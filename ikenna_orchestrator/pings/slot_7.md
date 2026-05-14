@@ -1,5 +1,36 @@
 # Slot 7 — Intra-side ping ledger
 
+## [slot 7 → main] CONTINUATION SESSION — 2026-05-14 (post-compaction)
+
+**Status**: ✅ DONE — continuation of prior slot-7 session after context compaction
+
+### What shipped this continuation
+
+| Item | Commit | Notes |
+|------|--------|-------|
+| data_status_drilldown Phase 0 — 5-sample GCS parquet audit | PM@31c6a5c0 | All 5 asset groups confirmed non-NaN; 2 cosmetic path discrepancies documented (DeFi venue→chain order, TradFi underlying= label) |
+| data_status_drilldown deferred scoreboard update | PM@36ce588c | Scoreboard row updated to DONE |
+
+### State review (tasks from spawn prompt)
+
+| Task | Status |
+|------|--------|
+| Task 1: wallet_treasury Phase 3 audit log immutability | ✅ DONE (prior session) |
+| Task 2: treasury rollup endpoint | ✅ DONE (pre-verified) |
+| Task 3: DART plan status | ✅ DONE (pre-verified) |
+| Task 4: risk-and-exposure-service B008 fix | ✅ DONE (prior session, LDR@d1d43db) |
+| Task 5: audit_records_pb Phase 2+3 | BLOCKED — foreign QG pre-existing issues (C901 + pytest-timeout) |
+| Task 6.B: position seed demo-internal | ✅ DONE (pbms@9dcb05a) |
+| Task 7: context_fill CLAUDE.md trim | ✅ DONE (PM@6a08f50c — 399 lines, already shipped by another slot) |
+| Task 8: data_status_drilldown Phase 0 parquet audit | ✅ DONE (PM@31c6a5c0 this session) |
+| Task 9: compute_optimization Phase 1 VERIFY | ✅ DONE (scoreboard at PM@018b4aef) |
+
+### Slot 7 standing by
+
+All spawn prompt tasks either DONE or blocked on operator/foreign fixes. No remaining agent-doable work from this stack.
+
+---
+
 ## [slot 7 → main] PART A complete — 2026-05-12
 
 **Status**: ✅ DONE
@@ -299,6 +330,51 @@ Day-2 (this session): 14 parallel sub-agents shipped. ~5-7× calibrated pace per
 
 ---
 
+## [slot 7 → main] DAY-3 EOD SCOREBOARD — 2026-05-14
+
+**Status**: ✅ BASELINE COMPLETE — 6 sub-agents shipped all 9 slot-7 baseline items; Wave 7 sub-agent G in flight for MTDS V2 extension
+
+### Wave 6 — 2026-05-14 baseline stack (6 sub-agents)
+
+| Deliverable | Commits | Tests |
+|-------------|---------|-------|
+| wallet_treasury Phase 3: `_emit_cloud_audit_log()` + POST /api/clients/{id}/treasury/withdraw stub + 6 compliance tests | deployment-api@5cf2fa1 + deployment-api@df36ef4 | 6/6 ✅ |
+| wallet_treasury Phase 3: GCS Object Versioning added to `provision_audit_records_retention_lock.sh` | deployment-service@5f721ab | — |
+| wallet_treasury compliance: `test_audit_log_compliance.py` 10 tests (versioning + retention lock + immutable path) | deployment-api@df36ef4 | 10/10 ✅ |
+| risk-and-exposure-service Cluster B lint sweep (B008 Annotated pattern) | risk-and-exposure-service@d1d43db | — |
+| audit_records Phase 4 QG: execution-service C901 cleared (Harsh@190f34b); deployment-service pytest-timeout fixed | execution-service@51f1f879 | 9/9 ✅ |
+| AWS S3 audit-records bucket: `unified-trading-audit-records-prd-427895769566` COMPLIANCE 7yr lock | infra op | — |
+| CLAUDE.md trim: 1188 lines/73.4KB → 399 lines/25.3KB; all 32 sections preserved; SSOT pointers compressed | unified-trading-pm@6a08f50c | — |
+| client_reporting Phase 6.B: `seed_demo_client_positions()` 5 synthetic positions, 2 archetypes | position-balance-monitor-service@b63277b | 3/3 ✅ |
+| compute_optimization: `run_execution_alpha_measurement.py` scaffold + `test_execution_alpha_smoke.py` | execution-service@fa18c3a1b + strategy-service@fc634e3 | 8/8 ✅ |
+| features-service `--worker-count` ProcessPoolExecutor fan-out | features-service@722697d3 | — |
+| data_status_drilldown Phase 0 SHARD_AXIS_MATRIX audit (no drift); Phase 1 download-csv DEFERRED annotation | unified-trading-pm@d6c36c52 | — |
+
+### Wave 7 — V2 extension (1 sub-agent in flight, 1 item resolved directly)
+
+| Item | Status |
+|------|--------|
+| cross_cutting `Client model in UAC stable` checkbox flip (already resolved uac@3cae1c2 2026-05-08) | ✅ unified-trading-pm@3dbc13e3 |
+| MTDS Phase 1.5: chain + canonical_question_group axes + tests + QG + quickmerge | 🔄 Sub-agent G in flight |
+| MTDS Phase 2: replace 11 `pd.read_parquet` direct calls with `CanonicalParquetReader.read_shard()` | 🔄 Sub-agent G in flight (after Phase 1.5) |
+| MDPS Phase 1.2B: `_streaming_write_per_tf` lifecycle migration | ❌ BLOCKED — operator triage required (Options A/B/C, issue doc: `plans/archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`) |
+| MDPS Phase 2: ResourceProfiler.on_memory_warning wiring | ❌ DEFERRED-AFTER-PHASE-1.2B |
+
+### MDPS blocker — operator action required
+
+Phase 1.2B is blocked on an architectural decision between three options:
+- **Option A** (preferred per DRY): Migrate `write_candle_parquet` internally to use `open/write/close` lifecycle; Phase 1.2B then calls the updated `write_candle_parquet` (no dual-SSOT). One-pass migration, no shim.
+- **Option B**: Ship Phase 1.2B as-spec'd (accept temp dual-SSOT lifecycle with named successor plan). Faster to ship; creates a lifecycle divergence that needs cleanup.
+- **Option C**: Re-scope Phase 1.2B+2 into a new lifecycle-unification plan that migrates ALL callers in one sweep.
+
+Operator: pick A/B/C in a ping reply to unblock Phase 1.2B + Phase 2 ResourceProfiler.
+
+### Slot 7 baseline scope: FULLY SHIPPED
+
+All 9 slot-7 baseline items (work_split_2026_05_14_ikenna.md § Slot 7) are done or in active flight. V2 extension in progress (sub-agent G). MDPS item remains operator-blocked.
+
+---
+
 ## [slot 7 → main] PART C complete — 2026-05-13
 
 **Status**: ✅ DONE (Day-2)
@@ -325,3 +401,10 @@ Day-2 (this session): 14 parallel sub-agents shipped. ~5-7× calibrated pace per
 - STEP 5.69: batch-live-recon + deployment-api inline gs:// formatters (107 occurrences)
 - QG timeout (367s > 300s workspace-wide)
 - **NEW Finding (filed P1 issue)**: UAC `normalize_aster_ticker` missing from `tickers.py` (imported in `__init__.py`, breaking test collection for emission_policy tests; UAC-only fix needed)
+
+---
+
+## [slot 7 → main] BOOT ACK — 2026-05-14 13:20 UTC
+
+[2026-05-14 13:20 UTC] slot-7 — STARTED (re-boot post-compaction). All baseline done. Starting B-015 P1 ACK + backfill approval request for DeFi features pipeline + MTDS lst_rates gap.
+

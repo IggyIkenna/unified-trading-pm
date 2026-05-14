@@ -6,7 +6,7 @@ source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
 severity: P1
-status: IN_PROGRESS — slot 4 owns
+status: DONE — slot 4 (2026-05-14)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
@@ -98,6 +98,16 @@ back to Option B. Emit a one-shot warning at startup logging which path was take
   on-cadence-day → falls through; off-cadence-day → EXPECTED_REFDATA_CADENCE_CHANGE; transfer
   data still flows through transfer-window rule (no regression); non-PLAYER_VALUES transfermarkt
   data unchanged.
+
+## Resolution — 2026-05-14 slot 4
+
+**Option A chosen.** Weekday set: `frozenset({1, 2})` (Tue+Wed) per `refdata_cadence.py`.
+
+- `uac@17a0f82` — consolidated `refdata_cadence.py`: added `is_player_values_update_day(day)` helper.
+  Removed duplicate `player_values_cadence.py` (was `uac@042c81c`). Exports via sports `__init__`.
+- `utl@79c72bad` — `_classify_sports` imports from `refdata_cadence`; PLAYER_VALUES cadence branch fires.
+  5 new tests (Wednesday passes, Monday/Saturday → EXPECTED_REFDATA_CADENCE_CHANGE, transfer-window regression,
+  no-league-id falls through). 62/62 tests pass.
 
 ## Composes with
 

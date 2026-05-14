@@ -117,3 +117,29 @@ backtest replays) blocked on Phase 2/3C validation green.
 
 **Day-2-4 allocation**: Phase 2 + Phase 3C Day 2-3 (parallel) → Phase 8A/B/C Day 3-4 (serial, depends on validation
 green).
+
+---
+
+## [slot 6 → main] 2026-05-14 — Wallet/Treasury Phase 1 SHIPPED (coordination ping for slot 7)
+
+**Status**: DONE — Phase 1 (Real HMAC Withdrawal Approval Chain) fully pushed.
+
+**Commits**:
+- `unified-api-contracts@89f5754` — remove duplicate `WithdrawalApprovalSignature`/`WithdrawalApprovalChain` classes (stale simpler version from earlier session removed; canonical richer version with `.create()`/`.verify()` retained)
+- `execution-service@98ecfdf` — 5 unit tests for `withdrawal_signing.py` via `_injected_key` test seam in `tests/unit/custody/test_withdrawal_signing.py` (no Secret Manager calls; happy-path + sig-verifies + wrong-key-rejected + kms_key_ref-forwarded + different-approver-produces-different-HMAC)
+- `deployment-api@3111fd4` — suppress 3 pre-existing basedpyright errors in `client_treasury.py` (`reportConstantRedefinition` + 2x `reportUnknownMemberType` on google.cloud.logging)
+- `unified-trading-pm@ab5292f9` — plan flip + this ping
+
+**Note for slot 7**: The `approve_withdrawal` endpoint was already shipped by the upstream (concurrent agent on live-defi-rollout) with the richer `withdrawal_approval_rules` registry-driven version. My conflict resolution deferred to that version. Phase 3 (GCS versioning + retention lock + compliance tests) is yours to proceed with independently.
+
+---
+
+## [slot 6 → main] 2026-05-14 13:20 UTC — BOOT ACK (context reload)
+
+**Status**: STARTED — resuming slot 6 work stack.
+
+Context resumed from prior session. LDR FF-pull complete (all repos current except market-tick-data-service which has diverging local commits — not in slot 6 scope). features-service rebase conflict resolved (live_handler.py — kept `_check_live_emission_policy` + renamed `_SERVICE_NAME` to `"features-service"`). Dual-pushed to LDR.
+
+Starting: **Item 2 — 4 DeFi-specific alert codes producer-side wiring** (features-service onchain).
+
+Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE per prior session.

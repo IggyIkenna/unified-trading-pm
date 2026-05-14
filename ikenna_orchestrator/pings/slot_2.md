@@ -1,5 +1,29 @@
 # Slot 2 ping ledger — ikenna-defi-catalogue-tab
 
+## [main → slot 2] 2026-05-14 GMX/DRIFT Phase 1C skip instruction — ✅ ACKNOWLEDGED
+
+**Timestamp**: 2026-05-14 **Status**: ✅ ACKNOWLEDGED
+
+Cross-side ping from harsh-main relayed via ikenna-main: `DEFI_VENUE_AXIS_OVERRIDES` dict (UAC@`7c8482e`) is being
+**REVERTED** by Harsh slot 8 (dropping the dict entirely; making perp-venue-eligibility a venue capability
+`has_perp_funding`, not asset_group filter). Concrete changes per ping body:
+
+1. UAC — drop `DEFI_VENUE_AXIS_OVERRIDES`; keep GMX/DRIFT as DeFi.
+2. Strategy-service — perp-hedge eligibility by capability, not `asset_group == "cefi"`.
+3. MTDS — asset_group-agnostic `perp_funding_handler`.
+
+**Slot 2 action**: During Task 7 (`cross_asset_group_catalogue_audit` Phase 6A DeFi half), if Phase 1C (GMX/DRIFT
+dual-classification) surfaces as a todo, **skip it** and annotate:
+`**DEFERRED** — owned by Harsh slot 8 revert + capability refactor`. Do NOT do any work that depends on
+`DEFI_VENUE_AXIS_OVERRIDES` existing.
+
+**Plan annotation target**: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6 section — add annotation to any
+Phase 6A DeFi-half check that touches GMX/DRIFT classification or axis_override.
+
+All other tasks 1-6 and 8-9 unaffected.
+
+---
+
 ## [Slot 2 → Slot 1] 2026-05-13 Wave 3 cefi catalog cross-ref SHIPPED
 
 **Wave 3 per-instrument catalog cross-ref for cefi — code done, VM run pending.**
@@ -91,3 +115,9 @@ row.
 **Remaining open items**: Phase 5A/5B/5C (TradFi ETF/roots) and CF-4 (BINANCE vs BINANCE-SPOT split) are confirmed
 deferred to post-May-23. QG lint debt (137 E501) is pre-existing baseline — do not fix in isolation (high collision risk
 with other in-flight UAC agents). Continue with unblocked Phase 1E/1F/1G items or pull from reserve list.
+
+---
+
+## [Slot 2 → Slot 1] 2026-05-14T13:28Z boot ack
+
+[2026-05-14T13:28Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` + `wave2_polymarket` + `basefc_validation` + catalogue audit DeFi half + UTL QG preexisting failures). Background sub-agent (a13492ce2a3cf9eb3) completing Tasks 1/2 (defi_classifier Wave 3 + corrector). Main session picking up Tasks 3+ starting with wave2_polymarket Polymarket subset.

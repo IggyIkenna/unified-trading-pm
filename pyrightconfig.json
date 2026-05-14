@@ -31,7 +31,8 @@
     "scripts/checkers/triad_assertion_checker.py",
     "scripts/generators/generate_dependency_viz.py",
     "scripts/generators/generate_strategy_manifest_dag.py",
-    "scripts/generators/reverse-dependency-lookup.py"
+    "scripts/generators/reverse-dependency-lookup.py",
+    "scripts/quality_gates/snapshot_to_parquet.py"
   ],
   "extraPaths": ["../unified-internal-contracts", "../unified-api-contracts"],
   "venvPath": ".",

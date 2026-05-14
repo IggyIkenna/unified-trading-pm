@@ -171,9 +171,9 @@
   <circle cx="877" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="807" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="897" y="771" width="153" height="38" class="svc" />
-  <rect x="897" y="771" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="897" y="771" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="973" y="789" text-anchor="middle" class="label">ml-training-service</text>
-  <circle cx="1040" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1040" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="973" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1060" y="771" width="181" height="38" class="svc" />
   <rect x="1060" y="771" width="4" height="38" fill="#facc15" rx="2" />

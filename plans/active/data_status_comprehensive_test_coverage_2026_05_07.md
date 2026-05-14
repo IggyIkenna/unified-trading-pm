@@ -104,13 +104,14 @@ the rollup-math incident (ARBITRUM 32/54) are both this class.
 - [ ] [unified-trading-library] P0. `tests/test_manifest_writer_axis_kwargs.py` — for every `(service, asset_group)`
       covered by the writer, assert `record_captured` called with the SSOT-declared kwargs raises ValueError when one is
       missing (catches writer drift away from the SSOT).
-- [ ] [deployment-api] P0. `tests/unit/test_drilldown_axis_depth_matches_ssot.py` — call `get_hierarchical_drilldown`
+- [x] [deployment-api] P0. `tests/unit/test_drilldown_axis_depth_matches_ssot.py` — call `get_hierarchical_drilldown`
       for every `(service, asset_group)` in `SHARD_AXIS_MATRIX`; assert the returned `axes` list equals
       `SSOT_axes + ["date"]`. Catches the "drilldown excludes display axes" drift listed as an open follow-up in
-      `data_status_drilldown_shard_atom_alignment_2026_05_07` § "Open drifts".
-- [ ] [deployment-api] P0. `tests/unit/test_chain_breakdown_shards_vs_dates.py` — synthesize a manifest with multiple
+      `data_status_drilldown_shard_atom_alignment_2026_05_07` § "Open drifts". (deployment-api@6cfed38 — test exists +
+      passes; deployment-api@40f7769 — aligned to UAC SHARD_AXIS_MATRIX consolidation)
+- [x] [deployment-api] P0. `tests/unit/test_chain_breakdown_shards_vs_dates.py` — synthesize a manifest with multiple
       data_types and instruments per chain; assert `_build_chain_breakdown` returns `shards_expected ≫ dates_expected`.
-      Catches the rollup-math incident.
+      Catches the rollup-math incident. (deployment-api@6cfed38 — test exists + passes)
 - [ ] [deployment-ui] P0. `tests/contracts/test_drilldown_response_shape.test.ts` — Vitest test that pins the
       `DrilldownResponse` interface shape against a golden JSON snapshot. Catches API drift where a field rename (e.g.
       `total_top_axis_children` → `total`) silently breaks the UI.
@@ -127,13 +128,14 @@ UAC declares the canonical types every consumer expects. When a consumer adds a 
 - [ ] [unified-api-contracts] P0. `tests/test_drilldown_node_shape.py` — pin the `DrilldownNode` Pydantic / TypedDict
       shape; assert deployment-api's `DrilldownNode.to_dict()` produces a dict matching the schema (catches a renamed
       field on either side).
-- [ ] [unified-api-contracts] P0. `tests/test_protocol_launch_dates_vs_chain_genesis.py` — every chain in
+- [x] [unified-api-contracts] P0. `tests/test_protocol_launch_dates_vs_chain_genesis.py` — every chain in
       `PROTOCOL_LAUNCH_DATES` keys must be in `CHAIN_GENESIS_DATES`; every protocol declared must have either a launch
-      date OR be on `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`. (already partially shipped — extend.)
-- [ ] [deployment-api] P0. `tests/unit/test_uac_imports_only_via_facades.py` — AST-walk
+      date OR be on `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`. (already partially shipped — extend.) (UAC@6c873e4 —
+      shipped as `test_protocol_launch_dates.py` in UAC unit tests; UAC@f22f4b1 — `test_chain_genesis_dates.py`)
+- [x] [deployment-api] P0. `tests/unit/test_uac_imports_only_via_facades.py` — AST-walk
       `deployment_api/services/data_status_*.py` and assert no `from unified_api_contracts.canonical.*` imports
       (UAC-internal); only `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`.
-      Catches the Citadel UAC-import-rule violations.
+      Catches the Citadel UAC-import-rule violations. (deployment-api@6cfed38 — test exists + passes)
 
 ### C. Start-date / cutoff methodology (per-source coverage clipping)
 
@@ -142,22 +144,25 @@ builder, every preflight skip, every record_expected_empty reason.
 
 **Tests:**
 
-- [ ] [deployment-api] P0. `tests/unit/test_mtds_expected_dates_clipping.py` — for every (chain, protocol) pair in
+- [x] [deployment-api] P0. `tests/unit/test_mtds_expected_dates_clipping.py` — for every (chain, protocol) pair in
       `PROTOCOL_LAUNCH_DATES`, assert `_mtds_expected_dates_cached` returns empty when the window predates
       `max(chain_genesis, protocol_launch)` and non-empty when it postdates. Catches the regression where one cutoff is
-      honored but the other isn't.
+      honored but the other isn't. (deployment-api@6ab227b — test exists + passes)
 - [ ] [unified-api-contracts] P0. `tests/test_sports_source_coverage_propagation.py` — for every (source, data_type) in
       `SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`, assert
       `clip_dates_to_source_coverage(source, start, end, data_type=dt)` correctly drops pre-coverage dates.
+      **DEFERRED**: sports-domain work; owned by slot 4 (sports track). Successor: `sports_master_2026_05_07.md` Phase 4
+      coverage tests.
 - [ ] [market-tick-data-service] P0. `tests/unit/test_vix_15m_source_layering.py` — assert the routing surface in
       `umi_tick_provider.py` sends pre-2025-11-13 dates to Barchart preload (no Yahoo round-trip), 2025-11-13 →
       today−60d to the honest-gap branch, and post-today−60d to Yahoo. Catches the VIX 15m source-layering incident
       (closeout 2026-05-06 manual fill).
-- [ ] [deployment-api] P0. `tests/unit/test_data_status_denominator_clips_pre_cutoff_days.py` — assert the data- status
+- [x] [deployment-api] P0. `tests/unit/test_data_status_denominator_clips_pre_cutoff_days.py` — assert the data- status
       panel's denominator excludes pre-cutoff days, so the panel doesn't render thousands of phantom- missing pre-launch
-      days for chains/protocols that didn't exist yet.
-- [ ] [unified-api-contracts] P0. `tests/test_chain_genesis_dates_completeness.py` — every EVM chain in
+      days for chains/protocols that didn't exist yet. (deployment-api@6ab227b — test exists + passes)
+- [x] [unified-api-contracts] P0. `tests/test_chain_genesis_dates_completeness.py` — every EVM chain in
       `MAINNET_CHAIN_IDS` (non-zero chain_id) has a genesis date. (already shipped — extend with non-EVM fallbacks.)
+      (UAC@f22f4b1 — shipped as `test_chain_genesis_dates.py` in UAC unit tests)
 
 ### D. Deploy-Missing end-to-end coverage
 
@@ -166,15 +171,15 @@ orchestrator-skip flow.
 
 **Tests:**
 
-- [ ] [deployment-api] P0. `tests/unit/test_deploy_missing_preview_routing_per_service.py` — for every service in
+- [x] [deployment-api] P0. `tests/unit/test_deploy_missing_preview_routing_per_service.py` — for every service in
       `_SERVICE_LAUNCHER_SCRIPTS`, build a representative leaf row_key + assert the preview composes a shard-key
-      consumable by that service's CLI handler.
+      consumable by that service's CLI handler. (deployment-api@3040a1b + deployment-api@8012a12 — test exists + passes)
 - [ ] [market-tick-data-service] P0. `tests/cli/test_shard_key_round_trip.py` — given the preview's emitted `shard_key`,
       run `decompose_shard_key()` on it and assert the recovered argparse Namespace matches the original row_key
       field-for-field. Catches drift between the preview composer and the decomposer.
-- [ ] [deployment-api] P0. `tests/unit/test_deploy_missing_tarball_mode_command.py` — assert the `tarball-from-local`
+- [x] [deployment-api] P0. `tests/unit/test_deploy_missing_tarball_mode_command.py` — assert the `tarball-from-local`
       mode's command chains `create-code-tarballs.sh --all && launcher` (catches `&&` → `;` regression that would let
-      the launcher run even when the tarball build fails).
+      the launcher run even when the tarball build fails). (deployment-api@6cfed38 — test exists + passes)
 - [ ] [deployment-api] P0. `tests/integration/test_deploy_missing_skip_already_captured.py` — using a fixture manifest
       where one shard is `captured` and one is missing, run a simulated handler invocation with the shard-key targeting
       the captured shard; assert the orchestrator's `preflight_captured_atoms` skip path fires without re-fetching.

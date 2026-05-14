@@ -330,3 +330,68 @@ ASTER/EXTENDED adapter-debug slot assignment, 5 Solana successor plan slot assig
 adapters + Solana RPC + DEX/Drift (~25 cal AI-days) **Task stack**: items 1-9 from work_split_2026_05_14_ikenna.md §
 Slot 3 **Starting with**: Item 1 — ASTER + EXTENDED-STARKNET P0 root-cause adapter fix **LDR sync**: UTL pulled (30
 files), PM pulled (12 files), UAC pulled (fast-forward), instruments-service pull in progress (foreign WIP stashed)
+
+---
+
+[2026-05-14 ~15:15 UTC] Slot 3 → Slot 1 — **TASKS 1/2/3 ALL SHIPPED** (2026-05-14 session)
+
+### Task 1 (P0) ✅ ASTER 0% capture fix — 2 repos
+
+- **instruments-service@`c0c6593`** — `AsterReferenceDataAdapter._BASE` → `https://fapi.asterdex.com`; URL regression
+  tests added (`TestAsterAdapterEndpointUrl`)
+- **MTDS@`7d45b21`** (pushed to LDR): `AsterBaseClient.base_url_futures` → `https://fapi.asterdex.com`, `base_url_spot`
+  → `https://api.asterdex.com`
+- Root cause: Aster domain migration from `aster.exchange` → `asterdex.com` (2026 branding). All 17,681 attempted_failed
+  rows should retry and produce captured data once VM relaunched.
+
+### Task 2 (P0) ✅ EXTENDED-STARKNET diagnosis docstring — instruments-service
+
+- **instruments-service@`7c2fc5f`** — Added diagnosis docstring to `ExtendedReferenceDataAdapter`: "Only 15 rows
+  (2026-04-30), likely transient API failure. Endpoint correct: `api.starknet.extended.exchange/api/v1`." Operational
+  not structural.
+
+### Task 3 (P1) ✅ Helius Solana RPC wiring — MTDS
+
+- **MTDS@`05b705a`** (pushed to LDR as `70afae8` rebased): Helius already present in UAC
+  `SOLANA_RPC_TEMPLATES["helius"]`. Gap was MTDS hardcoding "alchemy" in 3 locations.
+- Changes shipped:
+  1. `MarketDataProviderConfig` — new fields: `solana_rpc_provider` (default "alchemy"), `helius_api_key`,
+     `helius_secret_name`
+  2. `AlchemyBaseClient.get_rpc_url()` — reads `cfg.solana_rpc_provider` via `get_market_config()`; unknown provider
+     logs valid options + falls back to "alchemy"
+  3. `SolanaGasFeeClient.__init__` — `provider: str = "alchemy"` param; uses `SOLANA_RPC_TEMPLATES.get(provider, ...)`
+     for URL template selection
+  4. `gas_fee_handler.py` — `_collect_solana_historical` + `_collect_solana_live` both read `SOLANA_RPC_PROVIDER` from
+     config; imports fixed (`...market_interface.config`)
+- To route Solana through Helius: set `SOLANA_RPC_PROVIDER=helius` env var on VM.
+
+### Task 4 (P1) ✅ Pyth Hermes batch + LST oracle feeds — MTDS
+
+- **MTDS@`639a311`** (rebased to `fce946b` on LDR): Pyth Hermes historical batch + Solana LST oracle feeds.
+- Changes shipped:
+  1. `_PYTH_HERMES_LATEST_URL` / `_PYTH_HERMES_HISTORICAL_URL` / `_PYTH_HERMES_ARCHIVE_START="2023-10-01"` constants
+  2. 4 Solana LST feeds added to `_PYTH_FEEDS`: JitoSOL/USD, mSOL/USD, bSOL/USD, INF/USD with correct 32-byte hex IDs
+  3. `process()` dispatch: pre-archive dates → honest empty_confirmed/EXPECTED_KNOWN_SOURCE_GAP; today → live endpoint;
+     historical → archive batch endpoint. PYTH manifest `chain=""` fixed to `chain="SOLANA"`.
+  4. `_fetch_pyth_prices_at_timestamp()` — full historical Hermes batch endpoint implementation
+  5. 13 new tests (4 test classes): feeds registry, Hermes constants, historical fetch parsing, pre-archive gating
+  6. Existing `test_writes_canonical_shards_per_chain` fixed to also patch `_fetch_pyth_prices_at_timestamp`
+  7. All 14 oracle_prices tests passing. QG exit 0.
+
+### Task 5 (P1) ✅ Kraken Futures + BitFinex symbol normalisation + Lighter Tardis routing tests — MTDS
+
+- **MTDS@`50728c7`** (pushed to LDR): Symbol normalisation helpers + settlement dimensions + routing tests.
+- Changes shipped:
+  1. `normalise_kraken_futures_symbol()` in `tardis_shared.py`: PF*/FF*/PI\_ prefix stripping, XBT→BTC alias,
+     YYYYMMDD→YYYY-MM-DD expiry (`FF_XBTUSD20251226` → `BTC-2025-12-26`), unknown passthrough
+  2. `normalise_bitfinex_futures_symbol()`: `tXXXF0:USTF0` pattern → base coin; XBT alias → BTC
+  3. `derive_settlement_dimensions()` extended: KRAKEN-FUTURES → (USD, inverse), BITFINEX-FUTURES → (USDT, linear)
+  4. 18 tests in `test_kraken_bitfinex_symbol_normalization.py` (8 Kraken + 7 BitFinex + 3 settlement dims)
+  5. 5 tests in `test_lighter_tardis_routing.py`: date-threshold routing (pre/on/post 2026-04-17), ohlcv_1m always
+     candles, derivative_ticker → market_stats Tardis translation
+  6. Plan 2A P0 `market_stats→derivative_ticker` confirmed pre-existing (MTDS@c936451 Harsh slot 10
+     `_TARDIS_DATA_TYPE_RENAMES`)
+  7. All 23 new tests + full QG (1104 passed, 2 pre-existing failures) — exit 0.
+- Plan checkbox flips: 2A P0+P1, 2B P1+TEST, 2C P1 all flipped to [x] in dex_perp plan.
+
+**Status**: Tasks 1-5 ✅ COMPLETE. Tasks 6-10 remaining (pending operator review).

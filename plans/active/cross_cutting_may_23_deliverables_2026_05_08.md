@@ -89,7 +89,7 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 
 ### #3 Clients + Accounts
 
-- [ ] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
+- [x] [DESIGN+UAC] **Client model in UAC stable** — client + account-per-venue mapping schema. Owner: Ikenna T6.
       **Resolved 2026-05-08 by Option A migration (uac@3cae1c2): existing `ClientDefinition`
       (`internal/domain/strategy_service/client_registry.py`) + `TradingAccount` + `AccountType` + `WalletRole`
       (`internal/domain/account.py`) + `ClientRegistry` + `AccountRegistry` are the canonical SSOTs; consumers use

@@ -31,10 +31,9 @@ estimate_calibration_note: |
 
 # DeFi Master — asset_group umbrella
 
-> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE)
-> `BatchExecutionMode` enum + `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59.
-> Re-verify any archetype-keyed batch/live routing code before touching pipeline_mode / reconciler
-> threshold / mode-routing logic.
+> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +
+> `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
+> pipeline_mode / reconciler threshold / mode-routing logic.
 
 > **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F/G 2026-05-09)**: UAC additive
 > `ExecutionTarget` / `ExecutionTrigger` enums + `decompose()` helper + `paper_target_registry` SSOT + per-chain paper
@@ -193,6 +192,13 @@ Covers:
   funding spread; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07, see
   [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)).
   7-day continuous run on real wallet.
+- **2 DeFi archetypes code+test+backtest READY-TO-GO-LIVE (toggle OFF at cutover)**:
+  `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+  - `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — per operator direction 2026-05-14 ("i want defi_recursive_borrow and
+    recursive staking in 23rd may though even if not essential for defi i want it backtested coded up and tested ready
+    to go live"). Phases 4-11 implementation in May-23 scope; Ikenna slots 2+3+6 own it. Live toggle ON post-cutover per
+    operator call. Plan:
+    [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md).
 - **2 DeFi perp DEXs live**: Hyperliquid + Aster. Plus historical-replay backfill for Lighter / Extended / Pacifica
   (originally scoped under CeFi venue expansion but they are DeFi by asset_group).
 - **DeFi data pipeline E2E**: features-onchain → strategy → execution. 8 archetypes pass Phase 1 batch e2e (per
@@ -296,8 +302,8 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P0. All 8 archetypes pass Phase 1 batch e2e: CARRY_RECURSIVE_STAKED, CARRY_STAKED_BASIS, CARRY_BASIS_PERP,
       [+5 more]. [AUDIT 2026-05-07: FRESH — actionable; CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs landed
       strategy@e4a0cdd]
-- [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with Phase
-      changes. [AUDIT 2026-05-07: FRESH — actionable]
+- [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
+      Phase changes. [AUDIT 2026-05-07: FRESH — actionable]
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
 
@@ -344,10 +350,10 @@ archetype before adding new specs:
 4. **Strategy engine** (`strategy-service/engine/strategies/v2/*_engine.py`) — entry triggers, exit triggers, roll on
    expiry, rotation cost gating. Per-archetype subclass.
 
-The `paired_price_dispersion` calculator in features-service (cross-instrument family) is the cross-asset-group greenfield that
-powers BOTH CARRY_BASIS_DATED (one leg spot/ETF, other dated future, held to convergence) and ARBITRAGE_PRICE_DISPERSION
-(both legs futures of same expiry on different venues, exit on convergence). Single calculator, two consumers; the
-per-archetype filter logic is in the catalog spec rows, not duplicated in the calculator.
+The `paired_price_dispersion` calculator in features-service (cross-instrument family) is the cross-asset-group
+greenfield that powers BOTH CARRY_BASIS_DATED (one leg spot/ETF, other dated future, held to convergence) and
+ARBITRAGE_PRICE_DISPERSION (both legs futures of same expiry on different venues, exit on convergence). Single
+calculator, two consumers; the per-archetype filter logic is in the catalog spec rows, not duplicated in the calculator.
 
 ### Lighter / Extended / Pacifica historical replay (`dex_historical_replay_*`)
 
@@ -648,18 +654,21 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** by Ikenna slot 4 per
 > [`api_keys_wallets_accounts_readiness_2026_05_10.md`](api_keys_wallets_accounts_readiness_2026_05_10.md): May-23
-> cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC`
-> on client-provided creds. Operator-action checklist: [`codex/05-infrastructure/custody-onboarding-checklist.md`](../../codex/05-infrastructure/custody-onboarding-checklist.md).
-> Per-wallet schema: [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+> cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC` on
+> client-provided creds. Operator-action checklist:
+> [`codex/05-infrastructure/custody-onboarding-checklist.md`](../../codex/05-infrastructure/custody-onboarding-checklist.md).
+> Per-wallet schema:
+> [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 > (UAC@`d721b6a`).
 
 - [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
       P0-relevant for May 23 Group F]
-- [ ] [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW, `execution-service/execution_service/custody/cloud_kms.py`)
-      per `api_keys_wallets` Plan Phase 3.C.1 — owner: Ikenna slot 4 successor + Harsh implementation.
-- [ ] [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation
-      per `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
+- [ ] [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
+      `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
+      Ikenna slot 4 successor + Harsh implementation.
+- [ ] [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation per
+      `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
       `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
 
 ### Audit findings 2026-05-07 — folded from session wrapper
@@ -738,134 +747,187 @@ shipping with the Fork-1 prep batches below).
       adapter has a routing bug (which CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate" rule flags as a likely
       cause). ~0.8k blank rows pending decision.
 - [x] [SCRIPT] P0. **Priority #5 — Lending-indices LINEA/BSC routing config.** Distinct workstream from priority #1
-      (which is Ethereum-AAVEV3 UAC fix).
-      `status: closed-2026-05-13-by-ikenna-defi-catalogue-tab` (was `backfill-aborted-handed-to-ikenna` per Harsh tab
-      3 end-of-shift handover 2026-05-11). **✅ FULLY CLOSED 2026-05-13 (Day 2) by slot 2** — recent-days catch-up
-      VM `mtds-lending-indices-20260511-204908` launched + ran-to-completion in ~3min (234 events including
-      STARTED+232 progress+STOPPED at 19:55:59 UTC). Manifest verified at
-      `gs://lending-indices-central-element-323112/_index/availability_index.parquet`: 65 captured rows for
+      (which is Ethereum-AAVEV3 UAC fix). `status: closed-2026-05-13-by-ikenna-defi-catalogue-tab` (was
+      `backfill-aborted-handed-to-ikenna` per Harsh tab 3 end-of-shift handover 2026-05-11). **✅ FULLY CLOSED
+      2026-05-13 (Day 2) by slot 2** — recent-days catch-up VM `mtds-lending-indices-20260511-204908` launched +
+      ran-to-completion in ~3min (234 events including STARTED+232 progress+STOPPED at 19:55:59 UTC). Manifest verified
+      at `gs://lending-indices-central-element-323112/_index/availability_index.parquet`: 65 captured rows for
       2026-05-07..2026-05-11 (13/day × 5 days across AAVEV3 × 6 chains + COMPOUNDV3 × 5 chains + SPARK × 1 chain);
-      2026-05-12+ → `empty_confirmed` (legitimate subgraph lag). Slot 3's handoff item (a) "recent-days catch-up"
-      done. Items (b) ManifestFreshnessCache wire-in + (c) clean full-history re-run after (b) + (d)
-      create-code-tarballs.sh stale-repo list remain as P1 follow-ups (not Priority-#5 blockers, not 2026-05-23
-      blockers). See `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3-LENDING.4 for full evidence.
-      - **✅ DONE (slot 3, 2026-05-11):**
-        - **"routing config absent" framing was STALE** (grep-then-conclude error in the 2026-05-08 audit):
-          `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e` (Mar 2026);
-          `get_supported_chains_for_protocol("aave_v3")` includes LINEA+BSC; UAC launch dates corrected at UAC@`6c873e4`
-          (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
-          `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date
-          short-circuit (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA
-          `aave_v3/LINEA/date=2025-03-01` = 475 rows USDC/WETH; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows
-          Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not 1440-NaN placeholders. Actual gap was operational — `lending-indices-{pid}`
-          canonical `_index/availability_index.parquet` was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147`
-          run had already captured LINEA AAVEV3 post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to
-          `empty_confirmed` in its per-VM shard, but the consolidator never merged it — root cause = the consolidator
-          daemon not polling the per-data_type DeFi buckets; see "Discoveries" below).
-        - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVEV3/LINEA = 451 captured
-          (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVEV3/BSC = 836 captured
-          (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET https"
-          `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are reclaimed** =
-          the Priority-#5 headline deliverable.
-        - **Consolidator-bucket Case-5 fix shipped** (deployment-service@`ad4d448` 8 per-data_type DeFi buckets + slot 6's
-          @`2a76a2a` adds dex-pools+liquidations = 10); relaunched daemon `manifest-consolidator-20260511-181538`; old
-          `20260507-175639` deleted; verified the new daemon consolidates `lending-indices`/`dex-swaps`/`evm-defi`/etc.
-        - **Stale-path note**: audit said `market_tick_data_service/adapters/lending_indices/` — actual handler is
-          `cli/handlers/lending_indices_handler.py` + adapter `market_interface/adapters/defi/aave_lending.py` (no
-          `adapters/lending_indices/` dir exists).
-      - **⏭ HANDED TO IKENNA** (Harsh tab 3 end-of-shift; pick up):
-        - (a) **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped run) — `launch-mtds-lending-indices-backfill-vm.sh
-          2026-05-07 2026-05-11` (event-verify per "No fire-and-forget VM launches"; the daemon then re-consolidates). The
-          full-history VM `mtds-lending-indices-20260511-181115` was **launched then KILLED 14:38 UTC** as the wrong call
-          (it re-downloads years of already-`captured` data — no manifest-freshness skip in the handler; got through
-          ~3373 events / ~375 dates before kill — idempotent re-captures, no data harm, just wasted compute + Graph
-          rate-limit). A clean full-history all-chains re-run should happen only AFTER (b).
-        - (b) **P1 — `ManifestFreshnessCache` wire-in** into `lending_indices_handler` + sibling MTDS DeFi backfill
-          handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`) so re-runs skip already-`captured`
-          dates — see the P1 todo in § "Discoveries during Priority #5" below for the full spec.
-        - (c) **Clean full-history all-chains lending-indices re-run AFTER (b)** lands.
-        - (d) **P1 — `create-code-tarballs.sh` stale-repo list + non-graceful skip** — see the P1 todo in § "Discoveries"
-          below (still `[ ]`, not urgent).
-        - (Optional) the ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits → `EXPECTED_PRE_GENESIS_CHAIN`
-          reconcile (cosmetic — both are honest absence; a clean post-(b) full re-run reconciles them, or
-          `reconcile_legacy_blank_to_typed_reason.py`-style sweep).
+      2026-05-12+ → `empty_confirmed` (legitimate subgraph lag). Slot 3's handoff item (a) "recent-days catch-up" done.
+      Items (b) ManifestFreshnessCache wire-in + (c) clean full-history re-run after (b) + (d) create-code-tarballs.sh
+      stale-repo list remain as P1 follow-ups (not Priority-#5 blockers, not 2026-05-23 blockers). See
+      `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3-LENDING.4 for full evidence. - **✅ DONE (slot 3,
+      2026-05-11):** - **"routing config absent" framing was STALE** (grep-then-conclude error in the 2026-05-08 audit):
+      `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e` (Mar 2026);
+      `get_supported_chains_for_protocol("aave_v3")` includes LINEA+BSC; UAC launch dates corrected at UAC@`6c873e4`
+      (`("LINEA","AAVEV3")="2025-02-11"`, `("BSC","AAVEV3")="2024-01-23"`); `lending_indices` ∈
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
+      (MTDS@`c6bdf96`) fires correctly. On-disk parquets verified REAL (LINEA `aave_v3/LINEA/date=2025-03-01` = 475 rows
+      USDC/WETH; BSC `aave_v3/BSC/date=2024-06-01` = 316 rows Cake/BTCB/USDT/USDC/WBNB/ETH/FDUSD), not 1440-NaN
+      placeholders. Actual gap was operational — `lending-indices-{pid}` canonical `_index/availability_index.parquet`
+      was stale vs the per-VM shards (the `mtds-lending-indices-20260508-141147` run had already captured LINEA AAVEV3
+      post-launch + BSC AAVEV3 post-launch + flipped pre-launch days to `empty_confirmed` in its per-VM shard, but the
+      consolidator never merged it — root cause = the consolidator daemon not polling the per-data_type DeFi buckets;
+      see "Discoveries" below). - **Manual consolidate** of `lending-indices-{pid}` → canonical now AAVEV3/LINEA = 451
+      captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0 attempted_failed; AAVEV3/BSC = 836 captured
+      (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0 attempted_failed — the **~576 stale "404 GET https"
+      `attempted_failed` rows** (293 LINEA + 219 BSC) + 198 LINEA blank-reason `empty_confirmed` **are reclaimed** = the
+      Priority-#5 headline deliverable. - **Consolidator-bucket Case-5 fix shipped** (deployment-service@`ad4d448` 8
+      per-data_type DeFi buckets + slot 6's @`2a76a2a` adds dex-pools+liquidations = 10); relaunched daemon
+      `manifest-consolidator-20260511-181538`; old `20260507-175639` deleted; verified the new daemon consolidates
+      `lending-indices`/`dex-swaps`/`evm-defi`/etc. - **Stale-path note**: audit said
+      `market_tick_data_service/adapters/lending_indices/` — actual handler is
+      `cli/handlers/lending_indices_handler.py` + adapter `market_interface/adapters/defi/aave_lending.py` (no
+      `adapters/lending_indices/` dir exists). - **⏭ HANDED TO IKENNA** (Harsh tab 3 end-of-shift; pick up): - (a)
+      **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped run) —
+      `launch-mtds-lending-indices-backfill-vm.sh         2026-05-07 2026-05-11` (event-verify per "No fire-and-forget
+      VM launches"; the daemon then re-consolidates). The full-history VM `mtds-lending-indices-20260511-181115` was
+      **launched then KILLED 14:38 UTC** as the wrong call (it re-downloads years of already-`captured` data — no
+      manifest-freshness skip in the handler; got through ~3373 events / ~375 dates before kill — idempotent
+      re-captures, no data harm, just wasted compute + Graph rate-limit). A clean full-history all-chains re-run should
+      happen only AFTER (b). - (b) **P1 — `ManifestFreshnessCache` wire-in** into `lending_indices_handler` + sibling
+      MTDS DeFi backfill handlers (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`) so re-runs skip
+      already-`captured` dates — see the P1 todo in § "Discoveries during Priority #5" below for the full spec. - (c)
+      **Clean full-history all-chains lending-indices re-run AFTER (b)** lands. - (d) **P1 — `create-code-tarballs.sh`
+      stale-repo list + non-graceful skip** — see the P1 todo in § "Discoveries" below (still `[ ]`, not urgent). -
+      (Optional) the ~142 LINEA + ~296 BSC `SOURCE_RETURNED_ZERO` pre-launch nits → `EXPECTED_PRE_GENESIS_CHAIN`
+      reconcile (cosmetic — both are honest absence; a clean post-(b) full re-run reconciles them, or
+      `reconcile_legacy_blank_to_typed_reason.py`-style sweep).
 
 ### Discoveries during Priority #5 (slot 3, 2026-05-11)
 
-- [x] [SCRIPT] P0. **Manifest consolidator daemon was NOT polling the per-data_type DeFi buckets** — `lending-indices-{pid}`,
-      `dex-swaps-{pid}`, `evm-defi-{pid}`, `gas-fees-{pid}`, `oracle-prices-{pid}`, `perp-funding-{pid}`,
-      `solana-defi-{pid}`, `lst-rates-{pid}` (deployment-api's `data_status_service._BUCKET_CATEGORY_OVERRIDES` routes
-      each DeFi data_type to its own dedicated bucket). The consolidator's `VM_BUCKETS` covered `instruments-store-*`,
-      `market-data-tick-*` (asset-group canonicals), `strategy-store-*`, `features-sports-*` — none of the per-data_type
-      DeFi buckets. Consequence: their canonical `_index/availability_index.parquet` drifted stale vs per-VM shards →
-      deployment-UI data-status showed wrong DeFi coverage (e.g. lending-indices kept showing 293 LINEA + 219 BSC
-      AAVEV3 `attempted_failed` for ~3 days after the `20260508-141147` run had reconciled them). **FIXED** —
-      deployment-service@`ad4d448` adds the 8 per-data_type DeFi buckets to `launch-manifest-consolidator-vm.sh`
-      `BUCKETS`; relaunched the consolidator daemon as `manifest-consolidator-20260511-181538` (old
-      `manifest-consolidator-20260507-175639` deleted 2026-05-11 12:50 UTC after the new one's first poll confirmed it
-      consolidating `lending-indices` + `dex-swaps` + `evm-defi`). One-time manual consolidation of `lending-indices-{pid}`
-      already done; the other 7 per-data_type DeFi buckets picked up by the relaunched daemon's first poll (verified —
-      `dex-swaps` got `legacy_seeded=True`, 46491 rows on first cycle). **Case-5 big finding** (data correctness for DeFi,
-      May-23 critical path, cross-repo) — operator flagged in chat 2026-05-11.
+- [x] [SCRIPT] P0. **Manifest consolidator daemon was NOT polling the per-data_type DeFi buckets** —
+      `lending-indices-{pid}`, `dex-swaps-{pid}`, `evm-defi-{pid}`, `gas-fees-{pid}`, `oracle-prices-{pid}`,
+      `perp-funding-{pid}`, `solana-defi-{pid}`, `lst-rates-{pid}` (deployment-api's
+      `data_status_service._BUCKET_CATEGORY_OVERRIDES` routes each DeFi data_type to its own dedicated bucket). The
+      consolidator's `VM_BUCKETS` covered `instruments-store-*`, `market-data-tick-*` (asset-group canonicals),
+      `strategy-store-*`, `features-sports-*` — none of the per-data_type DeFi buckets. Consequence: their canonical
+      `_index/availability_index.parquet` drifted stale vs per-VM shards → deployment-UI data-status showed wrong DeFi
+      coverage (e.g. lending-indices kept showing 293 LINEA + 219 BSC AAVEV3 `attempted_failed` for ~3 days after the
+      `20260508-141147` run had reconciled them). **FIXED** — deployment-service@`ad4d448` adds the 8 per-data_type DeFi
+      buckets to `launch-manifest-consolidator-vm.sh` `BUCKETS`; relaunched the consolidator daemon as
+      `manifest-consolidator-20260511-181538` (old `manifest-consolidator-20260507-175639` deleted 2026-05-11 12:50 UTC
+      after the new one's first poll confirmed it consolidating `lending-indices` + `dex-swaps` + `evm-defi`). One-time
+      manual consolidation of `lending-indices-{pid}` already done; the other 7 per-data_type DeFi buckets picked up by
+      the relaunched daemon's first poll (verified — `dex-swaps` got `legacy_seeded=True`, 46491 rows on first cycle).
+      **Case-5 big finding** (data correctness for DeFi, May-23 critical path, cross-repo) — operator flagged in chat
+      2026-05-11.
 - [x] [SCRIPT] P1. **Consolidator poll-list completeness audit (slot 6, 2026-05-11)** — the slot-3 fix above added 8 of
       the 10 per-data_type DeFi buckets to the consolidator `BUCKETS` list but missed `dex-pools-{pid}` and
       `liquidations-{pid}` — both are in `deployment-api`'s `_BUCKET_CATEGORY_OVERRIDES` + `_MTDS_DEFI_SUB_DIMENSIONS`
-      (10 keys), and both are written via `get_write_bucket_name()` in their MTDS handlers
-      (`dex_pools_handler.py:326`; `get_write_bucket_name("liquidations")`). Same staleness class. **FIXED** —
-      deployment-service@`2a76a2a` adds `dex-pools-{pid}` + `liquidations-{pid}` to `launch-manifest-consolidator-vm.sh`
-      `BUCKETS` (also reordered the DeFi block alphabetically + expanded the comment to document all 10 + flag
-      `solana-defi` as legacy — the Solana handler now writes to `dex_pools`/`perp_funding`/`lst_rates` per
-      `check_solana_defi_paths.py`). Relaunched the daemon: `manifest-consolidator-20260511-181538` (slot 3's) deleted,
-      new `manifest-consolidator-20260511-190513` running with the 10-bucket list — **first cycle PAID OFF immediately**:
-      it found `_index/per_vm/_legacy_seed.parquet` files in both new buckets (the consolidator auto-seeds legacy
-      snapshots on first poll of a bucket) and wrote them to the canonical indices — `dex-pools-{pid}` → 75983 rows,
-      `liquidations-{pid}` → 38134 rows. So there WAS real un-consolidated data sitting in those buckets (their canonical
-      `_index/availability_index.parquet` was stale-by-never-merged-legacy-seed; I'd initially mis-assessed it as
-      "no staleness" because I only checked for `_index/per_vm/{vm_name}.parquet` shards, missing the `_legacy_seed`).
-      **Other asset_groups checked, no gap**: CeFi options-chain/futures-chain, TradFi futures-chain,
+      (10 keys), and both are written via `get_write_bucket_name()` in their MTDS handlers (`dex_pools_handler.py:326`;
+      `get_write_bucket_name("liquidations")`). Same staleness class. **FIXED** — deployment-service@`2a76a2a` adds
+      `dex-pools-{pid}` + `liquidations-{pid}` to `launch-manifest-consolidator-vm.sh` `BUCKETS` (also reordered the
+      DeFi block alphabetically + expanded the comment to document all 10 + flag `solana-defi` as legacy — the Solana
+      handler now writes to `dex_pools`/`perp_funding`/`lst_rates` per `check_solana_defi_paths.py`). Relaunched the
+      daemon: `manifest-consolidator-20260511-181538` (slot 3's) deleted, new `manifest-consolidator-20260511-190513`
+      running with the 10-bucket list — **first cycle PAID OFF immediately**: it found
+      `_index/per_vm/_legacy_seed.parquet` files in both new buckets (the consolidator auto-seeds legacy snapshots on
+      first poll of a bucket) and wrote them to the canonical indices — `dex-pools-{pid}` → 75983 rows,
+      `liquidations-{pid}` → 38134 rows. So there WAS real un-consolidated data sitting in those buckets (their
+      canonical `_index/availability_index.parquet` was stale-by-never-merged-legacy-seed; I'd initially mis-assessed it
+      as "no staleness" because I only checked for `_index/per_vm/{vm_name}.parquet` shards, missing the
+      `_legacy_seed`). **Other asset_groups checked, no gap**: CeFi options-chain/futures-chain, TradFi futures-chain,
       prediction canonical-question, sports fixture-bundles all write to their asset-group canonical buckets
       (`market-data-tick-{cefi,tradfi,prediction,sports}-{pid}`) which ARE already in the poll list — no dedicated
       per-data_type buckets there.
-- [ ] [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction / ml-\*
-      buckets (slot-6 finding 2026-05-11).** When the features-service / execution-service / ml-\* pipelines run
+- [ ] [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction /
+      ml-\* buckets (slot-6 finding 2026-05-11).** When the features-service / execution-service / ml-\* pipelines run
       end-to-end and write manifest rows to their per-asset-group buckets — AND if they run multi-VM with
       `MANIFEST_PER_VM_SHARDS=true` — those buckets MUST be added to the consolidator `BUCKETS` list or their canonical
-      `_index/availability_index.parquet` will drift stale. Currently NOT a gap: probed 2026-05-11 — `features-delta-one-*`
-      / `features-volatility-*` / `features-onchain-defi` / `features-calendar` / `features-sports` / `execution-store-*`
-      / `ml-predictions-store` buckets exist but have ZERO `_index/availability_index.parquet` (pipeline hasn't run with
-      manifest writes yet); `ml-models-store-{pid}` has a canonical index (single-writer pattern → no consolidation
-      needed); `strategy-store-prediction-{pid}` not provisioned. **Also**: the bucket-name SSOT env-tier migration
+      `_index/availability_index.parquet` will drift stale. Currently NOT a gap: probed 2026-05-11 —
+      `features-delta-one-*` / `features-volatility-*` / `features-onchain-defi` / `features-calendar` /
+      `features-sports` / `execution-store-*` / `ml-predictions-store` buckets exist but have ZERO
+      `_index/availability_index.parquet` (pipeline hasn't run with manifest writes yet); `ml-models-store-{pid}` has a
+      canonical index (single-writer pattern → no consolidation needed); `strategy-store-prediction-{pid}` not
+      provisioned. **Also**: the bucket-name SSOT env-tier migration
       (`code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6) RENAMES every bucket (e.g.
       `market-data-tick-prediction-{pid}` → `market-data-tick-pred-prd-{pid}`); the consolidator `BUCKETS` list MUST be
-      updated in lockstep with that rename or it polls dead names. **Owner**: this item migrates to `code_freeze` Phase 2.6
-      (which already owns the bucket-rename + must update every bucket consumer) OR to the features/execution pipeline-
-      activation plan when those run end-to-end — whichever lands first. The fix shape is identical to deployment-service@`2a76a2a`:
-      add the (then-extant) bucket names to `launch-manifest-consolidator-vm.sh` `BUCKETS` + relaunch the daemon.
-      **Sub-finding (watchdog-dict imprecision, slot-6 2026-05-11)**: `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`
-      maps `mtds-gas-fees-` / `mtds-lst-rates-` / `mtds-dex-pools-backfill` / `mtds-liquidations-backfill` (+ `mtds-perp-funding-`)
-      to `market-data-tick-defi-{pid}`, but those MTDS handlers actually write the data to the dedicated per-data_type
-      buckets (`gas-fees-{pid}` / `lst-rates-{pid}` / `dex-pools-{pid}` / `liquidations-{pid}` / `perp-funding-{pid}`) via
-      `get_write_bucket_name(<kind>)`. The watchdog uses the mapped bucket only for a "is the VM still writing" progress
-      probe — `market-data-tick-defi-{pid}` is a *valid* (some handlers also write a catalogue index there) but imprecise
-      target. Cosmetic watchdog-progress-check imprecision, NOT a consolidator gap (the consolidator poll-list is now
-      correct vs the authoritative source = `get_write_bucket_name()` callsites + `_BUCKET_CATEGORY_OVERRIDES`). Fix when
-      touching the watchdog dict next: point those 5 prefixes at their dedicated buckets. Operator relaunch of the
-      watchdog VM required to pick it up (per CLAUDE.md VM-Naming-Convention rule).
-- [ ] [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` on `defi-phantom-recon-defi-20260511-192115`, completed 2026-05-11 13:58 UTC) reported **1298 "phantom captures", ALL `venue=EIGENLAYER` / `data_type=rewards`** — but they're **FALSE positives** (the data exists on disk, the audit's path template doesn't match). Root cause = a **shard-key-SSOT violation** in `market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`: it `recorder.record_captured(...)` with `data_type="rewards"` (`_EIGENLAYER_DATA_TYPE = "rewards"`, used at :184/193/203) + `instrument_type="staking"` (:186) but **writes the parquet** at a path built with `data_type="eigenlayer_rewards"` (:296) + `file_name="rewards.parquet"` (:298) → on-disk:
-      `raw_tick_data/by_date/day={D}/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet` (confirmed 2026-05-11: `gs://market-data-tick-defi-{pid}/raw_tick_data/by_date/day=2024-08-15/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet` exists). The audit probes the manifest row's `data_type=rewards` segment → `.../instrument_type=staking/data_type=rewards/` → empty → false phantom. **Do NOT `--apply` the flip** — flipping 1298 good rows to `attempted_failed` would corrupt the manifest (same class as the 2026-05-04 130,897-false-positive incident). **Also**: the handler docstring (:21) is stale on 3 axes — says `venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/data_type=rewards/ticks.parquet`; actual is `venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet`. **Fix** (shard-key-SSOT decision — defi-pipeline owner): make the `record_captured`/`record_empty` `data_type` match the parquet path (`eigenlayer_rewards` is the Phase-2-event-typed canonical token per deployment-api `data_status_service.py`'s comment — so flip `_EIGENLAYER_DATA_TYPE` to `"eigenlayer_rewards"`, NOT the parquet path to `rewards/`) + a one-time migration of the existing manifest rows from `data_type=rewards` → `data_type=eigenlayer_rewards` (per the "Manifest migration, NOT fallback" rule) + fix the docstring. Optionally also add the `data_type=eigenlayer_rewards`-on-disk-vs-manifest layout to `reconcile_phantom_manifest_rows_all.py`'s DeFi drift-axis list as a safety net, but the root fix is the handler's shard-key consistency. **Owner**: defi-pipeline / `defi_master` (the eigenlayer Phase-2 event handler) — coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the shard-key drift is a latent inconsistency that needs the handler fix.
-- [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its `DEFI_REPOS`/EXTRA_REPOS
-      list references `features-service (onchain family)` (consolidated into `features-service` by the 2026-05-08 features-*
-      consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo aborts the whole tarball build
-      with `EXIT=1` (it logs the SKIP message but then dies). Blocks `create-code-tarballs.sh --asset-group DEFI` from
-      `.tabs/*` worktrees (which have `features-service` not `features-service (onchain family)`). Workaround for Priority #5:
-      none needed — the deployed `mtds-code.tar.gz` (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit)
-      + the latest lending_indices code, so the VM ran current code without a refresh. Fix: (a) update the repo lists to
-      post-consolidation names (`features-service` instead of `features-service (onchain family)`/`features-defi-service`/etc.);
-      (b) make the missing-repo case actually `continue` past `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball
-      ...; else log "SKIP ..."; fi`). Owner: features-* consolidation follow-up — coordinate with
-      `features_repo_consolidation_2026_05_08` (archived?) or `infrastructure_master_2026_05_07`. **MIGRATE** to whichever
-      owns the features-* consolidation tail.
-- [ ] [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding 2026-05-11).** Root cause of the Priority-#5 full-history backfill VM blowing up from a ~60-90min estimate to ~4-17h: `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (and its `DefiManifestRecorder` in `_defi_manifest.py`) is **write-only** — `record_captured`/`record_empty`, no `read`/`is_captured`/skip. When a backfill is launched over a date range it fetches **every** post-launch day from the Messari subgraph regardless of whether the manifest already shows that `(asset_group, chain, protocol, data_type, day)` as `captured`; the only short-circuit is the pre-floor-date / chain-genesis check (date < protocol launch → `record_empty(EXPECTED_PRE_GENESIS_CHAIN)` without fetching) — a *different* check from "manifest already has this day captured." So a full-history re-run re-does years of already-captured OPTIMISM/ARBITRUM AAVEV3 history (idempotent — same parquet path+content, same `captured` row — so no corruption, just wasted compute + subgraph rate-limit quota). The UTL primitive **already exists** (`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` — shipped per `ml_and_features_master_2026_05_07.md` P0 `[x]`); the handlers just don't use it. **This is the "refactor existing MTDS per-venue VMs" debt item** from CLAUDE.md "Manifest concurrency principle" ("New backfill scripts MUST include this pattern; refactor existing scripts that run multi-VM ... MTDS per-venue VMs ... to add it"). **Fix**: in `lending_indices_handler` (and the sibling per-data_type MTDS DeFi backfill handlers — `gas_fees_handler` / `lst_rates_handler` / `dex_pools_handler` / `liquidations_handler` / `perp_funding_handler`), at startup bulk-read the canonical manifest once, cache the skip-set (`captured`/`empty_confirmed`/`attempted_failed`), derive the missing-days list, and skip the fetch for already-resolved days; mid-run, a TTL-refreshed targeted lookup of the row_key before each expensive fetch (per `/tmp/fill_missing_ohlcv.py`'s `_refresh_captured_cache` / `_is_now_captured`). Then a full-history re-run only fetches the genuinely-missing days. Owner: defi-pipeline / `defi_master` (coordinate with the shard-granularity-SSOT umbrella `infrastructure_master_2026_05_07`). Operational lesson (separate): scope backfill VMs to the actual gap window, not full-history-all-chains, unless a full refresh is the explicit intent. **HANDED TO IKENNA** (Harsh tab 3 end-of-shift handover 2026-05-11) along with the recent-days catch-up (`launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 2026-05-11`) + a clean full-history re-run AFTER this wire-in.
+      updated in lockstep with that rename or it polls dead names. **Owner**: this item migrates to `code_freeze` Phase
+      2.6 (which already owns the bucket-rename + must update every bucket consumer) OR to the features/execution
+      pipeline- activation plan when those run end-to-end — whichever lands first. The fix shape is identical to
+      deployment-service@`2a76a2a`: add the (then-extant) bucket names to `launch-manifest-consolidator-vm.sh`
+      `BUCKETS` + relaunch the daemon. **Sub-finding (watchdog-dict imprecision, slot-6 2026-05-11)**:
+      `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` maps `mtds-gas-fees-` / `mtds-lst-rates-` /
+      `mtds-dex-pools-backfill` / `mtds-liquidations-backfill` (+ `mtds-perp-funding-`) to
+      `market-data-tick-defi-{pid}`, but those MTDS handlers actually write the data to the dedicated per-data*type
+      buckets (`gas-fees-{pid}` / `lst-rates-{pid}` / `dex-pools-{pid}` / `liquidations-{pid}` / `perp-funding-{pid}`)
+      via `get_write_bucket_name(<kind>)`. The watchdog uses the mapped bucket only for a "is the VM still writing"
+      progress probe — `market-data-tick-defi-{pid}` is a \_valid* (some handlers also write a catalogue index there)
+      but imprecise target. Cosmetic watchdog-progress-check imprecision, NOT a consolidator gap (the consolidator
+      poll-list is now correct vs the authoritative source = `get_write_bucket_name()` callsites +
+      `_BUCKET_CATEGORY_OVERRIDES`). Fix when touching the watchdog dict next: point those 5 prefixes at their dedicated
+      buckets. Operator relaunch of the watchdog VM required to pick it up (per CLAUDE.md VM-Naming-Convention rule).
+- [ ] [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path
+      `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon
+      (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` on
+      `defi-phantom-recon-defi-20260511-192115`, completed 2026-05-11 13:58 UTC) reported **1298 "phantom captures", ALL
+      `venue=EIGENLAYER` / `data_type=rewards`** — but they're **FALSE positives** (the data exists on disk, the audit's
+      path template doesn't match). Root cause = a **shard-key-SSOT violation** in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`: it
+      `recorder.record_captured(...)` with `data_type="rewards"` (`_EIGENLAYER_DATA_TYPE = "rewards"`, used at
+      :184/193/203) + `instrument_type="staking"` (:186) but **writes the parquet** at a path built with
+      `data_type="eigenlayer_rewards"` (:296) + `file_name="rewards.parquet"` (:298) → on-disk:
+      `raw_tick_data/by_date/day={D}/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet`
+      (confirmed 2026-05-11:
+      `gs://market-data-tick-defi-{pid}/raw_tick_data/by_date/day=2024-08-15/asset_group=defi/venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet`
+      exists). The audit probes the manifest row's `data_type=rewards` segment →
+      `.../instrument_type=staking/data_type=rewards/` → empty → false phantom. **Do NOT `--apply` the flip** — flipping
+      1298 good rows to `attempted_failed` would corrupt the manifest (same class as the 2026-05-04
+      130,897-false-positive incident). **Also**: the handler docstring (:21) is stale on 3 axes — says
+      `venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/data_type=rewards/ticks.parquet`; actual is
+      `venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards/rewards.parquet`. **Fix**
+      (shard-key-SSOT decision — defi-pipeline owner): make the `record_captured`/`record_empty` `data_type` match the
+      parquet path (`eigenlayer_rewards` is the Phase-2-event-typed canonical token per deployment-api
+      `data_status_service.py`'s comment — so flip `_EIGENLAYER_DATA_TYPE` to `"eigenlayer_rewards"`, NOT the parquet
+      path to `rewards/`) + a one-time migration of the existing manifest rows from `data_type=rewards` →
+      `data_type=eigenlayer_rewards` (per the "Manifest migration, NOT fallback" rule) + fix the docstring. Optionally
+      also add the `data_type=eigenlayer_rewards`-on-disk-vs-manifest layout to
+      `reconcile_phantom_manifest_rows_all.py`'s DeFi drift-axis list as a safety net, but the root fix is the handler's
+      shard-key consistency. **Owner**: defi-pipeline / `defi_master` (the eigenlayer Phase-2 event handler) —
+      coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit
+      result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the
+      shard-key drift is a latent inconsistency that needs the handler fix.
+- [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its
+      `DEFI_REPOS`/EXTRA*REPOS list references `features-service (onchain family)` (consolidated into `features-service`
+      by the 2026-05-08 features-* consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo
+      aborts the whole tarball build with `EXIT=1` (it logs the SKIP message but then dies). Blocks
+      `create-code-tarballs.sh --asset-group DEFI` from `.tabs/_`worktrees (which
+      have`features-service`not`features-service (onchain     family)`). Workaround for Priority #5: none needed — the
+      deployed `mtds-code.tar.gz` (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest
+      lending_indices code, so the VM ran current code without a refresh. Fix: (a) update the repo lists to
+      post-consolidation names (`features-service`instead
+      of`features-service     (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually
+      `continue`past`set     -e`(e.g.`if [[-d "$path"]]; then create_tarball ...; else log "SKIP ...";     fi`). Owner:
+      features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`(archived?)
+      or`infrastructure_master_2026_05_07`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+- [ ] [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill handlers
+      (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding 2026-05-11).** Root
+      cause of the Priority-#5 full-history backfill VM blowing up from a ~60-90min estimate to ~4-17h:
+      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (and its
+      `DefiManifestRecorder` in `_defi_manifest.py`) is **write-only** — `record_captured`/`record_empty`, no
+      `read`/`is_captured`/skip. When a backfill is launched over a date range it fetches **every** post-launch day from
+      the Messari subgraph regardless of whether the manifest already shows that
+      `(asset_group, chain, protocol, data_type, day)` as `captured`; the only short-circuit is the pre-floor-date /
+      chain-genesis check (date < protocol launch → `record_empty(EXPECTED_PRE_GENESIS_CHAIN)` without fetching) — a
+      _different_ check from "manifest already has this day captured." So a full-history re-run re-does years of
+      already-captured OPTIMISM/ARBITRUM AAVEV3 history (idempotent — same parquet path+content, same `captured` row —
+      so no corruption, just wasted compute + subgraph rate-limit quota). The UTL primitive **already exists**
+      (`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` — shipped per
+      `ml_and_features_master_2026_05_07.md` P0 `[x]`); the handlers just don't use it. **This is the "refactor existing
+      MTDS per-venue VMs" debt item** from CLAUDE.md "Manifest concurrency principle" ("New backfill scripts MUST
+      include this pattern; refactor existing scripts that run multi-VM ... MTDS per-venue VMs ... to add it"). **Fix**:
+      in `lending_indices_handler` (and the sibling per-data_type MTDS DeFi backfill handlers — `gas_fees_handler` /
+      `lst_rates_handler` / `dex_pools_handler` / `liquidations_handler` / `perp_funding_handler`), at startup bulk-read
+      the canonical manifest once, cache the skip-set (`captured`/`empty_confirmed`/`attempted_failed`), derive the
+      missing-days list, and skip the fetch for already-resolved days; mid-run, a TTL-refreshed targeted lookup of the
+      row_key before each expensive fetch (per `/tmp/fill_missing_ohlcv.py`'s `_refresh_captured_cache` /
+      `_is_now_captured`). Then a full-history re-run only fetches the genuinely-missing days. Owner: defi-pipeline /
+      `defi_master` (coordinate with the shard-granularity-SSOT umbrella `infrastructure_master_2026_05_07`).
+      Operational lesson (separate): scope backfill VMs to the actual gap window, not full-history-all-chains, unless a
+      full refresh is the explicit intent. **HANDED TO IKENNA** (Harsh tab 3 end-of-shift handover 2026-05-11) along
+      with the recent-days catch-up (`launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 2026-05-11`) + a clean
+      full-history re-run AFTER this wire-in.
 
 ### Chain coverage + CLOB-on-chain venues (migrated from `defi_chain_coverage_and_clob_venues_2026_05_08`)
 
@@ -897,7 +959,9 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       **Decision needed before Phase 5 below ships.**
 - [ ] [SCRIPT] P1. **Phase 5 — Extended unblocking.** Starknet RPC template + OHLCV adapter for Extended. Blocked until
       Phase 1 ships Starknet chain entry + Phase 4 asset_group decision.
-- [ ] [SCRIPT] P1. Fix HYPERLIQUID adapter stub — currently raises `NotImplementedError` for `fetch_historical_ohlcv`. Wire to real Hyperliquid Info API endpoint. **DEFERRED**: not on critical path for paper-trade cutover (perp hedge leg uses Binance/Bybit/OKX first). Issue: plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md
+- [ ] [SCRIPT] P1. Fix HYPERLIQUID adapter stub — currently raises `NotImplementedError` for `fetch_historical_ohlcv`.
+      Wire to real Hyperliquid Info API endpoint. **DEFERRED**: not on critical path for paper-trade cutover (perp hedge
+      leg uses Binance/Bybit/OKX first). Issue: plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md
 
 ### Hardcoded on-chain-derivable values audit (migrated from `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`)
 
@@ -1075,21 +1139,23 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 - [ ] **AWS↔GCP parity**: live trading + monitoring runnable on AWS for at least one carry archetype (cloud-parity
       proof; full-scale AWS NOT required).
 - [ ] **Gas / lending / staking discipline live + verified** (added 2026-05-12 per operator carry-staked-basis cycle;
-      codified in [`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+      codified in
+      [`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
       HARD RULES #4-#6): (a) gas — real per-block `gas_fees` MTDS captures across all 7 DeFi chains (Ethereum / Arbitrum
       / Optimism / Polygon / Base / Avalanche / Solana / BSC / Gnosis) drive both strategy-decision preflight + P&L
       attribution as the `GAS` factor; (b) lending — `liquidity_index` / `variable_borrow_index` captured per-block from
-      Aave V3 / Compound V3 / Spark / Radiant subgraphs (per `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md`
-      end-to-end fix mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`); CARRY_LENDING_SUPPLY /
-      CARRY_LENDING_BORROW P&L factors derived from index growth × per-block aToken/debt-token balance reads (no APY
-      proxy); (c) staking — both wrapped (wstETH/weETH/jitoSOL price-delta) and rebasing (stETH balance-delta)
-      attribution paths wired; CEX collateral form discipline (Bybit/Deribit rebasing; OKX wrapped; Drift native
-      non-rebasing) baked into archetype `_build_legs` perp-venue dispatch.
-- [ ] **Scenario regression matrix passing** (Group F item 17.5, added 2026-05-12): 16-cell matrix
-      (2 cutover archetypes × ~8 registered scenarios each) all `ScenarioOutcomeResult.passed == True`
-      before live cutover. `ScenarioMatrixRunner` emits `matrix.parquet` as Phase 9 pre-cutover evidence.
-      Source plan: `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 5. Registered scenarios
-      in `SCENARIO_REGISTRY` (UAC@`33630a6`); runner in UTL@`3797fed5` `scenario/runner.py`.
+      Aave V3 / Compound V3 / Spark / Radiant subgraphs (per
+      `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` end-to-end fix mtds@`4b38a9b` + uac@`bd9c202` +
+      features-service@`e292a4d4`); CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW P&L factors derived from index growth ×
+      per-block aToken/debt-token balance reads (no APY proxy); (c) staking — both wrapped (wstETH/weETH/jitoSOL
+      price-delta) and rebasing (stETH balance-delta) attribution paths wired; CEX collateral form discipline
+      (Bybit/Deribit rebasing; OKX wrapped; Drift native non-rebasing) baked into archetype `_build_legs` perp-venue
+      dispatch.
+- [ ] **Scenario regression matrix passing** (Group F item 17.5, added 2026-05-12): 16-cell matrix (2 cutover archetypes
+      × ~8 registered scenarios each) all `ScenarioOutcomeResult.passed == True` before live cutover.
+      `ScenarioMatrixRunner` emits `matrix.parquet` as Phase 9 pre-cutover evidence. Source plan:
+      `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 5. Registered scenarios in `SCENARIO_REGISTRY`
+      (UAC@`33630a6`); runner in UTL@`3797fed5` `scenario/runner.py`.
 
 ### IN/OUT scope
 
@@ -1171,10 +1237,10 @@ Does NOT launch any defi_988 VM until Ikenna resolves #3 + #4 + operator authori
   routing config lands (per-service config; no UAC SSOT change). ~576 rows reclaimed from `actually_failed` →
   `legit_routed`. Smallest scope, biggest win/effort ratio.
 - **#4 (ASTER chain genesis on BSC)** — ✅ SHIPPED THIS SESSION at UAC@`<this commit>`. Added
-  `("BSC", "ASTER"): "2024-09-01"` to `unified-api-contracts/unified_api_contracts/registry/chain_env.py:255` (per
-  Tab K research: ASTER is a PROTOCOL on BSC, not a chain; conservative date 2024-09-01 per Aster DEX launch on BNB
-  Chain ~Q3 2024). Eliminates ~759 false-flagged missing rows. Tab 4 can now `get_protocol_launch_date("BSC", "ASTER")`
-  → `"2024-09-01"` and rows pre-launch correctly become `legit_pre_protocol_launch` instead of `actually_failed`.
+  `("BSC", "ASTER"): "2024-09-01"` to `unified-api-contracts/unified_api_contracts/registry/chain_env.py:255` (per Tab K
+  research: ASTER is a PROTOCOL on BSC, not a chain; conservative date 2024-09-01 per Aster DEX launch on BNB Chain ~Q3
+  2024). Eliminates ~759 false-flagged missing rows. Tab 4 can now `get_protocol_launch_date("BSC", "ASTER")` →
+  `"2024-09-01"` and rows pre-launch correctly become `legit_pre_protocol_launch` instead of `actually_failed`.
 - **#3 (PROTOCOL_LAUNCH_DATES tightening — ~30 (chain, protocol) pairs in `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`)** —
   ✅ AUTHORIZED IN PRINCIPLE. Per-protocol date research needed (~30 pairs). Recommend spawning a research sub-agent
   (could be coordinated by Ikenna slot 5 or a dedicated reserve slot) to web-research each pending pair + propose dates.
@@ -1245,6 +1311,26 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
   [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
+
+## Referenced sub-plans
+
+Active sub-plans owned by or closely coordinated with this epic:
+
+| Plan                                                                                                                                   | Role                                                                                                                | Status |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active |
+| [`defi_simulation_realism_2026_05_10.md`](./defi_simulation_realism_2026_05_10.md)                                                     | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active |
+| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active |
+| [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active |
+| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md)                     | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active |
+| [`wallet_treasury_client_flow_2026_05_10.md`](./wallet_treasury_client_flow_2026_05_10.md)                                             | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)           | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active |
+| [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active |
+| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                             | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | Active |
+| [`solana_amm_coverage_expansion_2026_05_13.md`](./solana_amm_coverage_expansion_2026_05_13.md)                                         | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active |
+| [`solana_perp_dex_adapters_2026_05_13.md`](./solana_perp_dex_adapters_2026_05_13.md)                                                   | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active |
+| [`solana_restaking_rewards_coverage_2026_05_13.md`](./solana_restaking_rewards_coverage_2026_05_13.md)                                 | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active |
+| [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active |
 
 ## Folded plans (archived 2026-05-07)
 
@@ -1429,17 +1515,17 @@ item 17 success criterion.
 
 ## DONE-2026-05-12 — Harsh tab 3 end-of-shift handover (defi #5 / lending-indices → Ikenna's side)
 
-Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BSC) work hands to Ikenna. Operator decision
-2026-05-11 14:32 UTC: the full-history backfill VM was the wrong call (re-downloads years of already-`captured` data —
-`lending_indices_handler` has no manifest-freshness skip), so it was killed and the residual is handed over.
+Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BSC) work hands to Ikenna. Operator
+decision 2026-05-11 14:32 UTC: the full-history backfill VM was the wrong call (re-downloads years of already-`captured`
+data — `lending_indices_handler` has no manifest-freshness skip), so it was killed and the residual is handed over.
 
 **✅ DONE this cycle (slot 3, 2026-05-11):**
 
-- **"routing config absent" framing was STALE** — `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since UAC@`2db3c8e`
-  (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVEV3 = 2025-02-11, BSC AAVEV3 = 2024-01-23); `lending_indices`
-  ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date short-circuit
-  (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC 2024-06-01 = 316 rows), not
-  1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM shards).
+- **"routing config absent" framing was STALE** — `SUBGRAPH_IDS["aave_v3"]["LINEA"]` + `["BSC"]` wired since
+  UAC@`2db3c8e` (Mar 2026); launch dates corrected UAC@`6c873e4` (LINEA AAVEV3 = 2025-02-11, BSC AAVEV3 = 2024-01-23);
+  `lending_indices` ∈ `DATA_TYPES_BY_ASSET_GROUP["defi"]`; `get_venue_prefix("aave_v3")=="AAVEV3"` so the pre-floor-date
+  short-circuit (MTDS@`c6bdf96`) fires. On-disk parquets verified REAL (LINEA 2025-03-01 = 475 rows; BSC 2024-06-01 =
+  316 rows), not 1440-NaN placeholders. The actual gap was operational (canonical manifest stale vs per-VM shards).
 - **Priority-#5 headline deliverable reclaimed** — manual `manifest_consolidator --bucket lending-indices-{pid} --once`
   → canonical now AAVEV3/LINEA = 451 captured (2025-02-11→2026-05-07) + 1137 empty_confirmed pre-launch + 0
   attempted_failed; AAVEV3/BSC = 836 captured (2024-01-23→2026-05-07) + 752 empty_confirmed pre-launch + 0
@@ -1457,9 +1543,9 @@ Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BS
 
 **⏭ HANDED TO IKENNA (pick up — Priority #5 stays `- [ ]` `status: backfill-aborted-handed-to-ikenna`):**
 
-- (a) **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped) — `launch-mtds-lending-indices-backfill-vm.sh
-  2026-05-07 2026-05-11` (event-verify per "No fire-and-forget VM launches"; daemon then re-consolidates) → flip
-  Priority #5 `[x]`.
+- (a) **Recent-days catch-up `2026-05-07..2026-05-11`** (~5-10min scoped) —
+  `launch-mtds-lending-indices-backfill-vm.sh 2026-05-07 2026-05-11` (event-verify per "No fire-and-forget VM launches";
+  daemon then re-consolidates) → flip Priority #5 `[x]`.
 - (b) **P1 — `ManifestFreshnessCache` wire-in** into `lending_indices_handler` + sibling MTDS DeFi backfill handlers
   (`gas_fees`/`lst_rates`/`dex_pools`/`liquidations`/`perp_funding`) so re-runs skip already-`captured` dates. Full spec
   in § "Discoveries during Priority #5" P1 todo. The "refactor existing MTDS per-venue VMs" debt item from CLAUDE.md
@@ -1472,10 +1558,16 @@ Harsh's shift ended; tab 3's `defi_master` Priority #5 (lending-indices LINEA/BS
 
 ## Cross-plan annotation from slot 5 / `defi_recursive_borrow_archetypes_2026_05_10.md` (2026-05-12)
 
-CLAUDE.md DeFi Execution Architecture section cites `UniswapConnector.swap_exact_input()` via SwapRouter02 `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`. **This address is Ethereum mainnet only.**
+CLAUDE.md DeFi Execution Architecture section cites `UniswapConnector.swap_exact_input()` via SwapRouter02
+`0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`. **This address is Ethereum mainnet only.**
 
-Family 1 + Family 2 cells on Arbitrum + Base require separate SwapRouter02 addresses for the cross-asset swap leg (e.g. WETH→wstETH unwind). Without per-chain dispatch, Family 1 Arbitrum/Base cells will revert at the swap step.
+Family 1 + Family 2 cells on Arbitrum + Base require separate SwapRouter02 addresses for the cross-asset swap leg (e.g.
+WETH→wstETH unwind). Without per-chain dispatch, Family 1 Arbitrum/Base cells will revert at the swap step.
 
-**Recommended fix**: extend `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` `UNISWAP_SWAP_ROUTER_BY_CHAIN: dict[str, str]` registry covering Ethereum / Arbitrum / Base / Optimism. `UniswapConnector.swap_exact_input(chain=...)` reads from registry. Per System-First Architecture rule — single SSOT, no hardcoded address in the connector.
+**Recommended fix**: extend `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`
+`UNISWAP_SWAP_ROUTER_BY_CHAIN: dict[str, str]` registry covering Ethereum / Arbitrum / Base / Optimism.
+`UniswapConnector.swap_exact_input(chain=...)` reads from registry. Per System-First Architecture rule — single SSOT, no
+hardcoded address in the connector.
 
-Slot 5 NOT fixing (Findings Triage — adjacent to defi_master scope, not recursive-borrow). Reference: `defi_recursive_borrow_archetypes_2026_05_10.md` Family 1 topology design § Cross-plan annotations queued.
+Slot 5 NOT fixing (Findings Triage — adjacent to defi_master scope, not recursive-borrow). Reference:
+`defi_recursive_borrow_archetypes_2026_05_10.md` Family 1 topology design § Cross-plan annotations queued.

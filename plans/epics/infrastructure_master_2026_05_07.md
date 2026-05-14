@@ -433,6 +433,18 @@ sub-plan; this section is a pointer.
   `sports_master_2026_05_07`, `predictions_master_2026_05_07`.
 - Manifest SSOT codex: `codex/02-data/availability-manifest-and-data-status.md`.
 
+## Referenced sub-plans (active, added 2026-05-14)
+
+Active sub-plans owned by or closely coordinated with this epic:
+
+| Plan                                                                                                         | Role                                                                                                        | Status |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------ |
+| [`active/per_agent_worktrees_2026_05_10`](../active/per_agent_worktrees_2026_05_10.md)                       | Per-agent worktree setup + tab isolation — 3-tier parallel-agent infrastructure for workspace               | Active |
+| [`active/ruff_workspace_cleanup_2026_05_12`](../active/ruff_workspace_cleanup_2026_05_12.md)                 | Ruff workspace cleanup — lint sweep + unsafe-fixes across workspace repos with foreign-file safety protocol | Active |
+| [`active/features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)       | Features service QG cleanup — quality-gate repair for features-\* service family                            | Active |
+| [`active/compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md) | Compute optimization + mock data — backtest compute sizing + mock-data pipeline benchmarking                | Active |
+| [`active/context_fill_optimization_2026_05_14`](../active/context_fill_optimization_2026_05_14.md)           | Context fill optimization — agent context efficiency + prompt-fill compression for long-running slots       | Active |
+
 ## Folded plans (archived 2026-05-07)
 
 - `shard_granularity_ssot_propagation_2026_05_06.md` — full per-service propagation spec; P0 todos lifted above.

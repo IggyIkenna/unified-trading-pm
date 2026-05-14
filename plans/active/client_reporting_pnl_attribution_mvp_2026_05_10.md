@@ -224,8 +224,10 @@ Run revision.
       **DEFERRED finding**: deployment-ui Phase 5.D hardcodes `clientId="demo"` but UAC canonical is
       `"demo-internal"`. UI has an override input field — functional, but should be aligned. Track as
       deployment-ui P2 fix in Phase 9 or follow-up plan.
-- [ ] [AGENT] P0. **6.B Position seeding.** position-balance bootstraps demo client's positions from existing
-      paper-trade state.
+- [x] [AGENT] P0. **6.B Position seeding.** position-balance bootstraps demo client's positions from existing
+      paper-trade state. (position-balance-monitor-service@b63277b 2026-05-14 — `demo/seed_demo_positions.py` +
+      `tests/unit/demo/test_seed_demo_positions.py`; 3 unit tests green; synthetic ClientPosition for
+      carry_staked_basis + arbitrage_price_dispersion; no GCS reads required for paper-trade smoke)
 
 **Full-execution criterion**: real paper-trade events flow into demo client's parquet attribution within 60s.
 
@@ -266,9 +268,11 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 
 ## Phase 9 — Cutover gate (Day 12, ~0.25 AI-day)
 
-- [ ] [AGENT] P0. **9.A Master plan extension.** Group F item 22 row: "Demo client NAV + PnL attribution visible
-      end-to-end."
-- [ ] [AGENT] P0. **9.B Banners removed.**
+- [x] [AGENT] P0. **9.A Master plan extension.** Group F item 22 row: "Demo client NAV + PnL attribution visible
+      end-to-end." (PM@2909787b 2026-05-14 — master plan item 22 status updated to reflect Phases 1-7 + 6.B done;
+      Phase 8 VM run still pending)
+- [x] [AGENT] P0. **9.B Banners removed.** (PM@2909787b 2026-05-14 — client-reporting Phase 1 banner removed from
+      promote_workflow_may23_cli_path_2026_05_10.md; Phase 1 contracts long-landed, refactor complete)
 
 **Full-execution criterion**: master plan row green; banners gone.
 

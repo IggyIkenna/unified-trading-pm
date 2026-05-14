@@ -2,6 +2,25 @@
 
 ---
 
+## [Slot 8 → Slot 1] 2026-05-14 — Task 1 DONE
+
+**Status: deployment_api_shard_axis_matrix_uac_drift FIXED ✅**
+
+Task 1 (P1 blocker) complete. 13 pre-existing test failures in deployment-api
+resolved by aligning tests to current UAC `SHARD_AXIS_MATRIX` + `EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
+
+Root cause: UAC consolidated features-* sub-family service names
+(`features-delta-one-service`, `features-volatility-service`, `features-onchain-service`,
+`features-sports-service`) into `features-service`. Tests were using stale sub-family names.
+
+Shipped:
+- `deployment-api@40f7769` — 4 test files updated, all 13 failures now pass
+- `unified-trading-pm@e73936a0` — issue doc closed
+
+QG running in background. Targeted test run confirmed 100% pass (70 tests in 4 files).
+
+---
+
 ## [Slot 8 → Slot 1] 2026-05-13 (session 3 — GATE 1 FIRED + PART B UNBLOCKED)
 
 **Status: D1+D4 design shipped ✅. PART B now READY TO EXECUTE. PART C already done by slot 3.**

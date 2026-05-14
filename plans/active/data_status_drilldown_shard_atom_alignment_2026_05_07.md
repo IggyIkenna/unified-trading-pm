@@ -265,11 +265,34 @@ on whatever flags exist today as a degenerate case).
 
 ### Phase 0 — Audit (sequential, no QG gate)
 
-- [ ] [audit] P0. Confirm the codex shard-atom matrix is current. Cross-check against `CLAUDE.md` "Per-asset-group
+- [x] [audit] P0. Confirm the codex shard-atom matrix is current. Cross-check against `CLAUDE.md` "Per-asset-group
       shard-key matrix" + the writer contracts in `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`. If any
-      drift, raise to user — do NOT silently proceed.
-- [ ] [audit] P0. Read 5 sample on-disk parquets (one per asset_group) + confirm the canonical path matches the shard
-      atom. Reference paths in `codex/02-data/per-asset-group-bucket-layouts.md`.
+      drift, raise to user — do NOT silently proceed. (2026-05-14 audit — no new drift found. UAC `SHARD_AXIS_MATRIX` in
+      `registry/data_status_axis_matrix.py` matches the plan's per-asset-group shard-key table exactly.
+      `canonical_question_group` as shard axis for prediction is already the documented known-temp state with named
+      successor `predictions_master_2026_05_07.md`. `instrument_type` promoted to shard axis for MTDS/MDPS CeFi+TradFi
+      per Phase 6 operator finding. DeFi uses `instrument_id` (not `protocol_id`) per Phase 6 fix at UAC@600bd21. All 5
+      asset-group axis orders align with the codex drilldown navigation flow documented in the matrix comments.)
+- [x] [audit] P0. Read 5 sample on-disk parquets (one per asset_group) + confirm the canonical path matches the shard
+      atom. Reference paths in `codex/02-data/per-asset-group-bucket-layouts.md`. (2026-05-14 slot-7 GCS audit — ADC
+      access confirmed; 5 samples inspected. All have real non-NaN data. **CEFI**
+      `day=.../asset_group=cefi/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=trades/BTCUSDT.parquet` — 3.4M
+      rows, price non-null. ✅ matches shard atom `(venue, instrument_type, data_type, instrument_id)`. **DeFi**
+      `day=.../asset_group=defi/venue=ETHENA/chain=ETHEREUM/instrument_type=yield_bearing/data_type=vault_share_price/{id}.parquet`
+      — 1 row (daily snapshot), all non-null. ⚠️ ON-DISK ORDER: venue → chain (codex declares chain → venue/protocol).
+      Drift is display-only; manifest row-key already uses per-row axes not hive-path order. Not a correctness bug but
+      documents the path-vs-codex ordering discrepancy. **TradFi**
+      `day=.../asset_group=tradfi/venue=CME/instrument_type=futures_chain/data_type=ohlcv_1m/underlying=ES/ticks.parquet`
+      — 1190 rows, all OHLC non-null. ✅ Uses `underlying=` partition (codex calls it `root`); functionally equivalent.
+      **Sports**
+      `day=.../category=sports/venue=ODDS_API/instrument_type=/data_type=odds/league=SERIE_A/ticks_migrated.parquet` —
+      753 rows, all non-null. ✅ Pre-writegate Phase 2.B shape (legacy `category=sports`; `instrument_type=` empty).
+      Expected: migration pending. **Prediction**
+      `day=.../asset_group=prediction/venue=POLYMARKET/instrument_type=prediction_market/data_type=trades/{market_id}.parquet`
+      — 182 rows, non-null. ✅ Pre-Plan-A per-market_id shape. Expected: post-Plan-A will migrate to
+      `canonical_question_group` partition. **Summary**: no correctness bugs found. Two cosmetic discrepancies captured:
+      (1) DeFi on-disk venue→chain vs codex chain→venue — display-only; (2) TradFi `underlying=` vs codex `root` label —
+      naming alias only. Both filed as known-state, no action required before May-23.)
 
 ### Phase 1 — deployment-api hierarchical drill-down endpoint
 
@@ -304,19 +327,22 @@ on whatever flags exist today as a degenerate case).
 - [ ] [deployment-api] P0. Adjust `download-csv` / `download-shard-csv` to accept the full leaf row_key (currently
       hard-stops at venue, day). Resolve the row_key to the canonical parquet path via UAC SSOT
       (per-asset-group-bucket-layouts), stream parquet OR CSV. **DEFERRED** to Phase 3 — existing endpoints already
-      accept partial keys; Phase 3 wire-in is the SmartDownloadButton consumer change.
+      accept partial keys (`instrument_type`, `data_type`, `chain`, `league_id`, `job_id`); Phase 3 wire-in is the
+      SmartDownloadButton consumer change. 2026-05-14 audit: `download_csv` at routes/data_status.py:1328 already
+      accepts all leaf axes as query params; no server-side change needed until Phase 3 UI wiring.
 - [x] [deployment-api] P0 (shipped deployment-api@d3f9c14). Unit tests: 13/13 pass in `test_data_status_hierarchical.py`
       covering top-level axis routing for MTDS DEFI, filter-descent into subtree, capture-status splits, window
       clipping, empty manifest, uncovered asset_group fallback, supported-pairs enumeration.
 
 ### Phase 2 — deployment-ui hierarchical drill-down component
 
-- [x] [deployment-ui] P0 (deployment-ui@9e7a64c). Replace the chain-row label `"shards"` with the new canonical fields: consume
-      `shards_found` / `shards_expected` from the Phase 1 rewrite (and the asset-group header reads the same fields).
-      Added `shards_found?`/`shards_expected?` to `TurboChainStatus`, `TurboAssetGroupStatus`, `TurboDataStatusResponse`
-      interfaces in `client.ts`. Updated `DataStatusTab.tsx` overall header, event_driven + dense category headers,
-      chain type cast, and chain row display to use `shards_found ?? dates_found` / `shards_expected ?? dates_expected`
-      fallback chain (backward-compat with older API responses). Visual smoke: DEFERRED — see item below.
+- [x] [deployment-ui] P0 (deployment-ui@9e7a64c). Replace the chain-row label `"shards"` with the new canonical fields:
+      consume `shards_found` / `shards_expected` from the Phase 1 rewrite (and the asset-group header reads the same
+      fields). Added `shards_found?`/`shards_expected?` to `TurboChainStatus`, `TurboAssetGroupStatus`,
+      `TurboDataStatusResponse` interfaces in `client.ts`. Updated `DataStatusTab.tsx` overall header, event_driven +
+      dense category headers, chain type cast, and chain row display to use `shards_found ?? dates_found` /
+      `shards_expected ?? dates_expected` fallback chain (backward-compat with older API responses). Visual smoke:
+      DEFERRED — see item below.
 - [x] [deployment-ui] P0 (shipped deployment-ui@209a41a). New `HierarchicalShardDrilldown.tsx` component (~250 LOC).
       Recursive: each level renders a list of expandable items; on first expand fires `getHierarchicalDrilldown(...)`
       with the parent's `row_key` as filter dict. AbortController on every fetch. Each row shows
@@ -334,9 +360,9 @@ on whatever flags exist today as a degenerate case).
       `row_key` (date / venue / data_type / instrument_type / chain / league_id). Capture-status banner already in place
       from the multi-axis plan Phase 3; no change to that surface.
 - [ ] [deployment-ui] P0. Visual smoke: walk every (service, asset_group) pair the SSOT declares; confirm the drill-down
-      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED** to a follow-up
-      Playwright walk; the local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is
-      operator-doable today.
+      depth matches the shard atom. Empty-state placeholders where writers haven't shipped. **DEFERRED-PER-USER**: the
+      local stack now renders the hierarchy at <http://localhost:5183/> so a manual smoke is operator-doable today
+      (`bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`). Successor: Phase 6 Playwright walk.
 
 ### Phase 3 — Per-shard download + missing surfacing
 
@@ -400,7 +426,11 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
 - [ ] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
-      repos.
+      repos. **DEFERRED**: remaining open items are Phase 3 (SmartDownloadButton row_key wire-in), Phase 6 Playwright
+      smoke, `canonical_question_group` shard axis (→ `predictions_master_2026_05_07.md`), cross-registry consistency
+      test (→ defers until predictions Plan A), and rollup-side metric inconsistency (→
+      `infrastructure_master_2026_05_07.md`). Phase 0 Phase 2 operator visual smoke is DEFERRED-PER-USER (operator runs
+      `restart-deployment-stack.sh` + manual walk at localhost:5183).
 
 ## Success criteria
 
@@ -416,22 +446,22 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 
 ## Deferred work after 2026-05-13 slot-2 session
 
-| Phase / item | Status as of 2026-05-13 | Successor / blocker |
-|---|---|---|
-| Phase 7 P1 — venue-detail pagination + field rename | ✅ DONE (deployment-service@99acc13 + deployment-api@0b853ba + deployment-ui@a67c32f) | — |
-| Phase 7 P2 — missing_dates sample label | ✅ DONE (deployment-ui@8ce86fa) | — |
-| Phase 7 P2 — totals_source field | ✅ DONE (deployment-api@b73ce3b + deployment-ui@0529c0a) | — |
-| Codex manifest schema version drift | ✅ DONE (already resolved to v8 pre-session) | — |
-| Phase 0 audit — codex shard-atom matrix verify | `- [ ]` open, never closed | Pre-flight; Phase 1-7 implementation implicitly verified it. Close next touch if no new drift found |
-| Phase 0 audit — 5 sample parquets on-disk | `- [ ]` open, never closed | Operator-doable smoke; not blocking current work |
-| Phase 1 download-csv leaf row_key | `- [ ] **DEFERRED**` to Phase 3 | Phase 3 SmartDownloadButton consumer |
-| Phase 2 visual smoke | `- [ ] **DEFERRED**` | Operator-doable at localhost:5183 |
-| Phase 3 /coverage-summary leaf counts | `- [ ] **DEFERRED**` | data-status multi-axis stream |
-| Phase 5 closeout | `- [ ]` pending Phase 3 completion + Playwright smoke | Deferred per above |
-| Phase 6 Playwright smoke | `- [ ] **DEFERRED**` | Operator-doable once stack running |
-| canonical_question_group shard axis | `- [ ]` named successor: predictions_master_2026_05_07.md | predictions Plan A |
-| cross-registry consistency test | `- [ ]` defers until predictions Plan A | — |
-| Rollup-side metric inconsistency | `- [ ]` owner: infrastructure_master_2026_05_07.md | data-status multi-axis stream |
+| Phase / item                                        | Status as of 2026-05-13                                                                          | Successor / blocker                                                          |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Phase 7 P1 — venue-detail pagination + field rename | ✅ DONE (deployment-service@99acc13 + deployment-api@0b853ba + deployment-ui@a67c32f)            | —                                                                            |
+| Phase 7 P2 — missing_dates sample label             | ✅ DONE (deployment-ui@8ce86fa)                                                                  | —                                                                            |
+| Phase 7 P2 — totals_source field                    | ✅ DONE (deployment-api@b73ce3b + deployment-ui@0529c0a)                                         | —                                                                            |
+| Codex manifest schema version drift                 | ✅ DONE (already resolved to v8 pre-session)                                                     | —                                                                            |
+| Phase 0 audit — codex shard-atom matrix verify      | ✅ DONE 2026-05-14 — no drift found; UAC SHARD_AXIS_MATRIX verified against plan shard-key table | —                                                                            |
+| Phase 0 audit — 5 sample parquets on-disk           | ✅ DONE 2026-05-14 slot-7 — GCS audit via ADC; 5 samples inspected, all non-NaN; 2 cosmetic path-order discrepancies documented inline (PM@31c6a5c0) | —                                                                            |
+| Phase 1 download-csv leaf row_key                   | `- [ ] **DEFERRED**` to Phase 3                                                                  | Phase 3 SmartDownloadButton consumer; endpoint already accepts all leaf axes |
+| Phase 2 visual smoke                                | `- [ ] **DEFERRED-PER-USER**`                                                                    | Operator-doable at localhost:5183; successor Phase 6 Playwright              |
+| Phase 3 /coverage-summary leaf counts               | `- [ ] **DEFERRED**`                                                                             | data-status multi-axis stream                                                |
+| Phase 5 closeout                                    | `- [ ]` pending Phase 3 completion + Playwright smoke                                            | Deferred per above                                                           |
+| Phase 6 Playwright smoke                            | `- [ ] **DEFERRED**`                                                                             | Operator-doable once stack running                                           |
+| canonical_question_group shard axis                 | `- [ ]` named successor: predictions_master_2026_05_07.md                                        | predictions Plan A                                                           |
+| cross-registry consistency test                     | `- [ ]` defers until predictions Plan A                                                          | —                                                                            |
+| Rollup-side metric inconsistency                    | `- [ ]` owner: infrastructure_master_2026_05_07.md                                               | data-status multi-axis stream                                                |
 
 ## Temporary states + their canonical follow-up plans
 
@@ -460,11 +490,11 @@ features-\* service. Three real drifts found, one fixed in this session, two rec
 
 ### Fixed this session
 
-- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-service (onchain family)", DEFI)]` referenced `protocol_id`
-      as a shard axis. `protocol_id` is **NOT** in UTL `_ROW_KEY_COLUMNS` (manifest_writer.py) — i.e. not a real
-      manifest column. The hierarchical-drilldown `_filter_manifest` silently no-ops on axes missing from the manifest
-      DataFrame, so every features-onchain DEFI drilldown collapsed at that level. Per the codex DeFi shard atom
-      `(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)` the per-instrument /
+- [x] [UAC] P0 (shipped UAC@600bd21). `SHARD_AXIS_MATRIX[("features-service (onchain family)", DEFI)]` referenced
+      `protocol_id` as a shard axis. `protocol_id` is **NOT** in UTL `_ROW_KEY_COLUMNS` (manifest_writer.py) — i.e. not
+      a real manifest column. The hierarchical-drilldown `_filter_manifest` silently no-ops on axes missing from the
+      manifest DataFrame, so every features-onchain DEFI drilldown collapsed at that level. Per the codex DeFi shard
+      atom `(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day)` the per-instrument /
       per-protocol slot is the canonical `instrument_id` column — switched the axis to `instrument_id`. 32/32 unit tests
       pass.
 
@@ -531,18 +561,19 @@ cannot reach the truncated tail. **Two related shape problems**:
       **Named successor**: `predictions_master_2026_05_07.md` (predictions Plan A — adds the column + Polymarket
       lifecycle). Until that lands, drilldown silently no-ops at the canonical_question_group level for every prediction
       service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
-      successor plan" rule.
+      successor plan" rule. **DEFERRED** to `predictions_master_2026_05_07.md` predictions Plan A.
 
 - [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
       UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist of v8-pending-columns like `canonical_question_group`).
-      Would have caught both `protocol_id` + `canonical_question_group` at QG time. Defers until predictions Plan A
-      lands so the allowlist isn't mostly-empty.
+      Would have caught both `protocol_id` + `canonical_question_group` at QG time. **DEFERRED** until predictions Plan
+      A (`predictions_master_2026_05_07.md`) lands so the allowlist isn't mostly-empty.
 
 - [x] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
       (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today (added `fixture_id`, `job_id` per the
       multi-axis correction 2026-05-06). The doc's "v5 → v6" + "Per-VM shard layout" sections document v7 columns but
-      the heading + version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes.
-      (**Already resolved**: doc now documents v8 as current — v7 + v8 both landed since this was written. No further action needed.)
+      the heading + version constant lag. Update to "Schema v7 (current)" with v6 → v7 migration notes. (**Already
+      resolved**: doc now documents v8 as current — v7 + v8 both landed since this was written. No further action
+      needed.)
 
 - [ ] [deployment-api / codex finding] P1. **Rollup-side metric inconsistency** (already flagged in
       `availability-manifest-and-data-status.md` § "Rollup-side metric inconsistency 2026-05-07 — open finding"). The
@@ -572,20 +603,19 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
 - [x] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
       rendering. When `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count
       label. Mirror the pattern from `HierarchicalShardDrilldown.tsx:218` shipped in Phase 6. Source: launcher-audit §
-      Q5 todo 2.
-      (deployment-ui@a67c32f — renamed `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel.tsx;
-      added "showing N of M" label when total_instruments_unfiltered > instruments.length; fixed date rendering to
-      use `v1.day ?? v1.date` to align with actual API response field)
+      Q5 todo 2. (deployment-ui@a67c32f — renamed `top_instruments` → `instruments` in VenueDetailResult +
+      VenueDetailPanel.tsx; added "showing N of M" label when total_instruments_unfiltered > instruments.length; fixed
+      date rendering to use `v1.day ?? v1.date` to align with actual API response field)
 - [x] **[deployment-api]** P2. `data_status_service.py:602` — `missing_dates: missing_pf[:50]` is fine as a sample
       preview but the UI should label it "sample of 50 / total N missing" rather than "the missing dates". Pure label
-      fix, no behaviour change. Source: launcher-audit § Q5 todo 3.
-      (deployment-ui@8ce86fa — added missing_count field to TurboLeagueStatus + missingIsSample logic in DataStatusTab)
+      fix, no behaviour change. Source: launcher-audit § Q5 todo 3. (deployment-ui@8ce86fa — added missing_count field
+      to TurboLeagueStatus + missingIsSample logic in DataStatusTab)
 - [x] **[deployment-api]** P2. Add a `totals_source: "rollup" | "manifest"` field to both code paths' response so the UI
       can render a tooltip explaining where each number came from and why they may differ until writegate Phase 3.D.4
       `--apply-write` lands per asset_group. Defensive observability — no behaviour change. Source: launcher-audit § Q5
       todo 5. Closes once writegate Phase 3.D.4 `--apply-write` ships across all 5 asset_groups (rollup and manifest
-      converge).
-      (deployment-api@b73ce3b + deployment-ui@0529c0a — added totals_source to both code paths + dynamic ROLLUP/MANIFEST badge with tooltip)
+      converge). (deployment-api@b73ce3b + deployment-ui@0529c0a — added totals_source to both code paths + dynamic
+      ROLLUP/MANIFEST badge with tooltip)
 
 ### Confirmed correct (no drift)
 

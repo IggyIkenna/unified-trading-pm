@@ -6,7 +6,7 @@ source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
 severity: P2
-status: IN_PROGRESS — slot 4 owns
+status: PARTIAL — read-side DONE (2026-05-14); write-side DEFERRED
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
@@ -84,6 +84,16 @@ need weather data if no match is scheduled.
 - `sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md` (sibling — SHARES the
   `is_fixture_scheduled` helper)
 - `sports_classifier_player_values_cadence_2026_05_13.md` (sibling)
+
+## Resolution — 2026-05-14 slot 4 (partial)
+
+**Read-side DONE**: `utl@79c72bad` — `open_meteo` added to the fixture-pin set in `_classify_sports`.
+Empty WEATHER rows on no-fixture days now return `EXPECTED_NO_FIXTURE`. Covered by 5 fixture-pin tests.
+
+**Write-side DEFERRED**: instruments-service weather adapter gate (`is_fixture_scheduled` pre-fetch) not yet
+implemented. File this as a follow-up in `instruments-service` weather adapter.
+**DEFERRED**: instruments-service `weather_open_meteo` adapter write-side prevention. Successor: file a new issue
+`weather_adapter_fixture_gate_YYYY_MM_DD.md` in instruments-service cleanup cycle.
 
 ## Notes
 

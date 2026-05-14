@@ -54,7 +54,6 @@ estimate_calibration_note: |
 > ownership boundary so static + dynamic rules don't conflict. Question doc:
 > [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
 
-
 Closes the "alerting plan does not exist" anomaly flagged by the 2026-05-07 audit (see
 `_AUDIT_2026_05_07_dependency_graph.md` operator action item #1). The alerting-**service** itself already exists
 (multi-channel routing across Slack/Email/PagerDuty/Telegram, KillSwitchBus subscriber via `7b74ed8`, MarginEvent
@@ -112,8 +111,8 @@ Affected files / consumers when shipping:
 - [risk-and-exposure-service/](risk-and-exposure-service/) — emit alerts using UAC closed taxonomy
 - [position-balance-monitor-service/](position-balance-monitor-service/) — same
 - [execution-service/](execution-service/) — circuit-breaker subscriber + KILL_SWITCH emitter
-- [features-service/features_service/onchain/](features-service/features_service/onchain/) — emit `DEFI_HEALTH_FACTOR_CRITICAL`,
-  `DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers
+- [features-service/features_service/onchain/](features-service/features_service/onchain/) — emit
+  `DEFI_HEALTH_FACTOR_CRITICAL`, `DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE` consumers
 - [unified-trading-system-ui/](unified-trading-system-ui/) (DART) — Active Alerts panel, Ack button, Escalate button
   (per e2e plan Frontend API Surface)
 - Codex doc: `unified-trading-pm/codex/15-runbooks/alerting/` — new operator playbook directory
@@ -199,14 +198,14 @@ default-factory.
       routing per ML code, threshold sources, archetype-scope mapping) + KillSwitchScope mapping table extension showing
       all 4 KILL*SWITCH*\* codes (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE,
       ML_MODEL_FAILURE=ARCHETYPE) + scope_key resolution rules per code. **SHIPPED 2026-05-11** PM@`<pending>`:
-      `codex/15-runbooks/alerting/alert-code-taxonomy.md` extended with (a) new `## ML category — alert codes +
-      thresholds + KillSwitchScope mapping` section covering per-code routing matrix (6 ML codes with
-      severity/channels/threshold_key/unit/scope), threshold sources + tuning rationale (PSI vs ratio guard, ms vs
-      minutes foot-gun avoidance), operator escalation ladder (INFERENCE_LATENCY → STALENESS → DRIFT → PNL → VERSION →
-      KILL_SWITCH), archetype-scope semantics + recovery flow, cross-references; (b) KillSwitchScope mapping table
-      extended with `KILL_SWITCH_ML_MODEL_FAILURE` ARCHETYPE row + `details["archetype"]` scope_key source; (c)
-      Categories bullet for ML lifecycle codes with deep-link to new section; (d) `AlertRule.pattern` references
-      updated to `event_pattern` in tandem with UAC@`0b61aec` rename.
+      `codex/15-runbooks/alerting/alert-code-taxonomy.md` extended with (a) new
+      `## ML category — alert codes +     thresholds + KillSwitchScope mapping` section covering per-code routing matrix
+      (6 ML codes with severity/channels/threshold_key/unit/scope), threshold sources + tuning rationale (PSI vs ratio
+      guard, ms vs minutes foot-gun avoidance), operator escalation ladder (INFERENCE_LATENCY → STALENESS → DRIFT → PNL
+      → VERSION → KILL_SWITCH), archetype-scope semantics + recovery flow, cross-references; (b) KillSwitchScope mapping
+      table extended with `KILL_SWITCH_ML_MODEL_FAILURE` ARCHETYPE row + `details["archetype"]` scope_key source; (c)
+      Categories bullet for ML lifecycle codes with deep-link to new section; (d) `AlertRule.pattern` references updated
+      to `event_pattern` in tandem with UAC@`0b61aec` rename.
 
 ### Phase 2 — Service migration to UAC SSOT (1 day, **PARALLEL** with Phase 1 once Phase 1 lands)
 
@@ -247,59 +246,63 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic field + every constructor
       in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body + any `.pattern` attribute
       access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT REFACTOR banner at top of
-      this plan — banner clears when this todo flips `[x]`. **SHIPPED 2026-05-11**: UAC@`0b61aec` (Pydantic field rename
-      + 44 LIVE_ALERT_RULES constructor calls + validators `_pattern_non_empty` → `_event_pattern_non_empty` +
+      this plan — banner clears when this todo flips `[x]`. **SHIPPED 2026-05-11**: UAC@`0b61aec` (Pydantic field
+      rename + 44 LIVE_ALERT_RULES constructor calls + validators `_pattern_non_empty` → `_event_pattern_non_empty` +
       `_validate_pattern_matches_codes` → `_validate_event_pattern_matches_codes` + test file rename `rule.pattern` →
-      `rule.event_pattern` × all sites + drive-by fix to
-      `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code` adding `kill_switch_scope=KillSwitchScope.VENUE` —
-      44/44 taxonomy tests green) + alerting-service@`3b94456` (router.py `_find_kill_switch_rule`: `rule.pattern` →
-      `rule.event_pattern`). `to_routing_dict()` dict KEY stays `"event_pattern"` (legacy byte-equivalence preserved).
-      IN-FLIGHT REFACTOR banner cleared by this flip.
+      `rule.event_pattern` × all sites + drive-by fix to `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code`
+      adding `kill_switch_scope=KillSwitchScope.VENUE` — 44/44 taxonomy tests green) + alerting-service@`3b94456`
+      (router.py `_find_kill_switch_rule`: `rule.pattern` → `rule.event_pattern`). `to_routing_dict()` dict KEY stays
+      `"event_pattern"` (legacy byte-equivalence preserved). IN-FLIGHT REFACTOR banner cleared by this flip.
 
 ### Phase 3 — Producer migration to UAC closed-set codes (2 days, parallel across services)
 
 Every emitter must use `AlertCode` enum, not raw strings. Fail-loud on unknown.
 
-> **🟢 4 DeFi-specific codes PULLED FORWARD May-23 (operator direction 2026-05-13)** —
-> `DEFI_AAVE_UTILIZATION_SPIKE` / `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` /
-> `DEFI_WEETH_DEPEG` features-onchain emission sites now in-scope pre-cutover. Was
-> previously deferred per master plan Group F item 22 "Sub-B finding (calculators not
-> yet wired; defi_master Fork 1 territory)"; reversed per operator rationale "throughput
-> margin (~5-6x), no descope, perfect cutover" — ~0.5-1 cal-AI-days against ~1,880
-> cal-day capacity in next 9 days. The 4 codes already exist in the AlertCode enum
-> (shipped UAC@`d00326d`); only the producer-side emission wiring is the pull-forward
-> scope. See per-code todo below.
+> **🟢 4 DeFi-specific codes PULLED FORWARD May-23 (operator direction 2026-05-13)** — `DEFI_AAVE_UTILIZATION_SPIKE` /
+> `DEFI_FUNDING_RATE_FLIP` / `DEFI_FEATURE_STALE` / `DEFI_WEETH_DEPEG` features-onchain emission sites now in-scope
+> pre-cutover. Was previously deferred per master plan Group F item 22 "Sub-B finding (calculators not yet wired;
+> defi_master Fork 1 territory)"; reversed per operator rationale "throughput margin (~5-6x), no descope, perfect
+> cutover" — ~0.5-1 cal-AI-days against ~1,880 cal-day capacity in next 9 days. The 4 codes already exist in the
+> AlertCode enum (shipped UAC@`d00326d`); only the producer-side emission wiring is the pull-forward scope. See per-code
+> todo below.
 
 - [ ] [SCRIPT] P0. `risk-and-exposure-service/`: emit `BALANCE_DRIFT`, `MARGIN_THRESHOLD_BREACH`, `CIRCUIT_BREAKER_OPEN`
       using `AlertCode.X`.
 - [ ] [SCRIPT] P0. `position-balance-monitor-service/`: emit `BALANCE_DRIFT`, `POSITION_DRIFT`.
 - [ ] [SCRIPT] P0. `execution-service/`: emit `KILL_SWITCH_*` from KillSwitchBus + `ORDER_REJECTION_SPIKE` from
       rejection-tracker.
-- [ ] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator),
-      `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding
-      calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog), `DEFI_WEETH_DEPEG` (from LST-peg deviation calc).
-- [x] [SCRIPT] P1. **🟢 PULLED FORWARD May-23** (operator direction 2026-05-13) — features-onchain emission sites
-      for the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above).
-      (alerting-service@12411e0 — Slot 8 2026-05-13. Producer-side wired via new
-      `defi_feature_event_handler.py` bridging 4 canonical feature event names to the existing check_* rules in
-      `defi_rules.py`. Rule wiring: `code=AlertCode.DEFI_*` field populated on each check_* return; `route_defi_alert`
-      prefers `alert.code.value` per producer-migration window 2026-05-08+. Alert-subscriber dispatch table extended
-      to route DeFi feature events. 10 new unit tests pass alongside existing 34.)
+- [x] [SCRIPT] P0. `features-service (onchain family)/`: emit `DEFI_AAVE_UTILIZATION_SPIKE` (from Aave pool-utilization
+      calc), `DEFI_FUNDING_RATE_FLIP` (from perp funding calc), `DEFI_FEATURE_STALE` (from feature-staleness watchdog),
+      `DEFI_WEETH_DEPEG` (from LST-peg deviation calc). (features-service@2ecb1378 — Slot 6 2026-05-14. Producer-side
+      `log_event` calls wired: `DEFI_FEATURE_AAVE_UTILIZATION` per pool row in `_calculate_utilization_features`;
+      `DEFI_FEATURE_PERP_FUNDING_RATE` per instrument from `hl_data` pre-select in `_calculate_perps_features`;
+      `DEFI_FEATURE_WEETH_ETH_RATE` for weETH rows in `lst_features.compute_lst_features_for_day`;
+      `DEFI_FEATURE_STALENESS` on warn/critical in `FeatureFreshnessChecker.check_output_freshness`. 9 unit tests pass.)
+      **DEFERRED**: `DEFI_HEALTH_FACTOR_CRITICAL` (from Aave health-factor calculator) — not in the 4 pulled-forward
+      codes for May-23 cutover; no `_calculate_health_factor` method exists yet. File as follow-up post-cutover.
+- [x] [SCRIPT] P1. **🟢 PULLED FORWARD May-23** (operator direction 2026-05-13) — features-onchain emission sites for
+      the 4 DeFi-specific codes, per-calculator wiring breakdown (composes with parent P0 todo above).
+      (alerting-service@12411e0 — Slot 8 2026-05-13. Producer-side wired via new `defi_feature_event_handler.py`
+      bridging 4 canonical feature event names to the existing check*\* rules in `defi_rules.py`. Rule wiring:
+      `code=AlertCode.DEFI*_` field populated on each check\__ return; `route_defi_alert` prefers `alert.code.value` per
+      producer-migration window 2026-05-08+. Alert-subscriber dispatch table extended to route DeFi feature events. 10
+      new unit tests pass alongside existing 34.)
   - [x] `DEFI_AAVE_UTILIZATION_SPIKE` — `check_aave_utilization` returns DefiAlert with
         `code=AlertCode.DEFI_AAVE_UTILIZATION_SPIKE`; producer via `DEFI_FEATURE_AAVE_UTILIZATION` event_name +
         `_build_aave_utilization_alert` builder; UAC threshold `defi_aave_utilization_spike_bps` (9500/9000
         per-archetype) applied. (alerting-service@12411e0)
   - [x] `DEFI_FUNDING_RATE_FLIP` — `check_funding_rate_flip` returns DefiAlert with
-        `code=AlertCode.DEFI_FUNDING_RATE_FLIP`; producer via `DEFI_FEATURE_PERP_FUNDING_RATE` event_name. UAC
-        threshold `defi_funding_rate_flip_bps_5m` (100 BPS default). (alerting-service@12411e0)
+        `code=AlertCode.DEFI_FUNDING_RATE_FLIP`; producer via `DEFI_FEATURE_PERP_FUNDING_RATE` event_name. UAC threshold
+        `defi_funding_rate_flip_bps_5m` (100 BPS default). (alerting-service@12411e0)
   - [x] `DEFI_FEATURE_STALE` — `check_feature_staleness` returns DefiAlert with `code=AlertCode.DEFI_FEATURE_STALE`;
-        producer via `DEFI_FEATURE_STALENESS` event_name. UAC threshold `defi_feature_stale_minutes` (15 min
-        default; 2x-SLA rule). (alerting-service@12411e0)
-  - [x] `DEFI_WEETH_DEPEG` — `check_weeth_depeg` returns DefiAlert with `code=AlertCode.DEFI_WEETH_DEPEG`;
-        producer via `DEFI_FEATURE_WEETH_ETH_RATE` event_name. UAC threshold `defi_weeth_depeg_bps`
-        (50 BPS_OF_ONE = 0.5% default). (alerting-service@12411e0)
-- [ ] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
-      enum value.
+        producer via `DEFI_FEATURE_STALENESS` event_name. UAC threshold `defi_feature_stale_minutes` (15 min default;
+        2x-SLA rule). (alerting-service@12411e0)
+  - [x] `DEFI_WEETH_DEPEG` — `check_weeth_depeg` returns DefiAlert with `code=AlertCode.DEFI_WEETH_DEPEG`; producer via
+        `DEFI_FEATURE_WEETH_ETH_RATE` event_name. UAC threshold `defi_weeth_depeg_bps` (50 BPS_OF_ONE = 0.5% default).
+        (alerting-service@12411e0)
+- [x] [SCRIPT] P0. Each emitter: add unit test asserting alert payload conforms to `DefiAlert` envelope + `AlertCode`
+      enum value. (features-service@2ecb1378 — 9 tests in `tests/onchain/unit/test_defi_alert_emission.py`; all pass.
+      Covers all 4 pulled-forward emitters with payload-shape assertions per alerting-service consumer contracts.)
 - [ ] [QG] P0. Per-service QG pass on each emitter repo.
 
 ### Phase 4 — Production paging targets via Secret Manager (1 day)
@@ -561,10 +564,10 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
       closed set, 50 alerting tests pass).
 - [x] [SCRIPT] P1. **Alert de-dup logic**: when both fire on the same (venue, instrument, time-window) the operator sees
       ONE alert with both signals merged in the body, not two. Implement at the router level via a 30-second coalesce
-      window keyed on `(venue, instrument)`. Shipped at alerting-service@e7a9e7c
-      (`alerting_service/notifiers/router.py` `_check_coalesce_window` + 22 unit tests in
-      `tests/unit/notifiers/test_router_coalesce.py`). Pair-review tag in commit message per CLAUDE.md "alerting-service
-      is Harsh's repo"; follows existing `_find_kill_switch_rule` precedent.
+      window keyed on `(venue, instrument)`. Shipped at alerting-service@e7a9e7c (`alerting_service/notifiers/router.py`
+      `_check_coalesce_window` + 22 unit tests in `tests/unit/notifiers/test_router_coalesce.py`). Pair-review tag in
+      commit message per CLAUDE.md "alerting-service is Harsh's repo"; follows existing `_find_kill_switch_rule`
+      precedent.
 - [x] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
       live-instruments-failure-rules section (already extended in `instruments_live_master_2026_05_08` Phase A.4 — land
       both updates same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
@@ -579,14 +582,14 @@ and oracle-safety signals in the closed set BEFORE Phase 7 quietness baseline ru
 
 - [x] [SCRIPT] P0. **Add 8 AlertCode members to UAC `codes.py` + 8 AlertRule entries in `rules.py` + 6 threshold entries
       in `thresholds.py`**. New codes: `VENUE_HALTED` (HIGH, PagerDuty+Telegram), `LENDING_POOL_PAUSED` (HIGH,
-      PagerDuty+Telegram), `LENDING_BORROW_CAP_REACHED` (WARN, Telegram-only — transient condition; pool may clear in one
-      block), `LENDING_UTILIZATION_HIGH` (WARN, threshold `lending_utilization_high_bps`=9000 bps_of_one — early warning
-      before Aave kink at 9500), `MARKET_DATA_STALE` (HIGH, threshold `market_data_stale_seconds`=300 — generic
+      PagerDuty+Telegram), `LENDING_BORROW_CAP_REACHED` (WARN, Telegram-only — transient condition; pool may clear in
+      one block), `LENDING_UTILIZATION_HIGH` (WARN, threshold `lending_utilization_high_bps`=9000 bps_of_one — early
+      warning before Aave kink at 9500), `MARKET_DATA_STALE` (HIGH, threshold `market_data_stale_seconds`=300 — generic
       consuming-service layer staleness complementing TICK_STALENESS which is MDPS-specific), `GAS_PRICE_SPIKE` (WARN,
       threshold `gas_price_spike_gwei`=200), `GAS_BUDGET_EXCEEDED` (HIGH, threshold `gas_budget_exceeded_eth`=1),
       `KILL_SWITCH_ORACLE_DIVERGENCE` (CRITICAL, GLOBAL scope, `triggers_kill_switch=True` — covers BOTH oracle price
-      deviation AND oracle data staleness; stale oracle and diverging oracle are equally unsafe). Shipped
-      UAC@086144e. AlertCode closed set: 61 → 69.
+      deviation AND oracle data staleness; stale oracle and diverging oracle are equally unsafe). Shipped UAC@086144e.
+      AlertCode closed set: 61 → 69.
 - [x] [SCRIPT] P0. **12 new taxonomy tests** added to `test_alerting_taxonomy.py`: presence, routing, no-shadowing,
       closed-set ratchet (≥64), kill-switch GLOBAL scope, threshold key linkage per code, unit assertions for
       `oracle_staleness_seconds` + `lending_utilization_high_bps`, channel severity assertions for VENUE_HALTED (HIGH,
@@ -594,8 +597,8 @@ and oracle-safety signals in the closed set BEFORE Phase 7 quietness baseline ru
 
 ### Phase 1.F — Telegram ops channel split (2026-05-13, Slot 7)
 
-Split Telegram delivery into two channels: live-ops runtime alerts → `TELEGRAM_CHAT_ID_OPS`; CI/QG/internal
-events → existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channel until operator sets OPS chat_id.
+Split Telegram delivery into two channels: live-ops runtime alerts → `TELEGRAM_CHAT_ID_OPS`; CI/QG/internal events →
+existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channel until operator sets OPS chat_id.
 
 - [x] [SCRIPT] P0. **alerting-service code**: Added `telegram_chat_id_ops: str = Field(default="")` to
       `AlertingSystemConfig`; added `_is_runtime_alert()` helper (fnmatch against `LIVE_ALERT_RULES`); modified
@@ -661,8 +664,8 @@ tracked here so the next agent picks up cleanly without re-reading session notes
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
-- **Phase 3 producer-side emission for `features-service (onchain family)`**: 4 of 5 services done per existing audit; features-
-  onchain DEFERRED to defi_master Fork 1 (per Sub-B finding 2026-05-08).
+- **Phase 3 producer-side emission for `features-service (onchain family)`**: 4 of 5 services done per existing audit;
+  features- onchain DEFERRED to defi_master Fork 1 (per Sub-B finding 2026-05-08).
 - **Codex `alert-code-taxonomy.md` ML category section**: still open under DEFERRED-PER-FOOTGUN-3 from 2026-05-08;
   unrelated to this session's Phase 4 / 7 scope.
 
@@ -769,7 +772,8 @@ operator-decision finding (Sub-B), 1 hit usage cap mid-Wave-2 (Sub-G — partial
   - position-balance-monitor-service@`d206ab3` (Sub-G Wave 2) — reconciliation_engine + fee_reconciliation_engine
     AlertEvents stamped with AlertCode.
   - risk-and-exposure-service@`915f0de` (Sub-G Wave 2) — RiskMonitor.\_send_alert AlertMessage stamped with AlertCode.
-  - features-service (onchain family): **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B finding).
+  - features-service (onchain family): **DEFERRED** (calculators not yet wired; defi_master Fork 1 territory per Sub-B
+    finding).
 - **Phase 5 — DART integration**:
   - unified-trading-system-ui@`e9559565` (Sub-D) — AlertDetailModal + SeverityBreakdownWidget + notification-bell
     poll-interval + critical-only badge filter + Playwright `live-operator` ack-flow spec. 19/19 vitest green.
@@ -905,8 +909,8 @@ session" scoreboard above. No grep-misses.
 
 ## DONE-2026-05-11 — Slot 7 (ikenna-phase-1d-tab) Sub-A cycle shipments
 
-**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7
-master spawned 3 sub-agents in parallel; Sub-A targeted alerting Phase 2.X + ML codex section.
+**Cycle ownership**: `work_split_2026_05_11_ikenna.md` § "Slot 7 spawn prompt" — Phase 1.D 3-plan fan-out. Slot 7 master
+spawned 3 sub-agents in parallel; Sub-A targeted alerting Phase 2.X + ML codex section.
 
 ### Shipped artefacts (Sub-A scope)
 
@@ -916,15 +920,14 @@ master spawned 3 sub-agents in parallel; Sub-A targeted alerting Phase 2.X + ML 
     `_validate_event_pattern_matches_codes`) + `tests/internal/unit/test_alerting_taxonomy.py` updated. 44/44 alerting
     taxonomy tests pass. Drive-by fix to `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code` adding
     `kill_switch_scope=KillSwitchScope.VENUE` (Findings Triage Case 1).
-  - `alerting-service@3b94456` — `router.py` `_find_kill_switch_rule` consumer one-liner. `to_routing_dict()` dict
-    key was already `event_pattern` (legacy byte-equivalence) so `config.py` factory was untouched.
+  - `alerting-service@3b94456` — `router.py` `_find_kill_switch_rule` consumer one-liner. `to_routing_dict()` dict key
+    was already `event_pattern` (legacy byte-equivalence) so `config.py` factory was untouched.
 - **Phase 1.B carryover — codex ML category section** (DEFERRED-PER-FOOTGUN-3 from 2026-05-08; picked up cleanly under
   per-slot worktree model):
-  - `unified-trading-pm@41c8a519` — `codex/15-runbooks/alerting/alert-code-taxonomy.md` new ML category subsection
-    (6 ML codes + severity routing + threshold sources + archetype-scope mapping); KillSwitchScope mapping table
-    extended to 4 rows (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE,
-    ML_MODEL_FAILURE=ARCHETYPE). Phase 2.X + Phase 1.B-ML-codex plan checkboxes flipped `[x]`. IN-FLIGHT REFACTOR
-    banner at top of plan removed.
+  - `unified-trading-pm@41c8a519` — `codex/15-runbooks/alerting/alert-code-taxonomy.md` new ML category subsection (6 ML
+    codes + severity routing + threshold sources + archetype-scope mapping); KillSwitchScope mapping table extended to 4
+    rows (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE, ML_MODEL_FAILURE=ARCHETYPE).
+    Phase 2.X + Phase 1.B-ML-codex plan checkboxes flipped `[x]`. IN-FLIGHT REFACTOR banner at top of plan removed.
 
 ### Findings raised
 
@@ -942,12 +945,12 @@ codified 2026-05-10 — codex ML category section landed cleanly on first attemp
 After Sub-A's `event_pattern` rename + Sub-B's 6 new `AlertCode` members landed, the master coordinator (slot 7 main)
 seeded the corresponding `LIVE_ALERT_RULES` entries — the master's scope partition per the 3-agent fan-out:
 
-- `unified-api-contracts@c96447b` — `feat(uac): LIVE_ALERT_RULES — 6 new entries (4 RISK_RULE_* + 2 KILL_SWITCH_*_RECOVERED)
-  + E501 cleanup`. 6 new `AlertRule` entries using the new `event_pattern` field (4 risk-rule consequences per the § 7
-  seam diagram severity routing; 2 kill-switch recovery events per Q8 ratification). Fixes the E501 leftover at
-  `alerting/rules.py:126` from Sub-A's rename. Test `test_kill_switch_rules_trigger_kill_switch_flag` updated to
-  exempt RECOVERY codes from the `triggers_kill_switch=True` invariant — they report past state changes, not arm new
-  ones. 160/160 tests pass workspace-wide across alerting + risk_rule + strategy_family + circuit_breaker + kill_switch.
+- `unified-api-contracts@c96447b` — `feat(uac): LIVE*ALERT_RULES — 6 new entries (4 RISK_RULE*_ + 2
+  KILL*SWITCH*_\_RECOVERED)
+  - E501
+    cleanup`. 6 new `AlertRule`entries using the new`event_pattern`field (4 risk-rule consequences per the § 7 seam diagram severity routing; 2 kill-switch recovery events per Q8 ratification). Fixes the E501 leftover at`alerting/rules.py:126`from Sub-A's rename. Test`test_kill_switch_rules_trigger_kill_switch_flag`updated to exempt RECOVERY codes from the`triggers_kill_switch=True`
+    invariant — they report past state changes, not arm new ones. 160/160 tests pass workspace-wide across alerting +
+    risk_rule + strategy_family + circuit_breaker + kill_switch.
 
 ## DONE-2026-05-11 — Slot 7 Round 2 Sub-I (alerting P1 tick-staleness)
 
@@ -967,9 +970,9 @@ taxonomy". 4 new AlertCodes (closed-set grew 52 → 56):
 - `unified-api-contracts@92ad35c` — `codes.py` + `rules.py` (4 new AlertCode members + 4 LIVE_ALERT_RULES entries) +
   `test_alerting_taxonomy.py` (+7 tests, 43 → 50 alerting tests pass).
 - `alerting-service@e7a9e7c` — `notifiers/router.py` `_check_coalesce_window()` (30s coalesce-window keyed on
-  `(venue, instrument)` for TICK_STALENESS + CONNECTIVITY_GAP_DETECTED) + `tests/unit/test_router_coalesce.py` (NEW,
-  22 tests, all green). **Pair-review tag** in commit body (alerting-service is Harsh's repo per CLAUDE.md "Two
-  teammates" rule); convention follows `_find_kill_switch_rule` precedent (`alerting-service@8eda37c`).
+  `(venue, instrument)` for TICK_STALENESS + CONNECTIVITY_GAP_DETECTED) + `tests/unit/test_router_coalesce.py` (NEW, 22
+  tests, all green). **Pair-review tag** in commit body (alerting-service is Harsh's repo per CLAUDE.md "Two teammates"
+  rule); convention follows `_find_kill_switch_rule` precedent (`alerting-service@8eda37c`).
 - `unified-trading-pm@62d09dc8` — codex `04-architecture/alerting-batch-live.md` "Live Instruments Failure Rules"
   section extended with 4 new codes + 3 plan checkboxes flipped (Phase 2.X migrated-issue todos: AlertCode taxonomy
   extension + alert de-dup logic + codex update).
@@ -979,5 +982,5 @@ taxonomy". 4 new AlertCodes (closed-set grew 52 → 56):
 - **Case-5 BIG — Foot-gun #1 cascade** documented in DONE-2026-05-11 of risk plan. Sub-E's pre-staged registry files
   bundled under Sub-I's `UAC@29d4fe4` commit message via within-slot index race. No data loss; attribution muddled.
 
-**Cycle metrics**: ~75 min (under budget). 4 commits across 3 repos. 0 issue docs filed (findings captured in
-risk plan § Audit findings 0.D + risk plan DONE-2026-05-11).
+**Cycle metrics**: ~75 min (under budget). 4 commits across 3 repos. 0 issue docs filed (findings captured in risk plan
+§ Audit findings 0.D + risk plan DONE-2026-05-11).

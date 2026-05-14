@@ -22,26 +22,30 @@ priority: P1 (Phase 1+3 pulled-forward)
 Per density-push capacity assessment, **Phase 1 (Real HMAC withdrawal approval chain) and Phase 3 (Audit log
 immutability + 7-year retention) PULLED FORWARD to pre-May-15 freeze window**.
 
-**Phase 2 (Real Copper + CEFFU integrations) DESCOPED from this plan**. Per Harsh-side 1M-context audit slot
-ping 2026-05-13 14:50 UTC (PM@`e1e67656`): _"Copper / CEFFU → marked client-side, NOT our blocker per operator
-direction 2026-05-13. Master plan Group F Week 2 Treasury row + api_keys_wallets 3.A/3.B flipped."_
+**Phase 2 (Real Copper + CEFFU integrations) DESCOPED from this plan**. Per Harsh-side 1M-context audit slot ping
+2026-05-13 14:50 UTC (PM@`e1e67656`): _"Copper / CEFFU → marked client-side, NOT our blocker per operator direction
+2026-05-13. Master plan Group F Week 2 Treasury row + api_keys_wallets 3.A/3.B flipped."_
 
-The Copper / CEFFU integration is the **client's** responsibility (their account provisioning + key management),
-not ours. We don't build the integration; if/when the client provisions Copper or CEFFU, we wire the existing UTL
-custody adapter to their credentials — which is a config-only flip on `WalletProvisioningConfig.signing_surface`
-per `codex/04-architecture/custody-providers.md`. No standalone Phase 2 build required.
+The Copper / CEFFU integration is the **client's** responsibility (their account provisioning + key management), not
+ours. We don't build the integration; if/when the client provisions Copper or CEFFU, we wire the existing UTL custody
+adapter to their credentials — which is a config-only flip on `WalletProvisioningConfig.signing_surface` per
+`codex/04-architecture/custody-providers.md`. No standalone Phase 2 build required.
 
 **Slot assignments (corrected)**:
-- **Phase 1** → Ikenna slot 6 (Cloud-KMS withdrawal signing + deployment-api endpoint + 8 unit tests, ~3.2 cal days = hours)
+
+- **Phase 1** → Ikenna slot 6 (Cloud-KMS withdrawal signing + deployment-api endpoint + 8 unit tests, ~3.2 cal days =
+  hours)
 - **Phase 2** → DESCOPED (client-side, no Ikenna/Harsh work needed; config flip only when credentials arrive)
-- **Phase 3** → Ikenna slot 7 (GCS Object Versioning + 7-year retention lock + Cloud Audit Logs + 4 compliance tests, ~1.6 cal days = hours)
+- **Phase 3** → Ikenna slot 7 (GCS Object Versioning + 7-year retention lock + Cloud Audit Logs + 4 compliance tests,
+  ~1.6 cal days = hours)
 
 Phase 1 + Phase 3 are fully independent — touch different code paths — parallel across slots 6+7. ~4.8 cal AI-days
 combined → ~hours calendar time at density-push pace (~100-200 cal AI-days/side/day).
 
-**Rationale**: workspace remaining backlog ≈ 530 cal AI-days (corrected per Harsh audit slot TBD-backfill);
-combined idle capacity ≈ 15 slots at ~5-7× compression; operator guidance "well over halfway to May-23 already"
-+ "100-200 AI-days per day" + "more to the 15th deadline".
+**Rationale**: workspace remaining backlog ≈ 530 cal AI-days (corrected per Harsh audit slot TBD-backfill); combined
+idle capacity ≈ 15 slots at ~5-7× compression; operator guidance "well over halfway to May-23 already"
+
+- "100-200 AI-days per day" + "more to the 15th deadline".
 
 ---
 
@@ -84,6 +88,26 @@ approval, Cloud-KMS-only signing). This plan executes the real integrations post
 **Dependency**: Copper signing surface (operator-provisioned post-cutover; Cloud-KMS pre-Copper). This plan assumes
 Cloud-KMS available; Copper path is June-15+ scope.
 
+#### Phase 1 Implementation Todos
+
+- [x] [SCRIPT] P0. 1.1 — UAC `WithdrawalApprovalSignature` (frozen dataclass, HMAC-SHA256 `create()`/`verify()`) +
+      `WithdrawalApprovalChain` (mutable, N-of-M quorum) in
+      `unified_api_contracts/internal/domain/treasury.py` + 9 unit tests in
+      `tests/internal/unit/test_withdrawal_approval_signature.py` (unified-api-contracts@0fa2b59)
+- [x] [SCRIPT] P0. 1.2 — `execution_service/custody/withdrawal_signing.py`: `sign_withdrawal_approval()` via
+      Secret Manager lazy-cached HMAC key; GCP + AWS paths; `_injected_key` test seam
+      (execution-service@b4fb55f); 5 unit tests via `_injected_key` seam (no Secret Manager calls)
+      in `tests/unit/custody/test_withdrawal_signing.py` (execution-service@98ecfdf)
+- [x] [SCRIPT] P0. 1.3 — `deployment_api/routes/client_treasury.py`:
+      `POST /clients/{client_id}/withdrawal/{withdrawal_id}/approve` real HMAC chain endpoint +
+      `WithdrawalApproveRequest`/`WithdrawalApproveResponse` models + `_WITHDRAWAL_CHAINS` in-memory store;
+      integrates `_emit_cloud_audit_log()` from LDR; removes stub `post_client_treasury_withdraw`
+      (deployment-api@4282d6a)
+- [x] [SCRIPT] P0. 1.4 — 10 compliance tests in `tests/unit/test_treasury_compliance.py`: happy path,
+      quorum accumulation, 404/400 validation, PB-1/PB-3 audit-log compliance (deployment-api@4282d6a)
+
+**Phase 1 SHIPPED 2026-05-14 (ikenna slot 6)**.
+
 ---
 
 ### Phase 2: Real Custody Integrations (Q5 Fulfillment)
@@ -114,6 +138,15 @@ between May-23 and June-1.
 2. **Retention Lock** — 7-year retention policy (regulatory requirement)
 3. **CloudAudit** — Wire deployment-api withdrawal calls into Cloud Audit Logs (for compliance audits)
 4. **Tests** — 4 compliance tests (lock enforcement, version history, audit log retrieval)
+
+#### Phase 3 Implementation Todos
+
+- [x] [SCRIPT] P0. 3.1 — GCS Object Versioning enabled on audit bucket via `--versioning` flag in
+      `provision_audit_records_retention_lock.sh` (deployment-service@5f721ab)
+- [x] [SCRIPT] P0. 3.2 — `_emit_cloud_audit_log()` helper + `POST /api/clients/{id}/treasury/withdraw` stub wired into
+      `deployment_api/routes/client_treasury.py` with Cloud Audit Log emission (deployment-api@5cf2fa1)
+- [x] [SCRIPT] P0. 3.3 — 4 compliance tests in `tests/unit/test_treasury_compliance.py`; 6/6 pass
+      (deployment-api@5cf2fa1)
 
 **Gate**: Pre-June-15 (compliance deadline for live trading). Links to `api_keys_wallets_accounts_readiness` Phase 8.D
 pre-cutover gate.
@@ -151,6 +184,13 @@ pre-cutover gate.
 - GCS audit bucket has versioning + 7-year retention lock enabled
 - Cloud Audit Logs linked
 - 4 compliance tests pass
+
+**Phase 3 SHIPPED 2026-05-14 (ikenna slot 7)**:
+
+- `deployment-service@f0f2c83` — `scripts/infra/configure_audit_bucket_versioning.sh` (GCS versioning + 7-year retention
+  lock; prod-only lock gate; idempotent)
+- `deployment-api@df36ef4` — `tests/unit/test_audit_log_compliance.py` (10 tests / 10 pass: versioning assertion,
+  retention lock 220752000s + isLocked, audit log emission via log_event, immutable append-only path pattern)
 
 ✅ **Successor unblocked**: Next operator decision (Fireblocks June-15+ for institutional custody).
 

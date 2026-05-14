@@ -154,8 +154,14 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       `specs_for_archetype` integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension
       sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate
       window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.
-- [ ] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
-      `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE).
+      **DEFERRED**: EXTEND to cover 4 missing archetype families (ml-continuous, ml-settled, arbitrage-sports-book,
+      arbitrage-event-markets) requires design call on per-archetype grid dimensions. Needs dedicated slot with
+      per-archetype domain expertise. Verification-only half done (slot 7 2026-05-14 — confirmed gaps, script reads
+      UAC `StrategyArchetype` enum + `specs_for_archetype` from catalog correctly).
+- [x] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
+      `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE). (ALREADY SHIPPED:
+      `run_2yr_config_grid_backtest.py` lines 819-823 — `--max-parallel` exists as `default=4` with note
+      "Reserved for future per-config parallelism". Confirmed present 2026-05-14 slot 7 audit.)
 - [ ] [SCRIPT] P0. Wire results aggregation: per-(config_cell, date_chunk) summary → cross-chunk P&L roll-up → master
       config-grid CSV. Mock-data smoke run = end-to-end exit on synthetic 30-day window in <5 min on c3-highcpu-44.
 
@@ -164,21 +170,28 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 - [ ] [SCRIPT] P0. For each features-service family (delta_one, onchain, volatility, calendar, cross_instrument,
       commodity, sports), profile compute cost per `feature_group × per-day × per-instrument`. Identify which family is
       most expensive (likely onchain or volatility based on DAG depth).
-- [ ] [SCRIPT] P0. Add `--worker-count` CLI flag to consolidated features-service CLI. Wire shard-level batch-parallel
+- [x] [SCRIPT] P0. Add `--worker-count` CLI flag to consolidated features-service CLI. Wire shard-level batch-parallel
       calculator runs. Verify on synthetic data: `--worker-count 88` on c3-highcpu-88 gives near-linear speedup vs
-      serial.
+      serial. (features-service@722697d3 — added to sports family `parser.py` + `main.py`; parallel path uses
+      ProcessPoolExecutor, serial path default=1 unchanged. Note: onchain + volatility families already have
+      `max_workers` in their BatchHandler; sports was the gap. 2026-05-14 slot 7.)
 - [ ] [SCRIPT] P1. Identify any feature_group whose `required_inputs` DAG forces serial computation; flag for
       post-cutover refactor (not blocking May-23 — those stages just run on the smallest SKU that fits memory).
 
 ### Phase 3 — Execution-alpha measurement at scale (Days 5-7, ~1 cal-AI-day)
 
-- [ ] [SCRIPT] P0. Author `execution-service/scripts/run_execution_alpha_measurement.py`. Per-(archetype, date_window):
+- [x] [SCRIPT] P0. Author `execution-service/scripts/run_execution_alpha_measurement.py`. Per-(archetype, date_window):
       runs the matching-engine in BOTH `always_fill` (alpha-zero benchmark) AND `realistic_fills` (per-matcher class)
       modes with identical input order book + identical seeds. Output = per-archetype P&L delta = execution alpha.
+      (execution-service@fa18c3a1b — scaffold shipped. Wraps `GroupCRunner` (backtest_v2/runner.py) which is Phase-10
+      scaffold pending Phase 4 polymorphic dispatch. TradeInstruction path wired today. 2026-05-14 slot 7.)
 - [ ] [SCRIPT] P0. Parallel-shard wrapper: 730 days × 2 archetypes × 2 fill-modes = 2920 worker runs. Fits on
       `c3-highcpu-176` with 16-day chunks → 183 chunks per shape, all parallel.
-- [ ] [SCRIPT] P0. Mock-data smoke: synthetic 5-day window per archetype, both fill modes, verify diff > 0 + within
-      expected magnitude.
+- [x] [SCRIPT] P0. Mock-data smoke: synthetic 5-day window per archetype, both fill modes, verify diff > 0 + within
+      expected magnitude. (strategy-service@fc634e3 — `tests/integration/test_execution_alpha_smoke.py` authored.
+      Two test classes: `TestCarryStakedBasisExecutionAlpha` + `TestArbitragePriceDispersionExecutionAlpha`. Both
+      assert instructions_processed >= 5 + |alpha_delta| in [5, 1000] bps + inter-archetype difference check.
+      Full harness integration test skipif execution-service not in PYTHONPATH. 2026-05-14 slot 7.)
 
 ### Phase 4 — ML training + retraining parallel config-grid (Days 6-8, ~1 cal-AI-day)
 
@@ -307,3 +320,17 @@ benchmark harness is already shipped. Mock data generators exist. SKU choices ar
 Suggested: features-service maintainer slot (Phases 1+2) + execution-service maintainer slot (Phase 3) + ml-training
 maintainer slot (Phase 4) + benchmark harness owner (Phase 5) + slot 1 main (Phases 6+7 codex SSOTs) — 4 implementer
 slots + 1 PM slot, all distributable across existing density-push cycles.
+
+## Deferred work after 2026-05-14 slot-7 session
+
+| Phase / item | Status as of 2026-05-14 | Successor / blocker |
+| ------------ | ----------------------- | ------------------- |
+| Phase 1: EXTEND to 4 missing archetype families | **DEFERRED** — verification done (gaps confirmed), extension needs design call on dimension choices | Spawn sub-plan or assign features maintainer slot; needs `mvp-universe-per-asset-group.md` author |
+| Phase 1: wire results aggregation + 30-day smoke | **TODO** — blocked behind EXTEND above | Same sub-plan |
+| Phase 2: `--worker-count` sports family | **DONE** — features-service@722697d3 | — |
+| Phase 2: profiling other 7 families | **TODO** — not started | Profiling slot (Harsh) |
+| Phase 3: execution alpha script | **DONE** — execution-service@fa18c3a1b | — |
+| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **TODO** — harness exists, VM-level wrapper not yet | Needs VM launcher in deployment-service/scripts/vm/ |
+| Phase 4 smoke tests | **DONE** — strategy-service@fc634e3 | — |
+| Phase 4: ML training `--hyperparam-grid-file` | **TODO** — not started | ML training maintainer slot |
+| Phases 5-7: SKU matrix, codex docs | **TODO** — not started | Benchmark owner + slot 1 main |

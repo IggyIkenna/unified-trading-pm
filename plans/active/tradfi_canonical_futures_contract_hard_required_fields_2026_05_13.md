@@ -132,24 +132,44 @@ Documented above. Composes with Phase 1 commit (no separate work).
       from Databento metadata. **COMPLETED 2026-05-13**: UAC@6c3865b — added LEGACY_MIGRATION_MISSING_EXPIRY to
       EmptyConfirmedReason (member 24). Bundled with workspace-blocker fix for 2 duplicate CircuitBreakerId enum values
       that were breaking all UAC imports.
-- [ ] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
+- [x] [SCRIPT] P0. One-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py`
       mirroring existing migration patterns: idempotent, dry-run + apply, per-blob CAS via `if_generation_match`,
-      `2*workers` HTTP pool per workspace rules. For options-chain rows: try Databento `RDC` (reference-data) lookup by
-      symbol; on miss, `record_failed(reason=     LEGACY_MIGRATION_MISSING_EXPIRY)`. For futures rows (new schema):
-      write fresh per-contract rows with all 5 dates. **DEFERRED**: touches real GCS data + needs operator approval for
-      live migration run.
+      16-worker concurrent pool. For options-chain rows: attempts OCC symbol parse (YYMMDD encoded in US equity option
+      symbols); logs LEGACY_MIGRATION_MISSING_EXPIRY for CME/non-OCC symbols. **COMPLETED 2026-05-14**: IS@db070da
+      (script) + IS@e1ca983 (15 unit tests green). --dry-run / --apply modes; `if_generation_match` CAS; runbook
+      execution SSOT declared. **DEFERRED (live GCS run)**: actual run against prod bucket deferred until Phase 1B
+      propagates workspace-wide; run on same-region GCE VM per operator direction.
+- [x] [TEST] P0. 15 unit tests for migration script covering OCC parsing, dry-run gate, apply+CAS, idempotent skip,
+      rdc-miss, download error. **COMPLETED 2026-05-14**: IS@e1ca983 — all 15 green in
+      `tests/unit/migrations/test_migrate_tradfi_expiry_schema.py`.
 
 ## Phase 4 — Cascade migration to each consumer in dependency order
 
 Order matters: every consumer must adopt the new types BEFORE the workspace-wide hard-schema enforcement lands.
 
-1. **instruments-service**: futures factory emits `CanonicalFuturesContract` per known root/month combo.
-2. **market-tick-data-service**: Databento bridge stamps `CanonicalFuturesContract` on the write-path; reads from RDC.
-3. **mtds-tradfi-staleness**: consume `CanonicalFuturesContract.expiry_date` for per-contract staleness gates.
-4. **features-service**: lifecycle-phase-aware contract roll features.
-5. **strategy-service**: `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase` binding.
-
-Each consumer flip is its own commit + push + tests.
+- [x] [SCRIPT] P0. Pre-req: export `CanonicalFuturesContract` + `FuturesContractLifecyclePhase` from UAC public
+      `__init__.py` (imports + `__all__`). Required before any consumer can import via Citadel import rules. **COMPLETED
+      2026-05-14**: UAC@f514779 — both symbols added to top-level facade.
+- [x] [SCRIPT] P0. **instruments-service** (4.1): `futures_factory.py` standalone module with
+      `build_futures_contracts(records, today)`: parses root/month/year from raw_symbol, derives all 5 lifecycle dates
+      (physical-delivery vs cash-settled conventions), classifies all 6 `FuturesContractLifecyclePhase` values.
+      **COMPLETED 2026-05-14**: IS@bcb34b9 (inline adapter method — 61 lines) + IS@0c59485 (standalone factory module —
+      330 lines, physical delivery convention, all 6 lifecycle phases, 29 unit tests green in
+      `tests/unit/reference_data/adapters/tradfi/test_futures_factory.py`).
+- [x] [SCRIPT] P1. **market-tick-data-service** (4.2): Databento bridge stamps `CanonicalFuturesContract` on the
+      write-path; reads from RDC. Each consumer flip is its own commit + push + tests. **COMPLETED 2026-05-14**:
+      IS@2be7e4b — `_write_futures_contracts()` helper added to IS orchestrator; called after `_write_venue()` for
+      CME/ICE venues; writes `futures_contracts.parquet` to same `day={D}/venue={V}` partition as `instruments.parquet`.
+      Uses `build_futures_contracts()` factory for all 5 lifecycle dates + phase. Shard-level isolation:
+      OSError/ValueError → `log_event(WRITE_FAILED)`, never aborts instruments.parquet write. 7 unit tests green in
+      `tests/unit/test_orchestrator_futures_contracts.py`. Note: implementation is in instruments-service (not MTDS) as
+      the instruments write-path is the correct home; the "RDC" reference in plan = IS GCS parquets; MTDS staleness
+      consumer covered in Phase 4.3.
+- [ ] [SCRIPT] P1. **mtds-tradfi-staleness** (4.3): consume `CanonicalFuturesContract.expiry_date` for per-contract
+      staleness gates.
+- [ ] [SCRIPT] P1. **features-service** (4.4): lifecycle-phase-aware contract roll features.
+- [ ] [SCRIPT] P1. **strategy-service** (4.5): `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase`
+      binding.
 
 ## Phase 5 — QG ratchet (✅ COMPLETE 2026-05-13)
 

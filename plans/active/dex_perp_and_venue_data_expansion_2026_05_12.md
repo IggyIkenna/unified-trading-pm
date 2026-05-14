@@ -104,13 +104,13 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `tardis.download_batch` with exchange from `_VM.get_tardis_exchange_for_venue("LIGHTER-ZKSYNC")` =
       `"lighter-zksync"`; pre-2026-04-17 falls back to `_fetch_lighter_rest`.
 
-- [ ] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** Tardis `market_stats`
-      message type carries funding_rate, mark_price, index_price, open_interest. Map to canonical `derivative_ticker`
-      output columns. Add normalisation in the Tardis parsing layer or in the Lighter-specific post-processor. Follow
-      the EXTENDED-STARKNET pattern at line ~1026.
+- [x] [SCRIPT] P0. **Add `market_stats` → `derivative_ticker` column mapping for Lighter-Tardis.** (MTDS@c936451 — Harsh
+      slot 10) `_TARDIS_DATA_TYPE_RENAMES = {"market_stats": "derivative_ticker"}` in `tardis_adapter.py:937`.
+      `_canonical_data_type()` resolves at write time. Pre-existing shipping confirmed 2026-05-14.
 
-- [ ] [TEST] P1. **Unit tests: Lighter routing date-threshold.** Parametrize: date < 2026-04-17 → REST path; date >=
-      2026-04-17 → Tardis path. Mock Tardis client at fetch boundary. ≥4 test cases.
+- [x] [TEST] P1. **Unit tests: Lighter routing date-threshold.** (MTDS@50728c7) 5 test cases in
+      `tests/unit/test_lighter_tardis_routing.py`: pre-threshold → REST, on-threshold → Tardis, post-threshold → Tardis,
+      ohlcv_1m always candles regardless of date, derivative_ticker → market_stats translation verified.
 
 ### 2B: Kraken Futures adapter via Tardis (PARALLEL with 2A/2C/2D/2E)
 
@@ -120,13 +120,13 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       handles routing. No explicit branch needed. UAC Phase 1 fixed `venue_start_dates` 2020-01-01 → 2019-03-30 and
       added PERPETUAL/FUTURE entries to `venue_instrument_type_to_tardis`.
 
-- [ ] [SCRIPT] P1. **Kraken Futures symbol normalisation.** Strip `PF_` prefix (perps) and `FF_` prefix (dated), extract
-      underlying coin (e.g. `PF_XBTUSD` → `BTC`). Dated futures include expiry in filename — preserve expiry suffix in
-      instrument_id as `BTC-20251226`. Add UAC constant for Tardis→canonical symbol map. Emit
-      `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` for symbols absent from instruments-service.
+- [x] [SCRIPT] P1. **Kraken Futures symbol normalisation.** (MTDS@50728c7) `normalise_kraken_futures_symbol()` in
+      `tardis_shared.py`: PF*/FF*/PI\_ prefix stripping, XBT→BTC alias, YYYYMMDD→YYYY-MM-DD expiry preservation
+      (`FF_XBTUSD20251226` → `BTC-2025-12-26`). `derive_settlement_dimensions("KRAKEN-FUTURES")` → (USD, inverse).
 
-- [ ] [TEST] P1. **Unit tests: Kraken Futures symbol normalisation.** Test perp + dated + unknown symbol edge cases. ≥6
-      cases.
+- [x] [TEST] P1. **Unit tests: Kraken Futures symbol normalisation.** (MTDS@50728c7) 8 cases in
+      `tests/unit/test_kraken_bitfinex_symbol_normalization.py`: PF_XBT→BTC, PF_ETH→ETH, PF_SOL→SOL,
+      FF_XBTUSD20251226→BTC-2025-12-26, FF_ETHUSD20250328→ETH-2025-03-28, PI_XBT→BTC, unknown passthrough, lowercase.
 
 ### 2C: BitFinex Derivatives adapter via Tardis (PARALLEL with 2A/2B/2D/2E)
 
@@ -137,8 +137,10 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `venue_instrument_type_to_tardis`. Name kept as BITFINEX-FUTURES (downstream parquet paths exist; renaming =
       manifest migration out of scope).
 
-- [ ] [SCRIPT] P1. **BitFinex symbol normalisation.** Pattern `tXXXF0:USTF0` → extract `XXX` as coin. Handle edge cases:
-      XBTF0 → BTC (BitFinex uses XBT not BTC). Add normalisation constant to UAC.
+- [x] [SCRIPT] P1. **BitFinex symbol normalisation.** (MTDS@50728c7) `normalise_bitfinex_futures_symbol()` in
+      `tardis_shared.py`: pattern `tXXXF0:USTF0` → extracts `XXX`; XBT alias → BTC; unrecognised passthrough.
+      `derive_settlement_dimensions("BITFINEX-FUTURES")` → (USDT, linear) added. Tests in
+      `test_kraken_bitfinex_symbol_normalization.py` (7 BitFinex cases + 2 settlement-dims cases).
 
 ### 2D: Drift adapter — S3 archive + Data API (PARALLEL with 2A/2B/2C/2E)
 

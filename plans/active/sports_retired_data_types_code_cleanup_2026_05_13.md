@@ -74,21 +74,24 @@ intent says these are retired; code must reflect that.
 
 **Phase 1 — instruments-service orchestrator.py cleanup** (~0.6 cal AI-days)
 
-- [ ] [CODE] P2. Delete `_DATA_TYPE_TO_PIPELINE_MODE` entries for retired types (3 entries).
-- [ ] [CODE] P2. Refactor TM entity dispatch (lines 1196, 1220, 1975, 2519): remove TRANSFERMARKT_LEAGUES;
-      PLAYER_VALUES path unchanged.
-- [ ] [CODE] P2. Refactor SFI entity dispatch (lines 2012-2013, 2551): keep only SFI_PROGRESSIVE_STATS.
-- [ ] [CODE] P2. Delete source-dispatch tuples (lines 1292-1295) and list entries (1575-1577).
-- [ ] [CODE] P2. Delete SFI_STANDINGS write callsites (5927-5951). Verify no downstream consumer.
-- [ ] [QG] P2. `cd instruments-service && bash scripts/quality-gates.sh`. Push.
+- [x] [CODE] P2. Delete `_DATA_TYPE_TO_PIPELINE_MODE` entries for retired types (3 entries). (`instruments-service@a0a720e`)
+- [x] [CODE] P2. Refactor TM entity dispatch (lines 1196, 1220, 1975, 2519): remove TRANSFERMARKT_LEAGUES;
+      PLAYER_VALUES path unchanged. (`instruments-service@a0a720e`)
+- [x] [CODE] P2. Refactor SFI entity dispatch (lines 2012-2013, 2551): keep only SFI_PROGRESSIVE_STATS. (`instruments-service@a0a720e`)
+- [x] [CODE] P2. Delete source-dispatch tuples (lines 1292-1295) and list entries (1575-1577). (`instruments-service@a0a720e`)
+- [x] [CODE] P2. Delete SFI_STANDINGS write callsites (5927-5951). Verify no downstream consumer. (`instruments-service@a0a720e` — was already unreachable, dead code deleted)
+- [x] [QG] P2. `cd instruments-service && bash scripts/quality-gates.sh`. Push. (✅ ALL QUALITY GATES PASSED — pushed to LDR)
 
 **Phase 2 — deployment-api data_status_service.py cleanup** (~0.4 cal AI-days)
 
-- [ ] [CODE] P2. Audit each retired-type reference in `data_status_service.py`. Decide KEEP vs REMOVE
-      per the pre-audit table.
-- [ ] [CODE] P2. Update `_is_transfer_window_venue` check at line 1226 of `tests/unit/test_data_status_service.py`
-      to remove TRANSFERMARKT_LEAGUES reference if no longer applicable.
-- [ ] [QG] P2. `cd deployment-api && bash scripts/quality-gates.sh`. Push.
+- [x] [CODE] P2. Audit each retired-type reference in `data_status_service.py`. Decide KEEP vs REMOVE
+      per the pre-audit table. (deployment-api@5e19878 — removed from _SPARSE_SPORTS_ENTITIES; historical
+      comments at lines 250/265/272/667/5478 preserved per plan)
+- [x] [CODE] P2. Update `_is_transfer_window_venue` check at line 1226 of `tests/unit/test_data_status_service.py`
+      to remove TRANSFERMARKT_LEAGUES reference if no longer applicable. (deployment-api@5e19878 — removed
+      TRANSFERMARKT_LEAGUES assertion from TestTransferWindowAwareness; 128/128 tests pass)
+- [x] [QG] P2. `cd deployment-api && bash scripts/quality-gates.sh`. Push. (✅ 2822/2822 pass baseline; 128/128
+      pass for test_data_status_service.py; pushed deployment-api@5e19878 to LDR)
 
 **Phase 3 — verification** (~0.2 cal AI-days)
 

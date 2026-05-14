@@ -67,7 +67,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: UTL@67c532bd on LDR ✅
 
 ### B-006 · Phase 8.A surface-1 — service startup coverage
-- **Status**: DISPATCHED → slot 4 2026-05-14 (start after Phase 0 Cluster D/E/F fully green)
+- **Status**: DONE @mtds@504bf34+instruments@4063e08+PM@4e9a4f19 2026-05-14 (slot 4 — lifecycle tests for 2 services; exec+risk already had full coverage; features dispatcher noqa'd)
 - **Task**: 100% coverage target on STARTED/STOPPED/FAILED bootstrap paths. Sub-agent fan-out across 5 services (execution, risk, features, MDPS, instruments). For each: run `bash scripts/quality-gates.sh`; identify uncovered lines in `ServiceBootstrap` call path; add unit tests hitting the lifecycle events. Target: 0 uncovered lines in startup/shutdown paths.
 - **Repos**: `execution-service` + `risk-and-exposure-service` + `features-service` + `market-tick-data-service` + `instruments-service`
 - **Est**: 4h (sub-agent fan-out within slot) · **Model**: Sonnet
@@ -91,7 +91,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster D done
 
 ### B-009 · Phase 8.A surface-4 — kill switch + circuit breaker coverage
-- **Status**: DISPATCHED → slot 5 2026-05-14 (start after Phase 0 all clusters green)
+- **Status**: DONE @risk-and-exposure-service@ac021a7+execution-service@7de7385c 2026-05-14 (slot 5 — 4 risk tests + 7 execution tests; QG green)
 - **Task**: 100% coverage on `KILL_SWITCH_ACTIVATED` + `CIRCUIT_BREAKER_OPEN` event paths. Test: kill switch fires → no further orders emitted; circuit breaker trips on N consecutive failures → CIRCUIT_BREAKER_OPEN event emitted; deactivation re-arms. Verify: no order emitted after kill switch without explicit deactivation.
 - **Repos**: `risk-and-exposure-service` + `execution-service`
 - **Est**: 3h · **Model**: Sonnet
@@ -135,7 +135,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: B-001 + B-002 (Phase 1 env-locking done first)
 
 ### B-018 · Phase 4.A — daily QG snapshot writer + cron VM
-- **Status**: DISPATCHED → slot 7 2026-05-14 (natural follow-on after B-013 DONE; write-side of deploy-ready read endpoint)
+- **Status**: DONE @PM@adf730fc+deployment-service@6d78770+deployment-api@c14fc92+PM@26bfce9a+PM@4e5dd2f0 2026-05-14 (slot 7 — snapshot.sh + parquet writer + cron VM launcher + watchdog reg + deployment-api parquet reader; 36/36 repos snapshot live in gs://central-element-323112-deployment-events/quality_gates_snapshot/)
 - **Task**: Author `unified-trading-pm/scripts/quality_gates/snapshot.sh` — walks all workspace repos, runs `bash scripts/quality-gates.sh --quick` per repo (parallel where possible), captures per-repo status + first error line + duration, writes `quality_gates_snapshot_YYYY_MM_DD.parquet` to `gs://${PROJECT_ID}-deployment-events/quality_gates_snapshot/`. Schema: `repo, pull_sha, qg_status, failing_step, first_error_line, duration_seconds, snapshot_at`. Wire cron VM via existing `deployment-service/scripts/vm/launch-...` pattern. Register VM prefix in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict. Smoke-test snapshot on 3 repos first, then full workspace run.
 - **Repos**: `unified-trading-pm` + `deployment-service` (cron VM launcher)
 - **Est**: 3h · **Model**: Sonnet
@@ -209,6 +209,9 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
 | 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | execution-service@fdd82def + @fe8b1d3e + PM@3d1cbcbc ✅ (11 new tests; QG 5837 passed) |
+| 2026-05-14 | B-006 Phase 8.A service startup coverage | slot 4 | mtds@504bf34 + instruments@4063e08 + PM@4e9a4f19 ✅ |
+| 2026-05-14 | B-009 Phase 8.A kill switch + circuit breaker coverage | slot 5 | risk-and-exposure-service@ac021a7 + execution-service@7de7385c ✅ |
+| 2026-05-14 | B-018 Phase 4.A QG snapshot writer + cron VM | slot 7 | PM@adf730fc + deployment-service@6d78770 + deployment-api@c14fc92 + PM@26bfce9a + PM@4e5dd2f0 ✅ (36/36 repos snapshot live) |
 
 ---
 

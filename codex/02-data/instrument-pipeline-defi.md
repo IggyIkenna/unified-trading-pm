@@ -1,7 +1,7 @@
 ---
 scope: [engineer, admin]
 status: canonical
-last_reviewed: 2026-05-13
+last_reviewed: 2026-05-14
 ---
 
 # DeFi Instrument Pipeline
@@ -17,10 +17,16 @@ are required by which strategy type.
 ```
 instruments-service
     │  Provides: InstrumentRecord objects with canonical instrument_key
-    │  Adapters (under reference_data/adapters/defi/ as of 2026-05-12 — refreshed per codex audit IN-4):
-    │    aave_v3, balancer, benqi, compound_v3, curve, drift, eigenlayer, ethena, etherfi, ethfi,
-    │    euler_v2, fluid, jito, kamino, lido, marinade, morpho, orca, radiant, raydium, spark,
-    │    uniswap_v2, uniswap_v3, uniswap_v4, venus (25 DeFi adapters total).
+    │  Adapters (under reference_data/adapters/defi/ as of 2026-05-14 — refreshed per Phase 2J audit):
+    │    Lending: aave_v3, benqi, compound_v3, euler_v2, fluid, kamino, morpho, radiant, spark, venus
+    │    DEX: balancer, curve, drift, lifinity, lighter, mango, meteora, orca, pacifica, phoenix, picasso,
+    │         raydium, uniswap_v2, uniswap_v3, uniswap_v4, zeta
+    │    DEX agg: jupiter
+    │    LST: etherfi, ethfi, jito, lido, marinade, rocket_pool, solblaze
+    │    Vault: beefy, convex, idle, pendle, yearn
+    │    Restaking + LRT: eigenlayer, jito_restaking, karak, kelpdao, puffer, renzo, symbiotic
+    │    Other: benqi, cambrian, ethena, flash_trade, pyth, solayer
+    │    (50 DeFi adapters total; excludes _solana_utils.py, _lst_utils.py, extended.py base helpers)
     │  CeFi adapters (under reference_data/adapters/cefi/): binance, hyperliquid, et al. — NOT DeFi.
     ▼
 market-tick-data-service (MTDS)
@@ -219,7 +225,7 @@ RewardScheduleEntry(
 | `instruments_service/reference_data/adapters/defi/eigenlayer.py`| EIGEN governance token adapter                               |
 | `instruments_service/reference_data/adapters/defi/ethfi.py`     | ETHFI governance token adapter                               |
 | `instruments_service/reference_data/adapters/defi/lido.py`      | stETH/wstETH LST adapters                                    |
-| `instruments_service/reference_data/adapters/defi/` (full set)  | 25 DeFi adapters; see Pipeline-Stages diagram for full list  |
+| `instruments_service/reference_data/adapters/defi/` (full set)  | 50 DeFi adapters; see Pipeline-Stages diagram for full list  |
 | `instruments_service/reference_data/factory.py`                 | Adapter registry (`CANONICAL_VENUE_TO_ADAPTER`, `_ADAPTERS`) — runtime auto-registration mechanism documented per codex audit IN-13 |
 | `unified_api_contracts/registry/reward_schedules.py`            | EIGEN/ETHFI reward schedule SSOT                             |
 | `unified_api_contracts/registry/defi_venues.py`                 | `ALL_DEFI_VENUES` / `DEFI_VENUE_PHASE` / `MTDS_DEFI_VENUES` (~70 DeFi venue ids) |
