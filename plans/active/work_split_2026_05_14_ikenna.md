@@ -500,11 +500,11 @@ are pinged to re-pull LDR + read their updated stack.
 
 | Slot 9 item                                                             | New owner       | Rationale                            |
 | ----------------------------------------------------------------------- | --------------- | ------------------------------------ |
-| Cluster A ×→x sed mechanical (~0.2)                                     | **Slot 6**      | Small mechanical fits slot 6 cleanup |
+| Cluster A ×→x sed mechanical (~0.2) ✅ DONE UAC@046f9d6                 | **Slot 6**      | Done                                 |
 | `solana_defi_coverage_gaps` successor E — Kamino/Marinade Native (~2.4) | **Slot 2**      | DeFi catalogue theme                 |
 | `honest_coverage_cron_vm_scheduling` (~2.4)                             | **Slot 8**      | Audit/ops verification theme         |
 | `mtf_intraday_micro_regime_policy` 2 dict entries (~0.6)                | **Slot 5**      | TradFi-adjacent micro-regime         |
-| `strategy_paper_vm_nautilus_trader_missing_dep` re-verify (~0.2)        | **Slot 6**      | Tiny mechanical                      |
+| `strategy_paper_vm_nautilus_trader_missing_dep` re-verify (~0.2) ✅ DONE e2e-testing@4e4a5da | **Slot 6** | Done: resolved (benchmark fills) |
 | `cross_asset_instruments_service_scope` triage (~3.6)                   | **Slot 2**      | DeFi catalogue + cross-asset         |
 | `bucket_name_ssot_canonicalisation_2026_05_10` workspace flip (~1.6)    | **Slot 8**      | Audit cleanup                        |
 | `cme_polymarket_arb_2026_05_08` close-out (~2.4)                        | **Slot 2**      | DeFi/Polymarket overlap              |
@@ -512,7 +512,7 @@ are pinged to re-pull LDR + read their updated stack.
 | `code_freeze_migrate_backfill_sequencing_2026_05_10` audit (~3.6)       | **Slot 8**      | Audit theme                          |
 | Phase 6.9 workspace QG flip-sweep (~2.4)                                | **Slot 7**      | Writegate Phase 6.x owner            |
 | `governance_qg_automation_gaps_post_cutover` codification (~3.0)        | **Slot 1 main** | Orchestrator-flavoured               |
-| ORPHAN MTDS test cluster E — tardis network-mocking (~0.4)              | **Slot 6**      | Mechanical mock-wiring               |
+| ORPHAN MTDS test cluster E — tardis network-mocking (~0.4) ✅ DONE MTDS@316996f | **Slot 6** | Done: mock_session.closed=False fix  |
 | ORPHAN Stream C C-enum.3+4 archetype enum flips (~1.8)                  | **Slot 2**      | DeFi archetype canonicalisation      |
 | V2: `writegate Phase 6.9 expanded scope` (12.6 cal left)                | **Slot 7**      | Writegate owner                      |
 | V2: `expected_universe_v2_design_2026_05_08` (3.6 cal)                  | **Slot 4**      | Sports/prediction universe           |
@@ -527,7 +527,7 @@ All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services
 
 | Slot 11 item                                                                    | New owner                 | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| alerting D.5+D.7 codex violations (~0.4)                                        | **Slot 6**                | Alerting theme                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| alerting D.5+D.7 codex violations (~0.4) ✅ DONE (pre-existing — UAC imports already present, no violations found 2026-05-14) | **Slot 6** | Done: issue doc closed |
 | features-service size violations 3 files (~0.4)                                 | **Slot 4**                | Sports `batch_handler.py` 914L (slot 4 owns sports); other 2 mechanical decomposition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Tardis docstring + codex (✅ DONE PM@468c7e8d)                                  | —                         | Already shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Sports scrapers cross-links (✅ DONE PM@3e349c65)                               | —                         | Already shipped                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -562,9 +562,11 @@ pickups. (2) Sports scrapers formalisation per HARD RULE. (3) Tardis docstring c
 status per "External Data Is Always Available" HARD RULE. Slot 11 is a fresh spawn beyond standard 9 + emergency
 slot 10.
 
-1. **`alerting_service_codex_violations_d5_d7_2026_05_14`** — 4 codex compliance fixes in
+1. ✅ **`alerting_service_codex_violations_d5_d7_2026_05_14`** — 4 codex compliance fixes in
    `alerting_service/subscribers/governance_forum_watcher.py` + `stablecoin_issuer_pause_subscriber.py`: raw
    `response.json()` → Pydantic `model_validate()`; empty-string fallbacks → fail fast. (refactor 0.4×, ~1 = 0.4 cal)
+   **DONE 2026-05-14 slot 6**: Pre-existing — files already import from `unified_api_contracts.internal.alerting`
+   (`GovernanceForumProposal` + `IssuePauseEvent`) + use `model_validate()`. No code change required; issue doc filed.
 2. **`features_service_size_violations_2026_05_14`** (P2 Ikenna-owned) — 3 size violations:
    `sports/cli/handlers/batch_handler.py` 914L (max 900);
    `cross_instrument/.../stablecoin_aggregate_exposure.py:compute()` 89L (max 50);
