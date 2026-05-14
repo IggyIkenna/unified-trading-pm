@@ -30,8 +30,7 @@ scope: [engineer, admin]
 > Operator-runbook for every cutover + June-1 onboarding step:
 > [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
 >
-> Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` PENDING at
-> `execution-service/execution_service/custody/cloud_kms.py` per Plan Phase 3.C.1.
+> Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` **SHIPPED** at execution-service@`d45d24b4` per Plan Phase 3.C.1 (envelope-encrypted PK via Cloud HSM CMK). Bridge function `custody_config_from_wallet_provisioning` **SHIPPED** at execution-service@`fdd82def` (B-012 Phase 8.A) — maps `WalletProvisioningConfig.signing_surface` → `CustodyConfig` at config-parse time; see §2.5 + §1 factory table.
 > Fireblocks adapter (§ C) — `FireblocksCustodyProvider` PENDING per Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER.
 
 This is the single SSOT for custody integration in the Unified Trading System. It folds in the previous per-provider
@@ -116,7 +115,7 @@ Frozen dataclass controlling provider selection and credentials:
 | ----------------- | ------------------------------------ | ------------------------------------------ | -------------------- |
 | `"mock"`          | `MockCustodyProvider`                | None                                       | `MOCK`               |
 | `"local_key"`     | `LocalKeyCustodyProvider`            | `private_key`, `rpc_url`                   | `LOCAL_KEY`          |
-| `"cloud_kms"`     | `CloudKmsCustodyProvider` (PENDING — Plan Phase 3.C.1) | `kms_key_uri`, `private_key_secret_ref` (wrapped ciphertext) | `CLOUD_KMS_ENCRYPTED` **(May-23 cutover default)** |
+| `"cloud_kms"`     | `CloudKmsCustodyProvider` (SHIPPED execution-service@`d45d24b4`; see §2.5) | `kms_key_uri`, `private_key_secret_ref` (wrapped ciphertext) | `CLOUD_KMS_ENCRYPTED` **(May-23 cutover default)** |
 | `"copper"`        | `CopperCustodyProvider`              | `api_key`, `api_secret`, `organization_id` | `COPPER_MPC`         |
 | `"fireblocks"`    | `FireblocksCustodyProvider` (PENDING — Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER) | `api_key`, `api_secret`, `vault_account_id` | `FIREBLOCKS_MPC`     |
 | `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise) | `api_key`, `api_secret`, `organization_id` | *(routes via Copper; CEFFU stub-only)* |
@@ -477,6 +476,55 @@ Secret Manager keys are listed in §8 Configuration below alongside Copper's.
 - [ ] Daily settlement window timing — what UTC hour does CEFFU finalise end-of-day P&L?
 - [ ] Exact REST endpoint paths + authentication header naming convention (Copper-style vs CEFFU-specific).
 - [ ] Sandbox base URL for staging-only paper-trade smokes.
+
+### §2.5 CloudKmsCustodyProvider — SHIPPED (execution-service@`d45d24b4`)
+
+Cloud HSM CMK envelope-encrypted private key signing. The **May-23 cutover default** for DeFi execution. No keys in memory beyond the signing window; envelope decrypted via Cloud KMS API at signing call time.
+
+Constructor fields (resolved from `CustodyConfig`):
+
+| Field | Type | Description |
+|---|---|---|
+| `kms_key_uri` | `str` | Full Cloud KMS key URI (`projects/.../cryptoKeyVersions/...`) for the HSM-backed CMK |
+| `private_key_secret_ref` | `str` | Secret Manager ref to the CMK-encrypted private key ciphertext |
+| `rpc_url` | `str` | JSON-RPC endpoint (resolved from UAC `CHAIN_RPC_TEMPLATES` at service startup) |
+| `cloud_provider` | `str` | `"gcp"` (default) or `"aws"` — routes to the correct KMS client implementation |
+
+Flow (sign_transaction):
+
+```
+1. Fetch encrypted ciphertext from Secret Manager (private_key_secret_ref)
+2. Decrypt ciphertext via Cloud KMS decrypt API (kms_key_uri) — plaintext PK available for signing window only
+3. Sign raw tx bytes via web3.eth.account.sign_transaction
+4. Wipe plaintext PK from local scope immediately after signing
+5. Return SignedTransaction with raw_signed + tx_hash
+```
+
+HSM CMKs provisioned 2026-05-12 (5 asset_groups × `wallets-prod` + `wallets-staging` KeyRings, `asia-northeast1`, 90-day auto-rotation). IAM Decrypter bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only.
+
+#### Bridge function `custody_config_from_wallet_provisioning` (execution-service@`fdd82def`, B-012 Phase 8.A)
+
+`execution_service/custody/factory.py::custody_config_from_wallet_provisioning(wallet, rpc_url, cloud_provider)`.
+
+Maps a `WalletProvisioningConfig` (loaded from GCS `wallet_provisioning.json`) to a `CustodyConfig` for `get_custody_provider()`. Calls `wallet.validate()` first — credential mismatches raise at config-parse time, not at trade time.
+
+```python
+# Caller pattern (execution-service startup / ApiKeyReloader reload):
+config = custody_config_from_wallet_provisioning(wallet_provisioning, rpc_url=resolved_rpc)
+provider = get_custody_provider(config)
+```
+
+Internal dispatch via `_SURFACE_TO_PROVIDER` dict:
+
+| `WalletProvisioningConfig.signing_surface` | `CustodyConfig.provider` |
+|---|---|
+| `CLOUD_KMS_ENCRYPTED` | `"cloud_kms"` |
+| `COPPER_MPC` | `"copper"` |
+| `FIREBLOCKS_MPC` | `"fireblocks"` |
+| `LOCAL_KEY` | `"local_key"` |
+| `MOCK` | `"mock"` |
+
+Test coverage: `tests/unit/custody/test_cloud_kms_provider.py` — 11 tests covering all 5 `SigningSurface` mappings, `validate()`-at-bridge-time enforcement, and end-to-end KMS mock decrypt (no real keys; `unittest.mock.patch` on KMS client).
 
 ---
 
