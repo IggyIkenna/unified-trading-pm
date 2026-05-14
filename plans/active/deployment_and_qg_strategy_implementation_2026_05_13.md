@@ -183,7 +183,7 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 - [ ] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/ schemas + assertion helpers. Cover happy + every validation error.
 - [ ] [AGENT] P0. **VM deploy scripts surface** (1 sub-agent): `bats` tests (or equivalent) for every `deployment-service/scripts/vm/launch-*.sh` covering env-var validation, tarball SHA assertion, singleton-lock, MANIFEST_PER_VM_SHARDS=true assertion, VM_PREFIX_TO_BUCKET registration, failure-path FAILED event emit. **CRITICAL — covers "bad VM starts for dumb reasons"**.
 - [ ] [AGENT] P0. Deploy-script-deps surface (1 sub-agent): UTL `bucket_naming.resolve_bucket_name()`, `cloud_interface/factory.py`, env-aware resolvers. Every (cloud, env, kind, asset_group) cell + failure paths.
-- [ ] [AGENT] P0. Manifest writer + emission publisher (1 sub-agent): UTL `manifest_writer.py` + `emission_publisher.py` — gaps + edge cases (multi-worker shard isolation, ManifestShaDriftError, per-asset-group empty rules).
+- [x] [AGENT] P0. Manifest writer + emission publisher (1 sub-agent): UTL `manifest_writer.py` + `emission_publisher.py` — gaps + edge cases (multi-worker shard isolation, ManifestShaDriftError, per-asset-group empty rules). (unified-trading-library@e6877d2 — B-007: record_failed with explicit attempted_at; B-008: new tests/unit/test_emission_publisher.py — 100% line coverage on emission_publisher.py)
 - [ ] [AGENT] P0. Custody + wallet (1 sub-agent): execution-service `custody/cloud_kms.py` + UAC `WalletProvisioningConfig` + signing surfaces.
 - [ ] [AGENT] P0. Kill switch + circuit breakers (1 sub-agent): UTL `kill_switch/` + UAC kill-switch event taxonomy. Cover all 3 tiers (wallet/asset_group/firm-wide).
 
