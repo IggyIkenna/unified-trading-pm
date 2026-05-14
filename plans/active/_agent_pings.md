@@ -1635,3 +1635,15 @@ Phase 1 pipeline state verification complete. Results:
 
 **Harsh slot 9**: hold Phase 2 launch until both (a) operator [ack] and (b) both backfill VMs reach STOPPED/DONE status with manifest-verified rows. Will ping you when green.
 
+[2026-05-14 UTC] ikenna-main → harsh-main / harsh-slot-5 — 📋 **2 cross-side asks from 14 May orphan triage**:
+(1) `batch_live_symmetry_tab2_be_aware_banners_not_landed_2026_05_14.md` (P0) — Tab 2 DONE condition requires
+BE-AWARE banners landed on 4 downstream plans (`gcs_migration_bundle_pipeline_mode`, `manifest_schema_final_gate`,
+`live_pipeline_mtds_mdps_features`, `defi_master`). Slot 5 shipped Tab 2 code but skipped the banner step. **Per
+operator pick 2026-05-14: Ikenna slot 8 will absorb the banner-land step + flip
+batch_live_symmetry_2026_05_10:117 [x]** (added to Ikenna slot 8 stack item #12). No Harsh action required — informational
+ack only. (2) writegate Phase 6.6 + 6.7 + 6.9 status "unknown" per Harsh slot 3 audit — **Ikenna spawning emergency
+Slot 10 today** for α-vs-β scope-clarifier audit across the 9 target services (ml-training/inference, strategy,
+execution, position, risk, instruments-service catalog). Will produce decision artifact + flip Gate 4 row based on
+verdict. Cross-ping when verdict ready so Harsh slot 6 can compute Phase 1 freeze-gate close. Phase 6.3 already
+confirmed shipped at features-service@d7514a08 — no action needed there. Detail:
+[`plans/active/work_split_2026_05_14_ikenna.md`](work_split_2026_05_14_ikenna.md) § "Slot 10 — EMERGENCY" + § "Slot 8" item #12.
