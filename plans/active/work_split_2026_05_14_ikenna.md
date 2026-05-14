@@ -126,10 +126,12 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
 `emerging_perp_adapters_diagnosed_2026_05_*` (P0) + `helius_solana_rpc_for_validation` (P1) +
 `solana_defi_coverage_gaps` (successor A) + `defi_master_2026_05_07` Drift/Jito subset.
 
-1. **`emerging_perp_venue_adapters_broken` P0 root-cause fix** — adapter-level fixes for the broken-perp-venue list;
-   each fix lands as separate commit. (research 1.2×, ~3 = 3.6 cal)
-2. **`emerging_perp_adapters_diagnosed` P0** — write fix notes / diagnosis into adapter docstrings per Findings Triage
-   "fix in code if you have context". (research 1.2×, ~2 = 2.4 cal)
+1. ✅ **`emerging_perp_venue_adapters_broken` P0 root-cause fix** — adapter-level fixes for the broken-perp-venue list;
+   each fix lands as separate commit. (research 1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): MTDS@7d45b21 — ASTER
+   AsterBaseClient.base_url_futures corrected to fapi.asterdex.com; instruments-service@c0c6593 — ASTER P0 root cause fix.
+2. ✅ **`emerging_perp_adapters_diagnosed` P0** — write fix notes / diagnosis into adapter docstrings per Findings Triage
+   "fix in code if you have context". (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14):
+   instruments-service@7c2fc5f — EXTENDED-STARKNET diagnosis comment with stale API endpoint note.
 3. ✅ **`helius_solana_rpc_for_validation` P1** — wire Helius into the Solana RPC validation path (replaces
    Infura/Alchemy for Solana per UAC `CHAIN_RPC_TEMPLATES`). (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14):
    execution-service@a300f7c — `capture_golden_swaps.py` Helius Solana RPC dispatch for SOLANA_CLMM/AMM shapes.
