@@ -14,6 +14,8 @@ locked_since: 2026-05-08
 
 ## Current shift: 2026-05-14 afternoon — Phase 0 QG clean-start (Harsh-side)
 
+> 🚨 **FINAL WAVE — DAY WRAP-UP @12:41 UTC**: Each slot has been pinged with their FINAL assignment for today's session. No new dispatches will follow. Slots ship what they can in remaining time + stand down at DONE or BLOCKED. Phase 0 is fully green (all clusters); Phase 8.A surfaces in flight. May-23 critical path resumes tomorrow.
+
 **Work-split**: [`plans/active/work_split_2026_05_14_harsh.md`](../plans/active/work_split_2026_05_14_harsh.md)
 **Model**: Sonnet 4.6 / thinking: high (all slots).
 **Cycle context**: Day-3 of 4-day density push (2026-05-12 → 2026-05-15). Phase 0 = QG clean-start sweep needed before Phase 8 surface-coverage.
