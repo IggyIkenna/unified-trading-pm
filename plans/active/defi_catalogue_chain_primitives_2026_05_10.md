@@ -603,8 +603,8 @@ Per-protocol todo template (instantiated 27 times):
 
 **Codex SSOT update (Phase 2 boundary)**:
 
-- [ ] [AGENT] P0. **2J — Update `codex/02-data/instrument-pipeline-defi.md`** with the 27 new protocol adapters +
-      cluster validation rules per protocol.
+- [x] [AGENT] P0. **2J — Update `codex/02-data/instrument-pipeline-defi.md`** with the 27 new protocol adapters +
+      cluster validation rules per protocol. (PM@`291f81d7` — adapter count 25→50, full categorized adapter list)
 
 **Full-execution criterion**:
 
@@ -789,7 +789,7 @@ Per-protocol todos (expanded from template):
 
 **Codex SSOT updates (Phase 3 boundary)**:
 
-- [ ] [AGENT] P0. **3J — Update `codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type matrix.
+- [x] [AGENT] P0. **3J — Update `codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type matrix. (PM@`291f81d7` — vault/restaking/LST coverage updated with adapter-shipped status)
 - [ ] [AGENT] P0. **3K — Update `codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
       from Phase 1A.
 

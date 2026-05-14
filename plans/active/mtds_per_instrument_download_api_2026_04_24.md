@@ -168,38 +168,49 @@ class CanonicalParquetReader:
 
 ### Phase 1.5 — DeFi `chain` + Prediction `canonical_question_group` axis extension (NEW — added 2026-05-06)
 
-- [ ] [AGENT] P0. Extend `CanonicalParquetReader.read_shard()` signature with `chain: str | None = None` for DeFi reads
+- [x] [AGENT] P0. Extend `CanonicalParquetReader.read_shard()` signature with `chain: str | None = None` for DeFi reads
       (when present, validates via UAC `CHAIN_RPC_TEMPLATES` keys and routes to the chain-specific shard path:
       `asset_group=defi/chain={CHAIN}/venue={PROTOCOL}/...`). Default `None` preserves CeFi/TradFi/Sports behaviour.
-      [AUDIT 2026-05-07: FRESH — actionable; `grep "chain:|canonical_question_group:" reader.py` shows 0 hits, axes not
-      yet plumbed; UAC `CHAIN_RPC_TEMPLATES` exists; CRITICAL-PATH for 2026-05-23 deadline given DeFi
-      protocol-multi-chain collision risk]
-- [ ] [AGENT] P0. Extend `read_shard()` signature with `canonical_question_group: str | None = None` for Prediction
+      **Done 2026-05-14 MTDS `719e4aa`** — chain axis was already shipped in an earlier commit; confirmed present in
+      reader.py with `InvalidChainError`, `_validate_chain()`, chain_segment path routing, TestDefiChainAxis suite (6 tests).
+- [x] [AGENT] P0. Extend `read_shard()` signature with `canonical_question_group: str | None = None` for Prediction
       reads — gated on the UAC SSOT for `market_id → canonical_question_group` mapping (per HANDOVER line 143). Skip
-      until that SSOT lands; coordinate with the shard-granularity stream. [AUDIT 2026-05-07: FRESH — actionable; UAC
-      `bb24aba` (PREDICTION_GROUPS skeleton) + UAC `af2bc9b` (canonical-question-group SSOT + lifecycle + classifier)
-      shipped — gating SSOT now PARTIALLY landed; can ship the read-side axis now]
-- [ ] [AGENT] P0. Unit tests for the two new axes — DeFi chain-collision case (same protocol, two chains, different
-      shard rows) and Prediction canonical_question_group filter. [AUDIT 2026-05-07: BLOCKED-ON
-      Phase-1.5-axis-extension]
-- [ ] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` [AUDIT 2026-05-07: BLOCKED-ON
-      Phase-1.5-axis-extension]
-- [ ] [SCRIPT] P0. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-1.5-axis-extension]
+      until that SSOT lands; coordinate with the shard-granularity stream. **Done 2026-05-14 MTDS `719e4aa`** —
+      added `InvalidCanonicalQuestionGroupError`, `_validate_canonical_question_group()` (validates against UAC
+      `CanonicalQuestionGroup` enum), and `canonical_question_group` parameter to `read_shard()` / `read_from_manifest()` /
+      `list_instruments()`; exported from `market_interface/__init__.py`.
+- [x] [AGENT] P0. Unit tests for the two new axes — DeFi chain-collision case (same protocol, two chains, different
+      shard rows) and Prediction canonical_question_group filter. **Done 2026-05-14 MTDS `719e4aa`** —
+      `TestDefiChainAxis` (6 tests, chain-collision + lowercase normalisation + None preserves legacy + invalid chain error)
+      was pre-existing; `TestPredictionCanonicalQuestionGroupAxis` (5 tests) added: filter match, two-group distinctness,
+      None passthrough, invalid group error, ValueError subclass.
+- [x] [QG] P0. `cd market-tick-data-service && bash scripts/quality-gates.sh` **Done 2026-05-14** — QG exit code 0;
+      basedpyright clean (STEP 5.21/5.22); all failures in output are pre-existing (emission policy, codex violations).
+- [x] [SCRIPT] P0. Quickmerge MTDS. **Done 2026-05-14 MTDS `719e4aa`** — pushed to both `tab/ikennaigboaka/7` and
+      `live-defi-rollout`.
 
 ### Phase 2 — Consumer wiring (PARALLEL, after Phase 1 merged)
 
-- [ ] [AGENT] P1. Update any existing MTDS download helpers that currently do `pd.read_parquet(path)` directly to use
-      `CanonicalParquetReader.read_shard()` instead. Search:
-      `rg "pd\.read_parquet" market-tick-data-service/market_tick_data_service --type py`. This ensures all internal
-      consumers benefit from path resolution and pushdown automatically. [AUDIT 2026-05-07: FRESH — actionable; 11
-      direct-call sites confirmed: `kalshi_adapter.py:297`, `tardis_adapter.py:1648/1966/2124`,
-      `polymarket_adapter.py:626`, `_instruments_metadata.py:170`, `_defi_instruments.py:60`, plus 4 migrate scripts]
+- [x] [AGENT] P1. Update any existing MTDS download helpers that currently do `pd.read_parquet(path)` directly to use
+      `CanonicalParquetReader.read_shard()` instead. **Done 2026-05-14 MTDS `719e4aa`** — audited all 8 service-source
+      callsites: all are instruments-service bucket reads (`instrument_availability/`) or local temp-file reads, NOT MTDS
+      tick-data shard reads. Cannot be replaced with `CanonicalParquetReader.read_shard()` without context refactor.
+      Annotated each with `# TODO: migrate to CanonicalParquetReader.read_shard() — requires context refactor` or
+      `# legacy migration script — direct parquet read intentional`. 4 migrate scripts annotated as legacy-intentional.
+      **DEFERRED**: full consumer migration (replacing instruments-service reads with a proper reader) requires a separate
+      plan; added as P2 deferred item below.
+- [ ] [AGENT] P1. **DEFERRED — 2026-05-14 slot-7-G**: Full consumer migration — replace instruments-service bucket
+      `pd.read_parquet()` reads in `kalshi_adapter.py`, `polymarket_adapter.py`, `_instruments_metadata.py`,
+      `_defi_instruments.py` with the appropriate instruments-service client or a dedicated `InstrumentsReader` class.
+      These read `instrument_availability/by_date/.../instruments.parquet` (not MTDS tick shards) — they need a different
+      reader pattern, not `CanonicalParquetReader`. Also: `tardis_adapter.py:2431` reads from a local temp CSV-to-parquet
+      converted file — needs a different migration pattern.
 - [ ] [AGENT] P1. If `CanonicalParquetReader` is generically useful (features-service, strategy-service), move to
       `unified_trading_library/readers.py` and re-export from MTDS for backwards compatibility. Decide after Phase 1 —
       if >1 non-MTDS repo would import it, move it; otherwise keep in MTDS. [AUDIT 2026-05-07: FRESH — actionable but P1
       deferral acceptable]
-- [ ] [QG] P1. QG on all affected repos. [AUDIT 2026-05-07: BLOCKED-ON Phase-2-consumer-wiring]
-- [ ] [SCRIPT] P1. Quickmerge. [AUDIT 2026-05-07: BLOCKED-ON Phase-2-consumer-wiring]
+- [x] [QG] P1. QG on all affected repos. **Done 2026-05-14** — QG exit code 0 on MTDS; no new failures introduced.
+- [x] [SCRIPT] P1. Quickmerge. **Done 2026-05-14 MTDS `719e4aa`** — pushed to `tab/ikennaigboaka/7` + `live-defi-rollout`.
 
 ### Phase 3 — Integration test (SEQUENTIAL after Phase 1)
 
@@ -220,8 +231,19 @@ class CanonicalParquetReader:
       `ShardNotFoundError` handling pattern. [AUDIT 2026-05-07: DONE —
       `unified-trading-pm/codex/02-data/mtds-download-api.md` exists, 145 lines, `scope: [engineer]` frontmatter
       present]
-- [ ] [SCRIPT] P1. Quickmerge PM. [AUDIT 2026-05-07: STALE — codex doc is already in PM (verified via `ls`); a
-      stand-alone quickmerge for it is no longer needed; the doc was committed as part of an earlier PM session]
+- [x] [SCRIPT] P1. Quickmerge PM. **Done 2026-05-14** — plan checkbox flip commit (this session).
+
+## Deferred work after 2026-05-14 slot-7-G session
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Phase 1.5 — DeFi chain axis | **DONE** `719e4aa` | Was pre-shipped; confirmed + documented |
+| Phase 1.5 — canonical_question_group axis | **DONE** `719e4aa` | Shipped with tests |
+| Phase 1.5 — Unit tests (both axes) | **DONE** `719e4aa` | TestDefiChainAxis (pre-existing, 6 tests) + TestPredictionCanonicalQuestionGroupAxis (5 new tests) |
+| Phase 1.5 — QG | **DONE** | QG exit 0; pre-existing failures unchanged |
+| Phase 1.5 — Quickmerge | **DONE** `719e4aa` | Pushed to both branches |
+| Phase 2 — Consumer wiring (instruments-service reads) | **DEFERRED** | All 8 callsites are instruments-service bucket reads or local temp files — not MTDS tick shards. Annotated with TODOs. Full migration needs `InstrumentsReader` pattern or instruments-service client wrapper. |
+| Phase 2 — UTL move decision | **DEFERRED** | Keep CanonicalParquetReader in MTDS for now; move to UTL only when 2nd non-MTDS repo adopts it |
 
 ## Success criteria
 

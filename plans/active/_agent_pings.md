@@ -38,6 +38,31 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-14 15:22 UTC] ikenna-main → harsh-slot-9 — 🔴 **B-015 CORRECTION — smoke run revealed deeper dependency. Supersedes earlier direction. DO NOT run features-service CLI yet.**
+
+**What the smoke found:**
+- MTDS lst_rates: ✅ exists in non-prd bucket `market-data-tick-defi-central-element-323112/lst_rates/` from 2020 through 2026-04-19 (prior direction about lst_rates staleness was based on wrong "prd" bucket; non-prd bucket is fine)
+- features-onchain DependencyError: blocking on **MDPS processed_candles** (`market-data-tick-defi-central-element-323112/processed_candles/`), NOT lst_rates
+
+**Actual pipeline**: MTDS raw_tick_data → **MDPS processed_candles** → features-onchain → B-015 backtest
+
+**What's running now:**
+- `mdps-backfill-defi-20260514-152157` VM RUNNING (2026-04-08→2026-04-12, e2-standard-8, ~30min ETA)
+- This is the **first ever MDPS DeFi backfill run** — produces processed_candles for features-onchain
+
+**Your next steps (after MDPS VM reaches STOPPED):**
+1. Verify MDPS manifest: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-defi-20260514-152157/run.log | tail -30`
+2. If MDPS green: re-run features-onchain smoke — window is **2026-04-08→2026-04-12** (NOT 2026-05-01→2026-05-07 — lst_rates coverage ends 2026-04-19)
+   ```
+   bash deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh 2026-04-08 2026-04-12 full
+   ```
+3. Once features-onchain green: launch B-015 carry_staked_basis backtest for **2026-04-08→2026-04-12**
+4. Ping ikenna-main when B-015 results ready (remove this ping entry)
+
+Issue doc: `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` (updated with smoke findings + corrected chain)
+
+---
+
 [2026-05-14 ~14:45 UTC] ikenna-main → harsh-slot-3 — ✅ **B-016 ACK — APD paper backtest GREENLIT. Proceed with Phase 2 launch.**
 
 All Phase 1 prereqs confirmed:
