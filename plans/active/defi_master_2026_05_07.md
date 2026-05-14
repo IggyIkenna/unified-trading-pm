@@ -1080,14 +1080,18 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
       if a venue × chain pair flatlines. Generalisable to other DeFi handlers; not just lending. Coordinate with
       `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor.
 
-### Coordination banner — defi_master 6-perp-venue list update
+### 2026-05-07 venue-matrix re-verification (Stream E update)
 
-> 🟡 IN-FLIGHT REFACTOR — `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream A is re-verifying the
-> 6-perp-venue list referenced throughout this plan; the current list (Bybit/Deribit/Binance/OKX/Hyperliquid/Aster) may
-> be stale per the 2026-05-07 audit (issue archived to
-> `plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md`). RE-VERIFY any venue-list reference in this plan
-> against the canonicalisation plan's Stream A output before committing changes that depend on the list. Banner will be
-> removed by canonicalisation plan owner once Stream A ships.
+Per `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream E correction (2026-05-07 audit):
+
+- **`carry_staked_basis`** — 3 LST-margin-capable venues only: **Deribit + Bybit + OKX**. Hyperliquid + Binance + Aster
+  do NOT accept ETH-LST as margin and cannot host the carry_staked_basis hedge leg.
+- **`ARBITRAGE_PRICE_DISPERSION`** — all 6 venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster) for cross-venue
+  funding spread.
+- Strategy playbook: `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`
+
+References throughout this plan that say "6 venues" for `carry_staked_basis` are imprecise — read as "3 LST-margin
+venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue matrix: UAC `venue_collateral.py` SSOT.
 
 ## `available_at` adapter stamping (coordinated)
 
@@ -1121,8 +1125,9 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 - [ ] **Live trading on real wallet** for **carry archetypes** (staked-basis carry + vanilla-basis carry + cross-venue
       carry) for ≥7 continuous days, on representative capital (size TBD per operator).
-- [ ] **Six perp venues live**: Bybit, Deribit, Binance, OKX (CeFi) + Hyperliquid, Aster (DeFi DEXs). Hedge legs route
-      across all six.
+- [ ] **Per-archetype perp venue subsets live** (per defi_archetypes_canonicalisation Stream E 2026-05-07):
+      `carry_staked_basis` hedge on 3 LST-margin-capable venues (Deribit + Bybit + OKX); `ARBITRAGE_PRICE_DISPERSION`
+      hedge on all 6 (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster).
 - [ ] **Cross-venue spot/perp/future legs live** for carry: CME futures + ETF + DeFi spot + CeFi perp + DeFi perp combos
       tradable end-to-end through unified pipeline.
 - [ ] **Custody integrated**: Copper for DeFi side; CEFFU for Binance institutional flow (manual handoff acceptable per
