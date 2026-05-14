@@ -115,6 +115,12 @@ between May-23 and June-1.
 3. **CloudAudit** — Wire deployment-api withdrawal calls into Cloud Audit Logs (for compliance audits)
 4. **Tests** — 4 compliance tests (lock enforcement, version history, audit log retrieval)
 
+#### Phase 3 Implementation Todos
+
+- [x] [SCRIPT] P0. 3.1 — GCS Object Versioning enabled on audit bucket via `--versioning` flag in `provision_audit_records_retention_lock.sh` (deployment-service@5f721ab)
+- [x] [SCRIPT] P0. 3.2 — `_emit_cloud_audit_log()` helper + `POST /api/clients/{id}/treasury/withdraw` stub wired into `deployment_api/routes/client_treasury.py` with Cloud Audit Log emission (deployment-api@5cf2fa1)
+- [x] [SCRIPT] P0. 3.3 — 4 compliance tests in `tests/unit/test_treasury_compliance.py`; 6/6 pass (deployment-api@5cf2fa1)
+
 **Gate**: Pre-June-15 (compliance deadline for live trading). Links to `api_keys_wallets_accounts_readiness` Phase 8.D
 pre-cutover gate.
 
