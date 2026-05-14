@@ -30,12 +30,12 @@ locked_since: 2026-05-08
 | 1 | Main orchestrator + freeze-gate monitoring + Wave 1/2/3 spawn cadence | 🟢 ONLINE | (this LEDGER + work-split) | `tab/hk/1` |
 | 2 | 🟢 **Wave 1** — api_football Phase 3.C EPL forward-poll VM + UI verify (P0, deadline today EOD) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | `api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md` | `tab/hk/2` |
 | 3 | 🟡 **Wave 2** — 117 UTL test-fixture sweep (pipeline_mode kwarg) | 🟢 IN FLIGHT (STARTED 04:31 UTC) | UTL@`547ff3c` API drift + writegate plan Phase 4 | `tab/hk/3` |
-| 4 | 🟡 **Wave 2** — 2-of-17 remaining strategy-service test failures (Findings Triage diagnose-first) | ✅ DONE (04:50 UTC — strategy-service@3ff75a2 + UTL@55424a9; 🟡 step 6 workspace-manifest pre-existing) | strategy-service test suite + slot 4 carry-forward from yesterday | `tab/hk/4` |
+| 4 | 🔁 **Continuation** — writegate Phase 6.8 instruments-service (41 `.add()` → `record_captured()`, P0) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 4" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.8 | `tab/hk/4` |
 | 5 | 🟠 **Wave 3** — batch_live_symmetry Tabs 1-2 (codex docs half) | 🟠 PENDING cross-side handshake (plan `operator: ikenna`). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tabs 1-2 | `tab/hk/5` |
-| 6 | 🟢 **Wave 1** — Phase 1 freeze-gate readiness audit (read-only verification of items #1-#6) | ✅ DONE (05:00 UTC — all 6/6 items GREEN, PM@33e6b308) | `master_to_live_defi_2026_05_23.md` "Phase 1 freeze-gate items status" + writegate plan Phase 4 | `tab/hk/6` |
+| 6 | 🔁 **Continuation** — writegate Phase 6.5 remaining open items (sports live_feature_subset live_handler + P2 findings: delta-one NAN_FILL policy / cross-instrument seed-drift / multi-timeframe cross-TF) | 🆕 READY — see § "Day-3 continuation task briefs — Slot 6" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 open `- [ ]` todos | `tab/hk/6` |
 | 7 | 🟢 **Wave 1** — Slot 7 Wave 4 carry-forward sweep (UI `ui-reference-data.json` copies + 6C UI-drilldown smoke + ICE US softs disambiguation) | 🟢 IN FLIGHT (STARTED 04:40 UTC) | `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 6C + Phase 1D consumer migration | `tab/hk/7` |
 | 8 | 🟠 **Wave 3** — batch_live_symmetry Tab 3 + UAC + QG STEPs (enforcement half) | 🟠 PENDING cross-side handshake (paired with slot 5). See § "Day-3 Wave 3 — pending handshake" | `batch_live_symmetry_2026_05_10.md` Tab 3 + new QG STEP | `tab/hk/8` |
-| 9 | 🟢 **Wave 1** — defi_recursive_borrow DESCOPE successor plan + plan-body annotation | ✅ DONE (05:02 UTC — PM@082f217f+3acaae6f+a2c79dbb) | `defi_recursive_borrow_archetypes_2026_05_10.md` descope + new successor plan | `tab/hk/9` |
+| 9 | 🔁 **Continuation** — peripheral scripts pipeline_mode fix (10 scripts) + workspace-manifest QG step 6 investigation | 🆕 READY — see § "Day-3 continuation task briefs — Slot 9" | `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 4 + strategy-service QG step 6 flag | `tab/hk/9` |
 | 10 | (✅ DONE 2026-05-13 — yesterday's dex_perp shipped; idle today) | ✅ DONE (idle) | `dex_perp_and_venue_data_expansion_2026_05_12.md` | `tab/hk/10` |
 
 **Wave 1 closeout** (commits on LDR for the record):
@@ -57,6 +57,61 @@ locked_since: 2026-05-08
 - ✅ Slot 10 foot-gun #5 intercept: MDPS@0c92b91 (19-test fix) was NOT on LDR despite slot 10's "all work synced" claim. Main cherry-picked to LDR as MDPS@c30d8e0; slot 10 worktree reset clean.
 
 All 10 slots are now in clean known state on LDR (or as ✅ DONE for slot 10).
+
+---
+
+## Day-3 continuation task briefs — 2026-05-14 (slots 4/6/9 post-first-task)
+
+### Slot 4 — writegate Phase 6.8 instruments-service (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `instruments-service` + `unified-api-contracts` (if seed dict missing) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) § "Phase 6.8 — instruments-service catalog snapshot"
+- **Task**: Phase 6.8 decision = Option (a): migrate all 41 `.add()` callsites in instruments-service to `record_captured()`. Steps:
+  1. `grep -rn "\.add(" instruments_service/ --include="*.py" | grep -v test | grep -v venv` — count + locate all 41 callsites.
+  2. Read 3 representative callsites to understand the shape: what positional args does `.add()` receive today? Map to `record_captured(date, data_type, venue, pipeline_mode=..., shard_id=..., row_count=...)`.
+  3. Sweep: replace `.add(` → `record_captured(` with correct kwargs. Add `pipeline_mode` from the CLI `--mode` arg (already wired in most instruments-service handlers).
+  4. Wire `publish_with_policy` at the write boundary (same pattern as Phase 6.3 features-volatility @features-service@d7514a08 — read that commit for the template).
+  5. `bash scripts/quality-gates.sh` from instruments-service root — all tests green.
+  6. Plan-flip Phase 6.8 `[x]` with evidence + FF-push per shippable unit.
+- **Reference**: Phase 6.3 template commit features-service@d7514a08. Phase 6.8 plan body at writegate plan line ~3458.
+- **Done-def**: All 41 `.add()` callsites migrated + `publish_with_policy` wired + QG green + Phase 6.8 checkbox flipped.
+- **Scope boundary**: Do NOT touch Phase 6.7 (strategy-service / execution-service / position-balance / risk) — Ikenna-owned.
+
+### Slot 6 — writegate Phase 6.5 remaining open todos (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `features-service` + `unified-api-contracts` (if seed dict missing) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) § "Phase 6.5" — scan for `- [ ]` todos only.
+- **Task**: Phase 6.5 main wiring is ✅ done. Open items are:
+  1. **Sports live_handler** — `live_feature_subset` STRICT_FAIL wiring deferred per task boundary. Wire `_check_emission_policy()` in `features_service/sports/cli/handlers/live_handler.py` (same pattern as batch_handler@a93dc3b4 but for live mode path).
+  2. **P2 delta-one finding** — ~24 ohlcv-derived feature_groups share NAN_FILL policy but policy not seeded individually; either verify the catch-all covers them or add explicit UAC seed entries.
+  3. **P2 cross-instrument seed drift** — `paired_spec` + registry drift flag; verify `_SEEDED_FEATURE_GROUPS` dict is in sync with `features_service/cross_instrument/schemas/`.
+  4. **P2 multi-timeframe ambiguity** — `intraday_regime` + `tf_risk_reward` + `wedge_confluence` cross-TF aggregate classification; verify STRICT_FAIL is correct policy per plan notes.
+  - For each: grep-then-read before changing. Fix if clear; file P2 issue doc if needs design call.
+  5. Run `bash scripts/quality-gates.sh` from features-service root after each fix.
+  6. Plan-flip each `[ ]` todo as shipped. FF-push per unit.
+- **Done-def**: All open `- [ ]` Phase 6.5 todos resolved (fixed or filed as issue doc) + QG green.
+- **Scope boundary**: Do NOT touch Phase 6.6 (ml-training / ml-inference) — Ikenna-owned.
+
+### Slot 9 — peripheral scripts pipeline_mode fix + workspace-manifest QG step 6 investigation (Sonnet 4.6 / thinking: high)
+
+- **Owned repos**: `market-tick-data-service` + `features-service` + `unified-trading-library` + `instruments-service` + `strategy-service` (QG investigation only) + `unified-trading-pm`
+- **Plan-of-record**: [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4 (manifest writer API) + strategy-service QG step 6 flag from slot 4.
+- **Task Part A — peripheral scripts pipeline_mode sweep** (mechanical):
+  The following 10 scripts still call `record_captured/record_empty/record_failed/record_expected_unattempted` without `pipeline_mode` kwarg — they will fail at runtime:
+  - `market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py`
+  - `market-tick-data-service/scripts/build_continuous_es.py`
+  - `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py`
+  - `features-service/scripts/sports/features_sports_reconcile_available_at.py`
+  - `features-service/scripts/sports/backfill_fixture_features_manifest.py`
+  - `features-service/scripts/sports/compute_sfi_progressive_only.py`
+  - `unified-trading-library/unified_trading_library/manifest_completeness.py`
+  - `unified-trading-library/unified_trading_library/options_cluster_lookup.py`
+  - `instruments-service/scripts/backfill_drift_funding_2026_05_13.py`
+  - `unified-trading-library/unified_trading_library/manifest_freshness.py`
+  For each: read the callsite → determine correct `pipeline_mode` from context (batch scripts → `PipelineMode.BATCH`; reconcilers → `PipelineMode.BATCH`) → add kwarg → commit + push per repo.
+- **Task Part B — workspace-manifest QG step 6 investigation**:
+  Slot 4 flagged strategy-service QG step 6 (production readiness) failing on `workspace-manifest.json`. Investigate: `cd strategy-service && bash scripts/quality-gates.sh 2>&1 | grep -A 20 "step 6\|STEP 6\|workspace-manifest"`. Determine root cause: version misalignment, missing field, or stale dep? If it's a version alignment issue: `cd unified-trading-pm && bash scripts/repo-management/run-version-alignment.sh --fix`. If code-level: fix it directly. File issue doc if diagnosis is ambiguous.
+- **Done-def**: All 10 scripts updated + QG step 6 diagnosed (fixed or issue doc filed) + plan todos flipped.
 
 ---
 
