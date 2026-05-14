@@ -56,12 +56,12 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
 
 **Cluster A — Workspace-wide mechanical** (1 slot serial, 0.5 cal-AI-day):
 - [ ] [AGENT] P0. `×→x` sed: UAC (134 RUF003 in `registry/risk_rules/venue.py`), client-reporting-api (1+ in `attribution.py:7`). Single per-repo command. **NOTE**: client-reporting-api × fixed at client-reporting-api@e936eb4 (absorbed by slot 7 B008 sweep); MTDS × fixed at market-tick-data-service@189be0a (3 callsites: tardis_adapter.py:2136, yahoo_finance_adapter.py:10, test_lst_rates_handler.py:223); **UAC only remaining open**.
-- [ ] [AGENT] P0. PM `python check-import-patterns.py --fix`.
+- [x] [AGENT] P0. PM `python check-import-patterns.py --fix`. (no violations found — already clean)
 - [x] [AGENT] P0. Verify untracked `2026-05-11` file in PM root (foreign or trash). (PM root has NO untracked files — already cleaned up by prior agent; verified 2026-05-14)
 
 **Cluster B — C901 + N802 + B008 lint sweep** (7 parallel slots, 3 cal-AI-days):
-- [ ] [AGENT] P0. `execution-service`: 2 C901 (`submit_manual_instruction` 12>10, `__init__` 11>10). Both legitimate orchestrators → `# noqa: C901` with rationale.
-- [ ] [AGENT] P0. `risk-and-exposure-service`: 2 C901 (`compute_risk` 20>7 orchestrator → noqa; `_assess_withdrawal_delay_risk` 10>7 → extract-method).
+- [x] [AGENT] P0. `execution-service`: 2 C901 (`submit_manual_instruction` 12>10, `__init__` 11>10). Both legitimate orchestrators → `# noqa: C901` with rationale. (execution-service@7df685d8 — no C901 violations found; already clean on LDR)
+- [x] [AGENT] P0. `risk-and-exposure-service`: 2 C901 (`compute_risk` 20>7 orchestrator → noqa; `_assess_withdrawal_delay_risk` 10>7 → extract-method). (risk-and-exposure-service@190f34b — noqa on compute_risk; _tally_illiquid_positions extracted; stale count assert updated; QG green 73s, 525 passed)
 - [ ] [AGENT] P0. `pnl-attribution-service`: 3 C901 (`_compute_hold_day_pnl`, `compute_pnl`, `aggregate_fills_to_pnl_inputs`). Extract-method aggregator; noqa pipeline-stages.
 - [x] [AGENT] P0. `ml-training-service`: 6 C901 in `cloud_feature_provider.py`. Mixed extract + noqa. (ml-training-service@5b60d5f — 5 noqa + 1 extract _generate_sports_targets → _build_legacy/_build_family helpers; lint step clean)
 - [x] [AGENT] P0. `deployment-api`: 9 C901 (`_build_leaf_parquet_candidates` 21>10, `_sports_honest_coverage` 22>10 in `services/data_status_drilldown.py` + `data_status_service.py`). Extract-method 3-4; noqa rest. (deployment-api@3040a1b — all 8 C901/SIM102/E402 violations resolved via per-callsite noqa with rationale; _EMPTY_REASON_KEYS synced with UAC EmptyConfirmedReason +7 values; 4 pre-existing test failures fixed by adding row_keys for cross-asset-rescan + strategy-paper + strategy-live launchers)
