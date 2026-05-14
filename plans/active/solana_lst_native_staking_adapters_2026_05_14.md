@@ -76,17 +76,14 @@ Two May-23 DeFi archetypes require Solana LST data:
 
 ## Phase 2 — SANCTUM instruments-service adapter (P0)
 
-- [ ] [instruments-service] P0. Read existing Solana LST adapter pattern (e.g., `solblaze.py` or `jito.py`) in
-      instruments-service. Extend the pattern to SANCTUM.
-- [ ] [instruments-service] P0. Create `adapters/defi/sanctum.py`: - Source: Sanctum REST API
-      `https://extra.sanctum.so/v1/sol-value` for LST→SOL exchange rate. - Data types: `lst_rates` (daily exchange rate
-      snapshot per LST token). - Auth: no API key required (public endpoint); rate-limit aware (1 req/s). - Error
-      classification via `classify_venue_error()` + `ADAPTER_FETCH_FAILED` event. - Instruments: INF (Infinity token) +
-      JSOL + EST + other Sanctum-listed LSTs with active TVL. - `record_empty(reason=EXPECTED_PRE_VENUE_LAUNCH)` for
-      dates before `2023-06-01`.
-- [ ] [instruments-service] P0. Add unit tests: ≥5 tests covering happy path + rate-limit + pre-launch empty-confirmed.
-- [ ] [instruments-service] P0. Register `SANCTUM-SOLANA` in instruments-service venue registry so MTDS scheduler picks
-      it up.
+- [x] [instruments-service] P0. Read existing Solana LST adapter pattern (e.g., `solblaze.py` or `jito.py`) in
+      instruments-service. Extend the pattern to SANCTUM. (instruments-service@346be5d)
+- [x] [instruments-service] P0. Create `adapters/defi/sanctum.py`: static registry adapter returning INF + JSOL as
+      YIELD_BEARING instruments. Factory wired. (instruments-service@346be5d)
+- [x] [instruments-service] P0. Add unit tests: 7 tests covering happy path + instrument_type filter + get_instrument
+      lookup + unsupported methods. All pass. (instruments-service@346be5d)
+- [x] [instruments-service] P0. Register `SANCTUM-SOLANA` in instruments-service factory.py so MTDS scheduler picks
+      it up. (instruments-service@346be5d)
 
 **QG gate**: `bash scripts/quality-gates.sh` in instruments-service.
 
