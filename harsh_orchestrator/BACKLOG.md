@@ -134,6 +134,14 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Plan-ref**: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 2
 - **Prereq**: B-001 + B-002 (Phase 1 env-locking done first)
 
+### B-018 · Phase 4.A — daily QG snapshot writer + cron VM
+- **Status**: DISPATCHED → slot 7 2026-05-14 (natural follow-on after B-013 DONE; write-side of deploy-ready read endpoint)
+- **Task**: Author `unified-trading-pm/scripts/quality_gates/snapshot.sh` — walks all workspace repos, runs `bash scripts/quality-gates.sh --quick` per repo (parallel where possible), captures per-repo status + first error line + duration, writes `quality_gates_snapshot_YYYY_MM_DD.parquet` to `gs://${PROJECT_ID}-deployment-events/quality_gates_snapshot/`. Schema: `repo, pull_sha, qg_status, failing_step, first_error_line, duration_seconds, snapshot_at`. Wire cron VM via existing `deployment-service/scripts/vm/launch-...` pattern. Register VM prefix in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict. Smoke-test snapshot on 3 repos first, then full workspace run.
+- **Repos**: `unified-trading-pm` + `deployment-service` (cron VM launcher)
+- **Est**: 3h · **Model**: Sonnet
+- **Plan-ref**: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 4 line 1
+- **Prereq**: None (B-013 read-side already shipped)
+
 ### B-014 · Phase 3 — QG ratchet STEPs enable + rollout
 - **Status**: DISPATCHED → slot 8 2026-05-14 (prep now; start rollout only after B-006/B-009/B-010/B-011/B-012 all DONE)
 - **Task**: Enable STEP X.N1 (tarball-env-block), X.N2 (coverage-targets-enforcement), X.N3 in `base-service.sh` template. Run rollout: `bash scripts/propagation/rollout-quality-gates-unified.py`. Verify all service repos pass with new STEPs. Commit + push per repo.
@@ -196,6 +204,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | DISPATCHED (prep now; rollout after B-006-B-012 all DONE) |
 | 2026-05-14 | B-009 Phase 8.A kill switch + circuit breaker coverage | slot 5 | START (Phase 0 effectively green per operator @12:04) |
 | 2026-05-14 | B-015 DeFi carry_staked_basis paper backtest | slot 9 | DISPATCHED (Phase 1 cross-side prereq check FIRST) |
+| 2026-05-14 | B-018 Phase 4.A daily QG snapshot writer + cron VM | slot 7 | DISPATCHED (natural follow-on to B-013) |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
