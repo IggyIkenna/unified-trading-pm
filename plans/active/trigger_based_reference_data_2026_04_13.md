@@ -3,8 +3,18 @@ title: "Trigger-Based Sports Reference Data Refresh"
 status: active
 priority: P1
 created: 2026-04-13
+last_updated: 2026-05-14
 locked_by: live-defi-rollout
 locked_since: 2026-04-13
+parent_epic: instruments_live_master_2026_05_08
+promotion_note: |
+  Promoted from plans/ai/ to plans/active/ on 2026-05-14 per operator decision (option b):
+  keep as sibling sports-trigger sub-plan of instruments_live_master and complete in parallel
+  (vs option a: fold Phase A SSOT into instruments_live Phase A.6 and archive). instruments_live
+  Phase B.0 unlock-request RESOLVED — decision = option b.
+estimate_class: design
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 3
 ---
 
 # Trigger-Based Sports Reference Data Refresh

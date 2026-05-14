@@ -21,9 +21,11 @@ overview: >-
   / 60-sec-rollup invocation with last-run + next-fire + recent events + Telegram-alert-on-fail. This plan REFERENCES
   (does not duplicate) the existing codex SSOTs (batch-live-architecture, backfill-and-live-startup,
   live-deployment-monitoring, alerting-batch-live, sports-live-odds-connectivity, deployment-clusters-live-vs-batch),
-  the locked sports-only `trigger_based_reference_data_2026_04_13` plan (folds in via unlock + extension), and the
-  active issues that own data-correctness sub-deltas (fixture lifecycle, manifest cleanup, lookahead bias). Code delta
-  is small per repo because the heavy architecture is already designed in codex; this plan is the activation surface.
+  the active sports-only
+  [`trigger_based_reference_data_2026_04_13`](../active/trigger_based_reference_data_2026_04_13.md) sibling plan (option
+  b — completed in parallel, not folded; promoted from `plans/ai/` 2026-05-14), and the active issues that own
+  data-correctness sub-deltas (fixture lifecycle, manifest cleanup, lookahead bias). Code delta is small per repo
+  because the heavy architecture is already designed in codex; this plan is the activation surface.
 
 type: mixed
 epic: epic-deployment
@@ -166,16 +168,16 @@ todos:
 
   - id: a6-uac-trigger-calendar-ssot-extension
     content: |
-      - [ ] [SCRIPT] P0. Extend UAC sports trigger calendar SSOT (the seed work in
-        `trigger_based_reference_data_2026_04_13` Phase A) so it covers: per-league season-start dates,
+      - [ ] [SCRIPT] P0. Consume UAC sports trigger calendar SSOT — owned by
+        [`trigger_based_reference_data_2026_04_13`](../active/trigger_based_reference_data_2026_04_13.md) Phase A
+        (option b: SSOT stays in the sibling plan, NOT folded here). Coverage required: per-league season-start dates,
         per-league transfer-window open/close dates (already partially present in
         `unified_api_contracts.canonical.crosscutting.transfer_windows`), per-league season-end dates. Helpers
         `get_active_seasons(asset_group, on_date)`, `is_in_transfer_window(league_id, on_date)`,
-        `next_trigger_fire(league_id, trigger_type, after)`. Phase B's sports triggers consume these. NOTE: this todo
-        depends on operator unlocking `trigger_based_reference_data_2026_04_13` (locked since 2026-04-13) so Phase A
-        of that plan can be folded in here without conflict — see Phase B.0 unlock-request todo.
+        `next_trigger_fire(league_id, trigger_type, after)`. THIS plan's Phase B consumes them via the sibling plan's
+        UAC additions; no fold-in here.
     status: todo
-    note: ""
+    note: "Option-b resolution 2026-05-14 — sibling plan owns the SSOT; A.6 just consumes its UAC additions."
 
   - id: a7-instruments-service-cli-mode-trigger-axis
     content: |
@@ -299,23 +301,19 @@ todos:
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase B — Sports trigger orchestrator (depends on Phase A)
-  # Folds in the locked `trigger_based_reference_data_2026_04_13` plan via unlock-request.
+  # References sibling plan `trigger_based_reference_data_2026_04_13` (option b — sibling sub-plan, not folded).
   # ──────────────────────────────────────────────────────────────────────
 
   - id: b0-trigger-plan-unlock-request
     content: |
-      - [ ] [HUMAN] P0. Unlock-request for `plans/ai/trigger_based_reference_data_2026_04_13.md` (locked since
-        2026-04-13 by `live-defi-rollout`, currently Phase A only — UAC season-calendar foundation; Workstreams A/B/C
-        substantial work remaining). Two options for the operator: (a) fold its Phase A SSOT scope into Phase A.6 of
-        THIS plan and archive the trigger plan; (b) keep the trigger plan as the sports-trigger sub-plan referenced by
-        this master and complete it in parallel. Either way, trigger-plan content is the source of design for Phase
-        B.1-B.6 below — DO NOT re-derive triggers here. Operator choice required before Phase B execution begins;
-        agent emits `[unlock-plan]` commit on operator approval.
-    status: blocked
-    blocked_by: trigger-based-reference-data-2026-04-13
+      - [x] [HUMAN] P0. RESOLVED 2026-05-14 — operator chose option (b): keep
+        [`trigger_based_reference_data_2026_04_13`](../active/trigger_based_reference_data_2026_04_13.md) as
+        sports-trigger sub-plan and complete in parallel. Plan promoted from `plans/ai/` to `plans/active/`. Phase
+        B.1-B.6 below reference the trigger plan's design (DO NOT re-derive).
+    status: done
     note:
-      "Operator decision required. Until unlocked, Phase B.1-B.6 reference the trigger plan's design rather than
-      re-deriving."
+      "Resolved 2026-05-14 — option (b) selected. Trigger plan is now an active sibling sub-plan; Phase B.1-B.6 proceeds
+      against its design."
 
   - id: b0a-sports-preflight-wiring
     content: |
@@ -804,8 +802,10 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
   THIS plan reuses event-tail logic for the Scheduled Jobs tab (Phase G.1).
 - **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`** — depends_on. Owns launcher SSOT migration;
   THIS plan's Phase F.1 adds Cloud Scheduler config under the same `deployment-service/scripts/` root.
-- **`trigger_based_reference_data_2026_04_13.md`** — locked sibling. Owns the sports trigger calendar design; THIS
-  plan's Phase B references it. Operator unlock-request in B.0.
+- [`trigger_based_reference_data_2026_04_13.md`](../active/trigger_based_reference_data_2026_04_13.md) — **active
+  sibling** (promoted from `plans/ai/` to `plans/active/` on 2026-05-14 per operator decision = option b). Owns the
+  sports trigger calendar design; THIS plan's Phase B references it and completes in parallel (no fold). Phase B.0
+  unlock-request RESOLVED.
 
 ## Active issues this plan references (does NOT duplicate)
 
