@@ -246,8 +246,10 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
    0.4×, ~3 = 1.2 cal)
 4. **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8.D pre-cutover gate items** — finalize gate checklist
    verification. (research 1.2×, ~3 = 3.6 cal)
-5. **Kill-switch arming + manual-trade UX gate** — operator-only arming surface; build the UI gate that requires
-   explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal)
+5. ✅ **Kill-switch arming + manual-trade UX gate** — operator-only arming surface; build the UI gate that requires
+   explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
+   ManualPendingQueue engine + 4 API endpoints shipped at `execution-service@1e119a61f`;
+   ManualTradeGateDialog + dart-client.ts + mock fixtures shipped at `unified-trading-system-ui@13b94ca9`.
 6. **Custody adapter Cloud-KMS wiring smoke** — verify the `signing_surface` config flip path works against real
    Cloud-KMS endpoint (existing 10 CMKs, asia-northeast1). (infra 0.8×, ~2 = 1.6 cal)
 7. **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` Ikenna-half** — push remaining operator UX items.
@@ -256,8 +258,9 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
    3.6 cal)
 9. **`available_at_lookahead_bias_completion_2026_05_08` sweep** — close remaining stamping helper consumers. (refactor
    0.4×, ~4 = 1.6 cal)
-10. **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the custody-side
-    gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal)
+10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the custody-side
+    gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14):
+    pvl-p23c shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
 11. **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator**
     — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate. Root cause
     likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3 `DefaultReserveInterestRateStrategy`

@@ -197,3 +197,16 @@ Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE
 
 **Full analysis**: `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D annotation.
 **Re-run gate**: `bash deployment-service/scripts/audit/credential-probe.sh --mode live --archetype carry_staked_basis`
+
+---
+
+## [slot 6 → main] 2026-05-14 — pvl-p23c ManualTradeGateDialog SHIPPED
+
+**Status**: DONE — pvl-p23c fully shipped (Group G Item 23).
+
+**Commits**:
+- `execution-service@1e119a61f` — ManualPendingQueue engine + 4 API endpoints (POST /manual/pending, GET /manual/pending, /approve, /reject) + 12 unit tests
+- `unified-trading-system-ui@13b94ca9` — ManualTradeGateDialog component + dart-client.ts pending queue API + mock fixtures (3 new routes in mock-handler.ts) + 3 vitest tests
+
+**Requesting slot 1**: Flip `master_to_live_defi_2026_05_23.md` Group G Item 23 (pvl-p23c ManualTradeGateDialog) from `[ ]` to `[x]`.
+Evidence: both commits above. work_split_2026_05_14_ikenna.md items 5+10 already flipped ✅.
