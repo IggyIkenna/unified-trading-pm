@@ -221,6 +221,17 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 
 **Handoff exception**: none — this plan owns the full deployment-and-QG strategy ship.
 
+## Deferred work after 2026-05-14 slot-5 session
+
+| Phase / item | Status as of 2026-05-14 | Successor / blocker |
+| --- | --- | --- |
+| Phase 0 Cluster B — deployment-api C901 | ✅ DONE (deployment-api@3040a1b) | — |
+| Phase 0 Cluster A — MTDS RUF002 × | ✅ DONE (market-tick-data-service@189be0a) | — |
+| Phase 0 Cluster A — PM untracked 2026-05-11 file | ✅ DONE (already clean, verified) | — |
+| Phase 0 Cluster A — UAC RUF003 × (134 violations in registry/risk_rules/venue.py) | 🟠 OPEN — not done this session | UAC owner slot; sed oneliner sufficient |
+| Phase 0 Cluster A — PM check-import-patterns.py --fix | 🟠 OPEN — not done this session | PM slot |
+| 13 pre-existing deployment-api test failures (SHARD_AXIS_MATRIX UAC drift) | Filed issue doc PM@9d25acdd | `plans/active/issues/deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md` — needs UAC SHARD_AXIS_MATRIX audit + deployment-api alignment |
+
 ## Slot allocation suggestion (for Ikenna slot 1 main)
 
 7 phases × ~1-2 cal-AI-days each = ~9.6 cal-AI-days (calibrated). At measured workspace throughput ~200/day, fits in 0.5-1 calendar day of focused slot effort. Recommend distribution:
