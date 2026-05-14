@@ -529,7 +529,7 @@ Will proceed with Phase 4 Item 1 (instruments-service futures factory) immediate
 - ✅ UAC top-level facade export (UAC@f514779)
 - ✅ instruments-service futures factory (IS@bcb34b9 + IS@0c59485)
 - ✅ instruments-service write-path `futures_contracts.parquet` (IS@2be7e4b) — Phase 4.2 done
-- ⏸️ Phase 4.3 (mtds-tradfi-staleness): consume `expiry_date` for per-contract staleness gates — **NEXT**
+- ✅ Phase 4.3 (mtds-tradfi-staleness): UAC@421bb21 + MTDS@103540f — `is_tradfi_futures_instrument_active` staleness gate + MTDS Tier-3 filter
 - ⏸️ Phase 4.4 (features-service): lifecycle-phase-aware contract roll features
 - ⏸️ Phase 4.5 (strategy-service): `FuturesRollInstruction.lifecycle_phase` binding
 
@@ -539,6 +539,35 @@ The plan said "MTDS Databento bridge stamps CanonicalFuturesContract". After exp
 instruments-service (not MTDS): IS is the reference-data owner; `futures_contracts.parquet` lives alongside
 `instruments.parquet` in the instruments GCS bucket. MTDS consumers (staleness, features) read from IS GCS.
 
-Proceeding to Phase 4.3 (mtds-tradfi-staleness) next.
+---
+
+## [slot 5 → main] Phase 4.3 SHIPPED — 2026-05-14
+
+**Status**: ✅ Phase 4.3 (mtds-tradfi-staleness) complete
+
+### Commits
+
+- **UAC@421bb21** — `is_tradfi_futures_instrument_active(instrument_id, as_of_date_str)` pure UAC function in
+  `registry/market_data_categories.py`. Parses CME/ICE futures symbols (ESH26, CLZ6, BRN.H26) to filter expired
+  contracts. Exported from `registry/__init__.py`. 28 unit tests in
+  `tests/unit/test_tradfi_futures_staleness.py` (all green).
+- **MTDS@103540f** — Import + per-contract staleness filter wired in Tier-3 sentinel pass for
+  `asset_group_of_venue == "TRADFI"`. Filters `expected_instruments` before emitting `SOURCE_RETURNED_ZERO` sentinels.
+- **PM@30c32001** — Phase 4.3 plan flip.
+
+### Architecture: conservative approximation
+
+Used last-day-of-contract-month as expiry proxy (no GCS read needed). Full-precision `expiry_date` from IS parquet
+is possible as a Phase 4.3+ upgrade but requires reading `futures_contracts.parquet` inline in MTDS — deferred.
+All 14 existing MTDS sentinel tests still pass.
+
+### Phase 4 checklist state
+
+- ✅ UAC facade export (UAC@f514779)
+- ✅ IS futures factory (IS@0c59485, 29 tests)
+- ✅ IS write-path `futures_contracts.parquet` (IS@2be7e4b, 7 tests) — Phase 4.2 done
+- ✅ MTDS staleness gate (UAC@421bb21 + MTDS@103540f, 28 tests) — Phase 4.3 done
+- ⏸️ Phase 4.4 (features-service): lifecycle-phase-aware contract roll features — **NEXT**
+- ⏸️ Phase 4.5 (strategy-service): `FuturesRollInstruction.lifecycle_phase` binding
 
 
