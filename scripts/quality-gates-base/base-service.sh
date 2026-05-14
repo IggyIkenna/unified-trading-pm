@@ -1795,6 +1795,44 @@ else
     log_success "STEP 5.76: skipped (SOURCE_DIR not set or not a directory)"
 fi
 
+# ── STEP 5.77: L2 — No mode comparisons outside CLI seam ─────────────────────
+#
+# Mode routing (batch vs live) must happen ONLY at the CLI entry point.
+# Comparing mode strings deeper in the engine = separate code paths = L2 violation.
+#
+# Violation pattern: `mode == "batch"` / `mode == "live"` anywhere in non-CLI
+# Python source. CLI files (matching *cli*.py / *main.py) are exempt — that IS
+# the allowed seam. Lines annotated `# noqa: L2-mode-seam` are baselined known
+# exceptions pending a design call.
+#
+# Known baselined exceptions as of 2026-05-14:
+#   instruments-service/engine/orchestrator.py:1653,2072 — DeFi batch caching +
+#   pre-genesis early-exit; design call pending per batch_live_symmetry Q3.
+#
+# Plan: batch_live_symmetry_2026_05_10.md Tab 3 L2.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    _L2_HITS=$(rg -n --type py \
+        --glob '!**/cli/**' \
+        --glob '!**/cli*.py' \
+        --glob '!**/main.py' \
+        -e '\bmode\s*==\s*"batch"' \
+        -e '\bmode\s*==\s*"live"' \
+        -e "\bmode\s*==\s*'batch'" \
+        -e "\bmode\s*==\s*'live'" \
+        "${SOURCE_DIR}/" 2>/dev/null \
+        | grep -v '# noqa: L2-mode-seam' \
+        || true)
+    if [ -n "$_L2_HITS" ]; then
+        log_fail "STEP 5.77: mode == \"batch\"/\"live\" comparison found outside CLI seam — mode routing must happen ONLY at the CLI entry point (batch_live_symmetry L2). Annotate with '# noqa: L2-mode-seam' ONLY for known exceptions with a design-call pending."
+        printf "  %s\n" "$_L2_HITS"
+        V=$(( V + 1 ))
+    else
+        log_success "STEP 5.77: No L2 mode comparisons outside CLI seam"
+    fi
+else
+    log_success "STEP 5.77: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
 # ── STEP 5.78: L3 — RuntimeMode declared once (UAC internal/modes.py) ─────────
 #
 # RuntimeMode is a T0 canonical type (unified-api-contracts, no dependencies).
