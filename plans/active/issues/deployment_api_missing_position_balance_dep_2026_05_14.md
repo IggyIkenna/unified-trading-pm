@@ -12,7 +12,7 @@ resolved_at: 2026-05-14
 resolved_by: slot-2-wave2
 resolution_commits:
   - deployment-api@edce262
-  - unified-trading-pm@<this commit>
+  - unified-trading-pm@1d472ee9
 suggested_owner: deployment-api maintainer / operator triage
 ---
 
@@ -21,7 +21,7 @@ suggested_owner: deployment-api maintainer / operator triage
 Shipped both halves of the fix:
 
 1. **deployment-api@edce262** — added `position-balance-monitor-service>=0.1.0,<1.0.0` to `[project.dependencies]` + matching `[tool.uv.sources]` editable path. `uv.lock` regenerated via `uv sync`.
-2. **unified-trading-pm@<this commit>** — added `position-balance-monitor-service` (>=0.1.0,<1.0.0, required=true) to `workspace-manifest.json` deployment-api dependencies array. `canonical-dependency-manifest.json` + `derived-dependency-manifest.json` regenerated.
+2. **unified-trading-pm@1d472ee9** — added `position-balance-monitor-service` (>=0.1.0,<1.0.0, required=true) to `workspace-manifest.json` deployment-api dependencies array. `canonical-dependency-manifest.json` + `derived-dependency-manifest.json` regenerated.
 
 **Verification**:
 - `.venv/bin/python -c "from deployment_api.routes import treasury_routes"` → ✅ succeeds.
