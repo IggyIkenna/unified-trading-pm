@@ -1200,8 +1200,11 @@ debounce HF emission to 1s. Fallback: poll-loop under WS unavailable; emit `RPC_
       DEFI_HEALTH_FACTOR_CRITICAL/DEFI_LIQUIDATION_IMMINENT/DEFI_CROSS_VENUE_DELTA_DRIFT/DEFI_PERP_VENUE_OUTAGE/DEFI_ORACLE_STALE_PAUSE/DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED/DEFI_FUNDING_RATE_FLIP
       all in alerting/codes.py; alerting-service routing **DEFERRED** — alerting-service is separate repo, not
       execution-service scope)
-- [ ] [strategy-service] **P0**. NEW `circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action mappings. 6
+- [x] [strategy-service] **P0**. NEW `circuit_breakers/liquidation_proximity_circuit.py` with 6 alert→action mappings. 6
       unit tests + 1 Tenderly-fork integration test (HF=1.04 → flash-close within single block).
+      (strategy-service@fb3cd97 — 6 mappings:
+      FLASH_CLOSE/PARTIAL_UNWIND/POSITION_PAUSE/HEDGE_FAILOVER/ORACLE_BUFFER/MID_LOOP_RECOVERY; 8/8 unit tests pass;
+      Tenderly test scaffolded @requires_credentials; QG ✅ ALL PASSED)
 - [x] [UAC] **P1**. `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict + wire into risk-and-exposure-service `propose_position()`
       veto. (verified 2026-05-13 — UAC half: `registry/risk_rules/archetype.py:451` `ARCHETYPE_CONCENTRATION_MULTIPLIER`
       dict shipped + `:467` `get_archetype_concentration_multiplier()` accessor; risk-and-exposure-service wire-in not
