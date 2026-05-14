@@ -464,6 +464,9 @@ finding annotated. ✅
       (master_to_live_defi_2026_05_23.md@2026-05-13 — added 2026-05-13 update summarizing Phase 5.B matrix completion,
       per-stage profile aggregation, and c2-standard-8 recommendation for MTDS/strategy stages; continuous-verification
       column extended with benchmark report URI + Phase 3.D blocker note)
+      **Budget assertion wired 2026-05-14**: `UTL.synthetic.check_budget()` + `BudgetExceededError` added at
+      UTL@f942dc54. Group F item 18 row updated with VM-shape sizing note + budget assertion reference.
+      4 unit tests: all-within-budget, over-budget (BudgetExceededError), all-failed-skip, empty-budget.
 - [x] [AGENT] P0. **8.B Banners removed.** No `🟢 VM RUNNING` / `🟡 IN-FLIGHT REFACTOR` banner was ever added (no VM
       launched, no on-disk-shape refactor — the synthetic generator writes to a dedicated benchmark prefix, not the prod
       hive). Nothing to remove. ✅ (no-op confirmed; when Phase 5 actually launches the matrix VMs, a `🟢 VM RUNNING`
