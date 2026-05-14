@@ -4,11 +4,12 @@
 # Templates in: unified-trading-pm/scripts/workflow-templates/
 # Target: <repo>/.github/workflows/<template-name>.yml
 #
-# This script is the SSOT rollout mechanism for the 4 generic per-repo workflows:
+# This script is the SSOT rollout mechanism for the generic per-repo workflows:
 #   - request-major-bump.yml        (thin caller -> PM reusable workflow)
 #   - major-bump-issue-handler.yml   (canonical flat copy)
 #   - staging-lock-check.yml         (canonical flat copy)
 #   - update-dependency-version.yml  (canonical flat copy)
+#   - tab-mirror-to-ldr.yml          (auto-FF push tab/** -> live-defi-rollout)
 #
 # Usage:
 #   bash rollout-workflow-templates.sh [--dry-run] [--repo NAME] [--template NAME]
