@@ -62,7 +62,8 @@ pulls in-stack reserve when each item closes.
 | 9    | Mechanical (Cluster A sed) + governance + cron/ratchet sweep     | ~27         |
 | **Subtotal** | (8 implementer slots, baseline)                          | **~200**    |
 | **+ V2 ext** | (see § "V2 extension — +72 cal AI-days" below)          | **+72**     |
-| **Total**    | (8 implementer slots, baseline + v2)                     | **~272**    |
+| **+ Orphans**| (6 items absorbed from 11+12 May splits + MTDS issue)    | **+12**     |
+| **Total**    | (8 implementer slots, baseline + v2 + orphans)           | **~284**    |
 
 ---
 
@@ -99,7 +100,10 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) + `de
    per contract reading. (research 1.2×, ~3 = 3.6 cal)
 9. **Cluster D instruments-service test failures** (Phase 0 cluster D, instruments-service-half not yet flipped).
    (refactor 0.4×, ~2 = 0.8 cal)
-10. **Reserve**: in-stack pickup for any new DeFi classification issues filed during the cycle.
+10. **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count drift:
+    test expects 1 row, handler returns 2 (AAVEV3 + MORPHO dual-venue path). Diagnose-first per Findings Triage: code
+    drifted from test intent (multi-venue is correct), so update test expectations. (research 1.2×, ~1 = 1.2 cal)
+11. **Reserve**: in-stack pickup for any new DeFi classification issues filed during the cycle.
 
 Backfill flag: items 2 + 3 may need <1-week test backfills — OK without approval. ≥1 week → ping operator.
 
@@ -126,7 +130,10 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) + `
 8. **Cluster D ml-inference test failures** (Phase 0 cluster D, ml-inference-half). (refactor 0.4×, ~2 = 0.8 cal)
 9. **Aster + Bybit UTA eligibility verification for carry_staked_basis** — LST_AS_MARGIN per archetype matrix.
    (research 1.2×, ~3 = 3.6 cal)
-10. **Reserve**: in-stack on Solana RPC ratelimit handling + DEX venue catch-up.
+10. **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` clusters B + C** — Alchemy `_get_rpc_url`
+    API drift + g9_regression classifier event-shape drift. Diagnose-first per Findings Triage: read both sides of
+    contract (test expectation vs current implementation), fix the drifted side. (research 1.2×, ~2 = 2.4 cal)
+11. **Reserve**: in-stack on Solana RPC ratelimit handling + DEX venue catch-up.
 
 Backfill flag: item 3 + 5 + 6 — Solana validation backfills <1 week OK without approval.
 
@@ -159,7 +166,11 @@ Plan-of-record fan-out: 3 sports classifier issue docs (sfi_footystats / player_
     side. (refactor 0.4×, ~3 = 1.2 cal)
 11. **`data_status_comprehensive_test_coverage_2026_05_07` sports-half** — write sports-grain tests for the
     drilldown-shard-atom alignment. (design 0.6×, ~4 = 2.4 cal)
-12. **Reserve**: in-stack pickup on any sports classifier ambiguity surfaced from item 4.
+12. **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster D** —
+    prediction_market_venue_wiring: venue registry membership drift; test expects specific set of planned venues that
+    doesn't match current canonical list. Sync test expectations with current `unified_api_contracts` prediction-market
+    venue registry. (refactor 0.4×, ~1 = 0.4 cal)
+13. **Reserve**: in-stack pickup on any sports classifier ambiguity surfaced from item 4.
 
 Backfill flag: item 6 (phantom apply-flips) — reconciles existing manifest rows; not a backfill.
 
@@ -250,7 +261,11 @@ Plan-of-record fan-out: `wallet_treasury_post_cutover_custody_signing_2026_06_01
    shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal)
 9. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
    0.6×, ~3 = 1.8 cal)
-10. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+10. **[ORPHAN-2026-05-14] `mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — master-plan Group F item 18 row
+    gains budget assertion (Ikenna-side per harsh-mock-data-benchmarking-tab ping 2026-05-12 17:08 UTC; the ONLY
+    remaining gate). Wire budget assertion into the mock-data benchmark harness + flip Group F item 18 row in master
+    plan. (infra 0.8×, ~7 = 5.6 cal)
+11. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 
@@ -310,7 +325,13 @@ Plan-of-record fan-out: Phase 0 Cluster A `×→x sed + import-pattern fix` + `s
     0.4×, ~6 = 2.4 cal)
 12. **`governance_qg_automation_gaps_post_cutover` codification** — pair with slot 1 main on the SSOT writeup.
     (design 0.6×, ~5 = 3.0 cal)
-13. **Reserve**: in-stack pickup for any sed-fallout surfaced from item 1.
+13. **[ORPHAN-2026-05-14] Stream C C-enum.3+4** (deferred from 2026-05-11 slot 5 Tier 2 item 6; backport plan TBD) —
+    finish the 2 remaining archetype-enum flips per `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`.
+    C-enum.1+2 already done. (design 0.6×, ~3 = 1.8 cal)
+14. **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster E** — tardis_stream_client live
+    network calls: wire `respx` / `aiohttp` mock at session level per workspace testing standards; eliminate the 3
+    `TardisHTTPError: 404` live-network test fails. (refactor 0.4×, ~1 = 0.4 cal)
+15. **Reserve**: in-stack pickup for any sed-fallout surfaced from item 1.
 
 Backfill flag: item 3 (cron VM scheduling) — defines the cron, doesn't trigger a backfill on launch. Production cron
 runs are themselves bounded jobs, not backfills.
