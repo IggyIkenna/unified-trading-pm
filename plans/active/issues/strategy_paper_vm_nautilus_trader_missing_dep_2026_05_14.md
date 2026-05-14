@@ -59,3 +59,9 @@ Operator triage: pick A, B, or C. This issue blocks promote_workflow Phase 1 ful
 the actual gate. The paper VM is a smoke harness, not the live gate.
 
 Suggested owner: harsh-slot-9 or any defi slot in next wave (30-60 min fix for Option B).
+
+## Resolution
+
+**✅ RESOLVED 2026-05-14 slot-2** — Option B applied: removed the auto-override of DeFi paper mode to tenderly in `colocated_engine.py:1435-1439`. Paper mode now uses `benchmark` fills by default (simulated, no execution-service required). Real fork execution can still be invoked by passing `--execution_provider tenderly` explicitly.
+
+Fix: `e2e-testing@4e4a5da` — `fix(e2e): paper mode uses benchmark fills — remove tenderly auto-override`
