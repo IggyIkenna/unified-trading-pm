@@ -189,7 +189,7 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 
 **Phase 8.C — Domain coverage** (parallel slots, 2 cal-AI-days, P1):
 - [ ] [AGENT] P1. Per-archetype calculator coverage to 90% (features-* services).
-- [ ] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes).
+- [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2 — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [AGENT] P1. Error classification coverage to 95%.
 
 **Phase 8.D — Ratchet** (0.5 cal-AI-day):
