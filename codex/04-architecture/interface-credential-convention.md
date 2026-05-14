@@ -82,7 +82,12 @@ schema):
 field in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` + service reloads via `ApiKeyReloader` — **no
 recompile, no service restart**.
 
-**Bridge function** (execution-service@`fdd82def`, B-012 Phase 8.A): `custody_config_from_wallet_provisioning(wallet, rpc_url, cloud_provider)` in `execution_service/custody/factory.py` maps a loaded `WalletProvisioningConfig` to a `CustodyConfig` for `get_custody_provider()`. Calls `wallet.validate()` at bridge time so credential mismatches raise on config-parse, not at trade time. Covered by 11 unit tests (all 5 `SigningSurface` mappings; KMS mock decrypt; no real keys). See `custody-providers.md` §2.5 for full bridge dispatch table.
+**Bridge function** (execution-service@`fdd82def`, B-012 Phase 8.A):
+`custody_config_from_wallet_provisioning(wallet, rpc_url, cloud_provider)` in `execution_service/custody/factory.py`
+maps a loaded `WalletProvisioningConfig` to a `CustodyConfig` for `get_custody_provider()`. Calls `wallet.validate()` at
+bridge time so credential mismatches raise on config-parse, not at trade time. Covered by 11 unit tests (all 5
+`SigningSurface` mappings; KMS mock decrypt; no real keys). See `custody-providers.md` §2.5 for full bridge dispatch
+table.
 
 > **Hot-reload integration test (codex audit EX-16 2026-05-12)**: the `signing_surface` flip path (`cloud_kms_encrypted`
 > → `copper` for the June-1 client-cred cutover) MUST be verified by an end-to-end test that (a) writes a fresh
@@ -149,6 +154,15 @@ never cached in service memory beyond the signing window.
 - UAC `CopperEndpoint`, `CEFFUEndpoint`, `DefiWalletKeyMaterial` — `unified_api_contracts.canonical.domain.treasury`
 - Full custody taxonomy + endpoint config fields + withdrawal lifecycle:
   [`treasury-custody-flow.md`](treasury-custody-flow.md)
+
+## Tardis
+
+Tardis historical-data access requires a **separate paid commercial subscription** that is distinct from the workspace's
+default public/academic tier. The academic tier provides live-stream access only; historical replay (backfills,
+out-of-sample testing, candle reconstruction) requires the commercial plan. HTTP 403 from the Tardis API on historical
+paths means the workspace's current Tardis key lacks commercial-tier access — it is NOT a code/config bug. See
+`master_to_live_defi_2026_05_23.md` § "Deferred / blocked-on-operator items" for the `BLOCKED-CREDENTIALS` row tracking
+the commercial subscription request.
 
 ## Why This Convention
 
