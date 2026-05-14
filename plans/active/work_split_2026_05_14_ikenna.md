@@ -128,9 +128,10 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
 
 1. ✅ **`emerging_perp_venue_adapters_broken` P0 root-cause fix** — adapter-level fixes for the broken-perp-venue list;
    each fix lands as separate commit. (research 1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): MTDS@7d45b21 — ASTER
-   AsterBaseClient.base_url_futures corrected to fapi.asterdex.com; instruments-service@c0c6593 — ASTER P0 root cause fix.
-2. ✅ **`emerging_perp_adapters_diagnosed` P0** — write fix notes / diagnosis into adapter docstrings per Findings Triage
-   "fix in code if you have context". (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14):
+   AsterBaseClient.base_url_futures corrected to fapi.asterdex.com; instruments-service@c0c6593 — ASTER P0 root cause
+   fix.
+2. ✅ **`emerging_perp_adapters_diagnosed` P0** — write fix notes / diagnosis into adapter docstrings per Findings
+   Triage "fix in code if you have context". (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14):
    instruments-service@7c2fc5f — EXTENDED-STARKNET diagnosis comment with stale API endpoint note.
 3. ✅ **`helius_solana_rpc_for_validation` P1** — wire Helius into the Solana RPC validation path (replaces
    Infura/Alchemy for Solana per UAC `CHAIN_RPC_TEMPLATES`). (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14):
@@ -140,15 +141,15 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    `plans/active/solana_lst_native_staking_adapters_2026_05_14.md` created (6 phases,
    SANCTUM+SOLBLAZE+Pyth+native_staking_rates+backfill).
 5. ✅ **DEX perp + venue data expansion** — pickup from yesterday's Harsh slot 10 close; extend to additional venues per
-   `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal) **DONE** (2026-05-14): market-tick-data-service@78e3b28
-   — PACIFICA-SOLANA (REST, api.pacifica.fi/v1/funding_rate/history, gated 2025-06-01) + LIGHTER-ZKSYNC (Tardis
-   market_stats CSV, datasets.tardis.dev/v1/lighter-zksync/market_stats, gated 2026-04-17, Tardis API key via
-   Secret Manager). Both wired into DEFAULT_PROTOCOLS + _collect_pacifica/_collect_lighter. EXTENDED-STARKNET omitted
-   (BLOCKED-OPERATOR-DECISION per defi_master Item C).
+   `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal) **DONE** (2026-05-14):
+   market-tick-data-service@78e3b28 — PACIFICA-SOLANA (REST, api.pacifica.fi/v1/funding_rate/history, gated
+   2025-06-01) + LIGHTER-ZKSYNC (Tardis market_stats CSV, datasets.tardis.dev/v1/lighter-zksync/market_stats, gated
+   2026-04-17, Tardis API key via Secret Manager). Both wired into DEFAULT_PROTOCOLS +
+   \_collect_pacifica/\_collect_lighter. EXTENDED-STARKNET omitted (BLOCKED-OPERATOR-DECISION per defi_master Item C).
 6. ✅ **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
-   (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): strategy-service@6ff86fe — DRIFT-SOLANA perp_funding in UAC;
-   xfail test removed; TestDriftSolanaLstEligibility + perp_hedge_candidates test added; jito-drift + marinade-drift
-   slots verified; 48 tests pass.
+   (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): strategy-service@6ff86fe — DRIFT-SOLANA perp_funding in UAC; xfail
+   test removed; TestDriftSolanaLstEligibility + perp_hedge_candidates test added; jito-drift + marinade-drift slots
+   verified; 48 tests pass.
 7. ✅ **Hyperliquid arb_price_dispersion eligibility check** — verify USDC-margin compatibility per archetype matrix.
    (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14): USDC margin accepted (0 haircut) → eligible for
    `arbitrage_price_dispersion`. perp_funding capability gap fixed: UAC@052120d (HYPERLIQUID+ASTER in
@@ -157,9 +158,9 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
 8. ✅ **Cluster D ml-inference test failures** (Phase 0 cluster D, ml-inference-half). (refactor 0.4×, ~2 = 0.8 cal)
    **DONE** (2026-05-14 sub-agent): ml-inference@7e37109 — STEP 5.63 false-positive docstring fix + STEP 5.64
    `emit_preflight_skip()` added to `batch_handler.py` dependency-missing branches.
-9. ✅ **Aster + Bybit UTA eligibility verification for carry_staked_basis** — LST_AS_MARGIN per archetype matrix. (research
-   1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): strategy-service@ab8661e — ASTER=no LST (USDC/USDT-only), BYBIT UTA
-   stETH=True (10% haircut) → lido-bybit slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
+9. ✅ **Aster + Bybit UTA eligibility verification for carry_staked_basis** — LST_AS_MARGIN per archetype matrix.
+   (research 1.2×, ~3 = 3.6 cal) **DONE** (2026-05-14): strategy-service@ab8661e — ASTER=no LST (USDC/USDT-only), BYBIT
+   UTA stETH=True (10% haircut) → lido-bybit slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
 10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` clusters B + C** — Alchemy `_get_rpc_url`
     API drift + g9_regression classifier event-shape drift. (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14
     sub-agent): Cluster B already passing (no fix needed); Cluster C — MTDS@a54dc62 — `_safe_classify` re-exported from
@@ -249,15 +250,22 @@ Plan-of-record fan-out: `wallet_treasury_post_cutover_custody_signing_2026_06_01
 alert codes + Cluster B execution-service lint + `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D + custody
 adapter Cloud-KMS wiring + kill-switch + DART pickup.
 
-1. **wallet_treasury_post_cutover Phase 1 Real HMAC withdrawal approval chain** (PULLED FORWARD to pre-May-15 per
+1. ✅ **wallet_treasury_post_cutover Phase 1 Real HMAC withdrawal approval chain** (PULLED FORWARD to pre-May-15 per
    density-push assessment) — wire `WithdrawalApprovalSignature` (HMAC-SHA256) + 2-of-N multisig + Cloud-KMS signing
-   - 8 unit tests. (infra 0.8×, ~3.2 = 2.6 cal)
-2. **4 DeFi-specific alert codes** producer-side + alerting wiring per `alerting_service_live_rules_2026_05_07.md`.
-   (design 0.6×, ~3 = 1.8 cal)
-3. **Cluster B execution-service C901+N802+B008 lint sweep** — apply UAC carveout pattern from `UAC@ba49e70`. (refactor
-   0.4×, ~3 = 1.2 cal)
-4. **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8.D pre-cutover gate items** — finalize gate checklist
-   verification. (research 1.2×, ~3 = 3.6 cal)
+   - 8 unit tests. (infra 0.8×, ~3.2 = 2.6 cal) **DONE**: `execution-service@b4fb55f93` (sign_withdrawal_approval via
+     Secret Manager) + `execution-service@98ecfdf43` (8 unit tests). wallet_treasury Phase 1 checkboxes 1.1+1.2 flipped.
+2. ✅ **4 DeFi-specific alert codes** producer-side + alerting wiring per `alerting_service_live_rules_2026_05_07.md`.
+   (design 0.6×, ~3 = 1.8 cal) **DONE**: 4 codes shipped — `DEFI_AAVE_UTILIZATION_SPIKE` + `DEFI_FUNDING_RATE_FLIP` +
+   `DEFI_FEATURE_STALE` + `DEFI_WEETH_DEPEG` (alerting plan [x]); `inject_synthetic_alert.py` Phase 8 [x]. Kill-switch
+   wiring `execution-service@e78dd1bf9`.
+3. ✅ **Cluster B execution-service C901+N802+B008 lint sweep** — apply UAC carveout pattern from `UAC@ba49e70`.
+   (refactor 0.4×, ~3 = 1.2 cal) **DONE**: `execution-service@a1675eb69` — N802+B008 added to ruff select (0
+   violations); C901 already clean per `@7df685d8`.
+4. ✅ **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8.D pre-cutover gate items** — finalize gate checklist
+   verification. (research 1.2×, ~3 = 3.6 cal) **DONE (BLOCKED-OPERATOR-ACTION)**: Probe run 2026-05-14 slot 6 —
+   `credential-probe.sh --mode live --archetype carry_staked_basis` → 7/34 PASS | 27/34 FAIL | 9 SKIP. Root causes
+   documented in api_keys plan § 8.D: 10 wrapped wallet keys missing + 11 naming drift items + 3 infra keys. Checkbox
+   flips to [x] only after operator actions 🔴+🟡 items and probe returns 100% PASS ≤24h before cutover.
 5. ✅ **Kill-switch arming + manual-trade UX gate** — operator-only arming surface; build the UI gate that requires
    explicit operator action before live trading. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): ManualPendingQueue
    engine + 4 API endpoints shipped at `execution-service@1e119a61f`; ManualTradeGateDialog + dart-client.ts + mock
@@ -282,21 +290,21 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
-11. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator**
-    — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate. Root cause
-    likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3 `DefaultReserveInterestRateStrategy`
-    contract on mainnet (per-asset deployment addresses) + extract canonical `optimalUsageRatio` /
-    `baseVariableBorrowRate` / `variableRateSlope1` / `variableRateSlope2` per asset; (b) cross-ref against current
-    `LendingRateImpactCalculator.IRM_PARAMS` in `execution-service/.../matching_engine/lending/rate_impact.py`; (c)
-    update params from on-chain truth + re-run harness; (d) verify slope2 (post-optimal) path is implemented; (e)
-    cross-check `reserveFactor` is applied correctly (`supplyRate = borrowRate × utilization × (1 - reserveFactor)`);
-    (f) iterate to ≤10bps median. Operator direction 2026-05-14: "every problem solved" — no time cap. Spawn
-    Tenderly-fork sub-agent for parallel param-sweep if step (a) shows ≥3 assets out of date. (research 1.2×, ~6
-    baseline = 7.2 cal; could be more depending on root cause)
-    **DONE (2026-05-14)**: 5th bug (block off-by-one) shipped `execution-service@70825a432`; UAC IRM defaults updated
+11. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
+    operator** — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate.
+    Root cause likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3
+    `DefaultReserveInterestRateStrategy` contract on mainnet (per-asset deployment addresses) + extract canonical
+    `optimalUsageRatio` / `baseVariableBorrowRate` / `variableRateSlope1` / `variableRateSlope2` per asset; (b)
+    cross-ref against current `LendingRateImpactCalculator.IRM_PARAMS` in
+    `execution-service/.../matching_engine/lending/rate_impact.py`; (c) update params from on-chain truth + re-run
+    harness; (d) verify slope2 (post-optimal) path is implemented; (e) cross-check `reserveFactor` is applied correctly
+    (`supplyRate = borrowRate × utilization × (1 - reserveFactor)`); (f) iterate to ≤10bps median. Operator direction
+    2026-05-14: "every problem solved" — no time cap. Spawn Tenderly-fork sub-agent for parallel param-sweep if step (a)
+    shows ≥3 assets out of date. (research 1.2×, ~6 baseline = 7.2 cal; could be more depending on root cause) **DONE
+    (2026-05-14)**: 5th bug (block off-by-one) shipped `execution-service@70825a432`; UAC IRM defaults updated
     `unified-api-contracts@215ed3e` (USDC/USDT/DAI/WBTC/wstETH/rETH V2-ABI-verified params); issue doc update in
-    `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run.
-    Remaining: operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
+    `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run. Remaining:
+    operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
 12. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
