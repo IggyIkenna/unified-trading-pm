@@ -1734,6 +1734,67 @@ else
     log_success "STEP 5.74: skipped (checker or SOURCE_DIR not provisioned)"
 fi
 
+# ── STEP 5.75: L1 — DataType enum mode-agnosticism ───────────────────────────
+#
+# batch=live architecture: DataType enum values must be mode-agnostic.
+# No LIVE_/BATCH_ prefixed member names are permitted in any DataType enum
+# class (e.g. LIVE_PRICE, BATCH_OHLCV are banned; PRICE, OHLCV are correct).
+# Mode-specific behaviour is driven by RuntimeMode / the pipeline mode flag,
+# NOT by separate per-mode DataType variants.
+#
+# Detection: grep for LIVE_/BATCH_ prefixed identifier assignments inside
+# files that declare 'class DataType'. Pre-audit 2026-05-10 confirmed
+# 0 violations workspace-wide; DAY-1 ENABLE.
+#
+# Opt-out line: # noqa: L1-mode-prefix (requires team-lead approval).
+# Plan: batch_live_symmetry_2026_05_10.md Tab 3 L1.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    _L1_DT_FILES=$(rg -l --type py "^class DataType\b" "${SOURCE_DIR}/" 2>/dev/null || true)
+    if [ -n "$_L1_DT_FILES" ]; then
+        _L1_HITS=$(echo "$_L1_DT_FILES" | xargs rg -n "^\s+(LIVE_|BATCH_)[A-Z][A-Z0-9_]*\s*=" 2>/dev/null \
+            | grep -v "# noqa: L1-mode-prefix" || true)
+        if [ -n "$_L1_HITS" ]; then
+            log_fail "STEP 5.75: LIVE_/BATCH_ prefixed DataType enum members found — DataType values must be mode-agnostic (batch_live_symmetry L1). Rename to mode-agnostic name; drive mode via RuntimeMode flag."
+            printf "  %s\n" "$_L1_HITS"
+            V=$(( V + 1 ))
+        else
+            log_success "STEP 5.75: DataType enum members are mode-agnostic (no LIVE_/BATCH_ prefixes)"
+        fi
+    else
+        log_success "STEP 5.75: skipped (no DataType class in this service)"
+    fi
+else
+    log_success "STEP 5.75: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
+# ── STEP 5.76: L5 — No service-level DataType enum redeclarations ─────────────
+#
+# DataType enum lives exclusively in unified-api-contracts (UAC).
+# No service or library is permitted to declare 'class DataType' locally.
+# Services must import: from unified_api_contracts import DataType.
+#
+# UAC itself is exempt (canonical owner). Detection: grep for
+# '^class DataType' in service Python source dirs.
+# Pre-audit 2026-05-10 confirmed 0 violations workspace-wide; DAY-1 ENABLE.
+#
+# Plan: batch_live_symmetry_2026_05_10.md Tab 3 L5.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
+    if [[ "${REPO:-}" == "unified-api-contracts" ]]; then
+        log_success "STEP 5.76: skipped (UAC is the canonical DataType owner)"
+    else
+        _L5_HITS=$(rg -n --type py "^class DataType\b" "${SOURCE_DIR}/" 2>/dev/null || true)
+        if [ -n "$_L5_HITS" ]; then
+            log_fail "STEP 5.76: Service-level DataType class declaration found — import from unified_api_contracts instead, never redeclare (batch_live_symmetry L5)."
+            printf "  %s\n" "$_L5_HITS"
+            V=$(( V + 1 ))
+        else
+            log_success "STEP 5.76: No service-level DataType redeclarations"
+        fi
+    fi
+else
+    log_success "STEP 5.76: skipped (SOURCE_DIR not set or not a directory)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
