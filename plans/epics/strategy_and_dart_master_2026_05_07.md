@@ -37,15 +37,16 @@ locked_since: 2026-05-07
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the audit-driven
 > promote workflow plans
 > ([`promote_workflow_may23_cli_path_2026_05_10`](../active/promote_workflow_may23_cli_path_2026_05_10.md) dual-track
-> + [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
-> extension) ship the cutover-blocker UI track that this umbrella's DART scope depends on. **BE AWARE** when touching
-> `unified-trading-system-ui/components/promote/*` (Promote workflow context + flow modal — owned by May-23 plan
-> Phase U4 wiring), `unified-trading-system-ui/components/shell/dart-scope-bar.tsx` (3-way visualization owner is
-> May-23 Phase U5 = `pvl-p23a`), or any `ManualTradeGateDialog` work (May-23 Phase U6 = `pvl-p23c`). Post-cutover plan
-> Phase 1 also consolidates 4 competing UAC lifecycle SSOTs (`StrategyMaturityPhase` chosen canonical) — coordinate
-> Phase 1 strategy-service `availability/store.py` migration with this umbrella's archetype lifecycle Phase 1 work.
-> Question doc:
-> [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
+>
+> - [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](../active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+>   extension) ship the cutover-blocker UI track that this umbrella's DART scope depends on. **BE AWARE** when touching
+>   `unified-trading-system-ui/components/promote/*` (Promote workflow context + flow modal — owned by May-23 plan Phase
+>   U4 wiring), `unified-trading-system-ui/components/shell/dart-scope-bar.tsx` (3-way visualization owner is May-23
+>   Phase U5 = `pvl-p23a`), or any `ManualTradeGateDialog` work (May-23 Phase U6 = `pvl-p23c`). Post-cutover plan Phase
+>   1 also consolidates 4 competing UAC lifecycle SSOTs (`StrategyMaturityPhase` chosen canonical) — coordinate Phase 1
+>   strategy-service `availability/store.py` migration with this umbrella's archetype lifecycle Phase 1 work. Question
+>   doc:
+>   [`plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md`](../questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md).
 
 ## Scope
 
@@ -212,9 +213,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 > **May-23 gating clarification** (deep audit 2026-05-07): the May-23 lead archetype `carry_staked_basis` (and
 > hedging-leg `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per
 > Stream B canonicalisation 2026-05-07)) are perp-based — NO `-dated-` slot is on the May-23 critical path. Phase 1.8
-> roll
-> mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes live).
-> Stays P1, but does NOT gate the May-23 cutover.
+> roll mechanism is **advisory pre-May-23, hard prerequisite post-May-23** (when the first `-dated-` archetype goes
+> live). Stays P1, but does NOT gate the May-23 cutover.
 
 - [ ] [CODE] P1. **UAC registry + event contract.** Implement gap #11 from `uac-registry-gaps.md`:
       `UnderlyingDeclaration`, `RollTriggerPolicy`, `REPRESENTATIVE_FUTURE_REGISTRY` tuple.
@@ -458,10 +458,20 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
 ## Sub-plans (referenced from this epic)
 
-- **`plans/active/compute_optimization_mock_data_2026_05_13.md`** (~4.8 cal-AI-days, P1, deadline 2026-05-23) — Mock-data optimization sprint covering: per-stage parallelization (MDPS / features-service / strategy / execution-alpha / ml-training), big-machine SKU matrix extension (`c3-highcpu-88` / `-176` / `m3-megamem-128` / `m3-ultramem-160`), `strategy-service/scripts/run_2yr_config_grid_backtest.py` extension to cover all 6 Tier A archetype families, codex SSOTs for performance-targets + cutover-window dependency-order. Mock-data approach lets this run in parallel with real-backfill workstream (no I/O dependency). MVP universe scope per `codex/09-strategy/mvp-universe-per-asset-group.md`.
-- **`plans/active/strategy_archetype_taxonomy_2026_05_12.md`** — archetype taxonomy refinement (separately cross-referenced earlier; parent_epic already set).
+- **`plans/active/compute_optimization_mock_data_2026_05_13.md`** (~4.8 cal-AI-days, P1, deadline 2026-05-23) —
+  Mock-data optimization sprint covering: per-stage parallelization (MDPS / features-service / strategy /
+  execution-alpha / ml-training), big-machine SKU matrix extension (`c3-highcpu-88` / `-176` / `m3-megamem-128` /
+  `m3-ultramem-160`), `strategy-service/scripts/run_2yr_config_grid_backtest.py` extension to cover all 6 Tier A
+  archetype families, codex SSOTs for performance-targets + cutover-window dependency-order. Mock-data approach lets
+  this run in parallel with real-backfill workstream (no I/O dependency). MVP universe scope per
+  `codex/09-strategy/mvp-universe-per-asset-group.md`.
+- **`plans/active/strategy_archetype_taxonomy_2026_05_12.md`** — archetype taxonomy refinement (separately
+  cross-referenced earlier; parent_epic already set).
 
-**MVP scope SSOT for backtest config-grid + ML training sizing**: [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) defines Tier A (backtest-complete by May-23) vs Tier B (code-ready architecture only). Tier A = ml-continuous (CeFi + ES) + ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage-event-markets + defi-carry-family.
+**MVP scope SSOT for backtest config-grid + ML training sizing**:
+[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) defines
+Tier A (backtest-complete by May-23) vs Tier B (code-ready architecture only). Tier A = ml-continuous (CeFi + ES) +
+ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage-event-markets + defi-carry-family.
 
 ## Coordination with sibling plans
 
@@ -543,6 +553,17 @@ Phase 10 (master matrix + combinatoric + per-strategy detail), and Phase 10.5 (l
 remain open across Phase 2 follow-up UI, Phase 3 (DROPPED), Phase 4 (legacy deletion gated reordered), Phase 5 (Unity
 UAT post-May-23), Phase 6 (capability gaps), Phase 9 follow-up (markdown↔TS parity test), Phase 10.6 (service-split
 refactor), Phase 10.7 (allocator split), Phase 11 (futures roll), and the Phase 3-11 fold-in residuals.
+
+## Referenced sub-plans (active, added 2026-05-14)
+
+Active sub-plans owned by or closely coordinated with this epic:
+
+| Plan                                                                                                                                 | Role                                                                                                | Status |
+| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------ |
+| [`active/simulation_scenarios_topology_price_shocks_2026_05_09`](../active/simulation_scenarios_topology_price_shocks_2026_05_09.md) | Simulation scenarios — topology + price shock stress tests for strategy backtests                   | Active |
+| [`active/simulation_scenarios_post_cutover_2026_06_01`](../active/simulation_scenarios_post_cutover_2026_06_01.md)                   | Simulation scenarios (post-cutover) — extended scenario library for June-1+ strategy expansion      | Active |
+| [`active/topology_qgroup_gap_closure_2026_05_09`](../active/topology_qgroup_gap_closure_2026_05_09.md)                               | Topology + qgroup gap closure — strategy topology + question-group wiring gap remediation           | Active |
+| [`active/client_reporting_pnl_attribution_mvp_2026_05_10`](../active/client_reporting_pnl_attribution_mvp_2026_05_10.md)             | Client reporting + P&L attribution MVP — per-client P&L attribution surface for May-23 live trading | Active |
 
 ## Source plan archive references
 
