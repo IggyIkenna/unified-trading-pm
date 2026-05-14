@@ -24,7 +24,7 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC; defi/tradfi ~08:34 UTC). Script 3 apply-flips **BLOCKED** on classifier fix — P1 issue filed (`classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md`). Sports/prediction apply-flips deferred (separate authorized slot needed).
+> **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC; defi/tradfi ~08:34 UTC). **✅ Script 3 classifier fix RESOLVED 2026-05-14** — tarball refresh + UAC merge; re-run confirmed 0 upgrades for all groups (TypeError gone; default reasons already most specific; issue CLOSED). Sports/prediction Scripts 1+2 apply-flips deferred (separate authorized slot needed; 99,620 sports + 50 prediction phantoms).
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -319,28 +319,30 @@ VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,
 
 ### Script 3 — Legacy-blank upgradeable to typed `EXPECTED_*` reason
 
-> **⚠️ Classifier broken**: `classify_blank_reason_row() got an unexpected keyword argument 'fixture_manifest'` —
-> per-row failure for all candidate rows in defi/sports/prediction. Script continues (non-fatal), result is 0 upgrades.
-> Filed as issue: `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (P1).
+> **✅ RESOLVED 2026-05-14 (slot-8-ikenna)** — `fixture_manifest` TypeError fixed by tarball refresh (UTL +
+> instruments-service + UAC with `refdata_cadence.py` from LDR merge). Re-run locally (DEPLOYMENT_ENV=prod):
+> 0 upgrades for all groups — existing default reasons are the most specific classification possible.
+> Apply-flips would produce 0 changes; HOLD per Ikenna direction remains.
+> Issue doc: `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (CLOSED).
 
 | asset_group | Candidates (% of manifest) | Upgrades | Notes |
 | ----------- | -------------------------: | -------: | ----- |
-| defi        | 604,951 (37.66%)           | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
+| defi        | 0                          | 0        | no legacy-blank candidates (run 2026-05-14) |
 | cefi        | 0                          | 0        | clean — no legacy-blank candidates |
 | tradfi      | 0                          | 0        | clean — no legacy-blank candidates |
-| sports      | 1,868,285 (69.82%)         | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
-| prediction  | 41 (0.24%)                 | 0        | classifier `fixture_manifest` kwarg error — all rows fail |
+| sports      | 1,829,839 (69.66%)         | 0        | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
+| prediction  | 41 (0.24%)                 | 0        | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
 
 ### Gate 3 → Gate 4 gate status
 
 | Gate | Condition | Status |
 | ---- | --------- | ------ |
 | Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | ✅ FIRED 07:30 UTC (_agent_pings.md) |
-| Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | 🔴 BLOCKED — issue filed P1 |
+| Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | ✅ RESOLVED 2026-05-14 (tarball refresh + UAC merge) |
 | cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | ✅ COMPLETE (08:39 UTC) |
 | defi/tradfi phantom apply | Scripts 1+2 `--unphantom`/`--apply-flips` | ✅ COMPLETE (08:34 UTC) |
 | cefi phantom apply | Script 1 `--unphantom` (2,223 flips) | ✅ COMPLETE (08:39 UTC) |
-| Script 3 apply-flips | defi/sports/prediction legacy-blank upgrades | 🔴 BLOCKED on classifier fix |
+| Script 3 apply-flips | defi/sports/prediction legacy-blank upgrades | ✅ N/A — 0 upgrades; all default reasons already most specific; HOLD per Ikenna direction |
 
 ## Phantom audit Gate 4 results — 2026-05-13 apply-flips (cefi/defi/tradfi COMPLETE)
 
@@ -366,7 +368,7 @@ All 3 VMs self-deleted on completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
 | Phase / item | Status as of 2026-05-13 | Successor / blocker |
 | ------------ | ----------------------- | ------------------- |
 | Script 1+2 apply-flips cefi/defi/tradfi | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps) | — |
-| Script 3 apply-flips (defi/sports/prediction) | 🔴 BLOCKED — 0 upgrades due to `fixture_manifest` kwarg error | Fix in `classify_blank_reason_row()` UTL/reconciler; re-run dry-run first. Issue: `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` |
+| Script 3 apply-flips (defi/sports/prediction) | ✅ CLOSED — 0 upgrades (TypeError resolved 2026-05-14; apply-flips would produce 0 changes; HOLD per Ikenna direction moot) | Issue `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` CLOSED |
 | Sports/prediction apply-flips Scripts 1+2 | ⏸ DEFERRED — not in slot 6 scope | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50 |
 | `--data-types` pass-ordering for apply-flips | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
 | Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ⏸ DEFERRED — spec written in plan; script not yet shipped | Blocker: reconciliation pass ordering must be settled first |
