@@ -115,7 +115,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green
 
 ### B-012 · Phase 8.A surface-7 — custody + wallet signing coverage
-- **Status**: DISPATCHED → slot 6 2026-05-14 (execution-service + UTL are clean; start now — no Phase 0 blocker on these repos)
+- **Status**: DONE @execution-service@fdd82def+@fe8b1d3e+PM@3d1cbcbc 2026-05-14 (slot 6 — custody_config_from_wallet_provisioning bridge + 11 new tests; KMS mock decrypt; QG 5837 passed)
 - **Task**: 100% coverage on `WalletProvisioningConfig` load + `signing_surface` dispatch in execution-service. Test: CLOUD_KMS_ENCRYPTED path signs correctly; wrong config → raises loud at boot (not at trade time). Mock signing at the KMS client level (no real keys).
 - **Repos**: `execution-service` + `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -208,6 +208,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
+| 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | execution-service@fdd82def + @fe8b1d3e + PM@3d1cbcbc ✅ (11 new tests; QG 5837 passed) |
 
 ---
 
