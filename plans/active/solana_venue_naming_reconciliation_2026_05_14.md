@@ -110,13 +110,23 @@ grep -n "f\".*-{self._chain}\"\|f\".*SOLANA" \
 
 ## Phase 2 — QG + dry-run verification
 
-- [ ] [SCRIPT] P0. Run `cd instruments-service && bash scripts/quality-gates.sh` — confirm ruff + basedpyright green on
-      migration script.
+- [x] [SCRIPT] P0. Run `cd instruments-service && bash scripts/quality-gates.sh` — confirm ruff + basedpyright green on
+      migration script. (QG exit 0 — 2026-05-14; scripts/ dir excluded from basedpyright by SOURCE_DIR=instruments_service)
 
-- [ ] [SCRIPT] P0. Run migration script in dry-run mode (local, DEPLOYMENT_ENV=prod):
-      `CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod WORKSPACE_ROOT=... python scripts/migrate_solana_bare_name_venues.py --dry-run`
-      Verify: - Category A venues: X parquet paths would be copied; X manifest rows would be updated - Category B venues
-      (DRIFT, JITO): X manifest rows would be phantom-marked - No errors
+- [x] [SCRIPT] P0. Run migration script in dry-run mode (local, DEPLOYMENT_ENV=prod):
+      `CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod GCP_PROJECT_ID=central-element-323112 python scripts/migrate_solana_bare_name_venues.py`
+      Results (2026-05-14 16:25-16:32 UTC):
+      - Manifest: 1,606,190 rows read from `market-data-tick-defi-prd-central-element-323112`
+      - Category A: 169 rows (KAMINO=32, MARINADE=30, ORCA=31, RAYDIUM=31, SOLEND=29, MARGINFI=16)
+      - Category B: 59 rows (DRIFT+JITO)
+      - Would add 169 new {PROTOCOL}-SOLANA manifest rows; would mark 169 old + 59 Cat B rows as attempted_failed
+      - **FINDING: parquets_migrated=0** — no parquet files found at probed GCS paths for any of the 169 captured rows.
+        This means either (a) actual parquet data is at a different path structure than what the script probes, or
+        (b) the bare-name "captured" manifest rows are phantom captures (no actual file on disk). Requires operator
+        verification before Phase 3 apply: confirm whether parquet files exist at
+        `raw_tick_data/by_date/day=*/asset_group=defi/venue=MARINADE/...` or `category=defi/venue=MARINADE/...`
+        in bucket `market-data-tick-defi-prd-central-element-323112`. If not → phantom captures, apply is safe.
+        If yes → script path template needs correction before apply.
 
 ## Phase 3 — VM migration + verification
 
@@ -149,15 +159,27 @@ No downstream plan needed — this plan is self-contained.
 
 ---
 
+## Deferred work after 2026-05-14 slot-8-session-2
+
+| Deferred item | Successor / action |
+| --- | --- |
+| Phase 3 VM migration apply | **BLOCKED-OPERATOR-DECISION**: Verify whether parquet files exist at `raw_tick_data/.../venue=MARINADE/...` in `market-data-tick-defi-prd-central-element-323112` before apply. Dry-run found `parquets_migrated=0` for all 169 Cat A rows — likely phantom captures, but confirm before executing write. |
+| Phase 4 Codex update | Update `codex/04-architecture/solana-defi-coverage.md` once Phase 3 verified. |
+
+---
+
 ## Full-execution criterion
 
 - ✅ Migration script ships + QG passes.
-  - **What ran**: `bash scripts/quality-gates.sh` in instruments-service.
-  - **Verification**: 0 ruff/basedpyright errors on migration script.
+  - **What ran**: `bash scripts/quality-gates.sh` in instruments-service (2026-05-14).
+  - **Verification**: QG exit 0; 7/7 unit tests passing.
 
-- ✅ VM migration completes (Phase 3) — OPERATOR-AUTHORIZED.
-  - **What ran**: `launch-manifest-migration-vm.sh --apply` on GCE asia-northeast1-c.
-  - **Verification**: MARINADE/RAYDIUM/ORCA captured rows = 0; MARINADE-SOLANA/RAYDIUM-SOLANA/ORCA-SOLANA captured rows
-    ≥ 30/31/31; sample parquet `venue` column = `{PROTOCOL}-SOLANA`.
+- ✅ Dry-run verified.
+  - **What ran**: `python scripts/migrate_solana_bare_name_venues.py` (dry-run default) against prod manifest.
+  - **Verification**: 169 Cat A + 59 Cat B rows identified; no errors. FINDING: `parquets_migrated=0` — requires operator parquet-existence verification before Phase 3 apply.
 
-**Handoff exception**: Phase 3 VM migration deferred to next authorized backfill slot. Phase 1-2 ship now.
+- ⏳ VM migration completes (Phase 3) — BLOCKED-OPERATOR-DECISION (parquet path verification needed).
+  - **What ran**: N/A — pending operator verification.
+  - **Verification**: MARINADE/RAYDIUM/ORCA captured rows = 0; {PROTOCOL}-SOLANA captured ≥ 30/31/31.
+
+**Handoff**: Phase 1-2 done. Phase 3 blocked on operator parquet-path verification (see Deferred work above).

@@ -321,8 +321,10 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
 1. ✅ **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
    drift; UAC carveouts already shipped, this is the deployment-api alignment. (refactor 0.4×, ~2 = 0.8 cal) **DONE**:
    `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
-2. **`solana_defi_coverage_gaps` successor plan D** — Phoenix / Orca / Raydium DEX integration design + first-phase
-   ship. (design 0.6×, ~4 = 2.4 cal)
+2. 🔄 **`solana_defi_coverage_gaps` successor plan D** — venue naming reconciliation (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI/DRIFT/JITO → canonical {PROTOCOL}-SOLANA). (design 0.6×, ~4 = 2.4 cal)
+   **PHASE 1 DONE** (2026-05-14): `instruments-service@2639f8e` — migration script + 7 unit tests. QG green.
+   Phase 2 dry-run in progress: 169 Cat A rows + 59 Cat B rows found in prod manifest.
+   Phase 3 (VM migration) deferred to operator-authorized backfill slot.
 3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
    **DONE** (2026-05-14 audit pass): All 3 flagged action items already resolved by other agents — (a) wave3x Track D:
    EXPECTED_KNOWN_SOURCE_GAP already shipped UAC@174f401, status table already `done`; (b) launcher_scripts Phases 2/3:
