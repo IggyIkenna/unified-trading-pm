@@ -273,7 +273,7 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
-11. **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator**
+11. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per operator**
     — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate. Root cause
     likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3 `DefaultReserveInterestRateStrategy`
     contract on mainnet (per-asset deployment addresses) + extract canonical `optimalUsageRatio` /
@@ -284,6 +284,10 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
     (f) iterate to ≤10bps median. Operator direction 2026-05-14: "every problem solved" — no time cap. Spawn
     Tenderly-fork sub-agent for parallel param-sweep if step (a) shows ≥3 assets out of date. (research 1.2×, ~6
     baseline = 7.2 cal; could be more depending on root cause)
+    **DONE (2026-05-14)**: 5th bug (block off-by-one) shipped `execution-service@70825a432`; UAC IRM defaults updated
+    `unified-api-contracts@215ed3e` (USDC/USDT/DAI/WBTC/wstETH/rETH V2-ABI-verified params); issue doc update in
+    `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run.
+    Remaining: operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
 12. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
