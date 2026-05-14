@@ -5,8 +5,25 @@ author: slot-2-api-football
 source:
   - instruments_service/engine/orchestrator.py
 severity: P2
+status: ✅ RESOLVED 2026-05-14 — instruments-service@b91b88a (slot-6-w2)
 suggested_owner: instruments-service maintainer
 ---
+
+## Resolution (2026-05-14, slot-6-w2)
+
+✅ Fixed at instruments-service@b91b88a. Both fast paths now guard against
+`recovery_fixture_ids`:
+
+1. **Per-fixture `_skip_urdi` path** (orchestrator.py:1704-1717): added
+   `if not gcs_fixture_ids and not recovery_fixture_ids: return {}` guard;
+   when GCS empty but recovery IDs provided, uses them directly via
+   `gcs_fixture_ids = list(recovery_fixture_ids)`.
+2. **Zero-fixture path** (orchestrator.py:1881): replaced
+   `fixture_ids_override=[]` with
+   `fixture_ids_override=list(recovery_fixture_ids) if recovery_fixture_ids else []`.
+
+Two regression tests in `tests/unit/test_orchestrator_helpers.py`
+(`TestRecoveryFixtureIdsBypassBug`) lock in both source patterns.
 
 ## What I found
 
