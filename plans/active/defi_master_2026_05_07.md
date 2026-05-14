@@ -612,6 +612,16 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 1. **Solana coverage is genuinely thin** — `lst-rates-{pid}` has 784 SOLANA rows over a 2-year window (~monthly
    cadence). `carry_staked_basis` Solana leg won't have daily granularity until this is filled. Pyth wiring (separate
    item) is necessary-not-sufficient.
+
+   **Method-canonicalisation note (added 2026-05-14):** sub-agents have been suggesting DefiLlama as an LST-APR
+   approximation. That is a banned reasoning pattern per `cursor-configs/CLAUDE.md` § "External Data Is Always
+   Available" AND empirically unnecessary — on-chain `exchangeRate()` via Alchemy gives exact, reproducible,
+   ~4-year-deep history for every EVM LST in `lst_rates_handler.py`. Coinbase's public `wrapped-assets/CBETH` endpoint
+   returns the same value to 10 decimal places (0.00 bps delta) and reconstructed APY matches Coinbase-reported APY to
+   ~5 bps. Full evidence + recommended decisions:
+   [`issues/lst_apr_sourcing_method_validated_2026_05_14.md`](issues/lst_apr_sourcing_method_validated_2026_05_14.md).
+   For Solana mSOL specifically: thin coverage is a Tier-2 subgraph-registration problem, NOT a vendor-switch problem.
+
 2. **Kebab/snake `data_type` vocab inconsistency** — most per-data_type DeFi buckets contain BOTH forms for the SAME
    data (e.g. `lending-indices-{pid}` has 24,976 kebab + 12,024 snake_case rows). Read-time canonicaliser handles it
    today but it's a real follow-up: write a one-shot migration to rewrite kebab → snake then delete the canonicaliser.

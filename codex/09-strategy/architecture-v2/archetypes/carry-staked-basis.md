@@ -29,14 +29,13 @@ on `(perp_venue, lst_asset)`; if False, the slot is rejected.
 
 ## Token / position flow — `LST_AS_MARGIN` (only allowed structure)
 
-> **Hedge ratio audit 2026-05-12 (Phase 6A of `defi_simulation_realism_2026_05_10`)** — current hedge
-> sizing is **STATIC** at `eth_qty * (1 - margin_haircut)` (1:1 against LST principal clamped by venue
-> haircut), confirmed at `staked_basis.py:264`. NO per-tick / per-bar adjustment for LST/native peg drift.
-> Phase 6B implementation (Harsh slot 4) introduces dynamic adjustment using LST exchange rate stream
-> (jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH) with `peg_drift_threshold_bps` hysteresis
-> band (default 25 bps ≈ 3σ daily). Full spec:
-> [`../../../04-architecture/amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md)
-> § "Hedge-ratio dynamic adjustment (Phase 6)".
+> **Hedge ratio audit 2026-05-12 (Phase 6A of `defi_simulation_realism_2026_05_10`)** — current hedge sizing is
+> **STATIC** at `eth_qty * (1 - margin_haircut)` (1:1 against LST principal clamped by venue haircut), confirmed at
+> `staked_basis.py:264`. NO per-tick / per-bar adjustment for LST/native peg drift. Phase 6B implementation (Harsh
+> slot 4) introduces dynamic adjustment using LST exchange rate stream (jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH,
+> stETH/ETH, weETH/ETH) with `peg_drift_threshold_bps` hysteresis band (default 25 bps ≈ 3σ daily). Full spec:
+> [`../../../04-architecture/amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md) §
+> "Hedge-ratio dynamic adjustment (Phase 6)".
 
 ```
 1. SWAP (leader): USDC --> ETH/SOL on a spot venue (UNISWAP_V3, JUPITER, ...).
@@ -85,9 +84,15 @@ staking_apy_bps = ((rate[t] / rate[t-1])^365 - 1) * 1e4
 ```
 
 `rate[t]` is the LST contract's current exchange rate (e.g. `getPooledEthByShares` for stETH, `getExchangeRate` for
-rETH, on-chain method per LST captured in
+rETH, `exchangeRate` for cbETH, on-chain method per LST captured in
 [`market-tick-data-service/.../lst_rates_handler.py`](../../../../market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py)).
 This is what the position would actually earn — not a DefiLlama-modelled or vendor-reported APY.
+
+> **Non-goal: DefiLlama yields.** DefiLlama is a TVL / protocol-risk-context source only; it is **not** the LST APR
+> source for this archetype. Staking APY is reconstructed from on-chain rate growth via the formula above and audited
+> against the issuer's public endpoint where one exists (cbETH ↔ Coinbase `wrapped-assets/CBETH`, validated 0.00 bps
+> drift on 2026-05-14). Empirical evidence + recommended decisions:
+> [`plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md`](../../../../plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md).
 
 `funding_rate_apy_bps` = venue-published funding rate × cycles/day × 365 (pure arithmetic on raw venue data, no
 modelling).
@@ -120,30 +125,29 @@ Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
 Bybit/METH + Bybit/USDe-as-stable-not-LST + OKX/wstETH; final count depends on Stream A live-probe haircut
 verifications). This **supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
 
-**Per-venue wrap-step discipline (added 2026-05-12 per
-[`pnl-attribution.md`](../cross-cutting/pnl-attribution.md) HARD RULE #5
-"Staking yield: wrapped (price-delta) vs rebasing (balance-delta)")**: the
-on-chain `STAKE` leg shape depends on the perp venue's accepted form:
+**Per-venue wrap-step discipline (added 2026-05-12 per [`pnl-attribution.md`](../cross-cutting/pnl-attribution.md) HARD
+RULE #5 "Staking yield: wrapped (price-delta) vs rebasing (balance-delta)")**: the on-chain `STAKE` leg shape depends on
+the perp venue's accepted form:
 
-| perp_venue | LST form | `STAKE` leg sequence | P&L attribution factor |
-|---|---|---|---|
-| DRIFT (Solana) | JitoSOL / mSOL (natively non-rebasing) | `SWAP(USDC→SOL) → STAKE(SOL→jitoSOL via Jito stake pool) → TRANSFER(jitoSOL → Drift)` — no wrap step needed | `CARRY_BASE` (oracle price delta from Jito stake-pool getter) |
-| DERIBIT | stETH (rebasing; Deribit absorbs daily rebase server-side via 7.5% haircut + offset-credit calibration) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Deribit)` — NO wrap | `CARRY_BASE_REBASING` (position-balance-monitor reads Deribit subaccount balance delta) |
-| BYBIT (UTA) | stETH + METH + USDe (rebasing; Bybit handles daily rebase at UTA layer) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Bybit UTA)` — NO wrap | `CARRY_BASE_REBASING` (position-balance-monitor reads Bybit UTA balance delta) |
-| OKX (multi-currency margin) | wstETH (wrapped non-rebasing — OKX has no daily-rebase reconciliation) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH → wstETH wrap via Lido wrap contract) → TRANSFER(wstETH → OKX)` | `CARRY_BASE` (oracle price delta from `wstETH.stEthPerToken()`) |
+| perp_venue                  | LST form                                                                                                | `STAKE` leg sequence                                                                                        | P&L attribution factor                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| DRIFT (Solana)              | JitoSOL / mSOL (natively non-rebasing)                                                                  | `SWAP(USDC→SOL) → STAKE(SOL→jitoSOL via Jito stake pool) → TRANSFER(jitoSOL → Drift)` — no wrap step needed | `CARRY_BASE` (oracle price delta from Jito stake-pool getter)                           |
+| DERIBIT                     | stETH (rebasing; Deribit absorbs daily rebase server-side via 7.5% haircut + offset-credit calibration) | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Deribit)` — NO wrap                         | `CARRY_BASE_REBASING` (position-balance-monitor reads Deribit subaccount balance delta) |
+| BYBIT (UTA)                 | stETH + METH + USDe (rebasing; Bybit handles daily rebase at UTA layer)                                 | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH) → TRANSFER(stETH → Bybit UTA)` — NO wrap                       | `CARRY_BASE_REBASING` (position-balance-monitor reads Bybit UTA balance delta)          |
+| OKX (multi-currency margin) | wstETH (wrapped non-rebasing — OKX has no daily-rebase reconciliation)                                  | `SWAP(USDC→ETH) → STAKE(Lido.submit → stETH → wstETH wrap via Lido wrap contract) → TRANSFER(wstETH → OKX)` | `CARRY_BASE` (oracle price delta from `wstETH.stEthPerToken()`)                         |
 
 **Banned** at archetype `_build_legs` time:
 
 - Posting wrapped `wstETH` to Bybit / Deribit — those venues calibrate their margin pricing on rebasing stETH; the
   wrapped form's price diverges from the underlying share-price and the venue's offset-credit math breaks.
-- Posting rebasing `stETH` to OKX — OKX has no daily-rebase reconciliation; the position would mark as undersized
-  every Lido rebase epoch (typically daily) and re-collateralization risk compounds.
+- Posting rebasing `stETH` to OKX — OKX has no daily-rebase reconciliation; the position would mark as undersized every
+  Lido rebase epoch (typically daily) and re-collateralization risk compounds.
 - Treating jitoSOL / mSOL as needing a wrap step — they're natively non-rebasing, the issuer contract mints the
   rate-accreting form directly.
 
-The archetype config (`default_basis_trade.yaml`) discriminator: each `(perp_venue, lst_asset)` row hardcodes
-whether the `STAKE` leg includes the wrap step. This is part of the leg-sequence builder, not a runtime decision —
-the matrix above is the SSOT.
+The archetype config (`default_basis_trade.yaml`) discriminator: each `(perp_venue, lst_asset)` row hardcodes whether
+the `STAKE` leg includes the wrap step. This is part of the leg-sequence builder, not a runtime decision — the matrix
+above is the SSOT.
 
 **Why the prior claim was stale.** The 2026-05-05 SSOT comment in `unified-api-contracts/.../venue_collateral.py`
 asserting _"NO production ETH-perp venue accepts an ETH LST as direct cross-margin today"_ predated three live venue
@@ -228,10 +232,10 @@ STAKE + TRANSFER legs are unwound (TRANSFER LST back + UNSTAKE + reverse SWAP) �
 
 `staking_apy_total_bps` is the aggregated staking APY: base on-chain rate-diff + EIGEN AVS rewards (when the LST is
 restaked) + ETHFI / ANKR / Jito seasonal rewards − dust realisation slippage. Source: features-onchain
-[`engine/staking_apy_total.py`](../../../../features-service (onchain family)/features_onchain_service/engine/staking_apy_total.py)
-aggregator. The same value is consumed by `YieldStakingSimpleRankAllocator` and `CarryStakedBasisRankAllocator` so both
-batch and live allocators see the same number. Restaking economics detail:
-[restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md).
+[`engine/staking_apy_total.py`](../../../../features-service (onchain
+family)/features_onchain_service/engine/staking_apy_total.py) aggregator. The same value is consumed by
+`YieldStakingSimpleRankAllocator` and `CarryStakedBasisRankAllocator` so both batch and live allocators see the same
+number. Restaking economics detail: [restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md).
 
 ## Risk profile
 
