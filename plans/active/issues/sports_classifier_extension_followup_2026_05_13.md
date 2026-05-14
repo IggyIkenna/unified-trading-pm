@@ -6,12 +6,17 @@ source:
   - work_split_2026_05_13_harsh.md (Slot 9 scope, lines 277-281)
   - audit_wave1_quality_2026_05_13.md § "Critical follow-ups" item 2
 severity: P1
+status: RESOLVED — 2026-05-14 slot 4 (Task 1 + Task 2 close-out)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
   primary_owner: next-cycle Harsh slot (UTL + instruments-service scope per issue body)
   composes_with: classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md (parallel P1, both gate Script 3 sports apply-flips)
   ikenna_side_action: NONE — Harsh-side scope; Ikenna-main acked
+child_issues:
+  - plans/active/issues/sports_classifier_player_values_cadence_2026_05_13.md (DONE — uac@17a0f82 + utl@79c72bad)
+  - plans/active/issues/sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (DONE — uac@435abae + utl@79c72bad)
+  - plans/active/issues/sports_classifier_weather_no_fixture_2026_05_13.md (PARTIAL — read-side DONE utl@79c72bad; write-side DEFERRED)
 ---
 
 > **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — P1 self-routed to next-cycle Harsh slot. Scope is fully
@@ -117,3 +122,28 @@ Output: `RECONCILER_COMPLETED: candidates=1868285, upgraded=0` (run_id=`recon-le
 This is consistent with the issue doc noting Script 3 was originally "P1-blocked on classifier signature bug" (`classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md`). The classifier logic is correct; the 0-upgrade result reflects that sports manifest rows either: (a) already carry correct typed reasons, (b) have venue/field naming that doesn't match classifier dispatch keys, or (c) fall inside source coverage windows.
 
 **Apply-flips**: not run (Ikenna's "hold reconciliation VMs for later" hold still in effect). Deferred per operator direction.
+
+---
+
+## Parent close-out — 2026-05-14 slot 4 (Task 2)
+
+**Status: RESOLVED** — all 3 child gaps from the 2026-05-14 Task 1 session have been shipped. This parent issue is now closed.
+
+### Child issue resolution cross-links
+
+| Child issue | Gap | Status | Commits |
+| --- | --- | --- | --- |
+| `sports_classifier_player_values_cadence_2026_05_13.md` | PLAYER_VALUES cadence-aware rule (off-cadence days → EXPECTED_REFDATA_CADENCE_CHANGE) | DONE | uac@17a0f82 (refdata_cadence.py) + utl@79c72bad (_classify_sports extension) |
+| `sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md` | SFI/footystats fixture-pin rule (no fixture → EXPECTED_NO_FIXTURE) | DONE | uac@435abae (EXPECTED_NO_FIXTURE pre-existing) + utl@79c72bad (fixture-pin branch for soccer_football_info, footystats, open_meteo) |
+| `sports_classifier_weather_no_fixture_2026_05_13.md` | open_meteo WEATHER no-fixture read-side + write-side prevention | PARTIAL | Read-side DONE: utl@79c72bad (open_meteo in fixture-pin set); Write-side DEFERRED: instruments-service weather adapter gate pending follow-up issue |
+
+### What this resolves
+
+The parent issue was opened 2026-05-13 when Slot 4 discovered that the Wave 1 audit finding ("sports classifier extension not shipped") was partially misdiagnosed. The 4 rules in the work-split DO exist (committed `3fbc6b3`). The actual 3 gaps were data-type–specific cadence/fixture-pin rules discovered by Slot 4 through `grep-then-read` discipline.
+
+Task 1 (2026-05-14 session) shipped:
+- UAC `refdata_cadence.py` — `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS = frozenset({1, 2})`
+- UTL `_classify_sports` extension — PLAYER_VALUES off-cadence + SFI/footystats/open_meteo fixture-pin
+- 10+ new tests (26 total in classifier section, all pass)
+
+Parent issue is now RESOLVED. Script 3 sports apply-flips remain held per operator direction (Ikenna's hold). The write-side weather gate is the only DEFERRED item (P2, low priority, filed in child issue doc).
