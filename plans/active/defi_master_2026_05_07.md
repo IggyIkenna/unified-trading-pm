@@ -415,9 +415,11 @@ these venues.
       (mirror `launch-sfi-forward-poll.sh`). Polls `/funding` every 1-5 min → MTDS `data_type=perp_funding`;
       `/recentTrades` every ~10s → live tape; `/orderBookOrders` / `/book` snapshots every ~30s → slippage-modeling
       input. [AUDIT 2026-05-07: FRESH — required before live trading per HANDOVER Item A]
-- [ ] [AGENT] P0. **MTDS perp_funding adapter** for LIGHTER + PACIFICA + EXTENDED — venue iteration in
+- [x] [AGENT] P0. **MTDS perp_funding adapter** for LIGHTER + PACIFICA + EXTENDED — venue iteration in
       `mtds-perp-funding-` VM launcher; schema parity with existing Bybit / Binance / OKX / Deribit funding feed (per
       UAC `data_type=perp_funding` shape). [AUDIT 2026-05-07: FRESH — required before forward-poll launcher works]
+      **DONE** (2026-05-14): market-tick-data-service@78e3b28 — PACIFICA-SOLANA (REST, gated 2025-06-01) +
+      LIGHTER-ZKSYNC (Tardis market_stats, gated 2026-04-17). EXTENDED-STARKNET BLOCKED-OPERATOR-DECISION (Item C).
 - [ ] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
       `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py`. Verify whether Pacifica accepts
       JitoSOL / mSOL as cross-margin (live probe + docs check). YES → add row with haircut citation, unlocks

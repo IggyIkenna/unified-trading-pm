@@ -139,8 +139,12 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    first-phase ship. (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): PM@3fc9a790 —
    `plans/active/solana_lst_native_staking_adapters_2026_05_14.md` created (6 phases,
    SANCTUM+SOLBLAZE+Pyth+native_staking_rates+backfill).
-5. **DEX perp + venue data expansion** — pickup from yesterday's Harsh slot 10 close; extend to additional venues per
-   `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal)
+5. ✅ **DEX perp + venue data expansion** — pickup from yesterday's Harsh slot 10 close; extend to additional venues per
+   `defi_master_2026_05_07` venue matrix. (infra 0.8×, ~5 = 4.0 cal) **DONE** (2026-05-14): market-tick-data-service@78e3b28
+   — PACIFICA-SOLANA (REST, api.pacifica.fi/v1/funding_rate/history, gated 2025-06-01) + LIGHTER-ZKSYNC (Tardis
+   market_stats CSV, datasets.tardis.dev/v1/lighter-zksync/market_stats, gated 2026-04-17, Tardis API key via
+   Secret Manager). Both wired into DEFAULT_PROTOCOLS + _collect_pacifica/_collect_lighter. EXTENDED-STARKNET omitted
+   (BLOCKED-OPERATOR-DECISION per defi_master Item C).
 6. ✅ **Drift JitoSOL+mSOL basis-pair build-out** — eligibility wiring for `carry_staked_basis` per archetype matrix.
    (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): strategy-service@6ff86fe — DRIFT-SOLANA perp_funding in UAC;
    xfail test removed; TestDriftSolanaLstEligibility + perp_hedge_candidates test added; jito-drift + marinade-drift
