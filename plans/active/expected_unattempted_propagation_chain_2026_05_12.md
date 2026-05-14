@@ -428,8 +428,11 @@ grep -rn "subscription_list\|SUBSCRIPTION_LIST\|MVP\|mvp_instruments" \
   --include="*.py" --include="*.yaml" | grep -v .venv | head -40
 ```
 
-- [ ] [CODE] P1. Pre-audit: extract all per-module subscription_list values → union → add `FEATURES_MVP_INSTRUMENTS`
-      constant to UAC `registry/processing_scope.py`.
+- [x] [CODE] P1. Pre-audit: extract all per-module subscription_list values → union → add `FEATURES_MVP_INSTRUMENTS`
+      constant to UAC `registry/processing_scope.py`. **SUPERSEDED BY OPERATOR DIRECTION 2026-05-12**: subscription_list
+      is a runtime-dynamic config (not a static UAC frozenset). No `FEATURES_MVP_INSTRUMENTS` constant added. Instead,
+      Option A (runtime comparison at `_get_instruments()` call point) was chosen and implemented in
+      features-service@4a26ae04 + @a58480fb. No separate code needed here.
 
   **DESIGN DISCOVERY (2026-05-12 slot 4)**: `InstrumentDomainConfig.subscription_list` in all features modules
   (delta_one, calendar, onchain, volatility, commodity, sports, cross_instrument, multi_timeframe) is a **runtime-
@@ -646,20 +649,16 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 
 **Special handling — defi script-3 legacy_blank flips (RESOLVED 2026-05-13 by slot 3 — full smart fix)**:
 
-- [x] [SCRIPT] P0. Defi pre-venue-launch reclassification — RESOLVED 2026-05-13 by slot 3.
-      Original Round 3 dry-run proposed `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED →
-      attempted_failed/LegacyBlankErrorReasonError` for 604,951 rows (would have violated SSOT —
-      pre-launch dates treated as failures). Slot 3 diagnosed correctly: these are pre-venue-launch
-      dates where defi protocols didn't exist yet on a given chain. Full smart fix shipped:
-      - `uac@ca62a19` — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos)
-      - `utl@b0c38a21` — `_classify_defi` checks venue launch (mirrors `_classify_cefi`)
-      - `instruments-service@fafaa0c` — corrector script
-      - **599,486 defi rows reclassified**: `attempted_failed/LegacyBlank` →
-        `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (correct SSOT-compliant state)
-      - 0 cefi corrections (all post-launch)
-      Cross-finding (flagged for operator triage): cefi 789k `attempted_failed` rows still need
-      re-fetch (NOT reclassification — these are real fetch failures, not pre-launch dates).
-      Plan ref: `pm@4e6ed0eb`.
+- [x] [SCRIPT] P0. Defi pre-venue-launch reclassification — RESOLVED 2026-05-13 by slot 3. Original Round 3 dry-run
+      proposed `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED →     attempted_failed/LegacyBlankErrorReasonError` for
+      604,951 rows (would have violated SSOT — pre-launch dates treated as failures). Slot 3 diagnosed correctly: these
+      are pre-venue-launch dates where defi protocols didn't exist yet on a given chain. Full smart fix shipped: -
+      `uac@ca62a19` — `DEFI_VENUE_LAUNCH_DATES` dict (40 protocol-chain combos) - `utl@b0c38a21` — `_classify_defi`
+      checks venue launch (mirrors `_classify_cefi`) - `instruments-service@fafaa0c` — corrector script - **599,486 defi
+      rows reclassified**: `attempted_failed/LegacyBlank` → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (correct
+      SSOT-compliant state) - 0 cefi corrections (all post-launch) Cross-finding (flagged for operator triage): cefi
+      789k `attempted_failed` rows still need re-fetch (NOT reclassification — these are real fetch failures, not
+      pre-launch dates). Plan ref: `pm@4e6ed0eb`.
 
 ---
 
@@ -765,8 +764,12 @@ for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "comm
 | PART C (writegate 2.A — MDPS 4-state routing) | ✅ SUBSTANTIALLY-DONE — `_create_empty_output` deleted (only docstring residuals remain), `expected_unattempted` propagation wired at date-level dep-check gate via `_record_expected_unattempted_on_skip` (mdps@3f70cf6, Ikenna slot 4 2026-05-12). One-line docstring cleanup at `tests/unit/test_futures_chain_adapter.py` shipped at mdps@f50db4e (Harsh slot 2 2026-05-13). | Successor: writegate Phase 6.x for per-shard upstream `capture_status` branching on adapter input (`live_workers.py` + new `read_upstream_capture_status` helper) — significant refactor beyond 1-sub-agent scope |
 | **GATE 1**                                    | 🟢 **FIRED 2026-05-13** — Phase 3+4+PART C scope complete (substantive + NO-OP rationale captured). Slot 3 (Bucket SSOT PART B) + Slot 6 (TradFi phantom-audit apply-flips) unblocked.                                                                                                                                                                                           | n/a                                                                                                                                                                                                               |
 
-- [ ] [SCRIPT] P2. DeFi classifier catalog crossref — verify `defi_classifier.py` references UAC `EXPECTED_UNATTEMPTED_REASONS` enum (not a local set). Add crossref test. **DEFERRED**: low priority post-live-cutover. Issue: plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md
-- [ ] [SCRIPT] P2. Sports classifier extension — wire `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SEASON` reasons into sports classifier rules that reference fixture-count thresholds. **DEFERRED**: follow-up from slot 9 classifier work. Issue: plans/active/issues/sports_classifier_extension_followup_2026_05_13.md
+- [ ] [SCRIPT] P2. DeFi classifier catalog crossref — verify `defi_classifier.py` references UAC
+      `EXPECTED_UNATTEMPTED_REASONS` enum (not a local set). Add crossref test. **DEFERRED**: low priority
+      post-live-cutover. Issue: plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md
+- [ ] [SCRIPT] P2. Sports classifier extension — wire `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SEASON` reasons into
+      sports classifier rules that reference fixture-count thresholds. **DEFERRED**: follow-up from slot 9 classifier
+      work. Issue: plans/active/issues/sports_classifier_extension_followup_2026_05_13.md
 
 ### Finding (foreign) — pre-existing broken plan link
 

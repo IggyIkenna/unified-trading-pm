@@ -176,9 +176,9 @@ caller code or assuming the legacy contract:
 [`wave2_polymarket_record_captured_from_counts_2026_05_09.md`](../../plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md):49-60).**
 `ManifestWriter.record_captured_from_counts(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope, pipeline_mode)`
 is the streaming-writer-friendly variant of `record_captured`. Accepts `total_rows` (int) + `cluster_counts`
-(`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) + `pipeline_mode` (required) instead of a
-pandas DataFrame — used by streaming writers (PartitionedTickWriter et al) that need to satisfy the BUNDLED_DATA_TYPES
-cluster validation gate without reconstructing per-row DataFrames at finalize time. Internally calls the same
+(`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) + `pipeline_mode` (required) instead of a pandas
+DataFrame — used by streaming writers (PartitionedTickWriter et al) that need to satisfy the BUNDLED_DATA_TYPES cluster
+validation gate without reconstructing per-row DataFrames at finalize time. Internally calls the same
 `_check_cluster_coverage` private gate + `assert_available_at_present` on the envelope timestamp + writes the manifest
 row. Failure modes mirror `record_captured`: under-coverage → `record_failed(ClusterCoverageError)`, missing/null
 envelope → `LookaheadBiasError`, empty observed → `record_empty(SOURCE_RETURNED_ZERO)`. 11 unit tests at
@@ -229,8 +229,8 @@ column inside the parquet, NOT a hive-partition shard axis** (per the
 [canonical banner above](#multi-axis-correction-banner-canonical)) — per-fixture detail at drill-down comes from reading
 the parquet rows, not from a separate manifest row. Avoids ~10× manifest inflation. Per-fixture cluster validation
 enforced via UAC `SPORTS_FIXTURE_CLUSTERS` + UTL `MissingClusterValidationError` (see banner) — clusters are checked
-INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-service (sports family)
-reads the parquet rows.
+INSIDE the per-(league, day) parquet at write time. ML predictions remain fixture-level because features-service (sports
+family) reads the parquet rows.
 
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
 
@@ -679,6 +679,53 @@ api Health-API HTTP join (see
 "Health-API + alerting integration"). The deployment-ui `<LiveDataStatusTab/>` (since deployment-ui@`5738237`) renders
 the resulting rows with per-row `capture_status` badges + per-row staleness badges (WARN ≥ 30s, CRIT ≥ 60s).
 
+### Expected-universe pre-flight chain (propagation chain, codified 2026-05-12)
+
+The manifest dependency chain is: **instruments-service → MTDS → MDPS → features → ML**. Each layer reads the upstream
+layer's manifest before processing and propagates `expected_unattempted` downward rather than writing `attempted_failed`
+for instruments/shards that legitimately should not be processed.
+
+#### Per-layer pre-flight pattern
+
+| Layer               | Pre-flight check                                                                                    | On skip → writes                                                             | Reason code                         |
+| ------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------- |
+| **MTDS**            | Read instruments-service manifest; if shard is `empty_confirmed` or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
+| **MDPS**            | Read MTDS manifest via `DependencyChecker`; if MTDS shard absent or `expected_unattempted` → skip   | `record_expected_unattempted(..., reason=EXPECTED_UPSTREAM_EMPTY)`           | `EXPECTED_UPSTREAM_EMPTY`           |
+| **features**        | At `_get_instruments()` call: compare full catalog vs runtime `subscription_list` scope gate        | `record_expected_unattempted(..., reason=EXPECTED_OUTSIDE_PROCESSING_SCOPE)` | `EXPECTED_OUTSIDE_PROCESSING_SCOPE` |
+| **features/sports** | Sports classifier: check fixture existence for fixture-pinned sources (SFI, footystats, open_meteo) | `record_empty(reason=EXPECTED_NO_FIXTURE)` via legacy_reason_classifier      | `EXPECTED_NO_FIXTURE`               |
+
+#### Three new EmptyConfirmedReason values added (2026-05-12–13)
+
+- **`EXPECTED_OUTSIDE_PROCESSING_SCOPE`** — instrument is in the catalog but outside this service's runtime scope
+  (subscription_list not configured for it). Written by features-service per-module batch handlers.
+- **`EXPECTED_UPSTREAM_EMPTY`** — upstream manifest said `empty_confirmed` or `expected_unattempted`; this service
+  propagates the skip. Written by MTDS and MDPS DependencyChecker on dep-skip.
+- **`EXPECTED_NO_FIXTURE`** — no api*football fixture scheduled for this `(league_id, day)`. Written by UTL
+  `legacy_reason_classifier._classify_sports` for fixture-pinned sources (SFI_PROGRESSIVE_STATS, FOOTYSTATS*\*,
+  OPEN_METEO weather).
+
+#### MDPS downstream consumption contract
+
+When MDPS reads MTDS's capture_status:
+
+| MTDS `capture_status`  | MDPS behaviour                                                    |
+| ---------------------- | ----------------------------------------------------------------- |
+| `captured`             | Process normally                                                  |
+| `empty_confirmed`      | Write zero-volume / forward-fill-last-price bars                  |
+| `attempted_failed`     | Write NaN — do NOT forward-fill (data may exist but fetch failed) |
+| `expected_unattempted` | Write `expected_unattempted` in MDPS manifest + skip              |
+
+#### Implementation refs
+
+- MTDS pre-flight: `market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py` (Phase 1)
+- MDPS dep-skip: `market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py`
+  `DependencyChecker` + `record_expected_unattempted_for_shard` (mdps@3f70cf6, Phase 2)
+- Features scope gate: `features-service/features_service/{delta_one,volatility,sports}/batch_handler.py`
+  (features-service@4a26ae04 / @a58480fb, Phase 3.1-3.N)
+- Sports classifier fixture-pin: `unified_trading_library/legacy_reason_classifier.py:_classify_sports` (utl@79c72bad,
+  Phase 3/sports)
+- Plan: `plans/active/expected_unattempted_propagation_chain_2026_05_12.md`
+
 ### Phantom audit — re-runnable recipe
 
 **Script SSOT:** `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (multi-asset-group; the older
@@ -893,10 +940,10 @@ multi-axis stream.
 > **D-14 resolution status (2026-05-13)**: This finding is logged here AND in the codex doc audit findings issue
 > [`codex_audit_data_2026_05_12.md`](../../plans/active/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
 > been explicitly added as a new todo in `infrastructure_master_2026_05_07.md` (verified by grep 2026-05-13: the rollup
-> worker P5 task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔ `capture_status_counts`).
-> The finding remains OPEN — the rollup worker still derives `dates_found` from a different source than
-> `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD include this
-> reconciliation. Tracked via Sweep 4 of
+> worker P5 task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔
+> `capture_status_counts`). The finding remains OPEN — the rollup worker still derives `dates_found` from a different
+> source than `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD
+> include this reconciliation. Tracked via Sweep 4 of
 > [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
