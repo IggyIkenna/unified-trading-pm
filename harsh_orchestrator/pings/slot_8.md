@@ -6,6 +6,10 @@
 
 [2026-05-15 22:40 UTC] slot-8 — 🟢 STARTED items 11-20 (fresh queue). Beginning item 11: workspace-manifest.json drift audit.
 
+[2026-05-15 UTC] slot-8 — 🏥 **POST-OOM RECOVERY COMPLETE**. Worktrees rebased (PM +83 commits, UTL +1, UAC +1). Stale dirty state dropped. Item 14 (UTL bump strategy audit) flipped: PM@4c4915bc. UTL QG run post-OOM-fix: fixed 5 pre-existing LDR failures (pydantic v2 model_copy, 3 stale event-count assertions, freshness no-overlap fix). UTL@72df886. Residual: 95 xdist-parallel isolation failures (pass with n=1 — pre-existing setup_events() global-state issue, not from OOM fix). BIG FINDING: xdist parallel isolation bug in UTL tests — see below.
+
+[2026-05-15 UTC] slot-8 — 🔴 BIG: UTL has 95 tests that FAIL under xdist parallel workers but PASS with -n1. Root cause: tests/integration/ + tests/events/unit/test_missing_coverage.py modify global setup_events() state. When parallel workers contaminate each other, downstream tests see wrong event sink. This was pre-existing (not from OOM fix). Impact: QG reports FAILING → blocks semver-agent. Recommended fix: add @pytest.mark.isolation / worker-scoped event sink teardown in conftest. Filed as discovery — main to decide priority.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 2 UTL test coverage push. UTL@64bf59a: 3 new test modules —
 test_domain_client_catalog.py (10 tests: BigQueryCatalog DDL gen + GlueCatalog Parquet SerDe/partition/S3 location),
 test_domain_client_readers.py (65 tests: DirectReader/AthenaReader/BqExternalReader/BaseReader/GasFeeReader
