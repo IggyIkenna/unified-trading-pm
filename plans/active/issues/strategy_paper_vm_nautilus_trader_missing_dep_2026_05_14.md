@@ -2,12 +2,35 @@
 title: strategy-paper VM crashes on ModuleNotFoundError nautilus_trader
 created: 2026-05-14
 author: slot-9
+status: RESOLVED — e2e-testing@4e4a5da (2026-05-14 slot-2, Option B applied)
 source:
   - promote_workflow_may23_cli_path_2026_05_10.md Phase 1 RE-RUN
   - e2e-testing/scripts/defi/colocated_engine.py:950
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
+
+> **Frontmatter status added 2026-05-15** — body already has "RESOLVED" section
+> at the bottom from 2026-05-14 slot-2 fix; surfacing it here so the issue
+> doesn't keep appearing in operator triage sweeps.
+>
+> **nautilus_trader workspace audit (added 2026-05-15)** — operator asked
+> whether we still depend on it. Answer: **yes, heavily**. Production
+> imports across `execution-service/execution_service/` only (workspace-wide
+> grep, excluding stubs + tests):
+> - Execution algorithms: TWAP, VWAP, Almgren-Chriss, POV, passive-aggressive,
+>   hybrid-optimal — all use `nautilus_trader.model.{data,objects,enums}` for
+>   typed bars / trades / orders.
+> - Parquet I/O: `ParquetDataCatalog`, `BacktestDataConfig` —
+>   the entire backtest data loading layer in `execution_service/data/`.
+> - Pinned: `nautilus-trader>=1.221.0,<2.0.0` (execution-service/pyproject.toml
+>   + unified-trading-pm/workspace-constraints.toml).
+>
+> Removing it would require reimplementing TWAP/VWAP/Almgren-Chriss math +
+> Parquet typed-bar I/O — a multi-week rewrite. **Keep the dep.** Option B
+> (lazy import) already shipped, so paper-mode VMs no longer touch
+> nautilus_trader on startup. Real-execution VMs still need it and
+> already install execution-service.
 
 ## What I found
 

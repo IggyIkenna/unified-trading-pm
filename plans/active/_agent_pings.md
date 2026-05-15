@@ -2015,3 +2015,27 @@ fewer slots running or more RAM, bump `PYTEST_WORKERS` per-repo first, then
 actually exceeds 10 GB — in which case it dies with exit 137 instead of
 OOM-killing peers. **If your slot agents are already in-flight** ping me — I
 just spawned my 8 fresh, so cross-side ack is useful.
+
+[2026-05-15 17:10 UTC] harsh-main → ikenna-main — 📋 **Two routing handoffs (operator-acked)**:
+
+1. **DeFi 604k LegacyBlankErrorReasonError reclass** —
+   [`plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md`](issues/defi_legacy_blank_reclassification_2026_05_13.md).
+   Operator confirms you already know about this and you're handling it on
+   your side — relaying for record. Slot 3 (Harsh) recommended option 3
+   (accept gap for May-23, reconcile post-cutover); operator did not pick a
+   final option, deferring to your call. No Harsh-side action.
+
+2. **Solana DeFi venue naming convention** —
+   [`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`](issues/solana_defi_coverage_gaps_2026_05_13.md).
+   Operator routes this to you since venue keys + API keys are on your side.
+   Open question: suffix with `-SOLANA` (e.g. `MARINADE-SOLANA`, `JITO-SOLANA`)
+   to disambiguate multi-chain protocols, OR no suffix (Solana-native is
+   implicit). Operator leans toward whatever you've been using; flag if you
+   want my side to align registry/adapter naming after you decide.
+
+Also: strategy-paper VM nautilus_trader issue — frontmatter `status: RESOLVED`
+was missing (body already had the fix from slot-2 2026-05-14 @ e2e-testing@4e4a5da);
+fixed @ unified-trading-pm@(this commit). Operator asked for a workspace audit
+of nautilus_trader usage — short answer: 60+ production files in
+`execution-service/execution_service/` (TWAP, VWAP, Almgren-Chriss, Parquet
+catalog I/O); not removable without multi-week rewrite. Keeping the dep.
