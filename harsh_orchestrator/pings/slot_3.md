@@ -386,28 +386,49 @@ Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_3.md.
 
 ### P0 — start here
 
-- [ ] **1. defi_classifier_missing_catalog_crossref** (P0) — [`plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md`](../../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md). 604k spurious `attempted_failed` flips averted by 100k cap; root cause is `_classify_defi` missing instruments-service catalog cross-reference. Done-def: classifier consults `available_from`/`available_to` window + integration test proves 604k cohort not re-flipped + strategy QG green.
+- [x] **1. defi_classifier_missing_catalog_crossref** (P0) @ UTL@513d79fb + instruments-service@3670534 — ALREADY RESOLVED (pre-done by prior work; 11+13 tests; issue doc CLOSED).
 
-- [ ] **2. compound_kamino_lending_rates_gaps — COMPOUND_V3 only** (P0) — [`plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`](../../plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md). Fix COMPOUND_V3 IRM (populate `borrow_apy` — currently NaN) + asset field. KAMINO portion BLOCKED-CREDENTIALS (pending Helius); leave that with the status flag. Done-def: COMPOUND_V3 borrow_apy populated + tests cover non-NaN + MTDS lending_rates QG green.
+- [x] **2. compound_kamino_lending_rates_gaps — COMPOUND_V3 only** (P0) @ features-service — ALREADY FIXED (compound_v3_lending_calculator.py, DefiLlama Yields API, borrow_apy non-NaN, 18 tests pass). KAMINO = BLOCKED-CREDENTIALS.
 
 ### P1 — strategy QG fixes
 
-- [ ] **3. strategy_service_qg_ltv_threshold_violations** (P1) — [`plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md`](../../plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md). 3 inline LTV/HF threshold params. Either `# CORRECT-LOCAL` exemption comments or move to UAC `LIQUIDATION_PARAMS_REGISTRY`. Done-def: 3 violations resolved + strategy QG STEP 5.37 green.
+- [x] **3. strategy_service_qg_ltv_threshold_violations** (P1) — ALREADY GREEN (QG STEP 5.37 ✅ passes; 0 violations found in current run).
 
-- [ ] **4. strategy_service_qg_step6_production_readiness** (P1) — [`plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md`](../../plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md). Run QG to capture exact failure message + fix manifest/plan-validator gap. Done-def: step 6 green + strategy QG end-to-end pass.
+- [x] **4. strategy_service_qg_step6_production_readiness** (P1) — ALREADY GREEN (QG step 6 ✅ end-to-end pass; ALL QUALITY GATES PASSED).
 
 ### Buffer — strategy + e2e extensions
 
-- [ ] **5. e2e-testing backtest scenarios — other asset_groups** — extend the 4 scenarios you shipped (item 14 prior cycle) to tradfi paper smoke + sports paper smoke + multi-archetype mode-switch. Done-def: 2-3 new e2e scenarios + smoke log captured.
+- [x] **5. e2e-testing backtest scenarios — other asset_groups** @ e2e@56bc8c8 — 3 scenarios: TradFi carry smoke, sports odds-dispersion smoke, multi-archetype mode-switch (paper→batch parity).
 
-- [ ] **6. strategy-service Phase 11 codex audit** — search `plans/active/` for `strategy*phase_11*` or `recursive*borrow*`. If present, audit code-vs-codex drift. Done-def: audit report (clean OR drift doc).
+- [x] **6. strategy-service Phase 11 codex audit** @ strategy@e7f97f4 baseline — CLEAN (Phase 11 = deployment-api/UI scope only; strategy-service scaffold intentionally gated; no new drifts).
 
-- [ ] **7. e2e-testing concurrent-VM scenarios** — 2 archetypes on same VM (CSB+APD); verify slot isolation. Done-def: 2+ concurrent scenarios + log capture.
+- [x] **7. e2e-testing concurrent-VM scenarios** @ e2e@56bc8c8 — 2 scenarios: simultaneous tick routing (10 rounds isolation) + shared-state leak guard (kill/restart CSB ≠ APD).
 
-- [ ] **8. strategy-service venue admission criteria tests** — Phase 10 codex rules (CSB ≥X TVL + ≥Y APR; APD ≥4 spread venues). Done-def: 4+ admission scenarios + QG green.
+- [x] **8. strategy-service venue admission criteria tests** @ strategy@e7f97f4 — 9 tests: APD missing/empty/single venues ValueError at boot, 2-venue admitted, 3+-venue admitted; CSB high-entry suppresses, exact-match fires, below suppressed, missing feature returns [].
 
-- [ ] **9. strategy-service archetype-level kill-switch propagation** — arch-level kill via API (operator pulls CSB kill but leaves APD running). Done-def: 3+ kill-switch tests + QG green.
+- [x] **9. strategy-service archetype-level kill-switch propagation** @ strategy@e7f97f4 — 6 tests: targeted CSB/APD kills, broadcast kill, kill→restart resumes, default flatten=[], idempotent double-kill.
 
-- [ ] **10. strategy-service emit-window flush tests** — pending-emit buffer flushes correctly on STOPPED event. Done-def: 3+ flush tests + QG green.
+- [x] **10. strategy-service emit-window flush tests** @ strategy@e7f97f4 — 6 tests: buffer preserved after kill, no phantoms, restart clears, post-kill tick returns [], APD stable, multi-engine isolation.
 
 **Conflict rules**: features-service = slot 4/9 (skip); deployment-api = slot 7; UAC = surgical only (Ikenna); MTDS adapter = slot 9. Items 1, 3-10 are strategy-service primary; item 2 is MTDS lending_rates handler (DeFi classifier + IRM data sources — your territory).
+
+[2026-05-15 session-6] slot-3 — STARTED new 10-item queue. Reading P0 issue docs (items 1+4), then P1s (2+3). Self-pivoting through 5-10.
+
+[2026-05-15 session-6] slot-3 — ✅ **VERIFIED-DONE items 1-4 (all pre-done by prior work)**:
+- **Item 1** (defi_classifier_missing_catalog_crossref P0): ALREADY RESOLVED — UTL@513d79fb + instruments-service@3670534. Issue doc CLOSED.
+- **Item 2** (strategy_service_qg_ltv_threshold_violations P1): ALREADY GREEN — QG STEP 5.37 ✅.
+- **Item 3** (strategy_service_qg_step6_production_readiness P1): ALREADY GREEN — QG step 6 ✅ end-to-end.
+- **Item 4** (compound_kamino_lending_rates_gaps P0 — Compound V3): ALREADY FIXED — 18 onchain unit tests pass. KAMINO = BLOCKED-CREDENTIALS.
+Proceeding to items 5-10.
+
+[2026-05-15 session-6] slot-3 — ✅ **DONE item 5** (e2e additional asset_groups): TradFi carry smoke + sports odds-dispersion smoke + multi-archetype mode-switch. — e2e@56bc8c8
+
+[2026-05-15 session-6] slot-3 — ✅ **DONE item 6** (Phase 11 codex audit): CLEAN — Phase 11 = deployment-api/UI surface; strategy-service recursive-borrow scaffold intentionally gated. No new drifts. — baseline strategy@e7f97f4
+
+[2026-05-15 session-6] slot-3 — ✅ **DONE item 7** (e2e concurrent-archetype): simultaneous tick routing isolation + shared-state leak guard (kill/restart CSB ≠ APD). — e2e@56bc8c8
+
+[2026-05-15 session-6] slot-3 — ✅ **DONE item 8** (venue admission 9 tests) + **DONE item 9** (kill-switch propagation 6 tests) + **DONE item 10** (emit-window flush 6 tests): 21 new tests, QG green. — strategy@e7f97f4
+
+[2026-05-15 session-6] slot-3 — 🏁 **CYCLE-CLOSE — all 10 items done**.
+Items 1-4 pre-done. Items 5+7: e2e@56bc8c8. Item 6: audit CLEAN. Items 8-10: strategy@e7f97f4 (21 tests).
+Slot 3 session-6 DONE.
