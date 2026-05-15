@@ -38,12 +38,12 @@ locked_since: 2026-05-12
 Read every Position-balance / reconciliation / custody / audit-record surface in `codex/04-architecture/`,
 `codex/05-infrastructure/`, `codex/07-security/`, `codex/15-runbooks/alerting/` (anchor list of ~8 docs +
 cross-referenced sweeps). For each rule / pattern / claim: cite file:line, classify KEEP / LIFT / CONSOLIDATE / DELETE /
-ADD, attach a 1-line reason + suggested disposition (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER) + owner. Cross-checked
+ADD, attach a 1-line reason + suggested disposition (IMMEDIATE / PRE*CUTOVER / POST_CUTOVER) + owner. Cross-checked
 against `execution-service` audit-log writer, `strategy-service` signal-publisher audit emission,
 `position-balance-monitor-service` core/v2 reconciliation engines, `batch-live-reconciliation-service` stage DAG, and
 the UAC `internal/schemas/audit.py` + `internal/reconciliation.py` machine-readable SSOTs. Several findings come from
-grep-then-READ (e.g. the `audit/{client_id}/...` path template literally appears in codex AND in code, but the _actual
-written path_ diverges).
+grep-then-READ (e.g. the `audit/{client_id}/...` path template literally appears in codex AND in code, but the \_actual
+written path* diverges).
 
 ## Findings
 

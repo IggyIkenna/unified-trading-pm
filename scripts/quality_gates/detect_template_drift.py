@@ -41,12 +41,8 @@ SCRIPT_DIR: Final[Path] = Path(__file__).resolve().parent
 PM_ROOT: Final[Path] = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT_DEFAULT: Final[Path] = PM_ROOT.parent
 MANIFEST_PATH: Final[Path] = PM_ROOT / "workspace-manifest.json"
-SERVICE_TEMPLATE_PATH: Final[Path] = (
-    PM_ROOT / "codex" / "06-coding-standards" / "quality-gates-service-template.sh"
-)
-LIBRARY_TEMPLATE_PATH: Final[Path] = (
-    PM_ROOT / "codex" / "06-coding-standards" / "quality-gates-library-template.sh"
-)
+SERVICE_TEMPLATE_PATH: Final[Path] = PM_ROOT / "codex" / "06-coding-standards" / "quality-gates-service-template.sh"
+LIBRARY_TEMPLATE_PATH: Final[Path] = PM_ROOT / "codex" / "06-coding-standards" / "quality-gates-library-template.sh"
 
 CANONICAL_SOURCE_LINE: Final[str] = (
     'source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"'
@@ -72,12 +68,8 @@ MANDATORY_VARS: Final[tuple[str, ...]] = (
 )
 
 # Old lifecycle pattern: bare for-loop without fastapi/ServiceBootstrap check
-OLD_LIFECYCLE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"^for event in STARTED STOPPED FAILED", re.MULTILINE
-)
-CANONICAL_LIFECYCLE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"fastapi_uei_lifespan", re.MULTILINE
-)
+OLD_LIFECYCLE_PATTERN: Final[re.Pattern[str]] = re.compile(r"^for event in STARTED STOPPED FAILED", re.MULTILINE)
+CANONICAL_LIFECYCLE_PATTERN: Final[re.Pattern[str]] = re.compile(r"fastapi_uei_lifespan", re.MULTILINE)
 
 UI_REPO_TYPES: Final[frozenset[str]] = frozenset({"ui"})
 SKIP_REPO_TYPES: Final[frozenset[str]] = frozenset({"ui", "devops"})
@@ -159,9 +151,7 @@ def _check_repo(
     is_library = repo_type in LIBRARY_REPO_TYPES or LIBRARY_SSOT_COMMENT in content
     if is_library:
         if LIBRARY_SSOT_COMMENT not in content and CANONICAL_SSOT_COMMENT not in content:
-            report.items.append(
-                DriftItem("warn", "ssot-comment", "Missing SSOT header comment for library repo")
-            )
+            report.items.append(DriftItem("warn", "ssot-comment", "Missing SSOT header comment for library repo"))
         return report
 
     # 1. SSOT comment
@@ -178,7 +168,7 @@ def _check_repo(
     source_line_match = content.find('source "${WORKSPACE_ROOT}')
     if source_line_match == -1:
         # Also check for variable-indirection pattern: BASE_QG_SCRIPT=...; source "${BASE_QG_SCRIPT}"
-        source_line_match = content.find("source \"${")
+        source_line_match = content.find('source "${')
     pre_source = content[:source_line_match] if source_line_match != -1 else content
     for var in MANDATORY_VARS:
         if not re.search(rf"^{var}=", pre_source, re.MULTILINE):
@@ -189,7 +179,7 @@ def _check_repo(
     # 3. Source line — accept direct or variable-indirection form
     has_direct_source = CANONICAL_SOURCE_LINE in content
     has_indirect_source = bool(
-        re.search(r'BASE_QG_SCRIPT=.*base-service\.sh', content) and re.search(r'source.*BASE_QG_SCRIPT', content)
+        re.search(r"BASE_QG_SCRIPT=.*base-service\.sh", content) and re.search(r"source.*BASE_QG_SCRIPT", content)
     )
     if not has_direct_source and not has_indirect_source:
         if CANONICAL_SOURCE_INDIRECT in content:
@@ -202,9 +192,7 @@ def _check_repo(
                 )
             )
         else:
-            report.items.append(
-                DriftItem("error", "missing-source-line", "No base-service.sh source line found")
-            )
+            report.items.append(DriftItem("error", "missing-source-line", "No base-service.sh source line found"))
 
     # 4. Lifecycle block — canonical vs old
     has_canonical = bool(CANONICAL_LIFECYCLE_PATTERN.search(content))

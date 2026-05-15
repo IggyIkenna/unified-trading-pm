@@ -8,11 +8,11 @@
 
 ## Summary
 
-| Category | Count | Status |
-|---|---|---|
-| VM launchers with heartbeat/tee wrapper coverage | ~83 | ✅ STARTED/COMPLETED/FAILED via `_launch_with_tee()` |
-| VM launchers (backtest path — pre-fix) | 1 | ❌ bare nohup, no events (FIXED 2026-05-15) |
-| Heartbeat-only prefixes (zombie-watchdog, no event trail) | 56 | ℹ️ expected |
+| Category                                                  | Count | Status                                               |
+| --------------------------------------------------------- | ----- | ---------------------------------------------------- |
+| VM launchers with heartbeat/tee wrapper coverage          | ~83   | ✅ STARTED/COMPLETED/FAILED via `_launch_with_tee()` |
+| VM launchers (backtest path — pre-fix)                    | 1     | ❌ bare nohup, no events (FIXED 2026-05-15)          |
+| Heartbeat-only prefixes (zombie-watchdog, no event trail) | 56    | ℹ️ expected                                          |
 
 ---
 
@@ -44,12 +44,12 @@ with `setup_events()` + `run_lifecycle()` (STEP 5.63 compliant).
 **File**: `setup-data-pipeline-vm.sh`, lines 469-495 (original)  
 **Trigger**: `VM_PIPELINE_MODE=backtest` (set by `launch-strategy-test-vm.sh`)
 
-**Root cause**: The `backtest` branch used bare `nohup bash` and then `exit 0` **before**
-the heartbeat sidecar and tee wrapper were downloaded (those were at lines 497-570, after
-the `exit 0`). As a result:
+**Root cause**: The `backtest` branch used bare `nohup bash` and then `exit 0` **before** the heartbeat sidecar and tee
+wrapper were downloaded (those were at lines 497-570, after the `exit 0`). As a result:
 
 - GCS-blob heartbeat sidecar never started → zombie-watchdog could not detect hung backtests
-- `vm-exec-with-gcs-tee.sh` wrapper never downloaded → no `DEPLOYMENT_STARTED` / `DEPLOYMENT_COMPLETED` / `DEPLOYMENT_FAILED` events emitted
+- `vm-exec-with-gcs-tee.sh` wrapper never downloaded → no `DEPLOYMENT_STARTED` / `DEPLOYMENT_COMPLETED` /
+  `DEPLOYMENT_FAILED` events emitted
 - Backtest VMs were effectively invisible to the deployment-events audit trail
 
 **Affected launcher**: `launch-strategy-test-vm.sh` only (only launcher that sets `VM_PIPELINE_MODE=backtest`).
@@ -60,10 +60,9 @@ the `exit 0`). As a result:
 
 PR-equivalent: deployment-service `live-defi-rollout`, commit following item-5 work.
 
-**Change**: Moved the observability setup block (VM_NAME_SELF + heartbeat sidecar +
-tee wrapper download + `_launch_with_tee()` definition) to **before** the backtest
-branch check. Changed the backtest branch to call `_launch_with_tee()` instead of
-raw `nohup bash`.
+**Change**: Moved the observability setup block (VM_NAME_SELF + heartbeat sidecar + tee wrapper download +
+`_launch_with_tee()` definition) to **before** the backtest branch check. Changed the backtest branch to call
+`_launch_with_tee()` instead of raw `nohup bash`.
 
 ```bash
 # BEFORE (broken)
@@ -87,6 +86,7 @@ fi
 ```
 
 **Result**: Backtest VMs now get:
+
 - GCS-blob heartbeat sidecar (zombie-watchdog detection)
 - `DEPLOYMENT_STARTED` at daemon start
 - `DEPLOYMENT_COMPLETED` or `DEPLOYMENT_FAILED` on exit
@@ -96,9 +96,9 @@ fi
 
 ## Coverage of All VM_TASK Routing Branches
 
-Every `elif [[ "$VM_TASK" == "..." ]]; then` branch at lines 572+ calls `_launch_with_tee()`.
-The catch-all at line 807 (`elif [ -n "$VM_TASK" ]; then`) also calls `_launch_with_tee()`.
-The `else` at line 832 (`No VM_TASK metadata`) is a no-op (manual launch scenario).
+Every `elif [[ "$VM_TASK" == "..." ]]; then` branch at lines 572+ calls `_launch_with_tee()`. The catch-all at line 807
+(`elif [ -n "$VM_TASK" ]; then`) also calls `_launch_with_tee()`. The `else` at line 832 (`No VM_TASK metadata`) is a
+no-op (manual launch scenario).
 
 All paths are covered.
 
@@ -107,8 +107,10 @@ All paths are covered.
 ## Test Coverage
 
 Unit tests: `tests/unit/test_vm_event_emission.py`
+
 - Verifies `heartbeat_cli.main()` invokes `setup_events()` (event sink init)
-- Verifies `HeartbeatDaemon` is constructed with `DEPLOYMENT_STARTED` / `DEPLOYMENT_COMPLETED` / `DEPLOYMENT_FAILED` constants
+- Verifies `HeartbeatDaemon` is constructed with `DEPLOYMENT_STARTED` / `DEPLOYMENT_COMPLETED` / `DEPLOYMENT_FAILED`
+  constants
 - Verifies `run_lifecycle()` context manager is entered (STEP 5.63 compliance)
 - Verifies `_vm_payload()` includes all required fields
 

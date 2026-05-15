@@ -229,7 +229,10 @@ instead of writing nothing.
 
 - [ ] [MTDS] P0. Audit MTDS adapters + (when source returns zero AND catalog-aware guard reports the instrument alive)
       replace the `record_empty()` call with a per-data*type zero-activity-bar emission per the CLAUDE.md table:
-      `ohlcv**`→ O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close;`trades`→ empty parquet (0     rows ok; manifest`record_captured`row_count=0 + zero-activity flag column);`book_snapshot_5`→ carry-forward     last bid/ask 5 levels;`derivative_ticker`→ carry-forward last open_interest/mark_price/index_price.     **AUDIT DONE 2026-05-11** (slot 3 — D1+D2+D3 sub-agents; findings:`../archive/issues/wave3x_track_d_findings_2026_05_11.md`).
+      `ohlcv**`→ O=H=L=C=prior_LTP, volume=0, trade_count=0, available_at=window_close;`trades`→ empty parquet (0 rows
+      ok; manifest`record_captured`row_count=0 + zero-activity flag column);`book_snapshot_5`→ carry-forward last
+      bid/ask 5 levels;`derivative_ticker`→ carry-forward last open_interest/mark_price/index_price. **AUDIT DONE
+      2026-05-11** (slot 3 — D1+D2+D3 sub-agents; findings:`../archive/issues/wave3x_track_d_findings_2026_05_11.md`).
       \*\*DEFERRED — case-D *implementation\* post-cutover** (no schema change forced; needs a NEW UTL
       `zero_activity_bars` primitive + `instrument_catalog` threaded into adapter construction = Wave 2/3 of writegate
       Phase 3.D.5, "pending"). **NOTE\*\*: sports HISTORICAL capture is in instruments-service NOT MTDS — sports half of
@@ -247,9 +250,9 @@ instead of writing nothing.
       (`ManifestWriter.add` not `record_captured`), onchain/delta_one never record honest-absence rows — escalated in
       the findings doc.
 - [ ] [TEST] P0. Per-adapter smoke tests: synthetic instrument-alive-but-source-zero day → zero-activity-bar with
-      correct shape; instrument-not-yet-listed day → record_empty with EXPECTED_INSTRUMENT_NOT_LISTED (existing rule);
-      pre-genesis-chain day for DeFi → record_empty with EXPECTED_PRE_GENESIS_CHAIN. **DEFERRED — part of the case-D
-      _implementation_, post-cutover** (tests pair with the adapter wiring above).
+      correct shape; instrument-not-yet-listed day → record*empty with EXPECTED_INSTRUMENT_NOT_LISTED (existing rule);
+      pre-genesis-chain day for DeFi → record_empty with EXPECTED_PRE_GENESIS_CHAIN. \*\*DEFERRED — part of the case-D
+      \_implementation*, post-cutover\*\* (tests pair with the adapter wiring above).
 - [x] [DOCS] P0. Codex update to `unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md` §
       "Zero-activity-bar shape" — table of bar-shape per data_type, with explicit pre-LTP-carry-forward semantics + the
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for

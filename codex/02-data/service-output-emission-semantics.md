@@ -169,9 +169,9 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 ## When the policy gate is n/a — MTDS raw capture
 
 Not every service is a derived-output emitter. **MTDS is n/a per the slice (c) Phase 6.1 audit** (2026-05-12, harsh slot
-3). MTDS is the ORIGINATOR of every data_type it produces: ticks / candles / book snapshots / DeFi reserve params all
+3). MTDS is the ORIGINATOR of every data*type it produces: ticks / candles / book snapshots / DeFi reserve params all
 come from external APIs (Databento / Tardis / Hyperliquid REST / Pyth Hermes / chain RPCs / sportstats vendors). There
-is no _upstream MTDS service_ whose completeness gates the write — the upstream is the venue / vendor, and the manifest
+is no \_upstream MTDS service* whose completeness gates the write — the upstream is the venue / vendor, and the manifest
 layer (`record_captured` / `record_empty(reason=)` / `record_failed`) is sufficient.
 
 Workspace audit (2026-05-12): `rg "publish_with_policy|publish_with_manifest_lookup" market_tick_data_service/` returns

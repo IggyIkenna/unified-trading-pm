@@ -152,14 +152,14 @@ under-utilisation is fine, mid-cycle collision is not.
 >   `market-tick-data-service/.../cli/handlers/lending_indices_handler.py` +
 >   `market_interface/adapters/defi/aave_lending.py` (the plan's `adapters/lending_indices/` path is stale). Add LINEA +
 >   BSC chain→subgraph entries (Messari graph-network IDs); check the UAC `DATA_TYPES_BY_ASSET_GROUP` / `_defi.py`
->   capability-declaration gate too (per CLAUDE.md "UAC DATA_TYPES_BY_ASSET_GROUP is routing gate"). **NB the
->   AAVEV3-on-LINEA/BSC _launch dates_ are already corrected in UAC** (defi_master "Batch A" `[x]` — LINEA 2025-02-11,
->   BSC 2024-01-23) — slot 3 does NOT re-do the dates, only the routing. Smoke-test 1 day per chain post-launch (verify
->   the subgraph returns >0 real rows, not 1440-NaN placeholders per CLAUDE.md "Honest absence"); if the subgraph
->   genuinely has no data even post-launch, that's `empty_confirmed` per the honest-absence rule and the todo closes
->   that way. Then launch backfill VMs for LINEA + BSC lending-indices (Q1-approved) with full event-stream verification
->   per "No fire-and-forget VM launches" + `MANIFEST_PER_VM_SHARDS=true` + refresh code tarballs first if MTDS code
->   changed.
+>   capability-declaration gate too (per CLAUDE.md "UAC DATA*TYPES_BY_ASSET_GROUP is routing gate"). \*\*NB the
+>   AAVEV3-on-LINEA/BSC \_launch dates* are already corrected in UAC\*\* (defi_master "Batch A" `[x]` — LINEA
+>   2025-02-11, BSC 2024-01-23) — slot 3 does NOT re-do the dates, only the routing. Smoke-test 1 day per chain
+>   post-launch (verify the subgraph returns >0 real rows, not 1440-NaN placeholders per CLAUDE.md "Honest absence"); if
+>   the subgraph genuinely has no data even post-launch, that's `empty_confirmed` per the honest-absence rule and the
+>   todo closes that way. Then launch backfill VMs for LINEA + BSC lending-indices (Q1-approved) with full event-stream
+>   verification per "No fire-and-forget VM launches" + `MANIFEST_PER_VM_SHARDS=true` + refresh code tarballs first if
+>   MTDS code changed.
 > - **Not blocked**: distinct workstream from Priority #1 (Ethereum-AAVEV3 UAC fix — not slot 3's); the bucket-naming
 >   (b+) work (slot 4) doesn't touch `lending-indices-{pid}` (Phase 0e env-tiered only
 >   market-data/instruments-store/features-calendar/prediction kinds); the launch-date UAC fix is already shipped. **No

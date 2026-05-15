@@ -1592,9 +1592,9 @@ Per `master_to_live_defi_2026_05_23.md` Group F item 17 (real gas / matching eng
       in `cost_aggregator.py` wires gas+flash into `FillAttributionContext.fee_amount_modelled`.
 - [x] [execution-service] P0. Wire into batch P&L attribution. Per existing CLAUDE.md "Execution alpha measurement"
       rule: batch matching-engine produces simulated fills with realistic costs; benchmark fills (always-fill at
-      requested price) isolate strategy alpha. ✅ `build_defi_fill_context` + `DefiCostEstimate.total_fixed_cost_usd`
-      → `fee_amount_modelled`; slippage via `MatchResult.price_impact_bps` on live fill per existing `build_attribution_rows`.
-      execution-service@`2e2219079`.
+      requested price) isolate strategy alpha. ✅ `build_defi_fill_context` + `DefiCostEstimate.total_fixed_cost_usd` →
+      `fee_amount_modelled`; slippage via `MatchResult.price_impact_bps` on live fill per existing
+      `build_attribution_rows`. execution-service@`2e2219079`.
 - [ ] [execution-service] P0. Backtest replay: take Phase 1 lending-rate + perp-funding history; replay through the
       matching engine; produce per-day strategy P&L for both variants. Compare against `_net_apr_recursive` analytical
       prediction. **BLOCKED-DATA** — gates on `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills

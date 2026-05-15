@@ -7,15 +7,12 @@ import textwrap
 from pathlib import Path
 
 import pytest
-
 from detect_template_drift import (  # type: ignore[import-not-found]
     CANONICAL_SOURCE_LINE,
     CANONICAL_SSOT_COMMENT,
-    RepoDriftReport,
     _check_repo,
     run,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -143,8 +140,7 @@ class TestRunWithManifest:
         manifest = pm / "workspace-manifest.json"
         # Manifest uses dict-of-dicts: {repo_name: {type: ..., ...}}
         repo_dict: dict[str, object] = {
-            str(r.get("name", "")): {k: v for k, v in r.items() if k != "name"}
-            for r in repos
+            str(r.get("name", "")): {k: v for k, v in r.items() if k != "name"} for r in repos
         }
         manifest.write_text(json.dumps({"repositories": repo_dict}))
 
@@ -152,6 +148,7 @@ class TestRunWithManifest:
         self._write_manifest(tmp_repo, [{"name": "my-service", "type": "service"}])
         _write_qg(tmp_repo, "my-service", CANONICAL_QG)
         import detect_template_drift as mod  # type: ignore[import-not-found]
+
         monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_repo / "unified-trading-pm" / "workspace-manifest.json")
         exit_code = run(workspace_root=tmp_repo)
         assert exit_code == 0
@@ -161,6 +158,7 @@ class TestRunWithManifest:
         content = CANONICAL_QG.replace('SERVICE_NAME="test-service"', 'SERVICE_NAME="REPLACE_ME"')
         _write_qg(tmp_repo, "bad-service", content)
         import detect_template_drift as mod  # type: ignore[import-not-found]
+
         monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_repo / "unified-trading-pm" / "workspace-manifest.json")
         exit_code = run(workspace_root=tmp_repo)
         assert exit_code == 1
@@ -168,6 +166,7 @@ class TestRunWithManifest:
     def test_ui_repos_are_skipped(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self._write_manifest(tmp_repo, [{"name": "my-ui", "type": "ui"}])
         import detect_template_drift as mod  # type: ignore[import-not-found]
+
         monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_repo / "unified-trading-pm" / "workspace-manifest.json")
         exit_code = run(workspace_root=tmp_repo)
         assert exit_code == 0
@@ -177,6 +176,7 @@ class TestRunWithManifest:
             tmp_repo, [{"name": "archived-service", "type": "service", "archived_into": "other-service"}]
         )
         import detect_template_drift as mod  # type: ignore[import-not-found]
+
         monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_repo / "unified-trading-pm" / "workspace-manifest.json")
         exit_code = run(workspace_root=tmp_repo)
         assert exit_code == 0

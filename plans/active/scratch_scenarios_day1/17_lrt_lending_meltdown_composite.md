@@ -60,6 +60,7 @@ All three sub-triggers `synthetic=true` correlation per Phase 1.B; layer-tap at 
 ### Observable signature (in event stream + dashboards)
 
 - **`bridge_backing_ratio_<lrt>_<chain>`** RAW_TICK feature (proposed UAC; lives in features-onchain):
+
   ```
   bridge_backing_ratio = locked_eth_source_chain / circulating_lrt_destination_chain
   ```
@@ -71,6 +72,7 @@ All three sub-triggers `synthetic=true` correlation per Phase 1.B; layer-tap at 
       collateral before lender freezes)
     - `< 0.95` → AlertCode `LRT_BACKING_EXPLOIT_SUSPECTED` + `EMERGENCY_FULL_UNWIND` (deleverage + flatten regardless of
       slippage cost)
+
 - **`oracle_vs_attestation_divergence_bps`** FEATURE — gap between Chainlink price and bridge-attestation-implied fair
   value. Crosses 50bps → composite alert.
 - **`lender_state_change_event`** EVENT stream — subscription to Aave / Spark / Morpho governance contracts; any

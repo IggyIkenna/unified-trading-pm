@@ -525,25 +525,26 @@ Operator is AFK — do not ping for further authorization on items already in yo
 
 ## [main → slot 7] 2026-05-15 09:53 UTC — 🔴 NEW ITEM #24: COMPOUND_V3 lending_rates fix (CARRY_RECURSIVE_STAKED tier-2 unblock)
 
-Slot 3's carry-tracer audit 2026-05-15 found COMPOUND_V3 `borrow_apy=NaN` for all 64 rows in
-`features-onchain-defi-prd` lending_rates parquet + `asset` column has Comet contract addresses instead of token
-names. Breaks `CARRY_RECURSIVE_STAKED@compound-lido-*` slots (skip with "lending_rates for lending_venue='compound'").
+Slot 3's carry-tracer audit 2026-05-15 found COMPOUND_V3 `borrow_apy=NaN` for all 64 rows in `features-onchain-defi-prd`
+lending_rates parquet + `asset` column has Comet contract addresses instead of token names. Breaks
+`CARRY_RECURSIVE_STAKED@compound-lido-*` slots (skip with "lending_rates for lending_venue='compound'").
 
 AAVE_V3 tier-1 already passing 264-305 bps. COMPOUND is tier-2 fallback when AAVE rates spike. P1, NOT a May-23 blocker
 on its own, but required for full carry archetype coverage.
 
 **Fix scope**:
-1. `features-service/.../lending_rates/` COMPOUND_V3 handler computes `borrow_apy` from Comet IRM
-   (`baseBorrowMin` + utilization curve), NOT the AAVE reserve-factor model. See Comet `getBorrowRate(uint256 utilization)`
-   on-chain function.
-2. Normalize `asset` column to human token name via instruments-service catalog lookup OR hardcoded
-   ETH-mainnet Comet→token registry. Ethereum WETH Comet:
-   `0xA17581A9E3356d9A858b789D68B4d866e593aE94` (start here). USDC Comet is secondary.
-3. Re-run carry-tracer 2026-04-03..04-09 after fix to confirm `borrow_apy` populated + `CARRY_RECURSIVE_STAKED@compound-lido-*`
-   no longer skips.
 
-KAMINO Solana lending handler (Gap 2 in issue doc) is P2, depends on Helius credential (already
-filed as separate operator ask in slot 2). Defer post-May-23.
+1. `features-service/.../lending_rates/` COMPOUND_V3 handler computes `borrow_apy` from Comet IRM (`baseBorrowMin` +
+   utilization curve), NOT the AAVE reserve-factor model. See Comet `getBorrowRate(uint256 utilization)` on-chain
+   function.
+2. Normalize `asset` column to human token name via instruments-service catalog lookup OR hardcoded ETH-mainnet
+   Comet→token registry. Ethereum WETH Comet: `0xA17581A9E3356d9A858b789D68B4d866e593aE94` (start here). USDC Comet is
+   secondary.
+3. Re-run carry-tracer 2026-04-03..04-09 after fix to confirm `borrow_apy` populated +
+   `CARRY_RECURSIVE_STAKED@compound-lido-*` no longer skips.
 
-Issue doc: `plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`. Estimated 3.6 cal AI-days
-(research class).
+KAMINO Solana lending handler (Gap 2 in issue doc) is P2, depends on Helius credential (already filed as separate
+operator ask in slot 2). Defer post-May-23.
+
+Issue doc: `plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`. Estimated 3.6 cal AI-days (research
+class).

@@ -36,20 +36,18 @@ SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 **Never** run `pytest` directly — wrong venv. Always `quality-gates.sh`.
 
-**PYTEST_UNIT_DIR override** (per-family test layouts): some repos organise tests as
-`tests/<family>/unit/` rather than the flat `tests/unit/` default. The default will only
-collect the root-level unit tests, silently skipping per-family tests. To opt in, set
-`PYTEST_UNIT_DIR` BEFORE the `source base-service.sh` line in `quality-gates.sh`:
+**PYTEST_UNIT_DIR override** (per-family test layouts): some repos organise tests as `tests/<family>/unit/` rather than
+the flat `tests/unit/` default. The default will only collect the root-level unit tests, silently skipping per-family
+tests. To opt in, set `PYTEST_UNIT_DIR` BEFORE the `source base-service.sh` line in `quality-gates.sh`:
 
 ```bash
 PYTEST_UNIT_DIR="tests/"   # collect all tests recursively (e.g. features-service)
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 ```
 
-Trigger: if `find tests/unit/ -name 'test_*.py' | wc -l` returns <5% of
-`find tests/ -name 'test_*.py' | wc -l` — the per-family layout is almost certainly in use
-and this override is required. SSOT: `codex/06-coding-standards/quality-gates.md`
-§ "PYTEST_UNIT_DIR per-family override". Landed: PM@c7786b2f.
+Trigger: if `find tests/unit/ -name 'test_*.py' | wc -l` returns <5% of `find tests/ -name 'test_*.py' | wc -l` — the
+per-family layout is almost certainly in use and this override is required. SSOT:
+`codex/06-coding-standards/quality-gates.md` § "PYTEST_UNIT_DIR per-family override". Landed: PM@c7786b2f.
 
 ---
 
@@ -222,8 +220,8 @@ Pointer chain. Full specs in codex:
 - **Uniswap live swap**: `UniswapConnector.swap_exact_input()` via SwapRouter02
   `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`.
 - **DeFi error classification**: 30 codes in UAC
-  `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*_ + 2
-  ORACLE\__; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in
+  `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*\_ + 2
+  ORACLE\_\_; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in
   `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura.

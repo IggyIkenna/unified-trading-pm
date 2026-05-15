@@ -63,23 +63,27 @@ org-naming tidy):
 - [x] [AGENT] P0. Phase 1.2 — Fix each violation at the root. **DONE 2026-05-11 (slot 2, sessions 2-4).** Session 2:
       removed 3 broken `.cursor/scripts/check-import-patterns.py` symlinks + hoisted `cross_instrument/cli/main.py`
       nested `run_mock_pipeline` import (features-svc@`45efbe44`). Session 3: 3-sub-agent fan-out (A=sports,
-      B=onchain/volatility, C=delta_one/cross_instrument/calendar/commodity/multi_timeframe) — 28 commits, QG 16→9
-      (gcs_reader 1306L→4 modules + google.cloud→UCI + canonical._→facade + 5 gs:// URIs dropped + both orchestrators
+      B=onchain/volatility, C=delta*one/cross_instrument/calendar/commodity/multi_timeframe) — 28 commits, QG 16→9
+      (gcs_reader 1306L→4 modules + google.cloud→UCI + canonical.*→facade + 5 gs:// URIs dropped + both orchestrators
       split <900L + Files>900L 6→0 + imports-inside 28→4 + most func-size, features-svc up to @`e4b10570`). Session 4:
       Q4b (features-svc@`c9078cb2`), 3 more sub-agents (A's 5 deferred sports func-decomps `BatchHandler.run` 416→25 /
       `compute_team_form` 357→176 / `compute_h2h` 272→193 / `compute_player_lineup` 219→94 / `_build_registry` 389→12, 4
       imports-inside hoisted, broad-except ×13 narrowed, asyncio de-nested, sports empty-fallbacks fail-loud-or-noqa;
-      B's onchain ~17 empty-fallbacks root-fixed +
-      `Dependency_`dedup'd from UTL root in volatility +`FeatureProcessingResult`double-def collapsed; C's`#
-      CORRECT-LOCAL`markers +`PubSubMessage`→`DeltaOnePipelineMessage`rename), plus my fixes (12 E501s from verbose markers +`team_form`formatter follow-up + 7`mock_data_provider.py`noqa-marker normalize +`\_get_workspace_root`→ canonical single-key`WORKSPACE_ROOT`form matching`multi_timeframe`). **QG progression: 8→4→2→1 codex-compliance violations.** Cleared this session: `asyncio.run-in-loop`, `imports-inside-functions`, `broad
-      except Exception`, `Function/method size exceeded`, `Empty string fallback`, `Empty dict/list
-      fallback`, `os.getenv()/os.environ`, `Env canon`, `Deep unified lib
-      imports`, ruff E501. features-svc up to @`71023f20`(rebased onto slot-5's`225cc13b` Phase-5/6 live-runner wire-in). **Residual** = 1 codex-compliance category (`Schema
-      provenance`— a QG-check FP, see Q6 below:`check_schema_provenance.py`flags every local`BaseModel`/`TypedDict`/`@dataclass`and doesn't honor`#
-      CORRECT-LOCAL`; the ~40 types are correctly features-service-local per Q3 A1; needs an Ikenna PM-side fix) + the QG aborts even earlier at `[3.5/6]
-      IMPORT PATTERNS`on 11 deep`from unified_trading_library.feature_service_base.live_aggregator
-      import`calls from slot-5's`225cc13b` (NOT features-cleanup work — routed, see Q7). The features-service-side
-      carry-forward is done.
+      B's onchain ~17 empty-fallbacks root-fixed + `Dependency_`dedup'd from UTL root in
+      volatility +`FeatureProcessingResult`double-def collapsed;
+      C's`#     CORRECT-LOCAL`markers +`PubSubMessage`→`DeltaOnePipelineMessage`rename), plus my fixes (12 E501s from
+      verbose markers +`team_form`formatter follow-up + 7`mock_data_provider.py`noqa-marker
+      normalize +`\_get_workspace_root`→ canonical single-key`WORKSPACE_ROOT`form matching`multi_timeframe`). **QG
+      progression: 8→4→2→1 codex-compliance violations.** Cleared this session: `asyncio.run-in-loop`,
+      `imports-inside-functions`, `broad     except Exception`, `Function/method size exceeded`,
+      `Empty string fallback`, `Empty dict/list     fallback`, `os.getenv()/os.environ`, `Env canon`,
+      `Deep unified lib     imports`, ruff E501. features-svc up to @`71023f20`(rebased onto slot-5's`225cc13b`
+      Phase-5/6 live-runner wire-in). **Residual** = 1 codex-compliance category (`Schema     provenance`— a QG-check
+      FP, see Q6 below:`check_schema_provenance.py`flags every local`BaseModel`/`TypedDict`/`@dataclass`and doesn't
+      honor`#     CORRECT-LOCAL`; the ~40 types are correctly features-service-local per Q3 A1; needs an Ikenna PM-side
+      fix) + the QG aborts even earlier at `[3.5/6]     IMPORT PATTERNS`on 11
+      deep`from unified_trading_library.feature_service_base.live_aggregator     import`calls from slot-5's`225cc13b`
+      (NOT features-cleanup work — routed, see Q7). The features-service-side carry-forward is done.
 
 > **STATUS-2026-05-12 (harsh-defi-catalogue-impl-tab, slot 2 — Day-1 preamble).** Re-ran `bash scripts/quality-gates.sh`
 > on features-service. Found 3 _new_ codex-compliance violations beyond yesterday's Q6/Q7 close-out — all now fixed:

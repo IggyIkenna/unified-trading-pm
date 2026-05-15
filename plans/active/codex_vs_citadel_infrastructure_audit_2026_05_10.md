@@ -140,10 +140,10 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 - [x] [AGENT] P0. **1.E ML area.** Lifecycle; training/inference colocated; cache-delta hot reload; lookahead-bias.
       **DONE 2026-05-12 harsh-codex-audit-ml-tab (slot 8 sub-agent)** — issue doc
       [`plans/archive/issues/codex_audit_ml_2026_05_12.md`](../archive/issues/codex_audit_ml_2026_05_12.md) ships 20
-      findings (5 IMMEDIATE + 12 PRE_CUTOVER + 2 POST_CUTOVER + 1 KEEP) across 4 tiers. **BIG**: ML-1 (4+
+      findings (5 IMMEDIATE + 12 PRE*CUTOVER + 2 POST_CUTOVER + 1 KEEP) across 4 tiers. **BIG**: ML-1 (4+
       mutually-incompatible model-artefact bucket/path SSOTs in codex + a 5th in code — `ml-models-store-{pid}` /
       `ml-training-artifacts-{pid}` / `ml-predictions-{category}-...` — none routed through `resolve_bucket_name()` per
-      QG STEP 5.69; live-ML cutover path); ML-2 (`cefi-ml-live-serving.md` says live ML inference runs _inside_
+      QG STEP 5.69; live-ML cutover path); ML-2 (`cefi-ml-live-serving.md` says live ML inference runs \_inside*
       features-service "no parallel ML inference path", but code runs a standalone `ml-inference-service` and the v2
       archetype docs agree with the code — one side is dead); ML-5/ML-4 (the 4 ML AlertCodes + the PSI/KL model-drift
       rule in `ml-alerting-rules.md` were never wired — alerting-service has 0 of 4; `drift_monitor.py` uses an
@@ -216,14 +216,14 @@ Each sub-agent owns one area. Output template per area: `plans/active/issues/cod
 - [x] [AGENT] P0. **1.K UI area.** Tier-based startup; mock vs real; firebase-local; deployment-ui surfaces. **DONE
       2026-05-12 harsh-codex-audit-ui-tab (slot 8 sub-agent)** — issue doc
       [`plans/archive/issues/codex_audit_ui_2026_05_12.md`](../archive/issues/codex_audit_ui_2026_05_12.md) ships 19
-      findings (3 IMMEDIATE + 12 PRE_CUTOVER + 4 POST_CUTOVER) across 4 tiers. Critical: UI-1
+      findings (3 IMMEDIATE + 12 PRE*CUTOVER + 4 POST_CUTOVER) across 4 tiers. Critical: UI-1
       (`codex/08-workflows/local-dev.md` still prints the dead 5173-5183 port registry / 11 legacy split UIs verbatim
       below its own "obsolete" banner — only `deployment-ui:5183` + `unified-trading-system-ui:3000/3100` survive per
       `ui-api-mapping.json`); UI-2 (CLAUDE.md "check existing 13 UIs first" is a Feb-2026 artefact —
       `workspace-manifest.json` has 3 UI repos, active surface is 2; several plans still cite "13 UIs"); UI-14
       (`local-dev.md` is self-flagged `status: PARTIALLY-STALE` yet ships its stale frontend sections inline). BIG-ish:
       UI-7 (three+ overlapping SSOTs forming around the deployment-ui Data Status surface — `data-status-drilldown.md` +
-      `deployment-ui-architecture.md` + the _fourth_ `codex/03-deployment/data-status-ui-surface.md` that
+      `deployment-ui-architecture.md` + the \_fourth* `codex/03-deployment/data-status-ui-surface.md` that
       `cross_asset_group_catalogue_audit` Phase 2F is slated to create — that dir doesn't exist yet); UI-8
       (`runtime-tiers-and-deployment.md` internal contradiction — `user-management-api` listed as archived AND as a live
       Cloud Run service); UI-16 (`deployment-ui-architecture.md` still `status: stub` — if the 6-tab refactor hasn't

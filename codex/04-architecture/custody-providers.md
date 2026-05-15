@@ -766,7 +766,7 @@ Closed set; mirrors the existing alerting taxonomy.
 ### §10A.5 Relationship to `treasury_monitor.py`
 
 The custody-ping loop is **upstream of** `position-balance-monitor-service/core/treasury_monitor.py`'s `TREASURY_LOW` /
-`TREASURY_HIGH` thresholds — treasury_monitor reads the _post-reconciliation_ PBMS balance state, so it inherits the
+`TREASURY_HIGH` thresholds — treasury*monitor reads the \_post-reconciliation* PBMS balance state, so it inherits the
 freshness of the most recent successful balance-pull. If the custody-ping loop is degraded, treasury_monitor alerts may
 go stale; the `CUSTODY_HEALTH_DEGRADED` alert is the canonical "PBMS state may be drifting from reality" signal during
 that window.

@@ -314,8 +314,8 @@ already a UTL primitive `FeatureWriteGate`/`WriteGateConfig`, consumed by all 3 
     `cross_instrument/app/calculators/{cross_asset_correlation.py:330, cross_venue_calculator.py:338, cross_instrument_dynamics.py:275, cme_gap.py:160}`
     `_create_empty_features` / `_empty_result` write `np.zeros(n)` for _continuous_ features** (`correlation_*=0`,
     `beta_adjusted_return=0`, `spread_to_*=0`, `cme_gap_*=0`) when input is insufficient (<2 bars / <2 instruments / <2
-    venues / aligned rows < beta_window). `correlation_50 == 0.0` for a 1-instrument day is a _confidently-wrong label_,
-    not honest absence — manifest sees `captured` row_count=N; downstream ML trains on garbage `0`s. **FIX**:
+    venues / aligned rows < beta*window). `correlation_50 == 0.0` for a 1-instrument day is a \_confidently-wrong
+    label*, not honest absence — manifest sees `captured` row_count=N; downstream ML trains on garbage `0`s. **FIX**:
     `np.full(n, np.nan)` for continuous columns (keep binary event flags at 0). Same pattern across all 4 → candidate
     for a shared helper at the Phase-5 common lift; mirror
     `multi_timeframe/calculators/ intraday_regime.py:200 _empty_output` (the right null-fill shape).
@@ -339,10 +339,10 @@ already a UTL primitive `FeatureWriteGate`/`WriteGateConfig`, consumed by all 3 
 
 - **No banned `_create_empty_output()` anywhere in scope** ✓.
 - **Q2 (new shard atom dimension?)**: NO. onchain key
-  `(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day, feature_group)`, delta_one
+  `(asset_group, chain, venue/protocol, data_type, instrument_id_or_protocol_id, day, feature_group)`, delta*one
   `(asset_group, venue, data_type, instrument_type, instrument_id, day, feature_group, timeframe)`, sports
   `(asset_group=sports, source, data_type, league_id, day, feature_group)` — all present. Sports `fixture_id` grain is
-  the open implementation question for case-D ("this _specific_ fixture was catalog-active, odds source dark for it")
+  the open implementation question for case-D ("this \_specific* fixture was catalog-active, odds source dark for it")
   but `fixture_id` is already named in the CLAUDE.md shard matrix → documented, not new. `zero_activity` is a per-row
   flag, not a manifest column.
 - **Q3 (new reason?)**: NO new vocabulary needed — the gap is _usage_: onchain/delta*one orchestrators never call
@@ -406,9 +406,9 @@ already a UTL primitive `FeatureWriteGate`/`WriteGateConfig`, consumed by all 3 
 - **case-A-correct: ~7** (calendar orchestrator modulo untyped reason; commodity fetch-layer honest-absence + fail-loud;
   commodity factor base validation; sports `record_empty`/`record_failed` shard-level wiring; sports all-NaN-shape
   calculators — the good pattern; `sports/pipeline/fixture_features.py` reference quality; `sports/pipeline/_asof.py`
-  pure transform; delta_one `nan_handler` NaN-preservation). **needs-case-D: ~2-3** (sports
+  pure transform; delta*one `nan_handler` NaN-preservation). **needs-case-D: ~2-3** (sports
   `odds_features`/`derived_features`/`fixture_features` shards when a catalog-active fixture has no odds → carry-forward
-  prior bookmaker line; onchain `lst_yields`/delta_one illiquid-instrument _would_ be case-D but neither service even
+  prior bookmaker line; onchain `lst_yields`/delta_one illiquid-instrument \_would* be case-D but neither service even
   records the honest-absence row today, so they're 2-3 steps short). **case-B/C-bug: ~6** (commodity phantom-row ★;
   weather fillna; odds fillna; systemic sports magic-fill; onchain calc-failure-returns-empty; sports can't distinguish
   no-fixtures from missing-fixtures-parquet → potential case-2 mishandling).

@@ -288,9 +288,9 @@ SSOT: `codex/09-strategy/architecture-v2/archetypes/` (per-archetype venue matri
 
 ## Phase 9 DeFi Cost Models (gas + slippage + flash premium)
 
-Phase 9 of `defi_recursive_borrow_archetypes_2026_05_10.md` shipped three cost models and an
-aggregator in `execution-service/execution_service/matching_engine/defi/`. These are the
-**canonical** pre-trade cost estimation path for both batch backtest replay and live execution.
+Phase 9 of `defi_recursive_borrow_archetypes_2026_05_10.md` shipped three cost models and an aggregator in
+`execution-service/execution_service/matching_engine/defi/`. These are the **canonical** pre-trade cost estimation path
+for both batch backtest replay and live execution.
 
 ### Entry point
 
@@ -318,51 +318,50 @@ ctx = build_defi_fill_context(cost, strategy_id=..., ...)
 
 ### Three cost components
 
-| Component | Model file | Key constants / surface |
-| --- | --- | --- |
-| **Gas** | `matching_engine/defi/gas_cost_model.py` | `GasAction` (SUPPLY/BORROW/REPAY/WITHDRAW/UNISWAP_V3_SWAP/FLASH_OPEN/FLASH_CLOSE); `GAS_UNITS` (calibrated p50 mainnet 2024–2026); `FALLBACK_GAS_PRICE_GWEI` per chain |
-| **Slippage** | `matching_engine/defi/slippage_cost_model.py` | Pool-matcher path (preferred, `PoolMatcher.quote()` → `price_impact_bps`) or analytical fallback (`≈ amount_in_usd / pool_tvl_usd × 10_000`) |
-| **Flash premium** | `matching_engine/defi/flash_premium_cost_model.py` | `FlashLoanProvider` (AAVE_V3 = 5 bps, BALANCER = 0 bps, NONE = 0 bps); only applies in `FLASH` opening mode |
+| Component         | Model file                                         | Key constants / surface                                                                                                                                                |
+| ----------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Gas**           | `matching_engine/defi/gas_cost_model.py`           | `GasAction` (SUPPLY/BORROW/REPAY/WITHDRAW/UNISWAP_V3_SWAP/FLASH_OPEN/FLASH_CLOSE); `GAS_UNITS` (calibrated p50 mainnet 2024–2026); `FALLBACK_GAS_PRICE_GWEI` per chain |
+| **Slippage**      | `matching_engine/defi/slippage_cost_model.py`      | Pool-matcher path (preferred, `PoolMatcher.quote()` → `price_impact_bps`) or analytical fallback (`≈ amount_in_usd / pool_tvl_usd × 10_000`)                           |
+| **Flash premium** | `matching_engine/defi/flash_premium_cost_model.py` | `FlashLoanProvider` (AAVE_V3 = 5 bps, BALANCER = 0 bps, NONE = 0 bps); only applies in `FLASH` opening mode                                                            |
 
 ### Batch = Live contract
 
-- Batch callers pass per-day median `gas_price_gwei` from MTDS `gas_fee_data` parquet +
-  a `PoolMatcher` snapshot reconstructed from historical pool state.
+- Batch callers pass per-day median `gas_price_gwei` from MTDS `gas_fee_data` parquet + a `PoolMatcher` snapshot
+  reconstructed from historical pool state.
 - Live callers pass a live RPC gas price + a freshly-fetched pool snapshot.
 - No other difference — single code path, no live-only forks.
 
 ### P&L attribution wiring
 
-`gas_cost_usd + flash_premium_usd` → `FillAttributionContext.fee_amount_modelled`
-(STRATEGY layer / FEES factor, deterministic).
+`gas_cost_usd + flash_premium_usd` → `FillAttributionContext.fee_amount_modelled` (STRATEGY layer / FEES factor,
+deterministic).
 
-Slippage is captured via `MatchResult.price_impact_bps` on the live/simulated fill and
-attributed to EXECUTION layer / SLIPPAGE factor by `build_attribution_rows`.
+Slippage is captured via `MatchResult.price_impact_bps` on the live/simulated fill and attributed to EXECUTION layer /
+SLIPPAGE factor by `build_attribution_rows`.
 
 ### L2 gas overhead
 
-L2 chains (Arbitrum / Base / Optimism) carry an additional L1 data-posting overhead
-(`_L1_DATA_OVERHEAD_USD`: Arbitrum $0.02, Base/Optimism $0.01). Pass via
-`estimate_l1_data_cost_usd(chain)`.
+L2 chains (Arbitrum / Base / Optimism) carry an additional L1 data-posting overhead (`_L1_DATA_OVERHEAD_USD`: Arbitrum
+$0.02, Base/Optimism $0.01). Pass via `estimate_l1_data_cost_usd(chain)`.
 
 ### Backtest replay status
 
-Phase 9 item 3 (backtest replay with real cost gates) is `BLOCKED-DATA` until the
-≥1-year lending-indices window backfill lands (target 2026-05-19 → 2026-05-23).
+Phase 9 item 3 (backtest replay with real cost gates) is `BLOCKED-DATA` until the ≥1-year lending-indices window
+backfill lands (target 2026-05-19 → 2026-05-23).
 
 ## Key Files
 
-| File                                                       | What                                            |
-| ---------------------------------------------------------- | ----------------------------------------------- |
-| execution-service DeFi `protocols/aave.py`                 | Aave supply/borrow/repay/flash_loan             |
-| execution-service DeFi `protocols/uniswap.py`              | Uniswap swap (SwapRouter02)                     |
-| execution-service DeFi `protocols/base.py`                 | BaseConnector, Web3 signing, credential loading |
-| UAC `registry/capability_declarations/_defi.py`            | CHAIN_RPC_TEMPLATES, capabilities               |
-| UAC `config/testnet_contracts.yaml`                        | Contract addresses per chain                    |
-| deployment-service `contracts/FlashLoanReceiver.sol`       | Flash loan receiver source                      |
-| deployment-service `scripts/deploy-flash-loan-receiver.sh` | Deploy script                                   |
-| execution-service `cli/handlers/live_execution_handler.py` | SM fetch + execution-service DeFi injection     |
-| execution-service `matching_engine/defi/gas_cost_model.py`          | GasAction enum + GAS_UNITS + estimate_gas_cost_usd |
-| execution-service `matching_engine/defi/slippage_cost_model.py`     | Pool-matcher + analytical slippage estimation  |
-| execution-service `matching_engine/defi/flash_premium_cost_model.py`| FlashLoanProvider + FLASH_PREMIUM_BPS          |
-| execution-service `matching_engine/defi/cost_aggregator.py`         | DefiCostAggregator + DefiCostEstimate + build_defi_fill_context |
+| File                                                                 | What                                                            |
+| -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| execution-service DeFi `protocols/aave.py`                           | Aave supply/borrow/repay/flash_loan                             |
+| execution-service DeFi `protocols/uniswap.py`                        | Uniswap swap (SwapRouter02)                                     |
+| execution-service DeFi `protocols/base.py`                           | BaseConnector, Web3 signing, credential loading                 |
+| UAC `registry/capability_declarations/_defi.py`                      | CHAIN_RPC_TEMPLATES, capabilities                               |
+| UAC `config/testnet_contracts.yaml`                                  | Contract addresses per chain                                    |
+| deployment-service `contracts/FlashLoanReceiver.sol`                 | Flash loan receiver source                                      |
+| deployment-service `scripts/deploy-flash-loan-receiver.sh`           | Deploy script                                                   |
+| execution-service `cli/handlers/live_execution_handler.py`           | SM fetch + execution-service DeFi injection                     |
+| execution-service `matching_engine/defi/gas_cost_model.py`           | GasAction enum + GAS_UNITS + estimate_gas_cost_usd              |
+| execution-service `matching_engine/defi/slippage_cost_model.py`      | Pool-matcher + analytical slippage estimation                   |
+| execution-service `matching_engine/defi/flash_premium_cost_model.py` | FlashLoanProvider + FLASH_PREMIUM_BPS                           |
+| execution-service `matching_engine/defi/cost_aggregator.py`          | DefiCostAggregator + DefiCostEstimate + build_defi_fill_context |

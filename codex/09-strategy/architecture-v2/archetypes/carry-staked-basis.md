@@ -207,8 +207,9 @@ entry_bps: "200" # net carry must exceed this to enter
 exit_bps: "50" # net carry below this triggers exit
 min_health_factor: "1.25" # gates the perp short against LST-haircut breach
 hedge_deadline_ms: "5000" # perp hedge deadline
-peg_drift_threshold_bps: "25" # Phase 6B dynamic-hedge hysteresis band; rebalance fires when
-                              # |lst_native_rate_now - lst_native_rate_last_rebalance| × 1e4 > this. Default 25 ≈ 3σ daily.
+peg_drift_threshold_bps:
+  "25" # Phase 6B dynamic-hedge hysteresis band; rebalance fires when
+  # |lst_native_rate_now - lst_native_rate_last_rebalance| × 1e4 > this. Default 25 ≈ 3σ daily.
 ```
 
 ### Features expected (upstream `features-onchain` must publish)
@@ -219,9 +220,9 @@ peg_drift_threshold_bps: "25" # Phase 6B dynamic-hedge hysteresis band; rebalanc
 - `health_factor` — LST haircut breach gate
 - `lst_native_rate` — LST/native exchange rate (float, default 1.0 fallback) — used by `compute_dynamic_hedge_ratio()`
   for Phase 6B dynamic hedge sizing
-- `lst_native_rate_ts` — unix timestamp of last `lst_native_rate` observation (float, optional). Staleness guard:
-  if present and `now - lst_native_rate_ts > 300s`, engine falls back to `lst_native_rate=1.0` and logs a warning.
-  Without this key published, the staleness guard never fires.
+- `lst_native_rate_ts` — unix timestamp of last `lst_native_rate` observation (float, optional). Staleness guard: if
+  present and `now - lst_native_rate_ts > 300s`, engine falls back to `lst_native_rate=1.0` and logs a warning. Without
+  this key published, the staleness guard never fires.
 
 There is **no** `lending_protocol`, `borrow_asset`, or `borrow_apy_bps` — those belong to the deleted COLLATERAL_BORROW
 path. There is also no SPLIT_STAKE fallback or USDC-margin alternative: if

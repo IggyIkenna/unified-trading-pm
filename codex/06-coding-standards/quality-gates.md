@@ -2274,21 +2274,20 @@ baseline anchored at pre-audit count; new violations fail immediately; existing 
 
 ## STEP 5.79: dockerfile-base-pin
 
-**What it catches**: production Dockerfiles using mutable `:tag` references (including `:latest`)
-instead of digest-pinned `@sha256:<hex>` base images.
+**What it catches**: production Dockerfiles using mutable `:tag` references (including `:latest`) instead of
+digest-pinned `@sha256:<hex>` base images.
 
-**Rationale**: Docker image tags are mutable pointers. When an upstream registry owner re-tags
-an image (common for `:latest`, `:1.x` tracks), the next pull silently fetches a different layer
-than what was tested. A `@sha256:` digest is immutable — the exact layers you tested are the
-exact layers that run in production.
+**Rationale**: Docker image tags are mutable pointers. When an upstream registry owner re-tags an image (common for
+`:latest`, `:1.x` tracks), the next pull silently fetches a different layer than what was tested. A `@sha256:` digest is
+immutable — the exact layers you tested are the exact layers that run in production.
 
-**Scope**: all repos containing `Dockerfile` or `Dockerfile.*` files (not `.venv`, `build`,
-`node_modules`).
+**Scope**: all repos containing `Dockerfile` or `Dockerfile.*` files (not `.venv`, `build`, `node_modules`).
 
-**Ratchet**: WARN before 2026-05-15 → FAIL (exit 1) from 2026-05-15.
-Remediation: Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+**Ratchet**: WARN before 2026-05-15 → FAIL (exit 1) from 2026-05-15. Remediation: Phase 5 of
+`deployment_and_qg_strategy_implementation_2026_05_13.md`.
 
 **How to comply**:
+
 ```dockerfile
 # WRONG — mutable tag
 FROM python:3.13-slim
@@ -2301,11 +2300,13 @@ FROM python:3.13-slim@sha256:abc123...
 ```
 
 **Exemptions checked automatically**:
+
 - `FROM scratch` (no registry layer)
 - Multi-stage local alias re-references (`FROM build-stage AS runtime` within the same file)
 - `--platform` flag is stripped before checking
 
 **How to find the digest**:
+
 ```bash
 docker pull python:3.13-slim && docker inspect python:3.13-slim --format '{{index .RepoDigests 0}}'
 # or: crane digest python:3.13-slim
@@ -2318,20 +2319,21 @@ deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 (image-build pip
 
 ## STEP 5.80: tarball-manifest-present
 
-**What it catches**: `deployment-service/scripts/vm/create-code-tarballs.sh` that does NOT
-write a sibling `<repo>@<commit-sha>.manifest.json` alongside each tarball upload to GCS.
+**What it catches**: `deployment-service/scripts/vm/create-code-tarballs.sh` that does NOT write a sibling
+`<repo>@<commit-sha>.manifest.json` alongside each tarball upload to GCS.
 
 **Scope**: `deployment-service` only. All other repos: auto-skip.
 
-**Rationale**: VMs launched from tarballs must assert at boot-time that the tarball they're
-running matches a known commit SHA — preventing stale re-deploy. Without the sibling manifest
-(containing `repo`, `commit_sha`, `pyproject_version`, `git_status_clean`, `created_at`,
-`created_by`), the VM boot assertion has no source of truth to compare against and silently skips.
+**Rationale**: VMs launched from tarballs must assert at boot-time that the tarball they're running matches a known
+commit SHA — preventing stale re-deploy. Without the sibling manifest (containing `repo`, `commit_sha`,
+`pyproject_version`, `git_status_clean`, `created_at`, `created_by`), the VM boot assertion has no source of truth to
+compare against and silently skips.
 
-**Ratchet**: WARN before 2026-05-15 → FAIL from 2026-05-15.
-Remediation: Phase 3 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+**Ratchet**: WARN before 2026-05-15 → FAIL from 2026-05-15. Remediation: Phase 3 of
+`deployment_and_qg_strategy_implementation_2026_05_13.md`.
 
 **Compliant pattern** in `create-code-tarballs.sh`:
+
 ```bash
 # After uploading tarball to GCS, write sibling manifest
 cat > "/tmp/${REPO_NAME}@${COMMIT_SHA}.manifest.json" <<EOF
@@ -2353,29 +2355,29 @@ gsutil cp "/tmp/${REPO_NAME}@${COMMIT_SHA}.manifest.json" "gs://${BUCKET}/tarbal
 
 ## STEP 5.81: tarball-env-block
 
-**What it catches**: `deployment-api` Python source that contains tarball-deploy code but
-lacks an environment-tier guard preventing staging/prod uploads without an explicit override.
+**What it catches**: `deployment-api` Python source that contains tarball-deploy code but lacks an environment-tier
+guard preventing staging/prod uploads without an explicit override.
 
 **Scope**: `deployment-api` only. All other repos: auto-skip.
 
-**Rationale**: tarballs deployed to staging/prod must be intentional. Without a gate, an
-operator can accidentally call the tarball-deploy endpoint against production with the wrong
-commit — no confirmation, no blast-radius check, no audit trail. The env-tier block forces
-`DEPLOYMENT_ENV` to be checked before any staging/prod tarball upload proceeds.
+**Rationale**: tarballs deployed to staging/prod must be intentional. Without a gate, an operator can accidentally call
+the tarball-deploy endpoint against production with the wrong commit — no confirmation, no blast-radius check, no audit
+trail. The env-tier block forces `DEPLOYMENT_ENV` to be checked before any staging/prod tarball upload proceeds.
 
-**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17.
-Remediation: Phase 1 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17. Remediation: Phase 1 of
+`deployment_and_qg_strategy_implementation_2026_05_13.md`.
 
 **Compliant pattern** (deployment-api Python source must contain one of):
+
 ```python
 DEPLOYMENT_ENV = config.deployment_env  # from UnifiedCloudConfig
 staging_override: bool  # explicit caller flag
 allow_tarball: bool     # opt-in gate
 ```
 
-**Check logic**: QG greps for `DEPLOYMENT_ENV|deployment_env|staging_override|prod_override|
-allow_tarball|tarball_override|env_tier_check` alongside tarball-related code. If tarball code
-exists but no env guard is found → FAIL.
+**Check logic**: QG greps for
+`DEPLOYMENT_ENV|deployment_env|staging_override|prod_override| allow_tarball|tarball_override|env_tier_check` alongside
+tarball-related code. If tarball code exists but no env guard is found → FAIL.
 
 **Composes with**: `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1); STEP 5.80.
 
@@ -2383,23 +2385,22 @@ exists but no env guard is found → FAIL.
 
 ## STEP 5.82: image-build-on-staging-merge
 
-**What it catches**: repos with a staging-branch GitHub Actions workflow that do NOT also
-trigger a Cloud Build image build on merge to staging.
+**What it catches**: repos with a staging-branch GitHub Actions workflow that do NOT also trigger a Cloud Build image
+build on merge to staging.
 
-**Rationale**: if staging deploys consume a Docker image from Artifact Registry but the
-workflow only deploys (no build step), the image used is whatever was last built — potentially
-many cycles stale. The staging image MUST be freshly built from the exact commit being staged
-before the deploy runs.
+**Rationale**: if staging deploys consume a Docker image from Artifact Registry but the workflow only deploys (no build
+step), the image used is whatever was last built — potentially many cycles stale. The staging image MUST be freshly
+built from the exact commit being staged before the deploy runs.
 
-**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17.
-Remediation: Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17. Remediation: Phase 5 of
+`deployment_and_qg_strategy_implementation_2026_05_13.md`.
 
-**Check logic**: QG looks for any staging-branch trigger in `.github/workflows/`, then verifies
-at least one workflow file in the same directory references Cloud Build (`cloudbuild`,
-`cloud-build`, `gcloud builds`, `google-github-actions/deploy-cloudrun`, `buildTrigger`).
-FAIL if staging trigger present + no build invocation found.
+**Check logic**: QG looks for any staging-branch trigger in `.github/workflows/`, then verifies at least one workflow
+file in the same directory references Cloud Build (`cloudbuild`, `cloud-build`, `gcloud builds`,
+`google-github-actions/deploy-cloudrun`, `buildTrigger`). FAIL if staging trigger present + no build invocation found.
 
 **Compliant patterns**:
+
 ```yaml
 # Option A: gcloud builds submit in workflow
 - run: gcloud builds submit --config cloudbuild.yaml
@@ -2408,8 +2409,8 @@ FAIL if staging trigger present + no build invocation found.
 - uses: google-github-actions/deploy-cloudrun@v2
 ```
 
-**Repos currently showing PENDING-RATCHET warning** (as of 2026-05-15 audit):
-check `deployment-api`, `execution-service`, and any repo with a `.github/workflows/deploy-staging.yml`.
+**Repos currently showing PENDING-RATCHET warning** (as of 2026-05-15 audit): check `deployment-api`,
+`execution-service`, and any repo with a `.github/workflows/deploy-staging.yml`.
 
 **Composes with**: `deployment-and-qg-strategy.md` § image-build cutover path; STEP 5.81.
 
@@ -2417,8 +2418,8 @@ check `deployment-api`, `execution-service`, and any repo with a `.github/workfl
 
 ## quality-gates.sh Boilerplate DRY Consolidation Proposal
 
-> **Status**: PENDING OPERATOR ACK — doc-only. No code change to base-service.sh until operator
-> approves. Audited 2026-05-15 (slot 8). Rollout via `rollout-quality-gates-unified.py` once acked.
+> **Status**: PENDING OPERATOR ACK — doc-only. No code change to base-service.sh until operator approves. Audited
+> 2026-05-15 (slot 8). Rollout via `rollout-quality-gates-unified.py` once acked.
 
 ### Finding 1: UEI Lifecycle block (14 repos duplicate, 5 repos stale)
 
@@ -2439,17 +2440,16 @@ else
 fi
 ```
 
-**Repos with canonical pattern (14)**: batch-live-reconciliation-service, client-reporting-api,
-deployment-api, deployment-service, e2e-testing, execution-service, features-service,
-ibkr-gateway-infra, instruments-service, market-data-processing-service, pnl-attribution-service,
-position-balance-monitor-service, strategy-service, system-integration-tests, trading-agent-service,
-unified-trading-api.
+**Repos with canonical pattern (14)**: batch-live-reconciliation-service, client-reporting-api, deployment-api,
+deployment-service, e2e-testing, execution-service, features-service, ibkr-gateway-infra, instruments-service,
+market-data-processing-service, pnl-attribution-service, position-balance-monitor-service, strategy-service,
+system-integration-tests, trading-agent-service, unified-trading-api.
 
-**Repos with OLD pattern — missing fastapi/ServiceBootstrap check (5)**:
-alerting-service, market-tick-data-service, ml-inference-service, ml-training-service,
-risk-and-exposure-service.
+**Repos with OLD pattern — missing fastapi/ServiceBootstrap check (5)**: alerting-service, market-tick-data-service,
+ml-inference-service, ml-training-service, risk-and-exposure-service.
 
 Old pattern (4 lines, no UTL shortcut check):
+
 ```bash
 log_section "[5.X/6] UEI LIFECYCLE EVENT ENFORCEMENT (STARTED/STOPPED/FAILED)"
 for event in STARTED STOPPED FAILED; do
@@ -2458,9 +2458,9 @@ for event in STARTED STOPPED FAILED; do
 done
 ```
 
-**Proposal**: move canonical block into `scripts/quality-gates-base/base-service.sh` directly
-after STEP 5.62 (health-router check). Remove from all per-repo `quality-gates.sh` files. Update
-5 stale repos to canonical pattern as part of same rollout. One code change, one propagation pass.
+**Proposal**: move canonical block into `scripts/quality-gates-base/base-service.sh` directly after STEP 5.62
+(health-router check). Remove from all per-repo `quality-gates.sh` files. Update 5 stale repos to canonical pattern as
+part of same rollout. One code change, one propagation pass.
 
 **REQUIRES OPERATOR ACK** before implementation.
 
@@ -2468,22 +2468,21 @@ after STEP 5.62 (health-router check). Remove from all per-repo `quality-gates.s
 
 ### Finding 2: PERIPHERAL_DIR block pattern (2 repos, potentially expanding)
 
-`features-service` and `market-tick-data-service` both have a PERIPHERAL_DIR block pattern
-(checking `e2e-testing/scripts/` subdirs for import health). The pattern is unique to primary
-consumers of peripheral script directories (per CLAUDE.md hard rule). Each block is custom to
-the specific peripheral dir path and primary consumer — NOT a candidate for base-service.sh
-consolidation, because the path is repo-specific.
+`features-service` and `market-tick-data-service` both have a PERIPHERAL_DIR block pattern (checking
+`e2e-testing/scripts/` subdirs for import health). The pattern is unique to primary consumers of peripheral script
+directories (per CLAUDE.md hard rule). Each block is custom to the specific peripheral dir path and primary consumer —
+NOT a candidate for base-service.sh consolidation, because the path is repo-specific.
 
-**Action**: keep per-repo. Document in CLAUDE.md § "Peripheral Script Directories" that the
-block lives in the primary consumer's `quality-gates.sh`, not base-service.sh.
+**Action**: keep per-repo. Document in CLAUDE.md § "Peripheral Script Directories" that the block lives in the primary
+consumer's `quality-gates.sh`, not base-service.sh.
 
 ---
 
 ### Finding 3: PYTEST_UNIT_DIR opt-in (1 repo — features-service)
 
-`features-service` sets `PYTEST_UNIT_DIR="tests/"` before the `source base-service.sh` line to
-override the default `tests/unit/` path. This covers per-family test layouts (350+ files spread
-across `tests/<family>/unit/`). This is intentional and repo-specific.
+`features-service` sets `PYTEST_UNIT_DIR="tests/"` before the `source base-service.sh` line to override the default
+`tests/unit/` path. This covers per-family test layouts (350+ files spread across `tests/<family>/unit/`). This is
+intentional and repo-specific.
 
 **Action**: document opt-in pattern — see § "PYTEST_UNIT_DIR per-family override" below.
 
@@ -2491,9 +2490,9 @@ across `tests/<family>/unit/`). This is intentional and repo-specific.
 
 ### PYTEST_UNIT_DIR per-family override
 
-Some services organise tests as `tests/<family>/unit/` rather than the default `tests/unit/`.
-The flat `tests/unit/` default in `base-service.sh` will only collect ~46 tests (the cross-cutting
-unit tests); per-family tests are silently skipped.
+Some services organise tests as `tests/<family>/unit/` rather than the default `tests/unit/`. The flat `tests/unit/`
+default in `base-service.sh` will only collect ~46 tests (the cross-cutting unit tests); per-family tests are silently
+skipped.
 
 **To override**: set `PYTEST_UNIT_DIR` BEFORE the `source base-service.sh` line:
 
@@ -2502,13 +2501,13 @@ PYTEST_UNIT_DIR="tests/"           # collect all tests recursively
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 ```
 
-**When to use**: only when tests are structured as `tests/<family>/unit/` AND the default
-`tests/unit/` path would miss them. Verify by counting: if `find tests/unit/ -name 'test_*.py' | wc -l`
-returns <5% of `find tests/ -name 'test_*.py' | wc -l`, add the override.
+**When to use**: only when tests are structured as `tests/<family>/unit/` AND the default `tests/unit/` path would miss
+them. Verify by counting: if `find tests/unit/ -name 'test_*.py' | wc -l` returns <5% of
+`find tests/ -name 'test_*.py' | wc -l`, add the override.
 
-**Side effect**: `PYTEST_UNIT_DIR="tests/"` also collects `tests/integration/` — integration tests
-run unless `RUN_INTEGRATION=false` guards them (base-service.sh skips integration folder by name
-when `RUN_INTEGRATION=false`; spot-check that the integration-test exclusion logic still holds).
+**Side effect**: `PYTEST_UNIT_DIR="tests/"` also collects `tests/integration/` — integration tests run unless
+`RUN_INTEGRATION=false` guards them (base-service.sh skips integration folder by name when `RUN_INTEGRATION=false`;
+spot-check that the integration-test exclusion logic still holds).
 
 ---
 
