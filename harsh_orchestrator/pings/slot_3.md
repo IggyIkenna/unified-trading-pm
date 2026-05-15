@@ -57,6 +57,12 @@ Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
 
 [2026-05-15 07:33 UTC] slot-3 — ✅ DONE item 7 batch_live symmetry strategy-service follow-on: scan found 1 L2 import-pattern violation (deep UTL import in scripts/trace_all_carry_archetypes.py); fixed to top-level `from unified_trading_library import resolve_bucket_name`; import-patterns check 0 violations (strategy@3e2ec28). Pivoting to item 8: master plan pvl-p18a pre-work.
 
+[2026-05-15 07:37 UTC] [slot 3 → main] — 📋 **ITEM 8 (pvl-p18a pre-work)**: Please add to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator" (slot 3 cannot edit master plan per slot-precedence rule):
+```
+| CeFi features-service batch run | Internal pipeline (features-service) | **BLOCKED-CREDENTIALS** | B-016 DEFERRED — upstream CeFi features pipeline never run; no valid 7-day window found in MTDS tick data (best run: 3 days). Operator must run: `python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date <7-day-window-start> --end-date <7-day-window-end>` after CeFi MTDS tick pipeline completes. | Unblocks: B-016 re-activation + pvl-p18a paper evidence run for carry_staked_basis (DeFi/CeFi hybrid — CeFi perp leg needs delta_one features). |
+```
+Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
+
 [2026-05-15 07:41 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION** — add 4 more items after your 8-item batch. Total ~20 AI-days.
 9. **strategy-service archetype config validation tests** — every YAML in `strategy-service/configs/archetypes/` loads + passes schema validation; bad configs raise loud at boot, not at trade time. Done-def: tests + QG green.
 10. **e2e-testing/scripts/defi/ peripheral consumer hygiene** — `shellcheck` + `ruff check` + `basedpyright` sweep on all .py + .sh files in this directory (slot 3 is primary consumer of strategy-service.* imports). Fix import-rot. Done-def: 0 lint/type errors.
