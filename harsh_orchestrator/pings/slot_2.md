@@ -531,9 +531,9 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 - [x] **2. pyproject_workspace_audit** (P2) — @ 14 repos: alerting@f052e21, batch-live@de72ab7, client-reporting@163374e, ibkr@5f8d354, deployment-service@560af4d, mdps@b2b8dd5, ml-inference@0f49311, ml-training@4957ed8, pnl@f99d33d, pbm@06cba56, risk@e148b45, strategy@00af7ed, utl@623b0cd, uta@6d9ca22 — line-length 100→120 across all eligible repos (skipped deployment-api = slot 7). Coverage floor alignment deferred to issue doc Priority 2+3.
 
-- [ ] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — `plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`. Replace `os.getenv()` with `UnifiedCloudConfig` + assertions. Done-def: 1 slice fully closed in 3+ repos with QG green per repo.
+- [x] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — CLEAN: 0 source violations in tabs/2 worktrees. QG step 503-511 enforces and all repos pass. UTL startup_validation.py uses `# noqa: qg-os-environ` (intentional CLOUD_MOCK_MODE detection, approved exception). `new-sports-batting-services/footballbets/features/data_loader.py` has 1 violation but is outside standard service fleet / not in tabs/2 worktree — deferred to repo owner.
 
-- [ ] **4. deployment_events_lifecycle gsutil prep doc** (P2) — `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. Finalize: produce ONE shell snippet block the operator can copy-paste, with `gsutil ls` verification commands. Done-def: doc has "Ready to run" section.
+- [x] **4. deployment_events_lifecycle gsutil prep doc** (P2) — `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md` updated: "Ready to Run" section added with pre-verification gsutil ls counts + 3 POLICY heredoc lifecycle-set commands + post-verification lifecycle-get commands. Operator can copy-paste entire block.
 
 - [ ] **5. deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc. 466 occurrences. Bin into (a) legitimate suppression / (b) lazy bypass; fix the lazy ones. Done-def: bin report + 50+ lazy fixes across 3+ repos.
 

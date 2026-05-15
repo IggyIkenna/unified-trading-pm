@@ -158,3 +158,68 @@ gsutil lifecycle set <(echo '{"rule":[{"action":{"type":"Delete"},"condition":{"
 
 Apply all three lifecycle rules. Lowest-risk change — GCS lifecycle is log-and-delete only, never modifies data in
 flight. The vm-logs fix alone recovers significant list-bucket latency for the watchdog.
+
+---
+
+## Ready to Run (operator copy-paste)
+
+Run as `ikenna@odum-research.com` (needs `storage.buckets.update`). Copy the entire block.
+
+```bash
+# --- PRE-VERIFICATION ---
+echo "=== vm-logs dir count (expect ~4130+) ==="
+gsutil ls gs://deployment-scripts-central-element-323112/vm-logs/ | wc -l
+
+echo "=== QG snapshot count ==="
+gsutil ls gs://central-element-323112-deployment-events/quality_gates_snapshot/ | wc -l
+
+echo "=== events count ==="
+gsutil ls -r gs://central-element-323112-events/events/ 2>/dev/null | wc -l
+
+# --- APPLY LIFECYCLE POLICIES ---
+
+# 1. deployment-scripts vm-logs: 14-day purge
+gsutil lifecycle set <(cat <<'POLICY'
+{
+  "rule": [{
+    "action": {"type": "Delete"},
+    "condition": {"age": 14, "matchesPrefix": ["vm-logs/"]}
+  }]
+}
+POLICY
+) gs://deployment-scripts-central-element-323112/
+
+# 2. deployment-events: 30-day QG snapshot retention
+gsutil lifecycle set <(cat <<'POLICY'
+{
+  "rule": [{
+    "action": {"type": "Delete"},
+    "condition": {"age": 30, "matchesPrefix": ["quality_gates_snapshot/"]}
+  }]
+}
+POLICY
+) gs://central-element-323112-deployment-events/
+
+# 3. events: 90-day retention
+gsutil lifecycle set <(cat <<'POLICY'
+{
+  "rule": [{
+    "action": {"type": "Delete"},
+    "condition": {"age": 90, "matchesPrefix": ["events/"]}
+  }]
+}
+POLICY
+) gs://central-element-323112-events/
+
+# --- POST-VERIFICATION (confirm policies applied) ---
+echo "=== Lifecycle on deployment-scripts ==="
+gsutil lifecycle get gs://deployment-scripts-central-element-323112/
+
+echo "=== Lifecycle on deployment-events ==="
+gsutil lifecycle get gs://central-element-323112-deployment-events/
+
+echo "=== Lifecycle on events ==="
+gsutil lifecycle get gs://central-element-323112-events/
+```
+
+Expected output: each `gsutil lifecycle get` returns a JSON `rule` block with the `Delete` action. The actual deletion runs asynchronously (GCS applies lifecycle rules overnight).
