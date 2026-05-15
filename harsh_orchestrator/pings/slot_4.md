@@ -186,3 +186,5 @@ audit). Self-pivot when you pick it up.
 [2026-05-15 17:15 UTC] slot-4 — STARTED item 2: system-integration-tests new DeFi-flow scenarios (carry_staked_basis + APD paper flows using Tenderly fixtures)
 
 [2026-05-15 17:45 UTC] slot-4 — ✅ ITEM 2 DONE: system-integration-tests DeFi paper-flow scenarios. 16 new tests: TestCarryStakedBasisPaperFlow (6), TestArbitragePriceDispersionPaperFlow (6), TestDefiPaperFlowCrossArchetypeInvariants (3) + 1 invariant test — all 16 passed. Fixed 3 pre-existing QG lint failures (E741×4, C901×2). SIT QG ✅ (74s). sit@fba72b7. Moving to item 3.
+
+[2026-05-15 18:10 UTC] slot-4 — ✅ ITEM 3 DONE: alerting-service alert-code parity. New test file tests/unit/test_alert_code_parity.py: 3-tier coverage — (1) parametrized sweep (77 tests): every AlertCode matches ≥1 LIVE_ALERT_RULES rule; (2) explicit-rule ratchet: exactly 2 codes (CHAOS_DRILL_FAILED + RECON_DEGRADED) are catch-all-only; 75/77 have explicit rules; (3) family spot-checks: DeFi Family 1/2 (5 codes) + risk-rule (4 codes) + stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). alerting@c1c9a68. Moving to item 4.
