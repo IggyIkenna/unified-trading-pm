@@ -583,10 +583,10 @@ In-plan P0 (blocks Phase 5-8 implementation):
 - [x] [strategy-service] **P0**. `PerpHedgeSizer` (Phase 7): pre-trade check against `_HYPERLIQUID_RULES` ($500k
       per-instrument cap) — block sizing that exceeds. Same for any Bybit per-position risk cap. **DONE 2026-05-15
       (slot-3)**: `unified-api-contracts@5f26915` ships `get_max_position_size_usd_for_venue()` helper +
-      `execution-service@a2ce35b74` ships `PerpHedgeSizer.validate_size_against_venue_cap()` + `PerpVenueCapExceededError`.
-      Hyperliquid $500k / Bybit $1M / Binance $2M caps wired. Fail-closed on unknown venues per honest-absence rule.
-      7 new tests pass (16 total in file). basedpyright clean. (Note: PerpHedgeSizer lives in execution-service per
-      System-First — venue-cap pre-trade gate is execution responsibility, not strategy-service.)
+      `execution-service@a2ce35b74` ships `PerpHedgeSizer.validate_size_against_venue_cap()` +
+      `PerpVenueCapExceededError`. Hyperliquid $500k / Bybit $1M / Binance $2M caps wired. Fail-closed on unknown venues
+      per honest-absence rule. 7 new tests pass (16 total in file). basedpyright clean. (Note: PerpHedgeSizer lives in
+      execution-service per System-First — venue-cap pre-trade gate is execution responsibility, not strategy-service.)
 - [ ] [risk] **P0**. Bybit counterparty cap policy: **cap Bybit notional at ≤50% of Hyperliquid leg for first 30 days
       post-cutover** (Feb-2025-hack trust-premium discount). Codify in strategy-service archetype config +
       risk-and-exposure-service venue-cap table.
@@ -1032,8 +1032,14 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
       deployment-service 2026-05-15)
 - [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness /
       whitelist completeness). External audit deferred post-MVP.
-- [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
-      Ethereum + Base mainnet with cross-plan banner.
+- [x] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification. **DONE
+      2026-05-15 slot 2**: deployment-service@602feaf patched deploy_contract.py for --contract dispatch + multi-arg
+      constructor; web3+py-solc-x added to deps. Sepolia deploy at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (tx
+      0x5c299e9f..., gas 1.5M, OWNER+POOL verified via Web3). Secret `recursive-leverage-receiver-sepolia` v1 in
+      central-element-323112. UAC@468df51 updated FLASH_LOAN_RECEIVER_REGISTRY with deployed address.
+      e2e-testing@e839478 patched setup-tenderly.sh to also deploy RecursiveLeverageReceiver. Codex SSOT:
+      flash-loan-receiver.md "Extended receiver" section + new recursive-leverage-receiver-deploy-runbook.md
+      (PM@a411c240). Ethereum + Base mainnet deploys remain pending — gated on P1 security review above.
 
 ### Phase 5 — `RecursiveLoopOrchestrator` (execution-service Python)
 
