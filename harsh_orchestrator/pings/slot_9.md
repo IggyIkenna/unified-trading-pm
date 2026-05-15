@@ -360,8 +360,7 @@ After launch:
 
 - [x] **7. MTDS eigenlayer handler coverage extension** — ✅ 4 tests TestEigenlayerSafePattern: record_captured on success, record_empty on zero rows, record_failed on exception (no record_captured = phantom guard), recorder.close() in finally. MTDS QG green. mtds@b052a78.
 
-- [ ] **8. PBM mode parity — degraded conditions** — extend mdps@3f72029 baseline parity to schema parity under NaN rows
-      / late-arriving data / schema drift. Done-def: 3+ degraded-condition tests + PBM QG green.
+- [x] **8. PBM mode parity — degraded conditions** — ✅ 3 tests TestDegradedConditionModeParity: NaN rows stamped correctly (available_at non-null for all rows), pre-stamped available_at preserved (idempotent), extra column does not break schema parity (record_captured called for both BATCH_TARDIS + LIVE_WEBSOCKET). PBM QG green. mdps@92d9be5.
 
 - [ ] **9. MTDS lst_rates handler — additional LST tokens audit** — current 13 EVM + 2 Solana. Newer tokens (ezETH,
       weETH variants, sanctumSOL)? Done-def: audit report + 1-2 tokens added (or doc-only).
