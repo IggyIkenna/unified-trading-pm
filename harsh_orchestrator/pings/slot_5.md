@@ -276,7 +276,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **12. execution-service slippage model boundary tests** — execution-service@03bb3e3f (6 edge-case tests in TestSlippageBoundaryConditions: single-tick depth breach >10k bps no-cap, sandwich 5k bps pass-through, analytical zero amount→fee floor, amount==TVL→10k bps, whale 5×TVL→50k bps, zero-fee pool pure linear impact). QG ✅ (366s).
 
-- [ ] **13. pnl-attribution-service per-venue cost attribution** — extend item 4: which venue per archetype eats which cost? Add tests proving cost rolls up correctly by (venue, archetype). Done-def: 4+ per-venue attribution tests + QG green.
+- [x] **13. pnl-attribution-service per-venue cost attribution** — pnl-attribution-service@9fbd783 (6 tests in TestPerVenueCostAttribution: AAVE Ethereum gas, MORPHO 0-fee, UNISWAP_V3 slippage 42bps, CURVE < Uniswap, cross-venue AAVE+UNISWAP independent, AAVE L1 vs L2 costs). Also fixed pre-existing ruff SIM108 in pnl_input_builder.py:191. QG ✅ (46s).
 
 - [ ] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — same Phase 6.6 pattern slot 4 just did for features-onchain (features-service@a17d85b0) — apply to risk-and-exposure emission paths. Done-def: 3+ emission policy tests + QG green.
 
