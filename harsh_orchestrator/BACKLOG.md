@@ -190,8 +190,8 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-004 strategy-service 2 remaining test failures | slot 9 | strategy-service@PM@2acbd9bb ✅ |
 | 2026-05-14 | B-005 Writegate Phase 6.9 features-sports | slot 5 | DISPATCHED |
 | 2026-05-14 | B-017 defi_recursive_borrow successor plan | slot 5 | DISPATCHED |
-| 2026-05-14 | B-007 Phase 8.A manifest writer coverage | slot 8 | DISPATCHED |
-| 2026-05-14 | B-008 Phase 8.A emission publisher coverage | slot 8 | DISPATCHED |
+| 2026-05-14 | B-007 Phase 8.A manifest writer coverage | slot 8 | unified-trading-library@e6877d2 + PM@0ff4963e ✅ (2026-05-14) |
+| 2026-05-14 | B-008 Phase 8.A emission publisher coverage | slot 8 | unified-trading-library@e6877d2 + PM@0ff4963e ✅ (2026-05-14) |
 | 2026-05-14 | B-002 deployment-ui env selector lock | slot 7 | deployment-api@f0c0c43+deployment-ui@2c8de22 ✅ |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | DISPATCHED |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | DISPATCHED |
@@ -201,7 +201,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-009 Phase 8.A kill switch coverage | slot 5 | DISPATCHED (after Phase 0 green) |
 | 2026-05-14 | B-011 Phase 8.A VM deploy scripts coverage | slot 2 | DISPATCHED (after slot 5 + Phase 0 green) |
 | 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | DISPATCHED |
-| 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | DISPATCHED (prep now; rollout after B-006-B-012 all DONE) |
+| 2026-05-14 | B-014 Phase 3 QG ratchet STEPs enable + rollout | slot 8 | ✅ DONE 2026-05-15 — all 15 service repos + STEP 5.79-5.82 + PYTEST_UNIT_DIR fix (PM@c7786b2f). Sweep issue doc: mtb_p6e_qg_sweep_2026_05_15.md. |
 | 2026-05-14 | B-009 Phase 8.A kill switch + circuit breaker coverage | slot 5 | START (Phase 0 effectively green per operator @12:04) |
 | 2026-05-14 | B-015 DeFi carry_staked_basis paper backtest | slot 9 | DISPATCHED (Phase 1 cross-side prereq check FIRST) |
 | 2026-05-14 | B-018 Phase 4.A daily QG snapshot writer + cron VM | slot 7 | DISPATCHED (natural follow-on to B-013) |
