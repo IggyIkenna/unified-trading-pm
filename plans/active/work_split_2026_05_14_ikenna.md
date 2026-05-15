@@ -549,7 +549,7 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. **🔴 [TOP-PRIORITY 2026-05-15 — PREREQ MET; START NOW] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15`
+13. 🔄 **🔴 [TOP-PRIORITY 2026-05-15 — PREREQ MET; START NOW] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15`
     (P0)** — phantom manifest rows blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS
     lst_rates + features-onchain). **PREREQ ✅ MET**: slot 6 #11 handler hardening shipped at
     `market-tick-data-service@c1e6963` (2026-05-15); phantoms will NOT re-accumulate on next smoke. **JUMP TO TOP OF
@@ -560,7 +560,10 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     (their parallel fix) + coordinate smoke re-launch. (4) Verify event-stream STARTED + manifest captured rows > 0 +
     4-pillar parquet validation. (5) Diagnose why features-onchain smoke produced NO event stream (no-fire-and-forget
     HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal) **B-015 paper-trade gate unblocks the moment this lands** — Harsh
-    slot 9 standing by for ~24h.
+    slot 9 standing by for ~24h. **IN PROGRESS (2026-05-15)**: dry-run `--data-types lst_rates` → 0 phantoms (30
+    captured rows; apply-flips no-op). All 4 handlers hardened. Cross-ping posted to `_agent_pings.md@bfa443f1` — Harsh
+    slot 9 GREENLIT for re-smoke. Full DeFi all-data_types scan running locally (ETA ~40min); will update + flip to ✅
+    when complete.
 14. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
