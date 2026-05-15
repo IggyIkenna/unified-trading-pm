@@ -525,7 +525,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 ### P1 — start here
 
-- [ ] **1. mtb_p6e_qg_sweep audit close-out** (P1) — `plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`. B-014 rollout sweep across 6 repos. Done-def: every pre-existing failure either cross-links to a successor issue doc OR has `# pre-existing` xfail + 1-line rationale.
+- [x] **1. mtb_p6e_qg_sweep audit close-out** (P1) — `plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`. RESOLVED: features-service → cross-linked to 2 existing issue docs (slot 4 scope); ml-training → fixed by @7e18af8 (coverage ≥80%). All 6 B-014 repos above 70% floor ✅
 
 ### P2 — workspace cleanup sweeps
 

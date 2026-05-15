@@ -91,14 +91,16 @@ The QG floor of 70% is respected by all 6 repos. B-014 coverage deployment is co
 
 ## Recommended decision
 
-1. **features-service 211 failures**: Assign to features-service team for sports/volatility fixture repair. Not B-014
-   scope. Track in features-service repo issue backlog.
+1. **features-service 211 failures**: Tracked in successor issue docs (slot 4 owned):
+   - `plans/active/issues/features_service_volatility_test_failures_2026_05_15.md` — 48 volatility failures (class
+     rename: `VolatilityOrchestrationService` → `VolatilityFeaturesOrchestrator`). Slot 4 scope.
+   - `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md` — PYTEST_UNIT_DIR fix surfaced 350 per-family
+     tests. Remaining ~163 sports-fixture failures tracked there. Slot 4 scope.
+   - **No action required from this audit** — cross-links established.
 
-2. **ml-training 14 failures**: Two parallel tracks:
-   - Reduce `fail_under` in pyproject.toml from 80 → 79 (or match QG MIN_COVERAGE=70) to unblock QG while slow tests are
-     being addressed.
-   - Investigate parallel test isolation — these tests are likely sharing model-training state under xdist workers.
-     Sequential run (`PYTEST_WORKERS=1`) still fails → root cause is test logic, not only parallelism.
+2. **ml-training 14 failures**: RESOLVED by another slot — `ml-training-service@7e18af8` (`feat(tests): ml-training-service
+   coverage ≥80% + fix 15 pre-existing failures + 43 type errors`). Coverage now ≥80%; `fail_under=80` passes. No action
+   required.
 
 3. **No issue doc for coverage below 70%**: Criteria was "file issue doc for any repo below 70%". No repo is below 70%.
    This doc captures the QG failures for tracking purposes.
@@ -107,4 +109,9 @@ The QG floor of 70% is respected by all 6 repos. B-014 coverage deployment is co
 
 ## Status
 
-`OPEN — awaiting features-service + ml-training owners for fix assignment`
+`RESOLVED — 2026-05-15 (slot-2 close-out)`
+
+- features-service failures → cross-linked to `features_service_volatility_test_failures_2026_05_15.md` +
+  `features_service_qg_test_path_mismatch_2026_05_15.md` (slot 4 owns resolution)
+- ml-training failures → fixed by `ml-training-service@7e18af8` (coverage now ≥80%)
+- All 6 B-014 repos above 70% QG floor ✅
