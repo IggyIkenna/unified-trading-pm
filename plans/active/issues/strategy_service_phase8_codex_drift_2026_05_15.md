@@ -128,11 +128,71 @@ not commit to PM codex bodies per slot-precedence rule).
 
 ---
 
+---
+
+## Audit update — 2026-05-15 session-4 (slot-3)
+
+**Drifts 1–5 status**: ALL CONFIRMED FIXED by slot 6 in PM codex update (incoming merge to LDR 2026-05-15 afternoon).
+- Drift 1: Phase 6B hedge ratio → SHIPPED language + DYNAMIC formula in carry-staked-basis.md:32-38. ✅
+- Drift 2: stale `staked_basis.py:264` pointer → removed, replaced with `compute_dynamic_hedge_ratio()` ref. ✅
+- Drift 3: `lst_native_rate` + `lst_native_rate_ts` → added to Features section at lines 221-224. ✅
+- Drift 4: `peg_drift_threshold_bps` → added to config schema at line 210-212. ✅
+- Drift 5: APD code module path → fixed to v2 path at line 14-16. ✅
+
+**New drifts found (session-4 item 8 audit)**:
+
+### Drift 6 — `carry-staked-basis.md`: boot-rejection timing changed
+
+**Codex says (line 229):** `venue_accepts_collateral(perp_venue, lst_asset)` returns False → "slot is rejected at
+preflight."
+
+**Actual code (item 6 shipped at strategy-service@93965fd):** CarryStakedBasisEngine now raises `ValueError` at
+`__init__` if any of the 6 required params (`staking_protocol`, `native_asset`, `lst_asset`, `perp_venue`,
+`perp_instrument`, `spot_venue`) are absent. The rejection is at CONSTRUCTION, not at tick-time preflight. The codex
+"rejected at preflight" language refers to the collateral-matrix check (which still runs at tick time via
+`_derive_structure`), but the required-params check now fires earlier at boot. These are two different rejection points.
+
+**Severity:** Low — the behavior change is additive (boot rejection is stricter than tick rejection). Operators will
+get a clearer error message. Codex comment accuracy only.
+
+**Recommended fix (Drift 6):** Add a sentence to the config schema section noting that the 6 required params are
+validated at construction (ValueError at boot if absent), not silently skipped.
+
+---
+
+### Drift 7 — `arbitrage-price-dispersion.md`: Config schema shows generic sports schema, not engine params
+
+**Codex says (lines 80-100):** Config schema uses `opportunity_type: CROSS_BOOK_SPORTS`, `eligible_venues`,
+`eligible_markets`, `min_edge_bps` — generic schema for the theoretical full APD archetype.
+
+**Actual code engine params (price-dispersion path):**
+- `candidate_venues` (required, comma-separated, ≥ 2 venues) — NEW: raises ValueError at boot if absent or < 2
+- `dispersion_bps` (default "30")
+- `cost_bps` (default "10")
+- `stake_fraction` (default "0.1")
+- `hedge_deadline_ms` (default "5000")
+
+**Actual code engine params (funding-rate-dispersion path):** `dispersion_type: "funding-rate-dispersion"`,
+`venue_universe`, `pair_selection_mode`, `vol_cap_clamp_feature`, etc. (documented in examples at lines 163-173 as
+comments).
+
+**Severity:** Medium — engineer reading codex to implement APD upstream integration (features publisher) will expect
+the wrong params schema. `candidate_venues` especially is now required at boot — an upstream operator creating a new
+slot must know this.
+
+**Recommended fix (Drift 7):** Replace the generic YAML config schema with two sections: (a) price-dispersion params
+(CURRENT IMPLEMENTATION) and (b) funding-rate-dispersion params. Mark the old generic schema as "SUPERSEDED by actual
+impl."
+
+---
+
 ## Deferred work
 
-- [ ] **P1. DEFERRED** — Slot 1 (PM owner) to apply fixes 1–4 above to carry-staked-basis.md. Provenance: slot-3 audit
-      2026-05-15.
-- [ ] **P2. DEFERRED** — Slot 1 (PM owner) to apply fix 5 to arbitrage-price-dispersion.md. Provenance: slot-3 audit
-      2026-05-15.
+- [x] **P1. FIXED** — Slot 6 applied fixes 1–4 to carry-staked-basis.md (confirmed in merge 2026-05-15).
+- [x] **P2. FIXED** — Slot 6 applied fix 5 to arbitrage-price-dispersion.md (confirmed in merge 2026-05-15).
 - [ ] **P3. DEFERRED** — Add `lst_native_rate_ts` to features-onchain publisher so the staleness guard actually
       activates in production. Provenance: slot-3 audit 2026-05-15.
+- [ ] **P4. DEFERRED** — Slot 1 to update `carry-staked-basis.md` config schema with Drift 6 note (boot validation).
+      Provenance: slot-3 session-4 item 8 audit.
+- [ ] **P5. DEFERRED** — Slot 1 to replace APD generic config schema with actual impl params (Drift 7). Provenance:
+      slot-3 session-4 item 8 audit.
