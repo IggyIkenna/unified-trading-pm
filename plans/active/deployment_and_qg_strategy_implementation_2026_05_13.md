@@ -463,8 +463,9 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
 - [x] [AGENT] P0. **deployment-api WebSocket VM event streaming** — `/ws/vm/{vm_name}/events` polls GCS events bucket
       every 5 s; pushes new VMLifecycleEvents as JSON; mock mode sends 3 synthetic events; 1 smoke test; QG green. —
       _deployment-api@4951d10_
-- [ ] [AGENT] P0. **deployment-api Prometheus telemetry endpoint** — `GET /metrics` exposing key counters (requests,
+- [x] [AGENT] P0. **deployment-api Prometheus telemetry endpoint** — `GET /metrics` exposing key counters (requests,
       latencies, in-flight VMs, last-snapshot-age); standard Prometheus exposition format; 5+ exposed metrics; QG green.
+      — _deployment-api@8aabe72_
 - [ ] [AGENT] P0. **deployment-ui live deployments WebSocket integration** — `/ops/live-deployments` consumes
       `/ws/vm/{vm_name}/events`; auto-updates as events stream; pnpm build + vitest green.
 - [ ] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA
