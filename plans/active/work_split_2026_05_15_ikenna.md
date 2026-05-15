@@ -334,8 +334,15 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    wiring (ratchet mode — fails on regression). Verified: basedpyright clean, ruff clean, smoke exit 0.
    Future PRs ratchet down by adding the 4-field `execution:` block to the 9 baselined runbooks. Group A.1
    todo flipped in the governance plan body. (design 0.6×, ~3 = 1.8 cal)
-7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup.
-   (infra 0.8×, ~3 = 2.4 cal)
+7. 🔄 **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9). **Slot-8 partial 2026-05-15**:
+   Phase 4 item 1 (codex docs) ✅ SHIPPED at `unified-trading-pm@52cf9627` —
+   `codex/02-data/data-status-drilldown.md` §5 documents preview + auto-launch modes with full IAM /
+   rate-limit / audit-log / idempotency / correlation-id / tarball-refresh contract. **7 items still open**:
+   Phase 2 (4 P0 deployment-api endpoint + idempotency + event correlation + rate-limiter) `BLOCKED-UPSTREAM`
+   on Firestore rate-limit state infra + BigQuery audit-log infra (Phase 0 Decision 2+3 ratified 2026-05-08
+   but supporting infra still in design); Phase 3 (2 P0 UI) gated on Phase 2 endpoint; Phase 4 item 2 (P2
+   final closeout) gated on Phase 0-3 + 7-day soak. (infra 0.8×, ~3 = 2.4 cal — partial: doc shipped,
+   endpoint deferred)
 8. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
    `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`.
    Verified 15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`.
