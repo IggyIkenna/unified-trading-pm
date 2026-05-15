@@ -1585,16 +1585,20 @@ shows 0 ETH debt + 0 aETH within 1 block of `LIQUIDATION_IMMINENT` event.
 
 Per `master_to_live_defi_2026_05_23.md` Group F item 17 (real gas / matching engine / cost+yield precision).
 
-- [ ] [execution-service] P0. New cost models in `execution_service/matching_engine/defi/`: `gas_cost_model.py`
+- [x] [execution-service] P0. New cost models in `execution_service/matching_engine/defi/`: `gas_cost_model.py`
       (per-action gas estimation per chain), `slippage_cost_model.py` (Uniswap V3 concentrated-liquidity slippage curve
       at depth + Curve / Balancer fallbacks), `flash_premium_cost_model.py` (Aave V3 0.05% per principal + Balancer
-      alternative).
-- [ ] [execution-service] P0. Wire into batch P&L attribution. Per existing CLAUDE.md "Execution alpha measurement"
+      alternative). ✅ execution-service@`2e2219079` — 56 tests green; `DefiCostAggregator` + `build_defi_fill_context`
+      in `cost_aggregator.py` wires gas+flash into `FillAttributionContext.fee_amount_modelled`.
+- [x] [execution-service] P0. Wire into batch P&L attribution. Per existing CLAUDE.md "Execution alpha measurement"
       rule: batch matching-engine produces simulated fills with realistic costs; benchmark fills (always-fill at
-      requested price) isolate strategy alpha.
+      requested price) isolate strategy alpha. ✅ `build_defi_fill_context` + `DefiCostEstimate.total_fixed_cost_usd`
+      → `fee_amount_modelled`; slippage via `MatchResult.price_impact_bps` on live fill per existing `build_attribution_rows`.
+      execution-service@`2e2219079`.
 - [ ] [execution-service] P0. Backtest replay: take Phase 1 lending-rate + perp-funding history; replay through the
       matching engine; produce per-day strategy P&L for both variants. Compare against `_net_apr_recursive` analytical
-      prediction.
+      prediction. **BLOCKED-DATA** — gates on `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills
+      landing ≥1y of Aave V3 + Compound V3 lending-indices data (window: 2026-05-19 → 2026-05-23).
 
 **Done definition:** Cost models calibrated against historical on-chain data (gas: per-day median; slippage: per-pool
 depth at execution time; flash premium: flat 0.05%); batch P&L reconciles with analytical model within ±2% on a 1-year
