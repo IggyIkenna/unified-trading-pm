@@ -171,9 +171,33 @@ the commercial subscription request.
 - **Credential rotation**: Services manage rotation centrally, interfaces don't cache stale keys
 - **Separation of concerns**: Protocol logic (interface) vs operational security (service)
 
+## Live DeFi Wallet Key Lifetime — GAP-11 (2026-05-15)
+
+**Decision**: Wallet private keys MUST be fetched per-request from Secret Manager. They MUST NOT be cached in process
+memory between signing calls.
+
+Canonical enforcement:
+
+1. `ApiKeyReloader` (UTL) polls at `reload_interval_seconds` (default 60s) and refreshes the key reference. Each signing
+   call reads the current key from the reloader's latest fetch — NOT from a long-lived in-memory field.
+2. The DeFi connector `connect(config={...})` call happens **inside the trade-dispatch loop**, not at service startup.
+   The caller resolves the key immediately before calling `connect()`, uses it for the signing scope, and drops the
+   reference.
+3. Connectors MUST NOT store `config["wallet_private_key"]` as an instance attribute beyond the `connect()` method
+   scope.
+
+**Audit rule**: grep for `self.private_key`, `self.wallet_key`, `self._key`, `self.pk` in
+`execution-service/execution_service/defi_execution/`. Any assignment of a decrypted private key to an instance
+attribute is a HARD violation and must be raised with P0 severity.
+
+**Accepted exception**: `MOCK` signing surface (test-only). Mocks may store a fixed test key string as an attribute.
+
+**Cross-reference**: `custody-providers.md` § "KMS decrypt lifecycle" for the exact decrypt + sign + zeroize sequence.
+
 ## Anti-Patterns
 
 - Interface calling `get_secret_client()` directly
 - Interface reading API keys from environment variables
 - Interface with `CredentialsRegistry` import for fetching (constants-only import is OK)
 - Service passing `project_id` for interface to resolve keys internally
+- Storing decrypted private key as a long-lived instance attribute (see Live DeFi Wallet Key Lifetime above)
