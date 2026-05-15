@@ -300,8 +300,16 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    other agents during the 14 May audit pass: (a) wave3x Track D EXPECTED_KNOWN_SOURCE_GAP shipped `UAC@174f401` (status
    table already `done`); (b) launcher_scripts Phases 2/3 annotated DEFERRED-PER-AUDIT at `PM@724a2029`; (c)
    deployment_ui_lifecycle_tabs A.2 false positive corrected. (refactor 0.4×, ~3 = 1.2 cal)
-4. **`bucket_name_ssot_canonicalisation_2026_05_10` workspace flip** (carry from slot 9 #7) — remaining call-site
-   sweep + QG ratchet enforcement. (refactor 0.4×, ~4 = 1.6 cal)
+4. 🟡 **`bucket_name_ssot_canonicalisation_2026_05_10` workspace flip** — `BLOCKED-UPSTREAM` on
+   `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6 (window 2026-05-15→05-19): call-site sweep + L3
+   legacy delegate + dependency_checker migration all gated on Phase 2.6 physical flat→env-tiered migration.
+   **What IS shipped** (verified 2026-05-15 18:59 UTC): QG STEP 5.69 ratchet operational
+   (`scripts/quality-gates-base/base-service.sh:1578-1623`); 2 repos at 0 (instruments-service @5210149,
+   deployment-service @0b802ec); 8 baselined repos await Phase 2.6 ratchet-down (deployment-api 27, execution
+   33, UTL 23, batch-live-recon 7, UAC 5, UI 4, features-service 2, strategy-service 2); L1↔L4 parity
+   zero-drift verified; L2 features-* templates migrated to `resolve_bucket`. Workspace-flip Done-def #6
+   (full grep-audit table) deferred-after Phase 2.6 with named successor. (refactor 0.4×, ~4 = 1.6 cal —
+   bulk deferred-after Phase 2.6)
 5. **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) — sequencing
    items + TradFi cross-asset items. (research 1.2×, ~3 = 3.6 cal)
 6. ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
