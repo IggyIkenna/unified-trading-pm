@@ -30,6 +30,8 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 
 [2026-05-15 12:15 UTC] slot-3 — STARTED DR finalisation (plans/active/disaster_recovery_circuit_breakers_2026_05_10.md § Phases 6.A/6.B/9.A/9.B/10.A/10.B). Fetching owned repos (deployment-service + UTL + PM). Reading plan now.
 
+[2026-05-15 14:30 UTC] [slot 3 → main] — ✅ **DR CYCLE ITEM DONE**: UTL hygiene (deferred from DR plan 2026-05-12). Shipped `KillSwitchSubscriber` + `AuditLogWriter` + `ParquetAuditLogWriter` + `SubscriberCallback` + `TypedSubscriberCallback` + full 51-symbol `reconcile` sub-package at `unified_trading_library` root facade (utl@aeb1589). NOTE: LEDGER brief phases 6.A/6.B/9.A/9.B/10.A/10.B were ALL already shipped 2026-05-13 — task brief was stale. Picked up the highest-priority genuinely remaining item in slot 3's owned repos (UTL). Phase-4 service deep-import cleanup (execution-service/risk/pbm/alerting) is follow-up — outside slot 3's cycle owned repos. 🟡 SIDE NOTE: UAC slot 3 worktree is 137 commits behind LDR (rebase keeps being reverted by concurrent process); blocked UTL quickmerge so pushed directly per dirty-deps rule. Operator may want to run slot-master-rebase.sh on UAC slot 3.
+
 [2026-05-15 11:58 UTC] [slot 3 → main] — 🏁 **DAY-4 CYCLE-CLOSE**. All 4 items complete.
 - **B-016**: DEFERRED (MTDS CeFi no 7-day window); re-activates on features-service batch completion. Q1 updated, BACKLOG flipped.
 - **Item 2**: archetype_slot_resolver APD alias + 4 regression tests (strategy@a4dba55, PR #58).
