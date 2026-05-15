@@ -77,6 +77,8 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
 [2026-05-15 session-4] slot-3 — STARTED new 10-item queue. Beginning item 1: strategy-service signal generation tests across all archetypes.
 
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 1**: strategy-service signal generation tests. 12 tests across carry_staked_basis (6) + arbitrage_price_dispersion (6). Covers (a) clean signal, (b) threshold-fail no-signal, (c) hysteresis/suppression/kill-switch/best-pair-throttle. Discovered + documented: engine fires at carry >= entry_bps (inclusive, not strict >). QG green. — strategy-service@0f2c145. Pivoting to item 2: archetype state persistence + recovery tests.
+
 [2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
