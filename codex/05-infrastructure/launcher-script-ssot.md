@@ -408,29 +408,72 @@ Post-audit state: `VM_PREFIX_TO_BUCKET` has 0 known blindspots. `test_vm_zombie_
 
 Reference: `plans/active/issues/b011_vm_prefix_watchdog_blindspots_2026_05_13.md`.
 
-## Honest-coverage cron VM (2026-05-15) — Cloud Scheduler → Cloud Run Job → GCE VM pattern
+## Cloud Scheduler trigger SSOT (2026-05-15)
 
-A new 3-tier trigger chain for recurring measurement VMs (introduced for honest-coverage daily cron):
+### Primary SSOT: Terraform
+
+All Cloud Scheduler jobs are defined in `deployment-service/terraform/gcp/`:
+
+| Terraform file | Scheduler job | Cadence |
+|---|---|---|
+| `honest_coverage_scheduler.tf` | `honest-coverage-daily` | 00:30 UTC daily |
+| `qg_snapshot_scheduler.tf` (if wired) | `qg-snapshot-daily` | 06:00 UTC daily |
+| `catalogue_regen_scheduler.tf` | catalogue regeneration | periodic |
+| `manifest_consolidator_scheduler.tf` | manifest consolidation | periodic |
+| `t1_batch_scheduler.tf` | T1 batch trigger | daily |
+| others | see terraform/gcp/*.tf | — |
+
+### `setup-*-scheduler.sh` scripts: IAM-exception pattern only
+
+`setup-*-scheduler.sh` scripts exist ONLY when the Terraform plan cannot be applied by `harshkantariya@`
+due to `cloudscheduler.jobs.create` requiring the owner account (Ikenna). One script exists:
+
+- `setup-honest-coverage-scheduler.sh` — one-shot; requires `ikenna@odum-research.com`.
+
+**Standard Cloud Scheduler → Cloud Run Job → GCE VM pattern:**
+
+```
+Cloud Scheduler (cron expression, UTC)
+    └── Cloud Run Job: {name}-launcher
+            └── GCE VM: {prefix}-{ts}  (launched via launch-{name}-vm.sh from GCS)
+                    └── actual workload (measure_honest_coverage.py, snapshot.sh, etc.)
+                            └── GCS output
+```
+
+**Template for new setup-*-scheduler.sh** (copy from `setup-honest-coverage-scheduler.sh`):
+- `PROJECT="central-element-323112"` + `REGION="asia-northeast1"`
+- Verify Cloud Run Job exists before creating scheduler (fail-fast guard)
+- `--dry-run` + `--update` flags
+- `run()` helper that respects `$DRY_RUN`
+- `--attempt-deadline="60s"`, `--oauth-service-account-email=cloud-scheduler@${PROJECT}.iam.gserviceaccount.com`
+- IAM note in script header: who must run it and why
+
+### Honest-coverage cron VM (2026-05-15)
 
 ```
 Cloud Scheduler (30 0 * * * UTC)
     └── Cloud Run Job: honest-coverage-daily-launcher
-            └── GCE VM: measure-honest-coverage-{ts}
+            └── GCE VM: honest-coverage-{ts}
                     └── instruments-service/scripts/measure_honest_coverage.py
                             └── gs://central-element-323112-honest-coverage/{date}/coverage.json
 ```
 
 **Terraform SSOT**: `deployment-service/terraform/gcp/honest_coverage_scheduler.tf`
 
-**Launcher**: `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`
-  - GCS upload: `gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh`
-  - Cloud Run Job image: `gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine` (downloads launcher from GCS at runtime)
+**Launchers** (two — complementary, not duplicates):
+- `launch-honest-coverage-vm.sh` — Cloud Scheduler-targeted; always `--asset-group all`; VM prefix `honest-coverage-`
+- `launch-measure-honest-coverage-vm.sh` — ad-hoc; supports `--asset-group <filter>`; VM prefix `measure-honest-coverage-`
+
+Both are uploaded to GCS at `gs://deployment-scripts-central-element-323112/vm/`.
 
 **IAM note**: Cloud Scheduler creation requires `cloudscheduler.jobs.create` (Ikenna/owner territory).
 Operator setup: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com).
 BLOCKED-OPERATOR-DECISION pending Ikenna confirmation (pings/slot_2.md 2026-05-15 05:30 UTC).
 
-**VM prefix**: `measure-honest-coverage-` registered in `VM_PREFIX_TO_BUCKET` (bucket=`None`, heartbeat-only).
+**VM prefixes registered in `VM_PREFIX_TO_BUCKET`** (both heartbeat-only, bucket=`None`):
+- `honest-coverage-` — cron launcher prefix (registered 2026-05-15)
+- `measure-honest-coverage-` — ad-hoc launcher prefix (registered 2026-05-10)
+
 `VM_SHUTDOWN_ON_COMPLETION=true`. Machine: `e2-standard-2`, 50 GB.
 
 **When to use this pattern** vs bare launcher: when the VM must be triggered on a schedule (cron) rather than
