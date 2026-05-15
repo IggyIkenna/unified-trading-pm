@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 22:40 UTC] slot-8 — 🟢 STARTED items 11-20 (fresh queue). Beginning item 11: workspace-manifest.json drift audit.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 2 UTL test coverage push. UTL@64bf59a: 3 new test modules —
 test_domain_client_catalog.py (10 tests: BigQueryCatalog DDL gen + GlueCatalog Parquet SerDe/partition/S3 location),
 test_domain_client_readers.py (65 tests: DirectReader/AthenaReader/BqExternalReader/BaseReader/GasFeeReader
