@@ -421,6 +421,18 @@ surface, not per repo:
 **Owner**: slot 1 main spawns + monitors; leaf-service slots execute. **Dependencies**: None — independent of deployment
 work.
 
+### Phase 9 — Deployment API endpoint extensions (slot 7 queue 2026-05-15)
+
+Sourced from orchestrator ping [2026-05-15 07:36 UTC] 7-item queue.
+
+- [x] [AGENT] P0. **POST /api/backfill/launch** — fires `launch-backfill-vm.sh`; `(service, asset_group, venue, data_type, start, end, force, dry_run)` → `BackfillLaunchResult`. VM prefix `backfill-`. Unit tests + QG green. — _deployment-api@fe2a9c5 (pre-existing, wired by prior agent)_
+- [x] [AGENT] P0. **POST /api/ml/experiment/launch** — fires `launch-ml-training-vm.sh`; `(asset_group, instruments, target_types, timeframes, start_date, end_date, operation, machine, dry_run)` → vm_name `ml-train-{inst}-{ts}`. Unit tests (6) + QG green. — _deployment-api@f407c54_
+- [x] [AGENT] P0. **POST /api/strategy/backtest/launch** — fires `launch-strategy-backtest-grid-vm.sh`; `(archetype, start_date, end_date, grid_density, force, dry_run)` → vm_name `strategy-backtest-grid-{slug}-{ts}`. Unit tests (6) + QG green. — _deployment-api@f407c54_
+- [x] [AGENT] P0. **POST /api/execution/backtest/launch** — fires `launch-strategy-paper-vm.sh`; `(archetype, tick_interval, continuous, force, dry_run)` → vm_name `strategy-paper-{slug}-{ts}`. Unit tests (5) + QG green. — _deployment-api@f407c54_
+- [x] [AGENT] P0. **GET /api/vm/events?since=\<ts\>** — added `since: str | None` ISO 8601 param to existing endpoint; `_parse_since()` helper; date/from_hour params ignored when since set. Unit tests (3 new) + QG green. — _deployment-api@f407c54_
+- [ ] [AGENT] P0. **GET /api/builds/history** — tarball + Docker-image lineage endpoint. Done-def: endpoint + tests + QG green.
+- [ ] [AGENT] P0. **/ops/live-deployments UI route** — deployment-ui new route; Live-services panel showing running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds.
+
 ## Done definition
 
 **Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion"):
