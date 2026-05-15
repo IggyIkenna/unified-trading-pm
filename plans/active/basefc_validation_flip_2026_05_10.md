@@ -48,16 +48,20 @@ The Wave-8 BaseFC-ValidationFlip task was scoped against ~12 calculators with `f
 
 ## Done definition
 
-- [ ] **[AGENT] P1**. Decide flip strategy across the paradigm split. Options: (a) flip ONLY canonical UTL
-      `BaseFeatureCalculator` subclasses (35 calcs); leave legacy pandas `FeatureCalculator` alone as deprecated; (b)
-      extend the flip helper to support both inheritance trees; (c) migrate all 39 legacy pandas calcs to the canonical
-      `BaseFeatureCalculator` first, then flip universally. Recommendation: (a) — narrow blast radius, isolates the
-      change to the polars-canonical surface.
+- [x] **[AGENT] P1**. **Decided 2026-05-15 (slot 7 Ikenna)**: adopt **Option (a)** — flip ONLY canonical UTL
+      `BaseFeatureCalculator` subclasses (35 calcs in features-service across `cross_instrument` + `multi_timeframe`
+      + onchain canonical paths); leave legacy `FeatureCalculator` pandas subclasses alone as deprecated. Rationale:
+      narrow blast radius, isolates the change to the polars-canonical surface, no need to migrate 39 legacy pandas
+      calcs simultaneously. Counted feature_group overrides: 32 concrete + 3 base files = 35 sites (audit grep
+      2026-05-15). Phase 6 mandatory-validation flip lives in `features_repo_consolidation_2026_05_08.md` (parent
+      plan); this plan's items 2-4 do the actual class-var migration.
 - [ ] **[AGENT] P1**. Migrate concrete calculators from `@property @abstractmethod`/`@property @override` pattern to
       `feature_group: ClassVar[str] = "..."` + `feature_family: ClassVar[FeatureFamily] = FeatureFamily.X`. Per-family
-      commits.
+      commits. **Status 2026-05-15 EOD**: deferred to next session (estimate ~2 cal AI-days for 32 calcs; slot 7 May-23
+      stack prioritised writegate Gate-4 audit + audit_records + client_reporting over post-cutover P1 refactor).
 - [ ] **[SCRIPT] P1**. Flip UTL canonical `BaseFeatureCalculator.validate_class_attributes()` from opt-in (callable
-      helper) to mandatory (`__init_subclass__` enforcement). UTL commit.
+      helper) to mandatory (`__init_subclass__` enforcement). UTL commit. **Blocked on item 2 above** (mandatory
+      enforcement would break any subclass that hasn't migrated yet).
 - [ ] **[AGENT] P1**. Plan-flip cite: `unified-trading-pm` plan-flip commit pointing at the per-family + UTL commits.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
