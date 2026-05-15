@@ -113,9 +113,10 @@ the rollup-math incident (ARBITRUM 32/54) are both this class.
 - [x] [deployment-api] P0. `tests/unit/test_chain_breakdown_shards_vs_dates.py` — synthesize a manifest with multiple
       data_types and instruments per chain; assert `_build_chain_breakdown` returns `shards_expected ≫ dates_expected`.
       Catches the rollup-math incident. (deployment-api@6cfed38 — test exists + passes)
-- [ ] [deployment-ui] P0. `tests/contracts/test_drilldown_response_shape.test.ts` — Vitest test that pins the
+- [x] [deployment-ui] P0. `tests/contracts/test_drilldown_response_shape.test.ts` — Vitest test that pins the
       `DrilldownResponse` interface shape against a golden JSON snapshot. Catches API drift where a field rename (e.g.
       `total_top_axis_children` → `total`) silently breaks the UI.
+      (deployment-ui@f747e38 — 17 tests: TypeScript compile-time assignment-narrowing + runtime Object.keys assertions for DrilldownTotals, DrilldownNode, DrilldownResponse; critical regression guard pins total_top_axis_children as the pagination field name)
 
 ### B. UAC canonical-types alignment (cross-service field parity)
 
@@ -187,8 +188,9 @@ orchestrator-skip flow.
       the captured shard; assert the orchestrator's `preflight_captured_atoms` skip path fires without re-fetching.
       Catches the user's 2026-05-07 directive: "service responds to it, respects it, and is run without --force so that
       it skips already existing shards." (deployment-api@6ab227b — test exists + passes; 3 class tests + 3 parametrized)
-- [ ] [deployment-ui] P0. `tests/components/DeployMissingButton.test.tsx` — already partially shipped; extend with tests
+- [x] [deployment-ui] P0. `tests/components/DeployMissingButton.test.tsx` — already partially shipped; extend with tests
       for the warning panel rendering on `tarball-from-local` mode + the mode-toggle re-fetch behavior.
+      (deployment-ui@79548a6 — 19 tests in tests/unit/components/DeployMissingButton.test.tsx: tarball-from-local LOCAL-ONLY warning panel, mode-toggle re-fetch issues second postDeployMissingPreview call, env-based blocking staging/production/development, copy, close, error handling)
 
 ### E. Cloud-agnostic behavior
 
