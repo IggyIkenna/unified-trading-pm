@@ -163,7 +163,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: DeFi pipeline green end-to-end (instruments → MTDS → features → strategy → execution); Ikenna confirms backtest start date ready
 
 ### B-016 · DeFi arbitrage_price_dispersion backtest run (paper mode)
-- **Status**: DISPATCHED → slot 3 2026-05-14 (parallel with B-015; cross-side prereq check first)
+- **Status**: DEFERRED — MTDS CeFi tick data has no continuous 7-day window with ≥4 APD venues (BINANCE/BYBIT/DERIBIT/OKX). Re-activates when `features_service --asset-group cefi --feature-family delta_one` completes over 7d continuous window. See Q1 in continuation_prompts_harsh_2026_05_15.md § Slot 3.
 - **Task**: Same shape as B-015 for `arbitrage_price_dispersion`. Parallel with B-015 if separate slots.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h · **Model**: Sonnet
@@ -207,6 +207,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-018 Phase 4.A daily QG snapshot writer + cron VM | slot 7 | DISPATCHED (natural follow-on to B-013) |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
+| 2026-05-15 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DEFERRED — MTDS CeFi no 7-day window ≥4 venues (best=3d Mar30-Apr1); re-activates when features-service CeFi delta_one batch runs |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
 | 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | execution-service@fdd82def + @fe8b1d3e + PM@3d1cbcbc ✅ (11 new tests; QG 5837 passed) |
 | 2026-05-14 | B-006 Phase 8.A service startup coverage | slot 4 | mtds@504bf34 + instruments@4063e08 + PM@4e9a4f19 ✅ |

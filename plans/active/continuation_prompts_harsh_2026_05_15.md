@@ -183,47 +183,26 @@ Slot 3 went idle before seeing it.
 
 ### Open questions
 
-#### Q1 — [slot-3, 2026-05-15 05:18 UTC] — B-016 BLOCKED: features-cefi bucket missing + colocated_engine wrong bucket name
+#### Q1 — [slot-3, 2026-05-15 05:18 UTC] — B-016 DEFERRED: MTDS CeFi tick coverage insufficient for any 7-day window
 
-**Status**: 🟡 BLOCKED — awaiting operator direction on CeFi features pipeline run
+**Status**: 🔴 DEFERRED — upstream CeFi MTDS tick data has no continuous 7-day window with ≥4 APD venues
 
-**Finding**: Sanity-checked the CeFi feature bucket per continuation_prompts item 1 instruction. Two issues found:
+**Finding (updated 2026-05-15, post operator option-B decision)**:
 
-1. **Code bug (fixed this session)**: `colocated_engine.py` `_FEATURE_BUCKETS["CEFI"]` =
-   `"features-cefi-central-element-323112"` — this bucket does not exist (404). Correct canonical bucket via
-   `resolve_bucket_name(cloud='gcp', kind='features-delta-one', asset_group='cefi')` =
-   `features-delta-one-cefi-prd-central-element-323112`. Fix: change hardcoded string to resolve via UTL. **Fix
-   committed this session (see SHAs when done).**
+Operator approved option B (7-day smoke window). Scanned `gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/` for APD target venues: BINANCE-FUTURES, BYBIT, DERIBIT, OKX-FUTURES/SPOT/SWAP. Coverage is highly sporadic:
+- Mar 30, 31, Apr 1: 6 venues each (BINANCE, BYBIT, DERIBIT, OKX all present) — best 3-day run
+- Apr 2-5: 1-2 venues only
+- Apr 13-14: 4-6 venues briefly
+- No 7-day window anywhere with ≥4 venue families present on every day
 
-2. **Data pipeline gap (not fixable without operator direction)**: Even with the correct bucket name,
-   `features-delta-one-cefi-prd-central-element-323112` is **empty** — the CeFi delta*one features pipeline has never
-   been run against prod GCS. The APD strategy requires
-   `mid_price*{venue}`+`funding*rate*{venue}`features for all 6 perp venues. Without these,`on_tick()` receives empty
-   feature dicts → 0 signals generated → 0 trades → backtest result is meaningless.
+**Conclusion**: Option B cannot be satisfied — upstream MTDS tick data does not have any valid 7-day window. Per operator deferred fallback (07:38 UTC): **B-016 is DEFERRED**.
 
-**Impact**: Ikenna's Phase 2 ACK was based on the assumption that `features-cefi-central-element-323112` bucket existed
-with data. That assumption was incorrect (carried over from Phase 1 prereq item (e) which was 🟡 "assumed available").
-The ACK is still valid in principle — the data EXISTS in MTDS tick form — but the features pipeline needs to be run
-first.
+**Also confirmed (issue #1 from Q1 original, fixed)**:
+- `colocated_engine.py` `_FEATURE_BUCKETS["CEFI"]` hardcoded wrong bucket name → fixed to use `resolve_bucket_name()` (committed in e2e-testing@3ee6177).
 
-**Unblock path**:
+**Re-activation condition**: B-016 re-activates automatically when CeFi delta_one features land in GCS (i.e., after `features_service --operation batch --asset-group cefi --feature-family delta_one` runs over a continuous 7-day window with ≥4 venues). At that point BACKLOG status flips from DEFERRED to DISPATCHED.
 
-- Run
-  `python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date 2026-04-14 --end-date 2026-05-14`.
-  This would populate `features-delta-one-cefi-prd-*` with the per-venue mid-price + funding-rate features APD needs.
-- Full 30-day window (2026-04-14 → 2026-05-14) = ≥1 week → needs **operator approval** per "Plans Run To Actual
-  Completion" HARD RULE work-split rule.
-- Alternative: use a shorter ≤7-day smoke window first (e.g. 2026-05-07 → 2026-05-13) under ADC-admin pre-authorization.
-
-**Options presented to operator**:
-
-- (A) Approve full 30-day features-service CeFi batch (2026-04-14→2026-05-14) → launch B-016 Phase 2 after features
-  populate (~1-2 hrs).
-- (B) Approve 7-day smoke (2026-05-07→2026-05-13) first → verify → approve full 30-day extension.
-- (C) Descope B-016 backtest window to ≤7 days (ADC-admin-authorized without extra approval) — shorter results but still
-  meaningful for paper-readiness validation.
-
-**Status**: Pivoting to items 2-4 now. B-016 Phase 2 launch = `[BLOCKED-OPERATOR-DECISION — pinging operator via Q1]`.
+**Status**: `DEFERRED — no valid smoke window; re-activates when CeFi features-service batch completes over 7d continuous window`
 
 ---
 
