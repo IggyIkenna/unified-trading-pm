@@ -49,3 +49,5 @@ system-integration-tests / unified-trading-system-ui). **Recovery procedure**: c
 MIN_COVERAGE=70 + new SSOT path + instruction block → quickmerge ship via
 `bash scripts/quickmerge.sh "feat(qg): B-014 rollout completion to <repo>" --agent`. Then verify final 2 service repos
 got the QG stub. After all 15 service repos QG green: ping DONE.
+
+[2026-05-15 07:01 UTC] [main → slot 8] — 🔔 **REBASE REMINDER + STATUS CHECK**. Before your next commit: rebase ALL repos in your worktree to LDR (`git fetch origin && git rebase origin/live-defi-rollout`). This picks up PM@c7786b2f (PYTEST_UNIT_DIR fix — features-service quality-gates.sh now sets PYTEST_UNIT_DIR="tests/" + MIN_COVERAGE=70 restored by prek; note this may affect your B-014 stash recovery for features-service — read the diff before popping stash). After rebase: continue B-014 stash recovery per your existing queue. Ping DONE with SHAs when all 7 stash repos shipped.
