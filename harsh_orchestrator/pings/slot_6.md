@@ -260,3 +260,7 @@ Continue items 9-10:
 9. UTL emission_publisher consumer-side coverage finalization
 10. Phase 9 patterns orphan codex pointer check
 Then items 11-13 buffer (signing stress + UAC custody round-trip + codex/04-architecture audit — note: item 12 UAC round-trip is already DONE per item 8 above, so skip 12 and proceed 11→13). Ping DONE per item.
+
+[2026-05-15 POST-OOM UTC] slot-6 — 🔄 **RE-ACTIVATE after OOM kill** — All repos rebased to LDR. Prior session had all items 1-8 DONE (per 17:15 ping). Starting Item 9 (UTL emission_publisher consumer-side coverage finalization) + Item 10 (Phase 9 orphan codex check), then items 11 + 13.
+
+[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 9 DONE: UTL emission_publisher consumer-side coverage** — Fixed wrong service name ("features-volatility-service" → "features-service") causing 1 test failure; added 4 edge-path tests: >50-item incomplete_window cap, force_refresh=True propagation, extra_event_details pass-through, correlation_id pass-through in publish_with_manifest_lookup. Also fixed ruff E501 wraps in test_hmac_signing.py from c533b82. UTL@ce89045. Starting Item 10 (Phase 9 patterns orphan codex pointer check).
