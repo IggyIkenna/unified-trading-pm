@@ -369,6 +369,12 @@ STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry
 - vm_config.py (VMConfigManager): 71% → 89% (extract_registry_region, generate_instance_name, get_status_path, is_zone_exhausted/quota)
 - Overall: 71% → 72%. 49 new tests across 3 new files. All pass. Items 7+10 IAM-gated. STARTED item 8 (Phase 8 codex audit).
 
+[2026-05-15 19:00 UTC] slot-2 — ✅ **DONE item 8** (Phase 8 codex audit). unified-trading-pm@f981a40b.
+
+- `codex/05-infrastructure/deployment-and-qg-strategy.md`: new Phase 8.A section covering all 4 hardening patterns shipped 2026-05-15.
+- Patterns documented: launcher_common.sh DRY library, shellcheck security hardening, vm-deployment-events pubsub gap, zombie watchdog per-prefix thresholds + --notify-url, GCS lifecycle operator action.
+- Codex now accurate to Phase 8.A shipped code. STARTED item 9 (VM tarball cleanup tool — cleanup_old_tarballs.py).
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle
 audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
