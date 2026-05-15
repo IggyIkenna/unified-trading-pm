@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 2 UTL test coverage push. UTL@64bf59a: 3 new test modules — test_domain_client_catalog.py (10 tests: BigQueryCatalog DDL gen + GlueCatalog Parquet SerDe/partition/S3 location), test_domain_client_readers.py (65 tests: DirectReader/AthenaReader/BqExternalReader/BaseReader/GasFeeReader caching+factory), test_domain_client_writers.py (26 tests: DirectWriter/BaseWriter/MarketDataWriter/FeaturesWriter/MLWriter+factory). 101 new tests, all pass. Covers domain_client catalog/readers/writers previously at 53-66% coverage.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 3 base-service.sh CI workflow. PM@21686e55 + alerting-service@05dec98: workspace-qg.yml.tmpl template created in workflow-templates/; rollout-workflow-templates.sh extended with .tmpl substitution support ({{DEP_REPOS}} from manifest); alerting-service wired as proof (dep_repos=unified-trading-library unified-api-contracts).
 
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 9 UTL changelog automation. UTL@505cc8a: scripts/generate_changelog.py — generates CHANGELOG.md from git log using conventional commits; grouped by feat/fix/refactor/perf/docs/test/ci/chore; supports --unreleased/--from/--to/--output; basedpyright clean.
