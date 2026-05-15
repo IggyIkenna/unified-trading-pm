@@ -358,8 +358,7 @@ After launch:
 
 - [x] **6. MTDS Solana handler retry policy** — ✅ 4 tests TestGetWithRetryPolicy: 429→retry→success (2 GETs + sleep), 503→retry→success, max_retries=3 exhausted raises after 4 attempts, non-retryable 400 raises immediately (no sleep). Blockhash invalidation N/A (handler is HTTP-fetch only). MTDS QG green. mtds@f395c5e.
 
-- [ ] **7. MTDS eigenlayer handler coverage extension** — post-hardening safe-pattern tests + edge cases. Done-def: 4+
-      tests + MTDS QG green.
+- [x] **7. MTDS eigenlayer handler coverage extension** — ✅ 4 tests TestEigenlayerSafePattern: record_captured on success, record_empty on zero rows, record_failed on exception (no record_captured = phantom guard), recorder.close() in finally. MTDS QG green. mtds@b052a78.
 
 - [ ] **8. PBM mode parity — degraded conditions** — extend mdps@3f72029 baseline parity to schema parity under NaN rows
       / late-arriving data / schema drift. Done-def: 3+ degraded-condition tests + PBM QG green.
