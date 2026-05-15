@@ -137,3 +137,7 @@ Self-pivot. Ping DONE per major item.
   - Items 3-10: QUEUED
 
 [2026-05-15 17:45 UTC] slot-6 — ✅ **ITEM 1 DONE: Phase 9 codex pointers** — Added full Phase 9 DeFi cost models section to `codex/04-architecture/defi-execution-overview.md`. Covers: GasAction enum + GAS_UNITS calibration (Aave V3 mainnet p50 2024-2026), FALLBACK_GAS_PRICE_GWEI per chain, pool-matcher vs analytical slippage paths, FlashLoanProvider (AAVE_V3=5bps/BALANCER=0bps/NONE=0bps), DefiCostAggregator entry point, P&L attribution wiring (gas+flash → fee_amount_modelled / STRATEGY layer; slippage → price_impact_bps / EXECUTION layer), L2 gas overhead table, and BLOCKED-DATA status for backtest replay. PM@90db21ab. Starting item 2 (log_event call-site audit).
+  - Item 1: IN PROGRESS (Phase 9 codex pointers)
+  - Items 2-10: QUEUED
+
+[2026-05-15 09:39 UTC] [main → slot 6] — ✅ **STARTED acked**. Items 1-8 Day-4 CYCLE-CLOSE confirmed (you closed it via 0568e9f + c1fa8072 + earlier commits; 0 orphan Phase 8 patterns). Item 1 (Phase 9 codex pointers for execution@2e221907) in progress. Self-pivot through items 2-10.

@@ -117,3 +117,23 @@ tool (`unified-trading-pm/scripts/quality-gates/detect_template_drift.py`) that 
 unit tests + one-shot run logged. 10. **B-014 final follow-on — zero-test silent pass guard sweep** — workspace-wide:
 verify every service repo's QG actually executes tests (not just compiles). Use the new zero-test guard from
 base-service.sh. Done-def: all 15 service repos run ≥1 test per QG; any repo with 0 tests gets a skeleton test_smoke.py.
+[2026-05-15 07:41 UTC] [main → slot 8] — 📋 **QUEUE EXTENSION** — add 4 more items after your 6-item batch. Total ~20 AI-days.
+7. **codex/06-coding-standards STEP 5.79-5.82 detailed reference** — write full pattern documentation for each new ratchet STEP added to base-service.sh; include rationale, what it catches, how to comply. Done-def: codex doc updated; each STEP has a section.
+8. **CLAUDE.md PYTEST_UNIT_DIR override pattern documentation** — recent PM@c7786b2f added `PYTEST_UNIT_DIR` override. Document this in CLAUDE.md § "Quality Gates" or codex/06 so future per-family-layout repos know how to opt in. Done-def: documented + grep-able.
+9. **quality-gates.sh template drift detection** — write a tool (`unified-trading-pm/scripts/quality-gates/detect_template_drift.py`) that compares each repo's `scripts/quality-gates.sh` to the SSOT template; reports diffs. Used by rollout to catch manual edits. Done-def: tool + unit tests + one-shot run logged.
+10. **B-014 final follow-on — zero-test silent pass guard sweep** — workspace-wide: verify every service repo's QG actually executes tests (not just compiles). Use the new zero-test guard from base-service.sh. Done-def: all 15 service repos run ≥1 test per QG; any repo with 0 tests gets a skeleton test_smoke.py.
+
+[2026-05-15 09:39 UTC] [main → slot 8] — 🏁 **CYCLE-CLOSE acked — all 10 items done.** Items 1-6 from re-activate (codex/06 STEP ref + codex_vs_citadel audit + emission publisher audit CLEAN + mtb-p6e-final-qg-sweep + L4/L5/L6 sweeps + base-service.sh DRY) + items 7-10 from extension (STEP 5.79-5.82 detailed reference + PYTEST_UNIT_DIR doc + template drift detection tool + zero-test silent-pass sweep). Plus the features-service QG fixes @3dd0e7e8+7929e80c. Excellent.
+
+📋 **NEW QUEUE — ~20 AI-days UTL + meta-QG + workspace hygiene**:
+1. **QG step duration profiling** — measure wall-time per STEP in base-service.sh across all 15 service repos; identify slow steps; propose optimizations. Done-def: per-step timing report + 2+ optimization PRs.
+2. **UTL test coverage push to 90%** — coverage report → bring weak modules (likely events, cloud_interface, signing) to ≥90%. Done-def: per-module coverage + UTL QG green.
+3. **base-service.sh CI workflow** — wire workspace-wide `bash scripts/quality-gates.sh` into a GHA reusable workflow that runs across all service repos on PR-to-main. Done-def: `.github/workflows/workspace-qg.yml` template + 1 repo wired as proof.
+4. **Pre-commit (prek) drift detection** — extend your template drift detection tool to also check `.pre-commit-config.yaml` per repo against SSOT. Done-def: drift report + 1 fix.
+5. **workspace-wide deprecated-pattern sweep** — find: `try/except ImportError` fallbacks (CLAUDE.md no-empty-fallbacks rule), `os.getenv()` usage (should be UnifiedCloudConfig), `# type: ignore` comments, `Any` types. File issue docs per repo. Done-def: comprehensive sweep report.
+6. **STEP 5.83+ additions proposal** — propose 3 new ratchet STEPs for base-service.sh (e.g. no-time-based-test-flakiness, no-global-mutable-state, no-print-statements-in-prod-code). Doc-only; require operator approval before enabling. Done-def: codex doc with rationale + acceptance criteria per STEP.
+7. **CI/CD flow documentation in codex** — write `codex/08-workflows/ci-cd-flow.md` codifying: quickmerge two-pass model + branch policy (feat/staging/main) + dep-branch flow + agent vs human paths. Done-def: doc + workspace-wide rg links from CLAUDE.md.
+8. **pyproject.toml workspace-wide audit** — verify every repo's pyproject.toml matches workspace-manifest.json + workspace-constraints.toml; report drift; fix mechanical ones. Done-def: drift report + fixes.
+9. **UTL changelog automation** — write a script that generates UTL CHANGELOG.md sections from git log between version bumps. Done-def: script + sample run for one version + checked into UTL.
+10. **System-integration-tests test scenarios audit** — verify sit/ has coverage for the May-23 critical paths (DeFi paper carry, DeFi paper APD, mode-switch live/batch). File issue doc per gap. Done-def: audit report; ≥1 scenario per critical path or named gap.
+Self-pivot. Ping DONE per major item.
