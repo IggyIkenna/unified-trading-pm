@@ -329,11 +329,16 @@ volume.
       two-path `record_expected_empty` emission (early-return path for all-non-trading-day batches + finalization-block
       path for mixed batches); used existing UAC `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` reasons (more precise than
       generic `EXPECTED_NON_TRADING_SESSION`); 3 unit tests in `tests/unit/test_orchestrator_non_trading_session.py`.
-- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
+- [x] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
       empty reasons" section listing all 6 EXPECTED_NON_TRADING_SESSION sub-reasons (pre-market closed, post-market
       closed, weekend, holiday, half-day-early-close, partial-halt). NEW
       `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` (small doc) describes the standard pattern
       for features-\* calculators that need overnight or pre-market data.
+      **SHIPPED 2026-05-15**: `PM@db9b7af8` — added § "Session-typed availability" to honest-absence-downstream-handling.md
+      (EXPECTED_WEEKEND / EXPECTED_HOLIDAY / EXPECTED_OUTSIDE_TRADING_HOURS reasons, orchestrator two-path emission pattern,
+      downstream consumer action table, n_valid sibling column rule); extended session-aware-feature-calculator-pattern.md
+      with § "Session-typed manifest reasons" (three-reason table, rolling-window session-adjusted-denominator code pattern,
+      `is_session_closed` helper using `_SESSION_CLOSED_REASONS` frozenset).
 
 ### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`)
 
