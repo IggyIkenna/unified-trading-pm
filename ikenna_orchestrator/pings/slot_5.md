@@ -692,6 +692,11 @@ Without it: historical OHLCV rows have session=null/phase=null; new rows stamped
 (script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master_2026_05_07.md` § "Databento session-type
 awareness"
 
+**UPDATE 2026-05-15**: Databento account is ALSO locked (`403 auth_account_locked`). Tested key
+`databento-api-key-1` from Secret Manager — valid key, but account suspended (likely unpaid bill).
+Status upgraded to: 🔴 BLOCKED-CREDENTIALS (account-locked) + 🟡 BLOCKED-OPERATOR-DECISION.
+To unblock: resolve billing at app.databento.com → account (and all 20 Secret Manager keys) will resume.
+
 ---
 
 ## [slot 5] Zero-volume bars → record_expected_empty shipped (2026-05-15)

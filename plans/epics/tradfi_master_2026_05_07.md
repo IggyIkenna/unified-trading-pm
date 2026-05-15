@@ -147,8 +147,13 @@ respective umbrellas.
 
 ### Market-hours + holiday SSOT integration (`instrument_schema_cohesion_and_market_hours`)
 
-- [ ] [AGENT] P0. databento.py adapter: populate `pre_market_open_utc`, `post_market_close_utc`, `holiday_calendar` per
-      TradFi instrument. [AUDIT 2026-05-07: FRESH — actionable]
+- [x] [AGENT] P0. databento.py adapter: populate `pre_market_open_utc`, `post_market_close_utc`, `holiday_calendar` per
+      TradFi instrument. [AUDIT 2026-05-07: FRESH — actionable] **VERIFIED 2026-05-15**: `IS@7fa7759` (April 11) —
+      `_enrich_session_metadata()` (lines 581-601) sets all three fields for every `InstrumentRecord` via
+      `_get_session_metadata(venue, target_date)`. `holiday_calendar` set for all venues; `pre_market_open_utc` +
+      `post_market_close_utc` set for NYSE/NASDAQ (correctly None for CME/ICE/CBOE where pre/post-market doesn't apply).
+      FX records hardcode `holiday_calendar="FX"`. All `get_instruments()` paths call `_enrich_session_metadata`.
+      Test coverage in `test_cefi_tradfi_comprehensive.py::test_enrich_session_metadata`.
 - [x] [AGENT] P0. `ml-training-service/app/core/data_filters.py`: replace `filter_market_hours()` hardcoded NYSE with
       `venue_trading_calendar` lookup. [AUDIT 2026-05-07: FRESH — actionable] **SHIPPED 2026-05-15**: `MLTS@751130c` —
       removed hardcoded `_MARKET_OPEN_HOUR/MINUTE` ET constants; replaced with `classify_session(venue, ts)` per
