@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE item 6 base-service.sh DRY proposal. PM@28ce4771: 3 findings documented in codex quality-gates.md § "quality-gates.sh Boilerplate DRY Consolidation Proposal". Finding 1: lifecycle block (15 lines) duplicated 14 repos; 5 repos on stale old pattern — proposal to move to base-service.sh PENDING OPERATOR ACK. Finding 2: PERIPHERAL_DIR stays per-repo (intended). Finding 3: PYTEST_UNIT_DIR opt-in pattern documented. No code changes made.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE item 5 batch_live L4/L5/L6 sweep (features+strategy+mtds). STEP 5.75-5.78 (L1/L2/L3/L5) all ✅ clean in all 3 repos. L4 deferred items catalogued: LIVE_FEATURES_COMPUTED/LIVE_SIGNAL_GENERATED in strategy-service (log_event strings); LIVE_FEATURE_SUBSET constant in features-service. Both are post-cutover per plan D5 default — NOT violations for current QG STEPs. L6 executor-factory: no violations found. No code changes needed.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 4 mtb-p6e-final-qg-sweep. PM@41bbf18e: QG ran on all 6 B-014 repos. Results: ibkr-gateway-infra 51.47% ✅, ml-inference 78.41% ✅, mdps 74.91% ✅, sys-integration-tests ~8% ✅ (MIN_COV=2), features-service 71.83% ❌ (211 pre-existing failures — confirmed on LDR main), ml-training 79.96% ❌ (14 slow-test timeouts + 0.04% coverage gap vs pyproject fail_under=80 — confirmed pre-existing on LDR main). No repo below 70% floor. Issue doc: plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md
