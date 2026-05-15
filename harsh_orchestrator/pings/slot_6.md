@@ -203,8 +203,9 @@ stub). Self-pivoting through all 10 items. Status by item:
 
 - Item 1: ✅ DONE (Phase 9 codex pointers — PM@90db21ab)
 - Item 2: ✅ DONE (log_event call-site audit — execution@d06ec579)
-- Item 3: IN PROGRESS (UTL config_interface coverage)
-- Items 4-10: QUEUED
+- Item 3: ✅ DONE (UTL config_interface coverage — UTL@246ab77)
+- Item 4: ✅ DONE (execution-service native adapter contract tests — execution@9d50f02d)
+- Items 5-10: QUEUED
 
 [2026-05-15 17:45 UTC] slot-6 — ✅ **ITEM 1 DONE: Phase 9 codex pointers** — Added full Phase 9 DeFi cost models section
 to `codex/04-architecture/defi-execution-overview.md`. Covers: GasAction enum + GAS_UNITS calibration (Aave V3 mainnet
@@ -239,3 +240,5 @@ in base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453
 11. **UTL signing helper concurrent-call stress tests** — KMS/cloud_kms_signer/wallet_signer under N=100 concurrent sign calls; verify no key leak, no race, no partial-sign. Done-def: 3+ stress tests + UTL QG green.
 12. **UAC custody contract round-trip tests** — WalletProvisioningConfig, SigningSurface, CloudKmsConfig: encode → decode → equality. Surgical edits only (Ikenna primary UAC owner). Done-def: round-trip tests + UAC QG green.
 13. **codex/04-architecture full audit pass** — workspace-wide: every doc in codex/04-architecture/ matches shipped code. File one issue doc consolidating drift across docs. Done-def: full pass report.
+
+[2026-05-15 20:30 UTC] slot-6 — ✅ **ITEM 4 DONE: execution-service native adapter contract tests** — 19 contract compliance tests added (execution@9d50f02d): (1) tests/unit/test_native_adapter_contracts.py: 5 adapter families × 3-4 tests each — BybitCeFiAdapter, OKXCeFiAdapter, BitfinexCeFiAdapter, BitgetCeFiAdapter, KrakenCeFiAdapter; each verifies parse_order_response → CanonicalOrder with correct status/filled_quantity/avg_price fields; (2) BUG FIXED: kraken_rest_adapter.py status map produced uppercase PENDING/OPEN/FILLED/CANCELLED and used side.upper()/order_type.upper() but CanonicalOrder enum requires lowercase — now all lowercase (consistent with all other native adapters); (3) PYTEST_UNIT_DIR wired into execution-service quality-gates.sh to also collect tests/trade_execution/unit/ (46 adapter-contract + schema tests previously uncollected). All 19 tests pass (0.69s). QG running in background. Starting item 5 (codex/04-architecture/* drift audit).
