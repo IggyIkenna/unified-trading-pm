@@ -498,8 +498,10 @@ these venues.
 > only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5 lending-indices fixes
 > resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) resolve ~1.4k; (3) UAC
 > `PROTOCOL_LAUNCH_DATES` tightening for vault protocols (YEARN V3 / Morpho Vaults / Ethena vault) reclassifies ~6.9k
-> from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER perp-funding adapter has **zero captured rows**
-> (correctness risk if ASTER on May-23 hedge-leg path).
+> from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER perp-funding adapter had **zero captured rows** —
+> **FIXED 2026-05-15** (mtds@`f9824d0`): root cause was dead URL `api.aster.finance` → DNS NXDOMAIN; fixed to
+> `fapi.asterdex.com` (Binance-compatible, 406 live PERPETUAL symbols); added `_ASTER_FUNDING_START_DATE = "2024-09-25"`
+> pre-launch guard to emit `EXPECTED_PRE_VENUE_LAUNCH` for pre-launch dates instead of blank `SOURCE_RETURNED_ZERO`.
 
 - [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
