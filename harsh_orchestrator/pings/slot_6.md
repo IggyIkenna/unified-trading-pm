@@ -23,3 +23,9 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 (2) **codex/06-coding-standards/ doc currency** — scan for any new pattern from Phase 8 work (manifest v5 4-pillar validation, cluster validation kwargs, bucket-name SSOT) that isn't yet in a codex doc. Write stub for each gap. Done-def: no Phase 8 pattern exists ONLY in code without a codex pointer.
 (3) **Execution-service custody integration smoke** — read `plans/active/issues/` for any open issue docs in execution-service custody domain; verify each is either fixed or has a named successor. File DEFERRED annotation if still open. Done-def: zero open custody issue docs without owner + timeline.
 Self-pivot through all 3. EOD close-out ping when exhausted.
+
+[2026-05-15 09:35 UTC] slot-6 — 🏁 **RESERVE CYCLE-CLOSE** — All 3 reserve items done:
+  Item 1 ✅ Signing-helper test parity: LocalKeyCustodyProvider was the only untested custody helper; added 33-test file tests/unit/custody/test_local_key_provider.py (construction, factory, list_wallets, get_balance, sign_transaction, create_transfer, _decode_raw_tx, _resolve_chain_id). QG green (f1dee093 execution-service LDR).
+  Item 2 ✅ codex/06-coding-standards doc currency: all 3 Phase 8 patterns already documented — 4-pillar in availability-manifest-and-data-status.md §1124, cluster validation kwargs in validation-and-errors.md §84-109, bucket-name SSOT in bucket-naming-and-config.md + QG STEP 5.69. No stubs needed.
+  Item 3 ✅ Custody integration smoke: 1 open issue doc found (gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md, P0 security). Added PENDING-OPERATOR-ACTION annotation with owner (Harsh/Ikenna) + timeline (P0/24h). Blocked on hard-stop list items (force-push + SA revocation). Done-def met (783c98ab PM LDR).
+  No deferred items. No blockers.
