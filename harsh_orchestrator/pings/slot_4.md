@@ -236,7 +236,7 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 
 ### Remaining (in-progress = 9; pending = 10-15)
 
-- [ ] **9. execution-service order_router test gaps** — coverage gap fill on `order_router.py`. Done-def: ≥85% coverage + execution QG green. Note: slot 5 has execution-service Phase 9 cost-model work; order_router is separate surface (no collision).
+- [x] **9. execution-service order_router test gaps** — execution-service@bcb3771a (17 tests, 9 new: property getters, compose_validation paths, gas tracking, error codes; QG ✅ ALL GATES PASSED 437s)
 
 - [ ] **10. Cross-repo `@pytest.mark.live` audit** — find tests that should be marked `live` (touch real services) but aren't. Issue doc per finding + apply markers. Done-def: audit report + ≥3 markers applied.
 
@@ -255,3 +255,5 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 
 [2026-05-15 20:15 UTC] slot-4 — ✅ ITEM 8 DONE: instruments-service migration coverage gap. Added 2 test files (38 tests total) covering 2 previously-untested active migration scripts: (1) test_migrate_instrument_type_lowercase.py (19 tests): regex detection of uppercase GCS hive segments, path lowercasing transformation, pre/post path assertions, mocked GCS copy+delete; (2) test_migrate_defi_bare_to_asset_group.py (19 tests): bare-path classification, asset_group=defi/ insertion, pre/post segment count assertions, mocked GCS error+no-delete. QG ✅ ALL GATES PASSED (96s). instruments-service@f14f39a. Moving to item 9.
+
+[2026-05-15 20:50 UTC] slot-4 — ✅ ITEM 9 DONE: execution-service instruction_router test coverage gaps. Target was "order_router.py" but that file doesn't exist — identified instruction_router.py at 80.5% as the correct target. Added 9 new tests (17 total): eth_balance_tracker/pnl_calculator property getters; compose_validation skipped for BET (unmapped op); token_in colon-split instrument_type extraction; InstructionValidationError rejection path; sequential signal stops on first failure; _extract_error_code fallback + status_code attribute; _track_gas_cost gas deduction. QG ✅ ALL GATES PASSED (437s). execution-service@bcb3771a. Moving to item 10.
