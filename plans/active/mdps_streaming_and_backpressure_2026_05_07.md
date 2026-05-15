@@ -216,6 +216,8 @@ todos:
     content: |
       - [ ] [AGENT] P1. Phase 1.2 (now Phase 1.2B) — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle.
 
+      **Phase 1A SHIPPED 2026-05-15 MDPS@`0077f1d`** — `write_candle_parquet` migrated to UTL `open_candle_writer + _utl_write_chunk + finalize_local()` (R1 GCS-first approach per operator 2026-05-14 direction). Direct `StreamingParquetWriter` instantiation eliminated from MDPS canonical_writer.py. Phase 1B (`open_candle_streaming_writer` helper) + Phase 1C (`_streaming_write_per_tf` refactor) + Phase 2 + Phase 4 remain open.
+
       **DEFERRED 2026-05-10 PM** — chain-agent re-attempted Phase 1.2B and surfaced a new dual-SSOT collision concern
       that the spec'd shape creates. Phase 1.2A (MDPS@`afdb754`) successfully unified the manifest verb across the
       chain-bundle and per-instrument paths (both emit `record_captured`); shipping Phase 1.2B as-spec'd would
