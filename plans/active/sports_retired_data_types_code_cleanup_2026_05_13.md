@@ -109,15 +109,12 @@ inside the `_sports_per_league_entities` set. This is a stale alias — the TM h
 `_entity_wanted("PLAYER_VALUES")`, and the manifest writer at line 5548 uses `data_type="PLAYER_VALUES"`.
 `entity_filter="TRANSFERMARKT_VALUES"` would be a silent no-op (no manifest rows written).
 
-- [ ] **DEFERRED** — [CODE] P1. Remove `"TRANSFERMARKT_VALUES"` from `_sports_per_league_entities` in
-      orchestrator.py:1420. Safe to remove: handler never dispatches on it + manifest never writes it.
-      Successor: next sports_retired cleanup pass or sports_master_2026_05_07 Phase 5.
-      Surfaced: 2026-05-14 slot 4 during sports_master data_type universe audit.
+- [x] **DEFERRED → SHIPPED 2026-05-15** — [CODE] P1. Remove `"TRANSFERMARKT_VALUES"` from `_sports_per_league_entities` in
+      orchestrator.py:1420 (IS@2a024ab) and `SPORTS_DATA_TYPE_TO_SOURCE` in UAC `league_data.py` (UAC@5662ff5).
+      Safe to remove: handler never dispatches on it + manifest never writes it.
 
-Also: `SPORTS_DATA_TYPE_TO_SOURCE` in UAC `league_data.py` has both `"TRANSFERMARKT_VALUES": "transfermarkt"` and
-`"PLAYER_VALUES": "transfermarkt"`. The PLAYER_VALUES entry is the canonical one (used by manifest, source_priority,
-availability_semantics). TRANSFERMARKT_VALUES was likely an earlier name. Remove `TRANSFERMARKT_VALUES` entry from
-UAC dict when instruments-service is cleaned.
+Also: `SPORTS_DATA_TYPE_TO_SOURCE` in UAC `league_data.py` had both entries — TRANSFERMARKT_VALUES (stale alias)
+and PLAYER_VALUES (canonical). Both removals shipped together (2026-05-15).
 
 ## Success criteria
 
