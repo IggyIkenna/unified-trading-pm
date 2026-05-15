@@ -1,15 +1,26 @@
 ---
-title: Continuation prompts — Harsh side, 2026-05-15 Day-1 (post-2026-05-14 EOD)
+title: Continuation prompts — Harsh side, 2026-05-15 Day-1
 type: orchestration-spec
-status: draft
+status: active
 created: 2026-05-14
+adopted: 2026-05-15 04:00 UTC
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
 # Continuation Prompts — Harsh side, 2026-05-15 Day-1
 
-> **Status: DRAFT** — operator should review + adjust before adopting tomorrow morning. This is a Day-1 instance of the Lever 1 pattern (multi-item per-slot queue, slot self-pivots). See [`harsh_orchestrator/THEMATIC_CLUSTERS.md`](../../harsh_orchestrator/THEMATIC_CLUSTERS.md) for the stable theme map this draws from.
+> **Status: ADOPTED 🟢** — operator authorized Lever 1+2 pattern @04:00 UTC. Slots execute their queue + self-pivot; auto-poll script tracks STARTED/DONE/BLOCKED; main only intervenes on BLOCKED/cross-side/BIG findings.
+>
+> **Day-1 deltas from yesterday EOD** (verified against overnight commits):
+> - Slot 4 ✅ shipped B-006 (mtds@504bf34 + instruments@4063e08) overnight; queue updated below
+> - Slot 5 ✅ shipped B-009 (risk@ac021a7 + execution@7de7385c) + Phase 3 TradFi migration overnight
+> - Slot 7 ✅ shipped B-018 (36/36 repos snapshot live) + Wave 4 carry-forward overnight
+> - Slot 8 ✅ shipped B-014 STEP 5.79-5.82 to base-service.sh + 13/15 service repos QG stub; **2 repos remain (features-service + others; full set preserved in `.tabs/8/<repo>/` stash list with msg `slot-8 B-014-ROLLOUT-COMPLETION`)**
+> - Slot 9 🛑 STILL BLOCKED on B-015 — Ikenna posted update @02:00 UTC: smoke FAILED SILENTLY (phantom manifest skipped both VMs, ZERO data written); Ikenna slot 8 owns phantom-clear via `reconcile_phantom_manifest_rows_all.py --asset-group DEFI --apply-flips` then re-smoke; HOLD Phase 2 until Ikenna confirms phantom-fix DONE + green smoke
+> - Slot 6 self-completed Cluster A+B follow-on + codex audit overnight
+>
+> See [`harsh_orchestrator/THEMATIC_CLUSTERS.md`](../../harsh_orchestrator/THEMATIC_CLUSTERS.md) for the stable theme map this draws from.
 >
 > **Companion docs**:
 > - [`harsh_orchestrator/LEDGER.md`](../../harsh_orchestrator/LEDGER.md) § "End-of-shift summary 2026-05-14" — what shipped yesterday + open blockers

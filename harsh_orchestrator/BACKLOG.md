@@ -107,7 +107,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: B-004 (remaining test failures fixed first)
 
 ### B-011 · Phase 8.A surface-6 — VM deploy script coverage
-- **Status**: DISPATCHED → slot 2 2026-05-14 (start after slot 5 finishes deployment-service Cluster F + Phase 0 green)
+- **Status**: DONE @deployment-service@cf6bb83 2026-05-14 (slot 2 — VM zombie watchdog tests + shellcheck fix; QG green 77s; plan checkbox flipped)
 - **Task**: 95% coverage on `deployment-service/scripts/vm/launch-*.sh` paths. Bash-level: `shellcheck` all launchers. Python-level: unit tests for singleton-lock check, zombie-watchdog dict registration, tarball-uri construction. Verify `VM_PREFIX_TO_BUCKET` dict registration for any new VM prefixes.
 - **Repos**: `deployment-service`
 - **Est**: 3h · **Model**: Sonnet
