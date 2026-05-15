@@ -64,3 +64,9 @@ After B-014 stash recovery pings DONE:
 5. **batch_live symmetry L4/L5/L6 sweeps** (reserve): scan for any remaining batch_live L4-L6 violations in the 3 primary repos (features, strategy, mtds). Fix + QG green.
 6. **base-service.sh template DRY**: identify repeated boilerplate patterns across quality-gates.sh files (e.g. PERIPHERAL_DIR blocks, lifecycle checks); propose consolidation in codex. Doc-only; no code change without operator ack.
 Self-pivot. Ping DONE per major item or grouped CYCLE-CLOSE when exhausted.
+
+[2026-05-15 07:41 UTC] [main → slot 8] — 📋 **QUEUE EXTENSION** — add 4 more items after your 6-item batch. Total ~20 AI-days.
+7. **codex/06-coding-standards STEP 5.79-5.82 detailed reference** — write full pattern documentation for each new ratchet STEP added to base-service.sh; include rationale, what it catches, how to comply. Done-def: codex doc updated; each STEP has a section.
+8. **CLAUDE.md PYTEST_UNIT_DIR override pattern documentation** — recent PM@c7786b2f added `PYTEST_UNIT_DIR` override. Document this in CLAUDE.md § "Quality Gates" or codex/06 so future per-family-layout repos know how to opt in. Done-def: documented + grep-able.
+9. **quality-gates.sh template drift detection** — write a tool (`unified-trading-pm/scripts/quality-gates/detect_template_drift.py`) that compares each repo's `scripts/quality-gates.sh` to the SSOT template; reports diffs. Used by rollout to catch manual edits. Done-def: tool + unit tests + one-shot run logged.
+10. **B-014 final follow-on — zero-test silent pass guard sweep** — workspace-wide: verify every service repo's QG actually executes tests (not just compiles). Use the new zero-test guard from base-service.sh. Done-def: all 15 service repos run ≥1 test per QG; any repo with 0 tests gets a skeleton test_smoke.py.

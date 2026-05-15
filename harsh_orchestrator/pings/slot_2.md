@@ -112,6 +112,8 @@ Ready for next dispatch. Polling for new assignments.
 - Item 3 ✅ VM launcher template DRY audit section added to `codex/05-infrastructure/vm-tarball-deployment.md`. Audit: 83 launchers, 48 hardcoded CODE_BUCKET (pre-B-011), 12 variable ${PROJECT} (post-B-011 canonical), 23 no CODE_BUCKET. Common boilerplate noted.
 QG green (all pre-existing violations in deployment-service unrelated to my changes). Polling for next dispatch.
 
+[2026-05-15 13:10 UTC] slot-2 — NEW QUEUE acked. STARTED item 1 (pre-B-011 CODE_BUCKET fleet sweep, 48 launchers, 4 category batches).
+
 [2026-05-15 07:36 UTC] [main → slot 2] — ✅ reserve items 1+2+3 acked: launcher@a0adfbc + catboost ✅ + DRY codex@efa090f9. 📋 **NEW QUEUE — pre-B-011 launcher fleet + Cloud Scheduler SSOT** (~12 AI-days):
 
 1. **Pre-B-011 launcher fleet CODE_BUCKET sweep** — 48 launchers identified in your DRY audit with hardcoded `deployment-scripts-central-element-323112`. Refactor all to `deployment-scripts-${PROJECT}` pattern. Stage by category: (a) MTDS launchers; (b) features-service launchers; (c) strategy/execution launchers; (d) ML training/inference launchers. Ship 1 commit per category to keep diffs reviewable. Done-def: 0 hardcoded CODE_BUCKET strings; shellcheck clean on all touched files.
@@ -119,3 +121,10 @@ QG green (all pre-existing violations in deployment-service unrelated to my chan
 3. **VM_PREFIX_TO_BUCKET integration audit** — verify every active VM prefix (you registered 8 in B-011) actually maps to a real bucket via the watchdog. Write a one-shot validation script `deployment-service/scripts/vm/validate_vm_prefix_mapping.py` that walks PROD GCS + the dict; reports any orphan prefix or missing bucket. Done-def: script + unit tests + one prod run logged in plan.
 4. **honest_coverage VM end-to-end smoke** — once Ikenna unblocks IAM (Cloud Scheduler), trigger the VM and verify the full path: scheduler fires → VM launches → produces `coverage.json` → API endpoint returns 200 → slot 7's UI badge lights up. Done-def: smoke run successful; ping cross-side and slot 7.
 Conflict rule: deployment-service is yours; coordinate with slot 7 if they need to touch deployment-api in parallel. Self-pivot. Ping DONE per major item.
+
+[2026-05-15 07:41 UTC] [main → slot 2] — 📋 **QUEUE EXTENSION** — add 5 more items after your 4-item batch. Total ~20 AI-days.
+5. **deployment-service event emission compliance audit** — verify every VM launcher's startup-script emits STARTED/STOPPED/FAILED via UEI `log_event` (per CLAUDE.md lifecycle rules). Fix gaps with bootstrap pattern. Done-def: all launchers emit STARTED at startup + STOPPED on graceful exit + FAILED on error path; integration test covers one launcher end-to-end.
+6. **VM launcher security hardening** — `shellcheck` deep sweep on `deployment-service/scripts/vm/launch-*.sh` for: hardcoded credentials, shell injection vectors (unquoted variables in command substitutions), unsafe `curl | bash` patterns. Fix all P0 + P1 issues. Done-def: shellcheck clean + audit report in codex/05-infrastructure/vm-security-audit.md.
+7. **deployment-service test coverage extensions** — run `bash scripts/quality-gates.sh` in deployment-service; identify modules <70%; add tests to bring them to ≥70%. Skip experimental scripts. Done-def: coverage ≥70% on all production modules.
+8. **deployment-events GCS pubsub forwarding audit** — verify VM event sink chain works: VM startup → `gs://{pid}-events/events/.../` → pubsub forwarder → deployment-events bucket. Smoke test one VM type end-to-end. Done-def: smoke passes + event visible in deployment-events bucket within 60s of emit.
+9. **scripts/vm/ operator runbook update** — write per-launcher entry in `codex/05-infrastructure/vm-launcher-runbook.md`: when to use, required env vars, expected duration, common failure modes. Done-def: every active launcher has a runbook section.

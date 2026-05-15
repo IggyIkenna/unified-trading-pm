@@ -47,3 +47,8 @@ Queue:
   (3) ml-inference Phase 6.6 ✅ — TestPublishWithPolicyDecisionPassthrough (3 tests: PARTIAL_OK/NAN_FILL/STRICT_FAIL passthrough via publish_with_policy mock); QG passed 68s; ml-inference@d4f524b.
   🚨 BIG FINDING: features-service QG now reveals 48 pre-existing volatility failures (3 root causes: VolatilityOrchestrationService→VolatilityFeaturesOrchestrator API change, live_data_source module deleted, xdist interference). Fixed 1 sports test (LookaheadBiasError update, features@7ef55a7f). Issue doc: plans/active/issues/features_service_volatility_test_failures_2026_05_15.md. Volatility failures need slot with volatility ownership — outside slot-4 scope.
   Continuing with queue items 4-8.
+
+[2026-05-15 07:41 UTC] [main → slot 4] — 📋 **QUEUE EXTENSION** — add 3 more items after your 7-item batch. Total ~20 AI-days.
+8. **features-service Phase 6 emission parity — sports + commodity families** — extend item 4 to the remaining 2 families. Each must call `publish_with_policy` at write boundary with STRICT_FAIL seed in UAC. Done-def: parity tests for all 5 families + QG green.
+9. **instruments-service contract migration pre/post-state tests** — Phase 3 migrations (`scripts/migration_*.py`) should assert (a) pre-state expected schema; (b) post-state matches new schema; (c) row count preserved. Add tests for any migration missing these. Done-def: every migration has pre/post assertion test.
+10. **execution-service test_lifecycle_events.py expansion (if item 2 found gaps)** — add comprehensive STARTED/STOPPED/FAILED + correlation_id propagation + duration_ms on COMPLETED tests. Done-def: coverage matches B-006 + QG green.

@@ -54,3 +54,9 @@ Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
 [2026-05-15 07:16 UTC] slot-3 — ✅ DONE item 5 carry_staked_basis validation: 15 tests (resolver/threshold/hedge-ratio/LST-gate), QG green (strategy@0d67588). Pivoting to item 6: V2BatchHarness GCS mock conftest extensions.
 
 [2026-05-15 07:28 UTC] slot-3 — ✅ DONE item 6 V2BatchHarness GCS mock conftest extensions: 4 new fixture variants (empty_initial_positions, stale_manifest, missing_venue_data, daily_deposits) + 8 new tests, 552 v2 tests pass (strategy@932c61e). Pivoting to item 7: batch_live symmetry strategy-service follow-on.
+
+[2026-05-15 07:41 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION** — add 4 more items after your 8-item batch. Total ~20 AI-days.
+9. **strategy-service archetype config validation tests** — every YAML in `strategy-service/configs/archetypes/` loads + passes schema validation; bad configs raise loud at boot, not at trade time. Done-def: tests + QG green.
+10. **e2e-testing/scripts/defi/ peripheral consumer hygiene** — `shellcheck` + `ruff check` + `basedpyright` sweep on all .py + .sh files in this directory (slot 3 is primary consumer of strategy-service.* imports). Fix import-rot. Done-def: 0 lint/type errors.
+11. **archetype hedge-ratio computation edge-case tests** — test cases: zero LST yield, negative funding, missing one venue's funding rate, stale price (>5 min). Each case asserts safe behavior (skip vs WARN vs FAIL). Done-def: 8+ edge-case tests + QG green.
+12. **strategy-service Phase 8 codex audit** — verify `codex/09-strategy/architecture-v2/` matches shipped archetype code; file issue doc per drift. Done-def: audit report; no silent codex/code drift.

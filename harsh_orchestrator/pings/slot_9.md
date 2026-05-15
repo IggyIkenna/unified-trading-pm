@@ -70,3 +70,9 @@ propagation, not return-0). ALL 4 handlers now eigenlayer-safe. 🏁 Day-4 CYCLE
 Poll `_agent_pings.md` every 30 min for B-015 greenlight (Ikenna phantom-fix). When it lands: drop everything, verify smoke, launch Phase 2.
 
 [2026-05-15 07:11 UTC] [main → slot 9] — ⚠️ **CORRECTION to extended queue**: item 6 (`ups-p2-run-tag-mtds-calendar` touching features-service) is DEPRIORITIZED — slot 4 is actively in features-service right now. Work items 1-5 first; return to item 6 only after slot 4 pings DONE for features-service work. This avoids simultaneous edits to the same repo.
+
+[2026-05-15 07:41 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION** — add 4 more items after your 6-item batch. Total ~20 AI-days.
+7. **PBM honest-coverage emission audit** — verify market-data-processing-service emits honest-coverage updates per CLAUDE.md "Manifest + Honest Absence" rules. Audit + fix gaps. Done-def: every PBM batch_handler emits captured/empty/failed via UTL record_*.
+8. **MTDS Pyth oracle integration tests** — Pyth UNBANNED 2026-05-06 for Solana on-chain price feeds. Add MTDS-side Pyth adapter integration tests (happy-path, stale-feed detection, missing-symbol). Done-def: 3+ tests + MTDS QG green.
+9. **PBM Phase 8 service-output emission tests** — verify `_resolve_policy_output_data_type` + `_publish_emission_check` exist on every PBM publish path. Add tests for STRICT_FAIL/WARN_ONLY/NAN_FILL outcomes. Done-def: callsite coverage + QG green.
+10. **MTDS handler retry-and-backoff audit** — verify all 5 DeFi handlers (lst_rates, evm_defi, gas_fee, solana_defi, eigenlayer_rewards) respect 429 rate-limit headers with exponential backoff. Add tests where missing. Done-def: each handler tested for 429 → backoff → retry → success scenario.
