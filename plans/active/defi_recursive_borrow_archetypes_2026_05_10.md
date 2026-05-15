@@ -580,8 +580,13 @@ In-plan P0 (blocks Phase 5-8 implementation):
       `unified-api-contracts@2b60a14` — `perp_venue: str | None` added to `ArchetypeConfig`; validated against
       `get_perp_venues()` (rejects spot-only + unknown venues); `CARRY_RECURSIVE_BORROW_PERP_HEDGED` seed gets
       `perp_venue="HYPERLIQUID"` (May-23 default). 6 new tests pass; basedpyright clean.
-- [ ] [strategy-service] **P0**. `PerpHedgeSizer` (Phase 7): pre-trade check against `_HYPERLIQUID_RULES` ($500k
-      per-instrument cap) — block sizing that exceeds. Same for any Bybit per-position risk cap.
+- [x] [strategy-service] **P0**. `PerpHedgeSizer` (Phase 7): pre-trade check against `_HYPERLIQUID_RULES` ($500k
+      per-instrument cap) — block sizing that exceeds. Same for any Bybit per-position risk cap. **DONE 2026-05-15
+      (slot-3)**: `unified-api-contracts@5f26915` ships `get_max_position_size_usd_for_venue()` helper +
+      `execution-service@a2ce35b74` ships `PerpHedgeSizer.validate_size_against_venue_cap()` + `PerpVenueCapExceededError`.
+      Hyperliquid $500k / Bybit $1M / Binance $2M caps wired. Fail-closed on unknown venues per honest-absence rule.
+      7 new tests pass (16 total in file). basedpyright clean. (Note: PerpHedgeSizer lives in execution-service per
+      System-First — venue-cap pre-trade gate is execution responsibility, not strategy-service.)
 - [ ] [risk] **P0**. Bybit counterparty cap policy: **cap Bybit notional at ≤50% of Hyperliquid leg for first 30 days
       post-cutover** (Feb-2025-hack trust-premium discount). Codify in strategy-service archetype config +
       risk-and-exposure-service venue-cap table.
