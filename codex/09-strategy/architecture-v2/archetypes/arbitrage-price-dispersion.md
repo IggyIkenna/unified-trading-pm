@@ -106,6 +106,18 @@ share_class: USD
 - Execution-service enforces leader-hedge timing via execution_policy_ref
 - Mid-execution abort if conditions breach (unwind whichever leg filled)
 
+### LegController integration
+
+Both ATOMIC and LEADER_HEDGE modes flow through `LegController.update(slot, tick)`. The controller reads the
+`DispersionOpportunity` from `features-onchain` and maps it to the leg sequence:
+
+- **ATOMIC mode**: buy leg + sell leg emitted as a single bundled `AtomicInstruction` with `execution_mode=ATOMIC`.
+- **LEADER_HEDGE mode**: leader (larger/safer venue) fires first; `LegController.on_leader_fill()` triggers the hedge
+  leg within `hedge_deadline_ms`; `CLOSE_LEADER_IF_HEDGE_FAILS` compensation on deadline breach.
+
+**Code-backport status:** DEFERRED — `arbitrage/price_dispersion.py` still builds legs inline. Backport tracked in
+`defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship now per operator decision 2026-05-07.
+
 ## P&L attribution
 
 - **Arb edge captured**: (total_received - total_paid) on successful opp

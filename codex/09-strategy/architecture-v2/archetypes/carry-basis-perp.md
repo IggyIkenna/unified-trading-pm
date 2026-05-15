@@ -86,6 +86,16 @@ exploit_venue_netting: true # when spot + perp on same venue
 - Exit: same
 - Funding collection: passive; PBMS tracks funding accrual per position
 
+### LegController integration
+
+The 2-leg paired entry/exit is the **logical** flow. Mechanically, `LegController.update(slot, tick)` resolves the spot
+(leader) and perp (hedge) legs from the `ExecutionPlanner`'s `PairedLegPlan`. Mode selection (ATOMIC vs LEADER_HEDGE) is
+derived at preflight from `venue_accepts_batch_orders(venue)`.
+
+**Code-backport status:** DEFERRED — `carry_and_yield/carry_basis_perp.py` still wires legs hand-built. Backport tracked
+in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship now per operator decision
+2026-05-07.
+
 ## P&L attribution
 
 - **Funding P&L**: funding_rate × notional × holding_period (earned)
