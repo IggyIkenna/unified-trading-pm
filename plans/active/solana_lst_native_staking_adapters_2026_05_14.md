@@ -151,8 +151,12 @@ This is the only phase that requires a wholly new data_type.
       BLOCKED-CREDENTIALS ping filed in slot_2.md 2026-05-15). - Data type: `native_staking_rates` per epoch (daily-ish,
       ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
       (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
-- [ ] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
+- [x] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy.
+      (MTDS@1ec3a46 — NativeStakingHandler + _epoch_for_date + _schedule_rate + _fetch_live_rates; live RPC for
+      current epoch, deterministic inflation schedule for historical; 11 unit tests; wired as
+      collect-native-staking-rates in main.py. BLOCKED-CREDENTIALS: per-validator mev_apy requires Helius API key —
+      ping filed in pings/slot_3.md 2026-05-15.)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC + instruments-service + MTDS.
 

@@ -456,3 +456,30 @@ Without it: unit + scaffold shipped at instruments-service@da462af; live discove
 Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` (operator confirmed key incoming on 2026-05-14). Scaffold at
 instruments-service@`da462af` — KRAKEN-SPOT→ccxt.kraken, KRAKEN-FUTURES→ccxt.krakenfutures. Historic batch already wired
 via Tardis (CANONICAL_VENUE_TO_ADAPTER → "tardis").
+
+---
+
+[2026-05-15] Slot 3 → Operator — **CREDENTIAL APPROVAL REQUEST — Helius API key (native_staking_rates)**
+
+```
+CREDENTIAL APPROVAL REQUEST — Helius Solana per-validator staking APY
+Vendor: Helius — helius.dev — paid plan (Growth: $49/mo or Pro: $149/mo)
+What I need: helius-api-key
+  → store in Secret Manager as 'helius-api-key'
+Account to use: existing operator email (sign up at helius.dev if not already)
+Unblocks:
+  - native_staking_rates per-validator rows (mev_apy field + per-vote-account breakdown)
+  - carry_staked_basis archetype: native SOL staking yield per validator (needed for
+    optimal validator selection in staking strategy)
+  - Currently AGGREGATE row only is produced (validator_vote_account="AGGREGATE",
+    mev_apy=None, commission_pct=None)
+Without it: aggregate-only rows ship (1 row per day, AGGREGATE sentinel);
+  unit + scaffold shipped at MTDS@1ec3a46; integration tests gated via
+  @pytest.mark.requires_credentials; per-validator breakdown is dormant
+```
+
+Status: `BLOCKED-CREDENTIALS`. Aggregate path fully operational at MTDS@`1ec3a46`
+(native_staking_handler.py — collect-native-staking-rates CLI command wired).
+Per-validator Helius path: scaffold is in place, awaiting API key.
+
+Plan ref: `solana_lst_native_staking_adapters_2026_05_14.md` Phase 5 item 4.
