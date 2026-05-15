@@ -225,7 +225,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses _list_real_events from vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad since, prod no-blobs); QG green.
 
-- [ ] **19. deployment-ui VM events timeline component** — wire item 18 into `/ops/vms/{vm_name}`. Vertical timeline (type/timestamp/collapsible-JSON). Done-def: 4 vitest tests + pnpm build green.
+- [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name + VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types + fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
 
 - [ ] **20. deployment-api Firebase auth middleware integration tests** — your prior Firebase token verification needs: valid / expired / missing / wrong-issuer / wrong-audience. Done-def: 5+ integration tests + QG green.
 
