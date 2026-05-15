@@ -46,8 +46,27 @@ Options:
 
 Suggested owner: **Ikenna** (architecture call) or operator.
 
+## Architecture recommendation (Slot 2 triage, 2026-05-15)
+
+**Recommendation: Option 1 — extend instruments-service with CROSS_ASSET shard.**
+
+Rationale: instruments-service is the canonical reference-data service for ALL domains. Every other
+asset_group (cefi/defi/tradfi/sports/prediction) has an IS shard. CROSS_ASSET symbols (cross-exchange
+pairs, synthetic indices) are reference data — same lifecycle, same schema, same catalog/availability
+manifest pattern. Creating a new service for one more shard would introduce the same QG overhead (STEP
+5.61/5.62/5.34) with zero new functionality.
+
+Concrete implementation gate:
+- [ ] Add `cross_asset` to `deployment-api/pm-configs/sharding.instruments-service.yaml`
+- [ ] Add `cross_asset` to `deployment-ui/src/components/ServiceList.tsx` IS filter buttons
+- [ ] Implement `InstrumentBuilder` for cross-asset pairs (basis of CEX:DEX synthetic legs)
+- [ ] Wire into existing IS CLI `--asset-group cross_asset`
+
+**Status: BLOCKED-OPERATOR-DECISION** — waiting for operator [ack] on Option 1 vs alternatives.
+Not blocking May-23 (P2; features-service already handles cross_asset data production).
+
 execution:
   owner: operator
   cadence: one-shot (design decision)
   verifier: cross_asset appears in sharding.instruments-service.yaml + produces manifest rows
-  last_executed: NEVER
+  last_executed: NEVER (pending operator decision)
