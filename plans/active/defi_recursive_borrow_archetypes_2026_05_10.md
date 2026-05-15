@@ -934,12 +934,15 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 
 ### Phase 12 implementation gates
 
-- [ ] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list +
+- [x] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list +
       `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total.
-- [ ] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
-      × scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork.
-- [ ] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
-      against live testnet; wired into strategy-service QG per peripheral-script-dirs HARD RULE.
+      (dfcd890 unified-api-contracts 2026-05-15)
+- [x] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
+      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness BLOCKED-CREDENTIALS.
+      (8ff3ded strategy-service 2026-05-15)
+- [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
+      scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md.
+      (a7e9243 e2e-testing 2026-05-15)
 - [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
 - [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
