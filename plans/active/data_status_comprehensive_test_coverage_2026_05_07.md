@@ -97,13 +97,14 @@ the rollup-math incident (ARBITRUM 32/54) are both this class.
 
 **Tests:**
 
-- [ ] [unified-api-contracts] P0. `tests/test_shard_axis_matrix_consistency.py` — for every `(service, asset_group)` in
+- [x] [unified-api-contracts] P0. `tests/test_shard_axis_matrix_consistency.py` — for every `(service, asset_group)` in
       `SHARD_AXIS_MATRIX`, assert: (a) every axis name maps to a real manifest column that
       `ManifestWriter.record_captured` accepts as a kwarg; (b) the axis order matches the codex per-asset-group
-      shard-key matrix in CLAUDE.md (golden file).
-- [ ] [unified-trading-library] P0. `tests/test_manifest_writer_axis_kwargs.py` — for every `(service, asset_group)`
+      shard-key matrix in CLAUDE.md (golden file). (UAC@bf7607c — shipped; xfail documents canonical_question_group
+      drift)
+- [x] [unified-trading-library] P0. `tests/test_manifest_writer_axis_kwargs.py` — for every `(service, asset_group)`
       covered by the writer, assert `record_captured` called with the SSOT-declared kwargs raises ValueError when one is
-      missing (catches writer drift away from the SSOT).
+      missing (catches writer drift away from the SSOT). (UTL@02352dc8 — shipped; 43 tests pass)
 - [x] [deployment-api] P0. `tests/unit/test_drilldown_axis_depth_matches_ssot.py` — call `get_hierarchical_drilldown`
       for every `(service, asset_group)` in `SHARD_AXIS_MATRIX`; assert the returned `axes` list equals
       `SSOT_axes + ["date"]`. Catches the "drilldown excludes display axes" drift listed as an open follow-up in
@@ -122,9 +123,9 @@ UAC declares the canonical types every consumer expects. When a consumer adds a 
 
 **Tests:**
 
-- [ ] [unified-api-contracts] P0. `tests/test_canonical_capture_status_taxonomy.py` — assert `EMPTY_CONFIRMED_REASONS`
+- [x] [unified-api-contracts] P0. `tests/test_canonical_capture_status_taxonomy.py` — assert `EMPTY_CONFIRMED_REASONS`
       is a closed set covering every reason a writer is allowed to emit; assert UTL's `record_empty(reason=...)`
-      validates against this set.
+      validates against this set. (UAC@bf7607c — shipped; 8 tests pass)
 - [ ] [unified-api-contracts] P0. `tests/test_drilldown_node_shape.py` — pin the `DrilldownNode` Pydantic / TypedDict
       shape; assert deployment-api's `DrilldownNode.to_dict()` produces a dict matching the schema (catches a renamed
       field on either side).
@@ -150,13 +151,13 @@ builder, every preflight skip, every record_expected_empty reason.
       honored but the other isn't. (deployment-api@6ab227b — test exists + passes)
 - [x] [unified-api-contracts] P0. `tests/test_sports_source_coverage_propagation.py` — for every (source, data_type) in
       `SOURCE_COVERAGE_START` + `DATA_TYPE_COVERAGE_START`, assert
-      `clip_dates_to_source_coverage(source, start, end, data_type=dt)` correctly drops pre-coverage dates.
-      (UAC@6f2db1f — 20 tests covering clip_dates_to_source_coverage behaviour + completeness + DATA_TYPE_COVERAGE_START
-      integrity; 20/20 pass)
+      `clip_dates_to_source_coverage(source, start, end, data_type=dt)` correctly drops pre-coverage dates. (UAC@6f2db1f
+      — 20 tests covering clip_dates_to_source_coverage behaviour + completeness + DATA_TYPE_COVERAGE_START integrity;
+      20/20 pass)
 - [x] [market-tick-data-service] P0. `tests/unit/test_vix_15m_source_layering.py` — assert the routing surface in
       `umi_tick_provider.py` sends pre-2025-11-13 dates to Barchart preload (no Yahoo round-trip), 2025-11-13 →
-      today−60d to the honest-gap branch, and post-today−60d to Yahoo. (already shipped — 10/10 pass verified
-      2026-05-14 slot 4)
+      today−60d to the honest-gap branch, and post-today−60d to Yahoo. (already shipped — 10/10 pass verified 2026-05-14
+      slot 4)
 - [x] [deployment-api] P0. `tests/unit/test_data_status_denominator_clips_pre_cutoff_days.py` — assert the data- status
       panel's denominator excludes pre-cutoff days, so the panel doesn't render thousands of phantom- missing pre-launch
       days for chains/protocols that didn't exist yet. (deployment-api@6ab227b — test exists + passes)
