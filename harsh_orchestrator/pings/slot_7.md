@@ -223,7 +223,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts(); Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
 
-- [ ] **18. deployment-api VM events filter endpoint** — `GET /api/vm/{vm_name}/events?since=<ts>&type=<event_type>&limit=N` (item 5 returned last-3-only). Done-def: endpoint + filter tests + QG green.
+- [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses _list_real_events from vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad since, prod no-blobs); QG green.
 
 - [ ] **19. deployment-ui VM events timeline component** — wire item 18 into `/ops/vms/{vm_name}`. Vertical timeline (type/timestamp/collapsible-JSON). Done-def: 4 vitest tests + pnpm build green.
 
