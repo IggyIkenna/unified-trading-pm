@@ -4,7 +4,7 @@ scope: infrastructure
 owner: ikenna
 status: stable
 codified: 2026-05-08
-last_reviewed: 2026-05-12
+last_reviewed: 2026-05-15
 sources:
   - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
   - plans/epics/instruments_live_master_2026_05_08.md (Phase G delegates UI scope here)
@@ -334,6 +334,45 @@ gets actionable text rather than a bare red dot.
 probed connector, update both that file AND this table.
 
 Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (UI-19 finding).
+
+---
+
+## Phase 9 shipped patterns (2026-05-15)
+
+Phase 9 (Deployment API endpoint extensions, per `deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 9)
+shipped 10 endpoint additions + 3 UI routes that are now canonical. Agents reading this doc in the post-Phase-9 state
+should expect these surfaces to exist.
+
+### deployment-api additions
+
+| Endpoint | Commit | Notes |
+| ------------------------------------------ | ---------------------- | ------------------------------------------------------- |
+| `POST /api/backfill/launch` | deployment-api@fe2a9c5 | Fires `launch-backfill-vm.sh`; returns `BackfillLaunchResult` |
+| `POST /api/ml/experiment/launch` | deployment-api@f407c54 | Fires `launch-ml-training-vm.sh`; VM name `ml-train-{inst}-{ts}` |
+| `POST /api/strategy/backtest/launch` | deployment-api@f407c54 | Fires `launch-strategy-backtest-grid-vm.sh` |
+| `POST /api/execution/backtest/launch` | deployment-api@f407c54 | Fires `launch-strategy-paper-vm.sh` |
+| `GET /api/vm/events?since=<ts>` | deployment-api@f407c54 | `since` param (ISO 8601); older `date`/`from_hour` params deprecated |
+| `GET /api/builds/history` | deployment-api@b1ee896 | Tarball + Docker-image lineage |
+| `GET /api/openapi.json` | deployment-api@4769bd8 | Auto-generated FastAPI OpenAPI spec |
+| `GET /api/health/detailed` | deployment-api@1114bfe | Per-component status (GCS, Pub/Sub, Secret Manager, events) |
+| `GET /metrics` | deployment-api@8aabe72 | Prometheus exposition; key counters: requests, latencies, in-flight VMs, snapshot age |
+| `WS /ws/vm/{vm_name}/events` | deployment-api@4951d10 | GCS-poll every 5s; pushes `VMLifecycleEvent` JSON; mock mode for tests |
+
+**Auth**: Firebase ID token verification middleware on all endpoints (deployment-api@299908f). Token in `Authorization: Bearer <token>` header. Tests cover valid / expired / missing token cases.
+
+**Rate limiting**: per-IP 60 req/min via slowapi (deployment-api@e968719). 429 response on exceed.
+
+### deployment-ui additions
+
+| Route | Commit | Notes |
+| ------------------------------------ | ---------------------- | -------------------------------- |
+| `/ops/live-deployments` | deployment-ui@d3d657b | Running services panel; WebSocket consumer (deployment-ui@8bace71) |
+| `/research/ml-experiments` | deployment-ui@4d5e662 | Consumes `POST /api/ml/experiment/launch` |
+| `/research/strategy-backtests` | deployment-ui@4d5e662 | Consumes `POST /api/strategy/backtest/launch` |
+| `/research/execution-backtests` | deployment-ui@4d5e662 | Consumes `POST /api/execution/backtest/launch` |
+| `/dart` | deployment-ui@bf3ec2c | Operator-monitored DART terminal stub; manual trade entry path |
+
+**Additional hardening**: error boundary + retry UX (deployment-ui@71c658e); dark/light WCAG AA theme + ARIA labels (deployment-ui@3119577); form validation polish on /research forms (deployment-ui@088b5c6); toast/banner notification system (deployment-ui@e2b7a81).
 
 ---
 

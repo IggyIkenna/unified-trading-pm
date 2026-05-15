@@ -325,3 +325,29 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
   `deployment-service/scripts/vm/launch-qg-snapshot-vm.sh`. Scheduler: BLOCKED-OPERATOR-DECISION (Cloud Scheduler IAM
   same as honest-coverage cron above). Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` §
   Phase 4.A.
+
+## Phase 9 — Deployment API endpoint extensions (shipped 2026-05-15)
+
+Phase 9 added 10 deployment-api endpoints + 5 deployment-ui routes that are now canonical workspace surfaces. Full
+endpoint table in `codex/05-infrastructure/deployment-ui-architecture.md` § "Phase 9 shipped patterns".
+
+**Key additions**:
+
+- 4 VM-launch endpoints (`/api/backfill/launch`, `/api/ml/experiment/launch`, `/api/strategy/backtest/launch`,
+  `/api/execution/backtest/launch`) — each fires the canonical launcher in `deployment-service/scripts/vm/` and returns
+  VM name + launch metadata.
+- WebSocket VM event streaming (`/ws/vm/{vm_name}/events`) — polls GCS events bucket every 5s; used by
+  `/ops/live-deployments` real-time panel.
+- Prometheus telemetry (`/metrics`) — 5+ counters; standard exposition format; Grafana-compatible.
+- Firebase ID token auth middleware on all endpoints (deployment-api@299908f); per-IP rate limit 60 req/min
+  (deployment-api@e968719).
+- `/research/*` routes (ml-experiments, strategy-backtests, execution-backtests) and DART terminal stub.
+
+**Implication for new endpoints**: any new `deployment-api` endpoint MUST (a) accept Firebase ID token, (b) be
+covered by the rate-limit middleware, (c) appear in `/api/openapi.json`, (d) have a unit test for auth
+valid/expired/missing. These are now workspace defaults — not optional add-ons.
+
+**Phase 10 venue admission** (strategy-service): codex updated by slot 3/11 at
+`codex/09-strategy/` — `batch-live-architecture.md` + `carry-recursive-borrow-perp-hedged.md`; drift findings in
+`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`. No `codex/05-infrastructure/*` gaps found
+for venue admission (infra surfaces are neutral to venue admission logic).

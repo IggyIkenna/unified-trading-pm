@@ -485,6 +485,53 @@ consolidation needed.
 
 ---
 
+## VM admin + cost tooling (Phase 8.A, 2026-05-15)
+
+Three one-shot admin scripts live under `deployment-service/scripts/vm/` for fleet-wide operations. All are `--dry-run`
+safe.
+
+### `analyze_vm_costs.py` — VM spend by type / asset_group / week
+
+```bash
+python deployment-service/scripts/vm/analyze_vm_costs.py \
+    [--days N] [--project PROJECT_ID] [--output-csv PATH]
+```
+
+Two `gsutil ls -l` calls (no per-VM round trips) — fast on large fleets. Outputs spend-by-`machine_type`, by
+`asset_group` label, and by week. Useful for cutover-week budgeting. **Smoke (2026-05-15)**: 81 VMs / 7 days /
+105.8 VM-hrs / $13.98 total. CSV written to `/tmp/vm_costs_7d.csv`. Shipped: deployment-service@920ff18.
+
+### `cleanup_old_tarballs.py` — prune stale deployment tarballs from GCS
+
+```bash
+python deployment-service/scripts/vm/cleanup_old_tarballs.py \
+    [--keep-n N] [--noncurrent-days D] [--dry-run] [--project PROJECT_ID]
+```
+
+Two cleanup modes:
+
+- `--keep-n N` (default 5): for name-versioned tarball naming (`<repo>@<sha>.tar.gz`), keeps the N most-recent per
+  service and deletes the rest.
+- `--noncurrent-days D` (GCS object versioning): deletes noncurrent GCS object versions older than D days.
+
+**Note**: current production naming uses simple per-service files without SHA accumulation; `--noncurrent-days` is the
+active path until SHA-versioned naming (see § "Tarball naming + manifest" above) is adopted. Dry-run smoke confirmed 0
+deletions on the live bucket. Shipped: deployment-service@3c42df5.
+
+### `validate_vm_prefix_mapping.py` — prod audit: `VM_PREFIX_TO_BUCKET` vs live GCS buckets
+
+```bash
+python deployment-service/scripts/vm/validate_vm_prefix_mapping.py \
+    [--project PROJECT_ID] [--dry-run]
+```
+
+Walks every non-`None` bucket entry in `VM_PREFIX_TO_BUCKET` and verifies the GCS bucket exists. Reports orphan
+prefixes (bucket in dict, not in GCS) and missing-prefix entries. **Prod run (2026-05-15)**: 88 OK, 56
+heartbeat-only (`None`), 0 orphans. 6 legacy string entries in dict (pre-`VmPrefixSpec`; script handles both
+transparently). Shipped: deployment-service@29eb7ad.
+
+---
+
 ## Cross-references
 
 - Operational howto: [`deployment-service/scripts/vm/README.md`](../../../deployment-service/scripts/vm/README.md)
