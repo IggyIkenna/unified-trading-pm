@@ -78,3 +78,9 @@ exist. Both prior smokes (105009 rc=2 + 112048 no-events) failed because bucket 
 `gs://central-element-323112-honest-coverage` (asia-northeast1, uniform-bucket-level-access). Re-smoke #3:
 `measure-honest-coverage-20260515-115454` RUNNING. Expect coverage.json in ~10-15 min. STARTED reserve queue:
 shellcheck sweep on `deployment-service/scripts/vm/` launchers.
+
+[2026-05-15 12:03 UTC] slot-2 — ✅ **honest-coverage smoke VERIFIED**. `measure-honest-coverage-20260515-115454`
+completed. `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` written (287KB).
+5 asset_groups: cefi=49.5% captured, defi=19.5%, tradfi=69.7%, sports=99.8%, prediction=86.2%.
+Item 1 end-to-end path confirmed working (pending Cloud Scheduler from Ikenna for daily trigger).
+Reserve queue progress: shellcheck ✅ (deployment-service@cbd8a76); catboost_info ✅ (already clean).
