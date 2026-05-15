@@ -475,6 +475,9 @@ todos:
 
   - id: phase-5-features-asset-scoped-flavor
     content: |
+      > **✅ WATCH-2 RESOLVED 2026-05-15 — writegate Phase 2.D shipped 2026-05-12 (soft-blocker cleared).
+      > Phase 5 is complete. Banner added per topology_qgroup_gap_closure_2026_05_09 WATCH-2 requirement.**
+
       - [x] [AGENT] P0. Phase 5 — features-service asset-scoped flavor (live-mode). SEQUENTIAL after
         Phase 4 + features-repo-consolidation Phase 7. (UTL@`35425c70` AssetScopedFeaturesRunner real impl shipped 2026-05-11 slot 4 RE-TASK; **per-service features-service consumer wire-in SHIPPED 2026-05-12 by Ikenna slot 7 (absorbed Harsh-side scope) at features-service@`225cc13b`** — shared factory `features_service/common/live_runner.py` `build_asset_scoped_runner()` + 6 per-family thin wrappers (`onchain` / `commodity` / `delta_one` / `volatility` / `multi_timeframe` / `sports.live.runner`) each delegating to the factory with the family token; 23 unit tests across factory validation + per-family wrapper shape, all green. Default `UACFeatureGroupResolver` + `FamilyBatchComputeRunner` record honest absence per Live = batch until per-family DAG seeds + live compute overrides ship.)
 

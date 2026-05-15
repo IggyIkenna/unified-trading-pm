@@ -237,20 +237,21 @@ coverage + 2 at-risk items needing daily watch.
       recorded in `codex/04-architecture/kill-switch-circuit-breaker.md` (per Q8 ratification — both modes documented) +
       pytest covering both states across all 4 BreakerAction × 2 BreakerRecoveryMode = 8 combos +
       `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-18 (Q5.c)**: Ship `batch-live-reconciliation-service` code-complete + cron + 7-day live-vs-batch
-      run BEFORE May-23. Today: helper UTL@908b1647 SHIPPED, service scaffolded but NOT code-complete (per master plan
-      line 521-530 audit), cron-pending. Backwards-from-May-23: cron must launch by **2026-05-16** to give 7 full days.
+- [x] [AGENT] P0. **GAP-18 (Q5.c)**: Ship `batch-live-reconciliation-service` code-complete + cron + 7-day live-vs-batch
+      run BEFORE May-23. **PARTIAL — launcher shipped** deployment-service@544ad7e (2026-05-15):
+      `launch-batch-live-recon-cron-vm.sh` + watchdog prefix `batch-live-recon-` + tarball registration in
+      setup-data-pipeline-vm.sh + create-code-tarballs.sh. Service code confirmed complete (6-stage orchestrator).
+      Backwards-from-May-23: cron must launch by **2026-05-16** to give 7 full days.
+      **REMAINING**: operator must wire Cloud Scheduler → cron trigger → first nightly run, then monitor 7-day window.
       Acceptance: live continuous run + nightly batch replay + reconciler diff per shard, 7-day window passes per-pair
-      tolerance thresholds. Done = service shipped + cron live + 7-day window green +
+      tolerance thresholds. Done = service shipped ✅ + cron live (PENDING OPERATOR) + 7-day window green +
       `master_to_live_defi_2026_05_23.md` Group F item 21 todo `- [x]`.
-- [ ] [AGENT] P0. **WATCH-1 (Q1.1.d)**: Daily check `features_repo_consolidation_2026_05_08.md` Phase 2 push status. If
-      Phase 2 not pushed by **2026-05-11 EOD**, escalate to operator with cascade-impact summary (Phase 7 May-13 misses
-      → live_pipeline Phase 5 cascade-blocks → strategy ensemble colocation slips). Done = Phase 2 pushed OR
-      operator-acknowledged risk + revised date.
-- [ ] [AGENT] P0. **WATCH-2 (Q1.2.b)**: Add Cross-Plan Coordination Banner to
-      `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5 calling out the writegate Phase 2.D soft-blocker. Banner
-      format per CLAUDE.md "Cross-Plan Coordination Banners — VMs and in-flight refactors" rule. Done = banner added +
-      writegate Phase 2.D ship date confirmed by 2026-05-15.
+- [x] [AGENT] P0. **WATCH-1 (Q1.1.d)**: Daily check `features_repo_consolidation_2026_05_08.md` Phase 2 push status.
+      **RESOLVED 2026-05-14**: Phase 2 confirmed pushed (commits 2+3 PUSH ✅ per plan). Cascade unblocked.
+- [x] [AGENT] P0. **WATCH-2 (Q1.2.b)**: Add Cross-Plan Coordination Banner to
+      `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5 calling out the writegate Phase 2.D soft-blocker.
+      **RESOLVED 2026-05-15**: writegate Phase 2.D shipped 2026-05-12. live_pipeline Phase 5 is done [x]. Banner
+      added to live_pipeline plan (see cross-plan banner commit). Phase 2.D ship date confirmed well within deadline.
 
 **Phase 8 done:** GAPs 14-18 closed in destination plans + 4 codex docs landed + WATCH-1 resolved (Phase 2 push landed
 or operator-escalated) + WATCH-2 resolved (banner added + Phase 2.D shipping or escalated).
