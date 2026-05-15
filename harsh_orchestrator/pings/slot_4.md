@@ -206,8 +206,8 @@ LIVE_ALERT_RULES rule; (2) explicit-rule ratchet: exactly 2 codes (CHAOS_DRILL_F
 catch-all-only; 75/77 have explicit rules; (3) family spot-checks: DeFi Family 1/2 (5 codes) + risk-rule (4 codes) +
 stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). alerting@c1c9a68. Moving to item 4.
 
-[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded
-test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 —
-MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4).
-Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing
-pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.
+[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 — MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4). Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.
+
+[2026-05-15 19:00 UTC] slot-4 — ✅ ITEM 5 CONFIRMED DONE (pre-existing): features-service multi_timeframe + calendar lifecycle tests already exist from prior session (B-006 Phase 8.A). tests/multi_timeframe/unit/test_lifecycle_events.py (3 tests) + tests/calendar/unit/test_lifecycle_events.py (3 tests) — all 6 pass. PYTEST_UNIT_DIR="tests/" override already in scripts/quality-gates.sh. Calendar family has 45 pre-existing failures in smoke_matrix/other files (NOT lifecycle tests — not caused by slot-4). No new code needed. Moving to item 6.
+
+[2026-05-15 19:30 UTC] slot-4 — ✅ ITEM 6 DONE: features-onchain Phase 6.6 emission policy tests. Added TestCheckEmissionPolicyPhase66 (4 tests) to tests/onchain/unit/test_emission_policy.py: BLOCK_CRITICAL full window publishes; BLOCK_CRITICAL with NaN suppresses write + should_alert=True (P0 alert path); NAN_FILL with NaN publishes PUBLISHED_DEGRADED; empty DataFrame sends completeness=0.0. Fixed _make_decision helper to accept should_alert kwarg (EmissionDecision is frozen dataclass — cannot mutate post-init). All 12 onchain emission tests pass. Volatility failures are pre-existing (confirmed baseline 47 failures before any slot-4 changes). features-service@a17d85b0. Moving to item 7.
