@@ -293,3 +293,16 @@ deployment-service before starting.
 
 **Next slot-8 item**: `deploy_missing_auto_launch_2026_05_07` Phase 2+3 (4 P0 backend + 2 P0 UI items). Will pull that
 next.
+
+---
+
+[2026-05-15 18:56 UTC] slot-8 — STARTED Tab 8 (work_split_2026_05_15_ikenna.md slot 8).
+
+Boot sequence complete: synced LDR, read AGENT_ONBOARDING + work-split + B-015 issue doc, sanity-checked Half-2
+discipline (clean — alternating code/flip commits on tab/ikennaigboaka/8).
+
+**Top of stack picked up**: item #1 B-015 smoke re-launch coordination — Harsh slot-9 already shipped Smoke A clean
+(lst_rates VM `mtds-lst-rates-20260515-201226` exit_code=0, 12+ LST venues × 5 days written) + Smoke B
+features-onchain `BLOCKED-UPSTREAM` (MDPS DEFI processed_candles missing 2026-04-15..19). Going to flip item #1 with
+evidence + sweep items #2/#3 (already-done carry-overs from 14 May) for any missing flips, then pick the next
+concrete slot-8 unit.
