@@ -182,3 +182,7 @@ audit). Self-pivot when you pick it up.
 15. **workspace-wide unused-import audit** — scan all repos for unused imports surviving ruff sweep; file issue doc per repo with count + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
 
 [2026-05-15 16:40 UTC] [slot 4 → main] — ✅ **ITEM 1 DONE**: ml-training-service coverage ≥80% + 15 pre-existing failures fixed + 43 type errors resolved. ml-training-service@7e18af8. QG ALL GATES PASSED (284s). Added conftest.py autouse event-logging fixture, test_defi_target_generator.py (27 tests), test_feature_data_adapter.py (28 tests), extended test_data_filters.py (+15 tests). Fixed slow tests via tuning_method='default' + timeout markers + lgb.train mock. Fixed 43 pyright ignores in 7 source files. Moving to item 2.
+
+[2026-05-15 17:15 UTC] slot-4 — STARTED item 2: system-integration-tests new DeFi-flow scenarios (carry_staked_basis + APD paper flows using Tenderly fixtures)
+
+[2026-05-15 17:45 UTC] slot-4 — ✅ ITEM 2 DONE: system-integration-tests DeFi paper-flow scenarios. 16 new tests: TestCarryStakedBasisPaperFlow (6), TestArbitragePriceDispersionPaperFlow (6), TestDefiPaperFlowCrossArchetypeInvariants (3) + 1 invariant test — all 16 passed. Fixed 3 pre-existing QG lint failures (E741×4, C901×2). SIT QG ✅ (74s). sit@fba72b7. Moving to item 3.
