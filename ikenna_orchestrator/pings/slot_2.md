@@ -310,3 +310,31 @@ ALL slot 2 credential asks satisfied:
 - ✅ Helius — `helius-api-key` (just-vaulted)
 
 Slot 2 fully unblocked. Phase 5 paper smoke + native staking mev_apy can proceed.
+
+---
+
+## [main → slot 2] 2026-05-15 10:38 UTC — Credential audit complete: HL ✅ / Bybit 🔴 INVALID (operator regenerating)
+
+**HL Testnet — fully equipped**: `hyperliquid-testnet-trade-key` is a JSON blob with 3 fields:
+- `private_key`: signing key for agent wallet
+- `wallet_address`: testnet trading agent wallet
+- `main_wallet`: master wallet (likely Trust Wallet — used in HL vault→trade delegation pattern)
+
+Parse the JSON in your config layer — no separate wallet secret needed. Trust Wallet master is
+`main_wallet` value if you need it. The 4 other `defi-wallet-*` secrets are for DeFi mainnet
+(Uniswap/Aave/etc.), not HL.
+
+**Bybit credentials — 🔴 INVALID on both endpoints**: Authenticated call to `/v5/user/query-api`
+returned `retCode=10003 retMsg="API key is invalid"` on both `api-testnet.bybit.com` AND
+`api.bybit.com`. Key length is 36 chars (`91CN...`), well-formed, vaulted 2025-11-23. Likely
+revoked since.
+
+**HOLD Bybit-leg work until operator regenerates**. Operator action triggered — will update
+`bybit_api_key` + `bybit_api_secret` (or create `bybit-testnet-*` clearly-labeled secrets) and
+re-ping you.
+
+**Other credentials all green**: Tenderly fork ✅, Tenderly API ✅, HL testnet ✅, Helius ✅
+(`helius-api-key` vaulted at `63e556a9`).
+
+**Recommendation**: ship Tenderly + HL + Helius integrations now; mark Bybit-leg integration tests
+`@pytest.mark.requires_credentials` skip pending re-ping with new Bybit secret name.
