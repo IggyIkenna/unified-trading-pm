@@ -1,10 +1,10 @@
 ---
-title: GCP service account private key committed to execution-service git history (commit 280435195)
+title: GCP service account private key in git history — 4 repos (execution-service, instruments-service, MTDS, UTL)
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
 source:
   - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
-  - execution-service git log (all-branch scan)
+  - execution-service, instruments-service, market-tick-data-service, unified-trading-library git history scans
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P0 — ROTATE KEY IMMEDIATELY
@@ -12,25 +12,27 @@ severity: P0 — ROTATE KEY IMMEDIATELY
 
 ## What I found
 
-Running gitleaks on `execution-service` git history (Phase 0.A of api_keys plan):
+Running gitleaks on all repo git histories (Phase 0.A of api_keys plan), the same GCP SA private key file
+`central-element-323112-e35fb0ddafe2.json` was found in **4 repos**:
 
-```
-File: central-element-323112-e35fb0ddafe2.json
-RuleID: private-key
-Commits: 26150e45b3ec + 2804351950a8
-Commit message: "chore: add GCP service account credentials and update gitignore" (2026-01-22)
-```
+| Repo | Commits with file | Example commit |
+|------|-------------------|----------------|
+| execution-service | 2 | `2804351950a8` (2026-01-22, "chore: add GCP service account credentials") |
+| instruments-service | 9 | `71eb58b07a5a` |
+| market-tick-data-service | 3 | `ae9ebcbcf136` |
+| unified-trading-library | 2 | (see gitleaks-utl.json) |
 
-The file `central-element-323112-e35fb0ddafe2.json` (GCP service account key JSON for project
-`central-element-323112`) was committed to `execution-service` repo in commit `2804351950a8`
-(2026-01-22 17:52 UTC). The key was subsequently removed from the working tree (added to `.gitignore` in
-commit `40c2d9e8c`) but the private key remains accessible in git history via:
+The file `central-element-323112-e35fb0ddafe2.json` is a GCP service account key JSON for project
+`central-element-323112` (prod). It was removed from working trees (added to `.gitignore`) but the
+private key remains accessible in git history across all 4 repos via:
 
 ```bash
-git show 2804351950a8:central-element-323112-e35fb0ddafe2.json
+git show 2804351950a8:central-element-323112-e35fb0ddafe2.json  # execution-service
+git show 71eb58b07a5a:central-element-323112-e35fb0ddafe2.json  # instruments-service
+git show ae9ebcbcf136:central-element-323112-e35fb0ddafe2.json  # mtds
 ```
 
-The file is **NOT** present in `HEAD` or `origin/live-defi-rollout`.
+The file is **NOT** present in `HEAD` or `origin/live-defi-rollout` in any repo.
 
 ## Why it matters
 
@@ -80,23 +82,33 @@ gcloud projects get-iam-policy central-element-323112 \
   --format="table(bindings.role)"
 ```
 
-### 3. Git history rewrite (ETA: ≤2h, requires force-push authorization)
+### 3. Git history rewrite — all 4 repos (ETA: ≤4h total, requires force-push authorization)
 
-After revoking the key, rewrite the repo history to remove the file permanently:
+After revoking the key, rewrite history in **all 4 affected repos** to remove the file permanently.
+Run sequentially — one repo at a time to control re-clone notifications.
 
 ```bash
 # Install git-filter-repo if not present
 pip install git-filter-repo
 
-# Rewrite history (removes the file from ALL commits)
-git filter-repo --path central-element-323112-e35fb0ddafe2.json --invert-paths --force
+TARGET_FILE="central-element-323112-e35fb0ddafe2.json"
 
-# Force-push all branches
-git push origin --all --force
-git push origin --tags --force
+# Repeat for each repo: execution-service, instruments-service, market-tick-data-service, unified-trading-library
+for REPO_PATH in \
+  /path/to/execution-service \
+  /path/to/instruments-service \
+  /path/to/market-tick-data-service \
+  /path/to/unified-trading-library; do
+  echo "=== Rewriting $REPO_PATH ==="
+  cd "$REPO_PATH"
+  git filter-repo --path "$TARGET_FILE" --invert-paths --force
+  git push origin --all --force
+  git push origin --tags --force
+done
 ```
 
-⚠️ **This rewrites all commit SHAs** — all collaborators MUST re-clone. Notify Harsh and all agents.
+⚠️ **This rewrites all commit SHAs in each repo** — all collaborators and agent tab worktrees MUST
+re-clone all 4 repos after the rewrite. Notify Harsh and all agents (Slots 1-8).
 
 ⚠️ **This is in the HARD STOP list** ("force-push to main") — operator-only action per CLAUDE.md.
 
@@ -114,18 +126,34 @@ still function (any service that loaded the old key at startup may need restart)
 
 - [ ] SA key revoked in GCP Console
 - [ ] SA permissions audited (blast-radius determined)
-- [ ] Git history rewritten (`git filter-repo`) + force-pushed
-- [ ] Collaborators notified to re-clone
+- [ ] Git history rewritten (execution-service) + force-pushed
+- [ ] Git history rewritten (instruments-service) + force-pushed
+- [ ] Git history rewritten (market-tick-data-service) + force-pushed
+- [ ] Git history rewritten (unified-trading-library) + force-pushed
+- [ ] Collaborators + all agent tab worktrees notified to re-clone all 4 repos
 - [ ] `credential-probe.sh` re-runs clean
 - [ ] New SA key generated + added to Secret Manager (if needed)
-- [ ] Gitleaks confirm-clean scan on rewritten history
+- [ ] Gitleaks confirm-clean scan on rewritten history (all 4 repos)
 
-## Note on false positives in same scan
+## Note on false positives in same scans
 
-The other 110 gitleaks findings are false positives:
-- 108 `generic-api-key` in `.env` (gitignored + untracked — contains real venue keys but properly excluded)
-- 1 `generic-api-key` in `capture_golden_swaps.py` — Ethereum event topic hash
-  (`_SWAP_TOPIC_CURVE_TOKEN_EXCHANGE`), not an API key
-- 3 `generic-api-key` in `kelpdao.py`/`rocket_pool.py`/`renzo.py` — Ethereum contract addresses in docstrings
+Per-repo false positive summaries:
 
-Only the SA JSON private key finding requires action.
+**execution-service** (2 commits, 1 real finding):
+- `generic-api-key` in `.env` (gitignored + untracked): false positive
+- `generic-api-key` in `capture_golden_swaps.py`: Ethereum event topic hash, not a key
+- `generic-api-key` in `kelpdao.py`/`rocket_pool.py`/`renzo.py`: Ethereum contract addresses
+
+**instruments-service** (9 commits, 1 real finding — see also GitHub PAT issue):
+- 83 `generic-api-key`: false positives (venue API keys in .env files, gitignored)
+- 7 `github-pat`: **see P1 issue** `github_pat_in_instruments_service_env_2026_05_15.md`
+- 3 `curl-auth-header` in `scripts/CLICKUP_GUIDE.md`: documentation example token
+
+**market-tick-data-service** (3 commits, 1 real finding):
+- 129 `generic-api-key`: false positives
+
+**unified-trading-library** (2 commits, 1 real finding):
+- 81 `generic-api-key`: false positives
+- 2 `curl-auth-header` in `instruments-service/scripts/CLICKUP_GUIDE.md`: documentation example
+
+Only the SA JSON private key finding (and instruments-service GitHub PAT — separate issue) require action.

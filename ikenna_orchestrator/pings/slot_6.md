@@ -1,22 +1,30 @@
 # Slot 6 Ping Ledger
 
-## [slot 6 → OPERATOR] 2026-05-15 — 🔴 P0 SECURITY: GCP SA private key in execution-service git history
+## [slot 6 → OPERATOR] 2026-05-15 UPDATE — 🔴 P0 SECURITY: GCP SA key in git history — SCOPE EXPANDED to 4 repos
 
-**Severity**: P0 — requires operator action ≤1h (key revocation) + ≤2h (history rewrite, operator authorization needed).
+**Severity**: P0 — requires operator action ≤1h (key revocation) + ≤4h (history rewrite across 4 repos, operator-only).
 
 **Issue doc**: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`
 
-**Summary**: gitleaks Phase 0.A scan of execution-service git history found a committed GCP SA key JSON
-(`central-element-323112-e35fb0ddafe2.json`) in commit `2804351950a8` (2026-01-22). The file is NOT in HEAD
-but remains accessible in git history. The private key is for GCP project `central-element-323112` (prod).
+**Updated scope**: Phase 0.A full workspace scan reveals the SAME GCP SA key file
+(`central-element-323112-e35fb0ddafe2.json`) committed in **4 repos** (not just execution-service):
+- `execution-service`: 2 commits
+- `instruments-service`: 9 commits
+- `market-tick-data-service`: 3 commits
+- `unified-trading-library`: 2 commits
 
-**Required operator actions (in issue doc)**:
-1. Revoke the SA key via `gcloud iam service-accounts keys delete KEY_ID ...`
+**Required operator actions**:
+1. Revoke SA key via `gcloud iam service-accounts keys delete KEY_ID ...` (1 revocation covers all repos)
 2. Audit SA IAM bindings (blast-radius check)
-3. Rewrite git history: `git filter-repo --path central-element-323112-e35fb0ddafe2.json --invert-paths --force` + force-push (HARD STOP — operator-only)
-4. Notify Harsh + all agents to re-clone after rewrite
+3. Run `git filter-repo ... --force` + force-push on **all 4 repos** (HARD STOP — operator-only)
+4. Notify Harsh + all agents to re-clone **all 4 repos** after rewrite
 
-All other 110 gitleaks findings are false positives (documented in issue doc).
+**Additional P1 finding** (lower priority, can batch with P0 rewrite):
+- GitHub PAT `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` committed in `instruments-service` `.env.example` + `.env`
+- Issue doc: `plans/active/issues/github_pat_in_instruments_service_env_2026_05_15.md`
+- Action: revoke PAT in GitHub UI (`https://github.com/settings/tokens`)
+
+All other findings are false positives (documented in issue docs).
 
 ---
 
