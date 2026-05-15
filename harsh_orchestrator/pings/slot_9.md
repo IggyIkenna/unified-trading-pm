@@ -332,7 +332,7 @@ After launch:
 
 - [x] **2. emerging_perp_adapters_diagnosed close-out** — ✅ AUDIT CLEAN. ASTER URLs already fixed (api.asterdex.com/fapi.asterdex.com in aster_base_client.py@b2b8dd5). HYPERLIQUID S3 already wired in umi_tick_provider.py `_fetch_hyperliquid_s3()` (service-layer correct per ISS-022b design). MTDS QG green mtds@9f73cdf.
 
-- [ ] **3. mtds_defi_handler_perf_benchmark_gap close-out** (P2) — [`plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md`](../../plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md). Either mark RESOLVED (per the "no action for May-23" note) OR build the perf harness. Done-def: doc closed OR harness shipped.
+- [x] **3. mtds_defi_handler_perf_benchmark_gap close-out** — ✅ RESOLVED NO_ACTION_MAY23. Issue doc marked resolved (pm@cabd42b9). Perf not on May-23 critical path — future harness design captured in issue doc §2.
 
 - [ ] **4. MTDS data_status_reporter coverage** — per-data_type per-asset_group rows + edge cases (zero-row day, partial day, schema-drift day). Done-def: 4+ tests + MTDS QG green.
 

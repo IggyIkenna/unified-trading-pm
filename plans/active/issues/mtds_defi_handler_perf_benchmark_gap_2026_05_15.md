@@ -2,6 +2,8 @@
 title: MTDS DeFi handler perf benchmark gap — 1k-event model N/A for HTTP-fetch handlers
 created: 2026-05-15
 author: harsh-slot-9
+resolved: 2026-05-15
+resolution: NO_ACTION_MAY23 — perf not on critical path; future harness design in Recommended §2
 source:
   - harsh_orchestrator/pings/slot_9.md (new-queue item 4)
 locked_by: live-defi-rollout
