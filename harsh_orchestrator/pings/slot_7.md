@@ -104,3 +104,5 @@ token + QG green.
 [2026-05-15 15:30 UTC] slot-7 — ✅ DONE queue item 1 (new queue): deployment-api WebSocket VM event streaming —
 /ws/vm/{vm_name}/events; polls GCS every 5s; mock sends 3 events; 1 smoke test; pre-existing test_manual_pending fixture
 bug fixed; QG green. deployment-api@4951d10. Plan Phase 9 item flipped. Starting item 2: Prometheus telemetry endpoint.
+
+[2026-05-15 16:00 UTC] slot-7 — ✅ DONE queue item 2: deployment-api Prometheus telemetry — VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS gauges; /metrics route moved before health_router catch-all; 6 unit tests; QG green. deployment-api@8aabe72. Plan flipped. Starting item 3: deployment-ui WebSocket integration in /ops/live-deployments.
