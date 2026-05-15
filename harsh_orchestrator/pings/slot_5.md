@@ -284,7 +284,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **16. execution-service rate-limit + circuit-breaker tests** — execution-service@c1a51b1e (4 tests: rate-limit errors not counted as failures, burst 3 failures → OPEN via consecutive threshold, OPEN→HALF_OPEN→success→CLOSED drain 2 orders, cross-venue independence). 16→19 tests. QG ✅ (333s).
 
-- [ ] **17. execution-service oracle-mismatch handling** — Phase 9 DefiErrorCode ORACLE_PRICE_STALE + ORACLE_DEVIATION. Add execution-time tests that an oracle mismatch triggers correct retry/abort behavior. Done-def: 3+ scenarios + QG green.
+- [x] **17. execution-service oracle-mismatch handling** — execution-service@a4fd8014 (3 tests: OracleStaleError→ADAPTER_FETCH_FAILED with error_code=ORACLE_STALE, OracleDeviationError→ADAPTER_FETCH_FAILED+COMPLETED_FAILED, oracle stale does NOT advance CB consecutive_failures). QG ✅ (335s).
 
 - [ ] **18. risk-and-exposure-service stress test scenarios** — sustained drawdown over 30-day historical window; concurrent multi-archetype kill-switch arming; risk-limit ratchet under degraded conditions. Done-def: 3+ scenarios + QG green.
 
