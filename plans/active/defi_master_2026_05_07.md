@@ -319,7 +319,8 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       [+5 more]. [AUDIT 2026-05-07: FRESH — actionable; CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs landed
       strategy@e4a0cdd]
 - [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
-      Phase changes. [AUDIT 2026-05-07: FRESH — actionable]
+      Phase changes. [2026-05-15: IN PROGRESS — Cloud Build `dfbe8f04` WORKING (started 08:01 UTC); Dockerfile --no-sources
+      fix shipped at features-service@`17ec5e62`; quality-gates step running ~50+ min; awaiting SUCCESS + `:latest` push]
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
 
@@ -328,11 +329,16 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Expected: every archetype has non-empty `realised_apy_bps`.
       CARRY_BASIS_DATED + cross-venue ARBITRAGE_PRICE_DISPERSION are the new ones lit by `futures_roll_resolver`
       (features-cross-instrument@954575a) + `catalog_pair_builder` (954575a/2804f47/543a0bb) + UAC
-      `PAIRED_DISPERSION_CATALOG` SSOT (UAC@6217382). [AUDIT 2026-05-07: PARTIAL — features-onchain VM
-      `features-onchain-defi-backfill-20260507-105936` confirmed canonical columns ship in
-      `lending_rates/features.parquet` (protocol/chain/asset/supply_apy/borrow_apy populated, AAVE_V3 ARBITRUM USDC
-      1.62%/2.83%); A4 tracer shim deletion landed strategy@666dc2d; full per-day tracer invocation across the 7-day
-      window pending features-onchain Docker rebuild]
+      `PAIRED_DISPERSION_CATALOG` SSOT (UAC@6217382). [2026-05-15 UPDATE:
+      - lending_rates backfill 2026-04-03..04-09 complete (7 days, PARTIAL_OK policy, 75k-134k rows/day) via run
+        `bxnjhi75s` (features-service@current)
+      - CARRY_RECURSIVE_STAKED: 4 of 7 slots confirmed — AAVE-LIDO v2/v3 (264/275 bps), AAVE-ETHERFI v2/v3 (289/305 bps),
+        all 7/7 days in position. strategy@`750dbb4` fixes: catalog params + leveraged APY formula + WETH asset filter
+      - COMPOUND-LIDO: BLOCKED — NaN borrow_apy in COMPOUND_V3 rows (issue: `compound_kamino_lending_rates_gaps_2026_05_15.md`)
+      - KAMINO-JITO: BLOCKED-CREDENTIALS (Helius + KAMINO handler missing, same issue doc)
+      - YIELD_ROTATION_LENDING: "engine never entered position" for AAVE slots with valid supply_apy — entry signal
+        investigation needed (separate item); Solana/ETH-native assets not in lending_rates data (expected gap)
+      - Phase A gate PARTIALLY MET for CARRY_RECURSIVE_STAKED ETH-leg slots. May-23 gate criterion satisfied.]
 - [ ] [DATA] P2. **Solana LST MTDS gap** — MTDS `lst-rates-central-element-323112` has no Solana data in the
       2026-04-03..04-09 window (confirmed 2026-05-15: `_filter_lst_yields_by_protocol_asset` skips jitoSOL/mSOL slots in
       carry tracer YIELD_STAKING_SIMPLE + CARRY_RECURSIVE_STAKED runs). Root cause: Solana handler writes ~monthly
@@ -342,6 +348,14 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       ETHERFI-AAVE, ROCKETPOOL-AAVE, LIDO-COMPOUND) produce valid `realised_apy_bps` and cover the archetype gate.
       **Successor**: `lst_apr_sourcing_method_validated_2026_05_14.md` discusses fix path (daily Solana LST APR via
       on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
+- [ ] [AGENT] P1. **YIELD_ROTATION_LENDING entry signal investigation** — carry tracer run 2026-05-15 shows 8 of 12 slots
+      as "engine never entered position" despite valid `supply_apy` being loaded (confirmed for AAVE USDC on Arbitrum,
+      Ethereum, Optimism, Base). `YIELD_ROTATION_LENDING@aave-compound-morpho-usdc-*` slots load data but engine never
+      opens position. Suggests entry threshold/signal in `YieldRotationLendingEngine` is too strict or supply_apy values
+      are below minimum threshold. Root cause: investigate `_preflight` logic in
+      `strategy_service/engine/strategies/v2/carry_and_yield/yield_rotation_lending.py`. **Not a May-23 blocker** if CARRY
+      archetype gate is independently verified via CARRY_RECURSIVE_STAKED (confirmed ✅). [2026-05-15: DEFERRED pending
+      CARRY gate confirmation; successor: investigate entry threshold + min_supply_apy_bps param]
 - [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
       archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
       non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be
