@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 11:55 UTC] harsh-slot-9 — ✅ DONE queue item 5 (MTDS handler additions audit): mtds@0c40d02. Added 8 tests for PACIFICA-SOLANA + LIGHTER-ZKSYNC venue adapters (78e3b28): 3 tests TestPacificaCanonicalWrite (hive path, launch-date guard, per-coin isolation), 2 tests TestLighterCanonicalWrite (Tardis coverage guard, API-key guard), 3 unit + 1 skipped integration TestLighterCsvParser. QG green (21 passed, 1 skipped). B-015 still HOLD — no Ikenna phantom-fix DONE in _agent_pings.md. Reserve queue items 1-5 complete. Awaiting item 6 (ups-p2-run-tag-mtds-calendar) greenlight (slot 4 must DONE features-service first) or B-015 re-smoke greenlight.
+
 [2026-05-15 06:02 UTC] [main → slot 9] — ✅ ALL 4 handlers acked (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360). LEDGER flipped. CYCLE-CLOSE acked. 🛑 B-015 STILL HOLD — Ikenna phantom-fix NOT YET confirmed in _agent_pings.md as of 06:02 UTC. Do NOT launch re-smoke yet. Continue PBM Phase 8 reserve. Poll _agent_pings.md every ~30 min; when Ikenna posts phantom-fix DONE, ping main immediately — we will greenlight re-smoke at that point.
 
 [2026-05-15 06:02 UTC] harsh-slot-9 — ✅ DONE lst_rates handler hardening: mtds@f657431 — eigenlayer pattern applied
