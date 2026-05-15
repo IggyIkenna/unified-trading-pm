@@ -274,8 +274,9 @@ mass-fail every existing futures row.
       callsites + 12 unit tests. Historical-row backfill deferred to plan Phase 3 (one-shot migration script).
 - [x] [SCRIPT] P0. **One-shot manifest migration script** under
       `instruments-service/scripts/migrate_tradfi_expiry_schema.py` mirroring existing migration patterns (idempotent,
-      dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules).
-      **COMPLETED 2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase 1B propagation; run on GCE VM per operator direction.
+      dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules). **COMPLETED
+      2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase
+      1B propagation; run on GCE VM per operator direction.
 - [ ] [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands in tradfi-master scope
       first; the workspace-wide hard-schema enforcement (under `hard_schema_enforcement_2026_05_08` plan) ships AFTER to
       avoid mass-fail during transit. CLAUDE.md "Two teammates" rule applies — coordinate via shared cursor working
@@ -304,11 +305,14 @@ volume.
       `unified_api_contracts/canonical/crosscutting/market_session.py`. **COMPLETED 2026-05-13**: UAC@37f6dfd — shipped
       module with 5 venue schedules (CME / NYSE / NASDAQ / ICE / CBOE) + `classify_session()` cascade helper + 33 unit
       tests. Half-day / holiday calendars + ICE Brent (London) DEFERRED per operator direction (per-venue iteration).
-- [ ] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
+- [x] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
       the venue's `VENUE_SESSION_SCHEDULE`; stamp `session: MarketSession`, `phase: SessionPhase` on every OHLCV row at
       write-time. NEW columns added to canonical OHLCV schema. Backfill: one-shot reclassification VM walks existing
       OHLCV manifest rows, computes session per row from the existing timestamp, writes back. Same migration script
-      pattern as Q1+Q2 above.
+      pattern as Q1+Q2 above. **CODE SHIPPED 2026-05-15**: UAC@f4d0cec (CanonicalOhlcvBar + facade exports) +
+      MTDS@6873955 (adapter session stamping, 4 unit tests, migration script
+      `scripts/migrate_tradfi_ohlcv_session_stamps.py`). **Backfill VM run PENDING OPERATOR APPROVAL** (≥1 week GCS
+      backfill; see pings/slot_5.md). New rows stamped automatically from this release.
 - [ ] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
       opted in (overnight strategies / pre-market liquidity calculators); strategy-service per-archetype
       `allowed_sessions: list[MarketSession]` with default `[REGULAR]`; execution-service `OutOfSessionOrderError`
