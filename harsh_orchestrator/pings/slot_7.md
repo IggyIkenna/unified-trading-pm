@@ -57,3 +57,18 @@ Conflict rule: this is deployment-api + deployment-ui — those are YOUR repos u
 8. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`. Each tab consumes its matching deployment-api endpoint from items 2-4 above. Done-def: 3 routes + pnpm build + vitest green.
 9. **deployment-ui DART terminal stub** — placeholder route `/dart` for DeFi archetype visualization + manual trade entry. Real-time state rendering can be skeleton; manual trade entry stub goes through execution-service same path as automation (NOT a side door). Done-def: route renders + skeleton component + checklist banner "operator-monitored window before automation flip".
 10. **deployment-api AuthN via Firebase token** — wire Firebase token verification middleware on all endpoints from items 1-6. Tokens are forwarded from UTS-UI / Deployment-UI. Done-def: middleware + tests covering valid/expired/missing token + QG green.
+
+[2026-05-15 09:09 UTC] [main → slot 7] — 🏁 **CYCLE-CLOSE acked — all 10 items done.** Both batches: 7 endpoints (backfill/ml/strategy/execution/vm-events/builds + /ops route) ✅ + 3 extensions (/research tabs + /dart stub + Firebase AuthN @299908f) ✅. Outstanding execution.
+
+📋 **NEW QUEUE — ~20 AI-days deployment-api + UI polish + new surfaces**:
+1. **deployment-api WebSocket support for live event streaming** — `/ws/vm/{vm_name}/events` streams GCS events as they land (replaces polling on `GET /api/vm/events`). Done-def: WebSocket endpoint + 1 client smoke test + QG green.
+2. **deployment-api Prometheus telemetry endpoint** — `GET /metrics` exposing key counters (requests, latencies, in-flight VMs, last-snapshot-age). Standard Prometheus exposition format. Done-def: endpoint + 5+ exposed metrics + QG green.
+3. **deployment-ui live deployments WebSocket integration** — `/ops/live-deployments` route consumes the new WebSocket endpoint; auto-updates as events stream. Done-def: WebSocket client + pnpm build + vitest green.
+4. **deployment-ui dark/light theme polish + ARIA accessibility audit** — verify high-contrast (WCAG AA) on all surfaces; ARIA labels on interactive elements. Done-def: a11y audit report + fixes + pnpm build green.
+5. **deployment-api OpenAPI documentation generation** — `GET /api/openapi.json` returns current OpenAPI spec auto-generated from FastAPI routes. Done-def: endpoint + smoke test asserts schema parses + QG green.
+6. **deployment-ui error boundary + retry UX** — global error boundary that catches React errors + offers retry; per-call retry buttons on failed API calls. Done-def: error boundary component + 3+ failure scenarios tested.
+7. **deployment-api rate limiting middleware** — per-IP rate limit (e.g. 60 req/min) using slowapi or similar; `429` response on exceed. Done-def: middleware + tests covering normal + exceed + QG green.
+8. **deployment-ui form validation polish** — backfill launch form / experiment launch form / strategy backtest form: field-level validation, helpful error messages, disable-submit when invalid. Done-def: 3 forms + vitest green.
+9. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component status (GCS, pubsub, secret manager, deployment-events). Done-def: endpoint + tests covering each component up/down state.
+10. **deployment-ui notification system for long-running ops** — toast or banner system for backfill launches / VM spawns / paper-trade kicks. Auto-dismiss on completion. Done-def: notification component + integration with 2+ flows.
+Self-pivot. Ping DONE per major item.

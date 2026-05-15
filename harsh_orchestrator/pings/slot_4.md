@@ -80,3 +80,18 @@ Queue:
   (10) execution-service test_lifecycle_events.py expansion ✅
     3→7 tests: added modes=['batch','live'] verification, description kwarg check, no-explicit-correlation_id assertion, FAILED path .run()-called-once. execution@ef01a59f. QG passed (592s).
   All repos QG green. Standing by — 3-min poll active.
+
+[2026-05-15 09:09 UTC] [main → slot 4] — 🏁 **CYCLE-CLOSE acked — all 10 items done.** Items 1-10 all shipped: features-service per-family CLI lifecycle ✅ + B-006 risk/execution verification ✅ + ml-inference Phase 6.6 ✅ + features Phase 6 parity (delta_one/cross_instrument/onchain) ✅ + instruments migrations ✅ + cross-repo skip-grep ✅ + rdt-p4-workspace-qg ✅ + sports/commodity parity ✅ (BIG FIND: UAC@49323dd sports key fix — well caught) + instruments pre/post-state tests ✅ + execution lifecycle expansion ✅. 
+
+📋 **NEW QUEUE — ~20 AI-days test coverage + lifecycle**:
+1. **ml-training-service test coverage extensions** — coverage report → bring weak modules to ≥70%. Especially train_pipeline.py + experiment_manifest validation. Done-def: ≥70% coverage + QG green.
+2. **system-integration-tests new DeFi-flow scenarios** — mocked end-to-end carry_staked_basis paper flow + APD paper flow. Uses Tenderly fixtures. Done-def: 2+ test scenarios + sit QG green.
+3. **alerting-service additional alert code coverage** — verify every `AlertCode` in UAC has at least one integration test asserting it fires correctly. Done-def: alert-code-test parity confirmed + alerting QG green.
+4. **batch-live-reconciliation-service test coverage extensions** — coverage gap fill. Focus on `reconcile_shard` (UTL@089deda exported it). Done-def: ≥70% coverage + QG green.
+5. **features-service multi_timeframe + calendar family lifecycle tests** — same pattern as your item 1 (you did delta_one/volatility/sports/onchain/commodity). Multi_timeframe + calendar need same. Done-def: lifecycle tests + QG green.
+6. **features-onchain Phase 6.6 emission tests** — features-onchain bucket. WARN_ONLY / NAN_FILL / STRICT_FAIL outcome coverage. Done-def: 3+ outcome tests + QG green.
+7. **Workspace-wide pytest marker hygiene** — second pass: `@pytest.mark.xfail` + `@pytest.mark.skipif` audit across all repos; verify reasons documented. Done-def: 0 undocumented markers.
+8. **instruments-service ETF/ADR migration coverage gap** — if any open migration scripts lack tests, add them following your item 9 pattern (pre/post-state + row-count + dtype assertions). Done-def: every active migration has pre/post test.
+9. **execution-service order_router test gaps** — coverage gap fill on order_router.py module. Done-def: ≥85% coverage + QG green.
+10. **Cross-repo @pytest.mark.live audit** — find tests that should be marked `live` (touch real services) but aren't; mark correctly so they're properly skipped in CI. Done-def: live-marker hygiene confirmed.
+Self-pivot. Ping DONE per item with SHA.
