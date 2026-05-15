@@ -404,3 +404,21 @@ hand). Continue item 3 (VM startup script consolidation) per your STARTED ping. 
 After 11+12, stand by. Items 7+10 unblock once operator runs `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`. Self-pivot.
 
 [2026-05-15 19:35 UTC] slot-2 — STARTED items 11+12 (Phase 9 codex audit + VM image build caching audit). Post-OOM rebase complete (PM rebased to bc6e15e6, deployment-service already current). Auditing: launcher-script-ssot.md (missing launcher_common.sh lib + templates), vm-tarball-deployment.md (missing admin tools: analyze_vm_costs/cleanup_old_tarballs/validate_vm_prefix_mapping), deployment-ui-architecture.md (missing Phase 9 endpoint additions). Phase 10 venue admission gaps: none in codex/05-infrastructure/* (strategy-service codex already updated by slot 3/11).
+
+[2026-05-15 19:50 UTC] slot-2 — ✅ **DONE item 11** (Phase 9 codex audit). unified-trading-pm@2c50ed84.
+
+- launcher-script-ssot.md: added launcher_common.sh DRY library section (6 functions) + startup script templates (startup-gcs-url.sh.tmpl, startup-inline-heredoc.sh.tmpl). Rule: all new launchers MUST source lib/launcher_common.sh.
+- vm-tarball-deployment.md: added VM admin tooling section (analyze_vm_costs.py, cleanup_old_tarballs.py, validate_vm_prefix_mapping.py) with usage + prod-run metrics.
+- deployment-ui-architecture.md: added Phase 9 shipped patterns section (10 endpoints, 5 routes, Firebase auth, rate limiting); last_reviewed updated to 2026-05-15.
+- deployment-and-qg-strategy.md: added Phase 9 section + Phase 10 venue admission note (0 codex/05-infrastructure gaps; strategy-service codex updated by slot 3/11 at bfe08a13).
+
+STARTED item 12 (VM image build caching audit — deployment-service, execution-service, strategy-service Cloud Build configs).
+
+[2026-05-15 20:05 UTC] slot-2 — ✅ **DONE item 12** (VM image build caching audit). 3 repos audited + mechanical fixes applied.
+
+- deployment-service@17061f3: --cache-from added to 3 docker build steps (api, api-dev, sports-scheduler) + test_vm_zombie_watchdog fake_urlopen mock fix (kwargs signature)
+- execution-service@1692676f: pull-base-image fixed from unified-trading-library → unified-trading-services (was pulling wrong base) + --cache-from added to build step
+- strategy-service@41dd830: --cache-from added to build step
+- Issue doc filed: `plans/active/issues/vm_image_build_caching_gaps_2026_05_15.md` (Gap 1-4; Gap 2 Dockerfile layer reordering documented, not auto-applied — requires test build)
+
+🏁 **QUEUE EXHAUSTED** — items 11+12 both DONE. Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke). Awaiting next dispatch.
