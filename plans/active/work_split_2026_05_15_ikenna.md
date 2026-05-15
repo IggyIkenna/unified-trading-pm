@@ -109,8 +109,15 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST via aiohttp transport
    (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean. Remaining: private signed
    transport (`place_order`/`cancel_order`/`get_account_state`) + WS subscriptions.
-2. **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
+2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal)
+   **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium already wired in
+   `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines 101-105,
+   `_collect_drift`/`_collect_orca`/`_collect_raydium` + `_PROTOCOL_TO_DATA_TYPE` + venue map). Phoenix:
+   **BLOCKED-OPERATOR-DECISION** — `api.phoenix.trade` does not resolve DNS (also tried `phoenix.trade`,
+   `docs.phoenix.trade`); Phoenix CLOB DEX may have shut down or migrated. Ping filed at
+   `ikenna_orchestrator/pings/slot_3.md@2026-05-15T19:08:56Z` requesting operator confirmation +
+   canonical API URL OR `EMPTY_OR_DEPRECATED_DEFI_VENUE` marker.
 3. **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
    1.2×, ~2 = 2.4 cal)
 4. **`arbitrage_price_dispersion_finalisation_2026_05_09`** (carry from slot 9 reassignment) — push remaining

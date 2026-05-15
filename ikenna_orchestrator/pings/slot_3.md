@@ -573,3 +573,29 @@ Awaiting operator [ack] before launching. Fix code is ready.
 ## 2026-05-15T18:54:32Z — slot-3 boot 2026-05-15 cycle
 
 Starting on item 1: Kraken CeFi live REST + WS integration. Credentials now vaulted per work_split header.
+
+## 2026-05-15T19:08:56Z — Phoenix CLOB DEX API not resolving (BLOCKED-OPERATOR-DECISION)
+
+**Issue**: `api.phoenix.trade` (declared in UAC `_defi_chain_data.py:639`) does not resolve DNS.
+Also tried `phoenix.trade` and `docs.phoenix.trade` — none resolve.
+
+**Tested** (slot-3, 2026-05-15):
+- `curl https://api.phoenix.trade/markets` → DNS resolution timeout (10s)
+- `curl https://phoenix.trade/` → DNS resolution timeout
+- `curl https://docs.phoenix.trade/` → DNS resolution timeout
+
+**Impact**: Cannot wire MTDS `_collect_phoenix()` handler — no data source.
+Phoenix CLOB DEX on Solana may have shut down or migrated.
+
+**Status**: BLOCKED-OPERATOR-DECISION
+
+**Operator decision needed**:
+1. Is Phoenix still operational? Latest news from Solana ecosystem confirmation needed.
+2. If Phoenix is alive but moved endpoints: provide canonical API URL (update UAC `_defi_chain_data.py:639`).
+3. If Phoenix is dead/deprecated: mark Phoenix as `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC + remove from defi_master venue matrix. File deprecation note.
+4. Alternative: use on-chain RPC queries (Helius) directly to read Phoenix program accounts. Substantial additional work — needs operator approval.
+
+**Without decision**: Phoenix capture stays 0% (no rows written); other 3 venues
+(Drift/Orca/Raydium) in slot 3 item 2 already wired. Item 2 effectively complete
+modulo Phoenix.
+
