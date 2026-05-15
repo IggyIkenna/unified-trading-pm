@@ -33,10 +33,21 @@ you're being asked to be the main orchestrator:
 4. Ack to Ikenna: _"Main agent online. State: N tabs in flight, M intra-side pings open, K cross-side pings open, J
    local commits queued for push. Today's plan = X, Y, Z. Standing by."_
 
-**Polling cadence**: check [`_agent_pings.md`](_agent_pings.md) (intra-side) every **~1 min** while Ikenna is active.
-Stretch to ~5 min when ledger empty for 30+ min. Cross-side
-[`../plans/active/_agent_pings.md`](../plans/active/_agent_pings.md) polls on the same cadence but typically runs much
-quieter (cross-side comms are rarer than intra-side).
+**Polling cadence**: every **~1 min** while Ikenna is active (stretch to ~5 min when ledger empty for 30+ min). Each
+poll cycle MUST use the `Agent` sub-agent pattern — do NOT read ping files or run git commands directly in the main
+context (that inflates context permanently).
+
+```
+# Each /loop fire → spawn sub-agent, store ≤150-word summary only:
+Agent(
+    subagent_type="general-purpose",
+    model="sonnet",
+    prompt=<ikenna_orchestrator/poll_subagent_prompt.md with CYCLE_N replaced by cycle counter>,
+)
+```
+
+The sub-agent handles: git fetch, both ping ledgers, Q&A routing, LDR push. Main context receives one ≤150-word summary
+line per cycle. See [`poll_subagent_prompt.md`](poll_subagent_prompt.md) for the full sub-agent prompt template.
 
 **Your role**: direction-setting + Q&A dispatch + plan-of-record curation + ping triage. **Implementation work is NOT
 yours** — that's spawned tabs.
@@ -66,17 +77,17 @@ number is addressable. Both go in the registry entry for clarity.
 peak parallel work exceeds). All 26 active repos × 8 slots = 208 worktrees on branches `tab/ikennaigboaka/1` through
 `tab/ikennaigboaka/8`, each at head `6a6ae73b` at provisioning time.
 
-| Slot | Theme (2026-05-14 — Day-3 density-push, ~200 cal AI-days, pre-cutover stack)                                                                                                                                                                                                                                                                                                                                                                                                                                                | Plan-of-record / scope                                                                                                                                                                                                                   |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | main orchestrator — master plan refresh + ping triage + inventory + Phase 6.3 resolved + cross-side acks | (this LEDGER) + [`master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md) |
-| 2    | DeFi classifier catalog crossref (defi Wave 3) + Polymarket subset + defi_catalogue_chain_primitives + basefc_validation + cross_asset Phase 6A DeFi half + UTL QG pre-existing failures | [`defi_classifier_missing_catalog_crossref_2026_05_13.md`](../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md) + fan-out |
-| 3    | Perp venue adapters P0 fix (ASTER/HYPERLIQUID) + Helius Solana RPC + Pyth Hermes/PythNet + DEX expansion + Drift JitoSOL/mSOL + Bybit/Aster eligibility | [`emerging_perp_venue_adapters_broken_2026_05_13.md`](../plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md) + fan-out |
-| 4    | Sports classifier gaps (sfi_footystats/player_values/weather) + propagation chain Phase 3.1-3.N + phantom apply-flips + sports data_type universe audit + api_football flattening removal | [`sports_classifier_extension_followup`](../plans/active/) + [`expected_unattempted_propagation_chain_2026_05_12.md`](../plans/active/expected_unattempted_propagation_chain_2026_05_12.md) |
-| 5    | TradFi Phase 3 migration script + Phase 4 consumer cascade + tradfi_master refresh + venue calendar SSOT + sports_retired_data_types UAC half + Solana plan C | [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md`](../plans/active/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) Phase 3-4 |
-| 6    | wallet_treasury Phase 1 HMAC withdrawal approval chain + 4 DeFi alert codes + execution-service Cluster B lint + available_at stamping sweep + audit_records Phase 1 | [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../plans/active/wallet_treasury_post_cutover_custody_signing_2026_06_01.md) Phase 1 |
-| 7    | wallet_treasury Phase 3 audit immutability + /api/treasury/rollup endpoint + DART manual-trade UX + audit_records Phase 2-3 + client_reporting_pnl_attribution | [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../plans/active/wallet_treasury_post_cutover_custody_signing_2026_06_01.md) Phase 3 + [`dart_manual_trade_ux_refactor_2026_05_13.md`](../plans/active/dart_manual_trade_ux_refactor_2026_05_13.md) |
-| 8    | SHARD_AXIS_MATRIX drift fix (13 deployment-api tests) + Solana plan D (Phoenix/Orca/Raydium) + AUDIT pre-May-8 cleanup + codex doc currency | [`deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md`](../plans/active/issues/deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md) + fan-out |
-| 9    | Cluster A ×→x sed sweep + Solana plan E (Kamino/Marinade Native) + honest_coverage cron + arbitrage_price_dispersion finalisation + Phase 6.9 QG flip-sweep + governance_qg | [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md) + fan-out |
+| Slot | Theme (2026-05-14 — Day-3 density-push, ~200 cal AI-days, pre-cutover stack)                                                                                                              | Plan-of-record / scope                                                                                                                                                                                                                                            |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | main orchestrator — master plan refresh + ping triage + inventory + Phase 6.3 resolved + cross-side acks                                                                                  | (this LEDGER) + [`master_to_live_defi_2026_05_23.md`](../plans/active/master_to_live_defi_2026_05_23.md)                                                                                                                                                          |
+| 2    | DeFi classifier catalog crossref (defi Wave 3) + Polymarket subset + defi_catalogue_chain_primitives + basefc_validation + cross_asset Phase 6A DeFi half + UTL QG pre-existing failures  | [`defi_classifier_missing_catalog_crossref_2026_05_13.md`](../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md) + fan-out                                                                                                               |
+| 3    | Perp venue adapters P0 fix (ASTER/HYPERLIQUID) + Helius Solana RPC + Pyth Hermes/PythNet + DEX expansion + Drift JitoSOL/mSOL + Bybit/Aster eligibility                                   | [`emerging_perp_venue_adapters_broken_2026_05_13.md`](../plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md) + fan-out                                                                                                                         |
+| 4    | Sports classifier gaps (sfi_footystats/player_values/weather) + propagation chain Phase 3.1-3.N + phantom apply-flips + sports data_type universe audit + api_football flattening removal | [`sports_classifier_extension_followup`](../plans/active/) + [`expected_unattempted_propagation_chain_2026_05_12.md`](../plans/active/expected_unattempted_propagation_chain_2026_05_12.md)                                                                       |
+| 5    | TradFi Phase 3 migration script + Phase 4 consumer cascade + tradfi_master refresh + venue calendar SSOT + sports_retired_data_types UAC half + Solana plan C                             | [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md`](../plans/active/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) Phase 3-4                                                                                          |
+| 6    | wallet_treasury Phase 1 HMAC withdrawal approval chain + 4 DeFi alert codes + execution-service Cluster B lint + available_at stamping sweep + audit_records Phase 1                      | [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../plans/active/wallet_treasury_post_cutover_custody_signing_2026_06_01.md) Phase 1                                                                                                                |
+| 7    | wallet_treasury Phase 3 audit immutability + /api/treasury/rollup endpoint + DART manual-trade UX + audit_records Phase 2-3 + client_reporting_pnl_attribution                            | [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../plans/active/wallet_treasury_post_cutover_custody_signing_2026_06_01.md) Phase 3 + [`dart_manual_trade_ux_refactor_2026_05_13.md`](../plans/active/dart_manual_trade_ux_refactor_2026_05_13.md) |
+| 8    | SHARD_AXIS_MATRIX drift fix (13 deployment-api tests) + Solana plan D (Phoenix/Orca/Raydium) + AUDIT pre-May-8 cleanup + codex doc currency                                               | [`deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md`](../plans/active/issues/deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md) + fan-out                                                                                                           |
+| 9    | Cluster A ×→x sed sweep + Solana plan E (Kamino/Marinade Native) + honest_coverage cron + arbitrage_price_dispersion finalisation + Phase 6.9 QG flip-sweep + governance_qg               | [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md) + fan-out                                                                                                                        |
 
 **Per-slot full task brief + spawn prompts** in
 [`../plans/active/work_split_2026_05_11_ikenna.md`](../plans/active/work_split_2026_05_11_ikenna.md) § "Tab registry" +
@@ -165,46 +176,49 @@ session" for full migration ledger + per-slot DONE evidence.
 **🟢 Gate 0A FIRED** — uac@`0457b0e` + UTL helper pre-existed; PM@`fc429e43` (Slot 4 ping). Slot 4 now proceeding with
 propagation chain (expected_unattempted_propagation_chain plan): Phase 1.5 QG clean (PM@`ff2b46fb`).
 
-**Slot 1 Day-2 shippables**: PB-1 codex path fix (PM@`7c058ef0`) + Gate 0A flip in work_split + LEDGER update (this commit).
+**Slot 1 Day-2 shippables**: PB-1 codex path fix (PM@`7c058ef0`) + Gate 0A flip in work_split + LEDGER update (this
+commit).
 
-**Cross-asset catalogue**: Phase 5 ✅ COMPLETE (Phases 5A/5B/5C/5D all shipped; PM@`fc6dc081..160f451c`). UAC
-tickers.py BIG FINDING from Slot 2 ping is a **false alarm** — re-exports fully intact (25 lines, 15 functions).
+**Cross-asset catalogue**: Phase 5 ✅ COMPLETE (Phases 5A/5B/5C/5D all shipped; PM@`fc6dc081..160f451c`). UAC tickers.py
+BIG FINDING from Slot 2 ping is a **false alarm** — re-exports fully intact (25 lines, 15 functions).
 
 **Current gate status** (updated):
 
-| Gate | Status | Evidence |
-|------|--------|----------|
-| 0A | 🟢 FIRED | uac@0457b0e + PM@fc429e43 |
-| 1 | 🟡 IN PROGRESS | Slot 4 at Phase 1.5; ~2-3 phases remaining |
-| 2 | 🟢 FIRED | Slot 3 — 16 STS jobs SUCCESS, parity verified ~19:00 UTC (PM@`c52ddffb`) |
-| 3 | 🔴 OPEN | Phantom audit pending |
-| 4 | 🔴 OPEN | Slots 6+7 features-service build pending; Slot 8 PART A done |
+| Gate | Status         | Evidence                                                                 |
+| ---- | -------------- | ------------------------------------------------------------------------ |
+| 0A   | 🟢 FIRED       | uac@0457b0e + PM@fc429e43                                                |
+| 1    | 🟡 IN PROGRESS | Slot 4 at Phase 1.5; ~2-3 phases remaining                               |
+| 2    | 🟢 FIRED       | Slot 3 — 16 STS jobs SUCCESS, parity verified ~19:00 UTC (PM@`c52ddffb`) |
+| 3    | 🔴 OPEN        | Phantom audit pending                                                    |
+| 4    | 🔴 OPEN        | Slots 6+7 features-service build pending; Slot 8 PART A done             |
 
-**Slot 8 dependency**: PART B (Phase 6.9 sweep) waiting on Slots 6+7 ping confirming Phases 6.3/6.4/6.5 pushed. No
-ping files for slots 6+7 yet — operator may want to check those sessions.
+**Slot 8 dependency**: PART B (Phase 6.9 sweep) waiting on Slots 6+7 ping confirming Phases 6.3/6.4/6.5 pushed. No ping
+files for slots 6+7 yet — operator may want to check those sessions.
 
 ### Day-2 session-end scoreboard (2026-05-12 session 3 — slot 1 main)
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| Gate 0A | ✅ FIRED (pre-existing) | Slot 4 proceeding |
-| Gate 1 | 🟡 IN PROGRESS | Slot 4 given Phase 3.0 = Option A; Phases 3+4+2.A pending |
-| Gate 2 | ✅ FIRED this session | Slot 3 PART C (code migration) + Slot 8 PART C now unblocked |
-| Gate 3 | 🔴 OPEN | Phantom audit (needs GCE VM + manifest) |
-| Gate 4 | 🔴 OPEN | Slots 6+7 features-service build (no ping files yet) |
-| Slot 2 tickers.py BIG FINDING | ✅ FALSE ALARM resolved | PM@`caf36847`; file intact with all 15 re-exports |
-| Slot 2 Phase 1C GMX/DRIFT | 🟡 direction given (both DeFi) | Slot 2 can proceed; told to not block slot |
-| Slot 4 Phase 3.0 direction | ✅ Option A dispatched | PM@`279cc1ed`; Slot 4 proceeding |
-| MDPS EmissionDecision BIG FINDING | ✅ cross-side ping filed | Harsh-main triage needed (UTL schema drift) |
-| Slot 5 bookmaker BIG FINDING | ✅ resolved via Slot 2 UAC@`b73949d` | PM@`caf36847`; Slot 5 can pull + test |
-| PB-1 codex audit-log path fix | ✅ DONE (prior session) | PM@`7c058ef0` |
-| PB-3 client_id threading | 🟡 PRE_CUTOVER | Codex correctly marks as follow-up; no code change needed now |
+| Phase / item                      | Status as of 2026-05-12              | Successor / blocker                                           |
+| --------------------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| Gate 0A                           | ✅ FIRED (pre-existing)              | Slot 4 proceeding                                             |
+| Gate 1                            | 🟡 IN PROGRESS                       | Slot 4 given Phase 3.0 = Option A; Phases 3+4+2.A pending     |
+| Gate 2                            | ✅ FIRED this session                | Slot 3 PART C (code migration) + Slot 8 PART C now unblocked  |
+| Gate 3                            | 🔴 OPEN                              | Phantom audit (needs GCE VM + manifest)                       |
+| Gate 4                            | 🔴 OPEN                              | Slots 6+7 features-service build (no ping files yet)          |
+| Slot 2 tickers.py BIG FINDING     | ✅ FALSE ALARM resolved              | PM@`caf36847`; file intact with all 15 re-exports             |
+| Slot 2 Phase 1C GMX/DRIFT         | 🟡 direction given (both DeFi)       | Slot 2 can proceed; told to not block slot                    |
+| Slot 4 Phase 3.0 direction        | ✅ Option A dispatched               | PM@`279cc1ed`; Slot 4 proceeding                              |
+| MDPS EmissionDecision BIG FINDING | ✅ cross-side ping filed             | Harsh-main triage needed (UTL schema drift)                   |
+| Slot 5 bookmaker BIG FINDING      | ✅ resolved via Slot 2 UAC@`b73949d` | PM@`caf36847`; Slot 5 can pull + test                         |
+| PB-1 codex audit-log path fix     | ✅ DONE (prior session)              | PM@`7c058ef0`                                                 |
+| PB-3 client_id threading          | 🟡 PRE_CUTOVER                       | Codex correctly marks as follow-up; no code change needed now |
 
 **Slot 8 PART C**: Gate 2 just fired. Notify Slot 8 (ping filed this session). Slot 8 should proceed with
 `bucket_name_ssot` code migration in instruments-service + deployment-service scripts.
 
 **Next operator / fresh agent priorities**:
-1. Check Slots 6+7 status — no ping files; they own Phases 6.3/6.4/6.5 (features-service build). Gate 4 unblocked once these ship.
+
+1. Check Slots 6+7 status — no ping files; they own Phases 6.3/6.4/6.5 (features-service build). Gate 4 unblocked once
+   these ship.
 2. Gate 1 watch — Slot 4 will ping when Phases 3+4+2.A complete.
 3. Harsh-main triage — MDPS EmissionDecision 15 test failures (UTL schema drift; see `_agent_pings.md` entry).
 
