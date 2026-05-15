@@ -288,3 +288,30 @@ repos. Your `workspace-qg.yml.tmpl` (item 3 of your prior queue) is
 unaffected — still propagates to every Python repo via the generic tier.
 
 No action required. Continue queue items 11-20.
+
+---
+
+## [2026-05-15 UTC] slot-8 — 🏁 **CYCLE-CLOSE (post-OOM recovery wave)**
+
+**Items shipped this recovery session:**
+
+- ✅ Item 14: UTL bump strategy audit — PM@56ddb77e (issue doc + label mismatch report)
+- ✅ Post-OOM: 5 pre-existing LDR test failures fixed — UTL@72df886 (pydantic v2 model_copy, 3 event count assertions, freshness no-overlap)
+- ✅ Worktrees rebased: PM +83, UTL +1, UAC +1. Stale dirty state dropped.
+
+**Items deferred (items 15-20 — carry to next session):**
+
+| # | Item | Status |
+|---|------|--------|
+| 15 | pre-commit hook standardization | DEFERRED — not started |
+| 16 | issue-doc triage sweep | DEFERRED — not started |
+| 17 | UTL HMAC signing coverage extension | DEFERRED — UTL QG has xdist isolation issue |
+| 18 | workspace-wide cassette parity refresh | DEFERRED — not started |
+| 19 | workspace-constraints.toml audit | DEFERRED — not started |
+| 20 | codex/06 cross-link sweep | DEFERRED — not started |
+
+**BIG FINDING (requires main triage):** UTL QG fails under xdist parallel workers (95 tests, all pass with -n1). Pre-existing `setup_events()` global state contamination. Blocks semver-agent on LDR. Main to decide: (a) fix xdist isolation, (b) set `PYTEST_WORKERS=1` for UTL temporarily.
+
+**Ruff reformatting side-effect:** Running UTL QG reformatted ~300 source files (ruff 100→120 line-length). Not committed — needs separate commit. Main to decide if warranted.
+
+CYCLE-CLOSE complete. No new dispatches taken.
