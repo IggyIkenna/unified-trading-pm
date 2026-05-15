@@ -272,7 +272,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 ### Fresh extension (items 11-19, ~20 AI-days execution + risk + pnl)
 
-- [ ] **11. execution-service flash loan execution path tests** — TestFlashLoanReceiverExecution: end-to-end flash → swap → repay on Tenderly fork. Verify the FlashLoanReceiver contract is called correctly; gas accounting; failure modes (insufficient repayment). Done-def: 4+ tests with mocks + 2+ with Tenderly (auto-skip) + execution QG green.
+- [x] **11. execution-service flash loan execution path tests** — execution-service@50a5d24c (6 unit + 2 fork tests): TestFlashLoanReceiverExecution full flash→swap→repay, gas 220k, insufficient repayment→FAILED, liquidity→REJECTED, Morpho 0-fee, AAVE 0.05%; TestFlashLoanReceiverForkExecution auto-skip. QG ✅ (425s).
 
 - [ ] **12. execution-service slippage model boundary tests** — Phase 9 slippage_cost_model.py: extreme conditions (zero liquidity, infinite spread, single-tick depth, sandwich-attack-shaped book). Done-def: 5+ edge-case tests + execution QG green.
 
@@ -298,3 +298,5 @@ gaps: insufficient data guard, negative weight CeFi perp short, carry_staked_bas
 diversification property; RegimeDetector gaps: too-few-returns guard, vol+correlation → crisis, vol+drawdown_velocity →
 crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stressed multiplier 1.5×. QG ✅ (71s).
 Queue items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
+
+[2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution tests): execution-service@50a5d24c — 6 unit + 2 Tenderly fork tests (auto-skip). QG ✅ (425s). Rebased 3 repos to LDR post-OOM. Now handling operator request: UTL LDR pull + QG before item 12.
