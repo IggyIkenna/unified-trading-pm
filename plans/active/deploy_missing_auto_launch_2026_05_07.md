@@ -642,8 +642,14 @@ that already shipped.
 
 ### Phase 4 — Codex docs + plan close
 
-- [ ] [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with the
-      auto-launch flow diagram + the IAM scope reference.
+- [x] ✅ [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with
+      the auto-launch flow diagram + the IAM scope reference. Shipped at `unified-trading-pm@<pending>` — §5
+      "Per-leaf download + surgical recovery" now documents both **preview mode (shipped)** and **auto-launch mode
+      (Phase 2/3 in-flight)** including the `POST /api/data-status/deploy-missing-launch` contract,
+      per-shard idempotency via GCE label filter, `DEPLOY_MISSING_VM_LAUNCHED` correlation_id, Firestore-backed
+      Phase 0 Decision 3 rate-limit ceilings (30/op/hr, 200/op/day, 100/proj/hr, 1 active per shard_key for 6h),
+      BigQuery + Cloud Logging audit-log shape per Decision 2, custom IAM role
+      `roles/customDeployMissingLauncher` per Decision 1 Option B, and tarball-staleness paired refresh wiring.
 - [ ] [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
       fired).
 

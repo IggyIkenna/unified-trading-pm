@@ -330,6 +330,40 @@ Every leaf carries a `row_key` dict. Two operator actions consume it:
    asset_group. SSOT for the format:
    [`market_tick_data_service/cli/shard_key.py`](../../../market-tick-data-service/market_tick_data_service/cli/shard_key.py).
 
+   **Two launch modes** (operator-selectable per Phase 0 IAM/audit/rate-limit ratification 2026-05-08; tracked in
+   [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.md)):
+
+   - **Preview mode (shipped)** — `POST /api/data-status/deploy-missing-preview` returns the bash invocation
+     (`bash <launcher-script> --shard-key=<quoted>`) for the operator to copy + run from their authenticated
+     terminal. No service-account IAM grant required on the deployment-api side; the operator's user creds are the
+     auth boundary. Mode is opt-in via `DeployMissingButton` "Copy command" action.
+   - **Auto-launch mode (Phase 2/3 — in-flight; gated on IAM custom-role + Firestore rate-limit + audit-log infra
+     landing)** — `POST /api/data-status/deploy-missing-launch` invokes `gcloud compute instances create` from the
+     deployment-api Cloud Run pod via the `roles/customDeployMissingLauncher` service-account binding. The endpoint:
+     - Enforces per-shard idempotency via GCE `compute.instances.list` with label filter
+       `shard_key_hash=<sha1(shard_key)>` — duplicate calls return the running VM rather than launching a new one.
+     - Emits `DEPLOY_MISSING_VM_LAUNCHED` event keyed on `shard_key` as `correlation_id`; blocks the HTTP response
+       until the per-VM `STARTED` event lands within 90s (no-fire-and-forget rule).
+     - Routes through the Firestore-backed rate limiter enforcing Phase 0 Decision 3 ceilings:
+       30 launches/operator/hr, 200/operator/day, 100/project/hr, **1 active per `shard_key` for 6h**. Returns
+       HTTP 429 + `Retry-After` when tripped; alerts to `#uts-prod-alerts`.
+     - Writes a synchronous audit-log row to BigQuery primary + Cloud Logging mirror per Phase 0 Decision 2
+       (90d hot / 5y cold; sync-blocking write). The launch fails-closed if the audit write fails.
+
+   **IAM scope** (Phase 0 Decision 1 approved 2026-05-08, Option B): the auto-launch path uses a custom project-level
+   role `roles/customDeployMissingLauncher` with minimum permissions: `compute.instances.{create,get,list,delete,
+   setMetadata,setLabels}`, `compute.disks.{create,get}`, `compute.subnetworks.{use,useExternalIp}`,
+   `compute.networks.get`, `compute.machineTypes.get`, `compute.zones.get`, `compute.images.useReadOnly`,
+   `iam.serviceAccounts.actAs`, and `cloudbuild.builds.{create,get,list}` for tarball-staleness paired refresh.
+   IAM-condition-scoped to the specific zone + image family. Blanket `roles/compute.instanceAdmin.v1` is REJECTED
+   (insufficient scoping).
+
+   **Tarball-staleness paired refresh** — before the launch endpoint creates the GCE VM, it calls
+   `TarballStalenessChecker.ensure_fresh()` (`deployment-api@faac20a` —
+   `deployment_api/services/tarball_staleness.py`) which compares the GCS tarball mtime against `git rev-parse HEAD`
+   of `live-defi-rollout`; if stale, triggers the Cloud Build refresh + polls `cloudbuild.builds.get` until complete
+   before launching. This guarantees the recovery VM picks up the latest code, not a stale tarball.
+
 ### Failure modes that the drill-down catches
 
 - Misleading roll-up headlines — the pre-2026-05-07 chain rollup reported `ARBITRUM 32/54 shards` (date-count math
