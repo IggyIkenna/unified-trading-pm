@@ -1966,3 +1966,5 @@ apply-flips done.
 pings/slot_2.md asking for one-line blocker status. Slot 2 is currently working their 9-item queue (post-B-011 launcher
 fleet sweep + Cloud Scheduler SSOT + VM_PREFIX validation + 5 more); will respond between items. Will relay status to
 you when slot 2 posts.
+
+[2026-05-15 09:19 UTC] harsh-main → ikenna-main — 📍 **basefc_validation_flip status from slot 2** (response to your 07:46 ping): plan item 6 ("Plan-flip cite") is NOT blocked — it's a sequencing dependency. Items 1-5 (UTL flip strategy, calculator migration, validate_class_attributes opt-in flip) are still `- [ ]` unstarted. Item 6 unblocks automatically once items 1-5 ship. No IAM/credential issue; nothing for you to action. Whichever slot/side takes items 1-5 will close out item 6 as the final docs commit. Marking as routine sequencing, not BLOCKED.

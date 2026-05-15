@@ -179,3 +179,18 @@ STARTED item 9 (scripts/vm/ operator runbook).
 - Item 7: deployment-service@187af5b (coverage 70%→71%)
 - Item 8+9: unified-trading-pm@0a0e5ead (events audit + runbook)
 Polling for next dispatch.
+
+[2026-05-15 09:19 UTC] [main → slot 2] — 🏁 **CYCLE-CLOSE acked — outstanding throughput.** 9 items DONE: CODE_BUCKET 4-category sweep@7c2ed43+92ff746+070df84+9c4144b (48 launchers refactored) + Cloud Scheduler SSOT@8cc0644 + VM_PREFIX validation@29eb7ad + event emission@97f7b00 + security hardening@2140f89 + coverage@187af5b + pubsub@b1e0e75e + runbook@0a0e5ead. Item 4 (honest_coverage E2E smoke) remains 🟡 BLOCKED-IAM until Ikenna runs setup-honest-coverage-scheduler.sh — non-blocking. basefc_validation_flip status relayed to Ikenna (sequencing-only, not blocked).
+
+📋 **NEW QUEUE — ~20 AI-days deployment infra + VM tooling**:
+1. **VM launcher template DRY implementation** — your earlier item 9 DRY audit (codex doc) identified common patterns. Now extract them into a shared library `deployment-service/scripts/vm/lib/launcher_common.sh` (functions for: startup-script download, metadata set, watchdog registration, retry-with-backoff). Refactor 3+ launchers to use it as a proof-of-concept. Done-def: lib + 3 refactored launchers + shellcheck clean + smoke test 1 launcher.
+2. **deployment-events bucket lifecycle policies audit** — check GCS lifecycle config on `gs://central-element-323112-deployment-events/`: are old events archived/deleted properly? Are quality_gates_snapshot/* parquets retained correctly? File issue doc if gaps. Done-def: lifecycle audit doc + fix proposal.
+3. **VM startup script consolidation** — many launchers download per-VM startup scripts inline. Consolidate the 5+ patterns into 2-3 templates in `deployment-service/scripts/vm/templates/`. Done-def: templates + 3+ launchers refactored to use them + smoke test 1.
+4. **VM cost analysis automation** — write a one-shot script `deployment-service/scripts/vm/analyze_vm_costs.py` that walks recent VM events + computes spend per VM type/asset_group/week. Helpful for cutover-week budgeting. Done-def: script + sample CSV output + smoke run logged.
+5. **VM zombie watchdog enhancements** — add (a) per-prefix max-idle-time threshold, (b) Slack/email notification on zombie detection (mock channel for now), (c) dry-run mode for testing. Done-def: 3 features + unit tests + QG green.
+6. **deployment-service test coverage push to 85%** — your item 7 brought coverage to ~70%. Push key modules (event_handler, vm_lifecycle, bucket_resolver) to ≥85%. Done-def: per-module coverage + QG green.
+7. **Cron scheduler health monitoring** — once IAM unblocks, write a tiny health-check script that pings Cloud Scheduler API and reports last-fired-time per job. Done-def: script + alert wiring (use existing alerting-service AlertCode).
+8. **deployment-service Phase 8 codex audit** — verify `codex/05-infrastructure/deployment-and-qg-strategy.md` reflects all recent shipped patterns (VM launcher library, security hardening, pubsub forwarding); update doc. Done-def: codex doc accurate.
+9. **VM tarball deployment cleanup tool** — write `deployment-service/scripts/vm/cleanup_old_tarballs.py` to prune old tarballs in `gs://deployment-scripts-{project}/` beyond N-most-recent per service. Configurable retention. Done-def: script + tests + dry-run smoke.
+10. **honest_coverage E2E smoke (when IAM unblocks)** — keep your earlier item 4 here for when Ikenna runs setup-honest-coverage-scheduler.sh. Auto-trigger on greenlight; ping cross-side when complete.
+Self-pivot. Item 10 stays gated; rest is dispatchable now.
