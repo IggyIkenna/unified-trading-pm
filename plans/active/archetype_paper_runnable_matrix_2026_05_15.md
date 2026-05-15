@@ -37,7 +37,7 @@ estimate_calibrated_ai_days: 0.3
 | Archetype                                            | State (2026-05-15)   | Blockers to next state                                                         | Owning plan                                                       | Evidence shipped today                                              |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
 | `carry_staked_basis`                                 | **paper-shippable**  | Need ≥3-day end-to-end paper run on real infra (`pvl-p18a`)                   | `defi_master_2026_05_07.md` Fork 1                                | execution-service@310d9629 (TestCarryStakedBasisPaperSmoke, 4 tests)|
-| `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` | **backtest-only**    | APD execution orchestrator not yet built; need Phase A engine + paper evidence  | `arbitrage_price_dispersion_finalisation_2026_05_09.md`           | execution-service@{item5_sha} (TestAPDNormalFillAllVenues, 22 tests)|
+| `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` | **backtest-only**    | APD execution orchestrator not yet built; need Phase A engine + paper evidence  | `arbitrage_price_dispersion_finalisation_2026_05_09.md`           | execution-service@59eac3a5 (TestAPDNormalFillAllVenues, 22 tests)|
 
 > **Note on `carry_staked_basis` state**: promoted from `backtest-only` → `paper-shippable` today (2026-05-15).
 > Prior state per codex SSOT (2026-05-09): `backtest-only`.
@@ -71,8 +71,8 @@ estimate_calibrated_ai_days: 0.3
 | ---------------------------------------- | -------------- | -------------------------------------------------------- |
 | APD execution orchestrator               | ❌ not built   | Phase A pending (`arbitrage_price_dispersion_finalisation_2026_05_09.md`) |
 | L2Matcher for 6 perp venues (hedge fill) | ✅ wired       | execution-service matching_engine/engine.py              |
-| Hedge-leg fill simulation tests          | ✅ tested      | execution-service@{item5_sha} TestAPDNormalFillAllVenues (22 tests) |
-| APD slippage scenarios (5+)              | ✅ tested      | execution-service@{item5_sha} 5 scenarios × 6 venues    |
+| Hedge-leg fill simulation tests          | ✅ tested      | execution-service@59eac3a5 TestAPDNormalFillAllVenues (22 tests) |
+| APD slippage scenarios (5+)              | ✅ tested      | execution-service@59eac3a5 5 scenarios × 6 venues    |
 | UniswapConnector (DEX leg)               | ✅ wired       | execution-service defi_execution (UniswapConnector)      |
 | Price-dispersion detection               | ✅ tested      | TestAPDPriceDispersionDetection (HL@1802 vs Kraken@1798) |
 | APD carry decision trace CLI             | ✅ shipped     | execution-service cli/defi_arbitrage_dispersion_decision_trace.py |
