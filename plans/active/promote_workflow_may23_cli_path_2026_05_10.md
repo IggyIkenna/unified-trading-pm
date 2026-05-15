@@ -430,10 +430,13 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 4.C — pvl-p20c Solana paper analogue
 
-- [ ] [AGENT] P0. **Implement Solana devnet wiring** for LST archetypes (jitoSOL/mSOL/bSOL).
+- [x] [AGENT] P0. **Implement Solana devnet wiring** for LST archetypes (jitoSOL/mSOL/bSOL).
   - Pyth Hermes for prices (per CLAUDE.md unbanned 2026-05-06).
   - Solana devnet RPC URL in `CHAIN_RPC_TEMPLATES`.
   - Devnet wallet provisioning via standard CLI.
+  - **Evidence**: execution-service@a39294603 — `solana_lst_devnet.py` ships `get_solana_rpc_for_mode()` +
+    `get_solana_paper_connect_config()` + `SOLANA_LST_DEVNET_RPC` + Pyth Hermes feed IDs for jitoSOL/mSOL/bSOL. UAC
+    `public_devnet` RPC in `SOLANA_RPC_TEMPLATES`.
 - [ ] [SCRIPT] P0. **Smoke-test Solana paper** by running
       `colocated_engine.py --strategy-id carry_staked_basis --execution-provider solana_devnet` for 10min.
 
@@ -542,8 +545,9 @@ auto-registration stay in `promote_workflow_post_cutover_ui_pipeline_2026_05_10.
 **Scope**: Just enough to round-trip a config across the promote workflow. NOT the full pinned-shas treatment (no commit
 shas, no model refs, no features manifest version — those are post-cutover Phase 2).
 
-- [ ] [AGENT] P0. **NEW UAC `MinimalCandidateManifest`** Pydantic type at
+- [x] [AGENT] P0. **NEW UAC `MinimalCandidateManifest`** Pydantic type at
       `unified_api_contracts/internal/domain/strategy_service/candidate_manifest.py`. Captures (May-23 subset only):
+      (uac@2b48295)
   - `manifest_id: str` (UUID).
   - `strategy_instance_id: str`.
   - `version_id: str | None` (links to `StrategyVersion`).
