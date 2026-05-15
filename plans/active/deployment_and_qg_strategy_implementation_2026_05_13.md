@@ -514,8 +514,9 @@ Sourced from orchestrator ping [2026-05-15 11:15 UTC] extended queue (items 4-13
 - [x] [AGENT] P0. **deployment-ui cost estimate panel** — before launching a VM, show cost estimate inline in the launch
       form. Done-def: component + vitest green + pnpm build green. ✅
       _deployment-ui@5147f4b_ (VmCostEstimatePanel; machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate API; compute+disk+total breakdown; wired into MlExperiments; 5 vitest tests; 63 total; QG green)
-- [ ] [AGENT] P0. **deployment-ui responsive mobile layout audit** — every route at ≤768px: nav collapses, tables scroll
-      horizontally, forms stack vertically. Done-def: Playwright or visual audit + fixes + pnpm build green.
+- [x] [AGENT] P0. **deployment-ui responsive mobile layout audit** — every route at ≤768px: nav collapses, tables scroll
+      horizontally, forms stack vertically. Done-def: Playwright or visual audit + fixes + pnpm build green. ✅
+      _deployment-ui@fd4fa83_ (Header hamburger+mobile-nav; DeploymentHistory overflow-x-auto; MlExperiments/StrategyBacktests/Dart/ClientSubscriptions grid-cols-1 sm:grid-cols-N; pnpm build + QG green)
 
 ## Done definition
 

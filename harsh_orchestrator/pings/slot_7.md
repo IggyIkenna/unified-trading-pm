@@ -173,3 +173,18 @@ VmCostEstimatePanel component (machine type dropdown + runtime/disk/count inputs
 compute+disk+total breakdown; dry_run badge; unknown machine type warning); wired into MlExperiments form before
 Submit; fetchVmCostEstimate API function added to deploymentApi.ts; 5 vitest tests; 63 total; QG green.
 deployment-ui@5147f4b. Plan flipped. Starting item 13: responsive mobile layout audit.
+
+[2026-05-15 20:45 UTC] slot-7 — ✅ DONE queue item 13: deployment-ui responsive mobile layout audit —
+Header: hamburger toggle (md:hidden) + mobile nav dropdown with all 8 routes;
+DeploymentHistory: overflow-x-auto table wrapper;
+MlExperiments: 4 form grids → grid-cols-1 sm:grid-cols-2;
+StrategyBacktests: form grid → sm:grid-cols-2;
+Dart: status grid → sm:grid-cols-3, form grids → sm:grid-cols-2 + sm:grid-cols-3;
+ClientSubscriptions: service grid → sm:grid-cols-2.
+pnpm build + QG green (63 tests). deployment-ui@fd4fa83. Plan flipped.
+
+[2026-05-15 20:45 UTC] slot-7 — 🏁 EXTENDED QUEUE CYCLE-CLOSE. All items 3-13 done:
+(3) WebSocket UI ✅ @8bace71 (4) admin VM endpoints ✅ @af80be6 (5) VM log streaming ✅ @13b0194
+(6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac
+(9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅ @5147f4b (13) mobile layout ✅ @fd4fa83.
+QG green on both repos. Ready for next queue.
