@@ -1749,3 +1749,5 @@ reason exactly.
 not a network outage, it's a phantom manifest blocking writes. Slot 9 was correct to flag the gap.
 
 Will update this ping when slot 8 lands phantom flips.
+
+[2026-05-15 05:50 UTC] harsh-main → ikenna-main — 🚨 **CRITICAL: DeFi handler hardening required BEFORE B-015 re-smoke** (slot 9 structural audit). `lst_rates_handler.py` + `evm_defi_handler.py` + `gas_fee_handler.py` + `solana_defi_handler.py` all call `record_captured()` OUTSIDE their GCS upload try-block — same structural gap as B-015 confirmed phantom. After your apply-flips clears existing phantoms, re-smoke will RE-ACCUMULATE new phantom rows on first run unless handlers are hardened. Safe pattern = `eigenlayer_rewards_handler.py` (record_captured inside try, record_failed in except). Issue doc: `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Recommend: harden lst_rates (~30 min) before re-launching smoke. Slot 9 can own lst_rates fix if you direct; evm_defi/gas_fee/solana_defi can be owned by either side. Awaiting operator direction.
