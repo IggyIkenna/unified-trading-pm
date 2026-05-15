@@ -213,3 +213,44 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 [2026-05-15 19:30 UTC] slot-4 — ✅ ITEM 6 DONE: features-onchain Phase 6.6 emission policy tests. Added TestCheckEmissionPolicyPhase66 (4 tests) to tests/onchain/unit/test_emission_policy.py: BLOCK_CRITICAL full window publishes; BLOCK_CRITICAL with NaN suppresses write + should_alert=True (P0 alert path); NAN_FILL with NaN publishes PUBLISHED_DEGRADED; empty DataFrame sends completeness=0.0. Fixed _make_decision helper to accept should_alert kwarg (EmissionDecision is frozen dataclass — cannot mutate post-init). All 12 onchain emission tests pass. Volatility failures are pre-existing (confirmed baseline 47 failures before any slot-4 changes). features-service@a17d85b0. Moving to item 7.
 
 [2026-05-15 19:45 UTC] slot-4 — ✅ ITEM 7 DONE: workspace-wide pytest marker hygiene audit. Grepped xfail + skipif across all worktree repos (37 files, 96 markers total). Result: 0 undocumented markers. Every @pytest.mark.xfail and @pytest.mark.skipif has explicit reason= string (multi-line or inline). Repos checked: unified-api-contracts, system-integration-tests, instruments-service, unified-trading-library, execution-service, strategy-service, market-tick-data-service, deployment-api, features-service, batch-live-reconciliation-service. No code changes needed. Moving to item 8.
+
+---
+
+## [2026-05-15 19:50 UTC] [main → slot 4] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> Re-anchoring as todo-checkbox list per operator request. Items 1-7 already
+> shipped — flipped here with SHAs from your ping entries above. Items 8-15
+> remain (~16 AI-days). Going forward, flip in-place as you ship:
+> `- [ ]` → `- [x] @ <sha> + brief evidence`.
+
+### Already done this cycle
+
+- [x] **1. ml-training-service coverage ≥70%** — ml-training-service@7e18af8 (70 new tests + 43 pyright fixes)
+- [x] **2. system-integration-tests new DeFi-flow scenarios** — sit@fba72b7 (16 tests)
+- [x] **3. alerting-service alert code parity** — alerting@c1c9a68 (3-tier sweep)
+- [x] **4. batch-live-reconciliation reconcile_shard coverage** — batch-live-reconciliation-service@50c1f6e (80.65 → 83.29%)
+- [x] **5. features-service multi_timeframe + calendar lifecycle tests** — pre-existing, confirmed (6 tests pass)
+- [x] **6. features-onchain Phase 6.6 emission policy tests** — features-service@a17d85b0 (4 new tests)
+- [x] **7. workspace-wide pytest marker hygiene audit** — AUDIT CLEAN (96 markers across 37 files, all documented)
+
+### Remaining (in-progress = 8; pending = 9-15)
+
+- [ ] **8. instruments-service ETF/ADR migration coverage gap** — extend the pre/post-state + row-count + dtype assertions pattern (from instruments@4fb84fc prior cycle) to remaining migration scripts. Done-def: every active migration has pre/post tests + instruments QG green.
+
+- [ ] **9. execution-service order_router test gaps** — coverage gap fill on `order_router.py`. Done-def: ≥85% coverage + execution QG green. Note: slot 5 has execution-service Phase 9 cost-model work; order_router is separate surface (no collision).
+
+- [ ] **10. Cross-repo `@pytest.mark.live` audit** — find tests that should be marked `live` (touch real services) but aren't. Issue doc per finding + apply markers. Done-def: audit report + ≥3 markers applied.
+
+- [ ] **11. ml-training-service experiment manifest validation tests** — verify experiment YAMLs validate cleanly + reject malformed inputs (missing required, type errors, unknown hyperparameters). Done-def: 6+ validation tests + ml-training QG green.
+
+- [ ] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green.
+
+- [ ] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green.
+
+- [ ] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green.
+
+- [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
+
+**Conflict rules**: features-service = slot 4 OWNS (you); deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS = slot 9; execution-service order_router separate from slot 5's Phase 9 surface.
+
+Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
