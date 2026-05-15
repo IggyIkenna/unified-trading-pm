@@ -234,6 +234,25 @@ if [ -f "$SCOPE_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Runbook Execution-Owner SSOT (HARD RULE) — baselined ratchet ──
+# SSOT: CLAUDE.md § "Runbook Execution-Owner SSOT (HARD RULE)"
+# Origin: plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md
+# Codification: plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md
+# Asserts every *runbook*.md (excluding archive) declares execution.{owner,cadence,verifier,last_executed}.
+# Current baseline 9 — ratchet down by adding the 4-field block to existing runbooks one PR at a time.
+RUNBOOK_OWNER_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_runbook_execution_owner.py"
+if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Runbook Execution-Owner SSOT check (ratchet mode)..."
+    if python3 "$RUNBOOK_OWNER_CHECKER" --workspace-root "$WORKSPACE_ROOT"; then
+        log_success "Runbook Execution-Owner SSOT check passed"
+    else
+        echo "❌ Runbook Execution-Owner SSOT regression — see CLAUDE.md § 'Runbook Execution-Owner SSOT (HARD RULE)'" >&2
+        echo "   Either add execution.{owner,cadence,verifier,last_executed} to any new runbook, OR" >&2
+        echo "   if intentional debt, re-baseline with: python3 ${RUNBOOK_OWNER_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then

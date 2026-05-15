@@ -66,6 +66,14 @@ this plan owns the QG/automation half.)
       plans without a `## Deferred work — migrated to:` banner if `**DEFERRED**` annotations present; (b)
       filename-convention violations; (c) archived plans whose body mentions `**DEFERRED**` / `post-cutover` /
       `out of scope` without a successor reference. **MIGRATED FROM:** G-2, G-5, G-13.
+- [x] ✅ [DESIGN] P2. **Group A.1 — Runbook Execution-Owner SSOT codification (HARD RULE in CLAUDE.md).** Ship
+      `scripts/quality_gates/check_runbook_execution_owner.py` + baseline file + wire into PM's `quality-gates.sh`.
+      Walks workspace for `*runbook*.md` (excluding archive) and asserts each declares
+      `execution.{owner,cadence,verifier,last_executed}`. Initial baseline = 9 violations (codified at
+      `scripts/quality_gates/runbook_execution_owner_baseline.yaml`); ratchet-down mode prevents regression while
+      future PRs migrate the 9 existing runbooks to canonical format. Origin issue:
+      `plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md`. Shipped at
+      `unified-trading-pm@<pending>`. **MIGRATED FROM:** CLAUDE.md § "Runbook Execution-Owner SSOT (HARD RULE)".
 - [ ] [DESIGN] P2. **Group B — Codex freshness ratchet (G-12 + D-18).** Add a QG ratchet that flags codex docs in
       cutover-critical surfaces (`codex/02-data/`, `codex/04-architecture/`, `codex/05-infrastructure/`,
       `codex/11-project-management/`) lacking `last_reviewed:` frontmatter or older than 90 days. Cross-reference D-18
