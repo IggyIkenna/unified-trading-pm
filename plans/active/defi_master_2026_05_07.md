@@ -328,6 +328,15 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       `lending_rates/features.parquet` (protocol/chain/asset/supply_apy/borrow_apy populated, AAVE_V3 ARBITRUM USDC
       1.62%/2.83%); A4 tracer shim deletion landed strategy@666dc2d; full per-day tracer invocation across the 7-day
       window pending features-onchain Docker rebuild]
+- [ ] [DATA] P2. **Solana LST MTDS gap** — MTDS `lst-rates-central-element-323112` has no Solana data in the
+      2026-04-03..04-09 window (confirmed 2026-05-15: `_filter_lst_yields_by_protocol_asset` skips jitoSOL/mSOL slots in
+      carry tracer YIELD_STAKING_SIMPLE + CARRY_RECURSIVE_STAKED runs). Root cause: Solana handler writes ~monthly
+      granularity (784 rows / 2yr per defi_master § "Real residual concerns" note at line 627). Impact: any CARRY
+      archetype slot that combines a Solana LST (jitoSOL/mSOL) with an EVM lending protocol (AAVE/COMPOUND) will skip
+      for all 7-day back-test windows that have no Solana row. **Not a May-23 blocker** — ETH-leg slots (LIDO-AAVE,
+      ETHERFI-AAVE, ROCKETPOOL-AAVE, LIDO-COMPOUND) produce valid `realised_apy_bps` and cover the archetype gate.
+      **Successor**: `lst_apr_sourcing_method_validated_2026_05_14.md` discusses fix path (daily Solana LST APR via
+      on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
 - [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
       archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
       non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be
