@@ -67,3 +67,10 @@ Operator to confirm Option A or B. Once confirmed:
 
 Severity: P2 (data quality — currently falling back to STRICT_FAIL which may over-suppress).
 Suggested owner: features-service maintainer / operator triage.
+
+## Resolution
+
+✅ **RESOLVED 2026-05-15** (Option A — NAN_FILL, operator-acked via slot-9→5 reassignment):
+
+- **UAC@1f8bcbc** — 2 NAN_FILL entries in `SERVICE_OUTPUT_POLICIES`: `("features-multi-timeframe-service", "intraday_regime")` + `("features-multi-timeframe-service", "micro_regime")`. Comment updated to reflect 8 total entries + rationale. 2 new tests in `test_service_emission_policy.py`.
+- **FS@140b6fe5** — `_SEEDED_FEATURE_GROUPS` in `batch_handler.py`: added `"intraday_regime"` + `"micro_regime"`. Updated docstring + comment. `TestSingleTfGroupsNanFill` class + 2 tests in `test_emission_policy.py`.
