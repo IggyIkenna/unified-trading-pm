@@ -500,9 +500,10 @@ Sourced from orchestrator ping [2026-05-15 11:15 UTC] extended queue (items 4-13
 - [x] [AGENT] P0. **deployment-ui VM log viewer** — `/ops/live-deployments` gets an expandable log panel per VM that
       polls `GET /api/vm/logs/{vm_name}` every 10s. Done-def: component + vitest green + pnpm build green. ✅
       _deployment-ui@cb4f2bf_ (VmLogPanel 10s polling; Events/Logs tab switcher; 4 vitest tests; QG green; 3 pre-existing colour exclusions acknowledged)
-- [ ] [AGENT] P0. **deployment-api deployment diff endpoint** — `GET /api/deployments/diff?from=<sha>&to=<sha>`
+- [x] [AGENT] P0. **deployment-api deployment diff endpoint** — `GET /api/deployments/diff?from=<sha>&to=<sha>`
       compares two deployment snapshots (service versions, config versions); returns added/removed/changed list.
-      Done-def: endpoint + 3+ tests + QG green.
+      Done-def: endpoint + 3+ tests + QG green. ✅
+      _deployment-api@3acda8e_ (DiffEntry + DeploymentDiffResponse; mock synthetic 3-change diff; prod git-show path; 7 tests; QG green)
 - [ ] [AGENT] P0. **deployment-ui deployment diff viewer** — side-by-side diff panel accessible from the
       deployments list. Done-def: component + vitest green + pnpm build green.
 - [ ] [AGENT] P0. **deployment-api cost estimate endpoint** — `POST /api/vm/cost-estimate` accepts VM type + hours
