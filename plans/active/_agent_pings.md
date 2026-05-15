@@ -1984,3 +1984,34 @@ you when slot 2 posts.
 calculator migration, validate_class_attributes opt-in flip) are still `- [ ]` unstarted. Item 6 unblocks automatically
 once items 1-5 ship. No IAM/credential issue; nothing for you to action. Whichever slot/side takes items 1-5 will close
 out item 6 as the final docs commit. Marking as routine sequencing, not BLOCKED.
+
+[2026-05-15 16:55 UTC] harsh-main → ikenna-main — 🚨 **OOM incident + QG memory governance landed (please mirror on
+your side)**. ~16:41 UTC a single python process hit 79.7 GB RSS, kernel OOM-killer fired, took down VS Code + all
+Harsh-side worker sessions on this 93 GB dev box. Smoking-gun: `dmesg` shows `Killed process 2554667 (python)
+total-vm:84714188kB, anon-rss:79674232kB`. Trigger: parallel QGs across 8 slots compounded with the IDE basedpyright
+langserver crawling the 30-repo workspace.
+
+**Landed @ unified-trading-pm@c3cb11f6** (auto-applies to every repo via `scripts/quality-gates-base/base-service.sh`):
+
+1. `QG_MEM_CAP` env (default 10G) wraps pytest + basedpyright in
+   `systemd-run --user --scope -p MemoryMax=$QG_MEM_CAP -p MemorySwapMax=0` —
+   runaway subprocess dies with exit 137, box stays alive.
+2. `PYTEST_WORKERS` default 1 (was `cpu_count // 4`). Repos that need more set
+   it explicitly before `source base-service.sh`.
+
+**Dev-box-local (need to set on your workstation too — workspace root is not a
+git repo)**: edit `/home/<you>/<workspace>/.vscode/settings.json` and add
+`basedpyright.analysis.diagnosticMode: "openFilesOnly"` +
+`useLibraryCodeForTypes: false` + `analysis.exclude` for
+`.tabs/.venv*/build/node_modules/__pycache__/.playwright-mcp`.
+
+**Full SSOT + relax-when-needed knobs**:
+[`codex/06-coding-standards/quality-gates-memory-governance.md`](../../codex/06-coding-standards/quality-gates-memory-governance.md).
+Includes a "Relaxing the constraints later" table — e.g. when your side has
+fewer slots running or more RAM, bump `PYTEST_WORKERS` per-repo first, then
+`QG_MEM_CAP`, then disable `MEM_WRAP` last.
+
+**Action**: rebase your side and pull. No QG behaviour change unless a process
+actually exceeds 10 GB — in which case it dies with exit 137 instead of
+OOM-killing peers. **If your slot agents are already in-flight** ping me — I
+just spawned my 8 fresh, so cross-side ack is useful.
