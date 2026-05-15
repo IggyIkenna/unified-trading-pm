@@ -334,7 +334,7 @@ After launch:
 
 - [x] **3. mtds_defi_handler_perf_benchmark_gap close-out** — ✅ RESOLVED NO_ACTION_MAY23. Issue doc marked resolved (pm@cabd42b9). Perf not on May-23 critical path — future harness design captured in issue doc §2.
 
-- [ ] **4. MTDS data_status_reporter coverage** — per-data_type per-asset_group rows + edge cases (zero-row day, partial day, schema-drift day). Done-def: 4+ tests + MTDS QG green.
+- [x] **4. MTDS data_status_reporter coverage** — ✅ 11 tests (5 classes): _manifest_keys_for_day (4: venue-pair extraction, empty/None/missing-day), _tally_day full/zero-row/partial/manifest-only (5), _summarise multi-day+zero-catalogue (2). false_missing_rate, gap_keys, manifest_only_keys all covered. MTDS QG green. mtds@5580979.
 
 - [ ] **5. PBM canonical_writer integration tests with MTDS** — prior audit was CLEAN (pm@7ef1651f); add explicit integration tests proving MTDS → PBM honors archetype-grain partitioning end-to-end. Done-def: 3+ integration tests + PBM QG green.
 
