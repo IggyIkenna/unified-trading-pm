@@ -445,6 +445,45 @@ gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast
 
 ---
 
+## VM launcher template DRY audit (2026-05-15)
+
+As of 2026-05-15, `deployment-service/scripts/vm/` contains **~83 `launch-*.sh` launchers**. Audit
+findings from B-011 blindspot sweep + post-B-011 consolidation work:
+
+### CODE_BUCKET pattern split
+
+| Pattern | Count | Status |
+|---|---|---|
+| `CODE_BUCKET="deployment-scripts-${PROJECT}"` (variable) | 12 | Post-B-011 canonical form |
+| `CODE_BUCKET="deployment-scripts-central-element-323112"` (hardcoded) | 48 | Pre-B-011 legacy — functional but brittle |
+| No CODE_BUCKET reference | 23 | Use inline `gs://` or no GCS reads |
+
+**Consolidation opportunity**: the 48 hardcoded launchers could be migrated to `"deployment-scripts-${PROJECT}"`.
+This was deferred (pre-B-011 fleet sweep is large scope; no operator direction for full-fleet sweep as of
+2026-05-15). File a new plan if full migration is approved.
+
+### Common boilerplate repeated across all launchers
+
+These ~6 lines appear near-identically in every launcher — a future shared function or sourced helper
+could DRY them, but doing so requires a sourced-file deployment strategy (the helper would need to land
+on the VM or be inlined at `gcloud` call time):
+
+```bash
+--image-family=ubuntu-2404-lts-amd64
+--image-project=ubuntu-os-cloud
+--scopes=cloud-platform
+startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh
+VM_SHUTDOWN_ON_COMPLETION=true
+VM_NAME=${VM_NAME}
+```
+
+### Singleton lock pattern
+
+~36 launchers implement the singleton lock via `gcloud compute instances list --filter='name~"^PREFIX"
+AND status=RUNNING'`. The pattern is correct and uniform — no consolidation needed.
+
+---
+
 ## Cross-references
 
 - Operational howto: [`deployment-service/scripts/vm/README.md`](../../../deployment-service/scripts/vm/README.md)
