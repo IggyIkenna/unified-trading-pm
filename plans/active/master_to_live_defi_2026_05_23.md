@@ -1063,24 +1063,30 @@ pre-cutover scope)
 Operator decision 2026-05-09 (Settled #4 + #5): manual gate + DART 3-way visualization both ship pre-cutover, wired to
 real backend (not mock). Together with item 23 above, the canonical DART operator surface looks like:
 
-- [ ] [AGENT] P0. `pvl-p23a-dart-3way-visualization`: DART surface in `unified-trading-system-ui` renders three views
+- [x] [AGENT] P0. `pvl-p23a-dart-3way-visualization`: DART surface in `unified-trading-system-ui` renders three views
       for any strategy archetype: (a) **side-by-side comparison** — batch / paper / live P&L curves, fills blotter,
       events, position trajectory, risk metrics in a tri-pane or stacked-line-series canvas; (b) **separate per-mode
       views** — pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch); (c)
       **shared filter scope** — asset*group / instrument_type / strategy_family / archetype filters apply across all
       three lanes simultaneously. Wired to **real backend** (not mock fixtures): each lane reads from the mode-tagged
-      event stream + parquet results. *(folded from paper*vs_live_workflow_maturity_2026_05_08)*
-- [ ] [AGENT] P0. `pvl-p23b-dart-mode-data-api`: `deployment-api` (or strategy-service) endpoint
+      event stream + parquet results. *(folded from paper*vs_live_workflow_maturity_2026_05_08)* — **shipped
+      `ui@0c9fb81a` 2026-05-15** (`DartThreeWayView` 3-pane component + `fetchStrategyRuns` in dart-client.ts; 30s poll
+      via Promise.all across 3 modes; wired into terminal/page.tsx)
+- [x] [AGENT] P0. `pvl-p23b-dart-mode-data-api`: `deployment-api` (or strategy-service) endpoint
       `GET /strategy/{id}/runs?mode=batch|paper|live` returns the mode-tagged event/fill/P&L bundle for DART to render.
       Single API surface (per workspace pattern) — DART doesn't talk to three different endpoints. Composes with
-      `pvl-p17d-instruction-envelope-mode-field`. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
-- [ ] [AGENT] P0. `pvl-p23c-manual-trade-gate-ui`: DART surfaces a per-trade manual approval affordance for
+      `pvl-p17d-instruction-envelope-mode-field`. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped
+      `deployment-api@9c608c9` 2026-05-15** (`routes/strategy_runs.py` + registered on `_authenticated_router`; QG
+      green)
+- [x] [AGENT] P0. `pvl-p23c-manual-trade-gate-ui`: DART surfaces a per-trade manual approval affordance for
       `OperationalMode.MANUAL` strategies — operator sees pre-trade risk preview (margin, position-limit, worst-case
       loss) + approve/deny/timeout per instruction. Approval emits `MANUAL_APPROVED` event → execution-service unholds
       from manual-pending queue → fill at live venue. Composes with execution-service's pre-execution gate at the
       manual-pending queue boundary; closed-set timeout policy (cancel-with-audit | escalate | hold) per-strategy
       config. **DART is the canonical operator surface**; fallback approval channels (Telegram interactive button,
       email-with-confirm-link, Slack) ship as a P1 follow-up. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+      — **shipped `deployment-api@9c608c9` + `ui@0c9fb81a` 2026-05-15** (pending-queue backend
+      `routes/manual_pending.py` + `ManualTradeGateDialog` wired into DART terminal header)
 
 > Per-service yamls in `codex/10-audit/repos/<service>.yaml` get extended to track items 4–23. Items 1–3 already in the
 > existing repo readiness yaml are inherited.
