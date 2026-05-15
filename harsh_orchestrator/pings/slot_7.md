@@ -227,7 +227,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name + VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types + fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
 
-- [ ] **20. deployment-api Firebase auth middleware integration tests** — your prior Firebase token verification needs: valid / expired / missing / wrong-issuer / wrong-audience. Done-def: 5+ integration tests + QG green.
+- [x] **20. deployment-api Firebase auth middleware integration tests** — deployment-api@715ac1a: 11 integration tests covering verify_firebase_token (missing header, non-Bearer, empty, expired, wrong-issuer, wrong-audience, valid token) + verify_any_auth (valid API key, invalid API key, no-auth 401, valid Firebase token); QG green.
 
 **Conflict rules**: deployment-api + deployment-ui = slot 7 OWNS; UAC = surgical only (Ikenna primary).
 
