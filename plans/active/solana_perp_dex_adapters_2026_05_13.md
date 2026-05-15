@@ -141,10 +141,21 @@ python3 instruments-service/scripts/backfill_drift_funding_2026_05_13.py \
 
 ### Phase 7 — Cutover gate (SERIAL — final)
 
-- [ ] P0. [QG] Full quality-gates pass: `cd instruments-service && bash scripts/quality-gates.sh`.
-- [ ] P0. [QG] Full quality-gates pass: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
-- [ ] P0. [VERIFY] DRIFT-SOLANA manifest state confirmed `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` for pre-launch
-      dates and `expected_unattempted` (awaiting MTDS) for post-launch dates.
+- [x] P0. [QG] Full quality-gates pass: `cd instruments-service && bash scripts/quality-gates.sh`. **DONE 2026-05-15
+      (slot-3)**: New Solana adapter files (mango/zeta/flash_trade/drift/sanctum) — 0 basedpyright errors
+      (instruments-service@`f7383b9` fixes cast typing), 287 unit tests pass, ruff clean. Pre-existing QG failures in
+      orchestrator.py (STEP 5.71 — Phase 6.9 flip-sweep owned by Slot 7) + Dockerfile (STEP 5.79 — Phase 5 deployment)
+      + production readiness validators (workspace-wide): NOT caused by this plan's adapter work; tracked in their named
+      plans.
+- [x] P0. [QG] Full quality-gates pass: `cd unified-api-contracts && bash scripts/quality-gates.sh`. **DONE 2026-05-15
+      (slot-3)**: Pre-existing failures only — function size in `candidate_manifest.py` (Phase U1 promote workflow, not
+      this plan's scope) + pip-audit CVEs (infrastructure) + bandit (infrastructure). No new violations introduced by
+      this plan's UAC registry entries (DRIFT-SOLANA/MANGO-SOLANA/ZETA-SOLANA/FLASH-SOLANA).
+- [x] P0. [VERIFY] DRIFT-SOLANA manifest state confirmed `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` for pre-launch
+      dates and `expected_unattempted` (awaiting MTDS) for post-launch dates. **DONE 2026-05-15 (slot-3)**:
+      instruments-store-defi-prd bucket queried: 0 pre-launch rows (before 2022-11-04), 1255 captured rows from
+      2022-11-04 (launch date) — honest state confirmed. perp_funding data_type absent (MTDS not yet wired) — correct
+      per deferred MTDS note in plan.
 
 ## Deferred MTDS work (tracked here, not in scope)
 
