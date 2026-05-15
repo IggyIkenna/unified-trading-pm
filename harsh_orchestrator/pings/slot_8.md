@@ -237,7 +237,7 @@ Excellent.
 
 - [x] **11. workspace-manifest.json drift audit** — PM@69e91e99. 10 misalignments across 2 repos: UTL freezegun floor conflict (UTL>=1.5.0 vs canonical>=1.2.2 vs MTDS>=1.2.2 — fix needs coordination); e2e-testing 5 stale internal dep entries + 4 external version floors below canonical (httpx/pytest/pytest-asyncio/websockets). Issue doc filed: workspace_manifest_drift_2026_05_15.md. DAG SVG regenerated.
 
-- [ ] **12. workflow-templates rollout audit** — verify every repo's `.github/workflows/version-bump.yml` (or equivalent) matches `unified-trading-pm/scripts/workflow-templates/` SSOT. Run `bash scripts/workflow-templates/rollout.sh` if needed. Done-def: 0 drift across repos.
+- [x] **12. workflow-templates rollout audit** — PM@542f0e26 (script bug fix) + PM@b066647e (issue doc). Found critical substitution bug: rollout would write `__REPO_NAME__` placeholders into deployed semver-agent.yml, breaking CI for 22 repos. Fixed script; 3 templates still need per-repo propagation (documented as P1 issue). Untracked files from botched run reverted.
 
 - [ ] **13. codex/08-workflows new doc — deployment-flow.md** — operator's perspective: dev → staging → main with QG + version graduation. Done-def: doc + cross-link from CLAUDE.md.
 
