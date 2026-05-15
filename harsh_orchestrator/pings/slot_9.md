@@ -362,10 +362,21 @@ After launch:
 
 - [x] **8. PBM mode parity — degraded conditions** — ✅ 3 tests TestDegradedConditionModeParity: NaN rows stamped correctly (available_at non-null for all rows), pre-stamped available_at preserved (idempotent), extra column does not break schema parity (record_captured called for both BATCH_TARDIS + LIVE_WEBSOCKET). PBM QG green. mdps@92d9be5.
 
-- [ ] **9. MTDS lst_rates handler — additional LST tokens audit** — current 13 EVM + 2 Solana. Newer tokens (ezETH,
-      weETH variants, sanctumSOL)? Done-def: audit report + 1-2 tokens added (or doc-only).
+- [x] **9. MTDS lst_rates handler — additional LST tokens audit** — ✅ Audited 13 EVM + 3 Solana. weETH already
+      present (EtherFi). ezETH: UAC genesis-only (2024-01-24, RENZO venue); multi-call architecture gap noted
+      (RestakeManager.calculateTVLs requires 2-contract call — not supported by single-call _query_rate). sanctumSOL:
+      full Tier-1 SPL stake-pool implementation added (same decode_jito_stake_pool_rate() as jitoSOL/bSOL; pool account
+      SANCTUM_INF_POOL_ACCOUNT needs on-chain verification). uac@2654a7d + mtds@2497c81.
 
 **Conflict rules**: MTDS = slot 9 (you); PBM = slot 9 (you); features-service = slot 4/9 (slot 4 priority); UAC =
 surgical only (Ikenna primary); deployment-api = slot 7.
 
 Self-pivot through items 1 → 9. **Item 1 (B-015 VMs) FIRST**, then 2-9. Ping STARTED + per-item DONE in this file.
+
+---
+
+[2026-05-15 UTC] harsh-slot-9 — 🏁 CYCLE-CLOSE (resumed session post-compaction). All 9 queue items DONE.
+Item 8 (PBM mode parity degraded): mdps@92d9be5. Item 9 (LST tokens audit + sanctumSOL impl):
+uac@2654a7d (ezETH genesis + RENZO venue + sanctumSOL genesis + SANCTUM venue) + mtds@2497c81
+(sanctumSOL Tier-1 SPL stake pool, genesis guard, freshness skip, test fixes for 5 tests, QG bump 10→11).
+Queue exhausted — awaiting next dispatch.
