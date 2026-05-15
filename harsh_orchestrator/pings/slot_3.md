@@ -75,6 +75,8 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
 ---
 
+[2026-05-15 session-4] slot-3 — STARTED new 10-item queue. Beginning item 1: strategy-service signal generation tests across all archetypes.
+
 [2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
