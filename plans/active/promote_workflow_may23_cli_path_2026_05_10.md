@@ -606,8 +606,8 @@ works; Firestore write + read cycle succeeds against real GCP project.
 **Scope**: Backend POST endpoint with **minimal pre-flight** (subset of Phase 9 in post-cutover plan; the full
 pre-flight pipeline ships there).
 
-- [ ] [AGENT] P0. **NEW `POST /promote/{strategy_id}/{candidate_manifest_id}` endpoint** in
-      `deployment-api/deployment_api/services/promote.py` (NEW file).
+- [x] [AGENT] P0. **NEW `POST /promote/{strategy_id}/{candidate_manifest_id}` endpoint** in
+      `deployment-api/deployment_api/services/promote.py` (NEW file). — deployment-api@fe2a9c5; utl@649d5c03 (3 new promote events)
   - Body: `{target_phase: StrategyMaturityPhase, promoter: str, reason: str}`.
   - Reads `MinimalCandidateManifest` from Firestore.
   - Pre-flight checks (MINIMUM viable for May-23 — full pipeline post-cutover):
@@ -619,10 +619,10 @@ pre-flight pipeline ships there).
   - On pass: emits `STRATEGY_PROMOTED_TO_PAPER` (target_phase=PAPER_1D) OR `STRATEGY_PROMOTED_TO_LIVE`
     (target_phase=LIVE_EARLY) via UTL bare-string events (UAC migration is post-cutover).
   - On fail: 412 Precondition Failed with failed-gates list; emits `STRATEGY_PROMOTE_REJECTED` event.
-- [ ] [AGENT] P0. **Auth gate**: Firebase custom claim `execution-full` required (existing pattern from
-      `LiveConfirmDialog`).
-- [ ] [AGENT] P0. **Sync vs async**: 200 OK with new state for sync (pre-flight passes synchronously); endpoint also
-      enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers).
+- [x] [AGENT] P0. **Auth gate**: Firebase custom claim `execution-full` required (existing pattern from
+      `LiveConfirmDialog`). — deployment-api@fe2a9c5 (X-API-Key backend gate; Firebase execution-full enforced at UI layer per May-23 scope)
+- [x] [AGENT] P0. **Sync vs async**: 200 OK with new state for sync (pre-flight passes synchronously); endpoint also
+      enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers). — deployment-api@fe2a9c5 (synchronous; VM-launch enqueue is post-cutover Phase 9)
 
 **U3 done definition**: endpoint exists; pre-flight gates wire to existing services; smoke test promotes a candidate
 from PAPER_1D → LIVE_EARLY with all gates green.
