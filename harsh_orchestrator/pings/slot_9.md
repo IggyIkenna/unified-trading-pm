@@ -278,3 +278,5 @@ these 53 test failures have been sitting since 2026-05-14 P1.
 
 Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md. Conditional-push to live-defi-rollout per usual
 rebase-on-reject.
+
+[2026-05-15 22:15 UTC] harsh-slot-9 — 🔄 STARTED MTDS market_interface 53-test-failure triage+fix (dispatch @17:20 UTC — missed during post-OOM resume). Running pytest on market_interface/unit/ to cluster root causes.
