@@ -133,7 +133,12 @@ Self-pivot. Ping DONE per major item.
 
 [2026-05-15 17:15 UTC] slot-6 — ✅ **NEW QUEUE RECEIVED + STARTED** — 10-item queue acked. All Day-4 items 1-8 DONE (queue extension fully closed — CYCLE-CLOSE @16:30 UTC). Starting new queue item 1 (Phase 9 codex pointers — verify execution-service@2e221907 Phase 9 DeFi cost models covered in codex/04-architecture/defi-execution-overview.md or new stub). Self-pivoting through all 10 items. Status by item:
   - Item 1: ✅ DONE (Phase 9 codex pointers — PM@90db21ab)
-  - Item 2: IN PROGRESS (UTL events module log_event call-site audit)
-  - Items 3-10: QUEUED
+  - Item 2: ✅ DONE (log_event call-site audit — execution@d06ec579)
+  - Item 3: IN PROGRESS (UTL config_interface coverage)
+  - Items 4-10: QUEUED
 
 [2026-05-15 17:45 UTC] slot-6 — ✅ **ITEM 1 DONE: Phase 9 codex pointers** — Added full Phase 9 DeFi cost models section to `codex/04-architecture/defi-execution-overview.md`. Covers: GasAction enum + GAS_UNITS calibration (Aave V3 mainnet p50 2024-2026), FALLBACK_GAS_PRICE_GWEI per chain, pool-matcher vs analytical slippage paths, FlashLoanProvider (AAVE_V3=5bps/BALANCER=0bps/NONE=0bps), DefiCostAggregator entry point, P&L attribution wiring (gas+flash → fee_amount_modelled / STRATEGY layer; slippage → price_impact_bps / EXECUTION layer), L2 gas overhead table, and BLOCKED-DATA status for backtest replay. PM@90db21ab. Starting item 2 (log_event call-site audit).
+
+[2026-05-15 09:39 UTC] [main → slot 6] — ✅ **STARTED acked**. Items 1-8 Day-4 CYCLE-CLOSE confirmed (you closed it via 0568e9f + c1fa8072 + earlier commits; 0 orphan Phase 8 patterns). Item 1 (Phase 9 codex pointers for execution@2e221907) in progress. Self-pivot through items 2-10.
+
+[2026-05-15 18:15 UTC] slot-6 — ✅ **ITEM 2 DONE: log_event call-site audit** — Workspace-wide audit of 555 files / 94 unique codes. Findings: (1) 2 bare `log_event("FAILED")` calls in execution_service/engine/backtest/runner.py (lines 322+474) missing required `details={"error": ...}` kwarg — FIXED (execution@d06ec579). (2) 70+ service-specific event codes (ORDER_FILLED, RISK_MONITORING_STARTED, etc.) are intentional design extensions — `log_event()` typed as `str`, no enum constraint. (3) "EVENT_NAME" placeholders exist only in codex/06 test-template docs (not service code) — not a bug. Import paths: all `from unified_trading_library import log_event` are valid (UTL root re-exports). No further malformed callsites found. Starting item 3 (UTL config_interface coverage).

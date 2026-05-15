@@ -179,3 +179,28 @@ arbitrage-price-dispersion code module path stale. Slot 1 owner action needed fo
 | Codex fix: arbitrage-price-dispersion module path         | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
 | features-onchain: publish lst_native_rate_ts              | DEFERRED | Separate repo / outside slot 3 scope                   | TBD                   |
 | strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | \_position_state/\_gcs_config access in item 5-6 tests | Slot 3 (next session) |
+| Item | Status | Blocker | Owner |
+|------|--------|---------|-------|
+| Codex fix: carry-staked-basis Phase 6B status | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: lst_native_rate + lst_native_rate_ts features | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: peg_drift_threshold_bps in config schema | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: arbitrage-price-dispersion module path | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| features-onchain: publish lst_native_rate_ts | DEFERRED | Separate repo / outside slot 3 scope | TBD |
+| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | _position_state/_gcs_config access in item 5-6 tests | Slot 3 (next session) |
+
+[2026-05-15 09:09 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked — all 12 items done.** Items 4-12 shipped (strategy@932c61e+3e2ec28+ae715aa+d6be15b + e2e-testing@1931889 + pvl-p18a todo filed + deferred codex routed to slot 1). Excellent throughput. The 4 deferred codex fixes (carry-staked-basis Phase 6B status / lst_native_rate features / peg_drift_threshold_bps / arbitrage-price-dispersion module path) → ack'd as slot 1 scope; not your concern.
+
+📋 **NEW QUEUE — ~20 AI-days strategy + DeFi backtest support**:
+1. **strategy-service signal generation tests across all archetypes** — for each MVP archetype (carry_staked_basis, arbitrage_price_dispersion), add tests for signal generation: (a) clean signal under normal conditions, (b) no-signal under threshold-fail, (c) signal-throttle under cooldown. Done-def: 6+ tests/archetype × 2 archetypes + QG green.
+2. **strategy-service archetype state persistence + recovery tests** — VM restart mid-archetype-cycle: positions persist, last-signal time preserved, no double-emit on restart. Done-def: 4+ scenarios + QG green.
+3. **strategy-service venue rotation / failover tests** — when a perp venue goes down (mock 503), strategy correctly routes hedge leg to next available venue from VENUE_PRIORITY list. Done-def: 3+ scenarios + QG green.
+4. **e2e-testing/scripts/defi/ — end-to-end test scenarios** — mocked-but-realistic E2E flows: (a) carry_staked_basis paper trade 1 cycle; (b) APD paper trade 1 cycle. No real fills; use Tenderly fixtures. Done-def: 2 scripts + 1 smoke run logged in plan.
+5. **strategy-service backtest harness performance tests** — measure V2BatchHarness wall-time + memory on synthetic 30-day window; assert under thresholds. Done-def: perf assertions + smoke run + QG green.
+6. **strategy-service archetype dependency graph audit** — verify each archetype's required upstream features are declared correctly (feature contract); fail-loud-at-boot if missing. Done-def: contract test for each archetype + QG green.
+7. **strategy-service quality-gates.sh hardening audit** — verify strategy-service QG matches base-service.sh template; if drift, fix. Done-def: 0 drift + QG green.
+8. **strategy-service Phase 8 codex audit** — extend item 12 from prior session: verify codex/09-strategy/architecture-v2/ matches shipped code; file issue docs for drift. Done-def: audit report.
+9. **batch_live symmetry L4/L5/L6 sweeps — strategy-service** — workspace-wide grep for L4/L5/L6 violations specific to strategy-service; fix all. Done-def: 0 strategy-service L4/L5/L6 violations.
+10. **strategy-service CLI flag combinations audit** — `--operation/--mode/--asset-group` combinations; bad combos should raise loud. Done-def: tests + QG green.
+Self-pivot. Ping DONE per major milestone (the explicit pings prevent main from over-reallocating).
+
+[2026-05-15 09:39 UTC] [main → slot 3] — ✅ **items 1+2+3 acked**: signal-gen tests @0f2c145 (12 tests, w/ documented inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no double-emit confirmed) ✅ + venue failover @9d725eb (5 tests, APD pair-rotation + CSB VENUE_UNAVAILABLE) ✅. Outstanding pace. Continue item 4 (e2e-testing/scripts/defi/ end-to-end test scenarios). Self-pivot through items 4-10.
