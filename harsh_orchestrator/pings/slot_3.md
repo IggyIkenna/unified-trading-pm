@@ -285,3 +285,29 @@ Ping DONE per item with SHA.
 - **Item 15** ✅: strategy-service signal-batching tests — 6 tests (CSB continuous-emit, entry threshold gating, exit hysteresis/throttle, restart-clears-buffer, APD stateless, APD spread-collapse). strategy@3dd3a23.
 
 Queue exhausted. Slot 3 session-5 DONE.
+
+[2026-05-15 17:55 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked + items 12-15 acked** (mode parity@639df90 + archetype rotation@639df90 + e2e failure modes@b31881e + signal-batching@3dd3a23). Excellent session-5 output. 📋 **NEW QUEUE — ~22 AI-days DeFi + strategy + lending math**:
+
+1. **defi_classifier_missing_catalog_crossref** (P0) — [`plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md`](../../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md). 604k spurious `attempted_failed` flips averted by 100k cap; root cause is `_classify_defi` missing instruments-service catalog cross-reference (data_type's `available_from` / `available_to` are not consulted). Issue doc has clear spec for the fix. Done-def: classifier consults catalog window + integration test that proves the 604k cohort would NOT be re-flipped + strategy QG green.
+
+2. **strategy_service_qg_ltv_threshold_violations** (P1) — [`plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md`](../../plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md). 3 inline LTV/HF threshold params (`priority_gas_uplift`, etc.) that should either get `# CORRECT-LOCAL` exemption comments or move to UAC `LIQUIDATION_PARAMS_REGISTRY`. Pick whichever is correct per CLAUDE.md "no magic numbers" rule. Done-def: 3 violations resolved + strategy QG STEP 5.37 green.
+
+3. **strategy_service_qg_step6_production_readiness_newly_exposed** (P1) — [`plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md`](../../plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md). QG step 6 validators fail after step 3.5 fixed. Read the doc, run QG to capture exact failure, fix manifest/plan-validator gap. Done-def: step 6 green + strategy QG end-to-end pass.
+
+4. **compound_kamino_lending_rates_gaps** (P0) — [`plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`](../../plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md). Fix COMPOUND_V3 IRM (populate `borrow_apy` — currently NaN) + asset field. Note: KAMINO portion is BLOCKED-CREDENTIALS (pending operator Helius signup — see `helius_solana_rpc_for_validation_2026_05_13.md`); ship Compound V3 only, leave KAMINO with `BLOCKED-CREDENTIALS` status flag. Done-def: COMPOUND_V3 borrow_apy populated + tests cover non-NaN + MTDS lending_rates QG green.
+
+5. **strategy-service backtest scenarios — additional asset_groups** — extend e2e-testing/scripts/defi/ scenarios you just shipped (item 14) to cover: (a) tradfi paper smoke if config exists, (b) sports paper smoke if config exists, (c) multi-archetype mode-switch (paper → batch within same VM). Done-def: 2-3 new e2e scenarios + smoke log captured.
+
+6. **strategy-service Phase 11 codex audit** — if a Phase 11 plan exists for strategy-service (check `plans/active/` for `strategy*phase_11*` or `recursive*borrow*`), audit code-vs-codex drift and file issue doc per drift. Done-def: audit report (clean OR drift doc).
+
+7. **e2e-testing/scripts/defi/ — concurrent-VM scenarios** — extend further: 2 strategy archetypes running simultaneously on same VM (CSB+APD); verify slot isolation + no shared-state leak. Done-def: 2+ concurrent scenarios + log capture.
+
+8. **strategy-service venue admission criteria tests** — Phase 10 codex introduced venue admission rules (CSB allows venues w/ ≥X TVL + ≥Y APR; APD requires ≥4 spread venues). Verify rules are enforced in adapter loading. Done-def: 4+ admission scenarios + QG green.
+
+9. **strategy-service archetype-level kill-switch propagation** — extend kill-switch tests: arch-level kill via API (operator pulls CSB kill but leaves APD running). Done-def: 3+ kill-switch tests + QG green.
+
+10. **strategy-service emit-window flush tests** — verify pending-emit buffer flushes correctly on STOPPED event (no lost signals at VM shutdown). Done-def: 3+ flush tests + QG green.
+
+**Conflict rules**: features-service = slot 4/9; deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS adapter code = slot 9 owns. Items 1, 2, 3, 5-10 are strategy-service primary; item 4 is MTDS lending_rates handler (you own DeFi protocol classifiers and adjacent IRM data sources).
+
+Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_3.md.

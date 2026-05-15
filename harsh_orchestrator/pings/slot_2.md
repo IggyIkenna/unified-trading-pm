@@ -395,7 +395,15 @@ SHAs: item5=d55aea2, item6=a6f1478, item8=f981a40b (PM), item9=3c42df5. Polling 
 
 4. **deployment_events_lifecycle gsutil command prep doc** (P2) — [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md). 3 gsutil lifecycle policies sitting "queued for operator session". Finalize: produce ONE shell snippet block in the issue doc the operator can copy-paste, with explicit `gsutil ls` verification commands before + after. Done-def: doc has "Ready to run" section with copy-paste-able commands.
 
-**Conflict rules**: deployment-api = slot 7 only; features-service = slot 4/9 (skip — slot 4 owns first, then slot 9); UAC = surgical edits only (Ikenna primary). Items 1-4 are all PM/cross-repo audit work — no slot collision risk.
+5. **deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc as item 3. After os.getenv slice closes, take the type:ignore slice next: 466 `# type: ignore` occurrences workspace-wide. Bin them: (a) "legitimate suppression with typed-out reason" — leave; (b) "lazy bypass" — fix the underlying type problem. Done-def: bin report + 50+ lazy bypasses fixed across 3+ repos with QG green per repo.
+
+6. **deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc. `try / except ImportError / fallback` patterns are workspace-banned (CLAUDE.md "no try/except fallback imports"). Find + delete all instances + assert hard import works. Done-def: 0 ImportError fallback patterns workspace-wide + QG green for affected repos.
+
+7. **workspace-wide bucket-name SSOT scan** — every GCS `gs://` f-string inline should go through `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Find violations, fix them. QG STEP 5.69 enforces but coverage may be incomplete. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers the new sites.
+
+8. **deployment-service Phase 10 codex audit** — your prior cycle did Phase 8 + 9. Phase 10 (venue admission rules, batch=live archetype grain) was introduced for strategy-service but deployment-service VM launchers may reference outdated patterns. Audit + file drift doc per gap. Done-def: audit report (clean OR drift doc).
+
+**Conflict rules**: deployment-api = slot 7 only; features-service = slot 4/9 (skip — slot 4 owns first, then slot 9); UAC = surgical edits only (Ikenna primary). Items 1-8 are all PM/cross-repo audit/sweep work — no slot collision risk.
 
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_2.md.
 

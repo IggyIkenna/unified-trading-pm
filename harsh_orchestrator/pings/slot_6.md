@@ -290,3 +290,17 @@ Then items 11-13 buffer (signing stress + UAC custody round-trip + codex/04-arch
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_6.md.
 
 [2026-05-15 POST-OOM-2 UTC] slot-6 — 🟢 **STARTED NEW QUEUE** — 5-item queue acked (~12 AI-days UTL QG + codex drift + SIT). Reading issue docs for all 5 items. Self-pivoting through 1→2→3→4→5.
+
+[2026-05-15 18:05 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 1-5). Push to ~20 AI-days:
+
+6. **codex_04_architecture_drift_audit cleanup** (P3 batch from your prior cycle) — the issue doc you just filed lists 4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` → `basedpyright` references. Mechanical sed-style fixes, ~30 min. Done-def: 8 docs updated + grep confirms 0 stale refs.
+
+7. **UTL test additions for QG_MEM_CAP behavior** — `base-service.sh` (this morning's PM@c3cb11f6) added `MEM_WRAP` array + macOS fallback warning. Add UTL-side bash smoke tests verifying: (a) Linux path builds MEM_WRAP; (b) macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke tests + UTL QG green.
+
+8. **uac_qg_preexisting_size_violations — Harsh-side surgical 1-file** (P2) — [`plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md`](../../plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md). 5 pre-existing size violations in UAC. Ikenna primary owner — pick the SMALLEST/clearest-cut of the 5; refactor that one only; leave the other 4 for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+
+9. **codex/06-coding-standards/quality-gates.md SSOT refresh** — verify the SSOT doc cross-links to the new `codex/06-coding-standards/quality-gates-memory-governance.md` (this morning's PM@bc6e15e6 + ca3fad47 followup). The new doc is standalone; quality-gates.md should reference it from § "Memory Governance" or similar. Done-def: cross-link added + sweep finds no stale references to the OLD `cpu_count // 4` default.
+
+**Conflict rules (unchanged)**: UAC = surgical edits ONLY (item 8 take 1 file only); MTDS = slot 9; features-service = slot 4/9; strategy-service codex docs = OK for you.
+
+Self-pivot through items 6-9 after the 5-item primary queue closes.
