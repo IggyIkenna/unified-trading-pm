@@ -179,3 +179,5 @@ types, add them to UTL events module + tests. Done-def: events module updated OR
 9. **UTL kill-switch wiring cross-service tests** — verify kill-switch propagates correctly across strategy → risk → execution. Integration test. Done-def: 2+ propagation scenarios + UTL/integration QG green.
 10. **risk-and-exposure-service Phase 6.8+ extensions** — if any newer Phase items exist in risk-and-exposure (check Phase 6.8 / 6.9 docs); add coverage. Done-def: gap fill + QG green.
 Self-pivot. Ping DONE per major item — in slot_5.md ping file, please.
+
+[2026-05-15 21:10 UTC] slot-5 — ✅ DONE item 6 (risk-and-exposure-service VAR + drawdown tests): risk-and-exposure-service@75f9d17 — 5 tests in TestVarAndDrawdownHistoricalScenarios: (1) GFC 2008: stress_var(3.5×)<-5% + peak drawdown>20%; (2) COVID 2020: stress_var(2.5×)<-2% + peak drawdown>10%; (3) CRYPTO Black Thursday: stress_var(5.0×)<-10% + drawdown>45%; (4) cross-scenario ordering GFC<COVID<=baseline; (5) drawdown→0 after new ATH. QG ✅ (70s). Moving to item 7: execution-service Tenderly-fork integration tests.
