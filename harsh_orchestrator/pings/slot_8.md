@@ -4,6 +4,12 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 9 UTL changelog automation. UTL@505cc8a: scripts/generate_changelog.py — generates CHANGELOG.md from git log using conventional commits; grouped by feat/fix/refactor/perf/docs/test/ci/chore; supports --unreleased/--from/--to/--output; basedpyright clean.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 8 pyproject.toml workspace-wide audit. PM@54afee99: issue doc filed — 15 repos at line-length=100 (should be 120); 3 repos below 70% fail_under floor; 12 repos missing pyproject.toml; PM pyrightconfig on standard not strict. P1 mechanical fix: 15 repos need line-length update.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 1 QG step duration profiling. PM@c4b87640: scripts/quality_gates/profile_qg_steps.py — per-step wall-time profiler; ran on ibkr-gateway-infra: 40.3s total, STEP 5.64/5.65 AST check = 27.0s (67.2% of total); optimization hints for TESTS/TYPE-CHECK/CODEX-COMPLIANCE/LINT. Done-def met.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 10 SIT May-23 critical path audit. PM@45a8eaf5: issue doc filed — carry_staked_basis + APD + mode-switch scenarios all missing from SIT test suite. 5 existing DeFi playbooks cover infra events only (gas/slippage/MEV/reorg/oracle). 3 new scenarios recommended.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 7 CI/CD flow doc. PM@45a8eaf5: codex/08-workflows/ci-cd-flow.md created — two-pass model, branch policy, quickmerge variants, dep-branch flow, version bump, agent vs human paths, conditional push protocol.
