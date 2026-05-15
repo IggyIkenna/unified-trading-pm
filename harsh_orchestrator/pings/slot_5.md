@@ -268,10 +268,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 - [x] **7. execution-service Tenderly-fork integration tests** — execution-service@e60bc4b1 (4 tests, auto-skip without creds)
 - [x] **8. execution-service venue admission tests** — execution-service@44c4d584 (7 tests, Phase 10 codex rules)
 - [x] **9. UTL kill-switch cross-service tests** — execution-service@cd2d1927 (2 propagation scenarios)
-
-### Remaining (in-progress = 10; pending = 11-19 fresh extension)
-
-- [ ] **10. risk-and-exposure-service Phase 6.8+ extensions** — your in-flight item. Check Phase 6.8 / 6.9 docs for newer items in risk-and-exposure; add coverage. Done-def: gap fill + QG green.
+- [x] **10. risk-and-exposure-service Phase 6.8+ extensions** — risk-and-exposure-service@91d9373 (10 tests: compute_component_var + RegimeDetector gap fill). QG ✅ (71s).
 
 ### Fresh extension (items 11-19, ~20 AI-days execution + risk + pnl)
 
@@ -295,4 +292,9 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 **Conflict rules**: execution-service = slot 5 (you) + slot 4 (order_router only — separate surface); risk-and-exposure = slot 5 (you); pnl-attribution = slot 5 (you); UAC = surgical only (Ikenna primary). No collisions on this queue.
 
-Self-pivot through items 10 → 19. Ping STARTED + per-item DONE in this file.
+[2026-05-15 22:30 UTC] slot-5 — ✅ DONE item 10 (risk-and-exposure-service Phase 6.8+ extensions):
+risk-and-exposure-service@91d9373 — 10 new tests in test_var_attribution_regime.py: compute_component_var
+gaps: insufficient data guard, negative weight CeFi perp short, carry_staked_basis DeFi+CeFi hybrid attribution,
+diversification property; RegimeDetector gaps: too-few-returns guard, vol+correlation → crisis, vol+drawdown_velocity →
+crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stressed multiplier 1.5×. QG ✅ (71s).
+Queue items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
