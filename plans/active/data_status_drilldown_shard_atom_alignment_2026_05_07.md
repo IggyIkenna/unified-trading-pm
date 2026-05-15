@@ -425,12 +425,13 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 - [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
-- [ ] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
-      repos. **DEFERRED**: remaining open items are Phase 3 (SmartDownloadButton row_key wire-in), Phase 6 Playwright
-      smoke, `canonical_question_group` shard axis (→ `predictions_master_2026_05_07.md`), cross-registry consistency
-      test (→ defers until predictions Plan A), and rollup-side metric inconsistency (→
-      `infrastructure_master_2026_05_07.md`). Phase 0 Phase 2 operator visual smoke is DEFERRED-PER-USER (operator runs
-      `restart-deployment-stack.sh` + manual walk at localhost:5183).
+- [x] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected
+      repos. **DONE 2026-05-15**: Phase 3 shipped (deploy-missing preview endpoint + Deploy-Missing button). Remaining
+      open items are DEFERRED with named successors: Phase 3 SmartDownloadButton row_key wire-in (Phase 3 follow-up);
+      Phase 6 Playwright smoke (successor TBD); `canonical_question_group` shard axis
+      (→ `predictions_master_2026_05_07.md`); cross-registry consistency test (→ defers until predictions Plan A);
+      rollup-side metric inconsistency (→ `infrastructure_master_2026_05_07.md`); Phase 0/2 operator visual smoke
+      DEFERRED-PER-USER (operator runs `restart-deployment-stack.sh` + manual walk at localhost:5183).
 
 ## Success criteria
 
