@@ -455,8 +455,9 @@ risk-and-exposure lint.
    (research 1.2×, ~3 = 3.6 cal) **DONE (Phase 1 pre-existing)**: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines)
    - P1 orchestrator sub-agent loop `[x]` (`PM@1a056988`). P2 (relocate .claude/rules — lowest-impact) deferred per plan
      body; Phase 1 scope complete.
-8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — close out shard-atom alignment per the
-   shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal)
+8. ✅ **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — close out shard-atom alignment per the
+   shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal) — PM@163da45a: plan P2 closeout `[x]`
+   (Phase 3 shipped; remaining deferred items have named successors). Backfilled 2026-05-15.
 9. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
    0.6×, ~3 = 1.8 cal) — strategy-service@8b20a32: Phase 1 wire-results-aggregation complete; \_write_csv() +
    summary.csv output + 24 tests pass (30d smoke + unit CSV roundtrip)
