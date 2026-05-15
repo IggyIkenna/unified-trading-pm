@@ -52,3 +52,5 @@ After item 3 (execution alpha smoke test extensions) pings DONE:
 Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
 
 [2026-05-15 07:16 UTC] slot-3 — ✅ DONE item 5 carry_staked_basis validation: 15 tests (resolver/threshold/hedge-ratio/LST-gate), QG green (strategy@0d67588). Pivoting to item 6: V2BatchHarness GCS mock conftest extensions.
+
+[2026-05-15 07:28 UTC] slot-3 — ✅ DONE item 6 V2BatchHarness GCS mock conftest extensions: 4 new fixture variants (empty_initial_positions, stale_manifest, missing_venue_data, daily_deposits) + 8 new tests, 552 v2 tests pass (strategy@932c61e). Pivoting to item 7: batch_live symmetry strategy-service follow-on.
