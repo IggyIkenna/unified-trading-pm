@@ -272,8 +272,11 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    cite) deferred to next session/slot — post-cutover P1 per plan body, not May-23 blocker. Slot 7 prioritised
    writegate Gate-4 audit + audit_records pre-cutover gate over post-cutover refactor. (refactor 0.4×, ~6 = 2.4
    cal; ~0.4 cal shipped so far)
-3. **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** (carry from slot 10 reassignment) — 9 services audit; β verdict
-   closes Gate 4. (research 1.2×, ~4 = 4.8 cal)
+3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services
+   (`PM@3a4afdc5`); per-service emission boundary is canonical (vs centralised α). Audit table added at
+   `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4
+   CLOSED**: every Phase 6.6/6.7/6.8 service has `[x]` checkbox + sha evidence + QG STEP 5.71 paired-callsite
+   check passes workspace-wide. (research 1.2×, ~4 = 4.8 cal)
 4. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items. (research 1.2×,
    ~4 = 4.8 cal)
 5. **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — open todos workspace-wide. (design 0.6×, ~4 = 2.4 cal)
