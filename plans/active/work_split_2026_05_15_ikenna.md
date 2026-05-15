@@ -103,12 +103,12 @@ Plan fan-out: `emerging_perp_venue_adapters_broken` remainder + Solana DEX adapt
 Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_price_dispersion_finalisation_2026_05_09`
 (carry from slot 9 reassignment).
 
-1. 🔄 **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2 authenticated
-   2026-05-15 with Spot + Derivatives perms; also Kraken testnet API onboarded). Wire `KrakenCeFiAdapter` scaffold from
-   `execution-service@4d4d8e12d` to live data flow. (infra 0.8×, ~3 = 2.4 cal)
-   **PARTIAL 2026-05-15 (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST
-   via aiohttp transport (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean.
-   Remaining: private signed transport (`place_order`/`cancel_order`/`get_account_state`) + WS subscriptions.
+1. 🔄 **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2
+   authenticated 2026-05-15 with Spot + Derivatives perms; also Kraken testnet API onboarded). Wire `KrakenCeFiAdapter`
+   scaffold from `execution-service@4d4d8e12d` to live data flow. (infra 0.8×, ~3 = 2.4 cal) **PARTIAL 2026-05-15
+   (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST via aiohttp transport
+   (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean. Remaining: private signed
+   transport (`place_order`/`cancel_order`/`get_account_state`) + WS subscriptions.
 2. **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal)
 3. **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
@@ -177,8 +177,13 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
 5. **`tradfi_master_2026_05_07` venue + symbology coverage audit** (carry from 14 May #8). (research 1.2×, ~3 = 3.6 cal)
 6. 🔴 **BLOCKED-CREDENTIALS** **CME/EUREX 1-week test backfill** (carry from 14 May #10) — same Databento account-lock
    as items 1 + 2. Combined unblock ask in `pings/slot_5.md` (PM@`6d518a4f`). (infra 0.8×, ~2 = 1.6 cal)
-7. **`strategy_service_qg_ltv_threshold_violations_2026_05_15` close** (carry from 14 May #11) — migrate to UAC
-   `LIQUIDATION_PARAMS_REGISTRY`. (refactor 0.4×, ~1 = 0.4 cal)
+7. ✅ **`strategy_service_qg_ltv_threshold_violations_2026_05_15` close** (carry from 14 May #11) — migrate to UAC
+   `LIQUIDATION_PARAMS_REGISTRY`. (refactor 0.4×, ~1 = 0.4 cal) — **VERIFIED ALREADY CLEAN 2026-05-15**: ran exact STEP
+   5.37 regex on `strategy_service/engine/` — every match is annotated `# CORRECT-LOCAL` (gas uplift, runtime config,
+   func defaults) or `# noqa: qg-inline-threshold`. Live `bash scripts/quality-gates.sh` reports
+   `✅ STEP 5.37: No inline HF/LTV/margin thresholds (UAC LIQUIDATION_PARAMS_REGISTRY)`. Triage exemptions already
+   correctly applied; issue doc at `plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md` was
+   self-resolving (filed today + cleaned later same day by earlier slot-5 commits).
 8. **`mtf_intraday_micro_regime_policy` 2 dict entries** (carry from slot 9 #4 reassignment). (design 0.6×, ~1 = 0.6
    cal)
 9. **`sports_retired_data_types_code_cleanup` non-sports half** (carry from 14 May #7) — retire dead data_types from
@@ -290,8 +295,7 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
 5. **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) — sequencing
    items + TradFi cross-asset items. (research 1.2×, ~3 = 3.6 cal)
 6. **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
-   Execution-Owner SSOT gaps. (design 0.6×, ~3 = 1.8 cal)
-<<<<<<< Updated upstream
+   Execution-Owner SSOT gaps. (design 0.6×, ~3 = 1.8 cal) <<<<<<< Updated upstream
 7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup. (infra
    0.8×, ~3 = 2.4 cal)
 8. **Cluster B pnl-attribution-service lint sweep**. (refactor 0.4×, ~2 = 0.8 cal)
@@ -300,23 +304,20 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue doc flipped at
    `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler fire on 2026-05-16
    00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`. Backfill of pre-cron dates
-   remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal)
-=======
-7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup.
-   (infra 0.8×, ~3 = 2.4 cal)
-8. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
-   `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`.
-   Verified 15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`.
-   (refactor 0.4×, ~2 = 0.8 cal)
-9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped
-   canonical `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision:
-   independently built Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue
-   doc flipped at `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler
-   fire on 2026-05-16 00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`.
-   Backfill of pre-cron dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC).
-   (infra 0.8×, ~2 = 1.6 cal)
->>>>>>> Stashed changes
-10. **Reserve**: in-stack pickup for any UAC drift surfacings.
+   remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal) =======
+10. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup. (infra
+    0.8×, ~3 = 2.4 cal)
+11. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
+    `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`. Verified
+    15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`. (refactor 0.4×, ~2 = 0.8 cal)
+12. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped canonical
+    `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision: independently built
+    Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue doc flipped at
+    `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler fire on 2026-05-16
+    00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`. Backfill of pre-cron
+    dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal)
+    > > > > > > > Stashed changes
+13. **Reserve**: in-stack pickup for any UAC drift surfacings.
 
 ---
 
