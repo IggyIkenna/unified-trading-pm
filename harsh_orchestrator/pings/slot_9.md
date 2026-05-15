@@ -78,3 +78,12 @@ Poll `_agent_pings.md` every 30 min for B-015 greenlight (Ikenna phantom-fix). W
 8. **MTDS Pyth oracle integration tests** — Pyth UNBANNED 2026-05-06 for Solana on-chain price feeds. Add MTDS-side Pyth adapter integration tests (happy-path, stale-feed detection, missing-symbol). Done-def: 3+ tests + MTDS QG green.
 9. **PBM Phase 8 service-output emission tests** — verify `_resolve_policy_output_data_type` + `_publish_emission_check` exist on every PBM publish path. Add tests for STRICT_FAIL/WARN_ONLY/NAN_FILL outcomes. Done-def: callsite coverage + QG green.
 10. **MTDS handler retry-and-backoff audit** — verify all 5 DeFi handlers (lst_rates, evm_defi, gas_fee, solana_defi, eigenlayer_rewards) respect 429 rate-limit headers with exponential backoff. Add tests where missing. Done-def: each handler tested for 429 → backoff → retry → success scenario.
+
+[2026-05-15 07:45 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION 2** — slot 4 features-service work is ~8-10 AI-days; adding 4 more pure-MTDS/PBM items so you never idle waiting on slot 4. Item 6 stays DEPRIORITIZED — pick it up only after slot 4 features-service close-out ping.
+
+11. **MTDS calendar boundary tests** — date-rollover at midnight UTC: verify handlers correctly partition (a) trades spanning 23:59→00:01; (b) end-of-month rollovers; (c) DST edge cases (no DST in UTC but venue-local DST when timestamps converted). Done-def: 6+ boundary tests + MTDS QG green.
+12. **MTDS adapter rate-limit + cache layer tests** — every MTDS venue adapter (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken + DEXes) should have rate-limit retry + response-cache tests. Audit + fill gaps. Done-def: per-adapter test parity confirmed + MTDS QG green.
+13. **PBM phantom-manifest detection unit tests** — write tests for the phantom detection logic in `market-data-processing-service` (manifest row exists but parquet missing OR vice-versa). Use synthetic fixture data. Done-def: 4+ phantom-detection scenarios covered + PBM QG green.
+14. **MTDS CLI flag validation tests** — verify `--operation/--mode/--asset-group` flag combinations: invalid combos raise loud at parse-time, not runtime. Add tests if missing. Done-def: bad-flag combos rejected + good combos pass + MTDS QG green.
+
+After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred features-service item = ~24 AI-days non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
