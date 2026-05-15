@@ -132,17 +132,20 @@ The infrastructure exists (Pyth Hermes feeds for JITOSOL/mSOL/bSOL/INF landed 20
 
 This is the only phase that requires a wholly new data_type.
 
-- [ ] [UAC] P1. Add `native_staking_rates` to `DataType` enum in UAC `canonical/crosscutting/data_types.py` (if not
+- [x] [UAC] P1. Add `native_staking_rates` to `DataType` enum in UAC `canonical/crosscutting/data_types.py` (if not
       already present). Schema: `(chain, epoch, validator_vote_account, commission_pct, base_apy, mev_apy, total_apy)` —
       confirm against `sim_schemas.py:101` `native_staking_apr` field.
-- [ ] [UAC] P1. Register `SchemaContract` for `native_staking_rates` in
+      (UAC@8acadce — NATIVE_STAKING_RATES added to DataType in candle_schema.py; BATCH_SOLANA_RPC + BATCH_HELIUS_RPC
+      added to PipelineMode; availability_semantics + source_priority wired; 2246 tests pass)
+- [x] [UAC] P1. Register `SchemaContract` for `native_staking_rates` in
       `unified_api_contracts/internal/schemas/contracts.py` for `defi` asset group.
-- [ ] [instruments-service] P1. Create `adapters/defi/solana_native_staking.py`: - Sources: Solana RPC
-      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint
-      `https://mainnet.helius-rpc.com/v0/addresses/{validator}/staking-rewards` (requires Helius API key — file
-      `BLOCKED-CREDENTIALS` ping if key not in config). - Data type: `native_staking_rates` per epoch (daily-ish, ~2.5
-      day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). -
-      `record_empty(reason=EXPECTED_PRE_GENESIS_CHAIN)` for pre-genesis dates. - Unit tests with mock RPC responses.
+      (UAC@8acadce — DEFI_STAKING_NATIVE_STAKING_RATES with epoch/validator_vote_account/commission_pct/base_apy/
+      mev_apy/total_apy columns registered)
+- [x] [instruments-service] P1. Create `adapters/defi/solana_native_staking.py`: - Sources: Solana RPC
+      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key — BLOCKED-CREDENTIALS
+      ping filed in slot_2.md 2026-05-15). - Data type: `native_staking_rates` per epoch (daily-ish, ~2.5 day
+      granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
+      (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
 - [ ] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy.
 

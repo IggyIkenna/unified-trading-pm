@@ -182,3 +182,27 @@ Without it: carry_staked_basis archetype has no Solana-leg performance baseline
 
 **To approve**: reply `[ack]` below to unblock VM launch.
 **To launch after ack**: `bash deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`
+
+---
+
+## [Slot 2 → Operator] 2026-05-15 — CREDENTIAL APPROVAL REQUEST: Helius API key (native_staking_rates mev_apy)
+
+**Status**: 🟡 BLOCKED-CREDENTIALS — Helius API key needed for per-validator mev_apy
+
+```
+CREDENTIAL APPROVAL REQUEST — Helius RPC (Solana native staking mev_apy)
+Vendor: Helius (helius.dev) — free tier available; paid for higher rate-limits
+What I need: Helius API key (HELIUS_API_KEY env var) for the MTDS native_staking_handler
+Endpoint: https://mainnet.helius-rpc.com/?api-key=<KEY> (Solana RPC JSON-RPC)
+Account to use: existing ikennaigboaka@gmail.com account or new account needed?
+Unblocks: mev_apy column in native_staking_rates data_type (Solana native staking)
+         → carry_staked_basis Solana leg total_apy computation
+Without it: MTDS handler ships with mev_apy=None (nullable column); base_apy + total_apy
+           from free Solana RPC getInflationRate still land. Integration tests skip.
+```
+
+**Adapter commit**: instruments-service@9d7cfc7 (live-defi-rollout)
+**UAC SchemaContract**: UAC@8acadce — DEFI_STAKING_NATIVE_STAKING_RATES (mev_apy nullable=True)
+
+**To provide**: Add `HELIUS_API_KEY=<key>` to the MTDS config/secrets.
+**Note**: base_apy + total_apy collect via free Solana RPC without credentials.
