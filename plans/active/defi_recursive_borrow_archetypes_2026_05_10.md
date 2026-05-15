@@ -340,8 +340,9 @@ These items land in this plan (in-scope adjacent + P0 unblocker):
 - [x] [UAC] **P0**. Add `AAVE_V3_BASE_RESERVES` + `AAVE_V3_BASE_EMODE_CATEGORIES` to `defi_reserve_params.py`. Same
       low-confidence marking convention. (verified 2026-05-13: `registry/defi_reserve_params.py:183`
       `AAVE_V3_BASE_EMODE_CATEGORIES` + `:385` `AAVE_V3_BASE_RESERVES` shipped + dispatch wired @ `:752`)
-- [ ] [UAC] **P0**. Update `defi_reserve_params.py` module docstring (line 1-22) — claims "verified against on-chain
+- [x] [UAC] **P0**. Update `defi_reserve_params.py` module docstring (line 1-22) — claims "verified against on-chain
       getConfiguration() 2026-03-29" but 12+ Aave V3 ETH reserves are missing; refresh audit date OR scope the claim.
+      (UAC@4ec2256 — docstring refreshed to "Last updated: 2026-05-15" + multi-chain section)
 - [x] [UAC] **P0**. Backfill `ARCHETYPE_CONFIG_SEED` in `internal/architecture_v2/archetype_config.py` with
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` rows. Without these the enum is
       shipped but the seed dict raises `KeyError` at runtime via `get_archetype_config()`. Suggested Family 1 defaults:
@@ -349,12 +350,12 @@ These items land in this plan (in-scope adjacent + P0 unblocker):
       `kill_switch_position_breach_pct=0.025`. (verified 2026-05-13: UAC
       `internal/architecture_v2/archetype_config.py:147` ARCHETYPE_CONFIG_SEED contains both keys at `:182`
       LENDING_ONLY + `:197` PERP_HEDGED)
-- [ ] [UAC] **P1**. Extend `AAVE_V3_ETHEREUM_RESERVES` with `RETH` (proposed
-      `max_ltv=0.745, liquidation_threshold=0.79, liquidation_bonus=0.075, reserve_factor=0.15`); admit `RETH` to
-      ETH_CORRELATED E-Mode `assets` frozenset.
-- [ ] [UAC] **P1**. Investigate adding 12+ missing Aave V3 Ethereum reserves (OSETH, RSETH, WEETHS, LUSD, FRAX, SDAI,
-      USDS, PYUSD, USDE, SUSDE, CRVUSD, GHO). SUSDE + GHO are top-3 cell candidates so this is unblocker for
-      cell-selection ranking refinement.
+- [x] [UAC] **P1**. Extend `AAVE_V3_ETHEREUM_RESERVES` with `RETH`; admit `RETH` to ETH_CORRELATED E-Mode `assets`
+      frozenset. (UAC@4ec2256 — RETH added to AAVE_V3_ETHEREUM_RESERVES + ETH_CORRELATED E-Mode)
+- [x] [UAC] **P1**. Investigate adding 12+ missing Aave V3 Ethereum reserves. SUSDE + GHO + SDAI + FRAX + LUSD added
+      (top candidates); remaining (OSETH, RSETH, WEETHS, USDS, PYUSD, CRVUSD) deferred to
+      defi_recursive_borrow_archetypes_post_cutover as P2 (not blocking May-23 cell selection). (UAC@8564e31 —
+      SUSDE/GHO/SDAI/FRAX/LUSD added with low-confidence markers)
 - [ ] [UAC] **P1**. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` (two distinct
       Arbitrum markets) + `COMPOUND_V3_BASE_RESERVES`.
 - [ ] [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator —
