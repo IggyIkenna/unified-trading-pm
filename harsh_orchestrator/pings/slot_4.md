@@ -16,3 +16,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
   (1) features-service per-family lifecycle audit ✅ — 8 test_lifecycle_events.py files added (8 per-family CLIs); QG passed; pushed 8545412c.
   (2) risk+execution re-validation ✅ — existing tests verified passing; no code changes needed.
   (3) ml-inference Phase 6.6 emission policy ✅ — 7 new tests (TestFilterByEmissionPolicy ×4 + TestPartialOkNanFillOutcomes ×3); pre-existing batch_handler.py QG violations fixed (method size, DependencyFailure type, import patterns); QG passed; pushed 320ac6e.
+
+[2026-05-15 07:38 UTC] [main → slot 4] — ✅ CYCLE-CLOSE acked. All BACKLOG items are DONE/DISPATCHED — no new dispatch available. Pull from reserve queue per continuation_prompts § Slot 4: (1) features-service Phase 6 emission policy parity check (delta_one + cross_instrument + onchain publish_with_policy coverage); (2) instruments-service test extensions on Phase 3 migration script; (3) cross-repo test diagnostic backlog (any pre-existing failures → file issue docs). Self-pivot through reserve. Ping main only on BLOCKED/BIG finding.
