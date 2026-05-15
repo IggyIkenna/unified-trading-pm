@@ -123,14 +123,24 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    (ASTER adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
    approval >1 week + EXTENDED-STARKNET canonical API URL). Issue doc:
    `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md` § "UPDATE 2026-05-15".
-4. **`arbitrage_price_dispersion_finalisation_2026_05_09`** (carry from slot 9 reassignment) — push remaining
-   finalisation items. (design 0.6×, ~4 = 2.4 cal)
-5. **Hyperliquid arb_price_dispersion eligibility close** — verify USDC-margin + 7-venue dispersion universe. (research
-   1.2×, ~2 = 2.4 cal)
-6. **`helius_solana_rpc_for_validation` final close** (credentials now in vault — last wire-up). (infra 0.8×, ~2 = 1.6
-   cal)
-7. **Aster + Bybit UTA `carry_staked_basis` LST_AS_MARGIN final** — eligibility-matrix close. (research 1.2×, ~2 = 2.4
-   cal)
+4. ✅ **`arbitrage_price_dispersion_finalisation_2026_05_09`** (carry from slot 9 reassignment) — push remaining
+   finalisation items. (design 0.6×, ~4 = 2.4 cal) **ALREADY DONE 14 May, archived 2026-05-15 by slot-3**:
+   20/20 todos shipped 2026-05-09/10. Plan moved to `plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md`
+   yesterday. Only deferred item: live cutover dry-run → tracked in `master_to_live_defi_2026_05_23.md` Group F item 17.
+5. ✅ **Hyperliquid arb_price_dispersion eligibility close** — verify USDC-margin + 7-venue dispersion universe.
+   (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: 14 May session shipped UAC@052120d (HYPERLIQUID+ASTER
+   in VENUE_DATA_TYPE_CAPABILITIES) + strategy-service@c7a3f92 (4 eligibility tests). Verified 7-venue dispersion
+   universe in `strategy-service/.../target_universe/catalog.py:623-631`:
+   `hyperliquid` + `deribit` + `aster` + `kraken` + `binance` + `bybit` + `okx` — all 7 wired with ShareClass marker
+   (USDC/USDT). HL specifically: USDC margin, 0 haircut → eligible.
+6. ✅ **`helius_solana_rpc_for_validation` final close** (credentials now in vault — last wire-up). (infra 0.8×, ~2 = 1.6
+   cal) **DONE 2026-05-15 (slot-3)**: yesterday's `execution-service@a300f7c` shipped Helius Solana RPC dispatch for
+   SOLANA_CLMM + SOLANA_AMM shapes in `capture_golden_swaps.py` (18 helius references confirmed). Operator provisioned
+   `helius-api-key` vault entry 2026-05-15; slot 2 owns mev_apy integration; slot 3 wire-up already on LDR.
+7. ✅ **Aster + Bybit UTA `carry_staked_basis` LST_AS_MARGIN final** — eligibility-matrix close. (research 1.2×, ~2 = 2.4
+   cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
+   UTA stETH=True (10% haircut) → `lido-bybit` slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
+   Eligibility matrix sealed.
 8. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
 
 ---
