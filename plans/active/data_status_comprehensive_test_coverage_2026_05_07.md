@@ -211,9 +211,9 @@ the data-status / drilldown / deploy_missing services are GCS-only.
 - [x] [unified-cloud-interface] P0. `tests/test_storage_client_protocol_parity.py` — assert
       `StorageClient.read_parquet`, `list_blobs`, `get_blob_metadata` produce the same return shape across the GCS + S3
       backends for an identical input dataset. (Generalizes beyond data-status.) (unified-trading-library@e55d3c9f — 16 tests: subclass inheritance + return-shape via LocalStorageProvider; BlobMetadata.full_path; GCS/S3/Local all satisfy StorageClient ABC)
-- [ ] [deployment-ui] P0. `tests/components/CloudProviderToggle.test.tsx` — assert clicking AWS sets `apiBaseUrl` to
+- [x] [deployment-ui] P0. `tests/components/CloudProviderToggle.test.tsx` — assert clicking AWS sets `apiBaseUrl` to
       port 8005 + clears the cache; clicking GCP returns to 8004. (Today only port-swapping; extend when the API gains
-      real AWS code paths.)
+      real AWS code paths.) (deployment-ui@1d1c970 — 15 tests: 4 describe blocks — toggle rendering, target transitions, DEV-mode /api passthrough, local-prod port 8004/8005 routing)
 
 ### F. Playwright e2e suite (data-status UI walks)
 
