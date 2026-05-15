@@ -414,7 +414,7 @@ Self-pivot through items 6-9 after the 5-item primary queue closes.
 
 ### Primary queue (P1)
 
-- [ ] **1. utl_qg_preexisting_failures fix sweep** (P1) — [`plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md`](../../plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md). 6 categories of pre-existing UTL QG failures with documented fix paths (cloud SDK imports, backward-compat shims, etc.). Slice by category — start with the one closing the most failures at the least risk. Done-def: ≥3 categories closed + UTL QG green.
+- [x] ✅ **1. utl_qg_preexisting_failures fix sweep** (P1) — UTL@d3488b7 (size exclusions + urllib3 CVE bump + backward-compat shims removed) + UTL@30db050 (xdist env-leak fixes: GCP_PROJECT_ID save/restore in config_interface fixtures; RUNTIME_MODE/dry-run restore in test_service_cli; usage_meter __init__.py for import-mismatch). Result: 5238 passed, 0 failed, 0 errors — UTL QG fully green.
 
 - [ ] **2. strategy_service_phase8_codex_drift** (P1) — [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md). 5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` + `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. ~2 AI-days.
 
