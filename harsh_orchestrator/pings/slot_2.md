@@ -168,3 +168,14 @@ STARTED item 8 (deployment-events GCS pubsub forwarding audit).
 - Recommendation: switch heartbeat_cli.py to GCSEventSink or add GCS export subscription. Non-blocking for May-23.
 - Audit report: `codex/05-infrastructure/vm-deployment-events-audit.md`.
 STARTED item 9 (scripts/vm/ operator runbook).
+
+[2026-05-15 16:25 UTC] slot-2 — ✅ **DONE items 8+9**. unified-trading-pm@0a0e5ead.
+- Item 8 ✅ Deployment-events audit: `codex/05-infrastructure/vm-deployment-events-audit.md`. Smoke verified (measure-honest-coverage-20260515-115454 emitted DEPLOYMENT_STARTED/COMPLETED within 2s). GAP FOUND (P2): vm-heartbeat-daemon uses PubSubEventSink (7-day TTL) while all other services use GCSEventSink for permanent archival. Recommendation: switch to GCSEventSink. Non-blocking May-23.
+- Item 9 ✅ VM launcher runbook: `codex/05-infrastructure/vm-launcher-runbook.md`. All 83 launchers covered across 10 categories. Per-entry: when-to-use, required args, duration, common failures. Common failure table covers all launcher types.
+
+🏁 **QUEUE EXHAUSTED** — items 5-9 all done. All SHAs:
+- Item 5: deployment-service@97f7b00 (event emission + backtest gap fix)
+- Item 6: deployment-service@2140f89 (shellcheck security hardening)
+- Item 7: deployment-service@187af5b (coverage 70%→71%)
+- Item 8+9: unified-trading-pm@0a0e5ead (events audit + runbook)
+Polling for next dispatch.
