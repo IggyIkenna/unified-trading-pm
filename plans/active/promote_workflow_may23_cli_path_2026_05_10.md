@@ -587,12 +587,14 @@ works; Firestore write + read cycle succeeds against real GCP project.
 
 **Scope**: Master plan `pvl-p23b` — `GET /strategy/{id}/runs?mode=batch|paper|live` endpoint in `deployment-api`.
 
-- [ ] [AGENT] P0. **NEW endpoint** `GET /strategy/{strategy_id}/runs?mode={batch|paper|live}` in
-      `deployment-api/deployment_api/services/strategy_runs.py` (NEW file).
+- [x] [AGENT] P0. **NEW endpoint** `GET /strategy/{strategy_id}/runs?mode={batch|paper|live}` in
+      `deployment-api/deployment_api/services/strategy_runs.py` (NEW file). — deployment-api@9c608c9 (route at
+      `routes/strategy_runs.py`; mock mode; all 3 modes)
   - Reads from PATH_REGISTRY canonical `backtest_results/strategy_id={strategy_id}/run_id={run_id}/` for batch.
   - Reads from `events/strategy-service/.../` event archive for paper + live runs.
   - Returns mode-tagged event/fill/P&L bundle.
-- [ ] [AGENT] P0. **3 unit tests** (one per mode) in deployment-api.
+- [x] [AGENT] P0. **3 unit tests** (one per mode) in deployment-api. — deployment-api@47d3bc4 (14 tests, 4 classes:
+      batch/paper/live/validation)
 - [ ] [SCRIPT] P0. **Smoke test** against real Phase 3 backtest output:
       `curl http://localhost:8004/strategy/carry_staked_basis/runs?mode=batch` returns 200 with non-empty body.
 
