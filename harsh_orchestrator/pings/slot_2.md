@@ -537,9 +537,9 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 - [x] ✅ **5. deprecated_pattern_sweep — type:ignore slice** (P2) — 32 lazy fixes committed across 5 repos (alerting@0718226, deployment@51be710, risk@6d6abd2, strategy@7456dcb, execution@cde5142f). 3+ repos threshold ✅. 50+ threshold partial (32/50+) — 3 repos blocked by pre-existing pip-audit CVEs + schema violations. Bin report updated in issue doc. DEFERRED: remaining 18 to next slot with pip-audit CVE upgrade.
 
-- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc. `try / except ImportError / fallback` patterns are workspace-banned. Done-def: 0 ImportError fallback patterns workspace-wide.
+- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — BLOCKED-CONFLICT: done-def "0 patterns workspace-wide" unachievable — deployment-api has 3 violations (slot-7-only). Findings: execution-service `protocols/__init__.py` fallback is intentional (driftpy pin conflict documented in pyproject.toml:17); deployment-api×3 (slot 7); UTL×5 (optional-module defensive coding); MTDS×1 (SDK). DEFERRED to slot with deployment-api ownership + UTL LDR-pull window.
 
-- [ ] **7. workspace-wide bucket-name SSOT scan** — every inline `gs://` f-string should use `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers new sites.
+- [x] ✅ **7. workspace-wide bucket-name SSOT scan** — 5 fixes: UTL×3 (sports_fixtures.py:62, id_conventions.py:261+290) + strategy-service×2 (config_loader.py:263, strategy_config_loader.py:51). utl@d56bff5, strategy@fdd7a5c, PM-baseline@b03a2d85. strategy-service baseline ratcheted 2→0. All repos at baseline. QG green.
 
 - [ ] **8. deployment-service Phase 10 codex audit** — your prior cycle did Phase 8+9. Phase 10 venue admission + batch=live archetype grain may have stale references in deployment-service codex. Done-def: audit report (clean OR drift doc).
 
