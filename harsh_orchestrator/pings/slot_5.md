@@ -278,7 +278,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **13. pnl-attribution-service per-venue cost attribution** — pnl-attribution-service@9fbd783 (6 tests in TestPerVenueCostAttribution: AAVE Ethereum gas, MORPHO 0-fee, UNISWAP_V3 slippage 42bps, CURVE < Uniswap, cross-venue AAVE+UNISWAP independent, AAVE L1 vs L2 costs). Also fixed pre-existing ruff SIM108 in pnl_input_builder.py:191. QG ✅ (46s).
 
-- [ ] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — same Phase 6.6 pattern slot 4 just did for features-onchain (features-service@a17d85b0) — apply to risk-and-exposure emission paths. Done-def: 3+ emission policy tests + QG green.
+- [x] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — risk-and-exposure-service@e66aab4 (5 tests in TestWarnOnlyAndStrictFailEmissionPolicies: WARN_ONLY allows upload + no EMISSION_POLICY_BLOCKED; STRICT_FAIL partial suppresses without alert; completeness_fraction 1.0/0.0). QG ✅ (69s).
 
 - [ ] **15. execution-service order book reconciliation tests** — your prior item 8 (097823ca) shipped order_book reconciliation. Extend: cross-venue book reconciliation, partial-fill book delta, book-snapshot vs book-delta consistency. Done-def: 4+ reconciliation tests + QG green.
 
