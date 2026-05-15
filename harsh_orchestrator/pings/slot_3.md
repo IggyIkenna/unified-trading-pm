@@ -72,3 +72,18 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 10. ✅ **e2e-testing/scripts/defi/ peripheral consumer hygiene** — 0 ruff + 0 basedpyright errors achieved. Fixed: colocated_engine AssetGroup type/private access/RiskPosition args, data_layer_runner unused bare-except fn, recursive_borrow_paper_smoke BacktestRunResult args, test_reward_lifecycle Decimal division, UTL circuit_breaker facade gap. pyrightconfig.json added; strategy-service QG updated to run basedpyright from within scripts/defi/. — e2e-testing@43e9a84 + utl@f9c0784 + strategy-service@3993f62
 11. ✅ **archetype hedge-ratio computation edge-case tests** — 11 edge-case tests across pure function + wire-in. Zero LST yield (genesis + subsequent tick), negative funding (fires vs skips), missing funding/staking rate (SKIP), stale lst_native_rate_ts >5min (WARN + 1.0 fallback), fresh rate (dynamic). Added staleness guard to staked_basis.py on_tick. QG green. — strategy-service@d6be15b
 12. ✅ **strategy-service Phase 8 codex audit** — 5 drifts found across 2 archetype codex docs. Issue doc filed: `plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`. Drifts: (1) carry-staked-basis Phase 6B marked FUTURE but is SHIPPED; (2) stale staked_basis.py:264 ref; (3) lst_native_rate + lst_native_rate_ts features undocumented; (4) peg_drift_threshold_bps missing from config schema; (5) arbitrage-price-dispersion code module path stale. Slot 1 owner action needed for codex edits. — PM issue-doc committed
+
+---
+
+[2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
+
+## Deferred work after 2026-05-15 session-3
+
+| Item | Status | Blocker | Owner |
+|------|--------|---------|-------|
+| Codex fix: carry-staked-basis Phase 6B status | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: lst_native_rate + lst_native_rate_ts features | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: peg_drift_threshold_bps in config schema | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| Codex fix: arbitrage-price-dispersion module path | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
+| features-onchain: publish lst_native_rate_ts | DEFERRED | Separate repo / outside slot 3 scope | TBD |
+| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | _position_state/_gcs_config access in item 5-6 tests | Slot 3 (next session) |
