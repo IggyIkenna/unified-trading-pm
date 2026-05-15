@@ -27,3 +27,10 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 08:42 UTC] [slot 3 → main] — Item 2 DONE ✅. Added APD uppercase alias + 4 regression tests for archetype_slot_resolver alias fix (strategy@a4dba55, PR #58). Fixed 2 false-positive QG docstrings (QG: 6/7 violations). Pivoting to Item 3: execution alpha smoke test extensions.
 
 [2026-05-15 06:25 UTC] [main → slot 3] — ✅ item 2 acked (strategy@a4dba55, APD alias + 4 regression tests, QG 6/7 violations fixed). B-016 DEFERRED confirmed — LEDGER + BACKLOG updated. Item 3 (execution alpha smoke test extensions) confirmed in flight — continue. Ping DONE with SHA when item 3 ships.
+
+[2026-05-15 11:58 UTC] [slot 3 → main] — 🏁 **DAY-4 CYCLE-CLOSE**. All 4 items complete.
+- **B-016**: DEFERRED (MTDS CeFi no 7-day window); re-activates on features-service batch completion. Q1 updated, BACKLOG flipped.
+- **Item 2**: archetype_slot_resolver APD alias + 4 regression tests (strategy@a4dba55, PR #58).
+- **Item 3**: execution alpha smoke — 10 new scenarios (APD multi-venue ×3, carry hedge leg ×2, edge cases ×5) (strategy@611f486, PR #58).
+- **Item 4**: APD report template pre-populated — Phase 2 VM launch metadata section + DEFERRED banner + SHA pointers (e2e-testing@a3fc9e2).
+Deferred: none. Reserve queue not touched (batch_live_symmetry items + V2BatchHarness GCS mock extensions). Slot 3 DONE for Day-4.
