@@ -234,3 +234,26 @@ slots 1-8. Your stack just got new items.
 
 Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
 ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+## [main → slot 8] 2026-05-15 07:46 UTC — 🔴 TOP PRIORITY: jump to item #13 (b_015 phantom apply-flips)
+
+Slot 6 #11 handler hardening landed at `market-tick-data-service@c1e6963` (try/finally wrapping; recorder.close()
+guaranteed via finally). **Phantoms will NOT re-accumulate on next smoke.**
+
+**JUMP TO ITEM #13 NOW** — your other open items (item 2: solana_defi successor D venue naming) can wait.
+
+Action sequence:
+1. `gcloud compute instances create` a same-region GCE VM running
+   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
+   `data_type=lst_rates`. Report phantom row count for 2026-04-15→present.
+2. `--apply-flips` to mark phantom rows as `attempted_failed`. Push the flip evidence to LDR.
+3. Cross-ping Harsh slot 9 in `plans/active/_agent_pings.md`: "phantom flips applied at <sha>; lst_rates handler
+   status?"
+4. Once Harsh confirms lst_rates handler hardened, coordinate smoke re-launch.
+5. **Diagnose features-onchain VM** — first launch produced NO event stream (no-fire-and-forget violation).
+   Likely cause: tarball staleness OR VM-startup script bug OR features-onchain service crashed pre-STARTED. Pull
+   the VM serial-console output via `gcloud compute instances get-serial-port-output`.
+
+**B-015 paper-trade gate unblocks the moment this lands** — Harsh slot 9 standing by ~24h.
