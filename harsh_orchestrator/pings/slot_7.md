@@ -217,7 +217,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health; VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11 unit tests; QG green.
 
-- [ ] **15. deployment-ui VM health-status badges** — wire item 14 into `/ops/live-deployments` + `/ops/vms/{vm_name}`. Color-coded (green/amber/red). Done-def: badge + integration + vitest green.
+- [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult types; 8 vitest tests; QG green.
 
 - [ ] **16. deployment-api Phase 12 cost aggregation endpoint** — `GET /api/costs/daily?date=YYYY-MM-DD` per-asset_group + per-archetype + per-vm. Reads `gs://central-element-323112-deployment-events/cost_summary/`. Done-def: endpoint + 5 tests + QG green.
 
