@@ -302,7 +302,7 @@ paper/live deployment exists.
 **Why**: Audit Block H6 + Block I1 step 8/9 — no pre-flight check exists today; operator improvises. Without this gate,
 the live cutover can launch with missing custody / missing API keys / unwired alerting and silently degrade.
 
-- [ ] [AGENT] P0. **Write `e2e-testing/scripts/defi/preflight-cutover.sh`** that probes:
+- [x] [AGENT] P0. **Write `e2e-testing/scripts/defi/preflight-cutover.sh`** that probes:
   - Copper credential present in Secret Manager + sandbox sign-test passes (HMAC handshake + poll loop completes).
   - All 6 perp venue API keys present in Secret Manager + read-write scope verified per venue (Bybit / Binance / OKX /
     Hyperliquid / Aster / Deribit).
@@ -313,10 +313,12 @@ the live cutover can launch with missing custody / missing API keys / unwired al
   - Alerting paging targets configured in Secret Manager (Telegram bot tokens, PagerDuty key — per Phase 5.B).
   - Composes with `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` credential matrix.
   - Done: each probe exits 0/1; aggregate report printed; refuses to exit 0 if any P0 probe fails.
+  - (e2e-testing@60283c2 — 7 probes implemented; --waive-<probe> + --skip-preflight escape hatches; dry-run verified)
 
-- [ ] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call
+- [x] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call
       `preflight-cutover.sh --mode paper` / `--mode live` as required pre-flight gate (refuses to start if pre-flight
       non-zero).
+  - (e2e-testing@60283c2 — both scripts updated; --waive-* pass-through; pre-flight runs before engine launch)
 
 - [ ] [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation** for both paper + live mode against
       carry_staked_basis. Resolve any failing probes by either fixing config OR explicitly waiving (write
@@ -339,20 +341,22 @@ the live cutover can launch with missing custody / missing API keys / unwired al
 **Why**: Audit Block A1 + master plan F18. 2-year backtest is operator-pending; informs the live-config selection.
 Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results are invisible to downstream consumers.
 
-- [ ] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/`
+- [x] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/`
       (PATH_REGISTRY) as canonical. Update
       [`unified-trading-library/.../domain/execution_client.py:199-296`](../../../unified-trading-library/unified_trading_library/domain/execution_client.py#L199-L296)
       reader to honor PATH_REGISTRY (currently uses `backtest_results/{run_id}/` — silent mismatch). Migrate 2yr-grid
       script (`backtests/config_grid_2yr/{archetype}/{run_id}/`) to canonical OR keep separate sub-prefix
       `backtest_results/grid_2yr/{archetype}/{run_id}/`.
+  - (utl@657eae41 — optional strategy_id param on all backtest methods; canonical path when provided; legacy compat preserved)
 
-- [ ] [AGENT] P0. **Update `strategy-service/scripts/run_2yr_config_grid_backtest.py`** to:
+- [x] [AGENT] P0. **Update `strategy-service/scripts/run_2yr_config_grid_backtest.py`** to:
   - Write to canonical PATH_REGISTRY path.
   - Emit `record_captured` manifest row per `(archetype, run_id, asset_group)` per CLAUDE.md _"Honest absence vs fake
     placeholders"_ HARD RULE.
   - Validate `GroupBMetrics` schema on output rows (4-pillar gate per CLAUDE.md "Cluster validation MANDATORY at
     `record_captured`").
   - Honor `--candidate-emit` flag that auto-promotes top-K results to `ConfigRegistry` for paper-mode pickup.
+  - (strategy-service@4b1e768 — PATH_REGISTRY canonical output path + --candidate-emit/--top-k flags + DeployableConfigCandidate emission; manifest row emission DEFERRED — requires pipeline-context design outside script scope)
 
 - [ ] [SCRIPT] P0. **Operator runs the 2yr backtest** for both archetypes:
   - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3`
