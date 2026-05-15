@@ -224,26 +224,32 @@ build an automated Playwright suite that walks every (service, asset_group) pane
 
 **Tests:**
 
-- [ ] [deployment-ui] P0. `tests/e2e/data-status-tab-renders.spec.ts` — clicks each of the 23 services in the
+- [x] [deployment-ui] P0. `tests/e2e/data-status-tab-renders.spec.ts` — clicks each of the 23 services in the
       service-mesh; asserts the Data Status tab loads + renders per-asset_group panels for every covered asset_group; no
       console errors; no 5xx in network log.
-- [ ] [deployment-ui] P0. `tests/e2e/hierarchical-drilldown-walk.spec.ts` — for every (service, asset_group) pair the
+      (deployment-ui@a9f5e98 — 3 tests: per-service loop over mocked services, pageerror listener, 5xx response guard)
+- [x] [deployment-ui] P0. `tests/e2e/hierarchical-drilldown-walk.spec.ts` — for every (service, asset_group) pair the
       drill-down endpoint covers, expand the panel + assert: axes list rendered, totals rendered with non-zero values
       for asset_groups that have data in the test window, "Show more" button surfaces when
       `total_top_axis_children > tree.length`.
-- [ ] [deployment-ui] P0. `tests/e2e/deploy-missing-preview.spec.ts` — drill into a captured=0 leaf with full shard
+      (deployment-ui@a9f5e98 — 6 tests: axes+totals + Show-more for 3 service/asset_group pairs)
+- [x] [deployment-ui] P0. `tests/e2e/deploy-missing-preview.spec.ts` — drill into a captured=0 leaf with full shard
       atom; click ↻ deploy; assert the copy-to-clipboard command renders + has the canonical 6-field shard-key shape;
       toggle to tarball-from-local; assert the LOCAL-ONLY warning panel is visible + the command chains
       create-code-tarballs.sh + launcher with `&&`.
-- [ ] [deployment-ui] P0. `tests/e2e/per-leaf-csv-download.spec.ts` — click a captured leaf's `↓ csv` link; assert the
+      (deployment-ui@a9f5e98 — 2 tests: shard-key fields in command; LOCAL-ONLY warning + && in tarball mode)
+- [x] [deployment-ui] P0. `tests/e2e/per-leaf-csv-download.spec.ts` — click a captured leaf's `↓ csv` link; assert the
       response Content-Type is `text/csv` + at least one row.
-- [ ] [deployment-ui] P0. `tests/e2e/cloud-toggle.spec.ts` — click the AWS toggle; assert the API base URL switches;
+      (deployment-ui@a9f5e98 — 2 tests: ↓ csv link visible; text/csv response with ≥1 data row)
+- [x] [deployment-ui] P0. `tests/e2e/cloud-toggle.spec.ts` — click the AWS toggle; assert the API base URL switches;
       reload; assert the panels still render (or render an explicit "AWS backend not configured" placeholder while the
       cloud-agnostic backend is still being built).
-- [ ] [deployment-ui] P0. `tests/e2e/regression-2026-05-07.spec.ts` — explicit regression for the 2026-05-07 "No data
+      (deployment-ui@a9f5e98 — 3 tests: toggle no crash; GCP/AWS buttons visible; round-trip GCP→AWS→GCP survives)
+- [x] [deployment-ui] P0. `tests/e2e/regression-2026-05-07.spec.ts` — explicit regression for the 2026-05-07 "No data
       for cefi" + "Deploy-Missing 400" incidents — load TRADFI panel, assert non-zero totals; load DeployMissingButton
       on a venue-level node, assert it does NOT render; load on a date-level leaf with full shard-key, assert it DOES
       render + opens the preview modal.
+      (deployment-ui@a9f5e98 — 3 tests: TRADFI non-zero totals; partial-key node no button; full-key leaf opens modal)
 
 ## Phased execution DAG
 
