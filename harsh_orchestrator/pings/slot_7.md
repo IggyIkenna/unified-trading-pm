@@ -100,3 +100,5 @@ route renders + skeleton component + checklist banner "operator-monitored window
 **deployment-api AuthN via Firebase token** — wire Firebase token verification middleware on all endpoints from items
 1-6. Tokens are forwarded from UTS-UI / Deployment-UI. Done-def: middleware + tests covering valid/expired/missing
 token + QG green.
+
+[2026-05-15 15:30 UTC] slot-7 — ✅ DONE queue item 1 (new queue): deployment-api WebSocket VM event streaming — /ws/vm/{vm_name}/events; polls GCS every 5s; mock sends 3 events; 1 smoke test; pre-existing test_manual_pending fixture bug fixed; QG green. deployment-api@4951d10. Plan Phase 9 item flipped. Starting item 2: Prometheus telemetry endpoint.
