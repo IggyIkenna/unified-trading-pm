@@ -8,7 +8,23 @@
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 3 codex_vs_citadel audit follow-up. Harsh-side surfaces verified. Findings: STEP 5.71-5.82 not indexed in quality-gates.md (DT-1/DT-2 IMMEDIATE — fixed PM@ae4fde31); UAC carveout patterns + B-014/B-018 cross-refs filed as PRE_CUTOVER in issue doc codex_audit_deployment_template_phase8_drift_2026_05_15.md. No BIG findings.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 1+3: SIT smoke tests + IBKR gateway verification. All repos have correct B-014 SSOT path (grep=0). Found 2 repos missing lifecycle block: features-service@30467e28 + ibkr-gateway-infra@eb4412f — both fixed + QG PASSED (61s / 23s). Pivoting to reserve item 2: UTL emission publisher coverage (features-service side).
+[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 1+3: SIT smoke tests + IBKR gateway verification. All repos have correct B-014 SSOT path (grep=0). Found 2 repos missing lifecycle block: features-service@30467e28 + ibkr-gateway-infra@eb4412f — both fixed + QG PASSED (61s / 23s).
+
+[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 2: UTL emission publisher consumer-side coverage audit (features-service side). Callsite map: 8 sub-families with publish_with_policy callsites (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) — ALL have matching test_emission_policy.py files. No gaps found. Coverage is comprehensive.
+
+[2026-05-15 UTC] slot-8 — 🏁 **Slot 8 Day-4 CYCLE-CLOSE**
+
+**4-day cycle summary (2026-05-12 → 2026-05-15) — Slot 8 (UTL + B-014 + codex)**
+
+Items shipped:
+- **2026-05-12**: B-007+B-008 UTL manifest writer + emission publisher 100% coverage (@e6877d2); 13/15 service repos B-014 QG stub rolled out; codex_vs_citadel audit Phases 0-5 complete (242 findings, 63 IMMEDIATE + 137 PRE_CUTOVER + 36 POST_CUTOVER)
+- **2026-05-15**: B-014 Phase 3 stash recovery + rollout completion — all .tabs/8 service repos updated (workspace grep=0); alerting@4795ccf, market-tick@acec41d, risk-exposure@55d7611, ml-inference@8116b23, market-data@2ff9258, ml-training@00a97aa; codex STEP 5.71-5.82 indexed in quality-gates.md (PM@ae4fde31); lifecycle block gap fixed in features-service@30467e28 + ibkr-gateway-infra@eb4412f; emission publisher audit: all 8 features-service sub-families covered
+
+Items deferred:
+- DT-3/DT-4 PRE_CUTOVER (UAC carveouts + B-018 cross-ref) → `plans/active/issues/codex_audit_deployment_template_phase8_drift_2026_05_15.md`
+- Item 4 continuation_prompts (features-service item 4 — full cycle close) → carry to next session
+
+Open blockers at cycle close: NONE for slot 8.
 
 [2026-05-15 05:08 UTC] slot-8 — STARTED slot 8 (B-014 stash recovery + rollout completion;
 plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8)
