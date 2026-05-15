@@ -1,5 +1,25 @@
 # Slot 6 Ping Ledger
 
+## [slot 6 → OPERATOR] 2026-05-15 — 🔴 P0 SECURITY: GCP SA private key in execution-service git history
+
+**Severity**: P0 — requires operator action ≤1h (key revocation) + ≤2h (history rewrite, operator authorization needed).
+
+**Issue doc**: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`
+
+**Summary**: gitleaks Phase 0.A scan of execution-service git history found a committed GCP SA key JSON
+(`central-element-323112-e35fb0ddafe2.json`) in commit `2804351950a8` (2026-01-22). The file is NOT in HEAD
+but remains accessible in git history. The private key is for GCP project `central-element-323112` (prod).
+
+**Required operator actions (in issue doc)**:
+1. Revoke the SA key via `gcloud iam service-accounts keys delete KEY_ID ...`
+2. Audit SA IAM bindings (blast-radius check)
+3. Rewrite git history: `git filter-repo --path central-element-323112-e35fb0ddafe2.json --invert-paths --force` + force-push (HARD STOP — operator-only)
+4. Notify Harsh + all agents to re-clone after rewrite
+
+All other 110 gitleaks findings are false positives (documented in issue doc).
+
+---
+
 ## [slot 6 → main] 2026-05-12 — Part A + Part B COMPLETE
 
 **Status**: DONE — both workstreams shipped and pushed.
@@ -111,7 +131,7 @@ backtest replays) blocked on Phase 2/3C validation green.
 - **Phase 2 validation** (~3-5 AI-days): per-pool-shape golden-fixture writing (7 shapes) + Tenderly-fork comparison
   runner + per-shape historical-swap validation (sample on-chain Swap events, within X bps threshold per-shape).
 - **Phase 3C validation** (~3-5 AI-days, independent): Aave V3 historical large-supply event collection (≥50 events
-  >$10M) + post-trade rate simulation vs on-chain realized rate comparison (≤10bps tolerance).
+  > $10M) + post-trade rate simulation vs on-chain realized rate comparison (≤10bps tolerance).
 
 **Unblocks**: Phase 8A/B/C (1-year replay harnesses) once validation results land green.
 
@@ -125,12 +145,19 @@ green).
 **Status**: DONE — Phase 1 (Real HMAC Withdrawal Approval Chain) fully pushed.
 
 **Commits**:
-- `unified-api-contracts@89f5754` — remove duplicate `WithdrawalApprovalSignature`/`WithdrawalApprovalChain` classes (stale simpler version from earlier session removed; canonical richer version with `.create()`/`.verify()` retained)
-- `execution-service@98ecfdf` — 5 unit tests for `withdrawal_signing.py` via `_injected_key` test seam in `tests/unit/custody/test_withdrawal_signing.py` (no Secret Manager calls; happy-path + sig-verifies + wrong-key-rejected + kms_key_ref-forwarded + different-approver-produces-different-HMAC)
-- `deployment-api@3111fd4` — suppress 3 pre-existing basedpyright errors in `client_treasury.py` (`reportConstantRedefinition` + 2x `reportUnknownMemberType` on google.cloud.logging)
+
+- `unified-api-contracts@89f5754` — remove duplicate `WithdrawalApprovalSignature`/`WithdrawalApprovalChain` classes
+  (stale simpler version from earlier session removed; canonical richer version with `.create()`/`.verify()` retained)
+- `execution-service@98ecfdf` — 5 unit tests for `withdrawal_signing.py` via `_injected_key` test seam in
+  `tests/unit/custody/test_withdrawal_signing.py` (no Secret Manager calls; happy-path + sig-verifies +
+  wrong-key-rejected + kms_key_ref-forwarded + different-approver-produces-different-HMAC)
+- `deployment-api@3111fd4` — suppress 3 pre-existing basedpyright errors in `client_treasury.py`
+  (`reportConstantRedefinition` + 2x `reportUnknownMemberType` on google.cloud.logging)
 - `unified-trading-pm@ab5292f9` — plan flip + this ping
 
-**Note for slot 7**: The `approve_withdrawal` endpoint was already shipped by the upstream (concurrent agent on live-defi-rollout) with the richer `withdrawal_approval_rules` registry-driven version. My conflict resolution deferred to that version. Phase 3 (GCS versioning + retention lock + compliance tests) is yours to proceed with independently.
+**Note for slot 7**: The `approve_withdrawal` endpoint was already shipped by the upstream (concurrent agent on
+live-defi-rollout) with the richer `withdrawal_approval_rules` registry-driven version. My conflict resolution deferred
+to that version. Phase 3 (GCS versioning + retention lock + compliance tests) is yours to proceed with independently.
 
 ---
 
@@ -138,7 +165,9 @@ green).
 
 **Status**: STARTED — resuming slot 6 work stack.
 
-Context resumed from prior session. LDR FF-pull complete (all repos current except market-tick-data-service which has diverging local commits — not in slot 6 scope). features-service rebase conflict resolved (live_handler.py — kept `_check_live_emission_policy` + renamed `_SERVICE_NAME` to `"features-service"`). Dual-pushed to LDR.
+Context resumed from prior session. LDR FF-pull complete (all repos current except market-tick-data-service which has
+diverging local commits — not in slot 6 scope). features-service rebase conflict resolved (live_handler.py — kept
+`_check_live_emission_policy` + renamed `_SERVICE_NAME` to `"features-service"`). Dual-pushed to LDR.
 
 Starting: **Item 2 — 4 DeFi-specific alert codes producer-side wiring** (features-service onchain).
 
@@ -152,15 +181,16 @@ Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE
 
 **🔴 CRITICAL — Must action before May-23:**
 
-1. **10 wrapped wallet private keys missing** — these are the signing keys for live trading.
-   Per `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`:
+1. **10 wrapped wallet private keys missing** — these are the signing keys for live trading. Per
+   `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`:
    - Wrap each wallet private key with Cloud KMS CMK `defi-wallet-private-key-wrapped`
-   - Push to SM as: `csb-eth-hot-lido-v1-wrapped`, `csb-arb-hot-lido-v1-wrapped`,
-     `csb-base-hot-aave-v1-wrapped`, `csb-poly-hot-aave-v1-wrapped`, `csb-sol-hot-jito-v1-wrapped`,
-     `gas-reserve-eth-v1-wrapped`, `gas-reserve-arb-v1-wrapped`, `gas-reserve-base-v1-wrapped`,
-     `gas-reserve-poly-v1-wrapped`, `gas-reserve-sol-v1-wrapped`
+   - Push to SM as: `csb-eth-hot-lido-v1-wrapped`, `csb-arb-hot-lido-v1-wrapped`, `csb-base-hot-aave-v1-wrapped`,
+     `csb-poly-hot-aave-v1-wrapped`, `csb-sol-hot-jito-v1-wrapped`, `gas-reserve-eth-v1-wrapped`,
+     `gas-reserve-arb-v1-wrapped`, `gas-reserve-base-v1-wrapped`, `gas-reserve-poly-v1-wrapped`,
+     `gas-reserve-sol-v1-wrapped`
 
 2. **11 naming drift aliases needed** — secrets exist under legacy names, canonical aliases missing:
+
    ```bash
    # Run these to create canonical aliases (copy value from legacy secret):
    gcloud secrets versions access latest --secret=binance-trade-api-key-secret | \
@@ -195,14 +225,15 @@ Items 1 (Phase 1 HMAC chain), 3A (Phase 3 audit GCS versioning) — already DONE
 
 **🟢 Not May-23 blocking** (other tracks): `kalshi-api-key`, `api-football-key`, `footystats-key`
 
-**Full analysis**: `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D annotation.
-**Re-run gate**: `bash deployment-service/scripts/audit/credential-probe.sh --mode live --archetype carry_staked_basis`
+**Full analysis**: `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D annotation. **Re-run
+gate**: `bash deployment-service/scripts/audit/credential-probe.sh --mode live --archetype carry_staked_basis`
 
 ---
 
 ## [slot 6 BOOT ACK] 2026-05-14 16:08 UTC — context reload, resuming stack
 
-LDR sync complete. Items 1-5, 10 DONE. Starting Item 6: Custody adapter Cloud-KMS wiring smoke (`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`).
+LDR sync complete. Items 1-5, 10 DONE. Starting Item 6: Custody adapter Cloud-KMS wiring smoke
+(`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`).
 
 ---
 
@@ -211,18 +242,21 @@ LDR sync complete. Items 1-5, 10 DONE. Starting Item 6: Custody adapter Cloud-KM
 **Status**: DONE — pvl-p23c fully shipped (Group G Item 23).
 
 **Commits**:
-- `execution-service@1e119a61f` — ManualPendingQueue engine + 4 API endpoints (POST /manual/pending, GET /manual/pending, /approve, /reject) + 12 unit tests
-- `unified-trading-system-ui@13b94ca9` — ManualTradeGateDialog component + dart-client.ts pending queue API + mock fixtures (3 new routes in mock-handler.ts) + 3 vitest tests
 
-**Requesting slot 1**: Flip `master_to_live_defi_2026_05_23.md` Group G Item 23 (pvl-p23c ManualTradeGateDialog) from `[ ]` to `[x]`.
-Evidence: both commits above. work_split_2026_05_14_ikenna.md items 5+10 already flipped ✅.
+- `execution-service@1e119a61f` — ManualPendingQueue engine + 4 API endpoints (POST /manual/pending, GET
+  /manual/pending, /approve, /reject) + 12 unit tests
+- `unified-trading-system-ui@13b94ca9` — ManualTradeGateDialog component + dart-client.ts pending queue API + mock
+  fixtures (3 new routes in mock-handler.ts) + 3 vitest tests
+
+**Requesting slot 1**: Flip `master_to_live_defi_2026_05_23.md` Group G Item 23 (pvl-p23c ManualTradeGateDialog) from
+`[ ]` to `[x]`. Evidence: both commits above. work_split_2026_05_14_ikenna.md items 5+10 already flipped ✅.
 
 ---
 
 ## [main → slot 6] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
 
-**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
-slots 1-8. Your stack just got new items.
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across slots 1-8.
+Your stack just got new items.
 
 **Action (do this NOW, no questions)**:
 
@@ -233,20 +267,21 @@ slots 1-8. Your stack just got new items.
       git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
    done
    ```
-2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
-   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
-   in the distribution tables; new items are additive to your existing stack.
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` — specifically the new "## SLOT 9-10-11
+   REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot in the distribution tables; new items are additive to
+   your existing stack.
 3. Re-read your "### Slot 6" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
-4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
-   incoming) already baked into the reassignment.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials incoming)
+   already baked into the reassignment.
 
 **Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
-- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
-  lifecycle, one-pass, no shim. Per DRY.
-- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
-  AMM-perp); Harsh slot 8 owns refactor.
-- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
-  mechanical fix while waiting on Phase 1.2B work.
 
-Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
-ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close lifecycle,
+  one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp);
+  Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as mechanical fix
+  while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
+(per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.

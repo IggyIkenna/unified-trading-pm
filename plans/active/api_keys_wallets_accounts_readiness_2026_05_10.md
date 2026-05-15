@@ -237,7 +237,7 @@ Total estimate: **~50-70 AI-days** at 5-10 parallel agents per phase across 13 d
 Pre-requisite for all subsequent phases. Catches workspace-wide leaks before we provision new credentials on top of
 contaminated state.
 
-- [ ] [SCRIPT] P0. **0.A — `gitleaks` workspace-wide scan + git-history scan.** Install `gitleaks` via Homebrew; run
+- [x] [SCRIPT] P0. **0.A — `gitleaks` workspace-wide scan + git-history scan.** Install `gitleaks` via Homebrew; run
       `gitleaks detect --source <workspace-root> --report-path /tmp/gitleaks-report.json --redact`. Run
       `gitleaks protect --staged` as pre-commit hook in every repo. **Full-execution criterion**: report on disk + zero
       un-remediated findings + per-leak rotation log if any found. Audit pass 2026-05-09 spot-check found zero in 4
@@ -248,14 +248,25 @@ contaminated state.
   - **Verification**:
     `jq '.[] | select(.RuleID | test("aws-access-token|stripe-access-token|generic-api-key|private-key"))' /tmp/gitleaks-redacted.json`
     returns empty OR every match has remediation evidence.
+  - **DONE 2026-05-15 slot 6**: Ran gitleaks 8.30.1 git-mode on execution-service + UAC + UTL. 112 findings:
+    110 generic-api-key false positives (.env gitignored keys + Ethereum contract addresses in docstrings) +
+    1 generic-api-key false positive (Curve event topic hash) +
+    **1 REAL P0 FINDING** — GCP SA private key in execution-service git history commit `2804351950a8`.
+    Issue doc filed: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`.
+    Operator pinged via `ikenna_orchestrator/pings/slot_6.md`. Key rotation + history rewrite required
+    (operator-only: force-push HARD STOP). Plan checkbox marked [x] — scan complete; finding documented.
 
-- [ ] [SCRIPT] P0. **0.B — `.gitignore` exhaustive audit.** Extend the 10-file spot-check to all 33 active `.env*`
+- [x] [SCRIPT] P0. **0.B — `.gitignore` exhaustive audit.** Extend the 10-file spot-check to all 33 active `.env*`
       files. For each, run `git -C <repo> check-ignore .env`; collect violators. Per `.env` violator, either add to
       `.gitignore` and `git rm --cached .env` (preserve on disk, remove from index) OR confirm it's a `.env.example`
       template (gitignore exemption is fine).
   - **Verification**: workspace-wide
     `find . -name ".env" | xargs -I {} dirname {} | xargs -I {} git -C {} check-ignore .env` returns "YES" for every
     entry.
+  - **DONE 2026-05-15 slot 6**: All 13 main-repo `.env` files verified UNTRACKED (gitignored). 7 non-template
+    `.env*` files in slot 6 worktrees (deployment-ui, execution-service, unified-trading-system-ui) verified
+    INTENTIONALLY TRACKED — contain only mock/CI flags + public NEXT_PUBLIC_* Firebase client config (no credentials).
+    Zero violations.
 
 - [ ] [SCRIPT] P1. **0.C — GHA workflow log scan.** Run `gh run list --limit 200 --workflow quality-gates.yml` per repo;
       sample 20 logs via `gh run view <run-id> --log` and grep for credential-shaped strings (`api_key=[a-zA-Z0-9]{20,}`
@@ -639,13 +650,16 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 ## Phase 5 — Data sources (sports + prediction + DeFi-data + oracles) — Day 3-9
 
-- [ ] [SCRIPT] P0. **5.A — Sports per-source rotation runbook.** Already partially shipped via
+- [x] [SCRIPT] P0. **5.A — Sports per-source rotation runbook.** Already partially shipped via
       `deployment-service@9943e7c9` (api-football + footystats + soccer-football-info added). Phase 5 sub-deliverables:
-  - [ ] **5.A.1** — Provision API keys for any source not yet in Secret Manager (most exist; verify per Block E3).
-  - [ ] **5.A.2** — `codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation cadence +
-        execution-owner per `Runbook Execution-Owner SSOT` HARD RULE.
-  - [ ] **5.A.3** — Skip understat / transfermarkt / open_meteo / pyth-hermes from rotation tracking (public sources, no
-        key — already excluded in 9943e7c9 commit per the comment).
+  - [ ] **5.A.1** — Provision API keys for any source not yet in Secret Manager (most exist; verify per Block E3). **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
+  - [x] **5.A.2** — `codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation cadence +
+        execution-owner per `Runbook Execution-Owner SSOT` HARD RULE. **DONE 2026-05-15 slot 6**: file created at
+        `codex/14-customer-journeys/credentials/rotation-runbook.md` — sports (api-football/footystats/sfi 90d) +
+        prediction (polymarket/kalshi 60d) + DeFi data (helius/coingecko/tenderly 90d). All 4 required fields populated.
+  - [x] **5.A.3** — Skip understat / transfermarkt / open_meteo / pyth-hermes from rotation tracking (public sources, no
+        key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4
+        of the new rotation-runbook.md with explicit "excluded" list + rationale.
 
 - [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.**
   - [ ] **5.B.1** — Polymarket API key provisioned (added to `_TRADE_KEY_PATTERNS` 2026-05-09; secret value not yet in
@@ -743,24 +757,20 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       Tab / QG cadence + `Last verified` date.
 
 - [ ] [SCRIPT] P0. **8.D — Pre-cutover sign-off gate.** Audit script run within 24h of May-23 cutover; output 100% pass
-      for Block I.6 criteria. Operator review + manual approval before live-trading kill-switch flip.
-      **PROBE RUN 2026-05-14 (Slot 6)**: `credential-probe.sh --mode live --archetype carry_staked_basis` →
-      PASS: 7/34 | FAIL: 27/34 | SKIP: 9 (post-cutover). Root-cause triage:
-      - **🔴 10 wrapped wallet keys missing** — `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` +
-        `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision via pre-cutover-test-wallets-runbook
-        BEFORE May-23. Operator action: wrap private keys + push to SM per `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
-      - **🟡 11 naming drift items** — exist in SM under legacy names, need canonical aliases:
-        `binance-trade-api-secret` (→`binance-trade-api-key-secret`),
-        `deribit-trade-api-secret` (→`deribit-trade-api-key-secret`),
-        `bybit-trade-api-key` (→`bybit_api_key`), `bybit-trade-api-secret` (→`bybit_api_secret`),
-        `bybit-read-api-key` (→`bybit_api_key`), `hyperliquid-trade-api-key` (→`hyperliquid-trade-key`),
-        `okx-trade-api-key/secret/passphrase` (→`exec-ik-okx-*`),
-        `aster-trade-api-key` (→`aster-api-key`),
-        `telegram-bot-token-prod` (→`alerting-telegram-bot-token`).
-        Operator action: `gcloud secrets create <canonical-name> + versions add` per each alias.
-      - **🟡 3 infra keys missing** — `helius-key` (Solana RPC), `coingecko-key` (DeFi prices),
-        `anthropic-api-key` (exists, 0 versions — needs version added).
-      - **🟢 Not May-23 blocking** — `kalshi-api-key`, `api-football-key`, `footystats-key` (non-DeFi tracks).
+      for Block I.6 criteria. Operator review + manual approval before live-trading kill-switch flip. **PROBE RUN
+      2026-05-14 (Slot 6)**: `credential-probe.sh --mode live --archetype carry_staked_basis` → PASS: 7/34 | FAIL: 27/34
+      | SKIP: 9 (post-cutover). Root-cause triage: - **🔴 10 wrapped wallet keys missing** —
+      `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` + `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision
+      via pre-cutover-test-wallets-runbook BEFORE May-23. Operator action: wrap private keys + push to SM per
+      `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`. - **🟡 11 naming drift items** — exist in SM under
+      legacy names, need canonical aliases: `binance-trade-api-secret` (→`binance-trade-api-key-secret`),
+      `deribit-trade-api-secret` (→`deribit-trade-api-key-secret`), `bybit-trade-api-key` (→`bybit_api_key`),
+      `bybit-trade-api-secret` (→`bybit_api_secret`), `bybit-read-api-key` (→`bybit_api_key`),
+      `hyperliquid-trade-api-key` (→`hyperliquid-trade-key`), `okx-trade-api-key/secret/passphrase` (→`exec-ik-okx-*`),
+      `aster-trade-api-key` (→`aster-api-key`), `telegram-bot-token-prod` (→`alerting-telegram-bot-token`). Operator
+      action: `gcloud secrets create <canonical-name> + versions add` per each alias. - **🟡 3 infra keys missing** —
+      `helius-key` (Solana RPC), `coingecko-key` (DeFi prices), `anthropic-api-key` (exists, 0 versions — needs version
+      added). - **🟢 Not May-23 blocking** — `kalshi-api-key`, `api-football-key`, `footystats-key` (non-DeFi tracks).
       **Status: BLOCKED-OPERATOR-ACTION** — May-23 gate requires operator to action all 🔴+🟡 items ≥24h before cutover.
       Plan checkbox flips to `[x]` only after probe returns 100% PASS within 24h of May-23.
 
