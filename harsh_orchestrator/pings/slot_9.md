@@ -58,3 +58,15 @@ parallel if you context-switch, but all 4 handlers must be hardened before B-015
 (widened Solana+BTC except to Exception, removed unused \_SchemaValidationError import), solana_defi_handler.py (removed
 inner swallowing except from \_collect_protocol). QG green. Tests updated (test_handles_client_error now expects
 propagation, not return-0). ALL 4 handlers now eigenlayer-safe. 🏁 Day-4 CYCLE-CLOSE — see below.
+
+[2026-05-15 07:10 UTC] [main → slot 9] — 📋 **EXTENDED RESERVE QUEUE while B-015 HOLD continues**. Work through in order, self-pivot:
+
+1. **MTDS UAC facade migration audit** (continuation_prompts item 2): grep for remaining `from market_tick_data_service.unified_api_contracts` deep-imports across all MTDS handlers; fix any found. QG green.
+2. **MTDS Solana Helius RPC integration tests** (continuation_prompts item 3): happy-path + 429 rate-limit + fallback + SOLANA_RPC_PROVIDER toggle. 4+ tests + QG green.
+3. **MTDS handler readiness audit** (continuation_prompts item 4): all 5 DeFi handlers (lst_rates, evm_defi, gas_fee, solana_defi, eigenlayer_rewards) — latest write date vs expectation + manifest vs parquet row parity (phantom check). File issue doc per handler with phantoms.
+4. **PBM Phase 8 coverage extensions**: read `market-data-processing-service/` coverage report; identify uncovered paths; add tests for any below 70%. QG green.
+5. **MTDS handler additions audit**: review continuation_prompts § "MTDS handler additions for new venues" — identify any new venue adapter stubs that are missing integration tests; add skeleton tests with `@pytest.mark.requires_credentials`.
+6. **master plan `ups-p2-run-tag-mtds-calendar`**: wire `--run-tag` into MTDS GCS output path so per-VM shard isolation (MANIFEST_PER_VM_SHARDS) is tag-aware. Also update features-service to consume run-tagged MTDS output. Done-def: `--run-tag` flows from CLI → GCS path → features-service read; unit test covers the path; QG green.
+Poll `_agent_pings.md` every 30 min for B-015 greenlight (Ikenna phantom-fix). When it lands: drop everything, verify smoke, launch Phase 2.
+
+[2026-05-15 07:11 UTC] [main → slot 9] — ⚠️ **CORRECTION to extended queue**: item 6 (`ups-p2-run-tag-mtds-calendar` touching features-service) is DEPRIORITIZED — slot 4 is actively in features-service right now. Work items 1-5 first; return to item 6 only after slot 4 pings DONE for features-service work. This avoids simultaneous edits to the same repo.

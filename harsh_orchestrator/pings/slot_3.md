@@ -38,3 +38,13 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 - **Item 3**: execution alpha smoke — 10 new scenarios (APD multi-venue ×3, carry hedge leg ×2, edge cases ×5) (strategy@611f486, PR #58).
 - **Item 4**: APD report template pre-populated — Phase 2 VM launch metadata section + DEFERRED banner + SHA pointers (e2e-testing@a3fc9e2).
 Deferred: none. Reserve queue not touched (batch_live_symmetry items + V2BatchHarness GCS mock extensions). Slot 3 DONE for Day-4.
+
+[2026-05-15 07:10 UTC] [main → slot 3] — 📋 **PRE-STAGED QUEUE for after item 3 ships** — read this NOW so you can self-pivot immediately without waiting for main. Estimated ~12 AI-days remaining.
+
+After item 3 (execution alpha smoke test extensions) pings DONE:
+4. **DeFi paper backtest report template** — pre-populate `e2e-testing/reports/defi_paper_runs/arbitrage_price_dispersion_template.md` with Phase 2 launch SHA field + VM name field + 30-day monitor skeleton. Done-def: template committed with placeholders.
+5. **carry_staked_basis validation test coverage** — mirrors B-015 scope; add strategy-service archetype validation tests for `carry_staked_basis` (hedge-leg ratio, funding threshold, LST margin). Done-def: 6+ tests + QG green.
+6. **V2BatchHarness GCS mock conftest extensions** — `strategy@8e478de` baseline; extend conftest to cover edge cases (empty feature set, stale manifest, missing venue data). Done-def: 4+ new fixture variants + tests green.
+7. **batch_live symmetry strategy-service follow-on** — scan strategy-service for any remaining L2 Tab 3 violations after B-003. Fix + QG green.
+8. **master plan `pvl-p18a` pre-work** — B-016 DEFERRED means paper-mode evidence run needs fresh CeFi data. File a follow-up todo in `plans/active/master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator": CeFi features-service batch run (BLOCKED-CREDENTIALS on fresh tick data). Include: vendor (internal pipeline), what's needed (operator runs features-service batch over 7-day CeFi window), unblocks (B-016 re-activation). Done-def: master plan todo filed with BLOCKED-CREDENTIALS status.
+Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.

@@ -53,3 +53,17 @@ stub uncoverable). QG ✅ all gates passed (72s). Queue exhausted — self-stand
 [2026-05-15 06:54 UTC] [main → slot 5] — ✅ CYCLE-CLOSE acked (item 3 risk@fd10112, 15 tests, 89%→98% coverage). Queue confirmed exhausted. **STAND-DOWN — Day-1 complete. Excellent work.**
 
 [2026-05-15 07:01 UTC] [main → slot 5] — 🔄 **RE-ACTIVATE — continuation_prompts reserve queue**. **STEP 0 (mandatory first)**: rebase ALL repos to latest LDR for each repo in your worktree. Then work from continuation_prompts § Slot 5 reserve: (1) **execution-service DefiErrorCode coverage** — 30 DefiErrorCode entries in `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode`; verify each has a test exercising FAIL/RETRY/SKIP routing in execution-service consumers (aave.py, etc.); add tests for any missing; (2) **pnl-attribution APD bucket extension tests** — `pnl-attribution-service` ARBITRAGE_PRICE_DISPERSION archetype bucket: verify test coverage on the bucket extension logic; add if gaps found; (3) **deployment-api SHARD_AXIS_MATRIX drift check** — verify `deployment-api` SHARD_AXIS_MATRIX in code matches codex SSOT; file issue doc if drift found. Done-def: all 3 items + QG green. Ping DONE with SHAs.
+
+[2026-05-15 07:09 UTC] [main → slot 5] — 📋 **EXTENDED QUEUE — work through in order, self-pivot, ping only on DONE or BLOCKED (not between items)**. Estimated ~15 AI-days.
+
+Queue:
+1. **execution-service DefiErrorCode coverage** (from re-activate): 30 DefiErrorCode entries; verify each has FAIL/RETRY/SKIP routing test in aave.py and other consumers; add missing. QG green.
+2. **pnl-attribution APD bucket extension tests** (from re-activate): ARBITRAGE_PRICE_DISPERSION archetype bucket; verify + add coverage. QG green.
+3. **deployment-api SHARD_AXIS_MATRIX drift check** (from re-activate): compare code vs codex SSOT; file issue doc if drift.
+4. **execution-service — carry_staked_basis paper trade smoke**: add smoke test that runs carry archetype end-to-end through execution-service in paper mode (mock fills, no real orders). Done-def: 1 new integration test + QG green.
+5. **execution-service — hedge-leg fill simulation tests**: APD multi-venue slippage scenarios across 6 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken). 5+ new scenarios. QG green.
+6. **master plan `pvl-p18b-archetype-paper-runnable-matrix`**: populate per-archetype 4-state taxonomy (paper-runnable / partial / blocked / not-started) for both `carry_staked_basis` and `arbitrage_price_dispersion`. File as `plans/active/archetype_paper_runnable_matrix_2026_05_15.md`. Done-def: matrix filed with current state + blockers named.
+7. **risk-and-exposure-service — phase 6.7 BLOCK_CRITICAL coverage gap check**: after your item 3 (risk@fd10112), re-read coverage report; verify 0 uncovered lines in BLOCK_CRITICAL paths. Add tests if any remain.
+8. Self-pivot through reserve if queue exhausts. Ping DONE per major milestone.
+
+[2026-05-15 07:11 UTC] [main → slot 5] — ⚠️ **CORRECTION to extended queue**: item 3 (deployment-api SHARD_AXIS_MATRIX drift) is REMOVED — slot 7 is actively working deployment-api items 1+2; avoid that repo until slot 7 CYCLE-CLOSE. Replace item 3 with: **UTL event-emission unit tests** — audit `unified-trading-library/events/` for uncovered `log_event` paths; add tests for any gap. Rest of queue (items 1,2,4,5,6,7) stands as written above.

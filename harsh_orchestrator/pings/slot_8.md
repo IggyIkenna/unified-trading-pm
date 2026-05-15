@@ -51,3 +51,14 @@ MIN_COVERAGE=70 + new SSOT path + instruction block → quickmerge ship via
 got the QG stub. After all 15 service repos QG green: ping DONE.
 
 [2026-05-15 07:01 UTC] [main → slot 8] — 🔔 **REBASE REMINDER + STATUS CHECK**. Before your next commit: rebase ALL repos in your worktree to LDR (`git fetch origin && git rebase origin/live-defi-rollout`). This picks up PM@c7786b2f (PYTEST_UNIT_DIR fix — features-service quality-gates.sh now sets PYTEST_UNIT_DIR="tests/" + MIN_COVERAGE=70 restored by prek; note this may affect your B-014 stash recovery for features-service — read the diff before popping stash). After rebase: continue B-014 stash recovery per your existing queue. Ping DONE with SHAs when all 7 stash repos shipped.
+
+[2026-05-15 07:10 UTC] [main → slot 8] — 📋 **EXTENDED QUEUE for after B-014 stash recovery completes**. Read now so you can self-pivot immediately. Estimated ~12 AI-days post-stash.
+
+After B-014 stash recovery pings DONE:
+1. **codex/06-coding-standards quality-gates.md update** — document new STEP 5.79-5.82 (B-014 ratchet STEPs) + PYTEST_UNIT_DIR override pattern (PM@c7786b2f) + UAC carveouts in the codex SSOT. Done-def: codex doc reflects all Phase 3 QG changes.
+2. **codex_vs_citadel audit** (continuation_prompts item 3): read `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md`; verify Harsh-side codex sections (UTL, deployment-service template, Phase 8 surfaces) align with shipped code. File issue doc per drift found.
+3. **UTL emission publisher consumer-side coverage audit** (continuation_prompts item 4): map `publish_with_policy` callsites across execution, risk, strategy, features; verify each callsite has a consumer-side test; fix gaps. Done-def: callsite map in plan doc OR gaps fixed; QG green per repo.
+4. **master plan `mtb-p6e-final-qg-sweep`**: full QG sweep across all 6 B-014 rollout repos (features-service, ibkr-gateway-infra, mdps, ml-inference, ml-training, system-integration-tests). Capture pass/fail + coverage %. File issue doc for any repo below 70%.
+5. **batch_live symmetry L4/L5/L6 sweeps** (reserve): scan for any remaining batch_live L4-L6 violations in the 3 primary repos (features, strategy, mtds). Fix + QG green.
+6. **base-service.sh template DRY**: identify repeated boilerplate patterns across quality-gates.sh files (e.g. PERIPHERAL_DIR blocks, lifecycle checks); propose consolidation in codex. Doc-only; no code change without operator ack.
+Self-pivot. Ping DONE per major item or grouped CYCLE-CLOSE when exhausted.
