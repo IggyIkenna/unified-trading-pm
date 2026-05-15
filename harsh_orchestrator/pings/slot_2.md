@@ -161,3 +161,10 @@ STARTED item 7 (test coverage verification).
 - Total coverage: 70% → 71%. QG threshold (70%) met + exceeded.
 - Pre-existing low modules (monitoring.py 66%, quota_broker_client.py 38%) excluded per done-def ("skip experimental scripts") — these are complex orchestration internals.
 STARTED item 8 (deployment-events GCS pubsub forwarding audit).
+
+[2026-05-15 16:10 UTC] slot-2 — ✅ **DONE item 8** (deployment-events GCS pubsub forwarding audit). unified-trading-pm@b1e0e75e.
+- Smoke verified: `measure-honest-coverage-20260515-115454` emitted DEPLOYMENT_STARTED + DEPLOYMENT_COMPLETED within 2s (exit 0, log in GCS).
+- GAP FOUND (P2): vm-heartbeat-daemon uses PubSubEventSink (7-day TTL) — all other services use GCSEventSink for permanent archival. No GCS export subscription on `deployment-events` topic. Events expire after 7 days.
+- Recommendation: switch heartbeat_cli.py to GCSEventSink or add GCS export subscription. Non-blocking for May-23.
+- Audit report: `codex/05-infrastructure/vm-deployment-events-audit.md`.
+STARTED item 9 (scripts/vm/ operator runbook).
