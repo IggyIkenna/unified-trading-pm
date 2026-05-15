@@ -911,12 +911,12 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
-  - [ ] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
+  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
         paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
         codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
         batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
         closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped batch-live-reconciliation-service@48f12ce 2026-05-15**
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
   - [x] [AGENT] P1. `pvl-p22a-mode-tagged-alerts`: Alerting-service rules consume `mode: OperationalMode` from
