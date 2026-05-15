@@ -448,6 +448,22 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   orchestrator + Layer 3 venue-account pre-flight — minimum subset of the ~22 P1 items needed for Group F live-trading.
   The HEAVIEST live-trading critical-path block in Phase 1; the rest of Phase 1.9 (allocator service, dual projection)
   is post-May-23.
+
+  **Topology GAP closure todos (from topology_qgroup_gap_closure_2026_05_09 Phase 1+8):**
+  - [x] [AGENT] P0. **GAP-1 + GAP-4**: `codex/04-architecture/strategy-ensemble-topology.md` pinning ONE VM per
+    asset_group + DeFi/CeFi split + multi-tenancy rules + colocation-bootstrap protocol.
+    Shipped PM@(pending) 2026-05-15.
+  - [x] [AGENT] P0. **GAP-2 + GAP-3**: Process-vs-in-proc shape codified in
+    `codex/04-architecture/strategy-ensemble-topology.md` § "Per-VM process layout" — 4 separate OS processes, local
+    Redis IPC, `POSITION_BALANCE_URL`/`RISK_EXPOSURE_URL`/`EXECUTION_URL` env-var service discovery.
+    Shipped PM@(pending) 2026-05-15. Colocation bootstrap script (`colocate-strategy-vm.sh`) DEFERRED Phase 1.9.
+  - [ ] [AGENT] P0. **GAP-5**: `ExecutionRejectionCode` + `ExecutionRejectionEvent` shipped in
+    UAC@(pending) 2026-05-15. Strategy-service rejection consumer (retry/alert/stop routing) TODO:
+    ship `strategy_service/app/core/rejection_handler.py` + wire into execution event loop.
+  - [x] [AGENT] P0. **GAP-12**: `codex/04-architecture/matching-engine-assumptions.md` pinning per-matcher slippage
+    model + commission schedule + latency model + venue-liquidity proxy + `BenchmarkFillMode` per `InstructionActionV2`.
+    `MatchingEngineConfig` UAC class TODO: ship in UAC internal/architecture_v2 Phase 1.9 bundle.
+    Shipped PM@(pending) 2026-05-15.
 - **Phase 3.3 cda-p3-unified-sor**: Live trading prereq for Group F.
 - **Phase 3.5 slv-p3-risk-attribution**: Live trading prereq for Group F.
 - **Phase 1.6 Phase 10.6 service-split refactor (subset)**: pre-execution audit + RBAC-scoped refactor of
