@@ -3593,6 +3593,38 @@ repo).
 | instruments-service            | instruments_service/triggers/sports_fixtures_daily_repoll.py | 361  | record_captured() in run_sports_fixtures_daily_repoll has no paired publish_with_policy() in same function | Added # QG-allow: emission-policy-not-applicable — raw api-football FIXTURES input capture; policy not applicable at this callsite (instruments-service@aa4d98f)                                        |
 | market-data-processing-service | market_data_processing_service/app/core/canonical_writer.py  | 950  | record_captured() in write_candle_parquet has no paired publish_with_manifest_lookup() in same function    | Added # QG-allow: emission-policy-not-applicable — policy gate runs in \_publish_emission_check (caller function); this site records manifest AFTER the policy gate has allowed emission (mdps@53343b1) |
 
+### 3.5 α-vs-β verdict (Phase 6.6/6.7/6.9 audit, slot 7 Ikenna 2026-05-15)
+
+**Verdict**: **β** wins — per-service emission boundary is the canonical wiring pattern across Phases 6.6/6.7/6.8.
+Gate 4 (Phase 6.9 ship-gate) closed.
+
+**Methodology**: workspace grep `_check_emission_policy|publish_with_policy|publish_with_manifest_lookup` across the
+9 Phase 6.x services (excluding tests) returned exactly 1 source file per service (10 for the consolidated
+features-service across 8 families). Each callsite lives in the SERVICE'S own emission boundary, not at a
+centralised orchestrator:
+
+| Service                          | File                                                                                | Boundary                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------- |
+| ml-training-service              | `ml_training_service/ml/model_registry.py`                                          | `store_model()` (BLOCK_CRITICAL)               |
+| ml-inference-service             | `ml_inference_service/app/core/prediction_publisher.py`                             | `_upload_one_mode()` (STRICT_FAIL)             |
+| strategy-service                 | `strategy_service/engine/core/signal_publisher.py`                                  | `SignalPublisher.publish()` (STRICT_FAIL)      |
+| execution-service                | `execution_service/engine/orchestrator.py`                                          | `order_intent` + `fill_confirmation` gates     |
+| position-balance-monitor-service | `position_balance_monitor_service/core/nav_snapshot_publisher.py`                   | `NAVSnapshotPublisher.publish()`               |
+| risk-and-exposure-service        | `risk_and_exposure_service/core/risk_snapshot_sink.py`                              | `RiskSnapshotSink.write()`                     |
+| instruments-service              | `instruments_service/engine/orchestrator.py`                                        | `process_instruments()` catalog_snapshot       |
+| features-service                 | 10 source files across delta_one/cross_instrument/multi_timeframe/onchain/sports/…  | per-family emission publisher (β across all)   |
+| market-data-processing-service   | `canonical_writer.py` + `_publish_emission_check` caller                            | policy gate runs in caller; QG-allow exemption |
+
+**Why β over α**: amendment F in Phase 2.B (MTDS cluster wiring) resolved α (orchestrator-boundary, single SSOT)
+because MTDS bundle data_types route through one orchestrator callsite. Phases 6.6/6.7/6.8 are different — each
+service has ONE primary emission boundary (its publisher), so β (per-service wiring) is the natural fit and
+matches every shipped commit. The Phase 6.9 audit table at § 1 above lists the SERVICE_OUTPUT_POLICIES roster;
+every row has its policy enforced at the named service's emission boundary, not at a workspace-level helper.
+
+**Gate 4 status**: ✅ **CLOSED** — verified all Phase 6.6 + 6.7 + 6.8 service checkboxes are `[x]` with sha
+evidence in their respective sections above; QG STEP 5.71 (`check_emission_policy_paired_callsites.py`) passes
+workspace-wide; no service ships an emission boundary without a paired `_check_emission_policy` callsite.
+
 ### 4. Open P1 follow-ups (not blocking Phase 6.9 gate)
 
 - MDPS P1: v8 manifest columns (service_emission_state / completeness_fraction) not forwarded to record_captured in
