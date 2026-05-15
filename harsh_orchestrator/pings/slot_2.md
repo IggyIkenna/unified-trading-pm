@@ -21,3 +21,17 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 08:05 UTC] [main → slot 2] — ✅ item 2 acked (deployment-service@97298f3, 8 prefixes, 6 tests). LEDGER updated. Item 3 (codex audit) confirmed in flight — continue.
 
 [2026-05-15 08:22 UTC] slot-2 — DONE items 3+4. unified-trading-pm@0f52f0da (codex: launcher-script-ssot.md + deployment-and-qg-strategy.md). alerting-service D.5+D.7 verified RESOLVED (alerting-service@6a01b98, QG green). BUG FOUND+FIXED: honest-coverage smoke rc=2 (VM_TASK=measure-honest-coverage not in setup-data-pipeline-vm.sh routing; changed to features-backfill). deployment-service@4b8d5b4 + GCS launcher updated. Re-smoke: measure-honest-coverage-20260515-112048 RUNNING. Watching for coverage.json in 10-15 min.
+
+[2026-05-15 08:25 UTC] slot-2 — 🏁 **Slot 2 Day-1 close**. Queue exhausted.
+
+**DONE:**
+- Item 2 ✅ — VM_PREFIX watchdog blindspot audit (deployment-service@97298f3). 8 B-011 prefixes registered, 6 tests pass, watchdog vm-zombie-watchdog-20260515-110711 running.
+- Item 3 ✅ — Codex audit (unified-trading-pm@0f52f0da). launcher-script-ssot.md + deployment-and-qg-strategy.md updated with B-011 audit + honest-coverage cron pattern.
+- Item 4 ✅ — alerting-service D.5+D.7 violations verified RESOLVED (alerting-service@6a01b98, QG=all-green).
+- BUG FIX (bonus) — honest-coverage launcher VM_TASK bug caught and fixed (deployment-service@4b8d5b4). Re-smoke running: measure-honest-coverage-20260515-112048.
+
+**BLOCKED-OPERATOR-DECISION (item 1):**
+- Cloud Scheduler `honest-coverage-daily` creation pending Ikenna (`cloudscheduler.jobs.create`). Infra shipped: Cloud Run Job ✅ + Terraform ✅ + launcher ✅ (GCS updated). One-liner: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as ikenna@odum-research.com.
+
+**WATCHING:**
+- measure-honest-coverage-20260515-112048 (RUNNING) — expect `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` in ~10 min. Will update when verified.
