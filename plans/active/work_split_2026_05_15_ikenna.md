@@ -257,12 +257,17 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
 `governance_qg_automation_gaps_post_cutover_2026_05_12` codification + `deploy_missing_auto_launch_2026_05_07` close
 (V2) + Cluster B pnl-attribution lint.
 
-1. **B-015 smoke re-launch coordination** — phantom audit returned CLEAN per
-   `plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md` resolution update
-   (2026-05-15 11:22-11:23 UTC); root cause was STALE IN-FLIGHT LOCK not phantoms. Coordinate with Harsh slot 9 to
-   re-launch MTDS lst_rates smoke with UNIQUE `VM_NAME=mtds-lst-rates-smoke-v2-20260515` + features-onchain smoke
-   investigation (no event stream on first launch — get serial-console output). Apply-flips NOT needed. (infra
-   0.8×, ~2 = 1.6 cal)
+1. ✅ **B-015 smoke re-launch coordination** — phantom audit returned CLEAN per
+   `plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md` (root cause: stale in-flight
+   lock not phantoms; apply-flips not needed). Harsh slot-9 re-launched 2026-05-15:
+   - **Smoke A ✅ CLEAN** — `mtds-lst-rates-20260515-201226` exit_code=0; 12+ LST venues × 5 days
+     (2026-04-15..19) written to `gs://lst-rates-central-element-323112/`; no phantoms (handlers
+     hardened pre-launch: `mtds@c1e6963/f657431` + 3bca360).
+   - **Smoke B 🟡 BLOCKED-UPSTREAM** — features-onchain dependency-check failed: MDPS `processed_candles`
+     missing for `2026-04-15..19/DEFI`. Upstream MDPS DEFI batch must run for those dates before
+     features-onchain can produce data. Operator decision pending: (a) declare B-015 verified on Smoke A
+     alone + ship MDPS DEFI batch as separate task, OR (b) run MDPS first then re-run features-onchain.
+   Coordination DONE on slot-8 side. (infra 0.8×, ~2 = 1.6 cal)
 2. **`solana_defi_coverage_gaps` successor D venue naming reconciliation** (carry from 14 May #2). (design 0.6×,
    ~3 = 1.8 cal)
 3. **`AUDIT_pre_may_8_cleanup_2026_05_13` close** (carry from 14 May #3). (refactor 0.4×, ~3 = 1.2 cal)
