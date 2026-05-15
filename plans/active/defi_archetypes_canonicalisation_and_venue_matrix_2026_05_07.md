@@ -268,22 +268,21 @@ controller layer).
 
 **Tasks** (per archetype doc — each is independently shippable)
 
-- [ ] [codex] P0. [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
-      "Token / position flow" + "Execution semantics" sections: rewrite to reference `LegController.update`. Keep the
-      4-leg sequence as the **logical** flow (SWAP → STAKE → TRANSFER → TRADE) but credit the controller for
-      mechanically generating it. Drop "hand-built" implications.
-- [ ] [codex] P0. [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md): same
-      rewrite for the 2-leg paired entry/exit.
-- [ ] [codex] P0.
+- [x] [codex] P0. [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+      "Execution semantics" section: added `### LegController integration` sub-section crediting controller for
+      mechanically generating the 4-leg sequence; Code-backport status: DEFERRED. (PM@552a3e6e)
+- [x] [codex] P0. [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md): same
+      rewrite for the 2-leg paired entry/exit. (PM@552a3e6e)
+- [x] [codex] P0.
       [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
-      add a "LegController integration" sub-section. ATOMIC mode and LEADER_HEDGE mode both flow through
-      `LegController.update` with mode-specific deadlines + compensation rules.
-- [ ] [codex] P0.
+      added "### LegController integration" sub-section; ATOMIC + LEADER_HEDGE modes documented. (PM@552a3e6e)
+- [x] [codex] P0.
       [`carry-recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md): same
-      rewrite for the recursive supply/borrow loop.
+      rewrite for the recursive supply/borrow loop. (PM@552a3e6e)
 - [ ] [codex] P1. Remaining 7 archetype docs in `codex/09-strategy/architecture-v2/archetypes/` — same rewrite. Per
       Citadel-grade `doc → plan → code` rule, ship even if the code backport for that archetype is deferred. Each doc
-      gets a `**Code-backport status:**` line declaring SHIPPED / DEFERRED.
+      gets a `**Code-backport status:**` line declaring SHIPPED / DEFERRED. **DEFERRED** to post-cutover plan (P1, not
+      blocking May-23).
 - [ ] [PM-plan] P1. Once the 11 doc rewrites land, update the archived
       [`leveraged_leg_controller_2026_05_01`](../archive/leveraged_leg_controller_2026_05_01.plan.md)'s Phase 4 GATE
       description (in a follow-up commit) to note "doc rewrites shipped 2026-05-07; code backport proceeds
