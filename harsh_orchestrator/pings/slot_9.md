@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 19:10 UTC] harsh-slot-9 — ✅ DONE new-queue item 7 (MTDS graceful shutdown tests): mtds@6a71ddf. 9 tests in test_graceful_shutdown.py: TestSystemExitNotCaughtByExceptException (2: SystemExit escapes except Exception, RuntimeError caught), TestDefiShardLoopShutdownBehavior (4: completed shards record_captured persists, exit code 0, all-shards normal, exception shard record_failed), TestGracefulShutdownHandlerFlag (3: shutdown_requested initially False, set via request_shutdown, SIGTERM+SIGINT registered on init). QG green. B-015 still HOLD. Moving to item 8 (PBM cluster validation tests).
+
 [2026-05-15 14:15 UTC] harsh-slot-9 — ✅ DONE queue item 10 (MTDS handler retry-and-backoff audit): mtds@dcd6f5f.
 solana_defi: added \_get_with_retry() (429/5xx + exponential backoff) applied to \_collect_drift +
 test_429_retries_then_succeeds; evm_defi: test_429_retries_then_succeeds (\_execute_subgraph_query existing retry
