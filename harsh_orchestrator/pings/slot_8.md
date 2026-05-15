@@ -207,3 +207,52 @@ Excellent.
 10. **System-integration-tests test scenarios audit** — verify sit/ has coverage for the May-23 critical paths (DeFi
     paper carry, DeFi paper APD, mode-switch live/batch). File issue doc per gap. Done-def: audit report; ≥1 scenario
     per critical path or named gap. Self-pivot. Ping DONE per major item.
+
+---
+
+## [2026-05-15 22:35 UTC] [main → slot 8] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> 🏁 CYCLE-CLOSE acked + items 1-10 + DT-3/DT-4 self-pivot — outstanding 11-item
+> session. Re-anchoring as todo-checkbox list per operator request. Fresh
+> 10-item queue (~20 AI-days UTL + workspace governance + meta-QG).
+> Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+
+### Already done this cycle
+
+- [x] **1. QG step duration profiling** — PM@c4b87640
+- [x] **2. UTL test coverage push** — UTL@64bf59a (3 new test modules)
+- [x] **3. base-service.sh CI workflow integration** — PM@21686e55 + alerting-service@05dec98
+- [x] **4. pre-commit (prek) drift detection** — PM@45a8eaf5
+- [x] **5. workspace-wide deprecated-pattern sweep audit** — PM@45a8eaf5 (466 type:ignore + os.getenv + ImportError report)
+- [x] **6. STEP 5.83+ additions proposal** — PM@45a8eaf5
+- [x] **7. CI/CD flow documentation** — PM@45a8eaf5 (`codex/08-workflows/ci-cd-flow.md`)
+- [x] **8. pyproject.toml workspace-wide audit** — PM@54afee99
+- [x] **9. UTL changelog automation** — UTL@505cc8a (`scripts/generate_changelog.py`)
+- [x] **10. SIT May-23 critical path audit** — PM@45a8eaf5
+- [x] **Bonus: DT-3/DT-4 self-pivot** — PM@8b4ab3ad (PRE_CUTOVER codex audit)
+
+### Fresh queue (items 11-20, ~20 AI-days)
+
+- [ ] **11. workspace-manifest.json drift audit** — verify it matches actual dep graph (every repo's pyproject.toml internal deps). Fix per-repo or regenerate manifest. Done-def: drift report + ≤2 fixes + manifest DAG SVG regenerated.
+
+- [ ] **12. workflow-templates rollout audit** — verify every repo's `.github/workflows/version-bump.yml` (or equivalent) matches `unified-trading-pm/scripts/workflow-templates/` SSOT. Run `bash scripts/workflow-templates/rollout.sh` if needed. Done-def: 0 drift across repos.
+
+- [ ] **13. codex/08-workflows new doc — deployment-flow.md** — operator's perspective: dev → staging → main with QG + version graduation. Done-def: doc + cross-link from CLAUDE.md.
+
+- [ ] **14. UTL bump strategy audit** — verify next-bump trigger (feat/feat!/fix) matches actual API surface change. Done-def: audit report + correct bump label if mismatched.
+
+- [ ] **15. pre-commit hook standardization** — audit `.pre-commit-config.yaml` across all repos vs PM template; report drift; fix mechanical. Done-def: drift report + 5+ fixes.
+
+- [ ] **16. issue-doc triage sweep** — `plans/active/issues/` has ~50 files; many may have stale status. Re-grep each for resolution evidence in git log; add `status: RESOLVED` frontmatter where applicable; surface still-open P0/P1 to a consolidating doc. Done-def: triage report + 10+ status frontmatter fixes.
+
+- [ ] **17. UTL HMAC signing module coverage extension** — slot 6 shipped HMAC concurrent + N=100 stress tests. Audit gaps in non-concurrent paths (envelope encoding, payload-size edges, timing-attack hardening). Done-def: 5+ extension tests + UTL QG green.
+
+- [ ] **18. workspace-wide cassette parity refresh** — `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py`; if any drift, investigate + file issue doc per cassette. Done-def: parity clean OR per-cassette doc.
+
+- [ ] **19. workspace-constraints.toml audit** — verify external dep pins are latest-acceptable; flag CVEs / major-version-behind. Done-def: audit report + 3+ pin updates.
+
+- [ ] **20. codex/06-coding-standards/README.md cross-link sweep** — verify every standard is cross-linked from README index + CLAUDE.md. Done-def: 0 orphan standards.
+
+**Conflict rules**: UTL = slot 8 territory (you); PM workspace audits = slot 8 OR slot 2 (you have priority on this batch); UAC cassettes = surgical only (Ikenna primary on UAC); codex docs = slot 8 OR slot 6.
+
+Self-pivot through items 11 → 20. Ping STARTED + per-item DONE in this file.
