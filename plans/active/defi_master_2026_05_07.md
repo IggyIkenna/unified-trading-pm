@@ -282,13 +282,13 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ### DeFi e2e pipeline gates (`defi_e2e_pipeline`)
 
-- [ ] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
+- [x] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable] (strategy-service@`671efda` 2026-05-15 — RUF002 × lint fix + ruff format; QG passed 197s)
 - [x] [AGENT] P0. execution-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
       (execution-service@`57f3bf972` 2026-05-15 — CanonicalError Exception inheritance fix in UAC@`3368669` + Kraken
       adapter kwargs fix + QG timeout 600→1200s + SKIP_IMPORT_PATTERNS; QG passed 1003s)
-- [ ] [AGENT] P0. risk-and-exposure-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
-      multi-recent-commit pattern of fixes shows ongoing work (7f1b2a1, c90d01a, 955abb5, 266f512, f3db4ca, 82d94b6)]
+- [x] [AGENT] P0. risk-and-exposure-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable] (2026-05-15 — QG passed 194s; 9/9 codex violations within tolerance)
+- [x] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
+      multi-recent-commit pattern of fixes shows ongoing work (7f1b2a1, c90d01a, 955abb5, 266f512, f3db4ca, 82d94b6)] (2026-05-15 — QG passed 254s)
 - [ ] [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. CARRY_RECURSIVE_STAKED batch e2e produces non-zero PnL row in
       `pnl-store-{pid}/by_strategy/.../day=2025-06-21`. [AUDIT 2026-05-07: FRESH — actionable; Phase 9 calculator
