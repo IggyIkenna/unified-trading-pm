@@ -1116,6 +1116,28 @@ pytest tests/smoke/ -v --tb=short --timeout=180
 
 Missing test directories are silently skipped.
 
+### `PYTEST_UNIT_DIR` override (Phase 8, 2026-05-15)
+
+**Added 2026-05-15 — Phase 8 / slot 6 doc-currency audit.**
+
+Services whose unit tests are NOT under the canonical `tests/unit/` root can override the pytest target directory
+by setting `PYTEST_UNIT_DIR` **before** `base-service.sh` runs its test step:
+
+```bash
+# In service's scripts/quality-gates.sh — set before sourcing base-service.sh
+PYTEST_UNIT_DIR="tests/"   # e.g. features-service: per-family CLIs share root tests/
+```
+
+`base-service.sh` line 209 reads: `PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"` — the default is
+`tests/unit/`; override only when the layout genuinely differs.
+
+**When to use**: services with per-family CLI layouts (e.g. `features-service`) where tests live directly under
+`tests/` without a `unit/` subdirectory. **Never** use to broaden the pytest scope to include integration tests in
+the unit pass — integration tests run in a separate step.
+
+Reference: `features-service/scripts/quality-gates.sh:28` (`PYTEST_UNIT_DIR="tests/"`). Issue doc that surfaced
+the gap: `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md`. PM commit: `c7786b2f`.
+
 ---
 
 ## Usage
