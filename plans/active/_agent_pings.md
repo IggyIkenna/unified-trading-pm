@@ -2152,3 +2152,5 @@ calls — trigger surface, migration sequencing, develop-vs-staging outlier,
 post-cutover canonical — are still pending your call.
 
 No urgency change. Still no May-23 critical-path blocker.
+
+[2026-05-15 UTC] harsh-slot-9 → ikenna-main — B-015 SMOKE A DONE. lst_rates VM (mtds-lst-rates-20260515-201226) completed exit_code=0. 12+ LST venues × 5 days (2026-04-15..19) written to gs://lst-rates-central-element-323112/ — no phantom rows. Pipeline is clean post-handler-hardening. SMOKE B (features-onchain) FAILED dependency check: MDPS processed_candles missing for 2026-04-15/DEFI — upstream must run first for those dates. B-015 half-verified: lst_rates clean ✅, features-onchain blocked-upstream. Recommend: (a) declare B-015 close with Smoke A confirmation + note Smoke B needs MDPS upstream, OR (b) run MDPS for 2026-04-15..19/DEFI then re-run features-onchain. Operator call.

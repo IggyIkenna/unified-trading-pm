@@ -328,9 +328,9 @@ After launch:
 
 #### Active (item 1 first, then 2-9, ~16 AI-days total)
 
-- [ ] **1. B-015 smoke VM launch + monitoring** — see commands above. Done-def: both VMs DONE + GCS data verified + cross-side ping to Ikenna posted in `_agent_pings.md`.
+- [x] **1. B-015 smoke VM launch + monitoring** — ✅ Smoke A DONE (mtds-lst-rates-20260515-201226, exit_code=0, 12+ LST venues × 5 days written to gs://lst-rates-central-element-323112/). Smoke B FAILED — dependency check: MDPS processed_candles missing for 2026-04-15/DEFI (upstream not run for these historical dates). QG fix: MTDS@9f73cdf (native_staking_handler exclusion restores 10/10 compliance). Cross-side ping below.
 
-- [ ] **2. emerging_perp_adapters_diagnosed close-out** (P0) — [`plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md`](../../plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md). HYPERLIQUID `fetch_trades` Tardis branch + ASTER URL fix. Done-def: 2 adapters fixed + MTDS QG green.
+- [x] **2. emerging_perp_adapters_diagnosed close-out** — ✅ AUDIT CLEAN. ASTER URLs already fixed (api.asterdex.com/fapi.asterdex.com in aster_base_client.py@b2b8dd5). HYPERLIQUID S3 already wired in umi_tick_provider.py `_fetch_hyperliquid_s3()` (service-layer correct per ISS-022b design). MTDS QG green mtds@9f73cdf.
 
 - [ ] **3. mtds_defi_handler_perf_benchmark_gap close-out** (P2) — [`plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md`](../../plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md). Either mark RESOLVED (per the "no action for May-23" note) OR build the perf harness. Done-def: doc closed OR harness shipped.
 
