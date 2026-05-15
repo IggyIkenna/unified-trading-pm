@@ -1,7 +1,7 @@
 ---
 title: Topology Q-group — features / strategy ensemble / ML / execution × batch / live / paper
 type: question-doc
-status: active-closing
+status: archived
 created: 2026-05-08
 status_changed: 2026-05-09
 deadline: 2026-05-23
@@ -395,3 +395,16 @@ This doc archives once: (a) every 🔴 GAP has a corresponding `- [ ]` todo in i
 flipped `- [x]`; (b) every 🟢 IN-FLIGHT Q's plan phase has shipped; (c) every 🟡 PARTIAL Q's promoting GAP has closed;
 (d) every ✅ ANSWERED Q has a codex doc reflecting the answer; (e) ISSUE-1 is fixed in code; (f) WATCH-1 + WATCH-2
 either landed cleanly OR escalated and resolved. Until then, status: `active-closing`.
+
+---
+
+## Deferred work — migrated to:
+
+**Archived 2026-05-15** by topology_qgroup_gap_closure_2026_05_09.md Phase 7.
+
+All 18 GAPs closed per Phases 1-8 of closure plan. ISSUE-1 resolved (features-service@d579f861). WATCH-1 + WATCH-2
+resolved (Phase 8). Codex SSOT coverage verified (Phase 6). 🟢 IN-FLIGHT Qs (Q1.1.a, Q2.2.a-e, Q2.3.a-b, Q4.1.a/c,
+Q4.2.a/d, Q5.a/b/c) remain tracked in their respective destination plans (`master_to_live_defi_2026_05_23.md` Group F +
+`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 5) — these are active-shipping plans, not deferrals.
+
+**Closure home**: `plans/active/topology_qgroup_gap_closure_2026_05_09.md`

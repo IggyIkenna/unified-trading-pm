@@ -318,10 +318,10 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [ ] [AGENT] P0. All 8 archetypes pass Phase 1 batch e2e: CARRY_RECURSIVE_STAKED, CARRY_STAKED_BASIS, CARRY_BASIS_PERP,
       [+5 more]. [AUDIT 2026-05-07: FRESH — actionable; CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs landed
       strategy@e4a0cdd]
-- [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
-      Phase changes. [2026-05-15: IN PROGRESS — Cloud Build `dfbe8f04` WORKING (started 08:01 UTC); Dockerfile
-      --no-sources fix shipped at features-service@`17ec5e62`; quality-gates step running ~50+ min; awaiting SUCCESS +
-      `:latest` push]
+- [x] ✅ [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
+      Phase changes. DONE (2026-05-15): features-service@`7929e80c` — add $SHORT_SHA tag to cloudbuild.yaml build step
+      (root cause: `images:` section expected $SHORT_SHA but build only created $VERSION + :latest tags); Cloud Build
+      `070d32cb` SUCCEEDED — image pushed with :latest + :7929e80c tags.
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
 
@@ -498,8 +498,10 @@ these venues.
 > only **13,632 rows / 2,234 distinct dates are actionable**. Top concentrations: (1) Tab 5 lending-indices fixes
 > resolve ~2.4k; (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) resolve ~1.4k; (3) UAC
 > `PROTOCOL_LAUNCH_DATES` tightening for vault protocols (YEARN V3 / Morpho Vaults / Ethena vault) reclassifies ~6.9k
-> from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER perp-funding adapter has **zero captured rows**
-> (correctness risk if ASTER on May-23 hedge-leg path).
+> from `SOURCE_RETURNED_ZERO` → `legit_pre_protocol_launch`; (4) ASTER perp-funding adapter had **zero captured rows** —
+> **FIXED 2026-05-15** (mtds@`f9824d0`): root cause was dead URL `api.aster.finance` → DNS NXDOMAIN; fixed to
+> `fapi.asterdex.com` (Binance-compatible, 406 live PERPETUAL symbols); added `_ASTER_FUNDING_START_DATE = "2024-09-25"`
+> pre-launch guard to emit `EXPECTED_PRE_VENUE_LAUNCH` for pre-launch dates instead of blank `SOURCE_RETURNED_ZERO`.
 
 - [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /

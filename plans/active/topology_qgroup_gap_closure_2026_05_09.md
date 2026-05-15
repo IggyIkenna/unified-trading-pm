@@ -213,12 +213,14 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 **Target ship:** 2026-05-22 (13 days, day before cutover).
 
-- [ ] [AGENT] P0. Verify parent Q-doc archive criteria: every 🔴 GAP has a `- [ ]` todo in destination plan + that todo
+- [x] [AGENT] P0. Verify parent Q-doc archive criteria: every 🔴 GAP has a `- [ ]` todo in destination plan + that todo
       flipped `- [x]`; every 🟢 IN-FLIGHT Q's plan phase has shipped; every 🟡 PARTIAL Q's promoting GAP has closed;
       every ✅ ANSWERED Q has codex SSOT reflecting; ISSUE-1 fixed in code; WATCH-1 + WATCH-2 either landed cleanly OR
       escalated and resolved. Move parent Q-doc from `plans/questions/` to
       `plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md` per archive filename convention. Done =
-      file moved + parent's `## Deferred work — migrated to:` section banners this plan as the closure home.
+      file moved + parent's `## Deferred work — migrated to:` section banners this plan as the closure home. **SHIPPED
+      PM@<next-commit> 2026-05-15 — all 18 GAPs verified closed; ISSUE-1 resolved; WATCH-1/2 resolved; Q-doc moved to
+      plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md with closure banner**
 
 ---
 

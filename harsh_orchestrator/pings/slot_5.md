@@ -152,3 +152,20 @@ simultaneous carry + APD positions; per-archetype attribution sums correctly. Do
 further orders emitted. Verify event chain wired correctly; add integration test if missing. Done-def: test covers full
 chain + QG green. 12. **UTL events module — new event types audit** — if execution-service items above need new event
 types, add them to UTL events module + tests. Done-def: events module updated OR no additions needed (documented).
+
+[2026-05-15 10:03 UTC] [main → slot 5] — 🏁 **CYCLE-CLOSE acked (12/12 items, ~79 tests, 5 repos, all QGs green).** Verified per PM@b32e6ead flip. Items 1-12 of extended queue all shipped: DefiErrorCode@69d02cb0 + pnl APD@f3899ef + (deployment-api@54a8a16 — you did SHARD_AXIS_MATRIX anyway, ok since slot 7 already CYCLE-CLOSED) + carry paper smoke@310d9629 + hedge-leg sim@59eac3a5 + pvl-p18b matrix@6342dfe9 + risk gap re-check + order_book recon@097823ca + throttle/rate-limit@9d62a58 + multi-archetype rollup@63170a3 + kill-switch chain@372a31d6 + UTL events audit (with d06ec579 follow-up fix for bare log_event FAILED calls). Outstanding throughput.
+
+**Reminder for next time**: ping CYCLE-CLOSE in your slot_5.md ping file too, not just as a docs(plans) flip in PM — main scans ping files first; the flip-commit-only pattern is harder to track. (No issue this round — just for next cycle.)
+
+📋 **NEW QUEUE — ~20 AI-days risk + execution + Phase 9 extensions**:
+1. **execution-service Phase 9 DeFi cost models tests** — execution@2e221907 shipped Phase 9 (gas + slippage + flash premium). Add test coverage: per-cost-component unit tests + integration test combining all three. Done-def: ≥80% coverage on phase 9 modules + QG green.
+2. **execution-service matching engine ReconGate extensions** — your item 8 ReconGate (8 tests) + Phase 9 might surface new edge cases. Audit + extend if needed. Done-def: any new scenarios + QG green.
+3. **risk-and-exposure-service exposure aggregation tests** — verify per-asset_group + per-archetype + cross-archetype aggregation paths. Done-def: 5+ aggregation tests + QG green.
+4. **pnl-attribution-service Phase 9 cost-attribution tests** — Phase 9 cost models (gas/slippage/flash) need attribution: which archetype eats which cost? Add tests. Done-def: 4+ attribution tests + QG green.
+5. **execution-service order_router Phase 9 enhancements** — verify order_router knows about Phase 9 cost models when routing. Coverage gap fill. Done-def: ≥85% coverage + QG green.
+6. **risk-and-exposure-service VAR + drawdown tests** — Value-at-Risk + max drawdown computation tests under historical scenarios. Done-def: 4+ scenarios + QG green.
+7. **execution-service Tenderly-fork integration tests** — DeFi execution paths against Tenderly fork fixtures. Coordinate with slot 9 if they're using Tenderly fixtures too — different test surfaces. Done-def: 3+ integration tests + skipped without credentials.
+8. **execution-service venue admission tests (Phase 10 codex)** — verify venue admission criteria from Phase 10 codex are enforced in adapter loading. Done-def: tests per admission rule + QG green.
+9. **UTL kill-switch wiring cross-service tests** — verify kill-switch propagates correctly across strategy → risk → execution. Integration test. Done-def: 2+ propagation scenarios + UTL/integration QG green.
+10. **risk-and-exposure-service Phase 6.8+ extensions** — if any newer Phase items exist in risk-and-exposure (check Phase 6.8 / 6.9 docs); add coverage. Done-def: gap fill + QG green.
+Self-pivot. Ping DONE per major item — in slot_5.md ping file, please.
