@@ -235,3 +235,14 @@ TestCarryArchetypeForkGasCost: (1) SOR routes WETH/USDC to UNISWAP_V3 (specializ
 executes on fork (success + gas_used>0); (3) Phase 9 ECE prices fork gas_used → gas_cost_usd>0 (APD archetype DEX leg);
 (4) Aave USDC supply on fork → gas_used>0 → Phase 9 ECE gas_cost_usd>0 (carry_staked_basis supply leg). All auto-skip
 without Tenderly credentials. QG ✅ (341s). Moving to item 8: execution-service venue admission tests.
+
+[2026-05-15 21:45 UTC] slot-5 — ✅ DONE item 8 (venue admission tests): execution-service@44c4d584 — 7 tests in
+TestVenueAdmissionRules: (1) UnsupportedOperationError propagates (core admission rule); (2) non-admission errors
+swallowed (graceful degradation); (3) Phase 4 LST/LRT 6 protocols; (4) restaking+yield 5 protocols; (5) AAVE 6
+chains→aave source; (6) Uniswap 5 entries→uniswap source; (7) Solana SolBlaze+Jito. QG ✅ (331s). Moving to item 9:
+UTL kill-switch wiring cross-service tests.
+
+[2026-05-15 22:05 UTC] slot-5 — ✅ DONE item 9 (UTL kill-switch cross-service tests): execution-service@cd2d1927 — 2
+tests in test_kill_switch_bus_bridge.py: (1) risk-service STRATEGY-scope max-drawdown → UTL bus → execution blocks
+orders + narrow-scope CLEARED is NOOP; (2) ARCHETYPE-scope APD halt → local kill-switch active + scope_key in halt
+reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ extensions.
