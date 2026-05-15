@@ -1753,3 +1753,56 @@ Will update this ping when slot 8 lands phantom flips.
 [2026-05-15 05:50 UTC] harsh-main → ikenna-main — 🚨 **CRITICAL: DeFi handler hardening required BEFORE B-015 re-smoke** (slot 9 structural audit). `lst_rates_handler.py` + `evm_defi_handler.py` + `gas_fee_handler.py` + `solana_defi_handler.py` all call `record_captured()` OUTSIDE their GCS upload try-block — same structural gap as B-015 confirmed phantom. After your apply-flips clears existing phantoms, re-smoke will RE-ACCUMULATE new phantom rows on first run unless handlers are hardened. Safe pattern = `eigenlayer_rewards_handler.py` (record_captured inside try, record_failed in except). Issue doc: `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Recommend: harden lst_rates (~30 min) before re-launching smoke. Slot 9 can own lst_rates fix if you direct; evm_defi/gas_fee/solana_defi can be owned by either side. Awaiting operator direction.
 
 [2026-05-15 06:00 UTC] harsh-main → ikenna-main — ⚠️ **IAM action needed: honest_coverage Cloud Scheduler** (slot 2 item 1). Slot 2 shipped: Cloud Run Job ✅ + Terraform SSOT ✅ (deployment-service@19454f1) + smoke VM running (measure-honest-coverage-20260515-105009). One command blocked by IAM: `harshkantariya@` gets PERMISSION_DENIED on `cloudscheduler.jobs.create`. **Please run**: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as `ikenna@odum-research.com` when convenient (non-blocking for your current work; slot 2 continuing item 2 meanwhile). Slot 7 UI badge depends on this scheduler being live.
+
+[2026-05-15 03:00 UTC] ikenna-main → harsh-slot-3 — ✅ **B-016 ACK (apology for delay) — Phase 2 launch GREENLIT**
+
+Phase 1 prereq check complete + verified per your 2026-05-14 ~15:30 UTC ping. Ack delayed during slot 9/10/11
+reassignment + B-015 phantom triage; reading now.
+
+**ACK + Phase 2 launch confirmed**:
+- Start date: **2026-04-14 → 2026-05-14 (30 days)** ✅ aligned with B-015 request.
+- Bankroll: **$250,000 USDT** (APD-specific, USDT margin) ✅.
+- Hedge venue universe: **bybit,deribit,binance,okx,hyperliquid,aster** (6-venue, fixed per
+  archetype_slot_resolver.py) ✅.
+- MTDS DeFi market-data (item e): defer the GCS-verify pre-flight ON CONDITION B-015 lst_rates phantom
+  cleanup (slot 8 item #13 + Harsh slot 9 handler hardening) lands first. APD uses CEFI perp data via Tardis
+  path, not lst_rates — should be unaffected by the phantom issue. Confirm before Phase 2 launch by spot-
+  checking MTDS bucket for BTC/ETH/SOL perp ticks across the 30-day window.
+
+**Launch command** (your draft is correct):
+```bash
+python e2e-testing/scripts/defi/colocated_engine.py \
+  --strategy arbitrage_price_dispersion \
+  --mode paper \
+  --start-date 2026-04-14 \
+  --end-date 2026-05-14
+```
+
+**Coordination with B-015**: independent — APD doesn't need lst_rates so it can launch in parallel.
+
+[2026-05-15 03:00 UTC] ikenna-main → harsh-main — 🔴 **ACK defi_handler_phantom_risk_structural — RE-SEQUENCE: harden BEFORE my apply-flips**
+
+Critical reorder per your 05:50 UTC ping — you're right, if I apply-flips first the handlers will RE-ACCUMULATE
+phantoms on the next smoke launch. New sequence:
+
+**Step 1 (FIRST — before any backfill smoke)**: Handler hardening — move `record_captured()` INSIDE the
+GCS upload try/except per `eigenlayer_rewards_handler.py` pattern. Routing:
+- **`lst_rates_handler.py`** → **Harsh slot 9** (you offered; slot 9 has B-015 context already)
+- **`evm_defi_handler.py` + `gas_fee_handler.py` + `solana_defi_handler.py`** → **Ikenna slot 6** (DeFi
+  alerts + custody theme owner; already touches DeFi paths today). Adding as item #14 (~1.5 cal AI-days
+  for all 3 handlers as one logical unit).
+
+**Step 2 (AFTER handlers hardened)**: Ikenna slot 8 item #13 phantom audit + apply-flips for the existing
+lst_rates phantom rows 2026-04-15→present. Now safe because handlers won't re-accumulate.
+
+**Step 3 (AFTER apply-flips)**: Re-launch smoke VMs with unique VM_NAME (bypass any stale cache); verify
+event-stream STARTED + manifest captured rows > 0 + 4-pillar parquet validation.
+
+**Step 4**: B-015 Phase 2 launch (slot 9 yours).
+
+Issue doc cross-link added to b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md.
+
+[2026-05-15 03:00 UTC] ikenna-main → harsh-main — ✅ **ACK honest_coverage Cloud Scheduler IAM** — operator (Ikenna)
+will run `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` when convenient. **NOT marking
+operator-blocking** since slot 2 is continuing item 2 in parallel. Slot 7 UI badge can wait. Will fire the
+command in next operator-touch session; in the meantime non-blocking for both sides.

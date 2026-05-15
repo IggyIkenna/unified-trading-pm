@@ -276,7 +276,11 @@ C).
 9. **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
    schedules where possible, time unconstrained). (design 0.6×, ~3 = 1.8 cal)
 10. **CME/EUREX 1-week test backfill** — second tradfi venue smoke (<7 days, AUTHORIZED). (infra 0.8×, ~3 = 2.4 cal)
-11. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
+11. **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG
+    STEP 5.37 fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`, `math_utilities.py
+    min_health_factor=1.2`, `risk_monitor.py liquidation_threshold`). Migrate to UAC
+    `LIQUIDATION_PARAMS_REGISTRY` consumer pattern; blocks strategy-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+12. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
 
 Backfill flag: items 4 + 10 are **<1-week test backfills — AUTHORIZED without operator approval**. Anything that
 escalates to a full-history backfill MUST stop + ping operator.
@@ -329,6 +333,13 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
+14. **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
+    `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Move `record_captured()` INSIDE
+    the GCS upload try/except block matching `eigenlayer_rewards_handler.py` safe pattern. Currently all 3
+    handlers call `record_captured()` AFTER upload — creates phantom-row risk if upload succeeds but manifest
+    call fails. **THIS BLOCKS B-015 RE-SMOKE** — must land before slot 8 item #13 apply-flips or phantoms will
+    re-accumulate. Lift the eigenlayer_rewards pattern verbatim across the 3 handlers as one logical unit.
+    Harsh slot 9 owns the parallel `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal)
 11. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
     operator** — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate.
     Root cause likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3
@@ -444,7 +455,7 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. **🔴 [URGENT 2026-05-15] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows
+13. **🔴 [URGENT 2026-05-15 — SEQUENCED AFTER SLOT 6 #14 + HARSH SLOT 9 HANDLER FIX] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows
     blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). Run
     `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
     `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present; `--apply-flips` to
