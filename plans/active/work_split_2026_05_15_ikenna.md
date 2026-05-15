@@ -329,8 +329,20 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    zero-drift verified; L2 features-* templates migrated to `resolve_bucket`. Workspace-flip Done-def #6
    (full grep-audit table) deferred-after Phase 2.6 with named successor. (refactor 0.4×, ~4 = 1.6 cal —
    bulk deferred-after Phase 2.6)
-5. **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) — sequencing
-   items + TradFi cross-asset items. (research 1.2×, ~3 = 3.6 cal)
+5. 🔄 **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) —
+   Slot-8 audit 2026-05-15 19:05 UTC. Plan has 122 items; cross-cutting subset surfaces 5 actionable items
+   (Phase 2 freeze gate × 6 unchecked, blocked-on-physical-migration), of which slot-8 closeable:
+   - ✅ **Stamp-lag fix for `defi-data-type-taxonomy.md`** — already naturally absorbed; doc shows
+     `last_reviewed: 2026-05-15` with prior 2026-05-12 stamp acknowledged in body. Flipped in plan body.
+   - 🟡 **5 NEW gap-2.6.A through gap-2.6.E (Phase 2.6 detailed playbook)** — slot 8 / slot 3 carry; deployment-service
+     surface. Owners TBD; remains open as physical-migration work for the 2026-05-15→05-19 window. Routed to
+     slot 3 (already shipping Phase 2.6 playbook per `slot_3.md`).
+   - 🟡 **Codex audit for 11 Phase 1.A/1.B/1.C plans (P2)** — depth-audit follow-up beyond slot-6 day-1 breadth;
+     not blocking; carry into post-cutover sweep.
+   - 🟡 **TradFi 4.3% phantom audit triage (P2)** — no named owner; routed to `tradfi_master_2026_05_07.md`
+     § "Port phantom-audit" P0 todo; POST-CUTOVER scope per plan body.
+   - 🟡 **Phase 2 freeze gate × 6 items** — blocked on physical migration (Phase 2.0-2.6 window 05-15→05-19).
+   Audit-summary flip; substantive items routed/blocked. (research 1.2×, ~3 = 3.6 cal)
 6. ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
    Execution-Owner SSOT gap codified at `unified-trading-pm@7ef2ecdb`. Ships
    `scripts/quality_gates/check_runbook_execution_owner.py` + baseline (9 violations) + PM `quality-gates.sh`

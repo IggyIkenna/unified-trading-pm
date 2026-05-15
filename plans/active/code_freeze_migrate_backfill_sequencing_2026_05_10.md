@@ -1671,8 +1671,12 @@ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
       carry-forward.
 - [ ] [DOC] P2. Slot 8 + slot 6 follow-up: codex audit for remaining 11 Phase 1.A/1.B/1.C plans (out of slot 3 Day-3
       scope; slot 6 day-1 audit covered the breadth but didn't depth-audit per-cluster).
-- [ ] [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 → 2026-05-12 +
-      acknowledge UAC@`d02cce2` in changelog. Hygiene only.
+- [x] ✅ [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
+      2026-05-12 + acknowledge UAC@`d02cce2` in changelog. Hygiene only. **NATURALLY RESOLVED 2026-05-15 (slot-8
+      audit)**: doc frontmatter already shows `last_reviewed: 2026-05-15` + body "Last updated 2026-05-15
+      (solana_lst_native_staking_adapters_2026_05_14 Phase 5 — added native_staking_rates family + SOLANA-NATIVE-SOLANA
+      coverage row); prior: 2026-05-12 (codex audit IN-15 — 3-doc consolidation cross-link added)" — UAC@`d02cce2`
+      changelog item subsumed by later updates. No action needed.
 
 ### Slot 3 Day-3 EOD summary
 
