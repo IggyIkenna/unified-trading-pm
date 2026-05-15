@@ -196,6 +196,8 @@ strategy-service@93965fd. Pivoting to item 7: quality-gates.sh hardening audit.
 
 [2026-05-15 session-4] slot-3 — ✅ **DONE item 7**: QG hardening audit. All required vars set, no structural drift vs base-service.sh template. Added EXPECTED_BASE_VERSION=1.0 as forward-compat guard. QG green (109s). — strategy-service@b3444ea. Pivoting to item 8: Phase 8 codex audit extension.
 
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 8**: Phase 8 codex audit extension. Confirmed drifts 1-5 fixed by slot 6 (PM merge 2026-05-15 afternoon). Found 2 new drifts: Drift 6 — carry-staked-basis.md says "rejected at preflight" but boot validation now fires at __init__ (additive, severity low); Drift 7 — arbitrage-price-dispersion.md config schema shows generic CROSS_BOOK_SPORTS schema, not actual candidate_venues/dispersion_bps params (severity medium). Issue doc updated at plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md. Drifts 6+7 deferred to slot 1 (PM codex bodies). — unified-trading-pm@ea758178. Pivoting to item 9: batch_live symmetry L4/L5/L6 sweeps.
+
 [2026-05-15 session-3] slot-3 — 🏁
 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
