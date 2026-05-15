@@ -564,11 +564,11 @@ In-plan P0 (blocks Phase 5-8 implementation):
       POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace
       `available_margin = equity × 0.9` placeholder (line 259) with parsed
       `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`.
-- [ ] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`:
+- [x] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`:
       operator deposits USDC on Arbitrum → bridge to HL L1 → arrives in trading wallet. **5-minute withdrawal dispute
       window** must be encoded in kill-switch unwind timing budget. Bridge address
       `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — verify; HL has rotated bridges at least once in
-      2024).
+      2024). (649142a6a execution-service 2026-05-15 — hyperliquid_bridge.py with deposit/withdraw/get_bridge_pending)
 - [ ] [strategy-service] **P0**. Variant naming decision: **single archetype `CARRY_RECURSIVE_BORROW_PERP_HEDGED` with
       `perp_venue` config field** (already in Phase 2 schema proposal). No per-venue variant tarballs. Catalog
       enumerates `perp_venue ∈ {HYPERLIQUID, BYBIT}` at cell-id level only.
@@ -1125,10 +1125,12 @@ PerpHedgeSizer (Phase 7); 0.9 over-reports headroom ~10% on cross-margin with op
       execution-service 2026-05-15 — start_hl_key_reloader() + stop_hl_key_reloader() in config_reloaders.py)
 - [x] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
       code shape. (cc23a45 UAC 2026-05-15 — 9 cassette tests + fix VENUE_ERROR_MAP duplicate-key merge bug)
-- [ ] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
-      Arbitrum fork integration test.
-- [ ] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
-      `accountValue − totalMarginUsed`.
+- [x] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
+      Arbitrum fork integration test. (649142a6a execution-service 2026-05-15 — bridge module + 15 unit tests; Tenderly
+      fork integration test BLOCKED-CREDENTIALS per pings/slot_2.md b9ba90be)
+- [x] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
+      `accountValue − totalMarginUsed`. (649142a6a execution-service 2026-05-15 — 7 regression tests in
+      test_hyperliquid_available_margin.py; live path confirmed correct at protocols/hyperliquid.py:306)
 
 ### Phase 7 — `PerpHedgeSizer` + USDC margin top-up
 
