@@ -85,4 +85,11 @@ completed. `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json
 Item 1 end-to-end path confirmed working (pending Cloud Scheduler from Ikenna for daily trigger).
 Reserve queue progress: shellcheck ✅ (deployment-service@cbd8a76); catboost_info ✅ (already clean).
 
+[2026-05-15 12:12 UTC] slot-2 — DONE reserve item 3 (partial — post-B-011 launcher template consolidation).
+deployment-service@f19f738. Fixed CODE_BUCKET hardcoding in 3 post-B-011 launchers
+(launch-measure-honest-coverage-vm.sh, launch-mtds-pyth-archive-backfill-vm.sh, launch-mtds-pyth-lst-backfill-vm.sh):
+`"deployment-scripts-central-element-323112"` → `"deployment-scripts-\${PROJECT}"`. GCS launcher updated.
+All post-B-011 launchers now shellcheck-clean + CODE_BUCKET consistent. Pre-B-011 fleet (~20 scripts with hardcoded
+form) deferred — large scope, no operator direction for full-fleet sweep.
+
 [2026-05-15 06:38 UTC] [main → slot 2] — ✅ honest-coverage smoke VERIFIED + acked. coverage.json 287KB confirmed in GCS. LEDGER flipped. Reserve shellcheck ✅ also acked. STAND-DOWN — Day-1 complete. Item 1 (Cloud Scheduler) stays BLOCKED-IAM until Ikenna runs setup-honest-coverage-scheduler.sh; nothing more for you to do on it.
