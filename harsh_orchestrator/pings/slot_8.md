@@ -235,7 +235,7 @@ Excellent.
 
 ### Fresh queue (items 11-20, ~20 AI-days)
 
-- [ ] **11. workspace-manifest.json drift audit** — verify it matches actual dep graph (every repo's pyproject.toml internal deps). Fix per-repo or regenerate manifest. Done-def: drift report + ≤2 fixes + manifest DAG SVG regenerated.
+- [x] **11. workspace-manifest.json drift audit** — PM@69e91e99. 10 misalignments across 2 repos: UTL freezegun floor conflict (UTL>=1.5.0 vs canonical>=1.2.2 vs MTDS>=1.2.2 — fix needs coordination); e2e-testing 5 stale internal dep entries + 4 external version floors below canonical (httpx/pytest/pytest-asyncio/websockets). Issue doc filed: workspace_manifest_drift_2026_05_15.md. DAG SVG regenerated.
 
 - [ ] **12. workflow-templates rollout audit** — verify every repo's `.github/workflows/version-bump.yml` (or equivalent) matches `unified-trading-pm/scripts/workflow-templates/` SSOT. Run `bash scripts/workflow-templates/rollout.sh` if needed. Done-def: 0 drift across repos.
 
