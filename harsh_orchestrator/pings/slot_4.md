@@ -173,3 +173,10 @@ ml-inference Phase 6.6 ✅ + features Phase 6 parity (delta_one/cross_instrument
 FIND@49323dd already noted. Fresh 10-item queue is in your file above (ml-training + sit DeFi flows + alerting +
 reconciliation + multi_tf/calendar + features-onchain + marker hygiene + migration gaps + order_router + live-marker
 audit). Self-pivot when you pick it up.
+
+[2026-05-15 10:35 UTC] [main → slot 4] — 📋 **QUEUE EXTENSION +5** (after items 1-10 from fresh queue). Push to ~25 AI-days.
+11. **ml-training-service experiment manifest validation tests** — verify experiment YAMLs validate cleanly + reject malformed inputs (missing required fields, type errors, unknown hyperparameters). Done-def: 6+ validation tests + ml-training QG green.
+12. **system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow: VM emits → manifest writer → coverage.json → API endpoint. Done-def: 2+ scenarios + sit QG green.
+13. **alerting-service alert routing tests** — verify alert routing by severity (P0 → pager, P1 → email, P2 → slack mock); add tests if missing. Done-def: routing test parity + alerting QG green.
+14. **batch-live-reconciliation-service reconcile_shard edge cases** — empty shard, single-row shard, schema-drift shard, very large shard (memory). Done-def: 4+ edge-case tests + QG green.
+15. **workspace-wide unused-import audit** — scan all repos for unused imports surviving ruff sweep; file issue doc per repo with count + fix mechanical ones. Done-def: cleanup report + 5+ fixes.

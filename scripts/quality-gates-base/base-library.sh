@@ -155,16 +155,20 @@ if [ "$RUN_TESTS" = true ]; then
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
     PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=60 -q -r a --tb=short --no-header"
 
+    # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
+    # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").
+    PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
+
     _HAS_INTEGRATION=false
     [ -d "tests/integration" ] && \
         [ "$(find tests/integration -name 'test_*.py' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ] && \
         _HAS_INTEGRATION=true
 
     if [ "$_HAS_INTEGRATION" = true ]; then
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
     else
-        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
+        _pytest_out=$($PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
     fi
     log_success "Tests PASSED"

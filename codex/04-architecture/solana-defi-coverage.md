@@ -192,6 +192,30 @@ Until MTDS restaking source wiring is complete, restaking APY is not captured in
 (instrument discovery) is available via Plan E adapters. MTDS wiring tracked in
 `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
 
+## Venue naming convention
+
+**Canonical format**: `{PROTOCOL}-SOLANA` (e.g., `MARINADE-SOLANA`, `DRIFT-SOLANA`, `JITO-SOLANA`, `ORCA-SOLANA`).
+
+**Two authoritative sources confirm this:**
+
+1. **UAC `registry/capability_declarations/_defi.py:687`** (inline comment):
+   `venue: Canonical venue name (e.g. "AAVEV3-ETHEREUM", "DRIFT-SOLANA")`
+2. **All Solana adapter `get_instruments()` implementations** return `f"{PROTOCOL}-{self._chain}"`, e.g.
+   `return f"DRIFT-{self._chain}"` → `DRIFT-SOLANA`.
+
+**Legacy bare-name rows** (`MARINADE`, `DRIFT`, `JITO`, `RAYDIUM`, `ORCA`, `KAMINO`, `SOLEND`, `MARGINFI`) are migration
+artifacts from an adapter version that predated the `{PROTOCOL}-{CHAIN}` pattern. They are being resolved by
+`plans/active/solana_venue_naming_reconciliation_2026_05_14.md` (Plan D):
+
+- **Category A** venues with real captured data (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI): parquets re-written to
+  `{PROTOCOL}-SOLANA` path; bare-name manifest rows flipped to `attempted_failed`.
+- **Category B** empty venues (DRIFT/JITO): bare-name manifest rows flipped to `attempted_failed`; adapters already
+  write to `{PROTOCOL}-SOLANA` on every run.
+
+Until Plan D Phase 3 (VM migration) completes, bare-name `captured` rows may still appear in the manifest. Downstream
+consumers should treat `venue=MARINADE` and `venue=MARINADE-SOLANA` as the same instrument during the migration window.
+After Phase 3, only `{PROTOCOL}-SOLANA` rows will carry `capture_status=captured`.
+
 ## Deferred
 
 ### MTDS Solana source wiring (Plan B — perp DEX)

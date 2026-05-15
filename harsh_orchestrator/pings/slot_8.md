@@ -4,6 +4,16 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 10 SIT May-23 critical path audit. PM@45a8eaf5: issue doc filed — carry_staked_basis + APD + mode-switch scenarios all missing from SIT test suite. 5 existing DeFi playbooks cover infra events only (gas/slippage/MEV/reorg/oracle). 3 new scenarios recommended.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 7 CI/CD flow doc. PM@45a8eaf5: codex/08-workflows/ci-cd-flow.md created — two-pass model, branch policy, quickmerge variants, dep-branch flow, version bump, agent vs human paths, conditional push protocol.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 6 STEP 5.83+ additions proposal. PM@45a8eaf5: STEP 5.83 (no-bare-noqa), STEP 5.84 (no-bare-exit), STEP 5.85 (no-print-in-source) proposed with rationale/scope/ratchet/patterns in quality-gates.md. PENDING OPERATOR APPROVAL.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 5 deprecated-pattern sweep. PM@45a8eaf5: issue doc filed — 466 type:ignore / 1376 noqa / 4 os.getenv / 56 except ImportError / 127 bare sys.exit(1). Top offenders per category mapped. P1: batch-live-reconciliation-service config.py os.getenv.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 4 pre-commit drift detection (--prek extension). PM@45a8eaf5: detect_template_drift.py extended with --prek flag; checks gitleaks hook + SSOT comment + hook revs vs template; 16 tests passing (5 new). One-shot: 21/24 repos errors (missing gitleaks), 3 warnings.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE self-pivot DT-3/DT-4 (PRE_CUTOVER from codex audit issue doc). PM@8b4ab3ad: (1)
 "Library-Repo QG Carveout Patterns" section added to quality-gates.md (UAC_CANONICAL_EXEMPT / SIZE_EXTRA_EXCLUDES /
 GCP_PROJECT_ID_EXCLUDE_GLOBS / BROAD_EXCEPT_EXTRA_EXCLUDES — when valid, pattern, guard rails); (2) B-014 STEP 5.79-5.82

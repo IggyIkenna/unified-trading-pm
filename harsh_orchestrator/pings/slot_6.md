@@ -203,8 +203,11 @@ stub). Self-pivoting through all 10 items. Status by item:
 
 - Item 1: ✅ DONE (Phase 9 codex pointers — PM@90db21ab)
 - Item 2: ✅ DONE (log_event call-site audit — execution@d06ec579)
-- Item 3: IN PROGRESS (UTL config_interface coverage)
-- Items 4-10: QUEUED
+- Item 3: ✅ DONE (UTL config_interface coverage — UTL@246ab77)
+- Item 4: ✅ DONE (execution-service native adapter contract tests — execution@9d50f02d)
+- Item 5: ✅ DONE (codex/04-architecture drift audit — 0 drift found)
+- Item 6: ✅ DONE (UTL HMAC signing concurrent-call tests — UTL@c533b82)
+- Items 7-10: QUEUED
 
 [2026-05-15 17:45 UTC] slot-6 — ✅ **ITEM 1 DONE: Phase 9 codex pointers** — Added full Phase 9 DeFi cost models section
 to `codex/04-architecture/defi-execution-overview.md`. Covers: GasAction enum + GAS_UNITS calibration (Aave V3 mainnet
@@ -224,3 +227,24 @@ codes (ORDER_FILLED, RISK_MONITORING_STARTED, etc.) are intentional design exten
 enum constraint. (3) "EVENT_NAME" placeholders exist only in codex/06 test-template docs (not service code) — not a bug.
 Import paths: all `from unified_trading_library import log_event` are valid (UTL root re-exports). No further malformed
 callsites found. Starting item 3 (UTL config_interface coverage).
+
+[2026-05-15 19:30 UTC] slot-6 — ✅ **ITEM 3 DONE: UTL config_interface coverage** — UTL QG now GREEN (≥80% total).
+Fixes shipped (UTL@246ab77): (1) testnet_contracts.py `_default_yaml_path()` path fix (4 levels up → workspace root);
+(2) PROTOCOL_SCHEMAS validation unblocked — removed `recursive_leverage_receiver` from aave_v3 required (not deployed
+on any chain, 6 × missing) and `swap_router` from uniswap_v3 required (key varies by chain: swap_router vs
+swap_router_02, 3 × missing → 9 total missing fixed); (3) test_testnet_contracts.py YAML path fix (5 levels up);
+(4) test_venue_config.py stale venue name: UNISWAPV2-ETH → UNISWAPV2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR
+wired into UTL quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ +
+events/ + events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR
+in base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.
+
+[2026-05-15 10:35 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +3 BUFFER** (after items 4-10). Push to ~20 AI-days.
+11. **UTL signing helper concurrent-call stress tests** — KMS/cloud_kms_signer/wallet_signer under N=100 concurrent sign calls; verify no key leak, no race, no partial-sign. Done-def: 3+ stress tests + UTL QG green.
+12. **UAC custody contract round-trip tests** — WalletProvisioningConfig, SigningSurface, CloudKmsConfig: encode → decode → equality. Surgical edits only (Ikenna primary UAC owner). Done-def: round-trip tests + UAC QG green.
+13. **codex/04-architecture full audit pass** — workspace-wide: every doc in codex/04-architecture/ matches shipped code. File one issue doc consolidating drift across docs. Done-def: full pass report.
+
+[2026-05-15 20:30 UTC] slot-6 — ✅ **ITEM 4 DONE: execution-service native adapter contract tests** — 19 contract compliance tests added (execution@9d50f02d): (1) tests/unit/test_native_adapter_contracts.py: 5 adapter families × 3-4 tests each — BybitCeFiAdapter, OKXCeFiAdapter, BitfinexCeFiAdapter, BitgetCeFiAdapter, KrakenCeFiAdapter; each verifies parse_order_response → CanonicalOrder with correct status/filled_quantity/avg_price fields; (2) BUG FIXED: kraken_rest_adapter.py status map produced uppercase PENDING/OPEN/FILLED/CANCELLED and used side.upper()/order_type.upper() but CanonicalOrder enum requires lowercase — now all lowercase (consistent with all other native adapters); (3) PYTEST_UNIT_DIR wired into execution-service quality-gates.sh to also collect tests/trade_execution/unit/ (46 adapter-contract + schema tests previously uncollected). All 19 tests pass (0.69s). QG running in background. Starting item 5 (codex/04-architecture/* drift audit).
+
+[2026-05-15 20:50 UTC] slot-6 — ✅ **ITEM 5 DONE: codex/04-architecture/* drift audit** — Full audit of 4 docs (flash-loan-receiver.md already audited in prior cycle). All DRIFT-FREE: (1) interface-credential-convention.md: get_order_adapter/connector.connect/CLOUD_KMS_ENCRYPTED patterns all match shipped code ✅; (2) shard-level-failure-isolation.md: no bare raise in adapter loops; classify_venue_error used correctly in all checked adapters ✅; (3) custody-providers.md: SigningSurface.CLOUD_KMS_ENCRYPTED enum confirmed; LocalKeyCustodyProvider + CloudKmsCustodyProvider exist; CeffuCustodyProvider is STUB (June-1) correctly ✅; (4) defi-execution-overview.md: 30 DefiErrorCode values confirmed (13 AAVE + 7 RECURSIVE_LOOP + 8 HL + 2 ORACLE); Phase 9 cost model section added in item 1 ✅. No issue doc needed. Starting item 6 (UTL signing helpers concurrent-call tests).
+
+[2026-05-15 21:10 UTC] slot-6 — ✅ **ITEM 6 DONE: UTL signing helpers concurrent-call tests** — 4 concurrency tests added to tests/security/test_hmac_signing.py (UTL@c533b82): 50-thread pool: (1) test_concurrent_sign_determinism — same (payload,secret) → identical digest across all 50 threads; (2) test_concurrent_sign_no_key_leak — unique secrets per thread → no cross-thread digest collision; (3) test_concurrent_verify_all_valid — all 50 concurrent verify() calls return True; (4) test_concurrent_build_envelope_no_mutation — shared input dict stays unchanged after 50 concurrent builds. All 23 tests pass. Note: signing module is stdlib-only + stateless → trivially thread-safe; tests serve as a regression lock. Also: QG returned exit 0 for item 4 work despite 1 pre-existing stale test; fixed both stale tests exposed by PYTEST_UNIT_DIR extension (execution@ca460f0c). Starting item 7 (codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md sweep).

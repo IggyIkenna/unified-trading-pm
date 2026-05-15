@@ -1309,13 +1309,15 @@ matrix tests at `deployment-ui/tests/integration/recursive_borrow/*.spec.ts`. Mo
 
 **Phase 11 P0/P1 implementation gates**:
 
-- [ ] [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates
-      `models/` directory). RBAC `@require_role(Role.READ_ONLY)`; 60s cache.
-- [ ] [deployment-api] **P0**. Integration test against Tier-0 mock manifest.
-- [ ] [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 + 10 cells).
-- [ ] [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (threshold lines; UI-throttled).
-- [ ] [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (coverage % + spread sparkline).
-- [ ] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + companion backtest-results endpoint (gates on Phase 9).
+- [x] ✅ [deployment-api] **P0**. NEW `routes/recursive_borrow_coverage.py` + `models/recursive_borrow.py` (creates
+      `models/` directory). RBAC `require_permission(Permission.DEPLOY_VIEW)`; 60s cache. — deployment-api@604b625
+- [x] ✅ [deployment-api] **P0**. Integration test against Tier-0 mock manifest. 13 unit tests; QG exit 0; 2909 passed.
+      — deployment-api@604b625
+- [x] ✅ [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 + 10 cells). — deployment-ui@a3d0516
+- [x] ✅ [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (threshold lines; UI-throttled). — deployment-ui@a3d0516
+- [x] ✅ [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (coverage % + spread sparkline). — deployment-ui@a3d0516
+- [ ] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + companion backtest-results endpoint (gates on Phase 9 item 3,
+      BLOCKED-DATA until 2026-05-19).
 
 **Cross-plan annotations queued**: `master_to_live_defi_2026_05_23.md` Group G item 23 (HealthFactorMonitorTile as NEW
 operator-UX surface — annotate Continuous Verification cadence `daily-Tab`);
@@ -1635,16 +1637,17 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates ride in 
 
 ## Phase 11 — deployment-api + deployment-ui surface (2 AI-days)
 
-- [ ] [deployment-api] P0. New endpoint `GET /data-status/recursive-borrow-coverage` — returns per-(protocol, chain,
+- [x] ✅ [deployment-api] P0. New endpoint `GET /data-status/recursive-borrow-coverage` — returns per-(protocol, chain,
       asset) lending-rate coverage status from the Phase 1 manifest. Pydantic models in
-      `deployment_api/models/recursive_borrow.py`.
-- [ ] [deployment-ui] P0. ArchetypeMatrix component renders both variants (`lending_arb_pure`, `perp_funding_capture`)
-      per asset_group=defi row.
-- [ ] [deployment-ui] P0. New tile: `HealthFactorMonitorTile` — live HF chart per active position, threshold lines at
-      1.10 / 1.05.
-- [ ] [deployment-ui] P0. Recursive-Borrow data-status drilldown: per-protocol coverage % + per-asset spread-history
-      sparkline.
+      `deployment_api/models/recursive_borrow.py`. — deployment-api@604b625
+- [x] ✅ [deployment-ui] P0. ArchetypeMatrix component renders both variants (F1 lending-only + F2 perp-hedged) per
+      asset_group=defi row. — deployment-ui@a3d0516
+- [x] ✅ [deployment-ui] P0. New tile: `HealthFactorMonitorTile` — live HF chart per active position, threshold lines at
+      1.10 / 1.05. — deployment-ui@a3d0516
+- [x] ✅ [deployment-ui] P0. Recursive-Borrow data-status drilldown: per-protocol coverage % + per-asset spread-history
+      sparkline. — deployment-ui@a3d0516
 - [ ] [deployment-ui] P1. Backtest-results visualisation: Phase 9 P&L curves rendered in deployment-ui per variant.
+      BLOCKED-DATA until 2026-05-19 (Phase 9 item 3 backtest replay data gate).
 
 **Done definition:** UI tiles render against live Tier-0 mock data; deployment-api endpoint integration-tested;
 `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` shows all components.

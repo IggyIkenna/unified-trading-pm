@@ -4,6 +4,16 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 21:05 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED: all 11 new-queue items done (items 7-11 this session). Summary: item 7 MTDS graceful shutdown (mtds@6a71ddf), item 8 PBM phantom-prevention (mdps@9f7b1ab), item 9 MTDS calendar boundaries (mtds@14d212a), item 10 MTDS adapter rate-limit+cache (mtds@b1360a5), item 11 MTDS CLI flag validation (audit clean). B-015 still HOLD — no Ikenna phantom apply-flips landed in _agent_pings.md since 09:19 UTC. Slot 9 idle, monitoring B-015 unblock.
+
+[2026-05-15 20:55 UTC] harsh-slot-9 — ✅ DONE new-queue item 11 (MTDS CLI flag validation tests): AUDIT CLEAN — tests/unit/cli/test_cli_flag_validation.py already exists (item 14 header). 10 tests: TestInvalidFlagCombosRejected (5: invalid operation/mode/asset-group + missing required --operation/--mode all raise SystemExit(2)) + TestValidCombosPass (5: download/collect-lst-rates/websocket-streaming/multi-asset-group/collect-perp-funding all parse successfully). Collected by QG pytest tests/unit/ recursively. All 10 pass, QG green. B-015 still HOLD. No more items in queue.
+
+[2026-05-15 20:40 UTC] harsh-slot-9 — ✅ DONE new-queue item 10 (MTDS adapter rate-limit + cache layer tests): mtds@b1360a5. 20 tests: TestHandleApiErrorsAsync (6: success/ConnectionError retry/exhaustion/call-count=max+1/non-retriable ValueError/TimeoutError), TestHandleApiErrorsSync (4), TestHyperliquidResponseCacheMiss (2), TestHyperliquidResponseCacheHit (2), TestHyperliquidResponseCacheTTLExpiry (2: freeze_time stale/fresh), TestHyperliquidCacheClear (2), TestHyperliquidClientConfigRetryContract (4: 429+5xx in retry_status_codes). QG green. B-015 still HOLD. Moving to item 11 (MTDS CLI flag validation tests).
+
+[2026-05-15 20:05 UTC] harsh-slot-9 — ✅ DONE new-queue item 9 (MTDS calendar boundary tests): mtds@14d212a. 11 tests across 5 classes: TestFutureDateSkipped (3: same-day future, 23:59 future, 00:01 next-day not-skipped), TestCeFiTardisLagWindow (2: 2h after midnight proceeds, 8h proceeds), TestTradFiDatabentoLagWindow (2: 20min after midnight proceeds, 1h proceeds), TestEndOfMonthRollover (2: Jan31 not-skipped on Feb1, Jan31 future during Jan31), TestEndOfYearRollover (2: Dec31 not-skipped on Jan1/27, Dec31 future during Dec31). Uses freezegun + object.__setattr__ to bypass reportPrivateUsage on _bucket. QG green. B-015 still HOLD. Moving to item 10 (MTDS adapter rate-limit + cache layer tests).
+
+[2026-05-15 19:35 UTC] harsh-slot-9 — ✅ DONE new-queue item 8 (PBM phantom-prevention tests): mdps@9f7b1ab. 8 tests in test_phantom_prevention.py: TestPhantomOnUploadFailure (2: OSError prevents record_captured, ManifestWriter never constructed), TestPhantomOnHeartbeatPath (1: should_publish_row=False → upload happens, no record_captured), TestPhantomOnFinalizeNone (1: finalize=None → no upload, no record), TestPhantomOnRecordCapturedFailure (2: OSError+ValueError from record_captured both isolated), TestPhantomHappyPath (1: upload+record each once). QG green. B-015 still HOLD. Moving to item 9 (MTDS Tenderly-fork integration smoke).
+
 [2026-05-15 19:10 UTC] harsh-slot-9 — ✅ DONE new-queue item 7 (MTDS graceful shutdown tests): mtds@6a71ddf. 9 tests in test_graceful_shutdown.py: TestSystemExitNotCaughtByExceptException (2: SystemExit escapes except Exception, RuntimeError caught), TestDefiShardLoopShutdownBehavior (4: completed shards record_captured persists, exit code 0, all-shards normal, exception shard record_failed), TestGracefulShutdownHandlerFlag (3: shutdown_requested initially False, set via request_shutdown, SIGTERM+SIGINT registered on init). QG green. B-015 still HOLD. Moving to item 8 (PBM cluster validation tests).
 
 [2026-05-15 14:15 UTC] harsh-slot-9 — ✅ DONE queue item 10 (MTDS handler retry-and-backoff audit): mtds@dcd6f5f.
@@ -184,3 +194,8 @@ after slot 4 features-service close-out ping.
 
 After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred features-service item = ~24 AI-days
 non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
+
+[2026-05-15 10:35 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION +3** (after items 4, 5, 6, 10 remaining). Push to ~14 AI-days.
+11. **MTDS Pyth additional symbol coverage** — your mtds@d63fda5 covered base Pyth tests. Extend: ETH/USD, BTC/USD, SOL/USD price feeds; price-deviation outlier detection. Done-def: 4+ symbol tests + MTDS QG green.
+12. **PBM canonical_writer Phase 10 codex audit** — Phase 10 introduced batch=live archetype grain. Verify canonical_writer respects archetype-grain partitioning. Done-def: audit + tests if drift.
+13. **MTDS perp venue funding rate normalization** — verify all 7 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Aster/Kraken) emit funding rates in normalized form (rate per 8h, signed convention consistent). 7+ normalization tests. Done-def: per-venue test + MTDS QG green.

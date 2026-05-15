@@ -13,7 +13,7 @@ epic: live_defi_rollout
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 date: 2026-05-09
-status: active
+status: complete
 migrated_from: defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md # Stream B sister todos
 folds_in: []
 related:
@@ -40,6 +40,18 @@ estimate_calibration_note: |
 ---
 
 # ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation
+
+## Deferred work — migrated to:
+
+- Live cutover dry-run (paper-trade integration): `master_to_live_defi_2026_05_23.md` Group F item 17 (paper-trade
+  smoke)
+
+**ARCHIVED 2026-05-15** — 20/20 todos done. All phases (A/B/C/D/E) complete. Strategy-service Phases A→A.6→A.7→B landed
+at strategy-service@{24f8494,0b4ef0e,04c0d52,1107ab7,d01661e,de9b4b0,2fdf7e8}; pnl-attribution-service Phase C at
+pnl-attribution-service@f5dcf63; codex Phase E + Stream B gate close at PM@{5fe5eabd,5d2d74c1}. Only deferred item is
+live cutover dry-run with named successor above.
+
+---
 
 > **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F 2026-05-09)**: this plan's
 > `funding-rate-dispersion` variant is half of the May-23 paper-mode evidence run (`pvl-p18a` in

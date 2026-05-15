@@ -2,6 +2,17 @@
 
 ---
 
+## [2026-05-14 16:04 UTC] slot-8 — STARTED Tab 8 (session 3)
+
+Starting V2 extension items after Plan D Phase 1+2 shipped. Items:
+
+- `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 4 (consumer sweep) — Phase 3 still unexecuted, **May-15 deadline
+  — operator needs to trigger Phase 3 TODAY**
+- `deployment_and_qg_strategy_implementation_2026_05_13` (20/52 open)
+- Harsh absorption: `batch_live_symmetry_2026_05_10.md` Tabs 3+ (UAC + QG STEPs)
+
+---
+
 ## [Slot 8 → Slot 1] 2026-05-14 session 2 — Tasks 1/3/4/5/6/7/8/9/10/11/12 STATUS
 
 **All 10 active slot-8 tasks audited + resolved or noted. Key deliverables:**

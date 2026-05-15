@@ -5,7 +5,7 @@ status: active
 created: 2026-05-09
 deadline: 2026-05-23
 author: ikenna
-parent_question_doc: plans/questions/topology_features_strategy_ml_execution_2026_05_08.md
+parent_question_doc: plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md
 consumes:
   - plans/epics/strategy_and_dart_master_2026_05_07.md
   - plans/epics/ml_and_features_master_2026_05_07.md
@@ -24,7 +24,7 @@ estimate_calibration_note: |
 # Topology Q-group GAP closure — 18 GAPs + 2 WATCH + 1 ISSUE before 2026-05-23
 
 > **Why this plan exists.** The topology Q-doc
-> ([`plans/questions/topology_features_strategy_ml_execution_2026_05_08.md`](../questions/topology_features_strategy_ml_execution_2026_05_08.md))
+> ([`plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md`](../archive/topology_features_strategy_ml_execution_2026_05_08.plan.md))
 > initially identified 13 GAPs + 1 critical code-finding ISSUE while pinning runtime topology for the 2026-05-23
 > live-DeFi cutover. After a 2026-05-10 audit verifying actual `- [ ]` todo coverage in claimed-IN-FLIGHT plans, **5
 > additional GAPs (14-18)** were demoted from claimed IN-FLIGHT (cited plan mentioned topic but lacked concrete May-23

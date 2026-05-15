@@ -10,6 +10,8 @@ import pytest
 from detect_template_drift import (  # type: ignore[import-not-found]
     CANONICAL_SOURCE_LINE,
     CANONICAL_SSOT_COMMENT,
+    PREK_SSOT_COMMENT,
+    _check_prek,
     _check_repo,
     run,
 )
@@ -79,6 +81,34 @@ def _write_qg(workspace: Path, repo_name: str, content: str) -> Path:
     qg = repo_dir / "quality-gates.sh"
     qg.write_text(content)
     return qg
+
+
+CANONICAL_PREK = textwrap.dedent(f"""\
+    {PREK_SSOT_COMMENT}
+    # Rollout: bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh
+    repos:
+      - repo: https://github.com/compilerla/conventional-pre-commit
+        rev: v3.2.0
+        hooks:
+          - id: conventional-pre-commit
+      - repo: https://github.com/astral-sh/ruff-pre-commit
+        rev: v0.15.0
+        hooks:
+          - id: ruff
+          - id: ruff-format
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.27.2
+        hooks:
+          - id: gitleaks
+""")
+
+
+def _write_prek(workspace: Path, repo_name: str, content: str) -> Path:
+    repo_dir = workspace / repo_name
+    repo_dir.mkdir(parents=True, exist_ok=True)
+    prek = repo_dir / ".pre-commit-config.yaml"
+    prek.write_text(content)
+    return prek
 
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
@@ -180,3 +210,70 @@ class TestRunWithManifest:
         monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_repo / "unified-trading-pm" / "workspace-manifest.json")
         exit_code = run(workspace_root=tmp_repo)
         assert exit_code == 0
+
+
+class TestCheckPrek:
+    def test_canonical_prek_is_clean(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        _write_prek(tmp_repo, "test-service", CANONICAL_PREK)
+        # Point template dir at our canonical fixture
+        prek_template_dir = tmp_repo / "prek-templates"
+        prek_template_dir.mkdir()
+        template_path = prek_template_dir / "python-service.pre-commit-config.yaml"
+        template_path.write_text(CANONICAL_PREK)
+        monkeypatch.setattr(mod, "PREK_SERVICE_TEMPLATE", template_path)
+        report = _check_prek("test-service", "service", tmp_repo)
+        assert report.is_clean, f"Expected clean but got: {report.items}"
+
+    def test_missing_prek_warns(self, tmp_repo: Path) -> None:
+        report = _check_prek("missing-service", "service", tmp_repo)
+        assert report.has_warnings
+        checks = [i.check for i in report.items]
+        assert "prek-missing-file" in checks
+
+    def test_missing_gitleaks_errors(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        no_gitleaks = CANONICAL_PREK.replace(
+            "  - repo: https://github.com/gitleaks/gitleaks\n    rev: v8.27.2\n    hooks:\n      - id: gitleaks\n",
+            "",
+        )
+        _write_prek(tmp_repo, "test-service", no_gitleaks)
+        prek_template_dir = tmp_repo / "prek-templates"
+        prek_template_dir.mkdir()
+        template_path = prek_template_dir / "python-service.pre-commit-config.yaml"
+        template_path.write_text(CANONICAL_PREK)
+        monkeypatch.setattr(mod, "PREK_SERVICE_TEMPLATE", template_path)
+        report = _check_prek("test-service", "service", tmp_repo)
+        checks = [i.check for i in report.items]
+        assert "prek-missing-hook-gitleaks" in checks
+        assert report.has_errors
+
+    def test_missing_ssot_comment_warns(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        no_comment = CANONICAL_PREK.replace(PREK_SSOT_COMMENT + "\n", "")
+        _write_prek(tmp_repo, "test-service", no_comment)
+        prek_template_dir = tmp_repo / "prek-templates"
+        prek_template_dir.mkdir()
+        template_path = prek_template_dir / "python-service.pre-commit-config.yaml"
+        template_path.write_text(CANONICAL_PREK)
+        monkeypatch.setattr(mod, "PREK_SERVICE_TEMPLATE", template_path)
+        report = _check_prek("test-service", "service", tmp_repo)
+        checks = [i.check for i in report.items]
+        assert "prek-ssot-comment" in checks
+
+    def test_stale_rev_warns(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        stale_ruff = CANONICAL_PREK.replace("rev: v0.15.0", "rev: v0.10.0")
+        _write_prek(tmp_repo, "test-service", stale_ruff)
+        prek_template_dir = tmp_repo / "prek-templates"
+        prek_template_dir.mkdir()
+        template_path = prek_template_dir / "python-service.pre-commit-config.yaml"
+        template_path.write_text(CANONICAL_PREK)
+        monkeypatch.setattr(mod, "PREK_SERVICE_TEMPLATE", template_path)
+        report = _check_prek("test-service", "service", tmp_repo)
+        checks = [i.check for i in report.items]
+        assert any("prek-stale-rev" in c for c in checks)

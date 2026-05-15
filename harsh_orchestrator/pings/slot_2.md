@@ -353,8 +353,36 @@ doc).
 - Pre-existing QG violations (gcp_instance_lister.py cloud SDK import) not introduced by this script.
 STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry-run + notification mock).
 
+[2026-05-15 18:10 UTC] slot-2 — ✅ **DONE item 5** (VM zombie watchdog enhancements). deployment-service@d55aea2.
+
+- `PREFIX_IDLE_THRESHOLDS` dict: per-prefix (heartbeat_stale_min, shard_stale_min) overrides; longest-prefix match; live-service VMs get 30/240 min, backfill 10/60 min.
+- `_resolve_idle_thresholds()`: wired into `_evaluate_vm()` — each VM evaluated against its own thresholds, not global defaults.
+- `_send_zombie_notification()`: best-effort webhook POST (Slack-compatible JSON payload). Fires when zombies detected and `--notify-url` is non-empty.
+- `--notify-url` CLI arg added to `main()`. Notification fires before kill loop (fires even under `--dry-run` review).
+- 10 new unit tests: threshold lookup (6), notification mock (3), arg parser (1). 123 tests pass total.
+- Dry-run was pre-existing; all 3 done-def features shipped. STARTED item 6 (test coverage push to 85%).
+
+[2026-05-15 18:35 UTC] slot-2 — ✅ **DONE item 6** (test coverage push to ≥85% on key modules). deployment-service@a6f1478.
+
+- config_reloaders.py: 0% → 100% (start/stop reloaders, callbacks, log_event call)
+- sports_trigger_state.py: 68% → 94% (malformed JSON, as_int/as_float coercion, resolve_source_key entity routing)
+- vm_config.py (VMConfigManager): 71% → 89% (extract_registry_region, generate_instance_name, get_status_path, is_zone_exhausted/quota)
+- Overall: 71% → 72%. 49 new tests across 3 new files. All pass. Items 7+10 IAM-gated. STARTED item 8 (Phase 8 codex audit).
+
+[2026-05-15 19:00 UTC] slot-2 — ✅ **DONE item 8** (Phase 8 codex audit). unified-trading-pm@f981a40b.
+
+- `codex/05-infrastructure/deployment-and-qg-strategy.md`: new Phase 8.A section covering all 4 hardening patterns shipped 2026-05-15.
+- Patterns documented: launcher_common.sh DRY library, shellcheck security hardening, vm-deployment-events pubsub gap, zombie watchdog per-prefix thresholds + --notify-url, GCS lifecycle operator action.
+- Codex now accurate to Phase 8.A shipped code. STARTED item 9 (VM tarball cleanup tool — cleanup_old_tarballs.py).
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle
 audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
 call. The 3 gsutil lifecycle commands stay queued for an operator session (no IAM/perms issue, just needs operator
 hand). Continue item 3 (VM startup script consolidation) per your STARTED ping. Self-pivot.
+
+[2026-05-15 10:35 UTC] [main → slot 2] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 6-10 + item 4 IAM-gated). Push to ~14 AI-days.
+11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/* reflects Phase 9 shipped patterns (DeFi cost models VM launchers, Phase 10 venue admission); file issue docs per drift. Done-def: audit report.
+12. **VM image build caching audit** — review Cloud Build configs across service repos for cache efficiency (layer ordering, .dockerignore correctness). File issue doc per fixable repo. Done-def: 3+ repos audited.
+13. **deployment-service event sink consolidation** — your audits found multiple emission paths (UEI, GCS direct, pubsub forward). Document the canonical chain in codex/05-infrastructure/event-sink-chain.md. Done-def: doc + 1 trace diagram.
+14. **service-registry drift audit** — verify every VM_PREFIX in vm_zombie_watchdog.py has a corresponding entry in any service-registry / cloud-providers.yaml; file drift. Done-def: 0 orphan prefixes confirmed or drift filed.
