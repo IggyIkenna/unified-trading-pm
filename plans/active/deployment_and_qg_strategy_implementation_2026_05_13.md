@@ -478,8 +478,9 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
 - [x] [AGENT] P0. **deployment-ui error boundary + retry UX** — global error boundary catches React errors + offers
       retry; per-call retry buttons on failed API calls; 3+ failure scenarios tested. —
       _deployment-ui@71c658e_
-- [ ] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar;
-      429 response on exceed; tests covering normal + exceed; QG green.
+- [x] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar;
+      429 response on exceed; tests covering normal + exceed; QG green. —
+      _deployment-api@e968719_
 - [ ] [AGENT] P0. **deployment-ui form validation polish** — backfill / experiment / strategy backtest forms:
       field-level validation, helpful error messages, disable-submit when invalid; vitest green.
 - [ ] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component
