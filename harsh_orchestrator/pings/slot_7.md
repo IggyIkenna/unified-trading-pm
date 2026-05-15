@@ -215,7 +215,7 @@ QG green on both repos. Ready for next queue.
 
 ### Fresh extension (items 14-20, ~14 AI-days)
 
-- [ ] **14. deployment-api VM health-check endpoint** — `GET /api/vm/{vm_name}/health` returns aggregate (last STARTED, last heartbeat, expected next, staleness threshold, current state). Done-def: endpoint + 4 unit tests + QG green.
+- [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health; VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11 unit tests; QG green.
 
 - [ ] **15. deployment-ui VM health-status badges** — wire item 14 into `/ops/live-deployments` + `/ops/vms/{vm_name}`. Color-coded (green/amber/red). Done-def: badge + integration + vitest green.
 
