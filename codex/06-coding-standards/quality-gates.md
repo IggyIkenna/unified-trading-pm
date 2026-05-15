@@ -2261,6 +2261,149 @@ baseline anchored at pre-audit count; new violations fail immediately; existing 
 
 ---
 
+## STEP 5.79: dockerfile-base-pin
+
+**What it catches**: production Dockerfiles using mutable `:tag` references (including `:latest`)
+instead of digest-pinned `@sha256:<hex>` base images.
+
+**Rationale**: Docker image tags are mutable pointers. When an upstream registry owner re-tags
+an image (common for `:latest`, `:1.x` tracks), the next pull silently fetches a different layer
+than what was tested. A `@sha256:` digest is immutable — the exact layers you tested are the
+exact layers that run in production.
+
+**Scope**: all repos containing `Dockerfile` or `Dockerfile.*` files (not `.venv`, `build`,
+`node_modules`).
+
+**Ratchet**: WARN before 2026-05-15 → FAIL (exit 1) from 2026-05-15.
+Remediation: Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+
+**How to comply**:
+```dockerfile
+# WRONG — mutable tag
+FROM python:3.13-slim
+
+# WRONG — latest
+FROM python:latest
+
+# CORRECT — digest-pinned
+FROM python:3.13-slim@sha256:abc123...
+```
+
+**Exemptions checked automatically**:
+- `FROM scratch` (no registry layer)
+- Multi-stage local alias re-references (`FROM build-stage AS runtime` within the same file)
+- `--platform` flag is stripped before checking
+
+**How to find the digest**:
+```bash
+docker pull python:3.13-slim && docker inspect python:3.13-slim --format '{{index .RepoDigests 0}}'
+# or: crane digest python:3.13-slim
+```
+
+**Composes with**: `codex/06-coding-standards/dockerfile-standards.md` — full Dockerfile rules;
+deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 (image-build pipeline).
+
+---
+
+## STEP 5.80: tarball-manifest-present
+
+**What it catches**: `deployment-service/scripts/vm/create-code-tarballs.sh` that does NOT
+write a sibling `<repo>@<commit-sha>.manifest.json` alongside each tarball upload to GCS.
+
+**Scope**: `deployment-service` only. All other repos: auto-skip.
+
+**Rationale**: VMs launched from tarballs must assert at boot-time that the tarball they're
+running matches a known commit SHA — preventing stale re-deploy. Without the sibling manifest
+(containing `repo`, `commit_sha`, `pyproject_version`, `git_status_clean`, `created_at`,
+`created_by`), the VM boot assertion has no source of truth to compare against and silently skips.
+
+**Ratchet**: WARN before 2026-05-15 → FAIL from 2026-05-15.
+Remediation: Phase 3 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+
+**Compliant pattern** in `create-code-tarballs.sh`:
+```bash
+# After uploading tarball to GCS, write sibling manifest
+cat > "/tmp/${REPO_NAME}@${COMMIT_SHA}.manifest.json" <<EOF
+{
+  "repo": "${REPO_NAME}",
+  "commit_sha": "${COMMIT_SHA}",
+  "pyproject_version": "${VERSION}",
+  "git_status_clean": ${GIT_CLEAN},
+  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "created_by": "create-code-tarballs.sh"
+}
+EOF
+gsutil cp "/tmp/${REPO_NAME}@${COMMIT_SHA}.manifest.json" "gs://${BUCKET}/tarballs/"
+```
+
+**Composes with**: `codex/05-infrastructure/vm-tarball-deployment.md`; STEP 5.81 (env-block).
+
+---
+
+## STEP 5.81: tarball-env-block
+
+**What it catches**: `deployment-api` Python source that contains tarball-deploy code but
+lacks an environment-tier guard preventing staging/prod uploads without an explicit override.
+
+**Scope**: `deployment-api` only. All other repos: auto-skip.
+
+**Rationale**: tarballs deployed to staging/prod must be intentional. Without a gate, an
+operator can accidentally call the tarball-deploy endpoint against production with the wrong
+commit — no confirmation, no blast-radius check, no audit trail. The env-tier block forces
+`DEPLOYMENT_ENV` to be checked before any staging/prod tarball upload proceeds.
+
+**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17.
+Remediation: Phase 1 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+
+**Compliant pattern** (deployment-api Python source must contain one of):
+```python
+DEPLOYMENT_ENV = config.deployment_env  # from UnifiedCloudConfig
+staging_override: bool  # explicit caller flag
+allow_tarball: bool     # opt-in gate
+```
+
+**Check logic**: QG greps for `DEPLOYMENT_ENV|deployment_env|staging_override|prod_override|
+allow_tarball|tarball_override|env_tier_check` alongside tarball-related code. If tarball code
+exists but no env guard is found → FAIL.
+
+**Composes with**: `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1); STEP 5.80.
+
+---
+
+## STEP 5.82: image-build-on-staging-merge
+
+**What it catches**: repos with a staging-branch GitHub Actions workflow that do NOT also
+trigger a Cloud Build image build on merge to staging.
+
+**Rationale**: if staging deploys consume a Docker image from Artifact Registry but the
+workflow only deploys (no build step), the image used is whatever was last built — potentially
+many cycles stale. The staging image MUST be freshly built from the exact commit being staged
+before the deploy runs.
+
+**Ratchet**: WARN before 2026-05-17 → FAIL from 2026-05-17.
+Remediation: Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`.
+
+**Check logic**: QG looks for any staging-branch trigger in `.github/workflows/`, then verifies
+at least one workflow file in the same directory references Cloud Build (`cloudbuild`,
+`cloud-build`, `gcloud builds`, `google-github-actions/deploy-cloudrun`, `buildTrigger`).
+FAIL if staging trigger present + no build invocation found.
+
+**Compliant patterns**:
+```yaml
+# Option A: gcloud builds submit in workflow
+- run: gcloud builds submit --config cloudbuild.yaml
+
+# Option B: google-github-actions/deploy-cloudrun (builds inline)
+- uses: google-github-actions/deploy-cloudrun@v2
+```
+
+**Repos currently showing PENDING-RATCHET warning** (as of 2026-05-15 audit):
+check `deployment-api`, `execution-service`, and any repo with a `.github/workflows/deploy-staging.yml`.
+
+**Composes with**: `deployment-and-qg-strategy.md` § image-build cutover path; STEP 5.81.
+
+---
+
 ## quality-gates.sh Boilerplate DRY Consolidation Proposal
 
 > **Status**: PENDING OPERATOR ACK — doc-only. No code change to base-service.sh until operator
