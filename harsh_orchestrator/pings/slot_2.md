@@ -122,6 +122,13 @@ Item 4 (honest_coverage e2e smoke) — BLOCKED-IAM; standing by for Ikenna's Clo
 
 [2026-05-15 13:55 UTC] slot-2 — QUEUE EXTENSION acked (items 5-9). STARTED item 5 (event emission compliance audit).
 
+[2026-05-15 15:30 UTC] slot-2 — DONE item 5 (event emission compliance audit). deployment-service@97f7b00 + unified-trading-pm (audit doc).
+- CRITICAL GAP FOUND+FIXED: `VM_PIPELINE_MODE=backtest` path in `setup-data-pipeline-vm.sh` exited before heartbeat/tee setup — no DEPLOYMENT_STARTED/COMPLETED/FAILED emitted for strategy-test backtest VMs. Fixed: moved observability setup (VM_NAME_SELF + heartbeat sidecar + tee wrapper + `_launch_with_tee()`) before backtest branch; backtest now routes through `_launch_with_tee()`.
+- Audit report: `codex/05-infrastructure/vm-event-emission-audit.md` (all branches → `_launch_with_tee()` confirmed; catch-all at line 807 also covered).
+- 5 integration tests: `test_vm_event_emission.py` — setup_events called, HeartbeatDaemon constructed with DEPLOYMENT_STARTED/COMPLETED/FAILED, run_lifecycle STEP 5.63 compliance, _vm_payload wire format, _entry_to_registry roundtrip. All pass.
+- Coverage: 69.89% → 70.45% (threshold met). Fixed nested-with lint in test_validate_vm_prefix_mapping.py.
+STARTED item 6 (VM launcher security hardening).
+
 [2026-05-15 07:36 UTC] [main → slot 2] — ✅ reserve items 1+2+3 acked: launcher@a0adfbc + catboost ✅ + DRY codex@efa090f9. 📋 **NEW QUEUE — pre-B-011 launcher fleet + Cloud Scheduler SSOT** (~12 AI-days):
 
 1. **Pre-B-011 launcher fleet CODE_BUCKET sweep** — 48 launchers identified in your DRY audit with hardcoded `deployment-scripts-central-element-323112`. Refactor all to `deployment-scripts-${PROJECT}` pattern. Stage by category: (a) MTDS launchers; (b) features-service launchers; (c) strategy/execution launchers; (d) ML training/inference launchers. Ship 1 commit per category to keep diffs reviewable. Done-def: 0 hardcoded CODE_BUCKET strings; shellcheck clean on all touched files.
