@@ -134,3 +134,5 @@ deployment-api + deployment-ui remain your repos until CYCLE-CLOSE. Ping DONE pe
   Also backfilling Phase 9 polish batch (9:09 UTC plan batch, all ✅ in plan):
     deployment-api@4769bd8 (OpenAPI spec endpoint) + @e968719/@5a398fe (rate limiting 60req/min) + @1114bfe/@9c26b27/@720c801 (health/detailed 16 tests).
   Items 4-10 and 13 from 11:15 queue NOT yet implemented — proceeding now. STARTED item 4: deployment-api admin endpoints (pause/resume/cancel VM).
+
+[2026-05-15 17:40 UTC] slot-7 — ✅ DONE queue item 4: deployment-api admin VM endpoints — POST /api/vm/admin/{vm_name}/cancel (archives as failed) + pause (GCS signal blob) + resume (deletes signal); 8 unit tests; QG green. deployment-api@af80be6. Plan Phase 9 extended batch item flipped. Starting item 5: VM log streaming endpoint.

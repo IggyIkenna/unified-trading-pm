@@ -488,6 +488,28 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
       kicks; auto-dismiss on completion; integrated with 2+ flows. — _deployment-ui@e2b7a81_ (NotificationContext +
       ToastStack + MlExperiments + StrategyBacktests wired; 5s auto-dismiss; aria-live=polite; 15 tests green)
 
+Sourced from orchestrator ping [2026-05-15 11:15 UTC] extended queue (items 4-13 from the 3-13 batch).
+
+- [x] [AGENT] P0. **deployment-api admin VM endpoints (cancel/pause/resume)** — `POST /api/vm/admin/{vm_name}/cancel`
+      marks active deployment as cancelled (status=failed, exit_code=-1, archive); `POST
+      /api/vm/admin/{vm_name}/pause` writes GCS pause-signal blob; `POST /api/vm/admin/{vm_name}/resume` deletes pause
+      signal. 8 unit tests; QG green. — _deployment-api@af80be6_
+- [ ] [AGENT] P0. **deployment-api VM log streaming endpoint** — `GET /api/vm/logs/{vm_name}?tail=N&since=<ts>` reads
+      GCS event JSONL files for the VM and streams the last N lines. Done-def: endpoint + 3+ tests + QG green.
+- [ ] [AGENT] P0. **deployment-ui VM log viewer** — `/ops/live-deployments` gets an expandable log panel per VM that
+      polls `GET /api/vm/logs/{vm_name}` every 10s. Done-def: component + vitest green + pnpm build green.
+- [ ] [AGENT] P0. **deployment-api deployment diff endpoint** — `GET /api/deployments/diff?from=<sha>&to=<sha>`
+      compares two deployment snapshots (service versions, config versions); returns added/removed/changed list.
+      Done-def: endpoint + 3+ tests + QG green.
+- [ ] [AGENT] P0. **deployment-ui deployment diff viewer** — side-by-side diff panel accessible from the
+      deployments list. Done-def: component + vitest green + pnpm build green.
+- [ ] [AGENT] P0. **deployment-api cost estimate endpoint** — `POST /api/vm/cost-estimate` accepts VM type + hours
+      estimate and returns projected GCP cost. Done-def: endpoint + 3+ tests + QG green.
+- [ ] [AGENT] P0. **deployment-ui cost estimate panel** — before launching a VM, show cost estimate inline in the
+      launch form. Done-def: component + vitest green + pnpm build green.
+- [ ] [AGENT] P0. **deployment-ui responsive mobile layout audit** — every route at ≤768px: nav collapses, tables
+      scroll horizontally, forms stack vertically. Done-def: Playwright or visual audit + fixes + pnpm build green.
+
 ## Done definition
 
 **Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion"):
