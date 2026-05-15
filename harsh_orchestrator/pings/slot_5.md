@@ -286,7 +286,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **17. execution-service oracle-mismatch handling** — execution-service@a4fd8014 (3 tests: OracleStaleError→ADAPTER_FETCH_FAILED with error_code=ORACLE_STALE, OracleDeviationError→ADAPTER_FETCH_FAILED+COMPLETED_FAILED, oracle stale does NOT advance CB consecutive_failures). QG ✅ (335s).
 
-- [ ] **18. risk-and-exposure-service stress test scenarios** — sustained drawdown over 30-day historical window; concurrent multi-archetype kill-switch arming; risk-limit ratchet under degraded conditions. Done-def: 3+ scenarios + QG green.
+- [x] **18. risk-and-exposure-service stress test scenarios** — risk-and-exposure-service@86b15fd (3 tests in TestStressExtendedScenarios: sustained -0.5%/day 30-day window >13% drawdown; concurrent carry MAX_DRAWDOWN_BREACH→DELTA_NEUTRAL_EXIT + APD DATA_STALE→REDUCTIONS_ONLY; risk-limit OK→WARNING→CRITICAL ratchet). QG ✅ (68s).
 
 - [ ] **19. pnl-attribution-service end-of-day rollup tests** — daily-close PnL emission to GCS audit/ paths; replay-correctness from event stream; cross-day rollup invariants. Done-def: 4+ rollup tests + QG green.
 
