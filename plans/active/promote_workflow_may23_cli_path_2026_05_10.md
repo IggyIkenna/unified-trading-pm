@@ -562,11 +562,11 @@ shas, no model refs, no features manifest version — those are post-cutover Pha
     `pinned_shas: dict[str, str] | None = None`, `model_refs: list[ModelRef] | None = None`,
     `features_manifest_version: str | None = None`, `chain_rpc_pins: dict[str, str] | None = None`. Lets post-cutover
     Phase 2 enrich without UAC schema break.
-- [ ] [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence. Schema matches
-      `MinimalCandidateManifest`.
-- [ ] [AGENT] P0. **UTL `CandidateManifestStore`** wrapper around Firestore — read/write helpers; emits
+- [x] [AGENT] P0. **Firestore `strategy_candidate_manifests` collection** for persistence. Schema matches
+      `MinimalCandidateManifest`. (utl@c7c8a730 — collection auto-created on first write)
+- [x] [AGENT] P0. **UTL `CandidateManifestStore`** wrapper around Firestore — read/write helpers; emits
       `STRATEGY_PROMOTED_TO_CANDIDATE` (via existing UTL bare-string event constants — UAC migration is post-cutover
-      Phase 3).
+      Phase 3). (utl@c7c8a730)
 
 **U1 codex deliverables**:
 
