@@ -280,7 +280,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — risk-and-exposure-service@e66aab4 (5 tests in TestWarnOnlyAndStrictFailEmissionPolicies: WARN_ONLY allows upload + no EMISSION_POLICY_BLOCKED; STRICT_FAIL partial suppresses without alert; completeness_fraction 1.0/0.0). QG ✅ (69s).
 
-- [ ] **15. execution-service order book reconciliation tests** — your prior item 8 (097823ca) shipped order_book reconciliation. Extend: cross-venue book reconciliation, partial-fill book delta, book-snapshot vs book-delta consistency. Done-def: 4+ reconciliation tests + QG green.
+- [x] **15. execution-service order book reconciliation tests** — execution-service@3e1c2644 (4 new tests in TestCrossVenueBookReconciliation: cross-venue failure isolation, partial-fill DEGRADED+STALE book delta, stale snapshot timestamp consistency, three-venue all-states). 11→15 tests. QG ✅ (356s).
 
 - [ ] **16. execution-service rate-limit + circuit-breaker tests** — cross-venue rate-limit aggregation, circuit-breaker tripping under burst load, recovery from open-state. Done-def: 4+ scenarios + QG green.
 
