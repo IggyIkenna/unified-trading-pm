@@ -241,7 +241,7 @@ Excellent.
 
 - [x] **13. codex/08-workflows new doc — deployment-flow.md** — PM@b582ed24. Operator perspective: 3-gate promotion model (local QG → staging quickmerge → main semver bump), strategy paper→live CLI+UI paths, dependency cascade, emergency procedures. Cross-linked from CLAUDE.md § "Git discipline".
 
-- [ ] **14. UTL bump strategy audit** — verify next-bump trigger (feat/feat!/fix) matches actual API surface change. Done-def: audit report + correct bump label if mismatched.
+- [x] **14. UTL bump strategy audit** — PM@56ddb77e. 5 `fix:` commits added public `__init__.py` exports (should be `feat:`); 1 removed exports (should be `feat!:`). Current next-bump correctly classified as MINOR. Issue doc filed: utl_bump_label_mismatch_audit_2026_05_15.md. P2 QG STEP proposal + CLAUDE.md rule recommendation.
 
 - [ ] **15. pre-commit hook standardization** — audit `.pre-commit-config.yaml` across all repos vs PM template; report drift; fix mechanical. Done-def: drift report + 5+ fixes.
 
