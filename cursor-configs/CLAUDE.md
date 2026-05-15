@@ -93,6 +93,7 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Two-pass: Pass 1 = `bash scripts/quality-gates.sh`. Pass 2 = `quickmerge --agent` (lint/format/typecheck/codex, no
   tests).
 - `--dep-branch` is human-only.
+- **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion): `codex/08-workflows/deployment-flow.md`.
 
 ### Imports + types
 
