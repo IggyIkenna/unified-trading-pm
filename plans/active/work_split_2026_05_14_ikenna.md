@@ -532,11 +532,13 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
 1. ✅ **`deployment_api_shard_axis_matrix_uac_drift_2026_05_14` P1** — fix 13 test failures from SHARD_AXIS_MATRIX
    drift; UAC carveouts already shipped, this is the deployment-api alignment. (refactor 0.4×, ~2 = 0.8 cal) **DONE**:
    `deployment-api@40f7769` — 4 test files updated, 13/13 failures resolved. (2026-05-14 session 1)
-2. 🔄 **`solana_defi_coverage_gaps` successor plan D** — venue naming reconciliation
+2. ✅ **`solana_defi_coverage_gaps` successor plan D** — venue naming reconciliation
    (MARINADE/RAYDIUM/ORCA/KAMINO/SOLEND/MARGINFI/DRIFT/JITO → canonical {PROTOCOL}-SOLANA). (design 0.6×, ~4 = 2.4 cal)
-   **PHASE 1 DONE** (2026-05-14): `instruments-service@2639f8e` — migration script + 7 unit tests. QG green. Phase 2
-   dry-run in progress: 169 Cat A rows + 59 Cat B rows found in prod manifest. Phase 3 (VM migration) deferred to
-   operator-authorized backfill slot.
+   **ALL PHASES DONE 2026-05-15 (slot-3)**: Phase 1 — `instruments-service@2639f8e` (migration script + 7 unit tests).
+   Phase 2 — dry-run confirmed 169 Cat A (all phantom, no actual GCS files) + 59 Cat B rows. Phase 3 — migration ran
+   locally with ADC admin perms: `rows_phantom_marked=228`, manifest written back to GCS; backup at
+   `availability_index.20260515-135146.bak.parquet`. Phase 4 — codex update `unified-trading-pm@02efcea5`. Verified:
+   all bare-name venues captured=0, PROTOCOL-SOLANA rows `empty_confirmed`. PM@`d526b8cb`. Plan flipped.
 3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
    **DONE** (2026-05-14 audit pass): All 3 flagged action items already resolved by other agents — (a) wave3x Track D:
    EXPECTED_KNOWN_SOURCE_GAP already shipped UAC@174f401, status table already `done`; (b) launcher_scripts Phases 2/3:
