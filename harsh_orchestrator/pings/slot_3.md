@@ -263,8 +263,8 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 
 [2026-05-15 10:35 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION +5** (after items 8-10). Push to ~16 AI-days.
 11. ✅ **strategy-service Phase 10 codex audit** — Phase 10 introduced venue admission rules + family 1/2 patterns + batch=live archetype grain. Verify strategy-service code reflects codex; file drift. Done-def: audit report. — unified-trading-pm@bfe08a1. 7 aligned (batch=live invariant via V2EngineOrchestrator, 9 StrategyFamily enum, DeployableConfigCandidate, GroupBMetrics). Drift 1 (medium): eligible_venues never populated on emitted instructions — routed to slot 1 for execution-service SOR triage. Drift 2 (low): defi_lp/mev→family mapping docstring-only.
-12. **strategy-service mode parity tests** — same archetype config produces identical signal sequences in `--mode batch` vs `--mode paper` vs `--mode live` (for in-process simulation). 3+ scenarios. Done-def: parity tests + QG green.
-13. **strategy-service archetype rotation tests** — multi-archetype concurrent run (CSB + APD on same VM); each gets correct slot allocation; no double-emit on cross-archetype signal. Done-def: 4+ scenarios + QG green.
+12. ✅ **strategy-service mode parity tests** — 9 tests: direct vs orchestrator 5-tick CSB+APD parity + parametric threshold boundary. QG green. strategy@639df90.
+13. ✅ **strategy-service archetype rotation tests** — 7 tests: CSB/APD slot isolation, cross-archetype kill-switch isolation, no double-emit across 3 concurrent cycles. QG green. strategy@639df90.
 14. **e2e-testing/scripts/defi/ — failure mode scenarios** — extend item 4: (a) one venue 503 mid-cycle; (b) gas price spike; (c) sandwich attack simulation; (d) flash loan fail. Done-def: 4+ failure scenarios + smoke run logged.
 15. **strategy-service signal-batching tests** — verify cooldown timers, batch emit windows, throttle release. Done-def: 4+ batching tests + QG green.
 
@@ -274,3 +274,5 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 14. e2e-testing/scripts/defi/ failure mode scenarios (503/gas-spike/sandwich/flash-fail)
 15. strategy-service signal-batching tests (cooldown timers, batch emit windows)
 Ping DONE per item with SHA.
+
+[2026-05-15 session-5] slot-3 — STARTED items 12-15. Post-OOM rebase complete (all repos on live-defi-rollout). Beginning item 12: strategy-service mode parity tests (batch vs paper vs live signal sequence parity).
