@@ -362,6 +362,13 @@ STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry
 - 10 new unit tests: threshold lookup (6), notification mock (3), arg parser (1). 123 tests pass total.
 - Dry-run was pre-existing; all 3 done-def features shipped. STARTED item 6 (test coverage push to 85%).
 
+[2026-05-15 18:35 UTC] slot-2 — ✅ **DONE item 6** (test coverage push to ≥85% on key modules). deployment-service@a6f1478.
+
+- config_reloaders.py: 0% → 100% (start/stop reloaders, callbacks, log_event call)
+- sports_trigger_state.py: 68% → 94% (malformed JSON, as_int/as_float coercion, resolve_source_key entity routing)
+- vm_config.py (VMConfigManager): 71% → 89% (extract_registry_region, generate_instance_name, get_status_path, is_zone_exhausted/quota)
+- Overall: 71% → 72%. 49 new tests across 3 new files. All pass. Items 7+10 IAM-gated. STARTED item 8 (Phase 8 codex audit).
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle
 audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
