@@ -4,6 +4,28 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 16:30 UTC] slot-5 — 🏁 **EXTENDED-QUEUE CYCLE-CLOSE (Slot 5) — all 12 items complete**.
+
+  **Repos touched**: execution-service (5 commits), pnl-attribution-service (2 commits), risk-and-exposure-service (1 commit), unified-trading-library (1 commit), unified-trading-pm (plan + matrix).
+  **Total new tests shipped this cycle**: ~79 tests across 5 repos.
+  **All QGs green. No blockers. No deferrals.**
+
+  Item-by-item ledger:
+  1. ✅ execution-service DefiErrorCode coverage @69d02cb0 — 30 codes × FAIL/RETRY/SKIP routing; +17 tests (14 Aave + 3 RECURSIVE_LOOP). QG ✅.
+  2. ✅ pnl-attribution APD bucket extension @f3899ef — archetype_aggregator 91.9%→100%; 3 gap-fill tests (_fill_unknown, zero-PnL fallback, strategy_id-from-slot_label). QG ✅.
+  3. ✅ UTL event-emission audit — events/ already 100% (366/366 stmts, 5 files); no gaps found, no tests needed.
+  4. ✅ carry_staked_basis paper trade smoke @310d9629 — 4 tests: paper supply wstETH, paper borrow USDC, full open (supply→borrow→mock perp hedge + net_apr>0), carry close unwind (repay→withdraw→positive residual). QG ✅ (585s).
+  5. ✅ hedge-leg fill simulation @59eac3a5 — 22 tests: 6 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken) × 5 slippage scenarios (IOC normal, FOK, price=None guard, MARKET, price-dispersion detection). QG ✅.
+  6. ✅ archetype paper-runnable matrix @PM/6342dfe9 — carry_staked_basis=paper-shippable (mock fills wired, paper VM ready), APD=backtest-only (no paper fill adapter for on-chain legs); blockers named per SSOT taxonomy.
+  7. ✅ BLOCK_CRITICAL coverage re-check — line 74 = Protocol stub `...` (uncoverable by design); all other BLOCK_CRITICAL paths 100% covered @fd10112. No new tests needed.
+  8. ✅ order_book reconciliation tests @097823ca — 8 tests, 6 scenarios: TestNormalClose (HEALTHY+CLOSED→all-OK), TestStaleSnapshot (STALE+CLOSED→RECON_DEGRADED_CLOSE, KS stays inactive), TestMissingVenueSnapshot (FAILED+CLOSED→degraded not dual-failure), TestDualFailure ×2 (FAILED+OPEN→DUAL_FAILURE_DETECTED + kill switch; STALE+OPEN→dual-fail emits event), TestMultiVenueSequential (binance STALE / bybit HEALTHY / okx dual-fail, each venue independent), TestPartialFillsExecDegraded ×2 (DEGRADED+HALF_OPEN→can_execute=True, no KS). QG ✅ (551s).
+  9. ✅ throttle/rate-limit tests @9d62a58 — 4 tests: burst 100 events (1 passes), sustained 10/s for 60s (1 passes), recovery after 300s window, independent metric keys per venue. QG ✅.
+  10. ✅ multi-archetype rollup tests @63170a3 — 5 tests in TestMultiArchetypeRollup: carry=250 USD / APD=450 USD isolated sums (no bleed), row count conserved, APD frd vs default in separate buckets, carry+APD GCS paths correct, UNKNOWN non-contaminating. QG ✅.
+  11. ✅ kill-switch event chain audit @372a31d6 — 12 tests (VenueCascadeMonitor had ZERO prior tests — first coverage ever): TestVenueCascadeMonitorBasic ×5 (no venues, all-CLOSED, exactly-50%=not-cascade, >50%=cascade, all-OPEN=total_failure) + TestKillSwitchEventChain ×7 (cascade→KS active, total_failure→KS active, KILL_SWITCH_ACTIVATED emitted, VENUE_CASCADE_DETECTED emitted, orders blocked after cascade, no-cascade=KS inactive, DEGRADED≠cascade). Full CIRCUIT_BREAKER_OPEN→KILL_SWITCH_ACTIVATED→orders-blocked chain verified. QG ✅ (535s).
+  12. ✅ UTL events new event types audit — NO new types needed; all 4 events used by items 8+11 (KILL_SWITCH_ACTIVATED, VENUE_CASCADE_DETECTED, RECON_DEGRADED_CLOSE, DUAL_FAILURE_DETECTED) already in UTL event_types.py. Done-def: "no additions needed (documented)".
+
+  **Standing by for Day-1 2026-05-16 dispatch.**
+
 [2026-05-15 16:15 UTC] slot-5 — ✅ DONE items 8+12 (extended queue): item 8 (order_book reconciliation tests): execution-service@097823ca — 8 tests, 6 scenarios in TestReconGate*: normal close (HEALTHY+CLOSED→all-OK), stale snapshot (STALE+CLOSED→RECON_DEGRADED_CLOSE, KS inactive), missing venue (FAILED+CLOSED→degraded not dual-failure), dual failure (FAILED+OPEN→DUAL_FAILURE_DETECTED+kill switch), multi-venue sequential (binance STALE / bybit HEALTHY / okx dual-fail independent), partial-fills/DEGRADED (DEGRADED+HALF_OPEN→can_execute=True). QG ✅ (551s). item 12 (UTL events new event types audit): NO NEW event types needed — all 4 events used by items 8+11 (KILL_SWITCH_ACTIVATED, VENUE_CASCADE_DETECTED, RECON_DEGRADED_CLOSE, DUAL_FAILURE_DETECTED) already in UTL event_types.py. Done-def satisfied: "no additions needed (documented)". 🏁 EXTENDED QUEUE COMPLETE — all 12 items done.
 
 [2026-05-15 15:30 UTC] slot-5 — ✅ DONE item 11 (kill-switch event chain audit): execution-service@372a31d6 — 12 tests in 2 classes: TestVenueCascadeMonitorBasic (5: no venues, all-CLOSED, exactly 50%=no cascade, >50%=cascade, all-OPEN=total_failure) + TestKillSwitchEventChain (7: cascade activates KS, total_failure activates KS, KILL_SWITCH_ACTIVATED emitted, VENUE_CASCADE_DETECTED emitted, orders blocked after cascade, no cascade=KS inactive, DEGRADED≠cascade). VenueCascadeMonitor had ZERO prior tests — this is first coverage. QG ✅ (535s). Moving to item 8: order_book reconciliation tests.

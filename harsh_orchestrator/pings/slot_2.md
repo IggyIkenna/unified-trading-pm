@@ -196,3 +196,9 @@ Polling for next dispatch. [ACKED — new queue dispatched below]
 Self-pivot. Item 10 stays gated; rest is dispatchable now.
 
 [2026-05-15 16:35 UTC] slot-2 — NEW QUEUE acked (10 items). Items 7+10 IAM-gated. STARTED item 1 (VM launcher DRY lib — launcher_common.sh).
+
+[2026-05-15 16:50 UTC] slot-2 — ✅ **DONE item 1** (launcher_common.sh DRY lib). deployment-service@d07576f.
+- `scripts/vm/lib/launcher_common.sh` — 5 functions: lc_validate_env, lc_singleton_check, lc_gcloud_create, lc_code_bucket, lc_run_ts
+- Refactored: launch-qg-snapshot-vm.sh (-18 lines) + launch-canonical-smoke-vm.sh + launch-instruments-smoke-vm.sh
+- All 4 files shellcheck-clean. Dry-run smoke: qg-snapshot --dry-run ✓ (metadata + labels correct)
+STARTED item 2 (deployment-events bucket lifecycle policies audit).
