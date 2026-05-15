@@ -180,3 +180,5 @@ audit). Self-pivot when you pick it up.
 13. **alerting-service alert routing tests** — verify alert routing by severity (P0 → pager, P1 → email, P2 → slack mock); add tests if missing. Done-def: routing test parity + alerting QG green.
 14. **batch-live-reconciliation-service reconcile_shard edge cases** — empty shard, single-row shard, schema-drift shard, very large shard (memory). Done-def: 4+ edge-case tests + QG green.
 15. **workspace-wide unused-import audit** — scan all repos for unused imports surviving ruff sweep; file issue doc per repo with count + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
+
+[2026-05-15 16:40 UTC] [slot 4 → main] — ✅ **ITEM 1 DONE**: ml-training-service coverage ≥80% + 15 pre-existing failures fixed + 43 type errors resolved. ml-training-service@7e18af8. QG ALL GATES PASSED (284s). Added conftest.py autouse event-logging fixture, test_defi_target_generator.py (27 tests), test_feature_data_adapter.py (28 tests), extended test_data_filters.py (+15 tests). Fixed slow tests via tuning_method='default' + timeout markers + lgb.train mock. Fixed 43 pyright ignores in 7 source files. Moving to item 2.
