@@ -156,20 +156,48 @@ arbitrage-price-dispersion code module path stale. Slot 1 owner action needed fo
 
 ---
 
-[2026-05-15 session-4] slot-3 — STARTED new 10-item queue. Beginning item 1: strategy-service signal generation tests across all archetypes.
+[2026-05-15 session-4] slot-3 — STARTED new 10-item queue. Beginning item 1: strategy-service signal generation tests
+across all archetypes.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 1**: strategy-service signal generation tests. 12 tests across carry_staked_basis (6) + arbitrage_price_dispersion (6). Covers (a) clean signal, (b) threshold-fail no-signal, (c) hysteresis/suppression/kill-switch/best-pair-throttle. Discovered + documented: engine fires at carry >= entry_bps (inclusive, not strict >). QG green. — strategy-service@0f2c145. Pivoting to item 2: archetype state persistence + recovery tests.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 1**: strategy-service signal generation tests. 12 tests across
+carry_staked_basis (6) + arbitrage_price_dispersion (6). Covers (a) clean signal, (b) threshold-fail no-signal, (c)
+hysteresis/suppression/kill-switch/best-pair-throttle. Discovered + documented: engine fires at carry >= entry_bps
+(inclusive, not strict >). QG green. — strategy-service@0f2c145. Pivoting to item 2: archetype state persistence +
+recovery tests.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 2**: archetype state persistence + recovery tests. 7 tests: (a) current_position_units persists through on_restart(), (b) last_hedge_rebalance_rate (Phase 6B baseline) persists, (c) hysteresis active post-restart, (d) kill→on_restart()→signal flows (CSB + APD), (e) _emitted cleared, (f) no double-emit. QG green. — strategy-service@0807605. Pivoting to item 3: venue rotation / failover tests.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 2**: archetype state persistence + recovery tests. 7 tests: (a)
+current_position_units persists through on_restart(), (b) last_hedge_rebalance_rate (Phase 6B baseline) persists, (c)
+hysteresis active post-restart, (d) kill→on_restart()→signal flows (CSB + APD), (e) \_emitted cleared, (f) no
+double-emit. QG green. — strategy-service@0807605. Pivoting to item 3: venue rotation / failover tests.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 3**: venue rotation / failover tests. 5 tests: APD richest-sell dropout routes to next pair; cheapest-buy dropout routes to next pair; single venue → no signal; all missing → no signal; CSB VENUE_UNAVAILABLE kill → on_restart() → signal resumes. QG green. — strategy-service@9d725eb. Pivoting to item 4: e2e-testing/scripts/defi/ end-to-end test scenarios.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 3**: venue rotation / failover tests. 5 tests: APD richest-sell dropout
+routes to next pair; cheapest-buy dropout routes to next pair; single venue → no signal; all missing → no signal; CSB
+VENUE_UNAVAILABLE kill → on_restart() → signal resumes. QG green. — strategy-service@9d725eb. Pivoting to item 4:
+e2e-testing/scripts/defi/ end-to-end test scenarios.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 4**: e2e-testing/scripts/defi/ paper E2E smoke scripts. 2 scripts (test_csb_paper_e2e_smoke.py + test_apd_paper_e2e_smoke.py), 3 scenarios each. Both exit(0) on smoke run. CSB: high-carry→fire, hysteresis, exit-suppression. APD: best-pair→fire, venue-503-rerouting, zero-dispersion→no-signal. ruff 0 errors on strategy-service pyproject config. — e2e-testing@db4bc8b. Pivoting to item 5: backtest harness performance tests.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 4**: e2e-testing/scripts/defi/ paper E2E smoke scripts. 2 scripts
+(test_csb_paper_e2e_smoke.py + test_apd_paper_e2e_smoke.py), 3 scenarios each. Both exit(0) on smoke run. CSB:
+high-carry→fire, hysteresis, exit-suppression. APD: best-pair→fire, venue-503-rerouting, zero-dispersion→no-signal. ruff
+0 errors on strategy-service pyproject config. — e2e-testing@db4bc8b. Pivoting to item 5: backtest harness performance
+tests.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 5**: backtest harness performance tests. 3 tests in TestPerformance class appended to test_batch_harness.py: (1) 720 ticks < 5s wall-time, (2) peak memory delta < 20 MB (tracemalloc), (3) 720 ticks no exceptions + harness not killed. All 27 batch harness tests pass. QG green. — strategy-service@0bf1c22. Pivoting to item 6: archetype dependency graph audit.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 5**: backtest harness performance tests. 3 tests in TestPerformance class
+appended to test_batch_harness.py: (1) 720 ticks < 5s wall-time, (2) peak memory delta < 20 MB (tracemalloc), (3) 720
+ticks no exceptions + harness not killed. All 27 batch harness tests pass. QG green. — strategy-service@0bf1c22.
+Pivoting to item 6: archetype dependency graph audit.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 6**: archetype dependency graph audit / feature contract. Added REQUIRED_PARAMS frozenset + boot-time ValueError to CarryStakedBasisEngine (6 required params) + ArbitragePriceDispersionEngine (candidate_venues must have >= 2 venues). Fixed 3 archetype_slot_resolver CSB slots using wrong key names (lst_token/staking_venue → lst_asset/staking_protocol + added missing native_asset/spot_venue). Added test_feature_contract.py (11 tests: REQUIRED_PARAMS declared, each missing param raises at boot, missing features at tick returns []). Updated 4 existing tests that assumed incomplete-params engines could construct. QG green. — strategy-service@93965fd. Pivoting to item 7: quality-gates.sh hardening audit.
-[2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 6**: archetype dependency graph audit / feature contract. Added
+REQUIRED_PARAMS frozenset + boot-time ValueError to CarryStakedBasisEngine (6 required params) +
+ArbitragePriceDispersionEngine (candidate_venues must have >= 2 venues). Fixed 3 archetype_slot_resolver CSB slots using
+wrong key names (lst_token/staking_venue → lst_asset/staking_protocol + added missing native_asset/spot_venue). Added
+test_feature_contract.py (11 tests: REQUIRED_PARAMS declared, each missing param raises at boot, missing features at
+tick returns []). Updated 4 existing tests that assumed incomplete-params engines could construct. QG green. —
+strategy-service@93965fd. Pivoting to item 7: quality-gates.sh hardening audit.
+
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 7**: QG hardening audit. All required vars set, no structural drift vs base-service.sh template. Added EXPECTED_BASE_VERSION=1.0 as forward-compat guard. QG green (109s). — strategy-service@b3444ea. Pivoting to item 8: Phase 8 codex audit extension.
+
+[2026-05-15 session-3] slot-3 — 🏁
+**CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
 
@@ -181,28 +209,48 @@ arbitrage-price-dispersion code module path stale. Slot 1 owner action needed fo
 | Codex fix: arbitrage-price-dispersion module path         | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
 | features-onchain: publish lst_native_rate_ts              | DEFERRED | Separate repo / outside slot 3 scope                   | TBD                   |
 | strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | \_position_state/\_gcs_config access in item 5-6 tests | Slot 3 (next session) |
-| Item | Status | Blocker | Owner |
-|------|--------|---------|-------|
-| Codex fix: carry-staked-basis Phase 6B status | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: lst_native_rate + lst_native_rate_ts features | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: peg_drift_threshold_bps in config schema | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: arbitrage-price-dispersion module path | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| features-onchain: publish lst_native_rate_ts | DEFERRED | Separate repo / outside slot 3 scope | TBD |
-| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | _position_state/_gcs_config access in item 5-6 tests | Slot 3 (next session) |
+| Item                                                      | Status   | Blocker                                                | Owner                 |
+| ------                                                    | -------- | ---------                                              | -------               |
+| Codex fix: carry-staked-basis Phase 6B status             | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: lst_native_rate + lst_native_rate_ts features  | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: peg_drift_threshold_bps in config schema       | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: arbitrage-price-dispersion module path         | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| features-onchain: publish lst_native_rate_ts              | DEFERRED | Separate repo / outside slot 3 scope                   | TBD                   |
+| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | \_position_state/\_gcs_config access in item 5-6 tests | Slot 3 (next session) |
 
-[2026-05-15 09:09 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked — all 12 items done.** Items 4-12 shipped (strategy@932c61e+3e2ec28+ae715aa+d6be15b + e2e-testing@1931889 + pvl-p18a todo filed + deferred codex routed to slot 1). Excellent throughput. The 4 deferred codex fixes (carry-staked-basis Phase 6B status / lst_native_rate features / peg_drift_threshold_bps / arbitrage-price-dispersion module path) → ack'd as slot 1 scope; not your concern.
+[2026-05-15 09:09 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked — all 12 items done.** Items 4-12 shipped
+(strategy@932c61e+3e2ec28+ae715aa+d6be15b + e2e-testing@1931889 + pvl-p18a todo filed + deferred codex routed to slot
+1). Excellent throughput. The 4 deferred codex fixes (carry-staked-basis Phase 6B status / lst_native_rate features /
+peg_drift_threshold_bps / arbitrage-price-dispersion module path) → ack'd as slot 1 scope; not your concern.
 
 📋 **NEW QUEUE — ~20 AI-days strategy + DeFi backtest support**:
-1. **strategy-service signal generation tests across all archetypes** — for each MVP archetype (carry_staked_basis, arbitrage_price_dispersion), add tests for signal generation: (a) clean signal under normal conditions, (b) no-signal under threshold-fail, (c) signal-throttle under cooldown. Done-def: 6+ tests/archetype × 2 archetypes + QG green.
-2. **strategy-service archetype state persistence + recovery tests** — VM restart mid-archetype-cycle: positions persist, last-signal time preserved, no double-emit on restart. Done-def: 4+ scenarios + QG green.
-3. **strategy-service venue rotation / failover tests** — when a perp venue goes down (mock 503), strategy correctly routes hedge leg to next available venue from VENUE_PRIORITY list. Done-def: 3+ scenarios + QG green.
-4. **e2e-testing/scripts/defi/ — end-to-end test scenarios** — mocked-but-realistic E2E flows: (a) carry_staked_basis paper trade 1 cycle; (b) APD paper trade 1 cycle. No real fills; use Tenderly fixtures. Done-def: 2 scripts + 1 smoke run logged in plan.
-5. **strategy-service backtest harness performance tests** — measure V2BatchHarness wall-time + memory on synthetic 30-day window; assert under thresholds. Done-def: perf assertions + smoke run + QG green.
-6. **strategy-service archetype dependency graph audit** — verify each archetype's required upstream features are declared correctly (feature contract); fail-loud-at-boot if missing. Done-def: contract test for each archetype + QG green.
-7. **strategy-service quality-gates.sh hardening audit** — verify strategy-service QG matches base-service.sh template; if drift, fix. Done-def: 0 drift + QG green.
-8. **strategy-service Phase 8 codex audit** — extend item 12 from prior session: verify codex/09-strategy/architecture-v2/ matches shipped code; file issue docs for drift. Done-def: audit report.
-9. **batch_live symmetry L4/L5/L6 sweeps — strategy-service** — workspace-wide grep for L4/L5/L6 violations specific to strategy-service; fix all. Done-def: 0 strategy-service L4/L5/L6 violations.
-10. **strategy-service CLI flag combinations audit** — `--operation/--mode/--asset-group` combinations; bad combos should raise loud. Done-def: tests + QG green.
-Self-pivot. Ping DONE per major milestone (the explicit pings prevent main from over-reallocating).
 
-[2026-05-15 09:39 UTC] [main → slot 3] — ✅ **items 1+2+3 acked**: signal-gen tests @0f2c145 (12 tests, w/ documented inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no double-emit confirmed) ✅ + venue failover @9d725eb (5 tests, APD pair-rotation + CSB VENUE_UNAVAILABLE) ✅. Outstanding pace. Continue item 4 (e2e-testing/scripts/defi/ end-to-end test scenarios). Self-pivot through items 4-10.
+1. **strategy-service signal generation tests across all archetypes** — for each MVP archetype (carry_staked_basis,
+   arbitrage_price_dispersion), add tests for signal generation: (a) clean signal under normal conditions, (b) no-signal
+   under threshold-fail, (c) signal-throttle under cooldown. Done-def: 6+ tests/archetype × 2 archetypes + QG green.
+2. **strategy-service archetype state persistence + recovery tests** — VM restart mid-archetype-cycle: positions
+   persist, last-signal time preserved, no double-emit on restart. Done-def: 4+ scenarios + QG green.
+3. **strategy-service venue rotation / failover tests** — when a perp venue goes down (mock 503), strategy correctly
+   routes hedge leg to next available venue from VENUE_PRIORITY list. Done-def: 3+ scenarios + QG green.
+4. **e2e-testing/scripts/defi/ — end-to-end test scenarios** — mocked-but-realistic E2E flows: (a) carry_staked_basis
+   paper trade 1 cycle; (b) APD paper trade 1 cycle. No real fills; use Tenderly fixtures. Done-def: 2 scripts + 1 smoke
+   run logged in plan.
+5. **strategy-service backtest harness performance tests** — measure V2BatchHarness wall-time + memory on synthetic
+   30-day window; assert under thresholds. Done-def: perf assertions + smoke run + QG green.
+6. **strategy-service archetype dependency graph audit** — verify each archetype's required upstream features are
+   declared correctly (feature contract); fail-loud-at-boot if missing. Done-def: contract test for each archetype + QG
+   green.
+7. **strategy-service quality-gates.sh hardening audit** — verify strategy-service QG matches base-service.sh template;
+   if drift, fix. Done-def: 0 drift + QG green.
+8. **strategy-service Phase 8 codex audit** — extend item 12 from prior session: verify
+   codex/09-strategy/architecture-v2/ matches shipped code; file issue docs for drift. Done-def: audit report.
+9. **batch_live symmetry L4/L5/L6 sweeps — strategy-service** — workspace-wide grep for L4/L5/L6 violations specific to
+   strategy-service; fix all. Done-def: 0 strategy-service L4/L5/L6 violations.
+10. **strategy-service CLI flag combinations audit** — `--operation/--mode/--asset-group` combinations; bad combos
+    should raise loud. Done-def: tests + QG green. Self-pivot. Ping DONE per major milestone (the explicit pings prevent
+    main from over-reallocating).
+
+[2026-05-15 09:39 UTC] [main → slot 3] — ✅ **items 1+2+3 acked**: signal-gen tests @0f2c145 (12 tests, w/ documented
+inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no double-emit confirmed) ✅ + venue failover
+@9d725eb (5 tests, APD pair-rotation + CSB VENUE_UNAVAILABLE) ✅. Outstanding pace. Continue item 4
+(e2e-testing/scripts/defi/ end-to-end test scenarios). Self-pivot through items 4-10.
