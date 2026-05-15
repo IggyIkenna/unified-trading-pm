@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 19:35 UTC] harsh-slot-9 — ✅ DONE new-queue item 8 (PBM phantom-prevention tests): mdps@9f7b1ab. 8 tests in test_phantom_prevention.py: TestPhantomOnUploadFailure (2: OSError prevents record_captured, ManifestWriter never constructed), TestPhantomOnHeartbeatPath (1: should_publish_row=False → upload happens, no record_captured), TestPhantomOnFinalizeNone (1: finalize=None → no upload, no record), TestPhantomOnRecordCapturedFailure (2: OSError+ValueError from record_captured both isolated), TestPhantomHappyPath (1: upload+record each once). QG green. B-015 still HOLD. Moving to item 9 (MTDS Tenderly-fork integration smoke).
+
 [2026-05-15 19:10 UTC] harsh-slot-9 — ✅ DONE new-queue item 7 (MTDS graceful shutdown tests): mtds@6a71ddf. 9 tests in test_graceful_shutdown.py: TestSystemExitNotCaughtByExceptException (2: SystemExit escapes except Exception, RuntimeError caught), TestDefiShardLoopShutdownBehavior (4: completed shards record_captured persists, exit code 0, all-shards normal, exception shard record_failed), TestGracefulShutdownHandlerFlag (3: shutdown_requested initially False, set via request_shutdown, SIGTERM+SIGINT registered on init). QG green. B-015 still HOLD. Moving to item 8 (PBM cluster validation tests).
 
 [2026-05-15 14:15 UTC] harsh-slot-9 — ✅ DONE queue item 10 (MTDS handler retry-and-backoff audit): mtds@dcd6f5f.
