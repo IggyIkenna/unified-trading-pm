@@ -185,8 +185,13 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       modes with identical input order book + identical seeds. Output = per-archetype P&L delta = execution alpha.
       (execution-service@fa18c3a1b — scaffold shipped. Wraps `GroupCRunner` (backtest_v2/runner.py) which is Phase-10
       scaffold pending Phase 4 polymorphic dispatch. TradeInstruction path wired today. 2026-05-14 slot 7.)
-- [ ] [SCRIPT] P0. Parallel-shard wrapper: 730 days × 2 archetypes × 2 fill-modes = 2920 worker runs. Fits on
+- [x] [SCRIPT] P0. Parallel-shard wrapper: 730 days × 2 archetypes × 2 fill-modes = 2920 worker runs. Fits on
       `c3-highcpu-176` with 16-day chunks → 183 chunks per shape, all parallel.
+      **SHIPPED 2026-05-15** — `execution-service/scripts/run_execution_alpha_parallel.py` fans out all
+      (archetype × 4-day chunk) pairs using `ProcessPoolExecutor(max_workers=176)`. Default 730-day window → 183 chunks
+      × 2 archetypes = 366 parallel workers per run. VM launcher:
+      `deployment-service/scripts/vm/launch-execution-alpha-vm.sh` (prefix `exec-alpha-` registered in
+      `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET). execution-service@`f65a7d5d5` + deployment-service@`1510310`.
 - [x] [SCRIPT] P0. Mock-data smoke: synthetic 5-day window per archetype, both fill modes, verify diff > 0 + within
       expected magnitude. (strategy-service@fc634e3 — `tests/integration/test_execution_alpha_smoke.py` authored.
       Two test classes: `TestCarryStakedBasisExecutionAlpha` + `TestArbitragePriceDispersionExecutionAlpha`. Both
@@ -340,7 +345,7 @@ slots + 1 PM slot, all distributable across existing density-push cycles.
 | Phase 2: `--worker-count` sports family | **DONE** — features-service@722697d3 | — |
 | Phase 2: profiling other 7 families | **TODO** — not started | Profiling slot (Harsh) |
 | Phase 3: execution alpha script | **DONE** — execution-service@fa18c3a1b | — |
-| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **TODO** — harness exists, VM-level wrapper not yet | Needs VM launcher in deployment-service/scripts/vm/ |
+| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **DONE 2026-05-15** — `run_execution_alpha_parallel.py` + `launch-execution-alpha-vm.sh` + watchdog prefix registered | — |
 | Phase 4 smoke tests | **DONE** — strategy-service@fc634e3 | — |
 | Phase 4: ML training `--hyperparam-grid-file` | **TODO** — not started | ML training maintainer slot |
 | Phase 5: big-machine SKU matrix | **TODO** — not started | Benchmark owner |
