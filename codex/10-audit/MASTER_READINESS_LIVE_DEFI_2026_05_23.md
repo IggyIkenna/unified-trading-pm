@@ -1,5 +1,7 @@
 ---
 scope: [engineer, admin]
+last_refreshed: 2026-05-15
+refresh_note: A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all group descriptions confirmed accurate vs shipped code.
 ---
 
 # Master Readiness — Live DeFi Trading by 2026-05-23
@@ -75,9 +77,10 @@ in `repos/<service>.yaml` extend their item set to track 4–23 (items 1–3 are
 17. **Backtest fidelity** — real gas, real market impact, realistic matching engine for AMM pools / perpetuals / spots /
     transfers / atomic transfers / flash loans (backtest-groups.md, batch-live-architecture.md — single SSOT)
 18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured
-19. **Treasury / custody integration** — Copper for DeFi side; CEFFU for Binance institutional flow. Single SSOT:
-    `codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08, replaces former
-    per-provider docs)
+19. **Treasury / custody integration** — **May-23: `CLOUD_KMS_ENCRYPTED`** (GCP KMS for all live keys; no Copper/CEFFU
+    dependency on cutover date). Copper (DeFi side) + CEFFU (Binance institutional flow) are **June-1** follow-ons.
+    Single SSOT: `codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08,
+    replaces former per-provider docs)
 20. **Live testnet replicates prod** — Tenderly fork / forked-mainnet for DeFi; Binance testnet / Bybit testnet for CeFi
 21. **Reconciliation suite** — batch-vs-live reconciliation, P&L attribution decomposed per source, per-trade
     reconciliation (pnl-attribution.md, batch-live-reconciliation-service)
@@ -175,6 +178,15 @@ The 7-group readiness applies to:
 > cross-cutting umbrella plans cited above. alerting-service IS dedicated. The other 4 do not need their own plan files;
 > their phases are explicit todos in the named umbrellas. Reviewers should follow those links to find the actual phase /
 > todo / gate ownership.
+
+> **Re-verified 2026-05-15** (slot 6 A-G sweep): service list confirmed accurate. Key updates vs 2026-05-08:
+> - Group F item 19 (custody): corrected to CLOUD_KMS_ENCRYPTED for May-23; Copper+CEFFU deferred to June-1 (aligned
+>   with `codex/04-architecture/custody-providers.md` which is the live SSOT — drift-audited clean per slot 6 item 5).
+> - batch-live-reconciliation-service: UTL `batch_live_reconciler` confirmed shipped + concurrency-tested.
+> - DeFi error classification: 30 codes in `DefiErrorCode` (13 Aave + 7 RECURSIVE_LOOP + 8 HL_* + 2 ORACLE_*);
+>   CLAUDE.md updated 2026-05-15 per slot 6 item 5 drift audit — codex/04-architecture/defi-execution-overview.md is
+>   accurate SSOT.
+> - No structural changes to 23-item A-G model.
 
 - deployment-api
 - deployment-service
