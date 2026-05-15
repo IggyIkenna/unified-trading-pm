@@ -485,8 +485,9 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
       field-level validation, helpful error messages, disable-submit when invalid; vitest green. —
       _deployment-ui@088b5c6_ (MlExperiments + StrategyBacktests + ExecutionBacktests: inline errors,
       aria-invalid/aria-describedby, button disabled when invalid, end≥start date check; 27 tests green)
-- [ ] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component
-      status (GCS, pubsub, secret manager, deployment-events); tests covering each component up/down state.
+- [x] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component
+      status (GCS, pubsub, secret manager, deployment-events); tests covering each component up/down state. —
+      _deployment-api@1114bfe_ (4 probe fns + mock fast-path + degraded/healthy rollup; 16 tests green)
 - [ ] [AGENT] P0. **deployment-ui notification system** — toast/banner for backfill launches / VM spawns / paper-trade
       kicks; auto-dismiss on completion; integrated with 2+ flows.
 
