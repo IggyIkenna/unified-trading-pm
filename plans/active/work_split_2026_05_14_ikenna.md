@@ -440,12 +440,17 @@ risk-and-exposure lint.
 4. ✅ **Cluster B risk-and-exposure-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal) Done: B008
    fixed (Annotated pattern) risk-and-exposure-service@d1d43db; C901 fixed by Harsh risk-and-exposure-service@190f34b
    (noqa on compute_risk + \_tally_illiquid_positions helper). All 3 violation types cleared.
-5. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items (slot 6 takes
-   Phase 1; this slot takes 2+3). (research 1.2×, ~4 = 4.8 cal)
+5. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items (slot 6 takes
+   Phase 1; this slot takes 2+3). (research 1.2×, ~4 = 4.8 cal) **ALREADY DONE (pre-existing)**: all 4 plan phases `[x]`
+   confirmed — `execution-service@51f1f879` (audit_log.py + callers + 9 tests) + `deployment-service@c3ac1c5`
+   (cloud-providers.yaml audit-records bucket + provision script) + GCP bucket locked (220752000s retention) + AWS
+   COMPLIANCE 7yr lock applied 2026-05-14.
 6. **`client_reporting_pnl_attribution_mvp_2026_05_10` Ikenna pickup** — push open todos workspace-wide. (design 0.6×,
    ~5 = 3.0 cal)
-7. **`context_fill_optimization_2026_05_14` Phase 1** — newly-created plan; review + first-phase implementation.
-   (research 1.2×, ~3 = 3.6 cal)
+7. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — newly-created plan; review + first-phase implementation.
+   (research 1.2×, ~3 = 3.6 cal) **DONE (Phase 1 pre-existing)**: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines)
+   - P1 orchestrator sub-agent loop `[x]` (`PM@1a056988`). P2 (relocate .claude/rules — lowest-impact) deferred per plan
+     body; Phase 1 scope complete.
 8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — close out shard-atom alignment per the
    shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal)
 9. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
