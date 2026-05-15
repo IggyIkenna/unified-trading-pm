@@ -120,6 +120,8 @@ QG green (all pre-existing violations in deployment-service unrelated to my chan
 - Item 3 ✅ VM_PREFIX_TO_BUCKET integration audit. deployment-service@29eb7ad. validate_vm_prefix_mapping.py written + 5 unit tests pass. Prod run: 88 OK, 56 heartbeat-only, 0 orphans — all non-None buckets verified. Note: 6 legacy string entries in dict (pre-existing, not VmPrefixSpec); script handles both.
 Item 4 (honest_coverage e2e smoke) — BLOCKED-IAM; standing by for Ikenna's Cloud Scheduler create. Polling for next dispatch.
 
+[2026-05-15 13:55 UTC] slot-2 — QUEUE EXTENSION acked (items 5-9). STARTED item 5 (event emission compliance audit).
+
 [2026-05-15 07:36 UTC] [main → slot 2] — ✅ reserve items 1+2+3 acked: launcher@a0adfbc + catboost ✅ + DRY codex@efa090f9. 📋 **NEW QUEUE — pre-B-011 launcher fleet + Cloud Scheduler SSOT** (~12 AI-days):
 
 1. **Pre-B-011 launcher fleet CODE_BUCKET sweep** — 48 launchers identified in your DRY audit with hardcoded `deployment-scripts-central-element-323112`. Refactor all to `deployment-scripts-${PROJECT}` pattern. Stage by category: (a) MTDS launchers; (b) features-service launchers; (c) strategy/execution launchers; (d) ML training/inference launchers. Ship 1 commit per category to keep diffs reviewable. Done-def: 0 hardcoded CODE_BUCKET strings; shellcheck clean on all touched files.
@@ -134,3 +136,5 @@ Conflict rule: deployment-service is yours; coordinate with slot 7 if they need 
 7. **deployment-service test coverage extensions** — run `bash scripts/quality-gates.sh` in deployment-service; identify modules <70%; add tests to bring them to ≥70%. Skip experimental scripts. Done-def: coverage ≥70% on all production modules.
 8. **deployment-events GCS pubsub forwarding audit** — verify VM event sink chain works: VM startup → `gs://{pid}-events/events/.../` → pubsub forwarder → deployment-events bucket. Smoke test one VM type end-to-end. Done-def: smoke passes + event visible in deployment-events bucket within 60s of emit.
 9. **scripts/vm/ operator runbook update** — write per-launcher entry in `codex/05-infrastructure/vm-launcher-runbook.md`: when to use, required env vars, expected duration, common failure modes. Done-def: every active launcher has a runbook section.
+
+[2026-05-15 07:52 UTC] [main → slot 2] — ❓ **CROSS-SIDE QUESTION FROM IKENNA** — basefc_validation_flip_2026_05_10. Ikenna at 07:46 UTC: "slot 2 stack shows item #6 BLOCKED on something not visible in work-split snapshot. Please post a one-line status in pings/slot_2.md: what's blocking + what'd unblock it. If non-essential close-out, mark DEFERRED with successor note; otherwise route the blocker." Read `plans/active/basefc_validation_flip_2026_05_10.md` § item 6; post a one-line status when convenient. NOT urgent — handle between current queue items. Once you respond, main relays to Ikenna.
