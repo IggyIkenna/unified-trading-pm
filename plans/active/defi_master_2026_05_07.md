@@ -29,6 +29,11 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_2026_05_10.md` is the canonical implementation track for
+> `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2). Phases 4+5
+> BLOCKED-CREDENTIALS (Tenderly fork + HL/Bybit testnet). Check that plan for current status before modifying any
+> recursive-borrow scope here. Banner added 2026-05-15.**
+
 # DeFi Master — asset_group umbrella
 
 > **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +

@@ -23,6 +23,11 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 ---
 
+> **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_2026_05_10.md` adds `HealthFactorMonitor` +
+> `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
+> (`DEFI_HEALTH_FACTOR_CRITICAL` / `DEFI_LIQUIDATION_IMMINENT` / `DEFI_FUNDING_RATE_FLIP` alert codes already added to
+> UAC `AlertCode`). Banner added 2026-05-15.**
+
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)

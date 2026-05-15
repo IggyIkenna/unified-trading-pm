@@ -174,16 +174,14 @@ window if Phase 1 starts immediately.
 Add these banners (per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE) to the top of the named plans BEFORE Phase
 1 starts:
 
-- [ ] **[BANNER]** `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — top-of-file banner:
-      `🟡 IN-FLIGHT REFACTOR — recursive-borrow plan     (defi_recursive_borrow_archetypes_2026_05_10.md) is consuming the lending-indices DEFERRED note as a P0 prerequisite. RE-VERIFY before flipping the     DEFERRED checkbox to ✅ — the recursive-borrow plan needs ≥1y of historical Aave V3 / Compound V3 lending data to backtest.`
+- [x] **[BANNER]** `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — top-of-file banner added. (commit
+      below unified-trading-pm 2026-05-15)
 - [ ] **[BANNER]** `master_to_live_defi_2026_05_23.md` — Group F item 18 (2-year batch backtest run) gets a sub-bullet
       pointing at this plan; Group F item 17 (real gas / matching engine / cost+yield precision) gets a sub-bullet
-      pointing at Phase 9.
-- [ ] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner declaring this plan as the canonical implementation
-      track for recursive-borrow archetypes.
-- [ ] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner pointing at Phase 8
-      (HealthFactorMonitor + LiquidationProximityCircuit) as a new alerting consumer with kill-switch tier-up
-      integration requirements.
+      pointing at Phase 9. **SLOT-1-ONLY** — queued in pings/slot_2.md for slot 1 to apply on next master-plan refresh.
+- [x] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner added. (commit below unified-trading-pm 2026-05-15)
+- [x] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner added. (commit below
+      unified-trading-pm 2026-05-15)
 
 Banner-removal owned by this plan when each phase ships; stale-banner sweep at end-of-plan.
 
@@ -1252,17 +1250,27 @@ replaced by 2 distinct family docs.
 
 **Phase 10 P0/P1 implementation gates** (10, one per doc):
 
-- [ ] [codex] **P0**. Ship `carry-recursive-borrow-lending-only.md` + verify `grep -r` ≥ 3 cross-refs.
-- [ ] [codex] **P0**. Ship `carry-recursive-borrow-perp-hedged.md` + verify bidirectional link.
-- [ ] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb).
+- [x] [codex] **P0**. Ship `carry-recursive-borrow-lending-only.md` + verify `grep -r` ≥ 3 cross-refs. (ec344724
+      unified-trading-pm 2026-05-15 — file existed from 2026-05-12 design ship; 7+ cross-refs verified)
+- [x] [codex] **P0**. Ship `carry-recursive-borrow-perp-hedged.md` + verify bidirectional link. (ec344724
+      unified-trading-pm 2026-05-15 — added ## Backtest scenarios section; bidirectional links verified)
+- [x] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb). (c5a25181
+      unified-trading-pm 2026-05-15)
 - [ ] [codex] **P0**. Patch `flash-loan-receiver.md` (`## Extended receiver` + addresses + modes).
-- [ ] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections).
-- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9).
-- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
-      2026-05-12 above).
-- [ ] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries.
-- [ ] [codex] **P0**. Patch `batch-live-architecture.md` `### Archetype-grain batch=live status`.
-- [ ] [codex] **P1**. Ship `cefi-perp-leg-bybit.md` (escalate to P0 if Family 2 ships Bybit before HL).
+      **BLOCKED-CREDENTIALS** — gates on Phase 4 RecursiveLeverageReceiver.sol deployed addresses (Tenderly fork RPC
+      required). See pings/slot_2.md.
+- [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
+      unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
+- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED** — gates on Phase 9
+      matching-engine DeFi cost model (execution-service).
+- [x] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
+      2026-05-12 above). (c5a25181 unified-trading-pm 2026-05-15)
+- [x] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries. (already done in prior session —
+      strategy-summary.md has (8) heading + both archetype entries as of 2026-05-12)
+- [x] [codex] **P0**. Patch `batch-live-architecture.md` `### Archetype-grain batch=live status`. (ec344724
+      unified-trading-pm 2026-05-15)
+- [x] [codex] **P1**. Ship `cefi-perp-leg-bybit.md` (escalate to P0 if Family 2 ships Bybit before HL). (ec344724
+      unified-trading-pm 2026-05-15 — NEW file, ~400 words, Bybit UTA + Feb-2025 hack + funding cadence)
 
 ### Phase 11 — deployment-api + deployment-ui surface
 
