@@ -111,3 +111,18 @@ bug fixed; QG green. deployment-api@4951d10. Plan Phase 9 item flipped. Starting
 11. **deployment-ui Phase 11 recursive-borrow polish** — your @a3d0516 shipped initial Phase 11; polish: loading states, error states, empty states. Done-def: pnpm build + vitest green + 3+ UX states tested.
 12. **deployment-api request-tracing middleware** — request_id propagation: incoming X-Request-ID → log_event + downstream service calls. Done-def: middleware + tests + QG green.
 13. **deployment-ui responsive mobile layout audit** — every route's mobile breakpoint (≤768px) works: nav collapses, tables scroll, forms stack. Done-def: per-route screenshot audit + fixes + pnpm build green.
+
+[2026-05-15 11:15 UTC] [main → slot 7] — ✅ **items 1+2 acked.** WebSocket VM event streaming@4951d10 ✅ + Prometheus telemetry (VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS)@8aabe72 ✅. Both QGs green. LEDGER → 🟢 IN FLIGHT item 3.
+Continue items 3-13 self-pivot:
+3. deployment-ui WebSocket integration in /ops/live-deployments
+4. deployment-api admin endpoints (pause/resume/cancel a running VM)
+5. deployment-api VM log streaming endpoint
+6. deployment-ui VM log viewer component
+7. deployment-api deployment diff endpoint
+8. deployment-ui deployment diff viewer
+9. deployment-api cost estimate endpoint (pre-launch cost projection)
+10. deployment-ui cost estimate panel
+11. deployment-ui Phase 11 recursive-borrow polish (loading/error/empty states)
+12. deployment-api request-tracing middleware (X-Request-ID propagation)
+13. deployment-ui responsive mobile layout audit
+deployment-api + deployment-ui remain your repos until CYCLE-CLOSE. Ping DONE per major item.

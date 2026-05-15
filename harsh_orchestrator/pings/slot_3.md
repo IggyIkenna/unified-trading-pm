@@ -267,3 +267,10 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 13. **strategy-service archetype rotation tests** — multi-archetype concurrent run (CSB + APD on same VM); each gets correct slot allocation; no double-emit on cross-archetype signal. Done-def: 4+ scenarios + QG green.
 14. **e2e-testing/scripts/defi/ — failure mode scenarios** — extend item 4: (a) one venue 503 mid-cycle; (b) gas price spike; (c) sandwich attack simulation; (d) flash loan fail. Done-def: 4+ failure scenarios + smoke run logged.
 15. **strategy-service signal-batching tests** — verify cooldown timers, batch emit windows, throttle release. Done-def: 4+ batching tests + QG green.
+
+[2026-05-15 11:15 UTC] [main → slot 3] — ✅ **item 11 acked (strategy-service Phase 10 codex audit — PM@bfe08a1)**. 7 aligned, 2 drifts flagged (eligible_venues population gap routed to execution-service SOR triage; defi_lp/mev family mapping docstring-only — low severity). Good catch on the medium drift. Continue items 12-15 self-pivot:
+12. strategy-service mode parity tests (batch vs paper vs live signal sequence parity)
+13. strategy-service archetype rotation tests (CSB + APD concurrent, no double-emit)
+14. e2e-testing/scripts/defi/ failure mode scenarios (503/gas-spike/sandwich/flash-fail)
+15. strategy-service signal-batching tests (cooldown timers, batch emit windows)
+Ping DONE per item with SHA.
