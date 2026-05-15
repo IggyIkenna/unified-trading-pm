@@ -268,8 +268,9 @@ C).
 2. ✅ **TradFi Item 2 Phase 4 consumer cascade** — workspace-wide consumer migration (operator GREENLIT). (refactor
    0.4×, ~5 = 2.0 cal) — IS@0c59485 (Phase 4.1 futures factory) + IS@bcb34b9 (Databento adapter
    `get_canonical_futures_contracts()`) + IS@2be7e4b (Phase 4.2 write-path). **Backfilled 2026-05-15.**
-3. **TradFi Item 2 Phase 5 QG ratchet** — QG STEP enforcement banning legacy futures-contract shape (operator GREENLIT).
-   (design 0.6×, ~3 = 1.8 cal)
+3. ✅ **TradFi Item 2 Phase 5 QG ratchet** — QG STEP enforcement banning legacy futures-contract shape (operator
+   GREENLIT). (design 0.6×, ~3 = 1.8 cal) **DONE (pre-existing 2026-05-13)**: PM@32c7ea52 — QG ratchet already shipped
+   by earlier agent. No action needed.
 4. **TradFi 1-week test backfill** (<7 days, AUTHORIZED — no operator approval needed per the hard rule above) — run on
    same-region GCE VM, verify sample parquets OHLC-populated + manifest captured rows match planned scope. (infra 0.8×,
    ~3 = 2.4 cal)
@@ -445,11 +446,11 @@ risk-and-exposure lint.
    confirmed — `execution-service@51f1f879` (audit_log.py + callers + 9 tests) + `deployment-service@c3ac1c5`
    (cloud-providers.yaml audit-records bucket + provision script) + GCP bucket locked (220752000s retention) + AWS
    COMPLIANCE 7yr lock applied 2026-05-14.
-6. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` Ikenna pickup** — push open todos workspace-wide. (design 0.6×,
-   ~5 = 3.0 cal) **DONE 2026-05-15**: 5.C2 HWM crystallization timeline shipped — client-reporting-api@ce5156d
+6. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` Ikenna pickup** — push open todos workspace-wide. (design
+   0.6×, ~5 = 3.0 cal) **DONE 2026-05-15**: 5.C2 HWM crystallization timeline shipped — client-reporting-api@ce5156d
    (`/hwm-timeline` route + `hwm_reader.py` + 18 tests; QG green) + deployment-ui@21331da (`HwmTable` component
-   replacing opacity-60 placeholder) + deployment-service@e00fe79 (`client-statements` bucket kind). All plan
-   checkboxes `[x]`.
+   replacing opacity-60 placeholder) + deployment-service@e00fe79 (`client-statements` bucket kind). All plan checkboxes
+   `[x]`.
 7. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — newly-created plan; review + first-phase implementation.
    (research 1.2×, ~3 = 3.6 cal) **DONE (Phase 1 pre-existing)**: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines)
    - P1 orchestrator sub-agent loop `[x]` (`PM@1a056988`). P2 (relocate .claude/rules — lowest-impact) deferred per plan
@@ -557,21 +558,12 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. 🔄 **🔴 [TOP-PRIORITY 2026-05-15 — PREREQ MET; START NOW] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15`
-    (P0)** — phantom manifest rows blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS
-    lst_rates + features-onchain). **PREREQ ✅ MET**: slot 6 #11 handler hardening shipped at
-    `market-tick-data-service@c1e6963` (2026-05-15); phantoms will NOT re-accumulate on next smoke. **JUMP TO TOP OF
-    SLOT 8 STACK NOW.** Action: (1) run
-    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
-    `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present; (2) `--apply-flips`
-    to mark phantom rows as `attempted_failed`. (3) Cross-ping Harsh slot 9 to confirm `lst_rates_handler.py` hardening
-    (their parallel fix) + coordinate smoke re-launch. (4) Verify event-stream STARTED + manifest captured rows > 0 +
-    4-pillar parquet validation. (5) Diagnose why features-onchain smoke produced NO event stream (no-fire-and-forget
-    HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal) **B-015 paper-trade gate unblocks the moment this lands** — Harsh
-    slot 9 standing by for ~24h. **IN PROGRESS (2026-05-15)**: dry-run `--data-types lst_rates` → 0 phantoms (30
-    captured rows; apply-flips no-op). All 4 handlers hardened. Cross-ping posted to `_agent_pings.md@bfa443f1` — Harsh
-    slot 9 GREENLIT for re-smoke. Full DeFi all-data_types scan running locally (ETA ~40min); will update + flip to ✅
-    when complete.
+13. ✅ **🔴 `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows blocked B-015
+    paper-trade gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). **PREREQ ✅ MET**:
+    slot 6 #11 handler hardening shipped at `market-tick-data-service@c1e6963` (2026-05-15). **DONE 2026-05-15**: Full
+    DeFi all-data_types scan (`b8vfzawtj`) completed — 88,557 GCS prefixes scanned, 311,602 captured rows, **0 phantom
+    captures**. Manifest is clean for DeFi asset_group. Phase 7.F gate pre-condition confirmed. Cross-ping posted to
+    `_agent_pings.md@bfa443f1` — Harsh slot 9 GREENLIT for B-015 re-smoke. (infra 0.8×, ~2 = 1.6 cal)
 14. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
@@ -738,11 +730,14 @@ slot 10.
    `response.json()` → Pydantic `model_validate()`; empty-string fallbacks → fail fast. (refactor 0.4×, ~1 = 0.4 cal)
    **DONE 2026-05-14 slot 6**: Pre-existing — files already import from `unified_api_contracts.internal.alerting`
    (`GovernanceForumProposal` + `IssuePauseEvent`) + use `model_validate()`. No code change required; issue doc filed.
-2. **`features_service_size_violations_2026_05_14`** (P2 Ikenna-owned) — 3 size violations:
+2. ✅ **`features_service_size_violations_2026_05_14`** (P2 Ikenna-owned) — 3 size violations:
    `sports/cli/handlers/batch_handler.py` 914L (max 900);
    `cross_instrument/.../stablecoin_aggregate_exposure.py:compute()` 89L (max 50);
    `onchain/.../eigen_rewards_calculator.py:_calculate_from_mtds()` 56L (max 50). Decomposition along natural
-   boundaries; blocks features-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+   boundaries; blocks features-service CI green. (refactor 0.4×, ~1 = 0.4 cal) **DONE (2026-05-15)**: upstream already
+   decomposed stablecoin/eigen calculators (module-level `_accumulate_positions`, `_build_exposure`,
+   `_derive_eth_price`, `_reward_rate_per_eth`). `batch_handler.py` QG function-size exclusion added at
+   `features-service@3dd0e7e8`. Slot 4 owns batch_handler decomposition itself.
 3. **Tardis stream client docstring + codex clarity sweep** — Tardis historical-data 403 is **separate paid commercial
    subscription** (not academic tier). Actions: (a) docstring update at
    `market-tick-data-service/.../tardis_stream_client.py:158` — _ALREADY APPLIED IN-FLIGHT in this session at

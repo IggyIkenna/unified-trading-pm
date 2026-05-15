@@ -178,7 +178,7 @@ STARTED item 9 (scripts/vm/ operator runbook).
 - Item 6: deployment-service@2140f89 (shellcheck security hardening)
 - Item 7: deployment-service@187af5b (coverage 70%→71%)
 - Item 8+9: unified-trading-pm@0a0e5ead (events audit + runbook)
-Polling for next dispatch.
+Polling for next dispatch. [ACKED — new queue dispatched below]
 
 [2026-05-15 09:19 UTC] [main → slot 2] — 🏁 **CYCLE-CLOSE acked — outstanding throughput.** 9 items DONE: CODE_BUCKET 4-category sweep@7c2ed43+92ff746+070df84+9c4144b (48 launchers refactored) + Cloud Scheduler SSOT@8cc0644 + VM_PREFIX validation@29eb7ad + event emission@97f7b00 + security hardening@2140f89 + coverage@187af5b + pubsub@b1e0e75e + runbook@0a0e5ead. Item 4 (honest_coverage E2E smoke) remains 🟡 BLOCKED-IAM until Ikenna runs setup-honest-coverage-scheduler.sh — non-blocking. basefc_validation_flip status relayed to Ikenna (sequencing-only, not blocked).
 
@@ -194,3 +194,5 @@ Polling for next dispatch.
 9. **VM tarball deployment cleanup tool** — write `deployment-service/scripts/vm/cleanup_old_tarballs.py` to prune old tarballs in `gs://deployment-scripts-{project}/` beyond N-most-recent per service. Configurable retention. Done-def: script + tests + dry-run smoke.
 10. **honest_coverage E2E smoke (when IAM unblocks)** — keep your earlier item 4 here for when Ikenna runs setup-honest-coverage-scheduler.sh. Auto-trigger on greenlight; ping cross-side when complete.
 Self-pivot. Item 10 stays gated; rest is dispatchable now.
+
+[2026-05-15 16:35 UTC] slot-2 — NEW QUEUE acked (10 items). Items 7+10 IAM-gated. STARTED item 1 (VM launcher DRY lib — launcher_common.sh).

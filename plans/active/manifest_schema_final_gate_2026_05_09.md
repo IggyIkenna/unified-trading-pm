@@ -94,14 +94,20 @@ estimate_calibration_note: |
 
 # Manifest schema final gate — best v8 by 2026-05-23 (no partials, all items done)
 
-> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE)
-> `BatchExecutionMode` enum + `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59.
-> Re-verify any archetype-keyed batch/live routing code before touching pipeline_mode / reconciler
-> threshold / mode-routing logic.
+> **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +
+> `RECON_GREEN_THRESHOLDS` shipped at UAC@01c1b59. Re-verify any archetype-keyed batch/live routing code before touching
+> pipeline_mode / reconciler threshold / mode-routing logic.
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) sequences this plan's **Phase 1 (v8 schema-bump)** as a Phase 1 freeze-gate item and **Phase 7 (gcs bundled walk May 13-15)** as Phase 2.1 + 2.2 of the cutover window. Per operator decision 2026-05-11 commit `39ab61e5` (resolving codex_audit F3 ambiguity), THIS plan is the canonical v8 column owner; writegate slice (b) Phase 5.2 ("UAC manifest schema columns") is SUPERSEDED. Phase 4.MTDS 🟡 BLOCKED 2026-05-12 on 3 PipelineMode operator findings (PM@`237d00b7` + `a5e5aa4d` + `6ede1e01`) — Phase 4.DEFAULT-REMOVAL chains. Reader contract: scan top-of-file banners before touching manifest v8 columns / writer / reader / `pipeline_mode` / `service_emission_state` / cross-asset rescan code paths.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> sequences this plan's **Phase 1 (v8 schema-bump)** as a Phase 1 freeze-gate item and **Phase 7 (gcs bundled walk May
+> 13-15)** as Phase 2.1 + 2.2 of the cutover window. Per operator decision 2026-05-11 commit `39ab61e5` (resolving
+> codex_audit F3 ambiguity), THIS plan is the canonical v8 column owner; writegate slice (b) Phase 5.2 ("UAC manifest
+> schema columns") is SUPERSEDED. Phase 4.MTDS 🟡 BLOCKED 2026-05-12 on 3 PipelineMode operator findings
+> (PM@`237d00b7` + `a5e5aa4d` + `6ede1e01`) — Phase 4.DEFAULT-REMOVAL chains. Reader contract: scan top-of-file banners
+> before touching manifest v8 columns / writer / reader / `pipeline_mode` / `service_emission_state` / cross-asset
+> rescan code paths.
 
 > **Operator direction (verbatim, 2026-05-09).** _"i want the best manifest before may 23rd not a partial one all the
 > items done."_ + _"yeah do all this v8 should not be deferred should be done"_ + ratification of the 7-item E3 launcher
@@ -246,46 +252,45 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       `ServiceEmissionStateEnum` (4 values verbatim: `PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY`
       / `BLOCKED`) + manifest-read protocol (BLOCKED rows = consumer-skip + raise `ManifestRowBlockedError`; STALE_DATA
       = consumer-skip + log; PUBLISHED_DEGRADED = consume with degraded flag). 12 unit tests covering: closed-set
-      enforcement; round-trip via JSON; consumer skip semantics; default-None back-compat for v7 rows.
-      **SHIPPED 2026-05-11** — UAC@174f401 (slot 6 ikenna-v8-schema-tab). 12 tests in
-      `tests/unit/test_service_emission_state.py` cover all four contract bullets. `ServiceEmissionStateEnum` +
-      `ManifestRowBlockedError` + `SERVICE_EMISSION_STATES` re-exported from `unified_api_contracts` root facade.
+      enforcement; round-trip via JSON; consumer skip semantics; default-None back-compat for v7 rows. **SHIPPED
+      2026-05-11** — UAC@174f401 (slot 6 ikenna-v8-schema-tab). 12 tests in `tests/unit/test_service_emission_state.py`
+      cover all four contract bullets. `ServiceEmissionStateEnum` + `ManifestRowBlockedError` +
+      `SERVICE_EMISSION_STATES` re-exported from `unified_api_contracts` root facade.
 - [x] [AGENT] P0. Phase 1.B — Extend `service_emission_policy.py` to surface a `next_state(...)` resolver that maps
       `(ServiceEmissionPolicy, EmissionDecision)` → `ServiceEmissionStateEnum`. Pure function, no I/O. Tests: every
-      (policy, decision) pair has a deterministic next_state.
-      **SHIPPED 2026-05-11** — UAC@174f401. `next_state(*, policy, event)` is the resolver; signature uses
-      `EmissionLifecycleEvent` (the structured `EmissionDecision.event_emitted` field) since that's UTL's
-      `publish_with_policy` output surface. 8 new tests in `test_service_emission_policy.py` cover every (policy, event)
-      pair + kwargs-only enforcement + pure-function determinism. Mapping: `STALE_DATA` → `STALE_DATA_HEARTBEAT_ONLY`;
-      other three lifecycle events map 1:1 to state values.
+      (policy, decision) pair has a deterministic next_state. **SHIPPED 2026-05-11** — UAC@174f401.
+      `next_state(*, policy, event)` is the resolver; signature uses `EmissionLifecycleEvent` (the structured
+      `EmissionDecision.event_emitted` field) since that's UTL's `publish_with_policy` output surface. 8 new tests in
+      `test_service_emission_policy.py` cover every (policy, event) pair + kwargs-only enforcement + pure-function
+      determinism. Mapping: `STALE_DATA` → `STALE_DATA_HEARTBEAT_ONLY`; other three lifecycle events map 1:1 to state
+      values.
 - [x] [AGENT] P0. Phase 1.C — Manifest schema column declaration in `canonical/crosscutting/manifest_schema.py` (NEW or
       extend existing). 3 new columns: `service_emission_state` (str | None, ServiceEmissionStateEnum value);
-      `last_emission_decision_at` (timestamp | None, ISO-8601 ms UTC); `expected_window_completeness_fraction` (float | None,
-      0.0-1.0). All nullable; v7 rows back-compat.
-      **SHIPPED 2026-05-11** — UAC@174f401 with NEW `unified_api_contracts/canonical/crosscutting/manifest_schema.py`
-      declaring all 3 column-name constants + `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` tuple + back-compat
-      `V8_COLUMN_DEFAULTS` dict (all `None`) + `READER_FALLBACK_WINDOW_DAYS = 30`. 6 tests in `test_manifest_schema.py`.
-      All 7 symbols re-exported from root facade. `__all__` alpha-sort drift from rebase caught by RUF022 + fixed in
-      follow-up UAC@d938a69.
-- QG: UAC quality-gates.sh clean (lint pass on my files; foreign lint errors from concurrent
-      circuit-breaker / risk-rule rebase resolved by another agent's UAC@dc4c9f0; tests pass; basedpyright 0/0; codex
-      compliance pass). **Done-definition**: `unified-api-contracts@174f401` + `@d938a69` shipped + 27 new tests added
-      (12 emission_state + 8 next_state + 6 manifest_schema + 1 EXPECTED_KNOWN_SOURCE_GAP).
-      **2026-05-11 RENAME** — third v8 column renamed from `expected_window_completeness_pct` → `expected_window_completeness_fraction`
-      at UAC@`76f950a` per operator-approved option (a) from
-      [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](issues/expected_window_completeness_pct_range_drift_2026_05_11.md).
-      Three-way SSOT drift on range convention (UAC said 0-1; codex said "0-100 fraction" oxymoron; column name `_pct`
-      implied percentage; UTL `completeness_fraction` arg canonical 0-1). Rename free because zero on-disk writes had
-      shipped. `_pct` constant name banned post-`76f950a`.
+      `last_emission_decision_at` (timestamp | None, ISO-8601 ms UTC); `expected_window_completeness_fraction` (float |
+      None, 0.0-1.0). All nullable; v7 rows back-compat. **SHIPPED 2026-05-11** — UAC@174f401 with NEW
+      `unified_api_contracts/canonical/crosscutting/manifest_schema.py` declaring all 3 column-name constants +
+      `MANIFEST_SCHEMA_VERSION_V8 = 8` + `V8_NEW_COLUMNS` tuple + back-compat `V8_COLUMN_DEFAULTS` dict (all `None`) +
+      `READER_FALLBACK_WINDOW_DAYS = 30`. 6 tests in `test_manifest_schema.py`. All 7 symbols re-exported from root
+      facade. `__all__` alpha-sort drift from rebase caught by RUF022 + fixed in follow-up UAC@d938a69.
+- QG: UAC quality-gates.sh clean (lint pass on my files; foreign lint errors from concurrent circuit-breaker / risk-rule
+  rebase resolved by another agent's UAC@dc4c9f0; tests pass; basedpyright 0/0; codex compliance pass).
+  **Done-definition**: `unified-api-contracts@174f401` + `@d938a69` shipped + 27 new tests added (12 emission_state + 8
+  next_state + 6 manifest_schema + 1 EXPECTED_KNOWN_SOURCE_GAP). **2026-05-11 RENAME** — third v8 column renamed from
+  `expected_window_completeness_pct` → `expected_window_completeness_fraction` at UAC@`76f950a` per operator-approved
+  option (a) from
+  [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](issues/expected_window_completeness_pct_range_drift_2026_05_11.md).
+  Three-way SSOT drift on range convention (UAC said 0-1; codex said "0-100 fraction" oxymoron; column name `_pct`
+  implied percentage; UTL `completeness_fraction` arg canonical 0-1). Rename free because zero on-disk writes had
+  shipped. `_pct` constant name banned post-`76f950a`.
 
 ### Phase 2 — UTL v8 ManifestWriter (May 10-12, PARALLEL with Phase 1/3)
 
 - [x] [AGENT] P0. Phase 2.A — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` /
       `record_failed` / `record_expected_empty` / `record_expected_unattempted` with 3 new kwargs
-      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) all defaulting to
-      `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; the default is REMOVED at end of
-      Phase 4 (explicit-or-fail per the writegate Phase 4 P0 P0 contract). **SHIPPED 2026-05-12 slot 6 @UTL@0adea1c6**
-      — 12 unit tests landed in `tests/unit/test_manifest_writer_emission_state.py`.
+      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) all defaulting
+      to `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; the default is REMOVED at end of
+      Phase 4 (explicit-or-fail per the writegate Phase 4 P0 P0 contract). **SHIPPED 2026-05-12 slot 6 @UTL@0adea1c6** —
+      12 unit tests landed in `tests/unit/test_manifest_writer_emission_state.py`.
 - [x] [AGENT] P0. Phase 2.B — `emission_publisher.py` integration: extend `publish_with_policy` to compute
       `service_emission_state` via Phase 1.B `next_state(...)` and pass to ManifestWriter. Wired at the same publish
       boundary as the existing `EmissionDecision` flow. **SHIPPED 2026-05-12 slot 6 @UTL@001e8892** — `EmissionDecision`
@@ -303,31 +308,32 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       `MissingVMShardIsolationError` guard. 12 unit tests under `tests/unit/test_manifest_migrations_v7_to_v8.py`.
 - QG: UTL quality-gates.sh clean. **Done-definition**: `unified-trading-library@<sha>` shipped + 11+ unit tests +
   back-compat with v7 rows. **STATUS — 4/4 sub-items ✅; UTL refs above; 30+ unit tests landed total.**
-- [x] [AGENT] P2. **Phase 2 follow-up — `MANIFEST_SCHEMA_VERSION` vs codex doc drift (slot-6 audit finding 2026-05-11).**
-      **RESOLVED 2026-05-12 (option b) — `ikenna-v8-manifestwriter-tab` (slot 2) @PM@`6efbfced`:** chose option (b) per
-      Phase-2 done-definition's own framing ("back-compat with v7 rows... bumps to 8 at end of Phase 4"). Codex doc
+- [x] [AGENT] P2. **Phase 2 follow-up — `MANIFEST_SCHEMA_VERSION` vs codex doc drift (slot-6 audit finding
+      2026-05-11).** **RESOLVED 2026-05-12 (option b) — `ikenna-v8-manifestwriter-tab` (slot 2) @PM@`6efbfced`:** chose
+      option (b) per Phase-2 done-definition's own framing ("back-compat with v7 rows... bumps to 8 at end of Phase 4").
+      Codex doc
       [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       lines 258-262 + 265 reconciled: prose now says "`MANIFEST_SCHEMA_VERSION = 7` (transitional; bumps to 8 at end of
       Phase 4.DEFAULT-REMOVAL)" matching the embedded code snippet at line 265. The "Schema v8 (current; ratified)"
       header is preserved because the column-shape contract IS final + ratified — only the version-constant lags one
-      phase behind, by design. Plan body Phase 4.DEFAULT-REMOVAL extended below to include the bump-to-8 + remove all
-      3 v8-emission-column `None` defaults at the same time as `pipeline_mode=` removal. No code change needed; the
-      manifest_writer.py constant value of `7` was correct all along.
-      `manifest_writer.py:131` is still `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns
-      (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) ARE present in
-      the `AvailabilityRecord` dataclass + the 5 `record_*` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks
-      *intentional* per the Phase-2 done-definition ("back-compat with v7 rows" — v7-labeled rows carry nullable v8
-      columns until Phase 4 makes the kwargs required, THEN bump to 8) — but the codex doc
-      `codex/02-data/availability-manifest-and-data-status.md` overstates it: line 261 prose says
-      "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while the embedded code snippet (line 265) correctly
-      says `MANIFEST_SCHEMA_VERSION = 7` — internal inconsistency in the doc + doc-prose-vs-code drift. Nothing branches
-      on `schema_version == 8` (grepped UTL/deployment-api/MTDS/MDPS/instruments-service — zero hits), so no current
-      reader-logic breakage. **Decision needed (ikenna-slot-6 / this plan owner)**: either (a) the code should bump to 8
-      now (and the codex snippet at line 265 updates to 8), OR (b) the code stays at 7 transitionally and the codex
-      prose at line 261 + the "Schema v8 (current; ratified)" header soften to "transitionally writing v7-labeled rows
-      with nullable v8 columns; bumps to 8 at end of Phase 4". Pick one + reconcile the doc. Source: slot-6 codex-audit
-      pass 2026-05-11, prompted by the 13:30 `[main → slot 6]` ping ("verify the v8 ManifestWriter is *shipped* not just
-      UAC-declared"). No urgency — additive, back-compat, no reader breakage; but it's a "docs are the intent" drift.
+      phase behind, by design. Plan body Phase 4.DEFAULT-REMOVAL extended below to include the bump-to-8 + remove all 3
+      v8-emission-column `None` defaults at the same time as `pipeline_mode=` removal. No code change needed; the
+      manifest*writer.py constant value of `7` was correct all along. `manifest_writer.py:131` is still
+      `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns (`service_emission_state` /
+      `last_emission_decision_at` / `expected_window_completeness_fraction`) ARE present in the `AvailabilityRecord`
+      dataclass + the 5 `record**` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks *intentional* per the Phase-2
+      done-definition ("back-compat with v7 rows" — v7-labeled rows carry nullable v8 columns until Phase 4 makes the
+      kwargs required, THEN bump to 8) — but the codex doc `codex/02-data/availability-manifest-and-data-status.md`
+      overstates it: line 261 prose says "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while the embedded
+      code snippet (line 265) correctly says `MANIFEST_SCHEMA_VERSION = 7` — internal inconsistency in the doc +
+      doc-prose-vs-code drift. Nothing branches on `schema_version == 8` (grepped
+      UTL/deployment-api/MTDS/MDPS/instruments-service — zero hits), so no current reader-logic breakage. **Decision
+      needed (ikenna-slot-6 / this plan owner)**: either (a) the code should bump to 8 now (and the codex snippet at
+      line 265 updates to 8), OR (b) the code stays at 7 transitionally and the codex prose at line 261 + the "Schema v8
+      (current; ratified)" header soften to "transitionally writing v7-labeled rows with nullable v8 columns; bumps to 8
+      at end of Phase 4". Pick one + reconcile the doc. Source: slot-6 codex-audit pass 2026-05-11, prompted by the
+      13:30 `[main → slot 6]` ping ("verify the v8 ManifestWriter is *shipped\* not just UAC-declared"). No urgency —
+      additive, back-compat, no reader breakage; but it's a "docs are the intent" drift.
 
 ### Phase 3 — Cross-asset rescan launcher (May 9-11, PARALLEL with Phase 1/2)
 
@@ -340,17 +346,18 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       Relaunch watchdog VM after dict update (running watchdog only fetches Python at boot per CLAUDE.md "VM Naming
       Convention" rule). **SHIPPED 2026-05-12 slot 6 @deployment-service@19fad8c** (same commit as 3.A) — prefix
       registered as `None` (heartbeat-only; rescan VM writes to canonical per-asset-group manifest, not a dedicated
-      shard bucket). **DEFERRED — operator runs watchdog VM relaunch** (`gcloud compute instances delete
-      vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` then `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`)
-      before the first rescan VM launch — running watchdog only fetches Python at boot.
+      shard bucket). **DEFERRED — operator runs watchdog VM relaunch**
+      (`gcloud compute instances delete     vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` then
+      `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`) before the first rescan VM launch — running
+      watchdog only fetches Python at boot.
 - [x] [AGENT] P0. Phase 3.C — Register launcher in deployment-api `_SERVICE_LAUNCHER_SCRIPTS` registry so Deploy-Missing
       UI can surface it. **SHIPPED 2026-05-12 slot 6 @deployment-api@c8a1cd4** — `cross-asset-rescan` slug added.
 - [x] [AGENT] P0. Phase 3.D — NEW `instruments-service/scripts/cross_asset_rescan.py` (Harsh Tab 4 scope per rescan
       design line 22, but if Harsh's queue can't fit it by May 11 a fresh sub-agent picks it up). Implements class A
       auto-flips + class C triage routing per rescan design § "Rescan flip schema". **SHIPPED 2026-05-12 slot 6
       @instruments-service@a264f21** — 333-line orchestrator on top of existing `reconcile_phantom_manifest_rows_all.py`
-      (handles 5 drift axes). Adds `cross_asset_all` dispatch + per-VM shard tag from `VM_NAME` + `VM_APPLY_FLIPS` gate
-      + triage JSONL streaming to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` + lifecycle events
+      (handles 5 drift axes). Adds `cross_asset_all` dispatch + per-VM shard tag from `VM_NAME` + `VM_APPLY_FLIPS`
+      gate + triage JSONL streaming to `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` + lifecycle events
       (RESCAN_RUN_STARTED / RESCAN_SHARD_STARTED / RESCAN_SHARD_COMPLETED / RESCAN_SHARD_FAILED / RESCAN_RUN_STOPPED /
       RESCAN_RUN_FAILED).
 - QG: deployment-service + instruments-service quality-gates.sh clean. **Done-definition**: launcher script + Python
@@ -367,35 +374,48 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 - [x] [AGENT] P0. Phase 4.MTDS — Each adapter (Databento / Tardis / CCXT / Barchart / Yahoo / Sports / DeFi /
       Prediction) explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>` per UAC SOURCE_PRIORITY
-  - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.**
-      **✅ SHIPPED 2026-05-12 by Ikenna slot 3 (`ikenna-codefreeze-audit-tab`)**: 3-sub-agent fan-out (MTDS + MDPS + instruments-service) executed in parallel after operator-relayed Q1+Q2 approval at PM@`4c573302`.
-      - **Q1 = (α)**: `DefiManifestRecorder` migrated to v8 record_* path at MTDS@`3da3f43` (record_empty + record_failed fully migrated; record_captured retains `add()`-path wrapper with explicit `pipeline_mode=` forward via **kwargs — bounded interpretation; full df-flow propagation through every DeFi handler tracked as Phase 4.DEFAULT-REMOVAL successor scope).
-      - **Q2 = (A)**: UAC@`52d289c` shipped 6 new PipelineMode batch values + 14 DeFi SOURCE_PRIORITY gap entries; UAC@`7d7ea4c` added 7 additive per-member round-trip tests pinning (enum value, source string) pairs.
-      - **MTDS sweep**: 97 callsites in 26 files at MTDS@`3da3f43` (20 DeFi handlers + DefiManifestRecorder + MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper `_resolve_pipeline_mode_for_sentinel`). PM baseline shrunk 114 → 17 at PM@`88226bdb`.
-      - **UTL sweep**: 11 internal record_* callsites at UTL@`12d5e621` (4 streaming/candle_writer LIVE_WEBSOCKET + 1 streaming/parallel_per_symbol_runner threaded kwarg + 1 streaming/live_aggregator whitelist marker for Protocol method + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1 manifest_writer.py:1919 internal plumbing). PM baseline shrunk 17 → 6 at PM@`ea50eddc` (only Phase 4.FEATURES entries remain).
-      - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates addressed inline. See `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` (flipped ✅ RESOLVED at PM@`4c573302`).
-      - **AST-walk QG STEP 5.70**: `OK — 6 baselined occurrences; 0 new occurrences` workspace-wide (6 remaining are Phase 4.FEATURES scope, separate slot).
-      - **DefiManifestRecorder record_captured full-v8 migration**: deferred to Phase 4.DEFAULT-REMOVAL (df-flow propagation through every DeFi handler needs separate plan or successor).
+  - emission-policy hooks via `publish_with_policy`. **Per E3 ratified item.** **✅ SHIPPED 2026-05-12 by Ikenna slot 3
+    (`ikenna-codefreeze-audit-tab`)**: 3-sub-agent fan-out (MTDS + MDPS + instruments-service) executed in parallel
+    after operator-relayed Q1+Q2 approval at PM@`4c573302`.
+    - **Q1 = (α)**: `DefiManifestRecorder` migrated to v8 record\_\* path at MTDS@`3da3f43` (record_empty +
+      record_failed fully migrated; record_captured retains `add()`-path wrapper with explicit `pipeline_mode=` forward
+      via \*\*kwargs — bounded interpretation; full df-flow propagation through every DeFi handler tracked as Phase
+      4.DEFAULT-REMOVAL successor scope).
+    - **Q2 = (A)**: UAC@`52d289c` shipped 6 new PipelineMode batch values + 14 DeFi SOURCE_PRIORITY gap entries;
+      UAC@`7d7ea4c` added 7 additive per-member round-trip tests pinning (enum value, source string) pairs.
+    - **MTDS sweep**: 97 callsites in 26 files at MTDS@`3da3f43` (20 DeFi handlers + DefiManifestRecorder +
+      MTDSShardManifestRecorder + websocket_runner + orchestrator sentinel helper
+      `_resolve_pipeline_mode_for_sentinel`). PM baseline shrunk 114 → 17 at PM@`88226bdb`.
+    - **UTL sweep**: 11 internal record\_\* callsites at UTL@`12d5e621` (4 streaming/candle_writer LIVE_WEBSOCKET + 1
+      streaming/parallel_per_symbol_runner threaded kwarg + 1 streaming/live_aggregator whitelist marker for Protocol
+      method + 3 manifest_writer_normalising delegating-wrapper signatures + 1 per_leaf_failure dataclass field + 1
+      manifest_writer.py:1919 internal plumbing). PM baseline shrunk 17 → 6 at PM@`ea50eddc` (only Phase 4.FEATURES
+      entries remain).
+    - **Q3-Q5**: orchestrator dispatch strategy / reconciler preservation / test fixture updates addressed inline. See
+      `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` (flipped ✅ RESOLVED at PM@`4c573302`).
+    - **AST-walk QG STEP 5.70**: `OK — 6 baselined occurrences; 0 new occurrences` workspace-wide (6 remaining are Phase
+      4.FEATURES scope, separate slot).
+    - **DefiManifestRecorder record_captured full-v8 migration**: deferred to Phase 4.DEFAULT-REMOVAL (df-flow
+      propagation through every DeFi handler needs separate plan or successor).
 - [x] [AGENT] P0. Phase 4.MDPS — candle writer + reprocess engine propagate `pipeline_mode` from input parquet's column.
-      Emission-policy hooks at publish boundary.
-      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent @MDPS@`a3c7198`** — 22 callsites across
-      16 files (8 source + 2 scripts + 6 tests). New helper `resolve_pipeline_mode_from_source(blob_path)` parses
-      `pipeline_mode=<value>` hive partition segment from GCS blob path; legacy pre-v8 paths fall back to
-      `BATCH_DATABENTO`. Threaded through `write_candle_parquet` / `candle_write_mixin._write_candles` /
-      `live_workers._process_instrument_file` / `batch_workers._handle_empty_tick_data` / `orchestration_writer` VIX 15m
-      gap path / `live_aggregator._MDPSManifestRecorder` (LIVE_WEBSOCKET) / `io/writer.CandleWriter`. Emission-policy
-      hooks already in `canonical_writer.write_candle_parquet` from prior Phase 6.2 ship @MDPS@`311614a`.
-      QG: 1174 tests passing, 1 pre-existing foreign failure (`test_cli_main::test_cli_help`); basedpyright clean on
-      edited files. Finding filed:
+      Emission-policy hooks at publish boundary. **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-mdps-sweep` sub-agent
+      @MDPS@`a3c7198`** — 22 callsites across 16 files (8 source + 2 scripts + 6 tests). New helper
+      `resolve_pipeline_mode_from_source(blob_path)` parses `pipeline_mode=<value>` hive partition segment from GCS blob
+      path; legacy pre-v8 paths fall back to `BATCH_DATABENTO`. Threaded through `write_candle_parquet` /
+      `candle_write_mixin._write_candles` / `live_workers._process_instrument_file` /
+      `batch_workers._handle_empty_tick_data` / `orchestration_writer` VIX 15m gap path /
+      `live_aggregator._MDPSManifestRecorder` (LIVE_WEBSOCKET) / `io/writer.CandleWriter`. Emission-policy hooks already
+      in `canonical_writer.write_candle_parquet` from prior Phase 6.2 ship @MDPS@`311614a`. QG: 1174 tests passing, 1
+      pre-existing foreign failure (`test_cli_main::test_cli_help`); basedpyright clean on edited files. Finding filed:
       [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md).
 - [x] [AGENT] P0. Phase 4.INSTRUMENTS — catalog refresh writes pass `pipeline_mode` per source. Update
-      `reconcile_phantom_manifest_rows_all.py` to handle v8 row shape.
-      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-instruments-sweep` sub-agent @instruments-service@`e530906`** —
-      ~50 callsites across 9 files. Per-source mapping table decided (api_football → BATCH_API_FOOTBALL, transfermarkt
-      → BATCH_TRANSFERMARKT, understat → BATCH_UNDERSTAT, soccer_football_info → BATCH_SOCCER_FOOTBALL_INFO, open_meteo
-      → BATCH_OPEN_METEO, polymarket gamma → BATCH_POLYMARKET_GAMMA_API, footystats → BATCH_API_FOOTBALL workaround
-      pending enum extension, CME options → BATCH_DATABENTO, CeFi options → BATCH_TARDIS, self-published catalog rows
-      → BATCH_INSTRUMENTS_SERVICE). New SSOT mapping `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` in orchestrator. Reconciler
+      `reconcile_phantom_manifest_rows_all.py` to handle v8 row shape. **SHIPPED 2026-05-12 slot 2 spawned
+      `ikenna-v8-mw-instruments-sweep` sub-agent @instruments-service@`e530906`** — ~50 callsites across 9 files.
+      Per-source mapping table decided (api_football → BATCH_API_FOOTBALL, transfermarkt → BATCH_TRANSFERMARKT,
+      understat → BATCH_UNDERSTAT, soccer_football_info → BATCH_SOCCER_FOOTBALL_INFO, open_meteo → BATCH_OPEN_METEO,
+      polymarket gamma → BATCH_POLYMARKET_GAMMA_API, footystats → BATCH_API_FOOTBALL workaround pending enum extension,
+      CME options → BATCH_DATABENTO, CeFi options → BATCH_TARDIS, self-published catalog rows →
+      BATCH_INSTRUMENTS_SERVICE). New SSOT mapping `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` in orchestrator. Reconciler
       `reconcile_phantom_manifest_rows_all.py` v8-aware (read-tolerant + write-preserving for all 4 new v8 columns —
       pandas round-trip is naturally column-preserving; added docstring banner + inline comment for future readers, no
       behaviour change needed). QG: identical pre-sweep baseline (zero new errors). Finding filed:
@@ -403,99 +423,93 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [x] [AGENT] P0. Phase 4.FEATURES — features-service (post-consolidation) + remaining features-\* repos pass propagated
       `pipeline_mode` + emission-policy hooks. **✅ SHIPPED 2026-05-12 by harsh slot 3** (features-consolidation Phase 7
       already shipped 2026-05-11 per code_freeze freeze-gate item 6; gate was effectively lifted Day 2). 6 callsites in
-      2 files cleared:
-      - `features-service@842ff741` (sports/batch_handler 4 callsites lines 474+487+538+547) — adds module-level SSOT
-        `_FEATURE_GROUP_TO_PIPELINE_MODE` dict + `_resolve_pipeline_mode(name)` helper. Mapping per slot 2's Phase
-        4.INSTRUMENTS `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` precedent: fixture_features → `BATCH_API_FOOTBALL`,
-        odds_features → `BATCH_ODDS_API`, derived_features → `BATCH_FOOTYSTATS`; 14 reference-table TABLE_TO_EXPORT
-        catalog exports fall-through to `BATCH_API_FOOTBALL` default.
-      - `features-service@229a0963` (calendar_orchestrator 2 callsites lines 241+264) — adds module-level SSOT
-        `_FEATURE_GROUP_TO_PIPELINE_MODE` for `time_features` + `economic_events`. Both tagged
-        `BATCH_INSTRUMENTS_SERVICE` as a documented closed-set workaround pending UAC enum extension
-        (`BATCH_FRED` for economic_events FRED-sourced + `BATCH_FEATURES_CALENDAR_SERVICE` for time_features
-        pure-derived) — full finding + operator-decision menu at
-        [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
-        Same logical-unit adjacent fix: `record_empty(...)` at line 264 now also passes `reason="SOURCE_RETURNED_ZERO"` —
-        original code would have crashed `LegacyBlankErrorReasonError` at runtime (UTL Wave-2 writegate blank-reason
-        guard, hardened 2026-05-07).
-      - PM baseline `pipeline_mode_explicit_baseline.yaml` shrunk **6 → 0** at PM@`<this-flip>` (full workspace
-        baseline now empty). STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py` workspace-wide: `OK — 0
-        baselined occurrences, 0 new occurrences`. Phase 4.DEFAULT-REMOVAL now UNBLOCKED on the FEATURES half.
+      2 files cleared: - `features-service@842ff741` (sports/batch_handler 4 callsites lines 474+487+538+547) — adds
+      module-level SSOT `_FEATURE_GROUP_TO_PIPELINE_MODE` dict + `_resolve_pipeline_mode(name)` helper. Mapping per slot
+      2's Phase 4.INSTRUMENTS `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` precedent: fixture_features → `BATCH_API_FOOTBALL`,
+      odds_features → `BATCH_ODDS_API`, derived_features → `BATCH_FOOTYSTATS`; 14 reference-table TABLE_TO_EXPORT
+      catalog exports fall-through to `BATCH_API_FOOTBALL` default. - `features-service@229a0963` (calendar_orchestrator
+      2 callsites lines 241+264) — adds module-level SSOT `_FEATURE_GROUP_TO_PIPELINE_MODE` for `time_features` +
+      `economic_events`. Both tagged `BATCH_INSTRUMENTS_SERVICE` as a documented closed-set workaround pending UAC enum
+      extension (`BATCH_FRED` for economic_events FRED-sourced + `BATCH_FEATURES_CALENDAR_SERVICE` for time_features
+      pure-derived) — full finding + operator-decision menu at
+      [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
+      Same logical-unit adjacent fix: `record_empty(...)` at line 264 now also passes `reason="SOURCE_RETURNED_ZERO"` —
+      original code would have crashed `LegacyBlankErrorReasonError` at runtime (UTL Wave-2 writegate blank-reason
+      guard, hardened 2026-05-07). - PM baseline `pipeline_mode_explicit_baseline.yaml` shrunk **6 → 0** at
+      PM@`<this-flip>` (full workspace baseline now empty). STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py`
+      workspace-wide: `OK — 0       baselined occurrences, 0 new occurrences`. Phase 4.DEFAULT-REMOVAL now UNBLOCKED on
+      the FEATURES half.
 - [x] [AGENT] P0. Phase 4.DEPLOYMENT-API — manifest read endpoints surface v8 columns; data-status drilldown renders
-      `service_emission_state` badges (4 states).
-      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui` sub-agent**:
-      - **deployment-api@`2f833a7`** — `ShardGcsMetadata` extended with 4 v8 fields (`pipeline_mode`,
-        `service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`) all
-        `None`-defaulting for forward-compat; new `ServiceEmissionStateLiteral` Literal[...] type mirroring UAC
-        `ServiceEmissionStateEnum`; `_gcs_metadata` populator threads v8 columns from manifest-row dict with closed-set
-        frozenset guard (off-set values silently drop to `None`) + unparseable-float warning fallback. 6 new tests in
-        `TestShardGcsMetadataV8Columns`; 49/49 shard_detail tests pass.
-      - **deployment-ui@`ab06bfe`** — NEW `ServiceEmissionStateBadge.tsx` (128 lines) — 4-state colour-coded badge
-        (green / amber / orange / red) + muted `—` placeholder for null/undefined; `compact` prop; ARIA `role=status`
-        + accessible-label + closed-set tooltip; `serviceEmissionStatePalette` helper for testability. `ShardDetailModal`
-        wired with the new badge + conditional `pipeline_mode` label. `ShardDetailGcs` TS interface extended with
-        4 nullable v8 fields. 9 new vitest tests (4 states + null + undefined + compact + ARIA + palette-uniqueness);
-        466/466 full suite passes; `VITE_MOCK_API=true npx vite build` clean.
-      - **Forward-compat verified**: pre-v8 manifest rows render muted `—` placeholder + omit pipeline_mode label; no
-        regressions; no double-SSOT (closed-set lives in UAC; deployment-api uses Literal alias; deployment-ui uses TS
-        union — all three name the same closed set, drift would be review-blocking).
-- [x] [AGENT] P0. Phase 4.E2E — synthetic-fixture writers pass synthetic-source `pipeline_mode`.
-      **N/A 2026-05-12 slot 2** — grep-then-read audit (per CLAUDE.md "Grep-Then-Read") found ZERO actual
-      `record_*(` method calls in `system-integration-tests/`. The only grep hit
-      (`tests/smoke/test_coverage_matrix_smoke.py:209`) was an error-message format-string referencing the method
-      names, not an actual invocation. No work needed.
+      `service_emission_state` badges (4 states). **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-deployment-api-ui`
+      sub-agent**: - **deployment-api@`2f833a7`** — `ShardGcsMetadata` extended with 4 v8 fields (`pipeline_mode`,
+      `service_emission_state`, `last_emission_decision_at`, `expected_window_completeness_fraction`) all
+      `None`-defaulting for forward-compat; new `ServiceEmissionStateLiteral` Literal[...] type mirroring UAC
+      `ServiceEmissionStateEnum`; `_gcs_metadata` populator threads v8 columns from manifest-row dict with closed-set
+      frozenset guard (off-set values silently drop to `None`) + unparseable-float warning fallback. 6 new tests in
+      `TestShardGcsMetadataV8Columns`; 49/49 shard_detail tests pass. - **deployment-ui@`ab06bfe`** — NEW
+      `ServiceEmissionStateBadge.tsx` (128 lines) — 4-state colour-coded badge (green / amber / orange / red) + muted
+      `—` placeholder for null/undefined; `compact` prop; ARIA `role=status` + accessible-label + closed-set tooltip;
+      `serviceEmissionStatePalette` helper for testability. `ShardDetailModal` wired with the new badge + conditional
+      `pipeline_mode` label. `ShardDetailGcs` TS interface extended with 4 nullable v8 fields. 9 new vitest tests (4
+      states + null + undefined + compact + ARIA + palette-uniqueness); 466/466 full suite passes;
+      `VITE_MOCK_API=true npx vite build` clean. - **Forward-compat verified**: pre-v8 manifest rows render muted `—`
+      placeholder + omit pipeline_mode label; no regressions; no double-SSOT (closed-set lives in UAC; deployment-api
+      uses Literal alias; deployment-ui uses TS union — all three name the same closed set, drift would be
+      review-blocking).
+- [x] [AGENT] P0. Phase 4.E2E — synthetic-fixture writers pass synthetic-source `pipeline_mode`. **N/A 2026-05-12 slot
+      2** — grep-then-read audit (per CLAUDE.md "Grep-Then-Read") found ZERO actual `record_*(` method calls in
+      `system-integration-tests/`. The only grep hit (`tests/smoke/test_coverage_matrix_smoke.py:209`) was an
+      error-message format-string referencing the method names, not an actual invocation. No work needed.
 - [x] [AGENT] P0. Phase 4.PM-SCRIPTS — any `unified-trading-pm/scripts/` Python that calls `record_*` passes explicit
-      kwargs.
-      **N/A 2026-05-12 slot 2** — grep-then-read audit found ZERO actual record_* method calls in PM scripts. The 3
-      grep hits were: (a) `test_check_removed_symbols.py:45` test-fixture string `successor="ManifestWriter.record_captured"`
-      (literal in test data dict); (b) `test_check_banned_placeholder_methods.py:158/168/308` synthetic test code
-      defining `def record_empty_for_shard()` inside string literals to feed the AST-walk QG check; (c)
-      `check_banned_placeholder_methods.py` docstring + error-message strings. None are actual invocations. No work
-      needed.
-- [x] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide AST-walk (not naive grep).
-      **SHIPPED 2026-05-12 slot 8** at `pm@<this-flip-commit>` — new AST-walk QG check
+      kwargs. **N/A 2026-05-12 slot 2** — grep-then-read audit found ZERO actual record\_\* method calls in PM scripts.
+      The 3 grep hits were: (a) `test_check_removed_symbols.py:45` test-fixture string
+      `successor="ManifestWriter.record_captured"` (literal in test data dict); (b)
+      `test_check_banned_placeholder_methods.py:158/168/308` synthetic test code defining `def record_empty_for_shard()`
+      inside string literals to feed the AST-walk QG check; (c) `check_banned_placeholder_methods.py` docstring +
+      error-message strings. None are actual invocations. No work needed.
+- [x] [AGENT] P0. Phase 4.GREP-VERIFY — workspace-wide AST-walk (not naive grep). **SHIPPED 2026-05-12 slot 8** at
+      `pm@<this-flip-commit>` — new AST-walk QG check
       [`scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py)
       (266 lines mirroring `check_banned_placeholder_methods.py` shape) + 11-test unit suite at
-      [`scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py)
-      + bootstrap baseline at
+      [`scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py) +
+      bootstrap baseline at
       [`scripts/quality_gates/pipeline_mode_explicit_baseline.yaml`](../../scripts/quality_gates/pipeline_mode_explicit_baseline.yaml)
-      (114 entries: 97 market-tick-data-service `pending_phase_4_mtds` + 6 features-service
-      `pending_phase_4_features` + 11 unified-trading-library `pending_phase_4_features` Phase 4.DEFAULT-REMOVAL
-      successor). Workspace-wide invocation: `OK — 114 baselined occurrence(s); 0 new occurrences`. Whitelist marker
+      (114 entries: 97 market-tick-data-service `pending_phase_4_mtds` + 6 features-service `pending_phase_4_features` +
+      11 unified-trading-library `pending_phase_4_features` Phase 4.DEFAULT-REMOVAL successor). Workspace-wide
+      invocation: `OK — 114 baselined occurrence(s); 0 new occurrences`. Whitelist marker
       `# QG-allow: pipeline-mode-not-applicable` supports the rare legitimate exception (e.g. `**kwargs` plumbing).
-      Reviewer enforcement: ANY new `record_*(...)` call without explicit `pipeline_mode=` kwarg + not baselined +
-      not whitelisted → ERROR, exit 1. Baseline entries get DELETED (not re-statused) as slot 3 ships Phase 4.MTDS
-      sweep + features-consolidation ships Phase 4.FEATURES sweep. **2026-05-12 slot 2 audit finding** confirmed:
-      naive grep `grep -rln "record_captured" --include="*.py" | xargs grep -L "pipeline_mode="` returned 7
-      false positives for docstring/comment/dict-key/string-literal references; AST-walk authoritatively counts only
-      actual `Call` nodes. **✅ Phase 4.GREP-VERIFY P1 SHIPPED 2026-05-12 slot 6 (Harsh) @pm@`93459749`** — QG check
-      wired into the per-repo QG body via `scripts/quality-gates-base/base-service.sh` **STEP 5.70** (5.6x range was
-      exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved — so the ratchet takes 5.70; same baseline-aware
-      shrinking-ratchet shape as STEP 5.67 / 5.69: `--workspace-root <ws> --scope <repo> --source-dir <pkg>`; baselined
-      occurrences → `log_warn` exit-clean, NEW occurrence → `log_fail` + `V++`; checker-absent → skip clean). Every
-      service repo sources `base-service.sh` so the ratchet is workspace-wide on next push. Codex doc
-      [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) documents STEP 5.70
-      (table row + full How-it-works / Adding-a-new-occurrence / Composes-with sections) + backfills the missing STEP 5.69
-      table row. **TODO Phase 4.GREP-VERIFY P2** [optional, low-pri]: `base-library.sh` does NOT carry STEP 5.65/5.67/5.69
-      either (library repos skip the workspace AST-walk ratchets by current precedent) — UTL's 11 baselined `record_*`
-      callsites are cleared by Phase 4.DEFAULT-REMOVAL regardless + caught by any workspace-wide sweep, so per-library
-      enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70 invocation to PM's own
-      `quality-gates.sh` (Phase 4.PM-SCRIPTS confirmed N/A — zero real `record_*` calls in PM scripts — so it'd be a
-      vacuous pass; defer).
+      Reviewer enforcement: ANY new `record_*(...)` call without explicit `pipeline_mode=` kwarg + not baselined + not
+      whitelisted → ERROR, exit 1. Baseline entries get DELETED (not re-statused) as slot 3 ships Phase 4.MTDS sweep +
+      features-consolidation ships Phase 4.FEATURES sweep. **2026-05-12 slot 2 audit finding** confirmed: naive grep
+      `grep -rln "record_captured" --include="*.py" | xargs grep -L "pipeline_mode="` returned 7 false positives for
+      docstring/comment/dict-key/string-literal references; AST-walk authoritatively counts only actual `Call` nodes.
+      **✅ Phase 4.GREP-VERIFY P1 SHIPPED 2026-05-12 slot 6 (Harsh) @pm@`93459749`** — QG check wired into the per-repo
+      QG body via `scripts/quality-gates-base/base-service.sh` **STEP 5.70** (5.6x range was exhausted — 5.65/5.67/5.69
+      in use, 5.66/5.68 reserved — so the ratchet takes 5.70; same baseline-aware shrinking-ratchet shape as STEP 5.67 /
+      5.69: `--workspace-root <ws> --scope <repo> --source-dir <pkg>`; baselined occurrences → `log_warn` exit-clean,
+      NEW occurrence → `log_fail` + `V++`; checker-absent → skip clean). Every service repo sources `base-service.sh` so
+      the ratchet is workspace-wide on next push. Codex doc
+      [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) documents STEP
+      5.70 (table row + full How-it-works / Adding-a-new-occurrence / Composes-with sections) + backfills the missing
+      STEP 5.69 table row. **TODO Phase 4.GREP-VERIFY P2** [optional, low-pri]: `base-library.sh` does NOT carry STEP
+      5.65/5.67/5.69 either (library repos skip the workspace AST-walk ratchets by current precedent) — UTL's 11
+      baselined `record_*` callsites are cleared by Phase 4.DEFAULT-REMOVAL regardless + caught by any workspace-wide
+      sweep, so per-library enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70
+      invocation to PM's own `quality-gates.sh` (Phase 4.PM-SCRIPTS confirmed N/A — zero real `record_*` calls in PM
+      scripts — so it'd be a vacuous pass; defer).
 - [x] [AGENT] P0. Phase 4.DEFAULT-REMOVAL — `pipeline_mode=` default removed (explicit-or-fail) from all 6 public
       `record_*` methods + `MANIFEST_SCHEMA_VERSION` bumped `7 → 8` at `manifest_writer.py:131` + codex doc
-      `availability-manifest-and-data-status.md` "transitional" prose updated to reflect v8 live.
-      (utl@`547ff3c` 2026-05-12 — Phase 4.DEFAULT-REMOVAL shipped)
-      **DEFERRED**: 3 v8 emission kwargs (`service_emission_state=` / `last_emission_decision_at=` /
-      `expected_window_completeness_fraction=`) still accept `= None` — removing their defaults requires a full
-      emission-policy callsite sweep across MTDS + instruments-service + any raw-tick adapters. Those callsites were
-      NOT swept in Phase 4 (only `pipeline_mode=` was). Tracked as follow-up deferred item below.
-- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission
-      kwargs (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`) in
-      all public `record_*` methods once MTDS + instruments-service + raw-tick adapter callsites are swept to pass
-      these explicitly. Predecessor: Phase 4.DEFAULT-REMOVAL (done, utl@`547ff3c`). Blocked by: callsite sweep not
-      yet done (emission-policy adapters only partially updated — only writegate slice (b) MDPS POC callsites pass v8
-      kwargs; remaining 8 services pending Phase 6.3-6.9 rollout per writegate plan).
+      `availability-manifest-and-data-status.md` "transitional" prose updated to reflect v8 live. (utl@`547ff3c`
+      2026-05-12 — Phase 4.DEFAULT-REMOVAL shipped) **DEFERRED**: 3 v8 emission kwargs (`service_emission_state=` /
+      `last_emission_decision_at=` / `expected_window_completeness_fraction=`) still accept `= None` — removing their
+      defaults requires a full emission-policy callsite sweep across MTDS + instruments-service + any raw-tick adapters.
+      Those callsites were NOT swept in Phase 4 (only `pipeline_mode=` was). Tracked as follow-up deferred item below.
+- [ ] [AGENT] P0. Phase 4.DEFAULT-REMOVAL-v8kwargs — **DEFERRED** — remove `= None` defaults from 3 v8 emission kwargs
+      (`service_emission_state=` / `last_emission_decision_at=` / `expected_window_completeness_fraction=`) in all
+      public `record_*` methods once MTDS + instruments-service + raw-tick adapter callsites are swept to pass these
+      explicitly. Predecessor: Phase 4.DEFAULT-REMOVAL (done, utl@`547ff3c`). Blocked by: callsite sweep not yet done
+      (emission-policy adapters only partially updated — only writegate slice (b) MDPS POC callsites pass v8 kwargs;
+      remaining 8 services pending Phase 6.3-6.9 rollout per writegate plan).
 - QG: every affected repo quality-gates.sh clean. **Done-definition**: zero grep hits + every repo's QG green + Phase
   4.DEFAULT-REMOVAL committed.
 
@@ -504,37 +518,42 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [x] [AGENT] P0. Phase 5.A — Extend `unified-trading-pm/scripts/migration/gcs_migration_bundle_2026_05_08.py` to
       include the v8 NULL-column backfill in the same parquet walk. Single walk does FIVE migrations: (1)
       `pipeline_mode=` partition insertion, (2) `category=` → `asset_group=` rekey, (3) 5 drift axes (path-prefix /
-      instrument_type casing / schema-4 empty / chain-bundle equivalence / hive-vocab), (4) v8 NULL columns via Phase
-      2.D helper, (5) cross-asset rescan class-A auto-fixes via Phase 3.D `cross_asset_rescan.py` helper.
-      **SHIPPED 2026-05-12 slot 2 spawned `ikenna-v8-mw-gcs-migration-bundle` sub-agent @PM@`d9a4fa9b`** — `DriftClass`
-      StrEnum extended with `V8_NULL_COLUMNS_MISSING` + `CROSS_ASSET_RESCAN_CLASS_A`; `MigrationMetrics` extended with
-      4 new counters + 2 record_* methods; new helpers `run_v8_column_backfill` + `run_cross_asset_rescan` +
+      instrument*type casing / schema-4 empty / chain-bundle equivalence / hive-vocab), (4) v8 NULL columns via Phase
+      2.D helper, (5) cross-asset rescan class-A auto-fixes via Phase 3.D `cross_asset_rescan.py` helper. **SHIPPED
+      2026-05-12 slot 2 spawned `ikenna-v8-mw-gcs-migration-bundle` sub-agent @PM@`d9a4fa9b`** — `DriftClass` StrEnum
+      extended with `V8_NULL_COLUMNS_MISSING` + `CROSS_ASSET_RESCAN_CLASS_A`; `MigrationMetrics` extended with 4 new
+      counters + 2 record*\* methods; new helpers `run_v8_column_backfill` + `run_cross_asset_rescan` +
       `_parse_rescan_output`; new dataclass `CrossAssetRescanResult`; `run_migration` extended with 5 new kwargs
       (`v8_backfill_fn`, `rescan_fn`, `rescan_asset_group`, `skip_v8_backfill`, `skip_rescan`); new CLI flags
       `--skip-v8-backfill` / `--skip-rescan` / `--rescan-asset-group`. Imports UTL Phase 2.D helper via facade (enabled
       by UTL@`d76203a2` Citadel § 7 facade re-export). Rescan invoked via subprocess (process-isolation; Phase 3.D
       helper is a standalone CLI). Defence-in-depth per-VM-shard-isolation guard fires BEFORE UTL helper invocation.
 - [x] [AGENT] P0. Phase 5.B — Extend tests in `tests/test_gcs_migration_bundle.py` with v8-column + rescan-auto-fix
-      coverage. Maintain dry-run-by-default + per-VM shard isolation guard.
-      **SHIPPED 2026-05-12 slot 2 @PM@`06076383`** — 14 new tests (target 8+): 4 v8 backfill + 7 rescan + 3
-      bundled/skip/isolation. Coverage: legacy v7 parquet → 4 NULL columns backfilled + non-zero
-      `v8_columns_backfilled_rows`; pre-migrated v8 parquet → `v8_columns_already_present_rows == row_count` + zero
-      backfilled; class-A drift case → `rescan_class_a_auto_fixes >= 1`; class-C ambiguous case → row in triage JSONL +
+      coverage. Maintain dry-run-by-default + per-VM shard isolation guard. **SHIPPED 2026-05-12 slot 2 @PM@`06076383`**
+      — 14 new tests (target 8+): 4 v8 backfill + 7 rescan + 3 bundled/skip/isolation. Coverage: legacy v7 parquet → 4
+      NULL columns backfilled + non-zero `v8_columns_backfilled_rows`; pre-migrated v8 parquet →
+      `v8_columns_already_present_rows == row_count` + zero backfilled; class-A drift case →
+      `rescan_class_a_auto_fixes >= 1`; class-C ambiguous case → row in triage JSONL +
       `rescan_class_c_triage_count >= 1`; per-VM-isolation guard fires before UTL helper; dry-run omits `--apply` flag
       from rescan subprocess. All 37 tests pass locally in 16s (23 original + 14 new).
-- QG: PM quality-gates.sh clean. **Done-definition**: bundled script + 30+ unit tests covering all 5 migration axes
-  ✅ (37 tests total post-Phase-5.B; covers 7 axes — original 5 + v8-backfill + rescan-class-A).
+- QG: PM quality-gates.sh clean. **Done-definition**: bundled script + 30+ unit tests covering all 5 migration axes ✅
+  (37 tests total post-Phase-5.B; covers 7 axes — original 5 + v8-backfill + rescan-class-A).
 
 ### Phase 6 — Bounce-sweep #1 — drain stale VMs (May 12)
 
-- [ ] [HUMAN+AGENT] P0. Phase 6.A — Identify all in-flight MTDS / MDPS / instruments / features VMs via
+- [x] [HUMAN+AGENT] P0. Phase 6.A — Identify all in-flight MTDS / MDPS / instruments / features VMs via
       `gcloud compute instances list --filter="status=RUNNING"`. Cross-reference against `vm_zombie_watchdog.py`
-      `VM_PREFIX_TO_BUCKET` registered prefixes.
-- [ ] [HUMAN+AGENT] P0. Phase 6.B — Drain VMs gracefully — wait for in-flight `record_captured` calls to flush per-VM
+      `VM_PREFIX_TO_BUCKET` registered prefixes. **DONE 2026-05-15**: 1 zombie found — `mtds-gas-fees-20260508-010121`
+      (VM_END_DATE=2026-05-08, idle since 2026-05-10). All other registered prefixes: no RUNNING instances.
+- [x] [HUMAN+AGENT] P0. Phase 6.B — Drain VMs gracefully — wait for in-flight `record_captured` calls to flush per-VM
       shard, then `gcloud compute instances delete <vm-name> --zone=<zone> --quiet`. Verify manifest consolidator drains
-      per-VM shards into canonical before next phase.
-- [ ] [AGENT] P0. Phase 6.C — Tarball refresh: `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` to
-      capture Phase 4 sweep into all flavors. **Per E3 ratified item.**
+      per-VM shards into canonical before next phase. **DONE 2026-05-15**: `mtds-gas-fees-20260508-010121` stopped via
+      `gcloud compute instances stop`. No manifest consolidator drain needed (VM was already idle with no in-flight
+      records).
+- [x] [AGENT] P0. Phase 6.C — Tarball refresh: `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` to
+      capture Phase 4 sweep into all flavors. **Per E3 ratified item.** **DONE 2026-05-15**: 16 tarballs refreshed and
+      uploaded to `gs://deployment-scripts-central-element-323112/code/` via `/opt/homebrew/bin/bash` (bash 5.3.9
+      required for associative arrays). All 16 service repos confirmed uploaded.
 - **Done-definition**: zero RUNNING MTDS / MDPS / instruments / features VMs + manifest consolidator drained + fresh
   tarballs in `gs://deployment-scripts-${PID}/code/`.
 
@@ -556,13 +575,13 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 - [ ] [HUMAN+AGENT] P0. Phase 7.F — Per-asset-group QA gate: re-run
       `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom
       count MUST be 0 (was 354 residual pre-bundle).
-- [ ] [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes,
-      one per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green.
-  - [ ] cefi signed off — date: ____ — operator: ____
-  - [ ] defi signed off — date: ____ — operator: ____
-  - [ ] tradfi signed off — date: ____ — operator: ____
-  - [ ] sports signed off — date: ____ — operator: ____
-  - [ ] prediction signed off — date: ____ — operator: ____
+- [ ] [HUMAN] P0. Phase 7.G — Operator sign-off per asset_group recorded inline below this todo (5 sub-checkboxes, one
+      per asset_group: cefi / defi / tradfi / sports / prediction) once Phase 7.F gate green.
+  - [ ] cefi signed off — date: \_**\_ — operator: \_\_**
+  - [ ] defi signed off — date: \_**\_ — operator: \_\_**
+  - [ ] tradfi signed off — date: \_**\_ — operator: \_\_**
+  - [ ] sports signed off — date: \_**\_ — operator: \_\_**
+  - [ ] prediction signed off — date: \_**\_ — operator: \_\_**
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
 
@@ -696,17 +715,19 @@ not silently defer.
 Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
 - Phase 1 boundary → UPDATE `codex/04-architecture/service-emission-policy.md` with the 4-state enum + read protocol.
-  **✅ SHIPPED — `service-emission-policy.md` LANDED (134 L, stub-appropriate)** (verified slot-6 codex-audit 2026-05-11).
+  **✅ SHIPPED — `service-emission-policy.md` LANDED (134 L, stub-appropriate)** (verified slot-6 codex-audit
+  2026-05-11).
 - Phase 2 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` with v8 columns + reader migration
   window. **Mostly done; ⚠ doc drift** — the v8 columns + reader-migration window are in the doc, but line 261 prose
   says "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while `manifest_writer.py:131` is still `= 7` (the
-  embedded code snippet at :265 correctly says `= 7`). See the Phase 2 follow-up todo above. (slot-6 codex-audit 2026-05-11.)
+  embedded code snippet at :265 correctly says `= 7`). See the Phase 2 follow-up todo above. (slot-6 codex-audit
+  2026-05-11.)
 - Phase 3 boundary → CREATE `codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
-  workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL → `gs://{pid}-rescan-triage/`).
-  **❌ NOT YET SHIPPED** — Phase 3 code shipped 2026-05-11 (`deployment-service@19fad8c` + `deployment-api@c8a1cd4` +
-  `instruments-service@a264f21`) but the codex stub is absent; OWNER ikenna-slot-6. Per the "Post-Plan-Phase Codex Audit"
-  HARD RULE the stub should ride with the Phase-3 ship. (slot-6 codex-audit finding 2026-05-11; was missing from this
-  section entirely — added by slot 6.)
+  workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL →
+  `gs://{pid}-rescan-triage/`). **❌ NOT YET SHIPPED** — Phase 3 code shipped 2026-05-11 (`deployment-service@19fad8c` +
+  `deployment-api@c8a1cd4` + `instruments-service@a264f21`) but the codex stub is absent; OWNER ikenna-slot-6. Per the
+  "Post-Plan-Phase Codex Audit" HARD RULE the stub should ride with the Phase-3 ship. (slot-6 codex-audit finding
+  2026-05-11; was missing from this section entirely — added by slot 6.)
 - Phase 4 boundary → UPDATE `codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
   step.
 - Phase 7 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" with bundled-walk
@@ -795,25 +816,26 @@ launcher + script + watchdog + deployment-api registry)** end-to-end across 4 re
 `next_state()` resolver + EXPECTED_KNOWN_SOURCE_GAP) had been shipped by slot 8 earlier the same day (UAC@`7be6bd5`);
 slot 6 absorbed via rebase + moved forward.
 
-| Phase  | Repo                | Commit                                                  | Highlights                                                                                                                                                                  |
-| ------ | ------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.A    | unified-trading-library | [`0adea1c6`]                                            | `AvailabilityRecord` + 3 new fields + 5 `record_*` methods extended + 12 unit tests.                                                                                          |
-| 2.B    | unified-trading-library | [`001e8892`]                                            | `EmissionDecision` extended + `publish_with_policy()` stamps v8 state via Phase 1.B `next_state()` + 6 new tests.                                                            |
-| 2.C    | unified-trading-library | [`5f2aacd6`]                                            | `read_availability_index()._backfill()` adds v8 cols as NULL when missing + emits `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event.                                              |
-| 2.D    | unified-trading-library | [`bae1ecb9`]                                            | `manifest_migrations/v7_to_v8.py` — per-VM shard isolation guard + `MissingVMShardIsolationError` + `V7ToV8MigrationResult` + 12 unit tests.                                  |
-| 3.A/B  | deployment-service  | [`19fad8c`]                                             | `launch-cross-asset-rescan-vm.sh` — singleton-lock, `WORKERS=64`, `HTTP_POOL_SIZE=128`, asia-northeast1-c, `--apply` toggle. Watchdog dict registered (`cross-asset-rescan-`). |
-| 3.C    | deployment-api      | [`c8a1cd4`]                                             | `_SERVICE_LAUNCHER_SCRIPTS["cross-asset-rescan"]` slug for Deploy-Missing UI.                                                                                                |
-| 3.D    | instruments-service | [`a264f21`]                                             | `scripts/cross_asset_rescan.py` — 333-line orchestrator on top of existing reconciler + `cross_asset_all` dispatch + triage JSONL + lifecycle events.                         |
+| Phase | Repo                    | Commit       | Highlights                                                                                                                                                                     |
+| ----- | ----------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2.A   | unified-trading-library | [`0adea1c6`] | `AvailabilityRecord` + 3 new fields + 5 `record_*` methods extended + 12 unit tests.                                                                                           |
+| 2.B   | unified-trading-library | [`001e8892`] | `EmissionDecision` extended + `publish_with_policy()` stamps v8 state via Phase 1.B `next_state()` + 6 new tests.                                                              |
+| 2.C   | unified-trading-library | [`5f2aacd6`] | `read_availability_index()._backfill()` adds v8 cols as NULL when missing + emits `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event.                                                |
+| 2.D   | unified-trading-library | [`bae1ecb9`] | `manifest_migrations/v7_to_v8.py` — per-VM shard isolation guard + `MissingVMShardIsolationError` + `V7ToV8MigrationResult` + 12 unit tests.                                   |
+| 3.A/B | deployment-service      | [`19fad8c`]  | `launch-cross-asset-rescan-vm.sh` — singleton-lock, `WORKERS=64`, `HTTP_POOL_SIZE=128`, asia-northeast1-c, `--apply` toggle. Watchdog dict registered (`cross-asset-rescan-`). |
+| 3.C   | deployment-api          | [`c8a1cd4`]  | `_SERVICE_LAUNCHER_SCRIPTS["cross-asset-rescan"]` slug for Deploy-Missing UI.                                                                                                  |
+| 3.D   | instruments-service     | [`a264f21`]  | `scripts/cross_asset_rescan.py` — 333-line orchestrator on top of existing reconciler + `cross_asset_all` dispatch + triage JSONL + lifecycle events.                          |
 
 **Operator follow-up:**
 
-- Phase 3.B watchdog relaunch (standard `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c
-  --quiet` + `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh` to pick up the new prefix) before the
-  first cross-asset-rescan VM launch.
+- Phase 3.B watchdog relaunch (standard
+  `gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet` +
+  `bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh` to pick up the new prefix) before the first
+  cross-asset-rescan VM launch.
 - Tarball refresh (`bash deployment-service/scripts/vm/create-code-tarballs.sh --all`) so the rescan VM at boot reads
   the new instruments-service `cross_asset_rescan.py` + the new launcher.
-- Phase 8 (cross-asset rescan triage review May 15) consumes the `gs://{pid}-rescan-triage/{run_id}/triage.jsonl`
-  output once the first rescan VM run completes.
+- Phase 8 (cross-asset rescan triage review May 15) consumes the `gs://{pid}-rescan-triage/{run_id}/triage.jsonl` output
+  once the first rescan VM run completes.
 
 **Scoreboard — Phase 4-13 status post slot-6 ship:** unchanged; Phase 4 (workspace-wide consumer sweep) still
 DEFERRED-AFTER Phase 2 (now unblocked since 2.A's `None` defaults preserve back-compat for the gradual callsite sweep);
@@ -953,34 +975,34 @@ unblocking + 8 parallel Phase 3 sub-agents — dynamic spawning fits the shape b
 ## DONE-2026-05-12 — slot 2 `ikenna-v8-manifestwriter-tab` — Phase 2 P2 + Phase 4 partial + Phase 5.A+B
 
 Tab: `ikenna-v8-manifestwriter-tab` (slot 2 worktree at `.tabs/2/`). Session scope: re-task from writegate slice (c)
-Phase 6.2 close-out (prior session) → manifest_schema_final_gate Phase 2 (UTL v8 ManifestWriter) per operator
-re-task brief. Pre-audit discovery: RE-TASK BRIEF #2 primary scope (Step 0 Q2 Bug 1 + Step 1-4 Phase 2.A/B/C/D) ALL
-already shipped (slot 6 finished today). Surfaced finding to operator → operator directed "do all these: Phase 2 P2 +
-Phase 4 + Phase 5.A/B".
+Phase 6.2 close-out (prior session) → manifest_schema_final_gate Phase 2 (UTL v8 ManifestWriter) per operator re-task
+brief. Pre-audit discovery: RE-TASK BRIEF #2 primary scope (Step 0 Q2 Bug 1 + Step 1-4 Phase 2.A/B/C/D) ALL already
+shipped (slot 6 finished today). Surfaced finding to operator → operator directed "do all these: Phase 2 P2 + Phase 4 +
+Phase 5.A/B".
 
 ### Commits
 
-| Commit | Repo | Summary |
-|---|---|---|
-| `PM@59d761a4` | unified-trading-pm | Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision (option b) + codex softened + Phase 4.DEFAULT-REMOVAL extended |
-| `MDPS@a3c7198` | market-data-processing-service | Phase 4.MDPS — 22 callsites + `resolve_pipeline_mode_from_source` helper |
-| `instruments-service@e530906` | instruments-service | Phase 4.INSTRUMENTS — ~50 callsites + per-source map + v8-aware reconciler |
-| `PM@237d00b7` | unified-trading-pm | Phase 4.MTDS — 🟡 finding doc (5 Q's pending operator triage) |
-| `PM@a5e5aa4d` | unified-trading-pm | Finding doc: VIX 15m Yahoo/Barchart `PipelineMode` enum gap |
-| `PM@6ede1e01` | unified-trading-pm | Finding doc: footystats `PipelineMode` enum gap |
-| `PM@42348eba` | unified-trading-pm | Phase 4 partial plan-flip — MDPS [x] + INSTRUMENTS [x] + small-repos N/A + MTDS blocked + GREP-VERIFY AST-walk upgrade |
-| `deployment-api@2f833a7` | deployment-api | Phase 4.DEPLOYMENT-API — 4 v8 fields in `ShardGcsMetadata` + 6 tests |
-| `deployment-ui@ab06bfe` | deployment-ui | Phase 4.UI — `ServiceEmissionStateBadge` + 9 vitest |
-| `PM@d9a4fa9b` | unified-trading-pm | Phase 5.A — gcs_migration_bundle v8 backfill + cross-asset-rescan class-A |
-| `PM@06076383` | unified-trading-pm | Phase 5.B — 14 new tests (37 total) |
-| `UTL@d76203a2` | unified-trading-library | UTL `manifest_migrations` facade re-exports (enables Phase 5.A imports per Citadel § 7) |
-| `PM@<this-flip>` | unified-trading-pm | Plan-flip + DONE block |
+| Commit                        | Repo                           | Summary                                                                                                                |
+| ----------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `PM@59d761a4`                 | unified-trading-pm             | Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision (option b) + codex softened + Phase 4.DEFAULT-REMOVAL extended           |
+| `MDPS@a3c7198`                | market-data-processing-service | Phase 4.MDPS — 22 callsites + `resolve_pipeline_mode_from_source` helper                                               |
+| `instruments-service@e530906` | instruments-service            | Phase 4.INSTRUMENTS — ~50 callsites + per-source map + v8-aware reconciler                                             |
+| `PM@237d00b7`                 | unified-trading-pm             | Phase 4.MTDS — 🟡 finding doc (5 Q's pending operator triage)                                                          |
+| `PM@a5e5aa4d`                 | unified-trading-pm             | Finding doc: VIX 15m Yahoo/Barchart `PipelineMode` enum gap                                                            |
+| `PM@6ede1e01`                 | unified-trading-pm             | Finding doc: footystats `PipelineMode` enum gap                                                                        |
+| `PM@42348eba`                 | unified-trading-pm             | Phase 4 partial plan-flip — MDPS [x] + INSTRUMENTS [x] + small-repos N/A + MTDS blocked + GREP-VERIFY AST-walk upgrade |
+| `deployment-api@2f833a7`      | deployment-api                 | Phase 4.DEPLOYMENT-API — 4 v8 fields in `ShardGcsMetadata` + 6 tests                                                   |
+| `deployment-ui@ab06bfe`       | deployment-ui                  | Phase 4.UI — `ServiceEmissionStateBadge` + 9 vitest                                                                    |
+| `PM@d9a4fa9b`                 | unified-trading-pm             | Phase 5.A — gcs_migration_bundle v8 backfill + cross-asset-rescan class-A                                              |
+| `PM@06076383`                 | unified-trading-pm             | Phase 5.B — 14 new tests (37 total)                                                                                    |
+| `UTL@d76203a2`                | unified-trading-library        | UTL `manifest_migrations` facade re-exports (enables Phase 5.A imports per Citadel § 7)                                |
+| `PM@<this-flip>`              | unified-trading-pm             | Plan-flip + DONE block                                                                                                 |
 
 ### What shipped (operationally)
 
 - **Phase 2 P2** — closed-set design call (option b): codex prose softened to match `manifest_writer.py:131` constant
-  value `MANIFEST_SCHEMA_VERSION = 7` (transitional); bump-to-8 + remove all 4 transitional `None` defaults
-  consolidated into Phase 4.DEFAULT-REMOVAL.
+  value `MANIFEST_SCHEMA_VERSION = 7` (transitional); bump-to-8 + remove all 4 transitional `None` defaults consolidated
+  into Phase 4.DEFAULT-REMOVAL.
 - **Phase 4.MDPS** — pipeline_mode propagated through `write_candle_parquet` / `candle_write_mixin` / `live_workers` /
   `batch_workers` / `orchestration_writer` / `live_aggregator` / `io/writer`. Helper `resolve_pipeline_mode_from_source`
   parses `pipeline_mode=<value>` hive partition segment from GCS blob path; legacy pre-v8 paths fall back to
@@ -996,11 +1018,11 @@ Phase 4 + Phase 5.A/B".
 
 ### Findings filed (3 — pending operator triage)
 
-| Finding doc | Scope | Severity |
-|---|---|---|
-| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md) | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0 |
-| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry | P1 |
-| [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md) | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows | P1 |
+| Finding doc                                                                                                                                    | Scope                                                                                                                                                                                                    | Severity |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                              | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
+| [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry                                                          | P1       |
+| [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md)                                   | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows                                                                       | P1       |
 
 **Operator triage decision needed** (consolidated): extend UAC `PipelineMode` enum + `SOURCE_PRIORITY` to add 6 missing
 values (`BATCH_YAHOO` / `BATCH_BARCHART` / `BATCH_FOOTYSTATS` / `BATCH_HYPERLIQUID_REST` / `BATCH_PYTH_HERMES` /
@@ -1010,33 +1032,34 @@ match). Plus: migrate `DefiManifestRecorder.record_captured` from legacy `Manife
 
 ### Deferred work after 2026-05-12 ikenna-v8-manifestwriter-tab session
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-|---|---|---|
-| Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision | `done` (PM@`59d761a4`) | — |
-| Phase 4.MDPS | `done` (MDPS@`a3c7198`) | — |
-| Phase 4.INSTRUMENTS | `done` (instruments-service@`e530906`) | — |
-| Phase 4.DEPLOYMENT-API + UI | `done` (deployment-api@`2f833a7` + deployment-ui@`ab06bfe`) | — |
-| Phase 4.E2E + Phase 4.PM-SCRIPTS | `done` (N/A — no real callsites; verified via grep-then-read) | — |
-| Phase 4.MTDS | `blocked` | Operator triage of 3 findings (6 PipelineMode enum gaps + DefiManifestRecorder add()-path) |
-| Phase 4.FEATURES | `deferred-after-may-16` | features-consolidation merge gate per plan body |
-| Phase 4.GREP-VERIFY | `todo` (`- [ ]`) | NEW QG STEP `check_pipeline_mode_explicit_at_record_calls.py` AST-walk; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape |
-| Phase 4.DEFAULT-REMOVAL | `blocked-after-mtds` | Blocked on Phase 4.MTDS unblock; once 4.MTDS + 4.FEATURES land, removes 4 None defaults + bumps MANIFEST_SCHEMA_VERSION 7→8 + reconciles codex |
-| Phase 5.A | `done` (PM@`d9a4fa9b`) | — |
-| Phase 5.B | `done` (PM@`06076383`) | — |
+| Phase / item                                  | Status as of 2026-05-12                                       | Successor / blocker                                                                                                                            |
+| --------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 P2 — MANIFEST_SCHEMA_VERSION decision | `done` (PM@`59d761a4`)                                        | —                                                                                                                                              |
+| Phase 4.MDPS                                  | `done` (MDPS@`a3c7198`)                                       | —                                                                                                                                              |
+| Phase 4.INSTRUMENTS                           | `done` (instruments-service@`e530906`)                        | —                                                                                                                                              |
+| Phase 4.DEPLOYMENT-API + UI                   | `done` (deployment-api@`2f833a7` + deployment-ui@`ab06bfe`)   | —                                                                                                                                              |
+| Phase 4.E2E + Phase 4.PM-SCRIPTS              | `done` (N/A — no real callsites; verified via grep-then-read) | —                                                                                                                                              |
+| Phase 4.MTDS                                  | `blocked`                                                     | Operator triage of 3 findings (6 PipelineMode enum gaps + DefiManifestRecorder add()-path)                                                     |
+| Phase 4.FEATURES                              | `deferred-after-may-16`                                       | features-consolidation merge gate per plan body                                                                                                |
+| Phase 4.GREP-VERIFY                           | `todo` (`- [ ]`)                                              | NEW QG STEP `check_pipeline_mode_explicit_at_record_calls.py` AST-walk; ~80-100 lines mirroring `check_banned_placeholder_methods.py` shape    |
+| Phase 4.DEFAULT-REMOVAL                       | `blocked-after-mtds`                                          | Blocked on Phase 4.MTDS unblock; once 4.MTDS + 4.FEATURES land, removes 4 None defaults + bumps MANIFEST_SCHEMA_VERSION 7→8 + reconciles codex |
+| Phase 5.A                                     | `done` (PM@`d9a4fa9b`)                                        | —                                                                                                                                              |
+| Phase 5.B                                     | `done` (PM@`06076383`)                                        | —                                                                                                                                              |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 
 - **Per-service slice (c) Phase 6.3-6.9** — writegate plan body: features-volatility / cross-instrument / ml-training /
   ml-inference / strategy / execution / position-balance / risk / instruments-service rollouts.
-- **Phase 6-8 (manifest_schema_final_gate)** — HUMAN+AGENT operational steps (drain stale VMs / tarball refresh /
-  gcs Phase 3 walk / class-C triage). Out of agent scope; operator-runnable per plan body.
+- **Phase 6-8 (manifest_schema_final_gate)** — HUMAN+AGENT operational steps (drain stale VMs / tarball refresh / gcs
+  Phase 3 walk / class-C triage). Out of agent scope; operator-runnable per plan body.
 
 ### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
 
-Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**`/`**BLOCKED**` annotation
-in `plans/active/`:
+Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**`/`**BLOCKED**` annotation in
+`plans/active/`:
 
-- "Phase 4.MTDS blocked" — annotated in plan body Phase 4.MTDS section + `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
+- "Phase 4.MTDS blocked" — annotated in plan body Phase 4.MTDS section +
+  `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`.
 - "Phase 4.FEATURES gated on May-16" — explicit annotation in plan body Phase 4.FEATURES.
 - "Phase 4.GREP-VERIFY AST-walk upgrade" — explicit `- [ ]` in plan body with implementation site
   (`unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`) named.
@@ -1049,43 +1072,43 @@ No deferral lives only in chat or in the commit message. Three findings filed fo
 ### Foreign findings flagged (NOT my code, NOT blocking)
 
 - Per-tree prettier auto-reflow (foot-gun #4) — ~130 codex docs + plans show line-wrapping diffs vs HEAD after sub-agent
-  rebases. Files have IDENTICAL semantic content; only whitespace differs. Stashed under `slot-2: foreign-prettier-reflows-foot-gun-4`
-  to keep the slot 2 working tree clean for plan-flip commits. Foreign agents will reconcile in their own commits per
-  CLAUDE.md "Two teammates × multiple parallel agents" rule.
+  rebases. Files have IDENTICAL semantic content; only whitespace differs. Stashed under
+  `slot-2: foreign-prettier-reflows-foot-gun-4` to keep the slot 2 working tree clean for plan-flip commits. Foreign
+  agents will reconcile in their own commits per CLAUDE.md "Two teammates × multiple parallel agents" rule.
 
 ---
 
 ## DONE-2026-05-12 — slot 8 Phase 4.GREP-VERIFY closure + Phase 4.FEATURES pre-audit
 
-Slot 8 (`tab/ikennaigboaka/8`, agent-tag `ikenna-manifest-phase3-tab`) shipped two consumer-sweep items today
-inside the manifest_schema_final_gate Phase 4 cluster:
+Slot 8 (`tab/ikennaigboaka/8`, agent-tag `ikenna-manifest-phase3-tab`) shipped two consumer-sweep items today inside the
+manifest_schema_final_gate Phase 4 cluster:
 
-| Phase                 | Repo                  | Commit            | Highlights                                                                                                                                                                                                                                                                                              |
-| --------------------- | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 4.GREP-VERIFY   | unified-trading-pm    | [`4159b7ae`]       | NEW AST-walk QG check `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (266 LOC) + 11-test unit suite + 706-LOC bootstrap baseline. Detects every `record_*(...)` call missing explicit `pipeline_mode=` kwarg. Workspace invocation: `OK — 114 baselined; 0 new occurrences`.    |
-| Phase 4.FEATURES P0   | unified-trading-pm    | [`c1414ed7`]       | Pre-audit enumerated 6 features-service callsites concentrated in 2 files (calendar orchestrator + sports batch handler). Pipeline-mode mapping per existing UAC SOURCE_PRIORITY documented inline. Mechanical sweep ~30min once features-consolidation merge lifts the gate (target 2026-05-16). |
+| Phase               | Repo               | Commit       | Highlights                                                                                                                                                                                                                                                                                            |
+| ------------------- | ------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4.GREP-VERIFY | unified-trading-pm | [`4159b7ae`] | NEW AST-walk QG check `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (266 LOC) + 11-test unit suite + 706-LOC bootstrap baseline. Detects every `record_*(...)` call missing explicit `pipeline_mode=` kwarg. Workspace invocation: `OK — 114 baselined; 0 new occurrences`. |
+| Phase 4.FEATURES P0 | unified-trading-pm | [`c1414ed7`] | Pre-audit enumerated 6 features-service callsites concentrated in 2 files (calendar orchestrator + sports batch handler). Pipeline-mode mapping per existing UAC SOURCE_PRIORITY documented inline. Mechanical sweep ~30min once features-consolidation merge lifts the gate (target 2026-05-16).     |
 
 **Phase 4 cluster scoreboard post-slot-8 ship:**
 
-| Sub-phase             | Status as of 2026-05-12 | Owner / Successor / Blocker                                                                              |
-| --------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| Phase 4.MDPS          | ✅ shipped slot 2 (`mdps@a3c7198`) | Done                                                                                                     |
-| Phase 4.INSTRUMENTS   | ✅ shipped slot 2 (`instruments-service@e530906`) | Done                                                                                                     |
-| Phase 4.DEPLOYMENT-API | ✅ shipped slot 2 (`deployment-api@2f833a7` + `deployment-ui@ab06bfe`) | Done                                                                                                     |
-| Phase 4.E2E           | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
-| Phase 4.PM-SCRIPTS    | ✅ N/A (slot 2 audit; zero actual record_* calls) | Done                                                                                                     |
-| Phase 4.GREP-VERIFY   | ✅ checker shipped slot 8 (PM@`4159b7ae`) + P1 QG-wiring shipped slot 6 (PM@`93459749`, STEP 5.70)  | Done — ratchet live in every service repo's QG; see DONE blocks below                                    |
-| Phase 4.FEATURES      | ⚪ pre-audit shipped slot 8 today; sweep deferred-after-may-16 | Successor: features-consolidation merge gate; 6 callsites enumerated above                                |
-| Phase 4.MTDS          | 🟡 pre-audit shipped slot 2 (26 files / 102 callsites); sweep BLOCKED on operator triage of Q1-Q5 | Successor: slot 3 (code_freeze Phase 1.E audit) per `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` |
-| Phase 4.DEFAULT-REMOVAL | ⚪ blocked transitively on Phase 4.MTDS | Successor: same as Phase 4.MTDS                                                                          |
+| Sub-phase               | Status as of 2026-05-12                                                                            | Owner / Successor / Blocker                                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4.MDPS            | ✅ shipped slot 2 (`mdps@a3c7198`)                                                                 | Done                                                                                                                         |
+| Phase 4.INSTRUMENTS     | ✅ shipped slot 2 (`instruments-service@e530906`)                                                  | Done                                                                                                                         |
+| Phase 4.DEPLOYMENT-API  | ✅ shipped slot 2 (`deployment-api@2f833a7` + `deployment-ui@ab06bfe`)                             | Done                                                                                                                         |
+| Phase 4.E2E             | ✅ N/A (slot 2 audit; zero actual record\_\* calls)                                                | Done                                                                                                                         |
+| Phase 4.PM-SCRIPTS      | ✅ N/A (slot 2 audit; zero actual record\_\* calls)                                                | Done                                                                                                                         |
+| Phase 4.GREP-VERIFY     | ✅ checker shipped slot 8 (PM@`4159b7ae`) + P1 QG-wiring shipped slot 6 (PM@`93459749`, STEP 5.70) | Done — ratchet live in every service repo's QG; see DONE blocks below                                                        |
+| Phase 4.FEATURES        | ⚪ pre-audit shipped slot 8 today; sweep deferred-after-may-16                                     | Successor: features-consolidation merge gate; 6 callsites enumerated above                                                   |
+| Phase 4.MTDS            | 🟡 pre-audit shipped slot 2 (26 files / 102 callsites); sweep BLOCKED on operator triage of Q1-Q5  | Successor: slot 3 (code_freeze Phase 1.E audit) per `plans/active/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md` |
+| Phase 4.DEFAULT-REMOVAL | ⚪ blocked transitively on Phase 4.MTDS                                                            | Successor: same as Phase 4.MTDS                                                                                              |
 
 **Phase 4.GREP-VERIFY ratchet** is now LIVE **and wired into every service repo's QG** — `Phase 4.GREP-VERIFY P1`
 shipped 2026-05-12 slot 6 (Harsh) @pm@`93459749`: `scripts/quality-gates-base/base-service.sh` **STEP 5.70** invokes
 `check_pipeline_mode_explicit_at_record_calls.py` scoped to the calling repo (every service repo `source`s
 `base-service.sh`, so the per-PR ratchet is workspace-wide on next push). Any new `record_*(...)` call missing explicit
 `pipeline_mode=` kwarg + not in `pipeline_mode_explicit_baseline.yaml` + no `# QG-allow: pipeline-mode-not-applicable`
-inline marker → `log_fail` + non-zero exit, blocking the PR. Baseline entries get DELETED (not re-statused) as
-Phase 4.MTDS sweep + Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. Codex doc
+inline marker → `log_fail` + non-zero exit, blocking the PR. Baseline entries get DELETED (not re-statused) as Phase
+4.MTDS sweep + Phase 4.FEATURES sweep + Phase 4.DEFAULT-REMOVAL land. Codex doc
 `codex/06-coding-standards/quality-gates.md` documents STEP 5.70 in full. P2 (library-repo enforcement / PM-repo
 invocation) noted as optional follow-up in the Phase 4.GREP-VERIFY checkbox above — not a gap (library callsites are
 cleared by Phase 4.DEFAULT-REMOVAL + caught by workspace-wide sweep; PM has zero real `record_*` calls).
