@@ -300,3 +300,5 @@ crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stres
 Queue items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
 
 [2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution tests): execution-service@50a5d24c — 6 unit + 2 Tenderly fork tests (auto-skip). QG ✅ (425s). Rebased 3 repos to LDR post-OOM. Now handling operator request: UTL LDR pull + QG before item 12.
+
+[2026-05-15 23:00 UTC] slot-5 — ⚠️ UTL QG REPORT (operator request): OOM is fixed (93ff771: ConfigStore._resolve_save_path now bounded at 10k, blob_exists defaults False). Remaining 95 QG failures ALL PASS SERIALLY — pure pre-existing xdist parallel isolation issue (sys.modules patches from config_interface/conftest.py leak across workers). Not my code, not the OOM. This is a pre-existing UTL infrastructure issue. Pivoting to item 12 (execution-service slippage model boundary tests).
