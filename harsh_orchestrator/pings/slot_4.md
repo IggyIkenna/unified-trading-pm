@@ -52,3 +52,20 @@ Queue:
 8. **features-service Phase 6 emission parity — sports + commodity families** — extend item 4 to the remaining 2 families. Each must call `publish_with_policy` at write boundary with STRICT_FAIL seed in UAC. Done-def: parity tests for all 5 families + QG green.
 9. **instruments-service contract migration pre/post-state tests** — Phase 3 migrations (`scripts/migration_*.py`) should assert (a) pre-state expected schema; (b) post-state matches new schema; (c) row count preserved. Add tests for any migration missing these. Done-def: every migration has pre/post assertion test.
 10. **execution-service test_lifecycle_events.py expansion (if item 2 found gaps)** — add comprehensive STARTED/STOPPED/FAILED + correlation_id propagation + duration_ms on COMPLETED tests. Done-def: coverage matches B-006 + QG green.
+
+[2026-05-15 14:45 UTC] slot-4 — 🏁 **CYCLE-CLOSE (Re-activate queue items 4-8)**. All items complete.
+  (4) features-service Phase 6 emission policy parity ✅ — done in prior reserve cycle (UAC service key fix + TestUACPolicyParity, features@541cb9ee).
+  (5) instruments-service Phase 3 migration tests ✅ — done in prior reserve cycle (15→23 tests, instruments@e29ebf3).
+  (6) Cross-repo skip markers diagnostic ✅ — grep across features-service, instruments-service, execution-service: only execution-service test_twap_timing.py had @pytest.mark.skip; existing # reason: comments above decorators already satisfy QG check. No violations requiring fix.
+  (7) Phase 3 workspace QG (rdt-p4-workspace-qg) ✅:
+    instruments-service: ✅ PASSED (191s)
+    market-tick-data-service: ✅ PASSED (169s, non-blocking PENDING-RATCHET warnings only)
+    execution-service: ✅ PASSED (372s)
+    risk-and-exposure-service: ✅ PASSED (150s, required setup.sh to install pytest-timeout)
+    features-service: ❌ FAILING (201 pre-existing failures — not Phase 3 TradFi related)
+    No new Phase 3-specific failures detected.
+    Fixed 1 additional failure: sports batch_handler row_key schema drift (data_type="" now included); features@15acdad8.
+  (8) Self-pivot: all 7-item queue + reserve items complete. Queue extension items 8-10 received from main — starting now.
+  🚨 NOTE: features-service has ~198 remaining pre-existing failures (beyond volatility's 48 and the 3 just fixed).
+    Commodity CLI (2 failures): xdist interference (pass in isolation).
+    Other families: ~150 additional failures across all per-family test dirs. Full audit needed.

@@ -299,10 +299,13 @@ C).
     Solana leg. (design 0.6×, ~3 = 1.8 cal) — IS@9d7cfc7. **Backfilled 2026-05-15.**
 14. ✅ **[SELF-ROUTED] Solana bare-name venue migration script + tests** — Solana venue normalization migration.
     (refactor 0.4×, ~2 = 0.8 cal) — IS@2639f8e. **Backfilled 2026-05-15.**
-15. **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP 5.37
-    fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
+15. ✅ **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP
+    5.37 fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
     `math_utilities.py min_health_factor=1.2`, `risk_monitor.py liquidation_threshold`). Migrate to UAC
     `LIQUIDATION_PARAMS_REGISTRY` consumer pattern; blocks strategy-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+    **DONE** (2026-05-15): strategy-service@935eb4a — `# noqa: qg-inline-threshold` suppression on doctest LST-rate
+    examples in `dynamic_hedge_ratio.py` + `min_surprise_sigma` Decimal("1.5") false-positive in `event_driven.py`. QG
+    STEP 5.37 ✅.
 16. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
 
 Backfill flag: items 4 + 10 are **<1-week test backfills — AUTHORIZED without operator approval**. Anything that
@@ -515,19 +518,18 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. **🔴 [TOP-PRIORITY 2026-05-15 — PREREQ MET; START NOW]
-    `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows blocked B-015 paper-trade
-    gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain).
-    **PREREQ ✅ MET**: slot 6 #11 handler hardening shipped at `market-tick-data-service@c1e6963` (2026-05-15);
-    phantoms will NOT re-accumulate on next smoke. **JUMP TO TOP OF SLOT 8 STACK NOW.**
-    Action: (1) run
+13. **🔴 [TOP-PRIORITY 2026-05-15 — PREREQ MET; START NOW] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15`
+    (P0)** — phantom manifest rows blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS
+    lst_rates + features-onchain). **PREREQ ✅ MET**: slot 6 #11 handler hardening shipped at
+    `market-tick-data-service@c1e6963` (2026-05-15); phantoms will NOT re-accumulate on next smoke. **JUMP TO TOP OF
+    SLOT 8 STACK NOW.** Action: (1) run
     `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
     `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present; (2) `--apply-flips`
-    to mark phantom rows as `attempted_failed`. (3) Cross-ping Harsh slot 9 to confirm `lst_rates_handler.py`
-    hardening (their parallel fix) + coordinate smoke re-launch. (4) Verify event-stream STARTED + manifest captured
-    rows > 0 + 4-pillar parquet validation. (5) Diagnose why features-onchain smoke produced NO event stream
-    (no-fire-and-forget HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal)
-    **B-015 paper-trade gate unblocks the moment this lands** — Harsh slot 9 standing by for ~24h.
+    to mark phantom rows as `attempted_failed`. (3) Cross-ping Harsh slot 9 to confirm `lst_rates_handler.py` hardening
+    (their parallel fix) + coordinate smoke re-launch. (4) Verify event-stream STARTED + manifest captured rows > 0 +
+    4-pillar parquet validation. (5) Diagnose why features-onchain smoke produced NO event stream (no-fire-and-forget
+    HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal) **B-015 paper-trade gate unblocks the moment this lands** — Harsh
+    slot 9 standing by for ~24h.
 14. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.

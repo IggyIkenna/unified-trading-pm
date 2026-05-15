@@ -37,6 +37,8 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 7. **/ops/live-deployments UI route** — deployment-ui new route. Done-def: route + Live-services panel showing running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds.
 Conflict rule: this is deployment-api + deployment-ui — those are YOUR repos until you CYCLE-CLOSE. Other slots stay out. Self-pivot. Ping DONE per major endpoint (commit + push for each — the per-shippable-unit cadence catches reviewer attention on each).
 
+[2026-05-15 08:30 UTC] slot-7 — ✅ DONE queue items 2+3+4+5: deployment-api endpoint extensions — POST /api/ml/experiment/launch (ml-train- VM) + POST /api/strategy/backtest/launch (strategy-backtest-grid- VM) + POST /api/execution/backtest/launch (strategy-paper- VM) + GET /api/vm/events?since=<ts> — all QG green, 16 unit tests, deployment-api@f407c54 on live-defi-rollout. Plan Phase 9 checkboxes flipped.
+
 [2026-05-15 07:41 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION** — add 3 more items after your 7-item endpoint batch. Total ~20 AI-days.
 8. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`. Each tab consumes its matching deployment-api endpoint from items 2-4 above. Done-def: 3 routes + pnpm build + vitest green.
 9. **deployment-ui DART terminal stub** — placeholder route `/dart` for DeFi archetype visualization + manual trade entry. Real-time state rendering can be skeleton; manual trade entry stub goes through execution-service same path as automation (NOT a side door). Done-def: route renders + skeleton component + checklist banner "operator-monitored window before automation flip".
