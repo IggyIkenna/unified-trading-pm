@@ -691,3 +691,20 @@ Without it: historical OHLCV rows have session=null/phase=null; new rows stamped
 **Script**: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py` **Commits**: MTDS@6873955
 (script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master_2026_05_07.md` § "Databento session-type
 awareness"
+
+---
+
+## [slot 5] Zero-volume bars → record_expected_empty shipped (2026-05-15)
+
+**Status**: ✅ SHIPPED
+
+### Commit
+
+- `MTDS@038a611` — `non_trading_day_reason` import + two-path `record_expected_empty` emission in orchestrator
+  (early-return path for all-non-trading batches + finalization-block path for mixed batches); used
+  `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` from existing UAC taxonomy; 3 unit tests in
+  `tests/unit/test_orchestrator_non_trading_session.py`
+
+### Plan flip
+
+- tradfi_master § "Replace zero-volume bars during non-tradeable sessions" → `[x]` with evidence above

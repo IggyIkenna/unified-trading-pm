@@ -322,10 +322,13 @@ volume.
       (\_filter_regular_session in DataLoader.load_candles, 6 tests). **MDPS write-gate session config DEFERRED** to
       next P0 item (zero-volume-bars replacement) — both changes touch the same MDPS write path; doing them together
       avoids double-edit.
-- [ ] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
+- [x] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
       writes 1440 zero-volume bars per non-tradeable day; flip to `record_empty(reason=EXPECTED_NON_TRADING_SESSION)`
       per workspace honest-absence rule. Manifest denominator math gets fixed automatically by the per-(venue, day)
-      session-typed expected universe.
+      session-typed expected universe. **SHIPPED 2026-05-15**: `MTDS@038a611` — added `non_trading_day_reason` import +
+      two-path `record_expected_empty` emission (early-return path for all-non-trading-day batches + finalization-block
+      path for mixed batches); used existing UAC `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` reasons (more precise than
+      generic `EXPECTED_NON_TRADING_SESSION`); 3 unit tests in `tests/unit/test_orchestrator_non_trading_session.py`.
 - [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
       empty reasons" section listing all 6 EXPECTED_NON_TRADING_SESSION sub-reasons (pre-market closed, post-market
       closed, weekend, holiday, half-day-early-close, partial-halt). NEW
