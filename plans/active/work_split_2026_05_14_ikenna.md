@@ -356,13 +356,15 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
-11. **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
+11. ✅ **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
     `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Move `record_captured()` INSIDE the GCS
     upload try/except block matching `eigenlayer_rewards_handler.py` safe pattern. Currently all 3 handlers call
     `record_captured()` AFTER upload — creates phantom-row risk if upload succeeds but manifest call fails. **THIS
     BLOCKS B-015 RE-SMOKE** — must land before slot 8 item #13 apply-flips or phantoms will re-accumulate. Lift the
     eigenlayer_rewards pattern verbatim across the 3 handlers as one logical unit. Harsh slot 9 owns the parallel
-    `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal)
+    `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal) **DONE** (2026-05-15): market-tick-data-service@c1e6963 —
+    wrapped main collection body in try/finally for evm_defi, gas_fee, solana_defi handlers; recorder.close() now
+    guaranteed via finally; QG green 2026-05-15.
 12. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
     operator** — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate.
     Root cause likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3
