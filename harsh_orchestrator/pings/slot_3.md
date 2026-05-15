@@ -432,3 +432,32 @@ Proceeding to items 5-10.
 [2026-05-15 session-6] slot-3 — 🏁 **CYCLE-CLOSE — all 10 items done**.
 Items 1-4 pre-done. Items 5+7: e2e@56bc8c8. Item 6: audit CLEAN. Items 8-10: strategy@e7f97f4 (21 tests).
 Slot 3 session-6 DONE.
+
+---
+
+[2026-05-15 session-7] slot-3 — **POST-OOM RECOVERY + UTL QG REPORT**.
+
+**Rebase/stash completed**:
+- PM: rebased → 0 behind LDR ✅
+- UTL: rebased → 0 behind LDR ✅
+- features-service: rebased → 0 behind LDR ✅
+- strategy-service: already current ✅
+- e2e-testing: 91 foreign whitespace+docs dirty files stashed (not slot-3's); repo 0 behind LDR ✅
+
+**UTL QG result** (operator requested after OOM fix `93ff771`):
+- 🟢 OOM fixed — QG completes without OOM (previously killed at 75 GB RSS)
+- 🔴 102 pre-existing test failures (NOT slot-3's work). Affected test areas:
+  - `test_bucket_naming.py` — AWS defi-purpose buckets (dex-pools, eigenlayer-rewards, pnl-store-defi)
+  - `test_protocol.py` — `ProtocolConfig.from_env()` returns BATCH when SERVICE_MODE=live set
+  - `test_constants.py` — market-data/features/execution bucket lookups
+  - `test_auth.py` — OIDC auth token tests (5 failures)
+  - `test_gcp_providers.py` + `test_gcp_secret_storage_build.py` — GCS upload/download
+  - `test_execution_config_schema.py` — DEX venue validation
+  - `test_testnet_contracts.py` — testnet registry
+  - `test_freshness_events.py` — VENUE_ZERO_INSTRUMENTS not in expected set
+  - ERROR: `test_usage_meter_sink.py` — import mismatch
+- Root cause candidates: `ebed394` (RuntimeMode re-export from UAC), `c80bfbf` (bucket_naming SSOT changes), `a7f140e` (StreamingParquetWriter March-27 conftest additions)
+- These failures exist at LDR HEAD `93ff771`. Not slot-3's responsibility. Routing to operator/main for triage.
+
+**Queue status**: All 10 items `[x]`. Queue EXHAUSTED.
+🏁 **Slot 3 session-7 CYCLE-CLOSE** — awaiting operator direction for next wave or reassignment.
