@@ -232,3 +232,17 @@ QG green on both repos. Ready for next queue.
 **Conflict rules**: deployment-api + deployment-ui = slot 7 OWNS; UAC = surgical only (Ikenna primary).
 
 Self-pivot through items 14 → 20. Ping STARTED + per-item DONE in this file.
+
+---
+
+🏁 **[2026-05-15 UTC] slot-7 — CYCLE-CLOSE: items 14-20 ALL DONE**
+
+- [x] 14. deployment-api VM health endpoint — deployment-api@921a5a8 (11 tests)
+- [x] 15. deployment-ui VM health badges — deployment-ui@213b8e9 (8 tests)
+- [x] 16. deployment-api cost aggregation GET /api/costs/daily — deployment-api@de84c7c (15 tests)
+- [x] 17. deployment-ui /ops/costs cost dashboard — deployment-ui@417d68c (8 tests, pnpm green)
+- [x] 18. deployment-api GET /api/vm/{vm_name}/events filter endpoint — deployment-api@a038145 (8 tests)
+- [x] 19. deployment-ui /ops/vms/:vmName VmEventsTimeline — deployment-ui@fb7baae (5 tests, pnpm green)
+- [x] 20. deployment-api Firebase auth integration tests — deployment-api@715ac1a (11 tests)
+
+QG green on both repos. Ready for next queue.
