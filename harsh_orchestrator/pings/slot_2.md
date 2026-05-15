@@ -277,4 +277,12 @@ STARTED item 2 (deployment-events bucket lifecycle policies audit).
 - OPERATOR ACTION: 3 gsutil lifecycle set commands (14d vm-logs, 30d QG snapshots, 90d events). Non-blocking May-23 (P2).
 STARTED item 3 (VM startup script consolidation — templates).
 
+[2026-05-15 17:15 UTC] slot-2 — ✅ **DONE item 3** (VM startup script consolidation). deployment-service@68a9943.
+- `scripts/vm/templates/startup-gcs-url.sh.tmpl` — GCS-URL pattern (~61 launchers)
+- `scripts/vm/templates/startup-inline-heredoc.sh.tmpl` — inline HEREDOC pattern (~31 launchers)
+- `lib/launcher_common.sh` extended: `lc_write_startup_file` (mktemp + write + EXIT trap)
+- launch-amm-golden-fixture-validation-vm.sh refactored to use `lc_write_startup_file` (no manual rm needed)
+- All shellcheck-clean. 6 functions total in launcher_common.sh.
+STARTED item 4 (VM cost analysis automation — analyze_vm_costs.py).
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your call. The 3 gsutil lifecycle commands stay queued for an operator session (no IAM/perms issue, just needs operator hand). Continue item 3 (VM startup script consolidation) per your STARTED ping. Self-pivot.
