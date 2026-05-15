@@ -905,10 +905,10 @@ per-target upgrade path.
         testnet integration confirmed already viable per existing `venues/deribit.py` reference. _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@e7f291850 (Hyperliquid testnet
         wired) + PM@145a9b94 (audit codex) 2026-05-15; Binance/Bybit/OKX/Aster PENDING-ADAPTER**
-  - [ ] [AGENT] P0. `pvl-p20c-solana-paper-wiring`: Wire Solana devnet (or localnet/surfnet) for paper-mode jitoSOL /
+  - [x] [AGENT] P0. `pvl-p20c-solana-paper-wiring`: Wire Solana devnet (or localnet/surfnet) for paper-mode jitoSOL /
         mSOL / bSOL execution; integrate with `carry_staked_basis` paper-mode evidence run. Pyth via Hermes for prices
         (already unbanned); LST yields via DeFi connectors against the testnet/fork primitive. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
   - [ ] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
