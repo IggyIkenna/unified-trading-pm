@@ -111,6 +111,32 @@ Before slots start, main does:
 - strategy-service overlaps with slot 4 (general tests) — coordinate file-level
 - **Once VM launched, ping cross-side ledger** so Ikenna knows Harsh's APD half is in flight
 
+### Open questions
+
+#### Q1 — [slot-3, 2026-05-15 05:18 UTC] — B-016 BLOCKED: features-cefi bucket missing + colocated_engine wrong bucket name
+
+**Status**: 🟡 BLOCKED — awaiting operator direction on CeFi features pipeline run
+
+**Finding**: Sanity-checked the CeFi feature bucket per continuation_prompts item 1 instruction. Two issues found:
+
+1. **Code bug (fixed this session)**: `colocated_engine.py` `_FEATURE_BUCKETS["CEFI"]` = `"features-cefi-central-element-323112"` — this bucket does not exist (404). Correct canonical bucket via `resolve_bucket_name(cloud='gcp', kind='features-delta-one', asset_group='cefi')` = `features-delta-one-cefi-prd-central-element-323112`. Fix: change hardcoded string to resolve via UTL. **Fix committed this session (see SHAs when done).**
+
+2. **Data pipeline gap (not fixable without operator direction)**: Even with the correct bucket name, `features-delta-one-cefi-prd-central-element-323112` is **empty** — the CeFi delta_one features pipeline has never been run against prod GCS. The APD strategy requires `mid_price_{venue}` + `funding_rate_{venue}` features for all 6 perp venues. Without these, `on_tick()` receives empty feature dicts → 0 signals generated → 0 trades → backtest result is meaningless.
+
+**Impact**: Ikenna's Phase 2 ACK was based on the assumption that `features-cefi-central-element-323112` bucket existed with data. That assumption was incorrect (carried over from Phase 1 prereq item (e) which was 🟡 "assumed available"). The ACK is still valid in principle — the data EXISTS in MTDS tick form — but the features pipeline needs to be run first.
+
+**Unblock path**:
+- Run `python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date 2026-04-14 --end-date 2026-05-14`. This would populate `features-delta-one-cefi-prd-*` with the per-venue mid-price + funding-rate features APD needs.
+- Full 30-day window (2026-04-14 → 2026-05-14) = ≥1 week → needs **operator approval** per "Plans Run To Actual Completion" HARD RULE work-split rule.
+- Alternative: use a shorter ≤7-day smoke window first (e.g. 2026-05-07 → 2026-05-13) under ADC-admin pre-authorization.
+
+**Options presented to operator**:
+- (A) Approve full 30-day features-service CeFi batch (2026-04-14→2026-05-14) → launch B-016 Phase 2 after features populate (~1-2 hrs).
+- (B) Approve 7-day smoke (2026-05-07→2026-05-13) first → verify → approve full 30-day extension.
+- (C) Descope B-016 backtest window to ≤7 days (ADC-admin-authorized without extra approval) — shorter results but still meaningful for paper-readiness validation.
+
+**Status**: Pivoting to items 2-4 now. B-016 Phase 2 launch = `[BLOCKED-OPERATOR-DECISION — pinging operator via Q1]`.
+
 ---
 
 ## Slot 4 — Test Failures Absorption & Service Lifecycle Coverage

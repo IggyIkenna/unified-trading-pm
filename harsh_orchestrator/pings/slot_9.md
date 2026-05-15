@@ -4,6 +4,10 @@
 > Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
 > Format: `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 05:33 UTC] harsh-slot-9 — 🚨 BIG FINDING (P1): DeFi handler phantom risk is STRUCTURAL — `lst_rates_handler.py` (+ evm_defi/gas_fee/solana_defi) call `record_captured()` OUTSIDE the GCS upload try-block. After Ikenna's apply-flips, B-015 re-smoke will re-accumulate phantoms unless handler code hardened first. Issue: `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Recommend: hold re-launch until lst_rates hardened (~30 min). Awaiting operator direction.
+
+[2026-05-15 05:08 UTC] harsh-slot-9 — STARTED slot 9 (plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 9) — B-015 HOLD, pivoting to items 2-4: MTDS UAC facade audit + Helius RPC tests + DeFi handler readiness audit
+
 [2026-05-15 04:46 UTC] [main → slot 9] — RE-THEMED via --reset-slot.
 Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
 New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
