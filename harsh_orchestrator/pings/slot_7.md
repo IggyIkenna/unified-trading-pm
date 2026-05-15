@@ -39,6 +39,8 @@ Conflict rule: this is deployment-api + deployment-ui — those are YOUR repos u
 
 [2026-05-15 08:30 UTC] slot-7 — ✅ DONE queue items 2+3+4+5: deployment-api endpoint extensions — POST /api/ml/experiment/launch (ml-train- VM) + POST /api/strategy/backtest/launch (strategy-backtest-grid- VM) + POST /api/execution/backtest/launch (strategy-paper- VM) + GET /api/vm/events?since=<ts> — all QG green, 16 unit tests, deployment-api@f407c54 on live-defi-rollout. Plan Phase 9 checkboxes flipped.
 
+[2026-05-15 09:00 UTC] slot-7 — ✅ DONE queue item 6: GET /api/builds/history — TarballInfo (bucket + object_path) + image_tags per service; mock from workspace manifest; route registered before /{service} to avoid path conflict; 7 unit tests; QG green. deployment-api@b1ee896. Starting item 7: /ops/live-deployments UI route.
+
 [2026-05-15 07:41 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION** — add 3 more items after your 7-item endpoint batch. Total ~20 AI-days.
 8. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`. Each tab consumes its matching deployment-api endpoint from items 2-4 above. Done-def: 3 routes + pnpm build + vitest green.
 9. **deployment-ui DART terminal stub** — placeholder route `/dart` for DeFi archetype visualization + manual trade entry. Real-time state rendering can be skeleton; manual trade entry stub goes through execution-service same path as automation (NOT a side door). Done-def: route renders + skeleton component + checklist banner "operator-monitored window before automation flip".

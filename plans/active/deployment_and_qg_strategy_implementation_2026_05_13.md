@@ -430,7 +430,7 @@ Sourced from orchestrator ping [2026-05-15 07:36 UTC] 7-item queue.
 - [x] [AGENT] P0. **POST /api/strategy/backtest/launch** — fires `launch-strategy-backtest-grid-vm.sh`; `(archetype, start_date, end_date, grid_density, force, dry_run)` → vm_name `strategy-backtest-grid-{slug}-{ts}`. Unit tests (6) + QG green. — _deployment-api@f407c54_
 - [x] [AGENT] P0. **POST /api/execution/backtest/launch** — fires `launch-strategy-paper-vm.sh`; `(archetype, tick_interval, continuous, force, dry_run)` → vm_name `strategy-paper-{slug}-{ts}`. Unit tests (5) + QG green. — _deployment-api@f407c54_
 - [x] [AGENT] P0. **GET /api/vm/events?since=\<ts\>** — added `since: str | None` ISO 8601 param to existing endpoint; `_parse_since()` helper; date/from_hour params ignored when since set. Unit tests (3 new) + QG green. — _deployment-api@f407c54_
-- [ ] [AGENT] P0. **GET /api/builds/history** — tarball + Docker-image lineage endpoint. Done-def: endpoint + tests + QG green.
+- [x] [AGENT] P0. **GET /api/builds/history** — tarball + Docker-image lineage endpoint. Done-def: endpoint + tests + QG green. — _deployment-api@b1ee896_
 - [ ] [AGENT] P0. **/ops/live-deployments UI route** — deployment-ui new route; Live-services panel showing running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds.
 
 ## Done definition
