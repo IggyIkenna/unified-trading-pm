@@ -635,15 +635,18 @@ returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
 
 **Scope**: Replace the React in-memory `PromoteWorkflowProvider` with real backend calls.
 
-- [ ] [AGENT] P0. **Update
+- [x] [AGENT] P0. **Update
       [`unified-trading-system-ui/components/promote/promote-workflow-context.tsx`](../../../unified-trading-system-ui/components/promote/promote-workflow-context.tsx)**
       — `useRecordPromoteWorkflow()` callback now POSTs to `/promote/{strategy_id}/{manifest_id}` (Phase U3 endpoint).
-- [ ] [AGENT] P0. **Update
+      (ui@76f9e186 — TokenCtx + useBackendPromoteWorkflow hook; token injected via promote-workflow-bridge.tsx)
+- [x] [AGENT] P0. **Update
       [`unified-trading-system-ui/components/promote/promote-flow-modal.tsx`](../../../unified-trading-system-ui/components/promote/promote-flow-modal.tsx)**
       — `onPromote: (targetStage) => Promise<void>` resolves on backend response; UI shows optimistic state then
       converges via SSE/event-stream subscription to lifecycle events.
-- [ ] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
+      (ui@76f9e186 — strategy-detail-page-client.tsx onPromote calls real promoteCandidate(); modal already async-awaited)
+- [x] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
       read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests).
+      (ui@90896373 — paper-trading-tab + champion-challenger-tab wired to useStrategyRuns; 7 non-runs tabs unchanged)
 - [ ] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
 - [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI
       converges.
@@ -659,13 +662,17 @@ auto-launches via Phase 1 launcher → STARTED event observable in event archive
 **Scope**: Master plan `pvl-p23a` — DART surface in UTS-UI renders three views for any strategy archetype (batch / paper
 / live) wired to real backend.
 
-- [ ] [AGENT] P0. **Side-by-side comparison** — batch / paper / live P&L curves, fills blotter, events, position
+- [x] [AGENT] P0. **Side-by-side comparison** — batch / paper / live P&L curves, fills blotter, events, position
       trajectory, risk metrics in tri-pane canvas.
-- [ ] [AGENT] P0. **Per-mode views** pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current
+      (ui@0c9fb81a — DartThreeWayView: 3-pane batch/paper/live polling real backend every 30s)
+- [x] [AGENT] P0. **Per-mode views** pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current
       paper/live to add batch).
-- [ ] [AGENT] P0. **Shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply
+      (ui@0c9fb81a — DartThreeWayView has per-mode lane tabs; dart-terminal/page.tsx renders it)
+- [x] [AGENT] P0. **Shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply
       across all three lanes simultaneously.
-- [ ] [AGENT] P0. **Wired to real backend** (not mock fixtures) — each lane reads from Phase U2 mode-data API.
+      (ui@0c9fb81a — strategyId prop + limit apply uniformly across all 3 lanes per DartThreeWayView)
+- [x] [AGENT] P0. **Wired to real backend** (not mock fixtures) — each lane reads from Phase U2 mode-data API.
+      (ui@0c9fb81a — dart-client.ts fetchStrategyRuns calls /api/strategy/{id}/runs via apiFetch; mock handler for dev)
 - [ ] [SCRIPT] P0. **Playwright e2e** covers comparison rendering with real data per lane.
 
 **U5 done definition**: DART terminal renders 3-way for ≥1 archetype with real data; Playwright green.
@@ -675,10 +682,11 @@ auto-launches via Phase 1 launcher → STARTED event observable in event archive
 **Scope**: Master plan `pvl-p23c` — `ManualTradeGateDialog` component + execution-service unhold path. **Cutover-blocker
 for Group G item 23.**
 
-- [ ] [AGENT] P0. **`ManualTradeGateDialog` component** in unified-trading-system-ui:
+- [x] [AGENT] P0. **`ManualTradeGateDialog` component** in unified-trading-system-ui:
   - Renders pre-trade preview (margin / position-limit / worst-case loss / venue / instrument / size / direction).
   - Approve / Deny / Timeout (default 30s) buttons.
   - Emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events via deployment-api.
+  (ui@13b94ca9 — ManualTradeGateDialog with 1s poll, approve/reject per card, 3 vitest tests; dart-terminal wired)
 - [ ] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
       execution-service holds in manual-pending queue → on `MANUAL_APPROVED` event, unholds and executes; on
       `MANUAL_REJECTED` or timeout, drops + emits cancellation.
