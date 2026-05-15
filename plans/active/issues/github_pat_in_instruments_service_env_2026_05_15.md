@@ -113,3 +113,21 @@ GH_PAT=ghp_YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE
 - [ ] Git history rewritten (instruments-service) — coordinate with P0 GCP SA key rewrite
 - [ ] `.env.example` updated with placeholder value (not real token)
 - [ ] Collaborators notified to re-clone instruments-service (if history rewritten separately from P0)
+
+---
+
+## RESOLUTION UPDATE 2026-05-15 ~03:30 UTC (ikenna-main)
+
+**Revocation status: ALREADY DONE** — the leaked PAT returns HTTP 401 on auth:
+
+```
+$ curl -s -o /dev/null -w "HTTP %{http_code}" -H "Authorization: token ghp_QJOtg6NX..." \
+    https://api.github.com/user
+HTTP 401
+```
+
+The token is dead. The leaked credential in git history is invalid + grants no access. Security
+incident resolved on the credential side.
+
+**Remaining work — BFG history scrub** demoted to P3-hygiene per same rationale as the GCP SA key
+issue. Both will be batched into the same maintenance-window scrub successor task.

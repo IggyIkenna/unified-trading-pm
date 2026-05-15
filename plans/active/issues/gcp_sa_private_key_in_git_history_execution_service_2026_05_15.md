@@ -177,3 +177,38 @@ Per-repo false positive summaries:
 - 2 `curl-auth-header` in `instruments-service/scripts/CLICKUP_GUIDE.md`: documentation example
 
 Only the SA JSON private key finding (and instruments-service GitHub PAT — separate issue) require action.
+
+---
+
+## RESOLUTION UPDATE 2026-05-15 ~03:30 UTC (ikenna-main)
+
+**Rotation status: ALREADY DONE** — the leaked key `e35fb0ddafe2cbc546e982a63b1c66131f0960e9` does NOT
+exist on the `cloudstorage@central-element-323112.iam.gserviceaccount.com` SA. Verified via:
+
+```
+$ gcloud iam service-accounts keys delete e35fb0ddafe2cbc546e982a63b1c66131f0960e9 \
+    --iam-account=cloudstorage@central-element-323112.iam.gserviceaccount.com \
+    --project=central-element-323112
+ERROR: NOT_FOUND: Service account key e35fb0ddafe2cbc546e982a63b1c66131f0960e9 does not exist.
+```
+
+The leaked credential in git history is therefore **invalid + grants no access**. The security
+incident is resolved on the credential side.
+
+**Remaining work — BFG history scrub** demoted from P0 to P3-hygiene:
+
+- 5 repos still have the (now-invalid) key file in git history.
+- Scrub is good hygiene but no longer time-sensitive (credential is dead).
+- Cost: force-push to LDR + main + staging on 5 repos; breaks 8 active agents' branches.
+- **Deferred to maintenance window** (operator-decision next quiet period — recommend Sat/Sun
+  off-hours).
+
+**Successor task**: file `git_history_scrub_maintenance_window_2026_05_XX.md` when scheduling
+the maintenance window. Until then, this issue stays open with status `DEFERRED-MAINTENANCE-WINDOW`.
+
+**SA permission audit** (for future reference — done while validating rotation): `cloudstorage@`
+SA has BROAD permissions (`bigquery.admin` / `storage.admin` / `cloudscheduler.admin` /
+`compute.instanceAdmin.v1` / `secretmanager.secretAccessor` / `run.admin`). The remaining 5 active
+keys on this SA are all from 2022-2026 with NO expiry — recommend operator audits + retires the
+oldest keys (`fe1dbc6a16b6`, `508598064df6`, `704322c4f4af` — all from 2022) as separate hardening
+task post-cutover.
