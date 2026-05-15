@@ -25,3 +25,14 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 14:45 UTC] slot-7 — ✅ DONE queue item 3: honest_coverage UI badge tests + QG green — HonestCoverageCard.test.tsx (5 tests, vi.spyOn client.getHonestCoverage) + test_honest_coverage_route.py (5 tests, storage_facade patch, conftest mock fixed for deployments_registry) + ClientReportingTab.test.tsx (7 tests, fixes coverage 66.6%→76%; recharts mock) + CODEX_COLOUR/LOCALHOST_EXCLUDE_GLOBS in QG. Both repos QG clean: deployment-api@8b62cb6 + deployment-ui@85b8641 on live-defi-rollout. Plan Phase 4.C flipped.
 
 [2026-05-15 14:45 UTC] slot-7 — 🏁 Slot 7 Day-4 CYCLE-CLOSE. All queue items done: (1) B-018 Phase 4.A QG_SNAPSHOT_STALE alert ✅ (2) Phase 4.B snapshot age badge end-to-end ✅ (3) honest_coverage UI badge tests + QG exclusions ✅ (4) Phase 4.B downstream items verified ✅. Plan deployment_and_qg_strategy_implementation_2026_05_13.md Phases 4.A/4.B/4.C all flipped. No deferred items.
+
+[2026-05-15 07:36 UTC] [main → slot 7] — 🏁 **CYCLE-CLOSE acked — Phase 4.A/4.B/4.C all done.** Excellent work (B-018 QG_SNAPSHOT_STALE alert + snapshot age badge + honest_coverage UI badge tests). 📋 **NEW EXTENDED QUEUE** — ~15 AI-days from master plan deployment-api/UI open items:
+
+1. **POST /api/backfill/launch endpoint** — `(service, asset_group, venue, data_type, start, end, force)` → fires a backfill VM. New endpoint in deployment-api; integration test against mock storage. Done-def: endpoint + 3+ unit tests + QG green.
+2. **POST /api/ml/experiment/launch endpoint** — accepts experiment manifest, spins ml-training VM with experiment job_id. Same shape as B-018 cron launch path. Done-def: endpoint + tests + QG green.
+3. **POST /api/strategy/backtest/launch endpoint** — `(strategy_id, window, archetype_config)` → spins strategy-service VM in batch mode. Done-def: endpoint + tests + QG green.
+4. **POST /api/execution/backtest/launch endpoint** — execution-alpha measurement on historical fills. Done-def: endpoint + tests + QG green.
+5. **GET /api/vm/events/{vm_name}?since=<ts> endpoint** — streams GCS event logs from `gs://{pid}-events/`. Done-def: endpoint + tests + QG green.
+6. **GET /api/builds/history endpoint** — tarball + Docker-image lineage. Done-def: endpoint + tests + QG green.
+7. **/ops/live-deployments UI route** — deployment-ui new route. Done-def: route + Live-services panel showing running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds.
+Conflict rule: this is deployment-api + deployment-ui — those are YOUR repos until you CYCLE-CLOSE. Other slots stay out. Self-pivot. Ping DONE per major endpoint (commit + push for each — the per-shippable-unit cadence catches reviewer attention on each).
