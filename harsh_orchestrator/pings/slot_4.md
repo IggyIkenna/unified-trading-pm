@@ -11,3 +11,8 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 04:18 UTC] [main → slot 4] — 🌅 **DAY-1 START (Lever 1+2)**. Read [`../../plans/active/continuation_prompts_harsh_2026_05_15.md`](../../plans/active/continuation_prompts_harsh_2026_05_15.md) § "Slot 4". Yesterday: B-006 ✅ + strategy Wave 4 ✅ (1582 passed). New theme = Test Failures Absorption & Service Lifecycle Coverage. Queue: (1) features-service per-family CLI lifecycle audit; (2) risk+execution lifecycle re-validation; (3) ml-inference Phase 6.6 emission policy coverage. Self-pivot.
 
 [2026-05-15 05:07 UTC] slot-4 — STARTED slot 4 (Test Failures Absorption & Service Lifecycle Coverage); beginning item 1: features-service per-family CLI lifecycle audit
+
+[2026-05-15 07:30 UTC] slot-4 — 🏁 **CYCLE-CLOSE slot 4**. All 3 queue items complete.
+  (1) features-service per-family lifecycle audit ✅ — 8 test_lifecycle_events.py files added (8 per-family CLIs); QG passed; pushed 8545412c.
+  (2) risk+execution re-validation ✅ — existing tests verified passing; no code changes needed.
+  (3) ml-inference Phase 6.6 emission policy ✅ — 7 new tests (TestFilterByEmissionPolicy ×4 + TestPartialOkNanFillOutcomes ×3); pre-existing batch_handler.py QG violations fixed (method size, DependencyFailure type, import patterns); QG passed; pushed 320ac6e.
