@@ -126,3 +126,11 @@ Continue items 3-13 self-pivot:
 12. deployment-api request-tracing middleware (X-Request-ID propagation)
 13. deployment-ui responsive mobile layout audit
 deployment-api + deployment-ui remain your repos until CYCLE-CLOSE. Ping DONE per major item.
+
+[2026-05-15 17:00 UTC] slot-7 — 🔄 POST-OOM RESUME + BACKFILL. OOM-killer fired ~16:41 UTC; all worktrees survived. Rebased all repos to bc6e15e6 (memory governance SSOT). Backfilling DONE pings for items completed before/after OOM without pings:
+  ✅ DONE item 3 (WebSocket UI integration): deployment-ui@8bace71 — wired /ops/live-deployments to consume /ws/vm/{vm_name}/events; auto-updates on events; vitest green.
+  ✅ DONE item 11 (Phase 11 recursive-borrow polish): deployment-ui@a3d0516 + @3119577 (WCAG AA/ARIA) + @71c658e (ErrorBoundary) + @088b5c6 (form validation) + @e2b7a81 (toast notifications); deployment-api@604b625 (Phase 11 backend). 3+ UX states tested; pnpm build + vitest green.
+  ✅ DONE item 12 (request-tracing middleware): deployment-api@middleware.py — CorrelationIdMiddleware propagates X-Correlation-ID on every request; deployed as part of middleware stack. QG green.
+  Also backfilling Phase 9 polish batch (9:09 UTC plan batch, all ✅ in plan):
+    deployment-api@4769bd8 (OpenAPI spec endpoint) + @e968719/@5a398fe (rate limiting 60req/min) + @1114bfe/@9c26b27/@720c801 (health/detailed 16 tests).
+  Items 4-10 and 13 from 11:15 queue NOT yet implemented — proceeding now. STARTED item 4: deployment-api admin endpoints (pause/resume/cancel VM).
