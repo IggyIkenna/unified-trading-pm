@@ -18,11 +18,26 @@
 ## Quality gates / tests — ONLY way to run them
 
 ```bash
-cd <repo> && bash scripts/quality-gates.sh    # uses repo .venv automatically; no activation
+cd <repo> && bash scripts/quality-gates.sh             # SHIP mode (default): autofix + check
+cd <repo> && bash scripts/quality-gates.sh --no-fix    # DIAGNOSTIC mode: check-only, zero file modifications
 ```
 
 **Never** run `pytest` directly — it picks the wrong venv. **Never** `pip install` — use `uv pip install`. **Never**
 activate `.venv-workspace` for tests (that's the IDE / general-Python venv).
+
+### Ship mode vs diagnostic mode (HARD RULE — choose intentionally)
+
+| Intent | Command | Behavior |
+| --- | --- | --- |
+| **Shipping work** (commit-bound) | `bash scripts/quality-gates.sh` | `FIX_MODE=true` (default) → `[1/6] AUTO-FIX` block runs `ruff format` + `ruff check --fix` **in-place**, then LINT + TYPECHECK + TESTS. Pick up the autofixed result in your commit. |
+| **Diagnostic / observation** (memory profiling, exploring failures, "what would CI see") | `bash scripts/quality-gates.sh --no-fix` | AUTO-FIX block **skipped**. Drift = fail. **Identical to CI behavior.** |
+| **CI** (`.github/workflows/python-quality-gates.yml`) | `bash scripts/quality-gates.sh --no-fix` | Same as diagnostic. Zero autofix. Drift = build fail. |
+
+**Why this matters** — incident 2026-05-15: an agent ran `bash scripts/quality-gates.sh` (ship mode) for a memory-diagnostic measurement. The AUTO-FIX block reformatted **350 unrelated files** in the worktree. The agent had to manually `git restore .` to avoid leaking foreign formatting changes into a commit (which would have collided with parallel agents editing the same files).
+
+**The rule**: if your purpose is anything OTHER than "I am about to commit these changes," use `--no-fix`. This includes: measuring memory, reproducing a failure, exploring `pytest` output, verifying CI parity, ad-hoc gate runs.
+
+(Note: `basedpyright` and `pytest` are check-only at all times — they don't have an autofix mode, so `--no-fix` only affects `ruff`. The semantic match still holds: locally autofix drift, in CI prove zero drift.)
 
 ## Commit + push + flip plan checkbox AS YOU SHIP each item (HARD RULE)
 
