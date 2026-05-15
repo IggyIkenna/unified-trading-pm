@@ -574,9 +574,12 @@ In-plan P0 (blocks Phase 5-8 implementation):
       window** must be encoded in kill-switch unwind timing budget. Bridge address
       `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — verify; HL has rotated bridges at least once in
       2024). (649142a6a execution-service 2026-05-15 — hyperliquid_bridge.py with deposit/withdraw/get_bridge_pending)
-- [ ] [strategy-service] **P0**. Variant naming decision: **single archetype `CARRY_RECURSIVE_BORROW_PERP_HEDGED` with
+- [x] [strategy-service] **P0**. Variant naming decision: **single archetype `CARRY_RECURSIVE_BORROW_PERP_HEDGED` with
       `perp_venue` config field** (already in Phase 2 schema proposal). No per-venue variant tarballs. Catalog
-      enumerates `perp_venue ∈ {HYPERLIQUID, BYBIT}` at cell-id level only.
+      enumerates `perp_venue ∈ {HYPERLIQUID, BYBIT}` at cell-id level only. **DONE 2026-05-15 (slot-3)**:
+      `unified-api-contracts@2b60a14` — `perp_venue: str | None` added to `ArchetypeConfig`; validated against
+      `get_perp_venues()` (rejects spot-only + unknown venues); `CARRY_RECURSIVE_BORROW_PERP_HEDGED` seed gets
+      `perp_venue="HYPERLIQUID"` (May-23 default). 6 new tests pass; basedpyright clean.
 - [ ] [strategy-service] **P0**. `PerpHedgeSizer` (Phase 7): pre-trade check against `_HYPERLIQUID_RULES` ($500k
       per-instrument cap) — block sizing that exceeds. Same for any Bybit per-position risk cap.
 - [ ] [risk] **P0**. Bybit counterparty cap policy: **cap Bybit notional at ≤50% of Hyperliquid leg for first 30 days
