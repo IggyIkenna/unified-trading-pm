@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 3 base-service.sh CI workflow. PM@21686e55 + alerting-service@05dec98: workspace-qg.yml.tmpl template created in workflow-templates/; rollout-workflow-templates.sh extended with .tmpl substitution support ({{DEP_REPOS}} from manifest); alerting-service wired as proof (dep_repos=unified-trading-library unified-api-contracts).
+
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 9 UTL changelog automation. UTL@505cc8a: scripts/generate_changelog.py — generates CHANGELOG.md from git log using conventional commits; grouped by feat/fix/refactor/perf/docs/test/ci/chore; supports --unreleased/--from/--to/--output; basedpyright clean.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 8 pyproject.toml workspace-wide audit. PM@54afee99: issue doc filed — 15 repos at line-length=100 (should be 120); 3 repos below 70% fail_under floor; 12 repos missing pyproject.toml; PM pyrightconfig on standard not strict. P1 mechanical fix: 15 repos need line-length update.
