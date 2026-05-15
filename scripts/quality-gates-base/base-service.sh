@@ -204,6 +204,9 @@ if [ "$RUN_TESTS" = true ]; then
     # PYTEST_WORKERS env var overrides when set (e.g. CI throttling or debugging).
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
     PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
+    # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
+    # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
+    PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
     # RUN_INTEGRATION=true: include tests/integration/ when the directory exists.
     # Repos without tests/integration/ run unit tests only — no failure, no skip.
     # Integration tests are library contract tests (no real GCS/network calls).
@@ -220,7 +223,7 @@ if [ "$RUN_TESTS" = true ]; then
     trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
 
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
-        if ! $PYTHON_CMD -m pytest tests/unit/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+        if ! $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
             cat "$_pytest_log"
             exit 1
         fi
@@ -229,7 +232,7 @@ if [ "$RUN_TESTS" = true ]; then
             log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
         fi
     else
-        if ! $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+        if ! $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
             cat "$_pytest_log"
             exit 1
         fi
