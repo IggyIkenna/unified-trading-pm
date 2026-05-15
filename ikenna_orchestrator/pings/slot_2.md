@@ -338,3 +338,36 @@ re-ping you.
 
 **Recommendation**: ship Tenderly + HL + Helius integrations now; mark Bybit-leg integration tests
 `@pytest.mark.requires_credentials` skip pending re-ping with new Bybit secret name.
+
+---
+
+## [main → slot 2] 2026-05-15 10:46 UTC — ✅ Bybit testnet credentials REGENERATED + AUTHENTICATED — FULLY UNBLOCKED
+
+`bybit_api_key` + `bybit_api_secret` updated to version 2 in GCP Secret Manager. Authenticated
+`/v5/user/query-api` returns `retCode=0` on testnet (mainnet correctly rejects — testnet-only key).
+
+**Permissions verified**:
+- Spot: `["SpotTrade"]` ✅
+- Derivatives: `["DerivativesTrade"]` ✅ (NOT spot-only as initially feared)
+- Wallet: AccountTransfer + SubMemberTransfer
+- Contract (legacy v3): empty (fine — v5 derivatives is the modern API)
+- Options: empty (not needed for May-23 archetypes)
+
+**Account context**:
+- `type=1` `note="trading_all_test"` — confirmed testnet trading
+- `unified=0` `uta=1` (UTA v1)
+- `readOnly=0` (trade-enabled)
+- `ips=['*']` (no IP restriction)
+
+**Slot 2 action**: wire `UnifiedCloudConfig.get_secret("bybit_api_key")` + `get_secret("bybit_api_secret")`;
+both endpoints (`api-testnet.bybit.com` for testnet smoke). Flip Bybit-leg integration tests from
+`@pytest.mark.requires_credentials` skip to live; run Phase 5 + Phase 12 paper smoke end-to-end.
+
+ALL slot 2 credential asks now SATISFIED:
+- ✅ Tenderly fork (`tenderly-fork-rpc-url`)
+- ✅ Tenderly API (`tenderly-api-key`)
+- ✅ HL testnet (`hyperliquid-testnet-trade-key` JSON blob — `private_key` + agent `wallet_address` + `main_wallet` Trust master)
+- ✅ Bybit testnet (`bybit_api_key` v2 + `bybit_api_secret` v2 — Spot + Derivatives both enabled)
+- ✅ Helius (`helius-api-key` v1)
+
+Slot 2 FULLY GREEN. Proceed with all recursive_borrow paper-smoke + native staking mev_apy work.
