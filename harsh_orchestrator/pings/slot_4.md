@@ -40,3 +40,10 @@ Queue:
 6. **Cross-repo test diagnostic backlog**: grep for `@pytest.mark.skip` without reason comments across features-service, instruments-service, execution-service; fix or file issue docs for each.
 7. **master plan `rdt-p4-workspace-qg`**: Run `bash scripts/quality-gates.sh` on the 5 repos touched by Phase 3 TradFi migration (instruments-service, market-tick-data-service, features-service, execution-service, risk-and-exposure-service). Report pass/fail per repo. File issue doc for any new failures.
 8. Self-pivot to reserve if queue exhausts. Ping DONE per item or grouped — your call on granularity, but at minimum one ping per major milestone.
+
+[2026-05-15 13:30 UTC] slot-4 — 🏁 **CYCLE-CLOSE (Re-activate queue items 1-3)**. All 3 items complete.
+  (1) features-service per-family lifecycle coverage ✅ — 8 test files (3 tests each) confirmed passing; PM worktree rebased to c7786b2f fixing PYTEST_UNIT_DIR; QG now runs 5006+ tests; features@2afd4337.
+  (2) B-006 verification — risk + execution ✅ — both lifecycle test files read and confirmed complete (STARTED/STOPPED/FAILED coverage matches B-006 spec); both QGs passed (exit 0).
+  (3) ml-inference Phase 6.6 ✅ — TestPublishWithPolicyDecisionPassthrough (3 tests: PARTIAL_OK/NAN_FILL/STRICT_FAIL passthrough via publish_with_policy mock); QG passed 68s; ml-inference@d4f524b.
+  🚨 BIG FINDING: features-service QG now reveals 48 pre-existing volatility failures (3 root causes: VolatilityOrchestrationService→VolatilityFeaturesOrchestrator API change, live_data_source module deleted, xdist interference). Fixed 1 sports test (LookaheadBiasError update, features@7ef55a7f). Issue doc: plans/active/issues/features_service_volatility_test_failures_2026_05_15.md. Volatility failures need slot with volatility ownership — outside slot-4 scope.
+  Continuing with queue items 4-8.
