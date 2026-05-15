@@ -571,3 +571,19 @@ gate; item #26 is internal hygiene.
 ---
 
 [2026-05-15 18:56 UTC] slot-7 — STARTED Day-4 cycle. Starting item #1 (🔴 MAY-23 BLOCKER `sit_may23_critical_path_coverage_gaps_2026_05_15`) — 3 SIT scenario playbooks: defi_carry_staked_basis_paper + defi_apd_paper + defi_paper_to_live_early_gate. Plan-of-record: `plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`. Yesterday's items all flipped (backfilled by slot 1 main); item #23 confirmed flipped `PM@9e6fb19f`.
+
+[2026-05-15 19:20 UTC] slot-7 — STOPPING Day-4 cycle, all 9 work_split items closed. Summary:
+
+| # | Item | Status | Evidence |
+| - | --- | --- | --- |
+| 1 | 🔴 MAY-23 BLOCKER SIT critical-path scenarios | ✅ | system-integration-tests@3872ce2 (3 playbooks + dedicated test file + 28 tests pass) |
+| 2 | basefc_validation_flip items 1-5 | 🟡 PARTIAL | PM@082444d7 strategy decided (Option a); items 2-4 deferred (post-cutover P1, non-blocker) |
+| 3 | writegate Phase 6.6/6.7/6.9 α-vs-β audit | ✅ | PM@3a4afdc5 — β verdict confirmed, Gate 4 CLOSED |
+| 4 | audit_records_pb_1_2_3 Phase 2-3 | ✅ | verification flip — execution-service@51f1f879 + deployment-service@c3ac1c5 + AWS/GCP retention locks done 14-15 May |
+| 5 | client_reporting_pnl_attribution_mvp | ✅ | verification flip — 36/36 [x] |
+| 6 | compute_optimization Ikenna-half | ✅ | Phase 0/1/3 done; Phase 2 partial; Phase 4-5 Harsh/joint |
+| 7 | mock_data_pipeline_benchmarking Phase 8.A | ✅ | UTL@f942dc54 + benchmark_report ready; master-plan row update is slot 1 main territory |
+| 8 | data_status_drilldown finalize | ✅ | verification flip — 7 open items all DEFERRED with named successors |
+| 9 | context_fill_optimization Phase 1 | ✅ | verification flip — P0+P1 already shipped |
+
+Half-2 plan-flip discipline followed throughout: every code commit had a sibling docs(plans) flip in the same agent turn. LDR alignment confirmed: PM/features/SIT all `rev-list --count HEAD ^origin/live-defi-rollout = 0`.
