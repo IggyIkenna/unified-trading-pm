@@ -4,6 +4,14 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE item 10 zero-test silent pass guard sweep. All 15 B-014 service repos + SIT (16 total) have test_event_logging.py + test_config.py ✅. test_files range: 2 (ibkr-gateway-infra) → 543 (execution-service). Zero repos with 0 tests. No skeleton test_smoke.py needed anywhere.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE item 9 detect_template_drift.py. PM@68609e03: new tool at scripts/quality_gates/detect_template_drift.py; 11 unit tests passing. One-shot run: 24 repos checked, 18 clean, 6 warnings (5 stale lifecycle: alerting/mtds/ml-inference/ml-training/risk-exposure; 1 missing file: fund-administration-service). No errors. SSOT: usage python3 scripts/quality_gates/detect_template_drift.py [--repo NAME] [--json].
+
+[2026-05-15 UTC] slot-8 — ✅ DONE item 8 CLAUDE.md PYTEST_UNIT_DIR doc. PM@247c7b40: added 14-line block to CLAUDE.md § "Environment: Venv Split" explaining override pattern, trigger condition (<5% ratio), and SSOT pointer. Grep-able: "PYTEST_UNIT_DIR".
+
+[2026-05-15 UTC] slot-8 — ✅ DONE item 7 STEP 5.79-5.82 detailed reference. PM@7706072a: 4 new sections added to codex quality-gates.md. Each STEP now has: rationale, scope, ratchet date, compliant/non-compliant patterns, how-to-comply, composes-with. (5.79=dockerfile-base-pin, 5.80=tarball-manifest-present, 5.81=tarball-env-block, 5.82=image-build-on-staging-merge)
+
 [2026-05-15 UTC] slot-8 — ✅ DONE item 6 base-service.sh DRY proposal. PM@28ce4771: 3 findings documented in codex quality-gates.md § "quality-gates.sh Boilerplate DRY Consolidation Proposal". Finding 1: lifecycle block (15 lines) duplicated 14 repos; 5 repos on stale old pattern — proposal to move to base-service.sh PENDING OPERATOR ACK. Finding 2: PERIPHERAL_DIR stays per-repo (intended). Finding 3: PYTEST_UNIT_DIR opt-in pattern documented. No code changes made.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 5 batch_live L4/L5/L6 sweep (features+strategy+mtds). STEP 5.75-5.78 (L1/L2/L3/L5) all ✅ clean in all 3 repos. L4 deferred items catalogued: LIVE_FEATURES_COMPUTED/LIVE_SIGNAL_GENERATED in strategy-service (log_event strings); LIVE_FEATURE_SUBSET constant in features-service. Both are post-cutover per plan D5 default — NOT violations for current QG STEPs. L6 executor-factory: no violations found. No code changes needed.
