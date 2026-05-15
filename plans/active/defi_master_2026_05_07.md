@@ -420,12 +420,14 @@ these venues.
       UAC `data_type=perp_funding` shape). [AUDIT 2026-05-07: FRESH — required before forward-poll launcher works]
       **DONE** (2026-05-14): market-tick-data-service@78e3b28 — PACIFICA-SOLANA (REST, gated 2025-06-01) +
       LIGHTER-ZKSYNC (Tardis market_stats, gated 2026-04-17). EXTENDED-STARKNET BLOCKED-OPERATOR-DECISION (Item C).
-- [ ] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
+- [x] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
       `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py`. Verify whether Pacifica accepts
       JitoSOL / mSOL as cross-margin (live probe + docs check). YES → add row with haircut citation, unlocks
       `CARRY_STAKED_BASIS@jito-pacifica-solana-...` slot (auto-generates next catalog regen). NO → add explicit
       `accepted=False` row (matrix encodes negatives explicitly per audit spec). [AUDIT 2026-05-07: FRESH — HANDOVER
-      Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift]
+      Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift] **DONE** (2026-05-15): UAC@dbdeb16 —
+      PACIFICA-SOLANA: USDC accepted (primary margin); SOL/JitoSOL/mSOL explicit accepted=False (USDC-only linear perp,
+      no LST cross-margin per 2026-05-15 live probe + docs review).
 - [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
       Starknet event subgraph against the Extended Settlement contract — add `STARKNET_RPC_TEMPLATE` to UAC
