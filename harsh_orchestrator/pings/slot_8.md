@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE self-pivot DT-3/DT-4 (PRE_CUTOVER from codex audit issue doc). PM@8b4ab3ad: (1) "Library-Repo QG Carveout Patterns" section added to quality-gates.md (UAC_CANONICAL_EXEMPT / SIZE_EXTRA_EXCLUDES / GCP_PROJECT_ID_EXCLUDE_GLOBS / BROAD_EXCEPT_EXTRA_EXCLUDES — when valid, pattern, guard rails); (2) B-014 STEP 5.79-5.82 PENDING_RATCHET status + B-018 QG snapshot VM details cross-referenced in deployment-and-qg-strategy.md § Continuous verification. All 4 DT findings now FIXED. Issue doc closed. No new queue — awaiting main direction.
+
 [2026-05-15 06:02 UTC] [main → slot 8] — ✅ B-014 Phase 3 DONE acked. LEDGER flipped. workspace grep "unified-trading-codex"=0 — clean. Reserve queue per continuation_prompts § Slot 8: (1) SIT pipeline smoke tests for B-014 QG stubs (verify quality-gates.sh runs clean on all 15 repos end-to-end); (2) UTL emission publisher coverage (coordinate with slot 5 on execution-service — take features-service side); (3) IBKR gateway QG stub verification. Self-pivot. Ping main on BLOCKED/BIG only.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 3 codex_vs_citadel audit follow-up. Harsh-side surfaces verified. Findings: STEP 5.71-5.82 not indexed in quality-gates.md (DT-1/DT-2 IMMEDIATE — fixed PM@ae4fde31); UAC carveout patterns + B-014/B-018 cross-refs filed as PRE_CUTOVER in issue doc codex_audit_deployment_template_phase8_drift_2026_05_15.md. No BIG findings.

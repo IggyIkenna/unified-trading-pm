@@ -118,11 +118,9 @@ reference entry to deployment-and-qg-strategy.md's "Continuous verification" sec
 |---|---------|-------------|-------|-------|
 | DT-1 | STEP 5.79-5.82 table rows missing from quality-gates.md | IMMEDIATE | slot-8 | ✅ FIXED |
 | DT-2 | STEP 5.71-5.78 table rows missing from quality-gates.md | IMMEDIATE | slot-8 | ✅ FIXED |
-| DT-3 | UAC carveout patterns not documented in quality-gates.md | PRE_CUTOVER | slot-8 / governance | 🟡 OPEN |
-| DT-4 | B-014 + B-018 not cross-referenced in deployment-and-qg-strategy.md | PRE_CUTOVER | slot-8 / slot-2 | 🟡 OPEN |
+| DT-3 | UAC carveout patterns not documented in quality-gates.md | PRE_CUTOVER | slot-8 / governance | ✅ FIXED @PM@8b4ab3ad |
+| DT-4 | B-014 + B-018 not cross-referenced in deployment-and-qg-strategy.md | PRE_CUTOVER | slot-8 / slot-2 | ✅ FIXED @PM@8b4ab3ad |
 
-PRE_CUTOVER items (DT-3 + DT-4) may be folded into:
-- `plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` if post-cutover is acceptable
-- OR fixed directly in this cycle (each is a ~20-min codex doc edit) if slot 8 has reserve capacity
+All 4 DT findings closed. Issue doc archived — no remaining open items.
 
 **No BIG findings** (no data-correctness, no cross-repo architectural contradiction, no May-23 critical path impact).
