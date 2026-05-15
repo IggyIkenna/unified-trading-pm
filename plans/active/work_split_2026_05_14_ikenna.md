@@ -285,10 +285,14 @@ C).
    ~3 = 2.4 cal)
 5. **`tradfi_master_2026_05_07` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4 =
    4.8 cal)
-6. **`solana_defi_coverage_gaps` successor plan C** — Jito MEV / restaking integration design. (design 0.6×, ~4 = 2.4
-   cal)
-7. **`sports_retired_data_types_code_cleanup_2026_05_13` non-sports-half** — retire dead data_types from cross-cutting /
-   UAC side (slot 4 owns the sports producer half — coordinate handshake). (refactor 0.4×, ~3 = 1.2 cal)
+6. ✅ **`solana_defi_coverage_gaps` successor plan C** — Jito MEV / restaking integration design. (design 0.6×, ~4 = 2.4
+   cal) **DONE**: 5 Solana AMM/oracle adapters (Meteora/Phoenix/Jupiter/Lifinity/Pyth) + 78 tests — IS@5665de8 +
+   UAC@2dd984e + PM@d3b75916. All 25 plan checkboxes done.
+7. ✅ **`sports_retired_data_types_code_cleanup_2026_05_13` non-sports-half** — retire dead data_types from
+   cross-cutting / UAC side (slot 4 owns the sports producer half — coordinate handshake). (refactor 0.4×, ~3 = 1.2 cal)
+   **DONE**: UAC@5662ff5 — `TRANSFERMARKT_VALUES` removed from `SPORTS_DATA_TYPE_TO_SOURCE`; IS@2a024ab removed from
+   `_sports_per_league_entities`. Remaining open: deployment-api smoke-test validation (data-status panel renders
+   empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE for retired types — scheduled for next vm cycle).
 8. **`tradfi_master_2026_05_07` venue + symbology coverage audit** — cross-ref against
    `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal)
 9. ✅ **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
