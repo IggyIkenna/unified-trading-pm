@@ -282,3 +282,70 @@ rebase-on-reject.
 [2026-05-15 22:15 UTC] harsh-slot-9 — 🔄 STARTED MTDS market_interface 53-test-failure triage+fix (dispatch @17:20 UTC — missed during post-OOM resume). Running pytest on market_interface/unit/ to cluster root causes.
 
 [2026-05-15 22:35 UTC] harsh-slot-9 — ✅ DONE MTDS market_interface 53-failure triage+fix: mtds@1515170. 6 remaining failures resolved in 3 clusters — Cluster A (CME/OPRA fixtures missing expiry: 2 fixed), Cluster B (reader.py used "symbol" filter on prediction parquets that have "market_id": 3 fixed), Cluster C (Alchemy SOLANA now supported, test used wrong chain: 1 fixed + 1 new test). 1770 passed, 2 skipped, 0 failed in market_interface/unit. Issue doc updated. 🏁 CYCLE-CLOSE — queue empty.
+
+---
+
+## [2026-05-15 22:40 UTC] [main → slot 9] — 🟢 B-015 LAUNCH AUTHORIZED + 📋 ACTIVE QUEUE
+
+> 🏁 CYCLE-CLOSE acked — MTDS 53-test triage @ mtds@1515170 (outstanding work).
+>
+> **B-015 BLOCKED-OPERATOR-DECISION resolved (operator-acked)**: Ikenna's
+> greenlights from 09:30 + 11:25 UTC are still valid. Main verified no
+> existing `mtds-lst-rates-*` or `features-onchain-*` VMs are RUNNING in
+> central-element-323112 (only `manifest-consolidator-20260511-190513` +
+> `vm-zombie-watchdog-20260515-110711`). Expected wallclock: ~5-20 min
+> (lst_rates ~2.5min/5-day, features-onchain ~5-15min) — well under the
+> 2-hour ceiling operator set. **Launch both smoke VMs now.**
+
+### B-015 launch commands (unique VM_NAME + STARTED@60s monitoring per no-fire-and-forget rule)
+
+```bash
+# Smoke A — MTDS lst_rates
+VM_NAME=mtds-lst-rates-smoke-v2-20260515 MANIFEST_PER_VM_SHARDS=true \
+  bash deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh \
+  2026-04-15 2026-04-19
+
+# Smoke B — features-onchain
+VM_NAME=features-onchain-defi-smoke-v2-20260515 MANIFEST_PER_VM_SHARDS=true \
+  bash deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh \
+  2026-04-15 2026-04-19
+```
+
+After launch:
+1. Verify STARTED event in `gs://central-element-323112-events/events/...` within 60s.
+2. Watch event stream every 5-10 min for progress / FAILED.
+3. On both DONE: verify `gs://market-data-tick-defi-central-element-323112/lst_rates/day=2026-04-15..19/` and `gs://features-onchain-central-element-323112/` have new partitions. Spot-check a parquet (row count > 0, expected schema).
+4. Cross-side ping ikenna-main when both VMs complete + data verified — closes the B-015 paper-trade unblock.
+5. If FAILED: capture log, file issue doc, ping main.
+
+### Active queue — flip in-place `- [ ]` → `- [x] @ <sha>`
+
+#### Done this cycle (context)
+
+- [x] **0. MTDS market_interface 53-test-failure triage+fix** — mtds@1515170
+- [x] **MTDS items 7-11 of prior queue** — mtds@6a71ddf + mdps@9f7b1ab + mtds@14d212a + mtds@b1360a5 + audit clean
+- [x] **MTDS queue-extension items 11-13** — mtds@487c9d0 + mtds@7b8f6b6 + pm@7ef1651f
+
+#### Active (item 1 first, then 2-9, ~16 AI-days total)
+
+- [ ] **1. B-015 smoke VM launch + monitoring** — see commands above. Done-def: both VMs DONE + GCS data verified + cross-side ping to Ikenna posted in `_agent_pings.md`.
+
+- [ ] **2. emerging_perp_adapters_diagnosed close-out** (P0) — [`plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md`](../../plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md). HYPERLIQUID `fetch_trades` Tardis branch + ASTER URL fix. Done-def: 2 adapters fixed + MTDS QG green.
+
+- [ ] **3. mtds_defi_handler_perf_benchmark_gap close-out** (P2) — [`plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md`](../../plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md). Either mark RESOLVED (per the "no action for May-23" note) OR build the perf harness. Done-def: doc closed OR harness shipped.
+
+- [ ] **4. MTDS data_status_reporter coverage** — per-data_type per-asset_group rows + edge cases (zero-row day, partial day, schema-drift day). Done-def: 4+ tests + MTDS QG green.
+
+- [ ] **5. PBM canonical_writer integration tests with MTDS** — prior audit was CLEAN (pm@7ef1651f); add explicit integration tests proving MTDS → PBM honors archetype-grain partitioning end-to-end. Done-def: 3+ integration tests + PBM QG green.
+
+- [ ] **6. MTDS Solana handler retry policy** — `_get_with_retry` from prior cycle (mtds@dcd6f5f). Audit: Helius timeouts? rate-limit (429)? blockhash invalidation? Done-def: 4+ retry scenarios + MTDS QG green.
+
+- [ ] **7. MTDS eigenlayer handler coverage extension** — post-hardening safe-pattern tests + edge cases. Done-def: 4+ tests + MTDS QG green.
+
+- [ ] **8. PBM mode parity — degraded conditions** — extend mdps@3f72029 baseline parity to schema parity under NaN rows / late-arriving data / schema drift. Done-def: 3+ degraded-condition tests + PBM QG green.
+
+- [ ] **9. MTDS lst_rates handler — additional LST tokens audit** — current 13 EVM + 2 Solana. Newer tokens (ezETH, weETH variants, sanctumSOL)? Done-def: audit report + 1-2 tokens added (or doc-only).
+
+**Conflict rules**: MTDS = slot 9 (you); PBM = slot 9 (you); features-service = slot 4/9 (slot 4 priority); UAC = surgical only (Ikenna primary); deployment-api = slot 7.
+
+Self-pivot through items 1 → 9. **Item 1 (B-015 VMs) FIRST**, then 2-9. Ping STARTED + per-item DONE in this file.
