@@ -647,7 +647,9 @@ returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
 - [x] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
       read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests).
       (ui@90896373 — paper-trading-tab + champion-challenger-tab wired to useStrategyRuns; 7 non-runs tabs unchanged)
-- [ ] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
+- [x] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
+      (deployment-api@b5a24a0 demote→REGRESSED + override→ADVANCED endpoints; ui@6e705085 bridge fires
+      demote/override backend calls fire-and-forget; Promote was already wired ui@76f9e186)
 - [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI
       converges.
 
