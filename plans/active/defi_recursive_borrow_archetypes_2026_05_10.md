@@ -943,8 +943,9 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
       strategy-service 2026-05-15)
 - [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
       scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
-- [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
-      tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
+- [x] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
+      tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. (01fb8d73 features-service
+      2026-05-15)
 - [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
       spec above.
 - [ ] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
