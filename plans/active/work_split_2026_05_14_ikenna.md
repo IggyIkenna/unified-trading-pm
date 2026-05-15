@@ -456,8 +456,8 @@ risk-and-exposure lint.
    - P1 orchestrator sub-agent loop `[x]` (`PM@1a056988`). P2 (relocate .claude/rules — lowest-impact) deferred per plan
      body; Phase 1 scope complete.
 8. ✅ **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — close out shard-atom alignment per the
-   shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal) — PM@163da45a: plan P2 closeout `[x]`
-   (Phase 3 shipped; remaining deferred items have named successors). Backfilled 2026-05-15.
+   shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal) — PM@163da45a: plan P2 closeout `[x]` (Phase 3 shipped;
+   remaining deferred items have named successors). Backfilled 2026-05-15.
 9. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
    0.6×, ~3 = 1.8 cal) — strategy-service@8b20a32: Phase 1 wire-results-aggregation complete; \_write_csv() +
    summary.csv output + 24 tests pass (30d smoke + unit CSV roundtrip)
@@ -496,18 +496,19 @@ risk-and-exposure lint.
     hardening. (design 0.6×, ~2 = 1.2 cal) — execution-service@5bf0ae522. **Backfilled 2026-05-15.**
 22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
     green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
-24. **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** — features-onchain
-    `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. (a) COMPOUND_V3 `borrow_apy` is NaN
-    in all 64 rows of `gs://features-onchain-defi-prd-central-element-323112/.../day=2026-04-03/feature_group=lending_rates/`;
-    AAVE_V3 rows correctly populate fractional borrow_apy. Root cause: COMPOUND V3 uses different IRM (base rate +
-    utilization curve, not AAVE reserve-factor model); handler hasn't implemented it. (b) COMPOUND_V3 `asset` column
-    stores Comet contract address (e.g. `0x9c4ec768...`) instead of token name (e.g. `WETH`). (c) KAMINO Solana lending
-    handler missing entirely — P2, depends on Helius credential (already filed). **Fix scope (P1 COMPOUND only)**:
+23. **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** —
+    features-onchain `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. (a) COMPOUND_V3
+    `borrow_apy` is NaN in all 64 rows of
+    `gs://features-onchain-defi-prd-central-element-323112/.../day=2026-04-03/feature_group=lending_rates/`; AAVE_V3
+    rows correctly populate fractional borrow_apy. Root cause: COMPOUND V3 uses different IRM (base rate + utilization
+    curve, not AAVE reserve-factor model); handler hasn't implemented it. (b) COMPOUND_V3 `asset` column stores Comet
+    contract address (e.g. `0x9c4ec768...`) instead of token name (e.g. `WETH`). (c) KAMINO Solana lending handler
+    missing entirely — P2, depends on Helius credential (already filed). **Fix scope (P1 COMPOUND only)**:
     features-service COMPOUND_V3 handler computes `borrow_apy` from Comet IRM (`baseBorrowMin` + utilization curve) +
     normalizes asset via instruments-service lookup or hardcoded ETH-mainnet Comet→token registry. Start with Ethereum
     WETH Comet (`0xA17581A9E3356d9A858b789D68B4d866e593aE94`); USDC Comet is secondary. KAMINO defers post-May-23.
     (research 1.2×, ~3 baseline = 3.6 cal)
-25. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+24. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 
@@ -913,17 +914,17 @@ density-push absorption — every slot has a deep stack.
 Pulled from top remaining plans in the inventory dashboard (regenerated 2026-05-14 12:14 UTC, 580 cal total, 77 plans).
 Each slot picks up its v2 items AFTER its main stack lands; this is overflow, not replacement.
 
-| Slot         | V2 item                                                                                                                                                                                                                                 | Plan                                                                               | Cal     |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------- |
-| 2            | **`defi_catalogue_chain_primitives_2026_05_10` push** — remaining 21 open todos (currently 47/68, 63.5 cal left); split into 2-3 batches and ship                                                                                       | `defi_catalogue_chain_primitives_2026_05_10.md`                                    | +9      |
-| 3            | **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna-half** (15.0 cal total; instruments_live_master May-23 deadline) — DeFi instrument live-pipeline activation                                                                      | `live_pipeline_mtds_mdps_features_2026_05_08.md`                                   | +9      |
-| 4            | **`topology_qgroup_gap_closure_2026_05_09` (9.6 cal, May-23)** + **`simulation_scenarios_topology_price_shocks_2026_05_09` sports-half subset**                                                                                         | `topology_qgroup_gap_closure_2026_05_09.md` + topology shocks                      | +9      |
-| 5            | **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting subset** — pull TradFi + cross-asset-group sequencing items (plan is 123.5 cal total; Ikenna takes the cross-cutting cap of ~9, rest stays Harsh-side cefi_master) | `code_freeze_migrate_backfill_sequencing_2026_05_10.md`                            | +9      |
-| 6            | **`api_keys_wallets_accounts_readiness_2026_05_10` more Phase 8 items** (40.0 cal left, 33/87, May-23) + **`alerting_service_live_rules_2026_05_07` close** (4.5 cal, 43/65, May-23)                                                    | api_keys_wallets + alerting_service_live_rules                                     | +9      |
-| 7            | **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (13.4 cal, 17/30) + **`mtds_per_instrument_download_api_2026_04_24`** (3.3 cal, 6/19) + **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7)                  | 3-plan parallel: cross_cutting deliverables + mtds per-instrument + mdps streaming | +9      |
-| 8            | **`deployment_and_qg_strategy_implementation_2026_05_13`** (12.3 cal, 20/52) + **`hard_schema_enforcement_2026_05_08`** (4.8 cal) + **`gcs_migration_bundle_pipeline_mode_2026_05_08`** (4.8 cal, May-15 deadline)                      | deployment_and_qg + hard_schema_enforcement + gcs_migration_bundle                 | +9      |
-| 9            | **`writegate_honest_coverage_endtoend_2026_05_06` Phase 6.9 expanded scope** (12.6 cal, 117/246) + **`expected_universe_v2_design_2026_05_08`** (3.6 cal) + **`deploy_missing_auto_launch_2026_05_07` close** (4.1 cal, 6/14)           | writegate Phase 6.9 + expected_universe_v2 + deploy_missing_auto_launch            | +9      |
-| **Total V2** |                                                                                                                                                                                                                                         | (8 implementer slots × +9)                                                         | **+72** |
+| Slot         | V2 item                                                                                                                                                                                                                                                                   | Plan                                                                               | Cal     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------- |
+| 2            | **`defi_catalogue_chain_primitives_2026_05_10` push** — remaining 21 open todos (currently 47/68, 63.5 cal left); split into 2-3 batches and ship                                                                                                                         | `defi_catalogue_chain_primitives_2026_05_10.md`                                    | +9      |
+| 3            | **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna-half** (15.0 cal total; instruments_live_master May-23 deadline) — DeFi instrument live-pipeline activation                                                                                                        | `live_pipeline_mtds_mdps_features_2026_05_08.md`                                   | +9      |
+| 4            | ✅ **`topology_qgroup_gap_closure_2026_05_09` Phase 7 DONE** (PM@a0ed7a31 — Q-doc archived, Phase 7 checkbox flipped) + **`simulation_scenarios_topology_price_shocks_2026_05_09` sports-half subset** (4.D DEFERRED-PER-USER, not actionable without operator direction) | `topology_qgroup_gap_closure_2026_05_09.md` + topology shocks                      | +9      |
+| 5            | **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting subset** — pull TradFi + cross-asset-group sequencing items (plan is 123.5 cal total; Ikenna takes the cross-cutting cap of ~9, rest stays Harsh-side cefi_master)                                   | `code_freeze_migrate_backfill_sequencing_2026_05_10.md`                            | +9      |
+| 6            | **`api_keys_wallets_accounts_readiness_2026_05_10` more Phase 8 items** (40.0 cal left, 33/87, May-23) + **`alerting_service_live_rules_2026_05_07` close** (4.5 cal, 43/65, May-23)                                                                                      | api_keys_wallets + alerting_service_live_rules                                     | +9      |
+| 7            | **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (13.4 cal, 17/30) + **`mtds_per_instrument_download_api_2026_04_24`** (3.3 cal, 6/19) + **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7)                                                    | 3-plan parallel: cross_cutting deliverables + mtds per-instrument + mdps streaming | +9      |
+| 8            | **`deployment_and_qg_strategy_implementation_2026_05_13`** (12.3 cal, 20/52) + **`hard_schema_enforcement_2026_05_08`** (4.8 cal) + **`gcs_migration_bundle_pipeline_mode_2026_05_08`** (4.8 cal, May-15 deadline)                                                        | deployment_and_qg + hard_schema_enforcement + gcs_migration_bundle                 | +9      |
+| 9            | **`writegate_honest_coverage_endtoend_2026_05_06` Phase 6.9 expanded scope** (12.6 cal, 117/246) + **`expected_universe_v2_design_2026_05_08`** (3.6 cal) + **`deploy_missing_auto_launch_2026_05_07` close** (4.1 cal, 6/14)                                             | writegate Phase 6.9 + expected_universe_v2 + deploy_missing_auto_launch            | +9      |
+| **Total V2** |                                                                                                                                                                                                                                                                           | (8 implementer slots × +9)                                                         | **+72** |
 
 **Note on `code_freeze_migrate_backfill_sequencing_2026_05_10` (slot 5 v2)**: this plan is 123.5 cal total and owned by
 cefi_master (Harsh-side). Ikenna takes only the **cross-cutting subset** (~9 cal) — TradFi-side migration sequencing
