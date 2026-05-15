@@ -116,3 +116,157 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 | Address registry     | UAC testnet_contracts.yaml                |
 | Preflight validation | execution-service AAVEConnector.connect() |
 | Backtest simulation  | execution-service flash_loan_simulator.py |
+
+---
+
+## Extended receiver — RecursiveLeverageReceiver (action-encoder, Phase 4)
+
+### Why a second contract?
+
+The passthrough `FlashLoanReceiver` cannot execute supply/borrow/swap inside `executeOperation()` — it only approves
+repayment. For atomic recursive-borrow opening (Family 1 + Family 2 of
+[`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)),
+the receiver must loop through an encoded action sequence (`bytes[]`) calling Aave Pool / UniswapV3 Router / WETH9
+inside the callback. The two contracts coexist:
+
+- `FlashLoanReceiver` — passthrough. Used by liquidation-capture archetypes that don't recurse.
+- `RecursiveLeverageReceiver` — action-encoder. Used by `CARRY_RECURSIVE_BORROW_LENDING_ONLY` +
+  `CARRY_RECURSIVE_BORROW_PERP_HEDGED` orchestrators.
+
+### Source location
+
+```
+deployment-service/contracts/RecursiveLeverageReceiver.sol
+```
+
+### Security model
+
+Tighter than the passthrough — three layers:
+
+1. `msg.sender == POOL` + `initiator == OWNER` (same as passthrough)
+2. Target whitelist: only `pool`, `uniswapRouter`, `weth9` addresses (set at deploy time, immutable)
+3. Selector whitelist: only `supply` / `borrow` / `repay` / `withdraw` (Aave) + `exactInputSingle` / `exactOutputSingle`
+   (Uniswap V3) + `deposit` / `withdraw` (WETH9)
+4. `nonReentrant` modifier on the `executeOperation` entrypoint
+5. Owner-only `sweep(token, recipient)` for accidental token transfers
+
+Custom errors: `TargetNotAllowed`, `SelectorNotAllowed`, `ActionFailed(idx)`,
+`InsufficientRepaymentBalance(owed, balance)`, `ReentrancyDetected`.
+
+### Constructor signature
+
+```solidity
+constructor(address pool, address uniswapRouter, address weth9)
+```
+
+The three addresses are checksum-validated then stored as immutables — re-deployment required to change any of them.
+
+### Deployed addresses
+
+| Chain    | Chain ID | Address                                                                                                                         | Deploy commit | Tx                                                                                                                    |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Sepolia  | 11155111 | [`0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`](https://sepolia.etherscan.io/address/0x668BC0C59F434D7cE2498416E7eF9095b840c7cF) | `602feaf`     | [`0x5c299e9f...`](https://sepolia.etherscan.io/tx/0x5c299e9f3e64c5179d81b8e26a695ab4f12392064f416ee22df205b0492aeab6) |
+| Mainnet  | 1        | _pending — deploy via `deploy-recursive-leverage-receiver.sh --chain ethereum`_                                                 | _pending_     | _pending_                                                                                                             |
+| Base     | 8453     | _pending — deploy via `deploy-recursive-leverage-receiver.sh --chain base`_                                                     | _pending_     | _pending_                                                                                                             |
+| Tenderly | 1 (fork) | _per-fork ephemeral — written to `e2e-testing/scripts/configs/tenderly.env` by `setup-tenderly.sh`_                             | _per-fork_    | _per-fork_                                                                                                            |
+
+Addresses are registered in:
+
+- **UAC**: `unified_api_contracts/internal/architecture_v2/flash_loan_receiver.py` `FLASH_LOAN_RECEIVER_REGISTRY`
+  (filter `receiver_kind="recursive_leverage"`)
+- **Secret Manager**: `recursive-leverage-receiver-sepolia` in `central-element-323112`
+- **Tenderly fork**: written to `e2e-testing/scripts/configs/tenderly.env` as
+  `RECURSIVE_LEVERAGE_RECEIVER_TENDERLY=0x...`
+
+### Deployment runbook
+
+```bash
+# Sepolia — credentials auto-fetched from Secret Manager
+cd deployment-service
+source .venv/bin/activate
+bash scripts/deploy-recursive-leverage-receiver.sh --chain sepolia
+
+# Mainnet — same shape, ≥0.05 ETH required in wallet
+bash scripts/deploy-recursive-leverage-receiver.sh --chain ethereum
+
+# Base — same shape, ≥0.02 ETH on Base required
+bash scripts/deploy-recursive-leverage-receiver.sh --chain base
+
+# Tenderly fork — explicit RPC + private key, mainnet pool/weth/router
+bash scripts/deploy-recursive-leverage-receiver.sh \
+  --rpc-url "$TENDERLY_FORK_RPC_URL" \
+  --chain-id 1 \
+  --private-key "$DEFI_WALLET_PRIVATE_KEY" \
+  --pool-address "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2" \
+  --weth-address "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" \
+  --swap-router-address "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+```
+
+The shell wrapper calls `scripts/deploy_contract.py --contract RecursiveLeverageReceiver` which:
+
+1. Compiles with solc 0.8.20, evm_version=paris (broad compat — no PUSH0)
+2. Sends EIP-1559 deploy tx (maxFee = 2× baseFee + 2 gwei priority)
+3. Waits 300s for receipt
+4. Verifies bytecode present at deployed address via `eth_getCode`
+5. Writes address to `--output` file + stdout
+
+After deploy, copy the address into:
+
+1. The Secret Manager secret for that chain (`recursive-leverage-receiver-<chain>`)
+2. `FLASH_LOAN_RECEIVER_REGISTRY` row for that chain (replace placeholder; commit + push)
+
+### Runtime resolution (executor-side)
+
+`RecursiveLoopOrchestrator.flash_open()` resolves the address by:
+
+1. Query `FLASH_LOAN_RECEIVER_REGISTRY` filtered by `(chain, protocol=AAVE_V3, receiver_kind=recursive_leverage)`
+2. Validate on-chain: `eth_getCode(address)` non-empty
+3. Use as `params.receiver` in `Pool.flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referralCode)`
+
+If no row matches or bytecode missing → raises `RECURSIVE_RECEIVER_NOT_DEPLOYED` (FAIL prefix in `DefiErrorCode`
+taxonomy).
+
+### CI integration
+
+```yaml
+# In integration-test.yml — Tenderly fork stage
+- name: Setup Tenderly fork + deploy both receivers
+  run: bash e2e-testing/scripts/defi/setup-tenderly.sh
+  # Deploys FlashLoanReceiver AND RecursiveLeverageReceiver; addresses
+  # written to e2e-testing/scripts/configs/tenderly.env
+
+- name: Run recursive-borrow integration tests
+  env:
+    TENDERLY_RPC_URL: ${{ steps.setup.outputs.rpc }}
+    RECURSIVE_LEVERAGE_RECEIVER: ${{ steps.setup.outputs.recursive_addr }}
+  run: |
+    cd execution-service && bash scripts/quality-gates.sh
+```
+
+### Verification commands
+
+```bash
+# Check deployed contract state via Web3 (after deploy)
+python3 -c "
+from web3 import Web3
+w3 = Web3(Web3.HTTPProvider('https://eth-sepolia.g.alchemy.com/v2/\$ALCHEMY'))
+addr = '0x668BC0C59F434D7cE2498416E7eF9095b840c7cF'
+abi = [
+  {'inputs': [], 'name': 'OWNER', 'outputs': [{'type': 'address'}], 'stateMutability': 'view', 'type': 'function'},
+  {'inputs': [], 'name': 'POOL', 'outputs': [{'type': 'address'}], 'stateMutability': 'view', 'type': 'function'},
+]
+c = w3.eth.contract(address=addr, abi=abi)
+print('OWNER:', c.functions.OWNER().call())
+print('POOL :', c.functions.POOL().call())
+"
+```
+
+Expected: `OWNER` matches the deploy wallet (`0x992ebFe04DB05f964C45BCE3D73Ca4c81715a79f` for our setup); `POOL` matches
+the chain-specific Aave V3 pool.
+
+### Plan reference
+
+- Phase 4 of
+  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+- See also [`recursive-leverage-receiver-deploy-runbook.md`](recursive-leverage-receiver-deploy-runbook.md) for the full
+  operator runbook (owner / cadence / verifier / last_executed metadata).
