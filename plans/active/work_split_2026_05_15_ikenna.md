@@ -275,8 +275,13 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
 7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup.
    (infra 0.8×, ~3 = 2.4 cal)
 8. **Cluster B pnl-attribution-service lint sweep**. (refactor 0.4×, ~2 = 0.8 cal)
-9. **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — verify scheduler-fire post operator-ran
-   setup script + per-day output. (infra 0.8×, ~2 = 1.6 cal)
+9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped
+   canonical `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision:
+   independently built Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue
+   doc flipped at `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler
+   fire on 2026-05-16 00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`.
+   Backfill of pre-cron dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC).
+   (infra 0.8×, ~2 = 1.6 cal)
 10. **Reserve**: in-stack pickup for any UAC drift surfacings.
 
 ---
