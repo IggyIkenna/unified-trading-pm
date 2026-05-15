@@ -310,7 +310,10 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    named successors per "Deferred work after 2026-05-13" table (download-csv → Phase 3 SmartDownloadButton;
    Playwright → operator-doable; canonical_question_group → predictions Plan A; cross-registry test → predictions
    Plan A; rollup metric → infrastructure_master). No additional work this session. (research 1.2×, ~3 = 3.6 cal)
-9. **`context_fill_optimization_2026_05_14` Phase 1**. (research 1.2×, ~2 = 2.4 cal)
+9. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — already finalised yesterday per work_split_2026_05_14
+   item 7: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines / 25.3KB) + P1 orchestrator sub-agent poll loop
+   `[x]` (`PM@1a056988`). Plan body P2 (relocate `.claude/rules/` per-repo) is lowest-impact, deferred per body
+   — outside Phase 1 scope. No additional work this session. (research 1.2×, ~2 = 2.4 cal)
 10. **Reserve**: in-stack pickup for SIT scenario surfacings.
 
 ---
