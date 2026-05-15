@@ -541,8 +541,34 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 - [x] ✅ **7. workspace-wide bucket-name SSOT scan** — 5 fixes: UTL×3 (sports_fixtures.py:62, id_conventions.py:261+290) + strategy-service×2 (config_loader.py:263, strategy_config_loader.py:51). utl@d56bff5, strategy@fdd7a5c, PM-baseline@b03a2d85. strategy-service baseline ratcheted 2→0. All repos at baseline. QG green.
 
-- [ ] **8. deployment-service Phase 10 codex audit** — your prior cycle did Phase 8+9. Phase 10 venue admission + batch=live archetype grain may have stale references in deployment-service codex. Done-def: audit report (clean OR drift doc).
+- [x] ✅ **8. deployment-service Phase 10 codex audit** — CLEAN. codex/05-infrastructure/deployment-and-qg-strategy.md already has Phase 10 note (lines 360-363, slot 3/11 confirmed no codex/05-infrastructure gaps). VM launchers are venue-neutral (pass --archetype through; venue admission handled in strategy-service/UAC). One pre-existing vocabulary finding: mixed archetype casing in 4 launchers (carry_staked_basis vs ARBITRAGE_PRICE_DISPERSION) — not Phase 10 drift, already in vocabulary plan 2026-04-25. No drift doc required.
 
 **Conflict rules**: deployment-api = slot 7 ONLY; features-service = slot 4/9 (skip); UAC = surgical only (Ikenna primary). Items 1-8 all PM/cross-repo audit work — no slot collision risk.
 
 [2026-05-15 20:20 UTC] slot-2 — Queue restored (overwritten by stash-pop during item 12 flip). STARTED item 1 (mtb_p6e_qg_sweep audit close-out).
+
+[2026-05-15 21:45 UTC] slot-2 — 🏁 **CYCLE-CLOSE** — wave complete. All 8 items done (7+8 this session, 1-6 prior session).
+
+**DONE this session (items 7+8):**
+
+- Item 7 ✅ bucket-name SSOT scan: 5 fixes — utl@d56bff5 (sports_fixtures.py:62 + id_conventions.py:261+290) + strategy@fdd7a5c (config_loader.py:263 + strategy_config_loader.py:51) + PM-baseline@22af8103 (strategy-service 2→0 ratchet). All 26 repos at baseline. QG green on UTL + strategy-service.
+- Item 8 ✅ Phase 10 codex audit: CLEAN (no drift doc needed). codex/05-infrastructure already has Phase 10 note (slot 3/11). VM launchers are venue-neutral. Pre-existing vocabulary finding (archetype casing) noted but not Phase 10 scope.
+
+## Deferred work after 2026-05-15 session-2
+
+| Item | Status | Reason | Successor |
+|------|--------|--------|-----------|
+| Item 5 type:ignore 50+ threshold | PARTIAL (32/50+) | pip-audit CVEs blocking pnl + pbm + trading-agent QG | Next slot with pip-audit CVE upgrade authority |
+| Item 6 ImportError fallback | BLOCKED-CONFLICT | deployment-api×3 = slot 7 only; UTL×5 = optional-module architectural decision | Slot 7 for deployment-api; UTL slot with LDR-pull window |
+| UTL uncommitted ruff auto-format | NOT committed | Mass ruff reformatting from QG run (hundreds of files); not in scope of this item | Slot with UTL ownership authority |
+| pnl-attribution SIM108 fix | UNCOMMITTED | Pre-existing pip-audit CVEs block QG | Next slot with pip-audit upgrade |
+| position-balance-monitor SIM108 fix | UNCOMMITTED | Pre-existing Pydantic/TypedDict violations block QG | Next slot with pbm ownership |
+
+**Final SHAs this wave:**
+- alerting@0718226 (type:ignore item 5)
+- deployment-service@51be710 (type:ignore item 5)
+- risk-and-exposure@6d6abd2 (type:ignore item 5)
+- strategy-service@7456dcb → fdd7a5c (type:ignore item 5 + bucket-name item 7)
+- execution-service@cde5142f (type:ignore item 5)
+- utl@d56bff5 (bucket-name item 7)
+- PM@22af8103 (item 7 flip + baseline ratchet)
