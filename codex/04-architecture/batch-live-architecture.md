@@ -201,21 +201,21 @@ must exclude MLTR from its scope.
 Current batch/live symmetry state across all pipeline services. Updated as part of
 `live_batch_protocol_completeness_2026_03_10` plan + post-A.6 fix (execution-service is batch+live, not batch-only):
 
-| Service                        | Code | Batch Handler           | Live Handler           | `--mode` CLI flag | Test Coverage       | Notes                                                                                                                                                                                                             |
-| ------------------------------ | ---- | ----------------------- | ---------------------- | ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| features-service (commodity family)     | FCS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Wired in `cli/main.py` (p1-todo-05)                                                                                                                                                                               |
-| features-service (volatility family)    | FVS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
-| features-service (onchain family)       | FOS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
-| features-service (sports family)        | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is future work (p1-todo-10)                                                                                                                                                                          |
-| market-tick-data-service       | MTDS | `DownloadBatchHandler`  | n/a (download-only)    | batch             | unit: batch handler | Download service — no live streaming mode                                                                                                                                                                         |
-| market-data-processing-service | MDPS | `process_candles`       | `LiveModeHandler`      | batch / live      | parser tests        | Lazy-imported; wired via `_mode_dispatch`                                                                                                                                                                         |
-| instruments-service            | INS  | `InstrumentsBatchMode`  | n/a (catalogue-only)   | batch             | parser tests        | `--run-mode` renamed to `--mode` (p1-todo-09); see §9 instruments-live exception                                                                                                                                  |
-| strategy-service               | STR  | `StrategyBatchHandler`  | `StrategyLiveHandler`  | batch / live      | unit: both modes    | `LiveHandler` facade added (p1-todo-13)                                                                                                                                                                           |
-| ml-inference-service           | MLIN | `BatchInferenceHandler` | `LiveInferenceHandler` | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
-| ml-training-service            | MLTR | `TrainingHandler`       | **EXEMPT**             | batch only        | unit: batch handler | Batch-only by design (see exemption above)                                                                                                                                                                        |
-| execution-service              | EXS  | `MatchingEngineHandler` | `ExecutionLiveHandler` | batch / live      | unit + integration  | Batch = matching engine fills (UAC `BatchExecutionMode`); live = real venue. Per CLAUDE.md "Batch = Live: Unified Pipeline Architecture" — execution alpha = live fills P&L − simulated fills P&L (see §6 below). |
-| risk-service                   | RSK  | `RiskBatchHandler`      | `RiskLiveHandler`      | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
-| alerting-service               | ALS  | n/a                     | `AlertingHandler`      | live only         | integration         | Event-driven only; no batch mode                                                                                                                                                                                  |
+| Service                              | Code | Batch Handler           | Live Handler           | `--mode` CLI flag | Test Coverage       | Notes                                                                                                                                                                                                             |
+| ------------------------------------ | ---- | ----------------------- | ---------------------- | ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| features-service (commodity family)  | FCS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Wired in `cli/main.py` (p1-todo-05)                                                                                                                                                                               |
+| features-service (volatility family) | FVS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
+| features-service (onchain family)    | FOS  | `BatchHandler`          | `LiveHandler`          | batch / live      | unit: both modes    | Pre-existing live handler                                                                                                                                                                                         |
+| features-service (sports family)     | FSS  | `BatchHandler`          | n/a (batch-first)      | batch             | unit: batch handler | Live handler is future work (p1-todo-10)                                                                                                                                                                          |
+| market-tick-data-service             | MTDS | `DownloadBatchHandler`  | n/a (download-only)    | batch             | unit: batch handler | Download service — no live streaming mode                                                                                                                                                                         |
+| market-data-processing-service       | MDPS | `process_candles`       | `LiveModeHandler`      | batch / live      | parser tests        | Lazy-imported; wired via `_mode_dispatch`                                                                                                                                                                         |
+| instruments-service                  | INS  | `InstrumentsBatchMode`  | n/a (catalogue-only)   | batch             | parser tests        | `--run-mode` renamed to `--mode` (p1-todo-09); see §9 instruments-live exception                                                                                                                                  |
+| strategy-service                     | STR  | `StrategyBatchHandler`  | `StrategyLiveHandler`  | batch / live      | unit: both modes    | `LiveHandler` facade added (p1-todo-13)                                                                                                                                                                           |
+| ml-inference-service                 | MLIN | `BatchInferenceHandler` | `LiveInferenceHandler` | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
+| ml-training-service                  | MLTR | `TrainingHandler`       | **EXEMPT**             | batch only        | unit: batch handler | Batch-only by design (see exemption above)                                                                                                                                                                        |
+| execution-service                    | EXS  | `MatchingEngineHandler` | `ExecutionLiveHandler` | batch / live      | unit + integration  | Batch = matching engine fills (UAC `BatchExecutionMode`); live = real venue. Per CLAUDE.md "Batch = Live: Unified Pipeline Architecture" — execution alpha = live fills P&L − simulated fills P&L (see §6 below). |
+| risk-service                         | RSK  | `RiskBatchHandler`      | `RiskLiveHandler`      | batch / live      | unit: both modes    | Pre-existing                                                                                                                                                                                                      |
+| alerting-service                     | ALS  | n/a                     | `AlertingHandler`      | live only         | integration         | Event-driven only; no batch mode                                                                                                                                                                                  |
 
 ### Handler pattern reference
 
@@ -230,6 +230,23 @@ cli/handlers/
 
 The CLI entry point (`cli/main.py` or `cli/parser.py`) dispatches on `--mode batch|live` and constructs the appropriate
 handler. Business logic lives in the service engine, shared by both modes — only the 4 seams differ.
+
+### Archetype-grain batch=live status
+
+DeFi recursive-borrow archetypes map to the same engine class (`CarryRecursiveStakedEngine`) across all three family
+variants, controlled entirely by config flags — no separate live/batch code path per archetype:
+
+| Archetype                                        | Engine class                 | `perp_leg_enabled` | `staking_yield_enabled`           | Batch fill source                        | Live fill source                  |
+| ------------------------------------------------ | ---------------------------- | ------------------ | --------------------------------- | ---------------------------------------- | --------------------------------- |
+| `CARRY_RECURSIVE_STAKED` (Family 0)              | `CarryRecursiveStakedEngine` | True               | True                              | Matching engine (AMMMatcher + L2Matcher) | Lido + Aave + HL perp             |
+| `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) | `CarryRecursiveStakedEngine` | False              | True (exchange-rate appreciation) | Matching engine (AMMMatcher)             | Aave + Uniswap V3                 |
+| `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2)  | `CarryRecursiveStakedEngine` | True               | False                             | Matching engine (AMMMatcher + L2Matcher) | Aave + Uniswap V3 + HL/Bybit perp |
+
+**Concentration-risk note**: `family=0+1+2` share the same E-Mode LST/WETH lending pool on Aave V3. A single risk-and-
+exposure-service `gross_notional` cap must bound the combined notional across all three family variants, not just
+per-archetype. `risk-and-exposure-service` recursive-position concentration rule: combined Family 0+1+2 Aave gross
+notional ≤ 20% of total portfolio equity. Tracked as Group G concentration-risk item in
+`master_to_live_defi_2026_05_23.md`.
 
 ### UX surface — how the symmetry shows up to the operator
 
@@ -296,23 +313,24 @@ Defined in UAC as `BatchExecutionMode` (`unified_api_contracts.internal.BatchExe
 
 The matching engine lives in `execution-service/execution_service/matching_engine/`. Book type matchers:
 
-| Matcher            | Category | Model                                           |
-| ------------------ | -------- | ----------------------------------------------- |
-| `L0Matcher`        | Sports   | Top-of-book (scraped bookmaker odds)            |
-| `L1Matcher`        | TradFi   | Trades with aggressor side                      |
-| `L2Matcher`        | CeFi     | Order book depth with 5 levels                  |
+| Matcher            | Category | Model                                                                                                                                                                                                                           |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `L0Matcher`        | Sports   | Top-of-book (scraped bookmaker odds)                                                                                                                                                                                            |
+| `L1Matcher`        | TradFi   | Trades with aggressor side                                                                                                                                                                                                      |
+| `L2Matcher`        | CeFi     | Order book depth with 5 levels                                                                                                                                                                                                  |
 | `AMMMatcher`       | DeFi     | Dispatch-by-`PoolShape` over `PoolMatcher` Protocol (V2 / V3 / V4 / Curve stable+crypto / Balancer weighted+boosted / Solana CLMM / Solidly-fork / aggregator) — see [`amm-slippage-simulation.md`](amm-slippage-simulation.md) |
-| `BenchmarkMatcher` | All      | Always fill at requested price (benchmark mode) |
+| `BenchmarkMatcher` | All      | Always fill at requested price (benchmark mode)                                                                                                                                                                                 |
 
-> **NOTE (2026-05-11 slot 6 design ship)**: pre-2026-05-11 `AMMMatcher` was a single constant-product
-> (`x*y=k`) matcher hardcoded to `UniswapV2Pool` at [`engine.py:471`](../../../execution-service/execution_service/matching_engine/engine.py). The Phase 2A refactor introduces dispatch by `pool.pool_shape` via a
-> `PoolMatcher` Protocol that all per-shape pool classes implement (`quote()` / `apply()` / `spot_price()` /
-> `snapshot()`). V2 / V3 / V4 pool classes already exist at `amm.py:52`, `:259`, `:403`; remaining 7 shape
-> classes (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork, aggregator) land
-> via `defi_simulation_realism_2026_05_10.md` Phases 2C-2H. The "Batch = Live" seam is `PoolMatcher.apply()`:
-> batch mutates in-memory pool snapshot; live submits tx to venue + reconstructs `FillResult` from on-chain
-> receipt. Full integration spec: [`amm-slippage-simulation.md`](amm-slippage-simulation.md) § "Matching-engine
-> end-to-end integration".
+> **NOTE (2026-05-11 slot 6 design ship)**: pre-2026-05-11 `AMMMatcher` was a single constant-product (`x*y=k`) matcher
+> hardcoded to `UniswapV2Pool` at
+> [`engine.py:471`](../../../execution-service/execution_service/matching_engine/engine.py). The Phase 2A refactor
+> introduces dispatch by `pool.pool_shape` via a `PoolMatcher` Protocol that all per-shape pool classes implement
+> (`quote()` / `apply()` / `spot_price()` / `snapshot()`). V2 / V3 / V4 pool classes already exist at `amm.py:52`,
+> `:259`, `:403`; remaining 7 shape classes (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM,
+> Solidly-fork, aggregator) land via `defi_simulation_realism_2026_05_10.md` Phases 2C-2H. The "Batch = Live" seam is
+> `PoolMatcher.apply()`: batch mutates in-memory pool snapshot; live submits tx to venue + reconstructs `FillResult`
+> from on-chain receipt. Full integration spec: [`amm-slippage-simulation.md`](amm-slippage-simulation.md) §
+> "Matching-engine end-to-end integration".
 
 ---
 
@@ -329,9 +347,9 @@ layer adds (or loses) relative to the idealised fill. Computed as:
 > must stay within tolerance of on-chain `Swap` events for the May-23 cutover archetypes. Owner-plan:
 > [`plans/active/defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md)
 > Phases 2 + 8C. Continuous-verification path: golden-set harness at
-> [`amm-slippage-simulation.md`](./amm-slippage-simulation.md) § "Golden test set harness" runs in
-> execution-service `scripts/quality-gates.sh` against the per-pool snapshot fixtures; tolerance gate fails the
-> matching-engine vs `Swap`-event delta out-of-band. Master-plan readiness checklist cross-link: Group B / B-13.
+> [`amm-slippage-simulation.md`](./amm-slippage-simulation.md) § "Golden test set harness" runs in execution-service
+> `scripts/quality-gates.sh` against the per-pool snapshot fixtures; tolerance gate fails the matching-engine vs
+> `Swap`-event delta out-of-band. Master-plan readiness checklist cross-link: Group B / B-13.
 
 ```
 execution_alpha = live_fills_pnl - benchmark_fills_pnl
@@ -477,16 +495,16 @@ clock-skew falls back to conservative latest-watermark (never emit beyond the sl
 
 ## §11 Per-asset-group batch/live docs
 
-Each asset group has its own narrative doc covering the group-specific matcher, shard atom, empty rules, and any
-domain quirks. All docs anchor on the invariants in §1-§4 above.
+Each asset group has its own narrative doc covering the group-specific matcher, shard atom, empty rules, and any domain
+quirks. All docs anchor on the invariants in §1-§4 above.
 
-| Asset group | Doc                                          | Status (2026-05-14)      |
-| ----------- | -------------------------------------------- | ------------------------ |
-| `cefi`      | [`cefi-batch-live.md`](cefi-batch-live.md)  | ✅ SHIPPED (Tab 1)        |
-| `defi`      | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending |
-| `tradfi`    | `tradfi-batch-live.md`                       | **POST-CUTOVER** (Tab 1 P2) |
-| `sports`    | §7 above covers sports-specific notes        | Inline (sufficient for May-23) |
-| `prediction`| `prediction-batch-live.md`                   | **POST-CUTOVER** (Tab 1 P2) |
+| Asset group  | Doc                                                                                               | Status (2026-05-14)                                        |
+| ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `cefi`       | [`cefi-batch-live.md`](cefi-batch-live.md)                                                        | ✅ SHIPPED (Tab 1)                                         |
+| `defi`       | DeFi-specific notes in §5 AMMMatcher + [`amm-slippage-simulation.md`](amm-slippage-simulation.md) | Partial — AMM matcher spec shipped; full narrative pending |
+| `tradfi`     | `tradfi-batch-live.md`                                                                            | **POST-CUTOVER** (Tab 1 P2)                                |
+| `sports`     | §7 above covers sports-specific notes                                                             | Inline (sufficient for May-23)                             |
+| `prediction` | `prediction-batch-live.md`                                                                        | **POST-CUTOVER** (Tab 1 P2)                                |
 
 ---
 
@@ -500,7 +518,7 @@ codifies how UI mode-context wires to the batch=live engineering invariant.
 ```typescript
 // Provider canonical — do NOT redeclare elsewhere in the UI codebase
 export const ExecutionModeContext = createContext<ExecutionModeContextValue>({
-  mode: "live",  // default
+  mode: "live", // default
   setMode: () => undefined,
   config: DEFAULT_MODE_CONFIG,
   isLive: true,
@@ -510,12 +528,14 @@ export const ExecutionModeContext = createContext<ExecutionModeContextValue>({
 ```
 
 **What is mode-driven in the UI**:
+
 - The `mode` value controls which time-slice the Data-Status API query uses (batch → historical shard; live → current
   live shard). The widget tree is IDENTICAL — only the query-key changes.
-- The mode-toggle in `deployment-ui` corresponds to `RuntimeMode` (batch vs live). It does NOT control
-  `OperationalMode` (live vs paper vs backtest) — that is a strategy-catalogue concern, not a data-pipeline concern.
+- The mode-toggle in `deployment-ui` corresponds to `RuntimeMode` (batch vs live). It does NOT control `OperationalMode`
+  (live vs paper vs backtest) — that is a strategy-catalogue concern, not a data-pipeline concern.
 
 **What is NOT mode-driven**:
+
 - Widget tree branching by mode (`<BatchDataStatus />` vs `<LiveDataStatus />`) — FORBIDDEN. Single component, mode
   prop.
 - New page routes per mode — FORBIDDEN. Mode is a filter, not a navigation axis.
@@ -525,7 +545,8 @@ export const ExecutionModeContext = createContext<ExecutionModeContextValue>({
 locally instead of importing from UAC. Tab 3 ships the fix (re-export from UAC). Until Tab 3 lands, UI uses its local
 copy. Do NOT propagate the local copy to new files.
 
-**SSOT for mode-axis semantics**: [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md).
+**SSOT for mode-axis semantics**:
+[`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md).
 
 ---
 
@@ -552,8 +573,11 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
 
 ## §14 References + cross-refs
 
-- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md` (post-cutover) · `prediction-batch-live.md` (post-cutover)
-- **Mode-axis discipline**: [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian product + anti-patterns)
+- **Per-asset-group batch/live docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · `tradfi-batch-live.md`
+  (post-cutover) · `prediction-batch-live.md` (post-cutover)
+- **Mode-axis discipline**:
+  [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian
+  product + anti-patterns)
 - **Live pipeline architecture**:
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) (MTDS
   standalone + MDPS+features-asset-scoped colocated topology, Redis Stream cascade)
