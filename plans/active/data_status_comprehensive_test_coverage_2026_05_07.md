@@ -175,17 +175,18 @@ orchestrator-skip flow.
 - [x] [deployment-api] P0. `tests/unit/test_deploy_missing_preview_routing_per_service.py` — for every service in
       `_SERVICE_LAUNCHER_SCRIPTS`, build a representative leaf row_key + assert the preview composes a shard-key
       consumable by that service's CLI handler. (deployment-api@3040a1b + deployment-api@8012a12 — test exists + passes)
-- [ ] [market-tick-data-service] P0. `tests/cli/test_shard_key_round_trip.py` — given the preview's emitted `shard_key`,
+- [x] [market-tick-data-service] P0. `tests/cli/test_shard_key_round_trip.py` — given the preview's emitted `shard_key`,
       run `decompose_shard_key()` on it and assert the recovered argparse Namespace matches the original row_key
-      field-for-field. Catches drift between the preview composer and the decomposer.
+      field-for-field. Catches drift between the preview composer and the decomposer. (MTDS@32960ad — test exists +
+      passes; 7 parametrized cases + 3 standalone tests)
 - [x] [deployment-api] P0. `tests/unit/test_deploy_missing_tarball_mode_command.py` — assert the `tarball-from-local`
       mode's command chains `create-code-tarballs.sh --all && launcher` (catches `&&` → `;` regression that would let
       the launcher run even when the tarball build fails). (deployment-api@6cfed38 — test exists + passes)
-- [ ] [deployment-api] P0. `tests/integration/test_deploy_missing_skip_already_captured.py` — using a fixture manifest
+- [x] [deployment-api] P0. `tests/integration/test_deploy_missing_skip_already_captured.py` — using a fixture manifest
       where one shard is `captured` and one is missing, run a simulated handler invocation with the shard-key targeting
       the captured shard; assert the orchestrator's `preflight_captured_atoms` skip path fires without re-fetching.
       Catches the user's 2026-05-07 directive: "service responds to it, respects it, and is run without --force so that
-      it skips already existing shards."
+      it skips already existing shards." (deployment-api@6ab227b — test exists + passes; 3 class tests + 3 parametrized)
 - [ ] [deployment-ui] P0. `tests/components/DeployMissingButton.test.tsx` — already partially shipped; extend with tests
       for the warning panel rendering on `tarball-from-local` mode + the mode-toggle re-fetch behavior.
 
