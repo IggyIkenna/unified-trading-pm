@@ -212,12 +212,15 @@ touched by this plan, enumerated.
 
 ## Phase 0 — Decision lock + Q-doc closeout (0.5 AI-days)
 
-- [ ] [PM] P0. Update
+- [x] [PM] P0. Update
       [`plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md`](../questions/defi_recursive_borrow_archetypes_2026_05_08.md):
       set `status: closed-spawned-plan`, `spawned_plan: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`,
       append a "Research summary 2026-05-09" section with the 4 sub-agent reports' headline findings + AD-1 through AD-6
-      decision calls.
-- [ ] [PM] P0. Add cross-plan coordination banners per the section above (4 banners).
+      decision calls. (Q-doc already had all fields + Research summary 2026-05-09 + AD-1..AD-6 table from prior session;
+      verified complete 2026-05-15)
+- [x] [PM] P0. Add cross-plan coordination banners per the section above (4 banners).
+      (7fe0e708 unified-trading-pm 2026-05-15 — 3 banners added; master_to_live_defi_2026_05_23.md Group F queued for
+      slot 1 in ikenna_orchestrator/_agent_pings.md)
 - [ ] [operator-ratify] P0. Operator confirms AD-1 through AD-6. (Not gating Phase 1 — Phase 1 is the lending-indices
       fix that's needed regardless of archetype shape — but gating Phase 2 onwards.)
 
