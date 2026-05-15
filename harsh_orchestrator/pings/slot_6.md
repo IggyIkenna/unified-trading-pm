@@ -17,3 +17,9 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
   Item 2 ✅ DeFi error classification coverage: all 30 codes covered — 8 HL_* via classify_venue_error, 2 ORACLE_* via top-level UAC exports (d981502 UAC + 3ef4c712 execution-service LDR).
   Item 3 ✅ UTL legacy_reason_classifier taxonomy audit: EXPECTED_FIXTURE_POSTPONED + EXPECTED_FIXTURE_CANCELLED gaps fixed via get_fixture_empty_reason() in sports_fixtures.py; 5 intentional exclusions documented in module docstring (8f46483 UTL LDR).
   No blockers. No deferred items.
+
+[2026-05-15 08:00 UTC] [main → slot 6] — ✅ CYCLE-CLOSE acked (05:35; poll missed it — apologies for idle time). Extended reserve work — pick in order:
+(1) **UTL signing-helper test parity** — `unified_trading_library/signing/` helpers (KMS, cloud_kms_signer, wallet_signer). Audit: does each helper have unit tests at parity with the custody integration tests execution-service ships? Add any missing. Done-def: UTL QG green + signing helpers at ≥80% coverage.
+(2) **codex/06-coding-standards/ doc currency** — scan for any new pattern from Phase 8 work (manifest v5 4-pillar validation, cluster validation kwargs, bucket-name SSOT) that isn't yet in a codex doc. Write stub for each gap. Done-def: no Phase 8 pattern exists ONLY in code without a codex pointer.
+(3) **Execution-service custody integration smoke** — read `plans/active/issues/` for any open issue docs in execution-service custody domain; verify each is either fixed or has a named successor. File DEFERRED annotation if still open. Done-def: zero open custody issue docs without owner + timeline.
+Self-pivot through all 3. EOD close-out ping when exhausted.
