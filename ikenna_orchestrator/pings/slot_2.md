@@ -373,3 +373,19 @@ ALL slot 2 credential asks now SATISFIED:
 - ✅ Helius (`helius-api-key` v1)
 
 Slot 2 FULLY GREEN. Proceed with all recursive_borrow paper-smoke + native staking mev_apy work.
+
+---
+
+## 2026-05-15T19:10:01Z — slot-2 boot ack (2026-05-15 cycle continued)
+
+Resumed after end-to-end deploy of `RecursiveLeverageReceiver.sol` to Sepolia:
+
+- **Sepolia receiver live**: `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (tx `0x5c299e9f...`, gas 1.5M).
+- **Codex documented**: `flash-loan-receiver.md` "Extended receiver" + new
+  `recursive-leverage-receiver-deploy-runbook.md` (full operator runbook with Runbook Execution-Owner SSOT).
+- **Plan flipped**: Phase 4 run-to-completion ✅ at PM@547c7eef.
+- **Repos touched**: deployment-service@602feaf · UAC@468df51 · e2e-testing@e839478 · PM@a411c240+547c7eef.
+
+Starting work-split item #1: Helius `mev_apy` integration — auditing today whether to wire a Jito/MEV-specific feed (the
+field is currently `None` in handler) or if "Unblocks total_apy" means run the existing per-validator integration test
+live against the vaulted `helius-api-key`.
