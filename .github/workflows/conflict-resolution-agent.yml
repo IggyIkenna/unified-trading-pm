@@ -75,8 +75,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           GH_ORG: IggyIkenna
+          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
+          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
           CALLING_WORKFLOW: conflict-resolution-agent
         run: |
           source unified-trading-pm/scripts/agents/claude-api-health-precheck.sh
@@ -107,8 +113,14 @@ jobs:
       - name: Classify Claude API error on failure
         if: failure()
         env:
+          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
+          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
           CLAUDE_TIMEOUT_FIRED: "true"
           REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
           SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
@@ -631,8 +643,7 @@ jobs:
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   # Stage 2: Notify validation failure (apply step failed)
   notify-validation-failure:
@@ -650,9 +661,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      GH_PAT: ${{ secrets.GH_PAT }}
+    secrets: inherit
 
   # Stage 3: Build the final result message and notify
   notify-result-build:
@@ -702,9 +711,7 @@ jobs:
       conclusion: ${{ needs.notify-result-build.outputs.conclusion }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      GH_PAT: ${{ secrets.GH_PAT }}
+    secrets: inherit
 
   notify-result-persist:
     name: Persist — Resolution Event

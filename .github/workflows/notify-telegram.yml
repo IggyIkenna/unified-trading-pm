@@ -31,9 +31,23 @@ on:
         required: false
         type: string
         default: ""
+    inputs:
+      env_name:
+        description: "Deployment environment: dev, staging, prod. Defaults to prod if not set."
+        required: false
+        type: string
+        default: ""
     secrets:
+      # Per-environment tokens (all optional; selection order: env-specific → TELEGRAM_BOT_TOKEN fallback)
+      TELEGRAM_BOT_TOKEN_PROD:
+        required: false
+      TELEGRAM_BOT_TOKEN_STAGING:
+        required: false
+      TELEGRAM_BOT_TOKEN_DEV:
+        required: false
+      # Legacy single-token fallback — kept for backward compat until all repos migrate to per-env
       TELEGRAM_BOT_TOKEN:
-        required: true
+        required: false
       GH_PAT:
         required: false
 
@@ -51,8 +65,17 @@ jobs:
     steps:
       - name: Build and send Telegram message
         env:
+          # Per-env secrets — all passed; script selects based on ENV_NAME
+          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
+          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
+          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          # Per-env chat IDs (vars): TELEGRAM_CHAT_ID_PROD, TELEGRAM_CHAT_ID_STAGING, TELEGRAM_CHAT_ID_DEV → fallback TELEGRAM_CHAT_ID
+          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          # Env selection: explicit input → derive from github.ref → default prod
+          INPUT_ENV_NAME: ${{ inputs.env_name }}
           GH_PAT: ${{ secrets.GH_PAT }}
           INPUT_MESSAGE: ${{ inputs.message }}
           INPUT_SEVERITY: ${{ inputs.severity }}
@@ -61,6 +84,29 @@ jobs:
           INPUT_CONCLUSION: ${{ inputs.conclusion }}
         run: |
           set -euo pipefail
+
+          # ── Resolve environment → select per-env token + chat ID ──
+          ENV_NAME="${INPUT_ENV_NAME:-}"
+          if [ -z "$ENV_NAME" ]; then
+            REF="${GITHUB_REF:-}"
+            if [ "$REF" = "refs/heads/main" ] || [ "$REF" = "refs/heads/live-defi-rollout" ]; then
+              ENV_NAME="prod"
+            elif [ "$REF" = "refs/heads/staging" ]; then
+              ENV_NAME="staging"
+            else
+              ENV_NAME="dev"
+            fi
+          fi
+
+          case "$ENV_NAME" in
+            prod)    RESOLVED_TOKEN="${TELEGRAM_BOT_TOKEN_PROD:-${TELEGRAM_BOT_TOKEN:-}}"
+                     RESOLVED_CHAT_ID="${TELEGRAM_CHAT_ID_PROD:-}" ;;
+            staging) RESOLVED_TOKEN="${TELEGRAM_BOT_TOKEN_STAGING:-${TELEGRAM_BOT_TOKEN:-}}"
+                     RESOLVED_CHAT_ID="${TELEGRAM_CHAT_ID_STAGING:-}" ;;
+            *)       RESOLVED_TOKEN="${TELEGRAM_BOT_TOKEN_DEV:-${TELEGRAM_BOT_TOKEN:-}}"
+                     RESOLVED_CHAT_ID="${TELEGRAM_CHAT_ID_DEV:-}" ;;
+          esac
+          echo "Telegram env: ${ENV_NAME}"
 
           # ── Pick emoji based on conclusion, then severity ──
           EMOJI=""
@@ -99,21 +145,21 @@ jobs:
 
           # ── Send to Telegram ──
           TELEGRAM_OK="false"
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+          if [ -n "${RESOLVED_TOKEN:-}" ] && [ -n "${RESOLVED_CHAT_ID:-}" ]; then
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              "https://api.telegram.org/bot${RESOLVED_TOKEN}/sendMessage" \
+              -d chat_id="${RESOLVED_CHAT_ID}" \
               -d text="${TEXT}" \
               -d parse_mode="HTML" || echo "000")
 
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
               TELEGRAM_OK="true"
-              echo "Telegram notification sent (HTTP $HTTP_CODE)"
+              echo "Telegram notification sent (HTTP $HTTP_CODE, env=${ENV_NAME})"
             else
-              echo "Telegram send failed (HTTP $HTTP_CODE)" >&2
+              echo "Telegram send failed (HTTP $HTTP_CODE, env=${ENV_NAME})" >&2
             fi
           else
-            echo "Telegram not configured (TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set)" >&2
+            echo "Telegram not configured for env=${ENV_NAME} (token or chat_id not set)" >&2
           fi
 
           # ── Fallback: create GitHub Issue on Telegram failure for CRITICAL/WARNING ──

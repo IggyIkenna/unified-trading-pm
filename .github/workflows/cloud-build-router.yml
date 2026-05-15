@@ -774,8 +774,7 @@ jobs:
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-health-check-failed:
     name: Telegram — Health Check FAILED
@@ -792,8 +791,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-smoke-test-failed:
     name: Telegram — Smoke Test FAILED
@@ -809,8 +807,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-emergency-resume:
     name: Telegram — Emergency Order Flow Resume
@@ -829,8 +826,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-regional-fallback:
     name: Telegram — Regional Fallback Used
@@ -848,8 +844,7 @@ jobs:
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-build-failed:
     name: Telegram — Build FAILED
@@ -868,8 +863,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-build-poll-exhausted:
     name: Telegram — Build Poll Exhausted
@@ -887,8 +881,7 @@ jobs:
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   notify-build-not-configured:
     name: Telegram — Build Trigger Not Configured
@@ -907,8 +900,7 @@ jobs:
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit
 
   persist:
     name: Persist — Cloud Build Event

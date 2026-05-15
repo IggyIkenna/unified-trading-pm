@@ -1,5 +1,36 @@
 # Slot 6 Ping Ledger
 
+## [slot 6 → OPERATOR] 2026-05-15 — Phase 6.A Telegram per-env SHIPPED; operator provisioning required
+
+**What shipped**: `notify-telegram.yml` reusable workflow upgraded to per-environment token selection. 34 PM workflow callers migrated to `secrets: inherit`. 3 workflow templates updated with env-detection. `secret-health-check.yml` updated to validate per-env tokens. `major-bump-issue-handler.yml` updated.
+
+**Operator actions required to activate per-env isolation**:
+
+1. **Create 2 new Telegram bots** (or reuse existing with separate tokens):
+   - Dev bot: `@UTSDevBot` → token for `TELEGRAM_BOT_TOKEN_DEV`
+   - Staging bot: `@UTSStagingBot` → token for `TELEGRAM_BOT_TOKEN_STAGING`
+   - Prod bot (existing): current `telegram-bot-token-prod` in SM → `TELEGRAM_BOT_TOKEN_PROD`
+
+2. **Set GitHub secrets** (org-level or per-repo) via:
+   ```bash
+   gh secret set TELEGRAM_BOT_TOKEN_PROD   --org IggyIkenna --body "<prod-token>"
+   gh secret set TELEGRAM_BOT_TOKEN_STAGING --org IggyIkenna --body "<staging-token>"
+   gh secret set TELEGRAM_BOT_TOKEN_DEV     --org IggyIkenna --body "<dev-token>"
+   ```
+
+3. **Set GitHub vars** (per-env chat IDs):
+   ```bash
+   gh variable set TELEGRAM_CHAT_ID_PROD    --org IggyIkenna --body "<prod-chat-id>"
+   gh variable set TELEGRAM_CHAT_ID_STAGING --org IggyIkenna --body "<staging-chat-id>"
+   gh variable set TELEGRAM_CHAT_ID_DEV     --org IggyIkenna --body "<dev-chat-id>"
+   ```
+
+**Backward compat**: legacy `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` remain as fallback until per-env secrets are provisioned. No breakage.
+
+**Plan checkbox**: Phase 6.A marked DONE-PARTIAL (scaffold shipped; awaiting operator bot provisioning).
+
+---
+
 ## [slot 6 → OPERATOR] 2026-05-15 UPDATE — 🔴 P0 SECURITY: GCP SA key in git history — SCOPE EXPANDED to 4 repos
 
 **Severity**: P0 — requires operator action ≤1h (key revocation) + ≤4h (history rewrite across 4 repos, operator-only).

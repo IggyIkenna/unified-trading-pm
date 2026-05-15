@@ -166,5 +166,4 @@ jobs:
       conclusion: "failure"
       workflow_name: "Change Freeze Check"
       run_url: ""
-    secrets:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    secrets: inherit

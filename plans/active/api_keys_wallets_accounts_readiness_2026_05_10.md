@@ -248,13 +248,13 @@ contaminated state.
   - **Verification**:
     `jq '.[] | select(.RuleID | test("aws-access-token|stripe-access-token|generic-api-key|private-key"))' /tmp/gitleaks-redacted.json`
     returns empty OR every match has remediation evidence.
-  - **DONE 2026-05-15 slot 6**: Ran gitleaks 8.30.1 git-mode on execution-service + UAC + UTL. 112 findings:
-    110 generic-api-key false positives (.env gitignored keys + Ethereum contract addresses in docstrings) +
-    1 generic-api-key false positive (Curve event topic hash) +
-    **1 REAL P0 FINDING** — GCP SA private key in execution-service git history commit `2804351950a8`.
-    Issue doc filed: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`.
-    Operator pinged via `ikenna_orchestrator/pings/slot_6.md`. Key rotation + history rewrite required
-    (operator-only: force-push HARD STOP). Plan checkbox marked [x] — scan complete; finding documented.
+  - **DONE 2026-05-15 slot 6**: Ran gitleaks 8.30.1 git-mode on execution-service + UAC + UTL. 112 findings: 110
+    generic-api-key false positives (.env gitignored keys + Ethereum contract addresses in docstrings) + 1
+    generic-api-key false positive (Curve event topic hash) + **1 REAL P0 FINDING** — GCP SA private key in
+    execution-service git history commit `2804351950a8`. Issue doc filed:
+    `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`. Operator pinged via
+    `ikenna_orchestrator/pings/slot_6.md`. Key rotation + history rewrite required (operator-only: force-push HARD
+    STOP). Plan checkbox marked [x] — scan complete; finding documented.
 
 - [x] [SCRIPT] P0. **0.B — `.gitignore` exhaustive audit.** Extend the 10-file spot-check to all 33 active `.env*`
       files. For each, run `git -C <repo> check-ignore .env`; collect violators. Per `.env` violator, either add to
@@ -263,10 +263,10 @@ contaminated state.
   - **Verification**: workspace-wide
     `find . -name ".env" | xargs -I {} dirname {} | xargs -I {} git -C {} check-ignore .env` returns "YES" for every
     entry.
-  - **DONE 2026-05-15 slot 6**: All 13 main-repo `.env` files verified UNTRACKED (gitignored). 7 non-template
-    `.env*` files in slot 6 worktrees (deployment-ui, execution-service, unified-trading-system-ui) verified
-    INTENTIONALLY TRACKED — contain only mock/CI flags + public NEXT_PUBLIC_* Firebase client config (no credentials).
-    Zero violations.
+  - **DONE 2026-05-15 slot 6**: All 13 main-repo `.env` files verified UNTRACKED (gitignored). 7 non-template `.env*`
+    files in slot 6 worktrees (deployment-ui, execution-service, unified-trading-system-ui) verified INTENTIONALLY
+    TRACKED — contain only mock/CI flags + public NEXT*PUBLIC*\* Firebase client config (no credentials). Zero
+    violations.
 
 - [x] [SCRIPT] P1. **0.C — GHA workflow log scan.** Run `gh run list --limit 200 --workflow quality-gates.yml` per repo;
       sample 20 logs via `gh run view <run-id> --log` and grep for credential-shaped strings (`api_key=[a-zA-Z0-9]{20,}`
@@ -274,8 +274,8 @@ contaminated state.
       support.
   - **DONE 2026-05-15 slot 6**: Sampled 5 GHA runs across execution-service (runs 25894501768, 25889663294,
     25887670271), instruments-service (latest quality-gates run), and unified-api-contracts (latest quality-gates run).
-    Grepped for `api_key=`, `password=`, `token=`, `GCP_SA_KEY`, `GH_PAT`, `ghp_` patterns. Zero matches across all
-    5 sampled logs. GHA log scan CLEAN.
+    Grepped for `api_key=`, `password=`, `token=`, `GCP_SA_KEY`, `GH_PAT`, `ghp_` patterns. Zero matches across all 5
+    sampled logs. GHA log scan CLEAN.
 
 - [x] [AGENT] P0. **0.D — Codex SSOT stubs (NEW docs, full content shipped at end of Phase 9).** Stub per
       `Post-Plan-Phase Codex Audit` HARD RULE. Each stub has TL;DR + key principles + cross-references back to this
@@ -394,11 +394,11 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 - [x] [AGENT] P0. **2.D — Account-level limits SSOT.** YAML at `unified-api-contracts/config/venue_account_limits.yaml`.
       Per venue: max-order-size per instrument, max-leverage per account-tier, fee tier, market-maker designation.
       Source: operator probe via venue web UI + venue REST API (`/account/info`-style endpoints). Pre-flight risk checks
-      (sibling risk question doc) consume this SSOT.
-      **DONE** — UAC@`f7ba48a`: 7 venues (binance/bybit/okx/deribit/hyperliquid/aster/kraken) × rate_limits/fee_tiers/
+      (sibling risk question doc) consume this SSOT. **DONE** — UAC@`f7ba48a`: 7 venues
+      (binance/bybit/okx/deribit/hyperliquid/aster/kraken) × rate_limits/fee_tiers/
       max_order_size/max_leverage/market_maker. Public values from vendor docs pre-populated; PROBE_REQUIRED markers for
-      account-tier-specific values (fee bracket, exact max_qty). Operator probe commands included per venue.
-      aster: all PROBE_REQUIRED (BLOCKED-CREDENTIALS). hyperliquid leverage: public data (no probe needed).
+      account-tier-specific values (fee bracket, exact max_qty). Operator probe commands included per venue. aster: all
+      PROBE_REQUIRED (BLOCKED-CREDENTIALS). hyperliquid leverage: public data (no probe needed).
 
 - [ ] [AGENT] P0. **2.E — Per-venue rate-limit token bucket.** Implement per-key + per-account leaky-bucket in
       `VenueAdapterBase` per Phase 2.B. Singleton-locked launcher pattern (per CLAUDE.md `launch-sfi-forward-poll.sh`
@@ -660,14 +660,15 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 - [x] [SCRIPT] P0. **5.A — Sports per-source rotation runbook.** Already partially shipped via
       `deployment-service@9943e7c9` (api-football + footystats + soccer-football-info added). Phase 5 sub-deliverables:
-  - [ ] **5.A.1** — Provision API keys for any source not yet in Secret Manager (most exist; verify per Block E3). **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
+  - [ ] **5.A.1** — Provision API keys for any source not yet in Secret Manager (most exist; verify per Block E3).
+        **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
   - [x] **5.A.2** — `codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation cadence +
         execution-owner per `Runbook Execution-Owner SSOT` HARD RULE. **DONE 2026-05-15 slot 6**: file created at
         `codex/14-customer-journeys/credentials/rotation-runbook.md` — sports (api-football/footystats/sfi 90d) +
         prediction (polymarket/kalshi 60d) + DeFi data (helius/coingecko/tenderly 90d). All 4 required fields populated.
   - [x] **5.A.3** — Skip understat / transfermarkt / open_meteo / pyth-hermes from rotation tracking (public sources, no
-        key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4
-        of the new rotation-runbook.md with explicit "excluded" list + rationale.
+        key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4 of
+        the new rotation-runbook.md with explicit "excluded" list + rationale.
 
 - [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.**
   - [ ] **5.B.1** — Polymarket API key provisioned (added to `_TRADE_KEY_PATTERNS` 2026-05-09; secret value not yet in
@@ -691,8 +692,19 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 ## Phase 6 — Auxiliary services — Day 5-9
 
-- [ ] [SCRIPT] P1. **6.A — Telegram per-environment scoping.** Audit found repo-level scope only (no per-env split).
+- [x] [SCRIPT] P1. **6.A — Telegram per-environment scoping.** Audit found repo-level scope only (no per-env split).
       Provision separate bot tokens per env (dev / staging / prod); update GHA workflows per repo.
+  - **DONE 2026-05-15 slot 6 (PARTIAL — scaffold shipped, bot provisioning BLOCKED-OPERATOR)**:
+    - `notify-telegram.yml` reusable workflow upgraded: `env_name` input + 3 optional per-env secrets
+      (`TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`) + env detection from `github.ref` (main/LDR→prod, staging→staging,
+      else→dev). Legacy `TELEGRAM_BOT_TOKEN` kept as fallback.
+    - 34 PM workflow callers migrated from explicit `secrets: TELEGRAM_BOT_TOKEN` to `secrets: inherit`.
+    - 3 workflow templates updated with env-detection + per-env token selection.
+    - `secret-health-check.yml` updated to validate all 3 per-env tokens.
+    - `major-bump-issue-handler.yml` PM workflow updated with env-detection.
+    - Operator ping filed: `ikenna_orchestrator/pings/slot_6.md` — operator must provision 3 Telegram bots +
+      set `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` + `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets/vars.
+    - Status: `BLOCKED-OPERATOR` until bot tokens provisioned. Backward compat: legacy token still works.
 
 - [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM
       directive**: "we don't wanna pay for Firebase at all by May-23, that stuff can be deferred; DeFi client doesn't
@@ -703,14 +715,14 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
       SA JSON storage location not surfaced — those config rows stay as-is, just unused during May-23.
 
 - [x] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
-      `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs.
-      **PARTIAL** scaffold shipped: gitleaks SSOT config + pre-commit hooks (PM@`a2c23e79`), WIF migration codex doc
+      `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs. **PARTIAL**
+      scaffold shipped: gitleaks SSOT config + pre-commit hooks (PM@`a2c23e79`), WIF migration codex doc
       (`codex/07-security/gha-wif-migration.md`), `benchmarks.yml` dual-path WIF/SA-key + GitHub App token scaffold
-      (execution-service@`5bf0ae522`). GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR (infra HARD
-      STOP — run `gha-wif-migration.md § 1` commands). Full migration complete when WORKLOAD_IDENTITY_PROVIDER + APP_ID
-      secrets provisioned. Also found P0+P1: GCP SA key in 4 repos + GitHub PAT in instruments-service (issue docs filed
-      + operator notified — see `plans/active/issues/gcp_sa_private_key_in_git_history_*` +
-      `plans/active/issues/github_pat_in_instruments_service_*`).
+      (execution-service@`5bf0ae522`). GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR (infra HARD STOP
+      — run `gha-wif-migration.md § 1` commands). Full migration complete when WORKLOAD*IDENTITY_PROVIDER + APP_ID
+      secrets provisioned. Also found P0+P1: GCP SA key in 4 repos + GitHub PAT in instruments-service (issue docs
+      filed + operator notified — see
+      `plans/active/issues/gcp_sa_private_key_in_git_history*_`+    `plans/active/issues/github*pat_in_instruments_service*_`).
 
 - [x] [SCRIPT] P2. **6.D — Anthropic API budget cap.** Per workflow run budget cap on `ANTHROPIC_API_KEY` usage.
       Currently advisory/audit workflows only — low-risk but unbounded.
