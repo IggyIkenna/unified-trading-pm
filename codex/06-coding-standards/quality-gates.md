@@ -449,6 +449,110 @@ classifications.
 
 ---
 
+## Library-Repo QG Carveout Patterns
+
+Library repos (UAC, UTL, etc.) use the same `base-library.sh` body as service repos but expose additional
+per-repo override variables to suppress false-positive QG checks on files that intentionally break the
+normal rules. These carveouts are in the repo's `scripts/quality-gates.sh` config stub above the
+`source base-library.sh` line.
+
+**These overrides are for library repos only.** Service repos must not use them — service code that needs a
+size or import exception should be refactored, not carved out.
+
+### `UAC_CANONICAL_EXEMPT=true`
+
+**What it disables**: The "no internal deep-imports" check that verifies service code never imports from
+`unified_api_contracts.canonical.*` directly (only through the public facade `from unified_api_contracts import ...`).
+
+**When valid**: Only for `unified-api-contracts` itself. UAC is the schema/contract owner — it must be allowed
+to import its own sub-modules internally.
+
+**Pattern (in `scripts/quality-gates.sh`)**:
+```bash
+UAC_CANONICAL_EXEMPT=true  # UAC is the schema repo — internal imports are allowed
+```
+
+**Never use for service repos.** Service deep-import violations (e.g. `from unified_api_contracts.canonical...`)
+must be fixed by switching to the facade import.
+
+---
+
+### `SIZE_EXTRA_EXCLUDES`
+
+**What it does**: Passes additional `! -path <glob>` exclusions to the file-size check so named files are
+not flagged for exceeding the 900-line limit.
+
+**When valid**: Closed-set enumerations — venue registries, error code tables, instrument seed catalogues,
+re-export facades — where splitting the file would harm grep-ability without reducing complexity. New files
+should not be added to this list unless they are provably closed-set enumerations.
+
+**Pattern**:
+```bash
+SIZE_EXTRA_EXCLUDES=(
+    "./unified_api_contracts/__init__.py"       # public re-export facade
+    "./unified_api_contracts/registry/defi_reserve_params.py"  # closed-set venue params
+    # ... additional closed-set registry files
+)
+```
+
+**Adding a new entry**: requires a comment explaining WHY the file is a legitimate exception (closed-set
+enumeration / generated / provenance doc). Without a comment, the PR is review-blocked.
+
+---
+
+### `GCP_PROJECT_ID_EXCLUDE_GLOBS`
+
+**What it does**: Passes additional exclusion globs to the `GCP_PROJECT_ID` literal-string check that
+prevents hardcoded project IDs appearing in source files.
+
+**When valid**: Files that contain GCS bucket names or project IDs purely as documentation — provenance
+comments, test-fixture URI shapes, or module-level string constants that document where live data lives.
+These are NOT runtime config paths; they never reach `get_storage_client()` or `resolve_bucket_name()`.
+
+**Pattern**:
+```bash
+GCP_PROJECT_ID_EXCLUDE_GLOBS=(
+    "!**/data_source_continuity.py"                 # VIX_PROD_BUCKET/VIX_DEV_BUCKET as constants
+    "!**/defi_prediction_instrument_seeds.py"       # docstring cites live GCS paths as provenance
+    "!**/registry/generators/cefi.py"               # real_backfill_sample_uri is doc of path shape
+)
+```
+
+**Never use to suppress actual runtime config.** Bucket lookups at runtime MUST go through
+`resolve_bucket_name(...)` (QG STEP 5.69 enforces). This carveout only covers static strings that are
+documentation artifacts, not lookup keys.
+
+---
+
+### `BROAD_EXCEPT_EXTRA_EXCLUDES`
+
+**What it does**: Passes additional glob patterns to the broad-`except` check (bandit B001 / ruff E722)
+so named files are not flagged for `except Exception:` or bare `except:` patterns.
+
+**When valid**: Registry dispatchers and mapping resolvers that must catch all exception types to isolate
+faults per-entry (e.g., `venue_context.py`, `mapping_resolver.py`). The catch-all prevents one bad entry
+from silently dropping the rest of the registry.
+
+**Pattern**:
+```bash
+BROAD_EXCEPT_EXTRA_EXCLUDES=("**/venue_context.py" "**/mapping_resolver.py")
+```
+
+**New entries require a comment** explaining the catch-all rationale. Do not use to paper over lazy
+exception handling in business-logic code — use specific exception types there.
+
+---
+
+### Adding a new library carveout
+
+1. Identify whether it fits an existing category above. If not, file an issue doc in `plans/active/issues/`.
+2. Add the variable to the repo's `scripts/quality-gates.sh` stub above the `source base-library.sh` line.
+3. Include an inline comment explaining WHY the carveout is legitimate for that specific file/pattern.
+4. Update `QUALITY_GATE_BYPASS_AUDIT.md` § 2.x with the same justification.
+5. Reference this section in the comment: `# See codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
+
+---
+
 ## STEP 5.65: Removed-Symbol AST-Walk (Citadel § 6 EXTENDED)
 
 Enforces CLAUDE.md
