@@ -83,6 +83,8 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
 [2026-05-15 session-4] slot-3 — ✅ **DONE item 3**: venue rotation / failover tests. 5 tests: APD richest-sell dropout routes to next pair; cheapest-buy dropout routes to next pair; single venue → no signal; all missing → no signal; CSB VENUE_UNAVAILABLE kill → on_restart() → signal resumes. QG green. — strategy-service@9d725eb. Pivoting to item 4: e2e-testing/scripts/defi/ end-to-end test scenarios.
 
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 4**: e2e-testing/scripts/defi/ paper E2E smoke scripts. 2 scripts (test_csb_paper_e2e_smoke.py + test_apd_paper_e2e_smoke.py), 3 scenarios each. Both exit(0) on smoke run. CSB: high-carry→fire, hysteresis, exit-suppression. APD: best-pair→fire, venue-503-rerouting, zero-dispersion→no-signal. ruff 0 errors on strategy-service pyproject config. — e2e-testing@db4bc8b. Pivoting to item 5: backtest harness performance tests.
+
 [2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
