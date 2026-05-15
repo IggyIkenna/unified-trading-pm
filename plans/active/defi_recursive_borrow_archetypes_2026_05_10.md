@@ -555,9 +555,10 @@ In-plan P0 (blocks Phase 5-8 implementation):
       auto-liquidation race). Mirror in `DefiErrorCode` class constants. (verified 2026-05-13: UAC
       `canonical/crosscutting/errors/defi.py:73` `HL_INSUFFICIENT_MARGIN` + `:75` `HL_REDUCE_ONLY_VIOLATION` shipped in
       DefiErrorCode enum)
-- [ ] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into
+- [x] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into
       ONE canonical connector. Pick `defi_execution/protocols/hyperliquid.py` as canon (already uses parsed UAC
-      schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up.
+      schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up. (33d064b86 execution-service
+      2026-05-15 — venues/hyperliquid.py deleted)
 - [ ] [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce +
       `vaultAddress` envelope; ChainId 1337 mainnet / 421614 testnet — verify against current Hyperliquid SDK); REST
       POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace
@@ -935,14 +936,13 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 ### Phase 12 implementation gates
 
 - [x] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list +
-      `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total.
-      (dfcd890 unified-api-contracts 2026-05-15)
+      `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total. (dfcd890
+      unified-api-contracts 2026-05-15)
 - [x] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
-      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness BLOCKED-CREDENTIALS.
-      (8ff3ded strategy-service 2026-05-15)
+      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness BLOCKED-CREDENTIALS. (8ff3ded
+      strategy-service 2026-05-15)
 - [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
-      scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md.
-      (a7e9243 e2e-testing 2026-05-15)
+      scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
 - [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
 - [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
@@ -1009,12 +1009,13 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
       `forge test --gas-report` BLOCKED-ENVIRONMENT (forge not installed); `.gas-snapshot` pending forge install.
       (6dfac41 deployment-service 2026-05-15)
 - [x] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
-      `passthrough`; add 3 NEW `recursive_leverage` rows (SEPOLIA/ETHEREUM/BASE). (e7492f7 unified-api-contracts 2026-05-15)
-- [x] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
-      (42b2a992 unified-trading-library 2026-05-15)
+      `passthrough`; add 3 NEW `recursive_leverage` rows (SEPOLIA/ETHEREUM/BASE). (e7492f7 unified-api-contracts
+      2026-05-15)
+- [x] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`. (42b2a992
+      unified-trading-library 2026-05-15)
 - [x] [deployment-service] **P0**. NEW launcher
-      `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT.
-      (4e371d5 deployment-service 2026-05-15)
+      `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT. (4e371d5
+      deployment-service 2026-05-15)
 - [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness /
       whitelist completeness). External audit deferred post-MVP.
 - [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
@@ -1065,13 +1066,14 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
 - [x] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
       (2a185b7e8 execution-service 2026-05-15)
 - [x] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
-      (pre-existing in UAC; consumed via RECURSIVE_LOOP_ABORTED_HF/GAS_BUDGET_EXCEEDED/SLIPPAGE_REVERT/FLASH_* — 2026-05-15)
-- [x] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
-      (LOOP_OPEN_STARTED / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW / LOOP_OPEN_COMPLETED — 2a185b7e8)
-- [x] [execution-service] **P0**. Action-encoder helpers + round-trip property test.
-      (`build_recursive_open_actions` / `build_recursive_close_actions` + 3 property tests — 2a185b7e8 2026-05-15)
-- [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level).
-      (14 tests passing / 1 skipped Tenderly fork BLOCKED-CREDENTIALS; 5895 total passing — 2a185b7e8 2026-05-15)
+      (pre-existing in UAC; consumed via RECURSIVE*LOOP_ABORTED_HF/GAS_BUDGET_EXCEEDED/SLIPPAGE_REVERT/FLASH*\* —
+      2026-05-15)
+- [x] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading. (LOOP_OPEN_STARTED
+      / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW / LOOP_OPEN_COMPLETED — 2a185b7e8)
+- [x] [execution-service] **P0**. Action-encoder helpers + round-trip property test. (`build_recursive_open_actions` /
+      `build_recursive_close_actions` + 3 property tests — 2a185b7e8 2026-05-15)
+- [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level). (14 tests
+      passing / 1 skipped Tenderly fork BLOCKED-CREDENTIALS; 5895 total passing — 2a185b7e8 2026-05-15)
 - [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
       Phase-4-deployed receiver. **BLOCKED-CREDENTIALS** — Tenderly fork requires live RPC + deployed receiver address;
       pings/slot_2.md credential request pending.
@@ -1112,14 +1114,17 @@ PerpHedgeSizer (Phase 7); 0.9 over-reports headroom ~10% on cross-margin with op
 
 **Phase 6 P0/P1 implementation gates**:
 
-- [ ] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
-- [ ] [execution-service] **P0**. Replace simulation logic with REST POST `/exchange` returning
-      `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind `is_live=False`.
-- [ ] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
-      SDK constants at runtime.
-- [ ] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key.
-- [ ] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
-      code shape.
+- [x] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
+      (33d064b86 execution-service 2026-05-15 — resolved conflict with foreign pvl-p20b commit)
+- [x] [execution-service] **P0**. Replace simulation logic with REST POST `/exchange` returning
+      `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind `is_live=False`. (ALREADY
+      DONE by prior session — `defi_execution/protocols/hyperliquid.py` already implemented)
+- [x] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
+      SDK constants at runtime. (ALREADY DONE by prior session — `_hyperliquid_signing.py` already existed)
+- [x] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key. (33d064b86
+      execution-service 2026-05-15 — start_hl_key_reloader() + stop_hl_key_reloader() in config_reloaders.py)
+- [x] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
+      code shape. (cc23a45 UAC 2026-05-15 — 9 cassette tests + fix VENUE_ERROR_MAP duplicate-key merge bug)
 - [ ] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
       Arbitrum fork integration test.
 - [ ] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
