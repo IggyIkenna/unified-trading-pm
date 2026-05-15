@@ -472,8 +472,9 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
 - [x] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA
       labels on interactive elements; a11y audit report + fixes; pnpm build green. —
       _deployment-ui@3119577_
-- [ ] [AGENT] P0. **deployment-api OpenAPI doc generation** — `GET /api/openapi.json` returns current OpenAPI spec
-      auto-generated from FastAPI routes; smoke test asserts schema parses; QG green.
+- [x] [AGENT] P0. **deployment-api OpenAPI doc generation** — `GET /api/openapi.json` returns current OpenAPI spec
+      auto-generated from FastAPI routes; smoke test asserts schema parses; QG green. —
+      _deployment-api@4769bd8_
 - [ ] [AGENT] P0. **deployment-ui error boundary + retry UX** — global error boundary catches React errors + offers
       retry; per-call retry buttons on failed API calls; 3+ failure scenarios tested.
 - [ ] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar;
