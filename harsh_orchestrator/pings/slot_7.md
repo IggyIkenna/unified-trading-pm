@@ -45,6 +45,14 @@ Conflict rule: this is deployment-api + deployment-ui — those are YOUR repos u
 
 [2026-05-15 09:00 UTC] slot-7 — ✅ DONE queue item 6: GET /api/builds/history — TarballInfo (bucket + object_path) + image_tags per service; mock from workspace manifest; route registered before /{service} to avoid path conflict; 7 unit tests; QG green. deployment-api@b1ee896. Starting item 7: /ops/live-deployments UI route.
 
+[2026-05-15 14:55 UTC] slot-7 — ✅ DONE queue item 8: /research routes (3 tabs) — MlExperiments + StrategyBacktests + ExecutionBacktests pages + 17 Vitest tests + nav links (ML/Strategy/Exec BT) in Header; pnpm build + QG green. deployment-ui@4d5e662.
+
+[2026-05-15 14:55 UTC] slot-7 — ✅ DONE queue item 9: DART terminal stub — /dart route; archetype state skeleton panel; operator-monitored checklist (5 pre-flip requirements); manual trade entry form via execution-service same path; 6 Vitest tests; QG green. deployment-ui@bf3ec2c.
+
+[2026-05-15 14:55 UTC] slot-7 — ✅ DONE queue item 10: Firebase AuthN middleware — firebase_auth.py (verify_firebase_token + verify_any_auth); verify_any_auth wired on _authenticated_router (replaces verify_api_key, accepts EITHER X-API-Key OR Bearer firebase token); 6 unit tests (mock bypass, missing, wrong scheme, valid, expired, invalid sig); QG green. deployment-api@299908f.
+
+[2026-05-15 14:55 UTC] slot-7 — 🏁 CYCLE-CLOSE: all 10 queue items done. Extended queue (8/9/10): (8) /research routes 3 tabs ✅ @4d5e662 (9) DART terminal stub ✅ @bf3ec2c (10) Firebase AuthN middleware ✅ @299908f. Plan Phase 9 items 8-10 all flipped. No deferred items. Ready for next queue.
+
 [2026-05-15 07:41 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION** — add 3 more items after your 7-item endpoint batch. Total ~20 AI-days.
 8. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`. Each tab consumes its matching deployment-api endpoint from items 2-4 above. Done-def: 3 routes + pnpm build + vitest green.
 9. **deployment-ui DART terminal stub** — placeholder route `/dart` for DeFi archetype visualization + manual trade entry. Real-time state rendering can be skeleton; manual trade entry stub goes through execution-service same path as automation (NOT a side door). Done-def: route renders + skeleton component + checklist banner "operator-monitored window before automation flip".
