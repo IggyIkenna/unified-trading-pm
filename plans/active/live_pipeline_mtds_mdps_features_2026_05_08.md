@@ -815,7 +815,7 @@ todos:
 
   - id: phase-11-deployment-ui-live-tab
     content: |
-      - [ ] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters.
+      - [x] [AGENT] P1. Phase 11 — deployment-UI live tab + Deploy-Missing for live clusters. **DONE 2026-05-11** — checkbox flip 2026-05-15 slot-3 (stale). All 4 sub-items fully shipped: deployment-api@9b0e81d + b7d3a4c + 98b6b6e + dd2adb6; deployment-ui@5738237 + 657ed68.
         PARALLEL with Phase 9 + 10. (11.1 endpoint real-wired @deployment-api@`9b0e81d`; 11.3 scaffold @deployment-ui@`f3204ce`; 11.2 + 11.4 DEFERRED on Phase 13 launchers; Health-API HTTP join DEFERRED on per-service URL registry.)
 
         **REAL WIRING shipped 2026-05-11 (Ikenna slot 4 RE-TASK)**:
