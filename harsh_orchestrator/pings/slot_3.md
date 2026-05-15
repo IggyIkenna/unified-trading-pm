@@ -262,7 +262,7 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 (e2e-testing/scripts/defi/ end-to-end test scenarios). Self-pivot through items 4-10.
 
 [2026-05-15 10:35 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION +5** (after items 8-10). Push to ~16 AI-days.
-11. **strategy-service Phase 10 codex audit** — Phase 10 introduced venue admission rules + family 1/2 patterns + batch=live archetype grain. Verify strategy-service code reflects codex; file drift. Done-def: audit report.
+11. ✅ **strategy-service Phase 10 codex audit** — Phase 10 introduced venue admission rules + family 1/2 patterns + batch=live archetype grain. Verify strategy-service code reflects codex; file drift. Done-def: audit report. — unified-trading-pm@bfe08a1. 7 aligned (batch=live invariant via V2EngineOrchestrator, 9 StrategyFamily enum, DeployableConfigCandidate, GroupBMetrics). Drift 1 (medium): eligible_venues never populated on emitted instructions — routed to slot 1 for execution-service SOR triage. Drift 2 (low): defi_lp/mev→family mapping docstring-only.
 12. **strategy-service mode parity tests** — same archetype config produces identical signal sequences in `--mode batch` vs `--mode paper` vs `--mode live` (for in-process simulation). 3+ scenarios. Done-def: parity tests + QG green.
 13. **strategy-service archetype rotation tests** — multi-archetype concurrent run (CSB + APD on same VM); each gets correct slot allocation; no double-emit on cross-archetype signal. Done-def: 4+ scenarios + QG green.
 14. **e2e-testing/scripts/defi/ — failure mode scenarios** — extend item 4: (a) one venue 503 mid-cycle; (b) gas price spike; (c) sandwich attack simulation; (d) flash loan fail. Done-def: 4+ failure scenarios + smoke run logged.
