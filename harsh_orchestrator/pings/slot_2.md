@@ -114,6 +114,12 @@ QG green (all pre-existing violations in deployment-service unrelated to my chan
 
 [2026-05-15 13:10 UTC] slot-2 — NEW QUEUE acked. STARTED item 1 (pre-B-011 CODE_BUCKET fleet sweep, 48 launchers, 4 category batches).
 
+[2026-05-15 13:45 UTC] slot-2 — DONE items 1+2+3.
+- Item 1 ✅ CODE_BUCKET fleet sweep (48 launchers). deployment-service@7c2ed43/92ff746/070df84/9c4144b. 4 batch commits (MTDS×10, features×4, CeFi/DeFi/TradFi/infra×18, ML/sports/other×16). 0 hardcoded remaining. Shellcheck: all pass (info-only pre-existing notices in defi-fwd + tradfi-backfill; not introduced by change).
+- Item 2 ✅ Cloud Scheduler SSOT consolidation. deployment-service@8cc0644 + unified-trading-pm@d624cb7c. Only 1 setup-*-scheduler.sh exists (honest-coverage). Terraform is primary SSOT (10 .tf files). launcher-script-ssot.md updated: Cloud Scheduler SSOT section + setup script template. Both launcher variants documented (honest-coverage- cron + measure-honest-coverage- ad-hoc).
+- Item 3 ✅ VM_PREFIX_TO_BUCKET integration audit. deployment-service@29eb7ad. validate_vm_prefix_mapping.py written + 5 unit tests pass. Prod run: 88 OK, 56 heartbeat-only, 0 orphans — all non-None buckets verified. Note: 6 legacy string entries in dict (pre-existing, not VmPrefixSpec); script handles both.
+Item 4 (honest_coverage e2e smoke) — BLOCKED-IAM; standing by for Ikenna's Cloud Scheduler create. Polling for next dispatch.
+
 [2026-05-15 07:36 UTC] [main → slot 2] — ✅ reserve items 1+2+3 acked: launcher@a0adfbc + catboost ✅ + DRY codex@efa090f9. 📋 **NEW QUEUE — pre-B-011 launcher fleet + Cloud Scheduler SSOT** (~12 AI-days):
 
 1. **Pre-B-011 launcher fleet CODE_BUCKET sweep** — 48 launchers identified in your DRY audit with hardcoded `deployment-scripts-central-element-323112`. Refactor all to `deployment-scripts-${PROJECT}` pattern. Stage by category: (a) MTDS launchers; (b) features-service launchers; (c) strategy/execution launchers; (d) ML training/inference launchers. Ship 1 commit per category to keep diffs reviewable. Done-def: 0 hardcoded CODE_BUCKET strings; shellcheck clean on all touched files.
