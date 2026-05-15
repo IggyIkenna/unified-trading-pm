@@ -246,6 +246,52 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
 - **MVP universe**:
   [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)
 
+## Phase 8.A — VM infrastructure hardening (shipped 2026-05-15)
+
+Four patterns shipped in the B-011 / Phase 8.A slot sweep that are now canonical:
+
+### VM launcher DRY library (`launcher_common.sh`)
+
+`deployment-service/scripts/vm/lib/launcher_common.sh` — 6 shared functions:
+`lc_validate_env`, `lc_singleton_check`, `lc_gcloud_create`, `lc_code_bucket`, `lc_run_ts`, `lc_write_startup_file`.
+
+**Rule**: every new launcher MUST source `lib/launcher_common.sh` and use these functions instead of inline boilerplate.
+New launchers that inline `gcloud compute instances create` without `lc_gcloud_create` are QG-blocking (review enforced, no automated gate yet — future QG STEP candidate).
+
+Template reference: `scripts/vm/templates/startup-gcs-url.sh.tmpl` (GCS-URL pattern, ~61 launchers) and
+`scripts/vm/templates/startup-inline-heredoc.sh.tmpl` (inline HEREDOC, ~31 launchers).
+
+### VM security hardening audit
+
+Shellcheck sweep at `--severity=error` on all 83 `launch-*.sh` launchers (see `codex/05-infrastructure/vm-security-audit.md`):
+
+- **P0 hardcoded credentials**: 0 found (clean)
+- **P0 curl-pipe-bash**: 0 found (clean)
+- **P1 SC2046 (flag injection)**: fixed `launch-amm-golden-fixture-validation-vm.sh` (3 vectors → `EXTRA_FLAGS=()` array)
+- **P2 SC2034 (unused vars)**: 11 removals across 9 launchers
+
+New launchers must pass `shellcheck --severity=warning` before merge. QG `TestShellcheckClean` enforces at `--severity=error` (warning-level is informational).
+
+### VM deployment-events pubsub gap
+
+Audit completed; findings in `codex/05-infrastructure/vm-deployment-events-audit.md`:
+
+- `vm-heartbeat-daemon` uses `PubSubEventSink` (7-day TTL) — all other services use `GCSEventSink` for permanent archival.
+- No GCS export subscription on `deployment-events` topic → heartbeat events expire after 7 days.
+- **Recommended action** (non-blocking May-23, P2): switch `heartbeat_cli.py` to `GCSEventSink` or add a GCS export subscription on the `deployment-events` Pub/Sub topic.
+
+### VM zombie watchdog per-prefix thresholds + notification
+
+`vm_zombie_watchdog.py` now supports:
+
+- `PREFIX_IDLE_THRESHOLDS`: per-prefix `(heartbeat_stale_min, shard_stale_min)` overrides (longest-prefix match). Live-service VMs tolerate longer idle periods (30/240 min); backfill VMs use shorter thresholds (10/60 min).
+- `--notify-url`: webhook POST (Slack-compatible) on zombie detection. Best-effort — never blocks kill loop.
+- Both features wired: thresholds applied per-VM in `_evaluate_vm()`; notification fires before kill loop (even under `--dry-run`).
+
+### GCS lifecycle gap (operator action required)
+
+`vm-logs/` prefix: 4,130 dirs, no lifecycle purge, growing ~1,800/year. Watchdog `gsutil ls` latency grows with this. See `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md` for the 3 `gsutil lifecycle set` commands needed (14d vm-logs, 30d QG snapshots, 90d events). Non-blocking May-23 (P2) but recommended before cutover.
+
 ## Continuous verification
 
 This SSOT is read at slot 1 main morning ledger sweep daily through 2026-05-23. Updated on:
