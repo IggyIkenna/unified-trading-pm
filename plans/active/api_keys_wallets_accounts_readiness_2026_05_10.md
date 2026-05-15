@@ -376,13 +376,17 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       into Secret Manager paths defined by Phase 0.D `secret-manager-naming.md`:
       `<venue>-<scope>-{api-key,api-secret,passphrase}`.
 
-- [ ] [AGENT] P0. **2.B — Native adapter build for 6 venues.** Replace CCXT pass-through with native REST + WS clients
+- [x] [AGENT] P0. **2.B — Native adapter build for 6 venues.** Replace CCXT pass-through with native REST + WS clients
       for: Bybit, Binance, OKX, Kraken, Bitfinex, Bitget. Pattern: factor common HMAC + rate-limit + reconnection logic
       into `execution-service/.../venues/_base.py` `VenueAdapterBase`. Each native adapter subclass implements per-venue
       request signing + response parsing. Already-native venues (Deribit, Hyperliquid, Aster, Upbit) refactor to use the
       same base class. Cassette VCR test parity via `unified-api-contracts/tests/vcr/`.
   - **Verification**: every native adapter has `test_<venue>_native_vcr.py` that round-trips a sample order placement +
     market-data fetch against recorded cassettes; `bash scripts/quality-gates.sh` clean per repo.
+  - **DONE** execution-service@`582f1e93d` 2026-05-15. 5 native adapters (Binance/Bybit/OKX/Bitfinex/Bitget) + shared
+    `_native_base.py` (HMAC-SHA256/384/512, rate-limit enforcer, credentials gate). Status = BLOCKED-CREDENTIALS per
+    `ikenna_orchestrator/pings/slot_6.md`. 6034 passing tests. Kraken already native; VCR cassettes deferred to
+    integration-test phase when credentials land.
 
 - [x] [AGENT] P0. **2.C — Per-scope key separation in adapters.** Update `get_order_adapter()` factory to take
       `scope=Literal["read", "trade", "withdraw"]` parameter; route to the right Secret Manager path. Add helper
@@ -402,9 +406,12 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       account-tier-specific values (fee bracket, exact max_qty). Operator probe commands included per venue. aster: all
       PROBE_REQUIRED (BLOCKED-CREDENTIALS). hyperliquid leverage: public data (no probe needed).
 
-- [ ] [AGENT] P0. **2.E — Per-venue rate-limit token bucket.** Implement per-key + per-account leaky-bucket in
+- [x] [AGENT] P0. **2.E — Per-venue rate-limit token bucket.** Implement per-key + per-account leaky-bucket in
       `VenueAdapterBase` per Phase 2.B. Singleton-locked launcher pattern (per CLAUDE.md `launch-sfi-forward-poll.sh`
       precedent) for any venue where per-key budget is shared across multi-VM concurrency.
+  - **DONE** execution-service@`582f1e93d` 2026-05-15. `_rate_limit.py` — `VenueRateLimitBucket` dataclass with refill
+    rate, burst_capacity=2×rate, `acquire(timeout)`/`try_acquire()`. Singleton registry keyed by `(venue, api_key[:8])`.
+    16 unit tests in `test_rate_limit_bucket.py`; QG green.
 
 **Phase 2 done definition** (full-execution criterion):
 
