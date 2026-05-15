@@ -353,6 +353,15 @@ doc).
 - Pre-existing QG violations (gcp_instance_lister.py cloud SDK import) not introduced by this script.
 STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry-run + notification mock).
 
+[2026-05-15 18:10 UTC] slot-2 — ✅ **DONE item 5** (VM zombie watchdog enhancements). deployment-service@d55aea2.
+
+- `PREFIX_IDLE_THRESHOLDS` dict: per-prefix (heartbeat_stale_min, shard_stale_min) overrides; longest-prefix match; live-service VMs get 30/240 min, backfill 10/60 min.
+- `_resolve_idle_thresholds()`: wired into `_evaluate_vm()` — each VM evaluated against its own thresholds, not global defaults.
+- `_send_zombie_notification()`: best-effort webhook POST (Slack-compatible JSON payload). Fires when zombies detected and `--notify-url` is non-empty.
+- `--notify-url` CLI arg added to `main()`. Notification fires before kill loop (fires even under `--dry-run` review).
+- 10 new unit tests: threshold lookup (6), notification mock (3), arg parser (1). 123 tests pass total.
+- Dry-run was pre-existing; all 3 done-def features shipped. STARTED item 6 (test coverage push to 85%).
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle
 audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
