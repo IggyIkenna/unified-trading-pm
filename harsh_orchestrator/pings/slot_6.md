@@ -402,3 +402,38 @@ SIT). Reading issue docs for all 5 items. Self-pivoting through 1→2→3→4→
 slot 4/9; strategy-service codex docs = OK for you.
 
 Self-pivot through items 6-9 after the 5-item primary queue closes.
+
+---
+
+## [2026-05-15 22:15 UTC] [main → slot 6] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> Re-anchoring as todo-checkbox list per operator request. The 5-item primary
+> queue (17:35 UTC) + 4-item buffer (18:05 UTC) are restated here as one
+> ~20 AI-day list. Nothing shipped yet from this batch — all 9 items pending.
+> Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+
+### Primary queue (P1)
+
+- [ ] **1. utl_qg_preexisting_failures fix sweep** (P1) — [`plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md`](../../plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md). 6 categories of pre-existing UTL QG failures with documented fix paths (cloud SDK imports, backward-compat shims, etc.). Slice by category — start with the one closing the most failures at the least risk. Done-def: ≥3 categories closed + UTL QG green.
+
+- [ ] **2. strategy_service_phase8_codex_drift** (P1) — [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md). 5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` + `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. ~2 AI-days.
+
+- [ ] **3. strategy_service_phase10_codex_drift — Drift 2 only** (P3 nice-to-have) — [`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md). Drift 1 (eligible_venues SOR triage) routed to slot 1 main — DO NOT touch. Drift 2 (defi_lp/mev → family mapping docstring-only): add 2 codex pointer lines. Done-def: drift 2 closed.
+
+- [ ] **4. sit_may23_critical_path_coverage_gaps** (P1) — [`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`](../../plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md). SIT scenarios for: (a) DeFi paper carry, (b) DeFi paper APD, (c) mode-switch live/batch gate, (d) batch-live DeFi parity smoke. Note: slot 4 just shipped sit DeFi paper flows in their item 2 (sit@fba72b7) — check overlap before duplicating. Done-def: gaps not already filled by slot 4 + sit QG green.
+
+- [ ] **5. expected_unattempted_propagation_gap** (P1) — [`plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md`](../../plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md). Wire `record_expected_unattempted()` into MTDS/MDPS/features/ML skip paths through the UTL emission_publisher chain you shipped (item 9 of OLD queue @ UTL@ce89045). Done-def: 4 services emit `expected_unattempted` events through UTL chain + tests.
+
+### Buffer (after primary queue)
+
+- [ ] **6. codex_04_architecture_drift_audit cleanup** (P3 batch) — the issue doc you filed in your last cycle (`plans/active/issues/codex_04_architecture_drift_audit_2026_05_15.md`) lists 4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` → `basedpyright` references. Mechanical fixes ~30 min. Done-def: 8 docs updated + grep confirms 0 stale refs.
+
+- [ ] **7. UTL bash smoke tests for QG_MEM_CAP** — `base-service.sh` (this morning's PM@c3cb11f6 + ca3fad47) added `MEM_WRAP` array + macOS fallback warning. Add UTL-side bash smoke tests verifying: (a) Linux path builds MEM_WRAP correctly; (b) macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke tests + UTL QG green.
+
+- [ ] **8. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) — [`plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md`](../../plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md). 5 pre-existing size violations in UAC; Ikenna is primary owner. Pick the SMALLEST/clearest-cut of the 5; refactor only that one; leave the other 4 for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+
+- [ ] **9. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh** — verify `quality-gates.md` cross-links to the new `quality-gates-memory-governance.md` (PM@bc6e15e6 + ca3fad47). Sweep for stale references to the OLD `cpu_count // 4` default. Done-def: cross-link added + 0 stale references.
+
+**Conflict rules (unchanged)**: UAC = surgical edits ONLY (item 8 take 1 file only); MTDS = slot 9 (53-test triage in flight); features-service = slot 4 owns (just shipped multi_timeframe/calendar/onchain); strategy-service codex docs = OK for you (slot 3 is shipping new strategy code, codex docs separate surface).
+
+Self-pivot through items 1 → 9. Ping STARTED + per-item DONE in this file.
