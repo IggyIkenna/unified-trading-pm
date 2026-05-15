@@ -284,7 +284,11 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    2026-05-13 (`retentionPeriod=220752000 isLocked=True`), AWS `unified-trading-audit-records-prd-427895769566`
    COMPLIANCE 7yr lock 2026-05-14. No additional work this session; verification-only flip. (research 1.2×, ~4
    = 4.8 cal)
-5. **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — open todos workspace-wide. (design 0.6×, ~4 = 2.4 cal)
+5. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — verified all 36 top-level plan checkboxes
+   `[x]`, zero open. Phase 5.C2 HWM + Phase 8.A/B/C confirmed complete in 14 May session (per work_split_2026_05_14
+   item 6 evidence: `client-reporting-api@ce5156d` + `deployment-ui@21331da` + `deployment-service@e00fe79` for HWM
+   route; `client-reporting-api@192b41d` + `deployment-service@007f67f` for Phase 8 real-VM cutover runner +
+   launcher). No additional work this session. (design 0.6×, ~4 = 2.4 cal)
 6. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — mock-data compute cost reduction for CI. (design 0.6×,
    ~3 = 1.8 cal)
 7. **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** (orphan from slot 7 14 May) — master plan Group F item 18
