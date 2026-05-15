@@ -108,7 +108,11 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
     # For .tmpl files: perform substitution; for .yml files: direct copy
     if [ "$is_tmpl" = true ]; then
       dep_repos=$(get_dep_repos "$repo")
-      rendered=$(sed "s/{{DEP_REPOS}}/${dep_repos}/g" "$template")
+      repo_underscore="${repo//-/_}"
+      rendered=$(sed -e "s/{{DEP_REPOS}}/${dep_repos}/g" \
+                     -e "s/__REPO_NAME__/${repo}/g" \
+                     -e "s/__SOURCE_DIR__/${repo_underscore}/g" \
+                     "$template")
       # Skip if target already matches rendered output
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
         skipped=$((skipped + 1))
