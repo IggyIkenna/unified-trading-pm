@@ -115,8 +115,11 @@ integration tests are tracked in `defi_catalogue_chain_primitives_2026_05_10.md`
 ## Error Classification
 
 Every on-chain revert maps to a structured error code with an action. SSOT for the closed set: UAC
-`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 codes; see CLAUDE.md § "DeFi Execution
-Architecture"). Table refreshed 2026-05-12 per slot 8 exec audit EX-7 — earlier count was 11.
+`unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (30 codes; refreshed 2026-05-15 per slot 6
+codex audit — count grew from 13 original Aave codes to 30 as HL perp + recursive-loop + oracle codes were added
+2026-05-12/13). Import: `from unified_api_contracts import DefiErrorCode, OracleStaleError, OracleDeviationError`.
+
+### Aave V3 / on-chain DeFi codes (13)
 
 | Code                              | Action | When                    |
 | --------------------------------- | ------ | ----------------------- |
@@ -135,6 +138,45 @@ Architecture"). Table refreshed 2026-05-12 per slot 8 exec audit EX-7 — earlie
 | SUPPLY_CAP_EXCEEDED               | FAIL   | Pool supply-cap reached |
 
 Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
+
+### Recursive-loop orchestrator codes (7)
+
+Used by `execution-service/defi_execution/protocols/recursive_loop_orchestrator.py` — emitted directly (not via
+`classify_venue_error`). Added 2026-05-12 per Phase 5 design.
+
+| Code                                       | Action | When                                              |
+| ------------------------------------------ | ------ | ------------------------------------------------- |
+| RECURSIVE_LOOP_ABORTED_HF                  | SKIP   | Pre-iter HF gate triggered; caller gets partial   |
+| RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED         | SKIP   | Gas-budget gate mid-loop; caller gets partial     |
+| RECURSIVE_LOOP_SLIPPAGE_REVERT             | RETRY  | Cross-asset swap slippage; retry with wider tol   |
+| RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND    | FAIL   | UAC flash_loan_receiver_for() returned None       |
+| RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT | FAIL  | Receiver InsufficientRepaymentBalance revert      |
+| RECURSIVE_LOOP_FLASH_ACTION_FAILED         | FAIL   | Receiver ActionFailed(idx, ret) revert            |
+| RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS | FAIL  | Persistent driver aborted; HF too tight to unwind |
+
+### Hyperliquid CeFi perp codes (8)
+
+Used by `VENUE_ERRORS_DEFI["hyperliquid"]` → `classify_venue_error("hyperliquid", code)`. Added 2026-05-12 per Phase 6.
+
+| Code                       | Action | When                                              |
+| -------------------------- | ------ | ------------------------------------------------- |
+| HL_INSUFFICIENT_MARGIN     | FAIL   | place_order rejected — insufficient USDC margin   |
+| HL_REDUCE_ONLY_VIOLATION   | FAIL   | reduce_only=True on size-increasing order         |
+| HL_INVALID_TIF             | FAIL   | TIF mismatch — HL accepts Alo/Ioc/Gtc only        |
+| HL_RATE_LIMITED            | RETRY  | 429 or 1-req/s breach — exponential backoff       |
+| HL_NONCE_TOO_LOW           | RETRY  | EIP-712 nonce race — re-read from /info           |
+| HL_SIGNATURE_INVALID       | FAIL   | Wallet config / chainId drift — alert operator    |
+| HL_POSITION_CLOSED         | SKIP   | Auto-liquidation race — ghost position            |
+| HL_FILL_CONFIRMATION_MISSED | RETRY | WS fill timeout — re-query /info userFills        |
+
+### Oracle codes (2)
+
+Raised as typed exceptions (`OracleStaleError`, `OracleDeviationError`). Added 2026-05-13 per writegate Phase 2.A.
+
+| Code                      | Exception              | Action | When                                               |
+| ------------------------- | ---------------------- | ------ | -------------------------------------------------- |
+| ORACLE_STALE              | OracleStaleError       | SKIP   | Chainlink/Pyth feed heartbeat exceeded threshold   |
+| ORACLE_DEVIATION_EXCEEDED | OracleDeviationError   | FAIL   | Multi-source prices diverge ≥ sigma threshold      |
 
 ## Modes
 

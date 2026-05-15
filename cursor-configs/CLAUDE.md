@@ -157,7 +157,7 @@ Pointer chain. Full specs in codex:
 - **Flash loan receiver**: `deployment-service/contracts/FlashLoanReceiver.sol`. SSOT: `codex/04-architecture/flash-loan-receiver.md`.
 - **Contract registry**: `unified_trading_library/config_interface/testnet_contracts.py` `TestnetContractRegistry` — validates `config/testnet_contracts.yaml` at load.
 - **Uniswap live swap**: `UniswapConnector.swap_exact_input()` via SwapRouter02 `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`.
-- **DeFi error classification**: 13 codes in UAC `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode`. Routes on FAIL/RETRY/SKIP prefix.
+- **DeFi error classification**: 30 codes in UAC `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode` (13 Aave + 7 RECURSIVE_LOOP + 8 HL_* + 2 ORACLE_*; updated 2026-05-15 per slot 6 audit). Routes on FAIL/RETRY/SKIP prefix. Full table in `codex/04-architecture/defi-execution-overview.md` § "Error Classification".
 - **DeFi pipeline**: instruments-service → MTDS → features-onchain → strategy → execution.
 - **Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Infura.
 - **Pyth UNBANNED 2026-05-06** for Solana on-chain price feeds. Solana-only; other chains use Chainlink.
