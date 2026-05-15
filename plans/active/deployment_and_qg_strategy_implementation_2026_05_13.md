@@ -237,6 +237,22 @@ root-dep slot.
 **Owner**: deployment-api + deployment-ui slots (parallel after Phase 1 lands). **Dependencies**: Phase 1 env-locking
 shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
 
+### Phase 4.A — QG snapshot staleness monitoring + alerting hook (0.5 cal-AI-day)
+
+- [x] [AGENT] P0. **`AlertCode.QG_SNAPSHOT_STALE` + `ALERT_THRESHOLDS["qg_snapshot_stale_days"]` + `AlertRule`** — UAC
+      closed-set alerting taxonomy for QG snapshot staleness. Severity HIGH, channels PD + Telegram, threshold 2 days.
+      (unified-api-contracts@1f80129 — codes.py + thresholds.py + rules.py)
+- [x] [AGENT] P0. **`check_snapshot_staleness.py`** — PM script called from qg-snapshot cron VM after
+      `snapshot_to_parquet.py`; scans GCS deployment-events bucket for last N days of snapshot parquets; emits
+      `QG_SNAPSHOT_STALE` event if all checked dates missing.
+      (unified-trading-pm@94f61350 — check_snapshot_staleness.py + pyrightconfig.json ignore)
+- [x] [AGENT] P0. **Integration tests for QG_SNAPSHOT_STALE routing** — `TestQGSnapshotStaleTaxonomy` (closed-set
+      checks: code, rule, severity HIGH, channels, threshold default=2) + `TestQGSnapshotStaleRouting` (route_event
+      mock verification PD + Telegram). All alerting-service QG pass.
+      (alerting-service@cc3cdb8 — tests/integration/test_qg_snapshot_stale.py)
+
+**Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4 Phase (snapshot.sh + cron VM) shipped.
+
 ### Phase 5 — Image base-pin audit + retention policy (1 cal-AI-day)
 
 - [ ] [AGENT] P0. **Author `deployment-service/scripts/audit/dockerfile-base-pin.sh`** — walks all `Dockerfile`s in
@@ -404,8 +420,8 @@ work.
 
 ## Deferred work after 2026-05-15 slot-8 session
 
-| Phase / item                                                                                                                      | Status as of 2026-05-15                                                                                                                                                                                                                                     | Successor / blocker |
-| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Phase / item                                                                                                                     | Status as of 2026-05-15                                                                                                                                                                                                                                                                                                                                      | Successor / blocker |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
 | B-014 Phase 3 — SSOT path rollout completion (.tabs/8 stash recovery: 7 repos + 3 newly discovered without new template version) | ✅ DONE — all .tabs/8 service repos updated to `SSOT: unified-trading-pm/codex/...`; SHAs: ml-inference-service@8116b23, market-data-processing-service@2ff9258, ml-training-service@00a97aa, alerting-service@4795ccf, market-tick-data-service@acec41d, risk-and-exposure-service@55d7611; workspace-wide `grep -r "unified-trading-codex"` returns 0 hits | —                   |
 
 ## Slot allocation suggestion (for Ikenna slot 1 main)
