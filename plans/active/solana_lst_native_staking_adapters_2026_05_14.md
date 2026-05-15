@@ -172,10 +172,12 @@ MTDS handler writes 1 row per epoch per validator to manifest.
 > **GCS backfill rule**: both venues have ≥ 2 years of data → **OPERATOR APPROVAL REQUIRED** before launching. Add ping
 > to `ikenna_orchestrator/pings/slot_3.md` and HOLD until `[ack]`.
 
-- [ ] [deployment-service] P0. Verify JITO-SOLANA adapter is functional against current Jito API endpoint (check
-      `jito.py` base URL is still live — similar to ASTER URL migration). Run quick test fetch.
-- [ ] [deployment-service] P0. Verify MARINADE-SOLANA adapter is functional against current Marinade API endpoint (check
-      `marinade.py` base URL).
+- [x] [deployment-service] P0. Verify JITO-SOLANA adapter is functional against current Jito API endpoint. **DONE
+      2026-05-15 (slot-3)**: `curl https://kobe.mainnet.jito.network/api/v1/stake_pool_stats` → returns valid JSON
+      with aggregated_mev_rewards, tvl, apy (~5.7%), num_validators=754. Endpoint live.
+- [x] [deployment-service] P0. Verify MARINADE-SOLANA adapter is functional against current Marinade API endpoint. **DONE
+      2026-05-15 (slot-3)**: `curl https://api.marinade.finance/msol/apy/30d` → returns
+      `{"value":0.0638..., "end_price":1.3806}`. Endpoint live. APY=6.39%.
 - [ ] [deployment-service] P0. **[BLOCKED-CREDENTIALS — pinging operator]** Add VM launchers: - `jito-solana-backfill` —
       JITO-SOLANA `lst_rates` from 2022-08-01 → 2026-05-14. - `marinade-backfill` — MARINADE-SOLANA `lst_rates` from
       2021-02-01 → 2026-05-14. - Both: `VM_NAME=<prefix>` + `MANIFEST_PER_VM_SHARDS=true` + singleton-locked. - Register
