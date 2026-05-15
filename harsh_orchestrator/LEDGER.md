@@ -1009,3 +1009,31 @@ Fresh main-agent chat (context window died, new session):
 3. `cat plans/active/_agent_pings.md` — cross-side pings.
 4. Read this LEDGER § "Current shift" table — note each slot's state; update any SPAWN PENDING → IN FLIGHT based on ping acks.
 5. Ack to operator: "Main online. Slots in flight: N. Pings: M intra / K cross. Standing by."
+
+---
+
+## 🏁 Slot 9 Day-4 CYCLE-CLOSE — 2026-05-15 (harsh-slot-9)
+
+**Theme**: MTDS DeFi handler hardening (eigenlayer phantom-safe pattern) + PBM Phase 8 coverage
+
+### Shipped this session
+
+| Item | SHA | Repo | Notes |
+|------|-----|------|-------|
+| lst_rates handler hardening | `f657431` | mtds | record_captured inside try, record_failed in except — eigenlayer pattern |
+| evm_defi/gas_fee/solana_defi handler hardening | `3bca360` | mtds | All 3 remaining handlers hardened; inner swallowing excepts removed; tests updated |
+| PBM STEP 5.37 QG carve-outs | (prior session) | pbm | `# noqa: qg-inline-threshold` on 4 simulation Decimal("1.5") values |
+| PBM transfer_reconciler broken import fix | (prior session) | pbm | `DeFiTransferRecord` → `TransferRecord` (module was unimportable) |
+| DualFailureDetector unit tests | (prior session) | pbm | 15 tests, full coverage |
+| TransferReconciler unit tests | (prior session) | pbm | 19 tests, full coverage |
+
+### ALL 4 DeFi handlers now eigenlayer-safe
+
+- `lst_rates_handler.py` ✅ `f657431`
+- `evm_defi_handler.py` ✅ `3bca360`
+- `gas_fee_handler.py` ✅ `3bca360`
+- `solana_defi_handler.py` ✅ `3bca360`
+
+### Remaining blocker
+
+B-015 re-smoke still **HOLD** — pending Ikenna phantom-fix confirmation. Once Ikenna's slot confirms `reconcile_phantom_manifest_rows_all.py --apply-flips` ran + green smoke, B-015 can re-launch with all 4 handlers hardened.
