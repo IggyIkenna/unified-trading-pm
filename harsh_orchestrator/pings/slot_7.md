@@ -167,3 +167,9 @@ deployment-ui@2c221ac. Plan flipped. Starting item 9: deployment-api cost estima
 /api/vm/cost-estimate; VmCostEstimateRequest + VmCostEstimateResponse models; n1/n2 GCP pricing table for
 asia-northeast1; compute+disk breakdown; count multiplier; unknown machine type fallback with flag; 9 unit tests; QG
 green. deployment-api@d3a001a. Plan flipped. Starting item 10: deployment-ui cost estimate panel.
+
+[2026-05-15 20:15 UTC] slot-7 — ✅ DONE queue item 10: deployment-ui cost estimate panel —
+VmCostEstimatePanel component (machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate POST;
+compute+disk+total breakdown; dry_run badge; unknown machine type warning); wired into MlExperiments form before
+Submit; fetchVmCostEstimate API function added to deploymentApi.ts; 5 vitest tests; 63 total; QG green.
+deployment-ui@5147f4b. Plan flipped. Starting item 13: responsive mobile layout audit.
