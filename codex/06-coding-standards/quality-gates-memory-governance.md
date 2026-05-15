@@ -45,8 +45,42 @@ array at startup and prepends it to every `pytest` and `basedpyright` invocation
   QG fails cleanly, the box stays alive.
 - `MemorySwapMax=0` is mandatory: without it the kernel swaps other processes
   out to keep the runaway alive, slowing everything down before the cap fires.
-- Graceful fallback: if `systemd-run` is unavailable (CI image, container)
-  `MEM_WRAP=()` empty and the commands run unwrapped — no behaviour change.
+- Graceful fallback: if `systemd-run` is unavailable (macOS, CI image,
+  container) `MEM_WRAP=()` empty and the commands run unwrapped — no behaviour
+  change. A one-shot warning prints on the macOS / non-systemd path so the
+  user knows the cap is inactive.
+
+### macOS compatibility
+
+`systemd-run` is Linux-only. macOS has no clean cgroup analog without root, so
+on Apple Silicon / Intel Mac the mem cap silently degrades:
+
+| Component                              | Linux         | macOS         |
+| -------------------------------------- | ------------- | ------------- |
+| `systemd-run` cgroup hard cap          | ✅ enforced    | ❌ unavailable, MEM_WRAP=() empty |
+| `PYTEST_WORKERS=1` default             | ✅ applies     | ✅ applies     |
+| IDE basedpyright open-files-only       | ✅ applies     | ✅ applies     |
+| QG_MEM_CAP env honored                 | yes            | no-op + warning |
+
+macOS users: keep parallel QGs to 1-2 slots max until a portable cap lands.
+To silence the per-run warning: `export QG_MEM_CAP=0` in `~/.zshrc` / `~/.bashrc`.
+
+### Per-box cap recommendations
+
+| Dev box                                | Total RAM | Reserved (OS + IDE + other apps) | Free for QG | `QG_MEM_CAP` |
+| -------------------------------------- | --------- | -------------------------------- | ----------- | ------------ |
+| Harsh workstation (Linux, this box)    | 96 GB     | ~36 GB (60 GB budgeted for work) | 60 GB       | `15G`        |
+| Teammate laptop (macOS, M5)            | 24 GB     | ~10 GB (other services)          | 14 GB       | `8G` (advisory only — no enforcement on macOS) |
+| Default for everyone                   | —         | —                                | —           | `10G`        |
+| CI runner (large)                      | 32+ GB    | low                              | most        | `0` (disable)|
+
+Put per-user overrides in `~/.bashrc` / `~/.zshrc`:
+
+```bash
+export QG_MEM_CAP=15G   # Harsh's workstation
+# export QG_MEM_CAP=8G    # macOS teammate (advisory only)
+# export QG_MEM_CAP=0     # CI / mem-rich host: disable cap entirely
+```
 
 ### 2 — `PYTEST_WORKERS=1` default
 
@@ -100,6 +134,45 @@ Order of relaxation when adding capacity (more RAM, fewer simultaneous slots):
 2. Bump `QG_MEM_CAP` to 16G or 20G if mem caps start firing under normal load.
 3. Disable `MEM_WRAP` entirely (`QG_MEM_CAP=0`) only on hosts where the OOM is
    architecturally impossible (eg ≥256 GB RAM CI runners, or ≤2 concurrent slots).
+
+## OLD/NEW comment pattern in `base-service.sh`
+
+The OOM mitigation lines in `scripts/quality-gates-base/base-service.sh` are
+intentionally written as **commented OLD + active NEW** rather than as outright
+replacements. This makes reverting trivial when the root cause is fixed
+elsewhere (e.g. a tighter basedpyright cache, a saner xdist worker policy, or
+a memory leak repaired upstream).
+
+Pattern:
+
+```bash
+# ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
+# OLD (pre-2026-05-15): ...one-line description + the exact previous code...
+#     _DEFAULT_WORKERS=$($PYTHON_CMD -c "..." 2>/dev/null || echo 1)
+#     PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} ..."
+# NEW (post-OOM): ...one-line reason for change...
+# TO REVERT: comment NEW line below, uncomment OLD pair above.
+# SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
+# ╚════════════════════════════════════════════════════════════════════════╝
+PARGS="-n ${PYTEST_WORKERS:-1} ..."   # NEW
+```
+
+Three locations use this pattern:
+
+1. **MEM_WRAP block** (top of file, ~30 lines): the systemd-run wrapper builder
+   + macOS warning. To fully revert, delete the block AND remove
+   `"${MEM_WRAP[@]}"` prefix from the three call-sites.
+2. **PYTEST_WORKERS default** (`PARGS=` line): NEW = `-n 1`, OLD = `-n cpu//4`.
+3. **pytest + basedpyright call-sites**: NEW prepends `"${MEM_WRAP[@]}"`;
+   OLD has no prefix. These are SAFE to leave in place during a revert because
+   `MEM_WRAP=()` empty array expands to nothing — but if you delete the
+   MEM_WRAP block at the top, you MUST also remove the prefix at the call-sites
+   (otherwise `"${MEM_WRAP[@]}"` is undefined and bash errors).
+
+Reviewers: when you find an OOM-mitigation block whose root cause is fixed,
+swap the commented OLD code back in and delete the NEW + comment block in
+one commit. Update this doc's "OLD/NEW pattern" section to remove the
+relevant entry from the list above.
 
 ## Cross-side guidance
 

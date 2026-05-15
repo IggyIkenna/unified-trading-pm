@@ -57,21 +57,59 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
-# ── MEMORY GOVERNANCE ────────────────────────────────────────────────────────
-# Cap heavy subprocesses (pytest, basedpyright) at QG_MEM_CAP via
-# `systemd-run --user --scope`. Prevents one runaway process from OOM-killing
-# the whole machine. Incident 2026-05-15: a single python process hit 79GB RSS
-# (basedpyright/pytest), kernel invoked oom-killer, took down VS Code + all
-# worker agent sessions on this dev box.
-# Default: 10G per heavy subprocess. Disable by setting QG_MEM_CAP=0.
+# ╔══ MEMORY GOVERNANCE [OOM MITIGATION — added 2026-05-15] ═══════════════════╗
+# Cap heavy subprocesses (pytest, basedpyright) at QG_MEM_CAP. Prevents one
+# runaway process from OOM-killing the whole machine.
+#
+# Incident 2026-05-15: single python process hit 79GB RSS (basedpyright/pytest),
+# kernel oom-killer fired, took down VS Code + all worker agent sessions on
+# 93 GB dev box.
+#
+# Linux: uses `systemd-run --user --scope -p MemoryMax=N -p MemorySwapMax=0`.
+#        Process exceeding cap dies with exit 137 (SIGKILL by cgroup). Rest of
+#        the box is unaffected. Requires bash 4+ and systemd user instance
+#        (available out-of-the-box on Ubuntu/Debian/Fedora since systemd v226).
+# macOS: NO equivalent cgroup memory cap without root. Falls through to
+#        MEM_WRAP=() empty array — pytest/basedpyright run unwrapped. The
+#        PYTEST_WORKERS=1 default below still applies. Warning printed once
+#        per QG run when QG_MEM_CAP is non-zero on a non-systemd host.
+#
+# Per-user override (recommended — put in ~/.bashrc or ~/.zshrc):
+#   export QG_MEM_CAP=15G    # 96GB workstation, can spare more for QG
+#   export QG_MEM_CAP=8G     # 24GB laptop, leave room for other apps
+#   export QG_MEM_CAP=0      # disable cap (also disables the macOS warning)
+#
+# Per-call override:
+#   QG_MEM_CAP=20G bash scripts/quality-gates.sh
+#
+# ── TO REVERT (once OOM root cause is properly fixed elsewhere) ───────────────
+# Option 1 (runtime, no code change):  export QG_MEM_CAP=0  in your shell.
+# Option 2 (full code revert):         delete this whole block AND remove the
+#   `"${MEM_WRAP[@]}"` prefix from the pytest + basedpyright call-sites below
+#   (search for "MEM_WRAP" in this file — should find 3 prefixed call-sites).
+# Option 2 partial revert is also safe: deleting just this block leaves the
+# call-sites with `"${MEM_WRAP[@]}"` undefined — bash will error. Either drop
+# this block AND the prefixes, or use Option 1.
+#
+# Full SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
+# ╚════════════════════════════════════════════════════════════════════════════╝
 QG_MEM_CAP="${QG_MEM_CAP:-10G}"
 MEM_WRAP=()
-if [[ "$QG_MEM_CAP" != "0" ]] && command -v systemd-run &>/dev/null; then
-    if systemd-run --user --scope -p MemoryMax=100M --quiet -- true >/dev/null 2>&1; then
-        # MemorySwapMax=0 prevents the process from thrashing into swap before
-        # hitting the cap — without it the kernel will swap-out other processes
-        # to keep the runaway alive, slowing the whole box.
+if [[ "$QG_MEM_CAP" != "0" ]]; then
+    if command -v systemd-run >/dev/null 2>&1 \
+        && systemd-run --user --scope -p MemoryMax=100M --quiet -- true >/dev/null 2>&1; then
+        # MemorySwapMax=0 prevents thrashing into swap before hitting the cap —
+        # without it the kernel swaps-out other processes to keep the runaway
+        # alive, slowing the whole box before SIGKILL fires.
         MEM_WRAP=(systemd-run --user --scope -p MemoryMax="$QG_MEM_CAP" -p MemorySwapMax=0 --quiet --)
+    elif [[ -z "${_QG_OOM_WARN_SHOWN:-}" ]]; then
+        # macOS / non-systemd Linux / containers without --user manager.
+        # Warn once per shell so the macOS teammate knows the cap is inactive.
+        echo "⚠️  QG_MEM_CAP=$QG_MEM_CAP set but systemd-run unavailable on this host" >&2
+        echo "    → running pytest + basedpyright without hard memory cap" >&2
+        echo "    → on macOS / small-RAM hosts: keep parallel QGs to 1-2 slots max" >&2
+        echo "    → silence this warning: export QG_MEM_CAP=0  in your shell rc" >&2
+        export _QG_OOM_WARN_SHOWN=1
     fi
 fi
 
@@ -218,11 +256,16 @@ if [ "$RUN_TESTS" = true ]; then
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    # Default 1 worker (memory-frugal). Multi-slot parallel QG used to default to
-    # cpu_count//4 — with 8 slots × N workers × ~2-4GB each, peak memory hit OOM
-    # on 93GB box (2026-05-15 incident). PYTEST_WORKERS env var still overrides;
-    # set in repo quality-gates.sh ONLY if the repo's test suite is wall-clock-
-    # critical and the dev box has memory headroom.
+    # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
+    # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
+    # slots × ~4 workers × 2-4GB each peak the 93GB dev box hit OOM.
+    #     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
+    #     PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
+    # NEW (post-OOM): default 1 worker. Per-repo opt-in: set PYTEST_WORKERS=N
+    # in the repo's scripts/quality-gates.sh BEFORE `source base-service.sh`.
+    # TO REVERT: comment NEW line below, uncomment OLD pair above.
+    # SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
+    # ╚════════════════════════════════════════════════════════════════════════╝
     PARGS="-n ${PYTEST_WORKERS:-1} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header"
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
@@ -242,6 +285,11 @@ if [ "$RUN_TESTS" = true ]; then
     _pytest_log="$(mktemp "${TMPDIR:-/tmp}/qg-pytest-out.XXXXXX")" || exit 1
     trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
 
+    # [OOM MITIGATION 2026-05-15] `"${MEM_WRAP[@]}"` prefix puts pytest in a
+    # cgroup with hard memory cap on Linux (no-op + empty array on macOS).
+    # OLD invocation (pre-2026-05-15) had no MEM_WRAP prefix:
+    #     if ! $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} ... ; then
+    # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix from both branches below.
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
         if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
             cat "$_pytest_log"
@@ -407,6 +455,9 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     BP_PID=""
     trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
     _bp_out="/tmp/bp_out.$$"
+    # [OOM MITIGATION 2026-05-15] MEM_WRAP wraps basedpyright in cgroup mem cap (Linux only).
+    # OLD: run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
+    # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix below.
     run_timeout "${PYRIGHT_TIMEOUT:-120}" "${MEM_WRAP[@]}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     BP_PID=$!
     wait $BP_PID || true
