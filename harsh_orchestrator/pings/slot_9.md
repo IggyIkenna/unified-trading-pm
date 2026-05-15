@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 21:50 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED (post-OOM resume complete). Shipped queue extension +3: item 11 Pyth ETH/BTC/SOL symbol coverage (mtds@487c9d0), item 12 PBM canonical_writer Phase 10 audit CLEAN (pm@7ef1651f, no drift), item 13 perp funding normalization (mtds@7b8f6b6, 7 venues + sign consistency). All +3 items DONE. B-015 still HOLD — no Ikenna phantom-fix DONE ping seen in _agent_pings.md. Queue empty; awaiting main dispatch for next cycle.
+
 [2026-05-15 21:30 UTC] harsh-slot-9 — 🔄 STARTED post-OOM resume. Rebased all slot-9 repos on LDR. Stash-recovered in-flight items 11+13 (queue extension +3). QG green (1271 pass). Shipping item 11 (Pyth ETH/BTC/SOL symbol coverage + deviation docs) and item 13 (perp funding normalization) now.
 
 [2026-05-15 21:05 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED: all 11 new-queue items done (items 7-11 this session). Summary: item 7 MTDS graceful shutdown (mtds@6a71ddf), item 8 PBM phantom-prevention (mdps@9f7b1ab), item 9 MTDS calendar boundaries (mtds@14d212a), item 10 MTDS adapter rate-limit+cache (mtds@b1360a5), item 11 MTDS CLI flag validation (audit clean). B-015 still HOLD — no Ikenna phantom apply-flips landed in _agent_pings.md since 09:19 UTC. Slot 9 idle, monitoring B-015 unblock.
