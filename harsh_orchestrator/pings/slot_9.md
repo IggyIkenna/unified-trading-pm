@@ -103,3 +103,20 @@ Poll `_agent_pings.md` every 30 min for B-015 greenlight (Ikenna phantom-fix). W
 14. **MTDS CLI flag validation tests** — verify `--operation/--mode/--asset-group` flag combinations: invalid combos raise loud at parse-time, not runtime. Add tests if missing. Done-def: bad-flag combos rejected + good combos pass + MTDS QG green.
 
 After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred features-service item = ~24 AI-days non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
+
+[2026-05-15 09:13 UTC] [main → slot 9] — 🏁 **CYCLE-CLOSE acked — outstanding throughput!** Items 5+7+8+10+11+12+13+14 all shipped (mtds@0c40d02 handler additions + mtds@d63fda5 Pyth + mtds@dcd6f5f retry-backoff + mtds@0fa3f4a calendar boundaries + mtds@7a41970 adapter rate-limit + pbm@2428656 phantom detection + mtds@40de2cc CLI flags). Items 1+2+3+4 done earlier. Item 9 likely shipped via pbm@c7219f6 (NAN_FILL+PARTIAL_OK emission tests).
+
+🔓 **GOOD NEWS — item 6 NOW UNBLOCKED**: Slot 4 pinged features-service CYCLE-CLOSE (all 10 items DONE incl. features-service per-family CLIs + Phase 6 parity + UAC sports key fix). You can now pick up item 6.
+
+📋 **NEW QUEUE — ~20 AI-days MTDS + PBM expansion**:
+1. **ups-p2-run-tag-mtds-calendar (was deferred item 6)** — wire `--run-tag` into MTDS GCS output path so per-VM shard isolation (MANIFEST_PER_VM_SHARDS) is tag-aware. Also update features-service to consume run-tagged MTDS output. Done-def: `--run-tag` flows from CLI → GCS path → features-service read; unit test covers the path; QG green on both repos.
+2. **MTDS schema versioning tests** — verify each handler's output schema has CANONICAL_*_VERSION (per UAC schema versioning rule); regression test for version bump scenarios. Done-def: per-handler version test + MTDS QG green.
+3. **PBM batch-to-live mode parity tests** — verify the SAME handler module produces equivalent output schema in `--mode batch` vs `--mode live`. Done-def: parity test scaffold + 3+ assertions covering schema equivalence.
+4. **MTDS handler performance benchmarks** — wall-time per 1k events; memory peak. Skip if no perf harness exists — file issue doc instead. Done-def: bench data OR issue doc filed.
+5. **MTDS observability audit** — verify every handler emits STARTED/STOPPED/FAILED via UEI per CLAUDE.md lifecycle rules. Fix any gap. Done-def: lifecycle parity confirmed + MTDS QG green.
+6. **PBM Phase 8 codex audit** — verify codex/02-data/* docs (manifest writer, honest-absence, service-output emission) reflect PBM shipped code; file issue docs per drift. Done-def: audit report.
+7. **MTDS handler graceful shutdown tests** — SIGTERM mid-batch: handler emits STOPPED + flushes pending writes + closes GCS sessions. Done-def: 2+ shutdown scenarios + MTDS QG green.
+8. **PBM cluster validation tests** — bundled data_type cluster validation at `record_captured()` boundary (per CLAUDE.md "cluster validation MANDATORY" rule). Test scenarios: complete cluster, missing one member, schema-drift. Done-def: 3+ scenarios + PBM QG green.
+9. **MTDS Tenderly-fork integration smoke** — DeFi handler integration test against Tenderly fork fixture (for lst_rates / evm_defi / solana_defi at least one each). Done-def: 3+ smoke tests using existing Tenderly fixtures + skipped in CI without credentials.
+10. **MTDS adapter error classification audit** — verify every adapter calls `classify_venue_error()` from UAC + emits `ADAPTER_FETCH_FAILED` (per CLAUDE.md "Every adapter MUST" rule). Fix gaps. Done-def: 0 unclassified errors + MTDS QG green.
+🛑 B-015 STILL HOLD — poll `_agent_pings.md` every ~30 min for Ikenna phantom-fix DONE; when it lands, drop everything and launch B-015 Phase 2 re-smoke. Self-pivot through queue otherwise.
