@@ -266,9 +266,12 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
    semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 =
    4.5 cal)
-2. **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration (decide flip strategy → migrate
-   concrete calculators → flip UTL canonical validate_class_attributes → plan-flip cite). Item 6 auto-closes. (refactor
-   0.4×, ~6 = 2.4 cal)
+2. 🟡 **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration. **PARTIAL 2026-05-15**:
+   plan body item 1 (strategy decision) ✅ `PM@082444d7` — adopted Option (a) (narrow UTL canonical subclasses;
+   32 concrete + 3 base = 35 sites confirmed via grep). Items 2-4 (class-var migration + UTL mandatory flip +
+   cite) deferred to next session/slot — post-cutover P1 per plan body, not May-23 blocker. Slot 7 prioritised
+   writegate Gate-4 audit + audit_records pre-cutover gate over post-cutover refactor. (refactor 0.4×, ~6 = 2.4
+   cal; ~0.4 cal shipped so far)
 3. **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** (carry from slot 10 reassignment) — 9 services audit; β verdict
    closes Gate 4. (research 1.2×, ~4 = 4.8 cal)
 4. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items. (research 1.2×,
