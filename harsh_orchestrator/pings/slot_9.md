@@ -336,7 +336,7 @@ After launch:
 
 - [x] **4. MTDS data_status_reporter coverage** — ✅ 11 tests (5 classes): _manifest_keys_for_day (4: venue-pair extraction, empty/None/missing-day), _tally_day full/zero-row/partial/manifest-only (5), _summarise multi-day+zero-catalogue (2). false_missing_rate, gap_keys, manifest_only_keys all covered. MTDS QG green. mtds@5580979.
 
-- [ ] **5. PBM canonical_writer integration tests with MTDS** — prior audit was CLEAN (pm@7ef1651f); add explicit integration tests proving MTDS → PBM honors archetype-grain partitioning end-to-end. Done-def: 3+ integration tests + PBM QG green.
+- [x] **5. PBM canonical_writer integration tests with MTDS** — ✅ 25 tests (3 classes): bridge completeness (8 entries verified), parametrized archetype dispatch CeFi→tardis / DeFi→onchain_subgraph / TradFi→databento / Prediction→polymarket_clob (13), cross-asset isolation + fall-through contract (4). PBM QG green. mdps@4ad6060.
 
 - [ ] **6. MTDS Solana handler retry policy** — `_get_with_retry` from prior cycle (mtds@dcd6f5f). Audit: Helius timeouts? rate-limit (429)? blockhash invalidation? Done-def: 4+ retry scenarios + MTDS QG green.
 
