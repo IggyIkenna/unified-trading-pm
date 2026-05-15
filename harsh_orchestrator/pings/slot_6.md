@@ -224,3 +224,13 @@ codes (ORDER_FILLED, RISK_MONITORING_STARTED, etc.) are intentional design exten
 enum constraint. (3) "EVENT_NAME" placeholders exist only in codex/06 test-template docs (not service code) — not a bug.
 Import paths: all `from unified_trading_library import log_event` are valid (UTL root re-exports). No further malformed
 callsites found. Starting item 3 (UTL config_interface coverage).
+
+[2026-05-15 19:30 UTC] slot-6 — ✅ **ITEM 3 DONE: UTL config_interface coverage** — UTL QG now GREEN (≥80% total).
+Fixes shipped (UTL@246ab77): (1) testnet_contracts.py `_default_yaml_path()` path fix (4 levels up → workspace root);
+(2) PROTOCOL_SCHEMAS validation unblocked — removed `recursive_leverage_receiver` from aave_v3 required (not deployed
+on any chain, 6 × missing) and `swap_router` from uniswap_v3 required (key varies by chain: swap_router vs
+swap_router_02, 3 × missing → 9 total missing fixed); (3) test_testnet_contracts.py YAML path fix (5 levels up);
+(4) test_venue_config.py stale venue name: UNISWAPV2-ETH → UNISWAPV2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR
+wired into UTL quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ +
+events/ + events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR
+in base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.
