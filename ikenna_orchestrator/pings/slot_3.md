@@ -569,3 +569,7 @@ Impact on May-23: ASTER perp-funding is on hedge-leg path; backfill needed befor
 ```
 
 Awaiting operator [ack] before launching. Fix code is ready.
+
+## 2026-05-15T18:54:32Z — slot-3 boot 2026-05-15 cycle
+
+Starting on item 1: Kraken CeFi live REST + WS integration. Credentials now vaulted per work_split header.
