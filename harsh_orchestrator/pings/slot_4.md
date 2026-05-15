@@ -232,10 +232,9 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 - [x] **5. features-service multi_timeframe + calendar lifecycle tests** — pre-existing, confirmed (6 tests pass)
 - [x] **6. features-onchain Phase 6.6 emission policy tests** — features-service@a17d85b0 (4 new tests)
 - [x] **7. workspace-wide pytest marker hygiene audit** — AUDIT CLEAN (96 markers across 37 files, all documented)
+- [x] **8. instruments-service ETF/ADR migration coverage gap** — instruments-service@f14f39a (38 tests: migrate_instrument_type_lowercase + migrate_defi_bare_to_asset_group; pre/post + mocked GCS; QG ✅)
 
-### Remaining (in-progress = 8; pending = 9-15)
-
-- [ ] **8. instruments-service ETF/ADR migration coverage gap** — extend the pre/post-state + row-count + dtype assertions pattern (from instruments@4fb84fc prior cycle) to remaining migration scripts. Done-def: every active migration has pre/post tests + instruments QG green.
+### Remaining (in-progress = 9; pending = 10-15)
 
 - [ ] **9. execution-service order_router test gaps** — coverage gap fill on `order_router.py`. Done-def: ≥85% coverage + execution QG green. Note: slot 5 has execution-service Phase 9 cost-model work; order_router is separate surface (no collision).
 
@@ -254,3 +253,5 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 **Conflict rules**: features-service = slot 4 OWNS (you); deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS = slot 9; execution-service order_router separate from slot 5's Phase 9 surface.
 
 Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
+
+[2026-05-15 20:15 UTC] slot-4 — ✅ ITEM 8 DONE: instruments-service migration coverage gap. Added 2 test files (38 tests total) covering 2 previously-untested active migration scripts: (1) test_migrate_instrument_type_lowercase.py (19 tests): regex detection of uppercase GCS hive segments, path lowercasing transformation, pre/post path assertions, mocked GCS copy+delete; (2) test_migrate_defi_bare_to_asset_group.py (19 tests): bare-path classification, asset_group=defi/ insertion, pre/post segment count assertions, mocked GCS error+no-delete. QG ✅ ALL GATES PASSED (96s). instruments-service@f14f39a. Moving to item 9.
