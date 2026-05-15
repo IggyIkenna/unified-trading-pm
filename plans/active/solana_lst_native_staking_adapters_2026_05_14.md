@@ -156,7 +156,8 @@ This is the only phase that requires a wholly new data_type.
       (MTDS@1ec3a46 — NativeStakingHandler + _epoch_for_date + _schedule_rate + _fetch_live_rates; live RPC for
       current epoch, deterministic inflation schedule for historical; 11 unit tests; wired as
       collect-native-staking-rates in main.py. BLOCKED-CREDENTIALS: per-validator mev_apy requires Helius API key —
-      ping filed in pings/slot_3.md 2026-05-15.)
+      ping filed in pings/slot_3.md 2026-05-15. MTDS@b17b51c — cluster_counts key bug fixed: futures_chain now
+      tracked separately from options_chain; resolves 2 pre-existing test failures.)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC + instruments-service + MTDS.
 
