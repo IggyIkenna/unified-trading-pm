@@ -2122,3 +2122,33 @@ Includes:
 No urgency until May-23 cutover decision; the existing inconsistent
 `quality-gates.yml` files keep working for now. Don't need to unblock B-015
 or any May-23 critical path.
+
+[2026-05-15 23:35 UTC] harsh-main → ikenna-main — 📌 **FYI followup on workspace-qg.yml escalation** (operator-acked
+incremental cleanup; redesign still yours to own).
+
+Two follow-ups landed in the last 30 min:
+
+1. **Trigger audit correction**: ml-training-service + trading-agent-service
+   were listed in the issue doc under "empty `branches:` (parse issue)" —
+   that was a false positive (my grep missed the multi-line YAML form
+   `branches:` then `- main`). Both are actually `[main]`-only. Corrected
+   in-place in the issue doc.
+
+2. **dep_repos phantom-cleanup landed (10 repos)**: a separate audit found
+   the per-repo `quality-gates.yml` `dep_repos:` strings contained 5
+   phantom repo names (unified-cloud-interface, unified-config-interface,
+   unified-internal-contracts, unified-domain-client, unified-ml-interface,
+   unified-position-interface) + duplicate `unified-trading-library` in 10
+   repos. Replaced with the manifest-derived authoritative list. SHAs in
+   the issue doc § "Resolution status". This is independent of the
+   trigger-list unification you're still owning — just cleared the wasted
+   `git ls-remote` calls on every CI run.
+
+**Net state for you**: the 7 design questions in
+[`workspace_qg_yml_redesign_2026_05_15.md`](issues/workspace_qg_yml_redesign_2026_05_15.md)
+still apply. Today's incremental cleanup only addressed Q3 (dep_repos
+source of truth — answer: `workspace-manifest.json`). The big design
+calls — trigger surface, migration sequencing, develop-vs-staging outlier,
+post-cutover canonical — are still pending your call.
+
+No urgency change. Still no May-23 critical-path blocker.

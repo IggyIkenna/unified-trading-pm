@@ -21,6 +21,10 @@ The template **omits the `live-defi-rollout` branch from its trigger list**, whi
 9 production repos currently rely on for every-push QG runs (hundreds of
 runs/day). Rolling it out as-is would silently kill those triggers.
 
+**UPDATE 2026-05-15 ~23:30 UTC**: dep_repos phantom-deps cleanup landed on
+10 repos (separate from the trigger-unification redesign which remains open).
+See § "Resolution status" at the bottom of this doc.
+
 Operator decision 2026-05-15 ~23:00 UTC: **discard slot 8's template, file this
 issue doc with full state, escalate to opus-max tier (likely Ikenna's side)
 for redesign + proper rollout.**
@@ -40,7 +44,14 @@ patterns** exist in the wild:
 | `[main]` only                                     | alerting-service, batch-live-reconciliation-service, ml-inference-service, pnl-attribution-service, risk-and-exposure-service, system-integration-tests, client-reporting-api (**7**)                                              | Only fires on PR-to-main (slow cadence)        |
 | `[main, staging]`                                 | unified-api-contracts, ibkr-gateway-infra (**2**)                                                                                                                                                                                   | Standard target-branch pattern                 |
 | `[main, develop]`                                 | position-balance-monitor-service (**1**)                                                                                                                                                                                            | Uses `develop` instead of `staging` (drift)    |
-| empty `branches:` (likely parse issue)            | ml-training-service, trading-agent-service (**2**)                                                                                                                                                                                  | Need investigation — may be broken triggers    |
+
+**CORRECTION 2026-05-15 23:30**: an earlier version of this table listed
+ml-training-service + trading-agent-service under "empty `branches:` (parse
+issue)". That was a false positive from a single-line grep; their
+`quality-gates.yml` files use the multi-line YAML list form
+(`branches:` then `- main` on the next line), which my grep didn't capture.
+Both repos are actually `[main]`-only — adjust counts: 7 → 9 in the
+`[main]`-only cluster, and remove the "empty" row entirely.
 
 **Verified via `gh run list`**:
 - execution-service: 15× `Quality Gates` on push to LDR (last 30 runs sample)
@@ -168,4 +179,49 @@ should re-spawn this on an opus-max slot.
 execution: owner: ikenna-main (pending ack) OR harsh-main on opus-max slot
 cadence: one-shot redesign + multi-repo rollout
 verifier: per-repo `gh run list` shows expected trigger pattern on appropriate branches
-last_executed: NEVER
+last_executed: NEVER (trigger-unification design)
+
+---
+
+## Resolution status (live updates)
+
+### 2026-05-15 23:30 UTC — dep_repos phantom-cleanup landed (separate from trigger redesign)
+
+Audit of `dep_repos:` strings across the 21 Python repos' `quality-gates.yml`
+found **10 repos with phantom and/or duplicate deps**:
+
+| Repo                                | Phantom deps removed                                                                                                              | Duplicates removed   | New SHA on origin/LDR   |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------- |
+| alerting-service                    | unified-cloud-interface, unified-config-interface, unified-internal-contracts                                                     | unified-trading-library | alerting-service@40ba05d |
+| batch-live-reconciliation-service   | unified-cloud-interface, unified-config-interface, unified-internal-contracts                                                     | unified-trading-library | batch-live-reconciliation-service@3115f52 |
+| client-reporting-api                | unified-cloud-interface, unified-config-interface, unified-internal-contracts                                                     | unified-trading-library | client-reporting-api@d42ecaf |
+| ml-inference-service                | unified-cloud-interface, unified-config-interface, unified-domain-client, unified-internal-contracts, unified-ml-interface         | unified-trading-library | ml-inference-service@824f0db |
+| ml-training-service                 | unified-cloud-interface, unified-config-interface, unified-domain-client, unified-internal-contracts, unified-ml-interface         | unified-trading-library | ml-training-service@845b0ce |
+| pnl-attribution-service             | unified-cloud-interface, unified-config-interface, unified-domain-client, unified-internal-contracts, unified-ml-interface         | unified-trading-library | pnl-attribution-service@6db1b52 |
+| position-balance-monitor-service    | unified-cloud-interface, unified-config-interface, unified-domain-client, unified-internal-contracts, unified-ml-interface, unified-position-interface | unified-trading-library | position-balance-monitor-service@d987836 |
+| risk-and-exposure-service           | unified-cloud-interface, unified-config-interface, unified-internal-contracts                                                     | unified-trading-library | risk-and-exposure-service@0849397 |
+| system-integration-tests            | unified-cloud-interface, unified-config-interface, unified-domain-client, unified-internal-contracts, unified-ml-interface         | unified-trading-library | system-integration-tests@f22f7f6 |
+| trading-agent-service               | unified-cloud-interface, unified-config-interface, unified-internal-contracts                                                     | unified-trading-library | trading-agent-service@3cda16d |
+
+**Method**: replace per-repo `dep_repos:` string with the manifest-derived
+authoritative list (sorted alphabetical) from
+`unified-trading-pm/workspace-manifest.json -> repositories.<repo>.dependencies[name]`.
+
+**Effect**: future CI runs no longer attempt to `git ls-remote` + clone
+phantom repos (which would 404). Each repo's QG is now a hair faster and
+deterministic.
+
+**What this didn't fix**:
+- The trigger-list inconsistency across the 5 patterns (still 9 LDR-trigger,
+  9 main-only, 2 main+staging, 1 main+develop) — that's the redesign
+  Ikenna/opus-max needs to do.
+- alerting-service still has the committed `workspace-qg.yml` from
+  `05dec98` running in parallel with `quality-gates.yml`. Redesigner
+  decides revert or keep.
+
+### Open items for the redesign (unchanged)
+
+The 7 design questions in § "Why this needs opus-max + Ikenna review" still
+apply to the trigger-list unification. The dep_repos phantom-cleanup
+landed today only addresses one of those (the `dep_repos` source-of-truth
+question — answer: `workspace-manifest.json`).
