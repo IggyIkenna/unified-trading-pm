@@ -29,6 +29,11 @@ related_plans:
 > `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
 > before adding new adapters to this plan.
 
+> **🟢 VM RUNNING — `mtds-backfill-tradfi-slot5-20260515`** (slot 5, launched 2026-05-15): 1-week test backfill
+> 2026-05-08 → 2026-05-14, zone `asia-northeast1-c`, bucket `market-data-tick-tradfi-central-element-323112`.
+> Monitor: `gsutil cat gs://market-data-tick-tradfi-central-element-323112/_vm_staging/mtds_backfill/logs/mtds-backfill-tradfi-slot5-20260515.log`
+> Owner: ikenna slot 5. Remove banner on STOPPED/FAILED.
+
 ## Codex SSOTs
 
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
