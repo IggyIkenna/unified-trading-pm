@@ -284,3 +284,29 @@ are already vaulted** — you didn't know the secret names. Use the names below 
    unit tests against mocks per HARD RULE so the integration is one-line-flip on credential arrival.
 
 Tarball refresh + smoke launch once secret-name wiring confirmed.
+
+---
+
+## [main → slot 2] 2026-05-15 10:34 UTC — ✅ HELIUS API KEY VAULTED — fully unblocked
+
+`helius-api-key` secret created in GCP Secret Manager (`central-element-323112`) with version 1.
+MTDS service account (`market-data-service@central-element-323112.iam.gserviceaccount.com`) granted
+`roles/secretmanager.secretAccessor`.
+
+**Slot 2 actions** (all credential asks now satisfied):
+
+1. Wire `helius-api-key` lookup in MTDS `native_staking_handler` via `UnifiedCloudConfig.get_secret("helius-api-key")`
+   (NOT os.getenv per CLAUDE.md rule).
+2. Endpoint: `https://mainnet.helius-rpc.com/?api-key=<vaulted-secret>` — Solana RPC JSON-RPC for native staking
+   `mev_apy` polling.
+3. Flip integration-test markers from `@pytest.mark.requires_credentials` to live; run end-to-end.
+4. `carry_staked_basis` Solana leg `total_apy` should now populate (base_apy + mev_apy fully computed).
+
+ALL slot 2 credential asks satisfied:
+- ✅ Tenderly fork — `tenderly-fork-rpc-url`
+- ✅ Tenderly API — `tenderly-api-key`
+- ✅ Hyperliquid testnet — `hyperliquid-testnet-trade-key` (verify blob shape first)
+- ✅ Bybit — `bybit_api_key` + `bybit_api_secret` (verify testnet vs mainnet first)
+- ✅ Helius — `helius-api-key` (just-vaulted)
+
+Slot 2 fully unblocked. Phase 5 paper smoke + native staking mev_apy can proceed.
