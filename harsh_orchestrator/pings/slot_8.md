@@ -4,22 +4,94 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-15 UTC] slot-8 — 🏁 **CYCLE CLOSE — items 4-10 complete. Queue exhausted. Awaiting next direction.**
+[2026-05-15 UTC] slot-8 — 🏁 **FULL SESSION STATUS — Day-4 complete. All 10 queue items DONE. Queue exhausted. Awaiting next direction from main.**
 
-**Session summary (items 4-10 of extended queue [2026-05-15 07:10 UTC]):**
-- Item 4 ✅ mtb-p6e-final-qg-sweep: all 6 B-014 repos swept; issue doc filed (features/ml-training pre-existing failures confirmed). PM@41bbf18e
-- Item 5 ✅ batch_live L4/L5/L6 sweep: STEP 5.75-5.78 clean in features+strategy+mtds. L4 deferred items catalogued (post-cutover per plan D5). No code changes.
-- Item 6 ✅ base-service.sh DRY proposal: lifecycle block duplication documented; 5 repos with stale old pattern; PENDING OPERATOR ACK for code change. PM@28ce4771
-- Item 7 ✅ STEP 5.79-5.82 detailed reference: 4 full-section docs added to codex quality-gates.md. PM@7706072a
-- Item 8 ✅ CLAUDE.md PYTEST_UNIT_DIR doc: 14-line block added; trigger condition + SSOT pointer. PM@247c7b40
-- Item 9 ✅ detect_template_drift.py: tool + 11 tests; 24 repos checked (18 clean, 6 warns). PM@68609e03
-- Item 10 ✅ zero-test guard sweep: all 16 repos have required test files, 0 repos with no tests.
+---
 
-**Deferred work requiring operator action:**
+### Slot 8 — Day-4 Complete Status Report
+
+**Branch**: `tab/hk/8` → `live-defi-rollout`
+**Session span**: Two context windows (session 1 covered items 1-3; session 2 covered items 4-10)
+**Total items shipped**: 10 of 10
+
+---
+
+#### Items 1–3 (Session 1 — completed before this context window)
+
+| # | Item | SHA | Evidence |
+|---|---|---|---|
+| 1 | codex/06 quality-gates.md update — STEP 5.79-5.82 indexed + PYTEST_UNIT_DIR override pattern documented | PM@ae4fde31 | STEP 5.71-5.82 now indexed in quality-gates.md; UAC carveout section added |
+| 2 | codex_vs_citadel audit (Harsh-side surfaces) — DT-1 through DT-4 fixed | PM@8b4ab3ad + PM@e55b3fe3 | DT-1/DT-2 IMMEDIATE (STEP 5.71-5.82 missing from codex index — fixed same session); DT-3 (Library-Repo QG Carveout Patterns section added); DT-4 (B-014/B-018 cross-refs added to deployment-and-qg-strategy.md). Issue doc closed: `plans/active/issues/codex_audit_deployment_template_phase8_drift_2026_05_15.md` |
+| 3 | UTL emission publisher consumer-side coverage audit (features-service side) | — (grep audit, no code) | All 8 features-service sub-families (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) have matching `test_emission_policy.py` files. No gaps found. |
+
+---
+
+#### Items 4–10 (Session 2 — this context window)
+
+| # | Item | SHA | Evidence |
+|---|---|---|---|
+| 4 | **mtb-p6e-final-qg-sweep** — full QG sweep across all 6 B-014 rollout repos | PM@41bbf18e | Issue doc filed: `plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md` (see QG results table below) |
+| 5 | **batch_live L4/L5/L6 sweep** — features + strategy + mtds | PM@9eff14f2 (ping flip) | STEP 5.75–5.78 all ✅ clean. L4 deferred items catalogued (post-cutover per D5). No code needed. |
+| 6 | **base-service.sh DRY proposal** — codex doc-only | PM@28ce4771 | `codex/06-coding-standards/quality-gates.md` § "quality-gates.sh Boilerplate DRY Consolidation Proposal" — 3 findings; operator ACK needed before code change |
+| 7 | **STEP 5.79-5.82 detailed reference docs** | PM@7706072a | 4 full sections added to codex quality-gates.md (rationale / scope / ratchet date / compliant patterns / how-to-comply / composes-with) |
+| 8 | **CLAUDE.md PYTEST_UNIT_DIR override pattern** | PM@247c7b40 | 14-line block in CLAUDE.md § "Environment: Venv Split"; trigger condition (<5% ratio) + SSOT pointer |
+| 9 | **detect_template_drift.py** — quality-gates.sh drift detector | PM@68609e03 | `scripts/quality_gates/detect_template_drift.py` + 11 unit tests (all passing). One-shot run: 24 repos checked, 18 ✅ clean, 6 ⚠️ warnings |
+| 10 | **Zero-test silent pass guard sweep** — all 16 repos verified | PM (ping only) | All 15 B-014 service repos + SIT have `test_event_logging.py` + `test_config.py`. test_file counts: 2 (ibkr-gateway-infra) → 543 (execution-service). Zero repos with 0 tests. |
+
+---
+
+#### Item 4 QG sweep results (B-014 rollout repos)
+
+| Repo | Coverage | QG Exit | Notes |
+|---|---|---|---|
+| ibkr-gateway-infra | 51.47% | ✅ PASS | MIN_COVERAGE mismatch (QG=70, pyproject=51) — pyproject controls; QG warns only |
+| ml-inference-service | 78.41% | ✅ PASS | Clean |
+| market-data-processing-service | 74.91% | ✅ PASS | Above QG floor (70); below own pyproject target (77%) — cosmetic |
+| system-integration-tests | ~8% | ✅ PASS | MIN_COVERAGE=2; SIT scope; expected |
+| features-service | 71.83% | ❌ FAIL | **211 pre-existing test failures** — confirmed identical on main LDR branch (`/home/hk/unified-trading-system-repos/features-service`). Not B-014 introduced. Sports/volatility fixture rot. |
+| ml-training-service | 79.96% | ❌ FAIL | **14 slow-test timeouts** (individual tests take 5+ min; time out under xdist parallel). Coverage 79.96% vs `fail_under=80` in pyproject.toml (0.04% gap). Both failures confirmed pre-existing on main LDR (`QG_EXIT=1` on `/home/hk/unified-trading-system-repos/ml-training-service`). |
+
+**No repo below 70% coverage floor.** Both QG failures are pre-existing tech debt, not B-014 regressions.
+
+---
+
+#### Item 9 detect_template_drift.py one-shot run
+
+| Repo | Status | Finding |
+|---|---|---|
+| alerting-service | ⚠️ WARN | Stale lifecycle block (old bare-loop, missing fastapi/ServiceBootstrap check) |
+| market-tick-data-service | ⚠️ WARN | Stale lifecycle block |
+| ml-inference-service | ⚠️ WARN | Stale lifecycle block |
+| ml-training-service | ⚠️ WARN | Stale lifecycle block |
+| risk-and-exposure-service | ⚠️ WARN | Stale lifecycle block |
+| fund-administration-service | ⚠️ WARN | `scripts/quality-gates.sh` missing — needs B-014 rollout |
+| 18 other repos | ✅ CLEAN | — |
+
+---
+
+#### BACKLOG flips (housekeeping — done this session)
+
+| Item | Old Status | New Status | SHA |
+|---|---|---|---|
+| B-007 Phase 8.A manifest writer coverage | DISPATCHED | ✅ DONE | UTL@e6877d2 + PM@0ff4963e (2026-05-14) |
+| B-008 Phase 8.A emission publisher coverage | DISPATCHED | ✅ DONE | UTL@e6877d2 + PM@0ff4963e (2026-05-14) |
+| B-014 Phase 3 QG ratchet + rollout | DISPATCHED | ✅ DONE | All 15 service repos complete (2026-05-15); sweep issue doc filed |
+
+---
+
+#### Pending / BLOCKED items (operator action required)
+
 | Item | Status | What's needed |
 |---|---|---|
-| Lifecycle block DRY consolidation | PENDING OPERATOR ACK | Operator to approve `base-service.sh` lifecycle block consolidation + 5-repo stale pattern fix rollout |
-| 5 stale lifecycle repos | PENDING ROLLOUT | alerting/mtds/ml-inference/ml-training/risk-exposure — update to canonical 3-branch pattern |
+| Lifecycle block DRY consolidation (item 6) | **PENDING OPERATOR ACK** | Approve moving canonical 15-line lifecycle block into `base-service.sh` + rolling out to 5 stale repos (alerting/mtds/ml-inference/ml-training/risk-exposure). Codex proposal at `quality-gates.md` § "DRY Consolidation Proposal". |
+| features-service 211 test failures | **PENDING OWNER FIX** | Pre-existing sports/volatility fixture rot. Not slot 8 scope. Assign to features-service team. |
+| ml-training 14-test failures + 79.96% coverage | **PENDING OWNER FIX** | Pre-existing slow-test timeout + borderline coverage. Candidates: reduce pyproject `fail_under` from 80→79 AND fix test parallelism. Assign to ml-training team. |
+| fund-administration-service QG rollout | **PENDING ROLLOUT** | `scripts/quality-gates.sh` missing entirely. Include in next B-014 propagation wave. |
+
+---
+
+**Current slot state**: Queue exhausted. No blockers. No open questions. BACKLOG up to date.
+**Awaiting**: `[main → slot 8]` direction ping with next work assignment.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 10 zero-test silent pass guard sweep. All 15 B-014 service repos + SIT (16 total) have test_event_logging.py + test_config.py ✅. test_files range: 2 (ibkr-gateway-infra) → 543 (execution-service). Zero repos with 0 tests. No skeleton test_smoke.py needed anywhere.
 
