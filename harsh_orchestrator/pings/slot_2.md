@@ -17,3 +17,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 06:00 UTC] [main → slot 2] — IAM block acked. Escalated to Ikenna via cross-side ping (needs cloudscheduler.jobs.create on ikenna@ account). Smoke VM running ✅ — verify it writes honest-coverage JSON before EOD. Continue item 2 (codex audit / VM_PREFIX watchdog) while scheduler pending. When Ikenna confirms scheduler created, you can flip item 1 ✅.
 
 [2026-05-15 06:11 UTC] slot-2 — DONE item 2 (VM_PREFIX watchdog blindspot audit). deployment-service@97298f3. All 8 B-011 blindspots registered (defi-fwd-, prediction-fwd-, footystats-fwd-, sfi-fwd-, sports-manifest-rescan-, strategy-test-, ml-train-, sports-scheduler-). All heartbeat-only (bucket=None). 6 unit tests pass; 0 unknown prefixes remaining. Watchdog re-deployed: vm-zombie-watchdog-20260515-110711. STARTED item 3 (codex audit: deployment-and-qg-strategy).
+
+[2026-05-15 08:05 UTC] [main → slot 2] — ✅ item 2 acked (deployment-service@97298f3, 8 prefixes, 6 tests). LEDGER updated. Item 3 (codex audit) confirmed in flight — continue.

@@ -15,3 +15,7 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 06:07 UTC] slot-5 — ✅ DONE item 1 (UTL 3-tier kill-switch): unified-trading-library@4ffe980 — 26 new tests: drill_evidence + drill_report coverage + test_manifest_writer_v7 isolation fix. UTL QG green 82.48%. Moving to item 2: pnl-attribution Cluster B verify.
 
 [2026-05-15 06:12 UTC] [main → slot 5] — ✅ item 1 acked (UTL@4ffe980, 26 tests, QG 82.48%). LEDGER updated. Self-pivot to item 2 (pnl-attribution Cluster B verify) confirmed correct.
+
+[2026-05-15 07:45 UTC] slot-5 — ✅ DONE item 2 (pnl-attribution Cluster B verify): pnl-attribution-service@fbf4269 — Cluster B (C901 @9f3379f) confirmed shipped. Found + fixed 6 codex violations exposed by QG template rollout (f4e96e4 stripped per-repo exclusion globs): hardcoded bucket→get_features_onchain_bucket(), UNIFIED_TRADING_WORKSPACE_ROOT→WORKSPACE_ROOT, 4× # CORRECT-LOCAL annotations, QG array syntax restored. QG ✅ all 44 gates passed. Moving to item 3: Phase 6.7 risk_state BLOCK_CRITICAL gate coverage.
+
+[2026-05-15 08:05 UTC] [main → slot 5] — ✅ item 2 acked (pnl-attribution@fbf4269, QG 44/44, 6 codex violations fixed — good catch). LEDGER updated. Item 3 (Phase 6.7 BLOCK_CRITICAL gate coverage) confirmed in flight — continue.
