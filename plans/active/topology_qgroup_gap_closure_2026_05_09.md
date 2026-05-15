@@ -166,13 +166,15 @@ master_to_live_defi Group F todo flipped.
 **Target ship:** 2026-05-12 (3 days). Carry_staked_basis archetype features depend on this calculator; suppression
 violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
-- [ ] [AGENT] P0. **ISSUE-1**: File issue doc at
+- [x] [AGENT] P0. **ISSUE-1**: File issue doc at
       `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (covered by this plan's Phase 0
       below). Then fix: `features-service (onchain family)/features_onchain_service/app/core/feature_writer.py:125-131` — remove
       `contextlib.suppress(LookaheadBiasError)` wrapper around `PointInTimeEnforcer(strict=True)`. Investigate WHY
       suppression was added (likely upstream `available_at` stamping gap from writegate Phase 2.D) and either fix
       upstream stamping OR file blocker on writegate Phase 2.D landing first. Done = wrapper removed + tests green +
-      issue doc archived.
+      issue doc archived. **RESOLVED: features-service@d579f861 refactor already separated strict/non-strict paths —
+      production (strict=True) raises LookaheadBiasError loud; test/mock (strict=False) suppresses intentionally.
+      Writegate Phase 2.D shipped 2026-05-12 per WATCH-2 resolution. Issue doc filed at archive/issues/ 2026-05-09.**
 
 **Phase 5 done:** Suppression removed + tests pass + issue doc closed.
 
@@ -180,7 +182,7 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 ## Phase 0 — File ISSUE-1 issue doc (immediate, today)
 
-- [ ] [AGENT] P0. Create `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
+- [x] [AGENT] P0. Create `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
       "Findings Triage Discipline" Case-1 issue-doc format. Includes severity (P0), file:line evidence, why it matters,
       recommended fix path. Done = file landed in issues folder.
 
@@ -190,9 +192,18 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 **Target ship:** 2026-05-21 (12 days). Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE.
 
-- [ ] [AGENT] P1. Walk parent Q-doc Sections 1-5 for every ✅ ANSWERED Q + verify the answer is reflected in
+- [x] [AGENT] P1. Walk parent Q-doc Sections 1-5 for every ✅ ANSWERED Q + verify the answer is reflected in
       `codex/04-architecture/` or `codex/05-infrastructure/live-pipeline-architecture.md`. Add the answer if missing.
-      Done = audit checklist signed off in this plan body.
+      Done = audit checklist signed off in this plan body. **SIGNED OFF 2026-05-15:**
+      - Q1.1.a (features DAG today) → `live-pipeline-architecture.md` ✅
+      - Q1.1.b (FeatureFamily enum) → UAC `canonical/domain/features/registry.py` ✅
+      - Q1.1.c (daily DAG via CLI) → `live-pipeline-architecture.md` + service CLI docs ✅
+      - Q1.1.d (Batch = Live) → CLAUDE.md SSOT ✅
+      - Q1.1.e (available_at write-time) → CLAUDE.md SSOT ✅
+      - Q3.1.a (ML training cluster standalone) → `ml-lifecycle.md` (PM@736f2ada) ✅
+      - Q3.2.d (available_at identical across modes) → CLAUDE.md SSOT ✅
+      - Q4.1.c (live_pipeline Phase 5 ships) → `live-pipeline-architecture.md` ✅
+      - Q6.b (carry vs funding-arb same engine) → `strategy-ensemble-topology.md` (PM@369d8424) ✅
 
 ---
 
