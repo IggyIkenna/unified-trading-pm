@@ -135,6 +135,15 @@ Harsh AND Ikenna both run parallel agents. Untracked files / dirty mid-edit / re
 
 When plan / SSOT name the canonical approach, **ship it**. Don't apply when destructive, foreign files involved, or plan says "AWAITING USER DIRECTION."
 
+### Promote Workflow Path (May-23 dual-track)
+
+- **PRIMARY = CLI**: operator runs `e2e-testing/scripts/defi/run-paper.sh` → `colocated_engine.py` → `run-live.sh` (safety net).
+- **SECONDARY = UI**: Promote button → `POST /api/promote/{strategy_id}/{manifest_id}` → `MinimalCandidateManifest` in Firestore → paper/live VM auto-launch → DART `ManualTradeGateDialog` for first 3 trading days.
+- **DO NOT** enrich `MinimalCandidateManifest` with pinned shas / model refs / features manifest version before May-23 — post-cutover scope (named successor: `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`).
+- Firebase `execution-full` enforcement is at UI layer for May-23; backend Firebase integration is post-cutover.
+- Valid promote targets May-23: `paper_1d` → `live_early` only. `live_full` is post-cutover.
+- SSOT: `codex/04-architecture/promote-workflow-architecture.md` + `codex/09-strategy/operational/cli-promote-paths.md`.
+
 ---
 
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)

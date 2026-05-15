@@ -719,25 +719,33 @@ from venue testnet.
 
 These codex docs ride with the phases that produce them — NOT batched at plan-end.
 
-- [ ] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
+- [x] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
       track SSOT; per-mode operator pre-flight checklist; ships with Phase 2.
-- [ ] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
+      (pm@this-commit — created with dual-track overview, pre-flight checklists, VM launcher convention)
+- [x] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
       primary + minimal UI parallel); full UI consolidation + state-machine + cross-service auto-registration deferred
       to post-cutover plan; ships with Phase 7.
-- [ ] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
+      (pm@this-commit — phase map, state machine, UTL events, deferred items table)
+- [x] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
       convention; ships with Phase 1.
-- [ ] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23
+      (already existed — created in prior slot session)
+- [x] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23
       subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1.
-- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
+      (already existed — created with Phase U1 work)
+- [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
       with Phase U5+U6.
-- [ ] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` —
+      (already existed — created with Phase U5 work)
+- [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` —
       `/promote/{strategy_id}/{manifest_id}` API + minimal pre-flight gates (May-23 subset); post-cutover Phase 9
       extends with full pre-flight pipeline; ships with Phase U3.
-- [ ] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification
+      (pm@this-commit — endpoint spec, 5 gates, event emission, source location table)
+- [x] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification
       result; CEFFU subsections explicitly DEFERRED with named successor (post-cutover plan); ships with Phase 4.A.
-- [ ] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
+      (file already has Copper config table + CEFFU DEFERRED banner; Phase 4.A SCRIPT item pending operator)
+- [x] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
       launcher patterns; ships with Phase 1.
-- [ ] [AGENT] P0. **UPDATE** CLAUDE.md — add **"Promote Workflow Path"** key rule:
+      (already updated — strategy-paper- / strategy-live- rows in launcher table, Phase 1 work)
+- [x] [AGENT] P0. **UPDATE** CLAUDE.md — add **"Promote Workflow Path"** key rule:
   - "May-23 cutover = dual-track. PRIMARY = operator-CLI via `e2e-testing/scripts/defi/run-paper.sh` + `run-live.sh` +
     `colocated_engine.py` (safety net). SECONDARY = UI promote pipeline (Promote button → POST /promote →
     MinimalCandidateManifest → paper/live VM auto-launch → DART manual-trade gate first 3d). Heavy state-machine
