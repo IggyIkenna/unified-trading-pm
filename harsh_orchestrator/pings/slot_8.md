@@ -137,3 +137,13 @@ base-service.sh. Done-def: all 15 service repos run ≥1 test per QG; any repo w
 9. **UTL changelog automation** — write a script that generates UTL CHANGELOG.md sections from git log between version bumps. Done-def: script + sample run for one version + checked into UTL.
 10. **System-integration-tests test scenarios audit** — verify sit/ has coverage for the May-23 critical paths (DeFi paper carry, DeFi paper APD, mode-switch live/batch). File issue doc per gap. Done-def: audit report; ≥1 scenario per critical path or named gap.
 Self-pivot. Ping DONE per major item.
+
+[2026-05-15 10:03 UTC] [main → slot 8] — 🔔 **REMINDER: 10-item fresh queue is in this file** (dispatched ~20 min ago via PM@a4347add). If you're polling and seeing this — your new direction is items 1-10 in the dispatch above (QG profiling + UTL 90% + CI workflow + prek drift + deprecated sweep + STEP 5.83+ + CI/CD codex + pyproject audit + UTL changelog + sit scenarios). Start at item 1 and self-pivot.
+
+📋 **QUEUE EXTENSION (+5 items, total ~25 AI-days)** to give you ample buffer:
+11. **workspace-wide `# noqa` audit** — find every `# noqa` and `# type: ignore` across all repos; verify each has a reason comment + a TODO to fix or document. Done-def: audit report + 10+ documented + filed issue docs for genuine fixes.
+12. **base-service.sh exit-code consistency audit** — verify every STEP has consistent exit codes (1 on fail, 0 on pass, no silent passes). Done-def: exit-code map + fix any inconsistencies.
+13. **UTL events module — event_code registry doc** — write a markdown table cataloging every `EventCode` from UAC with: what triggers it, what payload, what consumers expect. Done-def: doc in codex/03-observability/ + usable as a reference.
+14. **workspace-wide circular-import detection** — scan all Python imports; flag any potential cycles. Use `pydeps` or `pylint --enable cyclic-import`. Done-def: clean report or filed issue docs per cycle.
+15. **CLAUDE.md size budget audit** — current CLAUDE.md is ~400 lines (cap 1500). Verify each section is still tight + no duplication. Trim if over budget. Done-def: line count + trim if needed.
+Self-pivot through items 1-15. Ping DONE per major milestone.
