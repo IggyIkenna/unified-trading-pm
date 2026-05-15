@@ -297,8 +297,13 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    + parallel wrapper `execution-service@f65a7d5d5` + VM launcher `deployment-service@1510310` + smoke
    `strategy-service@fc634e3`). Remaining open: Phase 4 ml-training (Harsh-half), Phase 5 SKU matrix (joint),
    Phase 2 profiling item (joint). (design 0.6×, ~3 = 1.8 cal)
-7. **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** (orphan from slot 7 14 May) — master plan Group F item 18
-   row budget assertion. (infra 0.8×, ~3 = 2.4 cal)
+7. ✅ **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — verified Phase 8.A code SHIPPED:
+   `UTL@f942dc54` (`check_budget()` + `BudgetExceededError`); benchmark report parquet+md landed at
+   `gs://central-element-323112-benchmark-reports/benchmark_report/`; 8-VM matrix complete + per-stage P50/P95/P99
+   in `benchmark_report.md`. **Master plan Group F row 18 update is slot 1 main's territory** per CLAUDE.md "slot
+   precedence" rule (slot 7 does NOT edit `master_to_live_defi_2026_05_23.md` directly). Open downstream:
+   actual 2yr batch VM run is owner Agent 4 (AUTHOR-MISSING note in master plan row) — not slot 7 work.
+   (infra 0.8×, ~3 = 2.4 cal)
 8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize**. (research 1.2×, ~3 = 3.6 cal)
 9. **`context_fill_optimization_2026_05_14` Phase 1**. (research 1.2×, ~2 = 2.4 cal)
 10. **Reserve**: in-stack pickup for SIT scenario surfacings.
