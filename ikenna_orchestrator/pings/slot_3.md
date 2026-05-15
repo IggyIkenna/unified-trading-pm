@@ -524,3 +524,48 @@ cadence, Helius BLOCKED-CREDENTIALS), this slot has two separate blockers.
 - ✅ AAVE-ETHERFI v2/v3: 289/305 bps positive carry, 7/7 days in position
 - ❌ COMPOUND-LIDO: BLOCKED (NaN borrow_apy — see Gap 1)
 - ❌ KAMINO-JITO: BLOCKED-CREDENTIALS (Helius + KAMINO handler missing — see Gap 2)
+
+---
+
+[2026-05-15] Slot 3 → Operator — **BLOCKED-OPERATOR-DECISION: EXTENDED-STARKNET API endpoint dead**
+
+```
+BLOCKED-OPERATOR-DECISION — EXTENDED-STARKNET REST API endpoint
+Venue: EXTENDED-STARKNET (Extended.exchange StarkNet perp DEX)
+Current (dead) endpoint: https://api.starknet.extended.exchange/api/v1 — DNS NXDOMAIN (HTTP 000)
+Probed alternatives:
+  - api.extended.exchange → AWS ELB alive, TLS valid, BUT all paths 404:
+    /api/v1/info/markets, /api/v1/info, /api/v2/info/markets, /v1/markets,
+    /exchange/info, /get_all_perpetuals — all HTTP 404
+  - app.extended.exchange → CloudFront HTTP 403 (frontend only)
+What I need: operator to provide correct REST API base URL (from Extended Finance docs or GitHub)
+Unblocks: fix _EXTENDED_API_BASE in instruments-service/adapters/defi/extended.py + MTDS
+Impact: 0 captured rows for EXTENDED-STARKNET. Not May-23 blocker (EXTENDED not in
+  May-23 required carry_staked_basis or arbitrage_price_dispersion archetype paths).
+Note: prev diagnosis 2026-05-14 said endpoint was "correct" but that was untested;
+  live probe 2026-05-15 confirms dns-dead (HTTP 000 from local dev machine).
+```
+
+Status: `BLOCKED-OPERATOR-DECISION`. Adapter scaffold in place, awaiting correct URL.
+
+---
+
+[2026-05-15] Slot 3 → Operator — **OPERATOR APPROVAL REQUEST — ASTER perp-funding backfill VM**
+
+```
+OPERATOR APPROVAL REQUEST — ASTER perp-funding backfill VM
+Rule: GCS backfill ≥1 week requires operator approval BEFORE VM launch (CLAUDE.md hard rule).
+VM purpose: Re-run perp_funding MTDS handler for ASTER dates 2024-09-25 → 2026-05-15
+  (~570 days × instruments = ~17,681 rows to recover, all currently attempted_failed)
+Date range: 2024-09-25 (ASTER launch) → 2026-05-15 (today)
+Fix shipped: MTDS@f9824d0 (this session) — perp_funding_handler.py ASTER URL
+  fapi.asterdex.com + pre-launch guard. Also instruments-service@c0c6593 + MTDS@7d45b21
+  from 2026-05-14 session.
+VM template: existing mtds-perp-funding-{ts} launcher pattern
+Estimated cost: standard GCE VM ~2-4 hours compute (~$0.10-0.30)
+What changes: 17,681 attempted_failed rows → captured in market-data-tick-cefi manifest
+Impact on May-23: ASTER perp-funding is on hedge-leg path; backfill needed before cutover
+  to confirm archetype e2e (CARRY_BASIS_PERP ASTER hedge slot)
+```
+
+Awaiting operator [ack] before launching. Fix code is ready.

@@ -178,5 +178,12 @@ Next steps:
 
 Next steps:
 
-- `- [ ]` [SCRIPT] P1. Probe `https://api.starknet.extended.exchange/api/v1/info/markets` live; if 404/error, research
-  current Extended Finance REST base and update `_EXTENDED_API_BASE`. Owner: slot 3 or next perp-adapter slot.
+- `- [x]` ✅ [SCRIPT] P1. Probe `https://api.starknet.extended.exchange/api/v1/info/markets` live — **DONE 2026-05-15**:
+  - `api.starknet.extended.exchange` → HTTP 000 (DNS dead, same as ASTER pre-fix)
+  - `api.extended.exchange` → DNS resolves (AWS ELB / `54.92.96.57`), TLS valid, but ALL tested paths return HTTP 404:
+    `/api/v1/info/markets`, `/api/v1/info`, `/api/v2/info/markets`, `/v1/markets`, `/exchange/info`, `/get_all_perpetuals`
+  - `app.extended.exchange` → HTTP 403 (CloudFront, front-end only)
+  - **Status: BLOCKED-OPERATOR-DECISION** — domain is alive but correct API path unknown without docs/GitHub access.
+  - Ping filed: `ikenna_orchestrator/pings/slot_3.md` — operator needs to provide Extended Finance REST API docs or
+    GitHub link so correct `_EXTENDED_API_BASE` path can be found.
+  - Owner: operator provides endpoint → slot 3 updates `_EXTENDED_API_BASE` in both adapters.
