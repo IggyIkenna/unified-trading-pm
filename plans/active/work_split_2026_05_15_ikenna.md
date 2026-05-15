@@ -304,7 +304,12 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    precedence" rule (slot 7 does NOT edit `master_to_live_defi_2026_05_23.md` directly). Open downstream:
    actual 2yr batch VM run is owner Agent 4 (AUTHOR-MISSING note in master plan row) — not slot 7 work.
    (infra 0.8×, ~3 = 2.4 cal)
-8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize**. (research 1.2×, ~3 = 3.6 cal)
+8. ✅ **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — already finalised yesterday
+   (`PM@163da45a` per work_split_2026_05_14 item 8 "Phase 3 shipped; remaining deferred items have named
+   successors"). Audit reconfirms: 34/41 checkboxes `[x]`; remaining 7 open items all explicitly DEFERRED with
+   named successors per "Deferred work after 2026-05-13" table (download-csv → Phase 3 SmartDownloadButton;
+   Playwright → operator-doable; canonical_question_group → predictions Plan A; cross-registry test → predictions
+   Plan A; rollup metric → infrastructure_master). No additional work this session. (research 1.2×, ~3 = 3.6 cal)
 9. **`context_fill_optimization_2026_05_14` Phase 1**. (research 1.2×, ~2 = 2.4 cal)
 10. **Reserve**: in-stack pickup for SIT scenario surfacings.
 
