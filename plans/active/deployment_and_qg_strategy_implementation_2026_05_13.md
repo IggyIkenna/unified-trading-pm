@@ -436,7 +436,7 @@ Sourced from orchestrator ping [2026-05-15 07:36 UTC] 7-item queue.
 Sourced from orchestrator ping [2026-05-15 07:41 UTC] 3-item queue extension.
 
 - [x] [AGENT] P0. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`; each tab consumes its matching launch endpoint; 17 Vitest tests; pnpm build + QG green. — _deployment-ui@4d5e662_
-- [ ] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner "operator-monitored window before automation flip"; manual trade entry stub goes through execution-service same path as automation. Done-def: route renders + skeleton component + checklist banner.
+- [x] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner "operator-monitored window before automation flip"; manual trade entry stub goes through execution-service same path as automation. Done-def: route renders + skeleton component + checklist banner. — _deployment-ui@bf3ec2c_
 - [ ] [AGENT] P0. **deployment-api AuthN via Firebase token** — Firebase token verification middleware on all endpoints from items 1-6; tests covering valid/expired/missing token + QG green.
 
 ## Done definition
