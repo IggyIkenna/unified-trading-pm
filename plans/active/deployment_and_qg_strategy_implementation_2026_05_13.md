@@ -402,6 +402,12 @@ work.
 | Phase 0 Cluster B — alerting-service N802                                         | ✅ DONE (alerting-service@74761a5 + @75f0404)                   | 4 pre-existing codex violations filed → `issues/alerting_service_codex_violations_d5_d7_2026_05_14.md`                                        |
 | 13 pre-existing deployment-api test failures (SHARD_AXIS_MATRIX UAC drift)        | Filed issue doc PM@9d25acdd                                     | `plans/active/issues/deployment_api_shard_axis_matrix_uac_drift_2026_05_14.md` — needs UAC SHARD_AXIS_MATRIX audit + deployment-api alignment |
 
+## Deferred work after 2026-05-15 slot-8 session
+
+| Phase / item                                                                                                                      | Status as of 2026-05-15                                                                                                                                                                                                                                     | Successor / blocker |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| B-014 Phase 3 — SSOT path rollout completion (.tabs/8 stash recovery: 7 repos + 3 newly discovered without new template version) | ✅ DONE — all .tabs/8 service repos updated to `SSOT: unified-trading-pm/codex/...`; SHAs: ml-inference-service@8116b23, market-data-processing-service@2ff9258, ml-training-service@00a97aa, alerting-service@4795ccf, market-tick-data-service@acec41d, risk-and-exposure-service@55d7611; workspace-wide `grep -r "unified-trading-codex"` returns 0 hits | —                   |
+
 ## Slot allocation suggestion (for Ikenna slot 1 main)
 
 7 phases × ~1-2 cal-AI-days each = ~9.6 cal-AI-days (calibrated). At measured workspace throughput ~200/day, fits in
