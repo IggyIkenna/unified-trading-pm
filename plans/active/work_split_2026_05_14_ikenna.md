@@ -97,8 +97,9 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
    `available_to` cross-ref into `_classify_defi` + `_classify_cefi` (per operator decision 6 — make classifier consult
    IS catalog dates). (refactor 0.4×, ~3 baseline = ~1.2 cal) **DONE** (UTL@`513d79fb` + IS@`3670534`):
    `instrument_lifecycle_loader.py` added; `_classify_defi`/`_classify_cefi` wired with catalog cross-ref.
-2. **Phase B re-attempt** — re-run Script 3, queue re-attempt VMs only for genuinely-failing classifications after
+2. ✅ **Phase B re-attempt** — re-run Script 3, queue re-attempt VMs only for genuinely-failing classifications after
    crossref lands. (infra 0.8×, ~2 = 1.6 cal)
+   **DONE** (2026-05-15): Dry run 605,070 candidates / 599,486 corrections (all `EXPECTED_PRE_VENUE_LAUNCH`) / 5,584 legit re-fetch. Apply-flips: RECONCILER_COMPLETED — 599,486 rows corrected + uploaded to `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot2-corrector-defi-20260515.parquet` in 528.5s. Consolidator merge within ~5 min. Corrector wired with lifecycle loader (IS@`2a398cd`).
 3. ✅ **`wave2_polymarket_record_captured_from_counts` Polymarket subset** — wire counts → `record_captured()` for
    Polymarket market-state shards. (research 1.2×, ~3 = 3.6 cal) **DONE** (ALL PHASES COMPLETE: UTL@`ef47c81b`,
    `446d75ce`, `d8ca04bc`; MTDS@`a2f8d80`, `616ac15`; PM@`ce40d8ab`, `d93a9952`)
@@ -124,9 +125,10 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
    (refactor 0.4×, ~2 = 0.8 cal) **DONE** (pre-existing per deployment_and_qg_strategy_implementation_2026_05_13.md §
    Cluster D [x]): instruments-service@d78dd02 — 74 failed tests now 78 passing; IS QG confirms 2591 passed, ALL QUALITY
    GATES PASSED exit 0.
-10. **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count drift:
+10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count drift:
     test expects 1 row, handler returns 2 (AAVEV3 + MORPHO dual-venue path). Diagnose-first per Findings Triage: code
     drifted from test intent (multi-venue is correct), so update test expectations. (research 1.2×, ~1 = 1.2 cal)
+    **DONE** (MTDS@`8d54eb1`): Two distinct failures diagnosed — (1) `_fetch_aave_liquidations` missing `if not api_key or not subgraph_id: return []` guard (code fix, parallel parity with flash_loan handler); (2) `test_fetch_aave_flash_loans_returns_rows_on_200` not patching `get_subgraph_id` which returns `None` in real UAC registry (test fix, added patch). 33/33 tests pass. QG exit 0.
 11. **Reserve**: in-stack pickup for any new DeFi classification issues filed during the cycle.
 
 Backfill flag: items 2 + 3 may need <1-week test backfills — OK without approval. ≥1 week → ping operator.
