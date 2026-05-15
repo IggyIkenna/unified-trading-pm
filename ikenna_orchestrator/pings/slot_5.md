@@ -445,7 +445,8 @@ Slot 5 idle, standing by for next direction.
 
 ### Sequence
 
-1. **Phase 3** — one-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (~0.5 cal days)
+1. **Phase 3** — one-shot manifest migration script `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (~0.5
+   cal days)
 2. **Phase 4** — Downstream consumer cascade. Order:
    - instruments-service futures factory
    - MTDS Databento bridge
@@ -453,17 +454,23 @@ Slot 5 idle, standing by for next direction.
    - features-service consumers (rolls, calendar, delta-one if applicable)
    - strategy-service `FuturesRollInstruction`
    - ~1-2 cal days; sub-agent fan-out OK per consumer
-3. **Phase 5** — QG ratchet: new STEP that asserts every `CanonicalFuturesContract(...)` instantiation has all 5 required kwargs (`expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`). Plus assertion that `FuturesContractLifecyclePhase` StrEnum is consumed where lifecycle phase is queried. ~0.5 cal days.
+3. **Phase 5** — QG ratchet: new STEP that asserts every `CanonicalFuturesContract(...)` instantiation has all 5
+   required kwargs (`expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`, `settlement_date`). Plus
+   assertion that `FuturesContractLifecyclePhase` StrEnum is consumed where lifecycle phase is queried. ~0.5 cal days.
 
 ### Coordination notes
 
-- Cross-plan banner: when Phase 3 ships (breaking schema migration), add banner to: `cross_asset_group_catalogue_audit_2026_05_10.md` (futures-related rows), `defi_simulation_realism_2026_05_10.md` (if any futures legs), and `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` (futures sessions touched).
-- Sub-agent fan-out for Phase 4 is encouraged — one sub-agent per consumer service. Each verifies own QG locally before push.
+- Cross-plan banner: when Phase 3 ships (breaking schema migration), add banner to:
+  `cross_asset_group_catalogue_audit_2026_05_10.md` (futures-related rows), `defi_simulation_realism_2026_05_10.md` (if
+  any futures legs), and `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` (futures sessions touched).
+- Sub-agent fan-out for Phase 4 is encouraged — one sub-agent per consumer service. Each verifies own QG locally before
+  push.
 - Ping main when Phase 5 QG ratchet lands (Gate alignment with workspace QG baseline reset).
 
 ### After Phase 5
 
 Slot 5 picks up next from stack v3:
+
 - **`solana_defi_coverage_gaps` successor plan C** — Solana audit context useful
 - **`sports_retired_data_types_code_cleanup_2026_05_13`** — new plan filed `18e971df`
 
@@ -480,9 +487,9 @@ Proceed autonomously. Ping if blocked.
 - **IS@db070da** — `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (282 lines): OCC symbol parsing,
   `_parse_occ_expiry()`, `_has_null_expiration()`, `_process_parquet()` (dry-run/apply with `if_generation_match` CAS),
   16-worker `ThreadPoolExecutor`, runbook execution SSOT declared.
-- **IS@e1ca983** — `tests/unit/migrations/test_migrate_tradfi_expiry_schema.py`: 15 unit tests (all green).
-  Covers OCC parse (valid/empty/non-OCC), null-expiration detection, blob path filter, dry-run gate, apply+CAS guard,
-  idempotent skip, unresolvable non-OCC symbol, download error.
+- **IS@e1ca983** — `tests/unit/migrations/test_migrate_tradfi_expiry_schema.py`: 15 unit tests (all green). Covers OCC
+  parse (valid/empty/non-OCC), null-expiration detection, blob path filter, dry-run gate, apply+CAS guard, idempotent
+  skip, unresolvable non-OCC symbol, download error.
 - **PM@d9bc9d7d** — Plan flip: Phase 3 `[SCRIPT]` checkbox updated with both shas; `[TEST]` checkbox added.
 
 ### Phase 3 checklist state (final)
@@ -496,6 +503,7 @@ Proceed autonomously. Ping if blocked.
 ### Next: Phase 4 consumer cascade
 
 Ready to proceed with Phase 4. Plan specifies 5 consumers in dependency order:
+
 1. instruments-service: futures factory emits `CanonicalFuturesContract`
 2. market-tick-data-service: Databento bridge stamps `CanonicalFuturesContract`
 3. mtds-tradfi-staleness: consume `expiry_date` for per-contract staleness gates
@@ -529,7 +537,8 @@ Will proceed with Phase 4 Item 1 (instruments-service futures factory) immediate
 - ✅ UAC top-level facade export (UAC@f514779)
 - ✅ instruments-service futures factory (IS@bcb34b9 + IS@0c59485)
 - ✅ instruments-service write-path `futures_contracts.parquet` (IS@2be7e4b) — Phase 4.2 done
-- ✅ Phase 4.3 (mtds-tradfi-staleness): UAC@421bb21 + MTDS@103540f — `is_tradfi_futures_instrument_active` staleness gate + MTDS Tier-3 filter
+- ✅ Phase 4.3 (mtds-tradfi-staleness): UAC@421bb21 + MTDS@103540f — `is_tradfi_futures_instrument_active` staleness
+  gate + MTDS Tier-3 filter
 - ⏸️ Phase 4.4 (features-service): lifecycle-phase-aware contract roll features
 - ⏸️ Phase 4.5 (strategy-service): `FuturesRollInstruction.lifecycle_phase` binding
 
@@ -549,17 +558,17 @@ instruments-service (not MTDS): IS is the reference-data owner; `futures_contrac
 
 - **UAC@421bb21** — `is_tradfi_futures_instrument_active(instrument_id, as_of_date_str)` pure UAC function in
   `registry/market_data_categories.py`. Parses CME/ICE futures symbols (ESH26, CLZ6, BRN.H26) to filter expired
-  contracts. Exported from `registry/__init__.py`. 28 unit tests in
-  `tests/unit/test_tradfi_futures_staleness.py` (all green).
+  contracts. Exported from `registry/__init__.py`. 28 unit tests in `tests/unit/test_tradfi_futures_staleness.py` (all
+  green).
 - **MTDS@103540f** — Import + per-contract staleness filter wired in Tier-3 sentinel pass for
   `asset_group_of_venue == "TRADFI"`. Filters `expected_instruments` before emitting `SOURCE_RETURNED_ZERO` sentinels.
 - **PM@30c32001** — Phase 4.3 plan flip.
 
 ### Architecture: conservative approximation
 
-Used last-day-of-contract-month as expiry proxy (no GCS read needed). Full-precision `expiry_date` from IS parquet
-is possible as a Phase 4.3+ upgrade but requires reading `futures_contracts.parquet` inline in MTDS — deferred.
-All 14 existing MTDS sentinel tests still pass.
+Used last-day-of-contract-month as expiry proxy (no GCS read needed). Full-precision `expiry_date` from IS parquet is
+possible as a Phase 4.3+ upgrade but requires reading `futures_contracts.parquet` inline in MTDS — deferred. All 14
+existing MTDS sentinel tests still pass.
 
 ### Phase 4 checklist state
 
@@ -570,14 +579,12 @@ All 14 existing MTDS sentinel tests still pass.
 - ⏸️ Phase 4.4 (features-service): lifecycle-phase-aware contract roll features — **NEXT**
 - ⏸️ Phase 4.5 (strategy-service): `FuturesRollInstruction.lifecycle_phase` binding
 
-
-
 ---
 
 ## [main → slot 5] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
 
-**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
-slots 1-8. Your stack just got new items.
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across slots 1-8.
+Your stack just got new items.
 
 **Action (do this NOW, no questions)**:
 
@@ -588,20 +595,55 @@ slots 1-8. Your stack just got new items.
       git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
    done
    ```
-2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
-   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
-   in the distribution tables; new items are additive to your existing stack.
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` — specifically the new "## SLOT 9-10-11
+   REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot in the distribution tables; new items are additive to
+   your existing stack.
 3. Re-read your "### Slot 5" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
-4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
-   incoming) already baked into the reassignment.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials incoming)
+   already baked into the reassignment.
 
 **Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
-- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
-  lifecycle, one-pass, no shim. Per DRY.
-- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
-  AMM-perp); Harsh slot 8 owns refactor.
-- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
-  mechanical fix while waiting on Phase 1.2B work.
 
-Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
-ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close lifecycle,
+  one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp);
+  Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as mechanical fix
+  while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
+(per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+## [slot 5 → main] Phase 4.4 + 4.5 SHIPPED — 2026-05-15
+
+**Status**: ✅ Both phases complete
+
+### Phase 4.4 ✅
+
+- **FS@f83cac97** — `FuturesRollAdjuster.get_contract_lifecycle_phase()` (features-service)
+
+### Phase 4.5 ✅
+
+- **UAC@20c8b67** — `FuturesRollInstruction.lifecycle_phase: FuturesContractLifecyclePhase | None` field + `create()`
+  passthrough
+- **SS@cfcd3a7** — `roll_emitter.py`: `RollDecision.lifecycle_phase`, `evaluate_roll()` sets EXPIRED/ACTIVE,
+  `build_roll_instruction()` passes through; `test_roll_emitter.py`: EXPIRED test + ACTIVE assertion;
+  `scripts/quality-gates.sh`: restored IMPORT_INSIDE_EXCLUDE_GLOBS, SCHEMA_PROVENANCE_SKIP,
+  FUNCTION_SIZE_EXTRA_EXCLUDES, HARDCODED_PROJECT_EXCLUDE_GLOBS, BE_EXCLUDE_GLOBS, CODEX_MAX_VIOLATIONS=7;
+  gcs_feature_provider.py + risk_monitor.py + backrun.py: correct per-line CORRECT-LOCAL / noqa annotations
+
+### Phase 4 checklist final state
+
+- ✅ Phase 0-3: pre-audit, greenfield class, expiration flip, migration script
+- ✅ Phase 4.1: IS futures factory (IS@bcb34b9 + IS@0c59485, 29 tests)
+- ✅ Phase 4.2: IS write-path `futures_contracts.parquet` (IS@2be7e4b, 7 tests)
+- ✅ Phase 4.3: MTDS staleness gate (UAC@421bb21 + MTDS@103540f, 28 tests)
+- ✅ Phase 4.4: features-service lifecycle-phase (FS@f83cac97)
+- ✅ Phase 4.5: strategy-service lifecycle_phase binding (UAC@20c8b67 + SS@cfcd3a7)
+- ✅ Phase 5: QG ratchet (PM@32c7ea52)
+
+### Plan flip
+
+- tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md Phase 4.4+4.5 → [x]
