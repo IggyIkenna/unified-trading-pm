@@ -597,11 +597,13 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ### 4.C.B — PBM position-health endpoint (PBM owned; ~2 cal AI-days)
 
-- [ ] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current
+- [x] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current
       `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position keyed by wallet. Reads PBMS
       rolling state (Aave/Compound LTV from on-chain `getUserAccountData`; perp margin ratios from venue REST). 5-second
       cache. Pydantic response per UAC `PositionHealthSnapshot` (new type — add in same UAC commit as 4.C.A). **Owner**:
       PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first.
+      (UAC@1fababa + PBM@e93e3e5 2026-05-15; PositionHealthSnapshot in UAC execution.py; GET /positions/health route with
+      5s TTL cache + stale flag + derive_snapshot_from_lending(); 11 tests, 539 total pass)
 
 ### 4.C.C — UTL shared pre-flight helper (UTL owned; ~2 cal AI-days)
 
