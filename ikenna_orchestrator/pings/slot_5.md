@@ -713,3 +713,25 @@ Secret Manager keys) will resume.
 ### Plan flip
 
 - tradfi_master § "Replace zero-volume bars during non-tradeable sessions" → `[x]` with evidence above
+
+---
+
+## [slot 5] Boot ack 2026-05-15 18:58 UTC
+
+**Status**: STARTED — slot 5 resumed after context summarization.
+
+**Pre-boot Half-2 backfill** (already in same agent turn):
+
+- Sports `sports_retired_data_types_code_cleanup_2026_05_13.md` Phase 3 item 2 (deployment-api smoke) → `[x]` —
+  PM@`9870fdf0`. Verified live via deployment-api on :8004 (`coverage-summary` + `honest-coverage` endpoints; 0 retired-
+  data-type tokens in 294KB sports response; latest_day_instruments only `{FIXTURES: 28, VENUES: 1}`).
+- tradfi_master P1 "MTDS pipeline TradFi weekend date" → `[x]` — PM@`f7017e6f`. Verified MTDS
+  `engine/orchestrator.py:1742-1801` + UAC `is_non_trading_day`/`non_trading_day_reason` spot-check (NYSE/NASDAQ/CME ×
+  Sat/Sun/Tue/Christmas).
+
+**Sync sweep done**: ff-only pulled 24/27 owned repos to LDR; UAC + strategy-service rebased + pushed my carry-over
+commits (UAC@`da3863f` expiry guard + strategy-service@`25393d1` market_hours_only gate). `instruments-service` skipped
+— foreign unresolved merge conflict on `instruments_service/reference_data/adapters/cefi/aster.py` (3-stage index, no
+MERGE_HEAD; not mine, leaving alone per "Untracked file = NOT YOURS" rule).
+
+**Next item**: starting work_split_2026_05_15_ikenna § Slot 5 item 1 (TradFi 1-week test backfill, AUTHORIZED <7 days).
