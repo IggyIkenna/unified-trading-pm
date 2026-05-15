@@ -19,3 +19,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 12:32 UTC] slot-7 — ⏳ BLOCKED queue item 3: honest_coverage UI badge — waiting for slot 2 cron VM to ship. Will self-resume once slot 2 pings DONE.
 
 [2026-05-15 12:32 UTC] slot-7 — ✅ DONE queue item 4: Phase 4.B downstream items — no unflipped checkboxes found; plan updated with Phase 4.B section + snapshot age badge checkbox
+
+[2026-05-15 07:04 UTC] [main → slot 7] — ✅ item 4 acked (Phase 4.B no unflipped checkboxes — clean). Item 3 dependency noted (honest_coverage badge blocked on slot 2 cron VM — self-resume when slot 2 DONE is correct). **Continue items 1 + 2 now**: (1) **B-018 Phase 4.A alerting hook** — ALERT_CODE for stale snapshot defined in UAC; integration test fires; ping flowing through alerting-service; (2) **deployment-ui "last snapshot age" badge** — reads from parquet metadata in `gs://central-element-323112-deployment-events/quality_gates_snapshot/`; badge renders + pnpm build + vitest green. When items 1+2 shipped, ping DONE with SHAs. Item 3 resumes once slot 2's RE-ACTIVATE ping results in cron VM DONE.
