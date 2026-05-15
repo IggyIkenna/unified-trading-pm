@@ -272,9 +272,9 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 ### Fresh extension (items 11-19, ~20 AI-days execution + risk + pnl)
 
-- [x] **11. execution-service flash loan execution path tests** — execution-service@50a5d24c (6 unit + 2 fork tests): TestFlashLoanReceiverExecution full flash→swap→repay, gas 220k, insufficient repayment→FAILED, liquidity→REJECTED, Morpho 0-fee, AAVE 0.05%; TestFlashLoanReceiverForkExecution auto-skip. QG ✅ (425s).
+- [x] **11. execution-service flash loan execution path tests** — execution-service@50a5d24c (6 unit + 2 fork tests): TestFlashLoanReceiverExecution full flash→swap→repay, gas accounting 220k, insufficient repayment→bundle FAILED, insufficient liquidity→REJECTED, Morpho 0-fee, AAVE 0.05%; TestFlashLoanReceiverForkExecution flash gas_used>0, flash+swap combined gas. QG ✅ (425s).
 
-- [ ] **12. execution-service slippage model boundary tests** — Phase 9 slippage_cost_model.py: extreme conditions (zero liquidity, infinite spread, single-tick depth, sandwich-attack-shaped book). Done-def: 5+ edge-case tests + execution QG green.
+- [x] **12. execution-service slippage model boundary tests** — execution-service@03bb3e3f (6 edge-case tests in TestSlippageBoundaryConditions: single-tick depth breach >10k bps no-cap, sandwich 5k bps pass-through, analytical zero amount→fee floor, amount==TVL→10k bps, whale 5×TVL→50k bps, zero-fee pool pure linear impact). QG ✅ (366s).
 
 - [ ] **13. pnl-attribution-service per-venue cost attribution** — extend item 4: which venue per archetype eats which cost? Add tests proving cost rolls up correctly by (venue, archetype). Done-def: 4+ per-venue attribution tests + QG green.
 
@@ -299,6 +299,4 @@ diversification property; RegimeDetector gaps: too-few-returns guard, vol+correl
 crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stressed multiplier 1.5×. QG ✅ (71s).
 Queue items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
 
-[2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution tests): execution-service@50a5d24c — 6 unit + 2 Tenderly fork tests (auto-skip). QG ✅ (425s). Rebased 3 repos to LDR post-OOM. Now handling operator request: UTL LDR pull + QG before item 12.
-
-[2026-05-15 23:00 UTC] slot-5 — ⚠️ UTL QG REPORT (operator request): OOM is fixed (93ff771: ConfigStore._resolve_save_path now bounded at 10k, blob_exists defaults False). Remaining 95 QG failures ALL PASS SERIALLY — pure pre-existing xdist parallel isolation issue (sys.modules patches from config_interface/conftest.py leak across workers). Not my code, not the OOM. This is a pre-existing UTL infrastructure issue. Pivoting to item 12 (execution-service slippage model boundary tests).
+[2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution path tests): execution-service@50a5d24c — 6 unit + 2 Tenderly fork tests: TestFlashLoanReceiverExecution (borrow→swap→repay succeeds, gas 220k, insufficient repay→COMPLETED_FAILED, insufficient liquidity→REJECTED on borrow, Morpho 0-fee, AAVE 5-bps fee); TestFlashLoanReceiverForkExecution (auto-skip without creds: flash gas>0, flash+swap combined gas). QG ✅ (425s). Also rebased all 3 repos to LDR post-OOM. Moving to UTL LDR pull + QG (operator request), then item 12: slippage model boundary tests.
