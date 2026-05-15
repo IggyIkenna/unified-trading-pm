@@ -580,3 +580,50 @@ This note is pre-emptive — v2 has not yet launched. Update this section after 
   [`../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md`](../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md).
 - Writegate Phase 2.E.2 plan item: `plans/epics/tradfi_master_2026_05_07.md` § "Replace zero-volume bars during
   non-tradeable sessions."
+
+## Phase 8 honest-coverage VM cron pattern (B-018 Phase 8.A, 2026-05-15)
+
+Daily measurement of honest-coverage runs on a GCE VM launched by Cloud Scheduler. This is the shipped
+continuous-verification path for the manifest's `empty_confirmed` / `expected_unattempted` rows.
+
+### Components
+
+| Component | Path | Notes |
+| --------- | ---- | ----- |
+| VM launcher | `deployment-service/scripts/vm/launch-honest-coverage-vm.sh` | Primary — all asset groups, Cloud Scheduler target |
+| Ad-hoc launcher | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` | Per-asset-group filter via `--asset-group` |
+| Scheduler setup | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` | Creates `honest-coverage-daily` Cloud Scheduler job |
+| Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all` | Runs inside VM, writes to GCS |
+| Output bucket | `gs://central-element-323112-honest-coverage/{date}/coverage.json` | Consumed by deployment-api |
+| API consumer | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C) | UI-facing honest-coverage endpoint |
+
+### Cron schedule
+
+Cloud Scheduler job `honest-coverage-daily` fires at **00:30 UTC daily** and calls the VM launcher.
+The launcher enforces a singleton lock — refuses to start if any `honest-coverage-*` VM is RUNNING — so
+overlapping runs do not corrupt the GCS output.
+
+### VM spec
+
+- Machine: `e2-standard-2` in `asia-northeast1-c`
+- Boot disk: 50 GB
+- Auto-shutdown: VM terminates after `measure_honest_coverage.py` exits (STARTED + STOPPED lifecycle events)
+- Cost: ~5–15 min runtime → < $0.01/day
+
+### Watchdog registration
+
+VM name prefix `honest-coverage-` is registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`. The watchdog
+tracks heartbeats but does NOT kill honest-coverage VMs (they are inherently short-lived; heartbeat-only mode).
+
+### Operational rules (derived from workspace HARD RULES)
+
+1. **No fire-and-forget**: VM must emit STARTED within 60 s and STOPPED/FAILED at exit.
+2. **Per-VM shard isolation**: set `VM_NAME=honest-coverage-{date}` + `MANIFEST_PER_VM_SHARDS=true`.
+3. **Ad-hoc runs**: use `launch-measure-honest-coverage-vm.sh --asset-group {group}` for partial re-runs;
+   do NOT re-run the daily launcher with `--force` unless the scheduler job failed.
+
+### Cross-references
+
+- Plan: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2B + B-018 Phase 8.A.
+- Deployment codex: `codex/05-infrastructure/vm-tarball-deployment.md` (tarball creation for VM code).
+- QG enforcement: STEP 5.66 (`MANIFEST_PER_VM_SHARDS=true`) + STEP 5.61 (STARTED/STOPPED lifecycle).
