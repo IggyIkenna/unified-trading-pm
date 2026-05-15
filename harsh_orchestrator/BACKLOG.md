@@ -75,7 +75,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green (QG must be clean before coverage work)
 
 ### B-007 · Phase 8.A surface-2 — manifest writer coverage
-- **Status**: DISPATCHED → slot 8 2026-05-14
+- **Status**: DONE @unified-trading-library@e6877d2+PM@0ff4963e 2026-05-14 (slot 8 — manifest writer + emission publisher coverage; QG green)
 - **Task**: 100% coverage on `ManifestWriter.record_*` call paths in UTL. Add tests for: `record_captured` happy-path, `record_empty` with each reason taxonomy entry, `record_failed` with `attempted_at`, `record_expected_unattempted`. Verify `assert_available_at_present` fires on every `record_captured` path.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -83,7 +83,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster D done (UTL test suite green)
 
 ### B-008 · Phase 8.A surface-3 — emission publisher coverage
-- **Status**: DISPATCHED → slot 8 2026-05-14
+- **Status**: DONE @unified-trading-library@e6877d2+PM@0ff4963e 2026-05-14 (slot 8 — manifest writer + emission publisher coverage; QG green)
 - **Task**: 100% coverage on `publish_with_policy` + `_publish_emission_check` + `_resolve_policy_output_data_type` in UTL. Add unit tests: STRICT_FAIL policy blocks on mismatched output; WARN_ONLY policy logs but passes; NAN_FILL policy fills NaN correctly. Run `bash scripts/quality-gates.sh` — all tests green.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -99,7 +99,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green
 
 ### B-010 · Phase 8.A surface-5 — validation logic coverage (per-archetype)
-- **Status**: DISPATCHED → slot 3 2026-05-14
+- **Status**: DONE @strategy-service@4ede3b2+PM@4f4df625 2026-05-14 (slot 3 — 38 archetype validation tests; coverage 88.37% → 93.18%)
 - **Task**: 90% coverage on per-archetype calc validation paths in `strategy-service`. Target: `carry_staked_basis` + `arbitrage_price_dispersion` validation branches. Sub-agent fan-out per archetype. Run `bash scripts/quality-gates.sh`.
 - **Repos**: `strategy-service`
 - **Est**: 4h (sub-agent fan-out) · **Model**: Sonnet
