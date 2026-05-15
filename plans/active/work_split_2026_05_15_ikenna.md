@@ -257,12 +257,13 @@ Plan fan-out: **`sit_may23_critical_path_coverage_gaps_2026_05_15` (MAY-23 BLOCK
 audit (carry from slot 10 reassignment) + `client_reporting_pnl_attribution_mvp` + `compute_optimization_mock_data`
 Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimization`.
 
-1. **🔴 [MAY-23 BLOCKER] `sit_may23_critical_path_coverage_gaps_2026_05_15`** — 3 SIT scenario playbooks: (a)
-   `defi_carry_staked_basis_paper` — LST rates → strategy → execution → PBM manifest; (b) `defi_apd_paper` — DEX/CEX
-   dispersion → strategy → execution; (c) `defi_paper_to_live_early_gate` — MinimalCandidateManifest → promote → VM
-   event + DART gate. Add to `system-integration-tests/tests/scenarios/defi_scenarios.py` + wire into
-   `tests/overnight/test_archetype_cascade.py` parametrization. Last automated CI gate before paper→live_early manual
-   promotion. (brand-new 1.0×, ~4.5 = 4.5 cal)
+1. ✅ **🔴 [MAY-23 BLOCKER] `sit_may23_critical_path_coverage_gaps_2026_05_15`** — 3 SIT scenario playbooks shipped
+   in `system-integration-tests@3872ce2`: (a) `defi_carry_staked_basis_paper` + (b) `defi_apd_paper` (with explicit
+   not-silently-skipped routing assertion) + (c) `defi_paper_to_live_early_gate` (promote → VM STARTED + DART day-1
+   blocking gate). Added to `defi_scenarios.py::get_scenarios` (5 → 8) + dedicated
+   `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
+   semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 =
+   4.5 cal)
 2. **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration (decide flip strategy → migrate
    concrete calculators → flip UTL canonical validate_class_attributes → plan-flip cite). Item 6 auto-closes. (refactor
    0.4×, ~6 = 2.4 cal)
