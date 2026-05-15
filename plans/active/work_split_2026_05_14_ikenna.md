@@ -512,14 +512,10 @@ risk-and-exposure lint.
 22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
     green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
 23. ✅ **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** —
-    features-onchain `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. **DONE 2026-05-15**:
-    `features-service@f448bb1a` — (a) Fixed `borrow_apy = NaN`: root cause was diagonal concat of AAVE + COMPOUND
-    parquets caused `variable_borrow_rate` to shadow `borrow_rate` in first-match rename; fix uses `pl.coalesce` across
-    all supply/borrow APY candidates so each protocol contributes from its own non-null column. (b) Fixed
-    `asset = contract_address`: added `_COMPOUND_V3_COMET_TO_TOKEN` registry (5 Comets: ETH WETH/USDC/WBTC + ARB USDC +
-    Polygon USDC) with per-row `when/then` normalisation after instrument_id parse. (c) KAMINO deferred post-May-23
-    (BLOCKED-CREDENTIALS, Helius credential request filed). 2 regression tests added (comet-normalisation +
-    mixed-protocol coalesce), both pass. (research 1.2×, ~3 baseline = 3.6 cal)
+    **DONE 2026-05-15**: `features-service@f448bb1a` (AAVE coalesce fix + COMET_TO_TOKEN registry) +
+    `features-service@5b3599b4` (CompoundV3LendingCalculator + KaminoLendingCalculator via DefiLlama Yields, both
+    wired into `_process_lending_rates` via `_load_merged_lending_data` parallel asyncio.gather + diagonal-concat). 26
+    new unit tests, all passing. (research 1.2×, ~3 baseline = 3.6 cal)
 24. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
