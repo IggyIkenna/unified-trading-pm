@@ -124,6 +124,23 @@ https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/r
 Run `credential-probe.sh --mode live` after revoking + replacing SA key to verify all downstream systems
 still function (any service that loaded the old key at startup may need restart).
 
+## DEFERRED annotation — slot 6 custody smoke 2026-05-15
+
+**Status**: PENDING-OPERATOR-ACTION (not agent-actionable)
+
+**Owner**: Operator (Harsh / Ikenna) — hard-stop list items (force-push to main + SA key
+revocation require GCP Console access and human authority per CLAUDE.md hard-stop list).
+
+**Timeline**: P0 — complete within 24h of operator awareness. No blocker on code side;
+all implementation steps documented above. Unblocked as soon as operator executes.
+
+**Why not DEFERRED**: This is a live P0 security issue, not a backlog deferral. Status is
+PENDING-OPERATOR-ACTION until all resolution-tracking boxes are checked.
+
+**Successor plan**: None needed — this issue doc is the plan-of-record for remediation.
+
+---
+
 ## Resolution tracking
 
 - [ ] SA key revoked in GCP Console
