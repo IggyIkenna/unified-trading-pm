@@ -1,13 +1,14 @@
-"""Detect drift between per-repo quality-gates.sh files and the SSOT templates.
+"""Detect drift between per-repo quality-gates.sh / .pre-commit-config.yaml and SSOT templates.
 
-Reports repos where quality-gates.sh has diverged from the canonical template
-(quality-gates-service-template.sh or quality-gates-library-template.sh).  Used
-by the B-014 rollout to catch manual edits before they silently rot.
+Reports repos where quality-gates.sh or .pre-commit-config.yaml has diverged from the canonical
+templates.  Used by the B-014 rollout and ongoing prek rollout to catch manual edits before they
+silently rot.
 
 What is checked
 ---------------
 For each service/api-service/library repo:
 
+quality-gates.sh checks:
 1. SSOT comment — header must reference the correct SSOT path.
 2. Mandatory config vars — SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE, RUN_INTEGRATION,
    PYTEST_WORKERS, LOCAL_DEPS, WORKSPACE_ROOT, source line.
@@ -16,12 +17,20 @@ For each service/api-service/library repo:
    ServiceBootstrap / log_event loop); repos with the old bare-loop pattern are flagged.
 5. No placeholder values — SERVICE_NAME and SOURCE_DIR must not be "REPLACE_ME".
 
-UI repos and repos without quality-gates.sh are skipped.
+.pre-commit-config.yaml checks (--prek flag):
+6. SSOT comment — header must reference the pre-commit-templates/ path.
+7. gitleaks hook — must be present (secret scanning).
+8. ruff rev — must match SSOT template canonical version.
+9. conventional-pre-commit rev — must match SSOT template.
+
+UI repos and repos without quality-gates.sh are skipped for QG checks.
+All repos with .pre-commit-config.yaml are checked when --prek is passed.
 
 Usage
 -----
     python3 scripts/quality_gates/detect_template_drift.py [--workspace-root PATH]
     python3 scripts/quality_gates/detect_template_drift.py --repo features-service
+    python3 scripts/quality_gates/detect_template_drift.py --prek   # also check .pre-commit-config.yaml
     python3 scripts/quality_gates/detect_template_drift.py --json   # machine-readable output
 """
 
@@ -74,6 +83,21 @@ CANONICAL_LIFECYCLE_PATTERN: Final[re.Pattern[str]] = re.compile(r"fastapi_uei_l
 UI_REPO_TYPES: Final[frozenset[str]] = frozenset({"ui"})
 SKIP_REPO_TYPES: Final[frozenset[str]] = frozenset({"ui", "devops"})
 LIBRARY_REPO_TYPES: Final[frozenset[str]] = frozenset({"library"})
+
+# Pre-commit template paths
+PREK_TEMPLATE_DIR: Final[Path] = PM_ROOT / "scripts" / "pre-commit-templates"
+PREK_SERVICE_TEMPLATE: Final[Path] = PREK_TEMPLATE_DIR / "python-service.pre-commit-config.yaml"
+PREK_LIBRARY_TEMPLATE: Final[Path] = PREK_TEMPLATE_DIR / "python-library.pre-commit-config.yaml"
+PREK_UI_TEMPLATE: Final[Path] = PREK_TEMPLATE_DIR / "ui.pre-commit-config.yaml"
+
+# Canonical hook IDs that must be present (service repos)
+PREK_MANDATORY_HOOKS: Final[tuple[str, ...]] = (
+    "conventional-pre-commit",
+    "ruff",
+    "ruff-format",
+    "gitleaks",
+)
+PREK_SSOT_COMMENT: Final[str] = "# Template SSOT: unified-trading-pm/scripts/pre-commit-templates/"
 
 
 # ── Data model ────────────────────────────────────────────────────────────────
@@ -225,6 +249,67 @@ def _check_repo(
     return report
 
 
+# ── Pre-commit checks ─────────────────────────────────────────────────────────
+
+
+def _check_prek(
+    repo_name: str,
+    repo_type: str,
+    workspace_root: Path,
+) -> RepoDriftReport:
+    prek_path = workspace_root / repo_name / ".pre-commit-config.yaml"
+    report = RepoDriftReport(repo_name=repo_name, repo_type=repo_type, qg_path=prek_path)
+
+    if not prek_path.exists():
+        report.items.append(
+            DriftItem("warn", "prek-missing-file", ".pre-commit-config.yaml not found — run rollout-pre-commit-configs.sh")
+        )
+        return report
+
+    content = prek_path.read_text()
+
+    # 1. SSOT comment
+    if PREK_SSOT_COMMENT not in content:
+        report.items.append(
+            DriftItem("warn", "prek-ssot-comment", f"Missing SSOT header comment. Expected: {PREK_SSOT_COMMENT!r}")
+        )
+
+    # 2. Mandatory hooks — skip ui repos (different template)
+    if repo_type not in UI_REPO_TYPES:
+        for hook_id in PREK_MANDATORY_HOOKS:
+            if f"id: {hook_id}" not in content:
+                severity = "error" if hook_id == "gitleaks" else "warn"
+                report.items.append(
+                    DriftItem(severity, f"prek-missing-hook-{hook_id}", f"Missing hook {hook_id!r} in .pre-commit-config.yaml")
+                )
+
+    # 3. Rev version checks — parse canonical from template
+    template_path = PREK_LIBRARY_TEMPLATE if repo_type in LIBRARY_REPO_TYPES else PREK_SERVICE_TEMPLATE
+    if not template_path.exists():
+        return report
+
+    template_content = template_path.read_text()
+    rev_pattern = re.compile(r"- repo: (https://\S+)\s.*?rev: (\S+)", re.DOTALL)
+    template_revs: dict[str, str] = {m.group(1): m.group(2) for m in rev_pattern.finditer(template_content)}
+    repo_revs: dict[str, str] = {m.group(1): m.group(2) for m in rev_pattern.finditer(content)}
+
+    for repo_url, canonical_rev in template_revs.items():
+        actual_rev = repo_revs.get(repo_url)
+        if actual_rev is None:
+            continue  # hook not present — already flagged by mandatory-hook check
+        if actual_rev != canonical_rev:
+            hook_short = repo_url.split("/")[-1]
+            report.items.append(
+                DriftItem(
+                    "warn",
+                    f"prek-stale-rev-{hook_short}",
+                    f"{hook_short}: rev {actual_rev!r} != canonical {canonical_rev!r}",
+                )
+            )
+
+    return report
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 
@@ -232,6 +317,7 @@ def run(
     workspace_root: Path,
     filter_repo: str | None = None,
     output_json: bool = False,
+    check_prek: bool = False,
 ) -> int:
     if not MANIFEST_PATH.exists():
         print(f"ERROR: workspace manifest not found at {MANIFEST_PATH}", file=sys.stderr)
@@ -253,6 +339,13 @@ def run(
 
         report = _check_repo(repo_name, repo_type, workspace_root)
         reports.append(report)
+
+        if check_prek:
+            prek_report = _check_prek(repo_name, repo_type, workspace_root)
+            if not prek_report.is_clean:
+                # Merge prek items into main report under prek-prefixed checks
+                for item in prek_report.items:
+                    report.items.append(item)
 
     if output_json:
         out: list[dict[str, object]] = [
@@ -296,12 +389,14 @@ def main() -> None:
     parser.add_argument("--workspace-root", type=Path, default=WORKSPACE_ROOT_DEFAULT, help="Path to workspace root")
     parser.add_argument("--repo", help="Check a single repo by name")
     parser.add_argument("--json", action="store_true", dest="output_json", help="Machine-readable JSON output")
+    parser.add_argument("--prek", action="store_true", dest="check_prek", help="Also check .pre-commit-config.yaml drift")
     args = parser.parse_args()
 
     workspace_root = cast(Path, args.workspace_root)
     filter_repo = cast(str | None, args.repo)
     output_json = cast(bool, args.output_json)
-    sys.exit(run(workspace_root=workspace_root, filter_repo=filter_repo, output_json=output_json))
+    check_prek = cast(bool, args.check_prek)
+    sys.exit(run(workspace_root=workspace_root, filter_repo=filter_repo, output_json=output_json, check_prek=check_prek))
 
 
 if __name__ == "__main__":
