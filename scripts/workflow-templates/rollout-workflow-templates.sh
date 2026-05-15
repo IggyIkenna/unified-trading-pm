@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
-# Rolls out canonical workflow templates to all workspace repos.
+# Rolls out canonical workflow templates to workspace repos.
 #
-# Templates in: unified-trading-pm/scripts/workflow-templates/
+# Two-tier template structure:
+#   1. unified-trading-pm/scripts/workflow-templates/      — GENERIC; copied to every Python service repo
+#   2. unified-trading-pm/scripts/workflow-templates-ui/   — UI-ONLY; copied to unified-trading-system-ui ONLY
+#
 # Target: <repo>/.github/workflows/<template-name>.yml
 #
-# This script is the SSOT rollout mechanism for the generic per-repo workflows:
+# Generic per-repo workflows (tier 1):
 #   - request-major-bump.yml        (thin caller -> PM reusable workflow)
 #   - major-bump-issue-handler.yml   (canonical flat copy)
 #   - staging-lock-check.yml         (canonical flat copy)
 #   - update-dependency-version.yml  (canonical flat copy)
 #   - tab-mirror-to-ldr.yml          (auto-FF push tab/** -> live-defi-rollout)
+#   - workspace-qg.yml.tmpl          (workspace quality gates, DEP_REPOS substituted)
+#   - semver-agent.yml.tmpl          (per-repo semver-agent invocation)
+#
+# UI-only workflows (tier 2) — added 2026-05-15 to fix dead-copies-everywhere bug:
+#   - uac-registry-sync.yml          (receives uac-registry-updated dispatch in UI repo)
+#   - uic-openapi-sync.yml           (receives uac-openapi-updated dispatch in UI repo)
 #
 # Usage:
 #   bash rollout-workflow-templates.sh [--dry-run] [--repo NAME] [--template NAME]
@@ -19,12 +28,20 @@
 #   bash rollout-workflow-templates.sh --repo instruments-service
 #   bash rollout-workflow-templates.sh --template staging-lock-check.yml
 #   bash rollout-workflow-templates.sh --repo instruments-service --template request-major-bump.yml
+#   bash rollout-workflow-templates.sh --repo unified-trading-system-ui  # UI templates only
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR"
+# UI-only templates live in a sibling dir. The rollout pass for UI targets
+# `unified-trading-system-ui` ONLY — these workflows receive
+# `repository_dispatch` events from UAC and regenerate types in the UI repo.
+# Putting them in `scripts/workflow-templates/` (this dir) would propagate dead
+# copies to every Python service repo. Fixed 2026-05-15 after that bug landed.
+UI_TEMPLATE_DIR="$SCRIPT_DIR/../workflow-templates-ui"
+UI_TARGET_REPO="unified-trading-system-ui"
 MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 
 DRY_RUN=false
@@ -141,6 +158,36 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
   done
   echo ""
 done
+
+# ── UI-ONLY TEMPLATES ────────────────────────────────────────────────────────
+# Process templates from $UI_TEMPLATE_DIR — these go ONLY to $UI_TARGET_REPO,
+# never to Python service repos (they'd be dead copies receiving no dispatch).
+if [ -d "$UI_TEMPLATE_DIR" ] && [ -z "$REPO_FILTER" -o "$REPO_FILTER" = "$UI_TARGET_REPO" ]; then
+  ui_target_dir="$WORKSPACE_ROOT/$UI_TARGET_REPO/.github/workflows"
+  if [ ! -d "$ui_target_dir" ]; then
+    echo "WARN: UI repo workflows dir not found at $ui_target_dir — skipping UI templates" >&2
+  else
+    for template in "$UI_TEMPLATE_DIR"/*.yml; do
+      [ -f "$template" ] || continue
+      tname=$(basename "$template")
+      [ -n "$TEMPLATE_FILTER" ] && [ "$tname" != "$TEMPLATE_FILTER" ] && continue
+      echo "=== UI Template: $tname → $UI_TARGET_REPO ==="
+      target="$ui_target_dir/$tname"
+      if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then
+        skipped=$((skipped + 1))
+        echo "  [skipped — already current] $UI_TARGET_REPO"
+        continue
+      fi
+      if [ "$DRY_RUN" = true ]; then
+        echo "  [dry-$([ -f "$target" ] && echo update || echo create)] $UI_TARGET_REPO"
+      else
+        cp "$template" "$target"
+        echo "  [$([ -f "$target" ] && echo updated || echo created)] $UI_TARGET_REPO"
+      fi
+      updated=$((updated + 1))
+    done
+  fi
+fi
 
 echo "Summary:"
 echo "  Updated/created: $updated"
