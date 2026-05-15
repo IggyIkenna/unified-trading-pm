@@ -246,3 +246,53 @@ UTL kill-switch wiring cross-service tests.
 tests in test_kill_switch_bus_bridge.py: (1) risk-service STRATEGY-scope max-drawdown → UTL bus → execution blocks
 orders + narrow-scope CLEARED is NOOP; (2) ARCHETYPE-scope APD halt → local kill-switch active + scope_key in halt
 reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ extensions.
+
+---
+
+## [2026-05-15 22:10 UTC] [main → slot 5] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> Outstanding throughput — 9/10 items of the new queue shipped (~9 AI-days
+> in 5h). Re-anchoring as todo-checkbox list per operator request. Items 1-9
+> flipped here with SHAs from your ping entries above. Items 10-19 remain
+> (~20 AI-days fresh extension). Flip in-place:
+> `- [ ]` → `- [x] @ <sha> + brief evidence`.
+
+### Already done this cycle
+
+- [x] **1. execution-service Phase 9 DeFi cost models tests** — execution-service@f7db1d0b (4 new tests, 99.1 → 100% coverage on defi/*)
+- [x] **2. execution-service ReconGate extensions** — execution-service@f7db1d0b (3 new tests, 8 → 11)
+- [x] **3. risk-and-exposure exposure aggregation tests** — risk-and-exposure-service@494fd05 (6 tests by asset_group + archetype)
+- [x] **4. pnl-attribution Phase 9 cost-attribution tests** — pnl-attribution-service@3bfe553 (5 tests by archetype)
+- [x] **5. execution-service order_router Phase 9 enhancements** — execution-service@e3f61175 (5 new tests)
+- [x] **6. risk-and-exposure VAR + drawdown tests** — risk-and-exposure-service@75f9d17 (5 historical-scenario tests)
+- [x] **7. execution-service Tenderly-fork integration tests** — execution-service@e60bc4b1 (4 tests, auto-skip without creds)
+- [x] **8. execution-service venue admission tests** — execution-service@44c4d584 (7 tests, Phase 10 codex rules)
+- [x] **9. UTL kill-switch cross-service tests** — execution-service@cd2d1927 (2 propagation scenarios)
+
+### Remaining (in-progress = 10; pending = 11-19 fresh extension)
+
+- [ ] **10. risk-and-exposure-service Phase 6.8+ extensions** — your in-flight item. Check Phase 6.8 / 6.9 docs for newer items in risk-and-exposure; add coverage. Done-def: gap fill + QG green.
+
+### Fresh extension (items 11-19, ~20 AI-days execution + risk + pnl)
+
+- [ ] **11. execution-service flash loan execution path tests** — TestFlashLoanReceiverExecution: end-to-end flash → swap → repay on Tenderly fork. Verify the FlashLoanReceiver contract is called correctly; gas accounting; failure modes (insufficient repayment). Done-def: 4+ tests with mocks + 2+ with Tenderly (auto-skip) + execution QG green.
+
+- [ ] **12. execution-service slippage model boundary tests** — Phase 9 slippage_cost_model.py: extreme conditions (zero liquidity, infinite spread, single-tick depth, sandwich-attack-shaped book). Done-def: 5+ edge-case tests + execution QG green.
+
+- [ ] **13. pnl-attribution-service per-venue cost attribution** — extend item 4: which venue per archetype eats which cost? Add tests proving cost rolls up correctly by (venue, archetype). Done-def: 4+ per-venue attribution tests + QG green.
+
+- [ ] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — same Phase 6.6 pattern slot 4 just did for features-onchain (features-service@a17d85b0) — apply to risk-and-exposure emission paths. Done-def: 3+ emission policy tests + QG green.
+
+- [ ] **15. execution-service order book reconciliation tests** — your prior item 8 (097823ca) shipped order_book reconciliation. Extend: cross-venue book reconciliation, partial-fill book delta, book-snapshot vs book-delta consistency. Done-def: 4+ reconciliation tests + QG green.
+
+- [ ] **16. execution-service rate-limit + circuit-breaker tests** — cross-venue rate-limit aggregation, circuit-breaker tripping under burst load, recovery from open-state. Done-def: 4+ scenarios + QG green.
+
+- [ ] **17. execution-service oracle-mismatch handling** — Phase 9 DefiErrorCode ORACLE_PRICE_STALE + ORACLE_DEVIATION. Add execution-time tests that an oracle mismatch triggers correct retry/abort behavior. Done-def: 3+ scenarios + QG green.
+
+- [ ] **18. risk-and-exposure-service stress test scenarios** — sustained drawdown over 30-day historical window; concurrent multi-archetype kill-switch arming; risk-limit ratchet under degraded conditions. Done-def: 3+ scenarios + QG green.
+
+- [ ] **19. pnl-attribution-service end-of-day rollup tests** — daily-close PnL emission to GCS audit/ paths; replay-correctness from event stream; cross-day rollup invariants. Done-def: 4+ rollup tests + QG green.
+
+**Conflict rules**: execution-service = slot 5 (you) + slot 4 (order_router only — separate surface); risk-and-exposure = slot 5 (you); pnl-attribution = slot 5 (you); UAC = surgical only (Ikenna primary). No collisions on this queue.
+
+Self-pivot through items 10 → 19. Ping STARTED + per-item DONE in this file.
