@@ -552,6 +552,24 @@ trading days, not 20 calendar days.
 Session-aware calculators MUST emit an `n_valid` sibling column alongside any rolling aggregate so consumers know the
 denominator actually used. See worked example in the "20-day MA" section above for the shape.
 
+## Expected universe v2 — denominator impact on consumers (2026-05-15)
+
+When the v2 instrument-grain enumerator lands (sequenced under `manifest_evolution_master_2026_05_08` gate G3), the
+manifest's `expected_unattempted` denominator grows by ~100× (from ~1.4M venue-grain rows to ~190M instrument-grain
+rows). Downstream consumers that compute honest-coverage percentages must handle this volume change:
+
+- **Deployment-api data-status drilldown** — `coverage_pct` queries must use column-projection (e.g. `pyarrow` with
+  `columns=['capture_status', 'asset_group', 'venue', 'instrument_id', 'date']`) rather than full table scans.
+  Pre-compute 24h-TTL redis cache for UI-facing endpoints. DuckDB-style aggregates preferred for ad-hoc queries.
+- **features-\* pre-flight gates** — row-count assertions become 100× larger; assert relative coverage (%) not absolute
+  count, or adjust thresholds after v2 lands.
+- **ML training row counts** — features-to-manifest join denominators shift; update any hardcoded "expected N rows per
+  day" assertions to use dynamic lookups from the manifest.
+- **Reporting surfaces** — no action needed if they already read from the drilldown endpoint (gets the cache benefit).
+
+This note is pre-emptive — v2 has not yet launched. Update this section after Phase 4 of
+[`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md) completes.
+
 ### Cross-references
 
 - MTDS implementation: `market_tick_data_service/engine/orchestrator.py` — `process_ticks` non-trading-day block.

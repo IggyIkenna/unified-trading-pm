@@ -162,10 +162,10 @@ populated, the check MUST NOT be wired — green-on-introduction is the contract
 disabled in frustration.
 
 **Applies to**: O-7 (watchdog dict relaunch correlation) + O-8 (launcher → Deploy-Missing dict parity) per
-`plans/archive/issues/codex_audit_ops_2026_05_12.md`. Both checks ship under this policy; the operator-design-gate is the
-day-1 baseline payload (which currently-unwatched prefixes / unregistered launchers count as "known tolerated state vs
-latent bug"), not the warning-vs-error toggle. Future launcher-governance checks (e.g. a `MANIFEST_PER_VM_SHARDS=true`
-presence check across every `launch-*.sh`) ship under the same policy.
+`plans/archive/issues/codex_audit_ops_2026_05_12.md`. Both checks ship under this policy; the operator-design-gate is
+the day-1 baseline payload (which currently-unwatched prefixes / unregistered launchers count as "known tolerated state
+vs latent bug"), not the warning-vs-error toggle. Future launcher-governance checks (e.g. a
+`MANIFEST_PER_VM_SHARDS=true` presence check across every `launch-*.sh`) ship under the same policy.
 
 ## features-service consolidation (2026-05-08)
 
@@ -204,30 +204,30 @@ collision-risk with in-flight tabs, partial supersession by canonical equivalent
 
 Source repo bucket counts (baseline 30):
 
-| Source                             | Count  | Pattern                                                |
-| ---------------------------------- | ------ | ------------------------------------------------------ |
-| `e2e-testing/scripts/common/`      | 4      | `launch_*_vm.sh`                                       |
-| `e2e-testing/scripts/defi/`        | 10     | `launch_*_vm.sh`                                       |
-| `e2e-testing/scripts/prediction/`  | 4      | `launch_*_vm.sh` + `setup-backfill-vm.sh`              |
-| `e2e-testing/scripts/sports/`      | 10     | `launch_*_vm.sh` + sweep wrappers                      |
+| Source                                      | Count  | Pattern                                                |
+| ------------------------------------------- | ------ | ------------------------------------------------------ |
+| `e2e-testing/scripts/common/`               | 4      | `launch_*_vm.sh`                                       |
+| `e2e-testing/scripts/defi/`                 | 10     | `launch_*_vm.sh`                                       |
+| `e2e-testing/scripts/prediction/`           | 4      | `launch_*_vm.sh` + `setup-backfill-vm.sh`              |
+| `e2e-testing/scripts/sports/`               | 10     | `launch_*_vm.sh` + sweep wrappers                      |
 | `features-service (sports family)/scripts/` | 1      | `launch_parallel_backfill.sh`                          |
-| `deployment-service/scripts/`      | 1      | `deploy-dashboard-gce-vm.sh` (move into `scripts/vm/`) |
-| **Total**                          | **30** |                                                        |
+| `deployment-service/scripts/`               | 1      | `deploy-dashboard-gce-vm.sh` (move into `scripts/vm/`) |
+| **Total**                                   | **30** |                                                        |
 
 ### Shipped 2026-05-08 (Tab 11 — 10 launchers)
 
-| #   | Old path                                                         | New canonical path under `deployment-service/scripts/vm/` | Status + commit                                                |
-| --- | ---------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `launch-mtds-backfill-vm.sh`                              | shipped — deployment-service@76f4ecc + e2e-testing@8daba1a     |
-| 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`  | `launch-instruments-backfill-vm.sh`                       | shipped — deployment-service@fbb3673 + e2e-testing@2da6867     |
-| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh`    | `launch-features-sports-parallel-backfill-vm.sh`          | shipped — deployment-service@0215086 + features-sports@06f6b30 |
-| 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`          | `launch-mtds-sports-odds-backfill-vm.sh`                  | shipped — deployment-service@2e1d967 + e2e-testing@deff088     |
-| 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`  | `launch-sports-instruments-reference-vm.sh`               | shipped — deployment-service@fc9211e + e2e-testing@db7ace3     |
-| 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                | `launch-mtds-dex-pools-backfill-vm.sh`                    | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
-| 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`       | `launch-mtds-eigenlayer-rewards-backfill-vm.sh`           | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
-| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`             | `launch-mtds-solana-drift-backfill-vm.sh`                 | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
-| 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`         | `launch-cefi-migration-vm.sh`                             | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
-| 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`          | `launch-defi-backfill-vm.sh`                              | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
+| #   | Old path                                                               | New canonical path under `deployment-service/scripts/vm/` | Status + commit                                                |
+| --- | ---------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh`       | `launch-mtds-backfill-vm.sh`                              | shipped — deployment-service@76f4ecc + e2e-testing@8daba1a     |
+| 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`        | `launch-instruments-backfill-vm.sh`                       | shipped — deployment-service@fbb3673 + e2e-testing@2da6867     |
+| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh` | `launch-features-sports-parallel-backfill-vm.sh`          | shipped — deployment-service@0215086 + features-sports@06f6b30 |
+| 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`                | `launch-mtds-sports-odds-backfill-vm.sh`                  | shipped — deployment-service@2e1d967 + e2e-testing@deff088     |
+| 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`        | `launch-sports-instruments-reference-vm.sh`               | shipped — deployment-service@fc9211e + e2e-testing@db7ace3     |
+| 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                      | `launch-mtds-dex-pools-backfill-vm.sh`                    | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
+| 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`             | `launch-mtds-eigenlayer-rewards-backfill-vm.sh`           | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
+| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | `launch-mtds-solana-drift-backfill-vm.sh`                 | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
+| 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`               | `launch-cefi-migration-vm.sh`                             | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
+| 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`                | `launch-defi-backfill-vm.sh`                              | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
 
 **Migration shape** (each row): copy source → canonical destination, rename to canonical form, deprecation banner on old
 path, register new prefix in `VM_PREFIX_TO_BUCKET`, smoke-test `--dry-run` (or `bash -n` syntax check), single-relaunch
@@ -272,11 +272,11 @@ drift risk is contained; intra-repo move ships in a follow-up cycle.
 | `e2e-testing/scripts/launch-sports-backfill.sh`                      | `launch-sports-{source}-vm.sh`                         | shipped (canonical sports launchers)      |
 | `e2e-testing/scripts/launch-prediction-backfill.sh`                  | `launch-prediction-{venue}-vm.sh`                      | shipped (canonical prediction launchers)  |
 | `e2e-testing/scripts/launch-defi-backfill.sh`                        | `launch-defi-{chain}-{flavor}-vm.sh`                   | per-chain migration pattern               |
-| `features-service (onchain family)/scripts/launch-*.sh`                       | `launch-features-onchain-vm.sh` (or asset-scoped)      | folds into features-service consolidation |
-| `features-service (volatility family)/scripts/launch-*.sh`                    | `launch-features-volatility-vm.sh`                     | folds into features-service consolidation |
-| `features-service (cross-instrument family)/scripts/launch-*.sh`              | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
-| `features-service (sports family)/scripts/launch-*.sh`                        | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
-| `features-service (prediction family)/scripts/launch-*.sh`                    | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
+| `features-service (onchain family)/scripts/launch-*.sh`              | `launch-features-onchain-vm.sh` (or asset-scoped)      | folds into features-service consolidation |
+| `features-service (volatility family)/scripts/launch-*.sh`           | `launch-features-volatility-vm.sh`                     | folds into features-service consolidation |
+| `features-service (cross-instrument family)/scripts/launch-*.sh`     | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
+| `features-service (sports family)/scripts/launch-*.sh`               | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
+| `features-service (prediction family)/scripts/launch-*.sh`           | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
 | `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | intra-repo move (deferred)                |
 
 > **Folded in from `launcher-script-consolidation-2026-05-07.md`** (deleted by `codex_refactor_2026_05_08.md` Phase
@@ -324,40 +324,63 @@ Until the plan ships:
 
 Added in Phase 1 of `promote_workflow_may23_cli_path_2026_05_10.md`:
 
-| Launcher | VM prefix | Purpose |
-|---|---|---|
-| `launch-strategy-paper-vm.sh` | `strategy-paper-` | Tenderly paper-trade (no real capital) |
-| `launch-strategy-live-vm.sh` | `strategy-live-` | Copper MPC live-trade (real capital gate) |
+| Launcher                      | VM prefix         | Purpose                                   |
+| ----------------------------- | ----------------- | ----------------------------------------- |
+| `launch-strategy-paper-vm.sh` | `strategy-paper-` | Tenderly paper-trade (no real capital)    |
+| `launch-strategy-live-vm.sh`  | `strategy-live-`  | Copper MPC live-trade (real capital gate) |
 
-Both prefixes registered in `VM_PREFIX_TO_BUCKET` (heartbeat-only). Watchdog VM bounced 2026-05-12 to
-pick up the new prefixes (`vm-zombie-watchdog-20260512-184112`).
+Both prefixes registered in `VM_PREFIX_TO_BUCKET` (heartbeat-only). Watchdog VM bounced 2026-05-12 to pick up the new
+prefixes (`vm-zombie-watchdog-20260512-184112`).
 
 Full shape + tarball routing + known gaps: [`strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md).
 
 ## Hardcoded-name vs prefix-{ts} naming patterns (O-19, added 2026-05-13)
 
-Two naming patterns exist in `deployment-service/scripts/vm/` launchers with different
-watchdog + singleton implications:
+Two naming patterns exist in `deployment-service/scripts/vm/` launchers with different watchdog + singleton
+implications:
 
-| Pattern | Example | Use case | Watchdog behaviour | Singleton-lock behaviour |
-|---|---|---|---|---|
-| **`prefix-{ts}`** (default) | `mtds-cefi-backfill-20260508-152400` | Most backfill / one-shot VMs | Watchdog kills idle VMs matching the prefix after timeout; multiple parallel VMs OK | None — concurrent runs allowed |
-| **Hardcoded name** (singleton) | `vm-zombie-watchdog`, certain `strategy-paper-{archetype}` | Singleton services that MUST NOT run as duplicates (shared API keys, per-IP rate-limited adapters, kill-switch coordinators) | Watchdog skips kill-by-prefix (would self-terminate) | Launcher refuses launch if same-name VM RUNNING in zone; `--force` bypass for operator |
+| Pattern                        | Example                                                    | Use case                                                                                                                     | Watchdog behaviour                                                                  | Singleton-lock behaviour                                                               |
+| ------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **`prefix-{ts}`** (default)    | `mtds-cefi-backfill-20260508-152400`                       | Most backfill / one-shot VMs                                                                                                 | Watchdog kills idle VMs matching the prefix after timeout; multiple parallel VMs OK | None — concurrent runs allowed                                                         |
+| **Hardcoded name** (singleton) | `vm-zombie-watchdog`, certain `strategy-paper-{archetype}` | Singleton services that MUST NOT run as duplicates (shared API keys, per-IP rate-limited adapters, kill-switch coordinators) | Watchdog skips kill-by-prefix (would self-terminate)                                | Launcher refuses launch if same-name VM RUNNING in zone; `--force` bypass for operator |
 
 **Implications when adding a new launcher:**
 
-1. **Choose the right pattern**: hardcoded name only for genuine singletons (shared rate-limited API,
-   kill-switch coordinator, zombie-watchdog). Anything else → `prefix-{ts}`.
-2. **Hardcoded-name singletons** still register their bare name as a prefix in `VM_PREFIX_TO_BUCKET`
-   so the watchdog routes their logs correctly — but the watchdog's idle-kill logic must skip them
-   (look at `vm_zombie_watchdog.py` skip-list).
-3. **Singleton-lock check** lives in the launcher script itself — pattern from
-   `launch-sfi-backfill-vm.sh` (SFI thundering-herd 2026-04-19 reference incident): query
-   `gcloud compute instances list --filter='name=<hardcoded-name> AND status=RUNNING'`; if non-empty
-   AND `--force` not passed → exit 1 with the running VM's creation timestamp + zone.
+1. **Choose the right pattern**: hardcoded name only for genuine singletons (shared rate-limited API, kill-switch
+   coordinator, zombie-watchdog). Anything else → `prefix-{ts}`.
+2. **Hardcoded-name singletons** still register their bare name as a prefix in `VM_PREFIX_TO_BUCKET` so the watchdog
+   routes their logs correctly — but the watchdog's idle-kill logic must skip them (look at `vm_zombie_watchdog.py`
+   skip-list).
+3. **Singleton-lock check** lives in the launcher script itself — pattern from `launch-sfi-backfill-vm.sh` (SFI
+   thundering-herd 2026-04-19 reference incident): query
+   `gcloud compute instances list --filter='name=<hardcoded-name> AND status=RUNNING'`; if non-empty AND `--force` not
+   passed → exit 1 with the running VM's creation timestamp + zone.
 4. **Cross-ref**: CLAUDE.md "Singleton-locked launchers" rule + "No fire-and-forget VM launches" rule.
 
 Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` (O-19 finding).
+
+---
+
+## Expected universe v2 launcher (2026-05-15, deployment-service@7313a39)
+
+Added in Phase 2 of
+[`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):
+
+| Launcher                            | VM prefix               | Purpose                                             |
+| ----------------------------------- | ----------------------- | --------------------------------------------------- |
+| `launch-expected-universe-v2-vm.sh` | `expected-universe-v2-` | Instrument-grain expected universe enumeration (v2) |
+
+**VM prefix** registered in `VM_PREFIX_TO_BUCKET` with value `None` (heartbeat-only; same pattern as v1
+`expected-universe-enum-`). Watchdog bounces required after dict edit per plan Phase 2.
+
+**Positional arg**: `asset_group` (cefi|defi|tradfi|sports|prediction). Optional: `--apply-write`, `--max-writes`,
+`--catalog-gs-path`, `--force`, `--env`.
+
+**Sharding**: cefi shards by venue (7 VMs × 1 venue each); sports/prediction/defi/tradfi run as one VM each (~10 VMs
+total per full production launch).
+
+**Status**: launcher shipped; Phase 4 (VM launches) blocked on G4 v8 schema landing + operator backfill approval (≥1
+week GCS write). Phase 4 sequenced under `manifest_evolution_master_2026_05_08` gate G3.
 
 ---
 
