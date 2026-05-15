@@ -118,8 +118,11 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    `docs.phoenix.trade`); Phoenix CLOB DEX may have shut down or migrated. Ping filed at
    `ikenna_orchestrator/pings/slot_3.md@2026-05-15T19:08:56Z` requesting operator confirmation +
    canonical API URL OR `EMPTY_OR_DEPRECATED_DEFI_VENUE` marker.
-3. **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
-   1.2×, ~2 = 2.4 cal)
+3. ✅ **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
+   1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: snapshot added to issue doc — 3/5 venues fixed
+   (ASTER adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
+   approval >1 week + EXTENDED-STARKNET canonical API URL). Issue doc:
+   `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md` § "UPDATE 2026-05-15".
 4. **`arbitrage_price_dispersion_finalisation_2026_05_09`** (carry from slot 9 reassignment) — push remaining
    finalisation items. (design 0.6×, ~4 = 2.4 cal)
 5. **Hyperliquid arb_price_dispersion eligibility close** — verify USDC-margin + 7-venue dispersion universe. (research

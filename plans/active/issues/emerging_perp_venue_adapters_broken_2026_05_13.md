@@ -188,3 +188,21 @@ Next steps:
   - Ping filed: `ikenna_orchestrator/pings/slot_3.md` — operator needs to provide Extended Finance REST API docs or
     GitHub link so correct `_EXTENDED_API_BASE` path can be found.
   - Owner: operator provides endpoint → slot 3 updates `_EXTENDED_API_BASE` in both adapters.
+
+---
+
+## UPDATE 2026-05-15 — slot 3 status snapshot (item 3 close)
+
+Status summary across the 5 broken-perp venues:
+
+| Venue                 | Status                            | Owner / next action                                                                |
+| --------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| **ASTER**             | ✅ adapter fixed; backfill pending | `[BACKFILL] P0` BLOCKED-OPERATOR-APPROVAL (>1 week, 17,681 rows; pinged 2026-05-14) |
+| **EXTENDED-STARKNET** | ⚠ BLOCKED-OPERATOR-DECISION       | Operator must provide canonical API URL (pinged 2026-05-15)                        |
+| **HYPERLIQUID**       | ✅ reverse-phantom reconciler shipped | Run reconciler on full HYPERLIQUID residual (instruments-service@35f920e)        |
+| **LIGHTER-ZKSYNC**    | ✅ MTDS wired @78e3b28             | Captures should resume on next batch; verify via manifest                          |
+| **PACIFICA-SOLANA**   | ✅ MTDS wired @78e3b28             | Captures should resume on next batch; verify via manifest                          |
+
+**Slot 3 item 3 (work_split_2026_05_15_ikenna.md) effectively complete**: all in-scope adapter fixes shipped.
+2 remaining items are operator-blocked (ASTER backfill VM approval + EXTENDED-STARKNET canonical API URL).
+Issue doc remains active until both operator decisions land + reconciler runs operationally.
