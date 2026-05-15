@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — ✅ DONE item 5 batch_live L4/L5/L6 sweep (features+strategy+mtds). STEP 5.75-5.78 (L1/L2/L3/L5) all ✅ clean in all 3 repos. L4 deferred items catalogued: LIVE_FEATURES_COMPUTED/LIVE_SIGNAL_GENERATED in strategy-service (log_event strings); LIVE_FEATURE_SUBSET constant in features-service. Both are post-cutover per plan D5 default — NOT violations for current QG STEPs. L6 executor-factory: no violations found. No code changes needed.
+
 [2026-05-15 UTC] slot-8 — ✅ DONE item 4 mtb-p6e-final-qg-sweep. PM@41bbf18e: QG ran on all 6 B-014 repos. Results: ibkr-gateway-infra 51.47% ✅, ml-inference 78.41% ✅, mdps 74.91% ✅, sys-integration-tests ~8% ✅ (MIN_COV=2), features-service 71.83% ❌ (211 pre-existing failures — confirmed on LDR main), ml-training 79.96% ❌ (14 slow-test timeouts + 0.04% coverage gap vs pyproject fail_under=80 — confirmed pre-existing on LDR main). No repo below 70% floor. Issue doc: plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md
 
 [2026-05-15 UTC] slot-8 — ✅ DONE self-pivot DT-3/DT-4 (PRE_CUTOVER from codex audit issue doc). PM@8b4ab3ad: (1) "Library-Repo QG Carveout Patterns" section added to quality-gates.md (UAC_CANONICAL_EXEMPT / SIZE_EXTRA_EXCLUDES / GCP_PROJECT_ID_EXCLUDE_GLOBS / BROAD_EXCEPT_EXTRA_EXCLUDES — when valid, pattern, guard rails); (2) B-014 STEP 5.79-5.82 PENDING_RATCHET status + B-018 QG snapshot VM details cross-referenced in deployment-and-qg-strategy.md § Continuous verification. All 4 DT findings now FIXED. Issue doc closed. No new queue — awaiting main direction.
