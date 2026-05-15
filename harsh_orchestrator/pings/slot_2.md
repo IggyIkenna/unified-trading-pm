@@ -72,3 +72,9 @@ measure-honest-coverage-20260515-112048 RUNNING. Watching for coverage.json in 1
 
 - measure-honest-coverage-20260515-112048 (RUNNING) — expect
   `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` in ~10 min. Will update when verified.
+
+[2026-05-15 11:55 UTC] slot-2 — BUG FOUND+FIXED (2nd round): GCS bucket `central-element-323112-honest-coverage` did not
+exist. Both prior smokes (105009 rc=2 + 112048 no-events) failed because bucket missing. Created bucket
+`gs://central-element-323112-honest-coverage` (asia-northeast1, uniform-bucket-level-access). Re-smoke #3:
+`measure-honest-coverage-20260515-115454` RUNNING. Expect coverage.json in ~10-15 min. STARTED reserve queue:
+shellcheck sweep on `deployment-service/scripts/vm/` launchers.
