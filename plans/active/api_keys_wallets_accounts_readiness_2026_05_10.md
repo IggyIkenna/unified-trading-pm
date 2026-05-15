@@ -635,9 +635,11 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ### 4.C.F — Strategy-service forward wire-in (strategy-service owned; ~0.5 cal AI-days)
 
-- [ ] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls
+- [x] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls
       `run_wallet_preflight_checks` BEFORE handoff. Failure rejects the strategy emission + emits alert. **Owner**:
-      strategy-service maintainer; gated on 4.C.C.
+      strategy-service maintainer; gated on 4.C.C. (strategy-service@7809012 2026-05-15;
+      StrategyWalletPreflightRegistry + \_filter_strategy_emissions_preflight() in V2EngineOrchestrator.on_tick();
+      wallet_id propagated definition→identity; 18 tests, QG green 141s)
 
 ### 4.C.G — Per-venue safety-margin tuning (operator + risk-plan owner; ~0.5 cal AI-day)
 
