@@ -204,10 +204,10 @@ the data-status / drilldown / deploy_missing services are GCS-only.
 - [x] [deployment-api] P0. `tests/unit/test_data_status_hierarchical_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
       `get_hierarchical_drilldown` reads the manifest from S3 (mocked) using the AWS-equivalent bucket name template;
       the returned tree shape is identical to GCS. (deployment-api@fed999b — 10 tests: bucket-name pin + shape parity + required keys + no-GCS dispatch)
-- [ ] [deployment-api] P0. `tests/unit/test_deploy_missing_aws_launcher_routing.py` — when `CLOUD_PROVIDER=aws`, assert
+- [x] [deployment-api] P0. `tests/unit/test_deploy_missing_aws_launcher_routing.py` — when `CLOUD_PROVIDER=aws`, assert
       `_SERVICE_LAUNCHER_SCRIPTS` resolves to `launch-*-ec2.sh` (or the AWS-equivalent) rather than the GCE
       `launch-*-vm.sh`. (Note: requires the EC2 launchers from `aws_migration_defi_first_2026_05_07` to exist; gate this
-      test on the launcher-existence check.)
+      test on the launcher-existence check.) (deployment-api@ce40a88 — 6 tests skip-gated on EC2 launchers + 2 pre-migration state pins pass; auto-unskips when _SERVICE_LAUNCHER_SCRIPTS gains ec2 entries)
 - [ ] [unified-cloud-interface] P0. `tests/test_storage_client_protocol_parity.py` — assert
       `StorageClient.read_parquet`, `list_blobs`, `get_blob_metadata` produce the same return shape across the GCS + S3
       backends for an identical input dataset. (Generalizes beyond data-status.)
