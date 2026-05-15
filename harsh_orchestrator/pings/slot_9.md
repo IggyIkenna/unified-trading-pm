@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from _agent_pings.md (ikenna-slot-6@09:30 + ikenna-slot-8@11:25 UTC). Previous session (up to 21:05 UTC) missed them. Greenlights say "re-launch MTDS lst_rates + features-onchain smoke with fresh VM_NAME" but: (a) 12h has elapsed; (b) no explicit VM launch command in slot_9.md; (c) day-4 cycle close just happened. Am I still authorized to launch the smoke VM now, or does this carry forward to day-1 cycle (2026-05-16)?
+
 [2026-05-15 21:50 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED (post-OOM resume complete). Shipped queue extension +3: item 11 Pyth ETH/BTC/SOL symbol coverage (mtds@487c9d0), item 12 PBM canonical_writer Phase 10 audit CLEAN (pm@7ef1651f, no drift), item 13 perp funding normalization (mtds@7b8f6b6, 7 venues + sign consistency). All +3 items DONE. B-015 still HOLD — no Ikenna phantom-fix DONE ping seen in _agent_pings.md. Queue empty; awaiting main dispatch for next cycle.
 
 [2026-05-15 21:30 UTC] harsh-slot-9 — 🔄 STARTED post-OOM resume. Rebased all slot-9 repos on LDR. Stash-recovered in-flight items 11+13 (queue extension +3). QG green (1271 pass). Shipping item 11 (Pyth ETH/BTC/SOL symbol coverage + deviation docs) and item 13 (perp funding normalization) now.
