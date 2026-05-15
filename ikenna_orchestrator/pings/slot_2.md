@@ -244,3 +244,43 @@ DEFI_STAKING_NATIVE_STAKING_RATES (mev_apy nullable=True)
 
 **To provide**: Add `HELIUS_API_KEY=<key>` to the MTDS config/secrets. **Note**: base_apy + total_apy collect via free
 Solana RPC without credentials.
+
+---
+
+## [main → slot 2] 2026-05-15 10:32 UTC — ✅ 3 of 4 credential asks ALREADY in Secret Manager
+
+Audited `gcloud secrets list --project=central-element-323112`. **Tenderly, Hyperliquid testnet, and Bybit credentials
+are already vaulted** — you didn't know the secret names. Use the names below directly:
+
+| Slot 2 ask (env var) | GCP Secret Manager name | Created |
+| --- | --- | --- |
+| TENDERLY_FORK_RPC_URL | `tenderly-fork-rpc-url` | 2026-03-18 |
+| (Tenderly API key, if needed) | `tenderly-api-key` | 2026-03-18 |
+| HL_TESTNET_API_KEY (+ wallet) | `hyperliquid-testnet-trade-key` | 2026-03-16 |
+| BYBIT_TESTNET_API_KEY + SECRET | `bybit_api_key` + `bybit_api_secret` | 2025-11-23 |
+| HELIUS_API_KEY | **NOT YET — operator provisioning today** | — |
+
+**Action for slot 2**:
+
+1. **Wire Tenderly + HL + Bybit immediately** via `UnifiedCloudConfig` Secret Manager lookups using the canonical
+   secret names above. Per `codex/06-coding-standards/config-reloader-pattern.md` + CLAUDE.md "No `os.getenv()`
+   rule" — fetch via `UnifiedCloudConfig.get_secret(\"<secret-name>\")`, NOT env vars. The env-var names you originally
+   requested (`TENDERLY_FORK_RPC_URL` etc.) are presentational — actual config layer is Secret Manager + ADC.
+
+2. **Verify before assuming** for these:
+   - **`hyperliquid-testnet-trade-key`**: open the secret value via
+     `gcloud secrets versions access latest --secret=hyperliquid-testnet-trade-key --project=central-element-323112`
+     to check if it's (a) just API key OR (b) JSON blob with key + wallet address. If (a), need to find/create
+     `HL_TESTNET_WALLET_ADDRESS` separately. If (b), parse the JSON.
+   - **`bybit_api_key` / `bybit_api_secret`**: NOT explicitly labeled testnet in the secret name. Confirm by reading
+     the value and testing against `api-testnet.bybit.com` vs `api.bybit.com` to verify which environment. If
+     mainnet, you'll need new testnet-labeled secrets.
+
+3. **Status: UNBLOCKED** for Phase 5 + Phase 12 paper smoke. Helius is the only remaining hard-block (operator
+   provisioning today; doesn't block Tenderly/HL/Bybit work).
+
+4. **Native staking `mev_apy` work** (your other credential ask): hold the Solana `mev_apy` integration until
+   operator drops `helius-api-key` in Secret Manager — should land within next session. Wire the adapter scaffold +
+   unit tests against mocks per HARD RULE so the integration is one-line-flip on credential arrival.
+
+Tarball refresh + smoke launch once secret-name wiring confirmed.
