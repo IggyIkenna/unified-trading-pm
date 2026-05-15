@@ -183,15 +183,23 @@ respective umbrellas.
       `classify_session()` gating off-session ticks in `_tick_one_engine`;
       `TRADFI_DEFAULT_PARAMS={"respect_market_hours":"true"}` added as SSOT in `archetype_defaults.py`; 14 unit tests.
 - [x] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason. [AUDIT 2026-05-07:
-      FRESH — actionable] — ✅ Two-layer implementation 2026-05-15:
-      (1) Adapter layer: `instruments-service@c3782ba` — `reject_expired=True` default in `build_futures_contracts`;
-          EXPIRED/SETTLED contracts emit WARNING + skip; `reject_expired=False` bypass for historical backfill. 4 tests.
-      (2) Validation layer: `UAC@eb38f68` + `IS@aa09f9e` — status=EXPIRED guard (unconditional) + expiry.date()<as_of_date
-          guard in `validate_instrument_records()` / `_check_record()` with optional `as_of_date: date|None` param;
-          13 unit tests; both IS orchestrator call sites wired to pass `date_type.fromisoformat(date)` as as_of_date.
-- [ ] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log. [AUDIT
+      FRESH — actionable] — ✅ Two-layer implementation 2026-05-15: (1) Adapter layer: `instruments-service@c3782ba` —
+      `reject_expired=True` default in `build_futures_contracts`; EXPIRED/SETTLED contracts emit WARNING + skip;
+      `reject_expired=False` bypass for historical backfill. 4 tests. (2) Validation layer: `UAC@eb38f68` + `IS@aa09f9e`
+      — status=EXPIRED guard (unconditional) + expiry.date()<as_of_date guard in `validate_instrument_records()` /
+      `_check_record()` with optional `as_of_date: date|None` param; 13 unit tests; both IS orchestrator call sites
+      wired to pass `date_type.fromisoformat(date)` as as_of_date.
+- [x] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log. [AUDIT
       2026-05-07: IN-FLIGHT verification — `mdps-tradfi-2021/22/23/24/25` VMs RUNNING (T+22h, ETA 2026-05-08); event
-      stream + manifest will show pre-skip behavior post-drain]
+      stream + manifest will show pre-skip behavior post-drain] — ✅ VERIFIED 2026-05-15: MTDS
+      `engine/orchestrator.py:1742-1801` (live on LDR) gates `active_venues` through `is_non_trading_day(v, date)`, logs
+      `"Skipping %d venue(s) for date=%s — known non-trading day (weekend / US market holiday): %s"`, and emits
+      `record_expected_empty(reason=non_trading_day_reason(...))` via `ManifestWriter` for every (venue, data_type)
+      shard so the manifest itself stays honest. UAC contract spot-check executed in MTDS venv against `NYSE`, `NASDAQ`,
+      `CME`: Sat 2026-05-09 + Sun 2026-05-10 → `is_non_trading_day=True, reason=EXPECTED_WEEKEND`; Tue 2026-05-12 →
+      `is_non_trading_day=False, reason=None`; Thu 2025-12-25 (Christmas) →
+      `is_non_trading_day=True, reason=EXPECTED_HOLIDAY`. Pre-skip + typed-reason emission therefore correct for all
+      three TradFi venues in scope.
 
 **Acceptance**: MTDS skips closed TradFi markets; execution-service rejects TradFi orders on closed markets; ML training
 reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected repos pass QG.
