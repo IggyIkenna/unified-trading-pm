@@ -103,9 +103,12 @@ Plan fan-out: `emerging_perp_venue_adapters_broken` remainder + Solana DEX adapt
 Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_price_dispersion_finalisation_2026_05_09`
 (carry from slot 9 reassignment).
 
-1. **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2 authenticated
+1. 🔄 **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2 authenticated
    2026-05-15 with Spot + Derivatives perms; also Kraken testnet API onboarded). Wire `KrakenCeFiAdapter` scaffold from
    `execution-service@4d4d8e12d` to live data flow. (infra 0.8×, ~3 = 2.4 cal)
+   **PARTIAL 2026-05-15 (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST
+   via aiohttp transport (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean.
+   Remaining: private signed transport (`place_order`/`cancel_order`/`get_account_state`) + WS subscriptions.
 2. **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal)
 3. **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
