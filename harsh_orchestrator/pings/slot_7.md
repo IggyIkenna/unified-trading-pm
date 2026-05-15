@@ -188,3 +188,47 @@ pnpm build + QG green (63 tests). deployment-ui@fd4fa83. Plan flipped.
 (6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac
 (9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅ @5147f4b (13) mobile layout ✅ @fd4fa83.
 QG green on both repos. Ready for next queue.
+
+---
+
+## [2026-05-15 22:30 UTC] [main → slot 7] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> 🏁 CYCLE-CLOSE acked. Outstanding — 13/13 items shipped. Re-anchoring as
+> todo-checkbox list per operator request. 7-item fresh extension (~14 AI-days).
+> Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+
+### Already done this cycle
+
+- [x] **1. deployment-api WebSocket VM event streaming** — deployment-api@4951d10
+- [x] **2. deployment-api Prometheus telemetry** — deployment-api@8aabe72
+- [x] **3. deployment-ui WebSocket integration** — deployment-ui@8bace71
+- [x] **4. deployment-api admin VM endpoints** (pause/resume/cancel) — deployment-api@af80be6
+- [x] **5. deployment-api VM log streaming** — deployment-api@13b0194 (4 tests)
+- [x] **6. deployment-ui VM log viewer** — deployment-ui@cb4f2bf
+- [x] **7. deployment-api deployment diff endpoint** — deployment-api@3acda8e
+- [x] **8. deployment-ui deployment diff viewer** — deployment-ui@2c221ac (6 vitest tests)
+- [x] **9. deployment-api cost estimate endpoint** — deployment-api@d3a001a (9 tests)
+- [x] **10. deployment-ui cost estimate panel** — deployment-ui@5147f4b
+- [x] **11. deployment-ui Phase 11 recursive-borrow polish** — (backfilled)
+- [x] **12. deployment-api request-tracing middleware** — (backfilled, CorrelationIdMiddleware)
+- [x] **13. deployment-ui responsive mobile layout audit** — deployment-ui@fd4fa83 (8 routes, 63 vitest tests, pnpm build green)
+
+### Fresh extension (items 14-20, ~14 AI-days)
+
+- [ ] **14. deployment-api VM health-check endpoint** — `GET /api/vm/{vm_name}/health` returns aggregate (last STARTED, last heartbeat, expected next, staleness threshold, current state). Done-def: endpoint + 4 unit tests + QG green.
+
+- [ ] **15. deployment-ui VM health-status badges** — wire item 14 into `/ops/live-deployments` + `/ops/vms/{vm_name}`. Color-coded (green/amber/red). Done-def: badge + integration + vitest green.
+
+- [ ] **16. deployment-api Phase 12 cost aggregation endpoint** — `GET /api/costs/daily?date=YYYY-MM-DD` per-asset_group + per-archetype + per-vm. Reads `gs://central-element-323112-deployment-events/cost_summary/`. Done-def: endpoint + 5 tests + QG green.
+
+- [ ] **17. deployment-ui Phase 12 cost dashboard** — new route `/ops/costs` with date picker + tables + sparkline. Done-def: 3+ vitest tests + pnpm build green.
+
+- [ ] **18. deployment-api VM events filter endpoint** — `GET /api/vm/{vm_name}/events?since=<ts>&type=<event_type>&limit=N` (item 5 returned last-3-only). Done-def: endpoint + filter tests + QG green.
+
+- [ ] **19. deployment-ui VM events timeline component** — wire item 18 into `/ops/vms/{vm_name}`. Vertical timeline (type/timestamp/collapsible-JSON). Done-def: 4 vitest tests + pnpm build green.
+
+- [ ] **20. deployment-api Firebase auth middleware integration tests** — your prior Firebase token verification needs: valid / expired / missing / wrong-issuer / wrong-audience. Done-def: 5+ integration tests + QG green.
+
+**Conflict rules**: deployment-api + deployment-ui = slot 7 OWNS; UAC = surgical only (Ikenna primary).
+
+Self-pivot through items 14 → 20. Ping STARTED + per-item DONE in this file.
