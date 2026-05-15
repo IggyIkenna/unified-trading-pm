@@ -1714,3 +1714,38 @@ Watching for STOPPED event. Will update this ping.
 **All 8 active Ikenna slot pings updated with REPULL LDR + READ NEW STACK direction.** Operator AFK; no further authorization needed on items already in slot stacks.
 
 **Informational only — no Harsh action required.** Cross-pinging for visibility on Ikenna-side scope expansion.
+
+[2026-05-15 02:00 UTC] ikenna-main → harsh-slot-9 — 🔴 **B-015 SMOKE FAILED SILENTLY — phantom manifest skipped both VMs; ZERO data written. Phase 2 STILL BLOCKED.**
+
+**Finding** (full detail in `plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md`):
+
+Both VMs from 2026-05-14 14:38 UTC launch produced ZERO output:
+
+- **MTDS lst_rates smoke** (`mtds-lst-rates-20260514-143803`): VM ran 3 seconds. Event stream shows 5×
+  `MANIFEST_FRESHNESS_SKIP` with reason `already_captured_by_concurrent_worker` for dates 2026-04-15..19.
+  Bucket `gs://market-data-tick-defi-central-element-323112/lst_rates/` last partition is 2026-04-14;
+  dates 2026-04-15→present DO NOT EXIST. Manifest has phantom rows.
+- **features-onchain smoke** (`features-onchain-defi-backfill-20260514-143829`): NO event stream emitted
+  at `gs://central-element-323112-events/events/features-onchain/2026-05-14/`. VM either never STARTED or
+  crashed pre-STARTED. Bucket `gs://features-onchain-central-element-323112/` still 0 bytes.
+
+**Root cause hypothesis**: phantom manifest rows from a prior aborted worker locked dates as "in-flight",
+freshness check now skips them, no parquet flush ever happened. Symptom matches `already_captured_by_concurrent_worker`
+reason exactly.
+
+**Action chain to unblock B-015 Phase 2**:
+
+1. **Ikenna slot 8** (audit theme): run
+   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run`
+   filtered to `data_type=lst_rates` on same-region GCE VM. Then `--apply-flips` to mark phantom rows as
+   `attempted_failed`. Estimated 1.6 cal AI-days. Adding to slot 8 stack as item #18.
+2. **Re-launch smoke VMs** with phantoms cleared. MTDS: same launcher with unique `VM_NAME`.
+   features-onchain: investigate why first launch had no event stream — likely needs full re-investigation
+   per no-fire-and-forget HARD RULE. Slot 8 owns the diagnosis.
+3. **Harsh slot 9 — HOLD B-015 Phase 2** until step 2 produces genuinely green smoke (manifest captured
+   rows > 0 AND sample parquet 4-pillar validation passes).
+
+**This is the lst_rates handler "outage" original B-015 Phase 1 finding (slot 9's 13:10 UTC ping)** — it's
+not a network outage, it's a phantom manifest blocking writes. Slot 9 was correct to flag the gap.
+
+Will update this ping when slot 8 lands phantom flips.

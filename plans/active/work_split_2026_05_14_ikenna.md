@@ -429,6 +429,15 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
+13. **🔴 [URGENT 2026-05-15] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest
+    rows blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS lst_rates +
+    features-onchain). Run
+    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run`
+    filtered to `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present;
+    `--apply-flips` to mark rows as `attempted_failed`. Then coordinate with Harsh slot 9 to re-launch
+    smoke VMs with phantoms cleared + verify event-stream STARTED + manifest captured rows > 0 + 4-pillar
+    parquet validation. Also diagnose why features-onchain smoke produced NO event stream (no-fire-and-forget
+    HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal)
 13. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
