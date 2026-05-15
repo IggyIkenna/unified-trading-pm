@@ -81,6 +81,8 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
 [2026-05-15 session-4] slot-3 — ✅ **DONE item 2**: archetype state persistence + recovery tests. 7 tests: (a) current_position_units persists through on_restart(), (b) last_hedge_rebalance_rate (Phase 6B baseline) persists, (c) hysteresis active post-restart, (d) kill→on_restart()→signal flows (CSB + APD), (e) _emitted cleared, (f) no double-emit. QG green. — strategy-service@0807605. Pivoting to item 3: venue rotation / failover tests.
 
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 3**: venue rotation / failover tests. 5 tests: APD richest-sell dropout routes to next pair; cheapest-buy dropout routes to next pair; single venue → no signal; all missing → no signal; CSB VENUE_UNAVAILABLE kill → on_restart() → signal resumes. QG green. — strategy-service@9d725eb. Pivoting to item 4: e2e-testing/scripts/defi/ end-to-end test scenarios.
+
 [2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
