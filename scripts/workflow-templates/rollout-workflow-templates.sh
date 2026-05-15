@@ -58,16 +58,38 @@ fi
 
 REPOS=$(python3 -c "import json; [print(r) for r in json.load(open('$MANIFEST')).get('repositories',{})]")
 
+# dep_repos per repo from manifest (space-separated dep names)
+get_dep_repos() {
+  local repo="$1"
+  python3 -c "
+import json
+m = json.load(open('$MANIFEST'))
+r = m.get('repositories', {}).get('$repo', {})
+deps = r.get('dependencies', [])
+names = [d['name'] for d in deps if isinstance(d, dict) and 'name' in d]
+print(' '.join(names))
+" 2>/dev/null || echo ""
+}
+
 updated=0
 skipped=0
 missing_dir=0
 
-for template in "$TEMPLATE_DIR"/*.yml; do
+# Process both direct .yml templates and .yml.tmpl templates (with substitution)
+for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
   [ -f "$template" ] || continue
-  tname=$(basename "$template")
-  [ -n "$TEMPLATE_FILTER" ] && [ "$tname" != "$TEMPLATE_FILTER" ] && continue
+  tbase=$(basename "$template")
+  # For .yml.tmpl files, strip .tmpl to get the output filename
+  if [[ "$tbase" == *.yml.tmpl ]]; then
+    tname="${tbase%.tmpl}"
+    is_tmpl=true
+  else
+    tname="$tbase"
+    is_tmpl=false
+  fi
+  [ -n "$TEMPLATE_FILTER" ] && [ "$tname" != "$TEMPLATE_FILTER" ] && [ "$tbase" != "$TEMPLATE_FILTER" ] && continue
 
-  echo "=== Template: $tname ==="
+  echo "=== Template: $tbase → $tname ==="
   for repo in $REPOS; do
     [ -n "$REPO_FILTER" ] && [ "$repo" != "$REPO_FILTER" ] && continue
 
@@ -83,24 +105,32 @@ for template in "$TEMPLATE_DIR"/*.yml; do
       continue
     fi
 
-    # Check if target already matches template (skip if identical)
-    if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then
-      skipped=$((skipped + 1))
-      continue
-    fi
-
-    if [ "$DRY_RUN" = true ]; then
-      if [ -f "$target" ]; then
-        echo "  [dry-update] $repo"
+    # For .tmpl files: perform substitution; for .yml files: direct copy
+    if [ "$is_tmpl" = true ]; then
+      dep_repos=$(get_dep_repos "$repo")
+      rendered=$(sed "s/{{DEP_REPOS}}/${dep_repos}/g" "$template")
+      # Skip if target already matches rendered output
+      if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+      if [ "$DRY_RUN" = true ]; then
+        echo "  [dry-$([ -f "$target" ] && echo update || echo create)-tmpl] $repo (dep_repos=${dep_repos})"
       else
-        echo "  [dry-create] $repo"
+        echo "$rendered" > "$target"
+        echo "  [$([ -f "$target" ] && echo updated || echo created)-tmpl] $repo (dep_repos=${dep_repos})"
       fi
     else
-      cp "$template" "$target"
-      if [ -f "$target" ]; then
-        echo "  [updated] $repo"
+      # Check if target already matches template (skip if identical)
+      if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+      if [ "$DRY_RUN" = true ]; then
+        echo "  [dry-$([ -f "$target" ] && echo update || echo create)] $repo"
       else
-        echo "  [created] $repo"
+        cp "$template" "$target"
+        echo "  [$([ -f "$target" ] && echo updated || echo created)] $repo"
       fi
     fi
     updated=$((updated + 1))
