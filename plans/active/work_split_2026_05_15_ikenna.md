@@ -289,8 +289,14 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    item 6 evidence: `client-reporting-api@ce5156d` + `deployment-ui@21331da` + `deployment-service@e00fe79` for HWM
    route; `client-reporting-api@192b41d` + `deployment-service@007f67f` for Phase 8 real-VM cutover runner +
    launcher). No additional work this session. (design 0.6×, ~4 = 2.4 cal)
-6. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — mock-data compute cost reduction for CI. (design 0.6×,
-   ~3 = 1.8 cal)
+6. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — all Ikenna-half items shipped:
+   Phase 0 ✅ (stage-bottleneck classification `PM@c36a5bfb`); Phase 1 ✅ (aggregation wire +
+   `--max-parallel` flag `strategy-service@8b20a32`; verify-extend item is DEFERRED with named follow-up —
+   per-archetype design call needed); Phase 2 partial ✅ (sports `--worker-count` `features-service@722697d3`;
+   onchain/volatility families already had it); Phase 3 ✅ (execution-alpha scaffold `execution-service@fa18c3a1b`
+   + parallel wrapper `execution-service@f65a7d5d5` + VM launcher `deployment-service@1510310` + smoke
+   `strategy-service@fc634e3`). Remaining open: Phase 4 ml-training (Harsh-half), Phase 5 SKU matrix (joint),
+   Phase 2 profiling item (joint). (design 0.6×, ~3 = 1.8 cal)
 7. **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** (orphan from slot 7 14 May) — master plan Group F item 18
    row budget assertion. (infra 0.8×, ~3 = 2.4 cal)
 8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize**. (research 1.2×, ~3 = 3.6 cal)
