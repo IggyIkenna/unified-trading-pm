@@ -69,3 +69,14 @@ Queue:
   🚨 NOTE: features-service has ~198 remaining pre-existing failures (beyond volatility's 48 and the 3 just fixed).
     Commodity CLI (2 failures): xdist interference (pass in isolation).
     Other families: ~150 additional failures across all per-family test dirs. Full audit needed.
+
+[2026-05-15 16:10 UTC] slot-4 — 🏁 **CYCLE-CLOSE (Queue extension items 8-10)**. All 3 items complete.
+  (8) features-service Phase 6 emission parity — sports + commodity ✅
+    BIG FINDING (fixed): sports UAC seeds were under "features-service" instead of "features-sports-service" — 7 groups silently fell back to STRICT_FAIL. Fixed UAC service_emission_policy.py (uac@49323dd).
+    TestUACPolicyParity added to sports (3 tests) + commodity (3 tests); 6 tests passing; features@880826bb.
+    Commodity _SERVICE_NAME="features-commodity-service" was already correct — only needed parity tests.
+  (9) instruments-service migration pre/post-state tests ✅
+    Added TestPrePostMigrationState (5 tests) to test_migrate_tradfi_expiry_schema.py asserting: pre-state schema columns, post-state columns match, row count preserved, no null expiration post-migration, DatetimeTZDtype dtype. instruments@4fb84fc. QG passed (132s).
+  (10) execution-service test_lifecycle_events.py expansion ✅
+    3→7 tests: added modes=['batch','live'] verification, description kwarg check, no-explicit-correlation_id assertion, FAILED path .run()-called-once. execution@ef01a59f. QG passed (592s).
+  All repos QG green. Standing by — 3-min poll active.
