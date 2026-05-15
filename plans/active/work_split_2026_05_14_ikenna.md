@@ -189,10 +189,13 @@ Plan-of-record fan-out: 3 sports classifier issue docs (sfi_footystats / player_
 5. **6-bucket provisioning** — sports/prediction bucket provisioning per `bucket_name_ssot_canonicalisation` env-aware
    matrix. Operator-approval needed only if backfill is part of this — provisioning alone = config + bucket-create only,
    no approval. (infra 0.8×, ~2 = 1.6 cal)
-6. **Sports/prediction phantom apply-flips on VMs** — `reconcile_phantom_manifest_rows_all.py --apply-flips` on
-   same-region GCE VM. (infra 0.8×, ~3 = 2.4 cal)
-7. **Cluster D strategy-service test failures** (Phase 0 cluster D; different from Harsh slot 4's 2-of-17 — this is the
-   cluster-level remainder). (refactor 0.4×, ~2 = 0.8 cal)
+6. ✅ **Sports/prediction phantom apply-flips on VMs** — `reconcile_phantom_manifest_rows_all.py --apply-flips` on
+   same-region GCE VM. (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14 prior session): 0 phantoms for sports,
+   0 phantoms for prediction — dry-run confirmed clean. No apply needed (nothing to flip).
+7. ✅ **Cluster D strategy-service test failures** (Phase 0 cluster D; different from Harsh slot 4's 2-of-17 — this is the
+   cluster-level remainder). (refactor 0.4×, ~2 = 0.8 cal) **DONE**: strategy-service@3a3f20b —
+   `load_strategy_config_by_type` moved `get_storage_client()` inside try/except so ValueError (no GCP_PROJECT_ID)
+   returns None gracefully instead of propagating; 3 test_v2_batch_parity failures → 0; 1715 pass total.
 8. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — gather + cross-ref against
    `cross_asset_group_catalogue_audit`. (research 1.2×, ~4 = 4.8 cal) **DONE** (2026-05-15 sub-agent): 14 active
    data_types confirmed (FIXTURES/STANDINGS/INJURIES/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/
