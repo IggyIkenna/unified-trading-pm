@@ -24,7 +24,11 @@ estimate_calibration_note: |
   Updated 2026-05-13 (slot 6 substantive touch).
 ---
 
-> **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC; defi/tradfi ~08:34 UTC). **✅ Script 3 classifier fix RESOLVED 2026-05-14** — tarball refresh + UAC merge; re-run confirmed 0 upgrades for all groups (TypeError gone; default reasons already most specific; issue CLOSED). Sports/prediction Scripts 1+2 apply-flips deferred (separate authorized slot needed; 99,620 sports + 50 prediction phantoms).
+> **✅ Dry-run COMPLETE.** **✅ cefi/defi/tradfi apply-flips COMPLETE 2026-05-13** (cefi Scripts 1+2 done ~08:39 UTC;
+> defi/tradfi ~08:34 UTC). **✅ Script 3 classifier fix RESOLVED 2026-05-14** — tarball refresh + UAC merge; re-run
+> confirmed 0 upgrades for all groups (TypeError gone; default reasons already most specific; issue CLOSED).
+> Sports/prediction Scripts 1+2 apply-flips deferred (separate authorized slot needed; 99,620 sports + 50 prediction
+> phantoms).
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -114,12 +118,12 @@ follow the same protocol.
 The rescan IS a superset of the existing phantom audit
 (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`). Pre-rescan baseline: 354 residual phantom rows
 from 2026-05-04 audit. Post-rescan target: **0 phantoms across all 5 asset_groups**. **9 drift axes** now handled:
+
 1. Hive-key vocab (category= vs asset_group=), 2. Path-prefix drift (raw_tick_data/by_date/ vs top-level),
-3. instrument_type casing, 4. schema-4 empty instrument_type, 5. chain-bundle equivalence,
-6. DeFi protocol underscore (AAVEV3 ↔ AAVE_V3). **Added 2026-05-13 (instruments-service@1a62547)**:
-7. TradFi Databento per-schema-bundle (trades ↔ tbbo), 8. cross-asset venue=UNKNOWN skip,
-9. Sports pre-coverage + known-gap UAC clips.
-All 9 auto-fix via class A above; any residual goes to class C triage.
+2. instrument_type casing, 4. schema-4 empty instrument_type, 5. chain-bundle equivalence,
+3. DeFi protocol underscore (AAVEV3 ↔ AAVE_V3). **Added 2026-05-13 (instruments-service@1a62547)**:
+4. TradFi Databento per-schema-bundle (trades ↔ tbbo), 8. cross-asset venue=UNKNOWN skip,
+5. Sports pre-coverage + known-gap UAC clips. All 9 auto-fix via class A above; any residual goes to class C triage.
 
 ## Cross-plan coordination (banner)
 
@@ -187,13 +191,13 @@ parallel. Only the `--apply-flips` run requires strict ordering.
 **Action items** (todos below):
 
 - [x] [SCRIPT] P0. Extend `reconcile_phantom_manifest_rows_all.py` with 3 Databento-aware drift axes to eliminate
-      false-positive phantoms identified in the 2026-05-11 dry-run (instruments-service@1a62547 2026-05-13):
-      - **Axis 7** (TradFi Databento per-schema-bundle): `trades` and `tbbo` paired schemas share the same prefix;
-        accept either data_type needle as capture evidence. Eliminates ~1,017 per-data_type false positives.
-      - **Axis 8** (cross-asset venue=UNKNOWN): UNKNOWN sentinel has no resolvable path; skip the venue needle.
-        Eliminates ~565 TradFi + ~2k cross-asset false positives.
-      - **Axis 9** (Sports pre-coverage + known-gap): rows before source launch date or in registered gaps excluded
-        from phantom check via `is_pre_launch_date` + `is_in_known_gap`. Eliminates bulk of 16.8% sports false-positive rate.
+      false-positive phantoms identified in the 2026-05-11 dry-run (instruments-service@1a62547 2026-05-13): - **Axis
+      7** (TradFi Databento per-schema-bundle): `trades` and `tbbo` paired schemas share the same prefix; accept either
+      data_type needle as capture evidence. Eliminates ~1,017 per-data_type false positives. - **Axis 8** (cross-asset
+      venue=UNKNOWN): UNKNOWN sentinel has no resolvable path; skip the venue needle. Eliminates ~565 TradFi + ~2k
+      cross-asset false positives. - **Axis 9** (Sports pre-coverage + known-gap): rows before source launch date or in
+      registered gaps excluded from phantom check via `is_pre_launch_date` + `is_in_known_gap`. Eliminates bulk of 16.8%
+      sports false-positive rate.
 
 - [ ] [DESIGN] P1. Add `## Reconciliation execution order` section to this plan documenting the pass sequence with exact
       `--data-types` values per pass, derived from authoritative scan of each service's `record_captured()` callsites.
@@ -205,16 +209,16 @@ parallel. Only the `--apply-flips` run requires strict ordering.
 - [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
       before `--apply-flips`. (deployment-service@b5f25cc + @2ca80d5 2026-05-13): 5 VMs completed — Gate 3 results
       section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in
-      deployment-service@2ca80d5. Run 2 (07:47 UTC) all completed ~09:00 UTC.
-      Log root: `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`
-- [x] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — COMPLETE 2026-05-13 (deployment-service@1a714ec+@574c168).
-      Run 1 (08:19) failed rc=2 — `--apply` not recognized; fixed to `--unphantom` (deployment-service@574c168).
-      VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. All 3 self-deleted after completion.
-      **cefi**: 2,223 phantom flips + 3,146 null-reason stamps (SOURCE_RETURNED_ZERO) ~08:29–08:39 UTC.
-      **defi**: 1,298 phantom flips (rewards) + 0 stamps ~08:27–08:34 UTC.
-      **tradfi**: 3,976 phantom flips (trades+tbbo+ohlcv_1m) + 0 stamps ~08:27–08:34 UTC.
-      Sports/prediction apply-flips deferred — needs separate authorized slot (99,620 sports phantoms).
-      **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on classifier fix (P1 issue filed).
+      deployment-service@2ca80d5. Run 2 (07:47 UTC) all completed ~09:00 UTC. Log root:
+      `gs://deployment-scripts-central-element-323112/vm-logs/manifest-recon-{ag}-20260513-074{716,736}/run.log`
+- [x] [SCRIPT] P1. Apply-flips: cefi/defi/tradfi Scripts 1+2 — COMPLETE 2026-05-13
+      (deployment-service@1a714ec+@574c168). Run 1 (08:19) failed rc=2 — `--apply` not recognized; fixed to
+      `--unphantom` (deployment-service@574c168). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. All 3
+      self-deleted after completion. **cefi**: 2,223 phantom flips + 3,146 null-reason stamps (SOURCE_RETURNED_ZERO)
+      ~08:29–08:39 UTC. **defi**: 1,298 phantom flips (rewards) + 0 stamps ~08:27–08:34 UTC. **tradfi**: 3,976 phantom
+      flips (trades+tbbo+ohlcv_1m) + 0 stamps ~08:27–08:34 UTC. Sports/prediction apply-flips deferred — needs separate
+      authorized slot (99,620 sports phantoms). **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on
+      classifier fix (P1 issue filed).
 - [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
@@ -288,92 +292,94 @@ MANIFEST_PER_VM_SHARDS=true VM_NAME=recon-legacy-cefi-$(date +%Y%m%d) \
 
 ## Phantom audit Gate 3 results — 2026-05-13
 
-Run 2 (07:47 UTC), deployment-service@2ca80d5. All 5 VMs completed ~09:00 UTC.
-VM names: `manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,736}`.
+Run 2 (07:47 UTC), deployment-service@2ca80d5. All 5 VMs completed ~09:00 UTC. VM names:
+`manifest-recon-{defi,cefi,tradfi,sports,prediction}-20260513-074{716,736}`.
 
 ### Script 1 — Phantom captures (manifest `captured`, parquet missing)
 
-| asset_group | Captured rows scanned | Real captures | **Phantom captures** | Top phantom data_types |
-| ----------- | --------------------: | ------------: | -------------------: | ---------------------- |
-| defi        | 312,900               | 311,602       | **1,298**            | rewards (1,298) |
-| cefi        | 1,292,929             | 1,290,706     | **2,223**            | options_chain 435, futures_chain 401, trades 381, derivative_ticker 367, book_snapshot_5 363 |
-| tradfi      | 96,101                | 92,125        | **3,976**            | trades 1,017, tbbo 1,017, ohlcv_1m 904 |
-| sports      | 686,086               | 586,466       | **99,620**           | TRANSFERMARKT_LEAGUES 75,960, SFI_LEAGUES 12,777, INJURIES 9,843 |
-| prediction  | 14,474                | 14,424        | **50**               | trades 50 |
-| **TOTAL**   | **2,402,490**         | **2,295,323** | **107,167**          | |
+| asset_group | Captured rows scanned | Real captures | **Phantom captures** | Top phantom data_types                                                                       |
+| ----------- | --------------------: | ------------: | -------------------: | -------------------------------------------------------------------------------------------- |
+| defi        |               312,900 |       311,602 |            **1,298** | rewards (1,298)                                                                              |
+| cefi        |             1,292,929 |     1,290,706 |            **2,223** | options_chain 435, futures_chain 401, trades 381, derivative_ticker 367, book_snapshot_5 363 |
+| tradfi      |                96,101 |        92,125 |            **3,976** | trades 1,017, tbbo 1,017, ohlcv_1m 904                                                       |
+| sports      |               686,086 |       586,466 |           **99,620** | TRANSFERMARKT_LEAGUES 75,960, SFI_LEAGUES 12,777, INJURIES 9,843                             |
+| prediction  |                14,474 |        14,424 |               **50** | trades 50                                                                                    |
+| **TOTAL**   |         **2,402,490** | **2,295,323** |          **107,167** |                                                                                              |
 
 > **Notable**: sports 99,620 phantoms (TRANSFERMARKT_LEAGUES dominant at 75,960) vs 354 in 2026-05-04 audit — scope
 > difference (all manifest rows vs partial prior audit) or accumulated debt. cefi has 1,453 phantoms with blank venue
-> (likely schema_v4 vestigial rows not fully filtered) + 136 at DERIBIT + 111 at UNKNOWN. tradfi trades+tbbo = 2,034
-> of 3,976 (Databento paired-schema artifact; axis 7 eliminates false positives here but real phantoms remain).
+> (likely schema_v4 vestigial rows not fully filtered) + 136 at DERIBIT + 111 at UNKNOWN. tradfi trades+tbbo = 2,034 of
+> 3,976 (Databento paired-schema artifact; axis 7 eliminates false positives here but real phantoms remain).
 
 ### Script 2 — `empty_confirmed` with NULL `error_reason`
 
-| asset_group | Total manifest rows | Null-reason rows | Distribution |
-| ----------- | ------------------: | ---------------: | ------------ |
-| defi        | 1,606,190           | 0                | — |
-| cefi        | 2,632,931           | **3,146**        | all `SOURCE_RETURNED_ZERO` — ready for apply-flip |
-| tradfi      | 141,401             | 0                | — |
-| sports      | 2,675,696           | 0                | — |
-| prediction  | 16,812              | 0                | — |
+| asset_group | Total manifest rows | Null-reason rows | Distribution                                      |
+| ----------- | ------------------: | ---------------: | ------------------------------------------------- |
+| defi        |           1,606,190 |                0 | —                                                 |
+| cefi        |           2,632,931 |        **3,146** | all `SOURCE_RETURNED_ZERO` — ready for apply-flip |
+| tradfi      |             141,401 |                0 | —                                                 |
+| sports      |           2,675,696 |                0 | —                                                 |
+| prediction  |              16,812 |                0 | —                                                 |
 
 ### Script 3 — Legacy-blank upgradeable to typed `EXPECTED_*` reason
 
 > **✅ RESOLVED 2026-05-14 (slot-8-ikenna)** — `fixture_manifest` TypeError fixed by tarball refresh (UTL +
-> instruments-service + UAC with `refdata_cadence.py` from LDR merge). Re-run locally (DEPLOYMENT_ENV=prod):
-> 0 upgrades for all groups — existing default reasons are the most specific classification possible.
-> Apply-flips would produce 0 changes; HOLD per Ikenna direction remains.
-> Issue doc: `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (CLOSED).
+> instruments-service + UAC with `refdata_cadence.py` from LDR merge). Re-run locally (DEPLOYMENT_ENV=prod): 0 upgrades
+> for all groups — existing default reasons are the most specific classification possible. Apply-flips would produce 0
+> changes; HOLD per Ikenna direction remains. Issue doc:
+> `plans/active/issues/classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (CLOSED).
 
-| asset_group | Candidates (% of manifest) | Upgrades | Notes |
-| ----------- | -------------------------: | -------: | ----- |
-| defi        | 0                          | 0        | no legacy-blank candidates (run 2026-05-14) |
-| cefi        | 0                          | 0        | clean — no legacy-blank candidates |
-| tradfi      | 0                          | 0        | clean — no legacy-blank candidates |
-| sports      | 1,829,839 (69.66%)         | 0        | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
-| prediction  | 41 (0.24%)                 | 0        | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
+| asset_group | Candidates (% of manifest) | Upgrades | Notes                                                                                   |
+| ----------- | -------------------------: | -------: | --------------------------------------------------------------------------------------- |
+| defi        |                          0 |        0 | no legacy-blank candidates (run 2026-05-14)                                             |
+| cefi        |                          0 |        0 | clean — no legacy-blank candidates                                                      |
+| tradfi      |                          0 |        0 | clean — no legacy-blank candidates                                                      |
+| sports      |         1,829,839 (69.66%) |        0 | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
+| prediction  |                 41 (0.24%) |        0 | classifier ran clean (no TypeError); 0 upgrades = default reasons already most specific |
 
 ### Gate 3 → Gate 4 gate status
 
-| Gate | Condition | Status |
-| ---- | --------- | ------ |
-| Gate 1 | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | ✅ FIRED 07:30 UTC (_agent_pings.md) |
-| Script 3 classifier | `classify_blank_reason_row()` `fixture_manifest` kwarg fix | ✅ RESOLVED 2026-05-14 (tarball refresh + UAC merge) |
-| cefi Script 2 apply | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp | ✅ COMPLETE (08:39 UTC) |
-| defi/tradfi phantom apply | Scripts 1+2 `--unphantom`/`--apply-flips` | ✅ COMPLETE (08:34 UTC) |
-| cefi phantom apply | Script 1 `--unphantom` (2,223 flips) | ✅ COMPLETE (08:39 UTC) |
-| Script 3 apply-flips | defi/sports/prediction legacy-blank upgrades | ✅ N/A — 0 upgrades; all default reasons already most specific; HOLD per Ikenna direction |
+| Gate                      | Condition                                                              | Status                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Gate 1                    | Slot 2 `expected_unattempted_propagation_chain` Phase 3+4+2.A complete | ✅ FIRED 07:30 UTC (\_agent_pings.md)                                                     |
+| Script 3 classifier       | `classify_blank_reason_row()` `fixture_manifest` kwarg fix             | ✅ RESOLVED 2026-05-14 (tarball refresh + UAC merge)                                      |
+| cefi Script 2 apply       | 3,146 null-reason → `SOURCE_RETURNED_ZERO` stamp                       | ✅ COMPLETE (08:39 UTC)                                                                   |
+| defi/tradfi phantom apply | Scripts 1+2 `--unphantom`/`--apply-flips`                              | ✅ COMPLETE (08:34 UTC)                                                                   |
+| cefi phantom apply        | Script 1 `--unphantom` (2,223 flips)                                   | ✅ COMPLETE (08:39 UTC)                                                                   |
+| Script 3 apply-flips      | defi/sports/prediction legacy-blank upgrades                           | ✅ N/A — 0 upgrades; all default reasons already most specific; HOLD per Ikenna direction |
 
 ## Phantom audit Gate 4 results — 2026-05-13 apply-flips (cefi/defi/tradfi COMPLETE)
 
-Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`.
-All 3 VMs self-deleted on completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
+Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-{cefi,defi,tradfi}-20260513-082713`. All
+3 VMs self-deleted on completion (`VM_SHUTDOWN_ON_COMPLETION=true`).
 
 ### Script 1 — phantom rows flipped to `attempted_failed`
 
-| asset_group | Manifest rows uploaded | Phantoms flipped | Script 2 stamped | Notes |
-| ----------- | ---------------------: | ---------------: | ---------------: | ----- |
-| defi        | 1,606,190              | **1,298**        | 0                | All `rewards` — complete ~08:34 UTC |
-| cefi        | 2,632,931              | **2,223**        | **3,146**        | Scripts 1+2 both ran — complete ~08:39 UTC |
-| tradfi      | 141,401                | **3,976**        | 0                | Trades+tbbo+ohlcv_1m — complete ~08:34 UTC |
-| sports      | —                      | —                | —                | Deferred (out of slot scope; 99,620 phantoms need separate authorized slot) |
-| prediction  | —                      | —                | —                | Deferred (out of slot scope; 50 phantoms) |
-| **TOTAL**   |                        | **7,497**        | **3,146**        | cefi/defi/tradfi only |
+| asset_group | Manifest rows uploaded | Phantoms flipped | Script 2 stamped | Notes                                                                       |
+| ----------- | ---------------------: | ---------------: | ---------------: | --------------------------------------------------------------------------- |
+| defi        |              1,606,190 |        **1,298** |                0 | All `rewards` — complete ~08:34 UTC                                         |
+| cefi        |              2,632,931 |        **2,223** |        **3,146** | Scripts 1+2 both ran — complete ~08:39 UTC                                  |
+| tradfi      |                141,401 |        **3,976** |                0 | Trades+tbbo+ohlcv_1m — complete ~08:34 UTC                                  |
+| sports      |                      — |                — |                — | Deferred (out of slot scope; 99,620 phantoms need separate authorized slot) |
+| prediction  |                      — |                — |                — | Deferred (out of slot scope; 50 phantoms)                                   |
+| **TOTAL**   |                        |        **7,497** |        **3,146** | cefi/defi/tradfi only                                                       |
 
-> cefi Script 2 `SOURCE_RETURNED_ZERO` reason distribution: all 3,146 stamped rows → `SOURCE_RETURNED_ZERO`.
-> Per-VM shard at `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/manifest-recon-apply-cefi-20260513-082713.parquet`; consolidator merges within ~5 min.
+> cefi Script 2 `SOURCE_RETURNED_ZERO` reason distribution: all 3,146 stamped rows → `SOURCE_RETURNED_ZERO`. Per-VM
+> shard at
+> `gs://market-data-tick-cefi-central-element-323112/_index/per_vm/manifest-recon-apply-cefi-20260513-082713.parquet`;
+> consolidator merges within ~5 min.
 
 ## Deferred work after 2026-05-13 slot-6 session
 
-| Phase / item | Status as of 2026-05-13 | Successor / blocker |
-| ------------ | ----------------------- | ------------------- |
-| Script 1+2 apply-flips cefi/defi/tradfi | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps) | — |
-| Script 3 apply-flips (defi/sports/prediction) | ✅ CLOSED — 0 upgrades (TypeError resolved 2026-05-14; apply-flips would produce 0 changes; HOLD per Ikenna direction moot) | Issue `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` CLOSED |
-| Sports/prediction apply-flips Scripts 1+2 | ⏸ DEFERRED — not in slot 6 scope | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50 |
-| `--data-types` pass-ordering for apply-flips | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
-| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ⏸ DEFERRED — spec written in plan; script not yet shipped | Blocker: reconciliation pass ordering must be settled first |
-| `resolve_bucket_name` migration for 3 reconciler scripts | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6) | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first |
-| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands | Ship with cross-asset-rescan launcher |
+| Phase / item                                                     | Status as of 2026-05-13                                                                                                     | Successor / blocker                                                                                               |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Script 1+2 apply-flips cefi/defi/tradfi                          | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps)                                                          | —                                                                                                                 |
+| Script 3 apply-flips (defi/sports/prediction)                    | ✅ CLOSED — 0 upgrades (TypeError resolved 2026-05-14; apply-flips would produce 0 changes; HOLD per Ikenna direction moot) | Issue `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` CLOSED                                         |
+| Sports/prediction apply-flips Scripts 1+2                        | ⏸ DEFERRED — not in slot 6 scope                                                                                           | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50                                         |
+| `--data-types` pass-ordering for apply-flips                     | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering                                      | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
+| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`)  | ⏸ DEFERRED — spec written in plan; script not yet shipped                                                                  | Blocker: reconciliation pass ordering must be settled first                                                       |
+| `resolve_bucket_name` migration for 3 reconciler scripts         | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6)                                                | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first                                       |
+| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands                                           | Ship with cross-asset-rescan launcher                                                                             |
 
 ## Open questions
 

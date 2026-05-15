@@ -98,12 +98,12 @@ For live services, support runtime adjustment:
 
 ### Current Violations (to be fixed)
 
-| Service                  | Violation                                                 | Fix                                                     |
-| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------- |
-| instruments-service      | `--mode` used for operation, `--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live |
-| market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                      |
+| Service                  | Violation                                                 | Fix                                                                                                                                                                                                                 |
+| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| instruments-service      | `--mode` used for operation, `--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live                                                                                                                                                             |
+| market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                                                                                                                                                                                  |
 | ~~ml-training-service~~  | ~~`--mode` used for operation (train/evaluate)~~          | **DONE** — `--operation` registered at `ml-training-service/ml_training_service/cli/parser.py:136`; CLI help (`:497-528`) shows `ml-training-service --operation train`. Stale per slot 8 audit ML-15 (2026-05-12). |
-| UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                       |
+| UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                                                                                                                                                                                   |
 
 ### `--feature-family` for the consolidated features-service (2026-05-08)
 

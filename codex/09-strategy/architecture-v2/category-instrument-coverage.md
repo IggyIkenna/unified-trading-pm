@@ -1435,8 +1435,8 @@ summary:
   subset, full Phase 9 materialisation tracked under `plans/active/codex_refactor_2026_05_08.md` Phase A.4 + B.
   (Duplicate stub-line removed 2026-05-12 per slot 8 strategy audit ST-16.)
 - **2026-05-12** — Currency note: UAC `StrategyArchetype` is now 55 (not 53) per slot 8 strategy audit ST-1 — the
-  `CARRY_RECURSIVE_STAKED` split (into `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`)
-  was the post-2026-05-08 delta. Matrix body remains the 18-archetype subset until the full 55-archetype materialisation
+  `CARRY_RECURSIVE_STAKED` split (into `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`) was
+  the post-2026-05-08 delta. Matrix body remains the 18-archetype subset until the full 55-archetype materialisation
   ships under the codex_refactor plan above.
 - **2026-04-19 (same day)** — Added dated-future rolls architecture: continuous-underlying concept,
   representative-future resolution via features, `REPRESENTATIVE_FUTURE_CHANGED` event contract, futures-roll as ATOMIC

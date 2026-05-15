@@ -386,21 +386,21 @@ week GCS write). Phase 4 sequenced under `manifest_evolution_master_2026_05_08` 
 
 ## B-011 blindspot audit — 8 prefixes registered (2026-05-15)
 
-B-011 identified 8 VM name prefixes that existed in `launch-*.sh` launchers but were absent from
-`VM_PREFIX_TO_BUCKET`. All 8 were missing heartbeat-only (bucket=`None`) entries — none use
-`MANIFEST_PER_VM_SHARDS`, so no shard-parquet path check is needed. Registered in
+B-011 identified 8 VM name prefixes that existed in `launch-*.sh` launchers but were absent from `VM_PREFIX_TO_BUCKET`.
+All 8 were missing heartbeat-only (bucket=`None`) entries — none use `MANIFEST_PER_VM_SHARDS`, so no shard-parquet path
+check is needed. Registered in
 [`deployment-service@97298f3`](https://github.com/IggyIkenna/deployment-service/commit/97298f3):
 
-| Prefix                   | Launcher                              | Rationale                                           |
-| ------------------------ | ------------------------------------- | --------------------------------------------------- |
-| `defi-fwd-`              | `launch-defi-forward-poll.sh`         | DeFi on-chain forward poll, heartbeat-only          |
-| `prediction-fwd-`        | `launch-prediction-forward-poll.sh`   | Polymarket/Kalshi forward poll, heartbeat-only      |
-| `footystats-fwd-`        | `launch-footystats-forward-poll.sh`   | FootyStats entity poll, heartbeat-only              |
-| `sfi-fwd-`               | `launch-sfi-forward-poll.sh`          | SFI (SoccerFootballInfo) entity poll, heartbeat-only |
-| `sports-manifest-rescan-`| `launch-sports-manifest-rescan-vm.sh` | Covers coord+chunk VMs via `startswith()` check     |
-| `strategy-test-`         | `launch-strategy-test-vm.sh`          | CI strategy validation, heartbeat-only              |
-| `ml-train-`              | `launch-ml-training-vm.sh`            | ML model training, heartbeat-only                   |
-| `sports-scheduler-`      | `launch-sports-scheduler-vm.sh`       | Fixture trigger daemon; `_is_daemon()` exempts via `tier=scheduler` |
+| Prefix                    | Launcher                              | Rationale                                                           |
+| ------------------------- | ------------------------------------- | ------------------------------------------------------------------- |
+| `defi-fwd-`               | `launch-defi-forward-poll.sh`         | DeFi on-chain forward poll, heartbeat-only                          |
+| `prediction-fwd-`         | `launch-prediction-forward-poll.sh`   | Polymarket/Kalshi forward poll, heartbeat-only                      |
+| `footystats-fwd-`         | `launch-footystats-forward-poll.sh`   | FootyStats entity poll, heartbeat-only                              |
+| `sfi-fwd-`                | `launch-sfi-forward-poll.sh`          | SFI (SoccerFootballInfo) entity poll, heartbeat-only                |
+| `sports-manifest-rescan-` | `launch-sports-manifest-rescan-vm.sh` | Covers coord+chunk VMs via `startswith()` check                     |
+| `strategy-test-`          | `launch-strategy-test-vm.sh`          | CI strategy validation, heartbeat-only                              |
+| `ml-train-`               | `launch-ml-training-vm.sh`            | ML model training, heartbeat-only                                   |
+| `sports-scheduler-`       | `launch-sports-scheduler-vm.sh`       | Fixture trigger daemon; `_is_daemon()` exempts via `tier=scheduler` |
 
 Post-audit state: `VM_PREFIX_TO_BUCKET` has 0 known blindspots. `test_vm_zombie_watchdog.py`
 `_KNOWN_UNREGISTERED_PREFIXES` emptied; all 6 unit tests pass. Watchdog relaunched:
@@ -414,19 +414,19 @@ Reference: `plans/active/issues/b011_vm_prefix_watchdog_blindspots_2026_05_13.md
 
 All Cloud Scheduler jobs are defined in `deployment-service/terraform/gcp/`:
 
-| Terraform file | Scheduler job | Cadence |
-|---|---|---|
-| `honest_coverage_scheduler.tf` | `honest-coverage-daily` | 00:30 UTC daily |
-| `qg_snapshot_scheduler.tf` (if wired) | `qg-snapshot-daily` | 06:00 UTC daily |
-| `catalogue_regen_scheduler.tf` | catalogue regeneration | periodic |
-| `manifest_consolidator_scheduler.tf` | manifest consolidation | periodic |
-| `t1_batch_scheduler.tf` | T1 batch trigger | daily |
-| others | see terraform/gcp/*.tf | — |
+| Terraform file                        | Scheduler job           | Cadence         |
+| ------------------------------------- | ----------------------- | --------------- |
+| `honest_coverage_scheduler.tf`        | `honest-coverage-daily` | 00:30 UTC daily |
+| `qg_snapshot_scheduler.tf` (if wired) | `qg-snapshot-daily`     | 06:00 UTC daily |
+| `catalogue_regen_scheduler.tf`        | catalogue regeneration  | periodic        |
+| `manifest_consolidator_scheduler.tf`  | manifest consolidation  | periodic        |
+| `t1_batch_scheduler.tf`               | T1 batch trigger        | daily           |
+| others                                | see terraform/gcp/\*.tf | —               |
 
 ### `setup-*-scheduler.sh` scripts: IAM-exception pattern only
 
-`setup-*-scheduler.sh` scripts exist ONLY when the Terraform plan cannot be applied by `harshkantariya@`
-due to `cloudscheduler.jobs.create` requiring the owner account (Ikenna). One script exists:
+`setup-*-scheduler.sh` scripts exist ONLY when the Terraform plan cannot be applied by `harshkantariya@` due to
+`cloudscheduler.jobs.create` requiring the owner account (Ikenna). One script exists:
 
 - `setup-honest-coverage-scheduler.sh` — one-shot; requires `ikenna@odum-research.com`.
 
@@ -440,7 +440,8 @@ Cloud Scheduler (cron expression, UTC)
                             └── GCS output
 ```
 
-**Template for new setup-*-scheduler.sh** (copy from `setup-honest-coverage-scheduler.sh`):
+**Template for new setup-\*-scheduler.sh** (copy from `setup-honest-coverage-scheduler.sh`):
+
 - `PROJECT="central-element-323112"` + `REGION="asia-northeast1"`
 - Verify Cloud Run Job exists before creating scheduler (fail-fast guard)
 - `--dry-run` + `--update` flags
@@ -461,24 +462,27 @@ Cloud Scheduler (30 0 * * * UTC)
 **Terraform SSOT**: `deployment-service/terraform/gcp/honest_coverage_scheduler.tf`
 
 **Launchers** (two — complementary, not duplicates):
+
 - `launch-honest-coverage-vm.sh` — Cloud Scheduler-targeted; always `--asset-group all`; VM prefix `honest-coverage-`
-- `launch-measure-honest-coverage-vm.sh` — ad-hoc; supports `--asset-group <filter>`; VM prefix `measure-honest-coverage-`
+- `launch-measure-honest-coverage-vm.sh` — ad-hoc; supports `--asset-group <filter>`; VM prefix
+  `measure-honest-coverage-`
 
 Both are uploaded to GCS at `gs://deployment-scripts-central-element-323112/vm/`.
 
-**IAM note**: Cloud Scheduler creation requires `cloudscheduler.jobs.create` (Ikenna/owner territory).
-Operator setup: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com).
+**IAM note**: Cloud Scheduler creation requires `cloudscheduler.jobs.create` (Ikenna/owner territory). Operator setup:
+`bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com).
 BLOCKED-OPERATOR-DECISION pending Ikenna confirmation (pings/slot_2.md 2026-05-15 05:30 UTC).
 
 **VM prefixes registered in `VM_PREFIX_TO_BUCKET`** (both heartbeat-only, bucket=`None`):
+
 - `honest-coverage-` — cron launcher prefix (registered 2026-05-15)
 - `measure-honest-coverage-` — ad-hoc launcher prefix (registered 2026-05-10)
 
 `VM_SHUTDOWN_ON_COMPLETION=true`. Machine: `e2-standard-2`, 50 GB.
 
 **When to use this pattern** vs bare launcher: when the VM must be triggered on a schedule (cron) rather than
-operator-launched. Cloud Scheduler → Cloud Run Job → GCE VM is the canonical path; Cloud Workflows was explored
-but rejected (requires `workflows.workflows.create`, broader IAM surface, harder to audit).
+operator-launched. Cloud Scheduler → Cloud Run Job → GCE VM is the canonical path; Cloud Workflows was explored but
+rejected (requires `workflows.workflows.create`, broader IAM surface, harder to audit).
 
 ## References
 

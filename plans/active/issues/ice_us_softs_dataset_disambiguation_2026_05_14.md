@@ -18,6 +18,7 @@ suggested_owner: ikenna (UAC write authority for cross-cutting refactor)
 ## What I found
 
 Phase 5B (TRADFI_ROOTS) was shipped at UAC@`24dd517` with ICE US softs deferred:
+
 > "ICE US softs (CT/CC/KC/SB/OJ/DX/T) deferred — dataset ambiguity between 2 source files (Phase 6)"
 
 Disambiguation analysis (2026-05-14 slot 7 Day-3):
@@ -41,6 +42,7 @@ Disambiguation analysis (2026-05-14 slot 7 Day-3):
 ```
 
 Also in `TRADFI_DATA_BINDINGS` (lines 408-413):
+
 ```python
 "CT.FUT": [_db("IFUS.IMPACT", "parent", "CT")],
 "CC.FUT": [_db("IFUS.IMPACT", "parent", "CC")],
@@ -56,38 +58,37 @@ Also in `TRADFI_DATA_BINDINGS` (lines 408-413):
 DatabentoInstrumentDef("CT.FUT", "CME", "FUTURE", "GLBX.MDP3", "parent", "COTTON", "commodity", "CT"),
 ```
 
-This is **incorrect**: CT (Cotton No. 2 Futures) is an ICE Futures US product, not a CME product. CME
-Group's GLBX.MDP3 dataset covers CBOT/CME/NYMEX/COMEX — none of which list cotton futures. Cotton No. 2
-has traded exclusively on ICE Futures US since ICE acquired NYBOT in 2007.
+This is **incorrect**: CT (Cotton No. 2 Futures) is an ICE Futures US product, not a CME product. CME Group's GLBX.MDP3
+dataset covers CBOT/CME/NYMEX/COMEX — none of which list cotton futures. Cotton No. 2 has traded exclusively on ICE
+Futures US since ICE acquired NYBOT in 2007.
 
-Additionally: CC (Cocoa), KC (Coffee), SB (Sugar No. 11), OJ (Orange Juice), DX (Dollar Index) are
-**entirely missing** from `tradfi_instrument_universe.py`. They are ICE Futures US products and should
-appear with IFUS.IMPACT.
+Additionally: CC (Cocoa), KC (Coffee), SB (Sugar No. 11), OJ (Orange Juice), DX (Dollar Index) are **entirely missing**
+from `tradfi_instrument_universe.py`. They are ICE Futures US products and should appear with IFUS.IMPACT.
 
 ### Source file 3 — `tradfi_roots.py` (SSOT — missing entries)
 
 `DATASET_ICE_US = "IFUS.IMPACT"` is defined at line 75. ICE Europe entries (BRN/G/T) follow the pattern
-`RootMetadata(..., "ICE", DATASET_ICE_EUROPE, ...)`. ICE US softs entries are absent (deferred from
-Phase 5B).
+`RootMetadata(..., "ICE", DATASET_ICE_EUROPE, ...)`. ICE US softs entries are absent (deferred from Phase 5B).
 
 ## Why it matters
 
 The ambiguity blocks:
-1. **TRADFI_ROOTS completion** — Phase 5B explicitly deferred CT/CC/KC/SB/OJ/DX pending disambiguation.
-   Until these are added to TRADFI_ROOTS, `get_canonical_inventory("tradfi")` under-reports the TradFi
-   instrument universe.
-2. **`tradfi_instrument_universe.py` bug** — CT.FUT entry points to CME/GLBX.MDP3. Any consumer that
-   reads this file for data source routing will request CT data from the wrong Databento dataset.
-3. **Missing CC/KC/SB/OJ/DX** in `tradfi_instrument_universe.py` — these 5 ICE US softs are silently
-   absent from the instrument universe used for data pipeline scheduling.
+
+1. **TRADFI_ROOTS completion** — Phase 5B explicitly deferred CT/CC/KC/SB/OJ/DX pending disambiguation. Until these are
+   added to TRADFI_ROOTS, `get_canonical_inventory("tradfi")` under-reports the TradFi instrument universe.
+2. **`tradfi_instrument_universe.py` bug** — CT.FUT entry points to CME/GLBX.MDP3. Any consumer that reads this file for
+   data source routing will request CT data from the wrong Databento dataset.
+3. **Missing CC/KC/SB/OJ/DX** in `tradfi_instrument_universe.py` — these 5 ICE US softs are silently absent from the
+   instrument universe used for data pipeline scheduling.
 
 ## Disambiguation conclusion
 
 **IFUS.IMPACT is the canonical dataset for all 6 ICE US softs.** No ambiguity remains.
 
 Evidence:
-- `tradfi_symbology.py` explicitly labels them "ICE Futures US (IFUS.IMPACT)" — the most specific
-  labeling in the codebase.
+
+- `tradfi_symbology.py` explicitly labels them "ICE Futures US (IFUS.IMPACT)" — the most specific labeling in the
+  codebase.
 - `TRADFI_DATA_BINDINGS` in `tradfi_symbology.py` maps all 6 to IFUS.IMPACT parent symbology.
 - Databento's published dataset coverage confirms: IFUS.IMPACT = ICE Futures US; GLBX.MDP3 = CME Group.
 - `tradfi_instrument_universe.py:110` CT entry with CME/GLBX.MDP3 is a data-entry error.
@@ -108,8 +109,8 @@ No design call needed — fix is mechanical. Suggested owner: ikenna (UAC write 
 "DX": RootMetadata("DX", CATEGORY_COMMODITY_FUTURES, "DOLLARINDEX", "ICE", DATASET_ICE_US, "commodity"),
 ```
 
-Note: `CATEGORY_COMMODITY_FUTURES` may need to be added (check if that constant exists in tradfi_roots.py;
-if not, use the closest existing category or add `CATEGORY_SOFTS_FUTURES = "softs_futures"`).
+Note: `CATEGORY_COMMODITY_FUTURES` may need to be added (check if that constant exists in tradfi_roots.py; if not, use
+the closest existing category or add `CATEGORY_SOFTS_FUTURES = "softs_futures"`).
 
 **Fix 2 — Correct CT entry + add missing CC/KC/SB/OJ/DX in `tradfi_instrument_universe.py`**:
 
@@ -126,9 +127,9 @@ DatabentoInstrumentDef("OJ.FUT", "ICE", "FUTURE", "IFUS.IMPACT", "parent", "OJ",
 DatabentoInstrumentDef("DX.FUT", "ICE", "FUTURE", "IFUS.IMPACT", "parent", "DOLLARINDEX", "fx", "DX"),
 ```
 
-Note: DX (Dollar Index) is classified as "fx" not "commodity" since it's a currency futures contract.
-After the fix, `ROOT_SYMBOL_MAP` additions are also needed: "CC" → "COCOA", "KC" → "COFFEE", "SB" →
-"SUGAR", "OJ" → "OJ", "DX" → "DOLLARINDEX".
+Note: DX (Dollar Index) is classified as "fx" not "commodity" since it's a currency futures contract. After the fix,
+`ROOT_SYMBOL_MAP` additions are also needed: "CC" → "COCOA", "KC" → "COFFEE", "SB" → "SUGAR", "OJ" → "OJ", "DX" →
+"DOLLARINDEX".
 
 **Fix 3 — Run UAC QG after both fixes** to confirm no ruff/basedpyright violations introduced.
 
@@ -143,11 +144,11 @@ After the fix, `ROOT_SYMBOL_MAP` additions are also needed: "CC" → "COCOA", "K
 
 ✅ **RESOLVED** (2026-05-14 — shipped by harsh-main during OOM recovery):
 
-- `unified-api-contracts@2fb27f8` (feat(tradfi): add ICE US softs (CT/CC/KC/SB/OJ/DX) to TRADFI_ROOTS + fix CT dataset routing):
-  - Fix 1 — `tradfi_roots.py`: added CT / CC / KC / SB / OJ / DX under ICE Futures US (IFUS.IMPACT)
-    after the ICE Europe entries; DX classified as `fx` (currency basket).
-  - Fix 2 — `tradfi_instrument_universe.py`: removed CT.FUT from `_CME_COMMODITY_FUTURES` (was
-    incorrectly mapped to CME/GLBX.MDP3; CT trades on ICE Futures US only). Added `_ICE_US_FUTURES`
-    list (CT / CC / KC / SB / OJ / DX, IFUS.IMPACT) wired into `TRADFI_DATABENTO_INSTRUMENTS`. Added
-    CC / KC / SB / OJ / DX to `EXCHANGE_CODE_TO_NAME`.
+- `unified-api-contracts@2fb27f8` (feat(tradfi): add ICE US softs (CT/CC/KC/SB/OJ/DX) to TRADFI_ROOTS + fix CT dataset
+  routing):
+  - Fix 1 — `tradfi_roots.py`: added CT / CC / KC / SB / OJ / DX under ICE Futures US (IFUS.IMPACT) after the ICE Europe
+    entries; DX classified as `fx` (currency basket).
+  - Fix 2 — `tradfi_instrument_universe.py`: removed CT.FUT from `_CME_COMMODITY_FUTURES` (was incorrectly mapped to
+    CME/GLBX.MDP3; CT trades on ICE Futures US only). Added `_ICE_US_FUTURES` list (CT / CC / KC / SB / OJ / DX,
+    IFUS.IMPACT) wired into `TRADFI_DATABENTO_INSTRUMENTS`. Added CC / KC / SB / OJ / DX to `EXCHANGE_CODE_TO_NAME`.
   - Fix 3 — UAC QG green.

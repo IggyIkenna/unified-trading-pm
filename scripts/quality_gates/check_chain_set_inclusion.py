@@ -56,13 +56,7 @@ def _load_chain_env() -> object:
         pass
 
     workspace_root = Path(__file__).resolve().parents[3]
-    chain_env_path = (
-        workspace_root
-        / "unified-api-contracts"
-        / "unified_api_contracts"
-        / "registry"
-        / "chain_env.py"
-    )
+    chain_env_path = workspace_root / "unified-api-contracts" / "unified_api_contracts" / "registry" / "chain_env.py"
     if not chain_env_path.exists():
         msg = f"chain_env.py not found at {chain_env_path}"
         raise FileNotFoundError(msg)
@@ -95,8 +89,7 @@ def check_chain_set_inclusion() -> list[str]:
     genesis_orphans = sorted(genesis_names - mainnet_names)
     if genesis_orphans:
         violations.append(
-            f"CHAIN_GENESIS_DATES has {len(genesis_orphans)} chain(s) missing from "
-            f"MAINNET_CHAIN_IDS: {genesis_orphans}"
+            f"CHAIN_GENESIS_DATES has {len(genesis_orphans)} chain(s) missing from MAINNET_CHAIN_IDS: {genesis_orphans}"
         )
 
     # MAINNET ⊇ GAS_FEE (via chain_id reverse-lookup).
@@ -115,7 +108,8 @@ def check_chain_set_inclusion() -> list[str]:
     # so the data-status panel knows the earliest possible data date for that
     # chain. (DF-7: GAS_FEE archival can lag chain genesis, but never lead it.)
     gas_fee_names_missing_genesis = sorted(
-        chain_id_to_name[cid] for cid in GAS_FEE_CHAIN_START_DATES
+        chain_id_to_name[cid]
+        for cid in GAS_FEE_CHAIN_START_DATES
         if cid in chain_id_to_name and chain_id_to_name[cid] not in genesis_names
     )
     if gas_fee_names_missing_genesis:

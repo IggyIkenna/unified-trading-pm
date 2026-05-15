@@ -17,8 +17,8 @@ All `data-catalogue.*.yaml` files must conform to this schema. Validated by
 >
 > This document covers the **data-catalogue manifest** — a per-service inventory + freshness ledger written to
 > `gs://data-catalogue-{project_id}/{service}/day={date}/manifest.parquet` via
-> `deployment_service.data_status.manifest_writer.ManifestWriter`. It is for **catalogue-completeness reporting**
-> (which datasets exist, when they were last written, row counts at the dataset level).
+> `deployment_service.data_status.manifest_writer.ManifestWriter`. It is for **catalogue-completeness reporting** (which
+> datasets exist, when they were last written, row counts at the dataset level).
 >
 > The **availability manifest** (used everywhere else in this codex) is a different artifact at
 > `gs://{kind}-{asset_group}-{env}-{project_id}/_index/availability_index.parquet` written via the canonical
@@ -26,9 +26,9 @@ All `data-catalogue.*.yaml` files must conform to this schema. Validated by
 > `record_expected_unattempted` API). It is for **per-shard data-status drilldown** (capture_status × error_reason
 > taxonomy). See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md).
 >
-> The two SSOT classes happen to share the name `ManifestWriter` — they live in different modules and have
-> different APIs. When in doubt, the **availability manifest** is the May-23 cutover artifact; the **data-catalogue
-> manifest** is the operator-facing inventory ledger.
+> The two SSOT classes happen to share the name `ManifestWriter` — they live in different modules and have different
+> APIs. When in doubt, the **availability manifest** is the May-23 cutover artifact; the **data-catalogue manifest** is
+> the operator-facing inventory ledger.
 
 ---
 
@@ -37,11 +37,12 @@ All `data-catalogue.*.yaml` files must conform to this schema. Validated by
 ```yaml
 datasets:
   - dataset_id: instruments_cefi_binance # snake_case, globally unique
-    asset_group: cefi # cefi | tradfi | defi | sports | prediction (canonical key
-                     # set per CLAUDE.md § "Asset-group vocabulary"; the legacy
-                     # `category:` key + `altdata` member are deprecated 2026-05-12
-                     # per codex audit IN-5 — readers tolerate both keys during the
-                     # transition window, validators warn on legacy use)
+    asset_group:
+      cefi # cefi | tradfi | defi | sports | prediction (canonical key
+      # set per CLAUDE.md § "Asset-group vocabulary"; the legacy
+      # `category:` key + `altdata` member are deprecated 2026-05-12
+      # per codex audit IN-5 — readers tolerate both keys during the
+      # transition window, validators warn on legacy use)
     service_owner: instruments-service # repo name that writes this dataset
     schema_ref: unified_api_contracts.internal.reference.InstrumentRecord
     # Canonical bucket lookup (per CLAUDE.md § "Bucket-name SSOT (b+)" + codex

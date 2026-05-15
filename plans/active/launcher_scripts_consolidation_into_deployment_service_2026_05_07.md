@@ -126,15 +126,15 @@ Two related concerns from the user (2026-05-07):
 
 **Launcher-script migration** (29 scripts):
 
-| Source repo                                                   | Scripts | Destination                                                                                            |
-| ------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `e2e-testing/scripts/common/`                                 | 4       | `deployment-service/scripts/vm/` (rename via `launch-*.sh`)                                            |
-| `e2e-testing/scripts/defi/`                                   | 10      | `deployment-service/scripts/vm/`                                                                       |
-| `e2e-testing/scripts/prediction/`                             | 4       | `deployment-service/scripts/vm/`                                                                       |
-| `e2e-testing/scripts/sports/`                                 | 10      | `deployment-service/scripts/vm/`                                                                       |
+| Source repo                                                            | Scripts | Destination                                                                                            |
+| ---------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `e2e-testing/scripts/common/`                                          | 4       | `deployment-service/scripts/vm/` (rename via `launch-*.sh`)                                            |
+| `e2e-testing/scripts/defi/`                                            | 10      | `deployment-service/scripts/vm/`                                                                       |
+| `e2e-testing/scripts/prediction/`                                      | 4       | `deployment-service/scripts/vm/`                                                                       |
+| `e2e-testing/scripts/sports/`                                          | 10      | `deployment-service/scripts/vm/`                                                                       |
 | `features-service (sports family)/scripts/launch_parallel_backfill.sh` | 1       | `deployment-service/scripts/vm/`                                                                       |
-| `deployment-service/scripts/deploy-dashboard-gce-vm.sh`       | 1       | `deployment-service/scripts/vm/launch-dashboard-vm.sh` (intra-repo move; rename to match SSOT pattern) |
-| **Total**                                                     | **30**  |                                                                                                        |
+| `deployment-service/scripts/deploy-dashboard-gce-vm.sh`                | 1       | `deployment-service/scripts/vm/launch-dashboard-vm.sh` (intra-repo move; rename to match SSOT pattern) |
+| **Total**                                                              | **30**  |                                                                                                        |
 
 **Local scripts that are NOT VM launchers** (no migration; verified 2026-05-07 broad scan):
 
@@ -148,8 +148,8 @@ Two related concerns from the user (2026-05-07):
 - `ml-training-service` / `ml-inference-service` / `strategy-service` / `execution-service` /
   `position-balance-monitor-service` / `risk-and-exposure-service` / `alerting-service` `scripts/setup.sh` —
   install-only, no VM launches.
-- `features-service (sports family)/scripts/run_backfill.sh` — local orchestration that exec's `launch_parallel_backfill.sh`
-  (which DOES launch VMs and is in the migration list above).
+- `features-service (sports family)/scripts/run_backfill.sh` — local orchestration that exec's
+  `launch_parallel_backfill.sh` (which DOES launch VMs and is in the migration list above).
 
 For each script:
 
@@ -224,18 +224,18 @@ operator clicks Deploy-Missing, the API resolves the path, and the copy-to-clipb
 registry gaps + critical-path active flows; MEDIUM are DeFi launchers needed for the May-23 archetypes; LOW are deferred
 (duplicates of canonical or post-May-23 scope):
 
-| #   | Source path                                                      | Destination                                                                    | Priority | Rationale                                                                                        |
-| --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------ |
-| 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh` | `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`                     | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 63 (Deploy-Missing for `market-tick-data-service`).       |
-| 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`  | `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh`              | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 65 (Deploy-Missing for `instruments-service`).            |
-| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh`    | `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` | HIGH     | Plan body explicitly names this destination (line 219).                                          |
-| 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`          | `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`         | HIGH     | Sports critical-path; distinct from #1 (sports odds-API specific, vs. generic CeFi/DeFi/TradFi). |
-| 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`  | `deployment-service/scripts/vm/launch-sports-instruments-reference-vm.sh`      | HIGH     | Sports reference-data critical-path; v3 supersedes the v1/v2 launchers (those flagged LOW).      |
-| 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                | `deployment-service/scripts/vm/launch-mtds-dex-pools-backfill-vm.sh`           | MEDIUM   | DeFi pipeline May-23; no canonical equivalent.                                                   |
-| 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`       | `deployment-service/scripts/vm/launch-mtds-eigenlayer-rewards-backfill-vm.sh`  | MEDIUM   | DeFi pipeline May-23; no canonical equivalent.                                                   |
-| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`             | `deployment-service/scripts/vm/launch-mtds-solana-drift-backfill-vm.sh`        | MEDIUM   | DeFi/Solana pipeline May-23; no canonical equivalent (Solana now needed for Pyth integration).   |
-| 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`         | `deployment-service/scripts/vm/launch-cefi-migration-vm.sh`                    | MEDIUM   | CeFi-specific migration; complements existing `launch-canonical-migration-vm.sh`.                |
-| 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`          | `deployment-service/scripts/vm/launch-defi-backfill-vm.sh`                     | MEDIUM   | Generic DeFi backfill driver; no canonical equivalent.                                           |
+| #   | Source path                                                            | Destination                                                                    | Priority | Rationale                                                                                        |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------ |
+| 1   | `e2e-testing/scripts/common/launch_mtds_category_backfill_vm.sh`       | `deployment-service/scripts/vm/launch-mtds-backfill-vm.sh`                     | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 63 (Deploy-Missing for `market-tick-data-service`).       |
+| 2   | `e2e-testing/scripts/common/launch_instruments_backfill_vms.sh`        | `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh`              | HIGH     | Fills `_SERVICE_LAUNCHER_SCRIPTS` line 65 (Deploy-Missing for `instruments-service`).            |
+| 3   | `features-service (sports family)/scripts/launch_parallel_backfill.sh` | `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` | HIGH     | Plan body explicitly names this destination (line 219).                                          |
+| 4   | `e2e-testing/scripts/sports/launch_mtds_backfill_vm.sh`                | `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`         | HIGH     | Sports critical-path; distinct from #1 (sports odds-API specific, vs. generic CeFi/DeFi/TradFi). |
+| 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`        | `deployment-service/scripts/vm/launch-sports-instruments-reference-vm.sh`      | HIGH     | Sports reference-data critical-path; v3 supersedes the v1/v2 launchers (those flagged LOW).      |
+| 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                      | `deployment-service/scripts/vm/launch-mtds-dex-pools-backfill-vm.sh`           | MEDIUM   | DeFi pipeline May-23; no canonical equivalent.                                                   |
+| 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`             | `deployment-service/scripts/vm/launch-mtds-eigenlayer-rewards-backfill-vm.sh`  | MEDIUM   | DeFi pipeline May-23; no canonical equivalent.                                                   |
+| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | `deployment-service/scripts/vm/launch-mtds-solana-drift-backfill-vm.sh`        | MEDIUM   | DeFi/Solana pipeline May-23; no canonical equivalent (Solana now needed for Pyth integration).   |
+| 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`               | `deployment-service/scripts/vm/launch-cefi-migration-vm.sh`                    | MEDIUM   | CeFi-specific migration; complements existing `launch-canonical-migration-vm.sh`.                |
+| 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`                | `deployment-service/scripts/vm/launch-defi-backfill-vm.sh`                     | MEDIUM   | Generic DeFi backfill driver; no canonical equivalent.                                           |
 
 **Deferred to follow-up tabs** (LOW or collision-risk):
 
@@ -319,14 +319,14 @@ and doesn't affect Deploy-Missing UI registry coverage).
       wrappers in e2e-testing@d824cb6/989b7fb Phase 1 batch; sports_full_sweep + sports_entity_sweep orchestrators
       deployment-service@5cea036 + e2e-testing@e3a9cf2 Phase 3 per
       `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES COMPLETE".)
-- [x] [deployment-service] P0. Wave E (1 script): `features-service (sports family)/scripts/launch_parallel_backfill.sh` →
-      `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`. (Tab 11, 2026-05-08,
+- [x] [deployment-service] P0. Wave E (1 script): `features-service (sports family)/scripts/launch_parallel_backfill.sh`
+      → `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`. (Tab 11, 2026-05-08,
       deployment-service@0215086.)
-- [x] [e2e-testing / features-service (sports family)] P0. Update every callsite in source-repo `Makefile`s, READMEs, pre-commit
-      hooks, and dev-tier scripts that referenced the moved paths. (Tab 1 main "do everything" 2026-05-08 — all 23
-      wrapper migrations carry deprecation-banner redirects to the canonical script paths so callsites continue working
-      via the wrappers. Source-repo Makefile / README chase-down ships in `aws_migration_defi_first_2026_05_07.md` Phase
-      N as part of the bigger documentation sweep; tracked in
+- [x] [e2e-testing / features-service (sports family)] P0. Update every callsite in source-repo `Makefile`s, READMEs,
+      pre-commit hooks, and dev-tier scripts that referenced the moved paths. (Tab 1 main "do everything" 2026-05-08 —
+      all 23 wrapper migrations carry deprecation-banner redirects to the canonical script paths so callsites continue
+      working via the wrappers. Source-repo Makefile / README chase-down ships in
+      `aws_migration_defi_first_2026_05_07.md` Phase N as part of the bigger documentation sweep; tracked in
       `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "Remaining manual cleanup".)
 - [x] [deployment-service] P0. Add every newly-named launcher prefix to `VM_PREFIX_TO_BUCKET` in
       `vm_zombie_watchdog.py`. **Relaunch the watchdog VM** after the dict edit (see CLAUDE.md "VM Naming Convention").
@@ -373,14 +373,14 @@ and doesn't affect Deploy-Missing UI registry coverage).
       the API base URL between port 8004 (GCP backend) and 8005 (AWS backend). Confirm whether an AWS- configured
       deployment-api actually runs locally (`CLOUD_PROVIDER=aws` env var) and whether the data-status surface returns
       S3-backed data. **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: pending `aws_migration_defi_first_2026_05_07.md` Phase
-      N execution which owns the S3-client work this audit needs to validate against. (status: deferred-after-aws-phase-1
-      — toggle wiring documented in this plan body § "Pre-audit blast radius"; active validation gates on S3-client work
-      in `aws_migration_defi_first_2026_05_07.md`.)
+      N execution which owns the S3-client work this audit needs to validate against. (status:
+      deferred-after-aws-phase-1 — toggle wiring documented in this plan body § "Pre-audit blast radius"; active
+      validation gates on S3-client work in `aws_migration_defi_first_2026_05_07.md`.)
 - [x] [audit] P1. Document GCS-only call sites in `deployment-api` (the table in this plan's "Pre-audit blast radius"
       section is the seed). Roll findings into `aws_migration_defi_first_2026_05_07.md` Phase N (the existing plan
       tracks the bigger S3-client work). **DEFERRED-AFTER-AWS-PHASE-1 2026-05-10**: same successor. (status:
-      deferred-after-aws-phase-1 — GCS-only call sites enumerated in this plan body's "Pre-audit blast radius" table
-      (5 entries); rolling into aws_migration plan is tracked there.)
+      deferred-after-aws-phase-1 — GCS-only call sites enumerated in this plan body's "Pre-audit blast radius" table (5
+      entries); rolling into aws_migration plan is tracked there.)
 
 ### Phase 4 — Codex docs + plan close
 
@@ -473,11 +473,11 @@ watchdog only loads VM_PREFIX_TO_BUCKET at boot.
 
 **Deploy-Missing registry status** (`_SERVICE_LAUNCHER_SCRIPTS` audit at Tab 11 closeout):
 
-| Service slug                      | Registry path                          | On-disk status                                                                                                                |
-| --------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| market-tick-data-service          | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)                                                                                                         |
-| market-data-processing-service    | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11)                                                                                                        |
-| instruments-service               | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)                                                                                                         |
+| Service slug                               | Registry path                          | On-disk status                                                                                                                |
+| ------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| market-tick-data-service                   | launch-mtds-backfill-vm.sh             | ✅ EXISTS (Tab 11 #1)                                                                                                         |
+| market-data-processing-service             | launch-mdps-backfill-vm.sh             | ✅ EXISTS (pre-Tab 11)                                                                                                        |
+| instruments-service                        | launch-instruments-backfill-vm.sh      | ✅ EXISTS (Tab 11 #2)                                                                                                         |
 | features-service (onchain family)          | launch-features-onchain-backfill-vm.sh | ✅ EXISTS (verified 2026-05-09 audit — file landed at `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`) |
 | features-service (delta-one family)        | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
 | features-service (volatility family)       | launch-features-backfill-vm.sh         | ✅ EXISTS (pre-Tab 11)                                                                                                        |
@@ -525,5 +525,5 @@ the 2026-05-07 → 2026-05-09 QG-failure-on-others'-code window per CLAUDE.md.
 - PM@724a2029 — Phase 2 checkboxes flipped + Phase 3 deferred annotations + promote Phase 1.Y flip
 
 **Plan closeout**: 15/15 checkboxes done. Plan eligible for archive (pending operator direction on archival window).
-Phase 3 AWS toggle validation deferred to `aws_migration_defi_first_2026_05_07.md` Phase N.
-  paths still work as redirects, so callsites keep functioning during the transition window.
+Phase 3 AWS toggle validation deferred to `aws_migration_defi_first_2026_05_07.md` Phase N. paths still work as
+redirects, so callsites keep functioning during the transition window.

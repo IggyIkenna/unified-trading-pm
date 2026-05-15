@@ -8,10 +8,9 @@ scope: [engineer, admin]
 
 This checklist covers the complete operational process for onboarding a new strategy instance or a new client. A
 "strategy instance" is a `(strategy_id, client_id, config)` tuple — the atomic unit of execution in the system
-(canonical SSOTs:
-[`../architecture-v2/strategy-catalogue-3tier.md`](../architecture-v2/strategy-catalogue-3tier.md),
-[`../architecture-v2/strategy-registry-v2.md`](../architecture-v2/strategy-registry-v2.md), and UAC
-`ConfigRegistry`; repointed 2026-05-12 per slot 8 strategy audit ST-13 — the legacy
+(canonical SSOTs: [`../architecture-v2/strategy-catalogue-3tier.md`](../architecture-v2/strategy-catalogue-3tier.md),
+[`../architecture-v2/strategy-registry-v2.md`](../architecture-v2/strategy-registry-v2.md), and UAC `ConfigRegistry`;
+repointed 2026-05-12 per slot 8 strategy audit ST-13 — the legacy
 `_archived_pre_v2/cross-cutting/config-architecture.md` cross-reference is superseded).
 
 Two onboarding scenarios:

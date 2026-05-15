@@ -19,8 +19,8 @@ Fixed by Harsh slot 2 — `unified-api-contracts@b73949d` corrected the import p
 (`from .sports.bookmaker_registry import get_expected_bookmakers` →
 `from .sports.bookmaker_accessors import get_expected_bookmakers`).
 
-Verified via Slot 2 DONE-ping in `harsh_orchestrator/pings/slot_2.md` + PM coordination
-ledger `pm_coordination_ledger_2026_05_13.md` § "Active Issues" table.
+Verified via Slot 2 DONE-ping in `harsh_orchestrator/pings/slot_2.md` + PM coordination ledger
+`pm_coordination_ledger_2026_05_13.md` § "Active Issues" table.
 
 Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
 

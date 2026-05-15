@@ -102,8 +102,8 @@ an operator does about each, how thresholds are set, and how we verify the whole
 13. [`defi_aave_utilization_spike.md`](./defi_aave_utilization_spike.md) — pool utilization above kink; carry-strategy
     viability check.
 14. [`defi_funding_rate_flip.md`](./defi_funding_rate_flip.md) — perp funding regime change; re-pole vs pause.
-15. [`defi_feature_stale.md`](./defi_feature_stale.md) — LST-yield / on-chain feature stale > SLA;
-    features-service (onchain family) restart procedure.
+15. [`defi_feature_stale.md`](./defi_feature_stale.md) — LST-yield / on-chain feature stale > SLA; features-service
+    (onchain family) restart procedure.
 16. [`preflight_failed.md`](./preflight_failed.md) — execution-service preflight rejected order pre-submission.
 17. [`service_degraded.md`](./service_degraded.md) — workspace service in degraded mode; restart procedure.
 18. [`balance_drift.md`](./balance_drift.md) — wallet balance vs PBM ledger discrepancy > USD threshold.

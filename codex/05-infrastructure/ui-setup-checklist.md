@@ -81,9 +81,9 @@ export default defineConfig({
 ```
 
 Per CLAUDE.md "Local Development" § "Vitest: pool: forks only" rule. The `threads` pool is forbidden workspace-wide.
-**Proposed UI-QG check** (codified 2026-05-12 per UI-12 audit): `grep -q 'pool: "forks"' vitest.config.ts || fail`
-in every UI repo's pre-commit / QG ratchet. Today reviewer-discipline-only; tracked as PRE_CUTOVER backlog —
-🟡 NEEDS-OPERATOR-GATE for wiring policy (auto-fail vs warning).
+**Proposed UI-QG check** (codified 2026-05-12 per UI-12 audit): `grep -q 'pool: "forks"' vitest.config.ts || fail` in
+every UI repo's pre-commit / QG ratchet. Today reviewer-discipline-only; tracked as PRE_CUTOVER backlog — 🟡
+NEEDS-OPERATOR-GATE for wiring policy (auto-fail vs warning).
 
 ## Regenerating types after API changes
 
@@ -101,7 +101,8 @@ Two-step flow is manual today (no CI gate catches stale generated types — trac
 
 ## Cross-references
 
-- Full env-var matrix + runtime profiles + UI startup decision table: `codex/05-infrastructure/runtime-tiers-and-deployment.md`
+- Full env-var matrix + runtime profiles + UI startup decision table:
+  `codex/05-infrastructure/runtime-tiers-and-deployment.md`
 - Frontend-backend dev orchestration: `codex/08-workflows/local-dev.md`
 - Firebase emulator + persona seeding: `codex/14-customer-journeys/authentication/firebase-local.md`
 - Active UI surface + archived UI inventory: `codex/05-infrastructure/ui-functionality-requirements.md` +

@@ -37,24 +37,24 @@ Separating lets:
 
 Every artifact listed below is versioned, content-hashed, and consumer-opt-in:
 
-| Artifact                         | Owner                                                 | Versioned by                                |
-| -------------------------------- | ----------------------------------------------------- | ------------------------------------------- |
+| Artifact                         | Owner                                                          | Versioned by                                |
+| -------------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
 | Feature groups                   | features-service (onchain family), features-ohlc-service, etc. | content hash + monotonic v                  |
-| ML models                        | ml-training-service                                   | content hash + monotonic v                  |
-| Execution policies (rule tables) | execution-service                                     | content hash + monotonic v                  |
-| Cost models                      | execution-service                                     | content hash + monotonic v                  |
-| Benchmark modes                  | execution-service                                     | content hash + monotonic v                  |
-| Allocator algorithms             | portfolio-allocator-service                           | content hash + monotonic v                  |
-| Risk policies (limits tables)    | risk-and-exposure-service                             | content hash + monotonic v                  |
-| Venue capabilities               | UAC registry                                          | semver on UAC                               |
-| MEV policies                     | execution-service                                     | content hash + monotonic v                  |
-| Bridge selection policies        | transfer/rebalance                                    | content hash + monotonic v                  |
-| Strategy archetypes              | strategy-service codebase                             | build version (git SHA + semver)            |
-| Strategy configs                 | strategy-service registry                             | content hash + monotonic v per slot-version |
-| Reference data snapshots         | instruments-service                                   | snapshot date + version                     |
-| Event calendars                  | event-driven data providers                           | version per update                          |
-| Vol surface fits                 | vol-services                                          | timestamp + fit version                     |
-| Bookmaker mappings               | sports reference                                      | version per update                          |
+| ML models                        | ml-training-service                                            | content hash + monotonic v                  |
+| Execution policies (rule tables) | execution-service                                              | content hash + monotonic v                  |
+| Cost models                      | execution-service                                              | content hash + monotonic v                  |
+| Benchmark modes                  | execution-service                                              | content hash + monotonic v                  |
+| Allocator algorithms             | portfolio-allocator-service                                    | content hash + monotonic v                  |
+| Risk policies (limits tables)    | risk-and-exposure-service                                      | content hash + monotonic v                  |
+| Venue capabilities               | UAC registry                                                   | semver on UAC                               |
+| MEV policies                     | execution-service                                              | content hash + monotonic v                  |
+| Bridge selection policies        | transfer/rebalance                                             | content hash + monotonic v                  |
+| Strategy archetypes              | strategy-service codebase                                      | build version (git SHA + semver)            |
+| Strategy configs                 | strategy-service registry                                      | content hash + monotonic v per slot-version |
+| Reference data snapshots         | instruments-service                                            | snapshot date + version                     |
+| Event calendars                  | event-driven data providers                                    | version per update                          |
+| Vol surface fits                 | vol-services                                                   | timestamp + fit version                     |
+| Bookmaker mappings               | sports reference                                               | version per update                          |
 
 ## Version tuple on every event
 
@@ -146,9 +146,9 @@ Retention policy: permanent for all artifacts referenced by any live or past str
 ## Artifact registry
 
 Every artifact is registered in an artifact registry (content-addressed store). Bucket name MUST resolve via
-`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="ml-models-store",
-env=...)` per **Bucket-name SSOT (b+)** — never hardcode `s3://artifacts/` or `gs://...` (QG STEP 5.69 enforces).
-Canonical kind = `ml-models-store-{pid}`.
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="ml-models-store", env=...)`
+per **Bucket-name SSOT (b+)** — never hardcode `s3://artifacts/` or `gs://...` (QG STEP 5.69 enforces). Canonical kind =
+`ml-models-store-{pid}`.
 
 ```
 {bucket}/{type}/{family}/{version}/

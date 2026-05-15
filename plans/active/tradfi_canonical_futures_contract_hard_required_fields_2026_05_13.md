@@ -194,8 +194,10 @@ Order matters: every consumer must adopt the new types BEFORE the workspace-wide
 
 - ✅ Phase 0 complete (pre-audit done; documented above).
 - ✅ Phase 1 complete — UAC@2ac74e2 + UAC@dd407ae shipped; cross-plan banner cycle completed.
-- ✅ Phase 3 complete — migration script IS@db070da shipped; live GCS run DEFERRED (operator direction: run post workspace-wide propagation on GCE VM).
-- ✅ Phase 4 complete — consumer cascade: IS@bcb34b9 / IS@2be7e4b / UAC@421bb21 / MTDS@103540f / FS@f83cac97 / UAC@20c8b67 / SS@cfcd3a7.
+- ✅ Phase 3 complete — migration script IS@db070da shipped; live GCS run DEFERRED (operator direction: run post
+  workspace-wide propagation on GCE VM).
+- ✅ Phase 4 complete — consumer cascade: IS@bcb34b9 / IS@2be7e4b / UAC@421bb21 / MTDS@103540f / FS@f83cac97 /
+  UAC@20c8b67 / SS@cfcd3a7.
 - ✅ Phase 5 complete — QG ratchet PM@32c7ea52.
 - Phase 3-5 sequencing handled inside `hard_schema_enforcement_2026_05_08` plan (workspace-wide rollout).
 

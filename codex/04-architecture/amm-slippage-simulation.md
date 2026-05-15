@@ -4,41 +4,42 @@ scope: [engineer]
 
 # AMM Slippage + Simulation Realism
 
-> SSOT for matching engine simulation realism: per-pool-shape AMM models, lending rate-impact-from-own-trade,
-> governance proposal simulation harness, staking + restaking yield-stream models, slashing tail-risk MC.
-> Last updated 2026-05-10 (defi_simulation_realism_2026_05_10 Phase 9A).
+> SSOT for matching engine simulation realism: per-pool-shape AMM models, lending rate-impact-from-own-trade, governance
+> proposal simulation harness, staking + restaking yield-stream models, slashing tail-risk MC. Last updated 2026-05-10
+> (defi_simulation_realism_2026_05_10 Phase 9A).
 
 This doc is the architecture-side companion to
 [`defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md). It declares the
-mathematical models + their input shapes + their validation thresholds for every simulation primitive. The plan
-ships the implementation; this doc locks the contract.
+mathematical models + their input shapes + their validation thresholds for every simulation primitive. The plan ships
+the implementation; this doc locks the contract.
 
 ## Why simulation realism matters
 
 The matching engine is the **batch surface** that backtest P&L runs against, per CLAUDE.md "Batch = Live" principle:
 "Batch and live use the SAME code path, same component interactions. The ONLY difference is execution fills." The
-matching engine produces the simulated fills for batch (and for live's "always fill at requested price" strategy
-P&L mode). If the matching engine model is wrong, backtest P&L is wrong, the strategy ships with the wrong sizing
-+ the wrong tail risk, and live trade losses surprise everyone.
+matching engine produces the simulated fills for batch (and for live's "always fill at requested price" strategy P&L
+mode). If the matching engine model is wrong, backtest P&L is wrong, the strategy ships with the wrong sizing
+
+- the wrong tail risk, and live trade losses surprise everyone.
 
 Pre-2026-05-10 matching engine had ONE AMM **matcher** (constant product `x*y=k`) per
 [`engine.py:7-12`](../../../execution-service/execution_service/matching_engine/engine.py): "AMMMatcher: DeFi Swaps
-(constant product x*y=k)". The pool **classes** for `UniswapV2Pool` (`amm.py:52`), `UniswapV3Pool` (`amm.py:259`),
-and `UniswapV4Pool` (`amm.py:403`) all exist with full math, but the `AMMMatcher` dispatcher at
-[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) hardcodes V2 only
-(line 471 `cast("UniswapV2Pool | None", ...)`) — V3 + V4 pool classes are unreachable through current routing.
-Every other AMM family (Curve / Balancer / Solana CLMM / Solidly-fork / aggregators) is BOTH unrouted AND has
-no pool-class implementation, producing 50-500bps fill-price errors for any non-V2 leg.
+(constant product x\*y=k)". The pool **classes** for `UniswapV2Pool` (`amm.py:52`), `UniswapV3Pool` (`amm.py:259`), and
+`UniswapV4Pool` (`amm.py:403`) all exist with full math, but the `AMMMatcher` dispatcher at
+[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) hardcodes V2 only (line 471
+`cast("UniswapV2Pool | None", ...)`) — V3 + V4 pool classes are unreachable through current routing. Every other AMM
+family (Curve / Balancer / Solana CLMM / Solidly-fork / aggregators) is BOTH unrouted AND has no pool-class
+implementation, producing 50-500bps fill-price errors for any non-V2 leg.
 
-This doc fixes that by declaring per-pool-shape models that match production within ~5-10bps + by separating
-the gap into (a) wire up existing V3/V4 pool classes via dispatch-by-`PoolShape`, (b) ship the 7 missing pool
-classes (Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork, Jupiter aggregator).
+This doc fixes that by declaring per-pool-shape models that match production within ~5-10bps + by separating the gap
+into (a) wire up existing V3/V4 pool classes via dispatch-by-`PoolShape`, (b) ship the 7 missing pool classes (Curve
+stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork, Jupiter aggregator).
 
 ## Pool shape taxonomy + slippage models
 
 **Per-pool-shape model** (UAC `PoolShape` enum, declared in `defi_simulation_realism` Phase 1A):
 
-### 1. Uniswap V2 (constant product x*y=k)
+### 1. Uniswap V2 (constant product x\*y=k)
 
 ```
 amount_out = (reserve_out * amount_in) / (reserve_in + amount_in)
@@ -48,8 +49,8 @@ Realized fill = pre-fee output minus 0.3% LP fee. Existing in `matching_engine/a
 
 ### 2. Uniswap V3 (concentrated liquidity, tick-bucket integration)
 
-V3 fills consume liquidity at the current tick first; if size pushes through tick boundaries, integrates over each
-tick crossed. Per-tick: `getAmountsForLiquidity(sqrtPriceLower, sqrtPriceUpper, liquidity)`.
+V3 fills consume liquidity at the current tick first; if size pushes through tick boundaries, integrates over each tick
+crossed. Per-tick: `getAmountsForLiquidity(sqrtPriceLower, sqrtPriceUpper, liquidity)`.
 
 ```python
 def v3_swap_exact_input(pool, amount_in, zero_for_one):
@@ -90,15 +91,17 @@ V3 base + per-pool hook bytecode applied at `beforeSwap` / `afterSwap`. Hook del
 - `BeforeSwapDelta`: hook can override input amount or short-circuit return value.
 - `AfterSwapDelta`: hook can adjust output post-swap.
 
-Existing `hooks.py:CustomCurveHook` covers `constant_sum`, `constant_mean`, `polynomial`, `logarithmic` curves.
-Phase 2B extends to V4 hook semantics.
+Existing `hooks.py:CustomCurveHook` covers `constant_sum`, `constant_mean`, `polynomial`, `logarithmic` curves. Phase 2B
+extends to V4 hook semantics.
 
 ### 4. Curve stable (D-invariant)
 
 Stable pools use the StableSwap invariant:
+
 ```
 A * n^n * sum(x_i) + D = A * D * n^n + D^(n+1) / (n^n * prod(x_i))
 ```
+
 where `A` is the amplification coefficient, `n` is number of tokens, `x_i` are reserves.
 
 Solving for output given input requires Newton-Raphson on the invariant. Reference: Curve V1 paper.
@@ -106,6 +109,7 @@ Solving for output given input requires Newton-Raphson on the invariant. Referen
 ### 5. Curve crypto (D + gamma)
 
 Crypto pools (3pool / tricrypto) use a gamma-augmented invariant:
+
 ```
 K = A * D^(n-1) / (n^n * prod(x_i))
 G = gamma^2 / (gamma + 1 - K)^2
@@ -126,21 +130,21 @@ amount_out = balance_out * (1 - (balance_in / (balance_in + amount_in))^(weight_
 
 ### 7. Balancer boosted + composable
 
-Boosted = linear-pool building blocks (Aave aTokens wrapped); composable = phantom BPT in pool. Both reduce to
-weighted internally — handle the routing layer (decompose multi-leg via Balancer Vault).
+Boosted = linear-pool building blocks (Aave aTokens wrapped); composable = phantom BPT in pool. Both reduce to weighted
+internally — handle the routing layer (decompose multi-leg via Balancer Vault).
 
 ### 8. Solana CLMM (Raydium + Orca)
 
-Same tick-bucket math as Uniswap V3 but per-Solana-CLMM decimals + SPL-token semantics. New `SolanaCLMMPool`
-reuses V3 base.
+Same tick-bucket math as Uniswap V3 but per-Solana-CLMM decimals + SPL-token semantics. New `SolanaCLMMPool` reuses V3
+base.
 
 **Inputs**: per-pool tick bitmap (Solana-specific layout), `sqrt_price_x96`-equivalent, `liquidity_active`.
 **Validation**: ≥ 30 historical Raydium / Orca swaps within 5bps.
 
 ### 9. Aggregator (Jupiter / 1inch / 0x / ParaSwap)
 
-Read route from quote API; for each route leg, route to the appropriate pool-shape matcher above; compose realized
-fill across legs.
+Read route from quote API; for each route leg, route to the appropriate pool-shape matcher above; compose realized fill
+across legs.
 
 ```python
 def aggregator_swap(route, amount_in):
@@ -158,70 +162,69 @@ def aggregator_swap(route, amount_in):
 
 ### 10. Solidly-fork ve(3,3) — Velodrome / Aerodrome (and other Solidly forks)
 
-Single matcher serves all classic Solidly forks (Velodrome on Optimism, Aerodrome on Base, Equalizer on Fantom,
-Thena on BSC, Ramses on Arbitrum, etc.) discriminated by `(chain_id, factory_address)`. Each pool carries a
-`stable: bool` flag at pool creation selecting between two invariants:
+Single matcher serves all classic Solidly forks (Velodrome on Optimism, Aerodrome on Base, Equalizer on Fantom, Thena on
+BSC, Ramses on Arbitrum, etc.) discriminated by `(chain_id, factory_address)`. Each pool carries a `stable: bool` flag
+at pool creation selecting between two invariants:
 
 - **Volatile** (`stable=false`): `x * y = k` (identical to Uniswap V2 constant product).
-- **Stable** (`stable=true`): Solidly cubic invariant `x^3 * y + x * y^3 = k` — flatter than Curve near peg but
-  uses a closed-form cubic rather than amplification-coefficient interpolation.
+- **Stable** (`stable=true`): Solidly cubic invariant `x^3 * y + x * y^3 = k` — flatter than Curve near peg but uses a
+  closed-form cubic rather than amplification-coefficient interpolation.
 
 Output amount for the stable branch is computed via Newton-Raphson `_get_y(x_new, k, y_old)` solver (Velodrome
-`Pool.sol::_get_y`, 255-iteration cap, revert-on-non-convergence). Decimals are normalised to 1e18 internally
-BEFORE invariant math — critical edge case for 6-decimal tokens like USDC; cube terms overflow naïve uint256
-arithmetic without scale-down.
+`Pool.sol::_get_y`, 255-iteration cap, revert-on-non-convergence). Decimals are normalised to 1e18 internally BEFORE
+invariant math — critical edge case for 6-decimal tokens like USDC; cube terms overflow naïve uint256 arithmetic without
+scale-down.
 
-Fee model: per-pool, configurable by factory admin (`PoolFactory.setFee(pool, fee)`); defaults ~5 bps stable /
-~30 bps volatile. **Fees are siphoned to `PoolFees` distributor** (NOT added to reserves) — this is the
-ve(3,3) flywheel hook that distributes to veVELO / veAERO voters. Backtest reserve reconstruction must subtract
-the siphoned fee, unlike Uniswap V2 where fee grows `k`.
+Fee model: per-pool, configurable by factory admin (`PoolFactory.setFee(pool, fee)`); defaults ~5 bps stable / ~30 bps
+volatile. **Fees are siphoned to `PoolFees` distributor** (NOT added to reserves) — this is the ve(3,3) flywheel hook
+that distributes to veVELO / veAERO voters. Backtest reserve reconstruction must subtract the siphoned fee, unlike
+Uniswap V2 where fee grows `k`.
 
 **Inputs** (from MTDS captures): `(reserve0, reserve1, stable: bool, fee_bps, decimals0, decimals1)`. Optional
-`PoolFees` accumulator if backtest tracks LP fee distribution separately. **Validation**: ≥ 20 historical
-Velodrome + ≥ 20 historical Aerodrome swaps within 5bps; mixed flavour coverage (stable + volatile per fork).
+`PoolFees` accumulator if backtest tracks LP fee distribution separately. **Validation**: ≥ 20 historical Velodrome + ≥
+20 historical Aerodrome swaps within 5bps; mixed flavour coverage (stable + volatile per fork).
 
-**Out-of-scope for this matcher** (separate enum members): **Velodrome Slipstream** (concentrated-liquidity
-Uniswap-V3 clone on Optimism, late-2024 launch) and **Aerodrome Slipstream** (CL fork on Base, mid-2024
-launch) — both use V3 tick math + a separate `CLFactory`. Either model as `SOLIDLY_CL_FORK` with `(chain,
-factory)` discriminator (sharing V3 math + tick mechanics) or as parallel enum members
-`VELODROME_SLIPSTREAM` / `AERODROME_SLIPSTREAM`. **Open question for Phase 1A operator decision** — see plan
-body Phase 1A note.
+**Out-of-scope for this matcher** (separate enum members): **Velodrome Slipstream** (concentrated-liquidity Uniswap-V3
+clone on Optimism, late-2024 launch) and **Aerodrome Slipstream** (CL fork on Base, mid-2024 launch) — both use V3 tick
+math + a separate `CLFactory`. Either model as `SOLIDLY_CL_FORK` with `(chain, factory)` discriminator (sharing V3
+math + tick mechanics) or as parallel enum members `VELODROME_SLIPSTREAM` / `AERODROME_SLIPSTREAM`. **Open question for
+Phase 1A operator decision** — see plan body Phase 1A note.
 
 ## Per-shape sample pools + golden fixture seeds (Day-1 slot 6 design ship 2026-05-11)
 
-Below table enumerates the matrix that Phase 2 implementations validate against. Pool addresses verified at
-research time; TX hashes + exact reserves to be pinned by master agent (or Harsh slot 4 implementer) at
-fixture-capture time via `cast logs` / Etherscan / subgraph queries. **Validation harness reads fixture file,
-re-runs each leg through `_amm_match_impl`, asserts |fill-bps delta| < tolerance.**
+Below table enumerates the matrix that Phase 2 implementations validate against. Pool addresses verified at research
+time; TX hashes + exact reserves to be pinned by master agent (or Harsh slot 4 implementer) at fixture-capture time via
+`cast logs` / Etherscan / subgraph queries. **Validation harness reads fixture file, re-runs each leg through
+`_amm_match_impl`, asserts |fill-bps delta| < tolerance.**
 
-| Shape | Chain | Sample pool address | Primary token pair | Fee | Validation threshold | Pool class status |
-|---|---|---|---|---|---|---|
-| `UNISWAP_V2` | Ethereum mainnet | `0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc` | USDC / WETH | 30 bps flat | ≥1 swap exact (0 wei drift on V2 integer math) | ✅ `UniswapV2Pool` shipped (`amm.py:52`) |
-| `UNISWAP_V3` | Ethereum mainnet | `0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640` | USDC / WETH (0.05% tier) | 5 / 30 / 100 / 1000 bps tiered | ≥100 swaps within 5 bps | ✅ `UniswapV3Pool` shipped (`amm.py:259`) |
-| `UNISWAP_V4_HOOK` | Ethereum mainnet | `PoolManager 0x000000000004444c5dc75cB358380D2e3dE08A90` + vanilla USDC/WETH pool key | USDC / WETH (varies) | base + hook delta dynamic | ≥10 vanilla swaps (V3-equivalent) + ≥5 hook-active swaps within 5 bps | ✅ `UniswapV4Pool` shipped (`amm.py:403`) — hook dispatch via `hooks.py` |
-| `CURVE_STABLE` | Ethereum mainnet | `0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7` (3pool DAI/USDC/USDT) | n-token stable basket | 1-4 bps; `admin_fee` 50% | ≥50 swaps within 5 bps; metapool composition path required | ❌ NOT YET — Phase 2C needs new `CurveStablePool` class |
-| `CURVE_CRYPTO` | Ethereum mainnet | `0xD51a44d3FaE010294C616388b506AcdA1bfAAE46` (tricrypto USDT/WBTC/ETH) | 3-token crypto basket | dynamic `mid_fee`/`out_fee` + EMA oracle | ≥30 swaps within 10 bps (looser; gamma math non-trivial) | ❌ NOT YET — Phase 2C deferred to crypto-pool extension |
-| `BALANCER_WEIGHTED` | Ethereum mainnet | `0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56` (B-80BAL-20WETH; Vault `0xBA12222222228d8Ba445958a75a0704d566BF2C8`) | BAL / WETH (80/20) | 10 bps (per-pool configurable; bounds 0.0001%-10%) | ≥20 swaps within 5 bps via Vault `batchSwap` | ❌ NOT YET — Phase 2D needs new `BalancerWeightedPool` class |
-| `BALANCER_BOOSTED` | Ethereum mainnet | Phase 2E candidate: a `bb-a-USD` boosted pool — pin at impl time | stable basket via Aave aToken linear pools | composite (linear-pool spread + weighted swap fee) | ≥5 swaps within 5 bps | ❌ NOT YET — Phase 2E |
-| `SOLANA_CLMM` | Solana mainnet | Phase 2F candidate: Raydium USDC/SOL CLMM — pin at impl time | USDC / SOL | tiered (Raydium 5/25/100/1000 bps; Orca similar) | ≥30 swaps within 5 bps | ❌ NOT YET — Phase 2F (reuses V3 base) |
-| `JUPITER_ROUTE_AGGREGATOR` | Solana mainnet | n/a (route from Jupiter quote API) | varies per route | composite of leg fees | ≥30 routes within 10 bps (looser; multi-hop variance) | ❌ NOT YET — Phase 2G (route decomposition) |
-| `SOLIDLY_FORK` | Optimism (Velodrome) | `0x2B4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c` (USDC/USDT stable, `stable=true`, ~5 bps fee) | USDC / USDT | 5-30 bps per-pool configurable | ≥20 swaps Velodrome within 5 bps | ❌ NOT YET — Phase 2H (NEW: was not in original Phase 1A enum; added Day-1 slot 6 design 2026-05-11) |
-| `SOLIDLY_FORK` | Base (Aerodrome) | `0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d` (USDC/AERO volatile, `stable=false`, ~30 bps fee) | USDC / AERO | 5-30 bps per-pool configurable | ≥20 swaps Aerodrome within 5 bps; shared matcher with Velodrome | ❌ NOT YET — Phase 2H (shared matcher) |
+| Shape                      | Chain                | Sample pool address                                                                                               | Primary token pair                         | Fee                                                | Validation threshold                                                  | Pool class status                                                                                    |
+| -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `UNISWAP_V2`               | Ethereum mainnet     | `0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc`                                                                      | USDC / WETH                                | 30 bps flat                                        | ≥1 swap exact (0 wei drift on V2 integer math)                        | ✅ `UniswapV2Pool` shipped (`amm.py:52`)                                                             |
+| `UNISWAP_V3`               | Ethereum mainnet     | `0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640`                                                                      | USDC / WETH (0.05% tier)                   | 5 / 30 / 100 / 1000 bps tiered                     | ≥100 swaps within 5 bps                                               | ✅ `UniswapV3Pool` shipped (`amm.py:259`)                                                            |
+| `UNISWAP_V4_HOOK`          | Ethereum mainnet     | `PoolManager 0x000000000004444c5dc75cB358380D2e3dE08A90` + vanilla USDC/WETH pool key                             | USDC / WETH (varies)                       | base + hook delta dynamic                          | ≥10 vanilla swaps (V3-equivalent) + ≥5 hook-active swaps within 5 bps | ✅ `UniswapV4Pool` shipped (`amm.py:403`) — hook dispatch via `hooks.py`                             |
+| `CURVE_STABLE`             | Ethereum mainnet     | `0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7` (3pool DAI/USDC/USDT)                                                | n-token stable basket                      | 1-4 bps; `admin_fee` 50%                           | ≥50 swaps within 5 bps; metapool composition path required            | ❌ NOT YET — Phase 2C needs new `CurveStablePool` class                                              |
+| `CURVE_CRYPTO`             | Ethereum mainnet     | `0xD51a44d3FaE010294C616388b506AcdA1bfAAE46` (tricrypto USDT/WBTC/ETH)                                            | 3-token crypto basket                      | dynamic `mid_fee`/`out_fee` + EMA oracle           | ≥30 swaps within 10 bps (looser; gamma math non-trivial)              | ❌ NOT YET — Phase 2C deferred to crypto-pool extension                                              |
+| `BALANCER_WEIGHTED`        | Ethereum mainnet     | `0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56` (B-80BAL-20WETH; Vault `0xBA12222222228d8Ba445958a75a0704d566BF2C8`) | BAL / WETH (80/20)                         | 10 bps (per-pool configurable; bounds 0.0001%-10%) | ≥20 swaps within 5 bps via Vault `batchSwap`                          | ❌ NOT YET — Phase 2D needs new `BalancerWeightedPool` class                                         |
+| `BALANCER_BOOSTED`         | Ethereum mainnet     | Phase 2E candidate: a `bb-a-USD` boosted pool — pin at impl time                                                  | stable basket via Aave aToken linear pools | composite (linear-pool spread + weighted swap fee) | ≥5 swaps within 5 bps                                                 | ❌ NOT YET — Phase 2E                                                                                |
+| `SOLANA_CLMM`              | Solana mainnet       | Phase 2F candidate: Raydium USDC/SOL CLMM — pin at impl time                                                      | USDC / SOL                                 | tiered (Raydium 5/25/100/1000 bps; Orca similar)   | ≥30 swaps within 5 bps                                                | ❌ NOT YET — Phase 2F (reuses V3 base)                                                               |
+| `JUPITER_ROUTE_AGGREGATOR` | Solana mainnet       | n/a (route from Jupiter quote API)                                                                                | varies per route                           | composite of leg fees                              | ≥30 routes within 10 bps (looser; multi-hop variance)                 | ❌ NOT YET — Phase 2G (route decomposition)                                                          |
+| `SOLIDLY_FORK`             | Optimism (Velodrome) | `0x2B4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c` (USDC/USDT stable, `stable=true`, ~5 bps fee)                        | USDC / USDT                                | 5-30 bps per-pool configurable                     | ≥20 swaps Velodrome within 5 bps                                      | ❌ NOT YET — Phase 2H (NEW: was not in original Phase 1A enum; added Day-1 slot 6 design 2026-05-11) |
+| `SOLIDLY_FORK`             | Base (Aerodrome)     | `0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d` (USDC/AERO volatile, `stable=false`, ~30 bps fee)                    | USDC / AERO                                | 5-30 bps per-pool configurable                     | ≥20 swaps Aerodrome within 5 bps; shared matcher with Velodrome       | ❌ NOT YET — Phase 2H (shared matcher)                                                               |
 
-**Reading the "Pool class status" column**: pool-class-shipped means `amm.py` has a Python class
-implementing the math; it does NOT mean the `AMMMatcher` dispatcher in
-[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) routes to it. Per
-2026-05-11 slot-6 read, the matcher hardcodes `UniswapV2Pool` only at line 471
-(`pool = cast("UniswapV2Pool | None", kwargs.get("pool", self._pool))`). **Phase 2 work is therefore:
-(a) extend `AMMMatcher` to dispatch by `pool.pool_shape` attribute, (b) add the 7 missing pool classes
-(Curve stable + crypto, Balancer weighted + boosted, Solana CLMM, Solidly-fork volatile + stable, Jupiter
-route composer), (c) validate each per its row above.** V3 + V4 are NOT greenfield — they need wiring only.
+**Reading the "Pool class status" column**: pool-class-shipped means `amm.py` has a Python class implementing the math;
+it does NOT mean the `AMMMatcher` dispatcher in
+[`engine.py:433`](../../../execution-service/execution_service/matching_engine/engine.py) routes to it. Per 2026-05-11
+slot-6 read, the matcher hardcodes `UniswapV2Pool` only at line 471
+(`pool = cast("UniswapV2Pool | None", kwargs.get("pool", self._pool))`). **Phase 2 work is therefore: (a) extend
+`AMMMatcher` to dispatch by `pool.pool_shape` attribute, (b) add the 7 missing pool classes (Curve stable + crypto,
+Balancer weighted + boosted, Solana CLMM, Solidly-fork volatile + stable, Jupiter route composer), (c) validate each per
+its row above.** V3 + V4 are NOT greenfield — they need wiring only.
 
 ## Simulation contract — unified pre-trade quote interface (Day-1 slot 6 design ship 2026-05-11)
 
-Phase 2 of `defi_simulation_realism` extends `AMMMatcher` (`engine.py:433`) to dispatch by `pool.pool_shape`
-instead of hardcoding `UniswapV2Pool`. All pool classes implement a common `PoolMatcher` Protocol that the
-matching engine + strategy P&L backtest replay engine call uniformly:
+Phase 2 of `defi_simulation_realism` extends `AMMMatcher` (`engine.py:433`) to dispatch by `pool.pool_shape` instead of
+hardcoding `UniswapV2Pool`. All pool classes implement a common `PoolMatcher` Protocol that the matching engine +
+strategy P&L backtest replay engine call uniformly:
 
 ```python
 # execution-service/execution_service/matching_engine/pool_matcher.py (NEW Phase 2A)
@@ -279,8 +282,8 @@ class PoolMatcher(Protocol):
         ...
 ```
 
-The matching engine dispatcher resolves `pool.pool_shape` → matcher fn via a registry, then calls the unified
-`quote()` / `apply()` interface. Required dispatcher refactor at
+The matching engine dispatcher resolves `pool.pool_shape` → matcher fn via a registry, then calls the unified `quote()`
+/ `apply()` interface. Required dispatcher refactor at
 [`engine.py:_amm_match_impl`](../../../execution-service/execution_service/matching_engine/engine.py#L94):
 
 ```python
@@ -296,25 +299,25 @@ def _amm_match_impl(pool: PoolMatcher, ...):
     return MatchResult(filled=True, fill=fill, quote_delta=quote_vs_fill, ...)
 ```
 
-`SwapQuote` + `FillResult` + `PoolShape` + `OrderSide` are UAC `internal` schemas (declared in Phase 1A).
-Pool-class implementations live in `execution-service/execution_service/matching_engine/` per `pool_shape`:
+`SwapQuote` + `FillResult` + `PoolShape` + `OrderSide` are UAC `internal` schemas (declared in Phase 1A). Pool-class
+implementations live in `execution-service/execution_service/matching_engine/` per `pool_shape`:
 
-- `amm.py` — Uniswap V2/V3/V4 pool classes (shipped; add `pool_shape` field + `quote()`/`apply()`/`snapshot()`
-  methods to satisfy `PoolMatcher` Protocol — Phase 2A refactor).
-- `curve.py` (NEW Phase 2C) — `CurveStablePool` (D-invariant + Newton-Raphson + A ramp) + `CurveCryptoPool`
-  (D + gamma) classes.
-- `balancer.py` (NEW Phase 2D) — `BalancerWeightedPool` (closed-form weighted) + `BalancerBoostedPool`
-  (Phase 2E linear-pool wrapper).
+- `amm.py` — Uniswap V2/V3/V4 pool classes (shipped; add `pool_shape` field + `quote()`/`apply()`/`snapshot()` methods
+  to satisfy `PoolMatcher` Protocol — Phase 2A refactor).
+- `curve.py` (NEW Phase 2C) — `CurveStablePool` (D-invariant + Newton-Raphson + A ramp) + `CurveCryptoPool` (D + gamma)
+  classes.
+- `balancer.py` (NEW Phase 2D) — `BalancerWeightedPool` (closed-form weighted) + `BalancerBoostedPool` (Phase 2E
+  linear-pool wrapper).
 - `solana_clmm.py` (NEW Phase 2F) — `SolanaCLMMPool` reusing V3 tick math + Solana decimals semantics.
-- `solidly_fork.py` (NEW Phase 2H) — `SolidlyForkPool` (cubic stable + xy=k volatile branch via
-  `stable: bool` flag) + `SolidlyCLForkPool` (V3-tick CL clone — Slipstream variants).
-- `aggregator.py` (NEW Phase 2G) — `JupiterAggregatorRoute` (multi-leg route composer reading from Jupiter
-  quote API + dispatching per-leg to the appropriate `PoolMatcher`).
-- `hooks.py` (shipped) — V4 `BeforeSwapHook` / `AfterSwapHook` Protocols + custom-curve implementations
-  (constant_sum / constant_mean / polynomial / logarithmic).
+- `solidly_fork.py` (NEW Phase 2H) — `SolidlyForkPool` (cubic stable + xy=k volatile branch via `stable: bool` flag) +
+  `SolidlyCLForkPool` (V3-tick CL clone — Slipstream variants).
+- `aggregator.py` (NEW Phase 2G) — `JupiterAggregatorRoute` (multi-leg route composer reading from Jupiter quote API +
+  dispatching per-leg to the appropriate `PoolMatcher`).
+- `hooks.py` (shipped) — V4 `BeforeSwapHook` / `AfterSwapHook` Protocols + custom-curve implementations (constant_sum /
+  constant_mean / polynomial / logarithmic).
 
-**Multi-hop routing** (aggregator path) reuses the Protocol uniformly: each leg's pool is a `PoolMatcher`;
-the aggregator sums per-leg `SwapQuote`s into a composite route quote.
+**Multi-hop routing** (aggregator path) reuses the Protocol uniformly: each leg's pool is a `PoolMatcher`; the
+aggregator sums per-leg `SwapQuote`s into a composite route quote.
 
 ### Implementation status — Phase 2 as-built (execution-service, 2026-05-12)
 
@@ -322,64 +325,64 @@ Harsh slot 4 landed the Phase 2 implementation half against the design above:
 
 - **`pool_matcher.py`** (NEW) — `PoolMatcher` Protocol (`quote` / `apply` / `spot_price` property / `snapshot`),
   `POOL_MATCHER_REGISTRY` + `@register_pool_matcher(shape)` class decorator (sets `cls.pool_shape`; rejects a
-  *different* class for an already-registered shape), `pool_matcher_from_snapshot(shape, dict)` (dispatches to the
+  _different_ class for an already-registered shape), `pool_matcher_from_snapshot(shape, dict)` (dispatches to the
   registered class's `from_snapshot` classmethod), and a `BasePoolMatcher` mixin that implements
   `quote`/`apply`/`snapshot` over three subclass primitives: `simulate_swap(amount_in, token_in)` (read-only),
   `execute_swap(amount_in, token_in)` (mutating), `snapshot_state()` (+ classmethod `from_snapshot`). `side_to_token_in`
-  maps `SELL → "x"` (token0 in), `BUY → "y"` (token1 in); `amount_in` is in the input token's native decimals.
-  UAC schemas (`PoolShape` 15-member enum, `SwapQuote`, `FillResult`, `OrderSide`) live in
+  maps `SELL → "x"` (token0 in), `BUY → "y"` (token1 in); `amount_in` is in the input token's native decimals. UAC
+  schemas (`PoolShape` 15-member enum, `SwapQuote`, `FillResult`, `OrderSide`) live in
   `unified_api_contracts/internal/domain/matching_engine/`.
 - **`amm.py`** — `UniswapV2Pool` / `UniswapV3Pool` / `UniswapV4Pool` mix in `BasePoolMatcher` + `@register_pool_matcher`
   (`UNISWAP_V2` / `UNISWAP_V3` / `UNISWAP_V4_HOOK`); `execute_swap` added to V3/V4 (advances `sqrtPriceX96` + `tick`
   within the active tick range — single-active-tick model; multi-tick-bitmap traversal is a Phase-3-validation
   follow-up); `spot_price` property + `snapshot_state` + `from_snapshot` on all three.
 - **`curve.py`** (NEW) — `CurveStablePool` (`CURVE_STABLE`): n-token StableSwap D-invariant, Newton–Raphson `_get_d`
-  + `_get_y` (255-iter cap, 1e-18 tol), reserves normalised to human units (`balance / 10**decimals`) so
-  6-/8-/18-decimal baskets coexist, `admin_fee` removed from reserves on `execute_swap`, `get_amount_out_indexed(i, j, …)`
-  for >2-token baskets. `CURVE_CRYPTO` (D + γ + EMA oracle) is unimplemented — Phase-2C follow-up.
-- **`balancer.py`** (NEW) — `BalancerWeightedPool` (`BALANCER_WEIGHTED`): weighted-product curve, fee on input,
-  fee-free Balancer spot price `(B_j/W_j) / (B_i/W_i)`, `get_amount_out_indexed`. `BalancerBoostedPool`
-  (`BALANCER_BOOSTED`): linear-pool spread folded into the effective fee. `BALANCER_COMPOSABLE` (phantom-BPT + Vault
-  `batchSwap` routing) is unimplemented — Phase-2E follow-up.
+  - `_get_y` (255-iter cap, 1e-18 tol), reserves normalised to human units (`balance / 10**decimals`) so
+    6-/8-/18-decimal baskets coexist, `admin_fee` removed from reserves on `execute_swap`,
+    `get_amount_out_indexed(i, j, …)` for >2-token baskets. `CURVE_CRYPTO` (D + γ + EMA oracle) is unimplemented —
+    Phase-2C follow-up.
+- **`balancer.py`** (NEW) — `BalancerWeightedPool` (`BALANCER_WEIGHTED`): weighted-product curve, fee on input, fee-free
+  Balancer spot price `(B_j/W_j) / (B_i/W_i)`, `get_amount_out_indexed`. `BalancerBoostedPool` (`BALANCER_BOOSTED`):
+  linear-pool spread folded into the effective fee. `BALANCER_COMPOSABLE` (phantom-BPT + Vault `batchSwap` routing) is
+  unimplemented — Phase-2E follow-up.
 - **`solidly_fork.py`** (NEW) — `SolidlyForkPool` (`SOLIDLY_FORK`): shared matcher for all classic Solidly forks
   (Velodrome / Aerodrome / Equalizer / Thena / Ramses…), discriminated by `(chain_id, factory_address)` + a per-pool
   `stable: bool` flag — cubic stable invariant `x^3·y + x·y^3 = k` (Newton–Raphson `_get_y`, 255-iter cap,
-  revert-on-non-convergence) / `x·y = k` volatile branch; reserves normalised to human units BEFORE invariant math
-  (USDC 6-dec overflow edge case); fee siphoned to `PoolFees` (ve(3,3) flywheel — NOT added back to reserves, unlike
-  Uniswap V2 where the fee grows `k`); `_hooks_invoked → ("poolFeesNotify",)`. `SOLIDLY_CL_FORK` (Slipstream V3-tick
-  CL pools — reuses V3 tick math + `(chain, CLFactory)` discriminator) is unimplemented — Phase-2H follow-up.
+  revert-on-non-convergence) / `x·y = k` volatile branch; reserves normalised to human units BEFORE invariant math (USDC
+  6-dec overflow edge case); fee siphoned to `PoolFees` (ve(3,3) flywheel — NOT added back to reserves, unlike Uniswap
+  V2 where the fee grows `k`); `_hooks_invoked → ("poolFeesNotify",)`. `SOLIDLY_CL_FORK` (Slipstream V3-tick CL pools —
+  reuses V3 tick math + `(chain, CLFactory)` discriminator) is unimplemented — Phase-2H follow-up.
 - **`solana_clmm.py`** (NEW) — `SolanaCLMMPool` (`SOLANA_CLMM`) subclasses `UniswapV3Pool` (same concentrated-liquidity
   tick math); `SolanaAMMPool` (`SOLANA_AMM`) subclasses `UniswapV2Pool` (Raydium V4 standard `xy=k` pool).
 - **`aggregator.py`** (NEW) — `RouteLeg` (per-leg `pool_shape` + `pool_snapshot` + `side` + `input_share` + `chain_id`
-  + `pool_address`; `to_dict`/`from_dict`) + `AggregatorRouteMatcher` (`JUPITER_ROUTE_AGGREGATOR`): satisfies the
-  `PoolMatcher` Protocol; builds each leg's underlying `PoolMatcher` via `pool_matcher_from_snapshot` and composes
-  per-leg `quote()`/`apply()` into a route-level `SwapQuote`/`FillResult` with per-leg sub-quotes in `.legs`; two
-  route kinds — `"split"` (parallel — each leg takes `input_share` of route input, outputs summed) and `"chain"`
-  (serial multi-hop — leg *i* consumes 100 % of leg *i-1*'s output); `spot_price` = product (chain) /
-  share-weighted-sum (split) of per-leg effective rates; `snapshot`/`from_snapshot` round-trip the route + per-leg
-  pool snapshots (reflecting prior `apply` mutations); `FillResult.mempool_path ∈ {BATCH_SIM, PUBLIC, PRIVATE}` for
-  MEV-vs-slippage execution-alpha attribution. `OneInchRouteMatcher` / `ZeroExRouteMatcher` subclasses bind the same
-  logic to `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR`. **Batch replay** of aggregator legs is gated on the NEW
-  `aggregator_route` MTDS data_type (captured-route JSON persisted at decision time — catalogue gap) + the
-  `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the **live-mode** quote-API fetch path
-  (`jup.ag/quote` / `1inch.io/.../quote` / `api.0x.org/swap/v1/quote`) is the same follow-up.
-- **`engine.py`** — `_amm_match_impl` dispatches via the `PoolMatcher` Protocol (`quote()` → slippage gate →
-  `apply()`); `AMMMatcher` accepts any `PoolMatcher`; the per-shape modules are side-effect-imported by `engine.py`
-  so the registry is populated; the local `OrderSide` enum was deleted in favour of
-  `unified_api_contracts.internal.OrderSide`.
+  - `pool_address`; `to_dict`/`from_dict`) + `AggregatorRouteMatcher` (`JUPITER_ROUTE_AGGREGATOR`): satisfies the
+    `PoolMatcher` Protocol; builds each leg's underlying `PoolMatcher` via `pool_matcher_from_snapshot` and composes
+    per-leg `quote()`/`apply()` into a route-level `SwapQuote`/`FillResult` with per-leg sub-quotes in `.legs`; two
+    route kinds — `"split"` (parallel — each leg takes `input_share` of route input, outputs summed) and `"chain"`
+    (serial multi-hop — leg _i_ consumes 100 % of leg _i-1_'s output); `spot_price` = product (chain) /
+    share-weighted-sum (split) of per-leg effective rates; `snapshot`/`from_snapshot` round-trip the route + per-leg
+    pool snapshots (reflecting prior `apply` mutations); `FillResult.mempool_path ∈ {BATCH_SIM, PUBLIC, PRIVATE}` for
+    MEV-vs-slippage execution-alpha attribution. `OneInchRouteMatcher` / `ZeroExRouteMatcher` subclasses bind the same
+    logic to `ONEINCH_AGGREGATOR` / `ZEROX_AGGREGATOR`. **Batch replay** of aggregator legs is gated on the NEW
+    `aggregator_route` MTDS data_type (captured-route JSON persisted at decision time — catalogue gap) + the
+    `(chain, pool_address) → PoolShape` lookup (MTDS `dex_pools`); the **live-mode** quote-API fetch path
+    (`jup.ag/quote` / `1inch.io/.../quote` / `api.0x.org/swap/v1/quote`) is the same follow-up.
+- **`engine.py`** — `_amm_match_impl` dispatches via the `PoolMatcher` Protocol (`quote()` → slippage gate → `apply()`);
+  `AMMMatcher` accepts any `PoolMatcher`; the per-shape modules are side-effect-imported by `engine.py` so the registry
+  is populated; the local `OrderSide` enum was deleted in favour of `unified_api_contracts.internal.OrderSide`.
 
 `bash scripts/quality-gates.sh` on a fresh execution-service `.venv` should be re-run to gate on the full suite —
-verified this session via the workspace `.venv-workspace` + `PYTHONPATH` override (`tests/unit/test_pool_matcher.py`
-54 tests + 593 across the matching-engine suite green; `ruff` + `basedpyright` clean on all touched files, modulo
-the pre-existing `engine.py:_mk` `OrderType` mismatch [a dual-`OrderType`-import bug in UAC `internal/__init__.py`]
-and `sports_matching.py:394` unnecessary comparison — neither introduced here). Per-shape historical-swap validation
-(the ≥ N-Tenderly-fork / on-chain-`Swap`-event corpus) lands with the golden-test-set harness below — until then the
-matchers are math-correct (round-trip-tested + invariant-tested) but not yet bps-validated against on-chain fills.
+verified this session via the workspace `.venv-workspace` + `PYTHONPATH` override (`tests/unit/test_pool_matcher.py` 54
+tests + 593 across the matching-engine suite green; `ruff` + `basedpyright` clean on all touched files, modulo the
+pre-existing `engine.py:_mk` `OrderType` mismatch [a dual-`OrderType`-import bug in UAC `internal/__init__.py`] and
+`sports_matching.py:394` unnecessary comparison — neither introduced here). Per-shape historical-swap validation (the ≥
+N-Tenderly-fork / on-chain-`Swap`-event corpus) lands with the golden-test-set harness below — until then the matchers
+are math-correct (round-trip-tested + invariant-tested) but not yet bps-validated against on-chain fills.
 
 ## Golden test set harness (Day-1 slot 6 design ship 2026-05-11)
 
-Phase 3 of `defi_simulation_realism` ships the per-shape fixture corpus that locks the matcher fidelity gate
-in CI. Lives at
+Phase 3 of `defi_simulation_realism` ships the per-shape fixture corpus that locks the matcher fidelity gate in CI.
+Lives at
 [`execution-service/tests/integration/fixtures/amm_golden_swaps/`](../../../execution-service/tests/integration/fixtures/)
 as one JSON file per `PoolShape`:
 
@@ -457,42 +460,40 @@ def test_amm_golden_swap_replay(fixture_file: Path) -> None:
 ```
 
 Fixture capture (Phase 3A operator/Harsh runbook): per-shape script under
-`execution-service/scripts/capture_golden_swaps.py --pool-shape <X> --pool <addr> --from-block <N> --window <K>`
-queries archive node via `eth_getLogs` for the pool's `Swap` event topic, snapshots `slot0()` / reserves at
-`block - 1` and `block`, persists JSON row matching schema above. **Run on same-region GCE VM** per CLAUDE.md
-"Manifest phantom audit" pattern (cross-region archive node listing is 18× slower).
+`execution-service/scripts/capture_golden_swaps.py --pool-shape <X> --pool <addr> --from-block <N> --window <K>` queries
+archive node via `eth_getLogs` for the pool's `Swap` event topic, snapshots `slot0()` / reserves at `block - 1` and
+`block`, persists JSON row matching schema above. **Run on same-region GCE VM** per CLAUDE.md "Manifest phantom audit"
+pattern (cross-region archive node listing is 18× slower).
 
-**Capture cadence**: fixture refresh per-shape on each AMM-family-upgrade (V3 → V4 hook activation, Balancer
-V2 → V3 launch, new fee tier deployment). Cron VM under `deployment-service/scripts/vm/` per CLAUDE.md
-"Runbook Execution-Owner SSOT" — owner: Harsh slot 4 (implementer); cadence: per-deploy when matcher code
-changes; verifier: harness exit code + `|delta| < tolerance_bps` per row.
+**Capture cadence**: fixture refresh per-shape on each AMM-family-upgrade (V3 → V4 hook activation, Balancer V2 → V3
+launch, new fee tier deployment). Cron VM under `deployment-service/scripts/vm/` per CLAUDE.md "Runbook Execution-Owner
+SSOT" — owner: Harsh slot 4 (implementer); cadence: per-deploy when matcher code changes; verifier: harness exit code +
+`|delta| < tolerance_bps` per row.
 
 ### Cross-chain L2 deployment notes (Phase 2 implementation hazard)
 
-V3 deployed on Arbitrum / Optimism / Polygon / Base under the SAME factory bytecode but with
-`factory.enableFeeAmount()` overrides — Polygon historically added a 100bps tier with `tickSpacing=1` not
-present on Ethereum. **Matcher MUST read `pool.tickSpacing()` per pool at simulation time, NOT hardcode by
-fee tier**. Same hazard applies to Balancer (Vault address `0xBA12222222228d8Ba445958a75a0704d566BF2C8` is
-identical across Ethereum / Polygon / Arbitrum / Optimism / Gnosis / Avalanche / Base, but per-pool fees
-diverge) and to Curve (per-chain `A` parameters may differ from Ethereum reference). Per-chain calibration
-data must be captured per Phase 2 validation rows.
+V3 deployed on Arbitrum / Optimism / Polygon / Base under the SAME factory bytecode but with `factory.enableFeeAmount()`
+overrides — Polygon historically added a 100bps tier with `tickSpacing=1` not present on Ethereum. **Matcher MUST read
+`pool.tickSpacing()` per pool at simulation time, NOT hardcode by fee tier**. Same hazard applies to Balancer (Vault
+address `0xBA12222222228d8Ba445958a75a0704d566BF2C8` is identical across Ethereum / Polygon / Arbitrum / Optimism /
+Gnosis / Avalanche / Base, but per-pool fees diverge) and to Curve (per-chain `A` parameters may differ from Ethereum
+reference). Per-chain calibration data must be captured per Phase 2 validation rows.
 
 ## Matching-engine end-to-end integration (Day-1 slot 6 design ship 2026-05-11)
 
-Per CLAUDE.md "Batch = Live" HARD RULE: batch + live use the SAME `MatchingEngine` code path; only the
-execution-fill source differs. The `PoolMatcher` Protocol is the seam — `quote()` is read-only and identical
-in both modes; `apply()` differs:
+Per CLAUDE.md "Batch = Live" HARD RULE: batch + live use the SAME `MatchingEngine` code path; only the execution-fill
+source differs. The `PoolMatcher` Protocol is the seam — `quote()` is read-only and identical in both modes; `apply()`
+differs:
 
-- **Batch / backtest replay mode**: `apply()` advances the pool's in-memory snapshot (reserves / tick /
-  sqrtPrice / D), emits a synthetic `FillResult` keyed to the replay block. Strategy P&L backtest = sum of
-  synthetic fills against historical position snapshots.
-- **Live mode**: `apply()` is a thin wrapper that submits the swap tx to the execution venue (Uniswap
-  `SwapRouter02` / Aave `Pool.supply()` / Curve metapool router / etc.) and reconstructs `FillResult` from
-  the resulting on-chain transaction receipt + emitted `Swap` event. **Critical**: the pool snapshot is
-  refreshed from the chain AFTER the tx confirms (or from a Tenderly fork pre-flight if the tx is queued
-  but not yet broadcast).
-- **Execution-alpha measurement** (CLAUDE.md "Batch = Live" sub-rule): live fills P&L − simulated fills P&L
-  (where simulated runs the SAME `PoolMatcher.quote()` against the SAME pool snapshot at the same block).
+- **Batch / backtest replay mode**: `apply()` advances the pool's in-memory snapshot (reserves / tick / sqrtPrice / D),
+  emits a synthetic `FillResult` keyed to the replay block. Strategy P&L backtest = sum of synthetic fills against
+  historical position snapshots.
+- **Live mode**: `apply()` is a thin wrapper that submits the swap tx to the execution venue (Uniswap `SwapRouter02` /
+  Aave `Pool.supply()` / Curve metapool router / etc.) and reconstructs `FillResult` from the resulting on-chain
+  transaction receipt + emitted `Swap` event. **Critical**: the pool snapshot is refreshed from the chain AFTER the tx
+  confirms (or from a Tenderly fork pre-flight if the tx is queued but not yet broadcast).
+- **Execution-alpha measurement** (CLAUDE.md "Batch = Live" sub-rule): live fills P&L − simulated fills P&L (where
+  simulated runs the SAME `PoolMatcher.quote()` against the SAME pool snapshot at the same block).
 
 End-to-end flow (both modes):
 
@@ -545,53 +546,50 @@ End-to-end flow (both modes):
                                        (execution alpha = live − sim)
 ```
 
-**Slippage tolerance gate**: `_amm_match_impl` calls `.quote()` first; if `|quote.amount_out −
-strategy.min_amount_out| / strategy.min_amount_out > strategy.max_slippage_bps`, returns
+**Slippage tolerance gate**: `_amm_match_impl` calls `.quote()` first; if
+`|quote.amount_out − strategy.min_amount_out| / strategy.min_amount_out > strategy.max_slippage_bps`, returns
 `MatchResult(failed=True, reason="SLIPPAGE_EXCEEDED")`. **Quote vs fill realized-slippage** is captured in
 `FillResult.realized_slippage_vs_quote_bps` — a non-trivial value here is the matcher-realism signal.
 
-**Pre-flight Tenderly fork check** (live mode, pre-broadcast): for high-impact swaps (size > N% of pool TVL),
-the live `apply()` MAY run a Tenderly-fork pre-flight `.quote()` against the upstream RPC state before
-broadcasting — protects against pool-state drift between strategy decision and tx inclusion. Out-of-scope for
-Day-1; deferred to Phase 4 implementation (originally plan body Phase 4 was governance sim — clarification
-needed; this matching-engine integration spec is separate).
+**Pre-flight Tenderly fork check** (live mode, pre-broadcast): for high-impact swaps (size > N% of pool TVL), the live
+`apply()` MAY run a Tenderly-fork pre-flight `.quote()` against the upstream RPC state before broadcasting — protects
+against pool-state drift between strategy decision and tx inclusion. Out-of-scope for Day-1; deferred to Phase 4
+implementation (originally plan body Phase 4 was governance sim — clarification needed; this matching-engine integration
+spec is separate).
 
 ### Cross-service contracts (downstream consumer SSOTs)
 
-- **position-balance-monitor-service** (`position_balance_monitor/__init__.py`): consumes `FillResult` via
-  bus subscription. Position update logic must handle: (a) successful fill → reduce intent + add to filled
-  positions; (b) partial fill → split intent; (c) failed fill → log + emit `FILL_FAILED` event for
-  strategy-service replay.
-- **strategy-service** (`strategy_service/engine/`): drives backtest replay by iterating historical
-  `SwapIntent` events + dispatching to `MatchingEngine`. Live mode subscribes to
-  strategy-decision-bus + dispatches identically. Execution-alpha attribution = batch P&L (sim fills)
-  vs live P&L (real fills) on the same historical-or-paper-trade window.
+- **position-balance-monitor-service** (`position_balance_monitor/__init__.py`): consumes `FillResult` via bus
+  subscription. Position update logic must handle: (a) successful fill → reduce intent + add to filled positions; (b)
+  partial fill → split intent; (c) failed fill → log + emit `FILL_FAILED` event for strategy-service replay.
+- **strategy-service** (`strategy_service/engine/`): drives backtest replay by iterating historical `SwapIntent`
+  events + dispatching to `MatchingEngine`. Live mode subscribes to strategy-decision-bus + dispatches identically.
+  Execution-alpha attribution = batch P&L (sim fills) vs live P&L (real fills) on the same historical-or-paper-trade
+  window.
 - **risk-and-exposure-service**: consumes `FillResult` for position-limit / VaR / leverage checks. Reads
   `PoolMatcher.snapshot()` for forward-impact projection (what if strategy wants to scale up?).
 
 ## Aggregator / multi-hop routing realism (Day-1 slot 6 design ship 2026-05-11; supersedes section #9 stub)
 
-Aggregator pool shapes (`JUPITER_ROUTE_AGGREGATOR`, `1INCH_AGGREGATOR`, `0X_AGGREGATOR`) are NOT single-pool
-matchers — they are **route composers** that route a single user-facing swap across N legs of underlying
-AMMs. Phase 2G implementation must handle:
+Aggregator pool shapes (`JUPITER_ROUTE_AGGREGATOR`, `1INCH_AGGREGATOR`, `0X_AGGREGATOR`) are NOT single-pool matchers —
+they are **route composers** that route a single user-facing swap across N legs of underlying AMMs. Phase 2G
+implementation must handle:
 
 **Route-source by mode**:
 
-- **Live mode**: fetch route from aggregator quote API (`POST jup.ag/quote` / `1inch.io/v4.0/{chain}/quote`
-  / `api.0x.org/swap/v1/quote`) at strategy-decision time. Route is a JSON object listing per-leg pool
-  addresses + per-leg input share + expected per-leg amount_out + slippage cost. Returned route is
-  ephemeral — quote expires after ~5-15 seconds; matcher must re-fetch on stale-quote rejection.
-- **Batch mode**: replay needs historical routes. Aggregator quote APIs do NOT serve historical routes —
-  workaround: capture aggregator routes at decision time + persist per-route JSON to MTDS data_type
-  `aggregator_route` (NEW; not yet in catalogue). Backtest replay reconstructs per-leg state from MTDS
-  per-pool captures + replays the captured route, NOT the route the aggregator would have chosen at
-  replay-block (route choice is path-dependent on liquidity that's already been consumed — would be a
-  lookahead bias).
+- **Live mode**: fetch route from aggregator quote API (`POST jup.ag/quote` / `1inch.io/v4.0/{chain}/quote` /
+  `api.0x.org/swap/v1/quote`) at strategy-decision time. Route is a JSON object listing per-leg pool addresses + per-leg
+  input share + expected per-leg amount_out + slippage cost. Returned route is ephemeral — quote expires after ~5-15
+  seconds; matcher must re-fetch on stale-quote rejection.
+- **Batch mode**: replay needs historical routes. Aggregator quote APIs do NOT serve historical routes — workaround:
+  capture aggregator routes at decision time + persist per-route JSON to MTDS data_type `aggregator_route` (NEW; not yet
+  in catalogue). Backtest replay reconstructs per-leg state from MTDS per-pool captures + replays the captured route,
+  NOT the route the aggregator would have chosen at replay-block (route choice is path-dependent on liquidity that's
+  already been consumed — would be a lookahead bias).
 
-**Per-leg dispatch**: for each leg in the route, the `AggregatorRouteMatcher` looks up the
-underlying-pool `PoolMatcher` from the leg's pool address + `PoolShape` lookup table (`(chain,
-pool_address) → PoolShape`; sourced from MTDS `dex_pools` data_type), calls `.quote(leg_amount_in, leg_side)`,
-and sums per-leg outputs:
+**Per-leg dispatch**: for each leg in the route, the `AggregatorRouteMatcher` looks up the underlying-pool `PoolMatcher`
+from the leg's pool address + `PoolShape` lookup table (`(chain, pool_address) → PoolShape`; sourced from MTDS
+`dex_pools` data_type), calls `.quote(leg_amount_in, leg_side)`, and sums per-leg outputs:
 
 ```python
 def aggregator_quote(route, amount_in):
@@ -613,15 +611,15 @@ def aggregator_quote(route, amount_in):
     )
 ```
 
-**MEV considerations** (live mode): aggregator routes are **MEV-prone**. Front-running risk = high (bot sees
-your tx in mempool + sandwiches with bigger size on the same route legs). Mitigation: use private mempool
-(Flashbots Protect / MEV-Blocker) or private order flow (Cowswap / 1inch Fusion). The `FillResult` should
-record `mempool_path: PUBLIC | PRIVATE` so execution-alpha attribution can separate "lost to public mempool
-MEV" from "lost to genuine slippage."
+**MEV considerations** (live mode): aggregator routes are **MEV-prone**. Front-running risk = high (bot sees your tx in
+mempool + sandwiches with bigger size on the same route legs). Mitigation: use private mempool (Flashbots Protect /
+MEV-Blocker) or private order flow (Cowswap / 1inch Fusion). The `FillResult` should record
+`mempool_path: PUBLIC | PRIVATE` so execution-alpha attribution can separate "lost to public mempool MEV" from "lost to
+genuine slippage."
 
-**Slippage composition**: per-leg fees + per-leg price-impact compound multiplicatively, not additively, for
-multi-hop. A 30-bp leg fee × 3 hops = 90 bps fee (additive) but the per-hop price impact compounds on a
-non-linear curve. For backtest realism, use the composite price-impact formula:
+**Slippage composition**: per-leg fees + per-leg price-impact compound multiplicatively, not additively, for multi-hop.
+A 30-bp leg fee × 3 hops = 90 bps fee (additive) but the per-hop price impact compounds on a non-linear curve. For
+backtest realism, use the composite price-impact formula:
 
 ```
 composite_fill = leg_1_amount_out * leg_2_amount_in_share * ... * leg_N_amount_in_share
@@ -629,9 +627,9 @@ composite_fill = leg_1_amount_out * leg_2_amount_in_share * ... * leg_N_amount_i
 
 Each per-leg `amount_in_share` is the strategy's chosen split; aggregator-API returns the optimal split.
 
-**Validation threshold**: ≥ 30 historical Jupiter routes within 10 bps composite fill (looser than per-pool
-≤5 bps because multi-hop variance is inherent — different routes can be near-optimal). Per `defi_master`
-plan, aggregator captures land via Phase 2G MTDS adapter (NEW; not yet shipped).
+**Validation threshold**: ≥ 30 historical Jupiter routes within 10 bps composite fill (looser than per-pool ≤5 bps
+because multi-hop variance is inherent — different routes can be near-optimal). Per `defi_master` plan, aggregator
+captures land via Phase 2G MTDS adapter (NEW; not yet shipped).
 
 ## Lending rate-impact-from-own-trade
 
@@ -657,47 +655,41 @@ def post_trade_rate(state: LendingMarketState, supply_delta: Decimal, borrow_del
 ```
 
 **Inputs** (from MTDS captures via `defi_simulation_realism` Phase 1B `LendingMarketState`): `total_supply`,
-`total_borrow`, `optimal_utilization_rate`, `irm_base`, `irm_slope1`, `irm_slope2`, `reserve_factor`,
-`liquidityIndex`, `variableBorrowIndex`. **Validation**: replay ≥ 50 historical large-supply events; ≥ 90% within
-10bps APY tolerance.
+`total_borrow`, `optimal_utilization_rate`, `irm_base`, `irm_slope1`, `irm_slope2`, `reserve_factor`, `liquidityIndex`,
+`variableBorrowIndex`. **Validation**: replay ≥ 50 historical large-supply events; ≥ 90% within 10bps APY tolerance.
 
 `BenchmarkMatcher` extension (Phase 3B): all supply/borrow/repay/withdraw at Aave V3 + Compound V3 + Spark + Radiant
 call this calculator. Backtest yield uses post-trade rate.
 
 ### Per-protocol IRM parameter capture (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
 
-> **⚠️ CRITICAL — Phase 1B IRM-slope capture gap (2026-05-12)**: pre-fix the
-> Aave V3 lending-indices MTDS adapter at `aave_lending.py` was DROPPING the
-> per-block `optimalUtilisationRate` + `variableRateSlope1` + `variableRateSlope2`
-> fields it fetched from The Graph subgraph (line 77-79). Consumers fell back to
-> the static `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` snapshot ("governance current
-> as of 2026-05-05") — mis-pricing post-trade rates by 10-30 bps on the wing of
-> the kink. **Fixed at mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`**;
-> see `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full
-> remediation path. **Backfill VM (Step 3 of issue doc) must land before Phase
-> 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise
-> the replays use the proxy snapshot and the resulting P&L delta is
-> uninterpretable. **Tenderly fork live-vs-sim recon (Phase 8C) WILL mask this
-> drift** — Tenderly forks current chain state which holds today's slopes; the
-> drift only surfaces during historical-replay 8A/8B where the matcher uses
-> today's slopes against historical pool reserves.
+> **⚠️ CRITICAL — Phase 1B IRM-slope capture gap (2026-05-12)**: pre-fix the Aave V3 lending-indices MTDS adapter at
+> `aave_lending.py` was DROPPING the per-block `optimalUtilisationRate` + `variableRateSlope1` + `variableRateSlope2`
+> fields it fetched from The Graph subgraph (line 77-79). Consumers fell back to the static
+> `AAVE_V3_RATE_MODEL_DEFAULTS_BY_ASSET` snapshot ("governance current as of 2026-05-05") — mis-pricing post-trade rates
+> by 10-30 bps on the wing of the kink. **Fixed at mtds@`4b38a9b` + uac@`bd9c202` + features-service@`e292a4d4`**; see
+> `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for full remediation path. **Backfill VM (Step 3 of
+> issue doc) must land before Phase 8A/B carry-archetype + leveraged-funding-arb 1-year replay runs** — otherwise the
+> replays use the proxy snapshot and the resulting P&L delta is uninterpretable. **Tenderly fork live-vs-sim recon
+> (Phase 8C) WILL mask this drift** — Tenderly forks current chain state which holds today's slopes; the drift only
+> surfaces during historical-replay 8A/8B where the matcher uses today's slopes against historical pool reserves.
 
 Per-protocol IRM parameter source for Phase 3A `LendingMarketState` capture by MTDS adapter
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/lending_indices.py`:
 
-| Protocol | Chain | Pool/Comet address | IRM getter | Reserve config getter | Capture cadence |
-|---|---|---|---|---|---|
-| **Aave V3** | Ethereum | `PoolAddressesProvider` `0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e` → `Pool` `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` | `DefaultReserveInterestRateStrategyV2.getInterestRateData(asset)` — returns `baseVariableBorrowRate`, `variableRateSlope1`, `variableRateSlope2`, `optimalUsageRatio` | `Pool.getReserveData(asset)` — returns `liquidityIndex`, `variableBorrowIndex`, `currentVariableBorrowRate`, `currentLiquidityRate`, `aTokenAddress` | Per-block (12s slot) for active markets; per-hour for inactive |
-| **Aave V3** | Arbitrum / Optimism / Polygon / Base / Avalanche | Per-chain Pool address — see UAC `CHAIN_PROTOCOL_DEPLOYMENTS` | Same `DefaultReserveInterestRateStrategyV2` ABI | Same `Pool.getReserveData` ABI | Per-chain block time |
-| **Compound V3** | Ethereum | `Comet` per market (e.g. cUSDCv3 `0xc3d688B66703497DAA19211EEdff47f25384cdc3`) | `Comet.getUtilization()` + `Comet.getBorrowRate(utilization)` + `Comet.getSupplyRate(utilization)` (single-asset borrow model — DIFFERENT shape from Aave's kinked-slope) | `Comet.getAssetInfo(i)` for each collateral; `Comet.totalSupply()` / `Comet.totalBorrow()` | Per-block |
-| **Compound V3** | Arbitrum / Polygon / Base | Per-chain Comet markets | Same Comet ABI | Same | Per-chain block time |
-| **Spark** | Ethereum | `SparkPool` `0xC13e21B648A5Ee794902342038FF3aDAB66BE987` (Aave-V3-fork) | Same Aave V3 IRM ABI | Same Aave V3 ABI | Per-block |
-| **Spark** | Gnosis | `SparkPool` Gnosis address | Same ABI | Same | Per-block (~5s) |
-| **Radiant** | BSC / Arbitrum | Radiant V2 LendingPool addresses (Aave V2 fork — different ABI from V3) | `LendingPool.getReserveData(asset)` returns legacy V2 struct with `currentLiquidityRate`, `currentVariableBorrowRate`, IRM params accessed via separate `InterestRateStrategy` contract per-asset | Same V2-shape getter | Per-block |
+| Protocol        | Chain                                            | Pool/Comet address                                                                                                         | IRM getter                                                                                                                                                                                        | Reserve config getter                                                                                                                                | Capture cadence                                                |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Aave V3**     | Ethereum                                         | `PoolAddressesProvider` `0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e` → `Pool` `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` | `DefaultReserveInterestRateStrategyV2.getInterestRateData(asset)` — returns `baseVariableBorrowRate`, `variableRateSlope1`, `variableRateSlope2`, `optimalUsageRatio`                             | `Pool.getReserveData(asset)` — returns `liquidityIndex`, `variableBorrowIndex`, `currentVariableBorrowRate`, `currentLiquidityRate`, `aTokenAddress` | Per-block (12s slot) for active markets; per-hour for inactive |
+| **Aave V3**     | Arbitrum / Optimism / Polygon / Base / Avalanche | Per-chain Pool address — see UAC `CHAIN_PROTOCOL_DEPLOYMENTS`                                                              | Same `DefaultReserveInterestRateStrategyV2` ABI                                                                                                                                                   | Same `Pool.getReserveData` ABI                                                                                                                       | Per-chain block time                                           |
+| **Compound V3** | Ethereum                                         | `Comet` per market (e.g. cUSDCv3 `0xc3d688B66703497DAA19211EEdff47f25384cdc3`)                                             | `Comet.getUtilization()` + `Comet.getBorrowRate(utilization)` + `Comet.getSupplyRate(utilization)` (single-asset borrow model — DIFFERENT shape from Aave's kinked-slope)                         | `Comet.getAssetInfo(i)` for each collateral; `Comet.totalSupply()` / `Comet.totalBorrow()`                                                           | Per-block                                                      |
+| **Compound V3** | Arbitrum / Polygon / Base                        | Per-chain Comet markets                                                                                                    | Same Comet ABI                                                                                                                                                                                    | Same                                                                                                                                                 | Per-chain block time                                           |
+| **Spark**       | Ethereum                                         | `SparkPool` `0xC13e21B648A5Ee794902342038FF3aDAB66BE987` (Aave-V3-fork)                                                    | Same Aave V3 IRM ABI                                                                                                                                                                              | Same Aave V3 ABI                                                                                                                                     | Per-block                                                      |
+| **Spark**       | Gnosis                                           | `SparkPool` Gnosis address                                                                                                 | Same ABI                                                                                                                                                                                          | Same                                                                                                                                                 | Per-block (~5s)                                                |
+| **Radiant**     | BSC / Arbitrum                                   | Radiant V2 LendingPool addresses (Aave V2 fork — different ABI from V3)                                                    | `LendingPool.getReserveData(asset)` returns legacy V2 struct with `currentLiquidityRate`, `currentVariableBorrowRate`, IRM params accessed via separate `InterestRateStrategy` contract per-asset | Same V2-shape getter                                                                                                                                 | Per-block                                                      |
 
 **Compound V3 IRM is NOT kinked-slope** — uses a separate `kink` parameter where below-kink rate is linear in
-utilization, above-kink rate jumps to a different linear slope (different shape from Aave's piecewise). Matcher
-must dispatch by `(protocol, asset)` and use protocol-specific IRM formula:
+utilization, above-kink rate jumps to a different linear slope (different shape from Aave's piecewise). Matcher must
+dispatch by `(protocol, asset)` and use protocol-specific IRM formula:
 
 ```python
 # execution-service/execution_service/matching_engine/lending/rate_impact.py (NEW Phase 3A)
@@ -732,8 +724,10 @@ def post_trade_rate(
     return supply_apy, borrow_apy
 ```
 
-UAC `LendingMarketState` schema (Phase 1B) extends with discriminator field `protocol_irm_shape: Literal["AAVE_KINKED", "COMPOUND_V3", "MORPHO_ADAPTIVE"]` (future Morpho support) + Compound-specific fields
-`compound_kink`, `compound_base_rate`, `compound_below_kink_slope`, `compound_above_kink_slope`.
+UAC `LendingMarketState` schema (Phase 1B) extends with discriminator field
+`protocol_irm_shape: Literal["AAVE_KINKED", "COMPOUND_V3", "MORPHO_ADAPTIVE"]` (future Morpho support) +
+Compound-specific fields `compound_kink`, `compound_base_rate`, `compound_below_kink_slope`,
+`compound_above_kink_slope`.
 
 ### Phase 3C validation harness (operator-runnable for Harsh slot 4)
 
@@ -762,15 +756,15 @@ def test_post_trade_rate_within_tolerance(protocol: str) -> None:
     assert len(failures) / len(events) < Decimal("0.1"), failures
 ```
 
-**Large-supply event source** (`mtds.read_large_supply_events`): on-chain `Supply` event topic filter on Aave V3
-Pool / Compound V3 Comet — captured by MTDS `lending_events` data_type (NEW; not yet in catalogue; gap captured
-in `defi_simulation_realism_2026_05_10.md` DONE block discoveries section). Backfill: 30-day rolling window
-across 6 protocol-chain combos = ~200-500 events/window.
+**Large-supply event source** (`mtds.read_large_supply_events`): on-chain `Supply` event topic filter on Aave V3 Pool /
+Compound V3 Comet — captured by MTDS `lending_events` data_type (NEW; not yet in catalogue; gap captured in
+`defi_simulation_realism_2026_05_10.md` DONE block discoveries section). Backfill: 30-day rolling window across 6
+protocol-chain combos = ~200-500 events/window.
 
 ## Governance proposal simulation harness
 
-Capture (`defi_simulation_realism` Phase 4A): on-chain Governor events + Snapshot off-chain proposals API for
-Aave V3 + Compound V3 + Spark + Lido.
+Capture (`defi_simulation_realism` Phase 4A): on-chain Governor events + Snapshot off-chain proposals API for Aave V3 +
+Compound V3 + Spark + Lido.
 
 Simulator (Phase 4B): given proposal ID + Tenderly fork:
 
@@ -781,24 +775,23 @@ Simulator (Phase 4B): given proposal ID + Tenderly fork:
 CLI (Phase 4C): `defi-simulate-proposal --proposal-id <id> --archetype <X> --time T` returns archetype P&L delta if
 proposal executes at time T. Used by risk simulations sibling.
 
-**Inputs**: `GovernanceProposal` schema (`defi_simulation_realism` Phase 1C). **Validation**: ≥ 5 historical
-proposals' P&L delta within 100bps of actual realized post-execution delta.
+**Inputs**: `GovernanceProposal` schema (`defi_simulation_realism` Phase 1C). **Validation**: ≥ 5 historical proposals'
+P&L delta within 100bps of actual realized post-execution delta.
 
 ### Per-protocol capture detail (Day-1 slot 6 design ship 2026-05-11; operator-runnable for Harsh slot 4)
 
 Per-protocol Governor contract addresses + data sources for Phase 4A adapter:
 
-| Protocol | Chain | Governor address | Snapshot space | Subgraph (preferred) | Capture method |
-|---|---|---|---|---|---|
-| **Aave V3** | Ethereum | `GovernanceV3Ethereum` `0x9AEE0B04504CeF83A65AC3f0e838D0593BCb2BC7` | `aave.eth` | `https://api.thegraph.com/subgraphs/name/aave/governance-v2` | On-chain `ProposalCreated` / `ProposalExecuted` events via subgraph + Snapshot REST API for off-chain temperature checks (`hub.snapshot.org/api`) |
-| **Compound V3** | Ethereum | `GovernorBravoDelegator` `0xc0Da02939E1441F497fd74F78cE7Decb17B66529` | `comp-vote.eth` | `https://api.thegraph.com/subgraphs/name/arr00/compound-governance-2` | Same shape; `GovernorBravo` event ABI |
-| **Spark** | Ethereum | `MakerDAO`-style ChiefBoot delegation `0x0a3f6849f78076aefaDf113F5BED87720274dDC0` | `spark.eth` | `https://api.thegraph.com/subgraphs/name/makerdao/governance` | Spark proposals execute through MakerDAO's chief; capture via MakerDAO subgraph + filter for Spark-asset-list proposals |
-| **Lido** | Ethereum | `AragonVoting` `0x2e59A20f205bB85a89C53f1936454680651E618e` | `lido-snapshot.eth` | `https://api.thegraph.com/subgraphs/name/lidofinance/lido` | Aragon-style voting events; LDO-token weighted; Snapshot dominates pre-execution signalling |
+| Protocol        | Chain    | Governor address                                                                   | Snapshot space      | Subgraph (preferred)                                                  | Capture method                                                                                                                                    |
+| --------------- | -------- | ---------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Aave V3**     | Ethereum | `GovernanceV3Ethereum` `0x9AEE0B04504CeF83A65AC3f0e838D0593BCb2BC7`                | `aave.eth`          | `https://api.thegraph.com/subgraphs/name/aave/governance-v2`          | On-chain `ProposalCreated` / `ProposalExecuted` events via subgraph + Snapshot REST API for off-chain temperature checks (`hub.snapshot.org/api`) |
+| **Compound V3** | Ethereum | `GovernorBravoDelegator` `0xc0Da02939E1441F497fd74F78cE7Decb17B66529`              | `comp-vote.eth`     | `https://api.thegraph.com/subgraphs/name/arr00/compound-governance-2` | Same shape; `GovernorBravo` event ABI                                                                                                             |
+| **Spark**       | Ethereum | `MakerDAO`-style ChiefBoot delegation `0x0a3f6849f78076aefaDf113F5BED87720274dDC0` | `spark.eth`         | `https://api.thegraph.com/subgraphs/name/makerdao/governance`         | Spark proposals execute through MakerDAO's chief; capture via MakerDAO subgraph + filter for Spark-asset-list proposals                           |
+| **Lido**        | Ethereum | `AragonVoting` `0x2e59A20f205bB85a89C53f1936454680651E618e`                        | `lido-snapshot.eth` | `https://api.thegraph.com/subgraphs/name/lidofinance/lido`            | Aragon-style voting events; LDO-token weighted; Snapshot dominates pre-execution signalling                                                       |
 
 **Subgraph schema** for each: `id`, `proposer`, `createdAt`, `votingStartTime`, `votingEndTime`, `executedAt`
-(nullable), `status`, `payload_targets[]`, `payload_calldatas[]`. Adapter parses into UAC
-`GovernanceProposal` schema (Phase 1C). Capture cadence: 5-minute poll while voting active; 1-hour poll
-when no active proposals.
+(nullable), `status`, `payload_targets[]`, `payload_calldatas[]`. Adapter parses into UAC `GovernanceProposal` schema
+(Phase 1C). Capture cadence: 5-minute poll while voting active; 1-hour poll when no active proposals.
 
 ### Tenderly fork simulator detail (Phase 4B operator-runnable)
 
@@ -836,9 +829,10 @@ def simulate_proposal_execution(
 ```
 
 `read_asset_params(fork_id, asset)` calls protocol-specific getters: Aave V3 = `Pool.getReserveData(asset)`
-+ `Pool.getConfiguration(asset)` + `AaveOracle.getAssetPrice(asset)`; Compound V3 = `Comet.getAssetInfo()`
-+ `Comet.baseTrackingSupplyIndex`; Spark = `SparkPool.getReserveData(asset)`. Tenderly fork budget
-constraint: ~10 sims/day per `defi_simulation_realism` risk register row.
+
+- `Pool.getConfiguration(asset)` + `AaveOracle.getAssetPrice(asset)`; Compound V3 = `Comet.getAssetInfo()`
+- `Comet.baseTrackingSupplyIndex`; Spark = `SparkPool.getReserveData(asset)`. Tenderly fork budget constraint: ~10
+  sims/day per `defi_simulation_realism` risk register row.
 
 ### CLI signature (Phase 4C operator-runnable)
 
@@ -863,9 +857,9 @@ defi-simulate-proposal \
 ```
 
 CLI lives in `execution-service/execution_service/cli/simulate_proposal.py` (NEW Phase 4C); wired into
-`execution-service`'s service CLI per `codex/06-coding-standards/cli-convention.md` (`--operation simulate-proposal
---mode batch --asset-group defi`). Used by `risk_simulations_limits_alerting_2026_05_10.md` sibling for
-governance-axis scenario coverage.
+`execution-service`'s service CLI per `codex/06-coding-standards/cli-convention.md`
+(`--operation simulate-proposal --mode batch --asset-group defi`). Used by
+`risk_simulations_limits_alerting_2026_05_10.md` sibling for governance-axis scenario coverage.
 
 ### Backfill historical proposals (Phase 4D operator-runnable)
 
@@ -894,10 +888,10 @@ def backfill_governance_proposals(
         cursor = page.cursor
 ```
 
-VM launch: `deployment-service/scripts/vm/launch-governance-backfill-vm.sh aave_v3` (NEW; needs watchdog dict
-entry `governance-backfill-` + tarball refresh per CLAUDE.md VM Naming Convention HARD RULE). Expected
-output: ~500-1500 proposals/protocol/year × 4 protocols × 2 years = ~4k-12k rows. Per-VM shard isolation
-mandatory (`VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`).
+VM launch: `deployment-service/scripts/vm/launch-governance-backfill-vm.sh aave_v3` (NEW; needs watchdog dict entry
+`governance-backfill-` + tarball refresh per CLAUDE.md VM Naming Convention HARD RULE). Expected output: ~500-1500
+proposals/protocol/year × 4 protocols × 2 years = ~4k-12k rows. Per-VM shard isolation mandatory (`VM_NAME` +
+`MANIFEST_PER_VM_SHARDS=true`).
 
 ## Staking + restaking yield-stream simulators
 
@@ -906,22 +900,22 @@ mandatory (`VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`).
 Per-chain stochastic model:
 
 - **Ethereum beacon**: per-epoch reward distribution = consensus reward + execution layer (block-builder tip).
-  Historical 6+ months from `staking_yields` data_type. Forward distribution = 5-day rolling mean ± 2 stddev band
-  per epoch + churn-adjusted (validator entry/exit queue length feeds attestation efficiency).
+  Historical 6+ months from `staking_yields` data_type. Forward distribution = 5-day rolling mean ± 2 stddev band per
+  epoch + churn-adjusted (validator entry/exit queue length feeds attestation efficiency).
 - **Solana validator**: per-validator-epoch reward = base inflation + transaction fees + MEV (validator-tip share).
   Historical from `staking_yields` data_type. Forward distribution similar.
 
 ### Restaking AVS (Phase 5B)
 
-Per-AVS reward variability layered on top of native staking base. EigenLayer + Symbiotic + Karak + Jito-restaking
-AVSes from Phase 1A captures (`restaking_rewards` data_type). Per-LRT forward distribution: composite of native +
-AVS rewards weighted by operator allocation share.
+Per-AVS reward variability layered on top of native staking base. EigenLayer + Symbiotic + Karak + Jito-restaking AVSes
+from Phase 1A captures (`restaking_rewards` data_type). Per-LRT forward distribution: composite of native + AVS rewards
+weighted by operator allocation share.
 
 ### LRT protocol-fee (Phase 5C)
 
-Discrete-event model — Ether.fi / Renzo / KelpDAO / Puffer fees historically change ~quarterly via governance.
-Capture `governance_proposals` for fee-change events; forward fee assumption = most-recent-quarter fee + ±1 stddev
-band per protocol.
+Discrete-event model — Ether.fi / Renzo / KelpDAO / Puffer fees historically change ~quarterly via governance. Capture
+`governance_proposals` for fee-change events; forward fee assumption = most-recent-quarter fee + ±1 stddev band per
+protocol.
 
 ### Seasonal-points (Phase 5D)
 
@@ -947,23 +941,23 @@ Used by `carry_staked_basis` PnL projection + risk simulations.
 
 ### Per-protocol capture detail (Day-1 slot 6 design ship 2026-05-11; operator-runnable for Harsh slot 4)
 
-Native staking + restaking yield streams — per-protocol data sources for `staking_yields` /
-`restaking_rewards` / `lrt_protocol_fee_history` data_types under
+Native staking + restaking yield streams — per-protocol data sources for `staking_yields` / `restaking_rewards` /
+`lrt_protocol_fee_history` data_types under
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/`:
 
-| Protocol / source | Data_type | Endpoint / SDK | Per-period grain | Capture cadence |
-|---|---|---|---|---|
-| **Ethereum beacon** | `staking_yields` | Lighthouse / Prysm REST `https://beacon-mainnet.{provider}.com/eth/v1/validator/duties/attester/{epoch}` + `/beacon/rewards/blocks/{block_root}` | Per-epoch (32 slots, ~6.4 min) | Every epoch via WS subscription |
-| **Ethereum execution layer** | `staking_yields` (execution_rewards subfield) | `eth_getBlockByNumber` + decode block.baseFeePerGas + block.transactions.priorityFee | Per-block | Every 12-second slot via WS |
-| **Solana validator** | `staking_yields` | Solana RPC `getInflationReward` + Validator Info program | Per-epoch (432k slots, ~2-3 days) | Once per epoch (post-finalization) |
-| **EigenLayer AVS rewards** | `restaking_rewards` | Subgraph `https://api.thegraph.com/subgraphs/name/eigen-labs/eigenlayer-rewards-mainnet` + `RewardsCoordinator` contract `0x7750d328b314EfFa365A0402CcfD489B80B0adda` | Per-`rewardsSubmitted` event | 5-minute poll |
-| **Symbiotic** | `restaking_rewards` | Subgraph `https://api.studio.thegraph.com/query/symbiotic/symbiotic-mainnet` | Per-`RewardClaimed` event | 5-minute poll |
-| **Karak** | `restaking_rewards` | Subgraph `https://api.thegraph.com/subgraphs/name/karak-network/karak-mainnet` | Per-reward-distribution event | 5-minute poll |
-| **Jito (Solana restaking)** | `restaking_rewards` | Jito API `https://kobe.mainnet.jito.network/api/v1/validators` + on-chain `jitoSOL` stake pool | Per-epoch | Once per epoch |
-| **Ether.fi LRT fee** | `lrt_protocol_fee_history` | Etherfi `LiquidityPool` `0x308861A430be4cce5502d0A12724771Fc6DaF216` `setProtocolFee` event | Per-governance-change | Subgraph poll on governance state |
-| **Renzo LRT fee** | `lrt_protocol_fee_history` | Renzo `RestakeManager` `0x74a09653A083691711cF8215a6ab074BB4e99ef5` fee getter | Per-governance-change | Subgraph poll on governance state |
-| **KelpDAO LRT fee** | `lrt_protocol_fee_history` | KelpDAO `LRTConfig` `0x947Cb49334e6571ccBFEF1f1f1178d8469D65ec7` | Per-governance-change | Subgraph poll on governance state |
-| **Puffer LRT fee** | `lrt_protocol_fee_history` | Puffer `PufferVaultV2` `0xD9A442856C234a39a81a089C06451EBAa4306a72` | Per-governance-change | Subgraph poll on governance state |
+| Protocol / source            | Data_type                                     | Endpoint / SDK                                                                                                                                                        | Per-period grain                  | Capture cadence                    |
+| ---------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- |
+| **Ethereum beacon**          | `staking_yields`                              | Lighthouse / Prysm REST `https://beacon-mainnet.{provider}.com/eth/v1/validator/duties/attester/{epoch}` + `/beacon/rewards/blocks/{block_root}`                      | Per-epoch (32 slots, ~6.4 min)    | Every epoch via WS subscription    |
+| **Ethereum execution layer** | `staking_yields` (execution_rewards subfield) | `eth_getBlockByNumber` + decode block.baseFeePerGas + block.transactions.priorityFee                                                                                  | Per-block                         | Every 12-second slot via WS        |
+| **Solana validator**         | `staking_yields`                              | Solana RPC `getInflationReward` + Validator Info program                                                                                                              | Per-epoch (432k slots, ~2-3 days) | Once per epoch (post-finalization) |
+| **EigenLayer AVS rewards**   | `restaking_rewards`                           | Subgraph `https://api.thegraph.com/subgraphs/name/eigen-labs/eigenlayer-rewards-mainnet` + `RewardsCoordinator` contract `0x7750d328b314EfFa365A0402CcfD489B80B0adda` | Per-`rewardsSubmitted` event      | 5-minute poll                      |
+| **Symbiotic**                | `restaking_rewards`                           | Subgraph `https://api.studio.thegraph.com/query/symbiotic/symbiotic-mainnet`                                                                                          | Per-`RewardClaimed` event         | 5-minute poll                      |
+| **Karak**                    | `restaking_rewards`                           | Subgraph `https://api.thegraph.com/subgraphs/name/karak-network/karak-mainnet`                                                                                        | Per-reward-distribution event     | 5-minute poll                      |
+| **Jito (Solana restaking)**  | `restaking_rewards`                           | Jito API `https://kobe.mainnet.jito.network/api/v1/validators` + on-chain `jitoSOL` stake pool                                                                        | Per-epoch                         | Once per epoch                     |
+| **Ether.fi LRT fee**         | `lrt_protocol_fee_history`                    | Etherfi `LiquidityPool` `0x308861A430be4cce5502d0A12724771Fc6DaF216` `setProtocolFee` event                                                                           | Per-governance-change             | Subgraph poll on governance state  |
+| **Renzo LRT fee**            | `lrt_protocol_fee_history`                    | Renzo `RestakeManager` `0x74a09653A083691711cF8215a6ab074BB4e99ef5` fee getter                                                                                        | Per-governance-change             | Subgraph poll on governance state  |
+| **KelpDAO LRT fee**          | `lrt_protocol_fee_history`                    | KelpDAO `LRTConfig` `0x947Cb49334e6571ccBFEF1f1f1178d8469D65ec7`                                                                                                      | Per-governance-change             | Subgraph poll on governance state  |
+| **Puffer LRT fee**           | `lrt_protocol_fee_history`                    | Puffer `PufferVaultV2` `0xD9A442856C234a39a81a089C06451EBAa4306a72`                                                                                                   | Per-governance-change             | Subgraph poll on governance state  |
 
 **Native staking stochastic model** (`StakingYieldSimulator.calibrate_and_sample(chain, horizon_epochs)`):
 
@@ -994,25 +988,27 @@ def sample_forward_distribution(
     )
 ```
 
-**Restaking AVS model** (`RestakingAVSModel.sample(protocol, lst, horizon)`): per-AVS reward variability is
-generally higher than native staking (smaller AVS operator set, more concentrated reward distribution).
-Model as **base + AVS premium** where base = native staking yield distribution + AVS premium ~
-`LogNormal(μ_avs, σ_avs)` calibrated from `restaking_rewards` data_type. Per-LRT forward yield = base +
-weighted-sum-of-AVS-premia where weights = LRT's operator allocation shares.
+**Restaking AVS model** (`RestakingAVSModel.sample(protocol, lst, horizon)`): per-AVS reward variability is generally
+higher than native staking (smaller AVS operator set, more concentrated reward distribution). Model as **base + AVS
+premium** where base = native staking yield distribution + AVS premium ~ `LogNormal(μ_avs, σ_avs)` calibrated from
+`restaking_rewards` data_type. Per-LRT forward yield = base + weighted-sum-of-AVS-premia where weights = LRT's operator
+allocation shares.
 
-**LRT protocol-fee discrete-event model** (`LRTProtocolFeeModel.sample(protocol, horizon)`): fees change
-~quarterly via governance. State = `most_recent_quarter_fee_bps + std_band(historical_changes)`. Forward
-sample = `current_fee_bps + N(0, σ_quarterly)` capped at `[0, max_observed_fee_bps × 1.5]`.
+**LRT protocol-fee discrete-event model** (`LRTProtocolFeeModel.sample(protocol, horizon)`): fees change ~quarterly via
+governance. State = `most_recent_quarter_fee_bps + std_band(historical_changes)`. Forward sample =
+`current_fee_bps + N(0, σ_quarterly)` capped at `[0, max_observed_fee_bps × 1.5]`.
 
 **Seasonal-points discount factor** (operator-tuned per-protocol):
-- Ether.fi loyalty points → ETHFI airdrop (2024-03): redemption ratio ~0.001 ETHFI / point at launch; 60% discount applied.
+
+- Ether.fi loyalty points → ETHFI airdrop (2024-03): redemption ratio ~0.001 ETHFI / point at launch; 60% discount
+  applied.
 - Renzo ezPoints → REZ airdrop (2024-04): similar ~0.0008 REZ / point; 50% discount applied.
 - Puffer carrot points → PUFFER airdrop (2024-10): ~0.0006 PUFFER / point; 50% discount applied.
 - New programs (KelpDAO Kelp Miles, Karak XP) — operator-tunable; default 70% discount on first calibration.
 
-Discount factor accounts for: token-launch volatility, vesting cliffs, illiquidity-at-redemption, market
-sell-pressure at airdrop. Operator updates the per-protocol ratio quarterly via
-`config_reloaders.py` reload of `defi_seasonal_points_calibration.yaml`.
+Discount factor accounts for: token-launch volatility, vesting cliffs, illiquidity-at-redemption, market sell-pressure
+at airdrop. Operator updates the per-protocol ratio quarterly via `config_reloaders.py` reload of
+`defi_seasonal_points_calibration.yaml`.
 
 **Composite simulator integration** (Phase 5E):
 
@@ -1036,15 +1032,15 @@ def staking_yield_stream_distribution(
     return convolve_distributions([base, avs_premium, -fee, points])
 ```
 
-Used by `carry_staked_basis` archetype config (per-LST forward yield) + `leveraged_funding_arb` (debt cost
-vs LST yield differential) + `risk_simulations_limits_alerting` sibling.
+Used by `carry_staked_basis` archetype config (per-LST forward yield) + `leveraged_funding_arb` (debt cost vs LST yield
+differential) + `risk_simulations_limits_alerting` sibling.
 
 ## Slashing tail-risk Monte Carlo
 
 Per-chain calibration (Phase 7A): from `slashing_events` data_type captures.
 
-- **Ethereum beacon**: per-validator-epoch slashing probability ≈ 0.01-0.05 bp historical baseline; spikes during
-  fork events / client bugs. Heavy-tailed distribution.
+- **Ethereum beacon**: per-validator-epoch slashing probability ≈ 0.01-0.05 bp historical baseline; spikes during fork
+  events / client bugs. Heavy-tailed distribution.
 - **Solana validator**: per-validator-day slashing probability higher base rate (~0.5-1 bp), distinct shape (per-
   validator-event vs per-validator-epoch).
 
@@ -1062,17 +1058,17 @@ historical slashing rate spikes; back off when normal.
 Per-chain `slashing_events` data_type source — Phase 7A capture for MTDS adapter
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/slashing_events.py`:
 
-| Chain | Source / endpoint | Per-event grain | Historical depth | Capture cadence |
-|---|---|---|---|---|
-| **Ethereum beacon** | Lighthouse/Prysm REST `/eth/v1/beacon/pool/attester_slashings` + `/eth/v1/beacon/pool/proposer_slashings` + block-body parsing for slashing operations | Per-slot (every 12s) | Genesis 2020-12-01 → now (~5.5 years; ~1.5M slashings catalogued via beaconcha.in cross-ref) | WS subscription to head + epoch-finalization replay |
-| **Ethereum beacon** (historical) | beaconcha.in REST `https://beaconcha.in/api/v1/slashings` (rate-limited; 10 req/sec free tier) | Per-slashing event | Same | One-shot historical backfill via paginated API; ongoing capture via Lighthouse WS |
-| **Solana validator** | Solana RPC `getSlashingHistory` (Anza Solana 1.18+) + Validator Info program account scan | Per-validator-event | Genesis 2020-03 → now; per-epoch grain (~2-3 days) | Once per epoch (post-finalization); replay from epoch 0 for historical |
-| **Solana validator (cross-check)** | Solana Beach API `https://api.solanabeach.io/v1/validators/slashing` (rate-limited; needs API key) | Per-event | Same | Cross-validation against on-chain getSlashingHistory |
+| Chain                              | Source / endpoint                                                                                                                                      | Per-event grain      | Historical depth                                                                             | Capture cadence                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Ethereum beacon**                | Lighthouse/Prysm REST `/eth/v1/beacon/pool/attester_slashings` + `/eth/v1/beacon/pool/proposer_slashings` + block-body parsing for slashing operations | Per-slot (every 12s) | Genesis 2020-12-01 → now (~5.5 years; ~1.5M slashings catalogued via beaconcha.in cross-ref) | WS subscription to head + epoch-finalization replay                               |
+| **Ethereum beacon** (historical)   | beaconcha.in REST `https://beaconcha.in/api/v1/slashings` (rate-limited; 10 req/sec free tier)                                                         | Per-slashing event   | Same                                                                                         | One-shot historical backfill via paginated API; ongoing capture via Lighthouse WS |
+| **Solana validator**               | Solana RPC `getSlashingHistory` (Anza Solana 1.18+) + Validator Info program account scan                                                              | Per-validator-event  | Genesis 2020-03 → now; per-epoch grain (~2-3 days)                                           | Once per epoch (post-finalization); replay from epoch 0 for historical            |
+| **Solana validator (cross-check)** | Solana Beach API `https://api.solanabeach.io/v1/validators/slashing` (rate-limited; needs API key)                                                     | Per-event            | Same                                                                                         | Cross-validation against on-chain getSlashingHistory                              |
 
-UAC `SlashingEvent` schema (Phase 1E) fields: `chain`, `validator_id`, `slashed_at_epoch`, `slashed_at_slot`
-(ETH-only), `slashed_amount_native`, `slashing_reason` (Ethereum: `proposer_slashing` / `attester_slashing` /
-`surround_vote` / `double_propose`; Solana: `downtime` / `double_sign` / `network_partition`), `slasher_validator_id`
-(ETH-only — who reported), `evidence_block_hash`.
+UAC `SlashingEvent` schema (Phase 1E) fields: `chain`, `validator_id`, `slashed_at_epoch`, `slashed_at_slot` (ETH-only),
+`slashed_amount_native`, `slashing_reason` (Ethereum: `proposer_slashing` / `attester_slashing` / `surround_vote` /
+`double_propose`; Solana: `downtime` / `double_sign` / `network_partition`), `slasher_validator_id` (ETH-only — who
+reported), `evidence_block_hash`.
 
 ### Phase 7B MC simulator architecture (operator-runnable)
 
@@ -1154,32 +1150,32 @@ def _slashing_risk_gate(
     return Decimal("1.0")  # normal-rate operation
 ```
 
-Validation harness (Phase 7C tests): compare 1-year archetype backtest with vs without slashing risk gate;
-document realized P&L delta + max-drawdown delta + tail-event survival rate.
+Validation harness (Phase 7C tests): compare 1-year archetype backtest with vs without slashing risk gate; document
+realized P&L delta + max-drawdown delta + tail-event survival rate.
 
 ## Hedge-ratio dynamic adjustment (Phase 6)
 
-`carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts
-with peg behavior + accrual.
+`carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts with
+peg behavior + accrual.
 
 ### Phase 6A audit ✅ DONE 2026-05-12 (slot 6 Day-1 finding)
 
-**Hedge ratio is STATIC.** Original Phase 6A todo pointer (`pairs_fixed.py` + `default_basis_trade.yaml`) was
-stale — `pairs_fixed.py` is the stat_arb_pairs strategy, not the `carry_staked_basis` archetype.
+**Hedge ratio is STATIC.** Original Phase 6A todo pointer (`pairs_fixed.py` + `default_basis_trade.yaml`) was stale —
+`pairs_fixed.py` is the stat_arb_pairs strategy, not the `carry_staked_basis` archetype.
 
 **Real code path**: `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:248-318`
 (function `_build_legs()`).
 
 Line 264:
+
 ```python
 perp_short_units = eth_qty * (Decimal("1") - structure.perp_margin_haircut)
 ```
 
-The hedge is sized 1:1 against LST principal (delta-neutral) clamped by venue margin haircut. There is **no
-per-tick / per-bar peg-drift adjustment** anywhere in the carry-staked-basis engine. `default_basis_trade.yaml`
-has a `hedge_ratio_window: 60` parameter — but that's consumed by `stat_arb_pairs` strategy
-(rolling OLS hedge ratio for fixed pairs), NOT by `carry_staked_basis`. The carry archetype has no
-hedge_ratio dynamics in either code or config.
+The hedge is sized 1:1 against LST principal (delta-neutral) clamped by venue margin haircut. There is **no per-tick /
+per-bar peg-drift adjustment** anywhere in the carry-staked-basis engine. `default_basis_trade.yaml` has a
+`hedge_ratio_window: 60` parameter — but that's consumed by `stat_arb_pairs` strategy (rolling OLS hedge ratio for fixed
+pairs), NOT by `carry_staked_basis`. The carry archetype has no hedge_ratio dynamics in either code or config.
 
 ### Phase 6B implementation spec (operator-runnable for Harsh slot 4)
 
@@ -1220,36 +1216,36 @@ hedge_multiplier, _ = _compute_dynamic_hedge_ratio(
 perp_short_units = eth_qty * hedge_multiplier * (Decimal("1") - structure.perp_margin_haircut)
 ```
 
-Plus a per-tick handler in `CarryStakedBasisEngine.on_tick()` (line 326) that reads current LST rate,
-calls `_compute_dynamic_hedge_ratio`, and if `should_rebalance` emits a rebalance leg adjusting
-`perp_short_units` to the new size. Rebalance leg is an `InstructionActionV2.TRADE` on the perp venue
-with `params={"role": "hedge_rebalance"}`.
+Plus a per-tick handler in `CarryStakedBasisEngine.on_tick()` (line 326) that reads current LST rate, calls
+`_compute_dynamic_hedge_ratio`, and if `should_rebalance` emits a rebalance leg adjusting `perp_short_units` to the new
+size. Rebalance leg is an `InstructionActionV2.TRADE` on the perp venue with `params={"role": "hedge_rebalance"}`.
 
 ### Hysteresis band calibration
 
-Default `peg_drift_threshold_bps = 25` based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps
-(~3σ rebalance trigger). Per-archetype config overridable in `default_basis_trade.yaml`:
+Default `peg_drift_threshold_bps = 25` based on observed historical jitoSOL/SOL daily-stddev ≈ 8 bps (~3σ rebalance
+trigger). Per-archetype config overridable in `default_basis_trade.yaml`:
 
 ```yaml
 hedge_ratio:
-  dynamic: true                       # NEW flag — Phase 6B enables
-  peg_drift_threshold_bps: 25         # rebalance trigger
+  dynamic: true # NEW flag — Phase 6B enables
+  peg_drift_threshold_bps: 25 # rebalance trigger
   min_rebalance_interval_seconds: 300 # rate-limit (5 min) — prevents thrash on volatile peg
-  max_rebalance_per_day: 24           # circuit-breaker — Phase 6 risk register
+  max_rebalance_per_day: 24 # circuit-breaker — Phase 6 risk register
 ```
 
 LST exchange rate stream source (per MTDS `lst_rates` data_type catalogue):
-- **jitoSOL/SOL**: Jito stake pool on-chain getter `getStakeAccountRentExemption` + Solana RPC
-  `getMultipleAccounts` for stake delegations.
+
+- **jitoSOL/SOL**: Jito stake pool on-chain getter `getStakeAccountRentExemption` + Solana RPC `getMultipleAccounts` for
+  stake delegations.
 - **mSOL/SOL**: Marinade `marinadeProgramAccountInfo` + on-chain stake.
 - **bSOL/SOL**: BlazeStake stake pool getter.
 - **rETH/ETH**: RocketPool `rETH.getExchangeRate()` view function.
-- **stETH/ETH**: Lido `stEthPerToken()` getter (always ~1.0 for stETH — rebasing token; use
-  wstETH/ETH for the actual drift signal: `wstETH.stEthPerToken()`).
+- **stETH/ETH**: Lido `stEthPerToken()` getter (always ~1.0 for stETH — rebasing token; use wstETH/ETH for the actual
+  drift signal: `wstETH.stEthPerToken()`).
 - **weETH/ETH**: Ether.fi `weETH.getRate()`.
 
-Capture cadence: per-block on EVM chains (Ether.fi / RocketPool / Lido), per-epoch on Solana (Jito /
-Marinade / BlazeStake). Backtest replay reads historical rates from MTDS at simulation block.
+Capture cadence: per-block on EVM chains (Ether.fi / RocketPool / Lido), per-epoch on Solana (Jito / Marinade /
+BlazeStake). Backtest replay reads historical rates from MTDS at simulation block.
 
 ### Phase 6C validation harness
 
@@ -1305,14 +1301,14 @@ Per `defi_simulation_realism` Phase 8 (backtest fidelity validation):
 - **Phase 8A — Carry archetype 1-year replay**: simulated P&L vs old (constant-product + zero-rate-impact + static-
   hedge) replay. Document delta + reduced bias.
 - **Phase 8B — Leveraged-funding-arb 1-year replay**: ditto.
-- **Phase 8C — Tenderly fork live-vs-simulated reconciliation** for 1 day of paper-trade. Per-tick |delta| < 10bps
-  for ≥ 95% of fills.
+- **Phase 8C — Tenderly fork live-vs-simulated reconciliation** for 1 day of paper-trade. Per-tick |delta| < 10bps for ≥
+  95% of fills.
 - **Phase 8D — Operator sign-off** that backtest fidelity acceptable for May-23 cutover.
 
 ### Phase 8 validation framework (Day-1 slot 6 design ship 2026-05-12; operator-runnable for Harsh slot 4)
 
-Validation harness lives at `execution-service/tests/integration/backtest_fidelity/` (NEW Phase 8). Three
-parallel scripts produce JSON reports the operator reviews for Phase 8D sign-off:
+Validation harness lives at `execution-service/tests/integration/backtest_fidelity/` (NEW Phase 8). Three parallel
+scripts produce JSON reports the operator reviews for Phase 8D sign-off:
 
 ```
 backtest_fidelity/
@@ -1355,16 +1351,15 @@ def run_carry_replay(
     )
 ```
 
-Expected output for a 1-year carry replay: simulated P&L delta in the range 50-300 bps (new engine has higher
-fidelity → less optimistic estimates due to rate-impact + dynamic-hedge + per-shape pool dispatch). Negative
-delta means new engine reports LOWER P&L than old — this is the EXPECTED direction (old engine over-estimated
-because zero-impact assumptions favor the strategy). **A POSITIVE delta is a red flag** — investigate matcher
-bugs.
+Expected output for a 1-year carry replay: simulated P&L delta in the range 50-300 bps (new engine has higher fidelity →
+less optimistic estimates due to rate-impact + dynamic-hedge + per-shape pool dispatch). Negative delta means new engine
+reports LOWER P&L than old — this is the EXPECTED direction (old engine over-estimated because zero-impact assumptions
+favor the strategy). **A POSITIVE delta is a red flag** — investigate matcher bugs.
 
-**Phase 8B — Leveraged-funding-arb 1-year replay** (`run_leveraged_funding_arb_replay.py`): same shape as 8A
-but with `archetype="leveraged_funding_arb"`. Per-leg attribution differs (funding-arb has perp + lending legs
-vs carry-staked-basis's stake + perp legs). Expected delta range 30-200 bps (smaller than carry because
-funding-arb is less LST-rate-impact-sensitive).
+**Phase 8B — Leveraged-funding-arb 1-year replay** (`run_leveraged_funding_arb_replay.py`): same shape as 8A but with
+`archetype="leveraged_funding_arb"`. Per-leg attribution differs (funding-arb has perp + lending legs vs
+carry-staked-basis's stake + perp legs). Expected delta range 30-200 bps (smaller than carry because funding-arb is less
+LST-rate-impact-sensitive).
 
 **Phase 8C — Tenderly fork live-vs-simulated reconciliation** (`run_tenderly_live_reconciliation.py`):
 
@@ -1404,8 +1399,8 @@ def run_tenderly_reconciliation(
     )
 ```
 
-**Acceptance gate**: `within_tolerance_pct >= 95%` (per Phase 8C criterion). Failure mode flags per-pool-shape
-breakdown so operator can identify which matcher (V3 / Curve / Solidly-fork / etc.) is drifting.
+**Acceptance gate**: `within_tolerance_pct >= 95%` (per Phase 8C criterion). Failure mode flags per-pool-shape breakdown
+so operator can identify which matcher (V3 / Curve / Solidly-fork / etc.) is drifting.
 
 **Phase 8D — Operator sign-off report** (`compose_sign_off_report.py`):
 
@@ -1432,34 +1427,34 @@ class SignOffReport:
         }
 ```
 
-`SignOffReport` rendered by deployment-ui as a Phase-8 dashboard tile (NEW Phase 8D UI work — slot-8 owns
-DART surfaces per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT button + types
-notes; status persists to `pnl-attribution-service` as a one-off audit row keyed by `plan_version`.
+`SignOffReport` rendered by deployment-ui as a Phase-8 dashboard tile (NEW Phase 8D UI work — slot-8 owns DART surfaces
+per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT button + types notes; status persists to
+`pnl-attribution-service` as a one-off audit row keyed by `plan_version`.
 
 ### Phase 8 cross-plan dependencies
 
 - **Phase 8A/B** requires `MATCHING_ENGINE_NEW` config — wired AFTER Harsh slot 4 ships Phase 2-7 implementations.
 - **Phase 8C** requires Tenderly fork API + paper-trade log — Tenderly already wired
-  ([`tenderly-execution-provider.md`](tenderly-execution-provider.md)); paper-trade log is master plan Group F
-  item 17.
-- **Phase 8D operator sign-off** is a Group F item 17+18 entry in `master_to_live_defi_2026_05_23.md` —
-  refresh routed to slot 1 per Phase 9E annotation in `defi_simulation_realism_2026_05_10.md`.
+  ([`tenderly-execution-provider.md`](tenderly-execution-provider.md)); paper-trade log is master plan Group F item 17.
+- **Phase 8D operator sign-off** is a Group F item 17+18 entry in `master_to_live_defi_2026_05_23.md` — refresh routed
+  to slot 1 per Phase 9E annotation in `defi_simulation_realism_2026_05_10.md`.
 
 ## Cross-references
 
 - Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md) — owns
   implementation.
-- Plan: [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+- Plan:
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 — ships data_types this doc consumes.
 - Codex: [`defi-data-type-taxonomy.md`](../02-data/defi-data-type-taxonomy.md) — input data shapes.
 - Codex: [`concentrated-liquidity.md`](concentrated-liquidity.md) — V3/V4 + Solana CLMM addendum (Phase 9B update).
 - Codex: [`batch-live-architecture.md`](batch-live-architecture.md) — live=batch principle (Phase 9D update).
-- Codex: [`tenderly-execution-provider.md`](tenderly-execution-provider.md) — Tenderly provider used by governance
-  sim.
+- Codex: [`tenderly-execution-provider.md`](tenderly-execution-provider.md) — Tenderly provider used by governance sim.
 - Codex:
   [`../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`](../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md)
   — restaking yield decomposition (Phase 9C update).
-- Code: [`execution-service/execution_service/matching_engine/`](../../../execution-service/execution_service/matching_engine/)
+- Code:
+  [`execution-service/execution_service/matching_engine/`](../../../execution-service/execution_service/matching_engine/)
   — implementation home.
 - UAC: `internal/domain/defi/` — schemas (`PoolShape`, `LendingMarketState`, `GovernanceProposal`,
   `StakingYieldDecomposition`, `SlashingEvent`, `HedgeRatioSnapshot`).
@@ -1468,24 +1463,23 @@ notes; status persists to `pnl-attribution-service` as a one-off audit row keyed
 
 When adding a new pool shape:
 
-1. Add to UAC `PoolShape` enum (in `unified-api-contracts/unified_api_contracts/internal/domain/defi/` —
-   currently TO BE CREATED per Phase 1A; member list locked in plan body Phase 1A todo).
+1. Add to UAC `PoolShape` enum (in `unified-api-contracts/unified_api_contracts/internal/domain/defi/` — currently TO BE
+   CREATED per Phase 1A; member list locked in plan body Phase 1A todo).
 2. Add model implementation to `matching_engine/amm.py` or `hooks.py`.
 3. Add validation harness (≥ N historical Tenderly-fork swaps within bps).
-4. Add row to "Pool shape taxonomy + slippage models" section of this doc + new row to "Per-shape sample
-   pools + golden fixture seeds" table.
-5. Update routing in `engine.py:_amm_match_impl` to dispatch by `pool.pool_shape` (currently hardcoded to V2
-   per `engine.py:471`).
+4. Add row to "Pool shape taxonomy + slippage models" section of this doc + new row to "Per-shape sample pools + golden
+   fixture seeds" table.
+5. Update routing in `engine.py:_amm_match_impl` to dispatch by `pool.pool_shape` (currently hardcoded to V2 per
+   `engine.py:471`).
 
 When adding a new ve(3,3) Solidly fork (e.g., Equalizer / Thena / Ramses):
 
-1. **Prefer `SOLIDLY_FORK` shared matcher** with `(chain_id, factory_address)` discriminator over a new
-   enum member. The cubic stable + xy=k volatile math is byte-for-byte identical across forks.
-2. If the fork has a **Slipstream / CL variant** (Velodrome Slipstream, Aerodrome Slipstream), that is a
-   SEPARATE matcher (V3-tick math) — either fold into `SOLIDLY_CL_FORK` shared matcher or add a parallel
-   enum member. Operator-decision in Phase 1A.
-3. Add per-fork golden fixture (≥ 1 stable + 1 volatile swap) to "Per-shape sample pools + golden fixture
-   seeds" table.
+1. **Prefer `SOLIDLY_FORK` shared matcher** with `(chain_id, factory_address)` discriminator over a new enum member. The
+   cubic stable + xy=k volatile math is byte-for-byte identical across forks.
+2. If the fork has a **Slipstream / CL variant** (Velodrome Slipstream, Aerodrome Slipstream), that is a SEPARATE
+   matcher (V3-tick math) — either fold into `SOLIDLY_CL_FORK` shared matcher or add a parallel enum member.
+   Operator-decision in Phase 1A.
+3. Add per-fork golden fixture (≥ 1 stable + 1 volatile swap) to "Per-shape sample pools + golden fixture seeds" table.
 
 When adding a new simulation primitive (governance / staking / slashing / etc.):
 

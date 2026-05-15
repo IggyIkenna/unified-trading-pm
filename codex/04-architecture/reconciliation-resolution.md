@@ -16,38 +16,38 @@ breaks from the UI, and book correcting trades when needed.
 
 ## Reconciliation contract — batch ↔ live (codified 2026-05-12 per slot 8 audit PB-17)
 
-> **Architecture-level contract** for what gets compared between batch and live runs, the comparison keys, the
-> per-stage deviation metrics, and the failure-routing policy. Sister doc to the UI-resolution workflow below.
+> **Architecture-level contract** for what gets compared between batch and live runs, the comparison keys, the per-stage
+> deviation metrics, and the failure-routing policy. Sister doc to the UI-resolution workflow below.
 
-Derived from the CLAUDE.md `Batch = Live: Unified Pipeline Architecture (CRITICAL)` invariant + master plan
-readiness item F-21. The contract is **per-archetype** (every strategy archetype runs through the same recon DAG
-with archetype-specific tolerance bands).
+Derived from the CLAUDE.md `Batch = Live: Unified Pipeline Architecture (CRITICAL)` invariant + master plan readiness
+item F-21. The contract is **per-archetype** (every strategy archetype runs through the same recon DAG with
+archetype-specific tolerance bands).
 
 ### Invariant — same code path, only fill source differs
 
 Batch + live use identical service interactions (strategy → execution → PBMS → pnl-attribution → risk-and-exposure).
-Recon does NOT exist to validate "two implementations of the same logic" — it exists because the **fill source
-differs** (matching-engine simulated fills vs real venue fills) and we need to decompose **execution alpha**
-(`live fills P&L − simulated fills P&L`) from **strategy alpha** (the alpha the strategy would capture under a
-perfect fill model). Per CLAUDE.md `Batch = Live`: *"execution alpha = live fills P&L − simulated fills P&L"*.
+Recon does NOT exist to validate "two implementations of the same logic" — it exists because the **fill source differs**
+(matching-engine simulated fills vs real venue fills) and we need to decompose **execution alpha**
+(`live fills P&L − simulated fills P&L`) from **strategy alpha** (the alpha the strategy would capture under a perfect
+fill model). Per CLAUDE.md `Batch = Live`: _"execution alpha = live fills P&L − simulated fills P&L"_.
 
 ### Inputs to the recon DAG
 
-| Input | Source | Role |
-|---|---|---|
-| Positions baseline | PBMS query API (see [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT") | Canonical position state for both sides |
-| Live fills | execution-service fills stream (real venue) | Numerator: live execution P&L |
-| Simulated fills | execution-service matching engine (5 matchers: L0 Sports TOB, L1 TradFi, L2 CeFi, AMM, ALPHA_ZERO) on the same input ticks | Denominator: simulator P&L |
-| Strategy emissions | strategy-service signals (Pub/Sub or replayed) | Strategy-alpha attribution |
-| Per-stage thresholds | `batch-live-reconciliation-service/.../models/deviation_thresholds.py` (`MLThresholds` / `StrategyThresholds` / `ExecutionThresholds` / `DataPipelineThresholds`) | Tolerance bands per pipeline stage |
+| Input                | Source                                                                                                                                                            | Role                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Positions baseline   | PBMS query API (see [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT")                                                                  | Canonical position state for both sides |
+| Live fills           | execution-service fills stream (real venue)                                                                                                                       | Numerator: live execution P&L           |
+| Simulated fills      | execution-service matching engine (5 matchers: L0 Sports TOB, L1 TradFi, L2 CeFi, AMM, ALPHA_ZERO) on the same input ticks                                        | Denominator: simulator P&L              |
+| Strategy emissions   | strategy-service signals (Pub/Sub or replayed)                                                                                                                    | Strategy-alpha attribution              |
+| Per-stage thresholds | `batch-live-reconciliation-service/.../models/deviation_thresholds.py` (`MLThresholds` / `StrategyThresholds` / `ExecutionThresholds` / `DataPipelineThresholds`) | Tolerance bands per pipeline stage      |
 
 ### Comparison keys
 
 Both sides emit rows partitioned by `pipeline_mode` (batch / paper / live) per
 [`pipeline-mode-partition.md`](pipeline-mode-partition.md). Matching is on:
 
-- **`(strategy_id, instrument, timestamp_bucket)`** — primary diff key (timestamp_bucket = bar granularity, e.g.
-  1m / 1h depending on the stage).
+- **`(strategy_id, instrument, timestamp_bucket)`** — primary diff key (timestamp_bucket = bar granularity, e.g. 1m / 1h
+  depending on the stage).
 - **`correlation_id`** — secondary lineage key for tracing a single signal through both pipelines.
 - **`client_order_id` / `client_id`** — order-lineage match for execution-recon (per slot 8 audit PB-3, current
   execution-audit lineage is order-keyed; long-term threads `client_id` through both projections so the diff is
@@ -58,23 +58,22 @@ Both sides emit rows partitioned by `pipeline_mode` (batch / paper / live) per
 Per slot 8 audit PB-6 (corrected from "5-stage" in stale SSOT-INDEX):
 
 1. **`stage0_config_pull`** — pulls the immutable config snapshot the recon will assert against.
-2. **`stage0_data_pipeline_recon`** — input-data parity (manifest row counts + parquet schema + sample reads
-   match between batch + live).
+2. **`stage0_data_pipeline_recon`** — input-data parity (manifest row counts + parquet schema + sample reads match
+   between batch + live).
 3. **`stage1_ml_recon`** — ML prediction parity (`MLThresholds` deviation bands per feature × prediction).
-4. **`stage2_strategy_recon`** — signal emission parity (`StrategyThresholds` band on signal magnitude +
-   direction).
-5. **`stage3_execution_recon`** — fill-level parity (`ExecutionThresholds` band on slippage / commission /
-   notional; this is where the `live − simulated` execution-alpha lives).
+4. **`stage2_strategy_recon`** — signal emission parity (`StrategyThresholds` band on signal magnitude + direction).
+5. **`stage3_execution_recon`** — fill-level parity (`ExecutionThresholds` band on slippage / commission / notional;
+   this is where the `live − simulated` execution-alpha lives).
 6. **`stage4_agent_analysis`** + **`stage5_results_writer`** — narrative + report write.
 
 ### Output shape — alpha decomposition
 
 The recon report decomposes total P&L diff into:
 
-- **Strategy alpha** — diff attributable to strategy-side divergence (signal not emitted, signal emitted with
-  wrong magnitude, etc.). Driven by stage 2.
-- **Execution alpha** — diff attributable to execution-side divergence (slippage, commission, latency, venue
-  liquidity miss vs matching-engine estimate). Driven by stage 3.
+- **Strategy alpha** — diff attributable to strategy-side divergence (signal not emitted, signal emitted with wrong
+  magnitude, etc.). Driven by stage 2.
+- **Execution alpha** — diff attributable to execution-side divergence (slippage, commission, latency, venue liquidity
+  miss vs matching-engine estimate). Driven by stage 3.
 - **Data-pipeline noise** — diff attributable to upstream input drift (input partition mismatch, schema drift,
   late-arriving rows). Driven by stage 0.
 - **ML noise** — diff attributable to prediction divergence. Driven by stage 1.
@@ -85,8 +84,8 @@ Sum of the four = total live-vs-batch P&L diff over the recon window.
 
 **Per-stage today** (per `models/deviation_thresholds.py`). **Per-archetype tolerance bands** (e.g. tighter for
 `carry_staked_basis` than for high-vol scalping archetypes) are a deferred extension — see
-[`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) § "Reconciliation" DEFERRED banner + master
-plan F-21 / sub-item `pvl-p21a` (3-way recon design, including per-pair + per-archetype bands).
+[`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) § "Reconciliation" DEFERRED banner + master plan
+F-21 / sub-item `pvl-p21a` (3-way recon design, including per-pair + per-archetype bands).
 
 ### Failure-routing policy (closed set)
 
@@ -98,33 +97,32 @@ plan F-21 / sub-item `pvl-p21a` (3-way recon design, including per-pair + per-ar
   - **`auto-demote-to-paper`** — strategy mode-flips from `LIVE_VENUE` to `SIMULATION` per
     [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md); operator must explicitly re-promote.
 
-Per-stage routing (which breach maps to which action) is part of the deferred per-archetype work — today the live
-DAG ships `alert` only, per `models/deviation_thresholds.py` per-stage threshold semantics.
+Per-stage routing (which breach maps to which action) is part of the deferred per-archetype work — today the live DAG
+ships `alert` only, per `models/deviation_thresholds.py` per-stage threshold semantics.
 
 ### Recon report bucket
 
 Recon reports land in the canonical recon bucket resolved via
-`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="recon", ..., env=...)`
-— per CLAUDE.md bucket-name SSOT (slot 8 audit PB-10 routes the in-tree migration of two surviving
-`# noqa: gs-uri` callsites to the batch-live-reconciliation-service maintainer).
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="recon", ..., env=...)` — per
+CLAUDE.md bucket-name SSOT (slot 8 audit PB-10 routes the in-tree migration of two surviving `# noqa: gs-uri` callsites
+to the batch-live-reconciliation-service maintainer).
 
 ### Open design questions (PRE_CUTOVER — operator gate)
 
-- **Per-archetype tolerance bands** — `carry_staked_basis` (steady carry) vs `leveraged_funding_arb` (higher
-  variance) want different `ExecutionThresholds`. Today the thresholds are stage-level only. Operator/Ikenna call
-  on whether per-archetype bands ship by May-23 or defer to `pvl-p21a`.
-- **Recon schedule** — T+1 nightly (today) vs intra-day rolling window for the cutover monitoring period. Today
-  declared T+1 in the `execution:` frontmatter above; a tightened cadence for the 7-day continuous-live window is
-  a deferred decision.
+- **Per-archetype tolerance bands** — `carry_staked_basis` (steady carry) vs `leveraged_funding_arb` (higher variance)
+  want different `ExecutionThresholds`. Today the thresholds are stage-level only. Operator/Ikenna call on whether
+  per-archetype bands ship by May-23 or defer to `pvl-p21a`.
+- **Recon schedule** — T+1 nightly (today) vs intra-day rolling window for the cutover monitoring period. Today declared
+  T+1 in the `execution:` frontmatter above; a tightened cadence for the 7-day continuous-live window is a deferred
+  decision.
 
 ### Composes with
 
-- [`batch-live-architecture.md`](batch-live-architecture.md) — defines the `batch = live` invariant that recon
-  enforces.
-- [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — describes the 4-mode seam this recon
-  validates (today batch ↔ live; deferred batch ↔ paper ↔ live 3-way per `pvl-p21a`).
-- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the canonical positions
-  baseline both sides read from.
+- [`batch-live-architecture.md`](batch-live-architecture.md) — defines the `batch = live` invariant that recon enforces.
+- [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — describes the 4-mode seam this recon validates
+  (today batch ↔ live; deferred batch ↔ paper ↔ live 3-way per `pvl-p21a`).
+- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the canonical positions baseline
+  both sides read from.
 
 ## Resolution Schema
 

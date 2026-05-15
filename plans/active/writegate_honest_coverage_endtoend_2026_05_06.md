@@ -3372,10 +3372,9 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       sr_memory). Adding 24 near-duplicate rows pads the seed dict. **Recommend** helper pattern:
       `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]` + auto-population loop at module load time, OR wildcard convention
       `("features-service (delta-one family)",
-      "ohlcv*\*")`.     Defer to Phase-2 expansion alongside the per-service `publish_with_policy()` wiring.
-      (uac@07b4992 2026-05-14: replaced orphaned `("features-service", ...)` keys with correct
-      `("features-delta-one-service", ...)` entries for all 21 FEATURE_GROUPS including NAN_FILL bucket;
-      catch-all fallback = STRICT_FAIL; explicit seeds now route correctly.)
+      "ohlcv*\*")`.     Defer to Phase-2 expansion alongside the per-service `publish_with_policy()`wiring.     (uac@07b4992 2026-05-14: replaced orphaned`("features-service",
+      ...)`keys with correct    `("features-delta-one-service", ...)` entries for all 21 FEATURE_GROUPS including
+      NAN_FILL bucket; catch-all fallback = STRICT_FAIL; explicit seeds now route correctly.)
 - [x] [features-service (cross-instrument family)] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
       `pairwise_correlation` entries do NOT appear as `feature_group` names in the live `CALCULATOR_REGISTRY`
       (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live names:
@@ -3392,9 +3391,9 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       Issue doc resolved: `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md`.
 - [x] [features-service (multi-timeframe family)] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
       consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
-      because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer.
-      (uac@466d93c + features-service@47865006 2026-05-14: both added to UAC seed dict +
-      `_SEEDED_FEATURE_GROUPS` frozenset; 2 tests in TestNewSeededGroupsStrictFail.)
+      because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer. (uac@466d93c +
+      features-service@47865006 2026-05-14: both added to UAC seed dict + `_SEEDED_FEATURE_GROUPS` frozenset; 2 tests in
+      TestNewSeededGroupsStrictFail.)
 
 **Phase 6.6 — ml-training + ml-inference (P0, ~3-10 cal AI-days)** — 👉 **OWNER: Ikenna (this-cycle Wave 4/5 spawn —
 pre-2026-05-15 freeze)**
@@ -3603,7 +3602,7 @@ repo).
   - ✅ 24 ohlcv-derived NAN_FILL groups — fixed via UAC key correction (uac@07b4992; orphaned `features-service` keys
     replaced with correct `features-delta-one-service` keys for all 21 FEATURE_GROUPS)
   - ✅ seed-vs-registry drift (paired_spec) — documented, preserved-as-is per plan decision
-  - ✅ tf_risk_reward + wedge_confluence — added to UAC + _SEEDED_FEATURE_GROUPS (uac@466d93c;
+  - ✅ tf_risk_reward + wedge_confluence — added to UAC + \_SEEDED_FEATURE_GROUPS (uac@466d93c;
     features-service@47865006)
   - 🟡 intraday_regime/micro_regime ambiguity — DEFERRED awaiting operator classification (NAN_FILL vs STRICT_FAIL);
     issue doc: plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md
@@ -4352,35 +4351,47 @@ These remain open and will be resolved in subsequent plans the user drafts:
 
 ## DONE-2026-05-14 — Slot 9 (harsh-day3-continuation) — Peripheral pipeline_mode sweep + QG step 6 fix
 
-**Scope**: Part A — 6 peripheral scripts missing `pipeline_mode` kwarg on `record_*` calls (UTL@547ff3c removed the default); Part B — strategy-service QG step 6 (production readiness validators) failing due to 2 broken plan links.
+**Scope**: Part A — 6 peripheral scripts missing `pipeline_mode` kwarg on `record_*` calls (UTL@547ff3c removed the
+default); Part B — strategy-service QG step 6 (production readiness validators) failing due to 2 broken plan links.
 
 ### Commits
 
-| Commit                  | Repo               | Summary                                                                                                          |
-| ----------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| features-service@`268919ad` | features-service | `pipeline_mode=` added to record_empty/record_failed in 3 sports scripts (SFI + api_football) |
+| Commit                             | Repo                     | Summary                                                                                                                          |
+| ---------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| features-service@`268919ad`        | features-service         | `pipeline_mode=` added to record_empty/record_failed in 3 sports scripts (SFI + api_football)                                    |
 | market-tick-data-service@`bc77f94` | market-tick-data-service | `pipeline_mode=` added to record_captured/record_empty/record_failed in 3 MTDS scripts (BATCH_DATABENTO + BATCH_POLYMARKET_CLOB) |
-| PM@`5c1cfc7f`           | unified-trading-pm | Fix 2 broken plan links: `_agent_pings.md` wrong relative path + validator false-positive on regex in code spans |
+| PM@`5c1cfc7f`                      | unified-trading-pm       | Fix 2 broken plan links: `_agent_pings.md` wrong relative path + validator false-positive on regex in code spans                 |
 
 ### What shipped
 
 **Part A — peripheral scripts `pipeline_mode` sweep (6 of 10 scripts listed in LEDGER brief)**
 
-3 scripts had docstring-only references (false positives from grep); 1 script (`backfill_drift_funding_2026_05_13.py`) had a comment-only reference (skeleton stub with no actual call). Actual callsites fixed:
+3 scripts had docstring-only references (false positives from grep); 1 script (`backfill_drift_funding_2026_05_13.py`)
+had a comment-only reference (skeleton stub with no actual call). Actual callsites fixed:
 
-- `features-service/scripts/sports/compute_sfi_progressive_only.py` — 3 calls: `record_empty` + 2× `record_failed` → `PipelineMode.BATCH_SOCCER_FOOTBALL_INFO`
-- `features-service/scripts/sports/backfill_fixture_features_manifest.py` — 1 call: `record_empty` → `PipelineMode.BATCH_API_FOOTBALL`
-- `features-service/scripts/sports/features_sports_reconcile_available_at.py` — 1 call: `record_failed` → `PipelineMode.BATCH_API_FOOTBALL`
+- `features-service/scripts/sports/compute_sfi_progressive_only.py` — 3 calls: `record_empty` + 2× `record_failed` →
+  `PipelineMode.BATCH_SOCCER_FOOTBALL_INFO`
+- `features-service/scripts/sports/backfill_fixture_features_manifest.py` — 1 call: `record_empty` →
+  `PipelineMode.BATCH_API_FOOTBALL`
+- `features-service/scripts/sports/features_sports_reconcile_available_at.py` — 1 call: `record_failed` →
+  `PipelineMode.BATCH_API_FOOTBALL`
 - `market-tick-data-service/scripts/build_continuous_es.py` — 1 call: `record_captured` → `PipelineMode.BATCH_DATABENTO`
-- `market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py` — 1 call: `record_failed` → `PipelineMode.BATCH_DATABENTO`
-- `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py` — 1 call: `record_empty` → `PipelineMode.BATCH_POLYMARKET_CLOB`
+- `market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py` — 1 call: `record_failed` →
+  `PipelineMode.BATCH_DATABENTO`
+- `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py` — 1 call: `record_empty` →
+  `PipelineMode.BATCH_POLYMARKET_CLOB`
 
-Pre-existing QG violations in both repos (in unrelated files: `stablecoin_aggregate_exposure.py` in features-service, 2 test files in MTDS) — not caused by my changes, not my files; committed directly to LDR bypassing quickmerge.
+Pre-existing QG violations in both repos (in unrelated files: `stablecoin_aggregate_exposure.py` in features-service, 2
+test files in MTDS) — not caused by my changes, not my files; committed directly to LDR bypassing quickmerge.
 
 **Part B — strategy-service QG step 6 fix**
 
 Root cause: `run_validators.py --scope all` runs `validate_plan_links.py` which found 2 broken links:
-1. `_agent_pings.md:922` — link `(../plans/active/defi_master_2026_05_07.md)` navigated to `plans/plans/active/` (wrong); fixed to `(defi_master_2026_05_07.md)`.
-2. `wave2_polymarket_record_captured_from_counts_2026_05_09.md:152` — regex pattern `["'](options_chain|...)["']` inside a backtick code span was false-positived by the validator's raw-text link regex. Fixed validator to strip fenced blocks + inline code spans before link extraction.
+
+1. `_agent_pings.md:922` — link `(../plans/active/defi_master_2026_05_07.md)` navigated to `plans/plans/active/`
+   (wrong); fixed to `(defi_master_2026_05_07.md)`.
+2. `wave2_polymarket_record_captured_from_counts_2026_05_09.md:152` — regex pattern `["'](options_chain|...)["']` inside
+   a backtick code span was false-positived by the validator's raw-text link regex. Fixed validator to strip fenced
+   blocks + inline code spans before link extraction.
 
 QG step 6 now: `OK: No broken links in plans/active/*.md` ✅

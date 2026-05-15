@@ -162,17 +162,17 @@ Live mode subscribes to a PubSub subscription and publishes computed features.
 
 ## Known Issues Audit
 
-| #   | What to check                        | Why                                                                                                                                         | Status |
-| --- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| K.1 | No `--dry-run` flag                  | Parser does not define `--dry-run`. Every other service in the procedure uses it. Compliance gap.                                           |        |
-| K.2 | No `--operation` flag                | CLI uses `--mode` only, not the standardised `--operation/--mode/--asset-group` axes from `cli-convention.md`.                              |        |
-| K.3 | No `--asset-group` flag              | Service is SPORTS-only. Acceptable if documented, but breaks the universal category sweep pattern.                                          |        |
+| #   | What to check                        | Why                                                                                                                                                  | Status |
+| --- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| K.1 | No `--dry-run` flag                  | Parser does not define `--dry-run`. Every other service in the procedure uses it. Compliance gap.                                                    |        |
+| K.2 | No `--operation` flag                | CLI uses `--mode` only, not the standardised `--operation/--mode/--asset-group` axes from `cli-convention.md`.                                       |        |
+| K.3 | No `--asset-group` flag              | Service is SPORTS-only. Acceptable if documented, but breaks the universal category sweep pattern.                                                   |        |
 | K.4 | `--mode` is required (no default)    | Unlike features-service (commodity family) which defaults to `live`, this service requires explicit `--mode`. Inconsistency across feature services. |        |
-| K.5 | Future date validation only in batch | `validate_args()` rejects future dates for batch. Live mode has no date validation (correct -- live is real-time).                          |        |
-| K.6 | `load_dotenv` location               | Need to verify `load_dotenv(override=False)` is used (not visible in parser.py, check main.py).                                             |        |
-| K.7 | reference_data dependency            | Service depends on instruments-service reference_data sub-package for reference data. Verify it is installed in service `.venv`.            |        |
-| K.8 | PubSub subscription default          | `sports-odds-ready` subscription must exist in the project. Verify with `gcloud pubsub subscriptions list`.                                 |        |
-| K.9 | `--bucket` empty string default      | Default is empty string, resolved to `features-sports-{project_id}` at runtime. Verify resolution logic.                                    |        |
+| K.5 | Future date validation only in batch | `validate_args()` rejects future dates for batch. Live mode has no date validation (correct -- live is real-time).                                   |        |
+| K.6 | `load_dotenv` location               | Need to verify `load_dotenv(override=False)` is used (not visible in parser.py, check main.py).                                                      |        |
+| K.7 | reference_data dependency            | Service depends on instruments-service reference_data sub-package for reference data. Verify it is installed in service `.venv`.                     |        |
+| K.8 | PubSub subscription default          | `sports-odds-ready` subscription must exist in the project. Verify with `gcloud pubsub subscriptions list`.                                          |        |
+| K.9 | `--bucket` empty string default      | Default is empty string, resolved to `features-sports-{project_id}` at runtime. Verify resolution logic.                                             |        |
 
 ## AWS Testing
 

@@ -5,8 +5,9 @@ status: active
 ssot_for: prediction_market_codification_gaps
 execution:
   owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master_2026_05_07.md`)
-  cadence: per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this
-    gaps register; weekly sweep during the May-23 cutover window to close gaps as they land
+  cadence:
+    per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps
+    register; weekly sweep during the May-23 cutover window to close gaps as they land
   verifier: |
     Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC /
     features-cross-instrument change in the same logical unit (per CLAUDE.md "Commit + Push + Flip" rule).
@@ -64,8 +65,8 @@ Owner: features-service (cross-instrument family).
 
 ## G4 — Automated market classifier
 
-Required: `prediction_market_classifier.py` in features-service (cross-instrument family) that periodically pulls all markets
-from Polymarket + Kalshi, classifies them against G1, identifies cross-platform matches per G3, and publishes a
+Required: `prediction_market_classifier.py` in features-service (cross-instrument family) that periodically pulls all
+markets from Polymarket + Kalshi, classifies them against G1, identifies cross-platform matches per G3, and publishes a
 classified market registry to GCS. That registry becomes the SSOT for which prediction markets are useful and how.
 
 ## G5 — Venue registry wiring

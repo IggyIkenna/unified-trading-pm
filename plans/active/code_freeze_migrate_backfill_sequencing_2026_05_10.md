@@ -902,7 +902,8 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 
 ### Phase 2 freeze gate (✅ to flip Phase 3 startable)
 
-> **Cross-reference**: [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md)
+> **Cross-reference**:
+> [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md)
 > § "Hard sequencing constraint" shows the 2026-05-15→2026-05-19 data-pipeline checkpoint timeline that this freeze gate
 > starts. Master plan Group F items 17/18/20/21 — their sequencing is owned by that doc.
 
@@ -926,7 +927,8 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 
 > **Orchestrator sequencing guidance**: the per-stage ordering (instruments → MTDS → MDPS → features → ML/strategy
 > backtest) + the parallel code-and-tests track that MUST run concurrently (does NOT pause for backfill drain) is
-> specified in [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md).
+> specified in
+> [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md).
 > Read that doc before scheduling Phase 3 VMs — it identifies which Phase 3 sub-steps are on the serial track vs the
 > parallel track and maps each to master plan Group F items 17/18/20/21.
 

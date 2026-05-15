@@ -7,9 +7,10 @@ scope: [engineer]
 ## Consolidation status
 
 The pre-2026-05-08 layout had **8 separate** `features-*-service` repos (features-service (onchain family),
-features-service (volatility family), features-service (cross-instrument family), features-service (sports family), features-service (calendar family),
-features-service (commodity family), features-service (delta-one family), features-service (multi-timeframe family)). The current target state is a
-single workspace repo `features-service` with one sub-package per family
+features-service (volatility family), features-service (cross-instrument family), features-service (sports family),
+features-service (calendar family), features-service (commodity family), features-service (delta-one family),
+features-service (multi-timeframe family)). The current target state is a single workspace repo `features-service` with
+one sub-package per family
 ([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md) —
 canonical SSOT for the consolidated shape, the `--feature-family` CLI dispatcher, the Health-API aggregator, and the 7
 UTL Phase 5 lifts). `BaseFeatureServiceV2` becomes the per-sub-package base class within `features-service`, not the

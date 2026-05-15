@@ -72,8 +72,8 @@ VCR-based integration tests do NOT run standalone from AC. They EXECUTE from wit
 - `execution-service` (UTEI/USEI/UDEI consumer post-collapse — trade + sports + DeFi execution)
 - `position-balance-monitor-service` (UPI consumer post-collapse — position balance)
 
-Each declares `unified-api-contracts` as a dependency and provides the normalization layer under test. This ensures
-the cassette replays are exercised against the actual adapter code, not in isolation.
+Each declares `unified-api-contracts` as a dependency and provides the normalization layer under test. This ensures the
+cassette replays are exercised against the actual adapter code, not in isolation.
 
 See [`vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) for the canonical recording workflow + cassette
 inventory (the earlier `vcr-cassette-pattern.md` was deprecated 2026-05-12 per TS-3 audit; its content is folded into
@@ -227,18 +227,18 @@ def test_event_publication_invokes_event_sink():
 
 #### Emulator vs Mock Fixture Decision Matrix
 
-| Test scenario                          | Recommended tool                          | Reason                                                     |
-| -------------------------------------- | ----------------------------------------- | ---------------------------------------------------------- |
-| GCP Pub/Sub event propagation          | `PUBSUB_EMULATOR_HOST`                    | Protocol-faithful gRPC; SDK auto-detects                   |
-| GCS bucket lifecycle / signed URLs     | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | LocalStorageProvider skips ACLs and signed URLs            |
-| BigQuery analytics queries             | `BIGQUERY_EMULATOR_HOST`                  | SQL query validation (avoid window functions)              |
-| AWS S3 / Secrets / SQS                 | `@mock_aws` (moto)                        | SDK-level intercept; no emulator process needed            |
-| Exchange REST APIs (Hyperliquid, etc.) | `responses` library (`passthrough=False`) | HTTP-level intercept; proves zero live calls               |
-| WebSocket market data feeds            | `MockWebSocketFeed` (UMI)                 | In-process WS server; deterministic tick replay            |
-| DeFi on-chain protocols                | Sim mode + `responses passthrough=False`  | Pure in-process arithmetic; assert zero I/O                |
+| Test scenario                          | Recommended tool                          | Reason                                                                                      |
+| -------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| GCP Pub/Sub event propagation          | `PUBSUB_EMULATOR_HOST`                    | Protocol-faithful gRPC; SDK auto-detects                                                    |
+| GCS bucket lifecycle / signed URLs     | `STORAGE_EMULATOR_HOST` (fake-gcs-server) | LocalStorageProvider skips ACLs and signed URLs                                             |
+| BigQuery analytics queries             | `BIGQUERY_EMULATOR_HOST`                  | SQL query validation (avoid window functions)                                               |
+| AWS S3 / Secrets / SQS                 | `@mock_aws` (moto)                        | SDK-level intercept; no emulator process needed                                             |
+| Exchange REST APIs (Hyperliquid, etc.) | `responses` library (`passthrough=False`) | HTTP-level intercept; proves zero live calls                                                |
+| WebSocket market data feeds            | `MockWebSocketFeed` (UMI)                 | In-process WS server; deterministic tick replay                                             |
+| DeFi on-chain protocols                | Sim mode + `responses passthrough=False`  | Pure in-process arithmetic; assert zero I/O                                                 |
 | DeFi on-chain integration              | Tenderly VNet fork fixture                | Real EVM state; fixture in `execution-service/tests/defi_execution/integration/conftest.py` |
-| IBKR TWS gateway                       | `MagicMock(spec=IB)`                      | IBKR SDK is stateful; spec mock prevents attribute drift   |
-| VCR cassette re-use                    | vcrpy cassette in UAC                     | Protocol-faithful for REST; use for external API contracts |
+| IBKR TWS gateway                       | `MagicMock(spec=IB)`                      | IBKR SDK is stateful; spec mock prevents attribute drift                                    |
+| VCR cassette re-use                    | vcrpy cassette in UAC                     | Protocol-faithful for REST; use for external API contracts                                  |
 
 **Key rule**: If the GCP/AWS SDK is on the call path, use an emulator or moto — not `unittest.mock.patch` on internals.
 If only HTTP is on the call path, use `responses` or `aioresponses`.
@@ -286,13 +286,13 @@ Tests connecting to LOCAL emulators use `@pytest.mark.allow_network`. This opt-o
 emulator (not a live API). Each opt-out emits a CI warning.
 
 > **QG-enforcement gap (PRE_CUTOVER backlog, codified 2026-05-12 per TS-9 audit)** — today `--block-network` is wired
-> only into `system-integration-tests` per the archived `cicd_mock_hardening_2026_03_11` h8-credential-free-gate.
-> Most service test suites have the plugin available via UAC's `testing/network_block_plugin.py` but DO NOT register
-> it in their root `conftest.py`. **Proposed QG STEP**: scan every `*_service/tests/conftest.py` for explicit
-> registration of the network gate (or an explicit allowlist comment); fail any service that lacks either.
-> **Status**: unbacked — owner is governance + QG-template maintainer; design tradeoff between hard-fail vs warning.
-> Reference incident class: 2026-05-05 MDPS emitted STARTED+STOPPED with garbage output (a hermetic-test gate
-> catches a different failure mode but mirrors the "code-shipped is not operationally-shipped" lesson).
+> only into `system-integration-tests` per the archived `cicd_mock_hardening_2026_03_11` h8-credential-free-gate. Most
+> service test suites have the plugin available via UAC's `testing/network_block_plugin.py` but DO NOT register it in
+> their root `conftest.py`. **Proposed QG STEP**: scan every `*_service/tests/conftest.py` for explicit registration of
+> the network gate (or an explicit allowlist comment); fail any service that lacks either. **Status**: unbacked — owner
+> is governance + QG-template maintainer; design tradeoff between hard-fail vs warning. Reference incident class:
+> 2026-05-05 MDPS emitted STARTED+STOPPED with garbage output (a hermetic-test gate catches a different failure mode but
+> mirrors the "code-shipped is not operationally-shipped" lesson).
 
 ---
 

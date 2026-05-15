@@ -17,14 +17,14 @@ locked_since: 2026-05-12
 > Harsh-side bias = **implement-from-spec + run-script-and-verify + mechanical refactors**; Ikenna companion covers
 > cross-cutting design + multi-repo governance.
 >
-> Each prompt: (a) status-line-first preamble (post 1-line STATUS-2026-05-11 ack in per-slot ping doc before
-> pivoting), (b) new theme + plan-of-record, (c) Half-1+2+4 cadence, (d) sub-agent fan-out guidance, (e) "don't stop
-> at nice-haves" framing, (f) cross-tab + cross-side handshake pointers. References lean
+> Each prompt: (a) status-line-first preamble (post 1-line STATUS-2026-05-11 ack in per-slot ping doc before pivoting),
+> (b) new theme + plan-of-record, (c) Half-1+2+4 cadence, (d) sub-agent fan-out guidance, (e) "don't stop at nice-haves"
+> framing, (f) cross-tab + cross-side handshake pointers. References lean
 > `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (10KB).
 >
-> **Operator directive 2026-05-11 PM** (carry-forward): _"don't stop even at nice-haves; need to start migrating
-> buckets and manifests for v8 and start getting data again."_ Phase 1 freeze gate at 2026-05-15 is the hard
-> constraint. Required pace: 44 AI-days/day workspace-wide.
+> **Operator directive 2026-05-11 PM** (carry-forward): _"don't stop even at nice-haves; need to start migrating buckets
+> and manifests for v8 and start getting data again."_ Phase 1 freeze gate at 2026-05-15 is the hard constraint.
+> Required pace: 44 AI-days/day workspace-wide.
 
 ## Universal preamble — every slot does this first (5-10 min)
 
@@ -379,42 +379,43 @@ manifest Phase 3). Same pace expected workspace-wide → Harsh slots will hit do
 
 **Deadline UNCHANGED**: 2026-05-15 Phase 1 freeze gate. **Scope-within-cycle EXPANDS** to absorb idle capacity:
 
-| Slot | Day-2-4 extension scope |
-|---|---|
-| Harsh-2 (defi_catalogue impl 6-8 protocols) | Once protocols done: per-protocol consumer integration tests + codex docs + `defi_catalogue` reserve protocols (Sushi-V3 / Maverick / TraderJoe-V2 if not in initial set). Plus reserve list `client_reporting_pnl_attribution_mvp` (~6.5 calibrated, Group F item 22). |
-| Harsh-3 (code_freeze service-level closures) | Already has DAY-2 cross-side coordination with Ikenna slot 3's PipelineMode sweep. Day-2-4 extension: bucket_name_ssot Phase 0i tail (region pinning ratification) + manifest v8 wire-in tail + cc62f02 runner-shutdown wire-in cleanup (Harsh slot 5 limbo). |
-| Harsh-4 (defi_simulation_realism impl Phases 4-6) | Once Ikenna slot 6's family matrix lands Day 2 noon: per-AMM connectors. Then Phase 7 matching-engine integration (Ikenna slot 6 designs; you implement). Reserve list `wallet_treasury_client_flow` (~8.8 calibrated; pair with Ikenna slot 4). |
-| Harsh-5 (risk + DR impl) | Once Ikenna slot 7 scenarios land: per-scenario test coverage. Then Round 3 helper-shipped item test layer (5 reconcilers S/T/U/V/W + 1 risk route L + 4 UI components M+O). Plus alerting Phase 7-9 operator-action phases. |
-| Harsh-6 (cross_cutting #4 + manifest Phase 3 consumer sweep) | 8+ services consumer sweep is substantial; keep going. Day-4 stretch: reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15.6 calibrated; hygiene). |
-| Harsh-7 (mock_data_pipeline_benchmarking) | Per-asset_group fixtures + benchmark harness. Day-4 stretch: reserve list `simulation_scenarios_topology_price_shocks` implementation tail (~7 calibrated; Ikenna slot 7 publishes scenarios Day 1+2). |
-| Harsh-8 (cross_asset_group_catalogue_audit) | Per-asset_group audit fan-out 5+. Day-4 stretch: reserve list `promote_workflow_may23_cli_path_2026_05_10` (~4.2 calibrated) + `available_at_lookahead_bias_completion` (~1.5 calibrated). |
+| Slot                                                         | Day-2-4 extension scope                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Harsh-2 (defi_catalogue impl 6-8 protocols)                  | Once protocols done: per-protocol consumer integration tests + codex docs + `defi_catalogue` reserve protocols (Sushi-V3 / Maverick / TraderJoe-V2 if not in initial set). Plus reserve list `client_reporting_pnl_attribution_mvp` (~6.5 calibrated, Group F item 22). |
+| Harsh-3 (code_freeze service-level closures)                 | Already has DAY-2 cross-side coordination with Ikenna slot 3's PipelineMode sweep. Day-2-4 extension: bucket_name_ssot Phase 0i tail (region pinning ratification) + manifest v8 wire-in tail + cc62f02 runner-shutdown wire-in cleanup (Harsh slot 5 limbo).           |
+| Harsh-4 (defi_simulation_realism impl Phases 4-6)            | Once Ikenna slot 6's family matrix lands Day 2 noon: per-AMM connectors. Then Phase 7 matching-engine integration (Ikenna slot 6 designs; you implement). Reserve list `wallet_treasury_client_flow` (~8.8 calibrated; pair with Ikenna slot 4).                        |
+| Harsh-5 (risk + DR impl)                                     | Once Ikenna slot 7 scenarios land: per-scenario test coverage. Then Round 3 helper-shipped item test layer (5 reconcilers S/T/U/V/W + 1 risk route L + 4 UI components M+O). Plus alerting Phase 7-9 operator-action phases.                                            |
+| Harsh-6 (cross_cutting #4 + manifest Phase 3 consumer sweep) | 8+ services consumer sweep is substantial; keep going. Day-4 stretch: reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15.6 calibrated; hygiene).                                                                                                      |
+| Harsh-7 (mock_data_pipeline_benchmarking)                    | Per-asset_group fixtures + benchmark harness. Day-4 stretch: reserve list `simulation_scenarios_topology_price_shocks` implementation tail (~7 calibrated; Ikenna slot 7 publishes scenarios Day 1+2).                                                                  |
+| Harsh-8 (cross_asset_group_catalogue_audit)                  | Per-asset_group audit fan-out 5+. Day-4 stretch: reserve list `promote_workflow_may23_cli_path_2026_05_10` (~4.2 calibrated) + `available_at_lookahead_bias_completion` (~1.5 calibrated).                                                                              |
 
 **Allocation principle**: extend within plan (Phases beyond current scope) → pull reserve list per work_split § Reserve
 list → confirmed P1 bugs (`ManifestFreshnessCache` wire-in to lending_indices_handler + sibling MTDS DeFi backfill
 handlers per operator confirmation 2026-05-11). **DON'T pull Cycle 2 cutover scope forward** (sequentially blocked on
 Phase 1 closure 2026-05-15).
 
-Cross-side ↔ Ikenna companion split:
-[`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § "🟢 SCOPE EXTENSION" has the mirror Ikenna
-per-slot extensions. Coordinate on overlapping reserve-list pickups (esp. `client_reporting_pnl_attribution_mvp` —
-Ikenna slot 5 and Harsh slot 2 both flagged it; pair-up or claim first).
+Cross-side ↔ Ikenna companion split: [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § "🟢
+SCOPE EXTENSION" has the mirror Ikenna per-slot extensions. Coordinate on overlapping reserve-list pickups (esp.
+`client_reporting_pnl_attribution_mvp` — Ikenna slot 5 and Harsh slot 2 both flagged it; pair-up or claim first).
 
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, Harsh main (slot 1) sweeps:
+
 - ✅ DONE entries from yesterday → archive to plan-body DONE blocks.
 - ⚪ PARTIAL / 🟡 BLOCKED → escalate to operator or Ikenna-main via cross-side ping.
-- Banner-sweep: every plan touched in 2026-05-12 cycle gets correct `🟢 IN-FLIGHT` / `🟡 BLOCKED-ON-X` / `✅ SHIPPED` banner.
+- Banner-sweep: every plan touched in 2026-05-12 cycle gets correct `🟢 IN-FLIGHT` / `🟡 BLOCKED-ON-X` / `✅ SHIPPED`
+  banner.
 
 Harsh slot 1 polls per-slot ping doc (`harsh_orchestrator/pings/slot_<N>.md`) every ~1 min when operator active.
 Cross-side mirror at 17:00 daily into `plans/active/_agent_pings.md`.
 
 > **🟡 NOTE on per-slot ping doc growth**: per-slot files are currently 22-55KB each from accumulated 2026-05-11
 > context. Per Ikenna-side input on Phase 4.5 P1 todo in `per_agent_worktrees_2026_05_10.md` (PM@`f85763cb`), the
-> implementation of (R1) read-time rollup + (R2) `--reset-slot` truncate-stub + (R3) Ikenna-side parity migration
-> hasn't shipped yet. Workaround for this cycle: same-theme slots tolerate the size; re-themed slots (most this
-> cycle) got `--reset-slot` (worktree clean + rebase) but the ping doc itself was NOT truncated. Slot main should
-> scan the file's `## Prior context (rolled)` section first if it exists; otherwise reads from top for fresh context.
+> implementation of (R1) read-time rollup + (R2) `--reset-slot` truncate-stub + (R3) Ikenna-side parity migration hasn't
+> shipped yet. Workaround for this cycle: same-theme slots tolerate the size; re-themed slots (most this cycle) got
+> `--reset-slot` (worktree clean + rebase) but the ping doc itself was NOT truncated. Slot main should scan the file's
+> `## Prior context (rolled)` section first if it exists; otherwise reads from top for fresh context.
 
 ## Re-pointing if a slot finishes early
 
@@ -431,10 +432,10 @@ Slot picks up the highest-precedence un-claimed plan + files `[slot N → main] 
 
 ## P1 todo confirmed by operator 2026-05-11 (track in plan-of-record)
 
-**ManifestFreshnessCache wire-in** for `lending_indices_handler` + sibling MTDS DeFi backfill handlers
-(`gas_fees` / `lst_rates` / `dex_pools` / `liquidations` / `perp_funding`). Operator-confirmed P1 bug from 2026-05-11
-lending-indices VM ungraceful-exit (full-history re-download because no manifest-already-captured skip). Reference impl:
-UTL `unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` + `/tmp/fill_missing_ohlcv.py`
+**ManifestFreshnessCache wire-in** for `lending_indices_handler` + sibling MTDS DeFi backfill handlers (`gas_fees` /
+`lst_rates` / `dex_pools` / `liquidations` / `perp_funding`). Operator-confirmed P1 bug from 2026-05-11 lending-indices
+VM ungraceful-exit (full-history re-download because no manifest-already-captured skip). Reference impl: UTL
+`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` + `/tmp/fill_missing_ohlcv.py`
 (`_refresh_captured_cache` / `_is_now_captured`). Tracked in `defi_master` Discoveries per Harsh-side capture. Pickup
 target: whoever takes the next MTDS per-data_type backfill scope (likely slot 3 writegate slice (c) callsite migration
 crew if they touch the handler, OR a future cycle's reserve-list pickup).

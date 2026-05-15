@@ -77,18 +77,18 @@ execution-service
 
 ### Staking / LST Instruments
 
-| Key                                   | Venue              | Type            | Deploy Date |
-| ------------------------------------- | ------------------ | --------------- | ----------- |
-| `ETHERFI-ETHEREUM:LST:WEETH@ETHEREUM` | `ETHERFI-ETHEREUM` | `YIELD_BEARING` | 2023-11-01  |
-| `LIDO-ETHEREUM:LST:STETH@ETHEREUM`    | `LIDO-ETHEREUM`    | `YIELD_BEARING` | 2020-12-18  |
-| `LIDO-ETHEREUM:LST:WSTETH@ETHEREUM`   | `LIDO-ETHEREUM`    | `YIELD_BEARING` | 2020-12-18  |
-| `JITO-SOLANA:LST:JITOSOL@SOLANA`      | `JITO-SOLANA`      | `YIELD_BEARING` | 2022-08-01  |
-| `MARINADE-SOLANA:LST:MSOL@SOLANA`     | `MARINADE-SOLANA`  | `YIELD_BEARING` | 2021-02-01  |
-| `SOLBLAZE-SOLANA:LST:BSOL@SOLANA`     | `SOLBLAZE-SOLANA`  | `YIELD_BEARING` | 2022-11-01  |
-| `SANCTUM-SOLANA:LST:INF@SOLANA`       | `SANCTUM-SOLANA`   | `YIELD_BEARING` | 2023-06-01  |
-| `SANCTUM-SOLANA:LST:JUPSOL@SOLANA`    | `SANCTUM-SOLANA`   | `YIELD_BEARING` | 2023-06-01  |
-| `SANCTUM-SOLANA:LST:LAINESOL@SOLANA`  | `SANCTUM-SOLANA`   | `YIELD_BEARING` | 2023-06-01  |
-| `SOLANA-NATIVE-SOLANA:STAKING:NATIVE-SOL` | `SOLANA-NATIVE-SOLANA` | `STAKING` | 2020-03-16 |
+| Key                                       | Venue                  | Type            | Deploy Date |
+| ----------------------------------------- | ---------------------- | --------------- | ----------- |
+| `ETHERFI-ETHEREUM:LST:WEETH@ETHEREUM`     | `ETHERFI-ETHEREUM`     | `YIELD_BEARING` | 2023-11-01  |
+| `LIDO-ETHEREUM:LST:STETH@ETHEREUM`        | `LIDO-ETHEREUM`        | `YIELD_BEARING` | 2020-12-18  |
+| `LIDO-ETHEREUM:LST:WSTETH@ETHEREUM`       | `LIDO-ETHEREUM`        | `YIELD_BEARING` | 2020-12-18  |
+| `JITO-SOLANA:LST:JITOSOL@SOLANA`          | `JITO-SOLANA`          | `YIELD_BEARING` | 2022-08-01  |
+| `MARINADE-SOLANA:LST:MSOL@SOLANA`         | `MARINADE-SOLANA`      | `YIELD_BEARING` | 2021-02-01  |
+| `SOLBLAZE-SOLANA:LST:BSOL@SOLANA`         | `SOLBLAZE-SOLANA`      | `YIELD_BEARING` | 2022-11-01  |
+| `SANCTUM-SOLANA:LST:INF@SOLANA`           | `SANCTUM-SOLANA`       | `YIELD_BEARING` | 2023-06-01  |
+| `SANCTUM-SOLANA:LST:JUPSOL@SOLANA`        | `SANCTUM-SOLANA`       | `YIELD_BEARING` | 2023-06-01  |
+| `SANCTUM-SOLANA:LST:LAINESOL@SOLANA`      | `SANCTUM-SOLANA`       | `YIELD_BEARING` | 2023-06-01  |
+| `SOLANA-NATIVE-SOLANA:STAKING:NATIVE-SOL` | `SOLANA-NATIVE-SOLANA` | `STAKING`       | 2020-03-16  |
 
 ### Governance / Reward Tokens
 

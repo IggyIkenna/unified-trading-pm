@@ -13,18 +13,20 @@ scope: [engineer, admin]
 > alerting-service / ml-inference-service actually ship:
 >
 > - **The 4 AlertCodes (`ML_SIGNAL_STALE` / `ML_MODEL_DRIFT_DETECTED` / `ML_PNL_DEVIATION` / `ML_INFERENCE_LATENCY_SLO`)
->   are NOT in `alerting/codes.py`** as of 2026-05-12 — workspace grep returns 0 hits in `alerting-service/`. Tab 5 never
->   wired them. Operator disposition required: ship via slot 4 / alerting-service owner before cutover OR demote this
->   doc to design-only with `**DEFERRED-AFTER-CUTOVER**` banner + named successor plan.
+>   are NOT in `alerting/codes.py`** as of 2026-05-12 — workspace grep returns 0 hits in `alerting-service/`. Tab 5
+>   never wired them. Operator disposition required: ship via slot 4 / alerting-service owner before cutover OR demote
+>   this doc to design-only with `**DEFERRED-AFTER-CUTOVER**` banner + named successor plan.
 > - **`drift_monitor.py` ships a DIFFERENT signal**: it tracks **rolling prediction-accuracy drop**
->   (`retune_accuracy_drop_threshold`, default 0.15, over `retune_window_days`) and emits `MODEL_RETUNE_REQUESTED`
->   (an INTERNAL retune trigger, not an `AlertCode` fire / kill action). The PSI/KL input-feature drift path described
->   in Rule 2 below is **unbuilt design** — operator decision pending: (a) add PSI/KL path to `drift_monitor.py` +
->   wire `ML_MODEL_DRIFT_DETECTED` AlertCode, OR (b) re-baseline Rule 2 around the accuracy-drop signal that actually
->   ships, OR (c) deprecate Rule 2 to POST_CUTOVER.
+>   (`retune_accuracy_drop_threshold`, default 0.15, over `retune_window_days`) and emits `MODEL_RETUNE_REQUESTED` (an
+>   INTERNAL retune trigger, not an `AlertCode` fire / kill action). The PSI/KL input-feature drift path described in
+>   Rule 2 below is **unbuilt design** — operator decision pending: (a) add PSI/KL path to `drift_monitor.py` + wire
+>   `ML_MODEL_DRIFT_DETECTED` AlertCode, OR (b) re-baseline Rule 2 around the accuracy-drop signal that actually ships,
+>   OR (c) deprecate Rule 2 to POST_CUTOVER.
 >
-> Tracked in `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-4 + ML-5 (PRE_CUTOVER, owner: ml-inference + alerting
-> + slot 4).
+> Tracked in `plans/archive/issues/codex_audit_ml_2026_05_12.md` ML-4 + ML-5 (PRE_CUTOVER, owner: ml-inference +
+> alerting
+>
+> - slot 4).
 
 ## TL;DR
 

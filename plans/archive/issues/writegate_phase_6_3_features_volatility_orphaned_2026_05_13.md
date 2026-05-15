@@ -12,22 +12,22 @@ source:
 
 ## ✅ AUTO-RESOLVED 2026-05-13 14:16 UTC
 
-Phase 6.3 volatility emission semantics shipped autonomously by Rollout Agent at
-`features-service@d7514a08` (_"feat(emission-policy): wire features-volatility Phase 6.3 emission policy"_).
+Phase 6.3 volatility emission semantics shipped autonomously by Rollout Agent at `features-service@d7514a08`
+(_"feat(emission-policy): wire features-volatility Phase 6.3 emission policy"_).
 
 **Wired in `features_service/volatility/core/feature_writer.py`**:
+
 - `_check_emission_policy()` def at line 37
 - `_apply_emission_gate()` at `VolatilityFeatureWriter._write_features_impl()`
 - `publish_with_policy()` call at line 68
 - UAC seed honoured: `high_low_24h` → PARTIAL_OK, `vol_30d` → NAN_FILL, `realised_vol_intraday` → PARTIAL_OK
 
 **Implication for Option B**: Slot 6+ spawn (Day 3 AM) NO LONGER NEEDED. Slot 6 capacity freed for next-priority
-writegate work — Phase 6.6 (ml-training + ml-inference) or Phase 6.7 (strategy + execution + position + risk),
-which Ikenna inherits per `Phase 6.3-6.9 = Ikenna slots 6/7/8` ownership annotation in Harsh slot_2.md (2026-05-13
-08:38 UTC).
+writegate work — Phase 6.6 (ml-training + ml-inference) or Phase 6.7 (strategy + execution + position + risk), which
+Ikenna inherits per `Phase 6.3-6.9 = Ikenna slots 6/7/8` ownership annotation in Harsh slot_2.md (2026-05-13 08:38 UTC).
 
-**Verification**: `grep _check_emission_policy features-service/features_service/volatility/` returns 3 callsites
-(37, 68, 257). `git show d7514a08 --stat` confirms wire-in shape.
+**Verification**: `grep _check_emission_policy features-service/features_service/volatility/` returns 3 callsites (37,
+68, 257). `git show d7514a08 --stat` confirms wire-in shape.
 
 Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
 

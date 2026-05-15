@@ -24,22 +24,22 @@ The bulk of the rename sweep shipped 2026-05-10 PM across 5 commits to PM (opera
   this file was untracked-WIP locally; foot-gun #1 absorbed it into my commit. Content preserved + my edits surgical.
 - PM@30d96b08 — 3 epic plans (`cefi_master_2026_05_07.md` + `instruments_live_master_2026_05_08.md` +
   `strategy_and_dart_master_2026_05_07.md`; 1 ref each)
-- PM@476f00f9 — 6 tail tracked plans (`aws_migration_defi_first_2026_05_07.md` 3 refs; `live_pipeline_mtds_mdps_features
-  _2026_05_08.md` 2 refs; `topology_qgroup_gap_closure_2026_05_09.md` 1 ref; `deployment_ui_lifecycle_tabs_2026_05_08.md`
-  1 ref; `issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` 1 ref;
-  `work_split_2026_05_08_ikenna.md` 1 ref)
+- PM@476f00f9 — 6 tail tracked plans (`aws_migration_defi_first_2026_05_07.md` 3 refs;
+  `live_pipeline_mtds_mdps_features _2026_05_08.md` 2 refs; `topology_qgroup_gap_closure_2026_05_09.md` 1 ref;
+  `deployment_ui_lifecycle_tabs_2026_05_08.md` 1 ref; `issues/features_onchain_lookahead_bias_suppression_2026_05_09.md`
+  1 ref; `work_split_2026_05_08_ikenna.md` 1 ref)
 
-All renames preserve the historical-context annotation: `(funding-rate-dispersion; renamed from legacy
-leveraged_funding_arb per Stream B canonicalisation 2026-05-07)`.
+All renames preserve the historical-context annotation:
+`(funding-rate-dispersion; renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07)`.
 
 **Residual (NOT shipped — operator triage)**:
 
 - `plans/active/manifest_schema_final_gate_2026_05_09.md` (2 standalone refs) — UNTRACKED foreign-agent WIP. Skipped per
-  workspace foot-gun #1 + #2 rules ("untracked files in any repo are almost always someone else's in-flight work; do
-  not touch a file outside your clear context"). Original author should rename when committing.
+  workspace foot-gun #1 + #2 rules ("untracked files in any repo are almost always someone else's in-flight work; do not
+  touch a file outside your clear context"). Original author should rename when committing.
 - `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` (1 ref) — UNTRACKED foreign-agent WIP. Same disposition.
-  Note: the 1 ref is actually correctly framed as canonicalisation annotation ("`leveraged_funding_arb` = config
-  variant of `ARBITRAGE_PRICE_DISPERSION`") — would survive even after rename completes.
+  Note: the 1 ref is actually correctly framed as canonicalisation annotation ("`leveraged_funding_arb` = config variant
+  of `ARBITRAGE_PRICE_DISPERSION`") — would survive even after rename completes.
 - `plans/active/_AUDIT_2026_05_07_dependency_graph.md` (2 standalone refs) — TRACKED audit-snapshot doc; refs are
   recording 2026-05-07 audit findings ("`defi_master:leveraged_funding_arb-live` — same"). Snapshot semantics — leaving
   as historical context per Stream B gate phrasing ("except ... as historical context").

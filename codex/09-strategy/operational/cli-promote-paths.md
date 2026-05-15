@@ -1,7 +1,7 @@
 # CLI Promote Paths — May-23 SSOT
 
-> **Scope**: May-23 subset only. Post-cutover Phase 2 extends with full pinned-shas
-> CandidateManifest + cross-service auto-registration.
+> **Scope**: May-23 subset only. Post-cutover Phase 2 extends with full pinned-shas CandidateManifest + cross-service
+> auto-registration.
 >
 > SSOT: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` § Phase 2
 
@@ -11,13 +11,13 @@
 
 May-23 cutover ships on **dual-track promote**:
 
-| Track | Path | Trigger |
-|-------|------|---------|
-| **PRIMARY** (CLI) | `run-paper.sh` → `colocated_engine.py` → `run-live.sh` | Operator-initiated from workstation |
-| **SECONDARY** (UI) | Promote button → POST `/promote/{id}/{manifest_id}` → VM auto-launch | Browser-driven via UTS-UI |
+| Track              | Path                                                                 | Trigger                             |
+| ------------------ | -------------------------------------------------------------------- | ----------------------------------- |
+| **PRIMARY** (CLI)  | `run-paper.sh` → `colocated_engine.py` → `run-live.sh`               | Operator-initiated from workstation |
+| **SECONDARY** (UI) | Promote button → POST `/promote/{id}/{manifest_id}` → VM auto-launch | Browser-driven via UTS-UI           |
 
-Both tracks produce the same operational outcome: a strategy VM running in
-`paper` or `live` mode, emitting events to the event archive.
+Both tracks produce the same operational outcome: a strategy VM running in `paper` or `live` mode, emitting events to
+the event archive.
 
 ---
 
@@ -27,8 +27,8 @@ Both tracks produce the same operational outcome: a strategy VM running in
 
 **Location**: `e2e-testing/scripts/defi/run-paper.sh`
 
-**What it does**: creates a Tenderly fork of mainnet, runs real smart contract
-calls with live data. No money at risk. Real slippage + real gas from EVM math.
+**What it does**: creates a Tenderly fork of mainnet, runs real smart contract calls with live data. No money at risk.
+Real slippage + real gas from EVM math.
 
 ```bash
 # Single strategy
@@ -41,10 +41,11 @@ bash e2e-testing/scripts/defi/run-paper.sh --asset-group defi
 bash e2e-testing/scripts/defi/run-paper.sh --strategy carry_staked_basis --continuous
 ```
 
-**Pre-flight gate**: calls `preflight-cutover.sh` automatically unless
-`--skip-preflight` is passed (DANGEROUS — requires operator justification).
+**Pre-flight gate**: calls `preflight-cutover.sh` automatically unless `--skip-preflight` is passed (DANGEROUS —
+requires operator justification).
 
 **Required env**:
+
 - `TENDERLY_API_KEY` — Secret Manager or local env
 - `CLOUD_PROVIDER` / GCP credentials for VM launch
 
@@ -52,17 +53,18 @@ bash e2e-testing/scripts/defi/run-paper.sh --strategy carry_staked_basis --conti
 
 **Location**: `e2e-testing/scripts/defi/run-live.sh`
 
-**What it does**: promotes a paper-validated strategy to live capital deployment.
-Triggers `launch-strategy-live-vm.sh` via deployment-service.
+**What it does**: promotes a paper-validated strategy to live capital deployment. Triggers `launch-strategy-live-vm.sh`
+via deployment-service.
 
 ```bash
 bash e2e-testing/scripts/defi/run-live.sh --strategy carry_staked_basis
 ```
 
-**Gate**: requires paper trading to have passed ≥7d without P&L breach.
-Script checks `preflight-cutover.sh` live-mode probes before launching.
+**Gate**: requires paper trading to have passed ≥7d without P&L breach. Script checks `preflight-cutover.sh` live-mode
+probes before launching.
 
 **Required env**:
+
 - `CLOUD_KMS_KEY_URI` — envelope key for `CLOUD_KMS_ENCRYPTED` custody (May-23)
 - `PRIVATE_KEY_SECRET_REF` — wrapped private key in Secret Manager
 - Strategy MUST be in `PAPER_1D` or `LIVE_EARLY` maturity phase in strategy-service
@@ -71,8 +73,7 @@ Script checks `preflight-cutover.sh` live-mode probes before launching.
 
 **Location**: `e2e-testing/scripts/defi/colocated_engine.py`
 
-Directly invocable for a single strategy run without VM scaffolding. Useful for
-local debugging and CI smoke tests.
+Directly invocable for a single strategy run without VM scaffolding. Useful for local debugging and CI smoke tests.
 
 ```bash
 python3 e2e-testing/scripts/defi/colocated_engine.py \
@@ -110,13 +111,13 @@ All paper checks above, PLUS:
 
 Paper and live strategy VMs are launched via:
 
-| Script | VM prefix | Mode |
-|--------|-----------|------|
+| Script                                                      | VM prefix         | Mode                  |
+| ----------------------------------------------------------- | ----------------- | --------------------- |
 | `deployment-service/scripts/vm/launch-strategy-paper-vm.sh` | `strategy-paper-` | Paper (Tenderly fork) |
-| `deployment-service/scripts/vm/launch-strategy-live-vm.sh` | `strategy-live-` | Live (real capital) |
+| `deployment-service/scripts/vm/launch-strategy-live-vm.sh`  | `strategy-live-`  | Live (real capital)   |
 
-Both launchers: emit STARTED within 60s + emit ≥1 progress event/hour +
-emit STOPPED/FAILED at exit. Fire-and-forget is banned.
+Both launchers: emit STARTED within 60s + emit ≥1 progress event/hour + emit STOPPED/FAILED at exit. Fire-and-forget is
+banned.
 
 Full shape spec: `codex/05-infrastructure/strategy-vm-launcher-shape.md`.
 

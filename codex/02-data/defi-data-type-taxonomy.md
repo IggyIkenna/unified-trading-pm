@@ -107,12 +107,12 @@ CeFi-axis classification per FLAG 1 RESOLUTION; on-chain CLOBs (Hyperliquid / As
 
 ### Native Staking — Solana (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)
 
-Venue: `SOLANA-NATIVE-SOLANA`. Chain: `SOLANA`. One row per target date (aligned to Solana epoch boundaries).
-Aggregate mode (`validator_vote_account="AGGREGATE"`) ships without credentials. Per-validator mode requires Helius API key
+Venue: `SOLANA-NATIVE-SOLANA`. Chain: `SOLANA`. One row per target date (aligned to Solana epoch boundaries). Aggregate
+mode (`validator_vote_account="AGGREGATE"`) ships without credentials. Per-validator mode requires Helius API key
 (`BLOCKED-CREDENTIALS` ping in `ikenna_orchestrator/pings/slot_3.md` 2026-05-15).
 
-| data_type              | Source                                                                 | Shard key                                                               | Cluster validation | Schema fields                                                                            |
-| ---------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------- |
+| data_type              | Source                                                                                                                                  | Shard key                                                                      | Cluster validation                        | Schema fields                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
 | `native_staking_rates` | Solana RPC `getEpochInfo`+`getInflationRate` (live) / inflation schedule (historical) + Helius APY (per-validator, BLOCKED-CREDENTIALS) | `(asset_group=defi, chain=SOLANA, venue=SOLANA-NATIVE-SOLANA, data_type, day)` | not bundled (1 row/day in aggregate mode) | epoch, validator_vote_account, commission_pct, base_apy, mev_apy, total_apy |
 
 ### Governance (NEW per `defi_simulation_realism` Phase 1C)
@@ -245,8 +245,8 @@ For each protocol in the catalogue, this matrix declares which data_types are ca
 
 ### Native Staking (Solana)
 
-| Protocol             | native_staking_rates                                                                          |
-| -------------------- | --------------------------------------------------------------------------------------------- |
+| Protocol             | native_staking_rates                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
 | SOLANA-NATIVE-SOLANA | ◐ aggregate row only (MTDS@1ec3a46; per-validator BLOCKED-CREDENTIALS Helius; backlog: 2020-03-16→today) |
 
 ### Governance

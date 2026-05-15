@@ -99,25 +99,25 @@ The `data-status` command reads from GCS to check data completion. No writes.
 
 Verify all 15 sharding config YAMLs load without error and produce valid shards:
 
-| #    | Service config                                   | Expected                                        | Status |
-| ---- | ------------------------------------------------ | ----------------------------------------------- | ------ |
-| 4.1  | `sharding.instruments-service.yaml`              | Valid dimensions, venues resolved               |        |
-| 4.2  | `sharding.market-tick-data-service.yaml`         | Valid dimensions with data_types                |        |
-| 4.3  | `sharding.features-service (delta-one family).yaml`       | Valid dimensions with feature_groups            |        |
-| 4.4  | `sharding.features-service (volatility family).yaml`      | Valid dimensions                                |        |
-| 4.5  | `sharding.features-service (onchain family).yaml`         | Valid dimensions (DeFi protocols)               |        |
-| 4.6  | `sharding.features-service (calendar family).yaml`        | Valid dimensions                                |        |
-| 4.7  | `sharding.features-service (sports family).yaml`          | Valid dimensions (leagues)                      |        |
-| 4.8  | `sharding.market-data-processing-service.yaml`   | Valid dimensions with timeframes                |        |
-| 4.9  | `sharding.ml-training-service.yaml`              | Valid dimensions (dynamic GCS)                  |        |
-| 4.10 | `sharding.ml-inference-service.yaml`             | Valid dimensions                                |        |
-| 4.11 | `sharding.execution-service.yaml`                | Valid dimensions (dynamic GCS config discovery) |        |
-| 4.12 | `sharding.strategy-service.yaml`                 | Valid dimensions                                |        |
-| 4.13 | `sharding.pnl-attribution-service.yaml`          | Valid dimensions                                |        |
-| 4.14 | `sharding.risk-and-exposure-service.yaml`        | Valid dimensions                                |        |
-| 4.15 | `sharding.position-balance-monitor-service.yaml` | Valid dimensions                                |        |
-| 4.16 | `venues.yaml`                                    | All categories present, venues listed           |        |
-| 4.17 | `cloud-providers.yaml`                           | GCP + AWS provider configs loaded               |        |
+| #    | Service config                                       | Expected                                        | Status |
+| ---- | ---------------------------------------------------- | ----------------------------------------------- | ------ |
+| 4.1  | `sharding.instruments-service.yaml`                  | Valid dimensions, venues resolved               |        |
+| 4.2  | `sharding.market-tick-data-service.yaml`             | Valid dimensions with data_types                |        |
+| 4.3  | `sharding.features-service (delta-one family).yaml`  | Valid dimensions with feature_groups            |        |
+| 4.4  | `sharding.features-service (volatility family).yaml` | Valid dimensions                                |        |
+| 4.5  | `sharding.features-service (onchain family).yaml`    | Valid dimensions (DeFi protocols)               |        |
+| 4.6  | `sharding.features-service (calendar family).yaml`   | Valid dimensions                                |        |
+| 4.7  | `sharding.features-service (sports family).yaml`     | Valid dimensions (leagues)                      |        |
+| 4.8  | `sharding.market-data-processing-service.yaml`       | Valid dimensions with timeframes                |        |
+| 4.9  | `sharding.ml-training-service.yaml`                  | Valid dimensions (dynamic GCS)                  |        |
+| 4.10 | `sharding.ml-inference-service.yaml`                 | Valid dimensions                                |        |
+| 4.11 | `sharding.execution-service.yaml`                    | Valid dimensions (dynamic GCS config discovery) |        |
+| 4.12 | `sharding.strategy-service.yaml`                     | Valid dimensions                                |        |
+| 4.13 | `sharding.pnl-attribution-service.yaml`              | Valid dimensions                                |        |
+| 4.14 | `sharding.risk-and-exposure-service.yaml`            | Valid dimensions                                |        |
+| 4.15 | `sharding.position-balance-monitor-service.yaml`     | Valid dimensions                                |        |
+| 4.16 | `venues.yaml`                                        | All categories present, venues listed           |        |
+| 4.17 | `cloud-providers.yaml`                               | GCP + AWS provider configs loaded               |        |
 
 ### Phase 5: Cloud Provider A/B
 

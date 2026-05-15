@@ -843,4 +843,3 @@ Usage rules:
 
 <!-- TS-14 (2026-05-12): the verbatim-duplicated "Test Infrastructure: Emulators & Mocks" section was deleted here.
      The canonical copy survives ~180 lines above (search "## Test Infrastructure: Emulators & Mocks"). -->
-

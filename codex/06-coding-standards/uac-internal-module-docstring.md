@@ -19,9 +19,9 @@ Every `unified-api-contracts/unified_api_contracts/internal/*.py` module that sh
 3. Cite the **plan or issue doc** that introduced the module (provenance citation).
 
 Why: UAC internal modules are the workspace-wide contract surface for inter-service comms. Without the consumer
-citation, UAC contracts drift into orphaned-spec status — the original consumer evolves, the contract stagnates,
-and downstream readers can't tell which is authoritative. This rule turns every new internal module into a
-self-documenting bidirectional link.
+citation, UAC contracts drift into orphaned-spec status — the original consumer evolves, the contract stagnates, and
+downstream readers can't tell which is authoritative. This rule turns every new internal module into a self-documenting
+bidirectional link.
 
 ## When to apply
 
@@ -59,8 +59,8 @@ Cross-reference:
 The 2026-05-12 slot 8 ship of `unified_api_contracts/internal/manual_audit_paths.py` is the canonical reference
 implementation of this rule. Its docstring cites:
 
-- **Consumers**: position-balance-monitor-service (manual-trade-booking audit-log surface), deployment-ui (manual
-  trade UI surface).
+- **Consumers**: position-balance-monitor-service (manual-trade-booking audit-log surface), deployment-ui (manual trade
+  UI surface).
 - **Cross-reference**: `codex/07-security/audit-logging.md` (canonical audit-path SSOT) +
   `codex/14-customer-journeys/manual-trade-booking/manual-trade-booking.md`.
 - **Provenance**: `plans/active/manual_trade_booking_2026_05_07.md` Phase X.
@@ -69,13 +69,13 @@ When extending UAC `internal/` with a new consumer-facing module, mirror this sh
 
 ## Enforcement
 
-Today: reviewer-discipline only. Code review for any PR adding a `unified_api_contracts/internal/*.py` file MUST
-verify the docstring follows the shape above.
+Today: reviewer-discipline only. Code review for any PR adding a `unified_api_contracts/internal/*.py` file MUST verify
+the docstring follows the shape above.
 
 **Future ratchet** (P2 backlog): a QG STEP that walks `unified-api-contracts/unified_api_contracts/internal/*.py`,
-checks each for `^Consumers:` + `^Cross-reference:` + `^codex SSOT:` headers in the module docstring, fails the
-build if missing. Filed against `plans/archive/issues/codex_audit_governance_2026_05_12.md` G-15 (this codex doc
-is the design half; the QG ratchet is the enforcement half).
+checks each for `^Consumers:` + `^Cross-reference:` + `^codex SSOT:` headers in the module docstring, fails the build if
+missing. Filed against `plans/archive/issues/codex_audit_governance_2026_05_12.md` G-15 (this codex doc is the design
+half; the QG ratchet is the enforcement half).
 
 ## Composes with
 

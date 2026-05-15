@@ -26,7 +26,12 @@ related_plans:
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) adds **Stage 0 — pre-migration VM drain + state freeze** to this plan ahead of Stage 1. Stage 1 cannot start until Stage 0 lands: VM inventory via watchdog `VM_PREFIX_TO_BUCKET` registry → SIGTERM via launcher `--graceful-stop` → wait STOPPED event with non-empty progress metadata → manifest consolidator final run merging per-VM shards into canonical → snapshot canonical manifest to `_index/snapshots/pre_migration_2026_05_15.parquet` → operator-enforced lock against new VM launches until Phase 2 completes. Covers BOTH GCP and AWS VM fleets.
+> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> adds **Stage 0 — pre-migration VM drain + state freeze** to this plan ahead of Stage 1. Stage 1 cannot start until
+> Stage 0 lands: VM inventory via watchdog `VM_PREFIX_TO_BUCKET` registry → SIGTERM via launcher `--graceful-stop` →
+> wait STOPPED event with non-empty progress metadata → manifest consolidator final run merging per-VM shards into
+> canonical → snapshot canonical manifest to `_index/snapshots/pre_migration_2026_05_15.parquet` → operator-enforced
+> lock against new VM launches until Phase 2 completes. Covers BOTH GCP and AWS VM fleets.
 
 ## Audit 2026-05-07
 

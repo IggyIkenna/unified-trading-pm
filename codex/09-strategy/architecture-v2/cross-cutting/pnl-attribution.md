@@ -54,9 +54,9 @@ per the protocol's interest-rate model. APY is just a 365-day annualization of t
 discretization error AND loses the per-block fidelity needed for block-aligned P&L attribution.
 
 **Treasury wiring**: positions are tracked as the actual aToken / debt-token balance (Aave aUSDC, vDebt-USDC; Compound
-V3 base-token + collateral-token balances). position-balance-monitor-service reads on-chain `balanceOf(aToken_addr,
-user)` per block → balance growth IS the yield. The CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW factor rows below
-formalize the computation.
+V3 base-token + collateral-token balances). position-balance-monitor-service reads on-chain
+`balanceOf(aToken_addr, user)` per block → balance growth IS the yield. The CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW
+factor rows below formalize the computation.
 
 **Banned patterns** (review-blocking):
 
@@ -66,20 +66,20 @@ formalize the computation.
 - Reading `currentLiquidityRate` / `currentVariableBorrowRate` (the APR view) instead of `liquidityIndex` /
   `variableBorrowIndex` (the cumulative-growth view).
 
-**Backfill prerequisite**: MTDS `lending_indices` parquet must carry per-block `liquidity_index` + `variable_borrow_index`
-columns for the historical window covered by backtest replay. Currently captured per
+**Backfill prerequisite**: MTDS `lending_indices` parquet must carry per-block `liquidity_index` +
+`variable_borrow_index` columns for the historical window covered by backtest replay. Currently captured per
 [`amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md) § "Per-protocol IRM parameter
-capture" — see also `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for the slope-fields capture
-gap fix.
+capture" — see also `plans/active/issues/aave_irm_slope_capture_dropped_2026_05_12.md` for the slope-fields capture gap
+fix.
 
 ### 5. Staking yield: wrapped (price-delta) vs rebasing (balance-delta) — distinct attribution paths
 
 Both produce the same economic yield but the **data source differs**:
 
-| Token shape | Examples | Yield mechanism | Attribution factor | Data source |
-|---|---|---|---|---|
-| **Wrapped / non-rebasing** | wstETH, weETH, cbETH (ETH side); jitoSOL, mSOL, bSOL (Solana side) | On-chain exchange rate accretes; user balance stays fixed | `CARRY_BASE` = `holding × (exchange_rate_now / exchange_rate_prev - 1)` | `lst-rates` parquet — oracle price from issuer's stake pool contract (`rETH.getExchangeRate()`, `wstETH.stEthPerToken()`, Jito stake-pool getter) |
-| **Rebasing** | stETH (Lido native), ankrETH (rebasing variant), native unstaked SOL via validator-distribution | User balance grows mechanically each rebase epoch; price stays ~1:1 with native | `CARRY_BASE_REBASING` = `(balance_now - balance_prev) × token_price` | position-balance-monitor `balanceOf(token, wallet)` per block + `lst-rates` for token price |
+| Token shape                | Examples                                                                                        | Yield mechanism                                                                 | Attribution factor                                                      | Data source                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Wrapped / non-rebasing** | wstETH, weETH, cbETH (ETH side); jitoSOL, mSOL, bSOL (Solana side)                              | On-chain exchange rate accretes; user balance stays fixed                       | `CARRY_BASE` = `holding × (exchange_rate_now / exchange_rate_prev - 1)` | `lst-rates` parquet — oracle price from issuer's stake pool contract (`rETH.getExchangeRate()`, `wstETH.stEthPerToken()`, Jito stake-pool getter) |
+| **Rebasing**               | stETH (Lido native), ankrETH (rebasing variant), native unstaked SOL via validator-distribution | User balance grows mechanically each rebase epoch; price stays ~1:1 with native | `CARRY_BASE_REBASING` = `(balance_now - balance_prev) × token_price`    | position-balance-monitor `balanceOf(token, wallet)` per block + `lst-rates` for token price                                                       |
 
 **Native chain-side direct** (preferred over oracle proxy where available): both shapes can sometimes be derived
 directly from on-chain validator-distribution events (Ethereum beacon `Withdrawal` events + execution-layer rewards;
@@ -89,24 +89,24 @@ table lists the canonical chain-native sources per protocol. The oracle / exchan
 direct chain-native capture is unavailable.
 
 **Centralized-exchange collateral form** (per
-[`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../archetypes/carry-staked-basis.md) §
-"Venue × LST collateral matrix"):
+[`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../archetypes/carry-staked-basis.md) § "Venue ×
+LST collateral matrix"):
 
-| CEX | Accepted LST collateral | Form | Attribution factor when posted as cross-margin |
-|---|---|---|---|
-| **Bybit (UTA)** | stETH + METH + USDe | **Rebasing** (Bybit absorbs daily rebase server-side at UTA layer) | `CARRY_BASE_REBASING` — position-balance-monitor reads Bybit subaccount balance delta per day |
-| **OKX (multi-currency margin)** | wstETH + cbETH + weETH (haircut TBD per Stream A live probe) | **Wrapped non-rebasing** | `CARRY_BASE` — `holding × (exchange_rate_now / exchange_rate_prev - 1)` per the on-chain getter |
-| **Deribit (X:PM/X:SM)** | stETH (7.5% haircut, offsets ETH-perp directly — 2026-01-13 onwards) | **Rebasing** | `CARRY_BASE_REBASING` |
-| **Drift (Solana CL DEX)** | jitoSOL + mSOL (native non-rebasing) | **Wrapped non-rebasing** | `CARRY_BASE` |
+| CEX                             | Accepted LST collateral                                              | Form                                                               | Attribution factor when posted as cross-margin                                                  |
+| ------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| **Bybit (UTA)**                 | stETH + METH + USDe                                                  | **Rebasing** (Bybit absorbs daily rebase server-side at UTA layer) | `CARRY_BASE_REBASING` — position-balance-monitor reads Bybit subaccount balance delta per day   |
+| **OKX (multi-currency margin)** | wstETH + cbETH + weETH (haircut TBD per Stream A live probe)         | **Wrapped non-rebasing**                                           | `CARRY_BASE` — `holding × (exchange_rate_now / exchange_rate_prev - 1)` per the on-chain getter |
+| **Deribit (X:PM/X:SM)**         | stETH (7.5% haircut, offsets ETH-perp directly — 2026-01-13 onwards) | **Rebasing**                                                       | `CARRY_BASE_REBASING`                                                                           |
+| **Drift (Solana CL DEX)**       | jitoSOL + mSOL (native non-rebasing)                                 | **Wrapped non-rebasing**                                           | `CARRY_BASE`                                                                                    |
 
-Implication for `carry_staked_basis` archetype `_build_legs` discipline: the on-chain `STAKE` leg shape MUST match
-the perp venue's accepted collateral form. ETH-side: Bybit + Deribit consume the rebasing stETH directly
-(`Lido.submit → stETH → TRANSFER`); OKX requires wrapping (`Lido.submit → stETH → wstETH wrap → TRANSFER`). Solana
-side: jitoSOL / mSOL / bSOL are natively non-rebasing — no wrap step needed for Drift. **Banned**: posting wrapped
-wstETH to Bybit (Bybit's UTA pricing is calibrated on stETH share-price; wstETH delta diverges) — and conversely
-posting rebasing stETH to OKX (OKX has no daily-rebase reconciliation; the position would mark as undersized post-
-rebase). Archetype-engine config (`default_basis_trade.yaml`) discriminates by `perp_venue` to select the right
-wrap-or-not step at `_build_legs` time.
+Implication for `carry_staked_basis` archetype `_build_legs` discipline: the on-chain `STAKE` leg shape MUST match the
+perp venue's accepted collateral form. ETH-side: Bybit + Deribit consume the rebasing stETH directly
+(`Lido.submit → stETH → TRANSFER`); OKX requires wrapping (`Lido.submit → stETH → wstETH wrap → TRANSFER`). Solana side:
+jitoSOL / mSOL / bSOL are natively non-rebasing — no wrap step needed for Drift. **Banned**: posting wrapped wstETH to
+Bybit (Bybit's UTA pricing is calibrated on stETH share-price; wstETH delta diverges) — and conversely posting rebasing
+stETH to OKX (OKX has no daily-rebase reconciliation; the position would mark as undersized post- rebase).
+Archetype-engine config (`default_basis_trade.yaml`) discriminates by `perp_venue` to select the right wrap-or-not step
+at `_build_legs` time.
 
 **Banned patterns**:
 
@@ -125,15 +125,15 @@ Gas is a P&L factor on every DeFi transaction. Three discipline rules:
 2. **Native-gas-token treasury check + auto-provision**: every DeFi strategy preflight (`StrategyEngineV2.on_tick()` +
    execution-service preflight gate) verifies the wallet's native-gas-token balance per chain (ETH on
    Ethereum/Arbitrum/Optimism/Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche; GNO on Gnosis)
-   exceeds a configured threshold. When below threshold, the strategy auto-provisions by routing X% of starting
-   capital into the native-gas token via the spot venue (default `native_gas_reservation_pct = 1.0%` per DeFi strategy
-   config; tunable per chain via `default_basis_trade.yaml` `native_gas_reservation_pct_by_chain`). **Hard block**
-   when balance < threshold AND auto-provision route unavailable — strategy emits `record_failed(GAS_INSUFFICIENT)`
-   instead of attempting a tx that will revert at validator level.
-3. **GAS as a P&L factor**: every fill on a DeFi venue contributes `-(gas_used × gas_price × native_usd_at_tx_block)`
-   to the `GAS` factor (see Factor Definitions table). Strategy alpha vs execution alpha layer rule: gas is
-   `EXECUTION` layer for production trades (counterparty-independent cost); `STRATEGY` layer only when the strategy
-   over-trades (excessive rebalances eating gas — that's signal-quality, not fill-quality).
+   exceeds a configured threshold. When below threshold, the strategy auto-provisions by routing X% of starting capital
+   into the native-gas token via the spot venue (default `native_gas_reservation_pct = 1.0%` per DeFi strategy config;
+   tunable per chain via `default_basis_trade.yaml` `native_gas_reservation_pct_by_chain`). **Hard block** when balance
+   < threshold AND auto-provision route unavailable — strategy emits `record_failed(GAS_INSUFFICIENT)` instead of
+   attempting a tx that will revert at validator level.
+3. **GAS as a P&L factor**: every fill on a DeFi venue contributes `-(gas_used × gas_price × native_usd_at_tx_block)` to
+   the `GAS` factor (see Factor Definitions table). Strategy alpha vs execution alpha layer rule: gas is `EXECUTION`
+   layer for production trades (counterparty-independent cost); `STRATEGY` layer only when the strategy over-trades
+   (excessive rebalances eating gas — that's signal-quality, not fill-quality).
 
 **Banned patterns**:
 
@@ -160,8 +160,8 @@ flat enum) double-counts: `STRATEGY_ALPHA + EXECUTION_ALPHA` already sums to tot
   fill at requested price; zero execution alpha by definition). Captures what the strategy's signal earned assuming
   perfect execution.
 - `EXECUTION` rows = factor decomposition of `(live_or_SIMULATED_fill_pnl − BENCHMARK_fill_pnl)`. Captures what the
-  execution layer added or lost relative to the idealised fill: realised vs modelled slippage, latency, queue
-  position, adverse selection, size impact, partial fills, fee surprises.
+  execution layer added or lost relative to the idealised fill: realised vs modelled slippage, latency, queue position,
+  adverse selection, size impact, partial fills, fee surprises.
 
 **Invariant** (UTL helper enforces; see § Decomposition Invariants below):
 
@@ -171,26 +171,26 @@ sum(rows where layer=EXECUTION)            = execution_alpha_total
 sum(rows over both layers, all factors)    = realised_total_pnl
 ```
 
-`STRATEGY_ALPHA` and `EXECUTION_ALPHA` are **derived sum-by-layer views**, NOT enum members. Aggregators expose them
-as computed fields on rollups; storage stays factor × layer.
+`STRATEGY_ALPHA` and `EXECUTION_ALPHA` are **derived sum-by-layer views**, NOT enum members. Aggregators expose them as
+computed fields on rollups; storage stays factor × layer.
 
 **Per-factor layer profile** (which layer each factor typically populates):
 
-| Factor                                 | Layer profile        | Notes                                                                      |
-| -------------------------------------- | -------------------- | -------------------------------------------------------------------------- |
-| `DELTA`                                | STRATEGY (mostly)    | Position-side; tiny EXECUTION residual when fill price ≠ requested price   |
-| `FUNDING`                              | STRATEGY (entirely)  | Position-side; fill-price-independent                                      |
-| `BASIS`                                | STRATEGY (entirely)  | Convergence/divergence of holdings; not execution-driven                   |
-| `CARRY` + sub-factors                  | STRATEGY (entirely)  | Yield/rate accrual on held collateral                                      |
-| `GREEKS`                               | STRATEGY (mostly)    | Sensitivity-driven; small EXECUTION residual via fill-price delta on delta |
-| `SETTLEMENT`                           | STRATEGY (entirely)  | Contract expiry / event resolution                                         |
-| `SLIPPAGE`                             | EXECUTION (entirely) | Definition: fill_price − benchmark_price. Layer = EXECUTION                |
-| `FEES`                                 | Both                 | STRATEGY = modelled fee schedule; EXECUTION = surprise (rate change, etc.) |
-| `REBATE`                               | Both                 | STRATEGY = modelled maker rebate; EXECUTION = surprise                     |
-| `LIQUIDATION`                          | EXECUTION (entirely) | Liquidation penalty/bonus is execution outcome                             |
-| `REWARD_REALISATION_SLIPPAGE`          | EXECUTION (entirely) | Dust-conversion router slippage residual                                   |
-| `FX`                                   | STRATEGY (entirely)  | Currency conversion at settlement                                          |
-| `RESIDUAL`                             | Either               | Unexplained; investigate when > 1%                                         |
+| Factor                        | Layer profile        | Notes                                                                      |
+| ----------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| `DELTA`                       | STRATEGY (mostly)    | Position-side; tiny EXECUTION residual when fill price ≠ requested price   |
+| `FUNDING`                     | STRATEGY (entirely)  | Position-side; fill-price-independent                                      |
+| `BASIS`                       | STRATEGY (entirely)  | Convergence/divergence of holdings; not execution-driven                   |
+| `CARRY` + sub-factors         | STRATEGY (entirely)  | Yield/rate accrual on held collateral                                      |
+| `GREEKS`                      | STRATEGY (mostly)    | Sensitivity-driven; small EXECUTION residual via fill-price delta on delta |
+| `SETTLEMENT`                  | STRATEGY (entirely)  | Contract expiry / event resolution                                         |
+| `SLIPPAGE`                    | EXECUTION (entirely) | Definition: fill_price − benchmark_price. Layer = EXECUTION                |
+| `FEES`                        | Both                 | STRATEGY = modelled fee schedule; EXECUTION = surprise (rate change, etc.) |
+| `REBATE`                      | Both                 | STRATEGY = modelled maker rebate; EXECUTION = surprise                     |
+| `LIQUIDATION`                 | EXECUTION (entirely) | Liquidation penalty/bonus is execution outcome                             |
+| `REWARD_REALISATION_SLIPPAGE` | EXECUTION (entirely) | Dust-conversion router slippage residual                                   |
+| `FX`                          | STRATEGY (entirely)  | Currency conversion at settlement                                          |
+| `RESIDUAL`                    | Either               | Unexplained; investigate when > 1%                                         |
 
 ## Canonical Attribution Factors
 
@@ -241,27 +241,27 @@ realised_amount
 
 ### Factor Definitions
 
-| Factor                      | Computation                                                                                   | Sign Convention                            |
-| --------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| DELTA                       | `sum(position_qty × (price_now - price_prev))` per instrument                                 | Positive = profitable direction            |
-| FUNDING                     | `sum(position_qty × funding_rate × funding_interval)` per perp                                | Positive = received funding                |
-| BASIS                       | `spot_pnl + perp_pnl` for basis trades (captures convergence)                                 | Positive = basis moved in favor            |
-| **CARRY_LENDING_SUPPLY**    | `aToken_balance × (liquidity_index_now / liquidity_index_prev - 1)` per (protocol, asset, block). **NEVER `supply × apy × time_fraction`** — APY is a derived view, not a primary; the on-chain index IS the rate. | Positive = supply yield accreted           |
-| **CARRY_LENDING_BORROW**    | `debt_token_balance × (variable_borrow_index_now / variable_borrow_index_prev - 1)` per (protocol, asset, block). **NEVER `borrow × apy × time_fraction`**. The debt principal grows mechanically with `variable_borrow_index`; consumers track the debt-token balance separately. | Negative = borrow cost accrued             |
-| CARRY_BASE                  | **Wrapped non-rebasing LST** (wstETH, weETH, cbETH, jitoSOL, mSOL, jitoSOL): `holding × (exchange_rate_now / exchange_rate_prev - 1)` (oracle price IS the yield — non-rebasing token, balance fixed, price accretes) | Positive = exchange-rate accreted          |
-| **CARRY_BASE_REBASING**     | **Rebasing LST** (stETH, ankrETH-rebasing variants, native mSOL distribution): `(balance_now - balance_prev) × token_price` (balance accretes; price stays ~1:1 with native). Distinct factor from `CARRY_BASE` because the data source is balance-delta, NOT price-delta — wiring shape differs at the position-balance-monitor + lst-rates reader. | Positive = balance accreted                |
-| CARRY_AVS_CONTINUOUS        | `sum_per_token(claimed_amount × token_eth_price)` from eigenlayer_rewards                     | Positive = AVS rewards earned              |
-| CARRY_ISSUER_SEASONAL       | `sum_per_distributor(transfer_amount × token_eth_price_at_receipt)` from lst_seasonal_rewards | Positive = issuer epoch reward received    |
-| REWARD_REALISATION_SLIPPAGE | `realised_amount_target - mark_at_receipt_target` from dust-conversion router                 | Negative when reward token sells below mid |
-| GREEKS                      | `delta_pnl + gamma_pnl + vega_pnl + theta_pnl` for options                                    | Per-greek decomposition                    |
-| FEES                        | `-sum(fee_amount)` for all trades in period                                                   | Always negative (cost)                     |
-| **GAS**                     | `-sum(gas_used × gas_price_per_block × native_token_usd_price_at_tx_block)` per defi chain    | Always negative (cost — every defi tx burns native gas) |
-| SLIPPAGE                    | `sum(fill_price - benchmark_price) × quantity × side_sign`                                    | Negative = worse than benchmark            |
-| SETTLEMENT                  | `settlement_value - mark_value` at expiry/event resolution                                    | Positive = favorable settlement            |
-| LIQUIDATION                 | `liquidation_penalty` or `liquidation_bonus`                                                  | Negative for penalized party               |
-| REBATE                      | `sum(rebate_amount)` for maker fills and referral credits                                     | Always positive (income)                   |
-| FX                          | `pnl_local × (fx_rate_now - fx_rate_trade)` for non-USD venues                                | Positive = favorable FX move               |
-| RESIDUAL                    | `total_pnl - sum(all_attributed_factors)`                                                     | Should be near zero                        |
+| Factor                      | Computation                                                                                                                                                                                                                                                                                                                                          | Sign Convention                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| DELTA                       | `sum(position_qty × (price_now - price_prev))` per instrument                                                                                                                                                                                                                                                                                        | Positive = profitable direction                         |
+| FUNDING                     | `sum(position_qty × funding_rate × funding_interval)` per perp                                                                                                                                                                                                                                                                                       | Positive = received funding                             |
+| BASIS                       | `spot_pnl + perp_pnl` for basis trades (captures convergence)                                                                                                                                                                                                                                                                                        | Positive = basis moved in favor                         |
+| **CARRY_LENDING_SUPPLY**    | `aToken_balance × (liquidity_index_now / liquidity_index_prev - 1)` per (protocol, asset, block). **NEVER `supply × apy × time_fraction`** — APY is a derived view, not a primary; the on-chain index IS the rate.                                                                                                                                   | Positive = supply yield accreted                        |
+| **CARRY_LENDING_BORROW**    | `debt_token_balance × (variable_borrow_index_now / variable_borrow_index_prev - 1)` per (protocol, asset, block). **NEVER `borrow × apy × time_fraction`**. The debt principal grows mechanically with `variable_borrow_index`; consumers track the debt-token balance separately.                                                                   | Negative = borrow cost accrued                          |
+| CARRY_BASE                  | **Wrapped non-rebasing LST** (wstETH, weETH, cbETH, jitoSOL, mSOL, jitoSOL): `holding × (exchange_rate_now / exchange_rate_prev - 1)` (oracle price IS the yield — non-rebasing token, balance fixed, price accretes)                                                                                                                                | Positive = exchange-rate accreted                       |
+| **CARRY_BASE_REBASING**     | **Rebasing LST** (stETH, ankrETH-rebasing variants, native mSOL distribution): `(balance_now - balance_prev) × token_price` (balance accretes; price stays ~1:1 with native). Distinct factor from `CARRY_BASE` because the data source is balance-delta, NOT price-delta — wiring shape differs at the position-balance-monitor + lst-rates reader. | Positive = balance accreted                             |
+| CARRY_AVS_CONTINUOUS        | `sum_per_token(claimed_amount × token_eth_price)` from eigenlayer_rewards                                                                                                                                                                                                                                                                            | Positive = AVS rewards earned                           |
+| CARRY_ISSUER_SEASONAL       | `sum_per_distributor(transfer_amount × token_eth_price_at_receipt)` from lst_seasonal_rewards                                                                                                                                                                                                                                                        | Positive = issuer epoch reward received                 |
+| REWARD_REALISATION_SLIPPAGE | `realised_amount_target - mark_at_receipt_target` from dust-conversion router                                                                                                                                                                                                                                                                        | Negative when reward token sells below mid              |
+| GREEKS                      | `delta_pnl + gamma_pnl + vega_pnl + theta_pnl` for options                                                                                                                                                                                                                                                                                           | Per-greek decomposition                                 |
+| FEES                        | `-sum(fee_amount)` for all trades in period                                                                                                                                                                                                                                                                                                          | Always negative (cost)                                  |
+| **GAS**                     | `-sum(gas_used × gas_price_per_block × native_token_usd_price_at_tx_block)` per defi chain                                                                                                                                                                                                                                                           | Always negative (cost — every defi tx burns native gas) |
+| SLIPPAGE                    | `sum(fill_price - benchmark_price) × quantity × side_sign`                                                                                                                                                                                                                                                                                           | Negative = worse than benchmark                         |
+| SETTLEMENT                  | `settlement_value - mark_value` at expiry/event resolution                                                                                                                                                                                                                                                                                           | Positive = favorable settlement                         |
+| LIQUIDATION                 | `liquidation_penalty` or `liquidation_bonus`                                                                                                                                                                                                                                                                                                         | Negative for penalized party                            |
+| REBATE                      | `sum(rebate_amount)` for maker fills and referral credits                                                                                                                                                                                                                                                                                            | Always positive (income)                                |
+| FX                          | `pnl_local × (fx_rate_now - fx_rate_trade)` for non-USD venues                                                                                                                                                                                                                                                                                       | Positive = favorable FX move                            |
+| RESIDUAL                    | `total_pnl - sum(all_attributed_factors)`                                                                                                                                                                                                                                                                                                            | Should be near zero                                     |
 
 ## Strategy-Specific Factor Profiles
 
@@ -577,8 +577,8 @@ class PnLAttribution:
 
 ## Decomposition Invariants
 
-The UTL helper `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` enforces these
-on every per-day per-client rollup. Failure raises loud — never silent placeholder.
+The UTL helper `unified_trading_library.pnl_attribution.invariants.assert_decomposition_invariants()` enforces these on
+every per-day per-client rollup. Failure raises loud — never silent placeholder.
 
 ```
 1. sum(rows over both layers, all factors) == realised_total_pnl       (closed-set coverage)
@@ -596,15 +596,15 @@ factor + layer per this table. Adding a new factor requires the formal route: PR
 [Factor Definitions](#factor-definitions) table + extends the [per-archetype relevance](#per-archetype-factor-relevance)
 matrix.
 
-| Pre-codex name        | Canonical mapping                                                                                           |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `STRATEGY_ALPHA`      | Derived view: `sum(layer=STRATEGY)`. Not a factor; not an enum member.                                      |
-| `EXECUTION_ALPHA`     | Derived view: `sum(layer=EXECUTION)`. Not a factor; not an enum member.                                     |
-| `FINANCING`           | `factor=CARRY` with sub-factor metadata (lending/borrow rate accrual). If the borrow side needs its own bucket distinct from yield CARRY, formally add `BORROW_INTEREST` to `PnLFactor` enum (PR + matrix update). |
-| `BORROW`              | Same as `FINANCING` — collapse to `CARRY` (or formal `BORROW_INTEREST` factor add).                         |
-| `REBALANCE`           | NOT a factor. Each rebalance fill decomposes into `DELTA` + `SLIPPAGE` + `FEES` per existing canonical set. `REBALANCE` belongs in `PnLMetadata.fill_reason` (fill metadata), not the attribution axis. |
-| `HWM_CRYSTALLIZATION` | NOT in `PnLAttributionRow`. Performance-fee crystallization is recognised via a separate `FeeRecognitionRow` table emitted by `wallet_treasury_client_flow_2026_05_10` Phase 5.G's `PerformanceFeeCrystallizedEvent`. `FeeRecognitionRow` joins into the NAV waterfall but does NOT participate in factor × layer decomposition (it's a fee accounting event, not a P&L driver). |
-| `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #4 violation. Two axes (factor, layer) — not one flat union. |
+| Pre-codex name                                                       | Canonical mapping                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STRATEGY_ALPHA`                                                     | Derived view: `sum(layer=STRATEGY)`. Not a factor; not an enum member.                                                                                                                                                                                                                                                                                                           |
+| `EXECUTION_ALPHA`                                                    | Derived view: `sum(layer=EXECUTION)`. Not a factor; not an enum member.                                                                                                                                                                                                                                                                                                          |
+| `FINANCING`                                                          | `factor=CARRY` with sub-factor metadata (lending/borrow rate accrual). If the borrow side needs its own bucket distinct from yield CARRY, formally add `BORROW_INTEREST` to `PnLFactor` enum (PR + matrix update).                                                                                                                                                               |
+| `BORROW`                                                             | Same as `FINANCING` — collapse to `CARRY` (or formal `BORROW_INTEREST` factor add).                                                                                                                                                                                                                                                                                              |
+| `REBALANCE`                                                          | NOT a factor. Each rebalance fill decomposes into `DELTA` + `SLIPPAGE` + `FEES` per existing canonical set. `REBALANCE` belongs in `PnLMetadata.fill_reason` (fill metadata), not the attribution axis.                                                                                                                                                                          |
+| `HWM_CRYSTALLIZATION`                                                | NOT in `PnLAttributionRow`. Performance-fee crystallization is recognised via a separate `FeeRecognitionRow` table emitted by `wallet_treasury_client_flow_2026_05_10` Phase 5.G's `PerformanceFeeCrystallizedEvent`. `FeeRecognitionRow` joins into the NAV waterfall but does NOT participate in factor × layer decomposition (it's a fee accounting event, not a P&L driver). |
+| `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #4 violation. Two axes (factor, layer) — not one flat union.                                                                                                                                                                                                                                                                                                           |
 
 ## Share Class P&L
 
@@ -703,15 +703,15 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 
 ## SSOT References
 
-| Concept                | SSOT                       | Location                                                  |
-| ---------------------- | -------------------------- | --------------------------------------------------------- |
-| PnL calculator         | PnLCalculator              | `strategy-service/strategy_service/pnl_calculator.py`     |
-| Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py` |
-| PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                      |
-| Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                      |
-| Funding rate features  | features-service (delta-one family) | `features-service (delta-one family)/`                             |
-| Options greeks         | features-options-service   | `features-options-service/`                               |
-| Cost factors           | See execution-policy       | `codex/04-architecture/execution-policy.md`               |
-| PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
-| Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                   |
-| BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                |
+| Concept                | SSOT                                | Location                                                  |
+| ---------------------- | ----------------------------------- | --------------------------------------------------------- |
+| PnL calculator         | PnLCalculator                       | `strategy-service/strategy_service/pnl_calculator.py`     |
+| Settlement service     | SettlementService                   | `strategy-service/strategy_service/settlement_service.py` |
+| PnL attribution schema | UIC                                 | `unified-api-contracts (internal/)/`                      |
+| Fill schema            | CanonicalFill (UIC)                 | `unified-api-contracts (internal/)/`                      |
+| Funding rate features  | features-service (delta-one family) | `features-service (delta-one family)/`                    |
+| Options greeks         | features-options-service            | `features-options-service/`                               |
+| Cost factors           | See execution-policy                | `codex/04-architecture/execution-policy.md`               |
+| PnL storage            | GCS archives                        | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
+| Reporting UI           | trading-analytics-ui                | `trading-analytics-ui/`                                   |
+| BigQuery reporting     | UCI DataSink                        | `unified-cloud-interface/`                                |

@@ -29,13 +29,14 @@ for new MTDS writes (per `market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_
 [`service-output-emission-semantics.md`](./service-output-emission-semantics.md#manifest-read-protocol-per-service_emission_state)).
 Migration scripts owning the legacy-to-canonical rekey:
 [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-+ instruments-service `scripts/migrate_*_bare_to_asset_group.py`. After 2026-06-15 the dual-vocab tolerance in
-this doc is removed; readers + writers go canonical-only. `category=` is the **legacy** form
-(`RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY`) preserved on disk without a re-keying migration. Both coexist in production GCS
-— readers must try canonical first then fall back to legacy (`market_tick_data_service.reader` already does this;
-`deployment-api/utils/storage_facade.list_objects` transparently fans out to both vocabularies). Manifest pre-flight is
-hive-key-agnostic — it indexes by `(date, venue, chain, instrument_type, data_type)` only, so legacy `category=` data on
-disk is correctly skipped iff the manifest has a captured row for it.
+
+- instruments-service `scripts/migrate_*_bare_to_asset_group.py`. After 2026-06-15 the dual-vocab tolerance in this doc
+  is removed; readers + writers go canonical-only. `category=` is the **legacy** form
+  (`RAW_TICK_ASSET_GROUP_HIVE_KEY_LEGACY`) preserved on disk without a re-keying migration. Both coexist in production
+  GCS — readers must try canonical first then fall back to legacy (`market_tick_data_service.reader` already does this;
+  `deployment-api/utils/storage_facade.list_objects` transparently fans out to both vocabularies). Manifest pre-flight
+  is hive-key-agnostic — it indexes by `(date, venue, chain, instrument_type, data_type)` only, so legacy `category=`
+  data on disk is correctly skipped iff the manifest has a captured row for it.
 
 **Key insight**: asset-group-specific path divergences are REAL and have been a source of recurring bugs. SPORTS in
 particular does NOT follow the same layout as CEFI/TRADFI/DEFI/PREDICTION.
@@ -160,8 +161,8 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
    `2026-04-19 (ca246a9)` to use canonical `trades`. Old parquet files still have both; manifest reconciliation handles
    the merge.
 3. **DeFi `chain=` partition uses the UAC canonical name** — `ETHEREUM`, `ARBITRUM`, `BASE`, `SOLANA` — NOT aliases.
-   MDPS does NOT handle `chain=` in its DependencyChecker; DeFi processing routes through `features-service (onchain family)` for
-   chain-specific logic.
+   MDPS does NOT handle `chain=` in its DependencyChecker; DeFi processing routes through
+   `features-service (onchain family)` for chain-specific logic.
 4. **MDPS `_list_instrument_files` matches by `data_type=` substring**, not by full partition match. For SPORTS where
    the path has `data_type=odds/` but the orchestrator loops for `data_type=arbitrage_opportunity` etc., the mismatch
    returns 0 files for the mismatched types — they hit the fallback at `_list_instrument_files` line ~223 which accepts

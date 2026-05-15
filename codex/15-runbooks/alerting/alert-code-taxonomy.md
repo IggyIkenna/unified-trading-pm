@@ -319,10 +319,11 @@ flatten vs hold-and-monitor).
 
 ## Synthetic-data filter (AL-10 PRE_CUTOVER 2026-05-12, slot 8 audit)
 
-> **Codified 2026-05-12 per Alerting audit AL-10** (issue doc `plans/archive/issues/codex_audit_alerting_2026_05_12.md`).
-> Source-of-truth pattern: `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` defines the synthetic-data
-> taxonomy + slot 6 shipped the `synthetic-data generator taxonomy + per-asset_group registry` at UAC@`d47b232`. AL-10's
-> synthetic-data filter design is: "alerting rules don't fire on synthetic / mock data by default".
+> **Codified 2026-05-12 per Alerting audit AL-10** (issue doc
+> `plans/archive/issues/codex_audit_alerting_2026_05_12.md`). Source-of-truth pattern:
+> `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` defines the synthetic-data taxonomy + slot 6 shipped the
+> `synthetic-data generator taxonomy + per-asset_group registry` at UAC@`d47b232`. AL-10's synthetic-data filter design
+> is: "alerting rules don't fire on synthetic / mock data by default".
 
 ### Why this filter exists
 
@@ -393,8 +394,9 @@ Synthetic-allowed alerts NEVER route to PagerDuty + the production on-call Teleg
 - **UAC**: slot 6 `synthetic-data generator taxonomy + per-asset_group registry` at UAC@`d47b232`.
 - **Rehearsal seam**: [`rehearsal-procedure.md`](./rehearsal-procedure.md) § "rehearsal=true tag" — first concrete
   consumer of the filter.
-- **Issue doc**: [`codex_audit_alerting_2026_05_12.md`](../../../plans/archive/issues/codex_audit_alerting_2026_05_12.md)
-  AL-10 — origin of this section.
+- **Issue doc**:
+  [`codex_audit_alerting_2026_05_12.md`](../../../plans/archive/issues/codex_audit_alerting_2026_05_12.md) AL-10 —
+  origin of this section.
 
 ## Recommended AlertCode additions (PRE_CUTOVER 2026-05-12, slot 8 audit cross-refs)
 

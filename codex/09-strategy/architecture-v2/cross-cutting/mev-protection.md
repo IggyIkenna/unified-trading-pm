@@ -4,11 +4,12 @@ scope: [engineer, admin]
 
 # Cross-Cutting: MEV Protection (strategy-side)
 
-> **CANONICAL location for the protection mechanism**: [`codex/04-architecture/mev-protection.md`](../../../04-architecture/mev-protection.md).
-> This doc is the **strategy-side narrative** scope-narrowed 2026-05-10 per
-> `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 codex consolidation. Read the canonical for "what is MEV /
-> threat model / protection mechanisms / provider implementations / error codes". Read THIS doc for
-> "per-strategy MEV policy YAML + per-chain rules + per-action-type mapping + monitoring metrics".
+> **CANONICAL location for the protection mechanism**:
+> [`codex/04-architecture/mev-protection.md`](../../../04-architecture/mev-protection.md). This doc is the
+> **strategy-side narrative** scope-narrowed 2026-05-10 per `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 codex
+> consolidation. Read the canonical for "what is MEV / threat model / protection mechanisms / provider implementations /
+> error codes". Read THIS doc for "per-strategy MEV policy YAML + per-chain rules + per-action-type mapping + monitoring
+> metrics".
 >
 > If editing the implementation / threat model / provider behaviour, edit the canonical, NOT this doc.
 
@@ -28,7 +29,8 @@ scope: [engineer, admin]
 Mirrors UAC `MevSubmissionMode` enum (canonical:
 [`unified_api_contracts.internal.architecture_v2.enums.MevSubmissionMode`](../../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py)).
 Implementation detail + provider table lives in
-[canonical mev-protection.md](../../../04-architecture/mev-protection.md) § "MEV submission modes (UAC `MevSubmissionMode`)".
+[canonical mev-protection.md](../../../04-architecture/mev-protection.md) § "MEV submission modes (UAC
+`MevSubmissionMode`)".
 
 | Mode                         | Relay                                        | Protection                       | Speed               |
 | ---------------------------- | -------------------------------------------- | -------------------------------- | ------------------- |
@@ -40,8 +42,8 @@ Implementation detail + provider table lives in
 | `JITO_BUNDLE` (NEW Phase 5A) | Jito block-engine RPC                        | Strong (Solana)                  | Solana-specific     |
 | `BLOXROUTE`                  | (REMOVED per CLAUDE.md; do not re-introduce) | n/a                              | n/a                 |
 
-**Note:** Bloxroute is removed from our stack (per CLAUDE.md). Do not re-introduce without explicit decision.
-Solana DeFi swaps use `JITO_BUNDLE` (private mempool via Jito block-engine RPC), resolved at dispatch time.
+**Note:** Bloxroute is removed from our stack (per CLAUDE.md). Do not re-introduce without explicit decision. Solana
+DeFi swaps use `JITO_BUNDLE` (private mempool via Jito block-engine RPC), resolved at dispatch time.
 
 ## Policy mapping
 

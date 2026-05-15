@@ -30,21 +30,21 @@ flagged 3 mev-protection.md docs at risk of content drift:
 
 `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 consolidated these:
 
-1. Canonical = `codex/04-architecture/mev-protection.md` (most comprehensive system-architecture overview;
-   absorbed the implementation detail from this file).
+1. Canonical = `codex/04-architecture/mev-protection.md` (most comprehensive system-architecture overview; absorbed the
+   implementation detail from this file).
 2. This file → 1-page redirect (kept for link backwards-compat; do not add new content here).
-3. `09-strategy/architecture-v2/cross-cutting/mev-protection.md` → scope-narrowed strategy-side narrative with
-   explicit cross-link to the canonical.
+3. `09-strategy/architecture-v2/cross-cutting/mev-protection.md` → scope-narrowed strategy-side narrative with explicit
+   cross-link to the canonical.
 
 ## Where to find what
 
 If you came here looking for:
 
-- **MEV threat model + protection mechanisms** (slippage / private mempool / gas strategy / L2 / Tenderly pre-
-  flight) → [`04-architecture/mev-protection.md`](../04-architecture/mev-protection.md) sections "Threat Model" +
-  "How the System Protects Against MEV".
-- **MEVProtectionConfig + provider factory + protected RPC URLs SSOT** → same canonical doc, section
-  "Implementation: MEVProtectionConfig + Provider Factory".
+- **MEV threat model + protection mechanisms** (slippage / private mempool / gas strategy / L2 / Tenderly pre- flight) →
+  [`04-architecture/mev-protection.md`](../04-architecture/mev-protection.md) sections "Threat Model" + "How the System
+  Protects Against MEV".
+- **MEVProtectionConfig + provider factory + protected RPC URLs SSOT** → same canonical doc, section "Implementation:
+  MEVProtectionConfig + Provider Factory".
 - **Provider implementations** (NoProtection / PrivateMempool / Flashbots / Jito) → same canonical doc, section
   "Provider Implementations".
 - **Operational run-book** → same canonical doc, section "Operational Run-Book".

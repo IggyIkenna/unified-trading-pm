@@ -29,11 +29,11 @@ estimate_calibration_note: |
 
 > **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
 >
-> AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes
-> post-cutover (target 2026-06-04, sliding by GCP-green-date). Don't double cloud load before manifest +
-> data-quality is confirmed green on GCP primary. Phases 1-4 (audit + provisioning + ECR + secrets) can run
-> in parallel with GCP backfills (no live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6
-> ECS Fargate deployment** are GATED on master plan Gate 4 (GCP manifest+data-quality verification).
+> AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes post-cutover
+> (target 2026-06-04, sliding by GCP-green-date). Don't double cloud load before manifest + data-quality is confirmed
+> green on GCP primary. Phases 1-4 (audit + provisioning + ECR + secrets) can run in parallel with GCP backfills (no
+> live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6 ECS Fargate deployment** are GATED on master plan
+> Gate 4 (GCP manifest+data-quality verification).
 >
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
 >
@@ -335,15 +335,15 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
 ### Phase 2 — Provision 10 missing DeFi buckets + IAM (½ day, **PARALLEL** with Phase 1.5 once 1.5.A finishes)
 
 > **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11 extends Phase 2 scope.** Per
-> [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase 0c (operator
-> picked option (b+) — provision env-tiered buckets across both clouds + sync prod→staging/dev with truncated date
-> window), AWS bucket provisioning grows from "10 missing DeFi buckets" to "all env-tiered Group-A + Group-B kinds × 3
-> envs (staging/prod/development)." Estimated: ~150-200 NEW buckets on AWS alone (in addition to GCP-side ~150-200).
+> [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase 0c
+> (operator picked option (b+) — provision env-tiered buckets across both clouds + sync prod→staging/dev with truncated
+> date window), AWS bucket provisioning grows from "10 missing DeFi buckets" to "all env-tiered Group-A + Group-B kinds
+> × 3 envs (staging/prod/development)." Estimated: ~150-200 NEW buckets on AWS alone (in addition to GCP-side ~150-200).
 > The 10 DeFi buckets shipped 2026-05-08 cover only PROD env — STAGING + DEV variants must be added. **Coordinate with
 > bucket_name_ssot plan Phase 0c + 0d** (Harsh slot 4 owns); this plan's existing Phase 2 sub-items either get
 > superseded by Phase 0c/0d OR extend to cover the broader scope. Prefer the latter — keep Phase 2 here as the AWS-side
-> implementation arm of bucket_name_ssot Phase 0c. **Sequencing**: this Phase 2 still ships AFTER bucket_name_ssot
-> Phase 1 code-complete (yaml extensions, Phase 0e + 0f) lands.
+> implementation arm of bucket_name_ssot Phase 0c. **Sequencing**: this Phase 2 still ships AFTER bucket_name_ssot Phase
+> 1 code-complete (yaml extensions, Phase 0e + 0f) lands.
 
 - [x] [SCRIPT] P0. Extend `deployment-service/configs/cloud-providers.yaml` to declare AWS bucket templates for:
       `dex-pools`, `dex-swaps`, `evm-defi`, `eigenlayer-rewards`, `solana-defi`, `pnl-store-defi`,
@@ -469,8 +469,8 @@ This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-
 Both GCP and AWS prod-DeFi pipelines run simultaneously, reading the same manifest, writing to their respective stores.
 Operator verifies parity.
 
-- [ ] [SCRIPT] P0. Configure `instruments-service` + `features-service (onchain family)` + `strategy-service` to dual-write: GCP
-      for primary, AWS for secondary. Use a feature flag `DUAL_CLOUD_DEFI=true`.
+- [ ] [SCRIPT] P0. Configure `instruments-service` + `features-service (onchain family)` + `strategy-service` to
+      dual-write: GCP for primary, AWS for secondary. Use a feature flag `DUAL_CLOUD_DEFI=true`.
 - [ ] [SCRIPT] P0. Run for 24h continuous. After 24h, sample 10% of DeFi shards + diff GCP vs AWS parquets. Acceptance:
       byte-equal or schema+row-count match (NaN-aware compare).
 - [ ] [SCRIPT] P0. Manifest parity: `_index/availability_index.parquet` row-count + `capture_status` distribution match

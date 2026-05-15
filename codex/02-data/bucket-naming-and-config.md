@@ -7,8 +7,8 @@ superseded_on: 2026-05-11
 
 # Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
 
-> **SUPERSEDED 2026-05-11 by CLAUDE.md § "Bucket-name SSOT (b+) — env-aware bucket architecture (codified
-> 2026-05-11)"** — this document described the legacy `{bucket_prefix}-{gcp_project_id}` env-var pattern
+> **SUPERSEDED 2026-05-11 by CLAUDE.md § "Bucket-name SSOT (b+) — env-aware bucket architecture (codified 2026-05-11)"**
+> — this document described the legacy `{bucket_prefix}-{gcp_project_id}` env-var pattern
 > (`MARKET_DATA_BUCKET_PREFIX_CEFI`, per-category overrides). That pattern is BANNED. QG STEP 5.69 ratchet rejects
 > inline f-string bucket-name building.
 
@@ -44,5 +44,5 @@ bucket = resolve_bucket_name(
 ## Why this doc was retained as a stub (not deleted)
 
 Active plans, codex docs, and search engines reference this file path. A redirect stub preserves discoverability while
-making it impossible for a reader to re-introduce the legacy env-var-prefix pattern. The stub is the closed-set
-deletion gate for the legacy pattern.
+making it impossible for a reader to re-introduce the legacy env-var-prefix pattern. The stub is the closed-set deletion
+gate for the legacy pattern.

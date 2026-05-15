@@ -132,5 +132,8 @@ Self-pivot through all 3. EOD close-out ping when exhausted.
 Self-pivot. Ping DONE per major item.
 
 [2026-05-15 17:15 UTC] slot-6 — ✅ **NEW QUEUE RECEIVED + STARTED** — 10-item queue acked. All Day-4 items 1-8 DONE (queue extension fully closed — CYCLE-CLOSE @16:30 UTC). Starting new queue item 1 (Phase 9 codex pointers — verify execution-service@2e221907 Phase 9 DeFi cost models covered in codex/04-architecture/defi-execution-overview.md or new stub). Self-pivoting through all 10 items. Status by item:
-  - Item 1: IN PROGRESS (Phase 9 codex pointers)
-  - Items 2-10: QUEUED
+  - Item 1: ✅ DONE (Phase 9 codex pointers — PM@90db21ab)
+  - Item 2: IN PROGRESS (UTL events module log_event call-site audit)
+  - Items 3-10: QUEUED
+
+[2026-05-15 17:45 UTC] slot-6 — ✅ **ITEM 1 DONE: Phase 9 codex pointers** — Added full Phase 9 DeFi cost models section to `codex/04-architecture/defi-execution-overview.md`. Covers: GasAction enum + GAS_UNITS calibration (Aave V3 mainnet p50 2024-2026), FALLBACK_GAS_PRICE_GWEI per chain, pool-matcher vs analytical slippage paths, FlashLoanProvider (AAVE_V3=5bps/BALANCER=0bps/NONE=0bps), DefiCostAggregator entry point, P&L attribution wiring (gas+flash → fee_amount_modelled / STRATEGY layer; slippage → price_impact_bps / EXECUTION layer), L2 gas overhead table, and BLOCKED-DATA status for backtest replay. PM@90db21ab. Starting item 2 (log_event call-site audit).

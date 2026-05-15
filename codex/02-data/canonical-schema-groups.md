@@ -10,14 +10,14 @@ scope: [engineer, admin]
 > - **Canonical types** (`CanonicalTrade`, `CanonicalOrderBook`, `CanonicalOHLCV`, `CanonicalLiquidation`,
 >   `CanonicalOptionsChainEntry` — the "Group 1/2/…" tables below) live in `unified_api_contracts.canonical/domain/`.
 >   These are the output of normalizers — the cross-venue normalised shape every consumer reads.
-> - **Internal types** (service-internal pydantic models, dataclasses, TypedDicts used inside one repo as it
->   processes canonical inputs) live in `unified_api_contracts.internal/domain/<service>/`. These are NOT shared
->   cross-service; they exist so a service's `__init__` / `runner.py` / `cli/handlers/` agree on a single shape
->   without each module re-deriving it.
+> - **Internal types** (service-internal pydantic models, dataclasses, TypedDicts used inside one repo as it processes
+>   canonical inputs) live in `unified_api_contracts.internal/domain/<service>/`. These are NOT shared cross-service;
+>   they exist so a service's `__init__` / `runner.py` / `cli/handlers/` agree on a single shape without each module
+>   re-deriving it.
 >
-> The legacy phrasing "all internal canonical schemas are in `unified_api_contracts.internal`" was wrong — it
-> conflated canonical (cross-service output of normalizers) with internal (per-service intermediate). Each table
-> below is annotated `(canonical)` or `(internal)` at the top of the group.
+> The legacy phrasing "all internal canonical schemas are in `unified_api_contracts.internal`" was wrong — it conflated
+> canonical (cross-service output of normalizers) with internal (per-service intermediate). Each table below is
+> annotated `(canonical)` or `(internal)` at the top of the group.
 
 **External raw → normalised mapping:** [unified-api-contracts](https://github.com/central-element/unified-api-contracts)
 holds raw external schemas (`unified_api_contracts.external`) and normalised canonicals
@@ -132,11 +132,18 @@ absence is part of the contract.
 
 ## Module Location
 
-> **Refresh provenance (2026-05-12 codex audit D-10):** regenerated from `ls unified-api-contracts/unified_api_contracts/internal/`. Earlier table listed `positions/` / `risk/` / `orders.py` / `regulatory/` at the top level; actual top-level subpackages + modules below. Per the canonical-vs-internal split banner at the top of this doc, "internal" types live in `unified_api_contracts/internal/`; canonical normaliser-output types (CanonicalTrade / CanonicalOrderBook / CanonicalOHLCV / CanonicalLiquidation / CanonicalOptionsChainEntry) live under `unified_api_contracts/canonical/` per [`contracts-scope-and-layout.md`](./contracts-scope-and-layout.md) § "Canonical type ownership".
+> **Refresh provenance (2026-05-12 codex audit D-10):** regenerated from
+> `ls unified-api-contracts/unified_api_contracts/internal/`. Earlier table listed `positions/` / `risk/` / `orders.py`
+> / `regulatory/` at the top level; actual top-level subpackages + modules below. Per the canonical-vs-internal split
+> banner at the top of this doc, "internal" types live in `unified_api_contracts/internal/`; canonical normaliser-output
+> types (CanonicalTrade / CanonicalOrderBook / CanonicalOHLCV / CanonicalLiquidation / CanonicalOptionsChainEntry) live
+> under `unified_api_contracts/canonical/` per [`contracts-scope-and-layout.md`](./contracts-scope-and-layout.md) §
+> "Canonical type ownership".
 
 Internal-side top-level subpackages + modules (`unified-api-contracts/unified_api_contracts/internal/`):
 
-- `architecture_v2/` — strategy registry / family / archetype enums (StrategyFamily, StrategyArchetype, InstructionActionV2)
+- `architecture_v2/` — strategy registry / family / archetype enums (StrategyFamily, StrategyArchetype,
+  InstructionActionV2)
 - `connectivity/` — venue + transport capability declarations
 - `domain/` — domain-typed records (instruments, sports, prediction, etc.)
 - `events/` — internal event payloads
@@ -159,4 +166,5 @@ Internal-side top-level subpackages + modules (`unified-api-contracts/unified_ap
 - `sports.py` — internal sports contracts
 - `testing/` — internal testing helpers
 
-For canonical (normaliser-output) types, see `unified-api-contracts/unified_api_contracts/canonical/` — `domain/market_data/`, `domain/sports/`, `crosscutting/` etc.
+For canonical (normaliser-output) types, see `unified-api-contracts/unified_api_contracts/canonical/` —
+`domain/market_data/`, `domain/sports/`, `crosscutting/` etc.

@@ -45,8 +45,8 @@ scope: [engineer, admin]
 
 ## Pipeline DAG
 
-The 13 pipeline services (12 original + features-service (sports family)) form a directed acyclic graph with strict topological
-ordering. **Mermaid source (machine-readable):**
+The 13 pipeline services (12 original + features-service (sports family)) form a directed acyclic graph with strict
+topological ordering. **Mermaid source (machine-readable):**
 `unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md`
 
 ```
@@ -121,24 +121,25 @@ The pipeline processes four market categories through the same service graph:
 Each category shares the same pipeline services but with different venues, data types, instrument types, and external
 API dependencies. SPORTS was added as the fourth asset class (2026-03-01) and flows through the existing services
 (instruments, market-data-processing, strategy, execution) with `asset_group=SPORTS`. The only new standalone service is
-`features-service (sports family)` (sports-specific feature engineering). See `sports-integration-plan.md` for full details.
+`features-service (sports family)` (sports-specific feature engineering). See `sports-integration-plan.md` for full
+details.
 
 ### Service Roles
 
-| Service                        | Role                                                                                                        | External Dependencies                                         | Sports Augmentation (2026-03-01)                                              |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| instruments-service            | Generate instrument definitions from exchange APIs                                                          | Tardis, Databento, The Graph                                  | Sports parser, fixture matching, team normalization                           |
-| market-tick-data-service       | Download raw tick data from exchanges                                                                       | Tardis, Databento, Protocol APIs                              | N/A                                                                           |
-| market-data-processing-service | Aggregate raw ticks into candles (1m, 5m, 15m, 1h, 4h)                                                      | None                                                          | Odds API, Betfair Stream, API-Football; odds processing + arbitrage detection |
-| features-service (calendar family)      | Owns corporate actions (dividends, splits, earnings, macro results) and temporal/economic calendar features | FRED API, Earnings APIs, Polygon/yfinance (corporate actions) | N/A                                                                           |
-| features-service (delta-one family)     | Technical indicators, momentum, volume features                                                             | None                                                          | N/A                                                                           |
-| features-service (volatility family)    | IV, term structure, volatility features                                                                     | None                                                          | N/A                                                                           |
-| features-service (onchain family)       | TVL, sentiment, on-chain metrics (CEFI/DEFI)                                                                | None                                                          | N/A                                                                           |
-| **features-service (sports family)**    | **19 feature categories, time horizons (SPORTS only)**                                                      | **None**                                                      | **NEW standalone service**                                                    |
-| ml-training-service            | Train LightGBM models (3-stage pipeline)                                                                    | None                                                          | Sports configs, walk-forward validation                                       |
-| ml-inference-service           | Generate ML predictions from trained models                                                                 | None                                                          | Sports model loading                                                          |
-| strategy-service               | Generate trading signals and strategy instructions                                                          | None                                                          | Arbitrage, value betting, Kelly criterion                                     |
-| execution-service              | Backtest execution on tick-level data (NautilusTrader)                                                      | None                                                          | Betfair, Smarkets, Polymarket via USEI                                        |
+| Service                              | Role                                                                                                        | External Dependencies                                         | Sports Augmentation (2026-03-01)                                              |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| instruments-service                  | Generate instrument definitions from exchange APIs                                                          | Tardis, Databento, The Graph                                  | Sports parser, fixture matching, team normalization                           |
+| market-tick-data-service             | Download raw tick data from exchanges                                                                       | Tardis, Databento, Protocol APIs                              | N/A                                                                           |
+| market-data-processing-service       | Aggregate raw ticks into candles (1m, 5m, 15m, 1h, 4h)                                                      | None                                                          | Odds API, Betfair Stream, API-Football; odds processing + arbitrage detection |
+| features-service (calendar family)   | Owns corporate actions (dividends, splits, earnings, macro results) and temporal/economic calendar features | FRED API, Earnings APIs, Polygon/yfinance (corporate actions) | N/A                                                                           |
+| features-service (delta-one family)  | Technical indicators, momentum, volume features                                                             | None                                                          | N/A                                                                           |
+| features-service (volatility family) | IV, term structure, volatility features                                                                     | None                                                          | N/A                                                                           |
+| features-service (onchain family)    | TVL, sentiment, on-chain metrics (CEFI/DEFI)                                                                | None                                                          | N/A                                                                           |
+| **features-service (sports family)** | **19 feature categories, time horizons (SPORTS only)**                                                      | **None**                                                      | **NEW standalone service**                                                    |
+| ml-training-service                  | Train LightGBM models (3-stage pipeline)                                                                    | None                                                          | Sports configs, walk-forward validation                                       |
+| ml-inference-service                 | Generate ML predictions from trained models                                                                 | None                                                          | Sports model loading                                                          |
+| strategy-service                     | Generate trading signals and strategy instructions                                                          | None                                                          | Arbitrage, value betting, Kelly criterion                                     |
+| execution-service                    | Backtest execution on tick-level data (NautilusTrader)                                                      | None                                                          | Betfair, Smarkets, Polymarket via USEI                                        |
 
 ---
 

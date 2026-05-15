@@ -11,7 +11,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from check_imports_inside_functions import find_function_scope_imports
 
 
@@ -31,11 +30,11 @@ def write_py(tmp_path: Path):
 
 
 def test_real_nested_import_in_function_is_flagged(write_py) -> None:
-    src = '''
+    src = """
 def my_func():
     from json import loads
     return loads("{}")
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path)
     assert len(violations) == 1
@@ -45,30 +44,30 @@ def my_func():
 
 
 def test_real_nested_import_in_async_function_is_flagged(write_py) -> None:
-    src = '''
+    src = """
 async def my_func():
     import json
     return json.dumps({})
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path)
     assert len(violations) == 1
 
 
 def test_real_nested_import_in_method_is_flagged(write_py) -> None:
-    src = '''
+    src = """
 class Foo:
     def bar(self):
         from os import path
         return path.exists("/")
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path)
     assert len(violations) == 1
 
 
 def test_multiple_nested_imports_all_flagged(write_py) -> None:
-    src = '''
+    src = """
 def func1():
     from json import loads
     return loads("{}")
@@ -76,7 +75,7 @@ def func1():
 def func2():
     from os import path
     return path.exists("/")
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path)
     assert len(violations) == 2
@@ -86,13 +85,13 @@ def func2():
 
 
 def test_top_level_import_not_flagged(write_py) -> None:
-    src = '''
+    src = """
 import json
 from os import path
 
 def my_func():
     return json.dumps({})
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
@@ -149,28 +148,28 @@ class Foo:
 
 
 def test_commented_out_import_inside_function_not_flagged(write_py) -> None:
-    src = '''
+    src = """
 def my_func():
     # from json import loads  -- removed 2026-05-01, no longer needed
     return None
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
 
 def test_string_literal_with_import_text_not_flagged(write_py) -> None:
-    src = '''
+    src = """
 def my_func():
     error_msg = "Try `from json import loads` first."
     return error_msg
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
 
 def test_type_checking_block_at_module_scope_not_flagged(write_py) -> None:
     """TYPE_CHECKING block is If-node at MODULE scope (not function-scope)."""
-    src = '''
+    src = """
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -178,39 +177,39 @@ if TYPE_CHECKING:
 
 def my_func() -> "Iterator[int]":
     yield 1
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
 
 def test_noqa_marker_imports_inside_functions_skips(write_py) -> None:
-    src = '''
+    src = """
 def my_func():
     from json import loads  # noqa: imports-inside-functions
     return loads("{}")
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
 
 def test_legacy_noqa_marker_qg_inside_import_skips(write_py) -> None:
     """Legacy marker from base-library.sh; kept for backwards compatibility."""
-    src = '''
+    src = """
 def my_func():
     from json import loads  # noqa: qg-inside-import
     return loads("{}")
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
 
 def test_self_package_import_inside_function_not_flagged(write_py) -> None:
     """Preserves base-library.sh self-package auto-skip (circular-import workaround)."""
-    src = '''
+    src = """
 def my_func():
     from my_pkg.submodule import helper
     return helper()
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path, self_pkg="my_pkg")
     assert violations == []
@@ -220,11 +219,11 @@ def my_func():
 
 
 def test_non_self_package_import_still_flagged_with_self_pkg(write_py) -> None:
-    src = '''
+    src = """
 def my_func():
     from json import loads
     return loads("{}")
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path, self_pkg="my_pkg")
     assert len(violations) == 1
@@ -235,10 +234,10 @@ def my_func():
 
 def test_syntax_error_returns_empty(write_py) -> None:
     """Files with syntax errors return empty list (not crash)."""
-    src = '''
+    src = """
 def broken(:
     pass
-'''
+"""
     path = write_py("a.py", src)
     assert find_function_scope_imports(path) == []
 
@@ -250,13 +249,13 @@ def test_empty_file_returns_empty(write_py) -> None:
 
 def test_lambda_with_import_inside_flagged(write_py) -> None:
     """Lambdas can't contain imports as statements but nested defs CAN."""
-    src = '''
+    src = """
 def outer():
     def inner():
         from json import loads
         return loads("{}")
     return inner
-'''
+"""
     path = write_py("a.py", src)
     violations = find_function_scope_imports(path)
     assert len(violations) == 1

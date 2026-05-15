@@ -732,9 +732,10 @@ migrated:
    `resolve_bucket_name(cloud=get_cloud_provider().value, kind=<kind>, asset_group=<ag>)` calls. The `service → kind`
    map: `instruments-service`/`corporate-actions` → `instruments-store`;
    `market-tick-data-service`/`market-data-processing-service` → `market-data`; `features-service (delta-one family)` →
-   `features-delta-one`; `features-service (volatility family)` → `features-volatility`; `features-service (onchain family)` →
-   `features-onchain` (asset_group="defi"); `features-service (sports family)` → `features-sports`; `features-service (calendar family)` →
-   `features-calendar`; `features-service (multi-timeframe family)` → `features-multi-timeframe` (→ alias `features-mtf`);
+   `features-delta-one`; `features-service (volatility family)` → `features-volatility`;
+   `features-service (onchain family)` → `features-onchain` (asset_group="defi"); `features-service (sports family)` →
+   `features-sports`; `features-service (calendar family)` → `features-calendar`;
+   `features-service (multi-timeframe family)` → `features-multi-timeframe` (→ alias `features-mtf`);
    `features-service (cross-instrument family)` → `features-cross-instrument` (→ alias `features-xinstrument`);
    `features-service (commodity family)` → `features-commodity`; `ml-training-service` → `ml-models-store`;
    `ml-inference-service` → `ml-predictions-store`; `strategy-service` → `strategy-store`; `execution-service` →

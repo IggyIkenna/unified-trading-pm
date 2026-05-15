@@ -141,27 +141,21 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 
 - [ ] [SCRIPT] P0. **VERIFY** `strategy-service/scripts/run_2yr_config_grid_backtest.py` actually covers all 6 Tier A
       archetype families + uses `target_universe/catalog.py` as the rollout-instance SSOT + uses UAC `StrategyArchetype`
-      enum for archetype iteration. If gaps found, **EXTEND** rather than rewrite.
-      **VERIFY-2026-05-13** (slot 6): Script `SUPPORTED_ARCHETYPES` currently only contains
-      `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (2 of 53 enum members; covers ~2 of 6 Tier A families:
-      defi-carry-family partial, arbitrage-funding-rate=ARBITRAGE_PRICE_DISPERSION). **MISSING**: ml-continuous +
-      ml-settled (need `ML_DIRECTIONAL_CONTINUOUS` + `ML_DIRECTIONAL_EVENT_SETTLED` from
-      `StrategyArchetype` enum), arbitrage-sports-book (need sports vs Polymarket archetype), arbitrage-event-markets
-      (need Polymarket vs CME from `cme_polymarket_arb_2026_05_08.md`), plus 6 more defi-carry-family members
-      (`CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
-      `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, and any other `CARRY_*` archetypes in v2 enum). EXTEND scope = add
-      per-archetype `_DIMENSIONS_BY_ARCHETYPE` grid dimensions + `_dim_kwargs` + `_build_config_grid` branches +
-      `specs_for_archetype` integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension
-      sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate
-      window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.
-      **DEFERRED**: EXTEND to cover 4 missing archetype families (ml-continuous, ml-settled, arbitrage-sports-book,
-      arbitrage-event-markets) requires design call on per-archetype grid dimensions. Needs dedicated slot with
-      per-archetype domain expertise. Verification-only half done (slot 7 2026-05-14 — confirmed gaps, script reads
-      UAC `StrategyArchetype` enum + `specs_for_archetype` from catalog correctly).
+      enum for archetype iteration. If gaps found, **EXTEND** rather than rewrite. **VERIFY-2026-05-13** (slot 6):
+      Script `SUPPORTED_ARCHETYPES` currently only contains `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (2 of 53
+      enum members; covers ~2 of 6 Tier A families: defi-carry-family partial,
+      arbitrage-funding-rate=ARBITRAGE*PRICE_DISPERSION). **MISSING**: ml-continuous + ml-settled (need
+      `ML_DIRECTIONAL_CONTINUOUS` + `ML_DIRECTIONAL_EVENT_SETTLED` from `StrategyArchetype` enum), arbitrage-sports-book
+      (need sports vs Polymarket archetype), arbitrage-event-markets (need Polymarket vs CME from
+      `cme_polymarket_arb_2026_05_08.md`), plus 6 more defi-carry-family members (`CARRY_BASIS_DATED`,
+      `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
+      `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, and any other
+      `CARRY*\*`archetypes in v2 enum). EXTEND scope = add     per-archetype`\_DIMENSIONS_BY_ARCHETYPE`grid dimensions +`\_dim_kwargs`+`\_build_config_grid`branches +    `specs_for_archetype`integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension     sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate     window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.     **DEFERRED**: EXTEND to cover 4 missing archetype families (ml-continuous, ml-settled, arbitrage-sports-book,     arbitrage-event-markets) requires design call on per-archetype grid dimensions. Needs dedicated slot with     per-archetype domain expertise. Verification-only half done (slot 7 2026-05-14 — confirmed gaps, script reads     UAC`StrategyArchetype`enum +`specs_for_archetype`
+      from catalog correctly).
 - [x] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
       `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE). (ALREADY SHIPPED:
-      `run_2yr_config_grid_backtest.py` lines 819-823 — `--max-parallel` exists as `default=4` with note
-      "Reserved for future per-config parallelism". Confirmed present 2026-05-14 slot 7 audit.)
+      `run_2yr_config_grid_backtest.py` lines 819-823 — `--max-parallel` exists as `default=4` with note "Reserved for
+      future per-config parallelism". Confirmed present 2026-05-14 slot 7 audit.)
 - [ ] [SCRIPT] P0. Wire results aggregation: per-(config_cell, date_chunk) summary → cross-chunk P&L roll-up → master
       config-grid CSV. Mock-data smoke run = end-to-end exit on synthetic 30-day window in <5 min on c3-highcpu-44.
 
@@ -186,17 +180,17 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       (execution-service@fa18c3a1b — scaffold shipped. Wraps `GroupCRunner` (backtest_v2/runner.py) which is Phase-10
       scaffold pending Phase 4 polymorphic dispatch. TradeInstruction path wired today. 2026-05-14 slot 7.)
 - [x] [SCRIPT] P0. Parallel-shard wrapper: 730 days × 2 archetypes × 2 fill-modes = 2920 worker runs. Fits on
-      `c3-highcpu-176` with 16-day chunks → 183 chunks per shape, all parallel.
-      **SHIPPED 2026-05-15** — `execution-service/scripts/run_execution_alpha_parallel.py` fans out all
-      (archetype × 4-day chunk) pairs using `ProcessPoolExecutor(max_workers=176)`. Default 730-day window → 183 chunks
-      × 2 archetypes = 366 parallel workers per run. VM launcher:
-      `deployment-service/scripts/vm/launch-execution-alpha-vm.sh` (prefix `exec-alpha-` registered in
-      `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET). execution-service@`f65a7d5d5` + deployment-service@`1510310`.
+      `c3-highcpu-176` with 16-day chunks → 183 chunks per shape, all parallel. **SHIPPED 2026-05-15** —
+      `execution-service/scripts/run_execution_alpha_parallel.py` fans out all (archetype × 4-day chunk) pairs using
+      `ProcessPoolExecutor(max_workers=176)`. Default 730-day window → 183 chunks × 2 archetypes = 366 parallel workers
+      per run. VM launcher: `deployment-service/scripts/vm/launch-execution-alpha-vm.sh` (prefix `exec-alpha-`
+      registered in `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET). execution-service@`f65a7d5d5` +
+      deployment-service@`1510310`.
 - [x] [SCRIPT] P0. Mock-data smoke: synthetic 5-day window per archetype, both fill modes, verify diff > 0 + within
-      expected magnitude. (strategy-service@fc634e3 — `tests/integration/test_execution_alpha_smoke.py` authored.
-      Two test classes: `TestCarryStakedBasisExecutionAlpha` + `TestArbitragePriceDispersionExecutionAlpha`. Both
-      assert instructions_processed >= 5 + |alpha_delta| in [5, 1000] bps + inter-archetype difference check.
-      Full harness integration test skipif execution-service not in PYTHONPATH. 2026-05-14 slot 7.)
+      expected magnitude. (strategy-service@fc634e3 — `tests/integration/test_execution_alpha_smoke.py` authored. Two
+      test classes: `TestCarryStakedBasisExecutionAlpha` + `TestArbitragePriceDispersionExecutionAlpha`. Both assert
+      instructions_processed >= 5 + |alpha_delta| in [5, 1000] bps + inter-archetype difference check. Full harness
+      integration test skipif execution-service not in PYTHONPATH. 2026-05-14 slot 7.)
 
 ### Phase 4 — ML training + retraining parallel config-grid (Days 6-8, ~1 cal-AI-day)
 
@@ -228,12 +222,12 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       guidance for slot 1 main per-day allocation. Cross-references master plan + per-asset-group epics.
 - [x] [SCRIPT] P0. Cross-reference from master plan Group F items 17/18/20/21 +
       `code_freeze_migrate_backfill_sequencing` Phase 2/3 cutover-window section. (Master plan banner already references
-      via MVP SSOT row 2026-05-13; broader F17/18/20/21 row references to dependency-order doc pending.)
-      **SHIPPED 2026-05-15 PM@`pending`**: (1) `cutover-window-dependency-order.md` `## Cross-references` section
-      extended with "Master plan Group F items — sequencing ownership" table mapping F17/18/20/21 to checkpoint dates +
-      parallel-track status. (2) `code_freeze` Phase 2 freeze gate + Phase 3 intro both annotated with blockquote
-      references to dependency-order doc. Master plan forward-pointer is pending slot 1 main (slot precedence rule
-      prohibits direct master plan edits from slot 7).
+      via MVP SSOT row 2026-05-13; broader F17/18/20/21 row references to dependency-order doc pending.) **SHIPPED
+      2026-05-15 PM@`pending`**: (1) `cutover-window-dependency-order.md` `## Cross-references` section extended with
+      "Master plan Group F items — sequencing ownership" table mapping F17/18/20/21 to checkpoint dates + parallel-track
+      status. (2) `code_freeze` Phase 2 freeze gate + Phase 3 intro both annotated with blockquote references to
+      dependency-order doc. Master plan forward-pointer is pending slot 1 main (slot precedence rule prohibits direct
+      master plan edits from slot 7).
 
 ### Phase 7 — Performance-targets codex SSOT (Day 9-10, ~0.3 cal-AI-day)
 
@@ -338,16 +332,16 @@ slots + 1 PM slot, all distributable across existing density-push cycles.
 
 ## Deferred work after 2026-05-14 slot-7 session
 
-| Phase / item | Status as of 2026-05-14 | Successor / blocker |
-| ------------ | ----------------------- | ------------------- |
-| Phase 1: EXTEND to 4 missing archetype families | **DEFERRED** — verification done (gaps confirmed), extension needs design call on dimension choices | Spawn sub-plan or assign features maintainer slot; needs `mvp-universe-per-asset-group.md` author |
-| Phase 1: wire results aggregation + 30-day smoke | **TODO** — blocked behind EXTEND above | Same sub-plan |
-| Phase 2: `--worker-count` sports family | **DONE** — features-service@722697d3 | — |
-| Phase 2: profiling other 7 families | **TODO** — not started | Profiling slot (Harsh) |
-| Phase 3: execution alpha script | **DONE** — execution-service@fa18c3a1b | — |
-| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **DONE 2026-05-15** — `run_execution_alpha_parallel.py` + `launch-execution-alpha-vm.sh` + watchdog prefix registered | — |
-| Phase 4 smoke tests | **DONE** — strategy-service@fc634e3 | — |
-| Phase 4: ML training `--hyperparam-grid-file` | **TODO** — not started | ML training maintainer slot |
-| Phase 5: big-machine SKU matrix | **TODO** — not started | Benchmark owner |
-| Phase 6: F17/18/20/21 + code_freeze cross-refs | **DONE 2026-05-15** — dependency-order doc + code_freeze annotated; master plan forward-pointer pending slot 1 main | — |
-| Phase 7: performance-targets codex | **DONE PM@`db2de8ed`** — framework shipped; absolute targets STUB pending Phase 5 | — |
+| Phase / item                                          | Status as of 2026-05-14                                                                                               | Successor / blocker                                                                               |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Phase 1: EXTEND to 4 missing archetype families       | **DEFERRED** — verification done (gaps confirmed), extension needs design call on dimension choices                   | Spawn sub-plan or assign features maintainer slot; needs `mvp-universe-per-asset-group.md` author |
+| Phase 1: wire results aggregation + 30-day smoke      | **TODO** — blocked behind EXTEND above                                                                                | Same sub-plan                                                                                     |
+| Phase 2: `--worker-count` sports family               | **DONE** — features-service@722697d3                                                                                  | —                                                                                                 |
+| Phase 2: profiling other 7 families                   | **TODO** — not started                                                                                                | Profiling slot (Harsh)                                                                            |
+| Phase 3: execution alpha script                       | **DONE** — execution-service@fa18c3a1b                                                                                | —                                                                                                 |
+| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **DONE 2026-05-15** — `run_execution_alpha_parallel.py` + `launch-execution-alpha-vm.sh` + watchdog prefix registered | —                                                                                                 |
+| Phase 4 smoke tests                                   | **DONE** — strategy-service@fc634e3                                                                                   | —                                                                                                 |
+| Phase 4: ML training `--hyperparam-grid-file`         | **TODO** — not started                                                                                                | ML training maintainer slot                                                                       |
+| Phase 5: big-machine SKU matrix                       | **TODO** — not started                                                                                                | Benchmark owner                                                                                   |
+| Phase 6: F17/18/20/21 + code_freeze cross-refs        | **DONE 2026-05-15** — dependency-order doc + code_freeze annotated; master plan forward-pointer pending slot 1 main   | —                                                                                                 |
+| Phase 7: performance-targets codex                    | **DONE PM@`db2de8ed`** — framework shipped; absolute targets STUB pending Phase 5                                     | —                                                                                                 |

@@ -74,7 +74,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-
 # ── Constants ────────────────────────────────────────────────────────────────
 
 
@@ -254,9 +253,7 @@ def _scan_file(
 # ── Scope resolution ─────────────────────────────────────────────────────────
 
 
-def _resolve_scopes(
-    workspace_root: Path, scope: str | None, source_dir: str | None
-) -> list[tuple[str, Path, Path]]:
+def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | None) -> list[tuple[str, Path, Path]]:
     """Resolve which (repo, scan_root, canonical_writer_path) tuples to walk.
 
     Mirrors the shape of ``check_banned_placeholder_methods._resolve_scopes``
@@ -286,9 +283,7 @@ def _resolve_scopes(
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="MDPS bar `available_at` stamping discipline AST-walker."
-    )
+    parser = argparse.ArgumentParser(description="MDPS bar `available_at` stamping discipline AST-walker.")
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument(
         "--scope",
@@ -305,10 +300,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     workspace_root: Path = args.workspace_root.resolve()
     scopes = _resolve_scopes(workspace_root, args.scope, args.source_dir)
     if not scopes:
-        print(
-            f"[check_mdps_bar_available_at_stamping] no source trees to scan under "
-            f"{workspace_root} — skipping."
-        )
+        print(f"[check_mdps_bar_available_at_stamping] no source trees to scan under {workspace_root} — skipping.")
         return 0
 
     all_findings: list[Finding] = []
@@ -336,8 +328,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         )
 
     print(
-        f"\n[check_mdps_bar_available_at_stamping] FAIL — "
-        f"{len(all_findings)} unauthorised available_at write(s).",
+        f"\n[check_mdps_bar_available_at_stamping] FAIL — {len(all_findings)} unauthorised available_at write(s).",
         file=sys.stderr,
     )
     return 1

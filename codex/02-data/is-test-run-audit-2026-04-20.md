@@ -25,11 +25,11 @@ test-bucket routing for free. Services that build bucket names manually (via `*_
 
 ## Audit matrix (post-Phase-1)
 
-| #   | Service                           | Has `is_test_run` field? | How writes route                                                | Dep-checker test_mode auto-trigger? |
-| --- | --------------------------------- | ------------------------ | --------------------------------------------------------------- | ----------------------------------- |
-| 1   | instruments-service               | YES (pre-existing)       | orchestrator: `cfg.is_test_run` → `instruments-store-*-test-*`  | n/a (no dep-checker)                |
-| 2   | market-tick-data-service          | YES (pre-existing)       | orchestrator `get_tick_data_bucket()` honours `cfg.is_test_run` | n/a (no dep-checker)                |
-| 3   | market-data-processing-service    | YES (Phase 1 added)      | dep-checker: `test_mode=True` swaps via UPSTREAM_DEPS_TEST      | YES (Phase 1 — IS_TEST_RUN env)     |
+| #   | Service                                    | Has `is_test_run` field? | How writes route                                                | Dep-checker test_mode auto-trigger? |
+| --- | ------------------------------------------ | ------------------------ | --------------------------------------------------------------- | ----------------------------------- |
+| 1   | instruments-service                        | YES (pre-existing)       | orchestrator: `cfg.is_test_run` → `instruments-store-*-test-*`  | n/a (no dep-checker)                |
+| 2   | market-tick-data-service                   | YES (pre-existing)       | orchestrator `get_tick_data_bucket()` honours `cfg.is_test_run` | n/a (no dep-checker)                |
+| 3   | market-data-processing-service             | YES (Phase 1 added)      | dep-checker: `test_mode=True` swaps via UPSTREAM_DEPS_TEST      | YES (Phase 1 — IS_TEST_RUN env)     |
 | 4   | features-service (sports family)           | YES (Phase 1 added)      | service writes via UTL `get_write_bucket_name()` → auto-test    | n/a (no dep-checker)                |
 | 5   | features-service (calendar family)         | YES (Phase 1 added)      | shared bucket (no category) — `cfg.is_test_run` swaps suffix    | n/a (no dep-checker)                |
 | 6   | features-service (onchain family)          | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
@@ -38,8 +38,8 @@ test-bucket routing for free. Services that build bucket names manually (via `*_
 | 9   | features-service (cross-instrument family) | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
 | 10  | features-service (multi-timeframe family)  | YES (Phase 1 added)      | `output_bucket_template` + `cfg.is_test_run` to swap suffix     | n/a (no dep-checker)                |
 | 11  | features-service (commodity family)        | YES (Phase 1 added)      | `commodity_profiles_bucket` + `cfg.is_test_run` swaps           | n/a (no dep-checker)                |
-| 12  | ml-training-service               | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
-| 13  | ml-inference-service              | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
+| 12  | ml-training-service                        | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
+| 13  | ml-inference-service                       | YES (Phase 1 added)      | per-bucket templates + `cfg.is_test_run` to swap suffix         | n/a (no dep-checker)                |
 
 ---
 
@@ -85,11 +85,11 @@ class MyServiceConfig(UnifiedCloudConfig):
 
 ## Bucket-resolver helper inventory (per-service)
 
-| Service                           | Bucket helper                                               | Where it lives                                                 |
-| --------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| instruments-service               | UTL `get_bucket_name("instruments", category)`              | `engine/orchestrator.py` (uses cfg.is_test_run separately)     |
-| market-tick-data-service          | `get_tick_data_bucket(config, category)`                    | `engine/orchestrator.py:1313`                                  |
-| market-data-processing-service    | `_resolve_upstream_bucket()` + `OUTPUT_BUCKETS_TEST` map    | `app/core/dependency_checker.py:349`                           |
+| Service                                    | Bucket helper                                               | Where it lives                                                 |
+| ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| instruments-service                        | UTL `get_bucket_name("instruments", category)`              | `engine/orchestrator.py` (uses cfg.is_test_run separately)     |
+| market-tick-data-service                   | `get_tick_data_bucket(config, category)`                    | `engine/orchestrator.py:1313`                                  |
+| market-data-processing-service             | `_resolve_upstream_bucket()` + `OUTPUT_BUCKETS_TEST` map    | `app/core/dependency_checker.py:349`                           |
 | features-service (sports family)           | UTL `get_bucket_name("features_sports")`                    | (no shared category) — call `get_write_bucket_name()` at write |
 | features-service (calendar family)         | `cfg.source_bucket_template` (shared)                       | `config.py:40` — wrap with `cfg.is_test_run` swap              |
 | features-service (onchain family)          | `cfg.output_bucket_template`                                | `config.py:69` — wrap with `cfg.is_test_run` swap              |
@@ -98,8 +98,8 @@ class MyServiceConfig(UnifiedCloudConfig):
 | features-service (cross-instrument family) | `cfg.output_bucket_template`                                | `config.py:129` — wrap with `cfg.is_test_run` swap             |
 | features-service (multi-timeframe family)  | `cfg.output_bucket_template`                                | `config.py:165` — wrap with `cfg.is_test_run` swap             |
 | features-service (commodity family)        | `cfg.commodity_profiles_bucket`                             | `config.py:64` — wrap with `cfg.is_test_run` swap              |
-| ml-training-service               | `cfg.features_*_bucket_template` + `ml-models-store-*`      | `config.py:54+` — wrap with `cfg.is_test_run` swap             |
-| ml-inference-service              | `cfg.features_*_bucket_template` + `ml-predictions-store-*` | per-bucket — wrap with `cfg.is_test_run` swap                  |
+| ml-training-service                        | `cfg.features_*_bucket_template` + `ml-models-store-*`      | `config.py:54+` — wrap with `cfg.is_test_run` swap             |
+| ml-inference-service                       | `cfg.features_*_bucket_template` + `ml-predictions-store-*` | per-bucket — wrap with `cfg.is_test_run` swap                  |
 
 **Phase-1 scope**: every service has the `is_test_run` field landed. Phase-2 will run smoke matrices that set
 `IS_TEST_RUN=true`, exercise each service's write paths, and confirm shards land in `-test-` buckets. If a write path is

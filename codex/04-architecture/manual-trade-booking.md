@@ -128,24 +128,22 @@ For RECORD_ONLY mode, venue validation is skipped (OTC trades have arbitrary cou
 
 ### ML training-control actions (ml-training-service)
 
-Per `cross_cutting_may_23_deliverables` deliverable #4 BUILD #3 — DART manual ML training trigger.
-Distinct API surface (training-control is not a trade) but persists to the **same audit log** for
-unified operator-action timeline.
+Per `cross_cutting_may_23_deliverables` deliverable #4 BUILD #3 — DART manual ML training trigger. Distinct API surface
+(training-control is not a trade) but persists to the **same audit log** for unified operator-action timeline.
 
-| Method | Path                                | Description                                                          |
-| ------ | ----------------------------------- | -------------------------------------------------------------------- |
-| POST   | /training/{archetype}/{action}      | Apply lifecycle action (`pause` / `resume` / `retrain`) to archetype |
-| GET    | /training/{archetype}/status        | Get current training-loop status per archetype                       |
-| GET    | /training/audit/{request_id}        | Lookup audit row for a control request                               |
+| Method | Path                           | Description                                                          |
+| ------ | ------------------------------ | -------------------------------------------------------------------- |
+| POST   | /training/{archetype}/{action} | Apply lifecycle action (`pause` / `resume` / `retrain`) to archetype |
+| GET    | /training/{archetype}/status   | Get current training-loop status per archetype                       |
+| GET    | /training/audit/{request_id}   | Lookup audit row for a control request                               |
 
 Action axis is the closed-set `ManualMLTrainingAction` enum (`PAUSE` / `RESUME` / `RETRAIN`).
 
 ## Audit log surface
 
-Single `ManualInstructionAuditLog` row per operator-initiated action across BOTH trade + ML control
-axes. Dispatched via `action_category: ManualAuditCategory` (`MANUAL_TRADE` populates
-`manual_instruction`; `ML_TRAINING_CONTROL` populates `ml_training_request` + optionally
-`ml_training_response`).
+Single `ManualInstructionAuditLog` row per operator-initiated action across BOTH trade + ML control axes. Dispatched via
+`action_category: ManualAuditCategory` (`MANUAL_TRADE` populates `manual_instruction`; `ML_TRAINING_CONTROL` populates
+`ml_training_request` + optionally `ml_training_response`).
 
 Consumed by:
 
@@ -153,14 +151,13 @@ Consumed by:
 - **batch-live-reconciliation-service** — isolates execution alpha (manual vs simulated fills).
 - **alerting-service** — emits `strategy_id` per fired alert when manual action triggers a threshold.
 
-Persistence happens at the API boundary BEFORE forwarding (EXECUTE flow) or directly after recording
-the fill (RECORD_ONLY flow). Audit-log row is the durable record; downstream processing failures
-do not invalidate the audit row.
+Persistence happens at the API boundary BEFORE forwarding (EXECUTE flow) or directly after recording the fill
+(RECORD_ONLY flow). Audit-log row is the durable record; downstream processing failures do not invalidate the audit row.
 
 ## Audit log persistence (GCS / S3)
 
-Path SSOT lives at `unified_api_contracts/internal/manual_audit_paths.py`. Callers MUST use the
-path-helper functions; inline f-string paths are banned (would drift from the SSOT).
+Path SSOT lives at `unified_api_contracts/internal/manual_audit_paths.py`. Callers MUST use the path-helper functions;
+inline f-string paths are banned (would drift from the SSOT).
 
 ### Object key shape
 
@@ -175,9 +172,9 @@ Concrete examples:
 
 ### Bucket name (env-tiered)
 
-Resolved via `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(
-cloud=..., kind="manual-audit", env=...)`. The `manual-audit` bucket-kind entry lands in
-`deployment-service/configs/cloud-providers.yaml` per the
+Resolved via
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name( cloud=..., kind="manual-audit", env=...)`.
+The `manual-audit` bucket-kind entry lands in `deployment-service/configs/cloud-providers.yaml` per the
 [`bucket_name_ssot_canonicalisation_2026_05_10`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
 Phase 0i tail (slot 4 owned scope) — proposed shape:
 
@@ -188,87 +185,76 @@ manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}"
 
 ### Why separate from operational events bucket
 
-Operational events at `gs://{pid}-events-{env}/events/{service}/...` are short-retention (~30d)
-hourly-partitioned streams optimised for log-tail. Manual audit rows have different requirements:
+Operational events at `gs://{pid}-events-{env}/events/{service}/...` are short-retention (~30d) hourly-partitioned
+streams optimised for log-tail. Manual audit rows have different requirements:
 
 - **Long retention** for compliance (≥7 years).
 - **Append-only / immutable** — operator actions are durable record.
-- **Indexed by wallet / strategy / submitted_by** for pnl-attribution + batch-live-recon +
-  alerting queries.
+- **Indexed by wallet / strategy / submitted_by** for pnl-attribution + batch-live-recon + alerting queries.
 
-A dedicated `manual-audit` bucket (env-tiered) gives operations independent retention + access
-controls + lifecycle policies without polluting the operational events surface.
+A dedicated `manual-audit` bucket (env-tiered) gives operations independent retention + access controls + lifecycle
+policies without polluting the operational events surface.
 
 ### Date partition + UTC convention
 
-`YYYY-MM-DD` is computed from `ManualInstructionAuditLog.persisted_at` in UTC. Cross-day
-operator sessions (e.g. an action submitted at 2026-05-12T23:59 UTC) partition by UTC date,
-not operator-local timezone — keeps the audit log queryable without timezone-conversion logic.
+`YYYY-MM-DD` is computed from `ManualInstructionAuditLog.persisted_at` in UTC. Cross-day operator sessions (e.g. an
+action submitted at 2026-05-12T23:59 UTC) partition by UTC date, not operator-local timezone — keeps the audit log
+queryable without timezone-conversion logic.
 
 ### Action-category sub-partition
 
-The `action_category` directory matches `ManualAuditCategory` value strings
-(`manual_trade` / `ml_training_control`). Consumers selectively read one category for cheaper
-queries (e.g. pnl-attribution only needs `manual_trade/`; ml-training-service introspection only
-needs `ml_training_control/`).
+The `action_category` directory matches `ManualAuditCategory` value strings (`manual_trade` / `ml_training_control`).
+Consumers selectively read one category for cheaper queries (e.g. pnl-attribution only needs `manual_trade/`;
+ml-training-service introspection only needs `ml_training_control/`).
 
 ### File format
 
-Single-row line-delimited JSON (`.jsonl`). Object keys include the `.jsonl` suffix even for the
-common single-row write case — readers iterate via `readlines()` for forward-compat with future
-multi-row append batches. Pydantic round-trip via `ManualInstructionAuditLog.model_dump_json()` /
-`.model_validate_json()`.
+Single-row line-delimited JSON (`.jsonl`). Object keys include the `.jsonl` suffix even for the common single-row write
+case — readers iterate via `readlines()` for forward-compat with future multi-row append batches. Pydantic round-trip
+via `ManualInstructionAuditLog.model_dump_json()` / `.model_validate_json()`.
 
 ## Wallet-tier wiring (DeFi manual trades)
 
-When `ManualInstruction.wallet_id` is non-empty (DeFi action), the `/manual/instruction` endpoint
-performs a pre-trade wallet-tier validation BEFORE forwarding to the executor. The validation
-consumes the operator-target `WalletProvisioningConfig` (per slot 4 wallet schema at
-`unified_api_contracts/internal/domain/defi/wallet_config.py`) and computes a
-`WalletSpendingPreCheckResult` row that is persisted into the audit log.
+When `ManualInstruction.wallet_id` is non-empty (DeFi action), the `/manual/instruction` endpoint performs a pre-trade
+wallet-tier validation BEFORE forwarding to the executor. The validation consumes the operator-target
+`WalletProvisioningConfig` (per slot 4 wallet schema at `unified_api_contracts/internal/domain/defi/wallet_config.py`)
+and computes a `WalletSpendingPreCheckResult` row that is persisted into the audit log.
 
 ### Validation algorithm (execution-service runtime)
 
-1. **Kill-switch check** — load `WalletProvisioningConfig.kill_switch_id`; if armed in the
-   live `KillSwitchBus` state, set `kill_switch_armed=True`, `passed=False`,
-   `denial_reason="kill_switch_armed"`. Short-circuit (skip cap checks).
-2. **Per-tx cap** — compute `amount_usd` from `manual_instruction.quantity × price` (or reference
-   price for market orders) and call `SpendingCaps.is_within_per_tx(amount_usd)`. Populate
-   `per_tx_check`.
-3. **Per-hour cap** — query `position-balance-monitor-service` for the rolling 1h spend on this
-   wallet; populate `per_hour_check`.
+1. **Kill-switch check** — load `WalletProvisioningConfig.kill_switch_id`; if armed in the live `KillSwitchBus` state,
+   set `kill_switch_armed=True`, `passed=False`, `denial_reason="kill_switch_armed"`. Short-circuit (skip cap checks).
+2. **Per-tx cap** — compute `amount_usd` from `manual_instruction.quantity × price` (or reference price for market
+   orders) and call `SpendingCaps.is_within_per_tx(amount_usd)`. Populate `per_tx_check`.
+3. **Per-hour cap** — query `position-balance-monitor-service` for the rolling 1h spend on this wallet; populate
+   `per_hour_check`.
 4. **Per-day cap** — same for rolling 24h; populate `per_day_check`.
-5. **Per-protocol cap** — if `manual_instruction.venue` matches a `SpendingCaps.per_protocol_usd`
-   key, check the per-protocol limit; populate `per_protocol_check`.
-6. **Aggregate** — `passed = (kill_switch_armed is False) and all 4 cap checks True`. If `passed
-   is False`, populate `denial_reason` with the failed check name (`kill_switch_armed` /
-   `per_tx_cap_exceeded` / `per_hour_cap_exceeded` / `per_day_cap_exceeded` /
-   `per_protocol_cap_exceeded`).
+5. **Per-protocol cap** — if `manual_instruction.venue` matches a `SpendingCaps.per_protocol_usd` key, check the
+   per-protocol limit; populate `per_protocol_check`.
+6. **Aggregate** — `passed = (kill_switch_armed is False) and all 4 cap checks True`. If `passed is False`, populate
+   `denial_reason` with the failed check name (`kill_switch_armed` / `per_tx_cap_exceeded` / `per_hour_cap_exceeded` /
+   `per_day_cap_exceeded` / `per_protocol_cap_exceeded`).
 
 ### UI surface (DART panel — Harsh T6)
 
-The DART `ManualTradingPanel` "DeFi Action" tab (per `dart-manual-trade-spec.md` § 4 BUILD #1)
-extends the form with:
+The DART `ManualTradingPanel` "DeFi Action" tab (per `dart-manual-trade-spec.md` § 4 BUILD #1) extends the form with:
 
-- **Wallet selector** — dropdown of the operator's `(client × archetype)` wallets from
-  `WalletMappingConfig`. Disabled rows for wallets where `kill_switch_id` is currently armed
-  (with hover tooltip explaining the kill-switch state).
+- **Wallet selector** — dropdown of the operator's `(client × archetype)` wallets from `WalletMappingConfig`. Disabled
+  rows for wallets where `kill_switch_id` is currently armed (with hover tooltip explaining the kill-switch state).
 - **Per-row kill-switch button** — wallet-tier kill-switch arm/disarm action; each click writes a
-  `ManualInstructionAuditLog` row with `action_category=ManualAuditCategory.MANUAL_TRADE`,
-  `manual_instruction=None`, and a stub instruction documenting the kill-switch event (per
-  cross-side handoff with slot 4 — final shape may move to a dedicated `KillSwitchAction` audit
-  category in a follow-up cycle).
-- **Spending-caps display** — per-wallet `SpendingCaps` (per-tx / per-hour / per-day / per-protocol)
-  surfaced read-only above the submit button, with a "remaining headroom" indicator pulled from
-  the position-balance-monitor rolling-window query that drives the validation algorithm above.
-- **Pre-submit validation echo** — after the operator clicks Submit but before the request fires,
-  the client calls `POST /manual/instruction/precheck` (same payload, dry-run) and renders the
-  resulting `WalletSpendingPreCheckResult` so the operator sees the validation outcome without
-  spending actual quote-asset capital.
+  `ManualInstructionAuditLog` row with `action_category=ManualAuditCategory.MANUAL_TRADE`, `manual_instruction=None`,
+  and a stub instruction documenting the kill-switch event (per cross-side handoff with slot 4 — final shape may move to
+  a dedicated `KillSwitchAction` audit category in a follow-up cycle).
+- **Spending-caps display** — per-wallet `SpendingCaps` (per-tx / per-hour / per-day / per-protocol) surfaced read-only
+  above the submit button, with a "remaining headroom" indicator pulled from the position-balance-monitor rolling-window
+  query that drives the validation algorithm above.
+- **Pre-submit validation echo** — after the operator clicks Submit but before the request fires, the client calls
+  `POST /manual/instruction/precheck` (same payload, dry-run) and renders the resulting `WalletSpendingPreCheckResult`
+  so the operator sees the validation outcome without spending actual quote-asset capital.
 
-Per-row UI components map to slot 4's `WalletProvisioningConfig` fields:
-`kill_switch_id` → kill-switch button state · `spending_caps` → caps display ·
-`allowed_protocols` → enabled-action filter · `signing_surface` → pending-signing-modal route.
+Per-row UI components map to slot 4's `WalletProvisioningConfig` fields: `kill_switch_id` → kill-switch button state ·
+`spending_caps` → caps display · `allowed_protocols` → enabled-action filter · `signing_surface` → pending-signing-modal
+route.
 
 ## SSOT
 
@@ -280,6 +266,7 @@ Per-row UI components map to slot 4's `WalletProvisioningConfig` fields:
 - ManualInstructionAuditLog schema: same file
 - OperationalMode enum: `unified-api-contracts/unified_api_contracts/internal/modes.py`
 - API handler (trade): `execution-service/execution_service/api/manual_instruction_api.py`
-- API handler (training control): `ml-training-service/ml_training_service/api/training_control_api.py` (TBD per BUILD #3)
+- API handler (training control): `ml-training-service/ml_training_service/api/training_control_api.py` (TBD per BUILD
+  #3)
 - Cluster configs: `deployment-service/configs/clusters/*.yaml`
 - DART scope spec: `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`

@@ -4,9 +4,9 @@ scope: [engineer, admin]
 
 # DART Manual-Trade Lane — Per-Archetype Scope Specification
 
-> **Phase C remainder shipped 2026-05-13** (operator direction — pulled forward into May-23 cutover).
-> Routes + components + unified dart-client.ts shipped at
-> `unified-trading-system-ui` Phase C implementation:
+> **Phase C remainder shipped 2026-05-13** (operator direction — pulled forward into May-23 cutover). Routes +
+> components + unified dart-client.ts shipped at `unified-trading-system-ui` Phase C implementation:
+>
 > - `app/(platform)/services/dart/terminal/manual/page.tsx` — dedicated route replacing Sheet deep-link.
 > - `app/(platform)/services/dart/terminal/manual/[instructionId]/page.tsx` — per-instruction monitor route.
 > - `components/dart/manual-trade-form.tsx` — extracted form component.
@@ -14,8 +14,8 @@ scope: [engineer, admin]
 > - `components/dart/execution-dispatch.tsx` — dispatch coordinator.
 > - `lib/api/dart-client.ts` — unified typed wrappers for 4 DART endpoints.
 > - `lib/api/mocks/dart.ts` — mock fixtures wired into mock-handler.ts.
-> - `tests/e2e/dart-manual-trade-flow.spec.ts` — Playwright e2e spec.
-> **Reference plan**: `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md`.
+> - `tests/e2e/dart-manual-trade-flow.spec.ts` — Playwright e2e spec. **Reference plan**:
+>   `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md`.
 
 > **Plan-of-record**:
 > [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)

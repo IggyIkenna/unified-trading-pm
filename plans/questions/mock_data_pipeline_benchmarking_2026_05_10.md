@@ -45,10 +45,10 @@ related_questions:
 
 The May-23 cutover requires that **a 2-year batch backtest run completes inside an operationally-acceptable window**
 (master plan Group F item 18) and that **paper-trade smoke runs end-to-end without bottlenecking** (Group F item 17).
-Today we don't know what those run-times actually are. Each downstream consumer (features-* / ml-training / ml-inference
-/ strategy-service co-located with position-balance + risk + execution-service in matching-engine mode) has been built
-incrementally; nobody has measured "given a representative day's worth of input data, how long does this stage take on a
-VM, what's the per-stage CPU / memory / IO profile, and where's the bottleneck."
+Today we don't know what those run-times actually are. Each downstream consumer (features-\* / ml-training /
+ml-inference / strategy-service co-located with position-balance + risk + execution-service in matching-engine mode) has
+been built incrementally; nobody has measured "given a representative day's worth of input data, how long does this
+stage take on a VM, what's the per-stage CPU / memory / IO profile, and where's the bottleneck."
 
 The blocker for measuring this today is **input data**: the canonical answer would be "run the full pipeline on a real
 backfilled day from disk." But the backfills are partial, mid-flight, or post-cutover-only across several asset_groups.
@@ -73,12 +73,12 @@ code on top:
 - **`e2e-testing` repo** — the existing harnesses (`scripts/defi/colocated_engine.py`, sports / prediction harnesses,
   any other end-to-end runners) are the entry-point. Extend, don't re-author.
 - **`deployment-service` VM launchers** — per the workspace VM-launcher SSOT, every benchmark VM launches via
-  `deployment-service/scripts/vm/launch-*-vm.sh`. Add a `launch-benchmark-vm.sh` if missing; do NOT spin VMs from outside
-  the SSOT.
-- **Service repos as-is** — every service (features-* / ml-* / strategy-service / execution-service / position-balance /
+  `deployment-service/scripts/vm/launch-*-vm.sh`. Add a `launch-benchmark-vm.sh` if missing; do NOT spin VMs from
+  outside the SSOT.
+- **Service repos as-is** — every service (features-_ / ml-_ / strategy-service / execution-service / position-balance /
   risk / mtds / mdps / instruments) runs the exact same code path under benchmark as it does under prod. NO benchmark
-  forks of service code, NO `if benchmark_mode:` branches, NO mock-mode shims inside service business logic. The seam
-  is at data-source + bucket-name, not inside the service.
+  forks of service code, NO `if benchmark_mode:` branches, NO mock-mode shims inside service business logic. The seam is
+  at data-source + bucket-name, not inside the service.
 - **Non-prod buckets, same bucket structure** — benchmark runs read / write to a separate bucket suffix (e.g.
   `<prefix>-benchmark-` instead of `<prefix>-` for prod) but with **the exact same internal hive partitioning, parquet
   schema, manifest layout, and path templates**. Per CLAUDE.md "VM Naming Convention" + the `VM_PREFIX_TO_BUCKET`
@@ -131,8 +131,8 @@ is a pre-cutover prerequisite.
 
 ### Block A — Schema knowledge: do we know enough to generate the right shape?
 
-A1. **Per-data_type input schema — feature consumers.** For every `(asset_group, data_type)` that any features-* service
-consumes, do we have a canonical schema declaration in UAC describing exactly the parquet columns + types +
+A1. **Per-data_type input schema — feature consumers.** For every `(asset_group, data_type)` that any features-\*
+service consumes, do we have a canonical schema declaration in UAC describing exactly the parquet columns + types +
 cardinalities a mock generator must produce? Specifically:
 
 - **CeFi tick data** — `ticks`, `ohlcv_1m`, `ohlcv_15m`, `ohlcv_1h`, `funding_rate`, `open_interest`, `liquidations`,
@@ -165,18 +165,18 @@ tick history. For the matching engine in batch / paper mode:
 - What metadata about the venue (fee tier, liquidity profile, latency model) does it need?
 - What order-stream shape does the strategy → execution boundary produce?
 
-A6. **`available_at` write-time discipline in mock data.** Per CLAUDE.md "available_at is a write-time column, never
+A6. **`available_at` write-time discipline in mock data.** Per CLAUDE.md "available*at is a write-time column, never
 derived at read-time" + per-source stamping rules. Mock generators MUST stamp `available_at` correctly, or
 `LookaheadBiasError` will fire on every features compute. Audit: do we have per-source stamping helpers
-(`unified_trading_library.availability_stamping.stamp_available_at_*`) wired into generators?
+(`unified_trading_library.availability_stamping.stamp_available_at*\*`) wired into generators?
 
 A7. **Honest-absence + 4-state taxonomy in mock data.** Per CLAUDE.md, every shard's manifest row is one of `captured` /
 `empty_confirmed` / `attempted_failed` / `expected_unattempted`, and parquet rows reflect honest gaps. Mock generators
 must produce a representative mix — not just 100%-captured days — or downstream NaN-handling code paths are never
 exercised under benchmark.
 
-A8. **Schema versioning + drift.** Has the schema for any data_type changed in the last 6 months (column added /
-dropped / renamed)? If yes, are mock generators version-aware?
+A8. **Schema versioning + drift.** Has the schema for any data_type changed in the last 6 months (column added / dropped
+/ renamed)? If yes, are mock generators version-aware?
 
 ### Block B — Reuse audit: existing e2e-testing + deployment-service + service-repo surface
 
@@ -209,7 +209,7 @@ launcher lives here. Audit:
 
 B3. **Service-repo benchmark / profile entrypoints.** Per service, audit for existing benchmark scripts:
 
-- features-* services — `scripts/benchmark/*.py`, `scripts/profile/*.py`, perf tests under `tests/perf/`.
+- features-_ services — `scripts/benchmark/_.py`, `scripts/profile/\*.py`, perf tests under `tests/perf/`.
 - ml-training-service — per-model-family training profile.
 - ml-inference-service — per-batch inference latency / throughput.
 - strategy-service — per-archetype signal-generation timing.
@@ -299,7 +299,7 @@ C3. **Bucket provisioning + lifecycle.** Who provisions the benchmark buckets, o
 - Persistent benchmark buckets per asset_group, retained with lifecycle policies (1-week / 1-month TTL on parquets).
 - Per-experiment buckets with a UUID suffix for parallel benchmark runs.
 
-C4. **Reader-side bucket-suffix awareness.** Consumers (features-* / ml-* / strategy / execution / position-balance /
+C4. **Reader-side bucket-suffix awareness.** Consumers (features-_ / ml-_ / strategy / execution / position-balance /
 risk) must read from `*-benchmark-*` when in benchmark mode. Audit:
 
 - Does every consumer read bucket via UCI (the right path) or via `os.environ` + hardcoded prefix?
@@ -314,8 +314,8 @@ fork of `ManifestWriter`, no shortcut "just put the parquets there and fake the 
 
 ### Block D — End-to-end harness reuse
 
-D1. **`e2e-testing` harness extension over fork.** For each existing harness, the benchmark variant is a `--mode
-benchmark` flag (or equivalent) that:
+D1. **`e2e-testing` harness extension over fork.** For each existing harness, the benchmark variant is a
+`--mode benchmark` flag (or equivalent) that:
 
 - Switches data source from real-bucket to benchmark-bucket (single env-var per C4).
 - Wraps each stage in a timing span (per D3).
@@ -445,9 +445,9 @@ unified features benchmark surface is well-defined.
 - A workspace-wide benchmark-runner exists at the right SSOT location (TBD per D2 — likely
   `deployment-service/scripts/vm/launch-benchmark-vm.sh` + `e2e-testing/scripts/benchmark/run-pipeline-benchmark.sh`),
   runnable per `--asset-group` + `--archetype` + `--mode` + `--scale` flag.
-- Per-asset_group + per-data_type mock generators exist in a single SSOT module
+- Per-asset*group + per-data_type mock generators exist in a single SSOT module
   (`unified-trading-library/synthetic_data/` candidate), parametric on B7 axes, schema-version-aware per A8, calling
-  `ManifestWriter.record_*` exactly as prod adapters do.
+  `ManifestWriter.record*\*` exactly as prod adapters do.
 - Each downstream service (features / ml-training / ml-inference / strategy / execution-matching-engine /
   position-balance / risk) has a `scripts/benchmark/` entrypoint that consumes the SSOT generator surface + emits
   structured-event timing per stage (per D3 — additive instrumentation, no service-side forks).
@@ -457,8 +457,8 @@ unified features benchmark surface is well-defined.
   templates + manifest layout). Reader/writer code paths are identical to prod modulo a single bucket-suffix env-var.
 - Initial benchmark runs against representative mock data are complete; per-stage bottleneck report exists as a codex
   appendix or PM-archived artifact.
-- Bottleneck remediation backlog exists as P0 / P1 / P2 items folded into appropriate epic plans (ml_and_features_master,
-  strategy_and_dart_master, infrastructure_master).
+- Bottleneck remediation backlog exists as P0 / P1 / P2 items folded into appropriate epic plans
+  (ml_and_features_master, strategy_and_dart_master, infrastructure_master).
 - Per-stage thresholds + continuous-verification path are wired into the master plan's continuous-verification column
   for relevant Group F items (item 17 paper-trade smoke runtime, item 18 batch backtest runtime).
 - Service-readiness checklist gates per the master plan's per-service matrix get a "benchmark-passed" sub-gate.
@@ -472,21 +472,22 @@ file:line references against the workspace as of 2026-05-10.
 
 ### Block A — Schema knowledge (ready ~80%, sufficient for cefi/defi; gaps in sports/prediction/macro)
 
-**A1 — Per-data_type input schemas.** AVAILABILITY_AT_SEMANTICS dict at
-`unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py:~20-30` covers
-cefi (trades, ohlcv_*, book_snapshot, liquidations, options_chain), defi (swap, fx_rate, liquidity, market_state,
-gas_fees, lst_yields, vault_state), sports (FIXTURES, FIXTURE_LINEUPS, FIXTURE_EVENTS, FIXTURE_STATS, INJURIES, ODDS,
-WEATHER), prediction (market_created_at). **No per-column Parquet schema declarations centralized** — generators must
-infer field shapes from `InputReq.data_type` enums + availability_semantics tuples. **Gap**: tradfi tuple sparse
-in availability_semantics; per-data_type Pydantic models would lift inference reliability from ~70% to 100%.
+**A1 — Per-data_type input schemas.** AVAILABILITY*AT_SEMANTICS dict at
+`unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py:~20-30` covers cefi
+(trades, ohlcv*\*, book_snapshot, liquidations, options_chain), defi (swap, fx_rate, liquidity, market_state, gas_fees,
+lst_yields, vault_state), sports (FIXTURES, FIXTURE_LINEUPS, FIXTURE_EVENTS, FIXTURE_STATS, INJURIES, ODDS, WEATHER),
+prediction (market_created_at). **No per-column Parquet schema declarations centralized** — generators must infer field
+shapes from `InputReq.data_type` enums + availability_semantics tuples. **Gap**: tradfi tuple sparse in
+availability_semantics; per-data_type Pydantic models would lift inference reliability from ~70% to 100%.
 
 **A2 — Feature DAG SSOT.** **PRESENT and declarative** at
-`unified-api-contracts/unified_api_contracts/canonical/domain/features/required_inputs.py:1-429`. `FEATURE_REQUIRED_INPUTS`
-dict maps `feature_group → List[InputReq]` where `InputReq` is a dataclass with `asset_group, data_type, available_at_rule,
-horizon, source`. Helpers: `get_required_inputs / has_required_inputs / list_feature_groups / validate_required_inputs`.
-Coverage: features-onchain (defi) ~20 groups full; features-delta-one (cefi/tradfi) ~25 groups full; features-sports
-~5 groups partial; features-prediction ~2 groups minimal; features-macro absent. Already consumed by `LookaheadBiasError.
-assert_no_lookahead()` + deployment-api `data_status` denominator.
+`unified-api-contracts/unified_api_contracts/canonical/domain/features/required_inputs.py:1-429`.
+`FEATURE_REQUIRED_INPUTS` dict maps `feature_group → List[InputReq]` where `InputReq` is a dataclass with
+`asset_group, data_type, available_at_rule, horizon, source`. Helpers:
+`get_required_inputs / has_required_inputs / list_feature_groups / validate_required_inputs`. Coverage: features-onchain
+(defi) ~20 groups full; features-delta-one (cefi/tradfi) ~25 groups full; features-sports ~5 groups partial;
+features-prediction ~2 groups minimal; features-macro absent. Already consumed by
+`LookaheadBiasError. assert_no_lookahead()` + deployment-api `data_status` denominator.
 
 **A3 — ML model_family + strategy archetype contracts.** ML model_family registry **NOT FOUND** as a centralized SSOT.
 Strategy archetypes live at `strategy-service/strategy_service/portfolio_allocator/archetypes.py` with input shapes
@@ -494,23 +495,21 @@ implied via feature_groups but no explicit per-archetype input dataclass. **Gap*
 via feature_groups already in DAG) but explicit dataclasses would tighten contract.
 
 **A4 — Execution-backtest contract.** **READY**. `execution-service/execution_service/matching_engine/engine.py:1-100+`
-declares `MatchingEngine` abstraction with L0Matcher (sports TOB), L1Matcher (tradfi trades), L2Matcher (cefi orderbook),
-AMMMatcher (defi swaps), BenchmarkMatcher (lend/stake/borrow). `MatchResult` fully typed (success, filled, remaining,
-fill_price, ts, optional price_impact_bps, optional fee_amount). Deterministic backtest path.
+declares `MatchingEngine` abstraction with L0Matcher (sports TOB), L1Matcher (tradfi trades), L2Matcher (cefi
+orderbook), AMMMatcher (defi swaps), BenchmarkMatcher (lend/stake/borrow). `MatchResult` fully typed (success, filled,
+remaining, fill_price, ts, optional price_impact_bps, optional fee_amount). Deterministic backtest path.
 
 **A5 — `available_at` stamping helpers.** **PRESENT** at
-`unified-trading-library/unified_trading_library/availability_stamping.py:1-120+`:
-`stamp_available_at_lineups` (kickoff-60min) / `stamp_available_at_event_time` (per-row source column) /
-`stamp_available_at_post_match` (match_end_time fallback kickoff+120min) / `stamp_available_at_offset` (generic).
-Covers sports + cefi/defi/tradfi tick + prediction.
+`unified-trading-library/unified_trading_library/availability_stamping.py:1-120+`: `stamp_available_at_lineups`
+(kickoff-60min) / `stamp_available_at_event_time` (per-row source column) / `stamp_available_at_post_match`
+(match_end_time fallback kickoff+120min) / `stamp_available_at_offset` (generic). Covers sports + cefi/defi/tradfi
+tick + prediction.
 
 **A6 — Honest-absence taxonomy.** **PRESENT** at
 `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py:166` — `EMPTY_CONFIRMED_REASONS`
-closed set with 13+ typed reasons (`EXPECTED_HOLIDAY / EXPECTED_WEEKEND / EXPECTED_PAUSED_LEAGUE /
-EXPECTED_PRE_SOURCE_COVERAGE_START / EXPECTED_PRE_GENESIS_CHAIN / EXPECTED_INSTRUMENT_NOT_LISTED / EXPECTED_DELISTED /
-EXPECTED_PARTIAL_HALF_DAY / EXPECTED_OUTSIDE_TRADING_HOURS / EXPECTED_OUTSIDE_TRANSFER_WINDOW / EXPECTED_PRE_SEASON /
-EXPECTED_POST_SEASON / EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE / EXPECTED_DEPRECATED_DATA_TYPE`). 4-state `capture_status`
-enum at lines 56-80 (`captured / empty_confirmed / attempted_failed / expected_unattempted`).
+closed set with 13+ typed reasons
+(`EXPECTED_HOLIDAY / EXPECTED_WEEKEND / EXPECTED_PAUSED_LEAGUE / EXPECTED_PRE_SOURCE_COVERAGE_START / EXPECTED_PRE_GENESIS_CHAIN / EXPECTED_INSTRUMENT_NOT_LISTED / EXPECTED_DELISTED / EXPECTED_PARTIAL_HALF_DAY / EXPECTED_OUTSIDE_TRADING_HOURS / EXPECTED_OUTSIDE_TRANSFER_WINDOW / EXPECTED_PRE_SEASON / EXPECTED_POST_SEASON / EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE / EXPECTED_DEPRECATED_DATA_TYPE`).
+4-state `capture_status` enum at lines 56-80 (`captured / empty_confirmed / attempted_failed / expected_unattempted`).
 
 **A7 — Schema versioning.** **ABSENT**. No `schema_version` column / migration helpers / version-aware reader fallback.
 Long-term gap; not a blocker for first benchmark run.
@@ -524,74 +523,77 @@ and tradfi-tick, (b) ML model_family registry, (c) optional explicit strategy ar
 
 **B1 — `e2e-testing/scripts/` harness inventory** — 3 harnesses identified:
 
-| Harness | Purpose | Synth-input? | Per-stage events? | Currently green? |
-| --- | --- | --- | --- | --- |
-| `e2e-testing/scripts/defi/colocated_engine.py` | Co-located DeFi/CeFi/TradFi/Sports/Prediction engine; ring services in single process | Partial — `--mode batch` reads from GCS feature buckets; no synth-tick injection | No formal per-stage timing | **NO — import-rotted** since 2026-05-01 (`get_strategy_factories` removed from strategy-service.cli.handlers.batch_utils; uncaught due to QG gap; reference incident codified in CLAUDE.md) |
-| `e2e-testing/scripts/sports/arb_rolling_backtest.py` | Sports arbitrage signal + backtest over historical odds | Partial — fixture schedule synthesisable, odds read from sports bucket | No | Unknown |
-| `e2e-testing/scripts/sports/test_two_days_pipeline.py` | Sports 2-day pipeline smoke | Yes — constructs sample data in-memory | No | Unknown |
+| Harness                                                | Purpose                                                                               | Synth-input?                                                                     | Per-stage events?          | Currently green?                                                                                                                                                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `e2e-testing/scripts/defi/colocated_engine.py`         | Co-located DeFi/CeFi/TradFi/Sports/Prediction engine; ring services in single process | Partial — `--mode batch` reads from GCS feature buckets; no synth-tick injection | No formal per-stage timing | **NO — import-rotted** since 2026-05-01 (`get_strategy_factories` removed from strategy-service.cli.handlers.batch_utils; uncaught due to QG gap; reference incident codified in CLAUDE.md) |
+| `e2e-testing/scripts/sports/arb_rolling_backtest.py`   | Sports arbitrage signal + backtest over historical odds                               | Partial — fixture schedule synthesisable, odds read from sports bucket           | No                         | Unknown                                                                                                                                                                                     |
+| `e2e-testing/scripts/sports/test_two_days_pipeline.py` | Sports 2-day pipeline smoke                                                           | Yes — constructs sample data in-memory                                           | No                         | Unknown                                                                                                                                                                                     |
 
 Per CLAUDE.md "Peripheral Script Directories Under Primary-Consumer QG" (codified 2026-05-08), these directories are
-**outside primary-service QG** — fix is wiring `e2e-testing/scripts/defi/` into `strategy-service/scripts/quality-gates.sh`.
+**outside primary-service QG** — fix is wiring `e2e-testing/scripts/defi/` into
+`strategy-service/scripts/quality-gates.sh`.
 
-**B2 — `deployment-service/scripts/vm/` launcher inventory.** **73 launch-\*-vm.sh scripts**, mature pattern
-(tarball + tarball-from-local + singleton-lock + watchdog-registered). Patterns covered: cefi-{mr,fwd,venue}-,
+**B2 — `deployment-service/scripts/vm/` launcher inventory.** **73 launch-\*-vm.sh scripts**, mature pattern (tarball +
+tarball-from-local + singleton-lock + watchdog-registered). Patterns covered: cefi-{mr,fwd,venue}-,
 tradfi-{bf,fwd,recent,instr,phantom}-, sports-{ref-v3}, mtds-{asset-group}-, mdps-{asset-group}-, instr-backfill-,
 features-sports-, manifest-consolidator-, vm-zombie-watchdog. Singleton-lock in `launch-sfi-forward-poll.sh` +
 `launch-mtds-prediction-backfill-vm.sh`.
+
 - **`VM_PREFIX_TO_BUCKET` dict** at `deployment-service/scripts/vm/vm_zombie_watchdog.py:113-224`. **NO `benchmark-`
   prefix**. Add-pattern is 1-line dict entry + new launcher + watchdog VM relaunch.
 - **NO `launch-benchmark-vm.sh`** exists.
 
 **B3 — Service benchmark entrypoints.**
 
-| Service | `scripts/benchmark/` | `tests/perf/` | Notes |
-| --- | --- | --- | --- |
-| execution-service | NO | YES (+ `execution_service/benchmark/` for matching-engine perf — comparison.py / metrics.py / html_report.py) | Matching-engine-specific, not generic |
-| strategy-service | NO | YES | Signal-gen throughput tests |
-| ml-training-service | NO | YES | Training latency tests |
-| ml-inference-service | NO | YES | Batch inference throughput |
-| market-data-processing-service | NO | YES | OHLC bar aggregation perf |
-| features-delta-one-service | NO | YES | Feature compute latency (test-only) |
-| features-sports-service | NO | Embedded in launch scripts | No dedicated benchmark |
-| features-volatility-service | NO | NO | **GAP — zero perf coverage** |
-| features-onchain-service | NO | Embedded in launch scripts | No dedicated benchmark |
-| features-tradfi-options-service | NO | NO | **GAP** |
-| features-prediction-service | NO | NO | **GAP** |
-| position-balance-monitor-service | NO | NO | **GAP** |
-| risk-and-exposure-service | NO | YES | Risk check latency (test-only) |
-| market-tick-data-service | NO | YES | Adapter throughput per venue |
-| instruments-service | NO | NO | Reference data only |
+| Service                          | `scripts/benchmark/` | `tests/perf/`                                                                                                 | Notes                                 |
+| -------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| execution-service                | NO                   | YES (+ `execution_service/benchmark/` for matching-engine perf — comparison.py / metrics.py / html_report.py) | Matching-engine-specific, not generic |
+| strategy-service                 | NO                   | YES                                                                                                           | Signal-gen throughput tests           |
+| ml-training-service              | NO                   | YES                                                                                                           | Training latency tests                |
+| ml-inference-service             | NO                   | YES                                                                                                           | Batch inference throughput            |
+| market-data-processing-service   | NO                   | YES                                                                                                           | OHLC bar aggregation perf             |
+| features-delta-one-service       | NO                   | YES                                                                                                           | Feature compute latency (test-only)   |
+| features-sports-service          | NO                   | Embedded in launch scripts                                                                                    | No dedicated benchmark                |
+| features-volatility-service      | NO                   | NO                                                                                                            | **GAP — zero perf coverage**          |
+| features-onchain-service         | NO                   | Embedded in launch scripts                                                                                    | No dedicated benchmark                |
+| features-tradfi-options-service  | NO                   | NO                                                                                                            | **GAP**                               |
+| features-prediction-service      | NO                   | NO                                                                                                            | **GAP**                               |
+| position-balance-monitor-service | NO                   | NO                                                                                                            | **GAP**                               |
+| risk-and-exposure-service        | NO                   | YES                                                                                                           | Risk check latency (test-only)        |
+| market-tick-data-service         | NO                   | YES                                                                                                           | Adapter throughput per venue          |
+| instruments-service              | NO                   | NO                                                                                                            | Reference data only                   |
 
 **Zero services have `scripts/benchmark/` entrypoint.** All perf testing confined to `tests/perf/` (pytest-based).
 Volatility / onchain / tradfi-options / prediction features + position-balance + instruments have **zero perf
 instrumentation**.
 
-**B4-B9 — Synthetic-data generator inventory.** **ZERO generators across the workspace.** Workspace-wide grep returns
-no UTL `synthetic_data/` package, no test-fixture generators producing tick / OHLCV / DeFi data / TradFi options-chain /
-sports / prediction CLOB / order-fill streams. **This is the single biggest pre-benchmark blocker**: without per-data_type
-generators that satisfy UAC schema contracts + call `ManifestWriter.record_*` correctly, the whole reuse-principle
-benchmark cannot run regardless of how good the harness reuse is.
+**B4-B9 — Synthetic-data generator inventory.** **ZERO generators across the workspace.** Workspace-wide grep returns no
+UTL `synthetic_data/` package, no test-fixture generators producing tick / OHLCV / DeFi data / TradFi options-chain /
+sports / prediction CLOB / order-fill streams. **This is the single biggest pre-benchmark blocker**: without
+per-data*type generators that satisfy UAC schema contracts + call `ManifestWriter.record*\*` correctly, the whole
+reuse-principle benchmark cannot run regardless of how good the harness reuse is.
 
 ### Block C — Bucket + path SSOT for non-prod runs
 
-**C1 — Bucket-naming SSOT.** `unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py:1-60`
-is the single SSOT (per Tab 4 work `UTL@780a9575`). YAML SSOT at `deployment-service/configs/cloud-providers.yaml`
-mirrored to PM. **`resolve_bucket_name(cloud, asset_group, kind)` does NOT accept `--bucket-suffix` today** (line 54).
-Fix is a 5-line function-signature extension + `${suffix}` template substitution in cloud-providers.yaml.
+**C1 — Bucket-naming SSOT.** `unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py:1-60` is
+the single SSOT (per Tab 4 work `UTL@780a9575`). YAML SSOT at `deployment-service/configs/cloud-providers.yaml` mirrored
+to PM. **`resolve_bucket_name(cloud, asset_group, kind)` does NOT accept `--bucket-suffix` today** (line 54). Fix is a
+5-line function-signature extension + `${suffix}` template substitution in cloud-providers.yaml.
 
-**C2 — UCI bucket flow.** **No `unified-cloud-interface` service exists** — bucket flow is direct UTL import.
-Sample: `colocated_engine.py:47` imports `get_bucket_name` directly from UTL. Pattern: services pull bucket names via
-UTL bucket_naming, not via UCI mediation. Implication: bucket-suffix flow needs only the UTL extension; no UCI work.
+**C2 — UCI bucket flow.** **No `unified-cloud-interface` service exists** — bucket flow is direct UTL import. Sample:
+`colocated_engine.py:47` imports `get_bucket_name` directly from UTL. Pattern: services pull bucket names via UTL
+bucket_naming, not via UCI mediation. Implication: bucket-suffix flow needs only the UTL extension; no UCI work.
 
-**C3 — Path templates / hive partitioning.** **NOT centralized for features readers**. Per
-`colocated_engine.py:771-788` the `_FEATURE_BUCKETS` dict + path construction is per-service. Hive partition vocab
-**IS** centralized at MTDS `raw_tick_hive.py` (write side), but **reader path templates are duplicated per features-\*
-service**. Implication: a single bucket-suffix env-var won't redirect every reader without lifting reader paths to a
-shared module — this is a Phase 0 prereq.
+**C3 — Path templates / hive partitioning.** **NOT centralized for features readers**. Per `colocated_engine.py:771-788`
+the `_FEATURE_BUCKETS` dict + path construction is per-service. Hive partition vocab **IS** centralized at MTDS
+`raw_tick_hive.py` (write side), but **reader path templates are duplicated per features-\* service**. Implication: a
+single bucket-suffix env-var won't redirect every reader without lifting reader paths to a shared module — this is a
+Phase 0 prereq.
 
-**C4 — `ManifestWriter` parity.** **SINGLE class** at `unified-trading-library/unified_trading_library/manifest_writer.py`.
-**Zero forks** workspace-wide. Synthetic-data generators MUST call `ManifestWriter.record_captured / record_empty /
-record_failed / record_expected_unattempted` exactly as prod adapters do — same SSOT, no parallel writer.
+**C4 — `ManifestWriter` parity.** **SINGLE class** at
+`unified-trading-library/unified_trading_library/manifest_writer.py`. **Zero forks** workspace-wide. Synthetic-data
+generators MUST call `ManifestWriter.record_captured / record_empty / record_failed / record_expected_unattempted`
+exactly as prod adapters do — same SSOT, no parallel writer.
 
 **C5 — Manifest-bucket parity.** Inherits from C4 — single writer means generators producing parquets to benchmark
 buckets will write manifest entries to the same bucket via the same code path; no separate "fake manifest" surface.
@@ -604,17 +606,17 @@ COMPLETED, MODEL_SAVING_STARTED/COMPLETED, FILL_COMPLETED, STRATEGY_SIGNAL_GENER
 PERSISTENCE_STARTED/COMPLETED. **BUT** — workspace-wide grep shows these intermediate progress events are **NOT EMITTED
 at scale** by service code today. Only STARTED + STOPPED are reliably emitted by `ServiceBootstrap`.
 
-**D2 — Profiling tool wiring.** **ABSENT** in production code. No `cProfile / py-spy / austin / scalene / pyinstrument /
-memray / memory_profiler / tracemalloc / OpenTelemetry / OTel / tracer / span` imports. Test-only OTel skeleton at
-`unified-trading-library/tests/unit/test_tracing.py:1` (`_NoOpTracer`).
+**D2 — Profiling tool wiring.** **ABSENT** in production code. No
+`cProfile / py-spy / austin / scalene / pyinstrument / memray / memory_profiler / tracemalloc / OpenTelemetry / OTel / tracer / span`
+imports. Test-only OTel skeleton at `unified-trading-library/tests/unit/test_tracing.py:1` (`_NoOpTracer`).
 
-**D3 — VM event-stream contract.** **PRESENT** at
-`unified-trading-library/unified_trading_library/event_sink.py:53-126` (`GcsEventSink`). Path:
-`events/{service}/{ts[:10]}/{instance_id}/hour={HH:02d}/{ts_us}_{seq}.jsonl`. One event per file. STARTED/STOPPED required
-within 60s of launch / at exit; intermediate progress events **optional** by contract but the only way to disambiguate
-"silently broken" from "no progress" per CLAUDE.md "No fire-and-forget VM launches".
+**D3 — VM event-stream contract.** **PRESENT** at `unified-trading-library/unified_trading_library/event_sink.py:53-126`
+(`GcsEventSink`). Path: `events/{service}/{ts[:10]}/{instance_id}/hour={HH:02d}/{ts_us}_{seq}.jsonl`. One event per
+file. STARTED/STOPPED required within 60s of launch / at exit; intermediate progress events **optional** by contract but
+the only way to disambiguate "silently broken" from "no progress" per CLAUDE.md "No fire-and-forget VM launches".
 
 **D4 — Existing benchmark / bottleneck work.**
+
 - `execution-service/execution_service/benchmark/` (`comparison.py` 30KB, `enhanced_comparison.py` 14KB, `metrics.py`
   14KB, `html_report.py` 14KB) — matching-engine specific, not generic pipeline benchmark.
 - `plans/archive/ml_training_feature_read_perf_2026_05_06.plan.md` — prior ml-training perf work (archive, status
@@ -627,23 +629,27 @@ Tardis adapter, not per-pipeline-stage profiling.
 
 ### Bottom line — readiness summary
 
-| Block | Status | Critical gap |
-| --- | --- | --- |
-| A — Schema knowledge | **~80% ready** | Per-data_type Parquet field shapes for sports/prediction/tradfi-tick + ML model_family registry |
-| B — Reuse harness inventory | **Partial** | colocated_engine.py rotted; zero `scripts/benchmark/` entrypoints across services |
-| B — Synthetic generators | **0% ready** | **ZERO generators exist** — single biggest blocker |
-| C — Bucket SSOT | **Strong foundation, needs 1-line extension** | `resolve_bucket_name()` lacks `--bucket-suffix`; reader path templates not centralized |
-| C — ManifestWriter parity | **READY** | None |
-| D — Event-stream instrumentation | **Defined but not emitted** | Per-stage progress events declared in registry but service code doesn't call them at shard boundaries |
-| D — Profiling tools | **0% ready** | No cProfile / austin / memray / OTel anywhere in prod |
+| Block                            | Status                                        | Critical gap                                                                                          |
+| -------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| A — Schema knowledge             | **~80% ready**                                | Per-data_type Parquet field shapes for sports/prediction/tradfi-tick + ML model_family registry       |
+| B — Reuse harness inventory      | **Partial**                                   | colocated_engine.py rotted; zero `scripts/benchmark/` entrypoints across services                     |
+| B — Synthetic generators         | **0% ready**                                  | **ZERO generators exist** — single biggest blocker                                                    |
+| C — Bucket SSOT                  | **Strong foundation, needs 1-line extension** | `resolve_bucket_name()` lacks `--bucket-suffix`; reader path templates not centralized                |
+| C — ManifestWriter parity        | **READY**                                     | None                                                                                                  |
+| D — Event-stream instrumentation | **Defined but not emitted**                   | Per-stage progress events declared in registry but service code doesn't call them at shard boundaries |
+| D — Profiling tools              | **0% ready**                                  | No cProfile / austin / memray / OTel anywhere in prod                                                 |
 
 **Verdict.** The workspace is ~30-40% ready for "reuse harnesses + bucket-suffix" today. The four critical pre-cutover
 prerequisites in priority order:
 
-1. **P0 — Synthetic-data generator SSOT** (UTL `synthetic_data/` module; per-data_type generators driven by FEATURE_REQUIRED_INPUTS DAG + AVAILABILITY_AT_SEMANTICS; call `ManifestWriter.record_*` for parity). ~2-3 AI-days.
-2. **P0 — `colocated_engine.py` import-rot fix + e2e-testing-into-primary-service-QG wiring** (per CLAUDE.md "Peripheral Script Directories Under Primary-Consumer QG" rule, codified 2026-05-08, not yet implemented). ~0.5 AI-day.
-3. **P1 — `resolve_bucket_name()` `--bucket-suffix` + cloud-providers.yaml `${suffix}` templating + `benchmark-` prefix in `VM_PREFIX_TO_BUCKET` + `launch-benchmark-vm.sh`**. ~1 AI-day.
-4. **P1 — Per-stage progress event emission in MTDS / MDPS / features-\* / ml-\* / strategy / execution loops** (existing event types, just need `log_event()` calls at shard boundaries). ~1 AI-day.
+1. **P0 — Synthetic-data generator SSOT** (UTL `synthetic_data/` module; per-data*type generators driven by
+   FEATURE_REQUIRED_INPUTS DAG + AVAILABILITY_AT_SEMANTICS; call `ManifestWriter.record*\*` for parity). ~2-3 AI-days.
+2. **P0 — `colocated_engine.py` import-rot fix + e2e-testing-into-primary-service-QG wiring** (per CLAUDE.md "Peripheral
+   Script Directories Under Primary-Consumer QG" rule, codified 2026-05-08, not yet implemented). ~0.5 AI-day.
+3. **P1 — `resolve_bucket_name()` `--bucket-suffix` + cloud-providers.yaml `${suffix}` templating + `benchmark-` prefix
+   in `VM_PREFIX_TO_BUCKET` + `launch-benchmark-vm.sh`**. ~1 AI-day.
+4. **P1 — Per-stage progress event emission in MTDS / MDPS / features-\* / ml-\* / strategy / execution loops**
+   (existing event types, just need `log_event()` calls at shard boundaries). ~1 AI-day.
 
 After P0+P1: a benchmark VM launches via standard `deployment-service/scripts/vm/launch-benchmark-vm.sh`, mounts
 synthetic data via the SSOT generators into a `*-benchmark-*` bucket, runs the existing colocated_engine end-to-end
@@ -671,10 +677,10 @@ Operator clarifications likely needed during iteration:
 
 ## Iteration log
 
-| Date       | Author              | Change                                                                                |
-| ---------- | ------------------- | ------------------------------------------------------------------------------------- |
-| 2026-05-08 | ikenna + main agent | Initial draft created (later lost — uncommitted)                                      |
-| 2026-05-10 | ikenna + main agent | Recreated with `## Guiding principle — reuse, don't fork` section per operator direction; reframed Block B as "Reuse audit"; added Block C (bucket+path SSOT for non-prod runs); added Block D (end-to-end harness reuse); reuse-not-fork audit added to "What 'answered' looks like" |
+| Date       | Author                  | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-05-08 | ikenna + main agent     | Initial draft created (later lost — uncommitted)                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 2026-05-10 | ikenna + main agent     | Recreated with `## Guiding principle — reuse, don't fork` section per operator direction; reframed Block B as "Reuse audit"; added Block C (bucket+path SSOT for non-prod runs); added Block D (end-to-end harness reuse); reuse-not-fork audit added to "What 'answered' looks like"                                                                                                                                                                                                |
 | 2026-05-10 | main agent (audit pass) | Audit pass complete — 3 parallel `Explore` sub-agents fanned out across schema knowledge / reuse surface / instrumentation. Findings folded into `## Audit findings` section with file:line citations. Headline: ~30-40% reuse-ready today; 4 prereqs identified (synthetic generators + colocated_engine rot fix + bucket-suffix + per-stage event emission); active plan spawned at `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`; status flipped to `plan-spawned` |
 
 ## Plan-shape decisions (filled before plan extraction)
@@ -718,20 +724,21 @@ Operator clarifications likely needed during iteration:
     benchmark stage
   - `plans/questions/defi_readiness_catalogue_2026_05_08.md` — DeFi data catalogue feeds generator gap-list
 - **Estimated scope**: Medium — ~5-8 AI-days for generator gap-fill + harness extensions + bucket SSOT wiring +
-  benchmark-runner script + initial run + bottleneck report + codex SSOT. Breakdown: Block B (reuse audit +
-  generators) ~2-3d, Block C (bucket SSOT) ~1d, Block D (harness extensions + launcher) ~1-2d, Block E (taxonomy
-  SSOT) ~0.5d, Block F (entrypoint + run) ~1d, Codex docs + cross-plan threading ~0.5-1d.
+  benchmark-runner script + initial run + bottleneck report + codex SSOT. Breakdown: Block B (reuse audit + generators)
+  ~2-3d, Block C (bucket SSOT) ~1d, Block D (harness extensions + launcher) ~1-2d, Block E (taxonomy SSOT) ~0.5d, Block
+  F (entrypoint + run) ~1d, Codex docs + cross-plan threading ~0.5-1d.
 
 ## Plan extraction record
 
-- **Plan path**: [`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`](../active/mock_data_pipeline_benchmarking_2026_05_10.md)
+- **Plan path**:
+  [`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`](../active/mock_data_pipeline_benchmarking_2026_05_10.md)
 - **Spawned**: 2026-05-10 by main agent following audit pass
 - **Plan shape**: 5 phases — Phase 0 prereq gap-fill (synthetic generators + colocated_engine rot + bucket-suffix +
   per-stage events), Phase 1 benchmark VM + buckets, Phase 2 benchmark runner, Phase 3 initial run + bottleneck report,
   Phase 4 codex SSOT alignment + master-plan continuous-verification wiring, Phase 5 bottleneck-remediation backlog
   dispatch into epics
-- **Codex updates committed**: TBD (Phase 4 of plan — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW +
-  6 codex updates per plan-shape decisions block)
+- **Codex updates committed**: TBD (Phase 4 of plan — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + 6
+  codex updates per plan-shape decisions block)
 - **Question doc closes (status: `closed`) when**: Phase 4 of the active plan ships (codex SSOT lands + master-plan
   continuous-verification column wired) AND a real synthetic-data benchmark run has produced a per-stage bottleneck
   report against representative scale.

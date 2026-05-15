@@ -319,9 +319,9 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       [+5 more]. [AUDIT 2026-05-07: FRESH — actionable; CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION specs landed
       strategy@e4a0cdd]
 - [ ] [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
-      Phase changes. [2026-05-15 UPDATE: features-service@`5893eca5` — fix cloudbuild.yaml publish-wheel (pip install uv
-      before uv pip install); manual Cloud Build submitted ~10:50 UTC; awaiting SUCCESS + `:latest` push. Previous build
-      `d9938f1b` FAILED (publish-wheel missing uv; Dockerfile fix `17ec5e62` DID push image but build marked FAILURE).]
+      Phase changes. [2026-05-15: IN PROGRESS — Cloud Build `dfbe8f04` WORKING (started 08:01 UTC); Dockerfile
+      --no-sources fix shipped at features-service@`17ec5e62`; quality-gates step running ~50+ min; awaiting SUCCESS +
+      `:latest` push]
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D)
 
@@ -351,11 +351,12 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
 - [ ] [AGENT] P1. **YIELD_ROTATION_LENDING entry signal investigation** — carry tracer run 2026-05-15 shows 8 of 12
       slots as "engine never entered position" despite valid `supply_apy` being loaded (confirmed for AAVE USDC on
-      Arbitrum, Ethereum, Optimism, Base). Root causes found + fixed at strategy-service@`1429b52` (2026-05-15): (1)
-      catalog/legacy*strategy_mapping used `eligible_protocols` but engine reads `candidate_protocols` — param mismatch
-      meant \_candidate_protocols() returned {} → no entry signal; (2) tracer injected `supply_apy_bps` but engine scans
-      for `apy_bps*<protocol>` keys — added per-protocol injection in \_trace_slot() for YIELD_ROTATION_LENDING; Tracer
-      rerun in progress (09:39 UTC); awaiting results to confirm fix. Not a May-23 blocker (CARRY gate satisfied).
+      Arbitrum, Ethereum, Optimism, Base). `YIELD_ROTATION_LENDING@aave-compound-morpho-usdc-*` slots load data but
+      engine never opens position. Suggests entry threshold/signal in `YieldRotationLendingEngine` is too strict or
+      supply_apy values are below minimum threshold. Root cause: investigate `_preflight` logic in
+      `strategy_service/engine/strategies/v2/carry_and_yield/yield_rotation_lending.py`. **Not a May-23 blocker** if
+      CARRY archetype gate is independently verified via CARRY_RECURSIVE_STAKED (confirmed ✅). [2026-05-15: DEFERRED
+      pending CARRY gate confirmation; successor: investigate entry threshold + min_supply_apy_bps param]
 - [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
       archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
       non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be

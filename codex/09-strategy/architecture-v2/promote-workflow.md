@@ -43,15 +43,18 @@ live-testnet (live signals, real testnet fills, custody = cloud_kms_encrypted)
 live-mainnet (live signals, real mainnet fills, custody per pre-cutover wallet config)
 ```
 
-Each transition writes an audit row to `strategy_promote_audit.parquet` with `(from_state, to_state, operator_id,
-reason, commit_sha_at_promote)`. Rollback (live → paper) is a separate `--operation demote` flag — owner-gated.
+Each transition writes an audit row to `strategy_promote_audit.parquet` with
+`(from_state, to_state, operator_id, reason, commit_sha_at_promote)`. Rollback (live → paper) is a separate
+`--operation demote` flag — owner-gated.
 
 ## Plan-of-records (orchestration, not SSOT)
 
 The 14-step CLI sequence + per-step verifier + per-step rollback procedure is in:
 
-- **May-23 cutover scope**: [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
-- **Post-cutover UI pipeline**: [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+- **May-23 cutover scope**:
+  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
+- **Post-cutover UI pipeline**:
+  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 
 When the post-cutover UI pipeline lands, this doc updates to include the UI entry-point + cross-references to the
 UI-side workflow.
@@ -62,10 +65,10 @@ UI-side workflow.
   `ShadowDeploymentPolicy` shadow-gate config.
 - [`archetype-paper-readiness.md`](./cross-cutting/archetype-paper-readiness.md) — per-archetype paper-mode readiness
   gate driving the backtest → paper transition.
-- [`MIGRATION.md`](./MIGRATION.md) — v2 archetype engine catalogue ("the 18 archetype engines need to clear their
-  14- or 28-day shadow" framing; counts now 55 per slot 8 audit ST-1).
-- CLAUDE.md § "Master Plan" — the live-DeFi-by-2026-05-23 cutover that gates the first `--operation promote
-  --to live-mainnet` calls.
+- [`MIGRATION.md`](./MIGRATION.md) — v2 archetype engine catalogue ("the 18 archetype engines need to clear their 14- or
+  28-day shadow" framing; counts now 55 per slot 8 audit ST-1).
+- CLAUDE.md § "Master Plan" — the live-DeFi-by-2026-05-23 cutover that gates the first
+  `--operation promote --to live-mainnet` calls.
 
 ## Execution-owner block
 

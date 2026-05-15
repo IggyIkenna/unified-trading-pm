@@ -341,6 +341,7 @@ PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
 ```
 
 **Slot 4 session close status (2026-05-12):**
+
 - PART A (Script-1 root-cause) ✅ DONE — prior session
 - Phase 0A (UAC EmptyConfirmedReason) ✅ DONE — `uac@0457b0e`
 - Phase 0B (UTL helper) ✅ DONE — pre-existed; no new helper needed
@@ -348,12 +349,13 @@ PART C — PARALLEL with Phase 3 fan-out (same MDPS repo as Phase 2):
 - Phase 1 (MTDS pre-flight) ✅ DONE — wired, QG green
 - Phase 1.5 (sports classifier) ✅ DONE — `pm@ff2b46fb`
 - Phase 2 (MDPS dep-skip record_expected_unattempted) ✅ DONE — `mdps@3f70cf6`; 4 unit tests pass
-- Phase 3.0 design direction ✅ RESOLVED — **Option A confirmed** by operator 2026-05-12.
-  subscription_list is runtime (DomainConfigReloader). No UAC frozenset. Runtime comparison at `_get_instruments()`.
+- Phase 3.0 design direction ✅ RESOLVED — **Option A confirmed** by operator 2026-05-12. subscription_list is runtime
+  (DomainConfigReloader). No UAC frozenset. Runtime comparison at `_get_instruments()`.
 - Phase 3.1–3.N 🟡 TODO — spawn 6 feature sub-agents (delta_one, calendar, onchain, volatility, sports, commodity)
 - Phase 4 (ML services) 🟡 TODO — after Phase 3
 - PART C (writegate 2.A MDPS 4-state routing) 🟡 TODO
-- 19 pre-existing MDPS test failures 🟡 FLAGGED (EmissionDecision schema drift, sports config, env validation) — not this slot's work; logged to ping
+- 19 pre-existing MDPS test failures 🟡 FLAGGED (EmissionDecision schema drift, sports config, env validation) — not
+  this slot's work; logged to ping
 - Gate 1: 🔴 OPEN — need Phases 3, 4, and 2.A first
 
 **Slot 5 — Phase 2.D match_end_time + Phase 2.C features-sports**:
@@ -497,6 +499,7 @@ PART C — AFTER GATE 2: Bucket code migration:
 ```
 
 **Slot 8 session close status (2026-05-12):**
+
 - PART A ✅ DONE — `instruments-service@27fbc90`
 - PART B 🔴 BLOCKED — gate: Slots 6+7 confirm Phases 6.3+6.4+6.5 pushed → Slot 1 pings slot 8
 - PART C 🔴 BLOCKED — gate: Gate 2 (bucket parity confirmed by Slot 3) → Slot 1 pings slot 8
@@ -517,13 +520,13 @@ retried on next backfill. Memory note from 2026-05-06 ("retry doesn't work") pre
 
 ### Serial gate status tracking
 
-| Gate    | Condition                                                                | Status  | Unblocks              |
-| ------- | ------------------------------------------------------------------------ | ------- | --------------------- |
-| Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                             | 🟢 FIRED (uac@0457b0e; UTL: helper pre-existed; PM@fc429e43 per Slot 4 ping) | Slot 4 Phases 1–4 ✅ proceeding (Phase 1.5 QG green PM@ff2b46fb) |
-| Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin            | 🔴 OPEN | Slot 3 apply-flips    |
-| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified | 🟢 FIRED (Slot 3 @ ~19:00 UTC — 16 STS jobs SUCCESS, parity verified; PM@`c52ddffb`) | Slot 3 PART C (resolve_bucket_name migration) + Slot 8 PART C |
-| Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate | 🔴 OPEN | Backfill clearance    |
-| Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin    | 🔴 OPEN | Full manifest audit   |
+| Gate    | Condition                                                                | Status                                                                               | Unblocks                                                         |
+| ------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Gate 0A | UAC Phase 0A + UTL Phase 0B pushed to origin                             | 🟢 FIRED (uac@0457b0e; UTL: helper pre-existed; PM@fc429e43 per Slot 4 ping)         | Slot 4 Phases 1–4 ✅ proceeding (Phase 1.5 QG green PM@ff2b46fb) |
+| Gate 1  | Propagation chain Phases 1–4 + Phase 2.A all pushed to origin            | 🔴 OPEN                                                                              | Slot 3 apply-flips                                               |
+| Gate 2  | Physical bucket migration (prod) complete + object-count parity verified | 🟢 FIRED (Slot 3 @ ~19:00 UTC — 16 STS jobs SUCCESS, parity verified; PM@`c52ddffb`) | Slot 3 PART C (resolve_bucket_name migration) + Slot 8 PART C    |
+| Gate 3  | Phantom count = 0 (or <10 class-C) + manifest data-status panel accurate | 🔴 OPEN                                                                              | Backfill clearance                                               |
+| Gate 4  | All writegate coding (2.A-2.D + 6.3-6.9 + Phase 6.8) pushed to origin    | 🔴 OPEN                                                                              | Full manifest audit                                              |
 
 Slot 1 main owns the gate status column. Update when condition met; ping all affected slots.
 

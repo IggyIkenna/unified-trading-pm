@@ -212,8 +212,8 @@ before believing anything specific in the linked doc.
 | `market-tick-data-service/docs/DEFI_DOWNLOAD_STRATEGY.md`                                       | Missing GMX multi-chain Tier-2 fan-out; pre-3-category empty-output                                             |
 | `market-data-processing-service/docs/ARCHITECTURE.md`                                           | Describes `_create_empty_output` flow that's being deleted                                                      |
 | `market-data-processing-service/docs/ERROR_HANDLING.md`                                         | Pre-3-category empty-output decision tree                                                                       |
-| `features-service (sports family)/docs/ARCHITECTURE.md`                                                  | Missing 4 stub-export wiring + `_FETCH_COMPLETED_AT` cache + per-table `available_at` semantics                 |
-| `features-service (sports family)/docs/SCHEMA_VALIDATION.md`                                             | Missing `available_at` column required + per-row stamping rules                                                 |
+| `features-service (sports family)/docs/ARCHITECTURE.md`                                         | Missing 4 stub-export wiring + `_FETCH_COMPLETED_AT` cache + per-table `available_at` semantics                 |
+| `features-service (sports family)/docs/SCHEMA_VALIDATION.md`                                    | Missing `available_at` column required + per-row stamping rules                                                 |
 | `deployment-service/docs/ARCHITECTURE.md`                                                       | Missing per-VM shard isolation rule (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`) for concurrent backfills |
 
 ---

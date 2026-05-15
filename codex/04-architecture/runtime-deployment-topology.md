@@ -92,15 +92,15 @@ flowchart TD
 
 ## Layer Summary
 
-| Layer                    | Services                                                                                 | Input                          | Output                                        |
-| ------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------- |
-| 1 — Reference Data       | instruments-service, features-service (calendar family)                                           | External APIs, exchange feeds  | Instrument universe, trading calendars        |
-| 2 — Raw Market Data      | market-tick-data-service, features-service (calendar family) (corporate actions, earnings, macro) | Exchange websockets, REST APIs | Raw ticks, corporate action events            |
-| 3 — Processing           | market-data-processing-service                                                           | Raw ticks                      | OHLCV candles (15s, 1m, 5m, 15m, 1h, 4h, 24h) |
-| 4 — Features             | features-service (delta-one family), features-service (volatility family), features-service (onchain family)        | OHLCV candles                  | Feature vectors                               |
-| 5 — ML                   | ml-training-service, ml-inference-service                                                | Feature vectors                | Trained models, predictions                   |
-| 6 — Strategy & Execution | strategy-service, execution-service                                                      | Predictions                    | Orders, fills                                 |
-| 7 — Post-Trade           | position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service     | Fills                          | P&L, risk metrics, position state             |
+| Layer                    | Services                                                                                                     | Input                          | Output                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------------ | --------------------------------------------- |
+| 1 — Reference Data       | instruments-service, features-service (calendar family)                                                      | External APIs, exchange feeds  | Instrument universe, trading calendars        |
+| 2 — Raw Market Data      | market-tick-data-service, features-service (calendar family) (corporate actions, earnings, macro)            | Exchange websockets, REST APIs | Raw ticks, corporate action events            |
+| 3 — Processing           | market-data-processing-service                                                                               | Raw ticks                      | OHLCV candles (15s, 1m, 5m, 15m, 1h, 4h, 24h) |
+| 4 — Features             | features-service (delta-one family), features-service (volatility family), features-service (onchain family) | OHLCV candles                  | Feature vectors                               |
+| 5 — ML                   | ml-training-service, ml-inference-service                                                                    | Feature vectors                | Trained models, predictions                   |
+| 6 — Strategy & Execution | strategy-service, execution-service                                                                          | Predictions                    | Orders, fills                                 |
+| 7 — Post-Trade           | position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service                         | Fills                          | P&L, risk metrics, position state             |
 
 **Testing implications:** Run tests layer by layer; lower layers depend on upstream artifacts. Do not run Layer 4 tests
 without Layer 3 output. See `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md` for the
@@ -520,24 +520,24 @@ This is the core live trading loop. Understanding this flow is critical:
 
 Every dataset has exactly ONE authoritative producer. Consumers read from GCS (batch) or subscribe to PubSub (live).
 
-| Dataset                   | Authoritative Producer            | GCS Path Pattern             | PubSub Topic (live)                      |
-| ------------------------- | --------------------------------- | ---------------------------- | ---------------------------------------- |
-| instruments_universe      | instruments-service               | `instruments/by_date/`       | `instrument-events`                      |
-| raw_tick_data             | market-tick-data-service          | `ticks/raw/by_venue/`        | `raw-ticks-{venue}`                      |
-| processed_candles_ohlcv   | market-data-processing-service    | `candles/by_venue/`          | `processed-candles-{venue}`              |
+| Dataset                   | Authoritative Producer                     | GCS Path Pattern             | PubSub Topic (live)                      |
+| ------------------------- | ------------------------------------------ | ---------------------------- | ---------------------------------------- |
+| instruments_universe      | instruments-service                        | `instruments/by_date/`       | `instrument-events`                      |
+| raw_tick_data             | market-tick-data-service                   | `ticks/raw/by_venue/`        | `raw-ticks-{venue}`                      |
+| processed_candles_ohlcv   | market-data-processing-service             | `candles/by_venue/`          | `processed-candles-{venue}`              |
 | calendar_features         | features-service (calendar family)         | `features/calendar/`         | — (batch only)                           |
 | delta_one_features        | features-service (delta-one family)        | `features/delta_one/`        | `features-delta-one`                     |
 | volatility_features       | features-service (volatility family)       | `features/volatility/`       | `features-volatility`                    |
 | cross_instrument_features | features-service (cross-instrument family) | `features/cross_instrument/` | `features-cross-instrument-{underlying}` |
 | onchain_features          | features-service (onchain family)          | `features/onchain/`          | — (batch only)                           |
-| model_artifacts_registry  | ml-training-service               | `ml/models/`                 | — (batch only)                           |
-| predictions               | ml-inference-service              | `predictions/by_date/`       | `predictions-live`                       |
-| signals_backtest_results  | strategy-service                  | `signals/by_date/`           | `trade-signals`                          |
-| execution_results         | execution-service                 | `execution/by_date/`         | `order-events-{venue}`                   |
-| hot_order_state           | execution-service                 | — (Redis, transient)         | —                                        |
-| position_snapshots        | position-balance-monitor-service  | `positions/by_date/`         | `position-updates`                       |
-| risk_metrics              | risk-and-exposure-service         | `risk/by_date/`              | `risk-metrics`                           |
-| pnl_reports               | pnl-attribution-service           | `pnl/by_date/`               | `pnl-updates`                            |
+| model_artifacts_registry  | ml-training-service                        | `ml/models/`                 | — (batch only)                           |
+| predictions               | ml-inference-service                       | `predictions/by_date/`       | `predictions-live`                       |
+| signals_backtest_results  | strategy-service                           | `signals/by_date/`           | `trade-signals`                          |
+| execution_results         | execution-service                          | `execution/by_date/`         | `order-events-{venue}`                   |
+| hot_order_state           | execution-service                          | — (Redis, transient)         | —                                        |
+| position_snapshots        | position-balance-monitor-service           | `positions/by_date/`         | `position-updates`                       |
+| risk_metrics              | risk-and-exposure-service                  | `risk/by_date/`              | `risk-metrics`                           |
+| pnl_reports               | pnl-attribution-service                    | `pnl/by_date/`               | `pnl-updates`                            |
 
 **API Contract Schemas (SSOT: `unified_api_contracts.internal` + `unified-api-contracts`):** Full field-level types,
 Correlation ID, and Client Order ID are defined in:
@@ -886,29 +886,29 @@ On connectivity loss:
 
 ### Per-Service Deployment Targets
 
-| Service                               | Deploy Type       | Scaling Mode                             | Reason                                                                                        |
-| ------------------------------------- | ----------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **market-tick-data-service**          | VM (co-located)   | always-on                                | Continuous WebSocket connections; co-located with MDPS + execution for in_memory transport    |
-| **market-data-processing-service**    | VM (co-located)   | always-on                                | Co-located with MTDH for in_memory hot path; maintains ~1yr Redis candle window               |
-| **execution-service**                 | VM (co-located)   | always-on                                | Co-located with MTDH for live market feed; maintains Redis order state                        |
-| **ml-training-service**               | VM (standalone)   | manual/scheduled                         | Heavy compute (~2hr training runs); Cloud Run max timeout too short                           |
-| **strategy-service**                  | Cloud Run Service | always-on                                | Live PubSub subscriber; stateless enough for Cloud Run; auto-restarts on crash                |
-| **position-balance-monitor-service**  | Cloud Run Service | always-on                                | Continuous exchange feed + PubSub subscription; stateless between restarts                    |
-| **risk-and-exposure-service**         | Cloud Run Service | always-on                                | Live PubSub subscriber; computes risk on every position update                                |
-| **alerting-service**                  | Cloud Run Service | always-on                                | Must be available 24/7; auto-restart + PubSub retention for recovery                          |
-| **ml-inference-service**              | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs persistent PubSub subscription                                     |
+| Service                                        | Deploy Type       | Scaling Mode                             | Reason                                                                                        |
+| ---------------------------------------------- | ----------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **market-tick-data-service**                   | VM (co-located)   | always-on                                | Continuous WebSocket connections; co-located with MDPS + execution for in_memory transport    |
+| **market-data-processing-service**             | VM (co-located)   | always-on                                | Co-located with MTDH for in_memory hot path; maintains ~1yr Redis candle window               |
+| **execution-service**                          | VM (co-located)   | always-on                                | Co-located with MTDH for live market feed; maintains Redis order state                        |
+| **ml-training-service**                        | VM (standalone)   | manual/scheduled                         | Heavy compute (~2hr training runs); Cloud Run max timeout too short                           |
+| **strategy-service**                           | Cloud Run Service | always-on                                | Live PubSub subscriber; stateless enough for Cloud Run; auto-restarts on crash                |
+| **position-balance-monitor-service**           | Cloud Run Service | always-on                                | Continuous exchange feed + PubSub subscription; stateless between restarts                    |
+| **risk-and-exposure-service**                  | Cloud Run Service | always-on                                | Live PubSub subscriber; computes risk on every position update                                |
+| **alerting-service**                           | Cloud Run Service | always-on                                | Must be available 24/7; auto-restart + PubSub retention for recovery                          |
+| **ml-inference-service**                       | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs persistent PubSub subscription                                     |
 | **features-service (delta-one family)**        | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live needs MDPS event subscription                                            |
 | **features-service (volatility family)**       | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent                                                                                |
 | **features-service (cross-instrument family)** | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent; subscribes to multiple MDPS topics per underlying                             |
-| **instruments-service**               | Cloud Run Job     | scale-to-zero                            | Infrequent (~15min polls); one-shot batch runs; no persistent state needed                    |
+| **instruments-service**                        | Cloud Run Job     | scale-to-zero                            | Infrequent (~15min polls); one-shot batch runs; no persistent state needed                    |
 | **features-service (calendar family)**         | Cloud Run Job     | scale-to-zero                            | Batch only; calendar data changes rarely                                                      |
 | **features-service (onchain family)**          | Cloud Run Job     | scale-to-zero                            | Batch only; periodic on-chain data fetch                                                      |
-| **pnl-attribution-service**           | Cloud Run Service | always-on                                | Continuous subscriber to execution + risk PubSub events; runs P&L attribution on every update |
+| **pnl-attribution-service**                    | Cloud Run Service | always-on                                | Continuous subscriber to execution + risk PubSub events; runs P&L attribution on every update |
 | **features-service (multi-timeframe family)**  | Cloud Run Service | always-on (live) / scale-to-zero (batch) | Mode-dependent: live subscribes to FDS completion events                                      |
-| **execution-results-api**             | Cloud Run Service | auto-scale                               | Scales with HTTP/SSE connection count; min-instances configurable                             |
-| **deployment-api**                    | Cloud Run Service | auto-scale                               | Request-driven; SSE for health monitoring stream                                              |
-| **client-reporting-api**              | Cloud Run Job     | scale-to-zero                            | Batch report generation; occasional live SSE (target state)                                   |
-| **All UIs**                           | Cloud Run Service | auto-scale                               | Serve React static build; scale with concurrent users                                         |
+| **execution-results-api**                      | Cloud Run Service | auto-scale                               | Scales with HTTP/SSE connection count; min-instances configurable                             |
+| **deployment-api**                             | Cloud Run Service | auto-scale                               | Request-driven; SSE for health monitoring stream                                              |
+| **client-reporting-api**                       | Cloud Run Job     | scale-to-zero                            | Batch report generation; occasional live SSE (target state)                                   |
+| **All UIs**                                    | Cloud Run Service | auto-scale                               | Serve React static build; scale with concurrent users                                         |
 
 ---
 

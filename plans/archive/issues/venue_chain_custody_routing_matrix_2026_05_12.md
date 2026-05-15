@@ -14,9 +14,9 @@ locked_since: 2026-05-12
 # Venue × deposit-chain × custody-routing matrix — missing dimension
 
 > **Severity**: P0 — blocks May-23 cutover funds-flow design. Classification (cefi vs defi vs on-chain CLOB) alone is
-> insufficient; per-venue per-chain deposit/withdraw + custody-routing must be captured + codified.
-> **Suggested owner**: Ikenna slot 4 (api_keys_wallets context) + Ikenna slot 8 (cross_asset audit overlap).
-> Cross-side to Harsh slot 4 (defi_simulation_realism implementation has overlap on venue connectors).
+> insufficient; per-venue per-chain deposit/withdraw + custody-routing must be captured + codified. **Suggested owner**:
+> Ikenna slot 4 (api_keys_wallets context) + Ikenna slot 8 (cross_asset audit overlap). Cross-side to Harsh slot 4
+> (defi_simulation_realism implementation has overlap on venue connectors).
 
 ## What I found
 
@@ -30,7 +30,8 @@ has 2 orthogonal operational dimensions that the current registry **doesn't capt
    - GMX-V2: USDC accepts on Arbitrum only
    - DRIFT: USDC accepts on Solana only
    - Pacifica: USDC accepts on Solana only
-   - AAVE_V3 / Uniswap / Curve: per-chain native (Ethereum / Arbitrum / Base / Optimism / Polygon / Avalanche / BSC / Linea)
+   - AAVE_V3 / Uniswap / Curve: per-chain native (Ethereum / Arbitrum / Base / Optimism / Polygon / Avalanche / BSC /
+     Linea)
 
 2. **Custody-routing model per venue** — how does the client fund the venue?
    - **(A) Direct venue wallet** (prop trading; client owns account credentials; deposits land in venue-managed wallet)
@@ -43,13 +44,13 @@ has 2 orthogonal operational dimensions that the current registry **doesn't capt
 
 - `unified_api_contracts/internal/domain/execution_service/transfer_types.py` has `VENUE_WALLET_CAPABILITIES` dict with
   `custody_provider` field (single string: `"copper"` / `"fireblocks"` / `""`). **Insufficient**: missing per-chain
-  deposit routing; missing ClearLoop / CEFFU custody patterns; single-string custody_provider doesn't capture
-  per-venue routing differences.
+  deposit routing; missing ClearLoop / CEFFU custody patterns; single-string custody_provider doesn't capture per-venue
+  routing differences.
 - `unified_api_contracts/registry/market_data_categories.py` `VENUES_BY_ASSET_GROUP` is the classification dimension
   (cefi / defi / tradfi / sports / prediction). **Insufficient**: doesn't address per-chain or custody routing.
 - `WalletProvisioningConfig` (UAC@`d721b6a`, slot 4 shipped 2026-05-12) has `signing_surface` (CLOUD_KMS_ENCRYPTED /
-  COPPER_MPC / FIREBLOCKS_MPC) + `chain` + `allowed_protocols` — **good for DeFi wallet provisioning** but doesn't
-  cover cefi venue funding routing.
+  COPPER_MPC / FIREBLOCKS_MPC) + `chain` + `allowed_protocols` — **good for DeFi wallet provisioning** but doesn't cover
+  cefi venue funding routing.
 
 ## Why it matters
 
@@ -59,15 +60,16 @@ For May-23 cutover funds-flow:
 - **Withdrawal moves**: venue → client custody → next venue. Same routing data.
 - **PnL attribution**: per-venue, per-chain reconciliation needs the deposit-chain matrix.
 - **Treasury rebalancing**: cross-venue funding moves rely on accurate per-venue per-chain support.
-- **Risk surface**: each custody path has different counterparty risk (ClearLoop = LedgerEdge/Copper; CEFFU MirrorX = CEFFU; direct = venue insolvency).
+- **Risk surface**: each custody path has different counterparty risk (ClearLoop = LedgerEdge/Copper; CEFFU MirrorX =
+  CEFFU; direct = venue insolvency).
 
-Master plan G19 item ("Treasury / custody integration: Copper for DeFi, CEFFU for Binance") names CEFFU + Copper but
-not ClearLoop. Item is `manual` continuous-verification + `Last verified: NEVER`. Needs the matrix to flip.
+Master plan G19 item ("Treasury / custody integration: Copper for DeFi, CEFFU for Binance") names CEFFU + Copper but not
+ClearLoop. Item is `manual` continuous-verification + `Last verified: NEVER`. Needs the matrix to flip.
 
 ## Recommended decision (3 sub-items)
 
-**Item 1 — Schema extension** (UAC slot 4):
-Extend `VenueWalletCapabilities` (or NEW dataclass `VenueFundsRoutingCapabilities` if cleaner separation) with:
+**Item 1 — Schema extension** (UAC slot 4): Extend `VenueWalletCapabilities` (or NEW dataclass
+`VenueFundsRoutingCapabilities` if cleaner separation) with:
 
 ```python
 @dataclass(frozen=True)
@@ -88,42 +90,57 @@ class CustodyRoute(StrEnum):
     FIREBLOCKS = "fireblocks"                     # multi-venue custody via Fireblocks
 ```
 
-**Item 2 — Per-venue routing matrix** (slot 8 audit + slot 4 schema fill):
-For all 15+ venues in `VENUES_BY_ASSET_GROUP`, fill in:
-- BINANCE-SPOT / BINANCE-FUTURES: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Base/Avalanche/TRC20}; custody = (DIRECT_VENUE_WALLET, CLEARLOOP, CEFFU_MIRRORX)
-- BYBIT: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Avalanche}; custody = (DIRECT_VENUE_WALLET, CEFFU_MIRRORX, COPPER_SUB_ACCOUNT)
-- OKX: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Avalanche/TRC20}; custody = (DIRECT_VENUE_WALLET, COPPER_SUB_ACCOUNT)
+**Item 2 — Per-venue routing matrix** (slot 8 audit + slot 4 schema fill): For all 15+ venues in
+`VENUES_BY_ASSET_GROUP`, fill in:
+
+- BINANCE-SPOT / BINANCE-FUTURES: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Base/Avalanche/TRC20}; custody =
+  (DIRECT_VENUE_WALLET, CLEARLOOP, CEFFU_MIRRORX)
+- BYBIT: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Avalanche}; custody = (DIRECT_VENUE_WALLET, CEFFU_MIRRORX,
+  COPPER_SUB_ACCOUNT)
+- OKX: deposit_chains = {ETH/Polygon/BSC/Solana/Arbitrum/Avalanche/TRC20}; custody = (DIRECT_VENUE_WALLET,
+  COPPER_SUB_ACCOUNT)
 - DERIBIT: deposit_chains = {ETH/BTC}; custody = (DIRECT_VENUE_WALLET, COPPER_SUB_ACCOUNT)
 - HYPERLIQUID: deposit_chains = {ARBITRUM}; custody = (DIRECT_VENUE_WALLET via Copper signing — already in registry)
 - ASTER: deposit_chains = {BSC}; custody = (DIRECT_VENUE_WALLET via Copper)
 - GMX-V2: deposit_chains = {ARBITRUM}; custody = (DIRECT_VENUE_WALLET via Copper)
 - DRIFT: deposit_chains = {SOLANA}; custody = (DIRECT_VENUE_WALLET via Copper)
-- AAVE_V3 / UNISWAP_V3 / etc: deposit_chains per-protocol (Ethereum / Arbitrum / Base / Optimism / Polygon / etc); custody = (FIREBLOCKS, COPPER_SUB_ACCOUNT)
+- AAVE_V3 / UNISWAP_V3 / etc: deposit_chains per-protocol (Ethereum / Arbitrum / Base / Optimism / Polygon / etc);
+  custody = (FIREBLOCKS, COPPER_SUB_ACCOUNT)
 
-Need operator-input on which custody routes we actually use per venue for May-23 (prop trading vs ClearLoop vs CEFFU vs Copper). Slot 4 has Copper KYB Day-1 in flight; CEFFU is longest lead time per Phase 3.B; ClearLoop not in current plan.
+Need operator-input on which custody routes we actually use per venue for May-23 (prop trading vs ClearLoop vs CEFFU vs
+Copper). Slot 4 has Copper KYB Day-1 in flight; CEFFU is longest lead time per Phase 3.B; ClearLoop not in current plan.
 
-**Item 3 — Master plan G19 + new G24** (slot 1 main):
-Group F item 19 "Treasury / custody integration" currently names "Copper for DeFi, CEFFU for Binance". Extend to:
+**Item 3 — Master plan G19 + new G24** (slot 1 main): Group F item 19 "Treasury / custody integration" currently names
+"Copper for DeFi, CEFFU for Binance". Extend to:
+
 - Per-venue custody route declared in registry (Item 1+2)
 - ClearLoop included as 3rd path option
 - Add G24 "Per-venue deposit-chain matrix" with `Last verified` cadence; QG-enforced.
 
 ## ✅ Operator decisions received 2026-05-12 ~07 GMT
 
-**Q1 — Custody route mix for May-23**: ⚠️ **CRITICAL REFRAME**. Operator: _"we won't even have Copper by 23rd May 2026 realistically; we want the code/hooks to understand how it will work but we can't actually test it until 1st June. By that point we need to be confident in the strategy. For 23rd we can use Trust Wallet and MetaMask."_
+**Q1 — Custody route mix for May-23**: ⚠️ **CRITICAL REFRAME**. Operator: _"we won't even have Copper by 23rd May 2026
+realistically; we want the code/hooks to understand how it will work but we can't actually test it until 1st June. By
+that point we need to be confident in the strategy. For 23rd we can use Trust Wallet and MetaMask."_
 
 **→ May-23 path** = **self-custody hot wallets**:
-- **DeFi + on-chain CLOBs** (Aave/Uniswap/Curve/HYPERLIQUID/ASTER/GMX-V2 on EVM): **MetaMask** (browser-extension EVM) OR **Trust Wallet** (multi-chain mobile/extension)
+
+- **DeFi + on-chain CLOBs** (Aave/Uniswap/Curve/HYPERLIQUID/ASTER/GMX-V2 on EVM): **MetaMask** (browser-extension EVM)
+  OR **Trust Wallet** (multi-chain mobile/extension)
 - **DeFi on Solana** (DRIFT/PACIFICA): **Phantom** (Solana browser-extension) OR **Trust Wallet Solana**
-- **CeFi venues** (Binance/Bybit/OKX/Deribit): **direct API key + secret per account** (no intermediate custody; prop-trading model)
+- **CeFi venues** (Binance/Bybit/OKX/Deribit): **direct API key + secret per account** (no intermediate custody;
+  prop-trading model)
 
 **→ June 1+ path** = **MPC custody flippable**:
+
 - Copper MPC signing for DeFi + on-chain CLOBs (replaces MetaMask/Trust Wallet at signing-surface seam)
 - CEFFU MirrorX for select cefi (Binance/Bybit) off-exchange settlement
 - Fireblocks as MPC alternative
-- Strategy confidence MUST be built between May-23 and June-1 so MPC custody is just a wallet-surface flip, not a strategy redesign.
+- Strategy confidence MUST be built between May-23 and June-1 so MPC custody is just a wallet-surface flip, not a
+  strategy redesign.
 
 **Code/hooks ship NOW** so the May-23 → June-1 transition is wallet-surface-flip-only:
+
 - `SigningSurface` StrEnum extends with `BROWSER_EXTENSION_WALLET` (MetaMask / Trust Wallet EVM / Phantom Solana) +
   `EXCHANGE_API_KEY` (direct cefi venue credentials).
 - `WalletProvisioningConfig` accepts current = `BROWSER_EXTENSION_WALLET` for May-23; flippable to `COPPER_MPC` /
@@ -134,32 +151,40 @@ Group F item 19 "Treasury / custody integration" currently names "Copper for DeF
 **Q2 — ClearLoop**: ✅ **Post-cutover** (Cycle 6 backlog). Setup lead-time matches CEFFU; doesn't block May-23.
 
 **Q3 — Per-venue deposit-address provisioning timing**: ✅ **All chains for the 6 May-23 perp venues pre-cutover** —
-Binance / Bybit / OKX / Hyperliquid / Aster / GMX-V2 / DRIFT addresses per supported chain pre-2026-05-23. DeFi
-protocol wallets per Phase 4.A in flight.
+Binance / Bybit / OKX / Hyperliquid / Aster / GMX-V2 / DRIFT addresses per supported chain pre-2026-05-23. DeFi protocol
+wallets per Phase 4.A in flight.
 
 **Operator-action items for May-23 (slot 4 surface)**:
+
 1. Set up MetaMask + Trust Wallet + Phantom production hot wallets per `WalletProvisioningConfig` derivation (HD-wallet
    under `CLOUD_KMS_ENCRYPTED` master CMK per-asset_group — slot 4 schema shipped UAC@`d721b6a` already supports this).
 2. Per the 6 perp venues + DeFi protocols: provision deposit addresses on supported chains.
-3. Fund hot wallets per archetype × chain budget (separate operator decision — likely small initial sizes for confidence-building).
+3. Fund hot wallets per archetype × chain budget (separate operator decision — likely small initial sizes for
+   confidence-building).
 
 **Strategy-side implications**:
-- 2026-05-23 → 2026-06-01 = **8-day self-custody confidence window** running real-but-small positions; metric = confidence-to-flip-to-MPC.
+
+- 2026-05-23 → 2026-06-01 = **8-day self-custody confidence window** running real-but-small positions; metric =
+  confidence-to-flip-to-MPC.
 - 2026-06-01 = MPC custody flip (Copper + CEFFU integration online); zero strategy code change at flip moment.
-- If confidence not green by 2026-06-01, **extend self-custody window** rather than force MPC flip (recoverable decision).
+- If confidence not green by 2026-06-01, **extend self-custody window** rather than force MPC flip (recoverable
+  decision).
 
 ## Operator decisions for next routing (capacity-cram extensions)
 
 1. **Which custody routes do we actually use for May-23?**
    - (a) Prop-trading only — direct venue wallets across all cefi; Copper for DeFi
    - (b) Mixed — Copper sub-account for cefi multi-venue + direct for venues without Copper support; Copper for DeFi
-   - (c) CEFFU MirrorX for Binance/Bybit + Copper sub-account for OKX/Deribit + Copper for DeFi (operator's earlier mention)
+   - (c) CEFFU MirrorX for Binance/Bybit + Copper sub-account for OKX/Deribit + Copper for DeFi (operator's earlier
+     mention)
    - (d) Full custody — all venues through Copper or Fireblocks; no direct
-2. **ClearLoop included for May-23 or post-cutover?** — longest lead time per Phase 3.B; CEFFU pattern; likely post-cutover.
+2. **ClearLoop included for May-23 or post-cutover?** — longest lead time per Phase 3.B; CEFFU pattern; likely
+   post-cutover.
 3. **Per-venue per-chain deposit-address provisioning timing** — operator-action: which chains pre-cutover; which post.
 
 ## Composes with
 
-- `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.B (CEFFU) + Phase 4.A (per-chain wallet) — schema extension lands here
+- `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.B (CEFFU) + Phase 4.A (per-chain wallet) — schema
+  extension lands here
 - `cross_asset_group_catalogue_audit_2026_05_10.md` — venue audit dimension extension
 - `master_to_live_defi_2026_05_23.md` Group F item 19 — readiness criteria extension

@@ -243,15 +243,15 @@ df.to_parquet(
 
 ## Service Schema Registry
 
-| Service                        | Schema File                     | Output Types                          |
-| ------------------------------ | ------------------------------- | ------------------------------------- |
-| instruments-service            | `schemas/output_schemas.py`     | instrument_definitions                |
-| market-tick-data-service       | `schemas/tick_data_schemas.py`  | raw tick data (trades, book, etc.)    |
-| market-data-processing-service | `schemas/output_schemas.py`     | processed candles                     |
-| features-service (delta-one family)     | `schemas/output_schemas.py`     | feature matrices                      |
-| features-service (volatility family)    | `schemas/output_schemas.py`     | volatility features                   |
-| strategy-service               | `schemas/output_schemas.py`     | instructions, positions, equity curve |
-| execution-service              | internal NautilusTrader schemas | fills, trades, execution results      |
+| Service                              | Schema File                     | Output Types                          |
+| ------------------------------------ | ------------------------------- | ------------------------------------- |
+| instruments-service                  | `schemas/output_schemas.py`     | instrument_definitions                |
+| market-tick-data-service             | `schemas/tick_data_schemas.py`  | raw tick data (trades, book, etc.)    |
+| market-data-processing-service       | `schemas/output_schemas.py`     | processed candles                     |
+| features-service (delta-one family)  | `schemas/output_schemas.py`     | feature matrices                      |
+| features-service (volatility family) | `schemas/output_schemas.py`     | volatility features                   |
+| strategy-service                     | `schemas/output_schemas.py`     | instructions, positions, equity curve |
+| execution-service                    | internal NautilusTrader schemas | fills, trades, execution results      |
 
 ---
 

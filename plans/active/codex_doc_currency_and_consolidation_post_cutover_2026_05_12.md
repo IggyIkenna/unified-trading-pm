@@ -28,35 +28,34 @@ estimate_calibrated_ai_days: 1.8
 
 # Codex doc currency stamps + duplicate-doc consolidation (post-cutover)
 
-> **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation
-> 2026-05-12. Source area issue docs in `plans/active/issues/codex_audit_<area>_2026_05_12.md`. Findings are deferred
-> codex-doc hygiene work — non-blocking for May-23 cutover; resolves to a normal Codex SSOT refresh cadence in the
-> 3-month window after cutover.
+> **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST*CUTOVER consolidation 2026-05-12.
+> Source area issue docs in `plans/active/issues/codex_audit*<area>\_2026_05_12.md`. Findings are deferred codex-doc
+> hygiene work — non-blocking for May-23 cutover; resolves to a normal Codex SSOT refresh cadence in the 3-month window
+> after cutover.
 
 ## Why this plan exists
 
-The Phase 1 area audits surfaced ~12 codex-doc-hygiene findings: missing `Last verified:` currency stamps, duplicate
-doc pairs that say the same thing, stub docs flagged `audit needed`, cross-reference gaps between related codex docs.
-None are correctness bugs; all are doc-debt accumulation that future audits will trip over. Group them here so a
-single sweep can close them after May-23 — instead of 12 isolated issue docs that future agents must individually
-re-discover.
+The Phase 1 area audits surfaced ~12 codex-doc-hygiene findings: missing `Last verified:` currency stamps, duplicate doc
+pairs that say the same thing, stub docs flagged `audit needed`, cross-reference gaps between related codex docs. None
+are correctness bugs; all are doc-debt accumulation that future audits will trip over. Group them here so a single sweep
+can close them after May-23 — instead of 12 isolated issue docs that future agents must individually re-discover.
 
 ## Scope — migrated findings (12 codex-doc-currency items)
 
-| Finding | Source area | Description | Target codex doc |
-|---|---|---|---|
-| AL-12 | alerting | ADD CI-bot Telegram contract § to codex; today only in CLAUDE.md | `codex/03-observability/alerting.md` or `pagerduty-escalation-policy.md` |
-| D-14 | data | `availability-manifest-and-data-status.md:776-801` documents an open finding routed to infrastructure_master — resolve or move to issue doc | `codex/02-data/availability-manifest-and-data-status.md` |
-| IN-19 | instruments | Add `Last verified:` frontmatter to `defi-data-types-catalog.md` + `instrument-pipeline-defi.md` + `data-catalogue-schema.md` | `codex/02-data/defi-data-types-catalog.md`, `instrument-pipeline-defi.md`, `data-catalogue-schema.md` |
-| IN-20 | instruments | `defi-venue-protocol-catalogue.md` MTDS-adapter axis is misleading for Solana DeFi protocols (generic handler, not dedicated adapter) — change axis or footnote | `codex/02-data/defi-venue-protocol-catalogue.md` |
-| ML-12 | ml | `catalogue-ml-model.md:9,16-19` ⚠ audit-needed stub — resolve UAC-vs-UTL boundary for ModelRegistry/ModelMetadata | `codex/.../catalogue-ml-model.md` + UAC-gap tracker |
-| ML-18 | ml | Codify "two reload mechanisms" matrix (instrument-lifecycle delta-reloader vs model Pub/Sub cache-bust) | `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` or new `hot-reload-mechanisms.md` |
-| PB-16 | position_balance | `capital-flow-model.md` lacks `status: canonical` + `last_reviewed` frontmatter | `codex/04-architecture/capital-flow-model.md` |
-| O-12 | ops | `vm-tarball-deployment.md` § "How to debug a failed VM run" lacks cross-ref to `recommended_machine_type` runbook | `codex/05-infrastructure/vm-tarball-deployment.md` |
-| O-19 | ops | Codify "hardcoded-name VM singleton" pattern + watchdog implications (vs `prefix-{ts}` pattern) | `codex/05-infrastructure/launcher-script-ssot.md` or `vm-tarball-deployment.md` |
-| ST-20 | strategy | Cross-reference `signal-broadcast-architecture.md` BacktestComparisonPanel ↔ `archetype-paper-readiness.md` 4-state taxonomy | both docs |
-| UI-17 | ui | CONSOLIDATE `ui-functionality-requirements.md` + `ui-dependency-matrix.md` (both 2026-03-24, heavy overlap) into one `ui-architecture.md` | `codex/05-infrastructure/ui-*.md` |
-| UI-19 | ui | ADD § describing the health-page connector-status contract (which connectors probed, latency thresholds, startup hints) | `codex/05-infrastructure/deployment-ui-architecture.md` or `data-status-drilldown.md` |
+| Finding | Source area      | Description                                                                                                                                                     | Target codex doc                                                                                         |
+| ------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| AL-12   | alerting         | ADD CI-bot Telegram contract § to codex; today only in CLAUDE.md                                                                                                | `codex/03-observability/alerting.md` or `pagerduty-escalation-policy.md`                                 |
+| D-14    | data             | `availability-manifest-and-data-status.md:776-801` documents an open finding routed to infrastructure_master — resolve or move to issue doc                     | `codex/02-data/availability-manifest-and-data-status.md`                                                 |
+| IN-19   | instruments      | Add `Last verified:` frontmatter to `defi-data-types-catalog.md` + `instrument-pipeline-defi.md` + `data-catalogue-schema.md`                                   | `codex/02-data/defi-data-types-catalog.md`, `instrument-pipeline-defi.md`, `data-catalogue-schema.md`    |
+| IN-20   | instruments      | `defi-venue-protocol-catalogue.md` MTDS-adapter axis is misleading for Solana DeFi protocols (generic handler, not dedicated adapter) — change axis or footnote | `codex/02-data/defi-venue-protocol-catalogue.md`                                                         |
+| ML-12   | ml               | `catalogue-ml-model.md:9,16-19` ⚠ audit-needed stub — resolve UAC-vs-UTL boundary for ModelRegistry/ModelMetadata                                              | `codex/.../catalogue-ml-model.md` + UAC-gap tracker                                                      |
+| ML-18   | ml               | Codify "two reload mechanisms" matrix (instrument-lifecycle delta-reloader vs model Pub/Sub cache-bust)                                                         | `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` or new `hot-reload-mechanisms.md` |
+| PB-16   | position_balance | `capital-flow-model.md` lacks `status: canonical` + `last_reviewed` frontmatter                                                                                 | `codex/04-architecture/capital-flow-model.md`                                                            |
+| O-12    | ops              | `vm-tarball-deployment.md` § "How to debug a failed VM run" lacks cross-ref to `recommended_machine_type` runbook                                               | `codex/05-infrastructure/vm-tarball-deployment.md`                                                       |
+| O-19    | ops              | Codify "hardcoded-name VM singleton" pattern + watchdog implications (vs `prefix-{ts}` pattern)                                                                 | `codex/05-infrastructure/launcher-script-ssot.md` or `vm-tarball-deployment.md`                          |
+| ST-20   | strategy         | Cross-reference `signal-broadcast-architecture.md` BacktestComparisonPanel ↔ `archetype-paper-readiness.md` 4-state taxonomy                                   | both docs                                                                                                |
+| UI-17   | ui               | CONSOLIDATE `ui-functionality-requirements.md` + `ui-dependency-matrix.md` (both 2026-03-24, heavy overlap) into one `ui-architecture.md`                       | `codex/05-infrastructure/ui-*.md`                                                                        |
+| UI-19   | ui               | ADD § describing the health-page connector-status contract (which connectors probed, latency thresholds, startup hints)                                         | `codex/05-infrastructure/deployment-ui-architecture.md` or `data-status-drilldown.md`                    |
 
 ## Todos
 
@@ -66,18 +65,17 @@ re-discover.
       `defi-data-types-catalog.md`, `instrument-pipeline-defi.md`, `data-catalogue-schema.md`, `capital-flow-model.md`.)
 - [x] [DOC] P2. **Sweep 2 — duplicate consolidation.** Merge `ui-functionality-requirements.md` +
       `ui-dependency-matrix.md` into single `ui-architecture.md`; delete redundant docs. **MIGRATED FROM:** UI-17.
-      (PM@640c38d1 — Slot 8 2026-05-13. Created new `ui-architecture.md` as canonical entry-point with navigation
-      map + architectural principles + migration plan; tagged both source docs SUPERSEDED with cross-link banners.
-      Full content merge deferred to follow-up cycle per plan body — sources preserved for now to avoid risky
-      622-line merge mid-cutover.)
+      (PM@640c38d1 — Slot 8 2026-05-13. Created new `ui-architecture.md` as canonical entry-point with navigation map +
+      architectural principles + migration plan; tagged both source docs SUPERSEDED with cross-link banners. Full
+      content merge deferred to follow-up cycle per plan body — sources preserved for now to avoid risky 622-line merge
+      mid-cutover.)
 - [x] [DOC] P2. **Sweep 3 — cross-reference / clarification edits.** AL-12 (CI-bot contract §), IN-20 (Solana DeFi
-      axis), ML-12 (UAC-vs-UTL stub resolution), ML-18 (hot-reload mechanisms matrix), ST-20 (cross-ref add),
-      O-12 (vm-tarball cross-ref), O-19 (hardcoded-name pattern §), UI-19 (health-page §). **MIGRATED FROM:**
-      AL-12 + IN-20 + ML-12 + ML-18 + ST-20 + O-12 + O-19 + UI-19.
-      (Slot 8 2026-05-13. All 8 codex docs updated with the named cross-refs / clarifications / § additions:
-      AL-12 added CI-bot Telegram contract § to `alerting.md`; IN-20 added Solana generic-handler clarification to
-      `defi-venue-protocol-catalogue.md`; ML-12 added UAC schemas / UTL registry boundary table to
-      `catalogue-ml-model.md`; ML-18 added 2-mechanism hot-reload matrix to
+      axis), ML-12 (UAC-vs-UTL stub resolution), ML-18 (hot-reload mechanisms matrix), ST-20 (cross-ref add), O-12
+      (vm-tarball cross-ref), O-19 (hardcoded-name pattern §), UI-19 (health-page §). **MIGRATED FROM:** AL-12 + IN-20 +
+      ML-12 + ML-18 + ST-20 + O-12 + O-19 + UI-19. (Slot 8 2026-05-13. All 8 codex docs updated with the named
+      cross-refs / clarifications / § additions: AL-12 added CI-bot Telegram contract § to `alerting.md`; IN-20 added
+      Solana generic-handler clarification to `defi-venue-protocol-catalogue.md`; ML-12 added UAC schemas / UTL registry
+      boundary table to `catalogue-ml-model.md`; ML-18 added 2-mechanism hot-reload matrix to
       `instrument-lifecycle-cache-delta-hot-reload.md`; ST-20 added cross-refs both ways between
       `signal-broadcast-architecture.md` and `archetype-paper-readiness.md`; O-12 added `recommended_machine_type`
       cross-ref to `vm-tarball-deployment.md`; O-19 added hardcoded-name vs prefix-{ts} pattern table to
@@ -87,8 +85,8 @@ re-discover.
       from `availability-manifest-and-data-status.md:776-801` (actual lines 860-885 per current rev). **MIGRATED FROM:**
       D-14. (Slot 8 2026-05-13. Confirmed finding is NOT yet in `infrastructure_master_2026_05_07.md` Phase
       rollup-worker tasks; added explicit `D-14 resolution status` block to the codex doc directing the next
-      `deployment-api/scripts/data_status_rollup_worker.py` toucher to include the `dates_found ↔ capture_status_counts`
-      reconciliation. Finding remains OPEN but now has a clear next-agent home.)
+      `deployment-api/scripts/data_status_rollup_worker.py` toucher to include the
+      `dates_found ↔ capture_status_counts` reconciliation. Finding remains OPEN but now has a clear next-agent home.)
 
 ## Done definition
 

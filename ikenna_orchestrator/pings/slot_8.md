@@ -205,8 +205,8 @@ with ≥7-year retention policy. This is now unblocked and should proceed once S
 
 ## [main → slot 8] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
 
-**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
-slots 1-8. Your stack just got new items.
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across slots 1-8.
+Your stack just got new items.
 
 **Action (do this NOW, no questions)**:
 
@@ -217,23 +217,24 @@ slots 1-8. Your stack just got new items.
       git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
    done
    ```
-2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
-   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
-   in the distribution tables; new items are additive to your existing stack.
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` — specifically the new "## SLOT 9-10-11
+   REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot in the distribution tables; new items are additive to
+   your existing stack.
 3. Re-read your "### Slot 8" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
-4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
-   incoming) already baked into the reassignment.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials incoming)
+   already baked into the reassignment.
 
 **Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
-- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
-  lifecycle, one-pass, no shim. Per DRY.
-- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
-  AMM-perp); Harsh slot 8 owns refactor.
-- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
-  mechanical fix while waiting on Phase 1.2B work.
 
-Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
-ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close lifecycle,
+  one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp);
+  Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as mechanical fix
+  while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
+(per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
 
 ---
 
@@ -245,6 +246,7 @@ guaranteed via finally). **Phantoms will NOT re-accumulate on next smoke.**
 **JUMP TO ITEM #13 NOW** — your other open items (item 2: solana_defi successor D venue naming) can wait.
 
 Action sequence:
+
 1. `gcloud compute instances create` a same-region GCE VM running
    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
    `data_type=lst_rates`. Report phantom row count for 2026-04-15→present.
@@ -252,8 +254,8 @@ Action sequence:
 3. Cross-ping Harsh slot 9 in `plans/active/_agent_pings.md`: "phantom flips applied at <sha>; lst_rates handler
    status?"
 4. Once Harsh confirms lst_rates handler hardened, coordinate smoke re-launch.
-5. **Diagnose features-onchain VM** — first launch produced NO event stream (no-fire-and-forget violation).
-   Likely cause: tarball staleness OR VM-startup script bug OR features-onchain service crashed pre-STARTED. Pull
-   the VM serial-console output via `gcloud compute instances get-serial-port-output`.
+5. **Diagnose features-onchain VM** — first launch produced NO event stream (no-fire-and-forget violation). Likely
+   cause: tarball staleness OR VM-startup script bug OR features-onchain service crashed pre-STARTED. Pull the VM
+   serial-console output via `gcloud compute instances get-serial-port-output`.
 
 **B-015 paper-trade gate unblocks the moment this lands** — Harsh slot 9 standing by ~24h.

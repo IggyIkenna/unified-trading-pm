@@ -31,8 +31,9 @@ Examples:
   part of its normal cadence (it's a tiny diff, never collides because it's the slot's own file).
 - **Slot 1** reads `pings/*.md` each poll. For a blocker line → goes to the plan-of-record `## Open questions`, writes
   A1 (escalating to operator if needed). For STARTED → flips the LEDGER registry slot entry to 🟢 IN FLIGHT. For DONE →
-  verifies the done-definition + flips to ✅ DONE. Slot 1 does NOT edit the per-slot ping files (avoids a slot-1-vs-slot-N
-  race) — they're each slot's own append-only log; slot 1 tracks "handled up to line X" in its own working context.
+  verifies the done-definition + flips to ✅ DONE. Slot 1 does NOT edit the per-slot ping files (avoids a
+  slot-1-vs-slot-N race) — they're each slot's own append-only log; slot 1 tracks "handled up to line X" in its own
+  working context.
 - **Daily reset**: slot 1 archives the prior day's `slot_<N>.md` contents into the LEDGER historical log (or just
   truncates with a date marker) and the new cycle's slots start fresh.
 
@@ -53,16 +54,16 @@ low-traffic (<5 active entries normally) so a single shared file is fine there. 
 ## Bidirectional comms (codified 2026-05-11)
 
 The per-slot file is **two-way**. Beyond the slot's own STARTED/blocker/DONE/status lines, **slot 1 (main) may append
-`[main → slot N]` messages here** — acks, scope changes ("re-read work-split § Slot N — your scope grew"), pointers
-("Q1 answered in <plan> § Open questions — proceed with X"), short directives. So this file is the lightweight
-bidirectional comm doc between main and the slot; substantive Q→A still uses the slot's plan-of-record `## Open
-questions` (Q from slot → A1 from main) — `slot_<N>.md` just carries the *pointer* to the A1.
+`[main → slot N]` messages here** — acks, scope changes ("re-read work-split § Slot N — your scope grew"), pointers ("Q1
+answered in <plan> § Open questions — proceed with X"), short directives. So this file is the lightweight bidirectional
+comm doc between main and the slot; substantive Q→A still uses the slot's plan-of-record `## Open questions` (Q from
+slot → A1 from main) — `slot_<N>.md` just carries the _pointer_ to the A1.
 
-**The slot's read loop**: after each shippable-unit push you do `git fetch origin live-defi-rollout && git rebase
-origin/live-defi-rollout` anyway (per the conditional-push merge model). When you do — **re-read your `slot_<N>.md` for
-new `[main → slot N]` messages + your plan-of-record `## Open questions` for new A1s.** That's how main reaches you
-without going through the operator. The operator may also nudge you ("take a pull, main has a message in your slot
-file") — same thing, just a hint.
+**The slot's read loop**: after each shippable-unit push you do
+`git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout` anyway (per the conditional-push merge
+model). When you do — **re-read your `slot_<N>.md` for new `[main → slot N]` messages + your plan-of-record
+`## Open questions` for new A1s.** That's how main reaches you without going through the operator. The operator may also
+nudge you ("take a pull, main has a message in your slot file") — same thing, just a hint.
 
 **Collision note**: main appending `[main → slot N]` lines + the slot appending its own lines = an append-section
 conflict on a flat list IF you push within the same few-second window — trivially resolved "keep both" per the

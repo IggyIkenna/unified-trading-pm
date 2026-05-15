@@ -19,6 +19,7 @@ Idempotent: only rewrites content between `<!-- AUTO-INVENTORY-START -->` and
 `<!-- AUTO-INVENTORY-END -->` markers. Errors if markers absent (operator must add the
 section + markers manually once).
 """
+
 from __future__ import annotations
 
 import re
@@ -52,7 +53,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
         m = re.match(r"^([\w_]+):\s*(.*)$", line)
         if m:
             fm[m.group(1)] = m.group(2).strip()
-    body = "\n".join(lines[end_idx + 1:]) if end_idx > 0 else text
+    body = "\n".join(lines[end_idx + 1 :]) if end_idx > 0 else text
     return fm, body
 
 
@@ -116,17 +117,19 @@ def main() -> int:
         cal_cal = parse_cal(fm.get("estimate_calibrated_ai_days", ""))
         cal_left = (cal_cal * todo / total) if (cal_cal is not None and total > 0) else cal_cal
         owner = find_owner(plan.stem, ref_corpus)
-        rows.append({
-            "name": plan.stem,
-            "class": fm.get("estimate_class", "?"),
-            "cal_cal": cal_cal,
-            "done": done,
-            "todo": todo,
-            "pct": pct,
-            "cal_left": cal_left,
-            "owner": owner,
-            "deadline": fm.get("deadline", "—").strip()[:40] or "—",
-        })
+        rows.append(
+            {
+                "name": plan.stem,
+                "class": fm.get("estimate_class", "?"),
+                "cal_cal": cal_cal,
+                "done": done,
+                "todo": todo,
+                "pct": pct,
+                "cal_left": cal_left,
+                "owner": owner,
+                "deadline": fm.get("deadline", "—").strip()[:40] or "—",
+            }
+        )
 
     rows.sort(key=lambda r: -(r["cal_left"] if r["cal_left"] is not None else -1))
 
@@ -150,12 +153,10 @@ def main() -> int:
             total_done_cal += r["cal_cal"] * (r["pct"] / 100)
             total_left_cal += r["cal_left"] or 0
             cal_left_str = f"{r['cal_left']:.1f}" if r["cal_left"] is not None else "0"
-        cb = f"{r['done']}/{r['done']+r['todo']}" if (r["done"] + r["todo"]) > 0 else "—"
+        cb = f"{r['done']}/{r['done'] + r['todo']}" if (r["done"] + r["todo"]) > 0 else "—"
         pct_str = f"{r['pct']:.0f}%" if (r["done"] + r["todo"]) > 0 else "—"
         link = f"[`{r['name']}`](./{r['name']}.md)"
-        lines.append(
-            f"| {link} | {r['owner']} | {r['class']} | {cb} | {pct_str} | {cal_left_str} | {r['deadline']} |"
-        )
+        lines.append(f"| {link} | {r['owner']} | {r['class']} | {cb} | {pct_str} | {cal_left_str} | {r['deadline']} |")
 
     agg_pct = (total_done_cal / total_cal * 100) if total_cal > 0 else 0
     lines.append(
@@ -164,6 +165,7 @@ def main() -> int:
     )
 
     from datetime import datetime, timezone
+
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     inventory_md = (
         f"\n_Last regenerated: {now} via `scripts/plans/regenerate_active_plan_inventory.py`. "

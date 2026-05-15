@@ -18,8 +18,9 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17
 # Paper-vs-live execution seam
 
 > **Canonical 2026-05-10.** Per-venue paper-target policy + simulate-first-floor / testnet-upgrade-where-credentials-
-> exist mechanics live in [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md)
-> (the `paper_target_registry` SSOT). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry.
+> exist mechanics live in
+> [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md) (the
+> `paper_target_registry` SSOT). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry.
 > Consumer-site implementation (Group F sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` / `pvl-p20a..c`)
 > owned by `master_to_live_defi_2026_05_23.md`.
 
@@ -97,8 +98,8 @@ Execution-service routes per `decompose(mode)`:
 ## Reconciliation
 
 > **DEFERRED — DESIGN-ONLY 2026-05-12 (per slot 8 audit PB-5)**: 3-way reconciliation (batch ↔ paper ↔ live) is the
-> *target* shape per `pvl-p21a`. Today the live `batch-live-reconciliation-service` stage DAG ships **5 logical
-> stages** (`stage0_config_pull` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
+> _target_ shape per `pvl-p21a`. Today the live `batch-live-reconciliation-service` stage DAG ships **5 logical stages**
+> (`stage0_config_pull` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
 > `stage3_execution_recon` + `stage4_agent_analysis` + `stage5_results_writer`) and **per-stage thresholds only**
 > (`MLThresholds` / `StrategyThresholds` / `ExecutionThresholds` / `DataPipelineThresholds` in
 > `models/deviation_thresholds.py` — no per-pair batch/paper/live constants and no `paper_live_recon.py` /
@@ -107,7 +108,8 @@ Execution-service routes per `decompose(mode)`:
 
 The target 3-way reconciliation (batch ↔ paper ↔ live) will extend `batch-live-reconciliation-service` per `pvl-p21a`:
 
-- **Batch-vs-live**: will match within slippage + commission tolerance over a window. The original recon target (ships today).
+- **Batch-vs-live**: will match within slippage + commission tolerance over a window. The original recon target (ships
+  today).
 - **Paper-vs-live**: will match more tightly (same data, similar API conditions). Useful pre-cutover signal (DEFERRED).
 - **Batch-vs-paper**: will match within matching-engine fidelity tolerance. Validates simulator faithfulness (DEFERRED).
 

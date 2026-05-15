@@ -77,15 +77,15 @@ For batch services (Cloud Build jobs), update the image tag in the Cloud Build t
 > The watchdog dict (`deployment-service/scripts/vm/vm_zombie_watchdog.py` § `VM_PREFIX_TO_BUCKET`) is the live registry
 > of which bucket pattern serves which VM-prefix.
 
-| Data               | Canonical bucket kind (resolve via `resolve_bucket_name(kind=...)`) | Path                                           | Retention                  |
-| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------- | -------------------------- |
-| Manifest snapshots | `manifest` (asset-group-scoped where applicable; see `cloud-providers.yaml`) | `snapshots/YYYY-MM-DD/workspace-manifest.json` | 90 days                    |
-| Service configs    | `configs` (env-tier: dev / staging / prod via `${DEPLOYMENT_ENV}`)  | `<service>/config.json`                        | 30 days (versioned bucket) |
-| Market data        | `market-data-tick` (per asset_group — `cefi` / `defi` / `tradfi` / `sports` / `prediction`) | `pipeline_mode=<batch|live>/asset_group=<ag>/<venue>/<instrument>/YYYY/MM/DD/` (`pipeline_mode` in PATH, not bucket name) | Indefinite                 |
-| ML models          | `ml-models`                                                         | `<model>/<version>/`                           | Indefinite (tagged)        |
-| Audit logs         | `audit-logs` (per service)                                          | `<service>/YYYY/MM/DD/`                        | 1 year                     |
-| Events             | `events` (per service / per cloud)                                  | `events/<service>/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` | 90 days (per retention policy) |
-| Kill-switch audit  | `kill-switch-audit`                                                 | `audit/kill_switch/{YYYY-MM-DD}/`              | Indefinite (regulatory)    |
+| Data               | Canonical bucket kind (resolve via `resolve_bucket_name(kind=...)`)                         | Path                                                              | Retention                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------- |
+| Manifest snapshots | `manifest` (asset-group-scoped where applicable; see `cloud-providers.yaml`)                | `snapshots/YYYY-MM-DD/workspace-manifest.json`                    | 90 days                                                                                             |
+| Service configs    | `configs` (env-tier: dev / staging / prod via `${DEPLOYMENT_ENV}`)                          | `<service>/config.json`                                           | 30 days (versioned bucket)                                                                          |
+| Market data        | `market-data-tick` (per asset_group — `cefi` / `defi` / `tradfi` / `sports` / `prediction`) | `pipeline_mode=<batch                                             | live>/asset_group=<ag>/<venue>/<instrument>/YYYY/MM/DD/` (`pipeline_mode` in PATH, not bucket name) | Indefinite |
+| ML models          | `ml-models`                                                                                 | `<model>/<version>/`                                              | Indefinite (tagged)                                                                                 |
+| Audit logs         | `audit-logs` (per service)                                                                  | `<service>/YYYY/MM/DD/`                                           | 1 year                                                                                              |
+| Events             | `events` (per service / per cloud)                                                          | `events/<service>/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` | 90 days (per retention policy)                                                                      |
+| Kill-switch audit  | `kill-switch-audit`                                                                         | `audit/kill_switch/{YYYY-MM-DD}/`                                 | Indefinite (regulatory)                                                                             |
 
 ## Communication Protocol During Incidents
 

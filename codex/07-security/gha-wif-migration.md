@@ -1,8 +1,8 @@
 # GHA Credential Hygiene: WIF + GitHub App Migration
 
-**Status**: Phase 6.C of `api_keys_wallets_accounts_readiness_2026_05_10.md`
-**Operator action required**: GCP WIF pool provisioning + GitHub App creation (BLOCKED-OPERATOR)
-**Secret scanning**: `.gitleaks.toml` SSOT at `unified-trading-pm/.gitleaks.toml`
+**Status**: Phase 6.C of `api_keys_wallets_accounts_readiness_2026_05_10.md` **Operator action required**: GCP WIF pool
+provisioning + GitHub App creation (BLOCKED-OPERATOR) **Secret scanning**: `.gitleaks.toml` SSOT at
+`unified-trading-pm/.gitleaks.toml`
 
 ---
 
@@ -10,10 +10,10 @@
 
 Two classes of long-lived credentials exist in GHA workflows across all repos:
 
-| Class | Current secret | Risk | Replacement |
-|-------|---------------|------|-------------|
-| GCP service account JSON | `secrets.GCP_SA_KEY` | Committed to `benchmarks.yml`; GCP SA key rotates on a schedule; long-lived | GCP WIF (OIDC) |
-| GitHub Personal Access Token | `secrets.GH_PAT` | Long-lived; account-level scope; leaked in `instruments-service` history | GitHub App installation token |
+| Class                        | Current secret       | Risk                                                                        | Replacement                   |
+| ---------------------------- | -------------------- | --------------------------------------------------------------------------- | ----------------------------- |
+| GCP service account JSON     | `secrets.GCP_SA_KEY` | Committed to `benchmarks.yml`; GCP SA key rotates on a schedule; long-lived | GCP WIF (OIDC)                |
+| GitHub Personal Access Token | `secrets.GH_PAT`     | Long-lived; account-level scope; leaked in `instruments-service` history    | GitHub App installation token |
 
 ---
 
@@ -21,8 +21,8 @@ Two classes of long-lived credentials exist in GHA workflows across all repos:
 
 ### What it does
 
-GitHub Actions requests an OIDC token from GitHub → presents to GCP → GCP mints a short-lived SA access
-token. No long-lived SA key JSON stored anywhere.
+GitHub Actions requests an OIDC token from GitHub → presents to GCP → GCP mints a short-lived SA access token. No
+long-lived SA key JSON stored anywhere.
 
 ### Operator: provision WIF pool + provider (one-time, GCP Console or gcloud)
 
@@ -67,6 +67,7 @@ gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" \
 ### Operator: add GitHub repository secrets (per-repo)
 
 After provisioning, add these secrets to each repo in GitHub:
+
 - `WORKLOAD_IDENTITY_PROVIDER` = the provider resource name from above
 - `GCP_SERVICE_ACCOUNT` = the SA email (`execution-service-sa@central-element-323112.iam.gserviceaccount.com`)
 
@@ -77,7 +78,7 @@ Keep `GCP_SA_KEY` secret in place until all workflows migrated and verified.
 ```yaml
 permissions:
   contents: read
-  id-token: write  # Required for WIF OIDC token request
+  id-token: write # Required for WIF OIDC token request
 
 jobs:
   build:
@@ -100,10 +101,10 @@ jobs:
 
 ### Affected workflows (audit 2026-05-15)
 
-| Repo | Workflow | Uses `GCP_SA_KEY` | Migration status |
-|------|----------|-------------------|-----------------|
-| execution-service | `benchmarks.yml` | Yes | BLOCKED-OPERATOR (WIF pool not provisioned) |
-| All repos | `quality-gates.yml` | Indirect (via VM launch) | Inherits from deployment-service |
+| Repo              | Workflow            | Uses `GCP_SA_KEY`        | Migration status                            |
+| ----------------- | ------------------- | ------------------------ | ------------------------------------------- |
+| execution-service | `benchmarks.yml`    | Yes                      | BLOCKED-OPERATOR (WIF pool not provisioned) |
+| All repos         | `quality-gates.yml` | Indirect (via VM launch) | Inherits from deployment-service            |
 
 ---
 
@@ -111,8 +112,8 @@ jobs:
 
 ### Why not WIF
 
-WIF is GCP→GitHub auth. For GitHub→GitHub (cross-repo API calls, issue creation, PR management),
-the right replacement is a **GitHub App installation token** — scoped per-repo, auto-rotating (1h TTL).
+WIF is GCP→GitHub auth. For GitHub→GitHub (cross-repo API calls, issue creation, PR management), the right replacement
+is a **GitHub App installation token** — scoped per-repo, auto-rotating (1h TTL).
 
 ### Operator: create GitHub App
 
@@ -132,6 +133,7 @@ the right replacement is a **GitHub App installation token** — scoped per-repo
 ### Operator: add GitHub repository secrets (workspace-wide)
 
 In each repo settings, add:
+
 - `APP_ID` = the App ID from step 7
 - `APP_PRIVATE_KEY` = contents of the `.pem` file from step 7
 
@@ -167,24 +169,25 @@ jobs:
 
 ### Affected workflows (audit 2026-05-15)
 
-| Repo | Workflow | Uses `GH_PAT` / `GH_TOKEN` | Migration status |
-|------|----------|----------------------------|-----------------|
-| execution-service | `semver-agent.yml` | Yes (cross-repo dispatch) | BLOCKED-OPERATOR (App not created) |
-| execution-service | `major-bump-issue-handler.yml` | Yes (issue creation) | BLOCKED-OPERATOR |
-| execution-service | `request-major-bump.yml` | Yes (checkout + API) | BLOCKED-OPERATOR |
-| execution-service | `staging-lock-check.yml` | Yes (API call) | BLOCKED-OPERATOR |
-| execution-service | `benchmarks.yml` | Yes (git clone private repos) | BLOCKED-OPERATOR |
-| All repos | `semver-agent.yml` (copy) | Yes | BLOCKED-OPERATOR |
-| instruments-service | `.env` + `.env.example` | Leaked in history | P1 — revoke + history rewrite |
+| Repo                | Workflow                       | Uses `GH_PAT` / `GH_TOKEN`    | Migration status                   |
+| ------------------- | ------------------------------ | ----------------------------- | ---------------------------------- |
+| execution-service   | `semver-agent.yml`             | Yes (cross-repo dispatch)     | BLOCKED-OPERATOR (App not created) |
+| execution-service   | `major-bump-issue-handler.yml` | Yes (issue creation)          | BLOCKED-OPERATOR                   |
+| execution-service   | `request-major-bump.yml`       | Yes (checkout + API)          | BLOCKED-OPERATOR                   |
+| execution-service   | `staging-lock-check.yml`       | Yes (API call)                | BLOCKED-OPERATOR                   |
+| execution-service   | `benchmarks.yml`               | Yes (git clone private repos) | BLOCKED-OPERATOR                   |
+| All repos           | `semver-agent.yml` (copy)      | Yes                           | BLOCKED-OPERATOR                   |
+| instruments-service | `.env` + `.env.example`        | Leaked in history             | P1 — revoke + history rewrite      |
 
 ---
 
 ## 3. Gitleaks pre-commit hook — prevents future leaks
 
-Config SSOT: `unified-trading-pm/.gitleaks.toml`
-Pre-commit template SSOT: `unified-trading-pm/scripts/pre-commit-templates/`
+Config SSOT: `unified-trading-pm/.gitleaks.toml` Pre-commit template SSOT:
+`unified-trading-pm/scripts/pre-commit-templates/`
 
 All templates (python-service, python-library, docs) now include:
+
 ```yaml
 - repo: https://github.com/gitleaks/gitleaks
   rev: v8.27.2
@@ -194,12 +197,13 @@ All templates (python-service, python-library, docs) now include:
 ```
 
 **To propagate to all repos** (after template update):
+
 ```bash
 bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh
 ```
 
-The hook scans files staged for commit (not full git history). For CI-level scanning, see Phase 0.A
-gitleaks GHA workflow (to be added per Phase 6.C completion).
+The hook scans files staged for commit (not full git history). For CI-level scanning, see Phase 0.A gitleaks GHA
+workflow (to be added per Phase 6.C completion).
 
 ---
 
@@ -213,7 +217,7 @@ on:
   push:
     branches: [main, live-defi-rollout, staging]
   schedule:
-    - cron: '0 2 * * 1'  # Weekly Monday 02:00 UTC
+    - cron: "0 2 * * 1" # Weekly Monday 02:00 UTC
 
 jobs:
   gitleaks:
@@ -221,7 +225,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for git-mode scan
+          fetch-depth: 0 # Full history for git-mode scan
 
       - name: Run gitleaks (git mode — full history)
         uses: gitleaks/gitleaks-action@v2
@@ -229,23 +233,23 @@ jobs:
           config: unified-trading-pm/.gitleaks.toml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Optional for team use
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Optional for team use
 ```
 
 ---
 
 ## Operator Action Checklist
 
-| Action | Priority | ETA | Status |
-|--------|----------|-----|--------|
-| Revoke GCP SA key `e35fb0ddafe2` | P0 | ≤1h | `[ ]` |
-| Run `git filter-repo` on 4 repos | P0 | ≤4h | `[ ]` |
-| Revoke GitHub PAT `ghp_QJOtg6N...` | P1 | ≤15min | `[ ]` |
-| Provision GCP WIF pool + provider | P1 | ≤2h | `[ ]` |
-| Add `WORKLOAD_IDENTITY_PROVIDER` + `GCP_SERVICE_ACCOUNT` secrets | P1 | ≤30min | `[ ]` |
-| Create GitHub App `unified-trading-semver-agent` | P2 | ≤1h | `[ ]` |
-| Add `APP_ID` + `APP_PRIVATE_KEY` secrets to all repos | P2 | ≤30min | `[ ]` |
-| Run `rollout-pre-commit-configs.sh` after template update | P2 | ≤10min | `[ ]` |
+| Action                                                           | Priority | ETA    | Status |
+| ---------------------------------------------------------------- | -------- | ------ | ------ |
+| Revoke GCP SA key `e35fb0ddafe2`                                 | P0       | ≤1h    | `[ ]`  |
+| Run `git filter-repo` on 4 repos                                 | P0       | ≤4h    | `[ ]`  |
+| Revoke GitHub PAT `ghp_QJOtg6N...`                               | P1       | ≤15min | `[ ]`  |
+| Provision GCP WIF pool + provider                                | P1       | ≤2h    | `[ ]`  |
+| Add `WORKLOAD_IDENTITY_PROVIDER` + `GCP_SERVICE_ACCOUNT` secrets | P1       | ≤30min | `[ ]`  |
+| Create GitHub App `unified-trading-semver-agent`                 | P2       | ≤1h    | `[ ]`  |
+| Add `APP_ID` + `APP_PRIVATE_KEY` secrets to all repos            | P2       | ≤30min | `[ ]`  |
+| Run `rollout-pre-commit-configs.sh` after template update        | P2       | ≤10min | `[ ]`  |
 
 ---
 

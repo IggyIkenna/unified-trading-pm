@@ -12,10 +12,10 @@ locked_since: 2026-05-11
 # Continuation prompts — 2026-05-11 PM
 
 > **Why this doc**: Ikenna + Harsh slot agents need paste-ready CONTINUE prompts (not initial spawn prompts) for the
-> 2026-05-11 PM → 2026-05-15 freeze-gate push. Operator directive (2026-05-11 PM):
-> _"don't stop even at nice-haves; we're moving faster than planned + Harsh leaves in ~3hr."_ 6 slots have outstanding
-> work — 4 Ikenna (2/5/7/8) + 3 Harsh (2/4/6). Skipped: Ikenna 1 (main), 3/4/6 (already in flight, no staleness),
-> Harsh 1 (main), 3 (defi #5 VM monitoring), 5 (⚪ QUIET, absorbed by Ikenna 7).
+> 2026-05-11 PM → 2026-05-15 freeze-gate push. Operator directive (2026-05-11 PM): _"don't stop even at nice-haves;
+> we're moving faster than planned + Harsh leaves in ~3hr."_ 6 slots have outstanding work — 4 Ikenna (2/5/7/8) + 3
+> Harsh (2/4/6). Skipped: Ikenna 1 (main), 3/4/6 (already in flight, no staleness), Harsh 1 (main), 3 (defi #5 VM
+> monitoring), 5 (⚪ QUIET, absorbed by Ikenna 7).
 >
 > Each prompt is paste-ready into the slot's Cursor / Claude Code tab. References the **lean
 > `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (10KB)**, not the prior 211KB CLAUDE.md.
@@ -291,12 +291,16 @@ DONE: DONE-2026-05-12 block in `mdps_canonical_writer_off_by_one_tf_2026_05_11.m
 ## Skipped (already in flight or absorbed)
 
 - **Ikenna slot 1 (main orchestrator)**: this session.
-- **Ikenna slot 4, 6**: already in flight on live-pipeline Phase 14/11 / manifest_schema_final_gate Phase 1 follow-ups respectively. No staleness signal.
-- **Harsh slot 1 (main orchestrator)**, **slot 3** (defi #5 VM monitoring — same scope as Ikenna slot 3), **slot 5** (⚪ QUIET, absorbed by Ikenna slot 7).
+- **Ikenna slot 4, 6**: already in flight on live-pipeline Phase 14/11 / manifest_schema_final_gate Phase 1 follow-ups
+  respectively. No staleness signal.
+- **Harsh slot 1 (main orchestrator)**, **slot 3** (defi #5 VM monitoring — same scope as Ikenna slot 3), **slot 5** (⚪
+  QUIET, absorbed by Ikenna slot 7).
 
 ## Composes with
 
-- CLAUDE.md "Commit + Push + Flip Plan Checkboxes" HARD RULE (Half 1+2+4 — per-shippable-unit cadence + slot push + LDR FF).
+- CLAUDE.md "Commit + Push + Flip Plan Checkboxes" HARD RULE (Half 1+2+4 — per-shippable-unit cadence + slot push + LDR
+  FF).
 - CLAUDE.md "Capture Discoveries As Plan Todos Immediately" (mid-session findings → plan todos, not chat).
 - CLAUDE.md "Findings Triage Discipline" (case-1-to-5 routing for surprises).
-- CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required" (paste lean SUB_AGENT_MANDATORY_RULES.md at top of every Task spawn).
+- CLAUDE.md "Sub-Agents & Autonomous Agents: Full Rules Required" (paste lean SUB_AGENT_MANDATORY_RULES.md at top of
+  every Task spawn).

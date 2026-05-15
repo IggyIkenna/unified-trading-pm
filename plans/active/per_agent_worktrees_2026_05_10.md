@@ -274,8 +274,8 @@ master-resolved      sanity
       `tab/ikennaigboaka/<N>` head `6a6ae73b`. Scaffolded slot↔theme table in
       [`ikenna_orchestrator/LEDGER.md`](../../ikenna_orchestrator/LEDGER.md) (PM@9e85fefd) is now backed by real
       worktrees. Slots 2-8 currently `(unassigned)` — assigned daily via work-split plan.
-- [x] [AGENT] P0. **DONE 2026-05-13**: Harsh has been running per-slot worktrees on his machine continuously since
-      Wave 1 (2026-05-11). LEDGER shows `tab/hk/1` through `tab/hk/10` active across every wave; Wave 3 slot reset
+- [x] [AGENT] P0. **DONE 2026-05-13**: Harsh has been running per-slot worktrees on his machine continuously since Wave
+      1 (2026-05-11). LEDGER shows `tab/hk/1` through `tab/hk/10` active across every wave; Wave 3 slot reset
       (PM@7ca204a6 09:35 UTC) confirms all 6 active slots rebased cleanly to origin/live-defi-rollout. Evidence:
       `harsh_orchestrator/LEDGER.md` slot↔theme table matches `.tabs/<N>/<repo>` worktrees on disk. `M = 10` slots
       confirmed from `setup-tab-worktrees.sh --list` output in LEDGER boot section.
@@ -331,15 +331,61 @@ master-resolved      sanity
 
 ## Phase 4.5 — Post-rollout findings (in-flight)
 
-- [x] [SCRIPT] P1. **Slot-worktree QG resolves wrong repo root** — ✅ **SHIPPED 2026-05-12** via Option (i) at PM@`3b6e0ae3` (qg-common.sh walk-up resolution + diagnostic banner). Issue doc: [`plans/archive/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md`](../archive/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md). `qg-common.sh` now walks UP from caller stub's directory to the nearest `pyproject.toml` (instead of `dirname dirname` of `scripts/`) — robust against sibling-worktree confusion. Diagnostic banner `[quality-gates] <repo> @ <PROJECT_ROOT>` surfaces wrong-resolution at a glance.
+- [x] [SCRIPT] P1. **Slot-worktree QG resolves wrong repo root** — ✅ **SHIPPED 2026-05-12** via Option (i) at
+      PM@`3b6e0ae3` (qg-common.sh walk-up resolution + diagnostic banner). Issue doc:
+      [`plans/archive/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md`](../archive/issues/slot_worktree_qg_repo_root_resolution_2026_05_11.md).
+      `qg-common.sh` now walks UP from caller stub's directory to the nearest `pyproject.toml` (instead of
+      `dirname dirname` of `scripts/`) — robust against sibling-worktree confusion. Diagnostic banner
+      `[quality-gates] <repo> @ <PROJECT_ROOT>` surfaces wrong-resolution at a glance.
 
-- [x] [SCRIPT] P1. **SHIPPED 2026-05-13 — Reset the per-slot ping doc on re-theme (not at start-of-day) — operator proposal 2026-05-11 (Harsh side); ✅ Ikenna's input received 2026-05-12 boot — ready to implement with 3 refinements (see below).** Deliverables (i)/(ii)/(iv)/(v) shipped (PM@2f710f9a); (iii) Ikenna-side migration `**DEFERRED**` — requires Ikenna's machine + his per-slot pings directory; left as follow-up for Ikenna's next per-tab-worktrees touch. _Context_: the per-slot `harsh_orchestrator/pings/slot_<N>.md` (and `ikenna_orchestrator/pings/slot_<N>.md`) files are deliberately **append-only daily logs** (the per-slot-files design traded "single shared `_agent_pings.md` was the #1 rebase-conflict hotspot" for "one file per slot, append-only, zero collision") and the channel widened over time from a one-line nudge → work→main Q&A → bidirectional `[main → slot N]`. So they grow over a shift — by design within a day — but they need a clean reset boundary, and the current "Daily reset (each morning)" rule (CLAUDE.md step 5) hasn't been blanket-truncating them. **Proposal**: tie the ping-doc reset to the **slot re-theme event** (the `setup-tab-worktrees.sh --reset-slot <N>` op) rather than start-of-day — a slot mid-multi-day-task keeps its accumulated context; only a re-themed slot gets a fresh ping doc. **Concretely**: (1) make `--reset-slot <N>` the canonical "slot N starts a new theme" operation (it already cleans the worktree + rebases the slot branch) **and add a step that truncates `<side>_orchestrator/pings/slot_<N>.md` back to a fresh stub** — the `<!-- Append-only… -->` header + a `[date] [main → slot N] — RE-THEMED: prior theme <X> ✅ done (see LEDGER + DONE-block in <plan>); new theme = <new-plan>` line (prior content survives in git history + the prior plan's `## DONE` block, so nothing is lost); (2) a slot **continuing the same theme** uses `/clear` (clears the agent's conversation, NOT the worktree or ping doc — they keep day-context) — no `--reset-slot`, no ping-doc reset; (3) the **daily-reset shrinks** to: the *cross-side* `plans/active/_agent_pings.md` sweep (clear handled pings, verify no orphan `🟡 BLOCKED`) + work-split archive — it stops touching the per-slot files (those reset only on re-theme); (4) **observed gap**: 2026-05-10/11 we used `/clear` + "rebase, read your ping doc" for *both* same-theme-continue AND re-theme, instead of `--reset-slot <N>` for the re-theme case — adopting this makes "`--reset-slot <N>` = the re-theme op (worktree + ping doc together)" the rule. **Affected SSOTs**: `cursor-configs/CLAUDE.md` § "Per-Tab Worktrees" + § "Daily Work-Split Process" (the Daily-reset checklist + the ping-ledger-bifurcation paragraph), `codex/05-infrastructure/per-tab-worktrees.md` § slot-reset discipline, `scripts/dev/setup-tab-worktrees.sh --reset-slot` (add the truncate step), `tests/test_tab_worktrees.bats` (assert the truncate). **Owner**: whoever picks it up after Ikenna weighs in — Ikenna owns the per-tab-worktrees model SSOT, so he should sanity-check the shape (esp. (3) — does the daily-reset shrink lose anything? — and the `--reset-slot` truncate-step ergonomics).
+- [x] [SCRIPT] P1. **SHIPPED 2026-05-13 — Reset the per-slot ping doc on re-theme (not at start-of-day) — operator
+      proposal 2026-05-11 (Harsh side); ✅ Ikenna's input received 2026-05-12 boot — ready to implement with 3
+      refinements (see below).** Deliverables (i)/(ii)/(iv)/(v) shipped (PM@2f710f9a); (iii) Ikenna-side migration
+      `**DEFERRED**` — requires Ikenna's machine + his per-slot pings directory; left as follow-up for Ikenna's next
+      per-tab-worktrees touch. _Context_: the per-slot `harsh_orchestrator/pings/slot_<N>.md` (and
+      `ikenna_orchestrator/pings/slot_<N>.md`) files are deliberately **append-only daily logs** (the per-slot-files
+      design traded "single shared `_agent_pings.md` was the #1 rebase-conflict hotspot" for "one file per slot,
+      append-only, zero collision") and the channel widened over time from a one-line nudge → work→main Q&A →
+      bidirectional `[main → slot N]`. So they grow over a shift — by design within a day — but they need a clean reset
+      boundary, and the current "Daily reset (each morning)" rule (CLAUDE.md step 5) hasn't been blanket-truncating
+      them. **Proposal**: tie the ping-doc reset to the **slot re-theme event** (the
+      `setup-tab-worktrees.sh --reset-slot <N>` op) rather than start-of-day — a slot mid-multi-day-task keeps its
+      accumulated context; only a re-themed slot gets a fresh ping doc. **Concretely**: (1) make `--reset-slot <N>` the
+      canonical "slot N starts a new theme" operation (it already cleans the worktree + rebases the slot branch) **and
+      add a step that truncates `<side>_orchestrator/pings/slot_<N>.md` back to a fresh stub** — the
+      `<!-- Append-only… -->` header + a
+      `[date] [main → slot N] — RE-THEMED: prior theme <X> ✅ done (see LEDGER + DONE-block in <plan>); new theme = <new-plan>`
+      line (prior content survives in git history + the prior plan's `## DONE` block, so nothing is lost); (2) a slot
+      **continuing the same theme** uses `/clear` (clears the agent's conversation, NOT the worktree or ping doc — they
+      keep day-context) — no `--reset-slot`, no ping-doc reset; (3) the **daily-reset shrinks** to: the _cross-side_
+      `plans/active/_agent_pings.md` sweep (clear handled pings, verify no orphan `🟡 BLOCKED`) + work-split archive —
+      it stops touching the per-slot files (those reset only on re-theme); (4) **observed gap**: 2026-05-10/11 we used
+      `/clear` + "rebase, read your ping doc" for _both_ same-theme-continue AND re-theme, instead of `--reset-slot <N>`
+      for the re-theme case — adopting this makes "`--reset-slot <N>` = the re-theme op (worktree + ping doc together)"
+      the rule. **Affected SSOTs**: `cursor-configs/CLAUDE.md` § "Per-Tab Worktrees" + § "Daily Work-Split Process" (the
+      Daily-reset checklist + the ping-ledger-bifurcation paragraph), `codex/05-infrastructure/per-tab-worktrees.md` §
+      slot-reset discipline, `scripts/dev/setup-tab-worktrees.sh --reset-slot` (add the truncate step),
+      `tests/test_tab_worktrees.bats` (assert the truncate). **Owner**: whoever picks it up after Ikenna weighs in —
+      Ikenna owns the per-tab-worktrees model SSOT, so he should sanity-check the shape (esp. (3) — does the daily-reset
+      shrink lose anything? — and the `--reset-slot` truncate-step ergonomics).
 
-  **Ikenna-side input 2026-05-12 boot (slot 1 main as per-tab-worktrees SSOT owner)**: 👍 support the core proposal. Sound improvement that correctly identifies the growth problem (Harsh's per-slot files are now 22-55KB each = ~40k chars of accumulated context per slot per day; CLAUDE.md "Daily reset" step 5 has never blanket-truncated them). Tying truncate to `--reset-slot <N>` makes the worktree-clean + ping-reset atomic + operator-controlled. **3 refinements to fold into the implementation**:
+  **Ikenna-side input 2026-05-12 boot (slot 1 main as per-tab-worktrees SSOT owner)**: 👍 support the core proposal.
+  Sound improvement that correctly identifies the growth problem (Harsh's per-slot files are now 22-55KB each = ~40k
+  chars of accumulated context per slot per day; CLAUDE.md "Daily reset" step 5 has never blanket-truncated them). Tying
+  truncate to `--reset-slot <N>` makes the worktree-clean + ping-reset atomic + operator-controlled. **3 refinements to
+  fold into the implementation**:
 
-  **(R1) Bounded-growth mechanism within same-theme** — even within a multi-day-task a single slot can accumulate 100KB+ of STARTED/DONE acks. Add a "read-time rollup" rule: when slot main reads its own ping file for context, entries with both (a) ✅ DONE / ✅ RESOLVED status AND (b) age > 24h get rolled into a `## Prior context (rolled)` collapsed section at the bottom of the file. Trigger = main on read (NOT script — avoids racing with append-writes from sub-agents). Keeps file lean without losing recoverability (git history is the long-term home + each entry's plan-of-record DONE block is the canonical evidence). Composes with proposal step (3): daily-reset no longer touches per-slot files, but read-time-rollup keeps them bounded mid-multi-day-task.
+  **(R1) Bounded-growth mechanism within same-theme** — even within a multi-day-task a single slot can accumulate 100KB+
+  of STARTED/DONE acks. Add a "read-time rollup" rule: when slot main reads its own ping file for context, entries with
+  both (a) ✅ DONE / ✅ RESOLVED status AND (b) age > 24h get rolled into a `## Prior context (rolled)` collapsed
+  section at the bottom of the file. Trigger = main on read (NOT script — avoids racing with append-writes from
+  sub-agents). Keeps file lean without losing recoverability (git history is the long-term home + each entry's
+  plan-of-record DONE block is the canonical evidence). Composes with proposal step (3): daily-reset no longer touches
+  per-slot files, but read-time-rollup keeps them bounded mid-multi-day-task.
 
-  **(R2) `--reset-slot <N>` truncate-step ergonomics — placeholders, not auto-fill** — script writes a stub with placeholders; main agent fills in on slot boot. Don't make the script read LEDGER / work-split (too brittle; both can be stale at the re-theme moment, and a script that auto-cites can write the wrong thing). Concrete stub:
+  **(R2) `--reset-slot <N>` truncate-step ergonomics — placeholders, not auto-fill** — script writes a stub with
+  placeholders; main agent fills in on slot boot. Don't make the script read LEDGER / work-split (too brittle; both can
+  be stale at the re-theme moment, and a script that auto-cites can write the wrong thing). Concrete stub:
 
   ```text
   <!-- Append-only daily log for slot N. Reset on `setup-tab-worktrees.sh --reset-slot <N>`. -->
@@ -348,19 +394,45 @@ master-resolved      sanity
   New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
   ```
 
-  Slot main's first read after re-theme: replace the two `TBD` lines with citations + drop the placeholder. Script commits truncate via `[reset-slot]` tag in commit message so CI / cross-side acks recognize it as a known reset event (not a destructive overwrite).
+  Slot main's first read after re-theme: replace the two `TBD` lines with citations + drop the placeholder. Script
+  commits truncate via `[reset-slot]` tag in commit message so CI / cross-side acks recognize it as a known reset event
+  (not a destructive overwrite).
 
-  **(R3) Ikenna-side parity migration to per-slot files** — Ikenna side currently uses SINGLE `ikenna_orchestrator/_agent_pings.md` (per CLAUDE.md "Ping ledger bifurcation" codified 2026-05-08); Harsh migrated to per-slot `pings/slot_<N>.md`. Proposal as written is Harsh-shape only. Two options:
-  - **(a)** Migrate Ikenna side to per-slot files (symmetric with Harsh). Pro: rebase-conflict hotspot already drove Harsh's migration; Ikenna will hit the same as multi-sub-agent fan-out scales (slot 7 ran 14-sub-agent rounds today, with Round 1+2+3 incidents from `.git/index` sharing). Con: one-time migration step + workspace-wide doc updates.
-  - **(b)** Keep Ikenna single-file; proposal only applies to per-slot-file sides. Pro: faster, no migration. Con: asymmetric model = more cognitive overhead for cross-side operators.
+  **(R3) Ikenna-side parity migration to per-slot files** — Ikenna side currently uses SINGLE
+  `ikenna_orchestrator/_agent_pings.md` (per CLAUDE.md "Ping ledger bifurcation" codified 2026-05-08); Harsh migrated to
+  per-slot `pings/slot_<N>.md`. Proposal as written is Harsh-shape only. Two options:
+  - **(a)** Migrate Ikenna side to per-slot files (symmetric with Harsh). Pro: rebase-conflict hotspot already drove
+    Harsh's migration; Ikenna will hit the same as multi-sub-agent fan-out scales (slot 7 ran 14-sub-agent rounds today,
+    with Round 1+2+3 incidents from `.git/index` sharing). Con: one-time migration step + workspace-wide doc updates.
+  - **(b)** Keep Ikenna single-file; proposal only applies to per-slot-file sides. Pro: faster, no migration. Con:
+    asymmetric model = more cognitive overhead for cross-side operators.
 
-  **I lean (a)** — migrate Ikenna to per-slot in same logical unit as the proposal lands. Workspace becomes symmetric; rebase-conflict prevention extends to Ikenna; both sides hit the read-time-rollup rule identically. Implementation order: (1) `setup-tab-worktrees.sh --init` provisions both sides' `pings/slot_<N>.md` directories; (2) one-shot migration script splits existing `ikenna_orchestrator/_agent_pings.md` into 8 per-slot files (split on `[main → slot N]` markers + fallback to per-slot intro stubs); (3) CLAUDE.md "Ping ledger bifurcation" paragraph updates to enumerate both per-slot directories; (4) the proposal's `--reset-slot` truncate-step applies to both sides identically.
+  **I lean (a)** — migrate Ikenna to per-slot in same logical unit as the proposal lands. Workspace becomes symmetric;
+  rebase-conflict prevention extends to Ikenna; both sides hit the read-time-rollup rule identically. Implementation
+  order: (1) `setup-tab-worktrees.sh --init` provisions both sides' `pings/slot_<N>.md` directories; (2) one-shot
+  migration script splits existing `ikenna_orchestrator/_agent_pings.md` into 8 per-slot files (split on
+  `[main → slot N]` markers + fallback to per-slot intro stubs); (3) CLAUDE.md "Ping ledger bifurcation" paragraph
+  updates to enumerate both per-slot directories; (4) the proposal's `--reset-slot` truncate-step applies to both sides
+  identically.
 
-  **Sanity-check on proposal (3) — does daily-reset shrink lose anything?** I don't think so. The "lost" capability would be "auto-truncate stale acks daily" — but: (i) most resolved acks belong in plan-body DONE blocks per CLAUDE.md "Commit + Push + Flip" Half 2, not in the ping ledger; (ii) R1 read-time rollup handles bounded growth; (iii) the operator's explicit `--reset-slot` is a sharper signal than implicit daily-clear. Net: daily-reset shrinks to (a) cross-side `_agent_pings.md` sweep + (b) work-split archive — both of which slot 1 main already does explicitly per today's 2026-05-12 boot sweep (PM@`c15267ef` + `6445e059`). Cleaner.
+  **Sanity-check on proposal (3) — does daily-reset shrink lose anything?** I don't think so. The "lost" capability
+  would be "auto-truncate stale acks daily" — but: (i) most resolved acks belong in plan-body DONE blocks per CLAUDE.md
+  "Commit + Push + Flip" Half 2, not in the ping ledger; (ii) R1 read-time rollup handles bounded growth; (iii) the
+  operator's explicit `--reset-slot` is a sharper signal than implicit daily-clear. Net: daily-reset shrinks to (a)
+  cross-side `_agent_pings.md` sweep + (b) work-split archive — both of which slot 1 main already does explicitly per
+  today's 2026-05-12 boot sweep (PM@`c15267ef` + `6445e059`). Cleaner.
 
-  **Implementation owner**: per-tab-worktrees Phase 4.5 P1. Reasonable home is Ikenna slot 8 (already in deployment-scripts surface via Phase 0f rollout + has `setup-tab-worktrees.sh` familiarity), but cross-side ack to harsh-main when ready to land. Concrete deliverables: (i) extend `--reset-slot <N>` with truncate-to-stub + `[reset-slot]` commit tag; (ii) write read-time-rollup helper at `unified-trading-pm/scripts/agents/rollup_resolved_pings.py` (callable from slot main's boot sequence); (iii) ship Ikenna-side migration script + run it once; (iv) update CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`; (v) add `tests/test_tab_worktrees.bats` assertions for both the truncate step + the migration.
+  **Implementation owner**: per-tab-worktrees Phase 4.5 P1. Reasonable home is Ikenna slot 8 (already in
+  deployment-scripts surface via Phase 0f rollout + has `setup-tab-worktrees.sh` familiarity), but cross-side ack to
+  harsh-main when ready to land. Concrete deliverables: (i) extend `--reset-slot <N>` with truncate-to-stub +
+  `[reset-slot]` commit tag; (ii) write read-time-rollup helper at
+  `unified-trading-pm/scripts/agents/rollup_resolved_pings.py` (callable from slot main's boot sequence); (iii) ship
+  Ikenna-side migration script + run it once; (iv) update CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`;
+  (v) add `tests/test_tab_worktrees.bats` assertions for both the truncate step + the migration.
 
-  **Existing ping ledger state pre-implementation** — preserved at HEAD: `ikenna_orchestrator/_agent_pings.md` (single file, 3 entries post-2026-05-12 boot sweep) and `harsh_orchestrator/pings/slot_<N>.md` (per-slot, ~22-55KB each pre-implementation). Migration is non-destructive (git history retains everything).
+  **Existing ping ledger state pre-implementation** — preserved at HEAD: `ikenna_orchestrator/_agent_pings.md` (single
+  file, 3 entries post-2026-05-12 boot sweep) and `harsh_orchestrator/pings/slot_<N>.md` (per-slot, ~22-55KB each
+  pre-implementation). Migration is non-destructive (git history retains everything).
 
 ## Phase 5 — Sign-off (1h) — ✅ THIS SESSION
 
@@ -406,31 +478,33 @@ Plus four upstream-cleanup commits made earlier in the same session to reach 100
 
 Slot 6 Wave 3 shipped the 3 remaining open items. Plan is now 30/30.
 
-| Commit | What |
-|--------|------|
+| Commit      | What                                                                              |
+| ----------- | --------------------------------------------------------------------------------- |
 | PM@2f710f9a | Phase 2 PENDING-HARSH flip + Phase 2 burn-in flip + Phase 4.5 P1 (ping-doc reset) |
 
 **Phase 4.5 P1 deliverables shipped:**
-- (i) `setup-tab-worktrees.sh --reset-slot` now truncates `<side>_orchestrator/pings/slot_<N>.md` to fresh stub + commits with `[reset-slot]` tag
+
+- (i) `setup-tab-worktrees.sh --reset-slot` now truncates `<side>_orchestrator/pings/slot_<N>.md` to fresh stub +
+  commits with `[reset-slot]` tag
 - (ii) `scripts/agents/rollup_resolved_pings.py` — read-time rollup helper for same-theme bounded growth
 - (iv) CLAUDE.md § "Ping ledger bifurcation" + § "Daily reset" updated with ping-reset-on-retheme rule
 - (v) `tests/test_tab_worktrees.bats` — 5 new tests for rollup_resolved_pings.py
 
-**DEFERRED** (R3 — Ikenna-side migration to per-slot files): requires Ikenna's machine; left as follow-up for
-Ikenna's next touch on this plan. (i/ii/iv/v cover Harsh-side completely; Ikenna's `_agent_pings.md` is single-file
-until he migrates.)
+**DEFERRED** (R3 — Ikenna-side migration to per-slot files): requires Ikenna's machine; left as follow-up for Ikenna's
+next touch on this plan. (i/ii/iv/v cover Harsh-side completely; Ikenna's `_agent_pings.md` is single-file until he
+migrates.)
 
 ## Deferred work after 2026-05-11 (per_agent_worktrees plan closure) — ALL RESOLVED 2026-05-13
 
-| Item                                                        | Status as of 2026-05-13       | Evidence / successor                                                                                                      |
-| ----------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2 — Harsh `--init --slots M`                          | ✅ DONE (PM@2f710f9a)         | Harsh running tab/hk/1..10 continuously since Wave 1. LEDGER slot↔theme table confirmed backed by real worktrees.        |
-| Phase 2 — 1-week burn-in vs cross-slot foot-guns #1-#4      | ✅ DONE (PM@2f710f9a)         | 0 cross-slot incidents across 3+ waves. Within-slot drift identified correctly as foreign ruff drift, not foot-gun.       |
-| Phase 4 — full ~150-line trim of pre-commit-check section   | `deferred-after-burn-in`      | Burn-in confirmed 0 incidents; full trim deferred to avoid disruption mid-cycle. Tracked in future plan touch.            |
-| Phase 5 — burn-in foot-gun count in master plan Group E row | ✅ DONE implicitly              | Burn-in complete; master plan Group E row already updated with burn-in completion evidence (PM@2f710f9a annotation).      |
+| Item                                                        | Status as of 2026-05-13  | Evidence / successor                                                                                                 |
+| ----------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 — Harsh `--init --slots M`                          | ✅ DONE (PM@2f710f9a)    | Harsh running tab/hk/1..10 continuously since Wave 1. LEDGER slot↔theme table confirmed backed by real worktrees.   |
+| Phase 2 — 1-week burn-in vs cross-slot foot-guns #1-#4      | ✅ DONE (PM@2f710f9a)    | 0 cross-slot incidents across 3+ waves. Within-slot drift identified correctly as foreign ruff drift, not foot-gun.  |
+| Phase 4 — full ~150-line trim of pre-commit-check section   | `deferred-after-burn-in` | Burn-in confirmed 0 incidents; full trim deferred to avoid disruption mid-cycle. Tracked in future plan touch.       |
+| Phase 5 — burn-in foot-gun count in master plan Group E row | ✅ DONE implicitly       | Burn-in complete; master plan Group E row already updated with burn-in completion evidence (PM@2f710f9a annotation). |
 
-All Phase 0-5 + 4.5 deliverables shipped (scripts + codex SSOTs + CLAUDE.md + PLAN_FORMAT.md + both operator
-LEDGERs + workspace-bootstrap.sh hint + bats tests + Ikenna's slot provisioning + ping-doc reset + rollup helper).
+All Phase 0-5 + 4.5 deliverables shipped (scripts + codex SSOTs + CLAUDE.md + PLAN_FORMAT.md + both operator LEDGERs +
+workspace-bootstrap.sh hint + bats tests + Ikenna's slot provisioning + ping-doc reset + rollup helper).
 
 ## Done definition
 

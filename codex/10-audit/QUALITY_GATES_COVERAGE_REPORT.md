@@ -26,41 +26,41 @@ coverage minimum; quality-gates.sh --unit-only pass
 
 ### Pass (≥70%)
 
-| Repo                              | Coverage | Status |
-| --------------------------------- | -------- | ------ |
+| Repo                                       | Coverage | Status |
+| ------------------------------------------ | -------- | ------ |
 | features-service (sports family)           | 100.0%   | ok     |
-| unified-api-contracts (internal/) | 99.8%    | ok     |
-| unified-trading-library           | 97.1%    | ok     |
-| unified-ml-interface              | 93.4%    | ok     |
-| position-balance-monitor-service  | 88.6%    | ok     |
+| unified-api-contracts (internal/)          | 99.8%    | ok     |
+| unified-trading-library                    | 97.1%    | ok     |
+| unified-ml-interface                       | 93.4%    | ok     |
+| position-balance-monitor-service           | 88.6%    | ok     |
 | features-service (calendar family)         | 84.3%    | ok     |
 | features-service (cross-instrument family) | 81.5%    | ok     |
-| execution-service                 | 80.9%    | ok     |
-| execution-algo-library            | 72.1%    | ok     |
-| unified-trading-pm                | 72.5%    | ok     |
-| system-integration-tests          | 70.2%    | ok     |
+| execution-service                          | 80.9%    | ok     |
+| execution-algo-library                     | 72.1%    | ok     |
+| unified-trading-pm                         | 72.5%    | ok     |
+| system-integration-tests                   | 70.2%    | ok     |
 
 ### Below 70%
 
-| Repo                     | Coverage | Gap    |
-| ------------------------ | -------- | ------ |
-| execution-service        | 62.7%    | -7.3%  |
-| unified-cloud-interface  | 54.6%    | -15.4% |
+| Repo                              | Coverage | Gap    |
+| --------------------------------- | -------- | ------ |
+| execution-service                 | 62.7%    | -7.3%  |
+| unified-cloud-interface           | 54.6%    | -15.4% |
 | features-service (onchain family) | 54.0%    | -16.0% |
-| unified-domain-client    | 45.0%    | -25.0% |
-| pnl-attribution-service  | 37.2%    | -32.8% |
-| client-reporting-api     | 32.6%    | -37.4% |
-| unified-trading-library  | 26.2%    | -43.8% |
-| unified-trading-library  | 0.0%     | -70.0% |
+| unified-domain-client             | 45.0%    | -25.0% |
+| pnl-attribution-service           | 37.2%    | -32.8% |
+| client-reporting-api              | 32.6%    | -37.4% |
+| unified-trading-library           | 26.2%    | -43.8% |
+| unified-trading-library           | 0.0%     | -70.0% |
 
 ### Error (pytest fails before coverage)
 
-alerting-service, deployment-api, deployment-service, execution-results-api, execution-service,
-features-service (delta-one family), features-service (multi-timeframe family), features-service (volatility family), instruments-service,
-market-data-processing-service, market-tick-data-service, matching-engine-library, ml-inference-service,
-ml-training-service, position-balance-monitor-service, risk-and-exposure-service, strategy-service,
-unified-api-contracts, unified-config-interface, market-tick-data-service/market_tick_data_service/market_interface,
-instruments-service, execution-service
+alerting-service, deployment-api, deployment-service, execution-results-api, execution-service, features-service
+(delta-one family), features-service (multi-timeframe family), features-service (volatility family),
+instruments-service, market-data-processing-service, market-tick-data-service, matching-engine-library,
+ml-inference-service, ml-training-service, position-balance-monitor-service, risk-and-exposure-service,
+strategy-service, unified-api-contracts, unified-config-interface,
+market-tick-data-service/market_tick_data_service/market_interface, instruments-service, execution-service
 
 ---
 

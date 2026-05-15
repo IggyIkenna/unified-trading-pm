@@ -194,10 +194,10 @@ VM auto-shutdowns or the refactor lands.
 
 ### 6. External Data Is Always Available — Never Silently Defer Adapters (HARD RULE codified 2026-05-14)
 
-If you're working an adapter, handler, or data-source client in `instruments-service` or MTDS (or anywhere else) and
-hit a "no data available" wall — **the unblock is a credential ask to operator, NOT a scope cut**. Data exists for
-every asset_group and every MVP archetype. Free-tier exhausted? Upgrade. No public API? There's a paid tier (Helius,
-Alchemy paid, Glassnode, Kaiko, Tardis, Databento, Sportradar, etc.).
+If you're working an adapter, handler, or data-source client in `instruments-service` or MTDS (or anywhere else) and hit
+a "no data available" wall — **the unblock is a credential ask to operator, NOT a scope cut**. Data exists for every
+asset_group and every MVP archetype. Free-tier exhausted? Upgrade. No public API? There's a paid tier (Helius, Alchemy
+paid, Glassnode, Kaiko, Tardis, Databento, Sportradar, etc.).
 
 **Banned reasoning** (any of these leading to scope removal = rule violation): "no public API"; "free tier exhausted";
 "no test data"; "subscription required"; "couldn't reproduce in sandbox".
@@ -216,9 +216,9 @@ Alchemy paid, Glassnode, Kaiko, Tardis, Databento, Sportradar, etc.).
    Unblocks: <asset_group × archetype combos + which May-23 gate>
    Without it: integration tests skip; adapter dormant
    ```
-3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS` (closed-set), NOT `DEFERRED`, NOT
-   `POST-CUTOVER`. Plan-flip: `- [ ] [BLOCKED-CREDENTIALS — pinging operator at <commit-sha>]`. NEVER move adapter to
-   a post-cutover plan without explicit operator [ack] on the slot ping.
+3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS` (closed-set), NOT `DEFERRED`, NOT `POST-CUTOVER`.
+   Plan-flip: `- [ ] [BLOCKED-CREDENTIALS — pinging operator at <commit-sha>]`. NEVER move adapter to a post-cutover
+   plan without explicit operator [ack] on the slot ping.
 4. **Status taxonomy** (closed set): `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE` /
    `DEFERRED` (only valid with named successor + operator ack). Ad-hoc "deferred" language is rejected.
 

@@ -208,8 +208,8 @@ class IBKRMarketAdapter:
 ```
 
 This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, URDI). The full IBKR mock pattern
-lives inline above (this § "IBKR mock pattern" + the `MagicMock(spec=IB)` table below) — the dead cross-reference to
-a separate `ibkr-mock-pattern.md` was lifted 2026-05-12 per TS-6 audit (the file never existed).
+lives inline above (this § "IBKR mock pattern" + the `MagicMock(spec=IB)` table below) — the dead cross-reference to a
+separate `ibkr-mock-pattern.md` was lifted 2026-05-12 per TS-6 audit (the file never existed).
 
 ### Why not VCR
 

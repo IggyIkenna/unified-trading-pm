@@ -4,13 +4,13 @@ scope: [engineer, admin]
 
 # Strategy Registry (v2)
 
-> **PARTIALLY SUPERSEDED 2026-04-25 by Phase 9 — counts below are the 2026-04-21 baseline; UAC enums are
-> canonical.** Concrete numbers in this doc (`18 archetypes`, `96 entries`, `8 families`) reflect the 2026-04-21
-> registry snapshot. Per the `enum-wins` governance rule (`strategy-summary.md:27`), the canonical counts are:
-> 9 families / 55 archetypes / 14 InstructionActionV2 actions (per UAC `StrategyFamily` / `StrategyArchetype` /
-> `InstructionActionV2`). The flatten arithmetic still holds at the cell-level (each cell's
-> `representative_slot_labels` flatten to N entries) — the total entry count grew with the Phase 9 + recursive-staked-split
-> additions but the mechanism is unchanged. Refresh trigger: `codex_audit_strategy_2026_05_12.md` ST-1/ST-2 audit.
+> **PARTIALLY SUPERSEDED 2026-04-25 by Phase 9 — counts below are the 2026-04-21 baseline; UAC enums are canonical.**
+> Concrete numbers in this doc (`18 archetypes`, `96 entries`, `8 families`) reflect the 2026-04-21 registry snapshot.
+> Per the `enum-wins` governance rule (`strategy-summary.md:27`), the canonical counts are: 9 families / 55 archetypes /
+> 14 InstructionActionV2 actions (per UAC `StrategyFamily` / `StrategyArchetype` / `InstructionActionV2`). The flatten
+> arithmetic still holds at the cell-level (each cell's `representative_slot_labels` flatten to N entries) — the total
+> entry count grew with the Phase 9 + recursive-staked-split additions but the mechanism is unchanged. Refresh trigger:
+> `codex_audit_strategy_2026_05_12.md` ST-1/ST-2 audit.
 
 > **SSOT:** `unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/registry.py` backed by
 > `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`.

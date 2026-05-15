@@ -31,8 +31,8 @@ re-pole or exit. Telegram-only; not a paging alert because funding flips can be 
 - **Threshold key:** `defi_funding_rate_flip_bps_5m`.
 - **Default value:** 100 bps APR magnitude flip in 5 min, with sign change. See
   [`threshold-tuning.md`](./threshold-tuning.md) for citation.
-- **Emitter(s):** `features-service (onchain family)` (perp funding-rate calc; reads from venue REST + on-chain perp protocols
-  like Hyperliquid/Aster).
+- **Emitter(s):** `features-service (onchain family)` (perp funding-rate calc; reads from venue REST + on-chain perp
+  protocols like Hyperliquid/Aster).
 - **Upstream signal:**
   `sign(funding_rate_t) != sign(funding_rate_t-5m) AND |funding_rate_t − funding_rate_t-5m| × 365 × 24 × 12 > 100 bps`.
 - **De-dup window:** 600s.

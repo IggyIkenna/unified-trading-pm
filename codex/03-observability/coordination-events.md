@@ -130,18 +130,18 @@ strategy-service (sports_feature_subscriber.py)
 
 ## Wiring Status Summary
 
-| Event                      | Publisher(s)                      | Subscriber(s)            | Status       |
-| -------------------------- | --------------------------------- | ------------------------ | ------------ |
-| `INSTRUMENTS_READY`        | instruments-service               | market-tick-data-service | WIRED        |
-| `DATA_READY`               | market-data-processing-service    | (none)                   | PUBLISH ONLY |
-| `FEATURES_READY`           | features-service (delta-one family)        | (none)                   | PUBLISH ONLY |
-| `PREDICTIONS_READY`        | ml-inference-service              | (none)                   | PUBLISH ONLY |
-| `SIGNALS_READY`            | strategy-service                  | (none)                   | PUBLISH ONLY |
-| `INSTRUCTIONS_READY`       | (none)                            | (none)                   | DEFINED ONLY |
-| `LIVE_ODDS_RECEIVED`       | (none)                            | (none)                   | DEFINED ONLY |
-| `LIVE_MATCH_STATE_UPDATED` | (none)                            | (none)                   | DEFINED ONLY |
-| `LIVE_FEATURES_COMPUTED`   | strategy-service (sports adapter) | (none)                   | PUBLISH ONLY |
-| `LIVE_SIGNAL_GENERATED`    | strategy-service (sports adapter) | (none)                   | PUBLISH ONLY |
+| Event                      | Publisher(s)                        | Subscriber(s)            | Status       |
+| -------------------------- | ----------------------------------- | ------------------------ | ------------ |
+| `INSTRUMENTS_READY`        | instruments-service                 | market-tick-data-service | WIRED        |
+| `DATA_READY`               | market-data-processing-service      | (none)                   | PUBLISH ONLY |
+| `FEATURES_READY`           | features-service (delta-one family) | (none)                   | PUBLISH ONLY |
+| `PREDICTIONS_READY`        | ml-inference-service                | (none)                   | PUBLISH ONLY |
+| `SIGNALS_READY`            | strategy-service                    | (none)                   | PUBLISH ONLY |
+| `INSTRUCTIONS_READY`       | (none)                              | (none)                   | DEFINED ONLY |
+| `LIVE_ODDS_RECEIVED`       | (none)                              | (none)                   | DEFINED ONLY |
+| `LIVE_MATCH_STATE_UPDATED` | (none)                              | (none)                   | DEFINED ONLY |
+| `LIVE_FEATURES_COMPUTED`   | strategy-service (sports adapter)   | (none)                   | PUBLISH ONLY |
+| `LIVE_SIGNAL_GENERATED`    | strategy-service (sports adapter)   | (none)                   | PUBLISH ONLY |
 
 **Assessment:** Only 1 of 10 coordination events has both a publisher and subscriber wired (`INSTRUMENTS_READY`). The
 remaining 5 published events have no subscriber, and 4 events are defined but neither published nor subscribed.

@@ -317,8 +317,8 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 
 ## DONE-2026-05-13 — Slot 6 Wave 3 cycle (plan closeout)
 
-Slot 6 Wave 3 closed out residual checkboxes: flipped Phase 5.A (codex doc shipped PM@36c40a10 but checkbox missed)
-and Phase 5.B (plan closeout). Phase 3.B/3.C remain `**DEFERRED**` — operator-executable post-cutover.
+Slot 6 Wave 3 closed out residual checkboxes: flipped Phase 5.A (codex doc shipped PM@36c40a10 but checkbox missed) and
+Phase 5.B (plan closeout). Phase 3.B/3.C remain `**DEFERRED**` — operator-executable post-cutover.
 
 - `unified-trading-pm@2f710f9a` — docs(plans): api_football — flip Phase 5.A/5.B + plan closeout + DONE-2026-05-13
 

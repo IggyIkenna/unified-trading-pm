@@ -91,8 +91,8 @@ passthrough annotations.
 
 ## Layer-2.5 — wallet-tier pre-flight stack (DeFi + manual-trade booking)
 
-> **Codified 2026-05-12 per Risk audit R-4** (issue doc `plans/archive/issues/codex_audit_risk_2026_05_12.md`). Lifts the
-> 4-layer wallet-tier pre-flight stack already shipped via slot 7 (circuit_breaker + kill_switch contracts at
+> **Codified 2026-05-12 per Risk audit R-4** (issue doc `plans/archive/issues/codex_audit_risk_2026_05_12.md`). Lifts
+> the 4-layer wallet-tier pre-flight stack already shipped via slot 7 (circuit_breaker + kill_switch contracts at
 > `UAC@a7a99b5` — 20 `BreakerConfig × 2 archetypes` + 20 `BreakerRecoveryRule` + 11 `KillSwitchIds`) and slot 8 Day-2
 > (`WalletSpendingPreCheckResult` at UAC@`1d8a059` — kill-switch + caps validation). Lives BETWEEN Layer 2
 > (`risk_preflight()`) and Layer 3 (execution pre-trade). Engaged whenever `ManualInstruction.wallet_id` is non-empty
@@ -182,91 +182,113 @@ is discarded.
 
 ### R-10 — Where the 4 checks live (call-graph implementation)
 
-> **✅ RATIFIED 2026-05-12 by operator** (slot 8 audit recommendation accepted).
-> **Canonical: Option B — shared UTL helper.** A single
+> **✅ RATIFIED 2026-05-12 by operator** (slot 8 audit recommendation accepted). **Canonical: Option B — shared UTL
+> helper.** A single
 > `unified_trading_library.risk_preflight.run_wallet_preflight_checks(instruction) -> WalletSpendingPreCheckResult`
 > function lives in UTL. Every consumer (execution-service runtime + DART `/manual/instruction` endpoint +
 > strategy-service forward path) calls it. The helper owns the strict-ordered short-circuit + audit-log row write.
-> **Rejected alternatives**: Option A (per-service implementation) — drift risk between services; Option C
-> (dedicated `preflight-service` microservice) — +20-50ms RPC hop unacceptable for live DeFi.
+> **Rejected alternatives**: Option A (per-service implementation) — drift risk between services; Option C (dedicated
+> `preflight-service` microservice) — +20-50ms RPC hop unacceptable for live DeFi.
 >
-> **Why Option B**: matches the workspace's existing UTL-helper-as-SSOT pattern (e.g. `ApiKeyReloader`, `ManifestWriter`,
-> `availability_stamping`); zero network hop; single update point when invariants evolve; basedpyright catches the
-> "forgot to call it" case (every consumer's type-checker requires the helper). The discipline cost of Option A
-> (forgetting one check across N services) is a known failure mode in this workspace (see Findings Triage incidents).
+> **Why Option B**: matches the workspace's existing UTL-helper-as-SSOT pattern (e.g. `ApiKeyReloader`,
+> `ManifestWriter`, `availability_stamping`); zero network hop; single update point when invariants evolve; basedpyright
+> catches the "forgot to call it" case (every consumer's type-checker requires the helper). The discipline cost of
+> Option A (forgetting one check across N services) is a known failure mode in this workspace (see Findings Triage
+> incidents).
 
 ### R-11 — Wallet-USD vs archetype-USD aggregation semantics
 
-> **✅ RATIFIED 2026-05-12 by operator** (slot 8 audit recommendation accepted).
-> **Canonical: AND-aggregate with wallet-tier as HARD floor.** The pre-flight stack returns
-> `min(wallet_headroom, archetype_headroom)` as the allowed action size; BOTH ledgers update on the spend (wallet
-> daily-spend AND archetype daily-spend tick down by the spent amount). **Multi-archetype wallets** (e.g. 3 archetypes
-> share `hot-trading-eth-1`): the wallet daily-spend aggregates ALL archetypes' activity on that wallet; per-archetype
-> ledgers stay archetype-scoped. **Rejected alternatives**: Subsume (tighter-wins-but-only-track-the-loser) — loses
-> visibility of the looser axis's spend; Hierarchical (one axis primary) — defeats the safety-net role of the
-> non-primary axis.
+> **✅ RATIFIED 2026-05-12 by operator** (slot 8 audit recommendation accepted). **Canonical: AND-aggregate with
+> wallet-tier as HARD floor.** The pre-flight stack returns `min(wallet_headroom, archetype_headroom)` as the allowed
+> action size; BOTH ledgers update on the spend (wallet daily-spend AND archetype daily-spend tick down by the spent
+> amount). **Multi-archetype wallets** (e.g. 3 archetypes share `hot-trading-eth-1`): the wallet daily-spend aggregates
+> ALL archetypes' activity on that wallet; per-archetype ledgers stay archetype-scoped. **Rejected alternatives**:
+> Subsume (tighter-wins-but-only-track-the-loser) — loses visibility of the looser axis's spend; Hierarchical (one axis
+> primary) — defeats the safety-net role of the non-primary axis.
 >
-> **Why AND-aggregate**: wallet caps are the *operational* safety net (set by ops/treasury); archetype allocations are
-> the *strategy budget* (set by strategy/risk). Both should constrain; both should track; pre-flight returns the
-> binding constraint as the allowed action size. This matches how slot 4's `SpendingCaps` are already shaped (per-tx /
-> per-hour / per-day / per-protocol — designed as hard floors regardless of strategy budget).
+> **Why AND-aggregate**: wallet caps are the _operational_ safety net (set by ops/treasury); archetype allocations are
+> the _strategy budget_ (set by strategy/risk). Both should constrain; both should track; pre-flight returns the binding
+> constraint as the allowed action size. This matches how slot 4's `SpendingCaps` are already shaped (per-tx / per-hour
+> / per-day / per-protocol — designed as hard floors regardless of strategy budget).
 
 ### R-17 — Position-health is missing from the pre-flight stack (NEW 2026-05-12)
 
-> **🟢 NEW gap surfaced by operator 2026-05-12** during R-10/R-11 ratification (re-numbered from initial R-12 draft
-> to avoid collision with existing risk-audit R-12 circuit-breaker finding; this is risk-area finding R-17 in the
-> issue doc). **Layer-2.5 expanded from 4 → 5 checks**: position-health (LTV for lending; margin ratio for perps) was missing. A wallet can have spending budget
-> + archetype allocation + kill-switch off + venue allowed, but the existing leveraged position is at 88% LTV on
-> Aave with 90% liquidation threshold — one more borrow tips it over. Today's pre-flight doesn't catch this.
+> **🟢 NEW gap surfaced by operator 2026-05-12** during R-10/R-11 ratification (re-numbered from initial R-12 draft to
+> avoid collision with existing risk-audit R-12 circuit-breaker finding; this is risk-area finding R-17 in the issue
+> doc). **Layer-2.5 expanded from 4 → 5 checks**: position-health (LTV for lending; margin ratio for perps) was missing.
+> A wallet can have spending budget
+>
+> - archetype allocation + kill-switch off + venue allowed, but the existing leveraged position is at 88% LTV on Aave
+>   with 90% liquidation threshold — one more borrow tips it over. Today's pre-flight doesn't catch this.
 
 The expanded 5-layer stack:
 
-| Layer | Check | Data source | Failure mode prevented |
-|---|---|---|---|
-| 1 | Kill-switch armed | `KillSwitchBus` (per slot 7 UAC@`a7a99b5`) | Operator panic-stop bypass |
-| 2 | Wallet caps headroom | `WalletProvisioningConfig.SpendingCaps` (per slot 4 UAC@`d721b6a`) | Daily / hourly / per-tx blow-through |
-| 3 | Archetype allocation headroom | `CapitalAllocation` (per cross_cutting #3 Tab 6.B) | Archetype budget exhaustion |
-| 4 | **Position health** *(NEW per R-17)* | PBMS rolling state + on-chain query | Liquidation from over-leverage |
-| 5 | Venue eligibility | `CAPABILITY_DECLARATIONS` + `WalletProvisioningConfig.allowed_protocols` | Trade on unauthorized venue |
+| Layer | Check                                | Data source                                                              | Failure mode prevented               |
+| ----- | ------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------ |
+| 1     | Kill-switch armed                    | `KillSwitchBus` (per slot 7 UAC@`a7a99b5`)                               | Operator panic-stop bypass           |
+| 2     | Wallet caps headroom                 | `WalletProvisioningConfig.SpendingCaps` (per slot 4 UAC@`d721b6a`)       | Daily / hourly / per-tx blow-through |
+| 3     | Archetype allocation headroom        | `CapitalAllocation` (per cross_cutting #3 Tab 6.B)                       | Archetype budget exhaustion          |
+| 4     | **Position health** _(NEW per R-17)_ | PBMS rolling state + on-chain query                                      | Liquidation from over-leverage       |
+| 5     | Venue eligibility                    | `CAPABILITY_DECLARATIONS` + `WalletProvisioningConfig.allowed_protocols` | Trade on unauthorized venue          |
 
 **Layer 4 specifics**:
 
-- **Lending positions** (Aave / Compound / Morpho / Spark / Radiant / lst protocols): `projected_ltv = (current_debt_usd + new_borrow_usd) / collateral_usd < liquidation_threshold × ltv_safety_margin`. Recommended `ltv_safety_margin = 0.85` (15% buffer below liquidation; tunable per-protocol).
-- **Perp positions** (Hyperliquid / Aster / Drift / Binance / Deribit / Bybit / OKX): `projected_margin_ratio = (margin + unrealized_pnl) / (position_value + new_notional) > maintenance_margin × margin_safety_factor`. Recommended `margin_safety_factor = 1.5` (50% buffer above maintenance margin; tunable per-venue).
+- **Lending positions** (Aave / Compound / Morpho / Spark / Radiant / lst protocols):
+  `projected_ltv = (current_debt_usd + new_borrow_usd) / collateral_usd < liquidation_threshold × ltv_safety_margin`.
+  Recommended `ltv_safety_margin = 0.85` (15% buffer below liquidation; tunable per-protocol).
+- **Perp positions** (Hyperliquid / Aster / Drift / Binance / Deribit / Bybit / OKX):
+  `projected_margin_ratio = (margin + unrealized_pnl) / (position_value + new_notional) > maintenance_margin × margin_safety_factor`.
+  Recommended `margin_safety_factor = 1.5` (50% buffer above maintenance margin; tunable per-venue).
 - **Spot trades** (Uniswap swaps / spot CeFi): skip Layer 4 (no leverage, no liquidation; only Layers 1-3+5 apply).
-- **Atomic transactions** (flash-loan-receiver): Layer 4 evaluates the END state after all sub-operations (loan + arb + repay); if end-state is unhealthy, reject the atomic.
+- **Atomic transactions** (flash-loan-receiver): Layer 4 evaluates the END state after all sub-operations (loan + arb +
+  repay); if end-state is unhealthy, reject the atomic.
 
-**Layer 4 data path**: `position-balance-monitor-service` exposes a `GET /positions/health?wallet_id=X` query returning current `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position. UTL `run_wallet_preflight_checks` (per R-10) calls this query as the Layer-4 step; cache 5s to avoid hammering PBM (kill-switch + spending caps are zero-RPC inline checks; position-health is the only network hop in the pre-flight stack).
+**Layer 4 data path**: `position-balance-monitor-service` exposes a `GET /positions/health?wallet_id=X` query returning
+current `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position. UTL
+`run_wallet_preflight_checks` (per R-10) calls this query as the Layer-4 step; cache 5s to avoid hammering PBM
+(kill-switch + spending caps are zero-RPC inline checks; position-health is the only network hop in the pre-flight
+stack).
 
 **WalletSpendingPreCheckResult extension** (UAC `internal/execution.py`): add 4 fields:
+
 - `position_health_check: bool | None` — `None` if Layer 4 skipped (spot trade); `True/False` per evaluation
 - `projected_ltv: Decimal | None` — populated for lending operations
 - `projected_margin_ratio: Decimal | None` — populated for perp operations
 - `position_health_denial_reason: str` — closed-set: `"projected_ltv_breach"` / `"projected_margin_breach"` / empty
 
-Ordering invariant in the strict-short-circuit: 1 → 2 → 3 → 4 → 5 (kill-switch always first; venue-eligibility always last; position-health between budget checks + venue-check since it's a derived-position-state check, not a static-config check).
+Ordering invariant in the strict-short-circuit: 1 → 2 → 3 → 4 → 5 (kill-switch always first; venue-eligibility always
+last; position-health between budget checks + venue-check since it's a derived-position-state check, not a static-config
+check).
 
 ### R-18 — SpendingCaps shape: fixed-USD vs proportional-to-balance vs hybrid (NEW 2026-05-12)
 
 > **✅ RATIFIED 2026-05-12 by operator** (slot 8 audit recommendation accepted; re-numbered from initial R-13 draft to
-> avoid collision with existing risk-audit R-13 finding).
-> **Canonical: Option C — `min(fixed, proportional)`.** `SpendingCaps` extended with per-period `pct_of_balance: Decimal | None = None` field; pre-flight Layer 2 computes `effective_cap = min(per_period_usd, pct_of_balance × current_balance)` when both present (either may be None — only the populated one binds). Fixed caps stay as ops-set absolute floor; proportional auto-tightens as wallet shrinks (anti-procyclical for losses).
+> avoid collision with existing risk-audit R-13 finding). **Canonical: Option C — `min(fixed, proportional)`.**
+> `SpendingCaps` extended with per-period `pct_of_balance: Decimal | None = None` field; pre-flight Layer 2 computes
+> `effective_cap = min(per_period_usd, pct_of_balance × current_balance)` when both present (either may be None — only
+> the populated one binds). Fixed caps stay as ops-set absolute floor; proportional auto-tightens as wallet shrinks
+> (anti-procyclical for losses).
 
 Today's `WalletProvisioningConfig.SpendingCaps` (per slot 4 UAC@`d721b6a`) carries fixed-USD values:
-`per_tx_usd: Decimal | None` / `per_hour_usd: Decimal | None` / `per_day_usd: Decimal | None` / `per_protocol_usd: dict[str, Decimal]`.
+`per_tx_usd: Decimal | None` / `per_hour_usd: Decimal | None` / `per_day_usd: Decimal | None` /
+`per_protocol_usd: dict[str, Decimal]`.
 
 The operator question: should these be fixed, proportional-to-balance, or hybrid? Treasury-practice tradeoff:
 
-| Design | Behaviour | Pros | Cons |
-|---|---|---|---|
-| **A — Fixed USD** (today) | `per_day = $100k` regardless of balance | Simple; protects absolute blow-through | Wrong at scale — $100k/day too tight on $10M wallet, too loose on $50k wallet |
-| **B — Proportional** | `per_day = 5% × balance` | Auto-scales with wallet | If balance → 0, cap → 0 (stuck); procyclical (rapid drawdowns shrink cap) |
-| **C — Hybrid `min(fixed, proportional)`** | `per_day = min($100k, 5% × balance)` | Fixed = hard floor (anti-blow-through) + proportional = anti-procyclical | Two knobs to tune |
-| **C' — Hybrid `max(fixed, proportional)`** | `per_day = max($100k, 5% × balance)` | Small wallets operate normally even if proportional = tiny | Loosens safety for big wallets |
+| Design                                     | Behaviour                               | Pros                                                                     | Cons                                                                          |
+| ------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| **A — Fixed USD** (today)                  | `per_day = $100k` regardless of balance | Simple; protects absolute blow-through                                   | Wrong at scale — $100k/day too tight on $10M wallet, too loose on $50k wallet |
+| **B — Proportional**                       | `per_day = 5% × balance`                | Auto-scales with wallet                                                  | If balance → 0, cap → 0 (stuck); procyclical (rapid drawdowns shrink cap)     |
+| **C — Hybrid `min(fixed, proportional)`**  | `per_day = min($100k, 5% × balance)`    | Fixed = hard floor (anti-blow-through) + proportional = anti-procyclical | Two knobs to tune                                                             |
+| **C' — Hybrid `max(fixed, proportional)`** | `per_day = max($100k, 5% × balance)`    | Small wallets operate normally even if proportional = tiny               | Loosens safety for big wallets                                                |
 
-Slot 8 audit recommendation: **C — `min(fixed, proportional)`** — fixed caps stay as ops-set floor; proportional auto-tightens as wallet shrinks (anti-procyclical for losses). Schema change: add per-period `pct_of_balance: Decimal | None = None` field to `SpendingCaps`; pre-flight computes `min(per_period_usd, pct_of_balance × current_balance)` if both present.
+Slot 8 audit recommendation: **C — `min(fixed, proportional)`** — fixed caps stay as ops-set floor; proportional
+auto-tightens as wallet shrinks (anti-procyclical for losses). Schema change: add per-period
+`pct_of_balance: Decimal | None = None` field to `SpendingCaps`; pre-flight computes
+`min(per_period_usd, pct_of_balance × current_balance)` if both present.
 
-✅ **Operator-ratified Option C 2026-05-12.** Decision unblocks slot 4 schema update + R-17 pre-flight Layer 4 wiring (Layer 4 reads `SpendingCaps` effective cap via the new `effective_cap(period, current_balance)` helper).
+✅ **Operator-ratified Option C 2026-05-12.** Decision unblocks slot 4 schema update + R-17 pre-flight Layer 4 wiring
+(Layer 4 reads `SpendingCaps` effective cap via the new `effective_cap(period, current_balance)` helper).
 
 ## Aggregation semantics
 

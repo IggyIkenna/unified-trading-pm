@@ -7,13 +7,13 @@ last_updated: 2026-05-12
 
 > **Routing rule between DLQ + manifest `record_failed()` paths** (codex audit D-19 2026-05-12):
 >
-> | Failure stage                                          | Adapter action                                                                                 |
-> | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-> | **Pre-normalisation** — raw API response fails `_safe_parse()` Pydantic validation | DLQ (this doc). Schema mismatch — data shape is wrong before any row exists.                  |
-> | **Mid-normalisation** — known transient error (rate-limit, 5xx, timeout) | `record_failed(error=, attempted_at=)` per the 4-state `capture_status` contract. Retryable. |
-> | **Mid-normalisation** — `MalformedTickFieldError` / `UpstreamTimestampBiasError` (per-row data quality) | `record_failed(error=...)` per writegate Phase 2.A Category B/C; the row exists but is unusable. |
-> | **Source returned legitimately empty window**          | `record_empty(reason=<typed>)` per the closed `EmptyConfirmedReason` set — NOT DLQ.            |
-> | **Reader/schema-drift bug — manifest says captured but parquet row missing** | STOP + `DependencyError(fail_fast=True)`. Never silent placeholder. (SSOT in `availability-manifest-and-data-status.md`.) |
+> | Failure stage                                                                                           | Adapter action                                                                                                            |
+> | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+> | **Pre-normalisation** — raw API response fails `_safe_parse()` Pydantic validation                      | DLQ (this doc). Schema mismatch — data shape is wrong before any row exists.                                              |
+> | **Mid-normalisation** — known transient error (rate-limit, 5xx, timeout)                                | `record_failed(error=, attempted_at=)` per the 4-state `capture_status` contract. Retryable.                              |
+> | **Mid-normalisation** — `MalformedTickFieldError` / `UpstreamTimestampBiasError` (per-row data quality) | `record_failed(error=...)` per writegate Phase 2.A Category B/C; the row exists but is unusable.                          |
+> | **Source returned legitimately empty window**                                                           | `record_empty(reason=<typed>)` per the closed `EmptyConfirmedReason` set — NOT DLQ.                                       |
+> | **Reader/schema-drift bug — manifest says captured but parquet row missing**                            | STOP + `DependencyError(fail_fast=True)`. Never silent placeholder. (SSOT in `availability-manifest-and-data-status.md`.) |
 >
 > DLQ owns the **shape-mismatched-before-row-existed** class; `record_failed()` + `record_empty()` own everything from
 > mid-normalisation onward — the row key exists, the question is what happened TO that row. Cross-references:

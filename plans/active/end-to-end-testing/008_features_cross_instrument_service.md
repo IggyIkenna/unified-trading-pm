@@ -12,7 +12,8 @@ Follows `procedure.md`. Pipeline position: #8 (L3 features layer — aggregates 
 ## Upstream Dependencies
 
 - **features-service (delta-one family)** — delta-one features (returns, momentum, trend) per instrument
-- **features-service (volatility family)** — volatility features (realized vol, vol-of-vol, term structure) per instrument
+- **features-service (volatility family)** — volatility features (realized vol, vol-of-vol, term structure) per
+  instrument
 - **market-data-processing-service** — multi-venue candle data (needed for cross-venue spread calculation)
 - **instruments-service** — instrument universe definitions per category
 
@@ -282,4 +283,5 @@ definitions in UAC.
 
 ## Next Service
 
-After features-service (cross-instrument family) passes all phases → proceed to `009_features_multi_timeframe_service.md`
+After features-service (cross-instrument family) passes all phases → proceed to
+`009_features_multi_timeframe_service.md`

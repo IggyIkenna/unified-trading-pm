@@ -15,65 +15,66 @@ effective_concurrent_slots: 1
 # Audit Records PB-1/2/3 Pre-Cutover
 
 > **Source**: `plans/active/work_split_2026_05_13_harsh.md` § Slot 5. Operator confirmed all 3 items pre-cutover.
-> Reference issue: `plans/active/issues/codex_audit_position_balance_2026_05_12.md` (file not yet created — see scope below).
+> Reference issue: `plans/active/issues/codex_audit_position_balance_2026_05_12.md` (file not yet created — see scope
+> below).
 
 ## Pre-audit manifest
 
-| Symbol / pattern | Current state | Action |
-|---|---|---|
-| `persist_audit_log` | `execution_service/utils/audit_log.py:37` | Fix path + add `client_order_id` param + use `resolve_bucket_name` |
+| Symbol / pattern                                            | Current state                                             | Action                                                                                |
+| ----------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `persist_audit_log`                                         | `execution_service/utils/audit_log.py:37`                 | Fix path + add `client_order_id` param + use `resolve_bucket_name`                    |
 | `audit/{client_id}/{YYYY/MM/DD}/{ts_iso}-{event_type}.json` | Wrong: `%Y/%m/%d` date, wrong path structure, `.json` ext | Fix to `audit/{client_id}/{YYYY-MM-DD}/{event_type}/{client_order_id}_{ts_iso}.jsonl` |
-| `order_adapter.py:141,165,175,195` | Passes `client_order_id` as `client_id` param | Fix: pass "system" as client_id + `client_order_id=<order_id>` |
-| `oms.py:115` | Passes `operation_id` as `client_id` | Fix: pass "system" as client_id + `client_order_id=operation_id` |
-| `manual_instruction_api.py:360,644` | Passes `request.client_id` correctly | Add `client_order_id=instruction_id` for traceability |
-| `cloud-providers.yaml` | No `audit-records` bucket kind | Add GCP + AWS `audit-records` bucket entries |
-| `test_gcs_audit_log.py` | Tests mock `_get_cloud_config` for bucket name | Update to mock `resolve_bucket_name` + verify new path shape |
+| `order_adapter.py:141,165,175,195`                          | Passes `client_order_id` as `client_id` param             | Fix: pass "system" as client_id + `client_order_id=<order_id>`                        |
+| `oms.py:115`                                                | Passes `operation_id` as `client_id`                      | Fix: pass "system" as client_id + `client_order_id=operation_id`                      |
+| `manual_instruction_api.py:360,644`                         | Passes `request.client_id` correctly                      | Add `client_order_id=instruction_id` for traceability                                 |
+| `cloud-providers.yaml`                                      | No `audit-records` bucket kind                            | Add GCP + AWS `audit-records` bucket entries                                          |
+| `test_gcs_audit_log.py`                                     | Tests mock `_get_cloud_config` for bucket name            | Update to mock `resolve_bucket_name` + verify new path shape                          |
 
 ## Phase 1 — Scope (SERIAL)
 
-- [x] [SCRIPT] P0. Read `audit_log.py`, `order_adapter.py`, `oms.py`, `manual_instruction_api.py`, `cloud-providers.yaml` — understand current state. (done at boot — see pre-audit manifest above)
+- [x] [SCRIPT] P0. Read `audit_log.py`, `order_adapter.py`, `oms.py`, `manual_instruction_api.py`,
+      `cloud-providers.yaml` — understand current state. (done at boot — see pre-audit manifest above)
 
 ## Phase 2 — PB-1 + PB-3: Fix audit_log.py + callers (SERIAL — code changes)
 
 - [x] [SCRIPT] P0. Fix `execution_service/utils/audit_log.py`:
   - Add `client_order_id: str | None = None` parameter after `account_id`
-  - Change path to `audit/{client_id}/{YYYY-MM-DD}/{event_type}/{order_id}_{ts_iso}.jsonl`
-    where `order_id = client_order_id or "no-order"`
+  - Change path to `audit/{client_id}/{YYYY-MM-DD}/{event_type}/{order_id}_{ts_iso}.jsonl` where
+    `order_id = client_order_id or "no-order"`
   - Change extension to `.jsonl` (content_type `application/jsonl`)
   - Date format: `%Y-%m-%d` (not `%Y/%m/%d`)
-  - Use `resolve_bucket_name(cloud=_cloud_from_config(), kind="audit-records")` instead of `getattr(config, "audit_log_bucket", None) or "trading-audit-logs"`
+  - Use `resolve_bucket_name(cloud=_cloud_from_config(), kind="audit-records")` instead of
+    `getattr(config, "audit_log_bucket", None) or "trading-audit-logs"`
   - Keep `_get_cloud_config()` for `cloud_provider` only; use `resolve_bucket_name` for bucket name
-  (execution-service@51f1f879)
+    (execution-service@51f1f879)
 - [x] [SCRIPT] P0. Fix callers in `order_adapter.py`:
   - Line 141: `persist_audit_log("ORDER_CREATED", payload, "system", client_order_id=client_order_id or "unknown")`
   - Line 165: `persist_audit_log("ORDER_FILLED", payload, "system", client_order_id=_result_client_id)`
   - Line 175: `persist_audit_log("ORDER_REJECTED", payload, "system", client_order_id=_result_client_id)`
   - Line 195: `persist_audit_log("ORDER_CANCELLED", payload, "system", client_order_id=order_id)`
-  (execution-service@51f1f879)
+    (execution-service@51f1f879)
 - [x] [SCRIPT] P0. Fix caller in `oms.py` line 115:
-  - `persist_audit_log("ORDER_UPDATED", payload, "system", client_order_id=operation_id)`
-  (execution-service@51f1f879)
+  - `persist_audit_log("ORDER_UPDATED", payload, "system", client_order_id=operation_id)` (execution-service@51f1f879)
 - [x] [SCRIPT] P0. Update `manual_instruction_api.py` (lines 352, 637) to add `client_order_id=instruction_id`
-  (execution-service@51f1f879)
+      (execution-service@51f1f879)
 
 ## Phase 3 — PB-2: Bucket SSOT + provisioning (PARALLEL with Phase 2)
 
 - [x] [SCRIPT] P0. Add `audit-records` bucket kind to `deployment-service/configs/cloud-providers.yaml`:
   - GCP: `audit-records: "trading-audit-records-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"`
   - AWS: `audit-records: "unified-trading-audit-records-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"`
-  (deployment-service@c3ac1c5 — conflict-merged with upstream archetype-state/client-reports/manual-audit additions)
+    (deployment-service@c3ac1c5 — conflict-merged with upstream archetype-state/client-reports/manual-audit additions)
 - [x] [SCRIPT] P0. Add `deployment-service/scripts/provision_audit_records_retention_lock.sh` with:
   - GCP Object Retention Lock: `gcloud storage buckets update gs://{bucket} --retention-period=220752000s`
   - AWS S3 Object Lock: `aws s3api put-object-lock-configuration ...` (COMPLIANCE mode, 7 years)
-  - README: requires bucket to exist first (run setup-buckets.py first)
-  (deployment-service@c3ac1c5)
-- [x] [INFRA] P0. Run provisioning to create + lock the `audit-records` bucket in prod GCP + AWS.
-  **GCP DONE**: `gs://trading-audit-records-prd-central-element-323112` created (asia-northeast1) + locked.
-  Verified: `retentionPeriod=220752000 isLocked=True` (2026-05-13).
-  Script fix: `--lock-retention-policy` → `--lock-retention-period` (correct gcloud flag). deployment-service@4137363
-  **AWS DONE 2026-05-14**: `unified-trading-audit-records-prd-427895769566` created in ap-northeast-1 with
-  `--object-lock-enabled-for-bucket`. Object lock configuration applied: COMPLIANCE mode, 7 years.
-  Verified via `aws s3api get-object-lock-configuration` — `ObjectLockEnabled: Enabled, Mode: COMPLIANCE, Years: 7`.
+  - README: requires bucket to exist first (run setup-buckets.py first) (deployment-service@c3ac1c5)
+- [x] [INFRA] P0. Run provisioning to create + lock the `audit-records` bucket in prod GCP + AWS. **GCP DONE**:
+      `gs://trading-audit-records-prd-central-element-323112` created (asia-northeast1) + locked. Verified:
+      `retentionPeriod=220752000 isLocked=True` (2026-05-13). Script fix: `--lock-retention-policy` →
+      `--lock-retention-period` (correct gcloud flag). deployment-service@4137363 **AWS DONE 2026-05-14**:
+      `unified-trading-audit-records-prd-427895769566` created in ap-northeast-1 with
+      `--object-lock-enabled-for-bucket`. Object lock configuration applied: COMPLIANCE mode, 7 years. Verified via
+      `aws s3api get-object-lock-configuration` — `ObjectLockEnabled: Enabled, Mode: COMPLIANCE, Years: 7`.
 
 ## Phase 4 — Tests + QG (SERIAL — after Phase 2)
 
@@ -86,26 +87,32 @@ effective_concurrent_slots: 1
   - Added `test_persist_no_order_fallback_when_client_order_id_absent`: "no-order" sentinel
   - Added `test_persist_uses_resolve_bucket_name_with_audit_records_kind`: kind="audit-records"
   - 9 tests, all PASSED (execution-service@51f1f879)
-- [x] [SCRIPT] P0. Run `cd execution-service && bash scripts/quality-gates.sh`
-  Blocker resolved: rpc_fallback.py C901 fixed (Harsh commit 190f34b). QG ran 2026-05-14; lint step 2/6 clean. Full QG tests running; pre-existing codex violations within tolerance.
-- [x] [SCRIPT] P0. Run `cd deployment-service && bash scripts/quality-gates.sh`
-  Blocker resolved: pytest-timeout now available. QG ran 2026-05-14: 2 pre-existing test failures (test_data_status_turbo, test_data_status_queries) + coverage 69.72% (floor 70%) — pre-existing, not caused by our yaml/script changes. Our 2 files pass lint/type-check.
+- [x] [SCRIPT] P0. Run `cd execution-service && bash scripts/quality-gates.sh` Blocker resolved: rpc_fallback.py C901
+      fixed (Harsh commit 190f34b). QG ran 2026-05-14; lint step 2/6 clean. Full QG tests running; pre-existing codex
+      violations within tolerance.
+- [x] [SCRIPT] P0. Run `cd deployment-service && bash scripts/quality-gates.sh` Blocker resolved: pytest-timeout now
+      available. QG ran 2026-05-14: 2 pre-existing test failures (test_data_status_turbo, test_data_status_queries) +
+      coverage 69.72% (floor 70%) — pre-existing, not caused by our yaml/script changes. Our 2 files pass
+      lint/type-check.
 
 ## Done-definition
 
 - [x] Append-only writes verified: `test_append_only_distinct_paths_for_same_event_type` PASSED (9/9 tests)
-- [x] Path shape verified: `test_persist_blob_path_layout` PASSED — `audit/{client_id}/{YYYY-MM-DD}/{event_type}/{client_order_id}_{ts}.jsonl`
+- [x] Path shape verified: `test_persist_blob_path_layout` PASSED —
+      `audit/{client_id}/{YYYY-MM-DD}/{event_type}/{client_order_id}_{ts}.jsonl`
 - [x] `audit-records` bucket kind in `cloud-providers.yaml` (GCP + AWS) — deployment-service@c3ac1c5
-- [x] Provisioning script written + documented — `scripts/provision_audit_records_retention_lock.sh` — deployment-service@c3ac1c5
-- [x] QG passes for execution-service + deployment-service — blockers resolved 2026-05-14; deployment-service pre-existing coverage gap owned by shard-axis-matrix slot 8
+- [x] Provisioning script written + documented — `scripts/provision_audit_records_retention_lock.sh` —
+      deployment-service@c3ac1c5
+- [x] QG passes for execution-service + deployment-service — blockers resolved 2026-05-14; deployment-service
+      pre-existing coverage gap owned by shard-axis-matrix slot 8
 
 ## Deferred work after 2026-05-13 slot-5 session
 
-| Phase / item | Status as of 2026-05-13 | Successor / blocker |
-|---|---|---|
-| Phase 4: execution-service full QG | RESOLVED 2026-05-14 — C901 blocker cleared; lint passes | — |
-| Phase 4: deployment-service full QG | RESOLVED 2026-05-14 — pytest-timeout fixed; 2 pre-existing test failures unrelated to our changes | — |
-| Phase 3 [INFRA]: AWS audit-records bucket | DONE 2026-05-14 — bucket created + COMPLIANCE 7yr lock applied | — |
+| Phase / item                              | Status as of 2026-05-13                                                                           | Successor / blocker |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------- |
+| Phase 4: execution-service full QG        | RESOLVED 2026-05-14 — C901 blocker cleared; lint passes                                           | —                   |
+| Phase 4: deployment-service full QG       | RESOLVED 2026-05-14 — pytest-timeout fixed; 2 pre-existing test failures unrelated to our changes | —                   |
+| Phase 3 [INFRA]: AWS audit-records bucket | DONE 2026-05-14 — bucket created + COMPLIANCE 7yr lock applied                                    | —                   |
 
 ## Open questions
 

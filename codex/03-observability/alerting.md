@@ -14,13 +14,13 @@ Alert delivery channels: **Telegram** (primary, all alerts) and **PagerDuty** (c
 deprecated.
 
 > **🟡 SLACK DEPRECATION RECONCILIATION (AL-6 PRE_CUTOVER 2026-05-12, slot 8 audit)** — this doc declares Slack
-> deprecated; downstream references still treating Slack as a live channel are tracked for follow-up:
-> (a) `codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack";
-> (b) `codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel";
-> (c) `codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel;
-> (d) code: `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules
-> still ship. Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to
-> alerting-service maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
+> deprecated; downstream references still treating Slack as a live channel are tracked for follow-up: (a)
+> `codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack"; (b)
+> `codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel"; (c)
+> `codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel; (d) code:
+> `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules still ship.
+> Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to alerting-service
+> maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
 
 ---
 
@@ -124,13 +124,13 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 ## Alerting-Service Routing Rules
 
-> **SSOT note (AL-3 reconciliation 2026-05-12).** Routing rules are **UAC-driven**, not an inline python block in
-> this codex doc. The runtime loads `[rule.to_routing_dict() for rule in LIVE_ALERT_RULES]` from
-> `alerting_service/config.py` (line 12-34), where `LIVE_ALERT_RULES` lives in UAC
-> `unified_api_contracts/canonical/crosscutting/alerting/rules.py` and ships **~56 `AlertRule(...)` entries** spanning
-> kill-switch / circuit-breaker / ML / risk-rule-consequence / kill-switch-recovery / tick-staleness / connectivity-gap /
-> DeFi / margin / position-recon / order-recovery / multi-leg / service-health / cross-cloud-egress codes. Operator
-> overrides flow via `AlertingSystemConfig.routing_rules`. The closed AlertCode set is governed in
+> **SSOT note (AL-3 reconciliation 2026-05-12).** Routing rules are **UAC-driven**, not an inline python block in this
+> codex doc. The runtime loads `[rule.to_routing_dict() for rule in LIVE_ALERT_RULES]` from `alerting_service/config.py`
+> (line 12-34), where `LIVE_ALERT_RULES` lives in UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py`
+> and ships **~56 `AlertRule(...)` entries** spanning kill-switch / circuit-breaker / ML / risk-rule-consequence /
+> kill-switch-recovery / tick-staleness / connectivity-gap / DeFi / margin / position-recon / order-recovery / multi-leg
+> / service-health / cross-cloud-egress codes. Operator overrides flow via `AlertingSystemConfig.routing_rules`. The
+> closed AlertCode set is governed in
 > [`../15-runbooks/alerting/alert-code-taxonomy.md`](../15-runbooks/alerting/alert-code-taxonomy.md); the
 > [`AlertRule._validate_kill_switch_scope_matches_code_family`](../15-runbooks/alerting/alert-code-taxonomy.md#construction-time-validation)
 > validator enforces per-rule consistency.
@@ -144,12 +144,12 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 
 ## Infrastructure Alerts
 
-| Alert           | Trigger                        | Detection                | Response                  | Status      |
-| --------------- | ------------------------------ | ------------------------ | ------------------------- | ----------- |
+| Alert           | Trigger                        | Detection                                                                                                                                                      | Response                  | Status      |
+| --------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------- |
 | OOM Death Loop  | Serial log OOM >= 5 times      | deployment-service VM watchdog + `vm-exec-with-gcs-tee.sh` serial-log scrape (AL-9 PRE_CUTOVER 2026-05-12 refresh; "UTD v2" naming retired per Ops audit O-13) | VM terminated             | IMPLEMENTED |
-| Startup Timeout | No SERVICE_STARTED after 5 min | deployment-service VM watchdog + event-stream STARTED check (AL-9 PRE_CUTOVER 2026-05-12 refresh) | VM terminated             | IMPLEMENTED |
-| Memory Critical | memory_percent > 90%           | PerformanceMonitor (30s) | Log ERROR, resource_alert | IMPLEMENTED |
-| Memory Warning  | memory_percent > 85%           | PerformanceMonitor (30s) | Log WARNING               | IMPLEMENTED |
+| Startup Timeout | No SERVICE_STARTED after 5 min | deployment-service VM watchdog + event-stream STARTED check (AL-9 PRE_CUTOVER 2026-05-12 refresh)                                                              | VM terminated             | IMPLEMENTED |
+| Memory Critical | memory_percent > 90%           | PerformanceMonitor (30s)                                                                                                                                       | Log ERROR, resource_alert | IMPLEMENTED |
+| Memory Warning  | memory_percent > 85%           | PerformanceMonitor (30s)                                                                                                                                       | Log WARNING               | IMPLEMENTED |
 
 ## Pipeline Alerts
 
@@ -215,37 +215,33 @@ Operator sees alert in Telegram / PagerDuty on-call
 
 ## CI-bot Telegram contract (AL-12 — added 2026-05-13)
 
-Workspace-CI delivery to operators runs through a dedicated Telegram bot, **separate from
-the alerting-service runtime delivery surface above**. Documenting the contract here so
-agents don't conflate the two channels.
+Workspace-CI delivery to operators runs through a dedicated Telegram bot, **separate from the alerting-service runtime
+delivery surface above**. Documenting the contract here so agents don't conflate the two channels.
 
-**Trigger:** every `git push` to a branch that triggers remote CI (pushes to `main` +
-PRs targeting `main`). Pushes to `live-defi-rollout` and other `feat/*` branches DO NOT
-trigger remote CI — quality is enforced locally via `bash scripts/quality-gates.sh`
-before push.
+**Trigger:** every `git push` to a branch that triggers remote CI (pushes to `main` + PRs targeting `main`). Pushes to
+`live-defi-rollout` and other `feat/*` branches DO NOT trigger remote CI — quality is enforced locally via
+`bash scripts/quality-gates.sh` before push.
 
-**Payload contract:** the CI bot reports the underlying repo's QG status, not its own
-delivery result.
+**Payload contract:** the CI bot reports the underlying repo's QG status, not its own delivery result.
 
-| `client_payload.status` | Telegram severity | Body shape |
-|---|---|---|
-| `FAILING` | ❌ `CRITICAL` | Failure excerpt inline (last 30 lines QG output, ANSI-stripped, in `<pre>` block) |
-| anything else | ✅ `INFO` | Repo + commit + status summary |
+| `client_payload.status` | Telegram severity | Body shape                                                                        |
+| ----------------------- | ----------------- | --------------------------------------------------------------------------------- |
+| `FAILING`               | ❌ `CRITICAL`     | Failure excerpt inline (last 30 lines QG output, ANSI-stripped, in `<pre>` block) |
+| anything else           | ✅ `INFO`         | Repo + commit + status summary                                                    |
 
-**Operator response cadence:** CI failures on `live-defi-rollout` and `main` are NOT
-issues to flag — fix in real time. Red CI on `live-defi-rollout` blocks workspace.
+**Operator response cadence:** CI failures on `live-defi-rollout` and `main` are NOT issues to flag — fix in real time.
+Red CI on `live-defi-rollout` blocks workspace.
 
-**Watcher pattern:** after a CI-triggering push, set up a background watcher (sub-agent
-OR `ScheduleWakeup` ~3-5min after push) checking
-`gh run list --branch <branch> --repo <owner>/<repo> --limit 5`. Continue with other
-work; react asynchronously.
+**Watcher pattern:** after a CI-triggering push, set up a background watcher (sub-agent OR `ScheduleWakeup` ~3-5min
+after push) checking `gh run list --branch <branch> --repo <owner>/<repo> --limit 5`. Continue with other work; react
+asynchronously.
 
-**Diagnosis on fail:** `gh run view <run-id> --log-failed --repo <owner>/<repo>` (NOT
-local re-run; only run quality-gates locally on the SPECIFIC files in your diff).
+**Diagnosis on fail:** `gh run view <run-id> --log-failed --repo <owner>/<repo>` (NOT local re-run; only run
+quality-gates locally on the SPECIFIC files in your diff).
 
-**SSOT for the rule:** workspace `CLAUDE.md` § "CI Verification After Every Push (HARD
-RULE)". The § above mirrors the contract for cross-agent discoverability inside the
-codex (per AL-12 codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
+**SSOT for the rule:** workspace `CLAUDE.md` § "CI Verification After Every Push (HARD RULE)". The § above mirrors the
+contract for cross-agent discoverability inside the codex (per AL-12
+codex_doc_currency_and_consolidation_post_cutover_2026_05_12 Sweep 3).
 
 ---
 

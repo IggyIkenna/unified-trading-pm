@@ -451,24 +451,25 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 
   **Topology GAP closure todos (from topology_qgroup_gap_closure_2026_05_09 Phase 1+8):**
   - [x] [AGENT] P0. **GAP-1 + GAP-4**: `codex/04-architecture/strategy-ensemble-topology.md` pinning ONE VM per
-    asset_group + DeFi/CeFi split + multi-tenancy rules + colocation-bootstrap protocol.
-    Shipped PM@369d8424 2026-05-14.
+        asset_group + DeFi/CeFi split + multi-tenancy rules + colocation-bootstrap protocol. Shipped PM@369d8424
+        2026-05-14.
   - [x] [AGENT] P0. **GAP-2 + GAP-3**: Process-vs-in-proc shape codified in
-    `codex/04-architecture/strategy-ensemble-topology.md` § "Per-VM process layout" — 4 separate OS processes, local
-    Redis IPC, `POSITION_BALANCE_URL`/`RISK_EXPOSURE_URL`/`EXECUTION_URL` env-var service discovery.
-    Shipped PM@369d8424 2026-05-14. Colocation bootstrap script (`colocate-strategy-vm.sh`) DEFERRED Phase 1.9.
+        `codex/04-architecture/strategy-ensemble-topology.md` § "Per-VM process layout" — 4 separate OS processes, local
+        Redis IPC, `POSITION_BALANCE_URL`/`RISK_EXPOSURE_URL`/`EXECUTION_URL` env-var service discovery. Shipped
+        PM@369d8424 2026-05-14. Colocation bootstrap script (`colocate-strategy-vm.sh`) DEFERRED Phase 1.9.
   - [x] [AGENT] P0. **GAP-5**: `ExecutionRejectionCode` + `ExecutionRejectionEvent` shipped UAC@25d9a70.
-    Strategy-service rejection consumer shipped strategy-service@c87f9c1 (`rejection_handler.py` + 11 unit tests).
-    Shipped 2026-05-14.
+        Strategy-service rejection consumer shipped strategy-service@c87f9c1 (`rejection_handler.py` + 11 unit tests).
+        Shipped 2026-05-14.
   - [x] [AGENT] P0. **GAP-12**: `codex/04-architecture/matching-engine-assumptions.md` pinning per-matcher slippage
-    model + commission schedule + latency model + venue-liquidity proxy + `BenchmarkFillMode` per `InstructionActionV2`.
-    `MatchingEngineConfig` UAC class TODO: ship in UAC internal/architecture_v2 Phase 1.9 bundle.
-    Shipped PM@369d8424 2026-05-14.
+        model + commission schedule + latency model + venue-liquidity proxy + `BenchmarkFillMode` per
+        `InstructionActionV2`. `MatchingEngineConfig` UAC class TODO: ship in UAC internal/architecture_v2 Phase 1.9
+        bundle. Shipped PM@369d8424 2026-05-14.
   - [x] [AGENT] P0. **GAP-14 + GAP-15**: 5 matcher classes (L0/L1/L2/AMM/BenchmarkMatcher) importable + mode dispatch
-    tests in `execution-service/tests/unit/matching_engine/test_mode_dispatch.py`. Codex doc shipped PM@736f2ada.
-    Shipped execution-service@4bf6ec2c2 + PM@736f2ada 2026-05-15.
-  - [x] [AGENT] P0. **GAP-16**: `BENCHMARK_FILL_MODE_BY_ACTION` dict with all 14 `InstructionActionV2` → `BenchmarkFillMode`
-    mappings shipped UAC@42da7d0. Tests in execution-service@4bf6ec2c2. Shipped 2026-05-15.
+        tests in `execution-service/tests/unit/matching_engine/test_mode_dispatch.py`. Codex doc shipped PM@736f2ada.
+        Shipped execution-service@4bf6ec2c2 + PM@736f2ada 2026-05-15.
+  - [x] [AGENT] P0. **GAP-16**: `BENCHMARK_FILL_MODE_BY_ACTION` dict with all 14 `InstructionActionV2` →
+        `BenchmarkFillMode` mappings shipped UAC@42da7d0. Tests in execution-service@4bf6ec2c2. Shipped 2026-05-15.
+
 - **Phase 3.3 cda-p3-unified-sor**: Live trading prereq for Group F.
 - **Phase 3.5 slv-p3-risk-attribution**: Live trading prereq for Group F.
 - **Phase 1.6 Phase 10.6 service-split refactor (subset)**: pre-execution audit + RBAC-scoped refactor of

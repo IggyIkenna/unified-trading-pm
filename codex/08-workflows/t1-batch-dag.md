@@ -64,20 +64,20 @@ gs://<service-bucket>/
 All schedules are UTC. Services run sequentially in dependency order. The recon orchestrator polls GCS for output file
 presence before starting each stage.
 
-| Service                             | Schedule (UTC) | Writes to                                    | Dependencies |
-| ----------------------------------- | -------------- | -------------------------------------------- | ------------ |
-| execution-service (config snapshot) | 00:30          | `configs/snapshots/{date}/`                  | none         |
-| features-service (calendar family)           | 01:30          | `t1-recon/features/calendar/{date}/`         | none         |
-| features-service (delta-one family)          | 02:00          | `t1-recon/features/delta-one/{date}/`        | calendar     |
-| features-service (volatility family)         | 02:00          | `t1-recon/features/volatility/{date}/`       | delta-one    |
-| features-service (onchain family)            | 02:30          | `t1-recon/features/onchain/{date}/`          | none         |
-| features-service (sports family)             | 02:30          | `t1-recon/features/sports/{date}/`           | none         |
-| features-service (cross-instrument family)   | 02:30          | `t1-recon/features/cross-instrument/{date}/` | delta-one    |
-| features-service (multi-timeframe family)    | 02:30          | `t1-recon/features/multi-timeframe/{date}/`  | delta-one    |
-| features-service (commodity family)          | 02:30          | `t1-recon/features/commodity/{date}/`        | delta-one    |
-| ml-inference-service                | 03:00          | `t1-recon/ml/{date}/`                        | all features |
-| strategy-service                    | 04:00          | `t1-recon/strategy/{date}/`                  | ml           |
-| batch-live-reconciliation-service   | 06:00          | `t1-recon/recon/`                            | all above    |
+| Service                                    | Schedule (UTC) | Writes to                                    | Dependencies |
+| ------------------------------------------ | -------------- | -------------------------------------------- | ------------ |
+| execution-service (config snapshot)        | 00:30          | `configs/snapshots/{date}/`                  | none         |
+| features-service (calendar family)         | 01:30          | `t1-recon/features/calendar/{date}/`         | none         |
+| features-service (delta-one family)        | 02:00          | `t1-recon/features/delta-one/{date}/`        | calendar     |
+| features-service (volatility family)       | 02:00          | `t1-recon/features/volatility/{date}/`       | delta-one    |
+| features-service (onchain family)          | 02:30          | `t1-recon/features/onchain/{date}/`          | none         |
+| features-service (sports family)           | 02:30          | `t1-recon/features/sports/{date}/`           | none         |
+| features-service (cross-instrument family) | 02:30          | `t1-recon/features/cross-instrument/{date}/` | delta-one    |
+| features-service (multi-timeframe family)  | 02:30          | `t1-recon/features/multi-timeframe/{date}/`  | delta-one    |
+| features-service (commodity family)        | 02:30          | `t1-recon/features/commodity/{date}/`        | delta-one    |
+| ml-inference-service                       | 03:00          | `t1-recon/ml/{date}/`                        | all features |
+| strategy-service                           | 04:00          | `t1-recon/strategy/{date}/`                  | ml           |
+| batch-live-reconciliation-service          | 06:00          | `t1-recon/recon/`                            | all above    |
 
 ---
 
