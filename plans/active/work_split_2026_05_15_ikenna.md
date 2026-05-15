@@ -108,39 +108,38 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    scaffold from `execution-service@4d4d8e12d` to live data flow. (infra 0.8×, ~3 = 2.4 cal) **PARTIAL 2026-05-15
    (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST via aiohttp transport
    (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean.
-   `execution-service@3a511f1b9` — `get_account_state()` wired via `_do_private_post()` helper (HMAC-SHA512 signed
-   POST to `/0/private/Balance`); 2 new tests pass. Remaining: `place_order`/`cancel_order`/`get_order_status`/
-   `get_fills` private transport + WS subscriptions.
+   `execution-service@3a511f1b9` — `get_account_state()` wired via `_do_private_post()` helper (HMAC-SHA512 signed POST
+   to `/0/private/Balance`); 2 new tests pass. Remaining: `place_order`/`cancel_order`/`get_order_status`/ `get_fills`
+   private transport + WS subscriptions.
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
-   `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal)
-   **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium already wired in
-   `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines 101-105,
-   `_collect_drift`/`_collect_orca`/`_collect_raydium` + `_PROTOCOL_TO_DATA_TYPE` + venue map). Phoenix:
+   `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium
+   already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines
+   101-105, `_collect_drift`/`_collect_orca`/`_collect_raydium` + `_PROTOCOL_TO_DATA_TYPE` + venue map). Phoenix:
    **BLOCKED-OPERATOR-DECISION** — `api.phoenix.trade` does not resolve DNS (also tried `phoenix.trade`,
    `docs.phoenix.trade`); Phoenix CLOB DEX may have shut down or migrated. Ping filed at
-   `ikenna_orchestrator/pings/slot_3.md@2026-05-15T19:08:56Z` requesting operator confirmation +
-   canonical API URL OR `EMPTY_OR_DEPRECATED_DEFI_VENUE` marker.
-3. ✅ **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status. (research
-   1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: snapshot added to issue doc — 3/5 venues fixed
-   (ASTER adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
+   `ikenna_orchestrator/pings/slot_3.md@2026-05-15T19:08:56Z` requesting operator confirmation + canonical API URL OR
+   `EMPTY_OR_DEPRECATED_DEFI_VENUE` marker.
+3. ✅ **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status.
+   (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: snapshot added to issue doc — 3/5 venues fixed (ASTER
+   adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
    approval >1 week + EXTENDED-STARKNET canonical API URL). Issue doc:
    `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md` § "UPDATE 2026-05-15".
 4. ✅ **`arbitrage_price_dispersion_finalisation_2026_05_09`** (carry from slot 9 reassignment) — push remaining
-   finalisation items. (design 0.6×, ~4 = 2.4 cal) **ALREADY DONE 14 May, archived 2026-05-15 by slot-3**:
-   20/20 todos shipped 2026-05-09/10. Plan moved to `plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md`
-   yesterday. Only deferred item: live cutover dry-run → tracked in `master_to_live_defi_2026_05_23.md` Group F item 17.
+   finalisation items. (design 0.6×, ~4 = 2.4 cal) **ALREADY DONE 14 May, archived 2026-05-15 by slot-3**: 20/20 todos
+   shipped 2026-05-09/10. Plan moved to `plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md` yesterday.
+   Only deferred item: live cutover dry-run → tracked in `master_to_live_defi_2026_05_23.md` Group F item 17.
 5. ✅ **Hyperliquid arb_price_dispersion eligibility close** — verify USDC-margin + 7-venue dispersion universe.
-   (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: 14 May session shipped UAC@052120d (HYPERLIQUID+ASTER
-   in VENUE_DATA_TYPE_CAPABILITIES) + strategy-service@c7a3f92 (4 eligibility tests). Verified 7-venue dispersion
-   universe in `strategy-service/.../target_universe/catalog.py:623-631`:
-   `hyperliquid` + `deribit` + `aster` + `kraken` + `binance` + `bybit` + `okx` — all 7 wired with ShareClass marker
-   (USDC/USDT). HL specifically: USDC margin, 0 haircut → eligible.
-6. ✅ **`helius_solana_rpc_for_validation` final close** (credentials now in vault — last wire-up). (infra 0.8×, ~2 = 1.6
-   cal) **DONE 2026-05-15 (slot-3)**: yesterday's `execution-service@a300f7c` shipped Helius Solana RPC dispatch for
+   (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: 14 May session shipped UAC@052120d (HYPERLIQUID+ASTER in
+   VENUE_DATA_TYPE_CAPABILITIES) + strategy-service@c7a3f92 (4 eligibility tests). Verified 7-venue dispersion universe
+   in `strategy-service/.../target_universe/catalog.py:623-631`: `hyperliquid` + `deribit` + `aster` + `kraken` +
+   `binance` + `bybit` + `okx` — all 7 wired with ShareClass marker (USDC/USDT). HL specifically: USDC margin, 0 haircut
+   → eligible.
+6. ✅ **`helius_solana_rpc_for_validation` final close** (credentials now in vault — last wire-up). (infra 0.8×, ~2 =
+   1.6 cal) **DONE 2026-05-15 (slot-3)**: yesterday's `execution-service@a300f7c` shipped Helius Solana RPC dispatch for
    SOLANA_CLMM + SOLANA_AMM shapes in `capture_golden_swaps.py` (18 helius references confirmed). Operator provisioned
    `helius-api-key` vault entry 2026-05-15; slot 2 owns mev_apy integration; slot 3 wire-up already on LDR.
-7. ✅ **Aster + Bybit UTA `carry_staked_basis` LST_AS_MARGIN final** — eligibility-matrix close. (research 1.2×, ~2 = 2.4
-   cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
+7. ✅ **Aster + Bybit UTA `carry_staked_basis` LST_AS_MARGIN final** — eligibility-matrix close. (research 1.2×, ~2 =
+   2.4 cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
    UTA stETH=True (10% haircut) → `lido-bybit` slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
    Eligibility matrix sealed.
 8. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
@@ -206,8 +205,11 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    `✅ STEP 5.37: No inline HF/LTV/margin thresholds (UAC LIQUIDATION_PARAMS_REGISTRY)`. Triage exemptions already
    correctly applied; issue doc at `plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md` was
    self-resolving (filed today + cleaned later same day by earlier slot-5 commits).
-8. **`mtf_intraday_micro_regime_policy` 2 dict entries** (carry from slot 9 #4 reassignment). (design 0.6×, ~1 = 0.6
-   cal)
+8. ✅ **`mtf_intraday_micro_regime_policy` 2 dict entries** (carry from slot 9 #4 reassignment). (design 0.6×, ~1 = 0.6
+   cal) — **VERIFIED SHIPPED 2026-05-15**: Option A (NAN_FILL) operator-acked. UAC@`1f8bcbc` (`SERVICE_OUTPUT_POLICIES`
+   seeds for `intraday_regime` + `micro_regime` + 2 tests) + FS@`140b6fe5` (`_SEEDED_FEATURE_GROUPS` in
+   `batch_handler.py` + `TestSingleTfGroupsNanFill` class). Issue doc
+   `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md` already shows ✅ RESOLVED. No further action.
 9. **`sports_retired_data_types_code_cleanup` non-sports half** (carry from 14 May #7) — retire dead data_types from
    cross-cutting / UAC side. (refactor 0.4×, ~3 = 1.2 cal)
 10. **TradFi venue calendar SSOT `MarketSession` final close** — operator answered Yes 2026-05-13; backfill VM ask
@@ -259,61 +261,58 @@ Plan fan-out: **`sit_may23_critical_path_coverage_gaps_2026_05_15` (MAY-23 BLOCK
 audit (carry from slot 10 reassignment) + `client_reporting_pnl_attribution_mvp` + `compute_optimization_mock_data`
 Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimization`.
 
-1. ✅ **🔴 [MAY-23 BLOCKER] `sit_may23_critical_path_coverage_gaps_2026_05_15`** — 3 SIT scenario playbooks shipped
-   in `system-integration-tests@3872ce2`: (a) `defi_carry_staked_basis_paper` + (b) `defi_apd_paper` (with explicit
+1. ✅ **🔴 [MAY-23 BLOCKER] `sit_may23_critical_path_coverage_gaps_2026_05_15`** — 3 SIT scenario playbooks shipped in
+   `system-integration-tests@3872ce2`: (a) `defi_carry_staked_basis_paper` + (b) `defi_apd_paper` (with explicit
    not-silently-skipped routing assertion) + (c) `defi_paper_to_live_early_gate` (promote → VM STARTED + DART day-1
    blocking gate). Added to `defi_scenarios.py::get_scenarios` (5 → 8) + dedicated
    `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
-   semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 =
-   4.5 cal)
-2. 🟡 **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration. **PARTIAL 2026-05-15**:
-   plan body item 1 (strategy decision) ✅ `PM@082444d7` — adopted Option (a) (narrow UTL canonical subclasses;
-   32 concrete + 3 base = 35 sites confirmed via grep). Items 2-4 (class-var migration + UTL mandatory flip +
-   cite) deferred to next session/slot — post-cutover P1 per plan body, not May-23 blocker. Slot 7 prioritised
-   writegate Gate-4 audit + audit_records pre-cutover gate over post-cutover refactor. (refactor 0.4×, ~6 = 2.4
-   cal; ~0.4 cal shipped so far)
-3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services
-   (`PM@3a4afdc5`); per-service emission boundary is canonical (vs centralised α). Audit table added at
-   `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4
-   CLOSED**: every Phase 6.6/6.7/6.8 service has `[x]` checkbox + sha evidence + QG STEP 5.71 paired-callsite
-   check passes workspace-wide. (research 1.2×, ~4 = 4.8 cal)
+   semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 = 4.5
+   cal)
+2. 🟡 **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration. **PARTIAL 2026-05-15**: plan
+   body item 1 (strategy decision) ✅ `PM@082444d7` — adopted Option (a) (narrow UTL canonical subclasses; 32 concrete +
+   3 base = 35 sites confirmed via grep). Items 2-4 (class-var migration + UTL mandatory flip + cite) deferred to next
+   session/slot — post-cutover P1 per plan body, not May-23 blocker. Slot 7 prioritised writegate Gate-4 audit +
+   audit_records pre-cutover gate over post-cutover refactor. (refactor 0.4×, ~6 = 2.4 cal; ~0.4 cal shipped so far)
+3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services (`PM@3a4afdc5`);
+   per-service emission boundary is canonical (vs centralised α). Audit table added at
+   `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4 CLOSED**:
+   every Phase 6.6/6.7/6.8 service has `[x]` checkbox + sha evidence + QG STEP 5.71 paired-callsite check passes
+   workspace-wide. (research 1.2×, ~4 = 4.8 cal)
 4. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — verified all plan body checkboxes `[x]` +
    Done-definition fully checked: `execution-service@51f1f879` (audit_log.py path fix + client_order_id param +
    resolve_bucket_name + 9 unit tests), `deployment-service@c3ac1c5` (cloud-providers.yaml audit-records kind +
-   retention-lock provision script), GCP `gs://trading-audit-records-prd-central-element-323112` locked
-   2026-05-13 (`retentionPeriod=220752000 isLocked=True`), AWS `unified-trading-audit-records-prd-427895769566`
-   COMPLIANCE 7yr lock 2026-05-14. No additional work this session; verification-only flip. (research 1.2×, ~4
-   = 4.8 cal)
-5. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — verified all 36 top-level plan checkboxes
-   `[x]`, zero open. Phase 5.C2 HWM + Phase 8.A/B/C confirmed complete in 14 May session (per work_split_2026_05_14
-   item 6 evidence: `client-reporting-api@ce5156d` + `deployment-ui@21331da` + `deployment-service@e00fe79` for HWM
-   route; `client-reporting-api@192b41d` + `deployment-service@007f67f` for Phase 8 real-VM cutover runner +
-   launcher). No additional work this session. (design 0.6×, ~4 = 2.4 cal)
-6. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — all Ikenna-half items shipped:
-   Phase 0 ✅ (stage-bottleneck classification `PM@c36a5bfb`); Phase 1 ✅ (aggregation wire +
-   `--max-parallel` flag `strategy-service@8b20a32`; verify-extend item is DEFERRED with named follow-up —
-   per-archetype design call needed); Phase 2 partial ✅ (sports `--worker-count` `features-service@722697d3`;
-   onchain/volatility families already had it); Phase 3 ✅ (execution-alpha scaffold `execution-service@fa18c3a1b`
-   + parallel wrapper `execution-service@f65a7d5d5` + VM launcher `deployment-service@1510310` + smoke
-   `strategy-service@fc634e3`). Remaining open: Phase 4 ml-training (Harsh-half), Phase 5 SKU matrix (joint),
-   Phase 2 profiling item (joint). (design 0.6×, ~3 = 1.8 cal)
-7. ✅ **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — verified Phase 8.A code SHIPPED:
-   `UTL@f942dc54` (`check_budget()` + `BudgetExceededError`); benchmark report parquet+md landed at
-   `gs://central-element-323112-benchmark-reports/benchmark_report/`; 8-VM matrix complete + per-stage P50/P95/P99
-   in `benchmark_report.md`. **Master plan Group F row 18 update is slot 1 main's territory** per CLAUDE.md "slot
-   precedence" rule (slot 7 does NOT edit `master_to_live_defi_2026_05_23.md` directly). Open downstream:
-   actual 2yr batch VM run is owner Agent 4 (AUTHOR-MISSING note in master plan row) — not slot 7 work.
-   (infra 0.8×, ~3 = 2.4 cal)
-8. ✅ **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — already finalised yesterday
-   (`PM@163da45a` per work_split_2026_05_14 item 8 "Phase 3 shipped; remaining deferred items have named
-   successors"). Audit reconfirms: 34/41 checkboxes `[x]`; remaining 7 open items all explicitly DEFERRED with
-   named successors per "Deferred work after 2026-05-13" table (download-csv → Phase 3 SmartDownloadButton;
-   Playwright → operator-doable; canonical_question_group → predictions Plan A; cross-registry test → predictions
-   Plan A; rollup metric → infrastructure_master). No additional work this session. (research 1.2×, ~3 = 3.6 cal)
-9. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — already finalised yesterday per work_split_2026_05_14
-   item 7: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines / 25.3KB) + P1 orchestrator sub-agent poll loop
-   `[x]` (`PM@1a056988`). Plan body P2 (relocate `.claude/rules/` per-repo) is lowest-impact, deferred per body
-   — outside Phase 1 scope. No additional work this session. (research 1.2×, ~2 = 2.4 cal)
+   retention-lock provision script), GCP `gs://trading-audit-records-prd-central-element-323112` locked 2026-05-13
+   (`retentionPeriod=220752000 isLocked=True`), AWS `unified-trading-audit-records-prd-427895769566` COMPLIANCE 7yr lock
+   2026-05-14. No additional work this session; verification-only flip. (research 1.2×, ~4 = 4.8 cal)
+5. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — verified all 36 top-level plan checkboxes `[x]`, zero
+   open. Phase 5.C2 HWM + Phase 8.A/B/C confirmed complete in 14 May session (per work_split_2026_05_14 item 6 evidence:
+   `client-reporting-api@ce5156d` + `deployment-ui@21331da` + `deployment-service@e00fe79` for HWM route;
+   `client-reporting-api@192b41d` + `deployment-service@007f67f` for Phase 8 real-VM cutover runner + launcher). No
+   additional work this session. (design 0.6×, ~4 = 2.4 cal)
+6. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — all Ikenna-half items shipped: Phase 0 ✅
+   (stage-bottleneck classification `PM@c36a5bfb`); Phase 1 ✅ (aggregation wire + `--max-parallel` flag
+   `strategy-service@8b20a32`; verify-extend item is DEFERRED with named follow-up — per-archetype design call needed);
+   Phase 2 partial ✅ (sports `--worker-count` `features-service@722697d3`; onchain/volatility families already had it);
+   Phase 3 ✅ (execution-alpha scaffold `execution-service@fa18c3a1b`
+   - parallel wrapper `execution-service@f65a7d5d5` + VM launcher `deployment-service@1510310` + smoke
+     `strategy-service@fc634e3`). Remaining open: Phase 4 ml-training (Harsh-half), Phase 5 SKU matrix (joint), Phase 2
+     profiling item (joint). (design 0.6×, ~3 = 1.8 cal)
+7. ✅ **`mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — verified Phase 8.A code SHIPPED: `UTL@f942dc54`
+   (`check_budget()` + `BudgetExceededError`); benchmark report parquet+md landed at
+   `gs://central-element-323112-benchmark-reports/benchmark_report/`; 8-VM matrix complete + per-stage P50/P95/P99 in
+   `benchmark_report.md`. **Master plan Group F row 18 update is slot 1 main's territory** per CLAUDE.md "slot
+   precedence" rule (slot 7 does NOT edit `master_to_live_defi_2026_05_23.md` directly). Open downstream: actual 2yr
+   batch VM run is owner Agent 4 (AUTHOR-MISSING note in master plan row) — not slot 7 work. (infra 0.8×, ~3 = 2.4 cal)
+8. ✅ **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — already finalised yesterday (`PM@163da45a`
+   per work_split_2026_05_14 item 8 "Phase 3 shipped; remaining deferred items have named successors"). Audit
+   reconfirms: 34/41 checkboxes `[x]`; remaining 7 open items all explicitly DEFERRED with named successors per
+   "Deferred work after 2026-05-13" table (download-csv → Phase 3 SmartDownloadButton; Playwright → operator-doable;
+   canonical_question_group → predictions Plan A; cross-registry test → predictions Plan A; rollup metric →
+   infrastructure_master). No additional work this session. (research 1.2×, ~3 = 3.6 cal)
+9. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — already finalised yesterday per work_split_2026_05_14 item 7:
+   P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines / 25.3KB) + P1 orchestrator sub-agent poll loop `[x]`
+   (`PM@1a056988`). Plan body P2 (relocate `.claude/rules/` per-repo) is lowest-impact, deferred per body — outside
+   Phase 1 scope. No additional work this session. (research 1.2×, ~2 = 2.4 cal)
 10. **Reserve**: in-stack pickup for SIT scenario surfacings.
 
 ---
@@ -348,55 +347,51 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    table already `done`); (b) launcher_scripts Phases 2/3 annotated DEFERRED-PER-AUDIT at `PM@724a2029`; (c)
    deployment_ui_lifecycle_tabs A.2 false positive corrected. (refactor 0.4×, ~3 = 1.2 cal)
 4. 🟡 **`bucket_name_ssot_canonicalisation_2026_05_10` workspace flip** — `BLOCKED-UPSTREAM` on
-   `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6 (window 2026-05-15→05-19): call-site sweep + L3
-   legacy delegate + dependency_checker migration all gated on Phase 2.6 physical flat→env-tiered migration.
-   **What IS shipped** (verified 2026-05-15 18:59 UTC): QG STEP 5.69 ratchet operational
+   `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6 (window 2026-05-15→05-19): call-site sweep + L3 legacy
+   delegate + dependency_checker migration all gated on Phase 2.6 physical flat→env-tiered migration. **What IS
+   shipped** (verified 2026-05-15 18:59 UTC): QG STEP 5.69 ratchet operational
    (`scripts/quality-gates-base/base-service.sh:1578-1623`); 2 repos at 0 (instruments-service @5210149,
-   deployment-service @0b802ec); 8 baselined repos await Phase 2.6 ratchet-down (deployment-api 27, execution
-   33, UTL 23, batch-live-recon 7, UAC 5, UI 4, features-service 2, strategy-service 2); L1↔L4 parity
-   zero-drift verified; L2 features-* templates migrated to `resolve_bucket`. Workspace-flip Done-def #6
-   (full grep-audit table) deferred-after Phase 2.6 with named successor. (refactor 0.4×, ~4 = 1.6 cal —
-   bulk deferred-after Phase 2.6)
-5. 🔄 **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) —
-   Slot-8 audit 2026-05-15 19:05 UTC. Plan has 122 items; cross-cutting subset surfaces 5 actionable items
-   (Phase 2 freeze gate × 6 unchecked, blocked-on-physical-migration), of which slot-8 closeable:
+   deployment-service @0b802ec); 8 baselined repos await Phase 2.6 ratchet-down (deployment-api 27, execution 33, UTL
+   23, batch-live-recon 7, UAC 5, UI 4, features-service 2, strategy-service 2); L1↔L4 parity zero-drift verified; L2
+   features-\* templates migrated to `resolve_bucket`. Workspace-flip Done-def #6 (full grep-audit table) deferred-after
+   Phase 2.6 with named successor. (refactor 0.4×, ~4 = 1.6 cal — bulk deferred-after Phase 2.6)
+5. 🔄 **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) — Slot-8
+   audit 2026-05-15 19:05 UTC. Plan has 122 items; cross-cutting subset surfaces 5 actionable items (Phase 2 freeze gate
+   × 6 unchecked, blocked-on-physical-migration), of which slot-8 closeable:
    - ✅ **Stamp-lag fix for `defi-data-type-taxonomy.md`** — already naturally absorbed; doc shows
      `last_reviewed: 2026-05-15` with prior 2026-05-12 stamp acknowledged in body. Flipped in plan body.
    - 🟡 **5 NEW gap-2.6.A through gap-2.6.E (Phase 2.6 detailed playbook)** — slot 8 / slot 3 carry; deployment-service
-     surface. Owners TBD; remains open as physical-migration work for the 2026-05-15→05-19 window. Routed to
-     slot 3 (already shipping Phase 2.6 playbook per `slot_3.md`).
-   - 🟡 **Codex audit for 11 Phase 1.A/1.B/1.C plans (P2)** — depth-audit follow-up beyond slot-6 day-1 breadth;
-     not blocking; carry into post-cutover sweep.
-   - 🟡 **TradFi 4.3% phantom audit triage (P2)** — no named owner; routed to `tradfi_master_2026_05_07.md`
-     § "Port phantom-audit" P0 todo; POST-CUTOVER scope per plan body.
+     surface. Owners TBD; remains open as physical-migration work for the 2026-05-15→05-19 window. Routed to slot 3
+     (already shipping Phase 2.6 playbook per `slot_3.md`).
+   - 🟡 **Codex audit for 11 Phase 1.A/1.B/1.C plans (P2)** — depth-audit follow-up beyond slot-6 day-1 breadth; not
+     blocking; carry into post-cutover sweep.
+   - 🟡 **TradFi 4.3% phantom audit triage (P2)** — no named owner; routed to `tradfi_master_2026_05_07.md` § "Port
+     phantom-audit" P0 todo; POST-CUTOVER scope per plan body.
    - 🟡 **Phase 2 freeze gate × 6 items** — blocked on physical migration (Phase 2.0-2.6 window 05-15→05-19).
-   Audit-summary flip; substantive items routed/blocked. (research 1.2×, ~3 = 3.6 cal)
+     Audit-summary flip; substantive items routed/blocked. (research 1.2×, ~3 = 3.6 cal)
 6. ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
    Execution-Owner SSOT gap codified at `unified-trading-pm@7ef2ecdb`. Ships
-   `scripts/quality_gates/check_runbook_execution_owner.py` + baseline (9 violations) + PM `quality-gates.sh`
-   wiring (ratchet mode — fails on regression). Verified: basedpyright clean, ruff clean, smoke exit 0.
-   Future PRs ratchet down by adding the 4-field `execution:` block to the 9 baselined runbooks. Group A.1
-   todo flipped in the governance plan body. (design 0.6×, ~3 = 1.8 cal)
-7. 🔄 **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9). **Slot-8 partial 2026-05-15**:
-   Phase 4 item 1 (codex docs) ✅ SHIPPED at `unified-trading-pm@52cf9627` —
-   `codex/02-data/data-status-drilldown.md` §5 documents preview + auto-launch modes with full IAM /
-   rate-limit / audit-log / idempotency / correlation-id / tarball-refresh contract. **7 items still open**:
-   Phase 2 (4 P0 deployment-api endpoint + idempotency + event correlation + rate-limiter) `BLOCKED-UPSTREAM`
-   on Firestore rate-limit state infra + BigQuery audit-log infra (Phase 0 Decision 2+3 ratified 2026-05-08
-   but supporting infra still in design); Phase 3 (2 P0 UI) gated on Phase 2 endpoint; Phase 4 item 2 (P2
-   final closeout) gated on Phase 0-3 + 7-day soak. (infra 0.8×, ~3 = 2.4 cal — partial: doc shipped,
-   endpoint deferred)
+   `scripts/quality_gates/check_runbook_execution_owner.py` + baseline (9 violations) + PM `quality-gates.sh` wiring
+   (ratchet mode — fails on regression). Verified: basedpyright clean, ruff clean, smoke exit 0. Future PRs ratchet down
+   by adding the 4-field `execution:` block to the 9 baselined runbooks. Group A.1 todo flipped in the governance plan
+   body. (design 0.6×, ~3 = 1.8 cal)
+7. 🔄 **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9). **Slot-8 partial 2026-05-15**: Phase 4
+   item 1 (codex docs) ✅ SHIPPED at `unified-trading-pm@52cf9627` — `codex/02-data/data-status-drilldown.md` §5
+   documents preview + auto-launch modes with full IAM / rate-limit / audit-log / idempotency / correlation-id /
+   tarball-refresh contract. **7 items still open**: Phase 2 (4 P0 deployment-api endpoint + idempotency + event
+   correlation + rate-limiter) `BLOCKED-UPSTREAM` on Firestore rate-limit state infra + BigQuery audit-log infra (Phase
+   0 Decision 2+3 ratified 2026-05-08 but supporting infra still in design); Phase 3 (2 P0 UI) gated on Phase 2
+   endpoint; Phase 4 item 2 (P2 final closeout) gated on Phase 0-3 + 7-day soak. (infra 0.8×, ~3 = 2.4 cal — partial:
+   doc shipped, endpoint deferred)
 8. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
-   `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`.
-   Verified 15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`.
-   (refactor 0.4×, ~2 = 0.8 cal)
-9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped
-   canonical `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision:
-   independently built Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue
-   doc flipped at `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler
-   fire on 2026-05-16 00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`.
-   Backfill of pre-cron dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC).
-   (infra 0.8×, ~2 = 1.6 cal)
+   `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`. Verified
+   15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`. (refactor 0.4×, ~2 = 0.8 cal)
+9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped canonical
+   `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision: independently built
+   Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue doc flipped at
+   `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler fire on 2026-05-16
+   00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`. Backfill of pre-cron dates
+   remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal)
 10. **Reserve**: in-stack pickup for any UAC drift surfacings.
 
 ---
