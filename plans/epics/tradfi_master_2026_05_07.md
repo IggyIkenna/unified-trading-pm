@@ -182,8 +182,10 @@ respective umbrellas.
       FRESH — actionable] — ✅ `strategy-service@c0627fe` 2026-05-15: `_is_regular_session()` via UAC
       `classify_session()` gating off-session ticks in `_tick_one_engine`;
       `TRADFI_DEFAULT_PARAMS={"respect_market_hours":"true"}` added as SSOT in `archetype_defaults.py`; 14 unit tests.
-- [ ] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason. [AUDIT 2026-05-07:
-      FRESH — actionable]
+- [x] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason. [AUDIT 2026-05-07:
+      FRESH — actionable] **SHIPPED 2026-05-15**: `instruments-service@c3782ba` — `reject_expired=True` default in
+      `build_futures_contracts`; EXPIRED/SETTLED contracts emit WARNING + skip; `reject_expired=False` bypass for
+      historical backfill. 4 new tests (EXPIRED rejected, SETTLED rejected, ACTIVE passes, bypass flag).
 - [ ] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log. [AUDIT
       2026-05-07: IN-FLIGHT verification — `mdps-tradfi-2021/22/23/24/25` VMs RUNNING (T+22h, ETA 2026-05-08); event
       stream + manifest will show pre-skip behavior post-drain]
