@@ -78,6 +78,21 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
    written (currently absent), it should reference this doc + the `accepted_perp_collateral()` helper as the filter
    SSOT. Tracked in master-plan Group F.
 
+## Per-cell backtest verdicts (Phase 12)
+
+Backtest scenario taxonomy for cells using LST collateral:
+[recursive-borrow-backtest-scenarios-2026-05.md](recursive-borrow-backtest-scenarios-2026-05.md).
+
+Category B scenarios that directly test collateral-acceptance correctness:
+
+- `SCN-B1-FLASH-CRASH-LST-DEPEG` — validates that 3% wstETH depeg does not liquidate cells where venue LTV margin still
+  holds
+- `SCN-B4-CBETH-PEG-COINBASE` — validates cbETH bridge-risk alerting fires before collateral value drops below
+  acceptance threshold at each venue
+
+Venue-collateral rows with `accepted=True` in the tables above are the cells exercised by these scenarios. Venues with
+`accepted=False` (HL, Binance, Aster, GMX) are skipped in Category B.
+
 ## Composes with
 
 - `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` — the SSOT this doc cites.
@@ -85,3 +100,5 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
   (relevant for the live-API probe follow-up).
 - `unified-trading-pm/plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — the
   canonicalisation plan that defines Stream A.
+- [recursive-borrow-backtest-scenarios-2026-05.md](recursive-borrow-backtest-scenarios-2026-05.md) — Phase 12 scenario
+  taxonomy; per-cell verdict matrix; harness shape.

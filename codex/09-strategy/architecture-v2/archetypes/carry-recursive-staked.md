@@ -124,11 +124,11 @@ CARRY_RECURSIVE_STAKED@jito-kamino-sol-prod            (SOL on Kamino)
 | `defi/recursive-staked-basis.md`  | Direct match                   |
 | Code: `recursive_staked_basis.py` | → `CarryRecursiveStakedEngine` |
 
-> **Sibling archetypes (Family 1/2 — added 2026-05-12):** Family 1 + Family 2 are
-> distinct enum members consuming the recursive-loop infrastructure with different
-> leg composition. See [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md)
-> (Family 1; no perp leg) + [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
-> (Family 2; USDC-margined perp short for delta neutrality across HL + Bybit).
+> **Sibling archetypes (Family 1/2 — added 2026-05-12):** Family 1 + Family 2 are distinct enum members consuming the
+> recursive-loop infrastructure with different leg composition. See
+> [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md) (Family 1; no perp leg) +
+> [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md) (Family 2; USDC-margined perp short for
+> delta neutrality across HL + Bybit).
 
 ## Not in this archetype
 
@@ -136,8 +136,25 @@ CARRY_RECURSIVE_STAKED@jito-kamino-sol-prod            (SOL on Kamino)
 - **Non-recursive staked basis** (one stake + one perp hedge, no loops) — `CARRY_STAKED_BASIS`
 - **Pure lending rotation** (no staking leg) — `YIELD_ROTATION_LENDING`
 - **Liquidation snipe during cascade** — `LIQUIDATION_CAPTURE`
-- **Pure recursive lending arb** (no staking yield, no perp) → [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md)
-- **Delta-hedged recursive borrow** (Family 1 + USDC perp short) → [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
+- **Pure recursive lending arb** (no staking yield, no perp) →
+  [carry-recursive-borrow-lending-only.md](carry-recursive-borrow-lending-only.md)
+- **Delta-hedged recursive borrow** (Family 1 + USDC perp short) →
+  [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
+
+## Backtest scenarios
+
+14 scenarios gate every cell from `design-shipped` → `live-ready`. Full taxonomy in
+[../../../16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md](../../../16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md).
+
+Key Category B scenarios relevant to this archetype's LST peg-deviation risk:
+
+- `SCN-B1-FLASH-CRASH-LST-DEPEG`: wstETH/ETH −3% in 1 block
+- `SCN-B3-WSTETH-PEG-EXTREME`: wstETH/ETH −8% (slashing)
+- `SCN-B4-CBETH-PEG-COINBASE`: cbETH/ETH −5%
+- `SCN-B5-ORACLE-STALE-24H`: Chainlink 24h staleness
+
+Oracle-deviation features: `ChainlinkPegDeviationCalculator` (`"chainlink_peg_deviation"`) in
+`features-service/features_service/onchain/app/calculators/`.
 
 ## See also
 
@@ -148,3 +165,5 @@ CARRY_RECURSIVE_STAKED@jito-kamino-sol-prod            (SOL on Kamino)
   [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
 - Venue collateral rules (LTV, haircut):
   [../../../02-venues/venue-registry-reference.md](../../../02-venues/venue-registry-reference.md)
+- Backtest scenarios (Phase 12):
+  [../../../16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md](../../../16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md)

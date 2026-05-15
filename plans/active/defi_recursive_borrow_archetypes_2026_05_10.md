@@ -946,9 +946,10 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 - [x] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. (01fb8d73 features-service
       2026-05-15)
-- [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
-      spec above.
-- [ ] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
+- [x] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
+      spec above. (c5a25181 unified-trading-pm 2026-05-15)
+- [x] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
+      (c5a25181 unified-trading-pm 2026-05-15)
 
 ### Cross-plan annotations needed (Findings Triage)
 
