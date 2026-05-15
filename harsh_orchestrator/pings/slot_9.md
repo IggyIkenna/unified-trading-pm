@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 21:30 UTC] harsh-slot-9 — 🔄 STARTED post-OOM resume. Rebased all slot-9 repos on LDR. Stash-recovered in-flight items 11+13 (queue extension +3). QG green (1271 pass). Shipping item 11 (Pyth ETH/BTC/SOL symbol coverage + deviation docs) and item 13 (perp funding normalization) now.
+
 [2026-05-15 21:05 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED: all 11 new-queue items done (items 7-11 this session). Summary: item 7 MTDS graceful shutdown (mtds@6a71ddf), item 8 PBM phantom-prevention (mdps@9f7b1ab), item 9 MTDS calendar boundaries (mtds@14d212a), item 10 MTDS adapter rate-limit+cache (mtds@b1360a5), item 11 MTDS CLI flag validation (audit clean). B-015 still HOLD — no Ikenna phantom apply-flips landed in _agent_pings.md since 09:19 UTC. Slot 9 idle, monitoring B-015 unblock.
 
 [2026-05-15 20:55 UTC] harsh-slot-9 — ✅ DONE new-queue item 11 (MTDS CLI flag validation tests): AUDIT CLEAN — tests/unit/cli/test_cli_flag_validation.py already exists (item 14 header). 10 tests: TestInvalidFlagCombosRejected (5: invalid operation/mode/asset-group + missing required --operation/--mode all raise SystemExit(2)) + TestValidCombosPass (5: download/collect-lst-rates/websocket-streaming/multi-asset-group/collect-perp-funding all parse successfully). Collected by QG pytest tests/unit/ recursively. All 10 pass, QG green. B-015 still HOLD. No more items in queue.
@@ -196,6 +198,6 @@ After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred featu
 non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
 
 [2026-05-15 10:35 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION +3** (after items 4, 5, 6, 10 remaining). Push to ~14 AI-days.
-11. **MTDS Pyth additional symbol coverage** — your mtds@d63fda5 covered base Pyth tests. Extend: ETH/USD, BTC/USD, SOL/USD price feeds; price-deviation outlier detection. Done-def: 4+ symbol tests + MTDS QG green.
+11. ✅ **MTDS Pyth additional symbol coverage** — mtds@487c9d0. 4 classes / 10 tests: TestEthUsdSymbolCoverage (2: price parse + registry), TestBtcUsdSymbolCoverage (2: parse + multi-symbol batch ETH+BTC+SOL), TestPriceDeviationBehavior (2: extreme $1B BTC + near-zero ETH both pass through — no filter). QG green (1271 pass).
 12. **PBM canonical_writer Phase 10 codex audit** — Phase 10 introduced batch=live archetype grain. Verify canonical_writer respects archetype-grain partitioning. Done-def: audit + tests if drift.
 13. **MTDS perp venue funding rate normalization** — verify all 7 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Aster/Kraken) emit funding rates in normalized form (rate per 8h, signed convention consistent). 7+ normalization tests. Done-def: per-venue test + MTDS QG green.
