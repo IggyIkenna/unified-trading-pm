@@ -268,9 +268,16 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
      features-onchain can produce data. Operator decision pending: (a) declare B-015 verified on Smoke A
      alone + ship MDPS DEFI batch as separate task, OR (b) run MDPS first then re-run features-onchain.
    Coordination DONE on slot-8 side. (infra 0.8×, ~2 = 1.6 cal)
-2. **`solana_defi_coverage_gaps` successor D venue naming reconciliation** (carry from 14 May #2). (design 0.6×,
-   ~3 = 1.8 cal)
-3. **`AUDIT_pre_may_8_cleanup_2026_05_13` close** (carry from 14 May #3). (refactor 0.4×, ~3 = 1.2 cal)
+2. ✅ **`solana_defi_coverage_gaps` successor D venue naming reconciliation** (carry from 14 May #2). All phases
+   landed by slot-3 2026-05-15: Phase 1 `instruments-service@2639f8e` (migration + 7 unit tests), Phase 2 dry-run
+   (169 Cat A phantom + 59 Cat B), Phase 3 migration ran locally with ADC admin perms (`rows_phantom_marked=228`,
+   backup at `availability_index.20260515-135146.bak.parquet`), Phase 4 codex update
+   `unified-trading-pm@02efcea5`. Verified bare-name venues `captured=0`, PROTOCOL-SOLANA rows
+   `empty_confirmed`. Plan flipped at `unified-trading-pm@d526b8cb`. (design 0.6×, ~3 = 1.8 cal)
+3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13` close** (carry from 14 May #3). All 3 flagged items already resolved
+   by other agents during the 14 May audit pass: (a) wave3x Track D EXPECTED_KNOWN_SOURCE_GAP shipped
+   `UAC@174f401` (status table already `done`); (b) launcher_scripts Phases 2/3 annotated DEFERRED-PER-AUDIT at
+   `PM@724a2029`; (c) deployment_ui_lifecycle_tabs A.2 false positive corrected. (refactor 0.4×, ~3 = 1.2 cal)
 4. **`bucket_name_ssot_canonicalisation_2026_05_10` workspace flip** (carry from slot 9 #7) — remaining
    call-site sweep + QG ratchet enforcement. (refactor 0.4×, ~4 = 1.6 cal)
 5. **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) —
