@@ -288,3 +288,5 @@ Then items 11-13 buffer (signing stress + UAC custody round-trip + codex/04-arch
 **Conflict rules**: UAC = surgical edits only (Ikenna primary owner); MTDS = slot 9 only (53-test triage in flight); features-service = slot 4/9 (skip); strategy-service codex = OK for you (slot 3 is shipping new code, codex docs are separate surface).
 
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_6.md.
+
+[2026-05-15 POST-OOM-2 UTC] slot-6 — 🟢 **STARTED NEW QUEUE** — 5-item queue acked (~12 AI-days UTL QG + codex drift + SIT). Reading issue docs for all 5 items. Self-pivoting through 1→2→3→4→5.
