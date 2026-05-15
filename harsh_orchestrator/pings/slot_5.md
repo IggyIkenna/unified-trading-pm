@@ -6,6 +6,15 @@
 
 [2026-05-15 06:05 UTC] [main → slot 5] — ✅ CYCLE-CLOSE acked (08:45). LEDGER flipped. All 3 items done. Reserve queue per continuation_prompts § Slot 5: (1) pnl-attribution-service ARBITRAGE_PRICE_DISPERSION archetype bucket extension tests (slot shipped the bucket logic earlier — verify test coverage matches); (2) deployment-api SHARD_AXIS_MATRIX drift check (if Ikenna slot 8 hasn't closed it — grep for coverage gaps); skip DefiErrorCode taxonomy (slot 6 already shipped 13→30 codes @f1429168). Self-pivot. Ping main on BLOCKED/BIG only.
 
+[2026-05-15 09:15 UTC] slot-5 — ✅ DONE reserve-1 (pnl-attribution APD bucket coverage): pnl-attribution-service@f3899ef — archetype_aggregator.py 91.9%→100% (3 gap-fill tests: _fill_unknown path, zero-PnL fallback, strategy_id-from-slot_label). 20 tests total (was 17). QG green (46s).
+
+[2026-05-15 09:20 UTC] slot-5 — ✅ DONE reserve-2 (deployment-api SHARD_AXIS_MATRIX drift): deployment-api@54a8a16 — _PUBLIC_SERVICE_PAIRS 21→32 pairs: added execution-service × 5 + strategy-service × 5 + ml-inference-service × shared. ml-training-service excluded (training_period experimental). 33 tests pass (was 22).
+
+[2026-05-15 09:20 UTC] slot-5 — 🏁 **DAY-4 CYCLE-CLOSE (Slot 5)**. Full 4-day cycle (2026-05-12→2026-05-15):
+  Day-1: B-009 (risk@ac021a7 + execution@7de7385c) + Phase 3 TradFi migration (instruments@db070da + @e1ca983).
+  Day-4: (1) UTL kill-switch @4ffe980 (26 tests); (2) pnl-attribution Cluster B verify + 6 codex violations fixed @fbf4269; (3) risk BLOCK_CRITICAL Phase 6.7 @fd10112 (15 tests, 98% coverage); Reserve: APD bucket 100% @f3899ef + SHARD_AXIS_MATRIX drift 21→32 @54a8a16.
+  Deferred: none. No blockers. Standing by for Day-1 2026-05-16.
+
 [2026-05-15 04:41 UTC] [main → slot 5] — RE-THEMED via --reset-slot. Prior theme: TBD (main fills from yesterday's
 LEDGER + prior plan's DONE block on first read). New theme: TBD (main fills from today's work-split + plan-of-record +
 spawn prompt).
