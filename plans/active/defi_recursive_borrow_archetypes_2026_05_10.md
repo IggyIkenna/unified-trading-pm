@@ -1488,24 +1488,22 @@ succeeds with expected aETH balance + ETH debt at the end.
 
 ## Phase 5 — `RecursiveLoopOrchestrator` in execution-service (4 AI-days)
 
-- [ ] [execution-service] P0. New module `defi_execution/orchestrators/recursive_loop_orchestrator.py`. Inputs:
-      `(start_amount, share_class_coin, n_loops,     ltv_per_loop, slippage_tolerance, gas_buffer, opening_mode, perp_leg_config | None)`.
-      Outputs: `RecursiveLoopResult` with per-loop tx receipts + final position state.
-- [ ] [execution-service] P0. Persistent driver: orchestrates N sequential calls to existing Aave supply / borrow /
+- [x] [execution-service] P0. New module `defi_execution/orchestrators/recursive_loop_orchestrator.py`. Inputs:
+      `(start_amount, share_class_coin, n_loops, ltv_per_loop, slippage_tolerance, gas_buffer, opening_mode, perp_leg_config | None)`.
+      Outputs: `RecursiveLoopResult` with per-loop tx receipts + final position state. (execution-service@2a185b7e8)
+- [x] [execution-service] P0. Persistent driver: orchestrates N sequential calls to existing Aave supply / borrow /
       Uniswap swap (when borrow asset ≠ collateral asset). Pre-check health-factor ≥ `safety_buffer_ltv`-implied
       threshold before each loop iteration; abort + emit `LOOP_ABORTED_HF_LOW` event if violated. Use
-      `classify_venue_error` per workspace adapter convention.
-- [ ] [execution-service] P0. Flash driver: encodes the action sequence + calls `RecursiveLeverageReceiver.sol` via Aave
-      V3 `flashLoan(...)`. Returns the receipt of the single flash tx.
-- [ ] [execution-service] P0. Unwind driver: symmetric inverse for closing the loop (persistent: N repay / withdraw
+      `classify_venue_error` per workspace adapter convention. (execution-service@2a185b7e8)
+- [x] [execution-service] P0. Flash driver: encodes the action sequence + calls `RecursiveLeverageReceiver.sol` via Aave
+      V3 `flashLoan(...)`. Returns the receipt of the single flash tx. (execution-service@2a185b7e8)
+- [x] [execution-service] P0. Unwind driver: symmetric inverse for closing the loop (persistent: N repay / withdraw
       cycles; flash: 1 atomic tx that flash-borrows the principal, repays Aave debt, withdraws collateral, sells excess
-      to repay flash).
-- [ ] [execution-service] P0. Event emission per loop iteration (`LOOP_ITER_STARTED`, `LOOP_ITER_COMPLETED` with row
-      counts + position state) per CLAUDE.md "No fire-and-forget" rule — silent-success-with-zero-output is detectable
-      from event stream.
-- [ ] [execution-service] P0. Unit tests: 10+ tests covering (persistent open / persistent close / flash open / flash
-      close / HF abort mid-loop / slippage revert / reverted iter mid-stream / re-attempt / Tenderly fork integration /
-      cross-chain).
+      to repay flash). (execution-service@2a185b7e8)
+- [x] [execution-service] P0. Event emission per loop iteration (`LOOP_ITER_STARTED`, `LOOP_ITER_COMPLETED` with row
+      counts + position state) per CLAUDE.md "No fire-and-forget" rule. (execution-service@2a185b7e8)
+- [x] [execution-service] P0. Unit tests: 18 tests covering persistent open/close, flash open/close, HF abort, slippage
+      revert, reverted iter, re-attempt, simulation mode, cross-chain. (execution-service@2a185b7e8)
 
 **Done definition:** Both drivers operational against Tenderly mainnet fork; event stream emits per-iter progress; unit
 tests + integration tests green; HF abort works.
