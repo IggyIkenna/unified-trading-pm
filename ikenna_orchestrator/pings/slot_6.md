@@ -325,3 +325,32 @@ Your stack just got new items.
 
 Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
 (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+## [main → slot 6] 2026-05-15 08:30 UTC — 🔴 TOP PRIORITY: manifest v8 Phase 6 + Phase 7 (May 13-15 window IS NOW)
+
+Per audit of `manifest_schema_final_gate_2026_05_09.md`: Phases 1-5 all ✅ done (UAC + UTL + cross-asset rescan +
+consumer sweep + bundled migration script). Phases 6-7 still OPEN, both `[HUMAN+AGENT] P0`.
+
+You own this plan (per the `Decision needed (ikenna-slot-6 / this plan owner)` annotation in plan body).
+**We are 2 days into the May 13-15 operator-gated window for Phase 7.**
+
+Action (added as item #14 in work_split § Slot 6):
+
+1. **Phase 6 — Bounce-sweep**: list all running MTDS/MDPS/instruments/features VMs; confirm STOPPED or
+   graceful shutdown. `gcloud compute instances list --project=central-element-323112 --filter="status=RUNNING"`
+2. **Phase 7.A pre-flight check**: Phase 1-5 shipped + QG green workspace-wide + Phase 6 drain confirmed.
+3. **Phase 7.B snapshot**: per-bucket index snapshot (5 buckets: raw-tick across asset_groups).
+4. **Phase 7.C launch fleet**: per-bucket 4-8 migration VMs in asia-northeast1-c; `MANIFEST_PER_VM_SHARDS=true`
+   + unique `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
+5. **Phase 7.D-E**: watch event stream + manifest consolidator running.
+6. **Phase 7.F**: per-asset-group QA gate (reconcile_phantom_manifest_rows_all.py — phantom count MUST be 0).
+7. **Phase 7.G**: **operator hands needed** — sign-off per asset_group (5 sub-checkboxes). Cross-ping main when
+   each asset_group's QA gate green; operator will sign each off.
+
+This is the v8 cutover-critical work. **Bump above any current slot 6 in-progress.** Cross-ping slot 1 main
+when (a) bounce-sweep complete, (b) migration fleet launched, (c) each asset_group hits QA gate green.
+
+Backup: if Phase 6 surfaces foreign-owned VMs you don't recognize, post a one-line BLOCKED in pings/slot_6.md
+and main will coordinate.

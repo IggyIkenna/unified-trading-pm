@@ -383,7 +383,34 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
     `unified-api-contracts@215ed3e` (USDC/USDT/DAI/WBTC/wstETH/rETH V2-ABI-verified params); issue doc update in
     `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run. Remaining:
     operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
-13. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
+14. **🔴 [TOP-PRIORITY 2026-05-15] `manifest_schema_final_gate_2026_05_09.md` Phase 6 + Phase 7 — v8 GCS bundled walk (May 13-15 window — WE ARE IN IT NOW)** —
+    slot 6 is the manifest plan owner (per `**Decision needed (ikenna-slot-6 / this plan owner)**` annotation in plan body).
+    Phases 1-5 ✅ DONE (UAC + UTL + cross-asset rescan + consumer sweep across 8 repos + bundled migration script all
+    landed by 2026-05-12). Phases 6-7 are the live work for THIS WINDOW.
+
+    **Phase 6 — Bounce-sweep #1 (drain stale VMs)** [HUMAN+AGENT P0]:
+    (a) `gcloud compute instances list --project=central-element-323112 --filter="status=RUNNING"` — cross-reference
+    against `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`; (b) for each in-flight MTDS/MDPS/instruments/features VM,
+    confirm STOPPED (or trigger graceful shutdown if hung); (c) ping operator for any operator-only kills (none expected
+    — ADC admin covers).
+
+    **Phase 7 — GCS Phase 3 bundled walk (May 13-15 operator-gated)** [HUMAN+AGENT P0]:
+    7.A pre-flight: Phase 0.A artifact current + Phase 1-5 shipped + QG green + Phase 6 drain done.
+    7.B snapshot: per-bucket `gcloud storage cp -r gs://{pid}-raw-tick/_index/ gs://{pid}-pre-migration-snapshot/raw-tick-2026-05-15/_index/`.
+    7.C launch migration VM fleet per `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 3 spec — per-bucket 4-8 VMs,
+    asia-northeast1-c, `MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`.
+    7.D event-stream watch — MIGRATION_VM_STARTED within 60s + per-parquet progress + STOPPED per VM (no-fire-and-forget).
+    7.E manifest consolidator runs continuously; per-VM shards merge via last-writer-wins.
+    7.F per-asset-group QA gate — re-run `reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group;
+    phantom count MUST be 0 (was 354 residual pre-bundle).
+    7.G operator sign-off per asset_group (5 sub-checkboxes: cefi / defi / tradfi / sports / prediction) — **OPERATOR
+    INTERACTION REQUIRED** to verify each asset_group's bundled-walk output before signing.
+
+    **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted.
+    **Coordination**: Phase 7.A-7.F can be agent-driven (slot 6); Phase 7.G needs operator hands per-asset-group. Phase
+    8 (cross-asset rescan triage review May 15) is the immediate successor — slot 1 main owns the triage. (infra 0.8×,
+    ~5 = 4.0 cal across Phase 6 + 7 combined; could escalate if Phase 7.D event streams show issues during walk)
+15. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
 
