@@ -138,3 +138,5 @@ deployment-api + deployment-ui remain your repos until CYCLE-CLOSE. Ping DONE pe
 [2026-05-15 17:40 UTC] slot-7 — ✅ DONE queue item 4: deployment-api admin VM endpoints — POST /api/vm/admin/{vm_name}/cancel (archives as failed) + pause (GCS signal blob) + resume (deletes signal); 8 unit tests; QG green. deployment-api@af80be6. Plan Phase 9 extended batch item flipped. Starting item 5: VM log streaming endpoint.
 
 [2026-05-15 17:55 UTC] slot-7 — ✅ DONE queue item 5: deployment-api VM log streaming — GET /api/vm/logs/{vm_name}?tail=N&since=<ts>; VmLogLine + VmLogTailResult models; reuses GCS blob reading from vm_events.py; mock returns 3 events; 4 tests; QG green. deployment-api@13b0194. Plan item flipped. Starting item 6: deployment-ui VM log viewer.
+
+[2026-05-15 18:30 UTC] slot-7 — ✅ DONE queue item 6: deployment-ui VM log viewer — VmLogPanel (10s HTTP polling, loading/error/empty states); Events/Logs tab switcher in /ops/live-deployments; fetchVmLogs() + types in deploymentApi.ts; 4 vitest tests; QG green (62 tests); 3 pre-existing colour exclusions acknowledged. deployment-ui@cb4f2bf. Plan flipped. Starting item 7: deployment-api deployment diff endpoint.
