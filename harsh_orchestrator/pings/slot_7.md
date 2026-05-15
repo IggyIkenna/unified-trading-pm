@@ -162,3 +162,8 @@ deployment-api@3acda8e. Plan flipped.
 component in DeploymentsList; Compare SHAs toggle button (data-testid="toggle-diff-btn"); form inputs + submit;
 added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green.
 deployment-ui@2c221ac. Plan flipped. Starting item 9: deployment-api cost estimate endpoint.
+
+[2026-05-15 19:45 UTC] slot-7 — ✅ DONE queue item 9: deployment-api cost estimate endpoint — POST
+/api/vm/cost-estimate; VmCostEstimateRequest + VmCostEstimateResponse models; n1/n2 GCP pricing table for
+asia-northeast1; compute+disk breakdown; count multiplier; unknown machine type fallback with flag; 9 unit tests; QG
+green. deployment-api@d3a001a. Plan flipped. Starting item 10: deployment-ui cost estimate panel.

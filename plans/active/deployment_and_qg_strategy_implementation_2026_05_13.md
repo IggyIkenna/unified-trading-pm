@@ -508,8 +508,9 @@ Sourced from orchestrator ping [2026-05-15 11:15 UTC] extended queue (items 4-13
 - [x] [AGENT] P0. **deployment-ui deployment diff viewer** — side-by-side diff panel accessible from the deployments
       list. Done-def: component + vitest green + pnpm build green. ✅
       _deployment-ui@2c221ac_ (DeploymentDiffPanel; Compare SHAs toggle; added/removed/changed sections; 6 vitest tests; 672 total tests; QG green)
-- [ ] [AGENT] P0. **deployment-api cost estimate endpoint** — `POST /api/vm/cost-estimate` accepts VM type + hours
-      estimate and returns projected GCP cost. Done-def: endpoint + 3+ tests + QG green.
+- [x] [AGENT] P0. **deployment-api cost estimate endpoint** — `POST /api/vm/cost-estimate` accepts VM type + hours
+      estimate and returns projected GCP cost. Done-def: endpoint + 3+ tests + QG green. ✅
+      _deployment-api@d3a001a_ (vm_cost_estimate.py; n1/n2 pricing table; compute+disk breakdown; count multiplier; unknown type fallback flag; 9 unit tests; QG green)
 - [ ] [AGENT] P0. **deployment-ui cost estimate panel** — before launching a VM, show cost estimate inline in the launch
       form. Done-def: component + vitest green + pnpm build green.
 - [ ] [AGENT] P0. **deployment-ui responsive mobile layout audit** — every route at ≤768px: nav collapses, tables scroll
