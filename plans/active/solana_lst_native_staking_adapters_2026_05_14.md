@@ -154,9 +154,11 @@ This is the only phase that requires a wholly new data_type.
 - [x] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy. (MTDS@1ec3a46 — NativeStakingHandler + \_epoch_for_date +
       \_schedule_rate + \_fetch_live_rates; live RPC for current epoch, deterministic inflation schedule for historical;
-      11 unit tests; wired as collect-native-staking-rates in main.py. BLOCKED-CREDENTIALS: per-validator mev_apy
-      requires Helius API key — ping filed in pings/slot_3.md 2026-05-15. MTDS@b17b51c — cluster_counts key bug fixed:
-      futures_chain now tracked separately from options_chain; resolves 2 pre-existing test failures.)
+      11 unit tests; wired as collect-native-staking-rates in main.py. MTDS@b17b51c — cluster_counts key bug fixed. ✅
+      MTDS@348c171 — Helius wire-in: \_get_helius_api_key() via get_secret_client(); \_fetch_vote_accounts() top-200 by
+      activatedStake; per-validator rows with commission_pct when key present; AGGREGATE fallback without key; 15 unit
+      tests pass. BLOCKED-CREDENTIALS status lifted — scaffold ships; integration test @pytest.mark.requires_credentials
+      skips until [ack] from operator.)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC + instruments-service + MTDS.
 
