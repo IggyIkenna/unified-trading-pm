@@ -105,12 +105,16 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
 4. ✅ **`defi_catalogue_chain_primitives_2026_05_10` Phase 1A** — chain-primitive UAC capability matrix. (design 0.6×,
    ~5 = 3.0 cal) **DONE (Phase 1A only)** (uac@`00d526c`): 26 new DEFI_VENUE_DATA_TYPE_CAPABILITIES entries for Phase 1A
    protocols (vaults/LSTs/restaking/DEX aggregator). Phase 2+ (IS adapters, MTDS handlers) remain open in the plan.
-5. **`solana_defi_coverage_gaps` successor plan B — Lido / Marinade / Jito LST** — design + first-phase ship. (design
-   0.6×, ~4 = 2.4 cal)
+5. ✅ **`solana_defi_coverage_gaps` successor plan B — Lido / Marinade / Jito LST** — design + first-phase ship. (design
+   0.6×, ~4 = 2.4 cal) **DONE** (IS Phases 1-5 of `solana_lst_native_staking_adapters_2026_05_14.md` shipped in previous
+   session): SolanaNativeStakingAdapter + SANCTUM (INF/jupSOL/laineSOL) + Marinade adapters shipped. Phase 6 (backfill)
+   BLOCKED-OPERATOR-ACK per ping in pings/slot_2.md.
 6. **`basefc_validation_flip_2026_05_10`** — close out validation flip per plan body. BLOCKED on
    `features_repo_consolidation_2026_05_08.md` Phase 6 parity-green (pre-req not met). (refactor 0.4×, ~3 = 1.2 cal)
-7. **`cross_asset_group_catalogue_audit` Phase 6A DeFi half** — DeFi-specific catalogue parity audit (different from
-   Harsh slot 7's 6C UI half). (research 1.2×, ~3 = 3.6 cal)
+7. ✅ **`cross_asset_group_catalogue_audit` Phase 6A DeFi half** — DeFi-specific catalogue parity audit (different from
+   Harsh slot 7's 6C UI half). (research 1.2×, ~3 = 3.6 cal) **DONE** (pre-existing per
+   cross_asset_group_catalogue_audit_2026_05_10.md line 469 [x] and table ✅ DONE row): Phase 6A workspace-grep audit +
+   `check_chain_set_inclusion.py` QG ratchet (STEP 5.72) shipped Wave 4 2026-05-13.
 8. ✅ **`utl_qg_preexisting_failures_2026_05_14` P1** — diagnose-first per Findings Triage; fix code-side or test-side
    per contract reading. (research 1.2×, ~3 = 3.6 cal) **DONE (STEP 5.5 fix shipped)**: UTL STEP 5.5
    `instrument_lifecycle_loader.py` cloud SDK import fixed (UTL@`ac223da9`). Remaining items diagnosed: backward-compat
