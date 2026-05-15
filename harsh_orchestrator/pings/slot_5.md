@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 10:45 UTC] slot-5 — ✅ DONE RE-ACTIVATE queue (3 items): STEP 0 (all repos clean rebase). Item 1 (execution-service DefiErrorCode coverage): execution-service@69d02cb0 — all 30 codes tested with FAIL/RETRY/SKIP routing: +14 tests TestAaveErrorRouting (classify_venue_error aave_v3, 11×FAIL/2×RETRY/1×SKIP) + 3 RECURSIVE_LOOP FAIL tests (flash_receiver_not_found, flash_repayment_insufficient, partial_open_no_unwind_funds) — 84→98 comprehensive + 15→18 orchestrator. QG ✅. Items 2+3 already shipped per prior cycle (pnl-attribution@f3899ef + deployment-api@54a8a16). Queue exhausted — standing by.
+
 [2026-05-15 06:05 UTC] [main → slot 5] — ✅ CYCLE-CLOSE acked (08:45). LEDGER flipped. All 3 items done. Reserve queue per continuation_prompts § Slot 5: (1) pnl-attribution-service ARBITRAGE_PRICE_DISPERSION archetype bucket extension tests (slot shipped the bucket logic earlier — verify test coverage matches); (2) deployment-api SHARD_AXIS_MATRIX drift check (if Ikenna slot 8 hasn't closed it — grep for coverage gaps); skip DefiErrorCode taxonomy (slot 6 already shipped 13→30 codes @f1429168). Self-pivot. Ping main on BLOCKED/BIG only.
 
 [2026-05-15 09:15 UTC] slot-5 — ✅ DONE reserve-1 (pnl-attribution APD bucket coverage): pnl-attribution-service@f3899ef — archetype_aggregator.py 91.9%→100% (3 gap-fill tests: _fill_unknown path, zero-PnL fallback, strategy_id-from-slot_label). 20 tests total (was 17). QG green (46s).
