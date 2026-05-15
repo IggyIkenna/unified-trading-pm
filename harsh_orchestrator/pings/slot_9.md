@@ -188,3 +188,8 @@ after slot 4 features-service close-out ping.
 
 After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred features-service item = ~24 AI-days
 non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
+
+[2026-05-15 10:35 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION +3** (after items 4, 5, 6, 10 remaining). Push to ~14 AI-days.
+11. **MTDS Pyth additional symbol coverage** — your mtds@d63fda5 covered base Pyth tests. Extend: ETH/USD, BTC/USD, SOL/USD price feeds; price-deviation outlier detection. Done-def: 4+ symbol tests + MTDS QG green.
+12. **PBM canonical_writer Phase 10 codex audit** — Phase 10 introduced batch=live archetype grain. Verify canonical_writer respects archetype-grain partitioning. Done-def: audit + tests if drift.
+13. **MTDS perp venue funding rate normalization** — verify all 7 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Aster/Kraken) emit funding rates in normalized form (rate per 8h, signed convention consistent). 7+ normalization tests. Done-def: per-venue test + MTDS QG green.

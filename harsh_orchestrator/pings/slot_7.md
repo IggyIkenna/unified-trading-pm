@@ -106,3 +106,8 @@ token + QG green.
 bug fixed; QG green. deployment-api@4951d10. Plan Phase 9 item flipped. Starting item 2: Prometheus telemetry endpoint.
 
 [2026-05-15 16:00 UTC] slot-7 — ✅ DONE queue item 2: deployment-api Prometheus telemetry — VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS gauges; /metrics route moved before health_router catch-all; 6 unit tests; QG green. deployment-api@8aabe72. Plan flipped. Starting item 3: deployment-ui WebSocket integration in /ops/live-deployments.
+
+[2026-05-15 10:35 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION +3** (after items 7-10 from fresh queue + Phase 11 work). Push to ~14 AI-days.
+11. **deployment-ui Phase 11 recursive-borrow polish** — your @a3d0516 shipped initial Phase 11; polish: loading states, error states, empty states. Done-def: pnpm build + vitest green + 3+ UX states tested.
+12. **deployment-api request-tracing middleware** — request_id propagation: incoming X-Request-ID → log_event + downstream service calls. Done-def: middleware + tests + QG green.
+13. **deployment-ui responsive mobile layout audit** — every route's mobile breakpoint (≤768px) works: nav collapses, tables scroll, forms stack. Done-def: per-route screenshot audit + fixes + pnpm build green.

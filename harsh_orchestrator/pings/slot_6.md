@@ -234,3 +234,8 @@ swap_router_02, 3 × missing → 9 total missing fixed); (3) test_testnet_contra
 wired into UTL quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ +
 events/ + events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR
 in base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.
+
+[2026-05-15 10:35 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +3 BUFFER** (after items 4-10). Push to ~20 AI-days.
+11. **UTL signing helper concurrent-call stress tests** — KMS/cloud_kms_signer/wallet_signer under N=100 concurrent sign calls; verify no key leak, no race, no partial-sign. Done-def: 3+ stress tests + UTL QG green.
+12. **UAC custody contract round-trip tests** — WalletProvisioningConfig, SigningSurface, CloudKmsConfig: encode → decode → equality. Surgical edits only (Ikenna primary UAC owner). Done-def: round-trip tests + UAC QG green.
+13. **codex/04-architecture full audit pass** — workspace-wide: every doc in codex/04-architecture/ matches shipped code. File one issue doc consolidating drift across docs. Done-def: full pass report.

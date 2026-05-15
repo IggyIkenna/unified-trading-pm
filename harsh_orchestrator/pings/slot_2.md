@@ -367,3 +367,9 @@ audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecy
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
 call. The 3 gsutil lifecycle commands stay queued for an operator session (no IAM/perms issue, just needs operator
 hand). Continue item 3 (VM startup script consolidation) per your STARTED ping. Self-pivot.
+
+[2026-05-15 10:35 UTC] [main → slot 2] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 6-10 + item 4 IAM-gated). Push to ~14 AI-days.
+11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/* reflects Phase 9 shipped patterns (DeFi cost models VM launchers, Phase 10 venue admission); file issue docs per drift. Done-def: audit report.
+12. **VM image build caching audit** — review Cloud Build configs across service repos for cache efficiency (layer ordering, .dockerignore correctness). File issue doc per fixable repo. Done-def: 3+ repos audited.
+13. **deployment-service event sink consolidation** — your audits found multiple emission paths (UEI, GCS direct, pubsub forward). Document the canonical chain in codex/05-infrastructure/event-sink-chain.md. Done-def: doc + 1 trace diagram.
+14. **service-registry drift audit** — verify every VM_PREFIX in vm_zombie_watchdog.py has a corresponding entry in any service-registry / cloud-providers.yaml; file drift. Done-def: 0 orphan prefixes confirmed or drift filed.
