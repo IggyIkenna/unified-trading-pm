@@ -496,7 +496,18 @@ risk-and-exposure lint.
     hardening. (design 0.6×, ~2 = 1.2 cal) — execution-service@5bf0ae522. **Backfilled 2026-05-15.**
 22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
     green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
-23. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+24. **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** — features-onchain
+    `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. (a) COMPOUND_V3 `borrow_apy` is NaN
+    in all 64 rows of `gs://features-onchain-defi-prd-central-element-323112/.../day=2026-04-03/feature_group=lending_rates/`;
+    AAVE_V3 rows correctly populate fractional borrow_apy. Root cause: COMPOUND V3 uses different IRM (base rate +
+    utilization curve, not AAVE reserve-factor model); handler hasn't implemented it. (b) COMPOUND_V3 `asset` column
+    stores Comet contract address (e.g. `0x9c4ec768...`) instead of token name (e.g. `WETH`). (c) KAMINO Solana lending
+    handler missing entirely — P2, depends on Helius credential (already filed). **Fix scope (P1 COMPOUND only)**:
+    features-service COMPOUND_V3 handler computes `borrow_apy` from Comet IRM (`baseBorrowMin` + utilization curve) +
+    normalizes asset via instruments-service lookup or hardcoded ETH-mainnet Comet→token registry. Start with Ethereum
+    WETH Comet (`0xA17581A9E3356d9A858b789D68B4d866e593aE94`); USDC Comet is secondary. KAMINO defers post-May-23.
+    (research 1.2×, ~3 baseline = 3.6 cal)
+25. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 

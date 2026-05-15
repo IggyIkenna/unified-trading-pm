@@ -29,11 +29,12 @@ on `(perp_venue, lst_asset)`; if False, the slot is rejected.
 
 ## Token / position flow — `LST_AS_MARGIN` (only allowed structure)
 
-> **Hedge ratio audit 2026-05-12 (Phase 6A of `defi_simulation_realism_2026_05_10`)** — current hedge sizing is
-> **STATIC** at `eth_qty * (1 - margin_haircut)` (1:1 against LST principal clamped by venue haircut), confirmed at
-> `staked_basis.py:264`. NO per-tick / per-bar adjustment for LST/native peg drift. Phase 6B implementation (Harsh
-> slot 4) introduces dynamic adjustment using LST exchange rate stream (jitoSOL/SOL, mSOL/SOL, bSOL/SOL, rETH/ETH,
-> stETH/ETH, weETH/ETH) with `peg_drift_threshold_bps` hysteresis band (default 25 bps ≈ 3σ daily). Full spec:
+> **Hedge ratio (Phase 6B SHIPPED 2026-05-XX at `strategy-service@d6be15b`)** — hedge sizing is **DYNAMIC**:
+> `eth_qty * lst_native_rate_now * (1 - margin_haircut)`. Per-tick adjustment via `compute_dynamic_hedge_ratio()` in
+> `dynamic_hedge_ratio.py`, called from `on_tick` in `staked_basis.py`. LST exchange-rate stream covers jitoSOL/SOL,
+> mSOL/SOL, bSOL/SOL, rETH/ETH, stETH/ETH, weETH/ETH. `peg_drift_threshold_bps` hysteresis band (default 25 bps ≈ 3σ
+> daily) controls rebalance trigger. Staleness guard: if `lst_native_rate_ts` is >300s old, engine falls back to
+> `lst_native_rate=1.0` and logs a warning. Full spec:
 > [`../../../04-architecture/amm-slippage-simulation.md`](../../../04-architecture/amm-slippage-simulation.md) §
 > "Hedge-ratio dynamic adjustment (Phase 6)".
 
@@ -206,7 +207,21 @@ entry_bps: "200" # net carry must exceed this to enter
 exit_bps: "50" # net carry below this triggers exit
 min_health_factor: "1.25" # gates the perp short against LST-haircut breach
 hedge_deadline_ms: "5000" # perp hedge deadline
+peg_drift_threshold_bps: "25" # Phase 6B dynamic-hedge hysteresis band; rebalance fires when
+                              # |lst_native_rate_now - lst_native_rate_last_rebalance| × 1e4 > this. Default 25 ≈ 3σ daily.
 ```
+
+### Features expected (upstream `features-onchain` must publish)
+
+- `staking_apy_bps` — on-chain rate-diff staking yield (annualised bps)
+- `funding_rate_apy_bps` — perp funding rate (annualised bps)
+- `usdc_idle_yield_apy_bps` — venue-specific USDC margin yield
+- `health_factor` — LST haircut breach gate
+- `lst_native_rate` — LST/native exchange rate (float, default 1.0 fallback) — used by `compute_dynamic_hedge_ratio()`
+  for Phase 6B dynamic hedge sizing
+- `lst_native_rate_ts` — unix timestamp of last `lst_native_rate` observation (float, optional). Staleness guard:
+  if present and `now - lst_native_rate_ts > 300s`, engine falls back to `lst_native_rate=1.0` and logs a warning.
+  Without this key published, the staleness guard never fires.
 
 There is **no** `lending_protocol`, `borrow_asset`, or `borrow_apy_bps` — those belong to the deleted COLLATERAL_BORROW
 path. There is also no SPLIT_STAKE fallback or USDC-margin alternative: if

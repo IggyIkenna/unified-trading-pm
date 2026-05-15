@@ -11,8 +11,9 @@ topology_requirements:
 # Archetype: `ARBITRAGE_PRICE_DISPERSION`
 
 > **Family:** [Arbitrage / Structural Edge](../families/arbitrage-structural.md) **Settlement model:** ATOMIC (when
-> venue supports) or LEADER_HEDGE (when atomic isn't possible). **Code module (target):**
-> `strategy-service/engine/strategies/arbitrage_price_dispersion_engine.py`
+> venue supports) or LEADER_HEDGE (when atomic isn't possible). **Code module (SHIPPED):**
+> `strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py` (+
+> `price_dispersion_hierarchical.py` for the hierarchical variant)
 
 ## What it does
 
