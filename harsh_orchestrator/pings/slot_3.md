@@ -28,6 +28,8 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 
 [2026-05-15 06:25 UTC] [main → slot 3] — ✅ item 2 acked (strategy@a4dba55, APD alias + 4 regression tests, QG 6/7 violations fixed). B-016 DEFERRED confirmed — LEDGER + BACKLOG updated. Item 3 (execution alpha smoke test extensions) confirmed in flight — continue. Ping DONE with SHA when item 3 ships.
 
+[2026-05-15 12:15 UTC] slot-3 — STARTED DR finalisation (plans/active/disaster_recovery_circuit_breakers_2026_05_10.md § Phases 6.A/6.B/9.A/9.B/10.A/10.B). Fetching owned repos (deployment-service + UTL + PM). Reading plan now.
+
 [2026-05-15 11:58 UTC] [slot 3 → main] — 🏁 **DAY-4 CYCLE-CLOSE**. All 4 items complete.
 - **B-016**: DEFERRED (MTDS CeFi no 7-day window); re-activates on features-service batch completion. Q1 updated, BACKLOG flipped.
 - **Item 2**: archetype_slot_resolver APD alias + 4 regression tests (strategy@a4dba55, PR #58).
