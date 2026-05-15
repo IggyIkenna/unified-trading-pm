@@ -46,6 +46,20 @@ Self-pivot through all 3. EOD close-out ping when exhausted.
 
 [2026-05-15 15:20 UTC] slot-6 — Item 7 ✅ honest-absence-downstream-handling.md Phase 8 updates: Added B-018 Phase 8.A VM cron pattern section (Cloud Scheduler → GCE VM → measure_honest_coverage.py → GCS → deployment-api, watchdog registration, operational rules). PM@dd502602 LDR.
 
+[2026-05-15 15:45 UTC] slot-6 — Item 6 ✅ execution-service KMS mock improvements: 4-test TestKmsRotationAndKeyNotFound class added (GCP rotation-disabled key, AWS NotFoundException, AWS Secrets Manager ResourceNotFoundException, cache-not-populated-after-failure). 38 pass + 2 skipped. execution@c1fa8072 LDR.
+
+[2026-05-15 15:50 UTC] slot-6 — Item 8 ✅ codex Phase 8 audit closure: 0 orphan patterns found across B-006–B-018. Full mapping:
+  B-006 (ServiceBootstrap lifecycle) → codex/03-observability/lifecycle-events.md + QG STEP 5.61 ✅
+  B-007 (manifest writer + emission) → codex/02-data/service-output-emission-semantics.md ✅
+  B-008 (cluster validation kwargs) → codex/06-coding-standards/validation-and-errors.md §4 ✅
+  B-009 (kill-switch + circuit breaker) → codex/04-architecture/kill-switch-circuit-breaker.md ✅
+  B-010 (archetype validation coverage) → recurring test item; codex/06-coding-standards/testing.md covers general pattern ✅
+  B-011 (VM launcher + watchdog) → codex/05-infrastructure/strategy-vm-launcher-shape.md + vm-tarball-deployment.md ✅
+  B-012 (custody + signing) → codex/04-architecture/custody-providers.md + treasury-custody-flow.md ✅
+  B-013 (honest-coverage VM cron) → codex/02-data/honest-absence-downstream-handling.md (Item 7) + launcher-script-ssot.md ✅
+  B-018 (QG snapshot + bucket-name SSOT) → codex/06-coding-standards/quality-gates.md STEP 5.69 + cloud-agnostic-script-pattern.md ✅
+  No issue doc needed.
+
 [2026-05-15 07:01 UTC] [main → slot 6] — 🔄 **RE-ACTIVATE — continuation_prompts reserve queue**. **STEP 0 (mandatory first)**: rebase ALL repos to latest LDR for each repo in your worktree (pick up morning commits including execution@f1dee093 custody tests, UAC fixes, PM changes). Then work from continuation_prompts § Slot 6 reserve: (1) **UAC RUF003 ×→x cleanup check** — scan UAC for any new `×` (multiplication sign) occurrences that should be `x` per RUF003; fix if found (same pattern as UAC@046f9d6 yesterday); (2) **codex/06-coding-standards doc currency** — scan for any Phase 8 pattern (PYTEST_UNIT_DIR override, BLOCK_CRITICAL gate coverage, LocalKeyCustodyProvider test pattern) that exists ONLY in code without a codex doc pointer; write stub for each gap; (3) **UTL signing-helper integration tests parity** — audit `unified-trading-library/signing/` helpers (KMS, cloud_kms_signer, wallet_signer); verify test parity vs execution-service custody integration tests (`execution@f1dee093` set 33 tests as baseline); add missing UTL-side unit tests. Done-def: items 1-3 + UTL QG green + signing helpers ≥80% coverage. Ping DONE with SHAs.
 
 [2026-05-15 07:41 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION** — add 5 more items after your 3 in-flight items. Total ~20 AI-days. Heavy on codex audits + UTL work to avoid UAC overlap with Ikenna side.
