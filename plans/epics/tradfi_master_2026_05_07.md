@@ -173,9 +173,11 @@ respective umbrellas.
       268-273 already enforce both fields for all TradFi instruments in `_check_record()`. Called by orchestrator at
       line 2128 before every GCS write. Rejects entire venue shard if any record fails. Test coverage in
       `test_cefi_tradfi_comprehensive.py`.
-- [ ] [AGENT] P1. Add diagnostic: TradFi venue returning 0 rows on a trading day → WARN (potential upstream issue).
+- [x] [AGENT] P1. Add diagnostic: TradFi venue returning 0 rows on a trading day → WARN (potential upstream issue).
       [AUDIT 2026-05-07: FRESH — actionable; instruments-service@8b5eca3 Tier 2B already emits
-      EXPECTED_WEEKEND/EXPECTED_HOLIDAY for non-trading-day pre-skips — extend to active-day-zero diagnostic]
+      EXPECTED_WEEKEND/EXPECTED_HOLIDAY for non-trading-day pre-skips — extend to active-day-zero diagnostic] — ✅
+      `instruments-service@7af05d1` 2026-05-15: WARN + ADAPTER_FETCH_FAILED event emitted when tradfi_active venues
+      return 0 instruments on a confirmed trading day (per is_non_trading_day() check); QG passed.
 - [x] [AGENT] P1. Strategy base class config: `market_hours_only: bool = True` default for TradFi. [AUDIT 2026-05-07:
       FRESH — actionable] — ✅ `strategy-service@c0627fe` 2026-05-15: `_is_regular_session()` via UAC
       `classify_session()` gating off-session ticks in `_tick_one_engine`;
