@@ -270,3 +270,26 @@ Action sequence:
    serial-console output via `gcloud compute instances get-serial-port-output`.
 
 **B-015 paper-trade gate unblocks the moment this lands** — Harsh slot 9 standing by ~24h.
+
+---
+
+## 2026-05-15 19:36 UTC — honest_coverage cron VM collision with slot-2
+
+**Status**: Soft collision, resolved. No action required.
+
+**What happened**: slot-8 picked up `honest_coverage_cron_vm_scheduling_2026_05_14.md` from the issue backlog and
+shipped a Python launcher (`deployment-api@d6e72c6` — `deployment_api/scripts/honest_coverage_vm_launcher.py`, 186 LOC).
+On rebase, discovered slot-2 had already shipped the canonical fix at `deployment-service@19454f1`
+(`terraform/gcp/honest_coverage_scheduler.tf`) using a much simpler bash-pull-from-GCS approach (no Python required).
+
+**Resolution**:
+
+- `deployment-api@3afc016` — reverted my Python launcher (orphan code; slot-2's terraform doesn't reference it).
+- Issue doc flipped to ✅ RESOLVED citing slot-2's terraform.
+
+**Lesson logged**: when a `plans/active/issues/*.md` doc names a recent author (slot-7), check whether another slot on
+the partner side has already picked it up before re-implementing. Grep `git log --all --grep=<issue-slug>` across
+deployment-service before starting.
+
+**Next slot-8 item**: `deploy_missing_auto_launch_2026_05_07` Phase 2+3 (4 P0 backend + 2 P0 UI items). Will pull that
+next.
