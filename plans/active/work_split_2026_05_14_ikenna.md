@@ -775,8 +775,10 @@ slot 10.
    `plans/active/sports_scrapers_post_cutover_2026_06_01.md` — exists in tab/4 PM ✅. (c)
    `sports_master_2026_05_07.md:201` has `[plans/active/sports_scrapers_post_cutover_2026_06_01.md]` cross-link with
    `BLOCKED-OPERATOR-DECISION` annotation ✅. All verifications pass. (design 0.6×, ~1 = 0.6 cal)
-5. **Phase 1 freeze-gate audit** (absorbed from Harsh slot 6) — read-only verification that master plan freeze-gate
-   items #1-#6 are actually green on disk; file gap issue docs if mismatch. (research 1.2×, ~1.5 = 1.8 cal)
+5. ✅ **Phase 1 freeze-gate audit** (absorbed from Harsh slot 6) — read-only verification that master plan freeze-gate
+   items #1-#6 are actually green on disk; file gap issue docs if mismatch. (research 1.2×, ~1.5 = 1.8 cal) **DONE
+   2026-05-15**: master plan lines 1112-1126 confirm 6/6 ✅ ALL ITEMS GREEN — Day-3 audit 2026-05-14 by slot 6.
+   Freeze-gate sequencing plan checkboxes flipped at `PM@e67f5ce3`. No gap issue docs needed — zero discrepancies found.
 6. **🔴 Coinbase cbETH LST APR adapter (SILENT-MISSING from 2026-05-14 deep coverage scan)** — no adapter file in either
    `instruments-service/.../reference_data/adapters/` or `mtds/.../market_interface/`. Required for `carry_staked_basis`
    × DeFi cell. Per HARD RULE: (a) build SCAFFOLD anyway — UAC contract additions for cbETH APR + supply/redemption
