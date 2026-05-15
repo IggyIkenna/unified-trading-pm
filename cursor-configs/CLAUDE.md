@@ -34,6 +34,21 @@ SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 **Never** run `pytest` directly — wrong venv. Always `quality-gates.sh`.
 
+**PYTEST_UNIT_DIR override** (per-family test layouts): some repos organise tests as
+`tests/<family>/unit/` rather than the flat `tests/unit/` default. The default will only
+collect the root-level unit tests, silently skipping per-family tests. To opt in, set
+`PYTEST_UNIT_DIR` BEFORE the `source base-service.sh` line in `quality-gates.sh`:
+
+```bash
+PYTEST_UNIT_DIR="tests/"   # collect all tests recursively (e.g. features-service)
+source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
+```
+
+Trigger: if `find tests/unit/ -name 'test_*.py' | wc -l` returns <5% of
+`find tests/ -name 'test_*.py' | wc -l` — the per-family layout is almost certainly in use
+and this override is required. SSOT: `codex/06-coding-standards/quality-gates.md`
+§ "PYTEST_UNIT_DIR per-family override". Landed: PM@c7786b2f.
+
 ---
 
 ## Master Plan — Live DeFi Trading by 2026-05-23
