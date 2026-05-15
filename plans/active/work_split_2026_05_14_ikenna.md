@@ -457,8 +457,9 @@ risk-and-exposure lint.
      body; Phase 1 scope complete.
 8. **`data_status_drilldown_shard_atom_alignment_2026_05_07` finalize** — close out shard-atom alignment per the
    shard-granularity SSOT. (research 1.2×, ~3 = 3.6 cal)
-9. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
-   0.6×, ~3 = 1.8 cal)
+9. ✅ **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — reduce mock-data compute cost for CI runs. (design
+   0.6×, ~3 = 1.8 cal) — strategy-service@8b20a32: Phase 1 wire-results-aggregation complete; \_write_csv() +
+   summary.csv output + 24 tests pass (30d smoke + unit CSV roundtrip)
 10. ✅ **[ORPHAN-2026-05-14] `mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — master-plan Group F item 18 row
     gains budget assertion (Ikenna-side per harsh-mock-data-benchmarking-tab ping 2026-05-12 17:08 UTC; the ONLY
     remaining gate). Wire budget assertion into the mock-data benchmark harness + flip Group F item 18 row in master

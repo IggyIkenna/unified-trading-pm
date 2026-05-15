@@ -156,8 +156,10 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       `ParallelPerSymbolRunner` pattern with shard-level isolation (CLAUDE.md HARD RULE). (ALREADY SHIPPED:
       `run_2yr_config_grid_backtest.py` lines 819-823 — `--max-parallel` exists as `default=4` with note "Reserved for
       future per-config parallelism". Confirmed present 2026-05-14 slot 7 audit.)
-- [ ] [SCRIPT] P0. Wire results aggregation: per-(config_cell, date_chunk) summary → cross-chunk P&L roll-up → master
-      config-grid CSV. Mock-data smoke run = end-to-end exit on synthetic 30-day window in <5 min on c3-highcpu-44.
+- [x] [SCRIPT] P0. Wire results aggregation: per-(config_cell, date_chunk) summary → cross-chunk P&L roll-up → master
+      config-grid CSV. Mock-data smoke run = end-to-end exit on synthetic 30-day window in <5 min on c3-highcpu-44. —
+      strategy-service@8b20a32: \_write_csv() + main() wired; 24 tests pass incl.
+      test_results_aggregation_30d_smoke_writes_csv + test_write_csv_local_roundtrip
 
 ### Phase 2 — Features-service parallel batching (Days 3-5, ~1 cal-AI-day)
 
