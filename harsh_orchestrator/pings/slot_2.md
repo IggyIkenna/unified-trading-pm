@@ -444,3 +444,35 @@ STARTED item 12 (VM image build caching audit — deployment-service, execution-
 - Issue doc filed: `plans/active/issues/vm_image_build_caching_gaps_2026_05_15.md` (Gap 1-4; Gap 2 Dockerfile layer reordering documented, not auto-applied — requires test build)
 
 🏁 **QUEUE EXHAUSTED** — items 11+12 both DONE. Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke). Awaiting next dispatch.
+
+---
+
+## [2026-05-15 18:25 UTC] [main → slot 2] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> Operator-acked re-anchoring of the 17:30 + 18:05 dispatches (those got
+> mid-file when slot-2 added the 19:35/19:50/20:05 entries post-OOM).
+> Flip checkboxes IN-PLACE as you finish each item — `- [ ]` → `- [x] @ <sha>`.
+
+Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
+
+### P1 — start here
+
+- [ ] **1. mtb_p6e_qg_sweep audit close-out** (P1) — [`plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`](../../plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md). B-014 rollout sweep across 6 repos. Done-def: every pre-existing failure either cross-links to a successor issue doc OR has `# pre-existing` xfail + 1-line rationale.
+
+### P2 — workspace cleanup sweeps
+
+- [ ] **2. pyproject_workspace_audit** (P2) — [`plans/active/issues/pyproject_workspace_audit_2026_05_15.md`](../../plans/active/issues/pyproject_workspace_audit_2026_05_15.md). 15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift report + mechanical fixes + per-repo QG green.
+
+- [ ] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — [`plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`](../../plans/active/issues/deprecated_pattern_sweep_2026_05_15.md). Replace `os.getenv()` with `UnifiedCloudConfig` + assertions. Done-def: 1 slice fully closed in 3+ repos with QG green per repo.
+
+- [ ] **4. deployment_events_lifecycle gsutil prep doc** (P2) — [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md). Finalize: produce ONE shell snippet block the operator can copy-paste, with `gsutil ls` verification commands. Done-def: doc has "Ready to run" section.
+
+- [ ] **5. deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc. 466 occurrences. Bin into (a) legitimate suppression / (b) lazy bypass; fix the lazy ones. Done-def: bin report + 50+ lazy fixes across 3+ repos.
+
+- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc. `try / except ImportError / fallback` patterns are workspace-banned. Done-def: 0 ImportError fallback patterns workspace-wide.
+
+- [ ] **7. workspace-wide bucket-name SSOT scan** — every inline `gs://` f-string should use `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers new sites.
+
+- [ ] **8. deployment-service Phase 10 codex audit** — your prior cycle did Phase 8+9. Phase 10 venue admission + batch=live archetype grain may have stale references in deployment-service codex. Done-def: audit report (clean OR drift doc).
+
+**Conflict rules**: deployment-api = slot 7 ONLY; features-service = slot 4/9 (skip); UAC = surgical only (Ikenna primary). Items 1-8 all PM/cross-repo audit work — no slot collision risk.

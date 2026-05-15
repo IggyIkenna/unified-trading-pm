@@ -234,3 +234,34 @@ have been sitting since 2026-05-14 P1.
 
 Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md.
 Conditional-push to live-defi-rollout per usual rebase-on-reject.
+
+---
+
+## [2026-05-15 18:25 UTC] [main → slot 9] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
+
+> Re-anchoring as todo-checkbox list per operator request.
+> Flip IN-PLACE as you finish: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+> Self-pivot, ping STARTED + per-item DONE in this file.
+
+### P1 — primary focus (do this FIRST, before items 4-15 of your buffer)
+
+- [ ] **1. MTDS market_interface 53-test-failure triage** — [`plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md`](../../plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md). Operator-acked, slot 9 owns.
+  - **Triage half**: bin 53 failures into <10 root-cause clusters (venue API drift / mock fixture stale / schema rename / etc). Append refined table to existing issue doc.
+  - **Fix half**: ship fixes for LARGEST cluster first. If ≥30 of 53 close, ping CYCLE-CLOSE. Otherwise self-pivot to next-largest.
+  - **Scope guard**: MTDS market_interface ONLY. Other MTDS module failures → separate issue docs.
+
+### After CYCLE-CLOSE on item 1, continue your existing buffer queue (~14 AI-days remaining)
+
+- [ ] **2. MTDS Pyth additional symbol coverage extensions** — your mtds@487c9d0 covered base Pyth tests; extend for additional symbols if any 53-test triage surfaced gaps.
+
+- [ ] **3. PBM phantom-manifest detection unit tests** — write tests for phantom detection logic in `market-data-processing-service` (manifest row exists but parquet missing OR vice-versa). 4+ phantom-detection scenarios.
+
+- [ ] **4. MTDS CLI flag validation tests** — verify `--operation/--mode/--asset-group` flag combinations: invalid combos raise at parse-time, not runtime.
+
+- [ ] **5. Items 4/5/6/10 of original Day-1 queue** — see entries above this dispatch (the 13-item buffer queue from 2026-05-15 morning). Self-pivot through whichever remain unstarted.
+
+- [ ] **6. emerging_perp_adapters_diagnosed close-out** (P0) — [`plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md`](../../plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md). HYPERLIQUID `fetch_trades` Tardis branch completion + ASTER URL fix. Root cause already diagnosed.
+
+- [ ] **7. mtds_defi_handler_perf_benchmark_gap** (P2) — [`plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md`](../../plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md). Self-states "No action needed for May-23 gate"; build future harness or close as resolved.
+
+**Conflict rules**: features-service = slot 4 owns first, then slot 9 (item 6 of original queue blocked on slot 4 CYCLE-CLOSE for features-service work); deployment-api = slot 7; UAC = surgical only (Ikenna); strategy-service = slot 3.
