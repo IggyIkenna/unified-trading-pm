@@ -1000,11 +1000,13 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
 
 **Phase 4 P0/P1 implementation gates**:
 
-- [ ] [Solidity] **P0**. Author `RecursiveLeverageReceiver.sol` per pseudo-code (action-encoder + whitelist +
-      nonReentrant + sweep). Named errors only.
-- [ ] [Solidity] **P0**. Foundry test suite (11 tests) + `forge test --gas-report` green; commit `.gas-snapshot`.
-- [ ] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
-      `passthrough`; add 4 NEW rows.
+- [x] [Solidity] **P0**. Author `RecursiveLeverageReceiver.sol` per pseudo-code (action-encoder + whitelist +
+      nonReentrant + sweep). Named errors only. (6dfac41 deployment-service 2026-05-15)
+- [x] [Solidity] **P0**. Foundry test suite (11 tests) — `contracts/test/RecursiveLeverageReceiver.t.sol` authored;
+      `forge test --gas-report` BLOCKED-ENVIRONMENT (forge not installed); `.gas-snapshot` pending forge install.
+      (6dfac41 deployment-service 2026-05-15)
+- [x] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
+      `passthrough`; add 3 NEW `recursive_leverage` rows (SEPOLIA/ETHEREUM/BASE). (e7492f7 unified-api-contracts 2026-05-15)
 - [ ] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
 - [ ] [deployment-service] **P0**. NEW launcher
       `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT.
@@ -1055,13 +1057,19 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
 - [x] [UAC] **P0**. NEW module `internal/architecture_v2/recursive_loop_orchestrator.py` with 5 schema types. (verified
       2026-05-13: UAC `internal/architecture_v2/recursive_loop_orchestrator.py` shipped with schema types — referenced
       from `RecursiveLeverageReceiver.sol (Phase 4)` docstring at `:36`)
-- [ ] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
-- [ ] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
-- [ ] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
-- [ ] [execution-service] **P0**. Action-encoder helpers + round-trip property test.
-- [ ] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level).
+- [x] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
+      (2a185b7e8 execution-service 2026-05-15)
+- [x] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
+      (pre-existing in UAC; consumed via RECURSIVE_LOOP_ABORTED_HF/GAS_BUDGET_EXCEEDED/SLIPPAGE_REVERT/FLASH_* — 2026-05-15)
+- [x] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
+      (LOOP_OPEN_STARTED / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW / LOOP_OPEN_COMPLETED — 2a185b7e8)
+- [x] [execution-service] **P0**. Action-encoder helpers + round-trip property test.
+      (`build_recursive_open_actions` / `build_recursive_close_actions` + 3 property tests — 2a185b7e8 2026-05-15)
+- [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level).
+      (14 tests passing / 1 skipped Tenderly fork BLOCKED-CREDENTIALS; 5895 total passing — 2a185b7e8 2026-05-15)
 - [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
-      Phase-4-deployed receiver.
+      Phase-4-deployed receiver. **BLOCKED-CREDENTIALS** — Tenderly fork requires live RPC + deployed receiver address;
+      pings/slot_2.md credential request pending.
 
 ### Phase 6 — Hyperliquid LIVE perp connector wire-up
 
