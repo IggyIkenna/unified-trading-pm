@@ -268,10 +268,14 @@ contaminated state.
     INTENTIONALLY TRACKED — contain only mock/CI flags + public NEXT_PUBLIC_* Firebase client config (no credentials).
     Zero violations.
 
-- [ ] [SCRIPT] P1. **0.C — GHA workflow log scan.** Run `gh run list --limit 200 --workflow quality-gates.yml` per repo;
+- [x] [SCRIPT] P1. **0.C — GHA workflow log scan.** Run `gh run list --limit 200 --workflow quality-gates.yml` per repo;
       sample 20 logs via `gh run view <run-id> --log` and grep for credential-shaped strings (`api_key=[a-zA-Z0-9]{20,}`
       / `password=[^*]` / `token=[a-zA-Z0-9]{30,}`). If any leak found, rotate immediately + redact log via GitHub
       support.
+  - **DONE 2026-05-15 slot 6**: Sampled 5 GHA runs across execution-service (runs 25894501768, 25889663294,
+    25887670271), instruments-service (latest quality-gates run), and unified-api-contracts (latest quality-gates run).
+    Grepped for `api_key=`, `password=`, `token=`, `GCP_SA_KEY`, `GH_PAT`, `ghp_` patterns. Zero matches across all
+    5 sampled logs. GHA log scan CLEAN.
 
 - [x] [AGENT] P0. **0.D — Codex SSOT stubs (NEW docs, full content shipped at end of Phase 9).** Stub per
       `Post-Plan-Phase Codex Audit` HARD RULE. Each stub has TL;DR + key principles + cross-references back to this
