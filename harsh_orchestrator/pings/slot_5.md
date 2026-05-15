@@ -288,9 +288,12 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **18. risk-and-exposure-service stress test scenarios** — risk-and-exposure-service@86b15fd (3 tests in TestStressExtendedScenarios: sustained -0.5%/day 30-day window >13% drawdown; concurrent carry MAX_DRAWDOWN_BREACH→DELTA_NEUTRAL_EXIT + APD DATA_STALE→REDUCTIONS_ONLY; risk-limit OK→WARNING→CRITICAL ratchet). QG ✅ (68s).
 
-- [ ] **19. pnl-attribution-service end-of-day rollup tests** — daily-close PnL emission to GCS audit/ paths; replay-correctness from event stream; cross-day rollup invariants. Done-def: 4+ rollup tests + QG green.
+- [x] **19. pnl-attribution-service end-of-day rollup tests** — pnl-attribution-service@94d4486 (4 tests in TestEndOfDayRollup: daily-close GCS path includes date+partition, cross-day paths distinct, same-date replay idempotent, rollup total=sum of fills). QG ✅ (46s).
 
 **Conflict rules**: execution-service = slot 5 (you) + slot 4 (order_router only — separate surface); risk-and-exposure = slot 5 (you); pnl-attribution = slot 5 (you); UAC = surgical only (Ikenna primary). No collisions on this queue.
+
+[2026-05-15 UTC] slot-5 — 🏁 **CYCLE-CLOSE (items 17-19/19, 10 tests, 3 repos, all QGs green).**
+Items 17-19 shipped: execution-service@a4fd8014 (3 oracle-mismatch tests), risk-and-exposure-service@86b15fd (3 stress scenarios), pnl-attribution-service@94d4486 (4 EOD rollup tests). All 19 items in the extended queue now done. No blockers, no deferrals. Standing by for next dispatch.
 
 [2026-05-15 22:30 UTC] slot-5 — ✅ DONE item 10 (risk-and-exposure-service Phase 6.8+ extensions):
 risk-and-exposure-service@91d9373 — 10 new tests in test_var_attribution_regime.py: compute_component_var
