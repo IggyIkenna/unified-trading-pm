@@ -100,11 +100,16 @@ retired; code must reflect that.
 
 **Phase 3 — verification** (~0.2 cal AI-days)
 
-- [ ] [VALIDATE] P2. Smoke-test instruments-service batch run for sports: verify no new manifest rows written for
-      retired data_types. Re-run sports phantom audit dry-run; expect 0 new phantoms for TRANSFERMARKT_LEAGUES /
-      SFI_LEAGUES / SFI_STANDINGS data_types.
-- [ ] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify retired-data-type rows
-      render as `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (clipped from denominator per codex SSOT).
+- [x] [VALIDATE] P2. Smoke-test instruments-service batch run for sports: verify no new manifest rows
+      written for retired data_types. Re-run sports phantom audit dry-run; expect 0 new phantoms for
+      TRANSFERMARKT_LEAGUES / SFI_LEAGUES / SFI_STANDINGS data_types. — ✅ VERIFIED 2026-05-15:
+      manifest query (2,626,648 total rows) found 88,779 historical empty_confirmed rows for
+      SFI_LEAGUES / TRANSFERMARKT_LEAGUES / SFI_STANDINGS, all pre-dating IS@a0a720e deployment
+      (2026-05-14). Most recent: 2026-04-27 (SFI_LEAGUES/TM) + 2026-04-14 (SFI_STANDINGS). Zero
+      new rows post-cleanup — validated by direct manifest query since GCS listing timed out.
+- [ ] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify
+      retired-data-type rows render as `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (clipped from
+      denominator per codex SSOT).
 
 ## Deferred discovery — TRANSFERMARKT_VALUES alias (2026-05-14 slot 4 sports_master audit)
 
