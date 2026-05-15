@@ -1010,9 +1010,11 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
       (6dfac41 deployment-service 2026-05-15)
 - [x] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
       `passthrough`; add 3 NEW `recursive_leverage` rows (SEPOLIA/ETHEREUM/BASE). (e7492f7 unified-api-contracts 2026-05-15)
-- [ ] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
-- [ ] [deployment-service] **P0**. NEW launcher
+- [x] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
+      (42b2a992 unified-trading-library 2026-05-15)
+- [x] [deployment-service] **P0**. NEW launcher
       `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT.
+      (4e371d5 deployment-service 2026-05-15)
 - [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness /
       whitelist completeness). External audit deferred post-MVP.
 - [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
