@@ -144,8 +144,8 @@ python3 instruments-service/scripts/backfill_drift_funding_2026_05_13.py \
 - [x] P0. [QG] Full quality-gates pass: `cd instruments-service && bash scripts/quality-gates.sh`. **DONE 2026-05-15
       (slot-3)**: New Solana adapter files (mango/zeta/flash_trade/drift/sanctum) — 0 basedpyright errors
       (instruments-service@`f7383b9` fixes cast typing), 287 unit tests pass, ruff clean. Pre-existing QG failures in
-      orchestrator.py (STEP 5.71 — Phase 6.9 flip-sweep owned by Slot 7) + Dockerfile (STEP 5.79 — Phase 5 deployment)
-      + production readiness validators (workspace-wide): NOT caused by this plan's adapter work; tracked in their named
+      orchestrator.py (STEP 5.71 — Phase 6.9 flip-sweep owned by Slot 7) + Dockerfile (STEP 5.79 — Phase 5 deployment) +
+      production readiness validators (workspace-wide): NOT caused by this plan's adapter work; tracked in their named
       plans.
 - [x] P0. [QG] Full quality-gates pass: `cd unified-api-contracts && bash scripts/quality-gates.sh`. **DONE 2026-05-15
       (slot-3)**: Pre-existing failures only — function size in `candidate_manifest.py` (Phase U1 promote workflow, not

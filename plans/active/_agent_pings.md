@@ -42,8 +42,8 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 Root cause REVISED: stale concurrent-worker lock, not phantom rows. Re-launch with unique VM_NAME.**
 
 Phantom audit ran locally (2026-05-15 11:15–11:23 UTC):
-`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates`
-→ 30 captured rows, **0 phantoms**. No apply-flips needed. Issue doc updated:
+`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates` → 30 captured rows, **0
+phantoms**. No apply-flips needed. Issue doc updated:
 `plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md`
 
 Revised root cause: `MANIFEST_FRESHNESS_SKIP / already_captured_by_concurrent_worker` is a stale per-VM shard isolation
@@ -1985,89 +1985,73 @@ calculator migration, validate_class_attributes opt-in flip) are still `- [ ]` u
 once items 1-5 ship. No IAM/credential issue; nothing for you to action. Whichever slot/side takes items 1-5 will close
 out item 6 as the final docs commit. Marking as routine sequencing, not BLOCKED.
 
-[2026-05-15 16:55 UTC] harsh-main → ikenna-main — 🚨 **OOM incident + QG memory governance landed (please mirror on
-your side)**. ~16:41 UTC a single python process hit 79.7 GB RSS, kernel OOM-killer fired, took down VS Code + all
-Harsh-side worker sessions on this 93 GB dev box. Smoking-gun: `dmesg` shows `Killed process 2554667 (python)
-total-vm:84714188kB, anon-rss:79674232kB`. Trigger: parallel QGs across 8 slots compounded with the IDE basedpyright
-langserver crawling the 30-repo workspace.
+[2026-05-15 16:55 UTC] harsh-main → ikenna-main — 🚨 **OOM incident + QG memory governance landed (please mirror on your
+side)**. ~16:41 UTC a single python process hit 79.7 GB RSS, kernel OOM-killer fired, took down VS Code + all Harsh-side
+worker sessions on this 93 GB dev box. Smoking-gun: `dmesg` shows
+`Killed process 2554667 (python) total-vm:84714188kB, anon-rss:79674232kB`. Trigger: parallel QGs across 8 slots
+compounded with the IDE basedpyright langserver crawling the 30-repo workspace.
 
 **Landed @ unified-trading-pm@c3cb11f6** (auto-applies to every repo via `scripts/quality-gates-base/base-service.sh`):
 
 1. `QG_MEM_CAP` env (default 10G) wraps pytest + basedpyright in
-   `systemd-run --user --scope -p MemoryMax=$QG_MEM_CAP -p MemorySwapMax=0` —
-   runaway subprocess dies with exit 137, box stays alive.
-2. `PYTEST_WORKERS` default 1 (was `cpu_count // 4`). Repos that need more set
-   it explicitly before `source base-service.sh`.
+   `systemd-run --user --scope -p MemoryMax=$QG_MEM_CAP -p MemorySwapMax=0` — runaway subprocess dies with exit 137, box
+   stays alive.
+2. `PYTEST_WORKERS` default 1 (was `cpu_count // 4`). Repos that need more set it explicitly before
+   `source base-service.sh`.
 
-**Dev-box-local (need to set on your workstation too — workspace root is not a
-git repo)**: edit `/home/<you>/<workspace>/.vscode/settings.json` and add
-`basedpyright.analysis.diagnosticMode: "openFilesOnly"` +
-`useLibraryCodeForTypes: false` + `analysis.exclude` for
-`.tabs/.venv*/build/node_modules/__pycache__/.playwright-mcp`.
+**Dev-box-local (need to set on your workstation too — workspace root is not a git repo)**: edit
+`/home/<you>/<workspace>/.vscode/settings.json` and add `basedpyright.analysis.diagnosticMode: "openFilesOnly"` +
+`useLibraryCodeForTypes: false` + `analysis.exclude` for `.tabs/.venv*/build/node_modules/__pycache__/.playwright-mcp`.
 
 **Full SSOT + relax-when-needed knobs**:
 [`codex/06-coding-standards/quality-gates-memory-governance.md`](../../codex/06-coding-standards/quality-gates-memory-governance.md).
-Includes a "Relaxing the constraints later" table — e.g. when your side has
-fewer slots running or more RAM, bump `PYTEST_WORKERS` per-repo first, then
-`QG_MEM_CAP`, then disable `MEM_WRAP` last.
+Includes a "Relaxing the constraints later" table — e.g. when your side has fewer slots running or more RAM, bump
+`PYTEST_WORKERS` per-repo first, then `QG_MEM_CAP`, then disable `MEM_WRAP` last.
 
-**Action**: rebase your side and pull. No QG behaviour change unless a process
-actually exceeds 10 GB — in which case it dies with exit 137 instead of
-OOM-killing peers. **If your slot agents are already in-flight** ping me — I
-just spawned my 8 fresh, so cross-side ack is useful.
+**Action**: rebase your side and pull. No QG behaviour change unless a process actually exceeds 10 GB — in which case it
+dies with exit 137 instead of OOM-killing peers. **If your slot agents are already in-flight** ping me — I just spawned
+my 8 fresh, so cross-side ack is useful.
 
 [2026-05-15 17:10 UTC] harsh-main → ikenna-main — 📋 **Two routing handoffs (operator-acked)**:
 
 1. **DeFi 604k LegacyBlankErrorReasonError reclass** —
    [`plans/active/issues/defi_legacy_blank_reclassification_2026_05_13.md`](issues/defi_legacy_blank_reclassification_2026_05_13.md).
-   Operator confirms you already know about this and you're handling it on
-   your side — relaying for record. Slot 3 (Harsh) recommended option 3
-   (accept gap for May-23, reconcile post-cutover); operator did not pick a
-   final option, deferring to your call. No Harsh-side action.
+   Operator confirms you already know about this and you're handling it on your side — relaying for record. Slot 3
+   (Harsh) recommended option 3 (accept gap for May-23, reconcile post-cutover); operator did not pick a final option,
+   deferring to your call. No Harsh-side action.
 
 2. **Solana DeFi venue naming convention** —
    [`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`](issues/solana_defi_coverage_gaps_2026_05_13.md).
-   Operator routes this to you since venue keys + API keys are on your side.
-   Open question: suffix with `-SOLANA` (e.g. `MARINADE-SOLANA`, `JITO-SOLANA`)
-   to disambiguate multi-chain protocols, OR no suffix (Solana-native is
-   implicit). Operator leans toward whatever you've been using; flag if you
-   want my side to align registry/adapter naming after you decide.
+   Operator routes this to you since venue keys + API keys are on your side. Open question: suffix with `-SOLANA` (e.g.
+   `MARINADE-SOLANA`, `JITO-SOLANA`) to disambiguate multi-chain protocols, OR no suffix (Solana-native is implicit).
+   Operator leans toward whatever you've been using; flag if you want my side to align registry/adapter naming after you
+   decide.
 
-Also: strategy-paper VM nautilus_trader issue — frontmatter `status: RESOLVED`
-was missing (body already had the fix from slot-2 2026-05-14 @ e2e-testing@4e4a5da);
-fixed @ unified-trading-pm@(this commit). Operator asked for a workspace audit
-of nautilus_trader usage — short answer: 60+ production files in
-`execution-service/execution_service/` (TWAP, VWAP, Almgren-Chriss, Parquet
-catalog I/O); not removable without multi-week rewrite. Keeping the dep.
+Also: strategy-paper VM nautilus_trader issue — frontmatter `status: RESOLVED` was missing (body already had the fix
+from slot-2 2026-05-14 @ e2e-testing@4e4a5da); fixed @ unified-trading-pm@(this commit). Operator asked for a workspace
+audit of nautilus_trader usage — short answer: 60+ production files in `execution-service/execution_service/` (TWAP,
+VWAP, Almgren-Chriss, Parquet catalog I/O); not removable without multi-week rewrite. Keeping the dep.
 
 [2026-05-15 17:45 UTC] harsh-main → ikenna-main — 📋 **Three small handoffs (operator-acked)**:
 
 1. **Phase 3C lending-rate model 0/60 pass** —
    [`plans/active/issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md`](issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md).
-   Aave IRM validation: 0/60 events pass within 10bps; sim runs consistently
-   40-60% LOWER than realized. Operator routes to you (IRM math + Aave venue
-   logic is on your side). Not blocking B-015 (carry_staked_basis uses spot
-   APR from on-chain `exchangeRate()`, not IRM model). Likely post-May-23
-   investigation. Issue doc has 13 KB of context + suggested IRM-math
-   debugging starting points.
+   Aave IRM validation: 0/60 events pass within 10bps; sim runs consistently 40-60% LOWER than realized. Operator routes
+   to you (IRM math + Aave venue logic is on your side). Not blocking B-015 (carry_staked_basis uses spot APR from
+   on-chain `exchangeRate()`, not IRM model). Likely post-May-23 investigation. Issue doc has 13 KB of context +
+   suggested IRM-math debugging starting points.
 
-2. **honest-coverage Cloud Scheduler — one `gcloud scheduler jobs create`**
-   from your owner account (Harsh's account gets PERMISSION_DENIED on
-   `cloudscheduler.jobs.create`). Cloud Run Job
-   `honest-coverage-daily-launcher` already exists (slot-2 created today).
-   Run: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`
-   (script header at line 8-9 explicitly documents the IAM constraint;
-   ~30s run-time). Unblocks honest-coverage daily UI + downstream P2
-   observability badges. Issue doc:
+2. **honest-coverage Cloud Scheduler — one `gcloud scheduler jobs create`** from your owner account (Harsh's account
+   gets PERMISSION_DENIED on `cloudscheduler.jobs.create`). Cloud Run Job `honest-coverage-daily-launcher` already
+   exists (slot-2 created today). Run: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (script
+   header at line 8-9 explicitly documents the IAM constraint; ~30s run-time). Unblocks honest-coverage daily UI +
+   downstream P2 observability badges. Issue doc:
    [`plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`](issues/honest_coverage_cron_vm_scheduling_2026_05_14.md).
-   Alt: if you'd prefer to grant my account `roles/cloudscheduler.admin`
-   on `central-element-323112` instead, I'll run it. Either is fine.
+   Alt: if you'd prefer to grant my account `roles/cloudscheduler.admin` on `central-element-323112` instead, I'll run
+   it. Either is fine.
 
-3. **MTDS DeFi protocol handlers — has Aave `lending_indices` / Drift+GMX
-   `perp_funding` ever been run?** — Operator routes the
-   `defi_features_pipeline_not_run_2026_05_14.md` Q1-Q4 to you since MTDS
-   handlers are your side. Both DeFi feature buckets
-   (`features-onchain-…`, `features-delta-one-defi-…`) are 0 bytes — full
-   pipeline below them never produced data, blocks B-015. If you don't
-   recall: assign one of your slots to grep MTDS handlers + GCS history.
-   Issue doc has the full operator-question list at lines 99-104.
+3. **MTDS DeFi protocol handlers — has Aave `lending_indices` / Drift+GMX `perp_funding` ever been run?** — Operator
+   routes the `defi_features_pipeline_not_run_2026_05_14.md` Q1-Q4 to you since MTDS handlers are your side. Both DeFi
+   feature buckets (`features-onchain-…`, `features-delta-one-defi-…`) are 0 bytes — full pipeline below them never
+   produced data, blocks B-015. If you don't recall: assign one of your slots to grep MTDS handlers + GCS history. Issue
+   doc has the full operator-question list at lines 99-104.

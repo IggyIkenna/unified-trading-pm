@@ -105,38 +105,60 @@ token + QG green.
 /ws/vm/{vm_name}/events; polls GCS every 5s; mock sends 3 events; 1 smoke test; pre-existing test_manual_pending fixture
 bug fixed; QG green. deployment-api@4951d10. Plan Phase 9 item flipped. Starting item 2: Prometheus telemetry endpoint.
 
-[2026-05-15 16:00 UTC] slot-7 — ✅ DONE queue item 2: deployment-api Prometheus telemetry — VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS gauges; /metrics route moved before health_router catch-all; 6 unit tests; QG green. deployment-api@8aabe72. Plan flipped. Starting item 3: deployment-ui WebSocket integration in /ops/live-deployments.
+[2026-05-15 16:00 UTC] slot-7 — ✅ DONE queue item 2: deployment-api Prometheus telemetry — VMS_IN_FLIGHT +
+LAST_SNAPSHOT_AGE_SECONDS gauges; /metrics route moved before health_router catch-all; 6 unit tests; QG green.
+deployment-api@8aabe72. Plan flipped. Starting item 3: deployment-ui WebSocket integration in /ops/live-deployments.
 
-[2026-05-15 10:35 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION +3** (after items 7-10 from fresh queue + Phase 11 work). Push to ~14 AI-days.
-11. **deployment-ui Phase 11 recursive-borrow polish** — your @a3d0516 shipped initial Phase 11; polish: loading states, error states, empty states. Done-def: pnpm build + vitest green + 3+ UX states tested.
-12. **deployment-api request-tracing middleware** — request_id propagation: incoming X-Request-ID → log_event + downstream service calls. Done-def: middleware + tests + QG green.
-13. **deployment-ui responsive mobile layout audit** — every route's mobile breakpoint (≤768px) works: nav collapses, tables scroll, forms stack. Done-def: per-route screenshot audit + fixes + pnpm build green.
+[2026-05-15 10:35 UTC] [main → slot 7] — 📋 **QUEUE EXTENSION +3** (after items 7-10 from fresh queue + Phase 11 work).
+Push to ~14 AI-days. 11. **deployment-ui Phase 11 recursive-borrow polish** — your @a3d0516 shipped initial Phase 11;
+polish: loading states, error states, empty states. Done-def: pnpm build + vitest green + 3+ UX states tested. 12.
+**deployment-api request-tracing middleware** — request_id propagation: incoming X-Request-ID → log_event + downstream
+service calls. Done-def: middleware + tests + QG green. 13. **deployment-ui responsive mobile layout audit** — every
+route's mobile breakpoint (≤768px) works: nav collapses, tables scroll, forms stack. Done-def: per-route screenshot
+audit + fixes + pnpm build green.
 
-[2026-05-15 11:15 UTC] [main → slot 7] — ✅ **items 1+2 acked.** WebSocket VM event streaming@4951d10 ✅ + Prometheus telemetry (VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS)@8aabe72 ✅. Both QGs green. LEDGER → 🟢 IN FLIGHT item 3.
-Continue items 3-13 self-pivot:
-3. deployment-ui WebSocket integration in /ops/live-deployments
-4. deployment-api admin endpoints (pause/resume/cancel a running VM)
-5. deployment-api VM log streaming endpoint
-6. deployment-ui VM log viewer component
-7. deployment-api deployment diff endpoint
-8. deployment-ui deployment diff viewer
-9. deployment-api cost estimate endpoint (pre-launch cost projection)
-10. deployment-ui cost estimate panel
-11. deployment-ui Phase 11 recursive-borrow polish (loading/error/empty states)
-12. deployment-api request-tracing middleware (X-Request-ID propagation)
-13. deployment-ui responsive mobile layout audit
-deployment-api + deployment-ui remain your repos until CYCLE-CLOSE. Ping DONE per major item.
+[2026-05-15 11:15 UTC] [main → slot 7] — ✅ **items 1+2 acked.** WebSocket VM event streaming@4951d10 ✅ + Prometheus
+telemetry (VMS_IN_FLIGHT + LAST_SNAPSHOT_AGE_SECONDS)@8aabe72 ✅. Both QGs green. LEDGER → 🟢 IN FLIGHT item 3. Continue
+items 3-13 self-pivot: 3. deployment-ui WebSocket integration in /ops/live-deployments 4. deployment-api admin endpoints
+(pause/resume/cancel a running VM) 5. deployment-api VM log streaming endpoint 6. deployment-ui VM log viewer
+component 7. deployment-api deployment diff endpoint 8. deployment-ui deployment diff viewer 9. deployment-api cost
+estimate endpoint (pre-launch cost projection) 10. deployment-ui cost estimate panel 11. deployment-ui Phase 11
+recursive-borrow polish (loading/error/empty states) 12. deployment-api request-tracing middleware (X-Request-ID
+propagation) 13. deployment-ui responsive mobile layout audit deployment-api + deployment-ui remain your repos until
+CYCLE-CLOSE. Ping DONE per major item.
 
-[2026-05-15 17:00 UTC] slot-7 — 🔄 POST-OOM RESUME + BACKFILL. OOM-killer fired ~16:41 UTC; all worktrees survived. Rebased all repos to bc6e15e6 (memory governance SSOT). Backfilling DONE pings for items completed before/after OOM without pings:
-  ✅ DONE item 3 (WebSocket UI integration): deployment-ui@8bace71 — wired /ops/live-deployments to consume /ws/vm/{vm_name}/events; auto-updates on events; vitest green.
-  ✅ DONE item 11 (Phase 11 recursive-borrow polish): deployment-ui@a3d0516 + @3119577 (WCAG AA/ARIA) + @71c658e (ErrorBoundary) + @088b5c6 (form validation) + @e2b7a81 (toast notifications); deployment-api@604b625 (Phase 11 backend). 3+ UX states tested; pnpm build + vitest green.
-  ✅ DONE item 12 (request-tracing middleware): deployment-api@middleware.py — CorrelationIdMiddleware propagates X-Correlation-ID on every request; deployed as part of middleware stack. QG green.
-  Also backfilling Phase 9 polish batch (9:09 UTC plan batch, all ✅ in plan):
-    deployment-api@4769bd8 (OpenAPI spec endpoint) + @e968719/@5a398fe (rate limiting 60req/min) + @1114bfe/@9c26b27/@720c801 (health/detailed 16 tests).
-  Items 4-10 and 13 from 11:15 queue NOT yet implemented — proceeding now. STARTED item 4: deployment-api admin endpoints (pause/resume/cancel VM).
+[2026-05-15 17:00 UTC] slot-7 — 🔄 POST-OOM RESUME + BACKFILL. OOM-killer fired ~16:41 UTC; all worktrees survived.
+Rebased all repos to bc6e15e6 (memory governance SSOT). Backfilling DONE pings for items completed before/after OOM
+without pings: ✅ DONE item 3 (WebSocket UI integration): deployment-ui@8bace71 — wired /ops/live-deployments to consume
+/ws/vm/{vm_name}/events; auto-updates on events; vitest green. ✅ DONE item 11 (Phase 11 recursive-borrow polish):
+deployment-ui@a3d0516 + @3119577 (WCAG AA/ARIA) + @71c658e (ErrorBoundary) + @088b5c6 (form validation) + @e2b7a81
+(toast notifications); deployment-api@604b625 (Phase 11 backend). 3+ UX states tested; pnpm build + vitest green. ✅
+DONE item 12 (request-tracing middleware): deployment-api@middleware.py — CorrelationIdMiddleware propagates
+X-Correlation-ID on every request; deployed as part of middleware stack. QG green. Also backfilling Phase 9 polish batch
+(9:09 UTC plan batch, all ✅ in plan): deployment-api@4769bd8 (OpenAPI spec endpoint) + @e968719/@5a398fe (rate limiting
+60req/min) + @1114bfe/@9c26b27/@720c801 (health/detailed 16 tests). Items 4-10 and 13 from 11:15 queue NOT yet
+implemented — proceeding now. STARTED item 4: deployment-api admin endpoints (pause/resume/cancel VM).
 
-[2026-05-15 17:40 UTC] slot-7 — ✅ DONE queue item 4: deployment-api admin VM endpoints — POST /api/vm/admin/{vm_name}/cancel (archives as failed) + pause (GCS signal blob) + resume (deletes signal); 8 unit tests; QG green. deployment-api@af80be6. Plan Phase 9 extended batch item flipped. Starting item 5: VM log streaming endpoint.
+[2026-05-15 17:40 UTC] slot-7 — ✅ DONE queue item 4: deployment-api admin VM endpoints — POST
+/api/vm/admin/{vm_name}/cancel (archives as failed) + pause (GCS signal blob) + resume (deletes signal); 8 unit tests;
+QG green. deployment-api@af80be6. Plan Phase 9 extended batch item flipped. Starting item 5: VM log streaming endpoint.
 
-[2026-05-15 17:55 UTC] slot-7 — ✅ DONE queue item 5: deployment-api VM log streaming — GET /api/vm/logs/{vm_name}?tail=N&since=<ts>; VmLogLine + VmLogTailResult models; reuses GCS blob reading from vm_events.py; mock returns 3 events; 4 tests; QG green. deployment-api@13b0194. Plan item flipped. Starting item 6: deployment-ui VM log viewer.
+[2026-05-15 17:55 UTC] slot-7 — ✅ DONE queue item 5: deployment-api VM log streaming — GET
+/api/vm/logs/{vm_name}?tail=N&since=<ts>; VmLogLine + VmLogTailResult models; reuses GCS blob reading from vm_events.py;
+mock returns 3 events; 4 tests; QG green. deployment-api@13b0194. Plan item flipped. Starting item 6: deployment-ui VM
+log viewer.
 
-[2026-05-15 18:30 UTC] slot-7 — ✅ DONE queue item 6: deployment-ui VM log viewer — VmLogPanel (10s HTTP polling, loading/error/empty states); Events/Logs tab switcher in /ops/live-deployments; fetchVmLogs() + types in deploymentApi.ts; 4 vitest tests; QG green (62 tests); 3 pre-existing colour exclusions acknowledged. deployment-ui@cb4f2bf. Plan flipped. Starting item 7: deployment-api deployment diff endpoint.
+[2026-05-15 18:30 UTC] slot-7 — ✅ DONE queue item 6: deployment-ui VM log viewer — VmLogPanel (10s HTTP polling,
+loading/error/empty states); Events/Logs tab switcher in /ops/live-deployments; fetchVmLogs() + types in
+deploymentApi.ts; 4 vitest tests; QG green (62 tests); 3 pre-existing colour exclusions acknowledged.
+deployment-ui@cb4f2bf. Plan flipped. Starting item 7: deployment-api deployment diff endpoint.
+
+[2026-05-15 19:00 UTC] slot-7 — ✅ DONE queue item 7: deployment-api deployment diff endpoint — GET
+/api/deployments/diff?from_sha=<sha>&to_sha=<sha>; DiffEntry + DeploymentDiffResponse models; reads workspace-manifest
+deployed_versions at each SHA via git-show subprocess; mock mode for local dev; 7 unit tests; QG green.
+deployment-api@3acda8e. Plan flipped.
+
+[2026-05-15 19:15 UTC] slot-7 — ✅ DONE queue item 8: deployment-ui deployment diff viewer — DeploymentDiffPanel
+component in DeploymentsList; Compare SHAs toggle button (data-testid="toggle-diff-btn"); form inputs + submit;
+added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green.
+deployment-ui@2c221ac. Plan flipped. Starting item 9: deployment-api cost estimate endpoint.

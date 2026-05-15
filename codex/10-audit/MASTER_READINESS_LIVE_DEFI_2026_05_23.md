@@ -1,7 +1,10 @@
 ---
 scope: [engineer, admin]
 last_refreshed: 2026-05-15
-refresh_note: A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all group descriptions confirmed accurate vs shipped code.
+refresh_note:
+  A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect
+  CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all
+  group descriptions confirmed accurate vs shipped code.
 ---
 
 # Master Readiness — Live DeFi Trading by 2026-05-23
@@ -180,10 +183,11 @@ The 7-group readiness applies to:
 > todo / gate ownership.
 
 > **Re-verified 2026-05-15** (slot 6 A-G sweep): service list confirmed accurate. Key updates vs 2026-05-08:
+>
 > - Group F item 19 (custody): corrected to CLOUD_KMS_ENCRYPTED for May-23; Copper+CEFFU deferred to June-1 (aligned
 >   with `codex/04-architecture/custody-providers.md` which is the live SSOT — drift-audited clean per slot 6 item 5).
 > - batch-live-reconciliation-service: UTL `batch_live_reconciler` confirmed shipped + concurrency-tested.
-> - DeFi error classification: 30 codes in `DefiErrorCode` (13 Aave + 7 RECURSIVE_LOOP + 8 HL_* + 2 ORACLE_*);
+> - DeFi error classification: 30 codes in `DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*_ + 2 ORACLE\__);
 >   CLAUDE.md updated 2026-05-15 per slot 6 item 5 drift audit — codex/04-architecture/defi-execution-overview.md is
 >   accurate SSOT.
 > - No structural changes to 23-item A-G model.

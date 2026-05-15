@@ -4,25 +4,50 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 2 UTL test coverage push. UTL@64bf59a: 3 new test modules — test_domain_client_catalog.py (10 tests: BigQueryCatalog DDL gen + GlueCatalog Parquet SerDe/partition/S3 location), test_domain_client_readers.py (65 tests: DirectReader/AthenaReader/BqExternalReader/BaseReader/GasFeeReader caching+factory), test_domain_client_writers.py (26 tests: DirectWriter/BaseWriter/MarketDataWriter/FeaturesWriter/MLWriter+factory). 101 new tests, all pass. Covers domain_client catalog/readers/writers previously at 53-66% coverage.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 2 UTL test coverage push. UTL@64bf59a: 3 new test modules —
+test_domain_client_catalog.py (10 tests: BigQueryCatalog DDL gen + GlueCatalog Parquet SerDe/partition/S3 location),
+test_domain_client_readers.py (65 tests: DirectReader/AthenaReader/BqExternalReader/BaseReader/GasFeeReader
+caching+factory), test_domain_client_writers.py (26 tests:
+DirectWriter/BaseWriter/MarketDataWriter/FeaturesWriter/MLWriter+factory). 101 new tests, all pass. Covers domain_client
+catalog/readers/writers previously at 53-66% coverage.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 3 base-service.sh CI workflow. PM@21686e55 + alerting-service@05dec98: workspace-qg.yml.tmpl template created in workflow-templates/; rollout-workflow-templates.sh extended with .tmpl substitution support ({{DEP_REPOS}} from manifest); alerting-service wired as proof (dep_repos=unified-trading-library unified-api-contracts).
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 3 base-service.sh CI workflow. PM@21686e55 + alerting-service@05dec98:
+workspace-qg.yml.tmpl template created in workflow-templates/; rollout-workflow-templates.sh extended with .tmpl
+substitution support ({{DEP_REPOS}} from manifest); alerting-service wired as proof (dep_repos=unified-trading-library
+unified-api-contracts).
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 9 UTL changelog automation. UTL@505cc8a: scripts/generate_changelog.py — generates CHANGELOG.md from git log using conventional commits; grouped by feat/fix/refactor/perf/docs/test/ci/chore; supports --unreleased/--from/--to/--output; basedpyright clean.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 9 UTL changelog automation. UTL@505cc8a: scripts/generate_changelog.py
+— generates CHANGELOG.md from git log using conventional commits; grouped by feat/fix/refactor/perf/docs/test/ci/chore;
+supports --unreleased/--from/--to/--output; basedpyright clean.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 8 pyproject.toml workspace-wide audit. PM@54afee99: issue doc filed — 15 repos at line-length=100 (should be 120); 3 repos below 70% fail_under floor; 12 repos missing pyproject.toml; PM pyrightconfig on standard not strict. P1 mechanical fix: 15 repos need line-length update.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 8 pyproject.toml workspace-wide audit. PM@54afee99: issue doc filed —
+15 repos at line-length=100 (should be 120); 3 repos below 70% fail_under floor; 12 repos missing pyproject.toml; PM
+pyrightconfig on standard not strict. P1 mechanical fix: 15 repos need line-length update.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 1 QG step duration profiling. PM@c4b87640: scripts/quality_gates/profile_qg_steps.py — per-step wall-time profiler; ran on ibkr-gateway-infra: 40.3s total, STEP 5.64/5.65 AST check = 27.0s (67.2% of total); optimization hints for TESTS/TYPE-CHECK/CODEX-COMPLIANCE/LINT. Done-def met.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 1 QG step duration profiling. PM@c4b87640:
+scripts/quality_gates/profile_qg_steps.py — per-step wall-time profiler; ran on ibkr-gateway-infra: 40.3s total, STEP
+5.64/5.65 AST check = 27.0s (67.2% of total); optimization hints for TESTS/TYPE-CHECK/CODEX-COMPLIANCE/LINT. Done-def
+met.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 10 SIT May-23 critical path audit. PM@45a8eaf5: issue doc filed — carry_staked_basis + APD + mode-switch scenarios all missing from SIT test suite. 5 existing DeFi playbooks cover infra events only (gas/slippage/MEV/reorg/oracle). 3 new scenarios recommended.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 10 SIT May-23 critical path audit. PM@45a8eaf5: issue doc filed —
+carry_staked_basis + APD + mode-switch scenarios all missing from SIT test suite. 5 existing DeFi playbooks cover infra
+events only (gas/slippage/MEV/reorg/oracle). 3 new scenarios recommended.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 7 CI/CD flow doc. PM@45a8eaf5: codex/08-workflows/ci-cd-flow.md created — two-pass model, branch policy, quickmerge variants, dep-branch flow, version bump, agent vs human paths, conditional push protocol.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 7 CI/CD flow doc. PM@45a8eaf5: codex/08-workflows/ci-cd-flow.md created
+— two-pass model, branch policy, quickmerge variants, dep-branch flow, version bump, agent vs human paths, conditional
+push protocol.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 6 STEP 5.83+ additions proposal. PM@45a8eaf5: STEP 5.83 (no-bare-noqa), STEP 5.84 (no-bare-exit), STEP 5.85 (no-print-in-source) proposed with rationale/scope/ratchet/patterns in quality-gates.md. PENDING OPERATOR APPROVAL.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 6 STEP 5.83+ additions proposal. PM@45a8eaf5: STEP 5.83 (no-bare-noqa),
+STEP 5.84 (no-bare-exit), STEP 5.85 (no-print-in-source) proposed with rationale/scope/ratchet/patterns in
+quality-gates.md. PENDING OPERATOR APPROVAL.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 5 deprecated-pattern sweep. PM@45a8eaf5: issue doc filed — 466 type:ignore / 1376 noqa / 4 os.getenv / 56 except ImportError / 127 bare sys.exit(1). Top offenders per category mapped. P1: batch-live-reconciliation-service config.py os.getenv.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 5 deprecated-pattern sweep. PM@45a8eaf5: issue doc filed — 466
+type:ignore / 1376 noqa / 4 os.getenv / 56 except ImportError / 127 bare sys.exit(1). Top offenders per category mapped.
+P1: batch-live-reconciliation-service config.py os.getenv.
 
-[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 4 pre-commit drift detection (--prek extension). PM@45a8eaf5: detect_template_drift.py extended with --prek flag; checks gitleaks hook + SSOT comment + hook revs vs template; 16 tests passing (5 new). One-shot: 21/24 repos errors (missing gitleaks), 3 warnings.
+[2026-05-15 UTC] slot-8 — ✅ DONE new-queue item 4 pre-commit drift detection (--prek extension). PM@45a8eaf5:
+detect_template_drift.py extended with --prek flag; checks gitleaks hook + SSOT comment + hook revs vs template; 16
+tests passing (5 new). One-shot: 21/24 repos errors (missing gitleaks), 3 warnings.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE self-pivot DT-3/DT-4 (PRE_CUTOVER from codex audit issue doc). PM@8b4ab3ad: (1)
 "Library-Repo QG Carveout Patterns" section added to quality-gates.md (UAC_CANONICAL_EXEMPT / SIZE_EXTRA_EXCLUDES /

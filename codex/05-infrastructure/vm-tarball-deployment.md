@@ -498,8 +498,8 @@ python deployment-service/scripts/vm/analyze_vm_costs.py \
 ```
 
 Two `gsutil ls -l` calls (no per-VM round trips) — fast on large fleets. Outputs spend-by-`machine_type`, by
-`asset_group` label, and by week. Useful for cutover-week budgeting. **Smoke (2026-05-15)**: 81 VMs / 7 days /
-105.8 VM-hrs / $13.98 total. CSV written to `/tmp/vm_costs_7d.csv`. Shipped: deployment-service@920ff18.
+`asset_group` label, and by week. Useful for cutover-week budgeting. **Smoke (2026-05-15)**: 81 VMs / 7 days / 105.8
+VM-hrs / $13.98 total. CSV written to `/tmp/vm_costs_7d.csv`. Shipped: deployment-service@920ff18.
 
 ### `cleanup_old_tarballs.py` — prune stale deployment tarballs from GCS
 
@@ -525,10 +525,10 @@ python deployment-service/scripts/vm/validate_vm_prefix_mapping.py \
     [--project PROJECT_ID] [--dry-run]
 ```
 
-Walks every non-`None` bucket entry in `VM_PREFIX_TO_BUCKET` and verifies the GCS bucket exists. Reports orphan
-prefixes (bucket in dict, not in GCS) and missing-prefix entries. **Prod run (2026-05-15)**: 88 OK, 56
-heartbeat-only (`None`), 0 orphans. 6 legacy string entries in dict (pre-`VmPrefixSpec`; script handles both
-transparently). Shipped: deployment-service@29eb7ad.
+Walks every non-`None` bucket entry in `VM_PREFIX_TO_BUCKET` and verifies the GCS bucket exists. Reports orphan prefixes
+(bucket in dict, not in GCS) and missing-prefix entries. **Prod run (2026-05-15)**: 88 OK, 56 heartbeat-only (`None`), 0
+orphans. 6 legacy string entries in dict (pre-`VmPrefixSpec`; script handles both transparently). Shipped:
+deployment-service@29eb7ad.
 
 ---
 

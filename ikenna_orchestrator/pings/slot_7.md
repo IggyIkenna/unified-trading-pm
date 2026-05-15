@@ -553,9 +553,9 @@ class).
 
 ## [main → slot 7] 2026-05-15 10:52 UTC — 2 NEW items added: SIT critical-path scenarios (#25) + basefc paradigm migration (#26)
 
-**Item #25 (🔴 potential May-23 BLOCKER, ~4.5 cal)**: SIT suite is missing scenario playbooks for the 3 May-23
-critical paths (carry_staked_basis paper, APD paper, paper→live_early gate). Without these, CI gate for the
-paper→live_early promotion is missing — the last automated check before manual operator promotion. Issue doc:
+**Item #25 (🔴 potential May-23 BLOCKER, ~4.5 cal)**: SIT suite is missing scenario playbooks for the 3 May-23 critical
+paths (carry_staked_basis paper, APD paper, paper→live_early gate). Without these, CI gate for the paper→live_early
+promotion is missing — the last automated check before manual operator promotion. Issue doc:
 `plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`.
 
 Recommended structure: add 3 functions to `system-integration-tests/tests/scenarios/defi_scenarios.py` + wire into
@@ -565,5 +565,5 @@ Recommended structure: add 3 functions to `system-integration-tests/tests/scenar
 unstarted; item 6 plan-flip cite auto-closes once 1-5 ship. Slot 2 confirmed 2026-05-15 09:19 UTC this is sequencing,
 not BLOCKED. Features-service paradigm work fits your writegate Phase 6.x lane.
 
-Both items added to slot 7 stack after item #24 (Compound_V3 lending fix). Prioritize per impact: item #25 is the
-May-23 gate; item #26 is internal hygiene.
+Both items added to slot 7 stack after item #24 (Compound_V3 lending fix). Prioritize per impact: item #25 is the May-23
+gate; item #26 is internal hygiene.

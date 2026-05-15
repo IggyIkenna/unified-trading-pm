@@ -262,7 +262,9 @@ def _check_prek(
 
     if not prek_path.exists():
         report.items.append(
-            DriftItem("warn", "prek-missing-file", ".pre-commit-config.yaml not found — run rollout-pre-commit-configs.sh")
+            DriftItem(
+                "warn", "prek-missing-file", ".pre-commit-config.yaml not found — run rollout-pre-commit-configs.sh"
+            )
         )
         return report
 
@@ -280,7 +282,9 @@ def _check_prek(
             if f"id: {hook_id}" not in content:
                 severity = "error" if hook_id == "gitleaks" else "warn"
                 report.items.append(
-                    DriftItem(severity, f"prek-missing-hook-{hook_id}", f"Missing hook {hook_id!r} in .pre-commit-config.yaml")
+                    DriftItem(
+                        severity, f"prek-missing-hook-{hook_id}", f"Missing hook {hook_id!r} in .pre-commit-config.yaml"
+                    )
                 )
 
     # 3. Rev version checks — parse canonical from template
@@ -389,14 +393,18 @@ def main() -> None:
     parser.add_argument("--workspace-root", type=Path, default=WORKSPACE_ROOT_DEFAULT, help="Path to workspace root")
     parser.add_argument("--repo", help="Check a single repo by name")
     parser.add_argument("--json", action="store_true", dest="output_json", help="Machine-readable JSON output")
-    parser.add_argument("--prek", action="store_true", dest="check_prek", help="Also check .pre-commit-config.yaml drift")
+    parser.add_argument(
+        "--prek", action="store_true", dest="check_prek", help="Also check .pre-commit-config.yaml drift"
+    )
     args = parser.parse_args()
 
     workspace_root = cast(Path, args.workspace_root)
     filter_repo = cast(str | None, args.repo)
     output_json = cast(bool, args.output_json)
     check_prek = cast(bool, args.check_prek)
-    sys.exit(run(workspace_root=workspace_root, filter_repo=filter_repo, output_json=output_json, check_prek=check_prek))
+    sys.exit(
+        run(workspace_root=workspace_root, filter_repo=filter_repo, output_json=output_json, check_prek=check_prek)
+    )
 
 
 if __name__ == "__main__":

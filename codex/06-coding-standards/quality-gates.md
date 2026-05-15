@@ -2536,26 +2536,28 @@ pytest tests/ -v  # Fix what fails
 
 ## Proposed STEP 5.83+ Additions (PENDING OPERATOR APPROVAL)
 
-> **Status**: PROPOSAL — doc-only. Each STEP below requires operator approval before being added to
-> `base-service.sh`. None of these are active enforcement today. Authored 2026-05-15 (slot 8).
-> Approval mechanism: operator comments `[approve-step-5.83]` / `[approve-step-5.84]` / etc. in ping file.
+> **Status**: PROPOSAL — doc-only. Each STEP below requires operator approval before being added to `base-service.sh`.
+> None of these are active enforcement today. Authored 2026-05-15 (slot 8). Approval mechanism: operator comments
+> `[approve-step-5.83]` / `[approve-step-5.84]` / etc. in ping file.
 
 ### STEP 5.83: no-bare-noqa — `# noqa` suppressions must specify error code
 
-**What it catches**: `# noqa` without an error code suppresses ALL ruff warnings on a line. This creates a
-permanent blind spot: future ruff rules that fire on the same line are silently suppressed. Current workspace
-has 1,376 `# noqa` suppressions; unknown fraction are bare (without code).
+**What it catches**: `# noqa` without an error code suppresses ALL ruff warnings on a line. This creates a permanent
+blind spot: future ruff rules that fire on the same line are silently suppressed. Current workspace has 1,376 `# noqa`
+suppressions; unknown fraction are bare (without code).
 
 **Scope**: All service repos (`SOURCE_DIR/`), excluding `scripts/` subdirectories.
 
 **Ratchet plan**: WARN immediately, ERROR after 2026-06-01 (one sprint to clean up).
 
 **Compliant pattern**:
+
 ```python
 from some_module import thing  # noqa: E402  — module-level import at top (intentional)
 ```
 
 **Non-compliant pattern**:
+
 ```python
 from some_module import thing  # noqa  — ❌ bare noqa, suppresses everything
 ```
@@ -2571,15 +2573,16 @@ execution-service: 188, UTL: 163, strategy-service: 154). Total workspace effort
 
 ### STEP 5.84: no-bare-exit — `sys.exit(1)` must be preceded by `log_event FAILED`
 
-**What it catches**: Services that exit with error code without emitting the required FAILED lifecycle event.
-This breaks STARTED/STOPPED/FAILED monitoring — the VM zombie watchdog sees the process die but no FAILED event
-was emitted, so alerting doesn't fire and the orchestrator cannot classify the failure.
+**What it catches**: Services that exit with error code without emitting the required FAILED lifecycle event. This
+breaks STARTED/STOPPED/FAILED monitoring — the VM zombie watchdog sees the process die but no FAILED event was emitted,
+so alerting doesn't fire and the orchestrator cannot classify the failure.
 
 **Scope**: All service source (`SOURCE_DIR/`), excluding `tests/`, `scripts/`, and `cli/` exit-on-help patterns.
 
 **Ratchet plan**: WARN immediately (current workspace has ~127 violations), ERROR after 2026-06-15.
 
 **Compliant pattern**:
+
 ```python
 from unified_trading_library.events import log_event
 log_event(service_name, "FAILED", error=str(e), stack_trace=traceback.format_exc())
@@ -2587,15 +2590,16 @@ sys.exit(1)
 ```
 
 **Non-compliant pattern**:
+
 ```python
 sys.exit(1)  # ❌ — no FAILED event emitted before exit
 ```
 
-**How to comply**: Search `rg "sys\.exit\([^0]" --type py SOURCE_DIR/`; each bare exit should have a
-preceding `log_event(..., "FAILED")` call in the same except/error branch.
+**How to comply**: Search `rg "sys\.exit\([^0]" --type py SOURCE_DIR/`; each bare exit should have a preceding
+`log_event(..., "FAILED")` call in the same except/error branch.
 
-**False-positive exclusion**: CLI `--help` exit paths, `argparse` `sys.exit(0)`, and script-mode `main()`
-returns that feed into `sys.exit(run(...))` are excluded (STEP applies to service logic paths only).
+**False-positive exclusion**: CLI `--help` exit paths, `argparse` `sys.exit(0)`, and script-mode `main()` returns that
+feed into `sys.exit(run(...))` are excluded (STEP applies to service logic paths only).
 
 **Composes with**: STEP 6/6 PRODUCTION READINESS (ServiceBootstrap lifecycle); exit-code audit findings.
 
@@ -2603,15 +2607,16 @@ returns that feed into `sys.exit(run(...))` are excluded (STEP applies to servic
 
 ### STEP 5.85: no-print-in-source — `print()` calls banned in service source code
 
-**What it catches**: `print()` statements in service source code (not tests, not scripts, not CLI) emit to
-stdout, bypassing the structured `log_event` system. These show up in container logs untagged, making
-correlation impossible and breaking the observability contract.
+**What it catches**: `print()` statements in service source code (not tests, not scripts, not CLI) emit to stdout,
+bypassing the structured `log_event` system. These show up in container logs untagged, making correlation impossible and
+breaking the observability contract.
 
 **Scope**: `SOURCE_DIR/` only (not `tests/`, `scripts/`, `e2e-testing/`).
 
 **Ratchet plan**: ERROR immediately — no grace period. Current violation count is low (< 20 across workspace).
 
 **Compliant pattern**:
+
 ```python
 import logging
 logger = logging.getLogger(__name__)
@@ -2619,12 +2624,13 @@ logger.info("Processing %s records", count)
 ```
 
 **Non-compliant pattern**:
+
 ```python
 print(f"Processing {count} records")  # ❌ — use logger.info
 ```
 
-**Exception**: `if __name__ == "__main__"` blocks in CLI scripts may use `print()` for human-readable output
-(e.g. `print(json.dumps(result, indent=2))`).
+**Exception**: `if __name__ == "__main__"` blocks in CLI scripts may use `print()` for human-readable output (e.g.
+`print(json.dumps(result, indent=2))`).
 
 **How to comply**: `rg "^\s+print\(" --type py SOURCE_DIR/` — fix by replacing with `logger.info/warning/error`.
 
@@ -2633,6 +2639,7 @@ print(f"Processing {count} records")  # ❌ — use logger.info
 ---
 
 **Activation sequence (proposed)**:
+
 1. Operator approves individual STEPs via ping ack
 2. Each approved STEP added to `base-service.sh` as WARN with ratchet date
 3. Rollout via `rollout-quality-gates-unified.py` to all 15 service repos

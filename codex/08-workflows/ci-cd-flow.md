@@ -5,8 +5,8 @@ created: 2026-05-15
 
 # CI/CD Flow
 
-> SSOT for the workspace's CI/CD pipeline architecture. Covers the quickmerge two-pass model, branch policy,
-> agent vs human paths, and the dep-branch flow for cross-repo feature isolation.
+> SSOT for the workspace's CI/CD pipeline architecture. Covers the quickmerge two-pass model, branch policy, agent vs
+> human paths, and the dep-branch flow for cross-repo feature isolation.
 >
 > Cross-references: `CLAUDE.md` § "Git discipline"; `codex/08-workflows/dependency-cascade.md`;
 > `codex/08-workflows/version-graduation.md`; `cursor-rules/venv-usage-ssot.mdc`.
@@ -23,16 +23,16 @@ staging ────────────► PR CI + SIT
 main ───────────────► always stable; triggers version bump + image build
 ```
 
-| Branch | Purpose | CI runs | Who merges |
-|---|---|---|---|
-| `feat/*` | Feature isolation; dep-branch for cross-repo work | None (local QG only) | quickmerge `--agent` |
-| `staging` | Convergence point for breaking changes + SIT | Full CI | quickmerge `--to-staging` |
-| `main` | Always stable; semver bump + image build triggered here | Full CI + image build | quickmerge (standard) |
-| `live-defi-rollout` (LDR) | Active rollout branch (workspace-specific May-23) | None (local QG only) | slot quickmerge `--agent` |
-| `tab/hk/<N>` | Per-slot worktree branch | None | local work |
+| Branch                    | Purpose                                                 | CI runs               | Who merges                |
+| ------------------------- | ------------------------------------------------------- | --------------------- | ------------------------- |
+| `feat/*`                  | Feature isolation; dep-branch for cross-repo work       | None (local QG only)  | quickmerge `--agent`      |
+| `staging`                 | Convergence point for breaking changes + SIT            | Full CI               | quickmerge `--to-staging` |
+| `main`                    | Always stable; semver bump + image build triggered here | Full CI + image build | quickmerge (standard)     |
+| `live-defi-rollout` (LDR) | Active rollout branch (workspace-specific May-23)       | None (local QG only)  | slot quickmerge `--agent` |
+| `tab/hk/<N>`              | Per-slot worktree branch                                | None                  | local work                |
 
-**Never** push directly to `main` — always via quickmerge. The quickmerge script is the **only** sanctioned
-merge path (it runs QG, handles dep-branch resolution, and respects the two-pass model).
+**Never** push directly to `main` — always via quickmerge. The quickmerge script is the **only** sanctioned merge path
+(it runs QG, handles dep-branch resolution, and respects the two-pass model).
 
 ---
 
@@ -81,11 +81,11 @@ bash scripts/quickmerge.sh "feat: work" --agent
 bash scripts/quickmerge.sh "feat: work" --quick
 ```
 
-**`--dep-branch`** is human-only — it pins the dep resolver to a non-main branch. Agents must not use it
-(agents always merge to LDR where deps are on main).
+**`--dep-branch`** is human-only — it pins the dep resolver to a non-main branch. Agents must not use it (agents always
+merge to LDR where deps are on main).
 
-**`--agent`** is for agent sessions — it skips the GitHub Actions simulation (act) and test re-run. Only valid
-if Pass 1 (full QG) has already completed and exited 0.
+**`--agent`** is for agent sessions — it skips the GitHub Actions simulation (act) and test re-run. Only valid if Pass 1
+(full QG) has already completed and exited 0.
 
 ---
 
@@ -122,15 +122,16 @@ Step 4: Promote to main
 
 Semver is managed entirely by the semver-agent GitHub Action — never bump manually.
 
-| Commit prefix | Triggers | Result |
-|---|---|---|
-| `feat:` | MINOR bump on `0.x.x` | 0.1.0 → 0.2.0 |
-| `fix:` / `chore:` / `docs:` | PATCH bump | 0.1.0 → 0.1.1 |
-| `feat!:` or `BREAKING CHANGE:` footer | MAJOR bump (after 1.0.0) | 1.0.0 → 2.0.0 |
-| `feat!:` on `0.x.x` | MINOR bump (pre-1.0.0 policy) | 0.1.0 → 0.2.0 |
+| Commit prefix                         | Triggers                      | Result        |
+| ------------------------------------- | ----------------------------- | ------------- |
+| `feat:`                               | MINOR bump on `0.x.x`         | 0.1.0 → 0.2.0 |
+| `fix:` / `chore:` / `docs:`           | PATCH bump                    | 0.1.0 → 0.1.1 |
+| `feat!:` or `BREAKING CHANGE:` footer | MAJOR bump (after 1.0.0)      | 1.0.0 → 2.0.0 |
+| `feat!:` on `0.x.x`                   | MINOR bump (pre-1.0.0 policy) | 0.1.0 → 0.2.0 |
 
-**Version graduation (1.0.0)**: `gh workflow run request-major-bump.yml --repo IggyIkenna/<repo> -f proposed_version="1.0.0"` → comment `/approve`.
-Full SSOT: `codex/08-workflows/version-graduation.md`.
+**Version graduation (1.0.0)**:
+`gh workflow run request-major-bump.yml --repo IggyIkenna/<repo> -f proposed_version="1.0.0"` → comment `/approve`. Full
+SSOT: `codex/08-workflows/version-graduation.md`.
 
 ---
 
@@ -152,23 +153,23 @@ Full SSOT: `codex/08-workflows/version-graduation.md`.
 6. Manual promotion (or auto-promote if configured): staging → prod
 ```
 
-**Agents never reach step 4+** — agents push to LDR, not main. The full CI/CD flow runs when the operator
-promotes LDR to main.
+**Agents never reach step 4+** — agents push to LDR, not main. The full CI/CD flow runs when the operator promotes LDR
+to main.
 
 ---
 
 ## Agent vs Human Paths
 
-| Operation | Agent | Human |
-|---|---|---|
-| Run quality gates | `bash scripts/quality-gates.sh` | Same |
-| Merge to branch | `bash scripts/quickmerge.sh "..." --agent` | `bash scripts/quickmerge.sh "..."` |
-| Push to LDR | `git push origin HEAD:live-defi-rollout` | Same |
-| Promote LDR → main | ❌ NOT ALLOWED (operator only) | `bash scripts/admin-sync-to-main.sh` |
-| Dep-branch work | ❌ NOT ALLOWED | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
-| Version graduation | ❌ NOT ALLOWED | `gh workflow run request-major-bump.yml ...` |
-| Kill-switch arming | ❌ NOT ALLOWED | Manual via deployment-service API |
-| Wallet key ops | ❌ NOT ALLOWED | Hardware wallet / KMS console |
+| Operation          | Agent                                      | Human                                                    |
+| ------------------ | ------------------------------------------ | -------------------------------------------------------- |
+| Run quality gates  | `bash scripts/quality-gates.sh`            | Same                                                     |
+| Merge to branch    | `bash scripts/quickmerge.sh "..." --agent` | `bash scripts/quickmerge.sh "..."`                       |
+| Push to LDR        | `git push origin HEAD:live-defi-rollout`   | Same                                                     |
+| Promote LDR → main | ❌ NOT ALLOWED (operator only)             | `bash scripts/admin-sync-to-main.sh`                     |
+| Dep-branch work    | ❌ NOT ALLOWED                             | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
+| Version graduation | ❌ NOT ALLOWED                             | `gh workflow run request-major-bump.yml ...`             |
+| Kill-switch arming | ❌ NOT ALLOWED                             | Manual via deployment-service API                        |
+| Wallet key ops     | ❌ NOT ALLOWED                             | Hardware wallet / KMS console                            |
 
 ---
 
@@ -184,8 +185,8 @@ gh run list --branch <branch> --repo IggyIkenna/<repo> --limit 5
 gh run view <run-id> --log-failed
 ```
 
-Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced locally via `quality-gates.sh`.
-Pushes to `main` / PRs → CI runs. Always verify CI green before reporting "shipped".
+Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced locally via `quality-gates.sh`. Pushes to
+`main` / PRs → CI runs. Always verify CI green before reporting "shipped".
 
 ---
 
@@ -203,18 +204,18 @@ git rebase origin/<branch>
 git push origin HEAD:<branch>
 ```
 
-**Never** `git push --force` or `--force-with-lease` to LDR. Always rebase. Rebase conflicts mean another slot
-edited the same file — resolve with their changes in mind (likely their work should be preserved).
+**Never** `git push --force` or `--force-with-lease` to LDR. Always rebase. Rebase conflicts mean another slot edited
+the same file — resolve with their changes in mind (likely their work should be preserved).
 
 ---
 
 ## SSOT Pointers
 
-| Topic | SSOT |
-|---|---|
-| Quickmerge flags + mechanics | `cursor-rules/workspace-workflow.md` |
-| Dep-branch full flow | `codex/08-workflows/dependency-cascade.md` |
-| Version graduation | `codex/08-workflows/version-graduation.md` |
-| Per-tab worktrees (slot isolation) | `codex/05-infrastructure/per-tab-worktrees.md` |
-| QG two-pass model (detailed) | `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" |
-| Branch policy enforcement | `.cursorrules` § "Git" |
+| Topic                              | SSOT                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| Quickmerge flags + mechanics       | `cursor-rules/workspace-workflow.md`                                     |
+| Dep-branch full flow               | `codex/08-workflows/dependency-cascade.md`                               |
+| Version graduation                 | `codex/08-workflows/version-graduation.md`                               |
+| Per-tab worktrees (slot isolation) | `codex/05-infrastructure/per-tab-worktrees.md`                           |
+| QG two-pass model (detailed)       | `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" |
+| Branch policy enforcement          | `.cursorrules` § "Git"                                                   |

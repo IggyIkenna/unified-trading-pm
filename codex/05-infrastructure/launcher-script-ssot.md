@@ -486,7 +486,8 @@ rejected (requires `workflows.workflows.create`, broader IAM surface, harder to 
 
 ## launcher_common.sh DRY library (Phase 8.A, 2026-05-15)
 
-`deployment-service/scripts/vm/lib/launcher_common.sh` provides 6 shared functions extracted from repeated boilerplate across 83+ launchers. Every **new** launcher MUST source this library and use these functions.
+`deployment-service/scripts/vm/lib/launcher_common.sh` provides 6 shared functions extracted from repeated boilerplate
+across 83+ launchers. Every **new** launcher MUST source this library and use these functions.
 
 ```bash
 # Required at top of every new launcher:
@@ -494,29 +495,33 @@ rejected (requires `workflows.workflows.create`, broader IAM surface, harder to 
 source "$(dirname "$0")/lib/launcher_common.sh"
 ```
 
-| Function | Purpose |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `lc_validate_env VARS…` | Asserts required env vars are non-empty; exits 1 with helpful message if any missing |
-| `lc_singleton_check NAME` | Exits 1 if a VM named `NAME` is RUNNING in the target zone; use for hardcoded-name singletons |
-| `lc_gcloud_create …` | Thin wrapper around `gcloud compute instances create` — adds standard labels, retries, and dry-run support |
-| `lc_code_bucket` | Returns `deployment-scripts-${PROJECT}` — canonical `CODE_BUCKET` variable (no hardcoding) |
-| `lc_run_ts` | Returns `$(date +%Y%m%d-%H%M%S)` — canonical `RUN_TS` value |
-| `lc_write_startup_file CONTENT` | Writes a startup script to a temp file + registers `EXIT` trap for cleanup; avoids manual `rm` |
+| Function                        | Purpose                                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `lc_validate_env VARS…`         | Asserts required env vars are non-empty; exits 1 with helpful message if any missing                       |
+| `lc_singleton_check NAME`       | Exits 1 if a VM named `NAME` is RUNNING in the target zone; use for hardcoded-name singletons              |
+| `lc_gcloud_create …`            | Thin wrapper around `gcloud compute instances create` — adds standard labels, retries, and dry-run support |
+| `lc_code_bucket`                | Returns `deployment-scripts-${PROJECT}` — canonical `CODE_BUCKET` variable (no hardcoding)                 |
+| `lc_run_ts`                     | Returns `$(date +%Y%m%d-%H%M%S)` — canonical `RUN_TS` value                                                |
+| `lc_write_startup_file CONTENT` | Writes a startup script to a temp file + registers `EXIT` trap for cleanup; avoids manual `rm`             |
 
-**Shipped**: deployment-service@d07576f. Three proof-of-concept launchers refactored: `launch-qg-snapshot-vm.sh` (−18 lines), `launch-canonical-smoke-vm.sh`, `launch-instruments-smoke-vm.sh`.
+**Shipped**: deployment-service@d07576f. Three proof-of-concept launchers refactored: `launch-qg-snapshot-vm.sh` (−18
+lines), `launch-canonical-smoke-vm.sh`, `launch-instruments-smoke-vm.sh`.
 
 ### Startup script templates (Phase 8.A, 2026-05-15)
 
 Two canonical startup-script patterns extracted to `deployment-service/scripts/vm/templates/`:
 
-| Template | Pattern | Used by (approx) |
-| ---------------------------------- | ----------------------------------------------------------------------- | ---------------- |
-| `startup-gcs-url.sh.tmpl` | `startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh` | ~61 launchers |
-| `startup-inline-heredoc.sh.tmpl` | Inline HEREDOC startup script (for launchers that customise boot logic) | ~31 launchers |
+| Template                         | Pattern                                                                 | Used by (approx) |
+| -------------------------------- | ----------------------------------------------------------------------- | ---------------- |
+| `startup-gcs-url.sh.tmpl`        | `startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh`   | ~61 launchers    |
+| `startup-inline-heredoc.sh.tmpl` | Inline HEREDOC startup script (for launchers that customise boot logic) | ~31 launchers    |
 
-New launchers that customise startup logic MUST copy and fill the appropriate template rather than inventing ad-hoc heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + templates + `launch-amm-golden-fixture-validation-vm.sh` refactored).
+New launchers that customise startup logic MUST copy and fill the appropriate template rather than inventing ad-hoc
+heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + templates +
+`launch-amm-golden-fixture-validation-vm.sh` refactored).
 
-**Rule**: launchers that inline raw `gcloud compute instances create` without `lc_gcloud_create` are **review-blocking** (no automated QG gate yet — future STEP candidate).
+**Rule**: launchers that inline raw `gcloud compute instances create` without `lc_gcloud_create` are **review-blocking**
+(no automated QG gate yet — future STEP candidate).
 
 ---
 

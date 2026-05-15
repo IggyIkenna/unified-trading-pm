@@ -349,12 +349,12 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       ETHERFI-AAVE, ROCKETPOOL-AAVE, LIDO-COMPOUND) produce valid `realised_apy_bps` and cover the archetype gate.
       **Successor**: `lst_apr_sourcing_method_validated_2026_05_14.md` discusses fix path (daily Solana LST APR via
       on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
-- [x] ✅ [AGENT] P1. **YIELD_ROTATION_LENDING entry signal investigation** — RESOLVED (2026-05-15):
-      strategy@`1429b52` — (1) catalog `eligible_protocols` → `candidate_protocols`; (2) tracer injects
-      `apy_bps_<proto>` per protocol. Re-run (GCP_PROJECT_ID=central-element-323112, `bxbvhf0rd`): 8/12 slots enter
-      with 148-262 bps APY: USDC on base/ethereum/arbitrum/optimism (148-262 bps) + USDT on
-      ethereum/arbitrum/optimism (153-201 bps) + consolidated USDC v3 (229 bps). 4 zeros: base-USDT (data gap), ETH +
-      wBTC (supply APY <100 bps floor — correct), kamino-SOL (BLOCKED-CREDENTIALS).
+- [x] ✅ [AGENT] P1. **YIELD_ROTATION_LENDING entry signal investigation** — RESOLVED (2026-05-15): strategy@`1429b52` —
+      (1) catalog `eligible_protocols` → `candidate_protocols`; (2) tracer injects `apy_bps_<proto>` per protocol.
+      Re-run (GCP_PROJECT_ID=central-element-323112, `bxbvhf0rd`): 8/12 slots enter with 148-262 bps APY: USDC on
+      base/ethereum/arbitrum/optimism (148-262 bps) + USDT on ethereum/arbitrum/optimism (153-201 bps) + consolidated
+      USDC v3 (229 bps). 4 zeros: base-USDT (data gap), ETH + wBTC (supply APY <100 bps floor — correct), kamino-SOL
+      (BLOCKED-CREDENTIALS).
 - [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
       archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
       non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be

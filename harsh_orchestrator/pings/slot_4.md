@@ -174,21 +174,40 @@ FIND@49323dd already noted. Fresh 10-item queue is in your file above (ml-traini
 reconciliation + multi_tf/calendar + features-onchain + marker hygiene + migration gaps + order_router + live-marker
 audit). Self-pivot when you pick it up.
 
-[2026-05-15 10:35 UTC] [main → slot 4] — 📋 **QUEUE EXTENSION +5** (after items 1-10 from fresh queue). Push to ~25 AI-days.
-11. **ml-training-service experiment manifest validation tests** — verify experiment YAMLs validate cleanly + reject malformed inputs (missing required fields, type errors, unknown hyperparameters). Done-def: 6+ validation tests + ml-training QG green.
-12. **system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow: VM emits → manifest writer → coverage.json → API endpoint. Done-def: 2+ scenarios + sit QG green.
-13. **alerting-service alert routing tests** — verify alert routing by severity (P0 → pager, P1 → email, P2 → slack mock); add tests if missing. Done-def: routing test parity + alerting QG green.
-14. **batch-live-reconciliation-service reconcile_shard edge cases** — empty shard, single-row shard, schema-drift shard, very large shard (memory). Done-def: 4+ edge-case tests + QG green.
-15. **workspace-wide unused-import audit** — scan all repos for unused imports surviving ruff sweep; file issue doc per repo with count + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
+[2026-05-15 10:35 UTC] [main → slot 4] — 📋 **QUEUE EXTENSION +5** (after items 1-10 from fresh queue). Push to ~25
+AI-days. 11. **ml-training-service experiment manifest validation tests** — verify experiment YAMLs validate cleanly +
+reject malformed inputs (missing required fields, type errors, unknown hyperparameters). Done-def: 6+ validation tests +
+ml-training QG green. 12. **system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for
+honest-coverage emission flow: VM emits → manifest writer → coverage.json → API endpoint. Done-def: 2+ scenarios + sit
+QG green. 13. **alerting-service alert routing tests** — verify alert routing by severity (P0 → pager, P1 → email, P2 →
+slack mock); add tests if missing. Done-def: routing test parity + alerting QG green. 14.
+**batch-live-reconciliation-service reconcile_shard edge cases** — empty shard, single-row shard, schema-drift shard,
+very large shard (memory). Done-def: 4+ edge-case tests + QG green. 15. **workspace-wide unused-import audit** — scan
+all repos for unused imports surviving ruff sweep; file issue doc per repo with count + fix mechanical ones. Done-def:
+cleanup report + 5+ fixes.
 
-[2026-05-15 16:40 UTC] [slot 4 → main] — ✅ **ITEM 1 DONE**: ml-training-service coverage ≥80% + 15 pre-existing failures fixed + 43 type errors resolved. ml-training-service@7e18af8. QG ALL GATES PASSED (284s). Added conftest.py autouse event-logging fixture, test_defi_target_generator.py (27 tests), test_feature_data_adapter.py (28 tests), extended test_data_filters.py (+15 tests). Fixed slow tests via tuning_method='default' + timeout markers + lgb.train mock. Fixed 43 pyright ignores in 7 source files. Moving to item 2.
+[2026-05-15 16:40 UTC] [slot 4 → main] — ✅ **ITEM 1 DONE**: ml-training-service coverage ≥80% + 15 pre-existing
+failures fixed + 43 type errors resolved. ml-training-service@7e18af8. QG ALL GATES PASSED (284s). Added conftest.py
+autouse event-logging fixture, test_defi_target_generator.py (27 tests), test_feature_data_adapter.py (28 tests),
+extended test_data_filters.py (+15 tests). Fixed slow tests via tuning_method='default' + timeout markers + lgb.train
+mock. Fixed 43 pyright ignores in 7 source files. Moving to item 2.
 
-[2026-05-15 17:15 UTC] slot-4 — STARTED item 2: system-integration-tests new DeFi-flow scenarios (carry_staked_basis + APD paper flows using Tenderly fixtures)
+[2026-05-15 17:15 UTC] slot-4 — STARTED item 2: system-integration-tests new DeFi-flow scenarios (carry_staked_basis +
+APD paper flows using Tenderly fixtures)
 
-[2026-05-15 17:45 UTC] slot-4 — ✅ ITEM 2 DONE: system-integration-tests DeFi paper-flow scenarios. 16 new tests: TestCarryStakedBasisPaperFlow (6), TestArbitragePriceDispersionPaperFlow (6), TestDefiPaperFlowCrossArchetypeInvariants (3) + 1 invariant test — all 16 passed. Fixed 3 pre-existing QG lint failures (E741×4, C901×2). SIT QG ✅ (74s). sit@fba72b7. Moving to item 3.
+[2026-05-15 17:45 UTC] slot-4 — ✅ ITEM 2 DONE: system-integration-tests DeFi paper-flow scenarios. 16 new tests:
+TestCarryStakedBasisPaperFlow (6), TestArbitragePriceDispersionPaperFlow (6), TestDefiPaperFlowCrossArchetypeInvariants
+(3) + 1 invariant test — all 16 passed. Fixed 3 pre-existing QG lint failures (E741×4, C901×2). SIT QG ✅ (74s).
+sit@fba72b7. Moving to item 3.
 
-[2026-05-15 18:10 UTC] slot-4 — ✅ ITEM 3 DONE: alerting-service alert-code parity. New test file tests/unit/test_alert_code_parity.py: 3-tier coverage — (1) parametrized sweep (77 tests): every AlertCode matches ≥1 LIVE_ALERT_RULES rule; (2) explicit-rule ratchet: exactly 2 codes (CHAOS_DRILL_FAILED + RECON_DEGRADED) are catch-all-only; 75/77 have explicit rules; (3) family spot-checks: DeFi Family 1/2 (5 codes) + risk-rule (4 codes) + stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). alerting@c1c9a68. Moving to item 4.
+[2026-05-15 18:10 UTC] slot-4 — ✅ ITEM 3 DONE: alerting-service alert-code parity. New test file
+tests/unit/test_alert_code_parity.py: 3-tier coverage — (1) parametrized sweep (77 tests): every AlertCode matches ≥1
+LIVE_ALERT_RULES rule; (2) explicit-rule ratchet: exactly 2 codes (CHAOS_DRILL_FAILED + RECON_DEGRADED) are
+catch-all-only; 75/77 have explicit rules; (3) family spot-checks: DeFi Family 1/2 (5 codes) + risk-rule (4 codes) +
+stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). alerting@c1c9a68. Moving to item 4.
 
-[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 — MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4). Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.
-
-[2026-05-15 19:00 UTC] slot-4 — ✅ ITEM 5 CONFIRMED DONE (pre-existing): features-service multi_timeframe + calendar lifecycle tests already exist from prior session (B-006 Phase 8.A). tests/multi_timeframe/unit/test_lifecycle_events.py (3 tests) + tests/calendar/unit/test_lifecycle_events.py (3 tests) — all 6 pass. PYTEST_UNIT_DIR="tests/" override already in scripts/quality-gates.sh. Calendar family has 45 pre-existing failures in smoke_matrix/other files (NOT lifecycle tests — not caused by slot-4). No new code needed. Moving to item 6.
+[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded
+test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 —
+MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4).
+Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing
+pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.

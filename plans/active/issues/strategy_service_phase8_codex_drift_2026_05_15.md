@@ -133,6 +133,7 @@ not commit to PM codex bodies per slot-precedence rule).
 ## Audit update — 2026-05-15 session-4 (slot-3)
 
 **Drifts 1–5 status**: ALL CONFIRMED FIXED by slot 6 in PM codex update (incoming merge to LDR 2026-05-15 afternoon).
+
 - Drift 1: Phase 6B hedge ratio → SHIPPED language + DYNAMIC formula in carry-staked-basis.md:32-38. ✅
 - Drift 2: stale `staked_basis.py:264` pointer → removed, replaced with `compute_dynamic_hedge_ratio()` ref. ✅
 - Drift 3: `lst_native_rate` + `lst_native_rate_ts` → added to Features section at lines 221-224. ✅
@@ -152,8 +153,8 @@ preflight."
 "rejected at preflight" language refers to the collateral-matrix check (which still runs at tick time via
 `_derive_structure`), but the required-params check now fires earlier at boot. These are two different rejection points.
 
-**Severity:** Low — the behavior change is additive (boot rejection is stricter than tick rejection). Operators will
-get a clearer error message. Codex comment accuracy only.
+**Severity:** Low — the behavior change is additive (boot rejection is stricter than tick rejection). Operators will get
+a clearer error message. Codex comment accuracy only.
 
 **Recommended fix (Drift 6):** Add a sentence to the config schema section noting that the 6 required params are
 validated at construction (ValueError at boot if absent), not silently skipped.
@@ -166,6 +167,7 @@ validated at construction (ValueError at boot if absent), not silently skipped.
 `eligible_markets`, `min_edge_bps` — generic schema for the theoretical full APD archetype.
 
 **Actual code engine params (price-dispersion path):**
+
 - `candidate_venues` (required, comma-separated, ≥ 2 venues) — NEW: raises ValueError at boot if absent or < 2
 - `dispersion_bps` (default "30")
 - `cost_bps` (default "10")
@@ -176,9 +178,9 @@ validated at construction (ValueError at boot if absent), not silently skipped.
 `venue_universe`, `pair_selection_mode`, `vol_cap_clamp_feature`, etc. (documented in examples at lines 163-173 as
 comments).
 
-**Severity:** Medium — engineer reading codex to implement APD upstream integration (features publisher) will expect
-the wrong params schema. `candidate_venues` especially is now required at boot — an upstream operator creating a new
-slot must know this.
+**Severity:** Medium — engineer reading codex to implement APD upstream integration (features publisher) will expect the
+wrong params schema. `candidate_venues` especially is now required at boot — an upstream operator creating a new slot
+must know this.
 
 **Recommended fix (Drift 7):** Replace the generic YAML config schema with two sections: (a) price-dispersion params
 (CURRENT IMPLEMENTATION) and (b) funding-rate-dispersion params. Mark the old generic schema as "SUPERSEDED by actual

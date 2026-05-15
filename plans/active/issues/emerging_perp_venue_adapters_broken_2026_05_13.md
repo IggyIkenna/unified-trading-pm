@@ -181,7 +181,8 @@ Next steps:
 - `- [x]` ✅ [SCRIPT] P1. Probe `https://api.starknet.extended.exchange/api/v1/info/markets` live — **DONE 2026-05-15**:
   - `api.starknet.extended.exchange` → HTTP 000 (DNS dead, same as ASTER pre-fix)
   - `api.extended.exchange` → DNS resolves (AWS ELB / `54.92.96.57`), TLS valid, but ALL tested paths return HTTP 404:
-    `/api/v1/info/markets`, `/api/v1/info`, `/api/v2/info/markets`, `/v1/markets`, `/exchange/info`, `/get_all_perpetuals`
+    `/api/v1/info/markets`, `/api/v1/info`, `/api/v2/info/markets`, `/v1/markets`, `/exchange/info`,
+    `/get_all_perpetuals`
   - `app.extended.exchange` → HTTP 403 (CloudFront, front-end only)
   - **Status: BLOCKED-OPERATOR-DECISION** — domain is alive but correct API path unknown without docs/GitHub access.
   - Ping filed: `ikenna_orchestrator/pings/slot_3.md` — operator needs to provide Extended Finance REST API docs or

@@ -12,12 +12,12 @@
 Deployment-service has **two distinct** event emission chains that run concurrently during a VM run. They write to
 different sinks with different retention policies and should not be confused.
 
-| Chain | Emitter | Sink | Retention | Queryable |
-|---|---|---|---|---|
-| A — Orchestrator | `orchestrator.py`, `cli/main.py` | `sink=None` (UTL null sink) | local log only | no |
-| B — VM heartbeat | `heartbeat_cli.py`, `deployment_heartbeat.py` | `PubSubEventSink("deployment-events")` | 7 days (Pub/Sub) | yes (pull sub) |
-| B2 — Monitor consume | `monitor.py` | GCS direct write | permanent | yes |
-| C — GCS tee | `vm-exec-with-gcs-tee.sh` | `gs://{bucket}/vm-logs/{vm}/run.log` + `EXIT_STATUS` | permanent | yes |
+| Chain                | Emitter                                       | Sink                                                 | Retention        | Queryable      |
+| -------------------- | --------------------------------------------- | ---------------------------------------------------- | ---------------- | -------------- |
+| A — Orchestrator     | `orchestrator.py`, `cli/main.py`              | `sink=None` (UTL null sink)                          | local log only   | no             |
+| B — VM heartbeat     | `heartbeat_cli.py`, `deployment_heartbeat.py` | `PubSubEventSink("deployment-events")`               | 7 days (Pub/Sub) | yes (pull sub) |
+| B2 — Monitor consume | `monitor.py`                                  | GCS direct write                                     | permanent        | yes            |
+| C — GCS tee          | `vm-exec-with-gcs-tee.sh`                     | `gs://{bucket}/vm-logs/{vm}/run.log` + `EXIT_STATUS` | permanent        | yes            |
 
 ---
 
@@ -30,10 +30,11 @@ deployment-service CLI / API
               └─► No external emission — events stay in Cloud Logging / stdout
 ```
 
-**Pattern**: `sink=None` is the UTL null-sink convention — events are still logged via Python `logging` but
-not forwarded to Pub/Sub or GCS.
+**Pattern**: `sink=None` is the UTL null-sink convention — events are still logged via Python `logging` but not
+forwarded to Pub/Sub or GCS.
 
 **When used**:
+
 - `cli/main.py`: `setup_events(..., sink=None)` for local mode
 - `orchestrator.py T1Orchestrator.__init__`: `setup_events(..., sink=None)` for batch mode (lazy, once per worker)
 
@@ -64,12 +65,13 @@ VM startup (gcloud instances create --metadata startup-script=...)
 **Pub/Sub topic**: `deployment-events` (project `central-element-323112`)  
 **Retention**: 7 days (Pub/Sub default)  
 **Active subscriptions**:
+
 - `deployment-events-monitor` — pull, consumed by `monitor.py` → writes deployment registry to
   `gs://deployment-status-{project}/deployments/{deploy_id}/...`
 
-**Gap**: No push subscription exports events to `gs://central-element-323112-events/` for permanent archival.
-All other services use `GCSEventSink` directly and land in that bucket. VM heartbeat events have 7-day TTL only.
-See `vm-deployment-events-audit.md` for the operator action required to add a GCS export sub.
+**Gap**: No push subscription exports events to `gs://central-element-323112-events/` for permanent archival. All other
+services use `GCSEventSink` directly and land in that bucket. VM heartbeat events have 7-day TTL only. See
+`vm-deployment-events-audit.md` for the operator action required to add a GCS export sub.
 
 **Local mode**: `heartbeat_cli.py` uses `LocalFsEventSink` when `CLOUD_PROVIDER=local`, writing to
 `/tmp/vm-heartbeat-events.jsonl`.
@@ -89,6 +91,7 @@ vm-exec-with-gcs-tee.sh
 **Bucket**: `deployment-scripts-{project_id}` (e.g. `deployment-scripts-central-element-323112`)  
 **Retention**: permanent (no lifecycle rule on this bucket as of 2026-05-15)  
 **Consumers**:
+
 - `analyze_vm_costs.py` — reads `EXIT_STATUS` mtime for cost attribution
 - `vm_zombie_watchdog.py` — reads `run.log` mtime for shard heartbeat staleness check
 - Human operators — read `run.log` for debugging VM failures
@@ -151,23 +154,23 @@ Is this emitted FROM A VM (running as a startup script)?
 
 ## Known Gaps (tracked in deployment-and-qg-strategy.md Phase 8.A)
 
-| Gap | Severity | Operator action |
-|---|---|---|
-| No GCS export sub for `deployment-events` Pub/Sub topic | P2 | Add push sub → GCS export (Cloud Console or `gcloud pubsub subscriptions create`) |
-| heartbeat events 7-day TTL only — no permanent VM event log in events bucket | P2 | Depends on above gap being closed |
-| `deployment-service` API/orchestrator uses `sink=None` — no external telemetry | P3 | Add `GCSEventSink` to API server startup |
+| Gap                                                                            | Severity | Operator action                                                                   |
+| ------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------- |
+| No GCS export sub for `deployment-events` Pub/Sub topic                        | P2       | Add push sub → GCS export (Cloud Console or `gcloud pubsub subscriptions create`) |
+| heartbeat events 7-day TTL only — no permanent VM event log in events bucket   | P2       | Depends on above gap being closed                                                 |
+| `deployment-service` API/orchestrator uses `sink=None` — no external telemetry | P3       | Add `GCSEventSink` to API server startup                                          |
 
 ---
 
 ## File Pointers
 
-| Component | File |
-|---|---|
-| VM heartbeat daemon | `deployment_service/vm/heartbeat_cli.py` |
-| VM-side lifecycle helper | `scripts/vm/deployment_heartbeat.py` |
-| GCS tee wrapper | `scripts/vm/vm-exec-with-gcs-tee.sh` |
-| PubSub consumer | `deployment_service/monitor.py` |
-| Orchestrator events setup | `deployment_service/orchestrator.py:227` |
-| CLI events setup | `deployment_service/cli/main.py:90` |
-| Smoke-verified event trace | `vm-deployment-events-audit.md` |
-| VM event emission audit | `vm-event-emission-audit.md` |
+| Component                  | File                                     |
+| -------------------------- | ---------------------------------------- |
+| VM heartbeat daemon        | `deployment_service/vm/heartbeat_cli.py` |
+| VM-side lifecycle helper   | `scripts/vm/deployment_heartbeat.py`     |
+| GCS tee wrapper            | `scripts/vm/vm-exec-with-gcs-tee.sh`     |
+| PubSub consumer            | `deployment_service/monitor.py`          |
+| Orchestrator events setup  | `deployment_service/orchestrator.py:227` |
+| CLI events setup           | `deployment_service/cli/main.py:90`      |
+| Smoke-verified event trace | `vm-deployment-events-audit.md`          |
+| VM event emission audit    | `vm-event-emission-audit.md`             |

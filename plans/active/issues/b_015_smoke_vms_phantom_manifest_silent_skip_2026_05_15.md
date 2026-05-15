@@ -48,7 +48,8 @@ data**. Root cause: phantom manifest rows reporting "already captured" for dates
 
 ## Phantom audit results — 2026-05-15 (slot 8)
 
-**Ran**: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates`
+**Ran**:
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates`
 
 **Result**: `Real captures: 30, Phantom captures: 0` — **manifest is CLEAN**. No phantom rows found. No flips applied.
 
@@ -59,9 +60,9 @@ on disk.
 ### Revised root cause hypothesis
 
 The `already_captured_by_concurrent_worker` skip is from a **stale in-flight lock marker** — an MTDS per-VM shard
-isolation mechanism (`MANIFEST_PER_VM_SHARDS=true`) where a prior VM wrote a lock record but then aborted/crashed
-before completing. The freshness check sees the lock and skips rather than overwriting. Since the lock is stale, the
-data for `2026-04-15..19` appears "in progress" to the next VM, which exits immediately.
+isolation mechanism (`MANIFEST_PER_VM_SHARDS=true`) where a prior VM wrote a lock record but then aborted/crashed before
+completing. The freshness check sees the lock and skips rather than overwriting. Since the lock is stale, the data for
+`2026-04-15..19` appears "in progress" to the next VM, which exits immediately.
 
 ### Revised recommended decision
 
@@ -80,8 +81,8 @@ data for `2026-04-15..19` appears "in progress" to the next VM, which exits imme
    `storage.googleapis.com` during the listing phase (2026-05-15 11:22–11:23 UTC). Retry logic handled it; audit
    completed successfully. Not related to B-015 root cause.
 
-**Assignment**: Harsh slot 9 re-launches smoke VMs with unique `VM_NAME` + monitors event stream. Ikenna slot 8
-phantom audit is COMPLETE (clean result, no action needed).
+**Assignment**: Harsh slot 9 re-launches smoke VMs with unique `VM_NAME` + monitors event stream. Ikenna slot 8 phantom
+audit is COMPLETE (clean result, no action needed).
 
 ## Cross-references
 

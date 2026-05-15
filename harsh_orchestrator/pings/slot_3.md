@@ -194,16 +194,35 @@ test_feature_contract.py (11 tests: REQUIRED_PARAMS declared, each missing param
 tick returns []). Updated 4 existing tests that assumed incomplete-params engines could construct. QG green. —
 strategy-service@93965fd. Pivoting to item 7: quality-gates.sh hardening audit.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 7**: QG hardening audit. All required vars set, no structural drift vs base-service.sh template. Added EXPECTED_BASE_VERSION=1.0 as forward-compat guard. QG green (109s). — strategy-service@b3444ea. Pivoting to item 8: Phase 8 codex audit extension.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 7**: QG hardening audit. All required vars set, no structural drift vs
+base-service.sh template. Added EXPECTED_BASE_VERSION=1.0 as forward-compat guard. QG green (109s). —
+strategy-service@b3444ea. Pivoting to item 8: Phase 8 codex audit extension.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 8**: Phase 8 codex audit extension. Confirmed drifts 1-5 fixed by slot 6 (PM merge 2026-05-15 afternoon). Found 2 new drifts: Drift 6 — carry-staked-basis.md says "rejected at preflight" but boot validation now fires at __init__ (additive, severity low); Drift 7 — arbitrage-price-dispersion.md config schema shows generic CROSS_BOOK_SPORTS schema, not actual candidate_venues/dispersion_bps params (severity medium). Issue doc updated at plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md. Drifts 6+7 deferred to slot 1 (PM codex bodies). — unified-trading-pm@ea758178. Pivoting to item 9: batch_live symmetry L4/L5/L6 sweeps.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 8**: Phase 8 codex audit extension. Confirmed drifts 1-5 fixed by slot 6
+(PM merge 2026-05-15 afternoon). Found 2 new drifts: Drift 6 — carry-staked-basis.md says "rejected at preflight" but
+boot validation now fires at **init** (additive, severity low); Drift 7 — arbitrage-price-dispersion.md config schema
+shows generic CROSS_BOOK_SPORTS schema, not actual candidate_venues/dispersion_bps params (severity medium). Issue doc
+updated at plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md. Drifts 6+7 deferred to slot 1 (PM
+codex bodies). — unified-trading-pm@ea758178. Pivoting to item 9: batch_live symmetry L4/L5/L6 sweeps.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 9**: batch_live symmetry L4/L5/L6 sweep — strategy-service. Full audit result: L1 (STEP 5.75 DataType mode-agnosticism): strategy-service has no DataType class — N/A ✓. L2 (STEP 5.77 no mode comparisons outside CLI): 0 violations ✓. L3 (STEP 5.78 RuntimeMode only in UAC): 0 violations ✓. L4 (LIVE_* event-prefix): 2 violations found — log_event("LIVE_FEATURES_COMPUTED") + log_event("LIVE_SIGNAL_GENERATED") in sports_feature_subscriber.py. Both registered in UTL events/schemas.py — correctly deferred post-cutover per batch_live_symmetry plan (part of ~12 workspace L4 backlog, separate plan). L5 (STEP 5.76 no DataType redeclarations): 0 violations ✓. L6 (BatchExecutorFactory): N/A — factory not shipped yet ✓. L7 (record_captured assert): strategy-service doesn't write manifest — N/A ✓. Result: 0 non-deferred violations. Pivoting to item 10: CLI flag combinations audit.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 9**: batch*live symmetry L4/L5/L6 sweep — strategy-service. Full audit
+result: L1 (STEP 5.75 DataType mode-agnosticism): strategy-service has no DataType class — N/A ✓. L2 (STEP 5.77 no mode
+comparisons outside CLI): 0 violations ✓. L3 (STEP 5.78 RuntimeMode only in UAC): 0 violations ✓. L4 (LIVE*\*
+event-prefix): 2 violations found — log_event("LIVE_FEATURES_COMPUTED") + log_event("LIVE_SIGNAL_GENERATED") in
+sports_feature_subscriber.py. Both registered in UTL events/schemas.py — correctly deferred post-cutover per
+batch_live_symmetry plan (part of ~12 workspace L4 backlog, separate plan). L5 (STEP 5.76 no DataType redeclarations): 0
+violations ✓. L6 (BatchExecutorFactory): N/A — factory not shipped yet ✓. L7 (record_captured assert): strategy-service
+doesn't write manifest — N/A ✓. Result: 0 non-deferred violations. Pivoting to item 10: CLI flag combinations audit.
 
-[2026-05-15 session-4] slot-3 — ✅ **DONE item 10**: CLI flag combinations audit. Added mode/operation mismatch validation in validate_config(): StrategyBatchHandler raises (returns False) if --mode live (backtest is batch-only); StrategyLiveHandler raises (returns False) if --mode batch (trade is live-only). Error messages name the invalid flag + correct value. 6 new tests: test_batch_handler_rejects_live_mode, test_batch_handler_accepts_batch_mode, test_batch_handler_live_mode_error_mentions_operation, test_live_handler_rejects_batch_mode, test_live_handler_accepts_live_mode, test_live_handler_batch_mode_error_mentions_operation — all pass. QG green (no new failures vs pre-existing ratchet). — strategy-service@e28942e. Session 4 complete — items 6-10 done.
+[2026-05-15 session-4] slot-3 — ✅ **DONE item 10**: CLI flag combinations audit. Added mode/operation mismatch
+validation in validate_config(): StrategyBatchHandler raises (returns False) if --mode live (backtest is batch-only);
+StrategyLiveHandler raises (returns False) if --mode batch (trade is live-only). Error messages name the invalid flag +
+correct value. 6 new tests: test_batch_handler_rejects_live_mode, test_batch_handler_accepts_batch_mode,
+test_batch_handler_live_mode_error_mentions_operation, test_live_handler_rejects_batch_mode,
+test_live_handler_accepts_live_mode, test_live_handler_batch_mode_error_mentions_operation — all pass. QG green (no new
+failures vs pre-existing ratchet). — strategy-service@e28942e. Session 4 complete — items 6-10 done.
 
-[2026-05-15 session-3] slot-3 — 🏁
-**CYCLE-CLOSE** — items 10/11/12 shipped this session.
+[2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
 
@@ -261,54 +280,99 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 @9d725eb (5 tests, APD pair-rotation + CSB VENUE_UNAVAILABLE) ✅. Outstanding pace. Continue item 4
 (e2e-testing/scripts/defi/ end-to-end test scenarios). Self-pivot through items 4-10.
 
-[2026-05-15 10:35 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION +5** (after items 8-10). Push to ~16 AI-days.
-11. ✅ **strategy-service Phase 10 codex audit** — Phase 10 introduced venue admission rules + family 1/2 patterns + batch=live archetype grain. Verify strategy-service code reflects codex; file drift. Done-def: audit report. — unified-trading-pm@bfe08a1. 7 aligned (batch=live invariant via V2EngineOrchestrator, 9 StrategyFamily enum, DeployableConfigCandidate, GroupBMetrics). Drift 1 (medium): eligible_venues never populated on emitted instructions — routed to slot 1 for execution-service SOR triage. Drift 2 (low): defi_lp/mev→family mapping docstring-only.
-12. ✅ **strategy-service mode parity tests** — 9 tests: direct vs orchestrator 5-tick CSB+APD parity + parametric threshold boundary. QG green. strategy@639df90.
-13. ✅ **strategy-service archetype rotation tests** — 7 tests: CSB/APD slot isolation, cross-archetype kill-switch isolation, no double-emit across 3 concurrent cycles. QG green. strategy@639df90.
-14. ✅ **e2e-testing/scripts/defi/ failure mode scenarios** — test_failure_modes_e2e_smoke.py: 4/4 scenarios pass (a) venue503 rerouting (b) health-factor drop suppression (c) sandwich window collapse (d) flash-loan kill+restart. 0 ruff/basedpyright. e2e-testing@b31881e.
-15. ✅ **strategy-service signal-batching tests** — 6 tests: CSB continuous-emit while in-position, entry threshold gating, exit hysteresis + throttle release, restart clears buffer (position persists), APD stateless per-tick, APD spread collapse. QG green. strategy@3dd3a23.
+[2026-05-15 10:35 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION +5** (after items 8-10). Push to ~16 AI-days. 11. ✅
+**strategy-service Phase 10 codex audit** — Phase 10 introduced venue admission rules + family 1/2 patterns + batch=live
+archetype grain. Verify strategy-service code reflects codex; file drift. Done-def: audit report. —
+unified-trading-pm@bfe08a1. 7 aligned (batch=live invariant via V2EngineOrchestrator, 9 StrategyFamily enum,
+DeployableConfigCandidate, GroupBMetrics). Drift 1 (medium): eligible_venues never populated on emitted instructions —
+routed to slot 1 for execution-service SOR triage. Drift 2 (low): defi_lp/mev→family mapping docstring-only. 12. ✅
+**strategy-service mode parity tests** — 9 tests: direct vs orchestrator 5-tick CSB+APD parity + parametric threshold
+boundary. QG green. strategy@639df90. 13. ✅ **strategy-service archetype rotation tests** — 7 tests: CSB/APD slot
+isolation, cross-archetype kill-switch isolation, no double-emit across 3 concurrent cycles. QG green.
+strategy@639df90. 14. ✅ **e2e-testing/scripts/defi/ failure mode scenarios** — test_failure_modes_e2e_smoke.py: 4/4
+scenarios pass (a) venue503 rerouting (b) health-factor drop suppression (c) sandwich window collapse (d) flash-loan
+kill+restart. 0 ruff/basedpyright. e2e-testing@b31881e. 15. ✅ **strategy-service signal-batching tests** — 6 tests: CSB
+continuous-emit while in-position, entry threshold gating, exit hysteresis + throttle release, restart clears buffer
+(position persists), APD stateless per-tick, APD spread collapse. QG green. strategy@3dd3a23.
 
-[2026-05-15 11:15 UTC] [main → slot 3] — ✅ **item 11 acked (strategy-service Phase 10 codex audit — PM@bfe08a1)**. 7 aligned, 2 drifts flagged (eligible_venues population gap routed to execution-service SOR triage; defi_lp/mev family mapping docstring-only — low severity). Good catch on the medium drift. Continue items 12-15 self-pivot:
-12. strategy-service mode parity tests (batch vs paper vs live signal sequence parity)
-13. strategy-service archetype rotation tests (CSB + APD concurrent, no double-emit)
-14. e2e-testing/scripts/defi/ failure mode scenarios (503/gas-spike/sandwich/flash-fail)
-15. ✅ strategy-service signal-batching tests — strategy@3dd3a23
-Ping DONE per item with SHA.
+[2026-05-15 11:15 UTC] [main → slot 3] — ✅ **item 11 acked (strategy-service Phase 10 codex audit — PM@bfe08a1)**. 7
+aligned, 2 drifts flagged (eligible_venues population gap routed to execution-service SOR triage; defi_lp/mev family
+mapping docstring-only — low severity). Good catch on the medium drift. Continue items 12-15 self-pivot: 12.
+strategy-service mode parity tests (batch vs paper vs live signal sequence parity) 13. strategy-service archetype
+rotation tests (CSB + APD concurrent, no double-emit) 14. e2e-testing/scripts/defi/ failure mode scenarios
+(503/gas-spike/sandwich/flash-fail) 15. ✅ strategy-service signal-batching tests — strategy@3dd3a23 Ping DONE per item
+with SHA.
 
-[2026-05-15 session-5] slot-3 — STARTED items 12-15. Post-OOM rebase complete (all repos on live-defi-rollout). Beginning item 12: strategy-service mode parity tests (batch vs paper vs live signal sequence parity).
+[2026-05-15 session-5] slot-3 — STARTED items 12-15. Post-OOM rebase complete (all repos on live-defi-rollout).
+Beginning item 12: strategy-service mode parity tests (batch vs paper vs live signal sequence parity).
 
 [2026-05-15 session-5] slot-3 — ✅ **CYCLE-CLOSE — items 12-15 all done**.
 
-- **Item 12** ✅: strategy-service mode parity tests — 9 tests (direct vs orchestrator 5-tick CSB+APD parity, parametric threshold boundary). strategy@639df90.
-- **Item 13** ✅: strategy-service archetype rotation tests — 7 tests (CSB/APD slot isolation, cross-archetype kill-switch, no double-emit). strategy@639df90.
-- **Item 14** ✅: e2e-testing failure mode scenarios — 4/4 (venue-503, health-factor drop, sandwich collapse, flash-loan kill+restart). e2e-testing@b31881e.
-- **Item 15** ✅: strategy-service signal-batching tests — 6 tests (CSB continuous-emit, entry threshold gating, exit hysteresis/throttle, restart-clears-buffer, APD stateless, APD spread-collapse). strategy@3dd3a23.
+- **Item 12** ✅: strategy-service mode parity tests — 9 tests (direct vs orchestrator 5-tick CSB+APD parity, parametric
+  threshold boundary). strategy@639df90.
+- **Item 13** ✅: strategy-service archetype rotation tests — 7 tests (CSB/APD slot isolation, cross-archetype
+  kill-switch, no double-emit). strategy@639df90.
+- **Item 14** ✅: e2e-testing failure mode scenarios — 4/4 (venue-503, health-factor drop, sandwich collapse, flash-loan
+  kill+restart). e2e-testing@b31881e.
+- **Item 15** ✅: strategy-service signal-batching tests — 6 tests (CSB continuous-emit, entry threshold gating, exit
+  hysteresis/throttle, restart-clears-buffer, APD stateless, APD spread-collapse). strategy@3dd3a23.
 
 Queue exhausted. Slot 3 session-5 DONE.
 
-[2026-05-15 17:55 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked + items 12-15 acked** (mode parity@639df90 + archetype rotation@639df90 + e2e failure modes@b31881e + signal-batching@3dd3a23). Excellent session-5 output. 📋 **NEW QUEUE — ~22 AI-days DeFi + strategy + lending math**:
+[2026-05-15 17:55 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked + items 12-15 acked** (mode parity@639df90 + archetype
+rotation@639df90 + e2e failure modes@b31881e + signal-batching@3dd3a23). Excellent session-5 output. 📋 **NEW QUEUE —
+~22 AI-days DeFi + strategy + lending math**:
 
-1. **defi_classifier_missing_catalog_crossref** (P0) — [`plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md`](../../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md). 604k spurious `attempted_failed` flips averted by 100k cap; root cause is `_classify_defi` missing instruments-service catalog cross-reference (data_type's `available_from` / `available_to` are not consulted). Issue doc has clear spec for the fix. Done-def: classifier consults catalog window + integration test that proves the 604k cohort would NOT be re-flipped + strategy QG green.
+1. **defi_classifier_missing_catalog_crossref** (P0) —
+   [`plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md`](../../plans/active/issues/defi_classifier_missing_catalog_crossref_2026_05_13.md).
+   604k spurious `attempted_failed` flips averted by 100k cap; root cause is `_classify_defi` missing
+   instruments-service catalog cross-reference (data_type's `available_from` / `available_to` are not consulted). Issue
+   doc has clear spec for the fix. Done-def: classifier consults catalog window + integration test that proves the 604k
+   cohort would NOT be re-flipped + strategy QG green.
 
-2. **strategy_service_qg_ltv_threshold_violations** (P1) — [`plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md`](../../plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md). 3 inline LTV/HF threshold params (`priority_gas_uplift`, etc.) that should either get `# CORRECT-LOCAL` exemption comments or move to UAC `LIQUIDATION_PARAMS_REGISTRY`. Pick whichever is correct per CLAUDE.md "no magic numbers" rule. Done-def: 3 violations resolved + strategy QG STEP 5.37 green.
+2. **strategy_service_qg_ltv_threshold_violations** (P1) —
+   [`plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md`](../../plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md).
+   3 inline LTV/HF threshold params (`priority_gas_uplift`, etc.) that should either get `# CORRECT-LOCAL` exemption
+   comments or move to UAC `LIQUIDATION_PARAMS_REGISTRY`. Pick whichever is correct per CLAUDE.md "no magic numbers"
+   rule. Done-def: 3 violations resolved + strategy QG STEP 5.37 green.
 
-3. **strategy_service_qg_step6_production_readiness_newly_exposed** (P1) — [`plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md`](../../plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md). QG step 6 validators fail after step 3.5 fixed. Read the doc, run QG to capture exact failure, fix manifest/plan-validator gap. Done-def: step 6 green + strategy QG end-to-end pass.
+3. **strategy_service_qg_step6_production_readiness_newly_exposed** (P1) —
+   [`plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md`](../../plans/active/issues/strategy_service_qg_step6_production_readiness_newly_exposed_2026_05_14.md).
+   QG step 6 validators fail after step 3.5 fixed. Read the doc, run QG to capture exact failure, fix
+   manifest/plan-validator gap. Done-def: step 6 green + strategy QG end-to-end pass.
 
-4. **compound_kamino_lending_rates_gaps** (P0) — [`plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`](../../plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md). Fix COMPOUND_V3 IRM (populate `borrow_apy` — currently NaN) + asset field. Note: KAMINO portion is BLOCKED-CREDENTIALS (pending operator Helius signup — see `helius_solana_rpc_for_validation_2026_05_13.md`); ship Compound V3 only, leave KAMINO with `BLOCKED-CREDENTIALS` status flag. Done-def: COMPOUND_V3 borrow_apy populated + tests cover non-NaN + MTDS lending_rates QG green.
+4. **compound_kamino_lending_rates_gaps** (P0) —
+   [`plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`](../../plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md).
+   Fix COMPOUND_V3 IRM (populate `borrow_apy` — currently NaN) + asset field. Note: KAMINO portion is
+   BLOCKED-CREDENTIALS (pending operator Helius signup — see `helius_solana_rpc_for_validation_2026_05_13.md`); ship
+   Compound V3 only, leave KAMINO with `BLOCKED-CREDENTIALS` status flag. Done-def: COMPOUND_V3 borrow_apy populated +
+   tests cover non-NaN + MTDS lending_rates QG green.
 
-5. **strategy-service backtest scenarios — additional asset_groups** — extend e2e-testing/scripts/defi/ scenarios you just shipped (item 14) to cover: (a) tradfi paper smoke if config exists, (b) sports paper smoke if config exists, (c) multi-archetype mode-switch (paper → batch within same VM). Done-def: 2-3 new e2e scenarios + smoke log captured.
+5. **strategy-service backtest scenarios — additional asset_groups** — extend e2e-testing/scripts/defi/ scenarios you
+   just shipped (item 14) to cover: (a) tradfi paper smoke if config exists, (b) sports paper smoke if config exists,
+   (c) multi-archetype mode-switch (paper → batch within same VM). Done-def: 2-3 new e2e scenarios + smoke log captured.
 
-6. **strategy-service Phase 11 codex audit** — if a Phase 11 plan exists for strategy-service (check `plans/active/` for `strategy*phase_11*` or `recursive*borrow*`), audit code-vs-codex drift and file issue doc per drift. Done-def: audit report (clean OR drift doc).
+6. **strategy-service Phase 11 codex audit** — if a Phase 11 plan exists for strategy-service (check `plans/active/` for
+   `strategy*phase_11*` or `recursive*borrow*`), audit code-vs-codex drift and file issue doc per drift. Done-def: audit
+   report (clean OR drift doc).
 
-7. **e2e-testing/scripts/defi/ — concurrent-VM scenarios** — extend further: 2 strategy archetypes running simultaneously on same VM (CSB+APD); verify slot isolation + no shared-state leak. Done-def: 2+ concurrent scenarios + log capture.
+7. **e2e-testing/scripts/defi/ — concurrent-VM scenarios** — extend further: 2 strategy archetypes running
+   simultaneously on same VM (CSB+APD); verify slot isolation + no shared-state leak. Done-def: 2+ concurrent
+   scenarios + log capture.
 
-8. **strategy-service venue admission criteria tests** — Phase 10 codex introduced venue admission rules (CSB allows venues w/ ≥X TVL + ≥Y APR; APD requires ≥4 spread venues). Verify rules are enforced in adapter loading. Done-def: 4+ admission scenarios + QG green.
+8. **strategy-service venue admission criteria tests** — Phase 10 codex introduced venue admission rules (CSB allows
+   venues w/ ≥X TVL + ≥Y APR; APD requires ≥4 spread venues). Verify rules are enforced in adapter loading. Done-def: 4+
+   admission scenarios + QG green.
 
-9. **strategy-service archetype-level kill-switch propagation** — extend kill-switch tests: arch-level kill via API (operator pulls CSB kill but leaves APD running). Done-def: 3+ kill-switch tests + QG green.
+9. **strategy-service archetype-level kill-switch propagation** — extend kill-switch tests: arch-level kill via API
+   (operator pulls CSB kill but leaves APD running). Done-def: 3+ kill-switch tests + QG green.
 
-10. **strategy-service emit-window flush tests** — verify pending-emit buffer flushes correctly on STOPPED event (no lost signals at VM shutdown). Done-def: 3+ flush tests + QG green.
+10. **strategy-service emit-window flush tests** — verify pending-emit buffer flushes correctly on STOPPED event (no
+    lost signals at VM shutdown). Done-def: 3+ flush tests + QG green.
 
-**Conflict rules**: features-service = slot 4/9; deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS adapter code = slot 9 owns. Items 1, 2, 3, 5-10 are strategy-service primary; item 4 is MTDS lending_rates handler (you own DeFi protocol classifiers and adjacent IRM data sources).
+**Conflict rules**: features-service = slot 4/9; deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS
+adapter code = slot 9 owns. Items 1, 2, 3, 5-10 are strategy-service primary; item 4 is MTDS lending_rates handler (you
+own DeFi protocol classifiers and adjacent IRM data sources).
 
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_3.md.
 

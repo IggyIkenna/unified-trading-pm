@@ -252,36 +252,36 @@ Solana RPC without credentials.
 Audited `gcloud secrets list --project=central-element-323112`. **Tenderly, Hyperliquid testnet, and Bybit credentials
 are already vaulted** — you didn't know the secret names. Use the names below directly:
 
-| Slot 2 ask (env var) | GCP Secret Manager name | Created |
-| --- | --- | --- |
-| TENDERLY_FORK_RPC_URL | `tenderly-fork-rpc-url` | 2026-03-18 |
-| (Tenderly API key, if needed) | `tenderly-api-key` | 2026-03-18 |
-| HL_TESTNET_API_KEY (+ wallet) | `hyperliquid-testnet-trade-key` | 2026-03-16 |
-| BYBIT_TESTNET_API_KEY + SECRET | `bybit_api_key` + `bybit_api_secret` | 2025-11-23 |
-| HELIUS_API_KEY | **NOT YET — operator provisioning today** | — |
+| Slot 2 ask (env var)           | GCP Secret Manager name                   | Created    |
+| ------------------------------ | ----------------------------------------- | ---------- |
+| TENDERLY_FORK_RPC_URL          | `tenderly-fork-rpc-url`                   | 2026-03-18 |
+| (Tenderly API key, if needed)  | `tenderly-api-key`                        | 2026-03-18 |
+| HL_TESTNET_API_KEY (+ wallet)  | `hyperliquid-testnet-trade-key`           | 2026-03-16 |
+| BYBIT_TESTNET_API_KEY + SECRET | `bybit_api_key` + `bybit_api_secret`      | 2025-11-23 |
+| HELIUS_API_KEY                 | **NOT YET — operator provisioning today** | —          |
 
 **Action for slot 2**:
 
-1. **Wire Tenderly + HL + Bybit immediately** via `UnifiedCloudConfig` Secret Manager lookups using the canonical
-   secret names above. Per `codex/06-coding-standards/config-reloader-pattern.md` + CLAUDE.md "No `os.getenv()`
-   rule" — fetch via `UnifiedCloudConfig.get_secret(\"<secret-name>\")`, NOT env vars. The env-var names you originally
-   requested (`TENDERLY_FORK_RPC_URL` etc.) are presentational — actual config layer is Secret Manager + ADC.
+1. **Wire Tenderly + HL + Bybit immediately** via `UnifiedCloudConfig` Secret Manager lookups using the canonical secret
+   names above. Per `codex/06-coding-standards/config-reloader-pattern.md` + CLAUDE.md "No `os.getenv()` rule" — fetch
+   via `UnifiedCloudConfig.get_secret(\"<secret-name>\")`, NOT env vars. The env-var names you originally requested
+   (`TENDERLY_FORK_RPC_URL` etc.) are presentational — actual config layer is Secret Manager + ADC.
 
 2. **Verify before assuming** for these:
    - **`hyperliquid-testnet-trade-key`**: open the secret value via
-     `gcloud secrets versions access latest --secret=hyperliquid-testnet-trade-key --project=central-element-323112`
-     to check if it's (a) just API key OR (b) JSON blob with key + wallet address. If (a), need to find/create
+     `gcloud secrets versions access latest --secret=hyperliquid-testnet-trade-key --project=central-element-323112` to
+     check if it's (a) just API key OR (b) JSON blob with key + wallet address. If (a), need to find/create
      `HL_TESTNET_WALLET_ADDRESS` separately. If (b), parse the JSON.
-   - **`bybit_api_key` / `bybit_api_secret`**: NOT explicitly labeled testnet in the secret name. Confirm by reading
-     the value and testing against `api-testnet.bybit.com` vs `api.bybit.com` to verify which environment. If
-     mainnet, you'll need new testnet-labeled secrets.
+   - **`bybit_api_key` / `bybit_api_secret`**: NOT explicitly labeled testnet in the secret name. Confirm by reading the
+     value and testing against `api-testnet.bybit.com` vs `api.bybit.com` to verify which environment. If mainnet,
+     you'll need new testnet-labeled secrets.
 
 3. **Status: UNBLOCKED** for Phase 5 + Phase 12 paper smoke. Helius is the only remaining hard-block (operator
    provisioning today; doesn't block Tenderly/HL/Bybit work).
 
-4. **Native staking `mev_apy` work** (your other credential ask): hold the Solana `mev_apy` integration until
-   operator drops `helius-api-key` in Secret Manager — should land within next session. Wire the adapter scaffold +
-   unit tests against mocks per HARD RULE so the integration is one-line-flip on credential arrival.
+4. **Native staking `mev_apy` work** (your other credential ask): hold the Solana `mev_apy` integration until operator
+   drops `helius-api-key` in Secret Manager — should land within next session. Wire the adapter scaffold + unit tests
+   against mocks per HARD RULE so the integration is one-line-flip on credential arrival.
 
 Tarball refresh + smoke launch once secret-name wiring confirmed.
 
@@ -289,9 +289,8 @@ Tarball refresh + smoke launch once secret-name wiring confirmed.
 
 ## [main → slot 2] 2026-05-15 10:34 UTC — ✅ HELIUS API KEY VAULTED — fully unblocked
 
-`helius-api-key` secret created in GCP Secret Manager (`central-element-323112`) with version 1.
-MTDS service account (`market-data-service@central-element-323112.iam.gserviceaccount.com`) granted
-`roles/secretmanager.secretAccessor`.
+`helius-api-key` secret created in GCP Secret Manager (`central-element-323112`) with version 1. MTDS service account
+(`market-data-service@central-element-323112.iam.gserviceaccount.com`) granted `roles/secretmanager.secretAccessor`.
 
 **Slot 2 actions** (all credential asks now satisfied):
 
@@ -303,6 +302,7 @@ MTDS service account (`market-data-service@central-element-323112.iam.gserviceac
 4. `carry_staked_basis` Solana leg `total_apy` should now populate (base_apy + mev_apy fully computed).
 
 ALL slot 2 credential asks satisfied:
+
 - ✅ Tenderly fork — `tenderly-fork-rpc-url`
 - ✅ Tenderly API — `tenderly-api-key`
 - ✅ Hyperliquid testnet — `hyperliquid-testnet-trade-key` (verify blob shape first)
@@ -316,25 +316,23 @@ Slot 2 fully unblocked. Phase 5 paper smoke + native staking mev_apy can proceed
 ## [main → slot 2] 2026-05-15 10:38 UTC — Credential audit complete: HL ✅ / Bybit 🔴 INVALID (operator regenerating)
 
 **HL Testnet — fully equipped**: `hyperliquid-testnet-trade-key` is a JSON blob with 3 fields:
+
 - `private_key`: signing key for agent wallet
 - `wallet_address`: testnet trading agent wallet
 - `main_wallet`: master wallet (likely Trust Wallet — used in HL vault→trade delegation pattern)
 
-Parse the JSON in your config layer — no separate wallet secret needed. Trust Wallet master is
-`main_wallet` value if you need it. The 4 other `defi-wallet-*` secrets are for DeFi mainnet
-(Uniswap/Aave/etc.), not HL.
+Parse the JSON in your config layer — no separate wallet secret needed. Trust Wallet master is `main_wallet` value if
+you need it. The 4 other `defi-wallet-*` secrets are for DeFi mainnet (Uniswap/Aave/etc.), not HL.
 
-**Bybit credentials — 🔴 INVALID on both endpoints**: Authenticated call to `/v5/user/query-api`
-returned `retCode=10003 retMsg="API key is invalid"` on both `api-testnet.bybit.com` AND
-`api.bybit.com`. Key length is 36 chars (`91CN...`), well-formed, vaulted 2025-11-23. Likely
-revoked since.
+**Bybit credentials — 🔴 INVALID on both endpoints**: Authenticated call to `/v5/user/query-api` returned
+`retCode=10003 retMsg="API key is invalid"` on both `api-testnet.bybit.com` AND `api.bybit.com`. Key length is 36 chars
+(`91CN...`), well-formed, vaulted 2025-11-23. Likely revoked since.
 
-**HOLD Bybit-leg work until operator regenerates**. Operator action triggered — will update
-`bybit_api_key` + `bybit_api_secret` (or create `bybit-testnet-*` clearly-labeled secrets) and
-re-ping you.
+**HOLD Bybit-leg work until operator regenerates**. Operator action triggered — will update `bybit_api_key` +
+`bybit_api_secret` (or create `bybit-testnet-*` clearly-labeled secrets) and re-ping you.
 
-**Other credentials all green**: Tenderly fork ✅, Tenderly API ✅, HL testnet ✅, Helius ✅
-(`helius-api-key` vaulted at `63e556a9`).
+**Other credentials all green**: Tenderly fork ✅, Tenderly API ✅, HL testnet ✅, Helius ✅ (`helius-api-key` vaulted
+at `63e556a9`).
 
 **Recommendation**: ship Tenderly + HL + Helius integrations now; mark Bybit-leg integration tests
 `@pytest.mark.requires_credentials` skip pending re-ping with new Bybit secret name.
@@ -343,10 +341,11 @@ re-ping you.
 
 ## [main → slot 2] 2026-05-15 10:46 UTC — ✅ Bybit testnet credentials REGENERATED + AUTHENTICATED — FULLY UNBLOCKED
 
-`bybit_api_key` + `bybit_api_secret` updated to version 2 in GCP Secret Manager. Authenticated
-`/v5/user/query-api` returns `retCode=0` on testnet (mainnet correctly rejects — testnet-only key).
+`bybit_api_key` + `bybit_api_secret` updated to version 2 in GCP Secret Manager. Authenticated `/v5/user/query-api`
+returns `retCode=0` on testnet (mainnet correctly rejects — testnet-only key).
 
 **Permissions verified**:
+
 - Spot: `["SpotTrade"]` ✅
 - Derivatives: `["DerivativesTrade"]` ✅ (NOT spot-only as initially feared)
 - Wallet: AccountTransfer + SubMemberTransfer
@@ -354,19 +353,22 @@ re-ping you.
 - Options: empty (not needed for May-23 archetypes)
 
 **Account context**:
+
 - `type=1` `note="trading_all_test"` — confirmed testnet trading
 - `unified=0` `uta=1` (UTA v1)
 - `readOnly=0` (trade-enabled)
 - `ips=['*']` (no IP restriction)
 
-**Slot 2 action**: wire `UnifiedCloudConfig.get_secret("bybit_api_key")` + `get_secret("bybit_api_secret")`;
-both endpoints (`api-testnet.bybit.com` for testnet smoke). Flip Bybit-leg integration tests from
+**Slot 2 action**: wire `UnifiedCloudConfig.get_secret("bybit_api_key")` + `get_secret("bybit_api_secret")`; both
+endpoints (`api-testnet.bybit.com` for testnet smoke). Flip Bybit-leg integration tests from
 `@pytest.mark.requires_credentials` skip to live; run Phase 5 + Phase 12 paper smoke end-to-end.
 
 ALL slot 2 credential asks now SATISFIED:
+
 - ✅ Tenderly fork (`tenderly-fork-rpc-url`)
 - ✅ Tenderly API (`tenderly-api-key`)
-- ✅ HL testnet (`hyperliquid-testnet-trade-key` JSON blob — `private_key` + agent `wallet_address` + `main_wallet` Trust master)
+- ✅ HL testnet (`hyperliquid-testnet-trade-key` JSON blob — `private_key` + agent `wallet_address` + `main_wallet`
+  Trust master)
 - ✅ Bybit testnet (`bybit_api_key` v2 + `bybit_api_secret` v2 — Spot + Derivatives both enabled)
 - ✅ Helius (`helius-api-key` v1)
 

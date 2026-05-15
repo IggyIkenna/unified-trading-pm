@@ -230,77 +230,175 @@ enum constraint. (3) "EVENT_NAME" placeholders exist only in codex/06 test-templ
 Import paths: all `from unified_trading_library import log_event` are valid (UTL root re-exports). No further malformed
 callsites found. Starting item 3 (UTL config_interface coverage).
 
-[2026-05-15 19:30 UTC] slot-6 — ✅ **ITEM 3 DONE: UTL config_interface coverage** — UTL QG now GREEN (≥80% total).
-Fixes shipped (UTL@246ab77): (1) testnet_contracts.py `_default_yaml_path()` path fix (4 levels up → workspace root);
-(2) PROTOCOL_SCHEMAS validation unblocked — removed `recursive_leverage_receiver` from aave_v3 required (not deployed
-on any chain, 6 × missing) and `swap_router` from uniswap_v3 required (key varies by chain: swap_router vs
-swap_router_02, 3 × missing → 9 total missing fixed); (3) test_testnet_contracts.py YAML path fix (5 levels up);
-(4) test_venue_config.py stale venue name: UNISWAPV2-ETH → UNISWAPV2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR
-wired into UTL quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ +
-events/ + events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR
-in base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.
+[2026-05-15 19:30 UTC] slot-6 — ✅ **ITEM 3 DONE: UTL config_interface coverage** — UTL QG now GREEN (≥80% total). Fixes
+shipped (UTL@246ab77): (1) testnet_contracts.py `_default_yaml_path()` path fix (4 levels up → workspace root); (2)
+PROTOCOL_SCHEMAS validation unblocked — removed `recursive_leverage_receiver` from aave_v3 required (not deployed on any
+chain, 6 × missing) and `swap_router` from uniswap_v3 required (key varies by chain: swap_router vs swap_router_02, 3 ×
+missing → 9 total missing fixed); (3) test_testnet_contracts.py YAML path fix (5 levels up); (4) test_venue_config.py
+stale venue name: UNISWAPV2-ETH → UNISWAPV2-ETHEREUM (3 occurrences); (5) PYTEST_UNIT_DIR wired into UTL
+quality-gates.sh adding 7 per-family test dirs (tests/config_interface/unit/ + cloud_interface/unit/ + events/ +
+events_interface/ + pnl_attribution/unit/ + usage_meter/unit/ + security/). LDR already had PYTEST_UNIT_DIR in
+base-library.sh (from another slot). QG verified passing twice (bxgu9ilzw 453s + blervnn7r 455s). Starting item 4.
 
-[2026-05-15 10:35 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +3 BUFFER** (after items 4-10). Push to ~20 AI-days.
-11. **UTL signing helper concurrent-call stress tests** — KMS/cloud_kms_signer/wallet_signer under N=100 concurrent sign calls; verify no key leak, no race, no partial-sign. Done-def: 3+ stress tests + UTL QG green.
-12. **UAC custody contract round-trip tests** — WalletProvisioningConfig, SigningSurface, CloudKmsConfig: encode → decode → equality. Surgical edits only (Ikenna primary UAC owner). Done-def: round-trip tests + UAC QG green.
-13. **codex/04-architecture full audit pass** — workspace-wide: every doc in codex/04-architecture/ matches shipped code. File one issue doc consolidating drift across docs. Done-def: full pass report.
+[2026-05-15 10:35 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +3 BUFFER** (after items 4-10). Push to ~20 AI-days. 11.
+**UTL signing helper concurrent-call stress tests** — KMS/cloud_kms_signer/wallet_signer under N=100 concurrent sign
+calls; verify no key leak, no race, no partial-sign. Done-def: 3+ stress tests + UTL QG green. 12. **UAC custody
+contract round-trip tests** — WalletProvisioningConfig, SigningSurface, CloudKmsConfig: encode → decode → equality.
+Surgical edits only (Ikenna primary UAC owner). Done-def: round-trip tests + UAC QG green. 13. **codex/04-architecture
+full audit pass** — workspace-wide: every doc in codex/04-architecture/ matches shipped code. File one issue doc
+consolidating drift across docs. Done-def: full pass report.
 
-[2026-05-15 20:30 UTC] slot-6 — ✅ **ITEM 4 DONE: execution-service native adapter contract tests** — 19 contract compliance tests added (execution@9d50f02d): (1) tests/unit/test_native_adapter_contracts.py: 5 adapter families × 3-4 tests each — BybitCeFiAdapter, OKXCeFiAdapter, BitfinexCeFiAdapter, BitgetCeFiAdapter, KrakenCeFiAdapter; each verifies parse_order_response → CanonicalOrder with correct status/filled_quantity/avg_price fields; (2) BUG FIXED: kraken_rest_adapter.py status map produced uppercase PENDING/OPEN/FILLED/CANCELLED and used side.upper()/order_type.upper() but CanonicalOrder enum requires lowercase — now all lowercase (consistent with all other native adapters); (3) PYTEST_UNIT_DIR wired into execution-service quality-gates.sh to also collect tests/trade_execution/unit/ (46 adapter-contract + schema tests previously uncollected). All 19 tests pass (0.69s). QG running in background. Starting item 5 (codex/04-architecture/* drift audit).
+[2026-05-15 20:30 UTC] slot-6 — ✅ **ITEM 4 DONE: execution-service native adapter contract tests** — 19 contract
+compliance tests added (execution@9d50f02d): (1) tests/unit/test_native_adapter_contracts.py: 5 adapter families × 3-4
+tests each — BybitCeFiAdapter, OKXCeFiAdapter, BitfinexCeFiAdapter, BitgetCeFiAdapter, KrakenCeFiAdapter; each verifies
+parse_order_response → CanonicalOrder with correct status/filled_quantity/avg_price fields; (2) BUG FIXED:
+kraken_rest_adapter.py status map produced uppercase PENDING/OPEN/FILLED/CANCELLED and used
+side.upper()/order_type.upper() but CanonicalOrder enum requires lowercase — now all lowercase (consistent with all
+other native adapters); (3) PYTEST_UNIT_DIR wired into execution-service quality-gates.sh to also collect
+tests/trade_execution/unit/ (46 adapter-contract + schema tests previously uncollected). All 19 tests pass (0.69s). QG
+running in background. Starting item 5 (codex/04-architecture/\* drift audit).
 
-[2026-05-15 20:50 UTC] slot-6 — ✅ **ITEM 5 DONE: codex/04-architecture/* drift audit** — Full audit of 4 docs (flash-loan-receiver.md already audited in prior cycle). All DRIFT-FREE: (1) interface-credential-convention.md: get_order_adapter/connector.connect/CLOUD_KMS_ENCRYPTED patterns all match shipped code ✅; (2) shard-level-failure-isolation.md: no bare raise in adapter loops; classify_venue_error used correctly in all checked adapters ✅; (3) custody-providers.md: SigningSurface.CLOUD_KMS_ENCRYPTED enum confirmed; LocalKeyCustodyProvider + CloudKmsCustodyProvider exist; CeffuCustodyProvider is STUB (June-1) correctly ✅; (4) defi-execution-overview.md: 30 DefiErrorCode values confirmed (13 AAVE + 7 RECURSIVE_LOOP + 8 HL + 2 ORACLE); Phase 9 cost model section added in item 1 ✅. No issue doc needed. Starting item 6 (UTL signing helpers concurrent-call tests).
+[2026-05-15 20:50 UTC] slot-6 — ✅ **ITEM 5 DONE: codex/04-architecture/\* drift audit** — Full audit of 4 docs
+(flash-loan-receiver.md already audited in prior cycle). All DRIFT-FREE: (1) interface-credential-convention.md:
+get_order_adapter/connector.connect/CLOUD_KMS_ENCRYPTED patterns all match shipped code ✅; (2)
+shard-level-failure-isolation.md: no bare raise in adapter loops; classify_venue_error used correctly in all checked
+adapters ✅; (3) custody-providers.md: SigningSurface.CLOUD_KMS_ENCRYPTED enum confirmed; LocalKeyCustodyProvider +
+CloudKmsCustodyProvider exist; CeffuCustodyProvider is STUB (June-1) correctly ✅; (4) defi-execution-overview.md: 30
+DefiErrorCode values confirmed (13 AAVE + 7 RECURSIVE_LOOP + 8 HL + 2 ORACLE); Phase 9 cost model section added in item
+1 ✅. No issue doc needed. Starting item 6 (UTL signing helpers concurrent-call tests).
 
-[2026-05-15 21:10 UTC] slot-6 — ✅ **ITEM 6 DONE: UTL signing helpers concurrent-call tests** — 4 concurrency tests added to tests/security/test_hmac_signing.py (UTL@c533b82): 50-thread pool: (1) test_concurrent_sign_determinism — same (payload,secret) → identical digest across all 50 threads; (2) test_concurrent_sign_no_key_leak — unique secrets per thread → no cross-thread digest collision; (3) test_concurrent_verify_all_valid — all 50 concurrent verify() calls return True; (4) test_concurrent_build_envelope_no_mutation — shared input dict stays unchanged after 50 concurrent builds. All 23 tests pass. Note: signing module is stdlib-only + stateless → trivially thread-safe; tests serve as a regression lock. Also: QG returned exit 0 for item 4 work despite 1 pre-existing stale test; fixed both stale tests exposed by PYTEST_UNIT_DIR extension (execution@ca460f0c). Starting item 7 (codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md sweep).
+[2026-05-15 21:10 UTC] slot-6 — ✅ **ITEM 6 DONE: UTL signing helpers concurrent-call tests** — 4 concurrency tests
+added to tests/security/test_hmac_signing.py (UTL@c533b82): 50-thread pool: (1) test_concurrent_sign_determinism — same
+(payload,secret) → identical digest across all 50 threads; (2) test_concurrent_sign_no_key_leak — unique secrets per
+thread → no cross-thread digest collision; (3) test_concurrent_verify_all_valid — all 50 concurrent verify() calls
+return True; (4) test_concurrent_build_envelope_no_mutation — shared input dict stays unchanged after 50 concurrent
+builds. All 23 tests pass. Note: signing module is stdlib-only + stateless → trivially thread-safe; tests serve as a
+regression lock. Also: QG returned exit 0 for item 4 work despite 1 pre-existing stale test; fixed both stale tests
+exposed by PYTEST_UNIT_DIR extension (execution@ca460f0c). Starting item 7
+(codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md sweep).
 
-[2026-05-15 21:30 UTC] slot-6 — ✅ **ITEM 7 DONE: MASTER_READINESS A-G sweep** — Refreshed codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Changes: (1) Added last_refreshed: 2026-05-15 frontmatter field + refresh_note; (2) Fixed Group F item 19 custody description — was misleadingly "Copper for DeFi side; CEFFU for Binance" implying May-23 custody; corrected to: May-23 = CLOUD_KMS_ENCRYPTED (GCP KMS), Copper+CEFFU = June-1; (3) Added re-verified 2026-05-15 note in Tier-1 service list block with key post-2026-05-08 update summary (batch_live_reconciler confirmed, 30 DefiErrorCodes drift-audited, no structural 23-item model changes). All 23 A-G items verified accurate vs shipped code. PM@1051d3b6. Starting item 8 (UAC custody contract tests).
+[2026-05-15 21:30 UTC] slot-6 — ✅ **ITEM 7 DONE: MASTER_READINESS A-G sweep** — Refreshed
+codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md after heavy multi-slot shipping (slots 2-9, 2026-05-14/15).
+Changes: (1) Added last_refreshed: 2026-05-15 frontmatter field + refresh_note; (2) Fixed Group F item 19 custody
+description — was misleadingly "Copper for DeFi side; CEFFU for Binance" implying May-23 custody; corrected to: May-23 =
+CLOUD_KMS_ENCRYPTED (GCP KMS), Copper+CEFFU = June-1; (3) Added re-verified 2026-05-15 note in Tier-1 service list block
+with key post-2026-05-08 update summary (batch_live_reconciler confirmed, 30 DefiErrorCodes drift-audited, no structural
+23-item model changes). All 23 A-G items verified accurate vs shipped code. PM@1051d3b6. Starting item 8 (UAC custody
+contract tests).
 
-[2026-05-15 22:00 UTC] slot-6 — ✅ **ITEM 8 DONE: UAC custody contract round-trip + schema versioning** — (1) Added CANONICAL_WALLET_PROVISIONING_VERSION = "1.0.0" to wallet_config.py + exported from internal/domain/defi/__init__.py (UAC@a6a0f09); (2) Added 5 round-trip + schema versioning tests to test_wallet_provisioning_schema.py: semver constant check, SigningSurface StrEnum round-trip via .value, JSON-native StrEnum serialization, WalletProvisioningConfig field reconstruction via dataclasses.fields(), SpendingCaps Decimal precision preservation; UAC QG GREEN (130s, 35 wallet provisioning tests); (3) Fixed pre-existing PinnacleAdapterStub in execution-service test_sports_polymarket_adapters.py — basedpyright undefined-variable errors resolved; execution QG GREEN (513s); execution@fc5a8de9. Starting item 9 (UTL emission_publisher consumer-side coverage).
+[2026-05-15 22:00 UTC] slot-6 — ✅ **ITEM 8 DONE: UAC custody contract round-trip + schema versioning** — (1) Added
+CANONICAL_WALLET_PROVISIONING_VERSION = "1.0.0" to wallet_config.py + exported from internal/domain/defi/**init**.py
+(UAC@a6a0f09); (2) Added 5 round-trip + schema versioning tests to test_wallet_provisioning_schema.py: semver constant
+check, SigningSurface StrEnum round-trip via .value, JSON-native StrEnum serialization, WalletProvisioningConfig field
+reconstruction via dataclasses.fields(), SpendingCaps Decimal precision preservation; UAC QG GREEN (130s, 35 wallet
+provisioning tests); (3) Fixed pre-existing PinnacleAdapterStub in execution-service test_sports_polymarket_adapters.py
+— basedpyright undefined-variable errors resolved; execution QG GREEN (513s); execution@fc5a8de9. Starting item 9 (UTL
+emission_publisher consumer-side coverage).
 
-[2026-05-15 11:15 UTC] [main → slot 6] — ✅ **items 1-8 all acked.** Outstanding run: Phase 9 codex pointers@90db21ab + log_event audit@d06ec579 + UTL config_interface@246ab77 + native adapter contracts@9d50f02d (Kraken bug fixed!) + codex/04-architecture drift (0 drift) + HMAC concurrent tests@c533b82 + MASTER_READINESS refresh@1051d3b6 + UAC wallet provisioning@a6a0f09 + execution stale test fix@fc5a8de9. LEDGER → 🟢 IN FLIGHT item 9.
-Continue items 9-10:
-9. UTL emission_publisher consumer-side coverage finalization
-10. Phase 9 patterns orphan codex pointer check
-Then items 11-13 buffer (signing stress + UAC custody round-trip + codex/04-architecture audit — note: item 12 UAC round-trip is already DONE per item 8 above, so skip 12 and proceed 11→13). Ping DONE per item.
+[2026-05-15 11:15 UTC] [main → slot 6] — ✅ **items 1-8 all acked.** Outstanding run: Phase 9 codex pointers@90db21ab +
+log_event audit@d06ec579 + UTL config_interface@246ab77 + native adapter contracts@9d50f02d (Kraken bug fixed!) +
+codex/04-architecture drift (0 drift) + HMAC concurrent tests@c533b82 + MASTER_READINESS refresh@1051d3b6 + UAC wallet
+provisioning@a6a0f09 + execution stale test fix@fc5a8de9. LEDGER → 🟢 IN FLIGHT item 9. Continue items 9-10: 9. UTL
+emission_publisher consumer-side coverage finalization 10. Phase 9 patterns orphan codex pointer check Then items 11-13
+buffer (signing stress + UAC custody round-trip + codex/04-architecture audit — note: item 12 UAC round-trip is already
+DONE per item 8 above, so skip 12 and proceed 11→13). Ping DONE per item.
 
-[2026-05-15 POST-OOM UTC] slot-6 — 🔄 **RE-ACTIVATE after OOM kill** — All repos rebased to LDR. Prior session had all items 1-8 DONE (per 17:15 ping). Starting Item 9 (UTL emission_publisher consumer-side coverage finalization) + Item 10 (Phase 9 orphan codex check), then items 11 + 13.
+[2026-05-15 POST-OOM UTC] slot-6 — 🔄 **RE-ACTIVATE after OOM kill** — All repos rebased to LDR. Prior session had all
+items 1-8 DONE (per 17:15 ping). Starting Item 9 (UTL emission_publisher consumer-side coverage finalization) + Item 10
+(Phase 9 orphan codex check), then items 11 + 13.
 
-[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 9 DONE: UTL emission_publisher consumer-side coverage** — Fixed wrong service name ("features-volatility-service" → "features-service") causing 1 test failure; added 4 edge-path tests: >50-item incomplete_window cap, force_refresh=True propagation, extra_event_details pass-through, correlation_id pass-through in publish_with_manifest_lookup. Also fixed ruff E501 wraps in test_hmac_signing.py from c533b82. UTL@ce89045. Starting Item 10 (Phase 9 patterns orphan codex pointer check).
+[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 9 DONE: UTL emission_publisher consumer-side coverage** — Fixed wrong
+service name ("features-volatility-service" → "features-service") causing 1 test failure; added 4 edge-path
+tests: >50-item incomplete_window cap, force_refresh=True propagation, extra_event_details pass-through, correlation_id
+pass-through in publish_with_manifest_lookup. Also fixed ruff E501 wraps in test_hmac_signing.py from c533b82.
+UTL@ce89045. Starting Item 10 (Phase 9 patterns orphan codex pointer check).
 
-[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 10 DONE: Phase 9 codex audit closure** — Workspace-wide audit: all 4 Phase 9 cost model files (gas_cost_model.py, slippage_cost_model.py, flash_premium_cost_model.py, cost_aggregator.py) have codex pointers in defi-execution-overview.md § Phase 9 (added in item 1 this session). ReconGate = pre-Phase-9 pattern (not orphan). Backtest replay + deployment-ui viz = BLOCKED-DATA with explicit plan entries. 0 orphan Phase 9 patterns. No issue doc needed. Starting Item 11 (UTL HMAC signing N=100 stress tests).
+[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 10 DONE: Phase 9 codex audit closure** — Workspace-wide audit: all 4 Phase
+9 cost model files (gas_cost_model.py, slippage_cost_model.py, flash_premium_cost_model.py, cost_aggregator.py) have
+codex pointers in defi-execution-overview.md § Phase 9 (added in item 1 this session). ReconGate = pre-Phase-9 pattern
+(not orphan). Backtest replay + deployment-ui viz = BLOCKED-DATA with explicit plan entries. 0 orphan Phase 9 patterns.
+No issue doc needed. Starting Item 11 (UTL HMAC signing N=100 stress tests).
 
-[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 11 DONE: UTL HMAC signing N=100 stress tests** — TestHighLoadStressSignPayload class added: (1) test_high_load_sign_determinism — 100 threads same payload → identical digest; (2) test_high_load_key_isolation — 100 unique secrets → no cross-thread collision; (3) test_high_load_verify_tampered_rejection — 50 valid + 50 tampered (tampered all False, valid all True). 26 tests pass. UTL@cd49887. Starting Item 13 (codex/04-architecture full audit pass).
+[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 11 DONE: UTL HMAC signing N=100 stress tests** —
+TestHighLoadStressSignPayload class added: (1) test_high_load_sign_determinism — 100 threads same payload → identical
+digest; (2) test_high_load_key_isolation — 100 unique secrets → no cross-thread collision; (3)
+test_high_load_verify_tampered_rejection — 50 valid + 50 tampered (tampered all False, valid all True). 26 tests pass.
+UTL@cd49887. Starting Item 13 (codex/04-architecture full audit pass).
 
-[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 13 DONE: codex/04-architecture full audit pass** — Full pass over 90+ docs. 14 docs specifically audited for code-symbol drift. 0 breaking drift found. Found 2 categories of non-blocking stale refs: (A) 4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers; (B) 4 docs with `pyright` → `basedpyright`. Filed consolidating issue doc at plans/active/issues/codex_04_architecture_drift_audit_2026_05_15.md. P3 batch cleanup post-May-23. PM@<sha> LDR. QUEUE EXHAUSTED — all items 9-11+13 done. 🏁 CYCLE-CLOSE.
+[2026-05-15 POST-OOM UTC] slot-6 — ✅ **ITEM 13 DONE: codex/04-architecture full audit pass** — Full pass over 90+ docs.
+14 docs specifically audited for code-symbol drift. 0 breaking drift found. Found 2 categories of non-blocking stale
+refs: (A) 4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers; (B) 4 docs with `pyright`
+→ `basedpyright`. Filed consolidating issue doc at plans/active/issues/codex_04_architecture_drift_audit_2026_05_15.md.
+P3 batch cleanup post-May-23. PM@<sha> LDR. QUEUE EXHAUSTED — all items 9-11+13 done. 🏁 CYCLE-CLOSE.
 
-[2026-05-15 17:35 UTC] [main → slot 6] — 🏁 **CYCLE-CLOSE acked + items 9/10/11/13 acked** (UTL emission_publisher@ce89045 + Phase 9 orphan-audit clean + UTL HMAC stress@cd49887 + codex/04 audit). Outstanding 13-item-shipped session across UTL + UAC + codex. New issue doc `codex_04_architecture_drift_audit_2026_05_15.md` filed (P3 post-May-23 batch).
+[2026-05-15 17:35 UTC] [main → slot 6] — 🏁 **CYCLE-CLOSE acked + items 9/10/11/13 acked** (UTL
+emission_publisher@ce89045 + Phase 9 orphan-audit clean + UTL HMAC stress@cd49887 + codex/04 audit). Outstanding
+13-item-shipped session across UTL + UAC + codex. New issue doc `codex_04_architecture_drift_audit_2026_05_15.md` filed
+(P3 post-May-23 batch).
 
 📋 **NEW QUEUE — ~12 AI-days UTL QG + codex drift + SIT scenarios**:
 
-1. **utl_qg_preexisting_failures fix sweep** (P1) — [`plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md`](../../plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md). 6 categories of pre-existing UTL QG failures with documented fix paths (cloud SDK imports, backward-compat shims, etc.). Slice by category: start with the category that closes the most failures with the least risk (read the doc's per-category table). Done-def: ≥3 categories closed + UTL QG green. Self-pivot through remaining categories if time.
+1. **utl_qg_preexisting_failures fix sweep** (P1) —
+   [`plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md`](../../plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md).
+   6 categories of pre-existing UTL QG failures with documented fix paths (cloud SDK imports, backward-compat shims,
+   etc.). Slice by category: start with the category that closes the most failures with the least risk (read the doc's
+   per-category table). Done-def: ≥3 categories closed + UTL QG green. Self-pivot through remaining categories if time.
 
-2. **strategy_service_phase8_codex_drift** (P1) — [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md). 5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` + `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. Quick win (~2 AI-days).
+2. **strategy_service_phase8_codex_drift** (P1) —
+   [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md).
+   5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` +
+   `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. Quick win (~2 AI-days).
 
-3. **strategy_service_phase10_codex_drift — Drift 2 ONLY** (P3 nice-to-have) — [`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md). Drift 1 (eligible_venues SOR triage) is routed to slot 1 main — DO NOT touch. Drift 2 (defi_lp/mev → family mapping is docstring-only): add 2 codex pointer lines. Done-def: drift 2 closed.
+3. **strategy_service_phase10_codex_drift — Drift 2 ONLY** (P3 nice-to-have) —
+   [`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md).
+   Drift 1 (eligible_venues SOR triage) is routed to slot 1 main — DO NOT touch. Drift 2 (defi_lp/mev → family mapping
+   is docstring-only): add 2 codex pointer lines. Done-def: drift 2 closed.
 
-4. **sit_may23_critical_path_coverage_gaps** (P1) — [`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`](../../plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md). Add SIT scenarios for: (a) DeFi paper carry, (b) DeFi paper APD, (c) mode-switch live/batch gate, (d) batch-live DeFi parity smoke. Done-def: 4 scenarios shipped + sit QG green. Coordinate with slot 5 (Tenderly fixtures) if overlap — they're on execution-service integration tests, separate surface.
+4. **sit_may23_critical_path_coverage_gaps** (P1) —
+   [`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`](../../plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md).
+   Add SIT scenarios for: (a) DeFi paper carry, (b) DeFi paper APD, (c) mode-switch live/batch gate, (d) batch-live DeFi
+   parity smoke. Done-def: 4 scenarios shipped + sit QG green. Coordinate with slot 5 (Tenderly fixtures) if overlap —
+   they're on execution-service integration tests, separate surface.
 
-5. **expected_unattempted_propagation_gap** (P1) — [`plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md`](../../plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md). Wire `record_expected_unattempted()` into MTDS/MDPS/features/ML skip paths. Issue says "suggested owner Ikenna" but the UTL emission_publisher chain you just shipped (item 9) is exactly the underlying mechanism. You're closer to the code than Ikenna — finish the wiring. Done-def: 4 services (MTDS/MDPS/features/ML) emit `expected_unattempted` events through UTL chain, with tests.
+5. **expected_unattempted_propagation_gap** (P1) —
+   [`plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md`](../../plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md).
+   Wire `record_expected_unattempted()` into MTDS/MDPS/features/ML skip paths. Issue says "suggested owner Ikenna" but
+   the UTL emission_publisher chain you just shipped (item 9) is exactly the underlying mechanism. You're closer to the
+   code than Ikenna — finish the wiring. Done-def: 4 services (MTDS/MDPS/features/ML) emit `expected_unattempted` events
+   through UTL chain, with tests.
 
-**Conflict rules**: UAC = surgical edits only (Ikenna primary owner); MTDS = slot 9 only (53-test triage in flight); features-service = slot 4/9 (skip); strategy-service codex = OK for you (slot 3 is shipping new code, codex docs are separate surface).
+**Conflict rules**: UAC = surgical edits only (Ikenna primary owner); MTDS = slot 9 only (53-test triage in flight);
+features-service = slot 4/9 (skip); strategy-service codex = OK for you (slot 3 is shipping new code, codex docs are
+separate surface).
 
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_6.md.
 
-[2026-05-15 POST-OOM-2 UTC] slot-6 — 🟢 **STARTED NEW QUEUE** — 5-item queue acked (~12 AI-days UTL QG + codex drift + SIT). Reading issue docs for all 5 items. Self-pivoting through 1→2→3→4→5.
+[2026-05-15 POST-OOM-2 UTC] slot-6 — 🟢 **STARTED NEW QUEUE** — 5-item queue acked (~12 AI-days UTL QG + codex drift +
+SIT). Reading issue docs for all 5 items. Self-pivoting through 1→2→3→4→5.
 
 [2026-05-15 18:05 UTC] [main → slot 6] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 1-5). Push to ~20 AI-days:
 
-6. **codex_04_architecture_drift_audit cleanup** (P3 batch from your prior cycle) — the issue doc you just filed lists 4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` → `basedpyright` references. Mechanical sed-style fixes, ~30 min. Done-def: 8 docs updated + grep confirms 0 stale refs.
+6. **codex_04_architecture_drift_audit cleanup** (P3 batch from your prior cycle) — the issue doc you just filed lists 4
+   docs with `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` →
+   `basedpyright` references. Mechanical sed-style fixes, ~30 min. Done-def: 8 docs updated + grep confirms 0 stale
+   refs.
 
-7. **UTL test additions for QG_MEM_CAP behavior** — `base-service.sh` (this morning's PM@c3cb11f6) added `MEM_WRAP` array + macOS fallback warning. Add UTL-side bash smoke tests verifying: (a) Linux path builds MEM_WRAP; (b) macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke tests + UTL QG green.
+7. **UTL test additions for QG_MEM_CAP behavior** — `base-service.sh` (this morning's PM@c3cb11f6) added `MEM_WRAP`
+   array + macOS fallback warning. Add UTL-side bash smoke tests verifying: (a) Linux path builds MEM_WRAP; (b)
+   macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke
+   tests + UTL QG green.
 
-8. **uac_qg_preexisting_size_violations — Harsh-side surgical 1-file** (P2) — [`plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md`](../../plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md). 5 pre-existing size violations in UAC. Ikenna primary owner — pick the SMALLEST/clearest-cut of the 5; refactor that one only; leave the other 4 for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+8. **uac_qg_preexisting_size_violations — Harsh-side surgical 1-file** (P2) —
+   [`plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md`](../../plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md).
+   5 pre-existing size violations in UAC. Ikenna primary owner — pick the SMALLEST/clearest-cut of the 5; refactor that
+   one only; leave the other 4 for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
 
-9. **codex/06-coding-standards/quality-gates.md SSOT refresh** — verify the SSOT doc cross-links to the new `codex/06-coding-standards/quality-gates-memory-governance.md` (this morning's PM@bc6e15e6 + ca3fad47 followup). The new doc is standalone; quality-gates.md should reference it from § "Memory Governance" or similar. Done-def: cross-link added + sweep finds no stale references to the OLD `cpu_count // 4` default.
+9. **codex/06-coding-standards/quality-gates.md SSOT refresh** — verify the SSOT doc cross-links to the new
+   `codex/06-coding-standards/quality-gates-memory-governance.md` (this morning's PM@bc6e15e6 + ca3fad47 followup). The
+   new doc is standalone; quality-gates.md should reference it from § "Memory Governance" or similar. Done-def:
+   cross-link added + sweep finds no stale references to the OLD `cpu_count // 4` default.
 
-**Conflict rules (unchanged)**: UAC = surgical edits ONLY (item 8 take 1 file only); MTDS = slot 9; features-service = slot 4/9; strategy-service codex docs = OK for you.
+**Conflict rules (unchanged)**: UAC = surgical edits ONLY (item 8 take 1 file only); MTDS = slot 9; features-service =
+slot 4/9; strategy-service codex docs = OK for you.
 
 Self-pivot through items 6-9 after the 5-item primary queue closes.

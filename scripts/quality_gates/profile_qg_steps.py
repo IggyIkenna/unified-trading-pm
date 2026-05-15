@@ -42,8 +42,8 @@ MANIFEST_PATH: Final[Path] = PM_ROOT / "workspace-manifest.json"
 # Patterns that mark the start of a new section in QG output
 SECTION_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"(?:\[(?:[0-9]+(?:\.[0-9]+)?|ACT)/6\]"  # [N/6] or [N.M/6] section headers
-    r"|STEP [0-9]+\.[0-9]+"                   # STEP N.M
-    r"|\[ACT\])"                               # [ACT] section
+    r"|STEP [0-9]+\.[0-9]+"  # STEP N.M
+    r"|\[ACT\])"  # [ACT] section
 )
 
 PASS_PATTERN: Final[re.Pattern[str]] = re.compile(r"✅|✓|log_success|PASS")
@@ -117,7 +117,11 @@ class ProfileReport:
         ]
         for step in self.slowest_steps:
             pct = (step.duration_s / self.total_duration_s * 100) if self.total_duration_s > 0 else 0.0
-            icon = "✅" if step.status == "pass" else ("❌" if step.status == "fail" else ("⚠️ " if step.status == "warn" else "  "))
+            icon = (
+                "✅"
+                if step.status == "pass"
+                else ("❌" if step.status == "fail" else ("⚠️ " if step.status == "warn" else "  "))
+            )
             lines.append(f"{step.name:<40} {step.duration_s:>8.1f}s {pct:>7.1f}% {icon}")
         return "\n".join(lines)
 
@@ -220,7 +224,8 @@ def run(
         target_repos = [repo_name]
     elif all_repos:
         target_repos = [
-            r for r, meta in manifest.items()
+            r
+            for r, meta in manifest.items()
             if not meta.get("archived_into") and meta.get("type") not in {"ui", "devops"}
         ]
     else:

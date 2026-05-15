@@ -347,63 +347,105 @@ doc).
   analyze_vm_costs.py).
 
 [2026-05-15 17:35 UTC] slot-2 — ✅ **DONE item 4** (VM cost analysis automation). deployment-service@920ff18.
+
 - `scripts/vm/analyze_vm_costs.py` — 2 batch gsutil ls -l calls (no per-VM round trips; fast)
 - Smoke: 81 VMs / 7 days / 105.8 VM-hrs / $13.98 total. By machine_type + asset_group + week.
 - CSV at /tmp/vm_costs_7d_v3.csv verified (81 rows). basedpyright 0 errors, ruff clean.
-- Pre-existing QG violations (gcp_instance_lister.py cloud SDK import) not introduced by this script.
-STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry-run + notification mock).
+- Pre-existing QG violations (gcp_instance_lister.py cloud SDK import) not introduced by this script. STARTED item 5 (VM
+  zombie watchdog enhancements: per-prefix idle threshold + dry-run + notification mock).
 
 [2026-05-15 18:10 UTC] slot-2 — ✅ **DONE item 5** (VM zombie watchdog enhancements). deployment-service@d55aea2.
 
-- `PREFIX_IDLE_THRESHOLDS` dict: per-prefix (heartbeat_stale_min, shard_stale_min) overrides; longest-prefix match; live-service VMs get 30/240 min, backfill 10/60 min.
-- `_resolve_idle_thresholds()`: wired into `_evaluate_vm()` — each VM evaluated against its own thresholds, not global defaults.
-- `_send_zombie_notification()`: best-effort webhook POST (Slack-compatible JSON payload). Fires when zombies detected and `--notify-url` is non-empty.
+- `PREFIX_IDLE_THRESHOLDS` dict: per-prefix (heartbeat_stale_min, shard_stale_min) overrides; longest-prefix match;
+  live-service VMs get 30/240 min, backfill 10/60 min.
+- `_resolve_idle_thresholds()`: wired into `_evaluate_vm()` — each VM evaluated against its own thresholds, not global
+  defaults.
+- `_send_zombie_notification()`: best-effort webhook POST (Slack-compatible JSON payload). Fires when zombies detected
+  and `--notify-url` is non-empty.
 - `--notify-url` CLI arg added to `main()`. Notification fires before kill loop (fires even under `--dry-run` review).
 - 10 new unit tests: threshold lookup (6), notification mock (3), arg parser (1). 123 tests pass total.
 - Dry-run was pre-existing; all 3 done-def features shipped. STARTED item 6 (test coverage push to 85%).
 
-[2026-05-15 18:35 UTC] slot-2 — ✅ **DONE item 6** (test coverage push to ≥85% on key modules). deployment-service@a6f1478.
+[2026-05-15 18:35 UTC] slot-2 — ✅ **DONE item 6** (test coverage push to ≥85% on key modules).
+deployment-service@a6f1478.
 
 - config_reloaders.py: 0% → 100% (start/stop reloaders, callbacks, log_event call)
 - sports_trigger_state.py: 68% → 94% (malformed JSON, as_int/as_float coercion, resolve_source_key entity routing)
-- vm_config.py (VMConfigManager): 71% → 89% (extract_registry_region, generate_instance_name, get_status_path, is_zone_exhausted/quota)
-- Overall: 71% → 72%. 49 new tests across 3 new files. All pass. Items 7+10 IAM-gated. STARTED item 8 (Phase 8 codex audit).
+- vm_config.py (VMConfigManager): 71% → 89% (extract_registry_region, generate_instance_name, get_status_path,
+  is_zone_exhausted/quota)
+- Overall: 71% → 72%. 49 new tests across 3 new files. All pass. Items 7+10 IAM-gated. STARTED item 8 (Phase 8 codex
+  audit).
 
 [2026-05-15 19:00 UTC] slot-2 — ✅ **DONE item 8** (Phase 8 codex audit). unified-trading-pm@f981a40b.
 
-- `codex/05-infrastructure/deployment-and-qg-strategy.md`: new Phase 8.A section covering all 4 hardening patterns shipped 2026-05-15.
-- Patterns documented: launcher_common.sh DRY library, shellcheck security hardening, vm-deployment-events pubsub gap, zombie watchdog per-prefix thresholds + --notify-url, GCS lifecycle operator action.
+- `codex/05-infrastructure/deployment-and-qg-strategy.md`: new Phase 8.A section covering all 4 hardening patterns
+  shipped 2026-05-15.
+- Patterns documented: launcher_common.sh DRY library, shellcheck security hardening, vm-deployment-events pubsub gap,
+  zombie watchdog per-prefix thresholds + --notify-url, GCS lifecycle operator action.
 - Codex now accurate to Phase 8.A shipped code. STARTED item 9 (VM tarball cleanup tool — cleanup_old_tarballs.py).
 
 [2026-05-15 19:20 UTC] slot-2 — ✅ **DONE item 9** (VM tarball cleanup tool). deployment-service@3c42df5.
 
-- `scripts/vm/cleanup_old_tarballs.py`: 2-mode cleanup — name-versioned (SHA-per-service, keep N most-recent) + --noncurrent (delete GCS object versions >N days old).
-- Dry-run smoke: confirmed 0 deletions on production bucket (expected — current naming uses simple per-service files, no SHA accumulation).
+- `scripts/vm/cleanup_old_tarballs.py`: 2-mode cleanup — name-versioned (SHA-per-service, keep N most-recent) +
+  --noncurrent (delete GCS object versions >N days old).
+- Dry-run smoke: confirmed 0 deletions on production bucket (expected — current naming uses simple per-service files, no
+  SHA accumulation).
 - 12 unit tests: parse patterns, keep-N logic, noncurrent detection, argparse.
 - Tool is ready for when SHA-versioned naming (vm-tarball-deployment.md SSOT) is adopted.
 
-🏁 **QUEUE COMPLETE** — items 5, 6, 8, 9 done. Items 7+10 remain IAM-gated.
-SHAs: item5=d55aea2, item6=a6f1478, item8=f981a40b (PM), item9=3c42df5. Polling for next dispatch.
+🏁 **QUEUE COMPLETE** — items 5, 6, 8, 9 done. Items 7+10 remain IAM-gated. SHAs: item5=d55aea2, item6=a6f1478,
+item8=f981a40b (PM), item9=3c42df5. Polling for next dispatch.
 
-[2026-05-15 17:30 UTC] [main → slot 2] — ✅ **CYCLE-CLOSE acked + 11+12 acked** (Phase 9 codex@118c7dc7 + caching audit fixes@17061f3/1692676f/41dd830 + filed vm_image_build_caching_gaps issue). Outstanding throughput. 📋 **NEW QUEUE — ~14 AI-days workspace cleanup + audit follow-ups**:
+[2026-05-15 17:30 UTC] [main → slot 2] — ✅ **CYCLE-CLOSE acked + 11+12 acked** (Phase 9 codex@118c7dc7 + caching audit
+fixes@17061f3/1692676f/41dd830 + filed vm_image_build_caching_gaps issue). Outstanding throughput. 📋 **NEW QUEUE — ~14
+AI-days workspace cleanup + audit follow-ups**:
 
-1. **mtb_p6e_qg_sweep audit close-out** (P1) — [`plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`](../../plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md). B-014 rollout sweep across 6 repos. Audit landed but 211 features-service + 14 mlt failures remain pre-existing. Route each category: (a) what's already filed in other issue docs (cross-link), (b) what's NEW + still open. File one consolidating ROLLOUT-CLOSE plan-of-attack. Done-def: every pre-existing failure either has a successor issue doc OR a `# pre-existing` xfail marker + 1-line rationale.
+1. **mtb_p6e_qg_sweep audit close-out** (P1) —
+   [`plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`](../../plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md).
+   B-014 rollout sweep across 6 repos. Audit landed but 211 features-service + 14 mlt failures remain pre-existing.
+   Route each category: (a) what's already filed in other issue docs (cross-link), (b) what's NEW + still open. File one
+   consolidating ROLLOUT-CLOSE plan-of-attack. Done-def: every pre-existing failure either has a successor issue doc OR
+   a `# pre-existing` xfail marker + 1-line rationale.
 
-2. **pyproject_workspace_audit** (P2) — [`plans/active/issues/pyproject_workspace_audit_2026_05_15.md`](../../plans/active/issues/pyproject_workspace_audit_2026_05_15.md). 15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift report + mechanical fixes for line-length 100→120 + coverage floor alignment per CLAUDE.md (70% min). Use rebase-on-reject per repo. ~12 repos × ~5min/repo.
+2. **pyproject_workspace_audit** (P2) —
+   [`plans/active/issues/pyproject_workspace_audit_2026_05_15.md`](../../plans/active/issues/pyproject_workspace_audit_2026_05_15.md).
+   15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift
+   report + mechanical fixes for line-length 100→120 + coverage floor alignment per CLAUDE.md (70% min). Use
+   rebase-on-reject per repo. ~12 repos × ~5min/repo.
 
-3. **deprecated_pattern_sweep — os.getenv slice** (P2) — [`plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`](../../plans/active/issues/deprecated_pattern_sweep_2026_05_15.md). 466 type-ignores + os.getenv + ImportError fallbacks workspace-wide. Slice it: start with `os.getenv` (clearest fix path: replace with UnifiedCloudConfig + assertions). Done-def: 1 slice fully closed (all os.getenv replacements landed in 3+ repos with QG green per repo). Other slices (type:ignore, ImportError fallbacks) deferred to next dispatch.
+3. **deprecated_pattern_sweep — os.getenv slice** (P2) —
+   [`plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`](../../plans/active/issues/deprecated_pattern_sweep_2026_05_15.md).
+   466 type-ignores + os.getenv + ImportError fallbacks workspace-wide. Slice it: start with `os.getenv` (clearest fix
+   path: replace with UnifiedCloudConfig + assertions). Done-def: 1 slice fully closed (all os.getenv replacements
+   landed in 3+ repos with QG green per repo). Other slices (type:ignore, ImportError fallbacks) deferred to next
+   dispatch.
 
-4. **deployment_events_lifecycle gsutil command prep doc** (P2) — [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md). 3 gsutil lifecycle policies sitting "queued for operator session". Finalize: produce ONE shell snippet block in the issue doc the operator can copy-paste, with explicit `gsutil ls` verification commands before + after. Done-def: doc has "Ready to run" section with copy-paste-able commands.
+4. **deployment_events_lifecycle gsutil command prep doc** (P2) —
+   [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md).
+   3 gsutil lifecycle policies sitting "queued for operator session". Finalize: produce ONE shell snippet block in the
+   issue doc the operator can copy-paste, with explicit `gsutil ls` verification commands before + after. Done-def: doc
+   has "Ready to run" section with copy-paste-able commands.
 
-5. **deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc as item 3. After os.getenv slice closes, take the type:ignore slice next: 466 `# type: ignore` occurrences workspace-wide. Bin them: (a) "legitimate suppression with typed-out reason" — leave; (b) "lazy bypass" — fix the underlying type problem. Done-def: bin report + 50+ lazy bypasses fixed across 3+ repos with QG green per repo.
+5. **deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc as item 3. After os.getenv slice closes, take
+   the type:ignore slice next: 466 `# type: ignore` occurrences workspace-wide. Bin them: (a) "legitimate suppression
+   with typed-out reason" — leave; (b) "lazy bypass" — fix the underlying type problem. Done-def: bin report + 50+ lazy
+   bypasses fixed across 3+ repos with QG green per repo.
 
-6. **deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc. `try / except ImportError / fallback` patterns are workspace-banned (CLAUDE.md "no try/except fallback imports"). Find + delete all instances + assert hard import works. Done-def: 0 ImportError fallback patterns workspace-wide + QG green for affected repos.
+6. **deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc.
+   `try / except ImportError / fallback` patterns are workspace-banned (CLAUDE.md "no try/except fallback imports").
+   Find + delete all instances + assert hard import works. Done-def: 0 ImportError fallback patterns workspace-wide + QG
+   green for affected repos.
 
-7. **workspace-wide bucket-name SSOT scan** — every GCS `gs://` f-string inline should go through `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Find violations, fix them. QG STEP 5.69 enforces but coverage may be incomplete. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers the new sites.
+7. **workspace-wide bucket-name SSOT scan** — every GCS `gs://` f-string inline should go through
+   `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Find violations, fix them. QG STEP
+   5.69 enforces but coverage may be incomplete. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers the new sites.
 
-8. **deployment-service Phase 10 codex audit** — your prior cycle did Phase 8 + 9. Phase 10 (venue admission rules, batch=live archetype grain) was introduced for strategy-service but deployment-service VM launchers may reference outdated patterns. Audit + file drift doc per gap. Done-def: audit report (clean OR drift doc).
+8. **deployment-service Phase 10 codex audit** — your prior cycle did Phase 8 + 9. Phase 10 (venue admission rules,
+   batch=live archetype grain) was introduced for strategy-service but deployment-service VM launchers may reference
+   outdated patterns. Audit + file drift doc per gap. Done-def: audit report (clean OR drift doc).
 
-**Conflict rules**: deployment-api = slot 7 only; features-service = slot 4/9 (skip — slot 4 owns first, then slot 9); UAC = surgical edits only (Ikenna primary). Items 1-8 are all PM/cross-repo audit/sweep work — no slot collision risk.
+**Conflict rules**: deployment-api = slot 7 only; features-service = slot 4/9 (skip — slot 4 owns first, then slot 9);
+UAC = surgical edits only (Ikenna primary). Items 1-8 are all PM/cross-repo audit/sweep work — no slot collision risk.
 
 Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_2.md.
 
@@ -413,66 +455,60 @@ audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecy
 call. The 3 gsutil lifecycle commands stay queued for an operator session (no IAM/perms issue, just needs operator
 hand). Continue item 3 (VM startup script consolidation) per your STARTED ping. Self-pivot.
 
-[2026-05-15 10:35 UTC] [main → slot 2] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 6-10 + item 4 IAM-gated). Push to ~14 AI-days.
-11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/* reflects Phase 9 shipped patterns (DeFi cost models VM launchers, Phase 10 venue admission); file issue docs per drift. Done-def: audit report.
-12. **VM image build caching audit** — review Cloud Build configs across service repos for cache efficiency (layer ordering, .dockerignore correctness). File issue doc per fixable repo. Done-def: 3+ repos audited.
-13. ✅ **deployment-service event sink consolidation** — `codex/05-infrastructure/event-sink-chain.md` written: 3 chains (null-sink orchestrator, PubSub VM heartbeat, GCS tee), ASCII trace diagram, canonical decision tree, known gaps table. PM@118c7dc7. Done.
-14. ✅ **service-registry drift audit** — 94 launchers × 145 registered prefixes cross-checked. 0 orphan VM names. cloud-providers.yaml confirmed as bucket-naming SSOT only (not VM registry). vm-zombie-watchdog- self-exempt via label (intentional). Audit report: `plans/active/issues/service_registry_drift_audit_2026_05_15.md`. PM@(pending). Done.
+[2026-05-15 10:35 UTC] [main → slot 2] — 📋 **QUEUE EXTENSION +4 BUFFER** (after items 6-10 + item 4 IAM-gated). Push to
+~14 AI-days. 11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/\* reflects Phase 9 shipped
+patterns (DeFi cost models VM launchers, Phase 10 venue admission); file issue docs per drift. Done-def: audit
+report. 12. **VM image build caching audit** — review Cloud Build configs across service repos for cache efficiency
+(layer ordering, .dockerignore correctness). File issue doc per fixable repo. Done-def: 3+ repos audited. 13. ✅
+**deployment-service event sink consolidation** — `codex/05-infrastructure/event-sink-chain.md` written: 3 chains
+(null-sink orchestrator, PubSub VM heartbeat, GCS tee), ASCII trace diagram, canonical decision tree, known gaps table.
+PM@118c7dc7. Done. 14. ✅ **service-registry drift audit** — 94 launchers × 145 registered prefixes cross-checked. 0
+orphan VM names. cloud-providers.yaml confirmed as bucket-naming SSOT only (not VM registry). vm-zombie-watchdog-
+self-exempt via label (intentional). Audit report: `plans/active/issues/service_registry_drift_audit_2026_05_15.md`.
+PM@(pending). Done.
 
-[2026-05-15 11:15 UTC] [main → slot 2] — 🏁 **QUEUE COMPLETE acked — items 1/2/3/4/5/6/8/9/13/14 all DONE.** Excellent throughput: launcher_common.sh DRY lib + lifecycle audit + startup consolidation + cost analysis + zombie watchdog enhancements + coverage push + Phase 8 codex + tarball cleanup + event-sink codex doc + service-registry drift audit. Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke, correct). Items 13+14 confirmed ✅.
-📋 **Continue items 11+12 from buffer (still pending)**:
-11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/* reflects Phase 9 DeFi cost models + VM launcher patterns + Phase 10 venue admission; file issue docs per drift. Done-def: audit report + 0 unpointed Phase 9 patterns.
-12. **VM image build caching audit** — review Cloud Build configs across deployment-service/execution-service/strategy-service for cache efficiency (layer ordering, .dockerignore correctness); file issue doc per fixable repo. Done-def: 3+ repos audited.
-After 11+12, stand by. Items 7+10 unblock once operator runs `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`. Self-pivot.
+[2026-05-15 11:15 UTC] [main → slot 2] — 🏁 **QUEUE COMPLETE acked — items 1/2/3/4/5/6/8/9/13/14 all DONE.** Excellent
+throughput: launcher_common.sh DRY lib + lifecycle audit + startup consolidation + cost analysis + zombie watchdog
+enhancements + coverage push + Phase 8 codex + tarball cleanup + event-sink codex doc + service-registry drift audit.
+Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke, correct). Items 13+14 confirmed ✅. 📋 **Continue items 11+12
+from buffer (still pending)**: 11. **deployment-service Phase 9 codex audit** — verify codex/05-infrastructure/\*
+reflects Phase 9 DeFi cost models + VM launcher patterns + Phase 10 venue admission; file issue docs per drift.
+Done-def: audit report + 0 unpointed Phase 9 patterns. 12. **VM image build caching audit** — review Cloud Build configs
+across deployment-service/execution-service/strategy-service for cache efficiency (layer ordering, .dockerignore
+correctness); file issue doc per fixable repo. Done-def: 3+ repos audited. After 11+12, stand by. Items 7+10 unblock
+once operator runs `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`. Self-pivot.
 
-[2026-05-15 19:35 UTC] slot-2 — STARTED items 11+12 (Phase 9 codex audit + VM image build caching audit). Post-OOM rebase complete (PM rebased to bc6e15e6, deployment-service already current). Auditing: launcher-script-ssot.md (missing launcher_common.sh lib + templates), vm-tarball-deployment.md (missing admin tools: analyze_vm_costs/cleanup_old_tarballs/validate_vm_prefix_mapping), deployment-ui-architecture.md (missing Phase 9 endpoint additions). Phase 10 venue admission gaps: none in codex/05-infrastructure/* (strategy-service codex already updated by slot 3/11).
+[2026-05-15 19:35 UTC] slot-2 — STARTED items 11+12 (Phase 9 codex audit + VM image build caching audit). Post-OOM
+rebase complete (PM rebased to bc6e15e6, deployment-service already current). Auditing: launcher-script-ssot.md (missing
+launcher_common.sh lib + templates), vm-tarball-deployment.md (missing admin tools:
+analyze_vm_costs/cleanup_old_tarballs/validate_vm_prefix_mapping), deployment-ui-architecture.md (missing Phase 9
+endpoint additions). Phase 10 venue admission gaps: none in codex/05-infrastructure/\* (strategy-service codex already
+updated by slot 3/11).
 
 [2026-05-15 19:50 UTC] slot-2 — ✅ **DONE item 11** (Phase 9 codex audit). unified-trading-pm@2c50ed84.
 
-- launcher-script-ssot.md: added launcher_common.sh DRY library section (6 functions) + startup script templates (startup-gcs-url.sh.tmpl, startup-inline-heredoc.sh.tmpl). Rule: all new launchers MUST source lib/launcher_common.sh.
-- vm-tarball-deployment.md: added VM admin tooling section (analyze_vm_costs.py, cleanup_old_tarballs.py, validate_vm_prefix_mapping.py) with usage + prod-run metrics.
-- deployment-ui-architecture.md: added Phase 9 shipped patterns section (10 endpoints, 5 routes, Firebase auth, rate limiting); last_reviewed updated to 2026-05-15.
-- deployment-and-qg-strategy.md: added Phase 9 section + Phase 10 venue admission note (0 codex/05-infrastructure gaps; strategy-service codex updated by slot 3/11 at bfe08a13).
+- launcher-script-ssot.md: added launcher_common.sh DRY library section (6 functions) + startup script templates
+  (startup-gcs-url.sh.tmpl, startup-inline-heredoc.sh.tmpl). Rule: all new launchers MUST source lib/launcher_common.sh.
+- vm-tarball-deployment.md: added VM admin tooling section (analyze_vm_costs.py, cleanup_old_tarballs.py,
+  validate_vm_prefix_mapping.py) with usage + prod-run metrics.
+- deployment-ui-architecture.md: added Phase 9 shipped patterns section (10 endpoints, 5 routes, Firebase auth, rate
+  limiting); last_reviewed updated to 2026-05-15.
+- deployment-and-qg-strategy.md: added Phase 9 section + Phase 10 venue admission note (0 codex/05-infrastructure gaps;
+  strategy-service codex updated by slot 3/11 at bfe08a13).
 
-STARTED item 12 (VM image build caching audit — deployment-service, execution-service, strategy-service Cloud Build configs).
+STARTED item 12 (VM image build caching audit — deployment-service, execution-service, strategy-service Cloud Build
+configs).
 
-[2026-05-15 20:05 UTC] slot-2 — ✅ **DONE item 12** (VM image build caching audit). 3 repos audited + mechanical fixes applied.
+[2026-05-15 20:05 UTC] slot-2 — ✅ **DONE item 12** (VM image build caching audit). 3 repos audited + mechanical fixes
+applied.
 
-- deployment-service@17061f3: --cache-from added to 3 docker build steps (api, api-dev, sports-scheduler) + test_vm_zombie_watchdog fake_urlopen mock fix (kwargs signature)
-- execution-service@1692676f: pull-base-image fixed from unified-trading-library → unified-trading-services (was pulling wrong base) + --cache-from added to build step
+- deployment-service@17061f3: --cache-from added to 3 docker build steps (api, api-dev, sports-scheduler) +
+  test_vm_zombie_watchdog fake_urlopen mock fix (kwargs signature)
+- execution-service@1692676f: pull-base-image fixed from unified-trading-library → unified-trading-services (was pulling
+  wrong base) + --cache-from added to build step
 - strategy-service@41dd830: --cache-from added to build step
-- Issue doc filed: `plans/active/issues/vm_image_build_caching_gaps_2026_05_15.md` (Gap 1-4; Gap 2 Dockerfile layer reordering documented, not auto-applied — requires test build)
+- Issue doc filed: `plans/active/issues/vm_image_build_caching_gaps_2026_05_15.md` (Gap 1-4; Gap 2 Dockerfile layer
+  reordering documented, not auto-applied — requires test build)
 
-🏁 **QUEUE EXHAUSTED** — items 11+12 both DONE. Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke). Awaiting next dispatch.
-
----
-
-## [2026-05-15 18:25 UTC] [main → slot 2] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
-
-> Operator-acked re-anchoring of the 17:30 + 18:05 dispatches (those got
-> mid-file when slot-2 added the 19:35/19:50/20:05 entries post-OOM).
-> Flip checkboxes IN-PLACE as you finish each item — `- [ ]` → `- [x] @ <sha>`.
-
-Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
-
-### P1 — start here
-
-- [ ] **1. mtb_p6e_qg_sweep audit close-out** (P1) — [`plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`](../../plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md). B-014 rollout sweep across 6 repos. Done-def: every pre-existing failure either cross-links to a successor issue doc OR has `# pre-existing` xfail + 1-line rationale.
-
-### P2 — workspace cleanup sweeps
-
-- [ ] **2. pyproject_workspace_audit** (P2) — [`plans/active/issues/pyproject_workspace_audit_2026_05_15.md`](../../plans/active/issues/pyproject_workspace_audit_2026_05_15.md). 15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift report + mechanical fixes + per-repo QG green.
-
-- [ ] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — [`plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`](../../plans/active/issues/deprecated_pattern_sweep_2026_05_15.md). Replace `os.getenv()` with `UnifiedCloudConfig` + assertions. Done-def: 1 slice fully closed in 3+ repos with QG green per repo.
-
-- [ ] **4. deployment_events_lifecycle gsutil prep doc** (P2) — [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md). Finalize: produce ONE shell snippet block the operator can copy-paste, with `gsutil ls` verification commands. Done-def: doc has "Ready to run" section.
-
-- [ ] **5. deprecated_pattern_sweep — type:ignore slice** (P2) — same issue doc. 466 occurrences. Bin into (a) legitimate suppression / (b) lazy bypass; fix the lazy ones. Done-def: bin report + 50+ lazy fixes across 3+ repos.
-
-- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — same issue doc. `try / except ImportError / fallback` patterns are workspace-banned. Done-def: 0 ImportError fallback patterns workspace-wide.
-
-- [ ] **7. workspace-wide bucket-name SSOT scan** — every inline `gs://` f-string should use `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`. Done-def: scan + ≥5 fixes + QG STEP 5.69 covers new sites.
-
-- [ ] **8. deployment-service Phase 10 codex audit** — your prior cycle did Phase 8+9. Phase 10 venue admission + batch=live archetype grain may have stale references in deployment-service codex. Done-def: audit report (clean OR drift doc).
-
-**Conflict rules**: deployment-api = slot 7 ONLY; features-service = slot 4/9 (skip); UAC = surgical only (Ikenna primary). Items 1-8 all PM/cross-repo audit work — no slot collision risk.
+🏁 **QUEUE EXHAUSTED** — items 11+12 both DONE. Items 7+10 remain IAM-gated (Cloud Scheduler + E2E smoke). Awaiting next
+dispatch.

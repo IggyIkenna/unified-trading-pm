@@ -4,23 +4,61 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from _agent_pings.md (ikenna-slot-6@09:30 + ikenna-slot-8@11:25 UTC). Previous session (up to 21:05 UTC) missed them. Greenlights say "re-launch MTDS lst_rates + features-onchain smoke with fresh VM_NAME" but: (a) 12h has elapsed; (b) no explicit VM launch command in slot_9.md; (c) day-4 cycle close just happened. Am I still authorized to launch the smoke VM now, or does this carry forward to day-1 cycle (2026-05-16)?
+[2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from \_agent_pings.md
+(ikenna-slot-6@09:30 + ikenna-slot-8@11:25 UTC). Previous session (up to 21:05 UTC) missed them. Greenlights say
+"re-launch MTDS lst_rates + features-onchain smoke with fresh VM_NAME" but: (a) 12h has elapsed; (b) no explicit VM
+launch command in slot_9.md; (c) day-4 cycle close just happened. Am I still authorized to launch the smoke VM now, or
+does this carry forward to day-1 cycle (2026-05-16)?
 
-[2026-05-15 21:50 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED (post-OOM resume complete). Shipped queue extension +3: item 11 Pyth ETH/BTC/SOL symbol coverage (mtds@487c9d0), item 12 PBM canonical_writer Phase 10 audit CLEAN (pm@7ef1651f, no drift), item 13 perp funding normalization (mtds@7b8f6b6, 7 venues + sign consistency). All +3 items DONE. B-015 still HOLD — no Ikenna phantom-fix DONE ping seen in _agent_pings.md. Queue empty; awaiting main dispatch for next cycle.
+[2026-05-15 21:50 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED (post-OOM resume complete). Shipped queue extension +3: item 11
+Pyth ETH/BTC/SOL symbol coverage (mtds@487c9d0), item 12 PBM canonical_writer Phase 10 audit CLEAN (pm@7ef1651f, no
+drift), item 13 perp funding normalization (mtds@7b8f6b6, 7 venues + sign consistency). All +3 items DONE. B-015 still
+HOLD — no Ikenna phantom-fix DONE ping seen in \_agent_pings.md. Queue empty; awaiting main dispatch for next cycle.
 
-[2026-05-15 21:30 UTC] harsh-slot-9 — 🔄 STARTED post-OOM resume. Rebased all slot-9 repos on LDR. Stash-recovered in-flight items 11+13 (queue extension +3). QG green (1271 pass). Shipping item 11 (Pyth ETH/BTC/SOL symbol coverage + deviation docs) and item 13 (perp funding normalization) now.
+[2026-05-15 21:30 UTC] harsh-slot-9 — 🔄 STARTED post-OOM resume. Rebased all slot-9 repos on LDR. Stash-recovered
+in-flight items 11+13 (queue extension +3). QG green (1271 pass). Shipping item 11 (Pyth ETH/BTC/SOL symbol coverage +
+deviation docs) and item 13 (perp funding normalization) now.
 
-[2026-05-15 21:05 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED: all 11 new-queue items done (items 7-11 this session). Summary: item 7 MTDS graceful shutdown (mtds@6a71ddf), item 8 PBM phantom-prevention (mdps@9f7b1ab), item 9 MTDS calendar boundaries (mtds@14d212a), item 10 MTDS adapter rate-limit+cache (mtds@b1360a5), item 11 MTDS CLI flag validation (audit clean). B-015 still HOLD — no Ikenna phantom apply-flips landed in _agent_pings.md since 09:19 UTC. Slot 9 idle, monitoring B-015 unblock.
+[2026-05-15 21:05 UTC] harsh-slot-9 — 🏁 QUEUE EXHAUSTED: all 11 new-queue items done (items 7-11 this session).
+Summary: item 7 MTDS graceful shutdown (mtds@6a71ddf), item 8 PBM phantom-prevention (mdps@9f7b1ab), item 9 MTDS
+calendar boundaries (mtds@14d212a), item 10 MTDS adapter rate-limit+cache (mtds@b1360a5), item 11 MTDS CLI flag
+validation (audit clean). B-015 still HOLD — no Ikenna phantom apply-flips landed in \_agent_pings.md since 09:19 UTC.
+Slot 9 idle, monitoring B-015 unblock.
 
-[2026-05-15 20:55 UTC] harsh-slot-9 — ✅ DONE new-queue item 11 (MTDS CLI flag validation tests): AUDIT CLEAN — tests/unit/cli/test_cli_flag_validation.py already exists (item 14 header). 10 tests: TestInvalidFlagCombosRejected (5: invalid operation/mode/asset-group + missing required --operation/--mode all raise SystemExit(2)) + TestValidCombosPass (5: download/collect-lst-rates/websocket-streaming/multi-asset-group/collect-perp-funding all parse successfully). Collected by QG pytest tests/unit/ recursively. All 10 pass, QG green. B-015 still HOLD. No more items in queue.
+[2026-05-15 20:55 UTC] harsh-slot-9 — ✅ DONE new-queue item 11 (MTDS CLI flag validation tests): AUDIT CLEAN —
+tests/unit/cli/test_cli_flag_validation.py already exists (item 14 header). 10 tests: TestInvalidFlagCombosRejected (5:
+invalid operation/mode/asset-group + missing required --operation/--mode all raise SystemExit(2)) + TestValidCombosPass
+(5: download/collect-lst-rates/websocket-streaming/multi-asset-group/collect-perp-funding all parse successfully).
+Collected by QG pytest tests/unit/ recursively. All 10 pass, QG green. B-015 still HOLD. No more items in queue.
 
-[2026-05-15 20:40 UTC] harsh-slot-9 — ✅ DONE new-queue item 10 (MTDS adapter rate-limit + cache layer tests): mtds@b1360a5. 20 tests: TestHandleApiErrorsAsync (6: success/ConnectionError retry/exhaustion/call-count=max+1/non-retriable ValueError/TimeoutError), TestHandleApiErrorsSync (4), TestHyperliquidResponseCacheMiss (2), TestHyperliquidResponseCacheHit (2), TestHyperliquidResponseCacheTTLExpiry (2: freeze_time stale/fresh), TestHyperliquidCacheClear (2), TestHyperliquidClientConfigRetryContract (4: 429+5xx in retry_status_codes). QG green. B-015 still HOLD. Moving to item 11 (MTDS CLI flag validation tests).
+[2026-05-15 20:40 UTC] harsh-slot-9 — ✅ DONE new-queue item 10 (MTDS adapter rate-limit + cache layer tests):
+mtds@b1360a5. 20 tests: TestHandleApiErrorsAsync (6: success/ConnectionError
+retry/exhaustion/call-count=max+1/non-retriable ValueError/TimeoutError), TestHandleApiErrorsSync (4),
+TestHyperliquidResponseCacheMiss (2), TestHyperliquidResponseCacheHit (2), TestHyperliquidResponseCacheTTLExpiry (2:
+freeze_time stale/fresh), TestHyperliquidCacheClear (2), TestHyperliquidClientConfigRetryContract (4: 429+5xx in
+retry_status_codes). QG green. B-015 still HOLD. Moving to item 11 (MTDS CLI flag validation tests).
 
-[2026-05-15 20:05 UTC] harsh-slot-9 — ✅ DONE new-queue item 9 (MTDS calendar boundary tests): mtds@14d212a. 11 tests across 5 classes: TestFutureDateSkipped (3: same-day future, 23:59 future, 00:01 next-day not-skipped), TestCeFiTardisLagWindow (2: 2h after midnight proceeds, 8h proceeds), TestTradFiDatabentoLagWindow (2: 20min after midnight proceeds, 1h proceeds), TestEndOfMonthRollover (2: Jan31 not-skipped on Feb1, Jan31 future during Jan31), TestEndOfYearRollover (2: Dec31 not-skipped on Jan1/27, Dec31 future during Dec31). Uses freezegun + object.__setattr__ to bypass reportPrivateUsage on _bucket. QG green. B-015 still HOLD. Moving to item 10 (MTDS adapter rate-limit + cache layer tests).
+[2026-05-15 20:05 UTC] harsh-slot-9 — ✅ DONE new-queue item 9 (MTDS calendar boundary tests): mtds@14d212a. 11 tests
+across 5 classes: TestFutureDateSkipped (3: same-day future, 23:59 future, 00:01 next-day not-skipped),
+TestCeFiTardisLagWindow (2: 2h after midnight proceeds, 8h proceeds), TestTradFiDatabentoLagWindow (2: 20min after
+midnight proceeds, 1h proceeds), TestEndOfMonthRollover (2: Jan31 not-skipped on Feb1, Jan31 future during Jan31),
+TestEndOfYearRollover (2: Dec31 not-skipped on Jan1/27, Dec31 future during Dec31). Uses freezegun + object.**setattr**
+to bypass reportPrivateUsage on \_bucket. QG green. B-015 still HOLD. Moving to item 10 (MTDS adapter rate-limit + cache
+layer tests).
 
-[2026-05-15 19:35 UTC] harsh-slot-9 — ✅ DONE new-queue item 8 (PBM phantom-prevention tests): mdps@9f7b1ab. 8 tests in test_phantom_prevention.py: TestPhantomOnUploadFailure (2: OSError prevents record_captured, ManifestWriter never constructed), TestPhantomOnHeartbeatPath (1: should_publish_row=False → upload happens, no record_captured), TestPhantomOnFinalizeNone (1: finalize=None → no upload, no record), TestPhantomOnRecordCapturedFailure (2: OSError+ValueError from record_captured both isolated), TestPhantomHappyPath (1: upload+record each once). QG green. B-015 still HOLD. Moving to item 9 (MTDS Tenderly-fork integration smoke).
+[2026-05-15 19:35 UTC] harsh-slot-9 — ✅ DONE new-queue item 8 (PBM phantom-prevention tests): mdps@9f7b1ab. 8 tests in
+test_phantom_prevention.py: TestPhantomOnUploadFailure (2: OSError prevents record_captured, ManifestWriter never
+constructed), TestPhantomOnHeartbeatPath (1: should_publish_row=False → upload happens, no record_captured),
+TestPhantomOnFinalizeNone (1: finalize=None → no upload, no record), TestPhantomOnRecordCapturedFailure (2:
+OSError+ValueError from record_captured both isolated), TestPhantomHappyPath (1: upload+record each once). QG green.
+B-015 still HOLD. Moving to item 9 (MTDS Tenderly-fork integration smoke).
 
-[2026-05-15 19:10 UTC] harsh-slot-9 — ✅ DONE new-queue item 7 (MTDS graceful shutdown tests): mtds@6a71ddf. 9 tests in test_graceful_shutdown.py: TestSystemExitNotCaughtByExceptException (2: SystemExit escapes except Exception, RuntimeError caught), TestDefiShardLoopShutdownBehavior (4: completed shards record_captured persists, exit code 0, all-shards normal, exception shard record_failed), TestGracefulShutdownHandlerFlag (3: shutdown_requested initially False, set via request_shutdown, SIGTERM+SIGINT registered on init). QG green. B-015 still HOLD. Moving to item 8 (PBM cluster validation tests).
+[2026-05-15 19:10 UTC] harsh-slot-9 — ✅ DONE new-queue item 7 (MTDS graceful shutdown tests): mtds@6a71ddf. 9 tests in
+test_graceful_shutdown.py: TestSystemExitNotCaughtByExceptException (2: SystemExit escapes except Exception,
+RuntimeError caught), TestDefiShardLoopShutdownBehavior (4: completed shards record_captured persists, exit code 0,
+all-shards normal, exception shard record_failed), TestGracefulShutdownHandlerFlag (3: shutdown_requested initially
+False, set via request_shutdown, SIGTERM+SIGINT registered on init). QG green. B-015 still HOLD. Moving to item 8 (PBM
+cluster validation tests).
 
 [2026-05-15 14:15 UTC] harsh-slot-9 — ✅ DONE queue item 10 (MTDS handler retry-and-backoff audit): mtds@dcd6f5f.
 solana_defi: added \_get_with_retry() (429/5xx + exponential backoff) applied to \_collect_drift +
@@ -201,67 +239,42 @@ after slot 4 features-service close-out ping.
 After items 11-14, total slot 9 queue: 13 pure-MTDS/PBM items + 1 deferred features-service item = ~24 AI-days
 non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-service CYCLE-CLOSE.
 
-[2026-05-15 10:35 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION +3** (after items 4, 5, 6, 10 remaining). Push to ~14 AI-days.
-11. ✅ **MTDS Pyth additional symbol coverage** — mtds@487c9d0. 4 classes / 10 tests: TestEthUsdSymbolCoverage (2: price parse + registry), TestBtcUsdSymbolCoverage (2: parse + multi-symbol batch ETH+BTC+SOL), TestPriceDeviationBehavior (2: extreme $1B BTC + near-zero ETH both pass through — no filter). QG green (1271 pass).
-12. ✅ **PBM canonical_writer Phase 10 codex audit** — AUDIT CLEAN. canonical_writer is archetype-agnostic: dispatches on (asset_group, source_data_type) pairs only, no per-family (Family 0/1/2) branching. _MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY + _resolve_policy_output_data_type both archetype-neutral. codex batch-live-architecture.md § Archetype-grain covers strategy-service CarryRecursiveStakedEngine level; MDPS sits below that layer (raw market data, no strategy awareness). Codex doc accurate; no drift; no code/test changes needed.
-13. ✅ **MTDS perp venue funding rate normalization** — mtds@7b8f6b6. 8 tests (7 venue contracts + 1 multi-venue sign consistency): Hyperliquid (decimal+sign), Aster (decimal), GMX Arb+Avax (two-sided opposite signs), Pacifica (decimal), Lighter (CSV decimal + neg preserved), Hyperliquid×Aster cross-sign (longs-pay-shorts consistent). CeFi Tardis venues tested at UAC schema level (different ingestion path). QG green.
+[2026-05-15 10:35 UTC] [main → slot 9] — 📋 **QUEUE EXTENSION +3** (after items 4, 5, 6, 10 remaining). Push to ~14
+AI-days. 11. ✅ **MTDS Pyth additional symbol coverage** — mtds@487c9d0. 4 classes / 10 tests: TestEthUsdSymbolCoverage
+(2: price parse + registry), TestBtcUsdSymbolCoverage (2: parse + multi-symbol batch ETH+BTC+SOL),
+TestPriceDeviationBehavior (2: extreme $1B BTC + near-zero ETH both pass through — no filter). QG green (1271 pass). 12.
+✅ **PBM canonical_writer Phase 10 codex audit** — AUDIT CLEAN. canonical_writer is archetype-agnostic: dispatches on
+(asset_group, source_data_type) pairs only, no per-family (Family 0/1/2) branching.
+\_MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY + \_resolve_policy_output_data_type both archetype-neutral. codex
+batch-live-architecture.md § Archetype-grain covers strategy-service CarryRecursiveStakedEngine level; MDPS sits below
+that layer (raw market data, no strategy awareness). Codex doc accurate; no drift; no code/test changes needed. 13. ✅
+**MTDS perp venue funding rate normalization** — mtds@7b8f6b6. 8 tests (7 venue contracts + 1 multi-venue sign
+consistency): Hyperliquid (decimal+sign), Aster (decimal), GMX Arb+Avax (two-sided opposite signs), Pacifica (decimal),
+Lighter (CSV decimal + neg preserved), Hyperliquid×Aster cross-sign (longs-pay-shorts consistent). CeFi Tardis venues
+tested at UAC schema level (different ingestion path). QG green.
 
-[2026-05-15 17:20 UTC] [main → slot 9] — 📌 **NEW DISPATCH: MTDS market_interface 53-test-failure triage + fix** (operator-acked).
+[2026-05-15 17:20 UTC] [main → slot 9] — 📌 **NEW DISPATCH: MTDS market_interface 53-test-failure triage + fix**
+(operator-acked).
 
-Issue doc: [`plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md`](../../plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md).
+Issue doc:
+[`plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md`](../../plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md).
 
-53 unit-test failures across 5 modules in MTDS market_interface (slot 9's
-territory). Issue doc says "operator triage" because nobody had categorized
-them yet. Operator approved your slot picking it up.
+53 unit-test failures across 5 modules in MTDS market_interface (slot 9's territory). Issue doc says "operator triage"
+because nobody had categorized them yet. Operator approved your slot picking it up.
 
 **Done-def (two halves)**:
-1. **Triage half**: bin the 53 failures into root-cause clusters (e.g.
-   "venue API drift X" / "mock fixture stale Y" / "schema rename Z"). File a
-   refined plan-of-attack as an UPDATE to the existing issue doc (do NOT
-   create a new doc). Goal: a fewer-than-10 cluster table mapping
-   cluster → failing test count → suggested fix scope.
-2. **Fix half**: ship fixes for the LARGEST cluster first (highest leverage
-   per AI-hour). If the cluster you finish closes ≥30 of the 53 failures,
-   ping CYCLE-CLOSE; otherwise self-pivot to the next-largest cluster.
 
-**Scope guard**: MTDS market_interface ONLY. Other MTDS module failures (if
-any surface during triage) get filed as separate issue docs — don't expand
-scope inline.
+1. **Triage half**: bin the 53 failures into root-cause clusters (e.g. "venue API drift X" / "mock fixture stale Y" /
+   "schema rename Z"). File a refined plan-of-attack as an UPDATE to the existing issue doc (do NOT create a new doc).
+   Goal: a fewer-than-10 cluster table mapping cluster → failing test count → suggested fix scope.
+2. **Fix half**: ship fixes for the LARGEST cluster first (highest leverage per AI-hour). If the cluster you finish
+   closes ≥30 of the 53 failures, ping CYCLE-CLOSE; otherwise self-pivot to the next-largest cluster.
 
-**Self-pivot**: do this BEFORE the rest of your existing queue (items
-4/5/6/10/14). The 13-item buffer queue can wait — these 53 test failures
-have been sitting since 2026-05-14 P1.
+**Scope guard**: MTDS market_interface ONLY. Other MTDS module failures (if any surface during triage) get filed as
+separate issue docs — don't expand scope inline.
 
-Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md.
-Conditional-push to live-defi-rollout per usual rebase-on-reject.
+**Self-pivot**: do this BEFORE the rest of your existing queue (items 4/5/6/10/14). The 13-item buffer queue can wait —
+these 53 test failures have been sitting since 2026-05-14 P1.
 
----
-
-## [2026-05-15 18:25 UTC] [main → slot 9] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
-
-> Re-anchoring as todo-checkbox list per operator request.
-> Flip IN-PLACE as you finish: `- [ ]` → `- [x] @ <sha> + brief evidence`.
-> Self-pivot, ping STARTED + per-item DONE in this file.
-
-### P1 — primary focus (do this FIRST, before items 4-15 of your buffer)
-
-- [ ] **1. MTDS market_interface 53-test-failure triage** — [`plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md`](../../plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md). Operator-acked, slot 9 owns.
-  - **Triage half**: bin 53 failures into <10 root-cause clusters (venue API drift / mock fixture stale / schema rename / etc). Append refined table to existing issue doc.
-  - **Fix half**: ship fixes for LARGEST cluster first. If ≥30 of 53 close, ping CYCLE-CLOSE. Otherwise self-pivot to next-largest.
-  - **Scope guard**: MTDS market_interface ONLY. Other MTDS module failures → separate issue docs.
-
-### After CYCLE-CLOSE on item 1, continue your existing buffer queue (~14 AI-days remaining)
-
-- [ ] **2. MTDS Pyth additional symbol coverage extensions** — your mtds@487c9d0 covered base Pyth tests; extend for additional symbols if any 53-test triage surfaced gaps.
-
-- [ ] **3. PBM phantom-manifest detection unit tests** — write tests for phantom detection logic in `market-data-processing-service` (manifest row exists but parquet missing OR vice-versa). 4+ phantom-detection scenarios.
-
-- [ ] **4. MTDS CLI flag validation tests** — verify `--operation/--mode/--asset-group` flag combinations: invalid combos raise at parse-time, not runtime.
-
-- [ ] **5. Items 4/5/6/10 of original Day-1 queue** — see entries above this dispatch (the 13-item buffer queue from 2026-05-15 morning). Self-pivot through whichever remain unstarted.
-
-- [ ] **6. emerging_perp_adapters_diagnosed close-out** (P0) — [`plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md`](../../plans/active/issues/emerging_perp_adapters_diagnosed_2026_05_13.md). HYPERLIQUID `fetch_trades` Tardis branch completion + ASTER URL fix. Root cause already diagnosed.
-
-- [ ] **7. mtds_defi_handler_perf_benchmark_gap** (P2) — [`plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md`](../../plans/active/issues/mtds_defi_handler_perf_benchmark_gap_2026_05_15.md). Self-states "No action needed for May-23 gate"; build future harness or close as resolved.
-
-**Conflict rules**: features-service = slot 4 owns first, then slot 9 (item 6 of original queue blocked on slot 4 CYCLE-CLOSE for features-service work); deployment-api = slot 7; UAC = surgical only (Ikenna); strategy-service = slot 3.
+Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md. Conditional-push to live-defi-rollout per usual
+rebase-on-reject.

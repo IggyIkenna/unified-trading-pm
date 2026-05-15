@@ -345,34 +345,37 @@ should expect these surfaces to exist.
 
 ### deployment-api additions
 
-| Endpoint | Commit | Notes |
-| ------------------------------------------ | ---------------------- | ------------------------------------------------------- |
-| `POST /api/backfill/launch` | deployment-api@fe2a9c5 | Fires `launch-backfill-vm.sh`; returns `BackfillLaunchResult` |
-| `POST /api/ml/experiment/launch` | deployment-api@f407c54 | Fires `launch-ml-training-vm.sh`; VM name `ml-train-{inst}-{ts}` |
-| `POST /api/strategy/backtest/launch` | deployment-api@f407c54 | Fires `launch-strategy-backtest-grid-vm.sh` |
-| `POST /api/execution/backtest/launch` | deployment-api@f407c54 | Fires `launch-strategy-paper-vm.sh` |
-| `GET /api/vm/events?since=<ts>` | deployment-api@f407c54 | `since` param (ISO 8601); older `date`/`from_hour` params deprecated |
-| `GET /api/builds/history` | deployment-api@b1ee896 | Tarball + Docker-image lineage |
-| `GET /api/openapi.json` | deployment-api@4769bd8 | Auto-generated FastAPI OpenAPI spec |
-| `GET /api/health/detailed` | deployment-api@1114bfe | Per-component status (GCS, Pub/Sub, Secret Manager, events) |
-| `GET /metrics` | deployment-api@8aabe72 | Prometheus exposition; key counters: requests, latencies, in-flight VMs, snapshot age |
-| `WS /ws/vm/{vm_name}/events` | deployment-api@4951d10 | GCS-poll every 5s; pushes `VMLifecycleEvent` JSON; mock mode for tests |
+| Endpoint                              | Commit                 | Notes                                                                                 |
+| ------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------- |
+| `POST /api/backfill/launch`           | deployment-api@fe2a9c5 | Fires `launch-backfill-vm.sh`; returns `BackfillLaunchResult`                         |
+| `POST /api/ml/experiment/launch`      | deployment-api@f407c54 | Fires `launch-ml-training-vm.sh`; VM name `ml-train-{inst}-{ts}`                      |
+| `POST /api/strategy/backtest/launch`  | deployment-api@f407c54 | Fires `launch-strategy-backtest-grid-vm.sh`                                           |
+| `POST /api/execution/backtest/launch` | deployment-api@f407c54 | Fires `launch-strategy-paper-vm.sh`                                                   |
+| `GET /api/vm/events?since=<ts>`       | deployment-api@f407c54 | `since` param (ISO 8601); older `date`/`from_hour` params deprecated                  |
+| `GET /api/builds/history`             | deployment-api@b1ee896 | Tarball + Docker-image lineage                                                        |
+| `GET /api/openapi.json`               | deployment-api@4769bd8 | Auto-generated FastAPI OpenAPI spec                                                   |
+| `GET /api/health/detailed`            | deployment-api@1114bfe | Per-component status (GCS, Pub/Sub, Secret Manager, events)                           |
+| `GET /metrics`                        | deployment-api@8aabe72 | Prometheus exposition; key counters: requests, latencies, in-flight VMs, snapshot age |
+| `WS /ws/vm/{vm_name}/events`          | deployment-api@4951d10 | GCS-poll every 5s; pushes `VMLifecycleEvent` JSON; mock mode for tests                |
 
-**Auth**: Firebase ID token verification middleware on all endpoints (deployment-api@299908f). Token in `Authorization: Bearer <token>` header. Tests cover valid / expired / missing token cases.
+**Auth**: Firebase ID token verification middleware on all endpoints (deployment-api@299908f). Token in
+`Authorization: Bearer <token>` header. Tests cover valid / expired / missing token cases.
 
 **Rate limiting**: per-IP 60 req/min via slowapi (deployment-api@e968719). 429 response on exceed.
 
 ### deployment-ui additions
 
-| Route | Commit | Notes |
-| ------------------------------------ | ---------------------- | -------------------------------- |
-| `/ops/live-deployments` | deployment-ui@d3d657b | Running services panel; WebSocket consumer (deployment-ui@8bace71) |
-| `/research/ml-experiments` | deployment-ui@4d5e662 | Consumes `POST /api/ml/experiment/launch` |
-| `/research/strategy-backtests` | deployment-ui@4d5e662 | Consumes `POST /api/strategy/backtest/launch` |
-| `/research/execution-backtests` | deployment-ui@4d5e662 | Consumes `POST /api/execution/backtest/launch` |
-| `/dart` | deployment-ui@bf3ec2c | Operator-monitored DART terminal stub; manual trade entry path |
+| Route                           | Commit                | Notes                                                              |
+| ------------------------------- | --------------------- | ------------------------------------------------------------------ |
+| `/ops/live-deployments`         | deployment-ui@d3d657b | Running services panel; WebSocket consumer (deployment-ui@8bace71) |
+| `/research/ml-experiments`      | deployment-ui@4d5e662 | Consumes `POST /api/ml/experiment/launch`                          |
+| `/research/strategy-backtests`  | deployment-ui@4d5e662 | Consumes `POST /api/strategy/backtest/launch`                      |
+| `/research/execution-backtests` | deployment-ui@4d5e662 | Consumes `POST /api/execution/backtest/launch`                     |
+| `/dart`                         | deployment-ui@bf3ec2c | Operator-monitored DART terminal stub; manual trade entry path     |
 
-**Additional hardening**: error boundary + retry UX (deployment-ui@71c658e); dark/light WCAG AA theme + ARIA labels (deployment-ui@3119577); form validation polish on /research forms (deployment-ui@088b5c6); toast/banner notification system (deployment-ui@e2b7a81).
+**Additional hardening**: error boundary + retry UX (deployment-ui@71c658e); dark/light WCAG AA theme + ARIA labels
+(deployment-ui@3119577); form validation polish on /research forms (deployment-ui@088b5c6); toast/banner notification
+system (deployment-ui@e2b7a81).
 
 ---
 
