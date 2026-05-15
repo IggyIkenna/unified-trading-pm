@@ -16,13 +16,12 @@ routing:
 
 ## What I found
 
-Per slot 3 Day-3 Wave 2 done-def ("117 UTL tests pass via `bash scripts/quality-gates.sh`;
-pre-existing-foreign issues filed as issue docs with owner-tag"), the 117 test sweep
-is shipped at utl@`26ded7d`. The **test step** of `quality-gates.sh` passes
-(3482 tests pass, 5 skipped, 9 xfailed per separate freshness-monitor issue doc).
+Per slot 3 Day-3 Wave 2 done-def ("117 UTL tests pass via `bash scripts/quality-gates.sh`; pre-existing-foreign issues
+filed as issue docs with owner-tag"), the 117 test sweep is shipped at utl@`26ded7d`. The **test step** of
+`quality-gates.sh` passes (3482 tests pass, 5 skipped, 9 xfailed per separate freshness-monitor issue doc).
 
-However, the **full QG run fails on 6 unrelated pre-existing categories** that
-were already failing on `origin/live-defi-rollout` before my sweep:
+However, the **full QG run fails on 6 unrelated pre-existing categories** that were already failing on
+`origin/live-defi-rollout` before my sweep:
 
 ### 1. STEP 5.5 — Direct cloud SDK imports
 
@@ -30,10 +29,8 @@ were already failing on `origin/live-defi-rollout` before my sweep:
 ./unified_trading_library/instrument_lifecycle_loader.py
 ```
 
-`from google.cloud import storage` at module scope. Was present on
-`origin/live-defi-rollout` parent commit (`55424a9`) before my sweep — not
-introduced by me. Should be routed through `unified_cloud_interface`
-`get_storage_client()`.
+`from google.cloud import storage` at module scope. Was present on `origin/live-defi-rollout` parent commit (`55424a9`)
+before my sweep — not introduced by me. Should be routed through `unified_cloud_interface` `get_storage_client()`.
 
 ### 2. Backward-compat patterns
 
@@ -73,9 +70,8 @@ feature_service_base/live_aggregator.py:654:CrossCuttingFeaturesRunner.process_a
 feature_service_base/live_aggregator.py:750:CrossCuttingFeaturesRunner._emit_stale_data(): 51L
 ```
 
-Per coding standards, method limit is 50L. 22 methods exceed; concentrated in
-`treasury/`, `post_trade/`, `streaming/live_aggregator.py`, `feature_service_base/`,
-`synthetic/harness.py`. Pre-existing.
+Per coding standards, method limit is 50L. 22 methods exceed; concentrated in `treasury/`, `post_trade/`,
+`streaming/live_aggregator.py`, `feature_service_base/`, `synthetic/harness.py`. Pre-existing.
 
 ### 4. pip-audit vulnerabilities
 
@@ -84,8 +80,8 @@ urllib3 2.6.3 — CVE-2026-44431  fix=2.7.0
 urllib3 2.6.3 — CVE-2026-44432  fix=2.7.0
 ```
 
-Workspace-wide dep issue; fix is `uv pip install urllib3>=2.7.0` (probably
-via `pyproject.toml` bump). Affects every Python repo, not UTL-specific.
+Workspace-wide dep issue; fix is `uv pip install urllib3>=2.7.0` (probably via `pyproject.toml` bump). Affects every
+Python repo, not UTL-specific.
 
 ### 5. STEP 5.23 — Deep UAC imports (10 callsites)
 
@@ -103,11 +99,9 @@ unified_trading_library/treasury/withdrawal_reconciler.py
 unified_trading_library/feature_service_base/live_aggregator.py
 ```
 
-Imports from `unified_api_contracts.canonical.crosscutting.*` (UAC-internal
-path) instead of facade. 5 callsites have `# noqa: qg-deep-import` justification
-("not yet on root facade; lift when UAC root facade re-exports"); 5 do not.
-Composite scope: needs UAC facade re-exports (Ikenna territory) + per-callsite
-migration.
+Imports from `unified_api_contracts.canonical.crosscutting.*` (UAC-internal path) instead of facade. 5 callsites have
+`# noqa: qg-deep-import` justification ("not yet on root facade; lift when UAC root facade re-exports"); 5 do not.
+Composite scope: needs UAC facade re-exports (Ikenna territory) + per-callsite migration.
 
 ### 6. Codex compliance: 14 violations
 
@@ -115,28 +109,24 @@ migration.
 
 ## Why it matters
 
-These do not block the 117-test-fixture sweep done-def (test step passes), but
-they keep `unified-trading-library/scripts/quality-gates.sh` red on every push,
-which masks new regressions and forces every UTL-touching agent to inspect
-"is this failure pre-existing or mine?". Composite scope: not a 30-min fix.
+These do not block the 117-test-fixture sweep done-def (test step passes), but they keep
+`unified-trading-library/scripts/quality-gates.sh` red on every push, which masks new regressions and forces every
+UTL-touching agent to inspect "is this failure pre-existing or mine?". Composite scope: not a 30-min fix.
 
 ## Recommended decision
 
 Operator triage / break into themed sub-issues:
 
-1. **Cloud SDK import** (`instrument_lifecycle_loader.py`): single-file fix; route
-   through `unified_cloud_interface`. ~30-60 min — assign to next UTL slot.
-2. **Backward-compat shims** (3 instances): targeted deletions; check callers
-   first. ~1 hour.
-3. **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days
-   total. Concentrated areas: `treasury/` (5), `post_trade/` (4),
-   `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py`
-   (3), `synthetic/harness.py` (2).
-4. **urllib3 CVE bump**: workspace-wide dep bump to 2.7.0 — single PR across
-   all repos via PM dep alignment scripts.
-5. **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports
-   on `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
+1. **Cloud SDK import** (`instrument_lifecycle_loader.py`): single-file fix; route through `unified_cloud_interface`.
+   ~30-60 min — assign to next UTL slot.
+2. **Backward-compat shims** (3 instances): targeted deletions; check callers first. ~1 hour.
+3. **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days total. Concentrated areas: `treasury/`
+   (5), `post_trade/` (4), `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py` (3),
+   `synthetic/harness.py` (2).
+4. **urllib3 CVE bump**: workspace-wide dep bump to 2.7.0 — single PR across all repos via PM dep alignment scripts.
+5. **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
+   `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
    then per-callsite migration.
 
-This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not**
-a blocker for the 117-test-fixture sweep closure (utl@`26ded7d`).
+This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not** a blocker for the 117-test-fixture
+sweep closure (utl@`26ded7d`).

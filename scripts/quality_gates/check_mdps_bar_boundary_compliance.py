@@ -93,9 +93,7 @@ _BANNED_ATTR_CALLS: dict[str, str] = {
 }
 
 # kwargs that mark `.replace(...)` as a truncation (zeroing-out time components)
-_REPLACE_TRUNCATION_KWARGS: frozenset[str] = frozenset(
-    ["minute", "second", "microsecond", "nanosecond"]
-)
+_REPLACE_TRUNCATION_KWARGS: frozenset[str] = frozenset(["minute", "second", "microsecond", "nanosecond"])
 
 # Directories to skip in source walk.
 _SKIP_DIR_NAMES: frozenset[str] = frozenset(
@@ -138,10 +136,7 @@ class _Violation:
         self.reason = reason
 
     def format(self) -> str:
-        return (
-            f"{self.file_path}:{self.line}:{self.col}: "
-            f"{self.reason}\n    {self.snippet}"
-        )
+        return f"{self.file_path}:{self.line}:{self.col}: {self.reason}\n    {self.snippet}"
 
 
 def _iter_py_files(source_dir: Path) -> Iterator[Path]:
@@ -219,11 +214,7 @@ def _scan_file(file_path: Path) -> list[_Violation]:
             if _call_has_timeframe_arg(node):
                 if _line_has_noqa(file_lines, node.lineno):
                     continue
-                snippet = (
-                    file_lines[node.lineno - 1].strip()
-                    if 1 <= node.lineno <= len(file_lines)
-                    else "<unknown>"
-                )
+                snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
                 violations.append(
                     _Violation(
                         file_path=file_path,
@@ -239,21 +230,14 @@ def _scan_file(file_path: Path) -> list[_Violation]:
             if _replace_has_truncation_kwargs(node):
                 if _line_has_noqa(file_lines, node.lineno):
                     continue
-                snippet = (
-                    file_lines[node.lineno - 1].strip()
-                    if 1 <= node.lineno <= len(file_lines)
-                    else "<unknown>"
-                )
+                snippet = file_lines[node.lineno - 1].strip() if 1 <= node.lineno <= len(file_lines) else "<unknown>"
                 violations.append(
                     _Violation(
                         file_path=file_path,
                         line=node.lineno,
                         col=node.col_offset,
                         snippet=snippet,
-                        reason=(
-                            "dt.replace(minute=0, ...) truncation bypass — "
-                            "use compute_bar_close_boundary()"
-                        ),
+                        reason=("dt.replace(minute=0, ...) truncation bypass — use compute_bar_close_boundary()"),
                     )
                 )
 
@@ -261,11 +245,7 @@ def _scan_file(file_path: Path) -> list[_Violation]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description=(
-            "STEP 5.74 — MDPS bar-boundary truncation-bypass static check."
-        )
-    )
+    parser = argparse.ArgumentParser(description=("STEP 5.74 — MDPS bar-boundary truncation-bypass static check."))
     parser.add_argument(
         "--source-dir",
         type=Path,
@@ -290,8 +270,7 @@ def main() -> int:
         return 0
 
     print(
-        f"\n❌ STEP 5.74: MDPS bar-boundary truncation-bypass check found "
-        f"{len(all_violations)} violation(s):\n",
+        f"\n❌ STEP 5.74: MDPS bar-boundary truncation-bypass check found {len(all_violations)} violation(s):\n",
         file=sys.stderr,
     )
     for v in all_violations:

@@ -293,28 +293,28 @@ check features_service/`exit-0; no`.py`>900L). Minor non-blocking: 5 bare`# noqa
 
 Worked the ▶ RESUME block item 2 ("days-2-4 codex deepening: the 4 day-1-flagged NEW codex docs in their owning plans;
 verify the v8-schema + emission-policy SSOT consistency") + the 13:30 `[main → slot 6]` ping ("verify the v8
-ManifestWriter is *shipped* (Phase 2) not just UAC-declared; rescan launcher referenced in launcher-SSOT codex").
+ManifestWriter is _shipped_ (Phase 2) not just UAC-declared; rescan launcher referenced in launcher-SSOT codex").
 
-**Status delta on the 4 day-1-flagged NEW codex docs** (supersedes the 12:23-UTC "all 4 still absent" note above —
-3 of 4 have now landed):
+**Status delta on the 4 day-1-flagged NEW codex docs** (supersedes the 12:23-UTC "all 4 still absent" note above — 3 of
+4 have now landed):
 
-| Doc                                                       | Day-1 state | Now (2026-05-11 ~13:45 UTC)                                                                                       |
-| --------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `codex/04-architecture/risk-rule-taxonomy.md`             | absent      | **LANDED** (168 L, `scope: [engineer, admin]`)                                                                    |
-| `codex/04-architecture/circuit-breaker-rule-taxonomy.md`  | absent      | **LANDED** (350 L, `scope: [engineer, admin]`, `status: active`)                                                  |
-| `codex/04-architecture/service-emission-policy.md`        | absent      | **LANDED** (134 L, `scope: [engineer, admin]`) — created by ikenna-slot-6 per the RESUME block; stub-appropriate. |
-| `codex/02-data/cross-asset-rescan-protocol.md`            | absent      | **STILL ABSENT** — see below; tracked-pending in `manifest_schema_final_gate_2026_05_09.md`.                      |
+| Doc                                                      | Day-1 state | Now (2026-05-11 ~13:45 UTC)                                                                                       |
+| -------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `codex/04-architecture/risk-rule-taxonomy.md`            | absent      | **LANDED** (168 L, `scope: [engineer, admin]`)                                                                    |
+| `codex/04-architecture/circuit-breaker-rule-taxonomy.md` | absent      | **LANDED** (350 L, `scope: [engineer, admin]`, `status: active`)                                                  |
+| `codex/04-architecture/service-emission-policy.md`       | absent      | **LANDED** (134 L, `scope: [engineer, admin]`) — created by ikenna-slot-6 per the RESUME block; stub-appropriate. |
+| `codex/02-data/cross-asset-rescan-protocol.md`           | absent      | **STILL ABSENT** — see below; tracked-pending in `manifest_schema_final_gate_2026_05_09.md`.                      |
 
 **`cross-asset-rescan-protocol.md` — codex gap post-Phase-3-ship (route to ikenna-slot-6 / `manifest_schema_final_gate`
 Phase 3 codex follow-up).** `manifest_schema_final_gate` Phase 3 (cross-asset rescan launcher) SHIPPED end-to-end
 (`deployment-service@19fad8c` = `vm/launch-cross-asset-rescan-vm.sh` + `cross-asset-rescan-` prefix in
 `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`; `deployment-api@c8a1cd4` = registered in `_SERVICE_LAUNCHER_SCRIPTS`;
 `instruments-service@a264f21` = `scripts/cross_asset_rescan.py` 333-line orchestrator) — per the CLAUDE.md
-"Post-Plan-Phase Codex Audit" HARD RULE, the codex stub the plan declares it touches (`codex/02-data/cross-asset-rescan-protocol.md`)
-should now exist as at least a stub. It doesn't. Not a flip violation if the owning plan's codex-doc checkbox is still
-`- [ ]` (it is — `manifest_schema_final_gate` Phase 3's done-def lists the codex update as pending) — but it's a deferred
-codex item that the Phase-3-ship should carry. **No code/data impact** — the rescan workflow runs fine without the codex
-doc; the doc is the intent-record. Routed to ikenna-slot-6.
+"Post-Plan-Phase Codex Audit" HARD RULE, the codex stub the plan declares it touches
+(`codex/02-data/cross-asset-rescan-protocol.md`) should now exist as at least a stub. It doesn't. Not a flip violation
+if the owning plan's codex-doc checkbox is still `- [ ]` (it is — `manifest_schema_final_gate` Phase 3's done-def lists
+the codex update as pending) — but it's a deferred codex item that the Phase-3-ship should carry. **No code/data
+impact** — the rescan workflow runs fine without the codex doc; the doc is the intent-record. Routed to ikenna-slot-6.
 
 **`MANIFEST_SCHEMA_VERSION` vs codex-doc drift — found + routed.** `manifest_writer.py:131` is still
 `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns (`service_emission_state` / `last_emission_decision_at` /
@@ -328,21 +328,24 @@ breakage. Routed to `manifest_schema_final_gate_2026_05_09.md` Phase 2 follow-up
 bump-code-to-8 vs soften-the-prose). PM@`f8d4d9bf` added that finding-todo.
 
 **`launcher-script-ssot.md` rescan-launcher reference** — checked: the doc does NOT mention `cross-asset-rescan` — but
-`codex/05-infrastructure/launcher-script-ssot.md` isn't an enumeration doc (it's the SSOT *rule* + migration-tracker for
+`codex/05-infrastructure/launcher-script-ssot.md` isn't an enumeration doc (it's the SSOT _rule_ + migration-tracker for
 ad-hoc launchers being moved into `deployment-service/scripts/vm/`); the rescan launcher was BORN in the canonical
 location (`deployment-service@19fad8c`), so it doesn't need a migration entry, and it IS properly registered in
 `_SERVICE_LAUNCHER_SCRIPTS` (`deployment-api@c8a1cd4`). **No update needed for `launcher-script-ssot.md`.** ✓
 
 **`service-output-emission-semantics.md` v8 currency** — re-confirmed current (ikenna-slot-6 maintains it; PM@`f99895d1`
 brought it to v8-currency with the `next_state(...)` resolver section + 4-state manifest-read-protocol table). The
-`expected_window_completeness_pct`→`_fraction` rename @UAC@`76f950a` is reflected in both `service-output-emission-semantics.md`
-and `availability-manifest-and-data-status.md`. ✓ No new drift (beyond the `MANIFEST_SCHEMA_VERSION` one above).
+`expected_window_completeness_pct`→`_fraction` rename @UAC@`76f950a` is reflected in both
+`service-output-emission-semantics.md` and `availability-manifest-and-data-status.md`. ✓ No new drift (beyond the
+`MANIFEST_SCHEMA_VERSION` one above).
 
 **`mdps@0068b2f` (slot-5 Phase 4 LiveStreamAggregator) QG-validated** — not a codex item; cross-ref to
 [`qg_sweep_2026_05_11.md`](qg_sweep_2026_05_11.md) regression-log row. ✓ static, Live=batch invariant satisfied.
 
-**Revised count**: 58 present / 35 pending → **61 present / 32 pending** (risk-rule-taxonomy + circuit-breaker-rule-taxonomy
-+ service-emission-policy landed; cross-asset-rescan-protocol still pending).
+**Revised count**: 58 present / 35 pending → **61 present / 32 pending** (risk-rule-taxonomy +
+circuit-breaker-rule-taxonomy
+
+- service-emission-policy landed; cross-asset-rescan-protocol still pending).
 
 ## Days 2-4 follow-up (slot 6)
 

@@ -12,18 +12,18 @@ Paper mode bridges the gap by executing real smart contract calls on chain forks
 
 ## Mode Matrix
 
-| Aspect                | Batch                                   | Paper (Testnet)             | Live                         |
-| --------------------- | --------------------------------------- | --------------------------- | ---------------------------- |
-| **Config flag**       | `--mode batch`                          | `--mode paper`              | `--mode live`                |
-| **RPC target**        | Tenderly fork (historical block)        | Tenderly fork (live block)  | Mainnet                      |
-| **Smart contracts**   | Called on fork (same code path as live) | Called on fork (real-time)  | Called on mainnet            |
-| **Execution**         | Real connectors → fork                  | Real connectors → fork      | Real connectors → mainnet    |
+| Aspect                | Batch                                   | Paper (Testnet)             | Live                                                                                                         |
+| --------------------- | --------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Config flag**       | `--mode batch`                          | `--mode paper`              | `--mode live`                                                                                                |
+| **RPC target**        | Tenderly fork (historical block)        | Tenderly fork (live block)  | Mainnet                                                                                                      |
+| **Smart contracts**   | Called on fork (same code path as live) | Called on fork (real-time)  | Called on mainnet                                                                                            |
+| **Execution**         | Real connectors → fork                  | Real connectors → fork      | Real connectors → mainnet                                                                                    |
 | **Signing**           | MockCustody (fork doesn't verify)       | MockCustody or sandbox      | CLOUD_KMS_ENCRYPTED (May-23 cutover default) → Copper MPC / CEFFU MirrorX / Fireblocks (June-1 flip targets) |
-| **Gas costs**         | Real from fork tx receipt               | Real from fork tx receipt   | Real from mainnet tx receipt |
-| **Fill prices**       | Real execution price (fork)             | Real execution price (fork) | Real execution price         |
-| **Data source**       | GCS (pre-downloaded features)           | Live feeds (real-time)      | Live feeds (real-time)       |
-| **Position tracking** | GCS state files                         | GCS + on-chain (fork)       | On-chain + GCS               |
-| **Speed**             | Fast (replay rate)                      | Real-time                   | Real-time                    |
+| **Gas costs**         | Real from fork tx receipt               | Real from fork tx receipt   | Real from mainnet tx receipt                                                                                 |
+| **Fill prices**       | Real execution price (fork)             | Real execution price (fork) | Real execution price                                                                                         |
+| **Data source**       | GCS (pre-downloaded features)           | Live feeds (real-time)      | Live feeds (real-time)                                                                                       |
+| **Position tracking** | GCS state files                         | GCS + on-chain (fork)       | On-chain + GCS                                                                                               |
+| **Speed**             | Fast (replay rate)                      | Real-time                   | Real-time                                                                                                    |
 
 **Lightweight fallback (batch only):** `BENCHMARK_FILL` skips contract calls for quick iteration. Not the production
 batch path — use fork execution for production-grade backtesting.
@@ -50,9 +50,8 @@ based on what exists on each date.
 
 > **6-perp-venue master-plan parity (codex audit EX-11 2026-05-12)**: CLAUDE.md § "Master Plan" + the master-plan
 > readiness checklist name Bybit, Deribit, Binance, OKX, Hyperliquid, Aster as the **6 perp venues** for hedge legs.
-> DERIBIT added to the example above 2026-05-12 — earlier 5-venue list omitted Deribit. Operators wiring
-> `perp_venues` lists in strategy configs MUST include all 6 unless explicitly scoped down.
-
+> DERIBIT added to the example above 2026-05-12 — earlier 5-venue list omitted Deribit. Operators wiring `perp_venues`
+> lists in strategy configs MUST include all 6 unless explicitly scoped down.
 
 The strategy config (GCS JSON) declares:
 
@@ -85,8 +84,8 @@ instruments-service --operation instruments --asset-group DEFI --start-date 2026
 
 ### 3. Strategy Reads Features (Not Instruments Directly)
 
-In batch: strategy reads pre-computed features from GCS (features-service (onchain family) output). In live: strategy subscribes
-to feature events via Pub/Sub.
+In batch: strategy reads pre-computed features from GCS (features-service (onchain family) output). In live: strategy
+subscribes to feature events via Pub/Sub.
 
 The strategy doesn't query instruments-service at runtime — it relies on the pipeline having already run instruments →
 MTDS → MDPS → features before strategy evaluation.
@@ -234,16 +233,16 @@ boundaries) behave correctly across multi-day backtests.
 
 ### Secret Manager (Single Source for All Modes)
 
-| Secret                   | Used By                          | Modes                               |
-| ------------------------ | -------------------------------- | ----------------------------------- |
-| `alchemy-api-key`        | All chain RPC calls              | All (same key, different endpoints) |
-| `tardis-api-key`         | CeFi historical data             | Batch only                          |
-| `thegraph-api-key`       | DeFi subgraph queries            | All                                 |
-| Cloud KMS CMK (GCP/AWS)  | Transaction signing (May-23 default) | Live only — `CLOUD_KMS_ENCRYPTED` signing surface per `interface-credential-convention.md` |
-| `copper-api-key`         | Transaction signing (June-1 flip target) | Live only — MPC flip post client cred delivery |
-| `copper-sandbox-api-key` | Transaction signing (test)       | Paper only                          |
-| `ceffu-api-key`          | Transaction signing (June-1 flip target) | Live only — CEFFU MirrorX flip post client cred delivery |
-| `fireblocks-api-key`     | Transaction signing (June-1 flip target) | Live only — Fireblocks MPC flip post client cred delivery |
+| Secret                   | Used By                                  | Modes                                                                                      |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `alchemy-api-key`        | All chain RPC calls                      | All (same key, different endpoints)                                                        |
+| `tardis-api-key`         | CeFi historical data                     | Batch only                                                                                 |
+| `thegraph-api-key`       | DeFi subgraph queries                    | All                                                                                        |
+| Cloud KMS CMK (GCP/AWS)  | Transaction signing (May-23 default)     | Live only — `CLOUD_KMS_ENCRYPTED` signing surface per `interface-credential-convention.md` |
+| `copper-api-key`         | Transaction signing (June-1 flip target) | Live only — MPC flip post client cred delivery                                             |
+| `copper-sandbox-api-key` | Transaction signing (test)               | Paper only                                                                                 |
+| `ceffu-api-key`          | Transaction signing (June-1 flip target) | Live only — CEFFU MirrorX flip post client cred delivery                                   |
+| `fireblocks-api-key`     | Transaction signing (June-1 flip target) | Live only — Fireblocks MPC flip post client cred delivery                                  |
 
 ### RPC Endpoint Resolution
 
@@ -393,12 +392,12 @@ the execution provider is pluggable.
 
 ### Pipeline Scripts
 
-| Pipeline                                                   | Status                                                                     |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `run-data-prep.sh` (instruments, ticks, process, features) | **Working** — positional subcommands for each pipeline stage               |
-| `run-batch.sh` (historical replay)                         | **Working** — `--strategy`, `--strategies`, `--asset-group`, `--skip-data` |
-| `run-paper.sh` (real-time on Tenderly fork)                | **Working** — creates Tenderly fork, uses `local-paper.env`                |
-| `run-live.sh` (real-time on mainnet)                       | **Working** — Copper custody, interactive safety confirmation              |
+| Pipeline                                                                                                                                                        | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `run-data-prep.sh` (instruments, ticks, process, features)                                                                                                      | **Working** — positional subcommands for each pipeline stage                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `run-batch.sh` (historical replay)                                                                                                                              | **Working** — `--strategy`, `--strategies`, `--asset-group`, `--skip-data`                                                                                                                                                                                                                                                                                                                                                                                     |
+| `run-paper.sh` (real-time on Tenderly fork)                                                                                                                     | **Working** — creates Tenderly fork, uses `local-paper.env`                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `run-live.sh` (real-time on mainnet)                                                                                                                            | **Working** — Copper custody, interactive safety confirmation                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `colocated_engine.py` (shared memory; strategy count is registry-driven, **not** the stale 44 figure cited prior to slot 8 exec audit EX-21 refresh 2026-05-12) | **Working** — async GCS sink, shared-memory architecture. **QG-wiring caveat**: per CLAUDE.md § "Peripheral Script Directories Under Primary-Consumer QG", `e2e-testing/scripts/defi/colocated_engine.py` MUST be wired into `strategy-service/scripts/quality-gates.sh` so symbol-removal incidents (2026-05-01 → 2026-05-08 silent rot of `get_strategy_factories` import) surface at PR time. Cross-reference: O-1 ops-area finding owns the QG-wiring fix. |
 
 ### Config Layer

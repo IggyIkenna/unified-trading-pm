@@ -6,77 +6,75 @@ plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
 
 # Mode-Axis Discipline
 
-> Single SSOT for every mode enum in the system, the cartesian-product table of valid combinations, and the
-> anti-pattern list for mode-conditional code. Pre-audit source: `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
+> Single SSOT for every mode enum in the system, the cartesian-product table of valid combinations, and the anti-pattern
+> list for mode-conditional code. Pre-audit source: `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
 
 ---
 
 ## §1 The four mode axes
 
-Four independent axes control system behaviour. Each axis is a `StrEnum` in UAC; each is injected as an env var by
-the deployment system and received by services through `UnifiedCloudConfig` (never via `os.getenv()`).
+Four independent axes control system behaviour. Each axis is a `StrEnum` in UAC; each is injected as an env var by the
+deployment system and received by services through `UnifiedCloudConfig` (never via `os.getenv()`).
 
 ### RuntimeMode — service execution mode
 
-**File**: `unified_api_contracts.internal.modes.RuntimeMode`
-**Env var**: `RUNTIME_MODE` (default: `live`)
+**File**: `unified_api_contracts.internal.modes.RuntimeMode` **Env var**: `RUNTIME_MODE` (default: `live`)
 
-| Value   | Meaning                                                                     |
-| ------- | --------------------------------------------------------------------------- |
-| `live`  | Streaming / event-driven: subscribe to Redis Streams + PubSub               |
-| `batch` | Historical: read GCS Parquet → compute → write GCS Parquet                  |
+| Value   | Meaning                                                       |
+| ------- | ------------------------------------------------------------- |
+| `live`  | Streaming / event-driven: subscribe to Redis Streams + PubSub |
+| `batch` | Historical: read GCS Parquet → compute → write GCS Parquet    |
 
-`RuntimeMode` is the PRIMARY axis that controls data transport and compute scheduling. All other axes are
-refinements or orthogonal concerns.
+`RuntimeMode` is the PRIMARY axis that controls data transport and compute scheduling. All other axes are refinements or
+orthogonal concerns.
 
 ### OperationalMode — what the service is doing with fills
 
-**File**: `unified_api_contracts.internal.modes.OperationalMode`
-**Env var**: `OPERATIONAL_MODE` (default: `live`)
+**File**: `unified_api_contracts.internal.modes.OperationalMode` **Env var**: `OPERATIONAL_MODE` (default: `live`)
 
-| Value       | Meaning                                                                              |
-| ----------- | ------------------------------------------------------------------------------------ |
-| `live`      | Automated strategy execution — strategy-service → execution-service real fills       |
-| `manual`    | Operator-initiated instructions via API (manual trading panel)                       |
-| `backtest`  | Historical replay — batch mode, no live execution                                    |
-| `paper`     | Live market data, simulated execution — no real fills                                |
+| Value      | Meaning                                                                        |
+| ---------- | ------------------------------------------------------------------------------ |
+| `live`     | Automated strategy execution — strategy-service → execution-service real fills |
+| `manual`   | Operator-initiated instructions via API (manual trading panel)                 |
+| `backtest` | Historical replay — batch mode, no live execution                              |
+| `paper`    | Live market data, simulated execution — no real fills                          |
 
 `OperationalMode` is relevant only at the execution boundary. Data pipelines (MTDS, MDPS, features-service) are
 `OperationalMode`-agnostic — they serve the same data regardless.
 
 ### BatchExecutionMode — how batch fills are simulated
 
-**File**: `unified_api_contracts.internal.execution.BatchExecutionMode`
-**Set by**: batch run config, NOT an env var (varies per strategy run)
+**File**: `unified_api_contracts.internal.execution.BatchExecutionMode` **Set by**: batch run config, NOT an env var
+(varies per strategy run)
 
-| Value       | Meaning                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------- |
-| `benchmark` | Always fill at requested price. Zero execution alpha. Isolates strategy P&L.                |
-| `simulated` | Realistic fills: commission, L2 order-book depth (CeFi), AMM slippage (DeFi), latency.    |
+| Value       | Meaning                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `benchmark` | Always fill at requested price. Zero execution alpha. Isolates strategy P&L.           |
+| `simulated` | Realistic fills: commission, L2 order-book depth (CeFi), AMM slippage (DeFi), latency. |
 
-`BatchExecutionMode` only applies when `RuntimeMode = batch`. In live mode, real venue fills replace the matching
-engine entirely — `BatchExecutionMode` has no runtime effect.
+`BatchExecutionMode` only applies when `RuntimeMode = batch`. In live mode, real venue fills replace the matching engine
+entirely — `BatchExecutionMode` has no runtime effect.
 
 ### StrategyMaturityPhase — strategy lifecycle stage
 
-**File**: `unified_api_contracts.internal.domain.strategy_service.lifecycle.StrategyMaturityPhase`
-**Set by**: strategy catalogue / promotion gates (NOT a deployment env var)
+**File**: `unified_api_contracts.internal.domain.strategy_service.lifecycle.StrategyMaturityPhase` **Set by**: strategy
+catalogue / promotion gates (NOT a deployment env var)
 
-| Value               | Rank | Meaning                                           |
-| ------------------- | ---- | ------------------------------------------------- |
-| `smoke`             | 0    | Pre-backtest smoke, mock data only                |
-| `backtest_minimal`  | 1    | < 1yr historical backtest — not viable yet        |
-| `backtest_1yr`      | 2    | 1-year backtest — minimum viability threshold     |
-| `backtest_multi_year` | 3  | Multi-year backtest, extended track               |
-| `paper_1d`          | 4    | First-day paper trading                           |
-| `paper_14d`         | 5    | 14-day paper trading                              |
-| `paper_stable`      | 6    | Extended paper, promotion-ready                   |
-| `live_early`        | 7    | Initial live, small capital                       |
-| `live_stable`       | 8    | Mature live                                       |
-| `retired`           | -1   | Terminal — orthogonal to the forward ladder       |
+| Value                 | Rank | Meaning                                       |
+| --------------------- | ---- | --------------------------------------------- |
+| `smoke`               | 0    | Pre-backtest smoke, mock data only            |
+| `backtest_minimal`    | 1    | < 1yr historical backtest — not viable yet    |
+| `backtest_1yr`        | 2    | 1-year backtest — minimum viability threshold |
+| `backtest_multi_year` | 3    | Multi-year backtest, extended track           |
+| `paper_1d`            | 4    | First-day paper trading                       |
+| `paper_14d`           | 5    | 14-day paper trading                          |
+| `paper_stable`        | 6    | Extended paper, promotion-ready               |
+| `live_early`          | 7    | Initial live, small capital                   |
+| `live_stable`         | 8    | Mature live                                   |
+| `retired`             | -1   | Terminal — orthogonal to the forward ladder   |
 
-`StrategyMaturityPhase` drives the strategy catalogue display + deployment-UI lifecycle tabs. It does NOT control
-which data pipeline runs — `RuntimeMode` does that.
+`StrategyMaturityPhase` drives the strategy catalogue display + deployment-UI lifecycle tabs. It does NOT control which
+data pipeline runs — `RuntimeMode` does that.
 
 ---
 
@@ -84,19 +82,19 @@ which data pipeline runs — `RuntimeMode` does that.
 
 Not all combinations are meaningful. The table below shows valid runtime combinations for the May-23 scope:
 
-| RuntimeMode | OperationalMode | BatchExecutionMode | MaturityPhase   | Description                              | May-23 in scope? |
-| ----------- | --------------- | ------------------ | --------------- | ---------------------------------------- | ---------------- |
-| batch       | backtest        | benchmark          | backtest_*      | Strategy P&L isolation (no exec alpha)   | ✅ YES           |
-| batch       | backtest        | simulated          | backtest_*      | Execution alpha measurement              | ✅ YES           |
-| batch       | backtest        | benchmark          | paper_*         | Paper-deploy calibration run             | ✅ YES           |
-| live        | paper           | N/A                | paper_*         | Paper-deploy: real data, sim fills       | ✅ YES           |
-| live        | live            | N/A                | live_early      | Initial live with real capital           | ✅ YES (May-23)  |
-| live        | live            | N/A                | live_stable     | Mature live                              | ⏳ POST-CUTOVER  |
-| batch       | backtest        | benchmark          | smoke           | Smoke test — mock data                   | ✅ YES (CI)      |
-| live        | manual          | N/A                | any             | Operator-initiated trade                 | ✅ YES           |
-| live        | live            | benchmark          | any             | ILLEGAL — live doesn't use matching eng  | ❌ FORBIDDEN     |
-| batch       | live            | any                | any             | ILLEGAL — batch + live op is incoherent  | ❌ FORBIDDEN     |
-| live        | backtest        | any                | any             | ILLEGAL — backtest is a batch concern    | ❌ FORBIDDEN     |
+| RuntimeMode | OperationalMode | BatchExecutionMode | MaturityPhase | Description                             | May-23 in scope? |
+| ----------- | --------------- | ------------------ | ------------- | --------------------------------------- | ---------------- |
+| batch       | backtest        | benchmark          | backtest\_\*  | Strategy P&L isolation (no exec alpha)  | ✅ YES           |
+| batch       | backtest        | simulated          | backtest\_\*  | Execution alpha measurement             | ✅ YES           |
+| batch       | backtest        | benchmark          | paper\_\*     | Paper-deploy calibration run            | ✅ YES           |
+| live        | paper           | N/A                | paper\_\*     | Paper-deploy: real data, sim fills      | ✅ YES           |
+| live        | live            | N/A                | live_early    | Initial live with real capital          | ✅ YES (May-23)  |
+| live        | live            | N/A                | live_stable   | Mature live                             | ⏳ POST-CUTOVER  |
+| batch       | backtest        | benchmark          | smoke         | Smoke test — mock data                  | ✅ YES (CI)      |
+| live        | manual          | N/A                | any           | Operator-initiated trade                | ✅ YES           |
+| live        | live            | benchmark          | any           | ILLEGAL — live doesn't use matching eng | ❌ FORBIDDEN     |
+| batch       | live            | any                | any           | ILLEGAL — batch + live op is incoherent | ❌ FORBIDDEN     |
+| live        | backtest        | any                | any           | ILLEGAL — backtest is a batch concern   | ❌ FORBIDDEN     |
 
 **Rule**: `BatchExecutionMode` is only consulted when `RuntimeMode = batch`. `OperationalMode = backtest` implies
 `RuntimeMode = batch`. `OperationalMode = live | paper` implies `RuntimeMode = live`.
@@ -142,18 +140,18 @@ class VMEventType(StrEnum):
     BATCH_STARTED = "BATCH_STARTED"
 ```
 
-Fix: use a single event type + a `mode` field on the payload. Mode is a runtime attribute, not a schema dimension.
-Block G1 (post-cutover): rename to `STARTED` + add `mode: RuntimeMode` field to the event schema.
+Fix: use a single event type + a `mode` field on the payload. Mode is a runtime attribute, not a schema dimension. Block
+G1 (post-cutover): rename to `STARTED` + add `mode: RuntimeMode` field to the event schema.
 
 ### AP-3 — UI `RuntimeMode` redeclarations
 
 ```typescript
 // FORBIDDEN — never redeclare what UAC owns
-type ExecutionMode = "live" | "batch";  // in unified-trading-system-ui/context/...
+type ExecutionMode = "live" | "batch"; // in unified-trading-system-ui/context/...
 ```
 
-Fix: import from UAC schema (Tab 3 ships this as an L3 violation fix — UAC re-exports `RuntimeMode` from UTL
-canonical; UI imports from UAC). SSOT: `unified_api_contracts.internal.modes.RuntimeMode`.
+Fix: import from UAC schema (Tab 3 ships this as an L3 violation fix — UAC re-exports `RuntimeMode` from UTL canonical;
+UI imports from UAC). SSOT: `unified_api_contracts.internal.modes.RuntimeMode`.
 
 ### AP-4 — `BatchExecutionMode` as a CLI flag that changes business logic
 
@@ -162,8 +160,8 @@ canonical; UI imports from UAC). SSOT: `unified_api_contracts.internal.modes.Run
 python -m strategy_service --mode batch --exec-mode benchmark --special-path ...
 ```
 
-Fix: `BatchExecutionMode` is a run-config field (`strategy_config.batch_execution_mode`). The strategy engine reads
-it at run-start to select the matching engine. No "special paths" — same code, different matcher.
+Fix: `BatchExecutionMode` is a run-config field (`strategy_config.batch_execution_mode`). The strategy engine reads it
+at run-start to select the matching engine. No "special paths" — same code, different matcher.
 
 ### AP-5 — Using `OperationalMode` to gate data-pipeline code
 
@@ -175,8 +173,9 @@ else:
     write_to_batch_bucket()
 ```
 
-Fix: GCS bucket path is governed by `pipeline_mode` (the PipelineMode enum from UAC `canonical/crosscutting/pipeline_mode.py`),
-NOT by `OperationalMode`. `OperationalMode` is an execution-boundary concern, not a data-path concern.
+Fix: GCS bucket path is governed by `pipeline_mode` (the PipelineMode enum from UAC
+`canonical/crosscutting/pipeline_mode.py`), NOT by `OperationalMode`. `OperationalMode` is an execution-boundary
+concern, not a data-path concern.
 
 ### AP-6 — `StrategyMaturityPhase` controlling data pipeline execution
 
@@ -186,8 +185,8 @@ if strategy.maturity_phase == "live_stable":
     start_live_pipeline()
 ```
 
-Fix: pipeline gate is operator-approval + deployment config. `StrategyMaturityPhase` informs the UI + promotion
-gates; it does not start or stop pipeline services.
+Fix: pipeline gate is operator-approval + deployment config. `StrategyMaturityPhase` informs the UI + promotion gates;
+it does not start or stop pipeline services.
 
 ---
 
@@ -220,26 +219,28 @@ Call site: `StrategyCatalogueSurface.tsx:85` `synthesiseMaturity()` calls this h
 
 ## §6 QG enforcement
 
-| STEP | What it catches                                       | Status (2026-05-14)          |
-| ---- | ----------------------------------------------------- | ---------------------------- |
-| L1   | Data_type enum contains `LIVE_` / `BATCH_` prefixed members | DAY-1 ENABLE (0 violations) |
-| L2   | Mode-conditional branches outside seams (~21 violations) | FIX-REQUIRED before enable  |
-| L3   | `RuntimeMode` declared outside UTL canonical (2 violations: UAC re-export + UI redecl) | FIX-REQUIRED before enable |
-| L4   | `LIVE_*` event-prefix members (~12 violations)        | **DEFERRED post-cutover** (Block G1) |
-| L5   | Unified DataType enum (no per-mode fork)              | DAY-1 ENABLE (0 violations) |
-| L6   | `BatchExecutorFactory` not yet shipped                | **DEFERRED** until Tab 2 factory ships |
-| L7   | `record_captured()` callsites missing `assert_available_at_present` | ongoing sweep |
+| STEP | What it catches                                                                        | Status (2026-05-14)                    |
+| ---- | -------------------------------------------------------------------------------------- | -------------------------------------- |
+| L1   | Data*type enum contains `LIVE*`/`BATCH\_` prefixed members                             | DAY-1 ENABLE (0 violations)            |
+| L2   | Mode-conditional branches outside seams (~21 violations)                               | FIX-REQUIRED before enable             |
+| L3   | `RuntimeMode` declared outside UTL canonical (2 violations: UAC re-export + UI redecl) | FIX-REQUIRED before enable             |
+| L4   | `LIVE_*` event-prefix members (~12 violations)                                         | **DEFERRED post-cutover** (Block G1)   |
+| L5   | Unified DataType enum (no per-mode fork)                                               | DAY-1 ENABLE (0 violations)            |
+| L6   | `BatchExecutorFactory` not yet shipped                                                 | **DEFERRED** until Tab 2 factory ships |
+| L7   | `record_captured()` callsites missing `assert_available_at_present`                    | ongoing sweep                          |
 
-Enforcement file: `scripts/quality-gates-base/base-service.sh`. STEPs L1/L5 enable on Day-1 (zero violations);
-L2/L3 enable after fix-batch lands (Tab 3). L4/L6 post-cutover.
+Enforcement file: `scripts/quality-gates-base/base-service.sh`. STEPs L1/L5 enable on Day-1 (zero violations); L2/L3
+enable after fix-batch lands (Tab 3). L4/L6 post-cutover.
 
 ---
 
 ## §7 Cross-references
 
-- **Batch/live invariant**: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
+- **Batch/live invariant**:
+  [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
 - **Modes UAC source**: `unified_api_contracts.internal.modes` (all 4 axes)
-- **Pipeline-mode partition** (data-path, orthogonal to these axes): [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
+- **Pipeline-mode partition** (data-path, orthogonal to these axes):
+  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
 - **QG STEPs L1-L7**: [`quality-gates.md`](quality-gates.md) § "STEP entries — batch/live symmetry"
 - **Pre-audit manifest**: `plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`
 - **J1 helper (deferred)**: `unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116`

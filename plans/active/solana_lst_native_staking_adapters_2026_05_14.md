@@ -152,12 +152,11 @@ This is the only phase that requires a wholly new data_type.
       ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
       (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
 - [x] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
-      data_type. Follow writegate Phase 6 emission policy.
-      (MTDS@1ec3a46 — NativeStakingHandler + _epoch_for_date + _schedule_rate + _fetch_live_rates; live RPC for
-      current epoch, deterministic inflation schedule for historical; 11 unit tests; wired as
-      collect-native-staking-rates in main.py. BLOCKED-CREDENTIALS: per-validator mev_apy requires Helius API key —
-      ping filed in pings/slot_3.md 2026-05-15. MTDS@b17b51c — cluster_counts key bug fixed: futures_chain now
-      tracked separately from options_chain; resolves 2 pre-existing test failures.)
+      data_type. Follow writegate Phase 6 emission policy. (MTDS@1ec3a46 — NativeStakingHandler + \_epoch_for_date +
+      \_schedule_rate + \_fetch_live_rates; live RPC for current epoch, deterministic inflation schedule for historical;
+      11 unit tests; wired as collect-native-staking-rates in main.py. BLOCKED-CREDENTIALS: per-validator mev_apy
+      requires Helius API key — ping filed in pings/slot_3.md 2026-05-15. MTDS@b17b51c — cluster_counts key bug fixed:
+      futures_chain now tracked separately from options_chain; resolves 2 pre-existing test failures.)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC + instruments-service + MTDS.
 
@@ -199,11 +198,11 @@ with manifest captured rows ≥ 90% of expected date range.
 ## Codex SSOT updates
 
 - [x] [codex] P1. Update `codex/02-data/defi-data-type-taxonomy.md` when Phase 5 ships: add `native_staking_rates` to
-      the Solana data-type table.
-      (PM@this-commit — added Native Staking family + SOLANA-NATIVE-SOLANA coverage row + per-protocol matrix entry)
+      the Solana data-type table. (PM@this-commit — added Native Staking family + SOLANA-NATIVE-SOLANA coverage row +
+      per-protocol matrix entry)
 - [x] [codex] P1. Update `codex/02-data/instrument-pipeline-defi.md` to add SANCTUM + SOLBLAZE to the Solana LST adapter
-      table.
-      (PM@this-commit — sanctum.py + solblaze.py + solana_native_staking in adapter list; 7 Solana LST instrument keys added)
+      table. (PM@this-commit — sanctum.py + solblaze.py + solana_native_staking in adapter list; 7 Solana LST instrument
+      keys added)
 
 ---
 

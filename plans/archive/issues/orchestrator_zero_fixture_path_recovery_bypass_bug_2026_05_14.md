@@ -11,37 +11,34 @@ suggested_owner: instruments-service maintainer
 
 ## Resolution (2026-05-14, slot-6-w2)
 
-✅ Fixed at instruments-service@b91b88a. Both fast paths now guard against
-`recovery_fixture_ids`:
+✅ Fixed at instruments-service@b91b88a. Both fast paths now guard against `recovery_fixture_ids`:
 
 1. **Per-fixture `_skip_urdi` path** (orchestrator.py:1704-1717): added
-   `if not gcs_fixture_ids and not recovery_fixture_ids: return {}` guard;
-   when GCS empty but recovery IDs provided, uses them directly via
-   `gcs_fixture_ids = list(recovery_fixture_ids)`.
-2. **Zero-fixture path** (orchestrator.py:1881): replaced
-   `fixture_ids_override=[]` with
+   `if not gcs_fixture_ids and not recovery_fixture_ids: return {}` guard; when GCS empty but recovery IDs provided,
+   uses them directly via `gcs_fixture_ids = list(recovery_fixture_ids)`.
+2. **Zero-fixture path** (orchestrator.py:1881): replaced `fixture_ids_override=[]` with
    `fixture_ids_override=list(recovery_fixture_ids) if recovery_fixture_ids else []`.
 
-Two regression tests in `tests/unit/test_orchestrator_helpers.py`
-(`TestRecoveryFixtureIdsBypassBug`) lock in both source patterns.
+Two regression tests in `tests/unit/test_orchestrator_helpers.py` (`TestRecoveryFixtureIdsBypassBug`) lock in both
+source patterns.
 
 ## What I found
 
-`instruments-service` orchestrator has a zero-fixture fast path: when
-`_read_fixture_ids_from_gcs(bucket, date)` returns an empty list (no completed fixtures in GCS for that date), the
-orchestrator writes `empty_confirmed` for all leagues and calls:
+`instruments-service` orchestrator has a zero-fixture fast path: when `_read_fixture_ids_from_gcs(bucket, date)` returns
+an empty list (no completed fixtures in GCS for that date), the orchestrator writes `empty_confirmed` for all leagues
+and calls:
 
 ```python
 _fetch_sports_reference_data(fixture_ids_override=[])
 ```
 
-The `fixture_ids_override=[]` is **hardcoded empty** — it **does not use** the `--recovery-fixture-ids` GCS parquet
-path passed via CLI. The `recovery_fixture_ids` argument is an allowlist FILTER applied after `_read_fixture_ids_from_gcs`
+The `fixture_ids_override=[]` is **hardcoded empty** — it **does not use** the `--recovery-fixture-ids` GCS parquet path
+passed via CLI. The `recovery_fixture_ids` argument is an allowlist FILTER applied after `_read_fixture_ids_from_gcs`
 populates the list; when that list is empty, the filter has nothing to work with.
 
-**Consequence**: Running the VM in "recovery mode" with `--recovery-fixture-ids <parquet>` does NOT override
-the zero-fixture path. If GCS fixtures parquet for the date has no completed fixtures, the VM exits in ~22 seconds
-with zero data regardless of the recovery fixture list provided.
+**Consequence**: Running the VM in "recovery mode" with `--recovery-fixture-ids <parquet>` does NOT override the
+zero-fixture path. If GCS fixtures parquet for the date has no completed fixtures, the VM exits in ~22 seconds with zero
+data regardless of the recovery fixture list provided.
 
 **Observed in Phase 3.C (2026-05-14)**: VM `af-backfill-20260514-102928` was launched with
 `--recovery-fixture-ids gs://instruments-store-sports-central-element-323112/_smoke_test/phase3c_recovery_fixtures.parquet`
@@ -49,21 +46,21 @@ with zero data regardless of the recovery fixture list provided.
 LA_LIGA NS rows. VM completed in ~22s with no FIXTURE_STATS written.
 
 **Workaround applied (2026-05-14)**: Added the EPL fixture row directly to the GCS fixtures parquet
-(`sports_reference/by_date/day=2026-05-13/entity=fixtures/fixtures.parquet`). Then ran `--entity FIXTURE_STATS`
-VM which correctly read the fixture from GCS and wrote 2-row × 23-col parquet.
+(`sports_reference/by_date/day=2026-05-13/entity=fixtures/fixtures.parquet`). Then ran `--entity FIXTURE_STATS` VM which
+correctly read the fixture from GCS and wrote 2-row × 23-col parquet.
 
 ## Why it matters
 
 - `--recovery-fixture-ids` is documented as a way to reprocess specific fixtures without running the full day
-- If the date's GCS fixtures file is missing or incomplete (common for backfill scenarios), the recovery mode
-  silently does nothing — operator has no indication that recovery was bypassed
+- If the date's GCS fixtures file is missing or incomplete (common for backfill scenarios), the recovery mode silently
+  does nothing — operator has no indication that recovery was bypassed
 - This makes the recovery workflow unreliable for dates where the primary fixtures parquet is stale or absent
 
 ## Recommended decision
 
-**Fix**: In orchestrator's zero-fixture path, check if `recovery_fixture_ids` is provided; if so, use those
-IDs directly instead of the `fixture_ids_override=[]` empty list. The zero-fixture path should only apply when
-BOTH `_read_fixture_ids_from_gcs` returns empty AND no `recovery_fixture_ids` are provided.
+**Fix**: In orchestrator's zero-fixture path, check if `recovery_fixture_ids` is provided; if so, use those IDs directly
+instead of the `fixture_ids_override=[]` empty list. The zero-fixture path should only apply when BOTH
+`_read_fixture_ids_from_gcs` returns empty AND no `recovery_fixture_ids` are provided.
 
 ```python
 # Current (broken):

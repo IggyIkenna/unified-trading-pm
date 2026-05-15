@@ -14,27 +14,26 @@ resolved_by: ikenna-slot-8 (2026-05-14)
 
 ## ✅ RESOLVED — 2026-05-14 (Ikenna Slot 8)
 
-**Root cause**: Tab 8 UAC was 37+ commits behind `origin/live-defi-rollout`. The deployment-api .venv
-had never been initialized (no `.venv` directory), so tests were running against the workspace-root UAC
-which lacked the `features-sports-service` PRIMARY_AXIS entry and other SHARD_AXIS_MATRIX keys.
+**Root cause**: Tab 8 UAC was 37+ commits behind `origin/live-defi-rollout`. The deployment-api .venv had never been
+initialized (no `.venv` directory), so tests were running against the workspace-root UAC which lacked the
+`features-sports-service` PRIMARY_AXIS entry and other SHARD_AXIS_MATRIX keys.
 
 **Fix applied**:
-1. Ran `WORKSPACE_ROOT=... bash scripts/quality-gates.sh` to create `.venv` and install deployment-api
-   with editable deps from tab 8 repos (UAC, UTL, position-balance-monitor-service).
+
+1. Ran `WORKSPACE_ROOT=... bash scripts/quality-gates.sh` to create `.venv` and install deployment-api with editable
+   deps from tab 8 repos (UAC, UTL, position-balance-monitor-service).
 2. Rebased UTL and position-balance-monitor-service to LDR (both were behind).
-3. Surgically checked out missing UAC files from LDR: `client_lifecycle.py`, `treasury.py`,
-   `kill_switch.py`, `honest_coverage.py` (EXPECTED_NO_FIXTURE + LEGACY_MIGRATION_MISSING_EXPIRY).
+3. Surgically checked out missing UAC files from LDR: `client_lifecycle.py`, `treasury.py`, `kill_switch.py`,
+   `honest_coverage.py` (EXPECTED_NO_FIXTURE + LEGACY_MIGRATION_MISSING_EXPIRY).
 4. Committed UAC backport: `uac@72a1934`.
 5. Committed MTDS ASTER URL fix (bonus P0 fix found): `mtds@4767f46`.
 
-**Evidence**: All 13 originally-failing tests now pass; 9 cascade failures from position-balance-monitor-service
-import chain also resolved (pre-existing). Full test run: 2077 passed, 0 failures in the originally-cited 4
-test files + 9 data_status cascade failures.
+**Evidence**: All 13 originally-failing tests now pass; 9 cascade failures from position-balance-monitor-service import
+chain also resolved (pre-existing). Full test run: 2077 passed, 0 failures in the originally-cited 4 test files + 9
+data_status cascade failures.
 
-**Remaining in tab 8 UAC**: 11 foreign-owned unstaged files + 37 commits behind LDR still block clean
-rebase. Tab 8 UAC slot branch has the 4-file backport commit.
-
-
+**Remaining in tab 8 UAC**: 11 foreign-owned unstaged files + 37 commits behind LDR still block clean rebase. Tab 8 UAC
+slot branch has the 4-file backport commit.
 
 ## What I found
 

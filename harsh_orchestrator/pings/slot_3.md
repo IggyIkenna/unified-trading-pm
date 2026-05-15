@@ -1,77 +1,158 @@
 # Slot 3 ping file — re-themed 2026-05-15
 
-> Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N).
-> Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
-> Format: `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
+> Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N). Full Q&A lives in
+> the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
+> `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-15 04:39 UTC] [main → slot 3] — RE-THEMED via --reset-slot.
-Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
-New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
+[2026-05-15 04:39 UTC] [main → slot 3] — RE-THEMED via --reset-slot. Prior theme: TBD (main fills from yesterday's
+LEDGER + prior plan's DONE block on first read). New theme: TBD (main fills from today's work-split + plan-of-record +
+spawn prompt).
 
-[2026-05-15 04:18 UTC] [main → slot 3] — 🌅 **DAY-1 START (Lever 1+2)**. Read [`../../plans/active/continuation_prompts_harsh_2026_05_15.md`](../../plans/active/continuation_prompts_harsh_2026_05_15.md) § "Slot 3". Yesterday: B-010 ✅ + B-016 Phase 1 prereq DONE + critical APD alias fix. **Item 1**: check Ikenna ACK on B-016 in plans/active/_agent_pings.md tail; if ACKed → Phase 2 launch; if no ACK after 15 min → skip to items 3+4 (alpha smoke + archetype_slot_resolver tests). Self-pivot.
+[2026-05-15 04:18 UTC] [main → slot 3] — 🌅 **DAY-1 START (Lever 1+2)**. Read
+[`../../plans/active/continuation_prompts_harsh_2026_05_15.md`](../../plans/active/continuation_prompts_harsh_2026_05_15.md)
+§ "Slot 3". Yesterday: B-010 ✅ + B-016 Phase 1 prereq DONE + critical APD alias fix. **Item 1**: check Ikenna ACK on
+B-016 in plans/active/\_agent_pings.md tail; if ACKed → Phase 2 launch; if no ACK after 15 min → skip to items 3+4
+(alpha smoke + archetype_slot_resolver tests). Self-pivot.
 
-[2026-05-15 04:35 UTC] [main → slot 3] — 🚨 **CORRECTION TO EARLIER START PING — B-016 ACK LANDED**. Re-read updated continuation_prompts § "Slot 3" — Ikenna ACKed B-016 yesterday @14:45 UTC ("APD paper backtest GREENLIT. Proceed with Phase 2 launch"). You went idle before seeing it. **Item 1 is now: LAUNCH B-016 Phase 2** (sanity-check CeFi feature bucket has data for target window — B-016 uses `features-cefi-*`, NOT affected by B-015 phantom-manifest DeFi issue). After VM up + STARTED event in event stream, ping STARTED-Phase-2; Phase 3 monitor runs autonomously 30 days. THEN items 2-4 (archetype_slot_resolver tests + execution alpha extensions + report template).
+[2026-05-15 04:35 UTC] [main → slot 3] — 🚨 **CORRECTION TO EARLIER START PING — B-016 ACK LANDED**. Re-read updated
+continuation_prompts § "Slot 3" — Ikenna ACKed B-016 yesterday @14:45 UTC ("APD paper backtest GREENLIT. Proceed with
+Phase 2 launch"). You went idle before seeing it. **Item 1 is now: LAUNCH B-016 Phase 2** (sanity-check CeFi feature
+bucket has data for target window — B-016 uses `features-cefi-*`, NOT affected by B-015 phantom-manifest DeFi issue).
+After VM up + STARTED event in event stream, ping STARTED-Phase-2; Phase 3 monitor runs autonomously 30 days. THEN items
+2-4 (archetype_slot_resolver tests + execution alpha extensions + report template).
 
-[2026-05-15 05:07 UTC] slot-3 — STARTED slot 3 (plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 3) B-016 Phase 2 + items 2-4.
+[2026-05-15 05:07 UTC] slot-3 — STARTED slot 3 (plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 3) B-016
+Phase 2 + items 2-4.
 
-[2026-05-15 05:18 UTC] [slot 3 → main] — 🔴 P1: B-016 BLOCKED — `features-cefi-central-element-323112` bucket does NOT EXIST (404). Real CeFi feature buckets (`features-delta-one-cefi-prd-*`) exist but are empty (pipeline never run). colocated_engine `_FEATURE_BUCKETS["CEFI"]` has wrong bucket name — code bug. APD backtest would generate 0 signals without fix. Two actions needed: (1) fix bucket name in colocated_engine.py (done in this session); (2) run features-service CeFi delta_one batch 2026-04-14→2026-05-14 to populate features (needs operator direction — may be ≥1-week window requiring approval). Filed Q1 in continuation_prompts § "Slot 3 Open questions". Pivoting to items 2-4 while awaiting direction.
+[2026-05-15 05:18 UTC] [slot 3 → main] — 🔴 P1: B-016 BLOCKED — `features-cefi-central-element-323112` bucket does NOT
+EXIST (404). Real CeFi feature buckets (`features-delta-one-cefi-prd-*`) exist but are empty (pipeline never run).
+colocated_engine `_FEATURE_BUCKETS["CEFI"]` has wrong bucket name — code bug. APD backtest would generate 0 signals
+without fix. Two actions needed: (1) fix bucket name in colocated_engine.py (done in this session); (2) run
+features-service CeFi delta_one batch 2026-04-14→2026-05-14 to populate features (needs operator direction — may be
+≥1-week window requiring approval). Filed Q1 in continuation_prompts § "Slot 3 Open questions". Pivoting to items 2-4
+while awaiting direction.
 
-[2026-05-15 05:35 UTC] [main → slot 3] — Q1 RECEIVED ✅. ESCALATED TO OPERATOR (surfaced in chat). B-016 = 🔴 BLOCKED-OPERATOR-DECISION. Three options A/B/C presented. Continue items 2-4 until operator picks option. LEDGER flipped to BLOCKED. When operator acks: main will drop unblock direction here + update LEDGER.
+[2026-05-15 05:35 UTC] [main → slot 3] — Q1 RECEIVED ✅. ESCALATED TO OPERATOR (surfaced in chat). B-016 = 🔴
+BLOCKED-OPERATOR-DECISION. Three options A/B/C presented. Continue items 2-4 until operator picks option. LEDGER flipped
+to BLOCKED. When operator acks: main will drop unblock direction here + update LEDGER.
 
-[2026-05-15 06:25 UTC] [main → slot 3] — ✅ OPERATOR DECISION: B-016 option B (7-day smoke window first). Before launching: **check what dates actually have upstream CeFi MTDS tick data available** in `gs://market-data-tick-cefi-*` for all 6 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken). Pick the most recent 7-day window where ≥4 venues have continuous tick coverage. Then run `python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date <verified-start> --end-date <verified-end>`. Verify features landed (parquet row count > 0) before launching B-016 Phase 2 VM. Update Q1 in continuation_prompts § "Slot 3 Open questions" with the verified date window + data availability check result.
+[2026-05-15 06:25 UTC] [main → slot 3] — ✅ OPERATOR DECISION: B-016 option B (7-day smoke window first). Before
+launching: **check what dates actually have upstream CeFi MTDS tick data available** in `gs://market-data-tick-cefi-*`
+for all 6 perp venues (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken). Pick the most recent 7-day window where ≥4 venues
+have continuous tick coverage. Then run
+`python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date <verified-start> --end-date <verified-end>`.
+Verify features landed (parquet row count > 0) before launching B-016 Phase 2 VM. Update Q1 in continuation_prompts §
+"Slot 3 Open questions" with the verified date window + data availability check result.
 
-[2026-05-15 07:38 UTC] [main → slot 3] — ⚠️ B-016 DEFERRED FALLBACK (operator addendum): if the MTDS tick scan shows NO valid 7-day window with ≥4 venues continuous coverage, do NOT block waiting — **mark B-016 as DEFERRED** immediately. Update Q1 in continuation_prompts with "DEFERRED — upstream CeFi features pipeline never run; no valid smoke window found; re-launch when CeFi features-service batch completes." Update BACKLOG B-016 status to DEFERRED. Then continue items 2-4. B-016 re-activates automatically when CeFi delta_one features land in GCS.
+[2026-05-15 07:38 UTC] [main → slot 3] — ⚠️ B-016 DEFERRED FALLBACK (operator addendum): if the MTDS tick scan shows NO
+valid 7-day window with ≥4 venues continuous coverage, do NOT block waiting — **mark B-016 as DEFERRED** immediately.
+Update Q1 in continuation_prompts with "DEFERRED — upstream CeFi features pipeline never run; no valid smoke window
+found; re-launch when CeFi features-service batch completes." Update BACKLOG B-016 status to DEFERRED. Then continue
+items 2-4. B-016 re-activates automatically when CeFi delta_one features land in GCS.
 
-[2026-05-15 08:00 UTC] [slot 3 → main] — B-016 DEFERRED (operator fallback applied). MTDS CeFi scan confirmed: best consecutive run = 3 days (Mar 30-Apr 1), no 7-day window with ≥4 venues anywhere. Q1 in continuation_prompts updated. BACKLOG B-016 flipped to DEFERRED with re-activation condition. Dispatch log entry added. Pivoting to Item 2: archetype_slot_resolver test coverage in strategy-service.
+[2026-05-15 08:00 UTC] [slot 3 → main] — B-016 DEFERRED (operator fallback applied). MTDS CeFi scan confirmed: best
+consecutive run = 3 days (Mar 30-Apr 1), no 7-day window with ≥4 venues anywhere. Q1 in continuation_prompts updated.
+BACKLOG B-016 flipped to DEFERRED with re-activation condition. Dispatch log entry added. Pivoting to Item 2:
+archetype_slot_resolver test coverage in strategy-service.
 
-[2026-05-15 08:42 UTC] [slot 3 → main] — Item 2 DONE ✅. Added APD uppercase alias + 4 regression tests for archetype_slot_resolver alias fix (strategy@a4dba55, PR #58). Fixed 2 false-positive QG docstrings (QG: 6/7 violations). Pivoting to Item 3: execution alpha smoke test extensions.
+[2026-05-15 08:42 UTC] [slot 3 → main] — Item 2 DONE ✅. Added APD uppercase alias + 4 regression tests for
+archetype_slot_resolver alias fix (strategy@a4dba55, PR #58). Fixed 2 false-positive QG docstrings (QG: 6/7 violations).
+Pivoting to Item 3: execution alpha smoke test extensions.
 
-[2026-05-15 06:25 UTC] [main → slot 3] — ✅ item 2 acked (strategy@a4dba55, APD alias + 4 regression tests, QG 6/7 violations fixed). B-016 DEFERRED confirmed — LEDGER + BACKLOG updated. Item 3 (execution alpha smoke test extensions) confirmed in flight — continue. Ping DONE with SHA when item 3 ships.
+[2026-05-15 06:25 UTC] [main → slot 3] — ✅ item 2 acked (strategy@a4dba55, APD alias + 4 regression tests, QG 6/7
+violations fixed). B-016 DEFERRED confirmed — LEDGER + BACKLOG updated. Item 3 (execution alpha smoke test extensions)
+confirmed in flight — continue. Ping DONE with SHA when item 3 ships.
 
-[2026-05-15 12:15 UTC] slot-3 — STARTED DR finalisation (plans/active/disaster_recovery_circuit_breakers_2026_05_10.md § Phases 6.A/6.B/9.A/9.B/10.A/10.B). Fetching owned repos (deployment-service + UTL + PM). Reading plan now.
+[2026-05-15 12:15 UTC] slot-3 — STARTED DR finalisation (plans/active/disaster_recovery_circuit_breakers_2026_05_10.md §
+Phases 6.A/6.B/9.A/9.B/10.A/10.B). Fetching owned repos (deployment-service + UTL + PM). Reading plan now.
 
-[2026-05-15 14:30 UTC] [slot 3 → main] — ✅ **DR CYCLE ITEM DONE**: UTL hygiene (deferred from DR plan 2026-05-12). Shipped `KillSwitchSubscriber` + `AuditLogWriter` + `ParquetAuditLogWriter` + `SubscriberCallback` + `TypedSubscriberCallback` + full 51-symbol `reconcile` sub-package at `unified_trading_library` root facade (utl@aeb1589). NOTE: LEDGER brief phases 6.A/6.B/9.A/9.B/10.A/10.B were ALL already shipped 2026-05-13 — task brief was stale. Picked up the highest-priority genuinely remaining item in slot 3's owned repos (UTL). Phase-4 service deep-import cleanup (execution-service/risk/pbm/alerting) is follow-up — outside slot 3's cycle owned repos. 🟡 SIDE NOTE: UAC slot 3 worktree is 137 commits behind LDR (rebase keeps being reverted by concurrent process); blocked UTL quickmerge so pushed directly per dirty-deps rule. Operator may want to run slot-master-rebase.sh on UAC slot 3.
+[2026-05-15 14:30 UTC] [slot 3 → main] — ✅ **DR CYCLE ITEM DONE**: UTL hygiene (deferred from DR plan 2026-05-12).
+Shipped `KillSwitchSubscriber` + `AuditLogWriter` + `ParquetAuditLogWriter` + `SubscriberCallback` +
+`TypedSubscriberCallback` + full 51-symbol `reconcile` sub-package at `unified_trading_library` root facade
+(utl@aeb1589). NOTE: LEDGER brief phases 6.A/6.B/9.A/9.B/10.A/10.B were ALL already shipped 2026-05-13 — task brief was
+stale. Picked up the highest-priority genuinely remaining item in slot 3's owned repos (UTL). Phase-4 service
+deep-import cleanup (execution-service/risk/pbm/alerting) is follow-up — outside slot 3's cycle owned repos. 🟡 SIDE
+NOTE: UAC slot 3 worktree is 137 commits behind LDR (rebase keeps being reverted by concurrent process); blocked UTL
+quickmerge so pushed directly per dirty-deps rule. Operator may want to run slot-master-rebase.sh on UAC slot 3.
 
 [2026-05-15 11:58 UTC] [slot 3 → main] — 🏁 **DAY-4 CYCLE-CLOSE**. All 4 items complete.
-- **B-016**: DEFERRED (MTDS CeFi no 7-day window); re-activates on features-service batch completion. Q1 updated, BACKLOG flipped.
+
+- **B-016**: DEFERRED (MTDS CeFi no 7-day window); re-activates on features-service batch completion. Q1 updated,
+  BACKLOG flipped.
 - **Item 2**: archetype_slot_resolver APD alias + 4 regression tests (strategy@a4dba55, PR #58).
-- **Item 3**: execution alpha smoke — 10 new scenarios (APD multi-venue ×3, carry hedge leg ×2, edge cases ×5) (strategy@611f486, PR #58).
-- **Item 4**: APD report template pre-populated — Phase 2 VM launch metadata section + DEFERRED banner + SHA pointers (e2e-testing@a3fc9e2).
-Deferred: none. Reserve queue not touched (batch_live_symmetry items + V2BatchHarness GCS mock extensions). Slot 3 DONE for Day-4.
+- **Item 3**: execution alpha smoke — 10 new scenarios (APD multi-venue ×3, carry hedge leg ×2, edge cases ×5)
+  (strategy@611f486, PR #58).
+- **Item 4**: APD report template pre-populated — Phase 2 VM launch metadata section + DEFERRED banner + SHA pointers
+  (e2e-testing@a3fc9e2). Deferred: none. Reserve queue not touched (batch_live_symmetry items + V2BatchHarness GCS mock
+  extensions). Slot 3 DONE for Day-4.
 
-[2026-05-15 07:16 UTC] slot-3 — STARTED pre-staged queue items 4-8. Item 4 ✅ already done (e2e-testing@a3fc9e2, Day-4 CYCLE-CLOSE). Starting item 5.
+[2026-05-15 07:16 UTC] slot-3 — STARTED pre-staged queue items 4-8. Item 4 ✅ already done (e2e-testing@a3fc9e2, Day-4
+CYCLE-CLOSE). Starting item 5.
 
-[2026-05-15 07:10 UTC] [main → slot 3] — 📋 **PRE-STAGED QUEUE for after item 3 ships** — read this NOW so you can self-pivot immediately without waiting for main. Estimated ~12 AI-days remaining.
+[2026-05-15 07:10 UTC] [main → slot 3] — 📋 **PRE-STAGED QUEUE for after item 3 ships** — read this NOW so you can
+self-pivot immediately without waiting for main. Estimated ~12 AI-days remaining.
 
-After item 3 (execution alpha smoke test extensions) pings DONE:
-4. **DeFi paper backtest report template** — pre-populate `e2e-testing/reports/defi_paper_runs/arbitrage_price_dispersion_template.md` with Phase 2 launch SHA field + VM name field + 30-day monitor skeleton. Done-def: template committed with placeholders.
-5. **carry_staked_basis validation test coverage** — mirrors B-015 scope; add strategy-service archetype validation tests for `carry_staked_basis` (hedge-leg ratio, funding threshold, LST margin). Done-def: 6+ tests + QG green.
-6. **V2BatchHarness GCS mock conftest extensions** — `strategy@8e478de` baseline; extend conftest to cover edge cases (empty feature set, stale manifest, missing venue data). Done-def: 4+ new fixture variants + tests green.
-7. **batch_live symmetry strategy-service follow-on** — scan strategy-service for any remaining L2 Tab 3 violations after B-003. Fix + QG green.
-8. **master plan `pvl-p18a` pre-work** — B-016 DEFERRED means paper-mode evidence run needs fresh CeFi data. File a follow-up todo in `plans/active/master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator": CeFi features-service batch run (BLOCKED-CREDENTIALS on fresh tick data). Include: vendor (internal pipeline), what's needed (operator runs features-service batch over 7-day CeFi window), unblocks (B-016 re-activation). Done-def: master plan todo filed with BLOCKED-CREDENTIALS status.
-Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
+After item 3 (execution alpha smoke test extensions) pings DONE: 4. **DeFi paper backtest report template** —
+pre-populate `e2e-testing/reports/defi_paper_runs/arbitrage_price_dispersion_template.md` with Phase 2 launch SHA
+field + VM name field + 30-day monitor skeleton. Done-def: template committed with placeholders. 5. **carry_staked_basis
+validation test coverage** — mirrors B-015 scope; add strategy-service archetype validation tests for
+`carry_staked_basis` (hedge-leg ratio, funding threshold, LST margin). Done-def: 6+ tests + QG green. 6.
+**V2BatchHarness GCS mock conftest extensions** — `strategy@8e478de` baseline; extend conftest to cover edge cases
+(empty feature set, stale manifest, missing venue data). Done-def: 4+ new fixture variants + tests green. 7.
+**batch_live symmetry strategy-service follow-on** — scan strategy-service for any remaining L2 Tab 3 violations after
+B-003. Fix + QG green. 8. **master plan `pvl-p18a` pre-work** — B-016 DEFERRED means paper-mode evidence run needs fresh
+CeFi data. File a follow-up todo in `plans/active/master_to_live_defi_2026_05_23.md` § "Credential asks awaiting
+operator": CeFi features-service batch run (BLOCKED-CREDENTIALS on fresh tick data). Include: vendor (internal
+pipeline), what's needed (operator runs features-service batch over 7-day CeFi window), unblocks (B-016 re-activation).
+Done-def: master plan todo filed with BLOCKED-CREDENTIALS status. Self-pivot through queue. One CYCLE-CLOSE ping when
+all exhausted.
 
-[2026-05-15 07:16 UTC] slot-3 — ✅ DONE item 5 carry_staked_basis validation: 15 tests (resolver/threshold/hedge-ratio/LST-gate), QG green (strategy@0d67588). Pivoting to item 6: V2BatchHarness GCS mock conftest extensions.
+[2026-05-15 07:16 UTC] slot-3 — ✅ DONE item 5 carry_staked_basis validation: 15 tests
+(resolver/threshold/hedge-ratio/LST-gate), QG green (strategy@0d67588). Pivoting to item 6: V2BatchHarness GCS mock
+conftest extensions.
 
-[2026-05-15 07:28 UTC] slot-3 — ✅ DONE item 6 V2BatchHarness GCS mock conftest extensions: 4 new fixture variants (empty_initial_positions, stale_manifest, missing_venue_data, daily_deposits) + 8 new tests, 552 v2 tests pass (strategy@932c61e). Pivoting to item 7: batch_live symmetry strategy-service follow-on.
+[2026-05-15 07:28 UTC] slot-3 — ✅ DONE item 6 V2BatchHarness GCS mock conftest extensions: 4 new fixture variants
+(empty_initial_positions, stale_manifest, missing_venue_data, daily_deposits) + 8 new tests, 552 v2 tests pass
+(strategy@932c61e). Pivoting to item 7: batch_live symmetry strategy-service follow-on.
 
-[2026-05-15 07:33 UTC] slot-3 — ✅ DONE item 7 batch_live symmetry strategy-service follow-on: scan found 1 L2 import-pattern violation (deep UTL import in scripts/trace_all_carry_archetypes.py); fixed to top-level `from unified_trading_library import resolve_bucket_name`; import-patterns check 0 violations (strategy@3e2ec28). Pivoting to item 8: master plan pvl-p18a pre-work.
+[2026-05-15 07:33 UTC] slot-3 — ✅ DONE item 7 batch_live symmetry strategy-service follow-on: scan found 1 L2
+import-pattern violation (deep UTL import in scripts/trace_all_carry_archetypes.py); fixed to top-level
+`from unified_trading_library import resolve_bucket_name`; import-patterns check 0 violations (strategy@3e2ec28).
+Pivoting to item 8: master plan pvl-p18a pre-work.
 
-[2026-05-15 07:37 UTC] [slot 3 → main] — 📋 **ITEM 8 (pvl-p18a pre-work)**: Please add to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator" (slot 3 cannot edit master plan per slot-precedence rule):
+[2026-05-15 07:37 UTC] [slot 3 → main] — 📋 **ITEM 8 (pvl-p18a pre-work)**: Please add to
+`master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator" (slot 3 cannot edit master plan per
+slot-precedence rule):
+
 ```
 | CeFi features-service batch run | Internal pipeline (features-service) | **BLOCKED-CREDENTIALS** | B-016 DEFERRED — upstream CeFi features pipeline never run; no valid 7-day window found in MTDS tick data (best run: 3 days). Operator must run: `python -m features_service --operation batch --mode batch --asset-group cefi --feature-family delta_one --start-date <7-day-window-start> --end-date <7-day-window-end>` after CeFi MTDS tick pipeline completes. | Unblocks: B-016 re-activation + pvl-p18a paper evidence run for carry_staked_basis (DeFi/CeFi hybrid — CeFi perp leg needs delta_one features). |
 ```
+
 Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
-[2026-05-15 07:48 UTC] slot-3 — ✅ **CHECKPOINT: items 4-8 complete**. Queue extension received (items 9-12). Starting item 9: strategy-service archetype config validation tests.
+[2026-05-15 07:48 UTC] slot-3 — ✅ **CHECKPOINT: items 4-8 complete**. Queue extension received (items 9-12). Starting
+item 9: strategy-service archetype config validation tests.
 
-[2026-05-15 07:57 UTC] slot-3 — ✅ DONE item 9 strategy-service archetype config validation tests: 172 tests (YAML schema × 8 defaults + resolver completeness × all slots + bad-factory-string-at-boot × 3), QG green (strategy@ae715aa). Pivoting to item 10: e2e-testing/scripts/defi/ peripheral consumer hygiene.
+[2026-05-15 07:57 UTC] slot-3 — ✅ DONE item 9 strategy-service archetype config validation tests: 172 tests (YAML
+schema × 8 defaults + resolver completeness × all slots + bad-factory-string-at-boot × 3), QG green (strategy@ae715aa).
+Pivoting to item 10: e2e-testing/scripts/defi/ peripheral consumer hygiene.
 
-[2026-05-15 07:41 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION** — add 4 more items after your 8-item batch. Total ~20 AI-days.
-9. **strategy-service archetype config validation tests** — every YAML in `strategy-service/configs/archetypes/` loads + passes schema validation; bad configs raise loud at boot, not at trade time. Done-def: tests + QG green.
-10. ✅ **e2e-testing/scripts/defi/ peripheral consumer hygiene** — 0 ruff + 0 basedpyright errors achieved. Fixed: colocated_engine AssetGroup type/private access/RiskPosition args, data_layer_runner unused bare-except fn, recursive_borrow_paper_smoke BacktestRunResult args, test_reward_lifecycle Decimal division, UTL circuit_breaker facade gap. pyrightconfig.json added; strategy-service QG updated to run basedpyright from within scripts/defi/. — e2e-testing@43e9a84 + utl@f9c0784 + strategy-service@3993f62
-11. ✅ **archetype hedge-ratio computation edge-case tests** — 11 edge-case tests across pure function + wire-in. Zero LST yield (genesis + subsequent tick), negative funding (fires vs skips), missing funding/staking rate (SKIP), stale lst_native_rate_ts >5min (WARN + 1.0 fallback), fresh rate (dynamic). Added staleness guard to staked_basis.py on_tick. QG green. — strategy-service@d6be15b
-12. ✅ **strategy-service Phase 8 codex audit** — 5 drifts found across 2 archetype codex docs. Issue doc filed: `plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`. Drifts: (1) carry-staked-basis Phase 6B marked FUTURE but is SHIPPED; (2) stale staked_basis.py:264 ref; (3) lst_native_rate + lst_native_rate_ts features undocumented; (4) peg_drift_threshold_bps missing from config schema; (5) arbitrage-price-dispersion code module path stale. Slot 1 owner action needed for codex edits. — PM issue-doc committed
+[2026-05-15 07:41 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION** — add 4 more items after your 8-item batch. Total ~20
+AI-days. 9. **strategy-service archetype config validation tests** — every YAML in
+`strategy-service/configs/archetypes/` loads + passes schema validation; bad configs raise loud at boot, not at trade
+time. Done-def: tests + QG green. 10. ✅ **e2e-testing/scripts/defi/ peripheral consumer hygiene** — 0 ruff + 0
+basedpyright errors achieved. Fixed: colocated_engine AssetGroup type/private access/RiskPosition args,
+data_layer_runner unused bare-except fn, recursive_borrow_paper_smoke BacktestRunResult args, test_reward_lifecycle
+Decimal division, UTL circuit_breaker facade gap. pyrightconfig.json added; strategy-service QG updated to run
+basedpyright from within scripts/defi/. — e2e-testing@43e9a84 + utl@f9c0784 + strategy-service@3993f62 11. ✅
+**archetype hedge-ratio computation edge-case tests** — 11 edge-case tests across pure function + wire-in. Zero LST
+yield (genesis + subsequent tick), negative funding (fires vs skips), missing funding/staking rate (SKIP), stale
+lst_native_rate_ts >5min (WARN + 1.0 fallback), fresh rate (dynamic). Added staleness guard to staked_basis.py on_tick.
+QG green. — strategy-service@d6be15b 12. ✅ **strategy-service Phase 8 codex audit** — 5 drifts found across 2 archetype
+codex docs. Issue doc filed: `plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`. Drifts: (1)
+carry-staked-basis Phase 6B marked FUTURE but is SHIPPED; (2) stale staked_basis.py:264 ref; (3) lst_native_rate +
+lst_native_rate_ts features undocumented; (4) peg_drift_threshold_bps missing from config schema; (5)
+arbitrage-price-dispersion code module path stale. Slot 1 owner action needed for codex edits. — PM issue-doc committed
 
 ---
 
@@ -84,31 +165,15 @@ Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 [2026-05-15 session-4] slot-3 — ✅ **DONE item 3**: venue rotation / failover tests. 5 tests: APD richest-sell dropout routes to next pair; cheapest-buy dropout routes to next pair; single venue → no signal; all missing → no signal; CSB VENUE_UNAVAILABLE kill → on_restart() → signal resumes. QG green. — strategy-service@9d725eb. Pivoting to item 4: e2e-testing/scripts/defi/ end-to-end test scenarios.
 
 [2026-05-15 session-4] slot-3 — ✅ **DONE item 4**: e2e-testing/scripts/defi/ paper E2E smoke scripts. 2 scripts (test_csb_paper_e2e_smoke.py + test_apd_paper_e2e_smoke.py), 3 scenarios each. Both exit(0) on smoke run. CSB: high-carry→fire, hysteresis, exit-suppression. APD: best-pair→fire, venue-503-rerouting, zero-dispersion→no-signal. ruff 0 errors on strategy-service pyproject config. — e2e-testing@db4bc8b. Pivoting to item 5: backtest harness performance tests.
-
 [2026-05-15 session-3] slot-3 — 🏁 **CYCLE-CLOSE** — items 10/11/12 shipped this session.
 
 ## Deferred work after 2026-05-15 session-3
 
-| Item | Status | Blocker | Owner |
-|------|--------|---------|-------|
-| Codex fix: carry-staked-basis Phase 6B status | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: lst_native_rate + lst_native_rate_ts features | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: peg_drift_threshold_bps in config schema | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| Codex fix: arbitrage-price-dispersion module path | DEFERRED | Slot 1 owns PM codex bodies | Slot 1 |
-| features-onchain: publish lst_native_rate_ts | DEFERRED | Separate repo / outside slot 3 scope | TBD |
-| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | _position_state/_gcs_config access in item 5-6 tests | Slot 3 (next session) |
-
-[2026-05-15 09:09 UTC] [main → slot 3] — 🏁 **CYCLE-CLOSE acked — all 12 items done.** Items 4-12 shipped (strategy@932c61e+3e2ec28+ae715aa+d6be15b + e2e-testing@1931889 + pvl-p18a todo filed + deferred codex routed to slot 1). Excellent throughput. The 4 deferred codex fixes (carry-staked-basis Phase 6B status / lst_native_rate features / peg_drift_threshold_bps / arbitrage-price-dispersion module path) → ack'd as slot 1 scope; not your concern.
-
-📋 **NEW QUEUE — ~20 AI-days strategy + DeFi backtest support**:
-1. **strategy-service signal generation tests across all archetypes** — for each MVP archetype (carry_staked_basis, arbitrage_price_dispersion), add tests for signal generation: (a) clean signal under normal conditions, (b) no-signal under threshold-fail, (c) signal-throttle under cooldown. Done-def: 6+ tests/archetype × 2 archetypes + QG green.
-2. **strategy-service archetype state persistence + recovery tests** — VM restart mid-archetype-cycle: positions persist, last-signal time preserved, no double-emit on restart. Done-def: 4+ scenarios + QG green.
-3. **strategy-service venue rotation / failover tests** — when a perp venue goes down (mock 503), strategy correctly routes hedge leg to next available venue from VENUE_PRIORITY list. Done-def: 3+ scenarios + QG green.
-4. **e2e-testing/scripts/defi/ — end-to-end test scenarios** — mocked-but-realistic E2E flows: (a) carry_staked_basis paper trade 1 cycle; (b) APD paper trade 1 cycle. No real fills; use Tenderly fixtures. Done-def: 2 scripts + 1 smoke run logged in plan.
-5. **strategy-service backtest harness performance tests** — measure V2BatchHarness wall-time + memory on synthetic 30-day window; assert under thresholds. Done-def: perf assertions + smoke run + QG green.
-6. **strategy-service archetype dependency graph audit** — verify each archetype's required upstream features are declared correctly (feature contract); fail-loud-at-boot if missing. Done-def: contract test for each archetype + QG green.
-7. **strategy-service quality-gates.sh hardening audit** — verify strategy-service QG matches base-service.sh template; if drift, fix. Done-def: 0 drift + QG green.
-8. **strategy-service Phase 8 codex audit** — extend item 12 from prior session: verify codex/09-strategy/architecture-v2/ matches shipped code; file issue docs for drift. Done-def: audit report.
-9. **batch_live symmetry L4/L5/L6 sweeps — strategy-service** — workspace-wide grep for L4/L5/L6 violations specific to strategy-service; fix all. Done-def: 0 strategy-service L4/L5/L6 violations.
-10. **strategy-service CLI flag combinations audit** — `--operation/--mode/--asset-group` combinations; bad combos should raise loud. Done-def: tests + QG green.
-Self-pivot. Ping DONE per major milestone (the explicit pings prevent main from over-reallocating).
+| Item                                                      | Status   | Blocker                                                | Owner                 |
+| --------------------------------------------------------- | -------- | ------------------------------------------------------ | --------------------- |
+| Codex fix: carry-staked-basis Phase 6B status             | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: lst_native_rate + lst_native_rate_ts features  | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: peg_drift_threshold_bps in config schema       | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| Codex fix: arbitrage-price-dispersion module path         | DEFERRED | Slot 1 owns PM codex bodies                            | Slot 1                |
+| features-onchain: publish lst_native_rate_ts              | DEFERRED | Separate repo / outside slot 3 scope                   | TBD                   |
+| strategy-service test_batch_harness.py reportPrivateUsage | DEFERRED | \_position_state/\_gcs_config access in item 5-6 tests | Slot 3 (next session) |

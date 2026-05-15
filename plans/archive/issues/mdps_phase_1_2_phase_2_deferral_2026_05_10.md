@@ -1,7 +1,6 @@
 ---
 title:
-  "MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 — semantic dual-SSOT collision blocks safe migration; needs plan
-  refresh"
+  "MDPS Phase 1.2 + Phase 2 deferral 2026-05-10 — semantic dual-SSOT collision blocks safe migration; needs plan refresh"
 created: 2026-05-10
 author: chain-agent-2026-05-10
 source:
@@ -32,19 +31,15 @@ execution:
 > — that issue doc is the active SSOT for Phase 1.2B + Phase 2 next steps. This issue stays open as the prior session's
 > deferral record (Phase 1.2A + 1.2A.1 RESOLVED here per below; Phase 1.2B + 2 redirected to the new issue doc).
 
-> **2026-05-10 PM RESOLVED-PARTIAL**: Phase 1.2A SHIPPED MDPS@`afdb754` (v5
-> manifest verb migration eliminated the dual-SSOT collision). Phase
-> 1.2A.1 SHIPPED MDPS@`1cdcda7` (write-time `available_at` stamping
-> closes the production-write blocker). Phase 1.2B (`_streaming_write_per_tf`
-> structural migration to UTL `open_candle_writer`/`write_chunk`/`close_candle_writer`
-> lifecycle) AND Phase 2 (`ResourceProfiler.on_memory_warning` wiring)
-> remain DEFERRED to the next MDPS-focused tab — not blocked by SSOT or
-> correctness; remaining scope is the per-batch chunking refactor for
-> the memory-budget improvement Phase 1.2B promises (peak memory ≈ one
-> timeframe-batch in flight, NOT all-day-all-timeframes accumulated).
-> Phase 1.2A.1 means production candle writes can resume on the band-aid
-> memory-tier launcher (`deployment-service@02ee6d6`) without raising
-> `LookaheadBiasError` — the band-aid retirement waits on Phase 1.2B + Phase 4.
+> **2026-05-10 PM RESOLVED-PARTIAL**: Phase 1.2A SHIPPED MDPS@`afdb754` (v5 manifest verb migration eliminated the
+> dual-SSOT collision). Phase 1.2A.1 SHIPPED MDPS@`1cdcda7` (write-time `available_at` stamping closes the
+> production-write blocker). Phase 1.2B (`_streaming_write_per_tf` structural migration to UTL
+> `open_candle_writer`/`write_chunk`/`close_candle_writer` lifecycle) AND Phase 2 (`ResourceProfiler.on_memory_warning`
+> wiring) remain DEFERRED to the next MDPS-focused tab — not blocked by SSOT or correctness; remaining scope is the
+> per-batch chunking refactor for the memory-budget improvement Phase 1.2B promises (peak memory ≈ one timeframe-batch
+> in flight, NOT all-day-all-timeframes accumulated). Phase 1.2A.1 means production candle writes can resume on the
+> band-aid memory-tier launcher (`deployment-service@02ee6d6`) without raising `LookaheadBiasError` — the band-aid
+> retirement waits on Phase 1.2B + Phase 4.
 
 > **Severity**: P0 — blocks live-pipeline Phase 4 + the May-23 cutover (Group F items 21+22 prereq).
 >
@@ -55,13 +50,13 @@ execution:
 
 ## Why this issue exists
 
-Picking up from
-[`audit_2026_05_08_substantial_unfixed_items.md`](audit_2026_05_08_substantial_unfixed_items.md) Item #3 § "Still open"
-(deferred 2026-05-09 with rationale "MDPS working tree has 9+ foreign-modified test files from parallel agents'
-sessions"). Today's chain agent re-attempted Phase 1.2 + Phase 2 and surfaced a **semantic dual-SSOT collision** that
-the original plan-of-record `mdps_streaming_and_backpressure_2026_05_07.md` did not anticipate. The deferral pattern
-banned by CLAUDE.md "Plans Run To Actual Completion, Not Smoke-Test Green" is exactly what this is — but the right next
-move is not to ship a broken half-migration; it is to refresh the plan-of-record so the next agent has a clean target.
+Picking up from [`audit_2026_05_08_substantial_unfixed_items.md`](audit_2026_05_08_substantial_unfixed_items.md) Item #3
+§ "Still open" (deferred 2026-05-09 with rationale "MDPS working tree has 9+ foreign-modified test files from parallel
+agents' sessions"). Today's chain agent re-attempted Phase 1.2 + Phase 2 and surfaced a **semantic dual-SSOT collision**
+that the original plan-of-record `mdps_streaming_and_backpressure_2026_05_07.md` did not anticipate. The deferral
+pattern banned by CLAUDE.md "Plans Run To Actual Completion, Not Smoke-Test Green" is exactly what this is — but the
+right next move is not to ship a broken half-migration; it is to refresh the plan-of-record so the next agent has a
+clean target.
 
 ## What I found (today, 2026-05-10)
 
@@ -90,12 +85,12 @@ every commit + skip files I don't own.
 shape together, the current state is:
 
 1. UTL ships `open_candle_writer` / `write_chunk` / `close_candle_writer` in
-   `unified_trading_library/streaming/candle_writer.py`. `close_candle_writer` calls `manifest_writer.record_captured(
-   row_key=..., df=..., attempted_at=..., **manifest_kwargs)` — the v5 honest-coverage manifest verb.
+   `unified_trading_library/streaming/candle_writer.py`. `close_candle_writer` calls
+   `manifest_writer.record_captured( row_key=..., df=..., attempted_at=..., **manifest_kwargs)` — the v5 honest-coverage
+   manifest verb.
 2. MDPS already has `canonical_writer.write_candle_parquet(...)` (canonical_writer.py:168-347) which calls
-   `manifest_writer.add(processing_date=..., venue=..., chain=..., instrument_type=..., data_type=..., timeframe=...,
-   league_id=..., underlying=..., instrument_id=..., row_count=..., expected=True, available=True)` — the LEGACY v4
-   `add()` shape, NOT `record_captured`.
+   `manifest_writer.add(processing_date=..., venue=..., chain=..., instrument_type=..., data_type=..., timeframe=..., league_id=..., underlying=..., instrument_id=..., row_count=..., expected=True, available=True)`
+   — the LEGACY v4 `add()` shape, NOT `record_captured`.
 3. Plan-of-record line 56-61 says "the existing `write_candle_parquet` is a one-shot convenience wrapper that does
    `open → write_chunk(df) → close` for callers that already have a fully-materialised DataFrame (preserves backward
    compat for non-MDPS callers — the workspace 'no shims' rule allows this when a single repo is being migrated)."
@@ -118,11 +113,11 @@ losing the inline `manifest_writer.add(...)` call). That keeps every MDPS callsi
 1. `canonical_writer.py` is foreign-modified (the 1-line docstring sweep). Editing it now would require resolving the
    dirty hunk into my commit — bundling foreign WIP via foot-gun #1.
 2. The migration of `write_candle_parquet`'s manifest contract from `add()` → `record_captured()` is an architectural
-   change with workspace-wide consumer impact (e.g. `_process_instrument_file` flows + every other MDPS write path).
-   The plan-of-record does NOT describe this migration as a Phase 1.x todo. Doing it as part of Phase 1.2 would
-   silently expand the work-split scope.
-3. Per CLAUDE.md "Findings Triage Discipline" — this is an "in-flight VM bug / contradicts an in-flight refactor"
-   case-5 BIG finding. The right action is operator-notify + issue doc, not silently expand scope.
+   change with workspace-wide consumer impact (e.g. `_process_instrument_file` flows + every other MDPS write path). The
+   plan-of-record does NOT describe this migration as a Phase 1.x todo. Doing it as part of Phase 1.2 would silently
+   expand the work-split scope.
+3. Per CLAUDE.md "Findings Triage Discipline" — this is an "in-flight VM bug / contradicts an in-flight refactor" case-5
+   BIG finding. The right action is operator-notify + issue doc, not silently expand scope.
 
 ### Phase 2 cannot ship without Phase 1.2
 
@@ -140,29 +135,28 @@ NOT silently shuffle the order.
 - **Live-pipeline Phase 4 stays blocked.** The umbrella plan (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4)
   re-uses the UTL lifecycle this plan ships. Unblocking that requires Phase 1.2 wiring landed in MDPS.
 - **May-23 cutover deadline.** Group F items 21+22 are MDPS streaming + memory-backpressure prereqs. 13 days remain.
-- **Manifest correctness drift risk.** If a future agent ships Phase 1.2 without ALSO migrating
-  `write_candle_parquet`, MDPS production starts emitting two manifest shapes and downstream rollups silently corrupt.
-  This needs to be in the plan body, not in agent memory.
+- **Manifest correctness drift risk.** If a future agent ships Phase 1.2 without ALSO migrating `write_candle_parquet`,
+  MDPS production starts emitting two manifest shapes and downstream rollups silently corrupt. This needs to be in the
+  plan body, not in agent memory.
 
 ## Recommended decision
 
 **Refresh `mdps_streaming_and_backpressure_2026_05_07.md` plan body** before the next agent picks up Phase 1.2:
 
 1. **Add Phase 1.2.A — UNIFY canonical_writer.py manifest semantics**: migrate `write_candle_parquet` to use
-   `open_candle_writer → write_chunk → close_candle_writer` internally (so the manifest verb is `record_captured`).
-   This becomes the one-shot wrapper line 50-61 already references, but with the manifest verb correction. Body
-   includes the workspace-grep audit table per CLAUDE.md "Citadel-Grade Planning § 6 Downstream Consumer Updates"
-   (extended) listing every caller of `write_candle_parquet` + every caller of `manifest_writer.add(...)` in MDPS that
-   needs to flip.
+   `open_candle_writer → write_chunk → close_candle_writer` internally (so the manifest verb is `record_captured`). This
+   becomes the one-shot wrapper line 50-61 already references, but with the manifest verb correction. Body includes the
+   workspace-grep audit table per CLAUDE.md "Citadel-Grade Planning § 6 Downstream Consumer Updates" (extended) listing
+   every caller of `write_candle_parquet` + every caller of `manifest_writer.add(...)` in MDPS that needs to flip.
 2. **Sequence Phase 1.2.A before Phase 1.2.B (the original `_streaming_write_per_tf` migration)** — Phase 1.2.A is
    strictly preparatory (single-call manifest verb migration); Phase 1.2.B is the streaming flush migration.
 3. **Add an explicit "what NOT to do" callout**: do NOT ship Phase 1.2.B alone. The dual-SSOT collision is the
    substantive blocker the previous deferral did not name. Phase 2 stays gated on Phase 1.2.B.
 4. **Keep the existing 4-test matrix in Phase 1.2.B**, but add 2 tests in Phase 1.2.A:
    `test_write_candle_parquet_emits_record_captured_not_add` + `test_manifest_row_shape_v5_post_migration`.
-5. **Operator coordination**: confirm no concurrent agent is currently mid-edit on `canonical_writer.py` before
-   spawning the MDPS-dedicated tab. Today's 1-line dirty diff is the docstring sweep — if that has landed by the time
-   the new tab spawns, the tree is clean enough to safely ship Phase 1.2.A.
+5. **Operator coordination**: confirm no concurrent agent is currently mid-edit on `canonical_writer.py` before spawning
+   the MDPS-dedicated tab. Today's 1-line dirty diff is the docstring sweep — if that has landed by the time the new tab
+   spawns, the tree is clean enough to safely ship Phase 1.2.A.
 
 ## Exit criteria (closing this issue)
 
@@ -170,8 +164,7 @@ NOT silently shuffle the order.
   audit-table + manifest-verb migration design. — `[ ]` open
 - MDPS-dedicated tab assigned in next work-split. — `[ ]` open
 - canonical_writer.py is clean OR foreign 1-line diff has been pushed by its owner. — `[ ]` open
-- Phase 1.2.A + 1.2.B + Phase 2 ship in the same coordinated tab session per the refreshed execution DAG. — `[ ]`
-  open
+- Phase 1.2.A + 1.2.B + Phase 2 ship in the same coordinated tab session per the refreshed execution DAG. — `[ ]` open
 - Live-pipeline Phase 4 banner removable. — `[ ]` open
 
 ## Cross-references

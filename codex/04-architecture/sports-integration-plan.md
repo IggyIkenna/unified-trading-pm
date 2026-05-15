@@ -67,16 +67,16 @@ graph TD
 
 ## Service Integration Summary
 
-| Service                        | Change Type | Key Additions                                                |
-| ------------------------------ | ----------- | ------------------------------------------------------------ |
-| instruments-service            | AUGMENT     | Sports parser, fixture matching, team normalization          |
-| market-data-processing-service | AUGMENT     | Odds API (batch), Betfair Stream (live), API-Football        |
-| **features-service (sports family)**    | **CREATE**  | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT) |
-| ml-training-service            | AUGMENT     | Sports configs, walk-forward validation (k-fold + standard)  |
-| ml-inference-service           | AUGMENT     | Sports model loading, prediction endpoint                    |
-| strategy-service               | AUGMENT     | Arbitrage, value betting, Kelly criterion                    |
-| execution-service              | AUGMENT     | Betfair, Smarkets, Polymarket API clients                    |
-| All UIs                        | AUGMENT     | Asset class filter, sports-specific views                    |
+| Service                              | Change Type | Key Additions                                                |
+| ------------------------------------ | ----------- | ------------------------------------------------------------ |
+| instruments-service                  | AUGMENT     | Sports parser, fixture matching, team normalization          |
+| market-data-processing-service       | AUGMENT     | Odds API (batch), Betfair Stream (live), API-Football        |
+| **features-service (sports family)** | **CREATE**  | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT) |
+| ml-training-service                  | AUGMENT     | Sports configs, walk-forward validation (k-fold + standard)  |
+| ml-inference-service                 | AUGMENT     | Sports model loading, prediction endpoint                    |
+| strategy-service                     | AUGMENT     | Arbitrage, value betting, Kelly criterion                    |
+| execution-service                    | AUGMENT     | Betfair, Smarkets, Polymarket API clients                    |
+| All UIs                              | AUGMENT     | Asset class filter, sports-specific views                    |
 
 ---
 
@@ -514,13 +514,13 @@ gs://ml-models/SPORTS/
 
 **Batch ordering (sports data flows through existing services with SPORTS category):**
 
-| Batch | Service                                    | Sports Augmentation                                             | Outputs                                                                                                       |
-| ----- | ------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **A** | instruments-service (AUGMENTED)            | Sports parser, fixture matching, team normalization             | GCS canonical fixtures/teams/leagues; PubSub instruments-updated (asset_group=SPORTS)                         |
-| **B** | market-data-processing-service (AUGMENTED) | Odds API (batch), Betfair Stream (live), API-Football ingestion | GCS odds snapshots + ProcessedOddsOutput; PubSub market-data-updated (asset_group=SPORTS), arbitrage-detected |
-| **C** | features-service (sports family) (NEW standalone)   | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT)    | GCS features; PubSub sports-features-computed                                                                 |
-| **D** | strategy-service (AUGMENTED)               | Arbitrage, value betting, Kelly criterion for SPORTS            | PubSub bet-orders (asset_group=SPORTS); GCS orders                                                            |
-| **E** | execution-service (AUGMENTED)              | Betfair, Smarkets, Polymarket API clients via USEI              | GCS BetExecution; PubSub bet-executions (asset_group=SPORTS)                                                  |
+| Batch | Service                                           | Sports Augmentation                                             | Outputs                                                                                                       |
+| ----- | ------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **A** | instruments-service (AUGMENTED)                   | Sports parser, fixture matching, team normalization             | GCS canonical fixtures/teams/leagues; PubSub instruments-updated (asset_group=SPORTS)                         |
+| **B** | market-data-processing-service (AUGMENTED)        | Odds API (batch), Betfair Stream (live), API-Football ingestion | GCS odds snapshots + ProcessedOddsOutput; PubSub market-data-updated (asset_group=SPORTS), arbitrage-detected |
+| **C** | features-service (sports family) (NEW standalone) | 19 feature categories, time horizons (T-24h, T-60m, T-0, HT)    | GCS features; PubSub sports-features-computed                                                                 |
+| **D** | strategy-service (AUGMENTED)                      | Arbitrage, value betting, Kelly criterion for SPORTS            | PubSub bet-orders (asset_group=SPORTS); GCS orders                                                            |
+| **E** | execution-service (AUGMENTED)                     | Betfair, Smarkets, Polymarket API clients via USEI              | GCS BetExecution; PubSub bet-executions (asset_group=SPORTS)                                                  |
 
 **DEPRECATED sports-specific services (archived 2026-03-01):**
 
@@ -595,8 +595,8 @@ increases operational overhead, duplicates observability/deployment infrastructu
 
 **What stays standalone:**
 
-- `features-service (sports family)` — sports-specific feature engineering (19 categories, time horizons) has no crypto/tradfi
-  analog; remains a new standalone service
+- `features-service (sports family)` — sports-specific feature engineering (19 categories, time horizons) has no
+  crypto/tradfi analog; remains a new standalone service
 - `execution-service` (USEI) — bookmaker/exchange adapter library; remains standalone as a venue adapter layer
 
 **Impact on batch pipeline:** Sports data flows through the same DAG as crypto/tradfi data, using `asset_group=SPORTS` /

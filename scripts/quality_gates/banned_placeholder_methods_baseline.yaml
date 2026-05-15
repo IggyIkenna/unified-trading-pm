@@ -63,8 +63,8 @@ entries:
     method: _maybe_write_vix_gap_placeholder
     status: pending_removal
     successor:
-      "writegate Phase 2.A — cosmetic rename to e.g. `_record_vix_gap_empty` (the body is already honest;
-      only the misnomer name keeps it flagged) — then drop this entry"
+      "writegate Phase 2.A — cosmetic rename to e.g. `_record_vix_gap_empty` (the body is already honest; only the
+      misnomer name keeps it flagged) — then drop this entry"
   # output_writer_service.py:upload_bytes — DEAD CODE. OutputWriterService.write_candles
   # writes the candle parquet directly via storage_client.upload_bytes(...) WITHOUT
   # routing through record_captured / the 4-pillar write-gate — but the class is not
@@ -78,5 +78,5 @@ entries:
     method: upload_bytes
     status: pending_removal
     successor:
-      "writegate Phase 2.A — delete the dead OutputWriterService class (output_writer_service.py); the live
-      candle-write path is CandleWriteMixin._write_candles → canonical_writer → record_captured"
+      "writegate Phase 2.A — delete the dead OutputWriterService class (output_writer_service.py); the live candle-write
+      path is CandleWriteMixin._write_candles → canonical_writer → record_captured"

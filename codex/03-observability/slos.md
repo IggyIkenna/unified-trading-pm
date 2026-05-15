@@ -50,10 +50,10 @@ All SLOs use **30-day rolling windows**. Error budget = `(1 - SLO_target) * 30 d
 
 ### alerting-service
 
-| SLI                       | Metric                           | Target | Error Budget (30d) | Notes                                   |
-| ------------------------- | -------------------------------- | ------ | ------------------ | --------------------------------------- |
-| Alert delivery P99        | `alerting_delivery_p99`          | < 30s  | 0.5% (3.6h)        | From event receipt to notification sent |
-| Alert false-positive rate | manual review (no live metric)   | < 1%   | —                  | No `AlertFeedback` model yet. Reviewed during quarterly DR rehearsal by on-call operator (Ikenna/Harsh). Upgrade to live metric when `AlertFeedback` is wired (AL-22 successor task). |
+| SLI                       | Metric                         | Target | Error Budget (30d) | Notes                                                                                                                                                                                 |
+| ------------------------- | ------------------------------ | ------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Alert delivery P99        | `alerting_delivery_p99`        | < 30s  | 0.5% (3.6h)        | From event receipt to notification sent                                                                                                                                               |
+| Alert false-positive rate | manual review (no live metric) | < 1%   | —                  | No `AlertFeedback` model yet. Reviewed during quarterly DR rehearsal by on-call operator (Ikenna/Harsh). Upgrade to live metric when `AlertFeedback` is wired (AL-22 successor task). |
 
 ### instruments-service
 

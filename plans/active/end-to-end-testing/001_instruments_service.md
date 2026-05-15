@@ -37,14 +37,14 @@ Follows `procedure.md`. Pipeline position: #1 (no upstream dependencies).
 
 ### Phase 2: Dry-Run (batch, real data, no writes)
 
-| #   | Operation   | Category   | Expected                                                        | Status                                                      |
-| --- | ----------- | ---------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| 2.1 | instruments | CEFI       | Fetch from Tardis/CCXT, no GCS writes                           | PASS — 19 venues fetched, dry-run confirmed                 |
-| 2.2 | instruments | TRADFI     | Fetch from EOD/IBKR, no GCS writes                              |                                                             |
-| 2.3 | instruments | DEFI       | Fetch from subgraphs, no GCS writes                             | PASS — 108 instruments/day, 7 days, Balancer 400 (isolated) |
-| 2.4 | instruments | SPORTS     | Fetch from sportsbooks, no GCS writes                           |                                                             |
-| 2.5 | instruments | PREDICTION | Should skip gracefully (not implemented)                        |                                                             |
-| 2.6 | aggregate   | (all)      | Read existing GCS data, no new writes                           |                                                             |
+| #   | Operation   | Category   | Expected                                                                 | Status                                                      |
+| --- | ----------- | ---------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| 2.1 | instruments | CEFI       | Fetch from Tardis/CCXT, no GCS writes                                    | PASS — 19 venues fetched, dry-run confirmed                 |
+| 2.2 | instruments | TRADFI     | Fetch from EOD/IBKR, no GCS writes                                       |                                                             |
+| 2.3 | instruments | DEFI       | Fetch from subgraphs, no GCS writes                                      | PASS — 108 instruments/day, 7 days, Balancer 400 (isolated) |
+| 2.4 | instruments | SPORTS     | Fetch from sportsbooks, no GCS writes                                    |                                                             |
+| 2.5 | instruments | PREDICTION | Should skip gracefully (not implemented)                                 |                                                             |
+| 2.6 | aggregate   | (all)      | Read existing GCS data, no new writes                                    |                                                             |
 | 2.7 | —           | —          | Corporate actions operation moved to features-service (calendar family). |                                                             |
 
 ### Phase 3: Real Writes (dev, CSV sampling on)

@@ -34,40 +34,40 @@ ring.
 
 **Five axes per event** — all five are required:
 
-| Axis | Type | What it captures |
-| ---- | ---- | ---------------- |
-| `KillSwitchId` | `StrEnum` (12 members) | What's being killed (`KILL_ALL_LIVE` / per-archetype / per-venue / per-asset_group / per-wallet) |
-| `KillSwitchProvenance` | `StrEnum` (4-set) | Who armed (operator / breaker / scenario / scheduled drill) |
-| `KillSwitchArmRequest` | `BaseModel` (6 fields) | Inbound request to `KillSwitchBus.arm()` (carries `target_wallet_id` for `KILL_PER_WALLET`) |
-| `KillSwitchArmedEvent` | `BaseModel` | Emitted to subscribers on successful arm |
-| `KillSwitchDisarmEvent` | `BaseModel` | Emitted on disarm with `BreakerRecoveryMode` + elapsed-cooldown telemetry |
+| Axis                    | Type                   | What it captures                                                                                 |
+| ----------------------- | ---------------------- | ------------------------------------------------------------------------------------------------ |
+| `KillSwitchId`          | `StrEnum` (12 members) | What's being killed (`KILL_ALL_LIVE` / per-archetype / per-venue / per-asset_group / per-wallet) |
+| `KillSwitchProvenance`  | `StrEnum` (4-set)      | Who armed (operator / breaker / scenario / scheduled drill)                                      |
+| `KillSwitchArmRequest`  | `BaseModel` (6 fields) | Inbound request to `KillSwitchBus.arm()` (carries `target_wallet_id` for `KILL_PER_WALLET`)      |
+| `KillSwitchArmedEvent`  | `BaseModel`            | Emitted to subscribers on successful arm                                                         |
+| `KillSwitchDisarmEvent` | `BaseModel`            | Emitted on disarm with `BreakerRecoveryMode` + elapsed-cooldown telemetry                        |
 
 ## `KillSwitchId` registry — 12 closed-set members
 
 Cutover-scope kill-switches (Phase 1.C UAC@a7a99b5 + wallet-tier slot 4 UAC@d721b6a 2026-05-12):
 
-| ID | Scope | Halt semantics |
-| -- | ----- | -------------- |
-| `KILL_ALL_LIVE` | `GLOBAL` | Halt every live archetype across every venue. Operator-only arming. |
-| `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` | `ARCHETYPE` | Halt the carry-staked-basis archetype across all its venues. |
-| `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` | `ARCHETYPE` | Halt the funding-arb archetype. |
-| `KILL_PER_VENUE_BYBIT` | `VENUE` | Halt every archetype touching Bybit. |
-| `KILL_PER_VENUE_DERIBIT` | `VENUE` | Halt every archetype touching Deribit. |
-| `KILL_PER_VENUE_BINANCE` | `VENUE` | Halt every archetype touching Binance. |
-| `KILL_PER_VENUE_OKX` | `VENUE` | Halt every archetype touching OKX. |
-| `KILL_PER_VENUE_HYPERLIQUID` | `VENUE` | Halt every archetype touching Hyperliquid. |
-| `KILL_PER_VENUE_ASTER` | `VENUE` | Halt every archetype touching Aster. |
-| `KILL_PER_ASSET_GROUP_CEFI` | (asset-group filter — no enum) | Halt every CeFi archetype. |
-| `KILL_PER_ASSET_GROUP_DEFI` | (asset-group filter — no enum) | Halt every DeFi archetype. |
-| `KILL_PER_WALLET` | (runtime-targeted via `target_wallet_id` — see `KillSwitchScope` mapping note below) | **FINEST-grain switch** (below per-venue + per-archetype). Engages only the named wallet's signing surface, leaving sibling wallets of the same archetype unaffected. Composes with `WalletProvisioningConfig.kill_switch_id`. Added 2026-05-12 (slot 4 UAC@d721b6a) per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5. |
+| ID                                              | Scope                                                                                | Halt semantics                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `KILL_ALL_LIVE`                                 | `GLOBAL`                                                                             | Halt every live archetype across every venue. Operator-only arming.                                                                                                                                                                                                                                                                   |
+| `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS`         | `ARCHETYPE`                                                                          | Halt the carry-staked-basis archetype across all its venues.                                                                                                                                                                                                                                                                          |
+| `KILL_PER_ARCHETYPE_ARBITRAGE_PRICE_DISPERSION` | `ARCHETYPE`                                                                          | Halt the funding-arb archetype.                                                                                                                                                                                                                                                                                                       |
+| `KILL_PER_VENUE_BYBIT`                          | `VENUE`                                                                              | Halt every archetype touching Bybit.                                                                                                                                                                                                                                                                                                  |
+| `KILL_PER_VENUE_DERIBIT`                        | `VENUE`                                                                              | Halt every archetype touching Deribit.                                                                                                                                                                                                                                                                                                |
+| `KILL_PER_VENUE_BINANCE`                        | `VENUE`                                                                              | Halt every archetype touching Binance.                                                                                                                                                                                                                                                                                                |
+| `KILL_PER_VENUE_OKX`                            | `VENUE`                                                                              | Halt every archetype touching OKX.                                                                                                                                                                                                                                                                                                    |
+| `KILL_PER_VENUE_HYPERLIQUID`                    | `VENUE`                                                                              | Halt every archetype touching Hyperliquid.                                                                                                                                                                                                                                                                                            |
+| `KILL_PER_VENUE_ASTER`                          | `VENUE`                                                                              | Halt every archetype touching Aster.                                                                                                                                                                                                                                                                                                  |
+| `KILL_PER_ASSET_GROUP_CEFI`                     | (asset-group filter — no enum)                                                       | Halt every CeFi archetype.                                                                                                                                                                                                                                                                                                            |
+| `KILL_PER_ASSET_GROUP_DEFI`                     | (asset-group filter — no enum)                                                       | Halt every DeFi archetype.                                                                                                                                                                                                                                                                                                            |
+| `KILL_PER_WALLET`                               | (runtime-targeted via `target_wallet_id` — see `KillSwitchScope` mapping note below) | **FINEST-grain switch** (below per-venue + per-archetype). Engages only the named wallet's signing surface, leaving sibling wallets of the same archetype unaffected. Composes with `WalletProvisioningConfig.kill_switch_id`. Added 2026-05-12 (slot 4 UAC@d721b6a) per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5. |
 
 > **Wallet axis — `KillSwitchScope` mapping note (2026-05-12).** Unlike per-venue / per-archetype which map cleanly to
 > `KillSwitchScope.{VENUE,ARCHETYPE}`, `KillSwitchScope` has **no `WALLET` member** today — the wallet axis is
-> *runtime-targeted* via `KillSwitchArmRequest.target_wallet_id` rather than enum-per-wallet (which would explode the
+> _runtime-targeted_ via `KillSwitchArmRequest.target_wallet_id` rather than enum-per-wallet (which would explode the
 > closed set unbounded). The `kill_switch.py` § 7 SSOT reconciliation docstring references a `KillSwitchScope.WALLET`;
 > see audit finding R-5 / AL-1 for the slot 4 reconciliation (add enum member OR fix docstring to "runtime-targeted").
-> See full wallet-tier kill-switch section + audit-log invariant in [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)
-> § "Wallet-tier kill-switch (`KILL_PER_WALLET`)".
+> See full wallet-tier kill-switch section + audit-log invariant in
+> [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) § "Wallet-tier kill-switch (`KILL_PER_WALLET`)".
 
 **Adding a new kill-switch** (review-blocking checklist):
 
@@ -83,12 +83,12 @@ Cutover-scope kill-switches (Phase 1.C UAC@a7a99b5 + wallet-tier slot 4 UAC@d721
 
 Drives downstream alert severity + recovery-mode policy:
 
-| Provenance | Source | Severity | Notes |
-| ---------- | ------ | -------- | ----- |
-| `OPERATOR_MANUAL` | Operator click via deployment-UI kill-switch tab OR `kill-switch` CLI. | HIGH (always) | `requested_by` carries operator ID; `KILL_ALL_LIVE` is operator-only. |
-| `BREAKER_AUTO` | Auto-armed by a `CircuitBreakerId` firing per its `BreakerAction.KILL_ALL`. | Inherits `BreakerConfig.alerting_severity`. | `requested_by` carries `f"{breaker_id}:{breaker_serial}"`. |
-| `SCENARIO_SYNTHETIC` | Chaos-drill cron / scenario runner. | WARN | Production-guarded: cron VM cannot arm on the live live-defi-rollout account; only testnet. |
-| `SCHEDULED_DRILL` | Nightly DR drill scheduler. | WARN | Same severity as SCENARIO_SYNTHETIC; distinguishable in audit logs by source-VM tag. |
+| Provenance           | Source                                                                      | Severity                                    | Notes                                                                                       |
+| -------------------- | --------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `OPERATOR_MANUAL`    | Operator click via deployment-UI kill-switch tab OR `kill-switch` CLI.      | HIGH (always)                               | `requested_by` carries operator ID; `KILL_ALL_LIVE` is operator-only.                       |
+| `BREAKER_AUTO`       | Auto-armed by a `CircuitBreakerId` firing per its `BreakerAction.KILL_ALL`. | Inherits `BreakerConfig.alerting_severity`. | `requested_by` carries `f"{breaker_id}:{breaker_serial}"`.                                  |
+| `SCENARIO_SYNTHETIC` | Chaos-drill cron / scenario runner.                                         | WARN                                        | Production-guarded: cron VM cannot arm on the live live-defi-rollout account; only testnet. |
+| `SCHEDULED_DRILL`    | Nightly DR drill scheduler.                                                 | WARN                                        | Same severity as SCENARIO_SYNTHETIC; distinguishable in audit logs by source-VM tag.        |
 
 Provenance gating rules:
 
@@ -97,13 +97,13 @@ Provenance gating rules:
   construction site (testnet bus + live bus are separate singletons; the chaos-drill cron only has a handle to the
   testnet bus).
 
-**Why `SCHEDULED_DRILL` is treated as operator-equivalent for `KILL_ALL_LIVE`**: A `SCHEDULED_DRILL` event is a
-nightly disaster-recovery (DR) drill that runs on the live account with an operator present in the drill window.
-Unlike `SCENARIO_SYNTHETIC` (fully unattended chaos-cron on testnet), every `SCHEDULED_DRILL` arm requires a human
-operator to have pre-approved the drill time-window and to be monitoring the recovery sequence. The drill runner VM
-carries a `source-vm-tag` in the audit log distinguishing it from a human click (`OPERATOR_MANUAL`), but the
-operator-attendance requirement makes the risk profile equivalent. Both provenances satisfy the "human-in-the-loop"
-constraint for `KILL_ALL_LIVE` arming.
+**Why `SCHEDULED_DRILL` is treated as operator-equivalent for `KILL_ALL_LIVE`**: A `SCHEDULED_DRILL` event is a nightly
+disaster-recovery (DR) drill that runs on the live account with an operator present in the drill window. Unlike
+`SCENARIO_SYNTHETIC` (fully unattended chaos-cron on testnet), every `SCHEDULED_DRILL` arm requires a human operator to
+have pre-approved the drill time-window and to be monitoring the recovery sequence. The drill runner VM carries a
+`source-vm-tag` in the audit log distinguishing it from a human click (`OPERATOR_MANUAL`), but the operator-attendance
+requirement makes the risk profile equivalent. Both provenances satisfy the "human-in-the-loop" constraint for
+`KILL_ALL_LIVE` arming.
 
 ## Event shapes
 
@@ -149,8 +149,8 @@ class KillSwitchDisarmEvent(BaseModel):
 ```
 
 Validator: `cooldown_seconds_elapsed` MUST be `None` when `recovery_mode=MANUAL_UNKILL`, and a positive int when
-`recovery_mode=AUTO_COOLDOWN`. The actual elapsed time may be longer than the breaker's configured `cooldown_seconds`
-if the guard predicate took multiple windows to read green.
+`recovery_mode=AUTO_COOLDOWN`. The actual elapsed time may be longer than the breaker's configured `cooldown_seconds` if
+the guard predicate took multiple windows to read green.
 
 ## Audit-log persistence (Phase 2.A)
 
@@ -233,8 +233,8 @@ bus.subscribe(ExecutionMatchingEngineSubscriber())
 **Subscriber contract**:
 
 - Subscribers MUST be idempotent. Re-emitted events are valid (process restart replay; bus reconstructs from audit log).
-- Subscribers MUST NOT raise on event consumption. Failures are logged + counted in `KillSwitchBus.fan_out_failures`
-  but never propagate to the publisher.
+- Subscribers MUST NOT raise on event consumption. Failures are logged + counted in `KillSwitchBus.fan_out_failures` but
+  never propagate to the publisher.
 - Subscribers SHOULD acknowledge state via a lifecycle event (`KILL_SWITCH_ACKED` per
   [`alerting.md`](../03-observability/alerting.md)) so the operator-facing UI can render per-subscriber state.
 
@@ -242,12 +242,12 @@ bus.subscribe(ExecutionMatchingEngineSubscriber())
 
 The cutover wiring fans out every arm to four subscribers:
 
-| Subscriber | Behaviour on `KillSwitchArmedEvent` | Behaviour on `KillSwitchDisarmEvent` |
-| ---------- | ----------------------------------- | ------------------------------------ |
-| `execution-service` matching engine | Per scope: cancel open orders, refuse new orders. | Re-enable order acceptance. |
-| `strategy-service` signal generators | Per scope: pause target-tracking, halt signal emission. | Resume target-tracking. |
-| `position-balance-monitor-service` | Mark reconcilers as "during kill switch" — non-blocking state queries continue, but reconciler-driven breaker arms are suppressed (no cascade). | Clear the suppression flag. |
-| `alerting-service` notifier | Emit `KILL_SWITCH_*` AlertCode with severity per provenance; route to PagerDuty + Telegram. | Emit `KILL_SWITCH_AUTO_RECOVERED` or `KILL_SWITCH_MANUAL_UNKILLED` AlertCode. |
+| Subscriber                           | Behaviour on `KillSwitchArmedEvent`                                                                                                             | Behaviour on `KillSwitchDisarmEvent`                                          |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `execution-service` matching engine  | Per scope: cancel open orders, refuse new orders.                                                                                               | Re-enable order acceptance.                                                   |
+| `strategy-service` signal generators | Per scope: pause target-tracking, halt signal emission.                                                                                         | Resume target-tracking.                                                       |
+| `position-balance-monitor-service`   | Mark reconcilers as "during kill switch" — non-blocking state queries continue, but reconciler-driven breaker arms are suppressed (no cascade). | Clear the suppression flag.                                                   |
+| `alerting-service` notifier          | Emit `KILL_SWITCH_*` AlertCode with severity per provenance; route to PagerDuty + Telegram.                                                     | Emit `KILL_SWITCH_AUTO_RECOVERED` or `KILL_SWITCH_MANUAL_UNKILLED` AlertCode. |
 
 Fan-out is **single-message-multi-subscriber** — all four callbacks invoked within the same `KillSwitchBus.arm()` call.
 Subscribers ordering is deterministic (registration order) but no consumer depends on it; idempotent state machines
@@ -291,20 +291,20 @@ breaker recovery loop runs per BreakerRecoveryMode:
 bus writes disarm audit-log entry + emits KillSwitchDisarmEvent to every subscriber
 ```
 
-For operator-initiated arms (`provenance=OPERATOR_MANUAL`), the flow starts at the deployment-UI kill-switch tab; the
-DR plan Phase 7.A wires `/api/kill-switch/{id}/arm` + `/disarm` endpoints that construct the `KillSwitchArmRequest` +
-call `KillSwitchBus.arm()`.
+For operator-initiated arms (`provenance=OPERATOR_MANUAL`), the flow starts at the deployment-UI kill-switch tab; the DR
+plan Phase 7.A wires `/api/kill-switch/{id}/arm` + `/disarm` endpoints that construct the `KillSwitchArmRequest` + call
+`KillSwitchBus.arm()`.
 
 ## Cross-link with alerting recovery events
 
 The bus + alerting-service emit complementary events. Per the
-[`alerting_service_live_rules_2026_05_07.md`](../../plans/active/alerting_service_live_rules_2026_05_07.md) plan
-(Round 1 UAC@a7a99b5 added two recovery AlertCodes):
+[`alerting_service_live_rules_2026_05_07.md`](../../plans/active/alerting_service_live_rules_2026_05_07.md) plan (Round
+1 UAC@a7a99b5 added two recovery AlertCodes):
 
-| AlertCode | Emitted by | Severity | Carried by `KillSwitchDisarmEvent` |
-| --------- | ---------- | -------- | ----------------------------------- |
-| `KILL_SWITCH_AUTO_RECOVERED` | alerting-service consuming `KillSwitchDisarmEvent` with `recovery_mode=AUTO_COOLDOWN`. | INFO | `cooldown_seconds_elapsed` + guard-evaluation trail in metadata. |
-| `KILL_SWITCH_MANUAL_UNKILLED` | alerting-service consuming `KillSwitchDisarmEvent` with `recovery_mode=MANUAL_UNKILL`. | INFO | `disarmed_by` (operator ID) in metadata. |
+| AlertCode                     | Emitted by                                                                             | Severity | Carried by `KillSwitchDisarmEvent`                               |
+| ----------------------------- | -------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
+| `KILL_SWITCH_AUTO_RECOVERED`  | alerting-service consuming `KillSwitchDisarmEvent` with `recovery_mode=AUTO_COOLDOWN`. | INFO     | `cooldown_seconds_elapsed` + guard-evaluation trail in metadata. |
+| `KILL_SWITCH_MANUAL_UNKILLED` | alerting-service consuming `KillSwitchDisarmEvent` with `recovery_mode=MANUAL_UNKILL`. | INFO     | `disarmed_by` (operator ID) in metadata.                         |
 
 The bus is the source of the disarm event; the alerting AlertCode is the source of the operator-facing notification.
 Both ship in the same logical cycle — operator sees the recovery notification via Telegram + UI simultaneously.
@@ -314,8 +314,8 @@ Both ship in the same logical cycle — operator sees the recovery notification 
 - **Don't bypass the bus and call subscribers directly.** Every arm/disarm MUST go through `KillSwitchBus.arm()` /
   `KillSwitchBus.disarm()` so the audit log captures the event. Direct subscriber invocation skips the log and breaks
   post-mortem reconstruction.
-- **Don't write to the audit log out-of-band.** The bus is the only writer. Out-of-band writes break the
-  append-only invariant + the operator-facing event-ordering guarantee.
+- **Don't write to the audit log out-of-band.** The bus is the only writer. Out-of-band writes break the append-only
+  invariant + the operator-facing event-ordering guarantee.
 - **Don't subscribe asynchronously and assume order.** The bus is synchronous fan-out; subscribers run in registration
   order within the publisher's call stack. Asyncio queue + worker pool inside a subscriber is fine but doesn't change
   the bus contract.
@@ -340,4 +340,6 @@ Both ship in the same logical cycle — operator sees the recovery notification 
 - Alerting AlertCode taxonomy: [`../03-observability/alerting.md`](../03-observability/alerting.md).
 - UAC SSOT: `unified_api_contracts.canonical.crosscutting.kill_switch` (UAC@a7a99b5).
 - UTL SSOT: `unified_trading_library.kill_switch.bus` (predates DR plan; audited in Phase 0.C).
-- Plan: [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md) Phase 2 (bus + audit-log) + Phase 7 (UI surface).
+- Plan:
+  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
+  Phase 2 (bus + audit-log) + Phase 7 (UI surface).

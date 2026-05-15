@@ -12,27 +12,28 @@ locked_since: 2026-05-15
 
 ## What I found
 
-Code audit of 5 MTDS DeFi handlers (lst_rates, evm_defi, gas_fee, solana_defi, eigenlayer_rewards)
-for the same phantom manifest risk that caused B-015 silent-skip (see companion issue doc).
+Code audit of 5 MTDS DeFi handlers (lst_rates, evm_defi, gas_fee, solana_defi, eigenlayer_rewards) for the same phantom
+manifest risk that caused B-015 silent-skip (see companion issue doc).
 
-**All 5 handlers call `record_captured()` AFTER the GCS write** (`upload_bytes` / `upload_parquet`).
-This creates a write-then-manifest sequencing gap: if the GCS upload succeeds but the manifest
-call fails or is skipped (exception, process kill, stale lock), a phantom row can be created in
-either direction (data without manifest, or manifest without data).
+**All 5 handlers call `record_captured()` AFTER the GCS write** (`upload_bytes` / `upload_parquet`). This creates a
+write-then-manifest sequencing gap: if the GCS upload succeeds but the manifest call fails or is skipped (exception,
+process kill, stale lock), a phantom row can be created in either direction (data without manifest, or manifest without
+data).
 
 ### Per-handler risk summary
 
-| Handler | Phantom Risk | Protection | Key concern |
-|---------|-------------|------------|-------------|
-| `lst_rates_handler.py` | HIGH | None outside `record_empty` routing | Partial-group writes (per protocol/chain) with no transactional guarantee across the group; stale lock confirmed live (B-015) |
-| `evm_defi_handler.py` | MEDIUM | Outer try/except calls `record_failed()` on exception | Multi-protocol loop: if one pair uploads but record_captured fails, that pair has phantom with recovery via outer except only |
-| `gas_fee_handler.py` | MEDIUM | Loop-level except calls `record_failed()` on throw | Multiple write paths (EVM/Solana/BTC); each path uploads then records; no atomicity across chain loop |
-| `solana_defi_handler.py` | MEDIUM | Outer except at 242-253 calls `record_failed()` | Upload (line 342) before record_captured (lines 225-232); brief unclean window if record_captured throws mid-write |
-| `eigenlayer_rewards_handler.py` | LOW | Try/except/finally wraps BOTH write AND manifest | Most defensive: if upload succeeds but record_captured fails, outer except emits record_failed immediately; finally ensures close() |
+| Handler                         | Phantom Risk | Protection                                            | Key concern                                                                                                                         |
+| ------------------------------- | ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `lst_rates_handler.py`          | HIGH         | None outside `record_empty` routing                   | Partial-group writes (per protocol/chain) with no transactional guarantee across the group; stale lock confirmed live (B-015)       |
+| `evm_defi_handler.py`           | MEDIUM       | Outer try/except calls `record_failed()` on exception | Multi-protocol loop: if one pair uploads but record_captured fails, that pair has phantom with recovery via outer except only       |
+| `gas_fee_handler.py`            | MEDIUM       | Loop-level except calls `record_failed()` on throw    | Multiple write paths (EVM/Solana/BTC); each path uploads then records; no atomicity across chain loop                               |
+| `solana_defi_handler.py`        | MEDIUM       | Outer except at 242-253 calls `record_failed()`       | Upload (line 342) before record_captured (lines 225-232); brief unclean window if record_captured throws mid-write                  |
+| `eigenlayer_rewards_handler.py` | LOW          | Try/except/finally wraps BOTH write AND manifest      | Most defensive: if upload succeeds but record_captured fails, outer except emits record_failed immediately; finally ensures close() |
 
 ### Root cause (structural)
 
 The safe pattern (eigenlayer_rewards) is:
+
 ```python
 try:
     storage.upload_bytes(...)     # GCS write
@@ -44,41 +45,41 @@ finally:
 ```
 
 The risky pattern (lst_rates / evm_defi / gas_fee / solana_defi) is:
+
 ```python
 storage.upload_bytes(...)         # GCS write — no try block or separate try
 recorder.record_captured(...)     # manifest — outside the upload try scope
 ```
-If the GCS write throws and is caught at an outer loop level that doesn't call `record_failed()`,
-the manifest row is silently absent. If the GCS write succeeds but the process is killed before
-`record_captured()`, the manifest row is absent but data exists.
+
+If the GCS write throws and is caught at an outer loop level that doesn't call `record_failed()`, the manifest row is
+silently absent. If the GCS write succeeds but the process is killed before `record_captured()`, the manifest row is
+absent but data exists.
 
 ## Why it matters
 
-1. **B-015 blocker root cause**: The lst_rates phantom rows confirmed live (2026-05-14) are the
-   same structural pattern as the other 4 handlers. Ikenna's phantom audit + apply-flips fixes the
-   DATA state but doesn't fix the CODE — the same phantom can re-accumulate on the next backfill
-   unless the handler code is hardened.
-2. **DeFi cutover readiness (May-23)**: Before any DeFi backfill VM runs successfully, the code
-   must not regenerate phantom rows. A hardened handler + re-run is the only durable fix.
-3. **Scope of risk**: Any DeFi backfill VM that runs lst_rates, evm_defi, gas_fee, or solana_defi
-   can produce phantom rows in the same way. gas_fee_handler has multiple write paths (EVM, Solana,
-   BTC) — higher risk surface.
+1. **B-015 blocker root cause**: The lst_rates phantom rows confirmed live (2026-05-14) are the same structural pattern
+   as the other 4 handlers. Ikenna's phantom audit + apply-flips fixes the DATA state but doesn't fix the CODE — the
+   same phantom can re-accumulate on the next backfill unless the handler code is hardened.
+2. **DeFi cutover readiness (May-23)**: Before any DeFi backfill VM runs successfully, the code must not regenerate
+   phantom rows. A hardened handler + re-run is the only durable fix.
+3. **Scope of risk**: Any DeFi backfill VM that runs lst_rates, evm_defi, gas_fee, or solana_defi can produce phantom
+   rows in the same way. gas_fee_handler has multiple write paths (EVM, Solana, BTC) — higher risk surface.
 
 ## Recommended decision
 
 **Two-phase fix**:
 
-1. **Immediate (before B-015 re-smoke)**: Harden `lst_rates_handler.py` to use the eigenlayer
-   pattern (wrap upload + record_captured in same try block; outer except calls record_failed;
-   finally calls recorder.close()). ~30 min, low blast radius.
-2. **Follow-up sweep (within next cycle)**: Apply same pattern to evm_defi, gas_fee, solana_defi.
-   File as a single hardening PR. Eigenlayer_rewards is already safe — use it as the reference.
+1. **Immediate (before B-015 re-smoke)**: Harden `lst_rates_handler.py` to use the eigenlayer pattern (wrap upload +
+   record_captured in same try block; outer except calls record_failed; finally calls recorder.close()). ~30 min, low
+   blast radius.
+2. **Follow-up sweep (within next cycle)**: Apply same pattern to evm_defi, gas_fee, solana_defi. File as a single
+   hardening PR. Eigenlayer_rewards is already safe — use it as the reference.
 
-**Assignment**: Harsh slot 9 or slot 2 (reserve) can take Phase 1 (lst_rates hardening) if B-015
-is still blocked. Phase 2 sweep goes to whoever ships lst_rates first.
+**Assignment**: Harsh slot 9 or slot 2 (reserve) can take Phase 1 (lst_rates hardening) if B-015 is still blocked. Phase
+2 sweep goes to whoever ships lst_rates first.
 
-**Do NOT attempt B-015 Phase 2 re-smoke with lst_rates handler in current state** — the phantom
-rows will re-accumulate even after Ikenna's apply-flips clears the backlog.
+**Do NOT attempt B-015 Phase 2 re-smoke with lst_rates handler in current state** — the phantom rows will re-accumulate
+even after Ikenna's apply-flips clears the backlog.
 
 ## Cross-references
 
@@ -87,8 +88,6 @@ rows will re-accumulate even after Ikenna's apply-flips clears the backlog.
 - Safe pattern reference: `market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`
 - Shard-level failure isolation SSOT: `codex/04-architecture/shard-level-failure-isolation.md`
 
-execution:
-  owner: harsh-slot-9 (Phase 1 lst_rates hardening) + TBD sweep (Phase 2)
-  cadence: one-shot (Phase 1 before B-015 re-smoke; Phase 2 within next cycle)
-  verifier: QG green + re-smoke with zero phantom rows in manifest (4-pillar check)
-  last_executed: NEVER
+execution: owner: harsh-slot-9 (Phase 1 lst_rates hardening) + TBD sweep (Phase 2) cadence: one-shot (Phase 1 before
+B-015 re-smoke; Phase 2 within next cycle) verifier: QG green + re-smoke with zero phantom rows in manifest (4-pillar
+check) last_executed: NEVER

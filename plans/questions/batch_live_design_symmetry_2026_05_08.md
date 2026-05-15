@@ -834,8 +834,8 @@ Status legend: ✅ ANSWERED-FROM-CODE · ⚠️ PARTIAL (code+gaps) · ❌ CONFI
   2026-05-08. Phases 3 (operator-gated VM fleet migration) / 4 (consumer sweep) / 6 / 8 (T+30d cleanup) / 9 (workspace
   QG sweep) PENDING. UTL `ManifestWriter.record_captured` accepts optional `pipeline_mode` kwarg
   (`unified-trading-library/unified_trading_library/manifest_writer.py:1968`).
-- **E2** ❌ — No QG step compares batch parquet schema to live parquet schema per data_type. Per-write validation exists
-  (`_maybe_validate()` at `manifest_writer.py:2025-2034`), schema is identical _by design_ (same UAC contract), not by
+- **E2** ❌ — No QG step compares batch parquet schema to live parquet schema per data*type. Per-write validation exists
+  (`_maybe_validate()` at `manifest_writer.py:2025-2034`), schema is identical \_by design* (same UAC contract), not by
   runtime cross-mode enforcement.
 - **E3** ✅ — `assert_available_at_present` at UTL `manifest_writer.py:72-103`; called from `record_captured()`. No
   active code paths bypassing `record_captured` for parquet writes (post-2026-05-05 MDPS-1440-NaN incident reconciled).

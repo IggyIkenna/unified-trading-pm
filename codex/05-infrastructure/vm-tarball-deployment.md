@@ -211,11 +211,11 @@ bash launch-ml-training-vm.sh \
 
 ## How to debug a failed VM run
 
-> **Cross-ref (O-12, added 2026-05-13)**: when sizing the next VM after an OOM or memory-pressure
-> failure, use the `recommended_machine_type` runbook in
-> `market-tick-data-service/market_tick_data_service/engine/shard_memory_profile.py` — it
-> reads the per-shard memory profile from past runs and recommends `e2-standard-N` / `e2-highmem-N`
-> tiers based on observed peak RSS. Referenced from rc=137 row in the Exit codes table below.
+> **Cross-ref (O-12, added 2026-05-13)**: when sizing the next VM after an OOM or memory-pressure failure, use the
+> `recommended_machine_type` runbook in
+> `market-tick-data-service/market_tick_data_service/engine/shard_memory_profile.py` — it reads the per-shard memory
+> profile from past runs and recommends `e2-standard-N` / `e2-highmem-N` tiers based on observed peak RSS. Referenced
+> from rc=137 row in the Exit codes table below.
 
 ```
 1. gcloud compute instances list --filter='name~"<vm-name-prefix>"' --format='table(name,status,creationTimestamp.date())'
@@ -447,26 +447,26 @@ gcloud compute instances delete manifest-consolidator-<TS> --zone=asia-northeast
 
 ## VM launcher template DRY audit (2026-05-15)
 
-As of 2026-05-15, `deployment-service/scripts/vm/` contains **~83 `launch-*.sh` launchers**. Audit
-findings from B-011 blindspot sweep + post-B-011 consolidation work:
+As of 2026-05-15, `deployment-service/scripts/vm/` contains **~83 `launch-*.sh` launchers**. Audit findings from B-011
+blindspot sweep + post-B-011 consolidation work:
 
 ### CODE_BUCKET pattern split
 
-| Pattern | Count | Status |
-|---|---|---|
-| `CODE_BUCKET="deployment-scripts-${PROJECT}"` (variable) | 12 | Post-B-011 canonical form |
-| `CODE_BUCKET="deployment-scripts-central-element-323112"` (hardcoded) | 48 | Pre-B-011 legacy — functional but brittle |
-| No CODE_BUCKET reference | 23 | Use inline `gs://` or no GCS reads |
+| Pattern                                                               | Count | Status                                    |
+| --------------------------------------------------------------------- | ----- | ----------------------------------------- |
+| `CODE_BUCKET="deployment-scripts-${PROJECT}"` (variable)              | 12    | Post-B-011 canonical form                 |
+| `CODE_BUCKET="deployment-scripts-central-element-323112"` (hardcoded) | 48    | Pre-B-011 legacy — functional but brittle |
+| No CODE_BUCKET reference                                              | 23    | Use inline `gs://` or no GCS reads        |
 
-**Consolidation opportunity**: the 48 hardcoded launchers could be migrated to `"deployment-scripts-${PROJECT}"`.
-This was deferred (pre-B-011 fleet sweep is large scope; no operator direction for full-fleet sweep as of
-2026-05-15). File a new plan if full migration is approved.
+**Consolidation opportunity**: the 48 hardcoded launchers could be migrated to `"deployment-scripts-${PROJECT}"`. This
+was deferred (pre-B-011 fleet sweep is large scope; no operator direction for full-fleet sweep as of 2026-05-15). File a
+new plan if full migration is approved.
 
 ### Common boilerplate repeated across all launchers
 
-These ~6 lines appear near-identically in every launcher — a future shared function or sourced helper
-could DRY them, but doing so requires a sourced-file deployment strategy (the helper would need to land
-on the VM or be inlined at `gcloud` call time):
+These ~6 lines appear near-identically in every launcher — a future shared function or sourced helper could DRY them,
+but doing so requires a sourced-file deployment strategy (the helper would need to land on the VM or be inlined at
+`gcloud` call time):
 
 ```bash
 --image-family=ubuntu-2404-lts-amd64
@@ -479,8 +479,9 @@ VM_NAME=${VM_NAME}
 
 ### Singleton lock pattern
 
-~36 launchers implement the singleton lock via `gcloud compute instances list --filter='name~"^PREFIX"
-AND status=RUNNING'`. The pattern is correct and uniform — no consolidation needed.
+~36 launchers implement the singleton lock via
+`gcloud compute instances list --filter='name~"^PREFIX" AND status=RUNNING'`. The pattern is correct and uniform — no
+consolidation needed.
 
 ---
 

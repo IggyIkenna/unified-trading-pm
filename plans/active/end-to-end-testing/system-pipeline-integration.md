@@ -57,13 +57,13 @@ position-balance-monitor-service
 
 ### Phase 2: Tick Data → Processed Market Data → Features Handoff
 
-| #   | Step                                                                         | Verify                                                                                                                       | Status |
-| --- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 2.1 | Run MDPS `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20`  | Reads tick data from 1.3, produces candles/processed data                                                                    |        |
-| 2.2 | Processed data schema                                                        | Candle schema: `open`, `high`, `low`, `close`, `volume`, `timestamp` + DeFi fields (`tvl`, `pool_fee_tier` where applicable) |        |
+| #   | Step                                                                                  | Verify                                                                                                                       | Status |
+| --- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 2.1 | Run MDPS `--asset-group DEFI --start-date 2026-03-20 --end-date 2026-03-20`           | Reads tick data from 1.3, produces candles/processed data                                                                    |        |
+| 2.2 | Processed data schema                                                                 | Candle schema: `open`, `high`, `low`, `close`, `volume`, `timestamp` + DeFi fields (`tvl`, `pool_fee_tier` where applicable) |        |
 | 2.3 | Run features-service (onchain family) `--start-date 2026-03-20 --end-date 2026-03-20` | Reads processed market data + on-chain sources, writes features                                                              |        |
-| 2.4 | Feature completeness                                                         | Features written for: lending (Aave rates, utilization), TVL (DefiLlama), staking (LST rates), protocol rewards              |        |
-| 2.5 | Feature temporal alignment                                                   | Feature timestamps align with market data timestamps (no look-ahead bias)                                                    |        |
+| 2.4 | Feature completeness                                                                  | Features written for: lending (Aave rates, utilization), TVL (DefiLlama), staking (LST rates), protocol rewards              |        |
+| 2.5 | Feature temporal alignment                                                            | Feature timestamps align with market data timestamps (no look-ahead bias)                                                    |        |
 
 ### Phase 3: Features → Strategy Backtest Handoff
 
@@ -121,15 +121,15 @@ Run the entire pipeline in `CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local` to verify
 
 ## GCS Path Convention Verification
 
-| Service                    | Expected bucket pattern                         | Layout                                    |
-| -------------------------- | ----------------------------------------------- | ----------------------------------------- |
-| instruments-service        | `instruments-store-defi-{project_id}`           | `day=YYYY-MM-DD/{venue}.parquet`          |
-| market-tick-data-service   | `market-tick-data-store-defi-{project_id}`      | `day=YYYY-MM-DD/{venue}/{symbol}.parquet` |
-| market-data-processing-svc | `processed-market-data-store-defi-{project_id}` | `day=YYYY-MM-DD/{candle_size}/`           |
-| features-service (onchain family)   | `features-store-onchain-{project_id}`           | `day=YYYY-MM-DD/{feature_group}/`         |
-| strategy-service           | `strategy-store-{project_id}`                   | `backtest/{grid_id}/{strategy_id}/`       |
-| execution-service          | `execution-store-{project_id}`                  | `execution_fills/day=YYYY-MM-DD/`         |
-| pnl-attribution-service    | `pnl-store-{project_id}`                        | `pnl/day=YYYY-MM-DD/`                     |
+| Service                           | Expected bucket pattern                         | Layout                                    |
+| --------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| instruments-service               | `instruments-store-defi-{project_id}`           | `day=YYYY-MM-DD/{venue}.parquet`          |
+| market-tick-data-service          | `market-tick-data-store-defi-{project_id}`      | `day=YYYY-MM-DD/{venue}/{symbol}.parquet` |
+| market-data-processing-svc        | `processed-market-data-store-defi-{project_id}` | `day=YYYY-MM-DD/{candle_size}/`           |
+| features-service (onchain family) | `features-store-onchain-{project_id}`           | `day=YYYY-MM-DD/{feature_group}/`         |
+| strategy-service                  | `strategy-store-{project_id}`                   | `backtest/{grid_id}/{strategy_id}/`       |
+| execution-service                 | `execution-store-{project_id}`                  | `execution_fills/day=YYYY-MM-DD/`         |
+| pnl-attribution-service           | `pnl-store-{project_id}`                        | `pnl/day=YYYY-MM-DD/`                     |
 
 Verify at each handoff that the downstream service reads from the exact path the upstream service wrote to.
 

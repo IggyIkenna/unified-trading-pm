@@ -10,8 +10,8 @@ locked_since: 2026-05-13
 
 # Day-4 continuation prompts (Harsh-side, 2026-05-13)
 
-> **Paste one prompt per fresh Claude Code session** in `cd .tabs/<N>/`. Each prompt is self-contained — agent
-> reads onboarding + work-split + plan-of-record + boots itself with a status ack to `harsh_orchestrator/pings/slot_<N>.md`.
+> **Paste one prompt per fresh Claude Code session** in `cd .tabs/<N>/`. Each prompt is self-contained — agent reads
+> onboarding + work-split + plan-of-record + boots itself with a status ack to `harsh_orchestrator/pings/slot_<N>.md`.
 >
 > **For ALL slots**: paste `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` content at the top of every
 > sub-agent Task call. Sub-agents inherit nothing.
@@ -422,9 +422,15 @@ Boot ack: append 1-liner to harsh_orchestrator/pings/slot_10.md (NEW per-slot pi
 
 ## Notes for all slots
 
-- **Conditional-push** (mandatory): `git fetch origin` + `git rev-list --left-right --count HEAD...origin/live-defi-rollout` BEFORE every push. If incoming touches your files → rebase. Don't pipe push through tail (masks non-zero exit).
-- **Pre-commit check** (mandatory per CLAUDE.md "Half 1"): `git status` + `git diff --cached --stat` (NO PATH ARGUMENT) before every commit. Restore any foreign-staged files.
+- **Conditional-push** (mandatory): `git fetch origin` +
+  `git rev-list --left-right --count HEAD...origin/live-defi-rollout` BEFORE every push. If incoming touches your files
+  → rebase. Don't pipe push through tail (masks non-zero exit).
+- **Pre-commit check** (mandatory per CLAUDE.md "Half 1"): `git status` + `git diff --cached --stat` (NO PATH ARGUMENT)
+  before every commit. Restore any foreign-staged files.
 - **Use `date -u`** for all timestamps (machine clock is IST; UTC is canonical for the workspace).
-- **Sub-agent fan-out**: send all Task calls in ONE message. Paste `SUB_AGENT_MANDATORY_RULES.md` at top of every Task prompt.
-- **CI verification**: pushes to `live-defi-rollout` do NOT trigger remote CI; quality enforced locally. Confirm push landed via `git rev-list ... 0 0`.
-- **prek auto-restore (foot-gun #4)**: if Edit→commit→push gets reverted by prek patch, `--no-verify` is authorized per CLAUDE.md § "Foot-gun #4".
+- **Sub-agent fan-out**: send all Task calls in ONE message. Paste `SUB_AGENT_MANDATORY_RULES.md` at top of every Task
+  prompt.
+- **CI verification**: pushes to `live-defi-rollout` do NOT trigger remote CI; quality enforced locally. Confirm push
+  landed via `git rev-list ... 0 0`.
+- **prek auto-restore (foot-gun #4)**: if Edit→commit→push gets reverted by prek patch, `--no-verify` is authorized per
+  CLAUDE.md § "Foot-gun #4".

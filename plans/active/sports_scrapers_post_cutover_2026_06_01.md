@@ -19,12 +19,12 @@ priority: P2 (post-cutover; not blocking May-23)
 ## Status (2026-05-14, codified per CLAUDE.md "External Data Is Always Available — Never Silently Defer Adapters")
 
 **BLOCKED-OPERATOR-DECISION** — operator explicitly chose 2026-05-12 not to pursue scraper-path book adapters for the
-May-23 cutover. Sports track ships odds-aggregator-API path only (api-football, the-odds-api, OddsJam,
-SFI Footystats). Scraper adapters are valuable but not critical for live trading.
+May-23 cutover. Sports track ships odds-aggregator-API path only (api-football, the-odds-api, OddsJam, SFI Footystats).
+Scraper adapters are valuable but not critical for live trading.
 
 This successor plan exists to satisfy the May-14 HARD RULE: every silently-deferred data adapter must either be
-re-activated with credential ask OR have an explicit `BLOCKED-OPERATOR-DECISION` row + named successor plan. This is
-the named successor.
+re-activated with credential ask OR have an explicit `BLOCKED-OPERATOR-DECISION` row + named successor plan. This is the
+named successor.
 
 ## What's deferred
 
@@ -38,8 +38,8 @@ gate.
 
 ### 2 US browser adapters
 
-Specifics in `sports_master_2026_05_07.md` § "DEFERRED-INDEFINITELY". US books gated additionally by GeoComply /
-XPoint state-level licensing checks.
+Specifics in `sports_master_2026_05_07.md` § "DEFERRED-INDEFINITELY". US books gated additionally by GeoComply / XPoint
+state-level licensing checks.
 
 ## Activation prerequisites (operator-side; not blockers — operator decision needed first)
 
@@ -71,11 +71,12 @@ Without it: sports track ships aggregator-only path (api-football, the-odds-api,
 ### Phase 2 — Per-book scraper hardening (~8 cal AI-days; brand-new 1.0× class)
 
 For each of 16 books:
+
 - Wire credential flow (login → session cookie / token).
 - Update HTML/XHR parsing to current site shape (most books rotate frontend every 3-6 mo).
 - Add residential-proxy rotation logic + retry/backoff with exponential jitter.
-- Anti-bot bypass: TLS fingerprint masking (CycleTLS / undetected-chromedriver), behavioural delays,
-  mouse-movement simulation for browser-driven adapters.
+- Anti-bot bypass: TLS fingerprint masking (CycleTLS / undetected-chromedriver), behavioural delays, mouse-movement
+  simulation for browser-driven adapters.
 - Unit tests against captured HTML fixtures; integration tests marked `@pytest.mark.requires_credentials`.
 - Manifest emission per writegate Phase 6.x pattern.
 
@@ -83,8 +84,8 @@ For each of 16 books:
 
 - Singleton-locked VM launcher under `deployment-service/scripts/vm/launch-sports-book-scraper-vm.sh`.
 - Per-book health watchdog: detect ban / rate-limit / session-expiry → alert operator via alerting-service.
-- Manifest reconciliation: scraper output vs odds-aggregator-API output cross-check; ≥1bps dispersion threshold
-  triggers alert.
+- Manifest reconciliation: scraper output vs odds-aggregator-API output cross-check; ≥1bps dispersion threshold triggers
+  alert.
 - Sports `categorical_dispersion_across_books` archetype eligibility flip.
 
 ### Phase 4 — Post-launch operational ramp (~4 cal AI-days)
@@ -115,7 +116,7 @@ For each of 16 books:
 
 ## Notes
 
-The original 2026-05-12 deferral was operator's strategic call (sports scrapers are a multi-week build with
-ongoing maintenance burden; the odds-aggregator-API path covers the MVP analytics use case). This plan does NOT
-contradict that decision — it simply formalises the deferral under the post-2026-05-14 closed-set status taxonomy.
-Activation is at operator's option post-cutover; nothing in this plan auto-fires.
+The original 2026-05-12 deferral was operator's strategic call (sports scrapers are a multi-week build with ongoing
+maintenance burden; the odds-aggregator-API path covers the MVP analytics use case). This plan does NOT contradict that
+decision — it simply formalises the deferral under the post-2026-05-14 closed-set status taxonomy. Activation is at
+operator's option post-cutover; nothing in this plan auto-fires.

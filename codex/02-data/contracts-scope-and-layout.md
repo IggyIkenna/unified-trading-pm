@@ -151,18 +151,18 @@ exposes thin facade modules that re-export from internal sub-packages.
 
 ### Package structure
 
-| Package                    | Purpose                                                                 |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `canonical/`                        | Canonical normalized types, grouped by domain                           |
-| `canonical/domain/`                 | Domain-specific canonicals (market_data, execution, defi, sports, etc.) |
-| `canonical/domain/derivatives/`     | TradFi derivatives SSOTs: `tradfi_etfs.py` (ETF catalogue) + `tradfi_roots.py` (futures-root catalogue) |
-| `canonical/crosscutting/`           | Cross-domain canonicals (errors, pagination, metadata)                  |
+| Package                             | Purpose                                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canonical/`                        | Canonical normalized types, grouped by domain                                                                                                                    |
+| `canonical/domain/`                 | Domain-specific canonicals (market_data, execution, defi, sports, etc.)                                                                                          |
+| `canonical/domain/derivatives/`     | TradFi derivatives SSOTs: `tradfi_etfs.py` (ETF catalogue) + `tradfi_roots.py` (futures-root catalogue)                                                          |
+| `canonical/crosscutting/`           | Cross-domain canonicals (errors, pagination, metadata)                                                                                                           |
 | `canonical/asset_group_registry.py` | **Cross-asset-group entry-point** — `get_canonical_inventory(asset_group)` → `AssetGroupInventory` (venues + data_types + source_coverage_start). Phase 5C SSOT. |
-| `registry/`                         | Capability registry + venue manifest                                    |
-| `registry/capability/`              | Per-source capability declarations (modes, envs, operations)            |
-| `registry/venue_manifest/`          | Venue metadata, connection params, rate limits                          |
-| `external/`                         | Raw per-source external schemas, flat layout (one module per source)    |
-| `normalize_utils/`                  | Internal normalization helpers (not part of public import surface)      |
+| `registry/`                         | Capability registry + venue manifest                                                                                                                             |
+| `registry/capability/`              | Per-source capability declarations (modes, envs, operations)                                                                                                     |
+| `registry/venue_manifest/`          | Venue metadata, connection params, rate limits                                                                                                                   |
+| `external/`                         | Raw per-source external schemas, flat layout (one module per source)                                                                                             |
+| `normalize_utils/`                  | Internal normalization helpers (not part of public import surface)                                                                                               |
 
 ### Import surface rules
 
@@ -175,8 +175,7 @@ exposes thin facade modules that re-export from internal sub-packages.
 
 ### Cross-asset-group canonical inventory (Phase 5C SSOT)
 
-`canonical/asset_group_registry.py` is the single entry-point that answers
-"give me everything for asset_group X":
+`canonical/asset_group_registry.py` is the single entry-point that answers "give me everything for asset_group X":
 
 ```python
 from unified_api_contracts.canonical.asset_group_registry import get_canonical_inventory
@@ -191,15 +190,15 @@ inv.source_coverage_start   # dict[str, date] — venue/source → earliest avai
 
 **`AssetGroupInventory`** fields:
 
-| Field                   | Type                  | Source SSOT                                      |
-| ----------------------- | --------------------- | ------------------------------------------------ |
-| `asset_group`           | `str`                 | key passed in (lowercased)                       |
-| `venues`                | `tuple[str, ...]`     | `registry.market_data_categories.VENUES_BY_ASSET_GROUP` |
-| `data_types`            | `tuple[str, ...]`     | `registry.market_data_categories.DATA_TYPES_BY_ASSET_GROUP` |
-| `source_coverage_start` | `dict[str, date]`     | per-asset-group `*_SOURCE_COVERAGE_START` in `canonical.coverage_starts` |
+| Field                   | Type              | Source SSOT                                                              |
+| ----------------------- | ----------------- | ------------------------------------------------------------------------ |
+| `asset_group`           | `str`             | key passed in (lowercased)                                               |
+| `venues`                | `tuple[str, ...]` | `registry.market_data_categories.VENUES_BY_ASSET_GROUP`                  |
+| `data_types`            | `tuple[str, ...]` | `registry.market_data_categories.DATA_TYPES_BY_ASSET_GROUP`              |
+| `source_coverage_start` | `dict[str, date]` | per-asset-group `*_SOURCE_COVERAGE_START` in `canonical.coverage_starts` |
 
-Resolves § A1 problem from 2026-05-08 catalogue audit (data spread across 3 separate dicts).
-Migration of consumers to this surface: Phase 6 of `cross_asset_group_catalogue_audit_2026_05_10.md`.
+Resolves § A1 problem from 2026-05-08 catalogue audit (data spread across 3 separate dicts). Migration of consumers to
+this surface: Phase 6 of `cross_asset_group_catalogue_audit_2026_05_10.md`.
 
 ### Capability registry
 
@@ -219,14 +218,13 @@ when an adapter is called with an unsupported mode, environment, or auth scope. 
 ## Audit-confirmed canonical picks — 2026-05-12 SSOT cleanup (Phase 1)
 
 Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catalogue audit
-(`cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1). These correct previously ambiguous or fragmented
-SSOTs.
+(`cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1). These correct previously ambiguous or fragmented SSOTs.
 
-| # | Finding | Canonical resolution | Key symbol / location |
-| - | ------- | -------------------- | --------------------- |
-| 1 | **Dual prediction module** — `canonical/domain/prediction/` (singular) and `canonical/domain/predictions/` (plural) appeared redundant | Both are canonical and non-redundant: singular = `PredictionMarketMapper` (venue→canonical mapping); plural = `PredictionCanonicalQuestionGroup` taxonomy. Services use facade: `from unified_api_contracts.prediction import ...` | `unified_api_contracts/prediction.py` facade |
-| 2 | **Radiant orphan adapter** — `instruments-service/adapters/defi/radiant.py` existed with no UAC protocol entry | `RADIANT-ARBITRUM` + `RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (lending_indices + oracle_prices) | `registry/defi_venue_capabilities.py` UAC@`6dd274b` |
-| 3 | **GMX + DRIFT dual-classification** — present in both `VENUES_BY_ASSET_GROUP["cefi"]` and defi registries | Retain in defi registries for protocol-coverage tracking; add `DEFI_VENUE_AXIS_OVERRIDES` dict to flag axis="cefi" for market-data routing. Consumers of defi registries must check this dict before routing. | `registry/defi_venues.py` `DEFI_VENUE_AXIS_OVERRIDES` UAC@`7c8482e` |
-| 4 | **Case-folding drift** — venue IDs used inconsistently (BLAZESTAKE vs SOLBLAZE, TRADERJOEV2 vs TRADER_JOEV2) | `VENUES_BY_ASSET_GROUP` uppercase keys are canonical user-facing IDs. `to_canonical_venue(venue_id)` helper in `defi_venues.py` normalises aliases. New aliases: BLAZESTAKE→SOLBLAZE-SOLANA, TRADERJOEV2→TRADER_JOEV2-AVALANCHE. | `registry/defi_venues.py` `to_canonical_venue` UAC@`b73949d` |
-| 5 | **LST_TOKEN_TO_PROTOCOL_ASSET location unknown** | Confirmed at `unified_api_contracts.internal.domain.defi.lst` as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` (LST token symbol → (protocol, base_asset)) + helpers `iter_lst_tokens_for_protocol` / `resolve_lst_protocol_asset`. Placement under `internal/` is correct (resolver scope, not contract-facing schema). | `unified_api_contracts/internal/domain/defi/lst.py` |
-| 6 | **Chain-set fragmentation** — `MAINNET_CHAIN_IDS` (19), `CHAIN_GENESIS_DATES` (21), `GAS_FEE_CHAIN_START_DATES` (14) were inconsistent subsets | Invariant: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys`. SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`/`TESTNET_CHAIN_IDS`; BLAST+MODE+GNOSIS+SCROLL+ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 entries). Mainnet now 21 chains. | `registry/chain_env.py` UAC@`6dd274b` |
+| #   | Finding                                                                                                                                        | Canonical resolution                                                                                                                                                                                                                                                                                                                 | Key symbol / location                                               |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| 1   | **Dual prediction module** — `canonical/domain/prediction/` (singular) and `canonical/domain/predictions/` (plural) appeared redundant         | Both are canonical and non-redundant: singular = `PredictionMarketMapper` (venue→canonical mapping); plural = `PredictionCanonicalQuestionGroup` taxonomy. Services use facade: `from unified_api_contracts.prediction import ...`                                                                                                   | `unified_api_contracts/prediction.py` facade                        |
+| 2   | **Radiant orphan adapter** — `instruments-service/adapters/defi/radiant.py` existed with no UAC protocol entry                                 | `RADIANT-ARBITRUM` + `RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (lending_indices + oracle_prices)                                                                                                                                                                                                                    | `registry/defi_venue_capabilities.py` UAC@`6dd274b`                 |
+| 3   | **GMX + DRIFT dual-classification** — present in both `VENUES_BY_ASSET_GROUP["cefi"]` and defi registries                                      | Retain in defi registries for protocol-coverage tracking; add `DEFI_VENUE_AXIS_OVERRIDES` dict to flag axis="cefi" for market-data routing. Consumers of defi registries must check this dict before routing.                                                                                                                        | `registry/defi_venues.py` `DEFI_VENUE_AXIS_OVERRIDES` UAC@`7c8482e` |
+| 4   | **Case-folding drift** — venue IDs used inconsistently (BLAZESTAKE vs SOLBLAZE, TRADERJOEV2 vs TRADER_JOEV2)                                   | `VENUES_BY_ASSET_GROUP` uppercase keys are canonical user-facing IDs. `to_canonical_venue(venue_id)` helper in `defi_venues.py` normalises aliases. New aliases: BLAZESTAKE→SOLBLAZE-SOLANA, TRADERJOEV2→TRADER_JOEV2-AVALANCHE.                                                                                                     | `registry/defi_venues.py` `to_canonical_venue` UAC@`b73949d`        |
+| 5   | **LST_TOKEN_TO_PROTOCOL_ASSET location unknown**                                                                                               | Confirmed at `unified_api_contracts.internal.domain.defi.lst` as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` (LST token symbol → (protocol, base_asset)) + helpers `iter_lst_tokens_for_protocol` / `resolve_lst_protocol_asset`. Placement under `internal/` is correct (resolver scope, not contract-facing schema). | `unified_api_contracts/internal/domain/defi/lst.py`                 |
+| 6   | **Chain-set fragmentation** — `MAINNET_CHAIN_IDS` (19), `CHAIN_GENESIS_DATES` (21), `GAS_FEE_CHAIN_START_DATES` (14) were inconsistent subsets | Invariant: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys`. SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`/`TESTNET_CHAIN_IDS`; BLAST+MODE+GNOSIS+SCROLL+ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 entries). Mainnet now 21 chains.                                                             | `registry/chain_env.py` UAC@`6dd274b`                               |

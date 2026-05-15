@@ -95,7 +95,7 @@ overrides strategy target state. Strategy pauses its target-tracking loop and on
 
 **Added 2026-05-12** (slot 4 UAC@`d721b6a`) per `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5.
 
-`KILL_PER_WALLET` is the **FINEST-grain switch** in the closed `KillSwitchId` set — sits *below* per-venue and
+`KILL_PER_WALLET` is the **FINEST-grain switch** in the closed `KillSwitchId` set — sits _below_ per-venue and
 per-archetype. The 5-axis kill-switch hierarchy is now:
 
 ```
@@ -112,12 +112,12 @@ validates: `target_wallet_id` MUST be non-empty when `switch_id == KILL_PER_WALL
 avoids an enum-per-wallet explosion (we provision many DeFi wallets per archetype) while preserving the closed-set
 discipline at the switch-axis level.
 
-**`KillSwitchScope` mapping.** `KillSwitchScope` (UAC `alerting/codes.py`) has **no `WALLET` member** today. The
-wallet axis is runtime-targeted, parallel to the per-asset-group convention (where `KILL_PER_ASSET_GROUP_*` enum
-values exist but there's no `KillSwitchScope.ASSET_GROUP` — at runtime the consumer maps to `GLOBAL` filtered by
-asset_group). The `unified_api_contracts.canonical.crosscutting.kill_switch.KillSwitchId.KILL_PER_WALLET` docstring
-currently references `KillSwitchScope.WALLET` — see audit findings R-5 / AL-1 for the slot 4 reconciliation
-(add `WALLET` enum member OR fix docstring to "runtime-targeted, no enum equivalent").
+**`KillSwitchScope` mapping.** `KillSwitchScope` (UAC `alerting/codes.py`) has **no `WALLET` member** today. The wallet
+axis is runtime-targeted, parallel to the per-asset-group convention (where `KILL_PER_ASSET_GROUP_*` enum values exist
+but there's no `KillSwitchScope.ASSET_GROUP` — at runtime the consumer maps to `GLOBAL` filtered by asset_group). The
+`unified_api_contracts.canonical.crosscutting.kill_switch.KillSwitchId.KILL_PER_WALLET` docstring currently references
+`KillSwitchScope.WALLET` — see audit findings R-5 / AL-1 for the slot 4 reconciliation (add `WALLET` enum member OR fix
+docstring to "runtime-targeted, no enum equivalent").
 
 **Halt semantics.** When armed:
 
@@ -127,17 +127,17 @@ currently references `KillSwitchScope.WALLET` — see audit findings R-5 / AL-1 
   `"KILL_PER_WALLET"` for wallet-level freezes; broader prefixes (`KILL_PER_VENUE_*` / `KILL_PER_ARCHETYPE_*` /
   `KILL_ALL_LIVE`) cascade through this wallet too.
 - Composes with `SpendingCaps` (per-tx / per-hour / per-day / per-protocol — UAC `wallet_config.py:106-141`).
-  Spending-cap exceedance fires `WALLET_CAP_EXCEEDED` AlertCode (see audit finding R-6 / AL-2 — missing today;
-  slot 4 follow-up).
+  Spending-cap exceedance fires `WALLET_CAP_EXCEEDED` AlertCode (see audit finding R-6 / AL-2 — missing today; slot 4
+  follow-up).
 
-**Audit-log invariant.** Every `KILL_PER_WALLET` arm / pre-trade check produces a `WalletSpendingPreCheckResult`
-row (UAC `internal/execution.py:192-232`, slot 8 UAC@`1d8a059` 2026-05-12). See
+**Audit-log invariant.** Every `KILL_PER_WALLET` arm / pre-trade check produces a `WalletSpendingPreCheckResult` row
+(UAC `internal/execution.py:192-232`, slot 8 UAC@`1d8a059` 2026-05-12). See
 [`manual-trade-booking.md`](manual-trade-booking.md) § "Wallet-tier wiring (DeFi manual trades)" for the validation
 algorithm + the `ManualInstructionPrecheckResponse` consumer surface.
 
-**Operator UX.** DART `ManualTradingPanel` "DeFi Action" tab ships a per-row kill-switch button for arming /
-unkilling `KILL_PER_WALLET` per wallet_id (Phase 5 slot 8). See
-[`manual-trade-booking.md`](manual-trade-booking.md) § "DART operator UI".
+**Operator UX.** DART `ManualTradingPanel` "DeFi Action" tab ships a per-row kill-switch button for arming / unkilling
+`KILL_PER_WALLET` per wallet_id (Phase 5 slot 8). See [`manual-trade-booking.md`](manual-trade-booking.md) § "DART
+operator UI".
 
 ### Propagation Path
 
@@ -228,17 +228,17 @@ Also triggered via `CIRCUIT_OPEN` PubSub event from alerting-service.
 ### Risk-Rule Fire → Breaker Arm Cross-Link
 
 The circuit breaker has a SECOND transition cause beyond venue-rejection rates: the **risk-controller → breaker
-escalation seam**. When `risk_preflight()` accumulates N consecutive `RiskRuleConsequence.SCALE_DOWN` fires on the
-same `(venue, asset_group)` within a rolling window W, the risk-controller emits
-`BREAKER_ESCALATION_REQUESTED` to `circuit-breaker-commands`. The breaker subscribes and transitions per the
-UAC-declared `RISK_TO_BREAKER_ESCALATION_MAP: dict[(RiskRuleConsequence, int, timedelta), BreakerAction]`.
+escalation seam**. When `risk_preflight()` accumulates N consecutive `RiskRuleConsequence.SCALE_DOWN` fires on the same
+`(venue, asset_group)` within a rolling window W, the risk-controller emits `BREAKER_ESCALATION_REQUESTED` to
+`circuit-breaker-commands`. The breaker subscribes and transitions per the UAC-declared
+`RISK_TO_BREAKER_ESCALATION_MAP: dict[(RiskRuleConsequence, int, timedelta), BreakerAction]`.
 
 This is **distinct from venue-rejection-rate-driven transitions** and lives in a separate enum domain — see
 [`risk-breaker-seam.md`](risk-breaker-seam.md) for the full layering contract. Key points:
 
 - The risk-controller emits the event; the breaker subscribes. No direct invocation.
-- Both transition causes are independent — a single SCALE_DOWN at Layer 2 does NOT engage the breaker (only
-  N-in-W does).
+- Both transition causes are independent — a single SCALE_DOWN at Layer 2 does NOT engage the breaker (only N-in-W
+  does).
 - A breaker already in DEGRADED via venue-rejection-rate is unaffected by a fresh seam event for DEGRADED — the
   transition is idempotent.
 
@@ -248,12 +248,12 @@ Each `BreakerConfig` carries a `recovery_mode: BreakerRecoveryMode` field with c
 `{manual_unkill, auto_cooldown}` plus `cooldown_seconds: int | None` (None when manual). Per-action defaults from
 `BREAKER_RECOVERY_DEFAULTS`:
 
-| `BreakerAction` | Default recovery mode | Rationale                                                                  |
-| --------------- | --------------------- | -------------------------------------------------------------------------- |
-| `BLOCK_NEW`     | `auto_cooldown`       | Least-restrictive; safe to auto-resume when metric clears.                 |
-| `SCALE_DOWN`    | `auto_cooldown`       | Partial unwind has a natural inverse — auto-resume on green guard reads.   |
-| `CANCEL_OPEN`   | `manual_unkill`       | Cancelled orders are gone; auto-recovery doesn't restore them.             |
-| `KILL_ALL`      | `manual_unkill`       | Full unwind needs operator sign-off before any new sizing.                 |
+| `BreakerAction` | Default recovery mode | Rationale                                                                |
+| --------------- | --------------------- | ------------------------------------------------------------------------ |
+| `BLOCK_NEW`     | `auto_cooldown`       | Least-restrictive; safe to auto-resume when metric clears.               |
+| `SCALE_DOWN`    | `auto_cooldown`       | Partial unwind has a natural inverse — auto-resume on green guard reads. |
+| `CANCEL_OPEN`   | `manual_unkill`       | Cancelled orders are gone; auto-recovery doesn't restore them.           |
+| `KILL_ALL`      | `manual_unkill`       | Full unwind needs operator sign-off before any new sizing.               |
 
 Recovery emits one of two AlertCodes:
 
@@ -262,8 +262,8 @@ Recovery emits one of two AlertCodes:
 - `KILL_SWITCH_MANUAL_UNKILLED` — operator action via deployment-UI or `kill-switch unkill` CLI; carries
   `unkilled_by_operator_id`.
 
-The risk-controller does not observe recovery state — once the breaker auto-recovers or is operator-unkilled,
-subsequent Layer 2 SCALE_DOWNs start a fresh rolling-window for the seam.
+The risk-controller does not observe recovery state — once the breaker auto-recovers or is operator-unkilled, subsequent
+Layer 2 SCALE_DOWNs start a fresh rolling-window for the seam.
 
 ### Per-state-surface reconciler outputs feed breaker triggers
 
@@ -273,16 +273,16 @@ reconciler drift events**. The
 [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
 Phase 3 ships 8 reconcilers, each emitting typed drift events that the matching `CircuitBreakerId` subscribes to.
 
-| Reconciler | What it diffs | Drift event feeds breaker |
-| ---------- | ------------- | ------------------------- |
-| **Position reconciler** (Phase 3.A) | `position-balance-monitor-service` internal state vs venue REST + custody endpoint per-instrument. | `POSITION_LIMIT_EXCEEDED` — position drift > tolerance fires breaker with `CANCEL_OPEN` action. |
-| **Balance reconciler** (Phase 3.B) | Per-account total balance: internal accumulator vs venue balance endpoint. | `HEDGE_GAP_NOTIONAL_USD` — balance drift > USD threshold fires breaker. |
-| **Custody reconciler** (Phase 3.C) | Copper + CEFFU ping success + balance vs internal record. | `CUSTODY_DISCONNECT_SECONDS` — failed ping over threshold seconds fires `BLOCK_NEW`. |
-| **On-chain reconciler** (Phase 3.D) | Wallet on-chain balance vs `position-balance-monitor` per-chain accumulator. | `POSITION_LIMIT_EXCEEDED` (chain-scoped) — drift > tolerance fires breaker. |
-| **Event reconciler** (Phase 3.E) | Event-stream count + sequence vs expected per service (gaps / out-of-order events). | `CLOCK_SKEW_MS` (sequence proxy) + per-service health breakers — gap fires `BLOCK_NEW`. |
-| **Manifest reconciler** (Phase 3.F) | Phantom audit (per CLAUDE.md "Manifest phantom audit"); wired as nightly cron. | `MANIFEST_PHANTOM_RATE_BPS` — phantom rate > threshold bps fires breaker. |
-| **Order-state reconciler** (Phase 3.G) | Internal order state vs venue order state per-instrument. | `REJECT_RATE_BPS` (order-state drift proxy) — drift > bps fires `BLOCK_NEW`. |
-| **PnL + clock + batch-vs-live reconciler** (Phase 3.H) | PnL invariant + clock-skew + UTL@908b1647 batch-vs-live divergence. | `BATCH_LIVE_DIVERGENCE_BPS` + `CLOCK_SKEW_MS` + `PNL_VARIANCE_SIGMA` — each subscribes to its slice. |
+| Reconciler                                             | What it diffs                                                                                      | Drift event feeds breaker                                                                            |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Position reconciler** (Phase 3.A)                    | `position-balance-monitor-service` internal state vs venue REST + custody endpoint per-instrument. | `POSITION_LIMIT_EXCEEDED` — position drift > tolerance fires breaker with `CANCEL_OPEN` action.      |
+| **Balance reconciler** (Phase 3.B)                     | Per-account total balance: internal accumulator vs venue balance endpoint.                         | `HEDGE_GAP_NOTIONAL_USD` — balance drift > USD threshold fires breaker.                              |
+| **Custody reconciler** (Phase 3.C)                     | Copper + CEFFU ping success + balance vs internal record.                                          | `CUSTODY_DISCONNECT_SECONDS` — failed ping over threshold seconds fires `BLOCK_NEW`.                 |
+| **On-chain reconciler** (Phase 3.D)                    | Wallet on-chain balance vs `position-balance-monitor` per-chain accumulator.                       | `POSITION_LIMIT_EXCEEDED` (chain-scoped) — drift > tolerance fires breaker.                          |
+| **Event reconciler** (Phase 3.E)                       | Event-stream count + sequence vs expected per service (gaps / out-of-order events).                | `CLOCK_SKEW_MS` (sequence proxy) + per-service health breakers — gap fires `BLOCK_NEW`.              |
+| **Manifest reconciler** (Phase 3.F)                    | Phantom audit (per CLAUDE.md "Manifest phantom audit"); wired as nightly cron.                     | `MANIFEST_PHANTOM_RATE_BPS` — phantom rate > threshold bps fires breaker.                            |
+| **Order-state reconciler** (Phase 3.G)                 | Internal order state vs venue order state per-instrument.                                          | `REJECT_RATE_BPS` (order-state drift proxy) — drift > bps fires `BLOCK_NEW`.                         |
+| **PnL + clock + batch-vs-live reconciler** (Phase 3.H) | PnL invariant + clock-skew + UTL@908b1647 batch-vs-live divergence.                                | `BATCH_LIVE_DIVERGENCE_BPS` + `CLOCK_SKEW_MS` + `PNL_VARIANCE_SIGMA` — each subscribes to its slice. |
 
 The three input axes are **independent + idempotent**. A single root cause that fires from multiple inputs (e.g. venue
 outage tripping rejection-rate AND custody reconciler) results in idempotent state transitions — CLOSED → DEGRADED is a
@@ -291,8 +291,7 @@ themselves.
 
 Per [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) § "Trigger sources — three input axes", every
 `CircuitBreakerId` declares which axis or axes it subscribes to in the per-archetype registry seed. Reconciler-driven
-breakers (manifest / batch-live / position-drift / balance / custody / clock) are explicit in their `description`
-field.
+breakers (manifest / batch-live / position-drift / balance / custody / clock) are explicit in their `description` field.
 
 ### Multi-Venue Cascade → Kill Switch Escalation
 
@@ -390,21 +389,21 @@ before any action."
 
 ## PubSub Events
 
-| Event                           | Published by      | Severity | Subscribers            |
-| ------------------------------- | ----------------- | -------- | ---------------------- |
-| `KILL_SWITCH_ACTIVATED`         | execution-service | CRITICAL | All services, alerting |
-| `KILL_SWITCH_DEACTIVATED`       | execution-service | INFO     | All services, alerting |
-| `KILL_SWITCH_AUTO_DEACTIVATED`  | execution-service | WARNING  | All services, alerting |
-| `KILL_SWITCH_BLOCKED_STARTUP`   | execution-service | CRITICAL | Alerting               |
-| `KILL_SWITCH_AUTO_RECOVERED`    | execution-service | INFO     | Alerting               |
-| `KILL_SWITCH_MANUAL_UNKILLED`   | execution-service | INFO     | Alerting               |
+| Event                           | Published by      | Severity | Subscribers               |
+| ------------------------------- | ----------------- | -------- | ------------------------- |
+| `KILL_SWITCH_ACTIVATED`         | execution-service | CRITICAL | All services, alerting    |
+| `KILL_SWITCH_DEACTIVATED`       | execution-service | INFO     | All services, alerting    |
+| `KILL_SWITCH_AUTO_DEACTIVATED`  | execution-service | WARNING  | All services, alerting    |
+| `KILL_SWITCH_BLOCKED_STARTUP`   | execution-service | CRITICAL | Alerting                  |
+| `KILL_SWITCH_AUTO_RECOVERED`    | execution-service | INFO     | Alerting                  |
+| `KILL_SWITCH_MANUAL_UNKILLED`   | execution-service | INFO     | Alerting                  |
 | `BREAKER_ESCALATION_REQUESTED`  | risk-and-exposure | WARNING  | Execution circuit breaker |
-| `CIRCUIT_OPEN`                  | execution-service | ERROR    | Alerting, all services |
-| `CIRCUIT_HALF_OPEN`             | execution-service | WARNING  | Alerting               |
-| `CIRCUIT_CLOSED`                | execution-service | INFO     | Alerting, all services |
-| `POSITION_DRIFT_DETECTED`       | PBMS              | HIGH     | Alerting, UI           |
-| `UNHEDGED_POSITION_ALERT`       | execution-service | CRITICAL | Alerting               |
-| `MULTI_LEG_COMPENSATION_FAILED` | execution-service | CRITICAL | Alerting               |
+| `CIRCUIT_OPEN`                  | execution-service | ERROR    | Alerting, all services    |
+| `CIRCUIT_HALF_OPEN`             | execution-service | WARNING  | Alerting                  |
+| `CIRCUIT_CLOSED`                | execution-service | INFO     | Alerting, all services    |
+| `POSITION_DRIFT_DETECTED`       | PBMS              | HIGH     | Alerting, UI              |
+| `UNHEDGED_POSITION_ALERT`       | execution-service | CRITICAL | Alerting                  |
+| `MULTI_LEG_COMPENSATION_FAILED` | execution-service | CRITICAL | Alerting                  |
 
 > **Lifecycle vs Alert taxonomy.** The events above are UAC `LifecycleEvent` enum members emitted via `log_event()`. The
 > alerting-service derives UAC `AlertCode` taxonomy from these (`CIRCUIT_BREAKER_OPEN`, `CIRCUIT_BREAKER_DEGRADED`,
@@ -414,11 +413,12 @@ before any action."
 > `alerting-service/notifiers/router.py`.
 
 > **Wallet-tier kill-switch ↔ manual-trade audit-log invariant (2026-05-12).** Every `KILL_PER_WALLET` arm AND every
-> wallet-tier pre-trade check produces a `WalletSpendingPreCheckResult` audit-log row (UAC `internal/execution.py:192-232`,
-> slot 8 UAC@`1d8a059`). See [`manual-trade-booking.md`](manual-trade-booking.md) § "Wallet-tier wiring (DeFi manual
-> trades)" for the validation algorithm + DART operator-UI integration. The audit log is the SSOT for "did the
-> wallet-tier kill-switch / spending-cap actually engage on this manual trade attempt?" — distinct from the PubSub
-> `KILL_SWITCH_*` event fanout (which is the runtime-halt signal, not the per-attempt audit trail).
+> wallet-tier pre-trade check produces a `WalletSpendingPreCheckResult` audit-log row (UAC
+> `internal/execution.py:192-232`, slot 8 UAC@`1d8a059`). See [`manual-trade-booking.md`](manual-trade-booking.md) §
+> "Wallet-tier wiring (DeFi manual trades)" for the validation algorithm + DART operator-UI integration. The audit log
+> is the SSOT for "did the wallet-tier kill-switch / spending-cap actually engage on this manual trade attempt?" —
+> distinct from the PubSub `KILL_SWITCH_*` event fanout (which is the runtime-halt signal, not the per-attempt audit
+> trail).
 
 ---
 
@@ -433,5 +433,7 @@ before any action."
 - [`risk-rule-taxonomy.md`](risk-rule-taxonomy.md) — Layer 2 vocabulary that feeds the escalation seam
 - [`risk-preflight-flow.md`](risk-preflight-flow.md) — every-order pre-flight aggregation that emits seam events
 - [`risk-breaker-seam.md`](risk-breaker-seam.md) — distinct-enums-with-escalation contract; Q9 ratification 2026-05-10
-- [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — closed-set `CircuitBreakerId` + `BreakerAction` + `BreakerRecoveryMode` SSOT (DR plan Phase 8.A)
-- [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — UTL `KillSwitchBus` arm/disarm/subscribe API + audit-log persistence + typed UAC event shapes (DR plan Phase 8.B)
+- [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — closed-set `CircuitBreakerId` +
+  `BreakerAction` + `BreakerRecoveryMode` SSOT (DR plan Phase 8.A)
+- [`kill-switch-event-bus.md`](kill-switch-event-bus.md) — UTL `KillSwitchBus` arm/disarm/subscribe API + audit-log
+  persistence + typed UAC event shapes (DR plan Phase 8.B)

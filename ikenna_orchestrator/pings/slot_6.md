@@ -2,7 +2,9 @@
 
 ## [slot 6 → OPERATOR] 2026-05-15 — Phase 6.A Telegram per-env SHIPPED; operator provisioning required
 
-**What shipped**: `notify-telegram.yml` reusable workflow upgraded to per-environment token selection. 34 PM workflow callers migrated to `secrets: inherit`. 3 workflow templates updated with env-detection. `secret-health-check.yml` updated to validate per-env tokens. `major-bump-issue-handler.yml` updated.
+**What shipped**: `notify-telegram.yml` reusable workflow upgraded to per-environment token selection. 34 PM workflow
+callers migrated to `secrets: inherit`. 3 workflow templates updated with env-detection. `secret-health-check.yml`
+updated to validate per-env tokens. `major-bump-issue-handler.yml` updated.
 
 **Operator actions required to activate per-env isolation**:
 
@@ -12,6 +14,7 @@
    - Prod bot (existing): current `telegram-bot-token-prod` in SM → `TELEGRAM_BOT_TOKEN_PROD`
 
 2. **Set GitHub secrets** (org-level or per-repo) via:
+
    ```bash
    gh secret set TELEGRAM_BOT_TOKEN_PROD   --org IggyIkenna --body "<prod-token>"
    gh secret set TELEGRAM_BOT_TOKEN_STAGING --org IggyIkenna --body "<staging-token>"
@@ -25,7 +28,8 @@
    gh variable set TELEGRAM_CHAT_ID_DEV     --org IggyIkenna --body "<dev-chat-id>"
    ```
 
-**Backward compat**: legacy `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` remain as fallback until per-env secrets are provisioned. No breakage.
+**Backward compat**: legacy `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` remain as fallback until per-env secrets are
+provisioned. No breakage.
 
 **Plan checkbox**: Phase 6.A marked DONE-PARTIAL (scaffold shipped; awaiting operator bot provisioning).
 
@@ -39,6 +43,7 @@
 
 **Updated scope (2026-05-15 final)**: Phase 0.A full workspace scan reveals the SAME GCP SA key file
 (`central-element-323112-e35fb0ddafe2.json`) committed in **5 repos**:
+
 - `execution-service`: 2 commits
 - `instruments-service`: 9 commits
 - `market-tick-data-service`: 3 commits
@@ -46,12 +51,14 @@
 - `strategy-service`: 1 commit (`2c4af3d777c2`)
 
 **Required operator actions**:
+
 1. Revoke SA key via `gcloud iam service-accounts keys delete KEY_ID ...` (1 revocation covers all repos)
 2. Audit SA IAM bindings (blast-radius check)
 3. Run `git filter-repo ... --force` + force-push on **all 5 repos** (HARD STOP — operator-only)
 4. Notify Harsh + all agents to re-clone **all 5 repos** after rewrite
 
 **Additional P1 finding** (lower priority, can batch with P0 rewrite):
+
 - GitHub PAT `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` committed in `instruments-service` `.env.example` + `.env`
 - Issue doc: `plans/active/issues/github_pat_in_instruments_service_env_2026_05_15.md`
 - Action: revoke PAT in GitHub UI (`https://github.com/settings/tokens`)
@@ -333,24 +340,24 @@ Operator is AFK — do not ping for further authorization on items already in yo
 Per audit of `manifest_schema_final_gate_2026_05_09.md`: Phases 1-5 all ✅ done (UAC + UTL + cross-asset rescan +
 consumer sweep + bundled migration script). Phases 6-7 still OPEN, both `[HUMAN+AGENT] P0`.
 
-You own this plan (per the `Decision needed (ikenna-slot-6 / this plan owner)` annotation in plan body).
-**We are 2 days into the May 13-15 operator-gated window for Phase 7.**
+You own this plan (per the `Decision needed (ikenna-slot-6 / this plan owner)` annotation in plan body). **We are 2 days
+into the May 13-15 operator-gated window for Phase 7.**
 
 Action (added as item #14 in work_split § Slot 6):
 
-1. **Phase 6 — Bounce-sweep**: list all running MTDS/MDPS/instruments/features VMs; confirm STOPPED or
-   graceful shutdown. `gcloud compute instances list --project=central-element-323112 --filter="status=RUNNING"`
+1. **Phase 6 — Bounce-sweep**: list all running MTDS/MDPS/instruments/features VMs; confirm STOPPED or graceful
+   shutdown. `gcloud compute instances list --project=central-element-323112 --filter="status=RUNNING"`
 2. **Phase 7.A pre-flight check**: Phase 1-5 shipped + QG green workspace-wide + Phase 6 drain confirmed.
 3. **Phase 7.B snapshot**: per-bucket index snapshot (5 buckets: raw-tick across asset_groups).
 4. **Phase 7.C launch fleet**: per-bucket 4-8 migration VMs in asia-northeast1-c; `MANIFEST_PER_VM_SHARDS=true`
-   + unique `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
+   - unique `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
 5. **Phase 7.D-E**: watch event stream + manifest consolidator running.
 6. **Phase 7.F**: per-asset-group QA gate (reconcile_phantom_manifest_rows_all.py — phantom count MUST be 0).
-7. **Phase 7.G**: **operator hands needed** — sign-off per asset_group (5 sub-checkboxes). Cross-ping main when
-   each asset_group's QA gate green; operator will sign each off.
+7. **Phase 7.G**: **operator hands needed** — sign-off per asset_group (5 sub-checkboxes). Cross-ping main when each
+   asset_group's QA gate green; operator will sign each off.
 
-This is the v8 cutover-critical work. **Bump above any current slot 6 in-progress.** Cross-ping slot 1 main
-when (a) bounce-sweep complete, (b) migration fleet launched, (c) each asset_group hits QA gate green.
+This is the v8 cutover-critical work. **Bump above any current slot 6 in-progress.** Cross-ping slot 1 main when (a)
+bounce-sweep complete, (b) migration fleet launched, (c) each asset_group hits QA gate green.
 
-Backup: if Phase 6 surfaces foreign-owned VMs you don't recognize, post a one-line BLOCKED in pings/slot_6.md
-and main will coordinate.
+Backup: if Phase 6 surfaces foreign-owned VMs you don't recognize, post a one-line BLOCKED in pings/slot_6.md and main
+will coordinate.

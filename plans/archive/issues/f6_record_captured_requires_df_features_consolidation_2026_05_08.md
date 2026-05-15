@@ -14,7 +14,8 @@ source:
   - features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:472,479
   - features-service/features_service/multi_timeframe/engine/orchestrator.py:254,261
   - unified-trading-library/unified_trading_library/manifest_writer.py:1916 (record_captured signature)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at UTL@ef47c81b)
+  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at
+    UTL@ef47c81b)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -22,8 +23,8 @@ locked_since: 2026-05-08
 > ## RESOLVED 2026-05-10 by record_captured_from_counts (UTL@ef47c81b)
 >
 > **Status**: ✅ RESOLVED. F6's "record_captured() requires a DataFrame" blocker is closed by the streaming-writer
-> companion `ManifestWriter.record_captured_from_counts(...)` shipped at UTL@`ef47c81b`. This is the operator's
-> stated **option (a) opt-out path** — accepts pre-aggregated counts + an envelope timestamp instead of a DataFrame.
+> companion `ManifestWriter.record_captured_from_counts(...)` shipped at UTL@`ef47c81b`. This is the operator's stated
+> **option (a) opt-out path** — accepts pre-aggregated counts + an envelope timestamp instead of a DataFrame.
 >
 > **The new helper signature:**
 >
@@ -45,36 +46,36 @@ locked_since: 2026-05-08
 > 1. Replace each `writer.add(...)` callsite with `writer.record_captured_from_counts(...)`.
 > 2. Compute `available_at_envelope` once at finalize time as
 >    `max(per-row available_at across all clusters) + UAC EMISSION_LATENCY_MS_BY_SOURCE for the primary source`.
-> 3. Pass the existing `row_count` dict (already in scope at every callsite per the original blocker analysis) as
->    BOTH `total_rows=sum(...)` and `observed_clusters=<...>`. For non-bundled feature families that have only one
->    "cluster" (the family's data_type itself), pass
+> 3. Pass the existing `row_count` dict (already in scope at every callsite per the original blocker analysis) as BOTH
+>    `total_rows=sum(...)` and `observed_clusters=<...>`. For non-bundled feature families that have only one "cluster"
+>    (the family's data_type itself), pass
 >    `expected_root_clusters={data_type: 1}, observed_clusters={data_type: row_count}`.
 >
 > **What the helper enforces (4-pillar gate):**
 >
 > 1. **Row count > 0** — `total_rows<=0` routes to `record_empty(SOURCE_RETURNED_ZERO)`, not a phantom captured row.
 > 2. **`available_at` presence** — envelope timestamp MUST be tz-aware UTC; missing/NaT raises `LookaheadBiasError`.
->    Per-row `available_at` is enforced at the streaming-writer chunk-by-chunk level via the schema contract
->    registry, not at `record_captured_from_counts` invocation. **This is the key F6 unblock**: the 7 features
->    families that don't stamp `available_at` per-row can compute a single envelope at finalize time without
->    refactoring the upstream df-flow.
+>    Per-row `available_at` is enforced at the streaming-writer chunk-by-chunk level via the schema contract registry,
+>    not at `record_captured_from_counts` invocation. **This is the key F6 unblock**: the 7 features families that don't
+>    stamp `available_at` per-row can compute a single envelope at finalize time without refactoring the upstream
+>    df-flow.
 > 3. **Cluster coverage** — same 4th-pillar guard as `record_captured(df, ...)`; under-coverage → `record_failed`.
-> 4. **Schema validation** — applied chunk-by-chunk by the streaming writer, not at finalize. (Same SSOT-clean
->    treatment as the bundled-shard streaming case for prediction canonical-question groups.)
+> 4. **Schema validation** — applied chunk-by-chunk by the streaming writer, not at finalize. (Same SSOT-clean treatment
+>    as the bundled-shard streaming case for prediction canonical-question groups.)
 >
 > **Why the predecessor analysis (Option A/B/C) is now superseded:**
 >
 > - **Option A** (extend `add()` with `feature_family` kwarg) — `add()` is preserved for legacy callsites but new
->   features-* code MUST use `record_captured_from_counts(...)` per CLAUDE.md "no double SSOT". F6's deployment-UI
+>   features-\* code MUST use `record_captured_from_counts(...)` per CLAUDE.md "no double SSOT". F6's deployment-UI
 >   Phase 8B drilldown column was the user-visible benefit; that ships via either path.
-> - **Option B** (refactor df-flow per family + migrate to `record_captured(df, ...)`) — no longer needed. The
->   df-flow refactor (3-5 day estimate) is replaced by the 3-line callsite migration above.
-> - **Option C** (hybrid — A now, B later) — collapses to "ship the migration now via
->   `record_captured_from_counts`". No follow-up Phase 5 sub-todo needed.
+> - **Option B** (refactor df-flow per family + migrate to `record_captured(df, ...)`) — no longer needed. The df-flow
+>   refactor (3-5 day estimate) is replaced by the 3-line callsite migration above.
+> - **Option C** (hybrid — A now, B later) — collapses to "ship the migration now via `record_captured_from_counts`". No
+>   follow-up Phase 5 sub-todo needed.
 >
 > **No further action required on this issue doc.** Migration to `record_captured_from_counts` is queued in
-> `features_repo_consolidation_2026_05_08.md` F6 deferred-work row + the per-family rollout playbook. This issue
-> doc may be moved to `plans/archive/issues/` at the next archival sweep.
+> `features_repo_consolidation_2026_05_08.md` F6 deferred-work row + the per-family rollout playbook. This issue doc may
+> be moved to `plans/archive/issues/` at the next archival sweep.
 
 # F6 migration blocker — `record_captured()` requires DataFrame; legacy `add()` callsites don't have one
 

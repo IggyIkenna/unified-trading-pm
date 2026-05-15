@@ -146,9 +146,9 @@ Manifest writes go to the test bucket's `_index/availability_index.parquet`. SSO
 - `instruments-service` — reference data (~510 cells across 5 categories)
 - `market-tick-data-service` — tick ingest
 - `market-data-processing-service` — candles (~109 cells)
-- `features-service (delta-one family)`, `features-service (volatility family)`, `features-service (calendar family)`, `features-service (onchain family)`,
-  `features-service (sports family)`, `features-service (commodity family)`, `features-service (multi-timeframe family)`,
-  `features-service (cross-instrument family)`
+- `features-service (delta-one family)`, `features-service (volatility family)`, `features-service (calendar family)`,
+  `features-service (onchain family)`, `features-service (sports family)`, `features-service (commodity family)`,
+  `features-service (multi-timeframe family)`, `features-service (cross-instrument family)`
 
 No orchestrator runs these in parallel — each is invoked locally, one at a time, by the developer.
 

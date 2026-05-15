@@ -478,9 +478,8 @@ Without it: aggregate-only rows ship (1 row per day, AGGREGATE sentinel);
   @pytest.mark.requires_credentials; per-validator breakdown is dormant
 ```
 
-Status: `BLOCKED-CREDENTIALS`. Aggregate path fully operational at MTDS@`1ec3a46`
-(native_staking_handler.py — collect-native-staking-rates CLI command wired).
-Per-validator Helius path: scaffold is in place, awaiting API key.
+Status: `BLOCKED-CREDENTIALS`. Aggregate path fully operational at MTDS@`1ec3a46` (native_staking_handler.py —
+collect-native-staking-rates CLI command wired). Per-validator Helius path: scaffold is in place, awaiting API key.
 
 Plan ref: `solana_lst_native_staking_adapters_2026_05_14.md` Phase 5 item 4.
 
@@ -494,28 +493,33 @@ Discovered during CARRY_RECURSIVE_STAKED carry tracer verification run (2026-05-
 
 `gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-03/feature_group=lending_rates/features.parquet`
 shows 64 COMPOUND_V3 rows across Arbitrum/Base/Ethereum/Optimism — all have `borrow_apy = NaN`. Additionally, the
-`asset` column stores Comet contract addresses (hex) instead of token names (WETH/USDC), making asset-based filtering impossible.
+`asset` column stores Comet contract addresses (hex) instead of token names (WETH/USDC), making asset-based filtering
+impossible.
 
 Impact: `CARRY_RECURSIVE_STAKED@compound-lido-*` slots can never enter — borrow rate always missing.
 
-Root cause: features-service onchain COMPOUND_V3 handler does not compute `borrow_apy` from the Comet interest rate model.
-The COMPOUND V3 architecture differs from AAVE (base rate + utilization curve; borrowApy emitted via Comet's `getBorrowRate()`).
+Root cause: features-service onchain COMPOUND_V3 handler does not compute `borrow_apy` from the Comet interest rate
+model. The COMPOUND V3 architecture differs from AAVE (base rate + utilization curve; borrowApy emitted via Comet's
+`getBorrowRate()`).
 
 **Gap 2: KAMINO (Solana) lending rates not produced (P2)**
 
 No `lending_rates` data for KAMINO in features-onchain bucket for any date.
 `CARRY_RECURSIVE_STAKED@kamino-jito-hyperliquid-sol-1h-sol-v2-prod` skips on every run.
 
-KAMINO lending handler not implemented in features-service onchain. Combined with Solana JitoSOL LST gap (monthly cadence,
-Helius BLOCKED-CREDENTIALS), this slot has two separate blockers.
+KAMINO lending handler not implemented in features-service onchain. Combined with Solana JitoSOL LST gap (monthly
+cadence, Helius BLOCKED-CREDENTIALS), this slot has two separate blockers.
 
 **Issue doc**: `plans/active/issues/compound_kamino_lending_rates_gaps_2026_05_15.md`
 
 **Operator decision needed**:
-1. COMPOUND_V3 fix priority: confirm which Comet markets to target first (Ethereum WETH comet = most relevant for carry trade)
+
+1. COMPOUND_V3 fix priority: confirm which Comet markets to target first (Ethereum WETH comet = most relevant for carry
+   trade)
 2. KAMINO: already tracked under Solana Helius credential ask; separate KAMINO lending handler work needed regardless
 
 **Current gate status** (May-23 gate A — CARRY_RECURSIVE_STAKED batch e2e):
+
 - ✅ AAVE-LIDO v2/v3: 264/275 bps positive carry, 7/7 days in position (2026-04-03..04-09)
 - ✅ AAVE-ETHERFI v2/v3: 289/305 bps positive carry, 7/7 days in position
 - ❌ COMPOUND-LIDO: BLOCKED (NaN borrow_apy — see Gap 1)

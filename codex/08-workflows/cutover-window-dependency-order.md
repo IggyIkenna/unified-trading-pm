@@ -1,15 +1,21 @@
 # Cutover-window critical-path checkpoint timeline (2026-05-13 → 2026-05-23)
 
-**Created**: 2026-05-13 per operator scope clarification
-**Status**: SSOT for cutover-window orchestration. Binds slot scheduling + identifies parallel-track work that does NOT gate on data-pipeline serialization. Read at start of every slot 1 morning ledger sweep through 2026-05-23.
+**Created**: 2026-05-13 per operator scope clarification **Status**: SSOT for cutover-window orchestration. Binds slot
+scheduling + identifies parallel-track work that does NOT gate on data-pipeline serialization. Read at start of every
+slot 1 morning ledger sweep through 2026-05-23.
 
 ## Why this exists
 
-Operator direction 2026-05-13: _"even if we find mtds gonna take 5 days for backfill doesn't stop us getting to the end with code and tests for that asset group whilst waiting. not like everything should pause. we want to keep the 100-200 ai days per day worth of work going"_.
+Operator direction 2026-05-13: _"even if we find mtds gonna take 5 days for backfill doesn't stop us getting to the end
+with code and tests for that asset group whilst waiting. not like everything should pause. we want to keep the 100-200
+ai days per day worth of work going"_.
 
 The cutover window has **two interleaved tracks**:
-1. **Serial data-pipeline track** (manifest → instruments → MTDS → MDPS → features → ML/strategy backtest) — sequencing-bound.
-2. **Parallel code-and-tests track** (archetype code, UI, CI/CD, treasury, optimization, codex) — does NOT pause for the serial track. Runs concurrently.
+
+1. **Serial data-pipeline track** (manifest → instruments → MTDS → MDPS → features → ML/strategy backtest) —
+   sequencing-bound.
+2. **Parallel code-and-tests track** (archetype code, UI, CI/CD, treasury, optimization, codex) — does NOT pause for the
+   serial track. Runs concurrently.
 
 This doc identifies what's on which track + the checkpoint dates that bind cutover readiness.
 
@@ -68,51 +74,56 @@ This doc identifies what's on which track + the checkpoint dates that bind cutov
 
 ## Parallel-track work (does NOT gate on the serial track)
 
-Run RIGHT NOW (2026-05-13) through 2026-05-23 in parallel with the data-pipeline serial track. Mock data + UAC schema-locked surfaces are sufficient for these.
+Run RIGHT NOW (2026-05-13) through 2026-05-23 in parallel with the data-pipeline serial track. Mock data + UAC
+schema-locked surfaces are sufficient for these.
 
-| Workstream | Driver plan | Target completion | Owner type |
-|---|---|---|---|
-| Tier A archetype code finalization (all 6 families) | defi_master + strategy_and_dart_master | **2026-05-17** | strategy-service slot |
-| Tier B options-strategy code (architecture-driver) | strategy_archetype_taxonomy | **2026-05-21** | strategy-service slot |
-| `compute_optimization_mock_data_2026_05_13` Phases 0-5 | self | **2026-05-18** | features + execution + ml slots |
-| DART manual-trade UX refactor | `dart_manual_trade_ux_refactor_2026_05_13` | **2026-05-20** | UTS-UI slot |
-| Deployment UI lifecycle tabs | `deployment_ui_lifecycle_tabs_2026_05_08` | **2026-05-20** | UTS-UI slot |
-| CI/CD images vs tarball decision + main-branch QG green | `promote_workflow_may23_cli_path` + `governance_qg_automation_gaps_post_cutover` | **2026-05-18 (freeze gate)** | deployment-service slot |
-| Treasury / wallet provisioning verification (CMK already done) | `wallet_treasury_client_flow` + `api_keys_wallets` | **2026-05-21** | wallet-service slot |
-| `governance_qg_automation_gaps` pulled-forward | self | **2026-05-20** | platform slot |
-| `basefc_validation_flip` (75 calcs ClassVar) | self | **2026-05-19** | features slot |
-| `codex_doc_currency_and_consolidation` | self | **2026-05-22** | research slot |
-| 4 DeFi alert codes (`DEFI_AAVE_UTILIZATION_SPIKE` etc.) | `alerting_service_live_rules` | **2026-05-18** | features-onchain + alerting slot |
-| Treasury rollup endpoint `/api/treasury/rollup` | `api_keys_wallets` Phase 3.D | **2026-05-19** | deployment-api slot |
-| Risk simulations + disaster recovery scripts | `risk_simulations_limits_alerting`, `disaster_recovery_circuit_breakers` | **2026-05-20** | risk + DR slots |
+| Workstream                                                     | Driver plan                                                                      | Target completion            | Owner type                       |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------- | -------------------------------- |
+| Tier A archetype code finalization (all 6 families)            | defi_master + strategy_and_dart_master                                           | **2026-05-17**               | strategy-service slot            |
+| Tier B options-strategy code (architecture-driver)             | strategy_archetype_taxonomy                                                      | **2026-05-21**               | strategy-service slot            |
+| `compute_optimization_mock_data_2026_05_13` Phases 0-5         | self                                                                             | **2026-05-18**               | features + execution + ml slots  |
+| DART manual-trade UX refactor                                  | `dart_manual_trade_ux_refactor_2026_05_13`                                       | **2026-05-20**               | UTS-UI slot                      |
+| Deployment UI lifecycle tabs                                   | `deployment_ui_lifecycle_tabs_2026_05_08`                                        | **2026-05-20**               | UTS-UI slot                      |
+| CI/CD images vs tarball decision + main-branch QG green        | `promote_workflow_may23_cli_path` + `governance_qg_automation_gaps_post_cutover` | **2026-05-18 (freeze gate)** | deployment-service slot          |
+| Treasury / wallet provisioning verification (CMK already done) | `wallet_treasury_client_flow` + `api_keys_wallets`                               | **2026-05-21**               | wallet-service slot              |
+| `governance_qg_automation_gaps` pulled-forward                 | self                                                                             | **2026-05-20**               | platform slot                    |
+| `basefc_validation_flip` (75 calcs ClassVar)                   | self                                                                             | **2026-05-19**               | features slot                    |
+| `codex_doc_currency_and_consolidation`                         | self                                                                             | **2026-05-22**               | research slot                    |
+| 4 DeFi alert codes (`DEFI_AAVE_UTILIZATION_SPIKE` etc.)        | `alerting_service_live_rules`                                                    | **2026-05-18**               | features-onchain + alerting slot |
+| Treasury rollup endpoint `/api/treasury/rollup`                | `api_keys_wallets` Phase 3.D                                                     | **2026-05-19**               | deployment-api slot              |
+| Risk simulations + disaster recovery scripts                   | `risk_simulations_limits_alerting`, `disaster_recovery_circuit_breakers`         | **2026-05-20**               | risk + DR slots                  |
 
-**Insight for orchestrator**: 13 parallel workstreams above can ship without waiting for backfill. They're all schema-stable
-(use UAC canonical models + mock data) or UI-layer (don't touch backfill data).
+**Insight for orchestrator**: 13 parallel workstreams above can ship without waiting for backfill. They're all
+schema-stable (use UAC canonical models + mock data) or UI-layer (don't touch backfill data).
 
 ## Per-archetype ML/backtest sizing (operator clarification: "human takes ~0.5 day per backtest/strategy/ML optimization")
 
 Once data-pipeline serial track completes (2026-05-18 EOD), the parallel ML training + strategy backtest workstream:
 
-| Tier A archetype family | Instances (multiple strategies + concurrent loops) | Per-instance cal-AI-days (0.5 day per operator estimate) | Total cal-AI-days |
-|---|---:|---:|---:|
-| ml-continuous (CeFi 30 coins + ES) | ~30 coins × walk-forward loops | 0.5 × ~10 concurrent | ~5.0 |
-| ml-settled (Sports Top-5 EU × 4 markets) | ~20 instances (5 leagues × 4 markets) | 0.5 × ~10 concurrent | ~5.0 |
-| arbitrage-funding-rate (CeFi 30 × 6 venues) | ~6 venue groups, per-pair loops | 0.5 × ~6 concurrent | ~3.0 |
-| arbitrage-sports-book (Polymarket vs Betfair Top-5 EU) | ~5 leagues × 4 markets | 0.5 × ~4 concurrent | ~2.0 |
-| arbitrage-event-markets (Polymarket vs CME) | 1-3 venue-pair groups | 0.5 × ~2 concurrent | ~1.0 |
-| defi-carry-family (7 archetypes incl. CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION) | ~7 archetypes | 0.5 × ~7 concurrent | ~3.5 |
-| **TOTAL Tier A backtest/ML completion** | | | **~19.5 cal-AI-days** |
+| Tier A archetype family                                                               | Instances (multiple strategies + concurrent loops) | Per-instance cal-AI-days (0.5 day per operator estimate) |     Total cal-AI-days |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------: | -------------------------------------------------------: | --------------------: |
+| ml-continuous (CeFi 30 coins + ES)                                                    |                     ~30 coins × walk-forward loops |                                     0.5 × ~10 concurrent |                  ~5.0 |
+| ml-settled (Sports Top-5 EU × 4 markets)                                              |              ~20 instances (5 leagues × 4 markets) |                                     0.5 × ~10 concurrent |                  ~5.0 |
+| arbitrage-funding-rate (CeFi 30 × 6 venues)                                           |                    ~6 venue groups, per-pair loops |                                      0.5 × ~6 concurrent |                  ~3.0 |
+| arbitrage-sports-book (Polymarket vs Betfair Top-5 EU)                                |                             ~5 leagues × 4 markets |                                      0.5 × ~4 concurrent |                  ~2.0 |
+| arbitrage-event-markets (Polymarket vs CME)                                           |                              1-3 venue-pair groups |                                      0.5 × ~2 concurrent |                  ~1.0 |
+| defi-carry-family (7 archetypes incl. CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION) |                                      ~7 archetypes |                                      0.5 × ~7 concurrent |                  ~3.5 |
+| **TOTAL Tier A backtest/ML completion**                                               |                                                    |                                                          | **~19.5 cal-AI-days** |
 
-At measured workspace throughput ~150-250 cal-AI-days/day, ~19.5 cal-AI-days = **<1 day wall-clock with concurrent slot fan-out**.
+At measured workspace throughput ~150-250 cal-AI-days/day, ~19.5 cal-AI-days = **<1 day wall-clock with concurrent slot
+fan-out**.
 
-**Critical implication**: from 2026-05-18 EOD (data ready) to 2026-05-20 (paper-trade dress rehearsal start), full Tier A backtest/ML completion fits in 1-2 calendar days. Even with the 5-yr CeFi/TradFi/Sports extension.
+**Critical implication**: from 2026-05-18 EOD (data ready) to 2026-05-20 (paper-trade dress rehearsal start), full Tier
+A backtest/ML completion fits in 1-2 calendar days. Even with the 5-yr CeFi/TradFi/Sports extension.
 
 ## Slot scheduling guidance (for slot 1 orchestrator)
 
 ### Days 1-2 (2026-05-13 → 2026-05-14) — PARALLEL TRACK ONLY (real backfill not started yet)
 
 Allocate slots heavily to parallel-track work — there's no data-pipeline dependency to wait on yet:
-- 2 slots → `compute_optimization_mock_data` Phases 0-2 (verify run_2yr_config_grid_backtest + features parallel batching)
+
+- 2 slots → `compute_optimization_mock_data` Phases 0-2 (verify run_2yr_config_grid_backtest + features parallel
+  batching)
 - 1 slot → `dart_manual_trade_ux_refactor` (UTS-UI extraction)
 - 1 slot → `deployment_ui_lifecycle_tabs`
 - 1 slot → Tier B options-strategy code (architecture-driver, post-cutover backtest but code ships now)
@@ -156,45 +167,60 @@ Allocate slots heavily to parallel-track work — there's no data-pipeline depen
 ## What this means for the "do plans encode these checkpoints?" question
 
 **Currently encoded** (good):
-- Manifest freeze gate 2026-05-15 in `manifest_schema_final_gate_2026_05_09` + `code_freeze_migrate_backfill_sequencing` Phase 1
+
+- Manifest freeze gate 2026-05-15 in `manifest_schema_final_gate_2026_05_09` + `code_freeze_migrate_backfill_sequencing`
+  Phase 1
 - Backfill window 2026-05-15→2026-05-19 in `code_freeze_migrate_backfill_sequencing` Phase 2-3
 - Tier A archetype scope in `codex/09-strategy/mvp-universe-per-asset-group.md` (just shipped 2026-05-13)
 - Compute optimization parallel track in `compute_optimization_mock_data_2026_05_13`
 - 7 pulled-forward May-23 items in respective plan frontmatters (2026-05-13 batch)
 
 **Not yet encoded** (action items spawned by this doc):
+
 - Per-asset_group ML kickoff dates (2026-05-19) — need to be added to `ml_and_features_master_2026_05_07.md`
 - DeFi strategy + execution backtest start dates (2026-05-19) — need to be added to `defi_master_2026_05_07.md`
-- Live wallet funding + CeFi credentials gate (2026-05-20) — need explicit dates in `wallet_treasury_client_flow_2026_05_10.md`
-- DART UI + deployment UI ready (2026-05-20) — need explicit dates in `dart_manual_trade_ux_refactor_2026_05_13` + `deployment_ui_lifecycle_tabs`
+- Live wallet funding + CeFi credentials gate (2026-05-20) — need explicit dates in
+  `wallet_treasury_client_flow_2026_05_10.md`
+- DART UI + deployment UI ready (2026-05-20) — need explicit dates in `dart_manual_trade_ux_refactor_2026_05_13` +
+  `deployment_ui_lifecycle_tabs`
 - CI/CD vs tarball decision (2026-05-18) — need explicit milestone in `promote_workflow_may23_cli_path`
 
-These are PENDING — the per-plan frontmatter currently says `deadline: 2026-05-23` for all, which is correct but doesn't surface the intermediate milestones. Suggested action: orchestrator ping epic owners to add per-checkpoint dates in their plan bodies.
+These are PENDING — the per-plan frontmatter currently says `deadline: 2026-05-23` for all, which is correct but doesn't
+surface the intermediate milestones. Suggested action: orchestrator ping epic owners to add per-checkpoint dates in
+their plan bodies.
 
 ## Cross-references
 
-- **MVP universe** (Tier A vs Tier B scope): [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)
-- **Compute optimization parallel track**: [`plans/active/compute_optimization_mock_data_2026_05_13.md`](../../plans/active/compute_optimization_mock_data_2026_05_13.md)
-- **Manifest freeze gate**: [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
-- **Code-freeze cutover sequencing**: [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-- **DeFi archetype owner**: [`plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md) Fork 1
-- **ML training**: [`plans/epics/ml_and_features_master_2026_05_07.md`](../../plans/epics/ml_and_features_master_2026_05_07.md)
-- **Master umbrella**: [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
+- **MVP universe** (Tier A vs Tier B scope):
+  [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)
+- **Compute optimization parallel track**:
+  [`plans/active/compute_optimization_mock_data_2026_05_13.md`](../../plans/active/compute_optimization_mock_data_2026_05_13.md)
+- **Manifest freeze gate**:
+  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+- **Code-freeze cutover sequencing**:
+  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+- **DeFi archetype owner**: [`plans/active/defi_master_2026_05_07.md`](../../plans/active/defi_master_2026_05_07.md)
+  Fork 1
+- **ML training**:
+  [`plans/epics/ml_and_features_master_2026_05_07.md`](../../plans/epics/ml_and_features_master_2026_05_07.md)
+- **Master umbrella**:
+  [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 
 ### Master plan Group F items — sequencing ownership
 
 This document is the SSOT for cutover-window stage ordering. The following master plan Group F items depend on the
 checkpoints and parallelization insights defined above:
 
-| Master plan item | What gates it here | Checkpoint |
-|---|---|---|
-| **F.17** — `carry_staked_basis` end-to-end batch run | Pipeline serial track 2026-05-18→2026-05-19 (ML/backtest kickoff slot); compute-optimization Phase 1 fan-out wrapper needed for config-grid | `code_freeze` Phase 3.3–3.5 complete |
-| **F.18** — 2-year P&L variance config-grid batch run | Requires pipeline serial track through features-service + `compute_optimization` Phase 1 (per-day fan-out wrapper); VM sizing per `codex/06-coding-standards/performance-targets.md` § Acceptable targets | `code_freeze` Phase 3 complete + optimization Phase 1 |
-| **F.20** — Execution-service testnet validation | Parallel-track (does NOT gate on data-pipeline serial track) — runs 2026-05-19→2026-05-20 via execution-alpha measurement harness (`compute_optimization` Phase 3) | Days 6-7 window |
-| **F.21** — Batch-vs-live reconciliation within tolerance | Last step: requires live-mode pipeline running (2026-05-22+); execution-alpha delta is the input for tolerance comparison | Week 3 cutover (post 2026-05-22) |
+| Master plan item                                         | What gates it here                                                                                                                                                                                        | Checkpoint                                            |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **F.17** — `carry_staked_basis` end-to-end batch run     | Pipeline serial track 2026-05-18→2026-05-19 (ML/backtest kickoff slot); compute-optimization Phase 1 fan-out wrapper needed for config-grid                                                               | `code_freeze` Phase 3.3–3.5 complete                  |
+| **F.18** — 2-year P&L variance config-grid batch run     | Requires pipeline serial track through features-service + `compute_optimization` Phase 1 (per-day fan-out wrapper); VM sizing per `codex/06-coding-standards/performance-targets.md` § Acceptable targets | `code_freeze` Phase 3 complete + optimization Phase 1 |
+| **F.20** — Execution-service testnet validation          | Parallel-track (does NOT gate on data-pipeline serial track) — runs 2026-05-19→2026-05-20 via execution-alpha measurement harness (`compute_optimization` Phase 3)                                        | Days 6-7 window                                       |
+| **F.21** — Batch-vs-live reconciliation within tolerance | Last step: requires live-mode pipeline running (2026-05-22+); execution-alpha delta is the input for tolerance comparison                                                                                 | Week 3 cutover (post 2026-05-22)                      |
 
 ## Continuous verification
 
-Read at slot 1 main morning ledger sweep daily through 2026-05-23. Update on any sequencing change (e.g., if MTDS backfill drags +1 day, push ML kickoff +1 day and update both this doc + master plan).
+Read at slot 1 main morning ledger sweep daily through 2026-05-23. Update on any sequencing change (e.g., if MTDS
+backfill drags +1 day, push ML kickoff +1 day and update both this doc + master plan).
 
 Last reviewed: 2026-05-13. Next review: every morning slot 1 boot through 2026-05-23.

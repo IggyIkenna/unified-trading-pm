@@ -607,7 +607,8 @@ works; Firestore write + read cycle succeeds against real GCP project.
 pre-flight pipeline ships there).
 
 - [x] [AGENT] P0. **NEW `POST /promote/{strategy_id}/{candidate_manifest_id}` endpoint** in
-      `deployment-api/deployment_api/services/promote.py` (NEW file). — deployment-api@fe2a9c5; utl@649d5c03 (3 new promote events)
+      `deployment-api/deployment_api/services/promote.py` (NEW file). — deployment-api@fe2a9c5; utl@649d5c03 (3 new
+      promote events)
   - Body: `{target_phase: StrategyMaturityPhase, promoter: str, reason: str}`.
   - Reads `MinimalCandidateManifest` from Firestore.
   - Pre-flight checks (MINIMUM viable for May-23 — full pipeline post-cutover):
@@ -620,9 +621,11 @@ pre-flight pipeline ships there).
     (target_phase=LIVE_EARLY) via UTL bare-string events (UAC migration is post-cutover).
   - On fail: 412 Precondition Failed with failed-gates list; emits `STRATEGY_PROMOTE_REJECTED` event.
 - [x] [AGENT] P0. **Auth gate**: Firebase custom claim `execution-full` required (existing pattern from
-      `LiveConfirmDialog`). — deployment-api@fe2a9c5 (X-API-Key backend gate; Firebase execution-full enforced at UI layer per May-23 scope)
+      `LiveConfirmDialog`). — deployment-api@fe2a9c5 (X-API-Key backend gate; Firebase execution-full enforced at UI
+      layer per May-23 scope)
 - [x] [AGENT] P0. **Sync vs async**: 200 OK with new state for sync (pre-flight passes synchronously); endpoint also
-      enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers). — deployment-api@fe2a9c5 (synchronous; VM-launch enqueue is post-cutover Phase 9)
+      enqueues VM-launch job (consumed by next paper/live VM cycle from Phase 1 launchers). — deployment-api@fe2a9c5
+      (synchronous; VM-launch enqueue is post-cutover Phase 9)
 
 **U3 done definition**: endpoint exists; pre-flight gates wire to existing services; smoke test promotes a candidate
 from PAPER_1D → LIVE_EARLY with all gates green.
@@ -642,14 +645,12 @@ returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
 - [x] [AGENT] P0. **Update
       [`unified-trading-system-ui/components/promote/promote-flow-modal.tsx`](../../../unified-trading-system-ui/components/promote/promote-flow-modal.tsx)**
       — `onPromote: (targetStage) => Promise<void>` resolves on backend response; UI shows optimistic state then
-      converges via SSE/event-stream subscription to lifecycle events.
-      (ui@76f9e186 — strategy-detail-page-client.tsx onPromote calls real promoteCandidate(); modal already async-awaited)
+      converges via SSE/event-stream subscription to lifecycle events. (ui@76f9e186 — strategy-detail-page-client.tsx
+      onPromote calls real promoteCandidate(); modal already async-awaited)
 - [x] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
-      read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests).
-      (ui@90896373 — paper-trading-tab + champion-challenger-tab wired to useStrategyRuns; 7 non-runs tabs unchanged)
-- [x] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
-      (deployment-api@b5a24a0 demote→REGRESSED + override→ADVANCED endpoints; ui@6e705085 bridge fires
-      demote/override backend calls fire-and-forget; Promote was already wired ui@76f9e186)
+      read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests). (ui@90896373 —
+      paper-trading-tab + champion-challenger-tab wired to useStrategyRuns; 7 non-runs tabs unchanged)
+- [ ] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend.
 - [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI
       converges.
 
@@ -665,14 +666,14 @@ auto-launches via Phase 1 launcher → STARTED event observable in event archive
 / live) wired to real backend.
 
 - [x] [AGENT] P0. **Side-by-side comparison** — batch / paper / live P&L curves, fills blotter, events, position
-      trajectory, risk metrics in tri-pane canvas.
-      (ui@0c9fb81a — DartThreeWayView: 3-pane batch/paper/live polling real backend every 30s)
+      trajectory, risk metrics in tri-pane canvas. (ui@0c9fb81a — DartThreeWayView: 3-pane batch/paper/live polling real
+      backend every 30s)
 - [x] [AGENT] P0. **Per-mode views** pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current
-      paper/live to add batch).
-      (ui@0c9fb81a — DartThreeWayView has per-mode lane tabs; dart-terminal/page.tsx renders it)
+      paper/live to add batch). (ui@0c9fb81a — DartThreeWayView has per-mode lane tabs; dart-terminal/page.tsx renders
+      it)
 - [x] [AGENT] P0. **Shared filter scope** — asset_group / instrument_type / strategy_family / archetype filters apply
-      across all three lanes simultaneously.
-      (ui@0c9fb81a — strategyId prop + limit apply uniformly across all 3 lanes per DartThreeWayView)
+      across all three lanes simultaneously. (ui@0c9fb81a — strategyId prop + limit apply uniformly across all 3 lanes
+      per DartThreeWayView)
 - [x] [AGENT] P0. **Wired to real backend** (not mock fixtures) — each lane reads from Phase U2 mode-data API.
       (ui@0c9fb81a — dart-client.ts fetchStrategyRuns calls /api/strategy/{id}/runs via apiFetch; mock handler for dev)
 - [ ] [SCRIPT] P0. **Playwright e2e** covers comparison rendering with real data per lane.
@@ -687,12 +688,11 @@ for Group G item 23.**
 - [x] [AGENT] P0. **`ManualTradeGateDialog` component** in unified-trading-system-ui:
   - Renders pre-trade preview (margin / position-limit / worst-case loss / venue / instrument / size / direction).
   - Approve / Deny / Timeout (default 30s) buttons.
-  - Emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events via deployment-api.
-  (ui@13b94ca9 — ManualTradeGateDialog with 1s poll, approve/reject per card, 3 vitest tests; dart-terminal wired)
-- [x] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
+  - Emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events via deployment-api. (ui@13b94ca9 — ManualTradeGateDialog with 1s
+    poll, approve/reject per card, 3 vitest tests; dart-terminal wired)
+- [ ] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
       execution-service holds in manual-pending queue → on `MANUAL_APPROVED` event, unholds and executes; on
       `MANUAL_REJECTED` or timeout, drops + emits cancellation.
-      (deployment-api@fbd77f7 — execution_service_url config + httpx forwarding for approve/reject + 6 unit tests)
 - [ ] [SCRIPT] P0. **Playwright e2e** — operator-approve flow against real testnet trade (uses Phase 4.B perp testnet
       wiring).
 
@@ -723,31 +723,29 @@ from venue testnet.
 These codex docs ride with the phases that produce them — NOT batched at plan-end.
 
 - [x] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
-      track SSOT; per-mode operator pre-flight checklist; ships with Phase 2.
-      (pm@this-commit — created with dual-track overview, pre-flight checklists, VM launcher convention)
+      track SSOT; per-mode operator pre-flight checklist; ships with Phase 2. (pm@this-commit — created with dual-track
+      overview, pre-flight checklists, VM launcher convention)
 - [x] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
       primary + minimal UI parallel); full UI consolidation + state-machine + cross-service auto-registration deferred
-      to post-cutover plan; ships with Phase 7.
-      (pm@this-commit — phase map, state machine, UTL events, deferred items table)
+      to post-cutover plan; ships with Phase 7. (pm@this-commit — phase map, state machine, UTL events, deferred items
+      table)
 - [x] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
-      convention; ships with Phase 1.
-      (already existed — created in prior slot session)
+      convention; ships with Phase 1. (already existed — created in prior slot session)
 - [x] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23
-      subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1.
-      (already existed — created with Phase U1 work)
+      subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1. (already existed — created with
+      Phase U1 work)
 - [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
-      with Phase U5+U6.
-      (already existed — created with Phase U5 work)
+      with Phase U5+U6. (already existed — created with Phase U5 work)
 - [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` —
       `/promote/{strategy_id}/{manifest_id}` API + minimal pre-flight gates (May-23 subset); post-cutover Phase 9
-      extends with full pre-flight pipeline; ships with Phase U3.
-      (pm@this-commit — endpoint spec, 5 gates, event emission, source location table)
+      extends with full pre-flight pipeline; ships with Phase U3. (pm@this-commit — endpoint spec, 5 gates, event
+      emission, source location table)
 - [x] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification
       result; CEFFU subsections explicitly DEFERRED with named successor (post-cutover plan); ships with Phase 4.A.
       (file already has Copper config table + CEFFU DEFERRED banner; Phase 4.A SCRIPT item pending operator)
 - [x] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
-      launcher patterns; ships with Phase 1.
-      (already updated — strategy-paper- / strategy-live- rows in launcher table, Phase 1 work)
+      launcher patterns; ships with Phase 1. (already updated — strategy-paper- / strategy-live- rows in launcher table,
+      Phase 1 work)
 - [x] [AGENT] P0. **UPDATE** CLAUDE.md — add **"Promote Workflow Path"** key rule:
   - "May-23 cutover = dual-track. PRIMARY = operator-CLI via `e2e-testing/scripts/defi/run-paper.sh` + `run-live.sh` +
     `colocated_engine.py` (safety net). SECONDARY = UI promote pipeline (Promote button → POST /promote →

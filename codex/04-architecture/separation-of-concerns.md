@@ -49,59 +49,59 @@ import surface specification.
 > **Invariant**: `position-balance-monitor-service` (PBMS) is the **single canonical ledger** for positions + balances
 > in the workspace. Every consumer reads positions through PBMS — never a local copy.
 
-Equivalent in shape to the existing CLAUDE.md rule for reference data (*"services use instruments-service for reference
-data, not MTDS"*), but applied to the positions axis.
+Equivalent in shape to the existing CLAUDE.md rule for reference data (_"services use instruments-service for reference
+data, not MTDS"_), but applied to the positions axis.
 
 ### The rule
 
 - PBMS owns the canonical position / balance ledger. Sources of truth: live fills from execution-service +
-  custody-provider `get_balance()` pings (see [`custody-providers.md`](custody-providers.md) §11) + manual
-  ledger overrides via DART.
+  custody-provider `get_balance()` pings (see [`custody-providers.md`](custody-providers.md) §11) + manual ledger
+  overrides via DART.
 - Every consumer service reads positions from PBMS via its query API + Pub/Sub NAV snapshots — **never** maintains a
   parallel position store, a "local cache of authoritative positions," or a private fills ledger.
 - The dual-projection that PBMS exposes externally:
-  - **Balances projection** — per-(wallet, asset, venue) ladder reconciled against custody + venue reads on the
-    5-min ping cadence (BALANCE_DRIFT alerting per [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md)).
-  - **Position-lineage projection** — per-`client_id` (top-level) and per-`client_order_id` (per-order) lineage
-    consumed by strategy / risk / pnl-attribution / batch-live-reconciliation. Per slot 8 audit PB-3
-    (`audit-logging.md` IMMEDIATE), execution-side audit records are *order-keyed* (the third arg to
-    `persist_audit_log()` is currently `client_order_id`); the long-term shape threads real `client_id` through
-    so both projections key off the same axis.
+  - **Balances projection** — per-(wallet, asset, venue) ladder reconciled against custody + venue reads on the 5-min
+    ping cadence (BALANCE_DRIFT alerting per
+    [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md)).
+  - **Position-lineage projection** — per-`client_id` (top-level) and per-`client_order_id` (per-order) lineage consumed
+    by strategy / risk / pnl-attribution / batch-live-reconciliation. Per slot 8 audit PB-3 (`audit-logging.md`
+    IMMEDIATE), execution-side audit records are _order-keyed_ (the third arg to `persist_audit_log()` is currently
+    `client_order_id`); the long-term shape threads real `client_id` through so both projections key off the same axis.
 
 ### Consumer matrix
 
-| Consumer | Reads positions via | Writes positions? |
-|---|---|---|
-| strategy-service | PBMS query API + Pub/Sub NAV snapshots | NO |
-| risk-and-exposure-service | PBMS query API (pre-flight checks) | NO |
-| pnl-attribution-service | PBMS query API + execution fills | NO |
-| batch-live-reconciliation-service | PBMS query API (canonical baseline for batch ↔ live diff) | NO |
-| execution-service | publishes fills → PBMS state-update path | NO (publishes, does not own state) |
-| position-balance-monitor-service | OWNS state; absorbs fills + custody pings | YES (sole writer) |
+| Consumer                          | Reads positions via                                        | Writes positions?                  |
+| --------------------------------- | ---------------------------------------------------------- | ---------------------------------- |
+| strategy-service                  | PBMS query API + Pub/Sub NAV snapshots                     | NO                                 |
+| risk-and-exposure-service         | PBMS query API (pre-flight checks)                         | NO                                 |
+| pnl-attribution-service           | PBMS query API + execution fills                           | NO                                 |
+| batch-live-reconciliation-service | PBMS query API (canonical baseline for batch ↔ live diff) | NO                                 |
+| execution-service                 | publishes fills → PBMS state-update path                   | NO (publishes, does not own state) |
+| position-balance-monitor-service  | OWNS state; absorbs fills + custody pings                  | YES (sole writer)                  |
 
 ### Anti-patterns (banned)
 
-- Any non-PBMS service holding `positions: dict[str, Position]` / `class PositionStore` / `class FillsLedger`
-  as long-lived authoritative state. Caches with a TTL bounded by the next PBMS query are acceptable; long-lived
-  shadow ledgers are not.
-- Branching on `OperationalMode` inside PBMS source (PBMS is mode-blind by construction — see slot 8 audit PB-19
-  P2 for the POST_CUTOVER QG ratchet that flags `if mode == "live"` in `position_balance_monitor_service/`).
-- Strategy / risk / execution code that bypasses PBMS to read venue balances directly during the trading hot
-  path. Out-of-band balance reads for diagnostics are fine; trading decisions go through PBMS.
+- Any non-PBMS service holding `positions: dict[str, Position]` / `class PositionStore` / `class FillsLedger` as
+  long-lived authoritative state. Caches with a TTL bounded by the next PBMS query are acceptable; long-lived shadow
+  ledgers are not.
+- Branching on `OperationalMode` inside PBMS source (PBMS is mode-blind by construction — see slot 8 audit PB-19 P2 for
+  the POST_CUTOVER QG ratchet that flags `if mode == "live"` in `position_balance_monitor_service/`).
+- Strategy / risk / execution code that bypasses PBMS to read venue balances directly during the trading hot path.
+  Out-of-band balance reads for diagnostics are fine; trading decisions go through PBMS.
 
 ### Composes with
 
-- [`batch-live-architecture.md`](batch-live-architecture.md) — PBMS is mode-blind; the 4-seam SSOT applies
-  identically across batch / paper / live.
-- [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — PBMS is on the *mode-blind* side of the
-  seam (position state-update happens identically; only the fill source differs).
-- [`reconciliation-resolution.md`](reconciliation-resolution.md) — batch-live reconciliation reads PBMS as the
-  positions baseline (see § "Reconciliation contract — batch ↔ live").
-- [`custody-providers.md`](custody-providers.md) §11 — custody-ping loop is the upstream signal that keeps the
-  balances projection honest.
+- [`batch-live-architecture.md`](batch-live-architecture.md) — PBMS is mode-blind; the 4-seam SSOT applies identically
+  across batch / paper / live.
+- [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — PBMS is on the _mode-blind_ side of the seam
+  (position state-update happens identically; only the fill source differs).
+- [`reconciliation-resolution.md`](reconciliation-resolution.md) — batch-live reconciliation reads PBMS as the positions
+  baseline (see § "Reconciliation contract — batch ↔ live").
+- [`custody-providers.md`](custody-providers.md) §11 — custody-ping loop is the upstream signal that keeps the balances
+  projection honest.
 
 ### Pending follow-ups (slot 8 audit)
 
-- **PB-19 POST_CUTOVER** — codify a QG ratchet that statically flags `OperationalMode` / `pipeline_mode` branching
-  in `position_balance_monitor_service/` engine/core. Mode-blindness is a CRITICAL invariant per CLAUDE.md
-  `batch = live`; today it's asserted in prose but unenforced.
+- **PB-19 POST_CUTOVER** — codify a QG ratchet that statically flags `OperationalMode` / `pipeline_mode` branching in
+  `position_balance_monitor_service/` engine/core. Mode-blindness is a CRITICAL invariant per CLAUDE.md `batch = live`;
+  today it's asserted in prose but unenforced.

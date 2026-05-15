@@ -44,13 +44,13 @@ execution:
 ### State of Phase 1.2A + 1.2A.1 (recap)
 
 - Phase 1.2A (MDPS@`afdb754`) migrated `write_candle_parquet`'s manifest verb from legacy v4 `manifest.add(...)` to v5
-  `record_captured(row_key, df=..., ...)`. **Both** the chain-bundle path (`_streaming_write_per_tf →
-_write_candles → write_candle_parquet`) and the per-instrument path (`_process_instrument_file → _write_candles
-→ write_candle_parquet`) NOW emit the same v5 manifest shape — Phase 1.2A successfully eliminated the manifest verb
-  dual-SSOT.
-- Phase 1.2A.1 (MDPS@`1cdcda7`) added `_stamp_candle_available_at` at the head of `write_candle_parquet` so every
-  candle DataFrame carries `available_at` before reaching `record_captured`'s `assert_available_at_present` guard.
-  Production candle writes can resume.
+  `record_captured(row_key, df=..., ...)`. **Both** the chain-bundle path
+  (`_streaming_write_per_tf → _write_candles → write_candle_parquet`) and the per-instrument path
+  (`_process_instrument_file → _write_candles → write_candle_parquet`) NOW emit the same v5 manifest shape — Phase 1.2A
+  successfully eliminated the manifest verb dual-SSOT.
+- Phase 1.2A.1 (MDPS@`1cdcda7`) added `_stamp_candle_available_at` at the head of `write_candle_parquet` so every candle
+  DataFrame carries `available_at` before reaching `record_captured`'s `assert_available_at_present` guard. Production
+  candle writes can resume.
 
 ### Phase 1.2B as-spec'd in the plan body (lines 217-253) creates a NEW dual-SSOT
 
@@ -73,10 +73,10 @@ candle_writer.py:356). The per-instrument path keeps calling `_write_candles →
 manifest rows via `canonical_writer.write_candle_parquet`'s inline `ManifestWriter.record_captured`. The manifest **verb
 is identical** (Phase 1.2A success) but the **emission code path is divergent**:
 
-| Path             | StreamingParquetWriter usage           | record_captured callsite                   | Schema-drift detection                      | Cluster validation kwargs                                          |
-| ---------------- | -------------------------------------- | ------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------ |
-| Chain-bundle 1.2B | UTL streaming lifecycle (open/write/close) | UTL `close_candle_writer:356`              | Yes (UTL `_fingerprint` per-chunk)          | Yes (UTL handle.expected_root_clusters)                            |
-| Per-instrument   | One-shot (write_chunk(df), close)      | `canonical_writer.py:546` inline           | No (single chunk; no drift possible)        | No (write_candle_parquet doesn't accept cluster kwargs)            |
+| Path              | StreamingParquetWriter usage               | record_captured callsite         | Schema-drift detection               | Cluster validation kwargs                               |
+| ----------------- | ------------------------------------------ | -------------------------------- | ------------------------------------ | ------------------------------------------------------- |
+| Chain-bundle 1.2B | UTL streaming lifecycle (open/write/close) | UTL `close_candle_writer:356`    | Yes (UTL `_fingerprint` per-chunk)   | Yes (UTL handle.expected_root_clusters)                 |
+| Per-instrument    | One-shot (write_chunk(df), close)          | `canonical_writer.py:546` inline | No (single chunk; no drift possible) | No (write_candle_parquet doesn't accept cluster kwargs) |
 
 This is the **"No double SSOT in data-saving methodology"** rule violation flagged in CLAUDE.md — "Where two paths
 produce the same outcome, one is deleted." Two emission code paths mean future bugs (e.g. a future change to the
@@ -86,12 +86,13 @@ manifest contract) need to be applied in both places, with high risk of drift.
 
 The plan-of-record Phase 1.1 lines 49-61 already imply the correct shape:
 
-> "the existing `write_candle_parquet` is a one-shot convenience wrapper that does
-> `open → write_chunk(df) → close` for callers that already have a fully-materialised DataFrame."
+> "the existing `write_candle_parquet` is a one-shot convenience wrapper that does `open → write_chunk(df) → close` for
+> callers that already have a fully-materialised DataFrame."
 
-The right Phase 1.2B is therefore **migrate `write_candle_parquet` itself to use UTL `open_candle_writer / write_chunk /
-close_candle_writer` internally**. Then BOTH paths (chain-bundle calling either `_write_candles → write_candle_parquet`
-OR the streaming variant directly) flow through the SAME UTL lifecycle. Only ONE emission code path; no dual-SSOT.
+The right Phase 1.2B is therefore **migrate `write_candle_parquet` itself to use UTL
+`open_candle_writer / write_chunk / close_candle_writer` internally**. Then BOTH paths (chain-bundle calling either
+`_write_candles → write_candle_parquet` OR the streaming variant directly) flow through the SAME UTL lifecycle. Only ONE
+emission code path; no dual-SSOT.
 
 The chain-bundle streaming benefit (peak memory ≈ one slice in flight) requires the open/write/close lifecycle to be
 externally driven from `_streaming_write_per_tf`. To preserve that benefit AND eliminate the dual-SSOT, the migration
@@ -128,25 +129,26 @@ harmonisation, not verb migration; the verb migration already shipped in Phase 1
 
 ## What I shipped
 
-1. **UTL@`6ce59900`** — exported `open_candle_writer / write_chunk / close_candle_writer / SchemaDriftError /
-   CandleWriterHandle` from `unified_trading_library/streaming/__init__.py`. Pre-requisite for any MDPS consumer
-   wire-in; the deep path was the only public surface before this commit. Discovery captured + fixed (Case 1 finding
-   per Findings Triage). No behaviour change.
+1. **UTL@`6ce59900`** — exported
+   `open_candle_writer / write_chunk / close_candle_writer / SchemaDriftError / CandleWriterHandle` from
+   `unified_trading_library/streaming/__init__.py`. Pre-requisite for any MDPS consumer wire-in; the deep path was the
+   only public surface before this commit. Discovery captured + fixed (Case 1 finding per Findings Triage). No behaviour
+   change.
 2. **This issue doc** — Case 5 architectural concern surfaced for operator triage.
 
 ## Why it matters
 
 - **Live-pipeline Phase 4 stays blocked.** The umbrella plan (`live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 4)
   re-uses the UTL lifecycle this plan ships in Phase 1.2B for live-mode candle aggregation. If Phase 1.2B lands as a
-  dual-SSOT shape, live-pipeline Phase 4 inherits the divergence — every future MDPS write-path change has to be
-  applied twice. Resolving the architectural shape NOW (before Phase 1.2B ships) is cheaper than refactoring after.
-- **May-23 cutover deadline.** Group F items 21+22 are MDPS streaming + memory-backpressure prereqs. 13 days remain.
-  The right shape ship is a 4-6 hour decision; the wrong shape ship is a multi-day refactor under deadline pressure.
+  dual-SSOT shape, live-pipeline Phase 4 inherits the divergence — every future MDPS write-path change has to be applied
+  twice. Resolving the architectural shape NOW (before Phase 1.2B ships) is cheaper than refactoring after.
+- **May-23 cutover deadline.** Group F items 21+22 are MDPS streaming + memory-backpressure prereqs. 13 days remain. The
+  right shape ship is a 4-6 hour decision; the wrong shape ship is a multi-day refactor under deadline pressure.
 - **`write_candle_parquet`-internal migration is also the live-pipeline-aggregator integration point.** The future live
-  streaming aggregator (live_pipeline plan Phase 4) feeds candles into this same write path. If we migrate
+  streaming aggregator (live*pipeline plan Phase 4) feeds candles into this same write path. If we migrate
   `write_candle_parquet` to UTL lifecycle internally NOW, the live aggregator's integration is "call
   `open_candle_writer` directly + use the existing canonical_writer plumbing" — clean. If we don't, the live aggregator
-  has to re-derive `_infer_*` / `_stamp_candle_available_at` / `lookup_mdps_contract` plumbing.
+  has to re-derive `\_infer*\*`/`\_stamp_candle_available_at`/`lookup_mdps_contract` plumbing.
 
 ## Recommended decision
 
@@ -161,16 +163,16 @@ phases:
    - Replace `StreamingParquetWriter` direct usage at `canonical_writer.py:476-485` with
      `open_candle_writer + write_chunk(df) + close_candle_writer` — convert the one-shot path to a 1-chunk lifecycle
      call.
-   - Eliminate the inline `manifest_writer.record_captured(...)` block (lines 540-569) — `close_candle_writer` does
-     this now.
+   - Eliminate the inline `manifest_writer.record_captured(...)` block (lines 540-569) — `close_candle_writer` does this
+     now.
    - Preserve all `_infer_*` / `_stamp_candle_available_at` / `lookup_mdps_contract` / `partition_path` plumbing.
    - Preserve cluster-validation kwargs (chain-bundle types) — pass them through to `close_candle_writer`.
    - Tests: every existing `test_canonical_writer_record_helpers.py` test still passes; add 2 new tests for the
      `open + 1×write_chunk + close` lifecycle path matching the existing one-shot semantics.
 
 2. **Phase 1B — Add streaming-mode counterpart in `canonical_writer.py`** (~1 hour):
-   - `open_candle_streaming_writer(*, asset_group, source_data_type, timeframe, instrument_id, venue, date_str,
-     underlying, ..., manifest_service_name) -> CandleWriterHandle` — opens with all manifest_kwargs pre-filled.
+   - `open_candle_streaming_writer(*, asset_group, source_data_type, timeframe, instrument_id, venue, date_str, underlying, ..., manifest_service_name) -> CandleWriterHandle`
+     — opens with all manifest_kwargs pre-filled.
    - `close_candle_streaming_writer(handle, *, manifest_writer)` — thin wrapper around UTL `close_candle_writer` that
      routes the manifest_writer (constructed once at the bundle level, not per-tf).
    - The user-facing `write_candle_parquet` becomes a 3-line wrapper:
@@ -181,8 +183,8 @@ phases:
    - In `_streaming_process_slice_timeframes`: `write_chunk(handle, candles_df)` instead of accumulator append.
    - At bundle end (rename `_streaming_write_per_tf` → `_streaming_close_per_tf`): per-tf
      `close_candle_streaming_writer(handle, manifest_writer=...)`.
-   - Tests in `tests/unit/test_streaming_write_per_tf.py`: 4-test matrix per the plan's existing spec (success / empty
-     / failed / schema-drift) PLUS a memory-ceiling regression test via `tracemalloc`.
+   - Tests in `tests/unit/test_streaming_write_per_tf.py`: 4-test matrix per the plan's existing spec (success / empty /
+     failed / schema-drift) PLUS a memory-ceiling regression test via `tracemalloc`.
 
 4. **Phase 2 — ResourceProfiler.on_memory_warning wiring** (~1 hour) — unchanged from the plan's spec, just sequenced
    AFTER Phase 1A+B+C land.
@@ -193,11 +195,11 @@ Total: ~6 hours, single coordinated tab, eliminates dual-SSOT, unblocks live-pip
 
 ### Option B — Ship Phase 1.2B as-spec'd, accept dual-SSOT short-term
 
-Ship the plan body's Phase 1.2B exactly. `_streaming_write_per_tf` calls UTL `open_candle_writer / write_chunk /
-close_candle_writer` directly. `write_candle_parquet` keeps its current shape. **Workspace rule violation accepted as
-temporary state** with a named successor plan filename — the same rule that requires "Temporary state must have a named
-successor plan." Successor plan: `mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` (filed at archival of
-the streaming-and-backpressure plan).
+Ship the plan body's Phase 1.2B exactly. `_streaming_write_per_tf` calls UTL
+`open_candle_writer / write_chunk / close_candle_writer` directly. `write_candle_parquet` keeps its current shape.
+**Workspace rule violation accepted as temporary state** with a named successor plan filename — the same rule that
+requires "Temporary state must have a named successor plan." Successor plan:
+`mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` (filed at archival of the streaming-and-backpressure plan).
 
 **Risk**: future MDPS write-path bugs need to be fixed in two places. Live-pipeline Phase 4 inherits the divergence.
 
@@ -221,10 +223,10 @@ landing.
 ## Extension issue (2026-05-10 evening)
 
 > **EXTENSION**: A subsequent agent attempted Option A and discovered a GCS-upload semantics gap — UTL
-> `close_candle_writer` finalizes locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS.
-> See [`mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md`](mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md)
-> for the audit + R1 (MDPS-level wrapper) vs R2 (extend UTL `close_candle_writer` with GCS upload) decision matrix.
-> Phase 1.2B + Phase 2 remain DEFERRED pending operator triage of Option A's R1 vs R2 sub-decision.
+> `close_candle_writer` finalizes locally + `shutil.move`s, but `write_candle_parquet` consumers all upload to GCS. See
+> [`mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md`](mdps_option_a_gcs_upload_semantics_gap_2026_05_10.md) for the
+> audit + R1 (MDPS-level wrapper) vs R2 (extend UTL `close_candle_writer` with GCS upload) decision matrix. Phase 1.2B +
+> Phase 2 remain DEFERRED pending operator triage of Option A's R1 vs R2 sub-decision.
 
 ## Cross-references
 

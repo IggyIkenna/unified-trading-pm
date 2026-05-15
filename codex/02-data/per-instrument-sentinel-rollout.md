@@ -57,8 +57,8 @@ execution:
   last_executed: NEVER (MVP tier is the default; first Expanded promotion gated on day-91 bake)
 ```
 
-(Added per codex audit IN-14 2026-05-12 — Runbook Execution-Owner SSOT HARD RULE compliance for tier-promotion
-operator decisions.)
+(Added per codex audit IN-14 2026-05-12 — Runbook Execution-Owner SSOT HARD RULE compliance for tier-promotion operator
+decisions.)
 
 ## 3. Promotion criteria (MVP → Expanded → Full)
 

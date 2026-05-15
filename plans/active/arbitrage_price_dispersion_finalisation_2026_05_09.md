@@ -287,9 +287,9 @@ in plan order).
 3. **Leverage cap → `target_leverage = 5.0`.** 5× max (operator override of the 3× conservative default). Slot config
    field `target_leverage: "5.0"`. Live-cutover risk discipline relies on the vol-cap clamp (Q4) + position-balance-
    monitor + kill-switch wiring rather than a low static cap.
-4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use `features-service (volatility family)`'s
-   short-window outputs: `realized_vol_5` / `realized_vol_10` / `realized_vol_20` (5/10/20 bar annualized close-to-
-   close, computed at
+4. **Volatility-cap clamp → short-term realised-vol features (NOT 60-day).** Use
+   `features-service (volatility family)`'s short-window outputs: `realized_vol_5` / `realized_vol_10` /
+   `realized_vol_20` (5/10/20 bar annualized close-to- close, computed at
    [`features_service/volatility/calculators/realized_vol_calculator.py`](../../../features-service/features_service/volatility/calculators/realized_vol_calculator.py)).
    Proposed shape: clamp `target_leverage → 1.0` when **`realized_vol_20` (1h candles, ≈ 20h trailing) exceeds 80%
    annualized OR `vol_regime_zscore_20` > 2.0** (the latter adapts to per-asset baseline rather than using a fixed
@@ -347,10 +347,10 @@ in plan order).
       A.6) to `strategy-service/strategy_service/engine/strategies/v2/archetype_slot_resolver.py` per the existing
       pattern (e.g. after the current ARBITRAGE_PRICE_DISPERSION rows ~L225–L811). The slot wires the **6-venue
       universe** with dynamic best-long/best-short selection (NOT a fixed venue pair) + Layer 1 + Layer 2 knobs +
-      sign-match entry filter + short-term-vol clamp; engine implements all 3 Layer 1 modes day 1:
-      **DONE-2026-05-13 (slot-4-harsh)**: `BTC_FUNDING_RATE_DISPERSION` slot was shipped in Commit 1 at
-      strategy-service@24f8494 (6-venue universe, all Layer 1/Layer 2 knobs, sign-match + vol-clamp). Verified via
-      grep-then-read at `archetype_slot_resolver.py:780-819`. Checkbox was stale-unchecked.
+      sign-match entry filter + short-term-vol clamp; engine implements all 3 Layer 1 modes day 1: **DONE-2026-05-13
+      (slot-4-harsh)**: `BTC_FUNDING_RATE_DISPERSION` slot was shipped in Commit 1 at strategy-service@24f8494 (6-venue
+      universe, all Layer 1/Layer 2 knobs, sign-match + vol-clamp). Verified via grep-then-read at
+      `archetype_slot_resolver.py:780-819`. Checkbox was stale-unchecked.
 
       ```python
       Slot(
@@ -490,8 +490,8 @@ in plan order).
       tests stay green.
 
 - [x] [strategy-service] P1. Tests:
-      `tests/unit/engine/strategies/v2/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`. QG green.
-      Commit + push. **DONE-2026-05-13 (slot-4-harsh)**: strategy-service@33697ce — added to
+      `tests/unit/engine/strategies/v2/test_archetype_slot_resolver.py::test_arbitrage_price_dispersion_funding_rate_slot_exists`.
+      QG green. Commit + push. **DONE-2026-05-13 (slot-4-harsh)**: strategy-service@33697ce — added to
       `TestArbitragePriceDispersionFundingRateSlot` class; asserts slot exists + correct archetype + dispersion_type.
       (Note: path corrected from plan — actual test file is under `engine/strategies/v2/`, not `tests/unit/` directly.)
 
@@ -690,10 +690,9 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
       variant); the redirect to CARRY_BASIS_PERP is the legacy framing. Leave the paired authoritative claim in
       [`carry-basis-perp.md:138-139`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) only. This
       closes the parent plan's pending P0 codex todo at line 155-157. **DONE-2026-05-10 (agent-arb-fundrate-tracer)**:
-      shipped at PM@5fe5eabd. Verified via
-      `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
-      → zero hits. Paired authoritative claim survives at `carry-basis-perp.md:135-136`: *"Cross-venue perp spread
-      arbitrage (funding-rate differential between two perp venues for the same asset) —
+      shipped at PM@5fe5eabd. Verified via `rg 'CARRY_BASIS_PERP.*funding|funding._CARRY_BASIS_PERP'
+      codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`    → zero hits. Paired authoritative claim survives at`carry-basis-perp.md:135-136`:
+      _"Cross-venue perp spread arbitrage (funding-rate differential between two perp venues for the same asset) —
       `ARBITRAGE_PRICE_DISPERSION`"\_.
 
 - [x] [codex] P0. In the same `arbitrage-price-dispersion.md` "Example instances" section (after L159

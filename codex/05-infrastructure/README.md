@@ -61,22 +61,22 @@ Layer 6: Deployment Orchestration
 
 ### GCP (Primary)
 
-| Setting            | Value                                                                      |
-| ------------------ | -------------------------------------------------------------------------- |
-| Project ID         | `central-element-323112`                                                   |
-| Region             | `asia-northeast1` (Tokyo)                                                  |
-| Failover regions   | `europe-west1`, `us-central1`                                              |
-| Container Registry | `asia-northeast1-docker.pkg.dev/{project_id}/{repository}/{service}:{tag}` |
+| Setting            | Value                                                                                                                                                                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project ID         | `central-element-323112`                                                                                                                                                                                                         |
+| Region             | `asia-northeast1` (Tokyo)                                                                                                                                                                                                        |
+| Failover regions   | `europe-west1`, `us-central1`                                                                                                                                                                                                    |
+| Container Registry | `asia-northeast1-docker.pkg.dev/{project_id}/{repository}/{service}:{tag}`                                                                                                                                                       |
 | Bucket naming      | `{domain}-{asset_group_lower}-{project_id}` (legacy `{category_lower}` retained on disk; readers fall back. SSOT: `deployment-service/configs/cloud-providers.yaml` + `resolve_bucket_name(kind=..., asset_group=..., env=...)`) |
-| Terraform state    | `gs://terraform-state-central-element-323112/`                             |
+| Terraform state    | `gs://terraform-state-central-element-323112/`                                                                                                                                                                                   |
 
 ### AWS (Secondary) [PLANNED]
 
-| Setting            | Value                                                              |
-| ------------------ | ------------------------------------------------------------------ |
-| Region             | `ap-northeast-1` (Tokyo -- matches GCP for low latency to Binance) |
-| Failover region    | `ap-southeast-1` (Singapore)                                       |
-| Container Registry | `{account_id}.dkr.ecr.{region}.amazonaws.com/{service}:{tag}`      |
+| Setting            | Value                                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Region             | `ap-northeast-1` (Tokyo -- matches GCP for low latency to Binance)                                                                                                             |
+| Failover region    | `ap-southeast-1` (Singapore)                                                                                                                                                   |
+| Container Registry | `{account_id}.dkr.ecr.{region}.amazonaws.com/{service}:{tag}`                                                                                                                  |
 | Bucket naming      | `unified-trading-{domain}-{asset_group_lower}-{account_id}` (legacy `{category_lower}` retained on disk; canonical pattern resolved via `resolve_bucket_name(cloud=aws, ...)`) |
 
 ### Cloud Provider Switching

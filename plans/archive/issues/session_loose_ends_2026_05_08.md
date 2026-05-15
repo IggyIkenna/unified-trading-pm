@@ -30,12 +30,12 @@ locked_since: 2026-05-08
 
 These 4 HARD RULES landed in CLAUDE.md (`PM@1d74f617`) but the actual enforcement requires retroactive sweeps:
 
-| #   | Item                                                                                                                                             | Owner                       | Cadence               | Notes                                                            |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | --------------------- | ---------------------------------------------------------------- |
-| 3   | Master plan `Continuous Verification` + `Last verified` columns NOT YET ADDED to `master_to_live_defi_2026_05_23.md` (rule codified PM@1d74f617) | Tab 5 (governance)          | one-shot ~2 AI-days   | Retroactive table refactor; every Group A-G row gets new columns |
-| 4   | `strategy-service/scripts/quality-gates.sh` NOT WIRED with `e2e-testing/scripts/defi/` basedpyright step                                         | strategy-service maintainer | one-shot ~0.5 AI-days | Catches `colocated_engine.py`-class import drift at PR time      |
-| 5   | `features-sports-service` QG NOT WIRED with `e2e-testing/scripts/sports/`                                                                        | features-sports maintainer  | one-shot ~0.5 AI-days | Same shape as #4                                                 |
-| 6   | `mtds` QG NOT WIRED with `e2e-testing/scripts/prediction/`                                                                                       | mtds maintainer             | one-shot ~0.5 AI-days | Same shape as #4                                                 |
+| #   | Item                                                                                                                                             | Owner                       | Cadence               | Notes                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | --------------------- | ----------------------------------------------------------------------------------- |
+| 3   | Master plan `Continuous Verification` + `Last verified` columns NOT YET ADDED to `master_to_live_defi_2026_05_23.md` (rule codified PM@1d74f617) | Tab 5 (governance)          | one-shot ~2 AI-days   | Retroactive table refactor; every Group A-G row gets new columns                    |
+| 4   | `strategy-service/scripts/quality-gates.sh` NOT WIRED with `e2e-testing/scripts/defi/` basedpyright step                                         | strategy-service maintainer | one-shot ~0.5 AI-days | Catches `colocated_engine.py`-class import drift at PR time                         |
+| 5   | `features-sports-service` QG NOT WIRED with `e2e-testing/scripts/sports/`                                                                        | features-sports maintainer  | one-shot ~0.5 AI-days | Same shape as #4                                                                    |
+| 6   | `mtds` QG NOT WIRED with `e2e-testing/scripts/prediction/`                                                                                       | mtds maintainer             | one-shot ~0.5 AI-days | Same shape as #4                                                                    |
 | 7   | ✅ DONE 2026-05-10 (PM@2414e86f) — STEP 5.65 AST-walk shipped + 18 unit tests + manifest SSOT + codex doc                                        | Tab 5 (governance)          | one-shot ~2 AI-days   | check_removed_symbols.py + removed_symbols_manifest.yaml; 0 ERROR / 1 WARN on smoke |
 
 ## P1 deferred (operator decision pending or non-blocking)
@@ -68,12 +68,12 @@ Governance HARD RULE retroactive sweeps shipped 2026-05-10 by Tab 5 (governance)
 
 - **Item 3 — Master plan Continuous-Verification matrix.** ✅ **DONE.** Verified the 23-item Continuous-Verification +
   `Last verified` matrix already exists in `master_to_live_defi_2026_05_23.md` lines 767-825 (shipped earlier per
-  `PM@1d74f617`). Per-row coverage: every Group A-G item has owner notation (`cron:` / `QG:` / `Tab:` / `manual`) plus
-  a `Last verified` column. 7 items currently `Last verified: NEVER` are enumerated under § "Items with
+  `PM@1d74f617`). Per-row coverage: every Group A-G item has owner notation (`cron:` / `QG:` / `Tab:` / `manual`) plus a
+  `Last verified` column. 7 items currently `Last verified: NEVER` are enumerated under § "Items with
   `Last verified: NEVER` (T-13 alerts)" — all 7 are May-23 critical-path execution risks tracked there.
-- **Item 4 — strategy-service/scripts/quality-gates.sh.** ✅ **DONE.** Wired
-  `e2e-testing/scripts/defi/` peripheral dir into the strategy-service QG via `strategy-service@e87a84a`. basedpyright
-  + ruff run on every push; skips with clear message when CI image lacks sibling clones.
+- **Item 4 — strategy-service/scripts/quality-gates.sh.** ✅ **DONE.** Wired `e2e-testing/scripts/defi/` peripheral dir
+  into the strategy-service QG via `strategy-service@e87a84a`. basedpyright
+  - ruff run on every push; skips with clear message when CI image lacks sibling clones.
 - **Item 5 — features-sports-service QG.** ✅ **DONE (rerouted).** features-sports-service is
   `consolidated-into-features-service` per workspace-manifest.json (GitHub repo archived; push fails). Wiring rerouted
   to consolidated `features-service/scripts/quality-gates.sh` via `features-service@3ed7aaff`. Sports peripheral dir
@@ -84,14 +84,14 @@ Governance HARD RULE retroactive sweeps shipped 2026-05-10 by Tab 5 (governance)
   modeled on QG STEP 5.64. Components: `unified-trading-pm/scripts/quality_gates/check_removed_symbols.py` (AST walker
   with strict receiver-name match, ProcessPoolExecutor parallelism, `--scope` flag for per-repo invocation),
   `removed_symbols_manifest.yaml` (workspace SSOT — 3 seed entries: V1-RETIRE `get_strategy_factories`,
-  `canonical.domain.client` Option-A revert, `ManifestWriter.add` pending_removal),
-  `test_check_removed_symbols.py` (18 unit tests covering manifest schema validation, 3 import patterns,
-  attribute-access receiver matching, false-positive negative cases, walker venv exclusions, unparseable-file
-  resilience), base-service.sh STEP 5.65 wired between 5.64 and 5.66, codex/06-coding-standards/quality-gates.md
-  updated with cross-reference table row + dedicated section. Smoke run: 0 ERROR (zero false positives), 1 genuine
-  WARN at `market-tick-data-service/.../migrate_deribit_margin_split_v6.py:175` for `manifest_writer.add(...)` —
-  already flagged by team via `# pyright: ignore[reportAttributeAccessIssue]` comment; pending_removal status
-  correctly reflects in-flight writegate Phase 1.2A migration. Per-repo scoped run completes in ~4s.
+  `canonical.domain.client` Option-A revert, `ManifestWriter.add` pending_removal), `test_check_removed_symbols.py` (18
+  unit tests covering manifest schema validation, 3 import patterns, attribute-access receiver matching, false-positive
+  negative cases, walker venv exclusions, unparseable-file resilience), base-service.sh STEP 5.65 wired between 5.64 and
+  5.66, codex/06-coding-standards/quality-gates.md updated with cross-reference table row + dedicated section. Smoke
+  run: 0 ERROR (zero false positives), 1 genuine WARN at
+  `market-tick-data-service/.../migrate_deribit_margin_split_v6.py:175` for `manifest_writer.add(...)` — already flagged
+  by team via `# pyright: ignore[reportAttributeAccessIssue]` comment; pending_removal status correctly reflects
+  in-flight writegate Phase 1.2A migration. Per-repo scoped run completes in ~4s.
 
 ## Recommended decision (UPDATED 2026-05-10)
 

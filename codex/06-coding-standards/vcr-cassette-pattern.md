@@ -12,16 +12,16 @@ hitting rate limits or requiring credentials.
 
 ## Cassette Locations
 
-> **2026-05-12 reconciliation (TS-2 + TS-3)**: this section was stale — paths now match shipped UAC layout.
-> Canonical SSOT for cassette ownership / recording / contributing is
-> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md); this doc covers the in-test
-> *pattern* (decorator usage + replay shape). When the two docs diverge, `vcr-cassette-ownership.md` wins.
+> **2026-05-12 reconciliation (TS-2 + TS-3)**: this section was stale — paths now match shipped UAC layout. Canonical
+> SSOT for cassette ownership / recording / contributing is
+> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md); this doc covers the in-test _pattern_
+> (decorator usage + replay shape). When the two docs diverge, `vcr-cassette-ownership.md` wins.
 
-| Repo                    | Path                                                                | Purpose                                                      |
-| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `unified-api-contracts` | `unified_api_contracts/external/<venue>/mocks/*.yaml`               | Cassette YAML files, one per endpoint                        |
-| `unified-api-contracts` | `unified_api_contracts/testing/vcr_endpoints.py`                    | Endpoint definitions — URL patterns, request/response schema |
-| (per-interface repo)    | `<interface>/scripts/record_*.py`                                   | Recording script — owned by each interface repo, NOT by AC (per `vcr-cassette-ownership.md` § "Recording") |
+| Repo                    | Path                                                  | Purpose                                                                                                    |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `unified-api-contracts` | `unified_api_contracts/external/<venue>/mocks/*.yaml` | Cassette YAML files, one per endpoint                                                                      |
+| `unified-api-contracts` | `unified_api_contracts/testing/vcr_endpoints.py`      | Endpoint definitions — URL patterns, request/response schema                                               |
+| (per-interface repo)    | `<interface>/scripts/record_*.py`                     | Recording script — owned by each interface repo, NOT by AC (per `vcr-cassette-ownership.md` § "Recording") |
 
 ## Recording Cassettes
 

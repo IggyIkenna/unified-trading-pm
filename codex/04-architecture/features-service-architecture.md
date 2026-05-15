@@ -200,37 +200,37 @@ Reference: [`batch-live-architecture.md`](batch-live-architecture.md) (single SS
 
 ### Live handler status per family (2026-05-14)
 
-| Family | `live_handler.py` shipped | Production deployment | Notes |
-| ------ | ------------------------ | --------------------- | ----- |
-| `volatility` | ✅ | ⏳ post-cutover | live pipeline Phase 7 gated |
-| `delta_one` | ✅ | ⏳ post-cutover | live pipeline Phase 7 gated |
-| `onchain` | ✅ | ⏳ post-cutover | live pipeline Phase 7 gated |
-| `sports` | ✅ | ⏳ post-cutover | sports live-odds PubSub feed gated on Phase 7 + live-pipeline sports schedule |
-| `calendar` | ✅ | ⏳ post-cutover | economic-events PubSub feed gated on Phase 7 |
-| `commodity` | ❌ (batch only) | N/A — batch-only scope for May-23 | live mode not in scope |
-| `cross_instrument` | ❌ (batch only) | N/A — batch-only scope for May-23 | live mode not in scope |
-| `multi_timeframe` | ❌ (batch only) | N/A — batch-only scope for May-23 | live mode not in scope |
+| Family             | `live_handler.py` shipped | Production deployment             | Notes                                                                         |
+| ------------------ | ------------------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| `volatility`       | ✅                        | ⏳ post-cutover                   | live pipeline Phase 7 gated                                                   |
+| `delta_one`        | ✅                        | ⏳ post-cutover                   | live pipeline Phase 7 gated                                                   |
+| `onchain`          | ✅                        | ⏳ post-cutover                   | live pipeline Phase 7 gated                                                   |
+| `sports`           | ✅                        | ⏳ post-cutover                   | sports live-odds PubSub feed gated on Phase 7 + live-pipeline sports schedule |
+| `calendar`         | ✅                        | ⏳ post-cutover                   | economic-events PubSub feed gated on Phase 7                                  |
+| `commodity`        | ❌ (batch only)           | N/A — batch-only scope for May-23 | live mode not in scope                                                        |
+| `cross_instrument` | ❌ (batch only)           | N/A — batch-only scope for May-23 | live mode not in scope                                                        |
+| `multi_timeframe`  | ❌ (batch only)           | N/A — batch-only scope for May-23 | live mode not in scope                                                        |
 
 **Sports live-handler gating**: `features_service/sports/cli/handlers/live_handler.py` is shipped but blocked on
 live-pipeline-architecture Phase 7 (sports odds PubSub feed activation). Until Phase 7 completes, the sports live
 handler is not deployed. Sports features continue to run from batch GCS reads.
 
-**Calendar live-handler gating**: `features_service/calendar/cli/handlers/live_handler.py` is shipped but blocked on
-the economic-events PubSub feed going live (Phase 7 scope). Pre-cutover, calendar features run batch.
+**Calendar live-handler gating**: `features_service/calendar/cli/handlers/live_handler.py` is shipped but blocked on the
+economic-events PubSub feed going live (Phase 7 scope). Pre-cutover, calendar features run batch.
 
 ### ModeHandler lift status — Tab 4 pending
 
 The adoption table above (§ Canonical ModeHandler ABC) marks `commodity`, `cross_instrument`, `multi_timeframe`, and
-`calendar` as "bare class" or "separate lineage." These are being re-examined in `batch_live_symmetry_2026_05_10.md`
-Tab 4 (features-service ModeHandler lift). If Tab 4 ships before cutover, the table above will flip those rows from
+`calendar` as "bare class" or "separate lineage." These are being re-examined in `batch_live_symmetry_2026_05_10.md` Tab
+4 (features-service ModeHandler lift). If Tab 4 ships before cutover, the table above will flip those rows from
 `bare-class` to `UTL ModeHandler` — update this doc in the same logical unit as the Tab 4 commit.
 
 ## Migration history
 
 Eight predecessor repos archived (commit history preserved via `git subtree add` per family):
 
-| Predecessor repo                    | Sub-package destination              |
-| ----------------------------------- | ------------------------------------ |
+| Predecessor repo                             | Sub-package destination              |
+| -------------------------------------------- | ------------------------------------ |
 | `features-service (onchain family)`          | `features_service/onchain/`          |
 | `features-service (volatility family)`       | `features_service/volatility/`       |
 | `features-service (cross-instrument family)` | `features_service/cross_instrument/` |

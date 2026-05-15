@@ -5,18 +5,18 @@ scope: [engineer, admin]
 # Risk-Breaker Seam — Distinct Enums With Escalation Event
 
 > **What it is:** The architectural contract between **Layer 2 risk-controller** (per-rule pre-flight decisions) and
-> **Layer 3 circuit-breaker state machine** (per-venue rejection-rate-driven state transitions). The two layers
-> publish **distinct closed enums** (`RiskRuleConsequence` ≠ `BreakerAction`) and never directly invoke each other. They
-> compose only through a **single UAC-defined escalation event** — `BREAKER_ESCALATION_REQUESTED` — fired when
-> N-consecutive `RiskRuleConsequence.SCALE_DOWN` consequences accumulate on the same `(venue, asset_group)` within a
-> rolling window W. The breaker subscribes to the event and transitions per its own rules; the risk-controller never
-> reads breaker state. This doc ratifies the design (Q9 2026-05-10) and codifies the seam.
+> **Layer 3 circuit-breaker state machine** (per-venue rejection-rate-driven state transitions). The two layers publish
+> **distinct closed enums** (`RiskRuleConsequence` ≠ `BreakerAction`) and never directly invoke each other. They compose
+> only through a **single UAC-defined escalation event** — `BREAKER_ESCALATION_REQUESTED` — fired when N-consecutive
+> `RiskRuleConsequence.SCALE_DOWN` consequences accumulate on the same `(venue, asset_group)` within a rolling window W.
+> The breaker subscribes to the event and transitions per its own rules; the risk-controller never reads breaker state.
+> This doc ratifies the design (Q9 2026-05-10) and codifies the seam.
 
 ## TL;DR
 
-`RiskRuleConsequence` and `BreakerAction` are SEPARATE enums by design. Both contain a `SCALE_DOWN` member — that
-naming collision is **intentional** because the operator-facing concept ("reduce activity") is the same, but the
-**triggers, layers, and consequences are different**.
+`RiskRuleConsequence` and `BreakerAction` are SEPARATE enums by design. Both contain a `SCALE_DOWN` member — that naming
+collision is **intentional** because the operator-facing concept ("reduce activity") is the same, but the **triggers,
+layers, and consequences are different**.
 
 - **`RiskRuleConsequence.SCALE_DOWN`** at Layer 2 → applies to a SINGLE pre-flight instruction; shrinks its size; does
   NOT change breaker state; emits `RISK_RULE_SCALED_DOWN` AlertCode.
@@ -30,17 +30,17 @@ transition CLOSED → DEGRADED → OPEN purely from venue-rejection rates withou
 
 ## Why the naming collision is intentional
 
-Collapsing the two enums into a single set would be a category error. Consider the same operator-facing concept,
-"scale down", at two layers:
+Collapsing the two enums into a single set would be a category error. Consider the same operator-facing concept, "scale
+down", at two layers:
 
-| Question                                       | Layer 2 answer (RiskRuleConsequence.SCALE_DOWN) | Layer 3 answer (BreakerAction.SCALE_DOWN)         |
-| ---------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
-| What triggered it?                             | A rule fired on THIS instruction's context     | N venue rejections within rolling-window threshold |
-| What does it affect?                           | THIS instruction's size                         | ALL future instructions on `(venue, asset_group)` |
-| How long does the effect last?                 | One instruction (next instruction re-evaluates) | A cooldown window (per `BreakerConfig.cooldown_seconds`) |
-| What state machine owns it?                    | Stateless per-instruction evaluator             | Stateful per-venue circuit breaker                |
-| What event(s) emit?                            | `RISK_RULE_SCALED_DOWN` AlertCode               | `CIRCUIT_BREAKER_DEGRADED` AlertCode              |
-| How does the operator un-do it?                | Wait for the rule's input state to clear (e.g. drawdown recovers) | Manual `kill-switch unkill` OR auto-cooldown per `BreakerRecoveryMode` |
+| Question                        | Layer 2 answer (RiskRuleConsequence.SCALE_DOWN)                   | Layer 3 answer (BreakerAction.SCALE_DOWN)                              |
+| ------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| What triggered it?              | A rule fired on THIS instruction's context                        | N venue rejections within rolling-window threshold                     |
+| What does it affect?            | THIS instruction's size                                           | ALL future instructions on `(venue, asset_group)`                      |
+| How long does the effect last?  | One instruction (next instruction re-evaluates)                   | A cooldown window (per `BreakerConfig.cooldown_seconds`)               |
+| What state machine owns it?     | Stateless per-instruction evaluator                               | Stateful per-venue circuit breaker                                     |
+| What event(s) emit?             | `RISK_RULE_SCALED_DOWN` AlertCode                                 | `CIRCUIT_BREAKER_DEGRADED` AlertCode                                   |
+| How does the operator un-do it? | Wait for the rule's input state to clear (e.g. drawdown recovers) | Manual `kill-switch unkill` OR auto-cooldown per `BreakerRecoveryMode` |
 
 Same operator vocabulary; entirely different semantics. The seam keeps the vocabulary aligned (the operator dashboard
 shows "scale down" for both) while keeping the implementations decoupled.
@@ -48,8 +48,8 @@ shows "scale down" for both) while keeping the implementations decoupled.
 ## The seam: `BREAKER_ESCALATION_REQUESTED`
 
 A `BREAKER_ESCALATION_REQUESTED` event fires when the risk-controller observes a pattern of N consecutive
-`RiskRuleConsequence.SCALE_DOWN` fires on the same `(venue, asset_group)` within a rolling time window W. The
-threshold table is declared in UAC:
+`RiskRuleConsequence.SCALE_DOWN` fires on the same `(venue, asset_group)` within a rolling time window W. The threshold
+table is declared in UAC:
 
 ```python
 # unified_api_contracts/canonical/crosscutting/risk_rule.py (planned addition, scope: cutover sprint)
@@ -65,9 +65,8 @@ RISK_TO_BREAKER_ESCALATION_MAP: dict[
 ```
 
 **Status (2026-05-11)**: shape declared; concrete thresholds populated as part of risk plan Phase 4 (per-service
-migration) when the per-archetype rule registries shape the cutover-aspirational N + W values. Until populated, the
-seam ships as a typed-dict stub with TODO entries — readers should consult the risk plan body for the in-flight
-thresholds.
+migration) when the per-archetype rule registries shape the cutover-aspirational N + W values. Until populated, the seam
+ships as a typed-dict stub with TODO entries — readers should consult the risk plan body for the in-flight thresholds.
 
 ### Event flow
 
@@ -151,15 +150,14 @@ existing venue-rejection-rate-driven cause.
   failure-rate threshold trips the breaker OPEN regardless of any risk-rule state.
 - **Both can fire on the same root cause.** A correlated-positions blowup triggers per-instruction SCALE_DOWN from the
   correlation rule AND a flood of venue rejections that trips the rejection-rate threshold. Both Layer 2 and Layer 3
-  respond; events emit from both layers; the seam ALSO fires (N SCALE_DOWNs in W). The breaker transitions twice
-  (once from rejection-rate, once from seam) — both transitions are idempotent (CLOSED → DEGRADED is a no-op if
-  already DEGRADED).
-- **Risk-controller doesn't read breaker state.** The risk-controller has no `breaker.is_open(venue)` check. The
-  Layer 2 evaluator is stateless w.r.t. breaker state. If the breaker is OPEN, Layer 3 will reject the instruction
-  AFTER Layer 2 passes — that's the correct layering; Layer 2 doesn't need to anticipate.
-- **Breaker doesn't read risk-controller state.** The breaker has no `risk.last_scaled_down(venue)` check. The
-  breaker subscribes only to the `BREAKER_ESCALATION_REQUESTED` event + venue rejection-rate updates from
-  execution-service.
+  respond; events emit from both layers; the seam ALSO fires (N SCALE_DOWNs in W). The breaker transitions twice (once
+  from rejection-rate, once from seam) — both transitions are idempotent (CLOSED → DEGRADED is a no-op if already
+  DEGRADED).
+- **Risk-controller doesn't read breaker state.** The risk-controller has no `breaker.is_open(venue)` check. The Layer 2
+  evaluator is stateless w.r.t. breaker state. If the breaker is OPEN, Layer 3 will reject the instruction AFTER Layer 2
+  passes — that's the correct layering; Layer 2 doesn't need to anticipate.
+- **Breaker doesn't read risk-controller state.** The breaker has no `risk.last_scaled_down(venue)` check. The breaker
+  subscribes only to the `BREAKER_ESCALATION_REQUESTED` event + venue rejection-rate updates from execution-service.
 
 This independence is what makes the layers composable. Each can evolve (new rules, new actions, new recovery modes)
 without touching the other, as long as the event-seam contract holds.
@@ -176,8 +174,8 @@ When the breaker transitions to OPEN or BLOCK_NEW via the seam, the recovery mod
 - `SCALE_DOWN` → `auto_cooldown`.
 - `KILL_ALL` → `manual_unkill`.
 
-The risk-controller is not aware of recovery — it sees only the seam-emission side. Once the breaker auto-recovers or
-is operator-unkilled, subsequent Layer 2 SCALE_DOWNs start a fresh window.
+The risk-controller is not aware of recovery — it sees only the seam-emission side. Once the breaker auto-recovers or is
+operator-unkilled, subsequent Layer 2 SCALE_DOWNs start a fresh window.
 
 ## Anti-patterns
 
@@ -187,10 +185,10 @@ is operator-unkilled, subsequent Layer 2 SCALE_DOWNs start a fresh window.
   state. The seam threshold (N-in-W) is the gating contract.
 - **Don't bypass the event for "performance reasons".** Direct invocation of `breaker.set_state()` from the
   risk-controller defeats the layering. The PubSub event is the contract — events emit; the breaker subscribes.
-- **Don't add a `BreakerAction` member to `RiskRuleConsequence` (or vice versa).** Different vocabularies for
-  different layers. Extension goes via the seam map, not via union enum membership.
-- **Don't read breaker state from the risk-controller.** Layer 2 evaluators are stateless w.r.t. Layer 3 state. If
-  you find yourself wanting `breaker.is_open(venue)` in a rule evaluator, the rule belongs at Layer 3 instead.
+- **Don't add a `BreakerAction` member to `RiskRuleConsequence` (or vice versa).** Different vocabularies for different
+  layers. Extension goes via the seam map, not via union enum membership.
+- **Don't read breaker state from the risk-controller.** Layer 2 evaluators are stateless w.r.t. Layer 3 state. If you
+  find yourself wanting `breaker.is_open(venue)` in a rule evaluator, the rule belongs at Layer 3 instead.
 - **Don't widen the seam contract silently.** Adding a new escalation pattern (e.g. "N BLOCKs in W" → breaker arm)
   requires a UAC PR extending `RISK_TO_BREAKER_ESCALATION_MAP`. Reviewers reject inline patterns in service code.
 
@@ -198,7 +196,8 @@ is operator-unkilled, subsequent Layer 2 SCALE_DOWNs start a fresh window.
 
 The operator ratified Framing 2 ("distinct enums with escalation seam") over Framing 1 ("unified single enum") on
 2026-05-10. The decision is recorded in
-[`risk_simulations_limits_alerting_2026_05_10.md` Phase 7.E](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md#phase-7--codex-ssots-day-12-05-ai-day) and
+[`risk_simulations_limits_alerting_2026_05_10.md` Phase 7.E](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md#phase-7--codex-ssots-day-12-05-ai-day)
+and
 [`disaster_recovery_circuit_breakers_2026_05_10.md` Phase 8.F](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md#phase-8--codex-ssots-day-12-05-ai-day).
 This doc is co-owned by both plans — risk plan Phase 7.E ships the doc; DR plan Phase 8.F cross-references it; both
 plans cite the seam in their `## Cross-plan coordination` sections.
@@ -208,7 +207,8 @@ plans cite the seam in their `## Cross-plan coordination` sections.
 - Risk rule vocabulary: [risk-rule-taxonomy.md](risk-rule-taxonomy.md)
 - Pre-flight flow + aggregation semantics: [risk-preflight-flow.md](risk-preflight-flow.md)
 - Kill switch + circuit breaker mechanics: [kill-switch-circuit-breaker.md](kill-switch-circuit-breaker.md)
-- 4-layer risk-gates separation: [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+- 4-layer risk-gates separation:
+  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Layer 4 ErrorAction taxonomy: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Co-owned plans:
   [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md) +

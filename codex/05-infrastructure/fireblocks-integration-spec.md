@@ -6,24 +6,20 @@ scope: [engineer, admin]
 
 > **Created 2026-05-12** by slot 4 (`ikenna-keys-wallets-tab`) per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
-> Phase 3.C.2 (Fireblocks signer integration, DEFERRED-AFTER-CUTOVER 2026-06-01).
-> Status: **paste-ready design** — implementation gated on client June-1
-> credential delivery. Successor plan when work starts:
-> `plans/active/fireblocks_copper_client_integration_2026_06_01.md`
-> (operator-spawned when creds land).
+> Phase 3.C.2 (Fireblocks signer integration, DEFERRED-AFTER-CUTOVER 2026-06-01). Status: **paste-ready design** —
+> implementation gated on client June-1 credential delivery. Successor plan when work starts:
+> `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when creds land).
 
-This document is the **paste-ready engineering spec** for the
-`FireblocksCustodyProvider` adapter. Drop-in equivalent of the Copper adapter:
-mirror its factory shape, swap signing protocol + REST endpoints, add HD
-derivation + per-tx co-signer policy. No new service-side primitives needed.
+This document is the **paste-ready engineering spec** for the `FireblocksCustodyProvider` adapter. Drop-in equivalent of
+the Copper adapter: mirror its factory shape, swap signing protocol + REST endpoints, add HD derivation + per-tx
+co-signer policy. No new service-side primitives needed.
 
 ---
 
 ## § 1 — Architecture (mirrors Copper § 2.3)
 
-`execution-service/execution_service/custody/fireblocks.py` (NEW) implements
-the existing `CustodyProvider` protocol from `custody/base.py`. Zero strategy
-code changes; only adapter + factory registration.
+`execution-service/execution_service/custody/fireblocks.py` (NEW) implements the existing `CustodyProvider` protocol
+from `custody/base.py`. Zero strategy code changes; only adapter + factory registration.
 
 ```python
 from typing import Protocol
@@ -39,9 +35,8 @@ class CustodyProvider(Protocol):
 
 ### 1.1 Factory registration
 
-`execution-service/execution_service/custody/factory.py` — add `"fireblocks"`
-key alongside existing `"copper"` / `"cloud_kms"` / `"local_key"` / `"mock"` /
-`"ceffu"`:
+`execution-service/execution_service/custody/factory.py` — add `"fireblocks"` key alongside existing `"copper"` /
+`"cloud_kms"` / `"local_key"` / `"mock"` / `"ceffu"`:
 
 ```python
 def get_custody_provider(config: CustodyConfig) -> CustodyProvider:
@@ -58,8 +53,8 @@ def get_custody_provider(config: CustodyConfig) -> CustodyProvider:
 
 ### 1.2 Per-wallet flip (config-only, no recompile)
 
-Operator edits `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json`
-per-wallet row to flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC`:
+Operator edits `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` per-wallet row to flip from
+`CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC`:
 
 ```diff
  {
@@ -75,8 +70,8 @@ per-wallet row to flip from `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC`:
  }
 ```
 
-Deployment-UI Live-Cluster button (shipped 2026-05-11 by slot 4) reloads
-config via `ApiKeyReloader` — no service restart.
+Deployment-UI Live-Cluster button (shipped 2026-05-11 by slot 4) reloads config via `ApiKeyReloader` — no service
+restart.
 
 ---
 
@@ -93,9 +88,8 @@ config via `ApiKeyReloader` — no service restart.
 
 ### 2.2 Authentication shape
 
-Fireblocks uses **RS256 JWT** (not HMAC-SHA256 like Copper). The "API secret"
-is a `.pem` RSA private key file; the API key is the JWT subject claim. Every
-request signs a JWT with:
+Fireblocks uses **RS256 JWT** (not HMAC-SHA256 like Copper). The "API secret" is a `.pem` RSA private key file; the API
+key is the JWT subject claim. Every request signs a JWT with:
 
 ```python
 import jwt
@@ -119,28 +113,31 @@ def _sign_request(self, path: str, body: dict | None) -> str:
 ```
 
 Headers emitted:
+
 - `X-API-Key: <api_key>`
 - `Authorization: Bearer <jwt>`
 
 ### 2.3 Secret Manager paths
 
 Per `codex/05-infrastructure/custody-onboarding-checklist.md` § C:
+
 - `fireblocks-api-key` — Fireblocks API user identifier (UUID).
-- `fireblocks-api-secret` — RSA private key PEM (multi-line, base64-encoded
-  for Secret Manager storage; PEM-decoded at startup via `cryptography.hazmat`).
+- `fireblocks-api-secret` — RSA private key PEM (multi-line, base64-encoded for Secret Manager storage; PEM-decoded at
+  startup via `cryptography.hazmat`).
 
 ---
 
 ## § 3 — Core endpoints + method mapping
 
-| `CustodyProvider` method | Fireblocks REST path | Body shape |
-|---|---|---|
-| `list_wallets` | `GET /v1/vault/accounts_paged` | Pagination via `before` cursor |
-| `get_balance` | `GET /v1/vault/accounts/{vaultAccountId}/assets` | Returns `available` + `pending` + `frozen` |
-| `create_transfer` | `POST /v1/transactions` | `operation=TRANSFER` + `source` + `destination` + `assetId` + `amount` |
-| `sign_transaction` | `POST /v1/transactions` | `operation=RAW` + `extraParameters={"rawMessageData": {"messages": [{"content": <hex>}]}}` for arbitrary tx signing |
+| `CustodyProvider` method | Fireblocks REST path                             | Body shape                                                                                                          |
+| ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `list_wallets`           | `GET /v1/vault/accounts_paged`                   | Pagination via `before` cursor                                                                                      |
+| `get_balance`            | `GET /v1/vault/accounts/{vaultAccountId}/assets` | Returns `available` + `pending` + `frozen`                                                                          |
+| `create_transfer`        | `POST /v1/transactions`                          | `operation=TRANSFER` + `source` + `destination` + `assetId` + `amount`                                              |
+| `sign_transaction`       | `POST /v1/transactions`                          | `operation=RAW` + `extraParameters={"rawMessageData": {"messages": [{"content": <hex>}]}}` for arbitrary tx signing |
 
 Polling on transaction status:
+
 ```python
 async def _poll_until_signed(self, tx_id: str, timeout_s: float = 30.0) -> str:
     deadline = time.monotonic() + timeout_s
@@ -169,24 +166,21 @@ Subscribers: position-balance-monitor + alerting-service + deployment-ui.
 
 ## § 4 — HD-wallet derivation (N × M wallet expansion)
 
-Plan Phase 4.A specifies N archetypes × M chains = N×M wallets. Fireblocks
-supports HD derivation under a master vault account. Two implementation paths:
+Plan Phase 4.A specifies N archetypes × M chains = N×M wallets. Fireblocks supports HD derivation under a master vault
+account. Two implementation paths:
 
 ### 4.1 Vault-account-per-wallet (recommended for May-23 cutover scope)
 
-Each wallet in `wallet_provisioning.json` maps to a distinct Fireblocks
-vault account ID. Operator pre-creates ≥10 vault accounts (2 archetypes × 5
-chains). Each vault account holds the assets for that wallet only.
+Each wallet in `wallet_provisioning.json` maps to a distinct Fireblocks vault account ID. Operator pre-creates ≥10 vault
+accounts (2 archetypes × 5 chains). Each vault account holds the assets for that wallet only.
 
-Pros: each `WalletProvisioningConfig.custodian_wallet_id` is a stable UUID;
-no derivation path required. Cons: 10+ vault accounts to manage in Fireblocks
-dashboard.
+Pros: each `WalletProvisioningConfig.custodian_wallet_id` is a stable UUID; no derivation path required. Cons: 10+ vault
+accounts to manage in Fireblocks dashboard.
 
 ### 4.2 BIP-44 HD derivation under a single master vault account
 
-Single Fireblocks vault account; derived addresses per `derivation_path`
-in `WalletProvisioningConfig` (already in UAC schema as
-`derivation_path: str = ""`).
+Single Fireblocks vault account; derived addresses per `derivation_path` in `WalletProvisioningConfig` (already in UAC
+schema as `derivation_path: str = ""`).
 
 ```python
 # Fireblocks SDK call
@@ -197,65 +191,57 @@ vault_assets = client.get_vault_account_assets(
 )
 ```
 
-Pros: single vault account; per-archetype-per-chain derived addresses
-under one master. Cons: requires Fireblocks Treasury / Connect-style
-account tier — confirm with client June-1.
+Pros: single vault account; per-archetype-per-chain derived addresses under one master. Cons: requires Fireblocks
+Treasury / Connect-style account tier — confirm with client June-1.
 
 ### 4.3 Decision gate
 
-Operator confirms with client June-1: vault-account-per-wallet (4.1) vs HD
-derivation under master (4.2). Default to 4.1 if unclear; switch to 4.2
-post-cutover if 10+ vault accounts become operationally tedious.
+Operator confirms with client June-1: vault-account-per-wallet (4.1) vs HD derivation under master (4.2). Default to 4.1
+if unclear; switch to 4.2 post-cutover if 10+ vault accounts become operationally tedious.
 
 ---
 
 ## § 5 — Per-wallet policy controls + co-signing
 
-Fireblocks Transaction Authorization Policy (TAP) implements the security
-envelope. Per-wallet policy rules:
+Fireblocks Transaction Authorization Policy (TAP) implements the security envelope. Per-wallet policy rules:
 
-| Rule | Source | Enforcement |
-|---|---|---|
-| `max_amount_per_tx` | UAC `SpendingCaps.per_tx_usd` | TAP rule: amount > threshold → require co-signer |
-| `allowed_destinations` | UAC `WalletProvisioningConfig.allowed_destinations` | TAP rule: destination ∈ AddressBook → auto-approve; else block |
-| `time_of_day_window` | (NEW) per-archetype trading hours | TAP rule per UTC hour-of-day |
-| `kill_switch_id` | UAC `WalletProvisioningConfig.kill_switch_id` | TAP rule: vault frozen if kill_switch armed via `freezeVaultAccount` API |
+| Rule                   | Source                                              | Enforcement                                                              |
+| ---------------------- | --------------------------------------------------- | ------------------------------------------------------------------------ |
+| `max_amount_per_tx`    | UAC `SpendingCaps.per_tx_usd`                       | TAP rule: amount > threshold → require co-signer                         |
+| `allowed_destinations` | UAC `WalletProvisioningConfig.allowed_destinations` | TAP rule: destination ∈ AddressBook → auto-approve; else block           |
+| `time_of_day_window`   | (NEW) per-archetype trading hours                   | TAP rule per UTC hour-of-day                                             |
+| `kill_switch_id`       | UAC `WalletProvisioningConfig.kill_switch_id`       | TAP rule: vault frozen if kill_switch armed via `freezeVaultAccount` API |
 
 ### 5.1 Co-signer policy
 
-For `amount > SpendingCaps.per_tx_usd`, require Fireblocks co-signer
-approval (typically operator + client signatures). For
-`SpendingCaps.per_hour_usd` breach, auto-block via TAP. For
-`SpendingCaps.per_day_usd` breach, auto-block via TAP + emit
-`WALLET_CAP_EXCEEDED_DAY` alert.
+For `amount > SpendingCaps.per_tx_usd`, require Fireblocks co-signer approval (typically operator + client signatures).
+For `SpendingCaps.per_hour_usd` breach, auto-block via TAP. For `SpendingCaps.per_day_usd` breach, auto-block via TAP +
+emit `WALLET_CAP_EXCEEDED_DAY` alert.
 
 ### 5.2 AddressBook integration
 
-`allowed_destinations` from `WalletProvisioningConfig` MUST be
-pre-populated in the Fireblocks AddressBook (operator-side via dashboard or
-`POST /v1/internal_wallets/{walletContainerId}/addresses`). TAP rule:
+`allowed_destinations` from `WalletProvisioningConfig` MUST be pre-populated in the Fireblocks AddressBook
+(operator-side via dashboard or `POST /v1/internal_wallets/{walletContainerId}/addresses`). TAP rule:
 `destination ∈ AddressBook` → auto-approve; else block.
 
-For TREASURY wallets (client-deposit-source whitelist), AddressBook entries
-are tagged `category=CLIENT_DEPOSIT`. For HOT_TRADING + GAS_RESERVE (empty
-allowed_destinations per schema invariant), AddressBook is empty — only
-internal vault-to-vault transfers permitted.
+For TREASURY wallets (client-deposit-source whitelist), AddressBook entries are tagged `category=CLIENT_DEPOSIT`. For
+HOT_TRADING + GAS_RESERVE (empty allowed_destinations per schema invariant), AddressBook is empty — only internal
+vault-to-vault transfers permitted.
 
 ---
 
 ## § 6 — Latency budget + load testing
 
-| Operation | Budget | Notes |
-|---|---|---|
-| JWT signing (local) | <5ms | RS256 via PyJWT |
-| `POST /v1/transactions` round-trip | 200-500ms | network + Fireblocks API |
-| Co-signer approval (if required) | 1-30s | human-in-loop for large amounts |
-| Total signing latency (no co-sign) | 100-500ms p95 | mirrors Copper |
-| Total signing latency (with co-sign) | 1-30s p95 | for amounts ≥ per_tx_usd |
+| Operation                            | Budget        | Notes                           |
+| ------------------------------------ | ------------- | ------------------------------- |
+| JWT signing (local)                  | <5ms          | RS256 via PyJWT                 |
+| `POST /v1/transactions` round-trip   | 200-500ms     | network + Fireblocks API        |
+| Co-signer approval (if required)     | 1-30s         | human-in-loop for large amounts |
+| Total signing latency (no co-sign)   | 100-500ms p95 | mirrors Copper                  |
+| Total signing latency (with co-sign) | 1-30s p95     | for amounts ≥ per_tx_usd        |
 
-Pre-cutover Sepolia + mainnet smoke (small balance) MUST validate p95 within
-budget under 10 concurrent signing requests (load test via `locust` or
-similar).
+Pre-cutover Sepolia + mainnet smoke (small balance) MUST validate p95 within budget under 10 concurrent signing requests
+(load test via `locust` or similar).
 
 ---
 
@@ -278,8 +264,8 @@ class FireblocksErrorCode(StrEnum):
     FIREBLOCKS_TX_SKIP_DUPLICATE_NONCE = "FIREBLOCKS_SKIP_DUPLICATE_NONCE"
 ```
 
-Route on `FAIL`/`RETRY`/`SKIP` prefix per existing DefiErrorCode pattern.
-8 codes minimum — extend as Fireblocks API surface expands.
+Route on `FAIL`/`RETRY`/`SKIP` prefix per existing DefiErrorCode pattern. 8 codes minimum — extend as Fireblocks API
+surface expands.
 
 ---
 
@@ -290,8 +276,8 @@ Route on `FAIL`/`RETRY`/`SKIP` prefix per existing DefiErrorCode pattern.
 - Construction: `FireblocksCustodyProvider(...)` with valid + invalid creds.
 - Factory registration: `get_custody_provider(CustodyConfig(provider="fireblocks", ...))` returns instance.
 - `_sign_request` JWT: claims structure matches Fireblocks spec, signed with RS256.
-- Method contract: every async method raises `NotImplementedError` if creds
-  not provided (pre-June-1 grace shape; mirror CEFFU stub).
+- Method contract: every async method raises `NotImplementedError` if creds not provided (pre-June-1 grace shape; mirror
+  CEFFU stub).
 
 ### 8.2 Integration tests (`tests/integration/test_fireblocks_custody_provider.py`)
 
@@ -309,13 +295,12 @@ Route on `FAIL`/`RETRY`/`SKIP` prefix per existing DefiErrorCode pattern.
 
 ### 8.4 Smoke test (Sepolia + mainnet small balance)
 
-Singleton-locked launcher
-`deployment-service/scripts/vm/launch-fireblocks-smoke-vm.sh` (NEW):
+Singleton-locked launcher `deployment-service/scripts/vm/launch-fireblocks-smoke-vm.sh` (NEW):
+
 - `--testnet` flag: signs on Sepolia + Solana devnet.
-- `--mainnet` flag: signs single dust-amount tx on Ethereum mainnet to
-  confirm production wiring.
-- Event-stream verification per CLAUDE.md "No fire-and-forget VM launches":
-  STARTED + per-wallet `FIREBLOCKS_TX_SIGNED` event + STOPPED.
+- `--mainnet` flag: signs single dust-amount tx on Ethereum mainnet to confirm production wiring.
+- Event-stream verification per CLAUDE.md "No fire-and-forget VM launches": STARTED + per-wallet `FIREBLOCKS_TX_SIGNED`
+  event + STOPPED.
 
 ---
 
@@ -337,23 +322,21 @@ execution:
 - [ ] **C.2.6** AddressBook populated per § 5.2 — operator.
 - [ ] **C.2.7** Sandbox smoke + Sepolia + mainnet small balance per § 8.4.
 - [ ] **C.2.8** UAC `FireblocksErrorCode` enum per § 7 — bundled with adapter PR.
-- [ ] **C.2.9** Update `codex/04-architecture/custody-providers.md` § 2.5
-      (NEW Fireblocks subsection mirroring Copper § 2.3).
+- [ ] **C.2.9** Update `codex/04-architecture/custody-providers.md` § 2.5 (NEW Fireblocks subsection mirroring Copper §
+      2.3).
 
 ---
 
 ## § 10 — References
 
-- [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) §2.3
-  (Copper reference architecture this spec mirrors).
-- [`codex/05-infrastructure/custody-onboarding-checklist.md`](custody-onboarding-checklist.md)
-  § C (operator-action runbook).
+- [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) §2.3 (Copper reference
+  architecture this spec mirrors).
+- [`codex/05-infrastructure/custody-onboarding-checklist.md`](custody-onboarding-checklist.md) § C (operator-action
+  runbook).
 - [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
-  (`SigningSurface.FIREBLOCKS_MPC` enum value + `WalletProvisioningConfig`
-  schema fields consumed).
+  (`SigningSurface.FIREBLOCKS_MPC` enum value + `WalletProvisioningConfig` schema fields consumed).
 - [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
   Phase 3.C.2 (parent plan).
-- Fireblocks API docs: <https://developers.fireblocks.com/reference/> (operator-side reference;
-  not for agent fetch — agent uses Context7 MCP if needed).
-- Fireblocks SDK Python: <https://github.com/fireblocks/fireblocks-sdk-py>
-  (operator-side reference).
+- Fireblocks API docs: <https://developers.fireblocks.com/reference/> (operator-side reference; not for agent fetch —
+  agent uses Context7 MCP if needed).
+- Fireblocks SDK Python: <https://github.com/fireblocks/fireblocks-sdk-py> (operator-side reference).

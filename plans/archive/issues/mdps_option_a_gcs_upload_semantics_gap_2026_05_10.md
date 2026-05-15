@@ -10,14 +10,16 @@ source:
     (StreamingParquetWriter.close() → _upload_to_gcs)
   - unified-trading-library/unified_trading_library/streaming/candle_writer.py:355-366 (close_candle_writer →
     shutil.move LOCAL only)
-  - unified-trading-library/unified_trading_library/io/streaming_writer.py:341-377 (StreamingParquetWriter._upload_to_gcs)
+  - unified-trading-library/unified_trading_library/io/streaming_writer.py:341-377
+    (StreamingParquetWriter._upload_to_gcs)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 execution:
   owner: operator triage → next MDPS-dedicated tab in work-split
   cadence: one-shot — resume Option A migration once architectural decision lands (R1 vs R2)
-  verifier: write_candle_parquet flows through UTL lifecycle internally on a real CeFi backfill VM
-    (writegate Phase 5 baseline + plan Phase 4 end-to-end) AND uploads to GCS correctly
+  verifier:
+    write_candle_parquet flows through UTL lifecycle internally on a real CeFi backfill VM (writegate Phase 5 baseline +
+    plan Phase 4 end-to-end) AND uploads to GCS correctly
   last_executed: "NEVER"
 ---
 
@@ -28,8 +30,8 @@ execution:
 > blocker for the lifecycle unification.
 >
 > **Blast radius**: market-data-processing-service `canonical_writer.py`, `candle_write_mixin.py`, `io/writer.py`,
-> `live_workers.py`. Potentially extends to UTL `streaming/candle_writer.py` if R2 adopted (cross-service
-> primitives extension).
+> `live_workers.py`. Potentially extends to UTL `streaming/candle_writer.py` if R2 adopted (cross-service primitives
+> extension).
 >
 > **Suggested owner**: MDPS-dedicated tab in next work-split. Architectural decision (R1 vs R2) is operator-judgment-
 > level; can be punted to operator triage if neither resolution is clearly better.
@@ -68,8 +70,8 @@ def close(self) -> int:
     return file_size
 ```
 
-`_upload_to_gcs` (UTL `io/streaming_writer.py:341-377`) calls `client.upload_file(self._bucket, self._gcs_path,
-self._tmp.name)` then unlinks the tempfile.
+`_upload_to_gcs` (UTL `io/streaming_writer.py:341-377`) calls
+`client.upload_file(self._bucket, self._gcs_path, self._tmp.name)` then unlinks the tempfile.
 
 ### Step 2 — Audit every `write_candle_parquet` callsite
 
@@ -109,23 +111,23 @@ def close_candle_writer(handle, *, manifest_writer, error=None, attempted_at=Non
 ```
 
 **Critical gap**: UTL `close_candle_writer` is local-only. It uses `finalize_local()` (which does NOT upload to GCS)
-then `shutil.move(tmp_path, parquet_path)` to a local destination. There is NO path through UTL primitives that
-uploads the finalized parquet to GCS as part of the close.
+then `shutil.move(tmp_path, parquet_path)` to a local destination. There is NO path through UTL primitives that uploads
+the finalized parquet to GCS as part of the close.
 
-The `parquet_path` argument on `CandleWriterHandle` is documented as "Final on-disk destination path. Renamed
-atomically on close" (UTL `candle_writer.py:75-83`) — explicitly local.
+The `parquet_path` argument on `CandleWriterHandle` is documented as "Final on-disk destination path. Renamed atomically
+on close" (UTL `candle_writer.py:75-83`) — explicitly local.
 
 ## Why Option A as spec'd doesn't compose cleanly
 
 Option A's key design: **single UTL lifecycle for the parquet finalize + manifest emission**. But the existing MDPS
 production callsites all upload to GCS via `StreamingParquetWriter.close()`'s integrated `_upload_to_gcs(...)` step.
 Migrating internally to UTL `open + write_chunk + close` lifecycle drops the GCS upload — silent regression: parquets
-finalize to local tempfiles + manifest records `captured`, but the bytes are NOT in the GCS bucket the manifest
-row points at.
+finalize to local tempfiles + manifest records `captured`, but the bytes are NOT in the GCS bucket the manifest row
+points at.
 
-The dual-SSOT we're trying to ELIMINATE was the duplicated `record_captured` callsite. The dual-SSOT we'd CREATE is
-the duplicated finalize-and-upload path: UTL handles `record_captured` on a finalized-LOCAL parquet, MDPS would still
-need to upload that local parquet to GCS in a separate post-close step → MDPS still owns half the lifecycle.
+The dual-SSOT we're trying to ELIMINATE was the duplicated `record_captured` callsite. The dual-SSOT we'd CREATE is the
+duplicated finalize-and-upload path: UTL handles `record_captured` on a finalized-LOCAL parquet, MDPS would still need
+to upload that local parquet to GCS in a separate post-close step → MDPS still owns half the lifecycle.
 
 ## Recommended decision (R1 vs R2)
 
@@ -133,8 +135,7 @@ need to upload that local parquet to GCS in a separate post-close step → MDPS 
 
 `write_candle_parquet` becomes a thin one-shot wrapper that:
 
-1. Calls UTL `open_candle_writer(...)` with `parquet_path=tmp_local_path` (a tempfile chosen by MDPS, not the GCS
-   path).
+1. Calls UTL `open_candle_writer(...)` with `parquet_path=tmp_local_path` (a tempfile chosen by MDPS, not the GCS path).
 2. Calls UTL `write_chunk(handle, candles_df)`.
 3. Calls UTL `close_candle_writer(handle, manifest_writer=..., ...)` — which finalizes + records manifest + moves
    tempfile to `tmp_local_path`.
@@ -142,14 +143,14 @@ need to upload that local parquet to GCS in a separate post-close step → MDPS 
    `get_storage_client().upload_file(...)` shape `_upload_to_gcs` uses today.
 5. **Then MDPS-side**: unlink the local tempfile.
 
-Pro: doesn't touch UTL's stable contract (UTL@`ac6e3244`). Contained to MDPS.
-Con: MDPS still owns part of the close-lifecycle (the GCS upload). Phase 1.2B's `_streaming_write_per_tf` migration
-still needs the same MDPS-side upload glue. Two-step close logic exists in MDPS even after migration. Mild violation
-of the "single lifecycle" intent.
+Pro: doesn't touch UTL's stable contract (UTL@`ac6e3244`). Contained to MDPS. Con: MDPS still owns part of the
+close-lifecycle (the GCS upload). Phase 1.2B's `_streaming_write_per_tf` migration still needs the same MDPS-side upload
+glue. Two-step close logic exists in MDPS even after migration. Mild violation of the "single lifecycle" intent.
 
 **However**: this preserves the ELIMINATED dual-SSOT for the manifest verb (which is what Option A actually targeted)
-+ schema validation + cluster validation + atomic finalize. The GCS upload is OUTSIDE the
-parquet-finalize-and-manifest unit, which arguably is fine because GCS uploads are post-finalize side effects.
+
+- schema validation + cluster validation + atomic finalize. The GCS upload is OUTSIDE the parquet-finalize-and-manifest
+  unit, which arguably is fine because GCS uploads are post-finalize side effects.
 
 ### R2 — Extend UTL `close_candle_writer` to support GCS upload (~1.5 days, touches stable UTL contract)
 
@@ -177,16 +178,15 @@ def close_candle_writer(handle, *, manifest_writer, ...) -> int:
         os.unlink(final_tmp); raise ValueError("close_candle_writer requires either gcs_bucket+gcs_path OR parquet_path")
 ```
 
-Pro: cleanest single-lifecycle shape. Future consumers (features-* live aggregator, ML serving) get GCS-aware
-finalize for free. Close path is genuinely centralized in UTL.
-Con: touches UTL's stable contract (UTL@`ac6e3244`). UTL needs new tests for the GCS path. Cross-service migration.
-Tests need to mock `get_storage_client()` similar to MDPS.
+Pro: cleanest single-lifecycle shape. Future consumers (features-\* live aggregator, ML serving) get GCS-aware finalize
+for free. Close path is genuinely centralized in UTL. Con: touches UTL's stable contract (UTL@`ac6e3244`). UTL needs new
+tests for the GCS path. Cross-service migration. Tests need to mock `get_storage_client()` similar to MDPS.
 
 ### Recommendation
 
-**Operator triage between R1 and R2.** Both are valid; the choice is engineering taste vs. cross-service value.
-If the live-pipeline Phase 4 + features-* live serving will both consume the lifecycle close path with GCS uploads,
-R2 pays off across consumers. If MDPS is the only consumer, R1 is sufficient.
+**Operator triage between R1 and R2.** Both are valid; the choice is engineering taste vs. cross-service value. If the
+live-pipeline Phase 4 + features-\* live serving will both consume the lifecycle close path with GCS uploads, R2 pays
+off across consumers. If MDPS is the only consumer, R1 is sufficient.
 
 The chain-agent's bias: **R2** for the cleaner cross-service primitive. But R1 is the lower-risk path if UTL is
 considered stable and we want to minimize cross-cutting changes during the May-23 cutover window.
@@ -204,24 +204,24 @@ remain the prior shipped state from the parent issue.
 ## Why I did NOT ship Option A internal migration today
 
 Per the parent issue + this session's spawn prompt: **"If during Step 1-2 you find that the existing
-`write_candle_parquet` callsites depend on internal one-shot behaviour that doesn't compose cleanly with the
-lifecycle wrapper: STOP, file an extension issue doc, ship Step 1 only as foundation + defer Phase 1.2B + 2 to a
-re-scoped agent. Don't ship a fake."**
+`write_candle_parquet` callsites depend on internal one-shot behaviour that doesn't compose cleanly with the lifecycle
+wrapper: STOP, file an extension issue doc, ship Step 1 only as foundation + defer Phase 1.2B + 2 to a re-scoped agent.
+Don't ship a fake."**
 
-The GCS-upload semantics gap is exactly this case. Shipping a refactor where `write_candle_parquet` calls UTL
-lifecycle BUT also has a separate GCS-upload step is technically sound (R1) but partially violates Option A's
-"single lifecycle" intent. Shipping R2 expands scope into UTL contract changes that warrant operator-direction.
+The GCS-upload semantics gap is exactly this case. Shipping a refactor where `write_candle_parquet` calls UTL lifecycle
+BUT also has a separate GCS-upload step is technically sound (R1) but partially violates Option A's "single lifecycle"
+intent. Shipping R2 expands scope into UTL contract changes that warrant operator-direction.
 
 ## Cross-references
 
-- [`mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md) —
-  the parent issue this extends.
+- [`mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md`](mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md)
+  — the parent issue this extends.
 - [`mdps_phase_1_2_phase_2_deferral_2026_05_10.md`](mdps_phase_1_2_phase_2_deferral_2026_05_10.md) — original Phase
   1.2B + Phase 2 deferral.
 - [`audit_2026_05_08_substantial_unfixed_items.md`](audit_2026_05_08_substantial_unfixed_items.md) Item #3 — the
   audit-level tracking of this work.
-- [`mdps_streaming_and_backpressure_2026_05_07.md`](../mdps_streaming_and_backpressure_2026_05_07.md) Phase 1.2B +
-  Phase 2 — the plan-of-record.
+- [`mdps_streaming_and_backpressure_2026_05_07.md`](../mdps_streaming_and_backpressure_2026_05_07.md) Phase 1.2B + Phase
+  2 — the plan-of-record.
 - [`live_pipeline_mtds_mdps_features_2026_05_08.md`](../live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4 — the
   downstream consumer of the unified lifecycle.
 - UTL@`ac6e3244` — the streaming-candle-writer primitives (the lifecycle this migration consumes).
@@ -233,8 +233,8 @@ lifecycle BUT also has a separate GCS-upload step is technically sound (R1) but 
 
 - Operator triage decision logged (R1 / R2). — `[ ]` open
 - If R1: `write_candle_parquet` refactored internally with the post-close GCS-upload step + tests for the
-  `(open + write_chunk + close + upload + unlink)` lifecycle. Phase 1.2B `_streaming_write_per_tf` migrated using
-  the same MDPS-side `open_candle_streaming_writer / close_candle_streaming_writer` helpers. — `[ ]` open
+  `(open + write_chunk + close + upload + unlink)` lifecycle. Phase 1.2B `_streaming_write_per_tf` migrated using the
+  same MDPS-side `open_candle_streaming_writer / close_candle_streaming_writer` helpers. — `[ ]` open
 - If R2: UTL `open_candle_writer` + `close_candle_writer` extended with optional GCS-upload kwargs + tests. MDPS
   `write_candle_parquet` migrated to use the GCS-upload path. Phase 1.2B uses the same. — `[ ]` open
 - Live-pipeline Phase 4 banner removable. — `[ ]` open

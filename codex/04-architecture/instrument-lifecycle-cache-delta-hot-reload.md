@@ -8,22 +8,22 @@ last_reviewed: 2026-05-13
 
 ## Two reload mechanisms across the workspace (ML-18 matrix, 2026-05-13)
 
-The workspace has **two distinct hot-reload mechanisms** that share the cache-delta shape but differ in
-trigger + payload + consumer. Codified here so future designs reuse the matching mechanism per use case:
+The workspace has **two distinct hot-reload mechanisms** that share the cache-delta shape but differ in trigger +
+payload + consumer. Codified here so future designs reuse the matching mechanism per use case:
 
-| Aspect | Mechanism 1 — Instrument-lifecycle delta-reloader | Mechanism 2 — Model Pub/Sub cache-bust |
-|---|---|---|
-| **Trigger source** | instruments-service catalog refresh (cron + on-demand) | ml-training-service post-training run + model-registry write |
-| **Pub/Sub topic** | `streaming.{asset_group}.instrument_cache_refresh_trigger` | `streaming.ml.model_registry_cache_bust` |
-| **Payload shape** | `INSTRUMENT_CACHE_REFRESH_TRIGGER` event with catalog-version hash | `MODEL_REGISTRY_CACHE_BUST` event with `(model_family, training_run_id)` |
-| **Consumer-side state** | In-memory catalog dict + per-instrument subscription state | UTL `ModelRegistry` instance cache + warm-loaded model artefacts |
-| **Delta strategy** | Fetch new catalog, compute (added/removed/changed) deltas, hot-reload affected subscription state | Invalidate cached entry for `(model_family, training_run_id)`, re-load on next access |
-| **Latency budget** | <30s end-to-end (instrument-day grain) | <60s (model warm-load is heavier) |
-| **Downstream consumers** | MTDS / MDPS / features-service (each maintains own cache) | strategy-service (`ML_DIRECTIONAL` archetypes), features-\* (ML-derived calculators) |
-| **Doc** | This file (continues below) | UTL `ml/model_registry.py` docstrings + `catalogue-ml-model.md` |
+| Aspect                   | Mechanism 1 — Instrument-lifecycle delta-reloader                                                 | Mechanism 2 — Model Pub/Sub cache-bust                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Trigger source**       | instruments-service catalog refresh (cron + on-demand)                                            | ml-training-service post-training run + model-registry write                          |
+| **Pub/Sub topic**        | `streaming.{asset_group}.instrument_cache_refresh_trigger`                                        | `streaming.ml.model_registry_cache_bust`                                              |
+| **Payload shape**        | `INSTRUMENT_CACHE_REFRESH_TRIGGER` event with catalog-version hash                                | `MODEL_REGISTRY_CACHE_BUST` event with `(model_family, training_run_id)`              |
+| **Consumer-side state**  | In-memory catalog dict + per-instrument subscription state                                        | UTL `ModelRegistry` instance cache + warm-loaded model artefacts                      |
+| **Delta strategy**       | Fetch new catalog, compute (added/removed/changed) deltas, hot-reload affected subscription state | Invalidate cached entry for `(model_family, training_run_id)`, re-load on next access |
+| **Latency budget**       | <30s end-to-end (instrument-day grain)                                                            | <60s (model warm-load is heavier)                                                     |
+| **Downstream consumers** | MTDS / MDPS / features-service (each maintains own cache)                                         | strategy-service (`ML_DIRECTIONAL` archetypes), features-\* (ML-derived calculators)  |
+| **Doc**                  | This file (continues below)                                                                       | UTL `ml/model_registry.py` docstrings + `catalogue-ml-model.md`                       |
 
-Both mechanisms compose with `ApiKeyReloader` / `start_domain_config_reloaders` — "service is effectively a
-config" applies uniformly. Reference: Sweep 3 of
+Both mechanisms compose with `ApiKeyReloader` / `start_domain_config_reloaders` — "service is effectively a config"
+applies uniformly. Reference: Sweep 3 of
 [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
 
 ---
@@ -125,14 +125,14 @@ details + Protocol surface are documented in the expanded tables further down th
 
 MTDS instantiates `InstrumentLifecycleCacheDeltaReloader` per asset_group in `live_mode` startup and wires three
 discrete callbacks. Each callback receives `(CatalogDelta, snapshot)` where `CatalogDelta` is a frozen dataclass with
-`added: tuple[InstrumentRow, ...]`, `removed: tuple[InstrumentRow, ...]`, `changed: tuple[tuple[InstrumentRow, InstrumentRow], ...]`
-(`(old, new)` pairs).
+`added: tuple[InstrumentRow, ...]`, `removed: tuple[InstrumentRow, ...]`,
+`changed: tuple[tuple[InstrumentRow, InstrumentRow], ...]` (`(old, new)` pairs).
 
-| Callback site                                         | Signature                                                   | Behaviour                                                                                                                                                                                       |
-| ----------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `live/ws_subscription_manager.on_added`               | `(delta: CatalogDelta, snapshot: InstrumentCatalog) -> None` | For each `added` instrument, call `ws_client.subscribe(venue, instrument_id)`. WS adapter routes by venue per `unified_api_contracts.market.SOURCE_PRIORITY`; falls back to REST poll if WS unavailable. |
-| `live/ws_subscription_manager.on_removed`             | `(delta, snapshot) -> None`                                 | For each `removed` instrument, call `ws_client.unsubscribe(venue, instrument_id)` + flush in-flight tick buffer to GCS via `record_captured` before final-tick window closes.                    |
-| `live/instrument_config_cache.on_changed`             | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair, refresh `tick_size` / `contract_size` / `expiry_date` / `settlement_currency` in the live config cache. New expiry → spawn new contract WS subscription; old `expiry_date < now` → unsubscribe expired contract. |
+| Callback site                             | Signature                                                    | Behaviour                                                                                                                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live/ws_subscription_manager.on_added`   | `(delta: CatalogDelta, snapshot: InstrumentCatalog) -> None` | For each `added` instrument, call `ws_client.subscribe(venue, instrument_id)`. WS adapter routes by venue per `unified_api_contracts.market.SOURCE_PRIORITY`; falls back to REST poll if WS unavailable.                                     |
+| `live/ws_subscription_manager.on_removed` | `(delta, snapshot) -> None`                                  | For each `removed` instrument, call `ws_client.unsubscribe(venue, instrument_id)` + flush in-flight tick buffer to GCS via `record_captured` before final-tick window closes.                                                                |
+| `live/instrument_config_cache.on_changed` | `(delta, snapshot) -> None`                                  | For each `(old, new)` pair, refresh `tick_size` / `contract_size` / `expiry_date` / `settlement_currency` in the live config cache. New expiry → spawn new contract WS subscription; old `expiry_date < now` → unsubscribe expired contract. |
 
 ### MDPS — `CatalogDelta` callback wiring (Phase 10 detail)
 
@@ -140,11 +140,11 @@ MDPS uses the catalog to drive the case-A-vs-D classifier (per CLAUDE.md "Four-c
 decides whether a zero-source-response window is `record_empty(reason=EXPECTED_INSTRUMENT_DELISTED)` (case A) or
 `record_captured` with a zero-activity bar (case D — instrument alive but illiquid).
 
-| Callback site                                          | Signature                                                   | Behaviour                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `live/catalog_classifier.on_added`                     | `(delta, snapshot) -> None`                                 | Add new instrument to `_alive_set` keyed by `(venue, instrument_id, day)`. The classifier reads `_alive_set` per write-gate; presence routes to case D, absence routes to case A.                                                                                                                                                          |
-| `live/catalog_classifier.on_removed`                   | `(delta, snapshot) -> None`                                 | Remove instrument from `_alive_set`. Subsequent zero-source-response windows for this instrument route to case A (record_empty reason `EXPECTED_INSTRUMENT_DELISTED`).                                                                                                                                                                     |
-| `live/aggregator_config_cache.on_changed`              | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair where contract-shape fields differ (`tick_size`, `lot_size`, `settlement_currency`, `multiplier`), refresh the per-instrument aggregator config. Aggregation function (`compute_ohlcv_bar` etc.) reads these for tick-to-candle normalisation; stale values produce silently wrong OHLCV. Cluster-validation propagates: new expiry → new entry in `expected_root_clusters` map for the bundled-shard root. |
+| Callback site                             | Signature                   | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live/catalog_classifier.on_added`        | `(delta, snapshot) -> None` | Add new instrument to `_alive_set` keyed by `(venue, instrument_id, day)`. The classifier reads `_alive_set` per write-gate; presence routes to case D, absence routes to case A.                                                                                                                                                                                                                                                      |
+| `live/catalog_classifier.on_removed`      | `(delta, snapshot) -> None` | Remove instrument from `_alive_set`. Subsequent zero-source-response windows for this instrument route to case A (record_empty reason `EXPECTED_INSTRUMENT_DELISTED`).                                                                                                                                                                                                                                                                 |
+| `live/aggregator_config_cache.on_changed` | `(delta, snapshot) -> None` | For each `(old, new)` pair where contract-shape fields differ (`tick_size`, `lot_size`, `settlement_currency`, `multiplier`), refresh the per-instrument aggregator config. Aggregation function (`compute_ohlcv_bar` etc.) reads these for tick-to-candle normalisation; stale values produce silently wrong OHLCV. Cluster-validation propagates: new expiry → new entry in `expected_root_clusters` map for the bundled-shard root. |
 
 ### features-service — `CatalogDelta` callback wiring (Phase 10 detail)
 
@@ -152,11 +152,11 @@ features-service consumes the catalog to validate UAC `feature_group → require
 asset-scoped runner. When an instrument is added/removed/changed mid-day, the DAG validity for any feature_group
 touching that instrument can flip.
 
-| Callback site                                                 | Signature                                                   | Behaviour                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `live/feature_dag_validator.on_added`                         | `(delta, snapshot) -> None`                                 | For each `added` instrument, walk every feature_group's `required_inputs` set; if any input matches `(asset_group, venue, instrument_id, data_type)`, mark feature_group as `now_satisfied` (was previously skipped with `DEPENDENCIES_MISSING_CONTINUE`). Next CandleComputed event fires the feature for this instrument.                          |
-| `live/feature_dag_validator.on_removed`                       | `(delta, snapshot) -> None`                                 | For each `removed` instrument, drop in-progress feature compute state cleanly (cancel pending tasks, flush partial outputs as `record_failed` with `error_reason=INSTRUMENT_DELISTED_MID_COMPUTE`, propagate `data_freshness=STALE` for any cross-instrument features whose inputs included this instrument).                                       |
-| `live/cross_instrument_input_cache.on_changed`                | `(delta, snapshot) -> None`                                 | For each `(old, new)` pair, refresh cross-instrument feature input mappings (e.g. `cross_instrument.lst_yield_vs_eth_spot` referencing `defi.lido.steth_yield` — if Lido's contract address changes mid-day, the cross-cutting runner needs the new address). Propagates to `WatermarkAlignmentFanin` upstream-stream registration if applicable. |
+| Callback site                                  | Signature                   | Behaviour                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `live/feature_dag_validator.on_added`          | `(delta, snapshot) -> None` | For each `added` instrument, walk every feature_group's `required_inputs` set; if any input matches `(asset_group, venue, instrument_id, data_type)`, mark feature_group as `now_satisfied` (was previously skipped with `DEPENDENCIES_MISSING_CONTINUE`). Next CandleComputed event fires the feature for this instrument.                       |
+| `live/feature_dag_validator.on_removed`        | `(delta, snapshot) -> None` | For each `removed` instrument, drop in-progress feature compute state cleanly (cancel pending tasks, flush partial outputs as `record_failed` with `error_reason=INSTRUMENT_DELISTED_MID_COMPUTE`, propagate `data_freshness=STALE` for any cross-instrument features whose inputs included this instrument).                                     |
+| `live/cross_instrument_input_cache.on_changed` | `(delta, snapshot) -> None` | For each `(old, new)` pair, refresh cross-instrument feature input mappings (e.g. `cross_instrument.lst_yield_vs_eth_spot` referencing `defi.lido.steth_yield` — if Lido's contract address changes mid-day, the cross-cutting runner needs the new address). Propagates to `WatermarkAlignmentFanin` upstream-stream registration if applicable. |
 
 ### Reloader invocation pattern (per service)
 
@@ -183,10 +183,10 @@ async for event in subscriber.subscribe():
 ```
 
 The reloader fetches the new catalog snapshot from GCS, diffs against the previous in-memory snapshot, builds the
-`CatalogDelta`, and dispatches the three callbacks in order: `on_added` → `on_changed` → `on_removed`. Order matters
-for two reasons: (1) `on_added` may need to subscribe a feed BEFORE `on_changed` refreshes that instrument's config;
-(2) `on_removed` runs last so its `flush_in_flight` calls don't fight `on_added`'s new subscriptions on the same
-underlying WS connection.
+`CatalogDelta`, and dispatches the three callbacks in order: `on_added` → `on_changed` → `on_removed`. Order matters for
+two reasons: (1) `on_added` may need to subscribe a feed BEFORE `on_changed` refreshes that instrument's config; (2)
+`on_removed` runs last so its `flush_in_flight` calls don't fight `on_added`'s new subscriptions on the same underlying
+WS connection.
 
 ## Failure modes + retry
 

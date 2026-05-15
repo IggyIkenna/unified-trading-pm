@@ -131,29 +131,30 @@ that named successor.
 ### Phase 4 — Legacy `add()` hard-ban for bundled data_types + QG enforcement (P0, ~1 AI-day)
 
 **Scope clarification (2026-05-13 after Phase 3 P1 audit)**: Phase 3 P1 audit found 20+ legitimate `add()` callsites
-using NON-bundled data_types (strategy-service orders/positions/pnl, features-service sports features, instruments-service
-sports scripts, MTDS migration scripts). These can NOT use `record_captured_from_counts` since they have no cluster
-coverage concept. Full deletion of `add()` requires migrating ALL non-bundled callers to `record_captured` first —
-that's a separate multi-service migration effort, out of scope for this wave. **Corrected scope**: harden the bundled
-data_type guard in `add()` from a `DeprecationWarning` to a hard `ValueError`, and add a QG static ratchet that bans
-`ManifestWriter.add()` calls where the `data_type=` kwarg is a known bundled type literal.
+using NON-bundled data_types (strategy-service orders/positions/pnl, features-service sports features,
+instruments-service sports scripts, MTDS migration scripts). These can NOT use `record_captured_from_counts` since they
+have no cluster coverage concept. Full deletion of `add()` requires migrating ALL non-bundled callers to
+`record_captured` first — that's a separate multi-service migration effort, out of scope for this wave. **Corrected
+scope**: harden the bundled data_type guard in `add()` from a `DeprecationWarning` to a hard `ValueError`, and add a QG
+static ratchet that bans `ManifestWriter.add()` calls where the `data_type=` kwarg is a known bundled type literal.
 
 - [x] [SCRIPT] P0. Harden `ManifestWriter.add()` bundled-data_type guard from `DeprecationWarning` to `ValueError` with
       message `"ManifestWriter.add() with bundled data_type={!r} is banned; use record_captured_from_counts()"`. Remove
       the `warnings.warn` + `inspect.currentframe()` code; replace with `raise ValueError(msg)` so any test that doesn't
       mock it hard-fails immediately. 5+ unit tests: bundled data_type raises ValueError, non-bundled data_type passes,
       all 4 bundled types trigger, empty string passes, ValueError message includes data_type name. status: done
-      (UTL@d8ca04bc — `manifest_writer.py` raises ValueError; `test_manifest_writer_add_deprecation_warning.py` rewritten
-      to 14 ValueError tests; also fixes 11 pre-existing failures in
+      (UTL@d8ca04bc — `manifest_writer.py` raises ValueError; `test_manifest_writer_add_deprecation_warning.py`
+      rewritten to 14 ValueError tests; also fixes 11 pre-existing failures in
       `test_manifest_writer_record_captured_from_counts.py` by adding missing `pipeline_mode=` kwarg to all 11 calls.)
 
 - [x] [SCRIPT] P0. Add QG STEP 5.73 to `base-service.sh` — static grep ratchet that bans
       `ManifestWriter.add(data_type="<bundled>")` literal-string callsites. Grep for
       `data_type\s*=\s*["'](options_chain|futures_chain|prediction_canonical_question_group|sports_fixture_bundle)["']`
-      combined with `.add(` in `SOURCE_DIR`. Any match = CI fail. Non-literal `data_type=` assignments pass (runtime-only).
-      status: done (PM@ce40d8ab — STEP 5.73 added to base-service.sh after STEP 5.72; grep-based pattern verified locally;
-      passes on UTL source with zero bundled literal callsites. QG unit tests deferred — base-service.sh steps are
-      integration-tested by running the full QG suite on each repo; no dedicated unit test file for shell QG steps.)
+      combined with `.add(` in `SOURCE_DIR`. Any match = CI fail. Non-literal `data_type=` assignments pass
+      (runtime-only). status: done (PM@ce40d8ab — STEP 5.73 added to base-service.sh after STEP 5.72; grep-based pattern
+      verified locally; passes on UTL source with zero bundled literal callsites. QG unit tests deferred —
+      base-service.sh steps are integration-tested by running the full QG suite on each repo; no dedicated unit test
+      file for shell QG steps.)
 
 ### Phase 5 — Codex SSOT updates (P0, ~0.5 AI-day)
 
@@ -211,7 +212,8 @@ deletion + QG enforcement + codex docs all sequenced after the predictions-bundl
 | Phase 3 — CME-OPTIONS migration          | `done` (2026-05-13 session)                                             | market-tick-data-service@616ac15 (6 new tests + 4 fixes) |
 | Phase 3 — Workspace add() callsite audit | `done` (2026-05-13 session — zero bundled callsites found outside MTDS) | PM checkbox flip only (audit finding)                    |
 | Phase 4 — add() hard ValueError ban + QG | `done` (2026-05-13 session)                                             | UTL@d8ca04bc (ValueError + 25 tests) + PM STEP 5.73      |
-| Phase 5 — Codex SSOT updates             | `done` (2026-05-13 session)                                             | PM@d93a9952 codex availability-manifest doc updated          |
+| Phase 5 — Codex SSOT updates             | `done` (2026-05-13 session)                                             | PM@d93a9952 codex availability-manifest doc updated      |
 
 Plan-flip commits: PM@8d44424a (Phase 1) + PM@75e768a6 (Phase 3 first item + predictions Q2 resolution)
-+ PM@b36c789b (Phase 2 + 3b) + PM@e0730a21 (Phase 3 P1 audit) + PM@ce40d8ab (Phase 4) + PM@d93a9952 (Phase 5).
+
+- PM@b36c789b (Phase 2 + 3b) + PM@e0730a21 (Phase 3 P1 audit) + PM@ce40d8ab (Phase 4) + PM@d93a9952 (Phase 5).

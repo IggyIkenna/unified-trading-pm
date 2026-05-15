@@ -249,8 +249,8 @@ config-api (self-contained)
 
 ### Orphan GCS Paths (written but no confirmed reader)
 
-| Written By                        | Path Pattern                                | Status                                                              |
-| --------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| Written By                                 | Path Pattern                                | Status                                                              |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------- |
 | features-service (sports family)           | `features-sports-{P}/`                      | No API reader -- ML pipeline bulk consumes (by design)              |
 | features-service (onchain family)          | `features-onchain-{P}/`                     | No API reader -- ML pipeline bulk consumes (by design)              |
 | features-service (volatility family)       | `features-volatility-{category}-{P}/`       | No API reader -- ML pipeline bulk consumes (by design)              |
@@ -258,11 +258,11 @@ config-api (self-contained)
 | features-service (cross-instrument family) | `features-cross-instrument-{category}-{P}/` | No API reader -- ML pipeline bulk consumes (by design)              |
 | features-service (multi-timeframe family)  | `features-multi-timeframe-{category}-{P}/`  | No API reader -- ML pipeline bulk consumes (by design)              |
 | features-service (calendar family)         | `calendar-features-{P}/`                    | No API reader -- ML pipeline bulk consumes (by design)              |
-| risk-and-exposure-service         | `{P}-risk/risk/{client_id}/{date}/`         | No API reader -- client-reporting-api reads PnL, not risk snapshots |
-| position-balance-monitor-service  | `positions-{P}/`                            | No API reader                                                       |
-| ml-inference-service              | `predictions-{P}/`                          | No direct API reader -- consumed by strategy-service via GCS/PubSub |
-| alerting-service                  | `alerting/configs/`                         | No API reader -- internal config snapshots                          |
-| alerting-service                  | `alerting/state/`                           | No API reader -- internal cooldown state                            |
+| risk-and-exposure-service                  | `{P}-risk/risk/{client_id}/{date}/`         | No API reader -- client-reporting-api reads PnL, not risk snapshots |
+| position-balance-monitor-service           | `positions-{P}/`                            | No API reader                                                       |
+| ml-inference-service                       | `predictions-{P}/`                          | No direct API reader -- consumed by strategy-service via GCS/PubSub |
+| alerting-service                           | `alerting/configs/`                         | No API reader -- internal config snapshots                          |
+| alerting-service                           | `alerting/state/`                           | No API reader -- internal cooldown state                            |
 
 ### Orphan UI Pages (UI pages with no confirmed API backing)
 

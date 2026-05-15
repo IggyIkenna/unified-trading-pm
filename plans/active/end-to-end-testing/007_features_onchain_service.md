@@ -43,8 +43,8 @@ Uses `ServiceCLI` from unified-trading-library with custom `_extra_args`:
 - `--run-tag` (GCS prefix: `batch` or `t1-recon`)
 - `--dry-run`, `--force`, `--log-level`
 
-Note: `onchain_perps` feature group is DEPRECATED — Hyperliquid/Aster now use CEFI bucket via
-features-service (delta-one family).
+Note: `onchain_perps` feature group is DEPRECATED — Hyperliquid/Aster now use CEFI bucket via features-service
+(delta-one family).
 
 ## Test Matrix
 
@@ -144,17 +144,17 @@ The parser accepts `live` mode (and `incremental` as deprecated alias). Verify l
 
 ### Phase 7: Observability
 
-| #   | Check                   | Expected                                              | Status |
-| --- | ----------------------- | ----------------------------------------------------- | ------ |
-| 7.1 | ServiceRuntime log line | All dimensions logged (operation, mode, category)     |        |
-| 7.2 | UEI lifecycle events    | STARTED, per-feature-group events, COMPLETED/FAILED   |        |
-| 7.3 | Shard-level isolation   | One feature group failure doesn't crash others        |        |
-| 7.4 | Dry-run warning         | "DRY RUN" or dry-run confirmation in logs             |        |
-| 7.5 | Error classification    | ADAPTER_FETCH_FAILED events for failed data sources   |        |
-| 7.6 | Memory watchdog         | "Memory watchdog started" logged                      |        |
-| 7.7 | Graceful shutdown       | GracefulShutdownHandler registered + cleanup callback |        |
-| 7.8 | Correlation ID          | correlation_id present in error events                |        |
-| 7.9 | Tracing                 | `setup_tracing("features-service (onchain family)")` called    |        |
+| #   | Check                   | Expected                                                    | Status |
+| --- | ----------------------- | ----------------------------------------------------------- | ------ |
+| 7.1 | ServiceRuntime log line | All dimensions logged (operation, mode, category)           |        |
+| 7.2 | UEI lifecycle events    | STARTED, per-feature-group events, COMPLETED/FAILED         |        |
+| 7.3 | Shard-level isolation   | One feature group failure doesn't crash others              |        |
+| 7.4 | Dry-run warning         | "DRY RUN" or dry-run confirmation in logs                   |        |
+| 7.5 | Error classification    | ADAPTER_FETCH_FAILED events for failed data sources         |        |
+| 7.6 | Memory watchdog         | "Memory watchdog started" logged                            |        |
+| 7.7 | Graceful shutdown       | GracefulShutdownHandler registered + cleanup callback       |        |
+| 7.8 | Correlation ID          | correlation_id present in error events                      |        |
+| 7.9 | Tracing                 | `setup_tracing("features-service (onchain family)")` called |        |
 
 ## Known Issues Audit
 

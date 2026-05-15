@@ -39,12 +39,12 @@ estimate_calibration_note: |
 
 # Deploy-Missing auto-launch (preview -> auto)
 
-> **🟢 FOLD-IN CONFIRMED — RATIFIED 2026-05-10 cross-plan audit L3.** This plan **stays as an independent
-> implementation surface** (Phases 0-4 own concrete tarball-refresh + auto-launch endpoint + IAM/audit-log details);
+> **🟢 FOLD-IN CONFIRMED — RATIFIED 2026-05-10 cross-plan audit L3.** This plan **stays as an independent implementation
+> surface** (Phases 0-4 own concrete tarball-refresh + auto-launch endpoint + IAM/audit-log details);
 > [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) is the **UI umbrella** that
-> exposes this plan's runtime-execution surface. The two plans coexist by ownership split: lifecycle-tabs owns
-> *UI tab structure + auth-flow re-shape*; this plan owns *endpoint + tarball + auto-launch backend*. Cross-references
-> between both plans stand; neither absorbs the other.
+> exposes this plan's runtime-execution surface. The two plans coexist by ownership split: lifecycle-tabs owns _UI tab
+> structure + auth-flow re-shape_; this plan owns _endpoint + tarball + auto-launch backend_. Cross-references between
+> both plans stand; neither absorbs the other.
 
 > **Fold-into-umbrella banner 2026-05-08**: this plan's Phase 1+2 (tarball-refresh + auto-launch endpoint) is a child of
 > the [`deployment_ui_lifecycle_tabs_2026_05_08`](deployment_ui_lifecycle_tabs_2026_05_08.md) umbrella per the

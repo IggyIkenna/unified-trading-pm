@@ -148,8 +148,8 @@ parent (e.g. per-repo or per-asset-group flavours of the same shippable unit):
 ```
 
 Sub-bullet checkboxes do not satisfy the "first content line" rule on their own (Cursor renders them as nested items
-under the parent's filled/hollow state). They are valid only as children of a parent `- [x]` / `- [ ]` checkbox; a
-plan section consisting entirely of nested checkboxes without a parent is rejected.
+under the parent's filled/hollow state). They are valid only as children of a parent `- [x]` / `- [ ]` checkbox; a plan
+section consisting entirely of nested checkboxes without a parent is rejected.
 
 ````
 

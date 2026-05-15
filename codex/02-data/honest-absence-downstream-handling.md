@@ -588,20 +588,20 @@ continuous-verification path for the manifest's `empty_confirmed` / `expected_un
 
 ### Components
 
-| Component | Path | Notes |
-| --------- | ---- | ----- |
-| VM launcher | `deployment-service/scripts/vm/launch-honest-coverage-vm.sh` | Primary — all asset groups, Cloud Scheduler target |
-| Ad-hoc launcher | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` | Per-asset-group filter via `--asset-group` |
-| Scheduler setup | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` | Creates `honest-coverage-daily` Cloud Scheduler job |
-| Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all` | Runs inside VM, writes to GCS |
-| Output bucket | `gs://central-element-323112-honest-coverage/{date}/coverage.json` | Consumed by deployment-api |
-| API consumer | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C) | UI-facing honest-coverage endpoint |
+| Component          | Path                                                                       | Notes                                               |
+| ------------------ | -------------------------------------------------------------------------- | --------------------------------------------------- |
+| VM launcher        | `deployment-service/scripts/vm/launch-honest-coverage-vm.sh`               | Primary — all asset groups, Cloud Scheduler target  |
+| Ad-hoc launcher    | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`       | Per-asset-group filter via `--asset-group`          |
+| Scheduler setup    | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`         | Creates `honest-coverage-daily` Cloud Scheduler job |
+| Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all` | Runs inside VM, writes to GCS                       |
+| Output bucket      | `gs://central-element-323112-honest-coverage/{date}/coverage.json`         | Consumed by deployment-api                          |
+| API consumer       | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C)           | UI-facing honest-coverage endpoint                  |
 
 ### Cron schedule
 
-Cloud Scheduler job `honest-coverage-daily` fires at **00:30 UTC daily** and calls the VM launcher.
-The launcher enforces a singleton lock — refuses to start if any `honest-coverage-*` VM is RUNNING — so
-overlapping runs do not corrupt the GCS output.
+Cloud Scheduler job `honest-coverage-daily` fires at **00:30 UTC daily** and calls the VM launcher. The launcher
+enforces a singleton lock — refuses to start if any `honest-coverage-*` VM is RUNNING — so overlapping runs do not
+corrupt the GCS output.
 
 ### VM spec
 
@@ -612,15 +612,15 @@ overlapping runs do not corrupt the GCS output.
 
 ### Watchdog registration
 
-VM name prefix `honest-coverage-` is registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`. The watchdog
-tracks heartbeats but does NOT kill honest-coverage VMs (they are inherently short-lived; heartbeat-only mode).
+VM name prefix `honest-coverage-` is registered in `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`. The watchdog tracks
+heartbeats but does NOT kill honest-coverage VMs (they are inherently short-lived; heartbeat-only mode).
 
 ### Operational rules (derived from workspace HARD RULES)
 
 1. **No fire-and-forget**: VM must emit STARTED within 60 s and STOPPED/FAILED at exit.
 2. **Per-VM shard isolation**: set `VM_NAME=honest-coverage-{date}` + `MANIFEST_PER_VM_SHARDS=true`.
-3. **Ad-hoc runs**: use `launch-measure-honest-coverage-vm.sh --asset-group {group}` for partial re-runs;
-   do NOT re-run the daily launcher with `--force` unless the scheduler job failed.
+3. **Ad-hoc runs**: use `launch-measure-honest-coverage-vm.sh --asset-group {group}` for partial re-runs; do NOT re-run
+   the daily launcher with `--force` unless the scheduler job failed.
 
 ### Cross-references
 

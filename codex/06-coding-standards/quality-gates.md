@@ -110,36 +110,36 @@ identifiers. The table below maps each canonical step number to its location in 
 file. Steps without a dedicated section here are enforced inline in `base-service.sh` and documented in CLAUDE.md "Key
 Rules (Quick Reference)" / "Service Infrastructure Requirements".
 
-| STEP | Topic                                  | This doc anchor                                                                                                                            | Enforcement file (canonical)                                         | CLAUDE.md cross-ref                                                                                                         |
-| ---- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| 5.10 | basedpyright type-check                | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                                                      | `scripts/quality-gates-base/base-service.sh`                         | "Key Rules — `basedpyright` not `pyright`"                                                                                  |
-| 5.11 | ruff lint + format                     | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)                                 | `scripts/quality-gates-base/base-service.sh`                         | "Key Rules — flat deps + ruff"                                                                                              |
-| 5.22 | basedpyright suppression baseline      | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10)             | `scripts/quality-gates-base/base-service.sh` + `base-library.sh`     | "No `# type: ignore` to hide architectural violations"                                                                      |
-| 5.34 | typed config reloaders                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)"                                                  |
-| 5.61 | ServiceBootstrap presence              | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"                                                        |
-| 5.62 | Health API + `make_health_router`      | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Service Infrastructure Requirements — Health API (STEP 5.62)"                                                              |
-| 5.64 | bundled-shard cluster validation AST   | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Cluster validation MANDATORY at `record_captured` for bundled shards"                                                      |
-| 5.65 | removed-symbol AST-walk                | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                                | `scripts/quality_gates/check_removed_symbols.py` (driver)            | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"                                                          |
-| 5.66 | per-VM shard isolation envvar AST walk | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                         | "Per-VM shard isolation for concurrent backfills"                                                                           |
-| 5.67 | banned NaN-placeholder method AST-walk | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver) | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision" |
-| 5.69 | inline `f"gs://…"` / `f"s3://…"` URI ratchet | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_inline_bucket_uri.py` (driver)          | "Bucket-name SSOT (b+)"                                                                                                     |
-| 5.70 | explicit `pipeline_mode=` at `record_*` calls | [STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call](#step-570-explicit-pipeline_mode-at-every-record_-call-manifest-v8) | `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (driver) | "Live = batch (CRITICAL)" + "Availability manifest v8 — `pipeline_mode` first-class column"                                 |
-| 5.71 | emission-policy paired-callsite (`publish_with_policy` for every `record_captured`) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (baseline-aware ratchet) | writegate Phase 6.9 — every `record_captured()` callsite must have a paired `publish_with_policy()` or `publish_with_manifest_lookup()` |
-| 5.72 | UAC chain_env inclusion invariant (`MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES`) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `defi-execution-overview.md` § chain-set completeness (DF-7) |
-| 5.73 | `ManifestWriter.add()` with bundled `data_type` literal — banned | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | use `record_captured_from_counts()` instead |
-| 5.74 | MDPS bar-boundary truncation bypass static check | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | MDPS-only; use `compute_bar_close_boundary()` helper |
-| 5.75 | `DataType` enum mode-agnosticism — no `LIVE_`/`BATCH_` prefixes (batch_live_symmetry L1) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | "Batch = Live" + `mode-axis-discipline.md` — DataType values must be mode-agnostic |
-| 5.76 | no service-level `DataType` class redeclarations (batch_live_symmetry L5) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | import from `unified_api_contracts`; never redeclare locally |
-| 5.77 | no `mode == "batch"`/`"live"` comparisons outside CLI seam (batch_live_symmetry L2) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `mode-axis-discipline.md` AP-1 — mode routing only at CLI entry point |
-| 5.78 | `RuntimeMode` declared only in UAC `internal/modes.py` (batch_live_symmetry L3) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `mode-axis-discipline.md` AP-3 — import from UAC, never redeclare |
-| 5.79 | dockerfile-base-pin — production Dockerfiles must use `@sha256:digest` not `:tag` | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5) | `codex/06-coding-standards/dockerfile-standards.md` — pin SHA for reproducible builds; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 |
-| 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json` | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet) | `codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch |
-| 5.81 | tarball-env-block — deployment-api must gate staging/prod tarball uploads behind env-tier check | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (deployment-api only; pending-ratchet) | `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1) |
-| 5.82 | image-build-on-staging-merge — staging branch workflow must trigger Cloud Build | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5) | `deployment-and-qg-strategy.md` § image-build cutover path; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 |
-| L1   | data_type enum contains `LIVE_`/`BATCH_` prefixed members | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork |
-| L2   | mode-conditional branches outside seams | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-fix-required-21-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode` |
-| L3   | `RuntimeMode` declared outside UAC SSOT | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-fix-required-2-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode` |
-| L7   | `record_captured()` missing `assert_available_at_present` | [STEP L7: record_captured assert_available_at_present](#step-l7-record_captured-assert_available_at_present-ongoing-sweep) | `scripts/quality-gates-base/base-service.sh` (ongoing ratchet) | "`available_at` is per-row, write-time" — UTL guard internal; L7 catches callsites that bypass |
+| STEP | Topic                                                                                                     | This doc anchor                                                                                                                            | Enforcement file (canonical)                                                            | CLAUDE.md cross-ref                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 5.10 | basedpyright type-check                                                                                   | [Type Checking Standards](#type-checking-standards-pyrightconfigjson)                                                                      | `scripts/quality-gates-base/base-service.sh`                                            | "Key Rules — `basedpyright` not `pyright`"                                                                                                             |
+| 5.11 | ruff lint + format                                                                                        | [Ruff Version Consistency](#ruff-version-consistency-critical) · [Ruff Configuration](#ruff-configuration)                                 | `scripts/quality-gates-base/base-service.sh`                                            | "Key Rules — flat deps + ruff"                                                                                                                         |
+| 5.22 | basedpyright suppression baseline                                                                         | [STEP 5.22: basedpyright Baseline Suppression](#step-522-basedpyright-baseline-suppression-error-policy--escalated-2026-03-10)             | `scripts/quality-gates-base/base-service.sh` + `base-library.sh`                        | "No `# type: ignore` to hide architectural violations"                                                                                                 |
+| 5.34 | typed config reloaders                                                                                    | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Service Infrastructure Requirements — Typed config reloaders (STEP 5.34)"                                                                             |
+| 5.61 | ServiceBootstrap presence                                                                                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Service Infrastructure Requirements — ServiceBootstrap (STEP 5.61)"                                                                                   |
+| 5.62 | Health API + `make_health_router`                                                                         | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Service Infrastructure Requirements — Health API (STEP 5.62)"                                                                                         |
+| 5.64 | bundled-shard cluster validation AST                                                                      | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Cluster validation MANDATORY at `record_captured` for bundled shards"                                                                                 |
+| 5.65 | removed-symbol AST-walk                                                                                   | [STEP 5.65: Removed-Symbol AST-Walk](#step-565-removed-symbol-ast-walk-citadel--6-extended)                                                | `scripts/quality_gates/check_removed_symbols.py` (driver)                               | "Citadel-Grade Planning Standards § 6 Downstream Consumer Updates"                                                                                     |
+| 5.66 | per-VM shard isolation envvar AST walk                                                                    | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Per-VM shard isolation for concurrent backfills"                                                                                                      |
+| 5.67 | banned NaN-placeholder method AST-walk                                                                    | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver)                    | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision"                            |
+| 5.69 | inline `f"gs://…"` / `f"s3://…"` URI ratchet                                                              | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_inline_bucket_uri.py` (driver)                             | "Bucket-name SSOT (b+)"                                                                                                                                |
+| 5.70 | explicit `pipeline_mode=` at `record_*` calls                                                             | [STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call](#step-570-explicit-pipeline_mode-at-every-record_-call-manifest-v8)        | `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (driver)        | "Live = batch (CRITICAL)" + "Availability manifest v8 — `pipeline_mode` first-class column"                                                            |
+| 5.71 | emission-policy paired-callsite (`publish_with_policy` for every `record_captured`)                       | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (baseline-aware ratchet)                   | writegate Phase 6.9 — every `record_captured()` callsite must have a paired `publish_with_policy()` or `publish_with_manifest_lookup()`                |
+| 5.72 | UAC chain_env inclusion invariant (`MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES`) | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | `defi-execution-overview.md` § chain-set completeness (DF-7)                                                                                           |
+| 5.73 | `ManifestWriter.add()` with bundled `data_type` literal — banned                                          | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | use `record_captured_from_counts()` instead                                                                                                            |
+| 5.74 | MDPS bar-boundary truncation bypass static check                                                          | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | MDPS-only; use `compute_bar_close_boundary()` helper                                                                                                   |
+| 5.75 | `DataType` enum mode-agnosticism — no `LIVE_`/`BATCH_` prefixes (batch_live_symmetry L1)                  | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | "Batch = Live" + `mode-axis-discipline.md` — DataType values must be mode-agnostic                                                                     |
+| 5.76 | no service-level `DataType` class redeclarations (batch_live_symmetry L5)                                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | import from `unified_api_contracts`; never redeclare locally                                                                                           |
+| 5.77 | no `mode == "batch"`/`"live"` comparisons outside CLI seam (batch_live_symmetry L2)                       | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | `mode-axis-discipline.md` AP-1 — mode routing only at CLI entry point                                                                                  |
+| 5.78 | `RuntimeMode` declared only in UAC `internal/modes.py` (batch_live_symmetry L3)                           | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                            | `mode-axis-discipline.md` AP-3 — import from UAC, never redeclare                                                                                      |
+| 5.79 | dockerfile-base-pin — production Dockerfiles must use `@sha256:digest` not `:tag`                         | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)            | `codex/06-coding-standards/dockerfile-standards.md` — pin SHA for reproducible builds; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 |
+| 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json`                   | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet) | `codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch                                                       |
+| 5.81 | tarball-env-block — deployment-api must gate staging/prod tarball uploads behind env-tier check           | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-api only; pending-ratchet)     | `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1)                                                                                          |
+| 5.82 | image-build-on-staging-merge — staging branch workflow must trigger Cloud Build                           | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)            | `deployment-and-qg-strategy.md` § image-build cutover path; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5                            |
+| L1   | data*type enum contains `LIVE*`/`BATCH\_` prefixed members                                                | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable)                                                        | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork                                                                |
+| L2   | mode-conditional branches outside seams                                                                   | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-fix-required-21-violations)                                | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode`                                                                       |
+| L3   | `RuntimeMode` declared outside UAC SSOT                                                                   | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-fix-required-2-violations)                                             | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode`                                                              |
+| L7   | `record_captured()` missing `assert_available_at_present`                                                 | [STEP L7: record_captured assert_available_at_present](#step-l7-record_captured-assert_available_at_present-ongoing-sweep)                 | `scripts/quality-gates-base/base-service.sh` (ongoing ratchet)                          | "`available_at` is per-row, write-time" — UTL guard internal; L7 catches callsites that bypass                                                         |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
 file's matching block for the exact assertion + the CLAUDE.md cross-ref for the rationale + the linked anchor here for
@@ -451,42 +451,43 @@ classifications.
 
 ## Library-Repo QG Carveout Patterns
 
-Library repos (UAC, UTL, etc.) use the same `base-library.sh` body as service repos but expose additional
-per-repo override variables to suppress false-positive QG checks on files that intentionally break the
-normal rules. These carveouts are in the repo's `scripts/quality-gates.sh` config stub above the
-`source base-library.sh` line.
+Library repos (UAC, UTL, etc.) use the same `base-library.sh` body as service repos but expose additional per-repo
+override variables to suppress false-positive QG checks on files that intentionally break the normal rules. These
+carveouts are in the repo's `scripts/quality-gates.sh` config stub above the `source base-library.sh` line.
 
-**These overrides are for library repos only.** Service repos must not use them — service code that needs a
-size or import exception should be refactored, not carved out.
+**These overrides are for library repos only.** Service repos must not use them — service code that needs a size or
+import exception should be refactored, not carved out.
 
 ### `UAC_CANONICAL_EXEMPT=true`
 
 **What it disables**: The "no internal deep-imports" check that verifies service code never imports from
 `unified_api_contracts.canonical.*` directly (only through the public facade `from unified_api_contracts import ...`).
 
-**When valid**: Only for `unified-api-contracts` itself. UAC is the schema/contract owner — it must be allowed
-to import its own sub-modules internally.
+**When valid**: Only for `unified-api-contracts` itself. UAC is the schema/contract owner — it must be allowed to import
+its own sub-modules internally.
 
 **Pattern (in `scripts/quality-gates.sh`)**:
+
 ```bash
 UAC_CANONICAL_EXEMPT=true  # UAC is the schema repo — internal imports are allowed
 ```
 
-**Never use for service repos.** Service deep-import violations (e.g. `from unified_api_contracts.canonical...`)
-must be fixed by switching to the facade import.
+**Never use for service repos.** Service deep-import violations (e.g. `from unified_api_contracts.canonical...`) must be
+fixed by switching to the facade import.
 
 ---
 
 ### `SIZE_EXTRA_EXCLUDES`
 
-**What it does**: Passes additional `! -path <glob>` exclusions to the file-size check so named files are
-not flagged for exceeding the 900-line limit.
+**What it does**: Passes additional `! -path <glob>` exclusions to the file-size check so named files are not flagged
+for exceeding the 900-line limit.
 
-**When valid**: Closed-set enumerations — venue registries, error code tables, instrument seed catalogues,
-re-export facades — where splitting the file would harm grep-ability without reducing complexity. New files
-should not be added to this list unless they are provably closed-set enumerations.
+**When valid**: Closed-set enumerations — venue registries, error code tables, instrument seed catalogues, re-export
+facades — where splitting the file would harm grep-ability without reducing complexity. New files should not be added to
+this list unless they are provably closed-set enumerations.
 
 **Pattern**:
+
 ```bash
 SIZE_EXTRA_EXCLUDES=(
     "./unified_api_contracts/__init__.py"       # public re-export facade
@@ -495,21 +496,22 @@ SIZE_EXTRA_EXCLUDES=(
 )
 ```
 
-**Adding a new entry**: requires a comment explaining WHY the file is a legitimate exception (closed-set
-enumeration / generated / provenance doc). Without a comment, the PR is review-blocked.
+**Adding a new entry**: requires a comment explaining WHY the file is a legitimate exception (closed-set enumeration /
+generated / provenance doc). Without a comment, the PR is review-blocked.
 
 ---
 
 ### `GCP_PROJECT_ID_EXCLUDE_GLOBS`
 
-**What it does**: Passes additional exclusion globs to the `GCP_PROJECT_ID` literal-string check that
-prevents hardcoded project IDs appearing in source files.
+**What it does**: Passes additional exclusion globs to the `GCP_PROJECT_ID` literal-string check that prevents hardcoded
+project IDs appearing in source files.
 
-**When valid**: Files that contain GCS bucket names or project IDs purely as documentation — provenance
-comments, test-fixture URI shapes, or module-level string constants that document where live data lives.
-These are NOT runtime config paths; they never reach `get_storage_client()` or `resolve_bucket_name()`.
+**When valid**: Files that contain GCS bucket names or project IDs purely as documentation — provenance comments,
+test-fixture URI shapes, or module-level string constants that document where live data lives. These are NOT runtime
+config paths; they never reach `get_storage_client()` or `resolve_bucket_name()`.
 
 **Pattern**:
+
 ```bash
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/data_source_continuity.py"                 # VIX_PROD_BUCKET/VIX_DEV_BUCKET as constants
@@ -518,28 +520,28 @@ GCP_PROJECT_ID_EXCLUDE_GLOBS=(
 )
 ```
 
-**Never use to suppress actual runtime config.** Bucket lookups at runtime MUST go through
-`resolve_bucket_name(...)` (QG STEP 5.69 enforces). This carveout only covers static strings that are
-documentation artifacts, not lookup keys.
+**Never use to suppress actual runtime config.** Bucket lookups at runtime MUST go through `resolve_bucket_name(...)`
+(QG STEP 5.69 enforces). This carveout only covers static strings that are documentation artifacts, not lookup keys.
 
 ---
 
 ### `BROAD_EXCEPT_EXTRA_EXCLUDES`
 
-**What it does**: Passes additional glob patterns to the broad-`except` check (bandit B001 / ruff E722)
-so named files are not flagged for `except Exception:` or bare `except:` patterns.
+**What it does**: Passes additional glob patterns to the broad-`except` check (bandit B001 / ruff E722) so named files
+are not flagged for `except Exception:` or bare `except:` patterns.
 
-**When valid**: Registry dispatchers and mapping resolvers that must catch all exception types to isolate
-faults per-entry (e.g., `venue_context.py`, `mapping_resolver.py`). The catch-all prevents one bad entry
-from silently dropping the rest of the registry.
+**When valid**: Registry dispatchers and mapping resolvers that must catch all exception types to isolate faults
+per-entry (e.g., `venue_context.py`, `mapping_resolver.py`). The catch-all prevents one bad entry from silently dropping
+the rest of the registry.
 
 **Pattern**:
+
 ```bash
 BROAD_EXCEPT_EXTRA_EXCLUDES=("**/venue_context.py" "**/mapping_resolver.py")
 ```
 
-**New entries require a comment** explaining the catch-all rationale. Do not use to paper over lazy
-exception handling in business-logic code — use specific exception types there.
+**New entries require a comment** explaining the catch-all rationale. Do not use to paper over lazy exception handling
+in business-logic code — use specific exception types there.
 
 ---
 
@@ -549,7 +551,8 @@ exception handling in business-logic code — use specific exception types there
 2. Add the variable to the repo's `scripts/quality-gates.sh` stub above the `source base-library.sh` line.
 3. Include an inline comment explaining WHY the carveout is legitimate for that specific file/pattern.
 4. Update `QUALITY_GATE_BYPASS_AUDIT.md` § 2.x with the same justification.
-5. Reference this section in the comment: `# See codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
+5. Reference this section in the comment:
+   `# See codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
 
 ---
 
@@ -705,20 +708,22 @@ an existing baselined occurrence that moved files in the same commit that moves 
 
 ## STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call (manifest v8)
 
-Enforces [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 4
-"explicit-or-fail" contract + CLAUDE.md [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md): the only legitimate
-difference between batch and live for a given `(asset_group, data_type)` is which SOURCE serves it — so the manifest must
-record that source. Manifest schema v8 makes `pipeline_mode` a first-class column; this ratchet keeps it explicit at the
-write boundary. Every `ManifestWriter.record_captured()` / `record_empty()` / `record_failed()` /
+Enforces [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase
+4 "explicit-or-fail" contract + CLAUDE.md [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md): the only
+legitimate difference between batch and live for a given `(asset_group, data_type)` is which SOURCE serves it — so the
+manifest must record that source. Manifest schema v8 makes `pipeline_mode` a first-class column; this ratchet keeps it
+explicit at the write boundary. Every `ManifestWriter.record_captured()` / `record_empty()` / `record_failed()` /
 `record_expected_unattempted()` call (and the legacy `ManifestWriter.add()` path) MUST pass an explicit
-`pipeline_mode=PipelineMode.<source>` kwarg matching the UAC `SOURCE_PRIORITY` top entry. Implicit / orchestrator-inherited
-`pipeline_mode`, or `**kwargs` that silently swallow it, is the anti-pattern this catches at PR time.
+`pipeline_mode=PipelineMode.<source>` kwarg matching the UAC `SOURCE_PRIORITY` top entry. Implicit /
+orchestrator-inherited `pipeline_mode`, or `**kwargs` that silently swallow it, is the anti-pattern this catches at PR
+time.
 
 **Reference incident**: the same 2026-05-05 MDPS data-correctness class as STEP 5.67 — when the manifest can't say which
 source produced a row, batch-vs-live reconciliation can't tell whether a divergence is a real alpha gap or just a
 slower-source artefact. The pre-audit (PM@`237d00b7` slot 2 sub-agent) found 26 MTDS files / 102 callsites with an
 inherited-or-implicit `pipeline_mode`; the slot-2 Phase 4 sweep cleared MDPS / instruments / deployment-api; the residue
-is baselined pending the MTDS sweep (gated on the operator's PipelineMode-enum triage) + the features-consolidation sweep.
+is baselined pending the MTDS sweep (gated on the operator's PipelineMode-enum triage) + the features-consolidation
+sweep.
 
 ### How it works
 
@@ -726,46 +731,50 @@ is baselined pending the MTDS sweep (gated on the operator's PipelineMode-enum t
    [`unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py`](../../scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py):
    `RECORD_METHOD_NAMES` = `record_captured` / `record_empty` / `record_failed` / `record_expected_unattempted` / `add`
    (the legacy path). A call passes if and only if it has a literal `pipeline_mode=` keyword, OR the call's source line
-   carries the inline marker `# QG-allow: pipeline-mode-not-applicable` (the rare legitimate exemption — e.g. a base-class
-   method that re-forwards `**kwargs`).
-2. **Baseline** — `unified-trading-pm/scripts/quality_gates/pipeline_mode_explicit_baseline.yaml` is a **SHRINKING ratchet**:
-   each entry is a currently-known occurrence keyed `(repo, file, line, method)` with `status` (`pending_phase_4_mtds` /
-   `pending_phase_4_features`) + `successor` (the plan phase that clears it). As of 2026-05-12 the baseline holds **114**
-   entries (97 market-tick-data-service + 6 features-service + 11 unified-trading-library). DELETE an entry the moment its
-   successor sweep ships the explicit kwarg; never ADD one — a new implicit `record_*` call is a bug, not a baseline item.
-3. **AST walker** — parses every `.py` in scope (excluding `.venv*` / `node_modules` / `build` / `dist` / `__pycache__` /
-   `scripts/` / `tests/`) and flags any `ast.Call` whose `func` is an `ast.Attribute` named in `RECORD_METHOD_NAMES` and
-   whose keyword set lacks `pipeline_mode` (and whose line lacks the whitelist marker). Counts only real `Call` nodes — a
-   docstring / comment / dict-key / string-literal reference to a method name does not trip it (the naive
+   carries the inline marker `# QG-allow: pipeline-mode-not-applicable` (the rare legitimate exemption — e.g. a
+   base-class method that re-forwards `**kwargs`).
+2. **Baseline** — `unified-trading-pm/scripts/quality_gates/pipeline_mode_explicit_baseline.yaml` is a **SHRINKING
+   ratchet**: each entry is a currently-known occurrence keyed `(repo, file, line, method)` with `status`
+   (`pending_phase_4_mtds` / `pending_phase_4_features`) + `successor` (the plan phase that clears it). As of 2026-05-12
+   the baseline holds **114** entries (97 market-tick-data-service + 6 features-service + 11 unified-trading-library).
+   DELETE an entry the moment its successor sweep ships the explicit kwarg; never ADD one — a new implicit `record_*`
+   call is a bug, not a baseline item.
+3. **AST walker** — parses every `.py` in scope (excluding `.venv*` / `node_modules` / `build` / `dist` / `__pycache__`
+   / `scripts/` / `tests/`) and flags any `ast.Call` whose `func` is an `ast.Attribute` named in `RECORD_METHOD_NAMES`
+   and whose keyword set lacks `pipeline_mode` (and whose line lacks the whitelist marker). Counts only real `Call`
+   nodes — a docstring / comment / dict-key / string-literal reference to a method name does not trip it (the naive
    `grep -L "pipeline_mode="` approach returned 7 false positives; the AST walk is authoritative).
 4. **QG wiring** — `scripts/quality-gates-base/base-service.sh` STEP 5.70 invokes the checker scoped to the calling repo
-   (`--workspace-root <ws> --scope <repo> --source-dir <pkg>`). Baselined occurrences → warnings (exit 0); a non-baselined
-   occurrence → ERROR + `file:line` + the baseline's `default_successor` → exit 1. A workspace-wide sweep (no `--scope`)
-   walks every immediate sub-dir with a `pyproject.toml`. If the checker file is absent (older PM checkout), the STEP is
-   skipped clean. Unit tests: `scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py` (11 cases).
+   (`--workspace-root <ws> --scope <repo> --source-dir <pkg>`). Baselined occurrences → warnings (exit 0); a
+   non-baselined occurrence → ERROR + `file:line` + the baseline's `default_successor` → exit 1. A workspace-wide sweep
+   (no `--scope`) walks every immediate sub-dir with a `pyproject.toml`. If the checker file is absent (older PM
+   checkout), the STEP is skipped clean. Unit tests:
+   `scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py` (11 cases).
 
 ### Adding a new occurrence? Don't — fix it instead.
 
-If STEP 5.70 fails on YOUR code, pass `pipeline_mode=PipelineMode.<source>` for the UAC `SOURCE_PRIORITY` top entry of the
-`(asset_group, data_type)` you're writing (the source that would actually serve that data in live mode — `BATCH_DATABENTO`
-/ `BATCH_TARDIS` / `BATCH_API_FOOTBALL` / `BATCH_INSTRUMENTS_SERVICE` for self-published catalog rows, etc.). The only
-legitimate baseline edits are **removal** when a successor sweep lands, or updating the `line:` of an existing baselined
-occurrence that shifted in the same commit. If a UAC `PipelineMode` enum member genuinely doesn't exist for your source
-yet, file the gap (precedent: `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`) and stamp the closest documented
-workaround (precedent: instruments-service stamps `BATCH_API_FOOTBALL` for footystats pending the enum extension).
+If STEP 5.70 fails on YOUR code, pass `pipeline_mode=PipelineMode.<source>` for the UAC `SOURCE_PRIORITY` top entry of
+the `(asset_group, data_type)` you're writing (the source that would actually serve that data in live mode —
+`BATCH_DATABENTO` / `BATCH_TARDIS` / `BATCH_API_FOOTBALL` / `BATCH_INSTRUMENTS_SERVICE` for self-published catalog rows,
+etc.). The only legitimate baseline edits are **removal** when a successor sweep lands, or updating the `line:` of an
+existing baselined occurrence that shifted in the same commit. If a UAC `PipelineMode` enum member genuinely doesn't
+exist for your source yet, file the gap (precedent: `mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`) and stamp the
+closest documented workaround (precedent: instruments-service stamps `BATCH_API_FOOTBALL` for footystats pending the
+enum extension).
 
 ### Composes with
 
 - [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md) — STEP 5.70 is the static enforcement of "the only
-  legitimate batch/live diff is which SOURCE serves a given `(asset_group, data_type)`": no recorded source ⇒ unverifiable
-  batch-vs-live recon.
-- [**Availability manifest v5+**](../../cursor-configs/CLAUDE.md) + [`codex/02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
-  — `pipeline_mode` joins the v8 manifest column set alongside `service_emission_state` /
-  `last_emission_decision_at` / `expected_window_completeness_fraction`; Phase 4.DEFAULT-REMOVAL drops the transitional
-  `None` defaults from the 5 `record_*` signatures so the column is explicit-or-fail.
+  legitimate batch/live diff is which SOURCE serves a given `(asset_group, data_type)`": no recorded source ⇒
+  unverifiable batch-vs-live recon.
+- [**Availability manifest v5+**](../../cursor-configs/CLAUDE.md) +
+  [`codex/02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) —
+  `pipeline_mode` joins the v8 manifest column set alongside `service_emission_state` / `last_emission_decision_at` /
+  `expected_window_completeness_fraction`; Phase 4.DEFAULT-REMOVAL drops the transitional `None` defaults from the 5
+  `record_*` signatures so the column is explicit-or-fail.
 - STEP 5.67 (banned NaN-placeholder AST-walk) + STEP 5.65 (removed-symbol AST-walk) + STEP 5.64 (bundled-shard cluster
-  validation AST-walk) are the implementation precedents — STEP 5.70 follows the same baseline-aware-ratchet + `ast.walk()`
-  shape applied to the explicit-pipeline-mode problem.
+  validation AST-walk) are the implementation precedents — STEP 5.70 follows the same baseline-aware-ratchet +
+  `ast.walk()` shape applied to the explicit-pipeline-mode problem.
 - `manifest_schema_final_gate_2026_05_09.md` Phase 4.MTDS / Phase 4.FEATURES / Phase 4.DEFAULT-REMOVAL — the successors
   that shrink the baseline to zero; Phase 4.GREP-VERIFY is the phase that shipped this checker + baseline.
 
@@ -1224,23 +1233,23 @@ Missing test directories are silently skipped.
 
 **Added 2026-05-15 — Phase 8 / slot 6 doc-currency audit.**
 
-Services whose unit tests are NOT under the canonical `tests/unit/` root can override the pytest target directory
-by setting `PYTEST_UNIT_DIR` **before** `base-service.sh` runs its test step:
+Services whose unit tests are NOT under the canonical `tests/unit/` root can override the pytest target directory by
+setting `PYTEST_UNIT_DIR` **before** `base-service.sh` runs its test step:
 
 ```bash
 # In service's scripts/quality-gates.sh — set before sourcing base-service.sh
 PYTEST_UNIT_DIR="tests/"   # e.g. features-service: per-family CLIs share root tests/
 ```
 
-`base-service.sh` line 209 reads: `PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"` — the default is
-`tests/unit/`; override only when the layout genuinely differs.
+`base-service.sh` line 209 reads: `PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"` — the default is `tests/unit/`;
+override only when the layout genuinely differs.
 
-**When to use**: services with per-family CLI layouts (e.g. `features-service`) where tests live directly under
-`tests/` without a `unit/` subdirectory. **Never** use to broaden the pytest scope to include integration tests in
-the unit pass — integration tests run in a separate step.
+**When to use**: services with per-family CLI layouts (e.g. `features-service`) where tests live directly under `tests/`
+without a `unit/` subdirectory. **Never** use to broaden the pytest scope to include integration tests in the unit pass
+— integration tests run in a separate step.
 
-Reference: `features-service/scripts/quality-gates.sh:28` (`PYTEST_UNIT_DIR="tests/"`). Issue doc that surfaced
-the gap: `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md`. PM commit: `c7786b2f`.
+Reference: `features-service/scripts/quality-gates.sh:28` (`PYTEST_UNIT_DIR="tests/"`). Issue doc that surfaced the gap:
+`plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md`. PM commit: `c7786b2f`.
 
 ---
 
@@ -2132,8 +2141,9 @@ This is equivalent to the GitHub Actions `quality-gates.yml` workflow for librar
 ## STEP entries — batch/live symmetry (L1-L7)
 
 > Full SSOT for the mode-axis cartesian product + anti-patterns: [`mode-axis-discipline.md`](mode-axis-discipline.md).
-> Batch/live invariant: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md).
-> Pre-audit source: `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
+> Batch/live invariant:
+> [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md). Pre-audit source:
+> `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
 >
 > Status as of 2026-05-14: L1+L5 enable DAY-1 (0 violations); L2+L3 enable after fix-batch lands (Tab 3, ~21+2
 > violations); L4+L6 post-cutover (Block G1). L7 is an ongoing ratchet sweep.
@@ -2160,8 +2170,8 @@ invariant.
 **Fix**: use a single `DataType.OHLCV_1H` member. The source is tracked by `pipeline_mode` column in the manifest (STEP
 5.70), not by the data_type name.
 
-**Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk on UAC DataType enum + consumer service
-enums. Wire-in pending (pre-audit confirmed 0 violations so gate enables at zero ratchet cost on Day-1).
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk on UAC DataType enum + consumer service enums.
+Wire-in pending (pre-audit confirmed 0 violations so gate enables at zero ratchet cost on Day-1).
 
 **Composes with**: STEP L5 (unified DataType enum, no per-mode fork) · STEP 5.70 (`pipeline_mode` at `record_*`).
 
@@ -2217,21 +2227,21 @@ class RuntimeMode(StrEnum):  # in a non-canonical UAC file
 ```
 
 **SSOT**: `unified_api_contracts.internal.modes.RuntimeMode`. All consumers import from there. Tab 3 ships:
+
 - UAC re-exports `RuntimeMode` from UTL canonical (fixing UAC-internal violation).
 - UI imports `RuntimeMode` from UAC schema bundle (fixing UI redeclaration — see `batch-live-architecture.md §12`).
 
-**Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'class RuntimeMode'` across workspace, excluding
-the canonical file. Wire-in pending Tab 3 fix-batch.
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'class RuntimeMode'` across workspace, excluding the
+canonical file. Wire-in pending Tab 3 fix-batch.
 
-**Composes with**: STEP L2 (mode-conditional branches) · `mode-axis-discipline.md` AP-3 · `batch-live-architecture.md
-§12`.
+**Composes with**: STEP L2 (mode-conditional branches) · `mode-axis-discipline.md` AP-3 ·
+`batch-live-architecture.md §12`.
 
 ---
 
 ### STEP L7: `record_captured()` assert_available_at_present (ongoing sweep)
 
-**Status**: Ongoing ratchet — baseline shrinks per sweep cycle. Violations added to fix-list; ratchet prevents new
-ones.
+**Status**: Ongoing ratchet — baseline shrinks per sweep cycle. Violations added to fix-list; ratchet prevents new ones.
 
 **What it catches**: `record_captured()` callsites that do NOT pass `assert_available_at_present=True` (or the
 equivalent UTL-internal guard). The UTL `record_captured()` implementation calls `assert_available_at_present`
@@ -2243,14 +2253,15 @@ lookahead bias in backtests (a row appears to have been available earlier than i
 correctness bug. See CLAUDE.md "`available_at` is per-row, write-time, equal to live-pipeline-arrival".
 
 **Known violations** (pre-audit 2026-05-10):
+
 - `market-tick-data-service/market_tick_data_service/io/storage_dispatch_worker.py:49`
 - `market-tick-data-service/market_tick_data_service/pipeline/output_writer_service.py:318`
 - `market-tick-data-service/market_tick_data_service/pipeline/orchestration_writer.py:388`
 - `unified-trading-library/unified_trading_library/domain/standardized_service.py:100,299` (UTL internal — verify if
   bypass is intentional or inadvertent)
 
-**Fix**: pass `assert_available_at_present=True` to `record_captured()`, or ensure the caller sets `available_at` on
-the parquet row before calling. Never set `available_at` at read-time.
+**Fix**: pass `assert_available_at_present=True` to `record_captured()`, or ensure the caller sets `available_at` on the
+parquet row before calling. Never set `available_at` at read-time.
 
 **Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'record_captured'` + AST-walk for keyword
 `assert_available_at_present=False` overrides + raw `ManifestWriter.add()` without stamp check. Ongoing ratchet:

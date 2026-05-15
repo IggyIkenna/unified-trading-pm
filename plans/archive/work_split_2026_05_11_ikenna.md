@@ -48,16 +48,16 @@ with explicit handshake).
 > provisioned (per `setup-tab-worktrees.sh --list` 2026-05-11). Before any slot reassignment from yesterday's theme, run
 > `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>`.
 
-| Slot | Theme                                                                                 | Plan-of-record                                                                                                                 | AI-day budget |
-| ---- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| 1    | main orchestrator + on-call governance                                                | [LEDGER](../../ikenna_orchestrator/LEDGER.md) + Phase 1 freeze-gate audit + master plan refresh + cross-plan banner sweep      | continuous    |
-| 2    | **CRITICAL PATH** — writegate slice (b) Phase 5.1, 5.3-5.7 (UTL helper + MDPS POC + UI surfaces; v8 columns moved to final-gate per operator 2026-05-11) | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (b) + [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md) | ~5            |
-| 3    | available_at completion Phase 0 (bar boundary contract) + Phase 4-5 audits            | [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md)                   | ~4            |
-| 4    | live pipeline Phase 4-5 design-ahead (gated) + Phase 11 deployment-UI live tab design | [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4-5 + 11                | ~3            |
-| 5    | DeFi Phase 1.E sequencing readiness + cross-plan coordination                         | [code_freeze_migrate_backfill_sequencing_2026_05_10.md](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E audit | ~3            |
-| 6    | **CRITICAL PATH** — manifest_schema_final_gate Phase 1 (UAC v8 schema columns + ServiceEmissionPolicy next_state + EXPECTED_KNOWN_SOURCE_GAP enum) — newly canonical per F3 decision 2026-05-11; gate item #1 unblock | [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md) Phase 1 | ~3 (aggressive) |
-| 7    | Phase 1.D blockers — alerting + risk + DR (3 plans, sub-agent fan-out)               | [alerting_service_live_rules_2026_05_07.md](alerting_service_live_rules_2026_05_07.md) Phase 1 + [risk_simulations_limits_alerting_2026_05_10.md](risk_simulations_limits_alerting_2026_05_10.md) + [disaster_recovery_circuit_breakers_2026_05_10.md](disaster_recovery_circuit_breakers_2026_05_10.md) | ~5 (aggressive)              |
-| 8    | writegate slice (c) Phase 6.1-6.9 — 37-callsite migration (no longer deferred per operator 2026-05-11 aggressive May-15 push) | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (c) | ~5 (aggressive)              |
+| Slot | Theme                                                                                                                                                                                                                 | Plan-of-record                                                                                                                                                                                                                                                                                           | AI-day budget   |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1    | main orchestrator + on-call governance                                                                                                                                                                                | [LEDGER](../../ikenna_orchestrator/LEDGER.md) + Phase 1 freeze-gate audit + master plan refresh + cross-plan banner sweep                                                                                                                                                                                | continuous      |
+| 2    | **CRITICAL PATH** — writegate slice (b) Phase 5.1, 5.3-5.7 (UTL helper + MDPS POC + UI surfaces; v8 columns moved to final-gate per operator 2026-05-11)                                                              | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (b) + [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md)                                                                                                    | ~5              |
+| 3    | available_at completion Phase 0 (bar boundary contract) + Phase 4-5 audits                                                                                                                                            | [available_at_lookahead_bias_completion_2026_05_08.md](available_at_lookahead_bias_completion_2026_05_08.md)                                                                                                                                                                                             | ~4              |
+| 4    | live pipeline Phase 4-5 design-ahead (gated) + Phase 11 deployment-UI live tab design                                                                                                                                 | [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md) Phase 4-5 + 11                                                                                                                                                                                          | ~3              |
+| 5    | DeFi Phase 1.E sequencing readiness + cross-plan coordination                                                                                                                                                         | [code_freeze_migrate_backfill_sequencing_2026_05_10.md](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase 1.E audit                                                                                                                                                                           | ~3              |
+| 6    | **CRITICAL PATH** — manifest_schema_final_gate Phase 1 (UAC v8 schema columns + ServiceEmissionPolicy next_state + EXPECTED_KNOWN_SOURCE_GAP enum) — newly canonical per F3 decision 2026-05-11; gate item #1 unblock | [manifest_schema_final_gate_2026_05_09.md](manifest_schema_final_gate_2026_05_09.md) Phase 1                                                                                                                                                                                                             | ~3 (aggressive) |
+| 7    | Phase 1.D blockers — alerting + risk + DR (3 plans, sub-agent fan-out)                                                                                                                                                | [alerting_service_live_rules_2026_05_07.md](alerting_service_live_rules_2026_05_07.md) Phase 1 + [risk_simulations_limits_alerting_2026_05_10.md](risk_simulations_limits_alerting_2026_05_10.md) + [disaster_recovery_circuit_breakers_2026_05_10.md](disaster_recovery_circuit_breakers_2026_05_10.md) | ~5 (aggressive) |
+| 8    | writegate slice (c) Phase 6.1-6.9 — 37-callsite migration (no longer deferred per operator 2026-05-11 aggressive May-15 push)                                                                                         | [writegate_honest_coverage_endtoend_2026_05_06.md](writegate_honest_coverage_endtoend_2026_05_06.md) slice (c)                                                                                                                                                                                           | ~5 (aggressive) |
 
 **Total active scope: ~15 AI-days across 4 thematic slots over a 4-day cycle.** Beefier than thin per CLAUDE.md sizing —
 under-utilisation is fine, mid-cycle collision is not.
@@ -104,22 +104,61 @@ under-utilisation is fine, mid-cycle collision is not.
 
 ### Slot 2 — Writegate slice (b) ✅ DONE → RE-TASKED to manifest_schema_final_gate Phase 2 (UTL v8 ManifestWriter) — CRITICAL PATH
 
-> **🟢 RE-TASK BRIEF #2 (added 2026-05-11 PM by slot 1 main on operator approval)** — Slot 2's primary scope (writegate slice (b) Phase 5.1, 5.3-5.7) ✅ DONE per PM@`2b207442` (5.1) + PM@`b0b01d9c` (5.3+5.4) + PM@`152db218` (5.5) + PM@`40aca8b4` (5.6+5.7) + PM@`2b7e4932` (DONE block). Slot 2 surfaced 4 self-proposed re-task options; operator picked **Option 2 (manifest_schema_final_gate Phase 2 — UTL v8 ManifestWriter)** with adjacent quick-win on slot 8's Q2 Bug 1. Re-task is critical-path for the 2026-05-15 freeze gate Phase 2.1 atomic v8 rename.
+> **🟢 RE-TASK BRIEF #2 (added 2026-05-11 PM by slot 1 main on operator approval)** — Slot 2's primary scope (writegate
+> slice (b) Phase 5.1, 5.3-5.7) ✅ DONE per PM@`2b207442` (5.1) + PM@`b0b01d9c` (5.3+5.4) + PM@`152db218` (5.5) +
+> PM@`40aca8b4` (5.6+5.7) + PM@`2b7e4932` (DONE block). Slot 2 surfaced 4 self-proposed re-task options; operator picked
+> **Option 2 (manifest_schema_final_gate Phase 2 — UTL v8 ManifestWriter)** with adjacent quick-win on slot 8's Q2
+> Bug 1. Re-task is critical-path for the 2026-05-15 freeze gate Phase 2.1 atomic v8 rename.
 >
-> **Step 1 (~10 min) — Adjacent quick win: clear slot 8's Q2 Bug 1 (UAC service-name typo)** in `unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_policy.py:163-168`. All 6 keys + docstring at `:216` use `"market-data-pipeline-service"`; actual service is `market-data-processing-service` (MDPS). Replace 6 + docstring + update `market-data-processing-service/tests/unit/test_canonical_writer_ohlcv_1h_policy.py:199` if it references the old name. **Note for slot 8: Q2 Bug 2 (book_snapshot_5 key-shape) was ✅ RESOLVED** by operator at PM@`fa806abe` (option α: source-conceptual data_type tokens, NOT per-cadence — UAC code already matches this; the commit was the CLAUDE.md ratification). Ack to slot 8 via plan-of-record (`writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.2 + `plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`) that Q2 is now fully cleared → slot 8 can resume Phase 6.2 wiring of `publish_with_manifest_lookup` at MDPS data_types.
+> **Step 1 (~10 min) — Adjacent quick win: clear slot 8's Q2 Bug 1 (UAC service-name typo)** in
+> `unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_policy.py:163-168`. All 6 keys +
+> docstring at `:216` use `"market-data-pipeline-service"`; actual service is `market-data-processing-service` (MDPS).
+> Replace 6 + docstring + update
+> `market-data-processing-service/tests/unit/test_canonical_writer_ohlcv_1h_policy.py:199` if it references the old
+> name. **Note for slot 8: Q2 Bug 2 (book_snapshot_5 key-shape) was ✅ RESOLVED** by operator at PM@`fa806abe` (option
+> α: source-conceptual data_type tokens, NOT per-cadence — UAC code already matches this; the commit was the CLAUDE.md
+> ratification). Ack to slot 8 via plan-of-record (`writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.2 +
+> `plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`) that Q2 is now fully
+> cleared → slot 8 can resume Phase 6.2 wiring of `publish_with_manifest_lookup` at MDPS data_types.
 >
-> **Step 2 (~10-12 hrs) — Phase 2 (manifest_schema_final_gate UTL v8 ManifestWriter)** per [`manifest_schema_final_gate_2026_05_09.md:266-285`](manifest_schema_final_gate_2026_05_09.md):
-> - **Phase 2.A (~3 hrs)** — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` / `record_failed` / `record_expected_empty` / `record_expected_unattempted` with 3 new kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`), all defaulting to `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; default REMOVED at end of Phase 4 (explicit-or-fail).
-> - **Phase 2.B (~2 hrs)** — `emission_publisher.py` integration: extend `publish_with_policy` to compute `service_emission_state` via Phase 1.B `next_state(...)` resolver (slot 6 shipped at `UAC@174f401`) + pass to ManifestWriter. Wired at the same publish boundary as existing `EmissionDecision` flow. Natural extension of the `manifest_completeness` helper slot 2 just shipped.
-> - **Phase 2.C (~2 hrs)** — Reader fallback: `manifest_reader_fallback.py` tolerates v7 (3 columns missing) for ≤30d post-Phase-7. Emit `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event per row. After 30d zero-event window, fallback deleted (workspace "no double SSOT" rule).
-> - **Phase 2.D (~3 hrs)** — NEW `manifest_migrations/v7_to_v8.py` helper: walks canonical `_index/availability_index.parquet` per bucket, adds 3 NULL columns to every existing row, writes per-VM shard at `_index/per_vm/v7_to_v8_migrate_{VM_NAME}.parquet`. Per-VM shard isolation MANDATORY per CLAUDE.md "Per-VM shard isolation for concurrent backfills."
-> - **Done-definition** (per plan body): `unified-trading-library@<sha>` shipped + 11+ unit tests + back-compat with v7 rows.
+> **Step 2 (~10-12 hrs) — Phase 2 (manifest_schema_final_gate UTL v8 ManifestWriter)** per
+> [`manifest_schema_final_gate_2026_05_09.md:266-285`](manifest_schema_final_gate_2026_05_09.md):
 >
-> **Why slot 2** — natural UAC+UTL context fit (slot 2 just shipped the `manifest_completeness` helper which Phase 2 extends + integrates); slot 6's Phase 1 v8 column declarations (`UAC@174f401`) are the prereq, now shipped; slot 8 has Phase 6.2 (separate scope, no collision). Phase 2 is currently UNOWNED per the post-pull state; no other agent has touched Phase 2.A-D commits. Critical path: without it, the Phase 2.1 atomic v8 rename (2026-05-15→05-19 window) has nothing to land — the rescan can't write rows in v8 shape if `ManifestWriter` can't accept the new kwargs.
+> - **Phase 2.A (~3 hrs)** — `unified_trading_library/manifest_writer.py`: extend `record_captured` / `record_empty` /
+>   `record_failed` / `record_expected_empty` / `record_expected_unattempted` with 3 new kwargs
+>   (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`), all defaulting
+>   to `None` for back-compat with existing callsites. Phase 4 sweeps the callsites; default REMOVED at end of Phase 4
+>   (explicit-or-fail).
+> - **Phase 2.B (~2 hrs)** — `emission_publisher.py` integration: extend `publish_with_policy` to compute
+>   `service_emission_state` via Phase 1.B `next_state(...)` resolver (slot 6 shipped at `UAC@174f401`) + pass to
+>   ManifestWriter. Wired at the same publish boundary as existing `EmissionDecision` flow. Natural extension of the
+>   `manifest_completeness` helper slot 2 just shipped.
+> - **Phase 2.C (~2 hrs)** — Reader fallback: `manifest_reader_fallback.py` tolerates v7 (3 columns missing) for ≤30d
+>   post-Phase-7. Emit `READER_BACKFILLED_V8_COLUMNS_AS_NULL` event per row. After 30d zero-event window, fallback
+>   deleted (workspace "no double SSOT" rule).
+> - **Phase 2.D (~3 hrs)** — NEW `manifest_migrations/v7_to_v8.py` helper: walks canonical
+>   `_index/availability_index.parquet` per bucket, adds 3 NULL columns to every existing row, writes per-VM shard at
+>   `_index/per_vm/v7_to_v8_migrate_{VM_NAME}.parquet`. Per-VM shard isolation MANDATORY per CLAUDE.md "Per-VM shard
+>   isolation for concurrent backfills."
+> - **Done-definition** (per plan body): `unified-trading-library@<sha>` shipped + 11+ unit tests + back-compat with v7
+>   rows.
 >
-> **Original scope context preserved below** (primary writegate slice (b) — ✅ DONE; previously also held UAC v8 column declaration scope which was MOVED OUT 2026-05-11 to `manifest_schema_final_gate` per operator F3 decision):
+> **Why slot 2** — natural UAC+UTL context fit (slot 2 just shipped the `manifest_completeness` helper which Phase 2
+> extends + integrates); slot 6's Phase 1 v8 column declarations (`UAC@174f401`) are the prereq, now shipped; slot 8 has
+> Phase 6.2 (separate scope, no collision). Phase 2 is currently UNOWNED per the post-pull state; no other agent has
+> touched Phase 2.A-D commits. Critical path: without it, the Phase 2.1 atomic v8 rename (2026-05-15→05-19 window) has
+> nothing to land — the rescan can't write rows in v8 shape if `ManifestWriter` can't accept the new kwargs.
 >
-> **⚠️ SCOPE UPDATE 2026-05-11** (operator decision resolving codex_audit F3 + work-split phase-number drift): the "UAC manifest v8 schema columns" item is **MOVED OUT** of slot 2's scope — it's now owned by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md). Slot 2's remaining scope = writegate slice (b) Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` + `:historical` wire-in) + Phase 5.5 (deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6 (codex + CLAUDE.md) + Phase 5.7 (ship-gate). Note: writegate's own phase numbering is canonical (5.1 = UTL helper, 5.2 = UAC columns SUPERSEDED, etc.); the work-split's prior 5.1/5.2 swap is corrected below.
+> **Original scope context preserved below** (primary writegate slice (b) — ✅ DONE; previously also held UAC v8 column
+> declaration scope which was MOVED OUT 2026-05-11 to `manifest_schema_final_gate` per operator F3 decision):
+>
+> **⚠️ SCOPE UPDATE 2026-05-11** (operator decision resolving codex_audit F3 + work-split phase-number drift): the "UAC
+> manifest v8 schema columns" item is **MOVED OUT** of slot 2's scope — it's now owned by
+> [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md). Slot 2's remaining scope =
+> writegate slice (b) Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:current` +
+> `:historical` wire-in) + Phase 5.5 (deployment-api `/leaf-stats` + deployment-ui DataStatusTab surfaces) + Phase 5.6
+> (codex + CLAUDE.md) + Phase 5.7 (ship-gate). Note: writegate's own phase numbering is canonical (5.1 = UTL helper, 5.2
+> = UAC columns SUPERSEDED, etc.); the work-split's prior 5.1/5.2 swap is corrected below.
 
 - **Identity**: `ikenna-writegate-slice-b-tab` (slot 2 worktree at `.tabs/2/`).
 - **Scope** (per [writegate plan §5.1, 5.3-5.7](writegate_honest_coverage_endtoend_2026_05_06.md)):
@@ -179,12 +218,25 @@ under-utilisation is fine, mid-cycle collision is not.
 
 ### Slot 3 — Available_at completion Phase 0 + Phase 4-5 audits — **RE-TASKED 2026-05-11**
 
-> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval; updated 2026-05-11 PM to deconflict with slot 6)** — original scope (Phase 0.1/0.2 + Phase 4 partial + Phase 5 both) ✅ DONE per PM@`9bc57fcb` + PM@`c628eee7`. Slot 3 went quiet legitimately at done-definition met. Operator re-tasks slot 3 to absorb two carryover items in its UAC/UTL competency:
+> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval; updated 2026-05-11 PM to deconflict with
+> slot 6)** — original scope (Phase 0.1/0.2 + Phase 4 partial + Phase 5 both) ✅ DONE per PM@`9bc57fcb` + PM@`c628eee7`.
+> Slot 3 went quiet legitimately at done-definition met. Operator re-tasks slot 3 to absorb two carryover items in its
+> UAC/UTL competency:
 >
-> 1. **Flip sports `available_at` Phase 1 todo** in `available_at_lookahead_bias_completion_2026_05_08.md` per Harsh slot 4's ship at `market-tick-data-service@c186ecb` (`stamp_available_at_odds_snapshot` wired into `_process_sports_venue_with_leagues` with shard-level failure isolation + 5 tests).
-> 2. **Answer 4 design Qs in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design questions"**: Q-A (odds `available_at` rule: `bm_time` vs `bm_time + emission_latency_ms_for_source(src)`); Q-B (does MTDS sports write path need `assert_available_at_present`-equivalent guard, given it uses `record_captured_from_counts` not `record_captured(df)`); Q-C (do all sports adapters — betfair/matchbook/sfi/footystats — emit `bm_time` or equivalent publication-time col); Q-D (is there a `SOURCE_PRIORITY` / `emission_latency_ms_for_source` entry for sports sources in UAC, and is it a pre-req).
+> 1. **Flip sports `available_at` Phase 1 todo** in `available_at_lookahead_bias_completion_2026_05_08.md` per Harsh
+>    slot 4's ship at `market-tick-data-service@c186ecb` (`stamp_available_at_odds_snapshot` wired into
+>    `_process_sports_venue_with_leagues` with shard-level failure isolation + 5 tests).
+> 2. **Answer 4 design Qs in `plans/active/issues/mtds_sports_available_at_wiring_2026_05_11.md` § "Open design
+>    questions"**: Q-A (odds `available_at` rule: `bm_time` vs `bm_time + emission_latency_ms_for_source(src)`); Q-B
+>    (does MTDS sports write path need `assert_available_at_present`-equivalent guard, given it uses
+>    `record_captured_from_counts` not `record_captured(df)`); Q-C (do all sports adapters —
+>    betfair/matchbook/sfi/footystats — emit `bm_time` or equivalent publication-time col); Q-D (is there a
+>    `SOURCE_PRIORITY` / `emission_latency_ms_for_source` entry for sports sources in UAC, and is it a pre-req).
 >
-> **DECONFLICT 2026-05-11 PM**: the `EXPECTED_KNOWN_SOURCE_GAP` UAC enum addition was originally bundled into this re-task but is now **owned by slot 6** (its spawn prompt assigns it explicitly per the extra-hands commit `2e7cfeea`). Slot 3 skips the enum add; cross-reference slot 6's plan-of-record (`manifest_schema_final_gate_2026_05_09.md` Phase 1) if needed.
+> **DECONFLICT 2026-05-11 PM**: the `EXPECTED_KNOWN_SOURCE_GAP` UAC enum addition was originally bundled into this
+> re-task but is now **owned by slot 6** (its spawn prompt assigns it explicitly per the extra-hands commit `2e7cfeea`).
+> Slot 3 skips the enum add; cross-reference slot 6's plan-of-record (`manifest_schema_final_gate_2026_05_09.md`
+> Phase 1) if needed.
 >
 > Estimated effort: ~1-2 hrs. Stays in slot 3's repos (UAC + UTL + PM).
 
@@ -233,23 +285,41 @@ under-utilisation is fine, mid-cycle collision is not.
 
 ### Slot 4 — Live pipeline Phase 4-5 design-ahead + Phase 11 deployment-UI live tab design — **RE-TASKED 2026-05-11**
 
-> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval)** — slot 4's design-ahead scope ✅ DONE per UAC@`e55651b` + UTL@`58bfbbeb` + deployment-api@`7d95dc9` + deployment-ui@`f3204ce` + PM@`789201d0` + PM@`e30bc355`. **However**: the spawn prompt's "BLOCKED on `features_repo_consolidation_2026_05_08` Phase 7 (Harsh slot 2)" hard-sync constraint is **STALE**. Verified 2026-05-11 by slot 1:
+> **🟢 RE-TASK BRIEF (added 2026-05-11 by slot 1 main on operator approval)** — slot 4's design-ahead scope ✅ DONE per
+> UAC@`e55651b` + UTL@`58bfbbeb` + deployment-api@`7d95dc9` + deployment-ui@`f3204ce` + PM@`789201d0` + PM@`e30bc355`.
+> **However**: the spawn prompt's "BLOCKED on `features_repo_consolidation_2026_05_08` Phase 7 (Harsh slot 2)" hard-sync
+> constraint is **STALE**. Verified 2026-05-11 by slot 1:
 >
 > - `features_repo_consolidation_2026_05_08.md:678` Phase 7 archival is `- [x]` flipped done.
-> - `workspace-manifest.json` shows 8 features-*-service repos with `"archived_into": "features-service", "archive_date": "2026-05-08"`.
+> - `workspace-manifest.json` shows 8 features-\*-service repos with
+>   `"archived_into": "features-service", "archive_date": "2026-05-08"`.
 > - `gh api repos/IggyIkenna/<repo> --jq .archived = true × 8` per plan's `## DONE — 2026-05-08 PM session` block.
-> - features-service repo exists + skeleton + 8 sub-package subtree merges + 10 workflows pushed at `features-service@d3d6e286` on 2026-05-10.
+> - features-service repo exists + skeleton + 8 sub-package subtree merges + 10 workflows pushed at
+>   `features-service@d3d6e286` on 2026-05-10.
 >
-> So slot 4's hard-sync gate cleared 3 days ago. Slot 4 design-shipped instead of implementing as a result of misreading the spawn prompt. Promote-to-implementation scope:
+> So slot 4's hard-sync gate cleared 3 days ago. Slot 4 design-shipped instead of implementing as a result of misreading
+> the spawn prompt. Promote-to-implementation scope:
 >
-> 1. **`MDPSStreamingAggregator`** (UTL@`58bfbbeb` stub) → real implementation: UTC-aligned candle boundaries + watermark + grace + replay handoff per the design contract in `codex/05-infrastructure/live-pipeline-architecture.md`. Add unit tests covering the 4-category empty-output decision matrix per CLAUDE.md.
-> 2. **`AssetScopedFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Per-asset_group flavor (cefi/defi/tradfi/predictions/sports) wired against the now-consolidated `features-service`.
-> 3. **`CrossCuttingFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Cross-cutting fan-in propagation per the codex doc's "cross-cutting fan-in propagation table".
-> 4. **`deployment-api /api/data-status/live` endpoint** (deployment-api@`7d95dc9` stub) → wire to real `data_freshness` callback from `unified_trading_library.health.make_health_router`. Pydantic models stay as shipped.
-> 5. **`<LiveDataStatusTab/>` deployment-ui** (deployment-ui@`f3204ce` scaffold) → wire to the live API endpoint above instead of mock fixtures.
-> 6. **Plan flips**: in `live_pipeline_mtds_mdps_features_2026_05_08.md`, flip Phase 4/5/6 implementation halves from `status: design-shipped` + `**DEFERRED**` annotations to `- [x]` done with `<repo>@<sha>` evidence. Phase 11 already partially flipped; complete the implementation half.
+> 1. **`MDPSStreamingAggregator`** (UTL@`58bfbbeb` stub) → real implementation: UTC-aligned candle boundaries +
+>    watermark + grace + replay handoff per the design contract in
+>    `codex/05-infrastructure/live-pipeline-architecture.md`. Add unit tests covering the 4-category empty-output
+>    decision matrix per CLAUDE.md.
+> 2. **`AssetScopedFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Per-asset_group flavor
+>    (cefi/defi/tradfi/predictions/sports) wired against the now-consolidated `features-service`.
+> 3. **`CrossCuttingFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Cross-cutting fan-in propagation per
+>    the codex doc's "cross-cutting fan-in propagation table".
+> 4. **`deployment-api /api/data-status/live` endpoint** (deployment-api@`7d95dc9` stub) → wire to real `data_freshness`
+>    callback from `unified_trading_library.health.make_health_router`. Pydantic models stay as shipped.
+> 5. **`<LiveDataStatusTab/>` deployment-ui** (deployment-ui@`f3204ce` scaffold) → wire to the live API endpoint above
+>    instead of mock fixtures.
+> 6. **Plan flips**: in `live_pipeline_mtds_mdps_features_2026_05_08.md`, flip Phase 4/5/6 implementation halves from
+>    `status: design-shipped` + `**DEFERRED**` annotations to `- [x]` done with `<repo>@<sha>` evidence. Phase 11
+>    already partially flipped; complete the implementation half.
 >
-> Estimated effort: ~6-10 hrs (live-pipeline implementation has integration test surface). Stays in slot 4's repos (UAC + UTL + deployment-api + deployment-ui + PM). Coordinate via cross-side ping with Harsh slot 5 (live-pipeline service wiring per-service consumers) — they were waiting on slot 4 to promote design to implementation; the slot 4 spawn-prompt staleness was the actual blocker on both sides.
+> Estimated effort: ~6-10 hrs (live-pipeline implementation has integration test surface). Stays in slot 4's repos
+> (UAC + UTL + deployment-api + deployment-ui + PM). Coordinate via cross-side ping with Harsh slot 5 (live-pipeline
+> service wiring per-service consumers) — they were waiting on slot 4 to promote design to implementation; the slot 4
+> spawn-prompt staleness was the actual blocker on both sides.
 
 - **Identity**: `ikenna-live-pipeline-tab` (slot 4 worktree at `.tabs/4/`).
 - **Scope** (per [live_pipeline_mtds_mdps_features_2026_05_08.md](live_pipeline_mtds_mdps_features_2026_05_08.md); Phase
@@ -319,24 +389,23 @@ under-utilisation is fine, mid-cycle collision is not.
     slot 4 scope ~3 → ~10-13 AI-day. Anti-sequencing audit table entry for bucket_name_ssot now flips from "Phase 1.B
     ownership; sequenced before Phase 2.4 AWS migration writes" to "Phase 1 (code-complete: 0a/0b/0e/0f/0g/0h/0i + L2
     config.py + legacy delegate) + Phase 2 (physical migration: 0c provision ~300-400 buckets + 0d data migration with
-    ≤0.01% drift verification + write-pause cutover) + Phase 3 (verification: zero readers hit flat names, QG STEP
-    5.69 ratchet enforces no new flat refs)." Update the audit table accordingly + extend
+    ≤0.01% drift verification + write-pause cutover) + Phase 3 (verification: zero readers hit flat names, QG STEP 5.69
+    ratchet enforces no new flat refs)." Update the audit table accordingly + extend
     [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group D + F readiness columns to reflect
     the bigger physical migration scope.
   - **P1** — Refresh anti-sequencing audit table at
     [code_freeze:298-313](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L298-L313) with today's status of every
     plan listed (now includes bucket_name_ssot Phase 0c/0d entry per (b+) per
-    [code_freeze:GAP-2.4.B/C/E/F/G/H/I](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L222-L228)); add new
-    plans created during today's cycle.
+    [code_freeze:GAP-2.4.B/C/E/F/G/H/I](code_freeze_migrate_backfill_sequencing_2026_05_10.md#L222-L228)); add new plans
+    created during today's cycle.
   - **P1** — Cross-plan coordination banner sweep (helper to slot 1 P0 banner verification): walk the 9 banner targets
     and add any banners still missing. **NEW per (b+)**: add banner on
     [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) Phase 2 (already added by slot 1
     PM@<this commit>) + verify on
     [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) +
     [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md)
-    +
-    [`client_reporting_pnl_attribution_mvp_2026_05_10.md`](client_reporting_pnl_attribution_mvp_2026_05_10.md) (the
-    other plans touching bucket-naming per the 2026-05-11 grep audit).
+    - [`client_reporting_pnl_attribution_mvp_2026_05_10.md`](client_reporting_pnl_attribution_mvp_2026_05_10.md) (the
+      other plans touching bucket-naming per the 2026-05-11 grep audit).
 - **Plan-of-record**:
   [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md) Phase
   1.E + anti-sequencing audit + [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md) for cross-reference.
@@ -422,10 +491,10 @@ each other's commits.
 > code "$WORKSPACE_ROOT/.tabs/<N>/unified-trading-system-repos.code-workspace"
 > ```
 >
-> The `.code-workspace` file is auto-provisioned into each slot dir by `setup-tab-worktrees.sh --init` /
-> `--add-slot`, so Option B works immediately. For Claude Code CLI: `cd "$WORKSPACE_ROOT/.tabs/<N>" && claude`. Verify
-> CWD with `pwd` (→ `.../.tabs/<N>`) + branch with `git -C unified-trading-pm rev-parse --abbrev-ref HEAD` (→
-> `tab/ikennaigboaka/<N>`) before pasting the spawn prompt.
+> The `.code-workspace` file is auto-provisioned into each slot dir by `setup-tab-worktrees.sh --init` / `--add-slot`,
+> so Option B works immediately. For Claude Code CLI: `cd "$WORKSPACE_ROOT/.tabs/<N>" && claude`. Verify CWD with `pwd`
+> (→ `.../.tabs/<N>`) + branch with `git -C unified-trading-pm rev-parse --abbrev-ref HEAD` (→ `tab/ikennaigboaka/<N>`)
+> before pasting the spawn prompt.
 
 ### Slot 2 spawn prompt (writegate slice b — CRITICAL PATH)
 
@@ -573,29 +642,80 @@ REPORT-BACK: same as slot 2.
 
 ### Slot 5 RE-TASK (after DeFi 1.E audit done ~half day) — hard_schema + available_at DeFi/TradFi/Predictions + PROTOCOL_LAUNCH_DATES research
 
-> **🟢 RE-TASK EXPANSION 2026-05-11 PM (added by slot 1 main on operator approval)** — slot 5 self-declared "freed up" after shipping DeFi Phase 1.E audit + hard_schema_enforcement Phase 1 (PM@`79b5258e` + `63413bb9` + `6f9db6ca` + `9c73ef57` + `b945e108`). Per operator direction _"reassign anything that was dropped out of 15th May code freeze to it since we are moving faster than planned so that it can do more and unblock more other work,"_ slot 5's scope expands with Tier 1 (Phase 1 freeze-gate critical-path closures) + Tier 2 (carryover from original re-task).
+> **🟢 RE-TASK EXPANSION 2026-05-11 PM (added by slot 1 main on operator approval)** — slot 5 self-declared "freed up"
+> after shipping DeFi Phase 1.E audit + hard*schema_enforcement Phase 1 (PM@`79b5258e` + `63413bb9` + `6f9db6ca` +
+> `9c73ef57` + `b945e108`). Per operator direction *"reassign anything that was dropped out of 15th May code freeze to
+> it since we are moving faster than planned so that it can do more and unblock more other work,"\_ slot 5's scope
+> expands with Tier 1 (Phase 1 freeze-gate critical-path closures) + Tier 2 (carryover from original re-task).
 >
-> **Tier 1 — Phase 1 freeze-gate critical-path closures (~5-6 AI-days, compressible with sub-agent fan-out to ~2-3 wall-clock days):**
+> **Tier 1 — Phase 1 freeze-gate critical-path closures (~5-6 AI-days, compressible with sub-agent fan-out to ~2-3
+> wall-clock days):**
 >
-> 1. **Step 5 of P0-2 MDPS surgery (~30 min - 1 hr)** — flip `market-data-processing-service/schemas/output_schemas.py:57-66` OHLCV column nullability from `nullable=True` → required for `trades` / `ohlcv` data_types. Closes the LAST item of P0-2 MDPS surgery (slot 8's task brief explicitly deferred Step 5 to `hard_schema_enforcement_2026_05_08.md` per writegate plan body DONE-2026-05-11). Natural extension of slot 5's hard_schema work shipped today.
-> 2. **Writegate slice (c) Phase 6.5 — Other features-\* services bundle (~2-3 days w/ 4 parallel sub-agents)** per [`writegate_honest_coverage_endtoend_2026_05_06.md:3123`](writegate_honest_coverage_endtoend_2026_05_06.md). 4 sub-agents in parallel (1 per service): features-onchain-defi (LST yield curves / gas-fee aggregates / vault-state summaries) + features-sports (fixture-stat aggregates / transfer-window / line-movement) + features-prediction (canonical-question-group bundle metrics / market-mid time-series) + features-microstructure (book-imbalance / trade-flow toxicity). Each sub-agent: audit emission boundaries for derived/aggregated outputs → extend UAC `SERVICE_OUTPUT_POLICIES` seed dict per finding → wire `publish_with_manifest_lookup()` per Phase 5.3-5.4 MDPS template → unit + integration tests → flip Phase 6.5 sub-checkboxes per service. **Closes ~60% of remaining Phase 1 freeze-gate item #3 (37-callsite migration)** — drives gate item from currently-red to ~70% green. Slot 8 has Phase 6.2 in parallel; no collision.
-> 3. **Promote `expected_universe_v2_design_2026_05_08.md` → active execution plan (~1 day)** per [code_freeze:199](code_freeze_migrate_backfill_sequencing_2026_05_10.md) "P1 deferred behind v8 schema bump." V8 just shipped today (`UAC@174f401` slot 6); prereq cleared. Slot 5 promotes the design draft to executable phase shape + ships any inline UAC additions the v2 enumerator needs.
+> 1. **Step 5 of P0-2 MDPS surgery (~30 min - 1 hr)** — flip
+>    `market-data-processing-service/schemas/output_schemas.py:57-66` OHLCV column nullability from `nullable=True` →
+>    required for `trades` / `ohlcv` data_types. Closes the LAST item of P0-2 MDPS surgery (slot 8's task brief
+>    explicitly deferred Step 5 to `hard_schema_enforcement_2026_05_08.md` per writegate plan body DONE-2026-05-11).
+>    Natural extension of slot 5's hard_schema work shipped today.
+> 2. **Writegate slice (c) Phase 6.5 — Other features-\* services bundle (~2-3 days w/ 4 parallel sub-agents)** per
+>    [`writegate_honest_coverage_endtoend_2026_05_06.md:3123`](writegate_honest_coverage_endtoend_2026_05_06.md). 4
+>    sub-agents in parallel (1 per service): features-onchain-defi (LST yield curves / gas-fee aggregates / vault-state
+>    summaries) + features-sports (fixture-stat aggregates / transfer-window / line-movement) + features-prediction
+>    (canonical-question-group bundle metrics / market-mid time-series) + features-microstructure (book-imbalance /
+>    trade-flow toxicity). Each sub-agent: audit emission boundaries for derived/aggregated outputs → extend UAC
+>    `SERVICE_OUTPUT_POLICIES` seed dict per finding → wire `publish_with_manifest_lookup()` per Phase 5.3-5.4 MDPS
+>    template → unit + integration tests → flip Phase 6.5 sub-checkboxes per service. **Closes ~60% of remaining Phase 1
+>    freeze-gate item #3 (37-callsite migration)** — drives gate item from currently-red to ~70% green. Slot 8 has Phase
+>    6.2 in parallel; no collision.
+> 3. **Promote `expected_universe_v2_design_2026_05_08.md` → active execution plan (~1 day)** per
+>    [code_freeze:199](code_freeze_migrate_backfill_sequencing_2026_05_10.md) "P1 deferred behind v8 schema bump." V8
+>    just shipped today (`UAC@174f401` slot 6); prereq cleared. Slot 5 promotes the design draft to executable phase
+>    shape + ships any inline UAC additions the v2 enumerator needs.
 >
 > **Tier 2 — Carryover from original re-task (~3-5 AI-days):**
 >
-> 4. **`available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 — DeFi + TradFi + Predictions per-adapter stamping (~2-3 days)** — original re-task item; NOT yet shipped. Same shape as Harsh slot 4's sports stamping at `MTDS@c186ecb`. Slot 5 has DeFi + TradFi context from Phase 1.E audit.
-> 5. **PROTOCOL_LAUNCH_DATES research ~30 (chain, protocol) pairs (~1-2 days w/ 8-10 sub-agent fan-out)** — original re-task item; NOT yet shipped. Per `defi_master Q1 #3`. Pure web-research + UAC dict edit fan-out; ~6,912 rows reclaimed once shipped.
+> 4. **`available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 — DeFi + TradFi + Predictions per-adapter stamping
+>    (~2-3 days)** — original re-task item; NOT yet shipped. Same shape as Harsh slot 4's sports stamping at
+>    `MTDS@c186ecb`. Slot 5 has DeFi + TradFi context from Phase 1.E audit.
+> 5. **PROTOCOL_LAUNCH_DATES research ~30 (chain, protocol) pairs (~1-2 days w/ 8-10 sub-agent fan-out)** — original
+>    re-task item; NOT yet shipped. Per `defi_master Q1 #3`. Pure web-research + UAC dict edit fan-out; ~6,912 rows
+>    reclaimed once shipped.
 > 6. **DeFi Phase 1.E Stream C remainder (~few hrs)** — PARTIAL today (1 of 3+ archetype enum flips); finish remainder.
 >
-> **Sequencing recommendation**: Tier 1 item 1 (Step 5 MDPS, ~30min) FIRST — quick win + closes P0-2. Then Tier 1 item 2 (Phase 6.5 bundle, fan out 4 sub-agents in parallel). Tier 1 item 3 (expected_universe_v2 promotion) in parallel with the Phase 6.5 sub-agents (different surface). Tier 2 items pick up if time allows before 2026-05-15 freeze.
+> **Sequencing recommendation**: Tier 1 item 1 (Step 5 MDPS, ~30min) FIRST — quick win + closes P0-2. Then Tier 1 item 2
+> (Phase 6.5 bundle, fan out 4 sub-agents in parallel). Tier 1 item 3 (expected_universe_v2 promotion) in parallel with
+> the Phase 6.5 sub-agents (different surface). Tier 2 items pick up if time allows before 2026-05-15 freeze.
 >
-> **Why slot 5**: slot 5 has the broadest cross-cutting context from today's shipments (DeFi catalogue + hard_schema + Phase 1.E audit + cross-plan banner sweep). Phase 6.5 unblocks gate item #3 closure (currently-red); expected_universe_v2 unblocks the Phase 2 cross-asset rescan; Step 5 closes the final P0-2 item. All 3 Tier 1 items have NO active owner and ALL are critical-path for the 2026-05-15 freeze gate. Slot 8 owns Phase 6.2 only (different scope); slot 2 owns manifest_schema_final_gate Phase 2 (different scope); slot 7 owns alerting+risk+DR (different scope). No collision.
+> **Why slot 5**: slot 5 has the broadest cross-cutting context from today's shipments (DeFi catalogue + hard_schema +
+> Phase 1.E audit + cross-plan banner sweep). Phase 6.5 unblocks gate item #3 closure (currently-red);
+> expected_universe_v2 unblocks the Phase 2 cross-asset rescan; Step 5 closes the final P0-2 item. All 3 Tier 1 items
+> have NO active owner and ALL are critical-path for the 2026-05-15 freeze gate. Slot 8 owns Phase 6.2 only (different
+> scope); slot 2 owns manifest_schema_final_gate Phase 2 (different scope); slot 7 owns alerting+risk+DR (different
+> scope). No collision.
 
 Once slot 5's DeFi 1.E audit lands (it's quick — ~half day), pull aggressive Phase 1 items in:
 
-- **`hard_schema_enforcement_2026_05_08.md` Phase 1** — currently `blocked_by: tradfi-master-2026-05-07`. Slot 5 unblocks by either: (a) coordinating tradfi futures-expiry fields landing first, or (b) shipping the schema flips with conditional-required (allow null until tradfi ships, then flip required). Workspace-wide enforcement via UAC schema additions + `record_failed(SCHEMA_VALIDATION_FAILED)` enum extension. ~2 AI-day aggressive.
-- **`available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 — DeFi + TradFi + Predictions per-adapter stamping** — currently deferred to defi_master / tradfi_master / predictions_master per the plan body. Slot 5 PULLS THESE IN per operator 2026-05-11 aggressive May-15 push. Same shape as Ikenna slot 3's Phase 0 + Harsh slot 4's sports stamping (already shipped MTDS@c186ecb): identify per-adapter write boundary, wire `stamp_available_at_*` UTL helpers from Wave3x Track E. ~2-3 AI-day across 3 asset_groups.
-- **NEW (operator 2026-05-11 fold-in): defi_master Q1 #3 — UAC `PROTOCOL_LAUNCH_DATES` tightening (~30 (chain, protocol) pairs in `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`)** — operator-approved 2026-05-11 in principle (defi_master Q1 A1); per-protocol launch-date research needed. Pure web-research + UAC dict edit fan-out (1 sub-agent per pair). For each pair in `unified-api-contracts/unified_api_contracts/registry/chain_env.py:264 _PROTOCOL_LAUNCH_PENDING_INVESTIGATION`: WebFetch protocol launch announcement / block explorer first-event / project documentation → propose conservative date → add `(chain, protocol): "YYYY-MM-DD"` to `PROTOCOL_LAUNCH_DATES` (line 144) → remove from PENDING set. Coordinate with Tab 14 Day-1 audit's 13 PROTOCOL_LAUNCH_DATES drift pairs (single consolidated UAC commit folds them all). ~6,912 rows reclaimed once shipped from defi_988 audit (4-page evidence in `plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`). **Sub-agent fan-out**: send 8-10 parallel `Task` blocks at boot (one per chunk of 3-4 pairs); each sub-agent researches its pairs + drafts the dict additions; master synthesizes into one UAC commit. Lower priority than hard_schema + available_at adapter wiring (those are gate items); this is the operator's "defer post-cutover" prevention so it doesn't slip past 2026-05-15. ~1-2 AI-day aggressive.
+- **`hard_schema_enforcement_2026_05_08.md` Phase 1** — currently `blocked_by: tradfi-master-2026-05-07`. Slot 5
+  unblocks by either: (a) coordinating tradfi futures-expiry fields landing first, or (b) shipping the schema flips with
+  conditional-required (allow null until tradfi ships, then flip required). Workspace-wide enforcement via UAC schema
+  additions + `record_failed(SCHEMA_VALIDATION_FAILED)` enum extension. ~2 AI-day aggressive.
+- **`available_at_lookahead_bias_completion_2026_05_08.md` Phase 1 — DeFi + TradFi + Predictions per-adapter stamping**
+  — currently deferred to defi*master / tradfi_master / predictions_master per the plan body. Slot 5 PULLS THESE IN per
+  operator 2026-05-11 aggressive May-15 push. Same shape as Ikenna slot 3's Phase 0 + Harsh slot 4's sports stamping
+  (already shipped MTDS@c186ecb): identify per-adapter write boundary, wire `stamp_available_at*\*` UTL helpers from
+  Wave3x Track E. ~2-3 AI-day across 3 asset_groups.
+- **NEW (operator 2026-05-11 fold-in): defi_master Q1 #3 — UAC `PROTOCOL_LAUNCH_DATES` tightening (~30 (chain, protocol)
+  pairs in `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`)** — operator-approved 2026-05-11 in principle (defi_master Q1 A1);
+  per-protocol launch-date research needed. Pure web-research + UAC dict edit fan-out (1 sub-agent per pair). For each
+  pair in
+  `unified-api-contracts/unified_api_contracts/registry/chain_env.py:264 _PROTOCOL_LAUNCH_PENDING_INVESTIGATION`:
+  WebFetch protocol launch announcement / block explorer first-event / project documentation → propose conservative date
+  → add `(chain, protocol): "YYYY-MM-DD"` to `PROTOCOL_LAUNCH_DATES` (line 144) → remove from PENDING set. Coordinate
+  with Tab 14 Day-1 audit's 13 PROTOCOL_LAUNCH_DATES drift pairs (single consolidated UAC commit folds them all). ~6,912
+  rows reclaimed once shipped from defi_988 audit (4-page evidence in
+  `plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`). **Sub-agent fan-out**: send 8-10 parallel `Task`
+  blocks at boot (one per chunk of 3-4 pairs); each sub-agent researches its pairs + drafts the dict additions; master
+  synthesizes into one UAC commit. Lower priority than hard_schema + available_at adapter wiring (those are gate items);
+  this is the operator's "defer post-cutover" prevention so it doesn't slip past 2026-05-15. ~1-2 AI-day aggressive.
 
 ```text
 You are Tab 5 (RE-TASK) — slot 5 finished DeFi Phase 1.E audit; now picking up aggressive Phase 1 closure items per operator decision 2026-05-11 (no items deferred past May-15 freeze gate; we don't want to re-migrate post-freeze).
@@ -775,35 +895,38 @@ These items are explicitly deferred behind the 2026-05-15 Phase 1 freeze gate an
 
 ## Deferred work after 2026-05-11 session
 
-End-of-cycle scoreboard per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 3. Companion: [`work_split_2026_05_11_harsh.md`](work_split_2026_05_11_harsh.md) § same.
+End-of-cycle scoreboard per CLAUDE.md "Commit + Push + Flip Plan Checkboxes" Half 3. Companion:
+[`work_split_2026_05_11_harsh.md`](work_split_2026_05_11_harsh.md) § same.
 
-| Phase / item | Status as of 2026-05-11 EOD | Successor / blocker |
-|---|---|---|
-| Slot 2 — manifest_schema_final_gate Phase 2/3/4/5 + writegate slice (b) Phase 5.A/B | ✅ DONE (PM@`1dae5dbf`; 12 commits / 5 repos) | — |
-| Slot 2 — writegate slice (b) Phase 5.X remainder (post-5.A/B) | ⚪ PARTIAL — 5.A/B `gcs_migration_bundle` shipped; 5.X tail open | 2026-05-12 slot 8 secondary scope (manifest Phase 3 + cross_cutting #4) — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 8 |
-| Slot 3 — defi #5 lending-indices LINEA/BSC + canonical re-consolidation | ✅ DONE (PM@`e160a364`) | — |
-| Slot 3 — 4 lending-indices residuals handed off | ⚪ DEFERRED | 2026-05-12 slot 2 (`defi_catalogue_chain_primitives` Phase 3 covers lending-indices fix) |
-| Slot 3 — Phase 3.D rescan VM CLI dispatcher fix (extra) | ✅ DONE (PM@`7a11b747`, deployment-service@`03ce073`) | — |
-| Slot 4 — live-pipeline Phase 4-5 design-ahead carry-forward | ⚪ PARTIAL — status uncertain per main-orch audit | 2026-05-12 slot 7 (already absorbing Harsh slot 5 live-pipeline Phase 3-5/15 carry-forward — extends to 4-5 implementation) |
-| Slot 5 — DeFi Phase 1.E audit + hard_schema_enforcement Phase 1 | ✅ DONE (PM@`79b5258e`/`63413bb9`/`6f9db6ca`/`9c73ef57`/`b945e108`) | — |
-| Slot 5 — Tier 1 item 1 Step 5 P0-2 MDPS output_schemas nullability | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack | 2026-05-12 slot 5 carry-forward (defi_recursive_borrow theme) — STATUS-2026-05-11 line resolves |
-| Slot 5 — Tier 1 item 2 writegate slice (c) Phase 6.5 features-* bundle | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack | 2026-05-12 slot 5 carry-forward; if open, fan to 2026-05-12 reserve list |
-| Slot 5 — Tier 1 item 3 expected_universe_v2 promotion | ✅ DONE (plan frontmatter `status: active`) | Enumerator implementation deferred — 2026-05-12 reserve list |
-| Slot 5 — Tier 2 item 4 available_at DeFi/TradFi/Pred per-adapter stamping | ⚪ PARTIAL | 2026-05-12 slot 5 carry-forward + per-asset-group master plans (defi_master / tradfi_master / predictions_master) |
-| Slot 5 — Tier 2 item 5 PROTOCOL_LAUNCH_DATES ~30 (chain, protocol) pairs | ✅ DONE — 45 pairs shipped (PM@`c71b10c7`; exceeds 30 scoped) | — |
-| Slot 5 — Tier 2 item 6 Stream C C-enum.3+4 | ⚪ DEFERRED-PER-USER (deferred to backport plan; C-enum.1+2 done) | Backport plan TBD (post-2026-05-15 freeze gate) |
-| Slot 6 — phantom audit all-5 asset_groups | ✅ DONE (PM@`17d0b9c6`; dry-run, no `--apply`; DeFi 0/CeFi 0.17%/TradFi 4.3%-P0-triage/Pred 0.49%/Sports 16.8%) | TradFi 4.3% P0-triage open — 2026-05-12 slot 3 (code_freeze Phase 1.E audit covers) |
-| Slot 6 — phantom audit items 8+9 partial | ⚪ DEFERRED | 2026-05-12 slot 6 (defi_simulation_realism) carry-forward — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 6 |
-| Slot 7 — Ikenna alerting/risk/DR Rounds 1-4 | ✅ DONE | — |
-| Slot 7 — Harsh slot 5 live-pipeline absorption (Phase 3/5/6/15) | ⚪ STATUS UNCLEAR — pending slot 7 STATUS-2026-05-11 ack | 2026-05-12 slot 7 (simulation_scenarios theme) carry-forward |
-| Slot 8 — P0-2 MDPS surgery 5/5 incl. EXPECTED_KNOWN_SOURCE_GAP + writegate Phase 6.2 PARTIAL | ✅/⚪ DONE primary + PARTIAL on Phase 6.2 consumer wiring (152 LOC scaffolding at mdps@`ae0cada` ONLY on `tab/ikennaigboaka/8`; NOT FF'd to LDR) | 2026-05-12 slot 8 (manifest Phase 3 owner — natural extension to wire-up scaffolding) |
-| Slot 8 — Phase 0f VM-launcher env-awareness absorption | ⚪ STATUS UNCLEAR — pending slot 8 STATUS-2026-05-11 ack | 2026-05-12 slot 8 carry-forward (cross_cutting #4 + manifest Phase 3) |
-| Slot 8 — Phase 0h sync-script first-execution | ⚪ DEFERRED — code shipped (deployment-service@`fc1cfa0` by Harsh slot 4); first-execution = post-Phase-2.6 cutover | 2026-05-12 slot 8 carry-forward; first exec lands in Phase 2.6 cutover window (2026-05-15→05-19) |
-| Q1-Q5 MTDS pipeline_mode (Phase 4.MTDS blocked) | 🟡 BLOCKED on operator decision (PM@`237d00b7`) | 2026-05-12 slot 3 (`code_freeze` Phase 1.E audit — Phase 4.MTDS triage) |
-| VIX 15m pipeline_mode finding (PM@`a5e5aa4d`) | ⚪ NOTED — issue doc filed, no owner | 2026-05-12 reserve list (post-cutover) |
-| footystats pipeline_mode gap (PM@`6ede1e01`) | ⚪ NOTED — issue doc filed, no owner | 2026-05-12 reserve list (post-cutover) |
+| Phase / item                                                                                 | Status as of 2026-05-11 EOD                                                                                                                      | Successor / blocker                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Slot 2 — manifest_schema_final_gate Phase 2/3/4/5 + writegate slice (b) Phase 5.A/B          | ✅ DONE (PM@`1dae5dbf`; 12 commits / 5 repos)                                                                                                    | —                                                                                                                                                                        |
+| Slot 2 — writegate slice (b) Phase 5.X remainder (post-5.A/B)                                | ⚪ PARTIAL — 5.A/B `gcs_migration_bundle` shipped; 5.X tail open                                                                                 | 2026-05-12 slot 8 secondary scope (manifest Phase 3 + cross_cutting #4) — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 8 |
+| Slot 3 — defi #5 lending-indices LINEA/BSC + canonical re-consolidation                      | ✅ DONE (PM@`e160a364`)                                                                                                                          | —                                                                                                                                                                        |
+| Slot 3 — 4 lending-indices residuals handed off                                              | ⚪ DEFERRED                                                                                                                                      | 2026-05-12 slot 2 (`defi_catalogue_chain_primitives` Phase 3 covers lending-indices fix)                                                                                 |
+| Slot 3 — Phase 3.D rescan VM CLI dispatcher fix (extra)                                      | ✅ DONE (PM@`7a11b747`, deployment-service@`03ce073`)                                                                                            | —                                                                                                                                                                        |
+| Slot 4 — live-pipeline Phase 4-5 design-ahead carry-forward                                  | ⚪ PARTIAL — status uncertain per main-orch audit                                                                                                | 2026-05-12 slot 7 (already absorbing Harsh slot 5 live-pipeline Phase 3-5/15 carry-forward — extends to 4-5 implementation)                                              |
+| Slot 5 — DeFi Phase 1.E audit + hard_schema_enforcement Phase 1                              | ✅ DONE (PM@`79b5258e`/`63413bb9`/`6f9db6ca`/`9c73ef57`/`b945e108`)                                                                              | —                                                                                                                                                                        |
+| Slot 5 — Tier 1 item 1 Step 5 P0-2 MDPS output_schemas nullability                           | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack                                                                                         | 2026-05-12 slot 5 carry-forward (defi_recursive_borrow theme) — STATUS-2026-05-11 line resolves                                                                          |
+| Slot 5 — Tier 1 item 2 writegate slice (c) Phase 6.5 features-\* bundle                      | ⚪ STATUS UNCLEAR — pending slot 5 STATUS-2026-05-11 ack                                                                                         | 2026-05-12 slot 5 carry-forward; if open, fan to 2026-05-12 reserve list                                                                                                 |
+| Slot 5 — Tier 1 item 3 expected_universe_v2 promotion                                        | ✅ DONE (plan frontmatter `status: active`)                                                                                                      | Enumerator implementation deferred — 2026-05-12 reserve list                                                                                                             |
+| Slot 5 — Tier 2 item 4 available_at DeFi/TradFi/Pred per-adapter stamping                    | ⚪ PARTIAL                                                                                                                                       | 2026-05-12 slot 5 carry-forward + per-asset-group master plans (defi_master / tradfi_master / predictions_master)                                                        |
+| Slot 5 — Tier 2 item 5 PROTOCOL_LAUNCH_DATES ~30 (chain, protocol) pairs                     | ✅ DONE — 45 pairs shipped (PM@`c71b10c7`; exceeds 30 scoped)                                                                                    | —                                                                                                                                                                        |
+| Slot 5 — Tier 2 item 6 Stream C C-enum.3+4                                                   | ⚪ DEFERRED-PER-USER (deferred to backport plan; C-enum.1+2 done)                                                                                | Backport plan TBD (post-2026-05-15 freeze gate)                                                                                                                          |
+| Slot 6 — phantom audit all-5 asset_groups                                                    | ✅ DONE (PM@`17d0b9c6`; dry-run, no `--apply`; DeFi 0/CeFi 0.17%/TradFi 4.3%-P0-triage/Pred 0.49%/Sports 16.8%)                                  | TradFi 4.3% P0-triage open — 2026-05-12 slot 3 (code_freeze Phase 1.E audit covers)                                                                                      |
+| Slot 6 — phantom audit items 8+9 partial                                                     | ⚪ DEFERRED                                                                                                                                      | 2026-05-12 slot 6 (defi_simulation_realism) carry-forward — see [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md) § Ikenna slot 6               |
+| Slot 7 — Ikenna alerting/risk/DR Rounds 1-4                                                  | ✅ DONE                                                                                                                                          | —                                                                                                                                                                        |
+| Slot 7 — Harsh slot 5 live-pipeline absorption (Phase 3/5/6/15)                              | ⚪ STATUS UNCLEAR — pending slot 7 STATUS-2026-05-11 ack                                                                                         | 2026-05-12 slot 7 (simulation_scenarios theme) carry-forward                                                                                                             |
+| Slot 8 — P0-2 MDPS surgery 5/5 incl. EXPECTED_KNOWN_SOURCE_GAP + writegate Phase 6.2 PARTIAL | ✅/⚪ DONE primary + PARTIAL on Phase 6.2 consumer wiring (152 LOC scaffolding at mdps@`ae0cada` ONLY on `tab/ikennaigboaka/8`; NOT FF'd to LDR) | 2026-05-12 slot 8 (manifest Phase 3 owner — natural extension to wire-up scaffolding)                                                                                    |
+| Slot 8 — Phase 0f VM-launcher env-awareness absorption                                       | ⚪ STATUS UNCLEAR — pending slot 8 STATUS-2026-05-11 ack                                                                                         | 2026-05-12 slot 8 carry-forward (cross_cutting #4 + manifest Phase 3)                                                                                                    |
+| Slot 8 — Phase 0h sync-script first-execution                                                | ⚪ DEFERRED — code shipped (deployment-service@`fc1cfa0` by Harsh slot 4); first-execution = post-Phase-2.6 cutover                              | 2026-05-12 slot 8 carry-forward; first exec lands in Phase 2.6 cutover window (2026-05-15→05-19)                                                                         |
+| Q1-Q5 MTDS pipeline_mode (Phase 4.MTDS blocked)                                              | 🟡 BLOCKED on operator decision (PM@`237d00b7`)                                                                                                  | 2026-05-12 slot 3 (`code_freeze` Phase 1.E audit — Phase 4.MTDS triage)                                                                                                  |
+| VIX 15m pipeline_mode finding (PM@`a5e5aa4d`)                                                | ⚪ NOTED — issue doc filed, no owner                                                                                                             | 2026-05-12 reserve list (post-cutover)                                                                                                                                   |
+| footystats pipeline_mode gap (PM@`6ede1e01`)                                                 | ⚪ NOTED — issue doc filed, no owner                                                                                                             | 2026-05-12 reserve list (post-cutover)                                                                                                                                   |
 
-**Sweep complete**: every line above either ✅ DONE with commit citation or has a named 2026-05-12 successor in [`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) / [`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md). No orphans remain after this scoreboard.
+**Sweep complete**: every line above either ✅ DONE with commit citation or has a named 2026-05-12 successor in
+[`work_split_2026_05_12_ikenna.md`](work_split_2026_05_12_ikenna.md) /
+[`continuation_prompts_2026_05_12.md`](continuation_prompts_2026_05_12.md). No orphans remain after this scoreboard.
 
 ## Composes with
 

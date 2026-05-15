@@ -79,8 +79,8 @@ source is up + restarts the feature compute if needed.
 
 ### Path 1 — Auto-recovery (next compute cycle succeeds)
 
-If diagnosis step 3 shows upstream source is healthy AND step 4 shows features-service (onchain family) is running, the next
-compute cycle (typically every 5 min) should resolve the staleness:
+If diagnosis step 3 shows upstream source is healthy AND step 4 shows features-service (onchain family) is running, the
+next compute cycle (typically every 5 min) should resolve the staleness:
 
 ```bash
 # Watch the feature freshness via health endpoint

@@ -162,8 +162,8 @@ sub-agent picks up this thread).
       `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation" pointing to this
       issue doc. (shipped in this commit)
 - [x] [SCRIPT] P1. Promote `/tmp/cbeth_history_test.py` to
-      `market-tick-data-service/scripts/smoke_test_cbeth_history.py` — shipped MTDS@`f0b1f7f9`. Passes ruff lint + format
-      + basedpyright (0 errors). Manual-run smoke (requires Alchemy creds + network); not wired into QG STEP as a
+      `market-tick-data-service/scripts/smoke_test_cbeth_history.py` — shipped MTDS@`f0b1f7f9`. Passes ruff lint +
+      format + basedpyright (0 errors). Manual-run smoke (requires Alchemy creds + network); not wired into QG STEP as a
       per-commit run since it requires Secret Manager + live network — operator runs via
       `python3 scripts/smoke_test_cbeth_history.py` from the workspace `.venv-workspace`. Follow-up: add a weekly /
       per-PR-touching-`lst_rates_handler` smoke trigger if cross-source drift becomes a recurring concern.

@@ -13,13 +13,15 @@ locked_since: 2026-05-12
 
 > **Why this doc**: 2026-05-12 split is a thematic reset for slots 2-8 (Ikenna side). Density target = 14-16 calibrated
 > AI-days/slot over the 4-day cycle (1.7× yesterday's already-aggressive load). Each slot gets a paste-ready CONTINUE
-> prompt with: (a) status-line-first preamble to ack/close 2026-05-11 scope before pivoting, (b) new theme + plan-of-record,
-> (c) Half-1+2+4 cadence, (d) sub-agent fan-out guidance, (e) "don't stop at nice-haves" framing, (f) cross-tab/cross-side
-> handshake pointers. References lean `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (10KB), not 211KB CLAUDE.md.
+> prompt with: (a) status-line-first preamble to ack/close 2026-05-11 scope before pivoting, (b) new theme +
+> plan-of-record, (c) Half-1+2+4 cadence, (d) sub-agent fan-out guidance, (e) "don't stop at nice-haves" framing, (f)
+> cross-tab/cross-side handshake pointers. References lean
+> `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (10KB), not 211KB CLAUDE.md.
 >
-> **Operator directive 2026-05-11 PM** (carry-forward): _"don't stop even at nice-haves; we're moving faster than planned + need
-> to start migrating buckets and manifests for v8 and start getting data again."_ Phase 1 freeze gate at 2026-05-15 is the
-> hard constraint. ~530 calibrated AI-days remaining vs 12 days runway → 44 AI-days/day workspace-wide pace required.
+> **Operator directive 2026-05-11 PM** (carry-forward): _"don't stop even at nice-haves; we're moving faster than
+> planned + need to start migrating buckets and manifests for v8 and start getting data again."_ Phase 1 freeze gate at
+> 2026-05-15 is the hard constraint. ~530 calibrated AI-days remaining vs 12 days runway → 44 AI-days/day workspace-wide
+> pace required.
 
 ## Universal preamble — every slot does this first (5-10 min)
 
@@ -389,59 +391,61 @@ EOD-audit per CLAUDE.md.
 
 ## 🟢 SCOPE EXTENSION — Day 1 EOD pace check (2026-05-12 PM update)
 
-**Observed**: slots shipping 3-5× calibrated pace. Multiple slots ✅ DONE entire 4-day Cycle-1 scope on Day 1
-(slot 2 defi_catalogue Phases 1-3 + Phase 1B-1H all shipped; slot 4 api_keys_wallets Day-1 DONE block + Day-2-4 plan;
-slot 5 defi_recursive_borrow Phases 1-11 design batch; slot 6 defi_simulation_realism Phases 1-5 + Phase 9B/9C
-continuation; slot 7 simulation_scenarios Phases 1-2 design SHIPPED Day 1).
+**Observed**: slots shipping 3-5× calibrated pace. Multiple slots ✅ DONE entire 4-day Cycle-1 scope on Day 1 (slot 2
+defi_catalogue Phases 1-3 + Phase 1B-1H all shipped; slot 4 api_keys_wallets Day-1 DONE block + Day-2-4 plan; slot 5
+defi_recursive_borrow Phases 1-11 design batch; slot 6 defi_simulation_realism Phases 1-5 + Phase 9B/9C continuation;
+slot 7 simulation_scenarios Phases 1-2 design SHIPPED Day 1).
 
 **Deadline UNCHANGED**: 2026-05-15 Phase 1 freeze gate (external; cannot shift). **Scope-within-cycle EXPANDS** to
 absorb idle Day-2-4 capacity. Per-slot Day-2-4 extensions:
 
-| Slot | Day-1 status | Day-2-4 extension scope |
-|---|---|---|
-| 2 | ✅ defi_catalogue Phases 1-3 DONE | (a) cross_asset_group_catalogue_audit fan-out (~31 calibrated; per-asset_group catalog drift reconcile, 5-sub-agent fan-out per asset_group); (b) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** (operator-confirmed bug from lending-indices VM ungraceful exit — extend to sibling MTDS DeFi backfill handlers `gas_fees` / `lst_rates` / `dex_pools` / `liquidations` / `perp_funding`). |
-| 3 | ✅ Phase 1.E audit + Phase 2.6 cutover dry-run + DAY-2 P0 PipelineMode sweep (operator-approved Q1+Q2) | After PipelineMode sweep closes Day 2: (a) workspace QG full sweep (freeze-gate item #5 partial); (b) full codex SSOT currency pass (~50 docs, freeze-gate item #6 partial); (c) Phase 2.6 detailed playbook (per-bucket migration order + per-VM-prefix rsync sizing + manifest re-sync scheduling). |
-| 4 | ✅ Day-1 DONE + Day-2-4 plan already drafted by slot itself | Slot 4 self-extended; let them keep momentum. Their Day-2-4 plan should be reviewed Day 2 morning by slot 1 to verify scope alignment with master plan Group F items 19+22. |
-| 5 | ✅ defi_recursive_borrow Phases 1-11 design batch | (a) Phase 12 backtest harness implementation (`recursive_borrow_paper_smoke.py` per `e2e-testing/scripts/defi/`); (b) Phase 4-6 implementation (sim contract integration + per-family backtest scenarios); (c) reserve list pickup `client_reporting_pnl_attribution_mvp_2026_05_10` (Group F item 22). |
-| 6 | ✅ defi_simulation_realism Phases 1-5 + Phase 9B/9C continuation | (a) Phase 6-7 (golden test set landing + matching-engine integration); (b) Phase 9C+9D (operator-runnable detail for Harsh slot 4); (c) reserve list pickup `mock_data_pipeline_benchmarking_2026_05_10` (~7 calibrated). |
-| 7 | ✅ simulation_scenarios Phases 1-2 (10 scenarios) | (a) Phase 3-4 (scenario-runner integration + per-scenario test fixtures); (b) Phase 5+ (per-archetype scenario coverage matrix); (c) handshake-driven fold-in of Harsh slot 5 risk + DR scenario test coverage. |
-| 8 | ⚪ ACTIVE on manifest Phase 4 consumer sweep | Keep going — Phase 3 consumer sweep is substantial (8+ services × per-service v8 column wire-in). Day-2 add-on: **DAY-2 P0 INJECTED PipelineMode sweep coordination** with slot 3 (Phase 4.MTDS / 4.MDPS / 4.INSTRUMENTS callsite migration overlap — see slot 3 prompt). Reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15 calibrated; hygiene) as Day-4 stretch. |
+| Slot | Day-1 status                                                                                           | Day-2-4 extension scope                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2    | ✅ defi_catalogue Phases 1-3 DONE                                                                      | (a) cross_asset_group_catalogue_audit fan-out (~31 calibrated; per-asset_group catalog drift reconcile, 5-sub-agent fan-out per asset_group); (b) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** (operator-confirmed bug from lending-indices VM ungraceful exit — extend to sibling MTDS DeFi backfill handlers `gas_fees` / `lst_rates` / `dex_pools` / `liquidations` / `perp_funding`). |
+| 3    | ✅ Phase 1.E audit + Phase 2.6 cutover dry-run + DAY-2 P0 PipelineMode sweep (operator-approved Q1+Q2) | After PipelineMode sweep closes Day 2: (a) workspace QG full sweep (freeze-gate item #5 partial); (b) full codex SSOT currency pass (~50 docs, freeze-gate item #6 partial); (c) Phase 2.6 detailed playbook (per-bucket migration order + per-VM-prefix rsync sizing + manifest re-sync scheduling).                                                                                                   |
+| 4    | ✅ Day-1 DONE + Day-2-4 plan already drafted by slot itself                                            | Slot 4 self-extended; let them keep momentum. Their Day-2-4 plan should be reviewed Day 2 morning by slot 1 to verify scope alignment with master plan Group F items 19+22.                                                                                                                                                                                                                             |
+| 5    | ✅ defi_recursive_borrow Phases 1-11 design batch                                                      | (a) Phase 12 backtest harness implementation (`recursive_borrow_paper_smoke.py` per `e2e-testing/scripts/defi/`); (b) Phase 4-6 implementation (sim contract integration + per-family backtest scenarios); (c) reserve list pickup `client_reporting_pnl_attribution_mvp_2026_05_10` (Group F item 22).                                                                                                 |
+| 6    | ✅ defi_simulation_realism Phases 1-5 + Phase 9B/9C continuation                                       | (a) Phase 6-7 (golden test set landing + matching-engine integration); (b) Phase 9C+9D (operator-runnable detail for Harsh slot 4); (c) reserve list pickup `mock_data_pipeline_benchmarking_2026_05_10` (~7 calibrated).                                                                                                                                                                               |
+| 7    | ✅ simulation_scenarios Phases 1-2 (10 scenarios)                                                      | (a) Phase 3-4 (scenario-runner integration + per-scenario test fixtures); (b) Phase 5+ (per-archetype scenario coverage matrix); (c) handshake-driven fold-in of Harsh slot 5 risk + DR scenario test coverage.                                                                                                                                                                                         |
+| 8    | ⚪ ACTIVE on manifest Phase 4 consumer sweep                                                           | Keep going — Phase 3 consumer sweep is substantial (8+ services × per-service v8 column wire-in). Day-2 add-on: **DAY-2 P0 INJECTED PipelineMode sweep coordination** with slot 3 (Phase 4.MTDS / 4.MDPS / 4.INSTRUMENTS callsite migration overlap — see slot 3 prompt). Reserve list `codex_vs_citadel_infrastructure_audit_2026_05_10` (~15 calibrated; hygiene) as Day-4 stretch.                   |
 
 **Allocation principle**: extend within plan (Phases 4+) → pull reserve list (precedence per work_split § Reserve list)
 → pull confirmed P1 bugs. Always finish current-cycle's directly-named scope before pulling forward.
 
-**Cycle 2 work-split (2026-05-16+) re-drafted at 2026-05-15 EOD** per `post_freeze_roadmap_2026_05_16_to_05_23.md`
-will account for whatever lands in Day-2-4 extension. Don't pull Cycle 2 cutover scope forward (sequentially blocked
-on Phase 1 closure).
+**Cycle 2 work-split (2026-05-16+) re-drafted at 2026-05-15 EOD** per `post_freeze_roadmap_2026_05_16_to_05_23.md` will
+account for whatever lands in Day-2-4 extension. Don't pull Cycle 2 cutover scope forward (sequentially blocked on Phase
+1 closure).
 
 ## 🟢 SCOPE EXTENSION 2 — Cycle 2 PREP work (2026-05-13/14/15 backfill)
 
 **Observed 2026-05-12 EOD**: 5 of 7 Ikenna slots ✅ FULL CYCLE CLOSE on Day 1 (slot 2 17-commit defi_catalogue; slot 4
 api_keys_wallets full-cycle; slot 5 defi_recursive_borrow Phases 1-11+12; slot 6 defi_simulation_realism Phases 1-5
-+ Phase 9C/9D; slot 8 11-ship-lots / ~12 cal AI-days). Slot 3 still on Day-2 P0 PipelineMode sweep. Slot 7 active on
-scenarios.
+
+- Phase 9C/9D; slot 8 11-ship-lots / ~12 cal AI-days). Slot 3 still on Day-2 P0 PipelineMode sweep. Slot 7 active on
+  scenarios.
 
 **Cycle 1 calendar-time-remaining = 3 days (2026-05-13 / 14 / 15)** of capacity for slots already closed. Cycle 2
 cutover EXECUTION is sequentially blocked on Phase 1 closure (2026-05-15), but Cycle 2 **PREP** work CAN happen
 pre-freeze. Per-slot Day-3-4 layer:
 
-| Slot | Cycle 2 PREP layer (pre-cutover; safe to ship pre-freeze) |
-|---|---|
-| 2 | (a) Bucket provisioning script review + dry-run (no actual creates) per `code_freeze` Phase 2.6 step 1; (b) per-bucket migration order + sizing tables per `bucket_name_ssot_canonicalisation` Phase 0c; (c) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** — ship NOW (not Cycle-2 blocked, operator-confirmed bug). |
-| 3 | (after PipelineMode sweep closes Day-2): (a) workspace-wide cutover runbook polish per Phase 2.6 dry-run; (b) per-VM-prefix rsync sizing tables; (c) manifest re-sync scheduling matrix; (d) write-pause coordination protocol — 5-min p99 latency design across 7 services. |
-| 4 | (after Day-2-4 plan closes): (a) Copper KYB onboarding checklist closure (operator-pending if R9 still open); (b) Fireblocks integration spec (Phase 4+); (c) kill-switch wallet-tier wiring (Phase 5+). |
-| 5 | (after Phase 12 backtest harness + Phase 4-6 impl): (a) per-archetype paper-trade smoke harness (Phase 13 design); (b) reserve list `client_reporting_pnl_attribution_mvp` ship; (c) DeFi Family 3+ archetype topology design (Cycle 6 prep). |
-| 6 | (after Phase 6-7 + 9C/9D): (a) matching-engine integration spec (Phase 10+); (b) `mock_data_pipeline_benchmarking` reserve ship; (c) AMM family matrix Cycle 2 verification readiness (post-Harsh-4 connector ship). |
-| 7 | (after Phase 3-5 + risk/DR fold-in): (a) scenario-runner integration spec (Phase 6+); (b) live-monitor dashboard prep for Cycle 5 (Phase 13 monitor mode); (c) cutover communication template + rollback procedure documentation. |
-| 8 | (parallel with manifest Phase 3 consumer sweep): (a) DART manual surfaces post-cutover UI verification readiness; (b) `codex_vs_citadel_infrastructure_audit_2026_05_10` ship; (c) per_agent_worktrees Phase 4.5 R1/R2/R3 design spec (no code yet — design for Cycle 6 implementation). |
+| Slot | Cycle 2 PREP layer (pre-cutover; safe to ship pre-freeze)                                                                                                                                                                                                                                                                         |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2    | (a) Bucket provisioning script review + dry-run (no actual creates) per `code_freeze` Phase 2.6 step 1; (b) per-bucket migration order + sizing tables per `bucket_name_ssot_canonicalisation` Phase 0c; (c) **DefiManifestRecorder ManifestFreshnessCache wire-in P1** — ship NOW (not Cycle-2 blocked, operator-confirmed bug). |
+| 3    | (after PipelineMode sweep closes Day-2): (a) workspace-wide cutover runbook polish per Phase 2.6 dry-run; (b) per-VM-prefix rsync sizing tables; (c) manifest re-sync scheduling matrix; (d) write-pause coordination protocol — 5-min p99 latency design across 7 services.                                                      |
+| 4    | (after Day-2-4 plan closes): (a) Copper KYB onboarding checklist closure (operator-pending if R9 still open); (b) Fireblocks integration spec (Phase 4+); (c) kill-switch wallet-tier wiring (Phase 5+).                                                                                                                          |
+| 5    | (after Phase 12 backtest harness + Phase 4-6 impl): (a) per-archetype paper-trade smoke harness (Phase 13 design); (b) reserve list `client_reporting_pnl_attribution_mvp` ship; (c) DeFi Family 3+ archetype topology design (Cycle 6 prep).                                                                                     |
+| 6    | (after Phase 6-7 + 9C/9D): (a) matching-engine integration spec (Phase 10+); (b) `mock_data_pipeline_benchmarking` reserve ship; (c) AMM family matrix Cycle 2 verification readiness (post-Harsh-4 connector ship).                                                                                                              |
+| 7    | (after Phase 3-5 + risk/DR fold-in): (a) scenario-runner integration spec (Phase 6+); (b) live-monitor dashboard prep for Cycle 5 (Phase 13 monitor mode); (c) cutover communication template + rollback procedure documentation.                                                                                                 |
+| 8    | (parallel with manifest Phase 3 consumer sweep): (a) DART manual surfaces post-cutover UI verification readiness; (b) `codex_vs_citadel_infrastructure_audit_2026_05_10` ship; (c) per_agent_worktrees Phase 4.5 R1/R2/R3 design spec (no code yet — design for Cycle 6 implementation).                                          |
 
 **Cycle 6 design-ahead** (pull-forward for slots with capacity to spare):
+
 - `expected_universe_v2_design_2026_05_08` enumerator implementation spec (was BLOCKED on v8; unblocks Cycle 1)
 - `per_agent_worktrees_2026_05_10.md` Phase 4.5 P1 detailed implementation plan (per Ikenna input shipped earlier today)
 - Reserve list audit + per-plan pickup-precedence refinement
 
-**Allocation principle (updated)**: Cycle 1 directly-named scope → Cycle 1 scope-extensions → reserve list →
-**Cycle 2 PREP** (pre-cutover, NOT execution) → Cycle 6 design-ahead → P1 bugs. NO Cycle 2 EXECUTION (gate-locked).
+**Allocation principle (updated)**: Cycle 1 directly-named scope → Cycle 1 scope-extensions → reserve list → **Cycle 2
+PREP** (pre-cutover, NOT execution) → Cycle 6 design-ahead → P1 bugs. NO Cycle 2 EXECUTION (gate-locked).
 
 **Day-of cadence**: at 2026-05-13 EOD, slot 1 main reviews who has shipped Cycle 1 + scope extensions + decides per-slot
 which Cycle 2 PREP work to assign Day 3 morning. Same review at 2026-05-14 EOD for Day 4. Master goal: arrive at
@@ -449,31 +453,48 @@ which Cycle 2 PREP work to assign Day 3 morning. Same review at 2026-05-14 EOD f
 
 ## 🟢 SCOPE EXTENSION 3 — Harsh-side absorption (2026-05-12 ~07 GMT operator-directed)
 
-**Observed**: Harsh side hit 96% weekly Claude limit (PM@`ae9847ed` wind-down). Some Harsh slots resumed on Sonnet (slot 2/5/8); others STOPPED (slot 3 BLOCKED on Ikenna PipelineMode sweep) or ⚪ DONE (slot 6/7). Ikenna has more credits remaining → operator-directed: **absorb Harsh blockers + idle scope into Ikenna slots**.
+**Observed**: Harsh side hit 96% weekly Claude limit (PM@`ae9847ed` wind-down). Some Harsh slots resumed on Sonnet (slot
+2/5/8); others STOPPED (slot 3 BLOCKED on Ikenna PipelineMode sweep) or ⚪ DONE (slot 6/7). Ikenna has more credits
+remaining → operator-directed: **absorb Harsh blockers + idle scope into Ikenna slots**.
 
 **Per-slot absorption (Ikenna picks up Harsh scope)**:
 
-| Ikenna slot | Absorbed Harsh scope | Why |
-|---|---|---|
-| **2** | **(reinforced)** 4 lending-indices residuals from Harsh slot 3 (recent-days catch-up backfill 2026-05-07→11; clean full-history re-run after ManifestFreshnessCache wire-in; create-code-tarballs.sh stale-repo P1) | DeFi-context match; already routed in SCOPE EXTENSION but slot 3 STOPPED so reinforcing |
-| **3** | **Harsh slot 3 STOPPED scope** — writegate slice (c) callsite migration tail + manifest v8 wire-in across MTDS/MDPS/features | Already deep in PipelineMode sweep (Q1+Q2); natural sequence after sweep closes (~Day-2 morning). 37-callsite migration is freeze-gate item #3 — must close anyway. |
-| **6** | **Harsh slot 4 scope** — defi_simulation_realism Phase 2C-H (per-pool-class connectors: curve.py / balancer.py / solana_clmm.py / solidly_fork.py / aggregator.py) + Phase 1A UAC schema implementation (PoolShape enum + LendingMarketState + GovernanceProposal + 3 others) | Already designed Phases 1-5 + Phase 9B/9C/9D today; you wrote the contract — now implement against it. 5-sub-agent fan-out per pool class. |
-| **7** | **Harsh slot 5 scope** — risk + DR Phase 3.E/3.F scenario integration (per-scenario test coverage + scenario-runner wiring) | Already on `simulation_scenarios_topology_price_shocks` Phase 1-2 (10 scenarios shipped); fold the test layer in as Phase 3-4 implementation. Cross-side overlap was always there. |
-| **8** | **Harsh slot 6 items 8+9 + (resume of) Harsh slot 8 scope** — full workspace QG sweep (~22-repo `quality-gates.sh`+basedpyright) + ~50-doc codex SSOT currency pass + reconstruct the 11 missing area issue docs from Harsh slot 8 local (IN-1 was routed to slot 2; EX-1, EX-10, PB-1/2/3, ML-1/2, + 4 more area finding docs need pushing) | Already on codex_vs_citadel + cross_cutting #4 + manifest Phase 3 today; natural extension. Operator triages each finding as it lands. |
+| Ikenna slot | Absorbed Harsh scope                                                                                                                                                                                                                                                                                                                         | Why                                                                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **2**       | **(reinforced)** 4 lending-indices residuals from Harsh slot 3 (recent-days catch-up backfill 2026-05-07→11; clean full-history re-run after ManifestFreshnessCache wire-in; create-code-tarballs.sh stale-repo P1)                                                                                                                          | DeFi-context match; already routed in SCOPE EXTENSION but slot 3 STOPPED so reinforcing                                                                                            |
+| **3**       | **Harsh slot 3 STOPPED scope** — writegate slice (c) callsite migration tail + manifest v8 wire-in across MTDS/MDPS/features                                                                                                                                                                                                                 | Already deep in PipelineMode sweep (Q1+Q2); natural sequence after sweep closes (~Day-2 morning). 37-callsite migration is freeze-gate item #3 — must close anyway.                |
+| **6**       | **Harsh slot 4 scope** — defi_simulation_realism Phase 2C-H (per-pool-class connectors: curve.py / balancer.py / solana_clmm.py / solidly_fork.py / aggregator.py) + Phase 1A UAC schema implementation (PoolShape enum + LendingMarketState + GovernanceProposal + 3 others)                                                                | Already designed Phases 1-5 + Phase 9B/9C/9D today; you wrote the contract — now implement against it. 5-sub-agent fan-out per pool class.                                         |
+| **7**       | **Harsh slot 5 scope** — risk + DR Phase 3.E/3.F scenario integration (per-scenario test coverage + scenario-runner wiring)                                                                                                                                                                                                                  | Already on `simulation_scenarios_topology_price_shocks` Phase 1-2 (10 scenarios shipped); fold the test layer in as Phase 3-4 implementation. Cross-side overlap was always there. |
+| **8**       | **Harsh slot 6 items 8+9 + (resume of) Harsh slot 8 scope** — full workspace QG sweep (~22-repo `quality-gates.sh`+basedpyright) + ~50-doc codex SSOT currency pass + reconstruct the 11 missing area issue docs from Harsh slot 8 local (IN-1 was routed to slot 2; EX-1, EX-10, PB-1/2/3, ML-1/2, + 4 more area finding docs need pushing) | Already on codex_vs_citadel + cross_cutting #4 + manifest Phase 3 today; natural extension. Operator triages each finding as it lands.                                             |
 
 **Operator decisions received 2026-05-12 ~07 GMT** (relayed in this commit):
-- **GMX/DRIFT P0** ✅ **Option (a)** — remove from `defi_venue_capabilities.py:130-131`, keep only in `VENUES_BY_ASSET_GROUP["cefi"]` per the HYPERLIQUID/ASTER pattern. Implementation owner: **Ikenna slot 8** (cross_asset Phase 1C scope). Cross-side ack to harsh-slot-8 (resumed Sonnet — same scope, but Ikenna slot 8 leads since Ikenna has credits).
-- **12 BIG findings Phase 2.C** ✅ **operator-triage-each** approach — Ikenna slot 8 reconstructs + ships the 11 area issue docs to LDR (governance G-1 to G-13 already on LDR); operator triages each via inline AskUserQuestion as ready. 3 IMMEDIATE governance findings (G-3 `--no-verify` reconciliation; G-9 cadence ceiling update; G-11 codex/13 index entry) surfaced to operator inline this commit for fast triage.
 
-**Allocation principle (updated 2026-05-12 ~07 GMT)**: directly-named scope → scope-extensions → Harsh-absorbed scope → reserve list → Cycle 2 PREP → Cycle 6 design-ahead → P1 bugs. **Harsh-absorbed scope is HIGHER priority than reserve list** because Harsh slots are STOPPED — these are blockers actually halting workspace throughput vs reserve which is "nice to have."
+- **GMX/DRIFT P0** ✅ **Option (a)** — remove from `defi_venue_capabilities.py:130-131`, keep only in
+  `VENUES_BY_ASSET_GROUP["cefi"]` per the HYPERLIQUID/ASTER pattern. Implementation owner: **Ikenna slot 8**
+  (cross_asset Phase 1C scope). Cross-side ack to harsh-slot-8 (resumed Sonnet — same scope, but Ikenna slot 8 leads
+  since Ikenna has credits).
+- **12 BIG findings Phase 2.C** ✅ **operator-triage-each** approach — Ikenna slot 8 reconstructs + ships the 11 area
+  issue docs to LDR (governance G-1 to G-13 already on LDR); operator triages each via inline AskUserQuestion as ready.
+  3 IMMEDIATE governance findings (G-3 `--no-verify` reconciliation; G-9 cadence ceiling update; G-11 codex/13 index
+  entry) surfaced to operator inline this commit for fast triage.
 
-**Cross-side coordination**: Harsh side may resume more slots on Sonnet as Claude credits free up. If Harsh re-spawns + picks up absorbed scope, coordinate via cross-side ping (`[ikenna-slot-N → harsh-slot-N] ABSORBED: <plan> Phase <X>; please skip + work on <Y> instead` shape). Ikenna picks up the writes; Harsh helps with test runs / smoke / non-owning verification.
+**Allocation principle (updated 2026-05-12 ~07 GMT)**: directly-named scope → scope-extensions → Harsh-absorbed scope →
+reserve list → Cycle 2 PREP → Cycle 6 design-ahead → P1 bugs. **Harsh-absorbed scope is HIGHER priority than reserve
+list** because Harsh slots are STOPPED — these are blockers actually halting workspace throughput vs reserve which is
+"nice to have."
+
+**Cross-side coordination**: Harsh side may resume more slots on Sonnet as Claude credits free up. If Harsh re-spawns +
+picks up absorbed scope, coordinate via cross-side ping
+(`[ikenna-slot-N → harsh-slot-N] ABSORBED: <plan> Phase <X>; please skip + work on <Y> instead` shape). Ikenna picks up
+the writes; Harsh helps with test runs / smoke / non-owning verification.
 
 **🚨 NEW P0 surfaced 2026-05-12 ~07 GMT** (operator): venue × deposit-chain × custody-routing matrix is missing.
 Classification (cefi vs defi) is in `VENUES_BY_ASSET_GROUP` but **per-chain deposit/withdraw routing + custody routes
 (ClearLoop / CEFFU / Copper / Fireblocks / direct prop)** are not in the registry. Full capture + recommended schema
-extension + per-venue matrix in [`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
+extension + per-venue matrix in
+[`plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md`](../archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md).
 **Routing**:
+
 - **Slot 4** (api_keys_wallets Day-2-4): extend `VENUE_WALLET_CAPABILITIES` schema with `VenueFundsRoutingCapabilities`
   (deposit_chains / withdrawal_chains / custody_routing tuple / deposit_address_per_chain dict) + fill matrix for 15+
   venues per issue doc Item 2. Compose with existing Phase 3.B (CEFFU) + Phase 4.A (per-chain wallet).
@@ -487,9 +508,11 @@ extension + per-venue matrix in [`plans/archive/issues/venue_chain_custody_routi
 ## Coordination + cleanup
 
 After all slots post their STATUS-2026-05-11 lines, slot 1 (main) sweeps the ping ledger:
+
 - ✅ DONE entries from yesterday → archive to plan-body DONE blocks (already done overnight for most).
 - ⚪ PARTIAL / 🟡 BLOCKED → escalate to operator if blocks 2026-05-15 freeze gate.
-- Banner-sweep: every plan touched in 2026-05-12 cycle gets correct `🟢 IN-FLIGHT` / `🟡 BLOCKED-ON-X` / `✅ SHIPPED` banner.
+- Banner-sweep: every plan touched in 2026-05-12 cycle gets correct `🟢 IN-FLIGHT` / `🟡 BLOCKED-ON-X` / `✅ SHIPPED`
+  banner.
 
 Slot 1 polls the ledger every ~1 min when operator active, ~5 min when quiet. Cross-side mirror at 17:00 daily into
 `plans/active/_agent_pings.md`.
@@ -497,6 +520,7 @@ Slot 1 polls the ledger every ~1 min when operator active, ~5 min when quiet. Cr
 ## Re-pointing if a slot finishes early
 
 If slot N closes its scope before Day 4 EOD, pickup precedence per `work_split_2026_05_12_ikenna.md` § Reserve list:
+
 1. `client_reporting_pnl_attribution_mvp_2026_05_10`
 2. `wallet_treasury_client_flow_2026_05_10`
 3. `mock_data_pipeline_benchmarking_2026_05_10`

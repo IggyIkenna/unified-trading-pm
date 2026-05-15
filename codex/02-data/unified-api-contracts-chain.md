@@ -175,11 +175,11 @@ def test_tardis_trade_validates():
 | pnl-attribution-service                                            | >=1.0.0,<2.0.0            | —                              | Optional                    |
 | ml-inference-service                                               | >=1.0.0,<2.0.0            | —                              | Optional                    |
 | ml-training-service                                                | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-service (volatility family)                                        | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-service (onchain family)                                           | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-service (volatility family)                               | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-service (onchain family)                                  | >=1.0.0,<2.0.0            | —                              | Optional                    |
 | position-balance-monitor-service                                   | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-service (calendar family)                                          | >=1.0.0,<2.0.0            | —                              | Optional                    |
-| features-service (delta-one family)                                         | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-service (calendar family)                                 | >=1.0.0,<2.0.0            | —                              | Optional                    |
+| features-service (delta-one family)                                | >=1.0.0,<2.0.0            | —                              | Optional                    |
 | risk-and-exposure-service                                          | >=1.0.0,<2.0.0            | —                              | Optional                    |
 | strategy-service                                                   | (path)                    | —                              | Optional                    |
 | alerting-service                                                   | >=1.0.0,<2.0.0            | —                              | Optional                    |

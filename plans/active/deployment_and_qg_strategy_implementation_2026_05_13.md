@@ -244,12 +244,12 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
       (unified-api-contracts@1f80129 — codes.py + thresholds.py + rules.py)
 - [x] [AGENT] P0. **`check_snapshot_staleness.py`** — PM script called from qg-snapshot cron VM after
       `snapshot_to_parquet.py`; scans GCS deployment-events bucket for last N days of snapshot parquets; emits
-      `QG_SNAPSHOT_STALE` event if all checked dates missing.
-      (unified-trading-pm@94f61350 — check_snapshot_staleness.py + pyrightconfig.json ignore)
+      `QG_SNAPSHOT_STALE` event if all checked dates missing. (unified-trading-pm@94f61350 —
+      check_snapshot_staleness.py + pyrightconfig.json ignore)
 - [x] [AGENT] P0. **Integration tests for QG_SNAPSHOT_STALE routing** — `TestQGSnapshotStaleTaxonomy` (closed-set
-      checks: code, rule, severity HIGH, channels, threshold default=2) + `TestQGSnapshotStaleRouting` (route_event
-      mock verification PD + Telegram). All alerting-service QG pass.
-      (alerting-service@cc3cdb8 — tests/integration/test_qg_snapshot_stale.py)
+      checks: code, rule, severity HIGH, channels, threshold default=2) + `TestQGSnapshotStaleRouting` (route_event mock
+      verification PD + Telegram). All alerting-service QG pass. (alerting-service@cc3cdb8 —
+      tests/integration/test_qg_snapshot_stale.py)
 
 **Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4 Phase (snapshot.sh + cron VM) shipped.
 
@@ -257,16 +257,17 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
 
 - [x] [AGENT] P0. **`last_snapshot_date` field end-to-end** — deployment-api `/api/repos/deploy-ready` extracts
       `snapshot_at` from GCS parquets and includes `last_snapshot_date` in all response dicts (+ mock data). Frontend
-      `RepoReadiness` interface extended with `last_snapshot_date: string | null`.
-      (deployment-api@e373860 — routes/repo_readiness.py)
+      `RepoReadiness` interface extended with `last_snapshot_date: string | null`. (deployment-api@e373860 —
+      routes/repo_readiness.py)
 - [x] [AGENT] P0. **`SnapshotAgeBadge` component in deployment-ui** — new "Snapshot" column in `DeploymentReadinessTab`
-      showing snapshot freshness: `success`=today, `warning`=1d ago, `error`≥2d or no snapshot.
-      (deployment-ui@b535429 — src/components/DeploymentReadinessTab.tsx + src/api/repoReadiness.ts)
-- [x] [AGENT] P1. **Fix 4 pre-existing test-isolation failures** — root cause: `deployment_api/routes/__init__.py` eagerly
-      imports all routes; early test files (test_kill_switch_routes.py) ran before `GCP_PROJECT_ID`/`CLOUD_MOCK_MODE`
-      were set. Fix: conftest.py `setdefault` block before `_ensure_*` calls. Also fixed boto3 IMDSv2 network calls
-      blocked by `--allow-hosts` in CI (mock AWS credentials in patch.dict).
-      (deployment-api@e373860 — tests/unit/conftest.py + test_storage_facade_aws_path.py; CODEX_MAX_VIOLATIONS 20→22)
+      showing snapshot freshness: `success`=today, `warning`=1d ago, `error`≥2d or no snapshot. (deployment-ui@b535429 —
+      src/components/DeploymentReadinessTab.tsx + src/api/repoReadiness.ts)
+- [x] [AGENT] P1. **Fix 4 pre-existing test-isolation failures** — root cause: `deployment_api/routes/__init__.py`
+      eagerly imports all routes; early test files (test*kill_switch_routes.py) ran before
+      `GCP_PROJECT_ID`/`CLOUD_MOCK_MODE` were set. Fix: conftest.py `setdefault` block before
+      `\_ensure*\*`calls. Also fixed boto3 IMDSv2 network calls     blocked by`--allow-hosts` in CI (mock AWS
+      credentials in patch.dict). (deployment-api@e373860 — tests/unit/conftest.py + test_storage_facade_aws_path.py;
+      CODEX_MAX_VIOLATIONS 20→22)
 
 **Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4 tracking surface shipped.
 
@@ -276,12 +277,11 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
       (deployment-ui@85b8641)
 - [x] [AGENT] P0. **`test_honest_coverage_route.py`** — 5 TestClient tests for `GET /api/data-status/honest-coverage`:
       success, 404, 500, bucket/path routing, today-UTC default. `conftest.py` mock fixed to include
-      `deployments_registry` sub-module (was causing collection errors in isolation).
-      (deployment-api@8b62cb6)
-- [x] [AGENT] P0. **deployment-ui QG exclusions** — `CODEX_COLOUR_EXCLUDE_GLOBS` + `CODEX_LOCALHOST_EXCLUDE_GLOBS`
-      in `scripts/quality-gates.sh`; also added `ClientReportingTab.test.tsx` (7 tests) covering Phase 5.C2 HwmTable to
-      push function coverage from 66.6% → 76.0% (threshold: 70%).
-      (deployment-ui@85b8641 — scripts/quality-gates.sh + src/components/ClientReportingTab.test.tsx)
+      `deployments_registry` sub-module (was causing collection errors in isolation). (deployment-api@8b62cb6)
+- [x] [AGENT] P0. **deployment-ui QG exclusions** — `CODEX_COLOUR_EXCLUDE_GLOBS` + `CODEX_LOCALHOST_EXCLUDE_GLOBS` in
+      `scripts/quality-gates.sh`; also added `ClientReportingTab.test.tsx` (7 tests) covering Phase 5.C2 HwmTable to
+      push function coverage from 66.6% → 76.0% (threshold: 70%). (deployment-ui@85b8641 — scripts/quality-gates.sh +
+      src/components/ClientReportingTab.test.tsx)
 
 **Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4.B shipped; slot 2 cron VM done.
 
@@ -425,19 +425,36 @@ work.
 
 Sourced from orchestrator ping [2026-05-15 07:36 UTC] 7-item queue.
 
-- [x] [AGENT] P0. **POST /api/backfill/launch** — fires `launch-backfill-vm.sh`; `(service, asset_group, venue, data_type, start, end, force, dry_run)` → `BackfillLaunchResult`. VM prefix `backfill-`. Unit tests + QG green. — _deployment-api@fe2a9c5 (pre-existing, wired by prior agent)_
-- [x] [AGENT] P0. **POST /api/ml/experiment/launch** — fires `launch-ml-training-vm.sh`; `(asset_group, instruments, target_types, timeframes, start_date, end_date, operation, machine, dry_run)` → vm_name `ml-train-{inst}-{ts}`. Unit tests (6) + QG green. — _deployment-api@f407c54_
-- [x] [AGENT] P0. **POST /api/strategy/backtest/launch** — fires `launch-strategy-backtest-grid-vm.sh`; `(archetype, start_date, end_date, grid_density, force, dry_run)` → vm_name `strategy-backtest-grid-{slug}-{ts}`. Unit tests (6) + QG green. — _deployment-api@f407c54_
-- [x] [AGENT] P0. **POST /api/execution/backtest/launch** — fires `launch-strategy-paper-vm.sh`; `(archetype, tick_interval, continuous, force, dry_run)` → vm_name `strategy-paper-{slug}-{ts}`. Unit tests (5) + QG green. — _deployment-api@f407c54_
-- [x] [AGENT] P0. **GET /api/vm/events?since=\<ts\>** — added `since: str | None` ISO 8601 param to existing endpoint; `_parse_since()` helper; date/from_hour params ignored when since set. Unit tests (3 new) + QG green. — _deployment-api@f407c54_
-- [x] [AGENT] P0. **GET /api/builds/history** — tarball + Docker-image lineage endpoint. Done-def: endpoint + tests + QG green. — _deployment-api@b1ee896_
-- [x] [AGENT] P0. **/ops/live-deployments UI route** — deployment-ui new route; Live-services panel showing running services in live mode, last STARTED, last DATA_BROADCAST, staleness in seconds. — _deployment-ui@d3d657b_
+- [x] [AGENT] P0. **POST /api/backfill/launch** — fires `launch-backfill-vm.sh`;
+      `(service, asset_group, venue, data_type, start, end, force, dry_run)` → `BackfillLaunchResult`. VM prefix
+      `backfill-`. Unit tests + QG green. — _deployment-api@fe2a9c5 (pre-existing, wired by prior agent)_
+- [x] [AGENT] P0. **POST /api/ml/experiment/launch** — fires `launch-ml-training-vm.sh`;
+      `(asset_group, instruments, target_types, timeframes, start_date, end_date, operation, machine, dry_run)` →
+      vm*name `ml-train-{inst}-{ts}`. Unit tests (6) + QG green. — \_deployment-api@f407c54*
+- [x] [AGENT] P0. **POST /api/strategy/backtest/launch** — fires `launch-strategy-backtest-grid-vm.sh`;
+      `(archetype, start_date, end_date, grid_density, force, dry_run)` → vm*name `strategy-backtest-grid-{slug}-{ts}`.
+      Unit tests (6) + QG green. — \_deployment-api@f407c54*
+- [x] [AGENT] P0. **POST /api/execution/backtest/launch** — fires `launch-strategy-paper-vm.sh`;
+      `(archetype, tick_interval, continuous, force, dry_run)` → vm*name `strategy-paper-{slug}-{ts}`. Unit tests (5) +
+      QG green. — \_deployment-api@f407c54*
+- [x] [AGENT] P0. **GET /api/vm/events?since=\<ts\>** — added `since: str | None` ISO 8601 param to existing endpoint;
+      `_parse_since()` helper; date/from*hour params ignored when since set. Unit tests (3 new) + QG green. —
+      \_deployment-api@f407c54*
+- [x] [AGENT] P0. **GET /api/builds/history** — tarball + Docker-image lineage endpoint. Done-def: endpoint + tests + QG
+      green. — _deployment-api@b1ee896_
+- [x] [AGENT] P0. **/ops/live-deployments UI route** — deployment-ui new route; Live-services panel showing running
+      services in live mode, last STARTED, last DATA*BROADCAST, staleness in seconds. — \_deployment-ui@d3d657b*
 
 Sourced from orchestrator ping [2026-05-15 07:41 UTC] 3-item queue extension.
 
-- [x] [AGENT] P0. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`, `/research/strategy-backtests`, `/research/execution-backtests`; each tab consumes its matching launch endpoint; 17 Vitest tests; pnpm build + QG green. — _deployment-ui@4d5e662_
-- [x] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner "operator-monitored window before automation flip"; manual trade entry stub goes through execution-service same path as automation. Done-def: route renders + skeleton component + checklist banner. — _deployment-ui@bf3ec2c_
-- [x] [AGENT] P0. **deployment-api AuthN via Firebase token** — Firebase token verification middleware on all endpoints from items 1-6; tests covering valid/expired/missing token + QG green. — _deployment-api@299908f_
+- [x] [AGENT] P0. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`,
+      `/research/strategy-backtests`, `/research/execution-backtests`; each tab consumes its matching launch endpoint;
+      17 Vitest tests; pnpm build + QG green. — _deployment-ui@4d5e662_
+- [ ] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner
+      "operator-monitored window before automation flip"; manual trade entry stub goes through execution-service same
+      path as automation. Done-def: route renders + skeleton component + checklist banner.
+- [ ] [AGENT] P0. **deployment-api AuthN via Firebase token** — Firebase token verification middleware on all endpoints
+      from items 1-6; tests covering valid/expired/missing token + QG green.
 
 ## Done definition
 

@@ -44,11 +44,11 @@ sequencing that change so we never have a moment where canonical manifest drifts
 
 ### Phase 1 — Preflight (T−24h)
 
-- Owner agent posts a cross-plan banner (`> **🟡 IN-FLIGHT REFACTOR — manifest v7→v8 cutover starts <YYYY-MM-DD HH:MM
-  UTC>**`) on every active plan whose work touches manifest reads or writes (per CLAUDE.md "Cross-Plan Coordination
-  Banners" rule).
-- Pre-flight grep workspace-wide for `MANIFEST_SCHEMA_VERSION` literal + `record_captured(...)` callsites missing the
-  v8 kwargs; the pre-audit manifest goes into the active plan body.
+- Owner agent posts a cross-plan banner
+  (`> **🟡 IN-FLIGHT REFACTOR — manifest v7→v8 cutover starts <YYYY-MM-DD HH:MM UTC>**`) on every active plan whose work
+  touches manifest reads or writes (per CLAUDE.md "Cross-Plan Coordination Banners" rule).
+- Pre-flight grep workspace-wide for `MANIFEST_SCHEMA_VERSION` literal + `record_captured(...)` callsites missing the v8
+  kwargs; the pre-audit manifest goes into the active plan body.
 - Snapshot `_index/availability_index.parquet` (GCS object-versioning is the snapshot mechanism).
 - Confirm zombie watchdog has drained all per-VM shard backfills; `gcloud compute instances list` shows zero
   manifest-writing VMs in either region.
@@ -80,11 +80,11 @@ sequencing that change so we never have a moment where canonical manifest drifts
   `AvailabilityRecord`. `MANIFEST_SCHEMA_VERSION` constant in UTL is now `8`.
 - Per-asset-group row-count parity vs pre-migration snapshot (≤0.01% drift; any drift > 0 requires explicit owner
   acknowledgement in the active plan body).
-- Downstream-consumer smoke: deployment-api `/api/data-status/shard-detail?service=&category=&day=&...` returns
-  success on a sample (asset_group, venue, data_type, day) tuple per asset_group (5 samples; one per asset_group).
+- Downstream-consumer smoke: deployment-api `/api/data-status/shard-detail?service=&category=&day=&...` returns success
+  on a sample (asset_group, venue, data_type, day) tuple per asset_group (5 samples; one per asset_group).
 - Sample-parquet inspection per asset_group: read 3 random rows × 5 asset_groups, assert non-NaN core columns
-  (`available_at`, `pipeline_mode`, `service_emission_state`). Reference-incident gate (2026-05-05 MDPS 1440-NaN
-  bars): row-count alone is insufficient.
+  (`available_at`, `pipeline_mode`, `service_emission_state`). Reference-incident gate (2026-05-05 MDPS 1440-NaN bars):
+  row-count alone is insufficient.
 
 ### Phase 5 — Unfreeze
 
@@ -113,7 +113,7 @@ endpoint returns 5xx:
 3. Revert `MANIFEST_SCHEMA_VERSION` constant in UTL to `7` + re-add the `None`-default kwargs in `record_*` methods.
 4. Notify operator immediately (the rollback IS the "big finding" per CLAUDE.md "Findings Triage Discipline" rule).
 5. File a post-mortem under `plans/active/issues/manifest_v7_v8_rollback_<YYYY_MM_DD>.md` with the rollback diagnostic
-   + root cause + corrective plan reference.
+   - root cause + corrective plan reference.
 
 Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 days post-migration.
 
@@ -139,8 +139,8 @@ Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 
 
 - Typical freeze-window duration is plan-specific; precedent: v3→v5 was ~2 hours; v7→v8 estimate documented in
   [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 4.
-- Shadow-consolidator parallel run: implement as future-work if v7→v8 verification fails on first attempt; not in
-  scope for the v7→v8 cutover itself.
+- Shadow-consolidator parallel run: implement as future-work if v7→v8 verification fails on first attempt; not in scope
+  for the v7→v8 cutover itself.
 - Rollback window: GCS object-versioning is canonical (7 days); full backup-bucket copy is NOT required.
-- Staging-environment dry-run: full-fidelity manifest copy lives in staging GCS; dry-run sequencing is the same
-  Phase 1-5 with staging buckets — owner agent runs once before prod.
+- Staging-environment dry-run: full-fidelity manifest copy lives in staging GCS; dry-run sequencing is the same Phase
+  1-5 with staging buckets — owner agent runs once before prod.

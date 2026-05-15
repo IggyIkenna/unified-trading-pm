@@ -45,9 +45,9 @@ glossary for the full set of routing examples per tier.
 
 **May-23 cutover rotation** (operator decision 2026-05-12; AL-14 RESOLVED):
 
-| Operator | Shift (UK time) | Coverage |
-| --- | --- | --- |
-| **Ikenna** (primary) | 14:30 → 02:30 UK | Afternoon + evening + early-night |
+| Operator             | Shift (UK time)  | Coverage                             |
+| -------------------- | ---------------- | ------------------------------------ |
+| **Ikenna** (primary) | 14:30 → 02:30 UK | Afternoon + evening + early-night    |
 | **Harsh** (primary)  | 02:30 → 14:30 UK | Late-night + early-morning + morning |
 
 **Shape**: 2-operator 12-hour split, fully-automated alert-checking workflow (no synchronous human reasoning loop —
@@ -64,8 +64,8 @@ operators post-May-23, this section gets a named-tier table.
 
 ## Quiet-hours policy
 
-There are no quiet hours for live trading. P0 / P1 page 24/7. The 12-hour split above means each operator carries
-the night-shift half the time.
+There are no quiet hours for live trading. P0 / P1 page 24/7. The 12-hour split above means each operator carries the
+night-shift half the time.
 
 ## Per-rule routing
 

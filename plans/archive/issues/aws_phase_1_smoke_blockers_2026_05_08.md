@@ -18,7 +18,7 @@ locked_since: 2026-05-08
 > ## RESOLVED 2026-05-10 — Tab 4 option (c) shipped + verified end-to-end
 >
 > **Status**: ✅ RESOLVED. Bucket-naming SSOT triple-drift closed by adopting option (c) — accept the per-purpose
-> 10-bucket model that ``setup-defi-buckets.sh`` provisions + the UTL resolver dispatches to via flat-string templates.
+> 10-bucket model that `setup-defi-buckets.sh` provisions + the UTL resolver dispatches to via flat-string templates.
 >
 > **What shipped:**
 >
@@ -33,25 +33,24 @@ locked_since: 2026-05-08
 >
 > **Phase 1 smoke verification (2026-05-10, real AWS S3, account 427895769566, region ap-northeast-1):**
 >
-> | Sub-smoke                                              | Result                                                                               |
-> | ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-> | A · Factory swings to S3StorageClient                  | ✅ PASS                                                                              |
-> | B · UTL resolver lookup for 10 DeFi purpose buckets    | ✅ 10/10 resolve                                                                     |
-> | C · `head_bucket` reachability for 10 buckets          | ✅ 10/10 reachable                                                                   |
-> | D · `list_blobs` round-trip on `evm-defi`              | ✅ no error                                                                          |
-> | E · Write/read/delete round-trip on `evm-defi`         | ✅ 50-byte payload round-trip clean                                                  |
-> | F · Per-asset-group `market-data` resolver alignment   | ✅ cefi/defi/tradfi all reachable                                                    |
+> | Sub-smoke                                            | Result                              |
+> | ---------------------------------------------------- | ----------------------------------- |
+> | A · Factory swings to S3StorageClient                | ✅ PASS                             |
+> | B · UTL resolver lookup for 10 DeFi purpose buckets  | ✅ 10/10 resolve                    |
+> | C · `head_bucket` reachability for 10 buckets        | ✅ 10/10 reachable                  |
+> | D · `list_blobs` round-trip on `evm-defi`            | ✅ no error                         |
+> | E · Write/read/delete round-trip on `evm-defi`       | ✅ 50-byte payload round-trip clean |
+> | F · Per-asset-group `market-data` resolver alignment | ✅ cefi/defi/tradfi all reachable   |
 >
-> **Smoke command (operator-runnable for re-verification):**
-> See § "Smoke test recipe (paste-ready bash, with band-aid in place)" below — the band-aid env var
-> `MARKET_DATA_S3_BUCKET_DEFI=unified-trading-evm-defi-prod-427895769566` is no longer required (the resolver dispatches
-> against the yaml directly), but keeping it in the recipe doesn't hurt.
+> **Smoke command (operator-runnable for re-verification):** See § "Smoke test recipe (paste-ready bash, with band-aid
+> in place)" below — the band-aid env var `MARKET_DATA_S3_BUCKET_DEFI=unified-trading-evm-defi-prod-427895769566` is no
+> longer required (the resolver dispatches against the yaml directly), but keeping it in the recipe doesn't hurt.
 >
 > **Companion blockers status:**
 >
-> 1. `SECRETS_CLOUD_PROVIDER` for hybrid mode → still required as documented (set
->    `SECRETS_CLOUD_PROVIDER=gcp` when running against AWS storage until Phase 4 mirror lands). Not a smoke blocker;
->    operator runs Phase 1 smoke with hybrid env.
+> 1. `SECRETS_CLOUD_PROVIDER` for hybrid mode → still required as documented (set `SECRETS_CLOUD_PROVIDER=gcp` when
+>    running against AWS storage until Phase 4 mirror lands). Not a smoke blocker; operator runs Phase 1 smoke with
+>    hybrid env.
 > 2. `ATHENA_OUTPUT_BUCKET` env at construction time → still required (set to any reachable AWS bucket).
 > 3. Phase 2 buckets EMPTY → still true (Phase 5 transfer hasn't run for ALL buckets); Phase 1 smoke verifies the
 >    runtime mechanism, not data presence.
@@ -60,11 +59,11 @@ locked_since: 2026-05-08
 >
 > - `cloud-providers.yaml` AWS section has `features-calendar` (single flat-string) BUT the GCP section does NOT have a
 >   matching entry. The `test_workspace_yaml_has_gcp_aws_parity_for_core_kinds` regression test (lifted from sub-A's
->   audit at UTL@`780a9575`) fires on this. Suggested owner: `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A —
->   add `features-calendar` to GCP yaml or remove from AWS yaml so parity holds.
+>   audit at UTL@`780a9575`) fires on this. Suggested owner: `aws_migration_defi_first_2026_05_07.md` Phase 1.5.A — add
+>   `features-calendar` to GCP yaml or remove from AWS yaml so parity holds.
 >
-> **No further action required on this issue doc.** Per CLAUDE.md "Plan Archival HARD RULE", the resolution above is
-> the audit trail; the issue doc may be moved to `plans/archive/issues/` at the next archival sweep.
+> **No further action required on this issue doc.** Per CLAUDE.md "Plan Archival HARD RULE", the resolution above is the
+> audit trail; the issue doc may be moved to `plans/archive/issues/` at the next archival sweep.
 
 # AWS Phase 1 smoke blockers — bucket-name SSOT triple-drift + secrets fanout
 

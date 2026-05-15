@@ -8,9 +8,10 @@ source:
   - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (F6 deferred-work row)
   - features-service/features_service/{calendar,onchain,volatility,commodity,delta_one,cross_instrument,multi_timeframe}/
     (no `available_at` references)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2153 (`assert_available_at_present(df)`
-    mandatory — df-shape path only)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at UTL@ef47c81b)
+  - unified-trading-library/unified_trading_library/manifest_writer.py:2153 (`assert_available_at_present(df)` mandatory
+    — df-shape path only)
+  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at
+    UTL@ef47c81b)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -32,30 +33,30 @@ locked_since: 2026-05-08
 > The shipped helper sidesteps this by **moving the `available_at` presence assertion from per-row (df) to per-shard
 > (envelope)**:
 >
-> | Aspect                       | `record_captured(df, ...)` (df-shape)             | `record_captured_from_counts(...)` (envelope-shape)               |
-> | ---------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-> | `available_at` presence gate | per-row via `assert_available_at_present(df)`     | per-shard via `available_at_envelope` kwarg + tz-aware UTC check  |
-> | Source of validation         | DataFrame column                                  | Caller-computed envelope timestamp                                |
-> | Where it fires               | Manifest finalize time (after parquet write)      | Manifest finalize time (same boundary)                            |
-> | What raises `LookaheadBiasError` | Missing/null per-row `available_at`           | None/NaT envelope timestamp                                       |
-> | Schema validation            | Per-row at manifest finalize                      | Per-chunk by streaming writer (already in place)                  |
-> | Cluster coverage             | Per-cluster from df groupby                       | Per-cluster from caller-supplied `observed_clusters` dict         |
+> | Aspect                           | `record_captured(df, ...)` (df-shape)         | `record_captured_from_counts(...)` (envelope-shape)              |
+> | -------------------------------- | --------------------------------------------- | ---------------------------------------------------------------- |
+> | `available_at` presence gate     | per-row via `assert_available_at_present(df)` | per-shard via `available_at_envelope` kwarg + tz-aware UTC check |
+> | Source of validation             | DataFrame column                              | Caller-computed envelope timestamp                               |
+> | Where it fires                   | Manifest finalize time (after parquet write)  | Manifest finalize time (same boundary)                           |
+> | What raises `LookaheadBiasError` | Missing/null per-row `available_at`           | None/NaT envelope timestamp                                      |
+> | Schema validation                | Per-row at manifest finalize                  | Per-chunk by streaming writer (already in place)                 |
+> | Cluster coverage                 | Per-cluster from df groupby                   | Per-cluster from caller-supplied `observed_clusters` dict        |
 >
 > **The 7 features families compute `available_at_envelope` at finalize time** as
-> `max(per-row available_at across all clusters) + UAC EMISSION_LATENCY_MS_BY_SOURCE for the primary source` — a
-> single timestamp per shard, not per-row stamping. This collapses the multi-day per-family stamping refactor into
-> a 3-line callsite migration.
+> `max(per-row available_at across all clusters) + UAC EMISSION_LATENCY_MS_BY_SOURCE for the primary source` — a single
+> timestamp per shard, not per-row stamping. This collapses the multi-day per-family stamping refactor into a 3-line
+> callsite migration.
 >
 > **What the predecessor analysis got right (still valid):**
 >
-> - The 3 other pillars (NaN ratio / schema / cluster coverage) for features rows still need independent UTL/UAC
->   work — those gaps are unrelated to F6 + remain tracked at:
+> - The 3 other pillars (NaN ratio / schema / cluster coverage) for features rows still need independent UTL/UAC work —
+>   those gaps are unrelated to F6 + remain tracked at:
 >   - **Pillar 2 (NaN ratio)** — writegate Plan B Q#4 (lift inline gate to UTL helper).
->   - **Pillar 3 (schema)** — UAC contract registry needs entries for the 8 features data_types
->     (`options_volatility`, `fixture_features`, `time_features`, `carry_staked_basis`, `cross_pair_corr`, etc.).
+>   - **Pillar 3 (schema)** — UAC contract registry needs entries for the 8 features data_types (`options_volatility`,
+>     `fixture_features`, `time_features`, `carry_staked_basis`, `cross_pair_corr`, etc.).
 >   - **Pillar 4 (cluster coverage)** — features data_types are not in
->     `unified_api_contracts.canonical.crosscutting.honest_coverage.BUNDLED_DATA_TYPES`; the per-cluster gate is a
->     no-op for non-bundled features (which is correct — only bundled shards have cluster semantics).
+>     `unified_api_contracts.canonical.crosscutting.honest_coverage.BUNDLED_DATA_TYPES`; the per-cluster gate is a no-op
+>     for non-bundled features (which is correct — only bundled shards have cluster semantics).
 >
 > Recommended Option α (preferred — keep F6 closed; track migration in features_repo_consolidation row) is now
 > mechanical instead of multi-day. No need for Option β (new prerequisite plan) or Option γ (banned bypass flag).

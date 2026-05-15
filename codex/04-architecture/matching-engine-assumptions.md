@@ -10,24 +10,24 @@ sources:
 
 # Matching Engine Assumptions
 
-> **Rationale.** Closes GAP-12 (Q4.2.c) from the topology Q-doc. This document records the per-matcher
-> slippage model, commission schedule, latency model, and venue-liquidity proxy for each of the 5 matcher
-> classes used in batch backtest mode. Required for backtest fidelity per master plan Group F item 18.
+> **Rationale.** Closes GAP-12 (Q4.2.c) from the topology Q-doc. This document records the per-matcher slippage model,
+> commission schedule, latency model, and venue-liquidity proxy for each of the 5 matcher classes used in batch backtest
+> mode. Required for backtest fidelity per master plan Group F item 18.
 
 ---
 
 ## Matcher classes
 
-The execution-service matching engine (`execution_service/matching_engine/engine.py`) dispatches on
-`BookType` to one of 5 matcher classes:
+The execution-service matching engine (`execution_service/matching_engine/engine.py`) dispatches on `BookType` to one of
+5 matcher classes:
 
-| Matcher | BookType | Asset domain | Fill semantics |
-| ------- | -------- | ------------ | -------------- |
-| `L0Matcher` | `L0_TOB` | Sports bookmakers / odds aggregators | Top-of-book only; fill at best bid/offer or reject |
-| `L1Matcher` | `L1_MBP` | TradFi (aggressor side) | NautilusTrader L1 MBP; fill against aggressor |
-| `L2Matcher` | `L2_MBP` | CeFi (order book depth) | NautilusTrader L2 MBP; depth-aware partial fills |
-| `AMMMatcher` | `AMM` | DeFi swaps (Uniswap V2/V3/V4, Curve, Balancer) | Constant-product x\*y=k; slippage-gated |
-| `BenchmarkMatcher` | `ALPHA_ZERO` | DeFi non-price ops (LEND/STAKE/BORROW/UNSTAKE) | Instant fill at benchmark (no slippage) |
+| Matcher            | BookType     | Asset domain                                   | Fill semantics                                     |
+| ------------------ | ------------ | ---------------------------------------------- | -------------------------------------------------- |
+| `L0Matcher`        | `L0_TOB`     | Sports bookmakers / odds aggregators           | Top-of-book only; fill at best bid/offer or reject |
+| `L1Matcher`        | `L1_MBP`     | TradFi (aggressor side)                        | NautilusTrader L1 MBP; fill against aggressor      |
+| `L2Matcher`        | `L2_MBP`     | CeFi (order book depth)                        | NautilusTrader L2 MBP; depth-aware partial fills   |
+| `AMMMatcher`       | `AMM`        | DeFi swaps (Uniswap V2/V3/V4, Curve, Balancer) | Constant-product x\*y=k; slippage-gated            |
+| `BenchmarkMatcher` | `ALPHA_ZERO` | DeFi non-price ops (LEND/STAKE/BORROW/UNSTAKE) | Instant fill at benchmark (no slippage)            |
 
 ---
 
@@ -63,8 +63,8 @@ The execution-service matching engine (`execution_service/matching_engine/engine
 - **Commission**: pool fee bps (default 30 bps for Uniswap V3 0.3% pool; configurable per pool)
 - **Latency model**: 0 (batch) / blockchain confirmation time (live); in batch, treat as instantaneous
 - **Venue-liquidity proxy**: pool reserves from MTDS on-chain tick data
-- **Rejection condition**: `quote.slippage_bps > max_slippage_bps` (default 100 bps) → reject with
-  `SLIPPAGE_EXCEEDED`; pool unavailable → reject with `POOL_UNAVAILABLE`
+- **Rejection condition**: `quote.slippage_bps > max_slippage_bps` (default 100 bps) → reject with `SLIPPAGE_EXCEEDED`;
+  pool unavailable → reject with `POOL_UNAVAILABLE`
 
 ### BenchmarkMatcher (ALPHA_ZERO — LEND/STAKE/BORROW/UNSTAKE)
 
@@ -78,37 +78,36 @@ The execution-service matching engine (`execution_service/matching_engine/engine
 
 ## BenchmarkFillMode per InstructionActionV2
 
-`BenchmarkFillMode` (UAC `unified_api_contracts.internal.architecture_v2.enums`) declares how the
-matching engine fills each action type in benchmark/batch mode. Every `InstructionActionV2` member must
-declare a non-default mode:
+`BenchmarkFillMode` (UAC `unified_api_contracts.internal.architecture_v2.enums`) declares how the matching engine fills
+each action type in benchmark/batch mode. Every `InstructionActionV2` member must declare a non-default mode:
 
-| Action | BenchmarkFillMode | Rationale |
-| ------ | ----------------- | --------- |
-| `TRADE` | `ARRIVAL_MID` | Fill at mid-price at bar arrival (standard equity/futures benchmark) |
-| `SWAP` | `POOL_MID_AT_BLOCK` | Fill at AMM pool mid-price at the block timestamp |
-| `LEND` | `PROTOCOL_RATE` | Fill at the lending protocol rate (Aave/Compound) at bar time |
-| `BORROW` | `PROTOCOL_RATE` | Same as LEND — borrow rate at protocol |
-| `STAKE` | `PROTOCOL_RATE` | Fill at LST staking APR at bar time |
-| `UNSTAKE` | `PROTOCOL_RATE` | Mirror of STAKE |
-| `QUOTE` | `ARRIVAL_MID` | Reference price only — no fill; ARRIVAL_MID is the reference |
-| `TRANSFER` | `ARRIVAL_MID` | Asset value at transfer time; chain fee modelled separately |
-| `BRIDGE` | `ARRIVAL_MID` | Bridge output at mid; bridge slippage modelled as fixed bps |
-| `ATOMIC` | `POOL_MID_AT_BLOCK` | Atomic on-chain bundle; AMM semantics |
-| `CANCEL` | `ARRIVAL_MID` | No fill; cancellation uses arrival price for P&L accounting |
-| `CONVERT_DUST` | `POOL_MID_AT_BLOCK` | Dust conversion via AMM at block mid |
-| `LP_MINT` | `POOL_MID_AT_BLOCK` | LP share minted at pool mid-price at block |
-| `LP_BURN` | `POOL_MID_AT_BLOCK` | LP share burned at pool mid-price at block |
+| Action         | BenchmarkFillMode   | Rationale                                                            |
+| -------------- | ------------------- | -------------------------------------------------------------------- |
+| `TRADE`        | `ARRIVAL_MID`       | Fill at mid-price at bar arrival (standard equity/futures benchmark) |
+| `SWAP`         | `POOL_MID_AT_BLOCK` | Fill at AMM pool mid-price at the block timestamp                    |
+| `LEND`         | `PROTOCOL_RATE`     | Fill at the lending protocol rate (Aave/Compound) at bar time        |
+| `BORROW`       | `PROTOCOL_RATE`     | Same as LEND — borrow rate at protocol                               |
+| `STAKE`        | `PROTOCOL_RATE`     | Fill at LST staking APR at bar time                                  |
+| `UNSTAKE`      | `PROTOCOL_RATE`     | Mirror of STAKE                                                      |
+| `QUOTE`        | `ARRIVAL_MID`       | Reference price only — no fill; ARRIVAL_MID is the reference         |
+| `TRANSFER`     | `ARRIVAL_MID`       | Asset value at transfer time; chain fee modelled separately          |
+| `BRIDGE`       | `ARRIVAL_MID`       | Bridge output at mid; bridge slippage modelled as fixed bps          |
+| `ATOMIC`       | `POOL_MID_AT_BLOCK` | Atomic on-chain bundle; AMM semantics                                |
+| `CANCEL`       | `ARRIVAL_MID`       | No fill; cancellation uses arrival price for P&L accounting          |
+| `CONVERT_DUST` | `POOL_MID_AT_BLOCK` | Dust conversion via AMM at block mid                                 |
+| `LP_MINT`      | `POOL_MID_AT_BLOCK` | LP share minted at pool mid-price at block                           |
+| `LP_BURN`      | `POOL_MID_AT_BLOCK` | LP share burned at pool mid-price at block                           |
 
-The matching engine MUST respect `BenchmarkFillMode` under `BATCH` + always-fill mode. If a new action
-type is added to `InstructionActionV2`, a corresponding `BenchmarkFillMode` entry is mandatory before
-that action can be dispatched in batch.
+The matching engine MUST respect `BenchmarkFillMode` under `BATCH` + always-fill mode. If a new action type is added to
+`InstructionActionV2`, a corresponding `BenchmarkFillMode` entry is mandatory before that action can be dispatched in
+batch.
 
 ---
 
 ## MatchingEngineConfig (UAC)
 
-`MatchingEngineConfig` in `unified_api_contracts.internal.architecture_v2` (to be shipped with Phase 1.9)
-holds the configurable matching assumptions:
+`MatchingEngineConfig` in `unified_api_contracts.internal.architecture_v2` (to be shipped with Phase 1.9) holds the
+configurable matching assumptions:
 
 ```python
 class MatchingEngineConfig(BaseModel):
@@ -122,17 +121,16 @@ class MatchingEngineConfig(BaseModel):
     always_fill: bool = True             # Batch mode: fill if slippage gated
 ```
 
-All fields are configurable per-archetype via strategy-service config; defaults above reflect the
-standard 2026-05-23 backtest assumptions. Any deviation from defaults must be documented in the
-archetype's `StrategyConfig` with a `matching_engine_config_override` field.
+All fields are configurable per-archetype via strategy-service config; defaults above reflect the standard 2026-05-23
+backtest assumptions. Any deviation from defaults must be documented in the archetype's `StrategyConfig` with a
+`matching_engine_config_override` field.
 
 ---
 
 ## Enforcement
 
-GAP-16 (topology plan Phase 8) requires a pytest in strategy-service or execution-service asserting
-every `InstructionActionV2` member maps to a non-default `BenchmarkFillMode`. This is the test gate for
-MAY-23 acceptance.
+GAP-16 (topology plan Phase 8) requires a pytest in strategy-service or execution-service asserting every
+`InstructionActionV2` member maps to a non-default `BenchmarkFillMode`. This is the test gate for MAY-23 acceptance.
 
 ---
 

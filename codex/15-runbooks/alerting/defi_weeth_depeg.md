@@ -128,8 +128,8 @@ If multiple LSTs depeg simultaneously (sector-wide event), exit all LST position
   just landed. Symptom: depeg_bps in alert payload is much wider than minute-VWAP. Action: re-read after 30s; if
   resolved, ack + log.
 - **Oracle-vs-AMM diff (NOT actual depeg):** `defi_weeth_depeg` measures AMM mid vs redemption rate; if the alert source
-  incorrectly reads oracle-USD vs AMM-USD, this is a code bug not a real depeg. Action: investigate
-  features-service (onchain family) emitter.
+  incorrectly reads oracle-USD vs AMM-USD, this is a code bug not a real depeg. Action: investigate features-service
+  (onchain family) emitter.
 
 If FP > 5% per 24h sustained, raise via [`threshold-tuning.md`](./threshold-tuning.md).
 

@@ -6,32 +6,31 @@ scope: [engineer, admin]
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** — per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
-> § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption);
-> **June-1 flips per-wallet to `COPPER_MPC` / CEFFU** on POD-provided creds. Per-wallet
-> `signing_surface` field on
+> § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption); **June-1 flips
+> per-wallet to `COPPER_MPC` / CEFFU** on POD-provided creds. Per-wallet `signing_surface` field on
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 > supports config-only flips with no recompile.
 >
-> **🟢 Cloud HSM CMKs PROVISIONED 2026-05-12** by slot 4 agent (operator-authorized ADC):
-> 10 HSM-backed CMKs (5 asset_groups × `wallets-prod` + `wallets-staging` KeyRings) in
-> `asia-northeast1`, 90-day auto-rotation, IAM Decrypter bound to
-> `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only.
-> **End-to-end smoke test PASSED**: encrypt + decrypt round-trip on staging CMK
-> returned matching plaintext. Issue doc closed at
+> **🟢 Cloud HSM CMKs PROVISIONED 2026-05-12** by slot 4 agent (operator-authorized ADC): 10 HSM-backed CMKs (5
+> asset_groups × `wallets-prod` + `wallets-staging` KeyRings) in `asia-northeast1`, 90-day auto-rotation, IAM Decrypter
+> bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only. **End-to-end smoke test PASSED**:
+> encrypt + decrypt round-trip on staging CMK returned matching plaintext. Issue doc closed at
 > [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
 >
 > **🟢 POD / Elysium client scope clarified 2026-05-12** — see
 > [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md).
-> POD (Elysium sub-entity, AIFM Ireland; BVI Fund) is our first DeFi allocator
-> client. POD manages Copper + CEFFU KYB directly. **Fireblocks is OUT OF SCOPE
-> per POD stack choice** — POD uses Copper + CEFFU only. `SigningSurface.FIREBLOCKS_MPC`
-> stays in UAC enum for future-flexibility but is NOT a May-23 / June-1 target.
+> POD (Elysium sub-entity, AIFM Ireland; BVI Fund) is our first DeFi allocator client. POD manages Copper + CEFFU KYB
+> directly. **Fireblocks is OUT OF SCOPE per POD stack choice** — POD uses Copper + CEFFU only.
+> `SigningSurface.FIREBLOCKS_MPC` stays in UAC enum for future-flexibility but is NOT a May-23 / June-1 target.
 >
 > Operator-runbook for every cutover + June-1 onboarding step:
 > [`codex/05-infrastructure/custody-onboarding-checklist.md`](../05-infrastructure/custody-onboarding-checklist.md).
 >
-> Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` **SHIPPED** at execution-service@`d45d24b4` per Plan Phase 3.C.1 (envelope-encrypted PK via Cloud HSM CMK). Bridge function `custody_config_from_wallet_provisioning` **SHIPPED** at execution-service@`fdd82def` (B-012 Phase 8.A) — maps `WalletProvisioningConfig.signing_surface` → `CustodyConfig` at config-parse time; see §2.5 + §1 factory table.
-> Fireblocks adapter (§ C) — `FireblocksCustodyProvider` PENDING per Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER.
+> Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` **SHIPPED** at execution-service@`d45d24b4` per Plan
+> Phase 3.C.1 (envelope-encrypted PK via Cloud HSM CMK). Bridge function `custody_config_from_wallet_provisioning`
+> **SHIPPED** at execution-service@`fdd82def` (B-012 Phase 8.A) — maps `WalletProvisioningConfig.signing_surface` →
+> `CustodyConfig` at config-parse time; see §2.5 + §1 factory table. Fireblocks adapter (§ C) —
+> `FireblocksCustodyProvider` PENDING per Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER.
 
 This is the single SSOT for custody integration in the Unified Trading System. It folds in the previous per-provider
 docs (`copper-custody-integration.md` + `ceffu-custody-integration.md`, both deleted 2026-05-08 per
@@ -111,24 +110,24 @@ Frozen dataclass controlling provider selection and credentials:
 
 `get_custody_provider(config: CustodyConfig)` in `custody/factory.py` routes on `config.provider`:
 
-| `config.provider` | Implementation                       | Credentials required                       | UAC `SigningSurface` |
-| ----------------- | ------------------------------------ | ------------------------------------------ | -------------------- |
-| `"mock"`          | `MockCustodyProvider`                | None                                       | `MOCK`               |
-| `"local_key"`     | `LocalKeyCustodyProvider`            | `private_key`, `rpc_url`                   | `LOCAL_KEY`          |
-| `"cloud_kms"`     | `CloudKmsCustodyProvider` (SHIPPED execution-service@`d45d24b4`; see §2.5) | `kms_key_uri`, `private_key_secret_ref` (wrapped ciphertext) | `CLOUD_KMS_ENCRYPTED` **(May-23 cutover default)** |
-| `"copper"`        | `CopperCustodyProvider`              | `api_key`, `api_secret`, `organization_id` | `COPPER_MPC`         |
-| `"fireblocks"`    | `FireblocksCustodyProvider` (PENDING — Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER) | `api_key`, `api_secret`, `vault_account_id` | `FIREBLOCKS_MPC`     |
-| `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise) | `api_key`, `api_secret`, `organization_id` | *(routes via Copper; CEFFU stub-only)* |
-| unknown           | `MockCustodyProvider` (with warning) | None                                       | —                    |
+| `config.provider` | Implementation                                                                  | Credentials required                                         | UAC `SigningSurface`                               |
+| ----------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| `"mock"`          | `MockCustodyProvider`                                                           | None                                                         | `MOCK`                                             |
+| `"local_key"`     | `LocalKeyCustodyProvider`                                                       | `private_key`, `rpc_url`                                     | `LOCAL_KEY`                                        |
+| `"cloud_kms"`     | `CloudKmsCustodyProvider` (SHIPPED execution-service@`d45d24b4`; see §2.5)      | `kms_key_uri`, `private_key_secret_ref` (wrapped ciphertext) | `CLOUD_KMS_ENCRYPTED` **(May-23 cutover default)** |
+| `"copper"`        | `CopperCustodyProvider`                                                         | `api_key`, `api_secret`, `organization_id`                   | `COPPER_MPC`                                       |
+| `"fireblocks"`    | `FireblocksCustodyProvider` (PENDING — Plan Phase 3.C.2 DEFERRED-AFTER-CUTOVER) | `api_key`, `api_secret`, `vault_account_id`                  | `FIREBLOCKS_MPC`                                   |
+| `"ceffu"`         | `CeffuCustodyProvider` (stub-shipped, methods raise)                            | `api_key`, `api_secret`, `organization_id`                   | _(routes via Copper; CEFFU stub-only)_             |
+| unknown           | `MockCustodyProvider` (with warning)                                            | None                                                         | —                                                  |
 
 Imports for `local_key`, `copper`, `ceffu`, `cloud_kms`, and `fireblocks` are deferred (inside the routing branch) to
 avoid importing `web3` / `httpx` / `google-cloud-kms` / `fireblocks-sdk-python` when not needed.
 
-**Per-wallet flippability** — each wallet row in
-`gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` carries its own
+**Per-wallet flippability** — each wallet row in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` carries
+its own
 [`WalletProvisioningConfig.signing_surface`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py),
-overriding the top-level `CustodyConfig.provider` default per-call. Operator flips the field
-in the JSON; deployment-UI Live-Cluster button reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
+overriding the top-level `CustodyConfig.provider` default per-call. Operator flips the field in the JSON; deployment-UI
+Live-Cluster button reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
 
 ---
 
@@ -297,8 +296,8 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 > Phase 3.C SPLIT (R9 RESOLVED 2026-05-12).** **CEFFU is OUT-OF-SCOPE for the May-23 cutover.** May-23 ships on
 > `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK envelope encryption per § 2.5 / Plan Phase 3.C.1); the per-wallet
 > `SigningSurface` flip to `COPPER_MPC` / CEFFU happens June-1+ when POD (Elysium sub-entity, BVI Fund) delivers
-> institutional KYB-approved credentials. The §2.4 subsection content below (CEFFU OES architecture, onboarding
-> flow, expected API integration shape) is preserved as **design intent for the June-1+ flip** — it is NOT a May-23
+> institutional KYB-approved credentials. The §2.4 subsection content below (CEFFU OES architecture, onboarding flow,
+> expected API integration shape) is preserved as **design intent for the June-1+ flip** — it is NOT a May-23
 > implementation gate. Master plan Group F Item 19's "Copper + CEFFU treasury wired" criterion is correspondingly
 > deferred to the June-1+ checkpoint. Codified per slot 4 audit refresh
 > [`codex/04-architecture/interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12.
@@ -308,8 +307,8 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 > constructor, factory registration, HMAC-SHA256 signing skeleton, and async-method stubs that raise
 > `NotImplementedError("CEFFU API spec pending — ...")`. The pluggable interface envelope is in place so the eventual
 > real implementation drops in as a tightly-scoped diff. Real REST endpoints + sandbox URL + sub-account model are
-> pending operator confirmation per the open questions below — **all such "pending" / "TBD" markers in §2.4
-> sub-sections are deferred-after-cutover (June-1+), not May-23 blockers.**
+> pending operator confirmation per the open questions below — **all such "pending" / "TBD" markers in §2.4 sub-sections
+> are deferred-after-cutover (June-1+), not May-23 blockers.**
 
 CEFFU (formerly Binance Custody) is the **institutional custody provider for Binance perp / spot exposure** in the
 6-venue perp universe (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster). The same pluggable `CustodyProvider`
@@ -352,41 +351,41 @@ Client → CEFFU custody account → Binance Futures (via OES bilateral mirror)
                                                 realised + unrealised P&L (settlement window)
 ```
 
-The custody-side balance at CEFFU is the source of truth for available collateral; the venue-side margin at Binance is
-a mirror. position-balance-monitor reads custody balance per `(venue=binance, asset)` from the CEFFU provider and
+The custody-side balance at CEFFU is the source of truth for available collateral; the venue-side margin at Binance is a
+mirror. position-balance-monitor reads custody balance per `(venue=binance, asset)` from the CEFFU provider and
 reconciles against Binance's reported margin to detect mirror drift.
 
 #### Onboarding flow (operator runbook)
 
 1. **Binance institutional account.** Operator signs the Binance Institutional Services agreement, opening an OES-
    eligible Binance Futures account. CEFFU is named as the off-exchange custodian.
-2. **CEFFU institutional account.** Operator signs the CEFFU custody agreement, receives institutional account ID +
-   API credentials (HMAC key + secret, parity expectations with Copper). CEFFU enables the OES bilateral mirror to the
+2. **CEFFU institutional account.** Operator signs the CEFFU custody agreement, receives institutional account ID + API
+   credentials (HMAC key + secret, parity expectations with Copper). CEFFU enables the OES bilateral mirror to the
    Binance account opened in step 1.
-3. **Sandbox onboarding.** Operator requests CEFFU sandbox credentials separately. Sandbox base URL +
-   sub-account-model details are <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once received.
-4. **Secret Manager wiring.** Credentials stored under `ceffu-api-key` / `ceffu-api-secret` / `ceffu-org-id` (production)
-   and `ceffu-sandbox-api-key` / `ceffu-sandbox-api-secret` (staging/test). `ApiKeyReloader` from UTL handles hot-reload
-   per workspace standard.
+3. **Sandbox onboarding.** Operator requests CEFFU sandbox credentials separately. Sandbox base URL + sub-account-model
+   details are <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once received.
+4. **Secret Manager wiring.** Credentials stored under `ceffu-api-key` / `ceffu-api-secret` / `ceffu-org-id`
+   (production) and `ceffu-sandbox-api-key` / `ceffu-sandbox-api-secret` (staging/test). `ApiKeyReloader` from UTL
+   handles hot-reload per workspace standard.
 5. **execution-service config flip.** Set `CUSTODY_PROVIDER=ceffu` for the Binance institutional execution flow;
    non-Binance CeFi + DeFi continue routing through Copper. Wallet mapping in
    `gs://wallet-config-{pid}/wallet_mapping.json` declares `custodian: ceffu` for Binance treasury + trading sub-
    accounts.
-6. **Dry-run + paper-trade.** Sandbox flow validates onboarding before any production capital moves. Master plan
-   Group F Item 19 paper-trade smoke validates this end-to-end.
+6. **Dry-run + paper-trade.** Sandbox flow validates onboarding before any production capital moves. Master plan Group F
+   Item 19 paper-trade smoke validates this end-to-end.
 
 #### API integration — PENDING SPEC
 
 The exact REST endpoint catalogue is <TBD-OPERATOR-PROVIDES-API-SPEC>. Expected shape (mirror Copper § 2.3.5 once
 confirmed):
 
-| Capability         | Expected method | Path                                | Notes                                              |
-| ------------------ | --------------- | ----------------------------------- | -------------------------------------------------- |
-| Balance query      | GET             | `/<TBD>/accounts/{id}/balances`     | Per token, per chain                               |
-| Collateral move    | POST            | `/<TBD>/oes/transfers`              | Custody → Binance margin and reverse               |
-| Settlement query   | GET             | `/<TBD>/oes/settlements?from&to`    | Daily P&L reconciliation                           |
-| Sign transaction   | POST            | `/<TBD>/orders` + `/<TBD>/sign`     | Parity with Copper's two-step MPC signing          |
-| List sub-accounts  | GET             | `/<TBD>/accounts`                   | Sub-account-per-strategy model decision pending    |
+| Capability        | Expected method | Path                             | Notes                                           |
+| ----------------- | --------------- | -------------------------------- | ----------------------------------------------- |
+| Balance query     | GET             | `/<TBD>/accounts/{id}/balances`  | Per token, per chain                            |
+| Collateral move   | POST            | `/<TBD>/oes/transfers`           | Custody → Binance margin and reverse            |
+| Settlement query  | GET             | `/<TBD>/oes/settlements?from&to` | Daily P&L reconciliation                        |
+| Sign transaction  | POST            | `/<TBD>/orders` + `/<TBD>/sign`  | Parity with Copper's two-step MPC signing       |
+| List sub-accounts | GET             | `/<TBD>/accounts`                | Sub-account-per-strategy model decision pending |
 
 #### Authentication / signing — skeleton in place, header names TBD
 
@@ -404,49 +403,50 @@ Sandbox base URL: `<TBD-OPERATOR-PROVIDES-API-SPEC>`. Sandbox credentials are ke
 
 #### Daily operational flow
 
-| Phase             | Time (UTC)               | Action                                                                                  |
-| ----------------- | ------------------------ | --------------------------------------------------------------------------------------- |
-| Mark-to-market    | Continuous (per Binance) | Binance recalculates margin per tick; mirror credit at CEFFU updates intraday           |
-| Settlement window | <TBD> daily              | CEFFU finalises end-of-day P&L; custody balance adjusted; alerting-service confirms     |
+| Phase             | Time (UTC)               | Action                                                                                       |
+| ----------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| Mark-to-market    | Continuous (per Binance) | Binance recalculates margin per tick; mirror credit at CEFFU updates intraday                |
+| Settlement window | <TBD> daily              | CEFFU finalises end-of-day P&L; custody balance adjusted; alerting-service confirms          |
 | Margin recall     | On threshold breach      | Position-balance-monitor triggers transfer from CEFFU treasury → Binance trading sub-account |
-| Reconciliation    | Post-settlement          | batch-vs-live reconciler asserts `custody_balance + position_unrealised == ledger_total`    |
+| Reconciliation    | Post-settlement          | batch-vs-live reconciler asserts `custody_balance + position_unrealised == ledger_total`     |
 
 The exact settlement window timing is <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once CEFFU confirms.
 
 #### Risk controls
 
 - **Credit-utilisation cap** — kill-switch rule fires when `position_notional / custody_balance > threshold` per the
-  alerting-service `LIVE_RISK_KILL_SWITCH` ruleset (see [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)).
+  alerting-service `LIVE_RISK_KILL_SWITCH` ruleset (see
+  [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)).
 - **Automatic margin recall threshold** — position-balance-monitor triggers proactive collateral transfer when the
   Binance-side margin ratio drops below `recall_threshold` (default 1.5x maintenance).
 - **Withdrawal whitelist** — destination addresses must be pre-approved. Whitelist management is API-driven vs operator-
   driven via the CEFFU dashboard: <TBD-OPERATOR-PROVIDES-API-SPEC> — populate once the CEFFU account model is confirmed.
 - **Rate-limit + backoff** — every CEFFU API call routes through UAC `classify_venue_error()` per workspace adapter
-  rule; transient 5xx + 429 retried with exponential backoff; 4xx auth/whitelist errors surface as `ADAPTER_FETCH_FAILED`
-  events without retry (per the no-fire-and-forget principle).
+  rule; transient 5xx + 429 retried with exponential backoff; 4xx auth/whitelist errors surface as
+  `ADAPTER_FETCH_FAILED` events without retry (per the no-fire-and-forget principle).
 
 #### CeffuCustodyProvider implementation reference
 
 `execution-service/execution_service/custody/ceffu.py` (stub shipped 2026-05-10):
 
-| Component            | Status                | Detail                                                                                          |
-| -------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
-| Constructor          | ✅ Wired              | Accepts `api_key` / `api_secret` / `organization_id` / `sandbox` parity with Copper             |
-| `_sign_request`      | ✅ Skeleton wired     | HMAC-SHA256 placeholder; final header names + canonicalisation pending API spec                 |
-| `sign_transaction`   | ❌ NotImplementedError | Raises with operator-action prompt + reference to this codex doc                                |
-| `get_balance`        | ❌ NotImplementedError | Same                                                                                            |
-| `create_transfer`    | ❌ NotImplementedError | Same                                                                                            |
-| `list_wallets`       | ❌ NotImplementedError | Same                                                                                            |
-| Factory registration | ✅ Live               | `get_custody_provider(CustodyConfig(provider="ceffu", ...))` returns `CeffuCustodyProvider`     |
+| Component            | Status                 | Detail                                                                                      |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| Constructor          | ✅ Wired               | Accepts `api_key` / `api_secret` / `organization_id` / `sandbox` parity with Copper         |
+| `_sign_request`      | ✅ Skeleton wired      | HMAC-SHA256 placeholder; final header names + canonicalisation pending API spec             |
+| `sign_transaction`   | ❌ NotImplementedError | Raises with operator-action prompt + reference to this codex doc                            |
+| `get_balance`        | ❌ NotImplementedError | Same                                                                                        |
+| `create_transfer`    | ❌ NotImplementedError | Same                                                                                        |
+| `list_wallets`       | ❌ NotImplementedError | Same                                                                                        |
+| Factory registration | ✅ Live                | `get_custody_provider(CustodyConfig(provider="ceffu", ...))` returns `CeffuCustodyProvider` |
 
 Tests: `execution-service/tests/unit/custody/test_ceffu_provider.py` — 11 tests covering construction + factory
 registration + every async method's NotImplementedError contract.
 
 #### Configuration
 
-| Variable           | Default                       | Description                                            |
-| ------------------ | ----------------------------- | ------------------------------------------------------ |
-| `CUSTODY_PROVIDER` | `mock`                        | Set to `ceffu` for Binance institutional flow         |
+| Variable           | Default                            | Description                                             |
+| ------------------ | ---------------------------------- | ------------------------------------------------------- |
+| `CUSTODY_PROVIDER` | `mock`                             | Set to `ceffu` for Binance institutional flow           |
 | `CEFFU_API_URL`    | `<TBD-OPERATOR-PROVIDES-API-SPEC>` | Production endpoint; sandbox toggled via `sandbox=True` |
 
 Secret Manager keys are listed in §8 Configuration below alongside Copper's.
@@ -479,16 +479,17 @@ Secret Manager keys are listed in §8 Configuration below alongside Copper's.
 
 ### §2.5 CloudKmsCustodyProvider — SHIPPED (execution-service@`d45d24b4`)
 
-Cloud HSM CMK envelope-encrypted private key signing. The **May-23 cutover default** for DeFi execution. No keys in memory beyond the signing window; envelope decrypted via Cloud KMS API at signing call time.
+Cloud HSM CMK envelope-encrypted private key signing. The **May-23 cutover default** for DeFi execution. No keys in
+memory beyond the signing window; envelope decrypted via Cloud KMS API at signing call time.
 
 Constructor fields (resolved from `CustodyConfig`):
 
-| Field | Type | Description |
-|---|---|---|
-| `kms_key_uri` | `str` | Full Cloud KMS key URI (`projects/.../cryptoKeyVersions/...`) for the HSM-backed CMK |
-| `private_key_secret_ref` | `str` | Secret Manager ref to the CMK-encrypted private key ciphertext |
-| `rpc_url` | `str` | JSON-RPC endpoint (resolved from UAC `CHAIN_RPC_TEMPLATES` at service startup) |
-| `cloud_provider` | `str` | `"gcp"` (default) or `"aws"` — routes to the correct KMS client implementation |
+| Field                    | Type  | Description                                                                          |
+| ------------------------ | ----- | ------------------------------------------------------------------------------------ |
+| `kms_key_uri`            | `str` | Full Cloud KMS key URI (`projects/.../cryptoKeyVersions/...`) for the HSM-backed CMK |
+| `private_key_secret_ref` | `str` | Secret Manager ref to the CMK-encrypted private key ciphertext                       |
+| `rpc_url`                | `str` | JSON-RPC endpoint (resolved from UAC `CHAIN_RPC_TEMPLATES` at service startup)       |
+| `cloud_provider`         | `str` | `"gcp"` (default) or `"aws"` — routes to the correct KMS client implementation       |
 
 Flow (sign_transaction):
 
@@ -500,13 +501,16 @@ Flow (sign_transaction):
 5. Return SignedTransaction with raw_signed + tx_hash
 ```
 
-HSM CMKs provisioned 2026-05-12 (5 asset_groups × `wallets-prod` + `wallets-staging` KeyRings, `asia-northeast1`, 90-day auto-rotation). IAM Decrypter bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only.
+HSM CMKs provisioned 2026-05-12 (5 asset_groups × `wallets-prod` + `wallets-staging` KeyRings, `asia-northeast1`, 90-day
+auto-rotation). IAM Decrypter bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only.
 
 #### Bridge function `custody_config_from_wallet_provisioning` (execution-service@`fdd82def`, B-012 Phase 8.A)
 
 `execution_service/custody/factory.py::custody_config_from_wallet_provisioning(wallet, rpc_url, cloud_provider)`.
 
-Maps a `WalletProvisioningConfig` (loaded from GCS `wallet_provisioning.json`) to a `CustodyConfig` for `get_custody_provider()`. Calls `wallet.validate()` first — credential mismatches raise at config-parse time, not at trade time.
+Maps a `WalletProvisioningConfig` (loaded from GCS `wallet_provisioning.json`) to a `CustodyConfig` for
+`get_custody_provider()`. Calls `wallet.validate()` first — credential mismatches raise at config-parse time, not at
+trade time.
 
 ```python
 # Caller pattern (execution-service startup / ApiKeyReloader reload):
@@ -517,14 +521,16 @@ provider = get_custody_provider(config)
 Internal dispatch via `_SURFACE_TO_PROVIDER` dict:
 
 | `WalletProvisioningConfig.signing_surface` | `CustodyConfig.provider` |
-|---|---|
-| `CLOUD_KMS_ENCRYPTED` | `"cloud_kms"` |
-| `COPPER_MPC` | `"copper"` |
-| `FIREBLOCKS_MPC` | `"fireblocks"` |
-| `LOCAL_KEY` | `"local_key"` |
-| `MOCK` | `"mock"` |
+| ------------------------------------------ | ------------------------ |
+| `CLOUD_KMS_ENCRYPTED`                      | `"cloud_kms"`            |
+| `COPPER_MPC`                               | `"copper"`               |
+| `FIREBLOCKS_MPC`                           | `"fireblocks"`           |
+| `LOCAL_KEY`                                | `"local_key"`            |
+| `MOCK`                                     | `"mock"`                 |
 
-Test coverage: `tests/unit/custody/test_cloud_kms_provider.py` — 11 tests covering all 5 `SigningSurface` mappings, `validate()`-at-bridge-time enforcement, and end-to-end KMS mock decrypt (no real keys; `unittest.mock.patch` on KMS client).
+Test coverage: `tests/unit/custody/test_cloud_kms_provider.py` — 11 tests covering all 5 `SigningSurface` mappings,
+`validate()`-at-bridge-time enforcement, and end-to-end KMS mock decrypt (no real keys; `unittest.mock.patch` on KMS
+client).
 
 ---
 
@@ -690,19 +696,19 @@ Record provider API responses for replay in CI:
 
 ## §10A Custody-ping / health-check protocol (codified 2026-05-12 per slot 8 audit PB-18)
 
-> **Contract** for the periodic health check + balance-pull loop that keeps PBMS's balances projection honest
-> against Copper + CEFFU. Upstream signal for `BALANCE_DRIFT` (see
+> **Contract** for the periodic health check + balance-pull loop that keeps PBMS's balances projection honest against
+> Copper + CEFFU. Upstream signal for `BALANCE_DRIFT` (see
 > [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md)) and
 > `CUSTODY_DISCONNECT_SECONDS` circuit-breaker (see
 > [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md)).
 
-Foundation: `CloudKmsCustodyProvider` shipped at execution-service@d45d24b4 per Plan Phase 3.C.1; Copper +
-CEFFU production custody flips on June-1 per `WalletProvisioningConfig.signing_surface`.
+Foundation: `CloudKmsCustodyProvider` shipped at execution-service@d45d24b4 per Plan Phase 3.C.1; Copper + CEFFU
+production custody flips on June-1 per `WalletProvisioningConfig.signing_surface`.
 
 ### §10A.1 Protocol surface
 
-Every `CustodyProvider` implementation MUST satisfy `health_check()` in addition to the
-`sign_transaction` / `get_balance` / `create_transfer` / `list_wallets` protocol methods declared in §1.
+Every `CustodyProvider` implementation MUST satisfy `health_check()` in addition to the `sign_transaction` /
+`get_balance` / `create_transfer` / `list_wallets` protocol methods declared in §1.
 
 ```python
 class CustodyProvider(Protocol):
@@ -711,26 +717,25 @@ class CustodyProvider(Protocol):
 
 `CustodyHealth` shape (canonical in UAC `unified_api_contracts.canonical.crosscutting.custody`):
 
-| Field | Type | Description |
-|---|---|---|
-| `healthy` | `bool` | `True` iff backend reachable AND last key-material rotation within freshness window |
-| `last_key_rotation_at` | `datetime` | Wall-clock of last successful CMK / key-material rotation (per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md)) |
-| `next_rotation_due_at` | `datetime` | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table) |
-| `provider` | `str` | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts |
-| `last_round_trip_ms` | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed |
-| `error` | `str \| None` | Error message if `healthy == False`; `None` on success |
+| Field                  | Type          | Description                                                                                                                                            |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `healthy`              | `bool`        | `True` iff backend reachable AND last key-material rotation within freshness window                                                                    |
+| `last_key_rotation_at` | `datetime`    | Wall-clock of last successful CMK / key-material rotation (per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md)) |
+| `next_rotation_due_at` | `datetime`    | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table)                                                          |
+| `provider`             | `str`         | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts                                                                         |
+| `last_round_trip_ms`   | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed                                                                               |
+| `error`                | `str \| None` | Error message if `healthy == False`; `None` on success                                                                                                 |
 
 ### §10A.2 Cadence + emitter
 
-| Loop | Cadence | Emitter | Consumer |
-|---|---|---|---|
-| Health-check ping | every **60s** (mirrors `make_health_router` heartbeat pattern from UTL) | each `CustodyProvider` instance in execution-service custody-runtime | execution-service `/health` endpoint + circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule |
-| Balance-pull reconciliation | every **5 min** (per `balance_drift.md`) | `position-balance-monitor-service` per-(wallet, asset) reconciler — pulls `CustodyProvider.get_balance()` + diffs against PBMS expected | PBMS balances projection + `BALANCE_DRIFT` alert |
+| Loop                        | Cadence                                                                 | Emitter                                                                                                                                 | Consumer                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Health-check ping           | every **60s** (mirrors `make_health_router` heartbeat pattern from UTL) | each `CustodyProvider` instance in execution-service custody-runtime                                                                    | execution-service `/health` endpoint + circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule |
+| Balance-pull reconciliation | every **5 min** (per `balance_drift.md`)                                | `position-balance-monitor-service` per-(wallet, asset) reconciler — pulls `CustodyProvider.get_balance()` + diffs against PBMS expected | PBMS balances projection + `BALANCE_DRIFT` alert                                         |
 
-Health-ping and balance-pull are **separate loops** by design: health-ping is high-frequency / cheap (proves the
-custody backend is reachable + creds fresh); balance-pull is lower-frequency / authoritative (proves PBMS state
-matches what custody actually holds). The two together give us both **liveness** (60s) and **correctness** (5min)
-signals.
+Health-ping and balance-pull are **separate loops** by design: health-ping is high-frequency / cheap (proves the custody
+backend is reachable + creds fresh); balance-pull is lower-frequency / authoritative (proves PBMS state matches what
+custody actually holds). The two together give us both **liveness** (60s) and **correctness** (5min) signals.
 
 ### §10A.3 Provider-to-(venue, asset) routing
 
@@ -739,62 +744,59 @@ Per §3 coverage matrix and `wallet-config/{chain_env}/wallet_mapping.json`:
 - **Copper**: every DeFi chain + non-Binance CeFi (Bybit, OKX, Deribit, Kraken, Aster, Hyperliquid).
 - **CEFFU**: Binance institutional custody only (Binance treasury + Binance trading sub-accounts).
 
-PBMS reads `wallet_mapping.json` at startup, builds the (venue, asset) → provider routing table, then runs the
-5-min balance-pull against the correct provider per wallet. The routing table hot-reloads per
+PBMS reads `wallet_mapping.json` at startup, builds the (venue, asset) → provider routing table, then runs the 5-min
+balance-pull against the correct provider per wallet. The routing table hot-reloads per
 [`../06-coding-standards/config-reloader-pattern.md`](../06-coding-standards/config-reloader-pattern.md).
 
 ### §10A.4 Failure modes + routing
 
 Closed set; mirrors the existing alerting taxonomy.
 
-| Failure | Detection | Action |
-|---|---|---|
-| Single missed health-ping (transient) | `last_round_trip_ms is None` on one tick | log debug; no alert (de-dup over 600s window per `balance_drift.md` pattern) |
-| Health-ping failed ≥ `CUSTODY_DISCONNECT_SECONDS` (default **300s** per `circuit-breaker-rule-taxonomy.md:228`) | rolling 5-tick failure window | emit `CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule fires `BLOCK_NEW` + CRITICAL severity (PagerDuty + Telegram). Slot 4 cred-rotation alert taxonomy AL-15 cross-references this code |
-| Balance-pull diff > `balance_drift_usd` threshold | per-(wallet, asset) reconciler, every 5 min | emit `BALANCE_DRIFT` AlertCode → operator runbook per [`balance_drift.md`](../15-runbooks/alerting/balance_drift.md). Does NOT pause trading by default; pages tier-3 on `drift > 10x` |
-| Key material stale (`now > next_rotation_due_at`) | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) per-class table |
+| Failure                                                                                                         | Detection                                                  | Action                                                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single missed health-ping (transient)                                                                           | `last_round_trip_ms is None` on one tick                   | log debug; no alert (de-dup over 600s window per `balance_drift.md` pattern)                                                                                                                                                    |
+| Health-ping failed ≥ `CUSTODY_DISCONNECT_SECONDS` (default **300s** per `circuit-breaker-rule-taxonomy.md:228`) | rolling 5-tick failure window                              | emit `CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule fires `BLOCK_NEW` + CRITICAL severity (PagerDuty + Telegram). Slot 4 cred-rotation alert taxonomy AL-15 cross-references this code |
+| Balance-pull diff > `balance_drift_usd` threshold                                                               | per-(wallet, asset) reconciler, every 5 min                | emit `BALANCE_DRIFT` AlertCode → operator runbook per [`balance_drift.md`](../15-runbooks/alerting/balance_drift.md). Does NOT pause trading by default; pages tier-3 on `drift > 10x`                                          |
+| Key material stale (`now > next_rotation_due_at`)                                                               | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) per-class table                                                |
 
 `CUSTODY_HEALTH_DEGRADED` is the AlertCode name; the underlying circuit-breaker rule code is
 `CUSTODY_DISCONNECT_SECONDS` per `circuit-breaker-rule-taxonomy.md` (the two compose: emitter →
-`CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker subscribes → `CUSTODY_DISCONNECT_SECONDS` rule fires
-`BLOCK_NEW`).
+`CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker subscribes → `CUSTODY_DISCONNECT_SECONDS` rule fires `BLOCK_NEW`).
 
 ### §10A.5 Relationship to `treasury_monitor.py`
 
-The custody-ping loop is **upstream of** `position-balance-monitor-service/core/treasury_monitor.py`'s
-`TREASURY_LOW` / `TREASURY_HIGH` thresholds — treasury_monitor reads the *post-reconciliation* PBMS balance
-state, so it inherits the freshness of the most recent successful balance-pull. If the custody-ping loop is
-degraded, treasury_monitor alerts may go stale; the `CUSTODY_HEALTH_DEGRADED` alert is the canonical "PBMS state
-may be drifting from reality" signal during that window.
+The custody-ping loop is **upstream of** `position-balance-monitor-service/core/treasury_monitor.py`'s `TREASURY_LOW` /
+`TREASURY_HIGH` thresholds — treasury_monitor reads the _post-reconciliation_ PBMS balance state, so it inherits the
+freshness of the most recent successful balance-pull. If the custody-ping loop is degraded, treasury_monitor alerts may
+go stale; the `CUSTODY_HEALTH_DEGRADED` alert is the canonical "PBMS state may be drifting from reality" signal during
+that window.
 
 ### §10A.6 PBMS is mode-blind (per `batch = live` invariant)
 
-The custody-ping loop runs identically in batch / paper / live — in batch + paper modes against the mock /
-local-key / tenderly providers (per §4 mode matrix), in live mode against Copper + CEFFU. PBMS does NOT branch
-on `OperationalMode` for the ping cadence or the alert routing (per
-[`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" invariant + slot 8 audit PB-19
-deferred QG ratchet).
+The custody-ping loop runs identically in batch / paper / live — in batch + paper modes against the mock / local-key /
+tenderly providers (per §4 mode matrix), in live mode against Copper + CEFFU. PBMS does NOT branch on `OperationalMode`
+for the ping cadence or the alert routing (per [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions
+SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 
 ### §10A.7 Open design questions (PRE_CUTOVER — operator gate)
 
 - **Specific failure thresholds for CEFFU** — CEFFU adapter is still stub per §2.4; the 300s
-  `CUSTODY_DISCONNECT_SECONDS` default is appropriate for Copper but operator may want a tighter band for
-  Binance institutional flows (CEFFU = sole signing path for Binance-side hedge legs of every DeFi archetype).
-  Routed as a follow-up P2 for the operator to decide alongside the CEFFU in-scope-for-May-23 call (slot 8 audit
-  PB-14).
-- **Should `auto-pause-live` fire on `CUSTODY_HEALTH_DEGRADED` or just alert?** Today the circuit-breaker
-  taxonomy says `BLOCK_NEW` (no new orders; existing positions held). Operator/Ikenna call on whether long-running
-  hedge legs need a tighter response (e.g. `KILL_ALL` after N consecutive degraded windows).
+  `CUSTODY_DISCONNECT_SECONDS` default is appropriate for Copper but operator may want a tighter band for Binance
+  institutional flows (CEFFU = sole signing path for Binance-side hedge legs of every DeFi archetype). Routed as a
+  follow-up P2 for the operator to decide alongside the CEFFU in-scope-for-May-23 call (slot 8 audit PB-14).
+- **Should `auto-pause-live` fire on `CUSTODY_HEALTH_DEGRADED` or just alert?** Today the circuit-breaker taxonomy says
+  `BLOCK_NEW` (no new orders; existing positions held). Operator/Ikenna call on whether long-running hedge legs need a
+  tighter response (e.g. `KILL_ALL` after N consecutive degraded windows).
 
 ### §10A.8 Composes with
 
-- [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) — per-class rotation
-  cadence (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
+- [`../05-infrastructure/rotation-runbook.md`](../05-infrastructure/rotation-runbook.md) — per-class rotation cadence
+  (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
 - [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) `CUSTODY_DISCONNECT_SECONDS` rule.
-- [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md) — the 5-min
-  balance-pull failure runbook.
-- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the sole consumer of
-  the balance-pull stream; the ping loop is how the balances projection stays honest.
+- [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md) — the 5-min balance-pull
+  failure runbook.
+- [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the sole consumer of the
+  balance-pull stream; the ping loop is how the balances projection stays honest.
 
 ---
 

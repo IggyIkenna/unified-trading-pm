@@ -36,13 +36,13 @@ action escalates to `KILL_ALL`, the breaker engages a `KillSwitchId` via the bus
 
 **Five orthogonal axes per breaker** — collapse none of them:
 
-| Axis | Type | What it captures |
-| ---- | ---- | ---------------- |
-| `CircuitBreakerId` | `StrEnum` (20 members) | What's being watched (oracle / RPC / gas / position / etc.) |
-| `BreakerScope` | `StrEnum` (5-set) | Blast radius (per-venue / per-archetype / per-account / per-asset_group / global) |
-| `BreakerTrigger` | `BaseModel` | Threshold value + unit + optional window + consecutive count |
-| `BreakerAction` | `StrEnum` (4-set) | Execution-side response (BLOCK_NEW / CANCEL_OPEN / SCALE_DOWN / KILL_ALL) |
-| `BreakerRecoveryMode` | `StrEnum` (2-set) | How the breaker disarms (manual_unkill / auto_cooldown) |
+| Axis                  | Type                   | What it captures                                                                  |
+| --------------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| `CircuitBreakerId`    | `StrEnum` (20 members) | What's being watched (oracle / RPC / gas / position / etc.)                       |
+| `BreakerScope`        | `StrEnum` (5-set)      | Blast radius (per-venue / per-archetype / per-account / per-asset_group / global) |
+| `BreakerTrigger`      | `BaseModel`            | Threshold value + unit + optional window + consecutive count                      |
+| `BreakerAction`       | `StrEnum` (4-set)      | Execution-side response (BLOCK_NEW / CANCEL_OPEN / SCALE_DOWN / KILL_ALL)         |
+| `BreakerRecoveryMode` | `StrEnum` (2-set)      | How the breaker disarms (manual_unkill / auto_cooldown)                           |
 
 Plus `BREAKER_RECOVERY_DEFAULTS: dict[BreakerAction, BreakerRecoveryMode]` is the per-action default mapping that drives
 `BreakerConfig.recovery_mode` resolution at construction time.
@@ -54,33 +54,33 @@ group by which cutover archetype primarily uses them.
 
 ### `carry_staked_basis` family (LST leverage)
 
-| ID | Description |
-| -- | ----------- |
-| `ORACLE_DEVIATION_BPS` | Oracle price deviation from canonical mid (Chainlink/Pyth) ≥ threshold bps. |
-| `RPC_OUTAGE_SECONDS` | Chain RPC endpoint unreachable ≥ threshold seconds. |
-| `GAS_PRICE_SURGE_GWEI` | L1 gas price ≥ threshold gwei (renders tx-cost economics negative). |
-| `POSITION_LIMIT_EXCEEDED` | Per-archetype / per-venue gross position exceeds configured cap. |
-| `DRAWDOWN_DAILY_BPS` | Daily drawdown ≥ threshold bps of NAV. |
-| `LIQUIDATION_CASCADE_RISK` | Aave/lending health-factor approaches liquidation across multiple positions. |
-| `VENUE_OUTAGE_SECONDS` | Venue REST + WS both unreachable ≥ threshold seconds. |
-| `CUSTODY_DISCONNECT_SECONDS` | Copper / CEFFU custody endpoint unreachable ≥ threshold seconds. |
-| `MANIFEST_PHANTOM_RATE_BPS` | Manifest phantom rate (captured-but-no-parquet) ≥ threshold bps of expected shards. |
-| `BATCH_LIVE_DIVERGENCE_BPS` | Batch-vs-live P&L divergence ≥ threshold bps (UTL@908b1647 batch_live_reconciler). |
+| ID                           | Description                                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| `ORACLE_DEVIATION_BPS`       | Oracle price deviation from canonical mid (Chainlink/Pyth) ≥ threshold bps.         |
+| `RPC_OUTAGE_SECONDS`         | Chain RPC endpoint unreachable ≥ threshold seconds.                                 |
+| `GAS_PRICE_SURGE_GWEI`       | L1 gas price ≥ threshold gwei (renders tx-cost economics negative).                 |
+| `POSITION_LIMIT_EXCEEDED`    | Per-archetype / per-venue gross position exceeds configured cap.                    |
+| `DRAWDOWN_DAILY_BPS`         | Daily drawdown ≥ threshold bps of NAV.                                              |
+| `LIQUIDATION_CASCADE_RISK`   | Aave/lending health-factor approaches liquidation across multiple positions.        |
+| `VENUE_OUTAGE_SECONDS`       | Venue REST + WS both unreachable ≥ threshold seconds.                               |
+| `CUSTODY_DISCONNECT_SECONDS` | Copper / CEFFU custody endpoint unreachable ≥ threshold seconds.                    |
+| `MANIFEST_PHANTOM_RATE_BPS`  | Manifest phantom rate (captured-but-no-parquet) ≥ threshold bps of expected shards. |
+| `BATCH_LIVE_DIVERGENCE_BPS`  | Batch-vs-live P&L divergence ≥ threshold bps (UTL@908b1647 batch_live_reconciler).  |
 
 ### `arbitrage_price_dispersion` family (funding-arb / cross-venue)
 
-| ID | Description |
-| -- | ----------- |
-| `FUNDING_RATE_FLIP_BPS` | Funding rate flips sign or moves ≥ threshold bps in one funding window. |
-| `BASIS_INVERSION_BPS` | Cash-perp basis inverts or moves ≥ threshold bps adverse. |
-| `SPREAD_BLOWOUT_BPS` | Quoted bid-ask spread ≥ threshold bps (illiquidity / venue degradation). |
-| `CROSS_VENUE_DIVERGENCE_BPS` | Same-instrument mid-price across hedge venues diverges ≥ threshold bps. |
-| `INVENTORY_IMBALANCE_RATIO` | Cross-venue inventory imbalance ≥ threshold ratio (hedge leg out of sync). |
-| `FILL_LATENCY_BREACH_MS` | Order ack → fill latency p99 ≥ threshold ms (venue performance degradation). |
-| `REJECT_RATE_BPS` | Order rejection rate over rolling window ≥ threshold bps. |
-| `PNL_VARIANCE_SIGMA` | Realised PnL variance ≥ threshold sigma vs expected (live-vs-backtest drift). |
-| `HEDGE_GAP_NOTIONAL_USD` | Unhedged delta notional ≥ threshold USD. |
-| `CLOCK_SKEW_MS` | Local clock vs venue ts skew ≥ threshold ms (timestamp-mismatch correctness risk). |
+| ID                           | Description                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| `FUNDING_RATE_FLIP_BPS`      | Funding rate flips sign or moves ≥ threshold bps in one funding window.            |
+| `BASIS_INVERSION_BPS`        | Cash-perp basis inverts or moves ≥ threshold bps adverse.                          |
+| `SPREAD_BLOWOUT_BPS`         | Quoted bid-ask spread ≥ threshold bps (illiquidity / venue degradation).           |
+| `CROSS_VENUE_DIVERGENCE_BPS` | Same-instrument mid-price across hedge venues diverges ≥ threshold bps.            |
+| `INVENTORY_IMBALANCE_RATIO`  | Cross-venue inventory imbalance ≥ threshold ratio (hedge leg out of sync).         |
+| `FILL_LATENCY_BREACH_MS`     | Order ack → fill latency p99 ≥ threshold ms (venue performance degradation).       |
+| `REJECT_RATE_BPS`            | Order rejection rate over rolling window ≥ threshold bps.                          |
+| `PNL_VARIANCE_SIGMA`         | Realised PnL variance ≥ threshold sigma vs expected (live-vs-backtest drift).      |
+| `HEDGE_GAP_NOTIONAL_USD`     | Unhedged delta notional ≥ threshold USD.                                           |
+| `CLOCK_SKEW_MS`              | Local clock vs venue ts skew ≥ threshold ms (timestamp-mismatch correctness risk). |
 
 **Adding a new breaker** (review-blocking checklist per
 [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)):
@@ -92,18 +92,18 @@ group by which cutover archetype primarily uses them.
 4. If the trigger maps to an alert, append the corresponding `AlertCode` in `alerting/codes.py`.
 5. Cross-link the codex doc list (this doc + [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) +
    [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md)).
-6. If the trigger is reconciler-driven, update [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md)
-   § "Per-state-surface reconciler outputs feed breaker triggers" with the consuming reconciler.
+6. If the trigger is reconciler-driven, update [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) §
+   "Per-state-surface reconciler outputs feed breaker triggers" with the consuming reconciler.
 
 ## `BreakerScope` — 5-set blast radius
 
-| Scope | Applies to | Mapping to `KillSwitchScope` (alerting) |
-| ----- | ---------- | --------------------------------------- |
-| `PER_VENUE` | Single venue (e.g. `bybit`, `aave_arbitrum`). | `KillSwitchScope.VENUE` |
-| `PER_ARCHETYPE` | One trading archetype (`carry_staked_basis` / `arbitrage_price_dispersion`). | `KillSwitchScope.ARCHETYPE` |
-| `PER_ACCOUNT` | One operator account / sub-fund. | `KillSwitchScope.ACCOUNT` |
-| `PER_ASSET_GROUP` | One asset_group (`cefi` / `defi`). | No 1:1 enum; runtime maps to GLOBAL filtered by asset_group. |
-| `GLOBAL` | Every archetype × every venue. | `KillSwitchScope.GLOBAL` |
+| Scope             | Applies to                                                                   | Mapping to `KillSwitchScope` (alerting)                      |
+| ----------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `PER_VENUE`       | Single venue (e.g. `bybit`, `aave_arbitrum`).                                | `KillSwitchScope.VENUE`                                      |
+| `PER_ARCHETYPE`   | One trading archetype (`carry_staked_basis` / `arbitrage_price_dispersion`). | `KillSwitchScope.ARCHETYPE`                                  |
+| `PER_ACCOUNT`     | One operator account / sub-fund.                                             | `KillSwitchScope.ACCOUNT`                                    |
+| `PER_ASSET_GROUP` | One asset_group (`cefi` / `defi`).                                           | No 1:1 enum; runtime maps to GLOBAL filtered by asset_group. |
+| `GLOBAL`          | Every archetype × every venue.                                               | `KillSwitchScope.GLOBAL`                                     |
 
 `BreakerConfig.applies_to: str` carries the scope-key (venue name when `scope=PER_VENUE`, archetype string when
 `scope=PER_ARCHETYPE`, etc.). The literal `"*"` means scope-wide (every member of the scope).
@@ -112,12 +112,12 @@ group by which cutover archetype primarily uses them.
 
 Severity escalates **left-to-right**:
 
-| Action | Behaviour | Default `BreakerRecoveryMode` (per `BREAKER_RECOVERY_DEFAULTS`) |
-| ------ | --------- | -------------------------------------------------------------- |
-| `BLOCK_NEW` | Least restrictive. New orders refused; in-flight kept. | `AUTO_COOLDOWN` |
-| `SCALE_DOWN` | Proportional unwind (e.g. halve position). | `AUTO_COOLDOWN` |
-| `CANCEL_OPEN` | Open orders cancelled; existing positions held. | `MANUAL_UNKILL` |
-| `KILL_ALL` | Full unwind / delta-neutral exit; engages `KillSwitchId` via bus. | `MANUAL_UNKILL` |
+| Action        | Behaviour                                                         | Default `BreakerRecoveryMode` (per `BREAKER_RECOVERY_DEFAULTS`) |
+| ------------- | ----------------------------------------------------------------- | --------------------------------------------------------------- |
+| `BLOCK_NEW`   | Least restrictive. New orders refused; in-flight kept.            | `AUTO_COOLDOWN`                                                 |
+| `SCALE_DOWN`  | Proportional unwind (e.g. halve position).                        | `AUTO_COOLDOWN`                                                 |
+| `CANCEL_OPEN` | Open orders cancelled; existing positions held.                   | `MANUAL_UNKILL`                                                 |
+| `KILL_ALL`    | Full unwind / delta-neutral exit; engages `KillSwitchId` via bus. | `MANUAL_UNKILL`                                                 |
 
 **Rationale for the per-action recovery default**:
 
@@ -134,9 +134,9 @@ defaults requires a written rationale in the registry seed's `description` field
 
 Codified per **Q8 ratification 2026-05-10** (cross-plan audit between DR Phase 1.A + risk-plan Phase 1.F).
 
-| Mode | When the breaker disarms | Recovery event |
-| ---- | ------------------------ | -------------- |
-| `MANUAL_UNKILL` | Operator action via deployment-UI kill-switch tab or `kill-switch unkill` CLI. | `KILL_SWITCH_MANUAL_UNKILLED` AlertCode + `unkilled_by_operator_id` metadata. |
+| Mode            | When the breaker disarms                                                                           | Recovery event                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `MANUAL_UNKILL` | Operator action via deployment-UI kill-switch tab or `kill-switch unkill` CLI.                     | `KILL_SWITCH_MANUAL_UNKILLED` AlertCode + `unkilled_by_operator_id` metadata.                |
 | `AUTO_COOLDOWN` | Guard predicate re-evaluated every `cooldown_seconds`; N consecutive green readings → auto-disarm. | `KILL_SWITCH_AUTO_RECOVERED` AlertCode + `recovered_after_seconds` + guard-evaluation trail. |
 
 `BreakerConfig` validator semantics:
@@ -253,8 +253,8 @@ A breaker fires from any of three independent input streams; the breaker subscri
 to cross threshold:
 
 1. **Venue-rejection-rate sliding-window** — the classic
-   [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) state machine
-   (CLOSED → DEGRADED at 30% failure rate; DEGRADED → OPEN at 60%; exponential backoff in HALF_OPEN). Lives in
+   [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) state machine (CLOSED → DEGRADED at 30% failure
+   rate; DEGRADED → OPEN at 60%; exponential backoff in HALF_OPEN). Lives in
    `execution-service/engine/circuit_breaker.py`. Feeds the `REJECT_RATE_BPS` + `FILL_LATENCY_BREACH_MS` breakers
    natively.
 2. **Risk-controller seam events** — `BREAKER_ESCALATION_REQUESTED` emitted by the risk-controller when N consecutive
@@ -266,9 +266,9 @@ to cross threshold:
    feed the matching breaker. See
    [`kill-switch-circuit-breaker.md` § "Per-state-surface reconciler outputs"](kill-switch-circuit-breaker.md).
 
-These three input streams are **independent + idempotent**. A single root cause that fires from multiple streams
-(e.g. venue outage tripping both rejection-rate AND custody reconciler) results in idempotent state transitions
-(CLOSED → DEGRADED is a no-op if already DEGRADED).
+These three input streams are **independent + idempotent**. A single root cause that fires from multiple streams (e.g.
+venue outage tripping both rejection-rate AND custody reconciler) results in idempotent state transitions (CLOSED →
+DEGRADED is a no-op if already DEGRADED).
 
 ## Compose with the kill-switch event bus
 
@@ -300,8 +300,8 @@ Disarm follows the breaker's `BreakerRecoveryMode`:
 
 - `AUTO_COOLDOWN` → bus auto-emits `KillSwitchDisarmEvent(recovery_mode=AUTO_COOLDOWN, cooldown_seconds_elapsed=N)` once
   the guard reads green for `cooldown_seconds`.
-- `MANUAL_UNKILL` → bus waits for operator action; emits `KillSwitchDisarmEvent(recovery_mode=MANUAL_UNKILL,
-  disarmed_by=operator_id, cooldown_seconds_elapsed=None)`.
+- `MANUAL_UNKILL` → bus waits for operator action; emits
+  `KillSwitchDisarmEvent(recovery_mode=MANUAL_UNKILL, disarmed_by=operator_id, cooldown_seconds_elapsed=None)`.
 
 ## Layer-3 boundary (what's NOT a breaker)
 
@@ -329,12 +329,12 @@ The 4-set strategy behaviours are service-side decisions on top of the bus event
 - **Don't compound triggers in a single `BreakerConfig`.** "Oracle deviation > 100bps AND gas > 200 gwei" is TWO
   breakers, not one. The matching engine subscribes to the union; the highest-severity firing action wins.
 - **Don't subscribe directly to `BreakerArmed` events from the risk-controller.** Layer 2 → Layer 3 is one-way via the
-  seam event; the risk-controller doesn't observe breaker state. See
-  [`risk-breaker-seam.md`](risk-breaker-seam.md).
+  seam event; the risk-controller doesn't observe breaker state. See [`risk-breaker-seam.md`](risk-breaker-seam.md).
 - **Don't expand `BreakerAction` beyond the 4-set.** Operator-facing vocab is closed at 4. New behaviours go into the
   strategy-side kill-switch 4-set, not into `BreakerAction`.
 - **Don't conflate `BreakerAction.SCALE_DOWN` with `RiskRuleConsequence.SCALE_DOWN`.** Same word, different layers,
-  different state machines. See [`risk-breaker-seam.md` § "Why the naming collision is intentional"](risk-breaker-seam.md).
+  different state machines. See
+  [`risk-breaker-seam.md` § "Why the naming collision is intentional"](risk-breaker-seam.md).
 
 ## Cross-references
 
@@ -346,5 +346,7 @@ The 4-set strategy behaviours are service-side decisions on top of the bus event
 - MEV-driven breakers: [`mev-protection.md`](mev-protection.md).
 - Reconciler-driven breakers (DR Phase 3): [`reconciliation-resolution.md`](reconciliation-resolution.md).
 - UAC SSOT: `unified_api_contracts.canonical.crosscutting.circuit_breaker` (UAC@a7a99b5).
-- Per-archetype registries: `unified_api_contracts/registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py`.
-- Plan: [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md).
+- Per-archetype registries:
+  `unified_api_contracts/registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py`.
+- Plan:
+  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md).

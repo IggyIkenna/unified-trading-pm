@@ -105,17 +105,17 @@ leakage. Canonical `PartitionedTickWriter`'s `validate_day_partition_alignment` 
 
 Follow-on plan: `dex_perp_and_venue_data_expansion_2026_05_12.md`. Key items shipped:
 
-| Item | Status | Evidence |
-|---|---|---|
-| LIGHTER-ZKSYNC → Tardis routing (date ≥ 2026-04-17) | ✅ DONE | MTDS@c936451 |
-| `market_stats` → `derivative_ticker` canonical mapping | ✅ DONE | MTDS@78bde77 |
-| DRIFT adapter (S3 archive + Data API, date-routed) | ✅ DONE | MTDS@66fb712 |
-| DRIFT venue routing in `umi_tick_provider.py` | ✅ DONE | MTDS@66fb712 |
-| Pacifica funding rates (`/funding_rate/history`) | ✅ DONE | pre-existing MTDS |
-| KRAKEN-FUTURES Tardis routing | ✅ DONE | UAC@06f0567 (pre-existing routing) |
-| BITFINEX-FUTURES Tardis routing | ✅ DONE | UAC@06f0567 (pre-existing routing) |
-| Kraken/BitFinex symbol normalisation | ⏳ DEFERRED | Requires UAC dual-repo — Ikenna slot |
-| Unit tests: Lighter routing (5), Drift (8), Pacifica funding (4) | ✅ DONE | MTDS@7fcc8b7 |
+| Item                                                             | Status      | Evidence                             |
+| ---------------------------------------------------------------- | ----------- | ------------------------------------ |
+| LIGHTER-ZKSYNC → Tardis routing (date ≥ 2026-04-17)              | ✅ DONE     | MTDS@c936451                         |
+| `market_stats` → `derivative_ticker` canonical mapping           | ✅ DONE     | MTDS@78bde77                         |
+| DRIFT adapter (S3 archive + Data API, date-routed)               | ✅ DONE     | MTDS@66fb712                         |
+| DRIFT venue routing in `umi_tick_provider.py`                    | ✅ DONE     | MTDS@66fb712                         |
+| Pacifica funding rates (`/funding_rate/history`)                 | ✅ DONE     | pre-existing MTDS                    |
+| KRAKEN-FUTURES Tardis routing                                    | ✅ DONE     | UAC@06f0567 (pre-existing routing)   |
+| BITFINEX-FUTURES Tardis routing                                  | ✅ DONE     | UAC@06f0567 (pre-existing routing)   |
+| Kraken/BitFinex symbol normalisation                             | ⏳ DEFERRED | Requires UAC dual-repo — Ikenna slot |
+| Unit tests: Lighter routing (5), Drift (8), Pacifica funding (4) | ✅ DONE     | MTDS@7fcc8b7                         |
 
 ## What's open — next-agent action items (priority order)
 

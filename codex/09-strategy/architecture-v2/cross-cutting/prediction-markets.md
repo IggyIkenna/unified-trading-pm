@@ -31,7 +31,7 @@ are simultaneously a data source, an execution venue, and an arbitrage surface.
 | PredictionArbStrategy                  | IMPLEMENTED | `strategy-service/engine/strategies/prediction_arb/prediction_arb_strategy.py`                                 |
 | Prediction mapping / categorisation    | IMPLEMENTED | `strategy-service/engine/strategies/prediction/prediction_mapping.py`                                          |
 | Cross-venue arb schemas (UAC internal) | IMPLEMENTED | `unified-api-contracts/unified_api_contracts/internal/domain/prediction_market/prediction_market_arb.py`       |
-| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-service (cross-instrument family)/calculators/polymarket_crowd_sentiment_calculator.py`                       |
+| Polymarket crowd sentiment feature     | IMPLEMENTED | `features-service (cross-instrument family)/calculators/polymarket_crowd_sentiment_calculator.py`              |
 | Execution handler                      | IMPLEMENTED | `execution-service/engine/handlers/prediction_handler.py`                                                      |
 | VCR cassettes                          | EXIST       | `unified-api-contracts/tests/`                                                                                 |
 

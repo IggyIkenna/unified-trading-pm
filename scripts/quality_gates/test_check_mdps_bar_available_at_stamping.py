@@ -216,9 +216,7 @@ def test_scan_file_flags_aug_assign(tmp_path: Path) -> None:
 
 def test_resolve_scopes_defaults_to_mdps(tmp_path: Path) -> None:
     """No scope arg → default to market-data-processing-service."""
-    (tmp_path / "market-data-processing-service" / "market_data_processing_service").mkdir(
-        parents=True
-    )
+    (tmp_path / "market-data-processing-service" / "market_data_processing_service").mkdir(parents=True)
     scopes = _resolve_scopes(tmp_path, scope=None, source_dir=None)
     assert len(scopes) == 1
     repo, scan_root, canonical_path = scopes[0]
@@ -257,9 +255,7 @@ def test_main_exits_clean_when_no_findings(tmp_path: Path, capsys: pytest.Captur
     assert "OK" in captured.out
 
 
-def test_main_exits_one_when_unauthorised_write(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_exits_one_when_unauthorised_write(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Non-canonical `available_at` write → exit 1 + ERROR line."""
     scan_root = tmp_path / "market-data-processing-service" / "market_data_processing_service"
     canonical_writer_path = scan_root / "app" / "core" / "canonical_writer.py"
@@ -283,9 +279,7 @@ def test_main_exits_one_when_unauthorised_write(
     assert "stamp_inline" in captured.err
 
 
-def test_main_skips_clean_when_workspace_empty(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_skips_clean_when_workspace_empty(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """No MDPS repo → exit 0 (clean skip, not failure)."""
     exit_code = main(["--workspace-root", str(tmp_path)])
     captured = capsys.readouterr()

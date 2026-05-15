@@ -114,10 +114,10 @@ Phase 0 is complete when ALL repos have:
 
 ## Known Offenders (as of 2026-03-04)
 
-| Repo                             | Violation                        | Status                  |
-| -------------------------------- | -------------------------------- | ----------------------- |
-| features-service (delta-one family)       | Python 3.9 in CI (requires 3.13) | Must fix before Phase 3 |
-| (run Phase 0 to discover others) |                                  |                         |
+| Repo                                | Violation                        | Status                  |
+| ----------------------------------- | -------------------------------- | ----------------------- |
+| features-service (delta-one family) | Python 3.9 in CI (requires 3.13) | Must fix before Phase 3 |
+| (run Phase 0 to discover others)    |                                  |                         |
 
 ---
 

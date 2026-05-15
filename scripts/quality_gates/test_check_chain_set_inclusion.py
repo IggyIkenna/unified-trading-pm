@@ -24,8 +24,7 @@ def test_invariant_holds_on_live_uac() -> None:
     violations = check_chain_set_inclusion()
     assert not violations, (
         "Live UAC chain_env violates the chain-set inclusion invariant. "
-        "Phase 1F-extend (DF-7) should have aligned these. Violations:\n"
-        + "\n".join(f"  - {v}" for v in violations)
+        "Phase 1F-extend (DF-7) should have aligned these. Violations:\n" + "\n".join(f"  - {v}" for v in violations)
     )
 
 
@@ -37,6 +36,7 @@ def test_returns_violation_when_genesis_orphan(monkeypatch: pytest.MonkeyPatch) 
 
     def fake_load() -> object:
         real = real_load()
+
         # Build a wrapper that overrides only CHAIN_GENESIS_DATES.
         class _Wrapped:
             MAINNET_CHAIN_IDS = real.MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
@@ -48,9 +48,7 @@ def test_returns_violation_when_genesis_orphan(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(mod, "_load_chain_env", fake_load)
 
     violations = check_chain_set_inclusion()
-    assert any("GHOST_CHAIN" in v for v in violations), (
-        f"Expected violation citing GHOST_CHAIN; got: {violations}"
-    )
+    assert any("GHOST_CHAIN" in v for v in violations), f"Expected violation citing GHOST_CHAIN; got: {violations}"
 
 
 def test_returns_violation_when_gas_fee_chain_id_orphan(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -72,6 +70,4 @@ def test_returns_violation_when_gas_fee_chain_id_orphan(monkeypatch: pytest.Monk
     monkeypatch.setattr(mod, "_load_chain_env", fake_load)
 
     violations = check_chain_set_inclusion()
-    assert any("99999999" in v for v in violations), (
-        f"Expected violation citing chain_id 99999999; got: {violations}"
-    )
+    assert any("99999999" in v for v in violations), f"Expected violation citing chain_id 99999999; got: {violations}"

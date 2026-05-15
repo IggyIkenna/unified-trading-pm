@@ -11,7 +11,8 @@ Follows `procedure.md`. Pipeline position: #9 (L3b features layer — multi-reso
 
 ## Upstream Dependencies
 
-- **features-service (delta-one family)** — single-timeframe delta-one features (`delta_one_features_multi_tf` source spec)
+- **features-service (delta-one family)** — single-timeframe delta-one features (`delta_one_features_multi_tf` source
+  spec)
 
 This service reads delta-one features computed at a base timeframe and re-aggregates them at multiple higher timeframes
 (5m, 15m, 1h, 4h, 1d). It does NOT re-fetch market data — it operates entirely on pre-computed feature outputs.
@@ -33,10 +34,10 @@ features-multi-timeframe
   --run-tag TAG         GCS output prefix (default: batch; use t1-recon for T+1 reconciliation)
 ```
 
-**Note:** This service uses `--operation` (standard CLI convention) unlike features-service (cross-instrument family). The `info`
-operation prints service metadata (base timeframe, supported timeframes, enabled feature groups, source specs) without
-doing any computation. Category defaults to `crypto` (maps to CEFI/DEFI) and is free-text — no argparse `choices`
-restriction. No `--dry-run` flag — use `info` operation for validation. No `--feature-groups` filtering.
+**Note:** This service uses `--operation` (standard CLI convention) unlike features-service (cross-instrument family).
+The `info` operation prints service metadata (base timeframe, supported timeframes, enabled feature groups, source
+specs) without doing any computation. Category defaults to `crypto` (maps to CEFI/DEFI) and is free-text — no argparse
+`choices` restriction. No `--dry-run` flag — use `info` operation for validation. No `--feature-groups` filtering.
 
 ## Operations
 
@@ -235,16 +236,16 @@ diff <(head -1 ./data/samples/mock/*.csv) <(head -1 ./data/samples/real/*.csv)
 
 ### Phase 7: Observability
 
-| #   | Check                 | Expected                                                    | Status |
-| --- | --------------------- | ----------------------------------------------------------- | ------ |
-| 7.1 | Service startup log   | operation, mode, category all logged                        |        |
-| 7.2 | UEI events            | STARTED (via BaseFeatureServiceV2.startup()), STOPPED       |        |
-| 7.3 | Shard-level isolation | One timeframe aggregation failure doesn't crash others      |        |
-| 7.4 | Info operation        | Clean metadata output, exit code 0                          |        |
-| 7.5 | Error classification  | Upstream read failures emit structured error events         |        |
-| 7.6 | Memory watchdog       | "Memory watchdog started" logged via start_memory_watchdog  |        |
+| #   | Check                 | Expected                                                             | Status |
+| --- | --------------------- | -------------------------------------------------------------------- | ------ |
+| 7.1 | Service startup log   | operation, mode, category all logged                                 |        |
+| 7.2 | UEI events            | STARTED (via BaseFeatureServiceV2.startup()), STOPPED                |        |
+| 7.3 | Shard-level isolation | One timeframe aggregation failure doesn't crash others               |        |
+| 7.4 | Info operation        | Clean metadata output, exit code 0                                   |        |
+| 7.5 | Error classification  | Upstream read failures emit structured error events                  |        |
+| 7.6 | Memory watchdog       | "Memory watchdog started" logged via start_memory_watchdog           |        |
 | 7.7 | Tracing               | setup_tracing called for "features-service (multi-timeframe family)" |        |
-| 7.8 | Async lifecycle       | `svc.startup()` and `svc.shutdown()` both called cleanly    |        |
+| 7.8 | Async lifecycle       | `svc.startup()` and `svc.shutdown()` both called cleanly             |        |
 
 ## Known Issues Audit
 

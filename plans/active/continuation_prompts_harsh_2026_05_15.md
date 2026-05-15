@@ -74,7 +74,8 @@ while true; do
 done
 ```
 
-- If you see a new `[main → slot N]` direction ping at the top of your ping file → stop the loop, read the direction, start immediately.
+- If you see a new `[main → slot N]` direction ping at the top of your ping file → stop the loop, read the direction,
+  start immediately.
 - If you see `STAND-DOWN` in the direction → stop completely.
 - Do NOT ping main to ask for work — just keep polling until the ping arrives.
 - Replace `<N>` with your slot number.
@@ -189,20 +190,29 @@ Slot 3 went idle before seeing it.
 
 **Finding (updated 2026-05-15, post operator option-B decision)**:
 
-Operator approved option B (7-day smoke window). Scanned `gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/` for APD target venues: BINANCE-FUTURES, BYBIT, DERIBIT, OKX-FUTURES/SPOT/SWAP. Coverage is highly sporadic:
+Operator approved option B (7-day smoke window). Scanned
+`gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/` for APD target venues:
+BINANCE-FUTURES, BYBIT, DERIBIT, OKX-FUTURES/SPOT/SWAP. Coverage is highly sporadic:
+
 - Mar 30, 31, Apr 1: 6 venues each (BINANCE, BYBIT, DERIBIT, OKX all present) — best 3-day run
 - Apr 2-5: 1-2 venues only
 - Apr 13-14: 4-6 venues briefly
 - No 7-day window anywhere with ≥4 venue families present on every day
 
-**Conclusion**: Option B cannot be satisfied — upstream MTDS tick data does not have any valid 7-day window. Per operator deferred fallback (07:38 UTC): **B-016 is DEFERRED**.
+**Conclusion**: Option B cannot be satisfied — upstream MTDS tick data does not have any valid 7-day window. Per
+operator deferred fallback (07:38 UTC): **B-016 is DEFERRED**.
 
 **Also confirmed (issue #1 from Q1 original, fixed)**:
-- `colocated_engine.py` `_FEATURE_BUCKETS["CEFI"]` hardcoded wrong bucket name → fixed to use `resolve_bucket_name()` (committed in e2e-testing@3ee6177).
 
-**Re-activation condition**: B-016 re-activates automatically when CeFi delta_one features land in GCS (i.e., after `features_service --operation batch --asset-group cefi --feature-family delta_one` runs over a continuous 7-day window with ≥4 venues). At that point BACKLOG status flips from DEFERRED to DISPATCHED.
+- `colocated_engine.py` `_FEATURE_BUCKETS["CEFI"]` hardcoded wrong bucket name → fixed to use `resolve_bucket_name()`
+  (committed in e2e-testing@3ee6177).
 
-**Status**: `DEFERRED — no valid smoke window; re-activates when CeFi features-service batch completes over 7d continuous window`
+**Re-activation condition**: B-016 re-activates automatically when CeFi delta_one features land in GCS (i.e., after
+`features_service --operation batch --asset-group cefi --feature-family delta_one` runs over a continuous 7-day window
+with ≥4 venues). At that point BACKLOG status flips from DEFERRED to DISPATCHED.
+
+**Status**:
+`DEFERRED — no valid smoke window; re-activates when CeFi features-service batch completes over 7d continuous window`
 
 ---
 
@@ -415,8 +425,8 @@ write paths; ZERO data written to GCS). Issue doc:
    venue adapters work. Add Harsh-side integration tests: (a) Helius adapter happy-path; (b) rate-limit handling (429
    response); (c) fallback to alternative provider; (d) `SOLANA_RPC_PROVIDER` env var toggle. Done-def: 4+ tests + MTDS
    QG green.
-4. **MTDS handler readiness audit for DeFi backtests** — given B-015 phantom issue surfaced lst_rates data-correctness
-   gap, audit _all_ MTDS DeFi handlers for similar phantom risk: lst_rates, evm_defi, gas_fee, solana_defi,
+4. **MTDS handler readiness audit for DeFi backtests** — given B-015 phantom issue surfaced lst*rates data-correctness
+   gap, audit \_all* MTDS DeFi handlers for similar phantom risk: lst_rates, evm_defi, gas_fee, solana_defi,
    eigenlayer_rewards. For each: verify (a) latest write date matches expectation, (b) manifest rows match parquet rows
    (no phantoms). Done-def: audit report ping with findings; new issue docs if phantoms found beyond lst_rates.
 

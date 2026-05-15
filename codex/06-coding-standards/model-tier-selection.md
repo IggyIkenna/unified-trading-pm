@@ -7,10 +7,10 @@ classify each plan/slot as Sonnet-doable or Opus-required before spawning agents
 
 ## The two tiers
 
-| Tier | Model | Context | Cost | Use when |
-|------|-------|---------|------|----------|
-| **Default** | `claude-sonnet-4-6` | 200k | Low | Everything that fits in 200k context without multi-repo synthesis |
-| **Escalation** | `claude-opus-4-7` | 1M | High (~5-10×) | Main orchestrator, cross-repo architecture decisions, tasks whose context provably exceeds 200k |
+| Tier           | Model               | Context | Cost          | Use when                                                                                        |
+| -------------- | ------------------- | ------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| **Default**    | `claude-sonnet-4-6` | 200k    | Low           | Everything that fits in 200k context without multi-repo synthesis                               |
+| **Escalation** | `claude-opus-4-7`   | 1M      | High (~5-10×) | Main orchestrator, cross-repo architecture decisions, tasks whose context provably exceeds 200k |
 
 ---
 
@@ -26,8 +26,8 @@ IF task requires simultaneous reading of  → Opus 4.7
 OTHERWISE                                 → Sonnet 4.6
 ```
 
-**When in doubt, use Sonnet 4.6 and escalate only if the agent hits a genuine context wall.**
-Do NOT pre-escalate "just in case" — that is money waste with no quality upside for bounded tasks.
+**When in doubt, use Sonnet 4.6 and escalate only if the agent hits a genuine context wall.** Do NOT pre-escalate "just
+in case" — that is money waste with no quality upside for bounded tasks.
 
 ---
 
@@ -53,15 +53,15 @@ Do NOT pre-escalate "just in case" — that is money waste with no quality upsid
 
 - **Slot 1 main orchestrator**: boot checklist, ledger sweep, cross-slot Q&A dispatch, plan curation, ping triage,
   master plan refresh. Orchestrator context = entire workspace state → requires 1M window.
-- **Cross-repo architecture decisions**: design tasks that require simultaneously reading UAC schema + UTL helpers +
-  3+ service implementations + codex SSOT to make a coherent decision (e.g., new shard-atom design, new manifest
-  column rationale, signal-broadcast topology).
+- **Cross-repo architecture decisions**: design tasks that require simultaneously reading UAC schema + UTL helpers + 3+
+  service implementations + codex SSOT to make a coherent decision (e.g., new shard-atom design, new manifest column
+  rationale, signal-broadcast topology).
 - **Large migration design**: tasks where the full impact surface (all consumers across all repos) must be in context
   simultaneously to avoid silent breakage (pre-audit manifests for public API changes).
 - **Trading judgment calls**: position sizing, risk-limit calibration, archetype topology decisions — requires holding
   the entire live-pipeline architecture in context.
-- **>200k context provably required**: if the agent's plan-of-record + all referenced files + the task output
-  provably exceed 200k tokens, escalate. Document the reason in the spawn prompt: `OPUS-REQUIRED: <reason>`.
+- **>200k context provably required**: if the agent's plan-of-record + all referenced files + the task output provably
+  exceed 200k tokens, escalate. Document the reason in the spawn prompt: `OPUS-REQUIRED: <reason>`.
 
 ---
 
@@ -70,15 +70,15 @@ Do NOT pre-escalate "just in case" — that is money waste with no quality upsid
 Every slot in `work_split_<YYYY_MM_DD>_<side>.md` MUST include a `model_tier` field:
 
 ```markdown
-| Slot | Theme | Plan-of-record | model_tier | Cal AI-days |
-|------|-------|----------------|------------|-------------|
-| 1    | Main orchestrator | LEDGER.md | **Opus 4.7** | continuous |
-| 2    | defi_catalogue impl | defi_catalogue_chain_primitives | **Sonnet 4.6** | ~16 |
-| 3    | code_freeze audit | code_freeze_migrate_backfill | **Sonnet 4.6** | ~14 |
+| Slot | Theme               | Plan-of-record                  | model_tier     | Cal AI-days |
+| ---- | ------------------- | ------------------------------- | -------------- | ----------- |
+| 1    | Main orchestrator   | LEDGER.md                       | **Opus 4.7**   | continuous  |
+| 2    | defi_catalogue impl | defi_catalogue_chain_primitives | **Sonnet 4.6** | ~16         |
+| 3    | code_freeze audit   | code_freeze_migrate_backfill    | **Sonnet 4.6** | ~14         |
 ```
 
-Classification is the **first thing** the operator or main-orch agent fills in when drafting the split.
-If model_tier is absent from a slot row, the agent MUST use Sonnet 4.6 and flag the omission.
+Classification is the **first thing** the operator or main-orch agent fills in when drafting the split. If model_tier is
+absent from a slot row, the agent MUST use Sonnet 4.6 and flag the omission.
 
 ---
 
@@ -87,19 +87,21 @@ If model_tier is absent from a slot row, the agent MUST use Sonnet 4.6 and flag 
 When auditing `plans/active/` before drafting a work-split, classify each plan as one of:
 
 **`sonnet-doable`** — bounded scope, single-repo or clear cross-repo spec, fits in 200k:
+
 - Mechanical refactors (ruff, pipeline_mode sweep, import rename)
 - Per-service impl (adapter, writer, test, codex doc)
 - Script execution + verification
 - Single-plan phase implementation
 
 **`opus-required`** — needs 1M context OR is main-orchestrator work:
+
 - Master plan refresh + inventory regeneration (reads all 50+ active plans + codex)
 - Cross-repo architecture design (UAC schema + UTL + 3+ services simultaneously)
 - Full workspace impact pre-audit for a public API change
 - Work-split drafting itself (reads all plans to allocate scope)
 
-Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch
-(same logical unit as the substantive change — do NOT mass-sweep, per Findings Triage).
+Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch (same logical
+unit as the substantive change — do NOT mass-sweep, per Findings Triage).
 
 ---
 
@@ -127,12 +129,13 @@ Every agent MUST perform this check as the **first action** of every task, befor
 
 ### Step 1 — read your own model
 
-The running model is stated in the system prompt: `"You are powered by the model named <X>"`. Read it. You always
-know which model you are.
+The running model is stated in the system prompt: `"You are powered by the model named <X>"`. Read it. You always know
+which model you are.
 
 ### Step 2 — read the required tier
 
 From (in priority order):
+
 1. The spawn prompt: look for `MODEL TIER: Sonnet 4.6` or `MODEL TIER: Opus 4.7 — REASON: ...`
 2. The work-split slot row: `model_tier: sonnet-doable | opus-required`
 3. The plan frontmatter: `model_tier:` field
@@ -140,12 +143,12 @@ From (in priority order):
 
 ### Step 3 — check for mismatch and act
 
-| Running model | Required tier | Action |
-|---|---|---|
-| Sonnet 4.6 | sonnet-doable | ✅ Proceed |
-| Opus 4.7 | opus-required | ✅ Proceed |
-| **Sonnet 4.6** | **opus-required** | 🔴 **STOP — flag to operator, do not proceed** |
-| **Opus 4.7** | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
+| Running model  | Required tier     | Action                                                             |
+| -------------- | ----------------- | ------------------------------------------------------------------ |
+| Sonnet 4.6     | sonnet-doable     | ✅ Proceed                                                         |
+| Opus 4.7       | opus-required     | ✅ Proceed                                                         |
+| **Sonnet 4.6** | **opus-required** | 🔴 **STOP — flag to operator, do not proceed**                     |
+| **Opus 4.7**   | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
 
 **When Sonnet 4.6 detects opus-required task** — output this block and stop:
 
@@ -181,7 +184,7 @@ When using the Agent tool, **always** pass the `model` parameter. Never inherit:
 # Sonnet-doable sub-agent
 Agent(model="sonnet", prompt="...")
 
-# Opus-required sub-agent  
+# Opus-required sub-agent
 Agent(model="opus", prompt="... OPUS-REQUIRED: cross-repo architecture ...")
 ```
 
@@ -206,15 +209,16 @@ Sonnet-suitable work if the parent happens to be Opus.
 
 Three levels. Declared alongside `model_tier` in every work-split slot row and spawn prompt.
 
-| Level | Declaration | When | Typical cost vs medium |
-|---|---|---|---|
-| `thinking: medium` | Default — omit or state explicitly | Mechanical, impl-from-spec, script runs | 1× |
-| `thinking: high` | State explicitly | Design, architecture within a single repo, plan writing | ~2-3× |
-| `thinking: max` | State explicitly + requires Opus 4.7 | Novel cross-repo design, complex debugging, trading judgment | ~8-15× |
+| Level              | Declaration                          | When                                                         | Typical cost vs medium |
+| ------------------ | ------------------------------------ | ------------------------------------------------------------ | ---------------------- |
+| `thinking: medium` | Default — omit or state explicitly   | Mechanical, impl-from-spec, script runs                      | 1×                     |
+| `thinking: high`   | State explicitly                     | Design, architecture within a single repo, plan writing      | ~2-3×                  |
+| `thinking: max`    | State explicitly + requires Opus 4.7 | Novel cross-repo design, complex debugging, trading judgment | ~8-15×                 |
 
 ### What goes in each tier
 
 **`thinking: medium`** — standard reasoning, no extended thinking budget needed:
+
 - Ruff cleanup, callsite migration, import rename
 - Implementing from a clear spec (plan body + file = full context)
 - Script execution + output verification
@@ -224,6 +228,7 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 - QG runs and lint fixes
 
 **`thinking: high`** — needs careful reasoning but not extended thinking:
+
 - Single-repo feature design where trade-offs exist
 - Codex doc authoring for a new pattern (must cover edge cases)
 - Per-service adapter implementation (protocol logic, error handling)
@@ -232,6 +237,7 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 - Debugging a single service's failing test with non-obvious root cause
 
 **`thinking: max`** — requires extended thinking; always paired with Opus 4.7:
+
 - Novel trading archetype topology (carry_staked_basis, leveraged_funding_arb family decisions)
 - Cross-repo migration pre-audit (all consumers must be in context, breakage is non-obvious)
 - Complex multi-service debugging where the bug crosses 3+ system boundaries
@@ -242,8 +248,8 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 
 ### Pairing rules
 
-`thinking: max` requires `model_tier: opus-required` — no exceptions. Extended thinking on Sonnet is not
-available in this workspace's Claude Code configuration.
+`thinking: max` requires `model_tier: opus-required` — no exceptions. Extended thinking on Sonnet is not available in
+this workspace's Claude Code configuration.
 
 `thinking: high` works on either model tier. Sonnet 4.6 at high thinking is preferred over Opus at medium.
 
@@ -252,12 +258,12 @@ available in this workspace's Claude Code configuration.
 ### Work-split slot declaration
 
 ```markdown
-| Slot | Theme | Plan | model_tier | thinking | Cal AI-days |
-|------|-------|------|------------|----------|-------------|
-| 1    | Main orchestrator | LEDGER | opus-required | max | continuous |
-| 2    | defi_catalogue impl | defi_catalogue | sonnet-doable | high | ~16 |
-| 3    | ruff cleanup | ruff_workspace_cleanup | sonnet-doable | medium | ~0.4 |
-| 5    | archetype topology design | defi_recursive_borrow | opus-required | max | ~14 |
+| Slot | Theme                     | Plan                   | model_tier    | thinking | Cal AI-days |
+| ---- | ------------------------- | ---------------------- | ------------- | -------- | ----------- |
+| 1    | Main orchestrator         | LEDGER                 | opus-required | max      | continuous  |
+| 2    | defi_catalogue impl       | defi_catalogue         | sonnet-doable | high     | ~16         |
+| 3    | ruff cleanup              | ruff_workspace_cleanup | sonnet-doable | medium   | ~0.4        |
+| 5    | archetype topology design | defi_recursive_borrow  | opus-required | max      | ~14         |
 ```
 
 ### Spawn prompt header (required fields)
@@ -274,20 +280,20 @@ THINKING: medium | high | max
 
 After checking model tier, check thinking effort:
 
-**How the agent knows its thinking level**: The spawn prompt declares it. If not declared, the agent infers
-from the task description using the tier definitions above, then flags if it cannot confirm the setting matches.
+**How the agent knows its thinking level**: The spawn prompt declares it. If not declared, the agent infers from the
+task description using the tier definitions above, then flags if it cannot confirm the setting matches.
 
-| Declared thinking | Task actually needs | Action |
-|---|---|---|
-| medium | medium | ✅ Proceed |
-| high | high | ✅ Proceed |
-| max (+ Opus) | max | ✅ Proceed |
-| **under-provisioned** (medium→high, medium→max, high→max) | higher | 🔴 **HARD STOP — wait for operator override** |
-| **over-provisioned** (max→high, max→medium, high→medium) | lower | 🔴 **HARD STOP — wait for operator override** |
+| Declared thinking                                         | Task actually needs | Action                                        |
+| --------------------------------------------------------- | ------------------- | --------------------------------------------- |
+| medium                                                    | medium              | ✅ Proceed                                    |
+| high                                                      | high                | ✅ Proceed                                    |
+| max (+ Opus)                                              | max                 | ✅ Proceed                                    |
+| **under-provisioned** (medium→high, medium→max, high→max) | higher              | 🔴 **HARD STOP — wait for operator override** |
+| **over-provisioned** (max→high, max→medium, high→medium)  | lower               | 🔴 **HARD STOP — wait for operator override** |
 
-**Both directions are hard stops.** The operator gets to see the mismatch and decide — either confirm the
-deviation is intentional ("proceed anyway") or fix the spawn tier. This avoids silent quality degradation
-(under) and silent money burn (over).
+**Both directions are hard stops.** The operator gets to see the mismatch and decide — either confirm the deviation is
+intentional ("proceed anyway") or fix the spawn tier. This avoids silent quality degradation (under) and silent money
+burn (over).
 
 **Under-provisioned stop block:**
 
@@ -319,10 +325,10 @@ To proceed:
   Option B — override: reply "proceed anyway" and I will start at the declared tier
 ```
 
-**Override handling**: if the operator replies "proceed anyway" (or equivalent), the agent starts immediately
-with a one-line caveat in its first output ("proceeding at <tier> per operator override"). No further stops.
+**Override handling**: if the operator replies "proceed anyway" (or equivalent), the agent starts immediately with a
+one-line caveat in its first output ("proceeding at <tier> per operator override"). No further stops.
 
 ---
 
-*Companion plan*: `plans/active/ruff_workspace_cleanup_*.md` (example of correctly classified Sonnet-suitable work).
-*Enforced by*: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 4.6 / medium.
+_Companion plan_: `plans/active/ruff_workspace_cleanup_*.md` (example of correctly classified Sonnet-suitable work).
+_Enforced by_: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 4.6 / medium.

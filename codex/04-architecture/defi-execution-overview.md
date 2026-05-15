@@ -144,39 +144,39 @@ Error format: `ERROR_CODE: AAVE V3 transaction failed -- <raw message>`
 Used by `execution-service/defi_execution/protocols/recursive_loop_orchestrator.py` — emitted directly (not via
 `classify_venue_error`). Added 2026-05-12 per Phase 5 design.
 
-| Code                                       | Action | When                                              |
-| ------------------------------------------ | ------ | ------------------------------------------------- |
-| RECURSIVE_LOOP_ABORTED_HF                  | SKIP   | Pre-iter HF gate triggered; caller gets partial   |
-| RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED         | SKIP   | Gas-budget gate mid-loop; caller gets partial     |
-| RECURSIVE_LOOP_SLIPPAGE_REVERT             | RETRY  | Cross-asset swap slippage; retry with wider tol   |
-| RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND    | FAIL   | UAC flash_loan_receiver_for() returned None       |
-| RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT | FAIL  | Receiver InsufficientRepaymentBalance revert      |
-| RECURSIVE_LOOP_FLASH_ACTION_FAILED         | FAIL   | Receiver ActionFailed(idx, ret) revert            |
-| RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS | FAIL  | Persistent driver aborted; HF too tight to unwind |
+| Code                                        | Action | When                                              |
+| ------------------------------------------- | ------ | ------------------------------------------------- |
+| RECURSIVE_LOOP_ABORTED_HF                   | SKIP   | Pre-iter HF gate triggered; caller gets partial   |
+| RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED          | SKIP   | Gas-budget gate mid-loop; caller gets partial     |
+| RECURSIVE_LOOP_SLIPPAGE_REVERT              | RETRY  | Cross-asset swap slippage; retry with wider tol   |
+| RECURSIVE_LOOP_FLASH_RECEIVER_NOT_FOUND     | FAIL   | UAC flash_loan_receiver_for() returned None       |
+| RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT | FAIL   | Receiver InsufficientRepaymentBalance revert      |
+| RECURSIVE_LOOP_FLASH_ACTION_FAILED          | FAIL   | Receiver ActionFailed(idx, ret) revert            |
+| RECURSIVE_LOOP_PARTIAL_OPEN_NO_UNWIND_FUNDS | FAIL   | Persistent driver aborted; HF too tight to unwind |
 
 ### Hyperliquid CeFi perp codes (8)
 
 Used by `VENUE_ERRORS_DEFI["hyperliquid"]` → `classify_venue_error("hyperliquid", code)`. Added 2026-05-12 per Phase 6.
 
-| Code                       | Action | When                                              |
-| -------------------------- | ------ | ------------------------------------------------- |
-| HL_INSUFFICIENT_MARGIN     | FAIL   | place_order rejected — insufficient USDC margin   |
-| HL_REDUCE_ONLY_VIOLATION   | FAIL   | reduce_only=True on size-increasing order         |
-| HL_INVALID_TIF             | FAIL   | TIF mismatch — HL accepts Alo/Ioc/Gtc only        |
-| HL_RATE_LIMITED            | RETRY  | 429 or 1-req/s breach — exponential backoff       |
-| HL_NONCE_TOO_LOW           | RETRY  | EIP-712 nonce race — re-read from /info           |
-| HL_SIGNATURE_INVALID       | FAIL   | Wallet config / chainId drift — alert operator    |
-| HL_POSITION_CLOSED         | SKIP   | Auto-liquidation race — ghost position            |
-| HL_FILL_CONFIRMATION_MISSED | RETRY | WS fill timeout — re-query /info userFills        |
+| Code                        | Action | When                                            |
+| --------------------------- | ------ | ----------------------------------------------- |
+| HL_INSUFFICIENT_MARGIN      | FAIL   | place_order rejected — insufficient USDC margin |
+| HL_REDUCE_ONLY_VIOLATION    | FAIL   | reduce_only=True on size-increasing order       |
+| HL_INVALID_TIF              | FAIL   | TIF mismatch — HL accepts Alo/Ioc/Gtc only      |
+| HL_RATE_LIMITED             | RETRY  | 429 or 1-req/s breach — exponential backoff     |
+| HL_NONCE_TOO_LOW            | RETRY  | EIP-712 nonce race — re-read from /info         |
+| HL_SIGNATURE_INVALID        | FAIL   | Wallet config / chainId drift — alert operator  |
+| HL_POSITION_CLOSED          | SKIP   | Auto-liquidation race — ghost position          |
+| HL_FILL_CONFIRMATION_MISSED | RETRY  | WS fill timeout — re-query /info userFills      |
 
 ### Oracle codes (2)
 
 Raised as typed exceptions (`OracleStaleError`, `OracleDeviationError`). Added 2026-05-13 per writegate Phase 2.A.
 
-| Code                      | Exception              | Action | When                                               |
-| ------------------------- | ---------------------- | ------ | -------------------------------------------------- |
-| ORACLE_STALE              | OracleStaleError       | SKIP   | Chainlink/Pyth feed heartbeat exceeded threshold   |
-| ORACLE_DEVIATION_EXCEEDED | OracleDeviationError   | FAIL   | Multi-source prices diverge ≥ sigma threshold      |
+| Code                      | Exception            | Action | When                                             |
+| ------------------------- | -------------------- | ------ | ------------------------------------------------ |
+| ORACLE_STALE              | OracleStaleError     | SKIP   | Chainlink/Pyth feed heartbeat exceeded threshold |
+| ORACLE_DEVIATION_EXCEEDED | OracleDeviationError | FAIL   | Multi-source prices diverge ≥ sigma threshold    |
 
 ## Modes
 
@@ -286,6 +286,70 @@ that fail the margin-mode check at strategy runtime — no hardcoded allowlist i
 
 SSOT: `codex/09-strategy/architecture-v2/archetypes/` (per-archetype venue matrices).
 
+## Phase 9 DeFi Cost Models (gas + slippage + flash premium)
+
+Phase 9 of `defi_recursive_borrow_archetypes_2026_05_10.md` shipped three cost models and an
+aggregator in `execution-service/execution_service/matching_engine/defi/`. These are the
+**canonical** pre-trade cost estimation path for both batch backtest replay and live execution.
+
+### Entry point
+
+```python
+from execution_service.matching_engine.defi import (
+    DefiCostAggregator,
+    DefiCostEstimate,
+    build_defi_fill_context,
+)
+
+cost: DefiCostEstimate = DefiCostAggregator().estimate_recursive_loop_cost(
+    chain="ethereum",
+    opening_mode="FLASH",           # or "PERSISTENT"
+    gas_price_gwei=gas_gwei,        # from MTDS gas_fee_data (batch) or live RPC
+    native_token_usd=eth_usd,
+    flash_principal_usd=principal,
+    swap_notional_usd=notional,
+    pool_matcher=pool_snapshot,     # None → analytical fallback
+    swap_amount_in=amount_in,
+    swap_side=OrderSide.BUY,
+    pool_tvl_usd=None,
+)
+ctx = build_defi_fill_context(cost, strategy_id=..., ...)
+```
+
+### Three cost components
+
+| Component | Model file | Key constants / surface |
+| --- | --- | --- |
+| **Gas** | `matching_engine/defi/gas_cost_model.py` | `GasAction` (SUPPLY/BORROW/REPAY/WITHDRAW/UNISWAP_V3_SWAP/FLASH_OPEN/FLASH_CLOSE); `GAS_UNITS` (calibrated p50 mainnet 2024–2026); `FALLBACK_GAS_PRICE_GWEI` per chain |
+| **Slippage** | `matching_engine/defi/slippage_cost_model.py` | Pool-matcher path (preferred, `PoolMatcher.quote()` → `price_impact_bps`) or analytical fallback (`≈ amount_in_usd / pool_tvl_usd × 10_000`) |
+| **Flash premium** | `matching_engine/defi/flash_premium_cost_model.py` | `FlashLoanProvider` (AAVE_V3 = 5 bps, BALANCER = 0 bps, NONE = 0 bps); only applies in `FLASH` opening mode |
+
+### Batch = Live contract
+
+- Batch callers pass per-day median `gas_price_gwei` from MTDS `gas_fee_data` parquet +
+  a `PoolMatcher` snapshot reconstructed from historical pool state.
+- Live callers pass a live RPC gas price + a freshly-fetched pool snapshot.
+- No other difference — single code path, no live-only forks.
+
+### P&L attribution wiring
+
+`gas_cost_usd + flash_premium_usd` → `FillAttributionContext.fee_amount_modelled`
+(STRATEGY layer / FEES factor, deterministic).
+
+Slippage is captured via `MatchResult.price_impact_bps` on the live/simulated fill and
+attributed to EXECUTION layer / SLIPPAGE factor by `build_attribution_rows`.
+
+### L2 gas overhead
+
+L2 chains (Arbitrum / Base / Optimism) carry an additional L1 data-posting overhead
+(`_L1_DATA_OVERHEAD_USD`: Arbitrum $0.02, Base/Optimism $0.01). Pass via
+`estimate_l1_data_cost_usd(chain)`.
+
+### Backtest replay status
+
+Phase 9 item 3 (backtest replay with real cost gates) is `BLOCKED-DATA` until the
+≥1-year lending-indices window backfill lands (target 2026-05-19 → 2026-05-23).
+
 ## Key Files
 
 | File                                                       | What                                            |
@@ -298,3 +362,7 @@ SSOT: `codex/09-strategy/architecture-v2/archetypes/` (per-archetype venue matri
 | deployment-service `contracts/FlashLoanReceiver.sol`       | Flash loan receiver source                      |
 | deployment-service `scripts/deploy-flash-loan-receiver.sh` | Deploy script                                   |
 | execution-service `cli/handlers/live_execution_handler.py` | SM fetch + execution-service DeFi injection     |
+| execution-service `matching_engine/defi/gas_cost_model.py`          | GasAction enum + GAS_UNITS + estimate_gas_cost_usd |
+| execution-service `matching_engine/defi/slippage_cost_model.py`     | Pool-matcher + analytical slippage estimation  |
+| execution-service `matching_engine/defi/flash_premium_cost_model.py`| FlashLoanProvider + FLASH_PREMIUM_BPS          |
+| execution-service `matching_engine/defi/cost_aggregator.py`         | DefiCostAggregator + DefiCostEstimate + build_defi_fill_context |

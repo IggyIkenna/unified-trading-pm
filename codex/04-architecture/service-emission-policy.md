@@ -5,27 +5,28 @@ scope: [engineer, admin]
 # Service emission policy (Architecture View)
 
 > **What it is:** The architectural seam between a service's publish boundary and the v8 manifest column that records
-> what was published. Companion to [`../02-data/service-output-emission-semantics.md`](../02-data/service-output-emission-semantics.md)
-> (which covers the runtime/data-side perspective). This doc covers the _architectural_ seam — how the policy SSOT, the
-> publish-boundary helper, the resolver, and the manifest column compose to give downstream consumers a single read
-> surface for "what was published, and how complete was it."
+> what was published. Companion to
+> [`../02-data/service-output-emission-semantics.md`](../02-data/service-output-emission-semantics.md) (which covers the
+> runtime/data-side perspective). This doc covers the _architectural_ seam — how the policy SSOT, the publish-boundary
+> helper, the resolver, and the manifest column compose to give downstream consumers a single read surface for "what was
+> published, and how complete was it."
 >
 > **Why this doc exists separately from `02-data/`.** The 02-data doc is the runtime/operator-facing SSOT: which kwargs
-> to pass to `publish_with_policy()`, which lifecycle event the publisher emits, how to wire a new service. THIS doc
-> is the architecture-facing SSOT: how the four moving pieces (UAC declaration / UTL publisher / UAC resolver / v8
-> manifest column) compose without circular imports, what the layer-discipline guarantees are, and where the seams sit
-> for future extension. Read 02-data first for "how do I use it"; read THIS doc for "why is it shaped this way."
+> to pass to `publish_with_policy()`, which lifecycle event the publisher emits, how to wire a new service. THIS doc is
+> the architecture-facing SSOT: how the four moving pieces (UAC declaration / UTL publisher / UAC resolver / v8 manifest
+> column) compose without circular imports, what the layer-discipline guarantees are, and where the seams sit for future
+> extension. Read 02-data first for "how do I use it"; read THIS doc for "why is it shaped this way."
 
 > **STATUS** (2026-05-11): The four pieces are SHIPPED:
 >
-> - **UAC declaration** of policy SSOT — `unified_api_contracts.canonical.crosscutting.service_emission_policy.SERVICE_OUTPUT_POLICIES`
->   (slice (a), UAC@`58c3b61`).
+> - **UAC declaration** of policy SSOT —
+>   `unified_api_contracts.canonical.crosscutting.service_emission_policy.SERVICE_OUTPUT_POLICIES` (slice (a),
+>   UAC@`58c3b61`).
 > - **UTL publisher** — `unified_trading_library.emission_publisher.publish_with_policy()` (slice (a), UTL@`1a7e1d4b`)
->   + `publish_with_manifest_lookup()` (slice (b), UTL@`ac5ade59`).
-> - **UAC resolver** — `service_emission_policy.next_state(*, policy, event)` (Phase 1.B,
->   UAC@`174f401`).
-> - **UAC manifest column declaration** — `service_emission_state.ServiceEmissionStateEnum` + `manifest_schema.V8_NEW_COLUMNS`
->   (Phase 1.A + 1.C, UAC@`174f401` + rename @UAC@`76f950a`).
+>   - `publish_with_manifest_lookup()` (slice (b), UTL@`ac5ade59`).
+> - **UAC resolver** — `service_emission_policy.next_state(*, policy, event)` (Phase 1.B, UAC@`174f401`).
+> - **UAC manifest column declaration** — `service_emission_state.ServiceEmissionStateEnum` +
+>   `manifest_schema.V8_NEW_COLUMNS` (Phase 1.A + 1.C, UAC@`174f401` + rename @UAC@`76f950a`).
 >
 > Slice (c) Phase 6.1-6.9 (per-service rollout) is multi-week + tracked by
 > [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
@@ -70,8 +71,8 @@ scope: [engineer, admin]
 ```
 
 The seam discipline is **one direction per arrow** — no circular dependency. UAC has zero runtime imports of UTL. UTL
-imports UAC. The runtime path is `publisher → resolver → ManifestWriter`; the read path is `ManifestReader →
-ServiceEmissionStateEnum (interpret)`.
+imports UAC. The runtime path is `publisher → resolver → ManifestWriter`; the read path is
+`ManifestReader → ServiceEmissionStateEnum (interpret)`.
 
 ## Architectural invariants
 
@@ -81,9 +82,9 @@ ServiceEmissionStateEnum (interpret)`.
 2. **The publisher emits ONE event per publish cycle.** The publisher is the only place lifecycle events get emitted —
    bypass routes (services that hand-emit `PUBLISHED_OK`) are banned. Reviewers reject any non-publisher `log_event`
    call that names a lifecycle-event string.
-3. **The resolver is a pure function.** `next_state(*, policy, event) → state` is keyword-only, no I/O, no side
-   effects. The `policy` arg is currently advisory (state derives from `event` under slice (b) spec); kept in signature
-   for forward-compat with future policy-specific state nuances.
+3. **The resolver is a pure function.** `next_state(*, policy, event) → state` is keyword-only, no I/O, no side effects.
+   The `policy` arg is currently advisory (state derives from `event` under slice (b) spec); kept in signature for
+   forward-compat with future policy-specific state nuances.
 4. **The manifest column is `str | None`, not `ServiceEmissionStateEnum`.** Parquet round-trip safety — the column
    stores the `.value` of the enum (e.g. `"PUBLISHED_OK"`). Readers coerce via `ServiceEmissionStateEnum(row_value)`;
    `None` means "pre-v8 row, fall through to `capture_status`-based reasoning." The closed-set guarantee fires at the
@@ -98,20 +99,19 @@ ServiceEmissionStateEnum (interpret)`.
 
 ## Anti-patterns
 
-- **Don't write to the manifest column directly from a service.** Always go through `publish_with_policy()` → resolver
-  → `ManifestWriter`. Services that bypass write inconsistent `(state, event)` pairs; downstream `next_state` semantics
+- **Don't write to the manifest column directly from a service.** Always go through `publish_with_policy()` → resolver →
+  `ManifestWriter`. Services that bypass write inconsistent `(state, event)` pairs; downstream `next_state` semantics
   break.
 - **Don't catch `ManifestRowBlockedError` and continue.** A `BLOCKED` row is data deliberately withheld by the
   publish-boundary policy + a P0 alert fired. Catching the exception silently swaps correctness for "I got a number" —
   the original failure mode the policy was designed to prevent. The right consumer response is skip + surface the
   publish-time `correlation_id` to operators.
 - **Don't read the manifest column without reading `capture_status` too.** The v8 column is `None` for pre-v8 rows
-  (≤30-day reader-fallback window per `READER_FALLBACK_WINDOW_DAYS = 30`). Consumers that branch only on the new
-  column miss the legacy rows; consumers that branch only on `capture_status` miss the
-  policy-withheld-but-captured-upstream case (PUBLISHED_DEGRADED with low `completeness_fraction`).
-- **Don't add a fifth `ServiceEmissionPolicy` value during the freeze window.** Per § "UAC enums frozen for the
-  window." If a new policy is needed, defer to post-cutover; the four shipped values cover every operator-msg-10 use
-  case.
+  (≤30-day reader-fallback window per `READER_FALLBACK_WINDOW_DAYS = 30`). Consumers that branch only on the new column
+  miss the legacy rows; consumers that branch only on `capture_status` miss the policy-withheld-but-captured-upstream
+  case (PUBLISHED_DEGRADED with low `completeness_fraction`).
+- **Don't add a fifth `ServiceEmissionPolicy` value during the freeze window.** Per § "UAC enums frozen for the window."
+  If a new policy is needed, defer to post-cutover; the four shipped values cover every operator-msg-10 use case.
 
 ## Cross-references
 

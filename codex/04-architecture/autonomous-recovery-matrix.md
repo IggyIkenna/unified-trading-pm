@@ -244,19 +244,19 @@ T+300s  PagerDuty CRITICAL: "Multiple venues down"
 
 ## Gap Implementation Status
 
-> **🟡 STATUS REFRESH (R-14 PRE_CUTOVER 2026-05-12, slot 8 audit)** — table refreshed against DR plan Phase 3 ship
-> at `kill-switch-circuit-breaker.md:218-244` (8 reconcilers shipped). Reviewers reading the PLANNED-when-shipped state
+> **🟡 STATUS REFRESH (R-14 PRE_CUTOVER 2026-05-12, slot 8 audit)** — table refreshed against DR plan Phase 3 ship at
+> `kill-switch-circuit-breaker.md:218-244` (8 reconcilers shipped). Reviewers reading the PLANNED-when-shipped state
 > below before 2026-05-12 should treat the SHIPPED-status entries as authoritative; full implementation provenance
 > belongs to `plans/active/disaster_recovery_circuit_breakers_2026_05_10.md` Phase 3.
 
-| ID  | Gap                                                            | Status                      | Implementation                                                              |
-| --- | -------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------- |
-| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | SHIPPED (DR Plan Phase 3)   | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% — wired per `kill-switch-circuit-breaker.md:218-244` |
-| G2  | Reconciliation as pre-close gate                               | PLANNED                     | execution-service: check PBMS recon health before exit playbook             |
-| G3  | Dual failure event (recon + exec both down)                    | SHIPPED (DR Plan Phase 3)   | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
-| G4  | Position drift → auto STOP_NEW_ONLY                            | SHIPPED (DR Plan Phase 3)   | PBMS: on CRITICAL drift, call execution-service kill switch API — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
-| G5  | Connectivity loss → mark recon as stale                        | PLANNED                     | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable             |
-| G6  | Playbook-to-scenario mapping                                   | PLANNED                     | UAC: map EmergencyExitType to trigger scenarios in config                   |
+| ID  | Gap                                                            | Status                    | Implementation                                                                                                                    |
+| --- | -------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| G1  | Circuit breaker → kill switch escalation (multi-venue cascade) | SHIPPED (DR Plan Phase 3) | execution-service: monitor venue breaker states, auto STOP_NEW_ONLY at >50% — wired per `kill-switch-circuit-breaker.md:218-244`  |
+| G2  | Reconciliation as pre-close gate                               | PLANNED                   | execution-service: check PBMS recon health before exit playbook                                                                   |
+| G3  | Dual failure event (recon + exec both down)                    | SHIPPED (DR Plan Phase 3) | PBMS: detect when both are broken, emit DUAL_FAILURE_DETECTED — reconciler shipped per `kill-switch-circuit-breaker.md:218-244`   |
+| G4  | Position drift → auto STOP_NEW_ONLY                            | SHIPPED (DR Plan Phase 3) | PBMS: on CRITICAL drift, call execution-service kill switch API — reconciler shipped per `kill-switch-circuit-breaker.md:218-244` |
+| G5  | Connectivity loss → mark recon as stale                        | PLANNED                   | PBMS: subscribe to CIRCUIT_OPEN, mark venue recon as unreliable                                                                   |
+| G6  | Playbook-to-scenario mapping                                   | PLANNED                   | UAC: map EmergencyExitType to trigger scenarios in config                                                                         |
 
 ---
 

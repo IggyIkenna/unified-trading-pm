@@ -15,22 +15,23 @@ locked_since: 2026-05-10
 execution:
   owner: cross_cutting_may_23_deliverables Phase 4 — daily Tab assignment in next work-split
   cadence: one-shot (build-out) + per-PR (regression smokes once shipped)
-  verifier: Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN against mock-API + integration smoke against Tier-2 stack
+  verifier:
+    Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN against mock-API + integration smoke against Tier-2 stack
   last_executed: NEVER
 ---
 
 # DART manual-trade UI — 5-surface MVP build (master Group G Item 23)
 
-> **Severity**: P0 — May-23 cutover deadline critical path; Group G operator-UX prerequisite for live trading.
-> **Blast radius**: unified-trading-system-ui (~10-15 new files), execution-service (3 endpoints already shipped, need
+> **Severity**: P0 — May-23 cutover deadline critical path; Group G operator-UX prerequisite for live trading. **Blast
+> radius**: unified-trading-system-ui (~10-15 new files), execution-service (3 endpoints already shipped, need
 > verification + tests), strategy-service (1 new endpoint + 1 new UAC type), unified-api-contracts (operational-mode
 > facade re-export). **Suggested owner**: next daily work-split Phase 4 — beefier Tab on Ikenna side because design
 > spans 4 repos (UI + 2 services + UAC).
 
 ## What I found (build-readiness audit 2026-05-10)
 
-This issue captures the full work needed for master Group G Item 23 — the DART manual-trade gate. An agent attempted
-the build in a single session but discovered:
+This issue captures the full work needed for master Group G Item 23 — the DART manual-trade gate. An agent attempted the
+build in a single session but discovered:
 
 1. **Backend execution-service scaffolding is already extensive and shipped.**
    - `execution-service/execution_service/api/manual_instruction_api.py` (682 lines) — `/manual` router with
@@ -52,15 +53,14 @@ the build in a single session but discovered:
      `restriction_profile_router` + `registry_router` + signal-broadcast router.
    - **No `POST /api/archetypes/{id}/operational-mode` endpoint exists.** This is the manual→DART→automated flip
      switch's backend dependency — must be built.
-   - `OperationalMode` enum DOES exist in UAC at
-     `unified_api_contracts.internal.OperationalMode` (LIVE / MANUAL / BACKTEST / PAPER). Use this; do NOT invent a new
-     enum.
+   - `OperationalMode` enum DOES exist in UAC at `unified_api_contracts.internal.OperationalMode` (LIVE / MANUAL /
+     BACKTEST / PAPER). Use this; do NOT invent a new enum.
 
 3. **UI surface is a stub — no DART terminal exists.**
    - `unified-trading-system-ui/app/(platform)/services/dart/` has ONLY `locked/page.tsx` (the upgrade-to-DART-Full
      paywall) plus dashboard tile metadata referencing the route key `dart-terminal`.
-   - **No `app/(platform)/services/dart/terminal/page.tsx` route file exists.** The "stub" referenced in the master
-     plan refers to the route KEY in dashboard metadata, not an actual route file.
+   - **No `app/(platform)/services/dart/terminal/page.tsx` route file exists.** The "stub" referenced in the master plan
+     refers to the route KEY in dashboard metadata, not an actual route file.
    - `components/dart/strategy-param-version-bump-modal.tsx` exists (a single modal for param version bumps).
    - **No ManualTradeForm / TradePreview / ExecutionDispatch / TradeMonitor / AutomationToggle components exist
      anywhere.**
@@ -79,13 +79,13 @@ the build in a single session but discovered:
 
 - **May-23 deadline critical.** Item 23 is the last Group G operator-UX prerequisite. Without it, operator cannot
   manually first-trade an archetype before flipping to automation — the gate is undefined.
-- **Backend is half-shipped already.** Every day that passes without UI integration, the existing
-  `/manual` + `/preview` routes drift further from any consumer (risk of the same rot pattern as
-  `colocated_engine.py:306` per the runbook governance issue doc).
+- **Backend is half-shipped already.** Every day that passes without UI integration, the existing `/manual` + `/preview`
+  routes drift further from any consumer (risk of the same rot pattern as `colocated_engine.py:306` per the runbook
+  governance issue doc).
 - **Strategy-service operational-mode endpoint is a hard prerequisite** for the AutomationToggle surface. Without
   shipping the endpoint, the whole flip-switch UX is blocked.
-- **Per "Batch = Live" rule the manual path MUST go through `LiveOrchestrator.execute(StrategyInstruction)` — same
-  code path as automation.** Existing backend already does this; UI must NOT build a parallel path.
+- **Per "Batch = Live" rule the manual path MUST go through `LiveOrchestrator.execute(StrategyInstruction)` — same code
+  path as automation.** Existing backend already does this; UI must NOT build a parallel path.
 
 ## Recommended decision (full spec — paste-ready for next work-split tab)
 
@@ -93,11 +93,12 @@ the build in a single session but discovered:
 
 Owner: Harsh-side spawn or Ikenna inline.
 
-1. **UAC** — re-export `OperationalMode` from `unified_api_contracts.internal` via the strategy facade if needed by
-   the route (verify import path; existing
-   `from unified_api_contracts.internal import OperationalMode` already works for service-internal use).
+1. **UAC** — re-export `OperationalMode` from `unified_api_contracts.internal` via the strategy facade if needed by the
+   route (verify import path; existing `from unified_api_contracts.internal import OperationalMode` already works for
+   service-internal use).
 
 2. **strategy-service** — author `strategy_service/api/operational_mode_router.py`:
+
    ```python
    from fastapi import APIRouter, HTTPException, Path
    from pydantic import BaseModel
@@ -129,6 +130,7 @@ Owner: Harsh-side spawn or Ikenna inline.
            ...
        return router
    ```
+
 3. **strategy-service** — wire `app.include_router(make_operational_mode_router())` in `api/main.py:create_app()`
    alongside the existing routers.
 4. **Tests** — `strategy-service/tests/unit/test_operational_mode_router.py` covering: valid transition, invalid
@@ -139,8 +141,8 @@ Owner: Harsh-side spawn or Ikenna inline.
 
 Owner: same tab as Phase A or parallel.
 
-1. Read `manual_instruction_api.py` + `preview_routes.py` end-to-end; verify they accept the `StrategyArchetype`
-   axis from UAC `ARCHETYPE_CAPABILITY_REGISTRY` (the `(archetype_id, venue, side)` triple the UI form will submit).
+1. Read `manual_instruction_api.py` + `preview_routes.py` end-to-end; verify they accept the `StrategyArchetype` axis
+   from UAC `ARCHETYPE_CAPABILITY_REGISTRY` (the `(archetype_id, venue, side)` triple the UI form will submit).
 2. Add `GET /api/dart/instructions/{id}/status` endpoint if not already covered — this is the TradeMonitor poll path.
    Likely lives in `manual_instruction_api.py` as a new route or in a new `instructions_status_routes.py`.
 3. Quality gate `cd execution-service && bash scripts/quality-gates.sh` GREEN.
@@ -151,20 +153,20 @@ Owner: same tab as Phase A or parallel.
 ### Phase C — UI 5-surface MVP (~3-4 AI-days, requires deep UI repo familiarity) — **PARTIAL-RESOLVED-VIA-OPTION-C 2026-05-10 (unified-trading-system-ui@`64660edd`)**
 
 > **Status update 2026-05-10:** A narrow option-c slice shipped — the 2 genuinely greenfield surfaces (`TradeMonitor` +
-> `AutomationToggle`) plus a thin DART terminal landing page that links to the **existing** `manual-trading-panel`
-> Sheet (`unified-trading-system-ui/components/trading/manual/{manual-trading-panel,single-order-form,mass-quote-panel}.tsx`,
+> `AutomationToggle`) plus a thin DART terminal landing page that links to the **existing** `manual-trading-panel` Sheet
+> (`unified-trading-system-ui/components/trading/manual/{manual-trading-panel,single-order-form,mass-quote-panel}.tsx`,
 > 1,256 lines — already shipped pre-this-task). Per CLAUDE.md "Grep-Then-Read, Not Grep-Then-Conclude" the original
 > Phase C scope re-built ManualTradeForm / TradePreview / ExecutionDispatch (items 3-5 + 9-10 below) which **already
 > exist** under `components/trading/manual/`; option-c skipped them and linked to the existing Sheet instead.
 >
 > **Shipped by `unified-trading-system-ui@64660edd`:**
 >
-> - `components/dart/trade-monitor.tsx` — covers item 7 below (5s polling against
->   `/api/instructions/{id}/status`, status badge, filled-qty / avg-fill-price / unrealized-P&L surfaces, last-good-snapshot
->   preservation on transient errors). 8 unit tests in `tests/unit/components/dart/trade-monitor.test.tsx`.
-> - `components/dart/automation-toggle.tsx` — covers item 8 below (POST `/api/archetypes/{id}/operational-mode`,
->   MANUAL → PAPER → LIVE forward graph + LIVE → MANUAL kill-switch, surfaces server-enforced 409s verbatim, transition
->   buttons disabled during in-flight requests). 10 unit tests in `tests/unit/components/dart/automation-toggle.test.tsx`.
+> - `components/dart/trade-monitor.tsx` — covers item 7 below (5s polling against `/api/instructions/{id}/status`,
+>   status badge, filled-qty / avg-fill-price / unrealized-P&L surfaces, last-good-snapshot preservation on transient
+>   errors). 8 unit tests in `tests/unit/components/dart/trade-monitor.test.tsx`.
+> - `components/dart/automation-toggle.tsx` — covers item 8 below (POST `/api/archetypes/{id}/operational-mode`, MANUAL
+>   → PAPER → LIVE forward graph + LIVE → MANUAL kill-switch, surfaces server-enforced 409s verbatim, transition buttons
+>   disabled during in-flight requests). 10 unit tests in `tests/unit/components/dart/automation-toggle.test.tsx`.
 > - `app/(platform)/services/dart/terminal/page.tsx` — covers item 2 below in slim form (lists every archetype from
 >   `ARCHETYPE_METADATA`, mounts AutomationToggle per row, renders TradeMonitor when `?instruction=<id>` URL param is
 >   present, links to existing `manual-trading-panel` Sheet via `/services/trading/overview`). Persona ACL gates
@@ -176,27 +178,29 @@ Owner: same tab as Phase A or parallel.
 >
 > - **Item 3 (ManualTradeForm)** + **Item 4 (TradePreview)** + **Item 5 (ExecutionDispatch)** + **Item 9
 >   (lib/api/dart-client.ts)** + **Item 10 (lib/api/mocks/dart.ts)** — already exist in `components/trading/manual/`
->   (manual-trading-panel.tsx + single-order-form.tsx + mass-quote-panel.tsx). The "Phase C remainder" is a Sheet → route
->   refactor + ExecutionDispatch endpoint rename from `/preview/<archetype>` + `/manual/submit` to the dart-client.ts
->   shape. Successor plan filename: TBD — operator triages whether the existing Sheet pattern (Phase C as shipped) is
->   sufficient for the May-23 cutover. If a dedicated route surface is required, the successor plan owns the refactor.
+>   (manual-trading-panel.tsx + single-order-form.tsx + mass-quote-panel.tsx). The "Phase C remainder" is a Sheet →
+>   route refactor + ExecutionDispatch endpoint rename from `/preview/<archetype>` + `/manual/submit` to the
+>   dart-client.ts shape. Successor plan filename: TBD — operator triages whether the existing Sheet pattern (Phase C as
+>   shipped) is sufficient for the May-23 cutover. If a dedicated route surface is required, the successor plan owns the
+>   refactor.
 > - **Item 6 (per-instruction monitor route `/dart/terminal/[instructionId]/page.tsx`)** — current option-c renders the
 >   monitor inline via `?instruction=<id>` URL param. Dedicated route is a UX-polish item, not a P0.
 > - **Item 11 (`tests/e2e/dart-manual-trade-flow.spec.ts` covering full submit → preview → confirm → monitor flow
 >   end-to-end)** — replaced this cycle by `phase-c-terminal-flow.spec.ts` covering the page-mount + monitor surface;
 >   full-flow e2e ships with the successor plan once the Sheet → route refactor lands.
 >
-> **Why option-c was the right shape:** the 2026-05-08 9-agent audit ("Grep-Then-Read" reference incident #4)
-> already flagged that `manual_instruction_api.py` + `preview_routes.py` + `manual_schemas.py` + `preview_schemas.py` +
+> **Why option-c was the right shape:** the 2026-05-08 9-agent audit ("Grep-Then-Read" reference incident #4) already
+> flagged that `manual_instruction_api.py` + `preview_routes.py` + `manual_schemas.py` + `preview_schemas.py` +
 > `ManualOperationHandler` were all already shipped on the backend; the Phase C original scope assumed those needed
 > building. The same shape applies on the UI: `manual-trading-panel.tsx` already provides the form + preview +
-> execution-dispatch surface. Option-c verified-via-grep-then-read that 5 of 11 surfaces existed; shipped only the
-> 3 genuinely greenfield ones. Saved ~2-3 AI-days of duplicate-effort builds per CLAUDE.md "Plans Run To Actual
+> execution-dispatch surface. Option-c verified-via-grep-then-read that 5 of 11 surfaces existed; shipped only the 3
+> genuinely greenfield ones. Saved ~2-3 AI-days of duplicate-effort builds per CLAUDE.md "Plans Run To Actual
 > Completion" anti-pattern.
 
 Owner: dedicated UI tab; should NOT be combined with Phase A/B due to foreign-edit risk.
 
 **Read-first list (before any UI edit):**
+
 - `unified-trading-system-ui/components/widgets/options/dart-options-analytics.tsx` — widget shape SSOT
 - `unified-trading-system-ui/lib/hooks/use-asset-group-data.ts` — data hook pattern
 - `unified-trading-system-ui/lib/api/mock-handler.ts` — mock-API integration
@@ -250,13 +254,14 @@ Owner: dedicated UI tab; should NOT be combined with Phase A/B due to foreign-ed
     - Automation toggle confirms before flipping to LIVE
     - Persona ACL: `prospect-signals-only` cannot reach `/dart/terminal` (404 / locked redirect)
 12. `tests/unit/components/dart/manual-trade-form.test.tsx` + `tests/unit/components/dart/trade-preview.test.tsx`
-    + `tests/unit/components/dart/automation-toggle.test.tsx` — vitest unit tests per component.
+    - `tests/unit/components/dart/automation-toggle.test.tsx` — vitest unit tests per component.
 
 **Persona ACL** — DART terminal route `/dart/terminal/*` MUST require DART-Full plan; non-DART personas redirect to
 `/dart/locked?from=terminal`. This wiring lives in `lib/auth/personas.ts` + middleware; matches the existing
 `/dart/locked` page.
 
 **Quality gates** —
+
 - `cd unified-trading-system-ui && CI=true npm test -- --run` GREEN
 - `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build` GREEN
 - `cd unified-trading-system-ui && npx playwright test tests/e2e/dart-manual-trade-flow.spec.ts` GREEN
@@ -272,24 +277,24 @@ Owner: dedicated UI tab; should NOT be combined with Phase A/B due to foreign-ed
 
 ### Why split Phases A/B (backend) from Phase C (UI) into separate work-split tabs
 
-- Phase A/B are **single-repo, crisp boundary, foreign-edit-risk LOW** — strategy-service has minimal in-flight churn
-  on the api/ surface; execution-service's `/manual` + `/preview` are live and stable.
+- Phase A/B are **single-repo, crisp boundary, foreign-edit-risk LOW** — strategy-service has minimal in-flight churn on
+  the api/ surface; execution-service's `/manual` + `/preview` are live and stable.
 - Phase C is **multi-component, foreign-pattern-heavy, foreign-edit-risk HIGH** — UI repo has extensive parallel-agent
-  conventions (mock-handler, persona ACL, Firebase emulator, widget shell, persona toggle). A single tab unfamiliar
-  with these will either misintegrate or take 2x the AI-days.
+  conventions (mock-handler, persona ACL, Firebase emulator, widget shell, persona toggle). A single tab unfamiliar with
+  these will either misintegrate or take 2x the AI-days.
 - Recommend: **Phase A+B in one tab (Tab Y on Harsh side, ~1 AI-day) → Phase C in dedicated UI tab (Tab Z on Ikenna
   side, ~3-4 AI-days, Opus full-window with read-first list above)** → Phase D either tab once both ship.
 
 ## Out-of-scope (explicit deferrals)
 
 - **Real backend integration testing against staged secrets / Tenderly fork** — deferred to next-cycle live-trading
-  rehearsal plan; the smoke harness in this plan exercises mock fixtures only. Operator first-trades will exercise
-  real integration.
+  rehearsal plan; the smoke harness in this plan exercises mock fixtures only. Operator first-trades will exercise real
+  integration.
 - **DART-Full plan billing / payment flow** — out of scope; existing `/dart/locked` upgrade page is the entry surface.
 - **Multi-archetype concurrent monitor** — Phase C ships single-archetype monitor; multi-archetype dashboard is a
   post-cutover polish item.
-- **Telemetry / OpenTelemetry traces for the manual-trade path** — covered by execution-service's existing trace
-  wiring; no UI-side trace work needed for MVP.
+- **Telemetry / OpenTelemetry traces for the manual-trade path** — covered by execution-service's existing trace wiring;
+  no UI-side trace work needed for MVP.
 
 ## Composes with
 

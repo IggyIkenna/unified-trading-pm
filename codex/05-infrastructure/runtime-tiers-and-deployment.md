@@ -9,18 +9,18 @@ scope: [engineer, admin]
 > Single SSOT for "which UI startup script do I use when". Replaces the prior partial coverage scattered across
 > `local-dev.md` + CLAUDE.md "Local Development" § + per-tier shorthand.
 
-| Use case                                            | Startup script                                                    | Default mode                                                   | Ports        |
-| --------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- | ------------ |
-| Consolidated portal (UI work, default)              | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier 0`    | Mock (Firebase emulators + Next dev + auto-seed)               | 3000 (UI)    |
-| Portal + 2 API gateways (UI+gateway integration)    | `dev-tiers.sh --tier 1`                                           | Mock (MockStateStore in `unified-trading-api`)                 | 3000 + 8030  |
-| Portal + APIs + Services (full local stack)         | `dev-tiers.sh --tier 2`                                           | Mock (full engine)                                             | 3000 + fleet |
-| Static export (zero deps, browser-only)             | `dev-tiers.sh --tier static`                                      | N/A (pre-built HTML/JS)                                        | 3100         |
-| Deployment-stack (deployment-api + deployment-ui)   | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` | **REAL cloud** (`CLOUD_PROVIDER=gcp`, `CLOUD_MOCK_MODE=false`) | 8004 + 5183  |
-| Backend service ad-hoc spin-up (8004-8016 range)    | `bash unified-trading-pm/scripts/dev/dev-start.sh` + flags        | Per `--mode ci\|mock\|api-real\|real`                          | per service  |
+| Use case                                          | Startup script                                                    | Default mode                                                   | Ports        |
+| ------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- | ------------ |
+| Consolidated portal (UI work, default)            | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier 0`    | Mock (Firebase emulators + Next dev + auto-seed)               | 3000 (UI)    |
+| Portal + 2 API gateways (UI+gateway integration)  | `dev-tiers.sh --tier 1`                                           | Mock (MockStateStore in `unified-trading-api`)                 | 3000 + 8030  |
+| Portal + APIs + Services (full local stack)       | `dev-tiers.sh --tier 2`                                           | Mock (full engine)                                             | 3000 + fleet |
+| Static export (zero deps, browser-only)           | `dev-tiers.sh --tier static`                                      | N/A (pre-built HTML/JS)                                        | 3100         |
+| Deployment-stack (deployment-api + deployment-ui) | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` | **REAL cloud** (`CLOUD_PROVIDER=gcp`, `CLOUD_MOCK_MODE=false`) | 8004 + 5183  |
+| Backend service ad-hoc spin-up (8004-8016 range)  | `bash unified-trading-pm/scripts/dev/dev-start.sh` + flags        | Per `--mode ci\|mock\|api-real\|real`                          | per service  |
 
-**Default mode rule (per-tier × mode matrix, codified 2026-05-12 per UI-10 audit)** — every script in this table runs
-in **mock mode by default** EXCEPT `restart-deployment-stack.sh`, which hardcodes real cloud mode (operators
-inspecting live cloud state). Both `dev-tiers.sh` and `dev-start.sh` accept explicit mode overrides via env / flags.
+**Default mode rule (per-tier × mode matrix, codified 2026-05-12 per UI-10 audit)** — every script in this table runs in
+**mock mode by default** EXCEPT `restart-deployment-stack.sh`, which hardcodes real cloud mode (operators inspecting
+live cloud state). Both `dev-tiers.sh` and `dev-start.sh` accept explicit mode overrides via env / flags.
 
 For full env-axis matrix + the `runtime_profile` v7 collapse: § "Runtime Profiles (v7)" below + § Mode axes in
 [`local-dev.md`](../08-workflows/local-dev.md).
@@ -126,13 +126,13 @@ The live pipeline (MTDS → MDPS → features-service via Redis Streams) deploys
 two singleton VMs**. Full architecture in [`live-pipeline-architecture.md`](live-pipeline-architecture.md). Launcher
 SSOT under `deployment-service/scripts/vm/` per the VM launcher script SSOT rule.
 
-| VM type                            | Launcher                                     | VM-name prefix        | Scope                                                        | Watchdog dict entry                          |
-| ---------------------------------- | -------------------------------------------- | --------------------- | ------------------------------------------------------------ | -------------------------------------------- |
-| **MTDS live**                      | `launch-mtds-live.sh --asset-group <ag>`     | `mtds-live-`          | Per asset_group; one VM per cluster (dispatched by `--asset-group` flag, single parameterised launcher) | `VM_PREFIX_TO_BUCKET["mtds-live-"]`          |
+| VM type                            | Launcher                                          | VM-name prefix        | Scope                                                                                                   | Watchdog dict entry                          |
+| ---------------------------------- | ------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **MTDS live**                      | `launch-mtds-live.sh --asset-group <ag>`          | `mtds-live-`          | Per asset_group; one VM per cluster (dispatched by `--asset-group` flag, single parameterised launcher) | `VM_PREFIX_TO_BUCKET["mtds-live-"]`          |
 | **MDPS + features (asset-scoped)** | `launch-mdps-features-live.sh --asset-group <ag>` | `mdps-features-live-` | Per asset_group; one VM per cluster (dispatched by `--asset-group` flag, single parameterised launcher) | `VM_PREFIX_TO_BUCKET["mdps-features-live-"]` |
-| **Features cross-cutting**         | `launch-features-cross-cutting.sh`           | `features-xc-`        | Singleton; subscribes to ALL asset_groups                    | `VM_PREFIX_TO_BUCKET["features-xc-"]`        |
-| **Replay cascade**                 | `launch-replay-cascade.sh`                   | `replay-`             | Singleton; bridges batch→live on restart                     | `VM_PREFIX_TO_BUCKET["replay-"]`             |
-| **Alerting service**               | unchanged batch-live wiring                  | n/a (existing)        | Singleton; consumes `StreamingHealthSnapshot` via Health-API | n/a (existing)                               |
+| **Features cross-cutting**         | `launch-features-cross-cutting.sh`                | `features-xc-`        | Singleton; subscribes to ALL asset_groups                                                               | `VM_PREFIX_TO_BUCKET["features-xc-"]`        |
+| **Replay cascade**                 | `launch-replay-cascade.sh`                        | `replay-`             | Singleton; bridges batch→live on restart                                                                | `VM_PREFIX_TO_BUCKET["replay-"]`             |
+| **Alerting service**               | unchanged batch-live wiring                       | n/a (existing)        | Singleton; consumes `StreamingHealthSnapshot` via Health-API                                            | n/a (existing)                               |
 
 Per-asset-group expansion (5 asset_groups × 2 VM types = 10 VMs at full cluster bootstrap):
 
@@ -265,36 +265,31 @@ Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STA
 
 ## Per-mode credential subset (added 2026-05-12 per Phase 7.A)
 
-Per [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
-Phase 7.A, each pipeline mode (paper / batch / live) declares its required
-credential set. SSOT yaml:
+Per
+[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+Phase 7.A, each pipeline mode (paper / batch / live) declares its required credential set. SSOT yaml:
 [`unified-api-contracts/config/credentials_per_mode.yaml`](../../unified-api-contracts/unified_api_contracts/config/credentials_per_mode.yaml).
 
-| Mode | Custody | Venue scope | Data | Telegram |
-|---|---|---|---|---|
-| `paper` | sandbox (`copper-sandbox-*` only) | None (Tenderly fork fills) | live read-only | `telegram-bot-token-dev` |
-| `batch` | `mock` | read-scope (`<venue>-read-*` only) | live (historical sources) | `telegram-bot-token-dev` |
-| `live` | `cloud_kms` (May-23 default) → `copper`/`fireblocks` (June-1 flip) | trade-scope (`<venue>-trade-*`) | live | `telegram-bot-token-prod` |
+| Mode    | Custody                                                            | Venue scope                        | Data                      | Telegram                  |
+| ------- | ------------------------------------------------------------------ | ---------------------------------- | ------------------------- | ------------------------- |
+| `paper` | sandbox (`copper-sandbox-*` only)                                  | None (Tenderly fork fills)         | live read-only            | `telegram-bot-token-dev`  |
+| `batch` | `mock`                                                             | read-scope (`<venue>-read-*` only) | live (historical sources) | `telegram-bot-token-dev`  |
+| `live`  | `cloud_kms` (May-23 default) → `copper`/`fireblocks` (June-1 flip) | trade-scope (`<venue>-trade-*`)    | live                      | `telegram-bot-token-prod` |
 
-Runtime-profile composition consumes this subset — e.g. `prod` profile
-implies `live` mode credential requirements; `paper` profile implies
-`paper` mode credentials. The `credential-probe.sh` audit script
+Runtime-profile composition consumes this subset — e.g. `prod` profile implies `live` mode credential requirements;
+`paper` profile implies `paper` mode credentials. The `credential-probe.sh` audit script
 ([`deployment-service/scripts/audit/credential-probe.sh`](../../deployment-service/scripts/audit/credential-probe.sh))
-takes `--mode {paper|batch|live}` and verifies the subset against real
-Secret Manager / Secrets Manager state.
+takes `--mode {paper|batch|live}` and verifies the subset against real Secret Manager / Secrets Manager state.
 
 **Per-archetype subset** (Phase 7.B):
 [`unified-api-contracts/config/credentials_per_archetype.yaml`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
-— each cutover archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION)
-declares its specific wallet PKs + venue trade keys + data sources. Operator
-runs `credential-probe.sh --mode live --archetype carry_staked_basis` to
-verify per-archetype readiness.
+— each cutover archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION) declares its specific wallet PKs + venue
+trade keys + data sources. Operator runs `credential-probe.sh --mode live --archetype carry_staked_basis` to verify
+per-archetype readiness.
 
-**R9 sub-(a) RESOLVED 2026-05-12**: May-23 cutover defaults all wallets to
-`signing_surface=CLOUD_KMS_ENCRYPTED` (per
-[`hsm-wallet-signing.md`](hsm-wallet-signing.md)). June-1 flips per-wallet
-to `COPPER_MPC` / `FIREBLOCKS_MPC` when client provides custody credentials.
-The flip is config-only (no recompile, no service restart) per the
+**R9 sub-(a) RESOLVED 2026-05-12**: May-23 cutover defaults all wallets to `signing_surface=CLOUD_KMS_ENCRYPTED` (per
+[`hsm-wallet-signing.md`](hsm-wallet-signing.md)). June-1 flips per-wallet to `COPPER_MPC` / `FIREBLOCKS_MPC` when
+client provides custody credentials. The flip is config-only (no recompile, no service restart) per the
 custody-providers § 1 factory pattern.
 
 ---
@@ -329,11 +324,11 @@ deploy that needs to reach all customer regions.
 
 > **`user-management-api` archived (2026-05-12 UI-8 reconciliation)** — the standalone `user-management-api` Cloud Run
 > service + repo is **archived**. User management routes (`/authorize`, role/entitlement endpoints) are folded into
-> `unified-trading-api`. The earlier "DO NOT deploy a parallel `user-management-api` on `odum-staging`" advisory is
-> now structurally enforced — there is no `user-management-api` repo to deploy. The `user-management-ui` repo
-> remains active (operator-facing console) and calls `unified-trading-api`. This row is removed from the table above
-> to match the `ui-api-mapping.json` `user-management` stack `$note` ("ARCHIVED: auth-api removed. User management
-> routes in unified-trading-api.") and `workspace-manifest.json` (no `user-management-api` entry).
+> `unified-trading-api`. The earlier "DO NOT deploy a parallel `user-management-api` on `odum-staging`" advisory is now
+> structurally enforced — there is no `user-management-api` repo to deploy. The `user-management-ui` repo remains active
+> (operator-facing console) and calls `unified-trading-api`. This row is removed from the table above to match the
+> `ui-api-mapping.json` `user-management` stack `$note` ("ARCHIVED: auth-api removed. User management routes in
+> unified-trading-api.") and `workspace-manifest.json` (no `user-management-api` entry).
 
 The portal calls these via `NEXT_PUBLIC_*_URL` env vars baked at build time. **They are NOT inside the UI repo.** UAT
 today runs `NEXT_PUBLIC_MOCK_API=true` and never calls them. When UAT flips to `MOCK_API=false`, the API auth
@@ -368,9 +363,10 @@ the API token-verification seam.
 
 ## Data-pipeline VM machine-type sizing — backed by the synthetic benchmark
 
-The default machine type for a data-pipeline VM (`setup-data-pipeline-vm.sh`) should be the *smallest shape that keeps
-the slowest cutover-pipeline stage inside the Group F item 18 "operationally-acceptable window"*, NOT a guessed
+The default machine type for a data-pipeline VM (`setup-data-pipeline-vm.sh`) should be the _smallest shape that keeps
+the slowest cutover-pipeline stage inside the Group F item 18 "operationally-acceptable window"_, NOT a guessed
 `e2-standard-N`. The per-stage profile + per-`(archetype, vm_shape)` recommendation matrix come from the synthetic-data
 benchmark harness — see [`synthetic-data-benchmarking.md`](synthetic-data-benchmarking.md). Until that matrix is
-populated (real-VM runs are blocked on the Phase-4-tail per `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`),
-machine-type defaults remain hand-set; treat them as provisional.
+populated (real-VM runs are blocked on the Phase-4-tail per
+`plans/active/mock_data_pipeline_benchmarking_2026_05_10.md`), machine-type defaults remain hand-set; treat them as
+provisional.

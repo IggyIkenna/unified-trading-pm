@@ -9,8 +9,8 @@
 
 - **Workspace root**: `${UNIFIED_TRADING_WORKSPACE_ROOT}` (or first `workspaces[].path` in `workspace-manifest.json`).
 - **Multi-repo workspace** (NOT a monorepo). 27 active sibling repos. Edit only the target repo your task names.
-- **Active branch**: `live-defi-rollout` (read from `workspace-manifest.json:active_feature_branch`). VMs pull from
-  this branch.
+- **Active branch**: `live-defi-rollout` (read from `workspace-manifest.json:active_feature_branch`). VMs pull from this
+  branch.
 - **Per-tab worktrees**: each operator slot runs in `.tabs/<N>/<repo>/` on `tab/<operator>/<N>`. Cross-slot races on
   `.git/index` are unrepresentable by construction. Within-slot multi-sub-agent fan-out shares one index — pre-commit
   check below applies.
@@ -41,11 +41,12 @@ A "shippable unit" = the smallest meaningful slice that QGs cleanly. The moment 
    git add <file1> <file2> && git diff --cached --name-status \
      && git commit --no-verify -m "..." && git push origin live-defi-rollout --no-verify
    ```
-   `--no-verify` is **authorized** when the prek auto-restore race is observed wiping your edits (Edit succeeds but
-   file unmodified at commit, OR commit lands under wrong author with empty diff). Otherwise keep hooks on.
-4. **Conditional push (multi-agent safety)**: before push, `git fetch origin <branch> && git log <branch>..origin/<branch>`.
-   Zero incoming → push freely. Any incoming → STOP, document blocker in plan-of-record `## Open questions`, ping
-   `_agent_pings.md`, continue with what you CAN do; main agent decides rebase / merge / cherry-pick.
+   `--no-verify` is **authorized** when the prek auto-restore race is observed wiping your edits (Edit succeeds but file
+   unmodified at commit, OR commit lands under wrong author with empty diff). Otherwise keep hooks on.
+4. **Conditional push (multi-agent safety)**: before push,
+   `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
+   document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
+   agent decides rebase / merge / cherry-pick.
 5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
    Commit the plan flip with `docs(plans):` prefix. Push.
 
@@ -56,28 +57,28 @@ A "shippable unit" = the smallest meaningful slice that QGs cleanly. The moment 
 - **#2 — `git diff --cached --stat <path>` masks other staged hunks**: never pass a path argument to that command.
 - **#3 — Concurrent agent's reset wipes your staged renames**: after every `git mv` / `git rm` / `git add`, run
   `git diff --cached --name-status` to verify YOUR entries are still in the index before committing.
-- **#4 — prek auto-restore wipes in-flight Edit between Edit and commit**: tighten Edit → stage → commit → push into
-  ONE Bash call; use `--no-verify` when observed; verify with `git show --stat HEAD` that your file actually landed
-  with non-zero insertions.
+- **#4 — prek auto-restore wipes in-flight Edit between Edit and commit**: tighten Edit → stage → commit → push into ONE
+  Bash call; use `--no-verify` when observed; verify with `git show --stat HEAD` that your file actually landed with
+  non-zero insertions.
 
 ## Findings Triage Discipline (HARD RULE)
 
 When you find something broken / drifting that wasn't your todo:
 
-| Where it sits | Action |
-|---|---|
-| In your plan / on your file | **Fix yourself** in the same commit |
-| Adjacent to your plan | Document + fix now in YOUR plan |
-| Outside your plan, fits another active plan | Annotate that plan's body with a finding callout — DO NOT fix yourself (collision risk) |
-| Outside every active plan | File `plans/active/issues/<slug>_<YYYY_MM_DD>.md` |
-| **Big finding** (data correctness / May-23 critical path / cross-repo / SSOT contradiction / kill-switch / batch-vs-live divergence) | **NOTIFY THE OPERATOR IMMEDIATELY** in chat AND file an issue doc |
+| Where it sits                                                                                                                        | Action                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| In your plan / on your file                                                                                                          | **Fix yourself** in the same commit                                                     |
+| Adjacent to your plan                                                                                                                | Document + fix now in YOUR plan                                                         |
+| Outside your plan, fits another active plan                                                                                          | Annotate that plan's body with a finding callout — DO NOT fix yourself (collision risk) |
+| Outside every active plan                                                                                                            | File `plans/active/issues/<slug>_<YYYY_MM_DD>.md`                                       |
+| **Big finding** (data correctness / May-23 critical path / cross-repo / SSOT contradiction / kill-switch / batch-vs-live divergence) | **NOTIFY THE OPERATOR IMMEDIATELY** in chat AND file an issue doc                       |
 
 ## Citadel-grade planning standards (apply to every plan you touch)
 
-1. **Pre-audit** the blast radius before writing any code: workspace-wide grep for every removed/renamed symbol; build
-   a manifest of consumers. **Grep-then-READ** — a literal grep with 0 hits is NEVER sufficient to conclude a feature
-   is missing. Many features are runtime-resolved (regex dispatch, StrEnum lookups, factory registries, dynamic
-   attribute access). When grep returns 0/few hits, READ the candidate consumer files.
+1. **Pre-audit** the blast radius before writing any code: workspace-wide grep for every removed/renamed symbol; build a
+   manifest of consumers. **Grep-then-READ** — a literal grep with 0 hits is NEVER sufficient to conclude a feature is
+   missing. Many features are runtime-resolved (regex dispatch, StrEnum lookups, factory registries, dynamic attribute
+   access). When grep returns 0/few hits, READ the candidate consumer files.
 2. **Phased execution DAG** with explicit dependencies; QG gates between phases.
 3. **No technical debt** — no backwards compat shims; no fallback `try/except ImportError`; no `# type: ignore` to hide
    architectural violations. Fix root cause.
@@ -105,9 +106,9 @@ pre-crash capture survives; future agents inherit the full picture.
 ## Cross-Plan Coordination Banners
 
 When launching ANY VM or starting an in-flight refactor (manifest schema / file structure / UAC contract / parquet
-columns / hive vocab / path templates / error-reason taxonomy), add a top-of-file
-`> **🟡 IN-FLIGHT REFACTOR — ...**` or `> **🟢 VM RUNNING — ...**` banner to every other active plan whose work is
-influenced. Reader contract: scan top-of-file banners before touching the affected surface.
+columns / hive vocab / path templates / error-reason taxonomy), add a top-of-file `> **🟡 IN-FLIGHT REFACTOR — ...**` or
+`> **🟢 VM RUNNING — ...**` banner to every other active plan whose work is influenced. Reader contract: scan
+top-of-file banners before touching the affected surface.
 
 ## Banned patterns (workspace-wide, zero exceptions)
 
@@ -117,14 +118,17 @@ influenced. Reader contract: scan top-of-file banners before touching the affect
 - ❌ `pip install` — use `uv pip install`
 - ❌ `pytest` directly — use `bash scripts/quality-gates.sh`
 - ❌ Hardcoded `"/tmp"` — use `tempfile.gettempdir()` (Bandit B108)
-- ❌ Hardcoded bucket names / `gs://`/`s3://` URIs — use `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`
+- ❌ Hardcoded bucket names / `gs://`/`s3://` URIs — use
+  `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`
 - ❌ `Any` types — use specific
 - ❌ `--dep-branch` flag in agent sessions (human-only)
 - ❌ Empty placeholder rows that LOOK populated (1440-NaN bars, partial bundles) — `record_failed(...)` instead of
   `record_captured(...)` when window is incomplete; `record_empty(reason=...)` only for legitimately-empty source
   responses. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
-- ❌ Inline f-string bucket-name building — every bucket lookup MUST go through `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` (QG STEP 5.69 ratchet enforces).
-- ❌ Fire-and-forget VM launches — every VM launch MUST be paired with active event-stream verification (STARTED + progress + STOPPED). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
+- ❌ Inline f-string bucket-name building — every bucket lookup MUST go through
+  `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` (QG STEP 5.69 ratchet enforces).
+- ❌ Fire-and-forget VM launches — every VM launch MUST be paired with active event-stream verification (STARTED +
+  progress + STOPPED). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
 
 ## Service infrastructure requirements (every service)
 
@@ -139,8 +143,8 @@ influenced. Reader contract: scan top-of-file banners before touching the affect
 ## When you spawn YOUR OWN sub-agents (Task tool)
 
 - **Paste this file at the TOP of the spawn prompt** — sub-agents do NOT inherit context. The Task tool description
-  (system prompt) does NOT echo this requirement, so it's on the spawning agent to remember. Forgetting = the
-  spawned sub-agent has no rules + no FOOT-GUN awareness + no commit/push/flip discipline.
+  (system prompt) does NOT echo this requirement, so it's on the spawning agent to remember. Forgetting = the spawned
+  sub-agent has no rules + no FOOT-GUN awareness + no commit/push/flip discipline.
 - For multi-sub-agent fan-out, send all `Task` tool calls in a SINGLE message so they run concurrently.
 - Each spawn gets a self-contained task with: WORKSPACE_ROOT, target repo, exact files to edit, done-definition,
   collision boundaries with other in-flight work.

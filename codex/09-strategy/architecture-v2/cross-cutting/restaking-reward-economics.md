@@ -166,8 +166,8 @@ For each new restaking-eligible LST or AVS:
 3. **instruments-service**: register the reward token's instrument record (token_address, decimals, chain) + DEX pool
    index entries for {reward_token}/USDC and {reward_token}/WETH (or {reward_token}/USDC and {reward_token}/SOL on
    Solana). Without DEX pools registered the dust router falls back to CEX-only routing.
-4. **features-service (onchain family)**: add the distributor address to the layer-3 collector's scan set; verify the daily
-   `lst_seasonal_rewards` parquet writes correctly
+4. **features-service (onchain family)**: add the distributor address to the layer-3 collector's scan set; verify the
+   daily `lst_seasonal_rewards` parquet writes correctly
 5. **market-tick-data-service**: confirm the reward token's CEX listings have spot-tick coverage in the relevant tick
    feeds (Binance / Coinbase / Bybit / OKX). For Solana tokens, confirm Jupiter aggregator quote endpoint coverage
 6. **pnl-attribution-service**: no code change needed — registry is data-driven
@@ -183,22 +183,22 @@ For each new restaking-eligible LST or AVS:
 
 ## Forward-yield simulation (composite stochastic model)
 
-The historical-reward-realisation registries above describe the deterministic accounting of REALISED rewards.
-For FORWARD-yield projection (used by `carry_staked_basis` PnL forecast + `risk_simulations_limits_alerting`
-scenario coverage), see codex
-[`../../04-architecture/amm-slippage-simulation.md`](../../04-architecture/amm-slippage-simulation.md) §
-"Staking + restaking yield-stream simulators":
+The historical-reward-realisation registries above describe the deterministic accounting of REALISED rewards. For
+FORWARD-yield projection (used by `carry_staked_basis` PnL forecast + `risk_simulations_limits_alerting` scenario
+coverage), see codex
+[`../../04-architecture/amm-slippage-simulation.md`](../../04-architecture/amm-slippage-simulation.md) § "Staking +
+restaking yield-stream simulators":
 
-- **Native staking** stochastic model — per-chain (Ethereum beacon + Solana validator); calibrated against ≥ 6
-  months historical `staking_yields` data_type with attestation-efficiency-binned heteroskedasticity.
-- **Restaking AVS** base+log-normal-premium model — per-LRT operator-allocation-weighted convolution of native
-  yield + per-AVS premium.
-- **LRT protocol-fee** discrete-event model — Ether.fi / Renzo / KelpDAO / Puffer fees historically change
-  quarterly; forward fee assumption = most-recent-quarter ± σ_quarterly capped at `[0, max_observed × 1.5]`.
-- **Seasonal-points** operator-tuned discount-factor model — historical points-to-token redemption ratios as
-  calibration anchors (Ether.fi 60% / Renzo 50% / Puffer 50% per 2024 airdrops; new programs 70% default).
-- **Composite simulator** Phase 5E — convolves all 4 layers into forward `ForwardYieldDistribution(mean, p5,
-  p95)` consumed by archetype PnL projection.
+- **Native staking** stochastic model — per-chain (Ethereum beacon + Solana validator); calibrated against ≥ 6 months
+  historical `staking_yields` data_type with attestation-efficiency-binned heteroskedasticity.
+- **Restaking AVS** base+log-normal-premium model — per-LRT operator-allocation-weighted convolution of native yield +
+  per-AVS premium.
+- **LRT protocol-fee** discrete-event model — Ether.fi / Renzo / KelpDAO / Puffer fees historically change quarterly;
+  forward fee assumption = most-recent-quarter ± σ_quarterly capped at `[0, max_observed × 1.5]`.
+- **Seasonal-points** operator-tuned discount-factor model — historical points-to-token redemption ratios as calibration
+  anchors (Ether.fi 60% / Renzo 50% / Puffer 50% per 2024 airdrops; new programs 70% default).
+- **Composite simulator** Phase 5E — convolves all 4 layers into forward `ForwardYieldDistribution(mean, p5, p95)`
+  consumed by archetype PnL projection.
 
 Implementation lives at `execution-service/execution_service/yield_streams/` (NEW Phase 5A-E per
 `defi_simulation_realism_2026_05_10.md`); design ship 2026-05-12 (PM@`ae804766`).

@@ -27,9 +27,8 @@ a canonical GCS path under the DeFi tick-data bucket.
 ```
 
 Bucket name is resolved via
-`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="market-data-tick",
-asset_group="defi", env=...)` per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...` (QG
-STEP 5.69 ratchet enforces).
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="market-data-tick", asset_group="defi", env=...)`
+per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...` (QG STEP 5.69 ratchet enforces).
 
 **Legacy** (data coexists on disk until ~2026-06-15 deletion cutoff per
 [`per-asset-group-bucket-layouts.md`](./per-asset-group-bucket-layouts.md) § "Asset-group hive vocabulary"):

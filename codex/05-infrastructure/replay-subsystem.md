@@ -19,18 +19,18 @@ don't know or care whether an event is replay or live — only the timestamps di
 
 ## Implementation status (2026-05-14)
 
-| Component | Status | Location |
-| --------- | ------ | -------- |
-| `ReplayWatermarkKV` — per-shard KV | ✅ SHIPPED | `unified_trading_library/streaming/replay.py:61-108` |
-| `ReplayPublisher` — event publisher with watermark coordination | ✅ SHIPPED | `unified_trading_library/streaming/replay.py:113-204` |
-| Phase 7 deployment — launch replay VMs in production | ⏳ PENDING | `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 7 |
-| `REPLAY_BACKSTOP_REACHED` alerting hook | ⏳ PENDING | alerting-service `alerting_service_live_rules_2026_05_07.md` Phase 7 scope |
+| Component                                                       | Status     | Location                                                                   |
+| --------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `ReplayWatermarkKV` — per-shard KV                              | ✅ SHIPPED | `unified_trading_library/streaming/replay.py:61-108`                       |
+| `ReplayPublisher` — event publisher with watermark coordination | ✅ SHIPPED | `unified_trading_library/streaming/replay.py:113-204`                      |
+| Phase 7 deployment — launch replay VMs in production            | ⏳ PENDING | `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 7      |
+| `REPLAY_BACKSTOP_REACHED` alerting hook                         | ⏳ PENDING | alerting-service `alerting_service_live_rules_2026_05_07.md` Phase 7 scope |
 
-**`REPLAY_BACKSTOP_REACHED` wiring**: the event is emitted by `ReplayPublisher.finalize()` when coverage limit is
-hit. alerting-service must route it to a `CRITICAL` alert + strategy-service manual-resume gate. This wiring is in
-Phase 7 scope (`live_pipeline_mtds_mdps_features_2026_05_08.md`) but has not yet run in production. Until Phase 7
-deploys, `REPLAY_BACKSTOP_REACHED` goes into the event stream but no alerting consumer is hooked up. **Do NOT treat
-this as a silent production gap** — Phase 7 is on the pre-cutover critical path.
+**`REPLAY_BACKSTOP_REACHED` wiring**: the event is emitted by `ReplayPublisher.finalize()` when coverage limit is hit.
+alerting-service must route it to a `CRITICAL` alert + strategy-service manual-resume gate. This wiring is in Phase 7
+scope (`live_pipeline_mtds_mdps_features_2026_05_08.md`) but has not yet run in production. Until Phase 7 deploys,
+`REPLAY_BACKSTOP_REACHED` goes into the event stream but no alerting consumer is hooked up. **Do NOT treat this as a
+silent production gap** — Phase 7 is on the pre-cutover critical path.
 
 ---
 

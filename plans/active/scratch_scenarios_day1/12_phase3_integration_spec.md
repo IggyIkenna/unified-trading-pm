@@ -1,9 +1,9 @@
 # Phase 3 scenario-runner integration spec — execution-service adversarial mode + risk/alerting consumers
 
-Per `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 3.E + Phase 3.F (compressed-scope single
-wire-in: execution-service matching-engine adversarial mode + position-balance / risk / alerting consumers). This
-spec is the design substrate consumers integrate against — it concretizes the Day-1 handshake-shape (fragment 11)
-in terms of the UTL primitives shipped Day-2 (UAC@`33630a6` + UTL@`3797fed5`).
+Per `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 3.E + Phase 3.F (compressed-scope single wire-in:
+execution-service matching-engine adversarial mode + position-balance / risk / alerting consumers). This spec is the
+design substrate consumers integrate against — it concretizes the Day-1 handshake-shape (fragment 11) in terms of the
+UTL primitives shipped Day-2 (UAC@`33630a6` + UTL@`3797fed5`).
 
 Phase 3.A/B/C/D/G (MTDS / MDPS / features / strategy / manifest taps) DEFERRED to successor
 `simulation_scenarios_post_cutover_2026_06_01.md` per compressed-scope plan body line 84-88. This document is
@@ -11,17 +11,17 @@ PRE-CUTOVER scope only.
 
 ## Shipped primitives (Day-2 2026-05-12)
 
-| Repo | Symbol | Purpose |
-|---|---|---|
-| UAC | `ScenarioOverlay` (`scenario_overlay.py`) | Frozen Pydantic — the declarative scenario contract. |
-| UAC | `ScenarioMutationSpec` (discriminated union) | 11 typed mutations (PriceShift / StaleHold / LatencyInject / BookSpoof / RejectFills / OracleDeviate / GasSurge / DropRows / EventDrop / EventDuplicate / ManifestPhantom). |
-| UAC | `ScenarioOutcomeAssertion` | The 6-tuple-per-cell contract (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes / expected_within). |
-| UAC | `SCENARIO_REGISTRY` | Module-level dict; populated at import by `registry/scenarios/{cefi,defi,cross_asset}.py`. 10 scenarios shipped. |
-| UAC | `ScenarioReport` / `ScenarioOutcomeResult` | Per-run report shape. |
-| UTL | `ScenarioOverlayApplier` (`scenario/applier.py`) | Per-mutation typed dispatch; pure-functional; stamps `_synthetic_provenance`. |
-| UTL | `ScenarioOutcomeChecker` (`scenario/checker.py`) | Per-OutcomeCategory match logic; consumes `ObservedEvent` stream + matches assertions. |
-| UTL | `ScenarioRunner` (`scenario/runner.py`) | Orchestrator; takes `(scenario_id, archetype, observer_callback)` + emits `ScenarioReport`. |
-| UTL | `ObserverCallback` typed alias | `Callable[[ScenarioOverlayApplier, ScenarioOutcomeChecker, ScenarioApplyContext], None]`. |
+| Repo | Symbol                                           | Purpose                                                                                                                                                                     |
+| ---- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UAC  | `ScenarioOverlay` (`scenario_overlay.py`)        | Frozen Pydantic — the declarative scenario contract.                                                                                                                        |
+| UAC  | `ScenarioMutationSpec` (discriminated union)     | 11 typed mutations (PriceShift / StaleHold / LatencyInject / BookSpoof / RejectFills / OracleDeviate / GasSurge / DropRows / EventDrop / EventDuplicate / ManifestPhantom). |
+| UAC  | `ScenarioOutcomeAssertion`                       | The 6-tuple-per-cell contract (consequence / breaker_id / breaker_action / kill_switch_id / alert_codes / expected_within).                                                 |
+| UAC  | `SCENARIO_REGISTRY`                              | Module-level dict; populated at import by `registry/scenarios/{cefi,defi,cross_asset}.py`. 10 scenarios shipped.                                                            |
+| UAC  | `ScenarioReport` / `ScenarioOutcomeResult`       | Per-run report shape.                                                                                                                                                       |
+| UTL  | `ScenarioOverlayApplier` (`scenario/applier.py`) | Per-mutation typed dispatch; pure-functional; stamps `_synthetic_provenance`.                                                                                               |
+| UTL  | `ScenarioOutcomeChecker` (`scenario/checker.py`) | Per-OutcomeCategory match logic; consumes `ObservedEvent` stream + matches assertions.                                                                                      |
+| UTL  | `ScenarioRunner` (`scenario/runner.py`)          | Orchestrator; takes `(scenario_id, archetype, observer_callback)` + emits `ScenarioReport`.                                                                                 |
+| UTL  | `ObserverCallback` typed alias                   | `Callable[[ScenarioOverlayApplier, ScenarioOutcomeChecker, ScenarioApplyContext], None]`.                                                                                   |
 
 All primitives type-check + ruff-clean; 53 UAC unit tests + 51 UTL unit tests pass.
 
@@ -30,16 +30,16 @@ All primitives type-check + ruff-clean; 53 UAC unit tests + 51 UTL unit tests pa
 ### Scope
 
 The matching engine already has slippage / latency / partial-fill hooks (per Day-1 audit fragment 01 cited
-`execution-service/execution_service/matching_engine/{engine,trade_matcher}.py` slippage model). Phase 3.E extends
-these hooks to accept `ScenarioMutationSpec`-driven mutations:
+`execution-service/execution_service/matching_engine/{engine,trade_matcher}.py` slippage model). Phase 3.E extends these
+hooks to accept `ScenarioMutationSpec`-driven mutations:
 
 - **`LatencyInject`** mutations slip into the existing latency hook (already an integer-ms knob).
 - **`RejectFills`** mutations slip into the existing partial-fill / reject hook.
 - **`BookSpoof`** mutations slip into the existing book-spoof / liquidity-withdrawal hook.
 
-Other mutation types (`PriceShift`, `StaleHold`, `GasSurge`, `OracleDeviate`, `DropRows`, `EventDrop`,
-`EventDuplicate`, `ManifestPhantom`) are NOT execution-service-relevant pre-cutover — those tap at FEATURE /
-RAW_TICK / EVENT / MANIFEST layers which are Phase 3.A/B/C/G (DEFERRED).
+Other mutation types (`PriceShift`, `StaleHold`, `GasSurge`, `OracleDeviate`, `DropRows`, `EventDrop`, `EventDuplicate`,
+`ManifestPhantom`) are NOT execution-service-relevant pre-cutover — those tap at FEATURE / RAW_TICK / EVENT / MANIFEST
+layers which are Phase 3.A/B/C/G (DEFERRED).
 
 ### Concrete wire-in (3-step recipe)
 
@@ -98,8 +98,8 @@ class MatchingEngineAdversarial:
 ### Scope
 
 The 3 downstream consumers subscribe to the synthetic event stream + emit matching `ObservedEvent` records into the
-checker. Per CLAUDE.md "Live = batch" rule, these consumers ride the SAME prod codepaths during synthetic runs —
-ONLY the `synthetic=true` metadata distinguishes scenario-fire from real-fire.
+checker. Per CLAUDE.md "Live = batch" rule, these consumers ride the SAME prod codepaths during synthetic runs — ONLY
+the `synthetic=true` metadata distinguishes scenario-fire from real-fire.
 
 ### position-balance-monitor-service
 
@@ -147,8 +147,8 @@ class AlertingScenarioFilter:
 - 3 consumers subscribe to synthetic-event stream + emit matching `ObservedEvent` records into the active
   `ScenarioOutcomeChecker` handle.
 - Alerting-service log-only path tested end-to-end (no PagerDuty / Telegram paging fires during synthetic runs).
-- Per-archetype integration test verifies: scenario fires breaker → BREAKER_ARMED ObservedEvent recorded →
-  checker matches assertion → ScenarioOutcomeResult.passed == True.
+- Per-archetype integration test verifies: scenario fires breaker → BREAKER_ARMED ObservedEvent recorded → checker
+  matches assertion → ScenarioOutcomeResult.passed == True.
 
 ## Operator-runtime invocation pattern
 
@@ -199,20 +199,20 @@ matrix (Phase 5) runs all scenarios for both archetypes; that artefact emits the
 
 ## Open follow-ups (operator-triage Day-3 / Day-4)
 
-| Follow-up | Owner | Pre-cutover vs successor |
-|---|---|---|
-| matching-engine adversarial mode wiring (the 3-step recipe above) | Harsh slot 5 per work-split row "Ikenna-7 ↔ Harsh-5 risk + DR + simulation" | Pre-cutover (Phase 3.E compressed scope) |
-| position-balance / risk / alerting consumer subscriptions | Harsh slot 5 | Pre-cutover (Phase 3.F compressed scope) |
-| per-scenario integration test fixtures (10 fixtures × 2 archetypes = up to 20 tests) | Ikenna slot 7 OR Harsh slot 5 | Pre-cutover; Day-3 / Day-4 |
-| `ScenarioMatrixRunner` (Phase 5) | Ikenna slot 7 | Pre-cutover Day-3 |
-| Phase 3.A/B/C/D/G (MTDS / MDPS / features / strategy / manifest taps) | — | DEFERRED `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3 |
-| `ScenarioReportEmitter` parquet sink (Phase 2.C) | — | DEFERRED post-cutover |
-| `LookaheadBiasError` downgrade wiring (Phase 2.E) | UTL maintainer | Pre-cutover if scenarios that shift `available_at` land (Day-3+) |
+| Follow-up                                                                            | Owner                                                                        | Pre-cutover vs successor                                           |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| matching-engine adversarial mode wiring (the 3-step recipe above)                    | Harsh slot 5 per work-split row "Ikenna-7 ↔ Harsh-5 risk + DR + simulation" | Pre-cutover (Phase 3.E compressed scope)                           |
+| position-balance / risk / alerting consumer subscriptions                            | Harsh slot 5                                                                 | Pre-cutover (Phase 3.F compressed scope)                           |
+| per-scenario integration test fixtures (10 fixtures × 2 archetypes = up to 20 tests) | Ikenna slot 7 OR Harsh slot 5                                                | Pre-cutover; Day-3 / Day-4                                         |
+| `ScenarioMatrixRunner` (Phase 5)                                                     | Ikenna slot 7                                                                | Pre-cutover Day-3                                                  |
+| Phase 3.A/B/C/D/G (MTDS / MDPS / features / strategy / manifest taps)                | —                                                                            | DEFERRED `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3 |
+| `ScenarioReportEmitter` parquet sink (Phase 2.C)                                     | —                                                                            | DEFERRED post-cutover                                              |
+| `LookaheadBiasError` downgrade wiring (Phase 2.E)                                    | UTL maintainer                                                               | Pre-cutover if scenarios that shift `available_at` land (Day-3+)   |
 
 ## Cross-side handshake (Ikenna slot 7 → Harsh slot 5)
 
-Per work-split `Ikenna-7 ↔ Harsh-5 (risk + DR + simulation)`: Ikenna designs + ships UAC + UTL primitives;
-Harsh implements service-level wiring (Phase 3.E + 3.F). Concretely Harsh slot 5 picks up:
+Per work-split `Ikenna-7 ↔ Harsh-5 (risk + DR + simulation)`: Ikenna designs + ships UAC + UTL primitives; Harsh
+implements service-level wiring (Phase 3.E + 3.F). Concretely Harsh slot 5 picks up:
 
 1. Read this spec + UAC@`33630a6` + UTL@`3797fed5`.
 2. Wire matching-engine adversarial mode per the 3-step recipe in Phase 3.E.
@@ -238,7 +238,7 @@ Phase 3.E + 3.F flipped to `done` 2026-05-12. Implementation shipped (each per s
     ObservedEvent emission + 8 unit tests.
   - `alerting-service@3c0d675` — router `_is_synthetic()` + `_route_synthetic_log_only()` short-circuit + 8 unit tests.
   - `execution-service@92aa4af2` — per-archetype integration smoke (2 tests pass: APD × cefi_venue_circuit_breaker_trip
-    + carry_staked_basis × defi_chain_rpc_outage_solana).
+    - carry_staked_basis × defi_chain_rpc_outage_solana).
 
 **Cross-side handshake closes**: Ikenna slot 7 (UAC@`33630a6` + UTL@`3797fed5` design primitives) ↔ Harsh slot 5
 (implementation). Ikenna slot 7 picks up Phase 5 matrix-runner next.

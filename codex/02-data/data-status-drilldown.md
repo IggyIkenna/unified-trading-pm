@@ -47,7 +47,8 @@ GET /api/data-status/shard-detail
 > param (uppercase asset-group enum names) while the hierarchical endpoint uses the canonical `{asset_group}` path
 > segment (lowercase dict-key form). Both endpoints accept the same set of asset-groups; the spelling difference is
 > preserved through the deprecation window. After 2026-06-15 the per-shard endpoint accepts `asset_group=` as primary
-> + `category=` as a deprecated alias that logs a `DEPRECATED_QUERY_PARAM` event.
+>
+> - `category=` as a deprecated alias that logs a `DEPRECATED_QUERY_PARAM` event.
 
 Sister endpoint `GET /api/data-status/venue-detail?service=<>&category=<>&venue=<>` powers the inline "Instrument
 breakdown" panel (DeFi-aware: chain-only returns protocols list, composite returns pools list).

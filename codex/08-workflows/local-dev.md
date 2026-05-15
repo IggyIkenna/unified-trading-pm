@@ -8,16 +8,16 @@ last_reviewed: 2026-05-12
 
 > **Decision table — which startup script when** (codified 2026-05-12 per UI-1/UI-14 audit):
 >
-> | Use case | Script | Reference |
-> | --- | --- | --- |
-> | Consolidated portal / UI work (default) | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static\|0\|1\|2}` | [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) |
-> | Firebase emulator suite (auth/admin work) | covered by `dev-tiers.sh --tier 0` (auto-seeds 23 demo personas) | [`firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md) |
-> | deployment-api (port 8004) + deployment-ui (port 5183) only | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` | `cursor-configs/CLAUDE.md` § "Deployment-stack restart (SSOT)" |
-> | Backend service ad-hoc spin-up (8004-8016 range) | `bash unified-trading-pm/scripts/dev/dev-start.sh` (this doc) | — |
+> | Use case                                                    | Script                                                                         | Reference                                                                                 |
+> | ----------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+> | Consolidated portal / UI work (default)                     | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static\|0\|1\|2}` | [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) |
+> | Firebase emulator suite (auth/admin work)                   | covered by `dev-tiers.sh --tier 0` (auto-seeds 23 demo personas)               | [`firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md)           |
+> | deployment-api (port 8004) + deployment-ui (port 5183) only | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`              | `cursor-configs/CLAUDE.md` § "Deployment-stack restart (SSOT)"                            |
+> | Backend service ad-hoc spin-up (8004-8016 range)            | `bash unified-trading-pm/scripts/dev/dev-start.sh` (this doc)                  | —                                                                                         |
 >
-> This doc covers the **backend orchestration** half (`dev-start.sh` / `dev-stop.sh` / `dev-status.sh`). The
-> frontend / consolidated-portal half was trimmed 2026-05-12 (UI-1 + UI-3 + UI-5 + UI-14) — for portal startup,
-> mode-axis collapse to `runtime_profile` v7, and the live UI port mapping see
+> This doc covers the **backend orchestration** half (`dev-start.sh` / `dev-stop.sh` / `dev-status.sh`). The frontend /
+> consolidated-portal half was trimmed 2026-05-12 (UI-1 + UI-3 + UI-5 + UI-14) — for portal startup, mode-axis collapse
+> to `runtime_profile` v7, and the live UI port mapping see
 > [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) and
 > `unified-trading-pm/scripts/dev/ui-api-mapping.json` (the machine-readable port SSOT).
 
@@ -39,14 +39,13 @@ focuses on `dev-start.sh` presets and UI-specific toggles.
 
 ## Mode System — `dev-start.sh` backend axes
 
-> **2026-05-12 UI-3 reconciliation**: the original 5-axis matrix
-> (`VITE_MOCK_API` / `VITE_SKIP_AUTH` / `CLOUD_MOCK_MODE` / `DISABLE_AUTH` / `MOCK_STATE_MODE`) was split
-> by the consolidated-portal migration. `VITE_*` axes are obsolete (Next.js uses `NEXT_PUBLIC_MOCK_API` /
-> `NEXT_PUBLIC_USE_FIREBASE_EMULATOR` — see `unified-trading-system-ui` repo). The 5 env vars also collapsed
-> into the single `runtime_profile` axis for deployment-api per
-> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) § "Runtime
-> Profiles (v7)". The backend axes documented below remain accurate for ad-hoc service spin-up via
-> `dev-start.sh` — they are NOT the SSOT for portal startup.
+> **2026-05-12 UI-3 reconciliation**: the original 5-axis matrix (`VITE_MOCK_API` / `VITE_SKIP_AUTH` / `CLOUD_MOCK_MODE`
+> / `DISABLE_AUTH` / `MOCK_STATE_MODE`) was split by the consolidated-portal migration. `VITE_*` axes are obsolete
+> (Next.js uses `NEXT_PUBLIC_MOCK_API` / `NEXT_PUBLIC_USE_FIREBASE_EMULATOR` — see `unified-trading-system-ui` repo).
+> The 5 env vars also collapsed into the single `runtime_profile` axis for deployment-api per
+> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) § "Runtime Profiles (v7)".
+> The backend axes documented below remain accurate for ad-hoc service spin-up via `dev-start.sh` — they are NOT the
+> SSOT for portal startup.
 
 The `dev-start.sh` backend stack has 3 independent mode axes (the UI axes above are deprecated):
 
@@ -119,10 +118,10 @@ bash unified-trading-pm/scripts/dev/dev-start.sh --list
 > (`onboarding-ui` / `execution-analytics-ui` / `strategy-ui` / `settlement-ui` / `live-health-monitor-ui` /
 > `logs-dashboard-ui` / `ml-training-ui` / `trading-analytics-ui` / `batch-audit-ui` / `client-reporting-ui` /
 > `deployment-ui`). All but `deployment-ui` are archived (consolidated into `unified-trading-system-ui` per
-> `codex/DEPRECATED_UIS_NOTICE.md` + `05-infrastructure/ui-functionality-requirements.md`). For the live UI
-> port mapping see `unified-trading-pm/scripts/dev/ui-api-mapping.json` (machine-readable SSOT) +
-> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) (consolidated
-> portal ports: `unified-trading-system-ui` Next.js dev `:3000`, real-API server `:3100`; `deployment-ui` `:5183`).
+> `codex/DEPRECATED_UIS_NOTICE.md` + `05-infrastructure/ui-functionality-requirements.md`). For the live UI port mapping
+> see `unified-trading-pm/scripts/dev/ui-api-mapping.json` (machine-readable SSOT) +
+> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) (consolidated portal ports:
+> `unified-trading-system-ui` Next.js dev `:3000`, real-API server `:3100`; `deployment-ui` `:5183`).
 
 ### API Ports (8004-8016)
 

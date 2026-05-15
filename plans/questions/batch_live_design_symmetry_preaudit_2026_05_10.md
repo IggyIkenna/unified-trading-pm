@@ -1,6 +1,10 @@
 ---
 name: batch-live-design-symmetry-preaudit
-overview: Citadel-grade pre-execution audit manifest for the spawned plan derived from `batch_live_design_symmetry_2026_05_08.md`. Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation pre-flight + cross-plan banners + risk register + collision matrix + ServiceEmissionPolicy gaps + spawned-plan readiness checklist + Tab-8 paste-ready operator recipe.
+overview:
+  Citadel-grade pre-execution audit manifest for the spawned plan derived from
+  `batch_live_design_symmetry_2026_05_08.md`. Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation
+  pre-flight + cross-plan banners + risk register + collision matrix + ServiceEmissionPolicy gaps + spawned-plan
+  readiness checklist + Tab-8 paste-ready operator recipe.
 type: pre-audit-manifest
 status: ready-for-plan-extraction
 created: 2026-05-10
@@ -56,7 +60,7 @@ carry_staked_basis end-to-end scaffold deep-dive · cross-plan banners + risk re
 - **NEW docs to ship**: `cefi-batch-live.md` · `tradfi-batch-live.md` (post-cutover) · `prediction-batch-live.md`
   (post-cutover) · `mode-axis-discipline.md` (cartesian product table for `RuntimeMode` × `OperationalMode` ×
   `BatchExecutionMode` × `MaturityPhase`).
-- **UPDATE docs**: `batch-live-architecture.md` (cross-asset-group meta + UI mode-context guidance + LIVE_ event
+- **UPDATE docs**: `batch-live-architecture.md` (cross-asset-group meta + UI mode-context guidance + LIVE\_ event
   anti-pattern + consolidated anti-patterns) · `quality-gates.md` (STEP entries L1-L6) · `replay-subsystem.md`
   (implementation status + REPLAY_BACKSTOP wiring) · `features-service-architecture.md` (sports + calendar live-handler
   timeline).
@@ -79,27 +83,27 @@ carry_staked_basis end-to-end scaffold deep-dive · cross-plan banners + risk re
 
 **Manifest 2 — L7 violations** (direct parquet writes bypassing `record_captured`) — 3 confirmed + 2 audit-needed:
 
-| severity      | file                                                                | line  | call                        | action                                 |
-| ------------- | ------------------------------------------------------------------- | ----- | --------------------------- | -------------------------------------- |
-| **CONFIRMED** | market-data-processing-service/app/core/storage_dispatch_worker.py  | 49    | `df.to_parquet()`           | wrap in `record_captured()` or rewrite |
-| **CONFIRMED** | market-data-processing-service/app/core/output_writer_service.py    | 318   | `candles_df.to_parquet()`   | audit upstream; wrap                   |
-| **CONFIRMED** | market-data-processing-service/app/core/orchestration_writer.py     | 388   | `validated_df.to_parquet()` | audit upstream; wrap                   |
-| audit-needed  | unified-trading-library/.../domain/standardized_service.py          | 100   | `data.to_parquet()`         | check calling context                  |
-| audit-needed  | unified-trading-library/.../domain/standardized_service.py          | 299   | `data.to_parquet()`         | check calling context                  |
-| OK            | unified-trading-library/.../manifest_writer.py                      | 2886+ | `merged.to_parquet()`       | no change (compliant)                  |
-| OK (mock)     | features-commodity-service/scripts/seed_mock_data.py                | 360   | `pq.write_table()`          | skip (mock)                            |
+| severity      | file                                                               | line  | call                        | action                                 |
+| ------------- | ------------------------------------------------------------------ | ----- | --------------------------- | -------------------------------------- |
+| **CONFIRMED** | market-data-processing-service/app/core/storage_dispatch_worker.py | 49    | `df.to_parquet()`           | wrap in `record_captured()` or rewrite |
+| **CONFIRMED** | market-data-processing-service/app/core/output_writer_service.py   | 318   | `candles_df.to_parquet()`   | audit upstream; wrap                   |
+| **CONFIRMED** | market-data-processing-service/app/core/orchestration_writer.py    | 388   | `validated_df.to_parquet()` | audit upstream; wrap                   |
+| audit-needed  | unified-trading-library/.../domain/standardized_service.py         | 100   | `data.to_parquet()`         | check calling context                  |
+| audit-needed  | unified-trading-library/.../domain/standardized_service.py         | 299   | `data.to_parquet()`         | check calling context                  |
+| OK            | unified-trading-library/.../manifest_writer.py                     | 2886+ | `merged.to_parquet()`       | no change (compliant)                  |
+| OK (mock)     | features-commodity-service/scripts/seed_mock_data.py               | 360   | `pq.write_table()`          | skip (mock)                            |
 
 **Manifest 7 — `BatchExecutionMode` switch location**: NO `BatchExecutionMode.SIMULATED` / `.BENCHMARK` enum-value
 references found in execution-service runtime code. Hardcoded strings instead at
-`execution-service/execution_service/engine/backtest/node_builder.py:496-504` (`exec_algo_type:
-"NORMAL"|"BENCHMARK_FILL"`) + `:631-632` (algo_type market-order selection). **Refactor target**: introduce unified
-`BatchExecutionMode` enum lookup in `service_config.py`; refactor `node_builder.py` + create explicit
+`execution-service/execution_service/engine/backtest/node_builder.py:496-504`
+(`exec_algo_type: "NORMAL"|"BENCHMARK_FILL"`) + `:631-632` (algo_type market-order selection). **Refactor target**:
+introduce unified `BatchExecutionMode` enum lookup in `service_config.py`; refactor `node_builder.py` + create explicit
 `BatchExecutorFactory`.
 
 **M9 reconciler thresholds**: NO `RECON_GREEN_THRESHOLDS` dict in UAC. Recommended location:
-`unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. Shape: `{archetype_id: {bps_delta_max,
-drawdown_pct, fill_rate_min}}`. Decision gate at reconciler: `if |batch_pnl - live_pnl| / live_pnl > threshold_bps` →
-emit `BATCH_VS_LIVE_RECON_DRIFTED`.
+`unified_api_contracts/canonical/crosscutting/alerting/thresholds.py`. Shape:
+`{archetype_id: {bps_delta_max, drawdown_pct, fill_rate_min}}`. Decision gate at reconciler:
+`if |batch_pnl - live_pnl| / live_pnl > threshold_bps` → emit `BATCH_VS_LIVE_RECON_DRIFTED`.
 
 ### Tab 3 — QG STEPs L1-L6 (workspace AST sweeps)
 
@@ -178,33 +182,33 @@ python -m batch_live_reconciliation_service \
 
 **Manifest 4 — UI mode-state independent reimplementations** (6 violations to refactor + 2 already-good):
 
-| file                                                           | line  | pattern                                          | action                       |
-| -------------------------------------------------------------- | ----- | ------------------------------------------------ | ---------------------------- |
-| app/(ops)/ops/page.tsx                                         | 192   | `useState<"live"\|"batch">`                      | import `useExecutionMode()`  |
-| app/(platform)/services/research/quant/page.tsx                | 216   | `useState<"batch"\|"live">`                      | same                         |
-| components/ops/deployment/data-status/data-status-provider.tsx | 33    | `useState<"batch"\|"live">`                      | lift to ExecutionModeContext |
-| components/ops/deployment/form/deploy-form-context.tsx         | 31    | `useState<"batch"\|"live">`                      | use ExecutionModeContext     |
-| components/widgets/markets/markets-data-context.tsx            | 57,62 | `useState<"live"\|"batch">` + 3-way `compare`    | use `{mode, setMode}`        |
-| components/widgets/pnl/pnl-data-context.tsx                    | 159   | `useState<"live"\|"batch">`                      | same refactor                |
-| components/trading/execution-mode-toggle.tsx                   | 27    | `useExecutionMode()` ✓ already integrated        | no change                    |
-| components/shell/lifecycle-nav.tsx                             | 97    | `useExecutionMode()` ✓ already integrated        | no change                    |
+| file                                                           | line  | pattern                                       | action                       |
+| -------------------------------------------------------------- | ----- | --------------------------------------------- | ---------------------------- |
+| app/(ops)/ops/page.tsx                                         | 192   | `useState<"live"\|"batch">`                   | import `useExecutionMode()`  |
+| app/(platform)/services/research/quant/page.tsx                | 216   | `useState<"batch"\|"live">`                   | same                         |
+| components/ops/deployment/data-status/data-status-provider.tsx | 33    | `useState<"batch"\|"live">`                   | lift to ExecutionModeContext |
+| components/ops/deployment/form/deploy-form-context.tsx         | 31    | `useState<"batch"\|"live">`                   | use ExecutionModeContext     |
+| components/widgets/markets/markets-data-context.tsx            | 57,62 | `useState<"live"\|"batch">` + 3-way `compare` | use `{mode, setMode}`        |
+| components/widgets/pnl/pnl-data-context.tsx                    | 159   | `useState<"live"\|"batch">`                   | same refactor                |
+| components/trading/execution-mode-toggle.tsx                   | 27    | `useExecutionMode()` ✓ already integrated     | no change                    |
+| components/shell/lifecycle-nav.tsx                             | 97    | `useExecutionMode()` ✓ already integrated     | no change                    |
 
-**Provider canonical**: `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`. Default mode `"live"` at `:24`.
-Hook returns `{mode, setMode, config, isLive, isPaper, isBatch}`.
+**Provider canonical**: `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`. Default mode `"live"` at
+`:24`. Hook returns `{mode, setMode, config, isLive, isPaper, isBatch}`.
 
 ### Tab 8 — carry_staked_basis end-to-end run + 7-day soak
 
-| Step                             | Status                                                                                                                                                                |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Backtest run                  | ⚠️ PARTIAL — script shipped (`run_2yr_config_grid_backtest.py` `strategy-service@3dea3c7`); deployment-service launcher `launch-defi-backtest-vm.sh` **MISSING**       |
-| 2. Score persistence             | ⚠️ PARTIAL — paths templated `gs://{pid}-strategy-outputs/backtest/{strategy_id}/{YYYY-MM-DD}/{scores,fills,positions}.parquet`; not verified end-to-end              |
-| 3. Paper-deploy launcher         | ❌ GREENFIELD — `find deployment-service/scripts/vm/ -name "*defi*" -o -name "*paper*"` returns ZERO matches                                                          |
-| 4. Tenderly fork wiring          | ⚠️ INTEGRATION-TEST-ONLY — `execution-service/tests/integration/conftest.py` fixture; NOT wired for paper-deploy                                                      |
-| 5. Aave + Uniswap mainnet        | ⚠️ PARTIAL — venues wired (`venues/aave.py:76`, `defi_execution/protocols/uniswap.py:789`); mainnet keys + RPC URLs unclear (audit Secret Manager + UAC `CHAIN_RPC_TEMPLATES`) |
+| Step                             | Status                                                                                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Backtest run                  | ⚠️ PARTIAL — script shipped (`run_2yr_config_grid_backtest.py` `strategy-service@3dea3c7`); deployment-service launcher `launch-defi-backtest-vm.sh` **MISSING**                                       |
+| 2. Score persistence             | ⚠️ PARTIAL — paths templated `gs://{pid}-strategy-outputs/backtest/{strategy_id}/{YYYY-MM-DD}/{scores,fills,positions}.parquet`; not verified end-to-end                                               |
+| 3. Paper-deploy launcher         | ❌ GREENFIELD — `find deployment-service/scripts/vm/ -name "*defi*" -o -name "*paper*"` returns ZERO matches                                                                                           |
+| 4. Tenderly fork wiring          | ⚠️ INTEGRATION-TEST-ONLY — `execution-service/tests/integration/conftest.py` fixture; NOT wired for paper-deploy                                                                                       |
+| 5. Aave + Uniswap mainnet        | ⚠️ PARTIAL — venues wired (`venues/aave.py:76`, `defi_execution/protocols/uniswap.py:789`); mainnet keys + RPC URLs unclear (audit Secret Manager + UAC `CHAIN_RPC_TEMPLATES`)                         |
 | 6. LST yield + perp funding live | ⚠️ PARTIAL — `features-onchain-service/handlers/lst_yields.py` + `perp_funding.py` shipped; **NO live VM running today** (no recent events at `gs://{pid}-events/events/features-onchain-service/...`) |
-| 7. Custody + treasury            | ⚠️ Copper started (`execution-service/custody/copper_provider.py`); ❌ CEFFU stub (no `ceffu_provider.py`); per master plan Q&A 3 — CEFFU manual handoff acceptable for May 23 |
-| 8. Kill-switch + alerting        | ⚠️ Framework shipped (`risk_and_exposure_service/kill_switch_rules.py`); carry_staked_basis-specific rules NOT enumerated; alerting-service rules pending             |
-| 9. Event-stream verification     | ⚠️ Framework exists; carry_staked_basis-specific event signature not codified                                                                                         |
+| 7. Custody + treasury            | ⚠️ Copper started (`execution-service/custody/copper_provider.py`); ❌ CEFFU stub (no `ceffu_provider.py`); per master plan Q&A 3 — CEFFU manual handoff acceptable for May 23                         |
+| 8. Kill-switch + alerting        | ⚠️ Framework shipped (`risk_and_exposure_service/kill_switch_rules.py`); carry_staked_basis-specific rules NOT enumerated; alerting-service rules pending                                              |
+| 9. Event-stream verification     | ⚠️ Framework exists; carry_staked_basis-specific event signature not codified                                                                                                                          |
 
 ## 2 — Service-readiness Groups A-G (RED-item summary)
 
@@ -256,17 +260,15 @@ is influenced. Banner format: 🟢 VM RUNNING / 🟡 IN-FLIGHT REFACTOR / 🔴 B
   `manifest_schema_final_gate_2026_05_09.md` (RE-VERIFY) · `live_pipeline_mtds_mdps_features_2026_05_08.md` (BE-AWARE) ·
   `defi_master_2026_05_07.md` (BE-AWARE).
 - **Tab 3 (QG STEPs)** → `available_at_lookahead_bias_completion_2026_05_08.md` (🔴 BLOCK) ·
-  `writegate_honest_coverage_endtoend_2026_05_06.md` (🔴 BLOCK) ·
-  `live_pipeline_mtds_mdps_features_2026_05_08.md` (🔴 BLOCK) · `features_repo_consolidation_2026_05_08.md` (🔴 BLOCK)
-  — until workspace QG green.
+  `writegate_honest_coverage_endtoend_2026_05_06.md` (🔴 BLOCK) · `live_pipeline_mtds_mdps_features_2026_05_08.md` (🔴
+  BLOCK) · `features_repo_consolidation_2026_05_08.md` (🔴 BLOCK) — until workspace QG green.
 - **Tab 4 (features lift)** → `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (🟡) ·
   `live_pipeline_mtds_mdps_features_2026_05_08.md` (🟡) · `features_repo_consolidation_2026_05_08.md` (RE-VERIFY).
 - **Tab 5 (pipeline_mode VM fleet)** → `master_to_live_defi_2026_05_23.md` (🔴 BLOCK Phase 3) ·
   `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (🟢 VM RUNNING — mirror) ·
   `live_pipeline_mtds_mdps_features_2026_05_08.md` (🔴 BLOCK Phase 5).
 - **Tab 6 (reconciler)** → `master_to_live_defi_2026_05_23.md` (🔴 BLOCK F18 gate) ·
-  `manifest_schema_final_gate_2026_05_09.md` (RE-VERIFY) ·
-  `live_pipeline_mtds_mdps_features_2026_05_08.md` (BE-AWARE).
+  `manifest_schema_final_gate_2026_05_09.md` (RE-VERIFY) · `live_pipeline_mtds_mdps_features_2026_05_08.md` (BE-AWARE).
 - **Tab 7 (UI rollout)** → `deployment_ui_lifecycle_tabs_2026_05_08.md` (🟡 IN-FLIGHT REFACTOR) ·
   `master_to_live_defi_2026_05_23.md` (BE-AWARE G23) · `live_pipeline_mtds_mdps_features_2026_05_08.md` (BE-AWARE).
 - **Tab 8 (carry_staked_basis E2E)** → `master_to_live_defi_2026_05_23.md` (🟢 VM RUNNING — 7-day wall-clock) ·
@@ -274,45 +276,45 @@ is influenced. Banner format: 🟢 VM RUNNING / 🟡 IN-FLIGHT REFACTOR / 🔴 B
 
 ## 5 — Compat paths + removal schedule (no-tech-debt § 3)
 
-| compat path                                       | introduced in         | removal trigger                                                                                                          | owner        | effort      |
-| ------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------- |
-| pipeline_mode reader fallback levels 1/3/4        | Phase 1B (2026-05-08) | Phase 8 (T+30d post-Phase-3, ~2026-06-15) when `READER_FELL_BACK_TO_LEGACY_PATH` event count = 0                         | Tab 5        | ~30 min     |
-| pipeline_mode level 2 (legacy `category=`) reader | Phase 1B (2026-05-08) | NEVER — CLAUDE.md hive-vocab exception (read-only fallback, no writes)                                                   | Tab 5        | n/a         |
-| UI `RuntimeMode` redeclaration                    | pre-plan (mirror)     | Tab 7 close-out — UAC re-export from UTL + UCI codegen pipeline                                                          | Tab 7        | ~2 hours    |
-| `LIVE_*` event-prefix anti-pattern (VMEventType)  | pre-plan              | Post-cutover (Block G1) — `VMEventType` rename + `mode` field on payload + 3-repo consumer sweep + semver-bump           | post-cutover | ~1 day      |
-| Feature bare-class fallback (pre-ModeHandler)     | pre-plan              | Tab 4 close-out — hard-delete 4 family classes once ModeHandler lift in prod                                             | Tab 4        | ~3 hours    |
-| MDPS dual-handler split (process vs live_mode)    | pre-plan              | Post-cutover (Block D2) — design proposal; refactor only if live shows divergence                                        | post-cutover | 1-2 days    |
-| Shadow-simulated fills in live (Block A3 scope)   | (not yet introduced)  | Post-cutover only if operator pivots — Block D5 gates as post-scope                                                      | post-cutover | 2-3 days    |
+| compat path                                       | introduced in         | removal trigger                                                                                                | owner        | effort   |
+| ------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- | ------------ | -------- |
+| pipeline_mode reader fallback levels 1/3/4        | Phase 1B (2026-05-08) | Phase 8 (T+30d post-Phase-3, ~2026-06-15) when `READER_FELL_BACK_TO_LEGACY_PATH` event count = 0               | Tab 5        | ~30 min  |
+| pipeline_mode level 2 (legacy `category=`) reader | Phase 1B (2026-05-08) | NEVER — CLAUDE.md hive-vocab exception (read-only fallback, no writes)                                         | Tab 5        | n/a      |
+| UI `RuntimeMode` redeclaration                    | pre-plan (mirror)     | Tab 7 close-out — UAC re-export from UTL + UCI codegen pipeline                                                | Tab 7        | ~2 hours |
+| `LIVE_*` event-prefix anti-pattern (VMEventType)  | pre-plan              | Post-cutover (Block G1) — `VMEventType` rename + `mode` field on payload + 3-repo consumer sweep + semver-bump | post-cutover | ~1 day   |
+| Feature bare-class fallback (pre-ModeHandler)     | pre-plan              | Tab 4 close-out — hard-delete 4 family classes once ModeHandler lift in prod                                   | Tab 4        | ~3 hours |
+| MDPS dual-handler split (process vs live_mode)    | pre-plan              | Post-cutover (Block D2) — design proposal; refactor only if live shows divergence                              | post-cutover | 1-2 days |
+| Shadow-simulated fills in live (Block A3 scope)   | (not yet introduced)  | Post-cutover only if operator pivots — Block D5 gates as post-scope                                            | post-cutover | 2-3 days |
 
 ## 6 — Risk register (top 12)
 
-| #   | Risk                                                                              | L | I | Mitigation                                                                                                                | Owner            | Detection                                                  |
-| --- | --------------------------------------------------------------------------------- | - | - | ------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| 1   | MDPS dual-handler silently diverges batch ↔ live during cutover                   | M | H | Tab 2 D1 audit + shared base abstract methods + L7 sweep + schema/error-reason parity unit test; 24h cutover-smoke         | Tab 2 + Tab 6   | Recon-green threshold spike on cutover day                  |
-| 2   | pipeline_mode migration runs out of GCS quota mid-flight                          | L | H | Pre-Phase-3 cost audit; Terraform budget +50%; CloudOps quota alert; nights-only fallback                                  | Tab 5 + operator | GCS quota alert; Phase-4 VM throttled                      |
-| 3   | F21 reconciler ships but recon-green threshold uncalibrated → false alarms        | M | M | Tab 6 sweep against shipped 2-yr backtest; 7-day paper-trade calibration; 95p+2× margin starting point                     | Tab 6           | Recon alerts >5×/hr post-cutover                           |
-| 4   | carry_staked_basis paper-trade soak hits venue testnet rate limits                | M | H | Pre-soak rate-limit confirmation across all 6 perp venues; staged Secret Manager keys; watchdog VM                         | Tab 8           | 429 errors in events; >10s order-place latency             |
-| 5   | Tenderly fork breaks during paper-deploy (currently test-fixture only)            | M | H | execution-service integration test pre-flight; pre-deploy fork-swap smoke                                                  | Tab 8           | swap returns "contract not found" / insufficient liquidity |
-| 6   | Aave/Uniswap mainnet RPC + Secret Manager bindings missing on launch              | L | H | UAC `CHAIN_RPC_TEMPLATES` codex audit (Tab 1) + Secret path check (Tab 2) + startup `eth_getCode` validation; operator manual sign-off 1 day pre-launch | Tab 2           | RpcConnectionError / MissingSecretError on startup         |
-| 7   | UI ExecutionModeContext rollout breaks build (parallel-agent collision)           | M | M | Tab 7 codex spec + Playwright matrix + Tab 7/Tab 3 commit serialisation                                                    | Tab 7 + Tab 3   | npm build fails / Playwright suite red                     |
-| 8   | QG STEP L2/L3/L4 lands red on first run + blocks every PR                         | M | M | Tab 3 pre-flight on local repo; identify false-positives; pre-announce rollout window                                      | Tab 3           | Workspace CI red >2h; operator override needed             |
-| 9   | J1 phase→mode helper signature wrong (operator pivots seam-count)                 | L | M | Operator confirm Block A2 seam decision before Tab 2 ships helper; signature locked via unit tests                         | Tab 2           | helper unit tests fail; consumer startup fails             |
-| 10  | Operator pivots — shadow-simulated live fills become cutover-blocking             | L | M | Block A3/D4 explicit deferral codified; reversal requires codex update + new Tab spawn (~5-10d slip)                       | master_to_live  | operator request after Tab 2/4/5/6 shipped                 |
-| 11  | REPLAY_BACKSTOP_REACHED gate fires during cutover week                            | L | M | Tab 5 Phase 8 wiring + Tab 8 paper-trade gate-firing rehearsal + alert escalation runbook                                  | Tab 5 + Tab 8   | event fires + strategy holds positions                     |
-| 12  | F21 reconciler consumes wrong inputs (Tab 6 ships before Tab 5 schema stable)     | M | H | Cross-Tab handshake: Tab 5 publishes manifest shape BEFORE Tab 6 implements; reconciler unit-tests mock real Tab 5 output  | Tab 5 + Tab 6   | recon misreads pipeline_mode column; recon NaN             |
+| #   | Risk                                                                          | L   | I   | Mitigation                                                                                                                                              | Owner            | Detection                                                  |
+| --- | ----------------------------------------------------------------------------- | --- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
+| 1   | MDPS dual-handler silently diverges batch ↔ live during cutover              | M   | H   | Tab 2 D1 audit + shared base abstract methods + L7 sweep + schema/error-reason parity unit test; 24h cutover-smoke                                      | Tab 2 + Tab 6    | Recon-green threshold spike on cutover day                 |
+| 2   | pipeline_mode migration runs out of GCS quota mid-flight                      | L   | H   | Pre-Phase-3 cost audit; Terraform budget +50%; CloudOps quota alert; nights-only fallback                                                               | Tab 5 + operator | GCS quota alert; Phase-4 VM throttled                      |
+| 3   | F21 reconciler ships but recon-green threshold uncalibrated → false alarms    | M   | M   | Tab 6 sweep against shipped 2-yr backtest; 7-day paper-trade calibration; 95p+2× margin starting point                                                  | Tab 6            | Recon alerts >5×/hr post-cutover                           |
+| 4   | carry_staked_basis paper-trade soak hits venue testnet rate limits            | M   | H   | Pre-soak rate-limit confirmation across all 6 perp venues; staged Secret Manager keys; watchdog VM                                                      | Tab 8            | 429 errors in events; >10s order-place latency             |
+| 5   | Tenderly fork breaks during paper-deploy (currently test-fixture only)        | M   | H   | execution-service integration test pre-flight; pre-deploy fork-swap smoke                                                                               | Tab 8            | swap returns "contract not found" / insufficient liquidity |
+| 6   | Aave/Uniswap mainnet RPC + Secret Manager bindings missing on launch          | L   | H   | UAC `CHAIN_RPC_TEMPLATES` codex audit (Tab 1) + Secret path check (Tab 2) + startup `eth_getCode` validation; operator manual sign-off 1 day pre-launch | Tab 2            | RpcConnectionError / MissingSecretError on startup         |
+| 7   | UI ExecutionModeContext rollout breaks build (parallel-agent collision)       | M   | M   | Tab 7 codex spec + Playwright matrix + Tab 7/Tab 3 commit serialisation                                                                                 | Tab 7 + Tab 3    | npm build fails / Playwright suite red                     |
+| 8   | QG STEP L2/L3/L4 lands red on first run + blocks every PR                     | M   | M   | Tab 3 pre-flight on local repo; identify false-positives; pre-announce rollout window                                                                   | Tab 3            | Workspace CI red >2h; operator override needed             |
+| 9   | J1 phase→mode helper signature wrong (operator pivots seam-count)             | L   | M   | Operator confirm Block A2 seam decision before Tab 2 ships helper; signature locked via unit tests                                                      | Tab 2            | helper unit tests fail; consumer startup fails             |
+| 10  | Operator pivots — shadow-simulated live fills become cutover-blocking         | L   | M   | Block A3/D4 explicit deferral codified; reversal requires codex update + new Tab spawn (~5-10d slip)                                                    | master_to_live   | operator request after Tab 2/4/5/6 shipped                 |
+| 11  | REPLAY_BACKSTOP_REACHED gate fires during cutover week                        | L   | M   | Tab 5 Phase 8 wiring + Tab 8 paper-trade gate-firing rehearsal + alert escalation runbook                                                               | Tab 5 + Tab 8    | event fires + strategy holds positions                     |
+| 12  | F21 reconciler consumes wrong inputs (Tab 6 ships before Tab 5 schema stable) | M   | H   | Cross-Tab handshake: Tab 5 publishes manifest shape BEFORE Tab 6 implements; reconciler unit-tests mock real Tab 5 output                               | Tab 5 + Tab 6    | recon misreads pipeline_mode column; recon NaN             |
 
 ## 7 — Concurrent-agent collision matrix
 
-| collision point                            | concurrent agents                              | risk     | mitigation                                                                                       |
-| ------------------------------------------ | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| UAC `internal/modes.py`                    | 2 (Tab 1 codex cross-link + Tab 2 J1 helper)   | MEDIUM   | Tab 2 ships first; Tab 1 references shipped commit sha; conditional-push                         |
-| UAC `BUNDLED_DATA_TYPES`                   | 3 (Tab 2 M9 + Tab 5 Phase 3 + Tab 6 F21)       | HIGH     | Tab 2 first (read-only); Tab 5 second (writer refactor); Tab 6 mocks Tab 2 snapshot in tests     |
-| UTL `manifest_writer.py`                   | 2 (Tab 2 L7 sweep + Tab 5 Phase 3 refactor)    | MEDIUM   | Serialise: Tab 2 survey → Tab 5 refactor; Tab 5 includes L7 consumer fixes in same batch         |
-| features-service base classes (4 families) | 4 sub-agents (Tab 4 fan-out)                   | LOW      | Per-family `git add -p`; sub-agent fan-out pattern from CLAUDE.md "Tab 4 close-out 2026-05-08" |
-| UI ExecutionModeContext + 3 page files     | 4 (Tab 7 main + 3 sub-agents)                  | HIGH     | SERIALISE NOT PARALLEL — main does context first + dashboard; subs wait + go sequential          |
-| `master_to_live_defi_2026_05_23.md`        | 8 (every Tab flips own checkboxes)             | CRITICAL | Pre-agreed row ranges per Tab; per-shippable-unit commits; first-merge-wins                       |
-| per-repo `quality-gates.sh`                | 8 (Tab 3 ships STEPs + others trigger)         | LOW      | Tab 3 ships STEP defs first (workspace-wide); other Tabs fix locally + re-push                  |
-| Codex `batch-live-architecture.md`         | 8 (Tab 1 writer + Tabs 2-8 readers)            | MEDIUM   | Tab 1 ships codex first (commit + push); Tabs 2-8 pull + verify anchors before pushing            |
+| collision point                            | concurrent agents                            | risk     | mitigation                                                                                     |
+| ------------------------------------------ | -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| UAC `internal/modes.py`                    | 2 (Tab 1 codex cross-link + Tab 2 J1 helper) | MEDIUM   | Tab 2 ships first; Tab 1 references shipped commit sha; conditional-push                       |
+| UAC `BUNDLED_DATA_TYPES`                   | 3 (Tab 2 M9 + Tab 5 Phase 3 + Tab 6 F21)     | HIGH     | Tab 2 first (read-only); Tab 5 second (writer refactor); Tab 6 mocks Tab 2 snapshot in tests   |
+| UTL `manifest_writer.py`                   | 2 (Tab 2 L7 sweep + Tab 5 Phase 3 refactor)  | MEDIUM   | Serialise: Tab 2 survey → Tab 5 refactor; Tab 5 includes L7 consumer fixes in same batch       |
+| features-service base classes (4 families) | 4 sub-agents (Tab 4 fan-out)                 | LOW      | Per-family `git add -p`; sub-agent fan-out pattern from CLAUDE.md "Tab 4 close-out 2026-05-08" |
+| UI ExecutionModeContext + 3 page files     | 4 (Tab 7 main + 3 sub-agents)                | HIGH     | SERIALISE NOT PARALLEL — main does context first + dashboard; subs wait + go sequential        |
+| `master_to_live_defi_2026_05_23.md`        | 8 (every Tab flips own checkboxes)           | CRITICAL | Pre-agreed row ranges per Tab; per-shippable-unit commits; first-merge-wins                    |
+| per-repo `quality-gates.sh`                | 8 (Tab 3 ships STEPs + others trigger)       | LOW      | Tab 3 ships STEP defs first (workspace-wide); other Tabs fix locally + re-push                 |
+| Codex `batch-live-architecture.md`         | 8 (Tab 1 writer + Tabs 2-8 readers)          | MEDIUM   | Tab 1 ships codex first (commit + push); Tabs 2-8 pull + verify anchors before pushing         |
 
 ## 8 — Spawned-plan readiness checklist
 

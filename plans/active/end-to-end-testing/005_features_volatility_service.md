@@ -26,8 +26,8 @@ Follows `procedure.md`. Pipeline position: #5 (L3 features layer -- depends on p
 | `compute` | Compute volatility features (batch or live mode) | Parquet per instrument per date per group |
 
 **Note:** This service has a single `compute` operation that dispatches to batch or live based on `--mode`. Unlike
-features-service (delta-one family) which has separate `compute` and `compute-live` operations, volatility uses one operation
-with mode-based routing via `VolatilityComputeHandler._dispatch()`.
+features-service (delta-one family) which has separate `compute` and `compute-live` operations, volatility uses one
+operation with mode-based routing via `VolatilityComputeHandler._dispatch()`.
 
 ## Feature Groups
 

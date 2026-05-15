@@ -2,14 +2,12 @@
 scope: [engineer, admin]
 ---
 
-> **DART route surface update 2026-05-13**: the DART manual-trade lane now has a
-> dedicated route surface at `/services/dart/terminal/manual/` (form + preview + dispatch)
-> and `/services/dart/terminal/manual/[instructionId]/` (per-instruction monitor).
-> The Sheet-over-trading-overview (`manual-trading-panel.tsx`) is preserved in parallel
-> for the trading overview surface; Sheet retirement is post-cutover polish.
-> Unified `lib/api/dart-client.ts` provides typed wrappers for the 4 DART endpoints
-> (preview / submit / status / mode-transition).
-> Reference: `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md` Phase C.
+> **DART route surface update 2026-05-13**: the DART manual-trade lane now has a dedicated route surface at
+> `/services/dart/terminal/manual/` (form + preview + dispatch) and `/services/dart/terminal/manual/[instructionId]/`
+> (per-instruction monitor). The Sheet-over-trading-overview (`manual-trading-panel.tsx`) is preserved in parallel for
+> the trading overview surface; Sheet retirement is post-cutover polish. Unified `lib/api/dart-client.ts` provides typed
+> wrappers for the 4 DART endpoints (preview / submit / status / mode-transition). Reference:
+> `plans/active/dart_manual_trade_ux_refactor_2026_05_13.md` Phase C.
 
 # Operational Modes Matrix — Cross-Cutting Infrastructure
 
