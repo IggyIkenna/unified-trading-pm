@@ -221,7 +221,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models; _parse_blob + _aggregate + _mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 + _parse_blob 3 + _aggregate 4 + prod no-blobs 1); QG green.
 
-- [ ] **17. deployment-ui Phase 12 cost dashboard** — new route `/ops/costs` with date picker + tables + sparkline. Done-def: 3+ vitest tests + pnpm build green.
+- [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts(); Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
 
 - [ ] **18. deployment-api VM events filter endpoint** — `GET /api/vm/{vm_name}/events?since=<ts>&type=<event_type>&limit=N` (item 5 returned last-3-only). Done-def: endpoint + filter tests + QG green.
 
