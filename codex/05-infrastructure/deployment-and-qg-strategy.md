@@ -250,4 +250,8 @@ This SSOT is read at slot 1 main morning ledger sweep daily through 2026-05-23. 
 - Image-build / tarball cost or speed observed beyond planned
 - Production incident post-mortem
 
-Last reviewed: 2026-05-13. Next review: 2026-05-16 (post freeze-gate, after first 99%-repo image-build run).
+Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + honest-coverage cron verification).
+
+**2026-05-15 additions**:
+- Honest-coverage cron VM: Cloud Scheduler → Cloud Run Job → GCE VM pattern canonised. SSOT: `launcher-script-ssot.md` § "Honest-coverage cron VM". Terraform: `deployment-service/terraform/gcp/honest_coverage_scheduler.tf`. BLOCKED-OPERATOR-DECISION: Cloud Scheduler creation pending Ikenna (cloudscheduler.jobs.create IAM).
+- B-011 blindspot audit complete: 8 VM_PREFIX_TO_BUCKET entries registered; 0 known watchdog blindspots. Watchdog relaunched: `vm-zombie-watchdog-20260515-110711`. SSOT: `launcher-script-ssot.md` § "B-011 blindspot audit".

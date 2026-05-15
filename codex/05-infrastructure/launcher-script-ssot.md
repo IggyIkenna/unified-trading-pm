@@ -1,7 +1,7 @@
 ---
 scope: infrastructure
 status: stable
-last_reviewed: 2026-05-10
+last_reviewed: 2026-05-15
 ---
 
 # VM launcher script SSOT — `deployment-service/scripts/vm/`
@@ -383,6 +383,59 @@ total per full production launch).
 week GCS write). Phase 4 sequenced under `manifest_evolution_master_2026_05_08` gate G3.
 
 ---
+
+## B-011 blindspot audit — 8 prefixes registered (2026-05-15)
+
+B-011 identified 8 VM name prefixes that existed in `launch-*.sh` launchers but were absent from
+`VM_PREFIX_TO_BUCKET`. All 8 were missing heartbeat-only (bucket=`None`) entries — none use
+`MANIFEST_PER_VM_SHARDS`, so no shard-parquet path check is needed. Registered in
+[`deployment-service@97298f3`](https://github.com/IggyIkenna/deployment-service/commit/97298f3):
+
+| Prefix                   | Launcher                              | Rationale                                           |
+| ------------------------ | ------------------------------------- | --------------------------------------------------- |
+| `defi-fwd-`              | `launch-defi-forward-poll.sh`         | DeFi on-chain forward poll, heartbeat-only          |
+| `prediction-fwd-`        | `launch-prediction-forward-poll.sh`   | Polymarket/Kalshi forward poll, heartbeat-only      |
+| `footystats-fwd-`        | `launch-footystats-forward-poll.sh`   | FootyStats entity poll, heartbeat-only              |
+| `sfi-fwd-`               | `launch-sfi-forward-poll.sh`          | SFI (SoccerFootballInfo) entity poll, heartbeat-only |
+| `sports-manifest-rescan-`| `launch-sports-manifest-rescan-vm.sh` | Covers coord+chunk VMs via `startswith()` check     |
+| `strategy-test-`         | `launch-strategy-test-vm.sh`          | CI strategy validation, heartbeat-only              |
+| `ml-train-`              | `launch-ml-training-vm.sh`            | ML model training, heartbeat-only                   |
+| `sports-scheduler-`      | `launch-sports-scheduler-vm.sh`       | Fixture trigger daemon; `_is_daemon()` exempts via `tier=scheduler` |
+
+Post-audit state: `VM_PREFIX_TO_BUCKET` has 0 known blindspots. `test_vm_zombie_watchdog.py`
+`_KNOWN_UNREGISTERED_PREFIXES` emptied; all 6 unit tests pass. Watchdog relaunched:
+`vm-zombie-watchdog-20260515-110711`.
+
+Reference: `plans/active/issues/b011_vm_prefix_watchdog_blindspots_2026_05_13.md`.
+
+## Honest-coverage cron VM (2026-05-15) — Cloud Scheduler → Cloud Run Job → GCE VM pattern
+
+A new 3-tier trigger chain for recurring measurement VMs (introduced for honest-coverage daily cron):
+
+```
+Cloud Scheduler (30 0 * * * UTC)
+    └── Cloud Run Job: honest-coverage-daily-launcher
+            └── GCE VM: measure-honest-coverage-{ts}
+                    └── instruments-service/scripts/measure_honest_coverage.py
+                            └── gs://central-element-323112-honest-coverage/{date}/coverage.json
+```
+
+**Terraform SSOT**: `deployment-service/terraform/gcp/honest_coverage_scheduler.tf`
+
+**Launcher**: `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`
+  - GCS upload: `gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh`
+  - Cloud Run Job image: `gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine` (downloads launcher from GCS at runtime)
+
+**IAM note**: Cloud Scheduler creation requires `cloudscheduler.jobs.create` (Ikenna/owner territory).
+Operator setup: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com).
+BLOCKED-OPERATOR-DECISION pending Ikenna confirmation (pings/slot_2.md 2026-05-15 05:30 UTC).
+
+**VM prefix**: `measure-honest-coverage-` registered in `VM_PREFIX_TO_BUCKET` (bucket=`None`, heartbeat-only).
+`VM_SHUTDOWN_ON_COMPLETION=true`. Machine: `e2-standard-2`, 50 GB.
+
+**When to use this pattern** vs bare launcher: when the VM must be triggered on a schedule (cron) rather than
+operator-launched. Cloud Scheduler → Cloud Run Job → GCE VM is the canonical path; Cloud Workflows was explored
+but rejected (requires `workflows.workflows.create`, broader IAM surface, harder to audit).
 
 ## References
 
