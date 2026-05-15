@@ -145,3 +145,12 @@ Conflict rule: deployment-service is yours; coordinate with slot 7 if they need 
 9. **scripts/vm/ operator runbook update** — write per-launcher entry in `codex/05-infrastructure/vm-launcher-runbook.md`: when to use, required env vars, expected duration, common failure modes. Done-def: every active launcher has a runbook section.
 
 [2026-05-15 07:52 UTC] [main → slot 2] — ❓ **CROSS-SIDE QUESTION FROM IKENNA** — basefc_validation_flip_2026_05_10. Ikenna at 07:46 UTC: "slot 2 stack shows item #6 BLOCKED on something not visible in work-split snapshot. Please post a one-line status in pings/slot_2.md: what's blocking + what'd unblock it. If non-essential close-out, mark DEFERRED with successor note; otherwise route the blocker." Read `plans/active/basefc_validation_flip_2026_05_10.md` § item 6; post a one-line status when convenient. NOT urgent — handle between current queue items. Once you respond, main relays to Ikenna.
+
+[2026-05-15 15:42 UTC] slot-2 — **basefc_validation_flip item 6 status**: plan item 6 ("Plan-flip cite") is the final docs commit pointing at per-family + UTL commits. It's NOT blocked — it's a sequencing dependency: items 1-5 (UTL flip strategy, calculator migration, validate_class_attributes opt-in flip) are all `- [ ]` unstarted. Item 6 unblocks automatically once items 1-5 ship. No IAM/credential issue. Nothing for Ikenna to act on — it just needs the implementation items to run first. DEFERRED to the slot that takes items 1-5.
+
+[2026-05-15 15:42 UTC] slot-2 — ✅ **DONE item 6** (VM launcher security hardening). deployment-service@2140f89 + codex vm-security-audit.md (already in PM@7081f0c9 via slot-9 side-effect).
+- P0: 0 hardcoded creds, 0 curl-pipe-bash
+- P1 (SC2046): flag-array fix in launch-amm-golden-fixture-validation-vm.sh (3 injection vectors → EXTRA_FLAGS=())
+- P2 (SC2034): 11 unused-var removals across 9 launchers (TICK_BUCKET_NAME×4, SCRIPT_DIR×4, SHAPE_LOWER, DATA_LIGHT_SPOT, CREATE_CMD)
+- 83 launchers shellcheck-clean at warning+ severity
+STARTED item 7 (test coverage verification).
