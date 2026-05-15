@@ -481,8 +481,10 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
 - [x] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar;
       429 response on exceed; tests covering normal + exceed; QG green. —
       _deployment-api@e968719_
-- [ ] [AGENT] P0. **deployment-ui form validation polish** — backfill / experiment / strategy backtest forms:
-      field-level validation, helpful error messages, disable-submit when invalid; vitest green.
+- [x] [AGENT] P0. **deployment-ui form validation polish** — backfill / experiment / strategy backtest forms:
+      field-level validation, helpful error messages, disable-submit when invalid; vitest green. —
+      _deployment-ui@088b5c6_ (MlExperiments + StrategyBacktests + ExecutionBacktests: inline errors,
+      aria-invalid/aria-describedby, button disabled when invalid, end≥start date check; 27 tests green)
 - [ ] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component
       status (GCS, pubsub, secret manager, deployment-events); tests covering each component up/down state.
 - [ ] [AGENT] P0. **deployment-ui notification system** — toast/banner for backfill launches / VM spawns / paper-trade
