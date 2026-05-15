@@ -188,6 +188,41 @@ Without it: carry_staked_basis archetype has no Solana-leg performance baseline
 
 ---
 
+## [Slot 2 → Operator] 2026-05-15 — CREDENTIAL APPROVAL REQUEST: Tenderly fork + HL/Bybit testnet (recursive-borrow)
+
+**Status**: 🟡 BLOCKED-CREDENTIALS — Tenderly fork RPC + HL testnet + Bybit testnet required
+
+```
+CREDENTIAL APPROVAL REQUEST — Tenderly fork + HL testnet + Bybit testnet (recursive-borrow smoke)
+Vendor: Tenderly (tenderly.co) — free tier supports fork; paid for higher rate-limits
+What I need:
+  1. TENDERLY_FORK_RPC_URL — fork of Aave V3 Ethereum mainnet state
+     Create at: tenderly.co → Fork → Fork Mainnet → copy RPC URL
+  2. HL_TESTNET_API_KEY + HL_TESTNET_WALLET_ADDRESS — Hyperliquid testnet
+     Sign up at: app.hyperliquid.xyz/testnet → generate API key
+  3. BYBIT_TESTNET_API_KEY + BYBIT_TESTNET_API_SECRET — Bybit testnet (failover leg)
+     Sign up at: testnet.bybit.com → API Management → Create New Key
+Account to use: existing ikennaigboaka@gmail.com or new accounts as needed
+Unblocks:
+  - Phase 5 run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork
+  - Phase 12 paper smoke: Category C operational-resilience scenarios (SCN-C1..C5)
+    x 12 Family 1+2 cells x >=7 continuous days (master plan Group F item 18)
+  - strategy-service test_cell_scenario full harness (12 cells x 14 scenarios)
+Without it: scaffold ships (done); integration tests skip with INFRA_GAP verdict;
+           unit + credential-free tests fully passing
+```
+
+**Scaffolds shipped**:
+
+- `execution-service/.../orchestrators/recursive_loop_orchestrator.py` (2a185b7e8)
+- `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (a7e9243)
+- `strategy-service/tests/integration/test_recursive_borrow_scenarios.py` (8ff3ded)
+
+**To provide**: Set env vars in GCP Secret Manager: `TENDERLY_FORK_RPC_URL`, `HL_TESTNET_API_KEY`,
+`HL_TESTNET_WALLET_ADDRESS`, `BYBIT_TESTNET_API_KEY`, `BYBIT_TESTNET_API_SECRET`
+
+---
+
 ## [Slot 2 → Operator] 2026-05-15 — CREDENTIAL APPROVAL REQUEST: Helius API key (native_staking_rates mev_apy)
 
 **Status**: 🟡 BLOCKED-CREDENTIALS — Helius API key needed for per-validator mev_apy

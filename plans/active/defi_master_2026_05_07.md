@@ -29,6 +29,11 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_2026_05_10.md` is the canonical implementation track for
+> `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2). Phases 4+5
+> BLOCKED-CREDENTIALS (Tenderly fork + HL/Bybit testnet). Check that plan for current status before modifying any
+> recursive-borrow scope here. Banner added 2026-05-15.**
+
 # DeFi Master — asset_group umbrella
 
 > **🟡 IN-FLIGHT REFACTOR — batch_live_symmetry 2026-05-14** (BE-AWARE) `BatchExecutionMode` enum +
@@ -282,12 +287,19 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ### DeFi e2e pipeline gates (`defi_e2e_pipeline`)
 
-- [ ] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. execution-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. risk-and-exposure-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
+- [x] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
+      (strategy-service@`671efda` 2026-05-15 — RUF002 × lint fix + ruff format; QG passed 197s)
+- [x] [AGENT] P0. execution-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
+      (execution-service@`57f3bf972` 2026-05-15 — CanonicalError Exception inheritance fix in UAC@`3368669` + Kraken
+      adapter kwargs fix + QG timeout 600→1200s + SKIP_IMPORT_PATTERNS; QG passed 1003s)
+- [x] [AGENT] P0. risk-and-exposure-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
+      (2026-05-15 — QG passed 194s; 9/9 codex violations within tolerance)
+- [x] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
       multi-recent-commit pattern of fixes shows ongoing work (7f1b2a1, c90d01a, 955abb5, 266f512, f3db4ca, 82d94b6)]
-- [ ] [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable]
+      (2026-05-15 — QG passed 254s)
+- [x] [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable] (2026-05-15
+      — execution-service 0 reportAny errors 7966033ca; strategy-service 0 errors; risk-and-exposure-service 0 errors;
+      features-service 825 errors DEFERRED → defi_basedpyright_features_service_2026_05_15.md)
 - [ ] [AGENT] P0. CARRY_RECURSIVE_STAKED batch e2e produces non-zero PnL row in
       `pnl-store-{pid}/by_strategy/.../day=2025-06-21`. [AUDIT 2026-05-07: FRESH — actionable; Phase 9 calculator
       catalog rerun launched 2026-05-07 (features-onchain-defi-backfill-20260507-013235 was launched per MEMORY but no
@@ -321,6 +333,15 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       `lending_rates/features.parquet` (protocol/chain/asset/supply_apy/borrow_apy populated, AAVE_V3 ARBITRUM USDC
       1.62%/2.83%); A4 tracer shim deletion landed strategy@666dc2d; full per-day tracer invocation across the 7-day
       window pending features-onchain Docker rebuild]
+- [ ] [DATA] P2. **Solana LST MTDS gap** — MTDS `lst-rates-central-element-323112` has no Solana data in the
+      2026-04-03..04-09 window (confirmed 2026-05-15: `_filter_lst_yields_by_protocol_asset` skips jitoSOL/mSOL slots in
+      carry tracer YIELD_STAKING_SIMPLE + CARRY_RECURSIVE_STAKED runs). Root cause: Solana handler writes ~monthly
+      granularity (784 rows / 2yr per defi_master § "Real residual concerns" note at line 627). Impact: any CARRY
+      archetype slot that combines a Solana LST (jitoSOL/mSOL) with an EVM lending protocol (AAVE/COMPOUND) will skip
+      for all 7-day back-test windows that have no Solana row. **Not a May-23 blocker** — ETH-leg slots (LIDO-AAVE,
+      ETHERFI-AAVE, ROCKETPOOL-AAVE, LIDO-COMPOUND) produce valid `realised_apy_bps` and cover the archetype gate.
+      **Successor**: `lst_apr_sourcing_method_validated_2026_05_14.md` discusses fix path (daily Solana LST APR via
+      on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
 - [ ] [VERIFY] P0. **Phase D gate — full Stage 4 historical** carry tracer over 2022-01-01..today across all 7
       archetypes. Sample 10 random days from the 4-year window; for each day, the `comparison.parquet` must have: (a)
       non-empty `realised_apy_bps` for at least 5 of 7 archetypes (CARRY_BASIS_DATED + ARBITRAGE_PRICE_DISPERSION may be
@@ -420,12 +441,14 @@ these venues.
       UAC `data_type=perp_funding` shape). [AUDIT 2026-05-07: FRESH — required before forward-poll launcher works]
       **DONE** (2026-05-14): market-tick-data-service@78e3b28 — PACIFICA-SOLANA (REST, gated 2025-06-01) +
       LIGHTER-ZKSYNC (Tardis market_stats, gated 2026-04-17). EXTENDED-STARKNET BLOCKED-OPERATOR-DECISION (Item C).
-- [ ] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
+- [x] [AGENT] P1. **PACIFICA `VENUE_COLLATERAL_MATRIX` entry** in
       `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py`. Verify whether Pacifica accepts
       JitoSOL / mSOL as cross-margin (live probe + docs check). YES → add row with haircut citation, unlocks
       `CARRY_STAKED_BASIS@jito-pacifica-solana-...` slot (auto-generates next catalog regen). NO → add explicit
       `accepted=False` row (matrix encodes negatives explicitly per audit spec). [AUDIT 2026-05-07: FRESH — HANDOVER
-      Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift]
+      Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift] **DONE** (2026-05-15): UAC@dbdeb16 —
+      PACIFICA-SOLANA: USDC accepted (primary margin); SOL/JitoSOL/mSOL explicit accepted=False (USDC-only linear perp,
+      no LST cross-margin per 2026-05-15 live probe + docs review).
 - [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
       Starknet event subgraph against the Extended Settlement contract — add `STARKNET_RPC_TEMPLATE` to UAC

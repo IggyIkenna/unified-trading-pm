@@ -1020,7 +1020,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1131,7 +1131,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1585,7 +1585,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1807,14 +1807,29 @@
       "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments \u2192 market data \u2192 features \u2192 strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
       "dependencies": [
         {
-          "name": "unified-trading-library",
+          "name": "unified-api-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
         {
-          "name": "unified-api-contracts",
+          "name": "execution-service",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
+          "required": false
+        },
+        {
+          "name": "strategy-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
+        },
+        {
+          "name": "risk-and-exposure-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
+        },
+        {
+          "name": "position-balance-monitor-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
         }
       ],
       "completion_path": "infrastructure",

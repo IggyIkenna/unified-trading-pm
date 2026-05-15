@@ -1,38 +1,66 @@
-# Slot 8 ping file — re-themed 2026-05-14
+# Slot 8 ping file — re-themed 2026-05-15
 
 > Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N). Full Q&A lives in
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-14 10:07 UTC] [main → slot 8] — RE-THEMED via --reset-slot. Prior theme: TBD (main fills from yesterday's
-LEDGER + prior plan's DONE block on first read). New theme: TBD (main fills from today's work-split + plan-of-record +
-spawn prompt). [2026-05-14 10:20 UTC] slot-8 — STARTED Phase 0 Cluster E: UTS-UI tsc errors
-(deployment*and_qg_strategy_implementation_2026_05_13.md § Cluster E) [2026-05-14 10:45 UTC] slot-8 — Tab 3 DONE: L2
-fix-batch + STEP 5.77 + L7 sweep all complete; instruments-service noqa'd; PM@06c6213c [2026-05-14 11:00 UTC] [main →
-slot 8] — NEXT ASSIGNMENT: B-007 + B-008 (2 items). Read LEDGER § "Slot 8 — B-007+B-008" for full brief. Work in order:
-(1) Phase 8.A manifest writer coverage — 100% coverage on ManifestWriter.record*\* in unified-trading-library; (2) Phase
-8.A emission publisher coverage — 100% coverage on publish_with_policy + \_publish_emission_check +
-\_resolve_policy_output_data_type in UTL. ~6h total. QG green after each. [2026-05-14 17:30 UTC] [slot 8 → main] — ✅
-B-007+B-008 DONE. unified-trading-library@e6877d2: record_failed with explicit attempted_at test + new
-tests/unit/test_emission_publisher.py (emission_publisher.py 100% QG coverage, was 33.8%). Plan checkbox flipped at
-PM@0ff4963e. All tests pass. Slot 8 AVAILABLE for next assignment. [2026-05-14 11:51 UTC] [main → slot 8] — B-007+B-008
-confirmed DONE ✅. NEXT ASSIGNMENT: B-014 (Phase 3 QG ratchet STEPs enable + rollout). Read LEDGER § "Slot 8 — B-014"
-for full brief. CRITICAL: do NOT start rollout until B-006+B-009+B-010+B-011+B-012 all DONE (watch LEDGER for all slots
-to DONE-ping). While waiting: read plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md § Phase 3 + read
-base-service.sh to identify exact STEP X.N1/X.N2/X.N3 lines. When all prereqs land: enable STEPs in template → run
-rollout-quality-gates-unified.py → QG all service repos → flip plan checkbox. Ping READY TO ROLLOUT when prereqs met,
-then proceed.
+[2026-05-15 UTC] slot-8 — ✅ DONE self-pivot DT-3/DT-4 (PRE_CUTOVER from codex audit issue doc). PM@8b4ab3ad: (1) "Library-Repo QG Carveout Patterns" section added to quality-gates.md (UAC_CANONICAL_EXEMPT / SIZE_EXTRA_EXCLUDES / GCP_PROJECT_ID_EXCLUDE_GLOBS / BROAD_EXCEPT_EXTRA_EXCLUDES — when valid, pattern, guard rails); (2) B-014 STEP 5.79-5.82 PENDING_RATCHET status + B-018 QG snapshot VM details cross-referenced in deployment-and-qg-strategy.md § Continuous verification. All 4 DT findings now FIXED. Issue doc closed. No new queue — awaiting main direction.
 
-[2026-05-14 12:41 UTC] [main → slot 8] — 🚨 **FINAL WAVE — DAY WRAP-UP**. B-014 is your FINAL ASSIGNMENT. **Current
-prereq state**: B-010 ✅ (slot 3) + B-012 ✅ (slot 6) DONE. B-006 (slot 4 IN FLIGHT), B-009 (slot 5 IN FLIGHT), B-011
-(slot 2 not yet STARTED). Today's session may NOT close all prereqs — be realistic. Two-path plan: (Path A — full
-prereq) If all B-006+B-009+B-011 land before EOD: execute full B-014 rollout per LEDGER brief, ping DONE. (Path B —
-partial prereq more likely) If 1+ prereq still red at EOD: ship ONLY the prep half — draft STEP X.N1/X.N2/X.N3 edits in
-`base-service.sh` (as a PATCH FILE or branch but NOT committed to main template), commit your prep notes as
-docs(orchestrator) ping with exact line numbers + planned edits, then stand down. Tomorrow's main picks up. **DO NOT
-half-ship the rollout** (don't enable STEPs in template until all prereqs are green — partial enable will break N
-service repos). **No new dispatches will follow** — this is the last item. [2026-05-14 UTC] slot-8 — READY TO ROLLOUT:
-B-006✅(slot 4 @504bf34+@4063e08) B-009✅(slot 5 @ac021a7+@7de7385c) B-010✅(slot 3 @4ede3b2) B-011✅(slot 2 @cf6bb83)
-B-012✅(slot 6 @fdd82def) — all prereqs confirmed DONE. Path A rollout executing: added STEP 5.79/5.80/5.81/5.82
-(date-gated 2026-05-15/05-17) to base-service.sh; running rollout-quality-gates-unified.py now.
-[2026-05-14 UTC] slot-8 — ✅ DONE B-014: STEP 5.79/5.80/5.81/5.82 added to base-service.sh (PM@22cd5d61); 13/15 service repos QG stub pushed; QG verified on risk-and-exposure-service (5.79⚠️PENDING-RATCHET 5.80✅SKIP 5.81✅SKIP 5.82⚠️PENDING-RATCHET; ALL QUALITY GATES PASSED 82s); plan Phase 6 checkboxes flipped PM@f09b37f4. Standing down — final wave complete.
+[2026-05-15 06:02 UTC] [main → slot 8] — ✅ B-014 Phase 3 DONE acked. LEDGER flipped. workspace grep "unified-trading-codex"=0 — clean. Reserve queue per continuation_prompts § Slot 8: (1) SIT pipeline smoke tests for B-014 QG stubs (verify quality-gates.sh runs clean on all 15 repos end-to-end); (2) UTL emission publisher coverage (coordinate with slot 5 on execution-service — take features-service side); (3) IBKR gateway QG stub verification. Self-pivot. Ping main on BLOCKED/BIG only.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE item 3 codex_vs_citadel audit follow-up. Harsh-side surfaces verified. Findings: STEP 5.71-5.82 not indexed in quality-gates.md (DT-1/DT-2 IMMEDIATE — fixed PM@ae4fde31); UAC carveout patterns + B-014/B-018 cross-refs filed as PRE_CUTOVER in issue doc codex_audit_deployment_template_phase8_drift_2026_05_15.md. No BIG findings.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 1+3: SIT smoke tests + IBKR gateway verification. All repos have correct B-014 SSOT path (grep=0). Found 2 repos missing lifecycle block: features-service@30467e28 + ibkr-gateway-infra@eb4412f — both fixed + QG PASSED (61s / 23s).
+
+[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 2: UTL emission publisher consumer-side coverage audit (features-service side). Callsite map: 8 sub-families with publish_with_policy callsites (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) — ALL have matching test_emission_policy.py files. No gaps found. Coverage is comprehensive.
+
+[2026-05-15 UTC] slot-8 — 🏁 **Slot 8 Day-4 CYCLE-CLOSE**
+
+**4-day cycle summary (2026-05-12 → 2026-05-15) — Slot 8 (UTL + B-014 + codex)**
+
+Items shipped:
+- **2026-05-12**: B-007+B-008 UTL manifest writer + emission publisher 100% coverage (@e6877d2); 13/15 service repos B-014 QG stub rolled out; codex_vs_citadel audit Phases 0-5 complete (242 findings, 63 IMMEDIATE + 137 PRE_CUTOVER + 36 POST_CUTOVER)
+- **2026-05-15**: B-014 Phase 3 stash recovery + rollout completion — all .tabs/8 service repos updated (workspace grep=0); alerting@4795ccf, market-tick@acec41d, risk-exposure@55d7611, ml-inference@8116b23, market-data@2ff9258, ml-training@00a97aa; codex STEP 5.71-5.82 indexed in quality-gates.md (PM@ae4fde31); lifecycle block gap fixed in features-service@30467e28 + ibkr-gateway-infra@eb4412f; emission publisher audit: all 8 features-service sub-families covered
+
+Items deferred:
+- DT-3/DT-4 PRE_CUTOVER (UAC carveouts + B-018 cross-ref) → `plans/active/issues/codex_audit_deployment_template_phase8_drift_2026_05_15.md`
+- Item 4 continuation_prompts (features-service item 4 — full cycle close) → carry to next session
+
+Open blockers at cycle close: NONE for slot 8.
+
+[2026-05-15 05:08 UTC] slot-8 — STARTED slot 8 (B-014 stash recovery + rollout completion;
+plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8)
+
+[2026-05-15 UTC] slot-8 — ✅ DONE B-014 Phase 3 rollout complete. All .tabs/8 service repos updated; workspace-wide grep
+for "unified-trading-codex" = 0 hits. SHAs: ml-inference-service@8116b23, market-data-processing-service@2ff9258,
+ml-training-service@00a97aa, alerting-service@4795ccf, market-tick-data-service@acec41d,
+risk-and-exposure-service@55d7611. Deferred work table updated in
+deployment_and_qg_strategy_implementation_2026_05_13.md.
+
+[2026-05-15 04:44 UTC] [main → slot 8] — RE-THEMED via --reset-slot. Prior theme: TBD (main fills from yesterday's
+LEDGER + prior plan's DONE block on first read). New theme: TBD (main fills from today's work-split + plan-of-record +
+spawn prompt).
+
+[2026-05-15 04:18 UTC] [main → slot 8] — 🌅 **DAY-1 START (Lever 1+2) — 🚨 STASH RECOVERY REQUIRED**. Read
+[`../../plans/active/continuation_prompts_harsh_2026_05_15.md`](../../plans/active/continuation_prompts_harsh_2026_05_15.md)
+§ "Slot 8". Yesterday: B-014 STEP 5.79-5.82 added to base-service.sh ✅; 13/15 service repos QG stub pushed. **Local
+B-014 rollout-completion work was uncommitted at EOD and is preserved in 7 stashes** (one per repo: features-service /
+ibkr-gateway-infra / market-data-processing-service / ml-inference-service / ml-training-service /
+system-integration-tests / unified-trading-system-ui). **Recovery procedure**: cd into each `.tabs/8/<repo>/` →
+`git stash list` (look for msg containing "B-014-ROLLOUT-COMPLETION") → `git stash pop` → verify quality-gates.sh has
+MIN_COVERAGE=70 + new SSOT path + instruction block → quickmerge ship via
+`bash scripts/quickmerge.sh "feat(qg): B-014 rollout completion to <repo>" --agent`. Then verify final 2 service repos
+got the QG stub. After all 15 service repos QG green: ping DONE.
+
+[2026-05-15 07:01 UTC] [main → slot 8] — 🔔 **REBASE REMINDER + STATUS CHECK**. Before your next commit: rebase ALL repos in your worktree to LDR (`git fetch origin && git rebase origin/live-defi-rollout`). This picks up PM@c7786b2f (PYTEST_UNIT_DIR fix — features-service quality-gates.sh now sets PYTEST_UNIT_DIR="tests/" + MIN_COVERAGE=70 restored by prek; note this may affect your B-014 stash recovery for features-service — read the diff before popping stash). After rebase: continue B-014 stash recovery per your existing queue. Ping DONE with SHAs when all 7 stash repos shipped.
+
+[2026-05-15 07:10 UTC] [main → slot 8] — 📋 **EXTENDED QUEUE for after B-014 stash recovery completes**. Read now so you can self-pivot immediately. Estimated ~12 AI-days post-stash.
+
+After B-014 stash recovery pings DONE:
+1. **codex/06-coding-standards quality-gates.md update** — document new STEP 5.79-5.82 (B-014 ratchet STEPs) + PYTEST_UNIT_DIR override pattern (PM@c7786b2f) + UAC carveouts in the codex SSOT. Done-def: codex doc reflects all Phase 3 QG changes.
+2. **codex_vs_citadel audit** (continuation_prompts item 3): read `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md`; verify Harsh-side codex sections (UTL, deployment-service template, Phase 8 surfaces) align with shipped code. File issue doc per drift found.
+3. **UTL emission publisher consumer-side coverage audit** (continuation_prompts item 4): map `publish_with_policy` callsites across execution, risk, strategy, features; verify each callsite has a consumer-side test; fix gaps. Done-def: callsite map in plan doc OR gaps fixed; QG green per repo.
+4. **master plan `mtb-p6e-final-qg-sweep`**: full QG sweep across all 6 B-014 rollout repos (features-service, ibkr-gateway-infra, mdps, ml-inference, ml-training, system-integration-tests). Capture pass/fail + coverage %. File issue doc for any repo below 70%.
+5. **batch_live symmetry L4/L5/L6 sweeps** (reserve): scan for any remaining batch_live L4-L6 violations in the 3 primary repos (features, strategy, mtds). Fix + QG green.
+6. **base-service.sh template DRY**: identify repeated boilerplate patterns across quality-gates.sh files (e.g. PERIPHERAL_DIR blocks, lifecycle checks); propose consolidation in codex. Doc-only; no code change without operator ack.
+Self-pivot. Ping DONE per major item or grouped CYCLE-CLOSE when exhausted.

@@ -98,8 +98,11 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
    IS catalog dates). (refactor 0.4×, ~3 baseline = ~1.2 cal) **DONE** (UTL@`513d79fb` + IS@`3670534`):
    `instrument_lifecycle_loader.py` added; `_classify_defi`/`_classify_cefi` wired with catalog cross-ref.
 2. ✅ **Phase B re-attempt** — re-run Script 3, queue re-attempt VMs only for genuinely-failing classifications after
-   crossref lands. (infra 0.8×, ~2 = 1.6 cal)
-   **DONE** (2026-05-15): Dry run 605,070 candidates / 599,486 corrections (all `EXPECTED_PRE_VENUE_LAUNCH`) / 5,584 legit re-fetch. Apply-flips: RECONCILER_COMPLETED — 599,486 rows corrected + uploaded to `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot2-corrector-defi-20260515.parquet` in 528.5s. Consolidator merge within ~5 min. Corrector wired with lifecycle loader (IS@`2a398cd`).
+   crossref lands. (infra 0.8×, ~2 = 1.6 cal) **DONE** (2026-05-15): Dry run 605,070 candidates / 599,486 corrections
+   (all `EXPECTED_PRE_VENUE_LAUNCH`) / 5,584 legit re-fetch. Apply-flips: RECONCILER_COMPLETED — 599,486 rows
+   corrected + uploaded to
+   `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot2-corrector-defi-20260515.parquet` in
+   528.5s. Consolidator merge within ~5 min. Corrector wired with lifecycle loader (IS@`2a398cd`).
 3. ✅ **`wave2_polymarket_record_captured_from_counts` Polymarket subset** — wire counts → `record_captured()` for
    Polymarket market-state shards. (research 1.2×, ~3 = 3.6 cal) **DONE** (ALL PHASES COMPLETE: UTL@`ef47c81b`,
    `446d75ce`, `d8ca04bc`; MTDS@`a2f8d80`, `616ac15`; PM@`ce40d8ab`, `d93a9952`)
@@ -125,10 +128,13 @@ Plan-of-record fan-out: `defi_classifier_missing_catalog_crossref` (issue) +
    (refactor 0.4×, ~2 = 0.8 cal) **DONE** (pre-existing per deployment_and_qg_strategy_implementation_2026_05_13.md §
    Cluster D [x]): instruments-service@d78dd02 — 74 failed tests now 78 passing; IS QG confirms 2591 passed, ALL QUALITY
    GATES PASSED exit 0.
-10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count drift:
-    test expects 1 row, handler returns 2 (AAVEV3 + MORPHO dual-venue path). Diagnose-first per Findings Triage: code
-    drifted from test intent (multi-venue is correct), so update test expectations. (research 1.2×, ~1 = 1.2 cal)
-    **DONE** (MTDS@`8d54eb1`): Two distinct failures diagnosed — (1) `_fetch_aave_liquidations` missing `if not api_key or not subgraph_id: return []` guard (code fix, parallel parity with flash_loan handler); (2) `test_fetch_aave_flash_loans_returns_rows_on_200` not patching `get_subgraph_id` which returns `None` in real UAC registry (test fix, added patch). 33/33 tests pass. QG exit 0.
+10. ✅ **[ORPHAN-2026-05-14] `mtds_market_interface_test_failures_2026_05_14` cluster A** — defi_handlers row-count
+    drift: test expects 1 row, handler returns 2 (AAVEV3 + MORPHO dual-venue path). Diagnose-first per Findings Triage:
+    code drifted from test intent (multi-venue is correct), so update test expectations. (research 1.2×, ~1 = 1.2 cal)
+    **DONE** (MTDS@`8d54eb1`): Two distinct failures diagnosed — (1) `_fetch_aave_liquidations` missing
+    `if not api_key or not subgraph_id: return []` guard (code fix, parallel parity with flash_loan handler); (2)
+    `test_fetch_aave_flash_loans_returns_rows_on_200` not patching `get_subgraph_id` which returns `None` in real UAC
+    registry (test fix, added patch). 33/33 tests pass. QG exit 0.
 11. **Reserve**: in-stack pickup for any new DeFi classification issues filed during the cycle.
 
 Backfill flag: items 2 + 3 may need <1-week test backfills — OK without approval. ≥1 week → ping operator.
@@ -256,10 +262,12 @@ Plan-of-record fan-out: `tradfi_canonical_futures_contract_hard_required_fields_
 `tradfi_master_2026_05_07` (master plan refresh) + tradfi 1-week test backfill + `solana_defi_coverage_gaps` (successor
 C).
 
-1. **TradFi Item 2 Phase 3 migration script** — futures contract migration script (operator GREENLIT 2026-05-13).
-   (refactor 0.4×, ~4 = 1.6 cal)
-2. **TradFi Item 2 Phase 4 consumer cascade** — workspace-wide consumer migration (operator GREENLIT). (refactor 0.4×,
-   ~5 = 2.0 cal)
+1. ✅ **TradFi Item 2 Phase 3 migration script** — futures contract migration script (operator GREENLIT 2026-05-13).
+   (refactor 0.4×, ~4 = 1.6 cal) — IS@db070da + IS@e1ca983 (15 tests) + IS@e29ebf3 (23 test extensions). **Backfilled
+   2026-05-15 by main during audit.**
+2. ✅ **TradFi Item 2 Phase 4 consumer cascade** — workspace-wide consumer migration (operator GREENLIT). (refactor
+   0.4×, ~5 = 2.0 cal) — IS@0c59485 (Phase 4.1 futures factory) + IS@bcb34b9 (Databento adapter
+   `get_canonical_futures_contracts()`) + IS@2be7e4b (Phase 4.2 write-path). **Backfilled 2026-05-15.**
 3. **TradFi Item 2 Phase 5 QG ratchet** — QG STEP enforcement banning legacy futures-contract shape (operator GREENLIT).
    (design 0.6×, ~3 = 1.8 cal)
 4. **TradFi 1-week test backfill** (<7 days, AUTHORIZED — no operator approval needed per the hard rule above) — run on
@@ -273,10 +281,29 @@ C).
    UAC side (slot 4 owns the sports producer half — coordinate handshake). (refactor 0.4×, ~3 = 1.2 cal)
 8. **`tradfi_master_2026_05_07` venue + symbology coverage audit** — cross-ref against
    `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal)
-9. **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
-   schedules where possible, time unconstrained). (design 0.6×, ~3 = 1.8 cal)
+9. ✅ **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
+   schedules where possible, time unconstrained). (design 0.6×, ~3 = 1.8 cal) — UAC@f4d0cec (`classify_session`
+   facade) + MTDS@038a611 (non-trading-day `record_expected_empty`) + MTDS@6873955 (migrate_tradfi_ohlcv_session_stamps
+   script) + FS@ce093d6c (`_filter_regular_session()` + 6 tests). **Backfilled 2026-05-15.** 🟡 Operator-action pending:
+   Databento session-stamp backfill VM approval (≥1 week — script ready at MTDS
+   scripts/migrate_tradfi_ohlcv_session_stamps.py).
 10. **CME/EUREX 1-week test backfill** — second tradfi venue smoke (<7 days, AUTHORIZED). (infra 0.8×, ~3 = 2.4 cal)
-11. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
+11. ✅ **[SELF-ROUTED 2026-05-14] Kraken instruments-service adapter (CCXT-based reference-data discovery)** — slot 5
+    shipped this alongside the slot 11 → slot 3 routing for the execution-service Kraken adapter. Complementary work:
+    slot 5 provides instrument-discovery layer, slot 7 provides execution layer. (refactor 0.4×, ~2 = 0.8 cal) —
+    IS@da462af. **Backfilled 2026-05-15.**
+12. ✅ **[SELF-ROUTED] SANCTUM-SOLANA LST adapter** — INF + JSOL + laineSOL + jupSOL Solana LST adapters in
+    instruments-service. (design 0.6×, ~3 = 1.8 cal) — IS@346be5d (Phase 2) + IS@e149995 (3 LSTs) + IS@f44f0dc (merge
+    resolve). **Backfilled 2026-05-15.**
+13. ✅ **[SELF-ROUTED] SolanaNativeStakingAdapter + 8 tests** — Solana native staking adapter for carry_staked_basis
+    Solana leg. (design 0.6×, ~3 = 1.8 cal) — IS@9d7cfc7. **Backfilled 2026-05-15.**
+14. ✅ **[SELF-ROUTED] Solana bare-name venue migration script + tests** — Solana venue normalization migration.
+    (refactor 0.4×, ~2 = 0.8 cal) — IS@2639f8e. **Backfilled 2026-05-15.**
+15. **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP 5.37
+    fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
+    `math_utilities.py min_health_factor=1.2`, `risk_monitor.py liquidation_threshold`). Migrate to UAC
+    `LIQUIDATION_PARAMS_REGISTRY` consumer pattern; blocks strategy-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+16. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
 
 Backfill flag: items 4 + 10 are **<1-week test backfills — AUTHORIZED without operator approval**. Anything that
 escalates to a full-history backfill MUST stop + ping operator.
@@ -329,7 +356,14 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
-11. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
+11. **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
+    `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Move `record_captured()` INSIDE the GCS
+    upload try/except block matching `eigenlayer_rewards_handler.py` safe pattern. Currently all 3 handlers call
+    `record_captured()` AFTER upload — creates phantom-row risk if upload succeeds but manifest call fails. **THIS
+    BLOCKS B-015 RE-SMOKE** — must land before slot 8 item #13 apply-flips or phantoms will re-accumulate. Lift the
+    eigenlayer_rewards pattern verbatim across the 3 handlers as one logical unit. Harsh slot 9 owns the parallel
+    `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal)
+12. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
     operator** — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate.
     Root cause likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3
     `DefaultReserveInterestRateStrategy` contract on mainnet (per-asset deployment addresses) + extract canonical
@@ -344,7 +378,7 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
     `unified-api-contracts@215ed3e` (USDC/USDT/DAI/WBTC/wstETH/rETH V2-ABI-verified params); issue doc update in
     `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run. Remaining:
     operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
-12. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
+13. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
 
@@ -357,12 +391,19 @@ Plan-of-record fan-out: `wallet_treasury_post_cutover_custody_signing_2026_06_01
 `audit_records_pb_1_2_3_pre_cutover_2026_05_13.md` + `client_reporting_pnl_attribution_mvp_2026_05_10.md` + Cluster B
 risk-and-exposure lint.
 
-1. **wallet_treasury_post_cutover Phase 3 Audit log immutability** (PULLED FORWARD to pre-May-15) — GCS Object
-   Versioning + 7-year retention lock + Cloud Audit Logs wiring + 4 compliance tests. (infra 0.8×, ~1.6 = 1.3 cal)
-2. **`/api/treasury/rollup` deployment-api endpoint** — Slot 4 Phase 3.D handoff per
-   `wallet_treasury_client_flow_2026_05_10.md` Q1 ack. (design 0.6×, ~3 = 1.8 cal)
-3. **DART manual-trade UX refactor implementation half** (`dart_manual_trade_ux_refactor_2026_05_13.md`) — operator
-   surface for live manual trade gate. (design 0.6×, ~4 = 2.4 cal)
+1. ✅ **wallet_treasury_post_cutover Phase 3 Audit log immutability** (PULLED FORWARD to pre-May-15) — GCS Object
+   Versioning + 7-year retention lock + Cloud Audit Logs wiring + 4 compliance tests. (infra 0.8×, ~1.6 = 1.3 cal) —
+   deployment-api@5cf2fa1 (Phase 3.2+3.3 Cloud Audit Log + withdrawal stub + 4 compliance tests) +
+   deployment-api@df36ef4 (Phase 3 compliance — versioning + retention lock + audit log immutability chain).
+   **Backfilled 2026-05-15.**
+2. ✅ **`/api/treasury/rollup` deployment-api endpoint** — Slot 4 Phase 3.D handoff per
+   `wallet_treasury_client_flow_2026_05_10.md` Q1 ack. (design 0.6×, ~3 = 1.8 cal) — deployment-api@4282d6a (Phase 1
+   HMAC withdrawal approval chain endpoint + 10 compliance tests) + deployment-api@3111fd4 (client_treasury.py typing
+   fixes). **Backfilled 2026-05-15.**
+3. ✅ **DART manual-trade UX refactor implementation half** (`dart_manual_trade_ux_refactor_2026_05_13.md`) — operator
+   surface for live manual trade gate. (design 0.6×, ~4 = 2.4 cal) — deployment-api@9c608c9 (pvl-p23b strategy-runs
+   endpoint + pvl-p23c manual-pending queue API) + execution-service@1e119a61f (ManualPendingQueue + API endpoints).
+   **Backfilled 2026-05-15.**
 4. ✅ **Cluster B risk-and-exposure-service lint sweep** — C901+N802+B008. (refactor 0.4×, ~2 = 0.8 cal) Done: B008
    fixed (Annotated pattern) risk-and-exposure-service@d1d43db; C901 fixed by Harsh risk-and-exposure-service@190f34b
    (noqa on compute_risk + \_tally_illiquid_positions helper). All 3 violation types cleared.
@@ -380,7 +421,35 @@ risk-and-exposure lint.
     gains budget assertion (Ikenna-side per harsh-mock-data-benchmarking-tab ping 2026-05-12 17:08 UTC; the ONLY
     remaining gate). Wire budget assertion into the mock-data benchmark harness + flip Group F item 18 row in master
     plan. (infra 0.8×, ~7 = 5.6 cal)
-11. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+11. ✅ **[SELF-ROUTED 2026-05-14] Kraken CeFi adapter (execution-service direct REST + WebSocket scaffold)** — paired
+    with slot 5's instruments-service CCXT discovery (item #13). Execution-layer Kraken for live trading +
+    arbitrage_price_dispersion 7th venue. (design 0.6×, ~3 = 1.8 cal) — execution-service@4d4d8e12d. **Backfilled
+    2026-05-15.** Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` — operator-onboarded Kraken Pro API key incoming.
+12. ✅ **[SELF-ROUTED] DeFi Phase 7+8 — PerpHedgeSizer + HealthFactorMonitor (recursive borrow)** — execution-service.
+    (design 0.6×, ~4 = 2.4 cal) — execution-service@4d63626ac. **Backfilled 2026-05-15.**
+13. ✅ **[SELF-ROUTED] Hyperliquid LIVE perp connector** — EIP-712 + REST POST direct integration. (design 0.6×, ~3 =
+    1.8 cal) — execution-service@de4311892. **Backfilled 2026-05-15.**
+14. ✅ **[SELF-ROUTED] custody — sign_withdrawal_approval() HMAC signing + unit tests + Cloud-KMS smoke** — full custody
+    integration trio. (infra 0.8×, ~3 = 2.4 cal) — execution-service@b4fb55f93 + execution-service@98ecfdf43 +
+    execution-service@1ee9e8001. **Backfilled 2026-05-15.**
+15. ✅ **[SELF-ROUTED] Cluster B execution-service lint sweep** — N802+B008 to ruff select. (refactor 0.4×, ~2 = 0.8
+    cal) — execution-service@a1675eb69. **Backfilled 2026-05-15.**
+16. ✅ **[SELF-ROUTED] alerting ORDER*REJECTION_SPIKE + KILL_SWITCH*\* AlertCode wiring** — alerting integration.
+    (design 0.6×, ~3 = 1.8 cal) — execution-service@e78dd1bf9. **Backfilled 2026-05-15.**
+17. ✅ **[SELF-ROUTED] compute_optimization Phase 3 — parallel execution-alpha wrapper** — Phase 3 of
+    compute_optimization plan. (infra 0.8×, ~3 = 2.4 cal) — execution-service@f65a7d5d5. **Backfilled 2026-05-15.**
+18. ✅ **[SELF-ROUTED] Phase 3C harness 5th bug fix** — pre-trade block off-by-one fix in lending validation. (refactor
+    0.4×, ~1 = 0.4 cal) — execution-service@70825a432. **Backfilled 2026-05-15** (works with slot 6 phase_3c lending
+    model item).
+19. ✅ **[SELF-ROUTED] Helius Solana RPC wiring into capture_golden_swaps** — CLMM+AMM coverage. (infra 0.8×, ~2 = 1.6
+    cal) — execution-service@a300f7caa. **Backfilled 2026-05-15.**
+20. ✅ **[SELF-ROUTED] lending rate validation integration test** — companion to slot 6 phase_3c. (research 1.2×, ~1 =
+    1.2 cal) — execution-service@a09f69f18. **Backfilled 2026-05-15.**
+21. ✅ **[SELF-ROUTED] Phase 6.C ci(security) — benchmarks.yml WIF dual-path + GitHub App token scaffold** — CI security
+    hardening. (design 0.6×, ~2 = 1.2 cal) — execution-service@5bf0ae522. **Backfilled 2026-05-15.**
+22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
+    green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
+23. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 
@@ -444,8 +513,9 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. **🔴 [URGENT 2026-05-15] `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows
-    blocked B-015 paper-trade gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). Run
+13. **🔴 [URGENT 2026-05-15 — SEQUENCED AFTER SLOT 6 #14 + HARSH SLOT 9 HANDLER FIX]
+    `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows blocked B-015 paper-trade
+    gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). Run
     `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
     `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present; `--apply-flips` to
     mark rows as `attempted_failed`. Then coordinate with Harsh slot 9 to re-launch smoke VMs with phantoms cleared +
@@ -570,9 +640,8 @@ All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services
 6.x already. Slot 7 confirms β verdict + flips Gate 4 row in master plan.
 
 **✅ DONE PM@`e054700e` 2026-05-15**: β-verdict confirmed; issue doc filed at
-`plans/active/issues/writegate_phase_6_6_7_9_alpha_vs_beta_decision_2026_05_14.md`; intra-side ping to
-slot 1 main with Gate 4 master-plan update instructions. Master plan flip delegated to slot 1 main (slot-precedence
-rule).
+`plans/active/issues/writegate_phase_6_6_7_9_alpha_vs_beta_decision_2026_05_14.md`; intra-side ping to slot 1 main with
+Gate 4 master-plan update instructions. Master plan flip delegated to slot 1 main (slot-precedence rule).
 
 ### Slot 11 work distribution (~7.4 cal AI-days; cbETH retracted, Kraken re-classed)
 

@@ -390,8 +390,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       MUST require human-in-loop approval (operator UI or DART manual-trade gate per master plan Group G item 23).
   - **Verification**: unit test confirms `get_order_adapter("bybit", scope="read")` raises `OrderError` if asked to
     place an order; per-scope rate-limit budgets distinct.
-  - **DONE** execution-service@`e3f447e37`. AdapterScope + ScopedCLOBAdapter added to base_adapter.py; scope param
-    wired through factory; get_market_data_adapter + get_withdraw_adapter helpers; 20 unit tests (all pass).
+  - **DONE** execution-service@`e3f447e37`. AdapterScope + ScopedCLOBAdapter added to base_adapter.py; scope param wired
+    through factory; get_market_data_adapter + get_withdraw_adapter helpers; 20 unit tests (all pass).
 
 - [x] [AGENT] P0. **2.D — Account-level limits SSOT.** YAML at `unified-api-contracts/config/venue_account_limits.yaml`.
       Per venue: max-order-size per instrument, max-leverage per account-tier, fee tier, market-maker designation.
@@ -582,29 +582,32 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 ### 4.C.A — UAC schema extensions (slot 4 owned; ~1 cal AI-day)
 
-- [ ] [UAC] **R-18: extend `SpendingCaps` with `pct_of_balance` fields** —
+- [x] [UAC] **R-18: extend `SpendingCaps` with `pct_of_balance` fields** —
       `unified_api_contracts/internal/domain/defi/wallet_config.py:106-141` add per-period
       `pct_of_balance: Decimal | None = None` field (per_tx / per_hour / per_day / per_protocol). Add helper
       `effective_cap(period, current_balance) → min(per_period_usd, pct_of_balance × current_balance)` returning the
-      binding cap (or `None` if neither set). 3-4 new unit tests. **Owner**: slot 4 (wallet schema).
-- [ ] [UAC] **R-17: extend `WalletSpendingPreCheckResult` with 4 position-health fields** —
+      binding cap (or `None` if neither set). 3-4 new unit tests. **Owner**: slot 4 (wallet schema). (UAC@acba8cc
+      2026-05-14)
+- [x] [UAC] **R-17: extend `WalletSpendingPreCheckResult` with 4 position-health fields** —
       `unified_api_contracts/internal/execution.py` add `position_health_check: bool | None`,
       `projected_ltv: Decimal | None`, `projected_margin_ratio: Decimal | None`,
       `position_health_denial_reason: str = ""`. Update `_now()`-based tests in
       `tests/unit/test_dart_manual_action_contracts.py` + add 2 new tests (lending Layer-4 path + perp Layer-4 path).
-      **Owner**: slot 8 successor (DART contract surface; closest fit).
+      **Owner**: slot 8 successor (DART contract surface; closest fit). (UAC@acba8cc 2026-05-14)
 
 ### 4.C.B — PBM position-health endpoint (PBM owned; ~2 cal AI-days)
 
-- [ ] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current
+- [x] [SERVICE] **R-17: add `GET /positions/health?wallet_id=X` to position-balance-monitor-service** — returns current
       `{ltv, margin_ratio, liquidation_threshold, maintenance_margin}` per open position keyed by wallet. Reads PBMS
       rolling state (Aave/Compound LTV from on-chain `getUserAccountData`; perp margin ratios from venue REST). 5-second
       cache. Pydantic response per UAC `PositionHealthSnapshot` (new type — add in same UAC commit as 4.C.A). **Owner**:
-      PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first.
+      PBM service maintainer; gated on R-17 UAC schema (4.C.A) shipping first. (UAC@1fababa + PBM@e93e3e5 2026-05-15;
+      PositionHealthSnapshot in UAC execution.py; GET /positions/health route with 5s TTL cache + stale flag +
+      derive_snapshot_from_lending(); 11 tests, 539 total pass)
 
 ### 4.C.C — UTL shared pre-flight helper (UTL owned; ~2 cal AI-days)
 
-- [ ] [LIB] **R-10: ship `run_wallet_preflight_checks(instruction) → WalletSpendingPreCheckResult`** — NEW module
+- [x] [LIB] **R-10: ship `run_wallet_preflight_checks(instruction) → WalletSpendingPreCheckResult`** — NEW module
       `unified_trading_library/risk_preflight/wallet_preflight.py`. 5-layer strict-ordered short-circuit:
   1. Kill-switch (KillSwitchBus query — local, microseconds)
   2. Wallet caps (SpendingCaps effective_cap per R-13)
@@ -612,27 +615,33 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   4. Position health (PBM `/positions/health` query per R-17; 5s cache)
   5. Venue eligibility (CAPABILITY_DECLARATIONS + WalletProvisioningConfig.allowed_protocols) Audit-log row write at end
      (success OR failure). 12-15 unit tests covering each layer's pass/fail + ordering invariant + 5s cache. **Owner**:
-     UTL maintainer; gated on 4.C.A + 4.C.B contracts shipping first.
+     UTL maintainer; gated on 4.C.A + 4.C.B contracts shipping first. (UTL@b1b05343 2026-05-15; 21 tests, QG green 508s)
 
 ### 4.C.D — Execution-service runtime wire-in (execution-service owned; ~1 cal AI-day)
 
-- [ ] [SERVICE] **R-10: wire `run_wallet_preflight_checks` into execution-service order-submission path** —
+- [x] [SERVICE] **R-10: wire `run_wallet_preflight_checks` into execution-service order-submission path** —
       `execution-service/.../order_adapter.py` calls UTL helper before every venue submission; on `passed=False` emit
       `INSTRUCTION_REJECTED_WALLET_PRECHECK` lifecycle event + persist `ManualInstructionAuditLog` row + return
       rejection to caller. **Owner**: execution-service maintainer; gated on 4.C.C UTL helper shipping.
+      (execution-service@754b22bf9 2026-05-15; `_enforce_wallet_preflight()` guard + `WalletPreflightRegistry`
+      injectable; 17 tests, QG green 5916 passed)
 
 ### 4.C.E — DART /manual/instruction wire-in (already partial per slot 8 Day-3; ~0.5 cal AI-days completion)
 
-- [ ] [SERVICE] **R-10: DART endpoints consume the shared helper** — `execution-service/.../manual_instruction_api.py`
+- [x] [SERVICE] **R-10: DART endpoints consume the shared helper** — `execution-service/.../manual_instruction_api.py`
       `POST /manual/instruction` + `POST /manual/instruction/precheck` (slot 8 Day-3 `ManualInstructionPrecheckResponse`
       contract at uac@`fe8e50e`) both call `run_wallet_preflight_checks`. Precheck endpoint returns the result without
       forwarding to executor (dry-run). **Owner**: execution-service maintainer; same logical unit as 4.C.D.
+      (execution-service@754b22bf9 2026-05-15; same commit as 4.C.D — `/instruction/precheck` added; fail-open for
+      unmanaged wallets)
 
 ### 4.C.F — Strategy-service forward wire-in (strategy-service owned; ~0.5 cal AI-days)
 
-- [ ] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls
+- [x] [SERVICE] **R-10: strategy emission also runs pre-flight** — `strategy-service` forward path to execution calls
       `run_wallet_preflight_checks` BEFORE handoff. Failure rejects the strategy emission + emits alert. **Owner**:
-      strategy-service maintainer; gated on 4.C.C.
+      strategy-service maintainer; gated on 4.C.C. (strategy-service@7809012 2026-05-15;
+      StrategyWalletPreflightRegistry + \_filter_strategy_emissions_preflight() in V2EngineOrchestrator.on_tick();
+      wallet_id propagated definition→identity; 18 tests, QG green 141s)
 
 ### 4.C.G — Per-venue safety-margin tuning (operator + risk-plan owner; ~0.5 cal AI-day)
 
@@ -704,8 +713,8 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
     - 3 workflow templates updated with env-detection + per-env token selection.
     - `secret-health-check.yml` updated to validate all 3 per-env tokens.
     - `major-bump-issue-handler.yml` PM workflow updated with env-detection.
-    - Operator ping filed: `ikenna_orchestrator/pings/slot_6.md` — operator must provision 3 Telegram bots +
-      set `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` + `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets/vars.
+    - Operator ping filed: `ikenna_orchestrator/pings/slot_6.md` — operator must provision 3 Telegram bots + set
+      `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` + `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets/vars.
     - Status: `BLOCKED-OPERATOR` until bot tokens provisioned. Backward compat: legacy token still works.
 
 - [ ] [SCRIPT] P0. **6.B — Firebase service-account JSON storage. — DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM

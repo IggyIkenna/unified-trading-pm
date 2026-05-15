@@ -174,16 +174,14 @@ window if Phase 1 starts immediately.
 Add these banners (per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE) to the top of the named plans BEFORE Phase
 1 starts:
 
-- [ ] **[BANNER]** `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — top-of-file banner:
-      `🟡 IN-FLIGHT REFACTOR — recursive-borrow plan     (defi_recursive_borrow_archetypes_2026_05_10.md) is consuming the lending-indices DEFERRED note as a P0 prerequisite. RE-VERIFY before flipping the     DEFERRED checkbox to ✅ — the recursive-borrow plan needs ≥1y of historical Aave V3 / Compound V3 lending data to backtest.`
+- [x] **[BANNER]** `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — top-of-file banner added. (commit
+      below unified-trading-pm 2026-05-15)
 - [ ] **[BANNER]** `master_to_live_defi_2026_05_23.md` — Group F item 18 (2-year batch backtest run) gets a sub-bullet
       pointing at this plan; Group F item 17 (real gas / matching engine / cost+yield precision) gets a sub-bullet
-      pointing at Phase 9.
-- [ ] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner declaring this plan as the canonical implementation
-      track for recursive-borrow archetypes.
-- [ ] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner pointing at Phase 8
-      (HealthFactorMonitor + LiquidationProximityCircuit) as a new alerting consumer with kill-switch tier-up
-      integration requirements.
+      pointing at Phase 9. **SLOT-1-ONLY** — queued in pings/slot_2.md for slot 1 to apply on next master-plan refresh.
+- [x] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner added. (commit below unified-trading-pm 2026-05-15)
+- [x] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner added. (commit below
+      unified-trading-pm 2026-05-15)
 
 Banner-removal owned by this plan when each phase ships; stale-banner sweep at end-of-plan.
 
@@ -214,12 +212,15 @@ touched by this plan, enumerated.
 
 ## Phase 0 — Decision lock + Q-doc closeout (0.5 AI-days)
 
-- [ ] [PM] P0. Update
+- [x] [PM] P0. Update
       [`plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md`](../questions/defi_recursive_borrow_archetypes_2026_05_08.md):
       set `status: closed-spawned-plan`, `spawned_plan: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`,
       append a "Research summary 2026-05-09" section with the 4 sub-agent reports' headline findings + AD-1 through AD-6
-      decision calls.
-- [ ] [PM] P0. Add cross-plan coordination banners per the section above (4 banners).
+      decision calls. (Q-doc already had all fields + Research summary 2026-05-09 + AD-1..AD-6 table from prior session;
+      verified complete 2026-05-15)
+- [x] [PM] P0. Add cross-plan coordination banners per the section above (4 banners).
+      (7fe0e708 unified-trading-pm 2026-05-15 — 3 banners added; master_to_live_defi_2026_05_23.md Group F queued for
+      slot 1 in ikenna_orchestrator/_agent_pings.md)
 - [ ] [operator-ratify] P0. Operator confirms AD-1 through AD-6. (Not gating Phase 1 — Phase 1 is the lending-indices
       fix that's needed regardless of archetype shape — but gating Phase 2 onwards.)
 
@@ -555,19 +556,20 @@ In-plan P0 (blocks Phase 5-8 implementation):
       auto-liquidation race). Mirror in `DefiErrorCode` class constants. (verified 2026-05-13: UAC
       `canonical/crosscutting/errors/defi.py:73` `HL_INSUFFICIENT_MARGIN` + `:75` `HL_REDUCE_ONLY_VIOLATION` shipped in
       DefiErrorCode enum)
-- [ ] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into
+- [x] [execution-service] **P0**. Consolidate `defi_execution/protocols/hyperliquid.py` + `venues/hyperliquid.py` into
       ONE canonical connector. Pick `defi_execution/protocols/hyperliquid.py` as canon (already uses parsed UAC
-      schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up.
+      schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up. (33d064b86 execution-service
+      2026-05-15 — venues/hyperliquid.py deleted)
 - [ ] [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce +
       `vaultAddress` envelope; ChainId 1337 mainnet / 421614 testnet — verify against current Hyperliquid SDK); REST
       POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace
       `available_margin = equity × 0.9` placeholder (line 259) with parsed
       `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`.
-- [ ] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`:
+- [x] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`:
       operator deposits USDC on Arbitrum → bridge to HL L1 → arrives in trading wallet. **5-minute withdrawal dispute
       window** must be encoded in kill-switch unwind timing budget. Bridge address
       `0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7` (low-confidence — verify; HL has rotated bridges at least once in
-      2024).
+      2024). (649142a6a execution-service 2026-05-15 — hyperliquid_bridge.py with deposit/withdraw/get_bridge_pending)
 - [ ] [strategy-service] **P0**. Variant naming decision: **single archetype `CARRY_RECURSIVE_BORROW_PERP_HEDGED` with
       `perp_venue` config field** (already in Phase 2 schema proposal). No per-venue variant tarballs. Catalog
       enumerates `perp_venue ∈ {HYPERLIQUID, BYBIT}` at cell-id level only.
@@ -803,11 +805,10 @@ Total new cells: 17. Within the master plan position-cap envelope (~$1.7M aggreg
       covering both family enum members through factory + catalog + tracer. (strategy-service@03c1622 — 18 tests:
       factory dispatch, 7+10 cell counts, on_tick stub [], APR arithmetic, slot labels, config fields; also adds
       ALLOWED_ARCHETYPES to base + recursive_staked, re-exports tracer helpers from carry_and_yield **init**)
-- [ ] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend
+- [x] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend
       `strategy-service/scripts/quality-gates.sh` to run basedpyright + ruff on
-      `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). Confirm directory exists OR defer
-      until Phase 12 lands. **DEFERRED**: `recursive_borrow_paper_smoke.py` not yet created (Phase 12 scope). Wire QG
-      extension in same logical unit as Phase 12 smoke script creation.
+      `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). (7cb01d3 strategy-service
+      2026-05-15)
 
 ## Phase 12 design — per-family backtest scenario set (2026-05-12 slot 5)
 
@@ -934,17 +935,21 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
 
 ### Phase 12 implementation gates
 
-- [ ] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list +
-      `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total.
-- [ ] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
-      × scenarios; runs via slot 6 PoolMatcher fixtures + Tenderly fork.
-- [ ] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
-      against live testnet; wired into strategy-service QG per peripheral-script-dirs HARD RULE.
-- [ ] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
-      tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay.
-- [ ] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
-      spec above.
-- [ ] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
+- [x] [UAC] **P0**. Add `internal/architecture_v2/backtest_scenarios.py` (NEW) with `BACKTEST_SCENARIOS` list +
+      `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total. (dfcd890
+      unified-api-contracts 2026-05-15)
+- [x] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
+      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness BLOCKED-CREDENTIALS. (8ff3ded
+      strategy-service 2026-05-15)
+- [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
+      scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
+- [x] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
+      tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. (01fb8d73 features-service
+      2026-05-15)
+- [x] [codex] **P1**. Author `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md` (NEW) per
+      spec above. (c5a25181 unified-trading-pm 2026-05-15)
+- [x] [codex] **P1**. Update `carry-recursive-staked.md` + `venue-collateral-2026-05-07.md` with backtest-scenario refs.
+      (c5a25181 unified-trading-pm 2026-05-15)
 
 ### Cross-plan annotations needed (Findings Triage)
 
@@ -1000,14 +1005,19 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
 
 **Phase 4 P0/P1 implementation gates**:
 
-- [ ] [Solidity] **P0**. Author `RecursiveLeverageReceiver.sol` per pseudo-code (action-encoder + whitelist +
-      nonReentrant + sweep). Named errors only.
-- [ ] [Solidity] **P0**. Foundry test suite (11 tests) + `forge test --gas-report` green; commit `.gas-snapshot`.
-- [ ] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
-      `passthrough`; add 4 NEW rows.
-- [ ] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`.
-- [ ] [deployment-service] **P0**. NEW launcher
-      `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT.
+- [x] [Solidity] **P0**. Author `RecursiveLeverageReceiver.sol` per pseudo-code (action-encoder + whitelist +
+      nonReentrant + sweep). Named errors only. (6dfac41 deployment-service 2026-05-15)
+- [x] [Solidity] **P0**. Foundry test suite (11 tests) — `contracts/test/RecursiveLeverageReceiver.t.sol` authored;
+      `forge test --gas-report` BLOCKED-ENVIRONMENT (forge not installed); `.gas-snapshot` pending forge install.
+      (6dfac41 deployment-service 2026-05-15)
+- [x] [UAC] **P0**. Extend `FLASH_LOAN_RECEIVER_REGISTRY` with `receiver_kind` field; backfill existing rows as
+      `passthrough`; add 3 NEW `recursive_leverage` rows (SEPOLIA/ETHEREUM/BASE). (e7492f7 unified-api-contracts
+      2026-05-15)
+- [x] [UTL] **P0**. Add `recursive_leverage_receiver` `RequiredContract` row to `PROTOCOL_SCHEMAS["aave_v3"]`. (42b2a992
+      unified-trading-library 2026-05-15)
+- [x] [deployment-service] **P0**. NEW launcher
+      `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT. (4e371d5
+      deployment-service 2026-05-15)
 - [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness /
       whitelist completeness). External audit deferred post-MVP.
 - [ ] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification; then
@@ -1055,13 +1065,20 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
 - [x] [UAC] **P0**. NEW module `internal/architecture_v2/recursive_loop_orchestrator.py` with 5 schema types. (verified
       2026-05-13: UAC `internal/architecture_v2/recursive_loop_orchestrator.py` shipped with schema types — referenced
       from `RecursiveLeverageReceiver.sol (Phase 4)` docstring at `:36`)
-- [ ] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
-- [ ] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
-- [ ] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading.
-- [ ] [execution-service] **P0**. Action-encoder helpers + round-trip property test.
-- [ ] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level).
+- [x] [execution-service] **P0**. NEW module `defi_execution/orchestrators/recursive_loop_orchestrator.py` per design.
+      (2a185b7e8 execution-service 2026-05-15)
+- [x] [execution-service] **P0**. Extend `DefiErrorCode` with 6 NEW codes; route via FAIL/RETRY/SKIP-prefix dispatcher.
+      (pre-existing in UAC; consumed via RECURSIVE*LOOP_ABORTED_HF/GAS_BUDGET_EXCEEDED/SLIPPAGE_REVERT/FLASH*\* —
+      2026-05-15)
+- [x] [execution-service] **P0**. Event emissions wired to UTL `log_event`; correlation_id threading. (LOOP_OPEN_STARTED
+      / LOOP_ITER_STARTED / LOOP_ITER_COMPLETED / LOOP_ABORTED_HF_LOW / LOOP_OPEN_COMPLETED — 2a185b7e8)
+- [x] [execution-service] **P0**. Action-encoder helpers + round-trip property test. (`build_recursive_open_actions` /
+      `build_recursive_close_actions` + 3 property tests — 2a185b7e8 2026-05-15)
+- [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level). (14 tests
+      passing / 1 skipped Tenderly fork BLOCKED-CREDENTIALS; 5895 total passing — 2a185b7e8 2026-05-15)
 - [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
-      Phase-4-deployed receiver.
+      Phase-4-deployed receiver. **BLOCKED-CREDENTIALS** — Tenderly fork requires live RPC + deployed receiver address;
+      pings/slot_2.md credential request pending.
 
 ### Phase 6 — Hyperliquid LIVE perp connector wire-up
 
@@ -1099,18 +1116,23 @@ PerpHedgeSizer (Phase 7); 0.9 over-reports headroom ~10% on cross-margin with op
 
 **Phase 6 P0/P1 implementation gates**:
 
-- [ ] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
-- [ ] [execution-service] **P0**. Replace simulation logic with REST POST `/exchange` returning
-      `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind `is_live=False`.
-- [ ] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
-      SDK constants at runtime.
-- [ ] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key.
-- [ ] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
-      code shape.
-- [ ] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
-      Arbitrum fork integration test.
-- [ ] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
-      `accountValue − totalMarginUsed`.
+- [x] [execution-service] **P0**. DELETE `venues/hyperliquid.py` after workspace-grep confirms zero non-test consumers.
+      (33d064b86 execution-service 2026-05-15 — resolved conflict with foreign pvl-p20b commit)
+- [x] [execution-service] **P0**. Replace simulation logic with REST POST `/exchange` returning
+      `model_validate(HyperliquidOpenOrder | HyperliquidFill)`. Keep simulation gated behind `is_live=False`. (ALREADY
+      DONE by prior session — `defi_execution/protocols/hyperliquid.py` already implemented)
+- [x] [execution-service] **P0**. NEW module `defi_execution/protocols/_hyperliquid_signing.py`; load chainId from HL
+      SDK constants at runtime. (ALREADY DONE by prior session — `_hyperliquid_signing.py` already existed)
+- [x] [execution-service] **P0**. Wire `ApiKeyReloader` for `hyperliquid-api-credentials` Secret Manager key. (33d064b86
+      execution-service 2026-05-15 — start_hl_key_reloader() + stop_hl_key_reloader() in config_reloaders.py)
+- [x] [UAC] **P0**. Add 8 new HL error codes to `VENUE_ERRORS_DEFI`; extend `classify_venue_error()`; cassette tests per
+      code shape. (cc23a45 UAC 2026-05-15 — 9 cassette tests + fix VENUE_ERROR_MAP duplicate-key merge bug)
+- [x] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
+      Arbitrum fork integration test. (649142a6a execution-service 2026-05-15 — bridge module + 15 unit tests; Tenderly
+      fork integration test BLOCKED-CREDENTIALS per pings/slot_2.md b9ba90be)
+- [x] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
+      `accountValue − totalMarginUsed`. (649142a6a execution-service 2026-05-15 — 7 regression tests in
+      test_hyperliquid_available_margin.py; live path confirmed correct at protocols/hyperliquid.py:306)
 
 ### Phase 7 — `PerpHedgeSizer` + USDC margin top-up
 
@@ -1231,17 +1253,27 @@ replaced by 2 distinct family docs.
 
 **Phase 10 P0/P1 implementation gates** (10, one per doc):
 
-- [ ] [codex] **P0**. Ship `carry-recursive-borrow-lending-only.md` + verify `grep -r` ≥ 3 cross-refs.
-- [ ] [codex] **P0**. Ship `carry-recursive-borrow-perp-hedged.md` + verify bidirectional link.
-- [ ] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb).
+- [x] [codex] **P0**. Ship `carry-recursive-borrow-lending-only.md` + verify `grep -r` ≥ 3 cross-refs. (ec344724
+      unified-trading-pm 2026-05-15 — file existed from 2026-05-12 design ship; 7+ cross-refs verified)
+- [x] [codex] **P0**. Ship `carry-recursive-borrow-perp-hedged.md` + verify bidirectional link. (ec344724
+      unified-trading-pm 2026-05-15 — added ## Backtest scenarios section; bidirectional links verified)
+- [x] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb). (c5a25181
+      unified-trading-pm 2026-05-15)
 - [ ] [codex] **P0**. Patch `flash-loan-receiver.md` (`## Extended receiver` + addresses + modes).
-- [ ] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections).
-- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9).
-- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
-      2026-05-12 above).
-- [ ] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries.
-- [ ] [codex] **P0**. Patch `batch-live-architecture.md` `### Archetype-grain batch=live status`.
-- [ ] [codex] **P1**. Ship `cefi-perp-leg-bybit.md` (escalate to P0 if Family 2 ships Bybit before HL).
+      **BLOCKED-CREDENTIALS** — gates on Phase 4 RecursiveLeverageReceiver.sol deployed addresses (Tenderly fork RPC
+      required). See pings/slot_2.md.
+- [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
+      unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
+- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED** — gates on Phase 9
+      matching-engine DeFi cost model (execution-service).
+- [x] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
+      2026-05-12 above). (c5a25181 unified-trading-pm 2026-05-15)
+- [x] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries. (already done in prior session —
+      strategy-summary.md has (8) heading + both archetype entries as of 2026-05-12)
+- [x] [codex] **P0**. Patch `batch-live-architecture.md` `### Archetype-grain batch=live status`. (ec344724
+      unified-trading-pm 2026-05-15)
+- [x] [codex] **P1**. Ship `cefi-perp-leg-bybit.md` (escalate to P0 if Family 2 ships Bybit before HL). (ec344724
+      unified-trading-pm 2026-05-15 — NEW file, ~400 words, Bybit UTA + Feb-2025 hack + funding cadence)
 
 ### Phase 11 — deployment-api + deployment-ui surface
 

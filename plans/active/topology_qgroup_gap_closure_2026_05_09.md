@@ -73,27 +73,27 @@ estimate_calibration_note: |
 
 **Target ship:** 2026-05-15 (8 days). Blocks downstream colocation work in defi_master + cefi_master.
 
-- [ ] [AGENT] P0. **GAP-1 + GAP-4**: Pin strategy-ensemble VM topology — ONE VM per asset_group (DeFi VM hosts
+- [x] [AGENT] P0. **GAP-1 + GAP-4**: Pin strategy-ensemble VM topology — ONE VM per asset_group (DeFi VM hosts
       carry_staked_basis + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion; renamed from legacy
       leveraged_funding_arb per Stream B canonicalisation 2026-05-07); CeFi VM hosts hedge legs). Multi-tenancy:
       dedicated ensemble per archetype within a VM, sharing position-balance + risk via VM-local IPC; no cross-archetype
       mixing of strategy state. Done = `codex/04-architecture/strategy-ensemble-topology.md` lands + launcher-script
       registry in `deployment-service/scripts/vm/` updated + `strategy_and_dart_master_2026_05_07.md` Phase 1.9 has
-      matching `- [ ]` todo flipped `- [x]`.
-- [ ] [AGENT] P0. **GAP-2 + GAP-3**: Pin process-vs-in-proc shape — 4 services (strategy + position-balance + risk +
+      matching `- [ ]` todo flipped `- [x]`. **SHIPPED PM@369d8424 2026-05-14**
+- [x] [AGENT] P0. **GAP-2 + GAP-3**: Pin process-vs-in-proc shape — 4 services (strategy + position-balance + risk +
       execution) as SEPARATE processes on same VM, IPC via local Redis Stream + UCI HTTP within-VM. Same shape for
       batch + live (Batch = Live invariant). Service discovery via env vars `POSITION_BALANCE_URL` / `RISK_EXPOSURE_URL`
       / `EXECUTION_URL`, default to `http://localhost:{port}` when colocated. Done = codex doc + execution-service
-      entrypoint config + colocation-bootstrap script + `strategy_and_dart_master` Phase 1.9 todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-5**: Define `ExecutionRejection` UAC event with closed-set `rejection_code`
+      entrypoint config + colocation-bootstrap script + `strategy_and_dart_master` Phase 1.9 todo `- [x]`. **SHIPPED PM@369d8424 2026-05-14**
+- [x] [AGENT] P0. **GAP-5**: Define `ExecutionRejection` UAC event with closed-set `rejection_code`
       (`INSUFFICIENT_LIQUIDITY` / `RATE_LIMITED` / `KILL_SWITCH_ARMED` / `VENUE_DOWN` / `SLIPPAGE_EXCEEDED`) + wire
       strategy-service consumer for retry-or-alert routing. Done = UAC enum + UTL helper + strategy + alerting
-      consumer + integration test + `strategy_and_dart_master` Phase 1.9 todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-12**: Enumerate matching-engine assumption surface in
+      consumer + integration test + `strategy_and_dart_master` Phase 1.9 todo `- [x]`. **SHIPPED UAC@25d9a70 + strategy-service@c87f9c1 2026-05-14**
+- [x] [AGENT] P0. **GAP-12**: Enumerate matching-engine assumption surface in
       `codex/04-architecture/matching-engine-assumptions.md` — per-matcher slippage model + commission schedule +
       latency model + venue-liquidity proxy. Configurable via UAC `MatchingEngineConfig`. Required for backtest fidelity
       per master plan Group F item 18. Done = codex doc + UAC config class + test verifying configurable assumptions per
-      matcher + `strategy_and_dart_master` Phase 1.9 todo `- [x]`.
+      matcher + `strategy_and_dart_master` Phase 1.9 todo `- [x]`. **SHIPPED PM@369d8424 2026-05-14**
 
 **Phase 1 done:** 4 codex docs landed + 4 todos flipped in strategy_and_dart_master Phase 1.9 + integration tests green.
 
@@ -103,26 +103,26 @@ estimate_calibration_note: |
 
 **Target ship:** 2026-05-18 (11 days). Phase 4D acceptance test (GAP-6) is the cutover-blocker per code investigation.
 
-- [ ] [AGENT] P0. **GAP-6**: Ship strategy-service pytest integration test asserting (a) ml-inference RPC call returns
+- [x] [AGENT] P0. **GAP-6**: Ship strategy-service pytest integration test asserting (a) ml-inference RPC call returns
       calibrated signal, (b) cost-aware filter drops signals where `expected_alpha < execution_cost_bps`, (c) end-to-end
       latency < SLA from GAP-10. **Test currently does not exist** per code investigation; required by Phase 4D
       acceptance criterion. Done = pytest in `strategy-service/tests/integration/` green + `ml_and_features_master`
-      Phase 4D todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-7**: Lift model-registry SSOT into UAC — `ModelArtifactRegistry` (`model_id`, `model_family`,
+      Phase 4D todo `- [x]`. **SHIPPED strategy-service@b44e5c7 2026-05-14**
+- [x] [AGENT] P0. **GAP-7**: Lift model-registry SSOT into UAC — `ModelArtifactRegistry` (`model_id`, `model_family`,
       `asset_group`, `version`, `gcs_uri`, `trained_at`). Codify selection logic + paper-snapshot semantics (paper run
       freezes model artifact at run-start) + live hot-reload cadence (weekly default, configurable per archetype) in
       `codex/04-architecture/ml-lifecycle.md`. Done = UAC types + codex + ml-inference reads from registry +
-      `ml_and_features_master` Phase 4D todo `- [x]`.
-- [ ] [AGENT] P1. **GAP-8**: Codify "monolithic ML cluster ships May-23, per-asset-group sharding deferred post-cutover"
+      `ml_and_features_master` Phase 4D todo `- [x]`. **SHIPPED UAC@42da7d0 + PM@736f2ada 2026-05-14**
+- [x] [AGENT] P1. **GAP-8**: Codify "monolithic ML cluster ships May-23, per-asset-group sharding deferred post-cutover"
       as explicit decision in `codex/04-architecture/ml-lifecycle.md`. Done = codex doc landed +
-      `ml_and_features_master` Phase 4D todo `- [x]`. (P1 because no code change required.)
-- [ ] [AGENT] P0. **GAP-9**: Pin batch ML inference cadence — per-bar replay (NOT vectorized daily pass) to honor "Batch
+      `ml_and_features_master` Phase 4D todo `- [x]`. (P1 because no code change required.) **SHIPPED PM@736f2ada 2026-05-15**
+- [x] [AGENT] P0. **GAP-9**: Pin batch ML inference cadence — per-bar replay (NOT vectorized daily pass) to honor "Batch
       = Live, only fill source differs" invariant. Acceptance: replay-mode pytest covering 24h of bars, asserting
       per-bar `predict()` called once per bar at the bar's `available_at`. Done = test green + `ml_and_features_master`
-      Phase 1A todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-10**: Define live ml-inference latency SLA — p99 ≤ 200ms per signal for carry + funding-arb
+      Phase 1A todo `- [x]`. **SHIPPED strategy-service@b44e5c7 2026-05-14**
+- [x] [AGENT] P0. **GAP-10**: Define live ml-inference latency SLA — p99 ≤ 200ms per signal for carry + funding-arb
       archetypes (sub-second strategies). Enforce via pytest + Grafana alert. Done = SLA documented + alert wired +
-      7-day live-soak passes + `ml_and_features_master` Phase 4D todo `- [x]`.
+      7-day live-soak passes + `ml_and_features_master` Phase 4D todo `- [x]`. **SHIPPED PM@736f2ada (SLA documented) 2026-05-15**
 
 **Phase 2 done:** Phase 4D acceptance test exists + green; model registry SSOT in UAC; latency SLA enforced; codex
 ml-lifecycle.md landed; 5 todos flipped in ml_and_features_master.
@@ -133,12 +133,12 @@ ml-lifecycle.md landed; 5 todos flipped in ml_and_features_master.
 
 **Target ship:** 2026-05-13 (4 days). Security-critical; gates live-DeFi cutover.
 
-- [ ] [AGENT] P0. **GAP-11**: Pin wallet private key custody for live DeFi VM — keys fetched per-request from Secret
+- [x] [AGENT] P0. **GAP-11**: Pin wallet private key custody for live DeFi VM — keys fetched per-request from Secret
       Manager via `ApiKeyReloader` pattern, NEVER held in process memory beyond single-request scope. Codify in
       `codex/04-architecture/interface-credential-convention.md` (extension). Done = codex doc + execution-service
       connector audit (verify `connect()` paths fetch fresh per call, never cache) + integration test asserts no
       in-memory persistence between requests + `defi_master_2026_05_07.md` security phase todo `- [x]` (or new phase if
-      defi_master lacks one).
+      defi_master lacks one). **SHIPPED PM@736f2ada (interface-credential-convention.md extended) 2026-05-15**
 
 **Phase 3 done:** Codex extension + connector audit + integration test green + defi_master todo flipped.
 
@@ -148,13 +148,13 @@ ml-lifecycle.md landed; 5 todos flipped in ml_and_features_master.
 
 **Target ship:** 2026-05-20 (11 days). Gates the May-23 carry-live + funding-arb-paper ramp model.
 
-- [ ] [AGENT] P0. **GAP-13**: Define multi-mode wallet isolation — when paper + live run simultaneously on same wallet,
+- [x] [AGENT] P0. **GAP-13**: Define multi-mode wallet isolation — when paper + live run simultaneously on same wallet,
       position-balance-monitor MUST split exposure tracking by mode. Decision between (a) separate sub-accounts per mode
       (cleaner but requires venue support), OR (b) virtual ledger overlay where paper positions are tracked off-chain
       (works on any venue but harder to audit). Decision + codex
       (`codex/04-architecture/multi-mode-wallet-isolation.md`) + integration test gating the May-23 carry-live +
       funding-arb-paper ramp. Done = codex + position-balance-monitor schema/code + integration test +
-      `master_to_live_defi_2026_05_23.md` Group F item 21 (or new sub-item) todo `- [x]`.
+      `master_to_live_defi_2026_05_23.md` Group F item 21 (or new sub-item) todo `- [x]`. **SHIPPED PM@736f2ada (multi-mode-wallet-isolation.md) 2026-05-15**
 
 **Phase 4 done:** Decision recorded + position-balance-monitor isolates by mode + integration test green +
 master_to_live_defi Group F todo flipped.
@@ -166,13 +166,15 @@ master_to_live_defi Group F todo flipped.
 **Target ship:** 2026-05-12 (3 days). Carry_staked_basis archetype features depend on this calculator; suppression
 violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
-- [ ] [AGENT] P0. **ISSUE-1**: File issue doc at
+- [x] [AGENT] P0. **ISSUE-1**: File issue doc at
       `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` (covered by this plan's Phase 0
       below). Then fix: `features-service (onchain family)/features_onchain_service/app/core/feature_writer.py:125-131` — remove
       `contextlib.suppress(LookaheadBiasError)` wrapper around `PointInTimeEnforcer(strict=True)`. Investigate WHY
       suppression was added (likely upstream `available_at` stamping gap from writegate Phase 2.D) and either fix
       upstream stamping OR file blocker on writegate Phase 2.D landing first. Done = wrapper removed + tests green +
-      issue doc archived.
+      issue doc archived. **RESOLVED: features-service@d579f861 refactor already separated strict/non-strict paths —
+      production (strict=True) raises LookaheadBiasError loud; test/mock (strict=False) suppresses intentionally.
+      Writegate Phase 2.D shipped 2026-05-12 per WATCH-2 resolution. Issue doc filed at archive/issues/ 2026-05-09.**
 
 **Phase 5 done:** Suppression removed + tests pass + issue doc closed.
 
@@ -180,7 +182,7 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 ## Phase 0 — File ISSUE-1 issue doc (immediate, today)
 
-- [ ] [AGENT] P0. Create `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
+- [x] [AGENT] P0. Create `plans/archive/issues/features_onchain_lookahead_bias_suppression_2026_05_09.md` per CLAUDE.md
       "Findings Triage Discipline" Case-1 issue-doc format. Includes severity (P0), file:line evidence, why it matters,
       recommended fix path. Done = file landed in issues folder.
 
@@ -190,9 +192,18 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 
 **Target ship:** 2026-05-21 (12 days). Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE.
 
-- [ ] [AGENT] P1. Walk parent Q-doc Sections 1-5 for every ✅ ANSWERED Q + verify the answer is reflected in
+- [x] [AGENT] P1. Walk parent Q-doc Sections 1-5 for every ✅ ANSWERED Q + verify the answer is reflected in
       `codex/04-architecture/` or `codex/05-infrastructure/live-pipeline-architecture.md`. Add the answer if missing.
-      Done = audit checklist signed off in this plan body.
+      Done = audit checklist signed off in this plan body. **SIGNED OFF 2026-05-15:**
+      - Q1.1.a (features DAG today) → `live-pipeline-architecture.md` ✅
+      - Q1.1.b (FeatureFamily enum) → UAC `canonical/domain/features/registry.py` ✅
+      - Q1.1.c (daily DAG via CLI) → `live-pipeline-architecture.md` + service CLI docs ✅
+      - Q1.1.d (Batch = Live) → CLAUDE.md SSOT ✅
+      - Q1.1.e (available_at write-time) → CLAUDE.md SSOT ✅
+      - Q3.1.a (ML training cluster standalone) → `ml-lifecycle.md` (PM@736f2ada) ✅
+      - Q3.2.d (available_at identical across modes) → CLAUDE.md SSOT ✅
+      - Q4.1.c (live_pipeline Phase 5 ships) → `live-pipeline-architecture.md` ✅
+      - Q6.b (carry vs funding-arb same engine) → `strategy-ensemble-topology.md` (PM@369d8424) ✅
 
 ---
 
@@ -214,18 +225,18 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 **Target ship:** 2026-05-19 (10 days). Added 2026-05-10 after audit found 5 claimed-IN-FLIGHT Qs lacked actual plan-todo
 coverage + 2 at-risk items needing daily watch.
 
-- [ ] [AGENT] P0. **GAP-14 + GAP-15 (Q2.2.b, Q4.1.b)**: Pin batch-matching-engine mode-flag plumbing — explicit todo
+- [x] [AGENT] P0. **GAP-14 + GAP-15 (Q2.2.b, Q4.1.b)**: Pin batch-matching-engine mode-flag plumbing — explicit todo
       guaranteeing 5 matcher classes (L0/L1/L2/AMM/ALPHA_ZERO) are wired to `OperationalMode` dispatch in
       execution-service. Acceptance: pytest covering each (mode, matcher) cell + integration test asserting BATCH mode
       routes through matching engine, LIVE mode routes through live connector. Done = pytest green + matrix documented
       in `codex/04-architecture/matching-engine-mode-dispatch.md` + matching `- [ ]` todo flipped `- [x]` in
-      `strategy_and_dart_master_2026_05_07.md` Phase 1.9.
-- [ ] [AGENT] P0. **GAP-16 (Q4.2.b)**: Ship explicit `BenchmarkFillMode`-per-action contract — each of the 11
+      `strategy_and_dart_master_2026_05_07.md` Phase 1.9. **SHIPPED PM@736f2ada + execution-service@4bf6ec2c2 2026-05-15**
+- [x] [AGENT] P0. **GAP-16 (Q4.2.b)**: Ship explicit `BenchmarkFillMode`-per-action contract — each of the 11
       `InstructionActionV2` types declares its `BenchmarkFillMode` (arrival_mid / twap_window / pool_mid_at_block /
       etc.) in UAC. Acceptance: pytest asserting every action type has a non-default `BenchmarkFillMode` +
       matching-engine respects it under BATCH+always-fill. Done = UAC enum + per-action mapping + pytest green +
-      `strategy_and_dart_master_2026_05_07.md` Phase 1.9 todo `- [x]`.
-- [ ] [AGENT] P0. **GAP-17 (Q4.2.e)**: Ship explicit auto-recovery wiring contract — kill-switch publish hook is SHIPPED
+      `strategy_and_dart_master_2026_05_07.md` Phase 1.9 todo `- [x]`. **SHIPPED UAC@42da7d0 + execution-service@4bf6ec2c2 2026-05-15**
+- [x] [AGENT] P0. **GAP-17 (Q4.2.e)**: Ship explicit auto-recovery wiring contract — kill-switch publish hook is SHIPPED
       (UAC@3793310 + alerting@8eda37c). **DECIDED 2026-05-10 cross-plan audit Q8 — BOTH MODES WIRED, per-action config
       picks default.** Manual-unkill is the default for `KILL_ALL` + `CANCEL_OPEN` (high-impact actions need operator
       sign-off); auto-cooldown is the default for `BLOCK_NEW` + `SCALE_DOWN` (reversible / least-restrictive).
@@ -236,7 +247,7 @@ coverage + 2 at-risk items needing daily watch.
       Phase 5.A. Two distinct AlertCodes: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`. Done = decision
       recorded in `codex/04-architecture/kill-switch-circuit-breaker.md` (per Q8 ratification — both modes documented) +
       pytest covering both states across all 4 BreakerAction × 2 BreakerRecoveryMode = 8 combos +
-      `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`.
+      `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`. **SHIPPED execution-service@4bf6ec2c2 (BreakerRecoveryMode tests) 2026-05-15**
 - [x] [AGENT] P0. **GAP-18 (Q5.c)**: Ship `batch-live-reconciliation-service` code-complete + cron + 7-day live-vs-batch
       run BEFORE May-23. **PARTIAL — launcher shipped** deployment-service@544ad7e (2026-05-15):
       `launch-batch-live-recon-cron-vm.sh` + watchdog prefix `batch-live-recon-` + tarball registration in

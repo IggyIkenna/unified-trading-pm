@@ -113,9 +113,11 @@ the rollup-math incident (ARBITRUM 32/54) are both this class.
 - [x] [deployment-api] P0. `tests/unit/test_chain_breakdown_shards_vs_dates.py` — synthesize a manifest with multiple
       data_types and instruments per chain; assert `_build_chain_breakdown` returns `shards_expected ≫ dates_expected`.
       Catches the rollup-math incident. (deployment-api@6cfed38 — test exists + passes)
-- [ ] [deployment-ui] P0. `tests/contracts/test_drilldown_response_shape.test.ts` — Vitest test that pins the
+- [x] [deployment-ui] P0. `tests/contracts/test_drilldown_response_shape.test.ts` — Vitest test that pins the
       `DrilldownResponse` interface shape against a golden JSON snapshot. Catches API drift where a field rename (e.g.
-      `total_top_axis_children` → `total`) silently breaks the UI.
+      `total_top_axis_children` → `total`) silently breaks the UI. (deployment-ui@f747e38 — 17 tests: TypeScript
+      compile-time assignment-narrowing + runtime Object.keys assertions for DrilldownTotals, DrilldownNode,
+      DrilldownResponse; critical regression guard pins total_top_axis_children as the pagination field name)
 
 ### B. UAC canonical-types alignment (cross-service field parity)
 
@@ -187,8 +189,11 @@ orchestrator-skip flow.
       the captured shard; assert the orchestrator's `preflight_captured_atoms` skip path fires without re-fetching.
       Catches the user's 2026-05-07 directive: "service responds to it, respects it, and is run without --force so that
       it skips already existing shards." (deployment-api@6ab227b — test exists + passes; 3 class tests + 3 parametrized)
-- [ ] [deployment-ui] P0. `tests/components/DeployMissingButton.test.tsx` — already partially shipped; extend with tests
+- [x] [deployment-ui] P0. `tests/components/DeployMissingButton.test.tsx` — already partially shipped; extend with tests
       for the warning panel rendering on `tarball-from-local` mode + the mode-toggle re-fetch behavior.
+      (deployment-ui@79548a6 — 19 tests in tests/unit/components/DeployMissingButton.test.tsx: tarball-from-local
+      LOCAL-ONLY warning panel, mode-toggle re-fetch issues second postDeployMissingPreview call, env-based blocking
+      staging/production/development, copy, close, error handling)
 
 ### E. Cloud-agnostic behavior
 
@@ -203,17 +208,22 @@ the data-status / drilldown / deploy_missing services are GCS-only.
       routing)
 - [x] [deployment-api] P0. `tests/unit/test_data_status_hierarchical_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
       `get_hierarchical_drilldown` reads the manifest from S3 (mocked) using the AWS-equivalent bucket name template;
-      the returned tree shape is identical to GCS. (deployment-api@fed999b — 10 tests: bucket-name pin + shape parity + required keys + no-GCS dispatch)
+      the returned tree shape is identical to GCS. (deployment-api@fed999b — 10 tests: bucket-name pin + shape parity +
+      required keys + no-GCS dispatch)
 - [x] [deployment-api] P0. `tests/unit/test_deploy_missing_aws_launcher_routing.py` — when `CLOUD_PROVIDER=aws`, assert
       `_SERVICE_LAUNCHER_SCRIPTS` resolves to `launch-*-ec2.sh` (or the AWS-equivalent) rather than the GCE
       `launch-*-vm.sh`. (Note: requires the EC2 launchers from `aws_migration_defi_first_2026_05_07` to exist; gate this
-      test on the launcher-existence check.) (deployment-api@ce40a88 — 6 tests skip-gated on EC2 launchers + 2 pre-migration state pins pass; auto-unskips when _SERVICE_LAUNCHER_SCRIPTS gains ec2 entries)
-- [ ] [unified-cloud-interface] P0. `tests/test_storage_client_protocol_parity.py` — assert
+      test on the launcher-existence check.) (deployment-api@ce40a88 — 6 tests skip-gated on EC2 launchers + 2
+      pre-migration state pins pass; auto-unskips when \_SERVICE_LAUNCHER_SCRIPTS gains ec2 entries)
+- [x] [unified-cloud-interface] P0. `tests/test_storage_client_protocol_parity.py` — assert
       `StorageClient.read_parquet`, `list_blobs`, `get_blob_metadata` produce the same return shape across the GCS + S3
-      backends for an identical input dataset. (Generalizes beyond data-status.)
-- [ ] [deployment-ui] P0. `tests/components/CloudProviderToggle.test.tsx` — assert clicking AWS sets `apiBaseUrl` to
+      backends for an identical input dataset. (Generalizes beyond data-status.) (unified-trading-library@e55d3c9f — 16
+      tests: subclass inheritance + return-shape via LocalStorageProvider; BlobMetadata.full_path; GCS/S3/Local all
+      satisfy StorageClient ABC)
+- [x] [deployment-ui] P0. `tests/components/CloudProviderToggle.test.tsx` — assert clicking AWS sets `apiBaseUrl` to
       port 8005 + clears the cache; clicking GCP returns to 8004. (Today only port-swapping; extend when the API gains
-      real AWS code paths.)
+      real AWS code paths.) (deployment-ui@1d1c970 — 15 tests: 4 describe blocks — toggle rendering, target transitions,
+      DEV-mode /api passthrough, local-prod port 8004/8005 routing)
 
 ### F. Playwright e2e suite (data-status UI walks)
 
@@ -222,26 +232,32 @@ build an automated Playwright suite that walks every (service, asset_group) pane
 
 **Tests:**
 
-- [ ] [deployment-ui] P0. `tests/e2e/data-status-tab-renders.spec.ts` — clicks each of the 23 services in the
+- [x] [deployment-ui] P0. `tests/e2e/data-status-tab-renders.spec.ts` — clicks each of the 23 services in the
       service-mesh; asserts the Data Status tab loads + renders per-asset_group panels for every covered asset_group; no
-      console errors; no 5xx in network log.
-- [ ] [deployment-ui] P0. `tests/e2e/hierarchical-drilldown-walk.spec.ts` — for every (service, asset_group) pair the
+      console errors; no 5xx in network log. (deployment-ui@a9f5e98 — 3 tests: per-service loop over mocked services,
+      pageerror listener, 5xx response guard)
+- [x] [deployment-ui] P0. `tests/e2e/hierarchical-drilldown-walk.spec.ts` — for every (service, asset_group) pair the
       drill-down endpoint covers, expand the panel + assert: axes list rendered, totals rendered with non-zero values
       for asset_groups that have data in the test window, "Show more" button surfaces when
-      `total_top_axis_children > tree.length`.
-- [ ] [deployment-ui] P0. `tests/e2e/deploy-missing-preview.spec.ts` — drill into a captured=0 leaf with full shard
+      `total_top_axis_children > tree.length`. (deployment-ui@a9f5e98 — 6 tests: axes+totals + Show-more for 3
+      service/asset_group pairs)
+- [x] [deployment-ui] P0. `tests/e2e/deploy-missing-preview.spec.ts` — drill into a captured=0 leaf with full shard
       atom; click ↻ deploy; assert the copy-to-clipboard command renders + has the canonical 6-field shard-key shape;
       toggle to tarball-from-local; assert the LOCAL-ONLY warning panel is visible + the command chains
-      create-code-tarballs.sh + launcher with `&&`.
-- [ ] [deployment-ui] P0. `tests/e2e/per-leaf-csv-download.spec.ts` — click a captured leaf's `↓ csv` link; assert the
-      response Content-Type is `text/csv` + at least one row.
-- [ ] [deployment-ui] P0. `tests/e2e/cloud-toggle.spec.ts` — click the AWS toggle; assert the API base URL switches;
+      create-code-tarballs.sh + launcher with `&&`. (deployment-ui@a9f5e98 — 2 tests: shard-key fields in command;
+      LOCAL-ONLY warning + && in tarball mode)
+- [x] [deployment-ui] P0. `tests/e2e/per-leaf-csv-download.spec.ts` — click a captured leaf's `↓ csv` link; assert the
+      response Content-Type is `text/csv` + at least one row. (deployment-ui@a9f5e98 — 2 tests: ↓ csv link visible;
+      text/csv response with ≥1 data row)
+- [x] [deployment-ui] P0. `tests/e2e/cloud-toggle.spec.ts` — click the AWS toggle; assert the API base URL switches;
       reload; assert the panels still render (or render an explicit "AWS backend not configured" placeholder while the
-      cloud-agnostic backend is still being built).
-- [ ] [deployment-ui] P0. `tests/e2e/regression-2026-05-07.spec.ts` — explicit regression for the 2026-05-07 "No data
+      cloud-agnostic backend is still being built). (deployment-ui@a9f5e98 — 3 tests: toggle no crash; GCP/AWS buttons
+      visible; round-trip GCP→AWS→GCP survives)
+- [x] [deployment-ui] P0. `tests/e2e/regression-2026-05-07.spec.ts` — explicit regression for the 2026-05-07 "No data
       for cefi" + "Deploy-Missing 400" incidents — load TRADFI panel, assert non-zero totals; load DeployMissingButton
       on a venue-level node, assert it does NOT render; load on a date-level leaf with full shard-key, assert it DOES
-      render + opens the preview modal.
+      render + opens the preview modal. (deployment-ui@a9f5e98 — 3 tests: TRADFI non-zero totals; partial-key node no
+      button; full-key leaf opens modal)
 
 ## Phased execution DAG
 

@@ -75,7 +75,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green (QG must be clean before coverage work)
 
 ### B-007 · Phase 8.A surface-2 — manifest writer coverage
-- **Status**: DISPATCHED → slot 8 2026-05-14
+- **Status**: DONE @unified-trading-library@e6877d2+PM@0ff4963e 2026-05-14 (slot 8 — manifest writer + emission publisher coverage; QG green)
 - **Task**: 100% coverage on `ManifestWriter.record_*` call paths in UTL. Add tests for: `record_captured` happy-path, `record_empty` with each reason taxonomy entry, `record_failed` with `attempted_at`, `record_expected_unattempted`. Verify `assert_available_at_present` fires on every `record_captured` path.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -83,7 +83,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 Cluster D done (UTL test suite green)
 
 ### B-008 · Phase 8.A surface-3 — emission publisher coverage
-- **Status**: DISPATCHED → slot 8 2026-05-14
+- **Status**: DONE @unified-trading-library@e6877d2+PM@0ff4963e 2026-05-14 (slot 8 — manifest writer + emission publisher coverage; QG green)
 - **Task**: 100% coverage on `publish_with_policy` + `_publish_emission_check` + `_resolve_policy_output_data_type` in UTL. Add unit tests: STRICT_FAIL policy blocks on mismatched output; WARN_ONLY policy logs but passes; NAN_FILL policy fills NaN correctly. Run `bash scripts/quality-gates.sh` — all tests green.
 - **Repos**: `unified-trading-library`
 - **Est**: 3h · **Model**: Sonnet
@@ -99,7 +99,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: Phase 0 all clusters green
 
 ### B-010 · Phase 8.A surface-5 — validation logic coverage (per-archetype)
-- **Status**: DISPATCHED → slot 3 2026-05-14
+- **Status**: DONE @strategy-service@4ede3b2+PM@4f4df625 2026-05-14 (slot 3 — 38 archetype validation tests; coverage 88.37% → 93.18%)
 - **Task**: 90% coverage on per-archetype calc validation paths in `strategy-service`. Target: `carry_staked_basis` + `arbitrage_price_dispersion` validation branches. Sub-agent fan-out per archetype. Run `bash scripts/quality-gates.sh`.
 - **Repos**: `strategy-service`
 - **Est**: 4h (sub-agent fan-out) · **Model**: Sonnet
@@ -107,7 +107,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: B-004 (remaining test failures fixed first)
 
 ### B-011 · Phase 8.A surface-6 — VM deploy script coverage
-- **Status**: DISPATCHED → slot 2 2026-05-14 (start after slot 5 finishes deployment-service Cluster F + Phase 0 green)
+- **Status**: DONE @deployment-service@cf6bb83 2026-05-14 (slot 2 — VM zombie watchdog tests + shellcheck fix; QG green 77s; plan checkbox flipped)
 - **Task**: 95% coverage on `deployment-service/scripts/vm/launch-*.sh` paths. Bash-level: `shellcheck` all launchers. Python-level: unit tests for singleton-lock check, zombie-watchdog dict registration, tarball-uri construction. Verify `VM_PREFIX_TO_BUCKET` dict registration for any new VM prefixes.
 - **Repos**: `deployment-service`
 - **Est**: 3h · **Model**: Sonnet
@@ -163,7 +163,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 - **Prereq**: DeFi pipeline green end-to-end (instruments → MTDS → features → strategy → execution); Ikenna confirms backtest start date ready
 
 ### B-016 · DeFi arbitrage_price_dispersion backtest run (paper mode)
-- **Status**: DISPATCHED → slot 3 2026-05-14 (parallel with B-015; cross-side prereq check first)
+- **Status**: DEFERRED — MTDS CeFi tick data has no continuous 7-day window with ≥4 APD venues (BINANCE/BYBIT/DERIBIT/OKX). Re-activates when `features_service --asset-group cefi --feature-family delta_one` completes over 7d continuous window. See Q1 in continuation_prompts_harsh_2026_05_15.md § Slot 3.
 - **Task**: Same shape as B-015 for `arbitrage_price_dispersion`. Parallel with B-015 if separate slots.
 - **Repos**: `strategy-service` + `execution-service` + `e2e-testing`
 - **Est**: 4h · **Model**: Sonnet
@@ -207,6 +207,7 @@ Status values: `QUEUED` · `DISPATCHED → slot N YYYY-MM-DD` · `DONE @sha YYYY
 | 2026-05-14 | B-018 Phase 4.A daily QG snapshot writer + cron VM | slot 7 | DISPATCHED (natural follow-on to B-013) |
 | 2026-05-14 | B-010 Phase 8.A archetype validation coverage | slot 3 | strategy-service@4ede3b2 + PM@4f4df625 ✅ (93.18% coverage; 38 new tests) |
 | 2026-05-14 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DISPATCHED (parallel with B-015; Phase 1 cross-side prereq check FIRST) |
+| 2026-05-15 | B-016 DeFi arbitrage_price_dispersion paper backtest | slot 3 | DEFERRED — MTDS CeFi no 7-day window ≥4 venues (best=3d Mar30-Apr1); re-activates when features-service CeFi delta_one batch runs |
 | 2026-05-14 | B-013 Phase 2 deploy-ready tracking | slot 7 | deployment-api@1f22e22 + deployment-ui@2dfefa1 + PM@b6e58906 ✅ |
 | 2026-05-14 | B-012 Phase 8.A custody + wallet signing coverage | slot 6 | execution-service@fdd82def + @fe8b1d3e + PM@3d1cbcbc ✅ (11 new tests; QG 5837 passed) |
 | 2026-05-14 | B-006 Phase 8.A service startup coverage | slot 4 | mtds@504bf34 + instruments@4063e08 + PM@4e9a4f19 ✅ |

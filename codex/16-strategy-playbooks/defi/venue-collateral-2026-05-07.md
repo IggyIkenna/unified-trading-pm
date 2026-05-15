@@ -78,6 +78,59 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
    written (currently absent), it should reference this doc + the `accepted_perp_collateral()` helper as the filter
    SSOT. Tracked in master-plan Group F.
 
+## Family 1 — lender admission (recursive supply-borrow loop)
+
+Family 1 (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`) runs a pure-lending loop: LST collateral → Aave V3 E-Mode → borrow ETH
+→ swap back to LST via Uniswap V3 SwapRouter02 → redeposit → repeat. The swap-back leg uses the **same SwapRouter02
+address `0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45` on all chains** (Ethereum, Arbitrum, Base) — no chain-specific
+disambiguation required; Uniswap V3 is deployed at this address cross-chain.
+
+Lender admission table (May-23 top-7 cells):
+
+| Lender      | Chain    | Collateral | Debt | E-Mode / Mode   | LTV (max)       | Status                      |
+| ----------- | -------- | ---------- | ---- | --------------- | --------------- | --------------------------- |
+| Aave V3     | Ethereum | wstETH     | WETH | ETH_CORRELATED  | 0.93            | ADMITTED — flagship cell    |
+| Morpho Blue | Ethereum | wstETH     | WETH | per-market LLTV | 0.945           | ADMITTED — highest-LTV      |
+| Aave V3     | Arbitrum | wstETH     | WETH | ETH_CORRELATED  | 0.93            | ADMITTED — cheap gas        |
+| Aave V3     | Base     | cbETH      | WETH | ETH_CORRELATED  | 0.93 (low-conf) | ADMITTED — Base-native LST  |
+| Morpho Blue | Ethereum | sUSDe      | USDC | per-market      | 0.86            | ADMITTED — stable loop      |
+| Aave V3     | Ethereum | weETH      | WETH | ETH_CORRELATED  | 0.93            | ADMITTED — restaking points |
+| Aave V3     | Base     | wstETH     | WETH | ETH_CORRELATED  | 0.93 (low-conf) | ADMITTED — cheapest gas     |
+
+Lender admission logic: `defi_reserve_params.py` per-chain E-Mode table. Morpho Blue per-market LLTV read from
+`defi_reserve_params.py:morpho_markets`. Base chain E-Mode LTVs marked low-confidence until Base Aave V3 params are
+live-verified (planned in `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` as P0 unblocker).
+
+## Family 2 — CeFi perp-venue pairing (delta-hedge leg)
+
+Family 2 (`CARRY_RECURSIVE_BORROW_PERP_HEDGED`) adds a USDC-margined ETH perp short on top of Family 1. The perp margin
+is **USDC only** — the LST collateral admitted above does NOT flow to the perp venue. The perp leg uses:
+
+- **Hyperliquid (PRIMARY)**: USDC-only margin (no LST admitted). Margin funded via Arbitrum USDC bridge (~10s finality).
+  Funding accrues per-block (continuous). Withdrawal dispute window: 5 minutes.
+- **Bybit (SECONDARY, ≤50% of HL notional for first 30 days post-cutover)**: USDC posted as UTA margin. `wstETH` and
+  `stETH` accepted at 10% haircut (per `## Verified rows` above), but Family 2 uses USDC-margin path — LST stays in the
+  lending loop. Funding paid every 8h (vs HL per-block). Bybit counterparty cap: ≤50% of HL notional for 30d
+  post-cutover (Feb-2025 hack discount per `carry-recursive-borrow-perp-hedged.md` § Bybit counterparty cap policy).
+
+Neither HL nor Bybit accept LST as direct perp margin in Family 2. The `accepted_perp_collateral(venue)` filter from
+`carry_staked_basis` does NOT apply to Family 2 — the margin leg is fully separated from the lending loop.
+
+## Per-cell backtest verdicts (Phase 12)
+
+Backtest scenario taxonomy for cells using LST collateral:
+[recursive-borrow-backtest-scenarios-2026-05.md](recursive-borrow-backtest-scenarios-2026-05.md).
+
+Category B scenarios that directly test collateral-acceptance correctness:
+
+- `SCN-B1-FLASH-CRASH-LST-DEPEG` — validates that 3% wstETH depeg does not liquidate cells where venue LTV margin still
+  holds
+- `SCN-B4-CBETH-PEG-COINBASE` — validates cbETH bridge-risk alerting fires before collateral value drops below
+  acceptance threshold at each venue
+
+Venue-collateral rows with `accepted=True` in the tables above are the cells exercised by these scenarios. Venues with
+`accepted=False` (HL, Binance, Aster, GMX) are skipped in Category B.
+
 ## Composes with
 
 - `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` — the SSOT this doc cites.
@@ -85,3 +138,5 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
   (relevant for the live-API probe follow-up).
 - `unified-trading-pm/plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — the
   canonicalisation plan that defines Stream A.
+- [recursive-borrow-backtest-scenarios-2026-05.md](recursive-borrow-backtest-scenarios-2026-05.md) — Phase 12 scenario
+  taxonomy; per-cell verdict matrix; harness shape.

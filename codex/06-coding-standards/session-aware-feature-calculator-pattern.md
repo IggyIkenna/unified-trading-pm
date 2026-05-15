@@ -111,6 +111,47 @@ Cross-instrument features (basis, spread, dispersion) span venues with potential
 takes the **intersection** of session-open windows; if instrument A is OPEN but instrument B is CLOSED, the row is
 emitted with the cross-instrument component set to NaN and a typed reason in honest-absence.
 
+## Session-typed manifest reasons (writegate Phase 2.E.2 — MTDS@038a611)
+
+The MTDS orchestrator emits `record_expected_empty` for every `(venue, data_type)` it pre-skips due to a non-trading
+day. Feature calculators MUST read and honour these manifest reasons — not re-derive them from the clock.
+
+### Three reasons a calculator sees
+
+| Manifest reason                  | Meaning for the calculator                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXPECTED_WEEKEND`               | Whole-day closed for this TradFi venue. Do NOT include in rolling-window denominator. Emit `record_empty` for any calc output targeting this day.           |
+| `EXPECTED_HOLIDAY`               | Same as weekend — whole-day US market holiday.                                                                                                              |
+| `EXPECTED_OUTSIDE_TRADING_HOURS` | Intra-day: this bar falls outside the venue's published session. Drop from rolling window. Omit from same-day aggregates. Emit NaN for the calc output bar. |
+
+### Rolling-window rule (session-adjusted denominator)
+
+For a W-bar rolling feature over a TradFi venue:
+
+```python
+from unified_api_contracts.canonical.crosscutting.honest_coverage import (
+    EXPECTED_WEEKEND, EXPECTED_HOLIDAY, EXPECTED_OUTSIDE_TRADING_HOURS,
+)
+
+_SESSION_CLOSED_REASONS = frozenset({
+    EXPECTED_WEEKEND, EXPECTED_HOLIDAY, EXPECTED_OUTSIDE_TRADING_HOURS,
+})
+
+def is_session_closed(manifest_reason: str | None) -> bool:
+    return manifest_reason in _SESSION_CLOSED_REASONS
+
+# In the rolling-window loop:
+valid_bars = [
+    bar for bar in window_bars
+    if not is_session_closed(manifest.get_reason(bar.row_key, bar.day))
+]
+# Denominator = len(valid_bars), not W.
+# Emit n_valid as a sibling column.
+```
+
+**Key invariant**: weekend / holiday bars excluded from the denominator are NOT treated as NaN-data — they are calendar
+vacuums. Including them in the denominator would produce a 5-day SMA over 7 calendar days, which is wrong.
+
 ## Cross-references
 
 - Honest absence + session-typed availability:

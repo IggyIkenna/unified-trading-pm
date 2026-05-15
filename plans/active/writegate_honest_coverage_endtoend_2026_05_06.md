@@ -3384,12 +3384,12 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       re-architecture, (c) drift to be renamed. Preserved as-is in this seed extension; route to slice-(c) wave-2
       cleanup. (2026-05-14: CALCULATOR_REGISTRY confirmed — `paired_spec` + `pairwise_correlation` NOT in registry;
       `paired_price_dispersion` + `cross_asset_correlation` are live. Decision: preserve-as-is per plan. Documented.)
-- [ ] [features-service (multi-timeframe family)] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` +
+- [x] [features-service (multi-timeframe family)] P2. **Single-TF vs cross-TF ambiguity**: `intraday_regime` +
       `micro_regime` may be single-TF derived (NAN_FILL ML feature, belongs in delta-one's bucket) rather than cross-TF
       aligned (STRICT_FAIL on paired_spec precedent). Not seeded pending operator/service-maintainer confirmation.
-      **DEFERRED 2026-05-14**: Confirmed single-TF via code reading (intraday_regime=1h OHLCV; micro_regime=1m OHLCV);
-      policy ambiguous (NAN_FILL vs STRICT_FAIL needs operator call). Issue doc filed:
-      `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md`. Awaiting operator classification.
+      **SHIPPED 2026-05-15**: Operator-acked NAN_FILL via slot-9→5 reassignment. `UAC@1f8bcbc` — 2 NAN_FILL entries in
+      `SERVICE_OUTPUT_POLICIES`; `FS@140b6fe5` — `_SEEDED_FEATURE_GROUPS` in `batch_handler.py` extended + 2 tests.
+      Issue doc resolved: `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md`.
 - [x] [features-service (multi-timeframe family)] P2. `tf_risk_reward` + `wedge_confluence` are also cross-TF aggregates
       consuming poly-fit + ATR across timeframes (same STRICT_FAIL reasoning as the 4 seeded entries). Not seeded
       because operator estimate was ~2 entries; add in Phase-2 alongside the rest of the wedge/RR layer.

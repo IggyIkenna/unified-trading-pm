@@ -658,8 +658,8 @@ light — see Phase 6.6D entry for the per-plan breakdown.
 | 6C cross_asset group in Data Status UI (GAP-2)                         | ❌ absent                    | `data_status_ui_phase_2f.md` Phase 2F cross_asset surfacing        |
 | 6C SPORTS/PREDICTION filter buttons (GAP-3)                            | ❌ missing from filter       | `data_status_ui_phase_2f.md`                                       |
 | 6C asset group row drilldown (GAP-4)                                   | ❌ rows not interactive      | `data_status_ui_phase_2f.md`                                       |
-| 5B Fix 1 — CT/CC/KC/SB/OJ/DX → tradfi_roots.py                         | ❌ pending UAC write         | ikenna; issue doc filed 2026-05-14                                 |
-| 5B Fix 2 — CT.FUT CME→ICE + add CC-DX in tradfi_instrument_universe.py | ❌ pending UAC write         | ikenna; issue doc filed 2026-05-14                                 |
+| 5B Fix 1 — CT/CC/KC/SB/OJ/DX → tradfi_roots.py                         | ✅ SHIPPED UAC@`2fb27f8`     | harsh-main 2026-05-14; issue doc resolved                          |
+| 5B Fix 2 — CT.FUT CME→ICE + add CC-DX in tradfi_instrument_universe.py | ✅ SHIPPED UAC@`2fb27f8`     | harsh-main 2026-05-14; same commit as Fix 1                        |
 | measure_honest_coverage.py:162 `datetime.utcnow()`                     | ⚠️ deprecated (non-blocking) | instruments-service next QG sweep                                  |
 
 ### DONE-2026-05-13 (Wave 4) — slot 7 (harsh-cross-asset-phase-1d, Opus 4.7/high) — Phase 1D producer-side migration + Phase 6A QG ratchet

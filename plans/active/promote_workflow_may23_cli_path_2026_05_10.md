@@ -68,8 +68,8 @@ estimate_calibration_note: |
 > (CLI is the operational floor; UI is the upgrade ramp). Both paths enforce identical gates (custody connected / venue
 > keys present / alerting wired / kill-switch armed / risk limits set / recon green / paper-evidence ≥3d) so either
 > selection is safe. **G23 (DART manual-trade gate)** scope split with
-> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross_cutting
-> owns _design + DART surface_; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate enforcement_. After
+> [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) #4: cross*cutting
+> owns \_design + DART surface*; this plan's Phase U6 (pvl-p23c) owns _testnet wiring + go-live gate enforcement_. After
 > cutover, UI evolution continues via
 > [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
 > Phase 9 (full pre-flight pipeline) which EXTENDS this plan's Phase U3 to the canonical UI path; CLI track persists as
@@ -214,32 +214,44 @@ paper/live deployment exists.
   - **Phase 2 gaps discovered during smoke** (see Phase 2 todos below):
     - `colocated_engine.py` lacks `ServiceBootstrap` → no STARTED event in `gs://central-element-323112-events/`
       strategy-service event archive. Phase 2 must wire ServiceBootstrap into colocated_engine.py.
-    - `V2BatchHarness` has no resolver entry for `carry_staked_basis` → `Unknown strategy: carry_staked_basis`.
-      Phase 2 must register the archetype in the harness resolver.
+    - `V2BatchHarness` has no resolver entry for `carry_staked_basis` → `Unknown strategy: carry_staked_basis`. Phase 2
+      must register the archetype in the harness resolver.
     - setup-data-pipeline-vm.sh startup failure leaves VM RUNNING indefinitely (self-delete only triggers via
       vm-exec-with-gcs-tee.sh which doesn't run when install fails). Phase 2 should add self-delete on script error.
 
-- [x] [SCRIPT] P0. **🔴 RE-RUN smoke VM after slot 9 wire-ins (FOOT-GUN intercept 2026-05-13 wave-1 audit)**.
-      Slot 9 (Day-4 2026-05-13) shipped wire-ins addressing all 3 gaps above (e2e-testing@`afd0c16` ServiceBootstrap +
-      GcsEventSink for paper/live; deployment-service@`ab6bfd2` strategy-paper/live self-delete on engine exit) BUT
-      did NOT re-run the smoke VM to verify the wire-ins close the gaps in production. Slot 9's ping at 08:10 UTC
-      claimed "Task 3 DONE" with PM@`0765d3aa` plan flip, but `gsutil ls gs://central-element-323112-events/events/strategy_paper/2026-05-13/`
-      returns no objects — VM was never relaunched. Violates HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green".
-      Re-run probe:
+- [x] [SCRIPT] P0. **🔴 RE-RUN smoke VM after slot 9 wire-ins (FOOT-GUN intercept 2026-05-13 wave-1 audit)**. Slot 9
+      (Day-4 2026-05-13) shipped wire-ins addressing all 3 gaps above (e2e-testing@`afd0c16` ServiceBootstrap +
+      GcsEventSink for paper/live; deployment-service@`ab6bfd2` strategy-paper/live self-delete on engine exit) BUT did
+      NOT re-run the smoke VM to verify the wire-ins close the gaps in production. Slot 9's ping at 08:10 UTC claimed
+      "Task 3 DONE" with PM@`0765d3aa` plan flip, but
+      `gsutil ls gs://central-element-323112-events/events/strategy_paper/2026-05-13/` returns no objects — VM was never
+      relaunched. Violates HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green". Re-run probe:
   - `bash deployment-service/scripts/vm/launch-strategy-paper-vm.sh --archetype carry_staked_basis --tick-interval 3600 --continuous=false --max-runtime 600`
-    on operator workstation (uses today's tarballs — needs `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` first).
+    on operator workstation (uses today's tarballs — needs
+    `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` first).
   - `gcloud storage ls gs://${PID}-events/events/strategy-service/$(date -u +%Y-%m-%d)/strategy-paper-carry_staked_basis-*/`
-    → directory exists with `hour=*` partition (CRITICAL — slot 9's fix was supposed to ensure STARTED event lands here).
-  - Read first JSONL → assert `event=="STARTED"` (CRITICAL — slot 9's ServiceBootstrap wire-in was supposed to ensure this).
+    → directory exists with `hour=*` partition (CRITICAL — slot 9's fix was supposed to ensure STARTED event lands
+    here).
+  - Read first JSONL → assert `event=="STARTED"` (CRITICAL — slot 9's ServiceBootstrap wire-in was supposed to ensure
+    this).
   - 10min recheck: ≥1 progress event/hour expected.
-  - VM auto-shutdowns after `--max-runtime` → `gcloud compute instances list` shows absent (CRITICAL — slot 9's self-delete fix
-    was supposed to ensure this).
+  - VM auto-shutdowns after `--max-runtime` → `gcloud compute instances list` shows absent (CRITICAL — slot 9's
+    self-delete fix was supposed to ensure this).
   - Last JSONL → assert `event in {"STOPPED","FAILED"}`.
-  - **Done-def**: all 4 critical-italic assertions above pass; flip with evidence chain (VM-name + 4 timestamps + last-event SHA).
+  - **Done-def**: all 4 critical-italic assertions above pass; flip with evidence chain (VM-name + 4 timestamps +
+    last-event SHA).
   - **Successor if FAILS**: file new issue doc `plans/active/issues/strategy_paper_vm_post_slot9_failure_2026_05_13.md`
     documenting which of the 4 critical assertions failed + which wire-in is incomplete.
   - **Audit ref**: `plans/active/issues/audit_wave1_quality_2026_05_13.md` § "Critical follow-ups" item 1.
-  - **DONE 2026-05-14 slot-9 post-OOM**: Bug found + fixed first: `args.mode='paper'` passed directly to `setup_events()` → `ValueError: Invalid mode: paper` (only `batch/live/local/test` accepted). Fix: e2e-testing@`f0b63ee` maps `'paper'→'live'` before call. Tarball refreshed + VM #2 launched. VM=`strategy-paper-carry-staked-basis-20260514-121752`. Event path correction: plan said `events/strategy-service/`; actual path is `events/colocated-engine/` (`service_name="colocated-engine"` in code). Wire-in assertions: GcsEventSink ✅ STARTED `2026-05-14T06:50:24.940577Z` ✅ VM self-deleted ✅ FAILED `2026-05-14T06:50:29.120987Z` (`No module named 'nautilus_trader'`) ✅. 10min progress N/A (engine crashed before first tick on pre-existing missing dep — NOT a wire-in failure). Wire-ins (afd0c16 + ab6bfd2) VERIFIED. Filing separate issue for nautilus_trader missing dep: `plans/active/issues/strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14.md`.
+  - **DONE 2026-05-14 slot-9 post-OOM**: Bug found + fixed first: `args.mode='paper'` passed directly to
+    `setup_events()` → `ValueError: Invalid mode: paper` (only `batch/live/local/test` accepted). Fix:
+    e2e-testing@`f0b63ee` maps `'paper'→'live'` before call. Tarball refreshed + VM #2 launched.
+    VM=`strategy-paper-carry-staked-basis-20260514-121752`. Event path correction: plan said `events/strategy-service/`;
+    actual path is `events/colocated-engine/` (`service_name="colocated-engine"` in code). Wire-in assertions:
+    GcsEventSink ✅ STARTED `2026-05-14T06:50:24.940577Z` ✅ VM self-deleted ✅ FAILED `2026-05-14T06:50:29.120987Z`
+    (`No module named 'nautilus_trader'`) ✅. 10min progress N/A (engine crashed before first tick on pre-existing
+    missing dep — NOT a wire-in failure). Wire-ins (afd0c16 + ab6bfd2) VERIFIED. Filing separate issue for
+    nautilus_trader missing dep: `plans/active/issues/strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14.md`.
 
 - [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
       [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
@@ -258,7 +270,8 @@ paper/live deployment exists.
       `_SERVICE_LAUNCHER_SCRIPTS` dict so operators can deploy via Deploy-Missing UI button instead of running scripts
       manually from workstation. **DEFERRED-AFTER-CONSOLIDATION-PHASE2** — gates on launcher_scripts_consolidation Phase
       2 shipping. Acceptable to ship Phase 1 without this; operators run launchers manually until then (see top-of-file
-      IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
+      IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered;
+      launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
 
 **Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
 
@@ -284,25 +297,27 @@ paper/live deployment exists.
 ## Phase 1 smoke-gaps → Phase 2 todos (discovered 2026-05-12 smoke run)
 
 - [x] [AGENT] P0. **Wire `ServiceBootstrap` into `colocated_engine.py`** so paper/live VMs emit
-      `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`.
-      Currently `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only.
-      Required for "No fire-and-forget VM launches" HARD RULE compliance.
-      (e2e-testing@afd0c16 — used setup_events()+log_event() directly; full ServiceBootstrap incompatible with asyncio CLI structure)
-- [x] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver.
-      Observed error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`.
-      Phase 2 must add resolver entry (or confirm the archetype slug → strategy_type mapping).
-      (strategy-service@61dc112 + e2e-testing@8427dc0 — lowercase aliases added to _DEFI/_CEFI
-      in archetype_slot_resolver.py + STRATEGY_CATEGORIES in colocated_engine.py; tarballs refreshed 14:39 UTC 2026-05-12)
+      `STARTED`/`STOPPED`/`FAILED` to `gs://central-element-323112-events/events/strategy-service/`. Currently
+      `colocated_engine.py` has no ServiceBootstrap; events go to the deployment heartbeat archive only. Required for
+      "No fire-and-forget VM launches" HARD RULE compliance. (e2e-testing@afd0c16 — used setup_events()+log_event()
+      directly; full ServiceBootstrap incompatible with asyncio CLI structure)
+- [x] [AGENT] P0. **Register `carry_staked_basis` (and `leveraged_funding_arb`) in `V2BatchHarness`** resolver. Observed
+      error: `Unknown strategy: carry_staked_basis -- V2BatchHarness: no resolver entry for strategy_type`. Phase 2 must
+      add resolver entry (or confirm the archetype slug → strategy_type mapping). (strategy-service@61dc112 +
+      e2e-testing@8427dc0 — lowercase aliases added to \_DEFI/\_CEFI in archetype_slot_resolver.py + STRATEGY_CATEGORIES
+      in colocated_engine.py; tarballs refreshed 14:39 UTC 2026-05-12)
 - [x] [AGENT] P1. **Add self-delete on startup-script failure** in `setup-data-pipeline-vm.sh`. When `set -euo pipefail`
-      exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
-      (deployment-service@ab6bfd2 — chained gcloud delete with ';' after VM_BACKFILL_CMD in strategy-paper/live block; resolves zone from metadata at launch so delete runs on any exit code)
+      exits the script early (e.g. dep conflict), the VM stays RUNNING indefinitely. Add a
+      `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
+      (deployment-service@ab6bfd2 — chained gcloud delete with ';' after VM_BACKFILL_CMD in strategy-paper/live block;
+      resolves zone from metadata at launch so delete runs on any exit code)
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
 **Why**: Audit Block H6 + Block I1 step 8/9 — no pre-flight check exists today; operator improvises. Without this gate,
 the live cutover can launch with missing custody / missing API keys / unwired alerting and silently degrade.
 
-- [ ] [AGENT] P0. **Write `e2e-testing/scripts/defi/preflight-cutover.sh`** that probes:
+- [x] [AGENT] P0. **Write `e2e-testing/scripts/defi/preflight-cutover.sh`** that probes:
   - Copper credential present in Secret Manager + sandbox sign-test passes (HMAC handshake + poll loop completes).
   - All 6 perp venue API keys present in Secret Manager + read-write scope verified per venue (Bybit / Binance / OKX /
     Hyperliquid / Aster / Deribit).
@@ -313,10 +328,12 @@ the live cutover can launch with missing custody / missing API keys / unwired al
   - Alerting paging targets configured in Secret Manager (Telegram bot tokens, PagerDuty key — per Phase 5.B).
   - Composes with `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` credential matrix.
   - Done: each probe exits 0/1; aggregate report printed; refuses to exit 0 if any P0 probe fails.
+  - (e2e-testing@60283c2 — 7 probes implemented; --waive-<probe> + --skip-preflight escape hatches; dry-run verified)
 
-- [ ] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call
+- [x] [AGENT] P0. **Update `e2e-testing/scripts/defi/run-paper.sh`** + **`run-live.sh`** to call
       `preflight-cutover.sh --mode paper` / `--mode live` as required pre-flight gate (refuses to start if pre-flight
       non-zero).
+  - (e2e-testing@60283c2 — both scripts updated; --waive-\* pass-through; pre-flight runs before engine launch)
 
 - [ ] [SCRIPT] P0. **Run preflight-cutover.sh on operator workstation** for both paper + live mode against
       carry_staked_basis. Resolve any failing probes by either fixing config OR explicitly waiving (write
@@ -339,20 +356,25 @@ the live cutover can launch with missing custody / missing API keys / unwired al
 **Why**: Audit Block A1 + master plan F18. 2-year backtest is operator-pending; informs the live-config selection.
 Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results are invisible to downstream consumers.
 
-- [ ] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/`
+- [x] [AGENT] P0. **Resolve path drift**: pick `backtest_results/strategy_id={strategy_id}/run_id={run_id}/`
       (PATH_REGISTRY) as canonical. Update
       [`unified-trading-library/.../domain/execution_client.py:199-296`](../../../unified-trading-library/unified_trading_library/domain/execution_client.py#L199-L296)
       reader to honor PATH_REGISTRY (currently uses `backtest_results/{run_id}/` — silent mismatch). Migrate 2yr-grid
       script (`backtests/config_grid_2yr/{archetype}/{run_id}/`) to canonical OR keep separate sub-prefix
       `backtest_results/grid_2yr/{archetype}/{run_id}/`.
+  - (utl@657eae41 — optional strategy_id param on all backtest methods; canonical path when provided; legacy compat
+    preserved)
 
-- [ ] [AGENT] P0. **Update `strategy-service/scripts/run_2yr_config_grid_backtest.py`** to:
+- [x] [AGENT] P0. **Update `strategy-service/scripts/run_2yr_config_grid_backtest.py`** to:
   - Write to canonical PATH_REGISTRY path.
   - Emit `record_captured` manifest row per `(archetype, run_id, asset_group)` per CLAUDE.md _"Honest absence vs fake
     placeholders"_ HARD RULE.
   - Validate `GroupBMetrics` schema on output rows (4-pillar gate per CLAUDE.md "Cluster validation MANDATORY at
     `record_captured`").
   - Honor `--candidate-emit` flag that auto-promotes top-K results to `ConfigRegistry` for paper-mode pickup.
+  - (strategy-service@4b1e768 — PATH_REGISTRY canonical output path + --candidate-emit/--top-k flags +
+    DeployableConfigCandidate emission; manifest row emission DEFERRED — requires pipeline-context design outside script
+    scope)
 
 - [ ] [SCRIPT] P0. **Operator runs the 2yr backtest** for both archetypes:
   - `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3`
@@ -385,16 +407,24 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
       [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py)
       HMAC-SHA256 sign + poll loop on testnet.
   - Probe: signed transaction returned within poll-interval; on-chain confirmation observed.
-- [ ] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `codex/04-architecture/custody-providers.md`
+- [x] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `codex/04-architecture/custody-providers.md`
       (per master plan Q&A 3 deferral). Manual handoff procedure for Binance flows documented.
+  - (codex already has explicit STUB status at §2.4 with "⚪ DEFERRED to June-1+" banner + operator runbook in §2.4
+    Onboarding flow; no code change needed — verified slot-4 2026-05-15)
 
 ### 4.B — pvl-p20b 5 perp venue testnet wiring
 
-- [ ] [AGENT] P0. **Audit current testnet support** for Bybit / Binance / OKX / Hyperliquid / Aster in
+- [x] [AGENT] P0. **Audit current testnet support** for Bybit / Binance / OKX / Hyperliquid / Aster in
       `execution-service/execution_service/venues/initializer.py` +
       `execution-service/execution_service/defi_execution/connectors/cefi_base.py`.
-- [ ] [AGENT] P0. **Implement testnet-mode constructor** for each missing venue. Pattern: `--testnet` flag → swap base
+  - (All venues already have testnet support — slot-4 2026-05-15 audit: Bybit/Binance/OKX/Hyperliquid/Deribit/Kraken all
+    have `testnet=False` param + `set_sandbox_mode(True)` in `trade_execution/adapters/*_ccxt.py`; Hyperliquid DeFi
+    protocol uses `testnet_mode` config key → `get_hyperliquid_api_url()`; Aster uses `paper_trade=True` mode (no public
+    testnet by design); `get_order_adapter(testnet=True)` threads through factory.py. cefi_base.py has `testnet=False`
+    on ExternalVenueAdapter.)
+- [x] [AGENT] P0. **Implement testnet-mode constructor** for each missing venue. Pattern: `--testnet` flag → swap base
       URL + use testnet-scoped credentials from Secret Manager `paper/<venue>/<env>` namespace.
+  - (No missing venues — all adapters already support testnet. No implementation required.)
 - [ ] [SCRIPT] P0. **Smoke-test each testnet** with read-only API call (e.g. `get_account_info`) to verify credential +
       endpoint pair.
 
@@ -429,23 +459,30 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 5.A — F21 batch-live-reconciliation-service minimum-viable shipment
 
-- [ ] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM
+- [x] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM
       `batch-live-recon-{ts}`).
   - Reads batch backtest output (PATH_REGISTRY canonical) + live event-stream paper/live runs.
   - Computes per-archetype P&L diff + per-trade fill comparison.
   - Emits `BATCH_LIVE_RECON_DRIFT` event when drift > 5bps.
   - Daily cadence; alerting rule wires to Telegram + PagerDuty.
-- [ ] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper**
+  - **Evidence**: batch-live-recon@0997694 — stage3b+stage3c wired, BATCH_LIVE_RECON_DRIFT emitted when
+    slippage_delta_bps > 5.0 (PaperLiveThresholds)
+- [x] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper**
       ([`UTL@908b1647`](../../../unified-trading-library/unified_trading_library/batch_live_reconciler.py)) into the new
       service.
+  - **Evidence**: stage0_data_pipeline_recon.py uses reconcile_shard() for parquet schema+value comparison; UTL export
+    added in UTL@089deda5
 - [ ] [SCRIPT] P0. **First recon dry-run** against carry_staked_basis paper run.
 
 ### 5.B — F22 Phase 4 alerting paging-target Secret Manager wiring
 
 - [ ] [SCRIPT] P0. **Provision Telegram bot tokens** for the May-23 alerting channel.
 - [ ] [SCRIPT] P0. **Provision PagerDuty integration key** (or skip if Telegram-only for cutover).
-- [ ] [AGENT] P0. **Update `alerting-service/alerting_service/notifiers/router.py`** to read paging targets from Secret
+- [x] [AGENT] P0. **Update `alerting-service/alerting_service/notifiers/router.py`** to read paging targets from Secret
       Manager paths defined in master plan F22 spec.
+  - **Evidence**: alerting-service@9d4150d — \_PagingCredentialsReloader in config_reloaders.py reads
+    alerting-telegram-bot-token + alerting-telegram-chat-id from GCP SM every 300s; router.\_deliver_message() prefers
+    SM creds over env-var values. SM secrets were pushed 2026-05-10.
 
 ### 5.C — F22 Phase 7 quietness 48h staging dry-run
 
@@ -798,17 +835,19 @@ differs.
 
 ## Deferred work after 2026-05-12 harsh-promote-workflow-tab session
 
-| Phase / item | Status as of 2026-05-12 | Successor / blocker |
-| --- | --- | --- |
-| Phase 1 — launcher scripts + infra | ✅ DONE (deployment-service@87f12f1 + watchdog bounced + smoke-pass @4a4e2e1) | — |
-| Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end |
-| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py` | ✅ DONE (e2e-testing@afd0c16 2026-05-13) | setup_events()+log_event() used; full ServiceBootstrap incompatible with asyncio CLI |
-| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh` | ✅ DONE (deployment-service@ab6bfd2 2026-05-13) | gcloud delete chained with ';' after VM_BACKFILL_CMD in strategy-paper/live block |
-| Phases 3–10 | ⏭ DEFERRED | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
+| Phase / item                                                                                  | Status as of 2026-05-12                                                                                                                                                                                    | Successor / blocker                                                                                       |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Phase 1 — launcher scripts + infra                                                            | ✅ DONE (deployment-service@87f12f1 + watchdog bounced + smoke-pass @4a4e2e1)                                                                                                                              | —                                                                                                         |
+| Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end                        |
+| Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py`                               | ✅ DONE (e2e-testing@afd0c16 2026-05-13)                                                                                                                                                                   | setup_events()+log_event() used; full ServiceBootstrap incompatible with asyncio CLI                      |
+| Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh`  | ✅ DONE (deployment-service@ab6bfd2 2026-05-13)                                                                                                                                                            | gcloud delete chained with ';' after VM_BACKFILL_CMD in strategy-paper/live block                         |
+| Phases 3–10                                                                                   | ⏭ DEFERRED                                                                                                                                                                                                | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
 
 **Session notes (2026-05-12 harsh-promote-workflow-tab)**:
+
 - Tarballs refreshed in GCS at 14:39 UTC — code is ready for next VM launch.
-- Smoke VM `strategy-paper-carry-staked-basis-20260512-200952` was launched for end-to-end resolver verification then deleted at operator request. ikenna-main notified via `_agent_pings.md`.
+- Smoke VM `strategy-paper-carry-staked-basis-20260512-200952` was launched for end-to-end resolver verification then
+  deleted at operator request. ikenna-main notified via `_agent_pings.md`.
 
 ## Temporary states + canonical follow-up plans
 

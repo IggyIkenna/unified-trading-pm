@@ -397,28 +397,27 @@ on `capture_status`:
 
 ## Zero-activity-bar shape (case-D design — implementation deferred post-cutover)
 
-> **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D);
-> **implementation deferred post-2026-05-23 cutover** — requires a NEW UTL `zero_activity_bars` primitive +
-> `instrument_catalog` threaded at adapter construction (writegate Phase 3.D.5 Wave 2/3, "pending"). This section is
-> the design stub so consumers know what shape to expect when case-D ships. Reference audit:
-> `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
+> **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D); **implementation deferred
+> post-2026-05-23 cutover** — requires a NEW UTL `zero_activity_bars` primitive + `instrument_catalog` threaded at
+> adapter construction (writegate Phase 3.D.5 Wave 2/3, "pending"). This section is the design stub so consumers know
+> what shape to expect when case-D ships. Reference audit: `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
 
 Case-D fires when: source returned 0 rows AND `instrument_catalog` says the instrument is alive on that date AND the
-date falls within the venue's published trading hours. The adapter writes **carry-forward bars** (not NaN-fill) and calls
-`record_captured` so downstream consumers see a fully-populated row. The absence of real ticks is transparent via a
-`zero_activity=True` column on each bar.
+date falls within the venue's published trading hours. The adapter writes **carry-forward bars** (not NaN-fill) and
+calls `record_captured` so downstream consumers see a fully-populated row. The absence of real ticks is transparent via
+a `zero_activity=True` column on each bar.
 
 ### Carry-forward rule per data_type
 
-| data_type | Zero-activity bar shape | `available_at` |
-|---|---|---|
-| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_1h` / `ohlcv_24h` | O=H=L=C = prior last-trade-price (LTP carry-forward), `volume=0`, `trade_count=0`, `zero_activity=True` | Interval close time (`window_close` for the candle) |
-| `trades` | Zero-row parquet (empty DataFrame, 0 rows); `record_captured(row_count=0)`; no rows on disk is the honest shape — a zero-activity day has no individual trades | Interval close time |
-| `book_snapshot_5` / `book_snapshot_25` | Carry-forward last known bid/ask levels (all N levels); `bid_size_*=0`, `ask_size_*=0`, `zero_activity=True` (quoted spread present but no resting volume) | Snapshot window close |
-| `derivative_ticker` | Carry-forward last known `open_interest`, `mark_price`, `index_price`; `funding_rate=0` (no funding accrual on zero-activity period); `zero_activity=True` | Interval close time |
-| `options_chain` / `futures_chain` | Carry-forward last known bid/ask across ALL active strikes/expiries (see volatility-smile note below); `volume=0`, `open_interest` unchanged, `zero_activity=True` | Interval close time |
-| DeFi continuous series (`lst_rates`, `staking_yields`, `lending_indices`, `oracle_prices`, `vault_share_price`, `perp_funding`) | Carry-forward last known rate/price; `zero_activity=True` | Block-close time |
-| Prediction market depth / CLOB (`market_depth`, `order_book`) | Carry-forward last known mid/best-bid/best-ask; `zero_activity=True` | Snapshot window close |
+| data_type                                                                                                                       | Zero-activity bar shape                                                                                                                                            | `available_at`                                      |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `ohlcv_1m` / `ohlcv_15m` / `ohlcv_1h` / `ohlcv_24h`                                                                             | O=H=L=C = prior last-trade-price (LTP carry-forward), `volume=0`, `trade_count=0`, `zero_activity=True`                                                            | Interval close time (`window_close` for the candle) |
+| `trades`                                                                                                                        | Zero-row parquet (empty DataFrame, 0 rows); `record_captured(row_count=0)`; no rows on disk is the honest shape — a zero-activity day has no individual trades     | Interval close time                                 |
+| `book_snapshot_5` / `book_snapshot_25`                                                                                          | Carry-forward last known bid/ask levels (all N levels); `bid_size_*=0`, `ask_size_*=0`, `zero_activity=True` (quoted spread present but no resting volume)         | Snapshot window close                               |
+| `derivative_ticker`                                                                                                             | Carry-forward last known `open_interest`, `mark_price`, `index_price`; `funding_rate=0` (no funding accrual on zero-activity period); `zero_activity=True`         | Interval close time                                 |
+| `options_chain` / `futures_chain`                                                                                               | Carry-forward last known bid/ask across ALL active strikes/expiries (see volatility-smile note below); `volume=0`, `open_interest` unchanged, `zero_activity=True` | Interval close time                                 |
+| DeFi continuous series (`lst_rates`, `staking_yields`, `lending_indices`, `oracle_prices`, `vault_share_price`, `perp_funding`) | Carry-forward last known rate/price; `zero_activity=True`                                                                                                          | Block-close time                                    |
+| Prediction market depth / CLOB (`market_depth`, `order_book`)                                                                   | Carry-forward last known mid/best-bid/best-ask; `zero_activity=True`                                                                                               | Snapshot window close                               |
 
 ### The volatility-smile constraint (operator-flagged)
 
@@ -438,17 +437,18 @@ rows.
 
 When the case-D implementation ships (writegate Phase 3.D.5 Wave 2/3, post-2026-05-23), it needs:
 
-1. **UTL primitive `zero_activity_bars(last_snapshot: pd.DataFrame, data_type: str, interval_close: datetime) ->
-   pd.DataFrame`** — per-data_type carry-forward logic per the table above; raises `ValueError` for unknown data_type.
-2. **`instrument_catalog` threaded at adapter construction** — adapter checks
-   `catalog.is_alive(instrument_id, day)` before deciding case-A vs case-D.
+1. **UTL primitive
+   `zero_activity_bars(last_snapshot: pd.DataFrame, data_type: str, interval_close: datetime) -> pd.DataFrame`** —
+   per-data_type carry-forward logic per the table above; raises `ValueError` for unknown data_type.
+2. **`instrument_catalog` threaded at adapter construction** — adapter checks `catalog.is_alive(instrument_id, day)`
+   before deciding case-A vs case-D.
 3. **`record_captured(df=zero_activity_df, ...)` call** — manifest records this as a real capture (not
    `empty_confirmed`); the `zero_activity=True` column distinguishes it from a genuine high-volume day.
 4. **Sports historical re-scope**: sports HISTORICAL capture lives in `instruments-service` (not MTDS); the case-D
    implementation for sports per-fixture zero-activity belongs there, not in MTDS (per D3 audit finding).
 
-Successor plan: `wave3x_track_d_implementation_<date>.md` (to be filed when the writegate Phase 3.D.5 Wave 2/3
-planning window opens post-2026-05-23 cutover). Reference: operator decision #4 in
+Successor plan: `wave3x_track_d_implementation_<date>.md` (to be filed when the writegate Phase 3.D.5 Wave 2/3 planning
+window opens post-2026-05-23 cutover). Reference: operator decision #4 in
 `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
 
 ---
@@ -476,3 +476,107 @@ report); pass `--apply-flips` with `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` to 
 scope; other asset_groups out of scope per this plan).
 
 Reference: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 3A/3B/3C.
+
+---
+
+## Session-typed availability (writegate Phase 2.E.2)
+
+> Shipped 2026-05-15 — MTDS@038a611, tradfi_master_2026_05_07.md § "Replace zero-volume bars during non-tradeable
+> sessions."
+
+### What changed
+
+Prior to Phase 2.E.2 the MTDS orchestrator **silently pre-skipped** TradFi venues whose date was a non-trading day
+(`is_non_trading_day()` returned True). No manifest row was written. Downstream feature calculators had to re-consult
+`venue_trading_calendar` to know why the parquet was absent — violating the "manifest is the SSOT for absence + reason"
+principle codified 2026-05-07.
+
+Phase 2.E.2 closes this gap: the orchestrator now calls `record_expected_empty(reason=...)` for **every (venue,
+data_type)** it would have silently skipped. The manifest becomes the single authoritative answer.
+
+### The three session-typed reasons
+
+| Reason                           | When emitted                                                                                                                   | Who emits it                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `EXPECTED_WEEKEND`               | Saturday or Sunday for any TradFi venue (`is_non_trading_day()` returns True and weekday ∈ {5, 6})                             | MTDS orchestrator via `non_trading_day_reason(venue, date)` → `record_expected_empty`              |
+| `EXPECTED_HOLIDAY`               | A US-market-holiday weekday per `venue_trading_calendar` (e.g. New Year's Day, Christmas, MLK Day on CME/NYSE/NASDAQ/ICE/CBOE) | Same as above                                                                                      |
+| `EXPECTED_OUTSIDE_TRADING_HOURS` | An intra-day timestamp falls outside the venue's published session window (see `VENUE_SESSION_HOURS` in UAC)                   | Per-bar / per-shard feature calculator that checks `classify_session()` before writing to manifest |
+
+`EXPECTED_WEEKEND` and `EXPECTED_HOLIDAY` are whole-day: the orchestrator pre-empts the fetch entirely. The adapter is
+never called. `EXPECTED_OUTSIDE_TRADING_HOURS` is intra-day: the adapter may run, but a bar-level filter at the
+calculator or writer decides the bar is outside the venue's published hours.
+
+### Orchestrator implementation pattern (canonical — MTDS@038a611)
+
+Two code paths in the MTDS `process_ticks` function both emit session-typed rows:
+
+**Path 1 — all-non-trading-day batch (early return):**
+
+```python
+# all venues non-trading → active_venues=[] → early return
+for nt_venue in non_trading_skipped:
+    nt_reason = non_trading_day_reason(nt_venue, date)  # "EXPECTED_WEEKEND" | "EXPECTED_HOLIDAY" | None
+    if nt_reason is None:
+        continue
+    nt_expected_dts = get_expected_data_types_for_venue(nt_venue)
+    if data_type_filter:
+        nt_expected_dts = [dt for dt in nt_expected_dts if dt in data_type_filter]
+    for nt_dt in nt_expected_dts:
+        _nt_writer.record_expected_empty(
+            row_key={"date": date, "venue": nt_venue, "chain": "", "data_type": nt_dt},
+            reason=nt_reason,
+            pipeline_mode=_resolve_pipeline_mode_for_sentinel(nt_venue, nt_dt),
+        )
+```
+
+**Path 2 — mixed batch (some venues trading, some not):** Same loop body executed after `ManifestWriter` instantiation
+in the finalization block, using the already-open `writer_manifest`.
+
+The guard `if nt_reason is None: continue` ensures crypto venues (which always return `None` from
+`non_trading_day_reason`) never get session-typed rows — weekends are normal trading days for crypto.
+
+### Downstream consumer action for session-typed rows
+
+| Reason                           | Rolling-window feature (e.g. 20-bar SMA)                                                                              | Same-day single-sample feature (e.g. daily VWAP)                                    | Execution / live strategy                                   |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `EXPECTED_WEEKEND`               | Skip the day; **do not include in denominator**. 20-bar window over Mon–Fri only.                                     | Emit `record_empty(reason=NO_INPUT_AVAILABLE)` for the calc output.                 | Skip asset allocation for that cycle. Log but do not alert. |
+| `EXPECTED_HOLIDAY`               | Same as weekend — skip and adjust denominator.                                                                        | Same as weekend.                                                                    | Same as weekend.                                            |
+| `EXPECTED_OUTSIDE_TRADING_HOURS` | Drop the bar from the rolling window and adjust denominator; do NOT count outside-hours bars toward the N-bar target. | Omit the bar from the daily aggregate; the aggregate covers session-open bars only. | Do not trade. Session is closed.                            |
+
+The key rule: **session-closed bars are NOT equivalent to "missing data" for a rolling-window feature**. They are
+_expected_ closed and the window size must honour calendar structure. A 20-day SMA over CME futures should span 20
+trading days, not 20 calendar days.
+
+### `n_valid` sibling column (session-aware calculators)
+
+Session-aware calculators MUST emit an `n_valid` sibling column alongside any rolling aggregate so consumers know the
+denominator actually used. See worked example in the "20-day MA" section above for the shape.
+
+## Expected universe v2 — denominator impact on consumers (2026-05-15)
+
+When the v2 instrument-grain enumerator lands (sequenced under `manifest_evolution_master_2026_05_08` gate G3), the
+manifest's `expected_unattempted` denominator grows by ~100× (from ~1.4M venue-grain rows to ~190M instrument-grain
+rows). Downstream consumers that compute honest-coverage percentages must handle this volume change:
+
+- **Deployment-api data-status drilldown** — `coverage_pct` queries must use column-projection (e.g. `pyarrow` with
+  `columns=['capture_status', 'asset_group', 'venue', 'instrument_id', 'date']`) rather than full table scans.
+  Pre-compute 24h-TTL redis cache for UI-facing endpoints. DuckDB-style aggregates preferred for ad-hoc queries.
+- **features-\* pre-flight gates** — row-count assertions become 100× larger; assert relative coverage (%) not absolute
+  count, or adjust thresholds after v2 lands.
+- **ML training row counts** — features-to-manifest join denominators shift; update any hardcoded "expected N rows per
+  day" assertions to use dynamic lookups from the manifest.
+- **Reporting surfaces** — no action needed if they already read from the drilldown endpoint (gets the cache benefit).
+
+This note is pre-emptive — v2 has not yet launched. Update this section after Phase 4 of
+[`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md) completes.
+
+### Cross-references
+
+- MTDS implementation: `market_tick_data_service/engine/orchestrator.py` — `process_ticks` non-trading-day block.
+- UAC calendar functions: `unified_api_contracts.registry.venue_trading_calendar.is_non_trading_day` +
+  `non_trading_day_reason`.
+- Intra-day session classifier: `unified_api_contracts.canonical.crosscutting.market_session.classify_session`.
+- Feature calculator pattern for session-aware rolling windows:
+  [`../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md`](../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md).
+- Writegate Phase 2.E.2 plan item: `plans/epics/tradfi_master_2026_05_07.md` § "Replace zero-volume bars during
+  non-tradeable sessions."

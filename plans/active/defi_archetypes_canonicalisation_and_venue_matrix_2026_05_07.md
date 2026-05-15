@@ -25,6 +25,11 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — `defi_recursive_borrow_archetypes_2026_05_10.md` is consuming the lending-indices DEFERRED
+> note in this plan as a P0 prerequisite. RE-VERIFY before flipping the DEFERRED checkbox to ✅ — the recursive-borrow
+> plan needs ≥1y of historical Aave V3 / Compound V3 lending data to backtest. Banner added 2026-05-15 per Cross-Plan
+> Coordination Banners HARD RULE.**
+
 # DeFi archetypes canonicalisation + venue-matrix correction
 
 > **Agent 4 triage decision (2026-05-07,

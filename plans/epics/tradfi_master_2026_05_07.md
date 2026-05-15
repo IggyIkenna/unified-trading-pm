@@ -274,8 +274,9 @@ mass-fail every existing futures row.
       callsites + 12 unit tests. Historical-row backfill deferred to plan Phase 3 (one-shot migration script).
 - [x] [SCRIPT] P0. **One-shot manifest migration script** under
       `instruments-service/scripts/migrate_tradfi_expiry_schema.py` mirroring existing migration patterns (idempotent,
-      dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules).
-      **COMPLETED 2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase 1B propagation; run on GCE VM per operator direction.
+      dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules). **COMPLETED
+      2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase
+      1B propagation; run on GCE VM per operator direction.
 - [ ] [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands in tradfi-master scope
       first; the workspace-wide hard-schema enforcement (under `hard_schema_enforcement_2026_05_08` plan) ships AFTER to
       avoid mass-fail during transit. CLAUDE.md "Two teammates" rule applies — coordinate via shared cursor working
@@ -304,25 +305,40 @@ volume.
       `unified_api_contracts/canonical/crosscutting/market_session.py`. **COMPLETED 2026-05-13**: UAC@37f6dfd — shipped
       module with 5 venue schedules (CME / NYSE / NASDAQ / ICE / CBOE) + `classify_session()` cascade helper + 33 unit
       tests. Half-day / holiday calendars + ICE Brent (London) DEFERRED per operator direction (per-venue iteration).
-- [ ] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
+- [x] [SCRIPT] P0. **Databento adapter `session_type` column write-time stamp.** Compare each bar's timestamp against
       the venue's `VENUE_SESSION_SCHEDULE`; stamp `session: MarketSession`, `phase: SessionPhase` on every OHLCV row at
       write-time. NEW columns added to canonical OHLCV schema. Backfill: one-shot reclassification VM walks existing
       OHLCV manifest rows, computes session per row from the existing timestamp, writes back. Same migration script
-      pattern as Q1+Q2 above.
-- [ ] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
+      pattern as Q1+Q2 above. **CODE SHIPPED 2026-05-15**: UAC@f4d0cec (CanonicalOhlcvBar + facade exports) +
+      MTDS@6873955 (adapter session stamping, 4 unit tests, migration script
+      `scripts/migrate_tradfi_ohlcv_session_stamps.py`). **Backfill VM run PENDING OPERATOR APPROVAL** (≥1 week GCS
+      backfill; see pings/slot_5.md). New rows stamped automatically from this release.
+- [x] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
       opted in (overnight strategies / pre-market liquidity calculators); strategy-service per-archetype
       `allowed_sessions: list[MarketSession]` with default `[REGULAR]`; execution-service `OutOfSessionOrderError`
       raised when an order targets a venue × instrument outside the configured allowed_sessions; MDPS write-gate checks
-      session against the per-(venue, data_type) allowed-sessions config.
-- [ ] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
+      session against the per-(venue, data_type) allowed-sessions config. **SHIPPED 2026-05-15**: `SS@09e239c`
+      (StrategyConfig.allowed_sessions, 3 tests) + `ES@dfd2f773c` (OutOfSessionOrderError, 3 tests) + `FS@ce093d6c`
+      (\_filter_regular_session in DataLoader.load_candles, 6 tests). **MDPS write-gate session config DEFERRED** to
+      next P0 item (zero-volume-bars replacement) — both changes touch the same MDPS write path; doing them together
+      avoids double-edit.
+- [x] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
       writes 1440 zero-volume bars per non-tradeable day; flip to `record_empty(reason=EXPECTED_NON_TRADING_SESSION)`
       per workspace honest-absence rule. Manifest denominator math gets fixed automatically by the per-(venue, day)
-      session-typed expected universe.
-- [ ] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
+      session-typed expected universe. **SHIPPED 2026-05-15**: `MTDS@038a611` — added `non_trading_day_reason` import +
+      two-path `record_expected_empty` emission (early-return path for all-non-trading-day batches + finalization-block
+      path for mixed batches); used existing UAC `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` reasons (more precise than
+      generic `EXPECTED_NON_TRADING_SESSION`); 3 unit tests in `tests/unit/test_orchestrator_non_trading_session.py`.
+- [x] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
       empty reasons" section listing all 6 EXPECTED_NON_TRADING_SESSION sub-reasons (pre-market closed, post-market
       closed, weekend, holiday, half-day-early-close, partial-halt). NEW
       `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` (small doc) describes the standard pattern
-      for features-\* calculators that need overnight or pre-market data.
+      for features-\* calculators that need overnight or pre-market data. **SHIPPED 2026-05-15**: `PM@db9b7af8` — added
+      § "Session-typed availability" to honest-absence-downstream-handling.md (EXPECTED_WEEKEND / EXPECTED_HOLIDAY /
+      EXPECTED_OUTSIDE_TRADING_HOURS reasons, orchestrator two-path emission pattern, downstream consumer action table,
+      n_valid sibling column rule); extended session-aware-feature-calculator-pattern.md with § "Session-typed manifest
+      reasons" (three-reason table, rolling-window session-adjusted-denominator code pattern, `is_session_closed` helper
+      using `_SESSION_CLOSED_REASONS` frozenset).
 
 ### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`)
 

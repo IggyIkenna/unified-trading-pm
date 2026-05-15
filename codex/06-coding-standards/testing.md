@@ -55,6 +55,53 @@ Per `.claude/rules/python-backend.md` § Testing + `.claude/rules/universal.md`:
 4. **autouse conftest fixtures for I/O mocks** — see "Singleton conftest fixtures" above.
 5. **`pool: "forks"` in `vitest.config.ts`** for TS test repos — see CLAUDE.md "Local Development" §.
 
+## BLOCK_CRITICAL emission-policy test pattern
+
+**Added 2026-05-15 — Phase 8 / slot 6 doc-currency audit.**
+
+When a service uses `ServiceEmissionPolicy.BLOCK_CRITICAL` as its write policy, unit tests MUST verify all three
+routing outcomes:
+
+1. **Suppression path** — empty / invalid data → `decision.should_publish_row == False`.
+2. **Alert path** — same suppression input → `decision.should_alert == True`.
+3. **Publish path** — valid data → `decision.should_publish_row == True`, no alert.
+
+Reference implementation: `risk-and-exposure-service/tests/test_emission_policy_risk_state.py` — uses two test
+classes (`TestCheckEmissionPolicyRouting` for the 4 routing cases, `TestRiskSnapshotSinkWrite` for the sink
+integration).
+
+**Done-def for BLOCK_CRITICAL coverage**: risk-and-exposure-service (and any future service adopting
+`BLOCK_CRITICAL`) has tests covering suppression + alert + publish routing + deactivation re-arms. QG coverage gate
+applies (≥70%). SSOT: `codex/02-data/service-output-emission-semantics.md` § BLOCK_CRITICAL.
+
+---
+
+## LocalKeyCustodyProvider test pattern (mock-`_w3` seam)
+
+**Added 2026-05-15 — Phase 8 / slot 6 doc-currency audit.**
+
+`LocalKeyCustodyProvider` (dev-only raw-PK signing) has **no constructor injection seam** for the Web3 client —
+unlike `CloudKmsCustodyProvider` which accepts `kms_client`/`secrets_client` as params. The correct mock seam is
+**direct attribute assignment** after construction:
+
+```python
+provider = LocalKeyCustodyProvider(private_key=_TEST_PK)
+provider._w3 = _make_mock_web3()   # bypass lazy _get_web3() initialisation
+```
+
+`_make_mock_web3()` must stub `eth.account.from_key.return_value.address`, `eth.account.from_key.return_value.sign_transaction.return_value.raw_transaction`, `eth.get_balance`, `eth.get_transaction_count`, `eth.gas_price`, `eth.send_raw_transaction`.
+
+**TxParams optional-key access**: `web3`'s `TxParams` TypedDict marks most keys as `NotRequired`. Access via
+`.get("key")`, never `["key"]`, to satisfy `basedpyright reportTypedDictNotRequiredAccess`.
+
+**Conftest requirement**: `setup_events(MockEventSink())` must be called in conftest so `log_event()` calls in
+provider methods don't raise during test.
+
+Reference implementation: `execution-service/tests/unit/custody/test_local_key_provider.py` (33 tests, 8 classes;
+committed `f1dee093` 2026-05-15).
+
+---
+
 ## Two-pass model — when tests run
 
 Per CLAUDE.md "Git discipline" + `.claude/rules/python-backend.md` § "Two-pass model":

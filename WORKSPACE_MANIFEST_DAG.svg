@@ -66,9 +66,9 @@
   <text x="95" y="343" text-anchor="middle" class="level-label">L1</text>
   <text x="150" y="343" class="desc">Foundation contracts (Tier 0) — present clone set. (1 repos)</text>
   <rect x="70" y="366" width="167" height="38" class="lib" />
-  <rect x="70" y="366" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="366" width="4" height="38" fill="#facc15" rx="2" />
   <text x="153" y="384" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="153" y="396" text-anchor="middle" class="ver">0.1.20</text>
   <!-- L2: Trading library (Tier 1) — depends on UAC. (1 repos) -->
   <rect x="40" y="438" width="2320" height="107" class="level-bg" />
@@ -86,9 +86,9 @@
   <text x="95" y="581" text-anchor="middle" class="level-label">L3</text>
   <text x="150" y="581" class="desc">Instrument registry — depends on UAC + UTL. (1 repos)</text>
   <rect x="70" y="604" width="153" height="38" class="svc" />
-  <rect x="70" y="604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="146" y="622" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="146" y="634" text-anchor="middle" class="ver">0.1.22</text>
   <!-- L4: Core services (batch + live) — parallel within tier. (19 repos) -->
   <rect x="40" y="676" width="2320" height="155" class="level-bg" />
@@ -161,9 +161,9 @@
   <circle cx="509" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="404" y="801" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="529" y="771" width="188" height="38" class="svc" />
-  <rect x="529" y="771" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="529" y="771" width="4" height="38" fill="#facc15" rx="2" />
   <text x="623" y="789" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="707" cy="779" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="707" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="623" y="801" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="727" y="771" width="160" height="38" class="svc" />
   <rect x="727" y="771" width="4" height="38" fill="#facc15" rx="2" />

@@ -647,3 +647,64 @@ Operator is AFK — do not ping for further authorization on items already in yo
 ### Plan flip
 
 - tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md Phase 4.4+4.5 → [x]
+
+---
+
+## [slot 5 → main] Downstream consumer wiring shipped 2026-05-15
+
+**Status**: ✅ SHIPPED (3 repos pushed to live-defi-rollout)
+
+### Commits
+
+- `SS@09e239c` — `StrategyConfig.allowed_sessions: list[str]` default `["regular"]` + 3 unit tests
+- `ES@dfd2f773c` — `OutOfSessionOrderError` exception class + 3 unit tests
+- `FS@ce093d6c` — `_filter_regular_session()` in `DataLoader.load_candles()` + 6 unit tests
+
+### Plan flip
+
+- tradfi_master § "Downstream consumer wiring" → `[x]` with evidence above
+- MDPS write-gate session config deferred to next P0 (zero-volume-bars replacement) — same write path
+
+---
+
+## [slot 5 → operator] APPROVAL REQUEST — Databento session-stamp backfill VM (2026-05-15)
+
+**Status**: 🟡 BLOCKED-OPERATOR-DECISION — awaiting approval to launch GCE VM
+
+```
+CREDENTIAL APPROVAL REQUEST — migrate_tradfi_ohlcv_session_stamps backfill VM
+Vendor: GCP Compute (central-element-323112) — no new spend beyond existing VM quota
+What I need: Operator approval to launch GCE VM running:
+  python3 scripts/migrate_tradfi_ohlcv_session_stamps.py \
+      --project central-element-323112 \
+      --start-date 2024-01-01 --end-date 2026-05-14 \
+      --no-dry-run
+Account to use: existing GCP project central-element-323112 (ADC, existing service account)
+Unblocks: TradFi OHLCV parquets — session/phase columns backfilled on all rows written before
+  MTDS@6873955. New rows are already stamped automatically. Without backfill, features-service
+  session-filter (next item) will see null session on historical bars.
+Without it: historical OHLCV rows have session=null/phase=null; new rows stamped OK.
+  Backfill script ready at MTDS scripts/migrate_tradfi_ohlcv_session_stamps.py.
+  Dry-run mode available (default). Rule: ≥1 week GCS backfill requires operator approval.
+```
+
+**Script**: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py` **Commits**: MTDS@6873955
+(script) + UAC@f4d0cec (classify_session facade) **Plan ref**: `tradfi_master_2026_05_07.md` § "Databento session-type
+awareness"
+
+---
+
+## [slot 5] Zero-volume bars → record_expected_empty shipped (2026-05-15)
+
+**Status**: ✅ SHIPPED
+
+### Commit
+
+- `MTDS@038a611` — `non_trading_day_reason` import + two-path `record_expected_empty` emission in orchestrator
+  (early-return path for all-non-trading batches + finalization-block path for mixed batches); used
+  `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` from existing UAC taxonomy; 3 unit tests in
+  `tests/unit/test_orchestrator_non_trading_session.py`
+
+### Plan flip
+
+- tradfi_master § "Replace zero-volume bars during non-tradeable sessions" → `[x]` with evidence above

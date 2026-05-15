@@ -124,6 +124,18 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.67 | banned NaN-placeholder method AST-walk | [STEP 5.67: Banned NaN-Placeholder / Bypass-`record_captured` AST-Walk](#step-567-banned-nan-placeholder--bypass-record_captured-ast-walk) | `scripts/quality_gates/check_banned_placeholder_methods.py` (driver) | "Honest absence vs fake placeholders" + "No double SSOT in data-saving methodology" + "Four-category empty-output decision" |
 | 5.69 | inline `f"gs://…"` / `f"s3://…"` URI ratchet | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_inline_bucket_uri.py` (driver)          | "Bucket-name SSOT (b+)"                                                                                                     |
 | 5.70 | explicit `pipeline_mode=` at `record_*` calls | [STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call](#step-570-explicit-pipeline_mode-at-every-record_-call-manifest-v8) | `scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (driver) | "Live = batch (CRITICAL)" + "Availability manifest v8 — `pipeline_mode` first-class column"                                 |
+| 5.71 | emission-policy paired-callsite (`publish_with_policy` for every `record_captured`) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (baseline-aware ratchet) | writegate Phase 6.9 — every `record_captured()` callsite must have a paired `publish_with_policy()` or `publish_with_manifest_lookup()` |
+| 5.72 | UAC chain_env inclusion invariant (`MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES`) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `defi-execution-overview.md` § chain-set completeness (DF-7) |
+| 5.73 | `ManifestWriter.add()` with bundled `data_type` literal — banned | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | use `record_captured_from_counts()` instead |
+| 5.74 | MDPS bar-boundary truncation bypass static check | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | MDPS-only; use `compute_bar_close_boundary()` helper |
+| 5.75 | `DataType` enum mode-agnosticism — no `LIVE_`/`BATCH_` prefixes (batch_live_symmetry L1) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | "Batch = Live" + `mode-axis-discipline.md` — DataType values must be mode-agnostic |
+| 5.76 | no service-level `DataType` class redeclarations (batch_live_symmetry L5) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | import from `unified_api_contracts`; never redeclare locally |
+| 5.77 | no `mode == "batch"`/`"live"` comparisons outside CLI seam (batch_live_symmetry L2) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `mode-axis-discipline.md` AP-1 — mode routing only at CLI entry point |
+| 5.78 | `RuntimeMode` declared only in UAC `internal/modes.py` (batch_live_symmetry L3) | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` | `mode-axis-discipline.md` AP-3 — import from UAC, never redeclare |
+| 5.79 | dockerfile-base-pin — production Dockerfiles must use `@sha256:digest` not `:tag` | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5) | `codex/06-coding-standards/dockerfile-standards.md` — pin SHA for reproducible builds; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 |
+| 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json` | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet) | `codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch |
+| 5.81 | tarball-env-block — deployment-api must gate staging/prod tarball uploads behind env-tier check | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (deployment-api only; pending-ratchet) | `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1) |
+| 5.82 | image-build-on-staging-merge — staging branch workflow must trigger Cloud Build | (no section here — see enforcement file) | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5) | `deployment-and-qg-strategy.md` § image-build cutover path; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 |
 | L1   | data_type enum contains `LIVE_`/`BATCH_` prefixed members | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork |
 | L2   | mode-conditional branches outside seams | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-fix-required-21-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode` |
 | L3   | `RuntimeMode` declared outside UAC SSOT | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-fix-required-2-violations) | `scripts/quality-gates-base/base-service.sh` (pending wire-in) | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode` |
@@ -434,6 +446,110 @@ classifications.
 - Cursor rules (`strict-quality-gates.mdc`, `quality-gates-audit-factors.mdc`) enforce documentation
 - Setup checklists require creating this file as part of repo scaffolding
 - Quarterly workspace-wide scans update the codex aggregate
+
+---
+
+## Library-Repo QG Carveout Patterns
+
+Library repos (UAC, UTL, etc.) use the same `base-library.sh` body as service repos but expose additional
+per-repo override variables to suppress false-positive QG checks on files that intentionally break the
+normal rules. These carveouts are in the repo's `scripts/quality-gates.sh` config stub above the
+`source base-library.sh` line.
+
+**These overrides are for library repos only.** Service repos must not use them — service code that needs a
+size or import exception should be refactored, not carved out.
+
+### `UAC_CANONICAL_EXEMPT=true`
+
+**What it disables**: The "no internal deep-imports" check that verifies service code never imports from
+`unified_api_contracts.canonical.*` directly (only through the public facade `from unified_api_contracts import ...`).
+
+**When valid**: Only for `unified-api-contracts` itself. UAC is the schema/contract owner — it must be allowed
+to import its own sub-modules internally.
+
+**Pattern (in `scripts/quality-gates.sh`)**:
+```bash
+UAC_CANONICAL_EXEMPT=true  # UAC is the schema repo — internal imports are allowed
+```
+
+**Never use for service repos.** Service deep-import violations (e.g. `from unified_api_contracts.canonical...`)
+must be fixed by switching to the facade import.
+
+---
+
+### `SIZE_EXTRA_EXCLUDES`
+
+**What it does**: Passes additional `! -path <glob>` exclusions to the file-size check so named files are
+not flagged for exceeding the 900-line limit.
+
+**When valid**: Closed-set enumerations — venue registries, error code tables, instrument seed catalogues,
+re-export facades — where splitting the file would harm grep-ability without reducing complexity. New files
+should not be added to this list unless they are provably closed-set enumerations.
+
+**Pattern**:
+```bash
+SIZE_EXTRA_EXCLUDES=(
+    "./unified_api_contracts/__init__.py"       # public re-export facade
+    "./unified_api_contracts/registry/defi_reserve_params.py"  # closed-set venue params
+    # ... additional closed-set registry files
+)
+```
+
+**Adding a new entry**: requires a comment explaining WHY the file is a legitimate exception (closed-set
+enumeration / generated / provenance doc). Without a comment, the PR is review-blocked.
+
+---
+
+### `GCP_PROJECT_ID_EXCLUDE_GLOBS`
+
+**What it does**: Passes additional exclusion globs to the `GCP_PROJECT_ID` literal-string check that
+prevents hardcoded project IDs appearing in source files.
+
+**When valid**: Files that contain GCS bucket names or project IDs purely as documentation — provenance
+comments, test-fixture URI shapes, or module-level string constants that document where live data lives.
+These are NOT runtime config paths; they never reach `get_storage_client()` or `resolve_bucket_name()`.
+
+**Pattern**:
+```bash
+GCP_PROJECT_ID_EXCLUDE_GLOBS=(
+    "!**/data_source_continuity.py"                 # VIX_PROD_BUCKET/VIX_DEV_BUCKET as constants
+    "!**/defi_prediction_instrument_seeds.py"       # docstring cites live GCS paths as provenance
+    "!**/registry/generators/cefi.py"               # real_backfill_sample_uri is doc of path shape
+)
+```
+
+**Never use to suppress actual runtime config.** Bucket lookups at runtime MUST go through
+`resolve_bucket_name(...)` (QG STEP 5.69 enforces). This carveout only covers static strings that are
+documentation artifacts, not lookup keys.
+
+---
+
+### `BROAD_EXCEPT_EXTRA_EXCLUDES`
+
+**What it does**: Passes additional glob patterns to the broad-`except` check (bandit B001 / ruff E722)
+so named files are not flagged for `except Exception:` or bare `except:` patterns.
+
+**When valid**: Registry dispatchers and mapping resolvers that must catch all exception types to isolate
+faults per-entry (e.g., `venue_context.py`, `mapping_resolver.py`). The catch-all prevents one bad entry
+from silently dropping the rest of the registry.
+
+**Pattern**:
+```bash
+BROAD_EXCEPT_EXTRA_EXCLUDES=("**/venue_context.py" "**/mapping_resolver.py")
+```
+
+**New entries require a comment** explaining the catch-all rationale. Do not use to paper over lazy
+exception handling in business-logic code — use specific exception types there.
+
+---
+
+### Adding a new library carveout
+
+1. Identify whether it fits an existing category above. If not, file an issue doc in `plans/active/issues/`.
+2. Add the variable to the repo's `scripts/quality-gates.sh` stub above the `source base-library.sh` line.
+3. Include an inline comment explaining WHY the carveout is legitimate for that specific file/pattern.
+4. Update `QUALITY_GATE_BYPASS_AUDIT.md` § 2.x with the same justification.
+5. Reference this section in the comment: `# See codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
 
 ---
 
@@ -1103,6 +1219,28 @@ pytest tests/smoke/ -v --tb=short --timeout=180
 ```
 
 Missing test directories are silently skipped.
+
+### `PYTEST_UNIT_DIR` override (Phase 8, 2026-05-15)
+
+**Added 2026-05-15 — Phase 8 / slot 6 doc-currency audit.**
+
+Services whose unit tests are NOT under the canonical `tests/unit/` root can override the pytest target directory
+by setting `PYTEST_UNIT_DIR` **before** `base-service.sh` runs its test step:
+
+```bash
+# In service's scripts/quality-gates.sh — set before sourcing base-service.sh
+PYTEST_UNIT_DIR="tests/"   # e.g. features-service: per-family CLIs share root tests/
+```
+
+`base-service.sh` line 209 reads: `PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"` — the default is
+`tests/unit/`; override only when the layout genuinely differs.
+
+**When to use**: services with per-family CLI layouts (e.g. `features-service`) where tests live directly under
+`tests/` without a `unit/` subdirectory. **Never** use to broaden the pytest scope to include integration tests in
+the unit pass — integration tests run in a separate step.
+
+Reference: `features-service/scripts/quality-gates.sh:28` (`PYTEST_UNIT_DIR="tests/"`). Issue doc that surfaced
+the gap: `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md`. PM commit: `c7786b2f`.
 
 ---
 

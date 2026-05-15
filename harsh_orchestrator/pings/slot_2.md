@@ -1,26 +1,105 @@
-# Slot 2 ping file — re-themed 2026-05-14
+# Slot 2 ping file — re-themed 2026-05-15
 
-> Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N).
-> Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
-> Format: `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
+> Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N). Full Q&A lives in
+> the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
+> `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-14 10:05 UTC] [main → slot 2] — RE-THEMED via --reset-slot.
-Prior theme: TBD (main fills from yesterday's LEDGER + prior plan's DONE block on first read).
-New theme: TBD (main fills from today's work-split + plan-of-record + spawn prompt).
-[2026-05-14 10:19 UTC] slot2 — STARTED slot 2 (plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md § Phase 0 Cluster B — ml-training-service C901 lint sweep)
-[2026-05-14 UTC] slot2 — DONE Phase 0 Cluster B (ml-training-service@5b60d5f — C901 clean; PM eac0774d) + Wave 2 verified-already-done (execution-service@09198760 PoolStateResult noqa:F401; deployment-api dep in pyproject.toml:42 + 2778 tests collected; both issue docs archived@912b126b). Standing by for next assignment.
-[2026-05-14 11:06 UTC] [main → slot 2] — NEXT ASSIGNMENT: Phase 0 remaining (absorbing silent slots 4+6). Read LEDGER § "Slot 2 — Phase 0 remaining" for full brief. Work in order: (1) alerting-service N802 — 4 SHOUTY_CASE noqa:N802 additions; (2) MDPS 2 test failures — diagnose-first, likely pipeline_mode kwarg drift; (3) features-service 1 import error in test_volatility_expected_unattempted — re-run QG, fix if still failing; (4) ml-inference-service 6f+33e — re-run after UTL propagation, diagnose-fix if still failing; (5) deployment-service Cluster F — re-run QG with 15min budget, flip checkbox. NOTE: MDPS is being worked by slot 9 — skip market-tick-data-service, focus on alerting/features/ml-inference/deployment.
-[2026-05-14 UTC] slot2 — BONUS FIX (prior context): strategy-paper VM nautilus_trader crash — Option B applied: removed paper→tenderly auto-override in colocated_engine.py (e2e-testing@4e4a5da). Issue doc RESOLVED (PM@7beb103d).
-[2026-05-14 UTC] slot2 — STARTED new assignment: alerting-service N802 → features-service import → ml-inference-service failures → deployment-service timeout re-run. (skipping MDPS — slot 9 owns it)
-[2026-05-14 11:15 UTC] [main → slot 2] — UPDATE: alerting-service already shipped by slot 6 (alerting-service@74761a5+@75f0404, 451 tests pass) — skip it if not already in progress, or if you already fixed it that's fine too. Focus remaining on: (1) features-service test_volatility_expected_unattempted import error; (2) ml-inference-service 6f+33e; (3) deployment-service Cluster F QG timeout re-run.
+[2026-05-15 06:02 UTC] [main → slot 2] — ✅ CYCLE-CLOSE acked (08:25). LEDGER flipped. All 4 items done + bonus bug fix.
+🛑 Item 1 (Cloud Scheduler) still BLOCKED-IAM — Ikenna ping outstanding, no response yet. Stand down from queue. Monitor
+honest-coverage smoke VM: expect `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` in next ~10 min.
+If it lands → post a final ping with the file path. If it fails → post BLOCKED with rc. Then stand down — you are done
+for Day-1.
 
-[2026-05-14 11:44 UTC] [main → slot 2] — UPDATE: (1) features-service is already QG green (slot 4 fixed it @38b43ea6) — just verify with a quick re-run, then skip. (2) ml-inference-service 6f+33e absorbed by slot 4 — do NOT work on it. (3) deployment-service Cluster F absorbed by slot 5 — do NOT work on it. Your ONLY item: verify features-service QG green (confirm @38b43ea6), then stand by for B-011 (Phase 8.A VM deploy scripts coverage) once Phase 0 is all green. Ping DONE when features-service verified.
+[2026-05-15 04:38 UTC] [main → slot 2] — RE-THEMED via --reset-slot. Prior theme: TBD (main fills from yesterday's
+LEDGER + prior plan's DONE block on first read). New theme: TBD (main fills from today's work-split + plan-of-record +
+spawn prompt).
 
-[2026-05-14 11:51 UTC] [main → slot 2] — PRE-ASSIGNMENT: B-011 (Phase 8.A VM deploy scripts coverage). Read LEDGER § "Slot 2 — B-011" for full brief. START CONDITION: wait for Phase 0 all clusters green (watch for DONE pings from slots 5, 6, 9). While waiting: verify features-service QG green, then read deployment-service/scripts/vm/ structure. Work when ready: (1) shellcheck all launch-*.sh; (2) unit tests for singleton-lock + zombie-watchdog VM_PREFIX_TO_BUCKET registration + tarball-URI construction; (3) QG green + plan checkbox flipped. Ping DONE with SHAs.
+[2026-05-15 04:18 UTC] [main → slot 2] — 🌅 **DAY-1 START (Lever 1+2 adopted)**. Read
+[`../../plans/active/continuation_prompts_harsh_2026_05_15.md`](../../plans/active/continuation_prompts_harsh_2026_05_15.md)
+§ "Slot 2" for your 3-item queue + reserve. Yesterday: B-011 ✅ + api_football Phase 3b/3c ✅. New theme = Deployment
+Infra & Lint Sweep per THEMATIC_CLUSTERS.md. Execute queue in order; ping DONE per item with SHAs; self-pivot to next
+item without main dispatch. After queue exhausted, pull from reserve. Ping main ONLY on BLOCKED/cross-side/BIG finding.
+EOD: "🏁 Slot 2 Day-1 close" summary. Auto-poll tracks your STARTED/DONE.
 
-[2026-05-14 12:08 UTC] [main → slot 2] — GREEN LIGHT for B-011 ✅. Operator confirmed Phase 0 effectively green @12:04 (MTDS DONE per slot 9; Cluster F DONE per slot 5; pnl-attribution C901 DONE per slot 5 proactive). deployment-service is independent of remaining ml-inference status (B-011 targets deployment-service only). START B-011 NOW per LEDGER § "Slot 2 — B-011": (1) shellcheck all deployment-service/scripts/vm/launch-*.sh; (2) unit tests for singleton-lock + zombie-watchdog VM_PREFIX_TO_BUCKET registration + tarball-URI construction; (3) QG green + plan Phase 8.A "VM deploy scripts" checkbox flipped. Ping STARTED then DONE with SHAs.
-[2026-05-14 UTC] slot2 — DONE prior assignment (carried across context window): alerting-service@7a69007 QG PASSED; features-service@6fc2450b import fix; ml-inference-service@107d7ef QG PASSED; deployment-service QG PASSED 78s. Now reading B-011 brief from LEDGER.
+[2026-05-15 05:07 UTC] slot-2 — STARTED honest_coverage cron VM scheduling
+(plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md)
 
-[2026-05-14 12:41 UTC] [main → slot 2] — 🚨 **FINAL WAVE — DAY WRAP-UP**. Operator confirms today's session is wrapping up. B-011 is your FINAL ASSIGNMENT. You've been idle since GREEN LIGHT @12:08 (~33 min). KICK NOW: (1) ping STARTED immediately so main can track; (2) ship B-011 deliverables (shellcheck launch-*.sh + singleton-lock test + zombie-watchdog VM_PREFIX_TO_BUCKET test + tarball-URI test); (3) QG green + plan checkbox flip + DONE ping with SHAs. After DONE: stand down for the day. If you hit a blocker that prevents shipping in next ~2h, file BLOCKED ping with specifics and main will retire the task. **No new dispatches will follow** — this is the last item.
-[2026-05-14 UTC] slot2 — DONE B-011 Phase 8.B VM deploy scripts: deployment-service@cf6bb83 — tests/unit/test_vm_zombie_watchdog.py (318 lines, 5 classes: prefix-registration / _is_daemon / WatchdogVerdict / VmPrefixSpec / shellcheck parametrized); shellcheck --severity=error sweep clean (fixed invalid SC2cat directive in launch-sports-full-sweep-vm.sh); 8 known zombie-watchdog blindspot prefixes documented; QG PASSED 77s. Plan Phase 8.B VM deploy scripts checkbox flipped.
-[2026-05-14 UTC] slot2 — STATE CHECK: all current slot 2 assignments exhausted. B-011 DONE (deployment-service@cf6bb83); api_football Phase 3b/3c DONE (plan status: done, PM@60c8e5a0). LEDGER slot 2 brief exhausted. Standing by for new assignment or EOD stand-down.
+[2026-05-15 05:30 UTC] [slot 2 → main] — BLOCKED-OPERATOR-DECISION: honest_coverage Cloud Scheduler job needs
+`cloudscheduler.jobs.create` (harshkantariya@ gets PERMISSION_DENIED). Cloud Run Job ✅ + VM smoke launched ✅ +
+Terraform SSOT ✅ (deployment-service@19454f1). **Ikenna needs to run 1 command**:
+`bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com). Everything else
+shipped. Smoke VM running: measure-honest-coverage-20260515-105009.
+
+[2026-05-15 06:00 UTC] [main → slot 2] — IAM block acked. Escalated to Ikenna via cross-side ping (needs
+cloudscheduler.jobs.create on ikenna@ account). Smoke VM running ✅ — verify it writes honest-coverage JSON before EOD.
+Continue item 2 (codex audit / VM_PREFIX watchdog) while scheduler pending. When Ikenna confirms scheduler created, you
+can flip item 1 ✅.
+
+[2026-05-15 06:11 UTC] slot-2 — DONE item 2 (VM_PREFIX watchdog blindspot audit). deployment-service@97298f3. All 8
+B-011 blindspots registered (defi-fwd-, prediction-fwd-, footystats-fwd-, sfi-fwd-, sports-manifest-rescan-,
+strategy-test-, ml-train-, sports-scheduler-). All heartbeat-only (bucket=None). 6 unit tests pass; 0 unknown prefixes
+remaining. Watchdog re-deployed: vm-zombie-watchdog-20260515-110711. STARTED item 3 (codex audit:
+deployment-and-qg-strategy).
+
+[2026-05-15 08:05 UTC] [main → slot 2] — ✅ item 2 acked (deployment-service@97298f3, 8 prefixes, 6 tests). LEDGER
+updated. Item 3 (codex audit) confirmed in flight — continue.
+
+[2026-05-15 08:22 UTC] slot-2 — DONE items 3+4. unified-trading-pm@0f52f0da (codex: launcher-script-ssot.md +
+deployment-and-qg-strategy.md). alerting-service D.5+D.7 verified RESOLVED (alerting-service@6a01b98, QG green). BUG
+FOUND+FIXED: honest-coverage smoke rc=2 (VM_TASK=measure-honest-coverage not in setup-data-pipeline-vm.sh routing;
+changed to features-backfill). deployment-service@4b8d5b4 + GCS launcher updated. Re-smoke:
+measure-honest-coverage-20260515-112048 RUNNING. Watching for coverage.json in 10-15 min.
+
+[2026-05-15 08:25 UTC] slot-2 — 🏁 **Slot 2 Day-1 close**. Queue exhausted.
+
+**DONE:**
+
+- Item 2 ✅ — VM_PREFIX watchdog blindspot audit (deployment-service@97298f3). 8 B-011 prefixes registered, 6 tests
+  pass, watchdog vm-zombie-watchdog-20260515-110711 running.
+- Item 3 ✅ — Codex audit (unified-trading-pm@0f52f0da). launcher-script-ssot.md + deployment-and-qg-strategy.md updated
+  with B-011 audit + honest-coverage cron pattern.
+- Item 4 ✅ — alerting-service D.5+D.7 violations verified RESOLVED (alerting-service@6a01b98, QG=all-green).
+- BUG FIX (bonus) — honest-coverage launcher VM_TASK bug caught and fixed (deployment-service@4b8d5b4). Re-smoke
+  running: measure-honest-coverage-20260515-112048.
+
+**BLOCKED-OPERATOR-DECISION (item 1):**
+
+- Cloud Scheduler `honest-coverage-daily` creation pending Ikenna (`cloudscheduler.jobs.create`). Infra shipped: Cloud
+  Run Job ✅ + Terraform ✅ + launcher ✅ (GCS updated). One-liner:
+  `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as ikenna@odum-research.com.
+
+**WATCHING:**
+
+- measure-honest-coverage-20260515-112048 (RUNNING) — expect
+  `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` in ~10 min. Will update when verified.
+
+[2026-05-15 11:55 UTC] slot-2 — BUG FOUND+FIXED (2nd round): GCS bucket `central-element-323112-honest-coverage` did not
+exist. Both prior smokes (105009 rc=2 + 112048 no-events) failed because bucket missing. Created bucket
+`gs://central-element-323112-honest-coverage` (asia-northeast1, uniform-bucket-level-access). Re-smoke #3:
+`measure-honest-coverage-20260515-115454` RUNNING. Expect coverage.json in ~10-15 min. STARTED reserve queue:
+shellcheck sweep on `deployment-service/scripts/vm/` launchers.
+
+[2026-05-15 12:03 UTC] slot-2 — ✅ **honest-coverage smoke VERIFIED**. `measure-honest-coverage-20260515-115454`
+completed. `gs://central-element-323112-honest-coverage/2026-05-15/coverage.json` written (287KB).
+5 asset_groups: cefi=49.5% captured, defi=19.5%, tradfi=69.7%, sports=99.8%, prediction=86.2%.
+Item 1 end-to-end path confirmed working (pending Cloud Scheduler from Ikenna for daily trigger).
+Reserve queue progress: shellcheck ✅ (deployment-service@cbd8a76); catboost_info ✅ (already clean).
+
+[2026-05-15 12:12 UTC] slot-2 — DONE reserve item 3 (partial — post-B-011 launcher template consolidation).
+deployment-service@f19f738. Fixed CODE_BUCKET hardcoding in 3 post-B-011 launchers
+(launch-measure-honest-coverage-vm.sh, launch-mtds-pyth-archive-backfill-vm.sh, launch-mtds-pyth-lst-backfill-vm.sh):
+`"deployment-scripts-central-element-323112"` → `"deployment-scripts-\${PROJECT}"`. GCS launcher updated.
+All post-B-011 launchers now shellcheck-clean + CODE_BUCKET consistent. Pre-B-011 fleet (~20 scripts with hardcoded
+form) deferred — large scope, no operator direction for full-fleet sweep.
+
+[2026-05-15 06:38 UTC] [main → slot 2] — ✅ honest-coverage smoke VERIFIED + acked. coverage.json 287KB confirmed in GCS. LEDGER flipped. Reserve shellcheck ✅ also acked. STAND-DOWN — Day-1 complete. Item 1 (Cloud Scheduler) stays BLOCKED-IAM until Ikenna runs setup-honest-coverage-scheduler.sh; nothing more for you to do on it.
+
+[2026-05-15 07:00 UTC] [main → slot 2] — 🔄 **RE-ACTIVATE — new work batch (Cloud Scheduler wait is non-blocking)**. Item 1 (honest_coverage Cloud Scheduler) is BLOCKED-IAM — Ikenna will run the script in next session. Skip it for now. **STEP 0 (mandatory first)**: rebase ALL repos to latest LDR — `cd /home/hk/unified-trading-system-repos/<repo> && git fetch origin && git rebase origin/live-defi-rollout` for every repo in your worktree. Then work in order: (2) **VM_PREFIX_TO_BUCKET watchdog blindspot audit** — 8 unknown prefixes from B-011; check which are active, map to buckets, update `deployment-service/vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET dict, re-deploy watchdog; (3) **codex audit** — verify `codex/05-infrastructure/deployment-and-qg-strategy.md` + `vm-tarball-deployment.md` reflect Phase 8.A surfaces (qg-snapshot VM prefix, honest-coverage VM prefix, B-018 cron pattern, Phase 8.A coverage targets); (4) **alerting-service codex violations follow-up** — `plans/active/issues/alerting_service_codex_violations_d5_d7_2026_05_14.md` (4 D.5+D.7 violations); triage + fix mechanical ones. Done-def: items 2-4 shipped + QG green. Ping DONE with SHAs.
+
+[2026-05-15 12:30 UTC] slot-2 — RE-ACTIVATE acked. STEP 0 complete: 18 repos rebased to LDR (16 fast-fwd, 2 already current). Items 2-4 SHAs VERIFIED in repos — done in prior session:
+- Item 2 ✅ deployment-service@97298f3 (8 B-011 prefixes registered, 6 tests, watchdog vm-zombie-watchdog-20260515-110711)
+- Item 3 ✅ unified-trading-pm@0f52f0da (deployment-and-qg-strategy.md + launcher-script-ssot.md updated)
+- Item 4 ✅ alerting-service@6a01b98 (D.5+D.7 RESOLVED, QG green)
+Ready for next dispatch. Polling for new assignments.
+
+[2026-05-15 07:07 UTC] [main → slot 2] — ✅ items 2-4 acked: watchdog@97298f3 (8 prefixes, 6 tests) ✅ + codex PM@0f52f0da ✅ + alerting D.5+D.7@6a01b98 ✅. Reserve queue next — work in order: (1) **honest_coverage VM launcher script** — write `deployment-service/scripts/vm/launch-honest-coverage-vm.sh` following the B-018 QG snapshot launcher as template (same pattern: VM naming, startup script, watchdog registration in VM_PREFIX_TO_BUCKET). Register prefix in `vm_zombie_watchdog.py`. The script itself doesn't need Cloud Scheduler IAM — write + shellcheck + register only. Done-def: script exists + shellcheck clean + prefix registered; done-def does NOT require Cloud Scheduler trigger (Ikenna runs that separately). (2) **ml-training-service catboost_info gitignore** — add `catboost_info/` to `.gitignore` in ml-training-service; verify no catboost artifacts tracked; QG green. (3) **VM launcher template DRY audit** — scan `deployment-service/scripts/vm/launch-*.sh` for repeated boilerplate (startup script download, metadata set, watchdog); note consolidation opportunities in a brief comment in `codex/05-infrastructure/vm-tarball-deployment.md`. Done-def: all 3 items + QG green. Ping DONE with SHAs.

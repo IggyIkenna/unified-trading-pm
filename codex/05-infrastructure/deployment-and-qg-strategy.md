@@ -250,4 +250,10 @@ This SSOT is read at slot 1 main morning ledger sweep daily through 2026-05-23. 
 - Image-build / tarball cost or speed observed beyond planned
 - Production incident post-mortem
 
-Last reviewed: 2026-05-13. Next review: 2026-05-16 (post freeze-gate, after first 99%-repo image-build run).
+Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + honest-coverage cron verification).
+
+**2026-05-15 additions**:
+- Honest-coverage cron VM: Cloud Scheduler → Cloud Run Job → GCE VM pattern canonised. SSOT: `launcher-script-ssot.md` § "Honest-coverage cron VM". Terraform: `deployment-service/terraform/gcp/honest_coverage_scheduler.tf`. BLOCKED-OPERATOR-DECISION: Cloud Scheduler creation pending Ikenna (cloudscheduler.jobs.create IAM).
+- B-011 blindspot audit complete: 8 VM_PREFIX_TO_BUCKET entries registered; 0 known watchdog blindspots. Watchdog relaunched: `vm-zombie-watchdog-20260515-110711`. SSOT: `launcher-script-ssot.md` § "B-011 blindspot audit".
+- **B-014 Phase 3 QG ratchet rollout** (2026-05-13 → 2026-05-15): All 15 service repos received `scripts/quality-gates.sh` with `MIN_COVERAGE=70` floor + SSOT path `unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh` + lifecycle enforcement block. STEP 5.79-5.82 (dockerfile-base-pin, tarball-manifest-present, tarball-env-block, image-build-on-staging-merge) are `PENDING_RATCHET` — they run post-compliance-check and show ❌ cosmetically but do NOT block the `✅ ALL QUALITY GATES PASSED` verdict. Phase 5 target date: 2026-05-17 (Day 5 of cutover window). Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT: `codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.
+- **B-018 Phase 4.A QG snapshot cron** (2026-05-15): Daily QG-status snapshot (described at § "99%-repo identification" above) implemented as `unified-trading-pm/scripts/quality_gates/snapshot.sh` + `check_snapshot_staleness.py`. VM prefix: `qg-snapshot` (registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`). GCS output: `quality_gates_snapshot/` prefix in deployment bucket. Launcher: `deployment-service/scripts/vm/launch-qg-snapshot-vm.sh`. Scheduler: BLOCKED-OPERATOR-DECISION (Cloud Scheduler IAM same as honest-coverage cron above). Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 4.A.
