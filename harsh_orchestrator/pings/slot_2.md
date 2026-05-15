@@ -202,3 +202,11 @@ Self-pivot. Item 10 stays gated; rest is dispatchable now.
 - Refactored: launch-qg-snapshot-vm.sh (-18 lines) + launch-canonical-smoke-vm.sh + launch-instruments-smoke-vm.sh
 - All 4 files shellcheck-clean. Dry-run smoke: qg-snapshot --dry-run ✓ (metadata + labels correct)
 STARTED item 2 (deployment-events bucket lifecycle policies audit).
+
+[2026-05-15 17:00 UTC] slot-2 — ✅ **DONE item 2** (deployment-events bucket lifecycle audit). unified-trading-pm (issue doc).
+- All 4 buckets have NO lifecycle config.
+- KEY FINDING: vm-logs/ has 4,130 dirs with no purge — growing ~1,800/year. Watchdog GCS list latency affected.
+- QG snapshot parquets: currently 1 date (81 KiB total) but will grow 80 KB/day × 60+ repos.
+- Issue doc: `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`
+- OPERATOR ACTION: 3 gsutil lifecycle set commands (14d vm-logs, 30d QG snapshots, 90d events). Non-blocking May-23 (P2).
+STARTED item 3 (VM startup script consolidation — templates).
