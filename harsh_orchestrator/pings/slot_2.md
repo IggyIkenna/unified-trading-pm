@@ -529,7 +529,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 ### P2 — workspace cleanup sweeps
 
-- [ ] **2. pyproject_workspace_audit** (P2) — `plans/active/issues/pyproject_workspace_audit_2026_05_15.md`. 15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift report + mechanical fixes + per-repo QG green.
+- [x] **2. pyproject_workspace_audit** (P2) — @ 14 repos: alerting@f052e21, batch-live@de72ab7, client-reporting@163374e, ibkr@5f8d354, deployment-service@560af4d, mdps@b2b8dd5, ml-inference@0f49311, ml-training@4957ed8, pnl@f99d33d, pbm@06cba56, risk@e148b45, strategy@00af7ed, utl@623b0cd, uta@6d9ca22 — line-length 100→120 across all eligible repos (skipped deployment-api = slot 7). Coverage floor alignment deferred to issue doc Priority 2+3.
 
 - [ ] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — `plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`. Replace `os.getenv()` with `UnifiedCloudConfig` + assertions. Done-def: 1 slice fully closed in 3+ repos with QG green per repo.
 

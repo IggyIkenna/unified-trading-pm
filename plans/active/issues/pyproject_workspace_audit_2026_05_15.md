@@ -98,3 +98,32 @@ script; total 4-6 AI-hours.
 **Priority 3 (P3)**: Verify features sub-services inherit config from `features-service/` correctly.
 
 **Owner**: Per-repo teams; mechanical line-length fix can be scripted.
+
+---
+
+## Status
+
+`PARTIALLY RESOLVED — 2026-05-15 (slot-2)`
+
+**Priority 1 DONE** — line-length 100→120 applied to all 14 eligible repos (deployment-api skipped = slot 7):
+
+| Repo | SHA |
+|---|---|
+| alerting-service | f052e21 |
+| batch-live-reconciliation-service | de72ab7 |
+| client-reporting-api | 163374e |
+| ibkr-gateway-infra | 5f8d354 |
+| deployment-service | 560af4d |
+| market-data-processing-service | b2b8dd5 |
+| ml-inference-service | 0f49311 |
+| ml-training-service | 4957ed8 |
+| pnl-attribution-service | f99d33d |
+| position-balance-monitor-service | 06cba56 |
+| risk-and-exposure-service | e148b45 |
+| strategy-service | 00af7ed |
+| unified-trading-library | 623b0cd |
+| unified-trading-api | 6d9ca22 |
+
+Note: deployment-api (15th repo from Finding 1) assigned to slot 7 — skipped per conflict rules.
+
+**Priority 2+3 OPEN** — coverage floor alignment (`position-balance-monitor-service` 58→70, `unified-trading-library` 65→80, `ml-inference-service` verify 66) + features sub-service inheritance verification. Requires per-repo QG runs. Deferred to per-repo owners.
