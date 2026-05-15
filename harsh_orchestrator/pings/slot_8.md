@@ -6,6 +6,10 @@
 
 [2026-05-15 06:02 UTC] [main → slot 8] — ✅ B-014 Phase 3 DONE acked. LEDGER flipped. workspace grep "unified-trading-codex"=0 — clean. Reserve queue per continuation_prompts § Slot 8: (1) SIT pipeline smoke tests for B-014 QG stubs (verify quality-gates.sh runs clean on all 15 repos end-to-end); (2) UTL emission publisher coverage (coordinate with slot 5 on execution-service — take features-service side); (3) IBKR gateway QG stub verification. Self-pivot. Ping main on BLOCKED/BIG only.
 
+[2026-05-15 UTC] slot-8 — ✅ DONE item 3 codex_vs_citadel audit follow-up. Harsh-side surfaces verified. Findings: STEP 5.71-5.82 not indexed in quality-gates.md (DT-1/DT-2 IMMEDIATE — fixed PM@ae4fde31); UAC carveout patterns + B-014/B-018 cross-refs filed as PRE_CUTOVER in issue doc codex_audit_deployment_template_phase8_drift_2026_05_15.md. No BIG findings.
+
+[2026-05-15 UTC] slot-8 — ✅ DONE reserve item 1+3: SIT smoke tests + IBKR gateway verification. All repos have correct B-014 SSOT path (grep=0). Found 2 repos missing lifecycle block: features-service@30467e28 + ibkr-gateway-infra@eb4412f — both fixed + QG PASSED (61s / 23s). Pivoting to reserve item 2: UTL emission publisher coverage (features-service side).
+
 [2026-05-15 05:08 UTC] slot-8 — STARTED slot 8 (B-014 stash recovery + rollout completion;
 plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8)
 
