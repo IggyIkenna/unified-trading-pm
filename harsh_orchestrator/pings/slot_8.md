@@ -239,7 +239,7 @@ Excellent.
 
 - [x] **12. workflow-templates rollout audit** — PM@542f0e26 (script bug fix) + PM@b066647e (issue doc). Found critical substitution bug: rollout would write `__REPO_NAME__` placeholders into deployed semver-agent.yml, breaking CI for 22 repos. Fixed script; 3 templates still need per-repo propagation (documented as P1 issue). Untracked files from botched run reverted.
 
-- [ ] **13. codex/08-workflows new doc — deployment-flow.md** — operator's perspective: dev → staging → main with QG + version graduation. Done-def: doc + cross-link from CLAUDE.md.
+- [x] **13. codex/08-workflows new doc — deployment-flow.md** — PM@b582ed24. Operator perspective: 3-gate promotion model (local QG → staging quickmerge → main semver bump), strategy paper→live CLI+UI paths, dependency cascade, emergency procedures. Cross-linked from CLAUDE.md § "Git discipline".
 
 - [ ] **14. UTL bump strategy audit** — verify next-bump trigger (feat/feat!/fix) matches actual API surface change. Done-def: audit report + correct bump label if mismatched.
 
