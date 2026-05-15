@@ -507,16 +507,38 @@ risk-and-exposure lint.
     hardening. (design 0.6×, ~2 = 1.2 cal) — execution-service@5bf0ae522. **Backfilled 2026-05-15.**
 22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
     green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
-23. ✅ **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** —
-    features-onchain `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. **DONE 2026-05-15**:
-    `features-service@f448bb1a` — (a) Fixed `borrow_apy = NaN`: root cause was diagonal concat of AAVE + COMPOUND
-    parquets caused `variable_borrow_rate` to shadow `borrow_rate` in first-match rename; fix uses `pl.coalesce` across
-    all supply/borrow APY candidates so each protocol contributes from its own non-null column. (b) Fixed `asset =
-    contract_address`: added `_COMPOUND_V3_COMET_TO_TOKEN` registry (5 Comets: ETH WETH/USDC/WBTC + ARB USDC + Polygon
-    USDC) with per-row `when/then` normalisation after instrument_id parse. (c) KAMINO deferred post-May-23
-    (BLOCKED-CREDENTIALS, Helius credential request filed). 2 regression tests added (comet-normalisation +
-    mixed-protocol coalesce), both pass. (research 1.2×, ~3 baseline = 3.6 cal)
-24. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+23. **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** —
+    features-onchain `lending_rates` parquet bug blocking `CARRY_RECURSIVE_STAKED@compound-lido-*`. (a) COMPOUND_V3
+    `borrow_apy` is NaN in all 64 rows of
+    `gs://features-onchain-defi-prd-central-element-323112/.../day=2026-04-03/feature_group=lending_rates/`; AAVE_V3
+    rows correctly populate fractional borrow_apy. Root cause: COMPOUND V3 uses different IRM (base rate + utilization
+    curve, not AAVE reserve-factor model); handler hasn't implemented it. (b) COMPOUND_V3 `asset` column stores Comet
+    contract address (e.g. `0x9c4ec768...`) instead of token name (e.g. `WETH`). (c) KAMINO Solana lending handler
+    missing entirely — P2, depends on Helius credential (already filed). **Fix scope (P1 COMPOUND only)**:
+    features-service COMPOUND_V3 handler computes `borrow_apy` from Comet IRM (`baseBorrowMin` + utilization curve) +
+    normalizes asset via instruments-service lookup or hardcoded ETH-mainnet Comet→token registry. Start with Ethereum
+    WETH Comet (`0xA17581A9E3356d9A858b789D68B4d866e593aE94`); USDC Comet is secondary. KAMINO defers post-May-23.
+    (research 1.2×, ~3 baseline = 3.6 cal)
+25. **🔴 [POTENTIAL MAY-23 BLOCKER 2026-05-15] `sit_may23_critical_path_coverage_gaps_2026_05_15`** — SIT suite missing
+    scenario playbooks for the 3 May-23 critical paths:
+    (a) `defi_carry_staked_basis_paper` — LST rates → strategy → execution → PBM manifest; assertions on signal,
+        fill count, manifest `captured`;
+    (b) `defi_apd_paper` — DEX/CEX price-dispersion fetch → strategy → execution; assertions on spread,
+        no SKIP, manifest `captured`;
+    (c) `defi_paper_to_live_early_gate` — MinimalCandidateManifest → promote endpoint → VM event STARTED + DART
+        gate blocking live fills days 1-3.
+    Add to `system-integration-tests/tests/scenarios/defi_scenarios.py` + wire into
+    `tests/overnight/test_archetype_cascade.py` parametrization OR new `test_may23_critical_paths.py`. Without these,
+    CI gate for paper→live_early promotion is missing — last automated check before manual operator promotion.
+    Issue doc: `plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`. (brand-new 1.0×,
+    ~4.5 = 4.5 cal — 1.5 cal per scenario)
+26. **🟡 [P1 2026-05-15] `basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm-split migration. Items 1-5
+    are unstarted; item 6 (plan-flip cite) auto-closes once 1-5 ship per slot 2's 2026-05-15 09:19 UTC status. Scope:
+    (a) decide flip strategy across paradigm split; (b) migrate concrete calculators from `@property @abstractmethod` /
+    `@property @override` to new pattern; (c) flip UTL canonical `BaseFeatureCalculator.validate_class_attributes()`
+    from opt-in to default; (d) plan-flip cite. Features-service paradigm work fits slot 7's writegate Phase 6.x
+    context. (refactor 0.4×, ~6 = 2.4 cal)
+27. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 

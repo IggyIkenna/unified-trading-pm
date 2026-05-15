@@ -124,3 +124,18 @@ to deployment-and-qg-strategy.md's "Continuous verification" section with:
 All 4 DT findings closed. Issue doc archived — no remaining open items.
 
 **No BIG findings** (no data-correctness, no cross-repo architectural contradiction, no May-23 critical path impact).
+
+---
+
+## RESOLUTION UPDATE 2026-05-15 (ikenna-main audit during pings/issues triage)
+
+**All 4 DT findings now ✅ RESOLVED** — DT-1 + DT-2 already fixed by slot-8 Harsh earlier today; DT-3 + DT-4 verified
+post-audit to already be in codex (likely landed between issue-doc filing and now):
+
+- ✅ DT-3 RESOLVED — `UAC_CANONICAL_EXEMPT` documented at `quality-gates.md:461`; `SIZE_EXTRA_EXCLUDES` documented at
+  `quality-gates.md:480`. Both with examples + when-to-use guidance.
+- ✅ DT-4 RESOLVED — `B-014 Phase 3 QG ratchet rollout` documented at `deployment-and-qg-strategy.md:313` with rollout
+  dates + remaining PENDING_RATCHET flags. `B-018 Phase 4.A QG snapshot cron` documented at
+  `deployment-and-qg-strategy.md:312` with VM prefix + GCS path + scheduler BLOCKED-OPERATOR-DECISION status.
+
+Issue can be moved to `plans/archive/issues/` at next archive sweep. No further action required.
