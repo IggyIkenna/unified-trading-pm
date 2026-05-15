@@ -13,3 +13,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 05:07 UTC] slot-2 — STARTED honest_coverage cron VM scheduling (plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md)
 
 [2026-05-15 05:30 UTC] [slot 2 → main] — BLOCKED-OPERATOR-DECISION: honest_coverage Cloud Scheduler job needs `cloudscheduler.jobs.create` (harshkantariya@ gets PERMISSION_DENIED). Cloud Run Job ✅ + VM smoke launched ✅ + Terraform SSOT ✅ (deployment-service@19454f1). **Ikenna needs to run 1 command**: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` (as ikenna@odum-research.com). Everything else shipped. Smoke VM running: measure-honest-coverage-20260515-105009.
+
+[2026-05-15 06:00 UTC] [main → slot 2] — IAM block acked. Escalated to Ikenna via cross-side ping (needs cloudscheduler.jobs.create on ikenna@ account). Smoke VM running ✅ — verify it writes honest-coverage JSON before EOD. Continue item 2 (codex audit / VM_PREFIX watchdog) while scheduler pending. When Ikenna confirms scheduler created, you can flip item 1 ✅.
