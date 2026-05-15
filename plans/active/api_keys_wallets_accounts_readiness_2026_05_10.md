@@ -384,12 +384,14 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - **Verification**: every native adapter has `test_<venue>_native_vcr.py` that round-trips a sample order placement +
     market-data fetch against recorded cassettes; `bash scripts/quality-gates.sh` clean per repo.
 
-- [ ] [AGENT] P0. **2.C — Per-scope key separation in adapters.** Update `get_order_adapter()` factory to take
+- [x] [AGENT] P0. **2.C — Per-scope key separation in adapters.** Update `get_order_adapter()` factory to take
       `scope=Literal["read", "trade", "withdraw"]` parameter; route to the right Secret Manager path. Add helper
       factories `get_market_data_adapter()` (read-scope) + `get_withdraw_adapter()` (withdraw-scope). Withdraw scope
       MUST require human-in-loop approval (operator UI or DART manual-trade gate per master plan Group G item 23).
   - **Verification**: unit test confirms `get_order_adapter("bybit", scope="read")` raises `OrderError` if asked to
     place an order; per-scope rate-limit budgets distinct.
+  - **DONE** execution-service@`e3f447e37`. AdapterScope + ScopedCLOBAdapter added to base_adapter.py; scope param
+    wired through factory; get_market_data_adapter + get_withdraw_adapter helpers; 20 unit tests (all pass).
 
 - [x] [AGENT] P0. **2.D — Account-level limits SSOT.** YAML at `unified-api-contracts/config/venue_account_limits.yaml`.
       Per venue: max-order-size per instrument, max-leverage per account-tier, fee tier, market-maker designation.
