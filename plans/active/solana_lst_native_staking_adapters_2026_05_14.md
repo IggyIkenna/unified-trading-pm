@@ -59,14 +59,12 @@ Two May-23 DeFi archetypes require Solana LST data:
       (UAC@75ee9c4 — chain_env.py PROTOCOL_LAUNCH_DATES entry added)
 - [x] [UAC] P0. Add `SANCTUM-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` in
       `unified_api_contracts/registry/capability_declarations/_defi_coverage.py` so data-status does not flag historical
-      days as missing until first parquet write lands.
-      (UAC@75ee9c4 — added with Phase 2 removal note)
+      days as missing until first parquet write lands. (UAC@75ee9c4 — added with Phase 2 removal note)
 - [x] [UAC] P0. Add `SOLBLAZE-SOLANA` to `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (same reason — adapter exists but MTDS
-      hasn't scheduled capture yet).
-      (UAC@75ee9c4 — added with Phase 3 removal note)
+      hasn't scheduled capture yet). (UAC@75ee9c4 — added with Phase 3 removal note)
 - [x] [UAC] P0. Verify `JITO-SOLANA` and `MARINADE-SOLANA` are NOT in `EMPTY_OR_DEPRECATED_DEFI_VENUES` (they are real
-      venues, just have 0% capture due to VM never running). If incorrectly listed there, remove.
-      (UAC@75ee9c4 — verified: only TRADER_JOEV2-AVALANCHE, UNISWAPV3-POLYGON, GMX-AVALANCHE in that set; no action needed)
+      venues, just have 0% capture due to VM never running). If incorrectly listed there, remove. (UAC@75ee9c4 —
+      verified: only TRADER_JOEV2-AVALANCHE, UNISWAPV3-POLYGON, GMX-AVALANCHE in that set; no action needed)
 
 **QG gate**: `bash scripts/quality-gates.sh` in UAC.
 
@@ -77,16 +75,16 @@ Two May-23 DeFi archetypes require Solana LST data:
 ## Phase 2 — SANCTUM instruments-service adapter (P0)
 
 - [x] [instruments-service] P0. Read existing Solana LST adapter pattern (e.g., `solblaze.py` or `jito.py`) in
-      instruments-service. Extend the pattern to SANCTUM.
-      (instruments-service@e149995 — read solblaze.py pattern; adopted _solana_utils.get_protocol_floor_date)
+      instruments-service. Extend the pattern to SANCTUM. (instruments-service@e149995 — read solblaze.py pattern;
+      adopted \_solana_utils.get_protocol_floor_date)
 - [x] [instruments-service] P0. Create `adapters/defi/sanctum.py`: static-registry adapter returning 3 YIELD_BEARING
       InstrumentRecords for INF + JUPSOL + LAINESOL; gated 2023-06-01 via get_protocol_floor_date("sanctum").
       (instruments-service@e149995 — sanctum.py created; merge-resolved@f44f0dc)
-- [x] [instruments-service] P0. Add unit tests: 8 tests covering venue prop, 3-token count, INF field validation,
-      type filter, mint lookup, symbol lookup, combined INF lookup + None, NotImplementedError for all market methods.
+- [x] [instruments-service] P0. Add unit tests: 8 tests covering venue prop, 3-token count, INF field validation, type
+      filter, mint lookup, symbol lookup, combined INF lookup + None, NotImplementedError for all market methods.
       (instruments-service@f44f0dc — test_sanctum_metadata.py)
 - [x] [instruments-service] P0. Register `SANCTUM-SOLANA` in instruments-service venue registry so MTDS scheduler picks
-      it up. (instruments-service@e149995 — factory.py: CANONICAL_VENUE_TO_ADAPTER + _ADAPTERS + ADAPTER_DATA_SOURCES)
+      it up. (instruments-service@e149995 — factory.py: CANONICAL_VENUE_TO_ADAPTER + \_ADAPTERS + ADAPTER_DATA_SOURCES)
 
 **QG gate**: `bash scripts/quality-gates.sh` in instruments-service.
 
@@ -96,12 +94,12 @@ Two May-23 DeFi archetypes require Solana LST data:
 
 ## Phase 3 — SOLBLAZE MTDS wiring (P1)
 
-- [x] [instruments-service] P1. Verify `SOLBLAZE-SOLANA` has a `ReferenceDataAdapter` in instruments-service.
-      Already exists — `instruments_service/reference_data/adapters/defi/solblaze.py` + factory wired.
-      (pre-existing, no commit needed)
-- [x] [MTDS] P1. Wire SOLBLAZE (bSOL) into MTDS `solana_lst_archival.py` (3-tier Solana LST rate fetcher):
-      Tier 1 Alchemy getAccountInfo + Tier 2 subgraph + Tier 3 BlazeStake REST. Pre-launch guard 2022-11-01.
-      Freshness cache wired. 27 tests pass. (MTDS@0636dd4)
+- [x] [instruments-service] P1. Verify `SOLBLAZE-SOLANA` has a `ReferenceDataAdapter` in instruments-service. Already
+      exists — `instruments_service/reference_data/adapters/defi/solblaze.py` + factory wired. (pre-existing, no commit
+      needed)
+- [x] [MTDS] P1. Wire SOLBLAZE (bSOL) into MTDS `solana_lst_archival.py` (3-tier Solana LST rate fetcher): Tier 1
+      Alchemy getAccountInfo + Tier 2 subgraph + Tier 3 BlazeStake REST. Pre-launch guard 2022-11-01. Freshness cache
+      wired. 27 tests pass. (MTDS@0636dd4)
 
 **QG gate**: `bash scripts/quality-gates.sh` in MTDS.
 
@@ -114,18 +112,22 @@ Two May-23 DeFi archetypes require Solana LST data:
 The infrastructure exists (Pyth Hermes feeds for JITOSOL/mSOL/bSOL/INF landed 2026-05-14 in MTDS
 `oracle_prices_handler.py`). This phase verifies configuration and schedules a backfill run.
 
-- [ ] [MTDS] P0. Verify `_PYTH_FEEDS` in `oracle_prices_handler.py` includes all 4 LST feeds: JitoSOL/USD, mSOL/USD,
+- [x] [MTDS] P0. Verify `_PYTH_FEEDS` in `oracle_prices_handler.py` includes all 4 LST feeds: JitoSOL/USD, mSOL/USD,
       bSOL/USD, INF/USD. Confirm feed IDs match Pyth mainnet: - JitoSOL: `67be9f519...` (32-byte hex from MTDS commit
       2026-05-14) - mSOL: verify against `https://pyth.network/price-feeds/crypto-msol-usd` - bSOL: verify against Pyth
-      bSOL/USD feed page - INF: verify against Pyth INF/USD feed page
-- [ ] [MTDS] P0. Confirm `oracle_prices_handler.py` `process()` dispatches `SOLANA` chain correctly for the LST venues
-      (e.g., `JITO-SOLANA` or `JITO`). Add routing test if missing.
+      bSOL/USD feed page - INF: verify against Pyth INF/USD feed page. **DONE-2026-05-14 (slot-3-ikenna)**: All 4 feeds
+      present in `_PYTH_FEEDS` (lines 395-437 of oracle_prices_handler.py) with hex IDs. TestPythFeedsRegistry tests
+      confirm all 4 feeds present + valid 32-byte hex IDs. (MTDS@2264b09)
+- [x] [MTDS] P0. Confirm `oracle_prices_handler.py` `process()` dispatches `SOLANA` chain correctly for the LST venues
+      (e.g., `JITO-SOLANA` or `JITO`). Add routing test if missing. **DONE-2026-05-14 (slot-3-ikenna)**: `process()`
+      dispatches all Pyth rows with `chain="SOLANA"` hardcoded (confirmed in `_fetch_pyth_prices` +
+      `_fetch_pyth_prices_at_timestamp`). Added `TestLstFeedsRouting` class with 2 tests: JitoSOL/USD routing +
+      all-4-LST-feeds-SOLANA-chain test. (MTDS@2264b09)
 - [x] [deployment-service] P0. Add VM launcher for `staked_token_oracle_prices` backfill covering `2023-10-01` (Pyth
       archive start) → today for JITO-SOLANA + MARINADE-SOLANA + SOLBLAZE-SOLANA. VM name prefix: `pyth-lst-backfill`
       (register in `VM_PREFIX_TO_BUCKET`). Backfill window: 7+ months → **REQUIRES operator ping before launch** per GCS
-      backfill rule.
-      (deployment-service@85419f4 — launcher + watchdog registration done; operator ping filed in pings/slot_2.md;
-      **[BLOCKED-OPERATOR-ACK — pinging operator]** launch held until [ack])
+      backfill rule. (deployment-service@85419f4 — launcher + watchdog registration done; operator ping filed in
+      pings/slot_2.md; **[BLOCKED-OPERATOR-ACK — pinging operator]** launch held until [ack])
 
 **Done definition**: VM launcher script exists; awaiting operator approval ping.
 
@@ -137,17 +139,17 @@ This is the only phase that requires a wholly new data_type.
 
 - [x] [UAC] P1. Add `native_staking_rates` to `DataType` enum in UAC `canonical/crosscutting/data_types.py` (if not
       already present). Schema: `(chain, epoch, validator_vote_account, commission_pct, base_apy, mev_apy, total_apy)` —
-      confirm against `sim_schemas.py:101` `native_staking_apr` field.
-      (UAC@8acadce — NATIVE_STAKING_RATES added to DataType in candle_schema.py; BATCH_SOLANA_RPC + BATCH_HELIUS_RPC
-      added to PipelineMode; availability_semantics + source_priority wired; 2246 tests pass)
+      confirm against `sim_schemas.py:101` `native_staking_apr` field. (UAC@8acadce — NATIVE_STAKING_RATES added to
+      DataType in candle_schema.py; BATCH_SOLANA_RPC + BATCH_HELIUS_RPC added to PipelineMode; availability_semantics +
+      source_priority wired; 2246 tests pass)
 - [x] [UAC] P1. Register `SchemaContract` for `native_staking_rates` in
-      `unified_api_contracts/internal/schemas/contracts.py` for `defi` asset group.
-      (UAC@8acadce — DEFI_STAKING_NATIVE_STAKING_RATES with epoch/validator_vote_account/commission_pct/base_apy/
-      mev_apy/total_apy columns registered)
+      `unified_api_contracts/internal/schemas/contracts.py` for `defi` asset group. (UAC@8acadce —
+      DEFI_STAKING_NATIVE_STAKING_RATES with epoch/validator_vote_account/commission_pct/base_apy/ mev_apy/total_apy
+      columns registered)
 - [x] [instruments-service] P1. Create `adapters/defi/solana_native_staking.py`: - Sources: Solana RPC
-      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key — BLOCKED-CREDENTIALS
-      ping filed in slot_2.md 2026-05-15). - Data type: `native_staking_rates` per epoch (daily-ish, ~2.5 day
-      granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
+      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key —
+      BLOCKED-CREDENTIALS ping filed in slot_2.md 2026-05-15). - Data type: `native_staking_rates` per epoch (daily-ish,
+      ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
       (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
 - [ ] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy.

@@ -400,8 +400,8 @@ files), PM pulled (12 files), UAC pulled (fast-forward), instruments-service pul
 
 ## [main → slot 3] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
 
-**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
-slots 1-8. Your stack just got new items.
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across slots 1-8.
+Your stack just got new items.
 
 **Action (do this NOW, no questions)**:
 
@@ -412,23 +412,24 @@ slots 1-8. Your stack just got new items.
       git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
    done
    ```
-2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
-   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
-   in the distribution tables; new items are additive to your existing stack.
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` — specifically the new "## SLOT 9-10-11
+   REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot in the distribution tables; new items are additive to
+   your existing stack.
 3. Re-read your "### Slot 3" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
-4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
-   incoming) already baked into the reassignment.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials incoming)
+   already baked into the reassignment.
 
 **Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
-- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
-  lifecycle, one-pass, no shim. Per DRY.
-- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
-  AMM-perp); Harsh slot 8 owns refactor.
-- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
-  mechanical fix while waiting on Phase 1.2B work.
 
-Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
-ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close lifecycle,
+  one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp);
+  Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as mechanical fix
+  while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
+(per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
 
 ---
 
@@ -452,6 +453,6 @@ Without it: unit + scaffold shipped at instruments-service@da462af; live discove
   skip via @pytest.mark.requires_credentials; adapter is dormant for authenticated paths
 ```
 
-Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` (operator confirmed key incoming on 2026-05-14).
-Scaffold at instruments-service@`da462af` — KRAKEN-SPOT→ccxt.kraken, KRAKEN-FUTURES→ccxt.krakenfutures.
-Historic batch already wired via Tardis (CANONICAL_VENUE_TO_ADAPTER → "tardis").
+Status: `BLOCKED-CREDENTIALS-OPERATOR-INCOMING` (operator confirmed key incoming on 2026-05-14). Scaffold at
+instruments-service@`da462af` — KRAKEN-SPOT→ccxt.kraken, KRAKEN-FUTURES→ccxt.krakenfutures. Historic batch already wired
+via Tardis (CANONICAL_VENUE_TO_ADAPTER → "tardis").

@@ -120,14 +120,17 @@ with other in-flight UAC agents). Continue with unblocked Phase 1E/1F/1G items o
 
 ## [Slot 2 → Slot 1] 2026-05-14T13:28Z boot ack
 
-[2026-05-14T13:28Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` + `wave2_polymarket` + `basefc_validation` + catalogue audit DeFi half + UTL QG preexisting failures). Background sub-agent (a13492ce2a3cf9eb3) completing Tasks 1/2 (defi_classifier Wave 3 + corrector). Main session picking up Tasks 3+ starting with wave2_polymarket Polymarket subset.
+[2026-05-14T13:28Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` + `wave2_polymarket` +
+`basefc_validation` + catalogue audit DeFi half + UTL QG preexisting failures). Background sub-agent (a13492ce2a3cf9eb3)
+completing Tasks 1/2 (defi_classifier Wave 3 + corrector). Main session picking up Tasks 3+ starting with
+wave2_polymarket Polymarket subset.
 
 ---
 
 ## [main → slot 2] 2026-05-14 16:50 UTC — REPULL LDR + READ NEW STACK
 
-**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across
-slots 1-8. Your stack just got new items.
+**Operator direction 2026-05-14 15:30 UTC**: PC concurrency cap = 8 tabs; slots 9/10/11 reassigned across slots 1-8.
+Your stack just got new items.
 
 **Action (do this NOW, no questions)**:
 
@@ -138,23 +141,24 @@ slots 1-8. Your stack just got new items.
       git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
    done
    ```
-2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` —
-   specifically the new "## SLOT 9-10-11 REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot
-   in the distribution tables; new items are additive to your existing stack.
+2. Re-read `unified-trading-pm/plans/active/work_split_2026_05_14_ikenna.md` — specifically the new "## SLOT 9-10-11
+   REASSIGNMENT — 2026-05-14 15:30 UTC" section. Look up your slot in the distribution tables; new items are additive to
+   your existing stack.
 3. Re-read your "### Slot 2" section + any item annotated **[REASSIGNED FROM 9/10/11]**.
-4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials
-   incoming) already baked into the reassignment.
+4. Continue work top-down through your stack. Operator [ack]s for cbETH (DEFERRED) + Kraken (credentials incoming)
+   already baked into the reassignment.
 
 **Other operator decisions baked into LDR today** (no action from you unless your slot owns them):
-- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close
-  lifecycle, one-pass, no shim. Per DRY.
-- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum
-  AMM-perp); Harsh slot 8 owns refactor.
-- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as
-  mechanical fix while waiting on Phase 1.2B work.
 
-Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential
-ask surfaces (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+- **MDPS Phase 1.2B** (slot 7): Option A — migrate `write_candle_parquet` internally to open/write/close lifecycle,
+  one-pass, no shim. Per DRY.
+- **GMX/DRIFT classification** (slot 2): RESOLVED — DRIFT = DeFi (Solana orderbook), GMX = DeFi (Arbitrum AMM-perp);
+  Harsh slot 8 owns refactor.
+- **Pre-existing MDPS test failures** (19 failures, EmissionDecision schema drift): Slot 7 absorbs as mechanical fix
+  while waiting on Phase 1.2B work.
+
+Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
+(per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
 
 ---
 
@@ -176,12 +180,11 @@ Why: carry_staked_basis Solana leg needs LST USD prices for full 2+ year backtes
 Without it: carry_staked_basis archetype has no Solana-leg performance baseline
 ```
 
-**Script**: `deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`
-**Commit**: deployment-service@85419f4 (live-defi-rollout)
-**Watchdog**: `pyth-lst-backfill-` registered in `VM_PREFIX_TO_BUCKET` (same commit)
+**Script**: `deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh` **Commit**: deployment-service@85419f4
+(live-defi-rollout) **Watchdog**: `pyth-lst-backfill-` registered in `VM_PREFIX_TO_BUCKET` (same commit)
 
-**To approve**: reply `[ack]` below to unblock VM launch.
-**To launch after ack**: `bash deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`
+**To approve**: reply `[ack]` below to unblock VM launch. **To launch after ack**:
+`bash deployment-service/scripts/vm/launch-mtds-pyth-lst-backfill-vm.sh`
 
 ---
 
@@ -201,8 +204,8 @@ Without it: MTDS handler ships with mev_apy=None (nullable column); base_apy + t
            from free Solana RPC getInflationRate still land. Integration tests skip.
 ```
 
-**Adapter commit**: instruments-service@9d7cfc7 (live-defi-rollout)
-**UAC SchemaContract**: UAC@8acadce — DEFI_STAKING_NATIVE_STAKING_RATES (mev_apy nullable=True)
+**Adapter commit**: instruments-service@9d7cfc7 (live-defi-rollout) **UAC SchemaContract**: UAC@8acadce —
+DEFI_STAKING_NATIVE_STAKING_RATES (mev_apy nullable=True)
 
-**To provide**: Add `HELIUS_API_KEY=<key>` to the MTDS config/secrets.
-**Note**: base_apy + total_apy collect via free Solana RPC without credentials.
+**To provide**: Add `HELIUS_API_KEY=<key>` to the MTDS config/secrets. **Note**: base_apy + total_apy collect via free
+Solana RPC without credentials.
