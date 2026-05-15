@@ -764,17 +764,17 @@ slot 10.
    decomposed stablecoin/eigen. `batch_handler.py` now 723L (under 900L limit) + all functions under 200L — stale QG
    exclusion removed. Also fixed pre-existing `feature_family="sports"` kwarg missing on 4 manifest calls
    (record_empty/record_failed) that was causing 3 test failures. — `features-service@d8e68608`
-3. **Tardis stream client docstring + codex clarity sweep** — Tardis historical-data 403 is **separate paid commercial
-   subscription** (not academic tier). Actions: (a) docstring update at
-   `market-tick-data-service/.../tardis_stream_client.py:158` — _ALREADY APPLIED IN-FLIGHT in this session at
-   `mtds@<TBD-sha-on-push>`_; verify it landed on LDR. (b) add 2-line note to
-   `codex/04-architecture/interface-credential-convention.md` § Tardis. (c) verify error message references the codex
-   doc for operator visibility. (research 1.2×, ~0.5 = 0.6 cal)
-4. **Sports scrapers `BLOCKED-OPERATOR-DECISION` cross-link verification** — per operator pick 2026-05-14 (B + light C):
-   (a) `master_to_live_defi_2026_05_23.md` § "Deferred / blocked-on-operator items" row added in this session
-   (`dba80b61` — verify on LDR). (b) successor plan `plans/active/sports_scrapers_post_cutover_2026_06_01.md` filed
-   (`dba80b61` — verify). (c) any remaining annotation in `sports_master_2026_05_07.md:153-176` updated to point at the
-   new master-plan row + successor. (design 0.6×, ~1 = 0.6 cal)
+3. ✅ **Tardis stream client docstring + codex clarity sweep** — Tardis historical-data 403 is **separate paid
+   commercial subscription** (not academic tier). Actions: (a) docstring update at `tardis_stream_client.py:159` —
+   VERIFIED on LDR at `MTDS@60c2e55`. (b) codex note at `interface-credential-convention.md` § Tardis — already present
+   (lines 158-167). (c) error message at line 167 references
+   `codex/04-architecture/interface-credential-convention.md § Tardis` — verified. All 3 actions confirmed done.
+   (research 1.2×, ~0.5 = 0.6 cal)
+4. ✅ **Sports scrapers `BLOCKED-OPERATOR-DECISION` cross-link verification** — per operator pick 2026-05-14 (B + light
+   C): (a) `master_to_live_defi_2026_05_23.md` row — `dba80b61` on LDR ✅. (b) successor plan
+   `plans/active/sports_scrapers_post_cutover_2026_06_01.md` — exists in tab/4 PM ✅. (c)
+   `sports_master_2026_05_07.md:201` has `[plans/active/sports_scrapers_post_cutover_2026_06_01.md]` cross-link with
+   `BLOCKED-OPERATOR-DECISION` annotation ✅. All verifications pass. (design 0.6×, ~1 = 0.6 cal)
 5. **Phase 1 freeze-gate audit** (absorbed from Harsh slot 6) — read-only verification that master plan freeze-gate
    items #1-#6 are actually green on disk; file gap issue docs if mismatch. (research 1.2×, ~1.5 = 1.8 cal)
 6. **🔴 Coinbase cbETH LST APR adapter (SILENT-MISSING from 2026-05-14 deep coverage scan)** — no adapter file in either
