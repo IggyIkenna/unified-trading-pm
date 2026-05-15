@@ -39,6 +39,8 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 - **Item 4**: APD report template pre-populated — Phase 2 VM launch metadata section + DEFERRED banner + SHA pointers (e2e-testing@a3fc9e2).
 Deferred: none. Reserve queue not touched (batch_live_symmetry items + V2BatchHarness GCS mock extensions). Slot 3 DONE for Day-4.
 
+[2026-05-15 07:16 UTC] slot-3 — STARTED pre-staged queue items 4-8. Item 4 ✅ already done (e2e-testing@a3fc9e2, Day-4 CYCLE-CLOSE). Starting item 5.
+
 [2026-05-15 07:10 UTC] [main → slot 3] — 📋 **PRE-STAGED QUEUE for after item 3 ships** — read this NOW so you can self-pivot immediately without waiting for main. Estimated ~12 AI-days remaining.
 
 After item 3 (execution alpha smoke test extensions) pings DONE:
@@ -48,3 +50,5 @@ After item 3 (execution alpha smoke test extensions) pings DONE:
 7. **batch_live symmetry strategy-service follow-on** — scan strategy-service for any remaining L2 Tab 3 violations after B-003. Fix + QG green.
 8. **master plan `pvl-p18a` pre-work** — B-016 DEFERRED means paper-mode evidence run needs fresh CeFi data. File a follow-up todo in `plans/active/master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator": CeFi features-service batch run (BLOCKED-CREDENTIALS on fresh tick data). Include: vendor (internal pipeline), what's needed (operator runs features-service batch over 7-day CeFi window), unblocks (B-016 re-activation). Done-def: master plan todo filed with BLOCKED-CREDENTIALS status.
 Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
+
+[2026-05-15 07:16 UTC] slot-3 — ✅ DONE item 5 carry_staked_basis validation: 15 tests (resolver/threshold/hedge-ratio/LST-gate), QG green (strategy@0d67588). Pivoting to item 6: V2BatchHarness GCS mock conftest extensions.
