@@ -6,18 +6,19 @@
 
 **Issue doc**: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`
 
-**Updated scope**: Phase 0.A full workspace scan reveals the SAME GCP SA key file
-(`central-element-323112-e35fb0ddafe2.json`) committed in **4 repos** (not just execution-service):
+**Updated scope (2026-05-15 final)**: Phase 0.A full workspace scan reveals the SAME GCP SA key file
+(`central-element-323112-e35fb0ddafe2.json`) committed in **5 repos**:
 - `execution-service`: 2 commits
 - `instruments-service`: 9 commits
 - `market-tick-data-service`: 3 commits
 - `unified-trading-library`: 2 commits
+- `strategy-service`: 1 commit (`2c4af3d777c2`)
 
 **Required operator actions**:
 1. Revoke SA key via `gcloud iam service-accounts keys delete KEY_ID ...` (1 revocation covers all repos)
 2. Audit SA IAM bindings (blast-radius check)
-3. Run `git filter-repo ... --force` + force-push on **all 4 repos** (HARD STOP — operator-only)
-4. Notify Harsh + all agents to re-clone **all 4 repos** after rewrite
+3. Run `git filter-repo ... --force` + force-push on **all 5 repos** (HARD STOP — operator-only)
+4. Notify Harsh + all agents to re-clone **all 5 repos** after rewrite
 
 **Additional P1 finding** (lower priority, can batch with P0 rewrite):
 - GitHub PAT `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` committed in `instruments-service` `.env.example` + `.env`

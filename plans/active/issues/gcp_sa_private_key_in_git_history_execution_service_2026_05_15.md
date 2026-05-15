@@ -1,10 +1,10 @@
 ---
-title: GCP service account private key in git history — 4 repos (execution-service, instruments-service, MTDS, UTL)
+title: GCP service account private key in git history — 5 repos (execution-service, instruments-service, MTDS, UTL, strategy-service)
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
 source:
   - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
-  - execution-service, instruments-service, market-tick-data-service, unified-trading-library git history scans
+  - execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service git history scans
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P0 — ROTATE KEY IMMEDIATELY
@@ -13,7 +13,7 @@ severity: P0 — ROTATE KEY IMMEDIATELY
 ## What I found
 
 Running gitleaks on all repo git histories (Phase 0.A of api_keys plan), the same GCP SA private key file
-`central-element-323112-e35fb0ddafe2.json` was found in **4 repos**:
+`central-element-323112-e35fb0ddafe2.json` was found in **5 repos**:
 
 | Repo | Commits with file | Example commit |
 |------|-------------------|----------------|
@@ -21,6 +21,7 @@ Running gitleaks on all repo git histories (Phase 0.A of api_keys plan), the sam
 | instruments-service | 9 | `71eb58b07a5a` |
 | market-tick-data-service | 3 | `ae9ebcbcf136` |
 | unified-trading-library | 2 | (see gitleaks-utl.json) |
+| strategy-service | 1 | `2c4af3d777c2` |
 
 The file `central-element-323112-e35fb0ddafe2.json` is a GCP service account key JSON for project
 `central-element-323112` (prod). It was removed from working trees (added to `.gitignore`) but the
@@ -82,9 +83,9 @@ gcloud projects get-iam-policy central-element-323112 \
   --format="table(bindings.role)"
 ```
 
-### 3. Git history rewrite — all 4 repos (ETA: ≤4h total, requires force-push authorization)
+### 3. Git history rewrite — all 5 repos (ETA: ≤5h total, requires force-push authorization)
 
-After revoking the key, rewrite history in **all 4 affected repos** to remove the file permanently.
+After revoking the key, rewrite history in **all 5 affected repos** to remove the file permanently.
 Run sequentially — one repo at a time to control re-clone notifications.
 
 ```bash
@@ -93,12 +94,13 @@ pip install git-filter-repo
 
 TARGET_FILE="central-element-323112-e35fb0ddafe2.json"
 
-# Repeat for each repo: execution-service, instruments-service, market-tick-data-service, unified-trading-library
+# Repeat for each repo: execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service
 for REPO_PATH in \
   /path/to/execution-service \
   /path/to/instruments-service \
   /path/to/market-tick-data-service \
-  /path/to/unified-trading-library; do
+  /path/to/unified-trading-library \
+  /path/to/strategy-service; do
   echo "=== Rewriting $REPO_PATH ==="
   cd "$REPO_PATH"
   git filter-repo --path "$TARGET_FILE" --invert-paths --force
@@ -130,7 +132,8 @@ still function (any service that loaded the old key at startup may need restart)
 - [ ] Git history rewritten (instruments-service) + force-pushed
 - [ ] Git history rewritten (market-tick-data-service) + force-pushed
 - [ ] Git history rewritten (unified-trading-library) + force-pushed
-- [ ] Collaborators + all agent tab worktrees notified to re-clone all 4 repos
+- [ ] Git history rewritten (strategy-service) + force-pushed
+- [ ] Collaborators + all agent tab worktrees notified to re-clone all 5 repos
 - [ ] `credential-probe.sh` re-runs clean
 - [ ] New SA key generated + added to Secret Manager (if needed)
 - [ ] Gitleaks confirm-clean scan on rewritten history (all 4 repos)

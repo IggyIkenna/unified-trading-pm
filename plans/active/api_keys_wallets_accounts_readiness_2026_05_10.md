@@ -387,10 +387,14 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - **Verification**: unit test confirms `get_order_adapter("bybit", scope="read")` raises `OrderError` if asked to
     place an order; per-scope rate-limit budgets distinct.
 
-- [ ] [AGENT] P0. **2.D — Account-level limits SSOT.** YAML at `unified-api-contracts/config/venue_account_limits.yaml`.
+- [x] [AGENT] P0. **2.D — Account-level limits SSOT.** YAML at `unified-api-contracts/config/venue_account_limits.yaml`.
       Per venue: max-order-size per instrument, max-leverage per account-tier, fee tier, market-maker designation.
       Source: operator probe via venue web UI + venue REST API (`/account/info`-style endpoints). Pre-flight risk checks
       (sibling risk question doc) consume this SSOT.
+      **DONE** — UAC@`f7ba48a`: 7 venues (binance/bybit/okx/deribit/hyperliquid/aster/kraken) × rate_limits/fee_tiers/
+      max_order_size/max_leverage/market_maker. Public values from vendor docs pre-populated; PROBE_REQUIRED markers for
+      account-tier-specific values (fee bracket, exact max_qty). Operator probe commands included per venue.
+      aster: all PROBE_REQUIRED (BLOCKED-CREDENTIALS). hyperliquid leverage: public data (no probe needed).
 
 - [ ] [AGENT] P0. **2.E — Per-venue rate-limit token bucket.** Implement per-key + per-account leaky-bucket in
       `VenueAdapterBase` per Phase 2.B. Singleton-locked launcher pattern (per CLAUDE.md `launch-sfi-forward-poll.sh`
@@ -694,8 +698,15 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
       `unified-trading-system-ui/.firebaserc` lists prod (`central-element-323112`) + staging (`odum-staging`) projects;
       SA JSON storage location not surfaced — those config rows stay as-is, just unused during May-23.
 
-- [ ] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
+- [x] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
       `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs.
+      **PARTIAL** scaffold shipped: gitleaks SSOT config + pre-commit hooks (PM@`a2c23e79`), WIF migration codex doc
+      (`codex/07-security/gha-wif-migration.md`), `benchmarks.yml` dual-path WIF/SA-key + GitHub App token scaffold
+      (execution-service@`5bf0ae522`). GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR (infra HARD
+      STOP — run `gha-wif-migration.md § 1` commands). Full migration complete when WORKLOAD_IDENTITY_PROVIDER + APP_ID
+      secrets provisioned. Also found P0+P1: GCP SA key in 4 repos + GitHub PAT in instruments-service (issue docs filed
+      + operator notified — see `plans/active/issues/gcp_sa_private_key_in_git_history_*` +
+      `plans/active/issues/github_pat_in_instruments_service_*`).
 
 - [x] [SCRIPT] P2. **6.D — Anthropic API budget cap.** Per workflow run budget cap on `ANTHROPIC_API_KEY` usage.
       Currently advisory/audit workflows only — low-risk but unbounded.
