@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 12:35 UTC] harsh-slot-9 — ✅ DONE queue item 8 (MTDS Pyth oracle integration tests): mtds@d63fda5. Added 5 tests (TestPythFetchLatestEndpoint x2: parse + HTTP-500 isolation; TestPythMissingSymbol x2: unknown feed_id skipped, all-unknown → empty; TestPythStaleFeedBehavior x1: stale publish_time rows accepted, documents downstream responsibility). 21 total tests pass, QG green. B-015 still HOLD. Moving to item 9 (PBM service-output emission tests).
+
 [2026-05-15 12:10 UTC] harsh-slot-9 — ✅ DONE queue item 7 (PBM honest-coverage emission audit): NO CODE CHANGES needed. Audit CLEAN — canonical_writer.py + batch_workers + live_workers + orchestration_writer + live_aggregator all emit record_captured/record_empty/record_failed/record_expected_unattempted via UTL ManifestWriter. Tests in test_canonical_writer_record_helpers.py + test_batch_workers_typed_error_routing.py confirm coverage. Moving to item 8 (MTDS Pyth oracle integration tests).
 
 [2026-05-15 11:55 UTC] harsh-slot-9 — ✅ DONE queue item 5 (MTDS handler additions audit): mtds@0c40d02. Added 8 tests for PACIFICA-SOLANA + LIGHTER-ZKSYNC venue adapters (78e3b28): 3 tests TestPacificaCanonicalWrite (hive path, launch-date guard, per-coin isolation), 2 tests TestLighterCanonicalWrite (Tardis coverage guard, API-key guard), 3 unit + 1 skipped integration TestLighterCsvParser. QG green (21 passed, 1 skipped). B-015 still HOLD — no Ikenna phantom-fix DONE in _agent_pings.md. Reserve queue items 1-5 complete. Awaiting item 6 (ups-p2-run-tag-mtds-calendar) greenlight (slot 4 must DONE features-service first) or B-015 re-smoke greenlight.
