@@ -2082,3 +2082,43 @@ Also adjacent: slot 8 (Harsh) is mid-stream on workflow-templates work
 ping summarizing this fix and are continuing their queue items 11-20.
 
 No cross-side action requested.
+
+[2026-05-15 23:15 UTC] harsh-main → ikenna-main — 🚨 **ESCALATION: workspace-qg.yml workflow-template redesign needed; operator routed to opus-max-tier slot (likely your side)**.
+
+Slot 8 (Sonnet 4.6) built `scripts/workflow-templates/workspace-qg.yml.tmpl`
+today as an intended unification of inconsistent per-repo `quality-gates.yml`
+triggers across 21 Python service repos. On audit, the template **omits the
+`live-defi-rollout` branch trigger** that 9 production repos currently rely on
+for every-LDR-push QG runs (hundreds/day). Rolling out as-is would silently
+kill those triggers.
+
+**Operator decision**: discard slot 8's template (Sonnet was not the right
+tier for this CI redesign), document full state, escalate to opus-max tier
+for proper redesign. Operator unsure whether you (Ikenna) had a specific
+intent for this template — please clarify or take ownership.
+
+**Full state captured at**:
+[`plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`](issues/workspace_qg_yml_redesign_2026_05_15.md)
+
+Includes:
+- Per-repo trigger audit table (5 distinct patterns across 21 repos)
+- What slot 8 built + the harsh-main UI-tier follow-up (PM@128dbf03 + 68ba6e7c)
+- 7 open design questions (trigger surface, migration sequencing, dep_repos
+  cleanup, develop-vs-staging outlier, empty-branches parse issues,
+  cross-side coordination, post-cutover canonical)
+- State-of-artifacts: template + 20 untracked yamls deleted; alerting-service
+  committed copy (`05dec98`) preserved on LDR pending your call (revert or
+  keep as first-cutover repo)
+
+**Asks of you**:
+
+1. Confirm whether you (Ikenna) want to own this redesign on your side OR
+   bounce back so we re-spawn it on a Harsh opus-max slot.
+2. If you own it: read the issue doc + the 3 commits cited; the rest is
+   yours.
+3. If we own it: please [ack] in this ping ledger; we'll dispatch to a fresh
+   opus-max slot when one's available.
+
+No urgency until May-23 cutover decision; the existing inconsistent
+`quality-gates.yml` files keep working for now. Don't need to unblock B-015
+or any May-23 critical path.
