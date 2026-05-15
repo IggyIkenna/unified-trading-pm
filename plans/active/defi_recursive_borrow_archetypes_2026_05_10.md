@@ -804,11 +804,10 @@ Total new cells: 17. Within the master plan position-cap envelope (~$1.7M aggreg
       covering both family enum members through factory + catalog + tracer. (strategy-service@03c1622 — 18 tests:
       factory dispatch, 7+10 cell counts, on_tick stub [], APR arithmetic, slot labels, config fields; also adds
       ALLOWED_ARCHETYPES to base + recursive_staked, re-exports tracer helpers from carry_and_yield **init**)
-- [ ] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend
+- [x] [strategy-service] **P0**. Peripheral script wiring per HARD RULE: extend
       `strategy-service/scripts/quality-gates.sh` to run basedpyright + ruff on
-      `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). Confirm directory exists OR defer
-      until Phase 12 lands. **DEFERRED**: `recursive_borrow_paper_smoke.py` not yet created (Phase 12 scope). Wire QG
-      extension in same logical unit as Phase 12 smoke script creation.
+      `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW per Phase 12). (7cb01d3 strategy-service
+      2026-05-15)
 
 ## Phase 12 design — per-family backtest scenario set (2026-05-12 slot 5)
 
