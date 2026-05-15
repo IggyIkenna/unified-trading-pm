@@ -63,6 +63,8 @@ Self-pivot through queue. One CYCLE-CLOSE ping when all exhausted.
 ```
 Slot 3 marks item 8 DONE on ping dispatch. ACK + flip when added.
 
+[2026-05-15 07:48 UTC] slot-3 — ✅ **CHECKPOINT: items 4-8 complete**. Queue extension received (items 9-12). Starting item 9: strategy-service archetype config validation tests.
+
 [2026-05-15 07:41 UTC] [main → slot 3] — 📋 **QUEUE EXTENSION** — add 4 more items after your 8-item batch. Total ~20 AI-days.
 9. **strategy-service archetype config validation tests** — every YAML in `strategy-service/configs/archetypes/` loads + passes schema validation; bad configs raise loud at boot, not at trade time. Done-def: tests + QG green.
 10. **e2e-testing/scripts/defi/ peripheral consumer hygiene** — `shellcheck` + `ruff check` + `basedpyright` sweep on all .py + .sh files in this directory (slot 3 is primary consumer of strategy-service.* imports). Fix import-rot. Done-def: 0 lint/type errors.
