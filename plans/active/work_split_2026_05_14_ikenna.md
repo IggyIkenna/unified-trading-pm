@@ -569,6 +569,11 @@ are pinged to re-pull LDR + read their updated stack.
 All of slot 10 (writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit across 9 services) → **Slot 7**, who owns writegate Phase
 6.x already. Slot 7 confirms β verdict + flips Gate 4 row in master plan.
 
+**✅ DONE PM@`e054700e` 2026-05-15**: β-verdict confirmed; issue doc filed at
+`plans/active/issues/writegate_phase_6_6_7_9_alpha_vs_beta_decision_2026_05_14.md`; intra-side ping to
+slot 1 main with Gate 4 master-plan update instructions. Master plan flip delegated to slot 1 main (slot-precedence
+rule).
+
 ### Slot 11 work distribution (~7.4 cal AI-days; cbETH retracted, Kraken re-classed)
 
 | Slot 11 item                                                                                                                  | New owner                 | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
