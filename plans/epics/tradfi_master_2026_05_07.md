@@ -3,7 +3,7 @@ name: tradfi-master
 slug: tradfi_master_2026_05_07
 date: 2026-05-07
 deadline: 2026-05-23
-last_updated: 2026-05-08
+last_updated: 2026-05-15
 owner: claude-code
 status: active
 priority: P1
@@ -277,9 +277,10 @@ mass-fail every existing futures row.
       row). **COMPLETED 2026-05-13 Phase 1B**: UAC@dd407ae — flipped expiration to required + added
       `_parse_deribit_option_expiry()` helper (fixes 2 callsites that hardcoded None) + fail-loud guards in 2 Databento
       callsites + 12 unit tests. Historical-row backfill deferred to plan Phase 3 (one-shot migration script).
-- [ ] [SCRIPT] P0. **One-shot manifest migration script** under
+- [x] [SCRIPT] P0. **One-shot manifest migration script** under
       `instruments-service/scripts/migrate_tradfi_expiry_schema.py` mirroring existing migration patterns (idempotent,
       dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules).
+      **COMPLETED 2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase 1B propagation; run on GCE VM per operator direction.
 - [ ] [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands in tradfi-master scope
       first; the workspace-wide hard-schema enforcement (under `hard_schema_enforcement_2026_05_08` plan) ships AFTER to
       avoid mass-fail during transit. CLAUDE.md "Two teammates" rule applies — coordinate via shared cursor working

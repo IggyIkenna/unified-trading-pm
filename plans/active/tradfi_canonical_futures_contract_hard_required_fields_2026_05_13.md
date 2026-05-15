@@ -3,11 +3,11 @@ name: tradfi-canonical-futures-contract-hard-required-fields
 slug: tradfi_canonical_futures_contract_hard_required_fields_2026_05_13
 date: 2026-05-13
 deadline: 2026-05-23
-last_updated: 2026-05-13
+last_updated: 2026-05-15
 owner: claude-code
-status: in_progress
+status: complete
 priority: P0
-phase: phase_1_3_5_complete
+phase: all_phases_complete
 domain: tradfi
 asset_group: tradfi
 type: schema-migration
@@ -193,8 +193,10 @@ Order matters: every consumer must adopt the new types BEFORE the workspace-wide
 ## Coordination protocol
 
 - ✅ Phase 0 complete (pre-audit done; documented above).
-- ⏸️ Phase 1 BLOCKED — ping main before landing the breaking UAC schema commit. Main coordinates cross-plan banner cycle
-  to alert downstream slots.
+- ✅ Phase 1 complete — UAC@2ac74e2 + UAC@dd407ae shipped; cross-plan banner cycle completed.
+- ✅ Phase 3 complete — migration script IS@db070da shipped; live GCS run DEFERRED (operator direction: run post workspace-wide propagation on GCE VM).
+- ✅ Phase 4 complete — consumer cascade: IS@bcb34b9 / IS@2be7e4b / UAC@421bb21 / MTDS@103540f / FS@f83cac97 / UAC@20c8b67 / SS@cfcd3a7.
+- ✅ Phase 5 complete — QG ratchet PM@32c7ea52.
 - Phase 3-5 sequencing handled inside `hard_schema_enforcement_2026_05_08` plan (workspace-wide rollout).
 
 ## Estimate
