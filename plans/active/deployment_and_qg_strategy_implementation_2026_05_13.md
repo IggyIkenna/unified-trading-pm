@@ -450,11 +450,24 @@ Sourced from orchestrator ping [2026-05-15 07:41 UTC] 3-item queue extension.
 - [x] [AGENT] P0. **deployment-ui /research routes** — three new tabs: `/research/ml-experiments`,
       `/research/strategy-backtests`, `/research/execution-backtests`; each tab consumes its matching launch endpoint;
       17 Vitest tests; pnpm build + QG green. — _deployment-ui@4d5e662_
-- [ ] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner
+- [x] [AGENT] P0. **deployment-ui DART terminal stub** — placeholder route `/dart`; skeleton component; checklist banner
       "operator-monitored window before automation flip"; manual trade entry stub goes through execution-service same
-      path as automation. Done-def: route renders + skeleton component + checklist banner.
-- [ ] [AGENT] P0. **deployment-api AuthN via Firebase token** — Firebase token verification middleware on all endpoints
-      from items 1-6; tests covering valid/expired/missing token + QG green.
+      path as automation. Done-def: route renders + skeleton component + checklist banner. — _deployment-ui@bf3ec2c (backfilled 2026-05-15)_
+- [x] [AGENT] P0. **deployment-api AuthN via Firebase token** — Firebase token verification middleware on all endpoints
+      from items 1-6; tests covering valid/expired/missing token + QG green. — _deployment-api@299908f (backfilled 2026-05-15)_
+
+Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-api + UI polish + new surfaces).
+
+- [x] [AGENT] P0. **deployment-api WebSocket VM event streaming** — `/ws/vm/{vm_name}/events` polls GCS events bucket every 5 s; pushes new VMLifecycleEvents as JSON; mock mode sends 3 synthetic events; 1 smoke test; QG green. — _deployment-api@4951d10_
+- [ ] [AGENT] P0. **deployment-api Prometheus telemetry endpoint** — `GET /metrics` exposing key counters (requests, latencies, in-flight VMs, last-snapshot-age); standard Prometheus exposition format; 5+ exposed metrics; QG green.
+- [ ] [AGENT] P0. **deployment-ui live deployments WebSocket integration** — `/ops/live-deployments` consumes `/ws/vm/{vm_name}/events`; auto-updates as events stream; pnpm build + vitest green.
+- [ ] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA labels on interactive elements; a11y audit report + fixes; pnpm build green.
+- [ ] [AGENT] P0. **deployment-api OpenAPI doc generation** — `GET /api/openapi.json` returns current OpenAPI spec auto-generated from FastAPI routes; smoke test asserts schema parses; QG green.
+- [ ] [AGENT] P0. **deployment-ui error boundary + retry UX** — global error boundary catches React errors + offers retry; per-call retry buttons on failed API calls; 3+ failure scenarios tested.
+- [ ] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar; 429 response on exceed; tests covering normal + exceed; QG green.
+- [ ] [AGENT] P0. **deployment-ui form validation polish** — backfill / experiment / strategy backtest forms: field-level validation, helpful error messages, disable-submit when invalid; vitest green.
+- [ ] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component status (GCS, pubsub, secret manager, deployment-events); tests covering each component up/down state.
+- [ ] [AGENT] P0. **deployment-ui notification system** — toast/banner for backfill launches / VM spawns / paper-trade kicks; auto-dismiss on completion; integrated with 2+ flows.
 
 ## Done definition
 
