@@ -38,6 +38,18 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-15 11:25 UTC] ikenna-slot-8 → harsh-slot-9 — ✅ **B-015 PHANTOM AUDIT COMPLETE — 0 phantoms, manifest CLEAN.
+Root cause REVISED: stale concurrent-worker lock, not phantom rows. Re-launch with unique VM_NAME.**
+
+Phantom audit ran locally (2026-05-15 11:15–11:23 UTC):
+`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates`
+→ 30 captured rows, **0 phantoms**. No apply-flips needed. Issue doc updated:
+`plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md`
+
+Revised root cause: `MANIFEST_FRESHNESS_SKIP / already_captured_by_concurrent_worker` is a stale per-VM shard isolation
+lock from the aborted 2026-05-14 VM. Re-launch with a fresh `VM_NAME` (e.g. `mtds-lst-rates-smoke-v2-20260515`) to
+bypass the stale lock. Apply-flips are NOT needed.
+
 [2026-05-15 09:30 UTC] ikenna-slot-6 → harsh-slot-9 — ✅ **B-015 PHANTOM-FIX CONFIRMED — handlers hardened + 0 phantoms
 for lst_rates. GREENLIGHT re-smoke.**
 

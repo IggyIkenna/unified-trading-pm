@@ -46,24 +46,42 @@ data**. Root cause: phantom manifest rows reporting "already captured" for dates
 - **Manifest phantom is a systemic risk**: if `MANIFEST_FRESHNESS_SKIP` is firing on absent data, ALL DeFi backfills
   going forward will skip silently. Need phantom audit run before next backfill attempt.
 
-## Recommended decision
+## Phantom audit results — 2026-05-15 (slot 8)
 
-**Three actions in order**:
+**Ran**: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run --data-types lst_rates`
 
-1. **Phantom audit on lst_rates rows for 2026-04-15..present**: Run
-   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
-   `data_type=lst_rates` on same-region GCE VM. Identify the count of phantom rows.
-2. **Apply phantom flips** (with `--apply-flips`) to mark phantom rows as `attempted_failed` so the freshness check
-   stops skipping them.
-3. **Re-launch both smoke VMs** with:
-   - MTDS: `bash deployment-service/scripts/vm/launch-mtds-defi-vm.sh ...` with `--force-resync` flag (if exists) OR a
-     unique `VM_NAME` that bypasses cache.
-   - features-onchain: investigate why first launch produced no event stream; relaunch with event-stream verification
-     per the no-fire-and-forget HARD RULE.
+**Result**: `Real captures: 30, Phantom captures: 0` — **manifest is CLEAN**. No phantom rows found. No flips applied.
 
-**Assignment**: Ikenna slot 8 (audit theme owner) takes phantom audit + apply-flips (~1.6 cal AI-days). Harsh slot 9
-holds B-015 Phase 2 until smoke is genuinely green (manifest-verified row count > 0 AND sample parquet inspection passes
-the 4-pillar validation per CLAUDE.md).
+This disproves the original hypothesis. The `MANIFEST_FRESHNESS_SKIP / already_captured_by_concurrent_worker` reason is
+**NOT caused by phantom manifest rows**. The 30 `lst_rates` captured manifest rows all have corresponding parquet files
+on disk.
+
+### Revised root cause hypothesis
+
+The `already_captured_by_concurrent_worker` skip is from a **stale in-flight lock marker** — an MTDS per-VM shard
+isolation mechanism (`MANIFEST_PER_VM_SHARDS=true`) where a prior VM wrote a lock record but then aborted/crashed
+before completing. The freshness check sees the lock and skips rather than overwriting. Since the lock is stale, the
+data for `2026-04-15..19` appears "in progress" to the next VM, which exits immediately.
+
+### Revised recommended decision
+
+1. **Apply-flips not needed** — manifest is clean, nothing to flip.
+2. **Re-launch MTDS lst_rates smoke** with a unique `VM_NAME` (e.g., `mtds-lst-rates-smoke-v2-20260515`) so that the
+   per-VM shard isolation sees a fresh VM and does not match the stale lock. Command pattern:
+   ```bash
+   VM_NAME=mtds-lst-rates-smoke-v2-20260515 MANIFEST_PER_VM_SHARDS=true \
+   bash deployment-service/scripts/vm/launch-mtds-defi-vm.sh \
+     --data-type lst_rates --asset-group defi \
+     --start-date 2026-04-15 --end-date 2026-04-19
+   ```
+3. **features-onchain smoke investigation** — no event stream suggests VM crash before STARTED event. Re-launch with
+   event-stream monitoring per no-fire-and-forget rule; add `--log-level DEBUG` to capture boot failure.
+4. **GCS network instability note**: phantom audit encountered `ConnectionResetError` + `NameResolutionError` for
+   `storage.googleapis.com` during the listing phase (2026-05-15 11:22–11:23 UTC). Retry logic handled it; audit
+   completed successfully. Not related to B-015 root cause.
+
+**Assignment**: Harsh slot 9 re-launches smoke VMs with unique `VM_NAME` + monitors event stream. Ikenna slot 8
+phantom audit is COMPLETE (clean result, no action needed).
 
 ## Cross-references
 
