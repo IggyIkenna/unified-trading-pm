@@ -282,7 +282,7 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 - [x] **15. execution-service order book reconciliation tests** — execution-service@3e1c2644 (4 new tests in TestCrossVenueBookReconciliation: cross-venue failure isolation, partial-fill DEGRADED+STALE book delta, stale snapshot timestamp consistency, three-venue all-states). 11→15 tests. QG ✅ (356s).
 
-- [ ] **16. execution-service rate-limit + circuit-breaker tests** — cross-venue rate-limit aggregation, circuit-breaker tripping under burst load, recovery from open-state. Done-def: 4+ scenarios + QG green.
+- [x] **16. execution-service rate-limit + circuit-breaker tests** — execution-service@c1a51b1e (4 tests: rate-limit errors not counted as failures, burst 3 failures → OPEN via consecutive threshold, OPEN→HALF_OPEN→success→CLOSED drain 2 orders, cross-venue independence). 16→19 tests. QG ✅ (333s).
 
 - [ ] **17. execution-service oracle-mismatch handling** — Phase 9 DefiErrorCode ORACLE_PRICE_STALE + ORACLE_DEVIATION. Add execution-time tests that an oracle mismatch triggers correct retry/abort behavior. Done-def: 3+ scenarios + QG green.
 
