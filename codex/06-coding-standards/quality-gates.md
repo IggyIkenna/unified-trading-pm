@@ -2261,6 +2261,103 @@ baseline anchored at pre-audit count; new violations fail immediately; existing 
 
 ---
 
+## quality-gates.sh Boilerplate DRY Consolidation Proposal
+
+> **Status**: PENDING OPERATOR ACK — doc-only. No code change to base-service.sh until operator
+> approves. Audited 2026-05-15 (slot 8). Rollout via `rollout-quality-gates-unified.py` once acked.
+
+### Finding 1: UEI Lifecycle block (14 repos duplicate, 5 repos stale)
+
+The canonical 15-line lifecycle block appears verbatim in every repo's `quality-gates.sh`:
+
+```bash
+log_section "[5.X/6] UEI LIFECYCLE EVENT ENFORCEMENT (STARTED/STOPPED/FAILED)"
+if rg -q 'fastapi_uei_lifespan\s*\(' --type py "$SOURCE_DIR" 2>/dev/null; then
+    log_success "UEI lifecycle: fastapi_uei_lifespan (canonical HTTP wiring in UTL)"
+elif rg -q 'ServiceBootstrap\s*\(' --type py "$SOURCE_DIR" 2>/dev/null; then
+    log_success "UEI lifecycle: ServiceBootstrap (canonical CLI wiring in UTL)"
+else
+    for event in STARTED STOPPED FAILED; do
+        # -U: allow multiline call sites (e.g. log_event(\n  "STARTED", ...))
+        run_timeout 30 rg "log_event.*\"${event}\"" "${SOURCE_DIR}" --type py -U -q \
+            || log_warn "Missing log_event('${event}') in ${SERVICE_NAME} — see codex 03-observability/lifecycle-events.md"
+    done
+fi
+```
+
+**Repos with canonical pattern (14)**: batch-live-reconciliation-service, client-reporting-api,
+deployment-api, deployment-service, e2e-testing, execution-service, features-service,
+ibkr-gateway-infra, instruments-service, market-data-processing-service, pnl-attribution-service,
+position-balance-monitor-service, strategy-service, system-integration-tests, trading-agent-service,
+unified-trading-api.
+
+**Repos with OLD pattern — missing fastapi/ServiceBootstrap check (5)**:
+alerting-service, market-tick-data-service, ml-inference-service, ml-training-service,
+risk-and-exposure-service.
+
+Old pattern (4 lines, no UTL shortcut check):
+```bash
+log_section "[5.X/6] UEI LIFECYCLE EVENT ENFORCEMENT (STARTED/STOPPED/FAILED)"
+for event in STARTED STOPPED FAILED; do
+    run_timeout 30 rg "log_event.*\"${event}\"" "${SOURCE_DIR}" --type py -q \
+        || log_warn "Missing log_event('${event}') in ${SERVICE_NAME} — ..."
+done
+```
+
+**Proposal**: move canonical block into `scripts/quality-gates-base/base-service.sh` directly
+after STEP 5.62 (health-router check). Remove from all per-repo `quality-gates.sh` files. Update
+5 stale repos to canonical pattern as part of same rollout. One code change, one propagation pass.
+
+**REQUIRES OPERATOR ACK** before implementation.
+
+---
+
+### Finding 2: PERIPHERAL_DIR block pattern (2 repos, potentially expanding)
+
+`features-service` and `market-tick-data-service` both have a PERIPHERAL_DIR block pattern
+(checking `e2e-testing/scripts/` subdirs for import health). The pattern is unique to primary
+consumers of peripheral script directories (per CLAUDE.md hard rule). Each block is custom to
+the specific peripheral dir path and primary consumer — NOT a candidate for base-service.sh
+consolidation, because the path is repo-specific.
+
+**Action**: keep per-repo. Document in CLAUDE.md § "Peripheral Script Directories" that the
+block lives in the primary consumer's `quality-gates.sh`, not base-service.sh.
+
+---
+
+### Finding 3: PYTEST_UNIT_DIR opt-in (1 repo — features-service)
+
+`features-service` sets `PYTEST_UNIT_DIR="tests/"` before the `source base-service.sh` line to
+override the default `tests/unit/` path. This covers per-family test layouts (350+ files spread
+across `tests/<family>/unit/`). This is intentional and repo-specific.
+
+**Action**: document opt-in pattern — see § "PYTEST_UNIT_DIR per-family override" below.
+
+---
+
+### PYTEST_UNIT_DIR per-family override
+
+Some services organise tests as `tests/<family>/unit/` rather than the default `tests/unit/`.
+The flat `tests/unit/` default in `base-service.sh` will only collect ~46 tests (the cross-cutting
+unit tests); per-family tests are silently skipped.
+
+**To override**: set `PYTEST_UNIT_DIR` BEFORE the `source base-service.sh` line:
+
+```bash
+PYTEST_UNIT_DIR="tests/"           # collect all tests recursively
+source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
+```
+
+**When to use**: only when tests are structured as `tests/<family>/unit/` AND the default
+`tests/unit/` path would miss them. Verify by counting: if `find tests/unit/ -name 'test_*.py' | wc -l`
+returns <5% of `find tests/ -name 'test_*.py' | wc -l`, add the override.
+
+**Side effect**: `PYTEST_UNIT_DIR="tests/"` also collects `tests/integration/` — integration tests
+run unless `RUN_INTEGRATION=false` guards them (base-service.sh skips integration folder by name
+when `RUN_INTEGRATION=false`; spot-check that the integration-test exclusion logic still holds).
+
+---
+
 ## Anti-Patterns
 
 ```bash
