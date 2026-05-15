@@ -4,6 +4,23 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 UTC] slot-8 — 🏁 **CYCLE CLOSE — items 4-10 complete. Queue exhausted. Awaiting next direction.**
+
+**Session summary (items 4-10 of extended queue [2026-05-15 07:10 UTC]):**
+- Item 4 ✅ mtb-p6e-final-qg-sweep: all 6 B-014 repos swept; issue doc filed (features/ml-training pre-existing failures confirmed). PM@41bbf18e
+- Item 5 ✅ batch_live L4/L5/L6 sweep: STEP 5.75-5.78 clean in features+strategy+mtds. L4 deferred items catalogued (post-cutover per plan D5). No code changes.
+- Item 6 ✅ base-service.sh DRY proposal: lifecycle block duplication documented; 5 repos with stale old pattern; PENDING OPERATOR ACK for code change. PM@28ce4771
+- Item 7 ✅ STEP 5.79-5.82 detailed reference: 4 full-section docs added to codex quality-gates.md. PM@7706072a
+- Item 8 ✅ CLAUDE.md PYTEST_UNIT_DIR doc: 14-line block added; trigger condition + SSOT pointer. PM@247c7b40
+- Item 9 ✅ detect_template_drift.py: tool + 11 tests; 24 repos checked (18 clean, 6 warns). PM@68609e03
+- Item 10 ✅ zero-test guard sweep: all 16 repos have required test files, 0 repos with no tests.
+
+**Deferred work requiring operator action:**
+| Item | Status | What's needed |
+|---|---|---|
+| Lifecycle block DRY consolidation | PENDING OPERATOR ACK | Operator to approve `base-service.sh` lifecycle block consolidation + 5-repo stale pattern fix rollout |
+| 5 stale lifecycle repos | PENDING ROLLOUT | alerting/mtds/ml-inference/ml-training/risk-exposure — update to canonical 3-branch pattern |
+
 [2026-05-15 UTC] slot-8 — ✅ DONE item 10 zero-test silent pass guard sweep. All 15 B-014 service repos + SIT (16 total) have test_event_logging.py + test_config.py ✅. test_files range: 2 (ibkr-gateway-infra) → 543 (execution-service). Zero repos with 0 tests. No skeleton test_smoke.py needed anywhere.
 
 [2026-05-15 UTC] slot-8 — ✅ DONE item 9 detect_template_drift.py. PM@68609e03: new tool at scripts/quality_gates/detect_template_drift.py; 11 unit tests passing. One-shot run: 24 repos checked, 18 clean, 6 warnings (5 stale lifecycle: alerting/mtds/ml-inference/ml-training/risk-exposure; 1 missing file: fund-administration-service). No errors. SSOT: usage python3 scripts/quality_gates/detect_template_drift.py [--repo NAME] [--json].
