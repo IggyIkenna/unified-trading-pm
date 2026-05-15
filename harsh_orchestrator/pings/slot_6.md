@@ -48,6 +48,45 @@ Self-pivot through all 3. EOD close-out ping when exhausted.
 
 [2026-05-15 15:45 UTC] slot-6 — Item 6 ✅ execution-service KMS mock improvements: 4-test TestKmsRotationAndKeyNotFound class added (GCP rotation-disabled key, AWS NotFoundException, AWS Secrets Manager ResourceNotFoundException, cache-not-populated-after-failure). 38 pass + 2 skipped. execution@c1fa8072 LDR.
 
+[2026-05-15 16:30 UTC] slot-6 — 🏁 **Slot 6 Day-4 CYCLE-CLOSE** — 4-day cycle (2026-05-12 → 2026-05-15)
+
+  **Day 1 (2026-05-12)**: Phase 0 Cluster B
+  - alerting-service N802 lint sweep: 4 test names fixed, QG clean (alerting-service LDR)
+
+  **Day 2 (2026-05-13)**: Phase 0 Clusters D+E + Writegate
+  - instruments-service enrichment preflight + zero-fixture bypass bugs fixed (instruments-service LDR)
+  - deployment-ui 21 vitest failures → 0 (deployment-ui@b6e4e22)
+  - UTL legacy_reason_classifier patch (unified-trading-library@d78dd02)
+  - writegate Phase 6.5 remaining todos closed (execution-service LDR)
+
+  **Day 3 (2026-05-14)**: Phase 1 audit + B-012
+  - Phase 1 freeze-gate readiness audit: all 6 gate items green ✅ (no gate-blocking work)
+  - B-012 custody+signing coverage: 11 new tests, QG 5837 passed (execution-service@fdd82def+@fe8b1d3e + PM@3d1cbcbc)
+  - Cluster A+B proactive follow-on (overnight)
+
+  **Day 4 (2026-05-15)**: 14 items across 3 sub-cycles
+  Sub-cycle 1 (Day-1 queue @05:09→05:35):
+  - Codex audit: flash-loan-receiver.md; CLAUDE.md + defi-execution-overview.md 13→30 DefiErrorCode (f1429168 PM)
+  - DeFi error classification: all 30 codes covered — 8 HL_* + 2 ORACLE_* (d981502 UAC + 3ef4c712 execution)
+  - UTL legacy_reason_classifier: EXPECTED_FIXTURE_POSTPONED + CANCELLED gaps fixed (8f46483 UTL)
+  Sub-cycle 2 (reserve @08:00→09:35):
+  - LocalKeyCustodyProvider 33-test file; QG green (f1dee093 execution)
+  - codex/06 doc currency: 3 Phase 8 patterns already documented; confirmed no gaps
+  - P0 security issue (SA key in git history) annotated PENDING-OPERATOR-ACTION (783c98ab PM)
+  Sub-cycle 3 (queue extension items 1-8 @12:18→16:00):
+  - UAC RUF003: 0 violations confirmed
+  - codex/06 stubs: PYTEST_UNIT_DIR + BLOCK_CRITICAL + LocalKeyCustodyProvider seam (c6323139 PM)
+  - UTL QG green: 13 pre-existing deep imports suppressed (a44972c UTL)
+  - flash-loan-receiver.md vs sol audit: NO DRIFT (no edits)
+  - UTL batch_live_reconciler: 5 branch-coverage tests; QG GREEN 444s (UTL@0568e9f)
+  - execution KMS mocks: 4-test TestKmsRotationAndKeyNotFound; 38 pass (execution@c1fa8072)
+  - honest-absence-downstream-handling.md B-018 Phase 8.A VM cron section (PM@dd502602)
+  - Phase 8 codex audit: 0 orphan patterns (B-006–B-018 all have codex pointers)
+
+  **Deferred items**: None
+  **Open blockers**: P0 security (SA key rotation) — HARD STOP, operator-owned
+  **Repos touched**: execution-service, unified-trading-library, unified-api-contracts, alerting-service, instruments-service, deployment-ui, unified-trading-pm
+
 [2026-05-15 16:00 UTC] slot-6 — 🏁 **QUEUE-EXTENSION CYCLE-CLOSE** — All 5 items (4-8) done:
   Item 4 ✅ flash-loan-receiver.md audit: NO DRIFT (no edits needed)
   Item 5 ✅ UTL batch_live_reconciler: 5 branch-coverage tests; QG GREEN (444s); UTL@0568e9f
