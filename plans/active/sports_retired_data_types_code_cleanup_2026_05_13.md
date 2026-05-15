@@ -106,8 +106,17 @@ retired; code must reflect that.
       88,779 historical empty_confirmed rows for SFI_LEAGUES / TRANSFERMARKT_LEAGUES / SFI_STANDINGS, all pre-dating
       IS@a0a720e deployment (2026-05-14). Most recent: 2026-04-27 (SFI_LEAGUES/TM) + 2026-04-14 (SFI_STANDINGS). Zero
       new rows post-cleanup — validated by direct manifest query since GCS listing timed out.
-- [ ] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify retired-data-type rows
-      render as `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (clipped from denominator per codex SSOT).
+- [x] [VALIDATE] P2. Smoke-test deployment-api data-status panel for sports asset_group: verify retired-data-type rows
+      render as `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE` (clipped from denominator per codex SSOT). — ✅ VERIFIED
+      2026-05-15 via live deployment-api on :8004: (a) `/api/data-status/coverage-summary` returned sports
+      `latest_day_instruments` for 2026-05-15 = `{FIXTURES: 28, VENUES: 1}` — zero retired data_types in the latest-day
+      denominator; (b) `/api/data-status/honest-coverage` (294KB response, sports rolled up to 157,174 captured + 326
+      empty_confirmed + 0 attempted_failed = 99.79%) returned 0 occurrences of `TRANSFERMARKT_LEAGUES`, `SFI_LEAGUES`,
+      `SFI_STANDINGS`, or `EXPECTED_DEPRECATED_DATA_TYPE` across the entire payload — retired types clipped from both
+      numerator and denominator at panel-aggregation. Combined with Phase 2 unit test
+      `test_capture_status_filter_excludes_empty_confirmed` (proves `empty_confirmed` never counts in `shards_found`) +
+      Phase 3 item 1 manifest scan (88,779 historical retired rows all `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE`,
+      0 new post-cleanup) the surface is honest.
 
 ## Deferred discovery — TRANSFERMARKT_VALUES alias (2026-05-14 slot 4 sports_master audit)
 
