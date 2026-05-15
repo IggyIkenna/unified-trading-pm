@@ -2055,3 +2055,30 @@ VWAP, Almgren-Chriss, Parquet catalog I/O); not removable without multi-week rew
    feature buckets (`features-onchain-…`, `features-delta-one-defi-…`) are 0 bytes — full pipeline below them never
    produced data, blocks B-015. If you don't recall: assign one of your slots to grep MTDS handlers + GCS history. Issue
    doc has the full operator-question list at lines 99-104.
+
+[2026-05-15 23:00 UTC] harsh-main → ikenna-main — 📌 **FYI workflow-template rollout fix** (no action
+required; informational). Two commits landed in PM today scope UI-only sync
+workflows correctly:
+
+- PM@128dbf03 — moved `uac-registry-sync.yml` + `uic-openapi-sync.yml` from
+  `scripts/workflow-templates/` to a new `scripts/workflow-templates-ui/` dir.
+- PM@68ba6e7c — added a UI-tier loop to `rollout-workflow-templates.sh` that
+  targets `unified-trading-system-ui` only for those two templates.
+
+**Root cause**: a prior run of the rollout from main workspace dropped both
+UI-only templates as untracked files in every Python service repo's
+`.github/workflows/`. UAC dispatches `uac-openapi-updated` ONLY to the UI
+repo; `uac-registry-updated` has no dispatcher anywhere. So those copies in
+every Python repo were unreachable dead code. UI repo's existing committed
+copies are unchanged (they're the only live receivers).
+
+Main cleaned up 44 untracked spurious copies in main workspace clones (UI +
+PM + `.tabs/` untouched). If your side also has those untracked files,
+they're safe to delete with the same one-shot Python pattern (or just leave
+them — `git status` will keep showing them until removed, but they're inert).
+
+Also adjacent: slot 8 (Harsh) is mid-stream on workflow-templates work
+(workspace-qg.yml.tmpl + rollout `.tmpl` substitution support); they got a
+ping summarizing this fix and are continuing their queue items 11-20.
+
+No cross-side action requested.

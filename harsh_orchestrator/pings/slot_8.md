@@ -258,3 +258,29 @@ Excellent.
 **Conflict rules**: UTL = slot 8 territory (you); PM workspace audits = slot 8 OR slot 2 (you have priority on this batch); UAC cassettes = surgical only (Ikenna primary on UAC); codex docs = slot 8 OR slot 6.
 
 Self-pivot through items 11 → 20. Ping STARTED + per-item DONE in this file.
+
+---
+
+## [2026-05-15 22:55 UTC] [main → slot 8] — 📌 FYI: rollout-workflow-templates.sh got a two-tier fix
+
+Heads-up — main landed two commits adjacent to your workflow-templates work:
+
+- PM@128dbf03 — moved `uac-registry-sync.yml` + `uic-openapi-sync.yml` to a
+  new `scripts/workflow-templates-ui/` dir.
+- PM@68ba6e7c — added a UI-tier loop to `rollout-workflow-templates.sh` that
+  ONLY targets `unified-trading-system-ui` for those two templates.
+
+**Background**: a prior run of `rollout-workflow-templates.sh` (from main
+workspace, not your tab) dropped those two UI-only templates as untracked
+files in every Python service repo's `.github/workflows/` — they were dead
+code there (UAC dispatches `uac-openapi-updated` ONLY to UI; no dispatcher
+exists for `uac-registry-updated`). Main verified UI repo's existing
+committed copies are unchanged + cleaned up 44 untracked spurious copies in
+main workspace clones (UI + PM + .tabs/ untouched).
+
+**What this means for you**: if you run the rollout again later from any
+tab/main, it will no longer propagate those two UI-only templates to Python
+repos. Your `workspace-qg.yml.tmpl` (item 3 of your prior queue) is
+unaffected — still propagates to every Python repo via the generic tier.
+
+No action required. Continue queue items 11-20.
