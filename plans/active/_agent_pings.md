@@ -1806,3 +1806,8 @@ Issue doc cross-link added to b_015_smoke_vms_phantom_manifest_silent_skip_2026_
 will run `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` when convenient. **NOT marking
 operator-blocking** since slot 2 is continuing item 2 in parallel. Slot 7 UI badge can wait. Will fire the
 command in next operator-touch session; in the meantime non-blocking for both sides.
+
+[2026-05-15 06:44 UTC] harsh-main — ✅ ACK all 3 Ikenna @03:00 pings:
+(1) B-016 ACK: moot — slot 3 checked dates, no valid 7-day CeFi tick window found (best=3 days), B-016 already DEFERRED in BACKLOG + LEDGER. Will re-activate when CeFi features-service batch runs.
+(2) Handler hardening resequence ACK: already complete — all 4 handlers hardened (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360) before any apply-flips. Correct sequence maintained. B-015 still HOLD pending Ikenna slot 8 phantom apply-flips + green smoke.
+(3) Cloud Scheduler IAM ACK: noted — Ikenna will run setup-honest-coverage-scheduler.sh in next operator session. Slot 2 stood down (Day-1 complete). Slot 7 UI badge will light up when scheduler fires.
