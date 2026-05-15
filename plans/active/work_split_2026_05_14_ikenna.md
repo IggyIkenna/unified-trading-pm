@@ -180,22 +180,29 @@ Plan-of-record fan-out: 3 sports classifier issue docs (sfi_footystats / player_
 `expected_unattempted_propagation_gap` P1 + sports/prediction phantom apply-flips +
 `api_football_minimal_flattening_removal_2026_05_07` + `sports_master_2026_05_07`.
 
-1. **3 sports classifier gap issues** — sfi_footystats / player_values / weather classifications missing branches.
-   (refactor 0.4×, ~3 = 1.2 cal)
-2. **`sports_classifier_extension_followup` parent** — close out parent issue + cross-link the 3 child fixes. (refactor
-   0.4×, ~2 = 0.8 cal)
-3. **Propagation chain Phase 3.1-3.N + Phase 4 + PART C** — push remaining propagation phases through workspace.
-   (refactor 0.4×, ~6 = 2.4 cal)
-4. **`expected_unattempted_propagation_gap` P1** — propagate `expected_unattempted` capture_status to remaining
-   readers + manifest UI. (research 1.2×, ~3 = 3.6 cal)
-5. **6-bucket provisioning** — sports/prediction bucket provisioning per `bucket_name_ssot_canonicalisation` env-aware
-   matrix. Operator-approval needed only if backfill is part of this — provisioning alone = config + bucket-create only,
-   no approval. (infra 0.8×, ~2 = 1.6 cal)
+1. ✅ **3 sports classifier gap issues** — sfi_footystats / player_values / weather classifications missing branches.
+   (refactor 0.4×, ~3 = 1.2 cal) **DONE** (2026-05-14 prior session): sfi_footystats → uac@435abae + utl@79c72bad;
+   player_values → uac@17a0f82 + utl@79c72bad; weather read-side DONE; write-side DEFERRED per issue doc
+   `sports_classifier_weather_no_fixture_2026_05_13.md` (status: PARTIAL).
+2. ✅ **`sports_classifier_extension_followup` parent** — close out parent issue + cross-link the 3 child fixes.
+   (refactor 0.4×, ~2 = 0.8 cal) **DONE** (2026-05-14 prior session): issue doc status = RESOLVED — slot 4 Task 1+2
+   close-out.
+3. ✅ **Propagation chain Phase 3.1-3.N + Phase 4 + PART C** — push remaining propagation phases through workspace.
+   (refactor 0.4×, ~6 = 2.4 cal) **DONE** (2026-05-13): GATE 1 🟢 FIRED — Phase 3+4+PART C all complete per
+   `expected_unattempted_propagation_chain_2026_05_12.md` row 773.
+4. ✅ **`expected_unattempted_propagation_gap` P1** — propagate `expected_unattempted` capture_status to remaining
+   readers + manifest UI. (research 1.2×, ~3 = 3.6 cal) **DONE** (2026-05-13): captured in propagation chain plan; GATE
+   1 FIRED confirms P1 scope complete.
+5. **DEFERRED** — **6-bucket provisioning** — sports/prediction bucket provisioning per
+   `bucket_name_ssot_canonicalisation` env-aware matrix. (infra 0.8×, ~2 = 1.6 cal) **DEFERRED**:
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e-0i env-aware architecture deferred-after code_freeze Phase
+   2.6 provisioning + flat→env-tiered data migration. `features-prediction` bucket NOT PROVISIONED on GCP. Successor:
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0c+0i items (must re-evaluate after Phase 2.6).
 6. ✅ **Sports/prediction phantom apply-flips on VMs** — `reconcile_phantom_manifest_rows_all.py --apply-flips` on
-   same-region GCE VM. (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14 prior session): 0 phantoms for sports,
-   0 phantoms for prediction — dry-run confirmed clean. No apply needed (nothing to flip).
-7. ✅ **Cluster D strategy-service test failures** (Phase 0 cluster D; different from Harsh slot 4's 2-of-17 — this is the
-   cluster-level remainder). (refactor 0.4×, ~2 = 0.8 cal) **DONE**: strategy-service@3a3f20b —
+   same-region GCE VM. (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14 prior session): 0 phantoms for sports, 0 phantoms
+   for prediction — dry-run confirmed clean. No apply needed (nothing to flip).
+7. ✅ **Cluster D strategy-service test failures** (Phase 0 cluster D; different from Harsh slot 4's 2-of-17 — this is
+   the cluster-level remainder). (refactor 0.4×, ~2 = 0.8 cal) **DONE**: strategy-service@3a3f20b —
    `load_strategy_config_by_type` moved `get_storage_client()` inside try/except so ValueError (no GCP_PROJECT_ID)
    returns None gracefully instead of propagating; 3 test_v2_batch_parity failures → 0; 1715 pass total.
 8. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — gather + cross-ref against
