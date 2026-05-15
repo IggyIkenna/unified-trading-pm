@@ -446,18 +446,19 @@ Slot 3 session-6 DONE.
 
 **UTL QG result** (operator requested after OOM fix `93ff771`):
 - 🟢 OOM fixed — QG completes without OOM (previously killed at 75 GB RSS)
-- 🔴 102 pre-existing test failures (NOT slot-3's work). Affected test areas:
-  - `test_bucket_naming.py` — AWS defi-purpose buckets (dex-pools, eigenlayer-rewards, pnl-store-defi)
-  - `test_protocol.py` — `ProtocolConfig.from_env()` returns BATCH when SERVICE_MODE=live set
-  - `test_constants.py` — market-data/features/execution bucket lookups
-  - `test_auth.py` — OIDC auth token tests (5 failures)
-  - `test_gcp_providers.py` + `test_gcp_secret_storage_build.py` — GCS upload/download
-  - `test_execution_config_schema.py` — DEX venue validation
-  - `test_testnet_contracts.py` — testnet registry
-  - `test_freshness_events.py` — VENUE_ZERO_INSTRUMENTS not in expected set
-  - ERROR: `test_usage_meter_sink.py` — import mismatch
-- Root cause candidates: `ebed394` (RuntimeMode re-export from UAC), `c80bfbf` (bucket_naming SSOT changes), `a7f140e` (StreamingParquetWriter March-27 conftest additions)
-- These failures exist at LDR HEAD `93ff771`. Not slot-3's responsibility. Routing to operator/main for triage.
+- 🔴 102 pre-existing test failures (NOT slot-3's work). Affected files:
+  - `tests/cloud_interface/unit/test_bucket_naming.py` — AWS defi-purpose buckets
+  - `tests/cloud_interface/unit/test_protocol.py` — `ProtocolConfig.from_env()` returns `BATCH` when `SERVICE_MODE=live` set
+  - `tests/cloud_interface/unit/test_constants.py` — market-data/features/execution bucket lookups
+  - `tests/cloud_interface/unit/test_auth.py` — OIDC auth token tests
+  - `tests/cloud_interface/unit/test_gcp_providers.py` + `test_gcp_secret_storage_build.py` — GCS upload/download
+  - `tests/config_interface/unit/test_execution_config_schema.py` — DEX venue validation
+  - `tests/config_interface/unit/test_testnet_contracts.py` — testnet registry
+  - `tests/events/test_freshness_events.py` — VENUE_ZERO_INSTRUMENTS not in expected set
+  - Plus ERROR: `tests/usage_meter/unit/test_usage_meter_sink.py` — import mismatch
+- **Root cause candidates**: `ebed394` (May 14 — RuntimeMode re-exported from UAC; possible identity mismatch), `c80bfbf` (bucket_naming SSOT changes), `a7f140e` (March — StreamingParquetWriter added cloud_interface conftest)
+- These failures exist in LDR HEAD at `93ff771`. Not slot-3's responsibility to fix.
+- Routing to operator/main for triage and assignment to correct slot.
 
-**Queue status**: All 10 items `[x]`. Queue EXHAUSTED.
+**Queue status**: All items 1-10 from 17:55 UTC queue are `[x]`. Queue EXHAUSTED.
 🏁 **Slot 3 session-7 CYCLE-CLOSE** — awaiting operator direction for next wave or reassignment.
