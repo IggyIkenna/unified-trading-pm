@@ -467,31 +467,26 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
       latencies, in-flight VMs, last-snapshot-age); standard Prometheus exposition format; 5+ exposed metrics; QG green.
       — _deployment-api@8aabe72_
 - [x] [AGENT] P0. **deployment-ui live deployments WebSocket integration** — `/ops/live-deployments` consumes
-      `/ws/vm/{vm_name}/events`; auto-updates as events stream; pnpm build + vitest green. —
-      _deployment-ui@8bace71_
+      `/ws/vm/{vm_name}/events`; auto-updates as events stream; pnpm build + vitest green. — _deployment-ui@8bace71_
 - [x] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA
-      labels on interactive elements; a11y audit report + fixes; pnpm build green. —
-      _deployment-ui@3119577_
+      labels on interactive elements; a11y audit report + fixes; pnpm build green. — _deployment-ui@3119577_
 - [x] [AGENT] P0. **deployment-api OpenAPI doc generation** — `GET /api/openapi.json` returns current OpenAPI spec
-      auto-generated from FastAPI routes; smoke test asserts schema parses; QG green. —
-      _deployment-api@4769bd8_
+      auto-generated from FastAPI routes; smoke test asserts schema parses; QG green. — _deployment-api@4769bd8_
 - [x] [AGENT] P0. **deployment-ui error boundary + retry UX** — global error boundary catches React errors + offers
-      retry; per-call retry buttons on failed API calls; 3+ failure scenarios tested. —
-      _deployment-ui@71c658e_
+      retry; per-call retry buttons on failed API calls; 3+ failure scenarios tested. — _deployment-ui@71c658e_
 - [x] [AGENT] P0. **deployment-api rate limiting middleware** — per-IP rate limit (60 req/min) via slowapi or similar;
-      429 response on exceed; tests covering normal + exceed; QG green. —
-      _deployment-api@e968719_
+      429 response on exceed; tests covering normal + exceed; QG green. — _deployment-api@e968719_
 - [x] [AGENT] P0. **deployment-ui form validation polish** — backfill / experiment / strategy backtest forms:
       field-level validation, helpful error messages, disable-submit when invalid; vitest green. —
       _deployment-ui@088b5c6_ (MlExperiments + StrategyBacktests + ExecutionBacktests: inline errors,
       aria-invalid/aria-describedby, button disabled when invalid, end≥start date check; 27 tests green)
 - [x] [AGENT] P0. **deployment-api comprehensive health check** — `GET /api/health/detailed` returns per-component
       status (GCS, pubsub, secret manager, deployment-events); tests covering each component up/down state. —
-      _deployment-api@1114bfe_ (4 probe fns + mock fast-path + degraded/healthy rollup; 16 tests green)
+      _deployment-api@1114bfe_ (4 probe fns + mock fast-path + degraded/healthy rollup; 16 tests green) +
+      _deployment-api@720c801_ (4 additional tests: mock-mode/all-up/one-down/all-down, slot 8)
 - [x] [AGENT] P0. **deployment-ui notification system** — toast/banner for backfill launches / VM spawns / paper-trade
-      kicks; auto-dismiss on completion; integrated with 2+ flows. —
-      _deployment-ui@e2b7a81_ (NotificationContext + ToastStack + MlExperiments + StrategyBacktests wired;
-      5s auto-dismiss; aria-live=polite; 15 tests green)
+      kicks; auto-dismiss on completion; integrated with 2+ flows. — _deployment-ui@e2b7a81_ (NotificationContext +
+      ToastStack + MlExperiments + StrategyBacktests wired; 5s auto-dismiss; aria-live=polite; 15 tests green)
 
 ## Done definition
 
