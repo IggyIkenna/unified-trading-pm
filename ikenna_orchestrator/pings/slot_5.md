@@ -735,3 +735,24 @@ commits (UAC@`da3863f` expiry guard + strategy-service@`25393d1` market_hours_on
 MERGE_HEAD; not mine, leaving alone per "Untracked file = NOT YOURS" rule).
 
 **Next item**: starting work_split_2026_05_15_ikenna § Slot 5 item 1 (TradFi 1-week test backfill, AUTHORIZED <7 days).
+
+---
+
+## [slot 5] Item 1 (TradFi 1-week test backfill) BLOCKED-CREDENTIALS (linked to item 2)
+
+**Status**: 🔴 BLOCKED-CREDENTIALS — same Databento account-lock as work_split item 2.
+
+The TradFi 1-week test backfill VM launcher (`deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh`) is hard-wired
+to Databento (the only ES/CME futures source on workspace path; Barchart is VIX-only). Dry-run confirmed it builds a
+`tradfi-bf-es-*` VM, fetches Databento `ohlcv_1m;trades` for the requested window — which will 403 immediately on the
+locked account.
+
+The `<7-days AUTHORIZED` qualifier on this item refers to GCS-backfill bandwidth approval (slot self-authorizes), NOT
+Databento credentials. Credentials are the blocker; same operator unblock as the migration item.
+
+**Combined ask** (rolled into the existing CREDENTIAL APPROVAL REQUEST already filed): unlock Databento billing at
+`app.databento.com` → both items 1 + 2 + 6 + 10 + the 5 `mdps-tradfi-*` VMs re-launch unblocked. No additional scaffold
+work needed (adapter + launcher already exist).
+
+**Plan-of-record adjustment**: leaving `work_split_2026_05_15_ikenna.md` § Slot 5 item 1 as `- [ ]` per HARD RULE —
+moving to next executable item (#3 Phase 5 QG ratchet, no external-data dependency).
