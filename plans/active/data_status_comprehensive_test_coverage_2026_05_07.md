@@ -126,9 +126,9 @@ UAC declares the canonical types every consumer expects. When a consumer adds a 
 - [x] [unified-api-contracts] P0. `tests/test_canonical_capture_status_taxonomy.py` — assert `EMPTY_CONFIRMED_REASONS`
       is a closed set covering every reason a writer is allowed to emit; assert UTL's `record_empty(reason=...)`
       validates against this set. (UAC@bf7607c — shipped; 8 tests pass)
-- [ ] [unified-api-contracts] P0. `tests/test_drilldown_node_shape.py` — pin the `DrilldownNode` Pydantic / TypedDict
+- [x] [unified-api-contracts] P0. `tests/test_drilldown_node_shape.py` — pin the `DrilldownNode` Pydantic / TypedDict
       shape; assert deployment-api's `DrilldownNode.to_dict()` produces a dict matching the schema (catches a renamed
-      field on either side).
+      field on either side). (UAC@ff599d7 spec-side 30 tests; deployment-api@b2de03d impl-side 16 tests; both pass)
 - [x] [unified-api-contracts] P0. `tests/test_protocol_launch_dates_vs_chain_genesis.py` — every chain in
       `PROTOCOL_LAUNCH_DATES` keys must be in `CHAIN_GENESIS_DATES`; every protocol declared must have either a launch
       date OR be on `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`. (already partially shipped — extend.) (UAC@6c873e4 —
