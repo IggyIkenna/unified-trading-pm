@@ -469,8 +469,9 @@ Sourced from orchestrator ping [2026-05-15 09:09 UTC] 10-item queue (deployment-
 - [x] [AGENT] P0. **deployment-ui live deployments WebSocket integration** — `/ops/live-deployments` consumes
       `/ws/vm/{vm_name}/events`; auto-updates as events stream; pnpm build + vitest green. —
       _deployment-ui@8bace71_
-- [ ] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA
-      labels on interactive elements; a11y audit report + fixes; pnpm build green.
+- [x] [AGENT] P0. **deployment-ui dark/light theme polish + ARIA audit** — WCAG AA high-contrast on all surfaces; ARIA
+      labels on interactive elements; a11y audit report + fixes; pnpm build green. —
+      _deployment-ui@3119577_
 - [ ] [AGENT] P0. **deployment-api OpenAPI doc generation** — `GET /api/openapi.json` returns current OpenAPI spec
       auto-generated from FastAPI routes; smoke test asserts schema parses; QG green.
 - [ ] [AGENT] P0. **deployment-ui error boundary + retry UX** — global error boundary catches React errors + offers
