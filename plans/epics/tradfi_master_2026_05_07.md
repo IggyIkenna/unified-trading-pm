@@ -152,8 +152,8 @@ respective umbrellas.
       `_enrich_session_metadata()` (lines 581-601) sets all three fields for every `InstrumentRecord` via
       `_get_session_metadata(venue, target_date)`. `holiday_calendar` set for all venues; `pre_market_open_utc` +
       `post_market_close_utc` set for NYSE/NASDAQ (correctly None for CME/ICE/CBOE where pre/post-market doesn't apply).
-      FX records hardcode `holiday_calendar="FX"`. All `get_instruments()` paths call `_enrich_session_metadata`.
-      Test coverage in `test_cefi_tradfi_comprehensive.py::test_enrich_session_metadata`.
+      FX records hardcode `holiday_calendar="FX"`. All `get_instruments()` paths call `_enrich_session_metadata`. Test
+      coverage in `test_cefi_tradfi_comprehensive.py::test_enrich_session_metadata`.
 - [x] [AGENT] P0. `ml-training-service/app/core/data_filters.py`: replace `filter_market_hours()` hardcoded NYSE with
       `venue_trading_calendar` lookup. [AUDIT 2026-05-07: FRESH — actionable] **SHIPPED 2026-05-15**: `MLTS@751130c` —
       removed hardcoded `_MARKET_OPEN_HOUR/MINUTE` ET constants; replaced with `classify_session(venue, ts)` per
@@ -168,13 +168,18 @@ respective umbrellas.
 - [ ] [AGENT] P0. Run `bash scripts/quality-gates.sh` on all 12 affected repos. [AUDIT 2026-05-07: FRESH — actionable]
 - [ ] [AGENT] P0. Run instruments pipeline for all 3 categories (CEFI, DEFI, TRADFI) and verify: (a) all venues emit
       calendar fields, (b) no hardcoded holidays remain. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P1. `instrument_validation.py`: require `holiday_calendar` + `timezone` for TradFi instruments. [AUDIT
-      2026-05-07: FRESH — actionable]
+- [x] [AGENT] P1. `instrument_validation.py`: require `holiday_calendar` + `timezone` for TradFi instruments. [AUDIT
+      2026-05-07: FRESH — actionable] **VERIFIED 2026-05-15**: `UAC/internal/reference/instrument_validation.py` lines
+      268-273 already enforce both fields for all TradFi instruments in `_check_record()`. Called by orchestrator at
+      line 2128 before every GCS write. Rejects entire venue shard if any record fails. Test coverage in
+      `test_cefi_tradfi_comprehensive.py`.
 - [ ] [AGENT] P1. Add diagnostic: TradFi venue returning 0 rows on a trading day → WARN (potential upstream issue).
       [AUDIT 2026-05-07: FRESH — actionable; instruments-service@8b5eca3 Tier 2B already emits
       EXPECTED_WEEKEND/EXPECTED_HOLIDAY for non-trading-day pre-skips — extend to active-day-zero diagnostic]
-- [ ] [AGENT] P1. Strategy base class config: `market_hours_only: bool = True` default for TradFi. [AUDIT 2026-05-07:
-      FRESH — actionable]
+- [x] [AGENT] P1. Strategy base class config: `market_hours_only: bool = True` default for TradFi. [AUDIT 2026-05-07:
+      FRESH — actionable] — ✅ `strategy-service@c0627fe` 2026-05-15: `_is_regular_session()` via UAC
+      `classify_session()` gating off-session ticks in `_tick_one_engine`;
+      `TRADFI_DEFAULT_PARAMS={"respect_market_hours":"true"}` added as SSOT in `archetype_defaults.py`; 14 unit tests.
 - [ ] [AGENT] P1. Expiry guard: instrument `status=EXPIRED` or `expiry < now` → reject with reason. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P1. MTDS pipeline TradFi weekend date — verify NYSE / NASDAQ / CME skip with "market closed" log. [AUDIT
