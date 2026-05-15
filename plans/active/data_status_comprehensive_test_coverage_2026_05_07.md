@@ -201,9 +201,9 @@ the data-status / drilldown / deploy_missing services are GCS-only.
       `storage_facade` reads from S3 (mocked via moto), NOT GCS. Catches the regression where a refactor leaves
       `from google.cloud import storage` hardcoded. (deployment-api@1e6e357 — 8 tests: factory dispatch + facade UCI
       routing)
-- [ ] [deployment-api] P0. `tests/unit/test_data_status_hierarchical_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
+- [x] [deployment-api] P0. `tests/unit/test_data_status_hierarchical_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
       `get_hierarchical_drilldown` reads the manifest from S3 (mocked) using the AWS-equivalent bucket name template;
-      the returned tree shape is identical to GCS.
+      the returned tree shape is identical to GCS. (deployment-api@fed999b — 10 tests: bucket-name pin + shape parity + required keys + no-GCS dispatch)
 - [ ] [deployment-api] P0. `tests/unit/test_deploy_missing_aws_launcher_routing.py` — when `CLOUD_PROVIDER=aws`, assert
       `_SERVICE_LAUNCHER_SCRIPTS` resolves to `launch-*-ec2.sh` (or the AWS-equivalent) rather than the GCE
       `launch-*-vm.sh`. (Note: requires the EC2 launchers from `aws_migration_defi_first_2026_05_07` to exist; gate this
