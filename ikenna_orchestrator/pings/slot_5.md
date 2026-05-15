@@ -650,6 +650,23 @@ Operator is AFK — do not ping for further authorization on items already in yo
 
 ---
 
+## [slot 5 → main] Downstream consumer wiring shipped 2026-05-15
+
+**Status**: ✅ SHIPPED (3 repos pushed to live-defi-rollout)
+
+### Commits
+
+- `SS@09e239c` — `StrategyConfig.allowed_sessions: list[str]` default `["regular"]` + 3 unit tests
+- `ES@dfd2f773c` — `OutOfSessionOrderError` exception class + 3 unit tests
+- `FS@ce093d6c` — `_filter_regular_session()` in `DataLoader.load_candles()` + 6 unit tests
+
+### Plan flip
+
+- tradfi_master § "Downstream consumer wiring" → `[x]` with evidence above
+- MDPS write-gate session config deferred to next P0 (zero-volume-bars replacement) — same write path
+
+---
+
 ## [slot 5 → operator] APPROVAL REQUEST — Databento session-stamp backfill VM (2026-05-15)
 
 **Status**: 🟡 BLOCKED-OPERATOR-DECISION — awaiting approval to launch GCE VM

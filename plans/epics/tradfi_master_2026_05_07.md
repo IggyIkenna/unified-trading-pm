@@ -313,11 +313,15 @@ volume.
       MTDS@6873955 (adapter session stamping, 4 unit tests, migration script
       `scripts/migrate_tradfi_ohlcv_session_stamps.py`). **Backfill VM run PENDING OPERATOR APPROVAL** (≥1 week GCS
       backfill; see pings/slot_5.md). New rows stamped automatically from this release.
-- [ ] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
+- [x] [SCRIPT] P0. **Downstream consumer wiring.** features-\* default-filter to `session=REGULAR` unless explicitly
       opted in (overnight strategies / pre-market liquidity calculators); strategy-service per-archetype
       `allowed_sessions: list[MarketSession]` with default `[REGULAR]`; execution-service `OutOfSessionOrderError`
       raised when an order targets a venue × instrument outside the configured allowed_sessions; MDPS write-gate checks
-      session against the per-(venue, data_type) allowed-sessions config.
+      session against the per-(venue, data_type) allowed-sessions config. **SHIPPED 2026-05-15**: `SS@09e239c`
+      (StrategyConfig.allowed_sessions, 3 tests) + `ES@dfd2f773c` (OutOfSessionOrderError, 3 tests) + `FS@ce093d6c`
+      (\_filter_regular_session in DataLoader.load_candles, 6 tests). **MDPS write-gate session config DEFERRED** to
+      next P0 item (zero-volume-bars replacement) — both changes touch the same MDPS write path; doing them together
+      avoids double-edit.
 - [ ] [SCRIPT] P0. **Replace zero-volume bars during non-tradeable sessions with typed empty reasons.** Today MDPS
       writes 1440 zero-volume bars per non-tradeable day; flip to `record_empty(reason=EXPECTED_NON_TRADING_SESSION)`
       per workspace honest-absence rule. Manifest denominator math gets fixed automatically by the per-(venue, day)
