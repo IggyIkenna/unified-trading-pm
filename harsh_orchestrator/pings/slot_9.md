@@ -280,3 +280,5 @@ Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md. Conditional-pu
 rebase-on-reject.
 
 [2026-05-15 22:15 UTC] harsh-slot-9 — 🔄 STARTED MTDS market_interface 53-test-failure triage+fix (dispatch @17:20 UTC — missed during post-OOM resume). Running pytest on market_interface/unit/ to cluster root causes.
+
+[2026-05-15 22:35 UTC] harsh-slot-9 — ✅ DONE MTDS market_interface 53-failure triage+fix: mtds@1515170. 6 remaining failures resolved in 3 clusters — Cluster A (CME/OPRA fixtures missing expiry: 2 fixed), Cluster B (reader.py used "symbol" filter on prediction parquets that have "market_id": 3 fixed), Cluster C (Alchemy SOLANA now supported, test used wrong chain: 1 fixed + 1 new test). 1770 passed, 2 skipped, 0 failed in market_interface/unit. Issue doc updated. 🏁 CYCLE-CLOSE — queue empty.
