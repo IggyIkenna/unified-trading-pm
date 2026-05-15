@@ -181,6 +181,18 @@ These are PENDING — the per-plan frontmatter currently says `deadline: 2026-05
 - **ML training**: [`plans/epics/ml_and_features_master_2026_05_07.md`](../../plans/epics/ml_and_features_master_2026_05_07.md)
 - **Master umbrella**: [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
 
+### Master plan Group F items — sequencing ownership
+
+This document is the SSOT for cutover-window stage ordering. The following master plan Group F items depend on the
+checkpoints and parallelization insights defined above:
+
+| Master plan item | What gates it here | Checkpoint |
+|---|---|---|
+| **F.17** — `carry_staked_basis` end-to-end batch run | Pipeline serial track 2026-05-18→2026-05-19 (ML/backtest kickoff slot); compute-optimization Phase 1 fan-out wrapper needed for config-grid | `code_freeze` Phase 3.3–3.5 complete |
+| **F.18** — 2-year P&L variance config-grid batch run | Requires pipeline serial track through features-service + `compute_optimization` Phase 1 (per-day fan-out wrapper); VM sizing per `codex/06-coding-standards/performance-targets.md` § Acceptable targets | `code_freeze` Phase 3 complete + optimization Phase 1 |
+| **F.20** — Execution-service testnet validation | Parallel-track (does NOT gate on data-pipeline serial track) — runs 2026-05-19→2026-05-20 via execution-alpha measurement harness (`compute_optimization` Phase 3) | Days 6-7 window |
+| **F.21** — Batch-vs-live reconciliation within tolerance | Last step: requires live-mode pipeline running (2026-05-22+); execution-alpha delta is the input for tolerance comparison | Week 3 cutover (post 2026-05-22) |
+
 ## Continuous verification
 
 Read at slot 1 main morning ledger sweep daily through 2026-05-23. Update on any sequencing change (e.g., if MTDS backfill drags +1 day, push ML kickoff +1 day and update both this doc + master plan).

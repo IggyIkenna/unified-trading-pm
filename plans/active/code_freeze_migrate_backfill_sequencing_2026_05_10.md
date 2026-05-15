@@ -902,6 +902,10 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 
 ### Phase 2 freeze gate (✅ to flip Phase 3 startable)
 
+> **Cross-reference**: [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md)
+> § "Hard sequencing constraint" shows the 2026-05-15→2026-05-19 data-pipeline checkpoint timeline that this freeze gate
+> starts. Master plan Group F items 17/18/20/21 — their sequencing is owned by that doc.
+
 - [ ] **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift in
       4-state taxonomy at every coverage drilldown level.
 - [ ] **GCS bundled migration complete**: `pipeline_mode` partition added; `category=` rekey done; 5 drift axes swept;
@@ -919,6 +923,12 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 Plans in this section run AFTER Phase 2 freeze gate. They are the actual data-population step against final-state code +
 final-state schema + final-state on-disk layout. The umbrella enforcer is `master_to_live_defi_2026_05_23` Group D
 (Coverage & shard) + Group F (Trading prerequisites — live-only).
+
+> **Orchestrator sequencing guidance**: the per-stage ordering (instruments → MTDS → MDPS → features → ML/strategy
+> backtest) + the parallel code-and-tests track that MUST run concurrently (does NOT pause for backfill drain) is
+> specified in [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md).
+> Read that doc before scheduling Phase 3 VMs — it identifies which Phase 3 sub-steps are on the serial track vs the
+> parallel track and maps each to master plan Group F items 17/18/20/21.
 
 ### Phase 3.1 — Instruments-service catalogue forward-fill
 

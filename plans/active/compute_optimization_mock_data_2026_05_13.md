@@ -221,14 +221,24 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       per-asset_group backtest window (5yr CeFi/TradFi/Sports, 2yr DeFi/Prediction), per-Tier-A archetype sizing
       (operator estimate ~0.5 day per backtest/strategy/ML optimization with concurrent loops), and slot-scheduling
       guidance for slot 1 main per-day allocation. Cross-references master plan + per-asset-group epics.
-- [ ] [SCRIPT] P0. Cross-reference from master plan Group F items 17/18/20/21 +
+- [x] [SCRIPT] P0. Cross-reference from master plan Group F items 17/18/20/21 +
       `code_freeze_migrate_backfill_sequencing` Phase 2/3 cutover-window section. (Master plan banner already references
       via MVP SSOT row 2026-05-13; broader F17/18/20/21 row references to dependency-order doc pending.)
+      **SHIPPED 2026-05-15 PM@`pending`**: (1) `cutover-window-dependency-order.md` `## Cross-references` section
+      extended with "Master plan Group F items — sequencing ownership" table mapping F17/18/20/21 to checkpoint dates +
+      parallel-track status. (2) `code_freeze` Phase 2 freeze gate + Phase 3 intro both annotated with blockquote
+      references to dependency-order doc. Master plan forward-pointer is pending slot 1 main (slot precedence rule
+      prohibits direct master plan edits from slot 7).
 
 ### Phase 7 — Performance-targets codex SSOT (Day 9-10, ~0.3 cal-AI-day)
 
-- [ ] [SCRIPT] P0. Author `codex/06-coding-standards/performance-targets.md`. Per-stage acceptable wall-clock targets at
+- [x] [SCRIPT] P0. Author `codex/06-coding-standards/performance-targets.md`. Per-stage acceptable wall-clock targets at
       production scale (2-yr backfill on production SKU). These become CI assertion gates (post-cutover hardening).
+      **SHIPPED PM@`db2de8ed`** (2026-05-13 batch): file authored with per-stage bottleneck classification, top-3
+      optimization priorities, parallelization hypotheses, per-core scalability predictions, acceptable wall-clock
+      targets table, benchmark data provenance, and continuous-verification gate. Absolute production-scale target
+      numbers are STUB pending Phase 5 SKU matrix (expected 2026-05-19); the framework + all non-Phase-5 content is
+      complete.
 
 ## Mock-data sufficiency caveat
 
@@ -333,4 +343,6 @@ slots + 1 PM slot, all distributable across existing density-push cycles.
 | Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **TODO** — harness exists, VM-level wrapper not yet | Needs VM launcher in deployment-service/scripts/vm/ |
 | Phase 4 smoke tests | **DONE** — strategy-service@fc634e3 | — |
 | Phase 4: ML training `--hyperparam-grid-file` | **TODO** — not started | ML training maintainer slot |
-| Phases 5-7: SKU matrix, codex docs | **TODO** — not started | Benchmark owner + slot 1 main |
+| Phase 5: big-machine SKU matrix | **TODO** — not started | Benchmark owner |
+| Phase 6: F17/18/20/21 + code_freeze cross-refs | **DONE 2026-05-15** — dependency-order doc + code_freeze annotated; master plan forward-pointer pending slot 1 main | — |
+| Phase 7: performance-targets codex | **DONE PM@`db2de8ed`** — framework shipped; absolute targets STUB pending Phase 5 | — |
