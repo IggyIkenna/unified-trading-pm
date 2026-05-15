@@ -228,14 +228,15 @@ Run revision.
       (deployment-ui@0044f96 — PnLChart stacked BarChart + AttributionChart waterfall in ClientReportingTab.tsx)
 - [x] [AGENT] P0. **5.C Per-leg drilldown.** Click an archetype bar → per-strategy-leg detail. (deployment-ui@0044f96 —
       DrilldownTable in ClientReportingTab.tsx; click attribution bar to filter)
-- [ ] [AGENT] P0. **5.C2 HWM crystallization timeline.** Per share-class HWM-vs-NAV chart with crystallization-event
+- [x] [AGENT] P0. **5.C2 HWM crystallization timeline.** Per share-class HWM-vs-NAV chart with crystallization-event
       markers; per-period perf-fee summary card (period_start / period_end / hwm_at_start / hwm_at_end / gross_pnl /
       perf_fee_amount / perf_fee_rate). Reads from `wallet_treasury_client_flow_2026_05_10` Phase 5.F audit log +
       `PerformanceFeeCrystallizedEvent` stream + the NEW `FeeRecognitionRow` parquet that Phase 4.C of the wallet plan
       emits. **Joins INTO the NAV waterfall view as a separate row class** (NOT a `PnLAttributionRow.factor` value);
       keeps factor × layer attribution decoupled from fee-recognition accounting per codex `pnl-attribution.md` Hard
-      Rule #4 + § Plan-vs-codex factor name mapping. **DEFERRED**: blocked on `wallet_treasury_client_flow_2026_05_10`
-      Phase 4.C (FeeRecognitionRow emit). Placeholder card renders in UI (opacity-60) at deployment-ui@0044f96.
+      Rule #4 + § Plan-vs-codex factor name mapping. (client-reporting-api@ce5156d — core/hwm_reader.py +
+      routes/hwm.py + 18 unit tests; deployment-ui@21331da — HwmTable replacing opacity-60 placeholder in
+      ClientReportingTab; deployment-service@a0e493b — client-statements bucket kind added to cloud-providers.yaml)
 - [x] [AGENT] P0. **5.D Operator-MVP.** Demo client visible by default; switcher for future clients.
       (deployment-ui@0044f96 — default clientId="demo", input field for override)
 - [x] [AGENT] P0. **5.E Playwright smoke.** End-to-end test confirms tab loads + cards render against live API.
@@ -312,19 +313,19 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 
 ## Deferred work after 2026-05-12 slot-8 Day-4 session
 
-| Phase / item                                | Status as of 2026-05-12                                                                             | Successor / blocker                                                                |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 0.A Existing PnL emission audit             | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done            | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2        |
-| 0.B Existing client-reporting-api audit     | **DEFERRED** — same as 0.A                                                                          | Run before Phase 4 API endpoints                                                   |
-| Phase 1.A-1.E UAC contracts                 | ✅ DONE (UAC@b3233e5)                                                                               | 42/42 tests pass; pushed to live-defi-rollout                                      |
-| Phase 2.A-2.D UTL pnl_attribution           | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36)                                                  | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added         |
-| Phase 3.A PBM lineage fields                | ✅ DONE (position-balance-monitor-service@14f25b9)                                                  | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass       |
-| Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838)                                                                | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed        |
-| Phase 3.C MTDS client_id enrichment         | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation)                      | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
-| Phase 4.A-4.D client-reporting-api routes   | ✅ DONE (client-reporting-api@a2555fa)                                                              | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout                  |
-| Phase 5.A-5.E deployment-ui                 | ✅ DONE (deployment-ui@0044f96)                                                                     | ClientReportingTab, clientReporting.ts, App.tsx wiring, 4 Playwright smoke tests   |
-| Phase 5.C2 HWM crystallization              | **DEFERRED** — blocked on wallet_treasury_client_flow_2026_05_10 Phase 4.C (FeeRecognitionRow emit) | Placeholder card in UI at opacity-60; unblock after wallet plan Phase 4.C ships    |
-| Phase 6-9                                   | TODO                                                                                                | Next: Phase 6 demo client seed                                                     |
+| Phase / item                                | Status as of 2026-05-12                                                                  | Successor / blocker                                                                |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 0.A Existing PnL emission audit             | **DEFERRED** — Phase 1 shipped first per operator reserve-plan direction; audit not done | Run as Phase 2 prep before 2.A joiner starts — add as first step in Phase 2        |
+| 0.B Existing client-reporting-api audit     | **DEFERRED** — same as 0.A                                                               | Run before Phase 4 API endpoints                                                   |
+| Phase 1.A-1.E UAC contracts                 | ✅ DONE (UAC@b3233e5)                                                                    | 42/42 tests pass; pushed to live-defi-rollout                                      |
+| Phase 2.A-2.D UTL pnl_attribution           | ✅ DONE (UTL@75de9d5 + deployment-service@d64de36)                                       | joiner, emitter, invariants, 35/35 tests; client-reports bucket kind added         |
+| Phase 3.A PBM lineage fields                | ✅ DONE (position-balance-monitor-service@14f25b9)                                       | archetype_id/strategy_leg_id/trade_id on Position + LocalFillRecord; QG pass       |
+| Phase 3.B execution-service pnl_attribution | ✅ DONE (execution-service@a4145838)                                                     | FillAttributionContext + build_attribution_rows; 6 test classes 5462 passed        |
+| Phase 3.C MTDS client_id enrichment         | ✅ RESOLVED-VIA-ARCHITECTURE — no MTDS change needed (see checkbox annotation)           | Architecture: FillAttributionContext.client_id already carries it; joiner confirms |
+| Phase 4.A-4.D client-reporting-api routes   | ✅ DONE (client-reporting-api@a2555fa)                                                   | 4 routes + reader + stubs + 15 tests; pushed to live-defi-rollout                  |
+| Phase 5.A-5.E deployment-ui                 | ✅ DONE (deployment-ui@0044f96)                                                          | ClientReportingTab, clientReporting.ts, App.tsx wiring, 4 Playwright smoke tests   |
+| Phase 5.C2 HWM crystallization              | **DONE 2026-05-15** — /hwm-timeline route + HwmTable card                                | client-reporting-api@ce5156d + deployment-ui@21331da + deployment-service@a0e493b  |
+| Phase 6-9                                   | TODO                                                                                     | Next: Phase 6 demo client seed                                                     |
 
 ## Deferred work after 2026-05-10 plan-creation session
 
