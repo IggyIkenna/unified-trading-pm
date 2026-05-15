@@ -546,10 +546,13 @@ several×/day during fast moves).
 
 In-plan P0 (blocks Phase 5-8 implementation):
 
-- [ ] [UAC] **P0**. Resolve `PerpVenue` ambiguity from Phase 2 line 362: workspace has NO unified `Venue` enum —
+- [x] [UAC] **P0**. Resolve `PerpVenue` ambiguity from Phase 2 line 362: workspace has NO unified `Venue` enum —
       `HYPERLIQUID` + `BYBIT` are string constants in `venue_constants.py`. **Implementation: add
       `get_perp_venues() -> frozenset[str]` helper deriving from `VENUE_CAPABILITIES` filtered by
-      `VenueCapability.PERP_TRADE`** (System-First — no new enum / no SSOT duplication).
+      `VenueCapability.PERP_TRADE`** (System-First — no new enum / no SSOT duplication). **DONE 2026-05-15 (slot-3)**:
+      `unified-api-contracts@be5b987` — `get_perp_venues()` added to `venue_constants.py` + exported from
+      `registry/__init__.py`; 6 unit tests pass; basedpyright clean. Returns 6 venues (BINANCE-FUTURES, BYBIT-FUTURES,
+      OKX-FUTURES, DERIBIT, HYPERLIQUID, ASTER).
 - [x] [UAC] **P0**. Add Hyperliquid entry to `VENUE_ERRORS_DEFI` dict in `canonical/crosscutting/errors/defi.py` with
       classified codes: `HL_INSUFFICIENT_MARGIN` (FAIL — analog to aave INSUFFICIENT_COLLATERAL),
       `HL_REDUCE_ONLY_VIOLATION` (FAIL), `HL_INVALID_TIF` (FAIL), `HL_RATE_LIMITED` (RETRY — 429), `HL_NONCE_TOO_LOW`
