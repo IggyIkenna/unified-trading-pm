@@ -277,8 +277,13 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4
    CLOSED**: every Phase 6.6/6.7/6.8 service has `[x]` checkbox + sha evidence + QG STEP 5.71 paired-callsite
    check passes workspace-wide. (research 1.2×, ~4 = 4.8 cal)
-4. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — close pre-cutover audit gate items. (research 1.2×,
-   ~4 = 4.8 cal)
+4. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 2-3** — verified all plan body checkboxes `[x]` +
+   Done-definition fully checked: `execution-service@51f1f879` (audit_log.py path fix + client_order_id param +
+   resolve_bucket_name + 9 unit tests), `deployment-service@c3ac1c5` (cloud-providers.yaml audit-records kind +
+   retention-lock provision script), GCP `gs://trading-audit-records-prd-central-element-323112` locked
+   2026-05-13 (`retentionPeriod=220752000 isLocked=True`), AWS `unified-trading-audit-records-prd-427895769566`
+   COMPLIANCE 7yr lock 2026-05-14. No additional work this session; verification-only flip. (research 1.2×, ~4
+   = 4.8 cal)
 5. **`client_reporting_pnl_attribution_mvp_2026_05_10` push** — open todos workspace-wide. (design 0.6×, ~4 = 2.4 cal)
 6. **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — mock-data compute cost reduction for CI. (design 0.6×,
    ~3 = 1.8 cal)
