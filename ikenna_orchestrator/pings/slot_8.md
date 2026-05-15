@@ -306,3 +306,20 @@ discipline (clean — alternating code/flip commits on tab/ikennaigboaka/8).
 features-onchain `BLOCKED-UPSTREAM` (MDPS DEFI processed_candles missing 2026-04-15..19). Going to flip item #1 with
 evidence + sweep items #2/#3 (already-done carry-overs from 14 May) for any missing flips, then pick the next
 concrete slot-8 unit.
+
+---
+
+## [main → slot 8] 2026-05-15 19:52 UTC — 2 mechanical absorb items (low priority, slot bandwidth)
+
+If you've closed your top-of-stack B-015 work + are bandwidth-free, 2 mechanical items to absorb:
+
+1. **`workflow_template_rollout_pending_2026_05_15`** — script bug ALREADY FIXED (`PM@542f0e26`); just needs
+   the rollout to fire. Run: `bash scripts/workflow-templates/rollout-workflow-templates.sh` (no `--dry-run`) +
+   commit + push each affected repo's new workflow file. Same pattern as my 2026-05-14 tab-mirror-to-ldr rollout.
+   ~30 min mechanical. (infra 0.8×, ~1 = 0.8 cal)
+
+2. **`workspace_manifest_drift_2026_05_15`** — 10 misalignments across 2 repos per
+   `python3 scripts/manifest/check-dependency-alignment.py`. UTL freezegun version intentional (keep); other 9
+   need alignment per pyproject vs canonical. (refactor 0.4×, ~1 = 0.4 cal)
+
+Pickup discipline: these are LOW priority vs B-015 coordination. If B-015 needs your attention, stay on that.

@@ -2154,3 +2154,17 @@ post-cutover canonical — are still pending your call.
 No urgency change. Still no May-23 critical-path blocker.
 
 [2026-05-15 UTC] harsh-slot-9 → ikenna-main — B-015 SMOKE A DONE. lst_rates VM (mtds-lst-rates-20260515-201226) completed exit_code=0. 12+ LST venues × 5 days (2026-04-15..19) written to gs://lst-rates-central-element-323112/ — no phantom rows. Pipeline is clean post-handler-hardening. SMOKE B (features-onchain) FAILED dependency check: MDPS processed_candles missing for 2026-04-15/DEFI — upstream must run first for those dates. B-015 half-verified: lst_rates clean ✅, features-onchain blocked-upstream. Recommend: (a) declare B-015 close with Smoke A confirmation + note Smoke B needs MDPS upstream, OR (b) run MDPS for 2026-04-15..19/DEFI then re-run features-onchain. Operator call.
+
+[2026-05-15 19:52 UTC] ikenna-main → harsh-slot-9 — 👀 **B-015 Smoke A ✅ + Smoke B blocked-upstream — operator decision pending (option a vs b)**
+
+Received your status. **Smoke A clean** is a major unblock — confirms post-handler-hardening pipeline works
+end-to-end. Smoke B's MDPS upstream gap is the new blocker.
+
+Operator review in progress — recommending **option (b)**: run MDPS for 2026-04-15..19/DEFI first (<1 week,
+pre-authorized), then re-run features-onchain with unique `VM_NAME=features-onchain-defi-smoke-v2-20260515`,
+then declare B-015 fully unblocked for Phase 2 launch. Rationale: paper-trade P&L without features-onchain
+is meaningless per your original 14 May Phase 1 finding.
+
+**Will cross-ping when operator confirms a/b.** If operator confirms (b), Ikenna slot 8 launches MDPS for the
+5-day window; you stand by + re-launch features-onchain smoke once MDPS STOPPED.
+
