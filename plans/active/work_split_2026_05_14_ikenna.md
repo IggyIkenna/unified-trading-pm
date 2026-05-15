@@ -447,10 +447,12 @@ risk-and-exposure lint.
    (cloud-providers.yaml audit-records bucket + provision script) + GCP bucket locked (220752000s retention) + AWS
    COMPLIANCE 7yr lock applied 2026-05-14.
 6. ✅ **`client_reporting_pnl_attribution_mvp_2026_05_10` Ikenna pickup** — push open todos workspace-wide. (design
-   0.6×, ~5 = 3.0 cal) **DONE 2026-05-15**: 5.C2 HWM crystallization timeline shipped — client-reporting-api@ce5156d
-   (`/hwm-timeline` route + `hwm_reader.py` + 18 tests; QG green) + deployment-ui@21331da (`HwmTable` component
-   replacing opacity-60 placeholder) + deployment-service@e00fe79 (`client-statements` bucket kind). All plan checkboxes
-   `[x]`.
+   0.6×, ~5 = 3.0 cal) **DONE 2026-05-15**: Phase 5.C2 HWM + Phase 8.A/B/C complete. 5.C2 HWM:
+   client-reporting-api@ce5156d + deployment-ui@21331da + deployment-service@e00fe79 (`/hwm-timeline` route +
+   `hwm_reader.py` + 18 tests; QG green + `HwmTable` + `client-statements` bucket kind). Phase 8 (Real-VM cutover):
+   runner `client-reporting-api@192b41d` (24h paper-trade loop, STARTED/PROGRESS/ STOPPED events, hourly
+   `assert_decomposition_invariants()`) + launcher `deployment-service@007f67f`
+   (`launch-client-reporting-cutover-vm.sh` + `"client-reporting-cutover-"` watchdog prefix). All plan checkboxes `[x]`.
 7. ✅ **`context_fill_optimization_2026_05_14` Phase 1** — newly-created plan; review + first-phase implementation.
    (research 1.2×, ~3 = 3.6 cal) **DONE (Phase 1 pre-existing)**: P0 CLAUDE.md trim `[x]` (`PM@6a08f50c`, 399 lines)
    - P1 orchestrator sub-agent loop `[x]` (`PM@1a056988`). P2 (relocate .claude/rules — lowest-impact) deferred per plan

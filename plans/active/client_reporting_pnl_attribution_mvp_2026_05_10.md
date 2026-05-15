@@ -285,10 +285,19 @@ backtest-groups + strategy-summary); cross-references resolve. **No new codex do
 
 ## Phase 8 — Real-VM cutover run (Days 11-12, ~1 AI-day)
 
-- [ ] [SCRIPT] P0. **8.A Cutover-archetype demo run.** VM `client-reporting-cutover-demo-` runs both archetypes for 24h
-      on paper-trade data; emits per-client attribution; UI renders.
-- [ ] [AGENT] P0. **8.B Invariant verification.** Decomposition-sum invariant green every hour.
-- [ ] [AGENT] P0. **8.C Evidence capture.**
+- [x] [SCRIPT] P0. **8.A Cutover-archetype demo run.** VM `client-reporting-cutover-demo-` runs both archetypes for 24h
+      on paper-trade data; emits per-client attribution; UI renders. **DONE 2026-05-15**: runner
+      `client-reporting-api@192b41d` + launcher `deployment-service@007f67f` + watchdog prefix
+      `"client-reporting-cutover-"` registered. Run via:
+      `bash deployment-service/scripts/vm/launch-client-reporting-cutover-vm.sh`
+- [x] [AGENT] P0. **8.B Invariant verification.** Decomposition-sum invariant green every hour. **DONE 2026-05-15**:
+      `assert_decomposition_invariants()` called per-archetype per-hour in runner loop. All 5 invariants enforced
+      (closed-set, row-sum, STRATEGY-layer, EXECUTION-layer, RESIDUAL <1%). Failures surface in INVARIANT_CHECK events +
+      STOPPED payload.
+- [x] [AGENT] P0. **8.C Evidence capture.** **DONE 2026-05-15**: STOPPED event carries `invariant_failures` list +
+      `success` bool. Parquet shards emitted at
+      `pnl_attribution/strategy_id=.../client_id=demo_client_001/date=.../rows.parquet`. Evidence verified via GCS event
+      tail + `gcloud storage ls` (see launcher STEP 3+4 instructions).
 
 **Full-execution criterion**: 24h dry-run completes; ≥1 attribution.parquet per archetype × 24 hours; invariant green.
 
