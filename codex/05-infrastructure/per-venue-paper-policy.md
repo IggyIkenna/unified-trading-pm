@@ -1,9 +1,10 @@
 ---
 name: per-venue-paper-policy
-overview: SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal fallback); testnet upgrade where API + credentials exist. Codifies `paper_target_registry: dict[chain | venue, target]` in UAC.
+overview: SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal fallback); testnet upgrade where API + credentials exist. Codifies `PAPER_EXECUTION_TARGETS: dict[chain | venue, ExecutionTarget]` in UAC.
 type: codex-ssot
-status: stub
+status: active
 created: 2026-05-09
+updated: 2026-05-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
@@ -12,8 +13,9 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md  # Group F items 2
 
 # Per-venue paper-mode policy
 
-> **Stub doc.** Full content fills in as `master_to_live_defi_2026_05_23.md` Group F sub-items `pvl-p20a` / `pvl-p20b` /
-> `pvl-p20c` ship.
+> **pvl-p20a shipped 2026-05-14** (`unified_api_contracts/internal/paper_execution_targets.py`).
+> **pvl-p20b audit shipped 2026-05-15** (below).
+> **pvl-p20c** (Solana devnet wiring) pending.
 
 ## Policy
 
@@ -24,59 +26,68 @@ upgrade path. The matching engine is never absent — testnet is additive.
 Rationale: testnet coverage is patchy across the 6 perp venues + chains we trade; the matching engine guarantees
 universal paper coverage; testnet upgrades give realistic API conditions where they exist (Settled #3).
 
-## `paper_target_registry` (UAC SSOT)
+## `PAPER_EXECUTION_TARGETS` (UAC SSOT)
 
-Codifies the per-target upgrade path:
+Shipped at `unified_api_contracts/internal/paper_execution_targets.py` (pvl-p20a, 2026-05-14).
+Import: `from unified_api_contracts.internal import PAPER_EXECUTION_TARGETS, get_paper_target`.
 
 ```python
-# unified_api_contracts/internal/paper_target_registry.py — NEW
+# Canonical registry — ExecutionTarget values
+PAPER_EXECUTION_TARGETS: dict[str, ExecutionTarget] = {
+    # EVM chains — Tenderly fork
+    "ethereum": ExecutionTarget.FORK,
+    "arbitrum": ExecutionTarget.FORK,
+    "base":     ExecutionTarget.FORK,
+    ...
 
-PAPER_TARGET_REGISTRY: Mapping[ChainOrVenue, PaperTarget] = {
-    # EVM chains — Tenderly Virtual TestNet fork
-    "ethereum": PaperTarget.TENDERLY_FORK,
-    "arbitrum": PaperTarget.TENDERLY_FORK,
-    "base":     PaperTarget.TENDERLY_FORK,
-    "polygon":  PaperTarget.TENDERLY_FORK,
+    # Solana — devnet (pvl-p20c wires connector)
+    "solana": ExecutionTarget.TESTNET,
 
-    # Solana — non-EVM, no Tenderly; pick devnet / localnet / surfnet per fork-state semantics
-    "solana": PaperTarget.SOLANA_DEVNET,  # or LOCALNET / SURFNET — TBD per pvl-p20c
+    # CeFi perp venues — testnet endpoints (see audit table below)
+    "DERIBIT":     ExecutionTarget.TESTNET,
+    "BINANCE":     ExecutionTarget.TESTNET,
+    "BYBIT":       ExecutionTarget.TESTNET,
+    "OKX":         ExecutionTarget.TESTNET,
+    "HYPERLIQUID": ExecutionTarget.TESTNET,
+    "KRAKEN":      ExecutionTarget.TESTNET,
 
-    # CeFi perp venues — testnet where viable, simulate otherwise
-    "deribit":     PaperTarget.DERIBIT_TESTNET,    # known viable per existing venues/deribit.py
-    "bybit":       PaperTarget.MATCHING_ENGINE,    # audit pending per pvl-p20b
-    "binance":     PaperTarget.MATCHING_ENGINE,    # audit pending per pvl-p20b
-    "okx":         PaperTarget.MATCHING_ENGINE,    # audit pending per pvl-p20b
-    "hyperliquid": PaperTarget.MATCHING_ENGINE,    # audit pending per pvl-p20b
-    "aster":       PaperTarget.MATCHING_ENGINE,    # audit pending per pvl-p20b
-
-    # Sports — PaperBettingAdapter (canonical simulator example)
-    "betfair":     PaperTarget.PAPER_BETTING_ADAPTER,
-    "matchbook":   PaperTarget.PAPER_BETTING_ADAPTER,
-
-    # Prediction — matching-engine simulation
-    "polymarket":  PaperTarget.MATCHING_ENGINE,
-    "kalshi":      PaperTarget.MATCHING_ENGINE,
+    # Sports + Prediction — simulation
+    "BETFAIR":    ExecutionTarget.SIMULATION,
+    "POLYMARKET": ExecutionTarget.SIMULATION,
+    ...
 }
 
-# Default fallback for any unmapped target: PaperTarget.MATCHING_ENGINE
+def get_paper_target(chain_or_venue: str) -> ExecutionTarget:
+    return PAPER_EXECUTION_TARGETS.get(chain_or_venue, ExecutionTarget.SIMULATION)
 ```
 
-The `PaperTarget` enum closed set:
+`ExecutionTarget` enum (UAC `internal/modes.py`): `MAINNET` | `TESTNET` | `FORK` | `SIMULATION`.
 
-- `MATCHING_ENGINE` — execution-service matching engine simulates fills.
-- `TENDERLY_FORK` — EVM Virtual TestNet fork (per `flash-loan-receiver.md`).
-- `SOLANA_DEVNET` (or `SOLANA_LOCALNET` / `SOLANA_SURFNET` per `pvl-p20c` audit).
-- `DERIBIT_TESTNET` — Deribit's testnet API endpoint.
-- `<VENUE>_TESTNET` — additive per-venue as `pvl-p20b` audit completes.
-- `PAPER_BETTING_ADAPTER` — sports `PaperBettingAdapter` (already shipped).
+## pvl-p20b: CeFi perp venue testnet audit (2026-05-15)
+
+Audited 5 venues without testnet routing before pvl-p20b. Deribit already fully wired (not in scope).
+
+| Venue | UAC testnet URL | Auth mechanism | Execution-service adapter | Wiring status |
+|-------|----------------|----------------|---------------------------|---------------|
+| **Binance** | `https://testnet.binance.vision` | HMAC-SHA256 (`api_key`) | None in `venues/` — NautilusTrader abstraction | PENDING — adapter needed |
+| **Bybit** | `https://api-testnet.bybit.com` | HMAC-SHA256 (`api_key`) | None in `venues/` | PENDING — adapter needed |
+| **OKX** | `https://www.okx.com` + `x-simulated-trading: 1` header | HMAC-SHA256 (`api_key`) | None in `venues/` | PENDING — adapter needed |
+| **Hyperliquid** | `https://api.hyperliquid-testnet.xyz` | L1 action signing (`api_wallet`) | `venues/hyperliquid.py` exists | **WIRED** — `testnet: bool` added in pvl-p20b |
+| **Aster** | `https://testnet-api.aster.finance` | HMAC-SHA256 | None in `venues/` | PENDING — adapter needed |
+
+**Hyperliquid wiring** (pvl-p20b, 2026-05-15): `HyperliquidConnector(testnet=True)` routes to testnet endpoint.
+`PAPER_EXECUTION_TARGETS["HYPERLIQUID"] = ExecutionTarget.TESTNET` is already set.
+
+**Pending 4 venues** (Binance/Bybit/OKX/Aster): testnet URLs exist in UAC `_cefi.py`; `PAPER_EXECUTION_TARGETS`
+already maps them to `TESTNET`. Execution-service venue adapters need to be built before testnet can be exercised.
+Status: `PENDING-ADAPTER` (not `DEFERRED` — UAC contract + target mapping are correct).
 
 ## Per-asset_group rules
 
 ### CeFi (spot + perp)
 
-Simulate via L2 CeFi matcher by default. Testnet upgrade per `paper_target_registry` where the venue exposes one. Audit
-`pvl-p20b` enumerates which of the 5 unwired perp venues (Bybit / Binance / OKX / Hyperliquid / Aster) actually expose
-testnets the workspace can use.
+Simulate via L2 CeFi matcher by default. Testnet upgrade per `PAPER_EXECUTION_TARGETS` where the venue exposes one.
+pvl-p20b audit confirms: Hyperliquid testnet wired; Binance/Bybit/OKX/Aster pending adapter construction.
 
 ### DeFi (EVM)
 
