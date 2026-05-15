@@ -301,30 +301,26 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    sweep + QG ratchet enforcement. (refactor 0.4×, ~4 = 1.6 cal)
 5. **`code_freeze_migrate_backfill_sequencing_2026_05_10` cross-cutting audit** (carry from slot 9 #10) — sequencing
    items + TradFi cross-asset items. (research 1.2×, ~3 = 3.6 cal)
-6. **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
-   Execution-Owner SSOT gaps. (design 0.6×, ~3 = 1.8 cal) <<<<<<< Updated upstream
-7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup. (infra
-   0.8×, ~3 = 2.4 cal)
-8. **Cluster B pnl-attribution-service lint sweep**. (refactor 0.4×, ~2 = 0.8 cal)
-9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped canonical
-   `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision: independently built
-   Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue doc flipped at
-   `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler fire on 2026-05-16
-   00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`. Backfill of pre-cron dates
-   remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal) =======
-10. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup. (infra
-    0.8×, ~3 = 2.4 cal)
-11. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
-    `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`. Verified
-    15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`. (refactor 0.4×, ~2 = 0.8 cal)
-12. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped canonical
-    `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision: independently built
-    Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue doc flipped at
-    `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler fire on 2026-05-16
-    00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`. Backfill of pre-cron
-    dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC). (infra 0.8×, ~2 = 1.6 cal)
-    > > > > > > > Stashed changes
-13. **Reserve**: in-stack pickup for any UAC drift surfacings.
+6. ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12` codification** (carry from slot 9 #12) — Runbook
+   Execution-Owner SSOT gap codified at `unified-trading-pm@7ef2ecdb`. Ships
+   `scripts/quality_gates/check_runbook_execution_owner.py` + baseline (9 violations) + PM `quality-gates.sh`
+   wiring (ratchet mode — fails on regression). Verified: basedpyright clean, ruff clean, smoke exit 0.
+   Future PRs ratchet down by adding the 4-field `execution:` block to the 9 baselined runbooks. Group A.1
+   todo flipped in the governance plan body. (design 0.6×, ~3 = 1.8 cal)
+7. **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9) — cross-cutting auto-launch cleanup.
+   (infra 0.8×, ~3 = 2.4 cal)
+8. ✅ **Cluster B pnl-attribution-service lint sweep** — C901+N802+B008 already fixed in 14 May session at
+   `pnl-attribution-service@9f3379f`; invalid `noqa` directives cleaned at `pnl-attribution-service@44ac3fd`.
+   Verified 15 May 18:58 UTC: `ruff check pnl_attribution_service/` → `All checks passed!`.
+   (refactor 0.4×, ~2 = 0.8 cal)
+9. ✅ **`honest_coverage_cron_vm_scheduling`** (carry from slot 9 #3) — Cron-VM half closed: slot-2 shipped
+   canonical `deployment-service@19454f1` Cloud Scheduler + Cloud Run Job at 00:30 UTC. Slot-8 collision:
+   independently built Python launcher (`deployment-api@d6e72c6`); reverted at `deployment-api@3afc016`. Issue
+   doc flipped at `unified-trading-pm@ae61ca1b`. **Operator verification still needed**: confirm first scheduler
+   fire on 2026-05-16 00:30 UTC produces `gs://central-element-323112-honest-coverage/2026-05-16/coverage.json`.
+   Backfill of pre-cron dates remains a one-shot operator concern (ping in slot_8.md 19:36 UTC).
+   (infra 0.8×, ~2 = 1.6 cal)
+10. **Reserve**: in-stack pickup for any UAC drift surfacings.
 
 ---
 
