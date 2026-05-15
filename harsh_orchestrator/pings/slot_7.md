@@ -219,7 +219,7 @@ QG green on both repos. Ready for next queue.
 
 - [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult types; 8 vitest tests; QG green.
 
-- [ ] **16. deployment-api Phase 12 cost aggregation endpoint** — `GET /api/costs/daily?date=YYYY-MM-DD` per-asset_group + per-archetype + per-vm. Reads `gs://central-element-323112-deployment-events/cost_summary/`. Done-def: endpoint + 5 tests + QG green.
+- [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models; _parse_blob + _aggregate + _mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 + _parse_blob 3 + _aggregate 4 + prod no-blobs 1); QG green.
 
 - [ ] **17. deployment-ui Phase 12 cost dashboard** — new route `/ops/costs` with date picker + tables + sparkline. Done-def: 3+ vitest tests + pnpm build green.
 
