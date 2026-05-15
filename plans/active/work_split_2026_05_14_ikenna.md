@@ -190,6 +190,15 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
     adapter shipped: `sanctum.py` (INF + JUPSOL + LAINESOL, \_solana_utils pattern) + factory registration + 8 unit
     tests. (instruments-service@e149995 + f44f0dc; PM plan Phase 2 checkboxes flipped @169132e7)
 
+**Redistributed from Slot 9 (2026-05-14 15:30 UTC)**: 12. ✅ **`arbitrage_price_dispersion_finalisation_2026_05_09`**
+(~3.6 cal) — ALREADY COMPLETE as of 2026-05-09/10 (20/20 todos [x] done by prior agents). Phases A/B/C/D/E all shipped:
+strategy-service@{24f8494,0b4ef0e,04c0d52,1107ab7, d01661e,de9b4b0,2fdf7e8} + pnl-attribution-service@f5dcf63 +
+PM@{5fe5eabd,5d2d74c1}. Plan archived 2026-05-15 (slot 3 admin). Deferred item: live cutover dry-run →
+master_to_live_defi_2026_05_23.md Group F item 17. 13. ✅ **Kraken CeFi adapter scaffold** (~1.8 cal) — SCAFFOLD SHIPPED
+instruments-service@`da462af` (KRAKEN-SPOT→ccxt.kraken + KRAKEN-FUTURES→ccxt.krakenfutures wired in factory.py; 3 new
+tests). Historic batch via Tardis already wired. Status: BLOCKED-CREDENTIALS-OPERATOR-INCOMING — credential vault
+entries `kraken-api-key` / `kraken-api-secret` pending operator [ack] on pings/slot_3.md.
+
 Backfill flag: item 3 + 5 + 6 — Solana validation backfills <1 week OK without approval.
 
 ---
