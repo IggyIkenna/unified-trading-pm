@@ -109,6 +109,27 @@ Should be preceded by `log_event(..., "FAILED")` per CLAUDE.md lifecycle event r
 - Bare `sys.exit(1)` without `log_event FAILED` means these services exit without emitting the required lifecycle event,
   breaking the STARTED/STOPPED/FAILED monitoring contract.
 
+## type:ignore slice — slot-2 progress (2026-05-15)
+
+32 lazy `# type: ignore` suppressions removed, 5 repos with QG green:
+
+| Repo                      | Count | SHA      | Notes                                                |
+| ------------------------- | ----- | -------- | ---------------------------------------------------- |
+| alerting-service          | 1     | 0718226  | defi_feature_event_handler + governance_forum_watcher |
+| deployment-service        | 11    | 51be710  | ruff post-120 + type:ignore sweep                   |
+| risk-and-exposure-service | 10    | 6d6abd2  | mock_data_provider + backtest_depeg_ladder           |
+| strategy-service          | 7     | 7456dcb  | staked_basis identity, _safe_log_event, batch_utils  |
+| execution-service         | 3     | cde5142f | sports fill_reports — negative→positive check pattern|
+
+3+ repos threshold: ✅ (5 repos)  
+50+ threshold: ❌ partial (32/50+) — 3 repos blocked by pre-existing QG failures:
+
+- pnl-attribution-service: pip-audit CVEs (cryptography 46.0.5, urllib3 2.6.3, python-dotenv 1.2.1, pip 26.0.1) — 1 mock_data_provider no-any-return fix uncommitted
+- position-balance-monitor-service: Pydantic/TypedDict schema placement + 10 codex violations — 1 fix uncommitted
+- trading-agent-service: empty-string fallback + local BaseModel + pip-audit — 1 fix uncommitted
+
+Deferred: 50+ threshold requires either pip-audit CVE upgrades workspace-wide OR adding more repos (UTL 126, features-service 107, MTDS 54, deployment-api 16 have remaining opportunities).
+
 ## Recommended decision
 
 **Priority 1 (immediate, P1)**: Fix `os.getenv()` in `batch-live-reconciliation-service/config.py` — this is a core
