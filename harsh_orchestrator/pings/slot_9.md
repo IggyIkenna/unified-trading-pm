@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 13:05 UTC] harsh-slot-9 — ✅ DONE queue item 9 (PBM service-output emission tests): mdps@c7219f6. Added 2 tests in TestWriteCandleParquetPolicyIntegration: test_nan_fill_degraded_calls_record_captured (NAN_FILL + PUBLISHED_DEGRADED + should_publish_row=True → record_captured called) + test_partial_ok_degraded_calls_record_captured (PARTIAL_OK + PUBLISHED_DEGRADED → record_captured called). No WARN_ONLY policy exists in UAC — PARTIAL_OK is the publish-with-warning analogue. 52 tests pass, QG green. B-015 still HOLD. Moving to item 10 (MTDS handler retry-and-backoff audit).
+
 [2026-05-15 12:35 UTC] harsh-slot-9 — ✅ DONE queue item 8 (MTDS Pyth oracle integration tests): mtds@d63fda5. Added 5 tests (TestPythFetchLatestEndpoint x2: parse + HTTP-500 isolation; TestPythMissingSymbol x2: unknown feed_id skipped, all-unknown → empty; TestPythStaleFeedBehavior x1: stale publish_time rows accepted, documents downstream responsibility). 21 total tests pass, QG green. B-015 still HOLD. Moving to item 9 (PBM service-output emission tests).
 
 [2026-05-15 12:10 UTC] harsh-slot-9 — ✅ DONE queue item 7 (PBM honest-coverage emission audit): NO CODE CHANGES needed. Audit CLEAN — canonical_writer.py + batch_workers + live_workers + orchestration_writer + live_aggregator all emit record_captured/record_empty/record_failed/record_expected_unattempted via UTL ManifestWriter. Tests in test_canonical_writer_record_helpers.py + test_batch_workers_typed_error_routing.py confirm coverage. Moving to item 8 (MTDS Pyth oracle integration tests).
