@@ -459,15 +459,17 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 
 ### 5.A — F21 batch-live-reconciliation-service minimum-viable shipment
 
-- [ ] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM
+- [x] [AGENT] P0. **Stand up `batch-live-reconciliation-service`** as a Cloud Run service (or GCE cron VM
       `batch-live-recon-{ts}`).
   - Reads batch backtest output (PATH_REGISTRY canonical) + live event-stream paper/live runs.
   - Computes per-archetype P&L diff + per-trade fill comparison.
   - Emits `BATCH_LIVE_RECON_DRIFT` event when drift > 5bps.
   - Daily cadence; alerting rule wires to Telegram + PagerDuty.
-- [ ] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper**
+  - **Evidence**: batch-live-recon@0997694 — stage3b+stage3c wired, BATCH_LIVE_RECON_DRIFT emitted when slippage_delta_bps > 5.0 (PaperLiveThresholds)
+- [x] [AGENT] P0. **Wire UTL `batch_live_reconciler` helper**
       ([`UTL@908b1647`](../../../unified-trading-library/unified_trading_library/batch_live_reconciler.py)) into the new
       service.
+  - **Evidence**: stage0_data_pipeline_recon.py uses reconcile_shard() for parquet schema+value comparison; UTL export added in UTL@089deda5
 - [ ] [SCRIPT] P0. **First recon dry-run** against carry_staked_basis paper run.
 
 ### 5.B — F22 Phase 4 alerting paging-target Secret Manager wiring
