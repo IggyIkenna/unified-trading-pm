@@ -266,13 +266,22 @@ inclusive >= entry_bps semantic) ✅ + state persistence @0807605 (7 tests, no d
 12. ✅ **strategy-service mode parity tests** — 9 tests: direct vs orchestrator 5-tick CSB+APD parity + parametric threshold boundary. QG green. strategy@639df90.
 13. ✅ **strategy-service archetype rotation tests** — 7 tests: CSB/APD slot isolation, cross-archetype kill-switch isolation, no double-emit across 3 concurrent cycles. QG green. strategy@639df90.
 14. ✅ **e2e-testing/scripts/defi/ failure mode scenarios** — test_failure_modes_e2e_smoke.py: 4/4 scenarios pass (a) venue503 rerouting (b) health-factor drop suppression (c) sandwich window collapse (d) flash-loan kill+restart. 0 ruff/basedpyright. e2e-testing@b31881e.
-15. **strategy-service signal-batching tests** — verify cooldown timers, batch emit windows, throttle release. Done-def: 4+ batching tests + QG green.
+15. ✅ **strategy-service signal-batching tests** — 6 tests: CSB continuous-emit while in-position, entry threshold gating, exit hysteresis + throttle release, restart clears buffer (position persists), APD stateless per-tick, APD spread collapse. QG green. strategy@3dd3a23.
 
 [2026-05-15 11:15 UTC] [main → slot 3] — ✅ **item 11 acked (strategy-service Phase 10 codex audit — PM@bfe08a1)**. 7 aligned, 2 drifts flagged (eligible_venues population gap routed to execution-service SOR triage; defi_lp/mev family mapping docstring-only — low severity). Good catch on the medium drift. Continue items 12-15 self-pivot:
 12. strategy-service mode parity tests (batch vs paper vs live signal sequence parity)
 13. strategy-service archetype rotation tests (CSB + APD concurrent, no double-emit)
 14. e2e-testing/scripts/defi/ failure mode scenarios (503/gas-spike/sandwich/flash-fail)
-15. strategy-service signal-batching tests (cooldown timers, batch emit windows)
+15. ✅ strategy-service signal-batching tests — strategy@3dd3a23
 Ping DONE per item with SHA.
 
 [2026-05-15 session-5] slot-3 — STARTED items 12-15. Post-OOM rebase complete (all repos on live-defi-rollout). Beginning item 12: strategy-service mode parity tests (batch vs paper vs live signal sequence parity).
+
+[2026-05-15 session-5] slot-3 — ✅ **CYCLE-CLOSE — items 12-15 all done**.
+
+- **Item 12** ✅: strategy-service mode parity tests — 9 tests (direct vs orchestrator 5-tick CSB+APD parity, parametric threshold boundary). strategy@639df90.
+- **Item 13** ✅: strategy-service archetype rotation tests — 7 tests (CSB/APD slot isolation, cross-archetype kill-switch, no double-emit). strategy@639df90.
+- **Item 14** ✅: e2e-testing failure mode scenarios — 4/4 (venue-503, health-factor drop, sandwich collapse, flash-loan kill+restart). e2e-testing@b31881e.
+- **Item 15** ✅: strategy-service signal-batching tests — 6 tests (CSB continuous-emit, entry threshold gating, exit hysteresis/throttle, restart-clears-buffer, APD stateless, APD spread-collapse). strategy@3dd3a23.
+
+Queue exhausted. Slot 3 session-5 DONE.
