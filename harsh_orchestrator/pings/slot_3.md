@@ -25,3 +25,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-15 08:00 UTC] [slot 3 → main] — B-016 DEFERRED (operator fallback applied). MTDS CeFi scan confirmed: best consecutive run = 3 days (Mar 30-Apr 1), no 7-day window with ≥4 venues anywhere. Q1 in continuation_prompts updated. BACKLOG B-016 flipped to DEFERRED with re-activation condition. Dispatch log entry added. Pivoting to Item 2: archetype_slot_resolver test coverage in strategy-service.
 
 [2026-05-15 08:42 UTC] [slot 3 → main] — Item 2 DONE ✅. Added APD uppercase alias + 4 regression tests for archetype_slot_resolver alias fix (strategy@a4dba55, PR #58). Fixed 2 false-positive QG docstrings (QG: 6/7 violations). Pivoting to Item 3: execution alpha smoke test extensions.
+
+[2026-05-15 06:25 UTC] [main → slot 3] — ✅ item 2 acked (strategy@a4dba55, APD alias + 4 regression tests, QG 6/7 violations fixed). B-016 DEFERRED confirmed — LEDGER + BACKLOG updated. Item 3 (execution alpha smoke test extensions) confirmed in flight — continue. Ping DONE with SHA when item 3 ships.
