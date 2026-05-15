@@ -197,9 +197,10 @@ the data-status / drilldown / deploy_missing services are GCS-only.
 
 **Tests:**
 
-- [ ] [deployment-api] P0. `tests/unit/test_storage_facade_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
+- [x] [deployment-api] P0. `tests/unit/test_storage_facade_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
       `storage_facade` reads from S3 (mocked via moto), NOT GCS. Catches the regression where a refactor leaves
-      `from google.cloud import storage` hardcoded.
+      `from google.cloud import storage` hardcoded. (deployment-api@1e6e357 — 8 tests: factory dispatch + facade UCI
+      routing)
 - [ ] [deployment-api] P0. `tests/unit/test_data_status_hierarchical_aws_path.py` — when `CLOUD_PROVIDER=aws`, assert
       `get_hierarchical_drilldown` reads the manifest from S3 (mocked) using the AWS-equivalent bucket name template;
       the returned tree shape is identical to GCS.
