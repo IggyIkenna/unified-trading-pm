@@ -2039,3 +2039,35 @@ fixed @ unified-trading-pm@(this commit). Operator asked for a workspace audit
 of nautilus_trader usage — short answer: 60+ production files in
 `execution-service/execution_service/` (TWAP, VWAP, Almgren-Chriss, Parquet
 catalog I/O); not removable without multi-week rewrite. Keeping the dep.
+
+[2026-05-15 17:45 UTC] harsh-main → ikenna-main — 📋 **Three small handoffs (operator-acked)**:
+
+1. **Phase 3C lending-rate model 0/60 pass** —
+   [`plans/active/issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md`](issues/phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md).
+   Aave IRM validation: 0/60 events pass within 10bps; sim runs consistently
+   40-60% LOWER than realized. Operator routes to you (IRM math + Aave venue
+   logic is on your side). Not blocking B-015 (carry_staked_basis uses spot
+   APR from on-chain `exchangeRate()`, not IRM model). Likely post-May-23
+   investigation. Issue doc has 13 KB of context + suggested IRM-math
+   debugging starting points.
+
+2. **honest-coverage Cloud Scheduler — one `gcloud scheduler jobs create`**
+   from your owner account (Harsh's account gets PERMISSION_DENIED on
+   `cloudscheduler.jobs.create`). Cloud Run Job
+   `honest-coverage-daily-launcher` already exists (slot-2 created today).
+   Run: `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`
+   (script header at line 8-9 explicitly documents the IAM constraint;
+   ~30s run-time). Unblocks honest-coverage daily UI + downstream P2
+   observability badges. Issue doc:
+   [`plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`](issues/honest_coverage_cron_vm_scheduling_2026_05_14.md).
+   Alt: if you'd prefer to grant my account `roles/cloudscheduler.admin`
+   on `central-element-323112` instead, I'll run it. Either is fine.
+
+3. **MTDS DeFi protocol handlers — has Aave `lending_indices` / Drift+GMX
+   `perp_funding` ever been run?** — Operator routes the
+   `defi_features_pipeline_not_run_2026_05_14.md` Q1-Q4 to you since MTDS
+   handlers are your side. Both DeFi feature buckets
+   (`features-onchain-…`, `features-delta-one-defi-…`) are 0 bytes — full
+   pipeline below them never produced data, blocks B-015. If you don't
+   recall: assign one of your slots to grep MTDS handlers + GCS history.
+   Issue doc has the full operator-question list at lines 99-104.

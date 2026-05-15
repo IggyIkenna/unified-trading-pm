@@ -205,3 +205,32 @@ non-conflicting work. Item 6 only becomes actionable when slot 4 pings features-
 11. ✅ **MTDS Pyth additional symbol coverage** — mtds@487c9d0. 4 classes / 10 tests: TestEthUsdSymbolCoverage (2: price parse + registry), TestBtcUsdSymbolCoverage (2: parse + multi-symbol batch ETH+BTC+SOL), TestPriceDeviationBehavior (2: extreme $1B BTC + near-zero ETH both pass through — no filter). QG green (1271 pass).
 12. ✅ **PBM canonical_writer Phase 10 codex audit** — AUDIT CLEAN. canonical_writer is archetype-agnostic: dispatches on (asset_group, source_data_type) pairs only, no per-family (Family 0/1/2) branching. _MDPS_SOURCE_DATA_TYPE_TO_PRIORITY_KEY + _resolve_policy_output_data_type both archetype-neutral. codex batch-live-architecture.md § Archetype-grain covers strategy-service CarryRecursiveStakedEngine level; MDPS sits below that layer (raw market data, no strategy awareness). Codex doc accurate; no drift; no code/test changes needed.
 13. ✅ **MTDS perp venue funding rate normalization** — mtds@7b8f6b6. 8 tests (7 venue contracts + 1 multi-venue sign consistency): Hyperliquid (decimal+sign), Aster (decimal), GMX Arb+Avax (two-sided opposite signs), Pacifica (decimal), Lighter (CSV decimal + neg preserved), Hyperliquid×Aster cross-sign (longs-pay-shorts consistent). CeFi Tardis venues tested at UAC schema level (different ingestion path). QG green.
+
+[2026-05-15 17:20 UTC] [main → slot 9] — 📌 **NEW DISPATCH: MTDS market_interface 53-test-failure triage + fix** (operator-acked).
+
+Issue doc: [`plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md`](../../plans/active/issues/mtds_market_interface_test_failures_2026_05_14.md).
+
+53 unit-test failures across 5 modules in MTDS market_interface (slot 9's
+territory). Issue doc says "operator triage" because nobody had categorized
+them yet. Operator approved your slot picking it up.
+
+**Done-def (two halves)**:
+1. **Triage half**: bin the 53 failures into root-cause clusters (e.g.
+   "venue API drift X" / "mock fixture stale Y" / "schema rename Z"). File a
+   refined plan-of-attack as an UPDATE to the existing issue doc (do NOT
+   create a new doc). Goal: a fewer-than-10 cluster table mapping
+   cluster → failing test count → suggested fix scope.
+2. **Fix half**: ship fixes for the LARGEST cluster first (highest leverage
+   per AI-hour). If the cluster you finish closes ≥30 of the 53 failures,
+   ping CYCLE-CLOSE; otherwise self-pivot to the next-largest cluster.
+
+**Scope guard**: MTDS market_interface ONLY. Other MTDS module failures (if
+any surface during triage) get filed as separate issue docs — don't expand
+scope inline.
+
+**Self-pivot**: do this BEFORE the rest of your existing queue (items
+4/5/6/10/14). The 13-item buffer queue can wait — these 53 test failures
+have been sitting since 2026-05-14 P1.
+
+Ping STARTED + per-cluster DONE + final CYCLE-CLOSE in slot_9.md.
+Conditional-push to live-defi-rollout per usual rebase-on-reject.

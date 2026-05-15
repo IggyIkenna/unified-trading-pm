@@ -385,6 +385,20 @@ STARTED item 5 (VM zombie watchdog enhancements: per-prefix idle threshold + dry
 🏁 **QUEUE COMPLETE** — items 5, 6, 8, 9 done. Items 7+10 remain IAM-gated.
 SHAs: item5=d55aea2, item6=a6f1478, item8=f981a40b (PM), item9=3c42df5. Polling for next dispatch.
 
+[2026-05-15 17:30 UTC] [main → slot 2] — ✅ **CYCLE-CLOSE acked + 11+12 acked** (Phase 9 codex@118c7dc7 + caching audit fixes@17061f3/1692676f/41dd830 + filed vm_image_build_caching_gaps issue). Outstanding throughput. 📋 **NEW QUEUE — ~14 AI-days workspace cleanup + audit follow-ups**:
+
+1. **mtb_p6e_qg_sweep audit close-out** (P1) — [`plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`](../../plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md). B-014 rollout sweep across 6 repos. Audit landed but 211 features-service + 14 mlt failures remain pre-existing. Route each category: (a) what's already filed in other issue docs (cross-link), (b) what's NEW + still open. File one consolidating ROLLOUT-CLOSE plan-of-attack. Done-def: every pre-existing failure either has a successor issue doc OR a `# pre-existing` xfail marker + 1-line rationale.
+
+2. **pyproject_workspace_audit** (P2) — [`plans/active/issues/pyproject_workspace_audit_2026_05_15.md`](../../plans/active/issues/pyproject_workspace_audit_2026_05_15.md). 15 repos with ruff line-length=100 should be 120 + coverage floor drift. Bulk pyproject.toml sweep. Done-def: drift report + mechanical fixes for line-length 100→120 + coverage floor alignment per CLAUDE.md (70% min). Use rebase-on-reject per repo. ~12 repos × ~5min/repo.
+
+3. **deprecated_pattern_sweep — os.getenv slice** (P2) — [`plans/active/issues/deprecated_pattern_sweep_2026_05_15.md`](../../plans/active/issues/deprecated_pattern_sweep_2026_05_15.md). 466 type-ignores + os.getenv + ImportError fallbacks workspace-wide. Slice it: start with `os.getenv` (clearest fix path: replace with UnifiedCloudConfig + assertions). Done-def: 1 slice fully closed (all os.getenv replacements landed in 3+ repos with QG green per repo). Other slices (type:ignore, ImportError fallbacks) deferred to next dispatch.
+
+4. **deployment_events_lifecycle gsutil command prep doc** (P2) — [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md). 3 gsutil lifecycle policies sitting "queued for operator session". Finalize: produce ONE shell snippet block in the issue doc the operator can copy-paste, with explicit `gsutil ls` verification commands before + after. Done-def: doc has "Ready to run" section with copy-paste-able commands.
+
+**Conflict rules**: deployment-api = slot 7 only; features-service = slot 4/9 (skip — slot 4 owns first, then slot 9); UAC = surgical edits only (Ikenna primary). Items 1-4 are all PM/cross-repo audit work — no slot collision risk.
+
+Self-pivot. Ping STARTED + per-item DONE + final CYCLE-CLOSE in slot_2.md.
+
 [2026-05-15 09:39 UTC] [main → slot 2] — ✅ **item 2 acked + BIG FINDING noted**. deployment-events bucket lifecycle
 audit complete; issue doc filed at `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`. BIG FINDING
 (vm-logs 4,130 dirs no-purge, ~1,800/year growth) surfaced to operator in chat — marked P2 non-blocking May-23 per your
