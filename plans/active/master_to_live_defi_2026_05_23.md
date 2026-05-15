@@ -108,90 +108,90 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-14 09:35 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-15 03:23 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
 | Plan                                                                                                                                          | Owner                                | Class     | Checkboxes | % done       | Cal left | Deadline                                 |
 | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | --------- | ---------- | ------------ | -------- | ---------------------------------------- |
-| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md)                               | cefi_master_2026_05_07               | infra     | 29/122     | 24%          | 123.5    | 2026-05-23                               |
-| [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md)                                               | master                               | design    | 47/68      | 69%          | 63.5     | 2026-05-23                               |
-| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                                       | master                               | design    | 33/87      | 38%          | 40.0     | 2026-05-23                               |
-| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 13/164     | 8%           | 38.9     | —                                        |
+| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md)                               | cefi_master_2026_05_07               | infra     | 31/122     | 25%          | 120.8    | 2026-05-23                               |
+| [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md)                                               | master                               | design    | 50/68      | 74%          | 54.4     | 2026-05-23                               |
+| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 31/164     | 19%          | 34.3     | —                                        |
+| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                                       | master                               | design    | 43/87      | 49%          | 32.6     | 2026-05-23                               |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                                             | cross_cutting_may_23_2026            | infra     | 8/72       | 11%          | 28.4     | 2026-06-04                               |
 | [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)                   | master                               | brand-new | 0/70       | 0%           | 24.0     | —                                        |
-| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                       | master                               | design    | 18/70      | 26%          | 22.3     | 2026-05-23                               |
-| [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md)                           | master                               | infra     | 0/52       | 0%           | 20.0     | 2026-05-23                               |
+| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                       | cross_cutting_may_23_2026            | design    | 22/70      | 31%          | 20.6     | 2026-05-23                               |
 | [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                           | master                               | infra     | 0/64       | 0%           | 20.0     | 2026-07-04                               |
+| [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md)                                                     | master                               | brand-new | —          | —            | 20.0     | post-cutover (target 2026-06-01)         |
 | [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md)                                           | master                               | infra     | 0/16       | 0%           | 15.2     | post-cutover (target 2026-07-15)         |
 | [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md)                                             | instruments_live_master_2026_05_08   | design    | —          | —            | 15.0     | 2026-05-23                               |
-| [`cross_cutting_may_23_deliverables_2026_05_08`](./cross_cutting_may_23_deliverables_2026_05_08.md)                                           | cross_cutting_may_23_2026            | design    | 17/30      | 57%          | 13.4     | 2026-05-23                               |
 | [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                         | cefi_master_2026_05_07               | design    | 117/246    | 48%          | 12.6     | —                                        |
-| [`defi_master_2026_05_07`](./defi_master_2026_05_07.md)                                                                                       | README                               | design    | 23/104     | 22%          | 11.0     | —                                        |
+| [`cross_cutting_may_23_deliverables_2026_05_08`](./cross_cutting_may_23_deliverables_2026_05_08.md)                                           | cross_cutting_may_23_2026            | design    | 18/30      | 60%          | 12.4     | 2026-05-23                               |
 | [`simulation_scenarios_topology_price_shocks_2026_05_09`](./simulation_scenarios_topology_price_shocks_2026_05_09.md)                         | master                               | design    | 34/74      | 46%          | 10.9     | 2026-05-23                               |
-| [`topology_qgroup_gap_closure_2026_05_09`](./topology_qgroup_gap_closure_2026_05_09.md)                                                       | master                               | research  | 0/21       | 0%           | 9.6      | 2026-05-23                               |
-| [`data_status_comprehensive_test_coverage_2026_05_07`](./data_status_comprehensive_test_coverage_2026_05_07.md)                               | cross_cutting_may_23_2026            | design    | 0/30       | 0%           | 9.0      | —                                        |
-| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)           | master                               | design    | 17/40      | 42%          | 6.9      | —                                        |
+| [`defi_master_2026_05_07`](./defi_master_2026_05_07.md)                                                                                       | README                               | design    | 29/104     | 28%          | 10.2     | —                                        |
+| [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md)                           | cross_cutting_may_23_2026            | infra     | 32/52      | 62%          | 7.7      | 2026-05-23                               |
 | [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](./dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)                                   | cefi_master_2026_05_07               | design    | 0/12       | 0%           | 6.0      | —                                        |
+| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)           | master                               | design    | 21/40      | 52%          | 5.7      | —                                        |
 | [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md)                                                       | master                               | refactor  | —          | —            | 4.8      | 2026-05-13                               |
 | [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md)                                         | manifest_evolution_master_2026_05_08 | infra     | —          | —            | 4.8      | 2026-05-15                               |
 | [`hard_schema_enforcement_2026_05_08`](./hard_schema_enforcement_2026_05_08.md)                                                               | cross_cutting_may_23_2026            | design    | —          | —            | 4.8      | —                                        |
 | [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md)                                                       | master                               | design    | —          | —            | 4.8      | —                                        |
-| [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)                     | master                               | infra     | —          | —            | 4.8      | 2026-05-15 (Phase 1 + Phase 3 only)      |
-| [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md)                                                       | instruments_live_master_2026_05_08   | design    | 43/65      | 66%          | 4.5      | 2026-05-23                               |
-| [`dex_perp_and_venue_data_expansion_2026_05_12`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                           | master                               | brand-new | 16/34      | 47%          | 4.2      | 2026-05-23                               |
 | [`deploy_missing_auto_launch_2026_05_07`](./deploy_missing_auto_launch_2026_05_07.md)                                                         | cross_cutting_may_23_2026            | infra     | 6/14       | 43%          | 4.1      | —                                        |
-| [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md)                                                 | cross_cutting_may_23_2026            | design    | 3/20       | 15%          | 4.1      | 2026-05-23                               |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md)                                               | master                               | design    | 10/77      | 13%          | 3.7      | 2026-05-23                               |
 | [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md)                                                       | manifest_evolution_master_2026_05_08 | design    | 6/15       | 40%          | 3.6      | —                                        |
 | [`defi_simulation_realism_2026_05_10`](./defi_simulation_realism_2026_05_10.md)                                                               | master                               | design    | 42/47      | 89%          | 3.4      | 2026-05-23                               |
-| [`mtds_per_instrument_download_api_2026_04_24`](./mtds_per_instrument_download_api_2026_04_24.md)                                             | cross_cutting_may_23_2026            | design    | 6/19       | 32%          | 3.3      | —                                        |
-| [`basefc_validation_flip_2026_05_10`](./basefc_validation_flip_2026_05_10.md)                                                                 | master                               | design    | 0/4        | 0%           | 3.0      | 2026-05-23                               |
-| [`governance_qg_automation_gaps_post_cutover_2026_05_12`](./governance_qg_automation_gaps_post_cutover_2026_05_12.md)                         | master                               | design    | 0/6        | 0%           | 3.0      | 2026-05-23                               |
+| [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md)                                                 | cross_cutting_may_23_2026            | design    | 7/20       | 35%          | 3.1      | 2026-05-23                               |
+| [`dex_perp_and_venue_data_expansion_2026_05_12`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                           | master                               | brand-new | 21/34      | 62%          | 3.1      | 2026-05-23                               |
+| [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md)                                                       | instruments_live_master_2026_05_08   | design    | 50/65      | 77%          | 3.0      | 2026-05-23                               |
+| [`basefc_validation_flip_2026_05_10`](./basefc_validation_flip_2026_05_10.md)                                                                 | cross_cutting_may_23_2026            | design    | 0/4        | 0%           | 3.0      | 2026-05-23                               |
+| [`governance_qg_automation_gaps_post_cutover_2026_05_12`](./governance_qg_automation_gaps_post_cutover_2026_05_12.md)                         | cross_cutting_may_23_2026            | design    | 0/6        | 0%           | 3.0      | 2026-05-23                               |
 | [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md)                                               | cross_cutting_may_23_2026            | design    | 0/7        | 0%           | 3.0      | 2026-05-23                               |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                       | README                               | design    | 30/167     | 18%          | 3.0      | —                                        |
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md)                                           | manifest_evolution_master_2026_05_08 | refactor  | 16/22      | 73%          | 2.7      | —                                        |
-| [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md)                         | cross_cutting_may_23_2026            | design    | 31/41      | 76%          | 2.6      | —                                        |
-| [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)                   | master                               | design    | 0/7        | 0%           | 2.4      | 2026-08-31                               |
+| [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md)                                                     | instruments_live_master_2026_05_08   | design    | 2/20       | 10%          | 2.7      | —                                        |
+| [`data_status_comprehensive_test_coverage_2026_05_07`](./data_status_comprehensive_test_coverage_2026_05_07.md)                               | cross_cutting_may_23_2026            | design    | 22/30      | 73%          | 2.4      | —                                        |
 | [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md)                                                     | master                               | design    | —          | —            | 2.4      | 2026-06-04                               |
-| [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md)                                 | manifest_evolution_master_2026_05_08 | brand-new | 31/44      | 70%          | 1.9      | 2026-05-15                               |
+| [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md)                         | cross_cutting_may_23_2026            | design    | 33/41      | 80%          | 2.1      | —                                        |
 | [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                             | master                               | design    | 0/16       | 0%           | 1.8      | 2026-05-21                               |
-| [`client_reporting_pnl_attribution_mvp_2026_05_10`](./client_reporting_pnl_attribution_mvp_2026_05_10.md)                                     | master                               | design    | 27/36      | 75%          | 1.6      | 2026-05-23                               |
 | [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md)                                                               | master                               | design    | —          | —            | 1.5      | 2026-05-15                               |
+| [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md)                                 | manifest_evolution_master_2026_05_08 | brand-new | 34/44      | 77%          | 1.5      | 2026-05-15                               |
 | [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md)                                   | master                               | research  | 30/33      | 91%          | 1.4      | 2026-05-23                               |
 | [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md)                                                         | manifest_evolution_master_2026_05_08 | design    | 23/56      | 41%          | 1.2      | 2026-05-23                               |
-| [`api_football_phase_3b_3c_smoke_forward_poll_2026_05_13`](./api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md)                       | master                               | infra     | —          | —            | 1.2      | 2026-05-14 EOD                           |
 | [`manifest_cross_asset_rescan_design_2026_05_08`](./manifest_cross_asset_rescan_design_2026_05_08.md)                                         | manifest_evolution_master_2026_05_08 | infra     | 3/6        | 50%          | 1.2      | —                                        |
 | [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md)                                                   | cross_cutting_may_23_2026            | design    | —          | —            | 1.2      | 2026-05-23                               |
-| [`sports_retired_data_types_code_cleanup_2026_05_13`](./sports_retired_data_types_code_cleanup_2026_05_13.md)                                 | master                               | refactor  | 0/11       | 0%           | 1.2      | 2026-05-20                               |
-| [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md)                                 | cefi_master_2026_05_07               | design    | 17/47      | 36%          | 1.0      | —                                        |
+| [`mtds_per_instrument_download_api_2026_04_24`](./mtds_per_instrument_download_api_2026_04_24.md)                                             | cross_cutting_may_23_2026            | design    | 15/20      | 75%          | 1.2      | —                                        |
 | [`wave3x_residual_ssots_2026_05_08`](./wave3x_residual_ssots_2026_05_08.md)                                                                   | manifest_evolution_master_2026_05_08 | design    | 17/23      | 74%          | 0.9      | 2026-05-23                               |
 | [`missing_question_docs_disposition_2026_05_10`](./missing_question_docs_disposition_2026_05_10.md)                                           | master                               | design    | 0/3        | 0%           | 0.9      | pre-cutover (P0 — May-23 plans cite ghos |
-| [`features_service_qg_cleanup_2026_05_11`](./features_service_qg_cleanup_2026_05_11.md)                                                       | master                               | refactor  | 3/11       | 27%          | 0.9      | —                                        |
+| [`features_service_qg_cleanup_2026_05_11`](./features_service_qg_cleanup_2026_05_11.md)                                                       | infrastructure_master_2026_05_07     | refactor  | 3/11       | 27%          | 0.9      | —                                        |
 | [`cross_asset_group_catalogue_audit_2026_05_10`](./cross_asset_group_catalogue_audit_2026_05_10.md)                                           | cefi_master_2026_05_07               | research  | 39/40      | 98%          | 0.8      | 2026-05-23                               |
-| [`mock_data_pipeline_benchmarking_2026_05_10`](./mock_data_pipeline_benchmarking_2026_05_10.md)                                               | master                               | design    | 28/31      | 90%          | 0.7      | 2026-05-23                               |
+| [`client_reporting_pnl_attribution_mvp_2026_05_10`](./client_reporting_pnl_attribution_mvp_2026_05_10.md)                                     | master                               | design    | 32/36      | 89%          | 0.7      | 2026-05-23                               |
+| [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)                   | cross_cutting_may_23_2026            | design    | 5/7        | 71%          | 0.7      | 2026-08-31                               |
+| [`mock_data_pipeline_benchmarking_2026_05_10`](./mock_data_pipeline_benchmarking_2026_05_10.md)                                               | manifest_evolution_master_2026_05_08 | design    | 28/31      | 90%          | 0.7      | 2026-05-23                               |
+| [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md)                                 | cefi_master_2026_05_07               | design    | 26/47      | 55%          | 0.7      | —                                        |
 | [`api_football_minimal_flattening_removal_2026_05_07`](./api_football_minimal_flattening_removal_2026_05_07.md)                               | master                               | refactor  | 13/16      | 81%          | 0.6      | —                                        |
 | [`solana_perp_dex_adapters_2026_05_13`](./solana_perp_dex_adapters_2026_05_13.md)                                                             | master                               | brand-new | 18/21      | 86%          | 0.6      | 2026-05-23                               |
-| [`data_status_ui_phase_2f`](./data_status_ui_phase_2f.md)                                                                                     | master                               | design    | 4/5        | 80%          | 0.4      | —                                        |
-| [`context_fill_optimization_2026_05_14`](./context_fill_optimization_2026_05_14.md)                                                           | master                               | design    | 0/3        | 0%           | 0.3      | —                                        |
-| [`features_modehandler_lift_2026_05_08`](./features_modehandler_lift_2026_05_08.md)                                                           | master                               | design    | —          | —            | 0.3      | post-2026-05-23                          |
-| [`audit_records_pb_1_2_3_pre_cutover_2026_05_13`](./audit_records_pb_1_2_3_pre_cutover_2026_05_13.md)                                         | master                               | brand-new | 13/16      | 81%          | 0.3      | 2026-05-23                               |
-| [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`](./tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) | master                               | brand-new | 5/6        | 83%          | 0.2      | 2026-05-23                               |
+| [`solana_lst_native_staking_adapters_2026_05_14`](./solana_lst_native_staking_adapters_2026_05_14.md)                                         | **orphan**                           | brand-new | 19/22      | 86%          | 0.5      | 2026-05-23                               |
+| [`topology_qgroup_gap_closure_2026_05_09`](./topology_qgroup_gap_closure_2026_05_09.md)                                                       | master                               | research  | 20/21      | 95%          | 0.5      | 2026-05-23                               |
+| [`solana_venue_naming_reconciliation_2026_05_14`](./solana_venue_naming_reconciliation_2026_05_14.md)                                         | **orphan**                           | design    | 4/7        | 57%          | 0.4      | 2026-05-23                               |
+| [`data_status_ui_phase_2f`](./data_status_ui_phase_2f.md)                                                                                     | manifest_evolution_master_2026_05_08 | design    | 4/5        | 80%          | 0.4      | —                                        |
 | [`solana_restaking_rewards_coverage_2026_05_13`](./solana_restaking_rewards_coverage_2026_05_13.md)                                           | master                               | brand-new | 16/18      | 89%          | 0.2      | 2026-05-23                               |
-| [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md)                                                                 | master                               | refactor  | 16/30      | 53%          | 0.2      | —                                        |
+| [`context_fill_optimization_2026_05_14`](./context_fill_optimization_2026_05_14.md)                                                           | infrastructure_master_2026_05_07     | design    | 1/3        | 33%          | 0.2      | —                                        |
+| [`sports_retired_data_types_code_cleanup_2026_05_13`](./sports_retired_data_types_code_cleanup_2026_05_13.md)                                 | master                               | refactor  | 10/12      | 83%          | 0.2      | 2026-05-20                               |
+| [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md)                                                                 | infrastructure_master_2026_05_07     | refactor  | 16/31      | 52%          | 0.2      | —                                        |
 | [`arbitrage_price_dispersion_finalisation_2026_05_09`](./arbitrage_price_dispersion_finalisation_2026_05_09.md)                               | master                               | design    | 20/20      | 100%         | 0.0      | 2026-05-23                               |
-| [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12`](./codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)           | master                               | design    | 4/4        | 100%         | 0.0      | 2026-05-23                               |
-| [`dart_manual_trade_ux_refactor_2026_05_13`](./dart_manual_trade_ux_refactor_2026_05_13.md)                                                   | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23                               |
-| [`disaster_recovery_circuit_breakers_2026_05_10`](./disaster_recovery_circuit_breakers_2026_05_10.md)                                         | master                               | design    | 44/44      | 100%         | 0.0      | 2026-05-23                               |
+| [`audit_records_pb_1_2_3_pre_cutover_2026_05_13`](./audit_records_pb_1_2_3_pre_cutover_2026_05_13.md)                                         | master                               | brand-new | 16/16      | 100%         | 0.0      | 2026-05-23                               |
+| [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12`](./codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)           | cross_cutting_may_23_2026            | design    | 4/4        | 100%         | 0.0      | 2026-05-23                               |
+| [`disaster_recovery_circuit_breakers_2026_05_10`](./disaster_recovery_circuit_breakers_2026_05_10.md)                                         | cross_cutting_may_23_2026            | design    | 44/44      | 100%         | 0.0      | 2026-05-23                               |
 | [`launcher_scripts_consolidation_into_deployment_service_2026_05_07`](./launcher_scripts_consolidation_into_deployment_service_2026_05_07.md) | cross_cutting_may_23_2026            | refactor  | 15/15      | 100%         | 0.0      | —                                        |
-| [`per_agent_worktrees_2026_05_10`](./per_agent_worktrees_2026_05_10.md)                                                                       | master                               | design    | 31/31      | 100%         | 0.0      | 2026-05-23                               |
-| [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md)                                             | master                               | design    | 47/47      | 100%         | 0.0      | 2026-05-23                               |
+| [`per_agent_worktrees_2026_05_10`](./per_agent_worktrees_2026_05_10.md)                                                                       | infrastructure_master_2026_05_07     | design    | 31/31      | 100%         | 0.0      | 2026-05-23                               |
+| [`risk_simulations_limits_alerting_2026_05_10`](./risk_simulations_limits_alerting_2026_05_10.md)                                             | cross_cutting_may_23_2026            | design    | 47/47      | 100%         | 0.0      | 2026-05-23                               |
 | [`solana_amm_coverage_expansion_2026_05_13`](./solana_amm_coverage_expansion_2026_05_13.md)                                                   | master                               | brand-new | 25/25      | 100%         | 0.0      | 2026-05-23                               |
-| [`wallet_treasury_client_flow_2026_05_10`](./wallet_treasury_client_flow_2026_05_10.md)                                                       | master                               | design    | 43/43      | 100%         | 0.0      | 2026-05-23                               |
+| [`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`](./tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md) | master                               | brand-new | 13/13      | 100%         | 0.0      | 2026-05-23                               |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)                     | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md)                     | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md)                                                                         | master                               | design    | —          | —            | TBD      | —                                        |
 | [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md)                                                     | cross_cutting_may_23_2026            | infra     | —          | —            | TBD      | —                                        |
-| **TOTAL** (77 plans)                                                                                                                          | 0 orphans, 2 TBD                     | —         | —          | **43% done** | **590**  | —                                        |
+| **TOTAL** (77 plans)                                                                                                                          | 2 orphans, 2 TBD                     | —         | —          | **49% done** | **539**  | —                                        |
 
 <!-- AUTO-INVENTORY-END -->
 
@@ -852,21 +852,22 @@ per-target upgrade path.
 **Items extended**:
 
 - **Item 17 (Backtest fidelity)**:
-  - [ ] [AGENT] P0. `pvl-p17a-uac-enum-consolidation`: UAC `internal/modes.py` additive change — keep `OperationalMode`
+  - [x] [AGENT] P0. `pvl-p17a-uac-enum-consolidation`: UAC `internal/modes.py` additive change — keep `OperationalMode`
         single 4-value enum; add `ExecutionTarget` + `ExecutionTrigger` enums + `decompose()` helper; deprecate
         `TestingStage` as parallel enum (collapse `LIVE_TESTNET` to `(target=TESTNET, trigger=AUTOMATED)`); pyproject /
         `__init__.py` exports updated. NO breaking change to existing 6 consumer call-sites. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P0. `pvl-p17b-paper-trade-bool-deletion`: Delete `paper_trade: bool` field from execution-service
+        paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped UAC@f09a19d 2026-05-14**
+  - [x] [AGENT] P0. `pvl-p17b-paper-trade-bool-deletion`: Delete `paper_trade: bool` field from execution-service
         `service_config.py` + alias `PAPER_TRADE | DEFI_PAPER_TRADE`; migrate 4 consumer call-sites
         (`execution_service/cli/handlers/__init__.py`, `engine/transfers/factory.py`,
         `engine/transfers/mock_adapter.py`, `tests/unit/test_operational_mode_validation.py`) to read `OperationalMode`
-        directly. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P0. `pvl-p17c-paper-venue-keys-deletion`: Delete `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`
+        directly. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@e7f291850
+        2026-05-14**
+  - [x] [AGENT] P0. `pvl-p17c-paper-venue-keys-deletion`: Delete `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`
         from `execution-service/execution_service/sports_execution/routing.py:16-25`; migrate routing logic to read
         `OperationalMode.PAPER` + sports-specific paper-venue resolver. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P0. `pvl-p17d-instruction-envelope-mode-field`: Lift `mode: OperationalMode` into the canonical
+        paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@e7f291850 2026-05-14**
+  - [x] [AGENT] P0. `pvl-p17d-instruction-envelope-mode-field`: Lift `mode: OperationalMode` into the canonical
         `StrategyInstruction` envelope at
         [`unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/instruction.py:184`](../../unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/instruction.py#L184)
         (canonical envelope) AND audit the 7 sub-instruction types in the same file (`TransferInstruction` L594 /
@@ -874,7 +875,8 @@ per-target upgrade path.
         `FuturesRollInstruction` L803 / `OptionsComboInstruction` L846) to confirm whether they nest inside
         `StrategyInstruction` (single mode field at envelope) or are peers (each carries its own mode field). Boot-time
         injection at execution-service becomes default-fallback when an instruction omits the field. Enables A/B
-        execution lanes + cleaner reconciliation per-mode. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+        execution lanes + cleaner reconciliation per-mode. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_ —
+        **shipped UAC@069a223 2026-05-14**
 
 - **Item 18 (2-year batch backtest run)**:
   - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
@@ -891,16 +893,18 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 20 (Live testnet replicates prod)**:
-  - [ ] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`
+  - [x] [AGENT] P0. `pvl-p20a-paper-target-registry`: UAC `paper_target_registry` SSOT — `dict[chain | venue, target]`
         per-target upgrade path. EVM chains → Tenderly fork; Solana → devnet (or localnet/surfnet — pick the one with
         the fullest fork-state semantics for jitoSOL/mSOL/bSOL); Deribit → testnet endpoint; sports →
         PaperBettingAdapter; prediction → matching-engine simulation. Default for unmapped target = matching-engine
-        simulation. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
-  - [ ] [AGENT] P0. `pvl-p20b-cefi-perp-testnet-audit`: Audit testnet API + credential availability for the 5 CeFi perp
+        simulation. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped UAC@069a223
+        (`PAPER_EXECUTION_TARGETS` + `get_paper_target()` in `internal/paper_execution_targets.py`) 2026-05-14**
+  - [x] [AGENT] P0. `pvl-p20b-cefi-perp-testnet-audit`: Audit testnet API + credential availability for the 5 CeFi perp
         venues without testnet routing today (Bybit, Binance, OKX, Hyperliquid, Aster); wire testnet endpoints where
         available (matching `paper_target_registry`); fall back to matching-engine simulation per Settled #3. Deribit
         testnet integration confirmed already viable per existing `venues/deribit.py` reference. _(folded from
-        paper_vs_live_workflow_maturity_2026_05_08)_
+        paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@e7f291850 (Hyperliquid testnet
+        wired) + PM@145a9b94 (audit codex) 2026-05-15; Binance/Bybit/OKX/Aster PENDING-ADAPTER**
   - [ ] [AGENT] P0. `pvl-p20c-solana-paper-wiring`: Wire Solana devnet (or localnet/surfnet) for paper-mode jitoSOL /
         mSOL / bSOL execution; integrate with `carry_staked_basis` paper-mode evidence run. Pyth via Hermes for prices
         (already unbanned); LST yields via DeFi connectors against the testnet/fork primitive. _(folded from
@@ -915,9 +919,10 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
-  - [ ] [AGENT] P1. `pvl-p22a-mode-tagged-alerts`: Alerting-service rules consume `mode: OperationalMode` from
+  - [x] [AGENT] P1. `pvl-p22a-mode-tagged-alerts`: Alerting-service rules consume `mode: OperationalMode` from
         instruction envelope (per `pvl-p17d`); per-mode alert thresholds (paper-mode looser than live; manual-mode wakes
-        operator vs paging on-call). _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
+        operator vs paging on-call). _(folded from paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped
+        alerting-service@97ec80c 2026-05-15**
 
 - **Item 23 (DART manual-trade gate, Group G)** — see Group G section below for full DART scope (`pvl-p23a` / `pvl-p23b`
   / `pvl-p23c`).
