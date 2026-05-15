@@ -270,6 +270,21 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
 
 **Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4 tracking surface shipped.
 
+### Phase 4.C — Honest coverage badge tests + QG fixes (0.3 cal-AI-day)
+
+- [x] [AGENT] P0. **`HonestCoverageCard.test.tsx`** — 5 vitest tests covering loading/data/null/error/date-prop.
+      (deployment-ui@85b8641)
+- [x] [AGENT] P0. **`test_honest_coverage_route.py`** — 5 TestClient tests for `GET /api/data-status/honest-coverage`:
+      success, 404, 500, bucket/path routing, today-UTC default. `conftest.py` mock fixed to include
+      `deployments_registry` sub-module (was causing collection errors in isolation).
+      (deployment-api@8b62cb6)
+- [x] [AGENT] P0. **deployment-ui QG exclusions** — `CODEX_COLOUR_EXCLUDE_GLOBS` + `CODEX_LOCALHOST_EXCLUDE_GLOBS`
+      in `scripts/quality-gates.sh`; also added `ClientReportingTab.test.tsx` (7 tests) covering Phase 5.C2 HwmTable to
+      push function coverage from 66.6% → 76.0% (threshold: 70%).
+      (deployment-ui@85b8641 — scripts/quality-gates.sh + src/components/ClientReportingTab.test.tsx)
+
+**Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4.B shipped; slot 2 cron VM done.
+
 ### Phase 5 — Image base-pin audit + retention policy (1 cal-AI-day)
 
 - [ ] [AGENT] P0. **Author `deployment-service/scripts/audit/dockerfile-base-pin.sh`** — walks all `Dockerfile`s in
