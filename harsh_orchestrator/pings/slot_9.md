@@ -4,6 +4,8 @@
 > Full Q&A lives in the slot's plan-of-record § "Open questions". Resolved entries removed by main.
 > Format: `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-15 05:42 UTC] harsh-slot-9 — ✅ DONE items 2+3+4: mtds@8693c57 (UAC facade audit clean + 4 Helius RPC tests); PM@9c666020 (phantom structural issue doc). B-015 still HOLD — (a) Ikenna phantom-fix not yet confirmed; (b) operator direction needed on lst_rates handler hardening before re-smoke. Moving to reserve queue (PBM Phase 8 coverage). Polling _agent_pings.md every ~30 min.
+
 [2026-05-15 05:33 UTC] harsh-slot-9 — 🚨 BIG FINDING (P1): DeFi handler phantom risk is STRUCTURAL — `lst_rates_handler.py` (+ evm_defi/gas_fee/solana_defi) call `record_captured()` OUTSIDE the GCS upload try-block. After Ikenna's apply-flips, B-015 re-smoke will re-accumulate phantoms unless handler code hardened first. Issue: `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Recommend: hold re-launch until lst_rates hardened (~30 min). Awaiting operator direction.
 
 [2026-05-15 05:08 UTC] harsh-slot-9 — STARTED slot 9 (plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 9) — B-015 HOLD, pivoting to items 2-4: MTDS UAC facade audit + Helius RPC tests + DeFi handler readiness audit
