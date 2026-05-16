@@ -547,3 +547,37 @@ Auto-continuing until next operator direction lands.
 
 ---
 
+## [slot 4 → main] 2026-05-16 ~20:35 UTC — CROSS-SLOT SWEEP ROUND 2 shipped
+
+5 more cross-slot ships this round (all Half-1+Half-2):
+
+| Item | Code | Plan-flip | Notes |
+| --- | --- | --- | --- |
+| UTL freezegun realign | UTL@b59fcb22 | PM@f8097c74 (issue + derived manifest regen) | `>=1.5.0` → `>=1.2.2` matches canonical; `freeze_time(tick=True)` is freezegun 0.3+ feature |
+| QG step6 production-readiness | (n/a — validators ran clean) | PM@c4cb1009 | transient freeze-gate cycle resolved by slot 1 + 8 manifest refresh |
+| betfair × requests validator fix | PM@b2106766 (`EXCLUDE_FROM_GLOBAL_COMPILE`) | PM@bbd8b422 (issue) | cursor rule's intended pattern; validator now exits 0; SIT-side uv-sync left as named follow-up |
+| Vocab drift OPTION G — 112,299 rows | IS@705ba5e (`canonicalize_defi_manifest_data_types_option_g_2026_05_16.py`) | PM@d509ebdf (issue) + PM@fd64eaaa (cross-side ping) | **slot 2's premature-closeout finding corrected**: original Option A wrote per-VM shards but consolidator UPSERT preserved kebab rows; Option G rewrites canonical _index directly + clears shards. All 6 DeFi manifests now snake-only (lending-indices 24,976 + perp-funding 3,298 + dex-swaps 28,171 + dex-pools 55,854 dropped) |
+| openapi.json mirror resync | UI@1abecee1 (resync + regen TS types) | PM@6d17a76e (issue) | drift checker now exit 0; 58,037 stale lines removed from `api-generated.ts` |
+
+**Workspace state changes**:
+
+- ✅ 112,299 kebab rows dropped from 4 DeFi canonical manifests (lending-indices, perp-funding, dex-swaps, dex-pools)
+- ✅ workspace-constraints validator now exits 0 (betfair × requests resolved by exclude pattern per cursor rule)
+- ✅ UTL pyproject aligned to canonical freezegun pin (workspace-manifest drift cleared)
+- ✅ UI openapi mirror + generated TS types resynced to backend openapi.json
+- ✅ QG step6 production-readiness verified clean (validators all OK)
+
+**Running cumulative tally for slot 4 (single 2026-05-16 session)**:
+
+- **Operational data ops** (real-infra): 6 AWS buckets created; 124,757 manifest rows touched (115,785 vocab-canonicalize + 6,972 corrupt-drop + 112,299 Option G drop — partial overlap since Option G dropped what canonicalize wrote-but-consolidator-preserved); 6 DeFi canonical manifests fully vocab-clean
+- **Code commits**: instruments-service ×4 (weather write-side, api_football smoke, lending-indices vocab, lst-rates+oracle corrupt, Option G); deployment-service ×1 (v2 launcher shell tests); execution-service ×1 (aave VM self-delete); UTL ×1 (freezegun realign); UI ×1 (openapi resync); PM ×1 (validator EXCLUDE_FROM_GLOBAL_COMPILE)
+- **Test scaffolds**: 3 new test files (api_football smoke + v2 launcher shell + v2 superset)
+- **Issue docs closed/RESOLVED**: 9 (sports_classifier_weather_no_fixture, lending_indices_data_type_vocabulary_drift, lst_rates_oracle_prices_corrupt_kebab_rows, sit_may23_critical_path_coverage_gaps, strategy_service_qg_step6_production_readiness_newly_exposed, workspace_manifest_drift, execution_service_betfairlightweight_requests_dep_conflict, vocab_drift_canonicalisation_didnt_stick, openapi_mirror_drift)
+- **Plan-flips**: ~20+ across work_split + propagation chain + expected_universe_v2 + api_football_minimal_flattening
+- **Codex SSOT updates**: 1 (availability-manifest-and-data-status.md vocab section RESOLVED)
+- **Cross-side pings**: 1 (correction to slot 2 + harsh-main re vocab-drift premature closeout)
+
+Continuing autonomous loop. Next sweep in ~30 min.
+
+---
+
