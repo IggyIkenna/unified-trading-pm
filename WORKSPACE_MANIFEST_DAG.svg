@@ -301,9 +301,9 @@
   <text x="95" y="1343" text-anchor="middle" class="level-label">L9</text>
   <text x="150" y="1343" class="desc">Operational services + API gateways (3 repos)</text>
   <rect x="70" y="1366" width="160" height="38" class="api" />
-  <rect x="70" y="1366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="150" y="1384" text-anchor="middle" class="label">client-reporting-api</text>
-  <circle cx="220" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="220" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="150" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="240" y="1366" width="244" height="38" class="svc" />
   <rect x="240" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
