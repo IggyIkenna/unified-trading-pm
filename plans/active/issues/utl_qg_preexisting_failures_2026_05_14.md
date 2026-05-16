@@ -143,8 +143,20 @@ Operator triage / break into themed sub-issues:
    `core/mock_defi_dynamics.py::simulate_price_movement` 61→40L (same commit);
    `lifecycle/resource_profiler.py::__init__` 57→46L `unified-trading-library@c8957897`;
    `treasury/withdrawal_executor.py::withdraw` 65→44L `unified-trading-library@ad4f2897`;
-   `streaming/live_aggregator.py::cascade_parent_candle` 73→33L `unified-trading-library@351a54bf`. 39 remaining;
-   continuing.
+   `streaming/live_aggregator.py::cascade_parent_candle` 73→33L `unified-trading-library@351a54bf`;
+   `treasury/withdrawal_reconciler.py::reconcile` 85→45L `unified-trading-library@6709fca6`;
+   `circuit_breaker/recovery.py::evaluate` 85→31L `unified-trading-library@09b971f9`;
+   `post_trade/settler.py::settle_trade` 87→50L `unified-trading-library@22b97cd0`;
+   `monitors/freshness_monitor.py::check_and_emit` 92→27L `unified-trading-library@86e6062a`;
+   `post_trade/settler.py::accrue_daily_fees` 68→33L `unified-trading-library@d902f405`;
+   `post_trade/settler.py::update_hwm_ledger` 78→36L `unified-trading-library@652abdc3`;
+   `manifest_writer.py::_write_to_gcs` 66→29L `unified-trading-library@54265159`;
+   `manifest_writer.py::_write_with_generation_match` 66→34L `unified-trading-library@6fff25f0`;
+   `synthetic/harness.py::run` 112→48L `unified-trading-library@e6fff423`;
+   `client_lifecycle/onboarding.py::advance` 105→46L `unified-trading-library@6bfd6e64`.
+   **25 of 51 method-size violations cleared (~49%)**. 26 remaining are mostly
+   docstring-heavy methods (body is correct; long docstrings carry contract documentation
+   for adapter authors / public surfaces — refactoring those would lose contract value).
 4. **urllib3 CVE bump**: workspace-wide dep bump to 2.7.0 — single PR across all repos via PM dep alignment scripts.
 5. **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
    `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
