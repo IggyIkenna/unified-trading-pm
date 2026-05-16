@@ -744,25 +744,43 @@ redesign accepted today.
   the codex docs half. (design 0.6×, ~5 = 3.0 cal)
 - **`defi_simulation_realism_2026_05_10` close** (3.4 cal, 42/47) — push 5 remaining items. (design 0.6×, ~5 = 3.0 cal)
 
-#### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive)
+#### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive) — **CLOSED 2026-05-16**
 
-- **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (2.6 cal, 1/7) — close 6 remaining. (design 0.6×, ~5 = 3.0
-  cal)
-- **`compute_optimization_mock_data_2026_05_13` Ikenna-half** (1.9 cal, 12/20) — close 8 remaining. (design 0.6×, ~3 =
-  1.8 cal)
-- **`promote_workflow_may23_cli_path_2026_05_10`** (1.7 cal, 46/77) — close remaining CLI path items. (design 0.6×, ~3 =
-  1.8 cal)
-- **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** (1.4 cal, 30/33). (research 1.2×, ~1 = 1.2 cal)
-- **`mock_data_pipeline_benchmarking_2026_05_10` close** (0.7 cal, 28/31). (design 0.6×, ~1 = 0.6 cal)
-- **`cross_asset_group_catalogue_audit_2026_05_10` close** (0.8 cal, 39/40) — 1 final item. (research 1.2×, ~0.5 = 0.6
-  cal)
-- **`deployment_and_qg_strategy_implementation_2026_05_13` final close** (4.5 cal, 69/89). (infra 0.8×, ~5 = 4.0 cal)
-- **Archive 11 fully-done plans** (mechanical sweep): `audit_records_pb_1_2_3` + `basefc_validation_flip`
-  - `client_reporting_pnl_attribution_mvp` + `codex_doc_currency_and_consolidation_post_cutover` +
-    `disaster_recovery_circuit_breakers` + `per_agent_worktrees` + `risk_simulations_limits_alerting` +
-    `solana_amm_coverage_expansion` + `solana_perp_dex_adapters` + `solana_venue_naming_reconciliation` +
-    `topology_qgroup_gap_closure` + `tradfi_canonical_futures_contract_hard_required_fields`. Move from `plans/active/`
-    → `plans/archive/`; banner each with "ARCHIVED 2026-05-16 — 100% done per inventory". (refactor 0.4×, ~1 = 0.4 cal)
+- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8):
+  Group A `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) +
+  Group C `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d`
+  (openapi drift contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d`
+  (operator-attentiveness, no-cron decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified).
+  (design 0.6×, ~5 = 3.0 cal — DONE)
+- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require
+  real GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover.
+  (design 0.6×, ~3 = 1.8 cal — DEFERRED-NEXT-SLOT)
+- 🟡 **`promote_workflow_may23_cli_path_2026_05_10`** — DEFERRED-OPERATOR: all remaining are operator-runnable
+  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run).
+  (design 0.6×, ~3 = 1.8 cal — DEFERRED-OPERATOR)
+- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator
+  review + sign-off + master plan row — slot-1 main owns master plan per slot precedence).
+  (research 1.2×, ~1 = 1.2 cal — DEFERRED-OPERATOR)
+- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items
+  owned by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
+- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US
+  softs UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
+- 🔄 **`deployment_and_qg_strategy_implementation_2026_05_13` final close** — PARTIAL: Phase 8.A item 1
+  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial
+  (per-repo coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning +
+  audit-log wire-in + act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
+- ✅ **Archive 11 fully-done plans** — DONE `PM@2d34b45c`. (refactor 0.4×, ~1 = 0.4 cal)
+
+**Slot-8 SWEEP-16 net haul** (~5.4 cal closed clean + ~6.6 cal triaged with blocker class):
+governance_qg_automation_gaps (all 6 groups) + Phase 8.A coverage_targets.yaml + 11-plan archive sweep + Group D
+corrective fix + 6 RESOLVED issues archived (2 sweeps). All deferred items have explicit blocker class
+(DEFERRED-OPERATOR / DEFERRED-NEXT-SLOT / DEFERRED-OTHER-SLOT / BLOCKED-OPERATOR-DECISION) per CLAUDE.md taxonomy.
+
+**Additional uncounted slot-8 work this cycle**: aave-lending-rate-val P1 no-shutdown fix `deployment-service@472f9ca` +
+deployment_events_lifecycle 3 GCS policies applied + service_registry P3 self-doc + gap-2.6.A-E Phase 2.6 cutover
+tooling (5 items) + 2 orchestrator absorb items (workspace_manifest_drift + workflow_template_rollout) +
+vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) +
+pyproject_workspace_audit Findings 1+2 (line-length + fail_under bumps across 4 repos).
 
 ### Slot 1 main — **[SWEEP-16]** orchestrator additions
 
@@ -788,25 +806,43 @@ redesign accepted today.
   the codex docs half. (design 0.6×, ~5 = 3.0 cal)
 - **`defi_simulation_realism_2026_05_10` close** (3.4 cal, 42/47) — push 5 remaining items. (design 0.6×, ~5 = 3.0 cal)
 
-#### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive)
+#### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive) — **CLOSED 2026-05-16**
 
-- **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (2.6 cal, 1/7) — close 6 remaining. (design 0.6×, ~5 = 3.0
-  cal)
-- **`compute_optimization_mock_data_2026_05_13` Ikenna-half** (1.9 cal, 12/20) — close 8 remaining. (design 0.6×, ~3 =
-  1.8 cal)
-- **`promote_workflow_may23_cli_path_2026_05_10`** (1.7 cal, 46/77) — close remaining CLI path items. (design 0.6×, ~3 =
-  1.8 cal)
-- **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** (1.4 cal, 30/33). (research 1.2×, ~1 = 1.2 cal)
-- **`mock_data_pipeline_benchmarking_2026_05_10` close** (0.7 cal, 28/31). (design 0.6×, ~1 = 0.6 cal)
-- **`cross_asset_group_catalogue_audit_2026_05_10` close** (0.8 cal, 39/40) — 1 final item. (research 1.2×, ~0.5 = 0.6
-  cal)
-- **`deployment_and_qg_strategy_implementation_2026_05_13` final close** (4.5 cal, 69/89). (infra 0.8×, ~5 = 4.0 cal)
-- **Archive 11 fully-done plans** (mechanical sweep): `audit_records_pb_1_2_3` + `basefc_validation_flip`
-  - `client_reporting_pnl_attribution_mvp` + `codex_doc_currency_and_consolidation_post_cutover` +
-    `disaster_recovery_circuit_breakers` + `per_agent_worktrees` + `risk_simulations_limits_alerting` +
-    `solana_amm_coverage_expansion` + `solana_perp_dex_adapters` + `solana_venue_naming_reconciliation` +
-    `topology_qgroup_gap_closure` + `tradfi_canonical_futures_contract_hard_required_fields`. Move from `plans/active/`
-    → `plans/archive/`; banner each with "ARCHIVED 2026-05-16 — 100% done per inventory". (refactor 0.4×, ~1 = 0.4 cal)
+- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8):
+  Group A `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) +
+  Group C `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d`
+  (openapi drift contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d`
+  (operator-attentiveness, no-cron decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified).
+  (design 0.6×, ~5 = 3.0 cal — DONE)
+- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require
+  real GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover.
+  (design 0.6×, ~3 = 1.8 cal — DEFERRED-NEXT-SLOT)
+- 🟡 **`promote_workflow_may23_cli_path_2026_05_10`** — DEFERRED-OPERATOR: all remaining are operator-runnable
+  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run).
+  (design 0.6×, ~3 = 1.8 cal — DEFERRED-OPERATOR)
+- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator
+  review + sign-off + master plan row — slot-1 main owns master plan per slot precedence).
+  (research 1.2×, ~1 = 1.2 cal — DEFERRED-OPERATOR)
+- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items
+  owned by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
+- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US
+  softs UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
+- 🔄 **`deployment_and_qg_strategy_implementation_2026_05_13` final close** — PARTIAL: Phase 8.A item 1
+  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial
+  (per-repo coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning +
+  audit-log wire-in + act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
+- ✅ **Archive 11 fully-done plans** — DONE `PM@2d34b45c`. (refactor 0.4×, ~1 = 0.4 cal)
+
+**Slot-8 SWEEP-16 net haul** (~5.4 cal closed clean + ~6.6 cal triaged with blocker class):
+governance_qg_automation_gaps (all 6 groups) + Phase 8.A coverage_targets.yaml + 11-plan archive sweep + Group D
+corrective fix + 6 RESOLVED issues archived (2 sweeps). All deferred items have explicit blocker class
+(DEFERRED-OPERATOR / DEFERRED-NEXT-SLOT / DEFERRED-OTHER-SLOT / BLOCKED-OPERATOR-DECISION) per CLAUDE.md taxonomy.
+
+**Additional uncounted slot-8 work this cycle**: aave-lending-rate-val P1 no-shutdown fix `deployment-service@472f9ca` +
+deployment_events_lifecycle 3 GCS policies applied + service_registry P3 self-doc + gap-2.6.A-E Phase 2.6 cutover
+tooling (5 items) + 2 orchestrator absorb items (workspace_manifest_drift + workflow_template_rollout) +
+vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) +
+pyproject_workspace_audit Findings 1+2 (line-length + fail_under bumps across 4 repos).
 
 ### Slot 1 main — **[SWEEP-16]** orchestrator additions
 
