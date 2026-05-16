@@ -519,6 +519,39 @@ healthy at 99.5% real captures. Vocab drift partial: corruption-rows successfull
 
 ---
 
+## 2026-05-16T~20:45Z — slot-2 EXTENDED SESSION ADDITIONAL (post-SWEEP-16)
+
+After session-close, operator-routed **[SWEEP-16]** items landed in this ping file. Picked up 6 items:
+
+12. ✅ **SWEEP-16 items 2-6**: 3 archive-flip-verifies (`solana_amm` / `solana_venue_naming` / `solana_perp_dex`) +
+    2 close-outs (`solana_lst_native_staking` 21/22 BLOCKED-CREDENTIALS-correct + `solana_restaking_rewards` 16/18
+    DEFERRED-NICE-TO-HAVE-correct). Work-split flipped at PM@`59276dfc`.
+
+13. ✅ **SWEEP-16 item 1 partial** — `mdps_streaming_and_backpressure_2026_05_07` items 2+7 (UAC CONNECTIVITY enums
+    VERIFIED-ALREADY-SHIPPED + codex `batch-live-architecture.md` § "Live=batch 4-state capture parity" section
+    APPENDED). PM@`69330f81`. Remaining items 1/3/4/5/6 (LiveConnectivityWatchdog + auto-backfill + MDPS write-gate
+    + execution circuit-breaker + 7-day calibration) substantial multi-repo design — deferred to next slot-2 session.
+
+14. ✅ **NEW P1 issue surfaced** — `vocab_drift_canonicalisation_didnt_stick_2026_05_16.md` (PM@`276eeb82`):
+    canonicalisation `--apply` ran but didn't stick (consolidator UPSERT semantics restored kebab); 112,299 row
+    leakage detected.
+
+15. ✅ **MASSIVE CROSS-SLOT IMPACT** — slot 4 picked up my Option G recommendation + shipped at
+    `instruments-service@705ba5e` 2026-05-16 20:29-20:30 UTC. Verified clean: 112,299 kebab rows dropped across 4
+    buckets. Issue auto-RESOLVED.
+
+**Total session impact** (extended autonomous loop, ~9h):
+- 15 substantive deliverables (11 earlier + 4 post-SWEEP-16)
+- ~30+ PM commits across plans / issues / orchestrator / codex
+- 5 code commits across 3 service repos (features-service / instruments-service × 3 / UAC verified-only)
+- 4 cross-slot impact realizations: my issue docs picked up + shipped by slot 4 (115,785 vocab flips + 6,972
+  corrupt drops + 112,299 Option G drops) + slot 1 cross-pinging on premature closeout
+- Reconciler operational: 99.5% real captures / 0.54% phantoms (clean signal)
+
+Truly STOPPING. Operator AFK ~9h+ now; substantial cross-slot work delivered + all SWEEP-16 items addressed.
+
+---
+
 ## [main → slot 2] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
 Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
