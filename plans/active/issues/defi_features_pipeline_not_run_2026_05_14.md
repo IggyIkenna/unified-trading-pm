@@ -298,11 +298,12 @@ processed_candles being present, so should be queued behind this VM's completion
       (a) swap to a vendor with historical TVL archive (Glassnode/IntoTheBlock paid tier per External Data Is Always
       Available rule), (b) downgrade macro_sentiment to live-only (drop from batch backfill), (c) cache live TVL
       observations forward (write today's TVL as today's row only). Routed to features-service owner.
-- [ ] [SCRIPT] P1. `lending_rates` feature_group returned 0 rows for 2026-04-15 despite LST bucket having data for
-      that day window. Possibly upstream `raw_tick_data` for date 2026-04-15 is empty (this would be the original
-      "MDPS DeFi 46-day backfill gap" reasserting itself for features-onchain consumption). Cross-link
-      `defi_upstream_46day_full_backfill_2026_05_16.md` — would the 14-day backfill option (C) include 2026-04-15?
-      If not, paper-trade Phase 2 still blocks on data gap regardless of VM infra.
+- [x] [SCRIPT] P1. `lending_rates` 0-rows root-caused + backfill VM launched ✅ **slot-1-main 2026-05-17 00:23 UTC** —
+      `lending-indices-central-element-323112` bucket has data ONLY through 2026-04-14; gap is exactly the B-015
+      window. Launched `mtds-lending-indices-20260517-002305` (e2-standard-4, asia-northeast1-c) for window
+      2026-04-15..19 via existing `launch-mtds-lending-indices-backfill-vm.sh`. Singleton-locked; runs The Graph
+      subgraph queries for Aave V3 + Spark + Compound V3. ETA ~10-15min for 5-day window. Once complete +
+      manifest-verified, re-launch features-onchain VM to consume the now-populated lending-indices upstream.
 - [ ] [DESIGN] P2. Workflow ran only 1 day per VM invocation despite `--end-date 2026-04-19`. Verify intended
       behaviour: should the workflow iterate all days in one VM run, or is the design 1-day-per-VM (slot 3 would
       need to launch 5 VMs)? If 1-day-per-VM by design, document in feature-pipeline runbook.
