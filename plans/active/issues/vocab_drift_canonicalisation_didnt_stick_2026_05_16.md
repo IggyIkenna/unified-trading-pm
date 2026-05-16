@@ -103,7 +103,43 @@ vs I.
 - 3-LENDING.5 reconciler bug-fix (data_type filter now accepts both forms): IS@70074a0
 
 execution:
-  owner: "operator decision on Option G/H/I; ikenna-slot-2 ships the fix once decided"
-  cadence: "one-shot script fix + one-shot --apply re-run"
+  owner: "slot-4-ikenna shipped Option G 2026-05-16"
+  cadence: "one-shot"
   verifier: "per-bucket groupby data_type returns 1 row (snake only); 112,299 row delta gone"
-  last_executed: "Live re-audit 2026-05-16 ~20:18 UTC — drift CONFIRMED still present"
+  last_executed: "2026-05-16 20:29-20:30 UTC — Option G applied; verified clean"
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup of slot 2's filing)
+
+**Option G shipped** at `instruments-service@705ba5e` —
+`scripts/canonicalize_defi_manifest_data_types_option_g_2026_05_16.py`.
+
+Bypasses consolidator UPSERT semantics by rewriting canonical `_index/availability_index.parquet` directly minus
+kebab rows + clearing the per-VM canonicalize shards to 0 rows (schema preserved) so consolidator merge on next
+cycle is a no-op.
+
+**Applied 2026-05-16 20:29-20:30 UTC**:
+
+| Bucket          | Pre canonical | Post canonical | Dropped kebab |
+| --------------- | ------------- | -------------- | ------------- |
+| lending-indices |       64,853  |        39,877  |   **24,976**  |
+| perp-funding    |        6,118  |         2,820  |    **3,298**  |
+| dex-swaps       |       74,452  |        46,281  |   **28,171**  |
+| dex-pools       |      128,536  |        72,682  |   **55,854**  |
+|                 |               |                | **112,299**   |
+
+Plus 8 per-VM canonicalize shards cleared (4 buckets × 1-2 shards). Consolidator merges on next cycle will be
+no-ops for these buckets.
+
+**Verified post-apply via `groupby data_type`** — each bucket shows ONLY canonical snake form:
+
+- `lending-indices`: 39,877 rows, all `lending_indices`
+- `perp-funding`: 2,820 rows, all `perp_funding`
+- `dex-swaps`: 46,281 rows, all `dex_swaps`
+- `dex-pools`: 72,682 rows, all `dex_pools`
+
+Combined with the earlier Option D cleanup for `lst-rates` + `oracle-prices` (IS@`70849b6`, 2026-05-16 20:00 UTC),
+**all 6 originally-affected DeFi canonical manifests now carry canonical-snake `data_type` ONLY**. Downstream
+snake-only queries no longer silently miss legacy kebab rows. Slot 2's premature-closeout finding is now corrected:
+the vocab drift IS fully resolved as of 2026-05-16 20:30 UTC.
+
+Issue closeable at next archive sweep.
