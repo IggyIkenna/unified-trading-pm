@@ -66,5 +66,23 @@ Add 3 scenario playbooks to SIT:
 These can be added to `tests/scenarios/defi_scenarios.py` + wired into `tests/overnight/test_archetype_cascade.py` as
 additional parametrized cells, or as a new `tests/scenarios/test_may23_critical_paths.py`.
 
+## RESOLVED — 2026-05-16 (slot 7 #1)
+
+All 3 scenarios shipped at `system-integration-tests@3872ce2` per
+`work_split_2026_05_15_ikenna.md` slot 7 item 1 (MAY-23 BLOCKER, marked ✅):
+
+| Scenario | Surface |
+| --- | --- |
+| `defi_carry_staked_basis_paper` | `tests/scenarios/defi_scenarios.py` (carry signal + mock fills + manifest captured) |
+| `defi_apd_paper` | same — with explicit not-silently-skipped routing assertion |
+| `defi_paper_to_live_early_gate` | same — promote → VM STARTED + DART day-1 blocking gate |
+| Suite aggregate | `tests/scenarios/test_may23_critical_paths.py` — dedicated suite making the gate dependency explicit (presence + per-gate semantics + suite aggregate) |
+
+`defi_scenarios.py::get_scenarios` extended 5 → 8. 28 framework + may23 tests pass; basedpyright clean. Issue closeable
+at next archive sweep.
+
+Cross-link: `plans/active/work_split_2026_05_15_ikenna.md` § "Slot 7 item 1" ✅. Closeout flip filed by slot-4-ikenna
+during cross-slot deferral sweep 2026-05-16.
+
 **Severity**: BLOCKER for May-23 gate if CI gate is required for paper → live_early promotion. **Owner**: SIT +
 strategy-service team **Estimated effort**: 1-2 AI-days per scenario (3 scenarios = 4-5 AI-days)
