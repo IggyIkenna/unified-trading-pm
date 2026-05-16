@@ -93,12 +93,21 @@ this plan owns the QG/automation half.)
       - **UI-18**: 19 Python service repo `package.json` — banned React/Next/Vite/Webpack deps; **0 violations**
         (no python service has package.json currently).
       Baseline 0 across all 3 rules; any new violation = regression. **MIGRATED FROM:** ST-19, PB-19, UI-18.
-- [ ] [DESIGN] P2. **Group D — Generated-artefact drift gate (UI-13).** Add CI gate (UI-QG or `unified-trading-api` QG)
-      that compares committed `openapi.json` hash to a fresh export, so `lib/types/api-generated.ts` cannot silently rot
-      when an endpoint is added. **MIGRATED FROM:** UI-13.
-- [ ] [DESIGN] P3. **Group E — Operator-attentiveness automation (G-8).** Either spec a cron-scheduled ping that pokes
-      the Model B main agent when ledger backlog exceeds N entries, OR downgrade G-8 from HARD RULE to "best-effort
-      while operator active" + remove the bound from CLAUDE.md. **MIGRATED FROM:** G-8.
+- [x] ✅ [DESIGN] P2. **Group D — Generated-artefact drift gate (UI-13).** Shipped at
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_openapi_drift.py` compares committed
+      `unified-trading-api/openapi.json` SHA256 against UI mirror at
+      `unified-trading-system-ui/lib/registry/openapi.json`. Wired into PM `quality-gates.sh` in **warn-only mode**
+      because current drift exists at landing (UI mirror is stale — `f4a331…` vs `9685cb…`). UI sync slot to close the
+      drift via `bash unified-trading-system-ui/scripts/sync-openapi.sh` (or whichever regen script lives there);
+      then flip the QG step from `--warn-only` to non-warn. **Captures the drift discovery** as
+      a deferred work item below. **MIGRATED FROM:** UI-13.
+- [x] ✅ [DESIGN] P3. **Group E — Operator-attentiveness automation (G-8).** Resolved via the no-cron option: verified
+      2026-05-16 (slot-8) — the "1 min polling cadence" wording lives in `ikenna_orchestrator/AGENT_ONBOARDING.md`
+      (intra-side onboarding doc) as a descriptive line, NOT in `cursor-configs/CLAUDE.md` tagged as HARD RULE. The
+      de-facto behaviour is already "best-effort while operator active" (agent-time-bound, not clock-bound). No
+      CLAUDE.md edit needed; no cron-poker; no automation surface to ship. Closing as DESIGN-DECISION-ONLY: keep
+      best-effort wording in AGENT_ONBOARDING.md; agents continue self-pacing per ScheduleWakeup/loop semantics.
+      **MIGRATED FROM:** G-8.
 - [ ] [DESIGN] P2. **Group F — STALE_OPEN_ALERT meta-alert (AL-21 QG half).** Wire a closed-loop check that
       alerting-service surfaces `STALE_OPEN_ALERT` when a fire→clear pair's clear is overdue. Codified contract goes
       into `alert-code-taxonomy.md` (or new `alert-lifecycle-audit.md`). **MIGRATED FROM:** AL-21.

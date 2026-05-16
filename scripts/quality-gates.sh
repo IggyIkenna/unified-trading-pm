@@ -272,6 +272,20 @@ if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: OpenAPI drift (Group D of governance_qg_automation_gaps) — warn-only mode ──
+# SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group D (UI-13).
+# Compares committed unified-trading-api/openapi.json against UI mirror at
+# unified-trading-system-ui/lib/registry/openapi.json. Drift signals UI types
+# may be out-of-sync with backend.
+# Currently warn-only (drift present at landing); flip to non-warn after UI sync.
+OPENAPI_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_openapi_drift.py"
+if [ -f "$OPENAPI_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running OpenAPI drift check (warn-only)..."
+    python3 "$OPENAPI_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warn-only \
+        && log_success "OpenAPI drift check completed (warn-only)" \
+        || log_warn "OpenAPI drift checker errored (non-blocking)"
+fi
+
 # ── Post-gates: Codex doc freshness (Group B of governance_qg_automation_gaps) — baselined ratchet ──
 # SSOT: CLAUDE.md § "Post-Plan-Phase Codex Audit (HARD RULE)"
 # Origin: plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group B

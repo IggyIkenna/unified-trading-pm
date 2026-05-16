@@ -1,0 +1,64 @@
+---
+title: "openapi.json drift: unified-trading-api vs UI mirror — UI generated types may be stale"
+created: 2026-05-16
+author: slot-8 (surfaced during Group D codification)
+source:
+  - unified-trading-api/openapi.json (sha256 f4a331...)
+  - unified-trading-system-ui/lib/registry/openapi.json (sha256 9685cb...)
+  - new QG step scripts/quality_gates/check_openapi_drift.py (warn-only mode)
+severity: P2 — non-blocking for May-23 (UI types still functional; just may not surface latest endpoints in autocomplete)
+locked_by: live-defi-rollout
+locked_since: 2026-05-16
+---
+
+## What I found
+
+While codifying Group D of `governance_qg_automation_gaps_post_cutover_2026_05_12.md` (the openapi.json drift gate),
+the newly-written check immediately flagged drift between the two committed copies:
+
+- `unified-trading-api/openapi.json` — backend FastAPI export
+- `unified-trading-system-ui/lib/registry/openapi.json` — UI mirror feeding type-generation
+
+```
+API openapi.json:   sha256=f4a3312d8b63f1eadef7ed9497ee6e6a (md5 form)
+UI  openapi mirror: sha256=9685cb97ccc0a9c0339d709610cfed5f (md5 form)
+DRIFT — non-trivial divergence.
+```
+
+Likely cause: the backend has added or modified endpoints since the last UI sync; the UI mirror + generated TS types
+weren't refreshed.
+
+## Why it matters
+
+- UI `lib/types/api-generated.ts` types may not include the latest endpoints / response shapes — IDE autocomplete +
+  type-checking will miss those.
+- Runtime calls still work (types are compile-time only); UI doesn't break.
+- Pre-cutover (May-23): if any UI feature consumes a recently-added endpoint, the type might be `unknown` / `any`
+  and the developer loses the compile-time safety net.
+
+## Recommended decision
+
+UI-owning slot runs the regeneration script:
+
+```bash
+# Probable shape (verify):
+cd unified-trading-system-ui
+bash scripts/sync-openapi.sh        # OR: npm run generate:types
+git add lib/registry/openapi.json lib/types/api-generated.ts
+git commit -m "chore(ui): re-sync openapi.json mirror + regenerate types"
+git push origin HEAD:live-defi-rollout
+```
+
+After the resync, flip the `--warn-only` flag off in `unified-trading-pm/scripts/quality-gates.sh` § "Post-gates:
+OpenAPI drift" so future drift fails QG immediately.
+
+## Cross-references
+
+- Group D codification: `plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md` § Group D
+- Drift checker: `unified-trading-pm/scripts/quality_gates/check_openapi_drift.py`
+
+execution:
+  owner: "unified-trading-system-ui slot (UI repo owns the mirror + regen script)"
+  cadence: "one-shot resync; QG ratchet then prevents future drift"
+  verifier: "python3 unified-trading-pm/scripts/quality_gates/check_openapi_drift.py → exit 0"
+  last_executed: "NEVER (resync pending UI slot pickup)"
