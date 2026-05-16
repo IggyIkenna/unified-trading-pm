@@ -96,9 +96,12 @@ rules at the root level.
       (PM@`1a056988` — `poll_subagent_prompt.md` template + LEDGER polling-cadence section updated to mandate Agent()
       pattern)
 
-- [ ] [DOC] P2. Relocate `pm-repo.md` + `ui.md` + `python-backend.md` from workspace-root `.claude/rules/` into per-repo
-      CLAUDE.md or per-repo `.claude/rules/`. Keep `universal.md`
-  - `workspace-workflow.md` at workspace root.
+- [x] [DOC] P2. Relocate `pm-repo.md` + `ui.md` + `python-backend.md` from workspace-root `.claude/rules/` into
+      per-repo CLAUDE.md or per-repo `.claude/rules/`. **OBSOLETE-DONE 2026-05-16 (slot 7)**: workspace-root
+      `.claude/rules/` no longer exists; the workspace migrated to per-repo `.cursor/rules/` structure (verified at
+      `unified-trading-pm/.cursor/rules/` with organised sub-dirs: architecture, ci-cd, config, core, dependencies,
+      documentation, imports, manifest-dag-sync.mdc, misc, pm-python-standards.mdc, pm-repo-context.mdc, etc.). The
+      relocation goal of P2 was achieved via the broader `.claude/rules/` → `.cursor/rules/` migration.
 
 ---
 
