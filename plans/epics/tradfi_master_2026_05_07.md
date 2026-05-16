@@ -237,12 +237,14 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       source layering wired per MEMORY/CLAUDE.md (Yahoo rolling window + Barchart preload for 2020-01-02 → 2025-11-12);
       17 days were filled manually 2026-05-06 per CLAUDE.md "VIX 15m source layering" closeout. Re-verify the actual gap
       window; this todo may be effectively closed]
-- [ ] [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` to completion. [AUDIT
-      2026-05-07: STALE / DONE? — VM not in current `gcloud running` snapshot so it has either drained or been deleted;
-      verify via manifest check (ES.OPT 18 single-parent fills was the original issue per CLAUDE.md "TradFi MVP
-      partial-bundle"); UAC@198a39a + UAC@121e6c5 wired the cluster-coverage gate so re-runs correctly bundle-validate]
-- [ ] [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July 2024 only. [AUDIT
-      2026-05-07: FRESH — actionable]
+- [ ] 🔴 **BLOCKED-CREDENTIALS** [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM
+      `tradfi-bf-es-opt-adhoc-adhoc-20260505-183009` to completion. [REFRESH 2026-05-16 slot 5: Databento account-locked
+      (`403 auth_account_locked`); VM cannot launch until billing resolved. Combined unblock ask filed in
+      `ikenna_orchestrator/pings/slot_5.md` PM@`6d518a4f`. Once unblocked, UAC@198a39a + UAC@121e6c5 cluster-coverage
+      gate bundle-validates re-runs.]
+- [ ] 🔴 **BLOCKED-CREDENTIALS** [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July
+      2024 only. [REFRESH 2026-05-16 slot 5: Databento account-locked — same blocker as the ES_OPT fill above; same
+      combined operator unblock unblocks both. Cold backfill requires Databento NASDAQ trades endpoint access.]
 - [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to TradFi (legacy disk path differs). [AUDIT 2026-05-07:
       FRESH — actionable; instruments-service `reconcile_phantom_manifest_rows_all.py --asset-group tradfi` per
       CLAUDE.md is multi-asset-group; needs per-tradfi axis verification (TradFi options 11-cluster taxonomy)] [SLOT-6
@@ -269,10 +271,15 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
 
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
 
-- [ ] [AGENT] P1. Per-venue completion %: CME ES, CME MES, CBOE VIX, NYSE ETFs, NASDAQ ETFs. Surface to deployment-ui.
-      [AUDIT 2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
-- [ ] [AGENT] P1. After backfill VMs drain, run data-status rollup; confirm TradFi shards count vs expected. [AUDIT
-      2026-05-07: BLOCKED-ON tradfi_master:5-VM-drain (ETA 2026-05-08)]
+- [ ] 🔴 **BLOCKED-CREDENTIALS** [AGENT] P1. Per-venue completion %: CME ES, CME MES, CBOE VIX, NYSE ETFs, NASDAQ ETFs.
+      Surface to deployment-ui. [REFRESH 2026-05-16 slot 5: original mdps-tradfi 5-VM drain partially completed
+      (2026-05-07 batch-1: 4 VMs exited mid-processing; 2026-05-07 batch-2: 2025 VM ran). Re-running blocked on
+      Databento account-lock — completion % computation depends on full backfill drain across 2021-2025. Latest live
+      data: per `coverage-summary` endpoint 2026-05-15 tradfi=69.71% (98,573/141,401; 27% are weekend/holiday
+      empty_confirmed, legitimate).]
+- [ ] 🔴 **BLOCKED-CREDENTIALS** [AGENT] P1. After backfill VMs drain, run data-status rollup; confirm TradFi shards
+      count vs expected. [REFRESH 2026-05-16 slot 5: same Databento blocker — backfill VMs cannot resume to full drain
+      without unlocked account. Honest-coverage endpoint live data above documents current partial state.]
 
 ### Futures + options expiry schema (Q1+Q2 from `instruments_lifecycle_and_fixtures_endtime_cascade_2026_05_08`)
 
@@ -308,10 +315,12 @@ mass-fail every existing futures row.
       dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules). **COMPLETED
       2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase
       1B propagation; run on GCE VM per operator direction.
-- [ ] [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands in tradfi-master scope
-      first; the workspace-wide hard-schema enforcement (under `hard_schema_enforcement_2026_05_08` plan) ships AFTER to
-      avoid mass-fail during transit. CLAUDE.md "Two teammates" rule applies — coordinate via shared cursor working
-      session if both repos are touched in the same window.
+- [ ] 🟡 **TRACKED-ELSEWHERE** [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands
+      in tradfi-master scope first; the workspace-wide hard-schema enforcement (under
+      `hard_schema_enforcement_2026_05_08` plan) ships AFTER to avoid mass-fail during transit. [REFRESH 2026-05-16 slot
+      5: this item is the tradfi-side mirror of `hard_schema_enforcement_2026_05_08.md`. Coordination is the cross-plan
+      banner discipline, not a code-action. Tradfi schema flip already landed (UAC@dd407ae + IS@db070da). Workspace-wide
+      enforcement tracked in the other plan; flip closes when that plan's Phase 1B propagation lands.]
 - [ ] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
       includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options- chain
       rows have non-null expiration. Manifest queries return ZERO rows where these fields are null for data_type ∈
@@ -399,10 +408,12 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 > contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling + honest gap per CLAUDE.md "VIX 15m
 > source layering") needs `available_at` stamped at the per-source emission timestamp, NOT bar timestamp.
 
-- [ ] [SCRIPT] P0. **Per-adapter `available_at` stamping for TradFi**. Databento (futures + ETFs + options), Polygon,
-      Yahoo Finance VIX 15m fallback, Barchart historical preload. Tick-level: `available_at = tick_ts + scrape_latency`
-      per UAC `SOURCE_PRIORITY`. Bar-level: `available_at = bar_close_boundary` (Phase 0 dependency). Stamp per-cluster
-      for ES.OPT 11-cluster bundles (each cluster has its own close time when its last constituent leg's tick lands).
+- [ ] 🟡 **TRACKED-ELSEWHERE** [SCRIPT] P0. **Per-adapter `available_at` stamping for TradFi**. Databento (futures +
+      ETFs + options), Polygon, Yahoo Finance VIX 15m fallback, Barchart historical preload. [REFRESH 2026-05-16 slot 5:
+      single-owner-umbrella ownership transferred to
+      [`active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
+      per workspace 2026-05-08 codification. Tradfi-specific phases live in that plan. This entry is a pointer; flip
+      closes when the umbrella's TradFi-adapter phases land.]
 - [ ] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
       butterfly, calendar_spread, vix_basis, etc.). Source-of-truth: `features-tradfi-service/calculators/` metadata.
       Coordinator Phase 4.
