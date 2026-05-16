@@ -96,7 +96,15 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
    (research 1.2×, ~2 = 2.4 cal)
 7. **`cross_asset_instruments_service_scope` triage** (carry from slot 9 reassignment) — instruments-service scope
    decision for cross_asset symbols. (research 1.2×, ~2 = 2.4 cal)
-8. **Reserve**: in-stack pickup for new DeFi classification surfacings.
+9. **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A** per
+   `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`. Operator-confirmed 2026-05-16:
+   features-onchain pre-flight gate is over-reaching — refactor to read raw_tick_data DIRECTLY for `vault_share_price`
+   (and other on-chain snapshot data_types). MDPS pre-flight remains gating ONLY for data_types MDPS actually aggregates
+   (`book_snapshot_5` / `dex_swaps` / `fx_rates` / `market_state` / `liquidity`). Slot 2 owns since fresh
+   features-onchain context from today's Helius integration (`MTDS@4cea371`). Once shipped, cross-ping Harsh slot 9 to
+   re-launch features-onchain Smoke B with unique `VM_NAME` — this unblocks B-015 paper-trade gate. (design 0.6×,
+   ~5 = 3.0 cal — could be more depending on per-data_type pre-flight surface)
+10. **Reserve**: in-stack pickup for new DeFi classification surfacings.
 
 ---
 
@@ -151,7 +159,12 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    2.4 cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
    UTA stETH=True (10% haircut) → `lido-bybit` slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
    Eligibility matrix sealed.
-8. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
+9. **🟡 [P1 2026-05-16] Kraken WebSocket implementation (Option 2 — operator-confirmed KEEP IN SCOPE)** — REST coverage
+   shipped 100% (8/8 private + Ticker + 43 tests); WS now in scope for May-23. Focus on coverage gaps WS uniquely solves:
+   (a) sub-200ms fill confirmation for `get_fills`; (b) order-book depth subscription for `get_orderbook`; (c) lower
+   API rate-limit pressure during high-frequency rebalance. Pattern: match the 6 other CeFi perp venues' WS
+   integration style. Slot 3 has full Kraken REST context already. (design 0.6×, ~5 = 3.0 cal)
+10. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
 
 ---
 

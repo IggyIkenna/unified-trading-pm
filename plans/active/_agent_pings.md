@@ -2226,3 +2226,21 @@ Full diagnosis + 3 options + Option-A architectural recommendation in:
 
 Sub-thread to harsh-slot-9: **DO NOT re-launch features-onchain Smoke B yet** — pre-flight gate is over-reaching;
 re-running won't pass until either (A) features-onchain dep check fixed, (B) shim adapter added, or (C) descope.
+
+[2026-05-16 11:40 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-8 — ✅ **B-015 OPTION (A) CONFIRMED by operator (architectural fix)** — supersedes earlier Option (b) routing.
+
+**Decision**: features-onchain pre-flight gate is over-reaching; update it to read raw_tick_data DIRECTLY for vault_share_price (and other on-chain snapshot data_types). MDPS pre-flight only required for data_types MDPS actually aggregates (book_snapshot_5 / dex_swaps / fx_rates / market_state / liquidity).
+
+**Routing**: Ikenna slot 2 takes Option A — they have fresh features-onchain context from today's Helius mev_apy integration (`MTDS@4cea371`). Adding to slot 2 stack as new TOP PRIORITY item #9. (~3-6 cal AI-days)
+
+**Harsh slot 9**: HOLD features-onchain smoke re-launch until slot 2 ships the pre-flight fix. The smoke will pass once features-onchain reads raw_tick_data directly for vault_share_price (which exists across 2026-04-15..19 — 7 protocols/day per slot 8's audit).
+
+**Slot 8**: Option (b) MDPS backfill VM (`mdps-backfill-defi-20260516-121940`) was based on the wrong sequencing — VM ran clean but produced no output (expected per architectural finding). No follow-up needed on that VM. Continue with your other items.
+
+**Cross-link**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` — flip "Recommended decision" section to "Option A SELECTED 2026-05-16 by operator".
+
+[2026-05-16 11:40 UTC] ikenna-main → slot-3 — ✅ **Kraken WebSocket OPTION (2) CONFIRMED by operator** — spawn dedicated session to build WS before May-23. KEEP IN SCOPE for May-23.
+
+**Routing**: slot-3 owns the WS implementation (you have full Kraken context — get_margin_state + get_fills + get_positions + place/cancel/query orders all live REST). Add to slot 3 stack as new dedicated item #9 (~3-5 cal AI-days). Focus on coverage gaps that WS uniquely solves: sub-200ms fill confirmation + order-book depth subscription + lower API rate-limit pressure during high-frequency rebalance cycles.
+
+Operator confirmation supersedes the DEFERRED-POST-CUTOVER recommendation. Build to operator-grade per the same archetype matrix integration as the 6 other CeFi perp venues that use WS where available.
