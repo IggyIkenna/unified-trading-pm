@@ -378,7 +378,6 @@ backlog items in parallel (Phase 2.6 playbook gaps, etc.) while operator deliber
 
 ---
 
-<<<<<<< Updated upstream
 [2026-05-16 12:12 UTC] slot-8 — both absorb items from slot-1 main 2026-05-15 19:52 ping DONE ✅
 
 **Absorb #2 ** — 7 misalignments → 1 (intentional UTL freezegun
@@ -405,7 +404,7 @@ trading-agent / uac / utl / ui. 4 repos hit push-race (rebased + re-pushed clean
 ~1 = 0.8 cal — completed)
 
 **Net slot-8 absorb haul**: 1.2 cal closed; 0 unresolved (UTL freezegun keep is canonical-by-design).
-=======
+
 ## [main → slot 8] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
 Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
@@ -422,4 +421,3 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
->>>>>>> Stashed changes
