@@ -282,8 +282,12 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       options 11-cluster taxonomy (the bundled `options_chain`/`futures_chain` paths). Cross-ref:
       `code_freeze_migrate_backfill_sequencing_2026_05_10.md` DONE-2026-05-11 deferral table +
       `harsh_orchestrator/pings/slot_6.md` 2026-05-11 ~14:25 UTC.]
-- [ ] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction]. [AUDIT 2026-05-07:
-      FRESH — actionable]
+- [x] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction]. [AUDIT 2026-05-07:
+      FRESH — actionable] — ✅ **OPERATIONALLY SHIPPED 2026-05-16 slot 5** (instruments-service@`f203ef3`): one-shot
+      script `scripts/purge_deprecated_etf_manifest_rows_2026_05_16.py` deleted **121 rows** from
+      `market-data-tick-tradfi-{PROJECT_ID}/_index/availability_index.parquet` (CAS via
+      `if_generation_match=1778936472461402`) covering NYSE-Arca ETHE/GBTC/BITO + BATS FBTC/ARKB/FETH per the 2026-05-05
+      MVP scope reduction (NASDAQ IBIT + ETHA remain in-scope; other crypto-trust ETFs dropped). Idempotent.
 - [x] [AGENT] P2. Yahoo Finance manifest cleanup — 2,211 abandoned `empty_confirmed` rows under `venue=YAHOO_FINANCE`.
       [AUDIT 2026-05-07: FRESH — actionable] — **OBSOLETE — NO CLEANUP NEEDED 2026-05-16 slot 5**: Yahoo Finance is NOT
       an abandoned adapter; it is the active rolling-60-day source for VIX 15m (`CBOE:INDEX:VIX-USD`) + `ohlcv_24h`
