@@ -6,7 +6,7 @@ source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
 severity: P2
-status: PARTIAL — read-side DONE (2026-05-14); write-side DEFERRED
+status: RESOLVED — read-side DONE (2026-05-14); write-side DONE (2026-05-16, instruments-service@f799109)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:

@@ -261,11 +261,13 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    C (start-date clipping) + D (deploy-missing end-to-end) all `[x]` deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12.
    No slot 4 work remaining.
 9. ✅ **3 sports classifier issues final verification** — confirm sfi_footystats / player_values / weather close.
-   (refactor 0.4×, ~2 = 0.8 cal) — **VERIFIED 2026-05-16 (slot 4)**: per `work_split_2026_05_14_ikenna.md` line 213-218
-   — sfi_footystats → uac@435abae + utl@79c72bad; player_values → uac@17a0f82 + utl@79c72bad; weather read-side ✅,
-   write-side `**DEFERRED**` per issue doc `sports_classifier_weather_no_fixture_2026_05_13.md` (status: PARTIAL).
-   Parent issue `sports_classifier_extension_followup` ✅ RESOLVED (pm@48db1ae0) cross-linking all 3 child fixes. No slot
-   4 work remaining.
+   (refactor 0.4×, ~2 = 0.8 cal) — **SHIPPED 2026-05-16 (slot 4)**: sfi_footystats → uac@435abae + utl@79c72bad;
+   player_values → uac@17a0f82 + utl@79c72bad; weather read-side ✅ (utl@79c72bad). **Weather write-side closed today**:
+   `instruments-service@f799109` — `_record_weather_empty(reason=...)` helper accepts typed `EmptyConfirmedReason`; the
+   no-fixtures branch (orchestrator.py:6489) now emits `reason="EXPECTED_NO_FIXTURE"` directly so the
+   `legacy_reason_classifier` round-trip no longer needs to second-guess. Closes
+   `sports_classifier_weather_no_fixture_2026_05_13.md` (status flipped to RESOLVED in same logical unit). Parent issue
+   `sports_classifier_extension_followup` ✅ RESOLVED (pm@48db1ae0) cross-linking all 3 child fixes.
 10. **Reserve**: in-stack pickup for any sports classifier ambiguity. — **NOT TRIGGERED 2026-05-16 (slot 4)**: no
     ambiguity surfaced during item 1-9 carry-status verifications.
 
