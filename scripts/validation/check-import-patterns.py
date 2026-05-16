@@ -83,40 +83,52 @@ class ImportChecker:
         self.files_checked = 0
         self.files_with_violations: set[str] = set()
 
+    @staticmethod
+    def _is_exempt(line: str) -> bool:
+        """True if the line carries a per-line qg-deep-import opt-out marker."""
+        return "# noqa: qg-deep-import" in line or "# noqa:qg-deep-import" in line
+
+    @staticmethod
+    def _is_same_package(file_path: Path, package: str) -> bool:
+        """True if the importing file belongs to the same package as the import target."""
+        path_str = str(file_path).replace("\\", "/")
+        return f"/{package}/" in path_str or path_str.startswith(package + "/")
+
+    def _check_line(
+        self, file_path: Path, line_no: int, line: str
+    ) -> ImportViolation | None:
+        """Return a violation for a single line, or None if the line is fine."""
+        if self._is_exempt(line):
+            return None
+        match = DEEP_IMPORT_PATTERN.match(line.strip())
+        if not match:
+            return None
+        package = match.group(1)
+        module_path = match.group(2)
+        if self._is_same_package(file_path, package):
+            return None
+        import_match = FROM_IMPORT_PATTERN.match(line)
+        if not import_match:
+            return None
+        return ImportViolation(
+            str(file_path), line_no, line.rstrip(), package, module_path, import_match.group(3)
+        )
+
     def check_file(self, file_path: Path) -> list[ImportViolation]:
         """Check a single file for import violations."""
-        violations: list[ImportViolation] = []
-
         try:
             with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
-
-            for line_no, line in enumerate(lines, 1):
-                if "# noqa: qg-deep-import" in line or "# noqa:qg-deep-import" in line:
-                    continue
-                match = DEEP_IMPORT_PATTERN.match(line.strip())
-                if match:
-                    package = match.group(1)
-                    module_path = match.group(2)
-
-                    # Skip same-package imports (avoids circular imports)
-                    path_str = str(file_path).replace("\\", "/")
-                    if f"/{package}/" in path_str or path_str.startswith(package + "/"):
-                        continue
-
-                    # Extract what's being imported
-                    import_match = FROM_IMPORT_PATTERN.match(line)
-                    if import_match:
-                        imports = import_match.group(3)
-                        violation = ImportViolation(
-                            str(file_path), line_no, line.rstrip(), package, module_path, imports
-                        )
-                        violations.append(violation)
-
         except (OSError, ValueError) as e:
             if self.verbose:
                 print(f"Error checking {file_path}: {e}")
+            return []
 
+        violations: list[ImportViolation] = []
+        for line_no, line in enumerate(lines, 1):
+            violation = self._check_line(file_path, line_no, line)
+            if violation is not None:
+                violations.append(violation)
         return violations
 
     def check_directory(self, directory: Path) -> None:
