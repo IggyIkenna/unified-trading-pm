@@ -1,0 +1,89 @@
+---
+title: "lending-indices manifest phantom rows block B-015 paper-trade — 65 rows in 2026-04-15..19 window claim captured but parquets absent"
+created: 2026-05-17
+author: ikenna-main (B-015 chain follow-up after VM 6 successful run revealed lending_rates 0-rows)
+source:
+  - "VM features-onchain-defi-20260516-235840 events: lending_rates feature_group COMPLETED with 0 rows for 2026-04-15"
+  - "VM mtds-lending-indices-20260517-002305 events: 31× MANIFEST_FRESHNESS_SKIP with reason=already_captured_by_concurrent_worker for 2026-04-15..19"
+  - "gs://lending-indices-central-element-323112/_index/availability_index.parquet — 65 captured rows for B-015 window but 0 parquets in day=2026-04-15..19/ prefixes"
+locked_by: live-defi-rollout
+locked_since: 2026-05-17
+severity: P1 — blocks features-onchain DeFi backfill (lending_rates 0-rows for B-015 window) → blocks harsh-slot-9 Phase 2 paper-trade rerun
+---
+
+## What I found
+
+The `lending-indices-central-element-323112` bucket's manifest claims 65 captured rows in the B-015 paper-trade window
+(2026-04-15..19) across `(AAVEV3, COMPOUNDV3, SPARK) × (ETHEREUM, ARBITRUM, OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA,
+BSC) × data_type=lending_indices`, but the bucket itself has ZERO parquets for those days. Real data exists through
+2026-04-14; the entire B-015 window is phantom-only.
+
+Evidence:
+```bash
+# Manifest claims captured:
+$ gsutil cp gs://lending-indices-central-element-323112/_index/availability_index.parquet /tmp/m.parquet
+$ python -c "import pandas as pd; df = pd.read_parquet('/tmp/m.parquet'); \
+    print(df[(df['date'].astype(str) >= '2026-04-15') & (df['date'].astype(str) <= '2026-04-19')]['capture_status'].value_counts())"
+captured    65
+
+# Actual bucket layout shows nothing:
+$ for d in 2026-04-15 2026-04-16 2026-04-17 2026-04-18 2026-04-19; do
+    cnt=$(gsutil ls -r "gs://lending-indices-central-element-323112/day=$d/" 2>/dev/null | grep -c "\.parquet")
+    echo "$d: $cnt parquets"
+  done
+2026-04-15: 0 parquets   ← phantom
+2026-04-16: 0 parquets   ← phantom
+2026-04-17: 0 parquets   ← phantom
+2026-04-18: 0 parquets   ← phantom
+2026-04-19: 0 parquets   ← phantom
+```
+
+This is the classic phantom-manifest pattern documented in CLAUDE.md ("Manifest phantom audit … Do NOT write empty
+parquets to mask phantoms"). The `lst_rates_handler` + sister handlers use `ManifestFreshnessCache.is_now_captured()`
+to short-circuit redundant work; when the manifest is lying, the handler skips real backfill work.
+
+## Why it matters
+
+- B-015 features-onchain DeFi backfill (VM `features-onchain-defi-20260516-235840`) ran cleanly, but `lending_rates`
+  feature_group returned 0 rows because upstream `lending-indices` bucket is empty for 2026-04-15..19.
+- harsh-slot-9 Phase 2 paper-trade rerun is gated on features-onchain rows existing.
+- Slot-1-main attempted to backfill via `bash launch-mtds-lending-indices-backfill-vm.sh 2026-04-15 2026-04-19` →
+  VM `mtds-lending-indices-20260517-002305` launched 00:23 UTC, STOPPED 7 sec later with 31× `MANIFEST_FRESHNESS_SKIP`
+  events (every (venue, chain, date) → "already_captured_by_concurrent_worker") + 2× `LENDING_DAY_COMPLETE` → no
+  actual GraphQL queries fired → no writes.
+
+## Why the existing reconciler doesn't cover this
+
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi` reads from
+`gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet`. That manifest holds DeFi tick
+data (vault_share_price, lst_rates, dex_swaps, etc.) but NOT lending_indices — the lending_indices handler writes its
+own manifest at `gs://lending-indices-central-element-323112/_index/availability_index.parquet`. The reconciler script
+needs extension to enumerate per-data-type buckets (lending-indices, dex-pools, eigenlayer-rewards, lst-rates) on top
+of the central DeFi tick bucket.
+
+## Recommended decision
+
+**Option A** (recommended; smallest scope): extend `reconcile_phantom_manifest_rows_all.py` to accept a
+`--manifest-bucket-override <BUCKET>` flag (or auto-resolve per data_type via UAC/bucket_naming) so it can audit the
+lending-indices manifest. Then run with `--unphantom` to flip the 65 phantom rows from `captured` →
+`attempted_failed` (so the handler retries). Then re-launch `mtds-lending-indices-backfill-vm.sh 2026-04-15 2026-04-19`
+to populate.
+
+**Option B**: write a one-shot script `reconcile_phantom_lending_indices_rows.py` that targets only the
+lending-indices manifest. Same flip logic; smaller blast radius if reconciler-script refactor takes more than 1 cycle.
+
+**Option C** (fastest but riskiest): directly modify the manifest via Python — load parquet, filter to phantom rows,
+flip `capture_status` to `attempted_failed`, set `error_reason` to a typed enum value, write back via `to_parquet`.
+Slot-1 has done this kind of operation before during the v8 schema migration. Risk: if there's a manifest-writer
+contract beyond capture_status (e.g. additional sentinel files or BigQuery sync), this may bypass invariants.
+
+**My recommendation**: **B** — write the one-shot now to unblock B-015 today, then file **A** as the follow-up
+generalisation. Owner: slot-3 (manifest reconciliation expertise) or features-service (downstream consumer).
+
+## Cross-references
+
+- `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` § "VM 6 follow-up findings" item #2
+- `plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md` — adjacent issue (the upstream MDPS DeFi gap)
+- `market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:294-326` —
+  `ManifestFreshnessCache` short-circuit logic
+- CLAUDE.md § "Manifest phantom audit"
