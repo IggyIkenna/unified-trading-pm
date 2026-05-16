@@ -95,23 +95,23 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
 5. 🟡 **`cme_polymarket_arb_2026_05_08` close-out** (carry from slot 9 reassignment 14 May) — **STATUS 2026-05-16 by
    slot 2**: Phase 1 ✅ (UAC@`b95d146` EVENT_CONTRACT enum); Phase 2 🟡 BLOCKED-UPSTREAM on
    `predictions_canonical_question_group_polymarket_migration_2026_05_06` Phase 5 (epic 38% done — ECRTY/ECYM/ECGC/
-   ECCL/ECNG/EC6E canonical-question-groups not yet shipped); Phases 3-5 todo (sequential multi-repo plumbing,
-   ~12 cal AI-days brand-new design); codex stub ✅. **DEFERRED — post-May-23 critical path per plan overview**; named
-   successor = this plan itself. 1.8 cal-day budget insufficient for Phases 3-5; status-update flip only. (design
-   0.6×, ~3 = 1.8 cal)
+   ECCL/ECNG/EC6E canonical-question-groups not yet shipped); Phases 3-5 todo (sequential multi-repo plumbing, ~12 cal
+   AI-days brand-new design); codex stub ✅. **DEFERRED — post-May-23 critical path per plan overview**; named successor
+   = this plan itself. 1.8 cal-day budget insufficient for Phases 3-5; status-update flip only. (design 0.6×, ~3 = 1.8
+   cal)
 6. ✅ **`cross_asset_group_catalogue_audit` Phase 6A DeFi half remainder** — **VERIFIED-DONE 2026-05-16 by slot 2**:
    plan body Phase 6A (line 469) is already `[x]` ("Workspace-grep audit post-Phase-1"). Sole open todo (line 554, ICE
    US softs UAC capability_declarations entry) is TradFi-side (slot 5 owns); slot 5's 2026-05-16 audit confirmed ICE
-   softs symbology + instrument_universe canonicalised at `tradfi_roots.py:242-247`. No DeFi-half remainder; issue
-   doc `ice_us_softs_dataset_disambiguation_2026_05_14.md` is operator-decision-pending, not slot-2 territory.
-   (research 1.2×, ~2 = 2.4 cal)
+   softs symbology + instrument_universe canonicalised at `tradfi_roots.py:242-247`. No DeFi-half remainder; issue doc
+   `ice_us_softs_dataset_disambiguation_2026_05_14.md` is operator-decision-pending, not slot-2 territory. (research
+   1.2×, ~2 = 2.4 cal)
 7. 🟡 **`cross_asset_instruments_service_scope` triage** (carry from slot 9 reassignment) — **DONE 2026-05-15 by slot
    2** (per issue doc § "Architecture recommendation"): triage written recommending **Option 1 — extend instruments-
    service with CROSS_ASSET shard**. Status `BLOCKED-OPERATOR-DECISION`; not May-23 blocking (P2; features-service
    handles cross_asset data production). 4-item implementation gate written. Awaiting operator [ack] on Option 1 vs
    alternatives. No further triage work needed. (research 1.2×, ~2 = 2.4 cal)
-9. ✅ **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A — SHIPPED 2026-05-16 by
-   slot 2** at `features-service@550cdaba`. `DependencyChecker` in
+8. ✅ **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A — SHIPPED 2026-05-16 by slot
+   2** at `features-service@550cdaba`. `DependencyChecker` in
    `features-service/features_service/onchain/app/core/dependency_checker.py` now dispatches asset_group-aware:
    - **DEFI**: uses new `UPSTREAM_DEPS_DEFI` ClassVar — MDPS processed_candles becomes `required: False`; adds
      `market-tick-data-service-vault-share-price` bypass probing `raw_tick_data/by_date/day={date}/` with
@@ -120,10 +120,10 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
    - **CEFI/TRADFI**: unchanged (UPSTREAM_DEPS with MDPS `required: True`).
    - **test_mode DEFI**: falls back to default (test buckets are unified per QG plumbing).
    - 7 new unit tests in `TestDefiPreflightBypassesMdps`; 38/38 onchain routing tests green; basedpyright 0 errors.
-   Cross-ping to Harsh slot 9 filed at `plans/active/_agent_pings.md` § 2026-05-16 — Smoke B re-launch unblocked.
-   Issue doc `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` flipped to RESOLVED. (design 0.6×,
-   ~5 = 3.0 cal)
-10. **Reserve**: in-stack pickup for new DeFi classification surfacings.
+     Cross-ping to Harsh slot 9 filed at `plans/active/_agent_pings.md` § 2026-05-16 — Smoke B re-launch unblocked.
+     Issue doc `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` flipped to RESOLVED. (design 0.6×, ~5 =
+     3.0 cal)
+9. **Reserve**: in-stack pickup for new DeFi classification surfacings.
 
 ---
 
@@ -149,15 +149,16 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    public Ticker LIVE.** `execution-service@266d369f1` — Kraken WebSocket client scaffold shipped:
    `KrakenWebSocketClient` subscribes to wss://ws.kraken.com/v2 ticker channel, exponential-backoff reconnect,
    per-symbol stale tracking (last_message_at/update_count), TickerCallback dispatch. 9 new tests. basedpyright clean.
-   Public WS DONE. Private WS streams (own_trades, openOrders) are a follow-up — need GetWebSocketsToken REST call
-   gate; deferred to a successor commit (filed as in-scope, not blocked).
+   Public WS DONE. Private WS streams (own_trades, openOrders) are a follow-up — need GetWebSocketsToken REST call gate;
+   deferred to a successor commit (filed as in-scope, not blocked).
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **FULLY DONE 2026-05-16 (slot-3)**:
-   Drift/Orca/Raydium already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`.
-   Phoenix: shipped `MTDS@696f188` — Phoenix's own REST is dead (DNS unresolved), but on-chain program alive per
-   Jupiter registry. `_collect_phoenix()` queries `lite-api.jup.ag/swap/v1/quote?dexes=Phoenix` for 3 major pairs
-   (SOL/USDC, WBTC/USDC, WBTC/SOL) → per-pair price + price_impact + USD value + context_slot. 3 new tests pass
-   (51 total in file). Phoenix BLOCKED-OPERATOR-DECISION lifted — Jupiter free tier suffices, no operator credential ask.
+   Drift/Orca/Raydium already wired in
+   `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`. Phoenix: shipped
+   `MTDS@696f188` — Phoenix's own REST is dead (DNS unresolved), but on-chain program alive per Jupiter registry.
+   `_collect_phoenix()` queries `lite-api.jup.ag/swap/v1/quote?dexes=Phoenix` for 3 major pairs (SOL/USDC, WBTC/USDC,
+   WBTC/SOL) → per-pair price + price_impact + USD value + context_slot. 3 new tests pass (51 total in file). Phoenix
+   BLOCKED-OPERATOR-DECISION lifted — Jupiter free tier suffices, no operator credential ask.
 3. ✅ **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status.
    (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: snapshot added to issue doc — 3/5 venues fixed (ASTER
    adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
@@ -181,12 +182,12 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    2.4 cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
    UTA stETH=True (10% haircut) → `lido-bybit` slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
    Eligibility matrix sealed.
-9. **🟡 [P1 2026-05-16] Kraken WebSocket implementation (Option 2 — operator-confirmed KEEP IN SCOPE)** — REST coverage
-   shipped 100% (8/8 private + Ticker + 43 tests); WS now in scope for May-23. Focus on coverage gaps WS uniquely solves:
-   (a) sub-200ms fill confirmation for `get_fills`; (b) order-book depth subscription for `get_orderbook`; (c) lower
-   API rate-limit pressure during high-frequency rebalance. Pattern: match the 6 other CeFi perp venues' WS
+8. **🟡 [P1 2026-05-16] Kraken WebSocket implementation (Option 2 — operator-confirmed KEEP IN SCOPE)** — REST coverage
+   shipped 100% (8/8 private + Ticker + 43 tests); WS now in scope for May-23. Focus on coverage gaps WS uniquely
+   solves: (a) sub-200ms fill confirmation for `get_fills`; (b) order-book depth subscription for `get_orderbook`; (c)
+   lower API rate-limit pressure during high-frequency rebalance. Pattern: match the 6 other CeFi perp venues' WS
    integration style. Slot 3 has full Kraken REST context already. (design 0.6×, ~5 = 3.0 cal)
-10. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
+9. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
 
 ---
 
@@ -202,11 +203,11 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    "BLOCKED-UPSTREAM" assumption. **GCP**: all 6 env-tiered buckets already provisioned at unknown earlier date —
    `gs://features-{sports,pred}-{dev,prd,stg}-central-element-323112` (`gcloud storage ls` 2026-05-16 12:58 UTC confirms
    all 6 + legacy flat `features-sports-central-element-323112`). **AWS**: 0/6 env-tiered buckets existed pre-session;
-   slot-4 created all 6 via `aws s3api create-bucket` (region ap-northeast-1; matches code_freeze Phase 2.6.1 region SSOT):
-   `unified-trading-features-{sports,pred}-{prd,stg,dev}-427895769566` (timestamps 2026-05-16 12:59:16-33 UTC). Verified
-   via `aws s3 ls`. Phase 2.6 fleet provisioning (Harsh slot 4) covers the OTHER ~290 buckets; sports + prediction
-   features-* shipped here as a discrete subset per CLAUDE.md "Plans Run To Actual Completion" HARD RULE + ADC admin
-   perms on both clouds. (No PM commit needed — pure infra op; this flip captures the operational evidence.)
+   slot-4 created all 6 via `aws s3api create-bucket` (region ap-northeast-1; matches code_freeze Phase 2.6.1 region
+   SSOT): `unified-trading-features-{sports,pred}-{prd,stg,dev}-427895769566` (timestamps 2026-05-16 12:59:16-33 UTC).
+   Verified via `aws s3 ls`. Phase 2.6 fleet provisioning (Harsh slot 4) covers the OTHER ~290 buckets; sports +
+   prediction features-\* shipped here as a discrete subset per CLAUDE.md "Plans Run To Actual Completion" HARD RULE +
+   ADC admin perms on both clouds. (No PM commit needed — pure infra op; this flip captures the operational evidence.)
 2. ✅ **`expected_unattempted_propagation_gap` P1** — close remaining propagation cascade. (research 1.2×, ~3 = 3.6 cal)
    — **VERIFIED 2026-05-16 (slot 4)**: Gate 1 🟢 FIRED 2026-05-13 per
    `expected_unattempted_propagation_chain_2026_05_12.md` line 773. P1 scope is contained in Phase 3+4+PART C all
@@ -217,36 +218,38 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    reconcile + apply-flips on same-region GCE VM. (infra 0.8×, ~2 = 1.6 cal) — **VERIFIED 2026-05-16 (slot 4)**:
    propagation-chain plan § "Reconciliation baseline" line 706-707 shows **sports phantom count = 0** + **prediction
    phantom count = 0** (post-retired-type-cleanup, dry-run 2026-05-14). Sports retired-data-type migration shipped
-   2026-05-13 via VM `migrate-sports-retired-20260513-160205` flipping 88,779 rows. No apply-flips remainder — nothing to
-   flip. (sports-retired plan line 250 — Phase 1 IS@a0a720e; Phase 2 deployment-api@5e19878.)
+   2026-05-13 via VM `migrate-sports-retired-20260513-160205` flipping 88,779 rows. No apply-flips remainder — nothing
+   to flip. (sports-retired plan line 250 — Phase 1 IS@a0a720e; Phase 2 deployment-api@5e19878.)
 4. ✅ **propagation chain Phase 3.1-3.N + Phase 4 + PART C remainder**. (refactor 0.4×, ~4 = 1.6 cal) — **VERIFIED
    2026-05-16 (slot 4)**: per `expected_unattempted_propagation_chain_2026_05_12.md` lines 765-773 deferred-work table —
    Phase 3.1 (delta_one) ✅ features-service@4a26ae04; Phase 3.2 (calendar) ✅ NO-OP; Phase 3.3 (onchain) ✅ NO-OP;
    Phase 3.4 (volatility) ✅ features-service@4a26ae04; Phase 3.5 (sports) 🟡 DEFERRED with named successor (operator
    triage + Phase 3.5 design call); Phase 3.6 (commodity) ✅ NO-OP; Phase 4 (ml-training + ml-inference) ✅ NO-OP
-   (externally-injected instrument lists); PART C ✅ SUBSTANTIALLY-DONE (mdps@3f70cf6, slot 4 2026-05-12;
-   mdps@f50db4e docstring cleanup, Harsh slot 2 2026-05-13). Gate 1 🟢 FIRED 2026-05-13. Residual Phase 5 Pass 3+4
-   (MDPS/features apply-flips) + Phase 6 validation gate items both `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover.
+   (externally-injected instrument lists); PART C ✅ SUBSTANTIALLY-DONE (mdps@3f70cf6, slot 4 2026-05-12; mdps@f50db4e
+   docstring cleanup, Harsh slot 2 2026-05-13). Gate 1 🟢 FIRED 2026-05-13. Residual Phase 5 Pass 3+4 (MDPS/features
+   apply-flips) + Phase 6 validation gate items both `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover.
 5. ✅ **`api_football_minimal_flattening_removal_2026_05_07` close** (carry from 14 May). (refactor 0.4×, ~3 = 1.2 cal)
-   — **VERIFIED 2026-05-16 (slot 4)**: plan body line 320-321 confirms Phase 5 closeout already landed
-   `PM@36c40a10` (Slot 6 Wave 3 2026-05-13). Phases 1-3.A ✅ shipped (UAC@c76e6d0 + IS@539130f + IS@e1ca983).
-   Phase 3.B/3.C (live-API smoke + EPL forward-poll) + Phase 4 (optional reprocessor) remain `**DEFERRED**` per plan body
-   line 269 — operator-executable post-cutover when API quota allows. Plan body line 267 P2 closeout already `[x]`. No
-   slot 4 work remaining.
-6. ✅ **`expected_universe_v2_design_2026_05_08`** (carry from slot 9 V2) — sports/prediction universe enumerator design.
-   (design 0.6×, ~3 = 1.8 cal) — **VERIFIED DESIGN-COMPLETE 2026-05-16 (slot 4)**: all design phases shipped pre-today:
-   Phase 1 enumerator code + `InstrumentCatalogEntry` + 65 unit tests (`instruments-service@5c5b1f8`); Phase 2 launcher
-   `launch-expected-universe-v2-vm.sh` + watchdog prefix `expected-universe-v2-` (`deployment-service@7313a39`); Phase 3
-   Q1 cefi venue-sharding decision (~7 VMs, one per venue) documented; Phase 5 codex updates landed (3 SSOTs, 2026-05-15).
-   Sports + prediction enumerators ARE part of the 5-per-asset-group v2 dispatch table (sports: per-fixture lifecycle for
-   per-fixture data_types; prediction: per-`canonical_question_group` market lifecycle bundle). Open items are
-   **Phase 4 production launch** (10 VMs × ~3-4h parallel — `BLOCKED-UPSTREAM` on slot-6's Phase 7 G4 v8 schema cutover,
-   per plan body line 26-30 banner + Prerequisites line 318) + 1 Phase 1 integration test (DEFERRED, same blocker) + 1
-   Phase 2 singleton-lock shell-test (DEFERRED, gcloud mock harness). Slot 4 has no further implementer surface here until
-   G4 v8 lands; checkbox ✅ on the design half. (Slot-4 evidence note: `unified-trading-pm@<TBD>` after this flip lands.)
-7. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs `cross_asset_group_catalogue_audit`.
-   (research 1.2×, ~3 = 3.6 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May sub-agent audit already shipped per
-   `work_split_2026_05_14_ikenna.md` line 238-243 — 14 active data_types confirmed (FIXTURES/STANDINGS/INJURIES/
+   — **VERIFIED 2026-05-16 (slot 4)**: plan body line 320-321 confirms Phase 5 closeout already landed `PM@36c40a10`
+   (Slot 6 Wave 3 2026-05-13). Phases 1-3.A ✅ shipped (UAC@c76e6d0 + IS@539130f + IS@e1ca983). Phase 3.B/3.C (live-API
+   smoke + EPL forward-poll) + Phase 4 (optional reprocessor) remain `**DEFERRED**` per plan body line 269 —
+   operator-executable post-cutover when API quota allows. Plan body line 267 P2 closeout already `[x]`. No slot 4 work
+   remaining.
+6. ✅ **`expected_universe_v2_design_2026_05_08`** (carry from slot 9 V2) — sports/prediction universe enumerator
+   design. (design 0.6×, ~3 = 1.8 cal) — **VERIFIED DESIGN-COMPLETE 2026-05-16 (slot 4)**: all design phases shipped
+   pre-today: Phase 1 enumerator code + `InstrumentCatalogEntry` + 65 unit tests (`instruments-service@5c5b1f8`); Phase
+   2 launcher `launch-expected-universe-v2-vm.sh` + watchdog prefix `expected-universe-v2-`
+   (`deployment-service@7313a39`); Phase 3 Q1 cefi venue-sharding decision (~7 VMs, one per venue) documented; Phase 5
+   codex updates landed (3 SSOTs, 2026-05-15). Sports + prediction enumerators ARE part of the 5-per-asset-group v2
+   dispatch table (sports: per-fixture lifecycle for per-fixture data_types; prediction: per-`canonical_question_group`
+   market lifecycle bundle). Open items are **Phase 4 production launch** (10 VMs × ~3-4h parallel — `BLOCKED-UPSTREAM`
+   on slot-6's Phase 7 G4 v8 schema cutover, per plan body line 26-30 banner + Prerequisites line 318) + 1 Phase 1
+   integration test (DEFERRED, same blocker) + 1 Phase 2 singleton-lock shell-test (DEFERRED, gcloud mock harness). Slot
+   4 has no further implementer surface here until G4 v8 lands; checkbox ✅ on the design half. (Slot-4 evidence note:
+   `unified-trading-pm@<TBD>` after this flip lands.)
+7. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs
+   `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May
+   sub-agent audit already shipped per `work_split_2026_05_14_ikenna.md` line 238-243 — 14 active data_types confirmed
+   (FIXTURES/STANDINGS/INJURIES/
    FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/PREDICTIONS/MATCHES/XG/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
    WEATHER/ODDS); 3 retired confirmed (TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS); gaps PLAYER_VALUES +
    SFI_PROGRESSIVE_STATS missing from UAC DATA_TYPE_CAPABILITY_REGISTRY documented in
@@ -258,8 +261,8 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    data_type→league_id→date tree, per-grain count rollups, retired data_type honest coverage, filtered drilldown. Plus
    the cross-repo regression-test net (Vitest + Playwright e2e) per
    `data_status_comprehensive_test_coverage_2026_05_07.md` lines 108-191 — categories A (shard SSOT) + B (UAC parity) +
-   C (start-date clipping) + D (deploy-missing end-to-end) all `[x]` deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12.
-   No slot 4 work remaining.
+   C (start-date clipping) + D (deploy-missing end-to-end) all `[x]`
+   deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12. No slot 4 work remaining.
 9. ✅ **3 sports classifier issues final verification** — confirm sfi_footystats / player_values / weather close.
    (refactor 0.4×, ~2 = 0.8 cal) — **SHIPPED 2026-05-16 (slot 4)**: sfi_footystats → uac@435abae + utl@79c72bad;
    player_values → uac@17a0f82 + utl@79c72bad; weather read-side ✅ (utl@79c72bad). **Weather write-side closed today**:
@@ -280,16 +283,16 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
 `strategy_service_qg_ltv_threshold_violations_2026_05_15` + `mtf_intraday_micro_regime_policy` (carry from slot 9) +
 `sports_retired_data_types_code_cleanup` non-sports half.
 
-1. 🟡 **PARTIAL — internal bug surfaced** **TradFi 1-week test backfill execution** (carry from 14 May #4) — (infra
-   0.8×, ~3 = 2.4 cal). **2026-05-16 chronology**: operator unblocked Databento credential (`databento-api-key` v6
-   vaulted with credits). VM 1 `tradfi-bf-es-adhoc-adhoc-20260516-123140` hit `NamedTemporaryFile` placeholder collision
-   in MTDS `databento_adapter.py:584` — fixed at MTDS@`741eb5d`. VM 2 `tradfi-bf-es-adhoc-adhoc-20260516-130240` got
-   past the temp-file collision (`DatabentoBaseClient warmup successful: API key valid, 29 datasets available`) but
-   failed on a NEW chunk-iteration bug: `dbn_store.to_df(count=50000)` throws
-   `int() argument must be a string, a bytes-like object or a real number, not 'Timestamp'` on every fetch. Likely SDK
-   version mismatch (local 0.78.0 vs uv.lock pinned 0.73.0). Issue doc filed:
-   `plans/active/issues/databento_chunk_iteration_int_timestamp_2026_05_16.md`. P0 — blocks items 1+6+10. Next slot 5
-   turn: pin SDK or switch off path-streaming.
+1. ✅ **TradFi 1-week test backfill execution** (carry from 14 May #4) — (infra 0.8×, ~3 = 2.4 cal). **OPERATIONALLY
+   SHIPPED 2026-05-16**: operator unblocked Databento (`databento-api-key` v6); slot 5 fixed two MTDS bugs in sequence
+   (MTDS@`741eb5d` temp-file placeholder collision + MTDS@`f19ff5f` SDK chunk-iteration `int(Timestamp)` bypass via
+   `pretty_ts=False`); VM `tradfi-bf-es-adhoc-adhoc-20260516-132055` captured **2,263,630 rows across 5 trading days**:
+   2026-05-01=382,926 / 2026-05-04=495,632 / 2026-05-05=348,307 / 2026-05-06=479,893 / 2026-05-07=556,872. Weekends
+   2026-05-02/03 pre-skipped (EXPECTED_WEEKEND). Sample parquet
+   `day=2026-05-01/.../futures_chain/ohlcv_1m/ES/ticks.parquet` (1,528 rows): canonical schema present
+   (instrument_id=`CME:FUTURE:ES-20260619`, lifecycle_phase=active, session=regular, phase=continuous, available_at
+   stamped); OHLC range 7240.75–7411.5; 0 nulls across OHLCV+volume. exit_code=0 + self-shutdown. The two MTDS fixes
+   simultaneously unblock items 6 + 10 + the 5 paused `mdps-tradfi-*` VMs.
 2. **Databento session-stamp backfill — operator approval pending** (≥1-week — slot 5 filed CREDENTIAL APPROVAL REQUEST
    2026-05-15). Script: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py`. **OPERATOR ACTION
    REQUIRED**: ack the request in `pings/slot_5.md` to unblock VM launch. (infra 0.8×, ~3 = 2.4 cal)
@@ -393,15 +396,14 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
    semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 = 4.5
    cal)
-2. ✅ **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration FULLY DONE 2026-05-16
-   (incl. extended-scope multi_timeframe family pickup):
-   (1) strategy decision Option-a `PM@082444d7`; (2a) cross_instrument 20 calcs `features-service@71643dec`;
-   (2b) onchain 19 calcs `features-service@151dffab`; (2c) multi_timeframe 9 calcs + ABC promoted to UTL
-   canonical `features-service@87ba9cf6`; (3) UTL mandatory `__init_subclass__` flip
+2. ✅ **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration FULLY DONE 2026-05-16 (incl.
+   extended-scope multi_timeframe family pickup): (1) strategy decision Option-a `PM@082444d7`; (2a) cross_instrument 20
+   calcs `features-service@71643dec`; (2b) onchain 19 calcs `features-service@151dffab`; (2c) multi_timeframe 9 calcs +
+   ABC promoted to UTL canonical `features-service@87ba9cf6`; (3) UTL mandatory `__init_subclass__` flip
    `unified-trading-library@ccc9b7bf` (eager MRO walk because ABCMeta sets `__abstractmethods__` after
-   `__init_subclass__`); (4) plan-flip cite. **48 concrete calcs migrated** across cross_instrument +
-   onchain + multi_timeframe polars families; `validate_class_attributes()` OK on all; basedpyright clean;
-   UTL test stub updated to assert raises. (refactor 0.4×, ~6 = 2.4 cal)
+   `__init_subclass__`); (4) plan-flip cite. **48 concrete calcs migrated** across cross_instrument + onchain +
+   multi_timeframe polars families; `validate_class_attributes()` OK on all; basedpyright clean; UTL test stub updated
+   to assert raises. (refactor 0.4×, ~6 = 2.4 cal)
 3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services (`PM@3a4afdc5`);
    per-service emission boundary is canonical (vs centralised α). Audit table added at
    `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4 CLOSED**:
@@ -601,19 +603,20 @@ this morning).
 
 ## Pre-cutover sweep — all remaining May-23 cal-days routed (2026-05-16 race-to-finish)
 
-**Source**: operator direction 2026-05-16 — race ahead; allocate ALL remaining May-23 cutover work
-across the 8 Ikenna slots; no operator action needed (all credentials vaulted). Inventory dashboard
-2026-05-16: 78 plans, 55% done, **~290 cal AI-days remaining on May-23-deadline plans**.
+**Source**: operator direction 2026-05-16 — race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna
+slots; no operator action needed (all credentials vaulted). Inventory dashboard 2026-05-16: 78 plans, 55% done, **~290
+cal AI-days remaining on May-23-deadline plans**.
 
-Items annotated **[SWEEP-16]** are NEW additions to each slot's existing stack — additive, take after
-current top-of-stack lands. Slot 1 main continues orchestration + drives the DAI VM relaunch + owns
-the workspace-qg.yml redesign accepted today.
+Items annotated **[SWEEP-16]** are NEW additions to each slot's existing stack — additive, take after current
+top-of-stack lands. Slot 1 main continues orchestration + drives the DAI VM relaunch + owns the workspace-qg.yml
+redesign accepted today.
 
 ### Per-slot SWEEP-16 allocation
 
 #### Slot 2 — **[SWEEP-16]** items (+5 cal absorbed from MTDS-pipeline overflow)
-- **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure
-  design + close. Slot 2 has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal)
+
+- **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure design + close. Slot 2
+  has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal)
 - **`solana_lst_native_staking_adapters_2026_05_14` close** (0.2 cal, 21/22). (refactor 0.4× ~0.2)
 - **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18). (refactor 0.4× ~0.2)
 - **`solana_amm_coverage_expansion_2026_05_13` flip-verify** (already 100% — just confirm). (~0.1 cal)
@@ -621,84 +624,86 @@ the workspace-qg.yml redesign accepted today.
 - **`solana_perp_dex_adapters_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
 
 #### Slot 3 — **[SWEEP-16]** items (+18 cal — MTDS/DEX/perp expansion theme)
-- **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument
-  live-pipeline activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal)
-- **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open
-  todos. (design 0.6×, ~5 = 3.0 cal)
-- **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3
-  context fit. (design 0.6×, ~2 = 1.2 cal)
+
+- **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument live-pipeline
+  activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal)
+- **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open todos. (design 0.6×,
+  ~5 = 3.0 cal)
+- **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3 context fit. (design 0.6×,
+  ~2 = 1.2 cal)
 
 #### Slot 4 — **[SWEEP-16]** items (+6 cal — sports/prediction expansion)
-- **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (12.4 cal, 18/30) — push remaining
-  cross-cutting deliverables. Slot 4 has sports/prediction context. (design 0.6×, ~10 = 6.0 cal)
+
+- **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (12.4 cal, 18/30) — push remaining cross-cutting
+  deliverables. Slot 4 has sports/prediction context. (design 0.6×, ~10 = 6.0 cal)
 
 #### Slot 5 — **[SWEEP-16]** items (+8 cal — TradFi/cross-cutting closure)
-- **`code_freeze_migrate_backfill_sequencing_2026_05_10` Ikenna cross-cutting subset** (112.9 cal
-  total, 37/122) — pull TradFi + cross-asset items; bulk stays Harsh-side cefi_master. (design 0.6×,
-  ~10 = 6.0 cal)
+
+- **`code_freeze_migrate_backfill_sequencing_2026_05_10` Ikenna cross-cutting subset** (112.9 cal total, 37/122) — pull
+  TradFi + cross-asset items; bulk stays Harsh-side cefi_master. (design 0.6×, ~10 = 6.0 cal)
 - **`wave3x_residual_ssots_2026_05_08` close** (0.9 cal, 17/23). (refactor 0.4×, ~2 = 0.8 cal)
 - **`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
 
 #### Slot 6 — **[SWEEP-16]** items (+14 cal — wallet/credentials/manifest/alerting)
-- **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8 remainder** (25.9 cal, 52/87) — push
-  remaining Phase 8.A/8.B/8.D items. (design 0.6×, ~15 = 9.0 cal)
-- **`alerting_service_live_rules_2026_05_07` close** (3.0 cal, 50/65) — push 15 remaining alerting
-  rule items. (design 0.6×, ~5 = 3.0 cal)
-- **`manifest_schema_final_gate_2026_05_09` remainder** (1.1 cal, 26/56) — Phase 8 + 11 + 12
-  carry-overs not in slot 6 #1 (which is Phase 6+7). (design 0.6×, ~2 = 1.2 cal)
+
+- **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8 remainder** (25.9 cal, 52/87) — push remaining Phase
+  8.A/8.B/8.D items. (design 0.6×, ~15 = 9.0 cal)
+- **`alerting_service_live_rules_2026_05_07` close** (3.0 cal, 50/65) — push 15 remaining alerting rule items. (design
+  0.6×, ~5 = 3.0 cal)
+- **`manifest_schema_final_gate_2026_05_09` remainder** (1.1 cal, 26/56) — Phase 8 + 11 + 12 carry-overs not in slot 6
+  #1 (which is Phase 6+7). (design 0.6×, ~2 = 1.2 cal)
 
 #### Slot 7 — **[SWEEP-16]** items (+12 cal — simulation + batch_live_symmetry + defi sim)
-- **`simulation_scenarios_topology_price_shocks_2026_05_09`** (10.9 cal, 34/74) — close 40 open
-  topology shock scenarios. (design 0.6×, ~10 = 6.0 cal)
-- **`batch_live_symmetry_2026_05_10` Tabs 1-2 codex docs** (20.6 cal total, 22/70) — Harsh slot 5
-  was on this; absorb the codex docs half. (design 0.6×, ~5 = 3.0 cal)
-- **`defi_simulation_realism_2026_05_10` close** (3.4 cal, 42/47) — push 5 remaining items.
-  (design 0.6×, ~5 = 3.0 cal)
+
+- **`simulation_scenarios_topology_price_shocks_2026_05_09`** (10.9 cal, 34/74) — close 40 open topology shock
+  scenarios. (design 0.6×, ~10 = 6.0 cal)
+- **`batch_live_symmetry_2026_05_10` Tabs 1-2 codex docs** (20.6 cal total, 22/70) — Harsh slot 5 was on this; absorb
+  the codex docs half. (design 0.6×, ~5 = 3.0 cal)
+- **`defi_simulation_realism_2026_05_10` close** (3.4 cal, 42/47) — push 5 remaining items. (design 0.6×, ~5 = 3.0 cal)
 
 #### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive)
-- **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (2.6 cal, 1/7) — close 6 remaining.
-  (design 0.6×, ~5 = 3.0 cal)
-- **`compute_optimization_mock_data_2026_05_13` Ikenna-half** (1.9 cal, 12/20) — close 8 remaining.
-  (design 0.6×, ~3 = 1.8 cal)
-- **`promote_workflow_may23_cli_path_2026_05_10`** (1.7 cal, 46/77) — close remaining CLI path
-  items. (design 0.6×, ~3 = 1.8 cal)
-- **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** (1.4 cal, 30/33). (research 1.2×,
-  ~1 = 1.2 cal)
+
+- **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (2.6 cal, 1/7) — close 6 remaining. (design 0.6×, ~5 = 3.0
+  cal)
+- **`compute_optimization_mock_data_2026_05_13` Ikenna-half** (1.9 cal, 12/20) — close 8 remaining. (design 0.6×, ~3 =
+  1.8 cal)
+- **`promote_workflow_may23_cli_path_2026_05_10`** (1.7 cal, 46/77) — close remaining CLI path items. (design 0.6×, ~3 =
+  1.8 cal)
+- **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** (1.4 cal, 30/33). (research 1.2×, ~1 = 1.2 cal)
 - **`mock_data_pipeline_benchmarking_2026_05_10` close** (0.7 cal, 28/31). (design 0.6×, ~1 = 0.6 cal)
-- **`cross_asset_group_catalogue_audit_2026_05_10` close** (0.8 cal, 39/40) — 1 final item.
-  (research 1.2×, ~0.5 = 0.6 cal)
-- **`deployment_and_qg_strategy_implementation_2026_05_13` final close** (4.5 cal, 69/89). (infra
-  0.8×, ~5 = 4.0 cal)
+- **`cross_asset_group_catalogue_audit_2026_05_10` close** (0.8 cal, 39/40) — 1 final item. (research 1.2×, ~0.5 = 0.6
+  cal)
+- **`deployment_and_qg_strategy_implementation_2026_05_13` final close** (4.5 cal, 69/89). (infra 0.8×, ~5 = 4.0 cal)
 - **Archive 11 fully-done plans** (mechanical sweep): `audit_records_pb_1_2_3` + `basefc_validation_flip`
-  + `client_reporting_pnl_attribution_mvp` + `codex_doc_currency_and_consolidation_post_cutover` +
-  `disaster_recovery_circuit_breakers` + `per_agent_worktrees` + `risk_simulations_limits_alerting` +
-  `solana_amm_coverage_expansion` + `solana_perp_dex_adapters` + `solana_venue_naming_reconciliation` +
-  `topology_qgroup_gap_closure` + `tradfi_canonical_futures_contract_hard_required_fields`. Move from
-  `plans/active/` → `plans/archive/`; banner each with "ARCHIVED 2026-05-16 — 100% done per inventory".
-  (refactor 0.4×, ~1 = 0.4 cal)
+  - `client_reporting_pnl_attribution_mvp` + `codex_doc_currency_and_consolidation_post_cutover` +
+    `disaster_recovery_circuit_breakers` + `per_agent_worktrees` + `risk_simulations_limits_alerting` +
+    `solana_amm_coverage_expansion` + `solana_perp_dex_adapters` + `solana_venue_naming_reconciliation` +
+    `topology_qgroup_gap_closure` + `tradfi_canonical_futures_contract_hard_required_fields`. Move from `plans/active/`
+    → `plans/archive/`; banner each with "ARCHIVED 2026-05-16 — 100% done per inventory". (refactor 0.4×, ~1 = 0.4 cal)
 
 ### Slot 1 main — **[SWEEP-16]** orchestrator additions
-- **workspace-qg.yml redesign** (~3 cal) — design unified template covering all 5 trigger patterns
-  without dropping LDR triggers; canary against `alerting-service@05dec98`; answer 7 open design
-  questions inline in `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`; roll out
-  tomorrow if canary green. (design 0.6×, ~5 = 3.0 cal)
-- **DAI IRM VM relaunch coordination** — once slot 6 ships DAI IRM source fix, launch
-  `aave-lending-rate-val-` VM again for re-verification. (infra 0.8×, ~0.5 = 0.4 cal)
+
+- **workspace-qg.yml redesign** (~3 cal) — design unified template covering all 5 trigger patterns without dropping LDR
+  triggers; canary against `alerting-service@05dec98`; answer 7 open design questions inline in
+  `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`; roll out tomorrow if canary green. (design 0.6×, ~5 =
+  3.0 cal)
+- **DAI IRM VM relaunch coordination** — once slot 6 ships DAI IRM source fix, launch `aave-lending-rate-val-` VM again
+  for re-verification. (infra 0.8×, ~0.5 = 0.4 cal)
 - **Phase 7.G operator sign-off coordination** (already in slot 1 stack from 15 May).
 - **Daily inventory regenerator** + master plan refresh continued.
 
 ### SWEEP-16 totals
 
-| Slot | Existing 15-May stack | + SWEEP-16 | New total |
-| --- | --- | --- | --- |
-| 2 | ~20 | ~3.7 | ~24 |
-| 3 | ~18 | ~13.2 | ~31 |
-| 4 | ~19 | ~6.0 | ~25 |
-| 5 | ~20 | ~6.9 | ~27 |
-| 6 | ~22 | ~13.2 | ~35 |
-| 7 | ~28 | ~12.0 | ~40 |
-| 8 | ~18 | ~12.8 | ~31 |
-| **Total** | ~145 | **~68** | **~213** |
+| Slot      | Existing 15-May stack | + SWEEP-16 | New total |
+| --------- | --------------------- | ---------- | --------- |
+| 2         | ~20                   | ~3.7       | ~24       |
+| 3         | ~18                   | ~13.2      | ~31       |
+| 4         | ~19                   | ~6.0       | ~25       |
+| 5         | ~20                   | ~6.9       | ~27       |
+| 6         | ~22                   | ~13.2      | ~35       |
+| 7         | ~28                   | ~12.0      | ~40       |
+| 8         | ~18                   | ~12.8      | ~31       |
+| **Total** | ~145                  | **~68**    | **~213**  |
 
 Plus slot 1 main: ~3.4 cal SWEEP-16 (workspace-qg.yml + DAI VM coord).
 
@@ -711,8 +716,8 @@ constrained.
 Slot owners pull from SWEEP-16 items AFTER current top-of-stack item lands. Each SWEEP-16 item starts with the
 **[SWEEP-16]** marker so it's easy to grep. Per-item Half-1+Half-2 flip discipline applies (no batch flips).
 
-Cross-side coordination: Harsh slot 8 still has remaining cefi_master bulk; do NOT duplicate work. Spot-check
-LDR before starting any SWEEP-16 item to see if Harsh has shipped it.
+Cross-side coordination: Harsh slot 8 still has remaining cefi_master bulk; do NOT duplicate work. Spot-check LDR before
+starting any SWEEP-16 item to see if Harsh has shipped it.
 
-**Race-to-finish target**: workspace dashboard at ≤200 cal-days remaining by EOD 2026-05-17 = ~75 cal burn rate
-across both sides per day = comfortable at density-push pace.
+**Race-to-finish target**: workspace dashboard at ≤200 cal-days remaining by EOD 2026-05-17 = ~75 cal burn rate across
+both sides per day = comfortable at density-push pace.
