@@ -847,3 +847,22 @@ binding pre-existing. Operator approval IMPLICIT via vaulting — proceeding wit
 All 6 owned repos now: ahead=0 / behind=0 / dirty=0.
 
 **Plan**: launch session-stamp backfill VM next.
+
+---
+
+## [main → slot 5] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
+
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
+Ikenna slots; no operator action needed (credentials all vaulted).
+
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
+SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+
+Pickup discipline:
+* Items annotated **[SWEEP-16]** in the work-split below your slot section
+* Each item starts with the marker so easy to grep
+* Half-1+Half-2 flip discipline per item (no batch flips)
+* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
+

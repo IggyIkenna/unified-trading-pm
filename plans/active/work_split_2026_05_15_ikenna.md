@@ -598,3 +598,121 @@ Now begin.
 
 **Daily inventory regenerator** (slot 1 main, EOD) should show **workspace cal-days remaining ≤ 370** (down from 518
 this morning).
+
+## Pre-cutover sweep — all remaining May-23 cal-days routed (2026-05-16 race-to-finish)
+
+**Source**: operator direction 2026-05-16 — race ahead; allocate ALL remaining May-23 cutover work
+across the 8 Ikenna slots; no operator action needed (all credentials vaulted). Inventory dashboard
+2026-05-16: 78 plans, 55% done, **~290 cal AI-days remaining on May-23-deadline plans**.
+
+Items annotated **[SWEEP-16]** are NEW additions to each slot's existing stack — additive, take after
+current top-of-stack lands. Slot 1 main continues orchestration + drives the DAI VM relaunch + owns
+the workspace-qg.yml redesign accepted today.
+
+### Per-slot SWEEP-16 allocation
+
+#### Slot 2 — **[SWEEP-16]** items (+5 cal absorbed from MTDS-pipeline overflow)
+- **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure
+  design + close. Slot 2 has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal)
+- **`solana_lst_native_staking_adapters_2026_05_14` close** (0.2 cal, 21/22). (refactor 0.4× ~0.2)
+- **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18). (refactor 0.4× ~0.2)
+- **`solana_amm_coverage_expansion_2026_05_13` flip-verify** (already 100% — just confirm). (~0.1 cal)
+- **`solana_venue_naming_reconciliation_2026_05_14` flip-verify** (100% — confirm). (~0.1 cal)
+- **`solana_perp_dex_adapters_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
+
+#### Slot 3 — **[SWEEP-16]** items (+18 cal — MTDS/DEX/perp expansion theme)
+- **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument
+  live-pipeline activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal)
+- **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open
+  todos. (design 0.6×, ~5 = 3.0 cal)
+- **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3
+  context fit. (design 0.6×, ~2 = 1.2 cal)
+
+#### Slot 4 — **[SWEEP-16]** items (+6 cal — sports/prediction expansion)
+- **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (12.4 cal, 18/30) — push remaining
+  cross-cutting deliverables. Slot 4 has sports/prediction context. (design 0.6×, ~10 = 6.0 cal)
+
+#### Slot 5 — **[SWEEP-16]** items (+8 cal — TradFi/cross-cutting closure)
+- **`code_freeze_migrate_backfill_sequencing_2026_05_10` Ikenna cross-cutting subset** (112.9 cal
+  total, 37/122) — pull TradFi + cross-asset items; bulk stays Harsh-side cefi_master. (design 0.6×,
+  ~10 = 6.0 cal)
+- **`wave3x_residual_ssots_2026_05_08` close** (0.9 cal, 17/23). (refactor 0.4×, ~2 = 0.8 cal)
+- **`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
+
+#### Slot 6 — **[SWEEP-16]** items (+14 cal — wallet/credentials/manifest/alerting)
+- **`api_keys_wallets_accounts_readiness_2026_05_10` Phase 8 remainder** (25.9 cal, 52/87) — push
+  remaining Phase 8.A/8.B/8.D items. (design 0.6×, ~15 = 9.0 cal)
+- **`alerting_service_live_rules_2026_05_07` close** (3.0 cal, 50/65) — push 15 remaining alerting
+  rule items. (design 0.6×, ~5 = 3.0 cal)
+- **`manifest_schema_final_gate_2026_05_09` remainder** (1.1 cal, 26/56) — Phase 8 + 11 + 12
+  carry-overs not in slot 6 #1 (which is Phase 6+7). (design 0.6×, ~2 = 1.2 cal)
+
+#### Slot 7 — **[SWEEP-16]** items (+12 cal — simulation + batch_live_symmetry + defi sim)
+- **`simulation_scenarios_topology_price_shocks_2026_05_09`** (10.9 cal, 34/74) — close 40 open
+  topology shock scenarios. (design 0.6×, ~10 = 6.0 cal)
+- **`batch_live_symmetry_2026_05_10` Tabs 1-2 codex docs** (20.6 cal total, 22/70) — Harsh slot 5
+  was on this; absorb the codex docs half. (design 0.6×, ~5 = 3.0 cal)
+- **`defi_simulation_realism_2026_05_10` close** (3.4 cal, 42/47) — push 5 remaining items.
+  (design 0.6×, ~5 = 3.0 cal)
+
+#### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive)
+- **`governance_qg_automation_gaps_post_cutover_2026_05_12`** (2.6 cal, 1/7) — close 6 remaining.
+  (design 0.6×, ~5 = 3.0 cal)
+- **`compute_optimization_mock_data_2026_05_13` Ikenna-half** (1.9 cal, 12/20) — close 8 remaining.
+  (design 0.6×, ~3 = 1.8 cal)
+- **`promote_workflow_may23_cli_path_2026_05_10`** (1.7 cal, 46/77) — close remaining CLI path
+  items. (design 0.6×, ~3 = 1.8 cal)
+- **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** (1.4 cal, 30/33). (research 1.2×,
+  ~1 = 1.2 cal)
+- **`mock_data_pipeline_benchmarking_2026_05_10` close** (0.7 cal, 28/31). (design 0.6×, ~1 = 0.6 cal)
+- **`cross_asset_group_catalogue_audit_2026_05_10` close** (0.8 cal, 39/40) — 1 final item.
+  (research 1.2×, ~0.5 = 0.6 cal)
+- **`deployment_and_qg_strategy_implementation_2026_05_13` final close** (4.5 cal, 69/89). (infra
+  0.8×, ~5 = 4.0 cal)
+- **Archive 11 fully-done plans** (mechanical sweep): `audit_records_pb_1_2_3` + `basefc_validation_flip`
+  + `client_reporting_pnl_attribution_mvp` + `codex_doc_currency_and_consolidation_post_cutover` +
+  `disaster_recovery_circuit_breakers` + `per_agent_worktrees` + `risk_simulations_limits_alerting` +
+  `solana_amm_coverage_expansion` + `solana_perp_dex_adapters` + `solana_venue_naming_reconciliation` +
+  `topology_qgroup_gap_closure` + `tradfi_canonical_futures_contract_hard_required_fields`. Move from
+  `plans/active/` → `plans/archive/`; banner each with "ARCHIVED 2026-05-16 — 100% done per inventory".
+  (refactor 0.4×, ~1 = 0.4 cal)
+
+### Slot 1 main — **[SWEEP-16]** orchestrator additions
+- **workspace-qg.yml redesign** (~3 cal) — design unified template covering all 5 trigger patterns
+  without dropping LDR triggers; canary against `alerting-service@05dec98`; answer 7 open design
+  questions inline in `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`; roll out
+  tomorrow if canary green. (design 0.6×, ~5 = 3.0 cal)
+- **DAI IRM VM relaunch coordination** — once slot 6 ships DAI IRM source fix, launch
+  `aave-lending-rate-val-` VM again for re-verification. (infra 0.8×, ~0.5 = 0.4 cal)
+- **Phase 7.G operator sign-off coordination** (already in slot 1 stack from 15 May).
+- **Daily inventory regenerator** + master plan refresh continued.
+
+### SWEEP-16 totals
+
+| Slot | Existing 15-May stack | + SWEEP-16 | New total |
+| --- | --- | --- | --- |
+| 2 | ~20 | ~3.7 | ~24 |
+| 3 | ~18 | ~13.2 | ~31 |
+| 4 | ~19 | ~6.0 | ~25 |
+| 5 | ~20 | ~6.9 | ~27 |
+| 6 | ~22 | ~13.2 | ~35 |
+| 7 | ~28 | ~12.0 | ~40 |
+| 8 | ~18 | ~12.8 | ~31 |
+| **Total** | ~145 | **~68** | **~213** |
+
+Plus slot 1 main: ~3.4 cal SWEEP-16 (workspace-qg.yml + DAI VM coord).
+
+**~290 cal AI-days remaining May-23 → distribution gap (~80 cal)** is in `code_freeze_migrate_backfill_sequencing`
+Harsh-side bulk (~100 cal) which stays Harsh-side per cefi_master ownership. Ikenna can absorb if Harsh capacity
+constrained.
+
+### Pickup discipline
+
+Slot owners pull from SWEEP-16 items AFTER current top-of-stack item lands. Each SWEEP-16 item starts with the
+**[SWEEP-16]** marker so it's easy to grep. Per-item Half-1+Half-2 flip discipline applies (no batch flips).
+
+Cross-side coordination: Harsh slot 8 still has remaining cefi_master bulk; do NOT duplicate work. Spot-check
+LDR before starting any SWEEP-16 item to see if Harsh has shipped it.
+
+**Race-to-finish target**: workspace dashboard at ≤200 cal-days remaining by EOD 2026-05-17 = ~75 cal burn rate
+across both sides per day = comfortable at density-push pace.

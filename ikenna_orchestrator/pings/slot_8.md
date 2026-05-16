@@ -378,6 +378,7 @@ backlog items in parallel (Phase 2.6 playbook gaps, etc.) while operator deliber
 
 ---
 
+<<<<<<< Updated upstream
 [2026-05-16 12:12 UTC] slot-8 — both absorb items from slot-1 main 2026-05-15 19:52 ping DONE ✅
 
 **Absorb #2 ** — 7 misalignments → 1 (intentional UTL freezegun
@@ -404,3 +405,21 @@ trading-agent / uac / utl / ui. 4 repos hit push-race (rebased + re-pushed clean
 ~1 = 0.8 cal — completed)
 
 **Net slot-8 absorb haul**: 1.2 cal closed; 0 unresolved (UTL freezegun keep is canonical-by-design).
+=======
+## [main → slot 8] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
+
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
+Ikenna slots; no operator action needed (credentials all vaulted).
+
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
+SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+
+Pickup discipline:
+* Items annotated **[SWEEP-16]** in the work-split below your slot section
+* Each item starts with the marker so easy to grep
+* Half-1+Half-2 flip discipline per item (no batch flips)
+* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
+
+>>>>>>> Stashed changes
