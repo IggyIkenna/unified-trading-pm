@@ -657,3 +657,29 @@ All clean: 0 ahead/0 behind across owned repos. Half-1+Half-2 plan-flip discipli
 **workspace sync fix** — yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) rebased + pushed to LDR as `execution-service@f871ffad7`.
 
 All commits Half-1+Half-2 plan-flip discipline maintained. All 28 repos 0/0 ahead/behind. Operator can review on return; autonomous loop ending — no foreign work pending and no blockers requiring direction.
+
+
+[2026-05-16 post-compaction continuation] slot-7 — turn ship summary:
+
+**UTL QG sub-task #5 (deep UAC imports) — 11/11 lifted to root facade**:
+* UAC root facade re-exports `STRATEGY_FAMILY_REGISTRY`, `StrategyFamily`, `StrategyFamilyId`, `family_for_archetype` + 6 `source_priority` helpers (`emission_latency_ms_for_source`, `get_primary_source`, `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`, `read_with_source_priority`) — `unified-api-contracts@48315a0`. Circular-import unblock: `strategy_family` import moved to after `.canonical.domain` block (BetStatus reachable at the time of strategy_family's internal-arch import).
+* Final 2 UTL lifts: `availability_stamping.py` + `risk/family_aggregator.py` — `unified-trading-library@ca1ccafc`. Issue doc flipped — `PM@56cbd671`.
+
+**UTL QG sub-task #3 (method-size) — SIZE_EXTRA_EXCLUDES went 9 → 1 (manifest_writer.py only)**:
+* `treasury/approval_bus.py::collect_approvals` 100L→39L via `_approval_is_valid` helper — `unified-trading-library@f34af1be`
+* `synthetic/harness.py::_run_stage` 80L→26L + `::run` 59L→24L via `_execute_stage_body` + `_record_failed_stage` — `unified-trading-library@175eaf1d`
+* `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52L→47L + `post_trade/settler.py::settle_trade` 53L→43L (call-site condensation) — `unified-trading-library@5a3a341b`
+* `service_runtime.py::from_env_and_args` 100L→49L via `_resolve_asset_groups` + `_resolve_testnet_mode` + `_validate_gcp_required` — `unified-trading-library@d75ae5d7`
+* `service_cli.py::ServiceCLI.run` 108L→39L via `_prepare_argv` + `_install_synthetic_input_override` + `_wire_runtime_env` — `unified-trading-library@0e0feced`
+* `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65L→39L via `_resolve_polymarket_price` — `unified-trading-library@d5780025`
+* `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65L→43L (docstring trim) — `unified-trading-library@17640cba`
+* `io/streaming_shard_finalizer.py::_route_row_groups` 52L→16L via `_route_chunk_to_writer` + `_close_writers_on_exception` — `unified-trading-library@fe2710bf`
+* QG script SIZE_EXTRA_EXCLUDES trimmed across each refactor — `unified-trading-library@0b79a4b3` + per-commit updates. Only `manifest_writer.py` remains (ManifestWriter public API is docstring-heavy contract documentation; trimming would scatter contract semantics).
+* Test stubs updated for `__init_subclass__` mandatory flip — `unified-trading-library@094804a2` (3 tests in `test_feature_calculator_registry_canonical.py` now wrap class definitions in `pytest.raises`).
+
+**defi_simulation_realism item 1G (UAC QG green)**:
+* 5 parquet_records added to `unified_api_contracts/internal/__init__.py` defi import block — `unified-api-contracts@570cb58`. Fixes 5 `reportUnsupportedDunderAll` errors (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord / PerpFundingRecord were in `__all__` but not imported). Issue doc flipped — `PM@86ef0de7`.
+
+**Net session result**: 8+ UTL refactor commits + 1 UAC facade ship + 1 UAC internal fix + 5 PM plan-flip commits. All shipped Half-1+Half-2 plan-flip discipline. SIZE_EXTRA_EXCLUDES: 9 → 1. Cumulative session ship now 47 method-size methods refactored under the 50-line budget.
+
+Autonomous loop ongoing per HARD RULE DON'T STOP — looking for next non-blocked work item.
