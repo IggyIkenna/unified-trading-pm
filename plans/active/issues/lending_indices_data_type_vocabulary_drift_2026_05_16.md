@@ -193,6 +193,7 @@ execution:
   owner: "operator decision on Option A/B/C; ikenna-slot-2 ships the migration once decided"
   cadence: "one-shot operator decision + one-shot migration"
   verifier: "lending-indices manifest groupby data_type returns 1 row (canonical form only)"
+<<<<<<< Updated upstream
   last_executed: "2026-05-16 19:44 UTC — Option A applied workspace-wide (slot 4 cross-slot pickup + slot 2 parallel script)"
 
 ## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup + slot 2 collision)
@@ -215,3 +216,49 @@ execution:
   them on next cycle (last-writer-wins).
 
 Issue closed. No further action; slot 2's script remains the canonical re-run path if drift re-surfaces.
+=======
+  last_executed: "NEVER (diagnostic only 2026-05-16)"
+
+## Per-bucket Option A safety table (2026-05-16 drill-down audit)
+
+Diagnostic groupby of `df[df.data_type == <kebab>]['chain'].value_counts()` per bucket; all kebab rows were emitted
+in a single batch on 2026-04-13 (legacy one-shot, no active drift):
+
+| Bucket            | Kebab rows | Empty `chain` rows | Top kebab chains                                          | Option A safe? |
+| ----------------- | ---------- | ------------------ | --------------------------------------------------------- | -------------- |
+| `lending-indices` | 24,976     | **0**              | ETHEREUM 4683, ARBITRUM 3122, BASE 3122, OPTIMISM 3122    | ✅ **YES**     |
+| `dex-swaps`       | 28,171     | **0**              | ETHEREUM 7185, ARBITRUM 6467, BASE 4119, AVALANCHE 3466   | ✅ **YES**     |
+| `dex-pools`       | 55,854     | **0**              | ARBITRUM 11556, BASE 9630, AVALANCHE 9630, ETHEREUM 9630  | ✅ **YES**     |
+| `oracle-prices`   | 1,926      | **1,926 (100%)**   | — (all empty)                                             | ❌ **NO** — need A.1 |
+| `perp-funding`    | 3,298      | **3,298 (100%)**   | — (all empty)                                             | ❌ **NO** — need A.1 |
+| `lst-rates`       | 1,560      | **1,560 (100%)**   | — (all empty)                                             | ❌ **NO** — need A.1 |
+
+**Total**:
+- **3 buckets SAFE for Option A** as-shipped: `lending-indices` + `dex-swaps` + `dex-pools` = **108,801 rows** ready
+  for `--apply` (pure column rename; chain already populated).
+- **3 buckets need A.1** (chain derivation from venue): `oracle-prices` + `perp-funding` + `lst-rates` =
+  **6,784 rows** blocked on a separate sub-task to extend the canonicalisation script with per-venue → chain
+  reverse-lookup.
+
+## Recommended operator sequence
+
+1. **Phase A (operator [ack] + slot-2 ADC `--apply`, ~5 min wall-clock)**: run shipped script on the 3 SAFE buckets:
+   ```
+   .venv/bin/python scripts/canonicalize_defi_manifest_data_types_2026_05_16.py \
+       --apply --confirm --bucket lending-indices
+   .venv/bin/python scripts/canonicalize_defi_manifest_data_types_2026_05_16.py \
+       --apply --confirm --bucket dex-swaps
+   .venv/bin/python scripts/canonicalize_defi_manifest_data_types_2026_05_16.py \
+       --apply --confirm --bucket dex-pools
+   ```
+   Closes 108,801 of the ~116,000 row drift; downstream snake-only queries on these 3 buckets are immediately
+   correct.
+
+2. **Phase B (next slot-2 session, ~1h)**: extend script with `--derive-chain-from-venue` mode that takes a
+   `VENUE_TO_CHAIN_MAP` lookup (LIDO/ETHERFI/COINBASE/ROCKETPOOL → ETHEREUM; JITO/MARINADE → SOLANA; etc.) and
+   ship `--apply --derive-chain --bucket lst-rates|oracle-prices|perp-funding`. Then operator runs Phase B for the
+   remaining 6,784 rows.
+
+3. **Phase C (validation)**: re-run audit to confirm zero kebab rows + zero empty-chain rows across all 6 buckets.
+   Optional: add QG STEP scanning canonical manifests for non-snake `data_type` values (workspace ratchet).
+>>>>>>> Stashed changes
