@@ -21,6 +21,8 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 1.2 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Topology Q-group GAP closure — 18 GAPs + 2 WATCH + 1 ISSUE before 2026-05-23
 
 > **Why this plan exists.** The topology Q-doc

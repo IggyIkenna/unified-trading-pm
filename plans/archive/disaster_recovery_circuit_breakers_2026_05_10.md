@@ -33,6 +33,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP
 
 <!-- Banners removed 2026-05-13 (Phase 10.B): all 3 banners were stale —

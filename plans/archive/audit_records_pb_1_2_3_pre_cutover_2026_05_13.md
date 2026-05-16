@@ -12,6 +12,8 @@ estimate_calibrated_ai_days: 1.5
 effective_concurrent_slots: 1
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Audit Records PB-1/2/3 Pre-Cutover
 
 > **Source**: `plans/active/work_split_2026_05_13_harsh.md` § Slot 5. Operator confirmed all 3 items pre-cutover.

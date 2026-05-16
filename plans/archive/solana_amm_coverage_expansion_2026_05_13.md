@@ -15,6 +15,8 @@ estimate_calibrated_ai_days: 3.0
 effective_concurrent_slots: 1
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Solana AMM coverage expansion — Plan C
 
 Successor to the Solana perp DEX adapters (Plan B) that shipped at `instruments-service@5624624` +

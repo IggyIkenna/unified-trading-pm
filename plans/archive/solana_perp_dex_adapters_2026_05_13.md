@@ -15,6 +15,8 @@ estimate_calibrated_ai_days: 4.0
 effective_concurrent_slots: 2-4
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 > **Scope: Successor Plan B from `solana_defi_coverage_gaps_2026_05_13.md`.** Plan A (LST + native staking) and Plan C
 > (AMM coverage) are separate concurrent plans. This plan covers only Solana perp DEX adapters.
 

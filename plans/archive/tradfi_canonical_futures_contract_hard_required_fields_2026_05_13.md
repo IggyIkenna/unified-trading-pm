@@ -23,6 +23,8 @@ related_plans:
   - hard_schema_enforcement_2026_05_08
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 > **🟡 SEQUENCING-GATED — DO NOT LAND PHASE 1 WITHOUT ORCHESTRATOR APPROVAL**
 >
 > Per tradfi_master cross-plan banner (line 240-244): this is a breaking UAC schema change. Must ship SEQUENCED with

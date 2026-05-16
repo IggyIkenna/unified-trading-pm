@@ -26,6 +26,8 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.8
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Codex doc currency stamps + duplicate-doc consolidation (post-cutover)
 
 > **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST*CUTOVER consolidation 2026-05-12.

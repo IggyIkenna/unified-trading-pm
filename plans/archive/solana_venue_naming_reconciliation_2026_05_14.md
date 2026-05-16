@@ -14,6 +14,8 @@ estimate_calibrated_ai_days: 0.9
 effective_concurrent_slots: 1
 ---
 
+> **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
+
 # Solana DeFi venue naming reconciliation — Plan D
 
 Successor to the Solana coverage gap issue doc (`plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`). The
