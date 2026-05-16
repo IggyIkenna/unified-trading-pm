@@ -284,8 +284,17 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       `harsh_orchestrator/pings/slot_6.md` 2026-05-11 ~14:25 UTC.]
 - [ ] [AGENT] P2. Cleanup stale ETF rows: NYSE ETHE 27, GBTC 27, [other ETFs in MVP scope reduction]. [AUDIT 2026-05-07:
       FRESH — actionable]
-- [ ] [AGENT] P2. Yahoo Finance manifest cleanup — 2,211 abandoned `empty_confirmed` rows under `venue=YAHOO_FINANCE`.
-      [AUDIT 2026-05-07: FRESH — actionable]
+- [x] [AGENT] P2. Yahoo Finance manifest cleanup — 2,211 abandoned `empty_confirmed` rows under `venue=YAHOO_FINANCE`.
+      [AUDIT 2026-05-07: FRESH — actionable] — **OBSOLETE — NO CLEANUP NEEDED 2026-05-16 slot 5**: Yahoo Finance is NOT
+      an abandoned adapter; it is the active rolling-60-day source for VIX 15m (`CBOE:INDEX:VIX-USD`) + `ohlcv_24h`
+      daily rates + KRW/USD per UAC SSOTs. References: `unified_api_contracts/registry/expected_coverage.py:96`
+      (`"YAHOO_FINANCE": ["ohlcv_15m", "ohlcv_24h"]`); `registry/market_data_categories.py:209` (active venue);
+      `registry/data_availability.py:95` (`ProviderDataAvailability` entry); MTDS `market_interface/factory.py:153`
+      (factory binding); MTDS `market_interface/adapters/tradfi/yahoo_finance_adapter.py` (live adapter). Current
+      canonical-manifest count is 6,174 YF rows (4,655 empty_confirmed + 1,519 attempted_failed across
+      ohlcv_24h/15m/1m + tbbo + trades). The empty_confirmed rows reflect the rolling-60-day window legitimately not
+      covering older dates — they are honest absence, not noise. The earlier "2,211 abandoned" framing was
+      pre-VIX-source-layering; that framing is stale per the CLAUDE.md "VIX 15m source layering" SSOT.
 
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
 
