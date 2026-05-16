@@ -927,3 +927,45 @@ files in 296s — first segment of 2020-01-02 → 2020-01-30 CME parquets, all w
 - ✅ TradFi 1-week test backfills (ES + MES + IBIT + ETHA): **4.25M rows total** captured cleanly across 4 instruments /
   2 datasets (GLBX.MDP3 + XNAS.ITCH) / 5 trading days each
 - ✅ Plan flips: items 1, 5, 6, 8, 9 (work_split) + lines 209, 237, 244 (tradfi_master epic)
+
+---
+
+## [slot 5] Session-end totals 2026-05-16 ~13:25 UTC (post-credential-unlock + backfill cycle)
+
+**Slot 5 work_split items**: 10/10 closed (1+2+3+5+6+7+8+9+10 ✅, item 11 is reserve).
+
+**TradFi backfills shipped operationally** (post operator Databento unblock + 2 MTDS bug fixes):
+
+| Instrument | VM                                           | Rows captured | Dataset   |
+| ---------- | -------------------------------------------- | ------------: | --------- |
+| ES.FUT     | `tradfi-bf-es-adhoc-adhoc-20260516-132055`   |     2,263,630 | GLBX.MDP3 |
+| MES.FUT    | `tradfi-bf-mes-adhoc-adhoc-20260516-132914`  |     1,854,206 | GLBX.MDP3 |
+| IBIT       | `tradfi-bf-ibit-adhoc-adhoc-20260516-133434` |       102,676 | XNAS.ITCH |
+| ETHA       | `tradfi-bf-etha-adhoc-adhoc-20260516-133930` |        26,888 | XNAS.ITCH |
+| **Total**  |                                              | **4,247,400** |           |
+
+Session-stamp full backfill RUNNING: `canonical-migration-tradfi-sessionstamp-20260516-135034` (2024-01-01..2026-05-14
+scope; ~7000 files / 2830 skipped at last check; walking forward at ~250 files/min).
+
+**MTDS/deployment/instruments code fixes shipped**:
+
+- MTDS@`741eb5d` — `NamedTemporaryFile` placeholder collision (Databento SDK refused overwrite)
+- MTDS@`f19ff5f` — SDK `int(Timestamp)` chunk-iteration bypass via `pretty_ts=False`
+- MTDS@`fdb92ca` — `migrate_tradfi_ohlcv_session_stamps` GCS prefix bug (capped backfill to 1 day)
+- MTDS@`0b373a6` — test mock accepts `pretty_ts=False` kwarg (5 path-streaming tests green)
+- MTDS@`278921a` — UTL contract test renamed `categories` → `asset_groups` (vocab SSOT)
+- deployment-service@`a9cfc38` — session-stamp launcher VM_TASK=canonical-migration
+- deployment-service@`dc441f2` — tarball SKIP for missing repos non-fatal
+- instruments-service@`f203ef3` — purge_deprecated_etf_manifest_rows script + 121 rows purged via CAS
+
+**Plan flips shipped** (across work_split + tradfi_master): items 1+2+3+5+6+7+8+9+10 in work_split; lines
+168/175/209/237/244/266/285/287/305/311 in tradfi_master.
+
+**Outstanding for slot 1 main (notification)**:
+
+- Databento credential is RESOLVED 2026-05-16 (operator vaulted `databento-api-key` v6 with credits). The master plan's
+  "Credential asks — resolved / deferred" table at line 1980 doesn't reflect this; consider adding a row for
+  completeness.
+- Two new issue docs filed today: `databento_chunk_iteration_int_timestamp_2026_05_16.md` (now RESOLVED via the 2 MTDS
+  fixes, can be archived) + `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` (Option A shipped earlier
+  by slot 2).
