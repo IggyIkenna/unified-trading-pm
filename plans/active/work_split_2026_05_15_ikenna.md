@@ -661,16 +661,16 @@ redesign accepted today.
   auto-backfill + circuit-breaker + per-venue heartbeat calibration + codex update). Spans MTDS + MDPS +
   execution-service. Exceeded slot-2 remaining wall-clock today; deferred to next session.
 - ✅ **`solana_lst_native_staking_adapters_2026_05_14` close** (0.2 cal, 21/22) — **VERIFIED 2026-05-16 by slot 2**:
-  sole open item (line 181) is `[BLOCKED-CREDENTIALS — pinging operator]` VM launcher (Phase E). Status correctly
-  set; no further slot-2 action needed; awaiting operator [ack] on credential ask. (refactor 0.4× ~0.2)
-- ✅ **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18) — **VERIFIED 2026-05-16 by slot 2**:
-  2 open items (lines 137, 140) both annotated `[DEFERRED] **NICE-TO-HAVE**` (MTDS wiring for Solayer/Picasso/
-  Cambrian + Picasso/Cambrian program ID verification). Correctly statused as nice-to-haves; not May-23 blocking.
-  (refactor 0.4× ~0.2)
-- ✅ **`solana_amm_coverage_expansion_2026_05_13` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED
-  at `plans/archive/solana_amm_coverage_expansion_2026_05_13.md`. (~0.1 cal)
-- ✅ **`solana_venue_naming_reconciliation_2026_05_14` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan
-  ARCHIVED at `plans/archive/solana_venue_naming_reconciliation_2026_05_14.md`. (~0.1 cal)
+  sole open item (line 181) is `[BLOCKED-CREDENTIALS — pinging operator]` VM launcher (Phase E). Status correctly set;
+  no further slot-2 action needed; awaiting operator [ack] on credential ask. (refactor 0.4× ~0.2)
+- ✅ **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18) — **VERIFIED 2026-05-16 by slot 2**: 2
+  open items (lines 137, 140) both annotated `[DEFERRED] **NICE-TO-HAVE**` (MTDS wiring for Solayer/Picasso/ Cambrian +
+  Picasso/Cambrian program ID verification). Correctly statused as nice-to-haves; not May-23 blocking. (refactor 0.4×
+  ~0.2)
+- ✅ **`solana_amm_coverage_expansion_2026_05_13` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED at
+  `plans/archive/solana_amm_coverage_expansion_2026_05_13.md`. (~0.1 cal)
+- ✅ **`solana_venue_naming_reconciliation_2026_05_14` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED
+  at `plans/archive/solana_venue_naming_reconciliation_2026_05_14.md`. (~0.1 cal)
 - ✅ **`solana_perp_dex_adapters_2026_05_13` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED at
   `plans/archive/solana_perp_dex_adapters_2026_05_13.md`. (~0.1 cal)
 
@@ -719,7 +719,13 @@ redesign accepted today.
 - **`code_freeze_migrate_backfill_sequencing_2026_05_10` Ikenna cross-cutting subset** (112.9 cal total, 37/122) — pull
   TradFi + cross-asset items; bulk stays Harsh-side cefi_master. (design 0.6×, ~10 = 6.0 cal)
 - **`wave3x_residual_ssots_2026_05_08` close** (0.9 cal, 17/23). (refactor 0.4×, ~2 = 0.8 cal)
-- **`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
+- ✅ **`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal) —
+  **VERIFIED 2026-05-16 (slot 5 ikenna)**: plan archived at
+  `plans/archive/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md` per slot owner's flip earlier
+  this cycle. All phases shipped (Phase 3 migration IS@db070da + Phase 4 consumer cascade
+  IS@0c59485/IS@bcb34b9/IS@2be7e4b + Phase 5 QG ratchet PM@32c7ea52). Discovery noted in slot 5 #4 flip:
+  `_write_futures_contracts` write path at IS@2be7e4b exists but isn't producing parquets in prod (no
+  `futures_contracts.parquet` files across 2024-2026 × all venues); follow-up scope for Phase 4.2 owner.
 
 #### Slot 6 — **[SWEEP-16]** items (+14 cal — wallet/credentials/manifest/alerting)
 
