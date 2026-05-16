@@ -1145,6 +1145,34 @@ Plan archives to `plans/archive/defi_catalogue_chain_primitives_2026_05_10.plan.
 audit per CLAUDE.md "Plan Archival HARD RULE" — every `**DEFERRED**` annotation migrated to active home before the
 archive boundary.
 
+## Deferred work after 2026-05-16 — slot-2 session
+
+| Plan item | Status | Reason | Successor / Unblock |
+| --- | --- | --- | --- |
+| **3-LENDING.5** Manifest reconciler one-shot | `🟡 DEFERRED` | Body marks: defer until ManifestFreshnessCache (7J) lands clean full-history re-run | Block (c) of `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block; tracked there |
+| **3K** Update `availability-manifest-and-data-status.md` with Phase 1A bundled data_types | `🟡 OPEN` | Doc update (~3-5 cal AI-day); requires sub-agent fan-out across 26 protocols × per-data-type bundling rules | Next slot-2 session; sub-agent fan-out with shard-atom matrix as reference |
+| **6B** Aave V3 multi-chain backfill (9 non-ETH chains) | `🔴 BLOCKED-OPERATOR` | ≥1 week GCS backfill requires operator [ack] | Filed at slot-2 ping (BACKFILL APPROVAL REQUEST pattern) |
+| **6C** Solana LST historical backfill | `🔴 BLOCKED-OPERATOR` | Pyth Hermes ≥1 year backfill; ping filed 2026-05-14 awaiting [ack] | `pings/slot_2.md` § 2026-05-14 Pyth LST oracle_prices BACKFILL APPROVAL REQUEST |
+| **6D** Lighter/Pacifica/Extended OHLCV backfill | `🟡 PARTIAL` | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779` | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md` |
+| **6E** Vaults + restaking + DEX historical (26 protocols) | `🟡 OPEN` | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack] | Aggregated approval request to filed once protocol selection narrowed |
+| **6F** Manifest phantom audit post-backfill | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race | After slot 6 #1 Phase 7.G operator sign-off lands |
+| **6J** Codex update for Phase 6 backfill coverage | `🟡 OPEN` | Depends on 6A-6F landing | Same successor as 6F |
+| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update | `🟡 OPEN` | Depends on 3K + 6J both landing | Same successor as 3K + 6J |
+| **7I** Master plan Group F items 17-20 status row refresh | `🔴 DEFERRED-SLOT-1` | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence" | Slot 1 main during next daily inventory regenerator cycle |
+| **8A** Paper-trade run all archetypes on Tenderly/devnet | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing | Once Phase 6 hits ≥99% captured per protocol |
+| **8B** Reconciliation rule (live ⊥ batch P&L delta) | `🟡 BLOCKED-UPSTREAM` | Gated on 8A | After 8A reaches paper-trade state |
+| **8C** 7-day continuous live-trade proof | `🔴 BLOCKED-OPERATOR` | Gated on 8A + 8B + Group F items 17/18/21 + Group G item 23 | Master plan critical path; multi-slot coordination |
+
+**Closed-as-stale 2026-05-16 by slot 2** (separate from above — these were flipped during today's audit):
+- **6A** Aave V3 Ethereum silent-zero: duplicate of 3-LENDING.1 already closed-as-stale 2026-05-11/12.
+- **7B** `defi-data-type-taxonomy.md`: shipped via 3J at PM@`291f81d7`; 284-line doc covers Phase 3 MTDS adapters.
+- **7D** `instrument-pipeline-defi.md`: shipped via 2J at PM@`291f81d7`; doc explicitly says "refreshed per Phase 2J audit".
+- **7F** `interface-credential-convention.md`: shipped via Phase 4J + GAP-11 extension; `connector.connect(config=...)` documented.
+- **7G** `defi-execution-overview.md`: shipped via Phase 4K; doc line 111 covers all 13 Phase 4 connectors.
+
+**Net session result**: 5 stale items closed-as-verified; ~13 items remain open with explicit blocked-on / deferred-to
+classifications. Zero silent deferrals; every open item has a named successor or operator-action handoff.
+
 ## DONE-2026-05-15 — slot 2 (ikenna-defi-catalogue-tab) Day 1 (2026-05-12)
 
 Density-push cycle Day 1 closed at high throughput. Phase 1 mostly done; Phase 2 design SSOT shipped; Phase 3 spec

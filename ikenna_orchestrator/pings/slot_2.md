@@ -405,3 +405,39 @@ FF-sync to LDR clean (all 27 owned repos FF-merged, no diverged trees). Working 
   (cme_polymarket_arb) → 6 (cross_asset_group_catalogue_audit Phase 6A DeFi) → 7 (cross_asset_instruments scope).
 
 Half-1+Half-2 plan-flip discipline strictly enforced per CLAUDE.md 2026-05-15 strengthening.
+
+---
+
+## 2026-05-16T~12:25Z — slot-2 session close (cycle complete)
+
+**Items shipped this session** (Half-1+Half-2 discipline strictly enforced):
+
+1. ✅ **Item 9 [TOP PRIORITY] — B-015 Option A architectural fix** at `features-service@550cdaba`. asset_group-aware
+   pre-flight; DEFI uses `UPSTREAM_DEPS_DEFI` with MDPS optional + raw_tick_data direct probes for vault_share_price +
+   lst_rates; CEFI/TRADFI/test_mode unchanged. 7 new tests; 38/38 onchain routing tests green; basedpyright clean.
+   Plan-flip + issue doc RESOLVED section + cross-ping to harsh-slot-9 all shipped in same agent turn at
+   `unified-trading-pm@1dcc0bdd`.
+2. ✅ **Items 4-7 status-update flips** at `unified-trading-pm@4ff8258f`. Item 4 (wave2_polymarket) verified-done;
+   item 5 (cme_polymarket_arb) status BLOCKED-UPSTREAM + post-May-23 (1.8 cal budget insufficient for Phases 3-5);
+   item 6 (cross_asset_group_catalogue_audit Phase 6A DeFi) verified-done (Phase 6A already [x]); item 7
+   (cross_asset_instruments scope) DONE per 2026-05-15 triage, BLOCKED-OPERATOR-DECISION.
+3. ✅ **Item 3 partial — 5 stale-flip items in defi_catalogue plan** at `unified-trading-pm@e4b533d3`. 6A closed-as-
+   stale (duplicate of 3-LENDING.1); 7B/7D/7F/7G verified-done via Phase 2J/3J/4J/4K already-shipped doc updates.
+4. ✅ **Deferred-work scoreboard** appended to `defi_catalogue_chain_primitives_2026_05_10.md` § "Deferred work after
+   2026-05-16 — slot-2 session" — 13 items remaining with explicit blocked-on / deferred-to classifications + named
+   successors. Zero silent deferrals.
+
+**Open items left** (all blocked on operator-action, slot-1, or other slots):
+
+- 3K + 6J + 7E codex updates (multi-protocol fan-out work; next session)
+- 6B/6C/6E backfill VMs (operator [ack] required)
+- 6F manifest phantom audit (blocked-upstream on slot 6 Phase 7.G)
+- 8A/8B/8C paper-trade gate (gated on Phase 6 completion)
+- 7I master plan refresh (slot 1 main territory)
+
+**Outstanding handoffs**:
+
+- ⏳ `harsh-slot-9` to verify B-015 Smoke B re-launch passes pre-flight (ack-back to PM@`1dcc0bdd`).
+- ⏳ Operator [ack] on backfill approval requests (Pyth LST oracle_prices filed 2026-05-14; future Aave multi-chain).
+
+STOPPING.
