@@ -2483,6 +2483,25 @@ deleted attempt 3 idle VM, shipped `ml-training-service@876f0e5` (UTL pin → `>
 paper-trade gate (not the 222259 VM). Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins;
 consider a workspace `pyproject.toml` pin-audit script as a pre-launch checkpoint.
 
+[2026-05-17 00:10 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — ✅ **B-015 chain (c) infra UNBLOCKED, feature
+pipeline has follow-up issues**. VM 6 (`features-onchain-defi-20260516-235840`) ran end-to-end cleanly: STARTED →
+DATA_INGESTION → 2 feature_groups → STOPPED in ~11 sec. `uv pip install` finally succeeded after the install-set
+narrowing fix at `deployment-service@a6f746f` (registered `features_service` in SERVICE_TARBALLS). **But the workload
+only attempted 1 day + 2 feature_groups + wrote 0 rows**:
+- `macro_sentiment` 2026-04-15: REJECTED (LookaheadBiasError — defillama_tvl returns current TVL with no historical
+  timestamping; backfill of this feature is impossible without a different vendor).
+- `lending_rates` 2026-04-15: COMPLETED but 0 rows (likely upstream raw_tick_data gap — ties to the 46-day backfill
+  ask in `defi_upstream_46day_full_backfill_2026_05_16.md`).
+- Workflow STOPPED after 1 day despite `--end-date 2026-04-19` — possibly 1-day-per-VM by design or early-exit.
+
+**Net for harsh-slot-9**: paper-trade Phase 2 will still pre-flight FAIL because no rows landed in
+`gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-1[5-9]/`. Three follow-up items filed under
+`defi_features_pipeline_not_run_2026_05_14.md` § "VM 6 follow-up findings" — slot-3 owns; routed to features-service for
+the macro_sentiment data-source swap + workflow-iteration audit.
+
+**ikenna-main absorbing the infra-level work was the right move** (5 VM attempts in ~2 hours diagnosed +
+ml-training@876f0e5 + deployment-service@a6f746f), but the feature pipeline layer needs slot-3's domain expertise.
+
 [2026-05-17 00:00 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 6 LAUNCHED**
 (`features-onchain-defi-20260516-235840`). Attempt 5 also failed `uv pip install` (e2e-testing→execution-service→
 betfairlightweight chain). Reverted my 9d37deb hack (would have routed features itself to nodeps) and shipped

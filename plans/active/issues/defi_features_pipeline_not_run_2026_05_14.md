@@ -274,12 +274,38 @@ processed_candles being present, so should be queued behind this VM's completion
      available tarballs" which pulled e2e-testing + execution-service transitively. The previous attempt 4 fix
      (NODEPS allowlist) was the wrong direction — would have routed features itself to --no-deps, breaking its
      runtime deps.
-  6. 🟢 **slot-1-main attempt 6 LAUNCHED 2026-05-16 23:58 UTC** — `features-onchain-defi-20260516-235840`
-     (asia-northeast1-c, e2-standard-8, 35.200.23.244, RUNNING). Setup-script fix: `deployment-service@a6f746f`
-     registered `features_service` in both `SERVICE_TARBALLS` (→ `features-service-code` only) AND
-     `MTDS_DEPENDENT_SERVICES` (auto-adds mtds-code). Install set now narrowed from ~24 tarballs to ~5
-     (uac + utl + deployment + features + mtds). e2e-testing + execution-service no longer in the install path.
-     Same 5-day onchain backfill 2026-04-15..19 DEFI ALL.
+  6. ✅ **slot-1-main attempt 6 RAN CLEANLY 2026-05-16 23:58 → 23:01:20 UTC** —
+     `features-onchain-defi-20260516-235840`. Setup-script fix `deployment-service@a6f746f` narrowed install set from
+     ~24 tarballs to 5 (uac + utl + deployment + features + mtds). `uv pip install` SUCCEEDED. Workload ran end-to-end:
+     STARTED → DATA_INGESTION → 2 feature_groups processed → STOPPED. **Infra layer UNBLOCKED.**
+
+     **But the workload only attempted 1 day + 2 feature groups + wrote 0 rows**. Per-feature_group outcomes:
+     - `macro_sentiment` date=2026-04-15: REJECTED with `LookaheadBiasError` ("observation at 2026-04-19 is after
+       as_of=2026-04-16"). The defillama_tvl API returns CURRENT TVL (no historical timestamping), and the
+       LookaheadBiasGate validator catches it. This feature can't be backfilled with the current data source.
+     - `lending_rates` date=2026-04-15: COMPLETED but **0 rows written**. LST bucket only has 2020-12-19+ daily data;
+       likely no rows for that day or no upstream raw_tick_data for 2026-04-15.
+     - Workflow STOPPED after 2 feature_groups + 1 day; despite `--feature-group ALL --start-date 2026-04-15
+       --end-date 2026-04-19`. Likely the workflow iterates 1 day at a time and only invokes feature_groups whose
+       upstream data exists.
+
+     **Follow-up findings (filed as separate items below)** — feature pipeline correctness, NOT B-015 chain (c) infra.
+
+## VM 6 follow-up findings (feature pipeline layer)
+
+- [ ] [DESIGN] P1. `macro_sentiment` feature uses defillama_tvl API which has no historical lookback; current
+      LookaheadBiasGate correctly rejects backfill writes but feature pipeline never gets backfill rows. Options:
+      (a) swap to a vendor with historical TVL archive (Glassnode/IntoTheBlock paid tier per External Data Is Always
+      Available rule), (b) downgrade macro_sentiment to live-only (drop from batch backfill), (c) cache live TVL
+      observations forward (write today's TVL as today's row only). Routed to features-service owner.
+- [ ] [SCRIPT] P1. `lending_rates` feature_group returned 0 rows for 2026-04-15 despite LST bucket having data for
+      that day window. Possibly upstream `raw_tick_data` for date 2026-04-15 is empty (this would be the original
+      "MDPS DeFi 46-day backfill gap" reasserting itself for features-onchain consumption). Cross-link
+      `defi_upstream_46day_full_backfill_2026_05_16.md` — would the 14-day backfill option (C) include 2026-04-15?
+      If not, paper-trade Phase 2 still blocks on data gap regardless of VM infra.
+- [ ] [DESIGN] P2. Workflow ran only 1 day per VM invocation despite `--end-date 2026-04-19`. Verify intended
+      behaviour: should the workflow iterate all days in one VM run, or is the design 1-day-per-VM (slot 3 would
+      need to launch 5 VMs)? If 1-day-per-VM by design, document in feature-pipeline runbook.
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the
