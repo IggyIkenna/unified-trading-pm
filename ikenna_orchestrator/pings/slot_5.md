@@ -990,3 +990,26 @@ migration won't pick it up since it's walking prd. No action needed from slot 5;
 eventually reconcile.
 
 This is not a regression — it's the expected dual-write window until Phase 0d completes.
+
+---
+
+## [slot 5] 2026-05-16 14:29 UTC — Session-stamp full backfill ✅ COMPLETED OPERATIONALLY
+
+VM `canonical-migration-tradfi-sessionstamp-20260516-135034`:
+
+- **migrated: 24,944** historical parquets back-stamped with `session` + `phase` columns
+- **skipped: 12,184** (already had columns from write-time stamping OR no-timestamp surface like VIX index)
+- **errors: 0**
+- elapsed: **5,771s (~96 min)**
+- date range walked: 2024-01-01 → 2026-05-05 (full operator-requested 2.4-year window)
+
+**Spot-check confirmation** (2025-06-13 prd-bucket parquet):
+
+- `raw_tick_data/by_date/day=2025-06-13/asset_group=tradfi/venue=CME/instrument_type=combo/data_type=ohlcv_1m/underlying=BO/ticks.parquet`
+- updated 2026-05-16 13:50:42 UTC (during VM run)
+- schema:
+  `['timestamp', 'rtype', 'publisher_id', 'instrument_id', 'open', 'high', 'low', 'close', 'volume', 'symbol', 'data_type', 'instrument_type', 'underlying', 'session', 'phase']`
+- session=regular ×850 / phase=continuous ×850
+
+Item 2 (Databento session-stamp backfill) + Item 10 (TradFi MarketSession SSOT final close) BOTH operationally shipped.
+Slot 5 day-of-cycle work fully closed.
