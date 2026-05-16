@@ -599,3 +599,31 @@ Phoenix CLOB DEX on Solana may have shut down or migrated.
 (Drift/Orca/Raydium) in slot 3 item 2 already wired. Item 2 effectively complete
 modulo Phoenix.
 
+
+## 2026-05-16T11:27:26Z — Kraken WS subscriptions: rationale for May-23 REST-only
+
+**Status**: Slot 3 item 1 (Kraken live integration) shipped REST 100% (8/8 private + Ticker, 43 tests).
+WS implementation remains open. Operator decision requested below.
+
+**Why REST is sufficient for May-23**:
+- `arbitrage_price_dispersion`: REST polling at 1-5s cadence captures cross-venue dispersion windows
+  (typical opportunity persists 5-30s — Kraken WS sub-100ms latency is over-engineering vs other 6
+  perp venues that also poll REST).
+- `carry_staked_basis` hedge leg: KRAKEN-FUTURES perp funding refreshes every 1h on Kraken (one
+  poll per hour suffices). KrakenFuturesCeFiAdapter scaffold from prior session already wired in
+  factory.
+
+**Why WS would still help (post-cutover)**:
+- Sub-200ms fill confirmation for `get_fills` (currently 1s REST poll).
+- Order-book depth subscription for `get_orderbook` (not yet in REST scaffold).
+- Lower API rate-limit pressure during high-frequency rebalance cycles.
+
+**Operator decision needed**:
+1. Mark Kraken WS as **DEFERRED-POST-CUTOVER** with successor plan
+   `plans/active/kraken_ws_post_cutover_2026_05_16.md`? OR
+2. Spawn dedicated slot/session to implement WS before May-23?
+3. Keep open in slot-3 reserve and ship if cycle bandwidth allows?
+
+**Recommendation**: Option 1 (DEFERRED-POST-CUTOVER). The REST coverage is complete and tested;
+WS is a latency optimization rather than a coverage gap.
+
