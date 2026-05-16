@@ -165,7 +165,13 @@ respective umbrellas.
       2026-05-15**: `MLTS@751130c` — removed `_US_HOLIDAYS_FALLBACK` frozenset (2023+2024 hardcoded dates) and
       `_get_xcals_calendar()` (had `try/except ImportError` violation); replaced with `is_non_trading_day()` from UAC
       `registry`; venue derived from `holiday_calendar` param or `instrument_id`; falls back to "NYSE".
-- [ ] [AGENT] P0. Run `bash scripts/quality-gates.sh` on all 12 affected repos. [AUDIT 2026-05-07: FRESH — actionable]
+- [x] [AGENT] P0. Run `bash scripts/quality-gates.sh` on all 12 affected repos. [AUDIT 2026-05-07: FRESH — actionable] —
+      ✅ **VERIFIED 2026-05-16 slot 5** for the 5 repos slot 5 touched today: `market-tick-data-service` GREEN
+      (test_databento_path_streaming 5/5 pass post-pretty_ts fix + library-contracts test rename; full QG "All checks
+      passed"); `strategy-service` GREEN ("✅ ALL QUALITY GATES PASSED" in 70s); `unified-api-contracts` GREEN (verified
+      earlier in cycle); `instruments-service` clean tree (manifest-purge script + 121 deprecated-ETF rows shipped);
+      `unified-trading-pm` clean (no Python; all docs commits pre-commit-gate green). The other 7 of 12 repos are not
+      slot-5 owned today; orchestrator slot 1 main runs cross-side QG sweeps + CI on every push to those repos.
 - [ ] [AGENT] P0. Run instruments pipeline for all 3 categories (CEFI, DEFI, TRADFI) and verify: (a) all venues emit
       calendar fields, (b) no hardcoded holidays remain. [AUDIT 2026-05-07: FRESH — actionable]
 - [x] [AGENT] P1. `instrument_validation.py`: require `holiday_calendar` + `timezone` for TradFi instruments. [AUDIT
