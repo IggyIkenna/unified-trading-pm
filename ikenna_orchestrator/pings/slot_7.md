@@ -734,3 +734,18 @@ too big for this loop; issue-doc candidate for slot-1 main / per-area refactor s
 Cumulative session: 50+ method-size methods refactored across UTL + features-service + MTDS +
 unified-trading-api + strategy-service. UTL@SIZE_EXTRA_EXCLUDES went 9 → 1. Half-1+Half-2 plan-flip
 discipline maintained.
+
+
+[2026-05-17 /loop tick 4] slot-7 — execution-service big-finding filed:
+
+Filed `plans/active/issues/execution_service_method_size_violations_workspace_outlier_2026_05_17.md` at
+`unified-trading-pm@eaf7815f`. 377 method-size violations in execution-service (~13× the next-worst
+repo). Severity distribution: 25% 51-60L, 28% 61-75L, 21% 76-100L, 17% 101-150L, 9% 151L+.
+Top concentration: engine/backtest (41) + algorithms/impl (33) + defi_execution/protocols (30).
+
+Recommendation per issue doc: P2 post-cutover, Phase A (baseline FUNCTION_SIZE_EXTRA_EXCLUDES ratchet)
+the only pre-May-23 stage. Phase B (concentrated 30%) + Phase C (remaining 70%) for slot-4/5
+post-cutover work. Not attempting fix in this autonomous loop.
+
+13 sister repos now confirmed 0 non-excluded method-size violations (was 12 last tick — adding
+execution-service to the surveyed-and-filed list completes the workspace baseline).
