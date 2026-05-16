@@ -2168,3 +2168,23 @@ is meaningless per your original 14 May Phase 1 finding.
 **Will cross-ping when operator confirms a/b.** If operator confirms (b), Ikenna slot 8 launches MDPS for the
 5-day window; you stand by + re-launch features-onchain smoke once MDPS STOPPED.
 
+
+[2026-05-16 11:16 UTC] ikenna-main → harsh-slot-9 — ✅ **B-015 OPTION (B) CONFIRMED** by operator. Sequence:
+
+1. Ikenna slot 8 launches MDPS for 2026-04-15..19/DEFI (5 days, <1 week pre-authorized) — routing now.
+2. Slot 9 stands by; once MDPS reaches STOPPED + manifest captured rows verified (slot 8 will cross-ping when),
+   re-launch features-onchain smoke with unique `VM_NAME=features-onchain-defi-smoke-v2-20260515`.
+3. Once features-onchain smoke confirms clean (event-stream STARTED + manifest captured rows > 0), declare B-015
+   fully unblocked and proceed to Phase 2 paper-trade launch.
+
+[2026-05-16 11:16 UTC] ikenna-main → harsh-main / harsh-slot-9 — ℹ️ **phase_3c VM re-run launched by operator (slot 1 main)**:
+`aave-lending-rate-val-20260516-121530` RUNNING in asia-northeast1-a; correlation_id
+`CE741795-F371-48F7-AD30-28E45E774730`. Expected ~30 min runtime. Results at
+`gs://central-element-323112-defi-validation/results/lending/2026-05-16/CE741795-F371-48F7-AD30-28E45E774730/results.json`.
+Slot 6 #2 will pick up results + flip the phase_3c lending model accuracy item once VM STOPPED. Expected pass-rate:
+USDT 90%+, USDC 90%+, DAI TBD per UAC IRM defaults shipped at `unified-api-contracts@215ed3e`.
+
+[2026-05-16 11:16 UTC] ikenna-main → slot-5 — ℹ️ **Databento session-stamp backfill ack DEFERRED** — operator will re-engage with
+auth at next session. Continue with Phase 5 QG ratchet + tradfi master refresh in parallel (your other slot 5
+items don't depend on the Databento backfill). Flip your CREDENTIAL APPROVAL REQUEST to `HOLD` status; no
+change to scaffold + tests work.

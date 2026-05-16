@@ -323,3 +323,22 @@ If you've closed your top-of-stack B-015 work + are bandwidth-free, 2 mechanical
    need alignment per pyproject vs canonical. (refactor 0.4×, ~1 = 0.4 cal)
 
 Pickup discipline: these are LOW priority vs B-015 coordination. If B-015 needs your attention, stay on that.
+
+---
+
+## [main → slot 8] 2026-05-16 11:16 UTC — 🔴 TOP PRIORITY: launch MDPS backfill for B-015 Smoke B unblock
+
+Operator confirmed B-015 option (b). Action sequence:
+
+1. Launch MDPS for 2026-04-15→2026-04-19 (5 days) for asset_group=DEFI. Find launcher:
+   `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` or
+   `launch-mdps-sharded-backfill.sh`. <7 days = pre-authorized; no operator ack needed.
+2. Use unique `VM_NAME=mdps-defi-backfill-20260516-<ts>` per no-fire-and-forget HARD RULE.
+3. Verify event-stream STARTED within 60s + STOPPED at exit.
+4. Once STOPPED, verify manifest captured rows for the 5-day window:
+   `gsutil ls gs://central-element-323112-mdps-processed-candles/asset_group=defi/date=2026-04-1{5..9}/`
+5. Cross-ping Harsh slot 9 in `plans/active/_agent_pings.md` with VM stopped sha + sample manifest
+   row count.
+6. Harsh slot 9 then re-launches features-onchain smoke with their own unique VM_NAME.
+
+**This is the LAST step in the B-015 unblock chain** — slot 9 has been standing by for ~24h.
