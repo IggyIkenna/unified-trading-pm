@@ -627,3 +627,13 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+
+[2026-05-16 14:50 UTC] slot-7 — autonomous-loop progress dump:
+
+* basefc fully done (51 calcs across 4 polars families) + UTL mandatory `__init_subclass__` flip + codex doc updated
+* UTL QG sub-task #1 (Cloud SDK routing): client_lifecycle/onboarding.py GCSStateStore → cloud_interface — `unified-trading-library@dfbe83c2`
+* UTL QG sub-task #2 (backward-compat shim): WithdrawalRequestedEvent.idempotency_key removed — `unified-trading-library@4d271d3f`
+* UTL QG sub-task #3 (method-size): **25 of 51 cleared** across 13 commits — protocol/from_env, kill_switch/arm+disarm, freshness/check_and_emit, recovery/evaluate, settler/{settle_trade,accrue_daily_fees,update_hwm_ledger}, withdrawal_reconciler/reconcile, withdrawal_executor/withdraw, withdrawal_audit_log/append, statement_emitter/emit_daily_statement, live_aggregator/{run,cascade_parent_candle,_emit_stale_data}, utc_aligned_scheduler/run_forever, mock_defi_dynamics/simulate_price_movement, resource_profiler/__init__, manifest_writer/{_write_to_gcs,_write_with_generation_match}, harness/run, onboarding/advance. 26 remaining are docstring-heavy methods with correct bodies.
+* SWEEP-16 batch_live_symmetry Tab 1 P2 placeholders shipped — tradfi-batch-live.md + prediction-batch-live.md @ `PM@c4c8972b`. Tab 1 todos now 8/8 closed.
+
+All clean: 0 ahead/0 behind across owned repos. Half-1+Half-2 plan-flip discipline maintained throughout.
