@@ -104,7 +104,29 @@ ikenna-slot-2 — minor cleanup; can pair with Phase B operator session for voca
 - Phantom reconciler (template): `instruments-service/scripts/reconcile_lending_indices_phantom.py` (IS@88d48da)
 
 execution:
-  owner: "operator decision Option D vs E vs F; ikenna-slot-2 ships the chosen migration once decided"
-  cadence: "one-shot decision + one-shot script run"
+  owner: "slot-4-ikenna (cross-slot pickup 2026-05-16); Option D shipped"
+  cadence: "one-shot"
   verifier: "lst-rates groupby venue returns only real venues (LIDO/ETHERFI/COINBASE/etc.); oracle-prices groupby venue returns only real oracle venues"
-  last_executed: "Diagnostic only 2026-05-16"
+  last_executed: "2026-05-16 20:01 UTC — instruments-service@70849b6"
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup)
+
+**Option D shipped** at `instruments-service@70849b6` —
+`scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py`.
+
+Closed-set filter: `data_type∈{kebab, snake}` + `venue==CORRUPT_LITERAL` + `chain==empty`. Filter handles both forms
+because slot-4's earlier canonicalize_defi_manifest_data_types apply (19:44 UTC) had already written snake-form
+duplicates of the corrupt rows to per-VM shards — script drops from canonical manifest AND rewrites the per-VM
+canonicalize shards minus the corrupt rows so consolidator doesn't reintroduce them on next cycle.
+
+Applied 2026-05-16 20:00-20:01 UTC:
+
+- **lst-rates**: 19,740 → **16,620 rows** (dropped 3,120 = 1,560 kebab + 1,560 snake-shard)
+- **oracle-prices**: 10,962 → **7,110 rows** (dropped 3,852 = 1,926 + 1,926)
+
+Verified post-apply via `groupby venue`:
+
+- `lst-rates`: ANKR, COINBASE, ETHENA, ETHERFI, JITO, LIDO, MAKER, MANTLE, MARINADE, PUFFER, ... (all real venues)
+- `oracle-prices`: CHAINLINK, PYTH (the 2 real oracle venues)
+
+Issue closeable at next archive sweep.
