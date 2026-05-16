@@ -172,6 +172,37 @@ To prevent batch and live modes from drifting apart in business logic:
 4. **No mode-specific business logic**: `if mode == "live": ... else: ...` branches inside business logic are forbidden.
    Mode differences belong only at the 4 seams above.
 
+### Live=batch 4-state capture parity
+
+Per CLAUDE.md "Manifest + honest absence" + "Live = batch" rules: live and batch modes BOTH emit the same 4-state
+`capture_status` taxonomy (`captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`) and the same
+17 `EXPECTED_*` reasons + `SOURCE_RETURNED_ZERO` from `EmptyConfirmedReason`. The live mode must NOT introduce a
+hidden 5th state for "WS disconnected → unknown" gap windows — every gap is classified into one of the 4 batch
+states via the `LiveConnectivityWatchdog + CONNECTIVITY_GAP_DETECTED + auto-backfill loop` per
+`plans/active/mdps_streaming_and_backpressure_2026_05_07.md` § "Migrated issue 2026-05-08 — Live data recovery
+self-detect".
+
+The mapping from live-mode events to batch states:
+
+| Live event                                                                           | Resulting manifest state                            | Reason value                                                                |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `CONNECTIVITY_GAP_DETECTED` then **no auto-backfill yet**                            | `attempted_failed`                                  | `UPSTREAM_LIVE_GAP` (typed)                                                 |
+| `CONNECTIVITY_GAP_BACKFILLED` (REST fill succeeded over the gap window)              | `captured`                                          | n/a                                                                         |
+| `CONNECTIVITY_RECOVERED` AND gap window had zero venue activity per secondary source | `empty_confirmed`                                   | `EXPECTED_VENUE_QUIET` (existing EmptyConfirmedReason)                      |
+| Venue planned outage (e.g. exchange maintenance window)                              | `expected_unattempted`                              | one of `EXPECTED_PLANNED_OUTAGE` / `EXPECTED_NO_TRADING_HOURS` (per source) |
+
+The `CONNECTIVITY_*` lifecycle events themselves are operational signals (Redis stream / PubSub) for alerting and
+ops visibility — they are NOT manifest rows. The actual manifest emission flows through the same `record_captured`
+/ `record_empty(reason=...)` / `record_failed(reason=...)` UTL surfaces that batch mode uses. This keeps the
+shard-atom SSOT identical across batch/live (per CLAUDE.md "Shard-granularity SSOT (CRITICAL)") and avoids the
+class of silent-correctness-drift bugs that resulted in the 2026-05-04 phantom-audit incident.
+
+The three UAC `LifecycleEventType` values (`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` /
+`CONNECTIVITY_GAP_BACKFILLED`) are defined in
+`unified-api-contracts/unified_api_contracts/internal/events.py:105-107`. Each event carries
+`{venue, gap_window_start, gap_window_end_or_null, last_received_at, message_count_during_gap}`. The companion
+`AlertCode` taxonomy in `alerting/rules.py` fires per event-type per CLAUDE.md "Alerting" workflow.
+
 ### Batch-only service exemptions
 
 Not all services implement both modes. The following services are explicitly exempt from the batch/live symmetry

@@ -510,10 +510,13 @@ upstream-detected) as complementary signals.
       timeout detection (per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — see calibration todo below);
       `gap_state` tracking via state machine (`HEALTHY → STALE → GAP → RECOVERING → HEALTHY`); emit typed event on every
       transition. Wraps existing per-venue WS adapter without touching adapter internals (decorator pattern).
-- [ ] [SCRIPT] P1. **`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED` event
-      types** added to UAC `LifecycleEventType` (alerting-service plan adds the alerting rule taxonomy; THIS plan adds
-      the event types themselves). Each carries
-      `{venue, gap_window_start, gap_window_end_or_null,     last_received_at, message_count_during_gap}`.
+- [x] [SCRIPT] P1. **`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED` event
+      types** added to UAC `LifecycleEventType`. ✅ **VERIFIED-DONE 2026-05-16 by slot 2** — all 3 enum values already
+      shipped at `unified-api-contracts/unified_api_contracts/internal/events.py:105-107` with full event metadata
+      classes at lines 820-890 (`ConnectivityGapDetectedEvent` / `ConnectivityRecoveredEvent` /
+      `ConnectivityGapBackfilledEvent`). Each event carries
+      `{venue, gap_window_start, gap_window_end_or_null, last_received_at, message_count_during_gap}`. Companion
+      `AlertCode` taxonomy at `alerting/rules.py` already fires per event-type. No further code change needed.
 - [ ] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
       window via REST batch fetch; call `record_captured` per filled row; emit `CONNECTIVITY_GAP_BACKFILLED` when
       complete. Per CLAUDE.md "Manifest concurrency principle" — read-once + per-date freshness check + CAS write.
@@ -528,9 +531,14 @@ upstream-detected) as complementary signals.
 - [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
       `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`.
-- [ ] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-architecture.md` with a "live=batch 4-state
+- [x] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-architecture.md` with a "live=batch 4-state
       capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
-      auto-backfill loop.
+      auto-backfill loop. ✅ **SHIPPED 2026-05-16 by slot 2** at PM@<TBD> — new "Live=batch 4-state capture parity"
+      section appended to § "Anti-drift guards" before § "Batch-only service exemptions". Covers: live mode MUST NOT
+      introduce a 5th state; per-event mapping table (GAP_DETECTED → attempted_failed UPSTREAM_LIVE_GAP / BACKFILLED
+      → captured / RECOVERED+empty → empty_confirmed EXPECTED_VENUE_QUIET / planned outage → expected_unattempted);
+      operational signal vs manifest row distinction; cross-link to UAC event metadata classes (lines 820-890) +
+      alerting taxonomy.
 
 ## Anti-patterns to avoid
 
