@@ -39,4 +39,21 @@ strategy-service will hit this failure.
 4. Re-run QG to confirm green after fix.
 
 execution: owner: slot 4 cadence: one-shot verifier: bash scripts/quality-gates.sh exit code 0 in strategy-service
-last_executed: NEVER
+last_executed: 2026-05-16 (validators ran clean — see Resolution below)
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup)
+
+Re-ran `bash codex/scripts/run-all-validators.sh --asset-group all --failed-only` on rebased PM tab today; all 3
+production-readiness validators return OK:
+
+```text
+OK: All checklists have phase_9_deployable_enhancements (items 38-41)
+OK: workspace-manifest.json valid (schema + topological)
+OK: No broken links in plans/active/*.md
+```
+
+The 2026-05-14 failure was a transient state from in-flight manifest/plan churn during the freeze-gate cycle.
+Subsequent slot 1 main + slot 8 commits (workspace-manifest refresh + plan-archival sweep + cross_asset_group audit
+phase shipments) brought the workspace back to OK. Issue closeable at next archive sweep.
+
+Cross-link: PM workspace-validators clean as of `unified-trading-pm@HEAD` 2026-05-16 20:08 UTC.
