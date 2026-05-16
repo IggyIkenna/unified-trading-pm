@@ -1,5 +1,23 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-16 11:37 UTC — BOOT ACK (day-2 of 15 May split)
+
+**Status**: 🟢 SLOT 4 ACTIVE — picking up 15 May stack, day 2.
+
+LDR FF-sync complete across all 27 owned repos. Yesterday's session already closed ~9/9 items on slot 4's 14 May stack;
+15 May items overlap heavily with carry-status verifications. Starting top-down on today's stack:
+
+1. Item 1 — 6-bucket provisioning re-evaluation (carry from 14 May DEFERRED #5). Read
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 status (slot 8 reported BLOCKED-UPSTREAM 15 May 18:59 UTC,
+   window 05-15→05-19) → ship if Phase 2.6 unblocked, else flip with named successor.
+2. Item 6 — `expected_universe_v2_design_2026_05_08` (carry from slot 9 V2 reassignment). Actual design work.
+
+Items 2-5 + 7-9 will be carry-status flip verifications (most shipped 14 May per slot_4 14 May session log).
+
+Half-1+Half-2 discipline acknowledged; will pair each code commit with `docs(plans):` flip in same agent turn.
+
+---
+
 ## [slot 4 → main] 2026-05-14 13:23 UTC — BOOT ACK
 
 **Status**: 🟢 SLOT 4 ACTIVE — continuing 2026-05-14 session
