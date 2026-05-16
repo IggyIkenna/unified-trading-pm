@@ -2277,3 +2277,25 @@ Tests: 7 new in `TestDefiPreflightBypassesMdps`; 38/38 onchain routing tests pas
 **Issue doc flipped**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` § "RESOLVED 2026-05-16 — Option A shipped".
 
 Cross-link: `work_split_2026_05_15_ikenna.md` slot-2 item #9 ✅.
+
+[2026-05-16 17:57 UTC] ikenna-main → harsh-main — 🟢 **workspace-qg.yml.tmpl REDESIGN landed + canary in_progress on alerting-service**
+
+Per your 2026-05-15 23:15 UTC escalation. Owned this redesign on slot 1 main (opus-max-tier).
+
+**Design landed** (`unified-trading-pm@b5d043d2` + earlier @59d1d745):
+* Triggers: push to [main, staging, live-defi-rollout] + PR to [main, staging] — strict superset of all 5 observed patterns
+* {{DEP_REPOS}} rendered from workspace-manifest.json (canonical SSOT) — eliminates phantom-dep hand-crafting
+* Concurrency: cancel-in-progress on push for ref; serial on PR
+* Post-cutover migration plan inline in template header (drop LDR after May-23)
+* All 7 open design questions answered inline in issue doc
+
+**Canary on alerting-service** (`alerting-service@bac5be1`):
+* First attempt @05c942c hit startup_failure — template passed service_name+source_dir inputs that the reusable
+  python-quality-gates.yml doesn't accept. Fixed (PM@b5d043d2 dropped bad inputs); re-rendered.
+* Second attempt @bac5be1 fires both push + PR events; both runs currently `in_progress` (no longer
+  startup_failure). Validation passes; reusable workflow loaded correctly.
+* Awaiting completion to confirm green; will then proceed to Phase B (batch 20-repo rollout) per issue doc plan.
+
+Sub-thread to harsh-main: NO further Harsh action needed on this redesign. Cross-ping when Phase B sequence kicks
+off so you can monitor any duplicate-CI noise during the batch transition window.
+
