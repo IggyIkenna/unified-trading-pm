@@ -76,10 +76,11 @@ Plan fan-out: `defi_catalogue_chain_primitives_2026_05_10` (74% done, 18 open to
 2026-05-15 operator) + Helius `mev_apy` integration (credentials just landed) + `cme_polymarket_arb_2026_05_08` (carry
 from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi remainder.
 
-1. **Helius `native_staking` mev_apy integration** — credentials vaulted at `helius-api-key` (operator provisioned
-   2026-05-15); MTDS service account granted access. Flip integration tests from `@pytest.mark.requires_credentials`
-   skip to live; endpoint `https://mainnet.helius-rpc.com/?api-key=<vaulted>`. Unblocks `carry_staked_basis` Solana leg
-   `total_apy` (base_apy + mev_apy). (infra 0.8×, ~3 = 2.4 cal)
+1. ✅ **Helius `native_staking` mev_apy integration** — DONE (MTDS@4cea371): added `_fetch_jito_mev_apy()` querying
+   public Jito Kobe `/api/v1/mev_rewards`; formula `mev_reward_per_lamport * epochs_per_year`. Per-validator rows now
+   emit `total_apy = base_apy + mev_apy * (1 - commission_pct)`. 5 unit tests + 1 `@pytest.mark.requires_credentials`
+   live integration test (17 pass, 1 skipped). Live verification 2026-05-16 epoch 972: base=3.58% mev=0.12% total=3.69%
+   for top validator at 7% commission. Helius RPC returned 200 vote_accounts. (infra 0.8×, ~3 = 2.4 cal)
 2. **Stream C P1 — 7 remaining archetype docs** (operator direction 2026-05-15: pulled from post-cutover; pure docs).
    Each archetype gets a `codex/09-strategy/architecture-v2/archetypes/<archetype>.md` per the canonical 9-strategy docs
    pattern. Targets: 7 archetypes that don't yet have docs. (refactor 0.4×, ~5 = 2.0 cal)
