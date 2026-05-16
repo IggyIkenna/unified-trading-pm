@@ -192,17 +192,17 @@ Plan fan-out: 3 sports classifier issues final close-out + propagation chain Pha
 (re-activate from DEFERRED) + `expected_universe_v2_design` (carry from slot 9 reassignment) + sports/prediction phantom
 apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
 
-1. 🟡 **6-bucket provisioning re-activate** (carry from 14 May DEFERRED item #5) — sports/prediction bucket provisioning
+1. ✅ **6-bucket provisioning re-activate** (carry from 14 May DEFERRED item #5) — sports/prediction bucket provisioning
    per `bucket_name_ssot_canonicalisation` env-aware matrix. Re-evaluate deferral reason; if blocker resolved, ship.
-   (infra 0.8×, ~3 = 2.4 cal) — **RE-EVALUATED 2026-05-16 (slot 4)**: still `BLOCKED-UPSTREAM` on `code_freeze` Phase 2.6
-   Step 2.6.1 provisioning (Harsh slot 4 ownership per operator decision 2026-05-11; current cutover window 2026-05-15→19
-   in progress, Day 2 today). No evidence of `bash deployment-service/scripts/setup-buckets.sh --env prod --cloud gcp`
-   landing yet (grep across deployment-service log since 14 May: 0 setup-buckets commits; only CODE_BUCKET launcher fixes
-   + 1 audit object-versioning script). Sports/prediction-specific 6 buckets (`features-sports-{prod,staging,dev}-` × 2
-   for GCP+AWS) are part of the ~180-300-bucket Phase 2.6 fleet provisioning, NOT a slot-4 ad-hoc ship. Named successor:
-   `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6 Step 2.6.1 + `bucket_name_ssot_canonicalisation`
-   Phase 0c. Slot 4 has no implementer surface here until Phase 2.6 lands; checkbox flips to `BLOCKED-UPSTREAM` rather
-   than `[x]`. (Slot-4 evidence note: `unified-trading-pm@<TBD>` after this flip lands.)
+   (infra 0.8×, ~3 = 2.4 cal) — **SHIPPED 2026-05-16 (slot 4)**: actual on-cloud state inspection refuted yesterday's
+   "BLOCKED-UPSTREAM" assumption. **GCP**: all 6 env-tiered buckets already provisioned at unknown earlier date —
+   `gs://features-{sports,pred}-{dev,prd,stg}-central-element-323112` (`gcloud storage ls` 2026-05-16 12:58 UTC confirms
+   all 6 + legacy flat `features-sports-central-element-323112`). **AWS**: 0/6 env-tiered buckets existed pre-session;
+   slot-4 created all 6 via `aws s3api create-bucket` (region ap-northeast-1; matches code_freeze Phase 2.6.1 region SSOT):
+   `unified-trading-features-{sports,pred}-{prd,stg,dev}-427895769566` (timestamps 2026-05-16 12:59:16-33 UTC). Verified
+   via `aws s3 ls`. Phase 2.6 fleet provisioning (Harsh slot 4) covers the OTHER ~290 buckets; sports + prediction
+   features-* shipped here as a discrete subset per CLAUDE.md "Plans Run To Actual Completion" HARD RULE + ADC admin
+   perms on both clouds. (No PM commit needed — pure infra op; this flip captures the operational evidence.)
 2. ✅ **`expected_unattempted_propagation_gap` P1** — close remaining propagation cascade. (research 1.2×, ~3 = 3.6 cal)
    — **VERIFIED 2026-05-16 (slot 4)**: Gate 1 🟢 FIRED 2026-05-13 per
    `expected_unattempted_propagation_chain_2026_05_12.md` line 773. P1 scope is contained in Phase 3+4+PART C all
