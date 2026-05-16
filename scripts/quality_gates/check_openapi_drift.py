@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
-"""Group D — openapi.json drift gate.
+"""Group D — openapi.json drift gate. **DEPRECATED 2026-05-16 — DO NOT WIRE INTO QG.**
 
-Compares committed `unified-trading-api/openapi.json` against the mirrored
-`unified-trading-system-ui/lib/registry/openapi.json`. Drift means the UI's
-generated types (`lib/types/api-generated.ts`) may be out-of-sync with the
-backend's actual API surface.
+ORIGINAL INTENT: compare committed `unified-trading-api/openapi.json` against the
+mirrored `unified-trading-system-ui/lib/registry/openapi.json`; drift = UI types stale.
 
-Exit-code semantics:
-  0 — both hashes match (no drift)
-  1 — drift detected (UI mirror stale)
-  2 — argument / IO error (one or both files missing)
+WHY DEPRECATED (per ikenna-main investigation in
+`plans/active/issues/openapi_mirror_drift_2026_05_16.md` § INVESTIGATION):
+the two files are structurally different by design:
+  - unified-trading-api/openapi.json: 61 paths — slim FastAPI facade
+  - unified-trading-system-ui/lib/registry/openapi.json: 479 paths — AGGREGATED mirror
+    of multiple backends (deployment-api, client-reporting-api, etc.)
+
+Full-file hash comparison will ALWAYS show drift; the script's semantic is wrong.
+
+CORRECT SEMANTIC (deferred to post-cutover): walk the canonical aggregator output
+(some script merges all backend openapi specs) and compare against the UI mirror's
+hash. Until that aggregator is identified, this script is a no-op.
+
+Exit-code semantics (legacy; left in place for future canonical-aggregator wiring):
+  0 — both hashes match
+  1 — drift detected
+  2 — argument / IO error
 
 Origin: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group D
         (UI-13 — Generated-artefact drift gate).

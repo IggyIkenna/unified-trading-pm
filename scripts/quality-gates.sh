@@ -289,19 +289,14 @@ if [ -f "$PLAN_DISCIPLINE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
-# ── Post-gates: OpenAPI drift (Group D of governance_qg_automation_gaps) — warn-only mode ──
-# SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group D (UI-13).
-# Compares committed unified-trading-api/openapi.json against UI mirror at
-# unified-trading-system-ui/lib/registry/openapi.json. Drift signals UI types
-# may be out-of-sync with backend.
-# Currently warn-only (drift present at landing); flip to non-warn after UI sync.
-OPENAPI_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_openapi_drift.py"
-if [ -f "$OPENAPI_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
-    echo "Running OpenAPI drift check (warn-only)..."
-    python3 "$OPENAPI_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warn-only \
-        && log_success "OpenAPI drift check completed (warn-only)" \
-        || log_warn "OpenAPI drift checker errored (non-blocking)"
-fi
+# ── Post-gates: OpenAPI drift (Group D) — DISABLED 2026-05-16 per orchestrator audit finding ──
+# The check compared full-file hashes of two structurally-different files:
+#   unified-trading-api/openapi.json (61 paths — slim FastAPI facade)
+#   unified-trading-system-ui/lib/registry/openapi.json (479 paths — aggregated UI mirror)
+# Hash comparison will ALWAYS show drift by design. Need an aggregator-aware semantic.
+# See plans/active/issues/openapi_mirror_drift_2026_05_16.md § INVESTIGATION for the path-count
+# diagnosis. The check script stays as documentation; QG wiring removed until the canonical
+# aggregator is identified (post-cutover scope).
 
 # ── Post-gates: Codex doc freshness (Group B of governance_qg_automation_gaps) — baselined ratchet ──
 # SSOT: CLAUDE.md § "Post-Plan-Phase Codex Audit (HARD RULE)"
