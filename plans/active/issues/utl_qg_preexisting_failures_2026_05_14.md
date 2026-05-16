@@ -157,10 +157,21 @@ Operator triage / break into themed sub-issues:
    **25 of 51 method-size violations cleared (~49%)**. 26 remaining are mostly
    docstring-heavy methods (body is correct; long docstrings carry contract documentation
    for adapter authors / public surfaces — refactoring those would lose contract value).
-4. **urllib3 CVE bump**: workspace-wide dep bump to 2.7.0 — single PR across all repos via PM dep alignment scripts.
-5. **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
+4. ✅ **urllib3 CVE bump**: DONE 2026-05-16 (slot 7 verification). All 8 repos that explicitly pin urllib3
+   (`batch-live-reconciliation-service` / `client-reporting-api` / `ibkr-gateway-infra` /
+   `pnl-attribution-service` / `system-integration-tests` / `trading-agent-service` / `unified-trading-api` /
+   `unified-trading-library`) are on `urllib3>=2.7.0,<3.0.0` per workspace-wide
+   `cryptography/python-dotenv` constraint bump.
+5. 🔄 **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
    `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
    then per-callsite migration.
+   **PARTIAL DONE 2026-05-16 (slot 7)**: lifted 9 of 11 UTL sites at `unified-trading-library@bd6a27ef`:
+   `CircuitBreakerId` (5 sites: 5 reconcile modules), `ServiceEmissionPolicy` (2 sites: streaming/live_aggregator
+   + feature_service_base/live_aggregator), `EmptyConfirmedReason` (manifest_writer lazy), and
+   `KillSwitchArmRequest/KillSwitchId/KillSwitchProvenance` (treasury/withdrawal_reconciler lazy) — all already
+   on UAC root facade per `unified_api_contracts/__init__.py`. Remaining 2 sites need UAC facade re-exports
+   first: `source_priority` (emission_latency helpers in availability_stamping) + `strategy_family`
+   (StrategyFamily in risk/family_aggregator) — UAC-side follow-up.
 
 This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not** a blocker for the 117-test-fixture
 sweep closure (utl@`26ded7d`).
