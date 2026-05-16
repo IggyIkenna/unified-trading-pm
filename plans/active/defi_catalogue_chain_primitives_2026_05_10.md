@@ -742,10 +742,19 @@ Owner: harsh + parallel agents per protocol.
 >       `lending_indices/{protocol}/{chain}/date={YYYY-MM-DD}/` per handler docstring; classifies phantoms as
 >       `EXPECTED_PRE_GENESIS_CHAIN` (via UAC `get_protocol_launch_date(chain, venue_prefix)` from
 >       `unified_api_contracts.registry.chain_env`) or `SOURCE_RETURNED_ZERO` (post-launch). Idempotent re-runs.
->       **Important caveat 2026-05-16**: lending-indices canonical manifest carries BOTH `data_type="lending-indices"`
->       (24,976 legacy kebab rows from pre-2026-04-23 emission) AND `data_type="lending_indices"` (21,044 snake rows
->       from post-rename emission). The reconciler's `data_type` filter MUST accept both forms; verify in next slot-2
->       session. Tracked in `plans/active/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`.
+>       **Bug-fix follow-up 2026-05-16 by slot 2** at `instruments-service@70074a0`: real-data dry-run caught 3
+>       critical bugs (100% false-positive rate before fixes):
+>       (1) `_audit_captured_rows` passed manifest venue (`AAVEV3` uppercase) directly into the path template; actual
+>       GCS flat-prefix layout uses lowercase + underscored slug (`aave_v3`). Added `_VENUE_TO_SLUG` inverse map.
+>       (2) `_classify_phantom` expected slug but callers passed venue; all rows fell through to `SOURCE_RETURNED_ZERO`
+>       regardless of date. Rewrote to take venue directly.
+>       (3) `--protocols` filter used `.str.lower()` (no-op for slug match: `AAVEV3.lower() == aavev3 ∉ {aave_v3}`);
+>       fixed to translate via `_VENUE_TO_SLUG` before `.isin()` comparison.
+>       Bonus fix: `data_type` filter now accepts both `lending_indices` (snake) AND `lending-indices` (kebab legacy
+>       24,976 rows) — see archived `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`.
+>       (Vocab-drift kebab rows since canonicalised by slot 4 via my Option A canonicalisation script
+>       `IS@b2726c6`; 115,785 vocab flips + 6,972 corrupt drops via slot 4 + IS@70849b6 Option D shipped 2026-05-16.)
+>       2 new unit tests; 12/12 tests green; basedpyright 0 errors.
 >       Earlier slot-3 manual consolidator already shipped (deployment-service@`ad4d448` + slot 6@`2a76a2a`);
 >       reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
 
