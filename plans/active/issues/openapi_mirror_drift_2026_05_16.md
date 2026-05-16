@@ -61,4 +61,26 @@ execution:
   owner: "unified-trading-system-ui slot (UI repo owns the mirror + regen script)"
   cadence: "one-shot resync; QG ratchet then prevents future drift"
   verifier: "python3 unified-trading-pm/scripts/quality_gates/check_openapi_drift.py → exit 0"
-  last_executed: "NEVER (resync pending UI slot pickup)"
+  last_executed: "2026-05-16 — slot-4-ikenna cross-slot pickup; resync + types regen shipped"
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup)
+
+Resync shipped at `unified-trading-system-ui@1abecee1`:
+
+1. Copied `unified-trading-api/openapi.json` → `unified-trading-system-ui/lib/registry/openapi.json`.
+2. Ran `npx openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts` (✨ openapi-typescript
+   7.13.0; 66.9ms).
+
+Diff: 2,124 inserted + 58,037 deleted on `api-generated.ts` — the UI mirror was carrying a much larger stale
+schema; the regen lands the trimmed canonical surface.
+
+Verified post-apply via `python3 unified-trading-pm/scripts/quality_gates/check_openapi_drift.py`:
+
+```text
+API openapi.json   (unified-trading-api/openapi.json):                 sha256=2045c5345c1c...
+UI  openapi mirror (unified-trading-system-ui/lib/registry/openapi.json):  sha256=2045c5345c1c...
+✅ No drift — UI mirror matches API source.
+```
+
+QG `--warn-only` flag can now be flipped off to enforce green-or-fail (Group D codification follow-up — see
+`governance_qg_automation_gaps_post_cutover_2026_05_12.md`). Issue closeable at next archive sweep.
