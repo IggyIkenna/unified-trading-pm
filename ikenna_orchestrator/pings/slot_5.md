@@ -1048,3 +1048,60 @@ with `session=regular ×1066, phase=continuous ×1066`.
 
 Combined totals (v2 + v3): **28,074 historical TradFi parquets back-stamped end-to-end** across the 2024-01-01 →
 2026-05-05 prd window. Zero errors across both runs.
+
+---
+
+## [slot 5] 2026-05-16 20:30 UTC — Day-4 race-to-finish session totals
+
+This session (slot-5 ikenna pickup of paused work from before-Databento-unblock):
+
+**Shipped 4 epic-level items + 1 work_split flip:**
+
+1. **UTL deployment-dir foot-gun fix** — `unified-trading-library@bc87bc89` — `_find_workspace_root` +
+   `_DEFAULT_YAML_RELATIVE_PATHS` now accept VM-extracted `deployment/` (no `-service` suffix). Covers the recurrence of
+   the `cloud-providers.yaml not found` VM crash that ate session-stamp launch attempt #1
+   (`canonical-migration-tradfi-session-stamps-20260516-130834`).
+
+2. **Deployment-service launcher** — `deployment-service@9ed84f8` (`launch-tradfi-session-stamps-vm.sh`) —
+   belt-and-braces sets `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` in `VM_MIGRATION_CMD` even if UTL fix regresses. Re-uses
+   existing `canonical-migration-tradfi-` prefix in `VM_PREFIX_TO_BUCKET` (no new registration).
+
+3. **MTDS migration script** — `market-tick-data-service@d22bc06` — fixed `resolve_bucket_name()` signature (was passing
+   `project_id=`, canonical signature is keyword-only `cloud="gcp", kind="market-data", asset_group="tradfi"`).
+
+4. **UAC FEATURE_REQUIRED_INPUTS** — `unified-api-contracts@99a7614` — 8 tradfi feature_groups (`options_iv`,
+   `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `futures_term_structure`, `tradfi_vol_surface`,
+   `vol_surface_term_structure`, `vix_features`). Closes `tradfi_master_2026_05_07` P1 + registers the new
+   `compute_vix_features()` calc at FS@b3814675. Registry 59 → 67; `validate_required_inputs()` 0 issues; UAC local QG
+   green.
+
+**Plan flips this session** (`docs(plans):` cadence per Half-2):
+
+- `tradfi_master_2026_05_07` line 185 (expiry guard P1)
+- `tradfi_master_2026_05_07` line 207 (VIX feature calc P3)
+- `tradfi_master_2026_05_07` line 472 (TradFi feature_groups → UAC P1)
+- `work_split_2026_05_15_ikenna.md` slot 5 item #2 (session-stamp ✅ ack — leveraged the parallel agent's
+  `canonical-migration-tradfi-sessionstamp-20260516-135034` successful run, 24,944 migrated / 0 errors / 96 min)
+- `work_split_2026_05_15_ikenna.md` slot 5 item #4 (tradfi_master refresh — 3 epic items + verify discovery)
+
+**Discoveries surfaced** (Findings Triage):
+
+- **`futures_contracts.parquet` write path not exercised in prod** — `instruments-service` orchestrator at line
+  2367-2375 calls `_write_futures_contracts` for TradFi venues (CME, ICE) after `_write_venue`, but
+  `gsutil ls -r gs://instruments-store-tradfi-central-element-323112/instrument_availability/` returns 0 files matching
+  `futures_contracts.parquet` across 2024-2026 × all venues. Write code shipped at IS@2be7e4b (Phase 4.2) but recent
+  backfills haven't triggered it. Not blocking May-23 since DeFi archetypes don't read futures_contracts.parquet, but
+  surfaces as a follow-up for the Phase 4.2 owner (`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`
+  is already archived). VERIFY P0 spot-check item at tradfi_master line 379 will fail until this is wired. Noted in flip
+  evidence for slot 5 #4.
+
+- **UAC remote workspace-qg surfaces pre-existing failures** — my UAC@99a7614 push triggered CI which reports 6
+  pre-existing failure categories (Naive datetime, Hardcoded project ID, Backward-compat pattern, Function/class/method
+  size, pip-audit, Production readiness validators). NONE introduced by my change (all in files I didn't touch). Local
+  QG passes ALL gates including production readiness validators. Per ikenna-main 2026-05-16 18:23 UTC ping these are
+  "surfaces on LDR pushes by design — slot owners pick up per Findings Triage". Not blocking; slot owners will address
+  per workspace-qg redesign.
+
+**Remaining slot 5 open**: NONE on the 15-May work_split itself (all 11 items closed). SWEEP-16 items (3) remain
+available for pickup; the smallest two are quickly closeable but require additional context. End-of-session for this
+slot 5 ikenna agent — passing to orchestrator for race-to-finish reallocation.
