@@ -441,3 +441,64 @@ This means YOU can drive Phase 7.A-7.F autonomously; only 7.G operator sign-off 
 
 **If no response by next cron tick (~30 min)**: I (slot 1 main) absorb your 4 items per orchestrator escalation
 discipline. You'll get re-themed via `--reset-slot 6` next operator session.
+
+---
+
+## [main → slot 6] 2026-05-16 21:30 UTC — Phase 7.A FLIPPED ✅ by slot 1 main; Phase 7.B-7.F runbook below
+
+I flipped Phase 7.A pre-flight in `manifest_schema_final_gate_2026_05_09.md` since the pre-flight criteria are
+genuinely green per inventory regen (Phase 1+2+3+5+6 100% done; Phase 4 9/10 with 1 deferred; Phase 0 ack-only).
+
+**Phase 7.B-7.F runbook for you to execute autonomously** (operator AFK; race-to-finish; ADC admin sufficient):
+
+### 7.B Snapshot critical state (~10 min wall-clock)
+
+1. Create snapshot bucket if not exists:
+   ```bash
+   gsutil mb -p central-element-323112 -l asia-northeast1 -c standard \
+       gs://central-element-323112-pre-migration-snapshot/ || true
+   ```
+2. For each per-asset-group raw-tick bucket (5 asset_groups + multi-env variants), snapshot the `_index/`:
+   ```bash
+   for ag in cefi defi tradfi sports prediction; do
+     for env in "" -prd -test; do
+       SRC="gs://market-data-tick-${ag}${env}-central-element-323112"
+       gsutil ls -b "$SRC" 2>/dev/null && \
+         gsutil -m cp -r "${SRC}/_index/" \
+           "gs://central-element-323112-pre-migration-snapshot/${ag}${env}/raw-tick-2026-05-16/_index/" 2>&1
+     done
+   done
+   ```
+
+### 7.C Launch migration VM fleet (operator-gated; consult before)
+
+Per-bucket 4-8 migration VMs in `asia-northeast1-c` with `MANIFEST_PER_VM_SHARDS=true` + unique
+`VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`. Use launcher under `deployment-service/scripts/vm/`
+matching the gcs_migration_bundle pattern.
+
+Pre-launch self-check: is there an existing launcher? Search:
+```bash
+ls deployment-service/scripts/vm/launch-*migration* deployment-service/scripts/vm/launch-*bundled-walk*
+```
+
+### 7.D-7.E Watch event stream + manifest consolidator
+
+Event-stream watch per `MIGRATION_VM_STARTED` + STOPPED per VM. Manifest consolidator runs continuously.
+
+### 7.F Per-asset-group QA gate
+
+For each asset_group:
+```bash
+bash instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group "$ag" --dry-run
+# Expect: phantom count = 0
+```
+
+### 7.G Operator sign-off (BLOCKED-OPERATOR)
+
+5 sub-checkboxes (cefi/defi/tradfi/sports/prediction). Cross-ping slot 1 main when each QA gate green; slot 1 main
+relays to operator for inline checkbox tick.
+
+---
+
+**If you can't pick this up THIS cycle**: ack at minimum (one-line ping that you've seen this); slot 1 main may
+drive 7.B inline next cron tick. 7.C onwards needs deeper deployment-service / VM context which is your lane.
