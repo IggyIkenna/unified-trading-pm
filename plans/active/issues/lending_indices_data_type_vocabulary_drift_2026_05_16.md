@@ -45,19 +45,22 @@ Other column distributions:
 4. **Hive path vs manifest column inconsistency**: the actual GCS hive segment is `data_type=lending_indices` (snake,
    confirmed via `gsutil ls`) — so the on-disk vocabulary is consistent. Only the manifest column carries both.
 
-## Why this drift exists (root cause hypothesis)
+## Why this drift exists (root cause CONFIRMED 2026-05-16)
 
-The handler emits one form (likely `lending_indices` snake — line ~115 of `lending_indices_handler.py` has the
-constant `_LENDING_INDICES_DATA_TYPE = "lending_indices"`). The other form (`lending-indices` kebab) may be:
+`written_at` distribution by `data_type` (groupby diagnostic 2026-05-16):
 
-- (a) **Legacy emission** from an older handler revision pre-canonicalisation (timeline check: 24,976 kebab rows
-  span which date range? — answer in `written_at` column groupby).
-- (b) **Cross-asset rescan** (`reconcile_phantom_manifest_rows_all.py` or related migration script) that wrote rows
-  using a different convention.
-- (c) **Manual operator-VM rebuild** that hardcoded the kebab form.
+| data_type         | written_at min                     | rows   | data-date range           |
+| ----------------- | ---------------------------------- | ------ | ------------------------- |
+| `lending-indices` | 2026-04-13T15:12:45 UTC            | 24,976 | 2022-01-01 → **2026-04-10** |
+| `lending_indices` | 2026-04-23T10:33:29 UTC            | 21,044 | 2022-01-01 → 2026-05-13     |
 
-Quick diagnosis: `df.groupby('data_type').agg({'written_at': ['min', 'max']})` would show whether kebab rows are
-pre-2026-05 (legacy) or contemporary (active drift).
+**Verdict**: ✅ **(a) Legacy emission from pre-2026-04-23 handler revision**. The kebab-form rows stopped being
+emitted on 2026-04-23 (when snake became canonical). The 24,976 kebab rows are static legacy entries that were
+never canonicalised. Current production emission is snake-only. Capture-status sample shows kebab rows are
+predominantly `captured` (real data on-disk) while early snake rows are `empty_confirmed` — likely because of a
+re-coverage of older dates with the new vocabulary.
+
+No active drift (nothing currently emitting kebab). One-shot migration is safe + correct.
 
 ## Recommended decision
 
