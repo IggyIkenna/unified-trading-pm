@@ -127,6 +127,61 @@ Root cause already confirmed for lending-indices: kebab rows stopped 2026-04-23.
 ikenna-slot-2 — pending operator nod on Option A vs B vs C. Migration script is straightforward; can ship in next
 slot-2 session if Option A acked.
 
+## Migration script SHIPPED 2026-05-16 (slot 2 sub-agent dispatch)
+
+`instruments-service@b2726c6` ships `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py`
+(326 lines) + tests at `instruments-service/tests/scripts/test_canonicalize_defi_manifest_data_types_2026_05_16.py`
+(353 lines / 8 unit tests green). basedpyright clean.
+
+CLI: `--dry-run` (default) / `--apply --confirm` (safety belt) / `--bucket <name>` (subset) / `--project-id`.
+Closed-set kebab→snake mapping for the 6 affected buckets baked in. Idempotent; on already-canonical bucket → no-op.
+
+**Next gating step**: operator [ack] to run `--apply --confirm` against the 6 production manifests in
+`central-element-323112`. Migration is column-rename only (no parquet repath); estimated <2-minute wall-clock per
+bucket (read manifest → flip column → write back).
+
+## Additional structural drift finding — lst-rates manifest (2026-05-16 follow-up audit)
+
+Drill-down audit of `gs://lst-rates-central-element-323112/_index/availability_index.parquet` (18,180 rows) reveals
+the 1,560 legacy `lst-rates` kebab rows ALSO have **empty `chain` column** (not just kebab data_type):
+
+```
+data_type x chain crosstab:
+data_type    lst-rates  lst_rates
+chain
+""              1560          0
+ETHEREUM           0     15470
+SOLANA             0      1150
+```
+
+**Interpretation**: kebab rows are from a pre-2026-04-23 schema where `chain` wasn't populated. Column-only
+canonicalisation (Option A) flips `data_type` but leaves `chain` empty, so downstream consumers querying
+`(data_type=='lst_rates') AND (chain=='ETHEREUM')` would still miss the 1,560 rows. The 1,560 rows themselves are
+mostly `captured` rows for older LST data, with the chain implicit in the venue prefix (LIDO/COINBASE/etc. are
+all-ETHEREUM venues).
+
+**Implication for Option A migration**: insufficient on its own for `lst-rates`. Three sub-options:
+
+- **A.1**: column-flip kebab→snake AND derive `chain` from venue lookup (LIDO/ETHERFI/COINBASE/ROCKETPOOL/etc. →
+  ETHEREUM; JITO/MARINADE/etc. → SOLANA; per UAC `get_venue_prefix` reverse map).
+- **A.2**: column-flip kebab→snake ONLY; downstream consumers must accept missing-chain rows for the legacy subset
+  (less clean but ships fast).
+- **A.3**: scope-cut — `lst-rates` migration excluded from the first canonicalisation run; investigate empty-chain
+  rows separately.
+
+Other buckets (lending-indices / oracle-prices / perp-funding / dex-swaps / dex-pools) need a similar drill-down to
+confirm whether their kebab rows have the same structural drift before running `--apply`.
+
+**Recommendation**: spot-check `chain` distribution in each kebab subset before running `--apply` on that bucket.
+The canonicalisation script as shipped does NOT derive chain — operator should pick A.1 / A.2 / A.3 per-bucket
+based on the audit.
+
+execution:
+  owner: "operator decision on Option A.1 vs A.2 vs A.3 per bucket; ikenna-slot-2 ships the per-bucket fix once decided"
+  cadence: "one-shot operator decision + one-shot migration per bucket (~6 buckets)"
+  verifier: "per-bucket groupby (data_type, chain) returns 1×N matrix (canonical form only, fully-populated chain column)"
+  last_executed: "Diagnostic only 2026-05-16; canonicalisation script SHIPPED at IS@b2726c6 awaiting operator --apply"
+
 ## Cross-references
 
 - 3-LENDING.5 reconciler in-flight: sub-agent `a8d9a9f29f77e0c48` writing
