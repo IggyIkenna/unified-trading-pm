@@ -153,8 +153,15 @@ banners.
       pending). (PM@HEAD)
 - [x] [AGENT] P1. **UPDATE** `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
       timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
-- [ ] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section.
-- [ ] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section.
+- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section.
+      DONE 2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
+      cross-refs, successor pointer to tradfi_master_2026_05_07.md). Cross-link from
+      cefi-batch-live.md remains symmetric.
+- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section.
+      DONE 2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues,
+      canonical_question_group axis cross-link, prediction-specific empty reasons
+      (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS / SOURCE_RETURNED_ZERO), successor pointer to
+      predictions_master_2026_05_07.md.
 
 ### Spawn prompt
 
