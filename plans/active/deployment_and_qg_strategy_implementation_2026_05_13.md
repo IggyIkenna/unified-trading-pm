@@ -350,7 +350,11 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 
 **Phase 8.A — Define targets** (1 cal-AI-day):
 
-- [ ] [AGENT] P0. Author `unified-trading-pm/scripts/quality_gates/coverage_targets.yaml` with table above.
+- [x] ✅ [AGENT] P0. Author `unified-trading-pm/scripts/quality_gates/coverage_targets.yaml` with table above. Shipped
+      2026-05-16 (slot-8) — 11 surfaces declared (service_startup, validation_logic, vm_deploy_scripts,
+      deploy_script_deps, manifest_writer_emission, custody_wallet, kill_switch_circuit_breakers,
+      error_classification, per_archetype_calculators, backtest_strategy_engines, default) each with target_pct +
+      rationale + glob_patterns. Phase 8.B consumer (check_coverage_targets.py) follows separately.
 - [ ] [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces.
 
 **Phase 8.B — Per-surface coverage push** (7 parallel sub-agents, 3.5 cal-AI-days). Surfaces SPAN repos; spawn per

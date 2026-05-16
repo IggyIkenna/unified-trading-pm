@@ -1,0 +1,95 @@
+# Per-surface coverage targets — Phase 8.A of deployment_and_qg_strategy_implementation_2026_05_13.md.
+#
+# Reasoning: line-coverage % alone is wrong metric. Target the SURFACES that fail cutover.
+# Per-surface targets enable QG to enforce 100% on safety-critical paths (startup / validation /
+# manifest writer / custody / kill switch) while accepting lower targets on domain-internal code.
+#
+# Consumer: scripts/quality_gates/check_coverage_targets.py (PHASE 8.B follow-up — see plan).
+# Per-repo overrides live in <repo>/scripts/quality_gates/coverage_targets_local.yaml (also Phase 8.A).
+
+surfaces:
+  service_startup:
+    target_pct: 100
+    rationale: "Bad startup = dead service at cutover"
+    glob_patterns:
+      - "**/api/main.py"
+      - "**/cli/main.py"
+      - "**/service_bootstrap*.py"
+      - "**/make_health_router*.py"
+
+  validation_logic:
+    target_pct: 100
+    rationale: "Silent data corruption past cutover"
+    glob_patterns:
+      - "unified-api-contracts/unified_api_contracts/canonical/**/*.py"
+      - "unified-api-contracts/unified_api_contracts/internal/**/*.py"
+      - "**/assertion_helpers*.py"
+
+  vm_deploy_scripts:
+    target_pct: 95
+    rationale: "Bad launcher = bad VM start 'for dumb reasons'"
+    glob_patterns:
+      - "deployment-service/scripts/vm/launch-*.sh"
+      - "deployment-service/scripts/vm/*launcher*.py"
+      - "deployment-service/scripts/vm/setup-data-pipeline-vm.sh"
+
+  deploy_script_deps:
+    target_pct: 100
+    rationale: "Deploy scripts call these — failure cascades"
+    glob_patterns:
+      - "unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py"
+      - "unified-trading-library/unified_trading_library/cloud_interface/factory.py"
+      - "**/env_substitutor*.py"
+      - "**/resolve_bucket*.py"
+
+  manifest_writer_emission:
+    target_pct: 100
+    rationale: "Honest-absence + writegate blast radius"
+    glob_patterns:
+      - "unified-trading-library/unified_trading_library/manifest_writer*.py"
+      - "unified-trading-library/unified_trading_library/manifest_consolidator*.py"
+      - "**/_resolve_policy_output_data_type*.py"
+      - "**/_publish_emission_check*.py"
+
+  custody_wallet:
+    target_pct: 100
+    rationale: "Live trading on real wallets — failure = lost funds"
+    glob_patterns:
+      - "execution-service/execution_service/custody/**/*.py"
+      - "execution-service/execution_service/wallet/**/*.py"
+      - "**/copper*.py"
+      - "**/ceffu*.py"
+
+  kill_switch_circuit_breakers:
+    target_pct: 100
+    rationale: "Safety-critical — failure prevents abort"
+    glob_patterns:
+      - "**/kill_switch*.py"
+      - "**/circuit_breaker*.py"
+      - "**/lifecycle/kill_switch_subscriber.py"
+
+  error_classification:
+    target_pct: 95
+    rationale: "FAIL/RETRY/SKIP routing — wrong classification = wrong handling"
+    glob_patterns:
+      - "unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/**/*.py"
+      - "**/classify_venue_error*.py"
+
+  per_archetype_calculators:
+    target_pct: 90
+    rationale: "Domain logic — high but not perfect"
+    glob_patterns:
+      - "strategy-service/strategy_service/archetypes/**/*.py"
+      - "features-service/features_service/**/calculators/**/*.py"
+
+  backtest_strategy_engines:
+    target_pct: 90
+    rationale: "Architecture-driver — V2EngineOrchestrator + tick loop"
+    glob_patterns:
+      - "strategy-service/strategy_service/engine/**/*.py"
+      - "strategy-service/strategy_service/colocated_engine.py"
+
+  default:
+    target_pct: 80
+    rationale: "Reasonable baseline for everything not surface-tagged"
+    glob_patterns: []
