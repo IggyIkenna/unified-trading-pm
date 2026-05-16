@@ -1546,11 +1546,6 @@
           "required": true
         },
         {
-          "name": "unified-sports-execution-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "pnl-attribution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
