@@ -233,7 +233,14 @@ pickup — it depends on MDPS processed_candles being present, so should be queu
 this VM's completion.
 
 **Updated chain**:
-- (a) ✅ slot-3 launched `mtds-lst-rates-20260516-205225` (RUNNING)
-- (b) ✅ slot-3 launched `mdps-backfill-defi-20260516-205843` (RUNNING)
-- (c) ⏳ features-onchain DeFi backfill (next slot pickup)
+- (a) ✅ slot-3 launched `mtds-lst-rates-20260516-205225` (COMPLETED, rc=0; 32 days
+  backfilled to `gs://lst-rates-central-element-323112/raw_tick_data/by_date/`).
+  New canonical LST bucket fresh through 2026-05-16. **Note**: legacy bucket
+  `market-data-tick-defi-prd-central-element-323112/lst_rates/` remains stale at
+  2026-04-14 — consumers should read from new dedicated bucket per Phase 0d split.
+- (b) ✅ slot-3 launched `mdps-backfill-defi-20260516-205843` (RUNNING — 2026-04-01 → 2026-05-16
+  full mode, e2-standard-8)
+- (c) ⏳ features-onchain DeFi backfill — launcher exists at
+  `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`; can be
+  launched once (b) completes (dependency on processed_candles)
 - (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun
