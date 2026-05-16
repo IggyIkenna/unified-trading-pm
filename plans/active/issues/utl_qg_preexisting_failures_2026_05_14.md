@@ -148,12 +148,17 @@ Operator triage / break into themed sub-issues:
    `unified-trading-library@d5780025` (extracted `_resolve_polymarket_price`; collapsed return dict);
    `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65→43L
    `unified-trading-library@17640cba` (compressed contract docstring + return-exceptions comment block).
-   **Remaining 2 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
-   docstring-heavy contract docs; refactoring would lose adapter-facing contract value) +
-   `io/streaming_shard_finalizer.py` (one 52L body-only method, low-leverage trim) — follow-up candidates.
+   **Further refactor 2026-05-16 (slot 7)**:
+   `io/streaming_shard_finalizer.py::_route_row_groups` 52→16L `unified-trading-library@fe2710bf`
+   (extracted `_route_chunk_to_writer` lazy-pool-entry helper + `_close_writers_on_exception`
+   FD-leak-safe cleanup helper). 7/7 streaming_shard_finalizer tests pass.
+   **Remaining 1 path in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` only — ManifestWriter public API
+   methods are docstring-heavy contract documentation (e.g. `record_captured` 266L total but body is
+   188L of correct multi-state handling logic; refactoring further would scatter contract semantics
+   across helpers that downstream services rely on grep-discovery for).
 
-   **Net session result**: SIZE_EXTRA_EXCLUDES went 9 → 2 paths (4 of 6 originally-flagged "remaining"
-   followups also cleared this turn). 45+ methods refactored under the 50-line budget cumulatively.
+   **Net session result**: SIZE_EXTRA_EXCLUDES went 9 → 1 path. 47 methods refactored under the
+   50-line budget cumulatively.
 
    **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start):
    the original 22 — current count after the 117-test sweep included additional internals). Commits:
