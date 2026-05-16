@@ -389,3 +389,19 @@ Resumed after end-to-end deploy of `RecursiveLeverageReceiver.sol` to Sepolia:
 Starting work-split item #1: Helius `mev_apy` integration — auditing today whether to wire a Jito/MEV-specific feed (the
 field is currently `None` in handler) or if "Unblocks total_apy" means run the existing per-validator integration test
 live against the vaulted `helius-api-key`.
+
+---
+
+## 2026-05-16T11:38Z — slot-2 boot ack (2026-05-16 cycle)
+
+[2026-05-16T11:38Z] slot-2 — STARTED Tab 2 (`defi_catalogue_chain_primitives_2026_05_10.md` close-out).
+
+Items 1+2 already ✅ from prior session (Helius mev_apy MTDS@`4cea371` + Stream C P1 7 archetype docs PM@`8bcf0f96`).
+FF-sync to LDR clean (all 27 owned repos FF-merged, no diverged trees). Working order:
+
+- **First**: audit + flip stale Phase 6/7 items in `defi_catalogue_chain_primitives_2026_05_10.md` plan-of-record (6A
+  closed-as-stale by 3-LENDING.1, 7B/7D/7E/7F/7G are HARSH-SIDE per plan body, 7I deferred to slot 1, etc.).
+- **Then**: substantive work split items 3 (catalogue close-out residuals) → 4 (Polymarket counts) → 5
+  (cme_polymarket_arb) → 6 (cross_asset_group_catalogue_audit Phase 6A DeFi) → 7 (cross_asset_instruments scope).
+
+Half-1+Half-2 plan-flip discipline strictly enforced per CLAUDE.md 2026-05-15 strengthening.
