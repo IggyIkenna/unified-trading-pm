@@ -756,3 +756,43 @@ work needed (adapter + launcher already exist).
 
 **Plan-of-record adjustment**: leaving `work_split_2026_05_15_ikenna.md` § Slot 5 item 1 as `- [ ]` per HARD RULE —
 moving to next executable item (#3 Phase 5 QG ratchet, no external-data dependency).
+
+---
+
+## [slot 5] Session-end deferred-work scoreboard 2026-05-16
+
+**Status**: 9/10 work_split_2026_05_15_ikenna § Slot 5 items closed; 1 deferred.
+
+| #     | Item                                                   | Status                                                             | Evidence                                                                                                                                                                                                               |
+| ----- | ------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | TradFi 1-week test backfill                            | 🔴 BLOCKED-CREDENTIALS                                             | Databento account-locked; combined unblock ask in this ping ledger (PM@`6d518a4f`)                                                                                                                                     |
+| 2     | Databento session-stamp backfill                       | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1; ask filed earlier 2026-05-15                                                                                                                                                                               |
+| 3     | TradFi Phase 5 QG ratchet                              | ✅ DONE (pre-existing)                                             | PM@`32c7ea52` shipped 2026-05-13                                                                                                                                                                                       |
+| **4** | **`tradfi_master_2026_05_07` master plan refresh**     | 🟡 **DEFERRED (carries to 2026-05-16 work_split or next session)** | 38 open todos in the plan; large-scope research (~4.8 cal); not actionable in single-turn budget. Next pickup: bulk-verify line-by-line which open todos are already done by recent commits + flip in same agent turn. |
+| 5     | TradFi venue + symbology coverage audit                | ✅ DONE                                                            | PM@`c63cdf2b` — ICE softs CT/CC/KC/SB/OJ/DX verified canonicalised in UAC                                                                                                                                              |
+| 6     | CME/EUREX 1-week test backfill                         | 🔴 BLOCKED-CREDENTIALS                                             | Same as #1                                                                                                                                                                                                             |
+| 7     | strategy_service_qg_ltv_threshold_violations close     | ✅ DONE (pre-existing)                                             | STEP 5.37 already passes — CORRECT-LOCAL annotations in place (PM@`e604d6c3` flipped)                                                                                                                                  |
+| 8     | mtf_intraday_micro_regime_policy 2 dict entries        | ✅ DONE (pre-existing)                                             | UAC@`1f8bcbc` + FS@`140b6fe5` already shipped Option A NAN_FILL                                                                                                                                                        |
+| 9     | sports_retired_data_types_code_cleanup non-sports half | ✅ DONE                                                            | UI@`f010d14f` synced stale `provider_league_ids.py` UI snapshot; rest of workspace already clean                                                                                                                       |
+| 10    | TradFi MarketSession final close                       | 🔴 BLOCKED-CREDENTIALS (partial)                                   | Code (UAC@`f4d0cec` + MTDS@`038a611` + FS@`ce093d6c`) already shipped; only the Databento session-stamp backfill VM leg remains, blocked on #1+#2                                                                      |
+
+**Session deliverables** (chronological):
+
+- Sports Phase 3 item 2 deployment-api smoke — PM@`9870fdf0`
+- TradFi MTDS weekend P1 — PM@`f7017e6f`
+- Boot ack + sync sweep (UAC@`da3863f` + strategy@`25393d1`) — PM@`ee9afd7b`
+- Items 1/3/6 status — PM@`7e1a10ee`
+- Item 7 LTV thresholds — PM@`e604d6c3`
+- Item 8 mtf intraday/micro_regime — PM@`79faaeef`
+- Item 9 UI snapshot sync — UI@`f010d14f` + PM@`78b6caf5`
+- Item 5 venue+symbology audit — PM@`c63cdf2b`
+
+**Net pushed**: 9 plan-flip commits (PM) + 3 dep-repo commits (UAC + strategy-service + UI). All Half-1+Half-2
+discipline observed — every code/sync commit has a sibling `docs(plans):` flip in the same agent turn.
+
+**Blocker summary for operator**: ONE outstanding ask — unlock Databento billing at app.databento.com. Unblocks items
+1+2+6+10 + the 5 paused `mdps-tradfi-*` backfill VMs. No additional credential asks today.
+
+**Outstanding instruments-service merge conflict** (not slot 5 scope but flagged here for visibility):
+`instruments_service/reference_data/adapters/cefi/aster.py` has unresolved 3-stage merge index but no MERGE_HEAD.
+Foreign work; leaving for the original committer to resolve.
