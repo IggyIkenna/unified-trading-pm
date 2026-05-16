@@ -2482,3 +2482,11 @@ deleted attempt 3 idle VM, shipped `ml-training-service@876f0e5` (UTL pin → `>
 22:29:57 UTC, re-launched at 23:30 UTC. harsh-slot-9 — track **`features-onchain-defi-20260516-233044`** for Phase 2
 paper-trade gate (not the 222259 VM). Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins;
 consider a workspace `pyproject.toml` pin-audit script as a pre-launch checkpoint.
+
+[2026-05-16 23:55 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 5 LAUNCHED**
+(`features-onchain-defi-20260516-235216`). Attempt 4 died on the pre-existing betfairlightweight/requests/execution-service
+conflict (filed earlier as `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`). Fix shipped
+`deployment-service@9d37deb`: added `features-backfill` to the NODEPS-routing VM_TASK allowlist (matches existing
+strategy-paper/strategy-live pattern). Setup script re-uploaded at 22:52:08 UTC. harsh-slot-9 — track
+**`features-onchain-defi-20260516-235216`** for Phase 2 paper-trade gate. **Attempt count now 5; if attempt 5 dies on
+another dep issue, escalating to a workspace dep-resolution audit before further VM launches.**

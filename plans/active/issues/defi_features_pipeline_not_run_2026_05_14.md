@@ -260,10 +260,17 @@ processed_candles being present, so should be queued behind this VM's completion
      STARTED event → VM sat idle 55+ min until slot-1 main orchestrator caught it via serial console at 23:07 UTC,
      deleted. **Fix shipped**: `ml-training-service@876f0e5` (UTL pin relaxed to `>=0.3.0,<1.0.0`). **Slot-1 main
      rebuilding tarball + re-launching as attempt 4.**
-  4. 🟢 **slot-1-main attempt 4 LAUNCHED 2026-05-16 23:30 UTC** — `features-onchain-defi-20260516-233044`
-     (asia-northeast1-c, e2-standard-8, 35.200.23.244, RUNNING). Tarball rebuilt 22:29:57 UTC
-     (`gs://deployment-scripts-central-element-323112/code/ml-training-service-code.tar.gz`) carrying the UTL pin
-     fix. Same command as attempt 3 (5-day onchain backfill 2026-04-15..19 DEFI ALL).
+  4. ❌ `features-onchain-defi-20260516-233044` — `uv pip install` STILL failed at 22:33:32 UTC, this time on the
+     pre-existing `execution-service` ↔ `betfairlightweight` ↔ `requests` conflict (filed earlier today as
+     `plans/active/issues/execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`).
+     `betfairlightweight>=2.20` pins `requests<2.33.0`; `execution-service` requires `requests>=2.33.0`; the flat
+     `uv pip install -e ... -e execution-service` resolve is unsatisfiable. Existing NODEPS opt-out only covered
+     `synthetic-benchmark`/`strategy-paper`/`strategy-live` VM_TASKs, not `features-backfill`. **Fix shipped**:
+     `deployment-service@9d37deb` — added `features-backfill` to the NODEPS allowlist + uploaded updated
+     `setup-data-pipeline-vm.sh` (22:52:08 UTC). attempt 4 deleted.
+  5. 🟢 **slot-1-main attempt 5 LAUNCHED 2026-05-16 23:52 UTC** — `features-onchain-defi-20260516-235216`
+     (asia-northeast1-c, e2-standard-8, 35.194.102.127, RUNNING). Setup script now routes execution-service through
+     NODEPS to bypass the betfairlightweight transitive conflict. Same 5-day onchain backfill 2026-04-15..19 DEFI ALL.
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the
