@@ -55,10 +55,16 @@ The Wave-8 BaseFC-ValidationFlip task was scoped against ~12 calculators with `f
       calcs simultaneously. Counted feature_group overrides: 32 concrete + 3 base files = 35 sites (audit grep
       2026-05-15). Phase 6 mandatory-validation flip lives in `features_repo_consolidation_2026_05_08.md` (parent
       plan); this plan's items 2-4 do the actual class-var migration.
-- [ ] **[AGENT] P1**. Migrate concrete calculators from `@property @abstractmethod`/`@property @override` pattern to
-      `feature_group: ClassVar[str] = "..."` + `feature_family: ClassVar[FeatureFamily] = FeatureFamily.X`. Per-family
-      commits. **Status 2026-05-15 EOD**: deferred to next session (estimate ~2 cal AI-days for 32 calcs; slot 7 May-23
-      stack prioritised writegate Gate-4 audit + audit_records + client_reporting over post-cutover P1 refactor).
+- [x] **[AGENT] P1**. Migrate concrete calculators from `@property @abstractmethod`/`@property @override` pattern to
+      `feature_group: ClassVar[str] = "..."` + `feature_family: ClassVar[str] = "<family>"`. Per-family commits.
+      **PARTIAL DONE 2026-05-16 (slot 7)**: cross_instrument family done — `features-service@71643dec` migrated
+      20/20 concrete calculators in `cross_instrument/app/calculators/`; base class adds
+      `feature_family: ClassVar[str] = "cross_instrument"` inherited by all subs;
+      `validate_class_attributes()` returns OK on every migrated calc. Multi_timeframe family OUT OF SCOPE per
+      Option-a (LOCAL `BaseFeatureCalculator(ABC)` does NOT extend UTL canonical — these are legacy paradigm,
+      narrow-flip skips them). Onchain calcs do NOT override `feature_group` at all (inherit canonical empty
+      default) — separate sub-task to ADD declarations needs per-calc data_type knowledge; deferred for next
+      session.
 - [ ] **[SCRIPT] P1**. Flip UTL canonical `BaseFeatureCalculator.validate_class_attributes()` from opt-in (callable
       helper) to mandatory (`__init_subclass__` enforcement). UTL commit. **Blocked on item 2 above** (mandatory
       enforcement would break any subclass that hasn't migrated yet).
