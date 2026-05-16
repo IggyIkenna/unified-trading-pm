@@ -254,7 +254,15 @@ processed_candles being present, so should be queued behind this VM's completion
      `plans/active/issues/features_vm_uv_resolution_unsatisfiable_2026_05_16.md`. Fix shipped:
      `risk-and-exposure-service@83b10e0` UAC pin relaxed to `>=0.1.0,<1.0.0` (workspace consensus). Tarball rebuilt
      2026-05-16 21:22 UTC.
-  3. **current** `features-onchain-defi-20260516-222259` — re-launched after pin fix + tarball rebuild.
+  3. ❌ `features-onchain-defi-20260516-222259` — `uv pip install` failed AGAIN, this time on
+     `ml-training-service==0.1.0` pinning `unified-trading-library>=0.4.0,<1.0.0` (UTL is at 0.3.167; peer repos
+     pin `>=0.1.0` or `>=0.3.0`). VM startup script exited rc=1 at 21:25:38 UTC → no python workload → no
+     STARTED event → VM sat idle 55+ min until slot-1 main orchestrator caught it via serial console at 23:07 UTC,
+     deleted. **Fix shipped**: `ml-training-service@876f0e5` (UTL pin relaxed to `>=0.3.0,<1.0.0`). **Slot-1 main
+     rebuilding tarball + re-launching as attempt 4.**
+  4. 🟢 **slot-1-main-relaunch** — tarball rebuild via
+     `bash deployment-service/scripts/vm/create-code-tarballs.sh ml-training` + re-run consolidated launcher with
+     fix in place. Attempt 4 in progress (see "Attempt 4" subsection below for VM ID once launched).
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the
