@@ -757,6 +757,19 @@ Owner: harsh + parallel agents per protocol.
 >       2 new unit tests; 12/12 tests green; basedpyright 0 errors.
 >       Earlier slot-3 manual consolidator already shipped (deployment-service@`ad4d448` + slot 6@`2a76a2a`);
 >       reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
+>
+>       **Operational dry-run RESULT 2026-05-16 ~20:21Z (post-fix)**: real-data audit of
+>       `gs://lending-indices-{pid}/_index/availability_index.parquet` reports:
+>       - Total captured rows audited: **64,827** (includes both kebab + snake data_type rows)
+>       - Real captures (parquet found): **64,476** (99.5%)
+>       - Phantom captures: **351** (0.54%) — all classified `SOURCE_RETURNED_ZERO`
+>       - Phantom distribution by venue: AAVEV3 216 / COMPOUNDV3 108 / SPARK 27
+>       - Phantom distribution by chain: ETHEREUM 81 / ARBITRUM 54 / BASE 54 / OPTIMISM 54 / others 27 each
+>       - Sample phantoms: 2026-04-15 across multiple AAVEV3 chains — recent backfill misses, not legacy phantoms
+>       Manifest is operationally clean; 351 phantoms are operator-decision: run `--apply-flips --confirm` to flip to
+>       `empty_confirmed/SOURCE_RETURNED_ZERO` (recommended once consolidator race resolved per
+>       `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`). Log archived at
+>       `/tmp/lending_indices_phantom_dryrun_v2_20260516.log`.
 
 Success criterion: per protocol, an MTDS adapter at
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/<protocol>_adapter.py` (or
