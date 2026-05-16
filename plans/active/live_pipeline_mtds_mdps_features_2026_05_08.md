@@ -954,7 +954,12 @@ todos:
 
   - id: phase-14-codex-ssot-updates
     content: |
-      - [ ] [AGENT] P0. Phase 14 — Codex SSOT updates. PARALLEL with Phase 11/13. Per the workspace
+      - [x] [AGENT] P0. Phase 14 — Codex SSOT updates. **DONE 2026-05-16 (slot-3 flip)**: 6 of 8 items shipped 2026-05-11
+        per status note (live-pipeline-architecture.md / availability-manifest-and-data-status.md / batch-live-architecture.md /
+        alerting-batch-live.md / runtime-tiers-and-deployment.md / 00-SSOT-INDEX.md). Items 2 (replay-subsystem
+        empirical benchmarks) + 3 (instrument-lifecycle callback tables) DEFERRED-PER-HARD-RULE per the workspace
+        "Post-Plan-Phase Codex Audit" rule — they enhance codex docs WHEN the matching implementation phase ships
+        (Phase 5/6/7/10 land actual benchmarks + wired callbacks). Stale `- [ ]` checkbox flip only.
         "Post-Plan-Phase Codex Audit" rule (CLAUDE.md, codified 2026-05-08), this phase enhances the
         plan-driven stubs created at plan-draft time + updates 5 existing docs.
 
