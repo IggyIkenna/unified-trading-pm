@@ -90,24 +90,45 @@ every bucket — not just the canonical asset-group one.**
    pattern; lands in the canonical `market-data-tick-defi-{pid}` bucket (no override needed; default `_BUCKET_TEMPLATES`
    entry picks them up).
 
-#### Vocabulary inconsistency to know about (kebab-case vs snake_case)
+#### Vocabulary inconsistency — RESOLVED 2026-05-16 (kebab→snake migration applied)
 
-Many DeFi buckets contain BOTH `data_type=lending-indices` (kebab-case, older write path) AND
-`data_type=lending_indices` (snake_case, newer + UAC-canonical) for the SAME data. Concrete numbers (verified
-2026-05-07):
+**Historical state (2026-05-07)**: Many DeFi buckets contained BOTH `data_type=lending-indices` (kebab-case, older
+write path) AND `data_type=lending_indices` (snake_case, newer + UAC-canonical) for the SAME data:
 
-- `lending-indices-{pid}`: 24,976 kebab-case + 12,024 snake_case rows
-- `dex-swaps-{pid}`: 28,171 kebab + 18,320 snake
-- `lst-rates-{pid}`: 1,560 kebab + 2,796 snake
-- `oracle-prices-{pid}`: 1,926 kebab + 5,106 snake
-- `perp-funding-{pid}`: 3,298 kebab + 2,277 snake
+| Bucket                        | Kebab (legacy) | Snake (canonical) |
+| ----------------------------- | -------------- | ----------------- |
+| `lending-indices-{pid}`       | 24,976         | 12,024            |
+| `dex-swaps-{pid}`             | 28,171         | 18,320            |
+| `dex-pools-{pid}`             | 55,854         | 20,129            |
+| `lst-rates-{pid}`             | 1,560          | 2,796             |
+| `oracle-prices-{pid}`         | 1,926          | 5,106             |
+| `perp-funding-{pid}`          | 3,298          | 2,277             |
 
-The deployment-api handles this via
-[`_canonicalise_defi_data_types()`](../../deployment-api/deployment_api/services/data_status_service.py) (line 991)
-which read-time normalises kebab → snake. Per the function's docstring, "safe to remove once the corresponding one-shot
-manifest migration runs (Plan B follow-up — currently no successor plan)" — so this is a real follow-up: write a
-migration script that rewrites kebab `data_type` values in place across the 5 affected buckets, then delete the
-canonicaliser. Aligns with the workspace "Manifest migration, NOT fallback" rule.
+**Migration shipped 2026-05-16** (per `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`
+Option A, workspace-wide canonicalisation):
+
+- **Canonicalize script**: `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py`
+  (IS@`b2726c6` — slot 2 canonical version; idempotent re-runs; `--bucket` flag for per-bucket targeting).
+- **Applied at 2026-05-16 ~19:44 UTC**: 115,785 rows flipped kebab → snake across all 6 affected buckets via per-VM
+  shards (`_index/per_vm/manifest-canonicalize-{bucket}-kebab-to-snake.parquet`). Consolidator merges last-writer-wins
+  on next cycle.
+
+**Corrupt-rows side-effect cleanup** (per `plans/active/issues/lst_rates_oracle_prices_corrupt_kebab_rows_2026_05_16.md`
+Option D, shipped slot 4):
+
+- **Reconciler script**: `instruments-service/scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py`
+  (IS@`70849b6`).
+- **Applied at 2026-05-16 20:00-20:01 UTC**: dropped 6,972 phantom rows (3,486 unique + 3,486 from canonicalize-shard
+  duplicates) where `venue==<DATA_TYPE_LITERAL_UPPERCASED>` + `chain==""` — never had matching parquets on disk.
+- Post-cleanup: `lst-rates-{pid}` 19,740 → 16,620 rows; `oracle-prices-{pid}` 10,962 → 7,110 rows. Verified via
+  `groupby venue` — only real venues remain (LIDO / ETHERFI / COINBASE / JITO / MARINADE / ... for lst-rates;
+  CHAINLINK + PYTH for oracle-prices).
+
+**Open follow-up**: the deployment-api `_canonicalise_defi_data_types()` read-time normaliser at
+[`deployment_api/services/data_status_service.py` ~line 991](../../deployment-api/deployment_api/services/data_status_service.py)
+can NOW be removed — the "Plan B follow-up successor" is the script shipped today. Deletion can land in deployment-api's
+next QG-clean PR (1-line removal + delete the function body; the consumer chain reads canonical snake from manifest
+directly).
 
 #### Operator verification recipe — exhaustive bucket walk
 
