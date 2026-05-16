@@ -84,3 +84,37 @@ UI  openapi mirror (unified-trading-system-ui/lib/registry/openapi.json):  sha25
 
 QG `--warn-only` flag can now be flipped off to enforce green-or-fail (Group D codification follow-up — see
 `governance_qg_automation_gaps_post_cutover_2026_05_12.md`). Issue closeable at next archive sweep.
+
+---
+
+## INVESTIGATION 2026-05-16 (ikenna-main during orchestrator cycle)
+
+**Root cause clarified — the check is comparing structurally-different files**:
+
+| File | title | path count | nature |
+| --- | --- | --- | --- |
+| `unified-trading-api/openapi.json` | "Unified Trading API" | **61** | Slim facade — `/health` + `/readiness` + `/market-data/...` |
+| `unified-trading-system-ui/lib/registry/openapi.json` | "Unified Trading System API" | **479** | Aggregated mirror — `/deployment-api/...` + `/client-reporting-api/...` + other backend prefixes |
+
+The UI mirror isn't a mirror of `unified-trading-api` — it's an AGGREGATED view of multiple backend APIs
+(deployment-api, client-reporting-api, etc.). Per-path namespace prefixes in the UI mirror prove this:
+`/deployment-api/api/services`, `/client-reporting-api/...`, etc.
+
+The current `check_openapi_drift.py` compares hashes; since the two files are structurally different by design, the
+hash will ALWAYS differ. The check fires P2 drift forever.
+
+**Two correct fixes**:
+
+**(A) Find the actual canonical aggregator** — likely a meta-export from deployment-api or a script that walks all
+backend services and merges. Update `DEFAULT_API_PATH` in `check_openapi_drift.py` to point at the aggregator's
+output. Slot 8 (filed the issue) likely knows the architecture; or whoever owns
+`unified-trading-system-ui/lib/registry/openapi.json` regeneration.
+
+**(B) Mark the check as "structural-mismatch — disabled"** until (A) lands. Convert to a no-op stub OR delete the
+script if the aggregator path can't be identified.
+
+**Severity confirmed P2** — UI types are still functional + complete (479 paths > 61 paths means UI has MORE
+coverage, not less). Slot owner can pick up the architectural fix post-cutover.
+
+**Workspace-qg impact**: this check is in `scripts/quality_gates/check_openapi_drift.py` (PM repo); not yet wired
+into per-repo `quality-gates.sh`. So workspace-qg green is NOT blocked by this finding.
