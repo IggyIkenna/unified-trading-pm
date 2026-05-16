@@ -718,3 +718,19 @@ MTDS scan now returns 0 non-excluded method-size violations. The 31-path
 FUNCTION_SIZE_EXTRA_EXCLUDES handler family is intentional (per-venue handler bodies are
 contract surfaces that grew with native_staking_handler.py:process Helius per-validator commit
 2026-05-15 — same pattern as other handlers).
+
+
+[2026-05-16 /loop tick 3] slot-7 — broad sister-repo sweep complete:
+
+* `unified-trading-api@5614289` — BatchCandleReader.get_candles 54L→33L via _resolve_bucket helper.
+* `strategy-service@9b9847b` — ArchetypeKillSwitchSubscriber.on_armed 56L→18L via _log_halt helper +
+  ExecutionRejectionHandler.on_rejection 57L→26L via _handle_venue_down / _alert_and_halt helpers.
+
+7 sister repos confirmed 0 non-excluded violations: deployment-service, unified-cloud-interface,
+batch-live-reconciliation-service, pnl-attribution-service, client-reporting-api, trading-agent-service,
+alerting-service. Only outstanding: execution-service (377 violations across all severity buckets —
+too big for this loop; issue-doc candidate for slot-1 main / per-area refactor sprint).
+
+Cumulative session: 50+ method-size methods refactored across UTL + features-service + MTDS +
+unified-trading-api + strategy-service. UTL@SIZE_EXTRA_EXCLUDES went 9 → 1. Half-1+Half-2 plan-flip
+discipline maintained.
