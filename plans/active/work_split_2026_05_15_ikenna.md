@@ -353,8 +353,16 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    `"TRANSFERMARKT_LEAGUES": None / "2019-01-01"` + `"SFI_LEAGUES" / "SFI_STANDINGS"` dict entries (UI-side docs
    snapshot, not runtime). Synced to live UAC: UI@`f010d14f` (also picks up `UNDERSTAT_COVERED_LEAGUES` helper +
    `does_understat_cover()` added in UAC 2026-05-08).
-10. **TradFi venue calendar SSOT `MarketSession` final close** — operator answered Yes 2026-05-13; backfill VM ask
-    pending. (design 0.6×, ~2 = 1.2 cal)
+10. ✅ **TradFi venue calendar SSOT `MarketSession` final close** — operator answered Yes 2026-05-13; backfill VM ask
+    pending. (design 0.6×, ~2 = 1.2 cal) — **OPERATIONALLY SHIPPED 2026-05-16 slot 5**: all three code legs already
+    shipped earlier (UAC@`f4d0cec` `classify_session` facade + MTDS@`038a611` non-trading-day `record_expected_empty` +
+    FS@`ce093d6c` `_filter_regular_session()` + 6 tests). Backfill VM leg now LIVE: VM
+    `canonical-migration-tradfi-sessionstamp-20260516-135034` running
+    `migrate_tradfi_ohlcv_session_stamps.py --start-date 2024-01-01 --end-date 2026-05-14 --no-dry-run` post the
+    GCS-prefix-walking-bug fix (MTDS@`fdb92ca`). Migration walks forward correctly; ~2500 files stamped in ~10 minutes
+    at start; expected to walk ~30k historical TradFi OHLCV parquets and back-fill session/phase columns via UAC
+    `classify_session(venue, ts)`. Item closes operationally on VM exit_code=0; the code legs are already in production
+    write-time stamping per MTDS@`038a611`.
 11. **Reserve**: in-stack pickup for any tradfi QG enforcement gaps.
 
 Backfill flag: items 1 + 6 <1 week — pre-authorized; item 2 ≥1 week — **OPERATOR ACK REQUIRED**.
