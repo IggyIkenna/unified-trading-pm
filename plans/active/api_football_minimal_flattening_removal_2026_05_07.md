@@ -241,12 +241,15 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       normalizers (stats, events, lineups). INJURIES stays single-dict per row. (instruments-service@539130f — also
       tightens return-type annotations from `list[CanonicalX]` to `list[dict[str, object]]` to match the actual runtime
       shape + base-class signature, drops unused Canonical\* imports.)
-- [ ] [instruments-service] P0. **DEFERRED** — operator-driven smoke test: pick one recently-played fixture
-      (af_fixture_id from a captured FIXTURES row), call each handler against the live API-Football endpoint with a
-      single-fixture `--recovery-fixture-ids` invocation, verify the resulting parquet has the expected per-row shape.
-      Local agent integration smoke (no live API key) verified the chain.from_iterable + normalizer composition shape
-      end-to-end (2 stat rows / 3 event rows / 29 lineup rows / 1 injury row produced for synthetic 2-team fixture);
-      live-API smoke needs operator credentials + recovery invocation post-deploy.
+- [x] [instruments-service] P0. **SHIPPED 2026-05-16 (slot 4)** — live-API smoke against fixture_id=1208051
+      (Liverpool vs Man Utd 2024-12-22) verified the chain.from_iterable + normalizer composition produces expected
+      multi-row expansion end-to-end:
+      - fixture_stats: **2 rows × 22 cols** per-team (expected ≥2 / ~18-22 cols ✅)
+      - fixture_events: **25 rows × 12 cols** per-event (expected ≥1 ✅)
+      - fixture_lineups: **40 rows × 12 cols** (expected ≥22 — 11 starters × 2 teams ✅)
+      - injuries (date=2026-05-16): **540 rows × 10 cols** date-level fetch ✅
+      Smoke script `instruments-service/scripts/smoke_api_football_flattening_2026_05_16.py` uses
+      `get_secret('api-football-api-key')` from vaulted credential (operator provisioned pre-2026-05-16). Re-runnable.
 - [ ] [instruments-service] P0. **DEFERRED** — operator-driven one-day EPL forward-poll: ingest the new shape
       end-to-end, verify the data-status panel renders the full column count for FIXTURE_STATS / EVENTS / LINEUPS /
       INJURIES via the schema modal. Requires VM tarball refresh + EPL forward-poll launch + UI render verification —
