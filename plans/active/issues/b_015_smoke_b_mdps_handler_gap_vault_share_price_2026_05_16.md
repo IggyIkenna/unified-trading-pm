@@ -108,7 +108,21 @@ strategy-features-onchain maintainer.
 downstream side-effects). Auto-delete via `VM_SHUTDOWN_ON_COMPLETION=true` metadata. No manual cleanup needed.
 
 execution:
-  owner: "operator decision pending (Option A/B/C); then ikenna-slot-8 implements OR routes to features-service maintainer"
-  cadence: "one-shot operator decision"
-  verifier: "features-onchain Smoke B re-run reaches STARTED + manifest captured > 0 OR B-015 declared verified on Smoke A alone"
-  last_executed: "2026-05-16 11:21:54 UTC (mdps-backfill-defi-20260516-121940 — no-op exit, see above)"
+  owner: "ikenna-slot-2 implemented features-service@550cdaba; verifier = harsh-slot-9 re-launches features-onchain Smoke B"
+  cadence: "one-shot — closed after Smoke B re-launch verified"
+  verifier: "features-onchain Smoke B re-run reaches STARTED + manifest captured > 0 for 2026-04-15..19/DEFI vault_share_price"
+  last_executed: "2026-05-16 (Option A implemented at features-service@550cdaba; Smoke B re-launch pending Harsh slot 9 cross-ping)"
+
+## RESOLVED 2026-05-16 — Option A shipped
+
+Operator-confirmed Option A implemented at `features-service@550cdaba`:
+
+- `DependencyChecker.UPSTREAM_DEPS_DEFI` ClassVar added with MDPS `required: False` + raw_tick_data bypass entries for
+  `vault_share_price` (substring filter) + `lst_rates` + existing lending/oracle/perp bypasses.
+- `check_dependencies(date, asset_group)` overridden to dispatch DEFI (non-test_mode) to `UPSTREAM_DEPS_DEFI`;
+  CEFI/TRADFI/test_mode unchanged.
+- 7 new unit tests in `TestDefiPreflightBypassesMdps` (`features-service/tests/onchain/unit/test_defi_data_source_routing.py`).
+- All 38 onchain routing tests pass; basedpyright clean on `dependency_checker.py`.
+
+Cross-ping to Harsh slot 9 filed at `plans/active/_agent_pings.md` § 2026-05-16 requesting Smoke B re-launch with
+unique `VM_NAME`. Issue will be archived once Smoke B reaches STARTED + manifest captured > 0.

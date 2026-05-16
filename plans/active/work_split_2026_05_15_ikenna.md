@@ -110,14 +110,19 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
    service with CROSS_ASSET shard**. Status `BLOCKED-OPERATOR-DECISION`; not May-23 blocking (P2; features-service
    handles cross_asset data production). 4-item implementation gate written. Awaiting operator [ack] on Option 1 vs
    alternatives. No further triage work needed. (research 1.2×, ~2 = 2.4 cal)
-9. **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A** per
-   `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`. Operator-confirmed 2026-05-16:
-   features-onchain pre-flight gate is over-reaching — refactor to read raw_tick_data DIRECTLY for `vault_share_price`
-   (and other on-chain snapshot data_types). MDPS pre-flight remains gating ONLY for data_types MDPS actually aggregates
-   (`book_snapshot_5` / `dex_swaps` / `fx_rates` / `market_state` / `liquidity`). Slot 2 owns since fresh
-   features-onchain context from today's Helius integration (`MTDS@4cea371`). Once shipped, cross-ping Harsh slot 9 to
-   re-launch features-onchain Smoke B with unique `VM_NAME` — this unblocks B-015 paper-trade gate. (design 0.6×,
-   ~5 = 3.0 cal — could be more depending on per-data_type pre-flight surface)
+9. ✅ **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A — SHIPPED 2026-05-16 by
+   slot 2** at `features-service@550cdaba`. `DependencyChecker` in
+   `features-service/features_service/onchain/app/core/dependency_checker.py` now dispatches asset_group-aware:
+   - **DEFI**: uses new `UPSTREAM_DEPS_DEFI` ClassVar — MDPS processed_candles becomes `required: False`; adds
+     `market-tick-data-service-vault-share-price` bypass probing `raw_tick_data/by_date/day={date}/` with
+     `substring="data_type=vault_share_price"`; adds `market-tick-data-service-lst-rates` bypass to
+     `lst-rates-{project_id}` bucket; keeps existing lending/oracle/perp bypass entries.
+   - **CEFI/TRADFI**: unchanged (UPSTREAM_DEPS with MDPS `required: True`).
+   - **test_mode DEFI**: falls back to default (test buckets are unified per QG plumbing).
+   - 7 new unit tests in `TestDefiPreflightBypassesMdps`; 38/38 onchain routing tests green; basedpyright 0 errors.
+   Cross-ping to Harsh slot 9 filed at `plans/active/_agent_pings.md` § 2026-05-16 — Smoke B re-launch unblocked.
+   Issue doc `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` flipped to RESOLVED. (design 0.6×,
+   ~5 = 3.0 cal)
 10. **Reserve**: in-stack pickup for new DeFi classification surfacings.
 
 ---

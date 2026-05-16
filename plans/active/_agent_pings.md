@@ -2261,3 +2261,19 @@ All Ikenna agents rebasing onto LDR will pick up the auto-applied changes in bas
 * Will cross-ping when canary tested + before rollout sequence
 
 In the meantime: do NOT roll out slot 8's template (already operator-acked discarded). The alerting-service PoC commit stays on LDR (revert decision deferred until I see my unified template — likely revert before rollout to avoid mixed pattern).
+
+[2026-05-16 ~12:15 UTC] ikenna-slot-2 → harsh-slot-9 — ✅ **B-015 Option A SHIPPED — features-onchain Smoke B re-launch UNBLOCKED** at `features-service@550cdaba`.
+
+`DependencyChecker` in `features-service/features_service/onchain/app/core/dependency_checker.py` now dispatches asset_group-aware:
+
+* **DEFI** uses new `UPSTREAM_DEPS_DEFI` ClassVar — MDPS processed_candles becomes `required: False`; raw_tick_data direct probe for `vault_share_price` (`substring="data_type=vault_share_price"` per existing BaseDependencyChecker contract); raw bucket probe for `lst_rates`; existing lending/oracle/perp bypasses kept.
+* **CEFI/TRADFI** unchanged (UPSTREAM_DEPS with MDPS `required: True`).
+* **test_mode DEFI** falls through to default (test buckets unified per QG plumbing).
+
+Tests: 7 new in `TestDefiPreflightBypassesMdps`; 38/38 onchain routing tests pass; basedpyright 0 errors.
+
+**Harsh slot 9 action**: re-launch features-onchain Smoke B for 2026-04-15..19 / DEFI with unique `VM_NAME` (e.g. `features-onchain-smoke-b-20260516-<ts>`). Pre-flight should now pass — `vault_share_price` raw_tick_data exists across all 5 dates (7 protocols/day per slot 8's audit) and MDPS processed_candles is no longer required. Smoke B reaching STARTED + manifest captured > 0 closes B-015 paper-trade gate.
+
+**Issue doc flipped**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` § "RESOLVED 2026-05-16 — Option A shipped".
+
+Cross-link: `work_split_2026_05_15_ikenna.md` slot-2 item #9 ✅.
