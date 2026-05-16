@@ -143,10 +143,17 @@ Operator triage / break into themed sub-issues:
    `_validate_gcp_required`) — removed from exclusion list. `service_cli.py::ServiceCLI.run` 108→39L
    `unified-trading-library@0e0feced` (extracted `_prepare_argv` + `_install_synthetic_input_override` +
    `_wire_runtime_env`) — also removed.
-   **Remaining 4 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
-   docstring-heavy contract docs; refactoring would lose adapter-facing contract value),
-   `io/streaming_shard_finalizer.py`, `features_interface/prediction/sports_odds_features.py`,
-   `streaming/parallel_per_symbol_runner.py` — follow-up candidates.
+   **Further refactors after the second trim**:
+   `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65→39L
+   `unified-trading-library@d5780025` (extracted `_resolve_polymarket_price`; collapsed return dict);
+   `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65→43L
+   `unified-trading-library@17640cba` (compressed contract docstring + return-exceptions comment block).
+   **Remaining 2 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
+   docstring-heavy contract docs; refactoring would lose adapter-facing contract value) +
+   `io/streaming_shard_finalizer.py` (one 52L body-only method, low-leverage trim) — follow-up candidates.
+
+   **Net session result**: SIZE_EXTRA_EXCLUDES went 9 → 2 paths (4 of 6 originally-flagged "remaining"
+   followups also cleared this turn). 45+ methods refactored under the 50-line budget cumulatively.
 
    **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start):
    the original 22 — current count after the 117-test sweep included additional internals). Commits:
