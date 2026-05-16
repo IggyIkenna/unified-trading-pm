@@ -26,7 +26,7 @@
     },
     {
       "name": "anthropic",
-      "versionRange": "anthropic>=0.49.0,<1.0.0"
+      "versionRange": "anthropic>=0.87.0,<1.0.0"
     },
     {
       "name": "asyncio_mqtt",
@@ -430,7 +430,7 @@
     },
     {
       "name": "web3",
-      "versionRange": "web3>=6.0.0,<7.0.0"
+      "versionRange": "web3>=6.20.0,<8.0.0"
     },
     {
       "name": "websockets",

@@ -39,6 +39,32 @@ def load_manifest() -> dict[str, Any]:
         return cast(dict[str, Any], json.load(f))
 
 
+_WORKSPACE_REPO_NAMES_CACHE: set[str] | None = None
+
+
+def _workspace_repo_names() -> set[str]:
+    """Workspace repo names from workspace-manifest.json (cached).
+
+    Used by ``is_internal_package`` to recognize bare service names like
+    ``execution-service`` / ``strategy-service`` that don't match the legacy
+    ``INTERNAL_PREFIXES`` heuristic.
+    """
+    global _WORKSPACE_REPO_NAMES_CACHE
+    if _WORKSPACE_REPO_NAMES_CACHE is None:
+        manifest = load_manifest()
+        names: set[str] = set()
+        topo_raw = manifest.get("topologicalOrder")
+        if isinstance(topo_raw, dict):
+            levels_raw = topo_raw.get("levels")
+            if isinstance(levels_raw, list):
+                for level in cast(list[dict[str, Any]], levels_raw):
+                    for r in level.get("repos", []) or []:
+                        if isinstance(r, str):
+                            names.add(normalize_pkg_name(r))
+        _WORKSPACE_REPO_NAMES_CACHE = names
+    return _WORKSPACE_REPO_NAMES_CACHE
+
+
 def _level_sort_key(lvl: dict[str, Any]) -> int:
     raw = lvl.get("level")
     return int(raw) if isinstance(raw, (int, float)) else 999
@@ -87,7 +113,12 @@ def extract_pkg_name(dep_spec: str) -> str:
 
 def is_internal_package(name: str) -> bool:
     norm = normalize_pkg_name(name)
-    return any(norm.startswith(p.replace("_", "-")) for p in INTERNAL_PREFIXES)
+    if any(norm.startswith(p.replace("_", "-")) for p in INTERNAL_PREFIXES):
+        return True
+    # Also recognize workspace repos by exact name match (covers service repos like
+    # execution-service / strategy-service / risk-and-exposure-service that don't
+    # match the legacy unified-/execution-algo/matching-engine prefixes).
+    return norm in _workspace_repo_names()
 
 
 def parse_pyproject(repo_path: Path) -> tuple[dict[str, str], dict[str, list[str]]]:
