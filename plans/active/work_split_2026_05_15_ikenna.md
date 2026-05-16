@@ -197,7 +197,17 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    2026-05-13". Carry-flag was bookkeeping only.
 4. **`tradfi_master_2026_05_07` master plan refresh** (carry from 14 May #5) — push remaining open todos workspace-wide.
    (research 1.2×, ~4 = 4.8 cal)
-5. **`tradfi_master_2026_05_07` venue + symbology coverage audit** (carry from 14 May #8). (research 1.2×, ~3 = 3.6 cal)
+5. ✅ **`tradfi_master_2026_05_07` venue + symbology coverage audit** (carry from 14 May #8). (research 1.2×, ~3 = 3.6
+   cal) — **AUDIT 2026-05-16**: cross-referenced against `cross_asset_group_catalogue_audit_2026_05_10.md` § ICE US
+   softs action item (Phase 5B pending). Found ICE US softs (CT/CC/KC/SB/OJ/DX) **already canonicalised** in UAC:
+   `canonical/domain/derivatives/tradfi_roots.py:242-247` registers all 6 as `CATEGORY_ICE_FUTURES` with
+   `DATASET_ICE_US`
+   - exchange="ICE"; `registry/tradfi_instrument_universe.py:233-239` `_ICE_US_FUTURES` list has all 6 as
+     `DatabentoInstrumentDef(..."ICE", "FUTURE", "IFUS.IMPACT", "parent", ...)`;
+     `registry/tradfi_symbology.py:104-105, 319, 408` references `CT.FUT → IFUS.IMPACT`. Zero drift: no `CT.FUT.*CME`
+     references workspace-wide. Other carry-over TF-6/TF-7 items (no `futures_chain` data_type / `options_chain` only at
+     CME / VIX-15m constants location) remain open per the catalogue audit and are tracked in that plan, NOT a slot-5
+     deliverable.
 6. 🔴 **BLOCKED-CREDENTIALS** **CME/EUREX 1-week test backfill** (carry from 14 May #10) — same Databento account-lock
    as items 1 + 2. Combined unblock ask in `pings/slot_5.md` (PM@`6d518a4f`). (infra 0.8×, ~2 = 1.6 cal)
 7. ✅ **`strategy_service_qg_ltv_threshold_violations_2026_05_15` close** (carry from 14 May #11) — migrate to UAC
