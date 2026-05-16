@@ -206,8 +206,12 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
 
 ### S&P 500 ML readiness (`sp500_ml_readiness_master`)
 
-- [ ] [AGENT] P2. Continuous-series stitcher for ES (rolled futures) — back-adjust for roll. [AUDIT 2026-05-07: FRESH —
-      actionable]
+- [x] [AGENT] P2. Continuous-series stitcher for ES (rolled futures) — back-adjust for roll. [AUDIT 2026-05-07: FRESH —
+      actionable] — **VERIFIED ALREADY SHIPPED 2026-05-16**: `features-service@FuturesRollAdjuster` class in
+      `features_service/delta_one/app/core/futures_roll_adjuster.py:244` implements continuous-series back-adjustment
+      with `get_lifecycle_phase()` + `annotate_lifecycle_phase()` helpers. Wired into delta-one orchestrator at
+      `features_service/delta_one/engine/orchestrator.py:49` (import) and `:607` (usage producing "continuous adjusted"
+      series). Design doc at `features_service/delta_one/docs/TRADFI_FUTURES_ROLL.md`. No further action.
 - [x] [AGENT] P2. `FUTURES_ROLL` event emission in `strategy-service` ML engine on continuous-series roll. [AUDIT
       2026-05-07: DONE — strategy@d7dad8d (FUTURES_ROLL emission helper + 16 roll-boundary tests)]
 - [ ] [AGENT] P3. Run `features-delta-one-service` for tradfi/ES across 36 calculators. [AUDIT 2026-05-07: FRESH —
