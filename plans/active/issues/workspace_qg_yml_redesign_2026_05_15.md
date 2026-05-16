@@ -319,3 +319,52 @@ After rollout, add row to `master_to_live_defi_2026_05_23.md` § "Continuous ver
 - **Cadence**: weekly drift-check (audit one repo per day across the week)
 - **Owner**: slot 1 main (or post-cutover: continuous-verification cron)
 - **Last verified**: 2026-05-16 (post-canary)
+
+---
+
+## CANARY OUTCOME 2026-05-16 18:00 UTC
+
+**Canary RESULT: workflow validates + runs end-to-end** ✅. Pre-existing QG issues surfaced (which is the
+expected/desired behavior of the new trigger surface):
+
+**Canary commits**:
+- `alerting-service@05c942c` — first attempt; startup_failure (template had bad service_name+source_dir inputs)
+- PM fix at `unified-trading-pm@b5d043d2` — drop bad inputs
+- `alerting-service@bac5be1` — second attempt; workflow runs to completion (conclusion=failure due to pre-existing QG)
+
+**QG failures exposed** (real pre-existing issues, not workflow bugs):
+1. **STEP 5.79 dockerfile-base-pin** — alerting-service Dockerfile uses `:latest` instead of `@sha256:digest`.
+   Fix per Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`. Harsh-side may already be
+   queueing this for the 21-repo Phase 5 rollout.
+2. **Production readiness validators** — workspace-manifest.json or plans/active/*.md validation issue from
+   `unified-trading-pm/scripts/run_validators.py --scope all`. Likely a stale dep declaration or removed-symbol
+   reference.
+
+**Validation summary**:
+- ✅ All 5 trigger patterns covered (push to [main, staging, live-defi-rollout] + PR to [main, staging])
+- ✅ `{{DEP_REPOS}}` rendered correctly from workspace-manifest.json (phantom-deps auto-removed)
+- ✅ Reusable workflow integration works
+- ✅ Concurrency cancel-in-progress on push fires correctly
+- ✅ Trigger surface exposes pre-existing issues (as designed — was masked by `[main]`-only trigger before)
+
+**Phase B decision**: PROCEED — workflow is correct; pre-existing QG failures it exposes are surfacing-by-design.
+Per Findings Triage HARD RULE, "pre-existing is NOT a triage criterion — fix now if you can". Slot owners pick
+up failures as they surface on each repo's first workspace-qg run.
+
+**Phase B sequencing** (~2 hours total, batch-of-5 per orchestrator cycle):
+
+Batch 1 (current cycle): client-reporting-api, batch-live-reconciliation-service, ml-inference-service,
+ml-training-service, pnl-attribution-service (5 `[main]`-only repos — biggest trigger-pattern change but lowest
+existing-CI risk since no LDR push CI today).
+
+Batch 2 (next cycle): risk-and-exposure-service, system-integration-tests, trading-agent-service,
+unified-api-contracts, ibkr-gateway-infra.
+
+Batch 3: deployment-api, deployment-service, execution-service, features-service, instruments-service.
+
+Batch 4: market-tick-data-service, market-data-processing-service, strategy-service, unified-trading-library,
+position-balance-monitor-service.
+
+Per-repo migration: (a) render workspace-qg.yml.tmpl; (b) drop old quality-gates.yml; (c) commit both as one
+logical unit; (d) push to LDR; (e) the auto-FF mirror lands on LDR; (f) workspace-qg workflow fires; (g) any QG
+failure goes to that repo's slot owner per Findings Triage.

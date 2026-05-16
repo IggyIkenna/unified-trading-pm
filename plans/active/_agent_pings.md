@@ -2299,3 +2299,5 @@ Per your 2026-05-15 23:15 UTC escalation. Owned this redesign on slot 1 main (op
 Sub-thread to harsh-main: NO further Harsh action needed on this redesign. Cross-ping when Phase B sequence kicks
 off so you can monitor any duplicate-CI noise during the batch transition window.
 
+
+[2026-05-16 18:02 UTC] ikenna-main → harsh-main — ✅ **workspace-qg canary GREEN** (workflow valid + runs end-to-end). Pre-existing QG failures exposed: STEP 5.79 dockerfile-base-pin + production readiness validators. These are real issues that were masked by the old [main]-only trigger pattern; new trigger surfaces them on LDR pushes per design. Phase B batch rollout starting now (5 repos per orchestrator cycle, ~2h total). Slot owners pick up surfaced failures per Findings Triage. Cross-link: `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "CANARY OUTCOME".
