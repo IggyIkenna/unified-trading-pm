@@ -79,10 +79,20 @@ stale tarball IS the cause of my first failed VM today.
 - [x] [SCRIPT] P0. Bring risk-and-exposure-service UAC pin into alignment with workspace consensus + rebuild tarball. ✅
       **DONE 2026-05-16 (slot-3)** — `risk-and-exposure-service@83b10e0` relaxed pin `>=0.2.38` → `>=0.1.0,<1.0.0`;
       tarball rebuilt 21:22 UTC; verified pin fix is present in tarball contents.
-- [ ] [SCRIPT] P0. **STILL BLOCKED — VM 3 (`features-onchain-defi-20260516-222259`) also failed.** Launched 22:23 UTC
-      after pin fix; auto-deleted by 22:26 UTC with ZERO events written (no STARTED, no PREFLIGHT_SKIPPED, no STOPPED).
-      Startup script failed before features_service launch. Likely another pin conflict among the 27 install-set repos;
-      needs full `uv pip compile --no-deps -e <repo1> -e <repo2> ...` walk to find the offending repo(s).
+- [x] [SCRIPT] P0. VM 3 (`features-onchain-defi-20260516-222259`) failure root-caused + fixed ✅ **DONE 2026-05-16
+      23:30 UTC (slot-1-main)** — `ml-training-service==0.1.0` pinned `unified-trading-library>=0.4.0,<1.0.0` but UTL
+      is at 0.3.167 (peer repos all use `>=0.1.0` or `>=0.3.0`). VM did NOT auto-delete — it sat IDLE for ~55 min
+      because startup script exited rc=1 BEFORE STARTED was emitted; the no-fire-and-forget watchdog only catches VMs
+      that emit STARTED then go silent, so VMs failing before STARTED slip through. Manual delete by slot-1-main at
+      23:07 UTC. Fix shipped `ml-training-service@876f0e5` (pin → `>=0.3.0,<1.0.0`); tarball rebuilt 22:29:57 UTC.
+      Filed `plans/active/issues/aave_lending_rate_val_vm_no_shutdown_2026_05_16.md` for the watchdog hardening.
+- [x] [SCRIPT] P0. VM 4 (`features-onchain-defi-20260516-233044`) failure root-caused + fixed ✅ **DONE 2026-05-16
+      23:52 UTC (slot-1-main)** — pre-existing `betfairlightweight>=2.20` ↔ `requests<2.33.0` vs `execution-service`
+      requires `>=2.33.0` flat-install conflict. Existing NODEPS opt-out only covered
+      `synthetic-benchmark`/`strategy-paper`/`strategy-live` VM_TASKs. Fix shipped `deployment-service@9d37deb`: added
+      `features-backfill` to the NODEPS allowlist; setup script re-uploaded 22:52:08 UTC. VM 5 launched as
+      `features-onchain-defi-20260516-235216`. Cross-ref:
+      `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`.
 - [ ] [DESIGN] P1. Add `uv pip compile` pre-flight to `create-code-tarballs.sh` per-asset-group set.
 - [ ] [SCRIPT] P1. Hard-redirect or hard-fail the deprecated `launch-features-{onchain,}-backfill-vm.sh` wrappers so
       they cannot silently use the legacy module + stale tarball.
