@@ -162,16 +162,16 @@ Operator triage / break into themed sub-issues:
    `pnl-attribution-service` / `system-integration-tests` / `trading-agent-service` / `unified-trading-api` /
    `unified-trading-library`) are on `urllib3>=2.7.0,<3.0.0` per workspace-wide
    `cryptography/python-dotenv` constraint bump.
-5. 🔄 **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
-   `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
-   then per-callsite migration.
-   **PARTIAL DONE 2026-05-16 (slot 7)**: lifted 9 of 11 UTL sites at `unified-trading-library@bd6a27ef`:
-   `CircuitBreakerId` (5 sites: 5 reconcile modules), `ServiceEmissionPolicy` (2 sites: streaming/live_aggregator
-   + feature_service_base/live_aggregator), `EmptyConfirmedReason` (manifest_writer lazy), and
-   `KillSwitchArmRequest/KillSwitchId/KillSwitchProvenance` (treasury/withdrawal_reconciler lazy) — all already
-   on UAC root facade per `unified_api_contracts/__init__.py`. Remaining 2 sites need UAC facade re-exports
-   first: `source_priority` (emission_latency helpers in availability_stamping) + `strategy_family`
-   (StrategyFamily in risk/family_aggregator) — UAC-side follow-up.
+5. ✅ **Deep UAC imports** (10 callsites): DONE 2026-05-16 (slot 7). 11 of 11 UTL deep-import sites lifted.
+   First 9 at `unified-trading-library@bd6a27ef`: `CircuitBreakerId` (5 sites: 5 reconcile modules),
+   `ServiceEmissionPolicy` (2 sites: streaming/live_aggregator + feature_service_base/live_aggregator),
+   `EmptyConfirmedReason` (manifest_writer lazy), and `KillSwitchArmRequest/KillSwitchId/KillSwitchProvenance`
+   (treasury/withdrawal_reconciler lazy). Final 2 lifted at `unified-trading-library@ca1ccafc` after
+   `unified-api-contracts@48315a0` re-exported the helpers on root: `emission_latency_ms_for_source`
+   (availability_stamping) + `STRATEGY_FAMILY_REGISTRY / StrategyFamily / StrategyFamilyId`
+   (risk/family_aggregator). UAC root facade also re-exports `get_primary_source`,
+   `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`,
+   `read_with_source_priority`, and `family_for_archetype` for future callers.
 
 This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not** a blocker for the 117-test-fixture
 sweep closure (utl@`26ded7d`).
