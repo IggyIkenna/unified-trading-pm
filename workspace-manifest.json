@@ -1340,6 +1340,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
+        },
+        {
+          "name": "market-tick-data-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "LOCAL_PASS",
