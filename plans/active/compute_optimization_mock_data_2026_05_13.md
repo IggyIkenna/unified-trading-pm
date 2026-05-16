@@ -171,8 +171,29 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       serial. (features-service@722697d3 — added to sports family `parser.py` + `main.py`; parallel path uses
       ProcessPoolExecutor, serial path default=1 unchanged. Note: onchain + volatility families already have
       `max_workers` in their BatchHandler; sports was the gap. 2026-05-14 slot 7.)
-- [ ] [SCRIPT] P1. Identify any feature_group whose `required_inputs` DAG forces serial computation; flag for
+- [x] [SCRIPT] P1. Identify any feature_group whose `required_inputs` DAG forces serial computation; flag for
       post-cutover refactor (not blocking May-23 — those stages just run on the smallest SKU that fits memory).
+      **DONE 2026-05-16 (slot 7)**: Audit of all 77 feature_groups across 7 families (calendar, cross_instrument,
+      delta_one, multi_timeframe, onchain, sports, volatility) via `feature_definitions.yaml` reveals:
+
+      **Truly cross-family serial chains** (post-cutover refactor candidates):
+      * `multi_timeframe/tf_structure_context` ← depends on `delta_one_market_structure` + `delta_one_fibonacci` +
+        `delta_one_supply_demand` (delta_one outputs must land first).
+      * `multi_timeframe/tf_confluence_signals` ← depends on `delta_one_candlestick` +
+        `delta_one_market_structure` + `delta_one_oscillators`.
+      * `multi_timeframe/hierarchical_regime_combiner` ← depends on `intraday_regime` + `micro_regime`
+        (both multi_timeframe outputs) + `features_cross_instrument` (cross-family).
+
+      **Intra-family serial chains**:
+      * `cross_instrument/composite_sr` ← depends on `liquidation_clusters` + `liquidity_walls` (both
+        cross_instrument outputs) + `book_snapshot_5` raw.
+
+      **Parallelisable majority**: 61 of 77 (~79%) feature_groups depend on EXTERNAL raw inputs only (ohlcv_candles
+      = 34 consumers, book_snapshot_5 = 7, polymarket_trades = 6, options_chain = 5, etc.) — these can compute
+      fully in parallel within their family. Post-cutover refactor priority: 4 cross-family serial chains above;
+      target = topological-sort scheduler that fans out delta_one before multi_timeframe and cross_instrument
+      leaves before cross_instrument composites. Not blocking May-23 — current serial execution fits the
+      benchmark budget on c2-standard-8 for in-scope archetypes.
 
 ### Phase 3 — Execution-alpha measurement at scale (Days 5-7, ~1 cal-AI-day)
 
