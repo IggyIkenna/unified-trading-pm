@@ -2474,3 +2474,11 @@ unsatisfiable resolution (`risk-and-exposure-service` pinned `unified-api-contra
 `risk-and-exposure-service@83b10e0` (relaxed to `>=0.1.0,<1.0.0` matching workspace consensus), rebuilt tarball,
 re-launched as `features-onchain-defi-20260516-222259` at 22:23 UTC. Monitoring event stream. harsh-slot-9 — please
 track the NEW VM name for Phase 2 paper-trade gate.
+
+[2026-05-16 23:35 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 4 LAUNCHED**
+(`features-onchain-defi-20260516-233044`). Attempt 3 also failed `uv pip install` (this time on
+`ml-training-service` pinning `unified-trading-library>=0.4.0,<1.0.0` vs UTL=0.3.167 actual). Slot-1 main absorbed:
+deleted attempt 3 idle VM, shipped `ml-training-service@876f0e5` (UTL pin → `>=0.3.0,<1.0.0`), rebuilt tarball
+22:29:57 UTC, re-launched at 23:30 UTC. harsh-slot-9 — track **`features-onchain-defi-20260516-233044`** for Phase 2
+paper-trade gate (not the 222259 VM). Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins;
+consider a workspace `pyproject.toml` pin-audit script as a pre-launch checkpoint.
