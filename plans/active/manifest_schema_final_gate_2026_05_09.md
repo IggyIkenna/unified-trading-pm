@@ -565,9 +565,15 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       all ✅ per `regenerate_active_plan_inventory.py` sweep. Workspace-qg pre-existing failures non-blocking for
       v8 (architectural — captured in `workspace_qg_yml_redesign_2026_05_15.md` issue doc). Pre-flight GREEN.
       Operator AFK direction 2026-05-16: race-to-finish, no operator action needed since all credentials vaulted.
-- [ ] [HUMAN+AGENT] P0. Phase 7.B — Snapshot critical state: per-bucket
+- [x] ✅ [HUMAN+AGENT] P0. Phase 7.B — Snapshot critical state: per-bucket
       `gcloud storage cp -r gs://{pid}-raw-tick/_index/ gs://{pid}-pre-migration-snapshot/raw-tick-2026-05-13/_index/`.
       Covers manifest pre-bundled-walk; restore path if any drift class breaks the manifest in-flight.
+      **DONE 2026-05-16 21:40 UTC by slot 1 main**: created
+      `gs://central-element-323112-pre-migration-snapshot/` (asia-northeast1, standard); snapshotted 9 raw-tick
+      buckets' `_index/` directories in parallel:
+      `market-data-tick-{cefi,defi,tradfi,sports,prediction}{,prd}-central-element-323112` → snapshot path
+      `pre-migration-snapshot/<bucket-name>/raw-tick-2026-05-16/_index/`. Total ~370 MB snapshotted; restore path
+      available if Phase 7.C-7.F bundled walk causes manifest drift.
 - [ ] [HUMAN+AGENT] P0. Phase 7.C — Launch migration VM fleet per gcs_migration plan Phase 3 spec — per-bucket
       parallelism (4-8 VMs per bucket); same-region `asia-northeast1-c`; HTTP pool `2*workers`;
       `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`.
