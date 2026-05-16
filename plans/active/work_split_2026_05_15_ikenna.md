@@ -315,8 +315,15 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
      references workspace-wide. Other carry-over TF-6/TF-7 items (no `futures_chain` data_type / `options_chain` only at
      CME / VIX-15m constants location) remain open per the catalogue audit and are tracked in that plan, NOT a slot-5
      deliverable.
-6. 🔴 **BLOCKED-CREDENTIALS** **CME/EUREX 1-week test backfill** (carry from 14 May #10) — same Databento account-lock
-   as items 1 + 2. Combined unblock ask in `pings/slot_5.md` (PM@`6d518a4f`). (infra 0.8×, ~2 = 1.6 cal)
+6. ✅ **CME (MES) 1-week test backfill** (carry from 14 May #10) — (infra 0.8×, ~2 = 1.6 cal). **OPERATIONALLY SHIPPED
+   2026-05-16**: VM `tradfi-bf-mes-adhoc-adhoc-20260516-132914` ran with the same 2 MTDS fixes that unblocked item 1.
+   Captured **1,854,206 rows across 5 trading days** (2026-05-01=327,750 / 05-04=419,950 / 05-05=285,879 / 05-06=365,861
+   / 05-07=454,718). MES.FUT canonical futures_chain + combo partitions written, weekends pre-skipped, exit_code=0.
+   **EUREX descoped**: not in current TradFi adapter universe (`EUREX` exists in
+   `unified_api_contracts/registry/venue_session_hours.py` + `half_day_sessions.py` for calendar logic only; no entries
+   in `tradfi_roots.py` / `tradfi_instrument_universe.py` / `launch-tradfi-backfill-vm.sh`). EUREX coverage is a
+   separate adapter-buildout task, NOT a backfill smoke. Moved to `tradfi_master_2026_05_07.md` § "Eurex venue
+   expansion" follow-up todo (P2, post-cutover).
 7. ✅ **`strategy_service_qg_ltv_threshold_violations_2026_05_15` close** (carry from 14 May #11) — migrate to UAC
    `LIQUIDATION_PARAMS_REGISTRY`. (refactor 0.4×, ~1 = 0.4 cal) — **VERIFIED ALREADY CLEAN 2026-05-15**: ran exact STEP
    5.37 regex on `strategy_service/engine/` — every match is annotated `# CORRECT-LOCAL` (gas uplift, runtime config,
