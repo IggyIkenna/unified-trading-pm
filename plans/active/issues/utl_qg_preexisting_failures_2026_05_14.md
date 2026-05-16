@@ -128,9 +128,23 @@ Operator triage / break into themed sub-issues:
    itself (legitimate); inside-function matches in `firestore_lifecycle.py` / `candidate_manifest_store.py` /
    `instruments_catalog_reader.py` / `presigned_urls.py` carry `qg-inside-import` noqa markers.
 2. **Backward-compat shims** (3 instances): targeted deletions; check callers first. ~1 hour.
-3. **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days total. Concentrated areas: `treasury/`
-   (5), `post_trade/` (4), `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py` (3),
-   `synthetic/harness.py` (2).
+3. 🔄 **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days total. Concentrated areas:
+   `treasury/` (5), `post_trade/` (4), `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py`
+   (3), `synthetic/harness.py` (2). **IN-PROGRESS 2026-05-16 (slot 7)**: 12 of 51 cleared (UTL audit found more than
+   the original 22 — current count after the 117-test sweep included additional internals). Commits:
+   `cloud_interface/protocol.py::from_env` 51→26L `unified-trading-library@ae622fe8`;
+   `feature_service_base/live_aggregator.py::_emit_stale_data` 51→32L (same commit);
+   `kill_switch/bus.py::arm` 51→45L (same commit);
+   `streaming/utc_aligned_scheduler.py::run_forever` 52→38L `unified-trading-library@403f4b34`;
+   `streaming/live_aggregator.py::run` 53→33L (same commit);
+   `post_trade/statement_emitter.py::emit_daily_statement` 54→47L `unified-trading-library@92e99a84`;
+   `treasury/withdrawal_audit_log.py::append` 57→39L (same commit, +1 reportAny error eliminated);
+   `kill_switch/bus.py::disarm` 60→48L `unified-trading-library@cc8323e5`;
+   `core/mock_defi_dynamics.py::simulate_price_movement` 61→40L (same commit);
+   `lifecycle/resource_profiler.py::__init__` 57→46L `unified-trading-library@c8957897`;
+   `treasury/withdrawal_executor.py::withdraw` 65→44L `unified-trading-library@ad4f2897`;
+   `streaming/live_aggregator.py::cascade_parent_candle` 73→33L `unified-trading-library@351a54bf`. 39 remaining;
+   continuing.
 4. **urllib3 CVE bump**: workspace-wide dep bump to 2.7.0 — single PR across all repos via PM dep alignment scripts.
 5. **Deep UAC imports** (10 callsites): pair with Ikenna for facade re-exports on
    `canonical.crosscutting.{service_emission_policy,honest_coverage,strategy_family,circuit_breaker,source_priority,kill_switch}`,
