@@ -598,3 +598,13 @@ Half-2 plan-flip discipline followed throughout: every code commit had a sibling
 39 concrete calcs migrated. Multi_timeframe family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical). basedpyright clean on all changed files.
 
 Also resolved workspace sync issue: yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) was on tab branch only; rebased + pushed to LDR as `execution-service@f871ffad7`. Audited all 28 repos: ahead/behind both 0 across the working set.
+
+[2026-05-16 13:20 UTC] slot-7 — third reserve pass complete. Pulled in 3 more deferred items:
+
+1. **basefc multi_timeframe family** (was "OUT OF SCOPE per Option-a") — promoted LOCAL ABC to UTL canonical `BaseFeatureCalculator[pl.DataFrame]`, widened `calculate()` signature to `(df, **params)`, migrated 9 calcs. `features-service@87ba9cf6`. **Combined total: 48 concrete calcs migrated across cross_instrument + onchain + multi_timeframe polars families.**
+
+2. **compute_optimization Phase 2 P1 — DAG serial-bottleneck audit** (was DEFERRED). Audited 77 feature_groups across 7 families via `feature_definitions.yaml`. Found 4 cross-family serial chains for post-cutover refactor: `tf_structure_context` + `tf_confluence_signals` + `hierarchical_regime_combiner` (all multi_timeframe ← delta_one) + `composite_sr` (cross_instrument intra-family). 61/77 (~79%) groups are parallelizable on raw inputs. `PM@59254828`.
+
+3. **context_fill_optimization P2 — .claude/rules/ relocation** (was DEFERRED lowest-impact). Verified obsolete: workspace migrated to per-repo `.cursor/rules/` structure already; P2 goal achieved via that broader migration. `PM@a4a2bb1d`.
+
+All shipped with Half-1 + Half-2 plan-flip discipline maintained. basedpyright clean on all changed files.
