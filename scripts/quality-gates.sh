@@ -253,6 +253,25 @@ if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Codex doc freshness (Group B of governance_qg_automation_gaps) — baselined ratchet ──
+# SSOT: CLAUDE.md § "Post-Plan-Phase Codex Audit (HARD RULE)"
+# Origin: plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group B
+# Walks cutover-critical codex surfaces (codex/02-data, /04-architecture, /05-infrastructure,
+# /11-project-management) and asserts every *.md has last_reviewed: + is ≤90 days old.
+# Current baseline 188 — ratchet down by adding last_reviewed: YYYY-MM-DD to codex docs as touched.
+CODEX_FRESHNESS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_codex_doc_freshness.py"
+if [ -f "$CODEX_FRESHNESS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Codex doc freshness check (ratchet mode)..."
+    if python3 "$CODEX_FRESHNESS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --staleness-days 90 >/dev/null; then
+        log_success "Codex doc freshness check passed (at-or-below baseline)"
+    else
+        echo "❌ Codex doc freshness regression — see CLAUDE.md § 'Post-Plan-Phase Codex Audit (HARD RULE)'" >&2
+        echo "   Add 'last_reviewed: YYYY-MM-DD' to any new codex doc in 02-data/04-architecture/05-infrastructure/11-project-management, OR" >&2
+        echo "   if intentional debt, re-baseline with: python3 ${CODEX_FRESHNESS_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then

@@ -74,10 +74,14 @@ this plan owns the QG/automation half.)
       future PRs migrate the 9 existing runbooks to canonical format. Origin issue:
       `plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md`. Shipped at
       `unified-trading-pm@<pending>`. **MIGRATED FROM:** CLAUDE.md § "Runbook Execution-Owner SSOT (HARD RULE)".
-- [ ] [DESIGN] P2. **Group B — Codex freshness ratchet (G-12 + D-18).** Add a QG ratchet that flags codex docs in
-      cutover-critical surfaces (`codex/02-data/`, `codex/04-architecture/`, `codex/05-infrastructure/`,
-      `codex/11-project-management/`) lacking `last_reviewed:` frontmatter or older than 90 days. Cross-reference D-18
-      cluster-validation gate to the QG STEP 5.64 script. **MIGRATED FROM:** G-12, D-18.
+- [x] ✅ [DESIGN] P2. **Group B — Codex freshness ratchet (G-12 + D-18).** Ship
+      `scripts/quality_gates/check_codex_doc_freshness.py` + baseline file + wire into PM `quality-gates.sh`.
+      Walks `codex/02-data/` + `codex/04-architecture/` + `codex/05-infrastructure/` + `codex/11-project-management/`
+      (206 docs total) and asserts every `*.md` has `last_reviewed: YYYY-MM-DD` frontmatter + age ≤ 90 days
+      (`--staleness-days` configurable). Initial baseline = 188 violations (codified at
+      `scripts/quality_gates/codex_doc_freshness_baseline.yaml`); ratchet-down mode prevents regression while
+      future PRs add `last_reviewed:` stamps to existing docs. Shipped at `unified-trading-pm@<pending>`.
+      **MIGRATED FROM:** G-12, D-18.
 - [ ] [DESIGN] P2. **Group C — Architectural ratchets (ST-19 + PB-19 + UI-18).** Three "no standalone X" rules with no
       enforcing QG: standalone backtest engine in strategy-service, mode-branching in PBMS, embedded UI in Python
       service repo. Design one QG-ratchet helper that takes (target path glob, banned-substring set, owner) and raises
