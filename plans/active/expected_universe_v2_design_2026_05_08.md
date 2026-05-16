@@ -202,11 +202,13 @@ canonical manifest post-v2.
       Rationale: v2 writes per-VM manifest shards, not a canonical data bucket; watchdog polls event stream only.
       **RELAUNCH watchdog VM after this dict edit — operator action before first v2 VM launch.**
       (deployment-service@7313a39 — vm_zombie_watchdog.py +6 lines)
-- [ ] [SCRIPT] P1. Singleton-lock shell tests for the v2 launcher at
+- [x] [SCRIPT] P1. Singleton-lock shell tests for the v2 launcher at
       `deployment-service/tests/test_launch_expected_universe_v2.sh`. Asserts: (a) refuses launch if same-prefix VM
       RUNNING; (b) --force bypasses singleton check; (c) --env staging passes DEPLOYMENT_ENV=staging to VM metadata; (d)
-      missing asset_group exits 2; (e) invalid asset_group exits 2. **DEFERRED**: tests require gcloud mock harness;
-      implement as pre-Phase-4 gate.
+      missing asset_group exits 2; (e) invalid asset_group exits 2. **SHIPPED 2026-05-16 (slot 4)** —
+      `deployment-service@31fe24f`. PATH-stub harness for gcloud + gsutil; 6/6 cases pass locally including (f) invalid
+      `--env` → exit 1. Case (g) (invalid `max_writes`) intentionally omitted: launcher treats non-integer max_writes as
+      catalog-path override (positional ambiguity is by design).
 
 ### Phase 3 — Q1-resolution: sharding strategy (P1, ~0.25 day)
 
