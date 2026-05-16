@@ -131,3 +131,29 @@ can patch ASTER URLs immediately if operator confirms canonical Aster Finance en
 - HYPERLIQUID S3 downloader (the missing wiring target):
   `market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py`
 - CLAUDE.md "DeFi + CeFi hybrid instrument universe" (eligibility rule)
+
+---
+
+## RESOLUTION 2026-05-16 (ikenna-main audit during orchestrator cycle)
+
+**Option A effectively shipped via WS-connector path** — both venues now LIVE via WebSocket:
+
+- **ASTER** ✅ LIVE: 7th WS connector landed at `b0419960` ("live_pipeline 3.5 — 7th WS connector (ASTER) — ALL 7
+  perp venues LIVE")
+- **HYPERLIQUID** ✅ LIVE: 2nd DeFi WS connector at `74e77ebf` ("live_pipeline Phase 3.5 — 2nd DeFi WS connector
+  landed (HYPERLIQUID)")
+
+The original REST-fetch failures (`fetch_trades` stub for HYPERLIQUID; broken base URLs for ASTER) are sidestepped
+by the WS subscription path. Perp tick data now flows via WebSocket subscriptions rather than the broken REST
+adapters.
+
+The diagnosed REST-side issues remain technically unfixed but are NOW non-blocking for May-23 cutover since the live
+data pipeline uses WS exclusively. Historical/backfill backfills via Tardis (paid commercial tier) cover the
+REST-fetch use case.
+
+**All 7 perp venues LIVE per live_pipeline 3.5** — May-23 perp coverage gate is GREEN.
+
+**Follow-up (post-cutover, P3)**: file successor plan for REST-adapter cleanup if historical-backfill use case
+expands beyond Tardis. Until then, REST adapters can be marked as DEPRECATED in MTDS docstrings.
+
+**Issue archive-ready.**
