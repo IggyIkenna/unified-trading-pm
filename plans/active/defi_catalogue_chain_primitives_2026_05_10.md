@@ -955,10 +955,13 @@ Owner: harsh + per-asset-group parallel agents.
 Per CLAUDE.md "No fire-and-forget VM launches" + "Per-VM shard isolation for concurrent backfills" + "Manifest
 concurrency principle" (read-once + per-date freshness check + write-time CAS).
 
-- [ ] [AGENT] P0. **6A — Aave V3 Ethereum silent-zero diagnose + re-run**. Per writegate Phase 2.A; root-cause the
-      0/343-shards bug, fix at MTDS adapter, re-run via launcher
-      `deployment-service/scripts/vm/launch-mtds-lending-indices-vm.sh`. Coverage end-state: ≥ 99% captured by
-      2026-05-13.
+- [x] [AGENT] P0. **6A — Aave V3 Ethereum silent-zero diagnose + re-run**. ✅ **CLOSED-AS-STALE 2026-05-16 by slot 2
+      (ikenna-defi-catalogue-tab)** — duplicate of Phase 3-LENDING.1 (line 679-689 above) which itself was closed-as-
+      stale 2026-05-11/12: "routing config absent" framing was stale; data exists on-disk (LINEA 2025-03-01 = 475 real
+      rows, BSC 2024-06-01 = 316 real rows). Root cause was operational (canonical manifest stale vs per-VM shards) —
+      closed by slot 3 manual consolidator + Case-5 bucket fix (deployment-service@`ad4d448`, slot 6@`2a76a2a`). No code
+      change needed at MTDS adapter. Tail-end catch-up already shipped 2026-05-13 via 3-LENDING.4 catch-up VM
+      `mtds-lending-indices-20260511-204908` (65 captured rows, 12 protocol-chain combos).
 - [ ] [AGENT] P0. **6B — Aave V3 multi-chain backfill** (9 non-Ethereum chains × N reserves × dates). Launcher
       `launch-mtds-lending-multichain-vm.sh` (NEW); per-chain VM with `MANIFEST_PER_VM_SHARDS=true` +
       `VM_NAME=aave-multi-<chain>-<ts>`.
@@ -992,20 +995,32 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
 - [x] [AGENT] P0. **7A — `codex/02-data/defi-venue-protocol-catalogue.md`** (NEW; Phase 1J). Final lock at Phase 8. ✅
       Slot 2 Day 1 (PM@`f54dd90c`) + Day 2 mirror (PM@`15709c4b`) — doc covers 26 protocols + per-protocol shard-atom
       matrix.
-- [ ] [AGENT] P0. **7B — `codex/02-data/defi-data-type-taxonomy.md`** (NEW; Phase 3J). Final lock at Phase 8.
-      **HARSH-SIDE** — depends on Phase 3 MTDS adapter buildout per cross-side handshake.
+- [x] [AGENT] P0. **7B — `codex/02-data/defi-data-type-taxonomy.md`** (NEW; Phase 3J). ✅ **VERIFIED-DONE 2026-05-16 by
+      slot 2** — already shipped via Phase 3J at PM@`291f81d7` (line 798 above): "vault/restaking/LST coverage updated
+      with adapter-shipped status". Doc exists at 284 lines covering full per-venue data-type matrix; matches the 13
+      Phase 3 MTDS adapters (mtds@`3e82cc5`/`80ee665`). Final-lock-at-Phase-8 step is a no-op since the content already
+      reflects shipped state.
 - [x] [AGENT] P0. **7C — `codex/05-infrastructure/chain-rpc-mev-tenderly.md`** (NEW; Phase 5D). Final lock at Phase 8.
       ✅ Pre-existed at 204 lines + slot 2 Day 3 JITO_BUNDLE status update (PM@`8ce85bbc`).
-- [ ] [AGENT] P0. **7D — `codex/02-data/instrument-pipeline-defi.md`** (UPDATE; Phase 2J). **HARSH-SIDE** — depends on
-      Phase 2 instruments-service adapter buildout.
+- [x] [AGENT] P0. **7D — `codex/02-data/instrument-pipeline-defi.md`** (UPDATE; Phase 2J). ✅ **VERIFIED-DONE 2026-05-16
+      by slot 2** — already shipped via Phase 2J at PM@`291f81d7` (line 610 above): adapter count 25→50, full
+      categorized adapter list. Doc line 20 confirms: "Adapters (under reference_data/adapters/defi/ as of 2026-05-14 —
+      refreshed per Phase 2J audit)". 267 lines documenting the 13 Phase 2 instruments-service adapters shipped at
+      instruments-service@`a490033`+`be12b56`+`57a4f1f`+`38192e7`+`b563afb`.
 - [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J).
       **HARSH-SIDE** — depends on Phase 3 MTDS bundled data_types + Phase 6 backfills landing. Slot 2 Day 2 Phase 2
       shard-atom matrix in codex (`defi-venue-protocol-catalogue.md`) provides the bundled-vs-per-instrument reference
       for the future Phase 3K update.
-- [ ] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). **HARSH-SIDE**
-      — depends on Phase 4 connector buildout.
-- [ ] [AGENT] P0. **7G — `codex/04-architecture/defi-execution-overview.md`** (UPDATE; Phase 4K). **HARSH-SIDE** —
-      depends on Phase 4 connector buildout.
+- [x] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
+      **VERIFIED-DONE 2026-05-16 by slot 2** — doc lines 56 + 118 confirm `connector.connect(config={...})` shape
+      documented for all 13 Phase 4 connectors shipped at execution-service@`b9078ee9`. GAP-11 Live DeFi Wallet Key
+      Lifetime extension landed 2026-05-15 (per-request Secret Manager fetch, no in-memory caching beyond
+      `connect()`scope). Anti-patterns section enumerates instance-attribute private-key storage as HARD violation.
+- [x] [AGENT] P0. **7G — `codex/04-architecture/defi-execution-overview.md`** (UPDATE; Phase 4K). ✅ **VERIFIED-DONE
+      2026-05-16 by slot 2** — doc line 111 confirms: "All Phase 4 connectors follow the same
+      `connector.connect(config={...})` credential injection shape as the Phase 1–3 [connectors]". Key Files table
+      covers all 13 Phase 4 protocol connectors + cost models + matching engine surfaces. Backtest replay status
+      documented as `BLOCKED-DATA` until lending-indices ≥1yr backfill lands (target 2026-05-19→23).
 - [x] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
       refreshed. ✅ Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
       `mtds-lending-indices-20260511-204908` + manifest verification of 65 captured rows).
