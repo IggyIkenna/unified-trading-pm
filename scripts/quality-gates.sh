@@ -253,6 +253,25 @@ if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Architectural ratchets (Group C — ST-19 + PB-19 + UI-18) — baselined ratchet ──
+# SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C.
+# Rules in scripts/quality_gates/architectural_ratchets.yaml:
+#   ST-19: no standalone backtest engine in strategy-service without V2EngineOrchestrator
+#   PB-19: no mode-branching in PBMS engine/core
+#   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
+# Current baseline 0 — any new violation in any rule = regression.
+ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
+if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Architectural ratchets check (ST-19 + PB-19 + UI-18)..."
+    if python3 "$ARCH_RATCHETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Architectural ratchets check passed (at-or-below baseline)"
+    else
+        echo "❌ Architectural ratchets regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C" >&2
+        echo "   Either fix the new violation OR re-baseline with --baseline-write after intentional debt" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: Codex doc freshness (Group B of governance_qg_automation_gaps) — baselined ratchet ──
 # SSOT: CLAUDE.md § "Post-Plan-Phase Codex Audit (HARD RULE)"
 # Origin: plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group B

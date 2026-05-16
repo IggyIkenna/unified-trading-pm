@@ -82,10 +82,17 @@ this plan owns the QG/automation half.)
       `scripts/quality_gates/codex_doc_freshness_baseline.yaml`); ratchet-down mode prevents regression while
       future PRs add `last_reviewed:` stamps to existing docs. Shipped at `unified-trading-pm@<pending>`.
       **MIGRATED FROM:** G-12, D-18.
-- [ ] [DESIGN] P2. **Group C — Architectural ratchets (ST-19 + PB-19 + UI-18).** Three "no standalone X" rules with no
-      enforcing QG: standalone backtest engine in strategy-service, mode-branching in PBMS, embedded UI in Python
-      service repo. Design one QG-ratchet helper that takes (target path glob, banned-substring set, owner) and raises
-      with a clear message. **MIGRATED FROM:** ST-19, PB-19, UI-18.
+- [x] ✅ [DESIGN] P2. **Group C — Architectural ratchets (ST-19 + PB-19 + UI-18).** Generic ratchet helper shipped at
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_architectural_ratchets.py` + per-rule yaml config at
+      `scripts/quality_gates/architectural_ratchets.yaml` + zero-baseline file + PM `quality-gates.sh` wiring.
+      Supports 3 semantics per rule: `banned_substring`, `banned_pattern` (regex), `banned_unless_contains` +
+      optional `condition_pattern`. Current 3 rules:
+      - **ST-19**: `strategy-service/strategy_service/engine/backtest/**/*.py` — class with `[Bb]acktest` in name
+        MUST contain `V2EngineOrchestrator`; **0 violations** (runner.py already compliant).
+      - **PB-19**: PBMS `core/` + `engine/` — banned `if mode == "live"|"batch"|"paper"` patterns; **0 violations**.
+      - **UI-18**: 19 Python service repo `package.json` — banned React/Next/Vite/Webpack deps; **0 violations**
+        (no python service has package.json currently).
+      Baseline 0 across all 3 rules; any new violation = regression. **MIGRATED FROM:** ST-19, PB-19, UI-18.
 - [ ] [DESIGN] P2. **Group D — Generated-artefact drift gate (UI-13).** Add CI gate (UI-QG or `unified-trading-api` QG)
       that compares committed `openapi.json` hash to a fresh export, so `lib/types/api-generated.ts` cannot silently rot
       when an endpoint is added. **MIGRATED FROM:** UI-13.

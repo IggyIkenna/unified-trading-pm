@@ -1,0 +1,32 @@
+# Architectural ratchets — Group C of governance_qg_automation_gaps_post_cutover_2026_05_12.md.
+#
+# Each ratchet: name + target_glob + (banned_substring | banned_pattern | banned_unless_contains)
+#               + optional condition_pattern (only flag files containing this) + owner + rule_doc.
+#
+# Workspace-root resolution: glob is relative to ${WORKSPACE_ROOT} (the .tabs/<N>/ root, not PM).
+
+ratchets:
+  # ST-19: strategy-service backtest engine must use V2EngineOrchestrator. Banned: new
+  # standalone backtest engine class without V2EngineOrchestrator import/reference.
+  - name: ST-19-no-standalone-backtest-engine
+    target_glob: "strategy-service/strategy_service/engine/backtest/**/*.py"
+    condition_pattern: 'class\s+\w*[Bb]acktest\w*'
+    banned_unless_contains: "V2EngineOrchestrator"
+    owner: strategy-service
+    rule_doc: "codex/09-strategy/operational/benchmark-fills.md:12"
+
+  # PB-19: PBMS must be mode-blind. Banned: any if/match branching on operational mode
+  # in engine/core code (excluding tests + the single CLI mode-router seam).
+  - name: PB-19-no-mode-branching-in-pbms-engine
+    target_glob: "position-balance-monitor-service/position_balance_monitor_service/{core,engine}/**/*.py"
+    banned_pattern: 'if\s+(mode|pipeline_mode|operational_mode)\s*==\s*["''](live|batch|paper)["'']'
+    owner: position-balance-monitor-service
+    rule_doc: "CLAUDE.md § 'Batch = Live (CRITICAL)' + codex/03-deployment/pbms-mode-blind.md"
+
+  # UI-18: Python service repos must NOT contain package.json with React/Next/Vite/Webpack
+  # deps (UI must be its own repo). Targets all python service repos' root-level package.json.
+  - name: UI-18-no-embedded-ui-in-python-service
+    target_glob: "{alerting-service,batch-live-reconciliation-service,client-reporting-api,deployment-api,deployment-service,execution-service,features-service,instruments-service,market-data-processing-service,market-tick-data-service,ml-inference-service,ml-training-service,pnl-attribution-service,position-balance-monitor-service,risk-and-exposure-service,strategy-service,trading-agent-service,unified-trading-api,unified-trading-library}/package.json"
+    banned_pattern: '"(react|next|vite|webpack)"\s*:'
+    owner: per-service-team
+    rule_doc: ".claude/rules/python-backend.md (UI must be its own repo)"

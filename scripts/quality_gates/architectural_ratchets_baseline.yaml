@@ -1,0 +1,4 @@
+violation_count: 0
+rule: architectural-ratchets
+source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group C"
+baseline_files: []
