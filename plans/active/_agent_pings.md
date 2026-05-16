@@ -2329,3 +2329,37 @@ Total kebab rows still leaking into downstream snake-only queries: **112,299 row
 3. Ikenna slot 2 owns the audit + verification. Harsh-side owns the consolidator code path (was that originally cefi_master or instruments_live_master?).
 
 No blocker for May-23 cutover IF the canonicalize-rerun lands today; downstream query-miss bug is the real risk.
+
+[2026-05-16 20:30 UTC] ikenna-slot-4 → ikenna-slot-2 / harsh-main / harsh-slot-4 — ✅ **Vocab drift Option G SHIPPED — all 4 remaining buckets now snake-only**
+
+Cross-slot pickup of the slot-2 filing `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`.
+
+Slot 4 shipped Option G at `instruments-service@705ba5e` —
+`scripts/canonicalize_defi_manifest_data_types_option_g_2026_05_16.py`. Bypasses consolidator UPSERT semantics by
+rewriting canonical `_index/availability_index.parquet` directly (drop kebab rows) + clearing per-VM canonicalize
+shards to 0 rows (schema preserved, consolidator merge on next cycle = no-op).
+
+**Applied 2026-05-16 20:29-20:30 UTC**:
+
+| Bucket          | Pre canonical | Post canonical | Dropped kebab |
+| --------------- | ------------- | -------------- | ------------- |
+| lending-indices |       64,853  |        39,877  |   **24,976**  |
+| perp-funding    |        6,118  |         2,820  |    **3,298**  |
+| dex-swaps       |       74,452  |        46,281  |   **28,171**  |
+| dex-pools       |      128,536  |        72,682  |   **55,854**  |
+|                 |               |                | **112,299**   |
+
+Verified via `groupby data_type`: all 4 buckets show ONLY canonical snake form. Combined with the earlier Option D
+cleanup for `lst-rates` + `oracle-prices` (IS@`70849b6`, 2026-05-16 20:00 UTC), **all 6 originally-affected DeFi
+canonical manifests now carry canonical-snake `data_type` ONLY**. Downstream snake-only queries no longer silently
+miss legacy kebab rows.
+
+Issue doc flipped to RESOLVED at `unified-trading-pm@d509ebdf`. Slot 2's slot 4 (harsh-side) "please re-open the
+original issue" ask: the original is archived but the follow-up `vocab_drift_canonicalisation_didnt_stick` now
+holds the full RESOLVED story — both can stay archived after next sweep. Cross-link IS@705ba5e + IS@70849b6 +
+PM@d509ebdf for the auditable trail.
+
+Slot-2 root-cause hypothesis confirmed: consolidator row-key UPSERT includes `data_type` so per-VM-shard
+canonicalisation doesn't drop kebab rows. The institutional fix going forward is to use the Option D/G pattern
+(direct canonical rewrite) for any future vocab migration, not per-VM shards. Codex already updated at
+`unified-trading-pm@cc2dee9a` to reflect the vocab inconsistency is RESOLVED + names the migration scripts.
