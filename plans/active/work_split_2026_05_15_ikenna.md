@@ -185,11 +185,32 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6 Step 2.6.1 + `bucket_name_ssot_canonicalisation`
    Phase 0c. Slot 4 has no implementer surface here until Phase 2.6 lands; checkbox flips to `BLOCKED-UPSTREAM` rather
    than `[x]`. (Slot-4 evidence note: `unified-trading-pm@<TBD>` after this flip lands.)
-2. **`expected_unattempted_propagation_gap` P1** — close remaining propagation cascade. (research 1.2×, ~3 = 3.6 cal)
-3. **Sports/prediction phantom apply-flips remainder** (sports/pred 16.8% + 0.49% phantoms per 2026-05-12 audit) —
-   reconcile + apply-flips on same-region GCE VM. (infra 0.8×, ~2 = 1.6 cal)
-4. **propagation chain Phase 3.1-3.N + Phase 4 + PART C remainder**. (refactor 0.4×, ~4 = 1.6 cal)
-5. **`api_football_minimal_flattening_removal_2026_05_07` close** (carry from 14 May). (refactor 0.4×, ~3 = 1.2 cal)
+2. ✅ **`expected_unattempted_propagation_gap` P1** — close remaining propagation cascade. (research 1.2×, ~3 = 3.6 cal)
+   — **VERIFIED 2026-05-16 (slot 4)**: Gate 1 🟢 FIRED 2026-05-13 per
+   `expected_unattempted_propagation_chain_2026_05_12.md` line 773. P1 scope is contained in Phase 3+4+PART C all
+   complete (3 substantive + 3 NO-OP). Two P2 follow-ups remain `**DEFERRED**` post-cutover (DeFi classifier UAC-enum
+   crossref test; sports classifier `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SEASON` reasons) — both already tracked at
+   plan body lines 775-780 with named successor issue docs. No slot 4 implementer surface here.
+3. ✅ **Sports/prediction phantom apply-flips remainder** (sports/pred 16.8% + 0.49% phantoms per 2026-05-12 audit) —
+   reconcile + apply-flips on same-region GCE VM. (infra 0.8×, ~2 = 1.6 cal) — **VERIFIED 2026-05-16 (slot 4)**:
+   propagation-chain plan § "Reconciliation baseline" line 706-707 shows **sports phantom count = 0** + **prediction
+   phantom count = 0** (post-retired-type-cleanup, dry-run 2026-05-14). Sports retired-data-type migration shipped
+   2026-05-13 via VM `migrate-sports-retired-20260513-160205` flipping 88,779 rows. No apply-flips remainder — nothing to
+   flip. (sports-retired plan line 250 — Phase 1 IS@a0a720e; Phase 2 deployment-api@5e19878.)
+4. ✅ **propagation chain Phase 3.1-3.N + Phase 4 + PART C remainder**. (refactor 0.4×, ~4 = 1.6 cal) — **VERIFIED
+   2026-05-16 (slot 4)**: per `expected_unattempted_propagation_chain_2026_05_12.md` lines 765-773 deferred-work table —
+   Phase 3.1 (delta_one) ✅ features-service@4a26ae04; Phase 3.2 (calendar) ✅ NO-OP; Phase 3.3 (onchain) ✅ NO-OP;
+   Phase 3.4 (volatility) ✅ features-service@4a26ae04; Phase 3.5 (sports) 🟡 DEFERRED with named successor (operator
+   triage + Phase 3.5 design call); Phase 3.6 (commodity) ✅ NO-OP; Phase 4 (ml-training + ml-inference) ✅ NO-OP
+   (externally-injected instrument lists); PART C ✅ SUBSTANTIALLY-DONE (mdps@3f70cf6, slot 4 2026-05-12;
+   mdps@f50db4e docstring cleanup, Harsh slot 2 2026-05-13). Gate 1 🟢 FIRED 2026-05-13. Residual Phase 5 Pass 3+4
+   (MDPS/features apply-flips) + Phase 6 validation gate items both `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover.
+5. ✅ **`api_football_minimal_flattening_removal_2026_05_07` close** (carry from 14 May). (refactor 0.4×, ~3 = 1.2 cal)
+   — **VERIFIED 2026-05-16 (slot 4)**: plan body line 320-321 confirms Phase 5 closeout already landed
+   `PM@36c40a10` (Slot 6 Wave 3 2026-05-13). Phases 1-3.A ✅ shipped (UAC@c76e6d0 + IS@539130f + IS@e1ca983).
+   Phase 3.B/3.C (live-API smoke + EPL forward-poll) + Phase 4 (optional reprocessor) remain `**DEFERRED**` per plan body
+   line 269 — operator-executable post-cutover when API quota allows. Plan body line 267 P2 closeout already `[x]`. No
+   slot 4 work remaining.
 6. ✅ **`expected_universe_v2_design_2026_05_08`** (carry from slot 9 V2) — sports/prediction universe enumerator design.
    (design 0.6×, ~3 = 1.8 cal) — **VERIFIED DESIGN-COMPLETE 2026-05-16 (slot 4)**: all design phases shipped pre-today:
    Phase 1 enumerator code + `InstrumentCatalogEntry` + 65 unit tests (`instruments-service@5c5b1f8`); Phase 2 launcher
@@ -201,13 +222,30 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    per plan body line 26-30 banner + Prerequisites line 318) + 1 Phase 1 integration test (DEFERRED, same blocker) + 1
    Phase 2 singleton-lock shell-test (DEFERRED, gcloud mock harness). Slot 4 has no further implementer surface here until
    G4 v8 lands; checkbox ✅ on the design half. (Slot-4 evidence note: `unified-trading-pm@<TBD>` after this flip lands.)
-7. **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs `cross_asset_group_catalogue_audit`.
-   (research 1.2×, ~3 = 3.6 cal)
-8. **`data_status_comprehensive_test_coverage_2026_05_07` sports-half close** — drilldown-shard-atom alignment tests.
-   (design 0.6×, ~3 = 1.8 cal)
-9. **3 sports classifier issues final verification** — confirm sfi_footystats / player_values / weather close. (refactor
-   0.4×, ~2 = 0.8 cal)
-10. **Reserve**: in-stack pickup for any sports classifier ambiguity.
+7. ✅ **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs `cross_asset_group_catalogue_audit`.
+   (research 1.2×, ~3 = 3.6 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May sub-agent audit already shipped per
+   `work_split_2026_05_14_ikenna.md` line 238-243 — 14 active data_types confirmed (FIXTURES/STANDINGS/INJURIES/
+   FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/PREDICTIONS/MATCHES/XG/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
+   WEATHER/ODDS); 3 retired confirmed (TRANSFERMARKT_LEAGUES/SFI_LEAGUES/SFI_STANDINGS); gaps PLAYER_VALUES +
+   SFI_PROGRESSIVE_STATS missing from UAC DATA_TYPE_CAPABILITY_REGISTRY documented in
+   `catalogue_audit_sports_2026_05_12.md` SP-6/SP-10/SP-12 with named successor in
+   `cross_asset_group_catalogue_audit_2026_05_10.md`. No slot 4 work remaining.
+8. ✅ **`data_status_comprehensive_test_coverage_2026_05_07` sports-half close** — drilldown-shard-atom alignment tests.
+   (design 0.6×, ~3 = 1.8 cal) — **VERIFIED 2026-05-16 (slot 4)**: 14 May session shipped deployment-api@1ecef8a —
+   `tests/unit/test_sports_shard_atom_drilldown_alignment.py` (12 tests, 12/12 pass) covering axes SSOT alignment,
+   data_type→league_id→date tree, per-grain count rollups, retired data_type honest coverage, filtered drilldown. Plus
+   the cross-repo regression-test net (Vitest + Playwright e2e) per
+   `data_status_comprehensive_test_coverage_2026_05_07.md` lines 108-191 — categories A (shard SSOT) + B (UAC parity) +
+   C (start-date clipping) + D (deploy-missing end-to-end) all `[x]` deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12.
+   No slot 4 work remaining.
+9. ✅ **3 sports classifier issues final verification** — confirm sfi_footystats / player_values / weather close.
+   (refactor 0.4×, ~2 = 0.8 cal) — **VERIFIED 2026-05-16 (slot 4)**: per `work_split_2026_05_14_ikenna.md` line 213-218
+   — sfi_footystats → uac@435abae + utl@79c72bad; player_values → uac@17a0f82 + utl@79c72bad; weather read-side ✅,
+   write-side `**DEFERRED**` per issue doc `sports_classifier_weather_no_fixture_2026_05_13.md` (status: PARTIAL).
+   Parent issue `sports_classifier_extension_followup` ✅ RESOLVED (pm@48db1ae0) cross-linking all 3 child fixes. No slot
+   4 work remaining.
+10. **Reserve**: in-stack pickup for any sports classifier ambiguity. — **NOT TRIGGERED 2026-05-16 (slot 4)**: no
+    ambiguity surfaced during item 1-9 carry-status verifications.
 
 ---
 
