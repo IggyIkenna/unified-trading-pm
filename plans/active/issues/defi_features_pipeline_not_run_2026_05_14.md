@@ -199,61 +199,51 @@ resume Phase 2 launch on Ikenna ACK + pipeline green.
 
 ## UPDATE 2026-05-16 — slot-3 partial unblock
 
-**lst_rates 30-day gap addressed**: slot-3 launched
-`mtds-lst-rates-20260516-205225` (asia-northeast1-c, e2-standard-4, 35.200.23.244, RUNNING)
-to backfill 2026-04-15 → 2026-05-16. Per CLAUDE.md "ADC admin perms — do NOT pause for
-operator approval on infra ops"; not on hard-stop list.
+**lst_rates 30-day gap addressed**: slot-3 launched `mtds-lst-rates-20260516-205225` (asia-northeast1-c, e2-standard-4,
+35.200.23.244, RUNNING) to backfill 2026-04-15 → 2026-05-16. Per CLAUDE.md "ADC admin perms — do NOT pause for operator
+approval on infra ops"; not on hard-stop list.
 
 Token coverage per `LstRatesHandler._LST_TOKENS`: 13 EVM tokens (stETH/wstETH/rETH/
-cbETH/sUSDe/sDAI/mETH/swETH/ETHx/osETH/ankrETH/weETH/pufETH) + 2 Solana (mSOL/jitoSOL).
-Expected runtime: ~30s/day × 32 days ≈ 16 minutes.
+cbETH/sUSDe/sDAI/mETH/swETH/ETHx/osETH/ankrETH/weETH/pufETH) + 2 Solana (mSOL/jitoSOL). Expected runtime: ~30s/day × 32
+days ≈ 16 minutes.
 
 **Remaining blockers** for B-015 paper-trade gate:
-- **MDPS DeFi pipeline never run** — `processed_candles/.../asset_group=defi/` empty.
-  Needs MDPS launch (launch-mdps-backfill-vm.sh or launch-mdps-sharded-backfill.sh).
+
+- **MDPS DeFi pipeline never run** — `processed_candles/.../asset_group=defi/` empty. Needs MDPS launch
+  (launch-mdps-backfill-vm.sh or launch-mdps-sharded-backfill.sh).
 - **features-onchain-service** depends on MDPS upstream → blocked until (b) runs.
 
-**Chain to unblock B-015**: (a) ✅ wait for mtds-lst-rates VM completion (~16 min);
-(b) ⏳ launch MDPS DeFi backfill (next owner); (c) ⏳ launch features-onchain DeFi backfill;
-(d) ⏳ Harsh slot 9 re-runs Phase 2 paper-trade.
+**Chain to unblock B-015**: (a) ✅ wait for mtds-lst-rates VM completion (~16 min); (b) ⏳ launch MDPS DeFi backfill
+(next owner); (c) ⏳ launch features-onchain DeFi backfill; (d) ⏳ Harsh slot 9 re-runs Phase 2 paper-trade.
 
-**Slot-3 action item**: LST VM handles (a). Items (b)+(c) need a slot with
-deployment-service / MDPS context to pick up.
+**Slot-3 action item**: LST VM handles (a). Items (b)+(c) need a slot with deployment-service / MDPS context to pick up.
 
 ---
 
 ## UPDATE 2026-05-16 — slot-3 (b) MDPS DeFi backfill VM launched
 
-`mdps-backfill-defi-20260516-205843` (asia-northeast1-c, e2-standard-8, 34.84.76.20, RUNNING)
-launched with `defi 2026-04-01 2026-05-16 full` args. Same ADC-perms rationale as LST VM
-above. Output: `gs://market-data-tick-defi-central-element-323112/processed_candles/by_date/`.
+`mdps-backfill-defi-20260516-205843` (asia-northeast1-c, e2-standard-8, 34.84.76.20, RUNNING) launched with
+`defi 2026-04-01 2026-05-16 full` args. Same ADC-perms rationale as LST VM above. Output:
+`gs://market-data-tick-defi-central-element-323112/processed_candles/by_date/`.
 
-This unblocks chain step (b). Step (c) (features-onchain backfill) still awaits owner
-pickup — it depends on MDPS processed_candles being present, so should be queued behind
-this VM's completion.
+This unblocks chain step (b). Step (c) (features-onchain backfill) still awaits owner pickup — it depends on MDPS
+processed_candles being present, so should be queued behind this VM's completion.
 
 **Updated chain**:
-- (a) ✅ slot-3 launched `mtds-lst-rates-20260516-205225` (COMPLETED, rc=0; 32 days
-  backfilled to `gs://lst-rates-central-element-323112/raw_tick_data/by_date/`).
-  New canonical LST bucket fresh through 2026-05-16. **Note**: legacy bucket
-  `market-data-tick-defi-prd-central-element-323112/lst_rates/` remains stale at
-  2026-04-14 — consumers should read from new dedicated bucket per Phase 0d split.
-- (b) ❌ `mdps-backfill-defi-20260516-205843` (FAILED rc=1; self-deleted). VM
-  surfaced **deeper systemic gap**: MDPS DeFi requires 2 upstream dependencies
-  that are missing for the entire 46-date window 2026-04-01 → 2026-05-16:
-    - `gs://instruments-store-defi-central-element-323112/instrument_availability/by_date/day=*/` (DeFi instruments index)
-    - `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/` (DeFi raw tick data)
-  Both buckets are empty/stale for those dates. **MDPS DeFi cannot be unblocked
-  without first running upstream**:
-    1. instruments-service DeFi `instrument_availability` backfill (per-protocol
-       enumerator writes; needs operator/slot-2 with instruments-service context)
-    2. MTDS DeFi `raw_tick_data` backfill — the existing handlers
-       (`solana_defi_handler.py`, `evm_defi_handler.py`, `lst_rates_handler.py`,
-       `gas_fee_handler.py`) need to run as a coordinated multi-handler batch
-       over the date window.
-  This is **substantively bigger than the issue title suggested**: it's not just
-  "MDPS never run" — the entire DeFi upstream is sparse. Operator triage required
-  on whether to run the full upstream backfill (~46 days × multiple protocols)
-  vs. tighter B-015 paper-trade window.
-- (c) ⏳ features-onchain DeFi backfill — blocked behind (b)
-- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (b) + (c)
+
+- (a) ✅ slot-3 launched `mtds-lst-rates-20260516-205225` (COMPLETED, rc=0; 32 days backfilled to
+  `gs://lst-rates-central-element-323112/raw_tick_data/by_date/`). New canonical LST bucket fresh through 2026-05-16.
+  **Note**: legacy bucket `market-data-tick-defi-prd-central-element-323112/lst_rates/` remains stale at 2026-04-14 —
+  consumers should read from new dedicated bucket per Phase 0d split.
+- (b) ❌ `mdps-backfill-defi-20260516-205843` (FAILED rc=1; self-deleted). VM surfaced upstream gap: MDPS DeFi requires
+  raw_tick_data + instrument_availability upstream — both empty/stale for 2026-04-01 → 2026-05-16. \*\*HOWEVER, see
+  parallel resolution below — MDPS run is now NOT REQUIRED for vault_share_price
+  - lst_rates per Option A architectural fix.\*\*
+- (b-bis) ✅ **Option A architectural fix shipped 2026-05-16 by slot-2**: `features-service@550cdaba` —
+  `DependencyChecker.UPSTREAM_DEPS_DEFI` bypasses MDPS for `vault_share_price` + `lst_rates` data_types.
+  features-onchain reads raw_tick_data directly for these on-chain snapshot data_types. See sibling issue
+  `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` for full resolution detail. **My MDPS DeFi VM launch
+  was redundant given this fix.**
+- (c) ⏳ features-onchain DeFi backfill — UNBLOCKED by (b-bis); ready to launch via
+  `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`
+- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (c)
