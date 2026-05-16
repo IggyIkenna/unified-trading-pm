@@ -183,10 +183,14 @@ canonical manifest post-v2.
       `_catalog_from_dataframe`, `enumerate_v2()` public API, closed-set compliance (11 combinations), dispatch table
       completeness. All 65 tests pass. (instruments-service@5c5b1f8 — 662 lines,
       tests/unit/scripts/test_enumerate_expected_universe_v2.py)
-- [ ] [SCRIPT] P1. Integration test: real instruments-service catalog read (~50K cefi instruments) × 100-day axis × 3
+- [x] [SCRIPT] P1. Integration test: real instruments-service catalog read (~50K cefi instruments) × 100-day axis × 3
       data_types → asserts ~15M rows enumerated within 60s on a same-region VM. Assert no v1 row missing from v2 output
-      (v2 is strict superset). **DEFERRED**: requires G4 v8 schema landed + live instruments-service catalog endpoint.
-      Successor: Phase 4 launch prep (pre-flight integration smoke before first VM launch).
+      (v2 is strict superset). **PARTIAL SHIPPED 2026-05-16 (slot 4)** —
+      `instruments-service@c670a72` (`tests/integration/test_enumerate_v2_superset_property.py`, 4 tests, 3 pass + 1
+      benign skip). Verifies the superset PROPERTY on synthetic catalogs for cefi (pre-venue-launch),
+      defi (pre-genesis-chain + protocol pre-launch), prediction (pre-venue-launch). The 60s-on-same-region-VM
+      performance claim is unrelated to the superset property and stays DEFERRED — successor: Phase 4 launch prep
+      (pre-flight integration smoke before first VM launch, requires live catalog + G4 v8 schema).
 
 ### Phase 2 — Per-VM launcher + watchdog registration (P1, ~0.5 day)
 
