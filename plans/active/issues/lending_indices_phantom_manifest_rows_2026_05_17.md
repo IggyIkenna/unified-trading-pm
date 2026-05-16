@@ -80,6 +80,24 @@ contract beyond capture_status (e.g. additional sentinel files or BigQuery sync)
 **My recommendation**: **B** — write the one-shot now to unblock B-015 today, then file **A** as the follow-up
 generalisation. Owner: slot-3 (manifest reconciliation expertise) or features-service (downstream consumer).
 
+## RESOLVED (B-015 window) — 2026-05-17 00:35 UTC (slot-1-main)
+
+**Shipped Option C inline** (direct manifest flip, idempotent + self-healing):
+
+1. Downloaded `gs://lending-indices-central-element-323112/_index/availability_index.parquet` (39,877 rows).
+2. Identified 65 phantom candidates: `capture_status=='captured'` AND date in 2026-04-15..19.
+3. Per-date GCS prefix probe (`gsutil ls -r day=D/`) confirmed all 5 days have 0 parquets → 65/65 verified phantom.
+4. Flipped rows to `capture_status=attempted_failed` / `error_reason=phantom_captured_no_parquet_at_canonical_path` /
+   `attempted_at=2026-05-17T00:33:36+00:00` (matching the pattern at
+   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py:744-746`).
+5. Re-uploaded manifest to GCS. Local backup at `/tmp/lending_manifest.parquet.backup-20260516T233336`.
+6. Re-launched backfill VM `mtds-lending-indices-20260517-003742` at 00:37 UTC. Expect actual GraphQL queries + parquet
+   writes this time.
+
+**Generalisation follow-up (still open)**: Option A — extend `reconcile_phantom_manifest_rows_all.py` to enumerate
+per-data-type buckets so this doesn't need a one-shot fix next time another non-central-MTDS bucket grows phantoms.
+Routed to slot-3 (manifest reconciliation expertise).
+
 ## Cross-references
 
 - `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` § "VM 6 follow-up findings" item #2
