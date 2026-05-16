@@ -293,11 +293,21 @@ processed_candles being present, so should be queued behind this VM's completion
 
 ## VM 6 follow-up findings (feature pipeline layer)
 
-- [ ] [DESIGN] P1. `macro_sentiment` feature uses defillama_tvl API which has no historical lookback; current
-      LookaheadBiasGate correctly rejects backfill writes but feature pipeline never gets backfill rows. Options:
-      (a) swap to a vendor with historical TVL archive (Glassnode/IntoTheBlock paid tier per External Data Is Always
-      Available rule), (b) downgrade macro_sentiment to live-only (drop from batch backfill), (c) cache live TVL
-      observations forward (write today's TVL as today's row only). Routed to features-service owner.
+- [ ] [DESIGN] P1. `macro_sentiment` feature uses CoinGecko global market cap endpoint + DeFi Llama TVL — both
+      return CURRENT values only (no historical archive). Source:
+      `features-service/features_service/onchain/app/calculators/macro_sentiment_calculator.py:163` —
+      `current_ts = int(datetime.now(UTC).timestamp())` tags every API response with wall-clock NOW, then writer
+      tries to partition into requested day → LookaheadBiasGate correctly rejects. **Backfill of this feature is
+      architecturally impossible with current data sources.** Options:
+      (a) **Skip macro_sentiment in batch mode** (cleanest for May-23 — `carry_staked_basis` archetype doesn't depend
+      on it). Add `_BATCH_INCOMPATIBLE = True` flag to the calculator; orchestrator skips with `EMPTY_CONFIRMED`
+      reason `LIVE_ONLY_DATA_SOURCE` (new enum value needed).
+      (b) Swap to CoinGecko Pro (paid tier has historical, ~$129/mo) or Glassnode TVL archive — adapter scaffold
+      already in place; only needs `requires_credentials` integration test.
+      (c) Cache forward-roll — write today's value as today's row only; gradually accretes a historical archive over
+      time (won't help B-015 paper-trade for the 2026-04-15..19 window though).
+      **Routed to features-service owner.** May-23 cutover pragmatic recommendation: ship (a) immediately, file (b)
+      as post-cutover credential ask.
 - [x] [SCRIPT] P1. `lending_rates` 0-rows root-caused + backfill VM launched ✅ **slot-1-main 2026-05-17 00:23 UTC** —
       `lending-indices-central-element-323112` bucket has data ONLY through 2026-04-14; gap is exactly the B-015
       window. Launched `mtds-lending-indices-20260517-002305` (e2-standard-4, asia-northeast1-c) for window
