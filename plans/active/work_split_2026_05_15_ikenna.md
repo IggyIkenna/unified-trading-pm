@@ -293,15 +293,14 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    (instrument_id=`CME:FUTURE:ES-20260619`, lifecycle_phase=active, session=regular, phase=continuous, available_at
    stamped); OHLC range 7240.75–7411.5; 0 nulls across OHLCV+volume. exit_code=0 + self-shutdown. The two MTDS fixes
    simultaneously unblock items 6 + 10 + the 5 paused `mdps-tradfi-*` VMs.
-2. 🟢 **VM RUNNING** **Databento session-stamp backfill** (infra 0.8×, ~3 = 2.4 cal) — **LAUNCHED 2026-05-16**: operator
-   implicit-acked via vaulting `databento-api-key` v6 with credits (slot 5 ping ledger 11:23 UTC). VM
-   `canonical-migration-tradfi-sessionstamp-20260516-134555` (e2-standard-8) running
-   `migrate_tradfi_ohlcv_session_stamps.py --start-date 2024-01-01 --end-date 2026-05-14 --no-dry-run`. Dry-run
-   precursor `canonical-migration-tradfi-sessionstamp-20260516-132635` validated migration logic (7350 files walked in
-   901s; 0 errors). Full backfill expected to take several hours; idempotent (skips parquets that already have
-   session/phase columns). Flip to ✅ on STOPPED + sample parquet inspection confirms session/phase populated. Launcher
-   follow-ups shipped (`deployment-service@a9cfc38` VM_TASK fix + `deployment-service@dc441f2` create-code-tarballs
-   non-fatal SKIP for missing repos).
+2. ✅ **Databento session-stamp backfill** (infra 0.8×, ~3 = 2.4 cal) — **OPERATIONALLY SHIPPED 2026-05-16 14:29 UTC**:
+   VM `canonical-migration-tradfi-sessionstamp-20260516-135034` completed migration: **24,944 parquets back-stamped**,
+   **12,184 skipped** (already had columns OR no timestamp surface like VIX index), **0 errors**, elapsed 5,771s (~96
+   min), date range 2024-01-01 → 2026-05-05. Spot-check 2025-06-13 CME combo parquet schema includes `session`
+   - `phase` (session=regular×850 / phase=continuous×850). Slot 5 ping 14:29 UTC confirms operationally closed. Bonus
+     durability fixes shipped same agent turn: UTL@`bc87bc89` (accept VM-extracted `deployment/` dir as workspace marker
+     — covers the foot-gun) + deployment-service@`9ed84f8` (launcher sets `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML`
+     belt-and-braces).
 3. ✅ **TradFi Item 2 Phase 5 QG ratchet** (carry from 14 May #3) — QG STEP enforcement banning legacy futures-contract
    shape (operator GREENLIT). (design 0.6×, ~3 = 1.8 cal) — **VERIFIED PRE-EXISTING DONE 2026-05-15**: PM@`32c7ea52`
    already shipped Phase 5 QG ratchet on 2026-05-13 (182-line scanner, AST-walks every `CanonicalFuturesContract(...)`,
