@@ -60,6 +60,39 @@ parallel; ~3-4h wall-clock) — operator-coordinated, likely Harsh slot 4 territ
 
 ---
 
+## [slot 4 → main] 2026-05-16 ~13:00 UTC — SESSION RE-OPEN: operator pushback "do the deferred stuff you can do"
+
+**Status**: 🟢 SLOT 4 RE-OPENED — operator flagged that carry-verification-only conclusion was premature. Walked back
+through the deferred items per CLAUDE.md "Plans Run To Actual Completion" HARD RULE (ADC admin perms = do NOT pause for
+operator approval on infra ops).
+
+### Additional ships this session (post-session-close)
+
+| Code commit | What |
+| --- | --- |
+| `aws s3api create-bucket` × 6 buckets | **Item 1 actually shipped**: AWS sports/prediction env-tiered buckets — `unified-trading-features-{sports,pred}-{prd,stg,dev}-427895769566` provisioned via AWS CLI 2026-05-16 12:59 UTC. GCP equivalents (`features-{sports,pred}-{dev,prd,stg}-central-element-323112`) pre-existed. 6-bucket subset of Phase 2.6 fleet shipped standalone; Harsh slot 4 Phase 2.6 cutover owns the other ~290. |
+| `instruments-service@f799109` | **Item 9 weather write-side closed**: `_record_weather_empty(reason=...)` helper accepts typed `EmptyConfirmedReason`; no-fixtures branch emits `reason="EXPECTED_NO_FIXTURE"` directly. Closes `sports_classifier_weather_no_fixture_2026_05_13.md` (status → RESOLVED). Issue doc was P2 PARTIAL since 2026-05-13; ~3 lines of code in orchestrator.py. |
+| `PM@d430c52f` | **Phase 3.5 sports drift fix**: propagation-chain plan deferred-table row was 🟡 DEFERRED while plan body line 503-509 showed Option A shipped 2026-05-13 by Slot 8. Now consistent: ✅ PARTIAL-DONE with named successor (writegate Phase 6.x). |
+
+### Items genuinely blocked (not slot 4 implementer surface)
+
+- **Item 6 `expected_universe_v2` Phase 4 production launch**: 10 VMs × 3-4h parallel; gated on slot-6's G4 v8 schema cutover (Phase 7 in `manifest_schema_final_gate_2026_05_09`). Phase 1+2+3+5 design all shipped pre-today. Phase 1 integration test + Phase 2 singleton-lock shell tests both DEFERRED on the same blocker.
+- **Item 5 `api_football` Phase 3.B/3.C**: live-API smoke + EPL forward-poll require API-Football credentials + recovery-mode VM. NOT in vaulted credential set; genuine operator-credential ask. Phase 4 (historical reprocessor) operator-decided as "default: skip" per plan body line 299-301.
+- **Item 4 Phase 3.5 sports deeper fix**: per-shard upstream `capture_status` branching = writegate Phase 6.x territory; α-vs-β audit already done per slot 7 #3 2026-05-15.
+
+### Slot 4 productive output (final)
+
+- 6 AWS buckets provisioned (real infra ship)
+- 1 production fix in instruments-service (typed reason propagation for weather no-fixture)
+- 1 plan body drift fix (propagation chain Phase 3.5 row)
+- 1 issue doc closed (sports_classifier_weather_no_fixture)
+- 10 work_split items flipped (1 actual-ship, 1 actual-ship, 8 carry-status verifications)
+
+Aligning future session-close behaviour: re-examine deferrals through CLAUDE.md "Plans Run To Actual Completion" lens
+BEFORE writing "no implementer surface" — ADC admin perms on both clouds means many deferrals are slot-shippable.
+
+---
+
 ## [slot 4 → main] 2026-05-14 13:23 UTC — BOOT ACK
 
 **Status**: 🟢 SLOT 4 ACTIVE — continuing 2026-05-14 session
