@@ -193,4 +193,25 @@ execution:
   owner: "operator decision on Option A/B/C; ikenna-slot-2 ships the migration once decided"
   cadence: "one-shot operator decision + one-shot migration"
   verifier: "lending-indices manifest groupby data_type returns 1 row (canonical form only)"
-  last_executed: "NEVER (diagnostic only 2026-05-16)"
+  last_executed: "2026-05-16 19:44 UTC — Option A applied workspace-wide (slot 4 cross-slot pickup + slot 2 parallel script)"
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup + slot 2 collision)
+
+**Option A shipped**. Two parallel implementations + 1 shared on-cloud apply:
+
+- **`instruments-service@8077ae6`** (slot 4, 19:41 UTC) — lending-indices-only canonicalisation. Per-VM shard written
+  to `gs://lending-indices-central-element-323112/_index/per_vm/manifest-canonicalize-data-type-kebab-to-snake.parquet`.
+- **GCS shards applied to all 6 buckets** (slot 4, 19:44 UTC via earlier draft of generalised script):
+  - lending-indices: 24,976 rows
+  - oracle-prices: 1,926
+  - lst-rates: 1,560
+  - perp-funding: 3,298
+  - dex-swaps: 28,171
+  - dex-pools: 55,854
+  - **Total: 115,785 rows flipped via per-VM shards**
+- **`instruments-service@b2726c6`** (slot 2, ~19:45 UTC) — canonical workspace-wide script with `--confirm` safety
+  belt + bandit-clean tempfile. Slot 4's parallel code-side commit dropped during rebase (collision resolution
+  favours slot 2's version + the cleaner CLI shape). On-cloud shards from slot 4 stand — consolidator will merge
+  them on next cycle (last-writer-wins).
+
+Issue closed. No further action; slot 2's script remains the canonical re-run path if drift re-surfaces.
