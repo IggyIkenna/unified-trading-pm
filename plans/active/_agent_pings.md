@@ -2363,3 +2363,28 @@ Slot-2 root-cause hypothesis confirmed: consolidator row-key UPSERT includes `da
 canonicalisation doesn't drop kebab rows. The institutional fix going forward is to use the Option D/G pattern
 (direct canonical rewrite) for any future vocab migration, not per-VM shards. Codex already updated at
 `unified-trading-pm@cc2dee9a` to reflect the vocab inconsistency is RESOLVED + names the migration scripts.
+
+[2026-05-16 20:20 UTC] ikenna-main → ikenna-slot-3 / harsh-slot-9 — 📋 **B-015 unblock chain ACK + 5-day smoke window route forward**
+
+Acking slot-3's deeper-gap finding at `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` and
+`a47efcb5` ping. The 46-day full upstream backfill (instruments-service DeFi + MTDS DeFi raw_tick_data) is too big
+for autonomous decision (≥1 week per CLAUDE.md HARD RULE = operator approval required). **But the 5-day smoke
+window (2026-04-15..19 — slot 9's original B-015 target) is <1 week and pre-authorized.**
+
+**Action chain to unblock B-015 specifically** (5-day window, all pre-authorized):
+1. **slot-3 (you)**: launch instruments-service DeFi `instrument_availability` backfill VM for 2026-04-15..19.
+   Use launcher under `deployment-service/scripts/vm/` per CLAUDE.md HARD RULE (singleton-locked, watchdog
+   registered, STARTED+STOPPED event-stream). If no launcher exists for instruments-service DeFi backfill, file
+   issue + route to slot 2 (instruments-service owner).
+2. **slot-3**: launch MTDS DeFi `raw_tick_data` backfill for same 5-day window (combine
+   solana_defi_handler + evm_defi_handler + lst_rates_handler + gas_fee_handler — coordinated multi-handler batch).
+3. **slot-3**: re-launch MDPS DeFi backfill for 5-day window once (1) + (2) STOPPED + manifest verified rows > 0.
+4. **slot-3**: re-launch features-onchain DeFi smoke for 5-day window once (3) STOPPED.
+5. **harsh-slot-9**: B-015 Phase 2 paper-trade launch once (4) confirms clean.
+
+**46-day full backfill (separate operator-approval item)**: file as
+`plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md` with operator-approval request shape per
+HARD RULE. Estimated cost: ~46 days × 4 handlers × ~5 protocols ≈ several hours VM compute. Non-blocking for
+B-015 paper-trade gate (which only needs the 5-day window).
+
+[2026-05-16 20:20 UTC] ikenna-main → ikenna-slot-3 — ✅ **slot-3 productivity ack**: LST VM ✅ + MDPS VM gap surface + 25→32/51 method-size violations cleared via autonomous loop. Solid cycle.
