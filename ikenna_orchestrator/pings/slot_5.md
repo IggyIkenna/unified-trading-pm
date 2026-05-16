@@ -852,17 +852,54 @@ All 6 owned repos now: ahead=0 / behind=0 / dirty=0.
 
 ## [main → slot 5] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
-Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
-Ikenna slots; no operator action needed (credentials all vaulted).
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna slots; no
+operator action needed (credentials all vaulted).
 
-See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
-SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your SWEEP-16 items
+(additive to your existing stack; take after current top-of-stack lands).
 
 Pickup discipline:
-* Items annotated **[SWEEP-16]** in the work-split below your slot section
-* Each item starts with the marker so easy to grep
-* Half-1+Half-2 flip discipline per item (no batch flips)
-* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+- Items annotated **[SWEEP-16]** in the work-split below your slot section
+- Each item starts with the marker so easy to grep
+- Half-1+Half-2 flip discipline per item (no batch flips)
+- Spot-check LDR before starting any item to see if Harsh-side shipped it already
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+---
+
+## [slot 5] 2026-05-16 12:24 UTC — Databento backfill END-TO-END WORKING
+
+**Status**: ✅ Two MTDS bugs fixed in sequence, ES.FUT 1-week backfill now captured real data.
+
+### Bug 1 fixed — `MTDS@741eb5d`
+
+`NamedTemporaryFile(delete=False)` created a 0-byte placeholder; Databento SDK `timeseries.get_range(path=tmp.name)`
+refuses to overwrite, so every fetch failed with `The file ... already exists`. Patched: `os.unlink(tmp.name)`
+immediately after `tmp.close()`.
+
+### Bug 2 fixed — `MTDS@f19ff5f`
+
+databento-python 0.78 / databento_dbn 0.58 / pandas 2.3 regression in `DataFrameIterator._format_map_symbols`:
+`np.asarray(dates, dtype="datetime64[D]")` on a Series of tz-aware `pd.Timestamp` triggered
+`int() argument must be a string, a bytes-like object or a real number, not 'Timestamp'`, aborting every chunk iteration
+after 0 rows. Patched: pass `pretty_ts=False` to `to_df()` to keep timestamps as int64 ns (which
+`_enrich_with_canonical_ids` already expects via `datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, …)`).
+
+### Confirmation
+
+VM `tradfi-bf-es-adhoc-adhoc-20260516-132055` log 2026-05-16 12:23:48 UTC — **382,926 records captured for ES.FUT on
+2026-05-01** across 4 partitions (futures_chain/ohlcv_1m/ES = 1528 rows; combo/ohlcv_1m/SP500 = 106; trades/ES =
+381,019; trades/SP500 = 273). Weekends 2026-05-02..03 pre-skipped as EXPECTED_WEEKEND. Streaming continued into
+2026-05-04..07.
+
+Combined fixes also unblock work_split items 6 (CME/EUREX 1-week test backfill), 10 (TradFi MarketSession close —
+Databento session-stamp leg), and the 5 paused `mdps-tradfi-*` VMs (which can now resume their multi-year backfills).
+
+### Session-stamp launcher follow-up — `deployment-service@a9cfc38`
+
+First dry-run failed because the launcher used `VM_TASK=tradfi-session-stamp` which isn't recognised by
+`setup-data-pipeline-vm.sh` — fell through to the generic CLI dispatch which doesn't have
+`migrate-tradfi-session-stamps` as an operation. Switched to `VM_TASK=canonical-migration` (which runs the
+`VM_MIGRATION_CMD` verbatim via `_launch_with_tee` after cd into mtds). Ready for next launch.
