@@ -976,9 +976,13 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
       Launcher `launch-mtds-defi-perp-backfill-vm.sh`.
 - [ ] [AGENT] P0. **6E — Vaults + restaking + DEX historical** for all 26 Phase 1A protocols. Per-protocol VM where TVL
       × dates × instruments justifies (default: 2-year backfill). Launchers under `deployment-service/scripts/vm/`.
-- [ ] [AGENT] P0. **6F — Manifest phantom audit** post-backfill. Run
-      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi` per CLAUDE.md § Manifest
-      phantom audit; surface any drift.
+- [x] [AGENT] P0. **6F — Manifest phantom audit** post-backfill. ✅ **DEFI raw_tick_data audit RAN-CLEAN 2026-05-16 by
+      slot 2** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`
+      executed against `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet`
+      (1,606,190 manifest rows; 311,602 captured rows in scope; 88,557 unique prefixes listed). **Result: zero
+      phantoms; manifest CLEAN**. Audit log at `/tmp/defi_phantom_audit_20260516.log` (188 lines). **Scope caveat**:
+      this audit covers the DEFI raw_tick_data bucket only; the separate `lending-indices-{pid}` canonical manifest
+      verification is the explicit successor of 3-LENDING.5 reconciler (in-flight slot-2 sub-agent dispatch).
 
 **Codex SSOT updates (Phase 6 boundary)**:
 
