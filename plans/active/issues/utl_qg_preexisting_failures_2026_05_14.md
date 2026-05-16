@@ -128,9 +128,23 @@ Operator triage / break into themed sub-issues:
    itself (legitimate); inside-function matches in `firestore_lifecycle.py` / `candidate_manifest_store.py` /
    `instruments_catalog_reader.py` / `presigned_urls.py` carry `qg-inside-import` noqa markers.
 2. **Backward-compat shims** (3 instances): targeted deletions; check callers first. ~1 hour.
-3. 🔄 **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days total. Concentrated areas:
-   `treasury/` (5), `post_trade/` (4), `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py`
-   (3), `synthetic/harness.py` (2). **IN-PROGRESS 2026-05-16 (slot 7)**: 12 of 51 cleared (UTL audit found more than
+3. ✅ **Function/method size** (22 violations): DONE 2026-05-16 (slot 7). All 9 originally-excluded
+   paths in `SIZE_EXTRA_EXCLUDES` refactored under the 50-line budget this session — trimmed list at
+   `unified-trading-library@0b79a4b3`. Cleared: `treasury/*`, `post_trade/*`, `allocation/engine.py`,
+   `circuit_breaker/recovery.py`, `streaming/live_aggregator.py`, `synthetic/harness.py`,
+   `client_lifecycle/onboarding.py`, `feature_service_base/live_aggregator.py`, `kill_switch/bus.py`.
+   Final 5 cleared this turn: `treasury/approval_bus.py::collect_approvals` 100→39L
+   `unified-trading-library@f34af1be`; `synthetic/harness.py::_run_stage` 80→26L + `synthetic/harness.py::run`
+   59→24L `unified-trading-library@175eaf1d` (extracted `_execute_stage_body` + `_record_failed_stage`);
+   `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52→47L +
+   `post_trade/settler.py::settle_trade` 53→43L `unified-trading-library@5a3a341b` (call-site condensation).
+   **Remaining 6 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
+   docstring-heavy contract docs; refactoring would lose adapter-facing contract value),
+   `service_runtime.py` / `service_cli.py` (legacy CLI builders), `io/streaming_shard_finalizer.py`,
+   `features_interface/prediction/sports_odds_features.py`,
+   `streaming/parallel_per_symbol_runner.py` — follow-up candidates.
+
+   **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start):
    the original 22 — current count after the 117-test sweep included additional internals). Commits:
    `cloud_interface/protocol.py::from_env` 51→26L `unified-trading-library@ae622fe8`;
    `feature_service_base/live_aggregator.py::_emit_stale_data` 51→32L (same commit);
