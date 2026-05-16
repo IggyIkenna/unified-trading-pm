@@ -182,11 +182,17 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    2.4 cal) **DONE 2026-05-14 (slot-3)**: `strategy-service@ab8661e` — ASTER=no LST (USDC/USDT-only, ineligible), BYBIT
    UTA stETH=True (10% haircut) → `lido-bybit` slot unlocked; `TestAsterBybitUtaLstEligibility` test class added.
    Eligibility matrix sealed.
-8. **🟡 [P1 2026-05-16] Kraken WebSocket implementation (Option 2 — operator-confirmed KEEP IN SCOPE)** — REST coverage
-   shipped 100% (8/8 private + Ticker + 43 tests); WS now in scope for May-23. Focus on coverage gaps WS uniquely
-   solves: (a) sub-200ms fill confirmation for `get_fills`; (b) order-book depth subscription for `get_orderbook`; (c)
-   lower API rate-limit pressure during high-frequency rebalance. Pattern: match the 6 other CeFi perp venues' WS
-   integration style. Slot 3 has full Kraken REST context already. (design 0.6×, ~5 = 3.0 cal)
+8. ✅ **Kraken WebSocket implementation (Option 2 — operator-confirmed KEEP IN SCOPE)** — REST coverage shipped 100%
+   (8/8 private + Ticker + 43 tests); WS now in scope for May-23. **DONE 2026-05-16 (slot-3)**: all 3 coverage gaps
+   closed. (a) sub-200ms fill confirmation for `get_fills` — `KrakenPrivateWebSocketClient` on
+   `wss://ws-auth.kraken.com/v2` `executions` channel, token-gated via `KrakenCeFiAdapter.get_websockets_token()`
+   (`execution-service@954f87205`). Token-supplier callback refreshed on each (re)connect. (b) order-book depth
+   subscription for `get_orderbook` — `KrakenBookWebSocketClient` on `wss://ws.kraken.com/v2` `book` channel, depth ∈
+   {10,25,100,500,1000} (`execution-service@2355b3a70`). Emits `BookSnapshot` with `is_snapshot` flag + checksum so
+   callers can validate local book state. (c) rate-limit pressure — both private + book streams + the public ticker
+   stream from `266d369f1` together remove the REST poll loop for fills/orderbook/ticker, satisfying the
+   rate-limit-relief criterion. Test totals: 29 in `test_kraken_ws_client.py` (16 ticker/private + 13 book) — all green.
+   basedpyright clean.
 9. **Reserve**: in-stack pickup for any Solana RPC ratelimit handling.
 
 ---
@@ -746,29 +752,28 @@ redesign accepted today.
 
 #### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive) — **CLOSED 2026-05-16**
 
-- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8):
-  Group A `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) +
-  Group C `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d`
-  (openapi drift contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d`
-  (operator-attentiveness, no-cron decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified).
-  (design 0.6×, ~5 = 3.0 cal — DONE)
-- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require
-  real GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover.
-  (design 0.6×, ~3 = 1.8 cal — DEFERRED-NEXT-SLOT)
+- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8): Group A
+  `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) + Group C
+  `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d` (openapi drift
+  contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d` (operator-attentiveness, no-cron
+  decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified). (design 0.6×, ~5 = 3.0 cal — DONE)
+- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require real
+  GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover. (design 0.6×, ~3
+  = 1.8 cal — DEFERRED-NEXT-SLOT)
 - 🟡 **`promote_workflow_may23_cli_path_2026_05_10`** — DEFERRED-OPERATOR: all remaining are operator-runnable
-  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run).
-  (design 0.6×, ~3 = 1.8 cal — DEFERRED-OPERATOR)
-- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator
-  review + sign-off + master plan row — slot-1 main owns master plan per slot precedence).
-  (research 1.2×, ~1 = 1.2 cal — DEFERRED-OPERATOR)
-- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items
-  owned by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
-- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US
-  softs UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
+  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run). (design 0.6×, ~3 = 1.8 cal —
+  DEFERRED-OPERATOR)
+- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator review +
+  sign-off + master plan row — slot-1 main owns master plan per slot precedence). (research 1.2×, ~1 = 1.2 cal —
+  DEFERRED-OPERATOR)
+- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items owned
+  by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
+- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US softs
+  UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
 - 🔄 **`deployment_and_qg_strategy_implementation_2026_05_13` final close** — PARTIAL: Phase 8.A item 1
-  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial
-  (per-repo coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning +
-  audit-log wire-in + act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
+  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial (per-repo
+  coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning + audit-log wire-in +
+  act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
 - ✅ **Archive 11 fully-done plans** — DONE `PM@2d34b45c`. (refactor 0.4×, ~1 = 0.4 cal)
 
 **Slot-8 SWEEP-16 net haul** (~5.4 cal closed clean + ~6.6 cal triaged with blocker class):
@@ -779,8 +784,8 @@ corrective fix + 6 RESOLVED issues archived (2 sweeps). All deferred items have 
 **Additional uncounted slot-8 work this cycle**: aave-lending-rate-val P1 no-shutdown fix `deployment-service@472f9ca` +
 deployment_events_lifecycle 3 GCS policies applied + service_registry P3 self-doc + gap-2.6.A-E Phase 2.6 cutover
 tooling (5 items) + 2 orchestrator absorb items (workspace_manifest_drift + workflow_template_rollout) +
-vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) +
-pyproject_workspace_audit Findings 1+2 (line-length + fail_under bumps across 4 repos).
+vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) + pyproject_workspace_audit
+Findings 1+2 (line-length + fail_under bumps across 4 repos).
 
 ### Slot 1 main — **[SWEEP-16]** orchestrator additions
 
@@ -808,29 +813,28 @@ pyproject_workspace_audit Findings 1+2 (line-length + fail_under bumps across 4 
 
 #### Slot 8 — **[SWEEP-16]** items (+12 cal — governance + audit + close-out + archive) — **CLOSED 2026-05-16**
 
-- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8):
-  Group A `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) +
-  Group C `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d`
-  (openapi drift contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d`
-  (operator-attentiveness, no-cron decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified).
-  (design 0.6×, ~5 = 3.0 cal — DONE)
-- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require
-  real GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover.
-  (design 0.6×, ~3 = 1.8 cal — DEFERRED-NEXT-SLOT)
+- ✅ **`governance_qg_automation_gaps_post_cutover_2026_05_12`** — ALL 6 GROUPS CLOSED 2026-05-16 (slot-8): Group A
+  `PM@42aa8bc1` (plan-discipline, baseline 231) + Group B `PM@42c7be41` (codex freshness, baseline 188) + Group C
+  `PM@ab60c339` (architectural ratchets ST-19/PB-19/UI-18, baseline 0) + Group D `PM@501dbe6d/a791800d` (openapi drift
+  contract + corrective fix after structural-mismatch finding) + Group E `PM@501dbe6d` (operator-attentiveness, no-cron
+  decision) + Group F `PM@0c35f6ee` (STALE_OPEN_ALERT contract codified). (design 0.6×, ~5 = 3.0 cal — DONE)
+- 🟡 **`compute_optimization_mock_data_2026_05_13` Ikenna-half** — DEFERRED-NEXT-SLOT: 8 remaining items require real
+  GCE profiling runs + big-machine SKU benchmark matrix. Recommend slot-6 ML-infra owner post-cutover. (design 0.6×, ~3
+  = 1.8 cal — DEFERRED-NEXT-SLOT)
 - 🟡 **`promote_workflow_may23_cli_path_2026_05_10`** — DEFERRED-OPERATOR: all remaining are operator-runnable
-  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run).
-  (design 0.6×, ~3 = 1.8 cal — DEFERRED-OPERATOR)
-- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator
-  review + sign-off + master plan row — slot-1 main owns master plan per slot precedence).
-  (research 1.2×, ~1 = 1.2 cal — DEFERRED-OPERATOR)
-- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items
-  owned by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
-- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US
-  softs UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
+  (preflight + 2yr backtest + Copper provisioning + Telegram tokens + recon dry-run). (design 0.6×, ~3 = 1.8 cal —
+  DEFERRED-OPERATOR)
+- 🟡 **`codex_vs_citadel_infrastructure_audit_2026_05_10` close** — DEFERRED-OPERATOR: 3 remaining (operator review +
+  sign-off + master plan row — slot-1 main owns master plan per slot precedence). (research 1.2×, ~1 = 1.2 cal —
+  DEFERRED-OPERATOR)
+- 🟡 **`mock_data_pipeline_benchmarking_2026_05_10` close** — DEFERRED-OTHER-SLOT: 3 remaining P2-DEFERRED items owned
+  by slot-7. (design 0.6×, ~1 = 0.6 cal — DEFERRED-OTHER-SLOT)
+- 🟡 **`cross_asset_group_catalogue_audit_2026_05_10` close** — BLOCKED-OPERATOR-DECISION: 1 final item (ICE US softs
+  UAC module placement). (research 1.2×, ~0.5 = 0.6 cal — BLOCKED-OPERATOR-DECISION)
 - 🔄 **`deployment_and_qg_strategy_implementation_2026_05_13` final close** — PARTIAL: Phase 8.A item 1
-  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial
-  (per-repo coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning +
-  audit-log wire-in + act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
+  (`coverage_targets.yaml`, 11 surfaces) ✅ `PM@625769d5`. 19 remaining items substantial (per-repo
+  coverage_targets_local × 20 + Phase 8.B/8.C surface coverage push + tarball SHA pinning + audit-log wire-in +
+  act-preflight workflow). (infra 0.8×, ~5 = 4.0 cal — partial 0.5 cal closed)
 - ✅ **Archive 11 fully-done plans** — DONE `PM@2d34b45c`. (refactor 0.4×, ~1 = 0.4 cal)
 
 **Slot-8 SWEEP-16 net haul** (~5.4 cal closed clean + ~6.6 cal triaged with blocker class):
@@ -841,8 +845,8 @@ corrective fix + 6 RESOLVED issues archived (2 sweeps). All deferred items have 
 **Additional uncounted slot-8 work this cycle**: aave-lending-rate-val P1 no-shutdown fix `deployment-service@472f9ca` +
 deployment_events_lifecycle 3 GCS policies applied + service_registry P3 self-doc + gap-2.6.A-E Phase 2.6 cutover
 tooling (5 items) + 2 orchestrator absorb items (workspace_manifest_drift + workflow_template_rollout) +
-vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) +
-pyproject_workspace_audit Findings 1+2 (line-length + fail_under bumps across 4 repos).
+vm_image_build_caching_gaps P1 Dockerfile reorders (execution-service + strategy-service) + pyproject_workspace_audit
+Findings 1+2 (line-length + fail_under bumps across 4 repos).
 
 ### Slot 1 main — **[SWEEP-16]** orchestrator additions
 
