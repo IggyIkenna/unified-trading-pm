@@ -424,3 +424,44 @@ All 21 Python repos (1 canary + 20 batch) now on unified `workspace-qg.yml`. Old
 trigger surface decision + rationale + post-cutover migration plan.
 
 **Issue can move to plans/archive/issues/** at next archival sweep (all 21 repos verified).
+
+---
+
+## POST-PHASE-B FIX 2026-05-16 18:55 UTC — transitive dep_repos closure (BFS)
+
+After Phase B rollout completed, ALL 21 repos started failing at `uv sync` with:
+
+```
+error: Distribution not found at: file:///home/runner/work/<repo>/<transitive-dep>
+```
+
+Root cause: rollout-workflow-templates.sh `get_dep_repos()` only emitted DIRECT deps from workspace-manifest.json,
+but uv sync resolves path-sourced deps recursively. Example chain: deployment-api → position-balance-monitor-service
+→ market-tick-data-service. With only direct deps cloned, uv sync fails on the transitive dep.
+
+**Fix at unified-trading-pm@c6419752**: get_dep_repos now does BFS over the dep tree, expanding to transitive
+closure. Self-ref excluded.
+
+**Re-rendered + pushed** (7 affected repos where transitive closure differed from direct):
+- deployment-api@e08f217 (added market-tick-data-service)
+- deployment-service@2a52da5 (added market-tick-data-service via deployment-api)
+- fund-administration-service@fb125c2
+- ibkr-gateway-infra@75dd8a1
+- system-integration-tests@0dadd46 (15-repo transitive closure)
+- deployment-ui@8880a13
+- unified-trading-system-ui@3aa85ef6
+
+**14 repos** (alerting-service, batch-live-reconciliation-service, client-reporting-api, execution-service,
+features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-inference-service,
+ml-training-service, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service,
+strategy-service, trading-agent-service, unified-api-contracts, unified-trading-library) had direct == transitive
+deps; no re-render needed.
+
+**Post-fix sample** (~18:57 UTC):
+- deployment-api: in_progress (uv sync should now succeed)
+- deployment-service: in_progress
+- system-integration-tests: in_progress
+- execution-service: failure (pre-existing QG; no transitive bug — its direct deps were already complete)
+- features-service: failure (pre-existing QG; same as execution-service)
+
+Pre-existing QG failures (~14 repos) remain — those are real issues per Findings Triage, picked up by slot owners.
