@@ -587,3 +587,14 @@ gate; item #26 is internal hygiene.
 | 9 | context_fill_optimization Phase 1 | ✅ | verification flip — P0+P1 already shipped |
 
 Half-2 plan-flip discipline followed throughout: every code commit had a sibling docs(plans) flip in the same agent turn. LDR alignment confirmed: PM/features/SIT all `rev-list --count HEAD ^origin/live-defi-rollout = 0`.
+
+[2026-05-16 12:35 UTC] slot-7 — basefc Item 2 PARTIAL → FULLY DONE. Reserve work this cycle:
+
+* cross_instrument family (20 calcs) migrated → `features-service@71643dec`
+* onchain family (19 calcs) migrated → `features-service@151dffab`
+* UTL `__init_subclass__` mandatory flip → `unified-trading-library@ccc9b7bf` (note: ABCMeta sets `__abstractmethods__` AFTER `__init_subclass__` runs, so eager MRO walk needed via new `_has_outstanding_abstract_methods()` classmethod)
+* Plan + work_split flips → `PM@3171b36f`
+
+39 concrete calcs migrated. Multi_timeframe family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical). basedpyright clean on all changed files.
+
+Also resolved workspace sync issue: yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) was on tab branch only; rebased + pushed to LDR as `execution-service@f871ffad7`. Audited all 28 repos: ahead/behind both 0 across the working set.
