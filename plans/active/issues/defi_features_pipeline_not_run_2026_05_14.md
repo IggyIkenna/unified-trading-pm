@@ -323,3 +323,15 @@ processed_candles being present, so should be queued behind this VM's completion
   wrappers should redirect to the consolidated launcher; current behaviour silently misroutes. Logging in
   `features_repo_consolidation_2026_05_08.md` follow-ups.
 - (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (c) completion.
+
+## VM 7 (slot-1-main) — features-onchain for 2026-04-15 only (post lending-indices unphantom)
+
+After phantom-flip + lending-indices backfill VM 003742 wrote 95,146 rows for 2026-04-15..16 to
+`gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-1[5-6]/asset_group=defi/`,
+slot-1-main launched `features-onchain-defi-20260517-005539` for single-day 2026-04-15 to verify the
+lending_rates feature_group now writes rows. **Next cycle**: verify rows land in
+`gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-15/feature_group=lending_rates/`.
+
+Days 17-19 lending-indices still returned 0 rows from the VM (LENDING_DAY_COMPLETE emitted but per_shard empty).
+Likely The Graph rate-limit / subgraph indexing lag. Filed as DEFERRED — re-launch with `--force` after the per-VM
+freshness cache cools; or split into per-day VMs.
