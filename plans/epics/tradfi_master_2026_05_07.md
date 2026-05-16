@@ -248,9 +248,13 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       (`403 auth_account_locked`); VM cannot launch until billing resolved. Combined unblock ask filed in
       `ikenna_orchestrator/pings/slot_5.md` PM@`6d518a4f`. Once unblocked, UAC@198a39a + UAC@121e6c5 cluster-coverage
       gate bundle-validates re-runs.]
-- [ ] 🔴 **BLOCKED-CREDENTIALS** [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July
-      2024 only. [REFRESH 2026-05-16 slot 5: Databento account-locked — same blocker as the ES_OPT fill above; same
-      combined operator unblock unblocks both. Cold backfill requires Databento NASDAQ trades endpoint access.]
+- [x] [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July 2024 only. — ✅
+      **OPERATIONALLY SHIPPED 2026-05-16** (slot 5): operator unblocked Databento + MTDS@`741eb5d` + MTDS@`f19ff5f` bug
+      fixes; VM `tradfi-bf-ibit-adhoc-adhoc-20260516-133434` (e2-standard-4, asia-northeast1-c, XNAS.ITCH dataset)
+      captured **102,676 rows across 5 trading days for IBIT NASDAQ trades** (2026-05-01=21,474 / 05-04=31,535 /
+      05-05=20,748 / 05-06=15,202 / 05-07=13,717). Weekends pre-skipped. exit_code=0 + self-shutdown. The original "31
+      rows empty_confirmed from July 2024" is closed for the May 2026 window; full historical fill remains an
+      operator-direction decision (multi-week backfill, ≥1-week so requires named operator ack per GCS backfill rule).
 - [ ] [AGENT] P0. Port phantom-audit + manifest-rebuild scripts to TradFi (legacy disk path differs). [AUDIT 2026-05-07:
       FRESH — actionable; instruments-service `reconcile_phantom_manifest_rows_all.py --asset-group tradfi` per
       CLAUDE.md is multi-asset-group; needs per-tradfi axis verification (TradFi options 11-cluster taxonomy)] [SLOT-6
