@@ -181,7 +181,7 @@
           "fastapi<1.0.0,>=0.115.0"
         ],
         "freezegun": [
-          "freezegun>=1.5.0,<2.0.0"
+          "freezegun>=1.2.2,<2.0.0"
         ],
         "fsspec<2026.0.0,": [
           "fsspec<2026.0.0,>=2025.2.0"
@@ -1480,6 +1480,9 @@
         "basedpyright": [
           "basedpyright==1.38.2"
         ],
+        "cryptography": [
+          "cryptography>=46.0.7,<47.0.0"
+        ],
         "fastapi<1.0.0,": [
           "fastapi<1.0.0,>=0.115.0"
         ],
@@ -1528,6 +1531,9 @@
         "pytest-xdist": [
           "pytest-xdist>=3.6.0,<4.0.0"
         ],
+        "python-dotenv": [
+          "python-dotenv>=1.2.2,<2.0.0"
+        ],
         "requests": [
           "requests>=2.33.0,<3.0.0"
         ],
@@ -1537,12 +1543,15 @@
         "scipy<2.0.0,": [
           "scipy<2.0.0,>=1.15.0"
         ],
+        "urllib3": [
+          "urllib3>=2.7.0,<3.0.0"
+        ],
         "uvicorn": [
           "uvicorn[standard]>=0.29.0,<1.0.0"
         ]
       },
       "internal_count": 2,
-      "external_count": 23
+      "external_count": 26
     },
     "strategy-service": {
       "internal_deps": {

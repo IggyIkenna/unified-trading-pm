@@ -78,3 +78,19 @@ fail, masking real future drift.
 
 DAG SVG regenerated at `WORKSPACE_MANIFEST_DAG.svg` (no structural changes — same dep graph,
 just confirming regeneration ran clean).
+
+## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup)
+
+All 3 misalignment classes closed; `check-dependency-alignment.py` now reports
+`OK: All dependencies aligned with manifest and canonical constraints.`
+
+- **e2e-testing pyproject.toml** — already aligned on LDR by prior agent (httpx / pytest /
+  pytest-asyncio / websockets all at canonical pins per `pyproject.toml:` grep 2026-05-16).
+- **e2e-testing stale manifest internal deps** — already cleaned on LDR by prior agent (5
+  entries removed during dep-graph refresh).
+- **UTL freezegun P2** — shipped today at `unified-trading-library@b59fcb22`: lowered floor
+  `>=1.5.0` → `>=1.2.2` to match canonical. UTL test only uses `freeze_time(..., tick=True)`
+  which is a freezegun 0.3+ feature; safe lower.
+
+Derived dependency manifest regenerated this commit to reflect new UTL freezegun spec.
+Issue closeable at next archive sweep.
