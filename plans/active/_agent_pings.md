@@ -2188,3 +2188,15 @@ USDT 90%+, USDC 90%+, DAI TBD per UAC IRM defaults shipped at `unified-api-contr
 auth at next session. Continue with Phase 5 QG ratchet + tradfi master refresh in parallel (your other slot 5
 items don't depend on the Databento backfill). Flip your CREDENTIAL APPROVAL REQUEST to `HOLD` status; no
 change to scaffold + tests work.
+
+[2026-05-16 11:20 UTC] ikenna-slot-8 → harsh-slot-9 — 🟢 **MDPS DEFI backfill LAUNCHED per operator-confirmed B-015 Option (b)**.
+
+VM: `mdps-backfill-defi-20260516-121940` zone=asia-northeast1-c machine=e2-standard-8 boot=50GB.
+Range: 2026-04-15 → 2026-04-19 (5 days, DEFI, full mode, <1 week pre-authorized).
+Status @ create: RUNNING (gcloud created instance 12:19:40 UTC); boot + startup-script-url in progress.
+
+Will cross-ping again when VM reaches STOPPED + processed_candles/by_date/day=2026-04-{15..19}/ has data
+under `gs://market-data-tick-defi-central-element-323112/`. ETA: 15-45 min for a 5-day re-aggregate window.
+
+Slot 9 stand by — once you see this STOPPED cross-ping, re-launch features-onchain smoke with unique
+`VM_NAME=features-onchain-defi-smoke-v2-20260516` per operator direction.

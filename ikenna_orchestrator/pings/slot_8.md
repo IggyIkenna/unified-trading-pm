@@ -342,3 +342,18 @@ Operator confirmed B-015 option (b). Action sequence:
 6. Harsh slot 9 then re-launches features-onchain smoke with their own unique VM_NAME.
 
 **This is the LAST step in the B-015 unblock chain** — slot 9 has been standing by for ~24h.
+
+---
+
+[2026-05-16 11:21 UTC] slot-8 — LAUNCHED MDPS DEFI backfill per operator B-015 Option (b)
+
+VM: `mdps-backfill-defi-20260516-121940` (asia-northeast1-c, e2-standard-8, 50GB boot).
+Range: 2026-04-15 → 2026-04-19 (5 days, full mode, <1 week pre-authorized GCS backfill).
+Source bucket: `market-data-tick-defi-central-element-323112` (raw_tick_data → processed_candles).
+
+Pre-launch state verified clean: 0 running mdps-backfill-defi-* VMs, 0 processed_candles for target dates.
+Cross-side ping to harsh-slot-9 appended to `plans/active/_agent_pings.md`.
+
+Now monitoring: STARTED event in `gs://central-element-323112-events/events/market-data-processing-service/2026-05-16//`
+within 60s of service bootstrap. Will cross-ping slot-9 when STOPPED + bucket inspection confirms processed_candles
+landed.
