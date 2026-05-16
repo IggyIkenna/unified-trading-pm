@@ -749,3 +749,21 @@ post-cutover work. Not attempting fix in this autonomous loop.
 
 13 sister repos now confirmed 0 non-excluded method-size violations (was 12 last tick — adding
 execution-service to the surveyed-and-filed list completes the workspace baseline).
+
+
+[2026-05-17 /loop tick 5] slot-7 — verification scan + no-new-work check:
+
+Final scan across 5 repos I touched this session: 0 non-excluded method-size violations everywhere.
+
+* unified-trading-library: 0  (SIZE_EXTRA_EXCLUDES = manifest_writer.py only — docstring-heavy)
+* features-service: 0         (FUNCTION_SIZE_EXTRA_EXCLUDES = 3 pre-existing orchestrators)
+* market-tick-data-service: 0 (FUNCTION_SIZE_EXTRA_EXCLUDES = 31 per-venue handler family + adapter)
+* strategy-service: 0         (FUNCTION_SIZE_EXTRA_EXCLUDES = 10 pre-existing engine/strategies/cli paths)
+* unified-trading-api: 0      (no exclusions)
+
+execution-service routed to operator via `execution_service_method_size_violations_workspace_outlier_2026_05_17.md`
+(3-phase plan, Phase A pre-May-23 ratchet, Phase B/C post-cutover). No slot-7 follow-up without explicit
+operator approval — execution-service is May-23 critical path and not in slot-7 plan-of-record scope.
+
+No new pings to slot 7 in the loop ledger since tick 4. Loop continues; idle-watching for orchestrator
+direction or unexpected drift.
