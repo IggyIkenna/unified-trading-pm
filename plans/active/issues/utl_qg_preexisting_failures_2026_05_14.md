@@ -138,10 +138,14 @@ Operator triage / break into themed sub-issues:
    59→24L `unified-trading-library@175eaf1d` (extracted `_execute_stage_body` + `_record_failed_stage`);
    `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52→47L +
    `post_trade/settler.py::settle_trade` 53→43L `unified-trading-library@5a3a341b` (call-site condensation).
-   **Remaining 6 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
+   **Additional refactors after the initial trim**: `service_runtime.py::from_env_and_args` 100→49L
+   `unified-trading-library@d75ae5d7` (extracted `_resolve_asset_groups` + `_resolve_testnet_mode` +
+   `_validate_gcp_required`) — removed from exclusion list. `service_cli.py::ServiceCLI.run` 108→39L
+   `unified-trading-library@0e0feced` (extracted `_prepare_argv` + `_install_synthetic_input_override` +
+   `_wire_runtime_env`) — also removed.
+   **Remaining 4 paths kept in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` (ManifestWriter public API —
    docstring-heavy contract docs; refactoring would lose adapter-facing contract value),
-   `service_runtime.py` / `service_cli.py` (legacy CLI builders), `io/streaming_shard_finalizer.py`,
-   `features_interface/prediction/sports_odds_features.py`,
+   `io/streaming_shard_finalizer.py`, `features_interface/prediction/sports_odds_features.py`,
    `streaming/parallel_per_symbol_runner.py` — follow-up candidates.
 
    **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start):
