@@ -279,10 +279,12 @@ controller layer).
 - [x] [codex] P0.
       [`carry-recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md): same
       rewrite for the recursive supply/borrow loop. (PM@552a3e6e)
-- [ ] [codex] P1. Remaining 7 archetype docs in `codex/09-strategy/architecture-v2/archetypes/` — same rewrite. Per
+- [x] [codex] P1. Remaining 7 archetype docs in `codex/09-strategy/architecture-v2/archetypes/` — same rewrite. Per
       Citadel-grade `doc → plan → code` rule, ship even if the code backport for that archetype is deferred. Each doc
-      gets a `**Code-backport status:**` line declaring SHIPPED / DEFERRED. **DEFERRED** to post-cutover plan (P1, not
-      blocking May-23).
+      gets a `**Code-backport status:**` line declaring SHIPPED / DEFERRED. **DONE 2026-05-16 slot 2** (PM@8bcf0f96):
+      carry-basis-dated, carry-recursive-borrow-lending-only (SHIPPED), carry-recursive-borrow-perp-hedged (SHIPPED),
+      yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool. Operator pulled from post-cutover
+      deferral 2026-05-15 ("its just docs, why not").
 - [ ] [PM-plan] P1. Once the 11 doc rewrites land, update the archived
       [`leveraged_leg_controller_2026_05_01`](../archive/leveraged_leg_controller_2026_05_01.plan.md)'s Phase 4 GATE
       description (in a follow-up commit) to note "doc rewrites shipped 2026-05-07; code backport proceeds

@@ -81,9 +81,11 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
    emit `total_apy = base_apy + mev_apy * (1 - commission_pct)`. 5 unit tests + 1 `@pytest.mark.requires_credentials`
    live integration test (17 pass, 1 skipped). Live verification 2026-05-16 epoch 972: base=3.58% mev=0.12% total=3.69%
    for top validator at 7% commission. Helius RPC returned 200 vote_accounts. (infra 0.8×, ~3 = 2.4 cal)
-2. **Stream C P1 — 7 remaining archetype docs** (operator direction 2026-05-15: pulled from post-cutover; pure docs).
-   Each archetype gets a `codex/09-strategy/architecture-v2/archetypes/<archetype>.md` per the canonical 9-strategy docs
-   pattern. Targets: 7 archetypes that don't yet have docs. (refactor 0.4×, ~5 = 2.0 cal)
+2. ✅ **Stream C P1 — 7 remaining archetype docs** — DONE (PM@8bcf0f96). LegController integration sections added to
+   carry-basis-dated, carry-recursive-borrow-lending-only (SHIPPED status), carry-recursive-borrow-perp-hedged
+   (SHIPPED), yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool. Pattern matches the 4 P0
+   docs from PM@552a3e6e. Closes Stream C P1 from `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`.
+   (refactor 0.4×, ~5 = 2.0 cal)
 3. **`defi_catalogue_chain_primitives_2026_05_10` close-out** — 18 remaining open todos (chain-primitive UAC schema
    additions + downstream MTDS/features wiring). (design 0.6×, ~8 = 4.8 cal)
 4. **`wave2_polymarket_record_captured_from_counts` Polymarket subset** (carry from 14 May) — wire counts →
@@ -112,13 +114,12 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    `execution-service@3a511f1b9` — `get_account_state()` wired via `_do_private_post()` helper (HMAC-SHA512 signed POST
    to `/0/private/Balance`); 2 new tests pass. `execution-service@6e5747366` — `place_order` + `cancel_order` +
    `get_order_status` all wired live: AddOrder/CancelOrder/QueryOrders endpoints, new `_parse_kraken_order_dict()`
-   helper (status/side/order-type/partial-fill mapping), 5 more tests (38 total).
-   `execution-service@4722026b4` — `get_fills` (TradesHistory + client-side ordertxid filter,
-   new `_parse_kraken_trade_dict()`) + `get_positions` (OpenPositions, LONG/SHORT side, entry_price + mark_price +
-   unrealized_pnl) live; 4 more tests (42 total).
+   helper (status/side/order-type/partial-fill mapping), 5 more tests (38 total). `execution-service@4722026b4` —
+   `get_fills` (TradesHistory + client-side ordertxid filter, new `_parse_kraken_trade_dict()`) + `get_positions`
+   (OpenPositions, LONG/SHORT side, entry_price + mark_price + unrealized_pnl) live; 4 more tests (42 total).
    `execution-service@70a851e4e` — `get_margin_state` (TradeBalance) live: total_collateral/total_debt/
-   available_margin/margin_level parsed; ml% → ratio conversion. 1 more test (43 total). **8 of 8 private REST
-   methods + public Ticker now LIVE.** Remaining: WS subscriptions (ticker + private user events).
+   available_margin/margin_level parsed; ml% → ratio conversion. 1 more test (43 total). **8 of 8 private REST methods +
+   public Ticker now LIVE.** Remaining: WS subscriptions (ticker + private user events).
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium
    already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines
@@ -295,14 +296,14 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
    semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 = 4.5
    cal)
-2. 🟡 **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration. **PARTIAL 2026-05-16**:
-   plan body item 1 (strategy decision Option-a) ✅ `PM@082444d7` + plan body item 2 cross_instrument family ✅
+2. 🟡 **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration. **PARTIAL 2026-05-16**: plan
+   body item 1 (strategy decision Option-a) ✅ `PM@082444d7` + plan body item 2 cross_instrument family ✅
    `features-service@71643dec` (20 calcs migrated to `feature_group: ClassVar[str]`; base adds
    `feature_family: ClassVar[str] = "cross_instrument"`; `validate_class_attributes()` OK on all). Multi_timeframe
-   family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical). Onchain `OnChainCalculator`
-   subclasses don't override `feature_group` — separate sub-task ADD declarations (needs per-calc data_type
-   mapping) deferred. UTL mandatory `__init_subclass__` flip (item 3) blocked on onchain coverage. Plan-flip cite
-   (item 4) auto-closes once items 2-3 ship. (refactor 0.4×, ~6 = 2.4 cal; ~1.0 cal shipped so far)
+   family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical). Onchain `OnChainCalculator` subclasses
+   don't override `feature_group` — separate sub-task ADD declarations (needs per-calc data_type mapping) deferred. UTL
+   mandatory `__init_subclass__` flip (item 3) blocked on onchain coverage. Plan-flip cite (item 4) auto-closes once
+   items 2-3 ship. (refactor 0.4×, ~6 = 2.4 cal; ~1.0 cal shipped so far)
 3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services (`PM@3a4afdc5`);
    per-service emission boundary is canonical (vs centralised α). Audit table added at
    `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4 CLOSED**:
