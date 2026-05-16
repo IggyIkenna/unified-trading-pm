@@ -421,3 +421,36 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+
+---
+
+[2026-05-16 20:48 UTC] slot-8 — autonomous session WRAP per operator 6h-no-stop directive
+
+**Cycle haul** (cumulative across 2026-05-15 + 16):
+
+**✅ Closed (16 items)**:
+1. B-015 MDPS DEFI launch + P0 big finding (vault_share_price not in MDPS adapters) + cross-side escalation → operator routed Option A to slot-2 (`features-service@550cdaba`)
+2. gap-2.6.A-E Phase 2.6 cutover tooling (5 items: launch-bucket-rsync-vm.sh + verify_flat_to_env_tiered_drift.py + verify_env_tiered_buckets_provisioned.py + watchdog reg + operator runbook)
+3. Absorb #1 workflow_template_rollout (71 workflow files across 24 service repos)
+4. Absorb #2 workspace_manifest_drift (9 misalignments → 1 intentional + generator-bug fix)
+5. vm_image_build_caching_gaps P1 (Dockerfile reorders in execution-service + strategy-service)
+6. pyproject_workspace_audit Findings 1+2 (line-length + fail_under across 4 repos)
+7. aave-lending-rate-val no-shutdown P1 (set -e bracket fix at `deployment-service@472f9ca`)
+8. deployment_events_lifecycle 3 GCS lifecycle policies applied on-cloud + codified
+9. service_registry_drift P3 self-doc entry
+10. SWEEP-16 archive 11 fully-done plans (`PM@2d34b45c`)
+11-16. **governance_qg_automation_gaps_post_cutover ALL 6 GROUPS** (A: plan-discipline / B: codex-freshness / C: architectural-ratchets / D: openapi-drift contract + corrective-fix / E: operator-attentiveness no-cron / F: STALE_OPEN_ALERT contract)
+17. Phase 8.A coverage_targets.yaml (11 surfaces) — partial close of deployment_and_qg_strategy
+18. 8 RESOLVED issues archived (2 sweeps)
+
+**🟡 Triaged DEFERRED with explicit blocker class** (5 items, ~6.6 cal):
+compute_optimization_mock_data (DEFERRED-NEXT-SLOT → slot-6) + promote_workflow_may23_cli (DEFERRED-OPERATOR) +
+codex_vs_citadel_audit (DEFERRED-OPERATOR) + mock_data_pipeline_benchmarking (DEFERRED-OTHER-SLOT → slot-7) +
+cross_asset_group_catalogue_audit (BLOCKED-OPERATOR-DECISION).
+
+**🔴 Still awaiting**:
+B-015 cross-side ping (Smoke A clean; Smoke B blocked-upstream awaiting slot-9 re-launch verification post slot-2
+Option A landing).
+
+**LDR alignment**: 27/27 owned repos at ahead=0. Half-1/Half-2 discipline clean throughout.
+**Slot-8 SWEEP-16 dashboard**: ~5.4 cal closed clean + ~6.6 cal triaged + ~0.5 cal partial = ~12.5 cal disposed.
