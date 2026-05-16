@@ -357,3 +357,21 @@ Cross-side ping to harsh-slot-9 appended to `plans/active/_agent_pings.md`.
 Now monitoring: STARTED event in `gs://central-element-323112-events/events/market-data-processing-service/2026-05-16//`
 within 60s of service bootstrap. Will cross-ping slot-9 when STOPPED + bucket inspection confirms processed_candles
 landed.
+
+---
+
+[2026-05-16 11:30 UTC] slot-8 — MDPS DEFI backfill VM EXITED CLEAN BUT WITH ZERO OUTPUT (architectural gap, not failure)
+
+VM `mdps-backfill-defi-20260516-121940`: STARTED 11:21:43 → STOPPED 11:21:54 UTC (3 min, exit 0). All 5 dates
+processed but `DATA_INGESTION_COMPLETED severity:"no files"` × 5. Raw_tick_data EXISTS for all 5 target dates
+(7 vault_share_price parquets each) but MDPS DeFi adapters cover only
+`book_snapshot_5/dex_swaps/fx_rates/market_state/liquidity` — no `vault_share_price` handler.
+
+**Operator escalation filed** at `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`
++ cross-side ping in `plans/active/_agent_pings.md`. Recommend Option A (features-onchain dep check fix) over B
+(tactical adapter shim) or C (descope).
+
+VM auto-deleted via VM_SHUTDOWN_ON_COMPLETION=true. No manual cleanup needed.
+
+**Slot-8 next move**: WAIT for operator decision on A/B/C before any further B-015 work. Picking up other slot-8
+backlog items in parallel (Phase 2.6 playbook gaps, etc.) while operator deliberates.

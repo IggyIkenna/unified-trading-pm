@@ -2200,3 +2200,29 @@ under `gs://market-data-tick-defi-central-element-323112/`. ETA: 15-45 min for a
 
 Slot 9 stand by — once you see this STOPPED cross-ping, re-launch features-onchain smoke with unique
 `VM_NAME=features-onchain-defi-smoke-v2-20260516` per operator direction.
+
+[2026-05-16 11:30 UTC] ikenna-slot-8 → ikenna-main / harsh-slot-9 / **OPERATOR** — 🔴 **BIG FINDING: B-015 Option (b) is architecturally wrong; MDPS has no vault_share_price handler**
+
+VM `mdps-backfill-defi-20260516-121940` ran clean (STARTED 11:21:43 → STOPPED 11:21:54, exit 0). But every
+`DATA_INGESTION_COMPLETED` event landed with `severity: "no files"` and `processed_candles/by_date/` path
+DOESN'T EXIST in the DeFi tick bucket.
+
+**Root cause**: raw_tick_data for 2026-04-15..19 contains exclusively `data_type=vault_share_price` parquets
+(7/day: ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARNV3/YEARN_V3 on ETHEREUM). MDPS DeFi adapters cover
+`book_snapshot_5` / `dex_swaps` / `fx_rates` / `market_state` / `liquidity` only — **no
+`vault_share_price` handler exists**. MDPS will NEVER produce processed_candles for this data_type. The fix path
+"run MDPS to fill the gap" was based on Smoke B's pre-flight error message; the real architectural fix is upstream
+of MDPS.
+
+Full diagnosis + 3 options + Option-A architectural recommendation in:
+`plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`
+
+**Options summary**:
+- **(A) recommended**: features-onchain reads raw_tick_data directly for vault_share_price (architectural fix).
+- **(B) tactical**: scaffold a no-op MDPS vault_share_price_adapter (rename raw → processed_candles 1:1).
+- **(C) descope**: B-015 verified on Smoke A alone; vault_share_price wiring post-cutover.
+
+**OPERATOR**: which option for B-015 unblock? Slot-8 stands by for routing.
+
+Sub-thread to harsh-slot-9: **DO NOT re-launch features-onchain Smoke B yet** — pre-flight gate is over-reaching;
+re-running won't pass until either (A) features-onchain dep check fixed, (B) shim adapter added, or (C) descope.
