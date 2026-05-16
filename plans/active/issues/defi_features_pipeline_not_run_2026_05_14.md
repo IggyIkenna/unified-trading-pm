@@ -260,9 +260,10 @@ processed_candles being present, so should be queued behind this VM's completion
      STARTED event → VM sat idle 55+ min until slot-1 main orchestrator caught it via serial console at 23:07 UTC,
      deleted. **Fix shipped**: `ml-training-service@876f0e5` (UTL pin relaxed to `>=0.3.0,<1.0.0`). **Slot-1 main
      rebuilding tarball + re-launching as attempt 4.**
-  4. 🟢 **slot-1-main-relaunch** — tarball rebuild via
-     `bash deployment-service/scripts/vm/create-code-tarballs.sh ml-training` + re-run consolidated launcher with
-     fix in place. Attempt 4 in progress (see "Attempt 4" subsection below for VM ID once launched).
+  4. 🟢 **slot-1-main attempt 4 LAUNCHED 2026-05-16 23:30 UTC** — `features-onchain-defi-20260516-233044`
+     (asia-northeast1-c, e2-standard-8, 35.200.23.244, RUNNING). Tarball rebuilt 22:29:57 UTC
+     (`gs://deployment-scripts-central-element-323112/code/ml-training-service-code.tar.gz`) carrying the UTL pin
+     fix. Same command as attempt 3 (5-day onchain backfill 2026-04-15..19 DEFI ALL).
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the

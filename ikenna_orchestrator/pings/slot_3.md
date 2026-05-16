@@ -676,3 +676,29 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+---
+
+## [main → slot 3] 2026-05-16 23:35 UTC — features-onchain VM attempt 3 idle-fail diagnosed + fixed + attempt 4 launched (slot-1 main absorbed)
+
+**Heads-up — your B-015 chain step (c) attempt 3 (`features-onchain-defi-20260516-222259`) sat idle for ~55 min** with
+no python workload, no STARTED event. Root cause via serial console: `ml-training-service==0.1.0` pinned
+`unified-trading-library>=0.4.0,<1.0.0` but UTL is at 0.3.167; `uv pip install` came back unsatisfiable; VM startup
+script exited rc=1 at 21:25:38 UTC; VM sat doing nothing but systemd housekeeping.
+
+**Actions slot-1 main absorbed** (saving you the cycle):
+1. Deleted idle VM `features-onchain-defi-20260516-222259`.
+2. Fixed `ml-training-service@876f0e5` — UTL pin relaxed to `>=0.3.0,<1.0.0` (matches peer repos).
+3. Rebuilt ml-training-service tarball at 22:29:57 UTC.
+4. Re-launched attempt 4: **`features-onchain-defi-20260516-233044`** (asia-northeast1-c, e2-standard-8, 35.200.23.244,
+   RUNNING). Same 5-day backfill 2026-04-15..19 DEFI ALL.
+5. Updated `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` chain step (c) with attempts 3+4.
+
+**Your action**: monitor attempt 4 — confirm STARTED event lands within 5 min, confirm rows show up in
+`gs://features-onchain-defi-central-element-323112/features/by_date/`, then proceed to chain step (d) by pinging
+Harsh slot 9 to re-run B-015 Phase 2 paper-trade.
+
+**Pattern call-out**: this is the second attempt in a row that died on a transitive dep pin (attempt 2 was
+risk-and-exposure UAC pin; attempt 3 was ml-training UTL pin). The VM workspace pulls 27 repos; any one with a
+mis-floored peer-repo pin will break `uv pip install`. Consider adding a workspace-wide audit of `pyproject.toml` deps
+vs current peer versions to catch the next one before VM launch.
+
