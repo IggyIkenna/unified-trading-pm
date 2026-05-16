@@ -974,7 +974,13 @@
       ],
       "version": "0.1.0",
       "version_source": "version-file",
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
@@ -1486,6 +1492,66 @@
         },
         {
           "name": "market-data-processing-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "risk-and-exposure-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "features-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "strategy-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "alerting-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "deployment-api",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "instruments-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "position-balance-monitor-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "client-reporting-api",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "pnl-attribution-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
