@@ -88,14 +88,28 @@ from slot 9 reassignment) + `cross_asset_group_catalogue_audit` Phase 6A DeFi re
    (refactor 0.4×, ~5 = 2.0 cal)
 3. **`defi_catalogue_chain_primitives_2026_05_10` close-out** — 18 remaining open todos (chain-primitive UAC schema
    additions + downstream MTDS/features wiring). (design 0.6×, ~8 = 4.8 cal)
-4. **`wave2_polymarket_record_captured_from_counts` Polymarket subset** (carry from 14 May) — wire counts →
-   `record_captured()` for Polymarket market-state shards. (research 1.2×, ~3 = 3.6 cal)
-5. **`cme_polymarket_arb_2026_05_08` close-out** (carry from slot 9 reassignment 14 May) — DeFi/Polymarket overlap.
-   (design 0.6×, ~3 = 1.8 cal)
-6. **`cross_asset_group_catalogue_audit` Phase 6A DeFi half remainder** — DeFi-specific catalogue parity audit.
+4. ✅ **`wave2_polymarket_record_captured_from_counts` Polymarket subset** (carry from 14 May) — **VERIFIED-DONE
+   2026-05-16 by slot 2**: full plan is `status: done` across Phases 1-5 (UTL@`446d75ce` deprecation banner,
+   MTDS@`616ac15` callsite migration, PM@`ce40d8ab` QG STEP 5.73, PM@`d93a9952` codex). Zero open todos in plan body;
+   bookkeeping-only flip. (research 1.2×, ~3 = 3.6 cal)
+5. 🟡 **`cme_polymarket_arb_2026_05_08` close-out** (carry from slot 9 reassignment 14 May) — **STATUS 2026-05-16 by
+   slot 2**: Phase 1 ✅ (UAC@`b95d146` EVENT_CONTRACT enum); Phase 2 🟡 BLOCKED-UPSTREAM on
+   `predictions_canonical_question_group_polymarket_migration_2026_05_06` Phase 5 (epic 38% done — ECRTY/ECYM/ECGC/
+   ECCL/ECNG/EC6E canonical-question-groups not yet shipped); Phases 3-5 todo (sequential multi-repo plumbing,
+   ~12 cal AI-days brand-new design); codex stub ✅. **DEFERRED — post-May-23 critical path per plan overview**; named
+   successor = this plan itself. 1.8 cal-day budget insufficient for Phases 3-5; status-update flip only. (design
+   0.6×, ~3 = 1.8 cal)
+6. ✅ **`cross_asset_group_catalogue_audit` Phase 6A DeFi half remainder** — **VERIFIED-DONE 2026-05-16 by slot 2**:
+   plan body Phase 6A (line 469) is already `[x]` ("Workspace-grep audit post-Phase-1"). Sole open todo (line 554, ICE
+   US softs UAC capability_declarations entry) is TradFi-side (slot 5 owns); slot 5's 2026-05-16 audit confirmed ICE
+   softs symbology + instrument_universe canonicalised at `tradfi_roots.py:242-247`. No DeFi-half remainder; issue
+   doc `ice_us_softs_dataset_disambiguation_2026_05_14.md` is operator-decision-pending, not slot-2 territory.
    (research 1.2×, ~2 = 2.4 cal)
-7. **`cross_asset_instruments_service_scope` triage** (carry from slot 9 reassignment) — instruments-service scope
-   decision for cross_asset symbols. (research 1.2×, ~2 = 2.4 cal)
+7. 🟡 **`cross_asset_instruments_service_scope` triage** (carry from slot 9 reassignment) — **DONE 2026-05-15 by slot
+   2** (per issue doc § "Architecture recommendation"): triage written recommending **Option 1 — extend instruments-
+   service with CROSS_ASSET shard**. Status `BLOCKED-OPERATOR-DECISION`; not May-23 blocking (P2; features-service
+   handles cross_asset data production). 4-item implementation gate written. Awaiting operator [ack] on Option 1 vs
+   alternatives. No further triage work needed. (research 1.2×, ~2 = 2.4 cal)
 9. **🔴 [TOP-PRIORITY 2026-05-16 — B-015 ARCHITECTURAL UNBLOCK] B-015 Smoke B Option A** per
    `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`. Operator-confirmed 2026-05-16:
    features-onchain pre-flight gate is over-reaching — refactor to read raw_tick_data DIRECTLY for `vault_share_price`
