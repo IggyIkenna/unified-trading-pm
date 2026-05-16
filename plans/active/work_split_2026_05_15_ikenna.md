@@ -280,11 +280,16 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
 `strategy_service_qg_ltv_threshold_violations_2026_05_15` + `mtf_intraday_micro_regime_policy` (carry from slot 9) +
 `sports_retired_data_types_code_cleanup` non-sports half.
 
-1. 🔴 **BLOCKED-CREDENTIALS** **TradFi 1-week test backfill execution** (carry from 14 May #4) — VM launcher
-   `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` is hard-wired to Databento (ES/CME futures source).
-   Databento account locked (`403 auth_account_locked`) — same blocker as item 2. `<7 days AUTHORIZED` qualifier covered
-   GCS bandwidth, NOT external-data credentials. Combined unblock ask filed in `ikenna_orchestrator/pings/slot_5.md`
-   (PM@`6d518a4f`). (infra 0.8×, ~3 = 2.4 cal)
+1. 🟡 **PARTIAL — internal bug surfaced** **TradFi 1-week test backfill execution** (carry from 14 May #4) — (infra
+   0.8×, ~3 = 2.4 cal). **2026-05-16 chronology**: operator unblocked Databento credential (`databento-api-key` v6
+   vaulted with credits). VM 1 `tradfi-bf-es-adhoc-adhoc-20260516-123140` hit `NamedTemporaryFile` placeholder collision
+   in MTDS `databento_adapter.py:584` — fixed at MTDS@`741eb5d`. VM 2 `tradfi-bf-es-adhoc-adhoc-20260516-130240` got
+   past the temp-file collision (`DatabentoBaseClient warmup successful: API key valid, 29 datasets available`) but
+   failed on a NEW chunk-iteration bug: `dbn_store.to_df(count=50000)` throws
+   `int() argument must be a string, a bytes-like object or a real number, not 'Timestamp'` on every fetch. Likely SDK
+   version mismatch (local 0.78.0 vs uv.lock pinned 0.73.0). Issue doc filed:
+   `plans/active/issues/databento_chunk_iteration_int_timestamp_2026_05_16.md`. P0 — blocks items 1+6+10. Next slot 5
+   turn: pin SDK or switch off path-streaming.
 2. **Databento session-stamp backfill — operator approval pending** (≥1-week — slot 5 filed CREDENTIAL APPROVAL REQUEST
    2026-05-15). Script: `market-tick-data-service/scripts/migrate_tradfi_ohlcv_session_stamps.py`. **OPERATOR ACTION
    REQUIRED**: ack the request in `pings/slot_5.md` to unblock VM launch. (infra 0.8×, ~3 = 2.4 cal)
