@@ -2,6 +2,8 @@
 title: "DeFi handler phantom risk — structural write-before-manifest gap in 4 handlers (evm_defi, gas_fee, solana_defi, lst_rates)"
 created: 2026-05-15
 author: harsh-slot-9 (Day-4 MTDS handler readiness audit)
+resolved: 2026-05-16
+resolution: SHIPPED — all 4 handlers structurally hardened by `MTDS@f657431` (lst_rates) + `MTDS@c1e6963` (evm_defi / gas_fee / solana_defi recorder.close() in finally). Re-verified by slot-3 2026-05-16: every (protocol, chain) shard now wraps upload + record_captured in the same try block; upload exception → record_failed; `recorder.close()` in finally; eigenlayer_rewards pattern matched. Safe to launch DeFi backfill VMs (features-onchain-defi-backfill-20260516-220052 launched on this basis).
 source:
   - "slot-9 Day-4 item 4: MTDS handler readiness audit for DeFi backtests"
   - "companion to plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md"
@@ -9,6 +11,12 @@ severity: P1 (systemic: affects all DeFi backfill VMs; P0 instance already confi
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
+
+> **✅ RESOLVED 2026-05-16 (slot-3 verification)** — All 4 handlers structurally hardened before this issue was filed.
+> Author's audit window was pre-`c1e6963` (2026-05-15 08:33 UTC); the lst_rates fix at `f657431` and the evm_defi /
+> gas_fee / solana_defi `recorder.close()` finally fix at `c1e6963` together close the systemic risk. Slot-3 re-verified
+> 2026-05-16 by reading each handler's `record_captured` callsite + outer try/except + finally block. Safe to launch
+> DeFi backfill VMs.
 
 ## What I found
 
