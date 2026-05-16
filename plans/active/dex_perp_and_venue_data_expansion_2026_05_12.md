@@ -153,11 +153,12 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       inside drift_adapter.py (date < 2025-01-01 → S3; date >= 2025-01-01 → Data API).
 
 - [x] [TEST] P1. **Unit tests for Drift adapter.** ✅ **VERIFIED-DONE 2026-05-16 (slot-3)**: 9 unit tests in
-      `market-tick-data-service/tests/unit/test_drift_adapter.py` cover date-routing boundary (`test_s3_path_for_pre_2025_date`,
-      `test_api_path_for_2025_and_later`), funding rate parse (`test_parses_funding_rate_and_mark_price`), shard
-      isolation (`test_shard_isolation_one_symbol_fails`), 404 handling (`test_s3_404_returns_empty`), timestamp
-      normalisation (3 variants), out-of-window guard, venue routing (`test_drift_venue_routes_to_drift_adapter`).
-      ≥8 cases satisfied (9 total). Mocks via `aioresponses`/`unittest.mock`.
+      `market-tick-data-service/tests/unit/test_drift_adapter.py` cover date-routing boundary
+      (`test_s3_path_for_pre_2025_date`, `test_api_path_for_2025_and_later`), funding rate parse
+      (`test_parses_funding_rate_and_mark_price`), shard isolation (`test_shard_isolation_one_symbol_fails`), 404
+      handling (`test_s3_404_returns_empty`), timestamp normalisation (3 variants), out-of-window guard, venue routing
+      (`test_drift_venue_routes_to_drift_adapter`). ≥8 cases satisfied (9 total). Mocks via
+      `aioresponses`/`unittest.mock`.
 
 ### 2E: Pacifica funding rate addition (PARALLEL with 2A/2B/2C/2D)
 
@@ -170,19 +171,21 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 - [x] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ✅ **DONE 2026-05-16 (slot-3)**:
       `tests/unit/test_perp_funding_handler.py::TestPacificaCanonicalWrite` has 4 tests covering all required cases:
-      `test_writes_canonical_shard` (normal), `test_skips_before_launch_date` (pre-launch), `test_per_coin_failure_is_isolated`
-      (API error, shard-isolated), `test_empty_response_zero_rows` (empty — added at MTDS@`3962e0d`).
+      `test_writes_canonical_shard` (normal), `test_skips_before_launch_date` (pre-launch),
+      `test_per_coin_failure_is_isolated` (API error, shard-isolated), `test_empty_response_zero_rows` (empty — added at
+      MTDS@`3962e0d`).
 
 ### 2F: Extended backfill planning
 
-- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION] Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** Under
-      `deployment-service/scripts/vm/` — singleton-locked launcher, register VM prefix in `vm_zombie_watchdog.py`. OHLCV
-      backfill: API serves historical from 2024-07-26. Funding backfill: only from 2025-08-01 (already captured).
-      Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
+- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION] Write VM launcher for Extended OHLCV backfill (2024-07-26 →
+      2025-07-31).** Under `deployment-service/scripts/vm/` — singleton-locked launcher, register VM prefix in
+      `vm_zombie_watchdog.py`. OHLCV backfill: API serves historical from 2024-07-26. Funding backfill: only from
+      2025-08-01 (already captured). Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
 
-- [ ] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** One-shot script (not a continuous job) to
-      probe `data.api.drift.trade/trades` for oldest available date. If rolling window < full 2025-01-01 coverage,
-      document gap range + emit `record_empty(EXPECTED_KNOWN_SOURCE_GAP)` for affected dates.
+- [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** ✅ **DONE 2026-05-16 (slot-3)** —
+      `market-tick-data-service/scripts/probe_drift_trades_window.py` at MTDS@`21ccab6`. One-shot probe of
+      `data.api.drift.trade/trades` for oldest available date; emits structured report so operator can decide whether to
+      widen the `EXPECTED_KNOWN_SOURCE_GAP` window. Runs without auth.
 
 **Phase 2 success criteria:** `basedpyright` + `ruff` + MTDS unit tests green. Each new venue routing has ≥4 passing
 unit tests. Shard-level isolation confirmed: single venue error does not propagate.
@@ -199,16 +202,17 @@ unit tests. Shard-level isolation confirmed: single venue error does not propaga
 
 - [x] [DESIGN] P0. **Audit `eigen_rewards_calculator.py` for protocol-level aggregation.** **DONE 2026-05-16 (slot-3)**:
       audited `features-service/features_service/onchain/app/calculators/eigen_rewards_calculator.py`. All 3 criteria
-      present in `_calculate_from_mtds` (lines 233-263): (a) `daily_rewards_usd = float(df["amount_usd"].sum())` (line
-      241) sums all earner USD amounts per distribution period; (b) `tvl_usd = float(df["eigenlayer_tvl_usd"].iloc[0])`
-      (line 243) — column comment (lines 245-246): "eigenlayer_tvl_usd in the parquet IS total_restaked_ETH_USD —
-      sourced from EigenLayer strategy contracts (userUnderlying) at MTDS write time"; (c)
+      present in `_calculate_from_mtds` (lines 233-263): (a) `daily_rewards_usd = float(df["amount_usd"].sum())`
+      (line 241) sums all earner USD amounts per distribution period; (b)
+      `tvl_usd = float(df["eigenlayer_tvl_usd"].iloc[0])` (line 243) — column comment (lines 245-246):
+      "eigenlayer_tvl_usd in the parquet IS total_restaked_ETH_USD — sourced from EigenLayer strategy contracts
+      (userUnderlying) at MTDS write time"; (c)
       `restaking_yield_rate = (daily_rewards_usd / tvl_usd) * 365.0 if tvl_usd > 0 else 0.0` (line 247) emits as feature
       column `eigen_restaking_yield_rate` (line 260, declared in `feature_names` line 116). Zero-TVL guard present
       (`if tvl_usd > 0 else 0.0`). Phase 3A DONE → 3B + 3B test DEFERRED per plan body conditional.
 
-- [x] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** ✅ **DEFERRED-PER-AUDIT 2026-05-16**:
-      Phase 3A audit (above) found all three present in `_calculate_from_mtds`. No further implementation needed.
+- [x] [SCRIPT] P1. **Add protocol-level yield aggregation if missing (3B).** ✅ **DEFERRED-PER-AUDIT 2026-05-16**: Phase
+      3A audit (above) found all three present in `_calculate_from_mtds`. No further implementation needed.
 
 - [x] [TEST] P1. **Unit test: protocol-level aggregation math.** ✅ **DEFERRED-PER-AUDIT 2026-05-16**: Phase 3A audit
       satisfied — no new implementation to test. Existing `_calculate_from_mtds` covered by features-service unit tests.
@@ -231,12 +235,11 @@ feature available to downstream strategy-service consumers.
 
 ### 4B: stETH collateral live verification script (PARALLEL with 4A)
 
-- [ ] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** One-shot diagnostic (not a continuous job). Place under
-      `market-tick-data-service/scripts/verify_lst_collateral_support.py`. Queries: (1) Deribit
-      `/api/v2/public/get_currencies` — check `cross_collateral_enabled` for STETH; (2) Bybit
-      `/v5/account/collateral-info` — check STETH marginable status; (3) OKX portfolio margin collateral list endpoint;
-      (4) Binance multi-assets mode collateral list. Output: structured report (venue / token / confirmed / needs-auth /
-      API endpoint / timestamp). Execution owner: one-shot operator tab. No VM launcher needed.
+- [x] [SCRIPT] P2. **Write `verify_lst_collateral_support.py`.** ✅ **DONE 2026-05-16 (slot-3)** —
+      `market-tick-data-service/scripts/verify_lst_collateral_support.py` at MTDS@`176e72ea`. Probes Deribit
+      `get_currencies` (`cross_collateral_enabled`), Bybit `coin/query-info` (`marginCollateral`), OKX public margin
+      instruments, Binance (records as needs-auth — no public endpoint). Emits per-venue confirmed / needs-auth /
+      endpoint / timestamp report; `--json` for machine-readable.
 
       ```yaml
       execution:
@@ -264,9 +267,9 @@ report. No QG gates for the doc-only changes (PM repo uses doc-fast-path to main
 
 - [x] [DOC] P1. **Update `codex/09-strategy/architecture-v2/archetypes/` index** ✅ **VERIFIED-DONE 2026-05-16
       (slot-3)**: archetypes/ directory has no separate `index.md`/`README.md` — individual archetype docs are the
-      index. `carry-staked-basis.md` lines 115-118 (verified in P1 above) already lists DRIFT as Solana LST-margin
-      hedge venue with JitoSOL/mSOL 10% haircuts. Cross-ref to `venue_collateral.py` DRIFT rows confirmed by
-      previous slot work (strategy-service@6ff86fe Drift-LST eligibility tests). Bookkeeping-only flip.
+      index. `carry-staked-basis.md` lines 115-118 (verified in P1 above) already lists DRIFT as Solana LST-margin hedge
+      venue with JitoSOL/mSOL 10% haircuts. Cross-ref to `venue_collateral.py` DRIFT rows confirmed by previous slot
+      work (strategy-service@6ff86fe Drift-LST eligibility tests). Bookkeeping-only flip.
 
 - [x] [DOC] P2. **Update `dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`** ✅ **VERIFIED-DONE 2026-05-16
       (slot-3)**: handover doc § "Phase 2 completion status (2026-05-13, slot-10)" (lines 104-119) already lists all
