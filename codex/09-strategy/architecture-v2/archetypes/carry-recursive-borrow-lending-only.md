@@ -77,6 +77,24 @@ Per-cell overrides via catalog builder `_build_carry_recursive_borrow_lending_on
 `ltv_target = liquidation_threshold - 0.05`, `rebalance_threshold_lower_hf=1.10`, `oracle_staleness_max_seconds=86400`.
 `gas_budget_usd_per_loop_iter`: 25 (eth), 0.50 (arb), 0.20 (base). `recursion_depth_max`: 8 (eth), 10 (arb), 12 (base).
 
+## Execution semantics
+
+Per loop iteration (1...N): single ATOMIC bundle = (STAKE → TRANSFER → LEND → BORROW). Flash mode uses
+`RecursiveLeverageReceiver.sol` to execute the full N-loop sequence inside one flash-loan callback. Unwind is the
+symmetric inverse.
+
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` reads the `RecursiveLoopPlan` (n_loops, ltv_per_loop) from
+`RecursiveLoopOrchestrator` (execution-service Python). Each loop fires as a bundled `AtomicInstruction`. Health-factor
+gate (`LOOP_ABORTED_HF_LOW`) is checked inside `LegController.on_pre_leg_check()` before each iteration; abort triggers
+`DEFI_HEALTH_FACTOR_CRITICAL` kill-switch.
+
+**Code-backport status:** SHIPPED — `execution-service/defi_execution/orchestrators/recursive_loop_orchestrator.py`
+already implements the persistent+flash drivers (execution-service@2a185b7e8). The receiver contract
+`RecursiveLeverageReceiver.sol` is deployed to Sepolia at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`
+(deployment-service@602feaf).
+
 ## Kill-switch surface
 
 Alert codes added 2026-05-12 to `unified_api_contracts.canonical.crosscutting.alerting.codes.AlertCode` that fire for

@@ -100,6 +100,22 @@ Cap Bybit notional at <= 50% of Hyperliquid leg notional for first 30 days post-
 ~$1.4B from cold wallet; resolved via market buyback over ~72h. Counterparty trust-premium discount persists. Codified
 at strategy-service archetype config + risk-and-exposure-service venue-cap table per plan Phase 5/8.
 
+## Execution semantics
+
+Two phases per opening: (1) recursive on-chain loop (identical to Family 1 — STAKE → TRANSFER → LEND → BORROW × N
+iterations), (2) perp-hedge leg on CeFi venue (Hyperliquid / Bybit). On-chain leg is `ATOMIC` (flash mode) or sequential
+multicall; perp leg fires after on-chain finalization. Unwind reverses both phases.
+
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=LEADER_HEDGE)` fires the on-chain recursive bundle as the leader,
+followed by the CeFi perp short as the hedge. `hedge_deadline_ms` covers Hyperliquid REST + Bybit testnet/mainnet
+latency (default 5000ms). `CLOSE_LEADER_IF_HEDGE_FAILS` triggers a flash-unwind of the on-chain leg.
+
+**Code-backport status:** SHIPPED — `execution-service@2a185b7e8` ships `RecursiveLoopOrchestrator` with perp-leg config
+slot. `RecursiveLeverageReceiver.sol` deployed Sepolia at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`. HL+Bybit
+adapters wired in execution-service per Phases 6+7 of `defi_recursive_borrow_archetypes_2026_05_10.md`.
+
 ## Kill-switch surface (additive to Family 1)
 
 Family 2-specific alert codes (Phase 8, additive to Family 1's `DEFI_HEALTH_FACTOR_CRITICAL` /

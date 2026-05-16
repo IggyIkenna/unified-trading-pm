@@ -74,6 +74,15 @@ rebalance_cadence_days: 30 # e.g., claim rewards + restake monthly
 - `UNSTAKE` action type for withdrawals (or SWAP via DEX if exit_preference = DEX_SWAP)
 - Passive between events
 
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` resolves a 1-leg STAKE or UNSTAKE action per equity-change
+event. Exit via DEX_SWAP becomes a 2-leg SWAP→TRANSFER bundle (ATOMIC if same-DEX, LEADER_HEDGE otherwise).
+
+**Code-backport status:** DEFERRED — `carry_and_yield/yield_staking_simple.py` still wires legs hand-built. Backport
+tracked in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship now per operator decision
+2026-05-07.
+
 ## P&L attribution
 
 - **Staking yield**: LST_balance_change × ETH_price (rebase model) OR LST_price × ETH_price (exchange rate model)

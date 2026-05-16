@@ -82,6 +82,15 @@ share_class: USD
 - Submission via Flashbots (Ethereum + Base) / equivalent bundlers (other chains)
 - Reverts atomically if profit falls short mid-bundle
 
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` resolves a single bundled flash-loan→liquidate→swap-to-debt
+sequence per opportunity. Uses `FlashLoanReceiver.sol` (passthrough — not `RecursiveLeverageReceiver.sol`); see
+[`../../04-architecture/flash-loan-receiver.md`](../../../04-architecture/flash-loan-receiver.md) for receiver details.
+
+**Code-backport status:** DEFERRED — `arbitrage/liquidation_capture.py` still builds bundles inline. Backport tracked in
+`defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship now per operator decision 2026-05-07.
+
 ## P&L attribution
 
 - **Gross liquidation profit**: seized_collateral_value − debt_repaid

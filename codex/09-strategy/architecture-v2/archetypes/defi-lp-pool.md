@@ -43,6 +43,21 @@ bleed; drift > `depeg_exit_bps` means exit immediately.**
 | WITHDRAW | `_PoolState == DEPOSITED` and `drift_bps >= depeg_exit_bps` |
 | WITHDRAW | kill switch (`flatten_on_kill`)                             |
 
+## Execution semantics
+
+- `LP_DEPOSIT` action (multi-token) for entry into the pool
+- `LP_WITHDRAW` action (proportional or imbalanced) for exit
+- Single-pool: ATOMIC bundle (add-liquidity + receive LP token, or burn LP + receive underlying)
+- Cross-pool rotation: LEADER_HEDGE (withdraw → bridge → deposit)
+
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` resolves single-pool deposit/withdraw as 1-leg bundles.
+Cross-pool rotation expands to 3 legs (WITHDRAW → BRIDGE → DEPOSIT) with LEADER_HEDGE deadlines per bridge SLA.
+
+**Code-backport status:** DEFERRED — `defi/lp_pool.py` (when added) wires legs hand-built. Backport tracked in
+`defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship now per operator decision 2026-05-07.
+
 ## Risks
 
 - **Depeg detection lag** — the invariant drift is computed from on-chain pool reserves; if the chain itself stalls, the
