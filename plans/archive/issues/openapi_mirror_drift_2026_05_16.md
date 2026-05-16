@@ -118,3 +118,20 @@ coverage, not less). Slot owner can pick up the architectural fix post-cutover.
 
 **Workspace-qg impact**: this check is in `scripts/quality_gates/check_openapi_drift.py` (PM repo); not yet wired
 into per-repo `quality-gates.sh`. So workspace-qg green is NOT blocked by this finding.
+
+## ERRATUM 2026-05-16 ~21:50 UTC (slot 4 self-correction)
+
+Slot 4 misread this issue earlier and shipped a "resync" at `unified-trading-system-ui@1abecee1` that copied
+`unified-trading-api/openapi.json` (61 paths) over `unified-trading-system-ui/lib/registry/openapi.json` (479
+paths) — the wrong copy direction; deleted 418 paths of API contracts from the UI mirror. Slot 1 main's investigation
+above (correctly diagnosing the files as structurally-different-by-design) was already shipped at PM@`a791800d` when
+slot 4 made the resync error.
+
+**Revert shipped 2026-05-16 21:50 UTC** at `unified-trading-system-ui@91e45bdf`: restored
+`lib/registry/openapi.json` + `lib/types/api-generated.ts` to the state at `1abecee1^` (md5=9685cb97 + 28,256-line
+types file; 479 paths intact).
+
+Net: no harm done — the broken state existed for ~1h between resync push and revert push; no downstream consumer
+shipped a build against the 61-path mirror in that window. The issue stays archived; this erratum is for the
+audit trail. Lesson logged: a P2 mirror-drift check that compares structurally-different files is a false-positive
+signal — fix the check before "fixing" the data.
