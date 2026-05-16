@@ -484,6 +484,41 @@ STOPPING (will resume if operator surfaces new routing or background tasks need 
 
 ---
 
+## 2026-05-16T~20:25Z — slot-2 EXTENDED SESSION wrap-up (additional findings post-canonicalise audit)
+
+After the canonicalisation deliverables, ran follow-up real-data audits + caught 2 more issues:
+
+10. ✅ **3-LENDING.5 reconciler operational dry-run** completed: 64,827 captured / 64,476 real / **351 phantoms
+    (0.54%)** — all SOURCE_RETURNED_ZERO. Manifest operationally clean. PM@`56f4e553`. Log archived at
+    `/tmp/lending_indices_phantom_dryrun_v2_20260516.log`.
+
+11. ✅ **NEW P1 issue doc — vocab drift canonicalisation DIDN'T STICK** at PM@`276eeb82`. Live re-audit shows
+    closeout commit `fe6141d1` was premature: 4 of 6 buckets still have kebab rows post-migration (lending-indices
+    24,976 / perp-funding 3,298 / dex-swaps 28,171 / dex-pools 55,854 — total **112,299 leakage**).
+    Hypothesis: consolidator UPSERT-by-row-key (where data_type is part of key) treats kebab + snake as different
+    rows. Option G recommended: extend canonicalisation script to DELETE kebab rows before flipping. Operator nod
+    needed.
+
+**Session totals (extended)**:
+- **PM commits today**: ~30 (boot ack + 7 plan flips + 8 issue docs / closures + 14 plan-of-record updates)
+- **features-service commits today**: 1 (B-015 Option A `550cdaba`)
+- **instruments-service commits today**: 2 (reconciler `88d48da` + canonicalise `b2726c6`) + 1 bug-fix follow-up (`70074a0`)
+- **Cross-slot impact**: 2 issue docs (vocab drift + corruption) closed-out by slot 4 with 115,785 row flips +
+  6,972 corrupt drops in production.
+- **New P1 issue surfaced**: canonicalisation didn't stick (112,299 rows still leak); needs operator triage.
+
+**Operational still-pending**:
+- Harsh slot 9: Smoke B re-launch (no VM yet as of ~20:25 UTC).
+- Operator: triage P1 vocab-drift-canonicalisation-didnt-stick (Option G recommended).
+- Operator: --apply on reconciler to flip 351 SOURCE_RETURNED_ZERO phantoms (after consolidator race resolved).
+- Operator: Phase B `--derive-chain-from-venue` extension for perp-funding (3,298 rows).
+
+Session-end STOPPING. Substantive work delivered across the day. Reconciler proves the lending-indices manifest is
+healthy at 99.5% real captures. Vocab drift partial: corruption-rows successfully dropped by slot 4 (oracle-prices
++ lst-rates clean); column-canonicalisation still ineffective for 4 of 6 buckets pending Option G fix.
+
+---
+
 ## [main → slot 2] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
 Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
