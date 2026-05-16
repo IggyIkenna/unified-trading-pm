@@ -85,10 +85,9 @@ NOTE: UAC `BITFINEX-FUTURES` (existing) vs `BITFINEX-DERIVATIVES` (new Tardis-sp
       exported from `registry/__init__.py` `__all__`. Values: `"BYBIT": ["stETH"]`, `"DERIBIT": ["stETH"]`,
       `"DRIFT": ["JitoSOL", "mSOL"]`. Gates Phase 4 collateral verification script.
 
-- [ ] [UAC] P2. **Add `is_rebasing` + `rebase_rate` to `lst_rates` schema.** In UAC `canonical/domain/defi/` or wherever
-      lst_rates schema lives: add `is_rebasing: bool` (stETH=True, wstETH=False) and `rebase_rate: float | None` (daily
-      rebase multiplier from Lido oracle for stETH; None for non-rebasing). Both tokens captured under same data_type,
-      distinguished by `is_rebasing` flag.
+- [x] [UAC] P2. **Add `is_rebasing` + `rebase_rate` to `lst_rates` schema.** ✅ **DONE 2026-05-16 (slot-3)**:
+      `unified-api-contracts@cdfeb9e` added `is_rebasing: bool = False` + `rebase_rate: float | None = None` to
+      `LstRateRecord` in `internal/domain/defi/parquet_records.py`. Backwards-compatible defaults; smoke-tested.
 
 **Phase 1 success criteria:** `basedpyright` + `ruff` + `pytest tests/test_cassette_schema_parity.py` green on UAC. New
 venue constants importable from `unified_api_contracts.defi` / `unified_api_contracts.market` facades.
@@ -153,9 +152,12 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `if venue_upper in ("DRIFT", "DRIFT-SOLANA"):` block with lazy import of `fetch_drift_data`. Date routing is
       inside drift_adapter.py (date < 2025-01-01 → S3; date >= 2025-01-01 → Data API).
 
-- [ ] [TEST] P1. **Unit tests for Drift adapter.** Mock S3 HTTP + Data API responses. Test date-routing boundary,
-      funding rate parse, shard-level isolation (one failed instrument doesn't abort loop). ≥8 cases. Use `responses`
-      library for HTTP mocking (consistent with DeFi unit test pattern per CLAUDE.md).
+- [x] [TEST] P1. **Unit tests for Drift adapter.** ✅ **VERIFIED-DONE 2026-05-16 (slot-3)**: 9 unit tests in
+      `market-tick-data-service/tests/unit/test_drift_adapter.py` cover date-routing boundary (`test_s3_path_for_pre_2025_date`,
+      `test_api_path_for_2025_and_later`), funding rate parse (`test_parses_funding_rate_and_mark_price`), shard
+      isolation (`test_shard_isolation_one_symbol_fails`), 404 handling (`test_s3_404_returns_empty`), timestamp
+      normalisation (3 variants), out-of-window guard, venue routing (`test_drift_venue_routes_to_drift_adapter`).
+      ≥8 cases satisfied (9 total). Mocks via `aioresponses`/`unittest.mock`.
 
 ### 2E: Pacifica funding rate addition (PARALLEL with 2A/2B/2C/2D)
 
@@ -166,12 +168,14 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
       `derivative_ticker` rows with `funding_rate` + `mark_price` columns. Pre-June 2025 dates skip funding fetch
       (orchestrator emits `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`).
 
-- [ ] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ≥4 cases: normal fetch, empty
-      response, pre-launch date, API error (→ record_failed not record_empty).
+- [x] [TEST] P1. **Unit test: Pacifica funding rate fetch + pre-launch empty emit.** ✅ **DONE 2026-05-16 (slot-3)**:
+      `tests/unit/test_perp_funding_handler.py::TestPacificaCanonicalWrite` has 4 tests covering all required cases:
+      `test_writes_canonical_shard` (normal), `test_skips_before_launch_date` (pre-launch), `test_per_coin_failure_is_isolated`
+      (API error, shard-isolated), `test_empty_response_zero_rows` (empty — added at MTDS@`3962e0d`).
 
 ### 2F: Extended backfill planning
 
-- [ ] [SCRIPT] P1. **Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** Under
+- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION] Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** Under
       `deployment-service/scripts/vm/` — singleton-locked launcher, register VM prefix in `vm_zombie_watchdog.py`. OHLCV
       backfill: API serves historical from 2024-07-26. Funding backfill: only from 2025-08-01 (already captured).
       Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
