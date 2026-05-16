@@ -225,3 +225,97 @@ The 7 design questions in § "Why this needs opus-max + Ikenna review" still
 apply to the trigger-list unification. The dep_repos phantom-cleanup
 landed today only addresses one of those (the `dep_repos` source-of-truth
 question — answer: `workspace-manifest.json`).
+
+---
+
+## OWNED BY IKENNA-MAIN (opus-max-tier) 2026-05-16 — DESIGN + REDESIGN COMPLETE
+
+**Status update**: design landed at `unified-trading-pm@<this-commit>`. Template rewritten + 7 open
+questions answered + per-repo migration plan documented. Canary against alerting-service in next
+cycle.
+
+### Answers to 7 open design questions
+
+**Q1 — Trigger surface**: `push to [main, staging, live-defi-rollout]` + `pull_request to [main, staging]`. Strict
+superset of all 5 observed patterns. The 9 `[main]`-only repos will see additional QG runs on LDR pushes after
+migration — intended unification (faster failure detection on LDR work). Post-cutover (after May-23), drop LDR from
+triggers; keep `[main, staging]`.
+
+**Q2 — Migration sequencing**: DROP existing per-repo `quality-gates.yml` in same commit that adds `workspace-qg.yml`.
+No transition window — keeps prevent duplicate CI runs (compute waste + flaky test surface). Canary one repo first
+(alerting-service since it already has the PoC committed); validate; then batch-roll-out remaining 20.
+
+**Q3 — `dep_repos` source of truth**: `workspace-manifest.json` is canonical. Template renders `{{DEP_REPOS}}` from
+manifest via `rollout-workflow-templates.sh`. Phantom-dep cleanup (e.g. alerting-service's stale
+`unified-cloud-interface` / `unified-config-interface` / `unified-internal-contracts` + duplicate
+`unified-trading-library`) is AUTOMATIC via rollout — no separate cleanup pass needed.
+
+**Q4 — `develop` outlier**: position-balance-monitor-service migrates to `[main, staging, live-defi-rollout]` in the
+unified rollout. `develop` is stale (no recent commits on remote `develop` branch per
+`git ls-remote origin develop` — sole occurrence). No deletion needed; just stops being a trigger.
+
+**Q5 — Empty `branches:`**: CORRECTION already noted at issue line 50-54 — ml-training-service +
+trading-agent-service were false positives (multi-line YAML); both are `[main]`-only. No action.
+
+**Q6 — Ikenna-side equivalence**: There is no per-side workflow split. All 21 Python repos use the same
+`quality-gates.yml` shape regardless of which operator's slot touches them. This unification covers BOTH sides.
+
+**Q7 — Post-cutover canonical**: `[main, staging]` push + PR-to-`[main, staging]`. Documented inline in template
+header comment. Post-cutover migration is one template edit + one rollout pass; takes ~5 min total.
+
+### Per-repo migration plan
+
+**Phase A — Canary** (1 repo, ~30 min including verification):
+
+1. `bash scripts/workflow-templates/rollout-workflow-templates.sh --repo alerting-service --template workspace-qg.yml.tmpl`
+2. In alerting-service: `git rm .github/workflows/quality-gates.yml` (drop old) — same commit as the new
+   `workspace-qg.yml` add
+3. Commit + push to alerting-service `live-defi-rollout`
+4. Watch the auto-FF mirror push to LDR via the tab-mirror-to-ldr GH Action; verify the workspace-qg run fires;
+   verify no duplicate `quality-gates` run; verify run conclusion=success
+5. If canary green → proceed to Phase B
+
+**Phase B — Batch rollout** (20 repos, ~10 min including verification):
+
+Repos to migrate (sorted by current trigger pattern for review):
+
+- 8 already on `[main, staging, live-defi-rollout]`: deployment-api, deployment-service, execution-service,
+  features-service, instruments-service, market-tick-data-service, market-data-processing-service, strategy-service,
+  unified-trading-library — minimal trigger-behaviour change.
+- 6 currently `[main]`-only: batch-live-reconciliation-service, ml-inference-service, ml-training-service,
+  pnl-attribution-service, risk-and-exposure-service, system-integration-tests, client-reporting-api,
+  trading-agent-service — will start seeing LDR push QG runs (intended).
+- 2 currently `[main, staging]`: unified-api-contracts, ibkr-gateway-infra — will add LDR push triggers.
+- 1 currently `[main, develop]`: position-balance-monitor-service — migrates to canonical.
+
+**Rollout command** (after canary green):
+```bash
+bash scripts/workflow-templates/rollout-workflow-templates.sh --template workspace-qg.yml.tmpl
+# Then per-repo: drop old quality-gates.yml + commit + push
+```
+
+Operator can pause/resume the batch by repo-name if any repo's first run fails post-migration.
+
+### Codex SSOT update
+
+Will append a "Workflow trigger surface (unified workspace-qg)" section to
+`codex/08-workflows/ci-cd-flow.md` after canary verification with:
+- The trigger surface decision + rationale
+- Post-cutover migration plan + cutover date
+- How to roll forward future workflow changes via template + rollout
+
+### alerting-service@05dec98 disposition
+
+KEEP — it's the canary. The current commit has the wrong trigger pattern (no LDR); Phase A above
+re-rolls-out the corrected template over it. The 4 duplicate-CI runs noted in issue body
+(10:57/12:14/12:52/13:15 UTC) are tolerable until Phase A lands (~30 min from now per orchestrator cadence).
+
+### Continuous verification
+
+After rollout, add row to `master_to_live_defi_2026_05_23.md` § "Continuous verification matrix":
+- **Item**: CI workflow consistency across 21 Python repos
+- **Continuous verification**: `gh workflow list --repo IggyIkenna/<repo> --json name` returns exactly
+  `workspace-qg` + standard auxiliary workflows; per-repo `quality-gates.yml` no longer exists.
+- **Cadence**: weekly drift-check (audit one repo per day across the week)
+- **Owner**: slot 1 main (or post-cutover: continuous-verification cron)
+- **Last verified**: 2026-05-16 (post-canary)

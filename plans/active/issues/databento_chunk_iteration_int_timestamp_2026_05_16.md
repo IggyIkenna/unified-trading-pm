@@ -64,3 +64,20 @@ regression.
 **Priority**: P0 (May-23 critical — blocks the entire TradFi backfill cutover lane).
 
 **Owner**: next slot 5 turn (or slot 3 / slot 6 if reassignment makes sense — MTDS is multi-owned).
+
+---
+
+## RESOLUTION 2026-05-16 (ikenna-main audit during 30-min orchestrator cycle)
+
+**✅ FIXED at `market-tick-data-service@f19ff5f`** — `to_df(count=chunk_rows, pretty_ts=False)` workaround landed
+between issue filing and now. Documented in inline comment at `databento_adapter.py:650-659`.
+
+`pretty_ts=False` keeps `ts_event` / `ts_recv` as int64 nanoseconds (which `_enrich_with_canonical_ids` already
+expects via `datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, ...)`). Bypasses the SDK 0.78
+`DataFrameIterator._format_map_symbols` bug where `np.asarray(dates, dtype="datetime64[D]")` calls `int()` on
+tz-aware `pd.Timestamps`. Confirmed against SDK 0.78.0 / databento_dbn 0.58.0 / pandas 2.3.3.
+
+**Next**: slot 5 re-launches `tradfi-bf-es-adhoc-` VM for ES.FUT × ohlcv_1m|trades × 2026-05-{01..07} (and any
+other previously-failing tuples). Expected: rows > 0 now, exit_code=0 with captured data.
+
+Issue can be moved to `plans/archive/issues/` at next sweep.
