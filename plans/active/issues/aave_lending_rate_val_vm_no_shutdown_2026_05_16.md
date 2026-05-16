@@ -2,6 +2,7 @@
 title: "aave-lending-rate-val VM ran validation in 3 min but stayed alive 7+ hours (no STOPPED event; no shutdown)"
 created: 2026-05-16
 author: ikenna-main (orchestrator cycle audit during continuous /loop)
+status: RESOLVED — root-cause fix shipped at deployment-service@472f9ca (2026-05-16 slot-8)
 source:
   - "ikenna-main launched VM 2026-05-16 12:15:30 UTC per operator request"
   - "results.json written at 2026-05-16T11:18:49Z (~3 min after VM launch)"
@@ -11,6 +12,25 @@ severity: P1 (compute waste + no-fire-and-forget HARD RULE violation)
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
 ---
+
+## ✅ RESOLUTION 2026-05-16 (slot-8)
+
+**Root cause confirmed**: `launch-aave-lending-rate-validation-vm.sh` startup-script has `set -euo pipefail` at line
+129. When validation exits non-zero (e.g., FAILED gate with pass_rate < threshold per `run_lending_rate_validation.py`
+final `log_event("STOPPED" if passed_gate else "FAILED")` + `sys.exit(1)`), the `set -e` halted the startup script
+BEFORE reaching the `shutdown -h now` step at line 214. VM stayed alive indefinitely.
+
+**Fix shipped** at `deployment-service@472f9ca`: brackets the `python3 scripts/run_lending_rate_validation.py ...` call
+with `set +e` / `set -e` so `EXIT_CODE` is captured and the final `shutdown -h now` runs regardless of validation
+outcome. Final log upload (`gsutil cp || true`) was already non-blocking.
+
+The validation script ALREADY emitted STOPPED — original issue-doc Recommended decision (A) was based on incomplete
+reading. The script does `log_event("STOPPED" if passed_gate else "FAILED")` at end. Only the **VM shutdown** was
+missing. Recommended decision (B) (watchdog re-pointing) is no longer needed since the launcher itself now
+self-deletes deterministically.
+
+Next phase_3c re-run will exercise the fix; expect STOPPED event + VM deletion within ~30s + 30s sleep + ~10s gcloud
+shutdown round-trip.
 
 ## What I found
 
