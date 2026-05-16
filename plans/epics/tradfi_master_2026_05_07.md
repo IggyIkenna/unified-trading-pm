@@ -214,8 +214,10 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       actionable]
 - [ ] [AGENT] P3. Run `features-volatility-service` for tradfi/ES + tradfi/CBOE-VIX (realized-vol + skew). [AUDIT
       2026-05-07: FRESH — actionable]
-- [ ] [AGENT] P3. VIX-specific feature calculator (level, contango proxy from VIX 1m vs 1h, momentum +
-      volatility-of-volatility). [AUDIT 2026-05-07: FRESH — actionable]
+- [x] [AGENT] P3. VIX-specific feature calculator (level, contango proxy from VIX 1m vs 1h, momentum +
+      volatility-of-volatility). [AUDIT 2026-05-07: FRESH — actionable] **SHIPPED 2026-05-16**:
+      `features-service@b3814675` — `compute_vix_features()` in `volatility/calculators/vix_calculator.py`; 10 tests
+      (10/10 pass); contango proxy = (1h_close/1m_close)-1; momentum + vol-of-vol for windows 5/10/20.
 - [ ] [AGENT] P4. Smoke `ml-training-service` 1-month ES window; features land in feature store. [AUDIT 2026-05-07:
       FRESH — actionable]
 - [ ] [AGENT] P4. Full backtest 2020-01-01 → 2024-12-31 (train) / 2025-01-01 → 2026-05-05 (test). OOS Sharpe + max
