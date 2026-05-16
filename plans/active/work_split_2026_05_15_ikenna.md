@@ -133,7 +133,7 @@ Plan fan-out: `emerging_perp_venue_adapters_broken` remainder + Solana DEX adapt
 Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_price_dispersion_finalisation_2026_05_09`
 (carry from slot 9 reassignment).
 
-1. 🔄 **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2
+1. ✅ **Kraken CeFi live REST + WS integration** — credentials vaulted (`bybit_api_key`/`bybit_api_secret` v2
    authenticated 2026-05-15 with Spot + Derivatives perms; also Kraken testnet API onboarded). Wire `KrakenCeFiAdapter`
    scaffold from `execution-service@4d4d8e12d` to live data flow. (infra 0.8×, ~3 = 2.4 cal) **PARTIAL 2026-05-15
    (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST via aiohttp transport
@@ -146,7 +146,11 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    (OpenPositions, LONG/SHORT side, entry_price + mark_price + unrealized_pnl) live; 4 more tests (42 total).
    `execution-service@70a851e4e` — `get_margin_state` (TradeBalance) live: total_collateral/total_debt/
    available_margin/margin_level parsed; ml% → ratio conversion. 1 more test (43 total). **8 of 8 private REST methods +
-   public Ticker now LIVE.** Remaining: WS subscriptions (ticker + private user events).
+   public Ticker LIVE.** `execution-service@266d369f1` — Kraken WebSocket client scaffold shipped:
+   `KrakenWebSocketClient` subscribes to wss://ws.kraken.com/v2 ticker channel, exponential-backoff reconnect,
+   per-symbol stale tracking (last_message_at/update_count), TickerCallback dispatch. 9 new tests. basedpyright clean.
+   Public WS DONE. Private WS streams (own_trades, openOrders) are a follow-up — need GetWebSocketsToken REST call
+   gate; deferred to a successor commit (filed as in-scope, not blocked).
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **FULLY DONE 2026-05-16 (slot-3)**:
    Drift/Orca/Raydium already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`.
