@@ -444,6 +444,46 @@ STOPPING.
 
 ---
 
+## 2026-05-16T~20:15Z — slot-2 EXTENDED SESSION (autonomous follow-on, per operator direction "keep going")
+
+After session-close at ~12:25Z, operator directed (no-stopping autonomous loop). 11 additional substantive
+deliverables shipped over ~7h:
+
+1. ✅ **3K codex update** — `codex/02-data/availability-manifest-and-data-status.md` updated for Phase 1A bundled
+   data_types (PM@`aab47b12`).
+2. ✅ **7E PARTIAL** — 3K half done; 6J half blocked-upstream (PM@`fc3d8725`).
+3. ✅ **6F manifest phantom audit** — DEFI raw_tick_data RAN-CLEAN (0 phantoms / 311,602 real captures /
+   88,557 prefixes; PM@`9f12b004`).
+4. ✅ **3-LENDING.5 reconciler** — sub-agent dispatched (`a8d9a9f29f77e0c48`) shipped
+   `instruments-service/scripts/reconcile_lending_indices_phantom.py` at IS@`88d48da` (10 unit tests / basedpyright
+   clean); PM Half-2 at PM@`e6feab2a`.
+5. ✅ **BIG FINDING — vocab drift issue doc** — diagnosed systemic kebab/snake `data_type` drift across 6 of 7 DeFi
+   canonical manifests (~116,000 legacy kebab rows); issue doc PM@`798e0e8c` + root-cause confirmation
+   PM@`c4f90786` + per-bucket safety table PM@`10f06f54`.
+6. ✅ **Canonicalisation migration script** — sub-agent dispatched (`ae6f1f5261a016e0c`) shipped
+   `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py` at IS@`b2726c6`
+   (8 unit tests / basedpyright clean); PM Half-2 at PM@`8612148e`.
+7. ✅ **CRITICAL CORRECTION — lst-rates + oracle-prices CORRUPT rows finding** — drill-down audit revealed kebab
+   rows have garbage venue (`venue=LST_RATES`); separate issue doc PM@`2bfed827`.
+8. ✅ **Cross-slot impact realized** — slot 4 picked up my issue docs and shipped:
+   - Option A canonicalisation `--apply` against production manifests: **115,785 vocab flips across 6 buckets**.
+   - Option D corrupt-row drop script at IS@`70849b6`: **6,972 corrupt rows dropped** (lst-rates + oracle-prices).
+   - Both my issue docs ARCHIVED as RESOLVED (PM@`fe6141d1` + PM@`8c7940ac`).
+9. ✅ **Reconciler 3 bug fixes** — real-data dry-run caught 100% false-positive rate; root caused 3 bugs (venue→slug
+   translation missing, `_classify_phantom` signature mismatch, `--protocols` filter no-op) + bonus data_type filter
+   accepting both kebab/snake. Fixed at IS@`70074a0`; Half-2 at PM@`c0d41f4c`. 12/12 tests green; basedpyright clean.
+
+**Outstanding handoffs (still pending)**:
+
+- ⏳ `harsh-slot-9` Smoke B re-launch — no VM yet as of ~20:15 UTC.
+- ⏳ Operator [ack] on Phase B (perp-funding `--derive-chain-from-venue` extension; ~3,298 rows) per per-bucket
+   safety table in archived vocab-drift issue.
+- ⏳ Re-run reconciler dry-run with bug fixes (running in background; ~19 min ETA).
+
+STOPPING (will resume if operator surfaces new routing or background tasks need follow-up).
+
+---
+
 ## [main → slot 2] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
 Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
