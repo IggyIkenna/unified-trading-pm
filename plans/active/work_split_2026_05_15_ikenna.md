@@ -109,8 +109,10 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    (slot-3)**: `execution-service@d1f336148` — `fetch_ticker()` wired to live Kraken REST via aiohttp transport
    (`_do_public_get` + `set_http_session` + `aclose`). 3 new tests pass. basedpyright clean.
    `execution-service@3a511f1b9` — `get_account_state()` wired via `_do_private_post()` helper (HMAC-SHA512 signed POST
-   to `/0/private/Balance`); 2 new tests pass. Remaining: `place_order`/`cancel_order`/`get_order_status`/ `get_fills`
-   private transport + WS subscriptions.
+   to `/0/private/Balance`); 2 new tests pass. `execution-service@6e5747366` — `place_order` + `cancel_order` +
+   `get_order_status` all wired live: AddOrder/CancelOrder/QueryOrders endpoints, new `_parse_kraken_order_dict()`
+   helper (status/side/order-type/partial-fill mapping), 5 more tests (38 total). Remaining: `get_fills` +
+   `get_positions` private transport + WS subscriptions.
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
    `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium
    already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines
