@@ -21,6 +21,17 @@ PM_ROOT = Path(__file__).resolve().parent.parent.parent
 CONSTRAINTS_PATH = PM_ROOT / "workspace-constraints.toml"
 CACHE_DIR = PM_ROOT / ".cache" / "workspace-constraints-validation"
 
+# Packages that CANNOT be co-resolved with the rest of the workspace constraints
+# in a single flat `uv pip compile`. Each entry is a PyPI-metadata conflict that
+# is correctly resolved per-repo via `[tool.uv] override-dependencies`, not by
+# editing the workspace floor.
+#
+# `betfairlightweight`: declares transitive `requests<2.33.0` on PyPI for every
+# release we'd use (CVE-2026-25645 floors workspace `requests` at >=2.33.0).
+# execution-service is the sole consumer; it pins requests via per-repo override.
+# See `.cursor/rules/dependencies/requests-betfairlightweight-workspace-resolution.mdc`.
+EXCLUDE_FROM_GLOBAL_COMPILE: frozenset[str] = frozenset({"betfairlightweight"})
+
 
 def _constraints_hash() -> str:
     content = CONSTRAINTS_PATH.read_bytes()
@@ -94,7 +105,11 @@ def main() -> int:
         return 1
     deps: dict[str, object] = deps_raw
 
-    specs = [str(v) for v in deps.values() if isinstance(v, str)]
+    specs = [
+        str(v)
+        for k, v in deps.items()
+        if isinstance(v, str) and k not in EXCLUDE_FROM_GLOBAL_COMPILE
+    ]
     if not specs:
         if not quiet:
             print("ERROR: No dependency specs in workspace-constraints.toml", file=sys.stderr)
