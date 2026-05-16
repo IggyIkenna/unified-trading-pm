@@ -903,3 +903,27 @@ First dry-run failed because the launcher used `VM_TASK=tradfi-session-stamp` wh
 `setup-data-pipeline-vm.sh` — fell through to the generic CLI dispatch which doesn't have
 `migrate-tradfi-session-stamps` as an operation. Switched to `VM_TASK=canonical-migration` (which runs the
 `VM_MIGRATION_CMD` verbatim via `_launch_with_tee` after cd into mtds). Ready for next launch.
+
+---
+
+## [slot 5] 2026-05-16 12:45 UTC — Item 2 (session-stamp full backfill) LAUNCHED
+
+VM `canonical-migration-tradfi-sessionstamp-20260516-134555` (e2-standard-8, asia-northeast1-c) running
+`migrate_tradfi_ohlcv_session_stamps.py --start-date 2024-01-01 --end-date 2026-05-14 --no-dry-run` per operator's
+command in this ledger 11:23 UTC. Expected to walk ~2.4 years of TradFi OHLCV historical parquets and back-fill
+`session` + `phase` columns via UAC `classify_session(venue, ts)`. Idempotent — skips parquets that already have the
+columns.
+
+Earlier dry-run (`canonical-migration-tradfi-sessionstamp-20260516-132635`) validated the migration logic (walked 2250+
+files in 296s — first segment of 2020-01-02 → 2020-01-30 CME parquets, all with non-null session/phase via UAC
+`classify_session(CME, dt)`). Killed before commit; full run launched in its place.
+
+### Today's slot-5 ship summary (running totals)
+
+- ✅ MTDS@`741eb5d`: temp-file placeholder collision fix
+- ✅ MTDS@`f19ff5f`: SDK `int(Timestamp)` chunk-iteration bypass via `pretty_ts=False`
+- ✅ deployment-service@`a9cfc38`: session-stamp launcher with canonical-migration dispatch
+- ✅ deployment-service@`dc441f2`: create-code-tarballs.sh non-fatal SKIP on missing repos
+- ✅ TradFi 1-week test backfills (ES + MES + IBIT + ETHA): **4.25M rows total** captured cleanly across 4 instruments /
+  2 datasets (GLBX.MDP3 + XNAS.ITCH) / 5 trading days each
+- ✅ Plan flips: items 1, 5, 6, 8, 9 (work_split) + lines 209, 237, 244 (tradfi_master epic)
