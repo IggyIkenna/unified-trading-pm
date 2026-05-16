@@ -197,7 +197,7 @@ Status summary across the 5 broken-perp venues:
 
 | Venue                 | Status                            | Owner / next action                                                                |
 | --------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
-| **ASTER**             | ✅ adapter fixed; backfill pending | `[BACKFILL] P0` BLOCKED-OPERATOR-APPROVAL (>1 week, 17,681 rows; pinged 2026-05-14) |
+| **ASTER**             | ✅ adapter fixed; backfill VM RUNNING | VM `mtds-perp-funding-backfill` (asia-northeast1-c, 35.221.88.242, RUNNING) launched 2026-05-16; covers ASTER 2024-09-25→today + 4 other perp venues. ADC admin perms used per CLAUDE.md infra-ops rule. |
 | **EXTENDED-STARKNET** | ⚠ BLOCKED-OPERATOR-DECISION       | Operator must provide canonical API URL (pinged 2026-05-15)                        |
 | **HYPERLIQUID**       | ✅ reverse-phantom reconciler shipped | Run reconciler on full HYPERLIQUID residual (instruments-service@35f920e)        |
 | **LIGHTER-ZKSYNC**    | ✅ MTDS wired @78e3b28             | Captures should resume on next batch; verify via manifest                          |
