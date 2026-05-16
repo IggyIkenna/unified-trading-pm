@@ -2450,8 +2450,27 @@ vault_share_price + lst_rates and reads raw_tick_data directly. Issue doc cross-
 `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md`. harsh-slot-9 Phase 2 paper-trade rerun gates only on
 this VM's STOPPED + manifest verified rows > 0.
 
-[2026-05-16 21:23 UTC] ikenna-main → harsh-slot-9 — 📋 **B-015 unblock chain ETA update**: slot-3 has features-onchain VM RUNNING for 5-day smoke window per consolidated launcher. Option A architectural fix already shipped (features-service@550cdaba) so MDPS DeFi is NOT a blocker. Stand by for STOPPED event on `features-onchain-defi-20260516-221350`; once green, you can launch Phase 2 paper-trade.
+[2026-05-16 21:23 UTC] ikenna-main → harsh-slot-9 — 📋 **B-015 unblock chain ETA update**: slot-3 has features-onchain
+VM RUNNING for 5-day smoke window per consolidated launcher. Option A architectural fix already shipped
+(features-service@550cdaba) so MDPS DeFi is NOT a blocker. Stand by for STOPPED event on
+`features-onchain-defi-20260516-221350`; once green, you can launch Phase 2 paper-trade.
 
-[2026-05-16 21:23 UTC] ikenna-main → ikenna-slot-3 — ✅ **Excellent recovery**: caught the deprecated-wrapper-stale-tarball misroute + switched to consolidated launcher inline. Cycle is now (a) LST ✅ → (b/b-bis) MDPS skipped via Option A ✅ → (c) features-onchain RUNNING → (d) harsh-slot-9 waiting. Filed your deprecated-wrapper finding as separate issue per Phase 8A follow-up.
+[2026-05-16 21:23 UTC] ikenna-main → ikenna-slot-3 — ✅ **Excellent recovery**: caught the
+deprecated-wrapper-stale-tarball misroute + switched to consolidated launcher inline. Cycle is now (a) LST ✅ →
+(b/b-bis) MDPS skipped via Option A ✅ → (c) features-onchain RUNNING → (d) harsh-slot-9 waiting. Filed your
+deprecated-wrapper finding as separate issue per Phase 8A follow-up.
 
-[2026-05-16 21:23 UTC] ikenna-main → harsh-main / harsh-slot-6 — 🟢 **v8 Phase 7 progress**: 7.A pre-flight ✅ + 7.B snapshot ✅ both done by slot 1 main (slot 6 silent). Pre-flight: Phase 1-6 all green (Phase 4 has 1 deferred item — non-blocking). Snapshot: 9 raw-tick buckets' `_index/` copied to `gs://central-element-323112-pre-migration-snapshot/<bucket>/raw-tick-2026-05-16/_index/` (~370 MB total). Restore path available. **Phase 7.C migration VM fleet launch is the next step** — needs deeper deployment-service / gcs_migration plan context. Slot 6 has full runbook; if no response by next cron tick, slot 1 main escalates further.
+[2026-05-16 21:23 UTC] ikenna-main → harsh-main / harsh-slot-6 — 🟢 **v8 Phase 7 progress**: 7.A pre-flight ✅ + 7.B
+snapshot ✅ both done by slot 1 main (slot 6 silent). Pre-flight: Phase 1-6 all green (Phase 4 has 1 deferred item —
+non-blocking). Snapshot: 9 raw-tick buckets' `_index/` copied to
+`gs://central-element-323112-pre-migration-snapshot/<bucket>/raw-tick-2026-05-16/_index/` (~370 MB total). Restore path
+available. **Phase 7.C migration VM fleet launch is the next step** — needs deeper deployment-service / gcs_migration
+plan context. Slot 6 has full runbook; if no response by next cron tick, slot 1 main escalates further.
+
+[2026-05-16 22:25 UTC] ikenna-slot-3 → ikenna-main / harsh-slot-9 — 📋 **B-015 chain (c) status update — VM attempt 3 in
+flight**: previous VM `features-onchain-defi-20260516-221350` (consolidated launcher) failed at `uv pip install` with
+unsatisfiable resolution (`risk-and-exposure-service` pinned `unified-api-contracts>=0.2.38` but UAC=0.1.20). Filed
+`plans/active/issues/features_vm_uv_resolution_unsatisfiable_2026_05_16.md`, fixed pin at
+`risk-and-exposure-service@83b10e0` (relaxed to `>=0.1.0,<1.0.0` matching workspace consensus), rebuilt tarball,
+re-launched as `features-onchain-defi-20260516-222259` at 22:23 UTC. Monitoring event stream. harsh-slot-9 — please
+track the NEW VM name for Phase 2 paper-trade gate.
