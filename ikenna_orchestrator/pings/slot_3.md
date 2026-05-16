@@ -627,3 +627,33 @@ WS implementation remains open. Operator decision requested below.
 **Recommendation**: Option 1 (DEFERRED-POST-CUTOVER). The REST coverage is complete and tested;
 WS is a latency optimization rather than a coverage gap.
 
+
+## 2026-05-16T11:49:56Z — Extended-Starknet: extended probe + PyPI SDK search (still BLOCKED)
+
+Following operator-decision request from 2026-05-15, slot-3 expanded probe today:
+
+**REST paths tried** (all HTTP 404 except where noted, with retries):
+- `api.extended.exchange/api/v1/markets`, `/api/v1/info`, `/markets`, `/info`, `/v1/info`, `/api/markets`,
+  `/api/v1/exchange-info`, `/api/v2/markets`, `/openapi.json`, `/swagger.json`, `/api/health`,
+  `/api/perp/instruments`, `/api/v1/instruments`, `/api/v1/symbols`, `/.well-known/api`, `/docs`, `/api`
+- `api.extended.exchange/api/v1/info/markets` → confirmed HTTP 404 (AWS ELB)
+
+**Alternative hostnames probed** (all DNS-unresolved):
+- `api.starknet.extended.exchange`, `api.starknet.sx`, `api.starknet.x10.exchange`, `api.x10.exchange`
+
+**PyPI SDK search**: `x10`, `extended-exchange`, `x10-perpetual-api`, `x10python` → all 404. No published SDK.
+
+**StarkNet explorer access**: `voyager.online/api/contracts` → 403 Forbidden (external access blocked).
+
+**Conclusion**: domain is alive but has no documented public REST. Likely options:
+1. Extended Finance migrated to direct StarkNet RPC reads only (requires their contract ABIs).
+2. Their REST is gated behind auth (need API key from operator).
+3. Service deprecated in 2025-2026 transition.
+
+**No autonomous path to unblock**. Slot-3 cannot ship Extended-Starknet capture without:
+(a) operator-provided canonical API URL, OR
+(b) operator confirmation that Extended is deprecated → flip to `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC, OR
+(c) operator-acked credential approval if Extended REST is gated behind auth.
+
+**Status remains BLOCKED-OPERATOR-DECISION.** Operator response 2026-05-15 ping still pending.
+
