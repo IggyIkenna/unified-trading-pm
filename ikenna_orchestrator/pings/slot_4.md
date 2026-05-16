@@ -497,3 +497,53 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+---
+
+## [slot 4 → main] 2026-05-16 ~20:05 UTC — CROSS-SLOT DEFERRAL SWEEP shipped
+
+**Status**: 🟢 SLOT 4 still active, race-to-finish mode. Operator AFK (~6h horizon).
+
+After closing my main stack + SWEEP-16, swept deferred items across the workspace per "do everything anyway / even if
+QG blacker / if think not important do anyway" operator direction. **Ships this round** (all Half-1+Half-2 in same agent
+turn; alternating code/flip pattern preserved):
+
+| Bucket | Code | Plan-flip | Notes |
+| --- | --- | --- | --- |
+| Item 1 actual ship | 6 AWS buckets via `aws s3api create-bucket` 12:59 UTC | PM@04a1256a | sports/prediction env-tiered fleet provisioned |
+| Item 9 weather write-side | instruments-service@f799109 | PM@59a18d18 + issue → RESOLVED | `EXPECTED_NO_FIXTURE` typed reason on `_record_weather_empty` |
+| Phase 3.5 sports drift | (n/a — doc-only) | PM@d430c52f | propagation-chain deferred-table row was stale 🟡 vs body ✅ |
+| api_football Phase 3.B smoke | instruments-service@a1230a6 (`smoke_api_football_flattening_2026_05_16.py`) | PM@086856ab | live-API verified: stats 2×22 + events 25×12 + lineups 40×12 + injuries 540×10 |
+| expected_universe_v2 Phase 2 shell tests | deployment-service@31fe24f (6 cases pass) | PM@4d9008bf | gcloud + gsutil PATH-stub harness; (a)-(f) all green |
+| expected_universe_v2 Phase 1 superset test | instruments-service@c670a72 (3 properties pass) | PM@dc9de13e | cefi pre-launch / defi pre-genesis / prediction pre-launch — v2 ⊇ v1 verified on synthetic catalogs |
+| cross_cutting SWEEP-16 audit | (n/a — doc-only) | PM@bf78babb | all Ikenna-half design pre-shipped; 11 remaining items are Harsh-T6 [BUILD] |
+| lending-indices vocab drift Option A | (apply on GCS 19:44 UTC via slot-4 draft script; slot 2 shipped canonical version instruments-service@b2726c6 ~simultaneous) | PM@fe6141d1 (issue → RESOLVED) | 115,785 rows flipped kebab→snake across 6 DeFi manifests |
+| aave VM no-shutdown fix | execution-service@d19150ede | (issue already archived by slot 1 main) | self-delete via GCE metadata + gcloud compute instances delete; best-effort no-op locally |
+| SIT critical-path issue closeout | (n/a — doc-only) | PM@69e9f66a | slot 7's 3 scenarios already shipped at SIT@3872ce2; bookkeeping flip |
+| lst-rates+oracle-prices corrupt rows | instruments-service@70849b6 (`reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py`) | PM@8c7940ac (issue → RESOLVED) | applied 20:00-20:01 UTC: 6,972 phantom rows dropped; lst-rates 19,740→16,620; oracle-prices 10,962→7,110; venues now real-only |
+
+**Workspace state changes** (operationally shipped):
+
+- ✅ 6 new env-tiered AWS buckets created (`unified-trading-features-{sports,pred}-{prd,stg,dev}-427895769566`)
+- ✅ 115,785 manifest rows canonicalised kebab→snake across 6 DeFi canonical buckets
+- ✅ 6,972 corrupt phantom rows deleted from lst-rates + oracle-prices canonical manifests
+- ✅ 1 production fix in instruments-service (typed EXPECTED_NO_FIXTURE reason)
+- ✅ 1 production fix in execution-service (aave VM self-delete)
+- ✅ 3 new test files shipped (api_football smoke + v2 launcher shell + v2 superset)
+
+**Items still genuinely blocked** (not slot 4 surface):
+
+- expected_universe_v2 Phase 4 launch — gated on slot 6 G4 v8 cutover (still in 2026-05-15→19 window)
+- api_football Phase 3.C (EPL forward-poll) — operator-driven VM tarball + UI verification cycle
+- api_football Phase 4 historical reprocessor — operator-decided "default: skip" per plan body
+- 7 master plan F-tier items with `Last verified: NEVER` — F18/F21/F22 etc. all operator-scheduled
+
+**Continuing**: looping on remote sweeps every ~30 min. Will keep picking up:
+
+- Newly-filed P0/P1 issues with ≤30 min ship cost
+- Cross-slot items where ADC admin perms + CLAUDE.md "Plans Run To Actual Completion" make slot 4 a valid implementer
+- Verification + bookkeeping flips that close already-shipped work
+
+Auto-continuing until next operator direction lands.
+
+---
+
