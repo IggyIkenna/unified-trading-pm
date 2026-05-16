@@ -469,9 +469,13 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
       [`active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
       per workspace 2026-05-08 codification. Tradfi-specific phases live in that plan. This entry is a pointer; flip
       closes when the umbrella's TradFi-adapter phases land.]
-- [ ] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
+- [x] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
       butterfly, calendar_spread, vix_basis, etc.). Source-of-truth: `features-tradfi-service/calculators/` metadata.
-      Coordinator Phase 4.
+      Coordinator Phase 4. **SHIPPED 2026-05-16**: `unified-api-contracts@99a7614` — 8 feature_groups added
+      (`options_iv`, `gamma_exposure`, `variance_risk_premium`, `second_order_greeks`, `futures_term_structure`,
+      `tradfi_vol_surface`, `vol_surface_term_structure`, `vix_features` for the new `compute_vix_features()` calculator
+      at `features-service@b3814675`). Registry count 59 → 67; `validate_required_inputs()` returns 0 issues; UAC QG
+      green.
 
 ## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08)
 
