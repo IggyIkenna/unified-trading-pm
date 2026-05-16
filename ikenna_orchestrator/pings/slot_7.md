@@ -705,3 +705,16 @@ need behavior-preserving extraction with broader test coverage.
 
 execution-service has 377 method-size violations across all severity buckets — too big for this loop; flagged but
 not touched. Issue doc candidate.
+
+
+[2026-05-16 /loop tick 2] slot-7 — MTDS fully clean for non-excluded method-size:
+
+* `market-tick-data-service@1490d6c` — LiveWebsocketRunner._flush_instrument_window 90L→33L via
+  _persist_window_to_sink + _record_empty_window. Cat A (source returned 0) contract preserved.
+* `market-tick-data-service@7982b5c` — ReplayRunner.run 110L→39L via _publish_window_instruments
+  (inner hot path) + _emit_replay_event (log_event identity-stamper). 14/14 test_replay_runner pass.
+
+MTDS scan now returns 0 non-excluded method-size violations. The 31-path
+FUNCTION_SIZE_EXTRA_EXCLUDES handler family is intentional (per-venue handler bodies are
+contract surfaces that grew with native_staking_handler.py:process Helius per-validator commit
+2026-05-15 — same pattern as other handlers).
