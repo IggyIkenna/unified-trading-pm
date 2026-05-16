@@ -219,3 +219,21 @@ Expected runtime: ~30s/day × 32 days ≈ 16 minutes.
 
 **Slot-3 action item**: LST VM handles (a). Items (b)+(c) need a slot with
 deployment-service / MDPS context to pick up.
+
+---
+
+## UPDATE 2026-05-16 — slot-3 (b) MDPS DeFi backfill VM launched
+
+`mdps-backfill-defi-20260516-205843` (asia-northeast1-c, e2-standard-8, 34.84.76.20, RUNNING)
+launched with `defi 2026-04-01 2026-05-16 full` args. Same ADC-perms rationale as LST VM
+above. Output: `gs://market-data-tick-defi-central-element-323112/processed_candles/by_date/`.
+
+This unblocks chain step (b). Step (c) (features-onchain backfill) still awaits owner
+pickup — it depends on MDPS processed_candles being present, so should be queued behind
+this VM's completion.
+
+**Updated chain**:
+- (a) ✅ slot-3 launched `mtds-lst-rates-20260516-205225` (RUNNING)
+- (b) ✅ slot-3 launched `mdps-backfill-defi-20260516-205843` (RUNNING)
+- (c) ⏳ features-onchain DeFi backfill (next slot pickup)
+- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun
