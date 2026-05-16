@@ -194,3 +194,28 @@ B-015 Phase 1 protocol.
 
 Ikenna (operator triage on DeFi feature pipeline architecture + MTDS lst_rates gap). Harsh slot 9 standing by; will
 resume Phase 2 launch on Ikenna ACK + pipeline green.
+
+---
+
+## UPDATE 2026-05-16 — slot-3 partial unblock
+
+**lst_rates 30-day gap addressed**: slot-3 launched
+`mtds-lst-rates-20260516-205225` (asia-northeast1-c, e2-standard-4, 35.200.23.244, RUNNING)
+to backfill 2026-04-15 → 2026-05-16. Per CLAUDE.md "ADC admin perms — do NOT pause for
+operator approval on infra ops"; not on hard-stop list.
+
+Token coverage per `LstRatesHandler._LST_TOKENS`: 13 EVM tokens (stETH/wstETH/rETH/
+cbETH/sUSDe/sDAI/mETH/swETH/ETHx/osETH/ankrETH/weETH/pufETH) + 2 Solana (mSOL/jitoSOL).
+Expected runtime: ~30s/day × 32 days ≈ 16 minutes.
+
+**Remaining blockers** for B-015 paper-trade gate:
+- **MDPS DeFi pipeline never run** — `processed_candles/.../asset_group=defi/` empty.
+  Needs MDPS launch (launch-mdps-backfill-vm.sh or launch-mdps-sharded-backfill.sh).
+- **features-onchain-service** depends on MDPS upstream → blocked until (b) runs.
+
+**Chain to unblock B-015**: (a) ✅ wait for mtds-lst-rates VM completion (~16 min);
+(b) ⏳ launch MDPS DeFi backfill (next owner); (c) ⏳ launch features-onchain DeFi backfill;
+(d) ⏳ Harsh slot 9 re-runs Phase 2 paper-trade.
+
+**Slot-3 action item**: LST VM handles (a). Items (b)+(c) need a slot with
+deployment-service / MDPS context to pick up.
