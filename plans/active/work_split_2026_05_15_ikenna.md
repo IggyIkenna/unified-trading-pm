@@ -655,13 +655,24 @@ redesign accepted today.
 - **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure design + close. Slot 2
   has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal)
 
-- **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure design + close. Slot 2
-  has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal)
-- **`solana_lst_native_staking_adapters_2026_05_14` close** (0.2 cal, 21/22). (refactor 0.4× ~0.2)
-- **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18). (refactor 0.4× ~0.2)
-- **`solana_amm_coverage_expansion_2026_05_13` flip-verify** (already 100% — just confirm). (~0.1 cal)
-- **`solana_venue_naming_reconciliation_2026_05_14` flip-verify** (100% — confirm). (~0.1 cal)
-- **`solana_perp_dex_adapters_2026_05_13` flip-verify** (100% — confirm). (~0.1 cal)
+- 🟡 **`mdps_streaming_and_backpressure_2026_05_07`** (3.0 cal, 0/7) — MTDS streaming + backpressure design + close.
+  Slot 2 has MTDS context from Helius integration. (design 0.6×, ~5 = 3.0 cal) — **CARRY TO NEXT SLOT-2 SESSION
+  2026-05-16 by slot 2**: substantial 6-item multi-repo P1 design (LiveConnectivityWatchdog + CONNECTIVITY events +
+  auto-backfill + circuit-breaker + per-venue heartbeat calibration + codex update). Spans MTDS + MDPS +
+  execution-service. Exceeded slot-2 remaining wall-clock today; deferred to next session.
+- ✅ **`solana_lst_native_staking_adapters_2026_05_14` close** (0.2 cal, 21/22) — **VERIFIED 2026-05-16 by slot 2**:
+  sole open item (line 181) is `[BLOCKED-CREDENTIALS — pinging operator]` VM launcher (Phase E). Status correctly
+  set; no further slot-2 action needed; awaiting operator [ack] on credential ask. (refactor 0.4× ~0.2)
+- ✅ **`solana_restaking_rewards_coverage_2026_05_13` close** (0.2 cal, 16/18) — **VERIFIED 2026-05-16 by slot 2**:
+  2 open items (lines 137, 140) both annotated `[DEFERRED] **NICE-TO-HAVE**` (MTDS wiring for Solayer/Picasso/
+  Cambrian + Picasso/Cambrian program ID verification). Correctly statused as nice-to-haves; not May-23 blocking.
+  (refactor 0.4× ~0.2)
+- ✅ **`solana_amm_coverage_expansion_2026_05_13` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED
+  at `plans/archive/solana_amm_coverage_expansion_2026_05_13.md`. (~0.1 cal)
+- ✅ **`solana_venue_naming_reconciliation_2026_05_14` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan
+  ARCHIVED at `plans/archive/solana_venue_naming_reconciliation_2026_05_14.md`. (~0.1 cal)
+- ✅ **`solana_perp_dex_adapters_2026_05_13` flip-verify** — **VERIFIED 2026-05-16 by slot 2**: plan ARCHIVED at
+  `plans/archive/solana_perp_dex_adapters_2026_05_13.md`. (~0.1 cal)
 
 #### Slot 3 — **[SWEEP-16]** items (+18 cal — MTDS/DEX/perp expansion theme)
 
