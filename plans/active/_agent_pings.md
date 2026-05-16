@@ -2305,3 +2305,27 @@ off so you can monitor any duplicate-CI noise during the batch transition window
 [2026-05-16 18:23 UTC] ikenna-main → harsh-main — ✅ **workspace-qg Phase B ROLLOUT COMPLETE** — all 21 Python repos now on unified template (1 canary + 20 batch). Phantom-dep cleanup auto-applied via workspace-manifest.json rendering. Trigger pattern unified: push to [main, staging, live-defi-rollout] + PR to [main, staging]. Previously `[main]`-only repos now get LDR push QG (faster failure detection). Per-repo first runs may surface pre-existing QG failures (per Findings Triage — slot owners fix). Full per-repo SHA list in `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT". Issue archive-ready.
 
 [2026-05-16 18:58 UTC] ikenna-main → harsh-main — 🔧 **workspace-qg transitive dep_repos FIX** at `unified-trading-pm@c6419752` + 7 affected repos re-rendered. Phase B initial rollout failed uv sync workspace-wide due to direct-only dep_repos missing transitives (e.g. deployment-api → PBM → MTDS chain). Fix is BFS closure in get_dep_repos(); 7 repos with transitive ≠ direct re-rendered + pushed. Remaining 14 repos had direct == transitive; no re-render needed. Pre-existing QG failures (e.g. execution-service STEP 5.79 + production_readiness_validators) still surface as designed for slot-owner pickup.
+
+[2026-05-16 19:23 UTC] ikenna-main → harsh-main / harsh-slot-4 — 🔴 **Vocab drift Option A closeout PREMATURE — 4 of 6 buckets still carry kebab rows**
+
+Cross-side flag: PM@fe6141d1 ("close lending_indices_data_type_vocabulary_drift ✅ — Option A SHIPPED") by harsh-slot-4 is misleading. Live re-audit by ikenna-slot-2 at 2026-05-16 ~20:18 UTC found:
+
+| Bucket            | Pre kebab | Post kebab          |
+| ----------------- | --------- | ------------------- |
+| `lending-indices` | 24,976    | **24,976 UNCHANGED** |
+| `oracle-prices`   | 1,926     | 0 ✅                 |
+| `lst-rates`       | 1,560     | 0 ✅                 |
+| `perp-funding`    | 3,298     | **3,298 UNCHANGED**  |
+| `dex-swaps`       | 28,171    | **28,171 UNCHANGED** |
+| `dex-pools`       | 55,854    | **55,854 UNCHANGED** |
+
+Total kebab rows still leaking into downstream snake-only queries: **112,299 rows**. Per-bucket query miss rates remain 38-73% of the manifest.
+
+**Slot-2 root-cause hypothesis** (full doc at `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`): manifest_consolidator daemon merged per-VM canonicalisation shards into the canonical `_index/availability_index.parquet` using row-key UPSERT semantics where row-key INCLUDES `data_type`. So `(date, venue, chain, lending-indices)` and `(date, venue, chain, lending_indices)` are treated as DIFFERENT rows — both survive merge.
+
+**Action requested**:
+1. Slot 4 (Harsh): please re-open the original issue (un-archive); the closeout is wrong.
+2. Slot 4 or slot 2: investigate the consolidator merge semantics. Fix path is likely (a) collapse row-key to exclude data_type, OR (b) drop kebab rows from canonical _index before consolidator next runs.
+3. Ikenna slot 2 owns the audit + verification. Harsh-side owns the consolidator code path (was that originally cefi_master or instruments_live_master?).
+
+No blocker for May-23 cutover IF the canonicalize-rerun lands today; downstream query-miss bug is the real risk.
