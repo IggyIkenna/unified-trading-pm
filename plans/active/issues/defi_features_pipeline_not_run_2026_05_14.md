@@ -238,9 +238,22 @@ this VM's completion.
   New canonical LST bucket fresh through 2026-05-16. **Note**: legacy bucket
   `market-data-tick-defi-prd-central-element-323112/lst_rates/` remains stale at
   2026-04-14 — consumers should read from new dedicated bucket per Phase 0d split.
-- (b) ✅ slot-3 launched `mdps-backfill-defi-20260516-205843` (RUNNING — 2026-04-01 → 2026-05-16
-  full mode, e2-standard-8)
-- (c) ⏳ features-onchain DeFi backfill — launcher exists at
-  `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`; can be
-  launched once (b) completes (dependency on processed_candles)
-- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun
+- (b) ❌ `mdps-backfill-defi-20260516-205843` (FAILED rc=1; self-deleted). VM
+  surfaced **deeper systemic gap**: MDPS DeFi requires 2 upstream dependencies
+  that are missing for the entire 46-date window 2026-04-01 → 2026-05-16:
+    - `gs://instruments-store-defi-central-element-323112/instrument_availability/by_date/day=*/` (DeFi instruments index)
+    - `gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=*/` (DeFi raw tick data)
+  Both buckets are empty/stale for those dates. **MDPS DeFi cannot be unblocked
+  without first running upstream**:
+    1. instruments-service DeFi `instrument_availability` backfill (per-protocol
+       enumerator writes; needs operator/slot-2 with instruments-service context)
+    2. MTDS DeFi `raw_tick_data` backfill — the existing handlers
+       (`solana_defi_handler.py`, `evm_defi_handler.py`, `lst_rates_handler.py`,
+       `gas_fee_handler.py`) need to run as a coordinated multi-handler batch
+       over the date window.
+  This is **substantively bigger than the issue title suggested**: it's not just
+  "MDPS never run" — the entire DeFi upstream is sparse. Operator triage required
+  on whether to run the full upstream backfill (~46 days × multiple protocols)
+  vs. tighter B-015 paper-trade window.
+- (c) ⏳ features-onchain DeFi backfill — blocked behind (b)
+- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (b) + (c)
