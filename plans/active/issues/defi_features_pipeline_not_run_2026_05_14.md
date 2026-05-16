@@ -335,3 +335,27 @@ lending_rates feature_group now writes rows. **Next cycle**: verify rows land in
 Days 17-19 lending-indices still returned 0 rows from the VM (LENDING_DAY_COMPLETE emitted but per_shard empty).
 Likely The Graph rate-limit / subgraph indexing lag. Filed as DEFERRED — re-launch with `--force` after the per-VM
 freshness cache cools; or split into per-day VMs.
+
+## VM 7 outcome (slot-1-main 2026-05-17 00:55 UTC) — features-onchain reads still find 0 lending_rates rows
+
+VM 7 (`features-onchain-defi-20260517-005539`) ran with the SAME 0-rows outcome despite lending-indices VM 003742
+having written 95,146 rows to `gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-15..16/`.
+
+**Findings from VM 7 events**:
+- `lending_rates`: `status=empty_or_failed`, `rows=0`, `elapsed_s=5.193`. Read attempted (not freshness-skipped) but
+  returned nothing.
+- `macro_sentiment`: REJECTED at write_gate (different gate from VM 6's LookaheadBias!). Failed validation:
+  `3 columns exceed 95% NaN: ['tvl_1d_change', 'tvl_7d_change', 'stablecoin_supply_1d_delta']`. So macro_sentiment is
+  blocked by TWO independent gates depending on which feature path runs first.
+
+**Likely root cause for lending_rates 0-rows**: vocab drift between lending-indices bucket writer (uses
+`raw_tick_data/by_date/day=*/asset_group=defi/`) and features-onchain reader (likely expects the legacy
+`day=*/category=defi/` layout where data ends at 2026-04-14). Cross-link: per CLAUDE.md asset_group vocabulary
+plan `plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md` — this is the systemic vocab drift surfacing
+again in features-onchain consumption.
+
+- [ ] [SCRIPT] P1. Verify features-onchain lending_rates reader path matches lending-indices writer output. Compare
+      `features-service/features_service/onchain/engine/lending_features.py` GCS read path against
+      `market-tick-data-service/.../lending_indices_handler.py` write path. If vocab drift, harmonize on
+      `raw_tick_data/by_date/day=*/asset_group=defi/` (new canonical per venue_axis_asset_group_vocabulary plan).
+      Routed to features-service owner.
