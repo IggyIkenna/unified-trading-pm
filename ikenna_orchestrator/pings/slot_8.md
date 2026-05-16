@@ -375,3 +375,32 @@ VM auto-deleted via VM_SHUTDOWN_ON_COMPLETION=true. No manual cleanup needed.
 
 **Slot-8 next move**: WAIT for operator decision on A/B/C before any further B-015 work. Picking up other slot-8
 backlog items in parallel (Phase 2.6 playbook gaps, etc.) while operator deliberates.
+
+---
+
+[2026-05-16 12:12 UTC] slot-8 — both absorb items from slot-1 main 2026-05-15 19:52 ping DONE ✅
+
+**Absorb #2 ** — 7 misalignments → 1 (intentional UTL freezegun
+kept per slot-1 direction):
+- canonical-dependency-manifest.json: anthropic bumped 0.49→0.87 (CVE-2026-{34450,34452}), web3 bumped 6→6.20-8
+  (`unified-trading-pm@<pending>`)
+- 5 service pyprojects bumped to match canonical: unified-trading-api removed duplicate anthropic 0.49 line +
+  trading-agent-service / alerting-service anthropic 0.87 + features-service / unified-trading-library /
+  instruments-service web3 6.20
+- e2e-testing pyproject: declared 5 internal deps (uac + execution / strategy / risk / pbm)
+- Bonus: fixed long-standing classification bug in `scripts/manifest/generate-derived-manifest.py` —
+  INTERNAL_PREFIXES heuristic missed bare service names; now also reads workspace-manifest.json
+  topologicalOrder for full coverage (no more false-positive 'internal_in_manifest_not_pyproject' for
+  service repos)
+- 8 commits across 7 service repos + PM. (refactor 0.4×, ~1 = 0.4 cal — completed)
+
+**Absorb #1 `workflow_template_rollout_pending_2026_05_15`** — 71 workflow files updated across
+24 repos via canonical rollout from PM (`PM@542f0e26` script bug fixed). Per-repo commits all on LDR
+(ahead=0 across all 25 service repos). Touched: major-bump-issue-handler.yml + semver-agent.yml +
+update-dependency-version.yml in alerting / batch-live-recon / client-reporting-api / deployment-api /
+deployment-service / deployment-ui / execution / features / fund-admin / ibkr-gateway / instruments /
+mdps / mtds / ml-inference / ml-training / pnl-attribution / pbm / risk / strategy / sit /
+trading-agent / uac / utl / ui. 4 repos hit push-race (rebased + re-pushed clean). (infra 0.8×,
+~1 = 0.8 cal — completed)
+
+**Net slot-8 absorb haul**: 1.2 cal closed; 0 unresolved (UTL freezegun keep is canonical-by-design).
