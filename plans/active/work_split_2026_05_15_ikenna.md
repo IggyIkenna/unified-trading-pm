@@ -210,8 +210,17 @@ each, operator-approval pending) + `tradfi_master_2026_05_07` master refresh +
    seeds for `intraday_regime` + `micro_regime` + 2 tests) + FS@`140b6fe5` (`_SEEDED_FEATURE_GROUPS` in
    `batch_handler.py` + `TestSingleTfGroupsNanFill` class). Issue doc
    `plans/active/issues/mtf_intraday_micro_regime_policy_2026_05_14.md` already shows ✅ RESOLVED. No further action.
-9. **`sports_retired_data_types_code_cleanup` non-sports half** (carry from 14 May #7) — retire dead data_types from
-   cross-cutting / UAC side. (refactor 0.4×, ~3 = 1.2 cal)
+9. ✅ **`sports_retired_data_types_code_cleanup` non-sports half** (carry from 14 May #7) — retire dead data_types from
+   cross-cutting / UAC side. (refactor 0.4×, ~3 = 1.2 cal) — **VERIFIED 2026-05-16**: workspace grep across all
+   non-IS/non-deployment-api repos (UTL, FS, MTDS, MDPS, strategy, execution, ML, MLI, deployment-service) for
+   `TRANSFERMARKT_LEAGUES|SFI_LEAGUES|SFI_STANDINGS` returned 0 active references — only historical
+   `# retired 2026-05-05` comments. UAC itself (`canonical/domain/sports/`, `internal/schemas/_sports_contracts.py`,
+   `registry/data_type_capability.py`) already has only historical comments (no enum / registry entries). **One stale
+   snapshot fixed**:
+   `unified-trading-system-ui/context/api-contracts/canonical-schemas/domain/sports/provider_league_ids.py` had stale
+   `"TRANSFERMARKT_LEAGUES": None / "2019-01-01"` + `"SFI_LEAGUES" / "SFI_STANDINGS"` dict entries (UI-side docs
+   snapshot, not runtime). Synced to live UAC: UI@`f010d14f` (also picks up `UNDERSTAT_COVERED_LEAGUES` helper +
+   `does_understat_cover()` added in UAC 2026-05-08).
 10. **TradFi venue calendar SSOT `MarketSession` final close** — operator answered Yes 2026-05-13; backfill VM ask
     pending. (design 0.6×, ~2 = 1.2 cal)
 11. **Reserve**: in-stack pickup for any tradfi QG enforcement gaps.
