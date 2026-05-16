@@ -244,7 +244,16 @@ processed_candles being present, so should be queued behind this VM's completion
   features-onchain reads raw_tick_data directly for these on-chain snapshot data_types. See sibling issue
   `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` for full resolution detail. **My MDPS DeFi VM launch
   was redundant given this fix.**
-- (c) 🟢 **VM RUNNING — `features-onchain-defi-backfill-20260516-220052`** (launched 2026-05-16 22:00 UTC by slot-3,
-  zone=asia-northeast1-c, machine=e2-standard-8). Mode=full, window=2026-04-15..19 (B-015 5-day smoke). Per-VM shard
-  isolation via `MANIFEST_PER_VM_SHARDS=true`. Post-backfill manifest rebuild pre-printed for operator.
+- (c) 🟢 **VM RUNNING — `features-onchain-defi-20260516-221350`** (launched 2026-05-16 22:13 UTC by slot-3 via
+  CONSOLIDATED `launch-features-vm.sh --feature-family onchain --asset-group DEFI --mode batch --launch-mode full`).
+  Window=2026-04-15..19 (B-015 5-day smoke). **First attempt** `features-onchain-defi-backfill-20260516-220052`
+  (deprecated wrapper `launch-features-onchain-backfill-vm.sh`) self-stopped at PREFLIGHT_SKIPPED rc=1: invoked legacy
+  `python -m features_onchain_service` on a stale 2026-05-08 tarball that predated Option A. Fixed by rebuilding
+  `features-service-code.tar.gz` at 2026-05-16 21:14 UTC + switching to the consolidated
+  `python -m features_service --feature-family onchain` invocation.
+- **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
+  `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
+  module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the
+  wrappers should redirect to the consolidated launcher; current behaviour silently misroutes. Logging in
+  `features_repo_consolidation_2026_05_08.md` follow-ups.
 - (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (c) completion.
