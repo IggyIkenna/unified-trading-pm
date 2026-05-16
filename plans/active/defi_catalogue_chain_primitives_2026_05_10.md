@@ -797,8 +797,13 @@ Per-protocol todos (expanded from template):
 
 - [x] [AGENT] P0. **3J — Update `codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type matrix.
       (PM@`291f81d7` — vault/restaking/LST coverage updated with adapter-shipped status)
-- [ ] [AGENT] P0. **3K — Update `codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
-      from Phase 1A.
+- [x] [AGENT] P0. **3K — Update `codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
+      from Phase 1A. ✅ **SHIPPED 2026-05-16 by slot 2** at `unified-trading-pm@<TBD>`. 3 targeted updates:
+      (1) Layer 2 MTDS DEFI row: 26 protocols enumerated + 14 chains + per-instance vs bundled data_type breakdown;
+      (2) Layer 2.5 MDPS DEFI row: corrected to actual 5 adapters (book_snapshot_5/dex_swaps/fx_rates/market_state/
+      liquidity) with B-015 Option A cross-reference noting on-chain snapshot types flow direct from MTDS;
+      (3) NEW sub-section "Phase 1A DeFi bundled data_types (2026-05-16 — Phase 3K)" with 7-row family matrix covering
+      shard atoms + cluster-validation requirements per protocol family + MDPS aggregation contract.
 
 **Full-execution criterion**:
 
