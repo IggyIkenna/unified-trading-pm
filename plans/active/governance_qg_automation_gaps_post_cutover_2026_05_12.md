@@ -109,9 +109,14 @@ this plan owns the QG/automation half.)
       CLAUDE.md edit needed; no cron-poker; no automation surface to ship. Closing as DESIGN-DECISION-ONLY: keep
       best-effort wording in AGENT_ONBOARDING.md; agents continue self-pacing per ScheduleWakeup/loop semantics.
       **MIGRATED FROM:** G-8.
-- [ ] [DESIGN] P2. **Group F — STALE_OPEN_ALERT meta-alert (AL-21 QG half).** Wire a closed-loop check that
-      alerting-service surfaces `STALE_OPEN_ALERT` when a fire→clear pair's clear is overdue. Codified contract goes
-      into `alert-code-taxonomy.md` (or new `alert-lifecycle-audit.md`). **MIGRATED FROM:** AL-21.
+- [x] ✅ [DESIGN] P2. **Group F — STALE_OPEN_ALERT meta-alert (AL-21 QG half).** Contract codified at
+      `unified-trading-pm@<pending>` in `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Alert lifecycle audit
+      (STALE_OPEN_ALERT meta-alert)". Defines: (1) `alert_type: transient|paired` per-code classification; (2) paired
+      alerts must clear within `clear_sla_seconds` (default 3600s) or alerting-service raises `STALE_OPEN_ALERT` with
+      the original alert_id/code/elapsed time in details; (3) implementation surface
+      (`alerting-service/alerting_service/lifecycle/stale_audit.py` + per-code metadata registry); (4) per-code SLA
+      defaults table; (5) future QG step proposal for registry completeness. Implementation deferred to
+      alerting-service slot pickup (contract is the QG half per the original spec). **MIGRATED FROM:** AL-21.
 
 ## Done definition
 

@@ -463,3 +463,71 @@ tier is needed (e.g. `OBSERVE` between `WARN` and `INFO`), update both `AlertSev
 - How do we handle alerts that need different severity per-archetype (e.g. funding-arb stall is PAGE, sports tip-stall
   is WARNING)? Threshold per-archetype overrides exist; severity per-archetype doesn't yet — requires extending
   `AlertRule` or duplicating rules per-archetype. DEFERRED until Phase 7 quietness baseline surfaces real-world need.
+
+---
+
+## Alert lifecycle audit (`STALE_OPEN_ALERT` meta-alert) — Group F of governance_qg_automation_gaps
+
+> Added 2026-05-16 (slot-8) per
+> [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../../plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+> § Group F. Codifies the closed-loop check that alerting-service must surface `STALE_OPEN_ALERT` when a fire→clear
+> pair's clear is overdue. Implementation lives in alerting-service; this section is the contract.
+
+### Contract
+
+Every alert raised via `log_event("ALERT_FIRED", ...)` MUST be either:
+
+1. **Self-clearing** (`alert_type: transient`) — fires once per occurrence, no clear expected. e.g. `BACKFILL_VM_FAILED`
+   for one VM run. Listed in `TRANSIENT_ALERT_CODES` in alerting-service registry; lifecycle audit skips these.
+2. **Pair-clearing** (`alert_type: paired`) — fires + must be followed by `log_event("ALERT_CLEARED", ...)` with
+   matching `alert_id` within `clear_sla_seconds`. e.g. `CIRCUIT_BREAKER_OPEN` should clear when the breaker re-closes.
+
+### `STALE_OPEN_ALERT` semantics
+
+If a paired alert's clear doesn't arrive within `clear_sla_seconds` (default 3600s = 1h; per-code overrides allowed),
+alerting-service raises a `STALE_OPEN_ALERT` meta-alert with:
+
+```json
+{
+  "alert_code": "STALE_OPEN_ALERT",
+  "severity": "WARNING",
+  "details": {
+    "stale_alert_id": "<original alert_id>",
+    "stale_alert_code": "<original code>",
+    "fired_at": "<ISO8601 of original fire>",
+    "sla_seconds": 3600,
+    "elapsed_seconds": 4523
+  }
+}
+```
+
+### Why this matters
+
+Without this meta-alert: a paired-clearing alert that fires but never clears stays "open" in the operator dashboard
+forever. The breaker may have actually closed; the manifest update / job recovery may have happened. Without a stale
+detector, operators must manually walk the open-alert list every cutover-week to triage stale entries.
+
+### Implementation surface
+
+- **`alerting-service/alerting_service/lifecycle/stale_audit.py`** (NEW) — periodic scan of open alerts; emits
+  `STALE_OPEN_ALERT` for any paired-clearing alert older than its `clear_sla_seconds`.
+- **`alerting-service/alerting_service/registry/alert_metadata.py`** (NEW) — registry mapping each `AlertCode` to
+  `{alert_type: transient|paired, clear_sla_seconds: int|None}`. Default for unspecified codes: `paired, 3600s`.
+- **Cron**: stale-audit runs every 5 min via existing alerting-service scheduler (no new VM needed).
+
+### Per-code SLA defaults (closed-set; extend in registry)
+
+| Code class                                    | `alert_type` | `clear_sla_seconds` |
+| --------------------------------------------- | ------------ | ------------------- |
+| `CIRCUIT_BREAKER_*`                           | paired       | 1800 (30min)        |
+| `KILL_SWITCH_*`                               | paired       | 300 (5min — manual operator-acked clear) |
+| `BACKFILL_VM_FAILED`                          | transient    | —                   |
+| `MANIFEST_*_DRIFT`                            | paired       | 7200 (2h — manifest consolidator cycle) |
+| `ML_SIGNAL_STALENESS`                         | paired       | 600 (10min)         |
+| `STALE_OPEN_ALERT` (the meta-alert itself)    | transient    | —                   |
+
+### QG hook (deferred to alerting-service slot pickup)
+
+A QG step (proposed STEP TBD) walks `alerting-service/alerting_service/registry/alert_metadata.py` + asserts every
+`AlertCode` enum value has an entry. Missing entries fail loud — prevents new alert codes from silently defaulting to
+`paired/3600s` if the author intended `transient`.
