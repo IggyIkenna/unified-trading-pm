@@ -234,8 +234,16 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
 
 ### CeFi+TradFi tick data — TradFi half (`cefi_tradfi_tick_data_backfill`)
 
-- [ ] [AGENT] P0. Verify MTDS orchestrator handles CME via Databento and CBOE via Barchart for target data_types. [AUDIT
-      2026-05-07: IN-FLIGHT — 5 mdps-tradfi VMs running; verify post-drain]
+- [x] [AGENT] P0. Verify MTDS orchestrator handles CME via Databento and CBOE via Barchart for target data_types. — ✅
+      **VERIFIED 2026-05-16 — code path + operational confirmation**: (a) **Code routing** in UAC
+      `registry/venue_mapping.py` lines 125–126: `"CME": "GLBX.MDP3"` (Databento) + `"CBOE": "BARCHART"` (VIX-only via
+      Barchart, NOT Databento OPRA.PILLAR); (b) **VIX dispatch** in UAC `registry/data_source_continuity.py:192`:
+      `("CBOE:INDEX:VIX-USD", "ohlcv_15m"): get_vix_15m_source`; (c) **Live confirmation 2026-05-16**: three Databento
+      backfill VMs ran cleanly on the CME path — `tradfi-bf-es-adhoc-adhoc-20260516-132055` (ES via GLBX.MDP3, 2.26M
+      rows), `tradfi-bf-mes-adhoc-adhoc-20260516-132914` (MES via GLBX.MDP3, 1.85M rows),
+      `tradfi-bf-ibit-adhoc-adhoc-20260516-133434` (IBIT via XNAS.ITCH NASDAQ Databento dataset, 102k rows). VIX 15m
+      source layering wired earlier (UAC@`f4d0cec` + Barchart preload + Yahoo rolling fallback, 17 days filled manually
+      2026-05-06 per CLAUDE.md closeout).
 - [x] [SCRIPT] P0. VM launch script for CBOE VIX backfill (ohlcv_15m, dates=2025-11-13→2026-04-10) — VIX layering per
       CLAUDE.md rule. (verified 2026-05-07: market_tick_data_service/adapters/umi_tick_provider.py:240/333/381 wires
       \_fetch_yahoo_vix_15m with BARCHART_VIX_FIRST_DATE short-circuit; UAC registry/data_source_continuity.py:63
