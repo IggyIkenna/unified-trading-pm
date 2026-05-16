@@ -18,6 +18,48 @@ Half-1+Half-2 discipline acknowledged; will pair each code commit with `docs(pla
 
 ---
 
+## [slot 4 → main] 2026-05-16 ~12:00 UTC — SESSION CLOSE: all 10 items flipped (carry-verification day)
+
+**Status**: 🟢 SLOT 4 COMPLETE — 10/10 items flipped on `work_split_2026_05_15_ikenna.md` § "Slot 4".
+
+### Deferred work after 2026-05-16 slot 4 session
+
+| Item | Status | Successor / blocker |
+| --- | --- | --- |
+| Item 1 — 6-bucket provisioning re-evaluation | 🟡 `BLOCKED-UPSTREAM` | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.6 Step 2.6.1 (Harsh slot 4 ownership per operator decision 2026-05-11); window 05-15→05-19 in progress, Day 2 today. No `setup-buckets.sh` commit observed in deployment-service log since 14 May. |
+| Item 2 — `expected_unattempted_propagation_gap` P1 | ✅ VERIFIED — Gate 1 🟢 FIRED 2026-05-13 | 2 P2 follow-ups already tracked in plan body lines 775-780 (DeFi classifier UAC-enum crossref test; sports classifier extension — both post-cutover). |
+| Item 3 — sports/prediction phantom apply-flips | ✅ VERIFIED — 0 phantoms both AGs (dry-run 2026-05-14, post-retired-type-cleanup) | n/a |
+| Item 4 — propagation chain Phase 3+4+PART C remainder | ✅ VERIFIED — Phase 3.1/3.4 substantive + 3.2/3.3/3.6/4 NO-OP + Phase 3.5 sports DEFERRED with design-call successor; PART C SUBSTANTIALLY-DONE | Phase 3.5 sports design call (operator triage); Phase 5 Pass 3+4 + Phase 6 validation gate `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover. |
+| Item 5 — `api_football_minimal_flattening_removal` close | ✅ VERIFIED — Phase 5 closeout PM@36c40a10 (Slot 6 Wave 3, 2026-05-13) | Phase 3.B/3.C/4 `**DEFERRED**` per plan body — operator-executable post-cutover when API quota allows. |
+| Item 6 — `expected_universe_v2_design` (carry from slot 9 V2) | ✅ DESIGN-COMPLETE — Phase 1 code + 65 unit tests (IS@5c5b1f8); Phase 2 launcher + watchdog (deployment-service@7313a39); Phase 3 sharding decision; Phase 5 codex 3-SSOT updates | Phase 4 production launch (10 VMs ~3-4h parallel) `BLOCKED-UPSTREAM` on slot-6 G4 v8 cutover per plan body line 26-30 banner + Prerequisites line 318. |
+| Item 7 — `sports_master_2026_05_07` coverage audit | ✅ VERIFIED — 14 active + 3 retired data_types confirmed (14 May sub-agent) | SP-6/SP-10/SP-12 gaps tracked in `cross_asset_group_catalogue_audit_2026_05_10.md`. |
+| Item 8 — `data_status_comprehensive_test_coverage` sports-half | ✅ VERIFIED — Categories A/B/C/D all `[x]` (deployment-api@6cfed38/40f7769/6ab227b/3040a1b/8012a12 + 12-test sports drilldown alignment @1ecef8a) | n/a |
+| Item 9 — 3 sports classifier issues final verification | ✅ VERIFIED — sfi_footystats / player_values / weather read-side all closed (uac@435abae + uac@17a0f82 + utl@79c72bad). Weather write-side `**DEFERRED**` per `sports_classifier_weather_no_fixture_2026_05_13.md` (PARTIAL). | Parent issue `sports_classifier_extension_followup` ✅ RESOLVED pm@48db1ae0. |
+| Item 10 — Reserve (in-stack pickup) | ✅ NOT TRIGGERED — no ambiguity surfaced during items 1-9 | n/a |
+
+### Slot 4 commits this session
+
+| Commit | What |
+| --- | --- |
+| PM@ac12fc4b (rebased to c5b8fd77) | docs(ping): slot-4 BOOT ACK 2026-05-16 — day-2 of 15 May split; starting items 1 + 6 |
+| PM@e96aa577 (rebased to 3e71d29c) | docs(plans): flip slot-4 item 1 — 6-bucket provisioning still BLOCKED-UPSTREAM on Phase 2.6 Step 2.6.1 |
+| PM@95f167cd | docs(plans): flip slot-4 item 6 — expected_universe_v2 DESIGN COMPLETE; Phase 4 launch BLOCKED-UPSTREAM on G4 v8 |
+| PM@85bde795 (rebased to 5e075f84) | docs(plans): flip slot-4 items 2-5+7-10 — carry-status verifications (most underlying work shipped 13-14 May) |
+
+### Findings (none)
+
+No bugs, no new credential walls, no new SSOT drift surfaced this session. Carry-verification day across a stack whose
+real work shipped 13-14 May; nothing left for slot 4 to ship until the upstream blockers (Phase 2.6 cutover + G4 v8
+schema) clear.
+
+### Resumption signal
+
+Slot 4 has no further implementer surface on the current 15 May stack. Next session pickup: either a new 16 May / 17 May
+work_split assignment, or Phase 2.6 Step 2.6.1 + G4 v8 unblock triggers Phase 4 expected_universe_v2 launch (10 VMs
+parallel; ~3-4h wall-clock) — operator-coordinated, likely Harsh slot 4 territory.
+
+---
+
 ## [slot 4 → main] 2026-05-14 13:23 UTC — BOOT ACK
 
 **Status**: 🟢 SLOT 4 ACTIVE — continuing 2026-05-14 session
