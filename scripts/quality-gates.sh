@@ -272,6 +272,23 @@ if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Plan discipline (Group A of governance_qg_automation_gaps) — baselined ratchet ──
+# SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A (G-2 + G-5 + G-13).
+# Three sub-rules: (a) DEFERRED-without-migration-banner, (b) filename-convention,
+# (c) archived plans mentioning DEFERRED/post-cutover/out-of-scope must reference a successor.
+# Current baseline 231 — ratchet down as plans get touched / archived clean.
+PLAN_DISCIPLINE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_plan_discipline.py"
+if [ -f "$PLAN_DISCIPLINE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Plan discipline check (ratchet mode)..."
+    if python3 "$PLAN_DISCIPLINE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Plan discipline check passed (at-or-below baseline)"
+    else
+        echo "❌ Plan discipline regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A" >&2
+        echo "   Add migrated-to banner / fix filename / add successor ref. Re-baseline with --baseline-write after intentional debt." >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: OpenAPI drift (Group D of governance_qg_automation_gaps) — warn-only mode ──
 # SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group D (UI-13).
 # Compares committed unified-trading-api/openapi.json against UI mirror at

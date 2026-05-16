@@ -61,11 +61,12 @@ this plan owns the QG/automation half.)
 
 ## Todos
 
-- [ ] [DESIGN] P2. **Group A — Plan-discipline grep-checks (G-2 + G-5 + G-13).** Design + ship a PM-side script
-      `scripts/quality_gates/check_plan_discipline.py` that walks `plans/active/` + `plans/archive/` and flags: (a)
-      plans without a `## Deferred work — migrated to:` banner if `**DEFERRED**` annotations present; (b)
-      filename-convention violations; (c) archived plans whose body mentions `**DEFERRED**` / `post-cutover` /
-      `out of scope` without a successor reference. **MIGRATED FROM:** G-2, G-5, G-13.
+- [x] ✅ [DESIGN] P2. **Group A — Plan-discipline grep-checks (G-2 + G-5 + G-13).** Shipped at
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_plan_discipline.py` covers all 3 sub-rules:
+      (a) `A-deferred-no-banner` — 57 violations; (b) `B-active-filename` — 5 violations + `B-issue-filename` checks;
+      (c) `C-archive-no-successor` — 169 violations. Total baseline 231; ratchet-down mode prevents regression while
+      plans get touched. Baseline file at `scripts/quality_gates/plan_discipline_baseline.yaml`. PM `quality-gates.sh`
+      wired. **MIGRATED FROM:** G-2, G-5, G-13.
 - [x] ✅ [DESIGN] P2. **Group A.1 — Runbook Execution-Owner SSOT codification (HARD RULE in CLAUDE.md).** Ship
       `scripts/quality_gates/check_runbook_execution_owner.py` + baseline file + wire into PM's `quality-gates.sh`.
       Walks workspace for `*runbook*.md` (excluding archive) and asserts each declares
