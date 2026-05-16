@@ -177,8 +177,17 @@ apply-flips remainder + `api_football_minimal_flattening_removal_2026_05_07`.
    reconcile + apply-flips on same-region GCE VM. (infra 0.8×, ~2 = 1.6 cal)
 4. **propagation chain Phase 3.1-3.N + Phase 4 + PART C remainder**. (refactor 0.4×, ~4 = 1.6 cal)
 5. **`api_football_minimal_flattening_removal_2026_05_07` close** (carry from 14 May). (refactor 0.4×, ~3 = 1.2 cal)
-6. **`expected_universe_v2_design_2026_05_08`** (carry from slot 9 V2) — sports/prediction universe enumerator design.
-   (design 0.6×, ~3 = 1.8 cal)
+6. ✅ **`expected_universe_v2_design_2026_05_08`** (carry from slot 9 V2) — sports/prediction universe enumerator design.
+   (design 0.6×, ~3 = 1.8 cal) — **VERIFIED DESIGN-COMPLETE 2026-05-16 (slot 4)**: all design phases shipped pre-today:
+   Phase 1 enumerator code + `InstrumentCatalogEntry` + 65 unit tests (`instruments-service@5c5b1f8`); Phase 2 launcher
+   `launch-expected-universe-v2-vm.sh` + watchdog prefix `expected-universe-v2-` (`deployment-service@7313a39`); Phase 3
+   Q1 cefi venue-sharding decision (~7 VMs, one per venue) documented; Phase 5 codex updates landed (3 SSOTs, 2026-05-15).
+   Sports + prediction enumerators ARE part of the 5-per-asset-group v2 dispatch table (sports: per-fixture lifecycle for
+   per-fixture data_types; prediction: per-`canonical_question_group` market lifecycle bundle). Open items are
+   **Phase 4 production launch** (10 VMs × ~3-4h parallel — `BLOCKED-UPSTREAM` on slot-6's Phase 7 G4 v8 schema cutover,
+   per plan body line 26-30 banner + Prerequisites line 318) + 1 Phase 1 integration test (DEFERRED, same blocker) + 1
+   Phase 2 singleton-lock shell-test (DEFERRED, gcloud mock harness). Slot 4 has no further implementer surface here until
+   G4 v8 lands; checkbox ✅ on the design half. (Slot-4 evidence note: `unified-trading-pm@<TBD>` after this flip lands.)
 7. **`sports_master_2026_05_07` data_type universe coverage audit** — cross-ref vs `cross_asset_group_catalogue_audit`.
    (research 1.2×, ~3 = 3.6 cal)
 8. **`data_status_comprehensive_test_coverage_2026_05_07` sports-half close** — drilldown-shard-atom alignment tests.
