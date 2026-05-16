@@ -733,16 +733,21 @@ Owner: harsh + parallel agents per protocol.
 > block § Discoveries during Priority #5); (c) clean full-history re-run after (b) lands. **Slot 5 Family-1 design NOT
 > blocked** — pulls fix Day 3 per spec above.
 >
-> - [ ] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**.
->       `instruments-service/scripts/reconcile_lending_indices_phantom.py` to clean any phantom-captured rows from
->       pre-fix runs. **PARTIAL 2026-05-11 by slot 3** — manual
->       `manifest_consolidator --bucket lending-indices-{pid} --once` executed; canonical now AAVEV3/LINEA = 451
->       captured + AAVEV3/BSC = 836 captured. Consolidator-bucket Case-5 fix shipped (deployment-service@`ad4d448` +
->       slot 6@`2a76a2a`); daemon `manifest-consolidator-20260511-181538` relaunched and verified consolidating
->       lending-indices/dex-swaps/evm-defi/etc on first cycle. **Remaining work**: phantom-audit script wrapper (not the
->       daemon — the one-shot scripted reconciler for pre-fix drift cleanup). Defer until ManifestFreshnessCache (P1
->       from (b) above) lands — clean re-run will reconcile residual `SOURCE_RETURNED_ZERO` pre-launch nits to
->       `EXPECTED_PRE_GENESIS_CHAIN`.
+> - [x] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**. ✅ **SHIPPED 2026-05-16 by slot 2 via sub-agent
+>       dispatch** at `instruments-service@88d48da` (10 unit tests green; basedpyright 0 errors).
+>       Script at `instruments-service/scripts/reconcile_lending_indices_phantom.py` (175 lines) + tests at
+>       `tests/scripts/test_reconcile_lending_indices_phantom.py`. CLI: `--dry-run` (default) / `--apply-flips
+>       --confirm` (safety belt) / `--protocols X,Y` / `--chains A,B` / `--max-flips N`. Reads canonical
+>       `gs://lending-indices-{pid}/_index/availability_index.parquet`; probes flat-prefix layout
+>       `lending_indices/{protocol}/{chain}/date={YYYY-MM-DD}/` per handler docstring; classifies phantoms as
+>       `EXPECTED_PRE_GENESIS_CHAIN` (via UAC `get_protocol_launch_date(chain, venue_prefix)` from
+>       `unified_api_contracts.registry.chain_env`) or `SOURCE_RETURNED_ZERO` (post-launch). Idempotent re-runs.
+>       **Important caveat 2026-05-16**: lending-indices canonical manifest carries BOTH `data_type="lending-indices"`
+>       (24,976 legacy kebab rows from pre-2026-04-23 emission) AND `data_type="lending_indices"` (21,044 snake rows
+>       from post-rename emission). The reconciler's `data_type` filter MUST accept both forms; verify in next slot-2
+>       session. Tracked in `plans/active/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`.
+>       Earlier slot-3 manual consolidator already shipped (deployment-service@`ad4d448` + slot 6@`2a76a2a`);
+>       reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
 
 Success criterion: per protocol, an MTDS adapter at
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/<protocol>_adapter.py` (or

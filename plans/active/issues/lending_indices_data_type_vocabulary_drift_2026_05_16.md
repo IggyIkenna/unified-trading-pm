@@ -1,32 +1,64 @@
 ---
-title: "lending-indices canonical manifest has kebab-case + snake-case data_type drift (24,976 kebab + 21,044 snake)"
+title: "Cross-bucket DeFi canonical-manifest data_type vocabulary drift — SYSTEMIC (6 of 7 manifests affected)"
 created: 2026-05-16
 author: ikenna-slot-2
 source:
   - gs://lending-indices-central-element-323112/_index/availability_index.parquet
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (constant _LENDING_INDICES_DATA_TYPE)
+  - gs://oracle-prices-central-element-323112/_index/availability_index.parquet
+  - gs://lst-rates-central-element-323112/_index/availability_index.parquet
+  - gs://perp-funding-central-element-323112/_index/availability_index.parquet
+  - gs://dex-swaps-central-element-323112/_index/availability_index.parquet
+  - gs://dex-pools-central-element-323112/_index/availability_index.parquet
+  - gs://gas-fees-central-element-323112/_index/availability_index.parquet (CLEAN — gas_fees snake-only)
+  - gs://liquidations-central-element-323112/_index/availability_index.parquet (CLEAN — liquidations base-form)
+  - market-tick-data-service/market_tick_data_service/cli/handlers/*_handler.py (per-handler canonical constants)
   - codex/02-data/availability-manifest-and-data-status.md (3K update — canonical type names)
-severity: P1 — affects DEFI asset_group manifest queryability + the 3-LENDING.5 reconciler scope
+severity: P1 — affects 6 DeFi asset_group manifests' queryability; any downstream filter on one form silently misses ~30-60% of rows
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
 ---
 
 ## What I found
 
-Diagnostic read of `gs://lending-indices-central-element-323112/_index/availability_index.parquet` 2026-05-16
-(46,020 manifest rows, 39,851 captured) shows **two values for `data_type`** coexisting in the same canonical
-manifest:
+### Cross-bucket audit (2026-05-16)
+
+Diagnostic read across 7 DeFi canonical manifests via `pd.read_parquet('gs://<bucket>-{pid}/_index/availability_index.parquet')`
+shows vocabulary drift in **6 of 7 buckets**. Both kebab + snake forms coexist in the same `data_type` column of
+the same canonical manifest:
+
+| Bucket            | Total rows | Kebab-form rows                  | Snake-form rows               | Drift? |
+| ----------------- | ---------- | -------------------------------- | ----------------------------- | ------ |
+| `lending-indices` | 46,020     | `lending-indices` 24,976 (54%)   | `lending_indices` 21,044 (46%) | **YES** |
+| `oracle-prices`   | 9,036      | `oracle-prices` 1,926 (21%)      | `oracle_prices` 7,110 (79%)    | **YES** |
+| `lst-rates`       | 18,180     | `lst-rates` 1,560 (9%)           | `lst_rates` 16,620 (91%)       | **YES** |
+| `perp-funding`    | 6,052      | `perp-funding` 3,298 (54%)       | `perp_funding` 2,754 (46%)     | **YES** |
+| `dex-swaps`       | 46,491     | `dex-swaps` 28,171 (61%)         | `dex_swaps` 18,320 (39%)       | **YES** |
+| `dex-pools`       | 75,983     | `dex-pools` 55,854 (73%)         | `dex_pools` 20,129 (27%)       | **YES** |
+| `gas-fees`        | 16,393     | —                                | `gas_fees` 16,393 (100%)       | clean  |
+| `liquidations`    | 38,134     | (single form: `liquidations`)    | (no `_` variant)               | clean  |
+
+**6 of 7 DeFi canonical manifests carry vocabulary drift.** Total affected rows: 25,976+1,926+1,560+3,298+28,171+55,854
+= **~116,000 legacy kebab-form rows** that any naive snake-only query would silently miss.
+
+### Per-handler canonical constants (workspace truth — should be the ONLY emission)
+
+Per `market-tick-data-service/.../cli/handlers/*_handler.py` line annotations:
+- `lending_indices_handler.py`: `_LENDING_INDICES_DATA_TYPE = "lending_indices"` (snake)
+- `oracle_prices_handler.py`: similar snake constant
+- `lst_rates_handler.py`: writes `lst_rates` (snake)
+- `perp_funding_handler.py`: writes `perp_funding` (snake)
+- `dex_swaps_handler.py` + `dex_pools_handler.py`: write snake forms
+
+The on-disk hive vocabulary (`gs://<bucket>/.../data_type=<form>/...`) is consistent snake-only across all buckets,
+confirmed via `gsutil ls`. **Only the manifest `data_type` column carries the kebab legacy.**
+
+### lending-indices detail (initial finding)
 
 | `data_type` value  | Row count  |
 | ------------------ | ---------- |
 | `lending-indices`  | **24,976** |
 | `lending_indices`  | **21,044** |
 | **Total**          | 46,020     |
-
-Both values land in the same canonical manifest (same `_index/availability_index.parquet`), under the same hive
-path (`category=defi/venue={PROTOCOL}/chain={CHAIN}/instrument_type=lending/data_type=lending_indices/`).
-
-Other column distributions:
 
 - **Venues** (3): AAVEV3 (28,512), COMPOUNDV3 (14,197), SPARK (3,311). Note `AAVEV3` not `AAVE_V3` (no underscore).
 - **Chains** (10): ETHEREUM / OPTIMISM / BASE / ARBITRUM / POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC.
@@ -64,26 +96,36 @@ No active drift (nothing currently emitting kebab). One-shot migration is safe +
 
 ## Recommended decision
 
-**Option A (recommended — operator-acked taxonomy)**: declare `lending_indices` (snake) the canonical form per the
-asset_group vocabulary rule pattern (CLAUDE.md § "Asset-group vocabulary"). Ship a one-shot migration script
-`instruments-service/scripts/canonicalize_lending_indices_data_type_2026_05_16.py` that:
+**Option A (recommended — workspace-wide canonicalisation)**: declare snake-form canonical for ALL DeFi data_type
+columns per CLAUDE.md § "Asset-group vocabulary" + per-handler constants. Ship a one-shot migration script
+`instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py` that:
 
-1. Reads the manifest
-2. Flips all `data_type == "lending-indices"` → `data_type == "lending_indices"` (in-place column update)
-3. Writes back with v8-tolerant `df.to_parquet`
-4. Idempotent re-runs
+1. For each of the 6 affected buckets, reads `_index/availability_index.parquet`
+2. Maps kebab → snake at the column level (closed-set mapping):
+   `{"lending-indices": "lending_indices", "oracle-prices": "oracle_prices", "lst-rates": "lst_rates",
+   "perp-funding": "perp_funding", "dex-swaps": "dex_swaps", "dex-pools": "dex_pools"}`
+3. Writes back via v8-tolerant `df.to_parquet`
+4. Idempotent re-runs (no-op when all rows already snake)
+5. `--dry-run` (default) / `--apply` / `--bucket` (filter to subset) / `--confirm` (safety belt)
 
-This is ~30-min work; blocks the 3-LENDING.5 reconciler from having to handle both forms.
+This is ~1-1.5 hour work + tests; eliminates the silent-query-miss bug class workspace-wide for DeFi. 6 buckets +
+~116,000 rows total to flip. Post-migration, downstream services + the 3-LENDING.5 reconciler don't need defensive
+both-form handling.
 
-**Option B**: extend the 3-LENDING.5 reconciler to accept both forms in its `data_type` filter and leave the drift
-in place (defer canonicalisation to post-cutover).
+**Option B**: extend the 3-LENDING.5 reconciler (and every downstream consumer) to accept both forms in their
+`data_type` filter and leave the drift in place. Defers canonicalisation to post-cutover. Higher long-term cost
+(every new consumer must remember to accept both forms).
 
-**Option C**: investigate root cause first — find which handler / migration emitted kebab — fix at source then
-backfill-canonicalize.
+**Option C**: investigate handler-by-handler root cause first — confirm each handler's canonical-constant emits only
+snake currently, then declare migration safe.
+
+Root cause already confirmed for lending-indices: kebab rows stopped 2026-04-23. Spot-check the other 5 buckets'
+`written_at` distributions to confirm same pattern (all-legacy, no active drift) before running migration.
 
 ## Suggested owner
 
-ikenna-slot-2 (slot-2 already in this manifold this session) — pending operator nod on Option A vs B vs C.
+ikenna-slot-2 — pending operator nod on Option A vs B vs C. Migration script is straightforward; can ship in next
+slot-2 session if Option A acked.
 
 ## Cross-references
 
