@@ -76,7 +76,13 @@ stale tarball IS the cause of my first failed VM today.
 
 ## Action items
 
-- [ ] [SCRIPT] P0. Bring risk-and-exposure-service UAC pin into alignment with workspace consensus + rebuild tarball.
+- [x] [SCRIPT] P0. Bring risk-and-exposure-service UAC pin into alignment with workspace consensus + rebuild tarball. ✅
+      **DONE 2026-05-16 (slot-3)** — `risk-and-exposure-service@83b10e0` relaxed pin `>=0.2.38` → `>=0.1.0,<1.0.0`;
+      tarball rebuilt 21:22 UTC; verified pin fix is present in tarball contents.
+- [ ] [SCRIPT] P0. **STILL BLOCKED — VM 3 (`features-onchain-defi-20260516-222259`) also failed.** Launched 22:23 UTC
+      after pin fix; auto-deleted by 22:26 UTC with ZERO events written (no STARTED, no PREFLIGHT_SKIPPED, no STOPPED).
+      Startup script failed before features_service launch. Likely another pin conflict among the 27 install-set repos;
+      needs full `uv pip compile --no-deps -e <repo1> -e <repo2> ...` walk to find the offending repo(s).
 - [ ] [DESIGN] P1. Add `uv pip compile` pre-flight to `create-code-tarballs.sh` per-asset-group set.
 - [ ] [SCRIPT] P1. Hard-redirect or hard-fail the deprecated `launch-features-{onchain,}-backfill-vm.sh` wrappers so
       they cannot silently use the legacy module + stale tarball.
