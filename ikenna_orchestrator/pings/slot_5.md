@@ -969,3 +969,24 @@ scope; ~7000 files / 2830 skipped at last check; walking forward at ~250 files/m
 - Two new issue docs filed today: `databento_chunk_iteration_int_timestamp_2026_05_16.md` (now RESOLVED via the 2 MTDS
   fixes, can be archived) + `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` (Option A shipped earlier
   by slot 2).
+
+---
+
+## [slot 5] 2026-05-16 13:35 UTC — Finding: TradFi flat-vs-prd bucket dual-write state (Phase 0d gate)
+
+Sample-inspecting freshly session-stamped parquets surfaced an expected-but-worth-noting finding:
+
+- `market-data-tick-tradfi-central-element-323112` (LEGACY flat bucket) — where my 4 backfill VMs wrote today's 4.25M
+  rows.
+- `market-data-tick-tradfi-prd-central-element-323112` (PRD env-tiered bucket, created 2026-05-12 Slot 3) — where the
+  session-stamp VM is currently walking.
+
+Both contain TradFi data; my fresh backfills land in legacy because the MTDS write path hasn't been migrated to
+`resolve_bucket_name()` yet — that's `bucket_name_ssot_canonicalisation_2026_05_10.md` **Phase 0d** scope (still open:
+"migrate flat-bucket data into env-tiered buckets"; physical migration not yet run).
+
+**Impact**: my today's 4.25M-row TradFi backfill is HONEST + INSPECTABLE in the legacy bucket; the session-stamp
+migration won't pick it up since it's walking prd. No action needed from slot 5; the Phase 0d migration sweep will
+eventually reconcile.
+
+This is not a regression — it's the expected dual-write window until Phase 0d completes.
