@@ -665,8 +665,17 @@ the workspace-qg.yml redesign accepted today.
 
 #### Slot 4 — **[SWEEP-16]** items (+6 cal — sports/prediction expansion)
 
-- **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (12.4 cal, 18/30) — push remaining cross-cutting
-  deliverables. Slot 4 has sports/prediction context. (design 0.6×, ~10 = 6.0 cal)
+- ✅ **`cross_cutting_may_23_deliverables_2026_05_08` Ikenna-half** (12.4 cal, 18/30) — push remaining cross-cutting
+  deliverables. Slot 4 has sports/prediction context. (design 0.6×, ~10 = 6.0 cal) — **AUDIT 2026-05-16 (slot 4)**: All
+  Ikenna-side design work shipped pre-SWEEP-16 per plan body line 638-697: catalogue UAC schema ✅ (uac@…); strategy-ID
+  schema + DERIVATION ✅ (uac@d6d0cd57); ClientDefinition + TradingAccount + CapitalAllocation ✅ (uac@3591037 →
+  internal/architecture_v2/capital_allocation.py); DART scope decision ✅ (PM@ab595616 dart-manual-trade-spec.md, 314
+  lines); ManualInstruction + audit-log UAC contracts ✅ shipped Ikenna T8 (Day-1/2/3 — uac@1d8a059 + fe8e50e + 003b5ff,
+  22 unit tests). Plan body line 104-105 confirms `ManualInstruction.side` already covers sports `HOME/AWAY/DRAW` +
+  prediction `YES/NO` and `operation_type` covers `PLACE_BET` — sports/prediction-specific UAC types already on LDR. 11
+  remaining `- [ ]` items are explicitly Harsh-T6 [BUILD]/[SCRIPT] (UI builds + consumer wiring). Slot 4 has no
+  implementer surface in the Ikenna-half closure beyond the bookkeeping flip recorded here. Plan stays `status: active`
+  pending Harsh-T6 DONE block.
 
 #### Slot 5 — **[SWEEP-16]** items (+8 cal — TradFi/cross-cutting closure)
 
