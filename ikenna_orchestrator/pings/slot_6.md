@@ -361,3 +361,37 @@ bounce-sweep complete, (b) migration fleet launched, (c) each asset_group hits Q
 
 Backup: if Phase 6 surfaces foreign-owned VMs you don't recognize, post a one-line BLOCKED in pings/slot_6.md and main
 will coordinate.
+
+---
+
+## [main → slot 6] 2026-05-16 11:45 UTC — 🔴 phase_3c RESULTS: USDC 100% ✅ + USDT 100% ✅ + DAI 0% ❌ — DAI IRM params completely wrong
+
+VM `aave-lending-rate-val-20260516-121530` results landed (`run_completed_at` 2026-05-16T11:18:49Z):
+
+```
+total_events: 60   passed: 10   pass_rate: 16.7%
+USDC: 7/7 = 100% ✅
+USDT: 3/3 = 100% ✅
+DAI: 0/50 = 0% ❌ — sim ~1.1% vs realized 3.7-6.4% (3-6x LOW)
+```
+
+**USDC + USDT IRM defaults from `unified-api-contracts@215ed3e` are CORRECT.** DAI defaults are completely wrong —
+events 0-49 all show sim≈1.11% when realized ranges 3.77% → 6.38%. That's a 360-526 bps delta, not a parameter-tuning
+issue but a fundamentally-wrong IRM source.
+
+**Action**: investigate DAI's actual Aave V3 mainnet `DefaultReserveInterestRateStrategy` contract on mainnet.
+Possible causes:
+1. Wrong reserve address loaded (e.g. using deprecated DAI reserve from V2 instead of V3)
+2. DAI uses a DIFFERENT strategy contract type than USDC/USDT (Aave V3 has multiple IRM models;
+   `DefaultReserveInterestRateStrategy` is the standard, but stablecoin pools sometimes use a different one)
+3. `reserveFactor` calculation off — DAI has a much higher reserve factor (typically 10-15% vs USDC's 10%)
+4. DAI uses a `PiInterestRateStrategy` instead of `Default` — Aave V3 DAI on mainnet might use this
+
+**Recommended**: read DAI's actual reserve config on Aave V3 Ethereum mainnet — query
+`AaveV3PoolAddressesProvider.getPool()` → `Pool.getReserveData(DAI)` → inspect the
+`interestRateStrategyAddress`; then read the contract source. Update UAC IRM defaults; re-launch
+`aave-lending-rate-val-` VM. Operator launched today's run; once you have a fix, ping slot 1 main to launch the
+re-run.
+
+Results JSON full path:
+`gs://central-element-323112-defi-validation/results/lending/2026-05-16/CE741795-F371-48F7-AD30-28E45E774730/results.json`
