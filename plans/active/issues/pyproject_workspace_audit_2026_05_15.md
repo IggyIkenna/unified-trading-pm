@@ -2,9 +2,21 @@
 title: "pyproject.toml workspace-wide audit — ruff line-length drift + coverage floor gaps"
 created: 2026-05-15
 author: slot-8
+status: RESOLVED — Findings 1+2 closed 2026-05-16; Finding 3 verified inapplicable; Finding 4 deferred
 source:
   - all repos' pyproject.toml + pyrightconfig.json
 locked_by: live-defi-rollout
+---
+
+## Resolution summary (2026-05-16 slot-8)
+
+| Finding | Status |
+|---------|--------|
+| 1. ruff line-length=100 in 15 repos | ✅ DONE — 14 of 15 already migrated since filing; last (deployment-api) bumped 2026-05-16 at `deployment-api@54b4b27`. |
+| 2. coverage fail_under below 70 floor (3 repos) | ✅ DONE — all 3 raised to 70 at `position-balance-monitor-service@bfb48dc` + `unified-trading-library@1e3ec43d` + `ml-inference-service@f3b7089`. Actual coverage was 77/78/75 (well above new floor). |
+| 3. 12 repos missing pyproject.toml | ✅ VERIFIED INAPPLICABLE — features sub-services live INSIDE `features-service/` (not separate dirs); 3 UI repos use `package.json` not pyproject; fund-administration deferred-after-cutover. |
+| 4. PM pyrightconfig.json standard mode | 🟡 DEFERRED — PM is not a Python package; scripts type-checked elsewhere. Re-eval if PM scripts grow to library-grade. |
+
 ---
 
 ## What I found
