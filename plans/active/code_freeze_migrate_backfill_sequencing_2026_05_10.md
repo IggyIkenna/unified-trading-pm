@@ -876,8 +876,14 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 - [ ] [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` env-tier re-pointing — every prefix
       mapping to a flat bucket needs the env-tiered name post-delegate-flip. Bundle into Step 2.6.4 PR. **Owner**: slot
       8 (watchdog surface familiarity).
-- [ ] [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
-      protocol above + operator-runnable GO/NO-GO checklist per wave. **Owner**: this plan body authorizes; slot 3
+- [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave
+      gating protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
+      `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
+      per-wave operator-runnable pre-checks + action steps + GO/NO-GO criteria + rollback decision tree + post-cutover
+      Step 2.6.5 archive flow + plan-flip closeout. Compliant with Runbook Execution-Owner SSOT (passes
+      `check_runbook_execution_owner.py`). Bundled foreign-runbook hygiene fix for
+      `codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
+      rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3
       Day-3/4 if time permits.
 
 ##### Carry-forward + dependencies
