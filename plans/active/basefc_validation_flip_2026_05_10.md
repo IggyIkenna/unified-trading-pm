@@ -61,9 +61,11 @@ The Wave-8 BaseFC-ValidationFlip task was scoped against ~12 calculators with `f
       concrete calculators; base adds `feature_family: ClassVar[str] = "cross_instrument"` inherited by all subs.
       (b) onchain family — `features-service@151dffab` added `feature_group: ClassVar[str]` to 19 concrete calcs
       (extracted from `@FeatureCalculatorRegistry.register("<name>")` decorator) + `feature_family` on
-      `OnChainCalculator` base. Combined: 39 calcs migrated. `validate_class_attributes()` returns OK on every
-      migrated calc; basedpyright clean. Multi_timeframe family OUT OF SCOPE per Option-a (LOCAL ABC doesn't
-      extend UTL canonical).
+      `OnChainCalculator` base. (c) multi_timeframe family — `features-service@87ba9cf6` extended LOCAL ABC to
+      `_CanonicalBaseFeatureCalculator[pl.DataFrame]` (matching cross_instrument); widened `calculate()` to
+      `(df, **params)` canonical signature (orchestrator caller compatible); added `feature_family = "multi_timeframe"`
+      on base; migrated 9 concrete calcs. **Combined: 48 calcs migrated** across all 3 polars families.
+      `validate_class_attributes()` returns OK on every migrated calc; basedpyright clean.
 - [x] **[SCRIPT] P1**. Flip UTL canonical `BaseFeatureCalculator.validate_class_attributes()` from opt-in (callable
       helper) to mandatory (`__init_subclass__` enforcement). UTL commit. **DONE 2026-05-16**:
       `unified-trading-library@ccc9b7bf` — added `__init_subclass__` that calls `validate_class_attributes()`

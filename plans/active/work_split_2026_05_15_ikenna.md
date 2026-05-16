@@ -386,14 +386,15 @@ Ikenna-half + `mock_data_pipeline_benchmarking` Phase 8.A + `context_fill_optimi
    `tests/scenarios/test_may23_critical_paths.py` makes the May-23 gate dependency explicit (presence + per-gate
    semantics + suite aggregate). All 28 framework + may23 tests pass; basedpyright clean. (brand-new 1.0×, ~4.5 = 4.5
    cal)
-2. ✅ **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration FULLY DONE 2026-05-16:
+2. ✅ **`basefc_validation_flip_2026_05_10` items 1-5** — calculator paradigm migration FULLY DONE 2026-05-16
+   (incl. extended-scope multi_timeframe family pickup):
    (1) strategy decision Option-a `PM@082444d7`; (2a) cross_instrument 20 calcs `features-service@71643dec`;
-   (2b) onchain 19 calcs `features-service@151dffab` (`feature_group` extracted from `@register("<name>")`
-   decorator; `feature_family = "onchain"` on `OnChainCalculator` base); (3) UTL mandatory
-   `__init_subclass__` flip `unified-trading-library@ccc9b7bf` (eager MRO walk to detect abstract since
-   ABCMeta sets `__abstractmethods__` after `__init_subclass__`); (4) plan-flip cite this commit. Multi_timeframe
-   family OUT OF SCOPE per Option-a. 39 concrete calcs migrated; `validate_class_attributes()` OK on all;
-   basedpyright clean; UTL test stub updated to assert raises. (refactor 0.4×, ~6 = 2.4 cal)
+   (2b) onchain 19 calcs `features-service@151dffab`; (2c) multi_timeframe 9 calcs + ABC promoted to UTL
+   canonical `features-service@87ba9cf6`; (3) UTL mandatory `__init_subclass__` flip
+   `unified-trading-library@ccc9b7bf` (eager MRO walk because ABCMeta sets `__abstractmethods__` after
+   `__init_subclass__`); (4) plan-flip cite. **48 concrete calcs migrated** across cross_instrument +
+   onchain + multi_timeframe polars families; `validate_class_attributes()` OK on all; basedpyright clean;
+   UTL test stub updated to assert raises. (refactor 0.4×, ~6 = 2.4 cal)
 3. ✅ **writegate Phase 6.6 + 6.7 + 6.9 α-vs-β audit** — β verdict confirmed across 9 services (`PM@3a4afdc5`);
    per-service emission boundary is canonical (vs centralised α). Audit table added at
    `writegate_honest_coverage_endtoend_2026_05_06.md` § 3.5 with per-service file + boundary mapping. **Gate 4 CLOSED**:
