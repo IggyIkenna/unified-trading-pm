@@ -129,13 +129,12 @@ Drift) + Kraken live REST+WS integration (credentials in vault) + `arbitrage_pri
    available_margin/margin_level parsed; ml% → ratio conversion. 1 more test (43 total). **8 of 8 private REST methods +
    public Ticker now LIVE.** Remaining: WS subscriptions (ticker + private user events).
 2. ✅ **Solana DEX adapter expansion — Phoenix / Orca / Raydium / Drift** — extend MTDS DeFi handlers per
-   `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **DONE 2026-05-15 (slot-3)**: Drift/Orca/Raydium
-   already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` (lines
-   101-105, `_collect_drift`/`_collect_orca`/`_collect_raydium` + `_PROTOCOL_TO_DATA_TYPE` + venue map). Phoenix:
-   **BLOCKED-OPERATOR-DECISION** — `api.phoenix.trade` does not resolve DNS (also tried `phoenix.trade`,
-   `docs.phoenix.trade`); Phoenix CLOB DEX may have shut down or migrated. Ping filed at
-   `ikenna_orchestrator/pings/slot_3.md@2026-05-15T19:08:56Z` requesting operator confirmation + canonical API URL OR
-   `EMPTY_OR_DEPRECATED_DEFI_VENUE` marker.
+   `defi_master_2026_05_07` venue matrix. (design 0.6×, ~5 = 3.0 cal) **FULLY DONE 2026-05-16 (slot-3)**:
+   Drift/Orca/Raydium already wired in `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`.
+   Phoenix: shipped `MTDS@696f188` — Phoenix's own REST is dead (DNS unresolved), but on-chain program alive per
+   Jupiter registry. `_collect_phoenix()` queries `lite-api.jup.ag/swap/v1/quote?dexes=Phoenix` for 3 major pairs
+   (SOL/USDC, WBTC/USDC, WBTC/SOL) → per-pair price + price_impact + USD value + context_slot. 3 new tests pass
+   (51 total in file). Phoenix BLOCKED-OPERATOR-DECISION lifted — Jupiter free tier suffices, no operator credential ask.
 3. ✅ **`emerging_perp_venue_adapters_broken` remainder** — close remaining broken-venue items per Day-3 status.
    (research 1.2×, ~2 = 2.4 cal) **DONE 2026-05-15 (slot-3)**: snapshot added to issue doc — 3/5 venues fixed (ASTER
    adapter, HYPERLIQUID/LIGHTER/PACIFICA via reconciler + MTDS wiring); 2 operator-blocked (ASTER backfill VM
