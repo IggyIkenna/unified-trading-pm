@@ -683,3 +683,25 @@ All commits Half-1+Half-2 plan-flip discipline maintained. All 28 repos 0/0 ahea
 **Net session result**: 8+ UTL refactor commits + 1 UAC facade ship + 1 UAC internal fix + 5 PM plan-flip commits. All shipped Half-1+Half-2 plan-flip discipline. SIZE_EXTRA_EXCLUDES: 9 → 1. Cumulative session ship now 47 method-size methods refactored under the 50-line budget.
 
 Autonomous loop ongoing per HARD RULE DON'T STOP — looking for next non-blocked work item.
+
+
+[2026-05-16 /loop autonomous-tick] slot-7 — sister-repo method-size sweep:
+
+UTL is fully cleaned (only manifest_writer.py remains in SIZE_EXTRA_EXCLUDES, intentionally — docstring-heavy contract docs).
+Loop expanded to sister repos:
+
+* `features-service@a9806fb8` — FuturesRollAdjuster.annotate_lifecycle_phase 58L→34L via _resolve_date_series helper.
+  Only method-size violation outside the 3 already-excluded orchestrator paths; file fully clean.
+* `market-tick-data-service@e043738` — MTDSShardManifestRecorder.record_captured 53L→34L (call-site condensation;
+  blob_path-is-unused docstring note preserved).
+* `market-tick-data-service@80ff3da` — WebsocketStreamingHandler.run 55L→33L via _resolve_connector static helper
+  (WS_FEED_CONNECTOR_FACTORIES lookup + NotImplementedError with rollout-stage hint).
+* `market-tick-data-service@49cec40` — ReplayHandler.run 65L→32L via _resolve_fetcher static helper. ReplayPublisher
+  constructed inline with StreamPublisher + ReplayWatermarkKV — 3 transient locals collapsed.
+
+Remaining MTDS non-excluded violations: live/websocket_runner.py:_flush_instrument_window 90L,
+replay/runner.py:ReplayRunner.run 110L. Both substantive (not docstring-bloat); leaving for follow-up since they
+need behavior-preserving extraction with broader test coverage.
+
+execution-service has 377 method-size violations across all severity buckets — too big for this loop; flagged but
+not touched. Issue doc candidate.
