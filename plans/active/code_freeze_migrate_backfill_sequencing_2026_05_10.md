@@ -861,21 +861,26 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 
 ##### Outstanding NEW work (gap-2.6.A through gap-2.6.E)
 
-- [ ] [SCRIPT] P0. **gap-2.6.A** — NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (singleton-locked,
-      per-source-bucket; emits BUCKET_RSYNC_STARTED/PROGRESS/STOPPED/FAILED events; takes `--source-bucket` +
-      `--dest-bucket` + `--workers N` + `--prefix-filter <pattern>`). Mirrors `launch-cross-asset-rescan-vm.sh` shape.
-      **Owner**: slot 8 or Harsh slot 4 (deployment-service surface familiarity). Phase 2 prereq.
-- [ ] [SCRIPT] P0. **gap-2.6.B** — NEW `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py`
-      (referenced in Step 2.6.2 verifier above; not yet shipped). Compares post-copy object count + total size + reads
-      100 random parquets per bucket; reports drift ≤0.01% per bucket. **Owner**: this plan body authorizes; slot 3 or
-      slot 8 Day-3/4.
-- [ ] [SCRIPT] P0. **gap-2.6.C** — NEW `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`
-      (referenced in Step 2.6.1 verifier; not yet shipped). Reads yaml SSOT, iterates every (kind, asset_group, env,
-      cloud), calls `gcloud storage ls` / `aws s3api head-bucket`, reports missing. **Owner**: this plan body
-      authorizes; slot 3 or slot 8 Day-3/4.
-- [ ] [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` env-tier re-pointing — every prefix
-      mapping to a flat bucket needs the env-tiered name post-delegate-flip. Bundle into Step 2.6.4 PR. **Owner**: slot
-      8 (watchdog surface familiarity).
+- [x] ✅ [SCRIPT] P0. **gap-2.6.A** — `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` shipped 2026-05-16
+      (slot-8). Singleton-locked per source-bucket-hash; auto-deletes on completion via
+      `VM_SHUTDOWN_ON_COMPLETION=true`; `--source-bucket` + `--dest-bucket` + `--workers N` (default 8) +
+      `--prefix-filter <pattern>` + `--dry-run` + `--force` (bypass lock). Uses `e2-standard-4` + 50GB boot +
+      `gcloud storage rsync --recursive`. `bucket-rsync-` prefix registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`.
+      Help via `bash launch-bucket-rsync-vm.sh --help`.
+- [x] ✅ [SCRIPT] P0. **gap-2.6.B** — `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py` shipped
+      2026-05-16 (slot-8). Computes object count + total bytes via `gcloud storage du` / `aws s3 ls --summarize`;
+      samples N random parquets (default 100, seedable) for size round-trip parity; configurable `--max-drift` (default
+      0.0001 = 0.01%) and `--min-sample-match` (default 0.99). Exit 0 on PASS, 1 on FAIL with operator GO/NO-GO
+      escalation pointer to runbook rollback section.
+- [x] ✅ [SCRIPT] P0. **gap-2.6.C** — `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`
+      shipped 2026-05-16 (slot-8). Parses `deployment-service/configs/cloud-providers.yaml` SSOT; enumerates 64 GCP
+      buckets (per-AG × kind) for env=prd; per-bucket existence via `gcloud storage buckets describe` /
+      `aws s3api head-bucket`. `--print-provision-commands` prints `gcloud storage buckets create` for any missing.
+      Exit 0 on all-exist, 1 on missing, 2 on yaml/IO error. `--dry-run` enumerates without checking.
+- [x] ✅ [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registration of `bucket-rsync-`
+      prefix shipped 2026-05-16 (slot-8) at `deployment-service@d92806b` lines 812-815. Workspace-wide env-tier
+      re-pointing of existing prefixes still bundled into Step 2.6.4 PR (cannot land pre-migration without breaking
+      the watchdog). Registration half ✅; rename half blocked-on Phase 2.6 physical migration.
 - [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave
       gating protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
       `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
