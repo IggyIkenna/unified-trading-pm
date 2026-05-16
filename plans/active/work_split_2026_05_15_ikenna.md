@@ -632,6 +632,7 @@ top-of-stack lands. Slot 1 main continues orchestration + drives the DAI VM rela
 redesign accepted today.
 
 
+
 **Source**: operator direction 2026-05-16 — race ahead; allocate ALL remaining May-23 cutover work
 across the 8 Ikenna slots; no operator action needed (all credentials vaulted). Inventory dashboard
 2026-05-16: 78 plans, 55% done, **~290 cal AI-days remaining on May-23-deadline plans**.
@@ -682,6 +683,7 @@ the workspace-qg.yml redesign accepted today.
 
 - **`code_freeze_migrate_backfill_sequencing_2026_05_10` Ikenna cross-cutting subset** (112.9 cal total, 37/122) — pull
   TradFi + cross-asset items; bulk stays Harsh-side cefi_master. (design 0.6×, ~10 = 6.0 cal)
+
 
 
 - **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument
@@ -807,6 +809,7 @@ the workspace-qg.yml redesign accepted today.
 | 7         | ~28                   | ~12.0      | ~40       |
 | 8         | ~18                   | ~12.8      | ~31       |
 | **Total** | ~145                  | **~68**    | **~213**  |
+
 
 
 | Slot | Existing 15-May stack | + SWEEP-16 | New total |

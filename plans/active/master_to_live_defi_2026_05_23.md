@@ -116,6 +116,12 @@ _Last regenerated: 2026-05-16 12:13 UTC via `scripts/plans/regenerate_active_pla
 | [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md) | cefi_master_2026_05_07 | infra | 37/122 | 30% | 112.9 | 2026-05-23 |
 | [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md) | master | design | 56/68 | 82% | 36.3 | 2026-05-23 |
 
+
+_Last regenerated: 2026-05-16 12:13 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+
+| Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
+|---|---|---|---|---|---|---|
+| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md) | cefi_master_2026_05_07 | infra | 37/122 | 30% | 112.9 | 2026-05-23 |
 | [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md) | master | design | 55/68 | 81% | 39.3 | 2026-05-23 |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md) | cross_cutting_may_23_2026 | infra | 8/72 | 11% | 28.4 | 2026-06-04 |
 | [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md) | master | design | 52/87 | 60% | 25.9 | 2026-05-23 |
@@ -149,6 +155,7 @@ _Last regenerated: 2026-05-16 12:13 UTC via `scripts/plans/regenerate_active_pla
 | [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md) | master | design | — | — | 2.4 | 2026-06-04 |
 | [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 10/15 | 67% | 2.0 | — |
 
+
 | [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 9/15 | 60% | 2.4 | — |
 | [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md) | master | design | — | — | 2.4 | 2026-06-04 |
 | [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) | cross_cutting_may_23_2026 | design | 12/20 | 60% | 1.9 | 2026-05-23 |
@@ -179,6 +186,7 @@ _Last regenerated: 2026-05-16 12:13 UTC via `scripts/plans/regenerate_active_pla
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) | infrastructure_master_2026_05_07 | refactor | 16/31 | 52% | 0.2 | — |
 | [`solana_lst_native_staking_adapters_2026_05_14`](./solana_lst_native_staking_adapters_2026_05_14.md) | master | brand-new | 21/22 | 95% | 0.2 | 2026-05-23 |
 | [`archetype_paper_runnable_matrix_2026_05_15`](./archetype_paper_runnable_matrix_2026_05_15.md) | master | design | 5/5 | 100% | 0.0 | — |
+
 
 | [`archetype_paper_runnable_matrix_2026_05_15`](./archetype_paper_runnable_matrix_2026_05_15.md) | **orphan** | design | 5/5 | 100% | 0.0 | — |
 | [`audit_records_pb_1_2_3_pre_cutover_2026_05_13`](./audit_records_pb_1_2_3_pre_cutover_2026_05_13.md) | master | brand-new | 16/16 | 100% | 0.0 | 2026-05-23 |

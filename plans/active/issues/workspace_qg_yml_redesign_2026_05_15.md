@@ -368,3 +368,59 @@ position-balance-monitor-service.
 Per-repo migration: (a) render workspace-qg.yml.tmpl; (b) drop old quality-gates.yml; (c) commit both as one
 logical unit; (d) push to LDR; (e) the auto-FF mirror lands on LDR; (f) workspace-qg workflow fires; (g) any QG
 failure goes to that repo's slot owner per Findings Triage.
+
+---
+
+## PHASE B FULLY ROLLED OUT 2026-05-16 18:23 UTC
+
+All 21 Python repos (1 canary + 20 batch) now on unified `workspace-qg.yml`. Old per-repo
+`quality-gates.yml` dropped in same commit per migration plan.
+
+**Batch 1** (5 `[main]`-only repos — biggest trigger-pattern change):
+- client-reporting-api@3391675
+- batch-live-reconciliation-service@788e526
+- ml-inference-service@f412c50
+- ml-training-service@286b810
+- pnl-attribution-service@5a107b5
+
+**Batch 2** (5 mixed):
+- risk-and-exposure-service@365ffec
+- system-integration-tests@84a20cb
+- trading-agent-service@3666ba9
+- unified-api-contracts@f56736a
+- ibkr-gateway-infra@3d1c3fc
+
+**Batch 3** (5 already-LDR-trigger):
+- deployment-api@ca008da
+- deployment-service@dae418e
+- execution-service@e6e775807
+- features-service@c4bfa24a
+- instruments-service@09c4b0e
+
+**Batch 4** (5 final):
+- market-tick-data-service@686ca07
+- market-data-processing-service@f5802e4
+- strategy-service@f7a2916
+- unified-trading-library@40efef2d
+- position-balance-monitor-service@b221cd5
+
+**Phantom-dep cleanup auto-applied** via workspace-manifest.json rendering — stale
+`unified-cloud-interface` / `unified-config-interface` / `unified-internal-contracts` / duplicate
+`unified-trading-library` entries silently removed across all 21 repos.
+
+**Trigger pattern unification**:
+- All 21 repos now fire on push to [main, staging, live-defi-rollout] + PR to [main, staging]
+- position-balance-monitor-service's stale `develop` branch trigger retired
+- 9 previously `[main]`-only repos now get LDR push-time QG (faster failure detection)
+
+**Continuous verification matrix row** (to be added to master plan by slot 1 main next cycle):
+- Item: CI workflow consistency across 21 Python repos
+- Verification: `gh workflow list --repo IggyIkenna/<repo>` returns `workspace-qg`; no `quality-gates.yml` artifact
+- Cadence: weekly drift-check
+- Owner: slot 1 main / post-cutover cron
+- Last verified: 2026-05-16 (2026-05-16 18:23 UTC)
+
+**Codex SSOT update** queued for `codex/08-workflows/ci-cd-flow.md` (next cycle):
+trigger surface decision + rationale + post-cutover migration plan.
+
+**Issue can move to plans/archive/issues/** at next archival sweep (all 21 repos verified).
