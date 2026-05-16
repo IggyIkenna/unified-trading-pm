@@ -268,9 +268,18 @@ processed_candles being present, so should be queued behind this VM's completion
      `synthetic-benchmark`/`strategy-paper`/`strategy-live` VM_TASKs, not `features-backfill`. **Fix shipped**:
      `deployment-service@9d37deb` — added `features-backfill` to the NODEPS allowlist + uploaded updated
      `setup-data-pipeline-vm.sh` (22:52:08 UTC). attempt 4 deleted.
-  5. 🟢 **slot-1-main attempt 5 LAUNCHED 2026-05-16 23:52 UTC** — `features-onchain-defi-20260516-235216`
-     (asia-northeast1-c, e2-standard-8, 35.194.102.127, RUNNING). Setup script now routes execution-service through
-     NODEPS to bypass the betfairlightweight transitive conflict. Same 5-day onchain backfill 2026-04-15..19 DEFI ALL.
+  5. ❌ `features-onchain-defi-20260516-235216` — `uv pip install` STILL failed (this time on
+     `e2e-testing==0.1.0 depends on execution-service>=0.1.0 ... requirements are unsatisfiable`). Root cause: the
+     VM_SERVICE=features_service was not registered in `SERVICE_TARBALLS`, so the script fell through to "install all
+     available tarballs" which pulled e2e-testing + execution-service transitively. The previous attempt 4 fix
+     (NODEPS allowlist) was the wrong direction — would have routed features itself to --no-deps, breaking its
+     runtime deps.
+  6. 🟢 **slot-1-main attempt 6 LAUNCHED 2026-05-16 23:58 UTC** — `features-onchain-defi-20260516-235840`
+     (asia-northeast1-c, e2-standard-8, 35.200.23.244, RUNNING). Setup-script fix: `deployment-service@a6f746f`
+     registered `features_service` in both `SERVICE_TARBALLS` (→ `features-service-code` only) AND
+     `MTDS_DEPENDENT_SERVICES` (auto-adds mtds-code). Install set now narrowed from ~24 tarballs to ~5
+     (uac + utl + deployment + features + mtds). e2e-testing + execution-service no longer in the install path.
+     Same 5-day onchain backfill 2026-04-15..19 DEFI ALL.
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the

@@ -2483,6 +2483,14 @@ deleted attempt 3 idle VM, shipped `ml-training-service@876f0e5` (UTL pin → `>
 paper-trade gate (not the 222259 VM). Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins;
 consider a workspace `pyproject.toml` pin-audit script as a pre-launch checkpoint.
 
+[2026-05-17 00:00 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 6 LAUNCHED**
+(`features-onchain-defi-20260516-235840`). Attempt 5 also failed `uv pip install` (e2e-testing→execution-service→
+betfairlightweight chain). Reverted my 9d37deb hack (would have routed features itself to nodeps) and shipped
+proper fix at `deployment-service@a6f746f`: registered `features_service` in `SERVICE_TARBALLS` so the script
+installs only `uac+utl+deployment+features+mtds` (5 tarballs) instead of falling through to "install all" (24+
+tarballs). e2e-testing + execution-service no longer in the install path. harsh-slot-9 — track
+**`features-onchain-defi-20260516-235840`** (not 235216).
+
 [2026-05-16 23:55 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 5 LAUNCHED**
 (`features-onchain-defi-20260516-235216`). Attempt 4 died on the pre-existing betfairlightweight/requests/execution-service
 conflict (filed earlier as `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`). Fix shipped
