@@ -1013,9 +1013,11 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       refreshed per Phase 2J audit)". 267 lines documenting the 13 Phase 2 instruments-service adapters shipped at
       instruments-service@`a490033`+`be12b56`+`57a4f1f`+`38192e7`+`b563afb`.
 - [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J).
-      **HARSH-SIDE** — depends on Phase 3 MTDS bundled data_types + Phase 6 backfills landing. Slot 2 Day 2 Phase 2
-      shard-atom matrix in codex (`defi-venue-protocol-catalogue.md`) provides the bundled-vs-per-instrument reference
-      for the future Phase 3K update.
+      🟡 **PARTIAL 2026-05-16 by slot 2**: Phase 3K portion ✅ SHIPPED at PM@`aab47b12` (Layer 2 MTDS DEFI row +
+      Layer 2.5 MDPS DEFI row + new "Phase 1A DeFi bundled data_types" sub-section covering 7-family shard-atom
+      matrix). Phase 6J portion remains 🟡 BLOCKED-UPSTREAM on Phase 6 backfills landing (capture coverage % per
+      asset_group); flips to ✅ once 6J ships per-protocol coverage numbers. **HARSH-SIDE** for the 6J finalization
+      cadence (slot 6 v8 Phase 7.G operator sign-off is the immediate upstream).
 - [x] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
       **VERIFIED-DONE 2026-05-16 by slot 2** — doc lines 56 + 118 confirm `connector.connect(config={...})` shape
       documented for all 13 Phase 4 connectors shipped at execution-service@`b9078ee9`. GAP-11 Live DeFi Wallet Key
