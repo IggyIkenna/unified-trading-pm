@@ -117,8 +117,16 @@ UTL-touching agent to inspect "is this failure pre-existing or mine?". Composite
 
 Operator triage / break into themed sub-issues:
 
-1. **Cloud SDK import** (`instrument_lifecycle_loader.py`): single-file fix; route through `unified_cloud_interface`.
-   ~30-60 min — assign to next UTL slot.
+1. ✅ **Cloud SDK import** (`instrument_lifecycle_loader.py` + `client_lifecycle/onboarding.py`):
+   DONE 2026-05-16 (slot 7). `instrument_lifecycle_loader.py` already routes through `cloud_interface`
+   (verified — `from unified_trading_library.cloud_interface import StorageClient, get_storage_client` at
+   line 38). `client_lifecycle/onboarding.py::GCSStateStore` refactored at
+   `unified-trading-library@dfbe83c2` to use `get_storage_client()` + `StorageClient.blob_exists()` /
+   `download_bytes()` / `upload_bytes()` (replaced `storage.Client()` / `bucket.blob()` /
+   `blob.download_as_text()` / `from google.cloud.exceptions import NotFound`). basedpyright clean.
+   Remaining `from google.cloud import` matches in `cloud_interface/providers/*.py` are the abstraction layer
+   itself (legitimate); inside-function matches in `firestore_lifecycle.py` / `candidate_manifest_store.py` /
+   `instruments_catalog_reader.py` / `presigned_urls.py` carry `qg-inside-import` noqa markers.
 2. **Backward-compat shims** (3 instances): targeted deletions; check callers first. ~1 hour.
 3. **Function/method size** (22 violations): per-module refactors. ~1-2 AI-days total. Concentrated areas: `treasury/`
    (5), `post_trade/` (4), `streaming/live_aggregator.py` (3), `feature_service_base/live_aggregator.py` (3),
