@@ -2,11 +2,19 @@
 title: Service registry drift audit — VM prefix vs cloud-providers.yaml
 created: 2026-05-15
 author: slot-2 agent (harsh)
+status: RESOLVED 2026-05-16 — audit clean (0 drift) + P3 self-doc entry shipped at deployment-service@7ee18b4
 source:
   - deployment-service/scripts/vm/vm_zombie_watchdog.py
   - deployment-service/configs/cloud-providers.yaml
 locked_by: none
 ---
+
+## ✅ RESOLUTION 2026-05-16 (slot-8)
+
+Audit was clean (0 drift) — all 94 launcher scripts have prefixes registered in `VM_PREFIX_TO_BUCKET`. Closed the
+optional P3 recommendation by shipping `deployment-service@7ee18b4` — `vm-zombie-watchdog-` added as a self-documenting
+`None` entry with comment cross-linking to the actual label-based self-exemption mechanism at line ~861.
+
 
 # Service Registry Drift Audit — 2026-05-15
 
