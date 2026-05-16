@@ -244,6 +244,7 @@ processed_candles being present, so should be queued behind this VM's completion
   features-onchain reads raw_tick_data directly for these on-chain snapshot data_types. See sibling issue
   `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` for full resolution detail. **My MDPS DeFi VM launch
   was redundant given this fix.**
-- (c) ⏳ features-onchain DeFi backfill — UNBLOCKED by (b-bis); ready to launch via
-  `deployment-service/scripts/vm/launch-features-onchain-backfill-vm.sh`
-- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (c)
+- (c) 🟢 **VM RUNNING — `features-onchain-defi-backfill-20260516-220052`** (launched 2026-05-16 22:00 UTC by slot-3,
+  zone=asia-northeast1-c, machine=e2-standard-8). Mode=full, window=2026-04-15..19 (B-015 5-day smoke). Per-VM shard
+  isolation via `MANIFEST_PER_VM_SHARDS=true`. Post-backfill manifest rebuild pre-printed for operator.
+- (d) ⏳ Harsh slot 9 Phase 2 paper-trade rerun — blocked behind (c) completion.
