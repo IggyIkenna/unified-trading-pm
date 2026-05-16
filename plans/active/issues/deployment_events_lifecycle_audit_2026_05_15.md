@@ -2,10 +2,28 @@
 title: "deployment-events GCS bucket lifecycle policies audit"
 created: 2026-05-15
 author: slot-2 agent
+status: RESOLVED 2026-05-16 (slot-8) — 3 lifecycle policies applied + codified in codex
 source:
   - deployment-service queue item 2 (new queue 2026-05-15)
 locked_by: live-defi-rollout
 ---
+
+## ✅ RESOLUTION 2026-05-16 (slot-8)
+
+All 3 recommended lifecycle policies applied on-cloud + codified in
+[`codex/05-infrastructure/gcs-lifecycle-policies.md`](../../codex/05-infrastructure/gcs-lifecycle-policies.md):
+
+1. `gs://deployment-scripts-central-element-323112/` — `vm-logs/` 14-day purge ✅
+2. `gs://central-element-323112-deployment-events/` — `quality_gates_snapshot/` 30-day retention ✅
+3. `gs://central-element-323112-events/` — `events/` 90-day retention ✅
+
+Verified via `gsutil lifecycle get` immediately post-apply. `vm-logs/` directory count was 4145 at apply time;
+will decay to <500 within 30 days as logs aged > 14 days roll off. Honest-coverage bucket intentionally NOT
+lifecycle'd (reviewed 2027-05).
+
+Per CLAUDE.md "Plans Run To Actual Completion" HARD RULE — ADC admin perms on `central-element-323112` cover
+GCS lifecycle (delete-only, no in-flight modification, lowest-risk infra op).
+
 
 ## What I Found
 
