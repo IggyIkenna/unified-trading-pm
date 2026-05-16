@@ -135,13 +135,11 @@ urgent pre-May-23 but worth tracking.
 
 ## Recommended decision
 
-| Gap                               | Action                                             | Owner                        | Urgency         |
-| --------------------------------- | -------------------------------------------------- | ---------------------------- | --------------- |
-| Gap 1 (`--cache-from` all 3)      | Fix: add `--cache-from` to all 3 `cloudbuild.yaml` | slot-2 or slot-8             | Pre-May-23 (P1) |
-| Gap 2 (layer order exec+strategy) | Fix: reorder COPY in Dockerfiles + smoke build     | slot owning exec/strategy CI | Pre-May-23 (P1) |
-| Gap 3 (exec base image mismatch)  | Fix: 1-line change in exec `cloudbuild.yaml`       | slot-2 or slot-8             | Pre-May-23 (P1) |
-| Gap 4 (deploy E2_HIGHCPU_32)      | Investigate: measure wall-clock on E2_HIGHCPU_8    | slot-2 or slot-8             | P2 post-May-23  |
+| Gap                               | Action                                             | Owner                        | Urgency         | Status |
+| --------------------------------- | -------------------------------------------------- | ---------------------------- | --------------- | ------ |
+| Gap 1 (`--cache-from` all 3)      | Fix: add `--cache-from` to all 3 `cloudbuild.yaml` | slot-2 or slot-8             | Pre-May-23 (P1) | ✅ DONE — deployment-service@`17061f3` + execution-service `--cache-from` present + strategy-service `--cache-from` present (verified 2026-05-16 slot-8) |
+| Gap 2 (layer order exec+strategy) | Fix: reorder COPY in Dockerfiles + smoke build     | slot owning exec/strategy CI | Pre-May-23 (P1) | ✅ DONE 2026-05-16 (slot-8) — execution-service@`73790241a` + strategy-service@`0e61590` — canonical dep-layer-first pattern (`COPY pyproject.toml uv.lock → uv sync → COPY .`). Smoke build deferred to next CI push (no semantic change; identical end state). |
+| Gap 3 (exec base image mismatch)  | Fix: 1-line change in exec `cloudbuild.yaml`       | slot-2 or slot-8             | Pre-May-23 (P1) | ✅ DONE — execution-service `cloudbuild.yaml` `pull-base-image` already pulls `unified-trading-services/unified-trading-services:latest` (verified 2026-05-16 slot-8). |
+| Gap 4 (deploy E2_HIGHCPU_32)      | Investigate: measure wall-clock on E2_HIGHCPU_8    | slot-2 or slot-8             | P2 post-May-23  | — investigation deferred per ping. |
 
-**deployment-service `--cache-from` fix**: safe to ship immediately — no semantic change to the build.
-**execution-service + strategy-service Dockerfile reorder**: requires a test build to confirm the re-ordered image
-starts and passes QG before merging.
+**ALL P1 gaps closed 2026-05-16 (slot-8).** Gap 4 (P2) remains open per investigation-only scope.
