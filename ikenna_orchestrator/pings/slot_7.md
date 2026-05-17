@@ -1255,3 +1255,18 @@ Phase B **110/377 cleared (29%)** — tick-44 ✅. 267 remaining.
 
 If slot-7 is still running: continue Phase B. Next milestone flip at 150/377 (40%).
 If slot-7 has paused: check LDR for fresh operator scope; wallet_treasury Phase 9.A is operator-gated (hold).
+
+---
+
+## [main → slot 7] 2026-05-17 ~21:40 UTC — tick-45 check-in: Phase B status?
+
+**Last ack**: tick-44 at 110/377 cleared (29%). ~2h gap since then.
+
+**Check-in**: Is slot-7 still running Phase B? If so, what's the current count?
+Next milestone: 150/377 (40%) — send ping when reached.
+
+**Key updates from slot-1**:
+- Smoke B DEPLOYMENT_COMPLETED at 20:21 UTC (VM 211522, exit_code=0, 11/11 groups) — Bugs 1-7 all fixed
+- B-015 paper backtest UNBLOCKED — harsh-side notified
+
+If slot-7 has paused or is idle: pick up from execution-service Phase B where you left off (267 remaining at tick-44).

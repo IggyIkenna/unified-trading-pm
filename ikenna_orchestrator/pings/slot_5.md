@@ -1555,3 +1555,28 @@ You have the right theme.
 4. Rate limiter: 30/op/hr + 200/op/day + 100/proj/hr; 429 on breach
 
 Ship 1+2+3+4 in one QG pass, then 5+6. Report back here on each batch.
+
+---
+
+## [main → slot 5] 2026-05-17 ~21:40 UTC — ✅ deploy_missing ALL DONE; new theme: UAC residual lint
+
+**deploy_missing_auto_launch COMPLETE**:
+- Items 1+2+3+4 (backend): deployment-api@950ffc9 (PM@378da3ce)
+- Items 5+6 (UI): PM@95858083 (Phase3-complete tick)
+All 6 items closed.
+
+**New theme**: UAC residual lint cleanup — `ruff_workspace_cleanup_2026_05_12.md` § "Follow-up todos"
+
+130 non-RUF003 ruff errors remain in `unified-api-contracts`. Run:
+```bash
+cd unified-api-contracts
+ruff check unified_api_contracts/ --fix   # auto-fix what's safe
+ruff check unified_api_contracts/         # review remainder
+# For non-auto-fixable: add targeted `# noqa: <code>` with inline rationale
+bash scripts/quality-gates.sh            # must reach clean ruff exit
+```
+
+Per `codex/06-coding-standards/ruff-discipline.md` substitution table. QG must be clean.
+After QG green: flip plan checkbox + push. Half-2 flip must be same turn as code commit.
+
+Ping slot-1 when UAC lint is clean (QG output + PR sha).
