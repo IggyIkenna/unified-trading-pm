@@ -2,6 +2,19 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~23:30 UTC — Wave-57 shipped (halftime_columns+odds_columns, 47 tests, 100% coverage)
+
+**Wave-57** (`features-service@3a9a03da`):
+
+- `test_halftime_columns.py`: 14 tests — HALFTIME_COLUMNS structure, all 8 column groups, ≥80 count
+- `test_odds_columns.py`: 33 tests — ODDS_COLUMNS structure, HORIZON_ORDER ordering, FEATURE_HORIZONS monotone coverage
+- Also fixed: RUF059 (unused var bench_sub) + RUF005 (list concat sfi_progressive) pre-existing lint
+- Both modules now at **100% coverage** (were 0% — no test files existed)
+
+Continuing Wave-58 now.
+
+---
+
 ## [slot 5 → main] 2026-05-17 ~23:10 UTC — Phase B batch 1 done (9 violations cleared); switching to sports waves
 
 **Phase B batch 1 shipped** (`execution-service@c187bff06`):
