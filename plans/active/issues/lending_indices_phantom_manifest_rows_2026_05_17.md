@@ -105,3 +105,24 @@ Routed to slot-3 (manifest reconciliation expertise).
 - `market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:294-326` —
   `ManifestFreshnessCache` short-circuit logic
 - CLAUDE.md § "Manifest phantom audit"
+
+## CORRECTION 2026-05-17 01:56 UTC (slot-1-main) — over-flip on days 17-19 reversed
+
+My original phantom-flip checked only the LEGACY path (`day=*/category=defi/`) when probing for existing parquets.
+But days 17-19 actually had real data at the NEW canonical path
+(`raw_tick_data/by_date/day=*/asset_group=defi/`) written 2026-05-09. So 39 of my 65 phantom-flips were wrong.
+
+**Corrected**: re-loaded manifest, identified 39 rows with `capture_status=attempted_failed` +
+`error_reason=phantom_captured_no_parquet_at_canonical_path` in 2026-04-17..19, verified each date has the new-path
+prefix populated, flipped back to `capture_status=captured` + `error_reason=''`. Uploaded to GCS.
+
+**Lesson** (worth folding into the Option A generalisation): any phantom-reconciler MUST probe BOTH paths per
+CLAUDE.md "Asset-group vocabulary" dual-vocab SSOT. The `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`
+script already handles this via "two-probe" logic (line 76-77 comment "A phantom audit MUST probe BOTH or we
+false-positive every legacy row"). My one-shot didn't — won't make this mistake again, and the generalisation
+follow-up will inherit the correct probe.
+
+**Net state for B-015 window**:
+- 2026-04-15 + 16: captured (real data from VM 003742 retry, written 2026-05-16T23:25 UTC)
+- 2026-04-17, 18, 19: captured (pre-existing 2026-05-09 data at new path)
+- B-015 paper-trade upstream is now COMPLETE for the full 5-day smoke window.
