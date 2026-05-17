@@ -540,11 +540,19 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Ratchet-down 2026-05-17 (slot-2 batch 32 — instruments loader)**: definitions_loader.py shipped at
    execution-service@6580f64fe (\_load_by_venue 88L→30L via \_resolve_venue_folders (single-venue override or
    list-all-venue= subfolders under base_prefix with iterator.prefixes warm-up pattern) + \_load_venue_file
-   (asyncio.run_in_executor wrapped blob.download → DataFrame; empty if blob absent)). Allowlist -1.
-   basedpyright clean.
+   (asyncio.run_in_executor wrapped blob.download → DataFrame; empty if blob absent)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-32**: 36 files cleared (slot-2 contribution: -36 files; spans 14
-   submodules incl. instruments loader).
+   **Slot-2 cumulative across batches 3-32**: 36 files cleared (slot-2 contribution: -36 files; spans 14 submodules
+   incl. instruments loader).
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 33 — engine/modes/batch)**: batch/matching_engine.py shipped at
+   execution-service@7bca66488 (submit_order 91L→28L via \_resolve_price (BUY→best_ask, SELL→best_bid, else last_price;
+   passthrough order.price when set) + \_build_matcher_kwargs (L0_TOB book + MD → best_bid/offer + bid/offer_size; empty
+   otherwise) + \_execute_match_and_convert (MEL match + fill conversion + debug log)). Same MARKET→MAX_SLIPPAGE for AMM
+   and CanonicalFill build path preserved. Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-33**: 37 files cleared (slot-2 contribution: -37 files; spans 15 submodules
+   incl. engine/modes/batch).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
