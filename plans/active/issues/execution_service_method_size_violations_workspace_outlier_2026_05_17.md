@@ -170,6 +170,19 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    failover order + status-code policy, instrument-precision fallbacks, sidecar message dispatch).
 
    **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from baseline).
+   **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
+   execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
+   _check_flash_loan_liquidity (REJECTED-or-proceed gate) + _record_flash_borrow (track + return) +
+   _settle_flash_repay (clear + fee calc)),
+   @1dde42821 (engine/handlers/sell_reward_handler.py execute 81L→47L, +1 helper _match_sell — venue-conditional
+   CEX L2_MBP MARKET vs DEX ALPHA_ZERO LIMIT switch).
+   Allowlist 168 → 166 files. basedpyright clean. Same per-method behavior preservation.
+
+   **Slot-2 cumulative across batches 3+4+5+6**: 10 files cleared (187→166, -21 from baseline).
+   All engine/handlers/{borrow,lend,stake,swap,sports,trade,transfer,flash_loan,sell_reward}_handler.py
+   are now refactored + removed from allowlist. The remaining handlers in
+   engine/handlers/ (sports_handler already done; claim_reward + auth + tradfi-twap already done by slot-4)
+   are below the 50L threshold. Slot-2 sweep of engine/handlers/ is COMPLETE.
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same
    helper-extraction patterns this session applied to UTL/MTDS/strategy-service:
