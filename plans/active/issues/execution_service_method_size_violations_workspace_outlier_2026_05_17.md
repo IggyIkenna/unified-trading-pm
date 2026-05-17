@@ -314,6 +314,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11**: 15 files cleared (slot-2 contribution: -15 files; 10
    handlers + 5 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 12 — defi_execution/protocols sweep continues)**: aave.py shipped at
+   execution-service@b0cf30814 (\_init_live_executor 69L→13L via \_try_init_via_base_credentials (Secret Manager
+   path) + \_try_init_via_config_overrides (direct config fallback) early-return split; warning emission centralised
+   in caller). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12**: 16 files cleared (slot-2 contribution: -16 files;
+   10 handlers + 6 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
