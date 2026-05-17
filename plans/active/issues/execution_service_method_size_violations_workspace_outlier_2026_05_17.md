@@ -621,9 +621,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    _run_steps2to5_validators + _run_steps6to8_data_checks + _run_steps9to10_compat_checks). Allowlist -1.
    basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-46**: 50 files cleared (slot-2 contribution: -50 files; spans 18
+   **Ratchet-down 2026-05-17 (slot-2 batch 47 — instruments/config_creator)**: shipped at
+   execution-service@051b21a16 (create_from_config 205L→15L via _create_from_config_tradfi +
+   _create_from_config_defi_instruction + _create_from_config_cefi_defi_clob + _build_crypto_perpetual).
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-47**: 51 files cleared (slot-2 contribution: -51 files; spans 18
    submodules incl. engine/validation ×2, engine/backtest ×1, engine/backtest/actors ×3, engine/live ×1,
-   algorithms/impl ×2, defi_execution/protocols ×8, instruments ×2 total).
+   algorithms/impl ×2, defi_execution/protocols ×8, instruments ×3 total).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
