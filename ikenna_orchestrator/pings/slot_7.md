@@ -1148,3 +1148,13 @@ because the issue is statused P2 post-cutover — proceed regardless.
   trim; IntentDecomposer._decompose_swap 64L→9L via module-level _build_swap_steps() extraction.
 
 296 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 35] slot-7 — execution-service Phase B (+3, 84/377 cleared):
+
+- `execution-service@665fa506b` — KrakenCeFiAdapter.parse_ticker_response 65L→45L (21-line
+  docstring → 1 line); VWAPExecutionMixin._schedule_children 64L→48L via
+  _schedule_final_primary_slice() + 6-line docstring trim; DriftConnector.get_positions 64L→13L
+  via module-level _collect_drift_perp_positions() + _collect_drift_spot_positions() + 5-line
+  docstring trim.
+
+293 remaining. basedpyright clean.
