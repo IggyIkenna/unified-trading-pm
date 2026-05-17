@@ -26,6 +26,14 @@ codex_ssots:
 
 # TradFi MVP — OHLCV-only Databento backfill
 
+## Deferred work — migrated to:
+
+L1/L2/L3 tick data (tbbo / mbp_10 / trades) scope is intentionally DEFERRED to post-cutover per
+operator direction 2026-05-15 — successor: `plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`
+(to be created in Phase 7 HUMAN item below; seed table from "Scope (OUT)" section). The
+`_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` constant in MTDS holds the prior tick windows for
+forward-restore by that successor plan.
+
 ## Operator direction (2026-05-15)
 
 > "lets to ohlcv 1m for all the tradfi mvp instruments only please and ping agent orchestrator to

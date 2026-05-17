@@ -5,6 +5,14 @@ overview:
   dual-classification / TradFi ETF list SSOT) + per-asset-group manifest coverage % UI surface +
   measure_honest_coverage.py script + per-CeFi-venue zero-activity-bar verification (writegate Wave 3.M dependency).
   May-23 cutover scope per all-in operator directive.
+
+## Deferred work — migrated to:
+- DeFi sub-items (1B(a) Spark instruments+MTDS+connector; DEX rename CF/DF parity) → successor: plans/active/defi_catalogue_chain_primitives_2026_05_10.md (Phases 2/3/4)
+- Sports SP-1/2/4/6/7/10/12 sub-findings → successor: plans/active/sports_master_2026_05_07.md
+- TradFi ETF SSOT → successor: plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md (MIGRATED TO post-MVP collapse 2026-05-15)
+- Per-asset-group manifest coverage UI + measure_honest_coverage.py → successor: plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
+- ICE US softs upstream-resolution (issue close) → successor: see plans/active/issues/cross_asset_group_catalogue_followups_2026_05_14.md (closed 2026-05-17)
+- All other 100%-closed items: archived complete (no successor needed).
 type: plan
 status: active
 created: 2026-05-10

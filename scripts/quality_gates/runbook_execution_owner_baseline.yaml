@@ -1,13 +1,12 @@
-violation_count: 9
+violation_count: 8
 rule: runbook-execution-owner-ssot
 source: "CLAUDE.md \xA7 'Runbook Execution-Owner SSOT (HARD RULE)'"
 baseline_files:
-- unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md
-- unified-trading-pm/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md
-- unified-trading-pm/codex/05-infrastructure/rotation-runbook.md
-- unified-trading-pm/codex/05-infrastructure/sit-runbook.md
-- unified-trading-pm/codex/05-infrastructure/vm-launcher-runbook.md
-- unified-trading-pm/codex/14-customer-journeys/credentials/rotation-runbook.md
-- unified-trading-pm/plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
-- unified-trading-pm/plans/ops/sit-runbook.md
-- unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md
+- codex/02-data/expected-absence-backfill-runbook.md
+- codex/05-infrastructure/pre-cutover-test-wallets-runbook.md
+- codex/05-infrastructure/rotation-runbook.md
+- codex/05-infrastructure/sit-runbook.md
+- codex/05-infrastructure/vm-launcher-runbook.md
+- codex/14-customer-journeys/credentials/rotation-runbook.md
+- plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
+- plans/ops/sit-runbook.md

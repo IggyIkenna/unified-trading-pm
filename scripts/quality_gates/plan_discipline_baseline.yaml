@@ -1,4 +1,4 @@
-violation_count: 231
+violation_count: 230
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
 baseline_files:
@@ -38,8 +38,6 @@ baseline_files:
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/dex_perp_and_venue_data_expansion_2026_05_12.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/defi_catalogue_chain_primitives_2026_05_10.md
-- rule: A-deferred-no-banner
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md
 - rule: A-deferred-no-banner
