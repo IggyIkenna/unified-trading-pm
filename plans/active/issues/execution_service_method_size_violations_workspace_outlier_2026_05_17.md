@@ -739,6 +739,19 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-62**: 66 files cleared (slot-2 contribution: -66 files; spans 33 submodules incl.
   instruments/tradfi_creator).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 63 — api/manual_instruction_api)**: shipped at execution-service@32846d337.
+  submit_manual_instruction 172L→37L + 8 additional violations cleared (\_handle_instruction_result 60L→10L,
+  \_enforce_wallet_preflight 62L→47L, \_validate_instruction_request 71L→20L, precheck_manual_instruction 74L→22L,
+  get_instruction_status 58L→17L, \_record_fill_directly 87L→22L, enqueue_pending_instruction 71L→24L,
+  approve_pending_instruction 66L→20L) via 11 module-level helpers (\_handle_completed_result +
+  \_reject_preflight_failed + \_raise_validation_http_error + \_precheck_accepted_response +
+  \_build_precheck_instruction + \_get_active_orchestrator_or_raise + \_build_record_only_audit_instruction +
+  \_finalize_record_fill + \_build_enqueue_strategy_instruction + \_build_pending_enqueue_response +
+  \_execute_approved_pending). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-63**: 67 files cleared (slot-2 contribution: -67 files; spans 34 submodules incl.
+  api/manual_instruction_api).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
@@ -747,9 +760,9 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    - test suite green per commit
    - Half-1+Half-2 plan-flip discipline per shippable unit
 
-   **Phase B in-progress (2026-05-17 autonomous loop — slot-7)**: 102/377 methods cleared (27%) — milestone ≥100
-   passed 2026-05-17. Latest: execution-service@47734d7d7 (tick-41 — BenchmarkMatcher.match 69L→48L /
-   KrakenCeFiAdapter.parse_order_response 69L→43L / LiveExecutionHandler._execute_instructions 69L→47L). Full
+   **Phase B in-progress (2026-05-17 autonomous loop — slot-7)**: 102/377 methods cleared (27%) — milestone ≥100 passed
+   2026-05-17. Latest: execution-service@47734d7d7 (tick-41 — BenchmarkMatcher.match 69L→48L /
+   KrakenCeFiAdapter.parse_order_response 69L→43L / LiveExecutionHandler.\_execute_instructions 69L→47L). Full
    turn-by-turn log: `ikenna_orchestrator/pings/slot_7.md` ticks 30–41.
 
 3. **Phase C — remaining 70%** (~5-7 cal AI-days, **POST-CUTOVER**): per-submodule sweep until
