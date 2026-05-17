@@ -604,3 +604,42 @@ silent-row-drop class bug across ALL feature_groups, not just lending_rates.
 B re-launch awaited; Phase B perp-funding derive-chain not needed (Option G already cleaned it); MDPS streaming
 items 1/3/4/5/6 substantive multi-repo design deferred to next cycle.
 
+
+---
+
+## [slot 2 → main] 2026-05-17 Late session — execution-service method-size ratchet sweep COMPLETE for slot-2
+
+**Timestamp**: 2026-05-17 (late session). **Status**: 🟢 SHIPPED & FLIPPED — 36 files cleared, 32 commits across execution-service + matching docs(plans) flips on PM.
+
+**Slot-2 contribution to slot-7's execution-service method-size sprint (post-cutover P2 issue
+`execution_service_method_size_violations_workspace_outlier_2026_05_17.md`)**: **36 files cleared from
+`FUNCTION_SIZE_EXTRA_EXCLUDES`** across 14 submodules. Allowlist moved from 187 (Phase A baseline) → 99 currently
+(slot-7 + slot-4 + slot-5 + slot-2 cumulative). My specific contributions span:
+
+- engine/handlers/{borrow,lend,stake,swap,sports,trade,transfer,flash_loan,sell_reward}_handler.py (10)
+- defi_execution/protocols/{marinade,kamino,orca,raydium,jupiter,aave,aster,base}.py (8)
+- services/{pnl_calculator,lst_collateral_resolver,bridge_cost_model,funding_recon_engine,execution_cost_estimator}.py (5)
+- engine/preprocessors/wrap_preprocessor.py (1)
+- service_config.py (1)
+- algo_library/{leg_controller_runner,multicall_batcher}.py (2)
+- trade_execution/adapters/{binance_native,bitfinex_native}.py (2)
+- backtest_v2/runner.py (1)
+- engine/validation/dependency_validator.py (1)
+- adapters/storage.py (1)
+- engine/modes/live/matching_engine.py (1)
+- algorithms/registry.py (1)
+- engine/live/risk.py (1)
+- instruments/definitions_loader.py (1)
+
+**Refactor pattern**: helper-extraction with per-method behavior preservation; basedpyright clean every commit;
+allowlist removed in same commit as code change; Half-2 PM plan flip in immediate next agent turn. All 32 ship
+commits followed by `docs(plans): flip slot-2 batch N — ...` on PM within seconds.
+
+**Cross-slot interaction**: slot 7 was sweeping the same allowlist concurrently — 4 files (`pnl_calculator.py`,
+`leg_controller_runner.py`, `multicall_batcher.py`, `algorithms/registry.py`) were touched by both sides; slot 7's
+version landed in the final tree for some via rebase order. Both versions achieve the same goal (file cleared from
+allowlist); my Half-2 entries note the SHA at which my push landed even when slot 7's variant ultimately persisted.
+
+**Truly STOPPING**: 100+ remaining allowlist files are the heavier `engine/backtest` + `algorithms/impl` cluster
+(majority 100L+ functions) — material refactors that warrant dedicated cycles, not a tail-end one-shot sweep.
+Post-cutover Phase B per the issue doc. No new operator/cross-slot signals in the last hour requiring action.
