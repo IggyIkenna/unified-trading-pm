@@ -2880,3 +2880,24 @@ Expected fix cycle: <1 day (if Bug 1 only → cast on read is a 5-line change; B
 
 **Harsh-side**: no action needed now. Wait for Smoke B re-run green confirmation before launching paper backtest.
 Ikenna-main will ping when Smoke B passes.
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 19:20 UTC — Smoke B Bug 1+2 FIXED; re-run `191412` RUNNING
+
+**Status update**: Both bugs fixed and Smoke B re-run launched.
+
+**Bug 1 (perp_funding schema drift)** — slot-6 shipped `features-service@30e449d7`:
+- `load_derivative_ticker`: per-shard cast Int64→Datetime before `vstack`. Also covered by post-concat cast at @64682456.
+
+**Bug 2 (utilization stall)** — slot-6 shipped `features-service@30e449d7`:
+- Root cause: `emit_aave_utilization_events` did synchronous PubSub `log_event` per-row on 134k rows (no subprocess, no RPC hang — pure I/O saturation). Fix: cap at `_MAX_UTILIZATION_EVENTS=500` + `.head(500)`. GCS async write timeout also added at @64682456.
+
+**New Smoke B VM**: `features-onchain-defi-20260517-191412` — RUNNING, tarball rebuilt with both fixes.
+
+**Expected timeline**: ~2h runtime. Ikenna-main will ping harsh-side when `DEPLOYMENT_COMPLETED`.
+
+**Harsh-side**: hold paper backtest launch. Monitor VM via:
+```bash
+gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-191412/run.log" | tail -20
+```
