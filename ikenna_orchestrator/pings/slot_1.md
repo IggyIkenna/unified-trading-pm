@@ -2420,3 +2420,17 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 
 **Status**: 🟡 Smoke B IN-PROGRESS — awaiting rate_impact validation (~19:38 UTC)
 
+
+## [slot 1 main] 2026-05-17 ~19:29 UTC — tick-57: VM 200717 04-12 onchain_perps loading
+
+**VM 200717 progress** (19:27:54 UTC last entry):
+- ✅ lending_rates, lst_yields complete
+- 🔄 onchain_perps: 04-12 loaded 11,897 rows at 19:27:54 (04-08/09/10/11 STALE_DATA suppressed)
+  - 04-12 suppression expected: ~19:32:12 UTC
+  - utilization: ~19:32-19:34 UTC (fast with Bug 2 fix)
+  - risk_params/rewards/.../liquidation_events: ~19:34-19:39 UTC
+  - **rate_impact: ~19:39 UTC ← BUG 4 VALIDATION MOMENT**
+  - DEPLOYMENT_COMPLETED: ~19:41 UTC
+
+**No duplicate VMs**: only VM 200717 running.
+
