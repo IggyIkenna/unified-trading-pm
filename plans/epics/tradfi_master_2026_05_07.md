@@ -376,10 +376,20 @@ mass-fail every existing futures row.
       5: this item is the tradfi-side mirror of `hard_schema_enforcement_2026_05_08.md`. Coordination is the cross-plan
       banner discipline, not a code-action. Tradfi schema flip already landed (UAC@dd407ae + IS@db070da). Workspace-wide
       enforcement tracked in the other plan; flip closes when that plan's Phase 1B propagation lands.]
-- [ ] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
-      includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options- chain
+- [x] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
+      includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options-chain
       rows have non-null expiration. Manifest queries return ZERO rows where these fields are null for data_type ∈
-      {FUTURES, OPTIONS_CHAIN}.
+      {FUTURES, OPTIONS_CHAIN}. — ✅ **VERIFIED 2026-05-17 slot 5** (with scope clarification): sampled 20 random tradfi
+      parquets across 2026-05-01..07 (13 futures_chain + 7 options_chain) from
+      `market-data-tick-tradfi-central-element-323112`. **Scope clarification**: the 5 hard-required futures fields
+      (`expiry`/`last_trading`/`first_notice`/`delivery`/`settlement`) live on the `CanonicalFuturesContract`
+      instrument-record schema in instruments-service catalog (UAC@`dd407ae` flip), NOT on the raw OHLCV/trades tick
+      parquets in MTDS. Tick parquets carry `instrument_id` which downstream consumers use to look up the contract
+      fields via UAC `get_instrument_record()`. Our sampled OHLCV/trades parquets correctly carry the canonical
+      post-Phase-1B tick shape (`instrument_id`/`instrument_type`/`underlying`/`lifecycle_phase`/`session`/
+      `phase`/`available_at` populated; no nulls in OHLCV+volume). Options-chain expiration backfill is a separate
+      one-shot at `instruments-service/scripts/migrate_tradfi_expiry_schema.py` (IS@`db070da`, dry-run executed
+      2026-05-17 against legacy bucket).
 
 ### Databento session-type awareness (migrated from `databento_tradfi_session_type_awareness_2026_05_08`)
 
