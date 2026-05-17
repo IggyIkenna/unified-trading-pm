@@ -2476,22 +2476,23 @@ re-launched as `features-onchain-defi-20260516-222259` at 22:23 UTC. Monitoring 
 track the NEW VM name for Phase 2 paper-trade gate.
 
 [2026-05-16 23:35 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 4 LAUNCHED**
-(`features-onchain-defi-20260516-233044`). Attempt 3 also failed `uv pip install` (this time on
-`ml-training-service` pinning `unified-trading-library>=0.4.0,<1.0.0` vs UTL=0.3.167 actual). Slot-1 main absorbed:
-deleted attempt 3 idle VM, shipped `ml-training-service@876f0e5` (UTL pin → `>=0.3.0,<1.0.0`), rebuilt tarball
-22:29:57 UTC, re-launched at 23:30 UTC. harsh-slot-9 — track **`features-onchain-defi-20260516-233044`** for Phase 2
-paper-trade gate (not the 222259 VM). Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins;
-consider a workspace `pyproject.toml` pin-audit script as a pre-launch checkpoint.
+(`features-onchain-defi-20260516-233044`). Attempt 3 also failed `uv pip install` (this time on `ml-training-service`
+pinning `unified-trading-library>=0.4.0,<1.0.0` vs UTL=0.3.167 actual). Slot-1 main absorbed: deleted attempt 3 idle VM,
+shipped `ml-training-service@876f0e5` (UTL pin → `>=0.3.0,<1.0.0`), rebuilt tarball 22:29:57 UTC, re-launched at 23:30
+UTC. harsh-slot-9 — track **`features-onchain-defi-20260516-233044`** for Phase 2 paper-trade gate (not the 222259 VM).
+Pattern note: 2 attempts in a row killed by transitive dep mis-floored pins; consider a workspace `pyproject.toml`
+pin-audit script as a pre-launch checkpoint.
 
 [2026-05-17 00:10 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — ✅ **B-015 chain (c) infra UNBLOCKED, feature
 pipeline has follow-up issues**. VM 6 (`features-onchain-defi-20260516-235840`) ran end-to-end cleanly: STARTED →
 DATA_INGESTION → 2 feature_groups → STOPPED in ~11 sec. `uv pip install` finally succeeded after the install-set
 narrowing fix at `deployment-service@a6f746f` (registered `features_service` in SERVICE_TARBALLS). **But the workload
 only attempted 1 day + 2 feature_groups + wrote 0 rows**:
+
 - `macro_sentiment` 2026-04-15: REJECTED (LookaheadBiasError — defillama_tvl returns current TVL with no historical
   timestamping; backfill of this feature is impossible without a different vendor).
-- `lending_rates` 2026-04-15: COMPLETED but 0 rows (likely upstream raw_tick_data gap — ties to the 46-day backfill
-  ask in `defi_upstream_46day_full_backfill_2026_05_16.md`).
+- `lending_rates` 2026-04-15: COMPLETED but 0 rows (likely upstream raw_tick_data gap — ties to the 46-day backfill ask
+  in `defi_upstream_46day_full_backfill_2026_05_16.md`).
 - Workflow STOPPED after 1 day despite `--end-date 2026-04-19` — possibly 1-day-per-VM by design or early-exit.
 
 **Net for harsh-slot-9**: paper-trade Phase 2 will still pre-flight FAIL because no rows landed in
@@ -2504,16 +2505,29 @@ ml-training@876f0e5 + deployment-service@a6f746f), but the feature pipeline laye
 
 [2026-05-17 00:00 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 6 LAUNCHED**
 (`features-onchain-defi-20260516-235840`). Attempt 5 also failed `uv pip install` (e2e-testing→execution-service→
-betfairlightweight chain). Reverted my 9d37deb hack (would have routed features itself to nodeps) and shipped
-proper fix at `deployment-service@a6f746f`: registered `features_service` in `SERVICE_TARBALLS` so the script
-installs only `uac+utl+deployment+features+mtds` (5 tarballs) instead of falling through to "install all" (24+
-tarballs). e2e-testing + execution-service no longer in the install path. harsh-slot-9 — track
+betfairlightweight chain). Reverted my 9d37deb hack (would have routed features itself to nodeps) and shipped proper fix
+at `deployment-service@a6f746f`: registered `features_service` in `SERVICE_TARBALLS` so the script installs only
+`uac+utl+deployment+features+mtds` (5 tarballs) instead of falling through to "install all" (24+ tarballs).
+e2e-testing + execution-service no longer in the install path. harsh-slot-9 — track
 **`features-onchain-defi-20260516-235840`** (not 235216).
 
 [2026-05-16 23:55 UTC] ikenna-main → harsh-slot-9 / ikenna-slot-3 — 🟢 **B-015 chain (c) — attempt 5 LAUNCHED**
-(`features-onchain-defi-20260516-235216`). Attempt 4 died on the pre-existing betfairlightweight/requests/execution-service
-conflict (filed earlier as `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`). Fix shipped
-`deployment-service@9d37deb`: added `features-backfill` to the NODEPS-routing VM_TASK allowlist (matches existing
-strategy-paper/strategy-live pattern). Setup script re-uploaded at 22:52:08 UTC. harsh-slot-9 — track
-**`features-onchain-defi-20260516-235216`** for Phase 2 paper-trade gate. **Attempt count now 5; if attempt 5 dies on
-another dep issue, escalating to a workspace dep-resolution audit before further VM launches.**
+(`features-onchain-defi-20260516-235216`). Attempt 4 died on the pre-existing
+betfairlightweight/requests/execution-service conflict (filed earlier as
+`execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`). Fix shipped `deployment-service@9d37deb`:
+added `features-backfill` to the NODEPS-routing VM_TASK allowlist (matches existing strategy-paper/strategy-live
+pattern). Setup script re-uploaded at 22:52:08 UTC. harsh-slot-9 — track **`features-onchain-defi-20260516-235216`** for
+Phase 2 paper-trade gate. **Attempt count now 5; if attempt 5 dies on another dep issue, escalating to a workspace
+dep-resolution audit before further VM launches.**
+
+[2026-05-17 01:15 UTC] ikenna-slot-3 → ikenna-main / slot-2 / harsh-slot-9 — 📋 **B-015 chain (c) infra UNBLOCKED — now
+blocked on features-onchain calculator bugs**. VM attempt 5 (`features-onchain-defi-20260517-005747`) successfully
+installed + bootstrapped after 3 fixes shipped tonight: (a) `risk-and-exposure-service@83b10e0` UAC pin relaxed
+`>=0.2.38 → >=0.1.0`; (b) `ml-training-service@876f0e5` UTL pin relaxed `>=0.4.0 → >=0.3.0` (slot-2 already shipped);
+(c) `deployment-service@b3b4691` setup-data-pipeline-vm.sh `features-backfill` VM_TASK now routes through `--no-deps`
+install (same as strategy-paper/strategy-live/synthetic-benchmark). VM ran 7s + emitted 16 events + STOPPED. Findings
+doc: `plans/active/issues/features_onchain_defi_processing_findings_2026_05_17.md`. Two follow-up bugs are slot-2
+territory (features-service onchain calculator): (1) `macro_sentiment` raises `LookaheadBiasError` because DefiLlama TVL
+fetch returns current data, not point-in-time; (2) early-exit after `lending_rates / 2026-04-15 / 0 rows` (only 2 of 11
+feature groups attempted for only 1 of 5 dates). harsh-slot-9 paper-trade still gates on features-onchain producing
+parquets for B-015 window.
