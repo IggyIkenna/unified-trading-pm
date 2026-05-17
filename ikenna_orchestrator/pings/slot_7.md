@@ -1073,3 +1073,14 @@ Phase A baseline ratchet landed; Phase B (this refactor) is ongoing; Phase C (re
 
 **Inventory**: 51% done / 498 cal AI-days (updated PM@56f9fa63). Phase B work isn't yet captured in the inventory
 because the issue is statused P2 post-cutover — proceed regardless.
+
+[2026-05-17 /loop tick 26] slot-7 — E501 lint sweep + test harness proxy fixes:
+
+- `execution-service@19d6af0d1` — fix E501 violations (passive_aggressive_spawn.py 11 violations: multi-line call
+  rewrites + f-string → %s log format; aster.py/base.py/marinade.py/sports_handler.py 1-2 each: docstring shortening)
+  - add `_ac_remaining_trajectory` + `_absorb_rounding` proxy stubs to `_ACMethodHarness` in
+    `test_algo_impl_almgren_chriss.py` + `_require_unit_interval` proxy stub to `_POVHarness` in
+    `test_algo_impl_pov_dynamic.py`. QG passed (git-aware mode: 7 staged files only). Recovery technique:
+    `git checkout -- .` + selective stash restore for 65-file prek-ruff-format noise.
+
+316 remaining in Phase B allowlist sweep. Continuing.
