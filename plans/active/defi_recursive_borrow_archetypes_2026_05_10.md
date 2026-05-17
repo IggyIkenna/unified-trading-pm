@@ -1577,8 +1577,10 @@ e-mode loop and asserts the final position matches the expected math within ±0.
 - [x] [execution-service] P0. Replace simulation tests with actual integration tests against
       `api.hyperliquid-testnet.xyz/exchange` (testnet fork). Cassette tests for replayability per workspace test
       convention. (execution-service@de43118 — 4 integration tests via responses mocks, 2026-05-14)
-- [ ] [execution-service] P1. CeFi alternative path: ensure existing Bybit / OKX / Binance perp connectors are equally
-      wired up for Family 2 (parallel hedge venue option, not new — verify they're not also simulation-only).
+- [x] ✅ [execution-service] P1. CeFi alternative path: verified Bybit (`bybit_ccxt.py` — "Place order on Bybit via
+      CCXT, or simulate when mode=sim"), OKX (`okx_ccxt.py` — same), Binance (`binance_native.py` — USDM perpetuals
+      `fapi.binance.com` wired) all live-wired; simulation is a mode flag not the only path. Bybit already in catalog
+      as Family 2 `perp_venues[1]`. (2026-05-17 slot-5)
 
 **Done definition:** Hyperliquid testnet integration test executes a place-order + cancel-order round trip; live mainnet
 wire-up gated behind ENV flag until paper-smoke passes.
