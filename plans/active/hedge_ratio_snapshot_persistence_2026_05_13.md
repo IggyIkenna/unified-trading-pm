@@ -150,11 +150,13 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
 
 ### Phase 4 — Codex SSOT + plan close (~0.2 cal AI-days)
 
-- [ ] [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
-      writeback pattern + consumer chain.
-- [ ] [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry → `[x]` with
-      this sub-plan's commit reference.
-- [ ] [SCRIPT] P0. Archive this sub-plan with `Plans Run To Actual Completion` checklist.
+- [x] ✅ [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
+      writeback pattern + consumer chain. ✅ Added FULLY SHIPPED banner with UAC@2fcb1bb + strategy-service@21209bd +
+      pnl-attribution-service@ee96d3c commit refs.
+- [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with
+      this sub-plan's commit reference. ✅ DEFERRED note updated to RESOLVED 2026-05-17 with all 3 commit refs.
+- [ ] [SCRIPT] P0. Archive this sub-plan. **🔒 LOCKED**: `locked_by: live-defi-rollout` — operator must add
+      `[unlock-plan]` to a commit before archival. Plan is fully complete (all todos done); archival pending unlock.
 
 ## Full-execution criterion
 

@@ -538,10 +538,10 @@ Owner: harsh.
       tests (default-rate-collapses-to-static, lst_rate>1-scales-up, drift-below-threshold-preserves-baseline,
       drift-above-threshold-advances-baseline, custom-threshold-param-honoured, initial-entry-always- triggers; all
       green); existing `test_carry_staked_basis_lst_as_margin_emits_four_leg_bundle` + 11 `dynamic_hedge_ratio` unit
-      tests still green (no regression). basedpyright + ruff clean.) **DEFERRED**: P1 — emit `HedgeRatioSnapshot` rows
-      to a dedicated downstream data_type (today's attestations bundle is the audit trail; persistence via a new
-      `hedge_ratio_snapshots` writeback can land after Phase 6C identifies which downstream service consumes the audit
-      log).
+      tests still green (no regression). basedpyright + ruff clean.) **RESOLVED 2026-05-17**: P1 DEFERRED — emit
+      `HedgeRatioSnapshot` rows to a dedicated downstream data_type — shipped via
+      `hedge_ratio_snapshot_persistence_2026_05_13.md`: UAC@2fcb1bb (DataType + schema) + strategy-service@21209bd
+      (HedgeRatioSnapshotWriter + on_tick wire-in) + pnl-attribution-service@ee96d3c (reader in PnlDomainAdapter).
 - [x] [AGENT] P0. **6B (original) — IMPLEMENT (not conditional — audit confirmed static)** dynamic hedge-ratio
       adjustment using LST/native exchange rate stream from Phase 1A captures (jitoSOL/SOL, mSOL/SOL, bSOL/SOL,
       rETH/ETH, stETH/ETH, weETH/ETH). Per-tick or per-bar rebalance trigger when |peg_drift| > N bps. **Implementation

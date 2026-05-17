@@ -1156,6 +1156,16 @@ realized P&L delta + max-drawdown delta + tail-event survival rate.
 
 ## Hedge-ratio dynamic adjustment (Phase 6)
 
+> **✅ FULLY SHIPPED 2026-05-17** — hedge_ratio_snapshot persistence pipeline complete:
+> - **UAC@2fcb1bb**: `DataType.HEDGE_RATIO_SNAPSHOT` + `HedgeRatioSnapshotRecord` schema in
+>   `unified_api_contracts/internal/domain/defi/sim_schemas.py`; bucket: `strategy-store/defi`
+> - **strategy-service@21209bd**: `HedgeRatioSnapshotWriter` + `CarryStakedBasisEngine.on_tick` wire-in;
+>   emits on `decision.rebalance_triggered=True`; ManifestWriter records per-archetype-per-day
+> - **pnl-attribution-service@ee96d3c**: `read_hedge_ratio_snapshots` reader in `PnlDomainAdapter`
+>
+> Sub-plan: `hedge_ratio_snapshot_persistence_2026_05_13.md` Phases 0-3 complete.
+> Phase 6C validation harness: `strategy-service@7eb3dab`.
+
 `carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts with
 peg behavior + accrual.
 
