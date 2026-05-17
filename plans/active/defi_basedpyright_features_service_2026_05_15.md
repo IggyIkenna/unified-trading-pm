@@ -83,6 +83,7 @@ Same patterns as execution-service fix:
   - [x] ✅ sports/calculators/league_calculator.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
   - [x] ✅ sports/exporters/odds_features_exporter.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
   - [x] ✅ features_service/sports/ FULL CLEAN — bench_sub_calculator, footystats_predictions_calculator, formation_calculator, halftime_multi_source, ht_features, injury_impact_calculator, meta_features_calculator, odds_prob_space, squad_value_calculator, _fetch_runner, batch_handler, live_handler, cli/main, config_reloaders, gcs_normalizers, feature_builder_registry (46→0) — features-service@5f4e0112 (slot-8 wave 5 2026-05-17)
+  - [x] ✅ features_service/delta_one/ FULL CLEAN — 23 files, 53→0 errors: anomaly, base, base_calculator, candlestick, kurtosis, liquidation_levels, market_structure, momentum, order_flow_inference, oscillators, polynomial_trendline, round_numbers, volatility, wedge_detector, dependency_checker, feature_writer, batch_handler, live_handler, target_handler, cli/main, cli/parser, config_reloaders, orchestrator — features-service@c0b7415c (slot-8 wave 5 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [x] ✅ [AGENT] P0. Fix remaining errors in other modules. — features-service@dad0b74a (slot-8 wave 4 2026-05-17)
