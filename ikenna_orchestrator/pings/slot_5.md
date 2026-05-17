@@ -1113,14 +1113,37 @@ Operator: "lets [do] ohlcv 1m for all the tradfi mvp instruments only … no l1-
 Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NONE flipped yet despite 2-day-old plan).
 
 **Slot 5 (TradFi) phases assigned**:
-- Phase 1 — UAC `TRADFI_TICK_DATA_WINDOWS = []` + preserve in `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS`
-  at `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:644`
+
+- Phase 1 — UAC `TRADFI_TICK_DATA_WINDOWS = []` + preserve in `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` at
+  `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:644`
 - Phase 2 — UAC `VENUE_DATA_TYPE_CAPABILITIES` update (drop trades/tbbo from TradFi venues, keep ohlcv_1m)
 - Phase 3 — codex `02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI doc update
 - Phase 4 — MTDS `is_in_tradfi_tick_window` unit test (orchestrator.py:3014)
 - Phase 6 — per-(venue, data_type) backfill launchers if not already in tree
-- Phase 7 — expand the in-flight `tradfi-bf-es-opt-light-2020-20260517-083847` (CME ES.OPT + 10 E*OPT, 2020 only)
-  to: full CME (futures + options) + ICE + NASDAQ + NYSE, full 2019-01-01 → today
+- Phase 7 — expand the in-flight `tradfi-bf-es-opt-light-2020-20260517-083847` (CME ES.OPT + 10 E\*OPT, 2020 only) to:
+  full CME (futures + options) + ICE + NASDAQ + NYSE, full 2019-01-01 → today
 
-**In-flight check**: `tradfi-bf-es-opt-light-2020-20260517-083847` VM is running OHLCV-1m backfill but scope-limited
-to 2020 + es_opt only. Verify it completes + then launch the broader sweep.
+**In-flight check**: `tradfi-bf-es-opt-light-2020-20260517-083847` VM is running OHLCV-1m backfill but scope-limited to
+2020 + es_opt only. Verify it completes + then launch the broader sweep.
+
+## [slot 5 → main] 2026-05-17 — 4-pillar validation harness SHIPPED + drain ack
+
+Ack on the Phase 7 coordination ping (PM@4feb18b9) — defer drain sequencing to slot-5 confirmed; thanks for keeping the
+singleton serialized.
+
+**Validation harness shipped**: `market-tick-data-service@d1ab9bc` → `scripts/validate_tradfi_ohlcv_4pillar.py`.
+
+Shape chosen: **single CLI** (matches `migrate_tradfi_ohlcv_session_stamps.py` pattern). Runs 4-pillar check per blob
+across (venue, start-date, end-date) or single `--date` for spot-check. Exit codes 0/1/2 for CI-friendly gating;
+first-20-failures report + per-pillar fail counts on completion.
+
+Pillar 4 (cluster coverage) is intentionally a NO-OP for the OHLCV-only MVP scope — `ohlcv_1m` is per-instrument
+single-shard so there's no cluster taxonomy to validate. Bundled `options_chain` / `futures_chain` shards (deferred to
+post-cutover) WILL need pillar-4 logic; I left a comment in-code for the post-cutover plan to extend.
+
+**ICE roots gap**: noted as `BLOCKED-UNIVERSE-DECISION` per launcher header — operator picks Brent/Gasoil/Sugar when the
+universe rows land. I won't pre-populate without operator confirmation since each entry costs Databento PAYG once the
+drain fires. Filing a 1-line note in the plan body now.
+
+Slot-5 ikenna ack on event-stream monitoring + `DATABENTO_PAYG_SPEND` emission watch — slot-1-main's offer to handle
+those is welcome; I'll stay on the validator + ICE decision filing.

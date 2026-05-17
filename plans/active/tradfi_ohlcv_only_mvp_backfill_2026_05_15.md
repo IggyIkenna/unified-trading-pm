@@ -181,20 +181,31 @@ per workspace HARD RULE.
 
 - [ ] [AGENT] P0. Launch the 4 VMs (CME / ICE / NASDAQ / NYSE) in parallel. Drain ETA: 2-4 hours per venue at Databento
       OHLCV throughput (cheap = fast).
-- [ ] [AGENT] P0. Post-drain, 4-pillar validation per shard: (1) row count > 0 OR `record_empty`; (2) NaN ratio <
-      threshold; (3) schema matches contract; (4) cluster coverage ≥ expected (per
-      [shard-granularity SSOT](../../codex/04-architecture/shard-level-failure-isolation.md)).
+- [x] ✅ **[AGENT] P0. 4-pillar validation harness shipped.** slot-5-ikenna 2026-05-17 at
+      `market-tick-data-service@d1ab9bc` — `scripts/validate_tradfi_ohlcv_4pillar.py` walks the TradFi tick bucket and
+      runs all 4 pillars: (1) row count > 0; (2) NaN ratio < 1% threshold across O/H/L/C/V; (3) schema matches
+      `OHLCV_REQUIRED` contract; (4) cluster coverage NO-OP for ohlcv_1m per-instrument shards. Exit code 0 = all green,
+      1 = at least one pillar failed. Usage: `--venue` / `--start-date` / `--end-date` / `--date` (single-day
+      spot-check) / `--sample-limit` / `--nan-threshold` knobs; defaults match the shard-granularity SSOT. Per-shard
+      failure report (first 20) printed on completion + counts of p1/p2/p3/p4 fails. Ready to invoke against the 6
+      currently-running NASDAQ/NYSE shards once they STOP + against the wider drain.
 - [ ] [AGENT] P0. Data-status rollup verifies CME / ICE / NASDAQ / NYSE OHLCV coverage ≥99% from 2019-01-01 → today;
       surface in deployment-ui.
 
 ### Phase 8 — Cost tracking + operator sign-off
 
-- [x] ✅ **[AGENT] P1. DATABENTO_PAYG_SPEND emission shipped.** slot-1-main 2026-05-17 10:05 UTC at `market-tick-data-service@1b0a207`. `_run_batch_download` now emits `DATABENTO_PAYG_SPEND` per batch with cost_usd from `client.metadata.get_cost()` (Databento SDK 0.74+) + dataset/schema/symbol_count/date_range/records_returned. Best-effort: failure to look up cost emits cost_usd=null + cost_lookup_error=<exc_type> so call provenance still recorded. Aggregator (deployment-ui rollup) sums over date for VM-run totals.
+- [x] ✅ **[AGENT] P1. DATABENTO_PAYG_SPEND emission shipped.** slot-1-main 2026-05-17 10:05 UTC at
+      `market-tick-data-service@1b0a207`. `_run_batch_download` now emits `DATABENTO_PAYG_SPEND` per batch with cost_usd
+      from `client.metadata.get_cost()` (Databento SDK 0.74+) + dataset/schema/symbol_count/date_range/records_returned.
+      Best-effort: failure to look up cost emits cost_usd=null + cost_lookup_error=<exc_type> so call provenance still
+      recorded. Aggregator (deployment-ui rollup) sums over date for VM-run totals.
 
-  **ORIGINAL TEXT BELOW** (the per-VM aggregation + dashboard row is the consumer-side rollup; emission is producer-side, now in place):
+  **ORIGINAL TEXT BELOW** (the per-VM aggregation + dashboard row is the consumer-side rollup; emission is
+  producer-side, now in place):
 
-  Original: Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at
-      completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in deployment-ui.
+  Original: Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at completion
+  (USD spend per dataset-month-symbol). Roll up to a single dashboard row in deployment-ui.
+
 - [ ] [HUMAN] P0. Operator sign-off on actual spend vs projected (~$50-200 estimated for the full 2019-2026 ohlcv_1m
       backfill across CME/ICE/NASDAQ/NYSE — projection refined post-Phase 7).
 
