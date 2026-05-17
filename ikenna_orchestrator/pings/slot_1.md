@@ -2711,3 +2711,24 @@ Group summary:
 **B-015 status**: still awaiting harsh-side ack (slot-9 CYCLE-CLOSE, no response)
 
 **Status**: 🟢 All slots covered; wave tracking current; hedge_ratio pipeline complete
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:20 UTC — tick-67: parallel session handling; all slots covered
+
+**Poll results** (remote 9a6795ee):
+- Remote had 3 new commits since tick-66: batch-86 (4 violations/3 files), slot-10 NEW TASK (Phase U6), Wave-53 (replacement_model_calculator)
+- Parallel session (tick-64b) already assigned slot-10 to promote_workflow Phase U6: execution-service manual-pending queue + unhold path
+- Harsh-side slot-9: CYCLE-CLOSE, no B-015 ack. B-015 awaiting operator dispatch.
+
+**Slot status** (tick-67):
+- Slot-2: execution-service Phase B — batch 86 done (continuing)
+- Slot-5: UAC lint (130 errors) — directive sent, no ack yet
+- Slot-6: simulation_scenarios Phase 6 — no commit yet
+- Slot-7: Phase B MIA (2h+ gap at 110/377, check-in sent tick-45). No response.
+- Slot-8: Sports wave-53 shipped (replacement_model_calculator) — continuing
+- Slot-10: NEW THEME — promote_workflow Phase U6 (manual-pending queue in execution-service)
+
+**No new actionable items** for main. Parallel session is coordinating slot assignments.
+
+**Status**: 🟢 All slots covered; loop monitoring; B-015 awaiting harsh-side dispatch
