@@ -27,6 +27,11 @@
 
 **Next slot pickup hint**: defi_basedpyright_features_service is at 827 reportAny (single biggest mechanical refactor); compute_optimization_mock_data + promote_workflow_may23_cli items are DEFERRED-OPERATOR.
 
+**Late-session additions (post-session-wrap, same agent turn)**:
+
+9. **Issue doc filed + Phase 8.B/8.C BLOCKED-OPERATOR-DECISION** — `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md` documents that UAC pyproject `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` + `canonical/crosscutting/errors/*` from coverage measurement (citadel-phase-1 transitional). Net: Phase 8.D ratchet silently passes Phase 8.B Validation logic + Phase 8.C Error classification surfaces because no entries exist in coverage.xml. Both items marked BLOCKED-OPERATOR-DECISION on deployment_and_qg_strategy plan pending Option A (lift omit + face truthful red signal) vs Option B (declare not-measurable). Slot-8 recommendation: Option A. @ PM@d9c75060 + PM@8e5d222f.
+10. **trigger_based_reference_data Phase A1 ✅ verified-shipped flip** — all 5 Phase A1 items present and importable from `unified_api_contracts.sports` facade (verified via `python3 -c` import sanity check at `season_dates.py:70/87/200`). Shipped at UAC@7c8b5ad. Flip @ PM@151bd2e9. Phase A2-A4 (instruments-service implementation) remain open — sports-domain slot work.
+
 ---
 
 ## [2026-05-14 16:04 UTC] slot-8 — STARTED Tab 8 (session 3)
