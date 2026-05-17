@@ -2,6 +2,16 @@
 title: "Solana DeFi data coverage gaps — LST + swap + lending + perp + native staking + restaking + oracle prices"
 created: 2026-05-13
 author: slot-3-ikenna
+resolved: 2026-05-17
+resolution:
+  SPLIT INTO 5 SUCCESSOR PLANS — this triage doc's role was to split scope; successor plans now own delivery. Plan A
+  (Solana LST + native staking) → `solana_lst_native_staking_adapters_2026_05_14.md` + IS@9d7cfc7
+  (SolanaNativeStakingAdapter) + IS@346be5d + IS@e149995 (3 LSTs INF/JSOL/laineSOL/jupSOL). Plan B (Solana perp DEX) →
+  `solana_perp_dex_adapters_2026_05_13.md` shipped IS@5624624 + UAC@2c69b01. Plan C (Solana AMM expansion) →
+  `solana_amm_coverage_expansion_2026_05_13.md` ALL [x] — IS@5665de8 + UAC@2dd984e
+  (Meteora/Phoenix/Jupiter/Lifinity/Pyth, 78 tests). Plan D (Solana venue naming reconciliation) → IS@2639f8e migration;
+  corrector ran 2026-05-15. Plan E (Restaking) → tracked in `defi_catalogue_chain_primitives_2026_05_10.md`. Open
+  Marinade follow-up has separate issue `marinade_solana_subgraph_registration_2026_05_17.md`.
 source:
   - defi_master_2026_05_07
   - defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07
