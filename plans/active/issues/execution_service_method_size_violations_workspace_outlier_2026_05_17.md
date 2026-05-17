@@ -859,8 +859,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   _weighted_alpha + _compute_cumulative_alpha_curve + _measure_adverse_at_delta + _compute_adverse_selection +
   _extract_alpha_weights_wins. 3 violations cleared. File not in allowlist. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-75**: 79 files cleared (slot-2 contribution: -79 files; spans 46 submodules incl.
-  benchmark/metrics).
+  **Ratchet-down 2026-05-17 (slot-2 batch 76 — engine/backtest/actors/evaluator_metrics)**: shipped at execution-service@adb9b8864.
+  get_position_info (97L→24L) + calculate_drawdown (152L→33L) + calculate_returns (85L→25L)
+  via _safe_float + _get_current_price + _compute_unrealized_pnl + _get_display_price + _build_position_result +
+  _max_dd_from_account_report + _max_dd_from_equity_curve + _max_dd_from_pnl_stats + _max_dd_from_final_balance +
+  _compute_base_returns + _get_returns_from_analyzer + _get_returns_from_trade_stats. 3 violations cleared. File not in allowlist.
+  basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-76**: 82 files cleared (slot-2 contribution: -82 files; spans 47 submodules incl.
+  engine/backtest/actors/evaluator_metrics).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
