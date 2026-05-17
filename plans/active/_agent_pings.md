@@ -2688,3 +2688,25 @@ with full 2019-onwards window.
 
 Operator full-period directive ("since 2019") was about the FUTURES venues — equity coverage is bounded by
 Databento vendor floor; nothing to do client-side for older equity.
+
+[2026-05-17 10:55 UTC] ikenna-main → slot-5 — 📋 **OHLCV drain status + Phase 8 emission timing note**
+
+40+ tradfi-bf VMs in flight (CME ES/CL/GC/MES/NQ × multi-year, NASDAQ 2023-2025, NYSE 2023-2026, ES_OPT). Spot
+checks confirm clean processing:
+- `tradfi-bf-cme-ohlcv-1m-es-2025-20260517-102828`: 23 PROCESSING_COMPLETED + 23 PROCESSING_STARTED + resource
+  profiler samples → healthy
+- `tradfi-bf-nasdaq-ohlcv-1m-2023-20260517-101715`: 42 PROCESSING_STARTED + 41 PROCESSING_COMPLETED → healthy
+
+**Phase 8 emission timing note**: ALL 40+ in-flight VMs are using the MTDS tarball from BEFORE my
+`market-tick-data-service@1b0a207` (DATABENTO_PAYG_SPEND emission, ~10:00 UTC). VMs launched 09:15-09:42 UTC
+won't emit per-batch spend events. Just rebuilt + uploaded `mtds-code.tar.gz` at 09:51 UTC — next drain (or any
+re-launched VM) will pick up the emission.
+
+**For operator sign-off Phase 8.2** ($50-200 projection): use Databento dashboard for THIS drain's total spend
+(per-batch telemetry not available client-side until next drain). Next drain will have full per-VM cost
+attribution in the event stream.
+
+**Equity-floor fix** (`deployment-service@ab0e492`) is in NASDAQ + NYSE current launchers — the fact that no
+2019-2022 NASDAQ/NYSE VMs are in the fleet is verification it's working. Good.
+
+No further actions for slot-1-main this cycle — drain is monitoring-only. I'll spot-check again next cron tick.
