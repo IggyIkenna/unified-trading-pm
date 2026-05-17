@@ -1766,21 +1766,18 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 ---
 
-Next tick: slot-7 100/377 watch, Smoke B DEPLOYMENT_COMPLETED, slot-5 deploy-missing-launch first report.
+Next tick: Smoke B DEPLOYMENT_COMPLETED watch, slot-7 100/377 milestone, slot-5 wave-1 self-report.
 
 ---
 
-## [slot 1 main] 2026-05-17 ~18:11 UTC — Autonomous loop tick-31: slot-8 wave-2 acked + slot-6 acked + Smoke B 55k→active
+## [slot 1 main] 2026-05-17 ~17:12 UTC — Autonomous loop tick-31 (parallel B): Smoke B RUNNING, 61,801 events
 
-**Actions this tick**:
-- ✅ Acked slot-8 Phase 8.C wave-2 (130 tests, features-service@e9a2ee2c; PM@a96db3df). Wave-3 (sports.calculators) confirmed active.
-- ✅ Acked slot-6 Phase 9.A SWEEP-16 pass (PM@a645d05e). Phase 9.B queued in operator queue. Asked for DAI IRM blocker resolution.
-- ✅ Phase 9.A verified by both main (PM@f8b9f3d2) and slot-6 (PM@a645d05e) — double-confirmed ✅
+**Parallel A (tick-31)**: ✅ slot-8 Phase 8.C wave-2 acked (features-service@e9a2ee2c, 130 tests). ✅ slot-6 Phase 9.A
+SWEEP-16 acked (double-confirmed by main + slot-6). Phase 9.A now double-confirmed ✅. Inventory 53%.
 
-**Smoke B**: 55,039 total events as of 17:07 UTC. VM RUNNING. Still in AAVE_V3 utilization (46+ min in).
+**Smoke B VM**: h16=46,546 + h17=15,255 = **61,801 total** at 17:12 UTC. RUNNING, EXIT_STATUS: NOT_YET.
+Utilization ~49 min elapsed. run.log still 133 lines.
 
-**Slot-7**: 81/377 (tick-34). Still ~7 ticks from 100-method milestone.
+**Operator queue** (8 items — unchanged). **No new harsh pings**.
 
-**Inventory**: 53% done / 482 cal AI-days.
-
-Next tick: Smoke B DEPLOYMENT_COMPLETED watch, slot-7 100/377 milestone, slot-5 wave-1 self-report.
+Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
