@@ -1084,3 +1084,11 @@ because the issue is statused P2 post-cutover — proceed regardless.
     `git checkout -- .` + selective stash restore for 65-file prek-ruff-format noise.
 
 316 remaining in Phase B allowlist sweep. Continuing.
+
+[2026-05-17 /loop tick 27] slot-7 — execution-service Phase B (+3, 64/377 cleared):
+
+- `execution-service@cec3ee56f` — ResultSerializer.generate_run_id 58L→19L via _shorten_venue static helper;
+  MultiLegOrchestrator._submit_leg_with_timeout 58L→32L via _handle_leg_exc_result (classify+emit+return);
+  DeribitOrdersMixin._parse_order_response 59L→36L via _extract_order_fills static helper.
+
+313 remaining. basedpyright clean.
