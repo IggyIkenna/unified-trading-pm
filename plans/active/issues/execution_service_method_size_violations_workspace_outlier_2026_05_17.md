@@ -330,6 +330,17 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13**: 17 files cleared (slot-2 contribution: -17
    files; 10 handlers + 7 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 14 — defi_execution/protocols sweep continues)**: base.py shipped at
+   execution-service@383595e75 (\_load_wallet_credentials 61L→14L via \_require_wallet_config (raise ValueError on
+   missing wallet_private_key/rpc_url) + \_resolve_wallet_address (config override OR derive from key);
+   sign_and_send_transaction 95L→27L via \_inject_tx_fields (mutate-in-place from/nonce/gas/gasPrice/chainId) +
+   \_simulated_tx_result (paper-mode pseudo-hash) + \_broadcast_signed_tx (returns (tx_hash, error_or_none)) +
+   \_await_tx_receipt (success-with-gas_used vs reverted vs wait-failed)). Per-method behavior preserved.
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14**: 18 files cleared (slot-2 contribution: -18
+   files; 10 handlers + 8 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
