@@ -2,6 +2,8 @@
 title: ICE US Softs (CT/CC/KC/SB/OJ/DX) dataset disambiguation — IFUS.IMPACT canonical
 created: 2026-05-14
 author: harsh-slot-7
+resolved: 2026-05-14
+resolution: SHIPPED 2026-05-14 by harsh-main during OOM recovery per body § "RESOLVED".
 source:
   - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md Phase 5B (TRADFI_ROOTS deferred note)
   - unified_api_contracts/registry/tradfi_symbology.py:103-115

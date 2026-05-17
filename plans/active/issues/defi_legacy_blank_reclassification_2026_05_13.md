@@ -2,6 +2,8 @@
 title: "defi 604,951 rows in attempted_failed/LegacyBlankErrorReasonError — need proper reclassification"
 created: 2026-05-13
 author: slot-3-ikenna
+resolved: 2026-05-13
+resolution: SHIPPED 2026-05-13 ~16:25 BST — full fix shipped per body § "RESOLVED 2026-05-13 ~16:25 BST".
 source:
   - bucket_name_ssot_canonicalisation_2026_05_10
   - expected_unattempted_propagation_chain_2026_05_12

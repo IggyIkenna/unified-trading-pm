@@ -2,6 +2,9 @@
 title: "MTF intraday_regime + micro_regime emission policy classification"
 created: 2026-05-14
 author: harsh-slot-6
+resolved: 2026-05-15
+resolution:
+  SHIPPED 2026-05-15 — Option A (NAN_FILL), operator-acked via slot-9→5 reassignment per body § "RESOLVED 2026-05-15".
 source:
   - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 6.5 P2
 locked_by: live-defi-rollout
