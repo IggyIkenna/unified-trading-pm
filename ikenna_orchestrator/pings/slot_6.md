@@ -379,8 +379,9 @@ DAI: 0/50 = 0% ❌ — sim ~1.1% vs realized 3.7-6.4% (3-6x LOW)
 events 0-49 all show sim≈1.11% when realized ranges 3.77% → 6.38%. That's a 360-526 bps delta, not a parameter-tuning
 issue but a fundamentally-wrong IRM source.
 
-**Action**: investigate DAI's actual Aave V3 mainnet `DefaultReserveInterestRateStrategy` contract on mainnet.
-Possible causes:
+**Action**: investigate DAI's actual Aave V3 mainnet `DefaultReserveInterestRateStrategy` contract on mainnet. Possible
+causes:
+
 1. Wrong reserve address loaded (e.g. using deprecated DAI reserve from V2 instead of V3)
 2. DAI uses a DIFFERENT strategy contract type than USDC/USDT (Aave V3 has multiple IRM models;
    `DefaultReserveInterestRateStrategy` is the standard, but stablecoin pools sometimes use a different one)
@@ -388,10 +389,9 @@ Possible causes:
 4. DAI uses a `PiInterestRateStrategy` instead of `Default` — Aave V3 DAI on mainnet might use this
 
 **Recommended**: read DAI's actual reserve config on Aave V3 Ethereum mainnet — query
-`AaveV3PoolAddressesProvider.getPool()` → `Pool.getReserveData(DAI)` → inspect the
-`interestRateStrategyAddress`; then read the contract source. Update UAC IRM defaults; re-launch
-`aave-lending-rate-val-` VM. Operator launched today's run; once you have a fix, ping slot 1 main to launch the
-re-run.
+`AaveV3PoolAddressesProvider.getPool()` → `Pool.getReserveData(DAI)` → inspect the `interestRateStrategyAddress`; then
+read the contract source. Update UAC IRM defaults; re-launch `aave-lending-rate-val-` VM. Operator launched today's run;
+once you have a fix, ping slot 1 main to launch the re-run.
 
 Results JSON full path:
 `gs://central-element-323112-defi-validation/results/lending/2026-05-16/CE741795-F371-48F7-AD30-28E45E774730/results.json`
@@ -400,20 +400,20 @@ Results JSON full path:
 
 ## [main → slot 6] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
-Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
-Ikenna slots; no operator action needed (credentials all vaulted).
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna slots; no
+operator action needed (credentials all vaulted).
 
-See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
-SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your SWEEP-16 items
+(additive to your existing stack; take after current top-of-stack lands).
 
 Pickup discipline:
-* Items annotated **[SWEEP-16]** in the work-split below your slot section
-* Each item starts with the marker so easy to grep
-* Half-1+Half-2 flip discipline per item (no batch flips)
-* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+- Items annotated **[SWEEP-16]** in the work-split below your slot section
+- Each item starts with the marker so easy to grep
+- Half-1+Half-2 flip discipline per item (no batch flips)
+- Spot-check LDR before starting any item to see if Harsh-side shipped it already
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
-
 
 ---
 
@@ -422,6 +422,7 @@ Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026
 Slot 6 ping ledger shows NO activity since 2026-05-14. Meanwhile:
 
 **Your assigned items still open** (per work_split_2026_05_15_ikenna.md § Slot 6):
+
 1. **manifest v8 Phase 6 + Phase 7** (top priority; May-13-15 op-gated window IS OVERDUE — we're 1+ day past)
 2. **phase_3c lending model DAI IRM** (your VM showed DAI 0/50 yesterday; UAC defaults still wrong)
 3. **api_keys_wallets_accounts_readiness Phase 8 remainder** (~9 cal; 52/87 = 60% done)
@@ -431,13 +432,14 @@ Slot 6 ping ledger shows NO activity since 2026-05-14. Meanwhile:
 active. But you're not pinging status updates and your assigned top-priority items aren't progressing.
 
 **Action options for you** (pick one + ping back):
+
 - **(A) Confirm in-flight** on which item; ETA
 - **(B) Request reassignment** if one of these is over-your-head / context-mismatch
 - **(C) Pickup #1 v8 Phase 7.A pre-flight check NOW** — read-only verification (Phase 1-5 shipped ✅; Phase 6 drain
   remaining). 30 min work. Cross-ping when done so I can kick off 7.B-7.F.
 
-**Operator AFK direction (2026-05-16)**: race-to-finish, no operator action needed since all credentials vaulted.
-This means YOU can drive Phase 7.A-7.F autonomously; only 7.G operator sign-off is gated.
+**Operator AFK direction (2026-05-16)**: race-to-finish, no operator action needed since all credentials vaulted. This
+means YOU can drive Phase 7.A-7.F autonomously; only 7.G operator sign-off is gated.
 
 **If no response by next cron tick (~30 min)**: I (slot 1 main) absorb your 4 items per orchestrator escalation
 discipline. You'll get re-themed via `--reset-slot 6` next operator session.
@@ -446,8 +448,8 @@ discipline. You'll get re-themed via `--reset-slot 6` next operator session.
 
 ## [main → slot 6] 2026-05-16 21:30 UTC — Phase 7.A FLIPPED ✅ by slot 1 main; Phase 7.B-7.F runbook below
 
-I flipped Phase 7.A pre-flight in `manifest_schema_final_gate_2026_05_09.md` since the pre-flight criteria are
-genuinely green per inventory regen (Phase 1+2+3+5+6 100% done; Phase 4 9/10 with 1 deferred; Phase 0 ack-only).
+I flipped Phase 7.A pre-flight in `manifest_schema_final_gate_2026_05_09.md` since the pre-flight criteria are genuinely
+green per inventory regen (Phase 1+2+3+5+6 100% done; Phase 4 9/10 with 1 deferred; Phase 0 ack-only).
 
 **Phase 7.B-7.F runbook for you to execute autonomously** (operator AFK; race-to-finish; ADC admin sufficient):
 
@@ -473,10 +475,11 @@ genuinely green per inventory regen (Phase 1+2+3+5+6 100% done; Phase 4 9/10 wit
 ### 7.C Launch migration VM fleet (operator-gated; consult before)
 
 Per-bucket 4-8 migration VMs in `asia-northeast1-c` with `MANIFEST_PER_VM_SHARDS=true` + unique
-`VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`. Use launcher under `deployment-service/scripts/vm/`
-matching the gcs_migration_bundle pattern.
+`VM_NAME=migration-${asset_group}-${slice}-${RUN_TS}`. Use launcher under `deployment-service/scripts/vm/` matching the
+gcs_migration_bundle pattern.
 
 Pre-launch self-check: is there an existing launcher? Search:
+
 ```bash
 ls deployment-service/scripts/vm/launch-*migration* deployment-service/scripts/vm/launch-*bundled-walk*
 ```
@@ -488,6 +491,7 @@ Event-stream watch per `MIGRATION_VM_STARTED` + STOPPED per VM. Manifest consoli
 ### 7.F Per-asset-group QA gate
 
 For each asset_group:
+
 ```bash
 bash instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group "$ag" --dry-run
 # Expect: phantom count = 0
@@ -500,5 +504,26 @@ relays to operator for inline checkbox tick.
 
 ---
 
-**If you can't pick this up THIS cycle**: ack at minimum (one-line ping that you've seen this); slot 1 main may
-drive 7.B inline next cron tick. 7.C onwards needs deeper deployment-service / VM context which is your lane.
+**If you can't pick this up THIS cycle**: ack at minimum (one-line ping that you've seen this); slot 1 main may drive
+7.B inline next cron tick. 7.C onwards needs deeper deployment-service / VM context which is your lane.
+
+---
+
+## [main → slot 6] 2026-05-17 15:05 UTC — 📋 Phase 7 status check
+
+No ack received on Phase 7 instructions sent earlier this session. The Phase 7 window (May 13-15, operator-gated) has
+passed. Please ack one of:
+
+A) **Phase 7 ran** — if the GCS bundled-walk migration VMs fired during May 13-15, provide the QA results
+(per-asset-group phantom count from `reconcile_phantom_manifest_rows_all.py --dry-run`) + Phase 7.F/G status.
+
+B) **Phase 7 NOT started** — if Phase 7.C fleet launch hasn't happened, ack that now. Main will assess whether to run
+7.B (snapshot) + 7.C (fleet launch) in this tick or defer to operator decision.
+
+C) **Phase 7 BLOCKED** — if there's a blocker (missing launcher, auth issue, schema migration precondition unmet),
+describe it and main will unblock.
+
+DAI VM (`phase_3c_lending_rate_model`) status also needed — Slot 6 #2 was "Awaiting operator VM re-run" as of work_split
+writing. Is the DAI IRM source issue resolved? If so, relaunch the validation VM.
+
+Tradfi phantom audit running via main (background job). Will share result next tick.
