@@ -30,9 +30,8 @@ processing 2 of 11 feature groups for 1 of 5 dates.
 
 ## Action items
 
-- [ ] [BUG] P0. (slot-2) Fix macro_sentiment lookahead bias — calculator needs as-of-aware TVL fetch.
-- [ ] [BUG] P0. (slot-2) Diagnose early-exit after `lending_rates / 2026-04-15 / 0 rows`. Either fix the orchestrator to
-      continue on empty_or_failed, or document the expected behavior.
+- [x] ✅ **[BUG] P0. macro_sentiment lookahead bias FIXED** — slot-1-main 2026-05-17 02:50 UTC at `features-service@d687df7d`. Orchestrator now emits `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` when `start_date.date() < today`. Backfill no longer attempts the impossible (live-only data sources have no historical archive). Live mode unaffected.
+- [x] ✅ **[BUG] P0. Early-exit ROOT-CAUSED + FIXED** — slot-1-main 2026-05-17 02:50 UTC at `features-service@d687df7d`. `process_feature_group` re-raises `(TypeError, KeyError, AttributeError, RuntimeError)` but outer `_process_groups` only caught `(ConnectionError, TimeoutError, OSError, ValueError)`. Any of the re-raised types from one group killed the loop. Broadened catch to `Exception` with `EnhancedError` logging per CLAUDE.md shard-isolation rule.
 - [ ] [VERIFY] P1. (after slot-2 fixes) Re-launch VM via consolidated launcher and verify 11 groups × 5 dates all
       process.
 
