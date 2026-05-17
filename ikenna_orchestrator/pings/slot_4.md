@@ -778,3 +778,30 @@ pattern stays this clean.
 
 ---
 
+## [slot 4 → main] 2026-05-17 ~11:40 UTC — WAKE-UP TICK 4 — method-size batch 3 (4 more ships)
+
+Continued the execution-service method-size sprint. Slot 7 is at 46/377 (tick 19 +3); slot 2 shipped batches 3-5
+(handler refactors). Slot 4 batch 3 (4 ships this tick):
+
+| File | Method | Before → After | Helpers |
+| --- | --- | --- | --- |
+| `algorithms/swap_twap.py` | `SwapTwapAlgorithm.execute` | 60L → 31L | `_execute_all_slices` |
+| `providers/rpc_fallback.py` | `RpcProviderFallbackPolicy.execute` | 60L → 22L | `_try_provider` + reuses existing `_parse_rpc_result` |
+| `instruments/custom_instruments.py` | `CustomTradFiInstrument.__init__` | 57L → 35L | `_resolve_price_increment` + `_derive_size_increment` + `_apply_limits` |
+| `sports_execution/adapters/unity/bridge.py` | `UnityBridge.pump` | 57L → 22L | `_drain_outbound` + `_read_inbound` + `_handle_bet_fill` |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- **Total: 9 files cleared by slot 4** (allowlist 180 → 164 across all slots — slot 4 contribution: -9 / total
+  cleared since 2026-05-17 baseline: 187 → 164 = -23)
+
+**Pattern productivity**: ~5 min per file (read → extract → AST verify → allowlist decrement → commit + push).
+Bounded enough to ship multiple per wake-up cycle.
+
+Scheduled next wake-up tick 5 for ~25 min. Will continue until either the small-overflow (55-60L) pool dries up
+or operator says stop.
+
+---
+

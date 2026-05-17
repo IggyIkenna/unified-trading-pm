@@ -158,6 +158,16 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    _execute_internal_transfer 58L→46L (_emit_internal_transfer_completed),
    auto_funding_to_trading 56L→26L (_auto_funding_required / _build_auto_funding_instruction)).
    Allowlist 170 → 168 files. Per-event payload + venue/capability logic preserved exactly. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 3)** — additional 4 files cleared at
+   execution-service@7a0859955 (algorithms/swap_twap.py execute 60L→31L, +1 helper _execute_all_slices),
+   @4875abadb (providers/rpc_fallback.py execute 60L→22L, +1 helper _try_provider; also consolidates payload
+   parse into the existing _parse_rpc_result helper),
+   @bed41ff45 (instruments/custom_instruments.py __init__ 57L→35L, +3 static/instance helpers for
+   price_increment/size_increment/limits),
+   @fe755fd3d (sports_execution/adapters/unity/bridge.py pump 57L→22L, +3 helpers _drain_outbound +
+   _read_inbound + _handle_bet_fill).
+   Allowlist 168 → 164 files. Per-method semantics preserved (multi-slice TWAP accumulators, JSON-RPC
+   failover order + status-code policy, instrument-precision fallbacks, sidecar message dispatch).
 
    **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from baseline).
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
