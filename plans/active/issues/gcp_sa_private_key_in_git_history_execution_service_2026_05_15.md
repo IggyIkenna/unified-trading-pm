@@ -4,6 +4,8 @@ title:
   strategy-service)
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
+resolved: 2026-05-15
+resolution: SECURITY-RESOLVED — credential is dead (key NOT_FOUND on cloudstorage@ SA — already deleted). BFG history scrub demoted from P0 to P3-hygiene (DEFERRED-MAINTENANCE-WINDOW per body resolution; cost: force-push to 5 repos breaks 8 active agent branches). SA-permission audit + retire-oldest-keys filed as separate hardening task.
 source:
   - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
   - execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service git
