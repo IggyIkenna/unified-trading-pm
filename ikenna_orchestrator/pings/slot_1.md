@@ -1250,9 +1250,9 @@ Next tick: continue monitoring harsh-slot-9 B-015 ack + operator decisions.
 
 **Poll results** (tick 7):
 
-- New commit `a4f0246b`: Phase 6B Aave V3 catch-up confirmed COMPLETE — 105,202 rows / 13 shards
-  (2026-05-14→2026-05-17 gap filled). SCROLL/ZKSYNC BLOCKED-UPSTREAM (no UAC subgraph IDs). Slot-8 Phase 5
-  retracted (already done by slot-1-main 09:55 UTC at PM@3d940c5e).
+- New commit `a4f0246b`: Phase 6B Aave V3 catch-up confirmed COMPLETE — 105,202 rows / 13 shards (2026-05-14→2026-05-17
+  gap filled). SCROLL/ZKSYNC BLOCKED-UPSTREAM (no UAC subgraph IDs). Slot-8 Phase 5 retracted (already done by
+  slot-1-main 09:55 UTC at PM@3d940c5e).
 - `harsh_orchestrator/pings/slot_9.md`: still CYCLE-CLOSE 2026-05-15 — no boot since B-015 ping.
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 - TradFi OHLCV plan: Phases 1-8 all ✅ — only ICE roots pick + operator spend sign-off remain (both gated).
@@ -1268,10 +1268,10 @@ Next tick: continue monitoring harsh-slot-9 B-015 ack + operator return.
 
 **Poll results** (tick 8):
 
-- **LST rates catch-up VM** (mtds-lst-rates-20260517-162106): COMPLETE ✅ — rc=0, EXIT_STATUS=0,
-  DEPLOYMENT_COMPLETED. 128 manifest entries (14 new for 2026-05-17). Multi-chain LST venues written: swell/stader/
-  stakewise/ankr/etherfi/puffer (ETHEREUM) + jito/marinade (SOLANA). VM STOPPING (self-deleting).
-  18-day gap (2026-04-30→2026-05-17) fully filled.
+- **LST rates catch-up VM** (mtds-lst-rates-20260517-162106): COMPLETE ✅ — rc=0, EXIT_STATUS=0, DEPLOYMENT_COMPLETED.
+  128 manifest entries (14 new for 2026-05-17). Multi-chain LST venues written: swell/stader/
+  stakewise/ankr/etherfi/puffer (ETHEREUM) + jito/marinade (SOLANA). VM STOPPING (self-deleting). 18-day gap
+  (2026-04-30→2026-05-17) fully filled.
 - `harsh_orchestrator/pings/slot_9.md`: still CYCLE-CLOSE 2026-05-15 — no boot since B-015 ping (>30 min wait).
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 - Remote: commit `23e9389c` (prior wakeup) noted LST VM launch + Phase 6B complete + slot-8 Phase 5 retraction.
@@ -1288,7 +1288,7 @@ Next tick: continue monitoring harsh-slot-9 boot + operator return.
 ping). `_agent_pings.md` unchanged.
 
 **Side-check**: manifest-consolidator-20260511-190513 verified healthy — producing output at 15:33 UTC, expected
-long-running daemon (consolidating strategy-store-* buckets in lock-step cycles). Not a zombie.
+long-running daemon (consolidating strategy-store-\* buckets in lock-step cycles). Not a zombie.
 
 **All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
@@ -1300,9 +1300,9 @@ Next tick: continue monitoring harsh-slot-9 boot + operator return.
 
 **Poll results** (tick 10):
 
-- New commit `aac59fd1` (prior wakeup): flipped 3 items in `defi_features_pipeline_not_run_2026_05_14.md` — macro_sentiment
-  batch-skip [x], lending_rates SchemaError fix [x] (features-service@50273e1f, 92,716 rows verified), 1-day-per-VM [x].
-  Plan now fully complete (0 open items).
+- New commit `aac59fd1` (prior wakeup): flipped 3 items in `defi_features_pipeline_not_run_2026_05_14.md` —
+  macro_sentiment batch-skip [x], lending_rates SchemaError fix [x] (features-service@50273e1f, 92,716 rows verified),
+  1-day-per-VM [x]. Plan now fully complete (0 open items).
 - `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline >50 min since B-015 ping.
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 
@@ -1325,3 +1325,25 @@ Next tick: continue monitoring harsh-slot-9 boot + operator return.
 **All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: continue monitoring harsh-slot-9 boot + operator return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~15:44 UTC — Autonomous loop tick-12: execution-service scan + inventory 491 AI-days
+
+**Poll results** (tick 12) — extended scan:
+
+- **Execution-service git scan** (slot-7 Phase B tracker): 27 commits landed in execution-service since slot-7 tick-25
+  (895cd1e25, 61/377 cleared). Breakdown: batch10 (4 methods), batch11 (5), batch12 (5), batch13 (5) + individual
+  commits (~13 methods) = **~32 methods cleared, estimated ~93/377 total**. Approaching 100 milestone but slot-7 has NOT
+  self-reported. Reminder sent 14:55 UTC. Awaiting slot-7 self-report before flipping issue doc to `~20%+`. Per earlier
+  ack: once slot-7 confirms ≥100/377, the flip is theirs to land (Half-2 discipline).
+- **Inventory regenerated**: 69 plans / 52% done / **491 cal AI-days** (down from 492 — defi_recursive_borrow
+  chain-routing flip counted). Timestamp: 15:44 UTC.
+- **Slot-4**: SESSION CLOSED 2026-05-16. No tick-11 observed. Not resuming this cycle.
+- **Slot-5 / Slot-8**: IDLE / COMPLETE respectively. Nothing new.
+- **Slot-6**: 3 pings, 0 responses. Phase 7.C + DAI IRM BLOCKED. Not launching fleet.
+- **Harsh-slot-9**: CYCLE CLOSED 2026-05-15. >65 min since B-015 unblock. No boot.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: await slot-7 100/377 self-report; monitor harsh-slot-9 boot.
