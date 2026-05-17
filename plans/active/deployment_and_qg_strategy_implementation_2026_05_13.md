@@ -587,6 +587,11 @@ surface, not per repo:
       (T-6h snap with bookmaker_key covers lines 212-254: loop body, ≥2 probs agreement,
       all-zero-delta→1.0, <2 probs→NaN). odds_prob_space.py 83.0%→~95%+.
       Shipped at `features-service@625f9711`.
+      **Wave 41 (2026-05-17 slot-8)**: +10 tests for `transfer_window_calculator` (both
+      has_lineups+has_transfers branches 310/312, new_signing_integration early return 399,
+      turnover_stability len<2 449 + empty-xi-sets 452, batch lineups 508-510/558-567,
+      timezone localize 530, shock data path 595-612, exception NaN row 620-636).
+      transfer_window_calculator.py 86.8%→90%+. Shipped at `features-service@5960cdeb`. 50 tests total.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
