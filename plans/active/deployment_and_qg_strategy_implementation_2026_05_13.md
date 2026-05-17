@@ -178,8 +178,13 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
       (deployment-api@f0c0c43 — deployment_env exposed in /region endpoint; deployment-ui@2c8de22 — tarball-from-local
       radio in DeployMissingButton disabled/greyed-out for staging/production/prod env with tooltip + blocked badge + 4
       vitest tests covering staging/production/development/badge paths; 18 DeployMissingButton tests pass)
-- [ ] [AGENT] P0. **Audit log wire-in** — every tarball-deploy attempt (success, reject, override) writes a
-      `DeploymentEvent` row via UTL `RequestAuditMiddleware` per CLAUDE.md audit-records discipline.
+- [x] ✅ [AGENT] P0. **Audit log wire-in** — verified 2026-05-17 (slot-8). Already shipped within the Phase 1 deploy
+      endpoint work at `deployment-api@0574e9e`: `deployment_api/services/deploy_missing.py:_emit_deploy_event()` calls
+      UTL `log_event()` for all 3 outcomes — `TARBALL_DEPLOY_ATTEMPTED` (allowed), `TARBALL_DEPLOY_BLOCKED` (rejected),
+      `TARBALL_DEPLOY_OVERRIDE` (override-allowed). Test coverage in `tests/unit/test_tarball_env_block.py` (lines
+      82/91/99) asserts all 3 events fire. Spec note: plan body said "via UTL `RequestAuditMiddleware`" but the system-
+      first pattern for business audit events is `log_event()` (RequestAuditMiddleware records HTTP request/response,
+      not business outcomes). No code change required.
 
 **Owner**: deployment-api + deployment-ui slots (parallel; both reads from same env config). **Dependencies**: None —
 UAC schemas already shipped.
