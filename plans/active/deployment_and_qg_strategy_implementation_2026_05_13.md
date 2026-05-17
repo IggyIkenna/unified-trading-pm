@@ -290,12 +290,14 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
 
 ### Phase 5 — Image base-pin audit + retention policy (1 cal-AI-day)
 
-- [ ] [AGENT] P0. **Author `deployment-service/scripts/audit/dockerfile-base-pin.sh`** — walks all `Dockerfile`s in
-      workspace; flags any using `:tag` instead of `@sha256:digest` for production-bound services (skip dev-only
-      utilities). Output: per-Dockerfile remediation list. Add to QG STEP as a P1 (warn) ratchet; flip to P0 (error) at
-      2026-05-15 freeze gate.
-- [ ] [AGENT] P0. **Pin all production Dockerfile base images to digest** — apply remediation list. Per-repo PRs;
-      serialize through root-dep slot.
+- [x] ✅ [AGENT] P0. **Author `deployment-service/scripts/audit/dockerfile-base-pin.sh`** — shipped 2026-05-15 at
+      `deployment-service@46dc1fd`. Walks all Dockerfiles workspace-wide; flags any using `:tag` instead of
+      `@sha256:digest` for production-bound services; skips dev-only (`Dockerfile.dev*`, `Dockerfile.test*`). QG STEP
+      5.79 ratchets WARN→FAIL from 2026-05-15.
+- [x] ✅ [AGENT] P0. **Pin all production Dockerfile base images to digest** — applied 2026-05-17 (slot-8). The audit
+      identified 1 remaining violation (`ibkr-gateway-infra/Dockerfile.terraform: hashicorp/terraform:1.6`); pinned to
+      `@sha256:9a42ea97ea25b363f4c65be25b9ca52b1e511ea5bf7d56050a506ad2daa7af9d` at `ibkr-gateway-infra@a5dd3c3`.
+      Re-run of audit reports `Pinned: 2 / Violations: 0 / Skipped: 1`.
 - [ ] [AGENT] P0. **Artifact Registry retention policy** —
       `deployment-service/scripts/audit/artifact-registry-retention.sh` (NEW): configures GCP Artifact Registry cleanup
       policies. Keep-forever: release tags. Keep-14d: commit-SHA images. Keep-3d: branch-feature images.
