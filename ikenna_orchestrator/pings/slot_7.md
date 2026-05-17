@@ -1107,3 +1107,11 @@ because the issue is statused P2 post-cutover — proceed regardless.
   (BUY/SELL unified); DriftConnector.cancel_order 60L→23L via _build_cancel_paper_result.
 
 308 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 30] slot-7 — execution-service Phase B (+2, 71/377 cleared):
+
+- `execution-service@ec0ab1497` — InstructionDrivenV3Handlers.enter_position 60L→39L via _store_parent_benchmark +
+  _notify_verifier_submitted helpers; TradeMeasurementVerifierActor.on_order_filled 63L→31L via
+  _resolve_expected_qty + docstring trim.
+
+306 remaining. basedpyright clean.
