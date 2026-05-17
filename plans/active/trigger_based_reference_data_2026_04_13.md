@@ -182,11 +182,18 @@ Workstreams B and C1a are done. Workstream A is the remaining substantial work.
 
 ## Phase A1 — UAC Season Start Calendar
 
-- [ ] [CODE] P0. Add `season_dates.py` to `canonical/domain/sports/` with per-league season start/end dates (2019-2027)
-- [ ] [CODE] P0. Public API: `get_season_start(league_id, season_year)`, `get_season_end(league_id, season_year)`
-- [ ] [CODE] P0. Add `get_reference_refresh_dates(league_id, year)` — union of season start + all window open/close
-- [ ] [CODE] P0. Re-export from `sports/__init__.py` and `sports.py` facade
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` on UAC
+- [x] ✅ [CODE] P0. Add `season_dates.py` to `canonical/domain/sports/` with per-league season start/end dates
+      (2019-2027) — shipped at `unified-api-contracts@7c8b5ad`
+      (`canonical/domain/sports/season_dates.py`, verified 2026-05-17 slot-8).
+- [x] ✅ [CODE] P0. Public API: `get_season_start(league_id, season_year)`, `get_season_end(league_id, season_year)` —
+      both functions present + tested at `unified_api_contracts/canonical/domain/sports/season_dates.py:70 + :87`.
+- [x] ✅ [CODE] P0. Add `get_reference_refresh_dates(league_id, year)` — union of season start + all window open/close —
+      shipped at `season_dates.py:200` (verified 2026-05-17 slot-8 — function imports cleanly + computes refresh dates).
+- [x] ✅ [CODE] P0. Re-export from `sports/__init__.py` and `sports.py` facade — direct `__init__.py` re-exports at
+      lines 149/151/152; `sports.py` facade re-exports via `from ...canonical.domain.sports import *` (verified
+      2026-05-17 slot-8 — `from unified_api_contracts.sports import get_season_start, get_season_end,
+      get_reference_refresh_dates` succeeds).
+- [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` on UAC — covered by every UAC commit cycle (gated by workspace-qg.yml).
 
 ## Phase A2 — Trigger-Aware Orchestrator
 
