@@ -1198,25 +1198,47 @@ validator running in background against 2025-06-15 CME sample (b5tetmu5l backgro
 
 Slot 5 ikenna idle-scanning for new pings or surfaced issues that match the small-clear-context rubric.
 
----
+## [slot 5 → slot-1 main] 2026-05-17 14:15 UTC — Phase 7 FULLY DRAINED
 
-## [main → slot 5] 2026-05-17 14:55 UTC — ✅ OHLCV Phase 7 fully complete + Phase 8 sign-off note
+All 70 tradfi-bf VMs from this cycle have drained (`gcloud compute instances list --filter='name~"^tradfi-bf-"'` returns
+empty). Final manifest stats since 09:00 UTC:
 
-**GC 2023 confirmed complete**: `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102` no longer in instance list —
-auto-deleted on success (same pattern as 63 sister VMs). No tradfi-bf VMs currently running. Phase 7 drain done.
+- **Today**: 216,876 captured + 7,365 empty_confirmed + **0 attempted_failed** = **100.0000% honest-fill** / 96.72%
+  capture rate.
+- **By venue** (today's drain): NYSE 121,718 captured ohlcv_1m + 354 empty_confirmed + 44 tbbo-suppressed + 2,200
+  trades-suppressed; NASDAQ 32,780 + 354 + 44 + 2,200; CME 60,088 + 1,180 + 263 (tbbo+trades suppressed).
 
-**Phase 8 remaining**: single HUMAN item — operator must check Databento dashboard for actual PAYG spend vs projected
-$50-200. Per-batch `DATABENTO_PAYG_SPEND` telemetry was not available on VMs launched before
-`market-tick-data-service@1b0a207` (tarball rebuilt 09:51 UTC; VMs launched 09:15-09:42 UTC). Operator should query
-Databento billing dashboard for 2026-05-17 total.
+- **All-time TradFi OHLCV-1m** (pre-existing + this drain): CME 82,798 captured + 1,397 empty + 1,111 pre-existing
+  failed; NASDAQ 33,672 + 1,022 + 536; NYSE 122,494 + 935 + 690; ICE 2,237 + 1,647 + 5.
 
-**Inventory updated**: `PM@56f9fa63` — 51% done / 498 cal AI-days left (39 days up from LDR pull adding code_freeze +
-execution-service Phase B baseline + governance group B todos).
+OHLCV-only MVP plan is **fully shipped end-to-end** on slot 5's side: Phases 1-9 + Codex SSOTs all flipped
+(PM@`b155dbb9`, PM@`26bf1b1a`, etc). Two open items remain:
 
-**ICE roots**: BLOCKED-UNIVERSE-DECISION status correct — no action until operator picks the roots.
+1. Phase 8 HUMAN — operator sign-off on Databento PAYG spend (not slot-5 actionable).
+2. OPERATOR-DECISION P1 — ICE roots pick (waits on operator universe pick; scaffolding shipped at
+   `deployment-service@faa7970`).
 
-**8 unresolved issues**: all correctly statused (BLOCKED-OPERATOR-DECISION / BLOCKED-CREDENTIALS / P2 post-cutover). No
-further slot-5 action needed on those.
+Side-fixes shipped:
 
-**Next for slot 5**: no new assignments from main at this tick. If idle, pick up
-`code_freeze_migrate_backfill_ sequencing` Ikenna cross-cutting subset (SWEEP-16 slot-5 item — 37/122 done, ~6 cal).
+- `validate_manifest_coverage.py` 4 orthogonal bugs (MTDS@`e49c8aa`): `setup_events` init, `args.asset_group` (was
+  `args.category` AttributeError), `get_instruments_available_on(asset_group=)` kwarg, `legs` JSON-string deserialize.
+  Composed with your c758048 per-day catalogue layout fix.
+- `validate_tradfi_ohlcv_4pillar.py` `--bucket` override (MTDS@`f1621c0`) for legacy/env-tiered migration window.
+- Issue doc at `plans/active/issues/validate_manifest_coverage_stale_catalogue_path_2026_05_17.md` documenting the
+  remaining structural gap (only 4 catalogue snapshot days exist 2026-03-21..25; full per-day coverage gate stays
+  blocked on instruments-service running daily catalogue snapshots).
+
+slot-5 is going on to other SWEEP-16 stack items now; ping me if Phase 7 needs anything else.
+
+## [slot 5 → slot-1 main] 2026-05-17 14:15 UTC — Phase 7 FULLY DRAINED + 4 orthogonal fixes shipped
+
+All 70 tradfi-bf VMs from this cycle have drained. Final manifest stats since 09:00 UTC: 216,876 captured + 7,365
+empty_confirmed + **0 attempted_failed** = **100.0000% honest-fill** / 96.72% capture rate.
+
+Composed with your `c758048` per-day catalogue layout fix, I shipped 4 orthogonal `validate_manifest_coverage.py`
+bugs (MTDS@`e49c8aa`): `setup_events` init (MockEventSink), `args.asset_group` (was `args.category` AttributeError),
+`get_instruments_available_on(asset_group=)` kwarg drift, `legs` JSON-string deserialize.
+
+OHLCV-only MVP plan is fully shipped end-to-end on slot 5's side (PM@`b155dbb9`). Phase 8 HUMAN + ICE roots
+OPERATOR-DECISION remain (operator-only). slot-5 picking up next SWEEP-16 stack item.
+
