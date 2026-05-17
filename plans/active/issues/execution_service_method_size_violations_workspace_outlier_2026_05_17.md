@@ -341,6 +341,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14**: 18 files cleared (slot-2 contribution: -18
    files; 10 handlers + 8 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 15 — services sweep starting)**: pnl_calculator.py shipped at
+   execution-service@ec766fcc8 (calculate_period_pnl 71L→42L via \_returns_pct (gross/net % returns,
+   zero-on-zero-capital) + \_ethena_benchmark_return (day-count APY→period-$-return)). Allowlist -1. basedpyright
+   clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15**: 19 files cleared (slot-2 contribution:
+   -19 files; 10 handlers + 8 defi protocols + 1 service).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
