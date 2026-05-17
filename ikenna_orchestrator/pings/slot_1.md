@@ -1,5 +1,38 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-17 ~16:05 UTC — /loop tick: Phase 6B catch-up VM launched + ping sweep
+
+**Actions this tick**:
+
+1. **Context sync**: Pulled 4 LDR commits that landed while session was compacted — Gate 3 FIRED ✅ (all 5 asset groups
+   0 phantoms, PM@`bf47123f`); B-015 HOLD released (`PM@4c0b9843`); inventory regenerated at 51% / 495 cal / 69 plans.
+   Dropped stale local stash (was showing "PARTIAL — cefi DONE" — superseded by real GCE VM results). Killed 2 redundant
+   local background audit processes (defi/tradfi — real VMs already ran).
+
+2. **Phase 6B Aave V3 multi-chain catch-up** ✅ launched: `mtds-lending-indices-20260517-160411` (VM RUNNING as of 16:04
+   UTC). Gap: 2026-05-14→2026-05-17 (4 days; latest GCS date was 2026-05-13). Historical 2022-01-01→2026-05-13 confirmed
+   present for all 8 UAC chains. SCROLL/ZKSYNC flagged BLOCKED-UPSTREAM (no UAC subgraph IDs). Phase 6B flipped `[x]` in
+   `defi_catalogue_chain_primitives_2026_05_10.md` at `PM@3d940c5e`.
+
+3. **Ping sweep**:
+   - slot-2: CLEAN (session ended, method-size ratchet COMPLETE)
+   - slot-3: BLOCKED-OPERATOR-DECISION (Extended REST auth pending operator pick since 2026-05-15)
+   - slot-4: 40 files cleared / allowlist 131 / tick 10 last; ack sent 15:40 UTC, tick 11 should land ~30min
+   - slot-5: tradfi-fwd cron BLOCKED-OPERATOR-DECISION, acked 15:40 UTC
+   - slot-6: Phase 7.C (manifest schema migration fleet) still unresponsive — 3 pings, 0 responses; operator-gated; DAI
+     IRM VM also unknown; NOT launching fleet unilaterally (plan says [HUMAN+AGENT])
+   - slot-7: Phase B acked 14:55 UTC; 61/377 cleared at tick 25; no new pings this tick
+   - slot-8: Governance + basedpyright done ✅; Phase 5 OHLCV reminder ping sent (slot-8 hadn't acked 08:35 assignment)
+
+4. **Pending operator decisions** (no change): Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron
+
+**Inventory**: 69 plans / 51% done / 495 cal AI-days left (PM@`3d940c5e` includes Phase 6B flip).
+
+**Next tick** (~16:35 UTC): check slot-4 tick 11 + slot-7 progress; poll `mtds-lending-indices-20260517-160411` VM
+STARTED event; check slot-8 Phase 5 ack; check Harsh cross-side for B-015 Smoke B re-launch result.
+
+---
+
 ## [slot 1 main] DAY-3 v5 — Phase 0 progress + 2 new issues assigned + C901 locked — 2026-05-14 ~15:00 UTC
 
 ### Progress since v4 push (3fd47835)
@@ -1114,17 +1147,19 @@ complete; update Gate 3 runbook execution record with phantom counts.
 
 All 5 VMs completed with exit_code=0 by 14:42 UTC:
 
-| Asset Group | Real Captures | Phantom Captures | Script 2 | Script 3 |
-|---|---|---|---|---|
-| cefi | 1,290,706 | **0** | 0 candidates | 0 candidates |
-| defi | 311,602 | **0** | 0 candidates | 0 candidates |
-| tradfi | 245,907 | **0** | 0 candidates | 5,212 proposed upgrades (scan-only) |
-| sports | 559,961 | **0** | 0 candidates | 1,829,839 candidates; 0 upgraded |
-| prediction | 14,403 | **0** | 0 candidates | 41 candidates; 0 upgraded |
+| Asset Group | Real Captures | Phantom Captures | Script 2     | Script 3                            |
+| ----------- | ------------- | ---------------- | ------------ | ----------------------------------- |
+| cefi        | 1,290,706     | **0**            | 0 candidates | 0 candidates                        |
+| defi        | 311,602       | **0**            | 0 candidates | 0 candidates                        |
+| tradfi      | 245,907       | **0**            | 0 candidates | 5,212 proposed upgrades (scan-only) |
+| sports      | 559,961       | **0**            | 0 candidates | 1,829,839 candidates; 0 upgraded    |
+| prediction  | 14,403        | **0**            | 0 candidates | 41 candidates; 0 upgraded           |
 
 **Operator disposition: ACCEPT** — all phantoms 0, manifests fully clean.
 
-**Side-finding (TradFi)**: 5,212 legacy-blank rows need `reconcile_legacy_blank_to_typed_reason --apply-flips` VM run (5,099 SOURCE_RETURNED_ZERO → LegacyBlankErrorReasonError + 113 → EXPECTED_PARTIAL_HALF_DAY). Filed as P2 todo in gate_3 runbook § "TradFi Side-Finding".
+**Side-finding (TradFi)**: 5,212 legacy-blank rows need `reconcile_legacy_blank_to_typed_reason --apply-flips` VM run
+(5,099 SOURCE_RETURNED_ZERO → LegacyBlankErrorReasonError + 113 → EXPECTED_PARTIAL_HALF_DAY). Filed as P2 todo in gate_3
+runbook § "TradFi Side-Finding".
 
 **Plans updated**: gate_3 runbook execution record FIRED ✅; master plan banner updated to ✅.
 
@@ -1136,13 +1171,16 @@ Next tick: poll slot pings for new acks; monitor tradfi-fwd cron + slot-6 Phase 
 
 ---
 
-## [slot 1 main] 2026-05-17 ~15:50 UTC — B-015 HOLD released via _agent_pings cross-side ping
+## [slot 1 main] 2026-05-17 ~15:50 UTC — B-015 HOLD released via \_agent_pings cross-side ping
 
 **Action taken**: Appended Gate 3 phantom-fix confirmation to `plans/active/_agent_pings.md` (PM@pending).
 
-**Finding**: harsh LEDGER had B-015 Smoke B on HOLD "pending Ikenna phantom-fix confirmation." Gate 3 audit (just completed) confirms 0 phantoms in DeFi manifest (311,602 real captures, 0 phantoms). No `--apply-flips` needed. HOLD condition is fully met.
+**Finding**: harsh LEDGER had B-015 Smoke B on HOLD "pending Ikenna phantom-fix confirmation." Gate 3 audit (just
+completed) confirms 0 phantoms in DeFi manifest (311,602 real captures, 0 phantoms). No `--apply-flips` needed. HOLD
+condition is fully met.
 
-**Ping sent** to harsh-slot-9: re-launch features-onchain Smoke B VM (2026-04-08 → 2026-04-12), `vault_share_price` fix already at `features-service@550cdaba`.
+**Ping sent** to harsh-slot-9: re-launch features-onchain Smoke B VM (2026-04-08 → 2026-04-12), `vault_share_price` fix
+already at `features-service@550cdaba`.
 
 **No other new actionable pings** this tick. Slot 2 stopping cleanly, slots 3-8 proceeding autonomously.
 
@@ -1155,7 +1193,9 @@ Next tick: monitor for harsh-slot-9 B-015 Smoke B re-launch ack.
 ## [slot 1 main] 2026-05-17 ~16:05 UTC — Autonomous loop tick: no new acks
 
 **Poll results** (tick 5):
-- `harsh_orchestrator/pings/slot_9.md`: last entry 2026-05-15 CYCLE-CLOSE — harsh-slot-9 not yet booted since B-015 HOLD release ping (PM@4c0b9843, 15:50 UTC).
+
+- `harsh_orchestrator/pings/slot_9.md`: last entry 2026-05-15 CYCLE-CLOSE — harsh-slot-9 not yet booted since B-015 HOLD
+  release ping (PM@4c0b9843, 15:50 UTC).
 - `plans/active/_agent_pings.md`: no new responses since our B-015 unblock ping.
 - Remote log: only our own commits (4c0b9843 / d0d4d15b / bf47123f) — no harsh-side activity.
 
