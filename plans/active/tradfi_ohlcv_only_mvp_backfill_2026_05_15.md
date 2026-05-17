@@ -141,26 +141,41 @@ per workspace HARD RULE.
 
 ### Phase 5 — Phantom-row reconciliation
 
-- [x] ✅ **[SCRIPT] P0. TradFi trades+tbbo manifest reconciled.** slot-1-main 2026-05-17 09:55 UTC. Added new enum value `EmptyConfirmedReason.EXPECTED_OUT_OF_COVERAGE_WINDOW` at `unified-api-contracts@585de75` (distinct from EXPECTED_DEPRECATED_DATA_TYPE — this is SCOPE SHRINK that may reverse post-cutover). One-shot reconciliation flipped all 39,048 TradFi trades+tbbo rows in `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` to `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERAGE_WINDOW`. Pre-flip: 20,972 captured + 9,162 empty_confirmed + 2,927 attempted_failed across CME/ICE/NASDAQ/NYSE/BARCHART/CBOE/FX/YAHOO_FINANCE. Post-flip: 10,279 tbbo + 28,769 trades all empty_confirmed. Non-target rows: 102,368 unchanged. Existing parquets on GCS preserved (audit trail). Local backup: `/tmp/tradfi_manifest.parquet.backup-20260517T085342`.
+- [x] ✅ **[SCRIPT] P0. TradFi trades+tbbo manifest reconciled.** slot-1-main 2026-05-17 09:55 UTC. Added new enum value
+      `EmptyConfirmedReason.EXPECTED_OUT_OF_COVERAGE_WINDOW` at `unified-api-contracts@585de75` (distinct from
+      EXPECTED_DEPRECATED_DATA_TYPE — this is SCOPE SHRINK that may reverse post-cutover). One-shot reconciliation
+      flipped all 39,048 TradFi trades+tbbo rows in
+      `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` to
+      `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERAGE_WINDOW`. Pre-flip: 20,972 captured + 9,162
+      empty_confirmed + 2,927 attempted_failed across CME/ICE/NASDAQ/NYSE/BARCHART/CBOE/FX/YAHOO_FINANCE. Post-flip:
+      10,279 tbbo + 28,769 trades all empty_confirmed. Non-target rows: 102,368 unchanged. Existing parquets on GCS
+      preserved (audit trail). Local backup: `/tmp/tradfi_manifest.parquet.backup-20260517T085342`.
 
-  **NEXT STEP** below was original plan text:
-      re-classify as `empty_confirmed` with reason = `EXPECTED_OUT_OF_COVERAGE_WINDOW` (existing UAC enum) OR delete +
-      flip to `expected_unattempted`. Decision: re-classify in place; preserves audit trail of prior captures. Use
-      existing
-      [`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`](../../../instruments-service/scripts/reconcile_phantom_manifest_rows_all.py)
-      with `--asset-group tradfi --apply` extended for this case.
+  **NEXT STEP** below was original plan text: re-classify as `empty_confirmed` with reason =
+  `EXPECTED_OUT_OF_COVERAGE_WINDOW` (existing UAC enum) OR delete + flip to `expected_unattempted`. Decision:
+  re-classify in place; preserves audit trail of prior captures. Use existing
+  [`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`](../../../instruments-service/scripts/reconcile_phantom_manifest_rows_all.py)
+  with `--asset-group tradfi --apply` extended for this case.
 
 ### Phase 6 — Backfill VM launchers (per-venue, per-data_type)
 
-- [ ] [SCRIPT] P0. Create per-(venue, data_type) backfill launchers under `deployment-service/scripts/vm/` per launcher
-      SSOT:
-  - `launch-tradfi-bf-cme-ohlcv-1m.sh` (CME ES + MES + NQ + MNQ + CL + GC roots; 2019-01-01 → today)
-  - `launch-tradfi-bf-ice-ohlcv-1m.sh`
-  - `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` (SP500 + ETF tickers per `tradfi_ticker_universe`)
-  - `launch-tradfi-bf-nyse-ohlcv-1m.sh` (SP500 + ETF tickers)
-  - VM naming: `tradfi-bf-<venue>-ohlcv-1m-<YYYYMMDD-HHMMSS>` matching `VM_PREFIX_TO_BUCKET` registry.
-  - Per-VM shard isolation: `VM_NAME=<unique> MANIFEST_PER_VM_SHARDS=true`.
-  - Active event-stream verification: STARTED within 60s + ≥1 progress/hour + STOPPED at exit (per CLAUDE.md).
+- [x] ✅ **[SCRIPT] P0. Per-venue OHLCV-1m backfill launchers shipped.** slot-5 2026-05-17 at
+      `deployment-service@f8cd7de` — 4 launchers + 1 shared library under `scripts/vm/`:
+  - `launch-tradfi-bf-cme-ohlcv-1m.sh` — 7 roots (ES, MES, NQ, MNQ, CL, GC, ES_OPT) × 8 year-shards = 56 VMs dry-run;
+    parent symbology via `.FUT`/`.OPT` suffix.
+  - `launch-tradfi-bf-ice-ohlcv-1m.sh` — scaffolding ships with empty `ICE_ROOTS` (operator picks roots once tradfi
+    ticker universe declares ICE rows; candidate extension shape commented in script).
+  - `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` — 293 tickers (SP500 ∪ NASDAQ ∪ ETF, resolved from UAC at launch-time) × 8
+    year-shards = 8 VMs.
+  - `launch-tradfi-bf-nyse-ohlcv-1m.sh` — 258 tickers (SP500 ∪ ETF) × 8 year-shards = 8 VMs.
+  - `_tradfi-ohlcv-launcher-lib.sh` — shared lib: `ohlcv_check_singleton_lock` (^tradfi-bf- match), `ohlcv_create_vm`
+    (gcloud + VM_NAME + MANIFEST_PER_VM_SHARDS=true), `ohlcv_year_shards`, `ohlcv_parse_common_args`.
+  - VM naming: `tradfi-bf-<venue>-ohlcv-1m-<root_or_year>-<YYYYMMDD-HHMMSS>` — covered by `tradfi-bf-` prefix in
+    `vm_zombie_watchdog.py:258` → `market-data-tick-tradfi-{PROJECT_ID}` bucket.
+  - Per-VM shard isolation: `VM_NAME=<unique> MANIFEST_PER_VM_SHARDS=true` enforced in metadata.
+  - Active event-stream verification: inherited from `setup-data-pipeline-vm.sh` (STARTED within 60s + ≥1 progress/hour
+    - STOPPED at exit).
+  - Dry-run smoke verified for all 4 launchers; bash 5 required (`${var,,}` lowercase param expansion).
 
 ### Phase 7 — Backfill execution + 4-pillar validation
 
