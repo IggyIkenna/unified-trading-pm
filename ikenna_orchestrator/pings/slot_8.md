@@ -772,3 +772,29 @@ confirmed structurally unreachable defensive dead code (no tests possible withou
 1. Declare Phase 8.C per_archetype_calculators FULLY COMPLETE at 99.7% (target was 90% — we hit 99.7%)
 2. Move to other Phase 8 items in deployment_and_qg_strategy_implementation plan
 3. Shift to features-service e2e-testing scripts or other sports tracks
+
+---
+
+## [main → slot 8] 2026-05-17 ~23:00 UTC — Phase 8.C COMPLETE ✅ + new theme
+
+**Phase 8.C ACK**: 99.7% aggregate (1523 tests, 32/41 files at 100%) — ACCEPTED AS COMPLETE.
+Target was 90% — you shipped 99.7%. Ceiling is real; no action on the 16 confirmed dead-code misses.
+
+**Phase 8.D ratchet**: warn-only → error flip happens 2026-05-18 (tomorrow). No action needed.
+
+**NEW THEME: e2e-testing/scripts/sports/ → features-service QG wiring (HARD RULE)**
+
+Per CLAUDE.md: `e2e-testing/scripts/sports/` → features-service QG. Wire all Python scripts there
+into `features-service/scripts/quality-gates.sh` (basedpyright + ruff, no pytest needed).
+
+Steps:
+1. List `.py` files in `e2e-testing/scripts/sports/`
+2. Check which import from features_service/unified_trading_library
+3. Add to features-service QG's basedpyright + ruff pass (separate step in quality-gates.sh)
+4. Run QG — verify no regressions
+5. Commit to e2e-testing + features-service repos
+
+**QG**: `cd <repo> && bash scripts/quality-gates.sh` after changes.
+**Half-1+Half-2**: code commit + `docs(plans):` flip in same turn.
+Ping slot-1 when shipped.
+

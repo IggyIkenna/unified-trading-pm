@@ -3014,3 +3014,43 @@ VM: strategy-paper-carry-staked-basis-20260517-225137
 ```
 
 **Status**: 🔧 VM 225137 launched; STARTED expected ~23:00 UTC
+
+---
+
+## [slot 1 main] 2026-05-17 ~23:00 UTC — tick-78: solana+solders fix applied; VM 225855 launched
+
+**B-015 dependency cascade fixed** (deployment-service@e8eef2d + @09570e0):
+
+VM 225137 crashed: `ModuleNotFoundError: No module named 'solana'`  
+Root cause: execution-service installed --no-deps; solana + solders needed at module level in defi_execution/protocols/.  
+Fix: install both explicitly in setup script (same pattern as sqlalchemy/nautilus-trader).
+
+Fixes applied:
+- @e8eef2d: install solana>=0.36.0 explicitly (solana_base.py module-level import)
+- @09570e0: install solders>=0.27.0 explicitly (solana_base, kamino, marinade, raydium, orca, jupiter module-level imports)
+GCS updated with both fixes.
+
+**VM 225855 launched**:
+```
+VM: strategy-paper-carry-staked-basis-20260517-225855
+Zone: asia-northeast1-c / n2-standard-4 / 50GB
+Waivers: --waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs
+Startup estimate: ~3-5 min (install nautilus-trader + solana + solders binary wheels)
+Expected STARTED event: ~23:05-23:08 UTC
+```
+
+Verify:
+```bash
+gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-225855/run.log" 2>/dev/null | tail -20
+gcloud storage ls "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-225855/" 2>/dev/null
+```
+
+**Slot-8**: Phase 8.C ack sent (99.7% ceiling), new theme: e2e-testing/scripts/sports/ → features-service QG wiring.
+
+**Other slots**:
+- Slot-2: Phase B batch-97 done (4 violations cleared) ✅
+- Slot-5: Sports waves (no new ack after Wave-57)
+- Slot-7: DARK 5h+
+- Slot-10: Phase U6 — no ack
+
+**Status**: 🔧 VM 225855 in startup (~3-5 min); monitoring for STARTED event
