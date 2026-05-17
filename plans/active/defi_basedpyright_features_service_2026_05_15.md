@@ -38,6 +38,7 @@ Same patterns as execution-service fix:
 
 ## Tasks
 
+- [x] ✅ [AGENT] P0. **risk-and-exposure-service drift cleanup** — 17 errors crept in since plan creation (seed_mock_data + backtest_depeg_ladder + mock_data_provider); fixed at risk-and-exposure-service@5408d9f (slot-8 2026-05-17). cast() for argparse Namespace + numpy scalar (np.sqrt returns Any) + json.loads result. All 3 sibling DeFi service repos (strategy-service, risk-and-exposure-service, execution-service) at 0 reportAny again.
 - [x] ✅ [AGENT] P0. Run basedpyright on features-service and triage top 10 error locations. — completed slot-8 2026-05-17 (full per-dir + per-file breakdown captured across 5 waves; informed sub-agent fan-out strategy).
 - [x] ✅ [AGENT] P0. Fix cast() wrappers in features_service/calculators/ (expected ~300 errors). — **691 errors cleared session-cumulative (827→136)** across waves 1-5 + cli/api cleanup; all of sports/, delta_one/, calendar/, volatility/, multi_timeframe/, commodity/, cli/, api/ at 0 reportAny. Remaining 136 errors are confined to onchain/ (96, foreign-active other slot) + cross_instrument/ (40, foreign-active other slot).
   - [x] ✅ transfer_window_calculator.py 32→0 errors — features-service@9183f81f (slot-8 2026-05-17)
