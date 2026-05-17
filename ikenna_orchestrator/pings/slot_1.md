@@ -1719,3 +1719,22 @@ Next tick: EXIT_STATUS + event count; if DEPLOYMENT_COMPLETED → ping harsh + f
 **No new harsh pings**. _agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
 
 Next tick: EXIT_STATUS + event count; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:05 UTC — Autonomous loop tick-28: Phase U4 flip ✅ + slot-7 78/377 + Smoke B hour=17
+
+**Actions this tick**:
+- ✅ **Phase U4 flip**: `promote_workflow_may23_cli_path_2026_05_10.md` item "Promote/Demote/Override wire to backend" → `[x]` (ui@6e705085). Plan now 48/77 done (PM@0325db69).
+- ✅ **slot-5 redirect**: pvl-p23a/b/c already done 2026-05-14/15; redirected to `deploy_missing_auto_launch_2026_05_07` (5 P0 backend+UI items). No self-report yet.
+
+**Slot-7 Phase B**: tick-33, **78/377 cleared** (299 remaining). Approaching 100-method milestone — ETA ~7-8 more ticks at current pace (+3/tick).
+
+**Smoke B** (`features-onchain-defi-20260517-171908`): VM RUNNING. Events: 46,546 in hour=16 + 1,829 in hour=17 (latest: 17:01 UTC AAVE_V3 utilization BASE:WETH). Now ~1h40m into run. Still in Aave V3 utilization phase — cross-chain scan is large (many pools × 5 dates × multiple chains).
+
+**Slot-2**: batch 50 shipped (cli/backtest_args parse_args 236L→28L; execution-service@3693bf430).
+**Slot-4/5/8**: no new self-reports since last ack.
+
+**Inventory**: 53% done / 482 cal AI-days / 69 plans.
+
+Next tick: slot-7 100/377 milestone watch; Smoke B hour=17 event count + DEPLOYMENT_COMPLETED check; slot-5 deploy-missing-launch progress.
