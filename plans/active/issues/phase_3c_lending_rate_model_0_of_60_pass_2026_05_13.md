@@ -419,3 +419,58 @@ static defaults suggest.
 + filed as next-cycle action.
 
 **Phase 3C VALIDATION GATE status**: 🟡 PARTIAL (16.7% vs 90% target) — gated on DAI fix only. USDC + USDT done.
+
+## BREAKTHROUGH 2026-05-17 03:35 UTC (slot-1-main) — DAI live IRM fetch IS WORKING
+
+Shipped diagnostic emissions at `execution-service@d52812439` (`IRM_PARAM_FETCH_OK` / `_FAILED` per-event in
+`tests/defi_execution/integration/test_lending_rate_validation.py`). Relaunched VM
+`aave-lending-rate-val-20260517-052230` (corr_id `1A60DB77-05D5-4F43-BCD0-558E1C171619`).
+
+**Diagnostic events**:
+- `IRM_PARAM_FETCH_OK`: **60/60** events (DAI: 50/50, USDC: 7/7, USDT: 3/3)
+- `IRM_PARAM_FETCH_FAILED`: 0 events
+
+**DAI live IRM params (uniform across all 50 events)**:
+```
+strategy_addr = 0x847A3364Cc5fE38928 (truncated; full = DAI V3 strategy)
+base_rate            = 0
+slope1               = 0.055   (5.5%)
+slope2               = 0.75    (75% — NOT the 0.35 in static defaults!)
+optimal_utilization  = 0.92    (92%)
+reserve_factor       = 0.25    (25% — NOT 0.10 in defaults)
+```
+
+**This invalidates the prior hypothesis** that DAI failed due to missing live params / static fallback. Live fetch
+works perfectly for all 60 events.
+
+## NEW root cause (for slot-6 / IRM domain expertise)
+
+**The bug is in `_reconstruct_lending_market_state`** (`tests/defi_execution/integration/test_lending_rate_validation.py:1011-1030`)
+— the utilization reconstruction:
+
+```python
+# supply_rate = borrow_rate * U * (1 - reserve_factor)
+# U = supply_rate / (borrow_rate * (1 - reserve_factor))
+```
+
+For DAI: sim consistently outputs U ≈ 0.184 (18.4%) → rate ≈ 1.1% from slope-1 branch
+(`0.055 * 0.184/0.92`). But realized rates 4-6% imply actual U ≈ 0.92 (in slope-2 branch).
+
+**Candidate causes** (each worth 1-2 hours of focused investigation by slot-6):
+1. The harness uses only `currentVariableBorrowRate` for borrow_rate, but DAI historically had significant stable
+   borrow. `liquidityRate` is `(weighted_avg_borrow_rate * U * (1-rf))` — using only variable underestimates the
+   denominator → inverse over-estimates U.
+2. `before_total_atoken` (total supply) may be stale / undercounted in the event dict → `total_borrow = U * supply`
+   becomes tiny → post-trade utilization stays in slope-1 forever.
+3. `reserve_factor=0.25` in the formula could be wrong — maybe DAI uses a tiered RF (deprecated asset = higher RF
+   on borrow but standard RF on supply).
+4. `before_liquidity_rate_ray` units may be wrong for DAI (e.g., DAI uses different RAY scale or includes accrued
+   interest).
+
+**Recommended fix path**: pull one DAI event's full enriched dict (block=20801709) from the GCS event stream,
+plug into a local Python script with the actual `post_trade_rate(state, supply, 0)` call, print intermediate
+`utilization`/`total_supply`/`total_borrow` to pinpoint where the math diverges.
+
+**Phase 3C VALIDATION GATE status**: 🟡 STILL PARTIAL (16.7% pass) — but rote cause now narrowed from "live
+fetch broken" to "utilization reconstruction wrong for stable-debt-bearing assets". Slot-6 cycle estimate: 2-3
+cal-hours focused investigation.
