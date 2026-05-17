@@ -767,3 +767,16 @@ operator approval — execution-service is May-23 critical path and not in slot-
 
 No new pings to slot 7 in the loop ledger since tick 4. Loop continues; idle-watching for orchestrator
 direction or unexpected drift.
+
+
+[2026-05-17 /loop tick 6] slot-7 — steady-state idle, no new orchestrator direction:
+
+Activity in the last hour was around B-015 chain (slot-3 / slot-1 main owning features-onchain VM
+debugging post infra-unblock): VM 5/7 calculator-bug surfacing, lending-indices phantom-row resolution,
+trading-agent-service auth fix. None touch slot-7 scope.
+
+Slot 7 work-split: all 9 base items + 5 SWEEP-16 items either ✅ done or routed-with-issue-doc.
+Method-size sweep: 5 repos clean (0 violations), 8 other sister repos confirmed clean by survey,
+1 outlier (execution-service) filed as P2 post-cutover.
+
+Loop remains in idle-watch mode. Next tick checks for new orchestrator pings.
