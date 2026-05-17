@@ -853,6 +853,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-74**: 78 files cleared (slot-2 contribution: -78 files; spans 45 submodules incl.
   config/grid_generator_cli).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 75 — benchmark/metrics)**: shipped at execution-service@e9b99db86.
+  compute_statistical_metrics (93L→42L) + compute_path_aware_metrics (162L→35L) + compute_aggregate_metrics (77L→38L)
+  via _empty_statistical_metrics + _compute_weighted_mean_std_n + _compute_z_score + _empty_path_metrics + _get_fill_ts +
+  _weighted_alpha + _compute_cumulative_alpha_curve + _measure_adverse_at_delta + _compute_adverse_selection +
+  _extract_alpha_weights_wins. 3 violations cleared. File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-75**: 79 files cleared (slot-2 contribution: -79 files; spans 46 submodules incl.
+  benchmark/metrics).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
