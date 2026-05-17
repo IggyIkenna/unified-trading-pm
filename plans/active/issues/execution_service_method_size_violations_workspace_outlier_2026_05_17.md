@@ -582,8 +582,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    batch 36 — this is the PreflightConfigValidator counterpart of ConfigurationValidator). Allowlist -1.
    basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-37**: 41 files cleared (slot-2 contribution: -41 files; spans 16
-   submodules incl. engine/validation ×2).
+   **Ratchet-down 2026-05-17 (slot-2 batch 38 — engine/backtest/actors/tp_sl_monitor_actor)**: shipped at
+   execution-service@e1847b3eb (_check_tp_sl 139L→36L via _emit_tp_hit + _emit_sl_hit helpers parameterized by
+   direction; LONG/SHORT mirror-symmetric blocks unified into two helpers). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-38**: 42 files cleared (slot-2 contribution: -42 files; spans 16
+   submodules incl. engine/validation ×2, engine/backtest/actors ×1).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
