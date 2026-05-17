@@ -3056,3 +3056,24 @@ No action needed from harsh-side — ikenna is monitoring.
 ```bash
 gcloud storage ls gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/
 ```
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 22:42 UTC — 🚨 B-015 PRE-FLIGHT BLOCKED
+
+**carry_staked_basis paper VM failing at pre-flight gate (NOT startup script)**
+
+Previous startup fix (e2e-testing NODEPS — deployment-service@d76ef7b) worked.
+VM now reaches run-paper.sh but pre-flight check blocks execution.
+
+**5 failing probes:**
+1. copper-sandbox-api-key — not in Secret Manager (post-May-23 scope, waiveable)
+2. CeFi testnet keys — bybit/binance/okx/hyperliquid/aster/deribit not in Secret Manager
+3. solana-wallet-address — not in Secret Manager
+4. chain-rpcs — ethereum+polygon unreachable (arbitrum/base/optimism OK)
+5. kill-switch — circuit_breaker_config.yaml path invalid on VM
+
+GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
+
+**OPERATOR ACTION REQUIRED** before B-015 can proceed.
+Harsh-side: no action needed. Awaiting operator response.

@@ -2928,3 +2928,42 @@ install e2e-testing as a package.
 VM 222941 deleted; third attempt: `strategy-paper-carry-staked-basis-20260517-223601`
 
 **Status**: 🔧 VM 223601 launched; awaiting STARTED event ~22:41 UTC
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:42 UTC — tick-75: 🚨 B-015 PRE-FLIGHT GATE BLOCKED — operator action required
+
+**VM 223601 root cause** (startup fix worked; pre-flight gate blocks strategy):
+
+Pre-flight probes ran inside `run-paper.sh`:
+```
+❌ copper:      Secret 'copper-sandbox-api-key' not found in Secret Manager
+❌ venue-keys:  Missing testnet secrets (bybit/binance/okx/hyperliquid/aster/deribit ×2 each)
+❌ solana-wallet: SOLANA_WALLET_ADDRESS not set; solana-wallet-address secret not found
+✅ tenderly:    anneki90/project reachable (HTTP 200)
+❌ chain-rpcs:  Unreachable: ethereum(1) polygon(137) | OK: arbitrum(42161) base optimism
+❌ kill-switch: circuit_breaker_config.yaml not found at:
+                /home/ikennaigboaka/workspace/unified-trading-pm/configs/circuit_breaker_config.yaml
+✅ alerting:    telegram-bot-token + telegram-chat-id OK
+```
+
+**HARD STOP**: wallet keys + kill-switch = human-only per CLAUDE.md. Cannot proceed without operator.
+
+**Cross-ping sent** to _agent_pings.md.
+**GCS log**: `gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
+
+**Operator action checklist** (B-015 unblock):
+1. Provision testnet CeFi keys in GCP Secret Manager
+2. Configure `solana-wallet-address` secret
+3. Fix kill-switch config path for VM (PM tarball not deployed to VM)
+4. Add Ethereum+Polygon RPC endpoints to Secret Manager
+5. `--waive-copper` — post-May-23 scope; safe to waive for paper
+
+**Other slots (tick-75):**
+- Slot-2: Phase B batch-96 (157 files cleared) ✅
+- Slot-5: Phase B algorithms/ (no ack, ~30 min since assignment)
+- Slot-7: DARK 4h+ (slot-5 covering)
+- Slot-8: Waves 45-57 all acked ✅
+- Slot-10: no new ack
+
+**Status**: 🔴 B-015 BLOCKED-CREDENTIALS — awaiting operator; all other slots progressing
