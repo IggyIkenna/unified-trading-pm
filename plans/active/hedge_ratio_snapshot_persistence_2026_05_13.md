@@ -28,11 +28,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # HedgeRatioSnapshot persistence — emit-to-data_type sub-plan
 
@@ -93,23 +91,33 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
 
 ### Phase 0 — Pre-audit + design call (~0.3 cal AI-days)
 
-- [ ] [SCRIPT] P0. Verify Phase 1F `HedgeRatioSnapshot` Pydantic model fields are sufficient for downstream consumer
-      (pnl-attribution Phase 6C). If gaps (e.g. need `tx_hash` for blockchain attribution), file UAC schema extension.
-- [ ] [SCRIPT] P0. Decide on bucket choice — reuse `strategy-output` or create new `hedge-ratio-snapshots` bucket? Read
-      `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0f conventions; default to existing bucket unless
-      cardinality / retention diverges materially.
-- [ ] [SCRIPT] P0. Decide writer pattern (A inline vs B buffer). Record decision in plan body.
+**Design decisions (slot-5 2026-05-17 ~21:30 UTC):**
+
+- Fields sufficient: YES — `HedgeRatioSnapshot` has all required fields. Added `HedgeRatioSnapshotRecord` with
+  `partition_dt`/`available_at`/`correlation_id` for parquet-specific shape.
+- Bucket: `strategy-store` / `defi` asset_group (existing bucket; no new bucket — cardinality/retention identical).
+- Writer pattern: **Pattern A (inline)** for both batch + live — rebalance events are infrequent (~25 bps threshold), so
+  I/O latency is not a concern; inline is simpler + same code path per batch=live SSOT.
+
+- [x] [SCRIPT] P0. Verify Phase 1F `HedgeRatioSnapshot` Pydantic model fields are sufficient for downstream consumer
+      (pnl-attribution Phase 6C). ✅ All 10 fields present; `HedgeRatioSnapshotRecord` adds
+      `partition_dt`/`available_at`/`correlation_id`. uac@`2fcb1bb`
+- [x] [SCRIPT] P0. Decide on bucket choice — reuse `strategy-output` or create new `hedge-ratio-snapshots` bucket? ✅
+      Reuse `strategy-store` / defi. uac@`2fcb1bb`
+- [x] [SCRIPT] P0. Decide writer pattern (A inline vs B buffer). ✅ Pattern A inline for both modes. uac@`2fcb1bb`
 
 ### Phase 1 — UAC data_type + parquet schema (~0.5 cal AI-days)
 
-- [ ] [SCRIPT] P0. Add `DataType.HEDGE_RATIO_SNAPSHOT` to UAC enum (location per SSOT canonical/crosscutting).
-- [ ] [SCRIPT] P0. Define `HedgeRatioSnapshotRecord` parquet schema in `unified_api_contracts/internal/positions/` or
-      `unified_api_contracts/internal/domain/defi/` — extends the Phase 1F Pydantic model with `available_at` +
-      `partition_dt` + `correlation_id` columns.
-- [ ] [SCRIPT] P0. Register data_type with `availability_semantics.AVAILABILITY_AT_SEMANTICS` (live-pipeline-arrival
-      stamping per CLAUDE.md HARD RULE).
-- [ ] [SCRIPT] P0. Add bucket kind to `deployment-service/configs/cloud-providers.yaml` if new bucket; else map
-      data_type to existing strategy-output bucket via `resolve_bucket_name(kind=..., asset_group="defi")`.
+- [x] [SCRIPT] P0. Add `DataType.HEDGE_RATIO_SNAPSHOT` to UAC enum (location per SSOT canonical/crosscutting). ✅ Added
+      as `(defi, hedge_ratio_snapshot)` in `availability_semantics` + `source_priority` + `pipeline_mode`. uac@`2fcb1bb`
+- [x] [SCRIPT] P0. Define `HedgeRatioSnapshotRecord` parquet schema in
+      `unified_api_contracts/internal/domain/defi/sim_schemas.py`. ✅ Extends `HedgeRatioSnapshot` with `partition_dt` +
+      `available_at` + `correlation_id`. uac@`2fcb1bb`
+- [x] [SCRIPT] P0. Register data_type with `availability_semantics.AVAILABILITY_AT_SEMANTICS` (live-pipeline-arrival
+      stamping per CLAUDE.md HARD RULE). ✅ `fetch_completed_at` semantic registered. uac@`2fcb1bb`
+- [x] [SCRIPT] P0. Add bucket kind to `deployment-service/configs/cloud-providers.yaml` if new bucket; else map
+      data_type to existing strategy-output bucket via `resolve_bucket_name(kind=..., asset_group="defi")`. ✅ No new
+      bucket — reuses `strategy-store`. uac@`2fcb1bb`
 
 ### Phase 2 — Producer wire-in (~0.6 cal AI-days)
 
