@@ -1534,3 +1534,26 @@ Next tick: continue monitoring; await operator return.
 7. ✅ **Smoke B VM RUNNING** — `features-onchain-defi-20260517-171908`. Pending: DEPLOYMENT_COMPLETED → paper backtest.
 
 Next tick: check Smoke B STARTED event; check slot-3 Databento credential ping; dispatch slot-5 redirect if queue empty.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:28 UTC — Autonomous loop tick-21: Smoke B CONFIRMED RUNNING + 134k rows
+
+**Smoke B VM verification** (tick-21 — conflict resolved, quiet-tick-20 merged):
+
+- VM `features-onchain-defi-20260517-171908`: STATUS=RUNNING ✅. Log active — loading rate_indices,
+  134,426 rows from MTDS lending-indices bucket (2026-04-08 window). Minor WARNING: `onchain_perps` timestamp
+  dtype mismatch (Int64 vs Datetime ns/UTC) — perps data skipped, not blocking.
+- Exec batches 45+46 also landed (`b603c6d9` + `94bbe9ef`): preflight check_all 201L→35L.
+- `harsh_orchestrator/pings/slot_9.md`: still CYCLE-CLOSE 2026-05-15 (ikenna-side launched Smoke B directly).
+- `plans/active/_agent_pings.md`: no new cross-side responses since B-015 unblock ping.
+
+**Updated operator queue** (6 items — Smoke B now in flight):
+1. Databento RT key (slot-3) — DatabentoTradfi WSFeedConnector activation
+2. DeFi MTDS backfill approval OR slot-5 redirect
+3. Databento OHLCV spend sign-off (~$50-200)
+4. ICE roots pick (Brent/Gasoil/Sugar)
+5. manifest_schema_final_gate Phase 7.C [HUMAN+AGENT]
+6. TradFi-fwd cron scheduling
+
+Next tick: monitor Smoke B DEPLOYMENT_COMPLETED; check for operator return.
