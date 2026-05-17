@@ -502,10 +502,9 @@ surface, not per repo:
       locally on deployment-service (2 surfaces emitted, 2.7KB parquet built in dry-run). deployment-ui
       DeploymentReadinessTab Coverage-column wire-in to consume these parquets is a separate ticket on deployment-ui
       slot (Phase 8.E.2 — captured as TODO below).
-- [ ] [AGENT] P1. **Phase 8.E.2 — deployment-ui Coverage column** — deployment-ui slot reads
-      `gs://{pid}-deployment-events/coverage_snapshot/repo=<R>/coverage_snapshot_*.parquet` via deployment-api new
-      endpoint (e.g. `/api/repos/coverage`). Per-repo: aggregate over surfaces, show red if any surface below
-      `target_pct`, else green. Pattern mirrors `last_snapshot_date` + `SnapshotAgeBadge` from Phase 4.B.
+- [x] ✅ [AGENT] P1. **Phase 8.E.2 — deployment-ui Coverage column** — deployment-api@269686d + deployment-ui@606e78f —
+      GET /api/repos/coverage endpoint + RepoCoverageTab with CoverageBadge + SnapshotAgeBadge; 10 Python tests + 6
+      Vitest tests pass. QG green both repos.
 
 ### Phase 7 — Coverage raise across leaf services (mechanical parallel sub-agents, 0.5 cal-AI-day; absorbed into Phase 8)
 
