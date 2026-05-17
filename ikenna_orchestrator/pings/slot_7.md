@@ -827,3 +827,15 @@ extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
   inline-comments folded into the contract paragraph).
 
 361 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
+
+
+[2026-05-17 /loop tick 12] slot-7 — execution-service Phase B (+3, 19/377 cleared):
+
+* `execution-service@11c13275f` — OrderBookDataConverter._detect_book_columns 51L→25L via
+  _detect_tardis_format + _detect_gcs_format helpers (per-format column detection + sort).
+* `execution-service@2065f864a` — CrossChainSOR._evaluate_single_chain 52L→26L via
+  _build_legs_for_chain helper (per-DEX route → RouteLeg map).
+* `execution-service@8e65ae6b4` — DeribitWebSocketMixin._authenticate_websocket 52L→33L via
+  _handle_auth_response helper (error-body inspect + raise pattern).
+
+358 remaining. basedpyright clean across all 3 commits.
