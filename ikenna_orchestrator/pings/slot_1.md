@@ -2294,3 +2294,17 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 **Pending**:
 - Wait for VM `193018` DEPLOYMENT_COMPLETED — then flip Smoke B re-run ✅ + notify harsh-side to launch paper backtest.
 - Bug 2 (utilization) confirmation still needed from run.log.
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:41 UTC — tick-53: VM 193018 progressing; onchain_perps 04-09; util pending
+
+**VM `193018` run.log (103 lines, 18:38 UTC)**: Loaded 11,864 perp rows for 04-09, NO Int64 error (Bug 1 clean). STALE_DATA suppression on 04-08 = emission policy (correct). Log growing normally — no stall, no crash.
+
+**utilization phase**: NOT YET STARTED. onchain_perps processing 04-08→04-12 sequentially at ~4.5 min/day.
+
+**New commits** (5 pulled): waves 26-28 sports calculators; slot-2 batch-65; master plan inventory refresh.
+
+**_agent_pings.md**: correctly shows VM 193018 + "hold paper backtest" (harsh-side acked by parallel tick-52 at 19:35 UTC).
+
+**Status**: 🟡 Smoke B IN-PROGRESS — Bug 2 (util stall fix) validation still pending.
