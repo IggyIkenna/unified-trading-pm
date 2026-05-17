@@ -155,3 +155,16 @@ client (can be fixed with proper narrowing) or `import-untyped` for pandas/pyarr
 per-module with QG green gate after each repo.
 
 **Owner**: Per-repo teams; batch-live-reconciliation-service P1 can be done in <30 min.
+
+## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
+
+P1 + P2 immediate items both shipped/verified:
+
+- **P1** (batch-live-reconciliation-service `os.getenv()`) ✅ verified clean 2026-05-17 (slot 3) — sole occurrence is
+  in module docstring, not actual code.
+- **P2** (execution-service DeFi protocol `except ImportError` fallbacks) ✅ shipped `execution-service@de170cc4`
+  2026-05-17 (slot 3) — dead try/except removed from `defi_execution/protocols/__init__.py`.
+
+P3 + P4 (UTL 126 `# type: ignore` + bare `# noqa` audit) are explicit "P3 sprint-aligned" — not immediately actionable
+without per-module work + QG-green gate after each repo. They have named successors (per-repo teams) per the
+recommended decision text. Issue closeable at next archive sweep.
