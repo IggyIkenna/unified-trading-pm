@@ -483,6 +483,11 @@ surface, not per repo:
       confidence, xg confidence, ensemble disagreement std/range/gap). Shipped at `features-service@6b17700f`. 685 total
       tests across 22 calculator files. Continuing — next targets: injury_impact, european_fatigue, h2h_calculator,
       elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space.
+      **Wave 11 (2026-05-17 slot-8)**: 63 new tests across 2 sports calculators: `injury_impact_calculator` (30 tests
+      — _extract_injury_type, _compute_team_injury_features severity/crisis/key_player, _compute_injury_impact_for_fixture,
+      compute_injury_impact_batch) + `h2h_calculator` (33 tests — _streak_from_end, _compute_h2h_streaks, _venue_record,
+      _h2h_xg_perspective_avgs, _count_h2h_results, _avg_total_goals, compute_h2h full computation, compute_h2h_batch).
+      Shipped at `features-service@84c8476c`. 748 total tests across 24 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
