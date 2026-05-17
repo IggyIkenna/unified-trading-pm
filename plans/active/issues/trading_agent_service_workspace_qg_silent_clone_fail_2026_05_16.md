@@ -53,3 +53,20 @@ Slot owner (whoever owns trading-agent-service per work-split) should:
 to re-trigger; if it still fails, file a deeper issue.
 
 Cross-link: `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT" + "POST-PHASE-B FIX".
+
+## UPDATE 2026-05-17 01:35 UTC (slot-1-main) — root cause + fix
+
+**Root cause** (via gh run view 25970374394 --log-failed): the `clone_repo` function in
+`unified-trading-pm/.github/workflows/python-quality-gates.yml` had `|| true` + `2>/dev/null` swallowing all clone
+errors. When the clone silently failed, `uv sync` downstream reported the confusing
+`Distribution not found at file:///.../unified-trading-library` with no upstream signal.
+
+**Fix shipped at `unified-trading-pm@c953d778`**: removed silencing — `git clone` now exits non-zero on failure so
+the real error (auth, missing branch, etc.) surfaces in the GHA log. Re-triggered the workflow at
+`trading-agent-service@2cf553d` (empty commit). Next run will either:
+
+1. Pass (if the clone actually works and the prior issue was transient) — close this issue.
+2. Fail with VISIBLE clone error message — diagnose the real cause from the new log.
+
+The fix is generalised to ALL 21 Python repos via the reusable workflow (`uses: ... @live-defi-rollout`), so the
+visibility benefit applies across the board.
