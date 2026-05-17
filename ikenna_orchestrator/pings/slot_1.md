@@ -2808,3 +2808,18 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 **No actionable items**. All slots have clear themes. Parallel session handling inventory refresh + tick-70.
 
 **Status**: 🟢 Loop monitoring; all slots themed; B-015 awaiting operator
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:47 UTC — tick-70: Phase B accelerating; no slot acks yet; B-015 waiting
+
+**Poll results** (remote 0c17eb52 — 3 new commits since tick-69):
+- batch-90: 4 violations cleared (trim+extract) — execution-service@7eb5e8ab6 ✅
+- batch-91: 3 violations cleared (trim+extract) — execution-service@999fb6206 ✅
+- Wave-55: goal_timing+formation+weather — features-service@7b81fc56 ✅ (slot-8 sports continuing)
+- Harsh-side slot-9: CYCLE-CLOSE unchanged. B-015 awaiting operator dispatch.
+- _agent_pings: no new harsh-side replies.
+
+**No new slot acks**: slots 5/6/7/10 all pending. Phase B batches 90-91 are from slot-2 or slot-5 (active).
+
+**Status**: 🟢 Phase B accelerating (batches 83-91 done); sports waves progressing; B-015 awaiting operator
