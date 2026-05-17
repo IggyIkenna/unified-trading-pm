@@ -932,3 +932,15 @@ basedpyright clean across all 2 commits.
 
 337 remaining. Cumulative session: 40 execution-service refactors + 50 across UTL/MTDS/strategy/UAC/UTL =
 ~90 method-size methods refactored under the 50-line budget. basedpyright clean throughout.
+
+
+[2026-05-17 /loop tick 18] slot-7 — execution-service Phase B (+3, 43/377 cleared):
+
+* `execution-service@ddcab5599` — EnhancedAlphaComparator.extract_fills_with_regimes 54L→23L via
+  _entry_fills_from_result helper (3-link summary→execution_alpha→entry_fills walk).
+* `execution-service@3b39593b1` — ReportTimelineExtractor.build_positions_from_fills 54L→24L via
+  _new_avg_entry_price + _unrealized_pnl helpers (direction-flip + long/short dispatch).
+* `execution-service@925ed15c5` — LiquidityModelQuoteSource.quote 55L→42L via _route_hint_blocks
+  helper (3-way veto: no-listings / CEX_ONLY / DEX_ONLY).
+
+334 remaining. basedpyright clean.
