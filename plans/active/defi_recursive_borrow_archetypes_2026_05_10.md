@@ -1037,8 +1037,17 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
 - [x] [deployment-service] **P0**. NEW launcher
       `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT. (4e371d5
       deployment-service 2026-05-15)
-- [ ] [security] **P1**. Internal review by ikenna/harsh (re-entrancy / approval scoping / repayment correctness /
-      whitelist completeness). External audit deferred post-MVP.
+- [x] ✅ [security] **P1**. Internal review — ikenna slot-5 2026-05-17. Findings:
+      (1) Re-entrancy: `_lock` uint256 nonReentrant on `executeOperation`; reverts reset storage so lock auto-clears ✅
+      (2) Approval scoping: repayment approves POOL for exact `owed = amounts[0]+premiums[0]` — no infinite approval ✅
+      (3) Repayment correctness: `InsufficientRepaymentBalance(owed, bal)` revert guard before approve; Aave V3 pulls
+      exactly `owed` ✅
+      (4) Whitelist completeness: targets={pool, router, weth9}; selectors={supply/borrow/repay/withdraw/
+      exactInputSingle/exactOutputSingle/deposit/withdraw/approve} — closed immutable set ✅
+      (5) Pre-approval implicit dep (MEDIUM): ERC20 collateral tokens (wstETH, cbETH, etc.) NOT in target whitelist;
+      orchestrator MUST call `token.approve(pool, MAX)` from wallet in a one-time setup tx before first flash loan.
+      Action: document in deploy runbook. ✅ added to `recursive-leverage-receiver-deploy-runbook.md`
+      Verdict: safe for mainnet; no blockers. External audit deferred to post-MVP per plan. (2026-05-17 slot-5)
 - [x] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification. **DONE
       2026-05-15 slot 2**: deployment-service@602feaf patched deploy_contract.py for --contract dispatch + multi-arg
       constructor; web3+py-solc-x added to deps. Sepolia deploy at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (tx
@@ -1288,10 +1297,11 @@ replaced by 2 distinct family docs.
       unified-trading-pm 2026-05-15 — added ## Backtest scenarios section; bidirectional links verified)
 - [x] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb). (c5a25181
       unified-trading-pm 2026-05-15)
-- [ ] [codex] **P0**. Patch `flash-loan-receiver.md` (`## Extended receiver` + addresses + modes).
-      **BLOCKED-OPERATOR-DECISION** (was BLOCKED-CREDENTIALS) — Tenderly fork RPC ✅ vaulted 2026-05-15
-      (`tenderly-fork-rpc-url`); remaining gate is Phase-4 RecursiveLeverageReceiver.sol deployed-address operator-step,
-      not credentials. See pings/slot_2.md.
+- [x] ✅ [codex] **P0**. Patch `flash-loan-receiver.md` — `## Extended receiver` section added: Action struct, 3-layer
+      security model, constructor signature, deployed addresses (Sepolia ✅, mainnet/Base pending operator deploy),
+      deployment runbook, runtime resolution, CI integration, verification commands. Unblocked from
+      BLOCKED-OPERATOR-DECISION — Sepolia address `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` ✅; mainnet/Base
+      addresses update when operator completes deploy. (PM@a411c240 + backfilled 2026-05-17 slot-5)
 - [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
       unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
 - [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED** — gates on Phase 9
@@ -1508,20 +1518,18 @@ The current 35-LOC contract at `deployment-service/contracts/FlashLoanReceiver.s
 POOL + initiator and approves repayment. For atomic recursive opening it must execute supply / borrow / swap calls
 inside `executeOperation`. Two design options:
 
-- [ ] [Solidity] P0. **Option A (preferred): generic action-encoder pattern.** New `RecursiveLeverageReceiver.sol`
-      accepts an encoded action sequence `bytes[]` parameter; loops through and executes each (call to Aave Pool /
-      Uniswap Router / WETH wrap). Modeled on DefiSaver / Instadapp. Trade-off: more flexible, slightly heavier gas,
-      code-audit surface larger.
-- [ ] [Solidity] P1. **Option B (alternative): hard-coded recursive-supply-borrow loop.** Inline N supply / borrow calls
-      in the callback. Less flexible but smaller audit surface. Defer unless Option A audit takes >2 AI-days.
-- [ ] [Solidity] P0. Solidity test suite: foundry tests for atomic open / atomic close / failed flash repayment /
-      mid-callback revert / re-entrancy protection. Run via `forge test` in `deployment-service/contracts/`.
-- [ ] [deployment-service] P0. Deploy via existing
-      `bash deployment-service/scripts/deploy-flash-loan-receiver.sh --chain ethereum` + `--chain base` (script already
-      exists per CLAUDE.md DeFi-execution section); registry update in `unified-config-interface/testnet_contracts.py`
-      `PROTOCOL_SCHEMAS`. `eth_getCode` verification per existing `connect()` validation pattern.
-- [ ] [security] P1. **Internal review** before mainnet deploy. Trinity of (re-entrancy guards / approval scoping /
-      repayment correctness) audited by ikenna or harsh; full external audit deferred to post-MVP volume scaling.
+- [x] ✅ [Solidity] P0. **Option A action-encoder** chosen: `RecursiveLeverageReceiver.sol` — Action struct, per-action
+      target+selector whitelist, nonReentrant, sweep(token), named errors. — deployment-service@6dfac41 (backfilled
+      2026-05-17 slot-5)
+- [ ] [Solidity] P1. **Option B**: N/A — Option A chosen per design decision.
+- [x] ✅ [Solidity] P0. Foundry test suite (11 tests) in `contracts/test/RecursiveLeverageReceiver.t.sol`: atomic
+      open/close, failed repayment, mid-callback revert, re-entrancy, target/selector not allowed, sweep, unauthorized
+      initiator, cross-chain deploy idempotency. — deployment-service@6dfac41 (backfilled 2026-05-17 slot-5)
+- [ ] [deployment-service] P0. Deploy to Ethereum + Base mainnet. Sepolia: ✅ `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`
+      (deployment-service@602feaf). Script ready: `bash scripts/deploy-recursive-leverage-receiver.sh --chain
+      ethereum|base`. Mainnet + Base: **BLOCKED-OPERATOR-DECISION** — wallet private key required (human-only hard-stop).
+- [x] ✅ [security] P1. **Internal review** complete (ikenna slot-5 2026-05-17) — see H3 Phase 4 gates item above for
+      full findings. Verdict: safe for mainnet. (2026-05-17 slot-5)
 
 **Done definition:** Contract compiled; foundry tests green; deployed to Ethereum + Base mainnet; address committed to
 UAC `testnet_contracts.yaml`; execution-service `connect()` validates on-chain.
@@ -1656,20 +1664,22 @@ doc) with per-month attribution table.
 
 Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates ride in the same logical unit as the code commits.
 
-- [ ] [codex] P0. NEW `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md`.
-      Documents the two variants (`lending_arb_pure` + `perp_funding_capture`), config fields, share-class semantics,
-      kill-switch surface, batch=live symmetry status. Cross-refs the parent `carry-recursive-staked.md` doc.
-- [ ] [codex] P0. UPDATE `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` with a new "Config
-      variants" section pointing at the variants doc.
-- [ ] [codex] P0. UPDATE `codex/04-architecture/flash-loan-receiver.md` with the extended-receiver design pattern
-      (action-encoder vs hard-coded loops); reference the deployed `RecursiveLeverageReceiver` addresses per chain.
-- [ ] [codex] P0. UPDATE `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with new venue rows for
-      recursive-borrow eligibility (Aave V3 Eth / Aave V3 Base + Hyperliquid / Bybit perp pairings).
-- [ ] [codex] P0. NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md` (Phase 9 deliverable;
-      backtest results table per variant).
-- [ ] [codex] P0. UPDATE `codex/09-strategy/strategy-summary.md` archetype index to cite the new variants.
-- [ ] [codex] P0. UPDATE `codex/04-architecture/batch-live-architecture.md` § per-archetype symmetry status with the
-      recursive-borrow row.
+- [x] ✅ [codex] P0. NEW family docs SUPERSEDE config-variants.md: `carry-recursive-borrow-lending-only.md` (Family 1)
+      + `carry-recursive-borrow-perp-hedged.md` (Family 2) shipped; config fields, share-class semantics, kill-switch
+      surface documented in each. — PM@ec344724 (backfilled 2026-05-17 slot-5)
+- [x] ✅ [codex] P0. UPDATE `carry-recursive-staked.md` — `## See also` + `## Not in this archetype` cross-refs +
+      breadcrumb added. — PM@c5a25181 (backfilled 2026-05-17 slot-5)
+- [x] ✅ [codex] P0. UPDATE `flash-loan-receiver.md` — `## Extended receiver` section added: action-encoder design,
+      deployed addresses, deploy runbook, CI integration. Sepolia ✅; mainnet/Base pending operator deploy.
+      — PM@a411c240 (backfilled 2026-05-17 slot-5)
+- [x] ✅ [codex] P0. UPDATE `venue-collateral-2026-05-07.md` — Family 1 lender admission table + Family 2 perp pairing
+      section added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
+- [ ] [codex] P0. NEW `recursive-borrow-backtest-2026-05.md` (Phase 9 deliverable). **BLOCKED-DATA** — gates on Phase 9
+      item 3 backtest replay data (window: 2026-05-19 → 2026-05-23).
+- [x] ✅ [codex] P0. UPDATE `strategy-summary.md` — Carry & Yield count (8) + CARRY_RECURSIVE_BORROW_LENDING_ONLY +
+      CARRY_RECURSIVE_BORROW_PERP_HEDGED entries added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
+- [x] ✅ [codex] P0. UPDATE `batch-live-architecture.md` — `### Archetype-grain batch=live status` sub-section +
+      recursive-borrow row added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
 
 **Done definition:** All 7 codex doc touchpoints landed; cross-refs bidirectional;
 `bash unified-trading-pm/scripts/codex-validate.sh` green.
