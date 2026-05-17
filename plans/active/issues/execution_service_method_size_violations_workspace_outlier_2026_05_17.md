@@ -409,6 +409,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-21**: 25 files cleared (slot-2 contribution: -25 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor + 1 service_config).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 22 — algo_library)**: leg_controller_runner.py shipped at
+   execution-service@2b3ee2620 (maybe_rebalance 72L→17L via 4 \_safe\_* wrappers (\_safe_load_observations,
+   \_safe_build_snapshots, \_safe_compute_drift, \_safe_emit_rebalance) — each catches the same exception set
+   (Connection/Timeout/OS/Value for observations; Key/Value for others) and emits the same shard-level isolation
+   log + return-None pattern). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-22**: 26 files cleared (slot-2 contribution: -26 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
