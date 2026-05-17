@@ -140,6 +140,16 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    benchmark match logic into typed helper; execute() reads as validate → cost-estimate → match →
    result-build. behavior preservation verified: same side/venue switch on operation type, same match_order
    kwargs, same MatchResult return path. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 4)** — additional 3 files cleared at
+   execution-service@90d66d10a (engine/handlers/stake_handler.py execute 79L→48L, +3 helpers
+   _resolve_exchange_rate / _match_alpha_zero / _amount_received — handles benchmark→DEFAULT_RATES fallback
+   + per-direction amount calculation in addition to the base ALPHA_ZERO match),
+   @dcd182add (engine/handlers/swap_handler.py — TWO methods: estimate_cost 57L→33L via
+   _simulate_swap_with_pool + _estimate_swap_no_pool, _execute_with_matching_engine 87L→27L via
+   _match_amm_swap + _log_swap_outcome — 4 helpers total),
+   @c78b8f994 (engine/handlers/sports_handler.py execute 59L→33L, +2 helpers _try_live_router
+   (None-fallback when router absent OR raises) + _simulate_actual_odds (20bps spread for exchanges)).
+   Allowlist 173 → 170 files. basedpyright clean on each. Same per-method behavior preservation discipline.
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same
    helper-extraction patterns this session applied to UTL/MTDS/strategy-service:
