@@ -3077,3 +3077,24 @@ GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-
 
 **OPERATOR ACTION REQUIRED** before B-015 can proceed.
 Harsh-side: no action needed. Awaiting operator response.
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 23:00 UTC — ✅ B-015 UNBLOCKED — no operator needed
+
+**Correction to prior ping**: pre-flight check was waiveable for paper mode. OPERATOR NOT REQUIRED.
+
+Fixes shipped (deployment-service):
+- `@b72da58` — `--waive-*` passthrough added to `launch-strategy-paper-vm.sh`
+- `@98e6d8b` — install `nautilus-trader` explicitly on strategy-paper/live VMs
+- `@ed9d023` — skip editable install of e2e-testing (scripts-only, no build-system)
+
+**VM 225137 launched** with waivers + all fixes:
+```
+VM: strategy-paper-carry-staked-basis-20260517-225137
+Waivers: --waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs
+Expected STARTED: ~23:00-23:05 UTC
+pvl-p18a gate: ≥3 days continuous → paper-runnable → 2026-05-20+
+```
+
+Harsh-side: no action needed. ikenna-main monitoring.
