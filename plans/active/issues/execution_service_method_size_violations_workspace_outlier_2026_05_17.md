@@ -880,7 +880,11 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   generate_per_algo_grid_configs (135L→20L) + get_all_strategy_variants (51L→39L).
   Extracted _build_per_type_combos + _build_cross_combo_config. 2 violations cleared. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-79**: 88 files cleared (slot-2 contribution: -88 files; spans 50 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 80 — api/preview_routes)**: shipped at execution-service@7a5a54310.
+  preview_unwind (131L→28L). Extracted _validate_unwind_request + _select_and_scale_positions + _compute_unwind_estimates.
+  1 violation cleared. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-80**: 89 files cleared (slot-2 contribution: -89 files; spans 51 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
