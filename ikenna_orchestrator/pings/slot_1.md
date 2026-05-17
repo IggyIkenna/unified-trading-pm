@@ -2364,3 +2364,18 @@ UTC).
 - All 11 feature groups expected to complete
 
 **Status**: 🟡 Smoke B IN-PROGRESS — VM 200717 running, Bug 4 fixed
+
+## [slot 1 main] 2026-05-17 ~19:14 UTC — tick-55: VM 200717 RUNNING — onchain_perps started
+
+**VM 200717 progress** (19:10:49 UTC last log entry):
+- ✅ lending_rates: complete
+- ✅ lst_yields: complete (04-12 wrote at 19:10:47, 15 rows)
+- 🔄 onchain_perps: started at 19:10:47 — 04-08 loaded 11,835 rows (same as VM 193018, no Int64 error)
+
+**Expected next**: onchain_perps takes ~4 min/day × 5 days = ~20 min → complete ~19:30 UTC
+Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pending.
+
+**DEPLOYMENT_COMPLETED expected**: ~19:38-19:42 UTC
+
+**Harsh-side status**: CYCLE-CLOSE, holding paper backtest.
+
