@@ -6,7 +6,7 @@ overview:
   parallelisation + UTL `streaming_dbn_writer` helper if the pattern proves shareable.
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 asset_group: cross-cutting
 priority: P1
