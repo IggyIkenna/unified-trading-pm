@@ -1661,3 +1661,20 @@ Next tick (270s): check EXIT_STATUS again; if DEPLOYMENT_COMPLETED → ping _age
 **Operator queue** (6 items — unchanged).
 
 Next tick: EXIT_STATUS check + event count; if DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+
+---
+
+## [slot 1 main] 2026-05-17 ~16:52 UTC — Autonomous loop tick-25: Smoke B RUNNING, 36,969 events
+
+**Smoke B VM** (`features-onchain-defi-20260517-171908`):
+- STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
+- Event stream: **36,969 events** in hour=16 at 16:51 UTC (up from 29,455 at tick-24, +7,514 in ~6 min).
+- Utilization phase elapsed: ~28 min (started 16:23 UTC). run.log buffered — still shows 16:23 "Processing: utilization" as last entry. Event stream confirms active throughput.
+
+**Remote**: 3 new commits since tick-24 — slot-6 alerting_runbook A/B/C/E/F shipped ✅; Phase 8.C per-archetype-calculators partial (features-service@1725465c); slot-7 tick-30 +2 methods (execution-service@ec0ab1497).
+
+**No new harsh pings** — slot-9 CYCLE-CLOSE. _agent_pings.md unchanged.
+
+**Operator queue** (6 items — unchanged).
+
+Next tick: EXIT_STATUS + event count; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
