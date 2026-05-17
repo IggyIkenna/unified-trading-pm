@@ -621,6 +621,10 @@ surface, not per repo:
       away_team_id not in team_stats covers all 12 miss lines: df_side.empty continue at
       197/209/250/257/264/273/282/291/300, team_df.empty continue at 234, offsides lines 243-244.
       34 tests. Shipped `features-service@1e488974`.
+      **Wave 50 (2026-05-17 slot-8)**: team_goals 92.1%→100% — _str_col missing-col (20),
+      set_piece_goals body (151-154), set_piece_conceded body (159-162), xg_against rolling
+      (209-210), possession rolling (230), goal_diff_season else (256). +6 tests → 32.
+      Shipped `features-service@6381d8ec`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
