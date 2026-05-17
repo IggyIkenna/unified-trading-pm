@@ -1,5 +1,27 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-17 ~16:21 UTC — LST rates catch-up VM launched + Phase 6B COMPLETE
+
+**Phase 6B Aave V3 multi-chain catch-up**: VM `mtds-lending-indices-20260517-160411` STOPPED cleanly. 105,202 rows
+collected across 13 shards (2026-05-14→2026-05-17). Plan checkbox flipped at `PM@a4f0246b`.
+
+**LST rates gap discovered + filled**: `gs://lst-rates-central-element-323112/` was 18 days behind (latest: 2026-04-29).
+VM `mtds-lst-rates-20260517-162106` launched for 2026-04-30→2026-05-17 (18-day catch-up, ~9 min wall-clock). Launcher
+has no operator-ack restriction. Expected ~13 tokens × 18 days = ~234 captures.
+
+**Phase 5 retraction sent to slot-8**: Phase 5 was already done by slot-1-main at 09:55 UTC. Slot-8 no longer needs to
+act on that assignment.
+
+**SWEEP-16 assessment**: All slot-1 SWEEP-16 items are DONE/BLOCKED. Remaining items in other slots are either:
+
+- Running (slots 4/7 method-size, slot-5 tradfi OHLCV VMs)
+- Operator-gated (Phase 7.C, DAI IRM, tradfi-fwd cron)
+- Harsh-side (alerting SM hot-reload, B-015 Smoke B)
+
+No further slot-1 main orchestration unblocks until next tick (slot-4 tick 11, slot-7 progress, LST VM STOPPED).
+
+---
+
 ## [slot 1 main] 2026-05-17 ~16:05 UTC — /loop tick: Phase 6B catch-up VM launched + ping sweep
 
 **Actions this tick**:
