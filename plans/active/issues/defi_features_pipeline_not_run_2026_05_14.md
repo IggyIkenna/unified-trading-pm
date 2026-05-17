@@ -437,3 +437,23 @@ column distributions will pinpoint where the zeros come from.
 slot-1-main not picking up this last item because: (a) requires polars expression debugging without local repro
 data, (b) shipping a fix without a unit test would risk lst_yields regression, (c) features-service expertise is
 slot-2's lane and the consolidated escalation already routed this issue.
+
+## Update 2026-05-17 07:25 UTC (slot-1-main) — aave_utilization=0 emission bug FIXED
+
+**Shipped `features-service@358717b5`**: `_calculate_utilization_features` (in `engine/orchestrator.py`) was
+looking for input columns `borrow_rate` / `supply_rate` / `utilization` that NEVER existed in MTDS lending-indices
+parquets (which carry the canonical names `variable_borrow_rate` / `liquidity_rate` / `utilization_rate`). The
+`aave_utilization` column was either never computed (when the column-existence guards correctly failed) or computed
+as 0.0 via an unintended path. Either way, 90+ false-zero `DEFI_FEATURE_AAVE_UTILIZATION` events fired per VM run.
+
+Fix: use `next((c for c in ('variable_borrow_rate', 'borrow_rate') if c in cols), None)` pattern to accept either
+MTDS canonical names (preferred — MTDS provides `utilization_rate` directly so no need to back-compute) or legacy
+aliases (defensive fallback for hypothetical other inputs).
+
+VM relaunched: `features-onchain-defi-20260517-072313`. Expected outcomes:
+- `DEFI_FEATURE_AAVE_UTILIZATION` events now emit REAL utilization values (~0.5-0.9 for active pools, not 0.0)
+- `utilization` feature_group writes parquets to
+  `gs://features-onchain-defi-prd-central-element-323112/by_date/day=*/feature_group=utilization/`
+
+The `lending_rates` 0-rows is a DIFFERENT issue (in `lending_features.py` not this `_calculate_utilization_features`)
+— still open. The `utilization` feature_group is now unblocked though.
