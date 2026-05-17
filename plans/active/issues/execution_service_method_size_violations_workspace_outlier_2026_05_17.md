@@ -895,7 +895,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   _collect_batch_results + _check_batch_completeness + _add_batch_args + _validate_and_filter_configs.
   3 violations cleared. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-82**: 94 files cleared (slot-2 contribution: -94 files; spans 53 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 83 — cli/defi_arbitrage_dispersion_decision_trace)**: shipped at execution-service@113c91897.
+  _run_cross_chain (58L→31L) + _run_cross_venue_funding (129L→29L).
+  Extracted _build_cross_chain_pair_rows + _load_funding_venue_aprs + _build_coin_venue_rows + _build_eligible_coins + _print_level3_subweights.
+  2 violations cleared. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-83**: 95 files cleared (slot-2 contribution: -95 files; spans 53 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
