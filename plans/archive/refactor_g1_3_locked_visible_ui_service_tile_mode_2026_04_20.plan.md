@@ -14,6 +14,12 @@ depends_on:
 # Downstream consumer (Wave D): refactor_g1_7_restriction_profile_engine (drives this tile's lockState)
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Refactor G1.3 — LOCKED-VISIBLE UI service-tile mode
 
 ## Context

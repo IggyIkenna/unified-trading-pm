@@ -19,6 +19,12 @@ depends_on: []
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 Two fixes landed 2026-04-21 that together give every VM launched via `setup-data-pipeline-vm.sh` full lifecycle

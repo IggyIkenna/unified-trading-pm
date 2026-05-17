@@ -25,6 +25,12 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 4 todos, 0 done; design call (paradigm-split strategy decision) drives a refactor across 35-74 calcs. Picked HIGHER (design) per CLAUDE.md "optimism is the failure mode this corrects". Baseline 5 (strategy decision + UTL flip + per-family migration + QG ratchet); × 0.6 = 3.0. post-cutover P1.
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
 
 # BaseFeatureCalculator validation flip

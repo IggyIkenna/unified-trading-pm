@@ -433,6 +433,12 @@ reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 > **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. Phases 1-5 shipped (PM
 > 1fce53d3, 939726c3, 47c5fd7a, 4d599b72, 0852d0be); canonical gate pivoted to system-integration-tests/smoke. Ready for
 > archive after YAML→checkbox conversion. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.

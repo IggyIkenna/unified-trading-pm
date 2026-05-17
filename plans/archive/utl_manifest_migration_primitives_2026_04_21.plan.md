@@ -21,6 +21,12 @@ depends_on: []
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 Manifest operations — chunk-safe backfill writes, per-entity rescans to materialise per-league rows, one-time purges of

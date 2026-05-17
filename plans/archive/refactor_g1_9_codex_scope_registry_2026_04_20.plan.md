@@ -12,6 +12,12 @@ depends_on:
 # Sibling Wave A plans: refactor_g1_{1,3,5,12,14}
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Refactor G1.9 — Codex scope registry (per-audience documentation surface)
 
 ## Context

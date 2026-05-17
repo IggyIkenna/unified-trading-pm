@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 # Plan: Service Protocol Abstraction (Intent-Level APIs)
 
 **ID:** service_protocol_abstraction **Status:** active **Day:** 2–4 (runs alongside #2a) **Scope:** UCI (T0), UTL (T1),

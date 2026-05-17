@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 ---
 
 name: performance-overlay-continuous-timeline-2026-04-21 overview: Single shared `<PerformanceOverlay>` chart primitive

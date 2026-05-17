@@ -23,6 +23,12 @@ depends_on:
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## PRE-AUDIT-FINDINGS (2026-04-21 — Phase 0 output)
 
 ### Per-entity parquet paths (verified from `instruments-service/scripts/rescan_sports_fixtures_canonical.py` + orchestrator + codex §9)

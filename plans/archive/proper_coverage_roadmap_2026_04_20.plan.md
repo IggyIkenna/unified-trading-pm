@@ -147,6 +147,12 @@ todos:
 isProject: true
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context + motivation
 
 Honest-coverage-metrics Phase A + Phase B + MTDS bug fix + MDPS extension landed 2026-04-19/20. The ManifestWriter v5

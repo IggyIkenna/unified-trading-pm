@@ -10,6 +10,12 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Session handoff — drilldown plan + launcher SSOT closeout (2026-05-07)
 
 ## What shipped this session (10 commits across 4 repos)

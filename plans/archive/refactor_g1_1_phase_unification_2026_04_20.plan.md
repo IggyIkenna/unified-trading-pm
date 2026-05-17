@@ -18,6 +18,12 @@ depends_on:
 # Downstream consumer (Wave C): refactor_g1_6_derivation_engine... (consumes `phase` prop in access_control formula)
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Refactor G1.1 — Phase unification (no forked research / paper / live UIs)
 
 ## Context

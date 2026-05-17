@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 ---
 
 name: orphan-audit-policy-2026-04-21 overview: 3-phase rollout of an orphan-route audit in the UI repo. Phase 1 =

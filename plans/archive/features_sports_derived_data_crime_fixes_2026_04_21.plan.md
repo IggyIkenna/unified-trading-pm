@@ -22,6 +22,12 @@ depends_on: [features_sports_denormalisation_pipeline_2026_04_21]
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 While shipping the per-fixture denormalisation pipeline (plan `features_sports_denormalisation_pipeline_2026_04_21`),

@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 # Session 2 of DeFi data → strategy 4-phase handoff (2026-05-07)
 
 You are the next agent. The prior session (this one) shipped A2 + A3 part 1 of the original 4-phase handoff

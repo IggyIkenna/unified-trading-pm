@@ -17,6 +17,12 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef 2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to plans/archive/ at next archival pass (no live work remaining).
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Features ModeHandler ABC lift — successor plan
 
 > **Status (2026-05-08 EOD)**: **COMPLETE**. UTL canonical `ModeHandler` shipped UTL@abeb5bc3 (lift + 11 unit tests at

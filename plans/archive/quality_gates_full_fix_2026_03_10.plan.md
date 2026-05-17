@@ -385,6 +385,12 @@ todos:
       Track separately as ui-coverage-uplift work item. Do NOT add thresholds until coverage is measured ≥60%.
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Quality Gates Full Fix — 2026-03-10
 
 **Goal:** Every repo passes unit tests with zero failures and meets coverage targets. No bypasses.

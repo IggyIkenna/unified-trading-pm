@@ -231,6 +231,12 @@ todos:
     blocked_by: p8g-prediction-market-resolver
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Sports Schema Allocation Restructuring
 
 ## Problem

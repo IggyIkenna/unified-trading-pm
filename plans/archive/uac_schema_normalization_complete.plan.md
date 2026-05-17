@@ -100,6 +100,12 @@ todos:
 isProject: true
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # UAC Schema Normalization — Complete Action Plan
 
 **SSOT:** unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md **Feeds from:**

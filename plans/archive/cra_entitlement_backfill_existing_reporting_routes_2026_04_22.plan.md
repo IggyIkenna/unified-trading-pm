@@ -28,6 +28,12 @@ reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 > **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 6/7 checkboxes done; 1 open
 > codex-doc todo deferred. client-reporting-api 5132588 + PM 8caae477. Ready for [unlock-plan] + archive once codex todo
 > lands. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.

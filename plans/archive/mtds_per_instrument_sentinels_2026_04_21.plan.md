@@ -71,6 +71,12 @@ todos:
 isProject: true
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 Phase 6d / Phase 7 closed per-venue × per-data_type Tier-2 sentinels plus the SPORTS per-(bookmaker, league,

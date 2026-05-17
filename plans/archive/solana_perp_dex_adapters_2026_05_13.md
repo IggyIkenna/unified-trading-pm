@@ -15,6 +15,12 @@ estimate_calibrated_ai_days: 4.0
 effective_concurrent_slots: 2-4
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
 
 > **Scope: Successor Plan B from `solana_defi_coverage_gaps_2026_05_13.md`.** Plan A (LST + native staking) and Plan C

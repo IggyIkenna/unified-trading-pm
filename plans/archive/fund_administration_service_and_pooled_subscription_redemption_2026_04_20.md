@@ -61,6 +61,12 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Context
 
 > **🟢 SCOPE CLARIFICATION — RATIFIED 2026-05-10 cross-plan audit L4.** Two areas where May-10 plans pulled scope

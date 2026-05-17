@@ -16,6 +16,12 @@ depends_on: []
 isProject: true
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 The 2026-04-21 sports-roadmap master-execution wave shipped 10 plans to `origin/live-defi-rollout`. Wave-2 (2026-04-21 →

@@ -21,6 +21,12 @@ depends_on: []
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 `deployment-service/deployment_service/sports_trigger_scheduler.py` currently dispatches **per-fixture triggers only**

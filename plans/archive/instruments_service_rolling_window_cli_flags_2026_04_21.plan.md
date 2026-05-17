@@ -25,6 +25,12 @@ depends_on: []
 isProject: false
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 ## Context
 
 The `instruments-service` CLI currently takes `--start-date` and `--end-date` as explicit date strings (provided by

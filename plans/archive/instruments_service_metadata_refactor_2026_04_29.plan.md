@@ -190,6 +190,12 @@ todos:
     blocked_by: phase-4-cohesion-validation
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # instruments-service → MTDS metadata refactor
 
 ## Why

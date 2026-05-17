@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 ---
 
 name: dashboard-services-grid-collapse-2026-04-21 overview: Collapse /dashboard tile grid from 11 product tiles to 5

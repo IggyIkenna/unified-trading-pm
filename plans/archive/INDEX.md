@@ -1,3 +1,9 @@
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 # Active Plans Index
 
 **Last updated:** 2026-03-16 (cleanup: 3 completed plans archived — cross_venue_position_aggregation_2026_03_15,

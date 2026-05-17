@@ -12,6 +12,12 @@ depends_on:
 # Upstream alignment (future): G2.4 ML Catalogue refactor — build-or-prune decisions here should align with that direction
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Refactor G1.5 — ML Catalogue broken-hrefs cleanup (5 probable)
 
 ## Context

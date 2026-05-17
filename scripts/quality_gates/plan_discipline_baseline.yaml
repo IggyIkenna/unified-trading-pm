@@ -1,4 +1,4 @@
-violation_count: 230
+violation_count: 115
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
 baseline_files:
@@ -8,6 +8,8 @@ baseline_files:
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/AUDIT_2026_05_15_harsh_side_completion.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/features_service_qg_cleanup_2026_05_11.md
+- rule: A-deferred-no-banner
+  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
 - rule: A-deferred-no-banner
@@ -127,8 +129,6 @@ baseline_files:
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/data_status_operations_dropdown_cli_derived_2026_05_07.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_predictions_e2e_2026_05_05.plan.md
@@ -137,111 +137,37 @@ baseline_files:
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/shard_granularity_ssot_propagation_2026_05_06.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/audit_records_pb_1_2_3_pre_cutover_2026_05_13.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_ml_may_23_2026.epic.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/PLAN_AMENDMENTS_2026_03_22.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_07_harsh_5tab_layout.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_sports_pipeline_deployment_2026_04_21.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/phase0_audit_remediation.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/share_class_architecture_2026_04_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dart_manual_trade_ux_refactor_2026_05_13.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/_reconciliation_evidence_map_2026_04_25.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/mtds_per_instrument_sentinels_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/frontend_backend_bilateral_plan2_mock_alignment_2026_04_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/session_2026_05_07_data_status_audit_findings.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/frontend_backend_bilateral_plan1_instrument_registry_2026_04_01.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/phase3_service_hardening_integration.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/run_lifecycle_events_ssot_2026_05_05.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_sports_denormalisation_pipeline_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/strategy_architecture_v2_phase3_11_handoff_2026_04_17.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/operator_decisions_2026_05_08.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_2_instruction_schema_validation_service_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/performance_overlay_continuous_timeline_2026_04_21.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/live_defi_rollout_may_23_2026.epic.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/uac_schema_normalization_complete.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dex_historical_replay_lighter_extended_pacifica_2026_05_07.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/marketing_site_restructure_2026_04_20.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_fixtures_truthset_recovery_2026_05_06.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_07.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/TESTED_AND_DEPLOYABLE_GATE_CRITERIA.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_to_100pct_eod_2026_05_04.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/config_dynamic_injection.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_11_ikenna.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/quality_gate_hardening.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/vm_observability_codex_update_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_11_harsh.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/uci_cloud_abstraction_complete.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/proper_coverage_roadmap_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/visualizer_to_analytics_ui_port.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g3_6_visibility_slicing_e2e_expansion_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_08_ikenna.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dashboard_services_grid_collapse_2026_04_21.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/WORKFLOW_RESIDUAL_ITEMS.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/strategy_catalogue_3tier_surface_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_sports_honest_coverage_2026_05_05.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/foundational_repos_remediation.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_migration_gap_fix.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md
 - rule: C-archive-no-successor
@@ -249,129 +175,41 @@ baseline_files:
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sp_prediction_may_23_2026.epic.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/institutional_smoke_matrix_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/ui_quality_gates_parity_2026_03_16.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/ICLOUD_MIGRATION_CHECKLIST.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/frontend_backend_bilateral_plan3_backend_gap_fill_2026_04_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_market_data_batch_wiring_2026_04_26.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/streaming_finalize_lift_and_downsize_2026_05_06.HANDOVER.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/per_agent_worktrees_2026_05_10.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/codex_refactor_2026_05_08.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/cicd_code_rollout_master_2026_03_13.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/frontend_backend_bilateral_plan4_strategy_type_completion_2026_04_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/solana_amm_coverage_expansion_2026_05_13.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_e2e_pipeline_2026_04_30.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/utl_manifest_migration_primitives_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/upcoming_fixtures_ui_view_2026_04_21.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sp500_ml_readiness_master_2026_05_05.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_uac_schema_contracts_registration_2026_04_24.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/post_wave_expanded_roadmap_handoff_2026_04_22.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/workspace_audit_remediation_2026_03_07.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/agent_ci_prototype.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_operation_capability_and_pipeline_2026_03_17.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/promote_ui_fixes_2026_03_26.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_service_metadata_refactor_2026_04_29.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/stub_completion_interfaces_and_infra.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/workspace_rules_housekeeping_2026_03_11.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_scheduler_periodic_tier_dispatch_2026_04_21.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_phantom_recon_and_failure_triage_2026_05_01.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07_session2.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/consolidated_remaining_work.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/strategy_architecture_v2_finalization_2026_04_19.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_data_status_fixture_level_drilldown_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/tradfi_canonical_futures_contract_hard_required_fields_2026_05_13.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/deployment_service_build_infrastructure_repair_2026_04_22.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/manifest_429_per_vm_sharding_2026_04_25.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_sports_derived_data_crime_fixes_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/INDEX.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/quality_gates_systemic_remediation_2026_03_16.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/cicd_audit_remediation_2026_03_13.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_live_streaming_viz_2026_04_15.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/_HANDOFF_expected_universe_enumerator_2026_05_07.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/deployment_api_work_stream_a_2026_05_07.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/production_mock_e2e_plan_d90c8f20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/quality_gates_dry_refactor_2026_03_09.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_data_types_completeness_2026_04_24.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/solana_perp_dex_adapters_2026_05_13.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/apifootball_enrichment_historical_backfill_2026_04_21.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/wallet_treasury_client_flow_2026_05_10.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/cra_entitlement_backfill_existing_reporting_routes_2026_04_22.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/trading_widget_merge_audit_2026_04_22.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/work_split_2026_05_08_harsh.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/uac_citadel_remediation.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sfi_chunk_parallel_backfill_2026_04_22.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/leveraged_leg_controller_2026_05_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_modehandler_lift_2026_05_08.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/frontend_backend_bilateral_plan5_dead_code_cleanup_2026_04_01.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/cefi_phase2_gap_audit_2026_05_01.plan.md
 - rule: C-archive-no-successor
@@ -379,86 +217,18 @@ baseline_files:
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/market_tick_data_to_100pct_2026_05_05.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/vm_oom_auto_kill_threshold_2026_04_29.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_data_available_at_rename_2026_05_07.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/price_arbitrage_may_23_2026.epic.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/strict_quality_gate_alignment_1e0e839a.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/quality_gates_full_fix_2026_03_10.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/solana_venue_naming_reconciliation_2026_05_14.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/basefc_validation_flip_2026_05_10.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_e2e_validation_2026_03_27.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/service_protocol_abstraction.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/codex_refactor_g1_audit_2026_05_08.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sit_events_observability_rollout_2026_03_10.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/universe_ssot_fix_2026_04_20.plan.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/prediction_markets_may_23_2026.epic.md
 - rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/marketing_site_audit_manifest_2026_04_20.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/cefi_venue_universe_expansion_2026_05_01.plan.md
 - rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_14_presentation_deck_refresh_2026_04_20.plan.md
-- rule: C-archive-no-successor
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/features_sports_upstream_coverage_gaps_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/plans_to_deployable_unified_audit.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/mock_data_rollout_2026_03_18.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/SESSION_SPLIT.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_pipeline_extension_2026_05_01.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_1_phase_unification_2026_04_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/defi_pipeline_extension_followups_2026_05_03.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/sports_schema_allocation_restructuring_2026_03_20.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/_SESSION_HANDOFF_drilldown_launcher_ssot_2026_05_07.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/instruments_service_rolling_window_cli_flags_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/strategy_lifecycle_maturity_model_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/orphan_audit_policy_2026_04_21.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/unified_pipeline_scheduling_and_triggers_2026_04_15.plan.md
-- rule: C-archive-no-successor
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/archive/refactor_g1_4_persona_combinatorial_expansion_2026_04_20.plan.md

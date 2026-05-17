@@ -9,6 +9,12 @@ locked_since: 2026-05-08
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
+
 # Operator decisions resolved — 2026-05-08
 
 > **What this is.** A single durable record of all the open-Q resolutions Ikenna signed off on 2026-05-08 in one sweep.
