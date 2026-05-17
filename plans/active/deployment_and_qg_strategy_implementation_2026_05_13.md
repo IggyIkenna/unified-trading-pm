@@ -431,13 +431,14 @@ surface, not per repo:
 
 ### Phase 7 — Coverage raise across leaf services (mechanical parallel sub-agents, 0.5 cal-AI-day; absorbed into Phase 8)
 
-- [ ] [AGENT] P1. **Coverage-raise spawn prompt template** at
-      `unified-trading-pm/cursor-configs/coverage-raise-spawn.md` — paste-ready prompt for spawning per-leaf-service
-      sub-agents. Each sub-agent: identifies coverage gaps via `pytest --cov`, writes snapshot tests + per-branch unit
-      tests, raises coverage by ≥5% per service.
-- [ ] [AGENT] P1. **Per-tab worktrees discipline** — coverage spawn prompts MUST cite per-tab-worktree setup (CLAUDE.md
-      `setup-tab-worktrees.sh` infra) to avoid index contention when multiple agents touch same root deps (PM / UAC /
-      deployment-service).
+- [x] ✅ [AGENT] P1. **Coverage-raise spawn prompt template** — shipped 2026-05-17 (slot-8) at
+      `unified-trading-pm@<pending>` → `cursor-configs/coverage-raise-spawn.md`. Paste-ready template with required
+      preamble (SUB_AGENT_MANDATORY_RULES injection) + per-spawn parameters ($REPO/$WORKTREE_PATH/$COVERAGE_TARGET/
+      $CURRENT_BASELINE/$SURFACES_IN_SCOPE/$PLAN_FLIP_TARGET) + bounded work contract (4hr/30-file cap) + success criteria
+      (per-surface ≥ target + plan-flip in same agent turn).
+- [x] ✅ [AGENT] P1. **Per-tab worktrees discipline** — codified in the same `coverage-raise-spawn.md` doc as a HARD
+      RULE section pointing to `setup-tab-worktrees.sh` + `codex/05-infrastructure/per-tab-worktrees.md`. Sub-agents MUST
+      operate in `.tabs/<N>/<repo>/`; the spawn template threads `$WORKTREE_PATH` to enforce this.
 
 **Owner**: slot 1 main spawns + monitors; leaf-service slots execute. **Dependencies**: None — independent of deployment
 work.
