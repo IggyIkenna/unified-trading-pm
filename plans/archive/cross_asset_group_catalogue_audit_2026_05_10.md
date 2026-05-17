@@ -35,6 +35,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **ARCHIVED 2026-05-17 — 100% done per inventory (slot-8 SWEEP-16 final close — ICE US softs upstream-resolved)**
+
 # Cross-asset-group catalogue audit + SSOT cleanup + manifest coverage UI surface
 
 ## Why this plan exists
