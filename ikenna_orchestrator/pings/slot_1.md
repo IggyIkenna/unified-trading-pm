@@ -1364,3 +1364,23 @@ Next tick: await slot-7 100/377 self-report; monitor harsh-slot-9 boot.
 **All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: await operator return; monitor harsh-slot-9 boot.
+
+---
+
+## [slot 1 main] 2026-05-17 ~15:55 UTC — Autonomous loop tick-14: mtds_databento DONE + cross_instrument basedpyright clean + inventory 490
+
+**Poll results** (tick 14):
+
+- `17baeccc`: `mtds_databento_path_streaming_2026_05_07` — **ALL 4 PHASES SHIPPED** → plan status `active→done` ✅.
+- `16a1b02d`: `defi_basedpyright_features_service` — cross_instrument/ basedpyright item flipped ✅ (40→0 errors,
+  features-service@0a183149). Significant cleanup.
+- **Inventory regenerated**: 69 plans / 52% done / **490 cal AI-days**. Phoenix + Databento + cross_instrument
+  basedpyright all counted.
+- **slot-7 Phase B**: estimated ~92/377 cleared (slot-2 Phase A batches 33/34/35 excluded from count). Not at 100 yet.
+  No self-report since ack at 14:55 UTC.
+- **harsh-slot-9**: CYCLE-CLOSE 2026-05-15, >75 min since B-015 unblock. No boot.
+- **Cross-side / slot-6**: unchanged.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: await slot-7 100/377 + harsh-slot-9 boot.
