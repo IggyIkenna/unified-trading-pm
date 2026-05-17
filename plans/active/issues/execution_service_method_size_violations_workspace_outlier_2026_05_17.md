@@ -512,6 +512,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
    **Slot-2 cumulative across batches 3-30**: 34 files cleared (slot-2 contribution: -34 files; spans 12 submodules).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 31 — engine/live)**: engine/live/risk.py shipped at
+   execution-service@050c47334 (check_order 85L→23L via \_derive_symbol (':' split + @LIN/@INV → -PERP) +
+   \_check_staleness (returns reject-or-None) + \_max_stale_seconds_for (per-symbol or global override; 0.5s MFT
+   default) + \_check_open_orders_cap (oms cap with MAX_OPEN_ORDERS_EXCEEDED event) + \_check_position_limit
+   (current + signed_add vs limits[symbol|canonical_id])). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-31**: 35 files cleared (slot-2 contribution: -35 files; spans 13
+   submodules incl. engine/live).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
