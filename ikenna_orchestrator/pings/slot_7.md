@@ -944,3 +944,15 @@ basedpyright clean across all 2 commits.
   helper (3-way veto: no-listings / CEX_ONLY / DEX_ONLY).
 
 334 remaining. basedpyright clean.
+
+
+[2026-05-17 /loop tick 19] slot-7 — execution-service Phase B (+3, 46/377 cleared):
+
+* `execution-service@b7c2a3b3e` — GridConfigGenerator.generate_algorithm_specs 54L→11L via
+  _resolve_param_grid + _specs_for_algo helpers (same pattern as grid_builder.py refactor tick 9).
+* `execution-service@4bec88967` — StorageAdapter.upload_catalog_cache_files 55L→24L via
+  _upload_catalog_files_parallel helper (ThreadPoolExecutor fan-out).
+* `execution-service@fc8563d5d` — OrderBookDataConverter._filter_by_time_window 55L→27L via
+  _to_ts_units helper (ns/μs factor selection; collapses mirror-pair into single filter).
+
+331 remaining. basedpyright clean.
