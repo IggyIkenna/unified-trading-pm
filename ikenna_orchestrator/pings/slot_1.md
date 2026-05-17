@@ -2062,3 +2062,24 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 **_agent_pings.md**: no new harsh response.
 
 **Operator queue**: unchanged (9 items, see tick-43).
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:00 UTC — Autonomous loop tick-45 (stale tick-43 wakeup): Phase 8.E.2 ✅, 108/377
+
+**Note**: Stale tick-43 wakeup firing concurrently with tick-44. Capturing 3 new commits not in tick-44.
+
+**New remote commits** (3, pulled — on top of tick-44's 1):
+- `c3bac30d` — **Phase 8.E.2 SHIPPED** (deployment-api@269686d + deployment-ui@606e78f): GET /api/repos/coverage + RepoCoverageTab with CoverageBadge + SnapshotAgeBadge. 10 Python + 6 Vitest tests green.
+- `5c750e74` — slot-2 batch-62 (execution-service@c3fadd421): instruments/tradfi_creator create_tradfi_from_config 139L→15L. ~108/377 cleared.
+- `f4832ffc` — slot-7 orchestrator: tick-41/42 ack + Phase B body + inventory refresh.
+
+**Phase 8.E.2**: Coverage column now wired end-to-end in deployment-ui. Operators can see repo coverage % from the Readiness tab.
+
+**Parallel flip note** (from `6470ccd2` below tick-44): 107/377 cleared via defi_data_avail + intent yield pattern methods. batch-62 brings it to ~108/377.
+
+**slot-6**: still no Smoke B fix commits.
+**harsh-slot-9**: CYCLE-CLOSE (unchanged).
+**_agent_pings.md**: no harsh response yet.
+
+**Operator queue**: unchanged (9 items).
