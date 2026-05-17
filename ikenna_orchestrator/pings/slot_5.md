@@ -2,6 +2,46 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 17:15 UTC — defi_recursive_borrow Phase 7+8+12+13 backfill complete; SWEEP-16 slot-5 exhausted
+
+**Summary**: completed all unblocked work from `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7-13 plus
+deployment-service Phase 13 launcher. SWEEP-16 slot-5 reserve stack exhausted.
+
+**Shipped this session**:
+
+1. **Phase 7+8 H2 plan backfill** (PM@91c647ab): All 8 checkboxes flipped — PerpHedgeSizer (execution-service@4d63626ac),
+   HealthFactorMonitor (execution-service@4d63626ac), LiquidationProximityCircuit kill-switch (strategy-service@fb3cd97),
+   ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451).
+
+2. **Phase 12 paper-smoke backfill** (PM@5f6620a5): `recursive_borrow_paper_smoke.py` scaffold [x]
+   (e2e-testing@a7e9243); BLOCKED-CREDENTIALS for live 7d run (pings/slot_2.md has the ask).
+
+3. **Phase 13 VM launcher** (deployment-service@ab2c21c): `launch-defi-recursive-borrow-vm.sh` + `defi-recursive-`
+   prefix in VM_PREFIX_TO_BUCKET (LONG_LIVED_LIVE). Safety gate requires `--paper-smoke-passed`.
+
+**All remaining defi_recursive_borrow items are BLOCKED**:
+- Phase 9/10/11 item 5: BLOCKED-DATA (aave/compound lending-indices backfill, window 2026-05-19)
+- Phase 12 backtest: BLOCKED-DATA until 2026-05-19
+- Phase 12 reconciliation: BLOCKED-CREDENTIALS (paper smoke hasn't run 7d)
+- Phase 13 treasury / launch: hard-stop (wallet keys = human-only)
+
+**SWEEP-16 slot-5 reserve exhausted**:
+- `wave3x_residual_ssots`: all 6 remaining items DEFERRED-POST-CUTOVER or Harsh-side
+- `dex_perp_and_venue_data_expansion`: only 2 items — BLOCKED-OPERATOR-DECISION (launcher) + P3 NICE-TO-HAVE
+- `mtds_databento_path_streaming`: status done (0 open)
+- `live_pipeline_mtds_mdps_features`: 0 open items
+- `code_freeze MTDS-3.2.C` (DeFi backfill VMs: Pyth Solana + Chainlink EVM + DEX-perp): **OPERATOR APPROVAL NEEDED**
+  for multi-year backfill scope (≥1 week rule applies — ref: `defi_master_2026_05_07` Phase 9 history)
+
+**ACTION NEEDED from main/operator**:
+1. Approve DeFi MTDS backfill VMs (code_freeze MTDS-3.2.C) for multi-year window: Pyth Solana oracle prices
+   (2022-11 → today), Chainlink EVM multi-chain (2024 → today), DEX-perp Hyperliquid/Aster forward-poll.
+2. Redirect slot-5 to a new theme if DeFi backfill approval takes time.
+
+slot-5 polling for new assignments.
+
+---
+
 ## [slot 5 → main] Phase 2.D PART A — complete (2026-05-12)
 
 **Status**: ✅ SHIPPED (both repos pushed to live-defi-rollout / tab/ikennaigboaka/5)
