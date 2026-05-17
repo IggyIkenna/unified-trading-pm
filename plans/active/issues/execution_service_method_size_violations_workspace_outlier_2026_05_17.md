@@ -435,6 +435,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-24**: 28 files cleared (slot-2 contribution: -28 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 25 — backtest_v2 runner)**: backtest_v2/runner.py shipped at
+   execution-service@af7733bd4 (run 76L→25L via \_process_instruction helper — single place that handles
+   TradeInstruction settle (via \_settle_trade_instruction) + non-Trade deferred-with-warning + missing-fill
+   deferred-silent paths, keeping run() to dispatch + cumulative aggregation + result building). Allowlist -1.
+   basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-25**: 29 files cleared (slot-2 contribution: -29 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
