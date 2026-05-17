@@ -226,8 +226,10 @@ highest on the 99%-repos identified in Phase 4.
       sibling of the tarball; assert `commit_sha` matches expected; fail loud on drift via UAC `ManifestShaDriftError`
       (NEW in `unified_api_contracts.canonical.crosscutting.deployment.errors`). — deployment-service@2f6b8b5
       (setup-data-pipeline-vm.sh: post-download manifest fetch + ManifestShaDriftError on VM_EXPECTED_SHA_* mismatch)
-- [ ] [AGENT] P0. **Async image-build trigger** — tarball write fires `cloud-build` on same commit-sha. Wired in
-      `create-code-tarballs.sh` POST upload step. So when promoting dev→staging, image already exists.
+- [x] ✅ [AGENT] P0. **Async image-build trigger** — tarball write fires `cloud-build` on same commit-sha. Wired in
+      `create-code-tarballs.sh` POST upload step. So when promoting dev→staging, image already exists. —
+      deployment-service@646ef02 (`--trigger-image-builds` flag; `gcloud builds submit --async` per repo with
+      cloudbuild.yaml; opt-in; GCS tarball as source + COMMIT_SHA substitution)
 
 **Owner**: deployment-service slot. **Dependencies**: UAC schema additions need shipping (`ManifestShaDriftError`) —
 root-dep slot.
