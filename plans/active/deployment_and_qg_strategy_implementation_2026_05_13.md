@@ -476,8 +476,13 @@ surface, not per repo:
       `ml_predictions` (12 tests — get_schedule_predictions stub schema + get_ml_features_for_fixture fixture_id/None
       values) + `multisource_xg_calculator` (22 tests — compute_multisource_xg empty/single/multi-source
       spread/confidence/CV threshold/negative filter + batch). Shipped at `features-service@e8c5b715`. 614 total tests
-      across 19 calculator files. Continuing coverage sweep — next targets: meta_features, injury_impact, european_fatigue,
-      h2h_calculator, elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space.
+      across 19 calculator files. **Wave 10 (2026-05-17 slot-8)**: 71 new tests across 3 sports calculators:
+      `promoted_team_handler` (14 tests — is_promoted_team threshold, blend_promoted_features decay/strength ratio) +
+      `league_calculator` (24 tests — _safe_float, compute_league_features, compute_league_from_standings goals/rates/
+      league-avg/vs-league) + `meta_features_calculator` (33 tests — validity count/ratio, invalid key features, lineup
+      confidence, xg confidence, ensemble disagreement std/range/gap). Shipped at `features-service@6b17700f`. 685 total
+      tests across 22 calculator files. Continuing — next targets: injury_impact, european_fatigue, h2h_calculator,
+      elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
