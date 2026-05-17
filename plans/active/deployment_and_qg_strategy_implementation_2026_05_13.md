@@ -498,6 +498,10 @@ surface, not per repo:
       detect_ht_break_minute, \_pivot_team_rows_to_home_away, compute_ht_break_minutes, compute_halftime_multi_source,
       \_enrich_from_events, \_compute_team_ht_form). Shipped at `features-service@632bef51`. 845 total tests across 27
       calculator files.
+      **Wave 15 (2026-05-17 slot-8)**: 43 new tests for `odds_prob_space` (_odds_to_prob, _remove_vig, _sign,
+      _apply_means_dispersion_entropy, _historical_fair_probs, _apply_deltas_velocity_acceleration,
+      _apply_reversal_chop_spread_complexity, compute_prob_space_features). Shipped at
+      `features-service@fd6a23b7`. 888 total tests across 28 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
