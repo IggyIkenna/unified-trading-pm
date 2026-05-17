@@ -649,3 +649,41 @@ Continuing autonomous loop; will keep sweeping every ~30 min for new P0/P1 issue
 
 ---
 
+## [slot 4 → main] 2026-05-17 — ROUND 5: workspace-wide BLOCKED-CREDENTIALS audit
+
+Performed `gcloud secrets list` audit + cross-referenced against every `BLOCKED-CREDENTIALS` mention in
+`plans/active/`. Updated **5 active plan files** to reflect actual vault state per spawn-prompt + my audit:
+
+| Plan | Change | Rationale |
+| --- | --- | --- |
+| `defi_simulation_realism_2026_05_10.md` | Helius P2 ✅ UNBLOCKED | `helius-api-key` vaulted 2026-05-15 (MTDS@4cea371) |
+| `compound_kamino_lending_rates_gaps_2026_05_15.md` | Helius BLOCKED-CREDENTIALS × 3 refs → UNBLOCKED | Same |
+| `defi_master_2026_05_07.md` | Helius × 2 refs → UNBLOCKED + Tenderly/HL/Bybit banner → UNBLOCKED | `tenderly-api-key`/`tenderly-fork-rpc-url`/`hyperliquid-testnet-trade-key`/`bybit_api_key`/`bybit_api_secret` all vaulted 2026-05-15 |
+| `defi_recursive_borrow_archetypes_2026_05_10.md` | 5 BLOCKED-CREDENTIALS → UNBLOCKED / restated as BLOCKED-OPERATOR-DECISION | Tenderly + testnet creds vaulted; remaining gate is Phase-4-deployed receiver address (operator-deploy step, not credentials) |
+| `solana_lst_native_staking_adapters_2026_05_14.md` | Helius for adapter (line 149-153) → UNBLOCKED | MTDS@4cea371 + MTDS@348c171 wired Jito MEV APY |
+| `api_keys_wallets_accounts_readiness_2026_05_10.md` | Per-venue vault audit: Binance/Bybit/OKX/Aster ✅; Bitfinex+Bitget still blocked | Direct `gcloud secrets list` check |
+
+**Vault-state truth table (2026-05-17 audit)**:
+
+| Vendor | Secret(s) | Status |
+| --- | --- | --- |
+| Tenderly | `tenderly-api-key` + `tenderly-fork-rpc-url` | ✅ vaulted |
+| Hyperliquid testnet | `hyperliquid-testnet-trade-key` | ✅ vaulted |
+| Bybit | `bybit_api_key` + `bybit_api_secret` (v2 Spot+Derivatives) | ✅ vaulted |
+| Helius | `helius-api-key` | ✅ vaulted 2026-05-15 |
+| Binance | `binance-trade-api-key` + `binance-read-api-key` + write variants | ✅ vaulted |
+| OKX | `exec-anu-okx-api-key` + `exec-anu-okx-api-secret` + `exec-anu-okx-passphrase` | ✅ vaulted |
+| Aster | `aster-api-key` + `aster-secret-key` | ✅ vaulted |
+| Kraken | `kraken-api-key` + `kraken-api-secret` | ❌ NOT vaulted (operator-incoming per work_split_2026_05_14) |
+| Bitfinex | (none) | ❌ NOT vaulted |
+| Bitget | (none) | ❌ NOT vaulted |
+| api-football | `api-football-api-key` | ✅ vaulted |
+
+Net workspace dashboard change: ~12 stale `BLOCKED-CREDENTIALS` annotations cleared across 6 active plan files. Real
+remaining `BLOCKED-CREDENTIALS` count workspace-wide is now: Kraken (live REST + WS) + Bitfinex + Bitget + Marinade
+subgraph + Solana LST backfill VM ops approval.
+
+Continuing autonomous loop.
+
+---
+
