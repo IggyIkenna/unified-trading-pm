@@ -2,6 +2,8 @@
 title: strategy-service QG STEP 5.37 — 3 inline LTV/HF threshold violations
 created: 2026-05-15
 author: slot-5-claude
+resolved: 2026-05-17
+resolution: SHIPPED — all 13 inline thresholds in strategy-service now carry either `# CORRECT-LOCAL` or `# noqa: qg-inline-threshold` annotations. Verified 2026-05-17 by slot-3: STEP 5.37 grep returns 0 violations.
 source:
   - strategy-service QG run 2026-05-15 during Phase 4.5 roll_emitter commit
 locked_by: live-defi-rollout
