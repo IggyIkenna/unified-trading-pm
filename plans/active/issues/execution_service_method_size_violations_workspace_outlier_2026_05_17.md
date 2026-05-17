@@ -493,6 +493,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    submodules: handlers + defi protocols + services + preprocessor + service_config + algo_library + CEX adapter +
    backtest_v2 + engine/validation + adapter + engine/modes).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 29 — algorithms/registry)**: algorithms/registry.py shipped at
+   execution-service@4e9345799 (\_discover_algorithms 80L→24L via \_resolve_algo_id (3-fallback chain) plus 2
+   module-level helpers: \_algo_id_from_dataclass_field (default_factory then default) +
+   \_algo_id_from_instantiation (frozen-config instantiation + StrEnum value or stringify); module-level helpers
+   allow re-use across other introspection callers + flatten the nested-try complexity). Allowlist -1.
+   basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-29**: 33 files cleared (slot-2 contribution: -33 files; spans 12
+   submodules now incl. algorithms/registry).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
