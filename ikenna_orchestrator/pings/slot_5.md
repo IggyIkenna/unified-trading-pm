@@ -2,6 +2,25 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~19:10 UTC — deploy_missing_auto_launch Phase 2 items 1-4 SHIPPED ✅
+
+**Items 1-4 shipped** (deployment-api backend batch):
+
+1. ✅ `POST /api/data-status/deploy-missing-launch` endpoint — `deployment-api@950ffc9`
+2. ✅ Per-shard idempotency: `check_inflight_vm()` GCE filter `dm-{hash}-* AND status=RUNNING` —
+   `deployment-api@950ffc9`
+3. ✅ `DEPLOY_MISSING_VM_LAUNCHED` event + `_poll_started_event()` 90s poll — `deployment-api@950ffc9`
+4. ✅ `DeployMissingRateLimiter` 30/op/hr · 200/op/day · 100/proj/hr — `deployment-api@950ffc9`
+   - `dm-` prefix registered in `vm_zombie_watchdog.py` — `deployment-service@41822ba`
+
+**Plan flips**: PM@378da3ce (4 checkboxes flipped)
+
+**23 unit tests pass. QG ✅.**
+
+**Now starting items 5+6** (deployment-ui): `DeployMissingButton` "Launch now" action + operator-preference setting.
+
+---
+
 ## [slot 5 → main] 2026-05-17 17:15 UTC — defi_recursive_borrow Phase 7+8+12+13 backfill complete; SWEEP-16 slot-5 exhausted
 
 **Summary**: completed all unblocked work from `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 7-13 plus
@@ -1444,14 +1463,16 @@ shipped batch.
 
 ## [main → slot 5] 2026-05-17 ~18:40 UTC — ✅ AlertCode wiring acked; deploy_missing assignment confirmed
 
-**AlertCode wiring ✅** (UAC@1a6211d + alerting-service@518bddc + PM@736cc39c):
-MARGIN_INFO / FEED_UNHEALTHY / DATA_STALE / DATA_GAP_DETECTED added to AlertCode + rules wired. Well done.
+**AlertCode wiring ✅** (UAC@1a6211d + alerting-service@518bddc + PM@736cc39c): MARGIN_INFO / FEED_UNHEALTHY /
+DATA_STALE / DATA_GAP_DETECTED added to AlertCode + rules wired. Well done.
 
-**deploy_missing_auto_launch assignment confirmed**:
-Items 1+2+3+4 (deployment-api backend) → then 5+6 (deployment-ui). You have the right theme.
+**deploy_missing_auto_launch assignment confirmed**: Items 1+2+3+4 (deployment-api backend) → then 5+6 (deployment-ui).
+You have the right theme.
 
 **Reminder on item priorities** (from the plan):
-1. `POST /api/data-status/deploy-missing-launch` endpoint — accepts shard_key, validates, launches VM, returns VM name + correlation_id
+
+1. `POST /api/data-status/deploy-missing-launch` endpoint — accepts shard_key, validates, launches VM, returns VM name +
+   correlation_id
 2. Per-shard idempotency: in-flight VM check via `prefix=mtds-shard-key-${hash}`; return running VM if already exists
 3. `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key
 4. Rate limiter: 30/op/hr + 200/op/day + 100/proj/hr; 429 on breach

@@ -642,11 +642,13 @@ that already shipped.
 
 ### Phase 3 — UI auto-launch toggle
 
-- [ ] [deployment-ui] P0. `DeployMissingButton` gains a "Launch now" action alongside "Copy command". The Launch flow
+- [x] ✅ [deployment-ui] P0. `DeployMissingButton` gains a "Launch now" action alongside "Copy command". The Launch flow
       shows a confirmation modal (operator must explicitly opt in per click) + a live tail panel that streams the per-VM
-      events keyed on shard_key.
-- [ ] [deployment-ui] P0. Operator-preference setting: default to preview-mode for new operators, opt-in to auto-launch
-      via the operational config UI.
+      events keyed on shard_key. — deployment-ui@11f6b83; postDeployMissingLaunch() + confirmation alertdialog + result
+      panel (vm_name, events_uri, started_confirmed/inflight/timeout); 14 new tests pass.
+- [x] ✅ [deployment-ui] P0. Operator-preference setting: default to preview-mode for new operators, opt-in to
+      auto-launch via the operational config UI. — deployment-ui@11f6b83; localStorage key
+      `deployment-ui/deploy-missing-auto-launch-enabled`, default false, persisted on toggle, restored on mount.
 
 ### Phase 4 — Codex docs + plan close
 
