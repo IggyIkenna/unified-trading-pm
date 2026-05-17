@@ -217,6 +217,21 @@ per workspace HARD RULE.
       `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` as forward-restore source. HUMAN-flagged for trigger (post-cutover
       execution-tuning archetype demand); stub itself is operator-doable now per "no shortcuts no deferred" mandate.
 
+## Pending operator decisions
+
+- [ ] **[OPERATOR-DECISION] P1. ICE roots pick for `launch-tradfi-bf-ice-ohlcv-1m.sh`**. Scaffolding ships with empty
+      `ICE_ROOTS=()` in
+      [`deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-1m.sh`](../../../deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-1m.sh).
+      ICE has 2 Databento datasets: `IFEU.IMPACT` (London — Brent crude `BRN.FUT`, Gasoil `G.FUT`, Sugar `SB.FUT`, Cocoa
+      `CC.FUT`, Coffee `KC.FUT`, Cotton `CT.FUT`, OJ `OJ.FUT`, USD Index `DX.FUT`) + `IFUS.IMPACT` (US — already
+      canonicalised in UAC `tradfi_roots.py:242-247` per slot 5 venue+symbology audit). **Slot-5 proposed defaults**:
+      `("BRN" "G")` for IFEU (Brent + Gasoil — most-liquid ICE futures, ~80% of ICE basis-arb relevance per
+      `tradfi_master_2026_05_07`); `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS (the 6 ICE softs already
+      venue-canonicalised per slot 5 audit). Each adds ~8 year-shard VMs → estimated cost <$10 PAYG for the full
+      2019-2026 ohlcv_1m window. **NOT pre-populated** to avoid silent Databento PAYG spend on operator-unacked symbols.
+      Operator picks subset (or "all 8" / "none for MVP") + slot-5 appends to `ICE_ROOTS` array + drain launches with
+      existing singleton lock.
+
 ## Codex SSOT updates
 
 - [ ] [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) § 3
