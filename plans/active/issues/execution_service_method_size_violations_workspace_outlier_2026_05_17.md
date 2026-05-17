@@ -393,6 +393,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18+19**: 23 files cleared (slot-2
    contribution: -23 files; 10 handlers + 8 defi protocols + 4 services + 1 preprocessor).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 20 — services sweep continues)**: execution_cost_estimator.py shipped at
+   execution-service@ca011329c (estimate_cost 111L→39L via \_estimate_exchange_fee_bps (taker lookup or venue-type
+   default + confidence + note) + \_estimate_gas_cost_usd (DEX/LENDING/STAKING only, inline chain_name_to_id) +
+   \_estimate_bridge_cost_usd (cross-chain-only, defaults to 0)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-20**: 24 files cleared (slot-2 contribution: -24 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
