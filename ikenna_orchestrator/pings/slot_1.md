@@ -2617,3 +2617,15 @@ Group summary:
 **No new operator pings** requiring action.
 
 **Status**: 🟢 Smoke B DONE — awaiting harsh-side B-015 launch confirmation
+
+## [slot 1 main] 2026-05-17 ~20:28 UTC — tick-65: B-015 ping not yet acked; slot-5 waves 45-49 shipping fast
+
+**B-015 status**: ping in slot_9.md and _agent_pings.md. Harsh-side (slot-9) still CYCLE-CLOSE, no ack yet. Operator not yet returned (~2h window from ~18:00 UTC → ~20:00 UTC; may return soon or B-015 dispatch awaits next session).
+
+**Slot-5 progress**: waves 45-49 shipped (PM@eee403df — advanced_stats_calculator 100%). Wave theme active and autonomous.
+
+**Slot-10**: Phase 3 directive received (hedge_ratio_snapshot) — PM@8bcb1204.
+
+**No new operator pings.** Loop idle — monitoring only.
+
+**Status**: 🟢 Loop idle — Smoke B done, B-015 awaiting harsh-side ack
