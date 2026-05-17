@@ -196,8 +196,11 @@ UAC schemas already shipped.
       classified across 4 statuses (FULL / PARTIAL / REMOTE-ONLY / N/A): 6 FULL · 6 PARTIAL · 28 REMOTE-ONLY · 5 N/A.
       Per-service-repo baseline: `quality-gates.yml` + `python-quality-gates.yml` are FULL when `.venv` resolvable.
       Doc carries `last_reviewed: 2026-05-17` + Runbook Execution-Owner 4 fields.
-- [ ] [AGENT] P1. **Optional pre-push git hook** (`.git/hooks/pre-push.sample`) — opt-in via
-      `scripts/dev/install-act-precommit.sh`. Refuses push if act-preflight fails. Documented as opt-in, not mandatory.
+- [x] ✅ [AGENT] P1. **Optional pre-push git hook** — shipped 2026-05-17 (slot-8) at `unified-trading-pm@<pending>` →
+      `scripts/dev/install-act-precommit.sh`. Opt-in only: `--repo <name>` installs `.git/hooks/pre-push` that runs
+      `act-preflight.sh --repo <name>` and rejects the push on failure. Worktree-aware (handles `.git` as file).
+      `--uninstall` removes the hook. Bypass via `git push --no-verify` is documented in the hook body. NOT mandatory —
+      developer opts in per-repo.
 
 **Owner**: deployment-service slot (one slot owns this end-to-end). **Dependencies**: None — but Phase 2's value is
 highest on the 99%-repos identified in Phase 4.
