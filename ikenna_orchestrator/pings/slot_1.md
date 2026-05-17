@@ -2991,3 +2991,26 @@ Pre-flight probes ran inside `run-paper.sh`:
 **No new actionable items.** Monitoring continues.
 
 **Status**: 🔴 B-015 blocked; 🟢 sports waves/Phase B progressing
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:51 UTC — tick-77: B-015 final fix + 5th launch (deployment-service@98e6d8b)
+
+**New failure on VM 224209** (pre-flight passed ✅, engine started, then crashed):
+```
+ModuleNotFoundError: No module named 'nautilus_trader'
+execution_service/__init__.py:40 → algorithms.algorithms → adaptive_twap → nautilus_trader.config
+```
+
+Root cause: nautilus_trader is declared dep of execution-service (`nautilus-trader>=1.221.0`) but skipped
+by `--no-deps` install. Fix: install nautilus-trader explicitly in setup script (same pattern as sqlalchemy).
+
+deployment-service@98e6d8b fixes this. GCS updated. **VM 225137 launched** with waivers + nautilus-trader fix.
+
+Note: nautilus-trader has binary wheels, install may take ~5-8 min. Startup script should complete ~23:00 UTC.
+
+```
+VM: strategy-paper-carry-staked-basis-20260517-225137
+```
+
+**Status**: 🔧 VM 225137 launched; STARTED expected ~23:00 UTC
