@@ -1009,3 +1009,15 @@ basedpyright clean throughout. Cumulative session ship: ~100 methods refactored 
   _prevalidate_atomic_instructions helper (pre-validate loop with failure-list construction).
 
 319 remaining. basedpyright clean.
+
+
+[2026-05-17 /loop tick 25] slot-7 — execution-service Phase B (+3, 61/377 cleared):
+
+* `execution-service@de5c946e1` — AlmgrenChrissExecAlgorithm._calculate_optimal_schedule 58L→14L via
+  _ac_remaining_trajectory + _absorb_rounding helpers (trajectory math + final-slice clamp).
+* `execution-service@30e80329d` — MulticallBatcher.create_batches 58L→20L via _build_calls_for_group
+  helper (per-step encode + gas/value accumulation).
+* `execution-service@895cd1e25` — MultiHopSolver.solve 58L→22L via _try_intermediate helper
+  (per-intermediate 2-hop simulation + legs construction).
+
+316 remaining. basedpyright clean. Cumulative session: ~110 methods refactored.
