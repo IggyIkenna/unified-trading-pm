@@ -46,9 +46,9 @@ Initial fix from parallel agent: capped `emit_aave_utilization_events` at 500 ro
 
 **Bug 3: startup NameError (VMs 192145, 192529)**
 
-`Callable` import inside `TYPE_CHECKING` block was evaluated at runtime in `cast(Callable[..., object], fn)`.
-Caused VMs `192145` + `192529` to exit with `DEPLOYMENT_FAILED` (exit_code=1) after only 17s. Fixed by
-features-service@818d8ecc (slot-8; moved to unconditional import). Tarball rebuilt at `2026-05-17T18:30:09Z`.
+`Callable` import inside `TYPE_CHECKING` block was evaluated at runtime in `cast(Callable[..., object], fn)`. Caused VMs
+`192145` + `192529` to exit with `DEPLOYMENT_FAILED` (exit_code=1) after only 17s. Fixed by features-service@818d8ecc
+(slot-8; moved to unconditional import). Tarball rebuilt at `2026-05-17T18:30:09Z`.
 
 **Bug 4: GcsEventSink synchronous blocking causes write stall (VM 191412)**
 
@@ -92,8 +92,8 @@ Cap of 500 was insufficient — 500 × 274ms = 137s blocking time already satura
 - features-service: Reduce `_MAX_UTILIZATION_EVENTS` from 500 → 10. 10 × 274ms = 2.74s total — well below GCS quota.
 - UTL fix: UTL@aca4004c. features-service fix: features-service@5afdd918.
 
-**Re-run Smoke B** — VM 193018 RUNNING with Bugs 1+2+3 fixed. If it stalls at utilization (Bug 4), rebuild tarball
-with @aca4004c+@5afdd918 and relaunch.
+**Re-run Smoke B** — VM 193018 RUNNING with Bugs 1+2+3 fixed. If it stalls at utilization (Bug 4), rebuild tarball with
+@aca4004c+@5afdd918 and relaunch.
 
 ## Status
 
@@ -103,10 +103,11 @@ with @aca4004c+@5afdd918 and relaunch.
       insufficient for mixed-precision files; shard-level isolation prevents stall.
 - [x] ✅ [AGENT] P0. Bug 2 investigation — utilization subprocess stall root cause + timeout guard — slot-6 owns —
       features-service@30e449d7 (root cause: synchronous PubSub log_event per-row on 134k rows; fix: cap
-      emit_aave_utilization_events at `_MAX_UTILIZATION_EVENTS=500`; GCS async write fix at 64682456 from parallel agent)
-- [x] ✅ [AGENT] P0. Bug 3 (startup NameError) — `Callable` import inside `TYPE_CHECKING` block evaluated at runtime
-      in `cast(Callable[..., object], fn)` — features-service@818d8ecc (slot-8; moved to unconditional import).
-      Caused VMs `192145` + `192529` to DEPLOYMENT_FAILED (exit_code=1, 17s). Tarball rebuilt at `2026-05-17T18:30:09Z`.
+      emit_aave_utilization_events at `_MAX_UTILIZATION_EVENTS=500`; GCS async write fix at 64682456 from parallel
+      agent)
+- [x] ✅ [AGENT] P0. Bug 3 (startup NameError) — `Callable` import inside `TYPE_CHECKING` block evaluated at runtime in
+      `cast(Callable[..., object], fn)` — features-service@818d8ecc (slot-8; moved to unconditional import). Caused VMs
+      `192145` + `192529` to DEPLOYMENT_FAILED (exit_code=1, 17s). Tarball rebuilt at `2026-05-17T18:30:09Z`.
 - [x] ✅ [AGENT] P0. Bug 4 fix (GcsEventSink synchronous blocking) — root cause: GcsEventSink.write_event calls
       upload_bytes synchronously with timeout=600 + retry(deadline=600s); after 9 uploads GCS rate-limits and 10th
       upload stalls event loop indefinitely. 500-cap insufficient (500×274ms=137s saturates GCS quota). Fix:
@@ -118,6 +119,9 @@ with @aca4004c+@5afdd918 and relaunch.
       (exit_code=1) at group 9/11 (`rate_impact`) — all prior groups passed cleanly. Fixed in features-service@ae90d1fd
       (slot-8). Tarball rebuilt at `2026-05-17T19:06:20Z`.
 - [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 5 bugs fixed — VM
-      `features-onchain-defi-20260517-200717` RUNNING (launched 2026-05-17 20:07 UTC; tarball @19:06:20Z includes all
-      fixes: @30e449d7+@64682456+@818d8ecc+@aca4004c+@5afdd918+@ae90d1fd; awaiting DEPLOYMENT_COMPLETED)
+      `features-onchain-defi-20260517-200717` RUNNING (launched 2026-05-17 19:09 UTC; tarball @19:06:20Z claimed to
+      include all fixes: @30e449d7+@64682456+@818d8ecc+@aca4004c+@5afdd918+@ae90d1fd; at `onchain_perps` 04-11 as of
+      19:23 UTC). Backup VM `features-onchain-defi-20260517-203044` ALSO RUNNING (launched 2026-05-17 19:30 UTC by
+      slot-6; tarball sha=60bbc03f @19:17:48Z confirmed includes all fixes incl ae90d1fd; DEPLOYMENT_STARTED 19:32:58
+      UTC). Awaiting DEPLOYMENT_COMPLETED from either VM.
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run
