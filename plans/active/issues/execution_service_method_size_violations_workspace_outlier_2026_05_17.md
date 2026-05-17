@@ -572,6 +572,19 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-35**: 39 files cleared (slot-2 contribution: -39 files; spans 16
    submodules incl. engine/startup).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 36 — engine/validation/configuration_validator)**: shipped at
+   execution-service@373215cee (check_execution_algorithms 140L→33L via \_validate_trade_algorithm +
+   \_validate_swap_algorithm + \_validate_other_algorithms; same 3-block split for TRADE / SWAP / other
+   instruction types). Allowlist -1. basedpyright clean.
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 37 — engine/validation/config_validator)**: shipped at
+   execution-service@34c09fa36 (check_execution_algorithms 143L→33L via same 3-helper extraction pattern as
+   batch 36 — this is the PreflightConfigValidator counterpart of ConfigurationValidator). Allowlist -1.
+   basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-37**: 41 files cleared (slot-2 contribution: -41 files; spans 16
+   submodules incl. engine/validation ×2).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
