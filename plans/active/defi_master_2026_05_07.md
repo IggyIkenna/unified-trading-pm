@@ -335,11 +335,12 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       CARRY_RECURSIVE_STAKED: 4 of 7 slots confirmed — AAVE-LIDO v2/v3 (264/275 bps), AAVE-ETHERFI v2/v3 (289/305 bps),
       all 7/7 days in position. strategy@`750dbb4` fixes: catalog params + leveraged APY formula + WETH asset filter -
       COMPOUND-LIDO: BLOCKED — NaN borrow_apy in COMPOUND_V3 rows (issue:
-      `compound_kamino_lending_rates_gaps_2026_05_15.md`) - KAMINO-JITO: BLOCKED-CREDENTIALS (Helius + KAMINO handler
-      missing, same issue doc) - YIELD_ROTATION_LENDING: "engine never entered position" for AAVE slots with valid
-      supply_apy — entry signal investigation needed (separate item); Solana/ETH-native assets not in lending_rates data
-      (expected gap) - Phase A gate PARTIALLY MET for CARRY_RECURSIVE_STAKED ETH-leg slots. May-23 gate criterion
-      satisfied.]
+      `compound_kamino_lending_rates_gaps_2026_05_15.md`) - KAMINO-JITO: **Helius credential UNBLOCKED 2026-05-15**
+      (`helius-api-key` vaulted, MTDS@4cea371 wired); only KAMINO handler implementation remains as standard P2 follow-up
+      per `compound_kamino_lending_rates_gaps_2026_05_15.md` § "STATUS UPDATE 2026-05-17". - YIELD_ROTATION_LENDING:
+      "engine never entered position" for AAVE slots with valid supply_apy — entry signal investigation needed (separate
+      item); Solana/ETH-native assets not in lending_rates data (expected gap) - Phase A gate PARTIALLY MET for
+      CARRY_RECURSIVE_STAKED ETH-leg slots. May-23 gate criterion satisfied.]
 - [ ] [DATA] P2. **Solana LST MTDS gap** — MTDS `lst-rates-central-element-323112` has no Solana data in the
       2026-04-03..04-09 window (confirmed 2026-05-15: `_filter_lst_yields_by_protocol_asset` skips jitoSOL/mSOL slots in
       carry tracer YIELD_STAKING_SIMPLE + CARRY_RECURSIVE_STAKED runs). Root cause: Solana handler writes ~monthly
@@ -348,7 +349,9 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
       for all 7-day back-test windows that have no Solana row. **Not a May-23 blocker** — ETH-leg slots (LIDO-AAVE,
       ETHERFI-AAVE, ROCKETPOOL-AAVE, LIDO-COMPOUND) produce valid `realised_apy_bps` and cover the archetype gate.
       **Successor**: `lst_apr_sourcing_method_validated_2026_05_14.md` discusses fix path (daily Solana LST APR via
-      on-chain exchange rate reads — Alchemy + Helius). Status: `BLOCKED-CREDENTIALS` on Helius RPC key.
+      on-chain exchange rate reads — Alchemy + Helius). Status: **Helius credential UNBLOCKED 2026-05-15**
+      (`helius-api-key` vaulted, MTDS@4cea371 wired Jito MEV APY integration); implementation can proceed at standard
+      P2 cadence.
 - [x] ✅ [AGENT] P1. **YIELD_ROTATION_LENDING entry signal investigation** — RESOLVED (2026-05-15): strategy@`1429b52` —
       (1) catalog `eligible_protocols` → `candidate_protocols`; (2) tracer injects `apy_bps_<proto>` per protocol.
       Re-run (GCP_PROJECT_ID=central-element-323112, `bxbvhf0rd`): 8/12 slots enter with 148-262 bps APY: USDC on
