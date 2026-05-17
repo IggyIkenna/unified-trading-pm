@@ -901,3 +901,21 @@ basedpyright clean across all 2 commits.
   _balance helper + generator-comprehension w/ None filter.
 
 346 remaining. basedpyright clean.
+
+
+[2026-05-17 user direction "keep going for the rest"] slot-7 — execution-service Phase B (+6, 37/377 cleared):
+
+* `execution-service@fbbda9586` — KrakenCeFiAdapter.get_fills 53L→28L (docstring + intermediate-local condensation).
+* `execution-service@bbecdcd8f` — InstructionDrivenStrategyV3.on_stop 52L→11L via _log_alpha_summary +
+  _save_events_to_cache helpers.
+* `execution-service@f060a87b5` — DeFiTestDataGenerator.generate_swap_events_data 54L→33L via
+  _resolve_tick_count_and_interval static helper.
+* `execution-service@97e61c87e` — ExecutionAlphaVerifierActor.on_stop 54L→8L via 4 helpers
+  (_fill_float + _log_entry_alpha_stats + _log_exit_alpha_stats + _log_benchmark_coverage).
+* `execution-service@467f33b4b` — LiveCcxtTransferAdapter.execute_internal_transfer 54L→30L (docstring +
+  intermediate-local trim).
+* `execution-service@89aafda9c` — InstructionValidator.check_strategy_instructions 54L→18L via
+  _category_from_strategy_id + _check_single_date helpers.
+
+340 remaining. basedpyright clean across all 6 commits. Slot-7 plan-of-record: all 9 base items +
+5 SWEEP-16 items remain ✅. Continuing execution-service grind per "no skip / no deferred" direction.
