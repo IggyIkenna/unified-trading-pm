@@ -936,6 +936,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-2 cumulative across batches 3-88**: 131 files cleared (slot-2 contribution: -131 files; spans 79 submodules).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 89 — helper extraction)**: shipped at execution-service@069bcee5d.
+  _convert.py:instruction_to_vwap_config 57L→46L, _timeline_extraction.py:extract_fills_from_timeline 56L→30L,
+  strategy_instructions/gcs.py:download_instructions_df 56L→40L. 3 violations cleared.
+
+  **Slot-2 cumulative across batches 3-89**: 134 files cleared (slot-2 contribution: -134 files; spans 81 submodules).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
