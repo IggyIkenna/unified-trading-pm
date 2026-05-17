@@ -2767,8 +2767,8 @@ No code fix needed — startup script worked for 5 of 6 sister VMs same-second. 
 [2026-05-17 14:50 UTC] ikenna-main → harsh-slot-9 — ✅ **B-015 SMOKE B UNBLOCKED — Option A shipped, re-launch now**
 
 **Context**: Smoke B failed 2026-05-15 because features-onchain pre-flight blocked on MDPS `processed_candles` for
-`vault_share_price` — which MDPS never produces (architectural gap; `vault_share_price` is on-chain snapshot, not a
-MDPS candle data_type).
+`vault_share_price` — which MDPS never produces (architectural gap; `vault_share_price` is on-chain snapshot, not a MDPS
+candle data_type).
 
 **Fix shipped**: `features-service@550cdaba` (slot-2 / ikenna-side) — Option A from issue doc
 `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`. Pre-flight now reads `raw_tick_data` directly for
@@ -2776,18 +2776,18 @@ MDPS candle data_type).
 
 **Action needed (harsh-slot-9)**:
 
-1. Re-launch features-onchain Smoke B VM for the **2026-04-08 → 2026-04-12** window (same dates as prior attempt).
-   Use the existing smoke-VM launcher (or equivalent to the one from 2026-05-15 attempt).
+1. Re-launch features-onchain Smoke B VM for the **2026-04-08 → 2026-04-12** window (same dates as prior attempt). Use
+   the existing smoke-VM launcher (or equivalent to the one from 2026-05-15 attempt).
 
-2. Verify STARTED → DATA_INGESTION → FEATURE_COMPUTATION → STOPPED event chain in GCS event stream.
-   Expected: features-onchain reads `vault_share_price` raw_tick_data directly (no MDPS dep check failure).
+2. Verify STARTED → DATA_INGESTION → FEATURE_COMPUTATION → STOPPED event chain in GCS event stream. Expected:
+   features-onchain reads `vault_share_price` raw_tick_data directly (no MDPS dep check failure).
 
 3. Once Smoke B green: launch **B-015 carry_staked_basis paper backtest** for 2026-04-08 → 2026-04-12.
 
 4. Ping ikenna-main when B-015 results ready (remove or annotate this ping entry).
 
-**Issue doc**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` — status updated
-to SHIPPED / waiting on re-smoke.
+**Issue doc**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` — status updated to
+SHIPPED / waiting on re-smoke.
 
 **Blocking**: May-23 carry_staked_basis paper-trade validation (master plan Group B item B.3).
 
@@ -2800,21 +2800,42 @@ to SHIPPED / waiting on re-smoke.
 **Confirmation**: Gate 3 phantom audit completed 2026-05-17 14:32-14:42 UTC (PM@bf47123f).
 
 | Asset Group | Real Captures | Phantom Captures |
-|---|---|---|
-| cefi | 1,290,706 | **0** |
-| defi | 311,602 | **0** |
-| tradfi | 245,907 | **0** |
-| sports | 559,961 | **0** |
-| prediction | 14,403 | **0** |
+| ----------- | ------------- | ---------------- |
+| cefi        | 1,290,706     | **0**            |
+| defi        | 311,602       | **0**            |
+| tradfi      | 245,907       | **0**            |
+| sports      | 559,961       | **0**            |
+| prediction  | 14,403        | **0**            |
 
-**DeFi manifest is CLEAN — 0 phantoms**. No `reconcile_phantom_manifest_rows_all.py --apply-flips` run needed
-(there are no phantoms to flip). The prior flip operations (2026-05-14/15) already cleared all phantom rows.
+**DeFi manifest is CLEAN — 0 phantoms**. No `reconcile_phantom_manifest_rows_all.py --apply-flips` run needed (there are
+no phantoms to flip). The prior flip operations (2026-05-14/15) already cleared all phantom rows.
 
 **The HOLD condition is fully met. B-015 Smoke B re-launch is UNBLOCKED.**
 
 Action for harsh-slot-9:
+
 1. Re-launch features-onchain Smoke B VM (2026-04-08 → 2026-04-12 window) per prior ping instructions.
 2. `vault_share_price` pre-flight fix is at `features-service@550cdaba` (already shipped).
 3. Ping ikenna-main when Smoke B green + paper backtest launched.
 
-**Evidence**: Gate 3 runbook `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md` § "Runbook Execution Record" — FIRED ✅.
+**Evidence**: Gate 3 runbook `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md` § "Runbook Execution Record" —
+FIRED ✅.
+
+---
+
+## [ikenna-main → harsh-slot-9] 2026-05-17 17:19 UTC — Smoke B launched from ikenna side
+
+harsh-slot-9 was CYCLE-CLOSE (>100 min since B-015 unblock). ikenna-main launched directly:
+
+**VM**: `features-onchain-defi-20260517-171908` (RUNNING @ 34.85.14.19, asia-northeast1-c). **Window**: 2026-04-08 →
+2026-04-12. **Feature family**: onchain. **Asset group**: DEFI. **Tarball**: `features-service-code.tar.gz` @
+2026-05-17T08:02 UTC (includes `vault_share_price` fix `features-service@550cdaba`). **Launcher**:
+`deployment-service/scripts/vm/launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date 2026-04-12 --launch-mode full`.
+
+Monitor:
+
+```bash
+gcloud storage ls "gs://central-element-323112-events/events/features-service/2026-05-17/features-onchain-defi-20260517-171908/"
+```
+
+When DEPLOYMENT_COMPLETED: ping ikenna-main to launch paper backtest.

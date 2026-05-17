@@ -1442,7 +1442,7 @@ Next tick: continue monitoring until operator confirms return.
 **Poll results** (tick 17):
 
 - `3ef1fb3e`: **Phase 6 P1 — CeFi perp connectors verified live-wired** ✅ (significant May-23 gate item).
-- `7e8268b5`: slot-2 batch 40 — signal_driven_v3_base __init__ 146L→8L (execution-service@7f5f93c28).
+- `7e8268b5`: slot-2 batch 40 — signal_driven_v3_base **init** 146L→8L (execution-service@7f5f93c28).
 - `d86d5a7b`: slot-2 batch 41 — orchestrator execute_order 147L→29L (execution-service@3313ce6e6).
 - `91c647ab`: backfill Phase 7+8 — PerpHedgeSizer + HealthFactorMonitor + kill-switch flips.
 - `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>90 min** since B-015 ping.
@@ -1460,7 +1460,8 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 
 - **slot-7**: still at tick-25 (110 methods / 316 remaining). No new self-report since main ack at 14:55 UTC.
 - **harsh-slot-9**: CYCLE-CLOSE 2026-05-15 — >100 min since B-015 ping. Session closed.
-- **Phase 7+8 detail**: LiquidationProximityCircuit kill-switch (strategy-service@fb3cd97) + ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451) — both flipped in `91c647ab`.
+- **Phase 7+8 detail**: LiquidationProximityCircuit kill-switch (strategy-service@fb3cd97) +
+  ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451) — both flipped in `91c647ab`.
 - **Inventory regenerated**: 69 plans / 52% done / **485 cal AI-days** (down 3 from tick-16's 488).
 - **Cross-side / slot-6**: no new responses.
 
@@ -1474,7 +1475,8 @@ Next tick: await operator return or slot-7 100/377 milestone ping.
 
 **Poll results** (tick 18) — duplicate tick-17 from prior wakeup (inventory 485 cal AI-days noted):
 
-- `04129230`: slot-2 batch 42 — passive_aggressive_spawn _start_aggressive_phase 152L→20L (execution-service@aa0153aa7).
+- `04129230`: slot-2 batch 42 — passive_aggressive_spawn \_start_aggressive_phase 152L→20L
+  (execution-service@aa0153aa7).
 - `5f6620a5`: **Phase 12 paper-smoke + Phase 13 launcher — defi_recursive_borrow** ✅ (May-23 critical path).
 - `1f39fcba`: slot-2 batch 43 — solana_base send_transaction 153L→34L (execution-service@15052b068).
 - `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>95 min** since B-015 ping.
@@ -1503,6 +1505,7 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 
 **Operator action queue** (updated):
+
 1. ❌ Databento RT key (slot-3) — DatabentoTradfi WSFeedConnector live activation
 2. ❌ DeFi MTDS backfill approval (slot-5) — Pyth/Chainlink/DEX-perp multi-year scope OR slot-5 redirect
 3. ❌ Databento OHLCV spend sign-off (~$50-200)
@@ -1512,3 +1515,22 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 7. ⏳ harsh-slot-9 B-015 Smoke B (needs boot)
 
 Next tick: continue monitoring; await operator return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:21 UTC — Autonomous loop tick-20: Smoke B VM launched (harsh-slot-9 CYCLE-CLOSE)
+
+**Action taken** — ikenna-main launched B-015 Smoke B directly (harsh-slot-9 CYCLE-CLOSE >100 min):
+
+- **VM**: `features-onchain-defi-20260517-171908` (RUNNING @ asia-northeast1-c, 34.85.14.19).
+  - Window: 2026-04-08 → 2026-04-12. Feature family: onchain / DEFI.
+  - Tarball: `features-service-code.tar.gz` built 2026-05-17T08:02 UTC (includes `vault_share_price` `features-service@550cdaba`).
+  - Launcher: `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date 2026-04-12 --launch-mode full`.
+- **`_agent_pings.md` updated**: cross-side ping written. When DEPLOYMENT_COMPLETED → harsh-side to launch paper backtest.
+- **Event stream**: not yet visible (VM boot <2 min ago; STARTED expected within 60s).
+
+**Operator action queue** now 8 items (Smoke B item was #7 — replaced with VM running, pending paper backtest launch by harsh-side):
+
+7. ✅ **Smoke B VM RUNNING** — `features-onchain-defi-20260517-171908`. Pending: DEPLOYMENT_COMPLETED → paper backtest.
+
+Next tick: check Smoke B STARTED event; check slot-3 Databento credential ping; dispatch slot-5 redirect if queue empty.
