@@ -9,9 +9,9 @@ deployment-service Phase 13 launcher. SWEEP-16 slot-5 reserve stack exhausted.
 
 **Shipped this session**:
 
-1. **Phase 7+8 H2 plan backfill** (PM@91c647ab): All 8 checkboxes flipped — PerpHedgeSizer (execution-service@4d63626ac),
-   HealthFactorMonitor (execution-service@4d63626ac), LiquidationProximityCircuit kill-switch (strategy-service@fb3cd97),
-   ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451).
+1. **Phase 7+8 H2 plan backfill** (PM@91c647ab): All 8 checkboxes flipped — PerpHedgeSizer
+   (execution-service@4d63626ac), HealthFactorMonitor (execution-service@4d63626ac), LiquidationProximityCircuit
+   kill-switch (strategy-service@fb3cd97), ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451).
 
 2. **Phase 12 paper-smoke backfill** (PM@5f6620a5): `recursive_borrow_paper_smoke.py` scaffold [x]
    (e2e-testing@a7e9243); BLOCKED-CREDENTIALS for live 7d run (pings/slot_2.md has the ask).
@@ -20,22 +20,25 @@ deployment-service Phase 13 launcher. SWEEP-16 slot-5 reserve stack exhausted.
    prefix in VM_PREFIX_TO_BUCKET (LONG_LIVED_LIVE). Safety gate requires `--paper-smoke-passed`.
 
 **All remaining defi_recursive_borrow items are BLOCKED**:
+
 - Phase 9/10/11 item 5: BLOCKED-DATA (aave/compound lending-indices backfill, window 2026-05-19)
 - Phase 12 backtest: BLOCKED-DATA until 2026-05-19
 - Phase 12 reconciliation: BLOCKED-CREDENTIALS (paper smoke hasn't run 7d)
 - Phase 13 treasury / launch: hard-stop (wallet keys = human-only)
 
 **SWEEP-16 slot-5 reserve exhausted**:
+
 - `wave3x_residual_ssots`: all 6 remaining items DEFERRED-POST-CUTOVER or Harsh-side
 - `dex_perp_and_venue_data_expansion`: only 2 items — BLOCKED-OPERATOR-DECISION (launcher) + P3 NICE-TO-HAVE
 - `mtds_databento_path_streaming`: status done (0 open)
 - `live_pipeline_mtds_mdps_features`: 0 open items
-- `code_freeze MTDS-3.2.C` (DeFi backfill VMs: Pyth Solana + Chainlink EVM + DEX-perp): **OPERATOR APPROVAL NEEDED**
-  for multi-year backfill scope (≥1 week rule applies — ref: `defi_master_2026_05_07` Phase 9 history)
+- `code_freeze MTDS-3.2.C` (DeFi backfill VMs: Pyth Solana + Chainlink EVM + DEX-perp): **OPERATOR APPROVAL NEEDED** for
+  multi-year backfill scope (≥1 week rule applies — ref: `defi_master_2026_05_07` Phase 9 history)
 
 **ACTION NEEDED from main/operator**:
-1. Approve DeFi MTDS backfill VMs (code_freeze MTDS-3.2.C) for multi-year window: Pyth Solana oracle prices
-   (2022-11 → today), Chainlink EVM multi-chain (2024 → today), DEX-perp Hyperliquid/Aster forward-poll.
+
+1. Approve DeFi MTDS backfill VMs (code_freeze MTDS-3.2.C) for multi-year window: Pyth Solana oracle prices (2022-11 →
+   today), Chainlink EVM multi-chain (2024 → today), DEX-perp Hyperliquid/Aster forward-poll.
 2. Redirect slot-5 to a new theme if DeFi backfill approval takes time.
 
 slot-5 polling for new assignments.
@@ -1335,3 +1338,54 @@ credential-ask discipline is correctly documented. Cross-link will appear in mas
 
 **No action needed until operator picks Option 1 vs 2**. When operator acks, deployment-service (likely slot-6 or
 Harsh-side, since they own the Cloud Run/Scheduler infra) ships the trigger.
+
+---
+
+## [main → slot 5] 2026-05-17 17:25 UTC — NEW THEME: DART pvl-p23a/b/c (Group G, May-23 gate)
+
+SWEEP-16 exhausted acknowledged. DeFi MTDS backfill (code_freeze MTDS-3.2.C) requires operator approval for multi-year
+scope — DO NOT launch autonomously. New theme assigned:
+
+**Theme: DART manual-trade gate Group G (pvl-p23a + pvl-p23b + pvl-p23c)**
+
+These are Group G May-23 cutover gate items, currently unassigned. Ship in sequence:
+
+### Phase 1 (start here): pvl-p23b — mode-data API endpoint
+
+**Goal**: `GET /strategy/{id}/runs?mode=batch|paper|live` endpoint on `deployment-api` (or strategy-service).
+
+- Returns mode-tagged event/fill/P&L bundle for a given strategy ID and mode.
+- Success criterion: `curl http://localhost:8004/strategy/<id>/runs?mode=paper` returns 200 with non-empty body;
+  deployment-api QG green; 3 unit tests (one per mode) pass.
+
+**Spec location**: `master_to_live_defi_2026_05_23.md` § "Group G — item pvl-p23b" (line 978).
+
+**Codex docs to read first**:
+
+- `codex/04-architecture/promote-workflow-architecture.md`
+- `codex/14-customer-journeys/dart/mode-toggle.md` (create if doesn't exist; this is the new doc per plan)
+
+**Repos**:
+
+- `deployment-api` — add endpoint + 3 unit tests (one per mode tag)
+- `unified-trading-pm` — flip pvl-p23b checkbox when done
+
+### Phase 2 (after pvl-p23b): pvl-p23a + pvl-p23c (parallel)
+
+**pvl-p23a**: DART terminal 3-way batch/paper/live comparison view in `unified-trading-system-ui`, wired to real
+pvl-p23b endpoint (not mock). Playwright e2e for 3-pane render.
+
+**pvl-p23c**: `ManualTradeGateDialog` component — pre-trade preview (margin / position-limit / worst-case loss) +
+approve/deny/timeout buttons. Emits `MANUAL_APPROVED` / `MANUAL_REJECTED`. Execution-service unholds from manual-pending
+queue on approval. Playwright e2e covers approve flow.
+
+**Full spec**: `master_to_live_defi_2026_05_23.md` § "Group G — item 23" (lines 977-979).
+
+### Rules (MANDATORY for this slot)
+
+1. Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any code change.
+2. Run `quality-gates.sh` before every push — two-pass: QG then quickmerge.
+3. Half-1 + Half-2: code push + plan checkbox flip in same agent turn.
+4. Report progress in `ikenna_orchestrator/pings/slot_5.md` after each shipped item.
+
+Ping main when pvl-p23b endpoint is live (curl green).
