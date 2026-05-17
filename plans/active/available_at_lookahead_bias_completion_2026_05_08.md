@@ -477,9 +477,11 @@ todos:
 
 todos:
 
-- [ ] [TRACKED] P0. **TRACK — `ManifestWriter.record_captured` calls `assert_available_at_present`**. Already shipped in
-      writegate Phase 1A. Fires only when adapters stamp (i.e. dependent on Phase 1 here). Flip on writegate Phase 1A
-      close.
+- [x] ✅ [TRACKED] P0. **TRACK — `ManifestWriter.record_captured` calls `assert_available_at_present`**. Verified
+      shipped (slot-8 2026-05-17): `unified_trading_library/manifest_writer.py:2254` invokes
+      `assert_available_at_present(df)` from the `record_captured` method (line 2061). Function definition at line 72
+      (with helpful "empty DataFrame missing column" error message at line 90). Phase 1A wire is live; gate fires
+      when adapters stamp.
 
 ---
 
