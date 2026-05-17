@@ -2,6 +2,8 @@
 title: codex/04-architecture full drift audit — 2026-05-15 pass
 created: 2026-05-15
 author: slot-6
+resolved: 2026-05-17
+resolution: SHIPPED — codex/04-architecture/ drift audit COMPLETE (15 docs ✅ no code-contract drift). Category A stale package refs (`unified_trading_services` → `unified_trading_library`) fixed 2026-05-17 by slot-3 at PM@bdbd899f in cloud-agnostic-migration.md + runtime-deployment-topology.md (3 lines). Category B (`pyright` → `basedpyright`) — already clean (grep returns 0 standalone pyright refs). tier-and-import-architecture.md mentions retained — those explicitly document the rename + alias.
 source:
   - slot-6 queue item 13 (continuation_prompts_harsh_2026_05_15.md)
 locked_by: live-defi-rollout
