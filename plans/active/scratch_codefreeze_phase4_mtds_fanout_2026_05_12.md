@@ -9,6 +9,15 @@ companion_to:
   plans/active/manifest_schema_final_gate_2026_05_09.md (Phase 4)
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
+last_updated: 2026-05-15
+estimate_class: refactor
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 0.8
+estimate_calibration_note: |
+  Backfilled 2026-05-15 per CLAUDE.md HARD RULE. Mechanical callsite-migration sweep across MTDS
+  handlers — pipeline_mode= arg insertion at each handler call. refactor class multiplier 0.4x
+  (mechanical sweep, well-defined target). Baseline 2 AI-days for the full sweep across MTDS;
+  calibrated 0.8 AI-day.
 ---
 
 # Phase 4.MTDS + writegate slice (c) callsite-migration — fan-out prep (Harsh slot 3)

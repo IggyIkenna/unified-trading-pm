@@ -9,6 +9,13 @@ execution:
   verifier:
     "event-stream receipt (triage.jsonl row count vs manifest phantom count; manifest row state post-reconciliation)"
   last_executed: "NEVER"
+estimate_class: infra
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 0.8
+estimate_calibration_note: |
+  Backfilled 2026-05-15 per CLAUDE.md HARD RULE (post-2026-05-11 plans require estimate_class).
+  One-shot operational runbook (VM launch + manifest reconciliation + verifier check); infra class
+  multiplier 0.8x. Baseline 1 AI-day. Calibrated 0.8 AI-day.
 ---
 
 # Gate 3 — Phantom-Audit Execution Runbook

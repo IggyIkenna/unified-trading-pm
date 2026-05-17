@@ -3,9 +3,16 @@ plan_type: code+infra
 asset_group: cross-cutting
 owner: ikenna
 created: 2026-05-08
-last_updated: 2026-05-08
+last_updated: 2026-05-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+data_dependency: |
+  Operator confirmation 2026-05-15: "cme_polymarket_arb dependency on tick data - i think ohlcv 1m
+  is enough to get a feel for arb backtest". Plan does NOT require Databento trades/tbbo/mbp_10 (L1-L3
+  tick data — deferred to post-cutover per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`). OHLCV-1m
+  bars are sufficient for the cross-venue basis spread backtest. Live execution-tuning may need tick
+  data once the L1-L3 successor plan ships (post-cutover); for May-23 backtest scope this is
+  unblocked.
 name: cme-polymarket-arb-2026-05-08
 overview: >-
   Cross-venue arbitrage between CME event-contracts (9 roots: ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E /

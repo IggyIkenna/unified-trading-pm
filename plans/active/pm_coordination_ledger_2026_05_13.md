@@ -1,9 +1,17 @@
 ---
 title: "PM Coordination Ledger — 2026-05-13 Reconciliation + Routing"
 created: 2026-05-13
+last_updated: 2026-05-15
 author: ikenna-main
 type: coordination-doc
 status: active
+estimate_class: design
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.3
+estimate_calibration_note: |
+  Backfilled 2026-05-15 per CLAUDE.md HARD RULE. Coordination/governance doc — once-per-cycle
+  reconciliation snapshot used for blocker triage. design class multiplier 0.6x. Per-cycle refresh
+  cadence means this is recurring effort, not one-shot.
 ---
 
 # PM Coordination Ledger — 2026-05-13 Reconciliation + Routing
