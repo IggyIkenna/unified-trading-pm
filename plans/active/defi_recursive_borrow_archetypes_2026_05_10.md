@@ -363,8 +363,8 @@ These items land in this plan (in-scope adjacent + P0 unblocker):
 - [x] ✅ [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator
       — plan body lists Spark in-scope but UAC has no dict). **SHIPPED UAC@3729af1** — `SPARK_ETHEREUM_RESERVES` 7
       reserves shipped. (backfilled 2026-05-17 slot-5)
-- [ ] [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)` tuples
-      OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback.
+- [x] ✅ [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)` tuples
+      OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback. **SHIPPED UAC@d88e512** — `_MORPHO_MARKET_LLTV` dict + `get_morpho_market_lltv(collateral, loan_asset)` accessor; wstETH/WETH→0.945 (top cell). Exported via registry.__init__.
 - [x] ✅ [UAC] **P2**. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys — bridged-vs-native
       USDC need separate entries on Arbitrum + Base. Cross-chain symbol hygiene. **SHIPPED UAC@3729af1** — `USDCE` in
       AAVE_V3_ARBITRUM_RESERVES + `USDBC` in AAVE_V3_BASE_RESERVES. (backfilled 2026-05-17 slot-5)
