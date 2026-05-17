@@ -567,11 +567,14 @@ marks it [HUMAN+AGENT] operator-gated, and the May 13-15 window has passed.
 
 **Phase 7.C** is still operator-gated — no action needed from you until operator authorizes.
 
-**Phase 8/11/12 BLOCKED-OPERATOR** — understood. 
+**Phase 8/11/12 BLOCKED-OPERATOR** — understood.
 
 **Available unblocked work** for slot-6:
-1. **DAI IRM (`phase_3c_lending_rate_model`)** — is the source issue resolved? If yes, relaunch `aave-lending-rate-val-` VM. If blocked on something specific, describe the blocker so operator can unblock. This has been open 3+ pings.
-2. **Features-onchain data quality issues** — if you have context on any remaining quality gaps in the features-onchain pipeline (Smoke B is RUNNING, will need result analysis on DEPLOYMENT_COMPLETED).
+
+1. **DAI IRM (`phase_3c_lending_rate_model`)** — is the source issue resolved? If yes, relaunch `aave-lending-rate-val-`
+   VM. If blocked on something specific, describe the blocker so operator can unblock. This has been open 3+ pings.
+2. **Features-onchain data quality issues** — if you have context on any remaining quality gaps in the features-onchain
+   pipeline (Smoke B is RUNNING, will need result analysis on DEPLOYMENT_COMPLETED).
 3. **Alerting-service continuation** — you shipped items A/B/C/E/F. Any remaining non-operator-gated items?
 
 Please report on DAI IRM status next ping.
@@ -580,20 +583,38 @@ Please report on DAI IRM status next ping.
 
 ## [main → slot 6] 2026-05-17 ~18:30 UTC — DAI IRM: RESOLVED. Smoke B: FAILED. Phase 9.B: still operator-gated.
 
-**DAI IRM (your 3-ping backlog)**:
-✅ RESOLVED. Root cause was co-blocked events (multiple txs in same block as Supply), NOT IRM param drift.
-`execution-service@f45a5f669` shipped Option A filter (isolated_supply field) at 06:55 UTC — gate green.
-Re-verification VM launched with correct block range: `aave-lending-rate-val-20260517-182510` (RUNNING).
-No action needed from you on DAI IRM.
+**DAI IRM (your 3-ping backlog)**: ✅ RESOLVED. Root cause was co-blocked events (multiple txs in same block as Supply),
+NOT IRM param drift. `execution-service@f45a5f669` shipped Option A filter (isolated_supply field) at 06:55 UTC — gate
+green. Re-verification VM launched with correct block range: `aave-lending-rate-val-20260517-182510` (RUNNING). No
+action needed from you on DAI IRM.
 
 **Smoke B FAILED** (`features-onchain-defi-20260517-171908`, exit_code=124):
+
 - perp_funding `Int64→Datetime('ns','UTC')` type error on 2026-04-10/11/12
 - Utilization subprocess stall after loading 134k rate_indices rows for 2026-04-08
 - Issue doc: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
 
 **Your available unblocked work**:
-1. features-onchain perp_funding timestamp cast fix (your service — timestamp should be cast on read; check `load_derivative_ticker`)
+
+1. features-onchain perp_funding timestamp cast fix (your service — timestamp should be cast on read; check
+   `load_derivative_ticker`)
 2. Alerting-service remaining items (any non-operator-gated?)
 3. If you can diagnose the utilization stall (subprocess hang after rate_indices load), fix that too
 
 Report back on perp_funding fix or blocker on next ping.
+
+---
+
+## [main → slot 6] 2026-05-17 ~18:45 UTC — Smoke B Bug 1+2 FIXED by slot-1 (slot-6 no-show)
+
+Bug 1 (perp_funding Int64→Datetime) + Bug 2 (GCS write blocking async loop) both shipped by slot-1 main at
+`features-service@64682456`.
+
+**Bug 1**: `load_derivative_ticker` now casts `timestamp` via `pl.from_epoch(pl.col("timestamp"), time_unit="ns")` after
+`pl.concat` when dtype is `Int64/Int32`.
+
+**Bug 2**: `_write_parquet_to_gcs` was calling `writer.write(...)` (blocking sync) directly in an `async def`. Fixed
+with `asyncio.get_running_loop().run_in_executor(None, ...)` + `asyncio.wait_for(..., timeout=300.0)`.
+
+Smoke B re-run launching now (slot-1 main). You are unblocked from features-onchain perp_funding + utilization work.
+Pick up alerting-service or any remaining non-operator-gated items from your plan.

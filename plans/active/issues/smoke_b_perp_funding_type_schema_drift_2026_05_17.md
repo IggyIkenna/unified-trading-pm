@@ -69,6 +69,6 @@ trace showed `do_wait` in kernel — waiting for a child process that never exit
       post-concat cast at 64682456 from parallel agent)
 - [x] ✅ [AGENT] P0. Bug 2 investigation — utilization subprocess stall root cause + timeout guard — slot-6 owns —
       features-service@30e449d7 (root cause: synchronous PubSub log_event per-row on 134k rows; fix: cap
-      emit_aave_utilization_events at \_MAX_UTILIZATION_EVENTS=500; GCS async write fix at 64682456 from parallel agent)
+      emit_aave_utilization_events at _MAX_UTILIZATION_EVENTS=500; GCS async write fix at 64682456 from parallel agent)
 - [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — slot-1 main launches VM
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run

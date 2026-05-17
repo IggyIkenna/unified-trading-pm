@@ -1961,8 +1961,8 @@ as Supply events), NOT wrong IRM params.
 
 - Root cause confirmed at 06:55 UTC (gate green 10/10 events 0-2bps, `execution-service@f45a5f669`)
 - Static defaults are stale fallback only; live fetch (`_fetch_irm_params_live`) already correct
-- Fix: block range defaults on launcher were wrong era (20800000→23300000, 22500000→25086000)
-  → Fixed: `deployment-service@25f5a12`
+- Fix: block range defaults on launcher were wrong era (20800000→23300000, 22500000→25086000) → Fixed:
+  `deployment-service@25f5a12`
 - Fresh tarball rebuilt (17:24 UTC), VM relaunched: **`aave-lending-rate-val-20260517-182510`** (RUNNING) Correlation:
   `3420C524-62D0-42C7-BB04-49A3CE701E69` Results when done:
   `gs://central-element-323112-defi-validation/results/lending/2026-05-17/3420C524-62D0-42C7-BB04-49A3CE701E69/results.json`
@@ -2050,16 +2050,18 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 
 ## [slot 1 main] 2026-05-17 ~17:56 UTC — Autonomous loop tick-44 (parallel stale-wakeup): wave-8 ✅
 
-**Note**: This tick resolves a stale tick-40 wakeup that fired concurrently with tick-43. No duplication — tick-43 (PM@75e4efc8) already captured wave-7 + batch-61. This tick captures wave-8 only.
+**Note**: This tick resolves a stale tick-40 wakeup that fired concurrently with tick-43. No duplication — tick-43
+(PM@75e4efc8) already captured wave-7 + batch-61. This tick captures wave-8 only.
 
 **New remote commit** (1 incoming, pulled):
+
 - `844cde03` — wave-8 formation/ht_features/bench_sub shipped (features-service@25a86c30, 86 tests, 548 total).
 
-**sports calculators progress**: 548 tests across 14+ files (wave-8 adds formation_calculator, ht_features_calculator, bench_sub_calculator). Pace: 3 waves in rapid succession (6 → 7 → 8).
+**sports calculators progress**: 548 tests across 14+ files (wave-8 adds formation_calculator, ht_features_calculator,
+bench_sub_calculator). Pace: 3 waves in rapid succession (6 → 7 → 8).
 
-**slot-6**: still no Smoke B fix commits in LDR. perp_funding + util stall investigation ongoing.
-**harsh-slot-9**: CYCLE-CLOSE (unchanged).
-**_agent_pings.md**: no new harsh response.
+**slot-6**: still no Smoke B fix commits in LDR. perp_funding + util stall investigation ongoing. **harsh-slot-9**:
+CYCLE-CLOSE (unchanged). **\_agent_pings.md**: no new harsh response.
 
 **Operator queue**: unchanged (9 items, see tick-43).
 
@@ -2070,17 +2072,21 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 **Note**: Stale tick-43 wakeup firing concurrently with tick-44. Capturing 3 new commits not in tick-44.
 
 **New remote commits** (3, pulled — on top of tick-44's 1):
-- `c3bac30d` — **Phase 8.E.2 SHIPPED** (deployment-api@269686d + deployment-ui@606e78f): GET /api/repos/coverage + RepoCoverageTab with CoverageBadge + SnapshotAgeBadge. 10 Python + 6 Vitest tests green.
-- `5c750e74` — slot-2 batch-62 (execution-service@c3fadd421): instruments/tradfi_creator create_tradfi_from_config 139L→15L. ~108/377 cleared.
+
+- `c3bac30d` — **Phase 8.E.2 SHIPPED** (deployment-api@269686d + deployment-ui@606e78f): GET /api/repos/coverage +
+  RepoCoverageTab with CoverageBadge + SnapshotAgeBadge. 10 Python + 6 Vitest tests green.
+- `5c750e74` — slot-2 batch-62 (execution-service@c3fadd421): instruments/tradfi_creator create_tradfi_from_config
+  139L→15L. ~108/377 cleared.
 - `f4832ffc` — slot-7 orchestrator: tick-41/42 ack + Phase B body + inventory refresh.
 
-**Phase 8.E.2**: Coverage column now wired end-to-end in deployment-ui. Operators can see repo coverage % from the Readiness tab.
+**Phase 8.E.2**: Coverage column now wired end-to-end in deployment-ui. Operators can see repo coverage % from the
+Readiness tab.
 
-**Parallel flip note** (from `6470ccd2` below tick-44): 107/377 cleared via defi_data_avail + intent yield pattern methods. batch-62 brings it to ~108/377.
+**Parallel flip note** (from `6470ccd2` below tick-44): 107/377 cleared via defi_data_avail + intent yield pattern
+methods. batch-62 brings it to ~108/377.
 
-**slot-6**: still no Smoke B fix commits.
-**harsh-slot-9**: CYCLE-CLOSE (unchanged).
-**_agent_pings.md**: no harsh response yet.
+**slot-6**: still no Smoke B fix commits. **harsh-slot-9**: CYCLE-CLOSE (unchanged). **\_agent_pings.md**: no harsh
+response yet.
 
 **Operator queue**: unchanged (9 items).
 
@@ -2089,13 +2095,14 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 ## [slot 1 main] 2026-05-17 ~18:04 UTC — Autonomous loop tick-46: wave-9 sports calculators ✅ (614 tests, 19 files)
 
 **New remote commit** (1 incoming, pulled):
-- `c12e563f` — wave-9 sports calculators: footystats_predictions + ml_predictions + multisource_xg (features-service@e8c5b715, 66 new tests, **614 total across 19 calculator files**).
+
+- `c12e563f` — wave-9 sports calculators: footystats_predictions + ml_predictions + multisource_xg
+  (features-service@e8c5b715, 66 new tests, **614 total across 19 calculator files**).
 
 **Sports calculators progress**: waves 1→9 complete. 614 tests, 19 files. Pace is ~1 wave per 5-8 minutes.
 
-**slot-6**: no Smoke B fix commits. perp_funding cast + util stall investigation ongoing.
-**harsh-slot-9**: CYCLE-CLOSE (unchanged).
-**_agent_pings.md**: no harsh response to Smoke B.
+**slot-6**: no Smoke B fix commits. perp_funding cast + util stall investigation ongoing. **harsh-slot-9**: CYCLE-CLOSE
+(unchanged). **\_agent_pings.md**: no harsh response to Smoke B.
 
 **Operator queue**: unchanged (9 items).
 
@@ -2118,3 +2125,13 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 `- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — slot-1 main launches VM`
 
 Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-skip and utilization stall.
+
+---
+
+## [slot 1 main] 2026-05-17 ~19:15 UTC — tick-47: slot-6 Smoke B fixes ✅ acked; re-run launching
+
+**Slot-6 ack**: Both Bug 1 (@30e449d7) + parallel-agent Bug 2 assist (@64682456) confirmed. Bug 1+2 checkboxes flipped in issue doc. Smoke B re-run launching now per slot-6 request.
+
+**Slot-7**: tick-44 acked (110/377 = 29%). 267 remaining.
+**Slot-8**: wave-9 acked (614 tests total across 19 files).
+**Operator queue**: 9 items (unchanged — operator AFK).
