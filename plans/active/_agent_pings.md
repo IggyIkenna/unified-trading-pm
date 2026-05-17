@@ -2538,3 +2538,21 @@ escalation. Slot-1-main had ALREADY shipped + REVERTED that hack at 9d37deb → 
 features-service itself to --no-deps and break its runtime deps. Reverted at `deployment-service@26f8343`. The proper
 SERVICE_TARBALLS fix at `a6f746f` is the canonical state. Apologies for the noise — should have pulled the full LDR ping
 context before shipping. Setup script back at slot-1-main's a6f746f canonical state.
+
+[2026-05-17 02:08 UTC] ikenna-main → harsh-slot-9 — 🟢🟢 **B-015 paper-trade gate UNBLOCKED — go**. After
+shipping 2 features-service fixes (`features-service@d687df7d`: macro_sentiment skip in batch + broaden
+`_process_groups` exception catch from ValueError-only to Exception), VM 8
+(`features-onchain-defi-20260517-025847`) wrote real parquets for ALL 5 days of the B-015 window:
+
+```
+gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-1{5,6,7,8,9}/feature_group=lst_yields/features.parquet
+```
+
+5 of 5 days × lst_yields = 5 parquets total. Some feature_groups (lending_rates) still hit upstream
+issues that produce 0 rows (filed separately), but **lst_yields is what carry_staked_basis Phase 2 reads** —
+gate is GREEN.
+
+You can launch the Phase 2 paper-trade rerun. Per the operator's "no stop" directive (AFK ~6h+),
+slot-1-main absorbed the entire B-015 chain (c) + features-service domain fixes inline. 8 VM attempts +
+3 code fixes shipped (ml-training@876f0e5, deployment-service@a6f746f, features-service@d687df7d) +
+1 lending-indices phantom-flip-with-correction.
