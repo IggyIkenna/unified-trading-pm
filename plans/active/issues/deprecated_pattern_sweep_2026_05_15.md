@@ -134,9 +134,16 @@ Deferred: 50+ threshold requires either pip-audit CVE upgrades workspace-wide OR
 
 **Priority 1 (immediate, P1)**: Fix `os.getenv()` in `batch-live-reconciliation-service/config.py` — this is a core
 config module. Use `UnifiedCloudConfig` instead.
+  - ✅ **VERIFIED CLEAN 2026-05-17 (slot-3)**: only occurrence of `os.getenv` in this file is in the module
+    docstring ("Uses UnifiedCloudConfig (no os.getenv() per workspace standards)") — no actual code use.
 
 **Priority 2 (P2, pre-cutover)**: Fix `except ImportError` in execution-service DeFi protocol modules (`drift.py`,
 `__init__.py`) — these are in the May-23 critical path.
+  - ✅ **SHIPPED 2026-05-17 (slot-3)**: `execution-service@de170cc4` removed dead try/except fallback in
+    `defi_execution/protocols/__init__.py` (drift/jupiter/solana_base imports unconditional now). The fallback was
+    dead-code anyway: drift.py uses lazy `_load_driftpy()` cache + jupiter.py + solana_base.py have no
+    optional-dep imports at module level. `drift.py:54` ImportError is re-raise-with-context (CORRECT pattern,
+    not a fallback — kept).
 
 **Priority 3 (P3, sprint-aligned)**: Tackle `# type: ignore` in UTL (126 occurrences) — most are `union-attr` on cloud
 client (can be fixed with proper narrowing) or `import-untyped` for pandas/pyarrow (add type stubs or use
