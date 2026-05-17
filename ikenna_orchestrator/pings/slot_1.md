@@ -1734,34 +1734,32 @@ Next tick: EXIT_STATUS + hour=16/17 counts; DEPLOYMENT_COMPLETED → ping harsh 
 
 **No new harsh pings**. _agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
 
-Next tick: EXIT_STATUS + hour=16/17 counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+Next tick: EXIT_STATUS + all-hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
 
 ---
 
-## [slot 1 main] 2026-05-17 ~18:09 UTC — Autonomous loop tick-29: Phase 9.A ✅ + slot-7 81/377 + Smoke B 55k events
+## [slot 1 main] 2026-05-17 ~17:08 UTC — Autonomous loop tick-29: Smoke B RUNNING, 56,182 events + Phase 9.A ✅ + Phase 9.B operator-gated
 
-**New since tick-28**:
-- ✅ **Phase 9.A VERIFIED** (`manifest_schema_final_gate_2026_05_09.md` PM@f8b9f3d2): E3 7-item launcher checklist passed for all MTDS adapters. All 7 items: UTL pipeline_mode default removed (v8), MTDS handlers pass BATCH_<source>, ManifestFreshnessCache(ttl=60) in 9 DeFi handlers, all 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap STARTED/STOPPED+PROCESSING_COMPLETED, Phase 6.C tarball [x], watchdog covers all mtds-* prefixes.
-- **Phase 9.B now unlocked** — `[HUMAN+AGENT] P0. Launch MTDS VM fleet per asset_group`. OPERATOR ACTION REQUIRED (adding to queue).
-- `b381f2cd` — slot-7 tick-34 (+3 → **81/377**), execution-service@206051e87
-- `14eeb7fb` — slot-2 batch 51 (book_builder 241L→40L, execution-service@31116b8a5)
+**Smoke B VM** (`features-onchain-defi-20260517-171908`):
+- h16=46,546 + h17=9,636 = **56,182 total** at 17:08 UTC. Still RUNNING. EXIT_STATUS: NOT_YET.
+  Utilization ~45 min elapsed (started 16:23 UTC). run.log buffered (133 lines).
 
-**Smoke B** (`features-onchain-defi-20260517-171908`): 55,039 total events (hour=16: 46,546 + hour=17: 8,493 as of 17:07 UTC). Still RUNNING, still in AAVE_V3 utilization phase (~46min elapsed). No DEPLOYMENT_COMPLETED yet.
+**Phase 9.A VERIFIED** ✅ (PM@f8b9f3d2 `manifest_schema_final_gate`): E3 7-item launcher checklist passed — UTL
+pipeline_mode default removed (v8), MTDS handlers pass BATCH_<source>, ManifestFreshnessCache(ttl=60) in 9 DeFi
+handlers, all 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap wired, watchdog covers mtds-*.
 
-**Slot-7**: 81/377 (296 remaining). ~7 ticks to 100-method milestone at current +3/tick pace.
-**Slot-4/5/8**: no new self-reports.
-**Slot-6**: still unresponsive (Phase 7.C operator-gated, DAI IRM unknown).
+**Phase 9.B now unlocked** — `[HUMAN+AGENT] P0. Launch MTDS VM fleet per asset_group`. OPERATOR GREENLIGHT NEEDED.
 
-**Inventory**: 53% done / 482 cal AI-days / 69 plans.
+**Slot-7**: `b381f2cd` tick-34 → **81/377** (execution-service@206051e87). **Slot-2**: batch-51 book_builder 241L→40L.
 
-**Updated operator action queue** (8 items now):
-1. ❌ Databento RT key (slot-3) — Real-Time streaming tier upgrade
-2. ❌ DeFi MTDS backfill approval — Pyth Solana + Chainlink EVM + DEX-perp multi-year scope
-3. ❌ Databento OHLCV spend sign-off (~$50-200)
-4. ❌ ICE roots pick (Brent/Gasoil/Sugar)
+**Updated operator action queue** (8 items):
+1. ❌ Databento RT key (slot-3)
+2. ❌ DeFi MTDS backfill approval (slot-5)
+3. ❌ Databento OHLCV spend sign-off
+4. ❌ ICE roots pick
 5. ❌ manifest_schema_final_gate Phase 7.C [HUMAN+AGENT]
-6. ❌ TradFi-fwd cron (Option 1 Cloud Run vs Option 2 Cron-VM)
-7. 🟡 Smoke B VM RUNNING — harsh-side ping on DEPLOYMENT_COMPLETED
-8. 🔴 **Phase 9.B READY** — Launch MTDS VM fleet per asset_group (Phase 9.A passed; requires operator greenlight on timing + zone selection)
+6. ❌ TradFi-fwd cron
+7. 🟡 Smoke B → harsh-side paper backtest ping on DEPLOYMENT_COMPLETED
+8. 🔴 **Phase 9.B** — MTDS VM fleet launch [HUMAN+AGENT] (Phase 9.A passed ✅)
 
-Next tick: slot-7 100/377 watch, Smoke B DEPLOYMENT_COMPLETED, slot-5 deploy-missing-launch first report.
+Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
