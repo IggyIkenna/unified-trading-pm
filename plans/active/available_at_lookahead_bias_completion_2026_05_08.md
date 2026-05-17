@@ -260,10 +260,11 @@ todos:
 
 todos:
 
-- [ ] [TRACKED] P0. **TRACK — writegate Phase 2.D adapter stamping helpers shipped**. UTL `availability_stamping.py` 5
-      helpers exist (`stamp_available_at_lineups` / `_event_time` / `_post_match` / `_offset` / `_explicit`).
-      `assert_available_at_present` already wired into `ManifestWriter.record_captured()`. **Owned by
-      `writegate_honest_coverage_endtoend_2026_05_06`** — flip when shipped.
+- [x] ✅ [TRACKED] P0. **TRACK — writegate Phase 2.D adapter stamping helpers shipped**. Verified slot-8 2026-05-17:
+      UTL `availability_stamping.py` has 7+ helpers (lines 131+ via grep): `stamp_available_at_lineups` /
+      `_event_time` / `_post_match` / `_post_match_cascade` / `_offset` / `_injuries` / `_odds_snapshot` (named
+      aliases at lines 33-73 in the module docstring example). `assert_available_at_present` wired into
+      `ManifestWriter.record_captured()` (UTL:2254). Phase 2.D helpers fully shipped + integrated.
 
 - [x] [TRACKED] P0. **TRACK — sports adapter stamping (MTDS-slice ODDS_SNAPSHOT path)** (shipped
       market-tick-data-service@c186ecb 2026-05-11 by Harsh slot 4; plan flip 2026-05-11 by `ikenna-available-at-tab`
