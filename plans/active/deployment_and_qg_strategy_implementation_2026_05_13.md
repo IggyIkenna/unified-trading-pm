@@ -528,6 +528,11 @@ surface, not per repo:
       **Wave 23 (2026-05-17 slot-8)**: 43 new tests for `xg_decomposition_calculator` (_resolve_col, _get_team_last_n,
       row-extractors, _compute_team_decomposition, compute_xg_decomposition_batch). Shipped at
       `features-service@6e73340e`. 1143 total tests across 36 calculator files.
+      **Wave 24 (2026-05-17 slot-8)**: 29 new tests for `squad_value_calculator` (_compute_team_squad_features,
+      _compute_team_net_transfer_spend, _compute_squad_value_for_fixture, compute_squad_value_batch).
+      **Wave 25 (2026-05-17 slot-8)**: 37 new tests for `weather_calculator` (_compute_temp_severity,
+      _compute_wind_severity, _compute_humidity_severity, compute_weather_features, compute_weather_batch).
+      Shipped at `features-service@501cf218`. 1209 total tests across 38 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
