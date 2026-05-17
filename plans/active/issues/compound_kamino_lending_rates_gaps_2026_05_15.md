@@ -2,6 +2,15 @@
 title: COMPOUND_V3 + KAMINO lending_rates adapter data gaps — NaN borrow_apy and Solana missing
 created: 2026-05-15
 author: ikenna-slot-3
+resolved: 2026-05-17
+resolution:
+  SHIPPED — Both gaps closed. Gap 1 (COMPOUND_V3 NaN borrow_apy + Comet-address asset normalisation) fixed at
+  `features-service@f448bb1a` via `pl.coalesce` for multi-source borrow_apy candidates + `_COMPOUND_V3_COMET_TO_TOKEN`
+  registry (5 Comet addresses → WETH/USDC/WBTC). Gap 2 (KAMINO missing) shipped via dedicated calculator at
+  `features-service@5b3599b4` — `CompoundV3LendingCalculator` + `KaminoLendingCalculator` both backed by DefiLlama
+  Yields API (free, no key); both wired into `_process_lending_rates` via `_load_merged_lending_data` parallel-fetch +
+  diagonal-concat. 26 new unit tests. Subsequent diagnostic at `features-service@a735750a` emits
+  `LENDING_LOADER_DIAGNOSTIC` per date for compound/kamino row-count visibility.
 source:
   - carry tracer run 2026-04-03..04-09 (commit 750dbb4)
   - features-onchain lending_rates parquet inspection 2026-05-15
@@ -76,8 +85,8 @@ computing borrow_apy correctly.
 ## STATUS UPDATE — 2026-05-17 (slot 4 audit during cross-slot sweep)
 
 KAMINO `BLOCKED-CREDENTIALS` cleared — Helius credential vaulted 2026-05-15 (see slot 2 cross-side ping confirming
-`market-tick-data-service@4cea371` wired Helius mev_apy integration + MTDS SA granted access). KAMINO handler can now
-be implemented per the standard adapter-scaffold pattern (no operator gating).
+`market-tick-data-service@4cea371` wired Helius mev_apy integration + MTDS SA granted access). KAMINO handler can now be
+implemented per the standard adapter-scaffold pattern (no operator gating).
 
 COMPOUND_V3 fix (P1) still `BLOCKED-OPERATOR-DECISION` — operator needs to confirm which Comet markets to target first
 (Ethereum WETH most relevant for CARRY_RECURSIVE_STAKED). When that decision lands, the handler-side fix is small
