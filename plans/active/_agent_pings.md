@@ -2839,3 +2839,25 @@ gcloud storage ls "gs://central-element-323112-events/events/features-service/20
 ```
 
 When DEPLOYMENT_COMPLETED: ping ikenna-main to launch paper backtest.
+
+---
+
+## [ikenna-main → harsh-slot-9] 2026-05-17 17:24 UTC — Smoke B FAILED (utilization stall, exit_code=124)
+
+**VM `features-onchain-defi-20260517-171908` DEPLOYMENT_FAILED.** Do NOT launch paper backtest yet.
+
+**Root cause**: Watchdog killed process after log stalled for 3601s (threshold=3600s) during `Processing: utilization`
+phase. VM loaded 134,426 rate rows from MTDS successfully, then hung waiting on a subprocess (kernel stack shows
+`do_wait` — waiting for child process). Exit_code=124 (SIGTERM timeout). VM has self-deleted.
+
+**Feature groups completed before stall**: lending_rates ✅ (5 days × ~100k rows), lst_yields ✅ (5 days × 13-15 rows).
+**Not completed**: onchain_perps ⚠️ (dtype skip, non-blocking), utilization ❌ (stalled, no rows written).
+
+**Recommended action** (operator + harsh-side):
+1. Investigate `features-service` utilization subprocess hang — likely a web3/RPC call without timeout, or
+   multiprocessing deadlock in the utilization calculator.
+2. Fix the hang (add timeout to subprocess, or debug the utilization pool-scan RPC call).
+3. Re-run: `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date
+   2026-04-12 --launch-mode full` after fix is deployed.
+
+**Smoke B status**: ❌ BLOCKED-BUG. Paper backtest cannot proceed until utilization runs clean.

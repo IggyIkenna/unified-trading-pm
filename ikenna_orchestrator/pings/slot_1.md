@@ -1784,6 +1784,38 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 ---
 
+## [slot 1 main] 2026-05-17 ~17:25 UTC — Autonomous loop tick-34: Smoke B FAILED ❌ (utilization stall, exit_code=124)
+
+**DEPLOYMENT_FAILED** — `features-onchain-defi-20260517-171908` self-deleted. VM gone.
+
+**Root cause**: `[vm-exec] STALL: log has not grown in 3601s` — watchdog killed CMD_PID=6771 with SIGTERM.
+Kernel stack at kill time: `do_wait` (waiting for child process). The utilization phase loaded 134,426 rate rows at
+16:23:11 UTC then hung silently for exactly 1 hour (threshold). No rows written for utilization feature_group.
+exit_code=124. Archived: `gs://...deployments/archive/2026-05-17/e8252faf-0bbd-4e91-8163-47a3d3ed444b.json`.
+
+**Features completed**: lending_rates ✅ (5 days, ~100K rows), lst_yields ✅ (5 days, 13-15 rows/day).
+**Not completed**: onchain_perps ⚠️ (dtype skip, pre-existing), utilization ❌ (0 rows, stall).
+
+**Actions taken**:
+- ✅ _agent_pings.md updated: harsh-side notified of FAILURE — do NOT launch paper backtest yet.
+- ✅ Operator queue updated with bug investigation item.
+
+**Updated operator action queue** (9 items):
+1. ❌ Databento RT key (slot-3)
+2. ❌ DeFi MTDS backfill (slot-5)
+3. ❌ Databento OHLCV spend sign-off
+4. ❌ ICE roots pick
+5. ❌ manifest_schema_final_gate Phase 7.C [HUMAN+AGENT]
+6. ❌ TradFi-fwd cron
+7. 🔴 **Smoke B FAILED** — investigate utilization subprocess hang (web3/RPC timeout or multiprocessing deadlock in
+   utilization calculator); fix + re-run features-onchain Smoke B VM
+8. 🔴 Phase 9.B MTDS VM fleet [HUMAN+AGENT]
+9. ✅ Paper backtest: BLOCKED pending Smoke B fix + re-run
+
+**Autonomous loop** for Smoke B monitoring: **ENDED** (VM self-deleted, DEPLOYMENT_FAILED).
+
+---
+
 ## [slot 1 main] 2026-05-17 ~17:21 UTC — Autonomous loop tick-33: Smoke B RUNNING, 72,016 events, fresh 17:21 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
