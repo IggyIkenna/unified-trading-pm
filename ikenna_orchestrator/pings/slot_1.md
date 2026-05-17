@@ -2406,3 +2406,17 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 
 **Harsh-side status**: CYCLE-CLOSE, holding paper backtest.
 
+
+## [slot 1 main] 2026-05-17 ~19:21 UTC — tick-56: VM 200717 04-10 onchain_perps; duplicate VM killed
+
+**VM 200717 progress** (19:19:26 UTC last entry):
+- ✅ lending_rates: complete
+- ✅ lst_yields: complete
+- 🔄 onchain_perps: 04-10 loaded (11,880 rows at 19:19:26); 04-08/09 STALE_DATA suppressed
+  - Pattern: ~4m18s/day → 04-10 done ~19:23:44, 04-11 ~19:28, 04-12 ~19:32
+  - DEPLOYMENT_COMPLETED expected ~19:40-19:42 UTC
+
+**Duplicate VM killed**: `features-onchain-defi-20260517-201826` was launched by parallel wakeup instance at ~19:18 UTC. Killed (VM 200717 is 10 min ahead with same tarball). VM 201826 deletion confirmed exit_code=0.
+
+**Status**: 🟡 Smoke B IN-PROGRESS — awaiting rate_impact validation (~19:38 UTC)
+
