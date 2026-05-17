@@ -298,10 +298,13 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
       identified 1 remaining violation (`ibkr-gateway-infra/Dockerfile.terraform: hashicorp/terraform:1.6`); pinned to
       `@sha256:9a42ea97ea25b363f4c65be25b9ca52b1e511ea5bf7d56050a506ad2daa7af9d` at `ibkr-gateway-infra@a5dd3c3`.
       Re-run of audit reports `Pinned: 2 / Violations: 0 / Skipped: 1`.
-- [ ] [AGENT] P0. **Artifact Registry retention policy** —
-      `deployment-service/scripts/audit/artifact-registry-retention.sh` (NEW): configures GCP Artifact Registry cleanup
-      policies. Keep-forever: release tags. Keep-14d: commit-SHA images. Keep-3d: branch-feature images.
-      Delete-on-PR-close: PR-specific images. Run as Cloud Scheduler weekly cron.
+- [x] ✅ [AGENT] P0. **Artifact Registry retention policy** — shipped 2026-05-17 (slot-8) at
+      `deployment-service@e9df370` → `scripts/audit/artifact-registry-retention.sh`. 5 cleanup rules:
+      keep-release-tags (KEEP `v*`) / delete-commit-sha (>14d tagged) / delete-feature-branch (>3d tag `feat-/feat_/feat/`) /
+      delete-pr-images (>7d tag `pr-*`) / delete-untagged (>1d). Default mode dry-run; `--apply` writes via
+      `gcloud artifacts repositories set-cleanup-policies`. Cloud Scheduler weekly-cron wiring deferred to
+      operator-approval (terraform file referenced in script header; tracked as REMOTE-ONLY in act-preflight-coverage).
+      Header carries Runbook Execution-Owner 4 fields.
 
 **Owner**: deployment-service + governance slots. **Dependencies**: None.
 
