@@ -845,3 +845,60 @@ Your stack just got new items.
 
 Operator is AFK — do not ping for further authorization on items already in your stack. If a NEW credential ask surfaces
 (per HARD RULE), file the CREDENTIAL APPROVAL REQUEST per format + continue with other work.
+
+---
+
+## 2026-05-15 — OPERATOR DIRECTION: TradFi MVP collapse to OHLCV-only — slot repurpose required
+
+**Source**: operator chat 2026-05-15 (verbatim):
+> "lets to ohlcv 1m for all the tradfi mvp instruments only please and ping agent orchestrator to repurpose
+> the slots to this and make plan fold under tradfi epic as this is cheapest solution also i want the full
+> period for tradfi thats available"
+>
+> Follow-ups: "since 2019 1st jan at least" / "or 2020 whatever we are starting at" / "we can deal with the
+> other data types later" / "no need for l1-l3 yet".
+
+**Plan filed**: [`plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`](../../plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
+**Folded into**: [`plans/epics/tradfi_master_2026_05_07.md`](../../plans/epics/tradfi_master_2026_05_07.md) — frontmatter `folds_in` + critical-path table updated.
+
+### Scope summary
+
+- **IN (MVP, ship by 2026-05-23)**: `ohlcv_1m` for CME / ICE / NASDAQ / NYSE; `ohlcv_15m` for CBOE (already shipped per VIX-layering); `ohlcv_24h` for FX (unchanged). Start ≥ 2019-01-01 OR Databento earliest-available per dataset, whichever later. Full TradFi MVP instrument universe per existing `tradfi_ticker_universe`.
+- **OUT (deferred post-cutover)**: `trades` (L2), `tbbo` (L1), `mbp_10` (L3) for all 4 venues. Move existing 2-window scope (May 2023 + Jul 2024) to successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` (operator to spawn post-cutover).
+
+### Slot repurpose ask (slot 1 main — please dispatch)
+
+Plan has 9 todo-blocks across 8 phases (~3.2 cal ai-days calibrated). Recommended slot mapping per plan's "Slot reassignment ask" section:
+
+| Phase | Slot | Why |
+|---|---|---|
+| 1 (UAC `TRADFI_TICK_DATA_WINDOWS = []` + drop trades/tbbo from `VENUE_DATA_TYPE_CAPABILITIES`) | **slot 5** | already owns TradFi cascade |
+| 2 (UAC capability matrix update) | **slot 5** | co-located with Phase 1 |
+| 3 (codex `mtds-data-source-coverage-matrix.md` § 3 update) | **slot 5** | doc beside the code |
+| 4 (MTDS orchestrator `is_in_tradfi_tick_window` empty-list test pin) | **slot 5** | MTDS surface |
+| 5 (phantom-reconcile existing trades/tbbo rows → `EXPECTED_OUT_OF_COVERAGE_WINDOW`) | **slot 8** | already owns SHARD_AXIS + audit cleanup; phantom audit theirs |
+| 6 (4 per-venue VM launcher scripts under `deployment-service/scripts/vm/`) | **slot 5** or **harsh slot 6** | mechanical |
+| 7 (launch 4 backfill VMs in parallel; 4-pillar validation) | **slot 5** | needs operator backfill approval gate per CLAUDE.md (≥1 week of data) |
+| 8 (cost-tracking dashboard + `DATABENTO_PAYG_SPEND` event) | **slot 7** | already owns Treasury rollup |
+| 9 (file post-cutover successor plan) | **slot 1 main** | plan-creation domain |
+
+### Cross-impact (slot 1 main please fold into master)
+
+- Per CLAUDE.md slot-precedence, only slot 1 main edits `master_to_live_defi_2026_05_23.md`. Please add a row in the Group readiness matrix:
+  - **Group**: D (data) or whichever holds TradFi data acquisition
+  - **Item**: TradFi OHLCV-only MVP backfill
+  - **Continuous-verification**: data-status rollup ≥99% OHLCV coverage 2019-2026 across CME/ICE/NASDAQ/NYSE
+  - **Last verified**: TBD post Phase 7
+- Master plan's existing TradFi line items mentioning `trades` / `tbbo` (per `tradfi_master_2026_05_07.md` Phase ES_OPT 2020-2022 fill + IBIT NASDAQ trades cold backfill) need a `**DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**` annotation.
+
+### Cost rationale (for operator visibility in dispatch)
+
+OHLCV PAYG ≈ $20/dataset-month vs tick data ($179/mo Standard subscription + PAYG for L2 history >1 month). Projected full backfill 2019-2026 OHLCV across 4 venues × MVP instrument universe: **~$50-200 total** (refined post-Phase 7). 10-100× cheaper than the prior 2-window tick strategy + dramatically wider time coverage.
+
+### Risk / blockers
+
+- [`cme_polymarket_arb_2026_05_08`](../../plans/active/cme_polymarket_arb_2026_05_08.md) — confirm archetype runs on OHLCV-only (no tick dependency). If it doesn't, escalate to operator BEFORE Phase 1 ships. Quick check: slot 2 reads the archetype's signal_specs.yaml and confirms.
+- VM-launch operator approval gate per CLAUDE.md ≥1 week of data → operator [ack] needed before Phase 7 fires.
+
+**No action requested from operator** beyond eventual Phase 7 backfill approval [ack] when VMs queue. Slot 1 main owns dispatch from here.
+>>>>>>> 3535ae3f (docs(plans): TradFi MVP collapse to OHLCV-only — drop L1-L3 tick data to post-cutover (operator direction 2026-05-15))

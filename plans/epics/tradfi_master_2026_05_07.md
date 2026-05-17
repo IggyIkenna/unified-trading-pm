@@ -18,6 +18,7 @@ folds_in:
   - sp500_ml_readiness_master_2026_05_05
   - cefi_tradfi_tick_data_backfill_2026_04_10 # TradFi half (CeFi half went to cefi_master)
   - market_tick_data_to_100pct_2026_05_05 # TradFi slice
+  - tradfi_ohlcv_only_mvp_backfill_2026_05_15 # OHLCV-only MVP scope narrow (drops L1-L3 to post-cutover)
 related_plans:
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
@@ -138,9 +139,11 @@ respective umbrellas.
 | ----------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------- |
 | Market-hours + holiday SSOT integration   | 72% done                                                              | `instrument_schema_cohesion_and_market_hours`  |
 | S&P 500 ML readiness backtest run         | 87% done; backtest pending                                            | `sp500_ml_readiness_master`                    |
-| ES + MES + VIX backfill to ≥99%           | partial                                                               | `cefi_tradfi_tick_data_backfill` (TradFi half) |
-| MTDS TradFi shards to ≥99%                | partial                                                               | `market_tick_data_to_100pct` (TradFi slice)    |
+| **OHLCV-only TradFi MVP backfill (NEW 2026-05-15)** | **active — supersedes tick-data scope below**              | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) |
+| ES + MES + VIX backfill to ≥99%           | partial — now OHLCV-only per 2026-05-15 operator scope narrow         | `cefi_tradfi_tick_data_backfill` (TradFi half) |
+| MTDS TradFi shards to ≥99%                | partial — OHLCV-only scope per 2026-05-15                             | `market_tick_data_to_100pct` (TradFi slice)    |
 | ETF cleanup (NYSE / NASDAQ stale rows)    | post-MVP scope reduction                                              | `cefi_tradfi_tick_data_backfill`               |
+| L1-L3 tick data (trades / tbbo / mbp_10)  | **DEFERRED-POST-CUTOVER per 2026-05-15 operator direction**           | successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` (TBD) |
 | TradFi venue trading calendar consumption | per CLAUDE.md "TradFi futures: bundled, non-trading days pre-skipped" | shard-granularity SSOT                         |
 
 ## Consolidated todos (P0/P1 only)
