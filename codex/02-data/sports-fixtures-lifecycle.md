@@ -1,3 +1,11 @@
+---
+title: Sports fixtures lifecycle
+type: data
+status: living
+last_reviewed: 2026-05-17
+owner: sports-domain
+---
+
 # Sports fixtures lifecycle
 
 > **SSOT for the lifetime of a sports fixture across the ingestion pipeline.** Codifies the state machine, per-state

@@ -1,3 +1,11 @@
+---
+title: Live Deployment Manifest — SSOT
+type: architecture
+status: living
+last_reviewed: 2026-05-17
+owner: deployment-platform
+---
+
 # Live Deployment Manifest — SSOT
 
 > Created: 2026-05-15 Scope: May-23 promote workflow (Phase U1). Post-cutover Phase 2 enrichments documented in **§

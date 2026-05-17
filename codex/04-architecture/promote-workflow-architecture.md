@@ -1,3 +1,11 @@
+---
+title: Promote Workflow Architecture — May-23 SSOT
+type: architecture
+status: living
+last_reviewed: 2026-05-17
+owner: strategy-platform
+---
+
 # Promote Workflow Architecture — May-23 SSOT
 
 > **Scope**: May-23 subset. Post-cutover Phase 2 ships full pinned-shas `CandidateManifest`, state-machine

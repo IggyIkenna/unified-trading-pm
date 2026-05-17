@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 execution:
   owner: batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI workflow)
   cadence: T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI)

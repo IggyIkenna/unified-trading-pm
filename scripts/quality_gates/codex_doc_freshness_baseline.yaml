@@ -1,4 +1,4 @@
-violation_count: 188
+violation_count: 184
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
@@ -37,8 +37,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/manifest-migration-coordination.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/match-end-time-cascade.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/mtds-data-source-coverage-matrix.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/mtds-download-api.md
@@ -71,8 +69,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-data-source-coverage-matrix.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-gcs-path-ssot.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md
@@ -171,8 +167,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/kill-switch-event-bus.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/live-deployment-manifest.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/manual-trade-booking.md
@@ -195,8 +189,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/orphan-audit.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/promote-workflow-architecture.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/reconciliation-resolution.md
   reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md

@@ -1,3 +1,11 @@
+---
+title: Match end-time resolution cascade
+type: data
+status: living
+last_reviewed: 2026-05-17
+owner: sports-domain
+---
+
 # Match end-time resolution cascade
 
 > **SSOT for sports fixture `match_end_time` derivation.** Codifies the priority order used by
