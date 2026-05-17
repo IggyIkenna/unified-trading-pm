@@ -60,6 +60,8 @@ Same patterns as execution-service fix:
   - [x] ✅ multi_timeframe/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
   - [x] ✅ commodity/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
   - [x] ✅ calendar/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
+  - [x] ✅ delta_one/engine/delta_one_validity_engine.py 23→0 errors — features-service@6d402524 (slot-8 wave 3 2026-05-17)
+  - [x] ✅ delta_one/app/core/multi_period_features.py 15→0 errors — features-service@6d402524 (slot-8 wave 3 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
