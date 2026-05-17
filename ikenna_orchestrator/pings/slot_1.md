@@ -2434,3 +2434,29 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 
 **No duplicate VMs**: only VM 200717 running.
 
+## [slot 1 main] 2026-05-17 ~20:43 UTC — tick-58: Bug 6 fixed; VM 6 launched
+
+**VM 200717 outcome** (confirmed DEPLOYMENT_FAILED at 19:35:09 UTC):
+- rate_impact group 9/11: `LookaheadBiasError: observation at 2026-05-17 19:35:07 is after as_of=2026-04-09`
+- Root cause: `AaveRateImpactCalculator.fetch_data` uses `datetime.now(UTC)` as timestamp; DefiLlama has no historical API
+- **Bug 6 fix** (c10fa999, landed by parallel session ~20:39 UTC): batch-skip guard in `_process_rate_impact` — if `start_date < today`, emit `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` and return True (non-fatal skip)
+
+**Tarball rebuilt**: 20:42 UTC — includes all 6 bug fixes (c10fa999 now included)
+
+**VM 6 launched**: `features-onchain-defi-20260517-204250` — RUNNING asia-northeast1-c
+- Same date range: 2026-04-08 → 2026-04-12, feature_family=onchain, asset_group=DEFI
+- All 11 groups expected: rate_impact will batch-skip (FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE) and return True
+- DEPLOYMENT_COMPLETED expected: ~21:40-21:50 UTC
+
+**Smoke B bug tally (6 bugs total)**:
+- Bug 1 (perp_funding Int64→Datetime): ✅ features-service@30e449d7
+- Bug 2 (utilization I/O saturation): ✅ features-service@64682456 + @5afdd918
+- Bug 3 (_shim.py NameError from TYPE_CHECKING): ✅ features-service@818d8ecc
+- Bug 4 (_add_timestamp_out Int64 dtype): ✅ features-service@ae90d1fd
+- Bug 5 (rate_impact batch-skip — same as Bug 6, was mislabeled): ✅ features-service@c10fa999
+- Bug 6 = same as Bug 5 (LookaheadBiasError; parallel sessions named it differently)
+
+**Slot-5 observation**: onchain_perps STRICT_FAIL blocks all historical dates (NaN → STALE_DATA). VM 6 will still see onchain_perps suppressed. Paper backtest team should note: onchain_perps historical dates will be empty; not blocking May-23 (live mode unaffected).
+
+**Harsh-side cross-ping sent**: _agent_pings.md updated — hold paper backtest until DEPLOYMENT_COMPLETED from VM 6.
+

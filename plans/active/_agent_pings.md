@@ -2952,3 +2952,27 @@ VM exits cleanly.
 
 - All 11 feature groups should complete this time
 - **Harsh-side**: paper backtest STILL on hold until `DEPLOYMENT_COMPLETED` from VM 200717
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
+
+**VM 200717 DEPLOYMENT_FAILED** (19:35:09 UTC, exit_code=1):
+- rate_impact group: `LookaheadBiasError: observation at 2026-05-17 19:35:07 is after as_of=2026-04-09`
+- Root cause: `AaveRateImpactCalculator` uses `datetime.now(UTC)` as timestamp; no historical Aave pool API exists
+- Bug 4 (_add_timestamp_out Int64): ✅ CONFIRMED FIXED — rate_impact got past type error, hit PIT check
+
+**Bug 6 fix** (`features-service@c10fa999`, ~20:39 UTC):
+- Batch-skip guard in `_process_rate_impact`: if `start_date.date() < today`, emit `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True (non-fatal skip, like macro_sentiment pattern)
+- Tarball rebuilt: 20:42 UTC (2.2MB)
+
+**VM 6 RUNNING**: `features-onchain-defi-20260517-204250` asia-northeast1-c
+- 2026-04-08 → 2026-04-12, all 11 groups; rate_impact will batch-skip cleanly
+- DEPLOYMENT_COMPLETED expected: ~21:40-21:50 UTC
+
+**Harsh-side**: paper backtest (B-015) still on hold. Ikenna-main will cross-ping when VM 6 exits cleanly.
+
+Monitor VM 6:
+```bash
+gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-204250/run.log" | tail -20
+```
