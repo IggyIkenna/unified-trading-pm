@@ -1176,3 +1176,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   module-level (replaces make_callback closure) + docstring trim + comment removal.
 
 287 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 38] slot-7 — execution-service Phase B (+3, 93/377 cleared):
+
+- `execution-service@cf655bcbc` — LiveExecutionHandler._run_live_async 65L→45L via _start_uvicorn_server
+  async helper (uvicorn Config+Server+try/except block → 1 call); DeribitOrdersMixin.get_positions
+  67L→29L via _parse_deribit_position_entry method + 6-line docstring trim; DeribitOrdersMixin.get_open_orders
+  66L→27L via _parse_deribit_open_order_entry method + 6-line docstring trim.
+
+284 remaining. basedpyright clean.
