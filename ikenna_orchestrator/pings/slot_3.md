@@ -772,3 +772,25 @@ Adapter scaffold + 30 unit tests shipped at MTDS@946bab0 (2026-05-17). Plan-flip
 **Cross-link**: `master_to_live_defi_2026_05_23.md` "Credential asks awaiting operator" section will be updated to include this row.
 
 No further action needed from slot-3 on this item. Continue with next unblocked work or self-redirect.
+
+---
+
+## [slot 3 → main] 2026-05-17 — CREDENTIAL APPROVAL REQUEST — odds-api-live-ws
+
+```
+CREDENTIAL APPROVAL REQUEST — odds-api-live-ws
+Vendor: The Odds API (https://the-odds-api.com/pricing) — Starter tier (~$10/month, 50k credits/month)
+What I need: existing `odds-api-key` vault entry (already used by batch path)
+             must have sufficient monthly credit quota for live polling.
+             Free tier: 500 credits/month. Starter: 50k/month (~$10).
+             Live polling at 60s x 1 sport = ~43k credits/month on Starter.
+             If currently on Free tier, upgrade to Starter is needed.
+Account to use: existing operator odds-api account
+Unblocks: sports x arbitrage_price_dispersion live feed (Phase 3.5e May-23 gate);
+          OddsApiWSFeedConnector venue key 'odds_api'; instruments ODDS_API:SPORT:{sport_key}
+Without it: integration tests skip; unit + scaffold shipped at MTDS@cab6f57 (29 tests pass);
+            adapter is BLOCKED-CREDENTIALS
+```
+
+Adapter scaffold + 29 unit tests shipped at MTDS@cab6f57 (2026-05-17). Plan-flip at PM@dd6d4248. Status:
+`BLOCKED-CREDENTIALS` — waiting for operator ack on credit quota upgrade.
