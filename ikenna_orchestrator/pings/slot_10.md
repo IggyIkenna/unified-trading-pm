@@ -94,3 +94,32 @@ before archival. Note in plan item 157.
 **Your hedge_ratio assignment is COMPLETE.** Well done — Phases 0-4 all shipped in one session.
 
 **Next**: slot-10 is IDLE — await new assignment from operator or slot-1 main.
+
+---
+
+## [main → slot 10] 2026-05-17 ~22:15 UTC — NEW TASK: promote_workflow execution-service unhold path
+
+**Plan**: `promote_workflow_may23_cli_path_2026_05_10.md` — Phase U6: execution-service unhold path
+
+**What's already done** (context):
+- UI: `ManualTradeGateDialog` component ships (ui@13b94ca9) — approve/deny/timeout buttons, MANUAL_APPROVED /
+  MANUAL_REJECTED events via deployment-api
+- strategy-service already emits instruction in `MANUAL` mode when `live_early` promote gate is active
+
+**Your task** — execution-service manual-pending queue + unhold path:
+1. When execution-service receives an instruction with `mode=MANUAL`, hold it in a per-archetype pending queue
+   (in-memory dict keyed by `correlation_id` or `instruction_id`)
+2. Subscribe to `MANUAL_APPROVED` events from deployment-api event stream; on receipt:
+   - Fetch held instruction by correlation_id
+   - Execute it via the normal execution path
+   - Emit `MANUAL_UNHOLD_EXECUTED` event
+3. On `MANUAL_REJECTED` or 30s timeout:
+   - Drop the held instruction
+   - Emit `MANUAL_CANCELLED` event with reason (`rejected` or `timeout`)
+4. Unit tests: 3 cases — approved-and-executed, rejected-and-dropped, timeout-and-dropped
+
+**QG**: `cd execution-service && bash scripts/quality-gates.sh` after changes.
+**Half-1+Half-2**: code commit immediately followed by `docs(plans):` checkbox flip.
+
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+Ping slot-1 when shipped (SHA + QG result).
