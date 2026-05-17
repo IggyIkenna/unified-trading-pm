@@ -617,6 +617,10 @@ surface, not per repo:
       team+timer_seconds format, all optional stat columns 245-301 (corners/fouls/dangerous_attacks/
       attacks/shots_total/shots_off_target/dominance), team_fx.empty continue (line 442). +5 tests →
       43 total. Shipped `features-service@86107989`.
+      **Wave 49 (2026-05-17 slot-8)**: advanced_stats_calculator 91.4%→100% — single test with
+      away_team_id not in team_stats covers all 12 miss lines: df_side.empty continue at
+      197/209/250/257/264/273/282/291/300, team_df.empty continue at 234, offsides lines 243-244.
+      34 tests. Shipped `features-service@1e488974`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
