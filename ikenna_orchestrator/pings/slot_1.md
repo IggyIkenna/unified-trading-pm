@@ -2912,3 +2912,19 @@ gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2
 ```
 
 **Status**: 🔧 B-015 VM relaunched with fix; awaiting STARTED event ~22:35 UTC
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:36 UTC — tick-74b: Second fix — e2e-testing skip-install (deployment-service@ed9d023)
+
+VM 222941 also FAILED — different error: setuptools auto-discovery failure on e2e-testing even with `--no-deps`.
+Root cause: e2e-testing has no `[build-system]` in pyproject.toml; uv can't build an editable install without one.
+Per TARBALL_DIRS comment: "No editable install" — e2e-testing is scripts-only, not a Python package.
+
+Fix 2: deployment-service@ed9d023 — skip editable install of e2e-testing entirely in the install loop.
+colocated_engine.py imports from strategy_service/execution_service (already installed as siblings) — no need to
+install e2e-testing as a package.
+
+VM 222941 deleted; third attempt: `strategy-paper-carry-staked-basis-20260517-223601`
+
+**Status**: 🔧 VM 223601 launched; awaiting STARTED event ~22:41 UTC
