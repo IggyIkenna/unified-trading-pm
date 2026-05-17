@@ -203,9 +203,28 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    primary+secondary role, gas-action FLASH_OPEN/SUPPLY mapping + flash-provider AAVE_V3/NONE switch,
    ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED dual-emit with classify_venue_error.
 
-   **Slot-4 cumulative across batches 1+2+3+4+5+6**: 25 files cleared (187→147 baseline-equivalent; slot 4 contribution:
-   -25 files; allowlist now 147). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from
-   baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 7)** — 6 additional files cleared at
+   execution-service@f1076caeb (data/schema_validator.py main 54L→14L, +2 helpers \_parse_cli_args +
+   \_print_validation_results; CLI argparse + per-data-type result logger separated), @3760b27bf
+   (defi_execution/mev/jito_bundle.py submit_bundle 63L→31L, +1 @staticmethod helper \_validate_submit_inputs for the
+   3-rule precondition gate), @f7187ee5b (engine/transfers/confirmation_poller.py wait_for_confirmation 63L→27L, +2
+   @staticmethod helpers \_emit_confirmed + \_emit_failed for the TRANSFER_CONFIRMED / TRANSFER_FAILED UEI emits),
+   @a27b2c0b9 (algo_library/sor_dex.py \_get_venue_quote 63L→28L, +1 helper \_synthetic_venue_quote for the config-based
+   fallback path when no on-chain pool data is loaded), @d5afc584a (trade_execution/adapters/bybit_native.py
+   parse_order_response 64L→28L, +3 @staticmethod helpers \_map_bybit_status + \_parse_decimal_or_zero +
+   \_parse_positive_decimal; same parser-helper pattern as okx_native + matchbook), @11737482a
+   (engine/venue_cascade_monitor.py evaluate 64L→37L, +1 @staticmethod helper \_emit_cascade_detected for the
+   VENUE_CASCADE_DETECTED CRITICAL emit). Allowlist 147 → 141 files. AST clean per file. Per-method behavior
+   preservation: argparse arg shape
+   - exit-code semantics, jito \_MAX_BUNDLE_SIZE enforcement + tip-positive check, transfer-status state machine
+     (CONFIRMED/FAILED/PENDING + elapsed counter + timeout path), sor_dex pool-found vs synthetic fallback ordering with
+     fee_rate + gas_estimate sourcing, bybit status-map (new/partial/filled/ cancelled/rejected/deactivated) +
+     Decimal-parse + positive-only avg-price filter, cascade-pct computation + is_total_failure full-equality + scoped
+     vs firm-wide kill-switch routing.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7**: 31 files cleared (187→141 baseline-equivalent; slot 4
+   contribution: -31 files; allowlist now 141). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168,
+   -19 from baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
    execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
    \_check_flash_loan_liquidity (REJECTED-or-proceed gate) + \_record_flash_borrow (track + return) +
    \_settle_flash_repay (clear + fee calc)), @1dde42821 (engine/handlers/sell_reward_handler.py execute 81L→47L, +1

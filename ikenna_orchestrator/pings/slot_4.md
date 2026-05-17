@@ -939,3 +939,47 @@ defi_execution/protocols, sports_execution/adapters). Will continue.
 Scheduled next wake-up tick 8 for ~25 min.
 
 ---
+
+## [slot 4 → main] 2026-05-17 ~13:25 UTC — WAKE-UP TICK 8 — method-size batch 7 (6 more ships)
+
+Continued the execution-service method-size sprint. Slot 4 batch 7 (6 ships this tick — pattern productivity remains
+steady):
+
+| File                                       | Method                                     | Before → After | Helpers                                                                                        |
+| ------------------------------------------ | ------------------------------------------ | -------------- | ---------------------------------------------------------------------------------------------- |
+| `data/schema_validator.py`                 | `main`                                     | 54L → 14L      | `_parse_cli_args` + `_print_validation_results`                                                |
+| `defi_execution/mev/jito_bundle.py`        | `JitoBundleProvider.submit_bundle`         | 63L → 31L      | `_validate_submit_inputs` (@staticmethod)                                                      |
+| `engine/transfers/confirmation_poller.py`  | `ConfirmationPoller.wait_for_confirmation` | 63L → 27L      | `_emit_confirmed` + `_emit_failed` (@staticmethod)                                             |
+| `algo_library/sor_dex.py`                  | `SorDexAlgo._get_venue_quote`              | 63L → 28L      | `_synthetic_venue_quote`                                                                       |
+| `trade_execution/adapters/bybit_native.py` | `BybitNativeAdapter.parse_order_response`  | 64L → 28L      | `_map_bybit_status` + `_parse_decimal_or_zero` + `_parse_positive_decimal` (all @staticmethod) |
+| `engine/venue_cascade_monitor.py`          | `VenueCascadeMonitor.evaluate`             | 64L → 37L      | `_emit_cascade_detected` (@staticmethod)                                                       |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- Batch 4: router + defi_data_loader + position_tracker + orphan_monitor + backtest/engine/execution (5 files)
+- Batch 5: matchbook + uniswap + hyperliquid + circuit_breaker + okx_native (5 files)
+- Batch 6: defi_adapter + dex_fill_model + progress_display + cost_aggregator + api_football (5 files)
+- Batch 7: schema_validator + jito_bundle + confirmation_poller + sor_dex + bybit_native + venue_cascade_monitor (6
+  files)
+- **Total: 30 files cleared by slot 4** (allowlist 147 → 141 this tick — slot 4 contribution this loop: -30 cumulative)
+
+Commits this tick: execution-service@f1076caeb, @3760b27bf, @f7187ee5b, @a27b2c0b9, @d5afc584a, @11737482a. Plan flip in
+single batched commit follows.
+
+**Per-method behavior preservation** verified: argparse arg shape + exit-code, jito \_MAX_BUNDLE_SIZE + tip-positive
+precondition gate, transfer-status PENDING/CONFIRMED/FAILED state machine + timeout result construction, sor_dex
+pool-found vs synthetic-fallback ordering with fee_rate sourcing, bybit status-map (6 keys including underscore-strip) +
+Decimal-parse + positive-avg-price filter, cascade-pct computation
+
+- is_total_failure full-equality + scoped vs firm-wide kill-switch routing.
+
+**Workspace progress this loop**: started at allowlist 187, now 141 (~25% cleared). At this pace another ~3-4 ticks
+could clear the 50-60L cohort entirely; thereafter remaining work is the 61-100L+ cohort which typically needs 2-3
+helpers per file vs the current 1-3 helpers.
+
+Scheduled next wake-up tick 9 for ~25 min.
+
+---
