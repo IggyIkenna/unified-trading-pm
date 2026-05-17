@@ -1,7 +1,13 @@
 ---
 title: "validate_manifest_coverage.py expects stale instruments_catalogue.jsonl path"
 type: issue
-status: open
+status: resolved
+resolved: 2026-05-17
+resolution:
+  SHIPPED — Option 1 (rewrite `_load_catalogue` to walk per-day manifest.json + read underlying instruments.parquet +
+  dedup by `instrument_key`) at `market-tick-data-service@c758048`. Legacy single-file `instruments_catalogue.jsonl`
+  path preserved as fallback when start_date/end_date are omitted. Caller in `validate_category()` now threads
+  `start_date`/`end_date` through. Lint + format clean.
 created: 2026-05-17
 author: slot-5
 priority: P2
