@@ -32,11 +32,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Deployment + QG strategy implementation
 
@@ -201,14 +199,14 @@ UAC schemas already shipped.
 
 - [x] ✅ [AGENT] P0. **Author `unified-trading-pm/scripts/dev/act-preflight.sh`** — shipped 2026-05-17 (slot-8) at
       `unified-trading-pm@<pending>`. Accepts `--repo <name|all>` + `--workflow` (default quality-gates.yml) +
-      `--architecture` (default linux/amd64). Pre-flight checks: act installed + docker daemon running.
-      Per-repo: logs to `/tmp/act-preflight-{repo}-{sha}.log`; reports PASS/FAIL + duration; overall exit code
-      = 0 if all pass, 1 if any fail, 2 if pre-flight error. Shellcheck clean.
+      `--architecture` (default linux/amd64). Pre-flight checks: act installed + docker daemon running. Per-repo: logs
+      to `/tmp/act-preflight-{repo}-{sha}.log`; reports PASS/FAIL + duration; overall exit code = 0 if all pass, 1 if
+      any fail, 2 if pre-flight error. Shellcheck clean.
 - [x] ✅ [AGENT] P0. **Per-workflow coverage test** — coverage matrix doc shipped 2026-05-17 (slot-8) at
       `unified-trading-pm@74edbc74` → `codex/05-infrastructure/act-preflight-coverage.md`. 45 workspace workflows
       classified across 4 statuses (FULL / PARTIAL / REMOTE-ONLY / N/A): 6 FULL · 6 PARTIAL · 28 REMOTE-ONLY · 5 N/A.
-      Per-service-repo baseline: `quality-gates.yml` + `python-quality-gates.yml` are FULL when `.venv` resolvable.
-      Doc carries `last_reviewed: 2026-05-17` + Runbook Execution-Owner 4 fields.
+      Per-service-repo baseline: `quality-gates.yml` + `python-quality-gates.yml` are FULL when `.venv` resolvable. Doc
+      carries `last_reviewed: 2026-05-17` + Runbook Execution-Owner 4 fields.
 - [x] ✅ [AGENT] P1. **Optional pre-push git hook** — shipped 2026-05-17 (slot-8) at `unified-trading-pm@<pending>` →
       `scripts/dev/install-act-precommit.sh`. Opt-in only: `--repo <name>` installs `.git/hooks/pre-push` that runs
       `act-preflight.sh --repo <name>` and rejects the push on failure. Worktree-aware (handles `.git` as file).
@@ -312,11 +310,11 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
       5.79 ratchets WARN→FAIL from 2026-05-15.
 - [x] ✅ [AGENT] P0. **Pin all production Dockerfile base images to digest** — applied 2026-05-17 (slot-8). The audit
       identified 1 remaining violation (`ibkr-gateway-infra/Dockerfile.terraform: hashicorp/terraform:1.6`); pinned to
-      `@sha256:9a42ea97ea25b363f4c65be25b9ca52b1e511ea5bf7d56050a506ad2daa7af9d` at `ibkr-gateway-infra@a5dd3c3`.
-      Re-run of audit reports `Pinned: 2 / Violations: 0 / Skipped: 1`.
+      `@sha256:9a42ea97ea25b363f4c65be25b9ca52b1e511ea5bf7d56050a506ad2daa7af9d` at `ibkr-gateway-infra@a5dd3c3`. Re-run
+      of audit reports `Pinned: 2 / Violations: 0 / Skipped: 1`.
 - [x] ✅ [AGENT] P0. **Artifact Registry retention policy** — shipped 2026-05-17 (slot-8) at
-      `deployment-service@e9df370` → `scripts/audit/artifact-registry-retention.sh`. 5 cleanup rules:
-      keep-release-tags (KEEP `v*`) / delete-commit-sha (>14d tagged) / delete-feature-branch (>3d tag `feat-/feat_/feat/`) /
+      `deployment-service@e9df370` → `scripts/audit/artifact-registry-retention.sh`. 5 cleanup rules: keep-release-tags
+      (KEEP `v*`) / delete-commit-sha (>14d tagged) / delete-feature-branch (>3d tag `feat-/feat_/feat/`) /
       delete-pr-images (>7d tag `pr-*`) / delete-untagged (>1d). Default mode dry-run; `--apply` writes via
       `gcloud artifacts repositories set-cleanup-policies`. Cloud Scheduler weekly-cron wiring deferred to
       operator-approval (terraform file referenced in script header; tracked as REMOTE-ONLY in act-preflight-coverage).
@@ -376,11 +374,11 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
 
 - [x] ✅ [AGENT] P0. Author `unified-trading-pm/scripts/quality_gates/coverage_targets.yaml` with table above. Shipped
       2026-05-16 (slot-8) — 11 surfaces declared (service_startup, validation_logic, vm_deploy_scripts,
-      deploy_script_deps, manifest_writer_emission, custody_wallet, kill_switch_circuit_breakers,
-      error_classification, per_archetype_calculators, backtest_strategy_engines, default) each with target_pct +
-      rationale + glob_patterns. Phase 8.B consumer (check_coverage_targets.py) follows separately.
-- [x] ✅ [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces. — shipped 2026-05-17
-      (slot-8) across 21 service repos: alerting-service@08ffb6a, batch-live-reconciliation-service@f157fb9,
+      deploy_script_deps, manifest_writer_emission, custody_wallet, kill_switch_circuit_breakers, error_classification,
+      per_archetype_calculators, backtest_strategy_engines, default) each with target_pct + rationale + glob_patterns.
+      Phase 8.B consumer (check_coverage_targets.py) follows separately.
+- [x] ✅ [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces. — shipped 2026-05-17 (slot-8)
+      across 21 service repos: alerting-service@08ffb6a, batch-live-reconciliation-service@f157fb9,
       client-reporting-api@64594e2, deployment-api@dac2224, deployment-service@6c2c0c0, execution-service@950573e39,
       features-service@da9497eb, fund-administration-service@e87f9ba, instruments-service@2c7b887,
       market-data-processing-service@a887313, market-tick-data-service@24e3b80, ml-inference-service@0398bca,
@@ -400,10 +398,10 @@ surface, not per repo:
       with correct service_name + run() called; execution-service + risk-and-exposure-service already had full lifecycle
       coverage; features-service top-level is a dispatcher, per-family CLIs have ServiceBootstrap + static scan tests
       cover markers)
-- [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/ schemas
-      + assertion helpers. Cover happy + every validation error. **🟡 BLOCKED 2026-05-17 (slot-8)**: UAC pyproject
-      `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` + `canonical/crosscutting/errors/*` from coverage
-      measurement (citadel-phase-1 transitional). Ratchet silently passes those surfaces because no entries in
+- [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/
+      schemas + assertion helpers. Cover happy + every validation error. **🟡 BLOCKED 2026-05-17 (slot-8)**: UAC
+      pyproject `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` + `canonical/crosscutting/errors/*` from
+      coverage measurement (citadel-phase-1 transitional). Ratchet silently passes those surfaces because no entries in
       `coverage.xml`. Operator decision required (Option A: remove omit + write tests against the truthful red signal;
       Option B: declare not-measurable in coverage_targets.yaml). Full ana lysis at
       `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`.
@@ -414,8 +412,15 @@ surface, not per repo:
       tests/unit/test_vm_zombie_watchdog.py [318 lines, 5 test classes]; shellcheck parametrized sweep of all
       launch-\*.sh; VM_PREFIX_TO_BUCKET coverage check with 8 known blindspots documented;
       \_is_daemon/WatchdogVerdict/VmPrefixSpec coverage; QG PASSED 77s)
-- [ ] [AGENT] P0. Deploy-script-deps surface (1 sub-agent): UTL `bucket_naming.resolve_bucket_name()`,
+- [x] ✅ [AGENT] P0. Deploy-script-deps surface (1 sub-agent): UTL `bucket_naming.resolve_bucket_name()`,
       `cloud_interface/factory.py`, env-aware resolvers. Every (cloud, env, kind, asset_group) cell + failure paths.
+      **Shipped 2026-05-17 (slot-8)** at `unified-trading-library@1ac18ea5`: new
+      `tests/cloud_interface/unit/test_bucket_naming_cell_sweep.py` (274 lines, 185 tests) — execution-store (gcp/aws ×
+      cefi/defi/tradfi, first coverage), strategy-store (6 cells, first coverage), 35 flat kinds not previously pinned
+      (archetype-state, audit-records, evm-defi, solana-defi, etc.), dynamic YAML sweep (test_every_yaml_cell_resolves,
+      144 live cells), dev/staging/prod env-short-form, resolve_bucket_uri for execution-store + strategy-store, error
+      paths for missing/unsupported asset_group. factory.py already covered (30 tests, gcp/aws/local paths, cache,
+      cloud-build). 316 cloud_interface tests pass.
 - [x] [AGENT] P0. Manifest writer + emission publisher (1 sub-agent): UTL `manifest_writer.py` + `emission_publisher.py`
       — gaps + edge cases (multi-worker shard isolation, ManifestShaDriftError, per-asset-group empty rules).
       (unified-trading-library@e6877d2 — B-007: record_failed with explicit attempted_at; B-008: new
@@ -449,24 +454,23 @@ surface, not per repo:
 
 - [x] ✅ [AGENT] P0. New QG STEP `coverage_targets_enforcement` reads coverage_targets.yaml + per-repo local; fails QG
       if any surface below target. Ratchet starting 2026-05-18. **Shipped 2026-05-17 (slot-8)** at
-      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_coverage_targets.py` walks each repo's
-      coverage.xml + computes aggregate per surface via fnmatch glob patterns + compares vs target_pct.
-      Per-repo overrides via `scripts/quality_gates/coverage_targets_local.yaml` enable subset filtering.
-      Currently wired warn-only in PM `quality-gates.sh`; baseline scan shows 9 failures across 8 repos
-      (worst: market-data-processing-service service_startup at 36.1%). Flip warn-only → error mode
-      2026-05-18 per plan deadline.
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_coverage_targets.py` walks each repo's coverage.xml +
+      computes aggregate per surface via fnmatch glob patterns + compares vs target_pct. Per-repo overrides via
+      `scripts/quality_gates/coverage_targets_local.yaml` enable subset filtering. Currently wired warn-only in PM
+      `quality-gates.sh`; baseline scan shows 9 failures across 8 repos (worst: market-data-processing-service
+      service_startup at 36.1%). Flip warn-only → error mode 2026-05-18 per plan deadline.
 
 **Phase 8.E — Daily snapshot** (0.5 cal-AI-day):
 
 - [x] ✅ [AGENT] P1. Extend `quality_gates_snapshot.sh` (Phase 4) to write per-repo coverage to GCS daily. — shipped
       2026-05-17 (slot-8) at `unified-trading-pm@041c0bb5` via 3 new sibling scripts:
-      `scripts/quality_gates/coverage_snapshot.sh` (walks workspace) + `coverage_snapshot_emit.py` (one repo → JSON lines)
-      + `coverage_snapshot_to_parquet.py` (JSON lines → parquet → GCS). Schema:
+      `scripts/quality_gates/coverage_snapshot.sh` (walks workspace) + `coverage_snapshot_emit.py` (one repo → JSON
+      lines) + `coverage_snapshot_to_parquet.py` (JSON lines → parquet → GCS). Schema:
       repo/surface/target_pct/actual_pct/files_matched/lines_covered/lines_valid/snapshot_at. GCS path
       `gs://{pid}-deployment-events/coverage_snapshot/repo=<R>/coverage_snapshot_YYYY_MM_DD.parquet`. Smoke-tested
       locally on deployment-service (2 surfaces emitted, 2.7KB parquet built in dry-run). deployment-ui
-      DeploymentReadinessTab Coverage-column wire-in to consume these parquets is a separate ticket on
-      deployment-ui slot (Phase 8.E.2 — captured as TODO below).
+      DeploymentReadinessTab Coverage-column wire-in to consume these parquets is a separate ticket on deployment-ui
+      slot (Phase 8.E.2 — captured as TODO below).
 - [ ] [AGENT] P1. **Phase 8.E.2 — deployment-ui Coverage column** — deployment-ui slot reads
       `gs://{pid}-deployment-events/coverage_snapshot/repo=<R>/coverage_snapshot_*.parquet` via deployment-api new
       endpoint (e.g. `/api/repos/coverage`). Per-repo: aggregate over surfaces, show red if any surface below
@@ -476,12 +480,13 @@ surface, not per repo:
 
 - [x] ✅ [AGENT] P1. **Coverage-raise spawn prompt template** — shipped 2026-05-17 (slot-8) at
       `unified-trading-pm@<pending>` → `cursor-configs/coverage-raise-spawn.md`. Paste-ready template with required
-      preamble (SUB_AGENT_MANDATORY_RULES injection) + per-spawn parameters ($REPO/$WORKTREE_PATH/$COVERAGE_TARGET/
-      $CURRENT_BASELINE/$SURFACES_IN_SCOPE/$PLAN_FLIP_TARGET) + bounded work contract (4hr/30-file cap) + success criteria
-      (per-surface ≥ target + plan-flip in same agent turn).
+      preamble (SUB_AGENT_MANDATORY_RULES injection) + per-spawn parameters
+      ($REPO/$WORKTREE_PATH/$COVERAGE_TARGET/
+      $CURRENT_BASELINE/$SURFACES_IN_SCOPE/$PLAN_FLIP_TARGET) + bounded
+      work contract (4hr/30-file cap) + success criteria (per-surface ≥ target + plan-flip in same agent turn).
 - [x] ✅ [AGENT] P1. **Per-tab worktrees discipline** — codified in the same `coverage-raise-spawn.md` doc as a HARD
-      RULE section pointing to `setup-tab-worktrees.sh` + `codex/05-infrastructure/per-tab-worktrees.md`. Sub-agents MUST
-      operate in `.tabs/<N>/<repo>/`; the spawn template threads `$WORKTREE_PATH` to enforce this.
+      RULE section pointing to `setup-tab-worktrees.sh` + `codex/05-infrastructure/per-tab-worktrees.md`. Sub-agents
+      MUST operate in `.tabs/<N>/<repo>/`; the spawn template threads `$WORKTREE_PATH` to enforce this.
 
 **Owner**: slot 1 main spawns + monitors; leaf-service slots execute. **Dependencies**: None — independent of deployment
 work.
@@ -571,17 +576,20 @@ Sourced from orchestrator ping [2026-05-15 11:15 UTC] extended queue (items 4-13
       endpoint + 3+ tests + QG green. ✅ _deployment-api@3acda8e_ (DiffEntry + DeploymentDiffResponse; mock synthetic
       3-change diff; prod git-show path; 7 tests; QG green)
 - [x] [AGENT] P0. **deployment-ui deployment diff viewer** — side-by-side diff panel accessible from the deployments
-      list. Done-def: component + vitest green + pnpm build green. ✅
-      _deployment-ui@2c221ac_ (DeploymentDiffPanel; Compare SHAs toggle; added/removed/changed sections; 6 vitest tests; 672 total tests; QG green)
+      list. Done-def: component + vitest green + pnpm build green. ✅ _deployment-ui@2c221ac_ (DeploymentDiffPanel;
+      Compare SHAs toggle; added/removed/changed sections; 6 vitest tests; 672 total tests; QG green)
 - [x] [AGENT] P0. **deployment-api cost estimate endpoint** — `POST /api/vm/cost-estimate` accepts VM type + hours
-      estimate and returns projected GCP cost. Done-def: endpoint + 3+ tests + QG green. ✅
-      _deployment-api@d3a001a_ (vm_cost_estimate.py; n1/n2 pricing table; compute+disk breakdown; count multiplier; unknown type fallback flag; 9 unit tests; QG green)
+      estimate and returns projected GCP cost. Done-def: endpoint + 3+ tests + QG green. ✅ _deployment-api@d3a001a_
+      (vm_cost_estimate.py; n1/n2 pricing table; compute+disk breakdown; count multiplier; unknown type fallback flag; 9
+      unit tests; QG green)
 - [x] [AGENT] P0. **deployment-ui cost estimate panel** — before launching a VM, show cost estimate inline in the launch
-      form. Done-def: component + vitest green + pnpm build green. ✅
-      _deployment-ui@5147f4b_ (VmCostEstimatePanel; machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate API; compute+disk+total breakdown; wired into MlExperiments; 5 vitest tests; 63 total; QG green)
+      form. Done-def: component + vitest green + pnpm build green. ✅ _deployment-ui@5147f4b_ (VmCostEstimatePanel;
+      machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate API; compute+disk+total breakdown; wired
+      into MlExperiments; 5 vitest tests; 63 total; QG green)
 - [x] [AGENT] P0. **deployment-ui responsive mobile layout audit** — every route at ≤768px: nav collapses, tables scroll
       horizontally, forms stack vertically. Done-def: Playwright or visual audit + fixes + pnpm build green. ✅
-      _deployment-ui@fd4fa83_ (Header hamburger+mobile-nav; DeploymentHistory overflow-x-auto; MlExperiments/StrategyBacktests/Dart/ClientSubscriptions grid-cols-1 sm:grid-cols-N; pnpm build + QG green)
+      _deployment-ui@fd4fa83_ (Header hamburger+mobile-nav; DeploymentHistory overflow-x-auto;
+      MlExperiments/StrategyBacktests/Dart/ClientSubscriptions grid-cols-1 sm:grid-cols-N; pnpm build + QG green)
 
 ## Done definition
 
