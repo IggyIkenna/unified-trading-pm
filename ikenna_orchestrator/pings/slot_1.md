@@ -990,3 +990,34 @@ second hang observed, file under `runbook_execution_governance_gaps_2026_05_08.m
 - slot-7 tick 22: execution-service Phase B 50→53/377.
 
 Next tick: monitor ES_OPT drain; if all 5 land, file Phase 7 completion flip + start 4-pillar validation script.
+
+---
+
+## [slot 1 main] 2026-05-17 ~14:45 UTC — /loop tick: drain confirmed, Phase 7 ✅, housekeeping shipped
+
+**TradFi OHLCV drain CONFIRMED** (slot-5 report 14:00 UTC):
+- ALL 70 tradfi-bf VMs STOPPED + self-deleted; singleton lock fully relaxed.
+- Phase 7 flip landed at PM@`462a5bdd` by slot-5 (216,876 captured / 100% honest-fill / 0 attempted_failed).
+- GC 2023 relaunched by slot-5 as `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102`.
+- 4-pillar validator (MTDS@d1ab9bc) running against CME 2025-06-15 sample (slot-5 background task).
+
+**Operator decisions still pending** (cannot proceed without these):
+1. **Phase 8.2 Databento spend sign-off** — slot-5 requests operator approval (Databento dashboard query); unblocks Phase 8 sign-off and closes `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`.
+2. **ICE roots pick** (`BLOCKED-UNIVERSE-DECISION`) — operator provides Brent/Gasoil/Sugar roots when universe rows land; slot-5 will not pre-populate (each entry costs Databento PAYG).
+
+**Slot-1-main housekeeping this tick** (PM@`55179719`):
+- Fixed duplicate `estimate_class:` frontmatter in `cme_polymarket_arb_2026_05_08.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — YAML was resolving to TBD block, hiding calibrated values from inventory regenerator.
+- Filed `plans/active/issues/concurrent_backfill_during_phase_2_6_migration_2026_05_15.md` — Phase 2.0 drain-gate process gap documented; empirical safety confirmed (0 attempted_failed).
+- Inventory regenerator: **0 TBD, 69 plans, 51% done, 498 cal AI-days left**.
+
+**Fleet / autonomous summary**:
+- slot-4: execution-service method-size allowlist 131 (~30% cleared from 187 baseline); tick 10 landed.
+- slot-7: Phase B 61/377 cleared (16%), 316 remaining; basedpyright clean throughout.
+- slot-2: STOPPED clean; all 6 DeFi canonical manifests verified clean (122,757 kebab rows purged).
+- slot-3: B-015 chain (c) VM 6 ran cleanly; 3 follow-ups filed under defi_features_pipeline issue.
+- slot-8: SWEEP-16 closed; Phase 5 OHLCV phantom-reconcile assigned (awaiting slot-8 ack).
+- Phase 6.3 orphaning: **ARCHIVED** (resolved; issue doc moved to archive/).
+
+**No actionable inbound pings** requiring slot-1 decision this tick. All autonomous slots proceeding cleanly.
+
+Next tick: watch for slot-5 4-pillar validation result; watch for slot-8 Phase 5 ack; poll any new operator pings.
