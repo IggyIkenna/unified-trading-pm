@@ -366,6 +366,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17**: 21 files cleared (slot-2
    contribution: -21 files; 10 handlers + 8 defi protocols + 2 services + 1 preprocessor).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 18 — services sweep continues)**: bridge_cost_model.py shipped at
+   execution-service@fde0f06d6 (get_live_quote 102L→33L via \_resolve_bridge_addrs (chain-id + token-addr lookup) +
+   \_fetch_across_suggested_fees (aiohttp ClientSession with ThreadedResolver + 10s timeout, returns None on
+   non-200/network error) + \_build_live_quote_from_payload (pct/1e14→bps, gas-tokens×$2000→USD, outputAmount)).
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18**: 22 files cleared (slot-2
+   contribution: -22 files; 10 handlers + 8 defi protocols + 3 services + 1 preprocessor).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
