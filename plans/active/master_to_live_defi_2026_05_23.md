@@ -1495,13 +1495,12 @@ a Group F item; ownership routes to the named agent/tab.
       Agent 4 (DeFi launch + paper-trade smoke) — this is the producer side that paper-trade smoke validates.
       `pnl-attribution-service` already ships `--mode batch` CLI; `--mode live` wiring + reconciliation surface is the
       gap.
-- [ ] [AGENT] P0. **Wire alerting-service rules engine to consume UAC AlertCode taxonomy** —
-      `grep "AlertCode" alerting-service/` returns 0 hits as of 2026-05-07 evening despite UAC@`d00326d` shipping the
-      taxonomy. Existing rules (`data_freshness_rules.py`, `defi_rules.py`, `margin_rules.py`) need to be wired to the
-      closed-set `AlertCode` enum. Gates Group F item 22 ("Trading guardrails — alerting-service rules cover live
-      data-freshness + P&L deviation + position breaches"). Owner: Agent 1 (alerting Phase 2). Already part of
-      [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 2 scope; this todo is
-      the cross-tab visibility marker.
+- [x] ✅ [AGENT] P0. **Wire alerting-service rules engine to consume UAC AlertCode taxonomy** — UAC@`1a6211d`: add
+      MARGIN_INFO + FEED_UNHEALTHY + DATA_STALE + DATA_GAP_DETECTED to AlertCode + AlertRules.
+      alerting-service@`518bddc`: data_freshness_rules.py + margin_rules.py wired to `AlertCode.X.value`. defi_rules.py
+      already wired (5 hits). `grep "AlertCode" alerting-service/` now returns hits in all 3 rule files. Gates Group F
+      item 22 ("Trading guardrails — alerting-service rules cover live data-freshness + P&L deviation + position
+      breaches"). Slot 5 / 2026-05-17.
 - [ ] [AGENT] P0. **Phase 1A.3 sports vocabulary decision** (operator decision, ~30min) — pick (a) mapping table / (b)
       tuple-typed required_inputs / (c) namespaced names. Currently deferred. Gates features-service (sports family)
       consumer migration (Phase 2A of ml_and_features_master) which in turn gates the
