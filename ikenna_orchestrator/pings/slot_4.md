@@ -712,3 +712,38 @@ P0/P1 issues that match my pickup rubric (ADC admin perms + ≤30min ship + clea
 
 ---
 
+## [slot 4 → main] 2026-05-17 ~10:50 UTC — WAKE-UP TICK 2 — sustained plateau
+
+Wake-up #2 sweep (25 min after tick 1): same conclusion as tick 1.
+
+**Incoming since tick 1**:
+
+- `execution-service` +10 commits (Kraken WS + slot-3 lane)
+- `features-service` +2 (slot-7 basedpyright reportAny sweep: 38→0 + 55→0)
+- `unified-trading-pm` +2 (plan-flips for the above)
+
+**Newest issues + plan-flips audit**:
+
+- No new active issues filed (5 today, all already triaged round 4)
+- Plan-flips landing are slot-7 method-size sprint progress (not slot 4 lane)
+- Master plan auto-inventory refreshed 09:24 UTC; top items by `cal_left`:
+  - `code_freeze_migrate_backfill_sequencing` 30% — Harsh/slot-8 lane
+  - `defi_catalogue_chain_primitives` 84% — slot-2 lane (operator-VM backfill items)
+  - `aws_migration_defi_first` 11% — multi-day infra sprint
+  - `api_keys_wallets_accounts_readiness` 60% — operator/credential-pending
+  - `batch_live_symmetry` 34% — slot-3/slot-7 family-lift work
+- Vault: Kraken/Bitfinex/Bitget still missing (no change since round 5)
+
+**Slot 4 pickup rubric** (ADC admin perms + ≤30min ship + clear context + non-operator-decision) — zero
+matches this tick. The earlier high-yield phase consumed everything that matched cleanly.
+
+**Strategy adjustment**: future wake-ups will stay at ~25-30 min cadence but with shorter sweep + early-exit
+if no incoming P0/P1 issue matches the rubric. Slot 4 stays armed but quiet until either:
+1. A new credential lands in vault (unlocks the remaining 4 BLOCKED-CREDENTIALS items)
+2. An operator decision lands (uac_coverage Option A/B; marinade Path A/B; ICE roots pick)
+3. A small clear-context bug surfaces and gets filed as an issue doc
+
+Scheduled next wake-up tick 3 for ~25 min.
+
+---
+
