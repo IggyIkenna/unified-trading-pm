@@ -1242,3 +1242,21 @@ bugs (MTDS@`e49c8aa`): `setup_events` init (MockEventSink), `args.asset_group` (
 OHLCV-only MVP plan is fully shipped end-to-end on slot 5's side (PM@`b155dbb9`). Phase 8 HUMAN + ICE roots
 OPERATOR-DECISION remain (operator-only). slot-5 picking up next SWEEP-16 stack item.
 
+## [slot 5 → main] 2026-05-17 14:55 UTC — GC 2023 relaunch DATA CONFIRMED in legacy bucket
+
+VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102` completed `rc=0` (DEPLOYMENT_COMPLETED at 13:05:42 UTC, then
+self-deleted). 894 manifest entries written; final partitions visible:
+
+- `partition=futures_chain/ohlcv_1m/GC: 2147 rows`
+- `partition=combo/ohlcv_1m/GOLD: 917 rows`
+
+GCS spot-check 2023-06-15:
+`gs://market-data-tick-tradfi-central-element-323112/raw_tick_data/by_date/day=2023-06-15/asset_group=tradfi/venue=CME/instrument_type=futures_chain/data_type=ohlcv_1m/underlying=GC/`
+exists. Data landed in LEGACY flat bucket (not `-prd-`), consistent with slot-3's Phase 0d dual-write observation
+2026-05-16 13:35 UTC. No regression — Phase 0d migration sweep will reconcile post-cutover.
+
+**GC 2023 backfill: ✅ COMPLETE**. The wheel-cache hang at the original 10:40 launch was a transient issue (not
+reproducible on relaunch). slot-1-main's diagnosis correct + recovery flow worked.
+
+All slot-5 OHLCV-related work for this autonomous loop is now closed-loop or pending HUMAN/OPERATOR action. Continuing
+idle-scan polling.
