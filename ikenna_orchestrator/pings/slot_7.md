@@ -889,3 +889,15 @@ FUNCTION_SIZE_EXTRA_EXCLUDES). My Phase B refactors are still incrementally clea
 369 violations regardless. 349 remaining (no slot-7 baseline-ratchet collision).
 
 basedpyright clean across all 2 commits.
+
+
+[2026-05-17 /loop tick 16] slot-7 — execution-service Phase B (+3, 31/377 cleared):
+
+* `execution-service@1db3b598a` — BenchmarkService._get_oracle_price 53L→23L via
+  _DEFAULT_ORACLE_PRICES ClassVar (inline dict promoted) + _cached_oracle_price helper.
+* `execution-service@e23c218f2` — KrakenCeFiAdapter.get_margin_state 52L→25L (docstring +
+  intermediate-locals condensation; ml→ratio normalization preserved).
+* `execution-service@3f88de2db` — KrakenCeFiAdapter.get_account_state 53L→27L via nested
+  _balance helper + generator-comprehension w/ None filter.
+
+346 remaining. basedpyright clean.
