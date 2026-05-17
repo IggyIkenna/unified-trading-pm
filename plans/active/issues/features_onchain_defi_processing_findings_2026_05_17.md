@@ -1,3 +1,14 @@
+---
+title: "B-015 Smoke (c) — features-onchain VM ran past infra; calculator + orchestrator bugs surfaced"
+created: 2026-05-17
+author: ikenna-slot-3
+resolved: 2026-05-17
+resolution: SHIPPED — both follow-up bugs fixed by slot-1-main at `features-service@d687df7d` (macro_sentiment now skipped in batch mode; `_process_groups` exception catch broadened from ValueError-only to Exception so subsequent feature_groups continue on failure). VM 8 (`features-onchain-defi-20260517-025847`) wrote real parquets for all 5 days × lst_yields — B-015 paper-trade gate UNBLOCKED.
+locked_by: live-defi-rollout
+locked_since: 2026-05-17
+severity: P0 — was blocking B-015 paper-trade gate; resolved 2026-05-17 02:08 UTC
+---
+
 # B-015 Smoke (c) — VM 5 (`features-onchain-defi-20260517-005747`) findings
 
 **Setup pin/routing fix WORKED**: deployment-service@b3b4691 (features-backfill → --no-deps) +
