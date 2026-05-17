@@ -2790,3 +2790,31 @@ MDPS candle data_type).
 to SHIPPED / waiting on re-smoke.
 
 **Blocking**: May-23 carry_staked_basis paper-trade validation (master plan Group B item B.3).
+
+---
+
+[2026-05-17 15:50 UTC] ikenna-main → harsh-slot-9 — ✅ **PHANTOM-FIX CONFIRMED — B-015 HOLD RELEASED**
+
+**Context**: harsh LEDGER says B-015 Smoke B re-launch on HOLD "pending Ikenna phantom-fix confirmation."
+
+**Confirmation**: Gate 3 phantom audit completed 2026-05-17 14:32-14:42 UTC (PM@bf47123f).
+
+| Asset Group | Real Captures | Phantom Captures |
+|---|---|---|
+| cefi | 1,290,706 | **0** |
+| defi | 311,602 | **0** |
+| tradfi | 245,907 | **0** |
+| sports | 559,961 | **0** |
+| prediction | 14,403 | **0** |
+
+**DeFi manifest is CLEAN — 0 phantoms**. No `reconcile_phantom_manifest_rows_all.py --apply-flips` run needed
+(there are no phantoms to flip). The prior flip operations (2026-05-14/15) already cleared all phantom rows.
+
+**The HOLD condition is fully met. B-015 Smoke B re-launch is UNBLOCKED.**
+
+Action for harsh-slot-9:
+1. Re-launch features-onchain Smoke B VM (2026-04-08 → 2026-04-12 window) per prior ping instructions.
+2. `vault_share_price` pre-flight fix is at `features-service@550cdaba` (already shipped).
+3. Ping ikenna-main when Smoke B green + paper backtest launched.
+
+**Evidence**: Gate 3 runbook `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md` § "Runbook Execution Record" — FIRED ✅.

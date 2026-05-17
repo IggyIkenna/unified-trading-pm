@@ -1133,3 +1133,19 @@ All 5 VMs completed with exit_code=0 by 14:42 UTC:
 **Pending operator decisions** (no change): Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: poll slot pings for new acks; monitor tradfi-fwd cron + slot-6 Phase 7.C for operator acks.
+
+---
+
+## [slot 1 main] 2026-05-17 ~15:50 UTC — B-015 HOLD released via _agent_pings cross-side ping
+
+**Action taken**: Appended Gate 3 phantom-fix confirmation to `plans/active/_agent_pings.md` (PM@pending).
+
+**Finding**: harsh LEDGER had B-015 Smoke B on HOLD "pending Ikenna phantom-fix confirmation." Gate 3 audit (just completed) confirms 0 phantoms in DeFi manifest (311,602 real captures, 0 phantoms). No `--apply-flips` needed. HOLD condition is fully met.
+
+**Ping sent** to harsh-slot-9: re-launch features-onchain Smoke B VM (2026-04-08 → 2026-04-12), `vault_share_price` fix already at `features-service@550cdaba`.
+
+**No other new actionable pings** this tick. Slot 2 stopping cleanly, slots 3-8 proceeding autonomously.
+
+**All operator-gated items still pending**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: monitor for harsh-slot-9 B-015 Smoke B re-launch ack.
