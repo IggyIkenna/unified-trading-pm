@@ -186,10 +186,11 @@ UAC schemas already shipped.
 
 ### Phase 2 — `act + docker` pre-flight workflow (2 cal-AI-days)
 
-- [ ] [AGENT] P0. **Author `unified-trading-pm/scripts/dev/act-preflight.sh`** — wraps `act` invocation against the
-      repo's `.github/workflows/quality-gates.yml` in a pinned `act-runner-image`. Accepts `--repo <name>` arg; resolves
-      repo path; runs `act -j quality-gates --container-architecture linux/amd64`. Captures EXIT_CODE + summary; writes
-      report to `/tmp/act-preflight-{repo}-{sha}.log`.
+- [x] ✅ [AGENT] P0. **Author `unified-trading-pm/scripts/dev/act-preflight.sh`** — shipped 2026-05-17 (slot-8) at
+      `unified-trading-pm@<pending>`. Accepts `--repo <name|all>` + `--workflow` (default quality-gates.yml) +
+      `--architecture` (default linux/amd64). Pre-flight checks: act installed + docker daemon running.
+      Per-repo: logs to `/tmp/act-preflight-{repo}-{sha}.log`; reports PASS/FAIL + duration; overall exit code
+      = 0 if all pass, 1 if any fail, 2 if pre-flight error. Shellcheck clean.
 - [ ] [AGENT] P0. **Per-workflow coverage test** — run `act-preflight.sh` against each repo's QG workflow. Document
       per-repo coverage matrix: which workflows act fully covers, which need OIDC/WIF tweaks, which need
       secret-injection workarounds. Output: `codex/05-infrastructure/act-preflight-coverage.md` (NEW).
