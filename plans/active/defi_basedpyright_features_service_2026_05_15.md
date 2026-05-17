@@ -66,6 +66,10 @@ Same patterns as execution-service fix:
   - [x] ✅ sports/calculators/h2h_calculator.py 13→0 errors — features-service@8444039c (slot-8 wave 3)
   - [x] ✅ sports/calculators/european_fatigue_calculator.py 13→0 errors — features-service@8444039c (slot-8 wave 3)
   - [x] ✅ sports/calculators/sfi_progressive_calculator.py 12→0 errors — features-service@8444039c (slot-8 wave 3)
+  - [x] ✅ delta_one/app/calculators/volume.py 11→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
+  - [x] ✅ delta_one/app/core/futures_roll_adjuster.py 9→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
+  - [x] ✅ delta_one/app/calculators/supply_demand_zones.py 8→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
+  - [x] ✅ delta_one/app/calculators/fibonacci.py 8→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
