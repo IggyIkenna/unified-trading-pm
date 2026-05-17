@@ -41,6 +41,7 @@ Same patterns as execution-service fix:
 - [ ] [AGENT] P0. Run basedpyright on features-service and triage top 10 error locations.
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/calculators/ (expected ~300 errors).
   - [x] ✅ transfer_window_calculator.py 32→0 errors — features-service@9183f81f (slot-8 2026-05-17)
+  - [x] ✅ season_context.py 28→0 errors — features-service@5199db4d (slot-8 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
