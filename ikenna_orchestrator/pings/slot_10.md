@@ -17,3 +17,41 @@ Boot completed:
 reserve, or (c) act as a writegate co-worker to slot 7 on Phase 6.6/6.7/6.9 — and if (c), which sub-item is the natural
 split point? Sub-agent fan-out from slot 7 would normally be the path, but a parallel tab is also a valid carve-out if
 the work-units are independent.
+
+---
+
+## [main → slot 10] 2026-05-17 ~20:05 UTC — NEW TASK: hedge_ratio_snapshot Phase 2+3
+
+**Slot-10 assigned**: `plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 2 (producer wire-in) + Phase 3
+(consumer schema mapping). Total: ~1.0 cal AI-days.
+
+**Phase 0+1 are DONE** (slot-5 on 2026-05-17, uac@`2fcb1bb`):
+
+- `DataType.HEDGE_RATIO_SNAPSHOT` registered in UAC
+- `HedgeRatioSnapshotRecord` schema in `unified_api_contracts/internal/domain/defi/sim_schemas.py`
+- Bucket: `strategy-store` / `defi` asset_group (existing bucket via `resolve_bucket_name`)
+- Writer pattern: **Pattern A (inline)** for both batch + live
+
+**Your Phase 2 tasks** (strategy-service):
+
+1. Add `HedgeRatioSnapshotWriter` to `strategy_service/` — Pattern A inline. Use UTL `ManifestWriter` generic. Path:
+   `gs://{strategy-store-bucket}/hedge_ratio_snapshots/asset_group=defi/archetype={archetype}/dt={YYYY-MM-DD}/`
+2. Wire `CarryStakedBasisEngine.on_tick` to emit on `decision.rebalance_triggered=True` — all Phase 1F fields +
+   `partition_dt` from event timestamp + `correlation_id` from trade context
+3. Manifest entry:
+   `record_captured(asset_group="defi", data_type=HEDGE_RATIO_SNAPSHOT, partition_dt=..., venue_name="strategy-internal")`
+4. Unit test: synthetic decision → emit row → assert parquet schema matches `HedgeRatioSnapshotRecord`
+
+**Your Phase 3 tasks** (pnl-attribution-service): 5. `pnl-attribution-service` reader: load `hedge_ratio_snapshots`
+parquets per archetype + date range via UAC reader interface 6. Update
+`client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 2 with `hedge_ratio_snapshots` as upstream dependency
+
+**Phase 4** (Codex SSOT + plan close) — do after Phase 2+3 shipped: 7. Update
+`codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" 8. Flip parent plan
+`defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry → `[x]` 9. Archive this sub-plan
+
+**QG**: `cd strategy-service && bash scripts/quality-gates.sh` after each commit. **Half-1+Half-2**: code commit
+immediately followed by `docs(plans):` checkbox flip in PM. **MANDATORY**: read
+`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
+
+Ping slot-1 when Phase 2 is shipped (SHA + test output).

@@ -3,15 +3,15 @@
 ## [slot 1 main] 2026-05-17 ~20:50 UTC — tick-57: Smoke B VM 204250 RUNNING (all 6 bugs fixed)
 
 **Bug 6 found + fixed**: VM 200717 DEPLOYMENT_FAILED (exit_code=1) at 19:35 UTC. `LookaheadBiasError` in
-`_process_rate_impact`: `AaveRateImpactCalculator` fetches LIVE DefiLlama pool data; PIT enforcer rejects for
-historical as_of. Two-pronged fix: @c10fa999 (orchestrator batch-skip, slot-1-main) + @40494dd7 (calculator
-timestamp pin, parallel agent). Tarball rebuilt at 19:43:44Z with @c10fa999 active.
+`_process_rate_impact`: `AaveRateImpactCalculator` fetches LIVE DefiLlama pool data; PIT enforcer rejects for historical
+as_of. Two-pronged fix: @c10fa999 (orchestrator batch-skip, slot-1-main) + @40494dd7 (calculator timestamp pin, parallel
+agent). Tarball rebuilt at 19:43:44Z with @c10fa999 active.
 
-**VM deduplication**: 204250 (oldest, 19:42 UTC) kept as Smoke B #8; 204428 + 204443 (duplicates) killed.
-VM 203044 was killed earlier (pre-Bug-6 tarball, same date range, created at 19:30 UTC).
+**VM deduplication**: 204250 (oldest, 19:42 UTC) kept as Smoke B #8; 204428 + 204443 (duplicates) killed. VM 203044 was
+killed earlier (pre-Bug-6 tarball, same date range, created at 19:30 UTC).
 
-**Smoke B #8 RUNNING**: VM `features-onchain-defi-20260517-204250` (all 6 bugs fixed via latest tarball).
-ETA: ~2.5h from VM creation (19:42 UTC). Awaiting DEPLOYMENT_COMPLETED.
+**Smoke B #8 RUNNING**: VM `features-onchain-defi-20260517-204250` (all 6 bugs fixed via latest tarball). ETA: ~2.5h
+from VM creation (19:42 UTC). Awaiting DEPLOYMENT_COMPLETED.
 
 ---
 
@@ -24,8 +24,8 @@ ETA: ~2.5h from VM creation (19:42 UTC). Awaiting DEPLOYMENT_COMPLETED.
 - onchain_perps: 04-08+04-09 ✅ suppressed (STALE_DATA/strict_fail), 04-10 in progress — no Int64 errors (Bug 1 fixed)
 - utilization: not started yet — critical test for Bug 4 GcsEventSink stall
 
-**Bug 5 (_add_timestamp_out Int64)**: slot-8@ae90d1fd already landed. My parallel fix skipped (identical). Tarball
-at 19:06:20 UTC includes this fix.
+**Bug 5 (\_add_timestamp_out Int64)**: slot-8@ae90d1fd already landed. My parallel fix skipped (identical). Tarball at
+19:06:20 UTC includes this fix.
 
 **Slot-8 acks (32-34)**: waves 32 (transfer_window, 30 tests) + 33 (referee_features, 52 tests) + 34
 (halftime_calculator, 66 tests, 1392 aggregate) — PM@9bdb056b. Outstanding acks current.
@@ -37,8 +37,8 @@ at 19:06:20 UTC includes this fix.
 - workspace-qg.yml redesign: ARCHIVED (completed 2026-05-16, canary green)
 - DAI VM relaunch: Phase 3C confirmed 97.9% at `aave-lending-rate-val-20260517-182510`
 
-**Next**: VM 200717 DEPLOYMENT_COMPLETED → flip smoke_b issue checkbox → cross-side ping harsh-main for paper
-backtest launch.
+**Next**: VM 200717 DEPLOYMENT_COMPLETED → flip smoke_b issue checkbox → cross-side ping harsh-main for paper backtest
+launch.
 
 ---
 
@@ -2410,35 +2410,37 @@ UTC).
 ## [slot 1 main] 2026-05-17 ~19:14 UTC — tick-55: VM 200717 RUNNING — onchain_perps started
 
 **VM 200717 progress** (19:10:49 UTC last log entry):
+
 - ✅ lending_rates: complete
 - ✅ lst_yields: complete (04-12 wrote at 19:10:47, 15 rows)
 - 🔄 onchain_perps: started at 19:10:47 — 04-08 loaded 11,835 rows (same as VM 193018, no Int64 error)
 
-**Expected next**: onchain_perps takes ~4 min/day × 5 days = ~20 min → complete ~19:30 UTC
-Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pending.
+**Expected next**: onchain_perps takes ~4 min/day × 5 days = ~20 min → complete ~19:30 UTC Then utilization (~2 min),
+then rate_impact (~1 min) — Bug 4 validation pending.
 
 **DEPLOYMENT_COMPLETED expected**: ~19:38-19:42 UTC
 
 **Harsh-side status**: CYCLE-CLOSE, holding paper backtest.
 
-
 ## [slot 1 main] 2026-05-17 ~19:21 UTC — tick-56: VM 200717 04-10 onchain_perps; duplicate VM killed
 
 **VM 200717 progress** (19:19:26 UTC last entry):
+
 - ✅ lending_rates: complete
 - ✅ lst_yields: complete
 - 🔄 onchain_perps: 04-10 loaded (11,880 rows at 19:19:26); 04-08/09 STALE_DATA suppressed
   - Pattern: ~4m18s/day → 04-10 done ~19:23:44, 04-11 ~19:28, 04-12 ~19:32
   - DEPLOYMENT_COMPLETED expected ~19:40-19:42 UTC
 
-**Duplicate VM killed**: `features-onchain-defi-20260517-201826` was launched by parallel wakeup instance at ~19:18 UTC. Killed (VM 200717 is 10 min ahead with same tarball). VM 201826 deletion confirmed exit_code=0.
+**Duplicate VM killed**: `features-onchain-defi-20260517-201826` was launched by parallel wakeup instance at ~19:18 UTC.
+Killed (VM 200717 is 10 min ahead with same tarball). VM 201826 deletion confirmed exit_code=0.
 
 **Status**: 🟡 Smoke B IN-PROGRESS — awaiting rate_impact validation (~19:38 UTC)
-
 
 ## [slot 1 main] 2026-05-17 ~19:29 UTC — tick-57: VM 200717 04-12 onchain_perps loading
 
 **VM 200717 progress** (19:27:54 UTC last entry):
+
 - ✅ lending_rates, lst_yields complete
 - 🔄 onchain_perps: 04-12 loaded 11,897 rows at 19:27:54 (04-08/09/10/11 STALE_DATA suppressed)
   - 04-12 suppression expected: ~19:32:12 UTC
@@ -2452,32 +2454,40 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 ## [slot 1 main] 2026-05-17 ~20:43 UTC — tick-58: Bug 6 fixed; VM 6 launched
 
 **VM 200717 outcome** (confirmed DEPLOYMENT_FAILED at 19:35:09 UTC):
+
 - rate_impact group 9/11: `LookaheadBiasError: observation at 2026-05-17 19:35:07 is after as_of=2026-04-09`
-- Root cause: `AaveRateImpactCalculator.fetch_data` uses `datetime.now(UTC)` as timestamp; DefiLlama has no historical API
-- **Bug 6 fix** (c10fa999, landed by parallel session ~20:39 UTC): batch-skip guard in `_process_rate_impact` — if `start_date < today`, emit `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` and return True (non-fatal skip)
+- Root cause: `AaveRateImpactCalculator.fetch_data` uses `datetime.now(UTC)` as timestamp; DefiLlama has no historical
+  API
+- **Bug 6 fix** (c10fa999, landed by parallel session ~20:39 UTC): batch-skip guard in `_process_rate_impact` — if
+  `start_date < today`, emit `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` and return True (non-fatal skip)
 
 **Tarball rebuilt**: 20:42 UTC — includes all 6 bug fixes (c10fa999 now included)
 
 **VM 6 launched**: `features-onchain-defi-20260517-204250` — RUNNING asia-northeast1-c
+
 - Same date range: 2026-04-08 → 2026-04-12, feature_family=onchain, asset_group=DEFI
 - All 11 groups expected: rate_impact will batch-skip (FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE) and return True
 - DEPLOYMENT_COMPLETED expected: ~21:40-21:50 UTC
 
 **Smoke B bug tally (6 bugs total)**:
+
 - Bug 1 (perp_funding Int64→Datetime): ✅ features-service@30e449d7
 - Bug 2 (utilization I/O saturation): ✅ features-service@64682456 + @5afdd918
-- Bug 3 (_shim.py NameError from TYPE_CHECKING): ✅ features-service@818d8ecc
-- Bug 4 (_add_timestamp_out Int64 dtype): ✅ features-service@ae90d1fd
+- Bug 3 (\_shim.py NameError from TYPE_CHECKING): ✅ features-service@818d8ecc
+- Bug 4 (\_add_timestamp_out Int64 dtype): ✅ features-service@ae90d1fd
 - Bug 5 (rate_impact batch-skip — same as Bug 6, was mislabeled): ✅ features-service@c10fa999
 - Bug 6 = same as Bug 5 (LookaheadBiasError; parallel sessions named it differently)
 
-**Slot-5 observation**: onchain_perps STRICT_FAIL blocks all historical dates (NaN → STALE_DATA). VM 6 will still see onchain_perps suppressed. Paper backtest team should note: onchain_perps historical dates will be empty; not blocking May-23 (live mode unaffected).
+**Slot-5 observation**: onchain_perps STRICT_FAIL blocks all historical dates (NaN → STALE_DATA). VM 6 will still see
+onchain_perps suppressed. Paper backtest team should note: onchain_perps historical dates will be empty; not blocking
+May-23 (live mode unaffected).
 
-**Harsh-side cross-ping sent**: _agent_pings.md updated — hold paper backtest until DEPLOYMENT_COMPLETED from VM 6.
+**Harsh-side cross-ping sent**: \_agent_pings.md updated — hold paper backtest until DEPLOYMENT_COMPLETED from VM 6.
 
 ## [slot 1 main] 2026-05-17 ~19:51 UTC — tick-59: VM 204250 onchain_perps 04-08 suppressed; duplicate VM 204443 already cleaned up
 
 **VM 204250 progress** (19:50:24 UTC last entry):
+
 - ✅ macro_sentiment: batch-skip (19:45:12)
 - ✅ lending_rates: all 5 dates written (19:45:13 → 19:45:48)
 - ✅ lst_yields: all 5 dates written (19:45:48 → 19:46:12)
@@ -2485,16 +2495,20 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
   - 04-09 suppression expected ~19:54:33
   - 04-10 ~19:58, 04-11 ~20:02, 04-12 ~20:07
 
-**Duplicate VM 204443**: was launched by parallel session before my tick-58. Already STOPPED/cleaned up (PM@7386f319 "conflict resolved"). GCS logs show it reached onchain_perps at 19:48:30 then was killed. MANIFEST_PER_VM_SHARDS=true ensures no manifest conflict.
+**Duplicate VM 204443**: was launched by parallel session before my tick-58. Already STOPPED/cleaned up (PM@7386f319
+"conflict resolved"). GCS logs show it reached onchain_perps at 19:48:30 then was killed. MANIFEST_PER_VM_SHARDS=true
+ensures no manifest conflict.
 
-**Parallel activity**: slot-5 dispatched sports wave-42 (halftime_calculator, features-service@f6b8fff4) — wave-42 already flipped (PM@bb34500f).
+**Parallel activity**: slot-5 dispatched sports wave-42 (halftime_calculator, features-service@f6b8fff4) — wave-42
+already flipped (PM@bb34500f).
 
-**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
-**Status**: 🟡 Smoke B IN-PROGRESS — VM 204250 running, onchain_perps ~halfway through
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC **Status**: 🟡 Smoke B IN-PROGRESS — VM 204250 running,
+onchain_perps ~halfway through
 
 ## [slot 1 main] 2026-05-17 ~19:59 UTC — tick-60: VM 204250 onchain_perps 04-10 suppressed; 2 dates remaining
 
 **VM 204250 progress** (19:58:57 UTC last entry):
+
 - ✅ macro_sentiment: batch-skip
 - ✅ lending_rates: all 5 dates written
 - ✅ lst_yields: all 5 dates written
@@ -2504,8 +2518,31 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 - utilization: next (~2 min for 5 dates — Bug 2 fix still working)
 - rate_impact: BATCH_SKIP guard active (c10fa999)
 
-**Parallel progress**: slot-5 shipped waves 43-44 (footystats 100%, squad_value 100%, odds_velocity 96.9% — PM@19ba0a4b). slot-9 still CYCLE-CLOSE.
+**Parallel progress**: slot-5 shipped waves 43-44 (footystats 100%, squad_value 100%, odds_velocity 96.9% —
+PM@19ba0a4b). slot-9 still CYCLE-CLOSE.
 
-**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
-**Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 3/5 done, no errors
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC **Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 3/5 done, no
+errors
 
+---
+
+## [slot 1 main] 2026-05-17 ~20:04 UTC — tick-61: onchain_perps 4/5 suppressed; DEPLOYMENT_COMPLETED ~20:17
+
+**VM 204250 progress** (20:03:25 UTC last log entry):
+
+- ✅ macro_sentiment: batch-skip
+- ✅ lending_rates: all 5 dates written
+- ✅ lst_yields: all 5 dates written
+- 🔄 onchain_perps: 04-08 ✅ (19:50:24), 04-09 ✅ (19:54:43), 04-10 ✅ (19:58:57), 04-11 ✅ (20:03:25)
+  - 04-12 loaded 11897 rows at 20:03:25 → suppression ~20:07:43
+  - All 5 STALE_DATA suppressed (strict_fail policy) — expected, historical dates
+- Next: utilization (~25s with 10-event cap), rate_impact BATCH_SKIP, remaining groups
+
+**Slot routing done this tick**:
+
+- Slot-8 waves 35-44 ACKED (10 waves, footystats/elo/bucketed/odds_prob all at 96-100%)
+- Slot-10 ROUTED to hedge_ratio_snapshot Phase 2+3 (strategy-service writer wire-in + pnl-attribution reader)
+
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC **Next action on completion**: flip smoke_b issue checkboxes +
+cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED) **Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5
+done, no errors

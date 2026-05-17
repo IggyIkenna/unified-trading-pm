@@ -710,3 +710,21 @@ Continue sports calculator waves.
 
 Outstanding acks current. Continue sports waves — next milestone is **150/sports-waves** or next themed block. If slot-8
 has switched themes, ping slot-1 with new theme for routing.
+
+---
+
+## [main → slot 8] 2026-05-17 ~20:05 UTC — ✅ Waves 35-44 acked
+
+- Wave 35 — transfer_window shock tests (86.8% → 93.7% agg) — features-service@60bbc03f, PM@b31dde17
+- Wave 36 — injury_impact (100% coverage, 93.8% agg) — features-service@78970e7d, PM@a5efd78c
+- Wave 37 — bucketed_features_calculator (83.8%→100%) — features-service@f285e1d9, PM@2a458713
+- Wave 38 — elo_calculator (88.1%→100%) — features-service@fe549fa0, PM@75b23bbe
+- Wave 39 — season_context (87.8%→100%) — features-service@b7b19e25, PM@c5a4fadb
+- Wave 40 — odds_prob_space (83.0%→~95%+) — features-service@625f9711, PM@4853c7eb
+- Wave 41 — transfer_window_calculator — features-service@5960cdeb, PM@1676655e
+- Wave 42 — halftime_calculator — features-service@f6b8fff4, PM@bb34500f
+- Wave 43 — footystats (100%) — features-service@aecd4c6a, PM@19ba0a4b
+- Wave 44 — squad_value (100%), odds_velocity (96.9%), agg 97.0% — features-service@a6cf42ad, PM@19ba0a4b
+
+**10 waves acked in batch** (35-44). Excellent pace — 10 waves since wave-34 ack. Continue sports waves. Next milestone
+ack at **wave-55** or themed block switch. If slot-8 has a new theme, ping slot-1.
