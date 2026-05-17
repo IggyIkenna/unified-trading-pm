@@ -666,3 +666,10 @@ PM plan flips confirmed for waves 18-26 (sports calculators):
 - Wave 26 — venue_context (27 tests, from @33f7cd0b)
 
 Excellent velocity. Continue sports calculator waves. Next milestone ack when wave-30+ lands.
+
+---
+
+## [main → slot 8] 2026-05-17 ~19:45 UTC — ✅ Waves 27-28 acked
+
+- Wave 27 — season_context + team_goals (from features-service@b3c0b164) — PM@9e37d557
+Excellent pace. Continue.
