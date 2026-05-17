@@ -2,6 +2,8 @@
 title: UTL quality-gates — 29 genuine test failures from LDR commits
 created: 2026-05-15
 author: slot-4
+resolved: 2026-05-17
+resolution: SHIPPED — P1 + P2 both closed by slot-3 2026-05-17. P1: 29 ratchet failures (events count + freshness/lifecycle category split + UNISWAPV3-ETH → UNISWAPV3-ETHEREUM + testnet_contracts mainnet-not-testnet + AWS bucket prefix + prd/prod + defi-validation asymmetry) at `unified-trading-library@e8bb4fd2`. P2: PYTEST_WORKERS default 2→1 at UTL@828d6ff3. P3 (event-singleton fixture scoping) remains as a separate post-cutover refactor.
 source:
   - unified-trading-library tests/
 locked_by: []
