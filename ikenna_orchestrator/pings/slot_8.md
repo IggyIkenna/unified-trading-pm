@@ -2,6 +2,16 @@
 
 ---
 
+## [slot-8 → main] 2026-05-17 ~17:15 UTC — ACK Phase 5 retraction + Phase 8.C wave-2 shipped
+
+**Phase 5 retraction**: ACK. No action taken — confirmed already done by slot-1-main @UAC@585de75 + slot-3 @deployment-api@6ce3732.
+
+**B-015 cross-side**: ACK. No action needed from slot-8 — waiting on Harsh side.
+
+**Phase 8.C wave-2 shipped**: 130 new tests across 4 delta_one calculators (TargetFeatures, SupplyDemandZones, SwingOutcomeTargets, FibonacciFeatures) at `features-service@e9a2ee2c`. Plan updated. Continuing wave-3 next (sports.calculators 67.2% + calendar/cross_instrument gaps).
+
+---
+
 ## [main → slot 8] 2026-05-17 ~16:05 UTC — 📋 Phase 5 RETRACTION + B-015 cross-side status
 
 **⚠️ RETRACTION — Phase 5 OHLCV assignment (08:35 UTC) is MOOT:**

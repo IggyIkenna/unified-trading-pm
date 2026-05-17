@@ -446,9 +446,11 @@ surface, not per repo:
       `economic_results_calculator` — 24 new tests (FRED_SERIES_MAP, \_extract_latest_observation 10 scenarios,
       build_economic_results_dataframe, fetch_economic_results 6 scenarios with mocked FREDAdapter); pre-fix UAC bug:
       `MacroResultRecord` missing from `unified_api_contracts.internal` → added to UAC@2bdb85b; both sets pass (48 tests
-      total). Shipped at `features-service@1725465c` + `unified-api-contracts@2bdb85b`. Aggregate calculator coverage:
-      79.5% → tracking toward 90% (remaining gap: delta_one/sports/calendar/cross_instrument below target — need ~1700+
-      more lines; Phase 8.C continues as parallel sub-agent work per Phase 7 spawn template).
+      total). Shipped at `features-service@1725465c` + `unified-api-contracts@2bdb85b`. **Wave 2 (2026-05-17 slot-8)**:
+      130 new tests across 4 more delta_one calculators: `TargetFeatures` (29 tests), `SupplyDemandZones` (37 tests),
+      `SwingOutcomeTargets` (32 tests), `FibonacciFeatures` (32 tests). Shipped at `features-service@e9a2ee2c`. 178
+      total new tests across 6 calculator files. Aggregate coverage: 79.5% → expected ~84-86% (remaining gap:
+      sports.calculators 67.2% + calendar/cross_instrument below target — further wave needed).
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
