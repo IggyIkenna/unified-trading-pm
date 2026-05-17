@@ -191,9 +191,11 @@ UAC schemas already shipped.
       `--architecture` (default linux/amd64). Pre-flight checks: act installed + docker daemon running.
       Per-repo: logs to `/tmp/act-preflight-{repo}-{sha}.log`; reports PASS/FAIL + duration; overall exit code
       = 0 if all pass, 1 if any fail, 2 if pre-flight error. Shellcheck clean.
-- [ ] [AGENT] P0. **Per-workflow coverage test** — run `act-preflight.sh` against each repo's QG workflow. Document
-      per-repo coverage matrix: which workflows act fully covers, which need OIDC/WIF tweaks, which need
-      secret-injection workarounds. Output: `codex/05-infrastructure/act-preflight-coverage.md` (NEW).
+- [x] ✅ [AGENT] P0. **Per-workflow coverage test** — coverage matrix doc shipped 2026-05-17 (slot-8) at
+      `unified-trading-pm@74edbc74` → `codex/05-infrastructure/act-preflight-coverage.md`. 45 workspace workflows
+      classified across 4 statuses (FULL / PARTIAL / REMOTE-ONLY / N/A): 6 FULL · 6 PARTIAL · 28 REMOTE-ONLY · 5 N/A.
+      Per-service-repo baseline: `quality-gates.yml` + `python-quality-gates.yml` are FULL when `.venv` resolvable.
+      Doc carries `last_reviewed: 2026-05-17` + Runbook Execution-Owner 4 fields.
 - [ ] [AGENT] P1. **Optional pre-push git hook** (`.git/hooks/pre-push.sample`) — opt-in via
       `scripts/dev/install-act-precommit.sh`. Refuses push if act-preflight fails. Documented as opt-in, not mandatory.
 
