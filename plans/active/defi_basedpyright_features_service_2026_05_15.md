@@ -55,6 +55,11 @@ Same patterns as execution-service fix:
   - [x] ✅ sports/calculators/referee_features.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
   - [x] ✅ sports/calculators/halftime_calculator.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
   - [x] ✅ sports/calculators/advanced_stats_calculator.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
+  - [x] ✅ sports/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
+  - [x] ✅ delta_one/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
+  - [x] ✅ multi_timeframe/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
+  - [x] ✅ commodity/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
+  - [x] ✅ calendar/smoke.py 11→0 errors — features-service@f64cb47a (slot-8 wave 3 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
