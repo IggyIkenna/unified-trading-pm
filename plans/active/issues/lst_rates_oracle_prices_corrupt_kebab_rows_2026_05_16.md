@@ -1,7 +1,14 @@
 ---
-title: "lst-rates + oracle-prices canonical manifests contain CORRUPT legacy kebab rows (venue=data_type literal, chain empty) — 3,486 phantoms to delete"
+title:
+  "lst-rates + oracle-prices canonical manifests contain CORRUPT legacy kebab rows (venue=data_type literal, chain
+  empty) — 3,486 phantoms to delete"
 created: 2026-05-16
 author: ikenna-slot-2
+resolved: 2026-05-16
+resolution:
+  SHIPPED — Option D at `instruments-service@70849b6`
+  (`scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py`); applied 2026-05-16 20:00-20:01 UTC;
+  lst-rates 19,740→16,620 rows + oracle-prices 10,962→7,110 rows; post-apply groupby venue returns only real venues.
 source:
   - gs://lst-rates-central-element-323112/_index/availability_index.parquet
   - gs://oracle-prices-central-element-323112/_index/availability_index.parquet
@@ -14,15 +21,15 @@ locked_since: 2026-05-16
 
 ## What I found
 
-While investigating the systemic kebab/snake data_type drift across 6 DeFi canonical manifests
-(see archived `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`), a deeper drill-down
-into the kebab `venue` column for the 3 empty-chain buckets revealed **2 of them have garbage venue values**:
+While investigating the systemic kebab/snake data_type drift across 6 DeFi canonical manifests (see archived
+`plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`), a deeper drill-down into the kebab
+`venue` column for the 3 empty-chain buckets revealed **2 of them have garbage venue values**:
 
-| Bucket          | Kebab rows | Kebab venue distribution                  | Verdict                                                     |
-| --------------- | ---------- | ----------------------------------------- | ----------------------------------------------------------- |
-| `lst-rates`     | 1,560      | `venue=LST_RATES` (100%)                  | ❌ **CORRUPT** — venue literal == data_type literal (uppercased) |
-| `oracle-prices` | 1,926      | `venue=ORACLE_PRICES` (100%)              | ❌ **CORRUPT** — venue literal == data_type literal (uppercased) |
-| `perp-funding`  | 3,298      | `venue=HYPERLIQUID` (1,685), `GMX` (1,613) | ⚠️ partial — venue real, just chain empty                    |
+| Bucket          | Kebab rows | Kebab venue distribution                   | Verdict                                                          |
+| --------------- | ---------- | ------------------------------------------ | ---------------------------------------------------------------- |
+| `lst-rates`     | 1,560      | `venue=LST_RATES` (100%)                   | ❌ **CORRUPT** — venue literal == data_type literal (uppercased) |
+| `oracle-prices` | 1,926      | `venue=ORACLE_PRICES` (100%)               | ❌ **CORRUPT** — venue literal == data_type literal (uppercased) |
+| `perp-funding`  | 3,298      | `venue=HYPERLIQUID` (1,685), `GMX` (1,613) | ⚠️ partial — venue real, just chain empty                        |
 
 The 1,560 `lst-rates` and 1,926 `oracle-prices` kebab rows have the data_type LITERAL (uppercased + underscored) put
 into the `venue` column. `LST_RATES` and `ORACLE_PRICES` are not real venues — Lido / Ether.fi / Coinbase / RocketPool /
@@ -46,25 +53,25 @@ This prefix has NO matching parquet on disk (manually verified via `gsutil ls`).
 
 ## Why it matters
 
-1. **Manifest inflation**: 3,486 rows claim `captured` status that's unsalvageable. Any consumer counting "DeFi
-   manifest coverage %" inflates its numerator by these phantoms.
-2. **Slot 5 / slot 6 Solana carry-staked-basis correlation**: per `defi_master_2026_05_07.md` line 343 ("Solana LST
-   MTDS gap"), `lst-rates` is reported sparse — these 1,560 corrupt rows likely contribute to the apparent gap. The
-   `MARINADE` and `JITO` rows (real) cover Solana correctly; the `LST_RATES` rows do not. Deleting them shows the
-   true coverage state.
+1. **Manifest inflation**: 3,486 rows claim `captured` status that's unsalvageable. Any consumer counting "DeFi manifest
+   coverage %" inflates its numerator by these phantoms.
+2. **Slot 5 / slot 6 Solana carry-staked-basis correlation**: per `defi_master_2026_05_07.md` line 343 ("Solana LST MTDS
+   gap"), `lst-rates` is reported sparse — these 1,560 corrupt rows likely contribute to the apparent gap. The
+   `MARINADE` and `JITO` rows (real) cover Solana correctly; the `LST_RATES` rows do not. Deleting them shows the true
+   coverage state.
 3. **Option A vocab migration unsafe for these 2 buckets**: my `canonicalize_defi_manifest_data_types_2026_05_16.py`
-   (IS@b2726c6) would flip the data_type column kebab→snake but leave the corrupt venue/chain intact. That would
-   convert "kebab-with-garbage-venue" into "snake-with-garbage-venue" — same problem, different label. Do NOT run
-   `--apply` on `lst-rates` or `oracle-prices` until corruption resolved.
-4. **Root cause hypothesis**: these rows were written 2026-04-13T15:14:51 UTC by some legacy migration script that
-   put the data_type literal in the venue column (possibly a placeholder filling pattern). The 2026-04-13 timestamp
-   matches the lst-rates + oracle-prices kebab-form emission window exactly — so likely SAME migration as the
-   data_type drift, just compounded by venue/chain misalignment.
+   (IS@b2726c6) would flip the data_type column kebab→snake but leave the corrupt venue/chain intact. That would convert
+   "kebab-with-garbage-venue" into "snake-with-garbage-venue" — same problem, different label. Do NOT run `--apply` on
+   `lst-rates` or `oracle-prices` until corruption resolved.
+4. **Root cause hypothesis**: these rows were written 2026-04-13T15:14:51 UTC by some legacy migration script that put
+   the data_type literal in the venue column (possibly a placeholder filling pattern). The 2026-04-13 timestamp matches
+   the lst-rates + oracle-prices kebab-form emission window exactly — so likely SAME migration as the data_type drift,
+   just compounded by venue/chain misalignment.
 
 ## Why it matters NOT (caveat)
 
-These rows do NOT block May-23 cutover — the snake-form rows (16,620 in lst-rates, 7,110 in oracle-prices) carry
-the real coverage. Deleting the corrupt kebab rows just cleans the manifest signal; no production data is lost.
+These rows do NOT block May-23 cutover — the snake-form rows (16,620 in lst-rates, 7,110 in oracle-prices) carry the
+real coverage. Deleting the corrupt kebab rows just cleans the manifest signal; no production data is lost.
 
 ## Recommended decision
 
@@ -73,7 +80,8 @@ the real coverage. Deleting the corrupt kebab rows just cleans the manifest sign
 Write `instruments-service/scripts/reconcile_corrupt_kebab_rows_lst_rates_oracle_prices_2026_05_16.py` that:
 
 1. Reads each bucket's `_index/availability_index.parquet`
-2. Filters to rows where `data_type ∈ {"lst-rates", "oracle-prices"}` AND `venue ∈ {"LST_RATES", "ORACLE_PRICES"}` AND `chain == ""`
+2. Filters to rows where `data_type ∈ {"lst-rates", "oracle-prices"}` AND `venue ∈ {"LST_RATES", "ORACLE_PRICES"}` AND
+   `chain == ""`
 3. On `--dry-run` (default): reports per-bucket row count + sample 3 rows
 4. On `--apply --confirm`: drops these rows from the dataframe + writes back via v8-tolerant `df.to_parquet`
 5. Idempotent re-runs (no rows to drop → no-op)
@@ -100,14 +108,13 @@ ikenna-slot-2 — minor cleanup; can pair with Phase B operator session for voca
 ## Companion artifacts
 
 - Vocab-drift archived issue: `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`
-- Canonicalisation script: `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py` (IS@b2726c6)
+- Canonicalisation script: `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py`
+  (IS@b2726c6)
 - Phantom reconciler (template): `instruments-service/scripts/reconcile_lending_indices_phantom.py` (IS@88d48da)
 
-execution:
-  owner: "slot-4-ikenna (cross-slot pickup 2026-05-16); Option D shipped"
-  cadence: "one-shot"
-  verifier: "lst-rates groupby venue returns only real venues (LIDO/ETHERFI/COINBASE/etc.); oracle-prices groupby venue returns only real oracle venues"
-  last_executed: "2026-05-16 20:01 UTC — instruments-service@70849b6"
+execution: owner: "slot-4-ikenna (cross-slot pickup 2026-05-16); Option D shipped" cadence: "one-shot" verifier:
+"lst-rates groupby venue returns only real venues (LIDO/ETHERFI/COINBASE/etc.); oracle-prices groupby venue returns only
+real oracle venues" last_executed: "2026-05-16 20:01 UTC — instruments-service@70849b6"
 
 ## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup)
 
