@@ -667,6 +667,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-52**: 56 files cleared (slot-2 contribution: -56 files; spans 23 submodules incl.
   instruments/gcs_creator).
 
+- **Batch 53** (2026-05-17): `engine/backtest/actors/trade_measurement_verifier_actor.py` — `on_stop` 85L→8L via 5
+  helpers (\_check_fill_correctness + \_log_incorrect_fills + \_check_fill_timing + \_log_timing_results +
+  \_log_twap_intervals). Allowlist -1. basedpyright 0 errors. execution-service@325407ea3.
+
+  **Slot-2 cumulative across batches 3-53**: 57 files cleared (slot-2 contribution: -57 files; spans 24 submodules incl.
+  engine/backtest/actors/trade_measurement_verifier_actor).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
