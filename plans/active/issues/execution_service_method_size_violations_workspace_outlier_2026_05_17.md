@@ -960,6 +960,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-2 cumulative across batches 3-92**: 145 files cleared (slot-2 contribution: -145 files; spans 88 submodules).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 93 — arg compaction + docstring trim)**: shipped at execution-service@da1302447.
+  kraken_rest_adapter:place_order 54L→49L, config_builder:_execute_gcs_load 51L→49L,
+  book_builder:_load_local_book_data 51L→50L, backtest/preflight:check_all 51L→50L. 4 violations cleared.
+
+  **Slot-2 cumulative across batches 3-93**: 149 files cleared (slot-2 contribution: -149 files; spans 90 submodules).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
