@@ -642,6 +642,11 @@ surface, not per repo:
       weather_calculator 99.0%→100% — no-goal-events early return (225), no-goals-for-fixture
       continue (253), exception handler (216-221), precipitation_mm in batch (164).
       Aggregate: 98.9%→99.1%. Shipped `features-service@7b81fc56`.
+      **Wave 56 (2026-05-17 slot-8)**: player_lineup 97.9%→98.6% (line 130: all-NaN ages std→0.0;
+      lines 242+247 confirmed structurally unreachable defensive dead code) + poisson_xg
+      96.1%→100% (lines 232-233, 238-239: model_xg_col blend in batch; also fixed
+      fillna(ndarray) pandas 2.x incompatibility in source).
+      Aggregate: 99.1%→99.2%. Shipped `features-service@69149a2b`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
