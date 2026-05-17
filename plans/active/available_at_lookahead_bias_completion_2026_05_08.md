@@ -373,11 +373,11 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P1. **Generalize `migrate_sports_available_at_column.py` → `migrate_available_at_column.py`** with
-      `--asset-group {cefi|defi|tradfi|predictions|sports}`. Walks GCS parquets, for each missing `available_at`:
-      re-stamp per UAC `AVAILABILITY_AT_SEMANTICS` rule. Honest-empty parquets pass through (Phase 10 safeguard). Output
-      CSV audit + RECONCILER\_\* events. Default scan-only; `--apply` requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`
-      per workspace concurrency rule.
+- [x] ✅ [SCRIPT] P1. **Generalize `migrate_sports_available_at_column.py` → `migrate_available_at_column.py`**
+      — SHIPPED 2026-05-17: `instruments-service@8d89e6b`. Accepts `--asset-group` + `--data-type` → looks up
+      `AVAILABILITY_AT_SEMANTICS[(ag, dt)]` → derives `available_at` via D_tick (timestamp col for tick_timestamp
+      semantic) or D_blob (GCS blob update time fallback). Handles sports legacy rename (A), dedup (B), skip (C),
+      honest-empty 0-row parquets. Requires `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true` when `--apply` is set.
 
 - [ ] [SCRIPT] P1. **Per-asset-group reconciler runs**. After Phase 1 ships per asset_group, run the reconciler
       scan-mode → review CSV → apply-mode on a same-region GCE VM. Order: sports (already done) → tradfi → cefi → defi →
