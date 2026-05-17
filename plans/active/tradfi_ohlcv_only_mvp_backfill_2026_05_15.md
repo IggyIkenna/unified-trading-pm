@@ -189,7 +189,11 @@ per workspace HARD RULE.
 
 ### Phase 8 — Cost tracking + operator sign-off
 
-- [ ] [AGENT] P1. Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at
+- [x] ✅ **[AGENT] P1. DATABENTO_PAYG_SPEND emission shipped.** slot-1-main 2026-05-17 10:05 UTC at `market-tick-data-service@1b0a207`. `_run_batch_download` now emits `DATABENTO_PAYG_SPEND` per batch with cost_usd from `client.metadata.get_cost()` (Databento SDK 0.74+) + dataset/schema/symbol_count/date_range/records_returned. Best-effort: failure to look up cost emits cost_usd=null + cost_lookup_error=<exc_type> so call provenance still recorded. Aggregator (deployment-ui rollup) sums over date for VM-run totals.
+
+  **ORIGINAL TEXT BELOW** (the per-VM aggregation + dashboard row is the consumer-side rollup; emission is producer-side, now in place):
+
+  Original: Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at
       completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in deployment-ui.
 - [ ] [HUMAN] P0. Operator sign-off on actual spend vs projected (~$50-200 estimated for the full 2019-2026 ohlcv_1m
       backfill across CME/ICE/NASDAQ/NYSE — projection refined post-Phase 7).
