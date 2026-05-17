@@ -12,6 +12,7 @@ referenced_by:
 related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/04-architecture/shard-granularity-ssot.md
+last_reviewed: 2026-05-17
 ---
 
 # Deployment UI Drilldown Depth Audit

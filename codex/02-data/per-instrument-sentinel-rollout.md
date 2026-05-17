@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)

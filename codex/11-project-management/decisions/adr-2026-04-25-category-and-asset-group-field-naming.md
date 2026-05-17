@@ -2,6 +2,7 @@
 scope: [engineer, admin]
 status: accepted
 date: 2026-04-25
+last_reviewed: 2026-05-17
 ---
 
 # ADR: `category` vs `asset_group` in deployment APIs and shard naming

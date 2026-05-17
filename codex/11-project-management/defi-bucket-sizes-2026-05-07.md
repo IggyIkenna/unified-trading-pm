@@ -10,6 +10,7 @@ referenced_by:
 related:
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
   - codex/02-data/availability-manifest-and-data-status.md
+last_reviewed: 2026-05-17
 ---
 
 # DeFi Bucket Sizes (2026-05-07)

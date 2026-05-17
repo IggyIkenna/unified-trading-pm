@@ -13,6 +13,7 @@ related:
   - codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
   - codex/04-architecture/unified-cloud-interface.md
+last_reviewed: 2026-05-17
 ---
 
 # Cloud-Agnostic Script Pattern

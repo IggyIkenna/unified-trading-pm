@@ -6,6 +6,7 @@ sources:
   - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-12)
   - execution-service/execution_service/matching_engine/engine.py
   - unified_api_contracts/internal/architecture_v2/enums.py (BenchmarkFillMode, InstructionActionV2)
+last_reviewed: 2026-05-17
 ---
 
 # Matching Engine Assumptions

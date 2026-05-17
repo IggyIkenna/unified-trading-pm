@@ -8,6 +8,7 @@ sources:
   - plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived)
   - plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)
+last_reviewed: 2026-05-17
 ---
 
 # Firebase project split — compute on prod, Firebase on staging

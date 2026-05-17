@@ -11,6 +11,7 @@ referenced_by:
 related:
   - codex/05-infrastructure/cloud-agnostic-script-pattern.md
   - codex/04-architecture/interface-credential-convention.md
+last_reviewed: 2026-05-17
 ---
 
 # Secrets Migration Tracking

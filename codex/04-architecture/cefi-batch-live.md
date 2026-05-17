@@ -2,6 +2,7 @@
 scope: [engineer, admin]
 created: 2026-05-14
 plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
+last_reviewed: 2026-05-17
 ---
 
 # CeFi Batch/Live Architecture

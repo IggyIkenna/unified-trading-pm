@@ -3,6 +3,7 @@ title: ML Lifecycle — Model Registry, Inference, and Deployment
 updated: 2026-05-15
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2
 closes: GAP-7, GAP-8
+last_reviewed: 2026-05-17
 ---
 
 # ML Lifecycle — Canonical Decisions

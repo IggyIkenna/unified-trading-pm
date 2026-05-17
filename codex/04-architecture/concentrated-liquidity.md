@@ -1,5 +1,6 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-05-17
 ---
 
 # Concentrated liquidity — tick math + per-implementation addendum

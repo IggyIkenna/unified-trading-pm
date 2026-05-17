@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # Fireblocks integration spec — June-1 paste-ready implementation

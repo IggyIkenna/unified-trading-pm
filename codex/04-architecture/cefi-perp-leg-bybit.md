@@ -5,6 +5,7 @@ author: ikenna-slot-2
 related_plans:
   - plans/active/defi_recursive_borrow_archetypes_2026_05_10.md Phase 10
   - plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg)
+last_reviewed: 2026-05-17
 ---
 
 # CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)

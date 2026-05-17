@@ -12,6 +12,7 @@ related:
   - codex/05-infrastructure/vm-tarball-deployment.md
   - codex/05-infrastructure/launcher-script-ssot.md
   - codex/05-infrastructure/cloud-agnostic-script-pattern.md
+last_reviewed: 2026-05-17
 ---
 
 # Cloud-Agnostic Build Lineage

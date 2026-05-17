@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin, strategist]
+last_reviewed: 2026-05-17
 ---
 
 # Research-service ↔ DART integration

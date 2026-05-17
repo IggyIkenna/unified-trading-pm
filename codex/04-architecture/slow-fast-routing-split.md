@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # Slow-Fast Routing Split (Architecture View)

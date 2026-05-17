@@ -3,6 +3,7 @@ title: Chunk-Safe Manifest Migrations
 status: canonical
 last_updated: 2026-04-21
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # Chunk-Safe Manifest Migrations

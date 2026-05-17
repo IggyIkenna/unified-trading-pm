@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # Backtest Groups (A / B / C)

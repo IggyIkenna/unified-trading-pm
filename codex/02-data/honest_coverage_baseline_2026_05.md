@@ -11,6 +11,7 @@ related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
   - codex/02-data/expected-absence-backfill-runbook.md
+last_reviewed: 2026-05-17
 ---
 
 # Honest-Coverage Baseline (2026-05)

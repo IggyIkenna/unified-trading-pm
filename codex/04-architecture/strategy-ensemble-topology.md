@@ -5,6 +5,7 @@ author: ikenna
 sources:
   - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)
   - plans/epics/strategy_and_dart_master_2026_05_07.md Phase 1.9
+last_reviewed: 2026-05-17
 ---
 
 # Strategy Ensemble VM Topology

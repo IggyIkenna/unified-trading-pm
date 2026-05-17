@@ -7,6 +7,7 @@ execution:
     each section's "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed
     approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.
   last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
+last_reviewed: 2026-05-17
 ---
 
 # Custody onboarding operator-action checklist

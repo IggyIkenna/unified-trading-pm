@@ -5,6 +5,7 @@ execution:
   cadence: "one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork"
   verifier: "execution-service `AAVEConnector.connect()` + `eth_getCode` preflight"
   last_executed: "2026-05-15 (Sepolia)"
+last_reviewed: 2026-05-17
 ---
 
 # RecursiveLeverageReceiver — Deploy Runbook

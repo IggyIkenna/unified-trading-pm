@@ -1,5 +1,6 @@
 ---
 scope: [admin, engineer]
+last_reviewed: 2026-05-17
 ---
 
 # AWS migration cost snapshot — 2026-05-07

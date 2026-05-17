@@ -9,6 +9,7 @@ related_plans:
 related_codex:
   - codex/05-infrastructure/per-tab-worktrees.md
   - ../../cursor-configs/CLAUDE.md
+last_reviewed: 2026-05-17
 ---
 
 # Plan-aware merge resolution — slot master reconciliation protocol

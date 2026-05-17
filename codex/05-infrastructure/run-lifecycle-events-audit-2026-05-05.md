@@ -1,5 +1,6 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-05-17
 ---
 
 # Run-Lifecycle Events Audit — 2026-05-05

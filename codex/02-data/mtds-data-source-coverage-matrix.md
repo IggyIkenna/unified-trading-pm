@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 ---
 
 # Market-Tick-Data-Service (MTDS) — Coverage Matrix SSOT

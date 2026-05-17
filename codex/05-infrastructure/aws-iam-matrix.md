@@ -1,5 +1,6 @@
 ---
 scope: [admin, operator]
+last_reviewed: 2026-05-17
 ---
 
 # AWS IAM matrix — per-service role + policy SSOT

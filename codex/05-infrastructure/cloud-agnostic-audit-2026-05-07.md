@@ -11,6 +11,7 @@ referenced_by:
 related:
   - codex/05-infrastructure/cloud-agnostic-script-pattern.md
   - codex/05-infrastructure/cloud-agnostic-build-lineage.md
+last_reviewed: 2026-05-17
 ---
 
 # Cloud-Agnostic Audit (2026-05-07)
