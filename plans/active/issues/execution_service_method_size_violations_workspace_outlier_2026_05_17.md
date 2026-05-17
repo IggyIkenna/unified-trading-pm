@@ -503,6 +503,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-29**: 33 files cleared (slot-2 contribution: -33 files; spans 12
    submodules now incl. algorithms/registry).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 30 — trade_execution adapters continues)**: bitfinex_native.py shipped
+   at execution-service@6bbc5b927 (parse_order_response 81L→25L via \_extract_order_fields (walks the v2
+   notification wrapper at idx 4 + ORDER_ARRAY at idx 11/7/6/13, tolerates short/missing arrays with pending
+   fallback) + \_classify_bitfinex_status (free-text status → canonical via in-string contains:
+   executed&@→filled, partially→open, cancel→cancelled) + \_compute_filled_qty (|orig|-|curr| amount-remaining
+   convention) + \_parse_positive_decimal (suppresses Bitfinex 0-price echoes)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-30**: 34 files cleared (slot-2 contribution: -34 files; spans 12 submodules).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
