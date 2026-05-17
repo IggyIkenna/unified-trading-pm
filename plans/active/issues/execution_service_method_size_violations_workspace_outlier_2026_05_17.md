@@ -711,6 +711,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-58**: 62 files cleared (slot-2 contribution: -62 files; spans 29 submodules incl.
   data/file_discovery).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 59 — cli/backtest)**: shipped at execution-service@8efc8eb15. main 141L→28L
+  via 5 helpers (\_setup_args_overrides + \_load_config_and_detect_domain + \_run_date_skip_check + \_check_deps +
+  \_dispatch_domain_handler). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-59**: 63 files cleared (slot-2 contribution: -63 files; spans 30 submodules incl.
+  cli/backtest).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
