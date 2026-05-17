@@ -956,3 +956,13 @@ basedpyright clean across all 2 commits.
   _to_ts_units helper (ns/μs factor selection; collapses mirror-pair into single filter).
 
 331 remaining. basedpyright clean.
+
+
+[2026-05-17 /loop tick 20] slot-7 — execution-service Phase B (+2, 48/377 cleared):
+
+* `execution-service@eef74cc3f` — POVDynamicExecAlgorithm._parse_pov_params 55L→21L via
+  _require_unit_interval helper (3 duplicate 0<x≤1 check blocks → helper calls).
+* `execution-service@005c4bff8` — BatchAuctionEngine.run_auction 56L→23L via _settle_intent helper
+  (per-intent solver race + winner-vs-no-viable-solution dispatch).
+
+329 remaining. basedpyright clean. Cumulative session ship now ~98 methods.
