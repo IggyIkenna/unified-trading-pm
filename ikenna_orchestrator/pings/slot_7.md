@@ -1194,3 +1194,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   (rar_rows + leg_id_hint + DustRouterResult construction) + 6-line docstring trim.
 
 281 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 40] slot-7 — execution-service Phase B (+3, 99/377 cleared):
+
+- `execution-service@d8230705c` — BaseDataLoader.__init__ 68L→41L via _resolve_bucket_domain static
+  (30-line if/elif/else → 2 lines); IntentDecomposer._decompose_deleverage 69L→8L via _build_deleverage_steps
+  module-level (all 5 ExecutionStep constructors extracted) + docstring trim; LiveExecutionHandler._get_defi_adapter
+  69L→33L + _build_defi_adapter static helper (connector build block) + docstring trim + 3 comment removal.
+
+278 remaining. basedpyright clean.
