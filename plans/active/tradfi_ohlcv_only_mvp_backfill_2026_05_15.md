@@ -279,7 +279,9 @@ per workspace HARD RULE.
       per-data-source empty-rule asymmetry" pointing to this plan + the post-cutover successor; references the Phase 4
       contract-pin tests at `unified-api-contracts@8aa36c1`. `is_in_tradfi_tick_window` reference — note that empty
       windows = OHLCV-only mode (intentional).
-- [ ] No new codex stub required — this plan is a scope narrowing within existing matrix, not a new pattern.
+- [x] ✅ No new codex stub required — this plan is a scope narrowing within existing matrix, not a new pattern.
+      Confirmed 2026-05-17: matrix already covers ohlcv_1m as primary tradfi data_type; the OHLCV-only path is a
+      defaulted-empty `TRADFI_TICK_DATA_WINDOWS` reconfiguration, not new architecture.
 
 ## Slot reassignment ask (slot 1 main pings to follow)
 
