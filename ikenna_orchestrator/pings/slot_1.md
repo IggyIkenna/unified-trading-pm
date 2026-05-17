@@ -2110,19 +2110,22 @@ response yet.
 
 ## [slot 6] 2026-05-17 ~19:10 UTC — Smoke B Bug 1+2 SHIPPED — requesting re-run
 
-**FROM**: slot-6 (features-onchain DeFi)
-**TO**: slot-1 main
+**FROM**: slot-6 (features-onchain DeFi) **TO**: slot-1 main
 
 **Smoke B fixes landed** — features-service@30e449d7 (pushed to live-defi-rollout):
 
-1. **Bug 1 fixed** — `load_derivative_ticker` now casts Int64 epoch-ns timestamps to `Datetime('ns','UTC')` per-shard on read. Parallel agent (64682456) also added a post-concat cast as safety net. Both coexist cleanly.
+1. **Bug 1 fixed** — `load_derivative_ticker` now casts Int64 epoch-ns timestamps to `Datetime('ns','UTC')` per-shard on
+   read. Parallel agent (64682456) also added a post-concat cast as safety net. Both coexist cleanly.
 
-2. **Bug 2 fixed** — Root cause: `emit_aave_utilization_events` iterated ALL 134,426 rows with synchronous `log_event` (PubSub) per row — no subprocess at all. Fixed with `_MAX_UTILIZATION_EVENTS = 500` cap + `.head(500)`. Parallel agent (64682456) also fixed GCS async write timeout in `feature_writer.py`. Both fixes complement each other.
+2. **Bug 2 fixed** — Root cause: `emit_aave_utilization_events` iterated ALL 134,426 rows with synchronous `log_event`
+   (PubSub) per row — no subprocess at all. Fixed with `_MAX_UTILIZATION_EVENTS = 500` cap + `.head(500)`. Parallel
+   agent (64682456) also fixed GCS async write timeout in `feature_writer.py`. Both fixes complement each other.
 
-**Issue doc**: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md` — Bug 1+2 checkboxes flipped (PM@eaba9cb1).
+**Issue doc**: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md` — Bug 1+2 checkboxes flipped
+(PM@eaba9cb1).
 
-**ACTION REQUESTED**: Smoke B re-run for window 2026-04-08→2026-04-12 on `features-onchain` DeFi pipeline. Issue doc checkbox:
-`- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — slot-1 main launches VM`
+**ACTION REQUESTED**: Smoke B re-run for window 2026-04-08→2026-04-12 on `features-onchain` DeFi pipeline. Issue doc
+checkbox: `- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — slot-1 main launches VM`
 
 Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-skip and utilization stall.
 
@@ -2130,10 +2133,10 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 
 ## [slot 1 main] 2026-05-17 ~19:15 UTC — tick-47: slot-6 Smoke B fixes ✅ acked; re-run launching
 
-**Slot-6 ack**: Both Bug 1 (@30e449d7) + parallel-agent Bug 2 assist (@64682456) confirmed. Bug 1+2 checkboxes flipped in issue doc. Smoke B re-run launching now per slot-6 request.
+**Slot-6 ack**: Both Bug 1 (@30e449d7) + parallel-agent Bug 2 assist (@64682456) confirmed. Bug 1+2 checkboxes flipped
+in issue doc. Smoke B re-run launching now per slot-6 request.
 
-**Slot-7**: tick-44 acked (110/377 = 29%). 267 remaining.
-**Slot-8**: wave-9 acked (614 tests total across 19 files).
+**Slot-7**: tick-44 acked (110/377 = 29%). 267 remaining. **Slot-8**: wave-9 acked (614 tests total across 19 files).
 **Operator queue**: 9 items (unchanged — operator AFK).
 
 ---
@@ -2145,15 +2148,19 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 - `7a9f5f84` — **wave-10** sports calculators: promoted_team + league + meta_features (71 tests)
 - `d4782beb` — **wave-11** sports calculators: injury_impact + h2h_calculator (63 tests)
 - `5f198ee7` — **wave-12** sports calculators: elo_calculator (34 tests)
-- `378da3ce` — **Phase 2 items 1-4** SHIPPED: deploy-missing auto-launch endpoint (deployment-api@950ffc9, POST /api/data-status/deploy-missing-launch, DeployMissingRateLimiter 30/op/hr; deployment-service@41822ba dm- prefix watchdog)
-- `58b07da0` — **Phase 3 COMPLETE**: MTDS reconnect — 3.1/3.2/3.3/3.4/3.5a-f all connectors SHIPPED (MTDS@5f8448b); Phase 15 7-day smoke remains
+- `378da3ce` — **Phase 2 items 1-4** SHIPPED: deploy-missing auto-launch endpoint (deployment-api@950ffc9, POST
+  /api/data-status/deploy-missing-launch, DeployMissingRateLimiter 30/op/hr; deployment-service@41822ba dm- prefix
+  watchdog)
+- `58b07da0` — **Phase 3 COMPLETE**: MTDS reconnect — 3.1/3.2/3.3/3.4/3.5a-f all connectors SHIPPED (MTDS@5f8448b);
+  Phase 15 7-day smoke remains
 
 **Sports calculators**: wave-12 elo_calculator lands — running total 648+ tests across 22+ calculator files.
 
-**Smoke B re-run**: `features-onchain-defi-20260517-190230` RUNNING. Expected runtime ~2h. Will ping harsh-side when STOPPED_CLEAN.
+**Smoke B re-run**: `features-onchain-defi-20260517-190230` RUNNING. Expected runtime ~2h. Will ping harsh-side when
+STOPPED_CLEAN.
 
-**Slot-7**: tick-44 still latest (110/377 = 29%). Continue Phase B.
-**Operator queue**: 9 items (unchanged — operator AFK).
+**Slot-7**: tick-44 still latest (110/377 = 29%). Continue Phase B. **Operator queue**: 9 items (unchanged — operator
+AFK).
 
 ---
 
@@ -2165,13 +2172,13 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 - `57cf95c2` — **wave-13** sports calculators: odds_calculator (25 tests, features-service@b9ae0538)
 - `c55e152a` — **wave-15** sports calculators: odds_prob_space (43 tests, features-service@fd6a23b7)
 - `752c709b` — **Phase 3.1+3.2** SHIPPED (deployment-service@2f6b8b5): tarball SHA pinning + boot-time manifest
-  validation in `create-code-tarballs.sh` + `setup-data-pipeline-vm.sh`. Phase 3.3 (async cloud-build trigger)
-  remains open.
+  validation in `create-code-tarballs.sh` + `setup-data-pipeline-vm.sh`. Phase 3.3 (async cloud-build trigger) remains
+  open.
 
 **Sports calculators**: wave-15 lands — 691+ tests across 25+ calculator files.
 
-**Smoke B re-run**: stale-tarball v1 (`190230`) killed + tarball rebuilt with fixes @30e449d7+@64682456.
-New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
+**Smoke B re-run**: stale-tarball v1 (`190230`) killed + tarball rebuilt with fixes @30e449d7+@64682456. New VM
+`features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
 
 **Slot-7**: still at tick-44 (110/377). **Operator queue**: 9 items (AFK).
 
@@ -2183,8 +2190,10 @@ New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
 
 - `a3d92fdd` — **wave-16** sports calculators: european_fatigue_calculator (39 tests, features-service@6c5ce10e)
 - `d265b2d0` — **wave-17** sports calculators: bucketed_features_calculator (28 tests, features-service@f0888568)
-- `38dfd049` — **Phase 3.3 SHIPPED** (deployment-service@646ef02): async cloud-build trigger on tarball write. **Phase 3 COMPLETE** (all 3 items done).
-- `29a83ffb` — **slot-2 batch-63** (execution-service@32846d337): api/manual_instruction_api 9 methods cleared + 11 helper extractions.
+- `38dfd049` — **Phase 3.3 SHIPPED** (deployment-service@646ef02): async cloud-build trigger on tarball write. **Phase 3
+  COMPLETE** (all 3 items done).
+- `29a83ffb` — **slot-2 batch-63** (execution-service@32846d337): api/manual_instruction_api 9 methods cleared + 11
+  helper extractions.
 
 **Sports calculators**: waves 1→17 complete — 762+ tests across 27+ calculator files.
 
@@ -2201,24 +2210,31 @@ New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
 **CRITICAL CORRECTION**: VM `191412` had the STALE tarball (uploaded 08:02 UTC — predates fixes).
 
 **Evidence from `191412` run.log** at 18:17:51 UTC:
+
 ```
 ERROR ❌ Error in load_derivative_ticker: type Int64 is incompatible with expected type Datetime('ns', 'UTC')
 WARNING No onchain_perps data available
 INFO Processing: utilization
 INFO Loaded 134426 rate rows from MTDS  ← about to stall for 60 min again
 ```
-Bug 1 (perp_funding Int64 cast) was STILL PRESENT. `lst_yields` was clean (comes before perp_funding), but `onchain_perps` was silently skipped and `utilization` was loading 134k rows → same stall incoming.
+
+Bug 1 (perp_funding Int64 cast) was STILL PRESENT. `lst_yields` was clean (comes before perp_funding), but
+`onchain_perps` was silently skipped and `utilization` was loading 134k rows → same stall incoming.
 
 **Actions taken this tick**:
+
 1. ✅ Pulled features-service to `origin/live-defi-rollout` (now includes `30e449d7` + `64682456` + wave-16).
-2. ✅ Rebuilt `features-service-code.tar.gz` manually (2.10MB, uploaded at 2026-05-17T18:18:53Z — includes both Smoke B fixes).
+2. ✅ Rebuilt `features-service-code.tar.gz` manually (2.10MB, uploaded at 2026-05-17T18:18:53Z — includes both Smoke B
+   fixes).
 3. ✅ Killed VM `191412` (avoided ~47 min of wasted compute + stall).
 4. ✅ Launched VM `features-onchain-defi-20260517-192145` with the corrected tarball (18:21 UTC).
 
-**NEW Smoke B VM**: `features-onchain-defi-20260517-192145` — **RUNNING** (created 18:21 UTC, asia-northeast1-c, e2-standard-8).
-**Expected**: perp_funding cast fix visible in run.log (~18:30 UTC when it reaches onchain_perps processing). Utilization should complete without stall (300s GCS write timeout + async fix).
+**NEW Smoke B VM**: `features-onchain-defi-20260517-192145` — **RUNNING** (created 18:21 UTC, asia-northeast1-c,
+e2-standard-8). **Expected**: perp_funding cast fix visible in run.log (~18:30 UTC when it reaches onchain_perps
+processing). Utilization should complete without stall (300s GCS write timeout + async fix).
 
 **Smoke B monitor**:
+
 ```
 gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-192145/run.log"
 ```
@@ -2229,24 +2245,29 @@ gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/featu
 
 ## [slot 1 main] 2026-05-17 ~18:30 UTC — tick-50: 🚨 Bug 3 found+fixed; Smoke B VM 193018 relaunched
 
-**Bug 3 (new — critical startup crash)**: `NameError: name 'Callable' is not defined` in `features_service/cli/_shim.py:36`.
+**Bug 3 (new — critical startup crash)**: `NameError: name 'Callable' is not defined` in
+`features_service/cli/_shim.py:36`.
+
 - Root cause: basedpyright reportAny sweep (wave fixes) moved `Callable` import into `TYPE_CHECKING` block.
   `cast(Callable[..., object], fn)` evaluates `Callable` at runtime — fails because `TYPE_CHECKING=False` at runtime.
 - Fix: moved `from collections.abc import Callable` out of `TYPE_CHECKING` block into unconditional imports.
 - Shipped: `features-service@818d8ecc`.
 
-**VMs killed in this tick**: `192529` (DEPLOYMENT_FAILED with Bug 3, exit_code=1 after 17s).
-**VMs killed in prior tick**: `190230` + `191412` (stale tarball — perp_funding + util bugs unfixed).
+**VMs killed in this tick**: `192529` (DEPLOYMENT_FAILED with Bug 3, exit_code=1 after 17s). **VMs killed in prior
+tick**: `190230` + `191412` (stale tarball — perp_funding + util bugs unfixed).
 
 **Full tarball history (features-service-code.tar.gz)**:
+
 - 08:02:05Z — original (vault_share_price only; perp_funding/util/Callable bugs all present)
 - 18:18:53Z — rebuilt with perp_funding+util fixes (features-service@30e449d7+@64682456); MISSING Callable fix
 - **18:30:09Z** — rebuilt with ALL 3 fixes: @30e449d7 + @64682456 + @818d8ecc (Callable). ← current
 
 **NEW Smoke B VM**: `features-onchain-defi-20260517-193018` — **RUNNING** (launched 18:30 UTC, asia-northeast1-c).
-Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-193018/run.log"`
+Monitor:
+`gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-193018/run.log"`
 
-**Expected validation**: run.log shows DEPLOYMENT_STARTED → lending_rates ✅ → lst_yields ✅ → onchain_perps (no Int64 error) → utilization (no stall, completes <5 min) → DEPLOYMENT_COMPLETED.
+**Expected validation**: run.log shows DEPLOYMENT_STARTED → lending_rates ✅ → lst_yields ✅ → onchain_perps (no Int64
+error) → utilization (no stall, completes <5 min) → DEPLOYMENT_COMPLETED.
 
 **harsh-slot-9**: still CYCLE-CLOSE. Paper backtest still blocked. Will notify when 193018 passes.
 
@@ -2255,13 +2276,16 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 ## [slot 1 main] 2026-05-17 ~18:36 UTC — tick-51: VM 193018 ✅ onchain_perps clean (Bug 1 CONFIRMED fixed)
 
 **VM `193018` run.log — 100 lines at 18:36 UTC. Currently in `onchain_perps` phase:**
+
 - `lst_yields` ✅: wrote 13-15 rows/day × 5 days to `features-onchain-defi-prd-central-element-323112`.
 - `onchain_perps` ✅: "Loaded **11,835** derivative ticker rows from MTDS" — **NO Int64 error** (Bug 1 CONFIRMED FIXED).
 - Not yet reached: utilization (Bug 2 fix validation pending).
 
-**Bug 1 confirmation**: perp_funding `Int64→Datetime` cast fix working. Prior runs loaded 0 rows with error → skipped. Now loading 11,835 rows cleanly.
+**Bug 1 confirmation**: perp_funding `Int64→Datetime` cast fix working. Prior runs loaded 0 rows with error → skipped.
+Now loading 11,835 rows cleanly.
 
 **New remote commits** (2, pulled):
+
 - `58be5047` — waves 24-25 sports calculators: squad_value + weather (features-service@501cf218).
 - `44f6a74e` — waves 22-23 sports calculators: replacement_model@f7cf28bf + xg_decomposition@6e73340e.
 
@@ -2276,15 +2300,18 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 ## [slot 1 main] 2026-05-17 ~19:35 UTC — tick-52: Smoke B VM 193018 confirmed clean; pings batch-acked
 
 **Smoke B VM `193018` — status RUNNING, all 3 bugs confirmed in tarball**:
-- Bug 1 (perp_funding Int64 cast): ✅ `onchain_perps` started at 18:33:42 UTC with NO Int64 error — `Loaded 11835 derivative ticker rows` (cast is working).
+
+- Bug 1 (perp_funding Int64 cast): ✅ `onchain_perps` started at 18:33:42 UTC with NO Int64 error —
+  `Loaded 11835 derivative ticker rows` (cast is working).
 - Bug 2 (utilization stall): ⏳ PENDING — awaiting `utilization` processing block to complete without stall.
-- Bug 3 (_shim.py NameError): ✅ VM started and ran past startup without crash — `818d8ecc` fix confirmed in tarball.
+- Bug 3 (\_shim.py NameError): ✅ VM started and ran past startup without crash — `818d8ecc` fix confirmed in tarball.
 - `lending_rates` ✅ wrote 134k/116k/116k/101k/90k rows for 04-08/09/10/11/12.
 - `lst_yields` ✅ wrote 13/13/13/15/15 rows for all 5 dates.
 - `onchain_perps` started at 18:33:42 UTC (last log at 18:34:03Z).
 
 **Actions this tick**:
-- Rebased PM + features-service onto LDR (9 commits ahead including waves 15-26 + _shim.py fix `818d8ecc`).
+
+- Rebased PM + features-service onto LDR (9 commits ahead including waves 15-26 + \_shim.py fix `818d8ecc`).
 - Smoke B issue doc updated: VM `193018` + Bug 3 entry added.
 - Batch-acked: slot-7 tick-44 (110/377), slot-8 waves 18-26.
 - slot_3 credential request (odds-api-live-ws): noted, operator-gated, no action needed now.
@@ -2292,6 +2319,7 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 - slot_11 cbETH+Kraken deferral: noted — slot-11 handles mechanical master plan row updates.
 
 **Pending**:
+
 - Wait for VM `193018` DEPLOYMENT_COMPLETED — then flip Smoke B re-run ✅ + notify harsh-side to launch paper backtest.
 - Bug 2 (utilization) confirmation still needed from run.log.
 
@@ -2299,12 +2327,40 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 
 ## [slot 1 main] 2026-05-17 ~18:41 UTC — tick-53: VM 193018 progressing; onchain_perps 04-09; util pending
 
-**VM `193018` run.log (103 lines, 18:38 UTC)**: Loaded 11,864 perp rows for 04-09, NO Int64 error (Bug 1 clean). STALE_DATA suppression on 04-08 = emission policy (correct). Log growing normally — no stall, no crash.
+**VM `193018` run.log (103 lines, 18:38 UTC)**: Loaded 11,864 perp rows for 04-09, NO Int64 error (Bug 1 clean).
+STALE_DATA suppression on 04-08 = emission policy (correct). Log growing normally — no stall, no crash.
 
 **utilization phase**: NOT YET STARTED. onchain_perps processing 04-08→04-12 sequentially at ~4.5 min/day.
 
 **New commits** (5 pulled): waves 26-28 sports calculators; slot-2 batch-65; master plan inventory refresh.
 
-**_agent_pings.md**: correctly shows VM 193018 + "hold paper backtest" (harsh-side acked by parallel tick-52 at 19:35 UTC).
+**\_agent_pings.md**: correctly shows VM 193018 + "hold paper backtest" (harsh-side acked by parallel tick-52 at 19:35
+UTC).
 
 **Status**: 🟡 Smoke B IN-PROGRESS — Bug 2 (util stall fix) validation still pending.
+
+## [slot 1 main] 2026-05-17 ~19:07 UTC — tick-54: 🐛 Bug 4 fixed; VM 5 launched (200717)
+
+**Bug 4 FOUND + FIXED** in `features_service/onchain/app/core/feature_writer.py`:
+
+- Root cause: `_add_timestamp_out` didn't handle `Int64` timestamps from `pl.from_pandas(pandas_df)`
+- `aave_rate_impact_calculator.py` builds `timestamp = int(epoch_μs)` → Polars `Int64` after `from_pandas`
+- Polars raises `+ not allowed on i64 and duration[μs]` when adding duration to Int64
+- Fix: add `elif ts_dtype in (pl.Int64, pl.Int32):` branch using `pl.from_epoch(..., time_unit="us")`
+- Pushed: `features-service@ae90d1fd`
+
+**VM 193018 run summary** (DEPLOYMENT_FAILED 19:00:34 UTC, exit_code=1):
+
+- ✅ lending_rates: wrote data all 5 days
+- ✅ lst_yields: wrote data all 5 days
+- ✅ onchain_perps: all 5 days STALE_DATA suppressed (Bug 1 confirmed fixed — no Int64 error)
+- ✅ utilization: all 5 days STALE_DATA suppressed in ~25s/day (Bug 2 confirmed fixed — was 60+ min stall)
+- ✅ risk_params/rewards/flash_loan_availability/health_factor/liquidation_events: wrote data all 5 days
+- ❌ rate_impact (11th group): `InvalidOperationError: + not allowed on i64 and duration[μs]` → DEPLOYMENT_FAILED
+
+**VM 5 launched**: `features-onchain-defi-20260517-200717` RUNNING asia-northeast1-c
+
+- Tarball rebuilt: 19:06:20 UTC (2.19 MB) — all 4 bugs fixed
+- All 11 feature groups expected to complete
+
+**Status**: 🟡 Smoke B IN-PROGRESS — VM 200717 running, Bug 4 fixed

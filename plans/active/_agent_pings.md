@@ -2854,11 +2854,13 @@ phase. VM loaded 134,426 rate rows from MTDS successfully, then hung waiting on 
 **Not completed**: onchain_perps ⚠️ (dtype skip, non-blocking), utilization ❌ (stalled, no rows written).
 
 **Recommended action** (operator + harsh-side):
+
 1. Investigate `features-service` utilization subprocess hang — likely a web3/RPC call without timeout, or
    multiprocessing deadlock in the utilization calculator.
 2. Fix the hang (add timeout to subprocess, or debug the utilization pool-scan RPC call).
-3. Re-run: `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date
-   2026-04-12 --launch-mode full` after fix is deployed.
+3. Re-run:
+   `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date 2026-04-12 --launch-mode full`
+   after fix is deployed.
 
 **Smoke B status**: ❌ BLOCKED-BUG. Paper backtest cannot proceed until utilization runs clean.
 
@@ -2867,16 +2869,17 @@ phase. VM loaded 134,426 rate rows from MTDS successfully, then hung waiting on 
 **VM**: `features-onchain-defi-20260517-171908` — DEPLOYMENT_FAILED (exit_code=124, stall watchdog).
 
 **Two bugs found**:
-1. `perp_funding` schema drift: `Int64` timestamp vs expected `Datetime('ns','UTC')` — affects 2026-04-10/11/12.
-   Silent skip (shard-isolation catches it), but `onchain_perps` features empty for those dates.
-2. `utilization` subprocess stall: after loading 134k rate_indices rows for 2026-04-08, child process hung >1h.
-   Watchdog killed the VM after 3601s log silence.
 
-**Blocker**: Paper backtest (harsh-side) blocked until Smoke B re-run passes.
-Issue doc: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
+1. `perp_funding` schema drift: `Int64` timestamp vs expected `Datetime('ns','UTC')` — affects 2026-04-10/11/12. Silent
+   skip (shard-isolation catches it), but `onchain_perps` features empty for those dates.
+2. `utilization` subprocess stall: after loading 134k rate_indices rows for 2026-04-08, child process hung >1h. Watchdog
+   killed the VM after 3601s log silence.
 
-**Assigned to ikenna-slot6**: perp_funding timestamp cast fix + utilization stall investigation.
-Expected fix cycle: <1 day (if Bug 1 only → cast on read is a 5-line change; Bug 2 needs investigation).
+**Blocker**: Paper backtest (harsh-side) blocked until Smoke B re-run passes. Issue doc:
+`plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
+
+**Assigned to ikenna-slot6**: perp_funding timestamp cast fix + utilization stall investigation. Expected fix cycle: <1
+day (if Bug 1 only → cast on read is a 5-line change; Bug 2 needs investigation).
 
 **Harsh-side**: no action needed now. Wait for Smoke B re-run green confirmation before launching paper backtest.
 Ikenna-main will ping when Smoke B passes.
@@ -2888,16 +2891,22 @@ Ikenna-main will ping when Smoke B passes.
 **Status update**: Both bugs fixed and Smoke B re-run launched.
 
 **Bug 1 (perp_funding schema drift)** — slot-6 shipped `features-service@30e449d7`:
-- `load_derivative_ticker`: per-shard cast Int64→Datetime before `vstack`. Also covered by post-concat cast at @64682456.
+
+- `load_derivative_ticker`: per-shard cast Int64→Datetime before `vstack`. Also covered by post-concat cast at
+  @64682456.
 
 **Bug 2 (utilization stall)** — slot-6 shipped `features-service@30e449d7`:
-- Root cause: `emit_aave_utilization_events` did synchronous PubSub `log_event` per-row on 134k rows (no subprocess, no RPC hang — pure I/O saturation). Fix: cap at `_MAX_UTILIZATION_EVENTS=500` + `.head(500)`. GCS async write timeout also added at @64682456.
+
+- Root cause: `emit_aave_utilization_events` did synchronous PubSub `log_event` per-row on 134k rows (no subprocess, no
+  RPC hang — pure I/O saturation). Fix: cap at `_MAX_UTILIZATION_EVENTS=500` + `.head(500)`. GCS async write timeout
+  also added at @64682456.
 
 **New Smoke B VM**: `features-onchain-defi-20260517-191412` — RUNNING, tarball rebuilt with both fixes.
 
 **Expected timeline**: ~2h runtime. Ikenna-main will ping harsh-side when `DEPLOYMENT_COMPLETED`.
 
 **Harsh-side**: hold paper backtest launch. Monitor VM via:
+
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-191412/run.log" | tail -20
 ```
@@ -2915,7 +2924,31 @@ gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onch
 **Bug 2 (utilization stall)**: still running, awaiting `utilization` processing block (was stalling for >3600s before;
 fix caps `emit_aave_utilization_events` at 500 rows). Expected to complete normally.
 
-**Bug 3 (_shim.py NameError)**: confirmed fixed — VM started and ran past CLI shim without crash.
+**Bug 3 (\_shim.py NameError)**: confirmed fixed — VM started and ran past CLI shim without crash.
 
 **Harsh-side**: paper backtest launch still on hold until `DEPLOYMENT_COMPLETED`. Ikenna-main will cross-side ping when
 VM exits cleanly.
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 ~19:07 UTC — Smoke B DEPLOYMENT_FAILED (Bug 4); VM 5 launched
+
+**VM 193018 FAILED at 19:00:34 UTC** — `rate_impact` feature group crashed (11th of 11 groups, 8/11 succeeded):
+
+- Error: `InvalidOperationError: + not allowed on i64 and duration[μs]`
+- Root cause: `_add_timestamp_out` in `feature_writer.py` didn't handle `Int64` timestamps (from `pl.from_pandas`)
+- Fix: `features-service@ae90d1fd` — `elif ts_dtype in (pl.Int64, pl.Int32)` branch →
+  `pl.from_epoch(..., time_unit="us")`
+- Tarball rebuilt: 19:06:20 UTC (2.19 MB)
+
+**Smoke B run tally for VM 193018 (all bugs except Bug 4 CONFIRMED FIXED)**:
+
+- Bug 1 (Int64 perp_funding) ✅ CONFIRMED FIXED
+- Bug 2 (utilization I/O stall) ✅ CONFIRMED FIXED — 134k rows processed in ~25s (was 60+ min stall)
+- Bug 3 (\_shim.py NameError) ✅ CONFIRMED FIXED
+- Bug 4 (rate_impact Int64 timestamp) — discovered this session, fixed @ae90d1fd
+
+**VM 5 launched**: `features-onchain-defi-20260517-200717` RUNNING
+
+- All 11 feature groups should complete this time
+- **Harsh-side**: paper backtest STILL on hold until `DEPLOYMENT_COMPLETED` from VM 200717
