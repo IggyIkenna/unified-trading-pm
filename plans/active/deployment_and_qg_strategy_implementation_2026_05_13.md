@@ -405,8 +405,14 @@ surface, not per repo:
 
 **Phase 8.D — Ratchet** (0.5 cal-AI-day):
 
-- [ ] [AGENT] P0. New QG STEP `coverage_targets_enforcement` reads coverage_targets.yaml + per-repo local; fails QG if
-      any surface below target. Ratchet starting 2026-05-18.
+- [x] ✅ [AGENT] P0. New QG STEP `coverage_targets_enforcement` reads coverage_targets.yaml + per-repo local; fails QG
+      if any surface below target. Ratchet starting 2026-05-18. **Shipped 2026-05-17 (slot-8)** at
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_coverage_targets.py` walks each repo's
+      coverage.xml + computes aggregate per surface via fnmatch glob patterns + compares vs target_pct.
+      Per-repo overrides via `scripts/quality_gates/coverage_targets_local.yaml` enable subset filtering.
+      Currently wired warn-only in PM `quality-gates.sh`; baseline scan shows 9 failures across 8 repos
+      (worst: market-data-processing-service service_startup at 36.1%). Flip warn-only → error mode
+      2026-05-18 per plan deadline.
 
 **Phase 8.E — Daily snapshot** (0.5 cal-AI-day):
 

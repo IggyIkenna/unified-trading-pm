@@ -253,6 +253,19 @@ if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Coverage targets enforcement (Phase 8.D of deployment_and_qg_strategy) — warn-only ──
+# SSOT: scripts/quality_gates/coverage_targets.yaml + per-repo coverage_targets_local.yaml.
+# Walks each repo's coverage.xml + computes aggregate per surface; compares vs target_pct.
+# Currently warn-only — surface failures must be triaged per-repo before flipping to error mode.
+# Per plan: ratchet starting 2026-05-18 (post-warn-only window).
+COV_TARGETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_coverage_targets.py"
+if [ -f "$COV_TARGETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Coverage-targets enforcement (warn-only)..."
+    python3 "$COV_TARGETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warn-only >/dev/null \
+        && log_success "Coverage-targets check completed (warn-only)" \
+        || log_warn "Coverage-targets checker errored (non-blocking)"
+fi
+
 # ── Post-gates: Architectural ratchets (Group C — ST-19 + PB-19 + UI-18) — baselined ratchet ──
 # SSOT: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C.
 # Rules in scripts/quality_gates/architectural_ratchets.yaml:
