@@ -35,3 +35,20 @@ processing 2 of 11 feature groups for 1 of 5 dates.
       continue on empty_or_failed, or document the expected behavior.
 - [ ] [VERIFY] P1. (after slot-2 fixes) Re-launch VM via consolidated launcher and verify 11 groups × 5 dates all
       process.
+
+## Cross-references (added by slot-1-main 2026-05-17 02:10 UTC)
+
+This focused 2-bug doc captures the highest-priority slot-2 work for B-015 unblock. Slot-1-main's consolidated
+escalation at `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` § "CONSOLIDATED ESCALATION" adds
+3 more compounding issues that surfaced in VM 6 + VM 7 runs:
+
+3. **macro_sentiment also fails 95%-NaN write_gate** (separate from LookaheadBias — depends on which feature path
+   runs first). 3 derived columns hit NaN cap.
+4. **Workflow iterates 1 day per VM invocation** despite `--end-date` arg (independent of the early-exit bug).
+5. **Days 17-19 lending-indices initially looked phantom-skipped** — turned out to be misdiagnosis: data exists at
+   the NEW canonical path (`raw_tick_data/by_date/`), my one-shot phantom-flip incorrectly probed only the LEGACY
+   path. Corrected at slot-1-main 01:56 UTC — 39 rows unflipped. Lending-indices B-015 window is now fully populated.
+
+**Net infra state**: lending-indices bucket has real data for ALL 5 days (2026-04-15..19) at the new canonical path.
+slot-2's fixes for the 2 calculator bugs here + the 3 additional issues in the consolidated escalation will unblock
+harsh-slot-9's Phase 2 paper-trade rerun.
