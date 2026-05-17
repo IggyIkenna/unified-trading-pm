@@ -1185,3 +1185,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   66L→27L via _parse_deribit_open_order_entry method + 6-line docstring trim.
 
 284 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 39] slot-7 — execution-service Phase B (+3, 96/377 cleared):
+
+- `execution-service@cd567f1a3` — GridConfigGenerator.generate_grid_configs 67L→44L via _make_grid_config
+  method (for-loop body → 1 call); UniswapConnector.swap_exact_input 67L→47L via 18-line docstring trim
+  to 1 line + 2 comment line removal; DustRouterRunner.maybe_realise 68L→47L via _build_dust_result method
+  (rar_rows + leg_id_hint + DustRouterResult construction) + 6-line docstring trim.
+
+281 remaining. basedpyright clean.
