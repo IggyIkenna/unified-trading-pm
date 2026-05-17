@@ -1,3 +1,14 @@
+---
+title: SIT (System Integration Tests) Runbook — ops variant
+scope: [engineer, admin]
+last_reviewed: 2026-05-17
+execution:
+  owner: "workspace-platform (CI maintainers)"
+  cadence: "ad-hoc — when SIT stuck or staging locked"
+  verifier: "gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm"
+  last_executed: "documented procedure; force-unlock exercised periodically per CI fail-recovery"
+---
+
 # SIT (System Integration Tests) Runbook
 
 ## Force-Unlock Staging

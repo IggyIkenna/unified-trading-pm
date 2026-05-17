@@ -1,7 +1,4 @@
-violation_count: 3
+violation_count: 0
 rule: runbook-execution-owner-ssot
 source: "CLAUDE.md \xA7 'Runbook Execution-Owner SSOT (HARD RULE)'"
-baseline_files:
-- codex/14-customer-journeys/credentials/rotation-runbook.md
-- plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
-- plans/ops/sit-runbook.md
+baseline_files: []

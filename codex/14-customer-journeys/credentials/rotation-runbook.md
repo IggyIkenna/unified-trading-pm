@@ -1,5 +1,11 @@
 ---
 scope: [admin, operator]
+last_reviewed: 2026-05-17
+execution:
+  owner: "operator (ikenna) — per-source credential rotation"
+  cadence: "per-source (see body table — typically 90d)"
+  verifier: "gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence"
+  last_executed: "per-source rotation log appended in body; cross-ref codex/05-infrastructure/rotation-runbook.md"
 ---
 
 # Per-source credential rotation runbook — sports, prediction, DeFi data

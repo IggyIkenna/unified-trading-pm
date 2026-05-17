@@ -4,6 +4,12 @@ type: plan
 status: active
 created: 2026-05-12
 deadline: 2026-08-31
+last_reviewed: 2026-05-17
+execution:
+  owner: "alerting-platform + DART operability owner"
+  cadence: "post-cutover backlog drain (open until 2026-08-31)"
+  verifier: "groups A-G success-criteria all flipped per plan body"
+  last_executed: "Groups A/C/E/F shipped 2026-05-14; D/G remain DEFERRED to UI slot"
 horizon: 3-month post-cutover backlog
 companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
