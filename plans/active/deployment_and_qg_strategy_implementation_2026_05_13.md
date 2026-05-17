@@ -609,6 +609,9 @@ surface, not per repo:
       **Wave 46 (2026-05-17 slot-8)**: xg_decomposition 94.5%→100% — NaN-val return-0.0
       branches in 6 helper funcs (104,138,155,172,189,206) + batch exception handler 437-442.
       50 tests. Shipped `features-service@4fe4584a`.
+      **Wave 47 (2026-05-17 slot-8)**: odds_calculator 92.5%→100% — pinnacle diff (162),
+      sharp-money (175-177), asian_handicap_line (191), secondary market odds (201-203,205),
+      tier-consensus early return (266). 30 tests. Shipped `features-service@a5f035a8`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
