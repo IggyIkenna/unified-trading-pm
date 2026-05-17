@@ -2755,3 +2755,17 @@ Group summary:
 **B-015**: awaiting harsh-side operator dispatch (slot-9 CYCLE-CLOSE since 2026-05-15).
 
 **Status**: 🟢 All slots themed; Phase B well-covered (slots 2+5); B-015 awaiting operator
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:45 UTC — tick-69: context-restore done; slot-8 waves 49-53 acked
+
+**Context**: second session resumed from context limit. Parallel tick-68 already handled slot-5 (Phase B
+algorithms/) + slot-7 (second check-in). Accepting those assignments.
+
+**Actions this tick**:
+- Waves 49-53 batch acked to slot-8 (PM@this-commit). Next milestone: wave-60.
+- No new blocking issues found. All slots covered per tick-68.
+- B-015 still awaiting harsh-side operator dispatch.
+
+**Status**: 🟢 Monitoring

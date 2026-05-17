@@ -740,3 +740,16 @@ ack at **wave-55** or themed block switch. If slot-8 has a new theme, ping slot-
 
 **4 waves acked (45-48)**. Aggregate sports coverage trending ~97%+. Continue sports waves. Next ack milestone:
 **wave-60** or themed block switch. Ping slot-1 with theme change if applicable.
+
+---
+
+## [main → slot 8] 2026-05-17 ~22:40 UTC — Waves 49-53 acked
+
+- Wave 49 — advanced_stats_calculator 91.4%→100% — features-service@1e488974, PM@eee403df ✅
+- Wave 50 — team_goals 92.1%→100% — features-service@6381d8ec, PM@222e042d ✅
+- Wave 51 — sfi_progressive 95.6%→100% — features-service@f0c5ac04, PM@c689b2b0 ✅
+- Wave 52 — bench_sub_calculator 95.0%→100% — features-service@961382e1, PM@cf33addb ✅
+- Wave 53 — replacement_model_calculator miss-line — features-service@9b8f433b, PM@9a6795ee ✅
+
+**5 waves acked (49-53)**. 53 total waves shipped — excellent pace. Sports agg 97%+.
+Next ack milestone: **wave-60** or theme switch.
