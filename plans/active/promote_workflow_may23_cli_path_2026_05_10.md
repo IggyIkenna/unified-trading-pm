@@ -253,14 +253,13 @@ paper/live deployment exists.
     missing dep — NOT a wire-in failure). Wire-ins (afd0c16 + ab6bfd2) VERIFIED. Filing separate issue for
     nautilus_trader missing dep: `plans/active/issues/strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14.md`.
 
-- [ ] [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** once
-      [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) Phase A.2 ships
-      (`VM_PREFIX_TO_BUCKET` dict-shape migration from `dict[str, str | None]` → `dict[str, VmPrefixSpec]` + 9 reserved
-      live/exp prefixes). Convert `"strategy-paper-": None` →
-      `"strategy-paper-": VmPrefixSpec(bucket=None,     lifecycle_class=LONG_LIVED_LIVE)` and same for `strategy-live-`.
-      Tag `LONG_LIVED_LIVE` per the lifecycle taxonomy (continuous strategy cluster — not EPHEMERAL).
-      **DEFERRED-AFTER-LIFECYCLE-A2** — sequencing per top-of-file banner. Successor gate: lifecycle Phase A.2 commit
-      lands + `VmPrefixSpec` type importable from `deployment-service/scripts/vm/vm_zombie_watchdog.py`.
+- [x] ✅ [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** — shipped
+      2026-05-17 (slot-8) at `deployment-service@5ab69b9`. Successor gate cleared: lifecycle Phase A.2 had
+      already landed (`VM_PREFIX_TO_BUCKET` is `dict[str, VmPrefixSpec | None]` already). Upgraded both
+      `"strategy-paper-"` and `"strategy-live-"` from raw `None` to
+      `VmPrefixSpec(bucket=None, lifecycle_class=LifecycleClass.LONG_LIVED_LIVE)`. Smoke-import validated: total
+      prefixes 147 unchanged. deployment-ui lifecycle tab queries can now filter strategy VMs by
+      lifecycle_class.
 
 - [x] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
       `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:
