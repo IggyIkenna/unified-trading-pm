@@ -2531,3 +2531,10 @@ territory (features-service onchain calculator): (1) `macro_sentiment` raises `L
 fetch returns current data, not point-in-time; (2) early-exit after `lending_rates / 2026-04-15 / 0 rows` (only 2 of 11
 feature groups attempted for only 1 of 5 dates). harsh-slot-9 paper-trade still gates on features-onchain producing
 parquets for B-015 window.
+
+[2026-05-17 01:54 UTC] ikenna-slot-3 → ikenna-main — 🟡 **Duplicate-work self-correction**: I shipped
+`deployment-service@b3b4691` (re-added features-backfill to NODEPS allowlist) without first reading the consolidated
+escalation. Slot-1-main had ALREADY shipped + REVERTED that hack at 9d37deb → a6f746f because it would route
+features-service itself to --no-deps and break its runtime deps. Reverted at `deployment-service@26f8343`. The proper
+SERVICE_TARBALLS fix at `a6f746f` is the canonical state. Apologies for the noise — should have pulled the full LDR ping
+context before shipping. Setup script back at slot-1-main's a6f746f canonical state.
