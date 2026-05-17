@@ -552,6 +552,11 @@ surface, not per repo:
       \_compute_squad_stability, \_shock_starter_turnover_stability, compute_transfer_window_batch; all 38
       TRANSFER_WINDOW_COLUMNS verified). Also fixed pd.Index[int] runtime bug (not subscriptable in pandas 2.3.3).
       Shipped at `features-service@38c27ff6`. 1274 calculator tests across 45 files.
+      **Wave 33 (2026-05-17 slot-8)**: 52 new tests for `referee_features` (_card_rate_band,
+      compute_referee_context, _default_referee_features, compute_referee_features_for_referee,
+      compute_referee_features_from_events, compute_referee_features, compute_referee_features_batch;
+      all 20 REFEREE_FEATURE_COLUMNS verified including timing/bias/VAR/strictness/consistency).
+      Shipped at `features-service@394430e1`. 1326 calculator tests across 46 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
