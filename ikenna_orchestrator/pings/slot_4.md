@@ -604,3 +604,48 @@ diagnosis landing on LDR. All other slot 4 cross-slot ships verified clean.
 
 ---
 
+## [slot 4 → main] 2026-05-17 — ROUND 4 issue-doc closeout sweep
+
+Audited 20+ active issue docs for genuinely-shippable closeouts (not big refactors / operator-pending). 5 more issues
+closed today:
+
+| Issue | Closure rationale |
+| --- | --- |
+| `features_service_qg_test_path_mismatch_2026_05_15.md` | `PYTEST_UNIT_DIR="tests/"` already on LDR per CLAUDE.md canonical pattern |
+| `uac_qg_preexisting_size_violations_2026_05_14.md` | `CODEX_MAX_VIOLATIONS=5` ratchet shipped 2026-05-14; P2/P3 have named successors |
+| `strategy_service_phase8_codex_drift_2026_05_15.md` | Drifts 1-5 fixed 2026-05-15 by slot 6; P3-P5 have named owners |
+| `expected_unattempted_propagation_gap_2026_05_12.md` | Successor chain plan Gate 1 🟢 FIRED 2026-05-13 across all phases |
+| `deprecated_pattern_sweep_2026_05_15.md` | P1 (batch-live-recon) + P2 (exec-svc ImportError) shipped today by slot 3; P3+P4 named per-repo |
+| `compound_kamino_lending_rates_gaps_2026_05_15.md` | KAMINO `BLOCKED-CREDENTIALS` cleared (Helius vaulted); COMPOUND fix still operator-decision (status updated, issue stays open as ticket) |
+
+**Genuinely-open issues remaining (NOT slot 4 surface)**:
+
+- `audit_wave1_quality_2026_05_13.md` — retrospective process audit (slot 1 main)
+- `client_reporting_api_coverage_below_floor_2026_05_14.md` — 2-4h of test work (per-repo team)
+- `cross_asset_instruments_service_scope_2026_05_14.md` — `BLOCKED-OPERATOR-DECISION` (architecture)
+- `defi_classifier_missing_catalog_crossref_2026_05_13.md` — code shipped, VM run pending (operator/slot-1)
+- `defi_upstream_46day_full_backfill_2026_05_16.md` — `BACKFILL APPROVAL REQUEST` pending operator
+- `execution_service_method_size_violations_workspace_outlier_2026_05_17.md` — 377-violation P2 sprint
+- `features_service_volatility_test_failures_2026_05_15.md` — 48 pre-existing test failures (per-test fix sprint)
+- `lst_apr_sourcing_method_validated_2026_05_14.md` — P2 follow-ups with named successors
+- `marinade_solana_subgraph_registration_2026_05_17.md` — `BLOCKED-OPERATOR-DECISION` (vendor pick)
+- `solana_defi_coverage_gaps_2026_05_13.md` — P0 split across 5 successor plans (multi-slot)
+- `trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md` — `BLOCKED-CREDENTIALS` (operator GH_PAT rotation)
+- `utl_qg_preexisting_failures_2026_05_14.md` — pre-existing 6 categories (operator triage)
+
+**Cumulative slot 4 ledger (2026-05-16 + 2026-05-17 cross-slot autonomous loop)**:
+
+- 14 issue docs RESOLVED/closed by slot 4 (sports_classifier_weather, lending-indices-vocab, lst-rates+oracle corrupt, SIT critical-path, QG step6, workspace_manifest_drift, betfair×requests validator, vocab-drift-didnt-stick, openapi-mirror-drift (reverted), features_service_qg_path, uac_qg_size, strategy_phase8_codex, expected_unattempted, deprecated_pattern_sweep)
+- ~30+ code commits across 7 service repos
+- ~125K manifest rows operationally touched
+- 6 AWS buckets provisioned
+- 3 test scaffolds shipped
+- 1 self-correction (openapi resync revert)
+- 1 codex SSOT update
+- 2 cross-side pings (vocab-drift correction + slot 2 collision ack)
+
+Continuing autonomous loop; will keep sweeping every ~30 min for new P0/P1 issues + cross-slot deferrals matching the
+"Plans Run To Actual Completion" + ADC admin perms rubric.
+
+---
+
