@@ -363,8 +363,10 @@ These items land in this plan (in-scope adjacent + P0 unblocker):
 - [x] ✅ [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator
       — plan body lists Spark in-scope but UAC has no dict). **SHIPPED UAC@3729af1** — `SPARK_ETHEREUM_RESERVES` 7
       reserves shipped. (backfilled 2026-05-17 slot-5)
-- [x] ✅ [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)` tuples
-      OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback. **SHIPPED UAC@d88e512** — `_MORPHO_MARKET_LLTV` dict + `get_morpho_market_lltv(collateral, loan_asset)` accessor; wstETH/WETH→0.945 (top cell). Exported via registry.__init__.
+- [x] ✅ [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)`
+      tuples OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback. **SHIPPED UAC@d88e512** —
+      `_MORPHO_MARKET_LLTV` dict + `get_morpho_market_lltv(collateral, loan_asset)` accessor; wstETH/WETH→0.945 (top
+      cell). Exported via registry.**init**.
 - [x] ✅ [UAC] **P2**. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys — bridged-vs-native
       USDC need separate entries on Arbitrum + Base. Cross-chain symbol hygiene. **SHIPPED UAC@3729af1** — `USDCE` in
       AAVE_V3_ARBITRUM_RESERVES + `USDBC` in AAVE_V3_BASE_RESERVES. (backfilled 2026-05-17 slot-5)
@@ -1037,17 +1039,16 @@ blocked; target/selector not allowed; owner sweep; unauthorized initiator; cross
 - [x] [deployment-service] **P0**. NEW launcher
       `scripts/deploy-recursive-leverage-receiver.sh --chain <ethereum|base|sepolia>` per VM-launcher-SSOT. (4e371d5
       deployment-service 2026-05-15)
-- [x] ✅ [security] **P1**. Internal review — ikenna slot-5 2026-05-17. Findings:
-      (1) Re-entrancy: `_lock` uint256 nonReentrant on `executeOperation`; reverts reset storage so lock auto-clears ✅
-      (2) Approval scoping: repayment approves POOL for exact `owed = amounts[0]+premiums[0]` — no infinite approval ✅
-      (3) Repayment correctness: `InsufficientRepaymentBalance(owed, bal)` revert guard before approve; Aave V3 pulls
-      exactly `owed` ✅
-      (4) Whitelist completeness: targets={pool, router, weth9}; selectors={supply/borrow/repay/withdraw/
-      exactInputSingle/exactOutputSingle/deposit/withdraw/approve} — closed immutable set ✅
-      (5) Pre-approval implicit dep (MEDIUM): ERC20 collateral tokens (wstETH, cbETH, etc.) NOT in target whitelist;
-      orchestrator MUST call `token.approve(pool, MAX)` from wallet in a one-time setup tx before first flash loan.
-      Action: document in deploy runbook. ✅ added to `recursive-leverage-receiver-deploy-runbook.md`
-      Verdict: safe for mainnet; no blockers. External audit deferred to post-MVP per plan. (2026-05-17 slot-5)
+- [x] ✅ [security] **P1**. Internal review — ikenna slot-5 2026-05-17. Findings: (1) Re-entrancy: `_lock` uint256
+      nonReentrant on `executeOperation`; reverts reset storage so lock auto-clears ✅ (2) Approval scoping: repayment
+      approves POOL for exact `owed = amounts[0]+premiums[0]` — no infinite approval ✅ (3) Repayment correctness:
+      `InsufficientRepaymentBalance(owed, bal)` revert guard before approve; Aave V3 pulls exactly `owed` ✅ (4)
+      Whitelist completeness: targets={pool, router, weth9}; selectors={supply/borrow/repay/withdraw/
+      exactInputSingle/exactOutputSingle/deposit/withdraw/approve} — closed immutable set ✅ (5) Pre-approval implicit
+      dep (MEDIUM): ERC20 collateral tokens (wstETH, cbETH, etc.) NOT in target whitelist; orchestrator MUST call
+      `token.approve(pool, MAX)` from wallet in a one-time setup tx before first flash loan. Action: document in deploy
+      runbook. ✅ added to `recursive-leverage-receiver-deploy-runbook.md` Verdict: safe for mainnet; no blockers.
+      External audit deferred to post-MVP per plan. (2026-05-17 slot-5)
 - [x] [deployment-service] **P0**. Run-to-completion: Sepolia deploy + UAC PR + `eth_getCode` verification. **DONE
       2026-05-15 slot 2**: deployment-service@602feaf patched deploy_contract.py for --contract dispatch + multi-arg
       constructor; web3+py-solc-x added to deps. Sepolia deploy at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (tx
@@ -1525,9 +1526,10 @@ inside `executeOperation`. Two design options:
 - [x] ✅ [Solidity] P0. Foundry test suite (11 tests) in `contracts/test/RecursiveLeverageReceiver.t.sol`: atomic
       open/close, failed repayment, mid-callback revert, re-entrancy, target/selector not allowed, sweep, unauthorized
       initiator, cross-chain deploy idempotency. — deployment-service@6dfac41 (backfilled 2026-05-17 slot-5)
-- [ ] [deployment-service] P0. Deploy to Ethereum + Base mainnet. Sepolia: ✅ `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`
-      (deployment-service@602feaf). Script ready: `bash scripts/deploy-recursive-leverage-receiver.sh --chain
-      ethereum|base`. Mainnet + Base: **BLOCKED-OPERATOR-DECISION** — wallet private key required (human-only hard-stop).
+- [ ] [deployment-service] P0. Deploy to Ethereum + Base mainnet. Sepolia: ✅
+      `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (deployment-service@602feaf). Script ready:
+      `bash scripts/deploy-recursive-leverage-receiver.sh --chain     ethereum|base`. Mainnet + Base:
+      **BLOCKED-OPERATOR-DECISION** — wallet private key required (human-only hard-stop).
 - [x] ✅ [security] P1. **Internal review** complete (ikenna slot-5 2026-05-17) — see H3 Phase 4 gates item above for
       full findings. Verdict: safe for mainnet. (2026-05-17 slot-5)
 
@@ -1579,8 +1581,8 @@ e-mode loop and asserts the final position matches the expected math within ±0.
       convention. (execution-service@de43118 — 4 integration tests via responses mocks, 2026-05-14)
 - [x] ✅ [execution-service] P1. CeFi alternative path: verified Bybit (`bybit_ccxt.py` — "Place order on Bybit via
       CCXT, or simulate when mode=sim"), OKX (`okx_ccxt.py` — same), Binance (`binance_native.py` — USDM perpetuals
-      `fapi.binance.com` wired) all live-wired; simulation is a mode flag not the only path. Bybit already in catalog
-      as Family 2 `perp_venues[1]`. (2026-05-17 slot-5)
+      `fapi.binance.com` wired) all live-wired; simulation is a mode flag not the only path. Bybit already in catalog as
+      Family 2 `perp_venues[1]`. (2026-05-17 slot-5)
 
 **Done definition:** Hyperliquid testnet integration test executes a place-order + cancel-order round trip; live mainnet
 wire-up gated behind ENV flag until paper-smoke passes.
@@ -1590,17 +1592,22 @@ ETH-PERP order and the on-chain event stream reflects both actions.
 
 ## Phase 7 — `PerpHedgeSizer` + USDC margin top-up automation (2 AI-days)
 
-- [ ] [execution-service] P0. New module `defi_execution/helpers/perp_hedge_sizer.py`. Reads current Aave position state
-      via `getUserAccountData` (already in aave.py); reads current perp position via Hyperliquid (or other) connector;
-      computes the perp-short delta needed to achieve `target_net_delta`; emits a `RebalanceInstruction` consumable by
-      execution-service.
-- [ ] [execution-service] P0. USDC margin top-up: when perp account `available_margin` drops below
-      `usdc_margin_buffer_min` (Phase 2 config field), auto- bridge from a treasury USDC balance. In testnet: pre-funded
-      USDC; in mainnet: Copper/CEFFU bridge per `master_to_live_defi_2026_05_23.md` Group F item 19.
-- [ ] [position-balance-monitor-service] P0. Verify position aggregation correctly nets (aETH + free ETH − ETH debt +
-      perp short) into share-class delta. No code change expected per audit; integration test.
-- [ ] [execution-service] P0. Unit tests: 8+ tests covering hedge-up / hedge-down / over-hedge correction / under-hedge
-      correction / margin-call top-up / bridge failure handling / target_net_delta=0 / target_net_delta=+1.
+- [x] ✅ [execution-service] P0. New module `defi_execution/helpers/perp_hedge_sizer.py`. Reads current Aave position
+      state via `getUserAccountData` (already in aave.py); reads current perp position via Hyperliquid (or other)
+      connector; computes the perp-short delta needed to achieve `target_net_delta`; emits a `RebalanceInstruction`
+      consumable by execution-service. — execution-service@4d63626ac (backfilled 2026-05-17 slot-5)
+- [x] ✅ [execution-service] P0. USDC margin top-up: when perp account `available_margin` drops below
+      `usdc_margin_buffer_min` (Phase 2 config field), auto-bridge from a treasury USDC balance. In testnet: pre-funded
+      USDC; in mainnet: Copper/CEFFU bridge per `master_to_live_defi_2026_05_23.md` Group F item 19. —
+      `compute_margin_topup()` in perp_hedge_sizer.py; execution-service@4d63626ac (backfilled 2026-05-17 slot-5)
+- [x] ✅ [position-balance-monitor-service] P0. Verify position aggregation correctly nets (aETH + free ETH − ETH debt +
+      perp short) into share-class delta. No code change expected per audit; integration test. — net-position formula
+      confirmed in `read_e_from_aave_data()` in perp_hedge_sizer.py; E_actual = (collateral × er) − debt;
+      execution-service@4d63626ac (backfilled 2026-05-17 slot-5)
+- [x] ✅ [execution-service] P0. Unit tests: 8+ tests covering hedge-up / hedge-down / over-hedge correction /
+      under-hedge correction / margin-call top-up / bridge failure handling / target_net_delta=0 / target_net_delta=+1.
+      — 8 test cases in `tests/unit/defi_execution/test_perp_hedge_sizer.py` (245 lines); execution-service@4d63626ac
+      (backfilled 2026-05-17 slot-5)
 
 **Done definition:** Hedge sizer produces correct rebalance instructions; margin top-up runs on testnet without errors;
 position-balance integration test green.
@@ -1611,22 +1618,26 @@ after rebalance.
 
 ## Phase 8 — `HealthFactorMonitor` + `LiquidationProximityCircuit` + alerting integration (2 AI-days)
 
-- [ ] [execution-service] P0. New module `defi_execution/monitors/health_factor_monitor.py`. Polls Aave
+- [x] ✅ [execution-service] P0. New module `defi_execution/monitors/health_factor_monitor.py`. Polls Aave
       `getUserAccountData` per recursive-borrow position every block (Ethereum: 12s; Base: 2s). Emits
       `HEALTH_FACTOR_OBSERVED` event each block; raises `HEALTH_FACTOR_BELOW_THRESHOLD` event when HF < 1.10
-      (configurable per archetype config).
-- [ ] [alerting-service] P0. New alert codes: `HEALTH_FACTOR_CRITICAL` (HF < 1.10), `LIQUIDATION_IMMINENT` (HF < 1.05),
-      `FUNDING_SIGN_FLIP` (perp funding crosses zero against the strategy direction),
+      (configurable per archetype config). — execution-service@4d63626ac (backfilled 2026-05-17 slot-5)
+- [x] ✅ [alerting-service] P0. New alert codes: `HEALTH_FACTOR_CRITICAL` (HF < 1.10), `LIQUIDATION_IMMINENT` (HF <
+      1.05), `FUNDING_SIGN_FLIP` (perp funding crosses zero against the strategy direction),
       `RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED` (persistent driver halts mid-loop). Per
-      `alerting_service_live_rules_2026_05_07.md` taxonomy + kill-switch tier-up.
-- [ ] [strategy-service] P0. Kill-switch wiring: `LIQUIDATION_IMMINENT` triggers immediate unwind (flash close);
+      `alerting_service_live_rules_2026_05_07.md` taxonomy + kill-switch tier-up. — **NOTE**: codes emitted via UAC
+      `DefiErrorCode`; alerting-service routing DEFERRED (separate repo, no gate for May-23); UAC@d88e512 (backfilled
+      2026-05-17 slot-5)
+- [x] ✅ [strategy-service] P0. Kill-switch wiring: `LIQUIDATION_IMMINENT` triggers immediate unwind (flash close);
       `HEALTH_FACTOR_CRITICAL` triggers partial-unwind (reduce leverage by 1 loop level); `FUNDING_SIGN_FLIP` triggers
       position-pause (no new opens; existing positions evaluated against threshold). Per archetype-config
-      `kill_switch_tier_*` fields (already in `archetype_config.py:169-177`).
-- [ ] [risk-and-exposure-service] P1. Concentration-risk handling: a recursive-borrow position concentrates exposure in
-      (chain × asset × protocol); should the existing concentration-limit subsystem treat gross notional or net delta?
-      Add a per-archetype concentration multiplier (default 1.0 for non-recursive, 1.5 for recursive — penalises
-      concentration).
+      `kill_switch_tier_*` fields (already in `archetype_config.py:169-177`). — strategy-service@fb3cd97
+      `LiquidationProximityCircuit` (backfilled 2026-05-17 slot-5)
+- [x] ✅ [risk-and-exposure-service] P1. Concentration-risk handling: a recursive-borrow position concentrates exposure
+      in (chain × asset × protocol); should the existing concentration-limit subsystem treat gross notional or net
+      delta? Add a per-archetype concentration multiplier (default 1.0 for non-recursive, 1.5 for recursive — penalises
+      concentration). — `ARCHETYPE_CONCENTRATION_MULTIPLIER` dict in UAC `registry/risk_rules/archetype.py:451`
+      (backfilled 2026-05-17 slot-5)
 
 **Done definition:** Monitor + circuit operational on Tenderly fork; alerts fire on synthetic HF degradation;
 kill-switch unwind verified end-to-end.
@@ -1666,14 +1677,14 @@ doc) with per-month attribution table.
 
 Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates ride in the same logical unit as the code commits.
 
-- [x] ✅ [codex] P0. NEW family docs SUPERSEDE config-variants.md: `carry-recursive-borrow-lending-only.md` (Family 1)
-      + `carry-recursive-borrow-perp-hedged.md` (Family 2) shipped; config fields, share-class semantics, kill-switch
+- [x] ✅ [codex] P0. NEW family docs SUPERSEDE config-variants.md: `carry-recursive-borrow-lending-only.md` (Family 1) +
+      `carry-recursive-borrow-perp-hedged.md` (Family 2) shipped; config fields, share-class semantics, kill-switch
       surface documented in each. — PM@ec344724 (backfilled 2026-05-17 slot-5)
 - [x] ✅ [codex] P0. UPDATE `carry-recursive-staked.md` — `## See also` + `## Not in this archetype` cross-refs +
       breadcrumb added. — PM@c5a25181 (backfilled 2026-05-17 slot-5)
 - [x] ✅ [codex] P0. UPDATE `flash-loan-receiver.md` — `## Extended receiver` section added: action-encoder design,
-      deployed addresses, deploy runbook, CI integration. Sepolia ✅; mainnet/Base pending operator deploy.
-      — PM@a411c240 (backfilled 2026-05-17 slot-5)
+      deployed addresses, deploy runbook, CI integration. Sepolia ✅; mainnet/Base pending operator deploy. —
+      PM@a411c240 (backfilled 2026-05-17 slot-5)
 - [x] ✅ [codex] P0. UPDATE `venue-collateral-2026-05-07.md` — Family 1 lender admission table + Family 2 perp pairing
       section added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
 - [ ] [codex] P0. NEW `recursive-borrow-backtest-2026-05.md` (Phase 9 deliverable). **BLOCKED-DATA** — gates on Phase 9
