@@ -583,6 +583,10 @@ surface, not per repo:
       (is_promo_relg_col lines 281-282+289, total_matchdays=0 else branch 303-305,
       regime from fixtures_history 315-324+364, exception handler 400-402).
       season_context.py 87.8%→100%. Shipped at `features-service@b7b19e25`.
+      **Wave 40 (2026-05-17 slot-8)**: +3 direction_agreement tests for `odds_prob_space`
+      (T-6h snap with bookmaker_key covers lines 212-254: loop body, ≥2 probs agreement,
+      all-zero-delta→1.0, <2 probs→NaN). odds_prob_space.py 83.0%→~95%+.
+      Shipped at `features-service@625f9711`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
