@@ -58,18 +58,13 @@ entries:
   # deletes/reforms the occurrence" rule. (1 entry remains — output_writer_service
   # dead-class upload_bytes residual below.)
   #
-  # output_writer_service.py:upload_bytes — DEAD CODE. OutputWriterService.write_candles
-  # writes the candle parquet directly via storage_client.upload_bytes(...) WITHOUT
-  # routing through record_captured / the 4-pillar write-gate — but the class is not
-  # instantiated anywhere on a live path (the live candle-write path is
-  # CandleWriteMixin._write_candles → canonical_writer → record_captured per MRO; the
-  # only references to OutputWriterService are its own class def + a doc-comment in
-  # output_path_helpers.py). Baselined-as-warning so a NEW candle-module upload_bytes
-  # bypass still fails CI; the residual occurrence clears when the dead class is deleted.
-  - repo: market-data-processing-service
-    file: market_data_processing_service/app/core/output_writer_service.py
-    method: upload_bytes
-    status: pending_removal
-    successor:
-      "writegate Phase 2.A — delete the dead OutputWriterService class (output_writer_service.py); the live candle-write
-      path is CandleWriteMixin._write_candles → canonical_writer → record_captured"
+  # output_writer_service.py:upload_bytes — REMOVED 2026-05-17 (slot-8 verified).
+  # The dead OutputWriterService class file has already been deleted; only .pyc cache
+  # remains. No live references (verified via grep across MDPS source + tests). The
+  # check passes 0 baselined + 0 new — file deletion already silenced this entry.
+  # Entry dropped from baseline since the live file no longer exists.
+
+  # Both original entries (vix_gap_placeholder + output_writer_service.upload_bytes)
+  # now FULLY CLEAR. STEP 5.67 banned-placeholder ratchet at 0 baseline + 0 new.
+
+entries_postscript: "all originally-baselined banned-placeholder occurrences fully removed 2026-05-17. New occurrences will fail CI."
