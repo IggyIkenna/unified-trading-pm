@@ -1223,3 +1223,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   _execute_npm_decrease_and_collect tuple-return + _maybe_burn_nft try/except pattern).
 
 272 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 43] slot-7 — execution-service Phase B (+2, 107/377 cleared):
+
+- `execution-service@31f6a300a` — DataAvailabilityValidator.check_defi_data_availability 70L→34L (trim 10L
+  docstring + extract _check_defi_for_date: per-date flash_loan/risk_params/rewards prefix checks);
+  IntentDecomposer._decompose_yield 71L→25L (trim 8L docstring + extract _build_yield_deploy_step module-level:
+  ETH/WETH→STAKE, USDC/USDT/DAI→SUPPLY, else→SUPPLY).
+
+270 remaining. basedpyright clean.
