@@ -2045,3 +2045,20 @@ subprocess stall 8. 🔴 Phase 9.B — MTDS VM fleet launch [HUMAN+AGENT] (Phase
 backtest: blocked pending #7
 
 Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:56 UTC — Autonomous loop tick-44 (parallel stale-wakeup): wave-8 ✅
+
+**Note**: This tick resolves a stale tick-40 wakeup that fired concurrently with tick-43. No duplication — tick-43 (PM@75e4efc8) already captured wave-7 + batch-61. This tick captures wave-8 only.
+
+**New remote commit** (1 incoming, pulled):
+- `844cde03` — wave-8 formation/ht_features/bench_sub shipped (features-service@25a86c30, 86 tests, 548 total).
+
+**sports calculators progress**: 548 tests across 14+ files (wave-8 adds formation_calculator, ht_features_calculator, bench_sub_calculator). Pace: 3 waves in rapid succession (6 → 7 → 8).
+
+**slot-6**: still no Smoke B fix commits in LDR. perp_funding + util stall investigation ongoing.
+**harsh-slot-9**: CYCLE-CLOSE (unchanged).
+**_agent_pings.md**: no new harsh response.
+
+**Operator queue**: unchanged (9 items, see tick-43).
