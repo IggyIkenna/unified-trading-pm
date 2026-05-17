@@ -689,6 +689,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-55**: 59 files cleared (slot-2 contribution: -59 files; spans 26 submodules incl.
   cli/argument_parser).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 56 — engine/backtest/passive_aggressive_hybrid)**: shipped at
+  execution-service@324ed5231. simulate_passive_aggressive_hybrid 169L→50L via 5 module-level helpers (\_empty_result +
+  \_execute_passive_phase + \_execute_aggressive_phase + \_compute_fill_stats + \_compute_edge_metrics). File not in
+  allowlist (pre-existing violation outside baseline capture). basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-56**: 60 files cleared (slot-2 contribution: -60 files; spans 27 submodules incl.
+  engine/backtest/passive_aggressive_hybrid).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
