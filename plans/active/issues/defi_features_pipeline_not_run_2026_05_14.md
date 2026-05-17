@@ -404,3 +404,36 @@ iteration loop.
 **B-015 paper-trade gate**: still BLOCKED on items 1+2 above. harsh-slot-9 should NOT attempt Phase 2 paper-trade
 until lending_rates writes ≥1 non-zero row to
 `gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-15/feature_group=lending_rates/features.parquet`.
+
+## Update 2026-05-17 03:30 UTC (slot-1-main) — lending_rates 0-rows root cause narrowed
+
+VM 8 ran successfully after the macro_sentiment + early-exit fixes. lst_yields wrote 5 days × 1 parquet. But
+lending_rates still reported `status=empty_or_failed, rows=0, elapsed_s=5.273` (5 sec means real work happened).
+
+**Deep-dive findings**:
+- Sample of 90 `DEFI_FEATURE_AAVE_UTILIZATION` events from VM 8 show emissions like
+  `{utilization_rate: 0.0, pool_name: AAVE_V3-ARBITRUM:LENDING:WETH, protocol: aave_v3}` — ALL zeros.
+- BUT the actual lending-indices parquet sample at
+  `gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-15/asset_group=defi/venue=AAVE_V3/chain=ARBITRUM/instrument_type=lending/data_type=lending_indices/aave_v3_ARBITRUM_20260516_234021.parquet`
+  has `utilization_rate` column with REAL values (mean=0.603, WETH rows show 0.801).
+- `_normalise_lending_columns` in `lending_features.py:71` uses `pl.coalesce([utilization_rate, ...])` to alias
+  to `aave_utilization` — should preserve the real values.
+- `MTDS_DATA_PROBE_EMPTY` events from VM 8 show probe SUCCEEDED for `rate_indices` (only oracle_prices + perp_funding
+  came up empty as expected per coverage matrix).
+
+**Hypothesis (for slot-2 pickup)**: between parquet read and emission, the `aave_utilization` column gets
+zero-filled somewhere. Candidates:
+- `pl.concat(frames, how="diagonal")` — if some frames have null `utilization_rate` AND others have values, diagonal
+  concat may produce a column with nulls THEN someone replaces nulls with 0.0.
+- `_synthesize_supply_apy` falls back to `0.10` for `aave_reserve_factor` when missing; maybe a similar fallback
+  zero-fills `aave_utilization`.
+- The COALESCE order may pick a column that's all-zero before the real one.
+
+Recommended diagnostic (1 hour estimate for slot-2): add `LENDING_INPUT_DIAGNOSTIC`-style emission at top of
+`calculate_lending_features` (in `engine/lending_features.py`) that logs `aave_utilization.describe()` and
+`utilization_rate.describe()` (source) BEFORE the synthesize step. Then re-run VM. The diff between the two
+column distributions will pinpoint where the zeros come from.
+
+slot-1-main not picking up this last item because: (a) requires polars expression debugging without local repro
+data, (b) shipping a fix without a unit test would risk lst_yields regression, (c) features-service expertise is
+slot-2's lane and the consolidated escalation already routed this issue.
