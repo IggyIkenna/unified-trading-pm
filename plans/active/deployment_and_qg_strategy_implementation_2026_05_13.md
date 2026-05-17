@@ -548,6 +548,10 @@ surface, not per repo:
       _compute_position_value_share, _compute_top_n_value_share, _compute_top_n_attacker_value_share,
       _compute_continuity_last3, compute_player_lineup_features, compute_player_lineup_batch).
       Shipped at `features-service@ecdb1b08`. 1423 tests across 43 files.
+      **Wave 31 (2026-05-17 slot-8)**: 56 new tests for `team_form` (_outcome_code, _compute_goals_trend,
+      _compute_form_momentum, _ppg_from_goal_arrays, _consecutive_from_end, compute_team_form,
+      compute_team_form_for_fixture, compute_team_form_batch).
+      Shipped at `features-service@36744394`. 1479 tests across 44 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
