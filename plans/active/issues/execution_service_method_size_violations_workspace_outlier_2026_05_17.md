@@ -866,8 +866,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   _compute_base_returns + _get_returns_from_analyzer + _get_returns_from_trade_stats. 3 violations cleared. File not in allowlist.
   basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-76**: 82 files cleared (slot-2 contribution: -82 files; spans 47 submodules incl.
-  engine/backtest/actors/evaluator_metrics).
+  **Ratchet-down 2026-05-17 (slot-2 batch 77 — engine/backtest/almgren_chriss_sweep)**: shipped at execution-service@e11c0857d.
+  almgren_chriss_optimal_schedule (52L→28L) + simulate_almgren_chriss (140L→28L).
+  Extracted _get_fill_price + _execute_sim_fills + _compute_sim_metrics. 2 violations cleared. File not in allowlist.
+  basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-77**: 84 files cleared (slot-2 contribution: -84 files; spans 48 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
