@@ -951,10 +951,13 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
       `BacktestScenario` dataclass; 4 Category A + 5 Category B + 5 Category C scenarios = 14 total. (dfcd890
       unified-api-contracts 2026-05-15)
 - [x] [strategy-service] **P0**. `tests/integration/test_recursive_borrow_scenarios.py` (NEW) — parametrised over cells
-      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness BLOCKED-CREDENTIALS. (8ff3ded
-      strategy-service 2026-05-15)
+      x scenarios; credential-free verdict unit tests ship now; full Tenderly fork harness ✅ UNBLOCKED 2026-05-15
+      (`tenderly-api-key` + `tenderly-fork-rpc-url` vaulted; integration tests can now run with
+      `@pytest.mark.requires_credentials` opt-in). (8ff3ded strategy-service 2026-05-15)
 - [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
-      scaffold ships; live testnet execution BLOCKED-CREDENTIALS. See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
+      scaffold ships; live testnet execution ✅ UNBLOCKED 2026-05-15 (`hyperliquid-testnet-trade-key` JSON +
+      `bybit_api_key`/`bybit_api_secret` v2 with Spot + Derivatives perms vaulted; HL/Bybit testnet smoke runnable).
+      See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
 - [x] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. (01fb8d73 features-service
       2026-05-15)
@@ -1093,10 +1096,13 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
 - [x] [execution-service] **P0**. Action-encoder helpers + round-trip property test. (`build_recursive_open_actions` /
       `build_recursive_close_actions` + 3 property tests — 2a185b7e8 2026-05-15)
 - [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level). (14 tests
-      passing / 1 skipped Tenderly fork BLOCKED-CREDENTIALS; 5895 total passing — 2a185b7e8 2026-05-15)
+      passing / 1 skipped Tenderly fork ✅ UNBLOCKED 2026-05-15 (Tenderly creds vaulted); 5895 total passing — 2a185b7e8
+      2026-05-15)
 - [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
-      Phase-4-deployed receiver. **BLOCKED-CREDENTIALS** — Tenderly fork requires live RPC + deployed receiver address;
-      pings/slot_2.md credential request pending.
+      Phase-4-deployed receiver. **BLOCKED-OPERATOR-DECISION** (was BLOCKED-CREDENTIALS) — Tenderly fork RPC ✅ vaulted
+      `tenderly-fork-rpc-url`; the remaining gate is the Phase-4 RecursiveLeverageReceiver.sol deployed receiver
+      address (operator-deploy step + per-environment configuration), not credentials. pings/slot_2.md tracks the
+      deployment ask.
 
 ### Phase 6 — Hyperliquid LIVE perp connector wire-up
 
@@ -1147,7 +1153,8 @@ PerpHedgeSizer (Phase 7); 0.9 over-reports headroom ~10% on cross-margin with op
       code shape. (cc23a45 UAC 2026-05-15 — 9 cassette tests + fix VENUE_ERROR_MAP duplicate-key merge bug)
 - [x] [execution-service] **P1**. NEW `hyperliquid_bridge.py` helpers + `_PENDING_BRIDGE_DISPUTE_SECONDS=300`. Tenderly
       Arbitrum fork integration test. (649142a6a execution-service 2026-05-15 — bridge module + 15 unit tests; Tenderly
-      fork integration test BLOCKED-CREDENTIALS per pings/slot_2.md b9ba90be)
+      fork integration test ✅ UNBLOCKED 2026-05-15 (`tenderly-api-key` + `tenderly-fork-rpc-url` vaulted) per
+      pings/slot_2.md b9ba90be)
 - [x] [execution-service] **P1**. Replace `equity × 0.9` placeholder; regression test asserting parsed
       `accountValue − totalMarginUsed`. (649142a6a execution-service 2026-05-15 — 7 regression tests in
       test_hyperliquid_available_margin.py; live path confirmed correct at protocols/hyperliquid.py:306)
@@ -1278,8 +1285,9 @@ replaced by 2 distinct family docs.
 - [x] [codex] **P0**. Patch `carry-recursive-staked.md` (See also + Not in this archetype + breadcrumb). (c5a25181
       unified-trading-pm 2026-05-15)
 - [ ] [codex] **P0**. Patch `flash-loan-receiver.md` (`## Extended receiver` + addresses + modes).
-      **BLOCKED-CREDENTIALS** — gates on Phase 4 RecursiveLeverageReceiver.sol deployed addresses (Tenderly fork RPC
-      required). See pings/slot_2.md.
+      **BLOCKED-OPERATOR-DECISION** (was BLOCKED-CREDENTIALS) — Tenderly fork RPC ✅ vaulted 2026-05-15
+      (`tenderly-fork-rpc-url`); remaining gate is Phase-4 RecursiveLeverageReceiver.sol deployed-address operator-step,
+      not credentials. See pings/slot_2.md.
 - [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
       unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
 - [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED** — gates on Phase 9
