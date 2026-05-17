@@ -871,7 +871,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   Extracted _get_fill_price + _execute_sim_fills + _compute_sim_metrics. 2 violations cleared. File not in allowlist.
   basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-77**: 84 files cleared (slot-2 contribution: -84 files; spans 48 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 78 — engine/risk/preflight_gate)**: shipped at execution-service@63971d89d.
+  build_rule_eval_context (67L→24L) + run_risk_preflight (138L→32L).
+  Extracted _extract_identity_fields + _copy_account_state_into_ctx + _handle_block + _handle_scale_down + _handle_test_only.
+  2 violations cleared. File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-78**: 86 files cleared (slot-2 contribution: -86 files; spans 49 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
