@@ -165,12 +165,19 @@ jobs:
             tag=$(get_version_tag "$name")
             if [ -n "$tag" ]; then
               echo "Cloning $name at tag $tag (version-aware)"
-              git clone -b "$tag" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null && return
-              echo "Tag clone failed for $name@$tag — falling back to branch clone"
+              git clone -b "$tag" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: Tag clone failed for $name@$tag — falling back to branch clone"
             fi
-            # Fallback: clone at triggering branch or main
-            (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null \
-              || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null) || true
+            # Fallback: clone at triggering branch or main. NOT silent — clone
+            # failures must be visible (debugged 2026-05-17 trading-agent-service
+            # workspace-qg silent fail issue: '|| true' swallowed real auth/branch
+            # errors, surfaced downstream as confusing 'Distribution not found' at
+            # uv sync). If both branch + main fail, exit non-zero so the workflow
+            # surfaces the real clone error.
+            echo "Cloning $name at branch $BRANCH (fallback)"
+            git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+            echo "WARN: Branch '$BRANCH' clone failed for $name — falling back to main"
+            git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"
           }
           # Always clone PM — base-service.sh lives here
           clone_repo unified-trading-pm
