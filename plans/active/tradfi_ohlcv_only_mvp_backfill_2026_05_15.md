@@ -141,7 +141,9 @@ per workspace HARD RULE.
 
 ### Phase 5 — Phantom-row reconciliation
 
-- [ ] [SCRIPT] P0. Existing TradFi `trades` + `tbbo` parquet + manifest rows in GCS from the prior 2-window strategy:
+- [x] ✅ **[SCRIPT] P0. TradFi trades+tbbo manifest reconciled.** slot-1-main 2026-05-17 09:55 UTC. Added new enum value `EmptyConfirmedReason.EXPECTED_OUT_OF_COVERAGE_WINDOW` at `unified-api-contracts@585de75` (distinct from EXPECTED_DEPRECATED_DATA_TYPE — this is SCOPE SHRINK that may reverse post-cutover). One-shot reconciliation flipped all 39,048 TradFi trades+tbbo rows in `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` to `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERAGE_WINDOW`. Pre-flip: 20,972 captured + 9,162 empty_confirmed + 2,927 attempted_failed across CME/ICE/NASDAQ/NYSE/BARCHART/CBOE/FX/YAHOO_FINANCE. Post-flip: 10,279 tbbo + 28,769 trades all empty_confirmed. Non-target rows: 102,368 unchanged. Existing parquets on GCS preserved (audit trail). Local backup: `/tmp/tradfi_manifest.parquet.backup-20260517T085342`.
+
+  **NEXT STEP** below was original plan text:
       re-classify as `empty_confirmed` with reason = `EXPECTED_OUT_OF_COVERAGE_WINDOW` (existing UAC enum) OR delete +
       flip to `expected_unattempted`. Decision: re-classify in place; preserves audit trail of prior captures. Use
       existing
