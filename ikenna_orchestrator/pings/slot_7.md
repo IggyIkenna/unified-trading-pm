@@ -1122,3 +1122,11 @@ because the issue is statused P2 post-cutover — proceed regardless.
   InstructionRouter._run_compose_validation 61L→44L (docstring trim).
 
 304 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 32] slot-7 — execution-service Phase B (+2, 75/377 cleared):
+
+- `execution-service@5ccb7dd72` — InstructionAlphaCalculator.get_market_price_at_time 61L→48L (14-line docstring → 1
+  line); DependencyChecker.check_instrument_definitions 61L→25L via _instrument_dep_status static helper (3
+  near-identical DependencyStatus constructors → 3 one-line calls) + 11-line docstring → 1 line.
+
+302 remaining. basedpyright clean.
