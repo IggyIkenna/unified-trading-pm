@@ -1,4 +1,4 @@
-violation_count: 114
+violation_count: 113
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
 baseline_files:
@@ -8,8 +8,6 @@ baseline_files:
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/AUDIT_2026_05_15_harsh_side_completion.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/features_service_qg_cleanup_2026_05_11.md
-- rule: A-deferred-no-banner
-  path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
 - rule: A-deferred-no-banner
   path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
 - rule: A-deferred-no-banner

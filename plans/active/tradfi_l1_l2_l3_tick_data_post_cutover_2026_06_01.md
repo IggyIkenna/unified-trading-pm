@@ -25,6 +25,12 @@ codex_ssots:
 
 # TradFi L1-L3 tick data restoration — post-cutover
 
+## Deferred work — migrated to:
+
+**N/A** — this plan IS the successor for the L1-L3 scope deferred from
+`plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`. Any in-body DEFERRED tokens describe the predecessor
+decision (May-23 OHLCV-only scope) and the post-cutover restoration boundary. No further migration needed.
+
 ## Predecessor
 
 This plan is the named successor to
