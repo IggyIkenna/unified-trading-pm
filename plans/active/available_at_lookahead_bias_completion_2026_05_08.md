@@ -260,11 +260,11 @@ todos:
 
 todos:
 
-- [x] ✅ [TRACKED] P0. **TRACK — writegate Phase 2.D adapter stamping helpers shipped**. Verified slot-8 2026-05-17:
-      UTL `availability_stamping.py` has 7+ helpers (lines 131+ via grep): `stamp_available_at_lineups` /
-      `_event_time` / `_post_match` / `_post_match_cascade` / `_offset` / `_injuries` / `_odds_snapshot` (named
-      aliases at lines 33-73 in the module docstring example). `assert_available_at_present` wired into
-      `ManifestWriter.record_captured()` (UTL:2254). Phase 2.D helpers fully shipped + integrated.
+- [x] ✅ [TRACKED] P0. **TRACK — writegate Phase 2.D adapter stamping helpers shipped**. Verified slot-8 2026-05-17: UTL
+      `availability_stamping.py` has 7+ helpers (lines 131+ via grep): `stamp_available_at_lineups` / `_event_time` /
+      `_post_match` / `_post_match_cascade` / `_offset` / `_injuries` / `_odds_snapshot` (named aliases at lines 33-73
+      in the module docstring example). `assert_available_at_present` wired into `ManifestWriter.record_captured()`
+      (UTL:2254). Phase 2.D helpers fully shipped + integrated.
 
 - [x] [TRACKED] P0. **TRACK — sports adapter stamping (MTDS-slice ODDS_SNAPSHOT path)** (shipped
       market-tick-data-service@c186ecb 2026-05-11 by Harsh slot 4; plan flip 2026-05-11 by `ikenna-available-at-tab`
@@ -360,10 +360,10 @@ todos:
       adapter). The lifecycle-bounded clamping (`max(tick_ts, market_created_at)`) remains adapter-level work per
       `predictions_master_2026_05_07.md` Phase 2; this todo can flip fully `[x]` once that clamp wires.
 
-- [ ] [TRACKED] P0. **TRACK — features-onchain `suppress(LookaheadBiasError)` removal**. Today landing-pad with
-      enforcement disabled. Once chain link 1 ships for onchain adapters AND chain link 4 (`FEATURE_REQUIRED_INPUTS`)
-      covers the relevant feature_groups, remove the `contextlib.suppress` and let it raise. Owned by
-      `ml_and_features_master_2026_05_07` Phase 2A.
+- [x] ✅ [TRACKED] P0. **TRACK — features-onchain `suppress(LookaheadBiasError)` removal**. SHIPPED 2026-05-17:
+      `features-service@7b1ede28`. Chain link 1 shipped (UTL@`8b0fb816` + MTDS@`bbdbf55`); removed
+      `contextlib.suppress(LookaheadBiasError)` + cleanup of `contextlib` import + `LookaheadBiasError` import.
+      `PointInTimeEnforcer.check_observation_timestamp` now raises directly on violation.
 
 ---
 
@@ -467,10 +467,8 @@ todos:
       calculator boundary (avoids pd↔pl gymnastics). Flip when chain links 0+1 cleared AND features_repo_consolidation
       Phase 5.c ships.
 
-- [ ] [SCRIPT] P0. **features-onchain `suppress()` removal**. Single-line edit at
-      `features-service (onchain family)/features_onchain_service/app/core/feature_writer.py` once chain link 1 ships
-      for onchain adapters. Replace `with contextlib.suppress(LookaheadBiasError):` with direct call; let it raise.
-      Verifies the gate is live.
+- [x] ✅ [SCRIPT] P0. **features-onchain `suppress()` removal**. SHIPPED 2026-05-17: `features-service@7b1ede28`.
+      Removed `contextlib.suppress(LookaheadBiasError)` + unused imports. Gate is live — violations now raise.
 
 ---
 
@@ -481,8 +479,8 @@ todos:
 - [x] ✅ [TRACKED] P0. **TRACK — `ManifestWriter.record_captured` calls `assert_available_at_present`**. Verified
       shipped (slot-8 2026-05-17): `unified_trading_library/manifest_writer.py:2254` invokes
       `assert_available_at_present(df)` from the `record_captured` method (line 2061). Function definition at line 72
-      (with helpful "empty DataFrame missing column" error message at line 90). Phase 1A wire is live; gate fires
-      when adapters stamp.
+      (with helpful "empty DataFrame missing column" error message at line 90). Phase 1A wire is live; gate fires when
+      adapters stamp.
 
 ---
 

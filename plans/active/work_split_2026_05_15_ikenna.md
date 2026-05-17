@@ -12,11 +12,9 @@ locked_since: 2026-05-15
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Ikenna's daily work-split — 2026-05-15
 
@@ -413,14 +411,20 @@ NOW) + `phase_3c_lending_rate_model` continuation (UNBOUNDED per operator) + ale
    (research 1.2×, ~4 = 4.8 cal — unbounded per operator)
 3. **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1 close** — pre-cutover audit-records gate. (research 1.2×,
    ~3 = 3.6 cal)
-4. **`available_at_lookahead_bias_completion_2026_05_08` sweep close** — remaining stamping helper consumers. (refactor
-   0.4×, ~3 = 1.2 cal)
+4. ✅ **`available_at_lookahead_bias_completion_2026_05_08` sweep close** — stamping helper consumers shipped:
+   UTL@`8b0fb816` (`stamp_available_at_onchain_tick` added); MTDS@`bbdbf55` (all 4 onchain DeFi handlers stamped:
+   evm_defi, gas_fee, solana_defi, lst_rates — all write paths); features-service@`7b1ede28`
+   (`contextlib.suppress(LookaheadBiasError)` removed + `contextlib` + `LookaheadBiasError` import cleanup). Chain link
+   1 complete. (refactor 0.4×, ~3 = 1.2 cal)
 5. **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` operator-UX remainder**. (design 0.6×, ~3 = 1.8 cal)
 6. **Custody Cloud-KMS smoke + 4 DeFi alert-codes alerting wiring final**. (design 0.6×, ~3 = 1.8 cal)
-7. **DeFi handler hardening verification across all 4 handlers** (post-`market-tick-data-service@c1e6963` + `@f657431`)
-   — confirm record_captured INSIDE try/finally per eigenlayer pattern; spot-check next smoke re-launch. (research 1.2×,
-   ~2 = 2.4 cal)
-8. **`strategy_paper_vm_nautilus_trader_missing_dep` re-verify** (carry from slot 9 #5). (refactor 0.4×, ~0.5 = 0.2 cal)
+7. ✅ **DeFi handler hardening verification across all 4 handlers** (post-`market-tick-data-service@c1e6963` +
+   `@f657431`) — verified shard-level failure isolation (record_captured INSIDE try, recorder.close() in finally) across
+   evm_defi_handler, gas_fee_handler, solana_defi_handler, lst_rates_handler. All 4 handlers follow eigenlayer pattern.
+   (research 1.2×, ~2 = 2.4 cal)
+8. ✅ **`strategy_paper_vm_nautilus_trader_missing_dep` re-verify** (carry from slot 9 #5) — verified nautilus_trader
+   dependency correctly declared in strategy-service pyproject.toml; no missing dep issue confirmed. (refactor 0.4×,
+   ~0.5 = 0.2 cal)
 9. **Reserve**: in-stack pickup for any wallet/custody issues.
 
 ---
