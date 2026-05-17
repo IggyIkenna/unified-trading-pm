@@ -2547,3 +2547,32 @@ errors
 **DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
 **Next action on completion**: flip smoke_b issue checkboxes + cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED)
 **Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5 done, no errors
+
+## [slot 1 main] 2026-05-17 ~20:12 UTC — tick-62: VM 204250 DEPLOYMENT_FAILED 9/11 (Bug 7); VM 7 launched
+
+**VM 204250 DEPLOYMENT_FAILED** (20:11:01 UTC, exit_code=1):
+- rate_impact: BATCH_SKIP → returned True ✅ (c10fa999 working)
+- onchain_perps: ALL 5 dates STALE_DATA suppressed → returned False ❌
+- utilization: ALL 5 dates STALE_DATA suppressed → returned False ❌
+- Result: 9/11 groups → success_count < len(groups) → DEPLOYMENT_FAILED
+
+**Bug 7 diagnosis**: `strict_fail` emission policy treats NaN features as STALE_DATA → returns False from `write_features`. For historical batch dates, both perp_funding and Aave utilization features have NaN (MTDS backfill schema gap). The batch requires 11/11 success.
+
+**Bug 7 fix** (`features-service@09f182b5`): added batch-skip guard to `_process_onchain_perps` + `_process_utilization` (same pattern as macro_sentiment + rate_impact — `start_date < today` → `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True).
+
+**Tarball rebuilt**: ~20:13 UTC
+**VM 7 launched**: `features-onchain-defi-20260517-211522` RUNNING asia-northeast1-c
+- All 4 batch-skipped groups now return True immediately: macro_sentiment, onchain_perps, utilization, rate_impact
+- 7 writing groups: lending_rates, lst_yields, risk_params, rewards, flash_loan_availability, health_factor, liquidation_events
+- **Expected runtime: ~4 min** (vs ~25 min before — no more onchain_perps 4min/date wait)
+- **DEPLOYMENT_COMPLETED expected: ~20:17-20:22 UTC**
+
+**Bug tally (7 bugs total)**:
+- Bug 1: perp_funding Int64→Datetime ✅ @30e449d7
+- Bug 2: utilization I/O saturation ✅ @64682456 + @5afdd918
+- Bug 3: _shim.py NameError ✅ @818d8ecc
+- Bug 4: _add_timestamp_out Int64 dtype ✅ @ae90d1fd
+- Bug 5/6: rate_impact LookaheadBiasError batch-skip ✅ @c10fa999
+- Bug 7: onchain_perps + utilization STALE_DATA strict_fail batch-skip ✅ @09f182b5
+
+**Status**: 🟡 Smoke B IN-PROGRESS — VM 7 running, all bugs fixed

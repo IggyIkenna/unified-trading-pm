@@ -2976,3 +2976,27 @@ Monitor VM 6:
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-204250/run.log" | tail -20
 ```
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
+
+**VM 204250 DEPLOYMENT_FAILED 20:11 UTC** — 9/11 groups:
+- rate_impact: ✅ BATCH_SKIPPED (c10fa999 working)
+- onchain_perps: ❌ all 5 dates STALE_DATA suppressed (strict_fail, NaN in perp features for historical MTDS dates)
+- utilization: ❌ all 5 dates STALE_DATA suppressed (strict_fail, NaN in Aave utilization for historical MTDS dates)
+
+**Bug 7 fix** (`features-service@09f182b5`): batch-skip guard added to both `_process_onchain_perps` and `_process_utilization` — same pattern as macro_sentiment + rate_impact. `start_date < today` → `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True.
+
+Now 4 groups batch-skip (macro_sentiment, onchain_perps, utilization, rate_impact) + 7 write data → 11/11 expected.
+
+**VM 7**: `features-onchain-defi-20260517-211522` RUNNING asia-northeast1-c
+- Runtime ~4 min (batch-skips eliminate 25-min onchain_perps wait)
+- **DEPLOYMENT_COMPLETED expected: ~20:17-20:22 UTC**
+
+**Harsh-side**: B-015 paper backtest still on hold. Cross-ping coming when DEPLOYMENT_COMPLETED confirmed.
+
+Monitor VM 7:
+```bash
+gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-211522/run.log" | tail -20
+```
