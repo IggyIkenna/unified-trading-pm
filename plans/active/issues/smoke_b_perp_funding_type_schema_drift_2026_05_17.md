@@ -71,5 +71,6 @@ trace showed `do_wait` in kernel — waiting for a child process that never exit
       features-service@30e449d7 (root cause: synchronous PubSub log_event per-row on 134k rows; fix: cap
       emit_aave_utilization_events at \_MAX_UTILIZATION_EVENTS=500; GCS async write fix at 64682456 from parallel agent)
 - [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — VM
-      `features-onchain-defi-20260517-190230` RUNNING (launched 2026-05-17 19:02 UTC)
+      `features-onchain-defi-20260517-191412` RUNNING (launched 2026-05-17 19:14 UTC; v1 was stale-tarball — killed
+      and relaunched after tarball rebuild with fixes @30e449d7+@64682456)
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run
