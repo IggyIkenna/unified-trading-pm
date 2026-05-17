@@ -472,3 +472,20 @@ VM `features-onchain-defi-20260517-072313` events confirm:
 
 VM still RUNNING; per-feature_group parquet writes will fire as workflow proceeds through remaining groups
 (`utilization`, `lst_yields` already verified; `lending_rates` deeper bug remains).
+
+## Update 2026-05-17 07:55 UTC (slot-1-main) — lending_rates 0-rows further narrowed
+
+Shipped `features-service@babd69f0`: broaden `calculate_lending_features` exception catch + emit
+`LENDING_FEATURES_UNEXPECTED_EXCEPTION`. VM 10 (`features-onchain-defi-20260517-075413`) ran with the new code
+but the diagnostic did NOT fire — meaning `calculate_lending_features` did NOT throw any exception. So the input
+`rate_data` to it was empty going in.
+
+That narrows the bug to `_load_merged_lending_data` (orchestrator.py:347) returning empty despite
+`MTDS_DATA_PROBE_EMPTY` NOT firing for `rate_indices` (meaning the bucket DOES have data).
+
+**Shipped `features-service@a735750a`**: per-source diagnostic. `_load_merged_lending_data` now emits
+`LENDING_LOADER_DIAGNOSTIC` per date with mtds_rows / compound_rows / kamino_rows + per-source exception types.
+The previous logging was silent (`self.logger.debug`) which didn't surface to GCS event stream.
+
+VM 10 still RUNNING (5500+ DEFI_FEATURE_AAVE_UTILIZATION emissions in progress for utilization feature_group).
+Next VM relaunch after VM 10 finishes will surface the actual loader breakdown.
