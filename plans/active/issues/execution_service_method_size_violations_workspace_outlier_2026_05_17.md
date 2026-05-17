@@ -659,6 +659,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-51**: 55 files cleared (slot-2 contribution: -55 files; spans 22 submodules incl.
   data/config/book_builder).
 
+- **Batch 52** (2026-05-17): `instruments/gcs_creator.py` — `create_from_gcs_definition` 241L→45L via 9 helpers
+  (\_get_initial_currency_strs + \_infer_currencies_from_symbols + \_apply_defi_fallback + \_validate_currencies +
+  \_resolve_tick_size + \_resolve_min_size + \_resolve_fees + \_detect_is_inverse + \_resolve_margins). Allowlist -1.
+  basedpyright 0 errors. execution-service@62d135bbb.
+
+  **Slot-2 cumulative across batches 3-52**: 56 files cleared (slot-2 contribution: -56 files; spans 23 submodules incl.
+  instruments/gcs_creator).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
