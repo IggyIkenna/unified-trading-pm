@@ -2,6 +2,12 @@
 title: "honest-coverage cron VM not yet scheduled"
 created: 2026-05-14
 author: harsh-slot-7
+resolved: 2026-05-15
+resolution:
+  SHIPPED (both halves) — UI half at `deployment-ui@365c32f` (neutral info card on 404 path); Cron VM half at
+  `deployment-service@19454f1` (terraform/gcp/honest_coverage_scheduler.tf + Cloud Run Job + 0:30 UTC scheduler).
+  Watchdog dict already registered. Backfill question is one-shot operator scope (otherwise scheduled run seeds the
+  first file).
 source:
   - plans/active/data_status_ui_phase_2f.md
 locked_by: live-defi-rollout
