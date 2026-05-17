@@ -491,6 +491,9 @@ surface, not per repo:
       **Wave 12 (2026-05-17 slot-8)**: 34 new tests for `elo_calculator` (_expected_score, _goal_diff_multiplier,
       _actual_score, _regress_toward_mean, _crosses_season_boundary, compute_elo_batch winner/loser/form/league-ranks).
       Shipped at `features-service@42320934`. 782 total tests across 25 calculator files.
+      **Wave 13 (2026-05-17 slot-8)**: 25 new tests for `odds_calculator` (compute_odds_features implied/vig/edge,
+      compute_odds_batch empty/missing cols/implied probs/movement/dispersion/multi-fixture, compute_tier_features
+      bookmaker groupby/counts). Shipped at `features-service@b9ae0538`. 807 total tests across 26 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
