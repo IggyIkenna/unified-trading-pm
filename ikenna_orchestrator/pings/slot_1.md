@@ -1467,3 +1467,19 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 **All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: await operator return or slot-7 100/377 milestone ping.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:12 UTC — Autonomous loop tick-18: recursive-borrow paper-smoke + exec 42/43
+
+**Poll results** (tick 18) — duplicate tick-17 from prior wakeup (inventory 485 cal AI-days noted):
+
+- `04129230`: slot-2 batch 42 — passive_aggressive_spawn _start_aggressive_phase 152L→20L (execution-service@aa0153aa7).
+- `5f6620a5`: **Phase 12 paper-smoke + Phase 13 launcher — defi_recursive_borrow** ✅ (May-23 critical path).
+- `1f39fcba`: slot-2 batch 43 — solana_base send_transaction 153L→34L (execution-service@15052b068).
+- `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>95 min** since B-015 ping.
+- `plans/active/_agent_pings.md`: no new cross-side responses.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: await operator return; monitor harsh-slot-9 boot.
