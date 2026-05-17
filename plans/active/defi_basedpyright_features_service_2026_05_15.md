@@ -48,6 +48,7 @@ Same patterns as execution-service fix:
   - [x] ✅ elo_calculator.py 17→0 errors — features-service@5aa6079f (slot-8 2026-05-17)
   - [x] ✅ delta_one/app/calculators/returns.py 23→0 errors — features-service@e14fdae8 (slot-8 wave 2 2026-05-17)
   - [x] ✅ delta_one/app/calculators/trendline.py 19→0 errors — features-service@e14fdae8 (slot-8 wave 2 2026-05-17)
+  - [x] ✅ delta_one/app/utils/numba_kernels.py 37→0 errors — features-service@be6f01a5 (slot-8 wave 2 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
