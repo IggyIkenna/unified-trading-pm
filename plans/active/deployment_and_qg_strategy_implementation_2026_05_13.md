@@ -225,7 +225,7 @@ highest on the 99%-repos identified in Phase 4.
 - [x] ✅ [AGENT] P0. **Update VM launcher scripts** at `deployment-service/scripts/vm/` — at boot, read manifest.json
       sibling of the tarball; assert `commit_sha` matches expected; fail loud on drift via UAC `ManifestShaDriftError`
       (NEW in `unified_api_contracts.canonical.crosscutting.deployment.errors`). — deployment-service@2f6b8b5
-      (setup-data-pipeline-vm.sh: post-download manifest fetch + ManifestShaDriftError on VM_EXPECTED_SHA_* mismatch)
+      (setup-data-pipeline-vm.sh: post-download manifest fetch + ManifestShaDriftError on VM*EXPECTED_SHA*\* mismatch)
 - [x] ✅ [AGENT] P0. **Async image-build trigger** — tarball write fires `cloud-build` on same commit-sha. Wired in
       `create-code-tarballs.sh` POST upload step. So when promoting dev→staging, image already exists. —
       deployment-service@646ef02 (`--trigger-image-builds` flag; `gcloud builds submit --async` per repo with
@@ -500,30 +500,28 @@ surface, not per repo:
       calculator files. **Wave 14 (2026-05-17 slot-8)**: 38 new tests for `halftime_multi_source` (\_safe_num,
       detect_ht_break_minute, \_pivot_team_rows_to_home_away, compute_ht_break_minutes, compute_halftime_multi_source,
       \_enrich_from_events, \_compute_team_ht_form). Shipped at `features-service@632bef51`. 845 total tests across 27
-      calculator files.
-      **Wave 15 (2026-05-17 slot-8)**: 43 new tests for `odds_prob_space` (_odds_to_prob, _remove_vig, _sign,
-      _apply_means_dispersion_entropy, _historical_fair_probs, _apply_deltas_velocity_acceleration,
-      _apply_reversal_chop_spread_complexity, compute_prob_space_features). Shipped at
-      `features-service@fd6a23b7`. 888 total tests across 28 calculator files.
-      **Wave 16 (2026-05-17 slot-8)**: 39 new tests for `european_fatigue_calculator`
-      (_get_team_european_history, _get_team_all_matches, _played_european_midweek,
-      _days_since_european, _european_matches_season, _double_fixture_week, _estimate_season_start,
-      compute_european_fatigue_batch). Shipped at `features-service@6c5ce10e`. 927 total tests across
-      29 calculator files.
-      **Wave 17 (2026-05-17 slot-8)**: 28 new tests for `bucketed_features_calculator` (_bucket_scalar,
-      _bucket_series, _safe_numeric_col, compute_bucketed_features_batch — days_rest/vig/dispersion/fatigue/
-      manager_change/history_depth/turnover/lineup_uncertainty buckets). Shipped at `features-service@f0888568`.
-      955 total tests across 30 calculator files.
-      **Wave 18 (2026-05-17 slot-8)**: 34 new tests for `steam_detector` (SteamDetectorConfig defaults,
-      SteamMoveSignal creation, SteamDetector init/record_odds/buffer_pruning/_key/_calculate_movement/
-      _find_stale_venues/_classify_urgency/_build_signal/detect_steam_moves). Shipped at
-      `features-service@2a189c73`. 989 total tests across 31 calculator files.
-      **Wave 19 (2026-05-17 slot-8)**: 24 new tests for `relative_context_calculator` (_safe_series,
-      _zscore_within_group, _pct_rank_within_group, compute_relative_context_batch). Shipped at
-      `features-service@61c385db`. 1013 total tests across 32 calculator files.
-      **Wave 20 (2026-05-17 slot-8)**: 29 new tests for `poisson_xg_calculator` (_poisson_pmf, _build_goal_matrix,
-      compute_poisson_xg, compute_poisson_xg_batch). Shipped at `features-service@298374a4`. 1042 total tests
-      across 33 calculator files.
+      calculator files. **Wave 15 (2026-05-17 slot-8)**: 43 new tests for `odds_prob_space` (\_odds_to_prob,
+      \_remove_vig, \_sign, \_apply_means_dispersion_entropy, \_historical_fair_probs,
+      \_apply_deltas_velocity_acceleration, \_apply_reversal_chop_spread_complexity, compute_prob_space_features).
+      Shipped at `features-service@fd6a23b7`. 888 total tests across 28 calculator files. **Wave 16 (2026-05-17
+      slot-8)**: 39 new tests for `european_fatigue_calculator` (\_get_team_european_history, \_get_team_all_matches,
+      \_played_european_midweek, \_days_since_european, \_european_matches_season, \_double_fixture_week,
+      \_estimate_season_start, compute_european_fatigue_batch). Shipped at `features-service@6c5ce10e`. 927 total tests
+      across 29 calculator files. **Wave 17 (2026-05-17 slot-8)**: 28 new tests for `bucketed_features_calculator`
+      (\_bucket_scalar, \_bucket_series, \_safe_numeric_col, compute_bucketed_features_batch —
+      days_rest/vig/dispersion/fatigue/ manager_change/history_depth/turnover/lineup_uncertainty buckets). Shipped at
+      `features-service@f0888568`. 955 total tests across 30 calculator files. **Wave 18 (2026-05-17 slot-8)**: 34 new
+      tests for `steam_detector` (SteamDetectorConfig defaults, SteamMoveSignal creation, SteamDetector
+      init/record_odds/buffer_pruning/\_key/\_calculate_movement/
+      \_find_stale_venues/\_classify_urgency/\_build_signal/detect_steam_moves). Shipped at `features-service@2a189c73`.
+      989 total tests across 31 calculator files. **Wave 19 (2026-05-17 slot-8)**: 24 new tests for
+      `relative_context_calculator` (\_safe_series, \_zscore_within_group, \_pct_rank_within_group,
+      compute_relative_context_batch). Shipped at `features-service@61c385db`. 1013 total tests across 32 calculator
+      files. **Wave 20 (2026-05-17 slot-8)**: 29 new tests for `poisson_xg_calculator` (\_poisson_pmf,
+      \_build_goal_matrix, compute_poisson_xg, compute_poisson_xg_batch). Shipped at `features-service@298374a4`. 1042
+      total tests across 33 calculator files. **Wave 21 (2026-05-17 slot-8)**: 25 new tests for `team_xg` (\_str_col,
+      \_xg_trend, compute_team_xg_stats, compute_team_xg_for_fixture, compute_team_xg_batch). Shipped at
+      `features-service@26ea2cac`. 1067 total tests across 34 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
