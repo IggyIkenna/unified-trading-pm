@@ -449,8 +449,11 @@ surface, not per repo:
       total). Shipped at `features-service@1725465c` + `unified-api-contracts@2bdb85b`. **Wave 2 (2026-05-17 slot-8)**:
       130 new tests across 4 more delta_one calculators: `TargetFeatures` (29 tests), `SupplyDemandZones` (37 tests),
       `SwingOutcomeTargets` (32 tests), `FibonacciFeatures` (32 tests). Shipped at `features-service@e9a2ee2c`. 178
-      total new tests across 6 calculator files. Aggregate coverage: 79.5% → expected ~84-86% (remaining gap:
-      sports.calculators 67.2% + calendar/cross_instrument below target — further wave needed).
+      total new tests across 6 calculator files. Aggregate coverage: 79.5% → expected ~84-86%. **Wave 3 (2026-05-17
+      slot-8)**: 41 new tests for `MarketStructureSequence` (resolve_swings, count_lower_highs/higher_lows,
+      check_bos_choch, update_swing_refs, update_decay_anchor, calculate_bos_choch, calculate_swing_decay, integration).
+      Shipped at `features-service@e57ed69f`. 219 total tests across 7 calculator files. Remaining gap:
+      sports.calculators 67.2% + calendar/cross_instrument below target — further wave needed.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
