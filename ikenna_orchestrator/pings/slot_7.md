@@ -1203,3 +1203,13 @@ because the issue is statused P2 post-cutover — proceed regardless.
   69L→33L + _build_defi_adapter static helper (connector build block) + docstring trim + 3 comment removal.
 
 278 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 41] slot-7 — execution-service Phase B (+3, 102/377 cleared):
+
+- `execution-service@47734d7d7` — BenchmarkMatcher.match 69L→48L (trim 22L docstring);
+  KrakenCeFiAdapter.parse_order_response 69L→43L (trim 15L docstring + extract _parse_decimal @staticmethod);
+  LiveExecutionHandler._execute_instructions 69L→47L (trim docstring + extract _handle_defi_instruction class method).
+
+**MILESTONE 100/377 crossed** (now 102/377). basedpyright clean.
+
+275 remaining.

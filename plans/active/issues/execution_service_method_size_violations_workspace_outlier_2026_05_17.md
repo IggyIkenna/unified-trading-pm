@@ -6,7 +6,7 @@ source:
   - execution-service@f871ffad7 (post-cutover snapshot)
   - workspace-wide method-size sweep 2026-05-16 → 2026-05-17 (slot 7 autonomous loop)
 severity: P2 (post-cutover hygiene; not blocking May-23)
-status: phase-a-shipped (baseline ratchet live; phases B+C post-cutover)
+status: phase-b-in-progress (102/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 routing:
