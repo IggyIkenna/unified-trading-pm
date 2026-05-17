@@ -386,3 +386,36 @@ gsutil cat gs://central-element-323112-defi-validation/results/lending/2026-05-1
 
 **Target**: ≥90% pass rate. If achieved, this issue closes. If DAI still fails (per slot-6's prediction —
 needs WEB3_PROVIDER_URI live IRM fetch verification), file follow-up.
+
+## Update 2026-05-17 02:08 UTC (slot-1-main) — VM results: USDC + USDT 100%, DAI 0%
+
+`aave-lending-rate-val-20260517-030304` ran + STOPPED at 02:06 UTC. Results at
+`gs://central-element-323112-defi-validation/results/lending/2026-05-17/6918BC11-E9ED-42A1-9082-96E21EA6CAD0/results.json`:
+
+| Asset | Total | Passed | Pass rate |
+| ----- | ----- | ------ | --------- |
+| USDC  | 7     | 7      | 100% ✅   |
+| USDT  | 3     | 3      | 100% ✅   |
+| DAI   | 50    | 0      | 0% ❌      |
+
+**Overall: 10/60 = 16.7%** (up from 0/60 = 0% before fixes). Slot-6's 5-fix payload + UAC defaults update WORKED
+for USDC + USDT. DAI is still broken — sim consistently ~1.1% vs realized 3.7-6.4% (delta 265-526bps, same pattern
+as pre-fix).
+
+**Root cause hypothesis** (per slot-6's earlier prediction "DAI requires VM re-run to confirm — live IRM fetch is the
+primary path; static defaults are fallback"): the live RPC IRM fetch for DAI is failing/skipped, so DAI uses the
+static UAC defaults (slope1=0.055, optimal=0.92, slope2=0.35) → sim utilization in slope-1 branch giving ~1%. The
+realized rates at 4-6% indicate DAI is in **slope-2 branch** at very high utilization with steeper params than the
+static defaults suggest.
+
+**Diagnostic next steps** (for slot-6 / DAI IRM investigation):
+1. SSH a follow-up VM with `WEB3_PROVIDER_URI` printed in the log; confirm `_fetch_live_irm_params(DAI)` is called.
+2. If live fetch returns: log `(optimal_utilization, slope1, slope2, base, utilization)` per event so we can see
+   which branch is firing.
+3. If live fetch is silently failing or returning stale data, the issue is in
+   `LendingRateImpactCalculator._fetch_live_irm_params` (DAI-specific RPC quirk).
+
+**slot-1-main can't drive this further** without RPC access + slot-6's IRM domain expertise. Cross-pinged slot-6
++ filed as next-cycle action.
+
+**Phase 3C VALIDATION GATE status**: 🟡 PARTIAL (16.7% vs 90% target) — gated on DAI fix only. USDC + USDT done.
