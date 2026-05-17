@@ -2,6 +2,34 @@
 
 ---
 
+## [2026-05-17 ~14:50 UTC] slot-8 — autonomous-loop continuation sweep
+
+**Governance ratchets at FULL CLEAN / floor**:
+- ✅ **Codex-freshness: 188 → 0** (all 188 cutover-critical codex docs gained `last_reviewed:` via batched + spot-check sweeps)
+- ✅ **Runbook execution-owner: 9 → 0** (every runbook has the 4-field `execution:` block)
+- ✅ **Architectural ratchets: 0** (was already)
+- 🟡 **Plan-discipline: 231 → 98** (133 cleared via archived-plan banner sweep + qualified-DEFERRED active-plan sweep; remaining 98 are 40 active plans needing real-successor decisions + 53 archived with still-open items + 5 B-active-filename)
+
+**Per-repo DeFi basedpyright drift cleaned**:
+- ✅ **risk-and-exposure-service: 17 → 0** (sub-agent at risk-and-exposure-service@5408d9f)
+- ✅ **strategy-service: 53 → 0** (sub-agent at strategy-service@eca730b)
+- ✅ **features-service: 827 → 136** (slot-8 5-wave fan-out; 691 errors / 84% reduction). Remaining 136 are 96 onchain/ + 40 cross_instrument/, both foreign-active-other-slot.
+
+**STEP 5.67 banned-placeholder ratchet FULLY CLEAN** (was 2 baselined → 0):
+- MDPS `_maybe_write_vix_gap_placeholder` renamed → `_record_vix_gap_empty` (cosmetic, body was already honest)
+- output_writer_service.py:upload_bytes baseline entry dropped (file already deleted, only .pyc cache remained)
+- Cleared 1 of 3 blockers on `features_service_qg_cleanup_2026_05_11` Phase 1.3 (STEP 5.69 inline-gs + production-readiness validators remain to other slots)
+
+**Verify-flip wins on shipped-but-unflipped TRACKED items**:
+- `available_at_lookahead_bias_completion` Phase 7 — `ManifestWriter.record_captured calls assert_available_at_present` verified at UTL:2254
+- `available_at_lookahead_bias_completion` Phase 2.D — 7+ stamping helpers verified at UTL `availability_stamping.py:131+`
+
+**LDR alignment**: ~30 commits this continuation cycle alone (across PM + MDPS + risk-and-exposure-service + strategy-service + features-service). All Half-1/Half-2 discipline clean. All 27 owned repos at ahead=0 end-state.
+
+---
+
+---
+
 ## [2026-05-17 ~11:30 UTC] slot-8 — 🎯 defi_basedpyright_features_service NEAR-CLEAN (827→136, 84%)
 
 **5 parallel-subagent waves shipped** (15+ sub-agents). All non-foreign-active surfaces at basedpyright 0 reportAny.
