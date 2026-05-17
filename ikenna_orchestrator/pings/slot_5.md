@@ -2,6 +2,27 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~20:05 UTC — slot-5 work-split cleanup complete; GC 2023 running; requesting new theme
+
+**Completed this cycle**:
+
+1. ✅ GC 2023 CME OHLCV re-launch — `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING (per ikenna-main directive
+   at 12:10 UTC)
+2. ✅ ES_OPT manifest verified — 1,932 captured rows, 100% captured, 2020-01-02 → 2026-05-15. 2019 gap expected
+   (Databento earliest = 2020). Tradfi_master P0 item flipped.
+3. ✅ Work_split items 5/8/15 flipped — tradfi master refresh done + venue/symbology audit done (catalogue 100%) +
+   LTV violations resolved by slot-3.
+4. ✅ batch-live-recon P0 scaffold — 113 unit tests pass, QG green (batch-live-reconciliation-service@d9d60ed)
+5. ✅ deploy_missing Phase 2+3 all done — deployment-api@950ffc9 (items 1-4) + deployment-ui@11f6b83 (items 5-6).
+
+**Smoke B (193018)**: still RUNNING as of 19:59 UTC. Gsutil heartbeat every ~60s confirms it's alive.
+
+**Slot 5 work-split exhausted** (all 15 assigned items done). Requesting new theme assignment.
+
+**Available slots for new work**: slot 5 is clear and ready for next theme.
+
+---
+
 ## [slot 5 → main] 2026-05-17 ~19:15 UTC — deploy_missing_auto_launch Phase 3 items 5+6 SHIPPED ✅
 
 **Phase 3 UI complete** (`deployment-ui@11f6b83`, `PM@92e682cc`):
