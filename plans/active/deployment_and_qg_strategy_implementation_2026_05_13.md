@@ -562,6 +562,11 @@ surface, not per repo:
       _compute_historical_ht_patterns, _compute_second_half_predictions, compute_halftime_features,
       compute_halftime_for_fixture; all 100 HALFTIME_COLUMNS paths covered).
       Shipped at `features-service@a26e82e5`. 1392 calculator tests across 47 files.
+      **Wave 35 (2026-05-17 slot-8)**: +12 tests extending `transfer_window_calculator` to cover
+      _shock_squad_structural_change (value/minutes/position-group turnover), _shock_new_signing_integration
+      (minutes-share, starters count + xi share), and _compute_shock_features dispatch (3 tests).
+      transfer_window_calculator.py coverage 62.4%→86.8%. Calculator aggregate 93.7%.
+      Shipped at `features-service@60bbc03f`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
