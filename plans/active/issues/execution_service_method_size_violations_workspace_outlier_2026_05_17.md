@@ -322,6 +322,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12**: 16 files cleared (slot-2 contribution: -16 files;
    10 handlers + 6 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 13 — defi_execution/protocols sweep continues)**: aster.py shipped at
+   execution-service@4493316a1 (place_order 93L→25L via \_place_order_live (signed-POST shape, error-classified) +
+   \_place_order_paper (deterministic fill + position + fee update); same OrderResult shape both paths). Allowlist
+   -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13**: 17 files cleared (slot-2 contribution: -17
+   files; 10 handlers + 7 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
