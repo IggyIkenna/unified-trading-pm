@@ -983,6 +983,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-2 cumulative across batches 3-96**: 157 files cleared (slot-2 contribution: -157 files; spans 94 submodules).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 97 — arg compaction + helper extraction)**: shipped at execution-service@ab2fbe80b.
+  config_builder:_load_missing_data 55L→49L (merge 4 signature param pairs + inline local-load call),
+  mock_feed_connector:_handle_place_bet 55L→48L (inline BET_ACK _write + merge signature pairs),
+  mock_data_provider:run_mock_pipeline 60L→42L (extract _dispatch_instrument_fills helper + trim docstring),
+  ccxt_common:place_order_sim 60L→49L (trim docstring + merge 7 CanonicalOrder constructor arg pairs). 4 violations cleared.
+  mock_feed_connector + ccxt_common now fully clean. Allowlist -2.
+
+  **Slot-2 cumulative across batches 3-97**: 159 files cleared (slot-2 contribution: -159 files; spans 95 submodules).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
