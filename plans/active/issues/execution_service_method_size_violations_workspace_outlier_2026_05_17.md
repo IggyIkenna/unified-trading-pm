@@ -780,51 +780,61 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 67 — benchmark/html_report)**: shipped at execution-service@37ae83b0c.
   \_build_html_head_and_styles 63L→3L via \_HTML_HEAD_AND_STYLES module constant + \_build_html_summary_section 66L→18L
-  via \_build_summary_cards_html + \_build_html_table_rows 58L→28L via \_build_algo_row_html +
-  \_build_chart_scripts 95L→9L via \_build_pnl_chart_js + \_build_vs_benchmark_chart_js. 4 violations cleared (file not
-  in allowlist). basedpyright 0 errors.
+  via \_build_summary_cards_html + \_build_html_table_rows 58L→28L via \_build_algo_row_html + \_build_chart_scripts
+  95L→9L via \_build_pnl_chart_js + \_build_vs_benchmark_chart_js. 4 violations cleared (file not in allowlist).
+  basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-67**: 71 files cleared (slot-2 contribution: -71 files; spans 38 submodules incl.
   benchmark/html_report).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 68 — utils/dependency_checker)**: shipped at execution-service@b820b4d20.
   check_dependencies 88L→9L + check_strategy_instructions 83L→17L + check_market_tick_data 96L→12L +
-  check_config_specific_dependencies 74L→22L via _build_dep_msg + _extract_config_metadata + _build_tick_data_path
-  (module-level) + _check_dep_blob_exists + _check_single_dep + _check_strategy_blob + _check_blob_dep_market_tick
+  check_config_specific_dependencies 74L→22L via \_build_dep_msg + \_extract_config_metadata + \_build_tick_data_path
+  (module-level) + \_check_dep_blob_exists + \_check_single_dep + \_check_strategy_blob + \_check_blob_dep_market_tick
   (instance methods). 4 violations cleared (file not in allowlist). basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-68**: 72 files cleared (slot-2 contribution: -72 files; spans 39 submodules incl.
   utils/dependency_checker).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 69 — trade_execution/adapters/kraken_rest_adapter)**: shipped at execution-service@e71867f36.
-  _parse_kraken_order_dict 88L→31L + _parse_kraken_trade_dict 55L→48L + place_order 85L→40L + get_positions 71L→22L
-  via _parse_kraken_order_status + _parse_kraken_order_type_str + _parse_kraken_order_quantities +
-  _parse_kraken_order_descr + _parse_kraken_order_prices + _parse_kraken_trade_timestamp +
-  _build_add_order_payload + _build_place_order_result + _parse_single_kraken_position.
-  4 violations cleared. allowlist -2 (kraken_rest_adapter + dependency_checker). basedpyright 0 errors.
+  **Ratchet-down 2026-05-17 (slot-2 batch 69 — trade_execution/adapters/kraken_rest_adapter)**: shipped at
+  execution-service@e71867f36. \_parse_kraken_order_dict 88L→31L + \_parse_kraken_trade_dict 55L→48L + place_order
+  85L→40L + get_positions 71L→22L via \_parse_kraken_order_status + \_parse_kraken_order_type_str +
+  \_parse_kraken_order_quantities + \_parse_kraken_order_descr + \_parse_kraken_order_prices +
+  \_parse_kraken_trade_timestamp + \_build_add_order_payload + \_build_place_order_result +
+  \_parse_single_kraken_position. 4 violations cleared. allowlist -2 (kraken_rest_adapter + dependency_checker).
+  basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-69**: 73 files cleared (slot-2 contribution: -73 files; spans 40 submodules incl.
   trade_execution/adapters/kraken_rest_adapter).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 70 — results/result_formatter)**: shipped at execution-service@a379230ca.
   prepare_orders_dataframe 96L→31L + prepare_fills_dataframe 81L→28L + prepare_positions_dataframe 89L→21L
-  + prepare_equity_curve_dataframe 107L→23L + validate_timestamp_alignment 103L→30L
-  via _setup_timestamps + _build_df_from_schema_cols + _empty_equity_df + _fill_equity_schema_columns
-  + _check_timestamp_bounds + _qty_to_side + module-level schema column constants. 5 violations cleared.
-  File not in allowlist. basedpyright 0 errors.
+  - prepare_equity_curve_dataframe 107L→23L + validate_timestamp_alignment 103L→30L via \_setup_timestamps +
+    \_build_df_from_schema_cols + \_empty_equity_df + \_fill_equity_schema_columns
+  - \_check_timestamp_bounds + \_qty_to_side + module-level schema column constants. 5 violations cleared. File not in
+    allowlist. basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-70**: 74 files cleared (slot-2 contribution: -74 files; spans 41 submodules incl.
   results/result_formatter).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 71 — results/dataframe_preparers)**: shipped at execution-service@68f0bc03b.
-  prepare_orders_dataframe 115L→32L + prepare_fills_dataframe 117L→28L +
-  prepare_positions_dataframe 105L→20L + prepare_equity_curve_dataframe 125L→23L
-  via _dp_setup_timestamps + _dp_build_df_from_schema_cols + _dp_build_fills_result_df +
-  _dp_empty_equity_df + _dp_fill_equity_schema_cols + _dp_qty_to_side + schema column constants.
-  4 violations cleared. File not in allowlist. basedpyright 0 errors.
+  prepare_orders_dataframe 115L→32L + prepare_fills_dataframe 117L→28L + prepare_positions_dataframe 105L→20L +
+  prepare_equity_curve_dataframe 125L→23L via \_dp_setup_timestamps + \_dp_build_df_from_schema_cols +
+  \_dp_build_fills_result_df + \_dp_empty_equity_df + \_dp_fill_equity_schema_cols + \_dp_qty_to_side + schema column
+  constants. 4 violations cleared. File not in allowlist. basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-71**: 75 files cleared (slot-2 contribution: -75 files; spans 42 submodules incl.
   results/dataframe_preparers).
+
+  **Ratchet-down 2026-05-17 (slot-2 batch 72 — results/timeline)**: shipped at execution-service@b9a4c86b9.
+  build_instruction_completed_event 89L→43L + \_build_order_dict 56L→30L + \_extract_strategy_events 56L→36L +
+  build_timeline 57L→36L + \_add_fills_from_orders 94L→38L + build_instruction_completion_events 133L→44L via
+  \_determine_instruction_status + \_warn_if_interval_exceeded + \_extract_order_price_and_amount +
+  \_load_cached_events_from_key + \_get_fill_price_for_order + \_get_filled_qty_and_status + \_count_order_stats +
+  \_extract_alpha_metrics. 6 violations cleared. allowlist -1. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-72**: 76 files cleared (slot-2 contribution: -76 files; spans 43 submodules incl.
+  results/timeline).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
