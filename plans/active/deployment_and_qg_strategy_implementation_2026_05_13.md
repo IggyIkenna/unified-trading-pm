@@ -472,28 +472,32 @@ surface, not per repo:
       xg_from_shots, aggregate_1h_events, batch, odds) + `bench_sub_calculator` (22 tests — sub timing, home/away split
       cols, proactive flag, batch). Shipped at `features-service@25a86c30`. 548 total tests across 16 calculator files.
       **Wave 9 (2026-05-17 slot-8)**: 66 new tests across 3 sports calculators: `footystats_predictions_calculator` (16
-      tests — \_safe\_float, compute_footystats_predictions_batch NaN passthrough/deduplication/custom fixture_id_col) +
+      tests — \_safe_float, compute_footystats_predictions_batch NaN passthrough/deduplication/custom fixture_id_col) +
       `ml_predictions` (12 tests — get_schedule_predictions stub schema + get_ml_features_for_fixture fixture_id/None
       values) + `multisource_xg_calculator` (22 tests — compute_multisource_xg empty/single/multi-source
       spread/confidence/CV threshold/negative filter + batch). Shipped at `features-service@e8c5b715`. 614 total tests
       across 19 calculator files. **Wave 10 (2026-05-17 slot-8)**: 71 new tests across 3 sports calculators:
       `promoted_team_handler` (14 tests — is_promoted_team threshold, blend_promoted_features decay/strength ratio) +
-      `league_calculator` (24 tests — _safe_float, compute_league_features, compute_league_from_standings goals/rates/
+      `league_calculator` (24 tests — \_safe_float, compute_league_features, compute_league_from_standings goals/rates/
       league-avg/vs-league) + `meta_features_calculator` (33 tests — validity count/ratio, invalid key features, lineup
       confidence, xg confidence, ensemble disagreement std/range/gap). Shipped at `features-service@6b17700f`. 685 total
       tests across 22 calculator files. Continuing — next targets: injury_impact, european_fatigue, h2h_calculator,
-      elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space.
-      **Wave 11 (2026-05-17 slot-8)**: 63 new tests across 2 sports calculators: `injury_impact_calculator` (30 tests
-      — _extract_injury_type, _compute_team_injury_features severity/crisis/key_player, _compute_injury_impact_for_fixture,
-      compute_injury_impact_batch) + `h2h_calculator` (33 tests — _streak_from_end, _compute_h2h_streaks, _venue_record,
-      _h2h_xg_perspective_avgs, _count_h2h_results, _avg_total_goals, compute_h2h full computation, compute_h2h_batch).
-      Shipped at `features-service@84c8476c`. 748 total tests across 24 calculator files.
-      **Wave 12 (2026-05-17 slot-8)**: 34 new tests for `elo_calculator` (_expected_score, _goal_diff_multiplier,
-      _actual_score, _regress_toward_mean, _crosses_season_boundary, compute_elo_batch winner/loser/form/league-ranks).
-      Shipped at `features-service@42320934`. 782 total tests across 25 calculator files.
-      **Wave 13 (2026-05-17 slot-8)**: 25 new tests for `odds_calculator` (compute_odds_features implied/vig/edge,
-      compute_odds_batch empty/missing cols/implied probs/movement/dispersion/multi-fixture, compute_tier_features
-      bookmaker groupby/counts). Shipped at `features-service@b9ae0538`. 807 total tests across 26 calculator files.
+      elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space. **Wave 11 (2026-05-17 slot-8)**: 63 new
+      tests across 2 sports calculators: `injury_impact_calculator` (30 tests — \_extract_injury_type,
+      \_compute_team_injury_features severity/crisis/key_player, \_compute_injury_impact_for_fixture,
+      compute_injury_impact_batch) + `h2h_calculator` (33 tests — \_streak_from_end, \_compute_h2h_streaks,
+      \_venue_record, \_h2h_xg_perspective_avgs, \_count_h2h_results, \_avg_total_goals, compute_h2h full computation,
+      compute_h2h_batch). Shipped at `features-service@84c8476c`. 748 total tests across 24 calculator files. **Wave 12
+      (2026-05-17 slot-8)**: 34 new tests for `elo_calculator` (\_expected_score, \_goal_diff_multiplier,
+      \_actual_score, \_regress_toward_mean, \_crosses_season_boundary, compute_elo_batch
+      winner/loser/form/league-ranks). Shipped at `features-service@42320934`. 782 total tests across 25 calculator
+      files. **Wave 13 (2026-05-17 slot-8)**: 25 new tests for `odds_calculator` (compute_odds_features
+      implied/vig/edge, compute_odds_batch empty/missing cols/implied probs/movement/dispersion/multi-fixture,
+      compute_tier_features bookmaker groupby/counts). Shipped at `features-service@b9ae0538`. 807 total tests across 26
+      calculator files. **Wave 14 (2026-05-17 slot-8)**: 38 new tests for `halftime_multi_source` (\_safe_num,
+      detect_ht_break_minute, \_pivot_team_rows_to_home_away, compute_ht_break_minutes, compute_halftime_multi_source,
+      \_enrich_from_events, \_compute_team_ht_form). Shipped at `features-service@632bef51`. 845 total tests across 27
+      calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
