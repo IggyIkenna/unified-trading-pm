@@ -359,3 +359,46 @@ again in features-onchain consumption.
       `market-tick-data-service/.../lending_indices_handler.py` write path. If vocab drift, harmonize on
       `raw_tick_data/by_date/day=*/asset_group=defi/` (new canonical per venue_axis_asset_group_vocabulary plan).
       Routed to features-service owner.
+
+## CONSOLIDATED ESCALATION — features-onchain pipeline has 5 compounding issues; slot-1-main has unblocked the infra layer, domain layer remains
+
+After 7 VM attempts + 4 fixes shipped + 1 phantom-reconcile across ~3 hours of slot-1-main cycling, the B-015 chain (c)
+infrastructure layer is fully unblocked:
+
+✅ ml-training-service UTL pin (876f0e5)
+✅ deployment-service VM setup install-set narrowing (a6f746f)
+✅ lending-indices upstream backfill 2026-04-15..16 (95,146 rows in `raw_tick_data/by_date/day=*/asset_group=defi/`)
+✅ phantom-manifest-rows flip for lending-indices (65 rows unphantomed)
+✅ macro_sentiment LookaheadBias diagnosed (CoinGecko global has no historical archive)
+
+**But 5 compounding feature-pipeline issues remain — all require features-service domain expertise**:
+
+1. **Workflow processes only 2 of 11 enumerated feature_groups** (DATA_INGESTION_COMPLETED reports 11 groups, but only
+   `macro_sentiment` + `lending_rates` get `FEATURE_GROUP_PROCESSING_STARTED`). Early-exit logic somewhere in the
+   orchestrator. The other 9 groups (`lst_yields`, `onchain_perps`, `utilization`, `risk_params`, `rewards`,
+   `flash_loan_availability`, `health_factor`, `liquidation_events`, `rate_impact`) never attempt.
+
+2. **lending_rates returns 0 rows despite populated upstream** (lending-indices bucket has 95K rows for 2026-04-15
+   under `raw_tick_data/by_date/day=2026-04-15/asset_group=defi/venue=AAVE_V3/...`). data_loader uses
+   `get_mtds_day_prefix_candidates` (canonical + legacy fallback) — looks correct. 5.193s elapsed suggests probe ran;
+   no MTDS_DATA_PROBE_EMPTY emitted; so probe found blobs but downstream transformation dropped them. Likely
+   column-mismatch or empty filter in `lending_features.py`.
+
+3. **macro_sentiment fails TWO independent gates** (LookaheadBias when CoinGecko_global ts > as_of; 95%-NaN-cap when
+   3 derived columns are NaN). Architecturally cannot backfill from current data sources per the
+   "External Data Is Always Available" HARD RULE; need vendor swap or live-only mode flag.
+
+4. **Workflow iterates 1 day per VM invocation** despite `--end-date` arg. 5-day backfill = 5 VMs.
+
+5. **Days 17-19 lending-indices still phantom-skipped** even after I flipped 65 phantom rows for 15-19. The
+   handler may load freshness cache before the manifest write completes; `shards_skipped_freshness=13` for each of
+   days 17/18/19. Needs `--force` flag or per-day-restart logic.
+
+**Routing**: features-service owner (slot-4 likely, based on prior expertise). slot-3 may consult for manifest
+reconciler extension. slot-1-main exits this chain — infra layer is done; domain-layer fixes need eyes on
+`features-service/features_service/onchain/engine/orchestrator.py` + `lending_features.py` + the feature_group
+iteration loop.
+
+**B-015 paper-trade gate**: still BLOCKED on items 1+2 above. harsh-slot-9 should NOT attempt Phase 2 paper-trade
+until lending_rates writes ≥1 non-zero row to
+`gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-15/feature_group=lending_rates/features.parquet`.
