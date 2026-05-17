@@ -1847,6 +1847,24 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 ---
 
+## [slot 1 main] 2026-05-17 ~17:31 UTC — Autonomous loop tick-37: general poll, post-Smoke-B-FAILED
+
+**Parallel tick-36 (814c6c33)**: 2 bugs analysed — (1) `perp_funding` schema dtype mismatch (Int64 vs Datetime)
+known pre-existing skip; (2) utilization stall (web3/RPC subprocess hung). slot-6 DAI IRM resolved ✅ + aave-lrv
+VM relaunched correct block range. Issue doc filed.
+
+**slot-7**: tick-40 → **99/377 cleared** (execution-service@d8230705c). 1 method from 100-milestone.
+**Phase 8.C wave-5**: 64 tests shipped (features-service@fedda39f). **slot-2 batch-57** shipped.
+
+**harsh-slot-9**: still CYCLE-CLOSE. No response to Smoke B failure ping.
+**_agent_pings.md**: no new harsh-side pings.
+
+**Operator queue** (9 items — unchanged).
+
+Next: general poll; await operator return or harsh dispatch.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~17:17 UTC — Autonomous loop tick-32: Smoke B RUNNING, 67,773 events, fresh at 17:17 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
