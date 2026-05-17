@@ -2135,3 +2135,22 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 **Slot-7**: tick-44 acked (110/377 = 29%). 267 remaining.
 **Slot-8**: wave-9 acked (614 tests total across 19 files).
 **Operator queue**: 9 items (unchanged — operator AFK).
+
+---
+
+## [slot 1 main] 2026-05-17 ~19:20 UTC — tick-48: waves 10+11+12 acked; Phase 2+3 acked; Smoke B re-run RUNNING
+
+**New remote commits since tick-47** (all acked):
+
+- `7a9f5f84` — **wave-10** sports calculators: promoted_team + league + meta_features (71 tests)
+- `d4782beb` — **wave-11** sports calculators: injury_impact + h2h_calculator (63 tests)
+- `5f198ee7` — **wave-12** sports calculators: elo_calculator (34 tests)
+- `378da3ce` — **Phase 2 items 1-4** SHIPPED: deploy-missing auto-launch endpoint (deployment-api@950ffc9, POST /api/data-status/deploy-missing-launch, DeployMissingRateLimiter 30/op/hr; deployment-service@41822ba dm- prefix watchdog)
+- `58b07da0` — **Phase 3 COMPLETE**: MTDS reconnect — 3.1/3.2/3.3/3.4/3.5a-f all connectors SHIPPED (MTDS@5f8448b); Phase 15 7-day smoke remains
+
+**Sports calculators**: wave-12 elo_calculator lands — running total 648+ tests across 22+ calculator files.
+
+**Smoke B re-run**: `features-onchain-defi-20260517-190230` RUNNING. Expected runtime ~2h. Will ping harsh-side when STOPPED_CLEAN.
+
+**Slot-7**: tick-44 still latest (110/377 = 29%). Continue Phase B.
+**Operator queue**: 9 items (unchanged — operator AFK).
