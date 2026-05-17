@@ -444,6 +444,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-25**: 29 files cleared (slot-2 contribution: -29 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 26 — engine/validation)**: dependency_validator.py shipped at
+   execution-service@a54c0ca97 (check_defi_data_availability 75L→14L via \_classify_defi_dependencies (returns
+   {flash, lending, staking} flags from instruction set + ":A_TOKEN/:DEBT_TOKEN/:LST" instrument suffix scan) +
+   \_check_defi_prefixes_for_date (table-driven loop over (flag → data_type → label → op_label) tuples).
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-26**: 30 files cleared (slot-2 contribution: -30 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
+   + 1 engine/validation).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
