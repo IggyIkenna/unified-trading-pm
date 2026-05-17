@@ -2769,3 +2769,25 @@ algorithms/) + slot-7 (second check-in). Accepting those assignments.
 - B-015 still awaiting harsh-side operator dispatch.
 
 **Status**: 🟢 Monitoring
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:50 UTC — tick-70: inventory refresh + B-015 still waiting
+
+**Inventory refresh**: 69 plans, 53% done, 476 cal AI-days left (–1 from prior, hedge_ratio plan completion).
+
+**B-015**: No harsh-side ack in _agent_pings. Harsh slot-9 still CYCLE-CLOSE. Awaiting operator dispatch.
+Cross-ping sent 20:21 UTC (2.5h ago). Operator action required.
+
+**Parallel session status**: Very active — pvl-p18b archetype matrix, batch/wave flips all handled in real-time.
+Parallel session handles flips faster than this session can avoid conflicts — delegating flip tracking to it.
+
+**Slot status** (tick-70):
+- Slot-2: Phase B docstring-trim (batches 83-88, ~131 violations cleared by slot-2)
+- Slot-5: Phase B algorithms/data/loaders extract-helpers (batch-89 shipped: 069bcee5d)
+- Slot-6: simulation_scenarios Phase 6 — no commit yet
+- Slot-7: DARK 3.5h+ — assumed paused
+- Slot-8: Sports waves 54+ (active; wave-54 shipped: eb3fe8b1)
+- Slot-10: execution-service unhold path — no commit yet
+
+**Status**: 🟢 Monitoring; operator action needed for B-015 dispatch
