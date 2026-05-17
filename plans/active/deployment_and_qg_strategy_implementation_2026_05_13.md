@@ -629,6 +629,9 @@ surface, not per repo:
       (206), collapsed<3 (251), NaN counter continue (271), counter_freeze no-valid-run (282),
       opn==0 drift NaN (397), exception handler (480-482). +6 tests → 63.
       Shipped `features-service@f0c5ac04`.
+      **Wave 52 (2026-05-17 slot-8)**: bench_sub_calculator 95.0%→100% — home_subs_count else
+      branch (152), exception handler defaults (257-264). +2 tests → 27.
+      Shipped `features-service@961382e1`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
