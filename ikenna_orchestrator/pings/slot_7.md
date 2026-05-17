@@ -1139,3 +1139,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   (LoopIterEvent + RecursiveLoopResult construction).
 
 299 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 34] slot-7 — execution-service Phase B (+3, 81/377 cleared):
+
+- `execution-service@206051e87` — DataValidator.validate_dataset_date 64L→29L via module-level
+  _parse_day_dataset_date() + 10-line docstring trim; MultiLegOrchestrator._submit_leg_with_retry
+  64L→44L via _leg_result() static helper (3 LegExecutionResult constructors) + 7-line docstring
+  trim; IntentDecomposer._decompose_swap 64L→9L via module-level _build_swap_steps() extraction.
+
+296 remaining. basedpyright clean.
