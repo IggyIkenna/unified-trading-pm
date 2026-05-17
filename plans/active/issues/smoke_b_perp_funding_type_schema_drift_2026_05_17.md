@@ -118,10 +118,13 @@ Cap of 500 was insufficient — 500 × 274ms = 137s blocking time already satura
       integer → Polars `Int64`; adding `pl.duration(...)` to `Int64` raises. Caused VM `193018` to DEPLOYMENT_FAILED
       (exit_code=1) at group 9/11 (`rate_impact`) — all prior groups passed cleanly. Fixed in features-service@ae90d1fd
       (slot-8). Tarball rebuilt at `2026-05-17T19:06:20Z`.
-- [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 5 bugs fixed — VM
-      `features-onchain-defi-20260517-200717` RUNNING (launched 2026-05-17 19:09 UTC; tarball @19:06:20Z claimed to
-      include all fixes: @30e449d7+@64682456+@818d8ecc+@aca4004c+@5afdd918+@ae90d1fd; at `onchain_perps` 04-11 as of
-      19:23 UTC). Backup VM `features-onchain-defi-20260517-203044` ALSO RUNNING (launched 2026-05-17 19:30 UTC by
-      slot-6; tarball sha=60bbc03f @19:17:48Z confirmed includes all fixes incl ae90d1fd; DEPLOYMENT_STARTED 19:32:58
-      UTC). Awaiting DEPLOYMENT_COMPLETED from either VM.
+- [x] ✅ [AGENT] P0. Bug 6 fix (`rate_impact` LookaheadBiasError) — `aave_rate_impact_calculator.fetch_data()` used
+      `datetime.now(UTC)` as observation timestamp; `_enforce_as_of_boundary` rejected it when run_time >> as_of in
+      historical backfill (VM 200717 FAILED at group 9/11, exit_code=1, 19:35 UTC). Two-pronged fix:
+      features-service@c10fa999 (batch-skip in orchestrator, same pattern as macro_sentiment) +
+      features-service@40494dd7 (timestamp pinned to end_date in calculator). Tarball rebuilt @19:43:44Z sha=40494dd7.
+- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 6 bugs fixed — VM
+      `features-onchain-defi-20260517-204443` RUNNING (launched 2026-05-17 19:44 UTC by slot-6; tarball sha=40494dd7
+      @19:43:44Z confirmed includes all 6 bug fixes; DEPLOYMENT_STARTED pending). Awaiting DEPLOYMENT_COMPLETED.
+      Prior VMs: 200717 FAILED (Bug 6 at 19:35), 203044 KILLED (pre-Bug-6-fix tarball, terminated by watchdog).
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run
