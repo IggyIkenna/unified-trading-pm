@@ -1860,3 +1860,40 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 **Operator queue** (8 items — unchanged).
 
 Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+
+## [slot 1 main] 2026-05-17 ~18:30 UTC — Autonomous loop tick-32: DAI IRM resolved, Smoke B FAILED, re-verification VM launched
+
+**DAI IRM resolution** (slot-6 asked 3 pings ago):
+Issue was **co-blocked events** (multiple txs in same Ethereum block as Supply events), NOT wrong IRM params.
+- Root cause confirmed at 06:55 UTC (gate green 10/10 events 0-2bps, `execution-service@f45a5f669`)
+- Static defaults are stale fallback only; live fetch (`_fetch_irm_params_live`) already correct
+- Fix: block range defaults on launcher were wrong era (20800000→23300000, 22500000→25086000)  
+  → Fixed: `deployment-service@25f5a12`
+- Fresh tarball rebuilt (17:24 UTC), VM relaunched: **`aave-lending-rate-val-20260517-182510`** (RUNNING)
+  Correlation: `3420C524-62D0-42C7-BB04-49A3CE701E69`
+  Results when done: `gs://central-element-323112-defi-validation/results/lending/2026-05-17/3420C524-62D0-42C7-BB04-49A3CE701E69/results.json`
+
+**Smoke B FAILED** — `features-onchain-defi-20260517-171908` (DEPLOYMENT_FAILED, exit_code=124):
+- EXIT_STATUS=0 but watchdog STALL: log didn't grow for 3601s → SIGTERM at 17:23 UTC
+- Two bugs found in run.log:
+  1. `perp_funding` schema mismatch: `type Int64 is incompatible with expected type Datetime('ns', 'UTC')`
+     (affects 2026-04-10/11/12 perp_funding parquets; MTDS writes timestamp as epoch Int64, features-onchain expects Datetime)
+  2. Utilization subprocess stall: after loading 134,426 rate_indices rows for 2026-04-08, child process hung >1h
+- Paper backtest (harsh-side) blocked until Smoke B re-run passes
+- `_agent_pings.md` cross-side notification written below
+- Issue doc filed: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
+
+**Slot-7** (inferred from LDR): tick-35 at 84/377 (293 remaining). Next milestone: 100/377.
+**Slot-2**: Reporting STOPPING (100+ heavy backtest/algo methods remaining → post-cutover).
+**Slot-4**: tick-10 ack was last main-side ack. Continue.
+**Slot-8**: wave-3 (sports.calculators) in progress.
+
+**Operator queue** (8 items — unchanged):
+1. ❌ Databento RT key (slot-3)
+2. ❌ DeFi MTDS backfill approval (slot-5)
+3. ❌ Databento OHLCV spend sign-off
+4. ❌ ICE roots pick
+5. ❌ manifest_schema_final_gate Phase 7.C
+6. ❌ TradFi-fwd cron
+7. 🔴 **Smoke B re-run** — BLOCKED (perp_funding schema fix needed first OR skip perp_funding dates)
+8. 🔴 **Phase 9.B** — MTDS VM fleet launch [HUMAN+AGENT]

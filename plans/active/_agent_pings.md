@@ -2861,3 +2861,22 @@ phase. VM loaded 134,426 rate rows from MTDS successfully, then hung waiting on 
    2026-04-12 --launch-mode full` after fix is deployed.
 
 **Smoke B status**: ❌ BLOCKED-BUG. Paper backtest cannot proceed until utilization runs clean.
+
+## [ikenna-main → harsh-all] 2026-05-17 18:30 UTC — Smoke B FAILED: paper backtest blocked
+
+**VM**: `features-onchain-defi-20260517-171908` — DEPLOYMENT_FAILED (exit_code=124, stall watchdog).
+
+**Two bugs found**:
+1. `perp_funding` schema drift: `Int64` timestamp vs expected `Datetime('ns','UTC')` — affects 2026-04-10/11/12.
+   Silent skip (shard-isolation catches it), but `onchain_perps` features empty for those dates.
+2. `utilization` subprocess stall: after loading 134k rate_indices rows for 2026-04-08, child process hung >1h.
+   Watchdog killed the VM after 3601s log silence.
+
+**Blocker**: Paper backtest (harsh-side) blocked until Smoke B re-run passes.
+Issue doc: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
+
+**Assigned to ikenna-slot6**: perp_funding timestamp cast fix + utilization stall investigation.
+Expected fix cycle: <1 day (if Bug 1 only → cast on read is a 5-line change; Bug 2 needs investigation).
+
+**Harsh-side**: no action needed now. Wait for Smoke B re-run green confirmation before launching paper backtest.
+Ikenna-main will ping when Smoke B passes.
