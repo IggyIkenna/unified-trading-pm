@@ -2,6 +2,12 @@
 title: Expected-Absence Backfill Runbook
 status: shipped
 created: 2026-05-07
+last_reviewed: 2026-05-17
+execution:
+  owner: "UTL maintainer (honest_coverage subsystem)"
+  cadence: "per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery"
+  verifier: "python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>"
+  last_executed: "writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body)"
 authoritative_for:
   Per-asset-group runbook for back-filling `record_expected_empty(reason=...)` rows over legacy null-reason manifest
   entries AND for enumerating the structurally-empty universe (chain pre-genesis / venue pre-launch / source

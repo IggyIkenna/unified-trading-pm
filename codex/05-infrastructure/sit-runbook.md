@@ -1,5 +1,11 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
+execution:
+  owner: "workspace-platform (CI maintainers)"
+  cadence: "ad-hoc — when SIT is stuck or staging is locked"
+  verifier: "gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed"
+  last_executed: "documented; force-unlock procedure exercised periodically per CI fail-recovery"
 ---
 
 # SIT (System Integration Tests) Runbook

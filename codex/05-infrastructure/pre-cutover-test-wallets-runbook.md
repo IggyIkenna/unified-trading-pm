@@ -1,5 +1,11 @@
 ---
 scope: [admin, operator]
+last_reviewed: 2026-05-17
+execution:
+  owner: "operator (ikenna) — wallet generation + KMS encryption"
+  cadence: "one-shot (per cutover) — re-run only on wallet rotation"
+  verifier: "gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype"
+  last_executed: "pending May-23 cutover (test-wallet ramp)"
 ---
 
 # Pre-cutover test-wallet operator runbook
