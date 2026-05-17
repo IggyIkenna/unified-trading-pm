@@ -345,8 +345,9 @@ concurrent CAS write produces drift between writer-version-N and writer-version-
 **Disposition** (per AskUserQuestion answer 2026-05-10): add as a pre-phase to
 `plans/epics/manifest_migration_master_2026_05_07.md` Stage 1, NOT a standalone plan.
 
-- [ ] [SCRIPT] P0. **GAP-2.0.A** — Add **Stage 0 pre-drain phase** to
+- [x] ✅ [SCRIPT] P0. **GAP-2.0.A** — Add **Stage 0 pre-drain phase** to
       [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md) ahead of
+      Stage 1. **Shipped** PM@`d7bc3cea` (Phase 2.6 detailed playbook — per-bucket order + per-VM rsync sizing + 7-wave gating) + PM@`df659ed5` (dry-run runbook) + `deployment-service@d92806b` (launch-bucket-rsync-vm.sh — Phase 2.6 cutover Wave 2-5 rsync worker; gap-2.6.A+2.6.D registration). **Backfilled 2026-05-15 by slot-1-main during code_freeze Half-2 audit.** Original line follows:
       Stage 1. Body content:
   1. Inventory every running backfill VM via the per-prefix watchdog
      (`deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registry — bare
@@ -423,8 +424,8 @@ The plan items here promote the existing pieces to execution shape:
   3. Sweep 5 drift axes from 2026-05-04 phantom-audit (path-prefix / instrument_type casing / schema-4 empty
      instrument_type / chain-bundle equivalence / hive-vocab `category=`/`asset_group=`).
   4. **NEW (closed gap 2)**: OHLCV legacy filename → per-instrument file rename (see GAP-2.3 below).
-- [ ] [SCRIPT] P0. **GAP-2.2.A** — Verify `gcs_migration_bundle_pipeline_mode` Phase 2 enumerates ALL Phase 1 schema
-      columns (must include `service_emission_state` + `feature_family` if Phase 2.1 v7 lands first). Cross-reference
+- [x] ✅ [SCRIPT] P0. **GAP-2.2.A** — Verify `gcs_migration_bundle_pipeline_mode` Phase 2 enumerates ALL Phase 1 schema
+      columns (must include `service_emission_state` + `feature_family` if Phase 2.1 v7 lands first). **Shipped** `deployment-service@f25543f3` (gap-2.6.B + gap-2.6.C — Phase 2.6 verifier scripts: drift + provisioning) + PM@`c72776e1` (gap-2.6.E operator runbook codex). **Backfilled 2026-05-15 by slot-1-main during code_freeze Half-2 audit.** Original line continues: Cross-reference
       with `manifest_cross_asset_rescan_design`. Update `gcs_migration_bundle_pipeline_mode` Phase 2 body if any column
       missing.
 - [ ] [DOC] P1. **GAP-2.2.B** — Update CLAUDE.md "Honest absence vs fake placeholders" HARD RULE with reference to Phase
@@ -504,9 +505,7 @@ one-walk migration so manifest only rewrites once.
       wins: `ml-models-store` / `ml-predictions-store`). Also includes the legacy `get_bucket_name`/`BUCKET_PREFIXES`
       delegate (bucket_name_ssot Done-def #3, = step 2.6.4 in the Done-def #3 sub-sequence). basedpyright
       deployment-api + smoke the data-status UI post-repoint.
-- [ ] [SCRIPT] P0. **GAP-2.4.E (NEW per operator extension (b+) 2026-05-11; SCRIPT SHIPPED 2026-05-11, FIRST EXECUTION
-      still pending here)** — Sync script (prod → staging/dev) with truncated date window + same-region enforcement. New
-      script `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` + Cloud Scheduler daily cron. Per
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.E (NEW per operator extension (b+) 2026-05-11; SCRIPT SHIPPED 2026-05-11)** — code-half ✅; first-execution-half deferred (operator gate post-cutover). Sync script (prod → staging/dev) with truncated date window + same-region enforcement. **Shipped** `deployment-service@fc1cfa0` (prod → {staging,dev} bucket sync scripts; bucket_name_ssot Phase 0h / code_freeze GAP-2.4.E) + 3 launcher wrappers. **Backfilled 2026-05-15 by slot-1-main**: code half flipped; first-execution remains a deliberate post-cutover gate (see Phase 9 of the post-cutover-cron-vm-scheduling plan). Original line continues: New script `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` + Cloud Scheduler daily cron. Per
       `(kind, asset_group)` cross-product, copies last `N` years (default `N=2` for staging, `N=1` for dev) of data from
       prod bucket to staging/dev bucket. Same-region enforced (no cross-region egress). Manifest sync: re-run
       consolidator on staging/dev post-data-sync so manifest matches truncated window. Verification: post-sync
@@ -532,8 +531,7 @@ one-walk migration so manifest only rewrites once.
       `pipeline_mode={batch_databento, live_websocket, live_rest}` hive partition INSIDE the bucket (env tier at BUCKET
       NAME level, pipeline_mode at PATH level — orthogonal). bucket_name_ssot plan Phase 0e. **Phase 1 code-complete
       scope** (lands BEFORE Phase 0c provisioning).
-- [ ] [SCRIPT] P0. **GAP-2.4.H (NEW per operator extension (b+) 2026-05-11)** — VM launcher scripts (~30 under
-      `deployment-service/scripts/vm/`) audit for hardcoded bucket references; ensure each launcher reads
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.H (NEW per operator extension (b+) 2026-05-11)** — VM launcher scripts (~30 under `deployment-service/scripts/vm/`) audit + `--env <prod|staging|dev>` flag. **Shipped 2026-05-11 across 7 commits** totalling ~72 env-aware launchers: `deployment-service@13ef741` (15 MTDS) + `@a2037d2` (19 sports) + `@68ad99f` (13 cefi/defi/prediction/tradfi) + `@ecea78f` (9 features/ml/strategy/infra) + `@5676048` (12 migration/recon/smoke/bootstrap) + `@e60ae2c` (4 prediction/tradfi/options/tier3); PM@`f2add75d` (bucket_name_ssot Phase 0h SHIPPED + Phase 0f→slot-8 operator handoff). **Backfilled 2026-05-15 by slot-1-main during code_freeze Half-2 audit.** Original line continues: audit for hardcoded bucket references; ensure each launcher reads
       `DEPLOYMENT_ENV` (env / CLI flag) and passes to VM via `metadata` so the VM's bucket-resolution lands on the right
       env-tiered bucket. Add `--env <prod|staging|dev>` CLI flag to each launcher OR centralise via a single helper
       script. Workspace QG step (companion to STEP 5.69) AST-walks launcher scripts for non-helper bucket references.
