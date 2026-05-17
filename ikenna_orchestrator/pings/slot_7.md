@@ -1100,3 +1100,10 @@ because the issue is statused P2 post-cutover — proceed regardless.
   DeribitOrdersMixin.get_order_status 60L→16L via _parse_deribit_order_state_result static helper.
 
 310 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 29] slot-7 — execution-service Phase B (+2, 69/377 cleared):
+
+- `execution-service@93e653160` — PassiveAggressiveCoreMixin._get_passive_price 60L→31L via _apply_bps_adjustment
+  (BUY/SELL unified); DriftConnector.cancel_order 60L→23L via _build_cancel_paper_result.
+
+308 remaining. basedpyright clean.
