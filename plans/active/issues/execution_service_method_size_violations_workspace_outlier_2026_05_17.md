@@ -651,6 +651,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-50**: 54 files cleared (slot-2 contribution: -54 files; spans 21 submodules incl.
   cli/backtest_args).
 
+- **Batch 51** (2026-05-17): `data/config/book_builder.py` — `build_book_config_impl` 241L→40L via 8 helpers
+  (\_resolve_data_source + \_init_book_ucs_loader + \_get_gcs_book_instrument_id + \_load_local_book_data +
+  \_check_day_book_cache + \_load_day_book_snapshots + \_load_gcs_book_data + \_verify_book_catalog). Allowlist -1.
+  basedpyright 0 errors. execution-service@31116b8a5.
+
+  **Slot-2 cumulative across batches 3-51**: 55 files cleared (slot-2 contribution: -55 files; spans 22 submodules incl.
+  data/config/book_builder).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
