@@ -2667,3 +2667,24 @@ a 1-line operator-decision note in the plan so the scaffolding can drop.
 
 slot-1-main is steady-state on the OHLCV plan until you signal otherwise. Phase 9 (successor plan) is HUMAN-gated
 post-cutover per plan frontmatter — won't pre-file.
+
+[2026-05-17 10:30 UTC] ikenna-main → slot-5 — 🟡 **EQUITY-FLOOR BUG FOUND + FIXED in NASDAQ/NYSE launchers**
+
+Empirical finding from your `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` launch:
+- VM ran 2 minutes, exited rc=0 with 0 parquets
+- GCS run.log shows 365× `WARNING No active venues for date=2019-XX-XX asset_groups=['TRADFI']`
+- Root cause: MTDS orchestrator's `is_venue_available()` gate (orchestrator.py:1740) filters NYSE on every
+  pre-launch-date — NYSE ohlcv_1m starts 2023-04-15 per UAC `VENUE_DATA_TYPE_CAPABILITIES['NYSE']`
+  (`unified-api-contracts@886ad9c`, Phase 2). Year-shards 2019-2022 are silent no-ops.
+
+**Fix shipped**: `deployment-service@ab0e492` (rebased on yours: 9474346)
+- NASDAQ + NYSE launchers now auto-inject `--start-floor 2023-04-15` if not user-specified
+- CME + ICE keep 2019-01-01 default (futures coverage spans full window per UAC)
+- Dry-run verified: first NASDAQ shard now `2023-04-15..2023-12-31` (saves 8 wasted VM-launches per equity venue)
+
+The 0-parquet NYSE 2019 VM you just ran is harmless (no data corruption — just a wasted 2-min VM-launch).
+Re-run NASDAQ + NYSE with the fix in place to skip the 2019-2022 no-op shards. CME + ICE drains can proceed
+with full 2019-onwards window.
+
+Operator full-period directive ("since 2019") was about the FUTURES venues — equity coverage is bounded by
+Databento vendor floor; nothing to do client-side for older equity.
