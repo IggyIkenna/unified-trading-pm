@@ -1115,3 +1115,10 @@ because the issue is statused P2 post-cutover — proceed regardless.
   _resolve_expected_qty + docstring trim.
 
 306 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 31] slot-7 — execution-service Phase B (+2, 73/377 cleared):
+
+- `execution-service@299b10d35` — LeveragedLegController.emit_rebalance_instructions 61L→47L (docstring trim);
+  InstructionRouter._run_compose_validation 61L→44L (docstring trim).
+
+304 remaining. basedpyright clean.
