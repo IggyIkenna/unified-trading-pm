@@ -618,3 +618,29 @@ with `asyncio.get_running_loop().run_in_executor(None, ...)` + `asyncio.wait_for
 
 Smoke B re-run launching now (slot-1 main). You are unblocked from features-onchain perp_funding + utilization work.
 Pick up alerting-service or any remaining non-operator-gated items from your plan.
+
+---
+
+## [main → slot 6] 2026-05-17 ~21:45 UTC — Smoke B DONE ✅; new theme: Simulation Scenarios Phase 6
+
+**Smoke B DEPLOYMENT_COMPLETED** at 20:21 UTC (VM 211522, exit_code=0, 11/11 groups, 7 bugs fixed).
+All Smoke B work closed — B-015 paper backtest UNBLOCKED on harsh-side.
+
+**Your prior alerting-service work** (AlertCode wiring @518bddc) is the last agent-doable item.
+Remaining alerting items are [HUMAN] or [SCRIPT]-with-SM-credentials — operator-gated.
+
+**New theme**: `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 6 — Backtest harness wire-in
+
+Phases 1-5 are DONE. Phase 6 is ready:
+
+**6.A** — Unified backtest CLI flags: extend backtest entry with `--scenario-id`, `--scenario-matrix`, 
+`--scenario-overlay-yaml` (mutually exclusive). Per `codex/06-coding-standards/cli-convention.md`.
+
+**6.B** — Pipeline wiring: backtest entry instantiates `ScenarioContext` from CLI flag + injects into 
+unified pipeline. `ScenarioContext` propagates via config-reloader pattern.
+
+**6.C** — YAML overlay schema: `ScenarioOverlay` pydantic round-trips via 
+`unified_api_contracts.scenario_overlay.ScenarioOverlay.model_validate_yaml`. 
+Schema published to `unified-api-contracts/schemas/scenario_overlay.schema.json`.
+
+QG after each repo (strategy-service + UAC). Half-2 flip in same turn. Ping slot-1 when Phase 6 shipped.
