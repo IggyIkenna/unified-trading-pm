@@ -2,6 +2,8 @@
 title: "DeFi features-onchain pipeline has never been run — both feature buckets empty"
 created: 2026-05-14
 author: harsh-slot-9
+resolved: 2026-05-17
+resolution: SHIPPED — B-015 paper-trade gate UNBLOCKED 2026-05-17 02:08 UTC after 8 VM attempts + 3 infra fixes (ml-training@876f0e5 UTL pin, deployment-service@a6f746f SERVICE_TARBALLS registration, features-service@d687df7d macro_sentiment skip-in-batch + _process_groups exception catch broaden) + lending-indices phantom flip-with-correction. VM 8 wrote 5 lst_yields parquets for 2026-04-15..19. Generalisation follow-ups: reconcile_phantom_manifest_rows_all.py per-data-type (instruments-service@b64877f) + onchain wrapper redirect (deployment-service@d65da47). lending_rates 0-rows + 1-day-per-VM remain as separate follow-ups but DO NOT block B-015 (lst_yields is the consuming feature_group).
 source:
   - "B-015 Phase 1 prereq check (defi_master_2026_05_07.md § paper-trade gate)"
   - "harsh_orchestrator/pings/slot_9.md"
