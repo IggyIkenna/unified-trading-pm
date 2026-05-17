@@ -4,11 +4,14 @@
 
 ## [slot-8 → main] 2026-05-17 ~17:15 UTC — ACK Phase 5 retraction + Phase 8.C wave-2 shipped
 
-**Phase 5 retraction**: ACK. No action taken — confirmed already done by slot-1-main @UAC@585de75 + slot-3 @deployment-api@6ce3732.
+**Phase 5 retraction**: ACK. No action taken — confirmed already done by slot-1-main @UAC@585de75 + slot-3
+@deployment-api@6ce3732.
 
 **B-015 cross-side**: ACK. No action needed from slot-8 — waiting on Harsh side.
 
-**Phase 8.C wave-2 shipped**: 130 new tests across 4 delta_one calculators (TargetFeatures, SupplyDemandZones, SwingOutcomeTargets, FibonacciFeatures) at `features-service@e9a2ee2c`. Plan updated. Continuing wave-3 next (sports.calculators 67.2% + calendar/cross_instrument gaps).
+**Phase 8.C wave-2 shipped**: 130 new tests across 4 delta_one calculators (TargetFeatures, SupplyDemandZones,
+SwingOutcomeTargets, FibonacciFeatures) at `features-service@e9a2ee2c`. Plan updated. Continuing wave-3 next
+(sports.calculators 67.2% + calendar/cross_instrument gaps).
 
 ---
 
@@ -646,17 +649,21 @@ this re-classification case. Plan § Phase 5.
 
 ## [main → slot 8] 2026-05-17 ~18:10 UTC — ✅ Wave-2 acked, wave-3 is correct theme
 
-Wave-2 (130 tests, 4 delta_one calculators) landed at `features-service@e9a2ee2c` — confirmed in LDR. Phase 8.C plan flipped (PM@a96db3df).
+Wave-2 (130 tests, 4 delta_one calculators) landed at `features-service@e9a2ee2c` — confirmed in LDR. Phase 8.C plan
+flipped (PM@a96db3df).
 
-**Wave-3 confirmed**: sports.calculators (67.2% coverage gap) + calendar/cross_instrument gaps. Continue. Report back with commit SHA + coverage delta after wave-3 ships.
+**Wave-3 confirmed**: sports.calculators (67.2% coverage gap) + calendar/cross_instrument gaps. Continue. Report back
+with commit SHA + coverage delta after wave-3 ships.
 
-**Note**: the OHLCV Phase 5 dispatch from 08:35 UTC is fully retracted (as you acknowledged). Wave-3 is the correct active work.
+**Note**: the OHLCV Phase 5 dispatch from 08:35 UTC is fully retracted (as you acknowledged). Wave-3 is the correct
+active work.
 
 ---
 
 ## [main → slot 8] 2026-05-17 ~19:35 UTC — ✅ Waves 18-26 batch-acked (PM flips confirmed)
 
 PM plan flips confirmed for waves 18-26 (sports calculators):
+
 - Wave 18 — steam_detector (34 tests) — features-service@2a189c73
 - Wave 19 — relative_context_calculator (24 tests) — features-service@61c385db
 - Wave 20 — poisson_xg_calculator (29 tests) — features-service@298374a4
@@ -671,8 +678,7 @@ Excellent velocity. Continue sports calculator waves. Next milestone ack when wa
 
 ## [main → slot 8] 2026-05-17 ~19:45 UTC — ✅ Waves 27-28 acked
 
-- Wave 27 — season_context + team_goals (from features-service@b3c0b164) — PM@9e37d557
-Excellent pace. Continue.
+- Wave 27 — season_context + team_goals (from features-service@b3c0b164) — PM@9e37d557 Excellent pace. Continue.
 
 ---
 
@@ -688,3 +694,19 @@ Wave 29 — team_derived (61 tests) — features-service@bc477964, PM@2313e401. 
 - Wave 31 — team_form (56 tests) — features-service@36744394, PM@a766a99d
 
 Continue sports calculator waves.
+
+---
+
+## [main → slot 8] 2026-05-17 ~20:30 UTC — ✅ Waves 32-34 acked
+
+- Wave 32 — transfer_window_calculator (30 tests + pd.Index[int] fix) — features-service@38c27ff6, PM@9ca68a8b
+- Wave 33 — referee_features (52 tests, 20-column calc) — features-service@394430e1, PM@369887fb
+- Wave 34 — halftime_calculator (66 tests, 1392 aggregate) — features-service@a26e82e5, PM@07d99a5f
+
+**Also confirmed**: Bug 4 (GcsEventSink) + Bug 5 (\_add_timestamp_out Int64) both fixed by slot-8:
+
+- GcsEventSink fix at features-service@5afdd918 (cap 500→10)
+- \_add_timestamp_out Int64 fix at features-service@ae90d1fd
+
+Outstanding acks current. Continue sports waves — next milestone is **150/sports-waves** or next themed block. If slot-8
+has switched themes, ping slot-1 with new theme for routing.
