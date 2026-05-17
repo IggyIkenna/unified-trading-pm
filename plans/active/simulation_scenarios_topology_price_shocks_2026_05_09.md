@@ -1341,8 +1341,9 @@ successor plan's Phase 3 multi-layer wire-in.
 
 ---
 
-- [ ] [DESIGN] P0. **1.T1 per-venue-down** (`cefi_venue_circuit_breaker_trip` — Binance/Bybit/OKX API outage). Full
-      design at
+- [x] [DESIGN] P0. **1.T1 per-venue-down** (`cefi_venue_circuit_breaker_trip` — Binance/Bybit/OKX API outage). ✅
+      DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc `01_cefi_venue_circuit_breaker_trip.md` + plan
+      body summary = canonical design record. Full design at
       [`scratch_scenarios_day1/01_cefi_venue_circuit_breaker_trip.md`](scratch_scenarios_day1/01_cefi_venue_circuit_breaker_trip.md).
       Summary:
 
@@ -1374,8 +1375,9 @@ successor plan's Phase 3 multi-layer wire-in.
   - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Per-venue kill-switch";
     `codex/04-architecture/autonomous-recovery-matrix.md` § "VENUE_OUTAGE_SECONDS recovery rule".
 
-- [ ] [DESIGN] P0. **1.T2 per-chain-down** (`defi_chain_rpc_outage_solana` — Ethereum RPC or Solana RPC unreachable).
-      Full design at
+- [x] [DESIGN] P0. **1.T2 per-chain-down** (`defi_chain_rpc_outage_solana` — Ethereum RPC or Solana RPC unreachable). ✅
+      DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc `02_defi_chain_rpc_outage_solana.md` + plan
+      body summary = canonical design record. Full design at
       [`scratch_scenarios_day1/02_defi_chain_rpc_outage_solana.md`](scratch_scenarios_day1/02_defi_chain_rpc_outage_solana.md).
       Summary:
 
@@ -1410,8 +1412,9 @@ successor plan's Phase 3 multi-layer wire-in.
   - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi kill-switch hierarchy"; UAC
     `CHAIN_RPC_TEMPLATES` in `_defi.py`.
 
-- [ ] [DESIGN] P0. **1.T3 per-protocol-paused** (`defi_liquidity_drain_lending_pool` — Aave/Morpho market paused or
-      borrow-cap reached). Full design at
+- [x] [DESIGN] P0. **1.T3 per-protocol-paused** (`defi_liquidity_drain_lending_pool` — Aave/Morpho market paused or
+      borrow-cap reached). ✅ DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc
+      `03_defi_liquidity_drain_lending_pool.md` + plan body summary = canonical design record. Full design at
       [`scratch_scenarios_day1/03_defi_liquidity_drain_lending_pool.md`](scratch_scenarios_day1/03_defi_liquidity_drain_lending_pool.md).
       Summary:
 
@@ -1454,8 +1457,9 @@ successor plan's Phase 3 multi-layer wire-in.
   - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi protocol-pause kill-switch";
     `codex/04-architecture/autonomous-recovery-matrix.md` § "borrow_blocked state".
 
-- [ ] [DESIGN] P0. **1.T4 oracle-stale** (`defi_oracle_deviation_30sigma` — Chainlink heartbeat exceeded or 30σ
-      wild-print). Full design at
+- [x] [DESIGN] P0. **1.T4 oracle-stale** (`defi_oracle_deviation_30sigma` — Chainlink heartbeat exceeded or 30σ
+      wild-print). ✅ DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc
+      `04_defi_oracle_deviation_30sigma.md` + plan body summary = canonical design record. Full design at
       [`scratch_scenarios_day1/04_defi_oracle_deviation_30sigma.md`](scratch_scenarios_day1/04_defi_oracle_deviation_30sigma.md).
       Summary:
 
@@ -1495,7 +1499,9 @@ successor plan's Phase 3 multi-layer wire-in.
   - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Oracle-divergence kill-switch"; UAC
     `CHAIN_RPC_TEMPLATES` + `config/testnet_contracts.yaml` (oracle address registry).
 
-- [ ] [DESIGN] P0. **1.T5 gas-spike** (`defi_gas_surge_50x` — Ethereum gas price 10-50× baseline). Full design at
+- [x] [DESIGN] P0. **1.T5 gas-spike** (`defi_gas_surge_50x` — Ethereum gas price 10-50× baseline). ✅ DESIGN-COMPLETE
+      2026-05-17 — UAC@33630a6 registry live; scratch doc `05_defi_gas_surge_50x.md` + plan body summary = canonical
+      design record. Full design at
       [`scratch_scenarios_day1/05_defi_gas_surge_50x.md`](scratch_scenarios_day1/05_defi_gas_surge_50x.md). Summary:
 
   **Trigger condition**: At `T+N` (default N=60s), the features-onchain gas-oracle feature for the targeted chain
@@ -1532,8 +1538,9 @@ successor plan's Phase 3 multi-layer wire-in.
   - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Gas-budget circuit breaker"; UAC
     `registry/risk_rules/archetype.py` `GAS_BUDGET_PER_ARCHETYPE` rule definition.
 
-- [ ] [DESIGN] P0. **1.T6 mempool-congestion** (`defi_mempool_congestion_inclusion_delay` — nonce queuing delays + MEV
-      sandwich risk). Full design at
+- [x] [DESIGN] P0. **1.T6 mempool-congestion** (`defi_mempool_congestion_inclusion_delay` — nonce queuing delays + MEV
+      sandwich risk). ✅ DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc
+      `06_defi_mempool_congestion.md` + plan body summary = canonical design record. Full design at
       [`scratch_scenarios_day1/06_defi_mempool_congestion.md`](scratch_scenarios_day1/06_defi_mempool_congestion.md).
       Summary:
 
