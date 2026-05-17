@@ -2475,3 +2475,20 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 
 **Harsh-side cross-ping sent**: _agent_pings.md updated — hold paper backtest until DEPLOYMENT_COMPLETED from VM 6.
 
+## [slot 1 main] 2026-05-17 ~19:51 UTC — tick-59: VM 204250 onchain_perps 04-08 suppressed; duplicate VM 204443 already cleaned up
+
+**VM 204250 progress** (19:50:24 UTC last entry):
+- ✅ macro_sentiment: batch-skip (19:45:12)
+- ✅ lending_rates: all 5 dates written (19:45:13 → 19:45:48)
+- ✅ lst_yields: all 5 dates written (19:45:48 → 19:46:12)
+- 🔄 onchain_perps: started 19:46:13; 04-08 STALE_DATA suppressed at 19:50:24 (~4 min/date pattern holds)
+  - 04-09 suppression expected ~19:54:33
+  - 04-10 ~19:58, 04-11 ~20:02, 04-12 ~20:07
+
+**Duplicate VM 204443**: was launched by parallel session before my tick-58. Already STOPPED/cleaned up (PM@7386f319 "conflict resolved"). GCS logs show it reached onchain_perps at 19:48:30 then was killed. MANIFEST_PER_VM_SHARDS=true ensures no manifest conflict.
+
+**Parallel activity**: slot-5 dispatched sports wave-42 (halftime_calculator, features-service@f6b8fff4) — wave-42 already flipped (PM@bb34500f).
+
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
+**Status**: 🟡 Smoke B IN-PROGRESS — VM 204250 running, onchain_perps ~halfway through
+
