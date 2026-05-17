@@ -2492,3 +2492,20 @@ Then utilization (~2 min), then rate_impact (~1 min) — Bug 4 validation pendin
 **DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
 **Status**: 🟡 Smoke B IN-PROGRESS — VM 204250 running, onchain_perps ~halfway through
 
+## [slot 1 main] 2026-05-17 ~19:59 UTC — tick-60: VM 204250 onchain_perps 04-10 suppressed; 2 dates remaining
+
+**VM 204250 progress** (19:58:57 UTC last entry):
+- ✅ macro_sentiment: batch-skip
+- ✅ lending_rates: all 5 dates written
+- ✅ lst_yields: all 5 dates written
+- 🔄 onchain_perps: 04-08 ✅ (19:50:24), 04-09 ✅ (19:54:43), 04-10 ✅ (19:58:57) — ~4m15s/date pattern
+  - 04-11 expected ~20:03:12, 04-12 ~20:07:27
+  - All STALE_DATA suppressed (strict_fail policy, historical dates)
+- utilization: next (~2 min for 5 dates — Bug 2 fix still working)
+- rate_impact: BATCH_SKIP guard active (c10fa999)
+
+**Parallel progress**: slot-5 shipped waves 43-44 (footystats 100%, squad_value 100%, odds_velocity 96.9% — PM@19ba0a4b). slot-9 still CYCLE-CLOSE.
+
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
+**Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 3/5 done, no errors
+
