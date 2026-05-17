@@ -483,6 +483,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
    + 1 engine/validation + 1 adapter).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 28 — engine/modes/live)**: live/matching_engine.py shipped at
+   execution-service@21da77ec3 (submit_order 77L→39L via \_resolve_price (BUY→best_ask, SELL→best_bid, else
+   last_price; passthrough order.price when set) + \_build_matcher_kwargs (L0_TOB book + MD → best_bid/offer +
+   bid/offer_size; empty otherwise)). Same MARKET→MAX_SLIPPAGE for AMM and CanonicalFill build path preserved.
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-28**: 32 files cleared (slot-2 contribution: -32 files; spans 11
+   submodules: handlers + defi protocols + services + preprocessor + service_config + algo_library + CEX adapter +
+   backtest_v2 + engine/validation + adapter + engine/modes).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
