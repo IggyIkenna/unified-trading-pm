@@ -1,4 +1,4 @@
-violation_count: 173
+violation_count: 162
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
@@ -255,11 +255,7 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/bucket-isolation-model.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/chain-rpc-mev-tenderly.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/cicd-setup.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md
   reason: no-last_reviewed-field
@@ -283,23 +279,13 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/hsm-wallet-signing.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md
-  reason: invalid-last_reviewed-format
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/library-setup-checklist.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/new-repo-setup.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/per-archetype-wallet-isolation.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/quickmerge-architecture.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/replay-subsystem.md
   reason: no-last_reviewed-field
@@ -308,8 +294,6 @@ baseline_files:
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/run-lifecycle-events-audit-2026-05-05.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/secret-manager-naming.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/service-setup-checklist.md
   reason: no-last_reviewed-field
@@ -326,12 +310,6 @@ baseline_files:
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/unified-libraries/dependency-matrix.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-tarball-deployment.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/workspace-root-variable.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/workspace-setup.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/11-project-management/README.md
   reason: no-last_reviewed-field

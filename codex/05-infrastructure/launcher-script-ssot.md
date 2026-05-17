@@ -1,7 +1,8 @@
 ---
 scope: infrastructure
 status: stable
-last_reviewed: 2026-05-15 (Phase 9 audit)
+last_reviewed: 2026-05-17
+last_reviewed_note: "Phase 9 audit 2026-05-15"
 ---
 
 # VM launcher script SSOT — `deployment-service/scripts/vm/`

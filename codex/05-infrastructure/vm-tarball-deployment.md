@@ -1,5 +1,7 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
+owner: deployment-platform
 ---
 
 # VM Tarball Deployment — SSOT

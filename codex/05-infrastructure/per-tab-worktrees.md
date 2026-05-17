@@ -3,6 +3,8 @@ title: "Per-tab worktrees — 3-tier isolation for parallel-agent flow"
 scope: workspace
 status: active
 last_updated: 2026-05-10
+last_reviewed: 2026-05-17
+owner: workspace-platform
 owner: ikenna
 related_plans:
   - plans/active/per_agent_worktrees_2026_05_10.md
