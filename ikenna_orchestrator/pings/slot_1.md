@@ -2967,3 +2967,27 @@ Pre-flight probes ran inside `run-paper.sh`:
 - Slot-10: no new ack
 
 **Status**: 🔴 B-015 BLOCKED-CREDENTIALS — awaiting operator; all other slots progressing
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:50 UTC — tick-76: poll + B-015 blocked + slots progressing
+
+**Poll results** (1 incoming commit — Wave-58 travel+transfer_window):
+- **B-015**: BLOCKED-CREDENTIALS (pre-flight gate). Operator action required (tick-75 + _agent_pings.md). No VM running.
+- **Parallel session fixes shipped**: deployment-service@ed9d023 (skip e2e-testing editable install) + @b72da58 (--waive-* passthrough in launcher). Pre-flight was the real blocker.
+- **Slot-2**: Phase B batch-96 done (157 files, 2 violations per batch) ✅
+- **Slot-5**: Sports waves (Wave-57 halftime_columns+odds_columns acked) — operating as wave agent rather than Phase B algorithms/. Phase B coverage from slot-5 may be deferred.
+- **Slot-7**: DARK 5h+ — no response to either check-in.
+- **Slot-8**: Wave-58 travel+transfer_window ✅ (wave-59+ coming)
+- **Slot-10**: Phase U6 execute-service manual-gate — no ack.
+
+**Execution-service violations** (current): 405 methods >60L (was 377 at baseline; slot-2 batches clearing smaller violations but large methods still untouched)
+
+**Key pending items for operator** (in priority order):
+1. 🔴 B-015 pre-flight waivers decision (--waive-copper, --waive-venue-keys, etc.) OR credential provisioning
+2. 🟡 Slot-7 DARK: may need manual recovery or fresh spawn
+3. 🟡 Slot-10 Phase U6: no ack since assignment
+
+**No new actionable items.** Monitoring continues.
+
+**Status**: 🔴 B-015 blocked; 🟢 sports waves/Phase B progressing
