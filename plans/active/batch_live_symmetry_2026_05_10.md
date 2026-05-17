@@ -34,6 +34,14 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Batch=Live design symmetry — 8-tab execution plan
 
 **Cutover deadline**: 2026-05-23 — `carry_staked_basis` lead + `leveraged_funding_arb` hedge live on real wallet ≥7

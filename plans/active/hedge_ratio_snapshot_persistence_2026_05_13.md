@@ -26,6 +26,14 @@ estimate_calibration_note: |
   + parquet path SSOT + manifest entry. ~3 baseline × 0.6 multiplier = 1.8 cal-AI-days.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # HedgeRatioSnapshot persistence — emit-to-data_type sub-plan
 
 ## Why this plan exists

@@ -36,6 +36,14 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # DeFi catalogue + chain primitives buildout (May-23 cutover)
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)

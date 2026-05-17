@@ -30,6 +30,14 @@ estimate_calibration_note: |
   Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Deployment + QG strategy implementation
 
 > **Spawned from**

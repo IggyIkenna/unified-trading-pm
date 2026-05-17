@@ -24,6 +24,14 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 ## STATUS BOARD — 2026-05-12 (agent orientation — read this, skip the 4000-line body)
 
 ### Operator decisions (locked 2026-05-12)

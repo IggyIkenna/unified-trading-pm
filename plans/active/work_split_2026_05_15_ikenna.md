@@ -10,6 +10,14 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Ikenna's daily work-split — 2026-05-15
 
 > **Cycle context**: Day-4 of the density push. Phase 1 freeze gate fired 2026-05-15. This split **continues from 14

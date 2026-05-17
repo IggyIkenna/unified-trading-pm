@@ -19,6 +19,14 @@ estimate_calibration_note: |
   time just tell your agents to take all my agents work").
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Harsh's daily work-split — 2026-05-13 (Day-4 close — Harsh-side ONLY)
 
 > **No Ikenna companion today** — Ikenna on flights all day (signal sporadic; one in-air assist around 11:22 IST on

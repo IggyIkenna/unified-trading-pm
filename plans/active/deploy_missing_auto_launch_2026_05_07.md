@@ -37,6 +37,14 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 14 todos, 6 done; 8 remaining covering deployment-api→gcloud auto-launch endpoint + tarball-refresh wiring + IAM/audit + per-VM observability + idempotency guards. infra class (real auto-launch surface, security review). Baseline 9 (~1.1 AI-day per remaining infra todo); × 0.8 = 7.2.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Deploy-Missing auto-launch (preview -> auto)
 
 > **🟢 FOLD-IN CONFIRMED — RATIFIED 2026-05-10 cross-plan audit L3.** This plan **stays as an independent implementation

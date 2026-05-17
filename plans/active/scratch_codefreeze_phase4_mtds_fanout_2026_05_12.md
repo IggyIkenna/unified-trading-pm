@@ -20,6 +20,14 @@ estimate_calibration_note: |
   calibrated 0.8 AI-day.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Phase 4.MTDS + writegate slice (c) callsite-migration — fan-out prep (Harsh slot 3)
 
 > **🟡 GATED — DO NOT EXECUTE YET.** Spawn the fan-out only after **both** land on `live-defi-rollout`: (1) UAC

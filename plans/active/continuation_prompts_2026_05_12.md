@@ -9,6 +9,14 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
+`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
+specific successor / blocker per-item. No single migration target — this plan tracks
+multiple per-item dispositions.
+
+
 # Continuation prompts — 2026-05-12 — density-push cycle
 
 > **Why this doc**: 2026-05-12 split is a thematic reset for slots 2-8 (Ikenna side). Density target = 14-16 calibrated
