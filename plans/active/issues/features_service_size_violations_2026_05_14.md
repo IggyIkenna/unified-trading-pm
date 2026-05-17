@@ -2,6 +2,8 @@
 title: features-service codex compliance — 2 remaining size violations (Ikenna-owned)
 created: 2026-05-14
 author: harsh-slot-5
+resolved: 2026-05-14
+resolution: SHIPPED — features-service@29cd4ea6 (slot-11). 3 other codex violations were already fixed by LDR commit 9e3339d1.
 severity: P2
 status: RESOLVED — features-service@29cd4ea6 (2026-05-14 slot-11)
 source:

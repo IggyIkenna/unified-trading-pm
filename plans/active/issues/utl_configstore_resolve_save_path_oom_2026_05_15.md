@@ -2,6 +2,8 @@
 title: "UTL OOM root-cause + workspace audit + UTL architecture review (2026-05-15)"
 created: 2026-05-15
 author: harsh-claude (forensic audit + reproduction + workspace sweep)
+resolved: 2026-05-15
+resolution: ROOT-CAUSE FIXED — utl@93ff771 fixes the 75GB OOM at persistence.py:388. P1-P3 follow-ups documented for triage.
 severity: P0 fixed (root cause); P1-P3 follow-ups documented
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
