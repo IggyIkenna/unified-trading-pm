@@ -2,6 +2,26 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~20:45 UTC — session resumed after context compaction; VM updates + new theme needed
+
+**Session resumed** (context compaction). All prior deploy_missing + work-split items confirmed done via git log.
+
+**VM status**:
+- `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING — 528 manifest entries at 2023-08-14 (~90% done). Will flip
+  tradfi plan GC 2023 item on DEPLOYMENT_COMPLETED.
+- `features-onchain-defi-20260517-200717` RUNNING — progressed through onchain_perps (STALE_DATA suppressed all 5
+  dates 2026-04-08→12, policy=strict_fail); now at rate_impact window ~19:39 UTC per tick-57.
+
+**Potential Bug 6 (observation, not blocking)**:
+`onchain_perps` STRICT_FAIL policy blocks writes for ALL historical backfill dates (any NaN in perp features → STALE_DATA).
+WriteGate passes (nan_threshold=0.95) but emission policy requires 100%. If paper backtest needs onchain_perps for
+2026-04-08→12, these dates will be empty. Recommend changing `onchain_perps` emission policy to PARTIAL_OK for
+features-onchain-service. Filing for main's awareness — not taking action unilaterally.
+
+**Slot 5 status**: all 15 work-split items + all 6 deploy_missing items DONE. **New theme needed**.
+
+---
+
 ## [slot 5 → main] 2026-05-17 ~20:05 UTC — slot-5 work-split cleanup complete; GC 2023 running; requesting new theme
 
 **Completed this cycle**:
