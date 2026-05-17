@@ -2,10 +2,10 @@
 scope: [engineer, admin]
 last_reviewed: 2026-05-17
 execution:
-  owner: batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI workflow)
-  cadence: T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI)
-  verifier: `batch-live-reconciliation-service` GET `/api/breaks` + POST `/api/resolve` persists `ReconciliationResolution` per UAC `internal/reconciliation.py`; deviation thresholds per-stage from `models/deviation_thresholds.py`.
-  last_executed: NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21)
+  owner: "batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI workflow)"
+  cadence: "T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI)"
+  verifier: "batch-live-reconciliation-service GET /api/breaks + POST /api/resolve persists ReconciliationResolution per UAC internal/reconciliation.py; deviation thresholds per-stage from models/deviation_thresholds.py."
+  last_executed: "NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21)"
 ---
 
 # Reconciliation Resolution Architecture
