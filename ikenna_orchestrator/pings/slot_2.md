@@ -568,3 +568,39 @@ Pickup discipline:
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
+---
+
+## 2026-05-17T~21:30Z — slot-2 SESSION-END VERIFICATION (extended autonomous loop, 2nd day)
+
+After extended overnight work, final verification of slot-2 cross-slot impact:
+
+**All 6 DeFi canonical manifests verified CLEAN** (snake-only, zero kebab rows):
+- `lending-indices`: 39,877 rows (was 64,853 with 24,976 kebab)
+- `dex-swaps`: 46,281 rows (was 74,452 with 28,171 kebab)
+- `dex-pools`: 72,682 rows (was 128,536 with 55,854 kebab)
+- `perp-funding`: 3,852 rows (was 6,118 with 3,298 kebab)
+- `oracle-prices`: 7,110 rows (Option D dropped 1,926 corrupt rows)
+- `lst-rates`: 16,620 rows (Option D dropped 1,560 corrupt rows)
+
+**Total kebab rows purged**: 122,757 — slot 4's Option D + Option G fully worked.
+
+**Today's lending_rates investigation closed**: slot-1-main root-caused at `features-service@50273e1f` (SchemaError
+in `pl.concat` due to MTDS Datetime[ns,UTC] vs Compound Int64 timestamp drift). Verified at VM 13: 92,716 rows
+written. My defense-in-depth `FEATURE_GROUP_DAILY_FLOW_TRACE` (features-service@aaa6b319) catches any future
+silent-row-drop class bug across ALL feature_groups, not just lending_rates.
+
+**features-onchain VM 091513 STOPPED cleanly** 09:19 UTC after 4-min run; auto-deleted; events archived.
+8 features-onchain VMs ran today total (072313/075413/082230/085414/085456/090444/090519/091513).
+
+**Net SLOT-2 contribution across the cycle (2026-05-16 → 17)**:
+- ~40+ PM commits
+- 7 code commits across 4 service repos (features-service x2 + IS x3 + UAC verified-only + 1 fixup)
+- 3 sub-agent dispatches successfully shipped (3-LENDING.5 reconciler + canonicalisation script + tests)
+- 4 cross-slot impact realisations (slot 4 shipped my Options A+D+G → 122,757 rows purged; slot 1 cross-pinged premature closeout)
+- FLOW_TRACE diagnostic as defense-in-depth for future silent-row-drop bugs
+- B-015 Option A architectural unblock (features-service@550cdaba)
+
+**Truly STOPPING**: nothing left actionable for slot 2 today without operator/cross-slot signals. Harsh slot 9 Smoke
+B re-launch awaited; Phase B perp-funding derive-chain not needed (Option G already cleaned it); MDPS streaming
+items 1/3/4/5/6 substantive multi-repo design deferred to next cycle.
+
