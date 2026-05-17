@@ -875,3 +875,17 @@ deployment-ui. Projection: $50-200 for the full 2019-2026 ohlcv_1m × CME+ICE+NA
   _safe_float_from_stats + _resolve_stats_returns helpers (3-key stats lookup + non-NaN guard).
 
 351 remaining. basedpyright clean across all 3 commits.
+
+
+[2026-05-17 /loop tick 15] slot-7 — execution-service Phase B (+2, 28/377 cleared):
+
+* `execution-service@ca20a72c9` — UnifiedOrderManager.handle_nautilus_order_event 52L→20L via
+  _coerce_numeric (getattr-Any → float) + _apply_order_filled_event helpers.
+* `execution-service@25ad9d474` — PassiveAggressiveSpawnMixin._spawn_aggressive_slice 52L→31L via
+  _resolve_fresh_parent_order helper (3 early-return guards into one None-check).
+
+NB: slot-1 main shipped Phase A baseline ratchet at `execution-service@91e2cfb9e` (187 paths in
+FUNCTION_SIZE_EXTRA_EXCLUDES). My Phase B refactors are still incrementally clearing the underlying
+369 violations regardless. 349 remaining (no slot-7 baseline-ratchet collision).
+
+basedpyright clean across all 2 commits.
