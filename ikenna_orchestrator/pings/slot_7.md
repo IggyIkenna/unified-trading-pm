@@ -989,3 +989,13 @@ basedpyright clean throughout. Cumulative session ship: ~100 methods refactored 
   _accrual_discrepancy_status helper (≥1% CRITICAL / ≥0.1% DISCREPANCY / MATCH classification).
 
 324 remaining. basedpyright clean.
+
+
+[2026-05-17 /loop tick 23] slot-7 — execution-service Phase B (+3, 56/377 cleared):
+
+* `execution-service@3c5f47d6c` — YieldReconEngine.reconcile_lst_yield 57L→36L via _lst_yield_status helper
+  (LST 20%/5% thresholds vs AAVE's 1%/0.1%).
+* `execution-service@ff4b3957e` — validate_tp_sl_for_instruction_type twin methods (utils/validation/ +
+  validation/) 57L→24L each (flattened nested branch into early-return ladder).
+
+321 remaining. basedpyright clean throughout. Cumulative session: ~105 methods refactored.
