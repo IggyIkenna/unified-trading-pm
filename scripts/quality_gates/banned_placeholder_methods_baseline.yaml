@@ -49,22 +49,15 @@ default_successor:
   "writegate Phase 2.A (banned-placeholder-method cleanup) — cosmetic renames + dead-code deletion of the residuals"
 
 entries:
-  # _maybe_write_vix_gap_placeholder — REFORMED 2026-05-11 by writegate Phase 2.A
-  # P0-2 step 4: the pre-reform body wrote a single market_state='closed' NaN-OHLC
-  # candle per timeframe for VIX 15m gap dates (2025-11-13 → ~today-60d) — same
-  # banned shape as the 1440-NaN-bar incident. It now emits per-timeframe
-  # record_empty_for_shard(reason=EXPECTED_KNOWN_SOURCE_GAP) (UAC enum landed
-  # 2026-05-11) — manifest carries empty_confirmed with the structurally-correct
-  # reason; NO placeholder parquet on disk. STEP 5.67 still flags it because the
-  # method NAME ("..._placeholder") still matches the heuristic — kept here as a
-  # warning so a NEW `_maybe_write_*_placeholder` elsewhere still fails CI.
-  - repo: market-data-processing-service
-    file: market_data_processing_service/app/core/orchestration_writer.py
-    method: _maybe_write_vix_gap_placeholder
-    status: pending_removal
-    successor:
-      "writegate Phase 2.A — cosmetic rename to e.g. `_record_vix_gap_empty` (the body is already honest; only the
-      misnomer name keeps it flagged) — then drop this entry"
+  # _maybe_write_vix_gap_placeholder — REMOVED 2026-05-17 (slot-8). Cosmetic rename
+  # to `_record_vix_gap_empty` shipped at MDPS@<pending>; body was already honest
+  # (emits record_empty_for_shard(EXPECTED_KNOWN_SOURCE_GAP) since 2026-05-11 writegate
+  # Phase 2.A step 4). The misnomer NAME was the last residual — now the new name no
+  # longer matches the BANNED_METHOD_NAMES regex, so STEP 5.67 stops flagging it.
+  # Entry dropped per "REMOVE an entry from this file the moment its successor
+  # deletes/reforms the occurrence" rule. (1 entry remains — output_writer_service
+  # dead-class upload_bytes residual below.)
+  #
   # output_writer_service.py:upload_bytes — DEAD CODE. OutputWriterService.write_candles
   # writes the candle parquet directly via storage_client.upload_bytes(...) WITHOUT
   # routing through record_captured / the 4-pillar write-gate — but the class is not
