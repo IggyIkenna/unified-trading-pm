@@ -909,6 +909,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-2 cumulative across batches 3-84**: 99 files cleared (slot-2 contribution: -99 files; spans 56 submodules).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 85 — docstring-trim sweep)**: shipped at execution-service@8a54ed3cf.
+  registry 1v (convert_to_nautilus_format 54L), amm_math 1v (quote_concentrated_liquidity 55L),
+  _storage 1v (create_storage_checker 55L), seasonal_points 1v (compute_implied_apr 55L),
+  rate_impact_engine 1v (_simulate_morpho 55L). 5 violations cleared.
+
+  **Slot-2 cumulative across batches 3-85**: 104 files cleared (slot-2 contribution: -104 files; spans 61 submodules).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
