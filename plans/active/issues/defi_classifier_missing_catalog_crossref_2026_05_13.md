@@ -4,6 +4,12 @@ title:
   100k cap
 created: 2026-05-13
 author: ikenna-slot-8
+resolved: 2026-05-17
+resolution:
+  SHIPPED — Structural fix at `unified-trading-library@513d79fb` (Wave 3 per-instrument catalog cross-ref in
+  `_classify_defi`) + `instruments-service@3670534` (corrector script). Per `work_split_2026_05_15_ikenna` slot 2 Phase
+  B re-attempt (2026-05-15) — dry run 605,070 candidates / 599,486 corrections all `EXPECTED_PRE_VENUE_LAUNCH` / 5,584
+  legit re-fetch; apply-flips ran RECONCILER_COMPLETED on 599,486 rows. cefi half resolved 2026-05-13 via Wave 3 cefi.
 severity: P0
 source:
   - unified-trading-library/unified_trading_library/legacy_reason_classifier.py:256-279 (_classify_defi)
