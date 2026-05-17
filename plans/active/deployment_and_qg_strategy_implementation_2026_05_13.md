@@ -457,8 +457,12 @@ surface, not per repo:
       \_detect_halftime xg_nan+counter_freeze+unavailable, slice helpers, \_compute_one_fixture,
       compute_sfi_progressive_batch) + `odds_velocity` (28 tests — compute_velocity_features, compute_opening_odds,
       compute_clv_features generic/sharp/direction). Shipped at `features-service@f52e469d`. 304 total tests across 9
-      calculator files. Remaining gap: sports.calculators still has multiple files at <75% (goal_timing 58.8%,
-      manager_calculator 65.7%, travel_calculator 54.1%, advanced_stats 59.3%) — wave 5 continuing.
+      calculator files. **Wave 5 (2026-05-17 slot-8)**: 64 new tests across 2 sports calculators: `goal_timing` (31
+      tests — compute_goal_timing_features, compute_goal_timing_for_team, compute_situational_rates, compute_goal_timing
+      pre-agg+derive_rates 1h/2h paths) + `advanced_stats_calculator` (33 tests — all feature blocks:
+      xG/possession/shots/ppda/tactical/pct/pressing/shot-quality/headed/efficiency/territory/key-passes, batch).
+      Shipped at `features-service@fedda39f`. 368 total tests across 11 calculator files. Remaining high-gap sports
+      files: travel_calculator 54.1%, manager_calculator 65.7% — wave 6 continuing.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
