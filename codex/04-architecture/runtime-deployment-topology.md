@@ -1566,7 +1566,7 @@ All API services in this cluster conform to the following pattern. Deviations ar
 ### Architecture
 
 - **Pure FastAPI** — no Python service engine code lives in these repos.
-- API services import from unified libraries (`unified_trading_services`, `unified_config_interface`, etc.) but
+- API services import from unified libraries (`unified_trading_library`, `unified_config_interface`, etc.) but
   **never** import from service repos (e.g., `execution-service`, `market-data-processing-service`). Services are
   proxied over HTTP/internal network.
 - Each repo is independently deployable to Cloud Run with its own `cloudbuild.yaml`.
@@ -1580,7 +1580,7 @@ All API services in this cluster conform to the following pattern. Deviations ar
 ### Auth
 
 - Internal endpoints: no auth (network-level isolation via Cloud Run ingress).
-- External/client-facing endpoints: `GoogleOAuthMiddleware` from `unified_trading_services`.
+- External/client-facing endpoints: `GoogleOAuthMiddleware` from `unified_trading_library`.
 
 ### SSE Streaming
 
@@ -1604,4 +1604,4 @@ All API services in this cluster conform to the following pattern. Deviations ar
 | Build order (L6 node)                | `unified-trading-pm/codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg`                 |
 | Quality gates                        | `unified-trading-pm/codex/06-coding-standards/quality-gates.md`                       |
 | Test-in-image CI                     | `unified-trading-pm/codex/06-coding-standards/quality-gates.md` (Cloud Build section) |
-| Auth middleware                      | `unified_trading_services.GoogleOAuthMiddleware`                                      |
+| Auth middleware                      | `unified_trading_library.GoogleOAuthMiddleware`                                       |

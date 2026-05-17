@@ -141,8 +141,8 @@ publisher = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path(project_id, topic_name)
 publisher.publish(topic_path, data=message_bytes)
 
-# AFTER (cloud-agnostic via UCI or UTS GCSEventSink/PubSubEventSink)
-from unified_trading_services import PubSubEventSink
+# AFTER (cloud-agnostic via UCI or UTL GCSEventSink/PubSubEventSink)
+from unified_trading_library import PubSubEventSink
 sink = PubSubEventSink(project_id=config.gcp_project_id, topic=config.events_topic)
 sink.emit("DATA_BROADCAST", metadata={"messages_published": 100})
 ```
