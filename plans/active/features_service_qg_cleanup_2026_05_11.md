@@ -109,9 +109,10 @@ org-naming tidy):
 > literal "fresh `quality-gates.sh` green" condition can't be met yet — the QG run also bundles **tab-wide ratchets that
 > fail on drift in OTHER repos**, none fixable from features-service:
 >
-> - STEP 5.67 —
->   `market-data-processing-service/.../app/core/orchestration_writer.py:271 _maybe_write_vix_gap_placeholder` banned
->   NaN-placeholder method not in `banned_placeholder_methods_baseline.yaml` (successor: writegate Phase 2.A).
+> - STEP 5.67 — ✅ **CLEARED 2026-05-17 (slot-8)**. Cosmetic rename
+>   `_maybe_write_vix_gap_placeholder` → `_record_vix_gap_empty` at MDPS@cb5863a + baseline entry
+>   dropped at PM@bd002df7 + final dead-class entry dropped at PM@69aa0f5e. Banned-placeholder
+>   ratchet at 0 baseline + 0 new. (Original 8-entry seed → final 0.)
 > - STEP 5.69 — 107 inline `gs://`/`s3://` f-string formatters > baseline 0
 >   (`batch-live-reconciliation-service/stages/stage0_*`,
 >   `deployment-api/.../data_status_drilldown.py`/`data_query_service.py`/`services.py`/`backfill_launch.py`, …) — the
