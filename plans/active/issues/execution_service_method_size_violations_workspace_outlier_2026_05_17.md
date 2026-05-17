@@ -764,11 +764,19 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 65 — benchmark/comparison_configs)**: shipped at execution-service@01f7f0b15.
   \_adaptive_twap_configs 64L→8L + \_almgren_chriss_configs 64L→8L + \_pov_dynamic_configs 52L→8L +
-  \_passive_aggressive_hybrid_configs 64L→8L via \_ADAPTIVE_TWAP_DATA + \_ALMGREN_CHRISS_DATA +
-  \_POV_DYNAMIC_DATA + \_PASSIVE_AGGRESSIVE_DATA list comprehensions. 4 violations cleared, file not in allowlist.
+  \_passive_aggressive_hybrid_configs 64L→8L via \_ADAPTIVE_TWAP_DATA + \_ALMGREN_CHRISS_DATA + \_POV_DYNAMIC_DATA +
+  \_PASSIVE_AGGRESSIVE_DATA list comprehensions. 4 violations cleared, file not in allowlist.
 
   **Slot-2 cumulative across batches 3-65**: 69 files cleared (slot-2 contribution: -69 files; spans 36 submodules incl.
   benchmark/comparison_configs).
+
+  **Ratchet-down 2026-05-17 (slot-2 batch 66 — benchmark/regimes)**: shipped at execution-service@7f97cc34c.
+  assign_regimes 52L→35L + \_assign_volatility_bucket 58L→17L via \_calc_vol_for_row + \_assign_liquidity_bucket 83L→22L
+  via \_score_liquidity_from_market + \_score_liquidity_fallback + \_assign_participation_bucket 52L→11L via
+  \_calc_participation_for_row. 4 violations cleared (file not in allowlist). basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-66**: 70 files cleared (slot-2 contribution: -70 files; spans 37 submodules incl.
+  benchmark/regimes).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
