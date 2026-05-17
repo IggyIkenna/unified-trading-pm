@@ -2193,3 +2193,34 @@ New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
 **Smoke B re-run** (`191412`): VM RUNNING, `lst_yields` writing cleanly. No errors in log so far.
 
 **Slot-7**: still at tick-44 (110/377). **Operator queue**: 9 items (AFK).
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:22 UTC — tick-49: 🚨 SMOKE B VM RE-KILLED + RE-RELAUNCHED (tarball fix)
+
+**CRITICAL CORRECTION**: VM `191412` had the STALE tarball (uploaded 08:02 UTC — predates fixes).
+
+**Evidence from `191412` run.log** at 18:17:51 UTC:
+```
+ERROR ❌ Error in load_derivative_ticker: type Int64 is incompatible with expected type Datetime('ns', 'UTC')
+WARNING No onchain_perps data available
+INFO Processing: utilization
+INFO Loaded 134426 rate rows from MTDS  ← about to stall for 60 min again
+```
+Bug 1 (perp_funding Int64 cast) was STILL PRESENT. `lst_yields` was clean (comes before perp_funding), but `onchain_perps` was silently skipped and `utilization` was loading 134k rows → same stall incoming.
+
+**Actions taken this tick**:
+1. ✅ Pulled features-service to `origin/live-defi-rollout` (now includes `30e449d7` + `64682456` + wave-16).
+2. ✅ Rebuilt `features-service-code.tar.gz` manually (2.10MB, uploaded at 2026-05-17T18:18:53Z — includes both Smoke B fixes).
+3. ✅ Killed VM `191412` (avoided ~47 min of wasted compute + stall).
+4. ✅ Launched VM `features-onchain-defi-20260517-192145` with the corrected tarball (18:21 UTC).
+
+**NEW Smoke B VM**: `features-onchain-defi-20260517-192145` — **RUNNING** (created 18:21 UTC, asia-northeast1-c, e2-standard-8).
+**Expected**: perp_funding cast fix visible in run.log (~18:30 UTC when it reaches onchain_perps processing). Utilization should complete without stall (300s GCS write timeout + async fix).
+
+**Smoke B monitor**:
+```
+gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-192145/run.log"
+```
+
+**Harsh-side**: NOT yet notified. Will notify when `192145` passes with DEPLOYMENT_COMPLETED.
