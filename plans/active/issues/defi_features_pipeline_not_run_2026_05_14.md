@@ -489,3 +489,45 @@ The previous logging was silent (`self.logger.debug`) which didn't surface to GC
 
 VM 10 still RUNNING (5500+ DEFI_FEATURE_AAVE_UTILIZATION emissions in progress for utilization feature_group).
 Next VM relaunch after VM 10 finishes will surface the actual loader breakdown.
+
+## 🟢 lending_rates 0-rows ROOT-CAUSED + FIXED — 2026-05-17 09:10 UTC (slot-1-main)
+
+**Bracket diagnostic confirmed**: `LENDING_LOADER_DIAGNOSTIC` fires with mtds=92716 + compound=47 + frames_appended=2,
+but `LENDING_CALC_ENTRY` did NOT fire. Calculator was never called → exception between the loader-end diagnostic
+and the actual return.
+
+**Root cause** (per LENDING_CONCAT_FAILED event from VM 13):
+```
+"exc_type": "SchemaError",
+"exc_message": "type Int64 is incompatible with expected type Datetime('ns', 'UTC')\n\n
+                This error occurred with the following context stack:\n
+                \t[1] failed to vstack column 'timestamp'\n",
+```
+
+`pl.concat(frames, how="diagonal")` raised `polars.exceptions.SchemaError` because `timestamp` column had
+conflicting dtypes across frames:
+- `mtds_result.timestamp`: `Datetime(time_unit='ns', time_zone='UTC')` (from polars `read_parquet`)
+- `compound_features.timestamp`: `Int64` (from `CompoundV3LendingCalculator.fetch_data` —
+  `now_us = int(datetime.now(UTC).timestamp() * 1_000_000)`)
+
+The SchemaError propagated SILENTLY through every layer because:
+- `_run_daily_feature_loop`: no try/except
+- `_process_daily_feature_group`: catches only `(ConnectionError, TimeoutError, OSError, ValueError)` — SchemaError
+  doesn't inherit from any of those
+- `_process_groups`: my earlier `Exception` broaden caught it but only emitted EnhancedError WARN log (not an event)
+- `_record_feature_group_outcome` then fired `FEATURE_GROUP_PROCESSING_COMPLETED` with `_last_record_count=0` →
+  showed rows=0 status=empty_or_failed elapsed=4.5s — but NO clue why
+
+**Fix shipped** (`features-service@50273e1f`): wrapped `pl.concat` in try/except in `_load_merged_lending_data`,
+fall back to `frames[0]` (always MTDS-result when frames is non-empty — primary source), emit
+`LENDING_CONCAT_FAILED` event with exc_type/message + frame schemas + fallback strategy. Compound/Kamino sources
+are supplementary; losing them is non-blocking.
+
+**Verified on VM 13 (`features-onchain-defi-20260517-090519`)**:
+- `LENDING_CONCAT_FAILED` event fires (diagnostic surface working)
+- `LENDING_CALC_ENTRY input_rows: 92716`
+- `LENDING_CALC_EXIT output_rows: 92716, result_is_none: false`
+- `LENDING_INPUT_DIAGNOSTIC: direct_supply_rate_rows: 92716, synthesized_rows: 0, genuinely_missing_rows: 0`
+- **`FEATURE_GROUP_PROCESSING_COMPLETED: status: success, rows: 92716, elapsed_s: 6.71`** ✅
+
+**B-015 paper-trade gate now has BOTH lst_yields + lending_rates** — full carry_staked_basis input is unblocked.
