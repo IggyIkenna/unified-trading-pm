@@ -780,3 +780,26 @@ Method-size sweep: 5 repos clean (0 violations), 8 other sister repos confirmed 
 1 outlier (execution-service) filed as P2 post-cutover.
 
 Loop remains in idle-watch mode. Next tick checks for new orchestrator pings.
+
+
+[2026-05-17 /loop tick 9] slot-7 — operator override "no deferred, no skip" → execution-service Phase B started:
+
+User direction overrode my P2-post-cutover routing. Started Phase B sweep. 8 of 377 cleared this tick:
+
+* `execution-service@9229420a2` — BaseDataLoader._infer_category 51L→11L via 3 per-domain static helpers
+  (_infer_cefi_category / _infer_tradfi_category / _infer_defi_category).
+* `execution-service@750e7426a` — GridBuilder.generate_algorithm_specs 51L→11L via _resolve_param_grid +
+  _specs_for_algo helpers (cartesian-combo expansion factored out).
+* `execution-service@7296d7ec4` — DataConfigBuilder._check_existing_catalog_data 51L→20L via
+  _catalog_has_complete_window parametric helper (eliminated Bar/TradeTick if/else mirror).
+* `execution-service@5b80d4d0c` — KaminoConnector.get_reserves + get_vault_info both 51L→18L via
+  _build_reserve_from_payload (KaminoReserve dict→dataclass map).
+* `execution-service@766417dad` — InstrumentDefinitionsLoader.load_for_date 51L→16L via
+  _load_legacy_single_file helper (legacy by-venue fallback path).
+* `execution-service@dcfe27495` — MarinadeConnector.get_stake_info 51L→17L via _fetch_marinade_state helper.
+* `execution-service@be06c6c99` — OrcaConnector.get_whirlpool_info 51L→22L via _fetch_whirlpool_payload helper.
+
+basedpyright clean across all 7 commits. Half-1+Half-2 plan-flip discipline maintained.
+
+369 remaining; pattern is established (per-method get_*/load_* methods need a _fetch_payload + dataclass-map
+extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
