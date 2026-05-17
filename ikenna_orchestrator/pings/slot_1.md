@@ -2154,3 +2154,23 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 
 **Slot-7**: tick-44 still latest (110/377 = 29%). Continue Phase B.
 **Operator queue**: 9 items (unchanged — operator AFK).
+
+---
+
+## [slot 1 main] 2026-05-17 ~19:20 UTC — tick-49: waves 13+14+15 ✅; Phase 3.1+3.2 ✅; Smoke B new VM
+
+**New remote commits since tick-48** (all acked):
+
+- `1d9d5ba7` — **wave-14** sports calculators: halftime_multi_source (38 tests, features-service@632bef51)
+- `57cf95c2` — **wave-13** sports calculators: odds_calculator (25 tests, features-service@b9ae0538)
+- `c55e152a` — **wave-15** sports calculators: odds_prob_space (43 tests, features-service@fd6a23b7)
+- `752c709b` — **Phase 3.1+3.2** SHIPPED (deployment-service@2f6b8b5): tarball SHA pinning + boot-time manifest
+  validation in `create-code-tarballs.sh` + `setup-data-pipeline-vm.sh`. Phase 3.3 (async cloud-build trigger)
+  remains open.
+
+**Sports calculators**: wave-15 lands — 691+ tests across 25+ calculator files.
+
+**Smoke B re-run**: stale-tarball v1 (`190230`) killed + tarball rebuilt with fixes @30e449d7+@64682456.
+New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
+
+**Slot-7**: still at tick-44 (110/377). **Operator queue**: 9 items (AFK).
