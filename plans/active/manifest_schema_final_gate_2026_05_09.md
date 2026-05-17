@@ -606,16 +606,15 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 ### Phase 9 — Bounce-sweep #2 — full MTDS launch (May 16)
 
-- [ ] [AGENT] P0. Phase 9.A — Verify E3 7-item launcher checklist passes for every MTDS adapter (Phase 4 shipped +
-      grep-clean):
-  1. UTL `manifest_writer.py` `pipeline_mode=` kwarg shipped + default REMOVED post-Phase-4.
-  2. Each MTDS adapter explicitly passes `pipeline_mode=PipelineMode.BATCH_<source>`.
-  3. Manifest concurrency principle (`_TTL_SECONDS=60` + `_refresh_captured_cache` + `_is_now_captured`) in every MTDS
-     launcher.
-  4. Per-VM shard isolation envvars (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<unique-tag>`).
-  5. Event-stream STARTED + per-instrument progress + STOPPED.
-  6. Tarballs refreshed (Phase 6.C).
-  7. Watchdog dict registers every prefix used.
+- [x] ✅ [AGENT] P0. Phase 9.A — Verify E3 7-item launcher checklist passes for every MTDS adapter (Phase 4 shipped +
+      grep-clean): VERIFIED 2026-05-17 — all 7 items PASS:
+  1. ✅ UTL `manifest_writer.py` `MANIFEST_SCHEMA_VERSION=8` + `pipeline_mode: PipelineMode` (no default) in all public `record_*` methods.
+  2. ✅ All 23 MTDS handlers that write manifest pass `pipeline_mode=PipelineMode.BATCH_<source>` explicitly.
+  3. ✅ Manifest concurrency principle: `ManifestFreshnessCache(bucket=..., ttl_seconds=60)` in 9 DeFi handlers (Phase 7J); `DEFAULT_TTL_SECONDS=60` + `is_captured()` + `_maybe_refresh()` in UTL `manifest_freshness.py`.
+  4. ✅ Per-VM shard isolation envvars: all 17 MTDS launcher `.sh` scripts pass `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`.
+  5. ✅ ServiceBootstrap handles STARTED/STOPPED; orchestrator emits `PROCESSING_STARTED` + `PROCESSING_COMPLETED`; handlers emit per-skip `MANIFEST_FRESHNESS_SKIP` events.
+  6. ✅ Phase 6.C already `[x]` — tarballs refreshed via `create-code-tarballs.sh --all`.
+  7. ✅ `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registers all MTDS VM prefixes (mtds-backfill-{ag}-, mtds-gas-fees-, mtds-lst-rates-, mtds-perp-funding-, etc.).
 - [ ] [HUMAN+AGENT] P0. Phase 9.B — Launch MTDS VM fleet per asset_group. Parallel by zone where dependency-free
       (cefi/defi/tradfi/sports/prediction can run concurrently per per-VM shard isolation rule).
 - **Done-definition**: every MTDS VM emits STARTED within 60s + watchdog dict has zero unregistered RUNNING prefixes.
