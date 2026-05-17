@@ -518,3 +518,17 @@ tests the IRM less rigorously at boundary conditions.
 
 **Phase 3C VALIDATION GATE status**: math is CORRECT. The 16.7% pass rate is a methodology artifact, not a
 LendingRateImpactCalculator bug. Recommend slot-6 ship Option A — quickest path to a clean signal.
+
+## Option A SHIPPED 2026-05-17 06:55 UTC (slot-1-main) — co-blocked event filter
+
+`execution-service@f45a5f669` ships the methodology fix. `_enrich_events_with_rates` now fetches aToken totalSupply
+at both event_block-1 AND event_block; events where `|delta_atoken - amount_wei| > max(1% of amount, 1e15 wei)`
+are marked `isolated_supply=false`. `_validate_events` skips non-isolated events, emits
+`EVENT_SKIPPED_CO_BLOCKED`, and surfaces `co_blocked_skipped` count in summary.
+
+Backward-compatible: fixtures without `isolated_supply` field fail open (treated as isolated).
+
+VM relaunched: `aave-lending-rate-val-20260517-065307` (corr_id `835F90D8-260A-492E-B70D-D2FFA61CC073`). Expected
+outcome: DAI events surviving the filter should pass at >90% (math is correct, contaminated inputs are skipped not
+counted-as-failures). USDC + USDT should remain ~100% pass (their pools are large enough that co-blocked events
+move U negligibly).
