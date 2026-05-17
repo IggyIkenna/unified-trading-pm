@@ -2,6 +2,8 @@
 title: Add Helius Solana RPC for Phase 2 SOLANA_CLMM + SOLANA_AMM golden-fixture capture
 created: 2026-05-13
 author: ikenna-slot-6
+resolved: 2026-05-16
+resolution: ✅ SHIPPED — full integration: (1) operator vaulted helius-api-key 2026-05-15; (2) MTDS native_staking at MTDS@4cea371; (3) execution-service capture_golden_swaps at execution-service@a300f7caa; (4) MTDS Phase 5 wire-in at MTDS@348c171. All paths green.
 source:
   - plans/active/defi_simulation_realism_2026_05_10.md (Phase 2F SOLANA_CLMM + SOLANA_AMM)
   - execution-service/scripts/capture_golden_swaps.py (DEFERRED-SOLANA branch in agent close-out 2026-05-13)

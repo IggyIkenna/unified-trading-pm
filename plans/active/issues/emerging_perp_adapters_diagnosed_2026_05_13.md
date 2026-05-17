@@ -2,6 +2,8 @@
 title: Emerging perp venue adapters — root-cause diagnosis (ASTER 0%, HYPERLIQUID 68% failure)
 created: 2026-05-13
 author: ikenna-slot-8
+resolved: 2026-05-16
+resolution: SHIPPED — Option A effectively shipped via WS-connector path. ASTER LIVE at `b0419960` (7th WS connector); HYPERLIQUID LIVE at `74e77ebf` (2nd DeFi WS connector). REST-side diagnosed issues sidestepped by WS subscription path. All 7 perp venues LIVE per live_pipeline 3.5 — May-23 perp coverage gate GREEN.
 severity: P0
 parent_issue: emerging_perp_venue_adapters_broken_2026_05_13.md
 source:
