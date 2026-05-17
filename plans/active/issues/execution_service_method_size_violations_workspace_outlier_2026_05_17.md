@@ -150,6 +150,16 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    @c78b8f994 (engine/handlers/sports_handler.py execute 59L→33L, +2 helpers _try_live_router
    (None-fallback when router absent OR raises) + _simulate_actual_odds (20bps spread for exchanges)).
    Allowlist 173 → 170 files. basedpyright clean on each. Same per-method behavior preservation discipline.
+   **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 5)** — additional 2 files cleared at
+   execution-service@54e0db54e (engine/handlers/trade_handler.py execute 81L→49L, +1 helper _match_orderbook
+   for the L1/L2 orderbook match path with limit_price/benchmark price fallback),
+   @94793f724 (engine/handlers/transfer_handler.py — THREE methods cleaned via 5 helpers:
+   execute 65L→16L (_emit_transfer_initiated / _dispatch_transfer / _emit_transfer_completion),
+   _execute_internal_transfer 58L→46L (_emit_internal_transfer_completed),
+   auto_funding_to_trading 56L→26L (_auto_funding_required / _build_auto_funding_instruction)).
+   Allowlist 170 → 168 files. Per-event payload + venue/capability logic preserved exactly. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from baseline).
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same
    helper-extraction patterns this session applied to UTL/MTDS/strategy-service:
