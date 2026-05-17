@@ -1,6 +1,7 @@
 ---
 scope: [engineer, admin]
 last_updated: 2026-05-12
+last_reviewed: 2026-05-17
 ---
 
 # Contract Failure Handling

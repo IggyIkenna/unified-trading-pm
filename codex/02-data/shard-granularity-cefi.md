@@ -1,5 +1,6 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-05-17
 ---
 
 # CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation

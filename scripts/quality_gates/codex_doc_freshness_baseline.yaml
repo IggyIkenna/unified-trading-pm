@@ -1,41 +1,17 @@
-violation_count: 148
+violation_count: 128
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
 baseline_files:
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/README.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/bucket-naming-and-config.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/canonical-schema-groups.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/chart-candle-delivery-flow.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/chunk-safe-manifest-migrations.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/contract-failure-handling.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/contracts-scope-and-layout.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/data-lineage-MTDS-features-ml.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/defi-venue-protocol-catalogue.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/hive-schema-compatibility.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/honest-absence-downstream-handling.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/honest_coverage_baseline_2026_05.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/is-test-run-audit-2026-04-20.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/manifest-migration-coordination.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/mtds-data-source-coverage-matrix.md
   reason: no-last_reviewed-field
@@ -43,35 +19,19 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/operation-capability-registry.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/partitioning.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/per-asset-group-bucket-layouts.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/per-instrument-sentinel-rollout.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/per-source-colocation.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/pipeline-coverage-matrix.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/pipeline-mode-partition.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/prediction-schema-paths.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/questionnaire-axes.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/schema-governance.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/service-output-emission-semantics.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/shard-granularity-cefi.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-adapter-dependency-order.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-data-source-coverage-matrix.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-gcs-path-ssot.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/02-data/subscription-model.md
   reason: no-last_reviewed-field

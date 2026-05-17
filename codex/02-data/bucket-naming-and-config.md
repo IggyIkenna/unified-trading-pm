@@ -3,6 +3,7 @@ scope: [engineer, admin]
 status: SUPERSEDED
 superseded_by: cursor-configs/CLAUDE.md § "Bucket-name SSOT (b+)"
 superseded_on: 2026-05-11
+last_reviewed: 2026-05-17
 ---
 
 # Bucket Naming and Config Standards — SUPERSEDED 2026-05-11

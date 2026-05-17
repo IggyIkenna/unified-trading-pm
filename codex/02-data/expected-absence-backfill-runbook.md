@@ -14,6 +14,7 @@ related:
   - codex/02-data/honest-absence-downstream-handling.md
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/manifest-migration-coordination.md
+last_reviewed: 2026-05-17
 ---
 
 # Expected-Absence Backfill Runbook

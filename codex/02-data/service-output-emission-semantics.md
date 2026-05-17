@@ -9,6 +9,7 @@ related_plans:
 related_codex:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
+last_reviewed: 2026-05-17
 ---
 
 # Service-output emission semantics

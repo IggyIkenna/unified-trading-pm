@@ -1,5 +1,6 @@
 ---
 scope: [engineer, agent]
+last_reviewed: 2026-05-17
 ---
 
 # Sports GCS Path SSOT

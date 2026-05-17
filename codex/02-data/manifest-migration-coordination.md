@@ -14,6 +14,7 @@ related:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/honest-absence-downstream-handling.md
   - codex/02-data/pipeline-mode-partition.md
+last_reviewed: 2026-05-17
 ---
 
 # Manifest Migration Coordination

@@ -1,5 +1,6 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-05-17
 ---
 
 # Chart Candle Delivery — End-to-End Flow
