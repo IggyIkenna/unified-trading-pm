@@ -204,13 +204,14 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       `registry/generators/cefi.py`. Since `book_snapshot_5` feeds the execution matching engine for slippage
       estimation, a spec should be added post-calibration if the Phase 3.D subprocess run confirms MTDS reads it. **Do
       NOT add until Phase 3.D confirms** (avoid premature spec proliferation).
-- [ ] [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **DEFERRED** (slot 7,
-      2026-05-12). DeFi bucket (5 venues: ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARNV3) has
-      `instrument_type=yield_bearing /     data_type=vault_share_price` (1 row/instrument/day, ~10KB/file). None of the
-      5 DeFi specs use this data_type. The LST_RATES spec is the closest match conceptually but uses
-      `data_type=lst_rates`. Operator/Ikenna decision needed: is vault_share_price the same data_type under a different
-      name, or a distinct data pipeline? Until resolved, all 5 DeFi specs stay as `# ESTIMATE`. Flag for Ikenna-side
-      during next DeFi pipeline planning.
+- [x] ✅ [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **RATIFIED 2026-05-17
+      (slot-8)** per the B-015 Option A architectural finding shipped at `features-service@550cdaba` (slot-2):
+      `vault_share_price` is consumed by features-onchain reading raw_tick_data DIRECTLY (NOT via MDPS-processed
+      candles). It's correctly NOT a generator spec data_type — it's an on-chain snapshot the features layer
+      ingests at native granularity (1 row/instrument/day). The 5 DeFi specs that omit vault_share_price are
+      correct as-is; no spec entry needed. The `# ESTIMATE` marker on the 5 DeFi specs is unrelated to this
+      data_type (it's about per-chain block-rate calibration tracked separately). Closed-decision per slot-2's
+      architectural ship + slot-8's diagnostic at `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`.
 - [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
       shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
       strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
