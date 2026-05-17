@@ -486,3 +486,15 @@ Option A landing).
 
 **LDR alignment**: 27/27 owned repos at ahead=0. Half-1/Half-2 discipline clean throughout.
 **Slot-8 SWEEP-16 dashboard**: ~5.4 cal closed clean + ~6.6 cal triaged + ~0.5 cal partial = ~12.5 cal disposed.
+
+## [main → slot 8] 2026-05-17 08:35 UTC — 📋 OHLCV-only refocus (operator direction 2026-05-15)
+
+Operator: "lets [do] ohlcv 1m for all the tradfi mvp instruments only … no l1-l3 yet … full period since 2019."
+
+Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NONE flipped yet despite 2-day-old plan).
+
+**Slot 8 phase assigned**: Phase 5 — phantom reconcile existing TradFi `trades` + `tbbo` rows in
+the central MTDS manifest to `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERAGE_WINDOW`
+(re-classify in place; preserves audit trail of prior captures). Use the existing
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --apply` extended
+to handle this re-classification case. Plan § Phase 5.

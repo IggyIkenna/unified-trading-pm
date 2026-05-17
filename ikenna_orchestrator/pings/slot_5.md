@@ -1105,3 +1105,22 @@ This session (slot-5 ikenna pickup of paused work from before-Databento-unblock)
 **Remaining slot 5 open**: NONE on the 15-May work_split itself (all 11 items closed). SWEEP-16 items (3) remain
 available for pickup; the smallest two are quickly closeable but require additional context. End-of-session for this
 slot 5 ikenna agent — passing to orchestrator for race-to-finish reallocation.
+
+## [main → slot 5] 2026-05-17 08:35 UTC — 📋 OHLCV-only refocus (operator direction 2026-05-15)
+
+Operator: "lets [do] ohlcv 1m for all the tradfi mvp instruments only … no l1-l3 yet … full period since 2019."
+
+Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NONE flipped yet despite 2-day-old plan).
+
+**Slot 5 (TradFi) phases assigned**:
+- Phase 1 — UAC `TRADFI_TICK_DATA_WINDOWS = []` + preserve in `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS`
+  at `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:644`
+- Phase 2 — UAC `VENUE_DATA_TYPE_CAPABILITIES` update (drop trades/tbbo from TradFi venues, keep ohlcv_1m)
+- Phase 3 — codex `02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI doc update
+- Phase 4 — MTDS `is_in_tradfi_tick_window` unit test (orchestrator.py:3014)
+- Phase 6 — per-(venue, data_type) backfill launchers if not already in tree
+- Phase 7 — expand the in-flight `tradfi-bf-es-opt-light-2020-20260517-083847` (CME ES.OPT + 10 E*OPT, 2020 only)
+  to: full CME (futures + options) + ICE + NASDAQ + NYSE, full 2019-01-01 → today
+
+**In-flight check**: `tradfi-bf-es-opt-light-2020-20260517-083847` VM is running OHLCV-1m backfill but scope-limited
+to 2020 + es_opt only. Verify it completes + then launch the broader sweep.

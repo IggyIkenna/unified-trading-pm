@@ -853,3 +853,13 @@ extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
   (sign convention by side + zero-benchmark guard).
 
 354 remaining. basedpyright clean across all 4 commits.
+
+## [main → slot 7] 2026-05-17 08:35 UTC — 📋 OHLCV-only refocus (operator direction 2026-05-15)
+
+Operator: "lets [do] ohlcv 1m for all the tradfi mvp instruments only … no l1-l3 yet … full period since 2019."
+
+Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NONE flipped yet despite 2-day-old plan).
+
+**Slot 7 phase assigned**: Phase 8 — Databento PAYG cost tracking. Emit `DATABENTO_PAYG_SPEND` event from each
+TradFi OHLCV backfill VM at completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in
+deployment-ui. Projection: $50-200 for the full 2019-2026 ohlcv_1m × CME+ICE+NASDAQ+NYSE backfill.
