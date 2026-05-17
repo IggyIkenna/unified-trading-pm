@@ -586,8 +586,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    execution-service@e1847b3eb (_check_tp_sl 139L→36L via _emit_tp_hit + _emit_sl_hit helpers parameterized by
    direction; LONG/SHORT mirror-symmetric blocks unified into two helpers). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-38**: 42 files cleared (slot-2 contribution: -42 files; spans 16
-   submodules incl. engine/validation ×2, engine/backtest/actors ×1).
+   **Ratchet-down 2026-05-17 (slot-2 batch 39 — engine/backtest/actors/evaluator)**: shipped at
+   execution-service@769303f22 (evaluate_performance 144L→49L via _extract_config_params + _resolve_account +
+   _get_final_balance + _apply_commission_fallback + _build_result_dict; also promoted `from typing import cast`
+   from inside-function to module level). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-39**: 43 files cleared (slot-2 contribution: -43 files; spans 16
+   submodules incl. engine/validation ×2, engine/backtest/actors ×2).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
