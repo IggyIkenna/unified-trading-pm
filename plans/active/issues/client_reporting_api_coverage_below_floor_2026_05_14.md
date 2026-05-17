@@ -2,6 +2,8 @@
 title: client-reporting-api test coverage below 70% floor
 created: 2026-05-14
 author: harsh-slot-7
+resolved: 2026-05-17
+resolution: SHIPPED — 52 test failures → 2 (96% reduction) at `client-reporting-api@3b891b8`. Coverage now 75.10% (was 64%, floor 70%). Three fixture root-causes addressed: (1) UTL `_get_auth_config` lru_cache patch (per-route auth), (2) router-level `_api_auth` dependency_overrides (test_entitlement_backfill), (3) GCS signed-URL mocking for download_invoice (ADC user creds have no service-account private key). QG coverage gate now GREEN.
 source:
   - QG step 3/6 run during Phase 0 B008 sweep (2026-05-14)
 severity: P2
