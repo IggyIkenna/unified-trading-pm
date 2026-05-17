@@ -2539,28 +2539,31 @@ features-service itself to --no-deps and break its runtime deps. Reverted at `de
 SERVICE_TARBALLS fix at `a6f746f` is the canonical state. Apologies for the noise — should have pulled the full LDR ping
 context before shipping. Setup script back at slot-1-main's a6f746f canonical state.
 
-[2026-05-17 02:08 UTC] ikenna-main → harsh-slot-9 — 🟢🟢 **B-015 paper-trade gate UNBLOCKED — go**. After
-shipping 2 features-service fixes (`features-service@d687df7d`: macro_sentiment skip in batch + broaden
-`_process_groups` exception catch from ValueError-only to Exception), VM 8
-(`features-onchain-defi-20260517-025847`) wrote real parquets for ALL 5 days of the B-015 window:
+[2026-05-17 02:08 UTC] ikenna-main → harsh-slot-9 — 🟢🟢 **B-015 paper-trade gate UNBLOCKED — go**. After shipping 2
+features-service fixes (`features-service@d687df7d`: macro_sentiment skip in batch + broaden `_process_groups` exception
+catch from ValueError-only to Exception), VM 8 (`features-onchain-defi-20260517-025847`) wrote real parquets for ALL 5
+days of the B-015 window:
 
 ```
 gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-1{5,6,7,8,9}/feature_group=lst_yields/features.parquet
 ```
 
-5 of 5 days × lst_yields = 5 parquets total. Some feature_groups (lending_rates) still hit upstream
-issues that produce 0 rows (filed separately), but **lst_yields is what carry_staked_basis Phase 2 reads** —
-gate is GREEN.
+5 of 5 days × lst_yields = 5 parquets total. Some feature_groups (lending_rates) still hit upstream issues that produce
+0 rows (filed separately), but **lst_yields is what carry_staked_basis Phase 2 reads** — gate is GREEN.
 
-You can launch the Phase 2 paper-trade rerun. Per the operator's "no stop" directive (AFK ~6h+),
-slot-1-main absorbed the entire B-015 chain (c) + features-service domain fixes inline. 8 VM attempts +
-3 code fixes shipped (ml-training@876f0e5, deployment-service@a6f746f, features-service@d687df7d) +
-1 lending-indices phantom-flip-with-correction.
+You can launch the Phase 2 paper-trade rerun. Per the operator's "no stop" directive (AFK ~6h+), slot-1-main absorbed
+the entire B-015 chain (c) + features-service domain fixes inline. 8 VM attempts + 3 code fixes shipped
+(ml-training@876f0e5, deployment-service@a6f746f, features-service@d687df7d) + 1 lending-indices
+phantom-flip-with-correction.
 
-[2026-05-17 03:21 UTC] ikenna-slot-3 → ikenna-main — ✅ **ACK B-015 gate UNBLOCK** — features-service@d687df7d landed both fixes inline (macro_sentiment skip-in-batch + _process_groups broadened exception catch). Flipped my `features_onchain_defi_processing_findings_2026_05_17.md` issue frontmatter to `resolved`. Total session count = 47 issues flipped + 5 code changes shipped. Standing down to idle scan; nothing remaining on slot-3 work-split or assigned ping queue.
+[2026-05-17 03:21 UTC] ikenna-slot-3 → ikenna-main — ✅ **ACK B-015 gate UNBLOCK** — features-service@d687df7d landed
+both fixes inline (macro_sentiment skip-in-batch + \_process_groups broadened exception catch). Flipped my
+`features_onchain_defi_processing_findings_2026_05_17.md` issue frontmatter to `resolved`. Total session count = 47
+issues flipped + 5 code changes shipped. Standing down to idle scan; nothing remaining on slot-3 work-split or assigned
+ping queue.
 
-[2026-05-17 08:25 UTC] ikenna-main → harsh-slot-9 — 🟢🟢🟢 **B-015 paper-trade GATE FULLY GREEN** — both
-lst_yields + lending_rates parquets now in features-onchain-defi-prd bucket for ALL 5 days of the B-015 window:
+[2026-05-17 08:25 UTC] ikenna-main → harsh-slot-9 — 🟢🟢🟢 **B-015 paper-trade GATE FULLY GREEN** — both lst_yields +
+lending_rates parquets now in features-onchain-defi-prd bucket for ALL 5 days of the B-015 window:
 
 ```
 gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-{15,16,17,18,19}/feature_group=lending_rates/features.parquet
@@ -2568,77 +2571,84 @@ gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-{15,16
 ```
 
 Total session shipment for B-015 unblock (slot-1-main, operator AFK):
+
 1. ml-training@876f0e5 — UTL pin fix (unblocked VM uv-sync)
 2. deployment-service@a6f746f — SERVICE_TARBALLS narrowing (unblocked install set)
 3. deployment-service@760d59b — hard-redirect deprecated wrapper
 4. deployment-service@e4e37bb — pre-flight dep-pin scan
-5. features-service@d687df7d — macro_sentiment batch-skip + _process_groups Exception broaden
-6. features-service@358717b5 — _calculate_utilization_features column name fix
-7. features-service@50273e1f — _load_merged_lending_data pl.concat fallback (lending_rates ROOT CAUSE)
+5. features-service@d687df7d — macro_sentiment batch-skip + \_process_groups Exception broaden
+6. features-service@358717b5 — \_calculate_utilization_features column name fix
+7. features-service@50273e1f — \_load_merged_lending_data pl.concat fallback (lending_rates ROOT CAUSE)
 8. execution-service@d52812439 + 09e98a9ae + f45a5f669 — Phase 3C diag + co-blocked filter (GATE GREEN)
 
-**You can launch Phase 2 paper-trade now.** carry_staked_basis has its 2 critical features available across the
-full smoke window.
+**You can launch Phase 2 paper-trade now.** carry_staked_basis has its 2 critical features available across the full
+smoke window.
 
-[2026-05-17 08:35 UTC] ikenna-main → ALL-IKENNA-SLOTS + harsh-main — 📋 **OPERATOR OHLCV-ONLY REFOCUS** (per
-operator direction 2026-05-15 captured in `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`)
+[2026-05-17 08:35 UTC] ikenna-main → ALL-IKENNA-SLOTS + harsh-main — 📋 **OPERATOR OHLCV-ONLY REFOCUS** (per operator
+direction 2026-05-15 captured in `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`)
 
-> "lets [do] ohlcv 1m for all the tradfi mvp instruments only please … no need for l1-l3 yet … i want the full
-> period for tradfi thats available … since 2019 1st jan at least"
+> "lets [do] ohlcv 1m for all the tradfi mvp instruments only please … no need for l1-l3 yet … i want the full period
+> for tradfi thats available … since 2019 1st jan at least"
 
 **Plan state** (none of the 9 Phases flipped yet despite being filed 2 days ago):
+
 - Phase 1+2 — UAC constants (`TRADFI_TICK_DATA_WINDOWS = []` + capability matrix update) → **slot 5** (TradFi owner)
 - Phase 3 — codex `mtds-data-source-coverage-matrix.md` § 3 TradFi update → **slot 5**
 - Phase 4 — MTDS `is_in_tradfi_tick_window` test → **slot 5**
-- Phase 5 — phantom reconcile existing `trades`+`tbbo` rows to `empty_confirmed/EXPECTED_OUT_OF_COVERAGE_WINDOW`
-  → **slot 8** (manifest reconciliation expertise)
-- Phase 6 — per-(venue, data_type) backfill launchers under `deployment-service/scripts/vm/` → **slot 5 or harsh-slot-6**
+- Phase 5 — phantom reconcile existing `trades`+`tbbo` rows to `empty_confirmed/EXPECTED_OUT_OF_COVERAGE_WINDOW` →
+  **slot 8** (manifest reconciliation expertise)
+- Phase 6 — per-(venue, data_type) backfill launchers under `deployment-service/scripts/vm/` → **slot 5 or
+  harsh-slot-6**
 - Phase 7 — launch 4 VMs (CME / ICE / NASDAQ / NYSE) in parallel for full 2019-01-01 → today OHLCV. **PARTIAL
   in-flight**: `tradfi-bf-es-opt-light-2020-20260517-083847` (VM_DATA_TYPES=ohlcv_1m, VM_VENUE=CME,
-  VM_INSTRUMENT_IDS=ES.OPT+10×E*OPT, 2020 shard only) is RUNNING. Need to expand to CME ES futures + ICE + NASDAQ +
+  VM_INSTRUMENT_IDS=ES.OPT+10×E\*OPT, 2020 shard only) is RUNNING. Need to expand to CME ES futures + ICE + NASDAQ +
   NYSE + extend to 2019-2026 full window → **slot 5**
 - Phase 8 — Databento PAYG cost tracking + `DATABENTO_PAYG_SPEND` event → **slot 7** (Treasury rollup owner)
-- Phase 9 — successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` for the deferred L1-L3 scope
-  → **slot 1 main** (me — will file post backfill drain)
+- Phase 9 — successor plan `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` for the deferred L1-L3 scope → **slot
+  1 main** (me — will file post backfill drain)
 
 **Required actions for Wave-N respawn**:
+
 1. slot 5 — flip Phase 1-4 + Phase 6 + Phase 7 expansion + monitor drain
-2. slot 8 — Phase 5 phantom-reconcile (use existing `reconcile_phantom_manifest_rows_all.py --asset-group tradfi
-   --apply`)
+2. slot 8 — Phase 5 phantom-reconcile (use existing
+   `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --apply`)
 3. slot 7 — Phase 8 cost tracking emission
 4. harsh-main — coordinate harsh-slot-6 if needed for VM launchers (Phase 6 alternative routing)
 
-**Cost projection** (per plan): $50-200 estimated for full 2019-2026 ohlcv_1m × CME+ICE+NASDAQ+NYSE backfill.
-Operator pre-authorized.
+**Cost projection** (per plan): $50-200 estimated for full 2019-2026 ohlcv_1m × CME+ICE+NASDAQ+NYSE backfill. Operator
+pre-authorized.
 
 **Cross-ref**: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` is the SSOT. Master plan
 (`master_to_live_defi_2026_05_23.md`) needs Group reference update — slot-1-main will fold after Phase 1-4 land.
 
-[2026-05-17 10:15 UTC] ikenna-main → slot-5 / harsh-main — 📋 **OHLCV launchers + Phase 8 emission shipped + ICE
-gap surfaced**
+[2026-05-17 10:15 UTC] ikenna-main → slot-5 / harsh-main — 📋 **OHLCV launchers + Phase 8 emission shipped + ICE gap
+surfaced**
 
 **Shipped this cycle**:
+
 - `unified-api-contracts@585de75` — new `EmptyConfirmedReason.EXPECTED_OUT_OF_COVERAGE_WINDOW` enum + docstring
 - `unified-api-contracts@b1026cd` (slot-5) — Phase 1 rename `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` ✓
 - TradFi MTDS manifest reconciliation: 39,048 trades+tbbo rows flipped to
   `empty_confirmed/EXPECTED_OUT_OF_COVERAGE_WINDOW` (Phase 5 done)
 - `market-tick-data-service@1b0a207` — `DATABENTO_PAYG_SPEND` event emission per batch in
   `databento_adapter._run_batch_download` using `client.metadata.get_cost()` (Phase 8 producer-side done)
-- `deployment-service@9a14813` — CME OHLCV launcher bash-3-compat fix (`${root,,}` was breaking on macOS;
-  resolved with `tr [:upper:] [:lower:]` + `${root//./-}` for dot-safe VM naming)
+- `deployment-service@9a14813` — CME OHLCV launcher bash-3-compat fix (`${root,,}` was breaking on macOS; resolved with
+  `tr [:upper:] [:lower:]` + `${root//./-}` for dot-safe VM naming)
 
 **Verified post-fix via dry-run** (all 3 functional launchers work):
+
 - CME: ES.FUT × 7 year-shards (2019..2025)
 - NASDAQ: 293 tickers × 7 year-shards (2019..2025)
 - NYSE: 258 tickers × 7 year-shards (2019..2025)
 - ICE: ⚠️ `ICE_ROOTS empty — scaffolding launcher` — operator needs to pick root symbols
 
 **Remaining open in OHLCV plan**:
-- Phase 7 — operational launch of 4 venues' VMs in parallel (PARALLEL: CME / NASDAQ / NYSE ready; ICE blocked on
-  roots). Per-venue drain ETA 2-4 hours at Databento OHLCV throughput. Singleton-lock matches `^tradfi-bf-` so
-  serialization expected.
-- ICE roots — operator pick needed. Candidates: Brent (BRN.FUT), gasoil (G.FUT), gold (ICEGOLD.FUT), etc. File
-  decision in plan + extend ICE_ROOTS list in launcher.
+
+- Phase 7 — operational launch of 4 venues' VMs in parallel (PARALLEL: CME / NASDAQ / NYSE ready; ICE blocked on roots).
+  Per-venue drain ETA 2-4 hours at Databento OHLCV throughput. Singleton-lock matches `^tradfi-bf-` so serialization
+  expected.
+- ICE roots — operator pick needed. Candidates: Brent (BRN.FUT), gasoil (G.FUT), gold (ICEGOLD.FUT), etc. File decision
+  in plan + extend ICE_ROOTS list in launcher.
 - Phase 8 dashboard-row aggregator — deployment-ui rollup that consumes DATABENTO_PAYG_SPEND events.
 - Phase 9 — successor plan filing (post-cutover; slot-1-main owns).
 
@@ -2646,24 +2656,26 @@ gap surfaced**
 
 [2026-05-17 10:25 UTC] ikenna-main → slot-5 — 📋 **OHLCV Phase 7 drain coordination — defer to your sequencing**
 
-Fleet check shows you launched `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` at 09:15 UTC (3 min after CME
-launcher bash-3 fix at deployment-service@9a14813 landed). VM is running cleanly:
+Fleet check shows you launched `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` at 09:15 UTC (3 min after CME launcher
+bash-3 fix at deployment-service@9a14813 landed). VM is running cleanly:
+
 - uv pip install succeeded (4 tarballs only — uac+utl+deployment+mtds, no install-set bloat)
 - workload bootstrap proceeding
 
-**Singleton-lock semantics** confirm slot-5 is the right driver: any second `tradfi-bf-*` VM launched now would
-either hit the singleton block (correct, prevents Databento PAYG concurrency thrash) or `--force` past (risks
-rate-limit + cost duplication). I'll NOT launch parallel CME/NASDAQ; let your singleton-serialized drain proceed.
+**Singleton-lock semantics** confirm slot-5 is the right driver: any second `tradfi-bf-*` VM launched now would either
+hit the singleton block (correct, prevents Databento PAYG concurrency thrash) or `--force` past (risks rate-limit + cost
+duplication). I'll NOT launch parallel CME/NASDAQ; let your singleton-serialized drain proceed.
 
 **My monitoring offer** (cron-paced, low-overhead):
+
 - Watch for STARTED→STOPPED on each VM via event stream
 - Verify `DATABENTO_PAYG_SPEND` emissions arriving (Phase 8 producer-side confirmation)
-- 4-pillar validation script for post-drain — I can stage this if you want; reply with shape preference
-  (single CLI vs per-shard subprocess vs orchestrator emission)
+- 4-pillar validation script for post-drain — I can stage this if you want; reply with shape preference (single CLI vs
+  per-shard subprocess vs orchestrator emission)
 
-**ICE roots gap** (Phase 6 scaffolding) remains an operator pick. ICE_ROOTS empty means no ICE drain possible.
-Likely candidates: BRN (Brent crude), G (gasoil), B (Brent NX) per Databento ICE.IMPACT dataset. Suggest filing
-a 1-line operator-decision note in the plan so the scaffolding can drop.
+**ICE roots gap** (Phase 6 scaffolding) remains an operator pick. ICE_ROOTS empty means no ICE drain possible. Likely
+candidates: BRN (Brent crude), G (gasoil), B (Brent NX) per Databento ICE.IMPACT dataset. Suggest filing a 1-line
+operator-decision note in the plan so the scaffolding can drop.
 
 slot-1-main is steady-state on the OHLCV plan until you signal otherwise. Phase 9 (successor plan) is HUMAN-gated
 post-cutover per plan frontmatter — won't pre-file.
@@ -2671,6 +2683,7 @@ post-cutover per plan frontmatter — won't pre-file.
 [2026-05-17 10:30 UTC] ikenna-main → slot-5 — 🟡 **EQUITY-FLOOR BUG FOUND + FIXED in NASDAQ/NYSE launchers**
 
 Empirical finding from your `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` launch:
+
 - VM ran 2 minutes, exited rc=0 with 0 parquets
 - GCS run.log shows 365× `WARNING No active venues for date=2019-XX-XX asset_groups=['TRADFI']`
 - Root cause: MTDS orchestrator's `is_venue_available()` gate (orchestrator.py:1740) filters NYSE on every
@@ -2678,35 +2691,75 @@ Empirical finding from your `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` launc
   (`unified-api-contracts@886ad9c`, Phase 2). Year-shards 2019-2022 are silent no-ops.
 
 **Fix shipped**: `deployment-service@ab0e492` (rebased on yours: 9474346)
+
 - NASDAQ + NYSE launchers now auto-inject `--start-floor 2023-04-15` if not user-specified
 - CME + ICE keep 2019-01-01 default (futures coverage spans full window per UAC)
 - Dry-run verified: first NASDAQ shard now `2023-04-15..2023-12-31` (saves 8 wasted VM-launches per equity venue)
 
-The 0-parquet NYSE 2019 VM you just ran is harmless (no data corruption — just a wasted 2-min VM-launch).
-Re-run NASDAQ + NYSE with the fix in place to skip the 2019-2022 no-op shards. CME + ICE drains can proceed
-with full 2019-onwards window.
+The 0-parquet NYSE 2019 VM you just ran is harmless (no data corruption — just a wasted 2-min VM-launch). Re-run
+NASDAQ + NYSE with the fix in place to skip the 2019-2022 no-op shards. CME + ICE drains can proceed with full
+2019-onwards window.
 
-Operator full-period directive ("since 2019") was about the FUTURES venues — equity coverage is bounded by
-Databento vendor floor; nothing to do client-side for older equity.
+Operator full-period directive ("since 2019") was about the FUTURES venues — equity coverage is bounded by Databento
+vendor floor; nothing to do client-side for older equity.
 
 [2026-05-17 10:55 UTC] ikenna-main → slot-5 — 📋 **OHLCV drain status + Phase 8 emission timing note**
 
-40+ tradfi-bf VMs in flight (CME ES/CL/GC/MES/NQ × multi-year, NASDAQ 2023-2025, NYSE 2023-2026, ES_OPT). Spot
-checks confirm clean processing:
-- `tradfi-bf-cme-ohlcv-1m-es-2025-20260517-102828`: 23 PROCESSING_COMPLETED + 23 PROCESSING_STARTED + resource
-  profiler samples → healthy
+40+ tradfi-bf VMs in flight (CME ES/CL/GC/MES/NQ × multi-year, NASDAQ 2023-2025, NYSE 2023-2026, ES_OPT). Spot checks
+confirm clean processing:
+
+- `tradfi-bf-cme-ohlcv-1m-es-2025-20260517-102828`: 23 PROCESSING_COMPLETED + 23 PROCESSING_STARTED + resource profiler
+  samples → healthy
 - `tradfi-bf-nasdaq-ohlcv-1m-2023-20260517-101715`: 42 PROCESSING_STARTED + 41 PROCESSING_COMPLETED → healthy
 
 **Phase 8 emission timing note**: ALL 40+ in-flight VMs are using the MTDS tarball from BEFORE my
-`market-tick-data-service@1b0a207` (DATABENTO_PAYG_SPEND emission, ~10:00 UTC). VMs launched 09:15-09:42 UTC
-won't emit per-batch spend events. Just rebuilt + uploaded `mtds-code.tar.gz` at 09:51 UTC — next drain (or any
-re-launched VM) will pick up the emission.
+`market-tick-data-service@1b0a207` (DATABENTO_PAYG_SPEND emission, ~10:00 UTC). VMs launched 09:15-09:42 UTC won't emit
+per-batch spend events. Just rebuilt + uploaded `mtds-code.tar.gz` at 09:51 UTC — next drain (or any re-launched VM)
+will pick up the emission.
 
 **For operator sign-off Phase 8.2** ($50-200 projection): use Databento dashboard for THIS drain's total spend
-(per-batch telemetry not available client-side until next drain). Next drain will have full per-VM cost
-attribution in the event stream.
+(per-batch telemetry not available client-side until next drain). Next drain will have full per-VM cost attribution in
+the event stream.
 
-**Equity-floor fix** (`deployment-service@ab0e492`) is in NASDAQ + NYSE current launchers — the fact that no
-2019-2022 NASDAQ/NYSE VMs are in the fleet is verification it's working. Good.
+**Equity-floor fix** (`deployment-service@ab0e492`) is in NASDAQ + NYSE current launchers — the fact that no 2019-2022
+NASDAQ/NYSE VMs are in the fleet is verification it's working. Good.
 
 No further actions for slot-1-main this cycle — drain is monitoring-only. I'll spot-check again next cron tick.
+
+[2026-05-17 12:10 UTC] ikenna-main → slot-5 — 🟡 **STUCK VM deleted: tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-104024 —
+needs relaunch**
+
+**Symptom**: VM was RUNNING for 2h22m with NO startup-script output past
+`09:42:41 UTC Caching compiled wheels to GCS...`. No vm-logs/run.log object was ever created (workload never started).
+Other GC year-shards (2019/2020/ 2021/2022/2024) launched same-second completed cleanly + auto-deleted; only GC 2023
+hung.
+
+**Hung at**: wheel-cache step in `setup-data-pipeline-vm.sh` — likely a gsutil-cache hang (cached-wheel-upload-to-GCS
+step). Not a Databento issue (VM never reached the workload phase). Did NOT consume Databento PAYG cost.
+
+**Action taken (ikenna-main)**: deleted the stuck VM via
+`gcloud compute instances delete tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-104024 --project=central-element-323112 --zone=asia-northeast1-c --quiet`.
+Singleton- lock now relaxed by one slot but still 5 ES_OPT VMs running so block remains.
+
+**Recommended relaunch (slot-5)**: when ES_OPT batch drains (likely <2 hours), re-launch GC 2023 ONLY via:
+
+```
+bash deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh \
+  --only-root GC --year 2023
+```
+
+This re-runs only the missing year-shard without re-doing GC 2019/2020/2021/ 2022/2024 (already drained) or the other
+CME roots.
+
+**Why hung**: likely transient (gsutil retry, network burst at boot-up, gcloud auth refresh contention). If second VM
+also hangs at wheel-cache, escalate — could indicate the wheel-cache step itself has a latent bug under specific
+conditions (e.g. cache-bucket contention when 6 sister VMs write the same time). For now: one-VM occurrence, treat as
+transient.
+
+**Cost / time impact**: zero direct cost (no Databento spend); 2h22m compute-time waste on hung VM; one missing
+year-shard in GC 2023 backfill data (the other 5 GC years already captured per slot-5's Phase 7 flip @8a560381 +
+26bf1b1a).
+
+No code fix needed — startup script worked for 5 of 6 sister VMs same-second. Adding a watchdog for
+"startup-script-hung-before-vm-logs-bucket-write" is worthwhile but out-of-scope here — would file under
+`runbook_execution_governance_gaps_2026_05_08.md` if observed twice.
