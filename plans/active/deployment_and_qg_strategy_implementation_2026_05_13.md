@@ -464,8 +464,11 @@ surface, not per repo:
       Shipped at `features-service@fedda39f`. 368 total tests across 11 calculator files. **Wave 6 (2026-05-17
       slot-8)**: 36 new tests for `travel_calculator` (haversine, home venue coord lookup, cumulative travel 30d,
       shard-level isolation fallback, long-travel flags, fatigue ratio). Shipped at `features-service@01b48fd0`. 404
-      total tests across 12 calculator files. Remaining high-gap sports files: manager_calculator 65.7%,
-      formation_calculator 68.0%, ht_features 71.2%, bench_sub_calculator 75.6% — wave 7 continuing.
+      total tests across 12 calculator files. **Wave 7 (2026-05-17 slot-8)**: 58 new tests for `manager_calculator`
+      (safe_div, team match filters, results, ppg, xg extraction, style shift attack/defense, batch with
+      coaches/tenure/flags/reset_weight/honeymoon). Shipped at `features-service@aa201e9f`. 462 total tests across 13
+      calculator files. Remaining high-gap sports files: formation_calculator 68.0%, ht_features 71.2%,
+      bench_sub_calculator 75.6% — wave 8 continuing.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
