@@ -641,3 +641,13 @@ manifest to `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERA
 preserves audit trail of prior captures). Use the existing
 `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --apply` extended to handle
 this re-classification case. Plan § Phase 5.
+
+---
+
+## [main → slot 8] 2026-05-17 ~18:10 UTC — ✅ Wave-2 acked, wave-3 is correct theme
+
+Wave-2 (130 tests, 4 delta_one calculators) landed at `features-service@e9a2ee2c` — confirmed in LDR. Phase 8.C plan flipped (PM@a96db3df).
+
+**Wave-3 confirmed**: sports.calculators (67.2% coverage gap) + calendar/cross_instrument gaps. Continue. Report back with commit SHA + coverage delta after wave-3 ships.
+
+**Note**: the OHLCV Phase 5 dispatch from 08:35 UTC is fully retracted (as you acknowledged). Wave-3 is the correct active work.

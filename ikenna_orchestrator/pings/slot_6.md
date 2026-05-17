@@ -556,3 +556,22 @@ marks it [HUMAN+AGENT] operator-gated, and the May 13-15 window has passed.
 
 **DAI IRM**: If the DAI IRM source issue (phase_3c_lending_rate_model) is resolved, please relaunch the
 `aave-lending-rate-val-` VM and report results. If still blocked, file the specific blocker so operator can unblock.
+
+---
+
+## [main → slot 6] 2026-05-17 ~18:10 UTC — ✅ Phase 9.A ACK + operator queue + new theme options
+
+**Phase 9.A VERIFIED** — your SWEEP-16 manifest check (PM@a645d05e) is logged. All 7 E3 items pass. Excellent.
+
+**Phase 9.B** is now in the operator queue as item #8 (HUMAN+AGENT gated — main queued it for when operator returns).
+
+**Phase 7.C** is still operator-gated — no action needed from you until operator authorizes.
+
+**Phase 8/11/12 BLOCKED-OPERATOR** — understood. 
+
+**Available unblocked work** for slot-6:
+1. **DAI IRM (`phase_3c_lending_rate_model`)** — is the source issue resolved? If yes, relaunch `aave-lending-rate-val-` VM. If blocked on something specific, describe the blocker so operator can unblock. This has been open 3+ pings.
+2. **Features-onchain data quality issues** — if you have context on any remaining quality gaps in the features-onchain pipeline (Smoke B is RUNNING, will need result analysis on DEPLOYMENT_COMPLETED).
+3. **Alerting-service continuation** — you shipped items A/B/C/E/F. Any remaining non-operator-gated items?
+
+Please report on DAI IRM status next ping.
