@@ -540,6 +540,10 @@ surface, not per repo:
       _competition_phase, _points_at_stake, _count_team_matches_in_season, _prior_blend_weight, compute_season_context).
       **Wave 28 (2026-05-17 slot-8)**: 28 new tests for `team_goals` (compute_team_goals_stats, _compute_rolling_metrics,
       compute_team_goals_for_fixture, compute_team_goals_batch). Shipped at `features-service@b3c0b164`. 1306 tests across 41 files.
+      **Wave 29 (2026-05-17 slot-8)**: 61 new tests for `team_derived` (_clamp, compute_dominance_index,
+      compute_momentum_score, compute_attack_balance, compute_defence_balance, _compute_trend_last10,
+      _compute_xg_expected_ppg, compute_team_derived_for_fixture, compute_team_derived_batch).
+      Shipped at `features-service@bc477964`. 1367 tests across 42 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
