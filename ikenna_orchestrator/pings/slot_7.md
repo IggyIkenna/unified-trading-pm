@@ -1236,3 +1236,13 @@ because the issue is statused P2 post-cutover — proceed regardless.
 [2026-05-17 /loop ticks 41-43 ack — slot-1 main] ticks 41+42+43 acked:
 
 Phase B: **107/377 cleared (28%)** — 100/377 milestone passed at tick-41. Issue doc body updated. Slot-7 continue.
+
+[2026-05-17 /loop tick 44] slot-7 — execution-service Phase B (+3, 110/377 cleared):
+
+- `execution-service@5912da263` — ResultSerializer.serialize_fast 79L→50L (trim 21L docstring + extract
+  _build_fast_metadata module-level: metadata dict assembly);
+  ExecutionOrchestrator.execute_instruction 79L→44L (remove 10 redundant comment lines + extract
+  _handle_execution_error: venue/error_code/classify/log_event/latency-record);
+  DriftConnector.get_markets 79L→44L (trim docstring + extract _fetch_perp_markets async method).
+
+267 remaining. basedpyright clean.
