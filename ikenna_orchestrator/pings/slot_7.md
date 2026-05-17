@@ -803,3 +803,13 @@ basedpyright clean across all 7 commits. Half-1+Half-2 plan-flip discipline main
 
 369 remaining; pattern is established (per-method get_*/load_* methods need a _fetch_payload + dataclass-map
 extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
+
+
+[2026-05-17 /loop tick 10] slot-7 — execution-service Phase B continues, +4 more (12/377 cleared):
+
+* `execution-service@d844cfa6c` — DeleverageExecutor.handle 51L→33L (multi-line collapse; logic unchanged).
+* `execution-service@30a203c01` — SorTwapAlgorithm.execute 51L→28L (docstring trim + inlined avg locals).
+* `execution-service@a5ae170ad` — SportsAdapter.place_bet 51L→25L via _require_betting_adapter helper.
+* `execution-service@9403a1afa` — TenderlyExecutionProvider.simulate_bundle 51L→23L via _build_bundle_payload helper.
+
+365 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
