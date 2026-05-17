@@ -2,6 +2,10 @@
 title: Databento adapter `to_df(count=N)` chunk-iteration fails with int(Timestamp) error
 created: 2026-05-16
 author: slot-5-claude
+resolved: 2026-05-16
+resolution:
+  FIXED at `market-tick-data-service@f19ff5f` — `to_df(count=chunk_rows, pretty_ts=False)` workaround bypasses SDK 0.78
+  DataFrameIterator._format_map_symbols bug. ts_event/ts_recv kept as int64 nanoseconds.
 source:
   - tradfi-bf-es-adhoc-adhoc-20260516-130240 VM log (post-temp-file-fix MTDS@741eb5d)
   - market-tick-data-service/market_interface/adapters/tradfi/databento_adapter.py:650
@@ -72,12 +76,12 @@ regression.
 **✅ FIXED at `market-tick-data-service@f19ff5f`** — `to_df(count=chunk_rows, pretty_ts=False)` workaround landed
 between issue filing and now. Documented in inline comment at `databento_adapter.py:650-659`.
 
-`pretty_ts=False` keeps `ts_event` / `ts_recv` as int64 nanoseconds (which `_enrich_with_canonical_ids` already
-expects via `datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, ...)`). Bypasses the SDK 0.78
-`DataFrameIterator._format_map_symbols` bug where `np.asarray(dates, dtype="datetime64[D]")` calls `int()` on
-tz-aware `pd.Timestamps`. Confirmed against SDK 0.78.0 / databento_dbn 0.58.0 / pandas 2.3.3.
+`pretty_ts=False` keeps `ts_event` / `ts_recv` as int64 nanoseconds (which `_enrich_with_canonical_ids` already expects
+via `datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, ...)`). Bypasses the SDK 0.78
+`DataFrameIterator._format_map_symbols` bug where `np.asarray(dates, dtype="datetime64[D]")` calls `int()` on tz-aware
+`pd.Timestamps`. Confirmed against SDK 0.78.0 / databento_dbn 0.58.0 / pandas 2.3.3.
 
-**Next**: slot 5 re-launches `tradfi-bf-es-adhoc-` VM for ES.FUT × ohlcv_1m|trades × 2026-05-{01..07} (and any
-other previously-failing tuples). Expected: rows > 0 now, exit_code=0 with captured data.
+**Next**: slot 5 re-launches `tradfi-bf-es-adhoc-` VM for ES.FUT × ohlcv_1m|trades × 2026-05-{01..07} (and any other
+previously-failing tuples). Expected: rows > 0 now, exit_code=0 with captured data.
 
 Issue can be moved to `plans/archive/issues/` at next sweep.
