@@ -510,6 +510,10 @@ surface, not per repo:
       _days_since_european, _european_matches_season, _double_fixture_week, _estimate_season_start,
       compute_european_fatigue_batch). Shipped at `features-service@6c5ce10e`. 927 total tests across
       29 calculator files.
+      **Wave 17 (2026-05-17 slot-8)**: 28 new tests for `bucketed_features_calculator` (_bucket_scalar,
+      _bucket_series, _safe_numeric_col, compute_bucketed_features_batch — days_rest/vig/dispersion/fatigue/
+      manager_change/history_depth/turnover/lineup_uncertainty buckets). Shipped at `features-service@f0888568`.
+      955 total tests across 30 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
