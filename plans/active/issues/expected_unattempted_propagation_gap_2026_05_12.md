@@ -107,3 +107,18 @@ writegate is near close-out.
 **Do NOT run `--apply-flips` on MTDS manifest before Phase 1 is shipped** — you will flip legitimate `attempted_failed`
 rows (instruments that never existed) to `empty_confirmed`, masking the fact that MTDS is attempting fetches it
 shouldn't be doing at all.
+
+## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
+
+This issue spawned the successor plan `expected_unattempted_propagation_chain_2026_05_12.md`. That plan's **Gate 1
+🟢 FIRED 2026-05-13** with Phase 1+2+3+4+PART C all complete:
+
+- Phase 1 (MTDS pre-flight) ✅ shipped `uac@0457b0e`
+- Phase 2 (MDPS dep-skip emission) ✅ shipped `mdps@3f70cf6`
+- Phase 3.1 (delta_one) ✅ + 3.2 (calendar NO-OP) + 3.3 (onchain NO-OP) + 3.4 (volatility) ✅ + 3.5 (sports) PARTIAL
+  with named successor (writegate Phase 6.x) + 3.6 (commodity NO-OP)
+- Phase 4 (ML) ✅ NO-OP — externally-injected lists
+- PART C (writegate 2.A MDPS 4-state routing) ✅ SUBSTANTIALLY-DONE `mdps@3f70cf6` + `mdps@f50db4e`
+
+P2 follow-ups (DeFi classifier UAC-enum crossref test; sports classifier `EXPECTED_PAUSED_LEAGUE` /
+`EXPECTED_PRE_SEASON` reasons) tracked at successor plan body lines 775-780. Issue closeable at next archive sweep.
