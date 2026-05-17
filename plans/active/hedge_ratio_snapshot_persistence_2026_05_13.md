@@ -121,13 +121,19 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
 
 ### Phase 2 — Producer wire-in (~0.6 cal AI-days)
 
-- [ ] [AGENT] P0. Add `HedgeRatioSnapshotWriter` to `strategy_service/` (or use UTL `ManifestWriter` generic). Pattern
-      decided in Phase 0.
-- [ ] [AGENT] P0. Wire `CarryStakedBasisEngine.on_tick` to emit on `decision.rebalance_triggered=True`. Include all
-      Phase 1F fields + `partition_dt` from event timestamp + `correlation_id` from trade context.
-- [ ] [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
+- [x] [AGENT] P0. Add `HedgeRatioSnapshotWriter` to `strategy_service/` (or use UTL `ManifestWriter` generic). Pattern
+      decided in Phase 0. ✅ `hedge_ratio_writer.py` with `emit_hedge_ratio_snapshot` + `build_hedge_ratio_snapshot`.
+      strategy-service@`21209bd`
+- [x] [AGENT] P0. Wire `CarryStakedBasisEngine.on_tick` to emit on `decision.rebalance_triggered=True`. Include all
+      Phase 1F fields + `partition_dt` from event timestamp + `correlation_id` from trade context. ✅ Wired inline
+      after baseline update, using `instruction.instruction_id` as `correlation_id`. strategy-service@`21209bd`
+- [x] [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
       `record_captured(asset_group="defi",     data_type=HEDGE_RATIO_SNAPSHOT, partition_dt=..., venue_name="strategy-internal")`.
-- [ ] [AGENT] P0. Unit test: synthetic decision → emit row → assert parquet schema matches contract.
+      ✅ Best-effort `record_captured(category="defi", data_type="hedge_ratio_snapshot",
+      pipeline_mode=BATCH_STRATEGY_SERVICE)` in `_record_manifest()`. strategy-service@`21209bd`
+- [x] [AGENT] P0. Unit test: synthetic decision → emit row → assert parquet schema matches contract. ✅ 6 tests
+      in `test_hedge_ratio_writer.py` (schema round-trip, blob_path, row values, exception-swallow).
+      strategy-service@`21209bd`
 
 ### Phase 3 — Consumer schema mapping (~0.4 cal AI-days)
 
