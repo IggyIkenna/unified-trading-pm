@@ -409,19 +409,23 @@ NOW) + `phase_3c_lending_rate_model` continuation (UNBOUNDED per operator) + ale
    UAC IRM defaults updated (`unified-api-contracts@215ed3e`). **Awaiting operator VM re-run** to confirm USDT 55%→90%+,
    USDC 85%→90%+, DAI TBD. (a) coordinate VM run via operator ping; (b) if DAI still fails, find DAI IRM source.
    (research 1.2×, ~4 = 4.8 cal — unbounded per operator)
-3. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1 close** — plan archived as 100% complete
-   2026-05-16 (slot-8 SWEEP-16 mechanical archive sweep). All Phases 1-4 verified done.
-   Archived at `plans/archive/audit_records_pb_1_2_3_pre_cutover_2026_05_13.md`. (research 1.2×, ~3 = 3.6 cal)
+3. ✅ **`audit_records_pb_1_2_3_pre_cutover_2026_05_13` Phase 1 close** — plan archived as 100% complete 2026-05-16
+   (slot-8 SWEEP-16 mechanical archive sweep). All Phases 1-4 verified done. Archived at
+   `plans/archive/audit_records_pb_1_2_3_pre_cutover_2026_05_13.md`. (research 1.2×, ~3 = 3.6 cal)
 4. ✅ **`available_at_lookahead_bias_completion_2026_05_08` sweep close** — stamping helper consumers shipped:
    UTL@`8b0fb816` (`stamp_available_at_onchain_tick` added); MTDS@`bbdbf55` (all 4 onchain DeFi handlers stamped:
    evm_defi, gas_fee, solana_defi, lst_rates — all write paths); features-service@`7b1ede28`
    (`contextlib.suppress(LookaheadBiasError)` removed + `contextlib` + `LookaheadBiasError` import cleanup). Chain link
    1 complete. (refactor 0.4×, ~3 = 1.2 cal)
-5. **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` operator-UX remainder**. (design 0.6×, ~3 = 1.8 cal)
-6. ✅ **Custody Cloud-KMS smoke + 4 DeFi alert-codes alerting wiring final** — Cloud-KMS smoke
-   END-TO-END verified 2026-05-12 (master plan entry + work_split_2026_05_14 item 14 ✅); 4 DeFi alert-codes
-   (`DEFI_AAVE_UTILIZATION_SPIKE`, `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE`, `DEFI_WEETH_DEPEG`) all
-   `[x]` in alerting_service_live_rules plan (alerting-service@12411e0 + features-service@2ecb1378). (design 0.6×, ~3 = 1.8 cal)
+5. ✅ **`alerting_runbook_and_operator_ux_post_cutover_2026_05_12` operator-UX remainder** — DESIGN-SHIPPED 2026-05-17:
+   Groups A/B/C/E/F all `[x]` in plan; Group D (ST-11 block-list TS parity) design call done → CI parity test, DEFERRED
+   to Harsh UI slot; Group G (STALE_OPEN_ALERT dashboard) design call done → deployment-ui tile, DEFERRED to Harsh
+   deployment-ui slot. Named successors in plan body. Plan's done-definition satisfied (all groups either shipped or
+   explicitly migrated). (design 0.6×, ~3 = 1.8 cal)
+6. ✅ **Custody Cloud-KMS smoke + 4 DeFi alert-codes alerting wiring final** — Cloud-KMS smoke END-TO-END verified
+   2026-05-12 (master plan entry + work_split_2026_05_14 item 14 ✅); 4 DeFi alert-codes (`DEFI_AAVE_UTILIZATION_SPIKE`,
+   `DEFI_FUNDING_RATE_FLIP`, `DEFI_FEATURE_STALE`, `DEFI_WEETH_DEPEG`) all `[x]` in alerting_service_live_rules plan
+   (alerting-service@12411e0 + features-service@2ecb1378). (design 0.6×, ~3 = 1.8 cal)
 7. ✅ **DeFi handler hardening verification across all 4 handlers** (post-`market-tick-data-service@c1e6963` +
    `@f657431`) — verified shard-level failure isolation (record_captured INSIDE try, recorder.close() in finally) across
    evm_defi_handler, gas_fee_handler, solana_defi_handler, lst_rates_handler. All 4 handlers follow eigenlayer pattern.
