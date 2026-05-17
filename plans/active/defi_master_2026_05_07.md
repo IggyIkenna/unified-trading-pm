@@ -31,8 +31,12 @@ estimate_calibration_note: |
 
 > **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_2026_05_10.md` is the canonical implementation track for
 > `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2). Phases 4+5
-> BLOCKED-CREDENTIALS (Tenderly fork + HL/Bybit testnet). Check that plan for current status before modifying any
-> recursive-borrow scope here. Banner added 2026-05-15.**
+> ✅ CREDENTIALS UNBLOCKED 2026-05-15 (`tenderly-api-key`, `tenderly-fork-rpc-url`, `hyperliquid-testnet-trade-key`,
+> `bybit_api_key`, `bybit_api_secret` all vaulted per spawn-prompt update). Tenderly-fork integration tests + HL/Bybit
+> testnet smoke now executable; remaining BLOCKED items in that plan are the Phase-4-deployed flash-loan receiver
+> address (operator-deploy step) and any per-environment fork RPC setup. Check that plan for current status before
+> modifying any recursive-borrow scope here. Banner added 2026-05-15; updated 2026-05-17 to reflect credential
+> unblock.**
 
 # DeFi Master — asset_group umbrella
 
