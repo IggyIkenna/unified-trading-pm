@@ -467,8 +467,11 @@ surface, not per repo:
       total tests across 12 calculator files. **Wave 7 (2026-05-17 slot-8)**: 58 new tests for `manager_calculator`
       (safe_div, team match filters, results, ppg, xg extraction, style shift attack/defense, batch with
       coaches/tenure/flags/reset_weight/honeymoon). Shipped at `features-service@aa201e9f`. 462 total tests across 13
-      calculator files. Remaining high-gap sports files: formation_calculator 68.0%, ht_features 71.2%,
-      bench_sub_calculator 75.6% — wave 8 continuing.
+      calculator files. **Wave 8 (2026-05-17 slot-8)**: 86 new tests across 3 sports calculators: `formation_calculator`
+      (32 tests — parse_formation, get_team_formation, batch) + `ht_features` (32 tests — ht_state/momentum,
+      xg_from_shots, aggregate_1h_events, batch, odds) + `bench_sub_calculator` (22 tests — sub timing, home/away split
+      cols, proactive flag, batch). Shipped at `features-service@25a86c30`. 548 total tests across 16 calculator files.
+      Continuing coverage sweep — checking next high-gap files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
