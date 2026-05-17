@@ -3029,3 +3029,30 @@ cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis -
 ```
 
 **Note**: 4 groups batch-skipped for historical dates (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data sources). These features will be absent from 2026-04-08→12 dates. Non-blocking for paper backtest — strategy handles NaN features in the feature matrix.
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 22:18 UTC — 🚀 B-015 paper VM LAUNCHED (ikenna-side)
+
+**carry_staked_basis paper VM is now running on ikenna-side** (harsh slot-9 CYCLE-CLOSE since 2026-05-15):
+
+```
+VM: strategy-paper-carry-staked-basis-20260517-221757
+Zone: asia-northeast1-c
+Mode: --continuous --tick-interval 3600 (1h per tick)
+Expected first tick: ~22:25 UTC (5 min boot + strategy init)
+pvl-p18a gate: ≥3-day paper run required for paper-runnable state
+```
+
+**All B-015 blockers cleared**:
+- Phantom-fix confirmed 2026-05-15 (0 phantoms, no apply-flips needed)
+- DeFi handlers hardened 2026-05-15 (4 handlers via slot-9 + slot-6)
+- Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 UTC (features-onchain 11/11 groups)
+
+**Harsh-side action**: Monitor the paper VM for first tick success. VM runs continuously until 2026-05-20+.
+No action needed from harsh-side — ikenna is monitoring.
+
+**Verify first tick**:
+```bash
+gcloud storage ls gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/
+```

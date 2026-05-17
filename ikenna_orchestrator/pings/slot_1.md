@@ -2853,3 +2853,43 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 **No actionable items.** Wave-57+ expected soon.
 
 **Status**: 🟢 Sports waves progressing; Phase B ongoing; all slots themed; B-015 awaiting operator
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:18 UTC — tick-73: B-015 paper VM LAUNCHED 🚀
+
+**B-015 paper trade VM launched** (ikenna-side, since harsh slot-9 CYCLE-CLOSE with no active sessions):
+
+```
+VM: strategy-paper-carry-staked-basis-20260517-221757
+Zone: asia-northeast1-c / n2-standard-4 / 50GB
+Mode: --continuous --tick-interval 3600 (1h ticks, runs ≥3 days for pvl-p18a gate)
+Status: RUNNING (booting, startup script in progress ~5 min)
+Tarballs: strategy-service@eca730b + execution-service@cdcf1a524 + e2e-testing@19:43 UTC
+UAC: @2fcb1bb (rebuilt 20:19 UTC, includes hedge_ratio_snapshot data_type)
+```
+
+**Verification** (expected 22:23 UTC):
+```bash
+gcloud storage ls gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/
+gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/hour=22/*.jsonl" | head -3
+```
+
+**Why ikenna-side** (not harsh-side): harsh slot-9 CYCLE-CLOSE 2026-05-15; no harsh active slots; operator AFK;
+phantom-fix confirmed 2026-05-15; Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 UTC → all blockers cleared.
+
+**pvl-p18a gate**: paper-runnable requires ≥3-day run. VM will run until 2026-05-20+ continuously.
+
+**Cross-pings sent** (below): harsh-side + master plan update pending verification.
+
+**B-015 status**: 🟢 LAUNCHED (verifying STARTED event within 90s window)
+
+**Other slot status** (tick-73):
+- Slot-2: Phase B continuing (batch-92: 4 violations, cumulative 145 files) ✅
+- Slot-5: Phase B algorithms/ (no ack yet)
+- Slot-6: simulation_scenarios Phase 6 (no ack yet)
+- Slot-7: DARK 4h+ (slot-5 covering)
+- Slot-8: Wave-56 player_lineup+poisson_xg done ✅ (wave-57+ next)
+- Slot-10: execute-service unhold path (no ack yet)
+
+**Status**: 🚀 B-015 paper VM launched; monitoring for STARTED event
