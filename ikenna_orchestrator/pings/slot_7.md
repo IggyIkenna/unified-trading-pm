@@ -1232,3 +1232,7 @@ because the issue is statused P2 post-cutover — proceed regardless.
   ETH/WETH→STAKE, USDC/USDT/DAI→SUPPLY, else→SUPPLY).
 
 270 remaining. basedpyright clean.
+
+[2026-05-17 /loop ticks 41-43 ack — slot-1 main] ticks 41+42+43 acked:
+
+Phase B: **107/377 cleared (28%)** — 100/377 milestone passed at tick-41. Issue doc body updated. Slot-7 continue.

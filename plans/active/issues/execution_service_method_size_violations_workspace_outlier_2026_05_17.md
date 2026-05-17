@@ -739,6 +739,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    - basedpyright residual error count must not regress
    - test suite green per commit
    - Half-1+Half-2 plan-flip discipline per shippable unit
+
+   **Phase B in-progress (2026-05-17 autonomous loop — slot-7)**: 102/377 methods cleared (27%) — milestone ≥100
+   passed 2026-05-17. Latest: execution-service@47734d7d7 (tick-41 — BenchmarkMatcher.match 69L→48L /
+   KrakenCeFiAdapter.parse_order_response 69L→43L / LiveExecutionHandler._execute_instructions 69L→47L). Full
+   turn-by-turn log: `ikenna_orchestrator/pings/slot_7.md` ticks 30–41.
+
 3. **Phase C — remaining 70%** (~5-7 cal AI-days, **POST-CUTOVER**): per-submodule sweep until
    `FUNCTION_SIZE_EXTRA_EXCLUDES = ()` cleanly. No urgency before live trade verification.
 
