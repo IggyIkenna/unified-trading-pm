@@ -1,3 +1,11 @@
+---
+title: Deployment + QG strategy SSOT
+type: infrastructure
+status: living
+last_reviewed: 2026-05-17
+owner: workspace-platform
+---
+
 # Deployment + QG strategy SSOT
 
 **Created**: 2026-05-13 per operator + Ikenna + Harsh design discussion 2026-05-13 17:05-17:18 UTC. **Status**: SSOT for

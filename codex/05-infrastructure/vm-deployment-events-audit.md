@@ -1,3 +1,11 @@
+---
+title: VM Deployment Events — GCS / PubSub Forwarding Audit
+type: infrastructure
+status: living
+last_reviewed: 2026-05-17
+owner: deployment-platform
+---
+
 # VM Deployment Events — GCS / PubSub Forwarding Audit
 
 **Author**: slot-2 agent  

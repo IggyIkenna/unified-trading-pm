@@ -1,3 +1,11 @@
+---
+title: Deployment-Service Event Sink Chain
+type: infrastructure
+status: living
+last_reviewed: 2026-05-17
+owner: deployment-platform
+---
+
 # Deployment-Service Event Sink Chain
 
 **Author**: slot-2 agent  

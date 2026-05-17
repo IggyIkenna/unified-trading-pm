@@ -1,3 +1,11 @@
+---
+title: Scenario injection architecture
+type: architecture
+status: living
+last_reviewed: 2026-05-17
+owner: simulation-platform
+---
+
 # Scenario injection architecture
 
 > **Phase 8.A of `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md`.** Codifies the

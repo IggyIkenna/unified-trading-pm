@@ -1,10 +1,11 @@
 ---
 name: per-venue-paper-policy
-overview: SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal fallback); testnet upgrade where API + credentials exist. Codifies `PAPER_EXECUTION_TARGETS: dict[chain | venue, ExecutionTarget]` in UAC.
+overview: "SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal fallback); testnet upgrade where API + credentials exist. Codifies PAPER_EXECUTION_TARGETS in UAC."
 type: codex-ssot
 status: active
 created: 2026-05-09
 updated: 2026-05-15
+last_reviewed: 2026-05-17
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md

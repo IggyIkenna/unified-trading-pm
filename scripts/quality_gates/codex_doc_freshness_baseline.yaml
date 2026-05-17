@@ -1,4 +1,4 @@
-violation_count: 183
+violation_count: 173
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
@@ -203,8 +203,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/scenario-injection-architecture.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/schema-placement.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/schema-versioning.md
@@ -227,8 +225,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/slow-fast-routing-split.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/solana-defi-coverage.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/sports-integration-plan.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/sports-live-odds-connectivity.md
@@ -277,14 +273,10 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/custody-onboarding-checklist.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/deployment-and-qg-strategy.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/deployment-clusters-live-vs-batch.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/disaster-recovery.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/event-sink-chain.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/firebase-split-topology.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/fireblocks-integration-spec.md
@@ -303,8 +295,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/per-venue-paper-policy.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md
@@ -337,14 +327,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/unified-libraries/dependency-matrix.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-deployment-events-audit.md
-  reason: no-frontmatter
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-event-emission-audit.md
-  reason: no-frontmatter
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-launcher-runbook.md
-  reason: no-frontmatter
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-security-audit.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/vm-tarball-deployment.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/05-infrastructure/workspace-root-variable.md
@@ -353,8 +335,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/11-project-management/README.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/11-project-management/active-plan-inventory-tracker.md
-  reason: no-frontmatter
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/11-project-management/architecture-constraints.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/11-project-management/codex-delta-canonical-brief.md

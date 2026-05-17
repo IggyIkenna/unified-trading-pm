@@ -1,3 +1,11 @@
+---
+title: VM Event Emission Compliance Audit
+type: infrastructure
+status: living
+last_reviewed: 2026-05-17
+owner: deployment-platform
+---
+
 # VM Event Emission Compliance Audit
 
 **Author**: slot-2 agent  

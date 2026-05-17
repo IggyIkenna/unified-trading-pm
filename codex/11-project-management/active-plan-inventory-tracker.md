@@ -1,3 +1,14 @@
+---
+title: Active Plan Inventory + Done-vs-Left Dashboard
+type: project-management
+status: living
+last_reviewed: 2026-05-17
+owner: pm-orchestrator
+cadence: morning + EOD + before planning decisions (slot 1 main, both sides)
+verifier: python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py
+last_executed: 2026-05-17
+---
+
 # Active Plan Inventory + Done-vs-Left Dashboard
 
 > SSOT for the auto-tracked workspace-wide plan inventory that lives inside `master_to_live_defi_2026_05_23.md`. Shipped

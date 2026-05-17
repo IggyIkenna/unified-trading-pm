@@ -1,3 +1,11 @@
+---
+title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
+type: architecture
+status: living
+last_reviewed: 2026-05-17
+owner: defi-adapters
+---
+
 # Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per

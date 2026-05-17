@@ -1,3 +1,11 @@
+---
+title: VM Launcher Security Audit
+type: infrastructure
+status: living
+last_reviewed: 2026-05-17
+owner: deployment-platform
+---
+
 # VM Launcher Security Audit
 
 **Author**: slot-2 agent  
