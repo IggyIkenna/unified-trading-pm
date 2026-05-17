@@ -604,8 +604,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    _record_aggressive_child + _try_spawn_first_slice_immediately + _schedule_aggressive_slices).
    Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-42**: 46 files cleared (slot-2 contribution: -46 files; spans 17
-   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×1).
+   **Ratchet-down 2026-05-17 (slot-2 batch 43 — defi_execution/protocols/solana_base)**: shipped at
+   execution-service@15052b068 (send_transaction 153L→34L via _paper_trade_result + _sign_and_send_tx +
+   _extract_tx_error_status + _build_tx_result). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-43**: 47 files cleared (slot-2 contribution: -47 files; spans 18
+   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×1,
+   defi_execution/protocols ×8 total).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
