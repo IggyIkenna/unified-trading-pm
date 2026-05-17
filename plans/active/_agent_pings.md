@@ -2613,3 +2613,33 @@ Operator pre-authorized.
 
 **Cross-ref**: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` is the SSOT. Master plan
 (`master_to_live_defi_2026_05_23.md`) needs Group reference update — slot-1-main will fold after Phase 1-4 land.
+
+[2026-05-17 10:15 UTC] ikenna-main → slot-5 / harsh-main — 📋 **OHLCV launchers + Phase 8 emission shipped + ICE
+gap surfaced**
+
+**Shipped this cycle**:
+- `unified-api-contracts@585de75` — new `EmptyConfirmedReason.EXPECTED_OUT_OF_COVERAGE_WINDOW` enum + docstring
+- `unified-api-contracts@b1026cd` (slot-5) — Phase 1 rename `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` ✓
+- TradFi MTDS manifest reconciliation: 39,048 trades+tbbo rows flipped to
+  `empty_confirmed/EXPECTED_OUT_OF_COVERAGE_WINDOW` (Phase 5 done)
+- `market-tick-data-service@1b0a207` — `DATABENTO_PAYG_SPEND` event emission per batch in
+  `databento_adapter._run_batch_download` using `client.metadata.get_cost()` (Phase 8 producer-side done)
+- `deployment-service@9a14813` — CME OHLCV launcher bash-3-compat fix (`${root,,}` was breaking on macOS;
+  resolved with `tr [:upper:] [:lower:]` + `${root//./-}` for dot-safe VM naming)
+
+**Verified post-fix via dry-run** (all 3 functional launchers work):
+- CME: ES.FUT × 7 year-shards (2019..2025)
+- NASDAQ: 293 tickers × 7 year-shards (2019..2025)
+- NYSE: 258 tickers × 7 year-shards (2019..2025)
+- ICE: ⚠️ `ICE_ROOTS empty — scaffolding launcher` — operator needs to pick root symbols
+
+**Remaining open in OHLCV plan**:
+- Phase 7 — operational launch of 4 venues' VMs in parallel (PARALLEL: CME / NASDAQ / NYSE ready; ICE blocked on
+  roots). Per-venue drain ETA 2-4 hours at Databento OHLCV throughput. Singleton-lock matches `^tradfi-bf-` so
+  serialization expected.
+- ICE roots — operator pick needed. Candidates: Brent (BRN.FUT), gasoil (G.FUT), gold (ICEGOLD.FUT), etc. File
+  decision in plan + extend ICE_ROOTS list in launcher.
+- Phase 8 dashboard-row aggregator — deployment-ui rollup that consumes DATABENTO_PAYG_SPEND events.
+- Phase 9 — successor plan filing (post-cutover; slot-1-main owns).
+
+**Operator sign-off when drain completes** — projection $50-200 for full 2019-2026 sweep per plan.
