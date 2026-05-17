@@ -44,6 +44,8 @@ Same patterns as execution-service fix:
   - [x] ✅ season_context.py 28→0 errors — features-service@5199db4d (slot-8 2026-05-17)
   - [x] ✅ team_form.py 28→0 errors — features-service@62e460cf (slot-8 2026-05-17)
   - [x] ✅ sports_validity_engine.py 26→0 errors (engine/ surface) — features-service@d2013034 (slot-8 2026-05-17)
+  - [x] ✅ poisson_xg_calculator.py 17→0 errors — features-service@5aa6079f (slot-8 2026-05-17)
+  - [x] ✅ elo_calculator.py 17→0 errors — features-service@5aa6079f (slot-8 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
