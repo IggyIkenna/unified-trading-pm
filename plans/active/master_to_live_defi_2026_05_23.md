@@ -109,6 +109,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
+_Last regenerated: 2026-05-17 15:49 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 _Last regenerated: 2026-05-17 16:12 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
@@ -186,7 +187,6 @@ folded into the appropriate epic._
 | [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)                     | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md)                     | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
 | **TOTAL** (69 plans)                                                                                                                          | 0 orphans, 0 TBD                     | —         | —          | **52% done** | **483**  | —                                        |
-
 <!-- AUTO-INVENTORY-END -->
 
 ---

@@ -612,9 +612,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    execution-service@362c35974 (on_order 163L→16L via _detect_and_log_regime + _compute_ac_schedule +
    _build_valid_amounts + _schedule_children). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-44**: 48 files cleared (slot-2 contribution: -48 files; spans 18
+   **Ratchet-down 2026-05-17 (slot-2 batch 45 — instruments/factory)**: shipped at
+   execution-service@c4063b597 (create_and_register 178L→23L via _extract_instrument_id_from_config +
+   _check_existing_in_catalog + _find_gcs_definition + _apply_gcs_or_fallback). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-45**: 49 files cleared (slot-2 contribution: -49 files; spans 18
    submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×2,
-   defi_execution/protocols ×8 total).
+   defi_execution/protocols ×8, instruments ×1 total).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
