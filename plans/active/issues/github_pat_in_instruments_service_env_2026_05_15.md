@@ -2,6 +2,8 @@
 title: GitHub PAT committed in instruments-service .env and .env.example (multiple commits)
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
+resolved: 2026-05-15
+resolution: SECURITY-RESOLVED — leaked PAT returns HTTP 401 (already revoked). BFG history scrub demoted to P3-hygiene (DEFERRED-MAINTENANCE-WINDOW; batched with companion gcp_sa_private_key issue).
 source:
   - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
   - instruments-service git history scan (/tmp/gitleaks-instruments.json)
