@@ -2,6 +2,8 @@
 title: Phase 3C lending rate validation — 0/60 events pass within 10bps; sim consistently ~40-60% LOWER than realized
 created: 2026-05-13
 author: ikenna-slot-6
+resolved: 2026-05-17
+resolution: DIAGNOSED — root cause is harness methodology bug, not LendingRateImpactCalculator math. DAI math is correct; harness compares sim against on-chain after-rate that reflects co-blocked supply+borrow events. USDC+USDT pass because large pool size makes co-blocked offsets immaterial; DAI fails because pool=$117M + co-blocked borrows. Slot-6 recommended Option A — filter _collect_supply_events to blocks with ONLY supply event for asset.
 source:
   - plans/active/defi_simulation_realism_2026_05_10.md Phase 3A/3B/3C
   - execution-service/execution_service/matching_engine/lending/rate_impact.py (LendingRateImpactCalculator)
