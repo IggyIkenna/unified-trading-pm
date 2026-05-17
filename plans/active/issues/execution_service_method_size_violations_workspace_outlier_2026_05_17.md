@@ -384,6 +384,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18**: 22 files cleared (slot-2 contribution:
    -22 files; 10 handlers + 8 defi protocols + 3 services + 1 preprocessor).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 19 — services sweep continues)**: funding_recon_engine.py shipped at
+   execution-service@dd7d967a6 (reconcile 114L→45L via \_record_missing_exchange_data (MISSING_EXCHANGE_DATA path +
+   INFO alert post-grace-period) + \_classify_status (MATCH/DISCREPANCY/CRITICAL ladder on payment_bps +
+   rate_bps thresholds) + \_maybe_publish_drift_alerts (per-rule_id payment + rate-divergence alert emission)).
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18+19**: 23 files cleared (slot-2
+   contribution: -23 files; 10 handlers + 8 defi protocols + 4 services + 1 preprocessor).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
