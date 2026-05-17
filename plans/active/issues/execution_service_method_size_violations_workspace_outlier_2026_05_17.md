@@ -6,7 +6,7 @@ source:
   - execution-service@f871ffad7 (post-cutover snapshot)
   - workspace-wide method-size sweep 2026-05-16 → 2026-05-17 (slot 7 autonomous loop)
 severity: P2 (post-cutover hygiene; not blocking May-23)
-status: phase-b-in-progress (102/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
+status: phase-b-in-progress (103/377 cleared = ~27%; milestone 100/377 crossed 2026-05-17)
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 routing:
@@ -731,6 +731,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-2 cumulative across batches 3-61**: 65 files cleared (slot-2 contribution: -65 files; spans 32 submodules incl.
   results/validation).
+
+  **Ratchet-down 2026-05-17 (slot-2 batch 62 — instruments/tradfi_creator)**: shipped at execution-service@c3fadd421.
+  create_tradfi_from_config 139L→15L via 3 helpers (\_resolve_common_params + \_create_equity_instrument +
+  \_create_future_instrument). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-62**: 66 files cleared (slot-2 contribution: -66 files; spans 33 submodules incl.
+  instruments/tradfi_creator).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
