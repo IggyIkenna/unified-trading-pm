@@ -1932,3 +1932,27 @@ Issue was **co-blocked events** (multiple txs in same Ethereum block as Supply e
 6. ❌ TradFi-fwd cron
 7. 🔴 **Smoke B re-run** — BLOCKED (perp_funding schema fix needed first OR skip perp_funding dates)
 8. 🔴 **Phase 9.B** — MTDS VM fleet launch [HUMAN+AGENT]
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:40 UTC — Autonomous loop tick-37: Phase 3C GATE CONFIRMED 97.9%; slot-5 AlertCode acked
+
+**Phase 3C Re-verification PASSED** ✅ (correct block range 23.3M→25.1M):
+- `aave-lending-rate-val-20260517-182510` — STOPPED, self-deleted.
+- Results: **97.9% pass rate (47/48)**, 12 co-blocked skipped, 0 outliers >50bps.
+- Per-asset: USDT 20/20, USDC 25/26, DAI 2/2 (all green).
+- Issue doc updated: `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md` § "Re-verification Run"
+- Phase 3C VALIDATION GATE **CLOSED** (issue doc banner already says RESOLVED).
+
+**Slot-5 AlertCode wiring ✅** (UAC@1a6211d, alerting-service@518bddc, PM@736cc39c):
+Now picking up deploy_missing backend items 1-4. Acked + confirmed.
+
+**Slot-7** (from LDR): 99/377 cleared as of tick-40. Flip trigger at 100/377.
+**Slot-6**: Pinged about Smoke B bugs (perp_funding cast + util stall). Awaiting response.
+**Slot-8**: Wave-3 (sports.calculators) in progress. No new self-report.
+
+**Operator queue** (8 items — unchanged):
+7. 🔴 Smoke B re-run blocked (slot-6 fixing perp_funding + util stall)
+8. 🔴 Phase 9.B — MTDS VM fleet launch [HUMAN+AGENT]
+
+Next: watch for slot-7 100/377 self-report + slot-6 fix report.

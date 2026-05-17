@@ -572,3 +572,26 @@ in the same block (smart-contract arbitrage flow into the smaller DAI pool).
   This would restore the original "60 events × 3 assets" statistical power. Likely requires scanning broader block
   range OR lowering MIN_SUPPLY_USD_EQUIVALENT for DAI specifically (smaller pool → smaller isolated events possible).
 - Cross-asset comparison would be informative: do MAI / GHO / USDe also show high co-blocked event rates like DAI?
+
+---
+
+## Re-verification Run — 2026-05-17 18:25 UTC (correct block range: 23.3M → 25.1M)
+
+**VM**: `aave-lending-rate-val-20260517-182510`  
+**Block range**: 23,300,000 → 25,086,000 (Sep 2025 → May 2026) — correct era  
+**Tarball**: rebuilt 17:24 UTC, includes `f45a5f669` co-blocked filter + `25f5a12` block range fix  
+**Results**: `gs://central-element-323112-defi-validation/results/lending/2026-05-17/3420C524-.../results.json`
+
+```
+pass_rate:        97.9% (gate ≥90% ✅)
+passed:           47/48 events
+co_blocked_skip:  12 events skipped (co-blocked methodology filter working)
+total_collected:  60 events
+per-asset:
+  USDT:  20/20 = 100.0% ✅
+  USDC:  25/26 =  96.2% ✅
+  DAI:    2/2  = 100.0% ✅ (only 2 isolated events found in this block range)
+outliers >50bps: none
+```
+
+**GATE CONFIRMED GREEN across correct block range.** Phase 3C is fully operationally verified.

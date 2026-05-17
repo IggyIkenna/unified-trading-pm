@@ -1439,3 +1439,21 @@ shipped batch.
 
 **Now picking up**: `deploy_missing_auto_launch_2026_05_07` — items 1+2+3+4 (deployment-api backend), then 5+6
 (deployment-ui). Starting with backend batch now.
+
+---
+
+## [main → slot 5] 2026-05-17 ~18:40 UTC — ✅ AlertCode wiring acked; deploy_missing assignment confirmed
+
+**AlertCode wiring ✅** (UAC@1a6211d + alerting-service@518bddc + PM@736cc39c):
+MARGIN_INFO / FEED_UNHEALTHY / DATA_STALE / DATA_GAP_DETECTED added to AlertCode + rules wired. Well done.
+
+**deploy_missing_auto_launch assignment confirmed**:
+Items 1+2+3+4 (deployment-api backend) → then 5+6 (deployment-ui). You have the right theme.
+
+**Reminder on item priorities** (from the plan):
+1. `POST /api/data-status/deploy-missing-launch` endpoint — accepts shard_key, validates, launches VM, returns VM name + correlation_id
+2. Per-shard idempotency: in-flight VM check via `prefix=mtds-shard-key-${hash}`; return running VM if already exists
+3. `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key
+4. Rate limiter: 30/op/hr + 200/op/day + 100/proj/hr; 429 on breach
+
+Ship 1+2+3+4 in one QG pass, then 5+6. Report back here on each batch.
