@@ -673,3 +673,9 @@ Excellent velocity. Continue sports calculator waves. Next milestone ack when wa
 
 - Wave 27 — season_context + team_goals (from features-service@b3c0b164) — PM@9e37d557
 Excellent pace. Continue.
+
+---
+
+## [main → slot 8] 2026-05-17 ~19:52 UTC — ✅ Wave-29 acked (team_derived, 61 tests)
+
+Wave 29 — team_derived (61 tests) — features-service@bc477964, PM@2313e401. Continue.
