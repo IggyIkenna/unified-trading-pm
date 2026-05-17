@@ -2,6 +2,8 @@
 title: UTL semver bump label mismatches — fix: commits adding/removing public exports
 created: 2026-05-15
 author: slot-8
+resolved: 2026-05-15
+resolution: AUDIT-COMPLETE — historical mismatches cannot be retroactively relabeled (per body "no action needed on shipped versions"). Current next-bump correct. Future enforcement (QG STEP + CLAUDE.md rule documentation) is a separate forward-only enhancement — filed but not blocking.
 source:
   - unified-trading-library/__init__.py git log
   - .github/workflows/semver-agent.yml
