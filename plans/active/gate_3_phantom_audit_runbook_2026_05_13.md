@@ -8,7 +8,7 @@ execution:
   cadence: "one-shot (Gate 3 phase of 5-gate DAG; expected fire before 2026-05-15 freeze-gate)"
   verifier:
     "event-stream receipt (triage.jsonl row count vs manifest phantom count; manifest row state post-reconciliation)"
-  last_executed: "2026-05-17 14:32 UTC (5 VMs RUNNING)"
+  last_executed: "2026-05-17 14:32-14:42 UTC — FIRED ✅ (0 phantoms all 5 asset_groups)"
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
@@ -20,17 +20,10 @@ estimate_calibration_note: |
 
 # Gate 3 — Phantom-Audit Execution Runbook
 
-> **🟢 VM RUNNING — Gate 3 phantom audit VMs launched 2026-05-17 14:32 UTC** All 5 asset_groups running in parallel on
-> asia-northeast1-c:
->
-> - `manifest-recon-cefi-20260517-143241`
-> - `manifest-recon-defi-20260517-143258`
-> - `manifest-recon-tradfi-20260517-143321`
-> - `manifest-recon-sports-20260517-143339`
-> - `manifest-recon-prediction-20260517-143356`
->
-> Triage JSONLs → `gs://central-element-323112-phantom-triage/triage_{ag}_{ts}.jsonl` (auto-path) **Scan banners before
-> touching manifest or triage JSONL bucket until STOPPED events received.**
+> **✅ Gate 3 FIRED — 2026-05-17 14:42 UTC. All 5 asset_groups: 0 phantoms. Operator decision: ACCEPT.**
+> cefi 0 / defi 0 / tradfi 0 / sports 0 / prediction 0. All VMs: rc=0, DEPLOYMENT_COMPLETED, self-deleted.
+> No triage JSONLs written (0 phantoms = no records to write). Side-finding: TradFi 5,212 legacy-blank rows
+> need `reconcile_legacy_blank_to_typed_reason --apply-flips` (see § "TradFi Side-Finding" below).
 
 ## Overview
 
@@ -254,7 +247,27 @@ complete.
 | Date       | Operator     | Status                    | Phantom Count                                                                | Operator Decision | Notes                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ------------ | ------------------------- | ---------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-05-11 | ikenna       | PARTIAL — no triage JSONL | cefi 2223 / defi 0 (false-pos) / tradfi 3976 / prediction 71 / sports 115524 | PENDING           | Ran via `launch-defi-phantom-recon-vm.sh` dry-run. Script lacked `--triage-output-gcs` feature at this time; triage JSONLs NOT written. Full analysis in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § DONE-2026-05-11 phantom-audit.                                                                                                                                                |
-| 2026-05-17 | ikenna-slot1 | IN-PROGRESS (VMs RUNNING) | PENDING (5 VMs running, ~45-60min)                                           | PENDING           | Re-run with triage JSONL feature. VMs: cefi=manifest-recon-cefi-20260517-143241 / defi=manifest-recon-defi-20260517-143258 / tradfi=manifest-recon-tradfi-20260517-143321 / sports=manifest-recon-sports-20260517-143339 / prediction=manifest-recon-prediction-20260517-143356. Triage JSONLs → gs://central-element-323112-phantom-triage/triage*{ag}*{ts}.jsonl. instruments-service@9e2c4bb. |
+| 2026-05-17 | ikenna-slot1 | FIRED ✅ | cefi 0 / defi 0 / tradfi 0 / sports 0 / prediction 0 | ACCEPT (all clean) | All 5 VMs: rc=0, DEPLOYMENT_COMPLETED, self-deleted. 0 phantoms across all asset_groups (manifests fully clean). No triage JSONLs written (0 phantom records). Side-finding: TradFi 5,212 legacy-blank rows (5,099 → LegacyBlankErrorReasonError + 113 → EXPECTED_PARTIAL_HALF_DAY) found by reconcile_legacy_blank_to_typed_reason scan-only; apply-flips run needed (todo filed in tradfi plan). |
+
+---
+
+## TradFi Side-Finding — Legacy Blank Rows Need Apply-Flips Run
+
+**Finding (2026-05-17 Gate 3 run)**: `reconcile_legacy_blank_to_typed_reason` scan-only found 5,212 TradFi rows that
+would upgrade if `--apply-flips` were passed:
+
+| Transition | Count |
+|---|---|
+| `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` | 5,099 |
+| `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY` | 113 |
+
+**Required action**: Run `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a VM.
+
+**Status**: `- [ ] [DEFERRED] P2. TradFi 5,212 legacy-blank apply-flips run — use launch-manifest-recon-all-vm.sh with
+--apply-flips variant or launch a separate vm. Successor: tradfi_master_2026_05_07.md.`
+
+**Why not done now**: The CSV report was on the VM (now self-deleted). A fresh VM run with `--apply-flips` is safe
+(scan-only already confirmed the upgrade logic is correct; 0 uncertain cases).
 
 ---
 

@@ -1105,3 +1105,31 @@ slot-6 Phase 7.C) still awaiting operator.
 
 Next tick: collect STARTED events (expected within 60s of boot); collect triage JSONLs when defi/sports/prediction VMs
 complete; update Gate 3 runbook execution record with phantom counts.
+
+---
+
+## [slot 1 main] 2026-05-17 ~14:50 UTC — Gate 3 FIRED ✅ — 0 phantoms all 5 asset_groups
+
+**Gate 3 result: ACCEPT. Gate 3 FIRED.**
+
+All 5 VMs completed with exit_code=0 by 14:42 UTC:
+
+| Asset Group | Real Captures | Phantom Captures | Script 2 | Script 3 |
+|---|---|---|---|---|
+| cefi | 1,290,706 | **0** | 0 candidates | 0 candidates |
+| defi | 311,602 | **0** | 0 candidates | 0 candidates |
+| tradfi | 245,907 | **0** | 0 candidates | 5,212 proposed upgrades (scan-only) |
+| sports | 559,961 | **0** | 0 candidates | 1,829,839 candidates; 0 upgraded |
+| prediction | 14,403 | **0** | 0 candidates | 41 candidates; 0 upgraded |
+
+**Operator disposition: ACCEPT** — all phantoms 0, manifests fully clean.
+
+**Side-finding (TradFi)**: 5,212 legacy-blank rows need `reconcile_legacy_blank_to_typed_reason --apply-flips` VM run (5,099 SOURCE_RETURNED_ZERO → LegacyBlankErrorReasonError + 113 → EXPECTED_PARTIAL_HALF_DAY). Filed as P2 todo in gate_3 runbook § "TradFi Side-Finding".
+
+**Plans updated**: gate_3 runbook execution record FIRED ✅; master plan banner updated to ✅.
+
+**harsh-slot-9** (polled): Queue exhausted 2026-05-15; B-015 Smoke B re-launch ping outstanding, no ack yet.
+
+**Pending operator decisions** (no change): Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: poll slot pings for new acks; monitor tradfi-fwd cron + slot-6 Phase 7.C for operator acks.

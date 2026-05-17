@@ -39,9 +39,7 @@ overview:
   start writing code in the affected area.
 ---
 
-> **🟢 VM RUNNING — Gate 3 phantom audit 2026-05-17 14:32 UTC (5 VMs all asset_groups)** VMs:
-> cefi/defi/tradfi/sports/prediction on asia-northeast1-c. STOPPED within ~60 min. Banner owner: slot-1-main. Remove on
-> STOPPED events received + triage JSONLs collected.
+> **✅ Gate 3 FIRED 2026-05-17 14:42 UTC — 0 phantoms all 5 asset_groups. Operator decision: ACCEPT.**
 
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
