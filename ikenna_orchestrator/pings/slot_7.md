@@ -1213,3 +1213,13 @@ because the issue is statused P2 post-cutover — proceed regardless.
 **MILESTONE 100/377 crossed** (now 102/377). basedpyright clean.
 
 275 remaining.
+
+[2026-05-17 /loop tick 42] slot-7 — execution-service Phase B (+3, 105/377 cleared):
+
+- `execution-service@c59222a6c` — VWAPExecutionMixin.on_order_accepted 70L→45L (trim docstring + extract
+  _schedule_vwap_fok_children: n_intervals/slice_quantities/log+schedule loop);
+  HybridOptimalSpawnMixin._detect_regime 70L→34L (trim docstring + extract _read_book_metrics: order book
+  volatility/trend/volume estimation); UniswapConnector.burn_position 70L→41L (trim docstring + extract
+  _execute_npm_decrease_and_collect tuple-return + _maybe_burn_nft try/except pattern).
+
+272 remaining. basedpyright clean.
