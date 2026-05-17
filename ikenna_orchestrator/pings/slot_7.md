@@ -863,3 +863,15 @@ Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NON
 **Slot 7 phase assigned**: Phase 8 — Databento PAYG cost tracking. Emit `DATABENTO_PAYG_SPEND` event from each
 TradFi OHLCV backfill VM at completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in
 deployment-ui. Projection: $50-200 for the full 2019-2026 ohlcv_1m × CME+ICE+NASDAQ+NYSE backfill.
+
+
+[2026-05-17 /loop tick 14] slot-7 — execution-service Phase B (+3, 26/377 cleared):
+
+* `execution-service@1b8e02062` — BaseSolanaConnector.connect 54L→18L via _load_keypair_from_cfg helper
+  (wallet key resolution + read-only fallback).
+* `execution-service@82cbdac17` — SmartOrderRouter._calculate_split_route 52L→34L via _inverse_impact
+  static helper (eliminates formula duplication).
+* `execution-service@3dc245a35` — ResultExtractor.extract_returns_from_stats 52L→24L via
+  _safe_float_from_stats + _resolve_stats_returns helpers (3-key stats lookup + non-NaN guard).
+
+351 remaining. basedpyright clean across all 3 commits.
