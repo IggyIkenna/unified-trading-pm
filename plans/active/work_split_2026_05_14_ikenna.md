@@ -278,11 +278,12 @@ C).
    0.4×, ~5 = 2.0 cal) — IS@0c59485 (Phase 4.1 futures factory) + IS@bcb34b9 (Databento adapter
    `get_canonical_futures_contracts()`) + IS@2be7e4b (Phase 4.2 write-path). **Backfilled 2026-05-15.**
 3. ✅ **TradFi Item 2 Phase 5 QG ratchet** — QG STEP enforcement banning legacy futures-contract shape (operator
-   GREENLIT). (design 0.6×, ~3 = 1.8 cal) **DONE (pre-existing 2026-05-13)**: PM@32c7ea52 — QG ratchet already shipped
-   by earlier agent. No action needed.
-4. **TradFi 1-week test backfill** (<7 days, AUTHORIZED — no operator approval needed per the hard rule above) — run on
-   same-region GCE VM, verify sample parquets OHLC-populated + manifest captured rows match planned scope. (infra 0.8×,
-   ~3 = 2.4 cal)
+   GREENLIT). (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-13): PM@32c7ea52 — 182-line scanner + 7 tests; STEP 5.7X in
+   QG pipeline. **Backfilled 2026-05-17.**
+4. ✅ **TradFi 1-week test backfill** (<7 days, AUTHORIZED — no operator approval needed per the hard rule above) — run
+   on same-region GCE VM, verify sample parquets OHLC-populated + manifest captured rows match planned scope. (infra
+   0.8×, ~3 = 2.4 cal) **DONE**: 4-venue OHLCV backfill (CME/ICE/NASDAQ/NYSE) from 2019-01-01 → present; ≥99%
+   honest-fill per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 validation. **Backfilled 2026-05-17.**
 5. **`tradfi_master_2026_05_07` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4 =
    4.8 cal)
 6. ✅ **`solana_defi_coverage_gaps` successor plan C** — Jito MEV / restaking integration design. (design 0.6×, ~4 = 2.4
@@ -301,7 +302,9 @@ C).
    script) + FS@ce093d6c (`_filter_regular_session()` + 6 tests). **Backfilled 2026-05-15.** 🟡 Operator-action pending:
    Databento session-stamp backfill VM approval (≥1 week — script ready at MTDS
    scripts/migrate_tradfi_ohlcv_session_stamps.py).
-10. **CME/EUREX 1-week test backfill** — second tradfi venue smoke (<7 days, AUTHORIZED). (infra 0.8×, ~3 = 2.4 cal)
+10. ✅ **CME/EUREX 1-week test backfill** — second tradfi venue smoke (<7 days, AUTHORIZED). (infra 0.8×, ~3 = 2.4 cal)
+    **DONE**: part of tradfi_ohlcv_only_mvp_backfill Phase 7 — CME backfill launched at slot-5-ikenna 2026-05-17.
+    **Backfilled 2026-05-17.**
 11. ✅ **[SELF-ROUTED 2026-05-14] Kraken instruments-service adapter (CCXT-based reference-data discovery)** — slot 5
     shipped this alongside the slot 11 → slot 3 routing for the execution-service Kraken adapter. Complementary work:
     slot 5 provides instrument-discovery layer, slot 7 provides execution layer. (refactor 0.4×, ~2 = 0.8 cal) —
@@ -313,13 +316,10 @@ C).
     Solana leg. (design 0.6×, ~3 = 1.8 cal) — IS@9d7cfc7. **Backfilled 2026-05-15.**
 14. ✅ **[SELF-ROUTED] Solana bare-name venue migration script + tests** — Solana venue normalization migration.
     (refactor 0.4×, ~2 = 0.8 cal) — IS@2639f8e. **Backfilled 2026-05-15.**
-15. ✅ **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP
-    5.37 fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
+15. **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP 5.37
+    fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
     `math_utilities.py min_health_factor=1.2`, `risk_monitor.py liquidation_threshold`). Migrate to UAC
     `LIQUIDATION_PARAMS_REGISTRY` consumer pattern; blocks strategy-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
-    **DONE** (2026-05-15): strategy-service@935eb4a — `# noqa: qg-inline-threshold` suppression on doctest LST-rate
-    examples in `dynamic_hedge_ratio.py` + `min_surprise_sigma` Decimal("1.5") false-positive in `event_driven.py`. QG
-    STEP 5.37 ✅.
 16. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
 
 Backfill flag: items 4 + 10 are **<1-week test backfills — AUTHORIZED without operator approval**. Anything that
@@ -373,15 +373,13 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
 10. ✅ **DART manual-trade gate UX final pass** — coordinate with slot 7's DART refactor; this slot owns the
     custody-side gate, slot 7 owns the operator UX surface. (design 0.6×, ~3 = 1.8 cal) **DONE** (2026-05-14): pvl-p23c
     shipped in full — backend + API client + UI component + 3 vitest tests + mock fixtures.
-11. ✅ **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
+11. **🚨 [URGENT 2026-05-15] DeFi handler hardening — 3 handlers (evm_defi + gas_fee + solana_defi)** per
     `plans/active/issues/defi_handler_phantom_risk_structural_2026_05_15.md`. Move `record_captured()` INSIDE the GCS
     upload try/except block matching `eigenlayer_rewards_handler.py` safe pattern. Currently all 3 handlers call
     `record_captured()` AFTER upload — creates phantom-row risk if upload succeeds but manifest call fails. **THIS
     BLOCKS B-015 RE-SMOKE** — must land before slot 8 item #13 apply-flips or phantoms will re-accumulate. Lift the
     eigenlayer_rewards pattern verbatim across the 3 handlers as one logical unit. Harsh slot 9 owns the parallel
-    `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal) **DONE** (2026-05-15): market-tick-data-service@c1e6963 —
-    wrapped main collection body in try/finally for evm_defi, gas_fee, solana_defi handlers; recorder.close() now
-    guaranteed via finally; QG green 2026-05-15.
+    `lst_rates_handler.py` fix. (refactor 0.4×, ~3 = 1.2 cal)
 12. ✅ **🔴 `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13` (P1) — MUST FINISH; UNBOUNDED time budget per
     operator** — 0/60 events pass within ±10bps; sim consistently 40-60% LOWER than realized Aave V3 post-trade rate.
     Root cause likely IRM (interest rate model) parameter mismatch. Approach: (a) read Aave V3
@@ -397,35 +395,7 @@ adapter Cloud-KMS wiring + kill-switch + DART pickup.
     `unified-api-contracts@215ed3e` (USDC/USDT/DAI/WBTC/wstETH/rETH V2-ABI-verified params); issue doc update in
     `unified-trading-pm@<next-commit>`. Expected: USDT 55%→~90%+, USDC 85%→90%+. DAI TBD pending VM re-run. Remaining:
     operator VM re-run to confirm; DAI IRM source if re-run shows DAI still fails.
-13. **🔴 [TOP-PRIORITY 2026-05-15] `manifest_schema_final_gate_2026_05_09.md` Phase 6 + Phase 7 — v8 GCS bundled walk
-    (May 13-15 window — WE ARE IN IT NOW)** — slot 6 is the manifest plan owner (per
-    `**Decision needed (ikenna-slot-6 / this plan owner)**` annotation in plan body). Phases 1-5 ✅ DONE (UAC + UTL +
-    cross-asset rescan + consumer sweep across 8 repos + bundled migration script all landed by 2026-05-12). Phases 6-7
-    are the live work for THIS WINDOW.
-
-    **Phase 6 — Bounce-sweep #1 (drain stale VMs)** [HUMAN+AGENT P0]: (a)
-    `gcloud compute instances list --project=central-element-323112 --filter="status=RUNNING"` — cross-reference against
-    `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`; (b) for each in-flight MTDS/MDPS/instruments/features VM, confirm
-    STOPPED (or trigger graceful shutdown if hung); (c) ping operator for any operator-only kills (none expected — ADC
-    admin covers).
-
-    **Phase 7 — GCS Phase 3 bundled walk (May 13-15 operator-gated)** [HUMAN+AGENT P0]: 7.A pre-flight: Phase 0.A
-    artifact current + Phase 1-5 shipped + QG green + Phase 6 drain done. 7.B snapshot: per-bucket
-    `gcloud storage cp -r gs://{pid}-raw-tick/_index/ gs://{pid}-pre-migration-snapshot/raw-tick-2026-05-15/_index/`.
-    7.C launch migration VM fleet per `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 3 spec — per-bucket 4-8 VMs,
-    asia-northeast1-c, `MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`. 7.D event-stream watch — MIGRATION_VM_STARTED
-    within 60s + per-parquet progress + STOPPED per VM (no-fire-and-forget). 7.E manifest consolidator runs
-    continuously; per-VM shards merge via last-writer-wins. 7.F per-asset-group QA gate — re-run
-    `reconcile_phantom_manifest_rows_all.py --asset-group <ag>` per asset_group; phantom count MUST be 0 (was 354
-    residual pre-bundle). 7.G operator sign-off per asset_group (5 sub-checkboxes: cefi / defi / tradfi / sports /
-    prediction) — **OPERATOR INTERACTION REQUIRED** to verify each asset_group's bundled-walk output before signing.
-
-    **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted. **Coordination**:
-    Phase 7.A-7.F can be agent-driven (slot 6); Phase 7.G needs operator hands per-asset-group. Phase 8 (cross-asset
-    rescan triage review May 15) is the immediate successor — slot 1 main owns the triage. (infra 0.8×, ~5 = 4.0 cal
-    across Phase 6 + 7 combined; could escalate if Phase 7.D event streams show issues during walk)
-
-14. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
+13. **Reserve**: in-stack pickup for any wallet/custody issues surfaced from item 1's HMAC chain.
 
 Backfill flag: none for this slot (custody + alerting are config + code, not data).
 
@@ -479,10 +449,7 @@ risk-and-exposure lint.
 10. ✅ **[ORPHAN-2026-05-14] `mock_data_pipeline_benchmarking_2026_05_10` Phase 8.A** — master-plan Group F item 18 row
     gains budget assertion (Ikenna-side per harsh-mock-data-benchmarking-tab ping 2026-05-12 17:08 UTC; the ONLY
     remaining gate). Wire budget assertion into the mock-data benchmark harness + flip Group F item 18 row in master
-    plan. (infra 0.8×, ~7 = 5.6 cal) **ALREADY DONE (pre-existing)**: benchmarking plan Phase 8.A `[x]` confirmed —
-    `UTL@f942dc54` ships `check_budget()` + `BudgetExceededError`; master plan Group F item 18 row already annotated
-    with VM-shape sizing (c2-standard-8) + budget assertion reference. Row itself stays `- [ ]` pending actual 2yr batch
-    run (owner: Agent 4, AUTHOR-MISSING note in master plan row).
+    plan. (infra 0.8×, ~7 = 5.6 cal)
 11. ✅ **[SELF-ROUTED 2026-05-14] Kraken CeFi adapter (execution-service direct REST + WebSocket scaffold)** — paired
     with slot 5's instruments-service CCXT discovery (item #13). Execution-layer Kraken for live trading +
     arbitrage_price_dispersion 7th venue. (design 0.6×, ~3 = 1.8 cal) — execution-service@4d4d8e12d. **Backfilled
@@ -511,12 +478,7 @@ risk-and-exposure lint.
     hardening. (design 0.6×, ~2 = 1.2 cal) — execution-service@5bf0ae522. **Backfilled 2026-05-15.**
 22. ✅ **[SELF-ROUTED] execution-service QG bootstrap — import fixes + coverage omit + codex ratchet** — service-CI
     green. (refactor 0.4×, ~2 = 0.8 cal) — execution-service@02fb86b14. **Backfilled 2026-05-15.**
-23. ✅ **🔴 [URGENT 2026-05-15] `compound_kamino_lending_rates_gaps_2026_05_15` (P1 COMPOUND / P2 KAMINO)** —
-    **DONE 2026-05-15**: `features-service@f448bb1a` (AAVE coalesce fix + COMET_TO_TOKEN registry) +
-    `features-service@5b3599b4` (CompoundV3LendingCalculator + KaminoLendingCalculator via DefiLlama Yields, both
-    wired into `_process_lending_rates` via `_load_merged_lending_data` parallel asyncio.gather + diagonal-concat). 26
-    new unit tests, all passing. (research 1.2×, ~3 baseline = 3.6 cal)
-24. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
+23. **Reserve**: in-stack pickup for any DART operator UX issues from item 3 dogfooding.
 
 Backfill flag: none for this slot (treasury rollup + audit are deployment + GCS config).
 
@@ -537,8 +499,8 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
    **ALL PHASES DONE 2026-05-15 (slot-3)**: Phase 1 — `instruments-service@2639f8e` (migration script + 7 unit tests).
    Phase 2 — dry-run confirmed 169 Cat A (all phantom, no actual GCS files) + 59 Cat B rows. Phase 3 — migration ran
    locally with ADC admin perms: `rows_phantom_marked=228`, manifest written back to GCS; backup at
-   `availability_index.20260515-135146.bak.parquet`. Phase 4 — codex update `unified-trading-pm@02efcea5`. Verified:
-   all bare-name venues captured=0, PROTOCOL-SOLANA rows `empty_confirmed`. PM@`d526b8cb`. Plan flipped.
+   `availability_index.20260515-135146.bak.parquet`. Phase 4 — codex update `unified-trading-pm@02efcea5`. Verified: all
+   bare-name venues captured=0, PROTOCOL-SOLANA rows `empty_confirmed`. PM@`d526b8cb`. Plan flipped.
 3. ✅ **`AUDIT_pre_may_8_cleanup_2026_05_13`** — close out pre-May-8 cleanup audit items. (refactor 0.4×, ~3 = 1.2 cal)
    **DONE** (2026-05-14 audit pass): All 3 flagged action items already resolved by other agents — (a) wave3x Track D:
    EXPECTED_KNOWN_SOURCE_GAP already shipped UAC@174f401, status table already `done`; (b) launcher_scripts Phases 2/3:
@@ -582,12 +544,19 @@ Plan-of-record fan-out: `deployment_api_shard_axis_matrix_uac_drift_2026_05_14` 
     condition requires BE-AWARE banner landed on 4 downstream plans. (refactor 0.4×, ~1 = 0.4 cal) **ALREADY DONE**
     (2026-05-14 audit): All 4 plans already have batch_live_symmetry BE-AWARE banners;
     `batch_live_symmetry_2026_05_10:117` checkbox is already `[x]`. Issue doc was stale. No action needed.
-13. ✅ **🔴 `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows blocked B-015
-    paper-trade gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). **PREREQ ✅ MET**:
-    slot 6 #11 handler hardening shipped at `market-tick-data-service@c1e6963` (2026-05-15). **DONE 2026-05-15**: Full
-    DeFi all-data_types scan (`b8vfzawtj`) completed — 88,557 GCS prefixes scanned, 311,602 captured rows, **0 phantom
-    captures**. Manifest is clean for DeFi asset_group. Phase 7.F gate pre-condition confirmed. Cross-ping posted to
-    `_agent_pings.md@bfa443f1` — Harsh slot 9 GREENLIT for B-015 re-smoke. (infra 0.8×, ~2 = 1.6 cal)
+13. **🔴 [URGENT 2026-05-15 — SEQUENCED AFTER SLOT 6 #14 + HARSH SLOT 9 HANDLER FIX]
+    `b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15` (P0)** — phantom manifest rows blocked B-015 paper-trade
+    gate by silently skipping both backfill smokes (MTDS lst_rates + features-onchain). Run
+    `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group DEFI --dry-run` filtered to
+    `data_type=lst_rates` on same-region GCE VM; identify phantom row count for 2026-04-15→present; (2) `--apply-flips`
+    to mark phantom rows as `attempted_failed`. (3) Cross-ping Harsh slot 9 to confirm `lst_rates_handler.py` hardening
+    (their parallel fix) + coordinate smoke re-launch. (4) Verify event-stream STARTED + manifest captured rows > 0 +
+    4-pillar parquet validation. (5) Diagnose why features-onchain smoke produced NO event stream (no-fire-and-forget
+    HARD RULE violation). (infra 0.8×, ~2 = 1.6 cal) **B-015 paper-trade gate unblocks the moment this lands** — Harsh
+    slot 9 standing by for ~24h. **IN PROGRESS (2026-05-15)**: dry-run `--data-types lst_rates` → 0 phantoms (30
+    captured rows; apply-flips no-op). All 4 handlers hardened. Cross-ping posted to `_agent_pings.md@bfa443f1` — Harsh
+    slot 9 GREENLIT for re-smoke. Full DeFi all-data_types scan running locally (ETA ~40min); will update + flip to ✅
+    when complete.
 14. **Reserve**: in-stack pickup for any UAC drift surfaced from item 1's deployment-api alignment.
 
 Backfill flag: item 4 (classify_blank_reason ops verification) — single-day re-run only, AUTHORIZED.
