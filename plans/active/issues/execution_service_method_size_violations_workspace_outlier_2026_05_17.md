@@ -876,7 +876,11 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   Extracted _extract_identity_fields + _copy_account_state_into_ctx + _handle_block + _handle_scale_down + _handle_test_only.
   2 violations cleared. File not in allowlist. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-78**: 86 files cleared (slot-2 contribution: -86 files; spans 49 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 79 — config/grid_utils)**: shipped at execution-service@1fa76d6fd.
+  generate_per_algo_grid_configs (135L→20L) + get_all_strategy_variants (51L→39L).
+  Extracted _build_per_type_combos + _build_cross_combo_config. 2 violations cleared. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-79**: 88 files cleared (slot-2 contribution: -88 files; spans 50 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
