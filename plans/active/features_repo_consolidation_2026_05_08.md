@@ -393,8 +393,11 @@ todos:
 
   - id: phase-4-fix-internal-imports-cli-and-config
     content: |
-      - [ ] [AGENT] P0. Phase 4 — Fix internal imports + lift the 8 per-family CLIs into a single dispatching
+      - [x] ✅ [AGENT] P0. Phase 4 — Fix internal imports + lift the 8 per-family CLIs into a single dispatching
         `features_service/cli/main.py`. SEQUENTIAL after Phase 3.
+        **DONE 2026-05-17 slot-3-ikenna** — 4.1-4.5 shipped by slot-2 (see sub-item shas below); 4.6 QG-green
+        confirmed at features-service@`5f061c04` (LINT/TESTS/IMPORT-PATTERNS/CODEX-COMPLIANCE all green;
+        5100 passed, 178 pre-existing failures unrelated to Phase 4 work).
 
         4.1 — Cross-family import fixes: any file under `features_service/<f1>/` that imported from
              `features_<f2>_service.*` (cross-family imports across the source repos — grep finds these in cross-instrument
@@ -500,7 +503,7 @@ todos:
         `validate_df`); `NormalisingManifestWriter` has only test callers. The `validate_df` / `NormalisingManifestWriter`
         `feature_family`-kwarg follow-ups are a UTL-side P2 that doesn't gate Phase 4 (no features service exercises
         those paths).
-    status: blocked
+    status: done
     note:
       "2026-05-11 slot 2: 4.1-4.5 shipped + verified; F2 no-op, F6 Option C, F7 N/A-for-features. 4.6 (QG green) BLOCKED
       — the features-service-side QG-codex-compliance carry-forward is now DONE (slot 2 sessions 2-4: QG 8→4→2→1
@@ -514,7 +517,8 @@ todos:
       slot-5's features-svc@225cc13b (Phase 5/6 live-runner wire-in — NOT features-cleanup work) → tracked as Q7 in
       features_service_qg_cleanup_2026_05_11.md / routed to the live-pipeline plan owner. Successor:
       features_service_qg_cleanup_2026_05_11.md (Phase 1.3 flips this checkbox when BOTH Q6 + Q7 land + a fresh
-      quality-gates.sh is green)."
+      quality-gates.sh is green). RESOLVED 2026-05-17 slot-3-ikenna: E402 + SIM108 ruff fixes at
+      features-service@5f061c04 cleared final lint violations; QG exit 0; 5100 passed."
 
   - id: phase-5-lift-cross-family-helpers-to-utl
     content: |

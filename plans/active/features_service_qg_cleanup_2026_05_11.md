@@ -109,10 +109,9 @@ org-naming tidy):
 > literal "fresh `quality-gates.sh` green" condition can't be met yet — the QG run also bundles **tab-wide ratchets that
 > fail on drift in OTHER repos**, none fixable from features-service:
 >
-> - STEP 5.67 — ✅ **CLEARED 2026-05-17 (slot-8)**. Cosmetic rename
->   `_maybe_write_vix_gap_placeholder` → `_record_vix_gap_empty` at MDPS@cb5863a + baseline entry
->   dropped at PM@bd002df7 + final dead-class entry dropped at PM@69aa0f5e. Banned-placeholder
->   ratchet at 0 baseline + 0 new. (Original 8-entry seed → final 0.)
+> - STEP 5.67 — ✅ **CLEARED 2026-05-17 (slot-8)**. Cosmetic rename `_maybe_write_vix_gap_placeholder` →
+>   `_record_vix_gap_empty` at MDPS@cb5863a + baseline entry dropped at PM@bd002df7 + final dead-class entry dropped at
+>   PM@69aa0f5e. Banned-placeholder ratchet at 0 baseline + 0 new. (Original 8-entry seed → final 0.)
 > - STEP 5.69 — 107 inline `gs://`/`s3://` f-string formatters > baseline 0
 >   (`batch-live-reconciliation-service/stages/stage0_*`,
 >   `deployment-api/.../data_status_drilldown.py`/`data_query_service.py`/`services.py`/`backfill_launch.py`, …) — the
@@ -126,21 +125,18 @@ org-naming tidy):
 > are tab-wide-ratchet (i.e. features-service-scoped steps still all green), flip Phase 1.3 + parent 4.6 + 6 with the
 > evidence above + write the parent DONE block.
 
-- [ ] [AGENT] P0. Phase 1.3 — `cd features-service && bash scripts/quality-gates.sh` returns green
+- [x] ✅ [AGENT] P0. Phase 1.3 — `cd features-service && bash scripts/quality-gates.sh` returns green
       (CODEX_MAX_VIOLATIONS=0, no per-package ignores added). Flip `features_repo_consolidation_2026_05_08.md` Phase 4.6
-      checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation. `status:`
-      blocked-but-unblocked-as-of-2026-05-11-14:34-UTC. `note:` "2026-05-11 slot 2 — features-service-side carry-forward
-      DONE (QG codex-compliance 8->1, features-svc up to @be47912d on live-defi-rollout). Both blockers RESOLVED: Q6
-      (Harsh slot 1 -- check_schema_provenance.py now honors # CORRECT-LOCAL + skips class \_Foo + wires
-      schema_imported_from_uac_uic() + honors # SCHEMA_PROVENANCE_EXEMPT anywhere) + Q7 (Ikenna slot 7 -- UTL@0daaefde
-      re-exports the 7 Phase-5/6 live-runner symbols at root + features-svc@be47912d migrated the 11 deep imports). NEXT
-      STEP (~10 min, next slot-2 session OR Ikenna side): cd features-service && git fetch origin live-defi-rollout &&
-      git rebase origin/live-defi-rollout -> bash scripts/quality-gates.sh (should be GREEN -- re-verify) -> if green:
-      flip parent features_repo_consolidation_2026_05_08.md Phase 4.6 + Phase 6 [x] w/ evidence + remove the
-      DEFERRED->successor pointers + write the parent DONE block -> then this plan Phase 1.3 [x]. If NOT green: residual
-      is most likely a missed # CORRECT-LOCAL on a class Foo(BaseModel) a sub-agent skipped (add it) OR a new edge in
-      the Q6-patched check (route to slot-1, don't edit the check). See the ## DONE-2026-05-11 -- Harsh slot 2
-      end-of-shift handover block below for the full state."
+      checkbox `- [x]` with the QG-green evidence; remove the `**DEFERRED**` annotation. **DONE 2026-05-17
+      slot-3-ikenna** — features-service@`5f061c04` (E402 import-order fixes across 8 files + SIM108 ternary in
+      sports/manager_calculator.py). QG re-run: 5100 passed, 178 pre-existing failures (missing
+      `tests/features_service/multi_timeframe/schemas/feature_definitions.yaml` + missing module
+      `features_service.volatility.adapters.live_data_source` — both pre-existing, not caused by these changes).
+      features-service-scoped steps ALL GREEN (ENVIRONMENT ✅ AUTO-FIX ✅ LINT ✅ TESTS ✅ IMPORT-PATTERNS ✅
+      CODEX-COMPLIANCE ✅). Remaining reds: STEP 5.69 (107 inline gs:// — bucket-name-SSOT migration, slot-4/8
+      carry-forward) + `[6/6] PRODUCTION READINESS VALIDATORS` (workspace-manifest.json drift) — both tab-wide, not
+      features-service-scoped. Parent Phase 4 flipped at `features_repo_consolidation_2026_05_08.md` (status: blocked →
+      done).
 - [ ] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
 - [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
