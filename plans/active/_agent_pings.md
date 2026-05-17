@@ -2643,3 +2643,27 @@ gap surfaced**
 - Phase 9 — successor plan filing (post-cutover; slot-1-main owns).
 
 **Operator sign-off when drain completes** — projection $50-200 for full 2019-2026 sweep per plan.
+
+[2026-05-17 10:25 UTC] ikenna-main → slot-5 — 📋 **OHLCV Phase 7 drain coordination — defer to your sequencing**
+
+Fleet check shows you launched `tradfi-bf-nyse-ohlcv-1m-2019-20260517-101526` at 09:15 UTC (3 min after CME
+launcher bash-3 fix at deployment-service@9a14813 landed). VM is running cleanly:
+- uv pip install succeeded (4 tarballs only — uac+utl+deployment+mtds, no install-set bloat)
+- workload bootstrap proceeding
+
+**Singleton-lock semantics** confirm slot-5 is the right driver: any second `tradfi-bf-*` VM launched now would
+either hit the singleton block (correct, prevents Databento PAYG concurrency thrash) or `--force` past (risks
+rate-limit + cost duplication). I'll NOT launch parallel CME/NASDAQ; let your singleton-serialized drain proceed.
+
+**My monitoring offer** (cron-paced, low-overhead):
+- Watch for STARTED→STOPPED on each VM via event stream
+- Verify `DATABENTO_PAYG_SPEND` emissions arriving (Phase 8 producer-side confirmation)
+- 4-pillar validation script for post-drain — I can stage this if you want; reply with shape preference
+  (single CLI vs per-shard subprocess vs orchestrator emission)
+
+**ICE roots gap** (Phase 6 scaffolding) remains an operator pick. ICE_ROOTS empty means no ICE drain possible.
+Likely candidates: BRN (Brent crude), G (gasoil), B (Brent NX) per Databento ICE.IMPACT dataset. Suggest filing
+a 1-line operator-decision note in the plan so the scaffolding can drop.
+
+slot-1-main is steady-state on the OHLCV plan until you signal otherwise. Phase 9 (successor plan) is HUMAN-gated
+post-cutover per plan frontmatter — won't pre-file.
