@@ -836,14 +836,22 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-72**: 76 files cleared (slot-2 contribution: -76 files; spans 43 submodules incl.
   results/timeline).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 73 — services/onchain_execution_service)**: shipped at execution-service@8358ae89d.
-  swap 87L→14L + deposit 73L→44L + withdraw 71L→43L + borrow 71L→43L +
-  repay 71L→44L + stake 83L→39L + bridge 72L→43L + flash_loan 73L→41L +
-  swap_cross_chain 105L→27L. 12 new private helpers extracted.
-  9 violations cleared. allowlist -1. basedpyright 0 errors.
+  **Ratchet-down 2026-05-17 (slot-2 batch 73 — services/onchain_execution_service)**: shipped at
+  execution-service@8358ae89d. swap 87L→14L + deposit 73L→44L + withdraw 71L→43L + borrow 71L→43L + repay 71L→44L +
+  stake 83L→39L + bridge 72L→43L + flash_loan 73L→41L + swap_cross_chain 105L→27L. 12 new private helpers extracted. 9
+  violations cleared. allowlist -1. basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-73**: 77 files cleared (slot-2 contribution: -77 files; spans 44 submodules incl.
   services/onchain_execution_service).
+
+  **Ratchet-down 2026-05-17 (slot-2 batch 74 — config/grid_generator_cli)**: shipped at execution-service@d478eebfd.
+  get_all_strategy_variants 51L→37L + generate_all_configs 125L→47L + main 196L→17L via \_make_strategy_variant +
+  \_generate_and_save_variant + \_update_gen_all_stats + \_init_gen_all_stats + \_add_root_args + \_build_arg_parser +
+  \_handle_generate_all_command + \_handle_generate_v2_command + \_run_cleanup_gcs + \_generate_single_strategy +
+  \_handle_default_command. 3 violations cleared. File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-74**: 78 files cleared (slot-2 contribution: -78 files; spans 45 submodules incl.
+  config/grid_generator_cli).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
