@@ -108,7 +108,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-17 13:47 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-17 14:00 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -169,7 +169,7 @@ folded into the appropriate epic._
 | [`dex_perp_and_venue_data_expansion_2026_05_12`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                           | master                               | brand-new | 32/34      | 94%          | 0.5      | 2026-05-23                               |
 | [`mock_data_pipeline_benchmarking_2026_05_10`](./mock_data_pipeline_benchmarking_2026_05_10.md)                                               | manifest_evolution_master_2026_05_08 | design    | 29/31      | 94%          | 0.5      | 2026-05-23                               |
 | [`api_football_minimal_flattening_removal_2026_05_07`](./api_football_minimal_flattening_removal_2026_05_07.md)                               | master                               | refactor  | 14/16      | 88%          | 0.4      | —                                        |
-| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)                                                 | master                               | infra     | 14/16      | 88%          | 0.4      | 2026-05-23                               |
+| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)                                                 | master                               | infra     | 15/17      | 88%          | 0.4      | 2026-05-23                               |
 | [`data_status_ui_phase_2f`](./data_status_ui_phase_2f.md)                                                                                     | manifest_evolution_master_2026_05_08 | design    | 4/5        | 80%          | 0.4      | —                                        |
 | [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md)                                                                 | master                               | design    | —          | —            | 0.3      | —                                        |
 | [`solana_restaking_rewards_coverage_2026_05_13`](./solana_restaking_rewards_coverage_2026_05_13.md)                                           | master                               | brand-new | 16/18      | 89%          | 0.2      | 2026-05-23                               |
