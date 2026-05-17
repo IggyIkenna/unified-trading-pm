@@ -816,6 +816,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-70**: 74 files cleared (slot-2 contribution: -74 files; spans 41 submodules incl.
   results/result_formatter).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 71 — results/dataframe_preparers)**: shipped at execution-service@68f0bc03b.
+  prepare_orders_dataframe 115L→32L + prepare_fills_dataframe 117L→28L +
+  prepare_positions_dataframe 105L→20L + prepare_equity_curve_dataframe 125L→23L
+  via _dp_setup_timestamps + _dp_build_df_from_schema_cols + _dp_build_fills_result_df +
+  _dp_empty_equity_df + _dp_fill_equity_schema_cols + _dp_qty_to_side + schema column constants.
+  4 violations cleared. File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-71**: 75 files cleared (slot-2 contribution: -75 files; spans 42 submodules incl.
+  results/dataframe_preparers).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
