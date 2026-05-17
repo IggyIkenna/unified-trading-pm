@@ -521,6 +521,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-31**: 35 files cleared (slot-2 contribution: -35 files; spans 13
    submodules incl. engine/live).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 32 — instruments loader)**: definitions_loader.py shipped at
+   execution-service@6580f64fe (\_load_by_venue 88L→30L via \_resolve_venue_folders (single-venue override or
+   list-all-venue= subfolders under base_prefix with iterator.prefixes warm-up pattern) + \_load_venue_file
+   (asyncio.run_in_executor wrapped blob.download → DataFrame; empty if blob absent)). Allowlist -1.
+   basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-32**: 36 files cleared (slot-2 contribution: -36 files; spans 14
+   submodules incl. instruments loader).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
