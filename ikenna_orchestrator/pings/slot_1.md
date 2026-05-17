@@ -901,4 +901,3 @@ OHLCV PAYG ≈ $20/dataset-month vs tick data ($179/mo Standard subscription + P
 - VM-launch operator approval gate per CLAUDE.md ≥1 week of data → operator [ack] needed before Phase 7 fires.
 
 **No action requested from operator** beyond eventual Phase 7 backfill approval [ack] when VMs queue. Slot 1 main owns dispatch from here.
->>>>>>> 3535ae3f (docs(plans): TradFi MVP collapse to OHLCV-only — drop L1-L3 tick data to post-cutover (operator direction 2026-05-15))
