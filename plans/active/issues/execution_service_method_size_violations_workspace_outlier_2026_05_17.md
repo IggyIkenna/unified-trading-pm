@@ -674,6 +674,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-53**: 57 files cleared (slot-2 contribution: -57 files; spans 24 submodules incl.
   engine/backtest/actors/trade_measurement_verifier_actor).
 
+- **Batch 54** (2026-05-17): `algorithms/impl/passive_aggressive_core.py` — `_parse_pah_params` 126L→8L via 4 helpers
+  (\_parse_candle_horizon_secs + \_parse_direct_horizon_secs + \_parse_passive_display_params +
+  \_parse_execution_params). Allowlist -1. basedpyright 0 errors. execution-service@6179da73a.
+
+  **Slot-2 cumulative across batches 3-54**: 58 files cleared (slot-2 contribution: -58 files; spans 25 submodules incl.
+  algorithms/impl/passive_aggressive_core).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
