@@ -124,11 +124,15 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    **Ratchet-down 2026-05-17 execution-service@78ee78909** — slot-7 Phase B incremental refactors cleared
    7 files (sor / defi_test_data_generator / signal_driven_v3 / live_ccxt_adapter / instruction_validator /
    oms / benchmark_service); allowlist 187 → 180 files. AST scanner re-verified clean.
-   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup)** — additional 3 files cleared at
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 1)** — additional 3 files cleared at
    execution-service@4da3d96fb (auth.py verify_token 61L→17L, +3 helpers), @80382caf1 (algorithms/tradfi/twap.py
    schedule 55L→27L, +2 helpers), @1e9440da7 (engine/handlers/claim_reward_handler.py execute 57L→36L, +1 helper);
    allowlist 180 → 177 files. AST scanner re-verified clean per file. Pure helper-extraction; per-method
    behavior preserved (same UEI/event emissions, same return shapes, same exception classes).
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 2)** — additional 2 files cleared at
+   execution-service@ed8789219 (services/eth_balance_tracker.py deduct_gas 57L→30L, +1 helper _record_debt),
+   @517e60a81 (sports_execution/adapters/exchanges/kalshi.py place_order 56L→41L, +1 helper _submit_order_post);
+   allowlist 177 → 175 files. Same AST clean + behavior-preservation discipline.
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same
    helper-extraction patterns this session applied to UTL/MTDS/strategy-service:

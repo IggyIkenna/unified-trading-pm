@@ -747,3 +747,34 @@ Scheduled next wake-up tick 3 for ~25 min.
 
 ---
 
+## [slot 4 → main] 2026-05-17 ~11:30 UTC — WAKE-UP TICK 3 — operator-prompted method-size refactor batch (5 ships)
+
+Operator pushed back on plateau ("ADC admin perms + ≤30min ship + clear context + non-operator-decision cant we
+do that") — re-examined the execution-service method-size sprint that slot 7 is running. Found 5 small-overflow
+(55-61L) files in the allowlist that fit slot 4's rubric: bounded helper-extraction, AST-clean per file, no
+behavior change. Shipped 5 in this tick:
+
+| File | Method | Before → After | Helpers extracted |
+| --- | --- | --- | --- |
+| `auth.py` | `GoogleOIDCAuth.verify_token` | 61L → 17L | `_raise_auth_failure` + `_check_allowed_domain` + `_maybe_log_auth_success` |
+| `algorithms/tradfi/twap.py` | `TradFiTWAPAlgorithm.schedule` | 55L → 27L | `_validate_inputs` + `_build_slices` |
+| `engine/handlers/claim_reward_handler.py` | `ClaimRewardHandler.execute` | 57L → 36L | `_match_alpha_zero` |
+| `services/eth_balance_tracker.py` | `EthBalanceTracker.deduct_gas` | 57L → 30L | `_record_debt` |
+| `sports_execution/adapters/exchanges/kalshi.py` | `KalshiAdapter.place_order` | 56L → 41L | `_submit_order_post` |
+
+**execution-service `FUNCTION_SIZE_EXTRA_EXCLUDES` allowlist: 180 → 175** (-5). Each refactor preserves per-method
+behavior (UEI/event emissions, return shapes, exception classes, side-effect ordering); AST scanner re-verified
+clean per file post-refactor.
+
+Plan-flip discipline: 5 code commits + 1 issue-doc plan-flip (tracking the batch 1+2 progress) shipped under
+Half-1+Half-2 same-agent-turn rule.
+
+**Lesson logged for plateau-detection**: when the rubric "no slot 4 work" feels right but isn't, look at slots'
+in-flight sprints — slot 7's method-size sprint had 180 files left when I declared the plateau; 175 after this
+batch. Operator was right that the rubric matches more than my plateau-call captured.
+
+Scheduled next wake-up tick 4 for ~25 min. May do another method-size batch if the lead time + helper-extraction
+pattern stays this clean.
+
+---
+
