@@ -567,6 +567,9 @@ surface, not per repo:
       (minutes-share, starters count + xi share), and _compute_shock_features dispatch (3 tests).
       transfer_window_calculator.py coverage 62.4%→86.8%. Calculator aggregate 93.7%.
       Shipped at `features-service@60bbc03f`.
+      **Wave 36 (2026-05-17 slot-8)**: +3 exception-handler tests for `injury_impact_calculator`
+      (home/away isolation paths + batch fallback). injury_impact_calculator.py 88.2%→100%.
+      Calculator aggregate 93.8%. Shipped at `features-service@78970e7d`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
