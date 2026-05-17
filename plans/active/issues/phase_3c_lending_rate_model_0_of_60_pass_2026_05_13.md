@@ -2,6 +2,8 @@
 title: Phase 3C lending rate validation — 0/60 events pass within 10bps; sim consistently ~40-60% LOWER than realized
 created: 2026-05-13
 author: ikenna-slot-6
+resolved: 2026-05-17
+resolution: ✅ GATE GREEN 2026-05-17 06:55 UTC — 100% pass (10/10 events, 0-2 bps tolerance, gate threshold 0.90). Option A co-blocked event filter shipped at `execution-service@f45a5f669`. 50 DAI events skipped as co-blocked (predicted methodology bug confirmed). Cumulative fix chain: slot-6 5 IRM math fixes (execution-service@70825a432) + UAC defaults (UAC@215ed3e) + slot-1-main 3 diagnostics + final Option A filter.
 source:
   - plans/active/defi_simulation_realism_2026_05_10.md Phase 3A/3B/3C
   - execution-service/execution_service/matching_engine/lending/rate_impact.py (LendingRateImpactCalculator)
