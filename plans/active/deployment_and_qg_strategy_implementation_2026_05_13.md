@@ -471,7 +471,13 @@ surface, not per repo:
       (32 tests — parse_formation, get_team_formation, batch) + `ht_features` (32 tests — ht_state/momentum,
       xg_from_shots, aggregate_1h_events, batch, odds) + `bench_sub_calculator` (22 tests — sub timing, home/away split
       cols, proactive flag, batch). Shipped at `features-service@25a86c30`. 548 total tests across 16 calculator files.
-      Continuing coverage sweep — checking next high-gap files.
+      **Wave 9 (2026-05-17 slot-8)**: 66 new tests across 3 sports calculators: `footystats_predictions_calculator` (16
+      tests — \_safe\_float, compute_footystats_predictions_batch NaN passthrough/deduplication/custom fixture_id_col) +
+      `ml_predictions` (12 tests — get_schedule_predictions stub schema + get_ml_features_for_fixture fixture_id/None
+      values) + `multisource_xg_calculator` (22 tests — compute_multisource_xg empty/single/multi-source
+      spread/confidence/CV threshold/negative filter + batch). Shipped at `features-service@e8c5b715`. 614 total tests
+      across 19 calculator files. Continuing coverage sweep — next targets: meta_features, injury_impact, european_fatigue,
+      h2h_calculator, elo_calculator, odds_calculator, halftime_multi_source, odds_prob_space.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
