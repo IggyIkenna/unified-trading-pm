@@ -33,7 +33,9 @@
     "scripts/generators/generate_strategy_manifest_dag.py",
     "scripts/generators/reverse-dependency-lookup.py",
     "scripts/quality_gates/snapshot_to_parquet.py",
-    "scripts/quality_gates/check_snapshot_staleness.py"
+    "scripts/quality_gates/check_snapshot_staleness.py",
+    "scripts/quality_gates/coverage_snapshot_emit.py",
+    "scripts/quality_gates/coverage_snapshot_to_parquet.py"
   ],
   "extraPaths": ["../unified-internal-contracts", "../unified-api-contracts"],
   "venvPath": ".",
