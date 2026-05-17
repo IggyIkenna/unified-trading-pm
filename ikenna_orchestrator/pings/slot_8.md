@@ -2,6 +2,31 @@
 
 ---
 
+## [2026-05-17 ~11:30 UTC] slot-8 — 🎯 defi_basedpyright_features_service NEAR-CLEAN (827→136, 84%)
+
+**5 parallel-subagent waves shipped** (15+ sub-agents). All non-foreign-active surfaces at basedpyright 0 reportAny.
+
+| Wave | Files | Errors | Status |
+|------|-------|--------|--------|
+| 1 | 5 sports calcs (transfer_window/season_context/team_form/sports_validity/poisson+elo) | 149 | ✅ |
+| 2 | 4 delta_one+sports (returns+trendline / streaks+market_structure / numba_kernels / 4 sports) | 167 | ✅ |
+| 3 | 3 (delta_one engine + 4 sports + 5 family smoke.py) | 144 | ✅ |
+| 4 | 3 (delta_one 4 files + 6 sports + 4-family sweep) | 127 | ✅ |
+| 5 | 2 sweeps (sports/ FULL CLEAN 46→0 + delta_one/ FULL CLEAN 53→0) + cli+api (4→0) | 103 | ✅ |
+| **Total** | **40+ files across 6 family dirs** | **691 errors** | **✅ 84% cleared** |
+
+**FULL CLEAN at basedpyright 0 reportAny**: sports/, delta_one/, calendar/, volatility/, multi_timeframe/, commodity/, cli/, api/.
+
+**Remaining 136**: onchain/ (96, foreign-active slot-2 + features-onchain pipeline) + cross_instrument/ (40, foreign-active other slot). Marked DEFERRED-OTHER-SLOT; final defi_master flip held until those reach 0.
+
+**11 reusable patterns codified** in plan body (cast / numpy / pandas / polars / numba / smoke / engine / nested-dict / 2D ndarray / ModeHandler overrides / private-import-shim).
+
+**Plan-flip discipline**: 17 code commits + 15 docs(plans): flip commits across features-service + unified-trading-pm. All Half-1/Half-2 same-agent-turn clean. LDR alignment ahead=0 throughout.
+
+---
+
+---
+
 ## [2026-05-17 09:00 UTC] slot-8 — autonomous continuation session WRAP
 
 **deployment_and_qg_strategy_implementation_2026_05_13 — 7 items closed clean** (Phase 2 fully closed, Phase 5 fully closed, Phase 7 fully closed, Phase 8.A/E partially closed, Phase 1 audit-wire flip):
