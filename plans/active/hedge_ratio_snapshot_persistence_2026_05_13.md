@@ -125,22 +125,28 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
       decided in Phase 0. ✅ `hedge_ratio_writer.py` with `emit_hedge_ratio_snapshot` + `build_hedge_ratio_snapshot`.
       strategy-service@`21209bd`
 - [x] [AGENT] P0. Wire `CarryStakedBasisEngine.on_tick` to emit on `decision.rebalance_triggered=True`. Include all
-      Phase 1F fields + `partition_dt` from event timestamp + `correlation_id` from trade context. ✅ Wired inline
-      after baseline update, using `instruction.instruction_id` as `correlation_id`. strategy-service@`21209bd`
+      Phase 1F fields + `partition_dt` from event timestamp + `correlation_id` from trade context. ✅ Wired inline after
+      baseline update, using `instruction.instruction_id` as `correlation_id`. strategy-service@`21209bd`
 - [x] [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
       `record_captured(asset_group="defi",     data_type=HEDGE_RATIO_SNAPSHOT, partition_dt=..., venue_name="strategy-internal")`.
-      ✅ Best-effort `record_captured(category="defi", data_type="hedge_ratio_snapshot",
-      pipeline_mode=BATCH_STRATEGY_SERVICE)` in `_record_manifest()`. strategy-service@`21209bd`
-- [x] [AGENT] P0. Unit test: synthetic decision → emit row → assert parquet schema matches contract. ✅ 6 tests
-      in `test_hedge_ratio_writer.py` (schema round-trip, blob_path, row values, exception-swallow).
+      ✅ Best-effort
+      `record_captured(category="defi", data_type="hedge_ratio_snapshot",     pipeline_mode=BATCH_STRATEGY_SERVICE)` in
+      `_record_manifest()`. strategy-service@`21209bd`
+- [x] [AGENT] P0. Unit test: synthetic decision → emit row → assert parquet schema matches contract. ✅ 6 tests in
+      `test_hedge_ratio_writer.py` (schema round-trip, blob_path, row values, exception-swallow).
       strategy-service@`21209bd`
 
 ### Phase 3 — Consumer schema mapping (~0.4 cal AI-days)
 
-- [ ] [AGENT] P0. `pnl-attribution-service` reader: load `hedge_ratio_snapshots` parquets per archetype + date range.
-      Confirm UAC reader interface (`unified_api_contracts.readers.<...>`).
-- [ ] [AGENT] P0. Update `client_reporting_pnl_attribution_mvp` plan Phase 2 with `hedge_ratio_snapshots` as upstream
-      dependency; cross-reference this plan.
+- [x] [AGENT] P0. `pnl-attribution-service` reader: load `hedge_ratio_snapshots` parquets per archetype + date range.
+      Confirm UAC reader interface (`unified_api_contracts.readers.<...>`). ✅
+      `PnlDomainAdapter.read_hedge_ratio_snapshots()` added to `adapters/domain_adapter.py` using
+      `resolve_bucket_name(strategy-store/defi)` + `get_storage_client()` direct download pattern (no PATH_REGISTRY —
+      custom hive path). 5 unit tests in `test_hedge_ratio_snapshot_reader.py`. pnl-attribution-service@`ee96d3c`
+- [x] [AGENT] P0. Update `client_reporting_pnl_attribution_mvp` plan Phase 2 with `hedge_ratio_snapshots` as upstream
+      dependency; cross-reference this plan. ✅ Consumer plan (`client_reporting_pnl_attribution_mvp_2026_05_10.md`) is
+      archived at 100% done (2026-05-16 sweep). Cross-reference captured in codex `amm-slippage-simulation.md` Phase 4
+      update instead (consumer chain doc). pnl-attribution-service@`ee96d3c`
 
 ### Phase 4 — Codex SSOT + plan close (~0.2 cal AI-days)
 
