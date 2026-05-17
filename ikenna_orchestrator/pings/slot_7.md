@@ -999,3 +999,13 @@ basedpyright clean throughout. Cumulative session ship: ~100 methods refactored 
   validation/) 57L→24L each (flattened nested branch into early-return ladder).
 
 321 remaining. basedpyright clean throughout. Cumulative session: ~105 methods refactored.
+
+
+[2026-05-17 /loop tick 24] slot-7 — execution-service Phase B (+2, 58/377 cleared):
+
+* `execution-service@fb461cc35` — DeribitOrdersMixin.get_account_summary 57L→27L via
+  _parse_account_summary_result helper (error-body inspect + result pull).
+* `execution-service@3d0657084` — InstructionRouter._execute_atomic 57L→26L via
+  _prevalidate_atomic_instructions helper (pre-validate loop with failure-list construction).
+
+319 remaining. basedpyright clean.
