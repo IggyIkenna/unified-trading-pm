@@ -4,6 +4,8 @@ title:
   unified-api-contracts>=0.2.38"
 created: 2026-05-16
 author: ikenna-slot-3
+resolved: 2026-05-17
+resolution: SHIPPED — 3 dep-pin fixes (risk-and-exposure-service@83b10e0 UAC pin, ml-training-service@876f0e5 UTL pin) + deployment-service@a6f746f registered features_service in SERVICE_TARBALLS (proper fix; reverts wrong-direction NODEPS hack). VM 8 (features-onchain-defi-20260517-025847) installed cleanly + ran. P2 follow-up "uv pip compile pre-flight" remains DEFERRED (NICE-TO-HAVE).
 source:
   - "VM serial console: features-onchain-defi-20260516-221350 (deleted 22:18 UTC)"
   - "Triggered by B-015 chain step (c) features-onchain DeFi backfill"
