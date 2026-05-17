@@ -778,6 +778,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-66**: 70 files cleared (slot-2 contribution: -70 files; spans 37 submodules incl.
   benchmark/regimes).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 67 — benchmark/html_report)**: shipped at execution-service@37ae83b0c.
+  \_build_html_head_and_styles 63L→3L via \_HTML_HEAD_AND_STYLES module constant + \_build_html_summary_section 66L→18L
+  via \_build_summary_cards_html + \_build_html_table_rows 58L→28L via \_build_algo_row_html +
+  \_build_chart_scripts 95L→9L via \_build_pnl_chart_js + \_build_vs_benchmark_chart_js. 4 violations cleared (file not
+  in allowlist). basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-67**: 71 files cleared (slot-2 contribution: -71 files; spans 38 submodules incl.
+  benchmark/html_report).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
