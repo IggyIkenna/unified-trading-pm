@@ -889,7 +889,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   Extracted _align_tradfi_start + _align_tradfi_end_after_close + _align_tradfi_end_before_open + _align_tradfi_end.
   2 violations cleared. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-81**: 91 files cleared (slot-2 contribution: -91 files; spans 52 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 82 — cli/batch_backtest)**: shipped at execution-service@6528a1375.
+  run_single_backtest (129L→13L) + run_batch_backtests (96L→15L) + main (113L→32L).
+  Extracted _resolve_and_load + _build_backtest_cmd + _handle_backtest_subprocess +
+  _collect_batch_results + _check_batch_completeness + _add_batch_args + _validate_and_filter_configs.
+  3 violations cleared. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-82**: 94 files cleared (slot-2 contribution: -94 files; spans 53 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
