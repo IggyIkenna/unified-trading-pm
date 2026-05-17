@@ -56,3 +56,15 @@ without risk of unrecoverable overwrite on foreign files.
 
 Until resolved, MTDS QG reports 5/3746+5 failures — these are pre-existing and not caused by Phase 3 work. MTDS@5f8448b
 (Phase 3) and MTDS@139e2e6 (Databento test fix) introduce 0 new failures.
+
+## Resolution — RESOLVED 2026-05-17
+
+All 5 failures fixed in-session by slot-3 (within-scope root-cause analysis + minimal targeted fixes):
+
+| Group | Fix | Commit |
+|-------|-----|--------|
+| A (3 Tardis canonical output) | Added `monkeypatch.setenv("TARDIS_STREAMING_FINALIZE", "false")` to 3 tests — forces legacy `download_csv` path (which tests mock) instead of `download_csv_streaming` (makes real network calls) | MTDS@936f0c4 |
+| B (Tardis stream client 404) | Added `mock_session.closed = False` to `TestAsyncIterBytes::test_raises_tardis_http_error_on_404` — prevents `initialize_async_session` from creating a real `aiohttp` session when `MagicMock().closed` is truthy | MTDS@1180dfe |
+| C (smarkets UAC registry) | Added `smarkets` entry to `BETTING_SPORTS_VENUES` in `unified_api_contracts/registry/venue_manifest/betting_sports.py` | UAC@0710ba8 |
+
+Post-fix QG result: **0 failures, 3751+ passed** (MTDS full suite with `PYTEST_UNIT_DIR="tests/"`). STEP 5.23 (deep UAC import in `orchestrator.py`/`api/main.py`) and codex 14-vs-13 violation remain as pre-existing foreign-file issues outside slot-3 scope.

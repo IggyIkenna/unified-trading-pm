@@ -704,9 +704,9 @@ redesign accepted today.
 
 - **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument live-pipeline
   activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal) — **PARTIAL 2026-05-17 (slot-3)**:
-  Phases 0-14 all done (PM@58b07da0 Phase 3 flip). Phase 15 (QG sweep + 7-day live smoke): 15.1 partial — MTDS QG 3746
-  pass / 5 pre-existing foreign failures (Tardis network + smarkets UAC; issue filed at
-  `issues/tardis_smarkets_test_regression_2026_05_17.md`; MTDS@139e2e6); 15.2-15.4 require operator VM launches
+  Phases 0-14 all done (PM@58b07da0 Phase 3 flip). Phase 15 (QG sweep + 7-day live smoke): **15.1 COMPLETE** — MTDS QG
+  3751 pass / 0 failures (all 5 pre-existing Tardis+smarkets failures fixed: MTDS@936f0c4 + MTDS@1180dfe + UAC@0710ba8;
+  issue resolved at `issues/tardis_smarkets_test_regression_2026_05_17.md`); 15.2-15.4 require operator VM launches
   (human-only). Plan stays active pending operator smoke kick-off.
 - ✅ **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open todos. (design
   0.6×, ~5 = 3.0 cal) — **AUDIT 2026-05-17 (slot-3)**: 32/34 items done. 2 remaining: (1) BLOCKED-OPERATOR-DECISION (VM
