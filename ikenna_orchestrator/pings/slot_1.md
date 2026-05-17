@@ -1,5 +1,32 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-17 ~20:35 UTC — tick-56: Smoke B VM 200717 in progress
+
+**VM 200717 status** (log ~19:20 UTC, log flushing every ~4 min to GCS):
+
+- lending_rates ✅ (5 dates written)
+- lst_yields ✅ (5 dates written)
+- onchain_perps: 04-08+04-09 ✅ suppressed (STALE_DATA/strict_fail), 04-10 in progress — no Int64 errors (Bug 1 fixed)
+- utilization: not started yet — critical test for Bug 4 GcsEventSink stall
+
+**Bug 5 (_add_timestamp_out Int64)**: slot-8@ae90d1fd already landed. My parallel fix skipped (identical). Tarball
+at 19:06:20 UTC includes this fix.
+
+**Slot-8 acks (32-34)**: waves 32 (transfer_window, 30 tests) + 33 (referee_features, 52 tests) + 34
+(halftime_calculator, 66 tests, 1392 aggregate) — PM@9bdb056b. Outstanding acks current.
+
+**Master plan inventory refreshed**: PM@2842ea0c — 69 plans / 53% done / 478 cal AI-days left.
+
+**Slot-1 main tasks confirmed DONE**:
+
+- workspace-qg.yml redesign: ARCHIVED (completed 2026-05-16, canary green)
+- DAI VM relaunch: Phase 3C confirmed 97.9% at `aave-lending-rate-val-20260517-182510`
+
+**Next**: VM 200717 DEPLOYMENT_COMPLETED → flip smoke_b issue checkbox → cross-side ping harsh-main for paper
+backtest launch.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~16:21 UTC — LST rates catch-up VM launched + Phase 6B COMPLETE
 
 **Phase 6B Aave V3 multi-chain catch-up**: VM `mtds-lending-indices-20260517-160411` STOPPED cleanly. 105,202 rows
