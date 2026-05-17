@@ -270,6 +270,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    claim_reward + auth + tradfi-twap already done by slot-4) are below the 50L threshold. Slot-2 sweep of
    engine/handlers/ is COMPLETE.
 
+   **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 7 — defi_execution/protocols sweep starting)**:
+   marinade.py shipped at execution-service@1e9d31edd (stake 67L→3L, unstake 68L→3L; extracted 3 helpers
+   \_submit_stake_op (shared lamports-convert + paper-trade-or-build-tx + send + log path), \_build_paper_trade_result
+   (synthesise SolanaTransactionResult for paper mode), \_log_stake_op_result (success/failure log emission)).
+   Allowlist after slot-7 batch (perp_hedge_sizer + bridge + deribit_websocket + bitget_native + tp_sl validation)
+   was 161; -1 = 160 files. basedpyright clean. Same per-method behavior preservation.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7**: 11 files cleared (187→160 with slot-7 contributions, slot-2
+   contribution: -11 files from execution-service handlers + 1 defi protocol).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
