@@ -385,10 +385,10 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    -22 files; 10 handlers + 8 defi protocols + 3 services + 1 preprocessor).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 19 — services sweep continues)**: funding_recon_engine.py shipped at
-   execution-service@dd7d967a6 (reconcile 114L→45L via \_record_missing_exchange_data (MISSING_EXCHANGE_DATA path +
-   INFO alert post-grace-period) + \_classify_status (MATCH/DISCREPANCY/CRITICAL ladder on payment_bps +
-   rate_bps thresholds) + \_maybe_publish_drift_alerts (per-rule_id payment + rate-divergence alert emission)).
-   Allowlist -1. basedpyright clean.
+   execution-service@dd7d967a6 (reconcile 114L→45L via \_record_missing_exchange_data (MISSING_EXCHANGE_DATA path + INFO
+   alert post-grace-period) + \_classify_status (MATCH/DISCREPANCY/CRITICAL ladder on payment_bps + rate_bps
+   thresholds) + \_maybe_publish_drift_alerts (per-rule_id payment + rate-divergence alert emission)). Allowlist -1.
+   basedpyright clean.
 
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18+19**: 23 files cleared (slot-2
    contribution: -23 files; 10 handlers + 8 defi protocols + 4 services + 1 preprocessor).
@@ -398,42 +398,42 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    default + confidence + note) + \_estimate_gas_cost_usd (DEX/LENDING/STAKING only, inline chain_name_to_id) +
    \_estimate_bridge_cost_usd (cross-chain-only, defaults to 0)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-20**: 24 files cleared (slot-2 contribution: -24 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor).
+   **Slot-2 cumulative across batches 3-20**: 24 files cleared (slot-2 contribution: -24 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 21 — service_config sweep)**: service_config.py shipped at
-   execution-service@da16a9754 (get_bucket_for_asset_group 74L→27L via \_resolve_asset_group_bucket
-   (asset-group-attr → generic-attr → constructed-from-project_id fallback chain) +  promoted
-   valid_bucket_types from local list to \_VALID_BUCKET_TYPES ClassVar tuple). Allowlist -1. basedpyright clean.
+   execution-service@da16a9754 (get_bucket_for_asset_group 74L→27L via \_resolve_asset_group_bucket (asset-group-attr →
+   generic-attr → constructed-from-project_id fallback chain) + promoted valid_bucket_types from local list to
+   \_VALID_BUCKET_TYPES ClassVar tuple). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-21**: 25 files cleared (slot-2 contribution: -25 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config).
+   **Slot-2 cumulative across batches 3-21**: 25 files cleared (slot-2 contribution: -25 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 22 — algo_library)**: leg_controller_runner.py shipped at
-   execution-service@2b3ee2620 (maybe_rebalance 72L→17L via 4 \_safe\_* wrappers (\_safe_load_observations,
+   execution-service@2b3ee2620 (maybe_rebalance 72L→17L via 4 \_safe\_\* wrappers (\_safe_load_observations,
    \_safe_build_snapshots, \_safe_compute_drift, \_safe_emit_rebalance) — each catches the same exception set
-   (Connection/Timeout/OS/Value for observations; Key/Value for others) and emits the same shard-level isolation
-   log + return-None pattern). Allowlist -1. basedpyright clean.
+   (Connection/Timeout/OS/Value for observations; Key/Value for others) and emits the same shard-level isolation log +
+   return-None pattern). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-22**: 26 files cleared (slot-2 contribution: -26 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library).
+   **Slot-2 cumulative across batches 3-22**: 26 files cleared (slot-2 contribution: -26 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 23 — trade_execution adapters)**: binance_native.py shipped at
    execution-service@c4b5e8798 (parse_order_response 76L→30L via \_STATUS_MAP ClassVar (NEW→pending,
    PARTIALLY_FILLED→open, FILLED, CANCELED/EXPIRED/REJECTED→cancelled) + \_safe_decimal (None + InvalidOperation
    fallback) + \_safe_decimal_positive (suppresses Binance 0-price echoes)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-23**: 27 files cleared (slot-2 contribution: -27 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library + 1 CEX adapter).
+   **Slot-2 cumulative across batches 3-23**: 27 files cleared (slot-2 contribution: -27 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library + 1 CEX adapter).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 24 — algo_library sweep)**: multicall_batcher.py shipped at
-   execution-service@d89f09ba8 (encode_step_to_call 74L→20L via 6 per-step-type module-level \_encode\_* helpers:
-   \_encode_approve (ERC20 selector + spender padded 32B + uint256 amount), \_encode_swap (Uniswap
-   exactInputSingle), \_encode_supply_or_repay (Aave V3 pool), \_encode_wrap (WETH.deposit value-carry),
-   \_encode_unwrap (WETH.withdraw + amount uint256)). Allowlist -1. basedpyright clean.
+   execution-service@d89f09ba8 (encode_step_to_call 74L→20L via 6 per-step-type module-level \_encode\_\* helpers:
+   \_encode_approve (ERC20 selector + spender padded 32B + uint256 amount), \_encode_swap (Uniswap exactInputSingle),
+   \_encode_supply_or_repay (Aave V3 pool), \_encode_wrap (WETH.deposit value-carry), \_encode_unwrap (WETH.withdraw +
+   amount uint256)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-24**: 28 files cleared (slot-2 contribution: -28 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter).
+   **Slot-2 cumulative across batches 3-24**: 28 files cleared (slot-2 contribution: -28 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 25 — backtest_v2 runner)**: backtest_v2/runner.py shipped at
    execution-service@af7733bd4 (run 76L→25L via \_process_instruction helper — single place that handles
@@ -441,18 +441,37 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    deferred-silent paths, keeping run() to dispatch + cumulative aggregation + result building). Allowlist -1.
    basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-25**: 29 files cleared (slot-2 contribution: -29 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2).
+   **Slot-2 cumulative across batches 3-25**: 29 files cleared (slot-2 contribution: -29 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 26 — engine/validation)**: dependency_validator.py shipped at
-   execution-service@a54c0ca97 (check_defi_data_availability 75L→14L via \_classify_defi_dependencies (returns
-   {flash, lending, staking} flags from instruction set + ":A_TOKEN/:DEBT_TOKEN/:LST" instrument suffix scan) +
-   \_check_defi_prefixes_for_date (table-driven loop over (flag → data_type → label → op_label) tuples).
-   Allowlist -1. basedpyright clean.
+   execution-service@a54c0ca97 (check_defi_data_availability 75L→14L via \_classify_defi_dependencies (returns {flash,
+   lending, staking} flags from instruction set + ":A_TOKEN/:DEBT_TOKEN/:LST" instrument suffix scan) +
+   \_check_defi_prefixes_for_date (table-driven loop over (flag → data_type → label → op_label) tuples). Allowlist -1.
+   basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-26**: 30 files cleared (slot-2 contribution: -30 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
-   + 1 engine/validation).
+   **Slot-2 cumulative across batches 3-26**: 30 files cleared (slot-2 contribution: -30 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
+   - 1 engine/validation).
+
+   **Ratchet-down 2026-05-17 (slot-4 batch 11 — config/engine/providers sweep)**: 3 net-new files cleared at
+   execution-service@2f92a58bd (config/grid_builder.py — 3 violations: \_generate_sor_secondary_instruments 63L→45L via
+   \_filter_stable_pair_secondaries (@staticmethod — USDC-USDT stable-pair filter + POOL: token set dedup);
+   \_get_config_for_instruction_type 68L→29L via \_lend_borrow_base_config + \_stake_base_config (@staticmethod dict
+   factories); generate_grid_configs 67L→47L via \_resolve_timeframe_seconds + \_build_grid_config (@staticmethod —
+   timeframe-str→seconds + config_id-gen+GridConfig constructor combined)); engine/backtest/actors/
+   execution_alpha_verifier_actor.py on_order_filled 74L→17L via \_record_entry_fill + \_record_exit_fill (per-fill
+   alpha calculation + dict append separated); providers/tenderly.py — 4 violations: create_fork 74L→32L via
+   \_build_vnet_payload + \_extract_rpc_urls (@staticmethod — fork payload construction + RPC-URL admin/public
+   extraction); fund_wallet 69L→14L via \_fund_eth + \_fund_erc20_tokens (async — ETH setBalance vs ERC20
+   setErc20Balance separated); \_parse_bundle_sim_response 59L→45L via \_find_first_reverting_or_last (traversal returns
+   first reverting or last entry); gate_or_advise 72L→44L via docstring trim). leg_controller_runner + multicall_batcher
+   stash-resolved to upstream slot (convergent refactor — both cleared by remote). Combined allowlist: 117 → 107 files
+   (10 entries removed including concurrent slot activity). AST clean per file. ruff + basedpyright clean. Per-method
+   behavior preserved (stable-pair filter logic identical, GridConfig config_version constant, on_order_filled exception
+   class unchanged, Tenderly VNet slug/display_name format preserved, RPC admin-vs-public preference order preserved).
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8+9+10+11**: 46 files cleared (allowlist now 107).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 27 — adapters)**: storage.py shipped at
    execution-service@4293df705 (download_catalog_cache_files 77L→26L via \_select_latest_blobs_per_date (list +
