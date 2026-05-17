@@ -522,6 +522,12 @@ surface, not per repo:
       total tests across 33 calculator files. **Wave 21 (2026-05-17 slot-8)**: 25 new tests for `team_xg` (\_str_col,
       \_xg_trend, compute_team_xg_stats, compute_team_xg_for_fixture, compute_team_xg_batch). Shipped at
       `features-service@26ea2cac`. 1067 total tests across 34 calculator files.
+      **Wave 22 (2026-05-17 slot-8)**: 33 new tests for `replacement_model_calculator` (_classify_position, _defaults,
+      _compute_team_replacement_features, compute_replacement_model_batch). Shipped at
+      `features-service@f7cf28bf`. 1100 total tests across 35 calculator files.
+      **Wave 23 (2026-05-17 slot-8)**: 43 new tests for `xg_decomposition_calculator` (_resolve_col, _get_team_last_n,
+      row-extractors, _compute_team_decomposition, compute_xg_decomposition_batch). Shipped at
+      `features-service@6e73340e`. 1143 total tests across 36 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
