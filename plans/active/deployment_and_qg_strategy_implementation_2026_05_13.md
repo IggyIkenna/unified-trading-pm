@@ -392,8 +392,13 @@ surface, not per repo:
       with correct service_name + run() called; execution-service + risk-and-exposure-service already had full lifecycle
       coverage; features-service top-level is a dispatcher, per-family CLIs have ServiceBootstrap + static scan tests
       cover markers)
-- [ ] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/ schemas + assertion helpers. Cover
-      happy + every validation error.
+- [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P0. Validation logic surface (1 sub-agent): UAC canonical/ + internal/ schemas
+      + assertion helpers. Cover happy + every validation error. **🟡 BLOCKED 2026-05-17 (slot-8)**: UAC pyproject
+      `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` + `canonical/crosscutting/errors/*` from coverage
+      measurement (citadel-phase-1 transitional). Ratchet silently passes those surfaces because no entries in
+      `coverage.xml`. Operator decision required (Option A: remove omit + write tests against the truthful red signal;
+      Option B: declare not-measurable in coverage_targets.yaml). Full ana lysis at
+      `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`.
 - [x] [AGENT] P0. **VM deploy scripts surface** (1 sub-agent): `bats` tests (or equivalent) for every
       `deployment-service/scripts/vm/launch-*.sh` covering env-var validation, tarball SHA assertion, singleton-lock,
       MANIFEST_PER_VM_SHARDS=true assertion, VM_PREFIX_TO_BUCKET registration, failure-path FAILED event emit.
@@ -425,7 +430,12 @@ surface, not per repo:
 - [ ] [AGENT] P1. Per-archetype calculator coverage to 90% (features-\* services).
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
-- [ ] [AGENT] P1. Error classification coverage to 95%.
+- [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
+      same root-cause as Phase 8.B Validation logic surface — UAC `[tool.coverage.run].omit` excludes
+      `canonical/crosscutting/errors/*` from coverage measurement. test_error_classification.py exists but tests the
+      older venue-namespaced `BinanceError.classify()`-style exports, NOT the canonical UAC error modules
+      (defi/cefi/infra/onchain_perps). Operator decision required per
+      `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`.
 
 **Phase 8.D — Ratchet** (0.5 cal-AI-day):
 
