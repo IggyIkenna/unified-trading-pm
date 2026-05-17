@@ -1003,9 +1003,11 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
       AVALANCHE / BASE / LINEA / BSC data from 2022-01-01 through 2026-05-13 (prior VM runs + live mode). **CATCH-UP VM
       LAUNCHED 2026-05-17 16:04 UTC**: `mtds-lending-indices-20260517-160411` filling 2026-05-14→2026-05-17 gap using
       existing `launch-mtds-lending-indices-backfill-vm.sh` (runs all UAC-defined chains via
-      `get_supported_chains_for_protocol('aave_v3')` automatically). **SCROLL/ZKSYNC**: no UAC subgraph IDs
-      (`get_subgraph_id('aave_v3', 'SCROLL')` returns None) — data collection blocked; BLOCKED-UPSTREAM pending UAC PR
-      to add `SCROLL`/`ZKSYNC` entries to `SUBGRAPH_IDS["aave_v3"]`.
+      `get_supported_chains_for_protocol('aave_v3')` automatically). **VM COMPLETED 2026-05-17 16:09 UTC** (`STOPPED`
+      event received). Results: 26,633 rows (2026-05-14) + 30,307 (2026-05-15) + 31,190 (2026-05-16) + 17,072
+      (2026-05-17 partial) = **105,202 rows total** across 13 protocol-chain shards; 0 empty shards. **SCROLL/ZKSYNC**:
+      no UAC subgraph IDs (`get_subgraph_id('aave_v3', 'SCROLL')` returns None) — data collection blocked;
+      BLOCKED-UPSTREAM pending UAC PR to add `SCROLL`/`ZKSYNC` entries to `SUBGRAPH_IDS["aave_v3"]`.
 - [ ] [AGENT] P0. **6C — Solana LST historical** (jitoSOL / mSOL / bSOL / Rocket Pool / Solblaze) — Pyth Hermes backfill
       2023-10-01 → today. Launcher `launch-mtds-solana-lst-vm.sh` (NEW).
 - [ ] [AGENT] P0. **6D — Lighter / Pacifica / Extended OHLCV backfill** + contract addresses + ABI parsing completion.

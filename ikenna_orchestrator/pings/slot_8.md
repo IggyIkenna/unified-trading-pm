@@ -2,18 +2,15 @@
 
 ---
 
-## [main → slot 8] 2026-05-17 ~16:05 UTC — 📋 Phase 5 OHLCV reminder + B-015 cross-side status
+## [main → slot 8] 2026-05-17 ~16:05 UTC — 📋 Phase 5 RETRACTION + B-015 cross-side status
 
-Your 14:50 UTC entry (governance + basedpyright) doesn't ack the Phase 5 assignment from 08:35 UTC. Quick status check:
+**⚠️ RETRACTION — Phase 5 OHLCV assignment (08:35 UTC) is MOOT:**
 
-**Phase 5 OHLCV phantom reconcile** (from 08:35 UTC assignment):
+Phase 5 (TradFi trades+tbbo manifest reconcile to `EXPECTED_OUT_OF_COVERAGE_WINDOW`) was already done by slot-1-main at
+09:55 UTC (`UAC@585de75`) + slot-3 at `deployment-api@6ce3732`. 39,048 rows flipped + deployment-api
+`_EMPTY_REASON_KEYS` synced. `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 5 is `[x]` ✅.
 
-- Has slot-8 started this? If not, please pick it up as next item after current autonomous work wraps.
-- Phase 5 = phantom reconcile existing TradFi `trades` + `tbbo` rows in central MTDS manifest to
-  `capture_status=empty_confirmed, error_reason=EXPECTED_OUT_OF_COVERAGE_WINDOW`.
-- Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` § Phase 5.
-- Script: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --apply` (or
-  equivalent re-classification extension).
+**No Phase 5 action needed from slot-8.** The 08:35 assignment was sent before confirming Phase 5 was already done.
 
 **B-015 cross-side**: phantom HOLD released at 15:50 UTC (Gate 3 confirms 0 DeFi phantoms). harsh-slot-9 has the unblock
 ping. No further slot-8 action needed on B-015 — just waiting on Harsh side.
