@@ -725,6 +725,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-60**: 64 files cleared (slot-2 contribution: -64 files; spans 31 submodules incl.
   instruments/factory_tradfi).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 61 — results/validation)**: shipped at execution-service@f1c71eca7.
+  validate_timestamp_alignment 139L→22L via 5 helpers (\_check_ucs_timestamp_alignment + \_resolve_timestamp_col +
+  \_check_timestamp_range + \_check_monotonicity + \_check_range_and_monotonicity). File not in allowlist. 0 errors.
+
+  **Slot-2 cumulative across batches 3-61**: 65 files cleared (slot-2 contribution: -65 files; spans 32 submodules incl.
+  results/validation).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
