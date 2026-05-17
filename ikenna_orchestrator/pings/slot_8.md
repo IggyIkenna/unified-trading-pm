@@ -2,6 +2,33 @@
 
 ---
 
+## [2026-05-17 09:00 UTC] slot-8 — autonomous continuation session WRAP
+
+**deployment_and_qg_strategy_implementation_2026_05_13 — 7 items closed clean** (Phase 2 fully closed, Phase 5 fully closed, Phase 7 fully closed, Phase 8.A/E partially closed, Phase 1 audit-wire flip):
+
+1. **Phase 2 P0** act-preflight workflow coverage matrix — `codex/05-infrastructure/act-preflight-coverage.md` @ PM@74edbc74 — 45 workflows classified (6 FULL / 6 PARTIAL / 28 REMOTE-ONLY / 5 N/A)
+2. **Phase 2 P1** install-act-precommit.sh — opt-in pre-push git hook installer + worktree-aware @ PM@c43062ef
+3. **Phase 5 P0** Pin all production Dockerfile base images — last violation pinned at `ibkr-gateway-infra@a5dd3c3` (terraform:1.6 → @sha256:9a42ea97...)
+4. **Phase 5 P0** Artifact Registry retention policy — `deployment-service/scripts/audit/artifact-registry-retention.sh` @ deployment-service@e9df370 (5 cleanup rules)
+5. **Phase 7 P1** Coverage-raise spawn prompt template + per-tab-worktree discipline — `cursor-configs/coverage-raise-spawn.md` @ PM@b5572948
+6. **Phase 8.A P0** Per-repo `coverage_targets_local.yaml` across 21 service repos via auto-detect generator @ PM@a9c7b5d0
+7. **Phase 8.E P1** Coverage snapshot to GCS daily — 3 new sibling scripts (coverage_snapshot.sh / coverage_snapshot_emit.py / coverage_snapshot_to_parquet.py) @ PM@041c0bb5
+8. **Phase 1 P0** Audit log wire-in — verified already shipped at deployment-api@0574e9e via `_emit_deploy_event` → UTL `log_event` for all 3 outcomes
+
+**Plan-flips alongside each code commit (Half-2 in same agent turn)**: all flipped on tab/ikennaigboaka/8 → live-defi-rollout.
+
+**🟡 STILL OPEN in deployment_and_qg_strategy** (left for other slots / future cycle):
+- Phase 3 P0 ×3 — tarball SHA pinning (foreign-dirty in deployment-service; other slot in flight on create-code-tarballs.sh + setup-data-pipeline-vm.sh)
+- Phase 8.B P0 ×2 — Validation logic + Deploy-script-deps coverage push (heavy, multi-repo sub-agent fan-out per Phase 7 template)
+- Phase 8.C P1 ×2 — Per-archetype calculator + Error classification coverage pushes (heavy)
+- Phase 8.E.2 — deployment-ui Coverage column wire-in (new ticket — needs deployment-ui slot)
+
+**LDR alignment**: tab/ikennaigboaka/8 ahead=0 across all touched repos at session end.
+
+**Next slot pickup hint**: defi_basedpyright_features_service is at 827 reportAny (single biggest mechanical refactor); compute_optimization_mock_data + promote_workflow_may23_cli items are DEFERRED-OPERATOR.
+
+---
+
 ## [2026-05-14 16:04 UTC] slot-8 — STARTED Tab 8 (session 3)
 
 Starting V2 extension items after Plan D Phase 1+2 shipped. Items:
