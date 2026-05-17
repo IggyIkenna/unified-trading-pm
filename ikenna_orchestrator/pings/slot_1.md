@@ -1433,3 +1433,20 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 **Inventory**: 488 cal AI-days remaining (52% done, 69 plans).
 
 Next tick: continue monitoring until operator confirms return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:07 UTC — Autonomous loop tick-17: CeFi perp live-wired + exec batches 40/41
+
+**Poll results** (tick 17):
+
+- `3ef1fb3e`: **Phase 6 P1 — CeFi perp connectors verified live-wired** ✅ (significant May-23 gate item).
+- `7e8268b5`: slot-2 batch 40 — signal_driven_v3_base __init__ 146L→8L (execution-service@7f5f93c28).
+- `d86d5a7b`: slot-2 batch 41 — orchestrator execute_order 147L→29L (execution-service@3313ce6e6).
+- `91c647ab`: backfill Phase 7+8 — PerpHedgeSizer + HealthFactorMonitor + kill-switch flips.
+- `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>90 min** since B-015 ping.
+- `plans/active/_agent_pings.md`: no new cross-side responses.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: await operator return; monitor harsh-slot-9 boot.
