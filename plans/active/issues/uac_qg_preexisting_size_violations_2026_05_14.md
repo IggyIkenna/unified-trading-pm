@@ -60,3 +60,9 @@ one, QG will fail → that's the correct behaviour.
 - [ ] **P2 DEFERRED** — `internal/__init__.py` split → successor: `solana_lst_native_staking_adapters_2026_05_14.md`
       Task 4 Phase 3K
 - [ ] **P3 NICE-TO-HAVE** — `instrument_generator.py` + `synthetic.py` function splits → future touch
+
+## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
+
+Immediate risk (Codex max-violations false-alarm) closed by `CODEX_MAX_VIOLATIONS=5` ratchet shipped 2026-05-14.
+P2 + P3 items both have named successors per "Status taxonomy" rule. No further short-term action needed; medium-term
+refactors will land when those plans naturally touch the affected files. Issue closeable at next archive sweep.
