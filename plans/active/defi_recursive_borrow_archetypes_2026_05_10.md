@@ -1473,21 +1473,28 @@ under `tests/internal/unit/test_carry_recursive_staked_config_variants.py`.
 
 ## Phase 3 — strategy-service factory + target-universe catalog (2 AI-days)
 
-- [ ] [strategy-service] P0. Extend `_build_carry_recursive_staked` in `engine/strategies/v2/target_universe/catalog.py`
-      to consume the new config fields (Phase 2). Branch on `perp_leg_enabled`: when True, emit (lending_leg,
-      perp_short_leg) tuple; when False, emit (lending_leg) only.
-- [ ] [strategy-service] P0. `LeveragedLegController` extension: accept `target_net_delta` parameter and rebalance by
+- [x] ✅ [strategy-service] P0. Extend `_build_carry_recursive_staked` in
+      `engine/strategies/v2/target_universe/catalog.py` to consume the new config fields (Phase 2). Branch on
+      `perp_leg_enabled`: when True, emit (lending_leg, perp_short_leg) tuple; when False, emit (lending_leg) only. —
+      strategy-service@44a8afc (separate builders: `_build_carry_recursive_borrow_lending_only` +
+      `_build_carry_recursive_borrow_perp_hedged`; both in BUILDERS_BY_ARCHETYPE registry)
+- [x] ✅ [strategy-service] P0. `LeveragedLegController` extension: accept `target_net_delta` parameter and rebalance by
       trimming or extending the perp leg to match. Keep the existing `target_leverage` parameter for the lending side;
-      the two parameters compose orthogonally.
-- [ ] [strategy-service] P0. New target-universe variants: `CARRY_RECURSIVE_STAKED__lending_arb_pure` (Family 1) and
+      the two parameters compose orthogonally. — execution-service (target_net_delta already in LeveragedLegController
+      state + compute_drift; strategy-service@44a8afc wires it)
+- [x] ✅ [strategy-service] P0. New target-universe variants: `CARRY_RECURSIVE_STAKED__lending_arb_pure` (Family 1) and
       `CARRY_RECURSIVE_STAKED__perp_funding_capture` (Family 2). Variant naming per existing precedent (`__` separator);
-      each variant maps to a config preset.
-- [ ] [strategy-service] P1. Tracer extension: `defi_carry_recursive_staked_decision_trace.py` already has
+      each variant maps to a config preset. — strategy-service@44a8afc (implemented as separate archetypes
+      CARRY_RECURSIVE_BORROW_LENDING_ONLY + CARRY_RECURSIVE_BORROW_PERP_HEDGED per
+      defi_recursive_borrow_archetypes_2026_05_10.md variant-naming decision)
+- [x] ✅ [strategy-service] P1. Tracer extension: `defi_carry_recursive_staked_decision_trace.py` already has
       `_net_apr_recursive(stake_apy, borrow_apy, ltv, n_loops)` at line 210 — reuse for Family 1; add
       `_net_apr_with_perp_funding(stake_apy, borrow_apy, perp_funding, ltv, n_loops, target_net_delta, usdc_idle_apy)`
-      for Family 2.
-- [ ] [strategy-service] P0. Strategy-service QG runs against `e2e-testing/scripts/defi/` (per peripheral-script-dirs
-      HARD RULE) — verify the new variants type-check from there too.
+      for Family 2. — strategy-service@44a8afc (both functions in defi_carry_recursive_staked_decision_trace.py; **all**
+      exports net_apr_recursive + net_apr_with_perp_funding)
+- [x] ✅ [strategy-service] P0. Strategy-service QG runs against `e2e-testing/scripts/defi/` (per peripheral-script-dirs
+      HARD RULE) — verify the new variants type-check from there too. — strategy-service@44a8afc (QG step 5.X wires
+      PERIPHERAL_DEFI_DIR; recursive_borrow_paper_smoke.py in scope; QG green 2026-05-17)
 
 **Done definition:** Both variants instantiable from strategy-service factory; tracer math available for batch P&L
 attribution; strategy-service QG green including peripheral-script wiring.
