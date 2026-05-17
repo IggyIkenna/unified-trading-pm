@@ -536,6 +536,10 @@ surface, not per repo:
       **Wave 26 (2026-05-17 slot-8)**: 27 new tests for `venue_context` (VenueContextFeatures, _haversine,
       compute_venue_context_features, compute_venue_context_for_fixture, compute_venue_context).
       Shipped at `features-service@33f7cd0b`. 1236 total tests across 39 calculator files.
+      **Wave 27 (2026-05-17 slot-8)**: 42 new tests for `season_context` (SeasonContextFeatures, compute_season_context_features,
+      _competition_phase, _points_at_stake, _count_team_matches_in_season, _prior_blend_weight, compute_season_context).
+      **Wave 28 (2026-05-17 slot-8)**: 28 new tests for `team_goals` (compute_team_goals_stats, _compute_rolling_metrics,
+      compute_team_goals_for_fixture, compute_team_goals_batch). Shipped at `features-service@b3c0b164`. 1306 tests across 41 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
