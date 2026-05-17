@@ -327,7 +327,7 @@ todos:
 
   - id: phase-3-mtds-streaming-rollout
     content: |
-      - [ ] [AGENT] P0. Phase 3 — MTDS websocket streaming rollout per asset_group. SEQUENTIAL after Phase 1 + 2.
+      - [x] [AGENT] P0. Phase 3 — MTDS websocket streaming rollout per asset_group. SEQUENTIAL after Phase 1 + 2.
         (3.1 ✅ orchestration + CLI surface SHIPPED 2026-05-11 Harsh slot 5 at mtds@`97b2224` — `live/websocket_runner.py`
         `LiveWebsocketRunner` + `LiveWebsocketTickSink` + `WSFeedConnector`/`TickSink`/`ShardManifestRecorder` Protocols +
         `InstrumentCacheRefreshConsumer` [3.4] + `cli/handlers/websocket_streaming_handler.py` `WebsocketStreamingHandler`
