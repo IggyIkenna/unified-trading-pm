@@ -2893,3 +2893,22 @@ phantom-fix confirmed 2026-05-15; Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 
 - Slot-10: execute-service unhold path (no ack yet)
 
 **Status**: 🚀 B-015 paper VM launched; monitoring for STARTED event
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:30 UTC — tick-74: B-015 VM startup FAILED + fixed + relaunched
+
+Root cause (VM `strategy-paper-carry-staked-basis-20260517-221757` FAILED):
+e2e-testing missing from `_SVC_BENCH_NODEPS` → STD install pass → uv resolver fails
+because `execution-service` (sibling dep of e2e-testing) not on PyPI.
+
+Fix: deployment-service@d76ef7b — added `e2e-testing` to `_SVC_BENCH_NODEPS`.
+GCS updated: `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
+Old VM deleted; new VM: `strategy-paper-carry-staked-basis-20260517-222941`
+
+Verification:
+```bash
+gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-222941/hour=22/*.jsonl" 2>/dev/null | head -3
+```
+
+**Status**: 🔧 B-015 VM relaunched with fix; awaiting STARTED event ~22:35 UTC
