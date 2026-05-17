@@ -2542,7 +2542,8 @@ errors
 
 - Slot-8 waves 35-44 ACKED (10 waves, footystats/elo/bucketed/odds_prob all at 96-100%)
 - Slot-10 ROUTED to hedge_ratio_snapshot Phase 2+3 (strategy-service writer wire-in + pnl-attribution reader)
+- Slot-5 shipped wave-45 (european_fatigue + h2h — PM@d1f158dd)
 
-**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC **Next action on completion**: flip smoke_b issue checkboxes +
-cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED) **Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5
-done, no errors
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
+**Next action on completion**: flip smoke_b issue checkboxes + cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED)
+**Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5 done, no errors
