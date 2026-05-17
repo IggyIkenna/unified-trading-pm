@@ -966,3 +966,14 @@ basedpyright clean across all 2 commits.
   (per-intent solver race + winner-vs-no-viable-solution dispatch).
 
 329 remaining. basedpyright clean. Cumulative session ship now ~98 methods.
+
+
+[2026-05-17 /loop tick 21] slot-7 — execution-service Phase B (+2, 50/377 cleared — milestone):
+
+* `execution-service@4a91e8d0d` — SchemaValidator.validate_mbp 56L→27L via _mbp_depth_columns helper
+  (per-level bid_px/bid_sz/ask_px/ask_sz column generator).
+* `execution-service@63dfd91ea` — InstructionDrivenV3Utils.create_order 56L→23L (eliminated 4 duplicate
+  factory call-sites via single algo_kwargs **-splat).
+
+327 remaining. **50/377 = ~13% of execution-service violations cleared** in this autonomous loop.
+basedpyright clean throughout. Cumulative session ship: ~100 methods refactored under 50L budget.
