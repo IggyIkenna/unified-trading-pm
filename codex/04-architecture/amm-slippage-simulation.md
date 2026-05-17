@@ -1157,14 +1157,15 @@ realized P&L delta + max-drawdown delta + tail-event survival rate.
 ## Hedge-ratio dynamic adjustment (Phase 6)
 
 > **✅ FULLY SHIPPED 2026-05-17** — hedge_ratio_snapshot persistence pipeline complete:
+>
 > - **UAC@2fcb1bb**: `DataType.HEDGE_RATIO_SNAPSHOT` + `HedgeRatioSnapshotRecord` schema in
 >   `unified_api_contracts/internal/domain/defi/sim_schemas.py`; bucket: `strategy-store/defi`
-> - **strategy-service@21209bd**: `HedgeRatioSnapshotWriter` + `CarryStakedBasisEngine.on_tick` wire-in;
->   emits on `decision.rebalance_triggered=True`; ManifestWriter records per-archetype-per-day
+> - **strategy-service@21209bd**: `HedgeRatioSnapshotWriter` + `CarryStakedBasisEngine.on_tick` wire-in; emits on
+>   `decision.rebalance_triggered=True`; ManifestWriter records per-archetype-per-day
 > - **pnl-attribution-service@ee96d3c**: `read_hedge_ratio_snapshots` reader in `PnlDomainAdapter`
 >
-> Sub-plan: `hedge_ratio_snapshot_persistence_2026_05_13.md` Phases 0-3 complete.
-> Phase 6C validation harness: `strategy-service@7eb3dab`.
+> Sub-plan: `hedge_ratio_snapshot_persistence_2026_05_13.md` Phases 0-3 complete. Phase 6C validation harness:
+> `strategy-service@7eb3dab`.
 
 `carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts with
 peg behavior + accrual.
@@ -1267,6 +1268,26 @@ Backtest carry archetype with dynamic vs static hedge-ratio over 1-year historic
 - Run C: dynamic hedge with operator-tuned threshold (`peg_drift_threshold_bps ∈ {10, 25, 50, 100}` sweep).
 
 Document P&L delta + confidence interval per Phase 6 full-execution criterion.
+
+### Phase 6 writeback + consumer chain (landed 2026-05-17)
+
+`hedge_ratio_snapshots` persistence sub-plan (`hedge_ratio_snapshot_persistence_2026_05_13.md`) delivered the full
+writeback chain:
+
+- **UAC data_type**: `("defi", "hedge_ratio_snapshot")` registered in `availability_semantics` + `source_priority` +
+  `pipeline_mode`. `HedgeRatioSnapshotRecord` (13 columns: all `HedgeRatioSnapshot` fields + `partition_dt` /
+  `available_at` / `correlation_id`) in `unified_api_contracts/internal/domain/defi/sim_schemas.py`. uac@`2fcb1bb`.
+- **Producer**: `strategy_service/engine/strategies/v2/carry_and_yield/hedge_ratio_writer.py` —
+  `emit_hedge_ratio_snapshot()` writes inline (Pattern A) on every `rebalance_triggered=True` tick.
+  `CarryStakedBasisEngine.on_tick` calls it with `correlation_id=instruction.instruction_id`. ManifestWriter
+  `record_captured(category="defi", data_type="hedge_ratio_snapshot")` best-effort. strategy-service@`21209bd`. Path:
+  `gs://{pid}-strategy-store/hedge_ratio_snapshots/asset_group=defi/archetype={a}/dt={YYYY-MM-DD}/{ts}_{a}.parquet`.
+- **Consumer**: `PnlDomainAdapter.read_hedge_ratio_snapshots(archetype, dates)` in
+  `pnl_attribution_service/adapters/domain_adapter.py` — loads per-archetype per-date shards via
+  `resolve_bucket_name(kind="strategy-store", asset_group="defi")` + `get_storage_client().download_bytes()`.
+  pnl-attribution-service@`ee96d3c`.
+- **Attribution decomposition**: `read_hedge_ratio_snapshots` feeds P&L decomposition into (a) carry yield, (b)
+  hedge-residual P&L, (c) execution alpha at each rebalance point.
 
 ## Architecture diagram
 
