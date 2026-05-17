@@ -473,53 +473,69 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
    **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8+9+10+11**: 46 files cleared (allowlist now 107).
 
-   **Ratchet-down 2026-05-17 (slot-2 batch 27 — adapters)**: storage.py shipped at
-   execution-service@4293df705 (download_catalog_cache_files 77L→26L via \_select_latest_blobs_per_date (list +
-   parse-date + recency-key dedupe per start_date) + \_download_blobs_parallel (ThreadPoolExecutor BATCH_MAX_WORKERS
-   + per-blob result aggregation; nested \_download_one preserves the (ValueError/TypeError/KeyError/AttributeError/
-   RuntimeError) catch-all)). Allowlist -1. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-2 batch 27 — adapters)**: storage.py shipped at execution-service@4293df705
+   (download_catalog_cache_files 77L→26L via \_select_latest_blobs_per_date (list + parse-date + recency-key dedupe per
+   start_date) + \_download_blobs_parallel (ThreadPoolExecutor BATCH_MAX_WORKERS
+   - per-blob result aggregation; nested \_download_one preserves the (ValueError/TypeError/KeyError/AttributeError/
+     RuntimeError) catch-all)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-27**: 31 files cleared (slot-2 contribution: -31 files; 10 handlers + 8
-   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
-   + 1 engine/validation + 1 adapter).
+   **Slot-2 cumulative across batches 3-27**: 31 files cleared (slot-2 contribution: -31 files; 10 handlers + 8 defi
+   protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
+   - 1 engine/validation + 1 adapter).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 28 — engine/modes/live)**: live/matching_engine.py shipped at
-   execution-service@21da77ec3 (submit_order 77L→39L via \_resolve_price (BUY→best_ask, SELL→best_bid, else
-   last_price; passthrough order.price when set) + \_build_matcher_kwargs (L0_TOB book + MD → best_bid/offer +
-   bid/offer_size; empty otherwise)). Same MARKET→MAX_SLIPPAGE for AMM and CanonicalFill build path preserved.
-   Allowlist -1. basedpyright clean.
+   execution-service@21da77ec3 (submit_order 77L→39L via \_resolve_price (BUY→best_ask, SELL→best_bid, else last_price;
+   passthrough order.price when set) + \_build_matcher_kwargs (L0_TOB book + MD → best_bid/offer + bid/offer_size; empty
+   otherwise)). Same MARKET→MAX_SLIPPAGE for AMM and CanonicalFill build path preserved. Allowlist -1. basedpyright
+   clean.
 
-   **Slot-2 cumulative across batches 3-28**: 32 files cleared (slot-2 contribution: -32 files; spans 11
-   submodules: handlers + defi protocols + services + preprocessor + service_config + algo_library + CEX adapter +
-   backtest_v2 + engine/validation + adapter + engine/modes).
+   **Slot-2 cumulative across batches 3-28**: 32 files cleared (slot-2 contribution: -32 files; spans 11 submodules:
+   handlers + defi protocols + services + preprocessor + service_config + algo_library + CEX adapter + backtest_v2 +
+   engine/validation + adapter + engine/modes).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 29 — algorithms/registry)**: algorithms/registry.py shipped at
    execution-service@4e9345799 (\_discover_algorithms 80L→24L via \_resolve_algo_id (3-fallback chain) plus 2
-   module-level helpers: \_algo_id_from_dataclass_field (default_factory then default) +
-   \_algo_id_from_instantiation (frozen-config instantiation + StrEnum value or stringify); module-level helpers
-   allow re-use across other introspection callers + flatten the nested-try complexity). Allowlist -1.
-   basedpyright clean.
+   module-level helpers: \_algo_id_from_dataclass_field (default_factory then default) + \_algo_id_from_instantiation
+   (frozen-config instantiation + StrEnum value or stringify); module-level helpers allow re-use across other
+   introspection callers + flatten the nested-try complexity). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-29**: 33 files cleared (slot-2 contribution: -33 files; spans 12
-   submodules now incl. algorithms/registry).
+   **Slot-2 cumulative across batches 3-29**: 33 files cleared (slot-2 contribution: -33 files; spans 12 submodules now
+   incl. algorithms/registry).
 
-   **Ratchet-down 2026-05-17 (slot-2 batch 30 — trade_execution adapters continues)**: bitfinex_native.py shipped
-   at execution-service@6bbc5b927 (parse_order_response 81L→25L via \_extract_order_fields (walks the v2
-   notification wrapper at idx 4 + ORDER_ARRAY at idx 11/7/6/13, tolerates short/missing arrays with pending
-   fallback) + \_classify_bitfinex_status (free-text status → canonical via in-string contains:
-   executed&@→filled, partially→open, cancel→cancelled) + \_compute_filled_qty (|orig|-|curr| amount-remaining
-   convention) + \_parse_positive_decimal (suppresses Bitfinex 0-price echoes)). Allowlist -1. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-2 batch 30 — trade_execution adapters continues)**: bitfinex_native.py shipped at
+   execution-service@6bbc5b927 (parse_order_response 81L→25L via \_extract_order_fields (walks the v2 notification
+   wrapper at idx 4 + ORDER_ARRAY at idx 11/7/6/13, tolerates short/missing arrays with pending fallback) +
+   \_classify_bitfinex_status (free-text status → canonical via in-string contains: executed&@→filled, partially→open,
+   cancel→cancelled) + \_compute_filled_qty (|orig|-|curr| amount-remaining convention) + \_parse_positive_decimal
+   (suppresses Bitfinex 0-price echoes)). Allowlist -1. basedpyright clean.
 
    **Slot-2 cumulative across batches 3-30**: 34 files cleared (slot-2 contribution: -34 files; spans 12 submodules).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 31 — engine/live)**: engine/live/risk.py shipped at
    execution-service@050c47334 (check_order 85L→23L via \_derive_symbol (':' split + @LIN/@INV → -PERP) +
    \_check_staleness (returns reject-or-None) + \_max_stale_seconds_for (per-symbol or global override; 0.5s MFT
-   default) + \_check_open_orders_cap (oms cap with MAX_OPEN_ORDERS_EXCEEDED event) + \_check_position_limit
-   (current + signed_add vs limits[symbol|canonical_id])). Allowlist -1. basedpyright clean.
+   default) + \_check_open_orders_cap (oms cap with MAX_OPEN_ORDERS_EXCEEDED event) + \_check_position_limit (current +
+   signed_add vs limits[symbol|canonical_id])). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-31**: 35 files cleared (slot-2 contribution: -35 files; spans 13
-   submodules incl. engine/live).
+   **Slot-2 cumulative across batches 3-31**: 35 files cleared (slot-2 contribution: -35 files; spans 13 submodules
+   incl. engine/live).
+
+   **Ratchet-down 2026-05-17 (slot-4 batch 12 — data/results sweep)**: 4 net-new files cleared at
+   execution-service@b932801ab (data/converter_bars.py — convert_ohlcv_parquet_to_catalog 122L→21L via \_build_bars_list
+   (batched Bar construction, 10k/batch; bar_spec/bar_type created once per call); data/converter_trades.py — 2
+   violations: convert_trades_parquet_to_catalog 108L→25L via \_create_trade_ticks_list (same batch pattern for
+   TradeTick), convert_trades_to_bars 113L→28L via \_aggregate_trades_df_to_ohlcv (groupby+flatten+ts_event int64 cast
+   isolated); data/loader_normalizer.py — \_normalize_timestamp_columns_for_backtest 209L→29L via
+   \_convert_defi_derivative_timestamp (ms→ns + unusually-large/small range-check warns) + \_convert_standard_timestamp
+   (4-tier ns/us/ms/s auto-detect) + \_fill_defi_derivative_fields (mark_price→premium→index_price price cascade +
+   synthetic size/aggressor_side/trade_id) + \_fill_standard_fields (amount/side/id rename); results/position_manager.py
+   — close_all_positions 148L→42L via \_get_open_positions (cache.positions_open dispatch) + \_sum_unrealized_pnl
+   (portfolio.unrealized_pnls items iteration) + \_log_position_detail (per-position qty/entry/unrealized log).
+   algorithms/registry.py stash-resolved to upstream slot-2 batch-29 (convergent refactor — same 80L→24L reduction,
+   different helper names: \_resolve_algo_id vs \_extract_algo_id; behavior identical). Combined allowlist: 107→96 (11
+   entries removed including concurrent slot-2 activity batches 27-31). AST clean. ruff+basedpyright 0 errors.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8+9+10+11+12**: 50 files cleared (allowlist now 96).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 32 — instruments loader)**: definitions_loader.py shipped at
    execution-service@6580f64fe (\_load_by_venue 88L→30L via \_resolve_venue_folders (single-venue override or
