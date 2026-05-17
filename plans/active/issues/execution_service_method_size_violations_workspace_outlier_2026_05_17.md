@@ -884,7 +884,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   preview_unwind (131L→28L). Extracted _validate_unwind_request + _select_and_scale_positions + _compute_unwind_estimates.
   1 violation cleared. basedpyright 0 errors.
 
-  **Slot-2 cumulative across batches 3-80**: 89 files cleared (slot-2 contribution: -89 files; spans 51 submodules).
+  **Ratchet-down 2026-05-17 (slot-2 batch 81 — utils/market_hours)**: shipped at execution-service@6f1256c23.
+  align_tradfi_time_window (129L→22L) + check_tradfi_market_open (65L→46L).
+  Extracted _align_tradfi_start + _align_tradfi_end_after_close + _align_tradfi_end_before_open + _align_tradfi_end.
+  2 violations cleared. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-81**: 91 files cleared (slot-2 contribution: -91 files; spans 52 submodules).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
