@@ -9,8 +9,14 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
 
-**MIGRATED FROM:** `defi_master_2026_05_07.md` line 292 deferral **Status:** DEFERRED — 825 reportAny errors remain in
-features-service
+**MIGRATED FROM:** `defi_master_2026_05_07.md` line 292 deferral **Status:** 84% CLEARED (slot-8 2026-05-17) — 136 reportAny remain (was 825); foreign-active onchain/ + cross_instrument/ are the only remaining surfaces.
+
+## Deferred work — migrated to:
+
+- features_service/onchain/ (96 errors): **DEFERRED-OTHER-SLOT** — slot-2 is in active flight on features-onchain pipeline (LDR commits aaa6b319, cb787082, 50273e1f). Successor: same plan, deferred until slot-2 stabilizes onchain pipeline.
+- features_service/cross_instrument/ (40 errors): **DEFERRED-OTHER-SLOT** — another slot has 5 cross_instrument calculator files dirty (per slot-8 LDR fetch 2026-05-17). Successor: same plan, deferred until other slot pushes.
+- features-service workspace foreign-dirty list cleanup → No successor needed (this plan handles).
+- Sibling repo drift (risk-and-exposure-service +17, strategy-service +53): ✅ cleaned slot-8 2026-05-17 — successor: not applicable.
 
 ## Context
 
