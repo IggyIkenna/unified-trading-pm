@@ -70,6 +70,12 @@ Same patterns as execution-service fix:
   - [x] ✅ delta_one/app/core/futures_roll_adjuster.py 9→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
   - [x] ✅ delta_one/app/calculators/supply_demand_zones.py 8→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
   - [x] ✅ delta_one/app/calculators/fibonacci.py 8→0 errors — features-service@b3e72d41 (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/calculators/replacement_model_calculator.py 10→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/calculators/goal_timing.py 9→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/calculators/team_goals.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/calculators/manager_calculator.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/calculators/league_calculator.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
+  - [x] ✅ sports/exporters/odds_features_exporter.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
