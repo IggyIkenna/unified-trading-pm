@@ -579,6 +579,10 @@ surface, not per repo:
       (NaN kickoff skip, season boundary regression, bad goals ValueError, missing home_team_col in
       target league teams + output fallback, missing cols in history league loop, unhashable league_id
       in rank lookup). elo_calculator.py 88.1%→100%. Shipped at `features-service@fe549fa0`.
+      **Wave 39 (2026-05-17 slot-8)**: +4 edge-case tests for `season_context`
+      (is_promo_relg_col lines 281-282+289, total_matchdays=0 else branch 303-305,
+      regime from fixtures_history 315-324+364, exception handler 400-402).
+      season_context.py 87.8%→100%. Shipped at `features-service@b7b19e25`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
