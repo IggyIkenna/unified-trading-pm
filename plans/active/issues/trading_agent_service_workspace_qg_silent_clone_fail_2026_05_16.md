@@ -70,3 +70,44 @@ the real error (auth, missing branch, etc.) surfaces in the GHA log. Re-triggere
 
 The fix is generalised to ALL 21 Python repos via the reusable workflow (`uses: ... @live-defi-rollout`), so the
 visibility benefit applies across the board.
+
+## CONFIRMED ROOT CAUSE — GH_PAT secret on trading-agent-service is INVALID/expired
+
+After the visibility fix at PM@c953d778, the next workflow run on trading-agent-service@2cf553d
+(`gh run view 25976833431 --log-failed`) surfaced the real error:
+
+```
+Cloning unified-trading-pm at branch live-defi-rollout (fallback)
+fatal: Authentication failed for 'https://github.com/IggyIkenna/unified-trading-pm.git/'
+WARN: Branch 'live-defi-rollout' clone failed for unified-trading-pm — falling back to main
+fatal: Authentication failed for 'https://github.com/IggyIkenna/unified-trading-pm.git/'
+##[error]Process completed with exit code 128.
+```
+
+The clone of the PM repo fails on BOTH branch + main fallback with 401 Auth Failed. The `GH_PAT` secret IS set on the
+repo (`gh secret list` shows it at `2026-03-07T06:43:48Z`) but the value is rejected.
+
+20 other Python repos that use the same workflow template successfully clone PM from `live-defi-rollout` — their
+`GH_PAT` secrets are functionally identical (one example: mtds's GH_PAT at `2026-03-06T09:54:49Z` works). The
+difference is the actual token value behind the secret on trading-agent — it may be:
+
+- A different token that's lost its scope for unified-trading-pm (fine-grained PAT scope drift)
+- An expired classic PAT (90-day default)
+- A token typo (extra whitespace, partial copy at the time it was set)
+
+**OPERATOR ACTION REQUIRED** (slot-1-main cannot read existing secret values via gh):
+
+```bash
+# Use the same GH_PAT value as a working repo (e.g. mtds). Cannot extract via gh CLI — read from
+# wherever the operator keeps the canonical token (1Password / keychain / .env-deploy-secret) and:
+gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"
+# Then re-trigger:
+gh workflow run workspace-qg.yml --repo IggyIkenna/trading-agent-service --ref live-defi-rollout
+```
+
+Filed in: `plans/active/master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator" (deferred to operator
+return; non-blocking for May-23 — trading-agent-service is post-cutover work per work-split). Marked
+`BLOCKED-CREDENTIALS`.
+
+**Status of original issue closes**: silent-clone-fail symptom is now LOUD (visibility fix shipped); the underlying
+credential issue is a routine operator-rotation task that doesn't block May-23 cutover.
