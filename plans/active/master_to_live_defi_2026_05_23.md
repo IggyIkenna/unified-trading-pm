@@ -107,7 +107,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-17 08:54 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-17 09:03 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -140,16 +140,17 @@ _Last regenerated: 2026-05-17 08:54 UTC via `scripts/plans/regenerate_active_pla
 | [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) | cross_cutting_may_23_2026 | design | 2/7 | 29% | 2.1 | 2026-05-23 |
 | [`defi_simulation_realism_2026_05_10`](./defi_simulation_realism_2026_05_10.md) | master | design | 44/47 | 94% | 2.0 | 2026-05-23 |
 | [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) | instruments_live_master_2026_05_08 | design | 7/20 | 35% | 1.9 | — |
-| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | master | infra | 6/15 | 40% | 1.9 | 2026-05-23 |
 | [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) | cross_cutting_may_23_2026 | design | 12/20 | 60% | 1.9 | 2026-05-23 |
 | [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md) | cross_cutting_may_23_2026 | design | 34/41 | 83% | 1.8 | — |
 | [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md) | master | design | 0/16 | 0% | 1.8 | 2026-05-21 |
 | [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md) | cross_cutting_may_23_2026 | infra | 82/90 | 91% | 1.8 | 2026-05-23 |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) | master | design | 47/77 | 61% | 1.6 | 2026-05-23 |
 | [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 11/15 | 73% | 1.6 | — |
+| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md) | tradfi_master_2026_05_07 | infra | 0/16 | 0% | 1.6 | 2026-06-15 |
 | [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) | master | design | — | — | 1.5 | 2026-05-15 |
 | [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md) | manifest_evolution_master_2026_05_08 | brand-new | 34/44 | 77% | 1.5 | 2026-05-15 |
 | [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md) | master | research | 30/33 | 91% | 1.4 | 2026-05-23 |
+| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | master | infra | 9/15 | 60% | 1.3 | 2026-05-23 |
 | [`manifest_cross_asset_rescan_design_2026_05_08`](./manifest_cross_asset_rescan_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | infra | 3/6 | 50% | 1.2 | — |
 | [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md) | cross_cutting_may_23_2026 | design | — | — | 1.2 | 2026-05-23 |
 | [`mtds_per_instrument_download_api_2026_04_24`](./mtds_per_instrument_download_api_2026_04_24.md) | cross_cutting_may_23_2026 | design | 15/20 | 75% | 1.2 | — |
@@ -177,7 +178,7 @@ _Last regenerated: 2026-05-17 08:54 UTC via `scripts/plans/regenerate_active_pla
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md) | master | design | 8/8 | 100% | 0.0 | 2026-05-23 (Polymarket subset) / 2026-06 |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md) | master | design | — | — | TBD | — |
 | [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md) | cross_cutting_may_23_2026 | infra | — | — | TBD | — |
-| **TOTAL** (66 plans) | 0 orphans, 2 TBD | — | — | **53% done** | **458** | — |
+| **TOTAL** (67 plans) | 0 orphans, 2 TBD | — | — | **53% done** | **459** | — |
 <!-- AUTO-INVENTORY-END -->
 
 ---
