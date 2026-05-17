@@ -107,7 +107,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-17 08:11 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-17 08:22 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -133,13 +133,14 @@ _Last regenerated: 2026-05-17 08:11 UTC via `scripts/plans/regenerate_active_pla
 | [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md) | master | design | — | — | 4.8 | — |
 | [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | master | design | 26/40 | 65% | 4.2 | — |
 | [`deploy_missing_auto_launch_2026_05_07`](./deploy_missing_auto_launch_2026_05_07.md) | cross_cutting_may_23_2026 | infra | 7/14 | 50% | 3.6 | — |
+| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | tradfi_master_2026_05_07 | infra | 0/15 | 0% | 3.2 | 2026-05-23 |
 | [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md) | instruments_live_master_2026_05_08 | design | 50/65 | 77% | 3.0 | 2026-05-23 |
 | [`defi_simulation_realism_2026_05_10`](./defi_simulation_realism_2026_05_10.md) | master | design | 43/47 | 91% | 2.7 | 2026-05-23 |
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md) | manifest_evolution_master_2026_05_08 | refactor | 16/22 | 73% | 2.7 | — |
-| [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) | instruments_live_master_2026_05_08 | design | 2/20 | 10% | 2.7 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 42/167 | 25% | 2.7 | — |
 | [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md) | master | design | — | — | 2.4 | 2026-06-04 |
 | [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) | cross_cutting_may_23_2026 | design | 2/7 | 29% | 2.1 | 2026-05-23 |
+| [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) | instruments_live_master_2026_05_08 | design | 7/20 | 35% | 1.9 | — |
 | [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) | cross_cutting_may_23_2026 | design | 12/20 | 60% | 1.9 | 2026-05-23 |
 | [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md) | cross_cutting_may_23_2026 | design | 34/41 | 83% | 1.8 | — |
 | [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md) | master | design | 0/16 | 0% | 1.8 | 2026-05-21 |
@@ -176,7 +177,7 @@ _Last regenerated: 2026-05-17 08:11 UTC via `scripts/plans/regenerate_active_pla
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md) | master | design | 8/8 | 100% | 0.0 | 2026-05-23 (Polymarket subset) / 2026-06 |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md) | master | design | — | — | TBD | — |
 | [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md) | cross_cutting_may_23_2026 | infra | — | — | TBD | — |
-| **TOTAL** (65 plans) | 0 orphans, 2 TBD | — | — | **53% done** | **458** | — |
+| **TOTAL** (66 plans) | 0 orphans, 2 TBD | — | — | **53% done** | **460** | — |
 <!-- AUTO-INVENTORY-END -->
 
 ---
