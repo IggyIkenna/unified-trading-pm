@@ -839,3 +839,17 @@ extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
   _handle_auth_response helper (error-body inspect + raise pattern).
 
 358 remaining. basedpyright clean across all 3 commits.
+
+
+[2026-05-17 /loop tick 13] slot-7 — execution-service Phase B (+4, 23/377 cleared):
+
+* `execution-service@1c677bb58` — BaseDataConverter._should_skip_conversion 52L→24L via
+  _format_skip_message helper (DataFrame vs Path source dispatch).
+* `execution-service@df892e763` — GasEstimator.estimate (gas_eip1559) 53L→24L via _compute_gas_units
+  helper (per-op + multicall overhead).
+* `execution-service@d78b43d19` — AlgorithmFactory.create 54L→26L via _require_config static helper
+  (isinstance narrowing + typed TypeError eliminates 5 duplicate if-branches).
+* `execution-service@2ac40510f` — PnLCalculator.add_execution_alpha 53L→26L via _alpha_bps helper
+  (sign convention by side + zero-benchmark guard).
+
+354 remaining. basedpyright clean across all 4 commits.
