@@ -940,3 +940,29 @@ ratchet, no blockers). ICE roots + WIF secrets BLOCKED-OPERATOR-DECISION already
 sit until return.
 
 Next tick: monitor drain completion + 4-pillar validation if ready; otherwise sweep again for new pings.
+
+[2026-05-17 11:35 UTC] slot-1-main /loop tick — workspace-qg redesign closeout + master plan continuous-verification
+flip
+
+**Shipped this cycle**:
+
+- `unified-trading-pm@86ca3295` — archived `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` to
+  `plans/archive/issues/` per the issue's own resolution note (Phase A canary
+  - Phase B rollout across 21 Python repos + transitive dep_repos BFS fix all fully shipped 2026-05-16; 0 deferred
+    items, clean archive).
+- Same commit — flipped master plan item 1 (Code health) continuous-verification cell to reference unified
+  workspace-qg + codex/08-workflows/ci-cd-flow.md § "Workspace-qg unified trigger surface". Last verified 2026-05-10 →
+  2026-05-17.
+
+**Fleet**: 6 tradfi-bf VMs remaining (5× ES_OPT 2021-2025 + GC 2023). ES_OPT 2026 finished since last tick. Drain
+proceeding cleanly via singleton-lock serialisation.
+
+**Trading-agent-service GH_PAT issue** (`trading_agent_service_workspace_qg_silent_clone_fail_2026_05_16.md`) remains
+open — credential rotation needs operator action (cannot extract token via gh CLI). Issue body has the verbatim
+`gh secret set` command. Non-blocking for May-23 cutover (post-cutover scope).
+
+**No actionable cross-side inbound** this tick. Slot-4 + slot-7 still in autonomous batch refactor (execution-service
+method-size ratchet, allowlist 157→152 + 48/377 cleared respectively, no blockers).
+
+Next tick: monitor drain completion; if all 6 VMs land before next tick, run 4-pillar validation script + flip Phase 7
+validation gate.
