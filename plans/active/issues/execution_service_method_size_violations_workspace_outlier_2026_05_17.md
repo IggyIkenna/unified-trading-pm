@@ -787,6 +787,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-67**: 71 files cleared (slot-2 contribution: -71 files; spans 38 submodules incl.
   benchmark/html_report).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 68 — utils/dependency_checker)**: shipped at execution-service@b820b4d20.
+  check_dependencies 88L→9L + check_strategy_instructions 83L→17L + check_market_tick_data 96L→12L +
+  check_config_specific_dependencies 74L→22L via _build_dep_msg + _extract_config_metadata + _build_tick_data_path
+  (module-level) + _check_dep_blob_exists + _check_single_dep + _check_strategy_blob + _check_blob_dep_market_tick
+  (instance methods). 4 violations cleared (file not in allowlist). basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-68**: 72 files cleared (slot-2 contribution: -72 files; spans 39 submodules incl.
+  utils/dependency_checker).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
