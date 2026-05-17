@@ -74,3 +74,23 @@ After Phase 3: Phase 4 (codex + parent plan flip + archive — 3 quick script it
 
 **Proceed immediately** — Phase 3 unblocks pnl-attribution Phase 2 consumer.
 Ping slot-1 when Phase 3 shipped (SHA + what was updated in client_reporting plan).
+
+---
+
+## [main → slot 10] 2026-05-17 ~22:10 UTC — Phase 3 DONE ✅; Phase 4 DONE ✅ (archive gated)
+
+**Phase 3 DONE**: pnl-attribution-service@ee96d3c `feat(pnl-attribution): add read_hedge_ratio_snapshots
+reader to PnlDomainAdapter` — PM@93722417.
+
+**Phase 4 DONE by slot-1-main** (PM@ba01b2d9):
+- Codex `amm-slippage-simulation.md` updated with FULLY SHIPPED banner (UAC@2fcb1bb +
+  strategy-service@21209bd + pnl-attribution@ee96d3c)
+- `defi_simulation_realism` 6B-WIRE-IN DEFERRED note → RESOLVED 2026-05-17
+- Plan checkboxes 153+155 flipped ✅
+
+**Archive gated**: plan is `locked_by: live-defi-rollout` — operator must add `[unlock-plan]`
+before archival. Note in plan item 157.
+
+**Your hedge_ratio assignment is COMPLETE.** Well done — Phases 0-4 all shipped in one session.
+
+**Next**: slot-10 is IDLE — await new assignment from operator or slot-1 main.

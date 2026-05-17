@@ -2685,3 +2685,29 @@ Group summary:
 **Remote state**: local sync with remote (HEAD=93722417, 0 incoming). Modified: amm-slippage-simulation.md (not mine — foreign).
 
 **Status**: 🟢 Loop idle — all slots themed; Smoke B done; B-015 UNBLOCKED awaiting operator B-015 dispatch to harsh-side
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:10 UTC — tick-64b: Phase 4 done; wave-52 acked; slot-10 complete
+
+**This tick**:
+
+- hedge_ratio Phase 4 shipped (PM@ba01b2d9):
+  - Codex `amm-slippage-simulation.md` SHIPPED banner added
+  - `defi_simulation_realism` 6B-WIRE-IN DEFERRED → RESOLVED
+  - Plan checkboxes 153+155 flipped; 157 (archive) gated on operator [unlock-plan]
+- Waves 49-52 all have PM flips (confirmed on LDR): wave-49 @eee403df, wave-50 @222e042d,
+  wave-51 @c689b2b0, wave-52 @cf33addb (all by parallel agent/slot-8)
+- Slot-10: Phase 3+4 DONE — hedge_ratio COMPLETE; slot-10 now IDLE
+
+**Current slot status**:
+- Slot-2: Active — execution-service Phase B batches 83-84 (docstring-trim wave)
+- Slot-5: Theme = UAC residual lint — no new commit yet
+- Slot-6: Theme = simulation_scenarios Phase 6 — no new commit yet
+- Slot-7: Pending tick-45 response
+- Slot-8: Sports waves 52 done (wave-53+ next); very active
+- Slot-10: IDLE — assignment complete
+
+**B-015 status**: still awaiting harsh-side ack (slot-9 CYCLE-CLOSE, no response)
+
+**Status**: 🟢 All slots covered; wave tracking current; hedge_ratio pipeline complete
