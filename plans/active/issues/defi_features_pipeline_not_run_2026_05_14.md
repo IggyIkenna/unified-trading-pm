@@ -257,11 +257,11 @@ processed_candles being present, so should be queued behind this VM's completion
      `risk-and-exposure-service@83b10e0` UAC pin relaxed to `>=0.1.0,<1.0.0` (workspace consensus). Tarball rebuilt
      2026-05-16 21:22 UTC.
   3. ❌ `features-onchain-defi-20260516-222259` — `uv pip install` failed AGAIN, this time on
-     `ml-training-service==0.1.0` pinning `unified-trading-library>=0.4.0,<1.0.0` (UTL is at 0.3.167; peer repos
-     pin `>=0.1.0` or `>=0.3.0`). VM startup script exited rc=1 at 21:25:38 UTC → no python workload → no
-     STARTED event → VM sat idle 55+ min until slot-1 main orchestrator caught it via serial console at 23:07 UTC,
-     deleted. **Fix shipped**: `ml-training-service@876f0e5` (UTL pin relaxed to `>=0.3.0,<1.0.0`). **Slot-1 main
-     rebuilding tarball + re-launching as attempt 4.**
+     `ml-training-service==0.1.0` pinning `unified-trading-library>=0.4.0,<1.0.0` (UTL is at 0.3.167; peer repos pin
+     `>=0.1.0` or `>=0.3.0`). VM startup script exited rc=1 at 21:25:38 UTC → no python workload → no STARTED event → VM
+     sat idle 55+ min until slot-1 main orchestrator caught it via serial console at 23:07 UTC, deleted. **Fix
+     shipped**: `ml-training-service@876f0e5` (UTL pin relaxed to `>=0.3.0,<1.0.0`). **Slot-1 main rebuilding tarball +
+     re-launching as attempt 4.**
   4. ❌ `features-onchain-defi-20260516-233044` — `uv pip install` STILL failed at 22:33:32 UTC, this time on the
      pre-existing `execution-service` ↔ `betfairlightweight` ↔ `requests` conflict (filed earlier today as
      `plans/active/issues/execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`).
@@ -273,13 +273,12 @@ processed_candles being present, so should be queued behind this VM's completion
   5. ❌ `features-onchain-defi-20260516-235216` — `uv pip install` STILL failed (this time on
      `e2e-testing==0.1.0 depends on execution-service>=0.1.0 ... requirements are unsatisfiable`). Root cause: the
      VM_SERVICE=features_service was not registered in `SERVICE_TARBALLS`, so the script fell through to "install all
-     available tarballs" which pulled e2e-testing + execution-service transitively. The previous attempt 4 fix
-     (NODEPS allowlist) was the wrong direction — would have routed features itself to --no-deps, breaking its
-     runtime deps.
-  6. ✅ **slot-1-main attempt 6 RAN CLEANLY 2026-05-16 23:58 → 23:01:20 UTC** —
-     `features-onchain-defi-20260516-235840`. Setup-script fix `deployment-service@a6f746f` narrowed install set from
-     ~24 tarballs to 5 (uac + utl + deployment + features + mtds). `uv pip install` SUCCEEDED. Workload ran end-to-end:
-     STARTED → DATA_INGESTION → 2 feature_groups processed → STOPPED. **Infra layer UNBLOCKED.**
+     available tarballs" which pulled e2e-testing + execution-service transitively. The previous attempt 4 fix (NODEPS
+     allowlist) was the wrong direction — would have routed features itself to --no-deps, breaking its runtime deps.
+  6. ✅ **slot-1-main attempt 6 RAN CLEANLY 2026-05-16 23:58 → 23:01:20 UTC** — `features-onchain-defi-20260516-235840`.
+     Setup-script fix `deployment-service@a6f746f` narrowed install set from ~24 tarballs to 5 (uac + utl + deployment +
+     features + mtds). `uv pip install` SUCCEEDED. Workload ran end-to-end: STARTED → DATA_INGESTION → 2 feature_groups
+     processed → STOPPED. **Infra layer UNBLOCKED.**
 
      **But the workload only attempted 1 day + 2 feature groups + wrote 0 rows**. Per-feature_group outcomes:
      - `macro_sentiment` date=2026-04-15: REJECTED with `LookaheadBiasError` ("observation at 2026-04-19 is after
@@ -287,38 +286,31 @@ processed_candles being present, so should be queued behind this VM's completion
        LookaheadBiasGate validator catches it. This feature can't be backfilled with the current data source.
      - `lending_rates` date=2026-04-15: COMPLETED but **0 rows written**. LST bucket only has 2020-12-19+ daily data;
        likely no rows for that day or no upstream raw_tick_data for 2026-04-15.
-     - Workflow STOPPED after 2 feature_groups + 1 day; despite `--feature-group ALL --start-date 2026-04-15
-       --end-date 2026-04-19`. Likely the workflow iterates 1 day at a time and only invokes feature_groups whose
-       upstream data exists.
+     - Workflow STOPPED after 2 feature_groups + 1 day; despite
+       `--feature-group ALL --start-date 2026-04-15 --end-date 2026-04-19`. Likely the workflow iterates 1 day at a time
+       and only invokes feature_groups whose upstream data exists.
 
      **Follow-up findings (filed as separate items below)** — feature pipeline correctness, NOT B-015 chain (c) infra.
 
 ## VM 6 follow-up findings (feature pipeline layer)
 
-- [ ] [DESIGN] P1. `macro_sentiment` feature uses CoinGecko global market cap endpoint + DeFi Llama TVL — both
-      return CURRENT values only (no historical archive). Source:
-      `features-service/features_service/onchain/app/calculators/macro_sentiment_calculator.py:163` —
-      `current_ts = int(datetime.now(UTC).timestamp())` tags every API response with wall-clock NOW, then writer
-      tries to partition into requested day → LookaheadBiasGate correctly rejects. **Backfill of this feature is
-      architecturally impossible with current data sources.** Options:
-      (a) **Skip macro_sentiment in batch mode** (cleanest for May-23 — `carry_staked_basis` archetype doesn't depend
-      on it). Add `_BATCH_INCOMPATIBLE = True` flag to the calculator; orchestrator skips with `EMPTY_CONFIRMED`
-      reason `LIVE_ONLY_DATA_SOURCE` (new enum value needed).
-      (b) Swap to CoinGecko Pro (paid tier has historical, ~$129/mo) or Glassnode TVL archive — adapter scaffold
-      already in place; only needs `requires_credentials` integration test.
-      (c) Cache forward-roll — write today's value as today's row only; gradually accretes a historical archive over
-      time (won't help B-015 paper-trade for the 2026-04-15..19 window though).
-      **Routed to features-service owner.** May-23 cutover pragmatic recommendation: ship (a) immediately, file (b)
-      as post-cutover credential ask.
+- [x] ✅ [DESIGN] P1. `macro_sentiment` batch-skip shipped. **DONE 2026-05-17 slot-1-main** — option (a) shipped in
+      `features-service/features_service/onchain/engine/orchestrator.py` `_process_macro_sentiment()`: if
+      `start_date.date() < today`, emits `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` and returns `False` (clean empty
+      skip). Option (b) credential ask filed at this same doc § "VM 6 follow-up findings". Verified in orchestrator.py
+      HEAD (LDR): `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` emission at line 256.
 - [x] [SCRIPT] P1. `lending_rates` 0-rows root-caused + backfill VM launched ✅ **slot-1-main 2026-05-17 00:23 UTC** —
-      `lending-indices-central-element-323112` bucket has data ONLY through 2026-04-14; gap is exactly the B-015
-      window. Launched `mtds-lending-indices-20260517-002305` (e2-standard-4, asia-northeast1-c) for window
-      2026-04-15..19 via existing `launch-mtds-lending-indices-backfill-vm.sh`. Singleton-locked; runs The Graph
-      subgraph queries for Aave V3 + Spark + Compound V3. ETA ~10-15min for 5-day window. Once complete +
-      manifest-verified, re-launch features-onchain VM to consume the now-populated lending-indices upstream.
-- [ ] [DESIGN] P2. Workflow ran only 1 day per VM invocation despite `--end-date 2026-04-19`. Verify intended
-      behaviour: should the workflow iterate all days in one VM run, or is the design 1-day-per-VM (slot 3 would
-      need to launch 5 VMs)? If 1-day-per-VM by design, document in feature-pipeline runbook.
+      `lending-indices-central-element-323112` bucket has data ONLY through 2026-04-14; gap is exactly the B-015 window.
+      Launched `mtds-lending-indices-20260517-002305` (e2-standard-4, asia-northeast1-c) for window 2026-04-15..19 via
+      existing `launch-mtds-lending-indices-backfill-vm.sh`. Singleton-locked; runs The Graph subgraph queries for Aave
+      V3 + Spark + Compound V3. ETA ~10-15min for 5-day window. Once complete + manifest-verified, re-launch
+      features-onchain VM to consume the now-populated lending-indices upstream.
+- [x] ✅ [DESIGN] P2. 1-day-per-VM question resolved. **VERIFIED 2026-05-17 slot-3-ikenna** — design IS multi-day per
+      VM: `_run_daily_feature_loop` in `orchestrator.py:967` loops `while cur <= end_date`. The original "1-day"
+      observation was a side-effect of the early-exit bug (broadened exception catch fixed 2026-05-17 slot-1-main at
+      `batch_handler.py` — only 2/11 groups ran previously because `TypeError`/`KeyError` etc. propagated past the
+      narrow `(ConnectionError, TimeoutError, OSError, ValueError)` catch). With the fix, VMs now iterate all days in
+      one run.
 - **Side-finding (file as follow-up)**: deprecated wrappers `launch-features-onchain-backfill-vm.sh` +
   `launch-features-backfill-vm.sh` still resolve `feature-family=onchain` to the legacy `features_onchain_service`
   module + stale `features-onchain-service-code` tarball. Per `features_repo_consolidation_2026_05_08.md` Phase 8A the
@@ -329,21 +321,22 @@ processed_candles being present, so should be queued behind this VM's completion
 ## VM 7 (slot-1-main) — features-onchain for 2026-04-15 only (post lending-indices unphantom)
 
 After phantom-flip + lending-indices backfill VM 003742 wrote 95,146 rows for 2026-04-15..16 to
-`gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-1[5-6]/asset_group=defi/`,
-slot-1-main launched `features-onchain-defi-20260517-005539` for single-day 2026-04-15 to verify the
-lending_rates feature_group now writes rows. **Next cycle**: verify rows land in
+`gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-1[5-6]/asset_group=defi/`, slot-1-main
+launched `features-onchain-defi-20260517-005539` for single-day 2026-04-15 to verify the lending_rates feature_group now
+writes rows. **Next cycle**: verify rows land in
 `gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-15/feature_group=lending_rates/`.
 
-Days 17-19 lending-indices still returned 0 rows from the VM (LENDING_DAY_COMPLETE emitted but per_shard empty).
-Likely The Graph rate-limit / subgraph indexing lag. Filed as DEFERRED — re-launch with `--force` after the per-VM
-freshness cache cools; or split into per-day VMs.
+Days 17-19 lending-indices still returned 0 rows from the VM (LENDING_DAY_COMPLETE emitted but per_shard empty). Likely
+The Graph rate-limit / subgraph indexing lag. Filed as DEFERRED — re-launch with `--force` after the per-VM freshness
+cache cools; or split into per-day VMs.
 
 ## VM 7 outcome (slot-1-main 2026-05-17 00:55 UTC) — features-onchain reads still find 0 lending_rates rows
 
-VM 7 (`features-onchain-defi-20260517-005539`) ran with the SAME 0-rows outcome despite lending-indices VM 003742
-having written 95,146 rows to `gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-15..16/`.
+VM 7 (`features-onchain-defi-20260517-005539`) ran with the SAME 0-rows outcome despite lending-indices VM 003742 having
+written 95,146 rows to `gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-15..16/`.
 
 **Findings from VM 7 events**:
+
 - `lending_rates`: `status=empty_or_failed`, `rows=0`, `elapsed_s=5.193`. Read attempted (not freshness-skipped) but
   returned nothing.
 - `macro_sentiment`: REJECTED at write_gate (different gate from VM 6's LookaheadBias!). Failed validation:
@@ -352,26 +345,26 @@ having written 95,146 rows to `gs://lending-indices-central-element-323112/raw_t
 
 **Likely root cause for lending_rates 0-rows**: vocab drift between lending-indices bucket writer (uses
 `raw_tick_data/by_date/day=*/asset_group=defi/`) and features-onchain reader (likely expects the legacy
-`day=*/category=defi/` layout where data ends at 2026-04-14). Cross-link: per CLAUDE.md asset_group vocabulary
-plan `plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md` — this is the systemic vocab drift surfacing
-again in features-onchain consumption.
+`day=*/category=defi/` layout where data ends at 2026-04-14). Cross-link: per CLAUDE.md asset_group vocabulary plan
+`plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md` — this is the systemic vocab drift surfacing again in
+features-onchain consumption.
 
-- [ ] [SCRIPT] P1. Verify features-onchain lending_rates reader path matches lending-indices writer output. Compare
-      `features-service/features_service/onchain/engine/lending_features.py` GCS read path against
-      `market-tick-data-service/.../lending_indices_handler.py` write path. If vocab drift, harmonize on
-      `raw_tick_data/by_date/day=*/asset_group=defi/` (new canonical per venue_axis_asset_group_vocabulary plan).
-      Routed to features-service owner.
+- [x] ✅ [SCRIPT] P1. lending_rates reader path superseded by SchemaError root cause. **RESOLVED 2026-05-17 slot-1-main
+      at `features-service@50273e1f`** — actual 0-rows root cause was
+      `SchemaError: type Int64 is incompatible     with expected type Datetime` in `pl.concat` (timestamp dtype mismatch
+      between MTDS frame and Compound V3 frame). Fixed: wrapped `pl.concat` in try/except, fall back to `frames[0]` on
+      schema mismatch. Reader path vocab is correct (`raw_tick_data/by_date/day=*/asset_group=defi/`) — no vocab drift
+      found. VM 13 verified: `FEATURE_GROUP_PROCESSING_COMPLETED: status=success, rows=92716`.
 
 ## CONSOLIDATED ESCALATION — features-onchain pipeline has 5 compounding issues; slot-1-main has unblocked the infra layer, domain layer remains
 
 After 7 VM attempts + 4 fixes shipped + 1 phantom-reconcile across ~3 hours of slot-1-main cycling, the B-015 chain (c)
 infrastructure layer is fully unblocked:
 
-✅ ml-training-service UTL pin (876f0e5)
-✅ deployment-service VM setup install-set narrowing (a6f746f)
-✅ lending-indices upstream backfill 2026-04-15..16 (95,146 rows in `raw_tick_data/by_date/day=*/asset_group=defi/`)
-✅ phantom-manifest-rows flip for lending-indices (65 rows unphantomed)
-✅ macro_sentiment LookaheadBias diagnosed (CoinGecko global has no historical archive)
+✅ ml-training-service UTL pin (876f0e5) ✅ deployment-service VM setup install-set narrowing (a6f746f) ✅
+lending-indices upstream backfill 2026-04-15..16 (95,146 rows in `raw_tick_data/by_date/day=*/asset_group=defi/`) ✅
+phantom-manifest-rows flip for lending-indices (65 rows unphantomed) ✅ macro_sentiment LookaheadBias diagnosed
+(CoinGecko global has no historical archive)
 
 **But 5 compounding feature-pipeline issues remain — all require features-service domain expertise**:
 
@@ -380,29 +373,29 @@ infrastructure layer is fully unblocked:
    orchestrator. The other 9 groups (`lst_yields`, `onchain_perps`, `utilization`, `risk_params`, `rewards`,
    `flash_loan_availability`, `health_factor`, `liquidation_events`, `rate_impact`) never attempt.
 
-2. **lending_rates returns 0 rows despite populated upstream** (lending-indices bucket has 95K rows for 2026-04-15
-   under `raw_tick_data/by_date/day=2026-04-15/asset_group=defi/venue=AAVE_V3/...`). data_loader uses
-   `get_mtds_day_prefix_candidates` (canonical + legacy fallback) — looks correct. 5.193s elapsed suggests probe ran;
-   no MTDS_DATA_PROBE_EMPTY emitted; so probe found blobs but downstream transformation dropped them. Likely
+2. **lending_rates returns 0 rows despite populated upstream** (lending-indices bucket has 95K rows for 2026-04-15 under
+   `raw_tick_data/by_date/day=2026-04-15/asset_group=defi/venue=AAVE_V3/...`). data_loader uses
+   `get_mtds_day_prefix_candidates` (canonical + legacy fallback) — looks correct. 5.193s elapsed suggests probe ran; no
+   MTDS_DATA_PROBE_EMPTY emitted; so probe found blobs but downstream transformation dropped them. Likely
    column-mismatch or empty filter in `lending_features.py`.
 
-3. **macro_sentiment fails TWO independent gates** (LookaheadBias when CoinGecko_global ts > as_of; 95%-NaN-cap when
-   3 derived columns are NaN). Architecturally cannot backfill from current data sources per the
-   "External Data Is Always Available" HARD RULE; need vendor swap or live-only mode flag.
+3. **macro_sentiment fails TWO independent gates** (LookaheadBias when CoinGecko_global ts > as_of; 95%-NaN-cap when 3
+   derived columns are NaN). Architecturally cannot backfill from current data sources per the "External Data Is Always
+   Available" HARD RULE; need vendor swap or live-only mode flag.
 
 4. **Workflow iterates 1 day per VM invocation** despite `--end-date` arg. 5-day backfill = 5 VMs.
 
-5. **Days 17-19 lending-indices still phantom-skipped** even after I flipped 65 phantom rows for 15-19. The
-   handler may load freshness cache before the manifest write completes; `shards_skipped_freshness=13` for each of
-   days 17/18/19. Needs `--force` flag or per-day-restart logic.
+5. **Days 17-19 lending-indices still phantom-skipped** even after I flipped 65 phantom rows for 15-19. The handler may
+   load freshness cache before the manifest write completes; `shards_skipped_freshness=13` for each of days 17/18/19.
+   Needs `--force` flag or per-day-restart logic.
 
 **Routing**: features-service owner (slot-4 likely, based on prior expertise). slot-3 may consult for manifest
 reconciler extension. slot-1-main exits this chain — infra layer is done; domain-layer fixes need eyes on
-`features-service/features_service/onchain/engine/orchestrator.py` + `lending_features.py` + the feature_group
-iteration loop.
+`features-service/features_service/onchain/engine/orchestrator.py` + `lending_features.py` + the feature_group iteration
+loop.
 
-**B-015 paper-trade gate**: still BLOCKED on items 1+2 above. harsh-slot-9 should NOT attempt Phase 2 paper-trade
-until lending_rates writes ≥1 non-zero row to
+**B-015 paper-trade gate**: still BLOCKED on items 1+2 above. harsh-slot-9 should NOT attempt Phase 2 paper-trade until
+lending_rates writes ≥1 non-zero row to
 `gs://features-onchain-defi-prd-central-element-323112/by_date/day=2026-04-15/feature_group=lending_rates/features.parquet`.
 
 ## Update 2026-05-17 03:30 UTC (slot-1-main) — lending_rates 0-rows root cause narrowed
@@ -411,18 +404,20 @@ VM 8 ran successfully after the macro_sentiment + early-exit fixes. lst_yields w
 lending_rates still reported `status=empty_or_failed, rows=0, elapsed_s=5.273` (5 sec means real work happened).
 
 **Deep-dive findings**:
+
 - Sample of 90 `DEFI_FEATURE_AAVE_UTILIZATION` events from VM 8 show emissions like
   `{utilization_rate: 0.0, pool_name: AAVE_V3-ARBITRUM:LENDING:WETH, protocol: aave_v3}` — ALL zeros.
 - BUT the actual lending-indices parquet sample at
   `gs://lending-indices-central-element-323112/raw_tick_data/by_date/day=2026-04-15/asset_group=defi/venue=AAVE_V3/chain=ARBITRUM/instrument_type=lending/data_type=lending_indices/aave_v3_ARBITRUM_20260516_234021.parquet`
   has `utilization_rate` column with REAL values (mean=0.603, WETH rows show 0.801).
-- `_normalise_lending_columns` in `lending_features.py:71` uses `pl.coalesce([utilization_rate, ...])` to alias
-  to `aave_utilization` — should preserve the real values.
+- `_normalise_lending_columns` in `lending_features.py:71` uses `pl.coalesce([utilization_rate, ...])` to alias to
+  `aave_utilization` — should preserve the real values.
 - `MTDS_DATA_PROBE_EMPTY` events from VM 8 show probe SUCCEEDED for `rate_indices` (only oracle_prices + perp_funding
   came up empty as expected per coverage matrix).
 
-**Hypothesis (for slot-2 pickup)**: between parquet read and emission, the `aave_utilization` column gets
-zero-filled somewhere. Candidates:
+**Hypothesis (for slot-2 pickup)**: between parquet read and emission, the `aave_utilization` column gets zero-filled
+somewhere. Candidates:
+
 - `pl.concat(frames, how="diagonal")` — if some frames have null `utilization_rate` AND others have values, diagonal
   concat may produce a column with nulls THEN someone replaces nulls with 0.0.
 - `_synthesize_supply_apy` falls back to `0.10` for `aave_reserve_factor` when missing; maybe a similar fallback
@@ -431,36 +426,38 @@ zero-filled somewhere. Candidates:
 
 Recommended diagnostic (1 hour estimate for slot-2): add `LENDING_INPUT_DIAGNOSTIC`-style emission at top of
 `calculate_lending_features` (in `engine/lending_features.py`) that logs `aave_utilization.describe()` and
-`utilization_rate.describe()` (source) BEFORE the synthesize step. Then re-run VM. The diff between the two
-column distributions will pinpoint where the zeros come from.
+`utilization_rate.describe()` (source) BEFORE the synthesize step. Then re-run VM. The diff between the two column
+distributions will pinpoint where the zeros come from.
 
-slot-1-main not picking up this last item because: (a) requires polars expression debugging without local repro
-data, (b) shipping a fix without a unit test would risk lst_yields regression, (c) features-service expertise is
-slot-2's lane and the consolidated escalation already routed this issue.
+slot-1-main not picking up this last item because: (a) requires polars expression debugging without local repro data,
+(b) shipping a fix without a unit test would risk lst_yields regression, (c) features-service expertise is slot-2's lane
+and the consolidated escalation already routed this issue.
 
 ## Update 2026-05-17 07:25 UTC (slot-1-main) — aave_utilization=0 emission bug FIXED
 
-**Shipped `features-service@358717b5`**: `_calculate_utilization_features` (in `engine/orchestrator.py`) was
-looking for input columns `borrow_rate` / `supply_rate` / `utilization` that NEVER existed in MTDS lending-indices
-parquets (which carry the canonical names `variable_borrow_rate` / `liquidity_rate` / `utilization_rate`). The
-`aave_utilization` column was either never computed (when the column-existence guards correctly failed) or computed
-as 0.0 via an unintended path. Either way, 90+ false-zero `DEFI_FEATURE_AAVE_UTILIZATION` events fired per VM run.
+**Shipped `features-service@358717b5`**: `_calculate_utilization_features` (in `engine/orchestrator.py`) was looking for
+input columns `borrow_rate` / `supply_rate` / `utilization` that NEVER existed in MTDS lending-indices parquets (which
+carry the canonical names `variable_borrow_rate` / `liquidity_rate` / `utilization_rate`). The `aave_utilization` column
+was either never computed (when the column-existence guards correctly failed) or computed as 0.0 via an unintended path.
+Either way, 90+ false-zero `DEFI_FEATURE_AAVE_UTILIZATION` events fired per VM run.
 
-Fix: use `next((c for c in ('variable_borrow_rate', 'borrow_rate') if c in cols), None)` pattern to accept either
-MTDS canonical names (preferred — MTDS provides `utilization_rate` directly so no need to back-compute) or legacy
-aliases (defensive fallback for hypothetical other inputs).
+Fix: use `next((c for c in ('variable_borrow_rate', 'borrow_rate') if c in cols), None)` pattern to accept either MTDS
+canonical names (preferred — MTDS provides `utilization_rate` directly so no need to back-compute) or legacy aliases
+(defensive fallback for hypothetical other inputs).
 
 VM relaunched: `features-onchain-defi-20260517-072313`. Expected outcomes:
+
 - `DEFI_FEATURE_AAVE_UTILIZATION` events now emit REAL utilization values (~0.5-0.9 for active pools, not 0.0)
 - `utilization` feature_group writes parquets to
   `gs://features-onchain-defi-prd-central-element-323112/by_date/day=*/feature_group=utilization/`
 
-The `lending_rates` 0-rows is a DIFFERENT issue (in `lending_features.py` not this `_calculate_utilization_features`)
-— still open. The `utilization` feature_group is now unblocked though.
+The `lending_rates` 0-rows is a DIFFERENT issue (in `lending_features.py` not this `_calculate_utilization_features`) —
+still open. The `utilization` feature_group is now unblocked though.
 
 ## VERIFICATION 2026-05-17 07:35 UTC — fix is working
 
 VM `features-onchain-defi-20260517-072313` events confirm:
+
 - 239+ `DEFI_FEATURE_AAVE_UTILIZATION` emissions with REAL values:
   - `util=0.80101266 pool=AAVE_V3-ARBITRUM:LENDING:WETH` ✓ (matches parquet 0.801)
   - `util=0.68899955 pool=AAVE_V3-ARBITRUM:LENDING:USDT`
@@ -476,27 +473,28 @@ VM still RUNNING; per-feature_group parquet writes will fire as workflow proceed
 ## Update 2026-05-17 07:55 UTC (slot-1-main) — lending_rates 0-rows further narrowed
 
 Shipped `features-service@babd69f0`: broaden `calculate_lending_features` exception catch + emit
-`LENDING_FEATURES_UNEXPECTED_EXCEPTION`. VM 10 (`features-onchain-defi-20260517-075413`) ran with the new code
-but the diagnostic did NOT fire — meaning `calculate_lending_features` did NOT throw any exception. So the input
-`rate_data` to it was empty going in.
+`LENDING_FEATURES_UNEXPECTED_EXCEPTION`. VM 10 (`features-onchain-defi-20260517-075413`) ran with the new code but the
+diagnostic did NOT fire — meaning `calculate_lending_features` did NOT throw any exception. So the input `rate_data` to
+it was empty going in.
 
 That narrows the bug to `_load_merged_lending_data` (orchestrator.py:347) returning empty despite
 `MTDS_DATA_PROBE_EMPTY` NOT firing for `rate_indices` (meaning the bucket DOES have data).
 
 **Shipped `features-service@a735750a`**: per-source diagnostic. `_load_merged_lending_data` now emits
-`LENDING_LOADER_DIAGNOSTIC` per date with mtds_rows / compound_rows / kamino_rows + per-source exception types.
-The previous logging was silent (`self.logger.debug`) which didn't surface to GCS event stream.
+`LENDING_LOADER_DIAGNOSTIC` per date with mtds_rows / compound_rows / kamino_rows + per-source exception types. The
+previous logging was silent (`self.logger.debug`) which didn't surface to GCS event stream.
 
-VM 10 still RUNNING (5500+ DEFI_FEATURE_AAVE_UTILIZATION emissions in progress for utilization feature_group).
-Next VM relaunch after VM 10 finishes will surface the actual loader breakdown.
+VM 10 still RUNNING (5500+ DEFI_FEATURE_AAVE_UTILIZATION emissions in progress for utilization feature_group). Next VM
+relaunch after VM 10 finishes will surface the actual loader breakdown.
 
 ## 🟢 lending_rates 0-rows ROOT-CAUSED + FIXED — 2026-05-17 09:10 UTC (slot-1-main)
 
 **Bracket diagnostic confirmed**: `LENDING_LOADER_DIAGNOSTIC` fires with mtds=92716 + compound=47 + frames_appended=2,
-but `LENDING_CALC_ENTRY` did NOT fire. Calculator was never called → exception between the loader-end diagnostic
-and the actual return.
+but `LENDING_CALC_ENTRY` did NOT fire. Calculator was never called → exception between the loader-end diagnostic and the
+actual return.
 
 **Root cause** (per LENDING_CONCAT_FAILED event from VM 13):
+
 ```
 "exc_type": "SchemaError",
 "exc_message": "type Int64 is incompatible with expected type Datetime('ns', 'UTC')\n\n
@@ -504,26 +502,29 @@ and the actual return.
                 \t[1] failed to vstack column 'timestamp'\n",
 ```
 
-`pl.concat(frames, how="diagonal")` raised `polars.exceptions.SchemaError` because `timestamp` column had
-conflicting dtypes across frames:
+`pl.concat(frames, how="diagonal")` raised `polars.exceptions.SchemaError` because `timestamp` column had conflicting
+dtypes across frames:
+
 - `mtds_result.timestamp`: `Datetime(time_unit='ns', time_zone='UTC')` (from polars `read_parquet`)
 - `compound_features.timestamp`: `Int64` (from `CompoundV3LendingCalculator.fetch_data` —
   `now_us = int(datetime.now(UTC).timestamp() * 1_000_000)`)
 
 The SchemaError propagated SILENTLY through every layer because:
+
 - `_run_daily_feature_loop`: no try/except
 - `_process_daily_feature_group`: catches only `(ConnectionError, TimeoutError, OSError, ValueError)` — SchemaError
   doesn't inherit from any of those
 - `_process_groups`: my earlier `Exception` broaden caught it but only emitted EnhancedError WARN log (not an event)
-- `_record_feature_group_outcome` then fired `FEATURE_GROUP_PROCESSING_COMPLETED` with `_last_record_count=0` →
-  showed rows=0 status=empty_or_failed elapsed=4.5s — but NO clue why
+- `_record_feature_group_outcome` then fired `FEATURE_GROUP_PROCESSING_COMPLETED` with `_last_record_count=0` → showed
+  rows=0 status=empty_or_failed elapsed=4.5s — but NO clue why
 
-**Fix shipped** (`features-service@50273e1f`): wrapped `pl.concat` in try/except in `_load_merged_lending_data`,
-fall back to `frames[0]` (always MTDS-result when frames is non-empty — primary source), emit
-`LENDING_CONCAT_FAILED` event with exc_type/message + frame schemas + fallback strategy. Compound/Kamino sources
-are supplementary; losing them is non-blocking.
+**Fix shipped** (`features-service@50273e1f`): wrapped `pl.concat` in try/except in `_load_merged_lending_data`, fall
+back to `frames[0]` (always MTDS-result when frames is non-empty — primary source), emit `LENDING_CONCAT_FAILED` event
+with exc_type/message + frame schemas + fallback strategy. Compound/Kamino sources are supplementary; losing them is
+non-blocking.
 
 **Verified on VM 13 (`features-onchain-defi-20260517-090519`)**:
+
 - `LENDING_CONCAT_FAILED` event fires (diagnostic surface working)
 - `LENDING_CALC_ENTRY input_rows: 92716`
 - `LENDING_CALC_EXIT output_rows: 92716, result_is_none: false`
@@ -534,18 +535,14 @@ are supplementary; losing them is non-blocking.
 
 ## Defense-in-depth diagnostic — 2026-05-17 ~21:00 UTC (ikenna-slot-2)
 
-Even with the SchemaError fix, the original gap (loader-emits-92k but
-processing-completed-rows=0 with no event in between) revealed a class of
-silent-row-drop bugs that could resurface for OTHER feature_groups. Shipped a
-generic per-iteration trace at `features-service@aaa6b319`:
+Even with the SchemaError fix, the original gap (loader-emits-92k but processing-completed-rows=0 with no event in
+between) revealed a class of silent-row-drop bugs that could resurface for OTHER feature_groups. Shipped a generic
+per-iteration trace at `features-service@aaa6b319`:
 
-`_run_daily_feature_loop` now emits `FEATURE_GROUP_DAILY_FLOW_TRACE` per
-(date, feature_group) with `raw_rows` + `features_rows` + `write_ok` +
-closed-set `skip_reason` (`loader_returned_empty` / `calculator_returned_empty`
-/ `write_features_returned_falsy`). Any future feature_group hitting the same
-loader-vs-writer asymmetry will surface in a single event without needing a
-purpose-built diagnostic.
+`_run_daily_feature_loop` now emits `FEATURE_GROUP_DAILY_FLOW_TRACE` per (date, feature_group) with `raw_rows` +
+`features_rows` + `write_ok` + closed-set `skip_reason` (`loader_returned_empty` / `calculator_returned_empty` /
+`write_features_returned_falsy`). Any future feature_group hitting the same loader-vs-writer asymmetry will surface in a
+single event without needing a purpose-built diagnostic.
 
-basedpyright clean; touches only `_run_daily_feature_loop` (no business-logic
-change). Cost: 1 extra event per (day, feature_group) iteration → negligible
-PubSub volume vs the diagnostic value when a silent-row-drop happens.
+basedpyright clean; touches only `_run_daily_feature_loop` (no business-logic change). Cost: 1 extra event per (day,
+feature_group) iteration → negligible PubSub volume vs the diagnostic value when a silent-row-drop happens.
