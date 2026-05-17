@@ -1494,13 +1494,13 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 
 - `90949401`: **DatabentoTradfi WSFeedConnector SHIPPED** — MTDS@946bab0 (CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS WS feed).
   Scaffold complete; needs RT Databento key to activate.
-- `02807be6`: **NEW OPERATOR ASK — slot-3** — Real-Time Databento key for DatabentoTradfiWSFeedConnector.
-  Filed in `ikenna_orchestrator/pings/slot_3.md`. BLOCKED-CREDENTIALS.
+- `02807be6`: **NEW OPERATOR ASK — slot-3** — Real-Time Databento key for DatabentoTradfiWSFeedConnector. Filed in
+  `ikenna_orchestrator/pings/slot_3.md`. BLOCKED-CREDENTIALS.
 - `e0b0a5ee`: slot-2 batch 44 — hybrid_optimal on_order 163L→16L (execution-service@362c35974).
-- `17392114`: **slot-5 SWEEP-16 exhausted** — all items BLOCKED or DEFERRED. Slot-5 needs operator redirect.
-  **NEW OPERATOR ASK**: Approve DeFi MTDS backfill VMs (code_freeze MTDS-3.2.C): Pyth Solana oracle prices
-  (2022-11→today), Chainlink EVM multi-chain (2024→today), DEX-perp Hyperliquid/Aster forward-poll.
-  Multi-year scope triggers ≥1-week operator approval rule (ref: defi_master Phase 9 history).
+- `17392114`: **slot-5 SWEEP-16 exhausted** — all items BLOCKED or DEFERRED. Slot-5 needs operator redirect. **NEW
+  OPERATOR ASK**: Approve DeFi MTDS backfill VMs (code_freeze MTDS-3.2.C): Pyth Solana oracle prices (2022-11→today),
+  Chainlink EVM multi-chain (2024→today), DEX-perp Hyperliquid/Aster forward-poll. Multi-year scope triggers ≥1-week
+  operator approval rule (ref: defi_master Phase 9 history).
 - `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>100 min** since B-015 ping.
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 
@@ -1524,12 +1524,16 @@ Next tick: continue monitoring; await operator return.
 
 - **VM**: `features-onchain-defi-20260517-171908` (RUNNING @ asia-northeast1-c, 34.85.14.19).
   - Window: 2026-04-08 → 2026-04-12. Feature family: onchain / DEFI.
-  - Tarball: `features-service-code.tar.gz` built 2026-05-17T08:02 UTC (includes `vault_share_price` `features-service@550cdaba`).
-  - Launcher: `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date 2026-04-12 --launch-mode full`.
-- **`_agent_pings.md` updated**: cross-side ping written. When DEPLOYMENT_COMPLETED → harsh-side to launch paper backtest.
+  - Tarball: `features-service-code.tar.gz` built 2026-05-17T08:02 UTC (includes `vault_share_price`
+    `features-service@550cdaba`).
+  - Launcher:
+    `launch-features-vm.sh --feature-family onchain --asset-group DEFI --start-date 2026-04-08 --end-date 2026-04-12 --launch-mode full`.
+- **`_agent_pings.md` updated**: cross-side ping written. When DEPLOYMENT_COMPLETED → harsh-side to launch paper
+  backtest.
 - **Event stream**: not yet visible (VM boot <2 min ago; STARTED expected within 60s).
 
-**Operator action queue** now 8 items (Smoke B item was #7 — replaced with VM running, pending paper backtest launch by harsh-side):
+**Operator action queue** now 8 items (Smoke B item was #7 — replaced with VM running, pending paper backtest launch by
+harsh-side):
 
 7. ✅ **Smoke B VM RUNNING** — `features-onchain-defi-20260517-171908`. Pending: DEPLOYMENT_COMPLETED → paper backtest.
 
@@ -1541,9 +1545,9 @@ Next tick: check Smoke B STARTED event; check slot-3 Databento credential ping; 
 
 **Smoke B VM verification** (tick-21 — conflict resolved, quiet-tick-20 merged):
 
-- VM `features-onchain-defi-20260517-171908`: STATUS=RUNNING ✅. Log active — loading rate_indices,
-  134,426 rows from MTDS lending-indices bucket (2026-04-08 window). Minor WARNING: `onchain_perps` timestamp
-  dtype mismatch (Int64 vs Datetime ns/UTC) — perps data skipped, not blocking.
+- VM `features-onchain-defi-20260517-171908`: STATUS=RUNNING ✅. Log active — loading rate_indices, 134,426 rows from
+  MTDS lending-indices bucket (2026-04-08 window). Minor WARNING: `onchain_perps` timestamp dtype mismatch (Int64 vs
+  Datetime ns/UTC) — perps data skipped, not blocking.
 - Exec batches 45+46 also landed (`b603c6d9` + `94bbe9ef`): preflight check_all 201L→35L.
 - `harsh_orchestrator/pings/slot_9.md`: still CYCLE-CLOSE 2026-05-15 (ikenna-side launched Smoke B directly).
 - `plans/active/_agent_pings.md`: no new cross-side responses since B-015 unblock ping.
@@ -1571,6 +1575,7 @@ Next tick: monitor Smoke B DEPLOYMENT_COMPLETED; check for operator return.
 - **Inventory**: 483 cal AI-days / 52% done / 69 plans.
 
 **Full operator action queue**:
+
 1. ❌ Databento RT key (slot-3) — Real-Time streaming tier upgrade on existing Databento account
 2. ❌ DeFi MTDS backfill approval (slot-5) — Pyth Solana (2022-11→today) + Chainlink EVM + DEX-perp multi-year scope
 3. ❌ Databento OHLCV spend sign-off (~$50-200)
@@ -1586,16 +1591,17 @@ Next tick: monitor Smoke B + slot-5 pvl-p23b progress.
 ## [slot 1 main] 2026-05-17 ~17:35 UTC — Autonomous loop tick-22: Smoke B active (17465 events, utilization phase)
 
 **Smoke B VM status** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. No EXIT_STATUS yet.
 - Event stream: 17,465 events in hour=16 partition (latest: DEFI_FEATURE_AAVE_UTILIZATION WETH pool @
   2026-05-17T16:37:07 UTC). VM is computing utilization rates across Aave V3 chains.
-- lst_yields ✅ (wrote rows for 2026-04-10/11/12). onchain_perps ⚠️ skipped (timestamp dtype mismatch).
-  utilization: IN PROGRESS.
+- lst_yields ✅ (wrote rows for 2026-04-10/11/12). onchain_perps ⚠️ skipped (timestamp dtype mismatch). utilization: IN
+  PROGRESS.
 
 **Other new commits** (slot-2 batch 47 + Phase 8.B Deploy-script-deps UTL@1ac18ea5 185 tests ✅).
 
-**Operator queue** (6 items — unchanged): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots /
-Phase 7.C / TradFi-fwd cron.
+**Operator queue** (6 items — unchanged): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots / Phase 7.C /
+TradFi-fwd cron.
 
 Next tick: check EXIT_STATUS + DEPLOYMENT_COMPLETED; monitor Smoke B completion.
 
@@ -1604,53 +1610,62 @@ Next tick: check EXIT_STATUS + DEPLOYMENT_COMPLETED; monitor Smoke B completion.
 ## [slot 1 main] 2026-05-17 ~16:44 UTC — Autonomous loop tick-23: Smoke B still RUNNING, 26,041 events
 
 **Smoke B VM status** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
-- Event stream: **26,041 events** in hour=16 partition (up from 17,465 at tick-22 — active throughput confirmed).
-  Latest event at 16:43:53 UTC (just 1 min ago). VM actively emitting.
+- Event stream: **26,041 events** in hour=16 partition (up from 17,465 at tick-22 — active throughput confirmed). Latest
+  event at 16:43:53 UTC (just 1 min ago). VM actively emitting.
 - Processing: utilization phase (Aave V3 multi-chain) in progress since 16:23 UTC (~21 min elapsed).
   `Loaded 134426 rate rows from MTDS` was last log line — computing utilization across chains.
 
 **Pings check**:
+
 - harsh-slot-9: still CYCLE-CLOSE (2026-05-15). No new activity.
-- _agent_pings.md: no new harsh-side response to Smoke B launch ping.
+- \_agent_pings.md: no new harsh-side response to Smoke B launch ping.
 - Remote: 2 new commits from other slots (slot-7 E501+test-harness-proxy + slot-6 custody/audit_records ✅).
 
 **No new actionable items** — monitoring only.
 
-**Operator queue** (6 items — unchanged): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots /
-Phase 7.C / TradFi-fwd cron.
+**Operator queue** (6 items — unchanged): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots / Phase 7.C /
+TradFi-fwd cron.
 
-Next tick (270s): check EXIT_STATUS again; if DEPLOYMENT_COMPLETED → ping _agent_pings.md for paper backtest launch.
+Next tick (270s): check EXIT_STATUS again; if DEPLOYMENT_COMPLETED → ping \_agent_pings.md for paper backtest launch.
 
 ---
 
 ## [slot 1 main] 2026-05-17 ~17:49 UTC — Autonomous loop tick-23 (parallel): slot-6 5-item sweep ✅ + slot-7 64/377 + Smoke B 24k events
 
 **New LDR commits since tick-22**:
+
 - `2652f679` — slot-6 items 3+6 flipped: audit_records plan archived ✅ + custody KMS/DeFi alert-codes done ✅
-- `21a3eacf` — slot-6 items 4/7/8 backfilled: available_at sweep close (UTL+MTDS+features-service) + DeFi handler hardening + strategy_paper_vm re-verify
+- `21a3eacf` — slot-6 items 4/7/8 backfilled: available_at sweep close (UTL+MTDS+features-service) + DeFi handler
+  hardening + strategy_paper_vm re-verify
 
 **Slot-6 status** (items 3/4/6/7/8 all done this session):
+
 - Phase 7.C (manifest schema migration fleet) — operator-gated, NOT started, GCS snapshot from 7.B is safety net
 - DAI IRM (`aave-lending-rate-val-`) VM status unknown — slot-6 unresponsive to 3 pings; escalated in ping file
 
 **Slot-7 Phase B** (execution-service method-size refactor):
+
 - Tick-26: E501 lint sweep + test harness proxy fixes (`execution-service@19d6af0d1`), 316 remaining
 - Tick-27: +3 methods cleared → `execution-service@cec3ee56f`, 313 remaining, **64/377 total**
 
 **Smoke B** (`features-onchain-defi-20260517-171908`):
+
 - VM RUNNING (confirmed 17:44 UTC). 24,151 files @ hour=16, latest 16:44:42 UTC.
 
-**Operator queue** (7 items): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots / Phase 7.C / TradFi-fwd cron / Smoke B → paper backtest on completion.
+**Operator queue** (7 items): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots / Phase 7.C / TradFi-fwd
+cron / Smoke B → paper backtest on completion.
 
 ---
 
 ## [slot 1 main] 2026-05-17 ~16:46 UTC — Autonomous loop tick-24: Smoke B still RUNNING, 29,455 events
 
 **Smoke B VM status** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
-- Event stream: **29,455 events** in hour=16 (up from 26,041 at tick-23, +3,414 in ~2 min = ~1,700 events/min).
-  VM actively computing — throughput confirmed healthy.
+- Event stream: **29,455 events** in hour=16 (up from 26,041 at tick-23, +3,414 in ~2 min = ~1,700 events/min). VM
+  actively computing — throughput confirmed healthy.
 - run.log: 133 lines, last entry 16:23 "Processing: utilization". Log buffered locally; event stream is live signal.
 - Utilization phase elapsed: ~23 min (started 16:23 UTC). Multi-chain Aave V3 scan (many pools × 5 dates).
 
@@ -1667,13 +1682,16 @@ Next tick: EXIT_STATUS check + event count; if DEPLOYMENT_COMPLETED → ping har
 ## [slot 1 main] 2026-05-17 ~16:52 UTC — Autonomous loop tick-25: Smoke B RUNNING, 36,969 events
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
 - Event stream: **36,969 events** in hour=16 at 16:51 UTC (up from 29,455 at tick-24, +7,514 in ~6 min).
-- Utilization phase elapsed: ~28 min (started 16:23 UTC). run.log buffered — still shows 16:23 "Processing: utilization" as last entry. Event stream confirms active throughput.
+- Utilization phase elapsed: ~28 min (started 16:23 UTC). run.log buffered — still shows 16:23 "Processing: utilization"
+  as last entry. Event stream confirms active throughput.
 
-**Remote**: 3 new commits since tick-24 — slot-6 alerting_runbook A/B/C/E/F shipped ✅; Phase 8.C per-archetype-calculators partial (features-service@1725465c); slot-7 tick-30 +2 methods (execution-service@ec0ab1497).
+**Remote**: 3 new commits since tick-24 — slot-6 alerting_runbook A/B/C/E/F shipped ✅; Phase 8.C
+per-archetype-calculators partial (features-service@1725465c); slot-7 tick-30 +2 methods (execution-service@ec0ab1497).
 
-**No new harsh pings** — slot-9 CYCLE-CLOSE. _agent_pings.md unchanged.
+**No new harsh pings** — slot-9 CYCLE-CLOSE. \_agent_pings.md unchanged.
 
 **Operator queue** (6 items — unchanged).
 
@@ -1684,6 +1702,7 @@ Next tick: EXIT_STATUS + event count; DEPLOYMENT_COMPLETED → ping harsh + flip
 ## [slot 1 main] 2026-05-17 ~16:57 UTC — Autonomous loop tick-26: Smoke B RUNNING, 42,893 events
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
 - Event stream: **42,893 events** in hour=16 at 16:57 UTC (up from 36,969 at tick-25, +5,924 in ~5 min ≈ 1,000/min).
   Throughput slightly lower than prior ticks — could be near end of utilization or processing heavier chain batches.
@@ -1691,7 +1710,7 @@ Next tick: EXIT_STATUS + event count; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 **Remote**: 1 new commit — slot-2 batch-49 (ohlcv_converter 251L→44L, execution-service@e20964148).
 
-**No new harsh pings**. _agent_pings.md unchanged.
+**No new harsh pings**. \_agent_pings.md unchanged.
 
 **Operator queue** (6 items — unchanged).
 
@@ -1701,9 +1720,9 @@ Next tick: EXIT_STATUS + event count; if DEPLOYMENT_COMPLETED → ping harsh + f
 
 ## [slot 1 main] 2026-05-17 ~17:55 UTC — Autonomous loop tick-27 (parallel A): Phase U4 wiring shipped, pvl-23 all done, slot-5 redirected
 
-**New LDR commits**: pvl-p23a/b/c ALL `[x]` (shipped 2026-05-14/15) · Phase U4 UI wiring (promote/lifecycle/demote
-→ real backend, 3 commits) · slot-5 redirected to `deploy_missing_auto_launch_2026_05_07` (5 P0 items).
-**Slot-7**: tick-28 `execution-service@88f756034` +3 methods → **67/377 cleared**. Inventory: 482 AI-days / 52%.
+**New LDR commits**: pvl-p23a/b/c ALL `[x]` (shipped 2026-05-14/15) · Phase U4 UI wiring (promote/lifecycle/demote →
+real backend, 3 commits) · slot-5 redirected to `deploy_missing_auto_launch_2026_05_07` (5 P0 items). **Slot-7**:
+tick-28 `execution-service@88f756034` +3 methods → **67/377 cleared**. Inventory: 482 AI-days / 52%.
 
 **Smoke B** (parallel A snapshot 16:52 UTC): 36,235 events, AAVE_V3 utilization cbBTC/BASE in progress.
 
@@ -1712,11 +1731,12 @@ Next tick: EXIT_STATUS + event count; if DEPLOYMENT_COMPLETED → ping harsh + f
 ## [slot 1 main] 2026-05-17 ~16:59 UTC — Autonomous loop tick-27 (parallel B): Smoke B RUNNING, 45,949 events
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
 - Event stream: **45,949 events** in hour=16 at 16:59 UTC (up from 42,893 at tick-26, +3,056 in ~2 min ≈ 1,500/min).
   Utilization phase ~36 min elapsed (started 16:23 UTC). run.log buffered at 133 lines.
 
-**No new harsh pings**. _agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
+**No new harsh pings**. \_agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
 
 Next tick: EXIT_STATUS + hour=16/17 counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
 
@@ -1725,14 +1745,16 @@ Next tick: EXIT_STATUS + hour=16/17 counts; DEPLOYMENT_COMPLETED → ping harsh 
 ## [slot 1 main] 2026-05-17 ~17:04 UTC — Autonomous loop tick-28: Smoke B RUNNING, 51,893 events (hour=17 active)
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
-- Event stream: **46,546** hour=16 + **5,347** hour=17 = **51,893 total** at 17:04 UTC.
-  Latest event: 17:01 UTC AAVE_V3 utilization BASE:WETH (per parallel instance). VM crossed hour boundary.
-  Utilization ~41 min elapsed. run.log buffered (133 lines, ends at 16:23).
+- Event stream: **46,546** hour=16 + **5,347** hour=17 = **51,893 total** at 17:04 UTC. Latest event: 17:01 UTC AAVE_V3
+  utilization BASE:WETH (per parallel instance). VM crossed hour boundary. Utilization ~41 min elapsed. run.log buffered
+  (133 lines, ends at 16:23).
 
-**Parallel instance A findings**: Phase U4 flip ✅ (`0325db69`, 53% inventory). slot-7 **78/377** cleared (299 remaining). slot-5 redirected to deploy_missing_auto_launch (5 P0 items). slot-2 batch-50.
+**Parallel instance A findings**: Phase U4 flip ✅ (`0325db69`, 53% inventory). slot-7 **78/377** cleared (299
+remaining). slot-5 redirected to deploy_missing_auto_launch (5 P0 items). slot-2 batch-50.
 
-**No new harsh pings**. _agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
+**No new harsh pings**. \_agent_pings.md unchanged. **Operator queue** (6 items — unchanged).
 
 Next tick: EXIT_STATUS + all-hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
 
@@ -1741,18 +1763,20 @@ Next tick: EXIT_STATUS + all-hour counts; DEPLOYMENT_COMPLETED → ping harsh + 
 ## [slot 1 main] 2026-05-17 ~17:08 UTC — Autonomous loop tick-29: Smoke B RUNNING, 56,182 events + Phase 9.A ✅ + Phase 9.B operator-gated
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
-- h16=46,546 + h17=9,636 = **56,182 total** at 17:08 UTC. Still RUNNING. EXIT_STATUS: NOT_YET.
-  Utilization ~45 min elapsed (started 16:23 UTC). run.log buffered (133 lines).
+
+- h16=46,546 + h17=9,636 = **56,182 total** at 17:08 UTC. Still RUNNING. EXIT_STATUS: NOT_YET. Utilization ~45 min
+  elapsed (started 16:23 UTC). run.log buffered (133 lines).
 
 **Phase 9.A VERIFIED** ✅ (PM@f8b9f3d2 `manifest_schema_final_gate`): E3 7-item launcher checklist passed — UTL
-pipeline_mode default removed (v8), MTDS handlers pass BATCH_<source>, ManifestFreshnessCache(ttl=60) in 9 DeFi
-handlers, all 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap wired, watchdog covers mtds-*.
+pipeline*mode default removed (v8), MTDS handlers pass BATCH*<source>, ManifestFreshnessCache(ttl=60) in 9 DeFi
+handlers, all 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap wired, watchdog covers mtds-\*.
 
 **Phase 9.B now unlocked** — `[HUMAN+AGENT] P0. Launch MTDS VM fleet per asset_group`. OPERATOR GREENLIGHT NEEDED.
 
 **Slot-7**: `b381f2cd` tick-34 → **81/377** (execution-service@206051e87). **Slot-2**: batch-51 book_builder 241L→40L.
 
 **Updated operator action queue** (8 items):
+
 1. ❌ Databento RT key (slot-3)
 2. ❌ DeFi MTDS backfill approval (slot-5)
 3. ❌ Databento OHLCV spend sign-off
@@ -1775,8 +1799,8 @@ Next tick: Smoke B DEPLOYMENT_COMPLETED watch, slot-7 100/377 milestone, slot-5 
 **Parallel A (tick-31)**: ✅ slot-8 Phase 8.C wave-2 acked (features-service@e9a2ee2c, 130 tests). ✅ slot-6 Phase 9.A
 SWEEP-16 acked (double-confirmed by main + slot-6). Phase 9.A now double-confirmed ✅. Inventory 53%.
 
-**Smoke B VM**: h16=46,546 + h17=15,255 = **61,801 total** at 17:12 UTC. RUNNING, EXIT_STATUS: NOT_YET.
-Utilization ~49 min elapsed. run.log still 133 lines.
+**Smoke B VM**: h16=46,546 + h17=15,255 = **61,801 total** at 17:12 UTC. RUNNING, EXIT_STATUS: NOT_YET. Utilization ~49
+min elapsed. run.log still 133 lines.
 
 **Operator queue** (8 items — unchanged). **No new harsh pings**.
 
@@ -1788,19 +1812,21 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 **DEPLOYMENT_FAILED** — `features-onchain-defi-20260517-171908` self-deleted. VM gone.
 
-**Root cause**: `[vm-exec] STALL: log has not grown in 3601s` — watchdog killed CMD_PID=6771 with SIGTERM.
-Kernel stack at kill time: `do_wait` (waiting for child process). The utilization phase loaded 134,426 rate rows at
-16:23:11 UTC then hung silently for exactly 1 hour (threshold). No rows written for utilization feature_group.
-exit_code=124. Archived: `gs://...deployments/archive/2026-05-17/e8252faf-0bbd-4e91-8163-47a3d3ed444b.json`.
+**Root cause**: `[vm-exec] STALL: log has not grown in 3601s` — watchdog killed CMD_PID=6771 with SIGTERM. Kernel stack
+at kill time: `do_wait` (waiting for child process). The utilization phase loaded 134,426 rate rows at 16:23:11 UTC then
+hung silently for exactly 1 hour (threshold). No rows written for utilization feature_group. exit_code=124. Archived:
+`gs://...deployments/archive/2026-05-17/e8252faf-0bbd-4e91-8163-47a3d3ed444b.json`.
 
-**Features completed**: lending_rates ✅ (5 days, ~100K rows), lst_yields ✅ (5 days, 13-15 rows/day).
-**Not completed**: onchain_perps ⚠️ (dtype skip, pre-existing), utilization ❌ (0 rows, stall).
+**Features completed**: lending_rates ✅ (5 days, ~100K rows), lst_yields ✅ (5 days, 13-15 rows/day). **Not
+completed**: onchain_perps ⚠️ (dtype skip, pre-existing), utilization ❌ (0 rows, stall).
 
 **Actions taken**:
-- ✅ _agent_pings.md updated: harsh-side notified of FAILURE — do NOT launch paper backtest yet.
+
+- ✅ \_agent_pings.md updated: harsh-side notified of FAILURE — do NOT launch paper backtest yet.
 - ✅ Operator queue updated with bug investigation item.
 
 **Updated operator action queue** (9 items):
+
 1. ❌ Databento RT key (slot-3)
 2. ❌ DeFi MTDS backfill (slot-5)
 3. ❌ Databento OHLCV spend sign-off
@@ -1818,14 +1844,14 @@ exit_code=124. Archived: `gs://...deployments/archive/2026-05-17/e8252faf-0bbd-4
 
 ## [slot 1 main] 2026-05-17 ~17:28 UTC — Autonomous loop tick-35: post-failure check + loop status
 
-**Smoke B VM**: confirmed gone (gcloud returns 0 instances). _agent_pings.md failure ping written. ✅
+**Smoke B VM**: confirmed gone (gcloud returns 0 instances). \_agent_pings.md failure ping written. ✅
 
 **harsh-slot-9**: still CYCLE-CLOSE (2026-05-15). No response to failure ping yet — operator must dispatch next.
 
 **Remote**: 0 new commits ahead of local HEAD (current at PM@1217d34e).
 
-**Loop status**: Smoke B monitoring ended. Continuing in general poll mode until operator returns.
-**Operator queue** (9 items — unchanged). No autonomous action possible.
+**Loop status**: Smoke B monitoring ended. Continuing in general poll mode until operator returns. **Operator queue** (9
+items — unchanged). No autonomous action possible.
 
 Next: await operator return or harsh-side dispatch.
 
@@ -1834,14 +1860,15 @@ Next: await operator return or harsh-side dispatch.
 ## [slot 1 main] 2026-05-17 ~17:21 UTC — Autonomous loop tick-33: Smoke B RUNNING, 72,016 events, fresh 17:21 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
-- h16=46,546 + h17=26,470 = **73,016 total** at 17:21 UTC. Latest event `2026-05-17T17:21:32Z` (< 1 min).
-  Actively computing — NOT stalled. Utilization ~58 min elapsed. run.log 133 lines, last entry 16:23:11.
-  Computation confirmed large: 134,426 rate rows loaded × pools × chains × 5 dates.
+- h16=46,546 + h17=26,470 = **73,016 total** at 17:21 UTC. Latest event `2026-05-17T17:21:32Z` (< 1 min). Actively
+  computing — NOT stalled. Utilization ~58 min elapsed. run.log 133 lines, last entry 16:23:11. Computation confirmed
+  large: 134,426 rate rows loaded × pools × chains × 5 dates.
 
 **Remote**: slot-7 tick-37 → **90/377** (+3); Polymarket + Kalshi WSFeedConnectors SHIPPED (MTDS@99fc7b3).
 
-**No new harsh pings**. _agent_pings.md unchanged. **Operator queue** (8 items — unchanged).
+**No new harsh pings**. \_agent_pings.md unchanged. **Operator queue** (8 items — unchanged).
 
 Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
 
@@ -1849,15 +1876,14 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 ## [slot 1 main] 2026-05-17 ~17:31 UTC — Autonomous loop tick-37: general poll, post-Smoke-B-FAILED
 
-**Parallel tick-36 (814c6c33)**: 2 bugs analysed — (1) `perp_funding` schema dtype mismatch (Int64 vs Datetime)
-known pre-existing skip; (2) utilization stall (web3/RPC subprocess hung). slot-6 DAI IRM resolved ✅ + aave-lrv
-VM relaunched correct block range. Issue doc filed.
+**Parallel tick-36 (814c6c33)**: 2 bugs analysed — (1) `perp_funding` schema dtype mismatch (Int64 vs Datetime) known
+pre-existing skip; (2) utilization stall (web3/RPC subprocess hung). slot-6 DAI IRM resolved ✅ + aave-lrv VM relaunched
+correct block range. Issue doc filed.
 
-**slot-7**: tick-40 → **99/377 cleared** (execution-service@d8230705c). 1 method from 100-milestone.
-**Phase 8.C wave-5**: 64 tests shipped (features-service@fedda39f). **slot-2 batch-57** shipped.
+**slot-7**: tick-40 → **99/377 cleared** (execution-service@d8230705c). 1 method from 100-milestone. **Phase 8.C
+wave-5**: 64 tests shipped (features-service@fedda39f). **slot-2 batch-57** shipped.
 
-**harsh-slot-9**: still CYCLE-CLOSE. No response to Smoke B failure ping.
-**_agent_pings.md**: no new harsh-side pings.
+**harsh-slot-9**: still CYCLE-CLOSE. No response to Smoke B failure ping. **\_agent_pings.md**: no new harsh-side pings.
 
 **Operator queue** (9 items — unchanged).
 
@@ -1867,7 +1893,8 @@ Next: general poll; await operator return or harsh dispatch.
 
 ## [slot 1 main] 2026-05-17 ~17:35 UTC — Autonomous loop tick-38: Smoke B fix assigned, slot-6 working
 
-**From _agent_pings.md** (parallel tick-36 wrote this):
+**From \_agent_pings.md** (parallel tick-36 wrote this):
+
 - Issue doc filed: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
 - **ikenna-slot6 assigned**: perp_funding timestamp cast fix + utilization stall investigation. ETA <1 day.
 - Harsh-side: no action until Smoke B re-run passes.
@@ -1884,12 +1911,12 @@ Next: general poll; await slot-6 fix completion + operator return.
 
 ## [slot 1 main] 2026-05-17 ~17:39 UTC — Autonomous loop tick-40: general poll, Phase 3C 97.9%, slot-7 watch
 
-**Parallel tick-39 (03534613)**: Phase 3C gate CONFIRMED 97.9% (re-verify pass). slot-5 AlertCode ack +
-deploy_missing theme confirmed active.
+**Parallel tick-39 (03534613)**: Phase 3C gate CONFIRMED 97.9% (re-verify pass). slot-5 AlertCode ack + deploy_missing
+theme confirmed active.
 
 **Remote**: slot-2 batch-59 retry (execution-service@8efc8eb15).
 
-**harsh-slot-9**: CYCLE-CLOSE. No response. **_agent_pings.md**: unchanged (Smoke B fix in-progress at slot-6).
+**harsh-slot-9**: CYCLE-CLOSE. No response. **\_agent_pings.md**: unchanged (Smoke B fix in-progress at slot-6).
 
 **slot-7**: was 99/377 at tick-37 — watching for 100-method milestone flip in upcoming commits.
 
@@ -1901,12 +1928,12 @@ Next: general poll; await operator return or slot-6 Smoke B fix ping.
 
 ## [slot 1 main] 2026-05-17 ~17:43 UTC — Autonomous loop tick-42: slot-7 100/377 milestone ✅ (102/377)
 
-**Parallel tick-41 (e3001ebe)**: slot-7 **100/377 milestone crossed** — now at **102/377** (275 remaining).
-**Phase 8.C wave-6**: `travel_calculator` shipped (features-service@01b48fd0, 36 tests, 404 across 12 files).
-**slot-2 batch-60** retry (execution-service@23ff62896).
+**Parallel tick-41 (e3001ebe)**: slot-7 **100/377 milestone crossed** — now at **102/377** (275 remaining). **Phase 8.C
+wave-6**: `travel_calculator` shipped (features-service@01b48fd0, 36 tests, 404 across 12 files). **slot-2 batch-60**
+retry (execution-service@23ff62896).
 
-**harsh-slot-9**: CYCLE-CLOSE. **_agent_pings.md**: unchanged — Smoke B fix in-progress at slot-6.
-**Operator queue** (9 items — unchanged).
+**harsh-slot-9**: CYCLE-CLOSE. **\_agent_pings.md**: unchanged — Smoke B fix in-progress at slot-6. **Operator queue**
+(9 items — unchanged).
 
 Next: general poll; await operator return or slot-6 completion.
 
@@ -1915,9 +1942,10 @@ Next: general poll; await operator return or slot-6 completion.
 ## [slot 1 main] 2026-05-17 ~17:17 UTC — Autonomous loop tick-32: Smoke B RUNNING, 67,773 events, fresh at 17:17 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
+
 - STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
-- h16=46,546 + h17=21,227 = **67,773 total** at 17:17 UTC. Latest event: `2026-05-17T17:17:19Z` (< 1 min ago).
-  Not stalled — actively computing. Utilization ~54 min elapsed. run.log still 133 lines, buffered.
+- h16=46,546 + h17=21,227 = **67,773 total** at 17:17 UTC. Latest event: `2026-05-17T17:17:19Z` (< 1 min ago). Not
+  stalled — actively computing. Utilization ~54 min elapsed. run.log still 133 lines, buffered.
 
 **Remote**: slot-7 tick-36 → **87/377**; slot-5 AlertCode wiring done + deploy_missing pickup; Phase 8.C wave-3
 (features-service@e57ed69f, 41 tests); slot-2 batch-54.
@@ -1928,32 +1956,34 @@ Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip
 
 ## [slot 1 main] 2026-05-17 ~18:30 UTC — Autonomous loop tick-32: DAI IRM resolved, Smoke B FAILED, re-verification VM launched
 
-**DAI IRM resolution** (slot-6 asked 3 pings ago):
-Issue was **co-blocked events** (multiple txs in same Ethereum block as Supply events), NOT wrong IRM params.
+**DAI IRM resolution** (slot-6 asked 3 pings ago): Issue was **co-blocked events** (multiple txs in same Ethereum block
+as Supply events), NOT wrong IRM params.
+
 - Root cause confirmed at 06:55 UTC (gate green 10/10 events 0-2bps, `execution-service@f45a5f669`)
 - Static defaults are stale fallback only; live fetch (`_fetch_irm_params_live`) already correct
-- Fix: block range defaults on launcher were wrong era (20800000→23300000, 22500000→25086000)  
+- Fix: block range defaults on launcher were wrong era (20800000→23300000, 22500000→25086000)
   → Fixed: `deployment-service@25f5a12`
-- Fresh tarball rebuilt (17:24 UTC), VM relaunched: **`aave-lending-rate-val-20260517-182510`** (RUNNING)
-  Correlation: `3420C524-62D0-42C7-BB04-49A3CE701E69`
-  Results when done: `gs://central-element-323112-defi-validation/results/lending/2026-05-17/3420C524-62D0-42C7-BB04-49A3CE701E69/results.json`
+- Fresh tarball rebuilt (17:24 UTC), VM relaunched: **`aave-lending-rate-val-20260517-182510`** (RUNNING) Correlation:
+  `3420C524-62D0-42C7-BB04-49A3CE701E69` Results when done:
+  `gs://central-element-323112-defi-validation/results/lending/2026-05-17/3420C524-62D0-42C7-BB04-49A3CE701E69/results.json`
 
 **Smoke B FAILED** — `features-onchain-defi-20260517-171908` (DEPLOYMENT_FAILED, exit_code=124):
+
 - EXIT_STATUS=0 but watchdog STALL: log didn't grow for 3601s → SIGTERM at 17:23 UTC
 - Two bugs found in run.log:
-  1. `perp_funding` schema mismatch: `type Int64 is incompatible with expected type Datetime('ns', 'UTC')`
-     (affects 2026-04-10/11/12 perp_funding parquets; MTDS writes timestamp as epoch Int64, features-onchain expects Datetime)
+  1. `perp_funding` schema mismatch: `type Int64 is incompatible with expected type Datetime('ns', 'UTC')` (affects
+     2026-04-10/11/12 perp_funding parquets; MTDS writes timestamp as epoch Int64, features-onchain expects Datetime)
   2. Utilization subprocess stall: after loading 134,426 rate_indices rows for 2026-04-08, child process hung >1h
 - Paper backtest (harsh-side) blocked until Smoke B re-run passes
 - `_agent_pings.md` cross-side notification written below
 - Issue doc filed: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
 
-**Slot-7** (inferred from LDR): tick-35 at 84/377 (293 remaining). Next milestone: 100/377.
-**Slot-2**: Reporting STOPPING (100+ heavy backtest/algo methods remaining → post-cutover).
-**Slot-4**: tick-10 ack was last main-side ack. Continue.
-**Slot-8**: wave-3 (sports.calculators) in progress.
+**Slot-7** (inferred from LDR): tick-35 at 84/377 (293 remaining). Next milestone: 100/377. **Slot-2**: Reporting
+STOPPING (100+ heavy backtest/algo methods remaining → post-cutover). **Slot-4**: tick-10 ack was last main-side ack.
+Continue. **Slot-8**: wave-3 (sports.calculators) in progress.
 
 **Operator queue** (8 items — unchanged):
+
 1. ❌ Databento RT key (slot-3)
 2. ❌ DeFi MTDS backfill approval (slot-5)
 3. ❌ Databento OHLCV spend sign-off
@@ -1968,21 +1998,50 @@ Issue was **co-blocked events** (multiple txs in same Ethereum block as Supply e
 ## [slot 1 main] 2026-05-17 ~18:40 UTC — Autonomous loop tick-37: Phase 3C GATE CONFIRMED 97.9%; slot-5 AlertCode acked
 
 **Phase 3C Re-verification PASSED** ✅ (correct block range 23.3M→25.1M):
+
 - `aave-lending-rate-val-20260517-182510` — STOPPED, self-deleted.
 - Results: **97.9% pass rate (47/48)**, 12 co-blocked skipped, 0 outliers >50bps.
 - Per-asset: USDT 20/20, USDC 25/26, DAI 2/2 (all green).
 - Issue doc updated: `phase_3c_lending_rate_model_0_of_60_pass_2026_05_13.md` § "Re-verification Run"
 - Phase 3C VALIDATION GATE **CLOSED** (issue doc banner already says RESOLVED).
 
-**Slot-5 AlertCode wiring ✅** (UAC@1a6211d, alerting-service@518bddc, PM@736cc39c):
-Now picking up deploy_missing backend items 1-4. Acked + confirmed.
+**Slot-5 AlertCode wiring ✅** (UAC@1a6211d, alerting-service@518bddc, PM@736cc39c): Now picking up deploy_missing
+backend items 1-4. Acked + confirmed.
 
-**Slot-7** (from LDR): 99/377 cleared as of tick-40. Flip trigger at 100/377.
-**Slot-6**: Pinged about Smoke B bugs (perp_funding cast + util stall). Awaiting response.
-**Slot-8**: Wave-3 (sports.calculators) in progress. No new self-report.
+**Slot-7** (from LDR): 99/377 cleared as of tick-40. Flip trigger at 100/377. **Slot-6**: Pinged about Smoke B bugs
+(perp_funding cast + util stall). Awaiting response. **Slot-8**: Wave-3 (sports.calculators) in progress. No new
+self-report.
 
-**Operator queue** (8 items — unchanged):
-7. 🔴 Smoke B re-run blocked (slot-6 fixing perp_funding + util stall)
-8. 🔴 Phase 9.B — MTDS VM fleet launch [HUMAN+AGENT]
+**Operator queue** (8 items — unchanged): 7. 🔴 Smoke B re-run blocked (slot-6 fixing perp_funding + util stall) 8. 🔴
+Phase 9.B — MTDS VM fleet launch [HUMAN+AGENT]
 
 Next: watch for slot-7 100/377 self-report + slot-6 fix report.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:52 UTC — Autonomous loop tick-43: wave-7 manager_calculator ✅, batch-61 ✅
+
+**New remote commits** (2 incoming, pulled):
+
+- `3c97c811` — wave-7 manager_calculator shipped (features-service@aa201e9f, 58 tests, 462 total across 13 files).
+- `1ae8fff9` — slot-2 batch-61 retry (execution-service@f1c71eca7, validate_timestamp_alignment 139L→22L via 5 helpers).
+
+**slot-7 / slot-8 (sports calculators wave-7)**: manager_calculator complete. 462 tests across 13 calculator files now.
+Next wave TBD.
+
+**slot-2 (execution-service method refactor)**: batch-61 done. validate_timestamp_alignment 139L→22L. Estimated ~103/377
+cleared now (plan still shows 102/377 — will update after batch-61 commit lands in plan frontmatter).
+
+**harsh-slot-9**: still CYCLE-CLOSE. No new dispatch.
+
+**\_agent_pings.md**: no harsh-side response to Smoke B failure notification yet. Still awaiting.
+
+**slot-6**: no Smoke B fix commits visible in LDR. Perp_funding cast + utilization stall investigation ongoing.
+
+**Smoke B status**: ❌ BLOCKED (slot-6 in-flight, no ETA visible from remote).
+
+**Operator queue** (9 items — unchanged): 7. 🔴 Smoke B re-run: slot-6 fixing perp_funding timestamp cast + utilization
+subprocess stall 8. 🔴 Phase 9.B — MTDS VM fleet launch [HUMAN+AGENT] (Phase 9.A ✅, awaiting greenlight) 9. 🔴 Paper
+backtest: blocked pending #7
+
+Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
