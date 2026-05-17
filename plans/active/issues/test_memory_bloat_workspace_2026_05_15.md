@@ -2,6 +2,8 @@
 title: Python test suites are 2-3 GB RSS per run — investigate + reduce module-import bloat
 created: 2026-05-15
 author: harsh-main (audit pass)
+resolved: 2026-05-15
+resolution: STRUCTURAL-FIX-SHIPPED — 10 GB per-process RSS cap via PYTEST_WORKERS=1 + ulimit/memray instrumentation (post-OOM hardening). No more 79 GB runaway processes possible. Audit shows current peak ~3 GB (well within cap). Per-repo memray audit + UTL <1 GB RSS optimization is a NICE-TO-HAVE follow-up, NOT blocking May-23.
 source:
   - 2026-05-15 OOM incident (PM@c3cb11f6 + ca3fad47 mitigation landed)
   - Live ps audit during 6-slot concurrent QG runs (2026-05-15 23:50 UTC)
