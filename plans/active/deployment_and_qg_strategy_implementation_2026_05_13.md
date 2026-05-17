@@ -592,6 +592,11 @@ surface, not per repo:
       turnover_stability len<2 449 + empty-xi-sets 452, batch lineups 508-510/558-567,
       timezone localize 530, shock data path 595-612, exception NaN row 620-636).
       transfer_window_calculator.py 86.8%→90%+. Shipped at `features-service@5960cdeb`. 50 tests total.
+      **Wave 42 (2026-05-17 slot-8)**: +9 tests for `halftime_calculator` (possession branch
+      142-146, _apply_per_fixture_ht_form body 234-256 + call 338, event_enrichment body
+      268-287 + call 340, historical_ht_patterns early return 369, draw_hold_rate 487, +
+      1 new test_ht_draw_sets_draw_hold_rate in TestComputeHalftimeForFixture).
+      halftime_calculator.py 88.2%→100%. Aggregate 96.6%. Shipped `features-service@f6b8fff4`. 74 tests.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
