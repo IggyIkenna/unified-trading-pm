@@ -454,6 +454,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
    + 1 engine/validation).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 27 — adapters)**: storage.py shipped at
+   execution-service@4293df705 (download_catalog_cache_files 77L→26L via \_select_latest_blobs_per_date (list +
+   parse-date + recency-key dedupe per start_date) + \_download_blobs_parallel (ThreadPoolExecutor BATCH_MAX_WORKERS
+   + per-blob result aggregation; nested \_download_one preserves the (ValueError/TypeError/KeyError/AttributeError/
+   RuntimeError) catch-all)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-27**: 31 files cleared (slot-2 contribution: -31 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter + 1 backtest_v2
+   + 1 engine/validation + 1 adapter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
