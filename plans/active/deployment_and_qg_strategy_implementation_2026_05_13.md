@@ -521,37 +521,37 @@ surface, not per repo:
       \_build_goal_matrix, compute_poisson_xg, compute_poisson_xg_batch). Shipped at `features-service@298374a4`. 1042
       total tests across 33 calculator files. **Wave 21 (2026-05-17 slot-8)**: 25 new tests for `team_xg` (\_str_col,
       \_xg_trend, compute_team_xg_stats, compute_team_xg_for_fixture, compute_team_xg_batch). Shipped at
-      `features-service@26ea2cac`. 1067 total tests across 34 calculator files.
-      **Wave 22 (2026-05-17 slot-8)**: 33 new tests for `replacement_model_calculator` (_classify_position, _defaults,
-      _compute_team_replacement_features, compute_replacement_model_batch). Shipped at
-      `features-service@f7cf28bf`. 1100 total tests across 35 calculator files.
-      **Wave 23 (2026-05-17 slot-8)**: 43 new tests for `xg_decomposition_calculator` (_resolve_col, _get_team_last_n,
-      row-extractors, _compute_team_decomposition, compute_xg_decomposition_batch). Shipped at
-      `features-service@6e73340e`. 1143 total tests across 36 calculator files.
-      **Wave 24 (2026-05-17 slot-8)**: 29 new tests for `squad_value_calculator` (_compute_team_squad_features,
-      _compute_team_net_transfer_spend, _compute_squad_value_for_fixture, compute_squad_value_batch).
-      **Wave 25 (2026-05-17 slot-8)**: 37 new tests for `weather_calculator` (_compute_temp_severity,
-      _compute_wind_severity, _compute_humidity_severity, compute_weather_features, compute_weather_batch).
-      Shipped at `features-service@501cf218`. 1209 total tests across 38 calculator files.
-      **Wave 26 (2026-05-17 slot-8)**: 27 new tests for `venue_context` (VenueContextFeatures, _haversine,
-      compute_venue_context_features, compute_venue_context_for_fixture, compute_venue_context).
-      Shipped at `features-service@33f7cd0b`. 1236 total tests across 39 calculator files.
-      **Wave 27 (2026-05-17 slot-8)**: 42 new tests for `season_context` (SeasonContextFeatures, compute_season_context_features,
-      _competition_phase, _points_at_stake, _count_team_matches_in_season, _prior_blend_weight, compute_season_context).
-      **Wave 28 (2026-05-17 slot-8)**: 28 new tests for `team_goals` (compute_team_goals_stats, _compute_rolling_metrics,
-      compute_team_goals_for_fixture, compute_team_goals_batch). Shipped at `features-service@b3c0b164`. 1306 tests across 41 files.
-      **Wave 29 (2026-05-17 slot-8)**: 61 new tests for `team_derived` (_clamp, compute_dominance_index,
-      compute_momentum_score, compute_attack_balance, compute_defence_balance, _compute_trend_last10,
-      _compute_xg_expected_ppg, compute_team_derived_for_fixture, compute_team_derived_batch).
-      Shipped at `features-service@bc477964`. 1367 tests across 42 files.
-      **Wave 30 (2026-05-17 slot-8)**: 56 new tests for `player_lineup_calculator` (_compute_age_std,
-      _compute_position_value_share, _compute_top_n_value_share, _compute_top_n_attacker_value_share,
-      _compute_continuity_last3, compute_player_lineup_features, compute_player_lineup_batch).
-      Shipped at `features-service@ecdb1b08`. 1423 tests across 43 files.
-      **Wave 31 (2026-05-17 slot-8)**: 56 new tests for `team_form` (_outcome_code, _compute_goals_trend,
-      _compute_form_momentum, _ppg_from_goal_arrays, _consecutive_from_end, compute_team_form,
-      compute_team_form_for_fixture, compute_team_form_batch).
-      Shipped at `features-service@36744394`. 1479 tests across 44 files.
+      `features-service@26ea2cac`. 1067 total tests across 34 calculator files. **Wave 22 (2026-05-17 slot-8)**: 33 new
+      tests for `replacement_model_calculator` (\_classify_position, \_defaults, \_compute_team_replacement_features,
+      compute_replacement_model_batch). Shipped at `features-service@f7cf28bf`. 1100 total tests across 35 calculator
+      files. **Wave 23 (2026-05-17 slot-8)**: 43 new tests for `xg_decomposition_calculator` (\_resolve_col,
+      \_get_team_last_n, row-extractors, \_compute_team_decomposition, compute_xg_decomposition_batch). Shipped at
+      `features-service@6e73340e`. 1143 total tests across 36 calculator files. **Wave 24 (2026-05-17 slot-8)**: 29 new
+      tests for `squad_value_calculator` (\_compute_team_squad_features, \_compute_team_net_transfer_spend,
+      \_compute_squad_value_for_fixture, compute_squad_value_batch). **Wave 25 (2026-05-17 slot-8)**: 37 new tests for
+      `weather_calculator` (\_compute_temp_severity, \_compute_wind_severity, \_compute_humidity_severity,
+      compute_weather_features, compute_weather_batch). Shipped at `features-service@501cf218`. 1209 total tests across
+      38 calculator files. **Wave 26 (2026-05-17 slot-8)**: 27 new tests for `venue_context` (VenueContextFeatures,
+      \_haversine, compute_venue_context_features, compute_venue_context_for_fixture, compute_venue_context). Shipped at
+      `features-service@33f7cd0b`. 1236 total tests across 39 calculator files. **Wave 27 (2026-05-17 slot-8)**: 42 new
+      tests for `season_context` (SeasonContextFeatures, compute_season_context_features, \_competition_phase,
+      \_points_at_stake, \_count_team_matches_in_season, \_prior_blend_weight, compute_season_context). **Wave 28
+      (2026-05-17 slot-8)**: 28 new tests for `team_goals` (compute_team_goals_stats, \_compute_rolling_metrics,
+      compute_team_goals_for_fixture, compute_team_goals_batch). Shipped at `features-service@b3c0b164`. 1306 tests
+      across 41 files. **Wave 29 (2026-05-17 slot-8)**: 61 new tests for `team_derived` (\_clamp,
+      compute_dominance_index, compute_momentum_score, compute_attack_balance, compute_defence_balance,
+      \_compute_trend_last10, \_compute_xg_expected_ppg, compute_team_derived_for_fixture, compute_team_derived_batch).
+      Shipped at `features-service@bc477964`. 1367 tests across 42 files. **Wave 30 (2026-05-17 slot-8)**: 56 new tests
+      for `player_lineup_calculator` (\_compute_age_std, \_compute_position_value_share, \_compute_top_n_value_share,
+      \_compute_top_n_attacker_value_share, \_compute_continuity_last3, compute_player_lineup_features,
+      compute_player_lineup_batch). Shipped at `features-service@ecdb1b08`. 1423 tests across 43 files. **Wave 31
+      (2026-05-17 slot-8)**: 56 new tests for `team_form` (\_outcome_code, \_compute_goals_trend,
+      \_compute_form_momentum, \_ppg_from_goal_arrays, \_consecutive_from_end, compute_team_form,
+      compute_team_form_for_fixture, compute_team_form_batch). Shipped at `features-service@36744394`. 1479 tests across
+      44 files. **Wave 32 (2026-05-17 slot-8)**: 30 new tests for `transfer_window_calculator` (\_resolve_league,
+      \_compute_squad_stability, \_shock_starter_turnover_stability, compute_transfer_window_batch; all 38
+      TRANSFER_WINDOW_COLUMNS verified). Also fixed pd.Index[int] runtime bug (not subscriptable in pandas 2.3.3).
+      Shipped at `features-service@38c27ff6`. 1274 calculator tests across 45 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
