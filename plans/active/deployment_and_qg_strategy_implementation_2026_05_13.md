@@ -488,6 +488,9 @@ surface, not per repo:
       compute_injury_impact_batch) + `h2h_calculator` (33 tests — _streak_from_end, _compute_h2h_streaks, _venue_record,
       _h2h_xg_perspective_avgs, _count_h2h_results, _avg_total_goals, compute_h2h full computation, compute_h2h_batch).
       Shipped at `features-service@84c8476c`. 748 total tests across 24 calculator files.
+      **Wave 12 (2026-05-17 slot-8)**: 34 new tests for `elo_calculator` (_expected_score, _goal_diff_multiplier,
+      _actual_score, _regress_toward_mean, _crosses_season_boundary, compute_elo_batch winner/loser/form/league-ranks).
+      Shipped at `features-service@42320934`. 782 total tests across 25 calculator files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
