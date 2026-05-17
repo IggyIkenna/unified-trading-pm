@@ -813,3 +813,17 @@ extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
 * `execution-service@9403a1afa` — TenderlyExecutionProvider.simulate_bundle 51L→23L via _build_bundle_payload helper.
 
 365 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
+
+
+[2026-05-17 /loop tick 11] slot-7 — execution-service Phase B (+4, 16/377 cleared):
+
+* `execution-service@216c70b12` — BetfairAdapter.get_odds 51L→22L via _emit_betfair_fetch_failure helper
+  (SP-12 ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED log_event pair extracted).
+* `execution-service@cb87efc7f` — KrakenCeFiAdapter._do_private_post 51L→32L via _extract_kraken_result helper
+  (response body parse + error classify + result-dict guard).
+* `execution-service@bb862de2f` — MultiLegOrchestrator._execute_leader_follower 51L→24L via
+  _cancel_remaining_legs helper (eliminates duplicate cancel loops; Callable import added for condition arg).
+* `execution-service@0a60c3216` — SlashingTailRiskMC.simulate_archetype_loss 51L→32L (docstring consolidated;
+  inline-comments folded into the contract paragraph).
+
+361 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
