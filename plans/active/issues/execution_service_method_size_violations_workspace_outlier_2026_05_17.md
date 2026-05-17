@@ -697,6 +697,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-56**: 60 files cleared (slot-2 contribution: -60 files; spans 27 submodules incl.
   engine/backtest/passive_aggressive_hybrid).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 57 — data/config/trades_builder)**: shipped at execution-service@b37764683.
+  build_trades_config_impl 151L→22L via 3 helpers (\_prepare_loading_context + \_load_data_to_catalog +
+  \_finalize_and_log). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-57**: 61 files cleared (slot-2 contribution: -61 files; spans 28 submodules incl.
+  data/config/trades_builder).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
