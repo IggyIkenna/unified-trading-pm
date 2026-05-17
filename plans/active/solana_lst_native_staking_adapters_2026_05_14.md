@@ -148,9 +148,10 @@ This is the only phase that requires a wholly new data_type.
       columns registered)
 - [x] [instruments-service] P1. Create `adapters/defi/solana_native_staking.py`: - Sources: Solana RPC
       `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key —
-      BLOCKED-CREDENTIALS ping filed in slot_2.md 2026-05-15). - Data type: `native_staking_rates` per epoch (daily-ish,
-      ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8 tests pass.
-      (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
+      ✅ UNBLOCKED 2026-05-15 `helius-api-key` vaulted; MTDS@4cea371 + MTDS@348c171 wired). - Data type:
+      `native_staking_rates` per epoch (daily-ish, ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet
+      genesis). - Unit tests: 8 tests pass. (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring +
+      8 unit tests)
 - [x] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy. (MTDS@1ec3a46 — NativeStakingHandler + \_epoch_for_date +
       \_schedule_rate + \_fetch_live_rates; live RPC for current epoch, deterministic inflation schedule for historical;
