@@ -110,7 +110,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-17 15:54 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-17 16:05 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -125,10 +125,10 @@ folded into the appropriate epic._
 | [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                           | master                               | infra     | 0/64       | 0%           | 20.0     | 2026-07-04                               |
 | [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md)                                                     | master                               | brand-new | —          | —            | 20.0     | post-cutover (target 2026-06-01)         |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                       | cross_cutting_may_23_2026            | design    | 24/70      | 34%          | 19.7     | 2026-05-23                               |
-| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 101/164    | 62%          | 16.2     | —                                        |
 | [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md)                                           | master                               | infra     | 0/16       | 0%           | 15.2     | post-cutover (target 2026-07-15)         |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md)                                                                         | master                               | brand-new | —          | —            | 15.0     | —                                        |
 | [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md)                                             | instruments_live_master_2026_05_08   | design    | —          | —            | 15.0     | 2026-05-23                               |
+| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 113/164    | 69%          | 13.2     | —                                        |
 | [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md)                                         | cefi_master_2026_05_07               | design    | 118/246    | 48%          | 12.5     | —                                        |
 | [`cross_cutting_may_23_deliverables_2026_05_08`](./cross_cutting_may_23_deliverables_2026_05_08.md)                                           | cross_cutting_may_23_2026            | design    | 18/30      | 60%          | 12.4     | 2026-05-23                               |
 | [`defi_master_2026_05_07`](./defi_master_2026_05_07.md)                                                                                       | README                               | design    | 32/106     | 30%          | 9.8      | —                                        |
@@ -185,7 +185,7 @@ folded into the appropriate epic._
 | [`sports_retired_data_types_code_cleanup_2026_05_13`](./sports_retired_data_types_code_cleanup_2026_05_13.md)                                 | master                               | refactor  | 12/12      | 100%         | 0.0      | 2026-05-20                               |
 | [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)                     | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md)                     | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
-| **TOTAL** (69 plans)                                                                                                                          | 0 orphans, 0 TBD                     | —         | —          | **52% done** | **488**  | —                                        |
+| **TOTAL** (69 plans)                                                                                                                          | 0 orphans, 0 TBD                     | —         | —          | **52% done** | **485**  | —                                        |
 
 <!-- AUTO-INVENTORY-END -->
 

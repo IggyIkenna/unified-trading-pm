@@ -1408,27 +1408,28 @@ Next tick: await operator return; monitor harsh-slot-9 boot.
 
 **Poll results** (tick 16):
 
-- `935ad3c1`: slot-2 batch 38 — tp_sl_monitor_actor _check_tp_sl 139L→36L (execution-service@e1847b3eb).
+- `935ad3c1`: slot-2 batch 38 — tp_sl_monitor_actor \_check_tp_sl 139L→36L (execution-service@e1847b3eb).
 - `df3a7576`: backfill Phase 4 security review + H2 Phase 10 codex flips.
 - `30bb3410`: slot-2 batch 39 — evaluator.py evaluate_performance 144L→49L (execution-service@769303f22).
-- `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>85 min** since B-015 ping. Likely won't boot this cycle.
+- `harsh_orchestrator/pings/slot_9.md`: CYCLE-CLOSE 2026-05-15 — offline **>85 min** since B-015 ping. Likely won't boot
+  this cycle.
 - `plans/active/_agent_pings.md`: no new cross-side responses.
 
 **Session summary for operator return** (~14:30→17:01 UTC, ~2.5h):
 
-| Item | Outcome |
-|---|---|
-| Gate 3 phantom audit (all 5 asset_groups) | ✅ FIRED — 0 phantoms, PM@bf47123f |
-| Phase 6B Aave V3 multi-chain catch-up | ✅ 105,202 rows / 13 shards, PM@3d940c5e |
-| LST rates 18-day gap fill | ✅ 128 manifest entries, PM@23e9389c |
-| TradFi OHLCV Phases 1-8 | ✅ Fully verified, PM@aac59fd1 |
-| B-015 HOLD released | ✅ _agent_pings.md PM@4c0b9843 |
-| defi_features_pipeline_not_run | ✅ All items flipped, PM@aac59fd1 |
-| harsh-slot-9 B-015 Smoke B re-launch | ⏳ Ping sent; no boot in >85 min |
-| Databento spend sign-off | ❌ BLOCKED-OPERATOR-DECISION |
-| ICE roots pick | ❌ BLOCKED-OPERATOR-DECISION |
-| manifest_schema_final_gate Phase 7.C | ❌ [HUMAN+AGENT] required |
-| TradFi-fwd cron scheduling | ❌ BLOCKED-OPERATOR-DECISION |
+| Item                                      | Outcome                                  |
+| ----------------------------------------- | ---------------------------------------- |
+| Gate 3 phantom audit (all 5 asset_groups) | ✅ FIRED — 0 phantoms, PM@bf47123f       |
+| Phase 6B Aave V3 multi-chain catch-up     | ✅ 105,202 rows / 13 shards, PM@3d940c5e |
+| LST rates 18-day gap fill                 | ✅ 128 manifest entries, PM@23e9389c     |
+| TradFi OHLCV Phases 1-8                   | ✅ Fully verified, PM@aac59fd1           |
+| B-015 HOLD released                       | ✅ \_agent_pings.md PM@4c0b9843          |
+| defi_features_pipeline_not_run            | ✅ All items flipped, PM@aac59fd1        |
+| harsh-slot-9 B-015 Smoke B re-launch      | ⏳ Ping sent; no boot in >85 min         |
+| Databento spend sign-off                  | ❌ BLOCKED-OPERATOR-DECISION             |
+| ICE roots pick                            | ❌ BLOCKED-OPERATOR-DECISION             |
+| manifest_schema_final_gate Phase 7.C      | ❌ [HUMAN+AGENT] required                |
+| TradFi-fwd cron scheduling                | ❌ BLOCKED-OPERATOR-DECISION             |
 
 **Inventory**: 488 cal AI-days remaining (52% done, 69 plans).
 
@@ -1450,3 +1451,19 @@ Next tick: continue monitoring until operator confirms return.
 **All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: await operator return; monitor harsh-slot-9 boot.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:08 UTC (tick-17 duplicate resolved → tick-18): inventory regen 485 cal AI-days
+
+**Parallel instance resolved** — tick-17 written concurrently by another instance. This tick carries supplemental data:
+
+- **slot-7**: still at tick-25 (110 methods / 316 remaining). No new self-report since main ack at 14:55 UTC.
+- **harsh-slot-9**: CYCLE-CLOSE 2026-05-15 — >100 min since B-015 ping. Session closed.
+- **Phase 7+8 detail**: LiquidationProximityCircuit kill-switch (strategy-service@fb3cd97) + ARCHETYPE_CONCENTRATION_MULTIPLIER (UAC archetype.py:451) — both flipped in `91c647ab`.
+- **Inventory regenerated**: 69 plans / 52% done / **485 cal AI-days** (down 3 from tick-16's 488).
+- **Cross-side / slot-6**: no new responses.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: await operator return or slot-7 100/377 milestone ping.
