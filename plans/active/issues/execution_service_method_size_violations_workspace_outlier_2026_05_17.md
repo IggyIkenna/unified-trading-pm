@@ -591,8 +591,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    _get_final_balance + _apply_commission_fallback + _build_result_dict; also promoted `from typing import cast`
    from inside-function to module level). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-39**: 43 files cleared (slot-2 contribution: -43 files; spans 16
-   submodules incl. engine/validation ×2, engine/backtest/actors ×2).
+   **Ratchet-down 2026-05-17 (slot-2 batch 40 — engine/backtest/actors/signal_driven_v3_base)**: shipped at
+   execution-service@7f5f93c28 (__init__ 146L→8L via _parse_instructions + _init_timing_config + _init_state +
+   _init_trade_config + _init_actors; fee bps conversion inlined). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-40**: 44 files cleared (slot-2 contribution: -44 files; spans 16
+   submodules incl. engine/validation ×2, engine/backtest/actors ×3).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
