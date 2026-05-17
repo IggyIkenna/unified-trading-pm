@@ -2174,3 +2174,22 @@ Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-ski
 New VM `features-onchain-defi-20260517-191412` RUNNING. Expected runtime ~2h.
 
 **Slot-7**: still at tick-44 (110/377). **Operator queue**: 9 items (AFK).
+
+---
+
+## [slot 1 main] 2026-05-17 ~19:25 UTC — tick-50: waves 16+17 ✅; Phase 3.3 COMPLETE; batch-63; Smoke B running
+
+**New remote commits since tick-49** (all acked):
+
+- `a3d92fdd` — **wave-16** sports calculators: european_fatigue_calculator (39 tests, features-service@6c5ce10e)
+- `d265b2d0` — **wave-17** sports calculators: bucketed_features_calculator (28 tests, features-service@f0888568)
+- `38dfd049` — **Phase 3.3 SHIPPED** (deployment-service@646ef02): async cloud-build trigger on tarball write. **Phase 3 COMPLETE** (all 3 items done).
+- `29a83ffb` — **slot-2 batch-63** (execution-service@32846d337): api/manual_instruction_api 9 methods cleared + 11 helper extractions.
+
+**Sports calculators**: waves 1→17 complete — 762+ tests across 27+ calculator files.
+
+**Phase 3**: ALL COMPLETE — tarball SHA pinning + boot validation + async build trigger. No more open items.
+
+**Smoke B re-run** (`191412`): VM RUNNING, `lst_yields` writing cleanly. No errors in log so far.
+
+**Slot-7**: still at tick-44 (110/377). **Operator queue**: 9 items (AFK).
