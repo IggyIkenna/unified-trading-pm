@@ -121,6 +121,9 @@ UAC's `internal/__init__.py` 1693L barrel file (separately tracked in `uac_qg_pr
    on line 779-794 actually exits via `except: pass` on any parse error, so QG only fired on files where
    `print()` succeeded. Likely the QG step was emitting the violation list but `log_fail` was never
    reached (need to audit — but the ratchet is now solid regardless).
+   **Ratchet-down 2026-05-17 execution-service@78ee78909** — slot-7 Phase B incremental refactors cleared
+   7 files (sor / defi_test_data_generator / signal_driven_v3 / live_ccxt_adapter / instruction_validator /
+   oms / benchmark_service); allowlist 187 → 180 files. AST scanner re-verified clean.
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same
    helper-extraction patterns this session applied to UTL/MTDS/strategy-service:
