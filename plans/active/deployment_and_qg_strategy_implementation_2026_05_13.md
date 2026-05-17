@@ -632,6 +632,9 @@ surface, not per repo:
       **Wave 52 (2026-05-17 slot-8)**: bench_sub_calculator 95.0%→100% — home_subs_count else
       branch (152), exception handler defaults (257-264). +2 tests → 27.
       Shipped `features-service@961382e1`.
+      **Wave 53 (2026-05-17 slot-8)**: replacement_model_calculator 95.0%→100% — uncertainty=0.0
+      when all unavailable positions map to UNKNOWN (174), exception handler (285-292). +2 tests → 35.
+      Shipped `features-service@9b8f433b`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
