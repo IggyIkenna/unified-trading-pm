@@ -4,6 +4,8 @@ title:
   parquets absent"
 created: 2026-05-17
 author: ikenna-main (B-015 chain follow-up after VM 6 successful run revealed lending_rates 0-rows)
+resolved: 2026-05-17
+resolution: SHIPPED — B-015 window phantom flip-with-correction landed 2026-05-17 by slot-1-main (Option C inline + correction at 01:56 UTC); Option A generalisation `--manifest-bucket` + DeFi venue-variant fix shipped 2026-05-17 by slot-3 at `instruments-service@b64877f`. Verified clean: 65 real / 0 phantom on lending-indices.
 source:
   - "VM features-onchain-defi-20260516-235840 events: lending_rates feature_group COMPLETED with 0 rows for 2026-04-15"
   - "VM mtds-lending-indices-20260517-002305 events: 31× MANIFEST_FRESHNESS_SKIP with
