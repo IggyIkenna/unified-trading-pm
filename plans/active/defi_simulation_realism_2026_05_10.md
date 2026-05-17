@@ -666,9 +666,11 @@ Owner: ikenna for sign-off + harsh for runs.
       from tab/hk/4@c5dd45eb after foot-gun #5) — `compose_sign_off_report.py`; `--synthetic` GREEN signal.
       **DEFERRED**: actual operator sign-off requires 8A/B/C real-data runs complete; May-23 cutover gate — route to
       slot 1 main for timing.
-- [ ] [INFRA] P2. Sign up for Helius RPC access (https://helius.dev) — needed for Solana on-chain data validation in
-      DeFi simulation. Free tier available. **DEFERRED**: not blocking Phase 1 simulation; needed for Phase 2+
-      real-chain validation. Issue: plans/active/issues/helius_solana_rpc_for_validation_2026_05_13.md
+- [x] [INFRA] P2. Sign up for Helius RPC access (https://helius.dev) — needed for Solana on-chain data validation in
+      DeFi simulation. Free tier available. **✅ UNBLOCKED 2026-05-15**: operator vaulted `helius-api-key` in GCP Secret
+      Manager; MTDS SA granted access. `market-tick-data-service@4cea371` wired Jito MEV APY via Helius. Phase 2+
+      real-chain validation now unblocked. Issue closed:
+      `plans/archive/issues/helius_solana_rpc_for_validation_2026_05_13.md`.
 
 **Full-execution criterion** (the May-23 gate):
 
