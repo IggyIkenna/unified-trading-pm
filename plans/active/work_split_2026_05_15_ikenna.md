@@ -759,8 +759,7 @@ redesign accepted today.
   8.A/8.B/8.D items. (design 0.6×, ~15 = 9.0 cal)
 - **`alerting_service_live_rules_2026_05_07` close** (3.0 cal, 50/65) — push 15 remaining alerting rule items. (design
   0.6×, ~5 = 3.0 cal)
-- **`manifest_schema_final_gate_2026_05_09` remainder** (1.1 cal, 26/56) — Phase 8 + 11 + 12 carry-overs not in slot 6
-  #1 (which is Phase 6+7). (design 0.6×, ~2 = 1.2 cal)
+- ✅ **`manifest_schema_final_gate_2026_05_09` Phase 9.A** — E3 7-item checklist VERIFIED 2026-05-17: all 7 items PASS (UTL v8 schema, BATCH_<source> on all handlers, ManifestFreshnessCache ttl=60, 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap events, Phase 6.C tarballs [x], watchdog dict complete). PM@`f8b9f3d2`. Phase 8+11+12 remain BLOCKED-OPERATOR. (design 0.6×, ~2 = 1.2 cal)
 
 #### Slot 7 — **[SWEEP-16]** items (+12 cal — simulation + batch_live_symmetry + defi sim)
 
