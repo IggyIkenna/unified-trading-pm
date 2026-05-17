@@ -681,6 +681,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-54**: 58 files cleared (slot-2 contribution: -58 files; spans 25 submodules incl.
   algorithms/impl/passive_aggressive_core).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 55 — cli/argument_parser)**: shipped at execution-service@942a02c6f.
+  parse*args 249L→28L via 10 module-level \_add*\*\_args helpers (\_add_config_args + \_add_time_args +
+  \_add_data_args + \_add_exec_args + \_add_signal_args + \_add_instrument_args + \_add_position_args +
+  \_add_output_args + \_add_dependency_args + \_add_meta_args). Allowlist -1. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-55**: 59 files cleared (slot-2 contribution: -59 files; spans 26 submodules incl.
+  cli/argument_parser).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
