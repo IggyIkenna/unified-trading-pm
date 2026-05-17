@@ -612,6 +612,11 @@ surface, not per repo:
       **Wave 47 (2026-05-17 slot-8)**: odds_calculator 92.5%→100% — pinnacle diff (162),
       sharp-money (175-177), asian_handicap_line (191), secondary market odds (201-203,205),
       tier-consensus early return (266). 30 tests. Shipped `features-service@a5f035a8`.
+      **Wave 48 (2026-05-17 slot-8)**: halftime_multi_source miss-line coverage — detect_ht_break_minute
+      timer_seconds too-few-rows (line 41) + no-large-gap (line 47), pivot path line 215 via
+      team+timer_seconds format, all optional stat columns 245-301 (corners/fouls/dangerous_attacks/
+      attacks/shots_total/shots_off_target/dominance), team_fx.empty continue (line 442). +5 tests →
+      43 total. Shipped `features-service@86107989`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
