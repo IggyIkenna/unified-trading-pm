@@ -647,6 +647,13 @@ surface, not per repo:
       96.1%→100% (lines 232-233, 238-239: model_xg_col blend in batch; also fixed
       fillna(ndarray) pandas 2.x incompatibility in source).
       Aggregate: 99.1%→99.2%. Shipped `features-service@69149a2b`.
+      **Wave 57 (2026-05-17 slot-8)**: manager_calculator 97.1%→100% (_str_col dead-code
+      direct test 86-89; _compute_style_shift_attack empty-full_history 251;
+      _compute_style_shift_defense empty-full_history 289 + pre-xga-empty 295) +
+      team_form 97.4%→+% (_team_form_ppg_windows empty 240; _team_form_streaks empty 262;
+      _team_form_cards_corners red_cards 286-287; _team_form_rest_congestion empty-dates 307) +
+      venue_context 96.0%→+% (capacity_col 178-179; rest_col 244; cumulative_travel 252).
+      Shipped `features-service@2ca9f7c0`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
