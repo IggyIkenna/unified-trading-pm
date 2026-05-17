@@ -1166,3 +1166,13 @@ because the issue is statused P2 post-cutover — proceed regardless.
   ExecutionAlphaMetrics.to_dict 67L→26L via module-level \_build_alpha_summary() (32-line summary dict → 1 call line).
 
 290 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 37] slot-7 — execution-service Phase B (+3, 90/377 cleared):
+
+- `execution-service@b6a1cca91` — GridConfigGenerator._generate_sor_secondary_instruments 65L→47L
+  via _filter_usdc_usdt_pools module-level (17-line USDC-USDT filter block → 1 call);
+  PassiveAggressiveExecutionMixin.on_order_accepted 65L→18L via _handle_parent_order_accepted method +
+  docstring trim; POVDynamicExecAlgorithm._schedule_pov_children 65L→39L via _pov_bucket_callback
+  module-level (replaces make_callback closure) + docstring trim + comment removal.
+
+287 remaining. basedpyright clean.
