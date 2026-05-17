@@ -1816,6 +1816,21 @@ exit_code=124. Archived: `gs://...deployments/archive/2026-05-17/e8252faf-0bbd-4
 
 ---
 
+## [slot 1 main] 2026-05-17 ~17:28 UTC — Autonomous loop tick-35: post-failure check + loop status
+
+**Smoke B VM**: confirmed gone (gcloud returns 0 instances). _agent_pings.md failure ping written. ✅
+
+**harsh-slot-9**: still CYCLE-CLOSE (2026-05-15). No response to failure ping yet — operator must dispatch next.
+
+**Remote**: 0 new commits ahead of local HEAD (current at PM@1217d34e).
+
+**Loop status**: Smoke B monitoring ended. Continuing in general poll mode until operator returns.
+**Operator queue** (9 items — unchanged). No autonomous action possible.
+
+Next: await operator return or harsh-side dispatch.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~17:21 UTC — Autonomous loop tick-33: Smoke B RUNNING, 72,016 events, fresh 17:21 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
