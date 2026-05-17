@@ -796,6 +796,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-68**: 72 files cleared (slot-2 contribution: -72 files; spans 39 submodules incl.
   utils/dependency_checker).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 69 — trade_execution/adapters/kraken_rest_adapter)**: shipped at execution-service@e71867f36.
+  _parse_kraken_order_dict 88L→31L + _parse_kraken_trade_dict 55L→48L + place_order 85L→40L + get_positions 71L→22L
+  via _parse_kraken_order_status + _parse_kraken_order_type_str + _parse_kraken_order_quantities +
+  _parse_kraken_order_descr + _parse_kraken_order_prices + _parse_kraken_trade_timestamp +
+  _build_add_order_payload + _build_place_order_result + _parse_single_kraken_position.
+  4 violations cleared. allowlist -2 (kraken_rest_adapter + dependency_checker). basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-69**: 73 files cleared (slot-2 contribution: -73 files; spans 40 submodules incl.
+  trade_execution/adapters/kraken_rest_adapter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
