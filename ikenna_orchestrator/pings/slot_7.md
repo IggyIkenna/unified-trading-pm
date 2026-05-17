@@ -919,3 +919,16 @@ basedpyright clean across all 2 commits.
 
 340 remaining. basedpyright clean across all 6 commits. Slot-7 plan-of-record: all 9 base items +
 5 SWEEP-16 items remain ✅. Continuing execution-service grind per "no skip / no deferred" direction.
+
+
+[2026-05-17 /loop tick 17] slot-7 — execution-service Phase B (+3, 40/377 cleared):
+
+* `execution-service@14fbef8d1` — DeribitWebSocketMixin.subscribe_market_data 54L→27L via
+  _check_subscribe_response helper (mirror of _handle_auth_response from tick 12).
+* `execution-service@956f89d8c` — OrderRecoveryEngine.run 54L→16L via _emit_recovery_summary helper
+  (all-failed detection + log_event dispatch).
+* `execution-service@225d6a076` — RpcProviderFallback.execute_async 54L→27L via _parse_rpc_result helper
+  (dict-shape validation + result key pull).
+
+337 remaining. Cumulative session: 40 execution-service refactors + 50 across UTL/MTDS/strategy/UAC/UTL =
+~90 method-size methods refactored under the 50-line budget. basedpyright clean throughout.
