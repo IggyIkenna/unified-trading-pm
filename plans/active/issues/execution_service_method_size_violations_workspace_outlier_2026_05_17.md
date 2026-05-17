@@ -305,6 +305,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10**: 14 files cleared (slot-2 contribution: -14 files; 10
    handlers + 4 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 11 — defi_execution/protocols sweep continues)**: jupiter.py shipped at
+   execution-service@8687febc9 (get_swap_quote 94L→10L via \_fetch_quote_payload + \_build_quote_from_payload split;
+   execute_swap 130L→33L via \_post_swap_request + \_quote_to_jupiter_payload + \_decode_swap_transaction +
+   \_build_paper_trade_swap_result. The execute_swap helper trio cleanly separates HTTP-POST, JSON-serialize, and
+   base64-decode VersionedTransaction phases). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11**: 15 files cleared (slot-2 contribution: -15 files; 10
+   handlers + 5 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
