@@ -110,7 +110,7 @@ stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
 
-_Last regenerated: 2026-05-17 15:45 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
+_Last regenerated: 2026-05-17 15:54 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left`
 desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be
 folded into the appropriate epic._
 
@@ -125,7 +125,7 @@ folded into the appropriate epic._
 | [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)                           | master                               | infra     | 0/64       | 0%           | 20.0     | 2026-07-04                               |
 | [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md)                                                     | master                               | brand-new | —          | —            | 20.0     | post-cutover (target 2026-06-01)         |
 | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md)                                                                       | cross_cutting_may_23_2026            | design    | 24/70      | 34%          | 19.7     | 2026-05-23                               |
-| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 90/164     | 55%          | 19.1     | —                                        |
+| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                             | master                               | design    | 101/164    | 62%          | 16.2     | —                                        |
 | [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md)                                           | master                               | infra     | 0/16       | 0%           | 15.2     | post-cutover (target 2026-07-15)         |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md)                                                                         | master                               | brand-new | —          | —            | 15.0     | —                                        |
 | [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md)                                             | instruments_live_master_2026_05_08   | design    | —          | —            | 15.0     | 2026-05-23                               |
@@ -177,7 +177,7 @@ folded into the appropriate epic._
 | [`solana_restaking_rewards_coverage_2026_05_13`](./solana_restaking_rewards_coverage_2026_05_13.md)                                           | master                               | brand-new | 16/18      | 89%          | 0.2      | 2026-05-23                               |
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md)                                                                 | infrastructure_master_2026_05_07     | refactor  | 16/31      | 52%          | 0.2      | —                                        |
 | [`solana_lst_native_staking_adapters_2026_05_14`](./solana_lst_native_staking_adapters_2026_05_14.md)                                         | master                               | brand-new | 21/22      | 95%          | 0.2      | 2026-05-23                               |
-| [`defi_basedpyright_features_service_2026_05_15`](./defi_basedpyright_features_service_2026_05_15.md)                                         | master                               | refactor  | 50/53      | 94%          | 0.0      | —                                        |
+| [`defi_basedpyright_features_service_2026_05_15`](./defi_basedpyright_features_service_2026_05_15.md)                                         | master                               | refactor  | 51/54      | 94%          | 0.0      | —                                        |
 | [`archetype_paper_runnable_matrix_2026_05_15`](./archetype_paper_runnable_matrix_2026_05_15.md)                                               | master                               | design    | 5/5        | 100%         | 0.0      | —                                        |
 | [`context_fill_optimization_2026_05_14`](./context_fill_optimization_2026_05_14.md)                                                           | infrastructure_master_2026_05_07     | design    | 3/3        | 100%         | 0.0      | —                                        |
 | [`governance_qg_automation_gaps_post_cutover_2026_05_12`](./governance_qg_automation_gaps_post_cutover_2026_05_12.md)                         | cross_cutting_may_23_2026            | design    | 7/7        | 100%         | 0.0      | 2026-05-23                               |
@@ -185,7 +185,7 @@ folded into the appropriate epic._
 | [`sports_retired_data_types_code_cleanup_2026_05_13`](./sports_retired_data_types_code_cleanup_2026_05_13.md)                                 | master                               | refactor  | 12/12      | 100%         | 0.0      | 2026-05-20                               |
 | [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)                     | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
 | [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md)                     | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
-| **TOTAL** (69 plans)                                                                                                                          | 0 orphans, 0 TBD                     | —         | —          | **52% done** | **491**  | —                                        |
+| **TOTAL** (69 plans)                                                                                                                          | 0 orphans, 0 TBD                     | —         | —          | **52% done** | **488**  | —                                        |
 
 <!-- AUTO-INVENTORY-END -->
 
