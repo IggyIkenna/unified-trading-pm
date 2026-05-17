@@ -457,3 +457,18 @@ VM relaunched: `features-onchain-defi-20260517-072313`. Expected outcomes:
 
 The `lending_rates` 0-rows is a DIFFERENT issue (in `lending_features.py` not this `_calculate_utilization_features`)
 — still open. The `utilization` feature_group is now unblocked though.
+
+## VERIFICATION 2026-05-17 07:35 UTC — fix is working
+
+VM `features-onchain-defi-20260517-072313` events confirm:
+- 239+ `DEFI_FEATURE_AAVE_UTILIZATION` emissions with REAL values:
+  - `util=0.80101266 pool=AAVE_V3-ARBITRUM:LENDING:WETH` ✓ (matches parquet 0.801)
+  - `util=0.68899955 pool=AAVE_V3-ARBITRUM:LENDING:USDT`
+  - `util=0.01713765 pool=AAVE_V3-ARBITRUM:LENDING:LINK` (low borrow — correct)
+- All previous false-zero emissions GONE
+- `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` x1 (macro_sentiment — confirms earlier fix still working)
+- `LST_DAY_PROCESSED` x5 + `PERSISTENCE_COMPLETED` x5 (lst_yields still writing successfully)
+- `FEATURE_GROUP_PROCESSING_STARTED` x5 (more groups attempted post early-exit fix)
+
+VM still RUNNING; per-feature_group parquet writes will fire as workflow proceeds through remaining groups
+(`utilization`, `lst_yields` already verified; `lending_rates` deeper bug remains).
