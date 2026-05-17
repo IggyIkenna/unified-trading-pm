@@ -635,6 +635,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-48**: 52 files cleared (slot-2 contribution: -52 files; spans 19 submodules
    incl. data/config_builder).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 49 — data/ohlcv_converter)**: shipped at execution-service@e20964148
+   (convert_ohlcv_parquet_to_catalog 251L→44L via \_normalize_ohlcv_instrument_id + \_try_primary_id_conversion +
+   \_try_fallback_id_conversion + \_skip_if_bar_exists + \_scale_prices + \_build_ohlcv_bars_list +
+   \_write_bars_to_catalog @staticmethod helpers). Allowlist -1. basedpyright 0 errors.
+
+   **Slot-2 cumulative across batches 3-49**: 53 files cleared (slot-2 contribution: -53 files; spans 20 submodules
+   incl. data/ohlcv_converter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
