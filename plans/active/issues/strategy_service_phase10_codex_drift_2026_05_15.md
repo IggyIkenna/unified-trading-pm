@@ -88,4 +88,4 @@ Drift 2: Low risk. Organizational confusion only.
 | Item                                                          | Status                   | Owner         |
 | ------------------------------------------------------------- | ------------------------ | ------------- |
 | Diagnose execution-service SOR empty-eligible_venues behavior | DEFERRED                 | Slot 1        |
-| Add family-map assertion test for defi_lp / mev subdirs       | DEFERRED P3 NICE-TO-HAVE | Slot 3 future |
+| Add family-map assertion test for defi_lp / mev subdirs       | ✅ SHIPPED 2026-05-17 (slot-3) — `strategy-service@f01d12d` `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (4 tests green) | Slot 3 |
