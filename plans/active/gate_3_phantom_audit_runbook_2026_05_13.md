@@ -8,7 +8,7 @@ execution:
   cadence: "one-shot (Gate 3 phase of 5-gate DAG; expected fire before 2026-05-15 freeze-gate)"
   verifier:
     "event-stream receipt (triage.jsonl row count vs manifest phantom count; manifest row state post-reconciliation)"
-  last_executed: "NEVER"
+  last_executed: "2026-05-17 14:32 UTC (5 VMs RUNNING)"
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
@@ -19,6 +19,18 @@ estimate_calibration_note: |
 ---
 
 # Gate 3 — Phantom-Audit Execution Runbook
+
+> **🟢 VM RUNNING — Gate 3 phantom audit VMs launched 2026-05-17 14:32 UTC** All 5 asset_groups running in parallel on
+> asia-northeast1-c:
+>
+> - `manifest-recon-cefi-20260517-143241`
+> - `manifest-recon-defi-20260517-143258`
+> - `manifest-recon-tradfi-20260517-143321`
+> - `manifest-recon-sports-20260517-143339`
+> - `manifest-recon-prediction-20260517-143356`
+>
+> Triage JSONLs → `gs://central-element-323112-phantom-triage/triage_{ag}_{ts}.jsonl` (auto-path) **Scan banners before
+> touching manifest or triage JSONL bucket until STOPPED events received.**
 
 ## Overview
 
@@ -239,10 +251,10 @@ complete.
 
 ## Runbook Execution Record
 
-| Date       | Operator | Status                    | Phantom Count                                                                | Operator Decision | Notes                                                                                                                                                                                                                                             |
-| ---------- | -------- | ------------------------- | ---------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-11 | ikenna   | PARTIAL — no triage JSONL | cefi 2223 / defi 0 (false-pos) / tradfi 3976 / prediction 71 / sports 115524 | PENDING           | Ran via `launch-defi-phantom-recon-vm.sh` dry-run. Script lacked `--triage-output-gcs` feature at this time; triage JSONLs NOT written. Full analysis in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § DONE-2026-05-11 phantom-audit. |
-| PENDING    | —        | TRIAGE-JSONL-READY        | —                                                                            | PENDING           | Re-run needed to collect triage JSONLs now that script has `--triage-output-gcs` feature (instruments-service@9e2c4bb, 2026-05-17). Trigger after freeze-gate Phase 1 completes.                                                                  |
+| Date       | Operator     | Status                    | Phantom Count                                                                | Operator Decision | Notes                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------- | ------------ | ------------------------- | ---------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-05-11 | ikenna       | PARTIAL — no triage JSONL | cefi 2223 / defi 0 (false-pos) / tradfi 3976 / prediction 71 / sports 115524 | PENDING           | Ran via `launch-defi-phantom-recon-vm.sh` dry-run. Script lacked `--triage-output-gcs` feature at this time; triage JSONLs NOT written. Full analysis in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § DONE-2026-05-11 phantom-audit.                                                                                                                                                |
+| 2026-05-17 | ikenna-slot1 | IN-PROGRESS (VMs RUNNING) | PENDING (5 VMs running, ~45-60min)                                           | PENDING           | Re-run with triage JSONL feature. VMs: cefi=manifest-recon-cefi-20260517-143241 / defi=manifest-recon-defi-20260517-143258 / tradfi=manifest-recon-tradfi-20260517-143321 / sports=manifest-recon-sports-20260517-143339 / prediction=manifest-recon-prediction-20260517-143356. Triage JSONLs → gs://central-element-323112-phantom-triage/triage*{ag}*{ts}.jsonl. instruments-service@9e2c4bb. |
 
 ---
 

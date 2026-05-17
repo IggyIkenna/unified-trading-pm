@@ -1058,3 +1058,50 @@ Next tick: watch for slot-5 4-pillar validation result; watch for slot-8 Phase 5
 pending.
 
 Next tick: monitor for Gate-3 re-run trigger; poll slot-5 4-pillar validation result; watch slot-8 Phase 5 ack.
+
+---
+
+## [slot 1 main] 2026-05-17 ~14:32 UTC — Gate 3 VMs launched (all 5 asset_groups)
+
+**Gate-3 phantom audit VMs launched** after tarball rebuild:
+
+- `instruments-service-code.tar.gz` rebuilt + uploaded (14:31 UTC) to include `instruments-service@9e2c4bb` (triage
+  JSONL feature).
+- All 5 VMs launched 14:32-14:35 UTC on asia-northeast1-c (e2-standard-4 + 50GB):
+
+| VM Name                                     | Asset Group | Status at launch |
+| ------------------------------------------- | ----------- | ---------------- |
+| `manifest-recon-cefi-20260517-143241`       | cefi        | RUNNING          |
+| `manifest-recon-defi-20260517-143258`       | defi        | RUNNING          |
+| `manifest-recon-tradfi-20260517-143321`     | tradfi      | RUNNING          |
+| `manifest-recon-sports-20260517-143339`     | sports      | RUNNING          |
+| `manifest-recon-prediction-20260517-143356` | prediction  | RUNNING          |
+
+**Expected triage JSONL output**: `gs://central-element-323112-phantom-triage/triage_{ag}_{timestamp}.jsonl`
+(auto-default path).
+
+**Expected completion**: cefi/tradfi ~45-60min; defi ~15min; sports/prediction ~10min from boot.
+
+**Cross-plan banners added**:
+
+- `gate_3_phantom_audit_runbook_2026_05_13.md` — 🟢 VM RUNNING banner + execution record row updated to IN-PROGRESS
+- `master_to_live_defi_2026_05_23.md` — 🟢 VM RUNNING banner added
+
+**Monitor commands** (for next tick):
+
+```bash
+# Check event stream for STARTED/COMPLETED events:
+gcloud storage ls gs://central-element-323112-events/events/instruments-service/2026-05-17/manifest-recon-cefi-20260517-143241/ 2>/dev/null
+
+# Check triage JSONL output:
+gsutil ls gs://central-element-323112-phantom-triage/ 2>/dev/null
+
+# Check running VMs:
+gcloud compute instances list --filter="name~manifest-recon" --zones=asia-northeast1-c --format='table(name,status)'
+```
+
+**No new actionable pings** this tick. All pending operator decisions (Databento spend / ICE roots / tradfi-fwd cron /
+slot-6 Phase 7.C) still awaiting operator.
+
+Next tick: collect STARTED events (expected within 60s of boot); collect triage JSONLs when defi/sports/prediction VMs
+complete; update Gate 3 runbook execution record with phantom counts.
