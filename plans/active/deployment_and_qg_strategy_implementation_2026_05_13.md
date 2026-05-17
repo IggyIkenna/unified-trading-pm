@@ -557,6 +557,11 @@ surface, not per repo:
       compute_referee_features_from_events, compute_referee_features, compute_referee_features_batch;
       all 20 REFEREE_FEATURE_COLUMNS verified including timing/bias/VAR/strictness/consistency).
       Shipped at `features-service@394430e1`. 1326 calculator tests across 46 files.
+      **Wave 34 (2026-05-17 slot-8)**: 66 new tests for `halftime_calculator` (_poisson_pmf, _apply_core_htft_rates,
+      _apply_score_state_features, _apply_ht_stat_features, _apply_ht_flag_features,
+      _compute_historical_ht_patterns, _compute_second_half_predictions, compute_halftime_features,
+      compute_halftime_for_fixture; all 100 HALFTIME_COLUMNS paths covered).
+      Shipped at `features-service@a26e82e5`. 1392 calculator tests across 47 files.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
