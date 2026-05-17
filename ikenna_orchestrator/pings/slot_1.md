@@ -2249,3 +2249,24 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 **Expected validation**: run.log shows DEPLOYMENT_STARTED → lending_rates ✅ → lst_yields ✅ → onchain_perps (no Int64 error) → utilization (no stall, completes <5 min) → DEPLOYMENT_COMPLETED.
 
 **harsh-slot-9**: still CYCLE-CLOSE. Paper backtest still blocked. Will notify when 193018 passes.
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:36 UTC — tick-51: VM 193018 ✅ onchain_perps clean (Bug 1 CONFIRMED fixed)
+
+**VM `193018` run.log — 100 lines at 18:36 UTC. Currently in `onchain_perps` phase:**
+- `lst_yields` ✅: wrote 13-15 rows/day × 5 days to `features-onchain-defi-prd-central-element-323112`.
+- `onchain_perps` ✅: "Loaded **11,835** derivative ticker rows from MTDS" — **NO Int64 error** (Bug 1 CONFIRMED FIXED).
+- Not yet reached: utilization (Bug 2 fix validation pending).
+
+**Bug 1 confirmation**: perp_funding `Int64→Datetime` cast fix working. Prior runs loaded 0 rows with error → skipped. Now loading 11,835 rows cleanly.
+
+**New remote commits** (2, pulled):
+- `58be5047` — waves 24-25 sports calculators: squad_value + weather (features-service@501cf218).
+- `44f6a74e` — waves 22-23 sports calculators: replacement_model@f7cf28bf + xg_decomposition@6e73340e.
+
+**Sports calculators**: now at wave-25 (weather_impact, squad_value). Running total continues growing past 648.
+
+**harsh-slot-9**: CYCLE-CLOSE. Will notify when 193018 → DEPLOYMENT_COMPLETED.
+
+**Next**: check back in 270s for utilization completion (Bug 2 validation) or DEPLOYMENT_COMPLETED.
