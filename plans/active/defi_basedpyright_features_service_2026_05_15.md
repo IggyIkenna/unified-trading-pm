@@ -51,6 +51,10 @@ Same patterns as execution-service fix:
   - [x] ✅ delta_one/app/utils/numba_kernels.py 37→0 errors — features-service@be6f01a5 (slot-8 wave 2 2026-05-17)
   - [x] ✅ delta_one/app/calculators/streaks.py 18→0 errors — features-service@8828900b (slot-8 wave 2 2026-05-17)
   - [x] ✅ delta_one/app/calculators/market_structure_sequence.py 14→0 errors — features-service@8828900b (slot-8 wave 2 2026-05-17)
+  - [x] ✅ sports/calculators/travel_calculator.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
+  - [x] ✅ sports/calculators/referee_features.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
+  - [x] ✅ sports/calculators/halftime_calculator.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
+  - [x] ✅ sports/calculators/advanced_stats_calculator.py 14→0 errors — features-service@360a804d (slot-8 wave 2 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
