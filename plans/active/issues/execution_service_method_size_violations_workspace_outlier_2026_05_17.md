@@ -273,20 +273,20 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 7 — defi_execution/protocols sweep starting)**:
    marinade.py shipped at execution-service@1e9d31edd (stake 67L→3L, unstake 68L→3L; extracted 3 helpers
    \_submit_stake_op (shared lamports-convert + paper-trade-or-build-tx + send + log path), \_build_paper_trade_result
-   (synthesise SolanaTransactionResult for paper mode), \_log_stake_op_result (success/failure log emission)).
-   Allowlist after slot-7 batch (perp_hedge_sizer + bridge + deribit_websocket + bitget_native + tp_sl validation)
-   was 161; -1 = 160 files. basedpyright clean. Same per-method behavior preservation.
+   (synthesise SolanaTransactionResult for paper mode), \_log_stake_op_result (success/failure log emission)). Allowlist
+   after slot-7 batch (perp_hedge_sizer + bridge + deribit_websocket + bitget_native + tp_sl validation) was 161; -1 =
+   160 files. basedpyright clean. Same per-method behavior preservation.
 
    **Slot-2 cumulative across batches 3+4+5+6+7**: 11 files cleared (187→160 with slot-7 contributions, slot-2
    contribution: -11 files from execution-service handlers + 1 defi protocol).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 8 — defi_execution/protocols sweep continues)**: kamino.py shipped at
-   execution-service@d398d3c9f (supply 70L→3L, withdraw 68L→3L; extracted 3 helpers \_submit_reserve_op
-   (lamports + paper-mode + tx build + send + log), \_build_paper_trade_result, \_log_reserve_op_result). Same
-   pattern as marinade.py batch 7. Allowlist -1. basedpyright clean.
+   execution-service@d398d3c9f (supply 70L→3L, withdraw 68L→3L; extracted 3 helpers \_submit_reserve_op (lamports +
+   paper-mode + tx build + send + log), \_build_paper_trade_result, \_log_reserve_op_result). Same pattern as
+   marinade.py batch 7. Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8**: 12 files cleared (slot-2 contribution: -12 files; 10 handlers +
-   2 defi protocols).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8**: 12 files cleared (slot-2 contribution: -12 files; 10 handlers + 2
+   defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 9 — defi_execution/protocols sweep continues)**: orca.py shipped at
    execution-service@da88ae8cd (add_liquidity 96L→34L, remove_liquidity 76L→23L; extracted 5 helpers
@@ -295,7 +295,7 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    plus matching remove\_\* helpers). Allowlist -1. basedpyright clean.
 
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9**: 13 files cleared (slot-2 contribution: -13 files; 10 handlers
-   + 3 defi protocols).
+   - 3 defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 10 — defi_execution/protocols sweep continues)**: raydium.py shipped at
    execution-service@0f2c38fd8 (get_pool_info 61L→9L via \_fetch_pool_payload + \_build_pool_info_from_payload
@@ -315,56 +315,65 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    handlers + 5 defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 12 — defi_execution/protocols sweep continues)**: aave.py shipped at
-   execution-service@b0cf30814 (\_init_live_executor 69L→13L via \_try_init_via_base_credentials (Secret Manager
-   path) + \_try_init_via_config_overrides (direct config fallback) early-return split; warning emission centralised
-   in caller). Allowlist -1. basedpyright clean.
+   execution-service@b0cf30814 (\_init_live_executor 69L→13L via \_try_init_via_base_credentials (Secret Manager path) +
+   \_try_init_via_config_overrides (direct config fallback) early-return split; warning emission centralised in caller).
+   Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12**: 16 files cleared (slot-2 contribution: -16 files;
-   10 handlers + 6 defi protocols).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12**: 16 files cleared (slot-2 contribution: -16 files; 10
+   handlers + 6 defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 13 — defi_execution/protocols sweep continues)**: aster.py shipped at
    execution-service@4493316a1 (place_order 93L→25L via \_place_order_live (signed-POST shape, error-classified) +
-   \_place_order_paper (deterministic fill + position + fee update); same OrderResult shape both paths). Allowlist
-   -1. basedpyright clean.
+   \_place_order_paper (deterministic fill + position + fee update); same OrderResult shape both paths). Allowlist -1.
+   basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13**: 17 files cleared (slot-2 contribution: -17
-   files; 10 handlers + 7 defi protocols).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13**: 17 files cleared (slot-2 contribution: -17 files; 10
+   handlers + 7 defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 14 — defi_execution/protocols sweep continues)**: base.py shipped at
    execution-service@383595e75 (\_load_wallet_credentials 61L→14L via \_require_wallet_config (raise ValueError on
    missing wallet_private_key/rpc_url) + \_resolve_wallet_address (config override OR derive from key);
    sign_and_send_transaction 95L→27L via \_inject_tx_fields (mutate-in-place from/nonce/gas/gasPrice/chainId) +
    \_simulated_tx_result (paper-mode pseudo-hash) + \_broadcast_signed_tx (returns (tx_hash, error_or_none)) +
-   \_await_tx_receipt (success-with-gas_used vs reverted vs wait-failed)). Per-method behavior preserved.
-   Allowlist -1. basedpyright clean.
+   \_await_tx_receipt (success-with-gas_used vs reverted vs wait-failed)). Per-method behavior preserved. Allowlist -1.
+   basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14**: 18 files cleared (slot-2 contribution: -18
-   files; 10 handlers + 8 defi protocols).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14**: 18 files cleared (slot-2 contribution: -18 files;
+   10 handlers + 8 defi protocols).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 15 — services sweep starting)**: pnl_calculator.py shipped at
    execution-service@ec766fcc8 (calculate_period_pnl 71L→42L via \_returns_pct (gross/net % returns,
-   zero-on-zero-capital) + \_ethena_benchmark_return (day-count APY→period-$-return)). Allowlist -1. basedpyright
-   clean.
+   zero-on-zero-capital) + \_ethena_benchmark_return (day-count APY→period-$-return)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15**: 19 files cleared (slot-2 contribution:
-   -19 files; 10 handlers + 8 defi protocols + 1 service).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15**: 19 files cleared (slot-2 contribution: -19
+   files; 10 handlers + 8 defi protocols + 1 service).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 16 — services sweep continues)**: lst_collateral_resolver.py shipped at
-   execution-service@847fe94e5 (resolve_collateral_path 76L→27L via \_best_lst_for_venue_coin (highest
-   collateral_factor accepted at venue) + \_build_lst_path_result (LST stake + post-collateral steps + per-chain
-   gas)). Allowlist -1. basedpyright clean.
+   execution-service@847fe94e5 (resolve_collateral_path 76L→27L via \_best_lst_for_venue_coin (highest collateral_factor
+   accepted at venue) + \_build_lst_path_result (LST stake + post-collateral steps + per-chain gas)). Allowlist -1.
+   basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16**: 20 files cleared (slot-2 contribution:
-   -20 files; 10 handlers + 8 defi protocols + 2 services).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16**: 20 files cleared (slot-2 contribution: -20
+   files; 10 handlers + 8 defi protocols + 2 services).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 17 — engine/preprocessors)**: wrap_preprocessor.py shipped at
    execution-service@0e3954de8 (\_maybe_insert_unwrap 71L→35L via \_resolve_unwrap (decide eligibility +
-   destination_token check) + \_unwrap_venue (type→venue mapping); preprocess 77L→27L via
-   \_rewrite_with_wrapped_token (clone instruction with token_in→wrapped + metadata tags)). Allowlist -1.
-   basedpyright clean.
+   destination_token check) + \_unwrap_venue (type→venue mapping); preprocess 77L→27L via \_rewrite_with_wrapped_token
+   (clone instruction with token_in→wrapped + metadata tags)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17**: 21 files cleared (slot-2
-   contribution: -21 files; 10 handlers + 8 defi protocols + 2 services + 1 preprocessor).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17**: 21 files cleared (slot-2 contribution:
+   -21 files; 10 handlers + 8 defi protocols + 2 services + 1 preprocessor).
+
+   **Ratchet-down 2026-05-17 (slot-4 batch 10 — services/data sweep)**: 2 net-new files cleared at
+   execution-service@fb8643e29 (data/defi_lateral_loader.py load_lst_rates 71L→41L via \_discover_lst_parquets (async —
+   canonical prefix list + legacy fallback + FileNotFoundError in one place)); services/yield_recon_engine.py
+   reconcile_eigenlayer_rewards 64L→44L via \_compute_eigen_status (@staticmethod — discrepancy_pct +
+   MATCH/DISCREPANCY/CRITICAL status in one typed helper; reconcile body reads as None-check → compute-status →
+   build-record → maybe-alert). aave.py + pnl_calculator.py stash-resolved convergently with slot-2 batches 12+15 (both
+   slots independently extracted the same logic; slot-2 naming used in final QG file). Allowlist 131 → 117 files
+   (combined progress since batch 9 including all slot activity). AST clean per file. basedpyright clean.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8+9+10**: 43 files cleared (allowlist now 117).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 18 — services sweep continues)**: bridge_cost_model.py shipped at
    execution-service@fde0f06d6 (get_live_quote 102L→33L via \_resolve_bridge_addrs (chain-id + token-addr lookup) +
@@ -372,8 +381,8 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    non-200/network error) + \_build_live_quote_from_payload (pct/1e14→bps, gas-tokens×$2000→USD, outputAmount)).
    Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18**: 22 files cleared (slot-2
-   contribution: -22 files; 10 handlers + 8 defi protocols + 3 services + 1 preprocessor).
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18**: 22 files cleared (slot-2 contribution:
+   -22 files; 10 handlers + 8 defi protocols + 3 services + 1 preprocessor).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
