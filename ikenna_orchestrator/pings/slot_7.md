@@ -1130,3 +1130,12 @@ because the issue is statused P2 post-cutover — proceed regardless.
   near-identical DependencyStatus constructors → 3 one-line calls) + 11-line docstring → 1 line.
 
 302 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 33] slot-7 — execution-service Phase B (+3, 78/377 cleared):
+
+- `execution-service@2db06f9d6` — NodeBuilder.build_run_config 61L→47L (15-line docstring → 1 line);
+  LeveragedLegController.clamp_to_venue_capabilities 64L→40L (25-line docstring → 1 line);
+  RecursiveLoopOrchestrator._flash_close 62L→34L via _build_flash_close_result static helper
+  (LoopIterEvent + RecursiveLoopResult construction).
+
+299 remaining. basedpyright clean.
