@@ -1,4 +1,4 @@
-violation_count: 162
+violation_count: 148
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
@@ -113,8 +113,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/chain-environment-resolution.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/circuit-breaker-rule-taxonomy.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/client-config-and-risk-dimensions.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md
@@ -129,13 +127,7 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/concentrated-liquidity.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/concurrency.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/custody-providers.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/data-flow-map.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/data-ownership-principles.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/data-tranches.md
   reason: no-last_reviewed-field
@@ -145,27 +137,17 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/defi-risk-monitoring.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/email-architecture-resend.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/execution-modes-and-chain-resolution.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/execution-policy.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/fixed-grid-config.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/flash-loan-receiver.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/identity-model.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/instruments-live-architecture.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/instruments-preflight-chain.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/interface-credential-convention.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/kill-switch-circuit-breaker.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/kill-switch-event-bus.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md
   reason: no-last_reviewed-field
@@ -185,8 +167,6 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/opentelemetry.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/order-state-machine.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/orphan-audit.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md
@@ -195,11 +175,7 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/retention-policies.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/risk-breaker-seam.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/risk-preflight-flow.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/risk-rule-taxonomy.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/runtime-deployment-topology.md
   reason: no-last_reviewed-field
@@ -209,13 +185,9 @@ baseline_files:
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/seamless-cloud-switch.md
   reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/separation-of-concerns.md
-  reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/service-control-surface.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/service-emission-policy.md
-  reason: no-last_reviewed-field
-- path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/service-framework.md
   reason: no-last_reviewed-field
 - path: /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm/codex/04-architecture/shadow-deployment-pattern.md
   reason: no-last_reviewed-field

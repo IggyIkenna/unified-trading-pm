@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-17
 doc_kind: contract_stub
 status: active
 ssot_for: order_state_machine
