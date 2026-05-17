@@ -269,8 +269,11 @@ per workspace HARD RULE.
 
 ## Codex SSOT updates
 
-- [ ] [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) § 3
-      — Phase 3 above.
+- [x] ✅ [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md)
+      § 3 TRADFI fully updated by slot-1-main 2026-05-17 (`PM@e944dae2` + `PM@836b1dd6`): OHLCV-only callout +
+      `TRADFI_TICK_DATA_WINDOWS = []` rationale + `_DEFERRED_*` constants referenced + post-cutover successor plan
+      pointer + venue×data_type table shows ohlcv_1m-only with CME/ICE backdated to 2019 + NASDAQ/NYSE 2023-04-15 +
+      coverage-axes table marks trades/tbbo as DEFERRED-post-cutover.
 - [x] [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
       — slot-5-ikenna 2026-05-17: added `is_in_tradfi_tick_window` empty-mode addendum under § "Per-asset-group +
       per-data-source empty-rule asymmetry" pointing to this plan + the post-cutover successor; references the Phase 4
