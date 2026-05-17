@@ -966,3 +966,27 @@ method-size ratchet, allowlist 157→152 + 48/377 cleared respectively, no block
 
 Next tick: monitor drain completion; if all 6 VMs land before next tick, run 4-pillar validation script + flip Phase 7
 validation gate.
+
+[2026-05-17 12:10 UTC] slot-1-main /loop tick — hung GC 2023 VM rescue + slot-5 relaunch ack
+
+**Shipped this cycle**:
+
+- Detected `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-104024` hung 2h22m at wheel-cache step (no vm-logs/ object ever
+  created, serial console showed no output past `Caching compiled wheels to GCS...` at 09:42:41 UTC).
+- Deleted the stuck VM via gcloud (zero Databento spend wasted — never reached workload phase). Other 5 GC year-shards
+  from the same launch- second drained cleanly.
+- `unified-trading-pm@05ea9959` — cross-side ping to slot-5 with full diagnosis + recommended relaunch command
+  (`launch-tradfi-bf-cme-ohlcv-1m.sh --only-root GC --year 2023` after ES_OPT batch drains the singleton lock).
+
+**Why no code fix yet**: 1-VM occurrence of wheel-cache hang; 5 of 6 sister VMs from same launch-second succeeded. If
+second hang observed, file under `runbook_execution_governance_gaps_2026_05_08.md`.
+
+**Fleet**: 5 tradfi-bf VMs (all ES_OPT 2021-2025; GC 2023 vacated). drain ETA ~2h based on current per-day progress.
+
+**Other slots' tick activity** (no actionable inbound for slot-1):
+
+- slot-8 (just landed): 5-wave basedpyright fan-out 827→136 errors (691 cleared, 84%). Big win — no blockers.
+- slot-4 tick 9: execution-service method-size allowlist 141→136.
+- slot-7 tick 22: execution-service Phase B 50→53/377.
+
+Next tick: monitor ES_OPT drain; if all 5 land, file Phase 7 completion flip + start 4-pillar validation script.
