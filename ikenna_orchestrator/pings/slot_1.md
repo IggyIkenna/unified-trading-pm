@@ -2732,3 +2732,26 @@ Group summary:
 **No new actionable items** for main. Parallel session is coordinating slot assignments.
 
 **Status**: 🟢 All slots covered; loop monitoring; B-015 awaiting harsh-side dispatch
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:32 UTC — tick-68: slot-5 IDLE→reassigned; batch-88 shipped; monitoring
+
+**Poll results** (remote 1341d46c):
+- batch-88: 13 violations cleared across 11 files — execution-service@342a0ae15 ✅
+- harsh-side slot-9: CYCLE-CLOSE, no B-015 ack. Still awaiting operator dispatch.
+- _agent_pings: no new harsh-side replies.
+
+**Actionable**: Slot-5 IDLE (UAC lint already clean when picked up — parallel agent had fixed prior). Assigned to execution-service Phase B `algorithms/` + `data/loaders/` large-method refactor (≥100L methods; separate file range from slot-2 docstring-trim + slot-7 51-60L bucket). Directive written to slot_5.md.
+
+**Slot status** (tick-68):
+- Slot-2: Continuing Phase B (batches 84-88 done; docstring-trim + violations)
+- Slot-5: REASSIGNED → execution-service Phase B (algorithms/ + data/loaders/, ≥100L bucket)
+- Slot-6: simulation_scenarios Phase 6 — no new commit yet
+- Slot-7: MIA 3h+ at 110/377 Phase B. Second check-in sent at tick-68. (Note: slot-2 + slot-5 now covering overlap)
+- Slot-8: Sports waves active — wave-53 done, continuing
+- Slot-10: promote_workflow Phase U6 (manual-pending queue) — no ack yet
+
+**B-015**: awaiting harsh-side operator dispatch (slot-9 CYCLE-CLOSE since 2026-05-15).
+
+**Status**: 🟢 All slots themed; Phase B well-covered (slots 2+5); B-015 awaiting operator

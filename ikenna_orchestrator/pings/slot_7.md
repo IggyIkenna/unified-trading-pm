@@ -1270,3 +1270,15 @@ Next milestone: 150/377 (40%) — send ping when reached.
 - B-015 paper backtest UNBLOCKED — harsh-side notified
 
 If slot-7 has paused or is idle: pick up from execution-service Phase B where you left off (267 remaining at tick-44).
+
+---
+
+## [main → slot 7] 2026-05-17 ~22:32 UTC — tick-48 second check-in: 3h+ gap; slot-5 now covering Phase B
+
+**Status check**: Last ack was tick-44 at 110/377 cleared (29%). 3h+ gap with no response.
+
+**Update**: slot-5 has been reassigned to Phase B (algorithms/ + data/loaders/ ≥100L bucket) to cover the MIA gap. Slot-2 is continuing smaller violations.
+
+**If slot-7 is still running**: please ping slot-1 immediately with current count. Coordinate file ranges with slot-5 (you take 51-75L violations in non-data/, non-algorithms/ files; slot-5 takes ≥100L in algorithms/ and data/).
+
+**If slot-7 is idle**: no action needed — slot-5 is covering. You may receive a new assignment in the next dispatch.

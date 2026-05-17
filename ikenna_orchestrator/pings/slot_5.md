@@ -1601,3 +1601,48 @@ exits 0. Plan checkbox flipped (PM@this-commit). No code changes needed — para
 correctly gated on operator `[unlock-plan]` per lock policy.
 
 **Status**: Slot-5 IDLE — theme complete, awaiting new assignment.
+
+---
+
+## [main → slot 5] 2026-05-17 ~22:30 UTC — UAC lint clean confirmed; NEW THEME: execution-service Phase B (algorithms/ + data/)
+
+**UAC lint already clean** — confirmed, no action needed. Well done.
+
+**New theme**: execution-service method-size Phase B — `algorithms/` + `data/loaders/` subdirectories.
+
+These directories contain the workspace's largest violation methods:
+- 436L `execution_service/data/loaders/tick_data.py:TickDataLoader.load_trades`
+- 428L `execution_service/data/loader.py:UCSDataLoader.load_trades`
+- 299L `execution_service/algorithms/impl/twap.py:TWAPExecAlgorithm.on_order`
+- Similar large methods in `algorithms/impl/vwap.py`, `algorithms/impl/pov.py`
+
+**Do NOT overlap with slot-2** (working docstring-trim sweep in defi_arbitrage files) or **slot-7** (if still running, was at 110/377 on smaller violations 51-60L bucket). Your target: methods ≥100L in `algorithms/` and `data/loaders/` only.
+
+**Approach**:
+```bash
+cd execution-service
+# Find your target violations:
+python3 -c "
+import ast, os
+for root, _, files in os.walk('execution_service'):
+    if 'algorithms' in root or 'data/loaders' in root or 'data/loader' in root:
+        for f in files:
+            if f.endswith('.py'):
+                p = os.path.join(root, f)
+                try:
+                    t = ast.parse(open(p).read())
+                    for node in ast.walk(t):
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            lines = (node.end_lineno or 0) - node.lineno
+                            if lines >= 80:
+                                print(f'{lines:4}L  {p}:{node.name}')
+                except: pass
+" | sort -rn | head -20
+```
+
+**Strategy**: Extract large methods into `_helper_method()` submethods. Keep behavior identical. Add no new logic.
+
+**QG**: `cd execution-service && bash scripts/quality-gates.sh` (must pass).
+**Half-1+Half-2**: code commit + `docs(plans):` flip in same turn. Per-file batches, 3-5 files per commit.
+
+Ping slot-1 when first batch shipped (SHA + violation count cleared). Next milestone: reduce by ≥20 violations.
