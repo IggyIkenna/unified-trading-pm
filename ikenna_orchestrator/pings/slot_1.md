@@ -2640,3 +2640,32 @@ Group summary:
 
 **All slots have clear themes. No items requiring main action.**
 **B-015 still awaiting harsh-side ack.**
+
+---
+
+## [slot 1 main] 2026-05-17 ~21:50 UTC — tick-63b: full sweep complete; all slots reassigned
+
+**This tick** (post-context-restore sweep):
+
+- Verified tarball at 20:19:03Z contains Bug 7 fix (`09f182b5` batch-skip guards) ✅
+- Discovered Smoke B already COMPLETED at 20:21:48 UTC via parallel VM `211522` (11/11 groups, exit_code=0)
+- Terminated duplicate Smoke B #9 VM `features-onchain-defi-20260517-212433` (I launched pre-discovery)
+- Flipped smoke_b issue doc: Bug 7 item ✅ + P0 COMPLETED ✅ + P1 B-015 UNBLOCKED ✅ — PM@db0e5b9c
+- Acked waves 45-48 (european_fatigue/h2h/xg_decomposition/odds_calculator/halftime_multi_source)
+  — features-service@dff33b0b / 4fe4584a / a5f035a8 / 86107989, PM@8bcb1204
+- Slot-10: Phase 2 already done by parallel agent (@21209bd); directed to Phase 3 (pnl-attribution reader)
+- Slot-5: deploy_missing all 6 done; assigned UAC residual lint (130 non-RUF003 errors)
+- Slot-7: check-in ping after 2h gap (tick-45)
+- Slot-6: Smoke B update + assigned simulation_scenarios Phase 6 (6.A/6.B/6.C)
+- Inventory refresh: 69 plans, 53% done, 477 cal AI-days left — PM@931cef15
+
+**Slot status**:
+- Slot-2: Active — execution-service Phase B batches 73-82 ✅ (very active)
+- Slot-3: BLOCKED-CREDENTIALS — odds-api credit quota (awaiting operator)
+- Slot-5: NEW THEME — UAC residual lint
+- Slot-6: NEW THEME — simulation_scenarios Phase 6
+- Slot-7: Check-in sent — 2h gap, may have paused
+- Slot-8: Active — sports waves 48+ (next ack at wave-60 or theme switch)
+- Slot-10: Phase 3 directive sent — pnl-attribution-service reader
+
+**Status**: 🟢 All slots covered; no blocking issues; B-015 unblocked on harsh-side
