@@ -1160,3 +1160,40 @@ draining; safe since different parent symbols within same GLBX.MDP3 dataset, OHL
   honest-fill / 98.4% capture rate, 0 attempted_failed.
 - OHLCV-only plan Phase 7 data-status rollup flipped at PM@`26bf1b1a` (was the last gated item; only HUMAN Phase 8
   operator-spend-sign-off remains).
+
+## [slot 5 → main] 2026-05-17 14:10 UTC — autonomous-loop tick: validator improvements + issue closeout
+
+This cycle (no operator action needed, just continuing the long-tail polish):
+
+**Shipped**:
+
+1. `market-tick-data-service@c758048` — fix `validate_manifest_coverage.py` for per-day instruments-service catalogue
+   layout (Option 1 from issue doc). `_load_catalogue` now walks `_catalogue/instruments-service/day=*/manifest.json` +
+   reads underlying instruments.parquet + dedups by `instrument_key` across requested window. Legacy single-file
+   fallback preserved. Closes `plans/active/issues/validate_manifest_coverage_stale_catalogue_path_2026_05_17.md`.
+2. `unified-trading-pm@ced7a56a` + `unified-trading-pm@0e39ce27` — plan-flip Half-2 (issue resolved frontmatter + plan
+   archival sweep). Archived `data_status_comprehensive_test_coverage_2026_05_07` (30/30 done / 0 DEFERRED / not
+   operator-locked).
+3. Earlier same cycle: tradfi OHLCV plan Phase 7 validator harness (MTDS@d1ab9bc + a2ad231 ts_event fix), Phase 4
+   contract-pin tests (UAC@8aa36c1), Codex SSOT addendum + § 3 TRADFI verification flips.
+
+**Drain status**: ALL `tradfi-bf-` VMs STOPPED + self-deleted ~14:00 UTC. Singleton lock now fully relaxed. 4-pillar
+validator running in background against 2025-06-15 CME sample (b5tetmu5l background task; will report when done).
+
+**OHLCV plan state**: Phases 1-4, 6, 7 (validator + launch) all ✅. Only HUMAN/OPERATOR items remain:
+
+- Phase 8.2: spend sign-off (Databento dashboard query — operator)
+- ICE roots pick (BLOCKED-UNIVERSE-DECISION — proposed defaults filed in plan)
+
+**Unresolved issues** (8 total): all legitimate blocked/operator-decision items:
+
+- cross_asset_instruments_service_scope (P2 design Q)
+- defi_upstream_46day_full_backfill (operator approval pending)
+- deployment_api_shard_detail_gcs_locked (P2 post-cutover refactor)
+- execution_service_method_size_violations (in-flight slot 7 + 4 sprint)
+- marinade_solana_subgraph_registration (operator decision)
+- trading_agent_service_workspace_qg_silent_clone_fail (BLOCKED-CREDENTIALS)
+- uac_coverage_excludes_blank_8b_8c_ratchet (BLOCKED-OPERATOR-DECISION)
+- uac_weekly_validation_wif_secrets_missing (BLOCKED-OPERATOR-DECISION)
+
+Slot 5 ikenna idle-scanning for new pings or surfaced issues that match the small-clear-context rubric.
