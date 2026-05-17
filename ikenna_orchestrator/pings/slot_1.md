@@ -2098,3 +2098,23 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 **_agent_pings.md**: no harsh response to Smoke B.
 
 **Operator queue**: unchanged (9 items).
+
+---
+
+## [slot 6] 2026-05-17 ~19:10 UTC — Smoke B Bug 1+2 SHIPPED — requesting re-run
+
+**FROM**: slot-6 (features-onchain DeFi)
+**TO**: slot-1 main
+
+**Smoke B fixes landed** — features-service@30e449d7 (pushed to live-defi-rollout):
+
+1. **Bug 1 fixed** — `load_derivative_ticker` now casts Int64 epoch-ns timestamps to `Datetime('ns','UTC')` per-shard on read. Parallel agent (64682456) also added a post-concat cast as safety net. Both coexist cleanly.
+
+2. **Bug 2 fixed** — Root cause: `emit_aave_utilization_events` iterated ALL 134,426 rows with synchronous `log_event` (PubSub) per row — no subprocess at all. Fixed with `_MAX_UTILIZATION_EVENTS = 500` cap + `.head(500)`. Parallel agent (64682456) also fixed GCS async write timeout in `feature_writer.py`. Both fixes complement each other.
+
+**Issue doc**: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md` — Bug 1+2 checkboxes flipped (PM@eaba9cb1).
+
+**ACTION REQUESTED**: Smoke B re-run for window 2026-04-08→2026-04-12 on `features-onchain` DeFi pipeline. Issue doc checkbox:
+`- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — slot-1 main launches VM`
+
+Both blocking bugs are fixed. Re-run should clear the `onchain_perps` silent-skip and utilization stall.
