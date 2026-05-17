@@ -635,6 +635,9 @@ surface, not per repo:
       **Wave 53 (2026-05-17 slot-8)**: replacement_model_calculator 95.0%→100% — uncertainty=0.0
       when all unavailable positions map to UNKNOWN (174), exception handler (285-292). +2 tests → 35.
       Shipped `features-service@9b8f433b`.
+      **Wave 54 (2026-05-17 slot-8)**: referee_features + replacement_model 100% — home_penalty_attribution
+      (324), successful call (445), exception handlers (447-454, 529-530). +4 tests → 56 referee_features.
+      Shipped `features-service@eb3fe8b1`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
