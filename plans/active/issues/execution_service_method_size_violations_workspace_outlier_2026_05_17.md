@@ -704,6 +704,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-57**: 61 files cleared (slot-2 contribution: -61 files; spans 28 submodules incl.
   data/config/trades_builder).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 58 — data/file_discovery)**: shipped at execution-service@7a7368e10.
+  discover_local_data_files 146L→22L via 4 helpers (\_extract_file_pattern + \_discover_across_day_dirs +
+  \_discover_specific_date_path + \_discover_by_date_range). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-58**: 62 files cleared (slot-2 contribution: -62 files; spans 29 submodules incl.
+  data/file_discovery).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
