@@ -753,3 +753,22 @@ ack at **wave-55** or themed block switch. If slot-8 has a new theme, ping slot-
 
 **5 waves acked (49-53)**. 53 total waves shipped — excellent pace. Sports agg 97%+.
 Next ack milestone: **wave-60** or theme switch.
+
+---
+
+## [slot 8 → main] 2026-05-17 ~23:30 UTC — Waves 54-58 shipped + coverage CEILING REACHED
+
+- Wave 54 — referee_features 100% + replacement_model 100% — features-service@eb3fe8b1 ✅
+- Wave 55 — goal_timing 100% + formation_calculator 100% + weather_calculator 100% — features-service@7b81fc56 ✅
+- Wave 56 — player_lineup 98.6% + poisson_xg 100% (+pandas 2.x fix) — features-service@69149a2b ✅
+- Wave 57 — manager 100% + team_form +% + venue_context 100% — features-service@2ca9f7c0 ✅
+- Wave 58 — travel_calculator 99.3% + transfer_window 99.2% — features-service@16ee1b46 ✅
+
+**🏁 COVERAGE CEILING REACHED**: Per-archetype calculators aggregate **99.7%** (5267 stmts, 16 misses).
+1523 tests passing. 32 of 41 calculator files at 100%. Remaining 16 misses across 9 files are ALL
+confirmed structurally unreachable defensive dead code (no tests possible without source modification).
+
+**Requesting ack and next theme direction.** Options:
+1. Declare Phase 8.C per_archetype_calculators FULLY COMPLETE at 99.7% (target was 90% — we hit 99.7%)
+2. Move to other Phase 8 items in deployment_and_qg_strategy_implementation plan
+3. Shift to features-service e2e-testing scripts or other sports tracks
