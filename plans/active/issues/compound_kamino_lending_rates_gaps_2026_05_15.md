@@ -69,4 +69,18 @@ computing borrow_apy correctly.
 ## Action items for orchestrator
 
 - [ ] [OPERATOR-DECISION] Confirm COMPOUND_V3 fix priority: which Comet markets to target first?
-- [ ] [BLOCKED-CREDENTIALS] KAMINO blocked on Helius RPC key (see solana_defi_coverage_gaps_2026_05_13.md)
+- [x] [BLOCKED-CREDENTIALS → UNBLOCKED] KAMINO Helius RPC key unblocked 2026-05-15 — `helius-api-key` vaulted; MTDS SA
+      granted access. KAMINO handler implementation no longer blocked by credentials; restatus to standard P2 follow-up
+      now that the credential is live.
+
+## STATUS UPDATE — 2026-05-17 (slot 4 audit during cross-slot sweep)
+
+KAMINO `BLOCKED-CREDENTIALS` cleared — Helius credential vaulted 2026-05-15 (see slot 2 cross-side ping confirming
+`market-tick-data-service@4cea371` wired Helius mev_apy integration + MTDS SA granted access). KAMINO handler can now
+be implemented per the standard adapter-scaffold pattern (no operator gating).
+
+COMPOUND_V3 fix (P1) still `BLOCKED-OPERATOR-DECISION` — operator needs to confirm which Comet markets to target first
+(Ethereum WETH most relevant for CARRY_RECURSIVE_STAKED). When that decision lands, the handler-side fix is small
+(normalize asset name from Comet contract address + correct borrow_apy formula).
+
+Issue stays open as a tracking ticket; remaining work is bounded + clearly owned.
