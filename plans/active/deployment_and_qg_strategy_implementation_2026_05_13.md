@@ -461,8 +461,11 @@ surface, not per repo:
       tests — compute_goal_timing_features, compute_goal_timing_for_team, compute_situational_rates, compute_goal_timing
       pre-agg+derive_rates 1h/2h paths) + `advanced_stats_calculator` (33 tests — all feature blocks:
       xG/possession/shots/ppda/tactical/pct/pressing/shot-quality/headed/efficiency/territory/key-passes, batch).
-      Shipped at `features-service@fedda39f`. 368 total tests across 11 calculator files. Remaining high-gap sports
-      files: travel_calculator 54.1%, manager_calculator 65.7% — wave 6 continuing.
+      Shipped at `features-service@fedda39f`. 368 total tests across 11 calculator files. **Wave 6 (2026-05-17
+      slot-8)**: 36 new tests for `travel_calculator` (haversine, home venue coord lookup, cumulative travel 30d,
+      shard-level isolation fallback, long-travel flags, fatigue ratio). Shipped at `features-service@01b48fd0`. 404
+      total tests across 12 calculator files. Remaining high-gap sports files: manager_calculator 65.7%,
+      formation_calculator 68.0%, ht_features 71.2%, bench_sub_calculator 75.6% — wave 7 continuing.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
