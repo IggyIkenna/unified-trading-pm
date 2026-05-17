@@ -39,11 +39,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Deploy-Missing auto-launch (preview -> auto)
 
@@ -631,14 +629,16 @@ that already shipped.
 
 ### Phase 2 — deployment-api auto-launch endpoint
 
-- [ ] [deployment-api] P0. New endpoint `POST /api/data-status/deploy-missing-launch` accepting
-      `{service,     asset_group, row_key, dry_run?}`. Invokes `gcloud compute instances create` via the existing
-      cloud-builds-style helper.
-- [ ] [deployment-api] P0. Per-shard idempotency: `prefix=mtds-shard-key-${hash}` in-flight-VM check returns the running
-      VM rather than launching a new one.
-- [ ] [deployment-api] P0. `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key as correlation_id; blocks the
-      response until the per-VM `STARTED` event is observed within 90s.
-- [ ] [deployment-api] P0. Rate limiter middleware enforcing the Phase 0 ceiling. Returns 429 when tripped.
+- [x] ✅ [deployment-api] P0. New endpoint `POST /api/data-status/deploy-missing-launch` accepting
+      `{service, asset_group, row_key, dry_run?}`. Lazy-imports deploy_missing_launch service; invokes launcher script
+      via subprocess. — deployment-api@950ffc9
+- [x] ✅ [deployment-api] P0. Per-shard idempotency: `check_inflight_vm()` GCE name filter
+      `dm-{hash}-* AND status=RUNNING` returns existing VM rather than launching a new one. — deployment-api@950ffc9
+- [x] ✅ [deployment-api] P0. `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key as correlation_id;
+      `_poll_started_event()` blocks the response until STARTED observed within 90s. — deployment-api@950ffc9
+- [x] ✅ [deployment-api] P0. `DeployMissingRateLimiter` enforcing 30/op/hr · 200/op/day · 100/proj/hr (Phase 0 Decision
+      3). Returns 429 when tripped. `dm-` prefix registered in watchdog+backfill_launch. — deployment-api@950ffc9
+      deployment-service@41822ba
 
 ### Phase 3 — UI auto-launch toggle
 
@@ -651,13 +651,13 @@ that already shipped.
 ### Phase 4 — Codex docs + plan close
 
 - [x] ✅ [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with
-      the auto-launch flow diagram + the IAM scope reference. Shipped at `unified-trading-pm@<pending>` — §5
-      "Per-leaf download + surgical recovery" now documents both **preview mode (shipped)** and **auto-launch mode
-      (Phase 2/3 in-flight)** including the `POST /api/data-status/deploy-missing-launch` contract,
-      per-shard idempotency via GCE label filter, `DEPLOY_MISSING_VM_LAUNCHED` correlation_id, Firestore-backed
-      Phase 0 Decision 3 rate-limit ceilings (30/op/hr, 200/op/day, 100/proj/hr, 1 active per shard_key for 6h),
-      BigQuery + Cloud Logging audit-log shape per Decision 2, custom IAM role
-      `roles/customDeployMissingLauncher` per Decision 1 Option B, and tarball-staleness paired refresh wiring.
+      the auto-launch flow diagram + the IAM scope reference. Shipped at `unified-trading-pm@<pending>` — §5 "Per-leaf
+      download + surgical recovery" now documents both **preview mode (shipped)** and **auto-launch mode (Phase 2/3
+      in-flight)** including the `POST /api/data-status/deploy-missing-launch` contract, per-shard idempotency via GCE
+      label filter, `DEPLOY_MISSING_VM_LAUNCHED` correlation_id, Firestore-backed Phase 0 Decision 3 rate-limit ceilings
+      (30/op/hr, 200/op/day, 100/proj/hr, 1 active per shard_key for 6h), BigQuery + Cloud Logging audit-log shape per
+      Decision 2, custom IAM role `roles/customDeployMissingLauncher` per Decision 1 Option B, and tarball-staleness
+      paired refresh wiring.
 - [ ] [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
       fired).
 
