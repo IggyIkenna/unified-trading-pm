@@ -343,8 +343,9 @@ drift is rare).
 - [ ] **UTL test layout consolidation** (Section 3 B4) — slot 6 already aware, in `utl_qg_preexisting_failures` queue.
 - [ ] **UTL ↔ unified-trading-services circular dep** (Section 3 B5) — design decision, needs operator + Ikenna. Until
       resolved, conftest mock pattern persists and is the OOM-class root cause.
-- [ ] **Conftest scope=session → scope=package** (Section 3 B6) — slot 6's `utl_qg_preexisting_failures` queue. Tactical
-      fix; verify all config_interface tests still pass after scope change.
+- [x] ✅ **Conftest scope=session → scope=package** (Section 3 B6) — slot 6's `utl_qg_preexisting_failures` queue.
+      Tactical fix; verify all config_interface tests still pass after scope change. — utl@82c7bc02 (2026-05-17).
+      Pre-existing 12 integration failures unchanged; all unit tests pass (16/16).
 - [x] ✅ **B1 race-condition fix** in `_resolve_save_path` — add UUID nonce to filename, eliminate the loop entirely. ~1
       hour. Slot 6 territory. — utl@dc7382f0 (2026-05-17)
 
