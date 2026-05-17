@@ -252,14 +252,15 @@ operator ack visible in chat or commit co-authoring metadata.
 
 ### 🚨 P0 silent correctness bug found mid-design (Findings Triage — adjacent to my plan)
 
-- [ ] [UAC] **P0 — `defi_reserve_params.py:175` `get_reserve_params(asset, chain="ETHEREUM")` accepts the `chain` arg
+- [x] ✅ [UAC] **P0 — `defi_reserve_params.py:175` `get_reserve_params(asset, chain="ETHEREUM")` accepts the `chain` arg
       but ignores it.** Any non-Ethereum caller silently receives Ethereum params. Wire `chain` to dispatch through
       `_CHAIN_RESERVES: dict[str, dict[str, ReserveParams]]` lookup. Same fix needed for
       `get_compound_reserve_params(asset)` (`defi_reserve_params.py:393`) — Compound V3 is per-market AND per-chain;
       current signature is single-market Ethereum-only. **Same fix needed for `_ASSET_EMODE_MAP` /
       `get_emode_category(asset)` / `get_emode_params(collateral, debt)`** — currently single global map (line 146-149);
       cross-chain support requires `(chain, asset)` keying. Without this fix Family 1 cannot route correctly to Arbitrum
-      or Base cells.
+      or Base cells. **SHIPPED UAC@3729af1** — `_AAVE_V3_CHAIN_DISPATCH` + `get_emode_category(chain=)` +
+      `get_emode_params(chain=)` + `UnknownChainError` all wired. (backfilled 2026-05-17 slot-5)
 
 ### Per-chain × per-lender ReserveParams matrix (proposed UAC additions)
 
@@ -356,14 +357,17 @@ These items land in this plan (in-scope adjacent + P0 unblocker):
       (top candidates); remaining (OSETH, RSETH, WEETHS, USDS, PYUSD, CRVUSD) deferred to
       defi_recursive_borrow_archetypes_post_cutover as P2 (not blocking May-23 cell selection). (UAC@8564e31 —
       SUSDE/GHO/SDAI/FRAX/LUSD added with low-confidence markers)
-- [ ] [UAC] **P1**. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` (two distinct
-      Arbitrum markets) + `COMPOUND_V3_BASE_RESERVES`.
-- [ ] [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator —
-      plan body lists Spark in-scope but UAC has no dict).
+- [x] ✅ [UAC] **P1**. Add `COMPOUND_V3_ARBITRUM_USDC_E_RESERVES` + `COMPOUND_V3_ARBITRUM_USDC_RESERVES` (two distinct
+      Arbitrum markets) + `COMPOUND_V3_BASE_RESERVES`. **SHIPPED UAC@3729af1** — all 3 dicts +
+      `get_compound_reserve_params(chain, market)` accessor. (backfilled 2026-05-17 slot-5)
+- [x] ✅ [UAC] **P2**. Add `SPARK_ETHEREUM_RESERVES` (Aave-fork; needs Spark in May-23 scope confirmation from operator
+      — plan body lists Spark in-scope but UAC has no dict). **SHIPPED UAC@3729af1** — `SPARK_ETHEREUM_RESERVES` 7
+      reserves shipped. (backfilled 2026-05-17 slot-5)
 - [ ] [UAC] **P2**. Document Morpho per-market LLTV overrides — either dict keyed by `(collateral, debt, oracle)` tuples
       OR `get_morpho_market_lltv(market_id)` accessor with on-chain fallback.
-- [ ] [UAC] **P2**. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys — bridged-vs-native USDC
-      need separate entries on Arbitrum + Base. Cross-chain symbol hygiene.
+- [x] ✅ [UAC] **P2**. Add `USDC.E` / `USDBC` symbol distinction to `defi_reserve_params.py` keys — bridged-vs-native
+      USDC need separate entries on Arbitrum + Base. Cross-chain symbol hygiene. **SHIPPED UAC@3729af1** — `USDCE` in
+      AAVE_V3_ARBITRUM_RESERVES + `USDBC` in AAVE_V3_BASE_RESERVES. (backfilled 2026-05-17 slot-5)
 
 These items annotate other plans (Findings Triage — fits another active plan):
 
@@ -956,8 +960,8 @@ Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE:
       `@pytest.mark.requires_credentials` opt-in). (8ff3ded strategy-service 2026-05-15)
 - [x] [strategy-service] **P0**. `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` (NEW) — Category C subset
       scaffold ships; live testnet execution ✅ UNBLOCKED 2026-05-15 (`hyperliquid-testnet-trade-key` JSON +
-      `bybit_api_key`/`bybit_api_secret` v2 with Spot + Derivatives perms vaulted; HL/Bybit testnet smoke runnable).
-      See pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
+      `bybit_api_key`/`bybit_api_secret` v2 with Spot + Derivatives perms vaulted; HL/Bybit testnet smoke runnable). See
+      pings/slot_2.md. (a7e9243 e2e-testing 2026-05-15)
 - [x] [features-service (onchain family)] **P1**. Historical oracle-deviation feature: per-block Chainlink deviation
       tracker for `wstETH/ETH`, `cbETH/ETH`, `weETH/eETH` — gates Category B scenario replay. (01fb8d73 features-service
       2026-05-15)
@@ -1100,9 +1104,9 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
       2026-05-15)
 - [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
       Phase-4-deployed receiver. **BLOCKED-OPERATOR-DECISION** (was BLOCKED-CREDENTIALS) — Tenderly fork RPC ✅ vaulted
-      `tenderly-fork-rpc-url`; the remaining gate is the Phase-4 RecursiveLeverageReceiver.sol deployed receiver
-      address (operator-deploy step + per-environment configuration), not credentials. pings/slot_2.md tracks the
-      deployment ask.
+      `tenderly-fork-rpc-url`; the remaining gate is the Phase-4 RecursiveLeverageReceiver.sol deployed receiver address
+      (operator-deploy step + per-environment configuration), not credentials. pings/slot_2.md tracks the deployment
+      ask.
 
 ### Phase 6 — Hyperliquid LIVE perp connector wire-up
 
