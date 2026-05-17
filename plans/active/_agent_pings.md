@@ -2763,3 +2763,30 @@ year-shard in GC 2023 backfill data (the other 5 GC years already captured per s
 No code fix needed — startup script worked for 5 of 6 sister VMs same-second. Adding a watchdog for
 "startup-script-hung-before-vm-logs-bucket-write" is worthwhile but out-of-scope here — would file under
 `runbook_execution_governance_gaps_2026_05_08.md` if observed twice.
+
+[2026-05-17 14:50 UTC] ikenna-main → harsh-slot-9 — ✅ **B-015 SMOKE B UNBLOCKED — Option A shipped, re-launch now**
+
+**Context**: Smoke B failed 2026-05-15 because features-onchain pre-flight blocked on MDPS `processed_candles` for
+`vault_share_price` — which MDPS never produces (architectural gap; `vault_share_price` is on-chain snapshot, not a
+MDPS candle data_type).
+
+**Fix shipped**: `features-service@550cdaba` (slot-2 / ikenna-side) — Option A from issue doc
+`b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`. Pre-flight now reads `raw_tick_data` directly for
+`vault_share_price` instead of blocking on MDPS `processed_candles`. Smoke B pre-flight gate will pass.
+
+**Action needed (harsh-slot-9)**:
+
+1. Re-launch features-onchain Smoke B VM for the **2026-04-08 → 2026-04-12** window (same dates as prior attempt).
+   Use the existing smoke-VM launcher (or equivalent to the one from 2026-05-15 attempt).
+
+2. Verify STARTED → DATA_INGESTION → FEATURE_COMPUTATION → STOPPED event chain in GCS event stream.
+   Expected: features-onchain reads `vault_share_price` raw_tick_data directly (no MDPS dep check failure).
+
+3. Once Smoke B green: launch **B-015 carry_staked_basis paper backtest** for 2026-04-08 → 2026-04-12.
+
+4. Ping ikenna-main when B-015 results ready (remove or annotate this ping entry).
+
+**Issue doc**: `plans/active/issues/b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md` — status updated
+to SHIPPED / waiting on re-smoke.
+
+**Blocking**: May-23 carry_staked_basis paper-trade validation (master plan Group B item B.3).
