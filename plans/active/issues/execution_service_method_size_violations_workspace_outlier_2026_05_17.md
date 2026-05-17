@@ -401,6 +401,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-20**: 24 files cleared (slot-2 contribution: -24 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 21 — service_config sweep)**: service_config.py shipped at
+   execution-service@da16a9754 (get_bucket_for_asset_group 74L→27L via \_resolve_asset_group_bucket
+   (asset-group-attr → generic-attr → constructed-from-project_id fallback chain) +  promoted
+   valid_bucket_types from local list to \_VALID_BUCKET_TYPES ClassVar tuple). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-21**: 25 files cleared (slot-2 contribution: -25 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
