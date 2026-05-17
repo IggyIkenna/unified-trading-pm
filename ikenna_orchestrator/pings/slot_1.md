@@ -1865,6 +1865,23 @@ Next: general poll; await operator return or harsh dispatch.
 
 ---
 
+## [slot 1 main] 2026-05-17 ~17:35 UTC — Autonomous loop tick-38: Smoke B fix assigned, slot-6 working
+
+**From _agent_pings.md** (parallel tick-36 wrote this):
+- Issue doc filed: `plans/active/issues/smoke_b_perp_funding_type_schema_drift_2026_05_17.md`
+- **ikenna-slot6 assigned**: perp_funding timestamp cast fix + utilization stall investigation. ETA <1 day.
+- Harsh-side: no action until Smoke B re-run passes.
+
+**harsh-slot-9**: CYCLE-CLOSE (2026-05-15). No response to failure ping.
+
+**Remote**: slot-2 batch-58 (file_discovery 146L→22L, execution-service@7a7368e10).
+
+**Operator queue** (9 items — unchanged). Fix in progress (slot-6).
+
+Next: general poll; await slot-6 fix completion + operator return.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~17:17 UTC — Autonomous loop tick-32: Smoke B RUNNING, 67,773 events, fresh at 17:17 UTC
 
 **Smoke B VM** (`features-onchain-defi-20260517-171908`):
