@@ -1092,3 +1092,11 @@ because the issue is statused P2 post-cutover — proceed regardless.
   DeribitOrdersMixin._parse_order_response 59L→36L via _extract_order_fills static helper.
 
 313 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 28] slot-7 — execution-service Phase B (+3, 67/377 cleared):
+
+- `execution-service@88f756034` — DataAvailabilityChecker.check_local_file_exists 60L→15L via _glob_match_instrument +
+  4-key loop; ReportTimelineExtractor.extract_all 59L→32L via _collect_fill_order_ids static helper;
+  DeribitOrdersMixin.get_order_status 60L→16L via _parse_deribit_order_state_result static helper.
+
+310 remaining. basedpyright clean.
