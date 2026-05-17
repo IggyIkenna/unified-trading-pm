@@ -196,9 +196,11 @@ per workspace HARD RULE.
 
 ### Phase 9 — Spawn successor plan for L1-L3 post-cutover
 
-- [ ] [HUMAN] P1. After cutover, create `plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` capturing
-      the deferred L1-L3 scope (the table in "Scope (OUT)" above is the seed). Reference
-      `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` from Phase 1 as the canonical window list to restore.
+- [x] ✅ **[SCRIPT] P1. Successor plan stub filed.** slot-5 2026-05-17 at
+      [`plans/active/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
+      — 8-phase plan with seed table copied from Scope (OUT), references `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` +
+      `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` as forward-restore source. HUMAN-flagged for trigger (post-cutover
+      execution-tuning archetype demand); stub itself is operator-doable now per "no shortcuts no deferred" mandate.
 
 ## Codex SSOT updates
 
