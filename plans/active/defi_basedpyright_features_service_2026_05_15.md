@@ -9,14 +9,19 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
 
-**MIGRATED FROM:** `defi_master_2026_05_07.md` line 292 deferral **Status:** 84% CLEARED (slot-8 2026-05-17) — 136 reportAny remain (was 825); foreign-active onchain/ + cross_instrument/ are the only remaining surfaces.
+**MIGRATED FROM:** `defi_master_2026_05_07.md` line 292 deferral **Status:** 84% CLEARED (slot-8 2026-05-17) — 136
+reportAny remain (was 825); foreign-active onchain/ + cross_instrument/ are the only remaining surfaces.
 
 ## Deferred work — migrated to:
 
-- features_service/onchain/ (96 errors): **DEFERRED-OTHER-SLOT** — slot-2 is in active flight on features-onchain pipeline (LDR commits aaa6b319, cb787082, 50273e1f). Successor: same plan, deferred until slot-2 stabilizes onchain pipeline.
-- features_service/cross_instrument/ (40 errors): **DEFERRED-OTHER-SLOT** — another slot has 5 cross_instrument calculator files dirty (per slot-8 LDR fetch 2026-05-17). Successor: same plan, deferred until other slot pushes.
+- features_service/onchain/ (96 errors): **DEFERRED-OTHER-SLOT** — slot-2 is in active flight on features-onchain
+  pipeline (LDR commits aaa6b319, cb787082, 50273e1f). Successor: same plan, deferred until slot-2 stabilizes onchain
+  pipeline.
+- features_service/cross_instrument/ (40 errors): **DEFERRED-OTHER-SLOT** — another slot has 5 cross_instrument
+  calculator files dirty (per slot-8 LDR fetch 2026-05-17). Successor: same plan, deferred until other slot pushes.
 - features-service workspace foreign-dirty list cleanup → No successor needed (this plan handles).
-- Sibling repo drift (risk-and-exposure-service +17, strategy-service +53): ✅ cleaned slot-8 2026-05-17 — successor: not applicable.
+- Sibling repo drift (risk-and-exposure-service +17, strategy-service +53): ✅ cleaned slot-8 2026-05-17 — successor:
+  not applicable.
 
 ## Context
 
@@ -44,10 +49,20 @@ Same patterns as execution-service fix:
 
 ## Tasks
 
-- [x] ✅ [AGENT] P0. **risk-and-exposure-service drift cleanup** — 17 errors crept in since plan creation (seed_mock_data + backtest_depeg_ladder + mock_data_provider); fixed at risk-and-exposure-service@5408d9f (slot-8 2026-05-17). cast() for argparse Namespace + numpy scalar (np.sqrt returns Any) + json.loads result. All 3 sibling DeFi service repos (strategy-service, risk-and-exposure-service, execution-service) at 0 reportAny again.
-- [x] ✅ [AGENT] P0. **strategy-service drift cleanup** — 53 errors crept in (seed_mock_data + hot_revert_version + trace_all_carry_archetypes scripts); fixed at strategy-service@eca730b (slot-8 2026-05-17). cast() for argparse Namespace attrs, rng.choice() scalars, dict[Hashable] key cast, and Protocol param name mismatch fix. Behavior-preserving; full repo basedpyright 0 errors confirmed.
-- [x] ✅ [AGENT] P0. Run basedpyright on features-service and triage top 10 error locations. — completed slot-8 2026-05-17 (full per-dir + per-file breakdown captured across 5 waves; informed sub-agent fan-out strategy).
-- [x] ✅ [AGENT] P0. Fix cast() wrappers in features_service/calculators/ (expected ~300 errors). — **691 errors cleared session-cumulative (827→136)** across waves 1-5 + cli/api cleanup; all of sports/, delta_one/, calendar/, volatility/, multi_timeframe/, commodity/, cli/, api/ at 0 reportAny. Remaining 136 errors are confined to onchain/ (96, foreign-active other slot) + cross_instrument/ (40, foreign-active other slot).
+- [x] ✅ [AGENT] P0. **risk-and-exposure-service drift cleanup** — 17 errors crept in since plan creation
+      (seed_mock_data + backtest_depeg_ladder + mock_data_provider); fixed at risk-and-exposure-service@5408d9f (slot-8
+      2026-05-17). cast() for argparse Namespace + numpy scalar (np.sqrt returns Any) + json.loads result. All 3 sibling
+      DeFi service repos (strategy-service, risk-and-exposure-service, execution-service) at 0 reportAny again.
+- [x] ✅ [AGENT] P0. **strategy-service drift cleanup** — 53 errors crept in (seed_mock_data + hot_revert_version +
+      trace_all_carry_archetypes scripts); fixed at strategy-service@eca730b (slot-8 2026-05-17). cast() for argparse
+      Namespace attrs, rng.choice() scalars, dict[Hashable] key cast, and Protocol param name mismatch fix.
+      Behavior-preserving; full repo basedpyright 0 errors confirmed.
+- [x] ✅ [AGENT] P0. Run basedpyright on features-service and triage top 10 error locations. — completed slot-8
+      2026-05-17 (full per-dir + per-file breakdown captured across 5 waves; informed sub-agent fan-out strategy).
+- [x] ✅ [AGENT] P0. Fix cast() wrappers in features_service/calculators/ (expected ~300 errors). — **691 errors cleared
+      session-cumulative (827→136)** across waves 1-5 + cli/api cleanup; all of sports/, delta_one/, calendar/,
+      volatility/, multi_timeframe/, commodity/, cli/, api/ at 0 reportAny. Remaining 136 errors are confined to
+      onchain/ (96, foreign-active other slot) + cross_instrument/ (40, foreign-active other slot).
   - [x] ✅ transfer_window_calculator.py 32→0 errors — features-service@9183f81f (slot-8 2026-05-17)
   - [x] ✅ season_context.py 28→0 errors — features-service@5199db4d (slot-8 2026-05-17)
   - [x] ✅ team_form.py 28→0 errors — features-service@62e460cf (slot-8 2026-05-17)
@@ -90,10 +105,26 @@ Same patterns as execution-service fix:
   - [x] ✅ sports/calculators/manager_calculator.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
   - [x] ✅ sports/calculators/league_calculator.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
   - [x] ✅ sports/exporters/odds_features_exporter.py 7→0 errors — features-service@d7a4574b (slot-8 wave 4 2026-05-17)
-  - [x] ✅ features_service/sports/ FULL CLEAN — bench_sub_calculator, footystats_predictions_calculator, formation_calculator, halftime_multi_source, ht_features, injury_impact_calculator, meta_features_calculator, odds_prob_space, squad_value_calculator, _fetch_runner, batch_handler, live_handler, cli/main, config_reloaders, gcs_normalizers, feature_builder_registry (46→0) — features-service@5f4e0112 (slot-8 wave 5 2026-05-17)
-  - [x] ✅ features_service/delta_one/ FULL CLEAN — 23 files, 53→0 errors: anomaly, base, base_calculator, candlestick, kurtosis, liquidation_levels, market_structure, momentum, order_flow_inference, oscillators, polynomial_trendline, round_numbers, volatility, wedge_detector, dependency_checker, feature_writer, batch_handler, live_handler, target_handler, cli/main, cli/parser, config_reloaders, orchestrator — features-service@c0b7415c (slot-8 wave 5 2026-05-17)
-- [x] ✅ [N/A-PLAN-ASSUMPTION-INACCURATE] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors). — **CLOSED 2026-05-17 slot-8**: features-service has no top-level `adapters/` directory (verified via `find features_service -type d -name adapters` returns empty). The per-family adapter modules (`delta_one/app/data_loader.py`, `commodity/cli/handlers/_fetch_runner.py`, `sports/_fetch_runner.py`, etc.) were already cleaned as part of waves 4-5 sweeps. Plan-body assumption from the original scoping was incorrect — there is no adapters/ surface to fix.
-- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors). — **DEFERRED-OTHER-SLOT 2026-05-17 slot-8**: onchain/ remains at 96 errors but is foreign-active (slot-2 + features-onchain pipeline work in flight per LDR commits aaa6b319 + cb787082 + 50273e1f). Slot-8 will not touch to avoid index contention; another slot picks up post-onchain-pipeline stabilization.
+  - [x] ✅ features_service/sports/ FULL CLEAN — bench_sub_calculator, footystats_predictions_calculator,
+        formation_calculator, halftime_multi_source, ht_features, injury_impact_calculator, meta_features_calculator,
+        odds_prob_space, squad_value_calculator, \_fetch_runner, batch_handler, live_handler, cli/main,
+        config_reloaders, gcs_normalizers, feature_builder_registry (46→0) — features-service@5f4e0112 (slot-8 wave 5
+        2026-05-17)
+  - [x] ✅ features_service/delta_one/ FULL CLEAN — 23 files, 53→0 errors: anomaly, base, base_calculator, candlestick,
+        kurtosis, liquidation_levels, market_structure, momentum, order_flow_inference, oscillators,
+        polynomial_trendline, round_numbers, volatility, wedge_detector, dependency_checker, feature_writer,
+        batch_handler, live_handler, target_handler, cli/main, cli/parser, config_reloaders, orchestrator —
+        features-service@c0b7415c (slot-8 wave 5 2026-05-17)
+- [x] ✅ [N/A-PLAN-ASSUMPTION-INACCURATE] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200
+      errors). — **CLOSED 2026-05-17 slot-8**: features-service has no top-level `adapters/` directory (verified via
+      `find features_service -type d -name adapters` returns empty). The per-family adapter modules
+      (`delta_one/app/data_loader.py`, `commodity/cli/handlers/_fetch_runner.py`, `sports/_fetch_runner.py`, etc.) were
+      already cleaned as part of waves 4-5 sweeps. Plan-body assumption from the original scoping was incorrect — there
+      is no adapters/ surface to fix.
+- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors). —
+      **DEFERRED-OTHER-SLOT 2026-05-17 slot-8**: onchain/ remains at 96 errors but is foreign-active (slot-2 +
+      features-onchain pipeline work in flight per LDR commits aaa6b319 + cb787082 + 50273e1f). Slot-8 will not touch to
+      avoid index contention; another slot picks up post-onchain-pipeline stabilization.
 - [x] ✅ [AGENT] P0. Fix remaining errors in other modules. — features-service@dad0b74a (slot-8 wave 4 2026-05-17)
   - [x] ✅ calendar/ family (15 errors): yfinance_earnings_adapter, batch_handler, corporate_actions_handler,
         config_reloaders, economic_calendar_loader, calendar_orchestrator, mock_data_provider, feature_builder_registry
@@ -103,9 +134,18 @@ Same patterns as execution-service fix:
   - [x] ✅ multi_timeframe/ family (11 errors): cli/main, mock_data_provider, orchestrator — features-service@dad0b74a
   - [x] ✅ commodity/ family (7 errors): cli/main, config_reloaders, mock_data_provider — features-service@dad0b74a
   - [x] ✅ basedpyright: 0 errors, 0 warnings, 0 notes on all 4 family dirs — confirmed 2026-05-17
-- [x] ✅ [AGENT] P0. Final cli+api cleanup (4→0) — `features-service@1c03df40` (slot-8 wave 5 final). All non-foreign-active surfaces at basedpyright 0 reportAny.
-- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. — **PARTIAL DONE**: basedpyright at 136 errors (827→136, 84% reduction); remaining 136 confined to onchain/ (96, foreign-active) + cross_instrument/ (40, foreign-active). Full 0 requires those two slots to complete; QG run skipped pending their cleanup.
-- [ ] [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain + cross_instrument reach 0 (cross-slot handshake required).
+- [x] ✅ [AGENT] P0. Final cli+api cleanup (4→0) — `features-service@1c03df40` (slot-8 wave 5 final). All
+      non-foreign-active surfaces at basedpyright 0 reportAny.
+- [x] ✅ [AGENT] P0. **cross_instrument/ basedpyright sweep (40→0 errors)**. — `features-service@0a183149` (slot-8
+      2026-05-17). cast() for numpy ufunc Any returns (np.nanmean/np.sign/np.std/np.cov/NDArray scalar indexing), polars
+      .to_list() Any iterations, importlib module attribute accesses (smoke.py). Return type fix:
+      \_sector_momentum_divergence NDArray[float64]→NDArray[np.int8]. CALCULATOR_REGISTRY cast for dict invariance.
+      cross_instrument/ now at 0 reportAny; total features-service: 96 remaining (onchain/ only, DEFERRED-OTHER-SLOT).
+- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. — **PARTIAL
+      DONE**: basedpyright at 96 errors (827→96, 88% reduction); remaining 96 confined to onchain/ (foreign-active).
+      Full 0 requires onchain slot to complete; QG run skipped pending their cleanup.
+- [ ] [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain reaches 0
+      (cross-slot handshake required).
 
 ## Temporary states + their canonical follow-up plans
 
