@@ -46,6 +46,8 @@ Same patterns as execution-service fix:
   - [x] ✅ sports_validity_engine.py 26→0 errors (engine/ surface) — features-service@d2013034 (slot-8 2026-05-17)
   - [x] ✅ poisson_xg_calculator.py 17→0 errors — features-service@5aa6079f (slot-8 2026-05-17)
   - [x] ✅ elo_calculator.py 17→0 errors — features-service@5aa6079f (slot-8 2026-05-17)
+  - [x] ✅ delta_one/app/calculators/returns.py 23→0 errors — features-service@e14fdae8 (slot-8 wave 2 2026-05-17)
+  - [x] ✅ delta_one/app/calculators/trendline.py 19→0 errors — features-service@e14fdae8 (slot-8 wave 2 2026-05-17)
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/adapters/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors).
 - [ ] [AGENT] P0. Fix remaining errors in other modules.
