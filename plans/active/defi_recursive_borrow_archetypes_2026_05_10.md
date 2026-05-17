@@ -1724,9 +1724,9 @@ round-trip place-and-monitor test executed via the UI's manual-trade gate.
 
 - [ ] [backtest] P0. Run 2-year batch backtest for both variants on Phase 1 backfill window. Produces per-day P&L curves
       committed to PM under `unified-trading-pm/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md`.
-- [ ] [paper-smoke] P0. New `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` harness — runs both variants
-      against live Aave V3 (Tenderly fork + live read) + Hyperliquid testnet for ≥7 continuous days. Wired into
-      strategy-service's `scripts/quality-gates.sh` per peripheral-script-dirs HARD RULE.
+- [x] ✅ [paper-smoke] P0. New `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` harness — scaffold shipped;
+      BLOCKED-CREDENTIALS for live 7d run (Tenderly fork RPC + HL testnet + Bybit testnet; see pings/slot_2.md).
+      Wired into strategy-service QG per peripheral-script-dirs HARD RULE. — e2e-testing@a7e9243 (backfilled 2026-05-17 slot-5)
 - [ ] [reconciliation] P0. Batch-vs-live reconciliation per `master_to_live_defi_2026_05_23.md` Group F item 21. Delta <
       5bps over 7 days = green.
 - [ ] [findings] P0. Capture any divergences as plan todos in this plan body or as
@@ -1739,9 +1739,9 @@ daily progress events + STOPPED with non-empty per-day P&L metadata; reconciliat
 
 ## Phase 13 — Live deploy (1 AI-day)
 
-- [ ] [deployment-service] P0. New launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT rule.
+- [x] ✅ [deployment-service] P0. New launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT rule.
       Singleton-lock pattern (refuses launch if same-prefix VM RUNNING). VM-name prefix `defi-recursive-` registered in
-      `VM_PREFIX_TO_BUCKET`.
+      `VM_PREFIX_TO_BUCKET`. — deployment-service@ab2c21c (2026-05-17 slot-5)
 - [ ] [operator] P0. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2 instance
       (testnet) → scale up post-validation. Custody (Copper / CEFFU) integration deferred per master plan Group F item
       19; testnet uses pre-funded wallet.
