@@ -996,21 +996,30 @@ Next tick: monitor ES_OPT drain; if all 5 land, file Phase 7 completion flip + s
 ## [slot 1 main] 2026-05-17 ~14:45 UTC — /loop tick: drain confirmed, Phase 7 ✅, housekeeping shipped
 
 **TradFi OHLCV drain CONFIRMED** (slot-5 report 14:00 UTC):
+
 - ALL 70 tradfi-bf VMs STOPPED + self-deleted; singleton lock fully relaxed.
 - Phase 7 flip landed at PM@`462a5bdd` by slot-5 (216,876 captured / 100% honest-fill / 0 attempted_failed).
 - GC 2023 relaunched by slot-5 as `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102`.
 - 4-pillar validator (MTDS@d1ab9bc) running against CME 2025-06-15 sample (slot-5 background task).
 
 **Operator decisions still pending** (cannot proceed without these):
-1. **Phase 8.2 Databento spend sign-off** — slot-5 requests operator approval (Databento dashboard query); unblocks Phase 8 sign-off and closes `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`.
-2. **ICE roots pick** (`BLOCKED-UNIVERSE-DECISION`) — operator provides Brent/Gasoil/Sugar roots when universe rows land; slot-5 will not pre-populate (each entry costs Databento PAYG).
+
+1. **Phase 8.2 Databento spend sign-off** — slot-5 requests operator approval (Databento dashboard query); unblocks
+   Phase 8 sign-off and closes `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`.
+2. **ICE roots pick** (`BLOCKED-UNIVERSE-DECISION`) — operator provides Brent/Gasoil/Sugar roots when universe rows
+   land; slot-5 will not pre-populate (each entry costs Databento PAYG).
 
 **Slot-1-main housekeeping this tick** (PM@`55179719`):
-- Fixed duplicate `estimate_class:` frontmatter in `cme_polymarket_arb_2026_05_08.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` — YAML was resolving to TBD block, hiding calibrated values from inventory regenerator.
-- Filed `plans/active/issues/concurrent_backfill_during_phase_2_6_migration_2026_05_15.md` — Phase 2.0 drain-gate process gap documented; empirical safety confirmed (0 attempted_failed).
+
+- Fixed duplicate `estimate_class:` frontmatter in `cme_polymarket_arb_2026_05_08.md` +
+  `deployment_ui_lifecycle_tabs_2026_05_08.md` — YAML was resolving to TBD block, hiding calibrated values from
+  inventory regenerator.
+- Filed `plans/active/issues/concurrent_backfill_during_phase_2_6_migration_2026_05_15.md` — Phase 2.0 drain-gate
+  process gap documented; empirical safety confirmed (0 attempted_failed).
 - Inventory regenerator: **0 TBD, 69 plans, 51% done, 498 cal AI-days left**.
 
 **Fleet / autonomous summary**:
+
 - slot-4: execution-service method-size allowlist 131 (~30% cleared from 187 baseline); tick 10 landed.
 - slot-7: Phase B 61/377 cleared (16%), 316 remaining; basedpyright clean throughout.
 - slot-2: STOPPED clean; all 6 DeFi canonical manifests verified clean (122,757 kebab rows purged).
@@ -1021,3 +1030,31 @@ Next tick: monitor ES_OPT drain; if all 5 land, file Phase 7 completion flip + s
 **No actionable inbound pings** requiring slot-1 decision this tick. All autonomous slots proceeding cleanly.
 
 Next tick: watch for slot-5 4-pillar validation result; watch for slot-8 Phase 5 ack; poll any new operator pings.
+
+---
+
+## [slot 1 main] 2026-05-17 ~15:15 UTC — /loop tick: Gate-3 triage JSONL script shipped
+
+**Gate-3 unblock shipped** (`instruments-service@9e2c4bb`):
+
+- Added `--triage-output-gcs` + `--manifest-snapshot-time` to `reconcile_phantom_manifest_rows_all.py`.
+- `--dry-run` now writes Gate-3 runbook triage JSONL schema
+  (`{venue, data_type, date, instrument_id, manifest_status, manifest_capture_time, parquet_row_count, reason, confidence, recommendation}`)
+  to `gs://central-element-323112-phantom-triage/triage_{asset_group}_{ts}.jsonl` (auto-default).
+- Reason classifier: `PHANTOM_KNOWN_ERROR_REASON:{code}` (HIGH/accept) · `PHANTOM_WEEKEND_TRADFI` (HIGH/accept) ·
+  `PHANTOM_NO_PARQUET` (MEDIUM/flip).
+- Gate-3 runbook execution record updated: prior 2026-05-11 run was PARTIAL (no triage JSONL); re-run needed.
+
+**Gate-3 status**: Script READY. Re-run can fire immediately — no further code work needed. Runbook at
+`plans/active/gate_3_phantom_audit_runbook_2026_05_13.md` § Execution Steps has the VM launcher command.
+
+**Pre-existing QG failures** in instruments-service (4 lint errors in test files I don't own):
+
+- `tests/integration/test_enumerate_v2_superset_property.py:287` — 2× RUF003 (ambiguous multiplication sign in comment)
+- `tests/scripts/test_canonicalize_defi_manifest_data_types_2026_05_16.py:311` — RUF059 (unused unpacked var `total`)
+  These are pre-existing, not caused by my changes. Owner of those test files needs to fix.
+
+**No actionable inbound pings** this tick. Operator decisions from prior tick (Databento spend / ICE roots) still
+pending.
+
+Next tick: monitor for Gate-3 re-run trigger; poll slot-5 4-pillar validation result; watch slot-8 Phase 5 ack.

@@ -239,9 +239,10 @@ complete.
 
 ## Runbook Execution Record
 
-| Date    | Operator | Status      | Phantom Count | Operator Decision | Notes                                                                           |
-| ------- | -------- | ----------- | ------------- | ----------------- | ------------------------------------------------------------------------------- |
-| PENDING | —        | NOT STARTED | —             | PENDING           | Awaiting Phase 4 writegate tail + freeze-gate Phase 1 completion before launch. |
+| Date       | Operator | Status                    | Phantom Count                                                                | Operator Decision | Notes                                                                                                                                                                                                                                             |
+| ---------- | -------- | ------------------------- | ---------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-11 | ikenna   | PARTIAL — no triage JSONL | cefi 2223 / defi 0 (false-pos) / tradfi 3976 / prediction 71 / sports 115524 | PENDING           | Ran via `launch-defi-phantom-recon-vm.sh` dry-run. Script lacked `--triage-output-gcs` feature at this time; triage JSONLs NOT written. Full analysis in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § DONE-2026-05-11 phantom-audit. |
+| PENDING    | —        | TRIAGE-JSONL-READY        | —                                                                            | PENDING           | Re-run needed to collect triage JSONLs now that script has `--triage-output-gcs` feature (instruments-service@9e2c4bb, 2026-05-17). Trigger after freeze-gate Phase 1 completes.                                                                  |
 
 ---
 
@@ -255,9 +256,10 @@ complete.
 
 - `--asset-group`: Required. Single asset group per run.
 - `--dry-run`: Do NOT apply flips to manifest; collect triage JSONL only (safe for Gate 3).
-- `--manifest-snapshot-time`: (Optional) UNIX timestamp of manifest snapshot. If absent, uses current timestamp.
+- `--manifest-snapshot-time`: (Optional) ISO timestamp of manifest snapshot. If absent, uses current timestamp.
 - `--triage-output-gcs`: (Optional) GCS path to write triage JSONL. Defaults to
-  `gs://central-element-323112-phantom-triage/triage_{asset_group}_{timestamp}.jsonl`.
+  `gs://central-element-323112-phantom-triage/triage_{asset_group}_{timestamp}.jsonl` when in `--dry-run` mode. Shipped:
+  instruments-service@9e2c4bb (2026-05-17).
 
 **Script guarantees** (per CLAUDE.md):
 
