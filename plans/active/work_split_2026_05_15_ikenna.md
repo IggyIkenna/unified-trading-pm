@@ -703,11 +703,18 @@ redesign accepted today.
 #### Slot 3 — **[SWEEP-16]** items (+18 cal — MTDS/DEX/perp expansion theme)
 
 - **`live_pipeline_mtds_mdps_features_2026_05_08` Ikenna portion** (15.0 cal) — DeFi instrument live-pipeline
-  activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal)
-- **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open todos. (design 0.6×,
-  ~5 = 3.0 cal)
-- **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3 context fit. (design 0.6×,
-  ~2 = 1.2 cal)
+  activation; slot 3 owns perp/venue/DEX theme already. (design 0.6×, ~15 = 9.0 cal) — **PARTIAL 2026-05-17 (slot-3)**:
+  Phases 0-14 all done (PM@58b07da0 Phase 3 flip). Phase 15 (QG sweep + 7-day live smoke): 15.1 partial — MTDS QG 3746
+  pass / 5 pre-existing foreign failures (Tardis network + smarkets UAC; issue filed at
+  `issues/tardis_smarkets_test_regression_2026_05_17.md`; MTDS@139e2e6); 15.2-15.4 require operator VM launches
+  (human-only). Plan stays active pending operator smoke kick-off.
+- ✅ **`dex_perp_and_venue_data_expansion_2026_05_12` remainder** (3.1 cal, 21/34) — close out 13 open todos. (design
+  0.6×, ~5 = 3.0 cal) — **AUDIT 2026-05-17 (slot-3)**: 32/34 items done. 2 remaining: (1) BLOCKED-OPERATOR-DECISION (VM
+  launcher for Extended OHLCV backfill, awaiting operator decision), (2) NICE-TO-HAVE P3 (Uniswap V3 tick-state subgraph
+  research, non-blocking). No agent-actionable scope remains.
+- ✅ **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3 context fit. (design
+  0.6×, ~2 = 1.2 cal) — **DONE 2026-05-16 (prior slot-3)**: plan `status: done`. Phase 1 at MTDS@d8358f9, Phase 2+3
+  DEFERRED-PER-PLAN (no wall-clock bottleneck). 2 test regressions from Phase 1 fixed at MTDS@139e2e6 (2026-05-17).
 
 #### Slot 4 — **[SWEEP-16]** items (+6 cal — sports/prediction expansion)
 
@@ -759,7 +766,10 @@ redesign accepted today.
   8.A/8.B/8.D items. (design 0.6×, ~15 = 9.0 cal)
 - **`alerting_service_live_rules_2026_05_07` close** (3.0 cal, 50/65) — push 15 remaining alerting rule items. (design
   0.6×, ~5 = 3.0 cal)
-- ✅ **`manifest_schema_final_gate_2026_05_09` Phase 9.A** — E3 7-item checklist VERIFIED 2026-05-17: all 7 items PASS (UTL v8 schema, BATCH_<source> on all handlers, ManifestFreshnessCache ttl=60, 17 launchers VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap events, Phase 6.C tarballs [x], watchdog dict complete). PM@`f8b9f3d2`. Phase 8+11+12 remain BLOCKED-OPERATOR. (design 0.6×, ~2 = 1.2 cal)
+- ✅ **`manifest_schema_final_gate_2026_05_09` Phase 9.A** — E3 7-item checklist VERIFIED 2026-05-17: all 7 items PASS
+  (UTL v8 schema, BATCH\_<source> on all handlers, ManifestFreshnessCache ttl=60, 17 launchers
+  VM_NAME+MANIFEST_PER_VM_SHARDS, ServiceBootstrap events, Phase 6.C tarballs [x], watchdog dict complete).
+  PM@`f8b9f3d2`. Phase 8+11+12 remain BLOCKED-OPERATOR. (design 0.6×, ~2 = 1.2 cal)
 
 #### Slot 7 — **[SWEEP-16]** items (+12 cal — simulation + batch_live_symmetry + defi sim)
 
