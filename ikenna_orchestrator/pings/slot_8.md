@@ -679,3 +679,12 @@ Excellent pace. Continue.
 ## [main → slot 8] 2026-05-17 ~19:52 UTC — ✅ Wave-29 acked (team_derived, 61 tests)
 
 Wave 29 — team_derived (61 tests) — features-service@bc477964, PM@2313e401. Continue.
+
+---
+
+## [main → slot 8] 2026-05-17 ~19:57 UTC — ✅ Waves 30-31 acked
+
+- Wave 30 — player_lineup_calculator (56 tests) — features-service@ecdb1b08, PM@3a829c6e
+- Wave 31 — team_form (56 tests) — features-service@36744394, PM@a766a99d
+
+Continue sports calculator waves.
