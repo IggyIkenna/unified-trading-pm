@@ -599,8 +599,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    execution-service@3313ce6e6 (execute_order 147L→29L via _make_rejection + _validate_order +
    _check_circuit_breaker + _report_compliance_pre_order + _submit_to_oms). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-41**: 45 files cleared (slot-2 contribution: -45 files; spans 17
-   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1).
+   **Ratchet-down 2026-05-17 (slot-2 batch 42 — algorithms/impl/passive_aggressive_spawn)**: shipped at
+   execution-service@aa0153aa7 (_start_aggressive_phase 152L→20L via _compute_aggressive_slice_params +
+   _record_aggressive_child + _try_spawn_first_slice_immediately + _schedule_aggressive_slices).
+   Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-42**: 46 files cleared (slot-2 contribution: -46 files; spans 17
+   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×1).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
