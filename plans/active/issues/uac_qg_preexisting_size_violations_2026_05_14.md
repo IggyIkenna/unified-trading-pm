@@ -2,6 +2,8 @@
 title: UAC QG pre-existing size violations (5 total)
 created: 2026-05-14
 author: ikenna-slot-2
+resolved: 2026-05-14
+resolution: SHIPPED — short-term fix landed (CODEX_MAX_VIOLATIONS=5 in scripts/quality-gates.sh). QG passes with pre-existing budget. P2 + P3 follow-ups are nice-to-haves tracked via solana_lst_native_staking_adapters + future-touch.
 source:
   - unified-api-contracts QG run 2026-05-14 (Task 5 Phase 1 session)
 locked_by: live-defi-rollout
