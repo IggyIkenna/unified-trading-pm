@@ -576,69 +576,74 @@ Starting on item 1: Kraken CeFi live REST + WS integration. Credentials now vaul
 
 ## 2026-05-15T19:08:56Z — Phoenix CLOB DEX API not resolving (BLOCKED-OPERATOR-DECISION)
 
-**Issue**: `api.phoenix.trade` (declared in UAC `_defi_chain_data.py:639`) does not resolve DNS.
-Also tried `phoenix.trade` and `docs.phoenix.trade` — none resolve.
+**Issue**: `api.phoenix.trade` (declared in UAC `_defi_chain_data.py:639`) does not resolve DNS. Also tried
+`phoenix.trade` and `docs.phoenix.trade` — none resolve.
 
 **Tested** (slot-3, 2026-05-15):
+
 - `curl https://api.phoenix.trade/markets` → DNS resolution timeout (10s)
 - `curl https://phoenix.trade/` → DNS resolution timeout
 - `curl https://docs.phoenix.trade/` → DNS resolution timeout
 
-**Impact**: Cannot wire MTDS `_collect_phoenix()` handler — no data source.
-Phoenix CLOB DEX on Solana may have shut down or migrated.
+**Impact**: Cannot wire MTDS `_collect_phoenix()` handler — no data source. Phoenix CLOB DEX on Solana may have shut
+down or migrated.
 
 **Status**: BLOCKED-OPERATOR-DECISION
 
 **Operator decision needed**:
+
 1. Is Phoenix still operational? Latest news from Solana ecosystem confirmation needed.
 2. If Phoenix is alive but moved endpoints: provide canonical API URL (update UAC `_defi_chain_data.py:639`).
-3. If Phoenix is dead/deprecated: mark Phoenix as `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC + remove from defi_master venue matrix. File deprecation note.
-4. Alternative: use on-chain RPC queries (Helius) directly to read Phoenix program accounts. Substantial additional work — needs operator approval.
+3. If Phoenix is dead/deprecated: mark Phoenix as `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC + remove from defi_master
+   venue matrix. File deprecation note.
+4. Alternative: use on-chain RPC queries (Helius) directly to read Phoenix program accounts. Substantial additional work
+   — needs operator approval.
 
-**Without decision**: Phoenix capture stays 0% (no rows written); other 3 venues
-(Drift/Orca/Raydium) in slot 3 item 2 already wired. Item 2 effectively complete
-modulo Phoenix.
-
+**Without decision**: Phoenix capture stays 0% (no rows written); other 3 venues (Drift/Orca/Raydium) in slot 3 item 2
+already wired. Item 2 effectively complete modulo Phoenix.
 
 ## 2026-05-16T11:27:26Z — Kraken WS subscriptions: rationale for May-23 REST-only
 
-**Status**: Slot 3 item 1 (Kraken live integration) shipped REST 100% (8/8 private + Ticker, 43 tests).
-WS implementation remains open. Operator decision requested below.
+**Status**: Slot 3 item 1 (Kraken live integration) shipped REST 100% (8/8 private + Ticker, 43 tests). WS
+implementation remains open. Operator decision requested below.
 
 **Why REST is sufficient for May-23**:
-- `arbitrage_price_dispersion`: REST polling at 1-5s cadence captures cross-venue dispersion windows
-  (typical opportunity persists 5-30s — Kraken WS sub-100ms latency is over-engineering vs other 6
-  perp venues that also poll REST).
-- `carry_staked_basis` hedge leg: KRAKEN-FUTURES perp funding refreshes every 1h on Kraken (one
-  poll per hour suffices). KrakenFuturesCeFiAdapter scaffold from prior session already wired in
-  factory.
+
+- `arbitrage_price_dispersion`: REST polling at 1-5s cadence captures cross-venue dispersion windows (typical
+  opportunity persists 5-30s — Kraken WS sub-100ms latency is over-engineering vs other 6 perp venues that also poll
+  REST).
+- `carry_staked_basis` hedge leg: KRAKEN-FUTURES perp funding refreshes every 1h on Kraken (one poll per hour suffices).
+  KrakenFuturesCeFiAdapter scaffold from prior session already wired in factory.
 
 **Why WS would still help (post-cutover)**:
+
 - Sub-200ms fill confirmation for `get_fills` (currently 1s REST poll).
 - Order-book depth subscription for `get_orderbook` (not yet in REST scaffold).
 - Lower API rate-limit pressure during high-frequency rebalance cycles.
 
 **Operator decision needed**:
-1. Mark Kraken WS as **DEFERRED-POST-CUTOVER** with successor plan
-   `plans/active/kraken_ws_post_cutover_2026_05_16.md`? OR
+
+1. Mark Kraken WS as **DEFERRED-POST-CUTOVER** with successor plan `plans/active/kraken_ws_post_cutover_2026_05_16.md`?
+   OR
 2. Spawn dedicated slot/session to implement WS before May-23?
 3. Keep open in slot-3 reserve and ship if cycle bandwidth allows?
 
-**Recommendation**: Option 1 (DEFERRED-POST-CUTOVER). The REST coverage is complete and tested;
-WS is a latency optimization rather than a coverage gap.
-
+**Recommendation**: Option 1 (DEFERRED-POST-CUTOVER). The REST coverage is complete and tested; WS is a latency
+optimization rather than a coverage gap.
 
 ## 2026-05-16T11:49:56Z — Extended-Starknet: extended probe + PyPI SDK search (still BLOCKED)
 
 Following operator-decision request from 2026-05-15, slot-3 expanded probe today:
 
 **REST paths tried** (all HTTP 404 except where noted, with retries):
+
 - `api.extended.exchange/api/v1/markets`, `/api/v1/info`, `/markets`, `/info`, `/v1/info`, `/api/markets`,
-  `/api/v1/exchange-info`, `/api/v2/markets`, `/openapi.json`, `/swagger.json`, `/api/health`,
-  `/api/perp/instruments`, `/api/v1/instruments`, `/api/v1/symbols`, `/.well-known/api`, `/docs`, `/api`
+  `/api/v1/exchange-info`, `/api/v2/markets`, `/openapi.json`, `/swagger.json`, `/api/health`, `/api/perp/instruments`,
+  `/api/v1/instruments`, `/api/v1/symbols`, `/.well-known/api`, `/docs`, `/api`
 - `api.extended.exchange/api/v1/info/markets` → confirmed HTTP 404 (AWS ELB)
 
 **Alternative hostnames probed** (all DNS-unresolved):
+
 - `api.starknet.extended.exchange`, `api.starknet.sx`, `api.starknet.x10.exchange`, `api.x10.exchange`
 
 **PyPI SDK search**: `x10`, `extended-exchange`, `x10-perpetual-api`, `x10python` → all 404. No published SDK.
@@ -646,33 +651,33 @@ Following operator-decision request from 2026-05-15, slot-3 expanded probe today
 **StarkNet explorer access**: `voyager.online/api/contracts` → 403 Forbidden (external access blocked).
 
 **Conclusion**: domain is alive but has no documented public REST. Likely options:
+
 1. Extended Finance migrated to direct StarkNet RPC reads only (requires their contract ABIs).
 2. Their REST is gated behind auth (need API key from operator).
 3. Service deprecated in 2025-2026 transition.
 
-**No autonomous path to unblock**. Slot-3 cannot ship Extended-Starknet capture without:
-(a) operator-provided canonical API URL, OR
-(b) operator confirmation that Extended is deprecated → flip to `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC, OR
+**No autonomous path to unblock**. Slot-3 cannot ship Extended-Starknet capture without: (a) operator-provided canonical
+API URL, OR (b) operator confirmation that Extended is deprecated → flip to `EMPTY_OR_DEPRECATED_DEFI_VENUE` in UAC, OR
 (c) operator-acked credential approval if Extended REST is gated behind auth.
 
 **Status remains BLOCKED-OPERATOR-DECISION.** Operator response 2026-05-15 ping still pending.
-
 
 ---
 
 ## [main → slot 3] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
-Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
-Ikenna slots; no operator action needed (credentials all vaulted).
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna slots; no
+operator action needed (credentials all vaulted).
 
-See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
-SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your SWEEP-16 items
+(additive to your existing stack; take after current top-of-stack lands).
 
 Pickup discipline:
-* Items annotated **[SWEEP-16]** in the work-split below your slot section
-* Each item starts with the marker so easy to grep
-* Half-1+Half-2 flip discipline per item (no batch flips)
-* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+- Items annotated **[SWEEP-16]** in the work-split below your slot section
+- Each item starts with the marker so easy to grep
+- Half-1+Half-2 flip discipline per item (no batch flips)
+- Spot-check LDR before starting any item to see if Harsh-side shipped it already
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
@@ -686,6 +691,7 @@ no python workload, no STARTED event. Root cause via serial console: `ml-trainin
 script exited rc=1 at 21:25:38 UTC; VM sat doing nothing but systemd housekeeping.
 
 **Actions slot-1 main absorbed** (saving you the cycle):
+
 1. Deleted idle VM `features-onchain-defi-20260516-222259`.
 2. Fixed `ml-training-service@876f0e5` — UTL pin relaxed to `>=0.3.0,<1.0.0` (matches peer repos).
 3. Rebuilt ml-training-service tarball at 22:29:57 UTC.
@@ -694,8 +700,8 @@ script exited rc=1 at 21:25:38 UTC; VM sat doing nothing but systemd housekeepin
 5. Updated `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` chain step (c) with attempts 3+4.
 
 **Your action**: monitor attempt 4 — confirm STARTED event lands within 5 min, confirm rows show up in
-`gs://features-onchain-defi-central-element-323112/features/by_date/`, then proceed to chain step (d) by pinging
-Harsh slot 9 to re-run B-015 Phase 2 paper-trade.
+`gs://features-onchain-defi-central-element-323112/features/by_date/`, then proceed to chain step (d) by pinging Harsh
+slot 9 to re-run B-015 Phase 2 paper-trade.
 
 **Pattern call-out**: this is the second attempt in a row that died on a transitive dep pin (attempt 2 was
 risk-and-exposure UAC pin; attempt 3 was ml-training UTL pin). The VM workspace pulls 27 repos; any one with a
@@ -707,24 +713,46 @@ vs current peer versions to catch the next one before VM launch.
 ## [main → slot 3] 2026-05-17 00:10 UTC — B-015 chain (c) infra UNBLOCKED + slot-3 parallel VM 233501 reaped
 
 Final state after 4 cycles of root-cause-and-fix:
+
 - VM 3 (222259 — yours): killed by `ml-training-service` UTL pin too-high; fixed `ml-training-service@876f0e5`.
 - VM 4 (233044 — mine): killed by betfairlightweight/requests/execution-service conflict; reverted the wrong-direction
   NODEPS-allowlist fix, applied proper fix at `deployment-service@a6f746f` registering features_service in
   SERVICE_TARBALLS.
 - VM 5 (235216 — mine): killed by e2e-testing→execution-service transitive (still same conflict, different symptom).
 - **VM 6 (235840 — mine): RAN CLEANLY** — STARTED → DATA_INGESTION → 2 feature_groups → STOPPED in 11 sec.
-- VM 233501 (yours, launched 22:35 UTC in parallel with my work): also failed at uv pip install (pre-fix) and sat
-  IDLE for ~95 min. **Deleted by main at 00:11 UTC.**
+- VM 233501 (yours, launched 22:35 UTC in parallel with my work): also failed at uv pip install (pre-fix) and sat IDLE
+  for ~95 min. **Deleted by main at 00:11 UTC.**
 
-You spawned VM 233501 between my attempts 3 and 4 — fair, you didn't know I was diagnosing in parallel. Going
-forward: when main is actively driving a chain item (banner in `_agent_pings.md`), spawn-coordinate via slot file
-before parallel-launching to avoid the same dep error landing on two VMs simultaneously.
+You spawned VM 233501 between my attempts 3 and 4 — fair, you didn't know I was diagnosing in parallel. Going forward:
+when main is actively driving a chain item (banner in `_agent_pings.md`), spawn-coordinate via slot file before
+parallel-launching to avoid the same dep error landing on two VMs simultaneously.
 
 **Three feature-pipeline follow-ups now own to you** (filed under
 `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` § "VM 6 follow-up findings"):
+
 1. `macro_sentiment` lookahead bias — defillama_tvl has no historical; needs vendor swap or feature-mode change.
 2. `lending_rates` 0 rows for 2026-04-15 — likely upstream raw_tick_data gap, cross-link the 46-day backfill ask.
 3. 1-day-per-VM iteration — verify intended behaviour or you'll need to spawn 5 VMs for the 5-day smoke.
 
 harsh-slot-9 has been cross-pinged that paper-trade Phase 2 still gates on resolving (2) before any rows exist.
 
+---
+
+## [slot 3 → operator] 2026-05-17 — CREDENTIAL APPROVAL REQUEST — databento-tradfi-live-ws
+
+```
+CREDENTIAL APPROVAL REQUEST — databento-tradfi-live-ws
+Vendor: Databento (https://databento.com/pricing) — Real-Time + Live subscription
+What I need: existing `databento-api-key` vault entry (already used by batch path)
+             must have Live streaming permissions (distinct from batch/historical).
+             If the key only has historical access, a Real-Time tier upgrade is needed.
+             Databento separates historical (batch) from Live (streaming) tiers.
+Account to use: existing operator Databento account
+Unblocks: tradfi x arbitrage_price_dispersion live feed (Phase 3.5d May-23 gate);
+          CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS venues via DatabentoTradfiWSFeedConnector
+Without it: integration tests skip; unit + scaffold shipped at MTDS@946bab0 (30 tests pass);
+            adapter is BLOCKED-CREDENTIALS
+```
+
+Adapter scaffold + 30 unit tests shipped at MTDS@946bab0 (2026-05-17). Plan-flip at PM@90949401. Status:
+`BLOCKED-CREDENTIALS` — waiting for operator ack.
