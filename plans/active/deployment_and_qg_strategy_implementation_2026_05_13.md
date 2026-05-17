@@ -426,8 +426,19 @@ surface, not per repo:
 
 **Phase 8.E — Daily snapshot** (0.5 cal-AI-day):
 
-- [ ] [AGENT] P1. Extend `quality_gates_snapshot.sh` (Phase 4) to write per-repo coverage to GCS daily. deployment-ui's
-      `DeploymentReadinessTab` shows red/green per surface.
+- [x] ✅ [AGENT] P1. Extend `quality_gates_snapshot.sh` (Phase 4) to write per-repo coverage to GCS daily. — shipped
+      2026-05-17 (slot-8) at `unified-trading-pm@041c0bb5` via 3 new sibling scripts:
+      `scripts/quality_gates/coverage_snapshot.sh` (walks workspace) + `coverage_snapshot_emit.py` (one repo → JSON lines)
+      + `coverage_snapshot_to_parquet.py` (JSON lines → parquet → GCS). Schema:
+      repo/surface/target_pct/actual_pct/files_matched/lines_covered/lines_valid/snapshot_at. GCS path
+      `gs://{pid}-deployment-events/coverage_snapshot/repo=<R>/coverage_snapshot_YYYY_MM_DD.parquet`. Smoke-tested
+      locally on deployment-service (2 surfaces emitted, 2.7KB parquet built in dry-run). deployment-ui
+      DeploymentReadinessTab Coverage-column wire-in to consume these parquets is a separate ticket on
+      deployment-ui slot (Phase 8.E.2 — captured as TODO below).
+- [ ] [AGENT] P1. **Phase 8.E.2 — deployment-ui Coverage column** — deployment-ui slot reads
+      `gs://{pid}-deployment-events/coverage_snapshot/repo=<R>/coverage_snapshot_*.parquet` via deployment-api new
+      endpoint (e.g. `/api/repos/coverage`). Per-repo: aggregate over surfaces, show red if any surface below
+      `target_pct`, else green. Pattern mirrors `last_snapshot_date` + `SnapshotAgeBadge` from Phase 4.B.
 
 ### Phase 7 — Coverage raise across leaf services (mechanical parallel sub-agents, 0.5 cal-AI-day; absorbed into Phase 8)
 
