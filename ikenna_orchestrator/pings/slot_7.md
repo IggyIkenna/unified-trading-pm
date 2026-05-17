@@ -977,3 +977,15 @@ basedpyright clean across all 2 commits.
 
 327 remaining. **50/377 = ~13% of execution-service violations cleared** in this autonomous loop.
 basedpyright clean throughout. Cumulative session ship: ~100 methods refactored under 50L budget.
+
+
+[2026-05-17 /loop tick 22] slot-7 — execution-service Phase B (+3, 53/377 cleared):
+
+* `execution-service@0a901f80e` — PassiveAggressiveSpawnMixin._spawn_passive_order 56L→24L via
+  _resolve_passive_order_quantity helper (3 early-returns into one Quantity|None).
+* `execution-service@31fbcbe91` — ConfigurationValidator.check_nautilus_compatibility 57L→34L via
+  _coerce_list_field helper (primary/secondary mirror-pair into 2 helper calls).
+* `execution-service@080c641a8` — YieldReconEngine.reconcile_aave_index 56L→39L via
+  _accrual_discrepancy_status helper (≥1% CRITICAL / ≥0.1% DISCREPANCY / MATCH classification).
+
+324 remaining. basedpyright clean.
