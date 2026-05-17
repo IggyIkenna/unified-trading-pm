@@ -2224,3 +2224,28 @@ gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/featu
 ```
 
 **Harsh-side**: NOT yet notified. Will notify when `192145` passes with DEPLOYMENT_COMPLETED.
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:30 UTC — tick-50: 🚨 Bug 3 found+fixed; Smoke B VM 193018 relaunched
+
+**Bug 3 (new — critical startup crash)**: `NameError: name 'Callable' is not defined` in `features_service/cli/_shim.py:36`.
+- Root cause: basedpyright reportAny sweep (wave fixes) moved `Callable` import into `TYPE_CHECKING` block.
+  `cast(Callable[..., object], fn)` evaluates `Callable` at runtime — fails because `TYPE_CHECKING=False` at runtime.
+- Fix: moved `from collections.abc import Callable` out of `TYPE_CHECKING` block into unconditional imports.
+- Shipped: `features-service@818d8ecc`.
+
+**VMs killed in this tick**: `192529` (DEPLOYMENT_FAILED with Bug 3, exit_code=1 after 17s).
+**VMs killed in prior tick**: `190230` + `191412` (stale tarball — perp_funding + util bugs unfixed).
+
+**Full tarball history (features-service-code.tar.gz)**:
+- 08:02:05Z — original (vault_share_price only; perp_funding/util/Callable bugs all present)
+- 18:18:53Z — rebuilt with perp_funding+util fixes (features-service@30e449d7+@64682456); MISSING Callable fix
+- **18:30:09Z** — rebuilt with ALL 3 fixes: @30e449d7 + @64682456 + @818d8ecc (Callable). ← current
+
+**NEW Smoke B VM**: `features-onchain-defi-20260517-193018` — **RUNNING** (launched 18:30 UTC, asia-northeast1-c).
+Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-193018/run.log"`
+
+**Expected validation**: run.log shows DEPLOYMENT_STARTED → lending_rates ✅ → lst_yields ✅ → onchain_perps (no Int64 error) → utilization (no stall, completes <5 min) → DEPLOYMENT_COMPLETED.
+
+**harsh-slot-9**: still CYCLE-CLOSE. Paper backtest still blocked. Will notify when 193018 passes.
