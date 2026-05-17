@@ -452,8 +452,13 @@ surface, not per repo:
       total new tests across 6 calculator files. Aggregate coverage: 79.5% → expected ~84-86%. **Wave 3 (2026-05-17
       slot-8)**: 41 new tests for `MarketStructureSequence` (resolve_swings, count_lower_highs/higher_lows,
       check_bos_choch, update_swing_refs, update_decay_anchor, calculate_bos_choch, calculate_swing_decay, integration).
-      Shipped at `features-service@e57ed69f`. 219 total tests across 7 calculator files. Remaining gap:
-      sports.calculators 67.2% + calendar/cross_instrument below target — further wave needed.
+      Shipped at `features-service@e57ed69f`. 219 total tests across 7 calculator files. **Wave 4 (2026-05-17 slot-8)**:
+      85 new tests across 2 sports calculators: `sfi_progressive_calculator` (57 tests — \_safe_float, \_runs_of_true,
+      \_detect_halftime xg_nan+counter_freeze+unavailable, slice helpers, \_compute_one_fixture,
+      compute_sfi_progressive_batch) + `odds_velocity` (28 tests — compute_velocity_features, compute_opening_odds,
+      compute_clv_features generic/sharp/direction). Shipped at `features-service@f52e469d`. 304 total tests across 9
+      calculator files. Remaining gap: sports.calculators still has multiple files at <75% (goal_timing 58.8%,
+      manager_calculator 65.7%, travel_calculator 54.1%, advanced_stats 59.3%) — wave 5 continuing.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
