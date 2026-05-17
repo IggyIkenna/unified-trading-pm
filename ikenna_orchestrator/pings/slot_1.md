@@ -1,5 +1,20 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-17 ~20:50 UTC — tick-57: Smoke B VM 204250 RUNNING (all 6 bugs fixed)
+
+**Bug 6 found + fixed**: VM 200717 DEPLOYMENT_FAILED (exit_code=1) at 19:35 UTC. `LookaheadBiasError` in
+`_process_rate_impact`: `AaveRateImpactCalculator` fetches LIVE DefiLlama pool data; PIT enforcer rejects for
+historical as_of. Two-pronged fix: @c10fa999 (orchestrator batch-skip, slot-1-main) + @40494dd7 (calculator
+timestamp pin, parallel agent). Tarball rebuilt at 19:43:44Z with @c10fa999 active.
+
+**VM deduplication**: 204250 (oldest, 19:42 UTC) kept as Smoke B #8; 204428 + 204443 (duplicates) killed.
+VM 203044 was killed earlier (pre-Bug-6 tarball, same date range, created at 19:30 UTC).
+
+**Smoke B #8 RUNNING**: VM `features-onchain-defi-20260517-204250` (all 6 bugs fixed via latest tarball).
+ETA: ~2.5h from VM creation (19:42 UTC). Awaiting DEPLOYMENT_COMPLETED.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~20:35 UTC — tick-56: Smoke B VM 200717 in progress
 
 **VM 200717 status** (log ~19:20 UTC, log flushing every ~4 min to GCS):

@@ -121,10 +121,11 @@ Cap of 500 was insufficient — 500 × 274ms = 137s blocking time already satura
 - [x] ✅ [AGENT] P0. Bug 6 fix (`rate_impact` LookaheadBiasError) — `aave_rate_impact_calculator.fetch_data()` used
       `datetime.now(UTC)` as observation timestamp; `_enforce_as_of_boundary` rejected it when run_time >> as_of in
       historical backfill (VM 200717 FAILED at group 9/11, exit_code=1, 19:35 UTC). Two-pronged fix:
-      features-service@c10fa999 (batch-skip in orchestrator, same pattern as macro_sentiment) +
-      features-service@40494dd7 (timestamp pinned to end_date in calculator). Tarball rebuilt @19:43:44Z sha=40494dd7.
-- [ ] [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 6 bugs fixed — VM
-      `features-onchain-defi-20260517-204443` RUNNING (launched 2026-05-17 19:44 UTC by slot-6; tarball sha=40494dd7
-      @19:43:44Z confirmed includes all 6 bug fixes; DEPLOYMENT_STARTED pending). Awaiting DEPLOYMENT_COMPLETED.
-      Prior VMs: 200717 FAILED (Bug 6 at 19:35), 203044 KILLED (pre-Bug-6-fix tarball, terminated by watchdog).
-- [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run
+      features-service@c10fa999 (batch-skip in orchestrator, same pattern as macro_sentiment — slot-1-main) +
+      features-service@40494dd7 (timestamp pinned to end_date in calculator — parallel agent). Tarball rebuilt
+      @19:43:44Z (features-service-code.tar.gz = @c10fa999 active; @40494dd7 manifest also present).
+- [ ] [AGENT] P0. Smoke B re-run #8 — VM `features-onchain-defi-20260517-204250` RUNNING (oldest survivor;
+      launched 2026-05-17 19:42 UTC; downloads latest tarball @c10fa999 on startup; duplicates 204428+204443+203044
+      killed). Prior VMs: 200717 FAILED (Bug 6, 19:35), 203044 KILLED (pre-Bug-6 tarball). Awaiting
+      DEPLOYMENT_COMPLETED.
+- [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run #8 completing
