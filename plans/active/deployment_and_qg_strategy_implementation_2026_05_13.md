@@ -625,6 +625,10 @@ surface, not per repo:
       set_piece_goals body (151-154), set_piece_conceded body (159-162), xg_against rolling
       (209-210), possession rolling (230), goal_diff_season else (256). +6 tests → 32.
       Shipped `features-service@6381d8ec`.
+      **Wave 51 (2026-05-17 slot-8)**: sfi_progressive_calculator 95.6%→100% — too-few-after-coerce
+      (206), collapsed<3 (251), NaN counter continue (271), counter_freeze no-valid-run (282),
+      opn==0 drift NaN (397), exception handler (480-482). +6 tests → 63.
+      Shipped `features-service@f0c5ac04`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
