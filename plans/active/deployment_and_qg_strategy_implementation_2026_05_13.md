@@ -597,6 +597,12 @@ surface, not per repo:
       268-287 + call 340, historical_ht_patterns early return 369, draw_hold_rate 487, +
       1 new test_ht_draw_sets_draw_hold_rate in TestComputeHalftimeForFixture).
       halftime_calculator.py 88.2%→100%. Aggregate 96.6%. Shipped `features-service@f6b8fff4`. 74 tests.
+      **Wave 43 (2026-05-17 slot-8)**: footystats_predictions 92.1%→100% — exception handler
+      133-135 patched via _safe_float side_effect. Shipped `features-service@aecd4c6a`. 17 tests.
+      **Wave 44 (2026-05-17 slot-8)**: squad_value 90.9%→100% + odds_velocity 91.5%→96.9%.
+      squad_value: home exception 167-168 + away 179-180 + batch exception 264-274 via patch.
+      odds_velocity: velocity NaN 79, opening-odds else 209, CLV missing-col 310-312, sharp CLV
+      missing-col 336-337. Aggregate 97.0%. Shipped `features-service@a6cf42ad`. 32+32 tests.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
