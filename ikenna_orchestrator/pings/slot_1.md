@@ -2629,3 +2629,14 @@ Group summary:
 **No new operator pings.** Loop idle — monitoring only.
 
 **Status**: 🟢 Loop idle — Smoke B done, B-015 awaiting harsh-side ack
+
+## [slot 1 main] 2026-05-17 ~20:29 UTC — tick-65 addendum: slot pings scanned; all slots have themes
+
+**Slot scan results** (from PM@67c5f955 → PM@5754b8d2 rebase):
+- Slot-5: theme = UAC residual lint cleanup (130 ruff errors in unified-api-contracts). Directive already sent.
+- Slot-7: Phase B execution-service lint clear (was at 110/377 / 29%); check-in sent by main at PM@8bcb1204
+- Slot-8: waves 45-48 acked; continuing sports waves → next ack at wave-60
+- Slot-10: hedge_ratio_snapshot Phase 3 (pnl-attribution reader); Phase 2 shipped @21209bd
+
+**All slots have clear themes. No items requiring main action.**
+**B-015 still awaiting harsh-side ack.**
