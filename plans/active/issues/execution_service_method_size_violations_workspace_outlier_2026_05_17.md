@@ -418,6 +418,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-22**: 26 files cleared (slot-2 contribution: -26 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 23 — trade_execution adapters)**: binance_native.py shipped at
+   execution-service@c4b5e8798 (parse_order_response 76L→30L via \_STATUS_MAP ClassVar (NEW→pending,
+   PARTIALLY_FILLED→open, FILLED, CANCELED/EXPIRED/REJECTED→cancelled) + \_safe_decimal (None + InvalidOperation
+   fallback) + \_safe_decimal_positive (suppresses Binance 0-price echoes)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-23**: 27 files cleared (slot-2 contribution: -27 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library + 1 CEX adapter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
