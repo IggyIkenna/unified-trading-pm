@@ -384,9 +384,14 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - **Verification**: every native adapter has `test_<venue>_native_vcr.py` that round-trips a sample order placement +
     market-data fetch against recorded cassettes; `bash scripts/quality-gates.sh` clean per repo.
   - **DONE** execution-service@`582f1e93d` 2026-05-15. 5 native adapters (Binance/Bybit/OKX/Bitfinex/Bitget) + shared
-    `_native_base.py` (HMAC-SHA256/384/512, rate-limit enforcer, credentials gate). Status = BLOCKED-CREDENTIALS per
-    `ikenna_orchestrator/pings/slot_6.md`. 6034 passing tests. Kraken already native; VCR cassettes deferred to
-    integration-test phase when credentials land.
+    `_native_base.py` (HMAC-SHA256/384/512, rate-limit enforcer, credentials gate). Status (per-venue 2026-05-17
+    vault audit): Binance ✅ vaulted (`binance-trade-api-key` + `binance-read-api-key` + write variants); Bybit ✅
+    vaulted (`bybit_api_key` + `bybit_api_secret` v2 with Spot + Derivatives perms 2026-05-15); OKX ✅ vaulted
+    (`exec-anu-okx-api-key` + `exec-anu-okx-api-secret` + `exec-anu-okx-passphrase`); **Bitfinex + Bitget still
+    BLOCKED-CREDENTIALS** (no `bitfinex-*` or `bitget-*` keys in vault as of 2026-05-17). Aster ✅ vaulted
+    (`aster-api-key` + `aster-secret-key`). Kraken already native (live REST 2026-05-16 per slot 3); WS in flight.
+    `ikenna_orchestrator/pings/slot_6.md` for the original credential ping. 6034 passing tests. VCR cassettes deferred
+    to integration-test phase when remaining 2 credentials land.
 
 - [x] [AGENT] P0. **2.C — Per-scope key separation in adapters.** Update `get_order_adapter()` factory to take
       `scope=Literal["read", "trade", "withdraw"]` parameter; route to the right Secret Manager path. Add helper
@@ -404,7 +409,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       (binance/bybit/okx/deribit/hyperliquid/aster/kraken) × rate_limits/fee_tiers/
       max_order_size/max_leverage/market_maker. Public values from vendor docs pre-populated; PROBE_REQUIRED markers for
       account-tier-specific values (fee bracket, exact max_qty). Operator probe commands included per venue. aster: all
-      PROBE_REQUIRED (BLOCKED-CREDENTIALS). hyperliquid leverage: public data (no probe needed).
+      PROBE_REQUIRED — ✅ UNBLOCKED 2026-05-17 (`aster-api-key` + `aster-secret-key` vaulted); probes runnable.
+      hyperliquid leverage: public data (no probe needed).
 
 - [x] [AGENT] P0. **2.E — Per-venue rate-limit token bucket.** Implement per-key + per-account leaky-bucket in
       `VenueAdapterBase` per Phase 2.B. Singleton-locked launcher pattern (per CLAUDE.md `launch-sfi-forward-poll.sh`
