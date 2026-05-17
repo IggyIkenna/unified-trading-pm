@@ -99,20 +99,20 @@ a flip-checkbox commit per workspace HARD RULE.
 
 ### Phase 1 — UAC constant changes (single commit)
 
-- [ ] [SCRIPT] P0. In [`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`](../../../unified-api-contracts/unified_api_contracts/registry/market_data_categories.py#L644):
+- [x] ✅ **[SCRIPT] P0. UAC TRADFI_TICK_DATA_WINDOWS = [] + _DEFERRED preserved.** slot-1-main 2026-05-17 09:00 UTC at `unified-api-contracts@886ad9c`. `is_in_tradfi_tick_window()` now returns False for every date (any([]) short-circuit). 2 prior windows preserved in `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS`. Smoke-import verified:
   - Set `TRADFI_TICK_DATA_WINDOWS = []` (was `[May 2023, Jul 2024]`) — empty list = "no MVP tick windows; only OHLCV".
   - Set `VENUE_DATA_TYPE_COVERAGE_WINDOWS` to drop `("CME", "tbbo")` and `("CME", "mbp_10")` entries (move them to a separate `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` module-level constant for forward-reference by the post-cutover plan).
   - Update docstring on `TRADFI_TICK_DATA_WINDOWS` to reference this plan as the operator-acked source of truth for the OHLCV-only decision.
 
 ### Phase 2 — UAC capability matrix update
 
-- [ ] [SCRIPT] P0. In [`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`](../../../unified-api-contracts/unified_api_contracts/registry/market_data_categories.py) `VENUE_DATA_TYPE_CAPABILITIES`:
+- [x] ✅ **[SCRIPT] P0. VENUE_DATA_TYPE_CAPABILITIES drop trades+tbbo from TradFi venues + backdate CME/ICE.** slot-1-main 2026-05-17 09:00 UTC at `unified-api-contracts@886ad9c` (same commit as Phase 1). NASDAQ/NYSE: ohlcv_1m only at 2023-04-15. CME/ICE: ohlcv_1m only at 2019-01-01 (operator full-period ask). CBOE/FX/BARCHART/YAHOO_FINANCE/Sports/Prediction unchanged.
   - For `CME` / `ICE` / `NASDAQ` / `NYSE`: remove `trades` and `tbbo` entries (move to a `_POST_CUTOVER_TRADFI_TICK_CAPABILITIES` deferred dict).
   - Keep `ohlcv_1m` entries with start dates set to `2019-01-01` (or earlier if Databento's earliest is earlier).
 
 ### Phase 3 — Coverage matrix codex update
 
-- [ ] [SCRIPT] P0. In [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) § 3 TRADFI:
+- [x] ✅ **[SCRIPT] P0. Codex coverage matrix § 3 TRADFI updated.** slot-1-main 2026-05-17 09:05 UTC at `unified-trading-pm@e944dae2`. Venue × data_type table shows ohlcv_1m-only with backdated CME/ICE; trades + tbbo rows in coverage-axes table marked DEFERRED-post-cutover. Header callout points to this plan + the successor restoration plan.
   - Update CME / ICE / NASDAQ / NYSE rows to list only `ohlcv_1m` under "expected data_types".
   - Add a `## Deferred to post-cutover` section listing the L1-L3 data_types with reference to this plan.
 
