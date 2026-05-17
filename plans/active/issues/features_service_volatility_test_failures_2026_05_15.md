@@ -2,6 +2,8 @@
 title: features-service volatility unit tests — 48 pre-existing failures surfaced by PYTEST_UNIT_DIR fix
 created: 2026-05-15
 author: slot-4 (harsh)
+resolved: 2026-05-17
+resolution: MOSTLY-SHIPPED — 48 → 13 failures (73% reduction) at features-service@070985c0 + 2425ecf8. Root causes fixed: VolatilityOrchestrationService import path (engine/orchestrator → engine/feature_group_service), BroadcastSink + LiveDataSource moved into UTL feature_service_base, smoke_matrix per-family layout. Remaining 13 are smaller per-test API drifts (test_cli_and_tradfi 2, test_mock_data_provider 1, test_feature_touchup 6 errors) — slot-4 picks up the long tail.
 source:
   - bash scripts/quality-gates.sh → 202 failed (all families), 48 in volatility/
   - tests/volatility/unit/ — failures surfaced when PYTEST_UNIT_DIR="tests/" picked up all per-family tests
