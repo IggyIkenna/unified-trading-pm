@@ -369,3 +369,20 @@ Target: ≥90% pass rate (USDC + USDT should clear; DAI TBD pending RPC verifica
 
 - DAI IRM source verification (requires `WEB3_PROVIDER_URI` and print of live_params for DAI events)
 - VM re-run to confirm fix closes the 35pp gap
+
+## Update 2026-05-17 02:03 UTC (slot-1-main) — VM relaunched with 5-fix payload
+
+Per slot-6's 2026-05-14 status declaration, operator action was needed to re-run the VM with the 5 shipped fixes
+(`execution-service@70825a432` + `unified-api-contracts@215ed3e`). Operator is AFK; slot-1-main absorbed per
+"never stop autonomously for operator approval" directive.
+
+**VM launched**: `aave-lending-rate-val-20260517-030304` (n2-standard-4, asia-northeast1-a). Default block range
+(20800000 → 22500000, 60 target events). corr_id `6918BC11-E9ED-42A1-9082-96E21EA6CAD0`.
+
+**Verification path**:
+```bash
+gsutil cat gs://central-element-323112-defi-validation/results/lending/2026-05-17/6918BC11-E9ED-42A1-9082-96E21EA6CAD0/results.json | python3 -m json.tool | grep pass_rate
+```
+
+**Target**: ≥90% pass rate. If achieved, this issue closes. If DAI still fails (per slot-6's prediction —
+needs WEB3_PROVIDER_URI live IRM fetch verification), file follow-up.
