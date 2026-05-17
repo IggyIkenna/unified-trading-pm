@@ -280,6 +280,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7**: 11 files cleared (187→160 with slot-7 contributions, slot-2
    contribution: -11 files from execution-service handlers + 1 defi protocol).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 8 — defi_execution/protocols sweep continues)**: kamino.py shipped at
+   execution-service@d398d3c9f (supply 70L→3L, withdraw 68L→3L; extracted 3 helpers \_submit_reserve_op
+   (lamports + paper-mode + tx build + send + log), \_build_paper_trade_result, \_log_reserve_op_result). Same
+   pattern as marinade.py batch 7. Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8**: 12 files cleared (slot-2 contribution: -12 files; 10 handlers +
+   2 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
