@@ -103,7 +103,7 @@ with @aca4004c+@5afdd918 and relaunch.
       insufficient for mixed-precision files; shard-level isolation prevents stall.
 - [x] ✅ [AGENT] P0. Bug 2 investigation — utilization subprocess stall root cause + timeout guard — slot-6 owns —
       features-service@30e449d7 (root cause: synchronous PubSub log_event per-row on 134k rows; fix: cap
-      emit_aave_utilization_events at \_MAX_UTILIZATION_EVENTS=500; GCS async write fix at 64682456 from parallel agent)
+      emit_aave_utilization_events at `_MAX_UTILIZATION_EVENTS=500`; GCS async write fix at 64682456 from parallel agent)
 - [x] ✅ [AGENT] P0. Bug 3 (startup NameError) — `Callable` import inside `TYPE_CHECKING` block evaluated at runtime
       in `cast(Callable[..., object], fn)` — features-service@818d8ecc (slot-8; moved to unconditional import).
       Caused VMs `192145` + `192529` to DEPLOYMENT_FAILED (exit_code=1, 17s). Tarball rebuilt at `2026-05-17T18:30:09Z`.
@@ -111,10 +111,13 @@ with @aca4004c+@5afdd918 and relaunch.
       upload_bytes synchronously with timeout=600 + retry(deadline=600s); after 9 uploads GCS rate-limits and 10th
       upload stalls event loop indefinitely. 500-cap insufficient (500×274ms=137s saturates GCS quota). Fix:
       UTL@aca4004c (ThreadPoolExecutor + 15s timeout, best-effort drops) + features-service@5afdd918 (cap 500→10,
-      10×274ms=2.74s well below rate-limit threshold). VM 191412 stalled due to Bug 4. NOTE: VM 193018 tarball does
-      NOT include @aca4004c — if 193018 stalls at utilization, rebuild tarball with @aca4004c+@5afdd918 and relaunch.
-- [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 3 bugs fixed — VM
-      `features-onchain-defi-20260517-193018` RUNNING (launched 2026-05-17 18:30 UTC; all 3 bugs confirmed in tarball
-      @30e449d7+@64682456+@818d8ecc; log confirms `lending_rates` ✅ `lst_yields` ✅ `onchain_perps` started cleanly
-      with no Int64 error — Bug 1 confirmed fixed in production. Awaiting `utilization` + DEPLOYMENT_COMPLETED.)
+      10×274ms=2.74s well below rate-limit threshold). VM 191412 stalled due to Bug 4.
+- [x] ✅ [AGENT] P0. Bug 5 (`+ not allowed on i64 and duration[μs]`) — `_add_timestamp_out` in `feature_writer.py`
+      handled `Utf8` and `Datetime` but NOT `Int64`. `rate_impact_calculator` creates `timestamp` as epoch-microseconds
+      integer → Polars `Int64`; adding `pl.duration(...)` to `Int64` raises. Caused VM `193018` to DEPLOYMENT_FAILED
+      (exit_code=1) at group 9/11 (`rate_impact`) — all prior groups passed cleanly. Fixed in features-service@ae90d1fd
+      (slot-8). Tarball rebuilt at `2026-05-17T19:06:20Z`.
+- [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 5 bugs fixed — VM
+      `features-onchain-defi-20260517-200717` RUNNING (launched 2026-05-17 20:07 UTC; tarball @19:06:20Z includes all
+      fixes: @30e449d7+@64682456+@818d8ecc+@aca4004c+@5afdd918+@ae90d1fd; awaiting DEPLOYMENT_COMPLETED)
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run
