@@ -1444,19 +1444,26 @@ Compound V3 Eth) × {USDC, USDT, ETH, wstETH, WBTC} hourly data.
 
 ## Phase 2 — UAC config schema extension (1 AI-day)
 
-- [ ] [UAC] P0. Extend `CARRY_RECURSIVE_STAKED` config in `internal/architecture_v2/archetype_config.py` with:
+- [x] ✅ [UAC] P0. Extend `CARRY_RECURSIVE_STAKED` config in `internal/architecture_v2/archetype_config.py` with:
       `perp_leg_enabled: bool`, `perp_venue: PerpVenue | None`, `target_net_delta: Decimal` (units of share-class coin),
       `recursion_depth_max: int`, `safety_buffer_ltv: Decimal`, `opening_mode: Literal["persistent", "flash"]`,
-      `usdc_margin_buffer_min: Decimal`, `lending_protocol: LendingProtocol` (Aave V3 / Compound V3 / etc.).
-- [ ] [UAC] P0. New helper enum `LendingProtocol` (AAVE_V3 / COMPOUND_V3 / SPARK / MORPHO_BLUE / MAKER_DSR) in
-      `canonical/crosscutting/defi.py`. Source-of- truth for which protocols a strategy can target.
-- [ ] [UAC] P0. New helper enum `PerpVenue` extension or reuse existing `Venue` — pick one based on what's already
-      there. Default: reuse `Venue` filtered by capability `SUPPORTS_PERP=True` per UAC capability_declarations.
-- [ ] [UAC] P0. Backfill default values for existing `CARRY_RECURSIVE_STAKED` instances (set `perp_leg_enabled=True`,
+      `usdc_margin_buffer_min: Decimal`, `lending_protocol: LendingProtocol` (Aave V3 / Compound V3 / etc.). —
+      uac@fb9181f (7 new optional fields + 3 validation bounds; Family 1 + Family 2 seeds backfilled)
+- [x] ✅ [UAC] P0. New helper enum `LendingProtocol` (AAVE_V3 / COMPOUND_V3 / SPARK / MORPHO_BLUE / MAKER_DSR) in
+      `canonical/crosscutting/defi.py`. Source-of- truth for which protocols a strategy can target. — uac@fb9181f
+      (StrEnum, 5 members, re-exported via crosscutting **init**)
+- [x] ✅ [UAC] P0. New helper enum `PerpVenue` extension or reuse existing `Venue` — pick one based on what's already
+      there. Default: reuse `Venue` filtered by capability `SUPPORTS_PERP=True` per UAC capability_declarations. —
+      resolved: reused existing `perp_venue: str` field + `get_perp_venues()` validation; no new enum needed (per Phase
+      2 pre-audit at plan line 549: `PerpVenue` ambiguity already resolved)
+- [x] ✅ [UAC] P0. Backfill default values for existing `CARRY_RECURSIVE_STAKED` instances (set `perp_leg_enabled=True`,
       `perp_venue=Hyperliquid`, `target_net_delta=0`, `lending_protocol=AAVE_V3`, `opening_mode="persistent"`) so
-      nothing breaks. Migration is a 1-line `model_config.populate_by_name` change + per-instance default in catalog.
-- [ ] [UAC] P0. Schema test: round-trip `archetype_config.from_dict(json)` for both Family 1 (perp_leg_enabled=False)
-      and Family 2 (perp_leg_enabled=True) configs.
+      nothing breaks. Migration is a 1-line `model_config.populate_by_name` change + per-instance default in catalog. —
+      uac@fb9181f (Family 1: perp_leg_enabled=False, depth=5, safety=0.05, AAVE_V3; Family 2: perp_leg_enabled=True,
+      usdc_buffer=500.0)
+- [x] ✅ [UAC] P0. Schema test: round-trip `archetype_config.from_dict(json)` for both Family 1 (perp_leg_enabled=False)
+      and Family 2 (perp_leg_enabled=True) configs. — uac@fb9181f (19 tests in
+      tests/internal/unit/test_carry_recursive_staked_config_variants.py; QG green)
 
 **Done definition:** UAC schema accepts both Family-1 and Family-2 configs; existing CARRY_RECURSIVE_STAKED instances
 continue to round-trip; QG green on UAC.
