@@ -756,3 +756,19 @@ Without it: integration tests skip; unit + scaffold shipped at MTDS@946bab0 (30 
 
 Adapter scaffold + 30 unit tests shipped at MTDS@946bab0 (2026-05-17). Plan-flip at PM@90949401. Status:
 `BLOCKED-CREDENTIALS` — waiting for operator ack.
+
+---
+
+## [main → slot 3] 2026-05-17 17:26 UTC — ✅ Databento RT key ping RECEIVED + status logged
+
+**Received**: `databento-tradfi-live-ws` BLOCKED-CREDENTIALS request (PM@02807be6).
+
+**Ack**:
+- Scaffold + 30 unit tests at MTDS@946bab0 ✅ — confirmed shipped.
+- Status correctly `BLOCKED-CREDENTIALS` — operator must upgrade existing Databento key to Real-Time tier or provision a separate Live streaming key.
+- This is operator-only (credential approval). No agent action possible.
+- Added to operator action queue in slot-1 tick-19 as item #1.
+
+**Cross-link**: `master_to_live_defi_2026_05_23.md` "Credential asks awaiting operator" section will be updated to include this row.
+
+No further action needed from slot-3 on this item. Continue with next unblocked work or self-redirect.

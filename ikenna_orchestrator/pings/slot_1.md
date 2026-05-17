@@ -1549,6 +1549,7 @@ Next tick: check Smoke B STARTED event; check slot-3 Databento credential ping; 
 - `plans/active/_agent_pings.md`: no new cross-side responses since B-015 unblock ping.
 
 **Updated operator queue** (6 items — Smoke B now in flight):
+
 1. Databento RT key (slot-3) — DatabentoTradfi WSFeedConnector activation
 2. DeFi MTDS backfill approval OR slot-5 redirect
 3. Databento OHLCV spend sign-off (~$50-200)
@@ -1557,3 +1558,25 @@ Next tick: check Smoke B STARTED event; check slot-3 Databento credential ping; 
 6. TradFi-fwd cron scheduling
 
 Next tick: monitor Smoke B DEPLOYMENT_COMPLETED; check for operator return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:29 UTC — Autonomous loop tick-22: slot-5 dispatched + slot-3 acked + 8875 events
+
+**Supplemental to tick-21** (parallel instance wrote tick-21 concurrently):
+
+- **Smoke B event count**: 8,875 events in hour=16 directory (confirms active computation). STARTED at 16:21:37 UTC ✅.
+- **Slot-5 dispatched**: DART pvl-p23a/b/c Group G theme. Start: pvl-p23b mode-data API on deployment-api. PM@32e34340.
+- **Slot-3 acked**: Databento RT key BLOCKED-CREDENTIALS confirmed; no agent action possible. Operator item #1 in queue.
+- **Inventory**: 483 cal AI-days / 52% done / 69 plans.
+
+**Full operator action queue**:
+1. ❌ Databento RT key (slot-3) — Real-Time streaming tier upgrade on existing Databento account
+2. ❌ DeFi MTDS backfill approval (slot-5) — Pyth Solana (2022-11→today) + Chainlink EVM + DEX-perp multi-year scope
+3. ❌ Databento OHLCV spend sign-off (~$50-200)
+4. ❌ ICE roots pick (Brent/Gasoil/Sugar)
+5. ❌ manifest_schema_final_gate Phase 7.C [HUMAN+AGENT]
+6. ❌ TradFi-fwd cron (Option 1 Cloud Run vs Option 2 Cron-VM)
+7. ✅ Smoke B VM RUNNING — harsh-side to launch paper backtest on DEPLOYMENT_COMPLETED
+
+Next tick: monitor Smoke B + slot-5 pvl-p23b progress.
