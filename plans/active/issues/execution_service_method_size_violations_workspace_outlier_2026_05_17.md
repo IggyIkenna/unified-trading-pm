@@ -357,6 +357,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16**: 20 files cleared (slot-2 contribution:
    -20 files; 10 handlers + 8 defi protocols + 2 services).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 17 — engine/preprocessors)**: wrap_preprocessor.py shipped at
+   execution-service@0e3954de8 (\_maybe_insert_unwrap 71L→35L via \_resolve_unwrap (decide eligibility +
+   destination_token check) + \_unwrap_venue (type→venue mapping); preprocess 77L→27L via
+   \_rewrite_with_wrapped_token (clone instruction with token_in→wrapped + metadata tags)). Allowlist -1.
+   basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10+11+12+13+14+15+16+17**: 21 files cleared (slot-2
+   contribution: -21 files; 10 handlers + 8 defi protocols + 2 services + 1 preprocessor).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
