@@ -2,6 +2,8 @@
 title: "classify_blank_reason_row() fixture_manifest kwarg mismatch — Script 3 0 upgrades for defi/sports/prediction"
 created: 2026-05-13
 author: slot-6-harsh
+resolved: 2026-05-14
+resolution: OPS-VERIFIED COMPLETE — 0 upgrades (TypeError gone, classifier ran clean 2026-05-14).
 investigated: 2026-05-13 (slot-4-harsh)
 source:
   - manifest_cross_asset_rescan_design_2026_05_08

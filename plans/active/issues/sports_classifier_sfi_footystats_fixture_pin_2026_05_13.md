@@ -2,6 +2,8 @@
 title: "Sports classifier — SFI_PROGRESSIVE_STATS + FOOTYSTATS_* should pin to fixture availability"
 created: 2026-05-13
 author: slot-4-ikenna
+resolved: 2026-05-14
+resolution: SHIPPED — slot 4 (2026-05-14).
 source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
