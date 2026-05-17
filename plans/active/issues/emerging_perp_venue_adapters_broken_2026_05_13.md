@@ -4,6 +4,8 @@ title:
   — 0-32% capture rate"
 created: 2026-05-13
 author: slot-3-ikenna
+resolved: 2026-05-15
+resolution: SUBSTANTIVELY-SHIPPED — all in-scope adapter fixes shipped by slot-3 per 2026-05-15 status snapshot. ASTER: adapter fixed + backfill VM ran (mtds-perp-funding-backfill); HYPERLIQUID: reverse-phantom reconciler shipped (instruments-service@35f920e); LIGHTER-ZKSYNC + PACIFICA-SOLANA: MTDS wired @78e3b28; EXTENDED-STARKNET remains BLOCKED-OPERATOR-DECISION (canonical API URL). 4 of 5 venues unblocked.
 source:
   - bucket_name_ssot_canonicalisation_2026_05_10
   - defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07
