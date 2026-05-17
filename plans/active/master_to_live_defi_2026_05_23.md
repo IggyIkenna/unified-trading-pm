@@ -107,7 +107,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-17 09:03 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-17 09:06 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -146,7 +146,7 @@ _Last regenerated: 2026-05-17 09:03 UTC via `scripts/plans/regenerate_active_pla
 | [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md) | cross_cutting_may_23_2026 | infra | 82/90 | 91% | 1.8 | 2026-05-23 |
 | [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) | master | design | 47/77 | 61% | 1.6 | 2026-05-23 |
 | [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 11/15 | 73% | 1.6 | — |
-| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md) | tradfi_master_2026_05_07 | infra | 0/16 | 0% | 1.6 | 2026-06-15 |
+| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md) | master | infra | 0/16 | 0% | 1.6 | 2026-06-15 |
 | [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) | master | design | — | — | 1.5 | 2026-05-15 |
 | [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md) | manifest_evolution_master_2026_05_08 | brand-new | 34/44 | 77% | 1.5 | 2026-05-15 |
 | [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md) | master | research | 30/33 | 91% | 1.4 | 2026-05-23 |
