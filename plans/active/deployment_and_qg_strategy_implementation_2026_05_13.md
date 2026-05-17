@@ -603,6 +603,9 @@ surface, not per repo:
       squad_value: home exception 167-168 + away 179-180 + batch exception 264-274 via patch.
       odds_velocity: velocity NaN 79, opening-odds else 209, CLV missing-col 310-312, sharp CLV
       missing-col 336-337. Aggregate 97.0%. Shipped `features-service@a6cf42ad`. 32+32 tests.
+      **Wave 45 (2026-05-17 slot-8)**: european_fatigue 265-276,282 exception fallback (2 tests)
+      + h2h 222 sort-by-date, 270-276 ht_goals_pct branches, 281-284 days_since_last (5 tests).
+      79 total tests passed. Shipped `features-service@dff33b0b`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
