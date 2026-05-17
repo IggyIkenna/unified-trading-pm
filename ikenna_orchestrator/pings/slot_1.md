@@ -1580,3 +1580,21 @@ Next tick: monitor Smoke B DEPLOYMENT_COMPLETED; check for operator return.
 7. ✅ Smoke B VM RUNNING — harsh-side to launch paper backtest on DEPLOYMENT_COMPLETED
 
 Next tick: monitor Smoke B + slot-5 pvl-p23b progress.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:35 UTC — Autonomous loop tick-22: Smoke B active (17465 events, utilization phase)
+
+**Smoke B VM status** (`features-onchain-defi-20260517-171908`):
+- STATUS: RUNNING ✅. No EXIT_STATUS yet.
+- Event stream: 17,465 events in hour=16 partition (latest: DEFI_FEATURE_AAVE_UTILIZATION WETH pool @
+  2026-05-17T16:37:07 UTC). VM is computing utilization rates across Aave V3 chains.
+- lst_yields ✅ (wrote rows for 2026-04-10/11/12). onchain_perps ⚠️ skipped (timestamp dtype mismatch).
+  utilization: IN PROGRESS.
+
+**Other new commits** (slot-2 batch 47 + Phase 8.B Deploy-script-deps UTL@1ac18ea5 185 tests ✅).
+
+**Operator queue** (6 items — unchanged): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots /
+Phase 7.C / TradFi-fwd cron.
+
+Next tick: check EXIT_STATUS + DEPLOYMENT_COMPLETED; monitor Smoke B completion.
