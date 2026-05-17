@@ -2,6 +2,8 @@
 title: "Sports classifier extension scope re-opened (slot 9 grep-then-conclude miss)"
 created: 2026-05-13
 author: harsh-main (slot 1, via Wave 1 audit)
+resolved: 2026-05-14
+resolution: SHIPPED — slot 4 Task 1 + Task 2 close-out 2026-05-14.
 source:
   - work_split_2026_05_13_harsh.md (Slot 9 scope, lines 277-281)
   - audit_wave1_quality_2026_05_13.md § "Critical follow-ups" item 2

@@ -2,6 +2,8 @@
 title: "Sports classifier — open_meteo WEATHER should be no-op on no-fixture days (write + read side)"
 created: 2026-05-13
 author: slot-4-ikenna
+resolved: 2026-05-16
+resolution: SHIPPED — read-side DONE 2026-05-14; write-side DONE 2026-05-16 instruments-service@f799109.
 source:
   - expected_unattempted_propagation_chain_2026_05_12
   - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
