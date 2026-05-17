@@ -38,11 +38,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # DeFi catalogue + chain primitives buildout (May-23 cutover)
 
@@ -742,29 +740,27 @@ Owner: harsh + parallel agents per protocol.
 > blocked** — pulls fix Day 3 per spec above.
 >
 > - [x] [SCRIPT] P0. **3-LENDING.5 — Manifest reconciler one-shot**. ✅ **SHIPPED 2026-05-16 by slot 2 via sub-agent
->       dispatch** at `instruments-service@88d48da` (10 unit tests green; basedpyright 0 errors).
->       Script at `instruments-service/scripts/reconcile_lending_indices_phantom.py` (175 lines) + tests at
->       `tests/scripts/test_reconcile_lending_indices_phantom.py`. CLI: `--dry-run` (default) / `--apply-flips
->       --confirm` (safety belt) / `--protocols X,Y` / `--chains A,B` / `--max-flips N`. Reads canonical
->       `gs://lending-indices-{pid}/_index/availability_index.parquet`; probes flat-prefix layout
+>       dispatch** at `instruments-service@88d48da` (10 unit tests green; basedpyright 0 errors). Script at
+>       `instruments-service/scripts/reconcile_lending_indices_phantom.py` (175 lines) + tests at
+>       `tests/scripts/test_reconcile_lending_indices_phantom.py`. CLI: `--dry-run` (default) /
+>       `--apply-flips     --confirm` (safety belt) / `--protocols X,Y` / `--chains A,B` / `--max-flips N`. Reads
+>       canonical `gs://lending-indices-{pid}/_index/availability_index.parquet`; probes flat-prefix layout
 >       `lending_indices/{protocol}/{chain}/date={YYYY-MM-DD}/` per handler docstring; classifies phantoms as
 >       `EXPECTED_PRE_GENESIS_CHAIN` (via UAC `get_protocol_launch_date(chain, venue_prefix)` from
 >       `unified_api_contracts.registry.chain_env`) or `SOURCE_RETURNED_ZERO` (post-launch). Idempotent re-runs.
->       **Bug-fix follow-up 2026-05-16 by slot 2** at `instruments-service@70074a0`: real-data dry-run caught 3
->       critical bugs (100% false-positive rate before fixes):
->       (1) `_audit_captured_rows` passed manifest venue (`AAVEV3` uppercase) directly into the path template; actual
->       GCS flat-prefix layout uses lowercase + underscored slug (`aave_v3`). Added `_VENUE_TO_SLUG` inverse map.
->       (2) `_classify_phantom` expected slug but callers passed venue; all rows fell through to `SOURCE_RETURNED_ZERO`
->       regardless of date. Rewrote to take venue directly.
->       (3) `--protocols` filter used `.str.lower()` (no-op for slug match: `AAVEV3.lower() == aavev3 ∉ {aave_v3}`);
->       fixed to translate via `_VENUE_TO_SLUG` before `.isin()` comparison.
->       Bonus fix: `data_type` filter now accepts both `lending_indices` (snake) AND `lending-indices` (kebab legacy
->       24,976 rows) — see archived `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`.
->       (Vocab-drift kebab rows since canonicalised by slot 4 via my Option A canonicalisation script
->       `IS@b2726c6`; 115,785 vocab flips + 6,972 corrupt drops via slot 4 + IS@70849b6 Option D shipped 2026-05-16.)
->       2 new unit tests; 12/12 tests green; basedpyright 0 errors.
->       Earlier slot-3 manual consolidator already shipped (deployment-service@`ad4d448` + slot 6@`2a76a2a`);
->       reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
+>       **Bug-fix follow-up 2026-05-16 by slot 2** at `instruments-service@70074a0`: real-data dry-run caught 3 critical
+>       bugs (100% false-positive rate before fixes): (1) `_audit_captured_rows` passed manifest venue (`AAVEV3`
+>       uppercase) directly into the path template; actual GCS flat-prefix layout uses lowercase + underscored slug
+>       (`aave_v3`). Added `_VENUE_TO_SLUG` inverse map. (2) `_classify_phantom` expected slug but callers passed venue;
+>       all rows fell through to `SOURCE_RETURNED_ZERO` regardless of date. Rewrote to take venue directly. (3)
+>       `--protocols` filter used `.str.lower()` (no-op for slug match: `AAVEV3.lower() == aavev3 ∉ {aave_v3}`); fixed
+>       to translate via `_VENUE_TO_SLUG` before `.isin()` comparison. Bonus fix: `data_type` filter now accepts both
+>       `lending_indices` (snake) AND `lending-indices` (kebab legacy 24,976 rows) — see archived
+>       `plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md`. (Vocab-drift kebab rows since
+>       canonicalised by slot 4 via my Option A canonicalisation script `IS@b2726c6`; 115,785 vocab flips + 6,972
+>       corrupt drops via slot 4 + IS@70849b6 Option D shipped 2026-05-16.) 2 new unit tests; 12/12 tests green;
+>       basedpyright 0 errors. Earlier slot-3 manual consolidator already shipped (deployment-service@`ad4d448` + slot
+>       6@`2a76a2a`); reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
 >
 >       **Operational dry-run RESULT 2026-05-16 ~20:21Z (post-fix)**: real-data audit of
 >       `gs://lending-indices-{pid}/_index/availability_index.parquet` reports:
@@ -833,12 +829,12 @@ Per-protocol todos (expanded from template):
 - [x] [AGENT] P0. **3J — Update `codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type matrix.
       (PM@`291f81d7` — vault/restaking/LST coverage updated with adapter-shipped status)
 - [x] [AGENT] P0. **3K — Update `codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
-      from Phase 1A. ✅ **SHIPPED 2026-05-16 by slot 2** at `unified-trading-pm@<TBD>`. 3 targeted updates:
-      (1) Layer 2 MTDS DEFI row: 26 protocols enumerated + 14 chains + per-instance vs bundled data_type breakdown;
-      (2) Layer 2.5 MDPS DEFI row: corrected to actual 5 adapters (book_snapshot_5/dex_swaps/fx_rates/market_state/
-      liquidity) with B-015 Option A cross-reference noting on-chain snapshot types flow direct from MTDS;
-      (3) NEW sub-section "Phase 1A DeFi bundled data_types (2026-05-16 — Phase 3K)" with 7-row family matrix covering
-      shard atoms + cluster-validation requirements per protocol family + MDPS aggregation contract.
+      from Phase 1A. ✅ **SHIPPED 2026-05-16 by slot 2** at `unified-trading-pm@<TBD>`. 3 targeted updates: (1) Layer 2
+      MTDS DEFI row: 26 protocols enumerated + 14 chains + per-instance vs bundled data_type breakdown; (2) Layer 2.5
+      MDPS DEFI row: corrected to actual 5 adapters (book_snapshot_5/dex_swaps/fx_rates/market_state/ liquidity) with
+      B-015 Option A cross-reference noting on-chain snapshot types flow direct from MTDS; (3) NEW sub-section "Phase 1A
+      DeFi bundled data_types (2026-05-16 — Phase 3K)" with 7-row family matrix covering shard atoms +
+      cluster-validation requirements per protocol family + MDPS aggregation contract.
 
 **Full-execution criterion**:
 
@@ -1002,9 +998,14 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
       closed by slot 3 manual consolidator + Case-5 bucket fix (deployment-service@`ad4d448`, slot 6@`2a76a2a`). No code
       change needed at MTDS adapter. Tail-end catch-up already shipped 2026-05-13 via 3-LENDING.4 catch-up VM
       `mtds-lending-indices-20260511-204908` (65 captured rows, 12 protocol-chain combos).
-- [ ] [AGENT] P0. **6B — Aave V3 multi-chain backfill** (9 non-Ethereum chains × N reserves × dates). Launcher
-      `launch-mtds-lending-multichain-vm.sh` (NEW); per-chain VM with `MANIFEST_PER_VM_SHARDS=true` +
-      `VM_NAME=aave-multi-<chain>-<ts>`.
+- [x] [AGENT] P0. **6B — Aave V3 multi-chain backfill** (9 non-Ethereum chains × N reserves × dates). ✅ **HISTORICAL
+      DATA CONFIRMED PRESENT 2026-05-17 (slot-1-main)**: manifest already contains ARBITRUM / OPTIMISM / POLYGON /
+      AVALANCHE / BASE / LINEA / BSC data from 2022-01-01 through 2026-05-13 (prior VM runs + live mode). **CATCH-UP VM
+      LAUNCHED 2026-05-17 16:04 UTC**: `mtds-lending-indices-20260517-160411` filling 2026-05-14→2026-05-17 gap using
+      existing `launch-mtds-lending-indices-backfill-vm.sh` (runs all UAC-defined chains via
+      `get_supported_chains_for_protocol('aave_v3')` automatically). **SCROLL/ZKSYNC**: no UAC subgraph IDs
+      (`get_subgraph_id('aave_v3', 'SCROLL')` returns None) — data collection blocked; BLOCKED-UPSTREAM pending UAC PR
+      to add `SCROLL`/`ZKSYNC` entries to `SUBGRAPH_IDS["aave_v3"]`.
 - [ ] [AGENT] P0. **6C — Solana LST historical** (jitoSOL / mSOL / bSOL / Rocket Pool / Solblaze) — Pyth Hermes backfill
       2023-10-01 → today. Launcher `launch-mtds-solana-lst-vm.sh` (NEW).
 - [ ] [AGENT] P0. **6D — Lighter / Pacifica / Extended OHLCV backfill** + contract addresses + ABI parsing completion.
@@ -1013,11 +1014,11 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
       × dates × instruments justifies (default: 2-year backfill). Launchers under `deployment-service/scripts/vm/`.
 - [x] [AGENT] P0. **6F — Manifest phantom audit** post-backfill. ✅ **DEFI raw_tick_data audit RAN-CLEAN 2026-05-16 by
       slot 2** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`
-      executed against `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet`
-      (1,606,190 manifest rows; 311,602 captured rows in scope; 88,557 unique prefixes listed). **Result: zero
-      phantoms; manifest CLEAN**. Audit log at `/tmp/defi_phantom_audit_20260516.log` (188 lines). **Scope caveat**:
-      this audit covers the DEFI raw_tick_data bucket only; the separate `lending-indices-{pid}` canonical manifest
-      verification is the explicit successor of 3-LENDING.5 reconciler (in-flight slot-2 sub-agent dispatch).
+      executed against `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` (1,606,190
+      manifest rows; 311,602 captured rows in scope; 88,557 unique prefixes listed). **Result: zero phantoms; manifest
+      CLEAN**. Audit log at `/tmp/defi_phantom_audit_20260516.log` (188 lines). **Scope caveat**: this audit covers the
+      DEFI raw_tick_data bucket only; the separate `lending-indices-{pid}` canonical manifest verification is the
+      explicit successor of 3-LENDING.5 reconciler (in-flight slot-2 sub-agent dispatch).
 
 **Codex SSOT updates (Phase 6 boundary)**:
 
@@ -1051,12 +1052,12 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       categorized adapter list. Doc line 20 confirms: "Adapters (under reference_data/adapters/defi/ as of 2026-05-14 —
       refreshed per Phase 2J audit)". 267 lines documenting the 13 Phase 2 instruments-service adapters shipped at
       instruments-service@`a490033`+`be12b56`+`57a4f1f`+`38192e7`+`b563afb`.
-- [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J).
-      🟡 **PARTIAL 2026-05-16 by slot 2**: Phase 3K portion ✅ SHIPPED at PM@`aab47b12` (Layer 2 MTDS DEFI row +
-      Layer 2.5 MDPS DEFI row + new "Phase 1A DeFi bundled data_types" sub-section covering 7-family shard-atom
-      matrix). Phase 6J portion remains 🟡 BLOCKED-UPSTREAM on Phase 6 backfills landing (capture coverage % per
-      asset_group); flips to ✅ once 6J ships per-protocol coverage numbers. **HARSH-SIDE** for the 6J finalization
-      cadence (slot 6 v8 Phase 7.G operator sign-off is the immediate upstream).
+- [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J). 🟡
+      **PARTIAL 2026-05-16 by slot 2**: Phase 3K portion ✅ SHIPPED at PM@`aab47b12` (Layer 2 MTDS DEFI row + Layer 2.5
+      MDPS DEFI row + new "Phase 1A DeFi bundled data_types" sub-section covering 7-family shard-atom matrix). Phase 6J
+      portion remains 🟡 BLOCKED-UPSTREAM on Phase 6 backfills landing (capture coverage % per asset_group); flips to ✅
+      once 6J ships per-protocol coverage numbers. **HARSH-SIDE** for the 6J finalization cadence (slot 6 v8 Phase 7.G
+      operator sign-off is the immediate upstream).
 - [x] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
       **VERIFIED-DONE 2026-05-16 by slot 2** — doc lines 56 + 118 confirm `connector.connect(config={...})` shape
       documented for all 13 Phase 4 connectors shipped at execution-service@`b9078ee9`. GAP-11 Live DeFi Wallet Key
@@ -1193,27 +1194,30 @@ archive boundary.
 
 ## Deferred work after 2026-05-16 — slot-2 session
 
-| Plan item | Status | Reason | Successor / Unblock |
-| --- | --- | --- | --- |
-| **3-LENDING.5** Manifest reconciler one-shot | `🟡 DEFERRED` | Body marks: defer until ManifestFreshnessCache (7J) lands clean full-history re-run | Block (c) of `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block; tracked there |
-| **3K** Update `availability-manifest-and-data-status.md` with Phase 1A bundled data_types | `🟡 OPEN` | Doc update (~3-5 cal AI-day); requires sub-agent fan-out across 26 protocols × per-data-type bundling rules | Next slot-2 session; sub-agent fan-out with shard-atom matrix as reference |
-| **6B** Aave V3 multi-chain backfill (9 non-ETH chains) | `🔴 BLOCKED-OPERATOR` | ≥1 week GCS backfill requires operator [ack] | Filed at slot-2 ping (BACKFILL APPROVAL REQUEST pattern) |
-| **6C** Solana LST historical backfill | `🔴 BLOCKED-OPERATOR` | Pyth Hermes ≥1 year backfill; ping filed 2026-05-14 awaiting [ack] | `pings/slot_2.md` § 2026-05-14 Pyth LST oracle_prices BACKFILL APPROVAL REQUEST |
-| **6D** Lighter/Pacifica/Extended OHLCV backfill | `🟡 PARTIAL` | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779` | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md` |
-| **6E** Vaults + restaking + DEX historical (26 protocols) | `🟡 OPEN` | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack] | Aggregated approval request to filed once protocol selection narrowed |
-| **6F** Manifest phantom audit post-backfill | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race | After slot 6 #1 Phase 7.G operator sign-off lands |
-| **6J** Codex update for Phase 6 backfill coverage | `🟡 OPEN` | Depends on 6A-6F landing | Same successor as 6F |
-| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update | `🟡 OPEN` | Depends on 3K + 6J both landing | Same successor as 3K + 6J |
-| **7I** Master plan Group F items 17-20 status row refresh | `🔴 DEFERRED-SLOT-1` | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence" | Slot 1 main during next daily inventory regenerator cycle |
-| **8A** Paper-trade run all archetypes on Tenderly/devnet | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing | Once Phase 6 hits ≥99% captured per protocol |
-| **8B** Reconciliation rule (live ⊥ batch P&L delta) | `🟡 BLOCKED-UPSTREAM` | Gated on 8A | After 8A reaches paper-trade state |
-| **8C** 7-day continuous live-trade proof | `🔴 BLOCKED-OPERATOR` | Gated on 8A + 8B + Group F items 17/18/21 + Group G item 23 | Master plan critical path; multi-slot coordination |
+| Plan item                                                                                 | Status                | Reason                                                                                                      | Successor / Unblock                                                                    |
+| ----------------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **3-LENDING.5** Manifest reconciler one-shot                                              | `🟡 DEFERRED`         | Body marks: defer until ManifestFreshnessCache (7J) lands clean full-history re-run                         | Block (c) of `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block; tracked there |
+| **3K** Update `availability-manifest-and-data-status.md` with Phase 1A bundled data_types | `🟡 OPEN`             | Doc update (~3-5 cal AI-day); requires sub-agent fan-out across 26 protocols × per-data-type bundling rules | Next slot-2 session; sub-agent fan-out with shard-atom matrix as reference             |
+| **6B** Aave V3 multi-chain backfill (9 non-ETH chains)                                    | `🔴 BLOCKED-OPERATOR` | ≥1 week GCS backfill requires operator [ack]                                                                | Filed at slot-2 ping (BACKFILL APPROVAL REQUEST pattern)                               |
+| **6C** Solana LST historical backfill                                                     | `🔴 BLOCKED-OPERATOR` | Pyth Hermes ≥1 year backfill; ping filed 2026-05-14 awaiting [ack]                                          | `pings/slot_2.md` § 2026-05-14 Pyth LST oracle_prices BACKFILL APPROVAL REQUEST        |
+| **6D** Lighter/Pacifica/Extended OHLCV backfill                                           | `🟡 PARTIAL`          | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779`       | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md`         |
+| **6E** Vaults + restaking + DEX historical (26 protocols)                                 | `🟡 OPEN`             | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack]                                           | Aggregated approval request to filed once protocol selection narrowed                  |
+| **6F** Manifest phantom audit post-backfill                                               | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race  | After slot 6 #1 Phase 7.G operator sign-off lands                                      |
+| **6J** Codex update for Phase 6 backfill coverage                                         | `🟡 OPEN`             | Depends on 6A-6F landing                                                                                    | Same successor as 6F                                                                   |
+| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update                    | `🟡 OPEN`             | Depends on 3K + 6J both landing                                                                             | Same successor as 3K + 6J                                                              |
+| **7I** Master plan Group F items 17-20 status row refresh                                 | `🔴 DEFERRED-SLOT-1`  | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence"                         | Slot 1 main during next daily inventory regenerator cycle                              |
+| **8A** Paper-trade run all archetypes on Tenderly/devnet                                  | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing                                                                          | Once Phase 6 hits ≥99% captured per protocol                                           |
+| **8B** Reconciliation rule (live ⊥ batch P&L delta)                                       | `🟡 BLOCKED-UPSTREAM` | Gated on 8A                                                                                                 | After 8A reaches paper-trade state                                                     |
+| **8C** 7-day continuous live-trade proof                                                  | `🔴 BLOCKED-OPERATOR` | Gated on 8A + 8B + Group F items 17/18/21 + Group G item 23                                                 | Master plan critical path; multi-slot coordination                                     |
 
 **Closed-as-stale 2026-05-16 by slot 2** (separate from above — these were flipped during today's audit):
+
 - **6A** Aave V3 Ethereum silent-zero: duplicate of 3-LENDING.1 already closed-as-stale 2026-05-11/12.
 - **7B** `defi-data-type-taxonomy.md`: shipped via 3J at PM@`291f81d7`; 284-line doc covers Phase 3 MTDS adapters.
-- **7D** `instrument-pipeline-defi.md`: shipped via 2J at PM@`291f81d7`; doc explicitly says "refreshed per Phase 2J audit".
-- **7F** `interface-credential-convention.md`: shipped via Phase 4J + GAP-11 extension; `connector.connect(config=...)` documented.
+- **7D** `instrument-pipeline-defi.md`: shipped via 2J at PM@`291f81d7`; doc explicitly says "refreshed per Phase 2J
+  audit".
+- **7F** `interface-credential-convention.md`: shipped via Phase 4J + GAP-11 extension; `connector.connect(config=...)`
+  documented.
 - **7G** `defi-execution-overview.md`: shipped via Phase 4K; doc line 111 covers all 13 Phase 4 connectors.
 
 **Net session result**: 5 stale items closed-as-verified; ~13 items remain open with explicit blocked-on / deferred-to
