@@ -51,6 +51,7 @@ UTL's event logging system uses module-level singletons (`_event_sink`, `_sink_s
 **Priority 1** (immediate, ≤1h): Fix the 29 ratchet failures. Each is a 1-line count update in 6 test files. The new counts are correct (events/APIs were legitimately added/changed by LDR commits). Assign to slot that owns the changed modules.
 
 **Priority 2** (same day): Change `PYTEST_WORKERS=${PYTEST_WORKERS:-2}` → `PYTEST_WORKERS=${PYTEST_WORKERS:-1}` in `unified-trading-library/scripts/quality-gates.sh` to match post-OOM base default.
+  - ✅ **SHIPPED 2026-05-17 (slot-3)**: `unified-trading-library@828d6ff3` — default flipped to 1; rationale comment added; override via `PYTEST_WORKERS=2` env var when xdist contamination resolves.
 
 **Priority 3** (P2, backlog): Fix UTL event system singletons to use proper pytest fixture scoping — prevents state leakage between xdist workers. SSOT: `unified_trading_library/events/setup.py` (wherever `_event_sink` global lives).
 
