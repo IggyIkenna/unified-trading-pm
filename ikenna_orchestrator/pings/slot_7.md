@@ -1087,46 +1087,46 @@ because the issue is statused P2 post-cutover — proceed regardless.
 
 [2026-05-17 /loop tick 27] slot-7 — execution-service Phase B (+3, 64/377 cleared):
 
-- `execution-service@cec3ee56f` — ResultSerializer.generate_run_id 58L→19L via _shorten_venue static helper;
-  MultiLegOrchestrator._submit_leg_with_timeout 58L→32L via _handle_leg_exc_result (classify+emit+return);
-  DeribitOrdersMixin._parse_order_response 59L→36L via _extract_order_fills static helper.
+- `execution-service@cec3ee56f` — ResultSerializer.generate_run_id 58L→19L via \_shorten_venue static helper;
+  MultiLegOrchestrator.\_submit_leg_with_timeout 58L→32L via \_handle_leg_exc_result (classify+emit+return);
+  DeribitOrdersMixin.\_parse_order_response 59L→36L via \_extract_order_fills static helper.
 
 313 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 28] slot-7 — execution-service Phase B (+3, 67/377 cleared):
 
-- `execution-service@88f756034` — DataAvailabilityChecker.check_local_file_exists 60L→15L via _glob_match_instrument +
-  4-key loop; ReportTimelineExtractor.extract_all 59L→32L via _collect_fill_order_ids static helper;
-  DeribitOrdersMixin.get_order_status 60L→16L via _parse_deribit_order_state_result static helper.
+- `execution-service@88f756034` — DataAvailabilityChecker.check_local_file_exists 60L→15L via \_glob_match_instrument +
+  4-key loop; ReportTimelineExtractor.extract_all 59L→32L via \_collect_fill_order_ids static helper;
+  DeribitOrdersMixin.get_order_status 60L→16L via \_parse_deribit_order_state_result static helper.
 
 310 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 29] slot-7 — execution-service Phase B (+2, 69/377 cleared):
 
-- `execution-service@93e653160` — PassiveAggressiveCoreMixin._get_passive_price 60L→31L via _apply_bps_adjustment
-  (BUY/SELL unified); DriftConnector.cancel_order 60L→23L via _build_cancel_paper_result.
+- `execution-service@93e653160` — PassiveAggressiveCoreMixin.\_get_passive_price 60L→31L via \_apply_bps_adjustment
+  (BUY/SELL unified); DriftConnector.cancel_order 60L→23L via \_build_cancel_paper_result.
 
 308 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 30] slot-7 — execution-service Phase B (+2, 71/377 cleared):
 
-- `execution-service@ec0ab1497` — InstructionDrivenV3Handlers.enter_position 60L→39L via _store_parent_benchmark +
-  _notify_verifier_submitted helpers; TradeMeasurementVerifierActor.on_order_filled 63L→31L via
-  _resolve_expected_qty + docstring trim.
+- `execution-service@ec0ab1497` — InstructionDrivenV3Handlers.enter_position 60L→39L via \_store_parent_benchmark +
+  \_notify_verifier_submitted helpers; TradeMeasurementVerifierActor.on_order_filled 63L→31L via
+  \_resolve_expected_qty + docstring trim.
 
 306 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 31] slot-7 — execution-service Phase B (+2, 73/377 cleared):
 
 - `execution-service@299b10d35` — LeveragedLegController.emit_rebalance_instructions 61L→47L (docstring trim);
-  InstructionRouter._run_compose_validation 61L→44L (docstring trim).
+  InstructionRouter.\_run_compose_validation 61L→44L (docstring trim).
 
 304 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 32] slot-7 — execution-service Phase B (+2, 75/377 cleared):
 
 - `execution-service@5ccb7dd72` — InstructionAlphaCalculator.get_market_price_at_time 61L→48L (14-line docstring → 1
-  line); DependencyChecker.check_instrument_definitions 61L→25L via _instrument_dep_status static helper (3
+  line); DependencyChecker.check_instrument_definitions 61L→25L via \_instrument_dep_status static helper (3
   near-identical DependencyStatus constructors → 3 one-line calls) + 11-line docstring → 1 line.
 
 302 remaining. basedpyright clean.
@@ -1135,26 +1135,34 @@ because the issue is statused P2 post-cutover — proceed regardless.
 
 - `execution-service@2db06f9d6` — NodeBuilder.build_run_config 61L→47L (15-line docstring → 1 line);
   LeveragedLegController.clamp_to_venue_capabilities 64L→40L (25-line docstring → 1 line);
-  RecursiveLoopOrchestrator._flash_close 62L→34L via _build_flash_close_result static helper
-  (LoopIterEvent + RecursiveLoopResult construction).
+  RecursiveLoopOrchestrator.\_flash_close 62L→34L via \_build_flash_close_result static helper (LoopIterEvent +
+  RecursiveLoopResult construction).
 
 299 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 34] slot-7 — execution-service Phase B (+3, 81/377 cleared):
 
 - `execution-service@206051e87` — DataValidator.validate_dataset_date 64L→29L via module-level
-  _parse_day_dataset_date() + 10-line docstring trim; MultiLegOrchestrator._submit_leg_with_retry
-  64L→44L via _leg_result() static helper (3 LegExecutionResult constructors) + 7-line docstring
-  trim; IntentDecomposer._decompose_swap 64L→9L via module-level _build_swap_steps() extraction.
+  \_parse_day_dataset_date() + 10-line docstring trim; MultiLegOrchestrator.\_submit_leg_with_retry 64L→44L via
+  \_leg_result() static helper (3 LegExecutionResult constructors) + 7-line docstring trim;
+  IntentDecomposer.\_decompose_swap 64L→9L via module-level \_build_swap_steps() extraction.
 
 296 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 35] slot-7 — execution-service Phase B (+3, 84/377 cleared):
 
-- `execution-service@665fa506b` — KrakenCeFiAdapter.parse_ticker_response 65L→45L (21-line
-  docstring → 1 line); VWAPExecutionMixin._schedule_children 64L→48L via
-  _schedule_final_primary_slice() + 6-line docstring trim; DriftConnector.get_positions 64L→13L
-  via module-level _collect_drift_perp_positions() + _collect_drift_spot_positions() + 5-line
-  docstring trim.
+- `execution-service@665fa506b` — KrakenCeFiAdapter.parse_ticker_response 65L→45L (21-line docstring → 1 line);
+  VWAPExecutionMixin.\_schedule_children 64L→48L via \_schedule_final_primary_slice() + 6-line docstring trim;
+  DriftConnector.get_positions 64L→13L via module-level \_collect_drift_perp_positions() +
+  \_collect_drift_spot_positions() + 5-line docstring trim.
 
 293 remaining. basedpyright clean.
+
+[2026-05-17 /loop tick 36] slot-7 — execution-service Phase B (+3, 87/377 cleared):
+
+- `execution-service@24a077cc6` — AdaptiveTWAP.\_parse_params 69L→22L via \_require_positive_float static helper
+  (validation + ValueError pattern) + 7-line docstring trim; CatalogValidator.check_market_tick_data 66L→41L via
+  \_classify_tick_data_type static helper (already existed, used call to it) + 10-line docstring trim;
+  ExecutionAlphaMetrics.to_dict 67L→26L via module-level \_build_alpha_summary() (32-line summary dict → 1 call line).
+
+290 remaining. basedpyright clean.
