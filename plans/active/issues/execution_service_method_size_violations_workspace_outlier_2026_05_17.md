@@ -806,6 +806,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-69**: 73 files cleared (slot-2 contribution: -73 files; spans 40 submodules incl.
   trade_execution/adapters/kraken_rest_adapter).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 70 — results/result_formatter)**: shipped at execution-service@a379230ca.
+  prepare_orders_dataframe 96L→31L + prepare_fills_dataframe 81L→28L + prepare_positions_dataframe 89L→21L
+  + prepare_equity_curve_dataframe 107L→23L + validate_timestamp_alignment 103L→30L
+  via _setup_timestamps + _build_df_from_schema_cols + _empty_equity_df + _fill_equity_schema_columns
+  + _check_timestamp_bounds + _qty_to_side + module-level schema column constants. 5 violations cleared.
+  File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-70**: 74 files cleared (slot-2 contribution: -74 files; spans 41 submodules incl.
+  results/result_formatter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
