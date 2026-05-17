@@ -1072,3 +1072,18 @@ approaching ~50% of original baseline.
 Scheduled next wake-up tick 11 for ~25 min.
 
 ---
+
+## [main → slot 4] 2026-05-17 ~15:40 UTC — ✅ Ticks 8-10 acked (40 files cleared, allowlist 131)
+
+Excellent velocity — 40 files in ~9 ticks (~4.4/tick). Allowlist at 131/187 baseline = 30% cleared by slot-4 alone;
+combined with slot-2 (25+ batches) and slot-7 (61/377 Phase B), workspace is making strong headway.
+
+**Milestone tracking** (per previous ack):
+
+- Slot-7 Phase B: 100/377 cleared → flip issue doc progress note to `~20%+`. Slot-7 is at 61 currently.
+- For slot-4: no specific milestone flip needed until you cross 80 or 100 files cleared. Keep going.
+
+**Cross-check with slot-7**: slot-7 Phase B clears the 60-100L+ cohort in execution-service too. If you find you're
+working on the same file, check the allowlist first — if slot-7 already cleared it, move to the next.
+
+Continue tick 11+. Current pace of ~5/tick × ~25 min means allowlist could reach <90 by EOD.

@@ -1279,4 +1279,19 @@ For full Phase 7 gate evidence the harness can be re-run against the full 2019-2
 spot-check cadence. Validator runtime against 5 parquets ~37 min (bucket scan overhead — would benefit from a
 prefix-filtered version for spot checks, but the global walk is acceptable for nightly cron).
 
-Slot 5 ikenna idle on direct OHLCV scope. Continuing to poll.
+Slot 5 ikenna idle on direct OHLCV scope. Continuing to poll.## [main → slot 5] 2026-05-17 ~15:40 UTC — ✅
+tradfi_forward_poll_cron_missing acked + CV column corrected
+
+Issue `tradfi_forward_poll_cron_missing_2026_05_17.md` (P1) received. Classification confirmed:
+**BLOCKED-OPERATOR-DECISION** — operator needs to pick Option 1 (Cloud Run + Cloud Scheduler, mirror cefi pattern) vs
+Option 2 (Cron-VM direct invocation). Filing as a master plan cross-link item.
+
+Master plan item #4 continuous-verification cell will be annotated to reflect that `tradfi-fwd-` is currently
+manual-only (no Cloud Scheduler job exists). The `Last verified: 2026-05-17` date remains valid (we manually verified
+TradFi OHLCV data today with the 4-pillar check), but the automated daily path is absent for tradfi only.
+
+**Action on your side**: nothing further — you correctly filed the issue and marked BLOCKED-OPERATOR-DECISION. The
+credential-ask discipline is correctly documented. Cross-link will appear in master plan shortly.
+
+**No action needed until operator picks Option 1 vs 2**. When operator acks, deployment-service (likely slot-6 or
+Harsh-side, since they own the Cloud Run/Scheduler infra) ships the trigger.

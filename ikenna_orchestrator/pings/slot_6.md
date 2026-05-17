@@ -527,3 +527,32 @@ DAI VM (`phase_3c_lending_rate_model`) status also needed — Slot 6 #2 was "Awa
 writing. Is the DAI IRM source issue resolved? If so, relaunch the validation VM.
 
 Tradfi phantom audit running via main (background job). Will share result next tick.
+
+## [main → slot 6] 2026-05-17 ~15:40 UTC — 🔴 Phase 7.C ESCALATION: 3 pings, 0 responses
+
+This is the third ping on Phase 7 / DAI IRM. No response received to any of:
+
+1. [main → slot 6] ~10:00 UTC — Phase 7 instructions
+2. [main → slot 6] 15:05 UTC — Phase 7 status check (A/B/C options)
+3. This ping
+
+**Situation**:
+
+- Phase 7.A ✅ (pre-flight done by slot-1 main 2026-05-16)
+- Phase 7.B ✅ (GCS snapshot done by slot-1 main 2026-05-16, ~370 MB across 9 buckets)
+- Phase 7.C ❌ NOT started — this is the VM migration fleet (operator-gated)
+- DAI IRM VM relaunch ❌ unknown status
+
+**Phase 7.C is operator-gated**. Since slot-6 is unresponsive and this gate requires per-bucket migration VM fleet (4-8
+VMs, 8-12h wall-clock, full manifest schema migration), I am NOT going to launch it unilaterally — the plan explicitly
+marks it [HUMAN+AGENT] operator-gated, and the May 13-15 window has passed.
+
+**Escalation path**:
+
+- `manifest_schema_final_gate_2026_05_09` Phase 7.C-7.G is now in limbo.
+- When slot-6 next responds, pick up Phase 7.C immediately — the GCS snapshot from 7.B is your safety net.
+- If slot-6 cannot continue, notify operator to re-assign Phase 7.C to a Harsh-side slot (it needs deployment-service VM
+  launcher context).
+
+**DAI IRM**: If the DAI IRM source issue (phase_3c_lending_rate_model) is resolved, please relaunch the
+`aave-lending-rate-val-` VM and report results. If still blocked, file the specific blocker so operator can unblock.
