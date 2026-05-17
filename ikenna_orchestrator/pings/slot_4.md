@@ -983,3 +983,46 @@ helpers per file vs the current 1-3 helpers.
 Scheduled next wake-up tick 9 for ~25 min.
 
 ---
+
+## [slot 4 → main] 2026-05-17 ~13:50 UTC — WAKE-UP TICK 9 — method-size batch 8 (5 more ships)
+
+Continued the execution-service method-size sprint. Slot 4 batch 8 (5 ships this tick); slot 2 shipped 3 more this
+window (yield_recon @080c641a8 + config_validator @31fbcbe91 + passive_aggressive @07ea5167a):
+
+| File                                           | Method                                      | Before → After | Helpers                                                                                                   |
+| ---------------------------------------------- | ------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------- |
+| `algo_library/dust_quote_sources.py`           | `MatchingEngineQuoteSource._simulate_route` | 63L → 28L      | `_simulate_hop`                                                                                           |
+| `sports_execution/adapters/unity/sidecar.py`   | `SidecarProcess.heartbeat`                  | 63L → 31L      | `_unhealthy_sample`                                                                                       |
+| `engine/execution/algorithms/adaptive_twap.py` | `AdaptiveTWAPAlgorithm.schedule`            | 64L → 36L      | `_build_initial_state` (@staticmethod)                                                                    |
+| `engine/live/positions.py`                     | `UnifiedPositionTracker.update_position`    | 64L → 18L      | `_empty_position` + `_merge_venue_quantity` + `_merge_venue_type` + `_set_pnl_fields` (all @staticmethod) |
+| `algorithms/tradfi/vwap.py`                    | `TradFiVWAPAlgorithm.schedule`              | 66L → 24L      | `_validate_and_normalise` + `_build_slices` (@staticmethod)                                               |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- Batch 4: router + defi_data_loader + position_tracker + orphan_monitor + backtest/engine/execution (5 files)
+- Batch 5: matchbook + uniswap + hyperliquid + circuit_breaker + okx_native (5 files)
+- Batch 6: defi_adapter + dex_fill_model + progress_display + cost_aggregator + api_football (5 files)
+- Batch 7: schema_validator + jito_bundle + confirmation_poller + sor_dex + bybit_native + venue_cascade_monitor (6
+  files)
+- Batch 8: dust_quote_sources + unity/sidecar + adaptive_twap + engine/live/positions + tradfi/vwap (5 files)
+- **Total: 35 files cleared by slot 4** (allowlist 141 → 136 this tick — slot 4 contribution this loop: -35 cumulative)
+
+Commits this tick: execution-service@528040ef4, @8a999fba9, @d61eef49d, @68dccf1c1, @0de2f906c. Plan flip in single
+batched commit follows.
+
+**Per-method behavior preservation** verified: dust-route hop-by-hop carrying-amount accumulation + 4-fail-mode
+return-None (book missing, mid invalid, match-exception, slippage cap, zero fill), sidecar nonce round-trip + sequence
+tracking + deadline loop with skip-non-HB-frame, adaptive-twap factor computation (price>0 branch) + min(base*factor,
+qty) selection + zero-qty fallback, update_position venue_positions/venue_types dict updates + PnL fallback derive
+(caller-supplied vs (px-avg)*agg) + kwargs passthrough + fire-and-forget PBMS publish, VWAP normalised-weights
+distribution + zero-qty skip + final-slice rounding catch-up.
+
+**Workspace progress this loop**: started at allowlist 187, now 136 (~27% cleared). ~5 ships per ~25-min tick remains
+the sustainable pace. Slot 2 continues handler/algo space; slot 7 still on Phase B engine/ backtest cluster.
+
+Scheduled next wake-up tick 10 for ~25 min.
+
+---

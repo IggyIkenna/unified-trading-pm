@@ -222,8 +222,24 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
      Decimal-parse + positive-only avg-price filter, cascade-pct computation + is_total_failure full-equality + scoped
      vs firm-wide kill-switch routing.
 
-   **Slot-4 cumulative across batches 1+2+3+4+5+6+7**: 31 files cleared (187→141 baseline-equivalent; slot 4
-   contribution: -31 files; allowlist now 141). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168,
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 8)** — 5 additional files cleared at
+   execution-service@528040ef4 (algo_library/dust_quote_sources.py \_simulate_route 63L→28L, +1 helper \_simulate_hop
+   pulls per-hop book-fetch + match + slippage-cap + fee tracking), @8a999fba9
+   (sports_execution/adapters/unity/sidecar.py heartbeat 63L→31L, +1 helper \_unhealthy_sample for the 5 failure-mode
+   SidecarHealthSample constructions), @d61eef49d (engine/execution/algorithms/adaptive_twap.py schedule 64L→36L, +1
+   @staticmethod helper \_build_initial_state pulls 4-param validation + n_slices/base_qty/side_sign derivation),
+   @68dccf1c1 (engine/live/positions.py update_position 64L→18L, +4 @staticmethod helpers \_empty_position +
+   \_merge_venue_quantity + \_merge_venue_type + \_set_pnl_fields; pnl derive vs caller-supplied switching preserved),
+   @0de2f906c (algorithms/tradfi/vwap.py schedule 66L→24L, +2 @staticmethod helpers \_validate_and_normalise
+   - \_build_slices; final-slice rounding absorption preserved). Allowlist 141 → 136 files (slot 2 also cleared
+     yield_recon + config_validator + passive_aggressive in the same window per commits @080c641a8 / @31fbcbe91 /
+     @07ea5167a; combined drop 141→136). AST clean per file. Per-method behavior preservation: dust-route hop-by-hop
+     carrying-amount accumulation + 4-fail path return-None, sidecar nonce round-trip + sequence tracking + deadline
+     loop, adaptive-twap factor computation + min(base\*factor, qty) selection, position venue_positions + venue_types
+     dict updates + PnL fallback derive, VWAP normalised-weights distribution + final-slice rounding catch-up.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8**: 36 files cleared (187→136 baseline-equivalent; slot 4
+   contribution: -36 files; allowlist now 136). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168,
    -19 from baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
    execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
    \_check_flash_loan_liquidity (REJECTED-or-proceed gate) + \_record_flash_borrow (track + return) +
