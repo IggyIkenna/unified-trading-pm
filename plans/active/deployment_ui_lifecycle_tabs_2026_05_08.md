@@ -463,13 +463,6 @@ todos:
       - [ ] [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
         env-tier hosting. B6 gate.
 
-isProject: false
-estimate_class: infra
-estimate_baseline_ai_days: TBD
-estimate_calibrated_ai_days: TBD
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
-  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan
