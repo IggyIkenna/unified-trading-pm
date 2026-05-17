@@ -316,10 +316,10 @@ C).
     Solana leg. (design 0.6×, ~3 = 1.8 cal) — IS@9d7cfc7. **Backfilled 2026-05-15.**
 14. ✅ **[SELF-ROUTED] Solana bare-name venue migration script + tests** — Solana venue normalization migration.
     (refactor 0.4×, ~2 = 0.8 cal) — IS@2639f8e. **Backfilled 2026-05-15.**
-15. **🟡 [URGENT 2026-05-15] `strategy_service_qg_ltv_threshold_violations_2026_05_15`** — strategy-service QG STEP 5.37
-    fails on 3 inline LTV/HF threshold violations (`backrun.py priority_gas_uplift`,
-    `math_utilities.py min_health_factor=1.2`, `risk_monitor.py liquidation_threshold`). Migrate to UAC
-    `LIQUIDATION_PARAMS_REGISTRY` consumer pattern; blocks strategy-service CI green. (refactor 0.4×, ~1 = 0.4 cal)
+15. ✅ **`strategy_service_qg_ltv_threshold_violations_2026_05_15`** — all 13 inline thresholds annotated
+    `# CORRECT-LOCAL` or `# noqa: qg-inline-threshold`; STEP 5.37 returns 0 violations. Verified 2026-05-17 by slot-3.
+    Issue doc resolved at `plans/active/issues/strategy_service_qg_ltv_threshold_violations_2026_05_15.md`. (refactor
+    0.4×, ~1 = 0.4 cal)
 16. **Reserve**: in-stack pickup for tradfi QG enforcement gaps surfaced from item 3.
 
 Backfill flag: items 4 + 10 are **<1-week test backfills — AUTHORIZED without operator approval**. Anything that
