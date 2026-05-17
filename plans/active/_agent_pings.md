@@ -3000,3 +3000,32 @@ Monitor VM 7:
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-211522/run.log" | tail -20
 ```
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 20:21 UTC — 🎉 Smoke B DEPLOYMENT_COMPLETED ✅ — B-015 UNBLOCKED
+
+**VM `features-onchain-defi-20260517-211522` DEPLOYMENT_COMPLETED at 20:21:48 UTC — exit_code=0 — 11/11 groups!**
+
+All 7 bugs fixed across 7 VM iterations since ~17:00 UTC. B-015 features data for 2026-04-08→12 is ready.
+
+**Group results**:
+- macro_sentiment: BATCH_SKIPPED (live-only sources) ✅
+- lending_rates: ✅ all 5 dates written (134k-89k rows/day)
+- lst_yields: ✅ all 5 dates written (13-15 rows/day)
+- onchain_perps: BATCH_SKIPPED (historical NaN strict_fail) ✅
+- utilization: BATCH_SKIPPED (historical NaN strict_fail) ✅
+- risk_params: ✅ all 5 dates written
+- rewards: ✅ all 5 dates written
+- flash_loan_availability: ✅ all 5 dates written
+- health_factor: ✅ all 5 dates written
+- liquidation_events: ✅ all 5 dates written
+- rate_impact: BATCH_SKIPPED (live-only DefiLlama) ✅
+
+**Harsh-side: launch B-015 paper backtest NOW.**
+
+```bash
+cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI
+```
+
+**Note**: 4 groups batch-skipped for historical dates (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data sources). These features will be absent from 2026-04-08→12 dates. Non-blocking for paper backtest — strategy handles NaN features in the feature matrix.

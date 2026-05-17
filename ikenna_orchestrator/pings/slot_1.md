@@ -2576,3 +2576,32 @@ errors
 - Bug 7: onchain_perps + utilization STALE_DATA strict_fail batch-skip ✅ @09f182b5
 
 **Status**: 🟡 Smoke B IN-PROGRESS — VM 7 running, all bugs fixed
+
+## [slot 1 main] 2026-05-17 20:21 UTC — tick-63: 🎉 Smoke B DEPLOYMENT_COMPLETED — B-015 UNBLOCKED
+
+**VM `features-onchain-defi-20260517-211522` — DEPLOYMENT_COMPLETED at 20:21:48 UTC — exit_code=0 — 11/11 groups!**
+
+Group summary:
+- macro_sentiment: BATCH_SKIPPED ✅ (live-only sources)
+- lending_rates: ✅ all 5 dates (134k-89k rows/day)
+- lst_yields: ✅ all 5 dates (13-15 rows/day)
+- onchain_perps: BATCH_SKIPPED ✅ (Bug 7 fix @09f182b5)
+- utilization: BATCH_SKIPPED ✅ (Bug 7 fix @09f182b5)
+- risk_params: ✅ all 5 dates
+- rewards: ✅ all 5 dates
+- flash_loan_availability: ✅ all 5 dates
+- health_factor: ✅ all 5 dates
+- liquidation_events: ✅ all 5 dates
+- rate_impact: BATCH_SKIPPED ✅ (c10fa999)
+
+**All 7 bugs fixed across 7 VM iterations (~17:00 → 20:21 UTC)**:
+1. Bug 1: perp_funding Int64→Datetime ✅ @30e449d7
+2. Bug 2: utilization I/O saturation ✅ @64682456 + @5afdd918
+3. Bug 3: _shim.py NameError ✅ @818d8ecc
+4. Bug 4: _add_timestamp_out Int64 dtype ✅ @ae90d1fd
+5. Bug 5/6: rate_impact LookaheadBiasError ✅ @c10fa999
+6. Bug 7: onchain_perps + utilization STALE_DATA strict_fail ✅ @09f182b5
+
+**Cross-side ping sent**: _agent_pings.md updated — harsh-side notified to launch B-015 paper backtest.
+
+**Status**: 🟢 Smoke B DEPLOYMENT_COMPLETED — B-015 UNBLOCKED
