@@ -70,3 +70,10 @@ the real coverage is measured — likely it is already above 70%.
 **Action required:** This is a QG infrastructure fix that requires modifying `base-service.sh` (Ikenna side, since it
 touches the PM SSOT template) or adding a per-repo override in `features-service/scripts/quality-gates.sh`. Slot-4
 cannot self-fix without touching the PM SSOT template.
+
+## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
+
+`features-service/scripts/quality-gates.sh` already sets `PYTEST_UNIT_DIR="tests/"` BEFORE the `source base-service.sh`
+line — Option A shipped (verified 2026-05-17 via grep). Inline comment cites this exact issue: "Per-family test layout:
+tests/<family>/unit/ holds 350+ test files invisible to the default tests/unit/ path." Per CLAUDE.md § "PYTEST_UNIT_DIR
+per-family override", this is the canonical pattern. Issue closeable at next archive sweep.
