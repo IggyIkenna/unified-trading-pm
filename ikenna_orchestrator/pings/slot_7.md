@@ -570,42 +570,59 @@ gate; item #26 is internal hygiene.
 
 ---
 
-[2026-05-15 18:56 UTC] slot-7 — STARTED Day-4 cycle. Starting item #1 (🔴 MAY-23 BLOCKER `sit_may23_critical_path_coverage_gaps_2026_05_15`) — 3 SIT scenario playbooks: defi_carry_staked_basis_paper + defi_apd_paper + defi_paper_to_live_early_gate. Plan-of-record: `plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`. Yesterday's items all flipped (backfilled by slot 1 main); item #23 confirmed flipped `PM@9e6fb19f`.
+[2026-05-15 18:56 UTC] slot-7 — STARTED Day-4 cycle. Starting item #1 (🔴 MAY-23 BLOCKER
+`sit_may23_critical_path_coverage_gaps_2026_05_15`) — 3 SIT scenario playbooks: defi_carry_staked_basis_paper +
+defi_apd_paper + defi_paper_to_live_early_gate. Plan-of-record:
+`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`. Yesterday's items all flipped (backfilled by
+slot 1 main); item #23 confirmed flipped `PM@9e6fb19f`.
 
 [2026-05-15 19:20 UTC] slot-7 — STOPPING Day-4 cycle, all 9 work_split items closed. Summary:
 
-| # | Item | Status | Evidence |
-| - | --- | --- | --- |
-| 1 | 🔴 MAY-23 BLOCKER SIT critical-path scenarios | ✅ | system-integration-tests@3872ce2 (3 playbooks + dedicated test file + 28 tests pass) |
-| 2 | basefc_validation_flip items 1-5 | 🟡 PARTIAL | PM@082444d7 strategy decided (Option a); items 2-4 deferred (post-cutover P1, non-blocker) |
-| 3 | writegate Phase 6.6/6.7/6.9 α-vs-β audit | ✅ | PM@3a4afdc5 — β verdict confirmed, Gate 4 CLOSED |
-| 4 | audit_records_pb_1_2_3 Phase 2-3 | ✅ | verification flip — execution-service@51f1f879 + deployment-service@c3ac1c5 + AWS/GCP retention locks done 14-15 May |
-| 5 | client_reporting_pnl_attribution_mvp | ✅ | verification flip — 36/36 [x] |
-| 6 | compute_optimization Ikenna-half | ✅ | Phase 0/1/3 done; Phase 2 partial; Phase 4-5 Harsh/joint |
-| 7 | mock_data_pipeline_benchmarking Phase 8.A | ✅ | UTL@f942dc54 + benchmark_report ready; master-plan row update is slot 1 main territory |
-| 8 | data_status_drilldown finalize | ✅ | verification flip — 7 open items all DEFERRED with named successors |
-| 9 | context_fill_optimization Phase 1 | ✅ | verification flip — P0+P1 already shipped |
+| #   | Item                                          | Status     | Evidence                                                                                                             |
+| --- | --------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | 🔴 MAY-23 BLOCKER SIT critical-path scenarios | ✅         | system-integration-tests@3872ce2 (3 playbooks + dedicated test file + 28 tests pass)                                 |
+| 2   | basefc_validation_flip items 1-5              | 🟡 PARTIAL | PM@082444d7 strategy decided (Option a); items 2-4 deferred (post-cutover P1, non-blocker)                           |
+| 3   | writegate Phase 6.6/6.7/6.9 α-vs-β audit      | ✅         | PM@3a4afdc5 — β verdict confirmed, Gate 4 CLOSED                                                                     |
+| 4   | audit_records_pb_1_2_3 Phase 2-3              | ✅         | verification flip — execution-service@51f1f879 + deployment-service@c3ac1c5 + AWS/GCP retention locks done 14-15 May |
+| 5   | client_reporting_pnl_attribution_mvp          | ✅         | verification flip — 36/36 [x]                                                                                        |
+| 6   | compute_optimization Ikenna-half              | ✅         | Phase 0/1/3 done; Phase 2 partial; Phase 4-5 Harsh/joint                                                             |
+| 7   | mock_data_pipeline_benchmarking Phase 8.A     | ✅         | UTL@f942dc54 + benchmark_report ready; master-plan row update is slot 1 main territory                               |
+| 8   | data_status_drilldown finalize                | ✅         | verification flip — 7 open items all DEFERRED with named successors                                                  |
+| 9   | context_fill_optimization Phase 1             | ✅         | verification flip — P0+P1 already shipped                                                                            |
 
-Half-2 plan-flip discipline followed throughout: every code commit had a sibling docs(plans) flip in the same agent turn. LDR alignment confirmed: PM/features/SIT all `rev-list --count HEAD ^origin/live-defi-rollout = 0`.
+Half-2 plan-flip discipline followed throughout: every code commit had a sibling docs(plans) flip in the same agent
+turn. LDR alignment confirmed: PM/features/SIT all `rev-list --count HEAD ^origin/live-defi-rollout = 0`.
 
 [2026-05-16 12:35 UTC] slot-7 — basefc Item 2 PARTIAL → FULLY DONE. Reserve work this cycle:
 
-* cross_instrument family (20 calcs) migrated → `features-service@71643dec`
-* onchain family (19 calcs) migrated → `features-service@151dffab`
-* UTL `__init_subclass__` mandatory flip → `unified-trading-library@ccc9b7bf` (note: ABCMeta sets `__abstractmethods__` AFTER `__init_subclass__` runs, so eager MRO walk needed via new `_has_outstanding_abstract_methods()` classmethod)
-* Plan + work_split flips → `PM@3171b36f`
+- cross_instrument family (20 calcs) migrated → `features-service@71643dec`
+- onchain family (19 calcs) migrated → `features-service@151dffab`
+- UTL `__init_subclass__` mandatory flip → `unified-trading-library@ccc9b7bf` (note: ABCMeta sets `__abstractmethods__`
+  AFTER `__init_subclass__` runs, so eager MRO walk needed via new `_has_outstanding_abstract_methods()` classmethod)
+- Plan + work_split flips → `PM@3171b36f`
 
-39 concrete calcs migrated. Multi_timeframe family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical). basedpyright clean on all changed files.
+39 concrete calcs migrated. Multi_timeframe family OUT OF SCOPE per Option-a (LOCAL ABC doesn't extend UTL canonical).
+basedpyright clean on all changed files.
 
-Also resolved workspace sync issue: yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) was on tab branch only; rebased + pushed to LDR as `execution-service@f871ffad7`. Audited all 28 repos: ahead/behind both 0 across the working set.
+Also resolved workspace sync issue: yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) was on
+tab branch only; rebased + pushed to LDR as `execution-service@f871ffad7`. Audited all 28 repos: ahead/behind both 0
+across the working set.
 
 [2026-05-16 13:20 UTC] slot-7 — third reserve pass complete. Pulled in 3 more deferred items:
 
-1. **basefc multi_timeframe family** (was "OUT OF SCOPE per Option-a") — promoted LOCAL ABC to UTL canonical `BaseFeatureCalculator[pl.DataFrame]`, widened `calculate()` signature to `(df, **params)`, migrated 9 calcs. `features-service@87ba9cf6`. **Combined total: 48 concrete calcs migrated across cross_instrument + onchain + multi_timeframe polars families.**
+1. **basefc multi_timeframe family** (was "OUT OF SCOPE per Option-a") — promoted LOCAL ABC to UTL canonical
+   `BaseFeatureCalculator[pl.DataFrame]`, widened `calculate()` signature to `(df, **params)`, migrated 9 calcs.
+   `features-service@87ba9cf6`. **Combined total: 48 concrete calcs migrated across cross_instrument + onchain +
+   multi_timeframe polars families.**
 
-2. **compute_optimization Phase 2 P1 — DAG serial-bottleneck audit** (was DEFERRED). Audited 77 feature_groups across 7 families via `feature_definitions.yaml`. Found 4 cross-family serial chains for post-cutover refactor: `tf_structure_context` + `tf_confluence_signals` + `hierarchical_regime_combiner` (all multi_timeframe ← delta_one) + `composite_sr` (cross_instrument intra-family). 61/77 (~79%) groups are parallelizable on raw inputs. `PM@59254828`.
+2. **compute_optimization Phase 2 P1 — DAG serial-bottleneck audit** (was DEFERRED). Audited 77 feature_groups across 7
+   families via `feature_definitions.yaml`. Found 4 cross-family serial chains for post-cutover refactor:
+   `tf_structure_context` + `tf_confluence_signals` + `hierarchical_regime_combiner` (all multi_timeframe ← delta_one) +
+   `composite_sr` (cross_instrument intra-family). 61/77 (~79%) groups are parallelizable on raw inputs. `PM@59254828`.
 
-3. **context_fill_optimization P2 — .claude/rules/ relocation** (was DEFERRED lowest-impact). Verified obsolete: workspace migrated to per-repo `.cursor/rules/` structure already; P2 goal achieved via that broader migration. `PM@a4a2bb1d`.
+3. **context_fill_optimization P2 — .claude/rules/ relocation** (was DEFERRED lowest-impact). Verified obsolete:
+   workspace migrated to per-repo `.cursor/rules/` structure already; P2 goal achieved via that broader migration.
+   `PM@a4a2bb1d`.
 
 All shipped with Half-1 + Half-2 plan-flip discipline maintained. basedpyright clean on all changed files.
 
@@ -613,244 +630,276 @@ All shipped with Half-1 + Half-2 plan-flip discipline maintained. basedpyright c
 
 ## [main → slot 7] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
-Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
-Ikenna slots; no operator action needed (credentials all vaulted).
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna slots; no
+operator action needed (credentials all vaulted).
 
-See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
-SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your SWEEP-16 items
+(additive to your existing stack; take after current top-of-stack lands).
 
 Pickup discipline:
-* Items annotated **[SWEEP-16]** in the work-split below your slot section
-* Each item starts with the marker so easy to grep
-* Half-1+Half-2 flip discipline per item (no batch flips)
-* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+- Items annotated **[SWEEP-16]** in the work-split below your slot section
+- Each item starts with the marker so easy to grep
+- Half-1+Half-2 flip discipline per item (no batch flips)
+- Spot-check LDR before starting any item to see if Harsh-side shipped it already
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
-
 [2026-05-16 14:50 UTC] slot-7 — autonomous-loop progress dump:
 
-* basefc fully done (51 calcs across 4 polars families) + UTL mandatory `__init_subclass__` flip + codex doc updated
-* UTL QG sub-task #1 (Cloud SDK routing): client_lifecycle/onboarding.py GCSStateStore → cloud_interface — `unified-trading-library@dfbe83c2`
-* UTL QG sub-task #2 (backward-compat shim): WithdrawalRequestedEvent.idempotency_key removed — `unified-trading-library@4d271d3f`
-* UTL QG sub-task #3 (method-size): **25 of 51 cleared** across 13 commits — protocol/from_env, kill_switch/arm+disarm, freshness/check_and_emit, recovery/evaluate, settler/{settle_trade,accrue_daily_fees,update_hwm_ledger}, withdrawal_reconciler/reconcile, withdrawal_executor/withdraw, withdrawal_audit_log/append, statement_emitter/emit_daily_statement, live_aggregator/{run,cascade_parent_candle,_emit_stale_data}, utc_aligned_scheduler/run_forever, mock_defi_dynamics/simulate_price_movement, resource_profiler/__init__, manifest_writer/{_write_to_gcs,_write_with_generation_match}, harness/run, onboarding/advance. 26 remaining are docstring-heavy methods with correct bodies.
-* SWEEP-16 batch_live_symmetry Tab 1 P2 placeholders shipped — tradfi-batch-live.md + prediction-batch-live.md @ `PM@c4c8972b`. Tab 1 todos now 8/8 closed.
+- basefc fully done (51 calcs across 4 polars families) + UTL mandatory `__init_subclass__` flip + codex doc updated
+- UTL QG sub-task #1 (Cloud SDK routing): client_lifecycle/onboarding.py GCSStateStore → cloud_interface —
+  `unified-trading-library@dfbe83c2`
+- UTL QG sub-task #2 (backward-compat shim): WithdrawalRequestedEvent.idempotency_key removed —
+  `unified-trading-library@4d271d3f`
+- UTL QG sub-task #3 (method-size): **25 of 51 cleared** across 13 commits — protocol/from_env, kill_switch/arm+disarm,
+  freshness/check_and_emit, recovery/evaluate, settler/{settle_trade,accrue_daily_fees,update_hwm_ledger},
+  withdrawal_reconciler/reconcile, withdrawal_executor/withdraw, withdrawal_audit_log/append,
+  statement_emitter/emit_daily_statement, live_aggregator/{run,cascade_parent_candle,\_emit_stale_data},
+  utc_aligned_scheduler/run_forever, mock_defi_dynamics/simulate_price_movement, resource_profiler/**init**,
+  manifest_writer/{\_write_to_gcs,\_write_with_generation_match}, harness/run, onboarding/advance. 26 remaining are
+  docstring-heavy methods with correct bodies.
+- SWEEP-16 batch_live_symmetry Tab 1 P2 placeholders shipped — tradfi-batch-live.md + prediction-batch-live.md @
+  `PM@c4c8972b`. Tab 1 todos now 8/8 closed.
 
 All clean: 0 ahead/0 behind across owned repos. Half-1+Half-2 plan-flip discipline maintained throughout.
 
 [2026-05-16 15:35 UTC] slot-7 — final autonomous-loop ping. Cumulative session ship:
 
-**basefc migration (51 calcs, 4 polars families) + UTL `__init_subclass__` mandatory flip + features-service codex audit** — fully done across cross_instrument (20), onchain (19), multi_timeframe (9), delta_one (3); test stubs updated; basedpyright clean. UTL@`ccc9b7bf` + features-service@`71643dec`/`151dffab`/`87ba9cf6`/`f9622291` + PM@`14d9a99a` (codex).
+**basefc migration (51 calcs, 4 polars families) + UTL `__init_subclass__` mandatory flip + features-service codex
+audit** — fully done across cross_instrument (20), onchain (19), multi_timeframe (9), delta_one (3); test stubs updated;
+basedpyright clean. UTL@`ccc9b7bf` + features-service@`71643dec`/`151dffab`/`87ba9cf6`/`f9622291` + PM@`14d9a99a`
+(codex).
 
-**UTL QG sub-task #1 (Cloud SDK)** — `client_lifecycle/onboarding.py::GCSStateStore` routed through `cloud_interface.get_storage_client()` — `unified-trading-library@dfbe83c2`.
+**UTL QG sub-task #1 (Cloud SDK)** — `client_lifecycle/onboarding.py::GCSStateStore` routed through
+`cloud_interface.get_storage_client()` — `unified-trading-library@dfbe83c2`.
 
-**UTL QG sub-task #2 (backward-compat shim)** — `WithdrawalRequestedEvent.idempotency_key` alias removed — `unified-trading-library@4d271d3f`.
+**UTL QG sub-task #2 (backward-compat shim)** — `WithdrawalRequestedEvent.idempotency_key` alias removed —
+`unified-trading-library@4d271d3f`.
 
-**UTL QG sub-task #3 (method-size)** — **32 of 51 violations cleared (~62%)**. 19 remaining are the heaviest docstring-bearing methods (manifest_writer.record_captured 266L, .add 219L, .record_captured_from_counts 219L, ._record_status 135L) whose docstrings carry contract documentation for adapter authors; trimming further would lose contract value.
+**UTL QG sub-task #3 (method-size)** — **32 of 51 violations cleared (~62%)**. 19 remaining are the heaviest
+docstring-bearing methods (manifest_writer.record_captured 266L, .add 219L, .record_captured_from_counts 219L,
+.\_record_status 135L) whose docstrings carry contract documentation for adapter authors; trimming further would lose
+contract value.
 
-**SWEEP-16 batch_live_symmetry Tab 1 P2** — tradfi-batch-live.md + prediction-batch-live.md placeholder docs shipped — PM@`c4c8972b`.
+**SWEEP-16 batch_live_symmetry Tab 1 P2** — tradfi-batch-live.md + prediction-batch-live.md placeholder docs shipped —
+PM@`c4c8972b`.
 
-**compute_optimization Phase 2 P1** — DAG serial-bottleneck audit across 77 feature_groups (4 cross-family chains found) — PM@`59254828`.
+**compute_optimization Phase 2 P1** — DAG serial-bottleneck audit across 77 feature_groups (4 cross-family chains found)
+— PM@`59254828`.
 
-**context_fill_optimization P2** — `.claude/rules/` relocation verified obsolete (workspace migrated to `.cursor/rules/`) — PM@`a4a2bb1d`.
+**context_fill_optimization P2** — `.claude/rules/` relocation verified obsolete (workspace migrated to
+`.cursor/rules/`) — PM@`a4a2bb1d`.
 
-**workspace sync fix** — yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) rebased + pushed to LDR as `execution-service@f871ffad7`.
+**workspace sync fix** — yesterday's `execution-service@f65a7d5d5` (parallel execution-alpha wrapper) rebased + pushed
+to LDR as `execution-service@f871ffad7`.
 
-All commits Half-1+Half-2 plan-flip discipline maintained. All 28 repos 0/0 ahead/behind. Operator can review on return; autonomous loop ending — no foreign work pending and no blockers requiring direction.
-
+All commits Half-1+Half-2 plan-flip discipline maintained. All 28 repos 0/0 ahead/behind. Operator can review on return;
+autonomous loop ending — no foreign work pending and no blockers requiring direction.
 
 [2026-05-16 post-compaction continuation] slot-7 — turn ship summary:
 
 **UTL QG sub-task #5 (deep UAC imports) — 11/11 lifted to root facade**:
-* UAC root facade re-exports `STRATEGY_FAMILY_REGISTRY`, `StrategyFamily`, `StrategyFamilyId`, `family_for_archetype` + 6 `source_priority` helpers (`emission_latency_ms_for_source`, `get_primary_source`, `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`, `read_with_source_priority`) — `unified-api-contracts@48315a0`. Circular-import unblock: `strategy_family` import moved to after `.canonical.domain` block (BetStatus reachable at the time of strategy_family's internal-arch import).
-* Final 2 UTL lifts: `availability_stamping.py` + `risk/family_aggregator.py` — `unified-trading-library@ca1ccafc`. Issue doc flipped — `PM@56cbd671`.
+
+- UAC root facade re-exports `STRATEGY_FAMILY_REGISTRY`, `StrategyFamily`, `StrategyFamilyId`, `family_for_archetype` +
+  6 `source_priority` helpers (`emission_latency_ms_for_source`, `get_primary_source`,
+  `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`, `read_with_source_priority`) —
+  `unified-api-contracts@48315a0`. Circular-import unblock: `strategy_family` import moved to after `.canonical.domain`
+  block (BetStatus reachable at the time of strategy_family's internal-arch import).
+- Final 2 UTL lifts: `availability_stamping.py` + `risk/family_aggregator.py` — `unified-trading-library@ca1ccafc`.
+  Issue doc flipped — `PM@56cbd671`.
 
 **UTL QG sub-task #3 (method-size) — SIZE_EXTRA_EXCLUDES went 9 → 1 (manifest_writer.py only)**:
-* `treasury/approval_bus.py::collect_approvals` 100L→39L via `_approval_is_valid` helper — `unified-trading-library@f34af1be`
-* `synthetic/harness.py::_run_stage` 80L→26L + `::run` 59L→24L via `_execute_stage_body` + `_record_failed_stage` — `unified-trading-library@175eaf1d`
-* `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52L→47L + `post_trade/settler.py::settle_trade` 53L→43L (call-site condensation) — `unified-trading-library@5a3a341b`
-* `service_runtime.py::from_env_and_args` 100L→49L via `_resolve_asset_groups` + `_resolve_testnet_mode` + `_validate_gcp_required` — `unified-trading-library@d75ae5d7`
-* `service_cli.py::ServiceCLI.run` 108L→39L via `_prepare_argv` + `_install_synthetic_input_override` + `_wire_runtime_env` — `unified-trading-library@0e0feced`
-* `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65L→39L via `_resolve_polymarket_price` — `unified-trading-library@d5780025`
-* `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65L→43L (docstring trim) — `unified-trading-library@17640cba`
-* `io/streaming_shard_finalizer.py::_route_row_groups` 52L→16L via `_route_chunk_to_writer` + `_close_writers_on_exception` — `unified-trading-library@fe2710bf`
-* QG script SIZE_EXTRA_EXCLUDES trimmed across each refactor — `unified-trading-library@0b79a4b3` + per-commit updates. Only `manifest_writer.py` remains (ManifestWriter public API is docstring-heavy contract documentation; trimming would scatter contract semantics).
-* Test stubs updated for `__init_subclass__` mandatory flip — `unified-trading-library@094804a2` (3 tests in `test_feature_calculator_registry_canonical.py` now wrap class definitions in `pytest.raises`).
+
+- `treasury/approval_bus.py::collect_approvals` 100L→39L via `_approval_is_valid` helper —
+  `unified-trading-library@f34af1be`
+- `synthetic/harness.py::_run_stage` 80L→26L + `::run` 59L→24L via `_execute_stage_body` + `_record_failed_stage` —
+  `unified-trading-library@175eaf1d`
+- `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52L→47L + `post_trade/settler.py::settle_trade`
+  53L→43L (call-site condensation) — `unified-trading-library@5a3a341b`
+- `service_runtime.py::from_env_and_args` 100L→49L via `_resolve_asset_groups` + `_resolve_testnet_mode` +
+  `_validate_gcp_required` — `unified-trading-library@d75ae5d7`
+- `service_cli.py::ServiceCLI.run` 108L→39L via `_prepare_argv` + `_install_synthetic_input_override` +
+  `_wire_runtime_env` — `unified-trading-library@0e0feced`
+- `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65L→39L via
+  `_resolve_polymarket_price` — `unified-trading-library@d5780025`
+- `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65L→43L (docstring trim) —
+  `unified-trading-library@17640cba`
+- `io/streaming_shard_finalizer.py::_route_row_groups` 52L→16L via `_route_chunk_to_writer` +
+  `_close_writers_on_exception` — `unified-trading-library@fe2710bf`
+- QG script SIZE_EXTRA_EXCLUDES trimmed across each refactor — `unified-trading-library@0b79a4b3` + per-commit updates.
+  Only `manifest_writer.py` remains (ManifestWriter public API is docstring-heavy contract documentation; trimming would
+  scatter contract semantics).
+- Test stubs updated for `__init_subclass__` mandatory flip — `unified-trading-library@094804a2` (3 tests in
+  `test_feature_calculator_registry_canonical.py` now wrap class definitions in `pytest.raises`).
 
 **defi_simulation_realism item 1G (UAC QG green)**:
-* 5 parquet_records added to `unified_api_contracts/internal/__init__.py` defi import block — `unified-api-contracts@570cb58`. Fixes 5 `reportUnsupportedDunderAll` errors (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord / PerpFundingRecord were in `__all__` but not imported). Issue doc flipped — `PM@86ef0de7`.
 
-**Net session result**: 8+ UTL refactor commits + 1 UAC facade ship + 1 UAC internal fix + 5 PM plan-flip commits. All shipped Half-1+Half-2 plan-flip discipline. SIZE_EXTRA_EXCLUDES: 9 → 1. Cumulative session ship now 47 method-size methods refactored under the 50-line budget.
+- 5 parquet_records added to `unified_api_contracts/internal/__init__.py` defi import block —
+  `unified-api-contracts@570cb58`. Fixes 5 `reportUnsupportedDunderAll` errors (DexPoolDayRecord / LendingIndexRecord /
+  LiquidationRecord / LstRateRecord / PerpFundingRecord were in `__all__` but not imported). Issue doc flipped —
+  `PM@86ef0de7`.
+
+**Net session result**: 8+ UTL refactor commits + 1 UAC facade ship + 1 UAC internal fix + 5 PM plan-flip commits. All
+shipped Half-1+Half-2 plan-flip discipline. SIZE_EXTRA_EXCLUDES: 9 → 1. Cumulative session ship now 47 method-size
+methods refactored under the 50-line budget.
 
 Autonomous loop ongoing per HARD RULE DON'T STOP — looking for next non-blocked work item.
 
-
 [2026-05-16 /loop autonomous-tick] slot-7 — sister-repo method-size sweep:
 
-UTL is fully cleaned (only manifest_writer.py remains in SIZE_EXTRA_EXCLUDES, intentionally — docstring-heavy contract docs).
-Loop expanded to sister repos:
+UTL is fully cleaned (only manifest_writer.py remains in SIZE_EXTRA_EXCLUDES, intentionally — docstring-heavy contract
+docs). Loop expanded to sister repos:
 
-* `features-service@a9806fb8` — FuturesRollAdjuster.annotate_lifecycle_phase 58L→34L via _resolve_date_series helper.
+- `features-service@a9806fb8` — FuturesRollAdjuster.annotate_lifecycle_phase 58L→34L via \_resolve_date_series helper.
   Only method-size violation outside the 3 already-excluded orchestrator paths; file fully clean.
-* `market-tick-data-service@e043738` — MTDSShardManifestRecorder.record_captured 53L→34L (call-site condensation;
+- `market-tick-data-service@e043738` — MTDSShardManifestRecorder.record_captured 53L→34L (call-site condensation;
   blob_path-is-unused docstring note preserved).
-* `market-tick-data-service@80ff3da` — WebsocketStreamingHandler.run 55L→33L via _resolve_connector static helper
+- `market-tick-data-service@80ff3da` — WebsocketStreamingHandler.run 55L→33L via \_resolve_connector static helper
   (WS_FEED_CONNECTOR_FACTORIES lookup + NotImplementedError with rollout-stage hint).
-* `market-tick-data-service@49cec40` — ReplayHandler.run 65L→32L via _resolve_fetcher static helper. ReplayPublisher
+- `market-tick-data-service@49cec40` — ReplayHandler.run 65L→32L via \_resolve_fetcher static helper. ReplayPublisher
   constructed inline with StreamPublisher + ReplayWatermarkKV — 3 transient locals collapsed.
 
-Remaining MTDS non-excluded violations: live/websocket_runner.py:_flush_instrument_window 90L,
-replay/runner.py:ReplayRunner.run 110L. Both substantive (not docstring-bloat); leaving for follow-up since they
-need behavior-preserving extraction with broader test coverage.
+Remaining MTDS non-excluded violations: live/websocket_runner.py:\_flush_instrument_window 90L,
+replay/runner.py:ReplayRunner.run 110L. Both substantive (not docstring-bloat); leaving for follow-up since they need
+behavior-preserving extraction with broader test coverage.
 
-execution-service has 377 method-size violations across all severity buckets — too big for this loop; flagged but
-not touched. Issue doc candidate.
-
+execution-service has 377 method-size violations across all severity buckets — too big for this loop; flagged but not
+touched. Issue doc candidate.
 
 [2026-05-16 /loop tick 2] slot-7 — MTDS fully clean for non-excluded method-size:
 
-* `market-tick-data-service@1490d6c` — LiveWebsocketRunner._flush_instrument_window 90L→33L via
-  _persist_window_to_sink + _record_empty_window. Cat A (source returned 0) contract preserved.
-* `market-tick-data-service@7982b5c` — ReplayRunner.run 110L→39L via _publish_window_instruments
-  (inner hot path) + _emit_replay_event (log_event identity-stamper). 14/14 test_replay_runner pass.
+- `market-tick-data-service@1490d6c` — LiveWebsocketRunner.\_flush_instrument_window 90L→33L via
+  \_persist_window_to_sink + \_record_empty_window. Cat A (source returned 0) contract preserved.
+- `market-tick-data-service@7982b5c` — ReplayRunner.run 110L→39L via \_publish_window_instruments (inner hot path) +
+  \_emit_replay_event (log_event identity-stamper). 14/14 test_replay_runner pass.
 
-MTDS scan now returns 0 non-excluded method-size violations. The 31-path
-FUNCTION_SIZE_EXTRA_EXCLUDES handler family is intentional (per-venue handler bodies are
-contract surfaces that grew with native_staking_handler.py:process Helius per-validator commit
-2026-05-15 — same pattern as other handlers).
-
+MTDS scan now returns 0 non-excluded method-size violations. The 31-path FUNCTION_SIZE_EXTRA_EXCLUDES handler family is
+intentional (per-venue handler bodies are contract surfaces that grew with native_staking_handler.py:process Helius
+per-validator commit 2026-05-15 — same pattern as other handlers).
 
 [2026-05-16 /loop tick 3] slot-7 — broad sister-repo sweep complete:
 
-* `unified-trading-api@5614289` — BatchCandleReader.get_candles 54L→33L via _resolve_bucket helper.
-* `strategy-service@9b9847b` — ArchetypeKillSwitchSubscriber.on_armed 56L→18L via _log_halt helper +
-  ExecutionRejectionHandler.on_rejection 57L→26L via _handle_venue_down / _alert_and_halt helpers.
+- `unified-trading-api@5614289` — BatchCandleReader.get_candles 54L→33L via \_resolve_bucket helper.
+- `strategy-service@9b9847b` — ArchetypeKillSwitchSubscriber.on_armed 56L→18L via \_log_halt helper +
+  ExecutionRejectionHandler.on_rejection 57L→26L via \_handle_venue_down / \_alert_and_halt helpers.
 
 7 sister repos confirmed 0 non-excluded violations: deployment-service, unified-cloud-interface,
 batch-live-reconciliation-service, pnl-attribution-service, client-reporting-api, trading-agent-service,
-alerting-service. Only outstanding: execution-service (377 violations across all severity buckets —
-too big for this loop; issue-doc candidate for slot-1 main / per-area refactor sprint).
+alerting-service. Only outstanding: execution-service (377 violations across all severity buckets — too big for this
+loop; issue-doc candidate for slot-1 main / per-area refactor sprint).
 
-Cumulative session: 50+ method-size methods refactored across UTL + features-service + MTDS +
-unified-trading-api + strategy-service. UTL@SIZE_EXTRA_EXCLUDES went 9 → 1. Half-1+Half-2 plan-flip
-discipline maintained.
-
+Cumulative session: 50+ method-size methods refactored across UTL + features-service + MTDS + unified-trading-api +
+strategy-service. UTL@SIZE_EXTRA_EXCLUDES went 9 → 1. Half-1+Half-2 plan-flip discipline maintained.
 
 [2026-05-17 /loop tick 4] slot-7 — execution-service big-finding filed:
 
 Filed `plans/active/issues/execution_service_method_size_violations_workspace_outlier_2026_05_17.md` at
-`unified-trading-pm@eaf7815f`. 377 method-size violations in execution-service (~13× the next-worst
-repo). Severity distribution: 25% 51-60L, 28% 61-75L, 21% 76-100L, 17% 101-150L, 9% 151L+.
-Top concentration: engine/backtest (41) + algorithms/impl (33) + defi_execution/protocols (30).
+`unified-trading-pm@eaf7815f`. 377 method-size violations in execution-service (~13× the next-worst repo). Severity
+distribution: 25% 51-60L, 28% 61-75L, 21% 76-100L, 17% 101-150L, 9% 151L+. Top concentration: engine/backtest (41) +
+algorithms/impl (33) + defi_execution/protocols (30).
 
-Recommendation per issue doc: P2 post-cutover, Phase A (baseline FUNCTION_SIZE_EXTRA_EXCLUDES ratchet)
-the only pre-May-23 stage. Phase B (concentrated 30%) + Phase C (remaining 70%) for slot-4/5
-post-cutover work. Not attempting fix in this autonomous loop.
+Recommendation per issue doc: P2 post-cutover, Phase A (baseline FUNCTION_SIZE_EXTRA_EXCLUDES ratchet) the only
+pre-May-23 stage. Phase B (concentrated 30%) + Phase C (remaining 70%) for slot-4/5 post-cutover work. Not attempting
+fix in this autonomous loop.
 
-13 sister repos now confirmed 0 non-excluded method-size violations (was 12 last tick — adding
-execution-service to the surveyed-and-filed list completes the workspace baseline).
-
+13 sister repos now confirmed 0 non-excluded method-size violations (was 12 last tick — adding execution-service to the
+surveyed-and-filed list completes the workspace baseline).
 
 [2026-05-17 /loop tick 5] slot-7 — verification scan + no-new-work check:
 
 Final scan across 5 repos I touched this session: 0 non-excluded method-size violations everywhere.
 
-* unified-trading-library: 0  (SIZE_EXTRA_EXCLUDES = manifest_writer.py only — docstring-heavy)
-* features-service: 0         (FUNCTION_SIZE_EXTRA_EXCLUDES = 3 pre-existing orchestrators)
-* market-tick-data-service: 0 (FUNCTION_SIZE_EXTRA_EXCLUDES = 31 per-venue handler family + adapter)
-* strategy-service: 0         (FUNCTION_SIZE_EXTRA_EXCLUDES = 10 pre-existing engine/strategies/cli paths)
-* unified-trading-api: 0      (no exclusions)
+- unified-trading-library: 0 (SIZE_EXTRA_EXCLUDES = manifest_writer.py only — docstring-heavy)
+- features-service: 0 (FUNCTION_SIZE_EXTRA_EXCLUDES = 3 pre-existing orchestrators)
+- market-tick-data-service: 0 (FUNCTION_SIZE_EXTRA_EXCLUDES = 31 per-venue handler family + adapter)
+- strategy-service: 0 (FUNCTION_SIZE_EXTRA_EXCLUDES = 10 pre-existing engine/strategies/cli paths)
+- unified-trading-api: 0 (no exclusions)
 
 execution-service routed to operator via `execution_service_method_size_violations_workspace_outlier_2026_05_17.md`
-(3-phase plan, Phase A pre-May-23 ratchet, Phase B/C post-cutover). No slot-7 follow-up without explicit
-operator approval — execution-service is May-23 critical path and not in slot-7 plan-of-record scope.
+(3-phase plan, Phase A pre-May-23 ratchet, Phase B/C post-cutover). No slot-7 follow-up without explicit operator
+approval — execution-service is May-23 critical path and not in slot-7 plan-of-record scope.
 
-No new pings to slot 7 in the loop ledger since tick 4. Loop continues; idle-watching for orchestrator
-direction or unexpected drift.
-
+No new pings to slot 7 in the loop ledger since tick 4. Loop continues; idle-watching for orchestrator direction or
+unexpected drift.
 
 [2026-05-17 /loop tick 6] slot-7 — steady-state idle, no new orchestrator direction:
 
-Activity in the last hour was around B-015 chain (slot-3 / slot-1 main owning features-onchain VM
-debugging post infra-unblock): VM 5/7 calculator-bug surfacing, lending-indices phantom-row resolution,
-trading-agent-service auth fix. None touch slot-7 scope.
+Activity in the last hour was around B-015 chain (slot-3 / slot-1 main owning features-onchain VM debugging post
+infra-unblock): VM 5/7 calculator-bug surfacing, lending-indices phantom-row resolution, trading-agent-service auth fix.
+None touch slot-7 scope.
 
-Slot 7 work-split: all 9 base items + 5 SWEEP-16 items either ✅ done or routed-with-issue-doc.
-Method-size sweep: 5 repos clean (0 violations), 8 other sister repos confirmed clean by survey,
-1 outlier (execution-service) filed as P2 post-cutover.
+Slot 7 work-split: all 9 base items + 5 SWEEP-16 items either ✅ done or routed-with-issue-doc. Method-size sweep: 5
+repos clean (0 violations), 8 other sister repos confirmed clean by survey, 1 outlier (execution-service) filed as P2
+post-cutover.
 
 Loop remains in idle-watch mode. Next tick checks for new orchestrator pings.
-
 
 [2026-05-17 /loop tick 9] slot-7 — operator override "no deferred, no skip" → execution-service Phase B started:
 
 User direction overrode my P2-post-cutover routing. Started Phase B sweep. 8 of 377 cleared this tick:
 
-* `execution-service@9229420a2` — BaseDataLoader._infer_category 51L→11L via 3 per-domain static helpers
-  (_infer_cefi_category / _infer_tradfi_category / _infer_defi_category).
-* `execution-service@750e7426a` — GridBuilder.generate_algorithm_specs 51L→11L via _resolve_param_grid +
-  _specs_for_algo helpers (cartesian-combo expansion factored out).
-* `execution-service@7296d7ec4` — DataConfigBuilder._check_existing_catalog_data 51L→20L via
-  _catalog_has_complete_window parametric helper (eliminated Bar/TradeTick if/else mirror).
-* `execution-service@5b80d4d0c` — KaminoConnector.get_reserves + get_vault_info both 51L→18L via
-  _build_reserve_from_payload (KaminoReserve dict→dataclass map).
-* `execution-service@766417dad` — InstrumentDefinitionsLoader.load_for_date 51L→16L via
-  _load_legacy_single_file helper (legacy by-venue fallback path).
-* `execution-service@dcfe27495` — MarinadeConnector.get_stake_info 51L→17L via _fetch_marinade_state helper.
-* `execution-service@be06c6c99` — OrcaConnector.get_whirlpool_info 51L→22L via _fetch_whirlpool_payload helper.
+- `execution-service@9229420a2` — BaseDataLoader.\_infer_category 51L→11L via 3 per-domain static helpers
+  (\_infer_cefi_category / \_infer_tradfi_category / \_infer_defi_category).
+- `execution-service@750e7426a` — GridBuilder.generate_algorithm_specs 51L→11L via \_resolve_param_grid +
+  \_specs_for_algo helpers (cartesian-combo expansion factored out).
+- `execution-service@7296d7ec4` — DataConfigBuilder.\_check_existing_catalog_data 51L→20L via
+  \_catalog_has_complete_window parametric helper (eliminated Bar/TradeTick if/else mirror).
+- `execution-service@5b80d4d0c` — KaminoConnector.get_reserves + get_vault_info both 51L→18L via
+  \_build_reserve_from_payload (KaminoReserve dict→dataclass map).
+- `execution-service@766417dad` — InstrumentDefinitionsLoader.load_for_date 51L→16L via \_load_legacy_single_file helper
+  (legacy by-venue fallback path).
+- `execution-service@dcfe27495` — MarinadeConnector.get_stake_info 51L→17L via \_fetch_marinade_state helper.
+- `execution-service@be06c6c99` — OrcaConnector.get_whirlpool_info 51L→22L via \_fetch_whirlpool_payload helper.
 
 basedpyright clean across all 7 commits. Half-1+Half-2 plan-flip discipline maintained.
 
-369 remaining; pattern is established (per-method get_*/load_* methods need a _fetch_payload + dataclass-map
+369 remaining; pattern is established (per-method get*\*/load*\* methods need a \_fetch_payload + dataclass-map
 extraction). Loop continues — next tick keeps grinding the 51-58L bucket.
-
 
 [2026-05-17 /loop tick 10] slot-7 — execution-service Phase B continues, +4 more (12/377 cleared):
 
-* `execution-service@d844cfa6c` — DeleverageExecutor.handle 51L→33L (multi-line collapse; logic unchanged).
-* `execution-service@30a203c01` — SorTwapAlgorithm.execute 51L→28L (docstring trim + inlined avg locals).
-* `execution-service@a5ae170ad` — SportsAdapter.place_bet 51L→25L via _require_betting_adapter helper.
-* `execution-service@9403a1afa` — TenderlyExecutionProvider.simulate_bundle 51L→23L via _build_bundle_payload helper.
+- `execution-service@d844cfa6c` — DeleverageExecutor.handle 51L→33L (multi-line collapse; logic unchanged).
+- `execution-service@30a203c01` — SorTwapAlgorithm.execute 51L→28L (docstring trim + inlined avg locals).
+- `execution-service@a5ae170ad` — SportsAdapter.place_bet 51L→25L via \_require_betting_adapter helper.
+- `execution-service@9403a1afa` — TenderlyExecutionProvider.simulate_bundle 51L→23L via \_build_bundle_payload helper.
 
 365 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
 
-
 [2026-05-17 /loop tick 11] slot-7 — execution-service Phase B (+4, 16/377 cleared):
 
-* `execution-service@216c70b12` — BetfairAdapter.get_odds 51L→22L via _emit_betfair_fetch_failure helper
-  (SP-12 ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED log_event pair extracted).
-* `execution-service@cb87efc7f` — KrakenCeFiAdapter._do_private_post 51L→32L via _extract_kraken_result helper
+- `execution-service@216c70b12` — BetfairAdapter.get_odds 51L→22L via \_emit_betfair_fetch_failure helper (SP-12
+  ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED log_event pair extracted).
+- `execution-service@cb87efc7f` — KrakenCeFiAdapter.\_do_private_post 51L→32L via \_extract_kraken_result helper
   (response body parse + error classify + result-dict guard).
-* `execution-service@bb862de2f` — MultiLegOrchestrator._execute_leader_follower 51L→24L via
-  _cancel_remaining_legs helper (eliminates duplicate cancel loops; Callable import added for condition arg).
-* `execution-service@0a60c3216` — SlashingTailRiskMC.simulate_archetype_loss 51L→32L (docstring consolidated;
+- `execution-service@bb862de2f` — MultiLegOrchestrator.\_execute_leader_follower 51L→24L via \_cancel_remaining_legs
+  helper (eliminates duplicate cancel loops; Callable import added for condition arg).
+- `execution-service@0a60c3216` — SlashingTailRiskMC.simulate_archetype_loss 51L→32L (docstring consolidated;
   inline-comments folded into the contract paragraph).
 
 361 remaining. basedpyright clean across all 4 commits. Half-1+Half-2 plan-flip discipline maintained.
 
-
 [2026-05-17 /loop tick 12] slot-7 — execution-service Phase B (+3, 19/377 cleared):
 
-* `execution-service@11c13275f` — OrderBookDataConverter._detect_book_columns 51L→25L via
-  _detect_tardis_format + _detect_gcs_format helpers (per-format column detection + sort).
-* `execution-service@2065f864a` — CrossChainSOR._evaluate_single_chain 52L→26L via
-  _build_legs_for_chain helper (per-DEX route → RouteLeg map).
-* `execution-service@8e65ae6b4` — DeribitWebSocketMixin._authenticate_websocket 52L→33L via
-  _handle_auth_response helper (error-body inspect + raise pattern).
+- `execution-service@11c13275f` — OrderBookDataConverter.\_detect_book_columns 51L→25L via \_detect_tardis_format +
+  \_detect_gcs_format helpers (per-format column detection + sort).
+- `execution-service@2065f864a` — CrossChainSOR.\_evaluate_single_chain 52L→26L via \_build_legs_for_chain helper
+  (per-DEX route → RouteLeg map).
+- `execution-service@8e65ae6b4` — DeribitWebSocketMixin.\_authenticate_websocket 52L→33L via \_handle_auth_response
+  helper (error-body inspect + raise pattern).
 
 358 remaining. basedpyright clean across all 3 commits.
 
-
 [2026-05-17 /loop tick 13] slot-7 — execution-service Phase B (+4, 23/377 cleared):
 
-* `execution-service@1c677bb58` — BaseDataConverter._should_skip_conversion 52L→24L via
-  _format_skip_message helper (DataFrame vs Path source dispatch).
-* `execution-service@df892e763` — GasEstimator.estimate (gas_eip1559) 53L→24L via _compute_gas_units
-  helper (per-op + multicall overhead).
-* `execution-service@d78b43d19` — AlgorithmFactory.create 54L→26L via _require_config static helper
-  (isinstance narrowing + typed TypeError eliminates 5 duplicate if-branches).
-* `execution-service@2ac40510f` — PnLCalculator.add_execution_alpha 53L→26L via _alpha_bps helper
-  (sign convention by side + zero-benchmark guard).
+- `execution-service@1c677bb58` — BaseDataConverter.\_should_skip_conversion 52L→24L via \_format_skip_message helper
+  (DataFrame vs Path source dispatch).
+- `execution-service@df892e763` — GasEstimator.estimate (gas_eip1559) 53L→24L via \_compute_gas_units helper (per-op +
+  multicall overhead).
+- `execution-service@d78b43d19` — AlgorithmFactory.create 54L→26L via \_require_config static helper (isinstance
+  narrowing + typed TypeError eliminates 5 duplicate if-branches).
+- `execution-service@2ac40510f` — PnLCalculator.add_execution_alpha 53L→26L via \_alpha_bps helper (sign convention by
+  side + zero-benchmark guard).
 
 354 remaining. basedpyright clean across all 4 commits.
 
@@ -860,164 +909,167 @@ Operator: "lets [do] ohlcv 1m for all the tradfi mvp instruments only … no l1-
 
 Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (9 Phases, NONE flipped yet despite 2-day-old plan).
 
-**Slot 7 phase assigned**: Phase 8 — Databento PAYG cost tracking. Emit `DATABENTO_PAYG_SPEND` event from each
-TradFi OHLCV backfill VM at completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in
+**Slot 7 phase assigned**: Phase 8 — Databento PAYG cost tracking. Emit `DATABENTO_PAYG_SPEND` event from each TradFi
+OHLCV backfill VM at completion (USD spend per dataset-month-symbol). Roll up to a single dashboard row in
 deployment-ui. Projection: $50-200 for the full 2019-2026 ohlcv_1m × CME+ICE+NASDAQ+NYSE backfill.
-
 
 [2026-05-17 /loop tick 14] slot-7 — execution-service Phase B (+3, 26/377 cleared):
 
-* `execution-service@1b8e02062` — BaseSolanaConnector.connect 54L→18L via _load_keypair_from_cfg helper
-  (wallet key resolution + read-only fallback).
-* `execution-service@82cbdac17` — SmartOrderRouter._calculate_split_route 52L→34L via _inverse_impact
-  static helper (eliminates formula duplication).
-* `execution-service@3dc245a35` — ResultExtractor.extract_returns_from_stats 52L→24L via
-  _safe_float_from_stats + _resolve_stats_returns helpers (3-key stats lookup + non-NaN guard).
+- `execution-service@1b8e02062` — BaseSolanaConnector.connect 54L→18L via \_load_keypair_from_cfg helper (wallet key
+  resolution + read-only fallback).
+- `execution-service@82cbdac17` — SmartOrderRouter.\_calculate_split_route 52L→34L via \_inverse_impact static helper
+  (eliminates formula duplication).
+- `execution-service@3dc245a35` — ResultExtractor.extract_returns_from_stats 52L→24L via \_safe_float_from_stats +
+  \_resolve_stats_returns helpers (3-key stats lookup + non-NaN guard).
 
 351 remaining. basedpyright clean across all 3 commits.
 
-
 [2026-05-17 /loop tick 15] slot-7 — execution-service Phase B (+2, 28/377 cleared):
 
-* `execution-service@ca20a72c9` — UnifiedOrderManager.handle_nautilus_order_event 52L→20L via
-  _coerce_numeric (getattr-Any → float) + _apply_order_filled_event helpers.
-* `execution-service@25ad9d474` — PassiveAggressiveSpawnMixin._spawn_aggressive_slice 52L→31L via
-  _resolve_fresh_parent_order helper (3 early-return guards into one None-check).
+- `execution-service@ca20a72c9` — UnifiedOrderManager.handle_nautilus_order_event 52L→20L via \_coerce_numeric
+  (getattr-Any → float) + \_apply_order_filled_event helpers.
+- `execution-service@25ad9d474` — PassiveAggressiveSpawnMixin.\_spawn_aggressive_slice 52L→31L via
+  \_resolve_fresh_parent_order helper (3 early-return guards into one None-check).
 
 NB: slot-1 main shipped Phase A baseline ratchet at `execution-service@91e2cfb9e` (187 paths in
-FUNCTION_SIZE_EXTRA_EXCLUDES). My Phase B refactors are still incrementally clearing the underlying
-369 violations regardless. 349 remaining (no slot-7 baseline-ratchet collision).
+FUNCTION_SIZE_EXTRA_EXCLUDES). My Phase B refactors are still incrementally clearing the underlying 369 violations
+regardless. 349 remaining (no slot-7 baseline-ratchet collision).
 
 basedpyright clean across all 2 commits.
 
-
 [2026-05-17 /loop tick 16] slot-7 — execution-service Phase B (+3, 31/377 cleared):
 
-* `execution-service@1db3b598a` — BenchmarkService._get_oracle_price 53L→23L via
-  _DEFAULT_ORACLE_PRICES ClassVar (inline dict promoted) + _cached_oracle_price helper.
-* `execution-service@e23c218f2` — KrakenCeFiAdapter.get_margin_state 52L→25L (docstring +
-  intermediate-locals condensation; ml→ratio normalization preserved).
-* `execution-service@3f88de2db` — KrakenCeFiAdapter.get_account_state 53L→27L via nested
-  _balance helper + generator-comprehension w/ None filter.
+- `execution-service@1db3b598a` — BenchmarkService.\_get_oracle_price 53L→23L via \_DEFAULT_ORACLE_PRICES ClassVar
+  (inline dict promoted) + \_cached_oracle_price helper.
+- `execution-service@e23c218f2` — KrakenCeFiAdapter.get_margin_state 52L→25L (docstring + intermediate-locals
+  condensation; ml→ratio normalization preserved).
+- `execution-service@3f88de2db` — KrakenCeFiAdapter.get_account_state 53L→27L via nested \_balance helper +
+  generator-comprehension w/ None filter.
 
 346 remaining. basedpyright clean.
 
-
 [2026-05-17 user direction "keep going for the rest"] slot-7 — execution-service Phase B (+6, 37/377 cleared):
 
-* `execution-service@fbbda9586` — KrakenCeFiAdapter.get_fills 53L→28L (docstring + intermediate-local condensation).
-* `execution-service@bbecdcd8f` — InstructionDrivenStrategyV3.on_stop 52L→11L via _log_alpha_summary +
-  _save_events_to_cache helpers.
-* `execution-service@f060a87b5` — DeFiTestDataGenerator.generate_swap_events_data 54L→33L via
-  _resolve_tick_count_and_interval static helper.
-* `execution-service@97e61c87e` — ExecutionAlphaVerifierActor.on_stop 54L→8L via 4 helpers
-  (_fill_float + _log_entry_alpha_stats + _log_exit_alpha_stats + _log_benchmark_coverage).
-* `execution-service@467f33b4b` — LiveCcxtTransferAdapter.execute_internal_transfer 54L→30L (docstring +
+- `execution-service@fbbda9586` — KrakenCeFiAdapter.get_fills 53L→28L (docstring + intermediate-local condensation).
+- `execution-service@bbecdcd8f` — InstructionDrivenStrategyV3.on_stop 52L→11L via \_log_alpha_summary +
+  \_save_events_to_cache helpers.
+- `execution-service@f060a87b5` — DeFiTestDataGenerator.generate_swap_events_data 54L→33L via
+  \_resolve_tick_count_and_interval static helper.
+- `execution-service@97e61c87e` — ExecutionAlphaVerifierActor.on_stop 54L→8L via 4 helpers (\_fill_float +
+  \_log_entry_alpha_stats + \_log_exit_alpha_stats + \_log_benchmark_coverage).
+- `execution-service@467f33b4b` — LiveCcxtTransferAdapter.execute_internal_transfer 54L→30L (docstring +
   intermediate-local trim).
-* `execution-service@89aafda9c` — InstructionValidator.check_strategy_instructions 54L→18L via
-  _category_from_strategy_id + _check_single_date helpers.
+- `execution-service@89aafda9c` — InstructionValidator.check_strategy_instructions 54L→18L via
+  \_category_from_strategy_id + \_check_single_date helpers.
 
-340 remaining. basedpyright clean across all 6 commits. Slot-7 plan-of-record: all 9 base items +
-5 SWEEP-16 items remain ✅. Continuing execution-service grind per "no skip / no deferred" direction.
-
+340 remaining. basedpyright clean across all 6 commits. Slot-7 plan-of-record: all 9 base items + 5 SWEEP-16 items
+remain ✅. Continuing execution-service grind per "no skip / no deferred" direction.
 
 [2026-05-17 /loop tick 17] slot-7 — execution-service Phase B (+3, 40/377 cleared):
 
-* `execution-service@14fbef8d1` — DeribitWebSocketMixin.subscribe_market_data 54L→27L via
-  _check_subscribe_response helper (mirror of _handle_auth_response from tick 12).
-* `execution-service@956f89d8c` — OrderRecoveryEngine.run 54L→16L via _emit_recovery_summary helper
-  (all-failed detection + log_event dispatch).
-* `execution-service@225d6a076` — RpcProviderFallback.execute_async 54L→27L via _parse_rpc_result helper
-  (dict-shape validation + result key pull).
+- `execution-service@14fbef8d1` — DeribitWebSocketMixin.subscribe_market_data 54L→27L via \_check_subscribe_response
+  helper (mirror of \_handle_auth_response from tick 12).
+- `execution-service@956f89d8c` — OrderRecoveryEngine.run 54L→16L via \_emit_recovery_summary helper (all-failed
+  detection + log_event dispatch).
+- `execution-service@225d6a076` — RpcProviderFallback.execute_async 54L→27L via \_parse_rpc_result helper (dict-shape
+  validation + result key pull).
 
-337 remaining. Cumulative session: 40 execution-service refactors + 50 across UTL/MTDS/strategy/UAC/UTL =
-~90 method-size methods refactored under the 50-line budget. basedpyright clean throughout.
-
+337 remaining. Cumulative session: 40 execution-service refactors + 50 across UTL/MTDS/strategy/UAC/UTL = ~90
+method-size methods refactored under the 50-line budget. basedpyright clean throughout.
 
 [2026-05-17 /loop tick 18] slot-7 — execution-service Phase B (+3, 43/377 cleared):
 
-* `execution-service@ddcab5599` — EnhancedAlphaComparator.extract_fills_with_regimes 54L→23L via
-  _entry_fills_from_result helper (3-link summary→execution_alpha→entry_fills walk).
-* `execution-service@3b39593b1` — ReportTimelineExtractor.build_positions_from_fills 54L→24L via
-  _new_avg_entry_price + _unrealized_pnl helpers (direction-flip + long/short dispatch).
-* `execution-service@925ed15c5` — LiquidityModelQuoteSource.quote 55L→42L via _route_hint_blocks
-  helper (3-way veto: no-listings / CEX_ONLY / DEX_ONLY).
+- `execution-service@ddcab5599` — EnhancedAlphaComparator.extract_fills_with_regimes 54L→23L via
+  \_entry_fills_from_result helper (3-link summary→execution_alpha→entry_fills walk).
+- `execution-service@3b39593b1` — ReportTimelineExtractor.build_positions_from_fills 54L→24L via \_new_avg_entry_price +
+  \_unrealized_pnl helpers (direction-flip + long/short dispatch).
+- `execution-service@925ed15c5` — LiquidityModelQuoteSource.quote 55L→42L via \_route_hint_blocks helper (3-way veto:
+  no-listings / CEX_ONLY / DEX_ONLY).
 
 334 remaining. basedpyright clean.
 
-
 [2026-05-17 /loop tick 19] slot-7 — execution-service Phase B (+3, 46/377 cleared):
 
-* `execution-service@b7c2a3b3e` — GridConfigGenerator.generate_algorithm_specs 54L→11L via
-  _resolve_param_grid + _specs_for_algo helpers (same pattern as grid_builder.py refactor tick 9).
-* `execution-service@4bec88967` — StorageAdapter.upload_catalog_cache_files 55L→24L via
-  _upload_catalog_files_parallel helper (ThreadPoolExecutor fan-out).
-* `execution-service@fc8563d5d` — OrderBookDataConverter._filter_by_time_window 55L→27L via
-  _to_ts_units helper (ns/μs factor selection; collapses mirror-pair into single filter).
+- `execution-service@b7c2a3b3e` — GridConfigGenerator.generate_algorithm_specs 54L→11L via \_resolve_param_grid +
+  \_specs_for_algo helpers (same pattern as grid_builder.py refactor tick 9).
+- `execution-service@4bec88967` — StorageAdapter.upload_catalog_cache_files 55L→24L via \_upload_catalog_files_parallel
+  helper (ThreadPoolExecutor fan-out).
+- `execution-service@fc8563d5d` — OrderBookDataConverter.\_filter_by_time_window 55L→27L via \_to_ts_units helper (ns/μs
+  factor selection; collapses mirror-pair into single filter).
 
 331 remaining. basedpyright clean.
 
-
 [2026-05-17 /loop tick 20] slot-7 — execution-service Phase B (+2, 48/377 cleared):
 
-* `execution-service@eef74cc3f` — POVDynamicExecAlgorithm._parse_pov_params 55L→21L via
-  _require_unit_interval helper (3 duplicate 0<x≤1 check blocks → helper calls).
-* `execution-service@005c4bff8` — BatchAuctionEngine.run_auction 56L→23L via _settle_intent helper
-  (per-intent solver race + winner-vs-no-viable-solution dispatch).
+- `execution-service@eef74cc3f` — POVDynamicExecAlgorithm.\_parse_pov_params 55L→21L via \_require_unit_interval helper
+  (3 duplicate 0<x≤1 check blocks → helper calls).
+- `execution-service@005c4bff8` — BatchAuctionEngine.run_auction 56L→23L via \_settle_intent helper (per-intent solver
+  race + winner-vs-no-viable-solution dispatch).
 
 329 remaining. basedpyright clean. Cumulative session ship now ~98 methods.
 
-
 [2026-05-17 /loop tick 21] slot-7 — execution-service Phase B (+2, 50/377 cleared — milestone):
 
-* `execution-service@4a91e8d0d` — SchemaValidator.validate_mbp 56L→27L via _mbp_depth_columns helper
-  (per-level bid_px/bid_sz/ask_px/ask_sz column generator).
-* `execution-service@63dfd91ea` — InstructionDrivenV3Utils.create_order 56L→23L (eliminated 4 duplicate
-  factory call-sites via single algo_kwargs **-splat).
+- `execution-service@4a91e8d0d` — SchemaValidator.validate_mbp 56L→27L via \_mbp_depth_columns helper (per-level
+  bid_px/bid_sz/ask_px/ask_sz column generator).
+- `execution-service@63dfd91ea` — InstructionDrivenV3Utils.create_order 56L→23L (eliminated 4 duplicate factory
+  call-sites via single algo_kwargs \*\*-splat).
 
-327 remaining. **50/377 = ~13% of execution-service violations cleared** in this autonomous loop.
-basedpyright clean throughout. Cumulative session ship: ~100 methods refactored under 50L budget.
-
+327 remaining. **50/377 = ~13% of execution-service violations cleared** in this autonomous loop. basedpyright clean
+throughout. Cumulative session ship: ~100 methods refactored under 50L budget.
 
 [2026-05-17 /loop tick 22] slot-7 — execution-service Phase B (+3, 53/377 cleared):
 
-* `execution-service@0a901f80e` — PassiveAggressiveSpawnMixin._spawn_passive_order 56L→24L via
-  _resolve_passive_order_quantity helper (3 early-returns into one Quantity|None).
-* `execution-service@31fbcbe91` — ConfigurationValidator.check_nautilus_compatibility 57L→34L via
-  _coerce_list_field helper (primary/secondary mirror-pair into 2 helper calls).
-* `execution-service@080c641a8` — YieldReconEngine.reconcile_aave_index 56L→39L via
-  _accrual_discrepancy_status helper (≥1% CRITICAL / ≥0.1% DISCREPANCY / MATCH classification).
+- `execution-service@0a901f80e` — PassiveAggressiveSpawnMixin.\_spawn_passive_order 56L→24L via
+  \_resolve_passive_order_quantity helper (3 early-returns into one Quantity|None).
+- `execution-service@31fbcbe91` — ConfigurationValidator.check_nautilus_compatibility 57L→34L via \_coerce_list_field
+  helper (primary/secondary mirror-pair into 2 helper calls).
+- `execution-service@080c641a8` — YieldReconEngine.reconcile_aave_index 56L→39L via \_accrual_discrepancy_status helper
+  (≥1% CRITICAL / ≥0.1% DISCREPANCY / MATCH classification).
 
 324 remaining. basedpyright clean.
 
-
 [2026-05-17 /loop tick 23] slot-7 — execution-service Phase B (+3, 56/377 cleared):
 
-* `execution-service@3c5f47d6c` — YieldReconEngine.reconcile_lst_yield 57L→36L via _lst_yield_status helper
-  (LST 20%/5% thresholds vs AAVE's 1%/0.1%).
-* `execution-service@ff4b3957e` — validate_tp_sl_for_instruction_type twin methods (utils/validation/ +
-  validation/) 57L→24L each (flattened nested branch into early-return ladder).
+- `execution-service@3c5f47d6c` — YieldReconEngine.reconcile_lst_yield 57L→36L via \_lst_yield_status helper (LST 20%/5%
+  thresholds vs AAVE's 1%/0.1%).
+- `execution-service@ff4b3957e` — validate_tp_sl_for_instruction_type twin methods (utils/validation/ + validation/)
+  57L→24L each (flattened nested branch into early-return ladder).
 
 321 remaining. basedpyright clean throughout. Cumulative session: ~105 methods refactored.
 
-
 [2026-05-17 /loop tick 24] slot-7 — execution-service Phase B (+2, 58/377 cleared):
 
-* `execution-service@fb461cc35` — DeribitOrdersMixin.get_account_summary 57L→27L via
-  _parse_account_summary_result helper (error-body inspect + result pull).
-* `execution-service@3d0657084` — InstructionRouter._execute_atomic 57L→26L via
-  _prevalidate_atomic_instructions helper (pre-validate loop with failure-list construction).
+- `execution-service@fb461cc35` — DeribitOrdersMixin.get_account_summary 57L→27L via \_parse_account_summary_result
+  helper (error-body inspect + result pull).
+- `execution-service@3d0657084` — InstructionRouter.\_execute_atomic 57L→26L via \_prevalidate_atomic_instructions
+  helper (pre-validate loop with failure-list construction).
 
 319 remaining. basedpyright clean.
 
-
 [2026-05-17 /loop tick 25] slot-7 — execution-service Phase B (+3, 61/377 cleared):
 
-* `execution-service@de5c946e1` — AlmgrenChrissExecAlgorithm._calculate_optimal_schedule 58L→14L via
-  _ac_remaining_trajectory + _absorb_rounding helpers (trajectory math + final-slice clamp).
-* `execution-service@30e80329d` — MulticallBatcher.create_batches 58L→20L via _build_calls_for_group
-  helper (per-step encode + gas/value accumulation).
-* `execution-service@895cd1e25` — MultiHopSolver.solve 58L→22L via _try_intermediate helper
-  (per-intermediate 2-hop simulation + legs construction).
+- `execution-service@de5c946e1` — AlmgrenChrissExecAlgorithm.\_calculate_optimal_schedule 58L→14L via
+  \_ac_remaining_trajectory + \_absorb_rounding helpers (trajectory math + final-slice clamp).
+- `execution-service@30e80329d` — MulticallBatcher.create_batches 58L→20L via \_build_calls_for_group helper (per-step
+  encode + gas/value accumulation).
+- `execution-service@895cd1e25` — MultiHopSolver.solve 58L→22L via \_try_intermediate helper (per-intermediate 2-hop
+  simulation + legs construction).
 
 316 remaining. basedpyright clean. Cumulative session: ~110 methods refactored.
+
+---
+
+## [main → slot 7] 2026-05-17 14:55 UTC — ✅ Phase B ack + keep going
+
+Tick 25 acked (61/377 cleared, 316 remaining). Velocity ~4 methods/tick at ~30m = ~39h total remaining for Phase B alone
+— this is a multi-session effort. Continue autonomous Phase B refactor. No main-side blocker.
+
+**Issue `execution_service_method_size_violations_workspace_outlier_2026_05_17.md`** correctly filed (P2 post-cutover).
+Phase A baseline ratchet landed; Phase B (this refactor) is ongoing; Phase C (remaining post-cutover) is deferred.
+
+**Next milestone**: once 100/377 cleared, flip the `execution_service_method_size_violations` plan item progress note to
+`20%+` in the issue doc. At 200/377 flip to `50%+`. Each flip = docs(plans): prefix commit.
+
+**Inventory**: 51% done / 498 cal AI-days (updated PM@56f9fa63). Phase B work isn't yet captured in the inventory
+because the issue is statused P2 post-cutover — proceed regardless.

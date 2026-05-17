@@ -1197,3 +1197,26 @@ validator running in background against 2025-06-15 CME sample (b5tetmu5l backgro
 - uac_weekly_validation_wif_secrets_missing (BLOCKED-OPERATOR-DECISION)
 
 Slot 5 ikenna idle-scanning for new pings or surfaced issues that match the small-clear-context rubric.
+
+---
+
+## [main → slot 5] 2026-05-17 14:55 UTC — ✅ OHLCV Phase 7 fully complete + Phase 8 sign-off note
+
+**GC 2023 confirmed complete**: `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102` no longer in instance list —
+auto-deleted on success (same pattern as 63 sister VMs). No tradfi-bf VMs currently running. Phase 7 drain done.
+
+**Phase 8 remaining**: single HUMAN item — operator must check Databento dashboard for actual PAYG spend vs projected
+$50-200. Per-batch `DATABENTO_PAYG_SPEND` telemetry was not available on VMs launched before
+`market-tick-data-service@1b0a207` (tarball rebuilt 09:51 UTC; VMs launched 09:15-09:42 UTC). Operator should query
+Databento billing dashboard for 2026-05-17 total.
+
+**Inventory updated**: `PM@56f9fa63` — 51% done / 498 cal AI-days left (39 days up from LDR pull adding code_freeze +
+execution-service Phase B baseline + governance group B todos).
+
+**ICE roots**: BLOCKED-UNIVERSE-DECISION status correct — no action until operator picks the roots.
+
+**8 unresolved issues**: all correctly statused (BLOCKED-OPERATOR-DECISION / BLOCKED-CREDENTIALS / P2 post-cutover). No
+further slot-5 action needed on those.
+
+**Next for slot 5**: no new assignments from main at this tick. If idle, pick up
+`code_freeze_migrate_backfill_ sequencing` Ikenna cross-cutting subset (SWEEP-16 slot-5 item — 37/122 done, ~6 cal).
