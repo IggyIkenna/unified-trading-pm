@@ -608,8 +608,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    execution-service@15052b068 (send_transaction 153L→34L via _paper_trade_result + _sign_and_send_tx +
    _extract_tx_error_status + _build_tx_result). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-43**: 47 files cleared (slot-2 contribution: -47 files; spans 18
-   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×1,
+   **Ratchet-down 2026-05-17 (slot-2 batch 44 — algorithms/impl/hybrid_optimal)**: shipped at
+   execution-service@362c35974 (on_order 163L→16L via _detect_and_log_regime + _compute_ac_schedule +
+   _build_valid_amounts + _schedule_children). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-44**: 48 files cleared (slot-2 contribution: -48 files; spans 18
+   submodules incl. engine/validation ×2, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×2,
    defi_execution/protocols ×8 total).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
