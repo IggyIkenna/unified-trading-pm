@@ -2,6 +2,8 @@
 title: workflow-template rollout pending — 22 repos, 3 templates, script bug fixed
 created: 2026-05-15
 author: slot-8
+resolved: 2026-05-17
+resolution: SHIPPED — all 3 templates (semver-agent.yml + major-bump-issue-handler.yml + workspace-qg.yml) rolled out across 21 Python repos. Verified 2026-05-17 by sampling 5 repos (mtds/features/execution/strategy/deployment) — all 3 workflows present. UI-only templates (uac-registry-sync + uic-openapi-sync) remain UI-only (no rollout to non-UI repos by design).
 source:
   - scripts/workflow-templates/rollout-workflow-templates.sh
   - scripts/workflow-templates/semver-agent.yml.tmpl
