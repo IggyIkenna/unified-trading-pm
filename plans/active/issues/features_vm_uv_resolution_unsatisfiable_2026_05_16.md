@@ -95,7 +95,12 @@ stale tarball IS the cause of my first failed VM today.
       `features-backfill` to the NODEPS allowlist; setup script re-uploaded 22:52:08 UTC. VM 5 launched as
       `features-onchain-defi-20260516-235216`. Cross-ref:
       `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`.
-- [ ] [DESIGN] P1. Add `uv pip compile` pre-flight to `create-code-tarballs.sh` per-asset-group set.
+- [x] ✅ **[DESIGN] P1. Pre-flight dep-pin scan added to `create-code-tarballs.sh`.**
+      slot-1-main 2026-05-17 04:55 UTC at `deployment-service@e4e37bb`. Scans CORE_REPOS + MERGED_EXTRA_REPOS
+      pyproject.toml for too-high UAC (>0.1.x) / UTL (>0.3.x) pins; surfaces as WARN at tarball-build time so
+      conflicts are caught in seconds instead of failing a VM after ~30 min uv-pip-install timeout. Lighter than
+      full `uv pip compile` (which would need a venv + 30+ s) but covers the 100% mis-floor class. Skip via
+      SKIP_PREFLIGHT=true for CI builds.
 - [x] ✅ **[SCRIPT] P1. Both deprecated wrappers now hard-redirect to consolidated launcher.**
       `launch-features-onchain-backfill-vm.sh` already redirected (pre-existing). `launch-features-backfill-vm.sh`
       hard-redirect shipped at `deployment-service@760d59b` (slot-1-main 2026-05-17 04:35 UTC). Mapping translates
