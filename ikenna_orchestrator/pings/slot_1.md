@@ -1261,3 +1261,21 @@ Next tick: continue monitoring harsh-slot-9 B-015 ack + operator decisions.
 **All operator-gated items unchanged**: Databento spend sign-off / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
 
 Next tick: continue monitoring harsh-slot-9 B-015 ack + operator return.
+
+---
+
+## [slot 1 main] 2026-05-17 ~16:26 UTC — Autonomous loop tick-8: LST rates VM COMPLETE, all gates BLOCKED
+
+**Poll results** (tick 8):
+
+- **LST rates catch-up VM** (mtds-lst-rates-20260517-162106): COMPLETE ✅ — rc=0, EXIT_STATUS=0,
+  DEPLOYMENT_COMPLETED. 128 manifest entries (14 new for 2026-05-17). Multi-chain LST venues written: swell/stader/
+  stakewise/ankr/etherfi/puffer (ETHEREUM) + jito/marinade (SOLANA). VM STOPPING (self-deleting).
+  18-day gap (2026-04-30→2026-05-17) fully filled.
+- `harsh_orchestrator/pings/slot_9.md`: still CYCLE-CLOSE 2026-05-15 — no boot since B-015 ping (>30 min wait).
+- `plans/active/_agent_pings.md`: no new cross-side responses.
+- Remote: commit `23e9389c` (prior wakeup) noted LST VM launch + Phase 6B complete + slot-8 Phase 5 retraction.
+
+**All operator-gated items unchanged**: Databento spend / ICE roots / slot-6 Phase 7.C / tradfi-fwd cron.
+
+Next tick: continue monitoring harsh-slot-9 boot + operator return.
