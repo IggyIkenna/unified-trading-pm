@@ -554,6 +554,24 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-33**: 37 files cleared (slot-2 contribution: -37 files; spans 15 submodules
    incl. engine/modes/batch).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 34 — matching_engine/adversarial)**: adversarial.py shipped at
+   execution-service@55dbbfdff (match_order 119L→36L via \_apply_reject_fills (probabilistic RejectFills gate:
+   rate check + reject MatchResult construction) + \_stamp_latency_inject (event emit + debug log; no sleep in
+   batch mode) + \_scale_by_book_spoof (Decimal scale → effective_quantity; passthrough if absent)). Allowlist
+   -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-34**: 38 files cleared (slot-2 contribution: -38 files; spans 15
+   submodules incl. matching_engine/adversarial).
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 35 — engine/startup)**: order_recovery.py shipped at
+   execution-service@464756a95 (recover_venue 137L→35L via \_reconcile_exchange_orphans (cancel stale orphans
+   with confirm_cancel + ORDER_CANCEL_UNCONFIRMED + re-register recent ones as PENDING) + \_mark_internal_orphans
+   (mark absent internal orders EXCHANGE_REJECTED + ORDER_ORPHANED event) + \_apply_partial_fills (apply
+   exchange filled_qty to internal state)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-35**: 39 files cleared (slot-2 contribution: -39 files; spans 16
+   submodules incl. engine/startup).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
