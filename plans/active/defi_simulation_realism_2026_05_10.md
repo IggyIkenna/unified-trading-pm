@@ -385,10 +385,11 @@ Owner: ikenna for design + harsh for implementation.
 >   shard isolation `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`). **Implementation half remains `- [ ]` for
 >   Harsh slot 4** per cross-side handshake.
 
-- [ ] [AGENT] P0. **4A — Governance capture adapter**. New
+- [x] [AGENT] P0. **4A — Governance capture adapter**. ✅ MTDS@`e81031c` — New
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/governance_adapter.py` capturing
       Aave V3 + Compound V3 + Spark + Lido proposals. Sources: on-chain Governor contract events (Tally indexes, but
-      read directly via subgraph) + Snapshot off-chain proposals API.
+      read directly via subgraph) + Snapshot off-chain proposals API. GovernanceProposalsHandler writes
+      `governance_proposals` data_type rows; 19 unit tests green; QG PASSED.
 - [x] [AGENT] P0. **4B — `GovernanceProposalSimulator`** in execution-service. (execution-service@`9259edb9` — NEW
       `governance/proposal_simulator.py`:
       `simulate_proposal_execution(proposal, fork_block, affected_assets,     tenderly_client)` returns per-asset
@@ -416,8 +417,10 @@ Owner: ikenna for design + harsh for implementation.
       reserve_factor 0.10→0.15 + delta_bps=500.00. basedpyright + ruff clean.) **DEFERRED**: P1 — Phase 4A MTDS proposal
       loader wire-in; Phase 8 expected_pnl_delta_bps + confidence_interval_bps mapping (Phase 8 backtest harness ships
       the carry / leveraged-funding-arb P&L attribution).
-- [ ] [AGENT] P0. **4D — Backfill historical proposals** for the last 2 years across all 4 protocols. Coverage validates
-      that any "what if proposal X passed" can be answered for any historical date.
+- [x] [AGENT] P0. **4D — Backfill historical proposals** for the last 2 years across all 4 protocols. ✅
+      deployment-service@`b682e37` — `launch-governance-backfill-vm.sh` + `governance-backfill-` prefix in
+      VM_PREFIX_TO_BUCKET. To run: `bash deployment-service/scripts/vm/launch-governance-backfill-vm.sh 2024-01-01 2026-05-17`.
+      Coverage validates that any "what if proposal X passed" can be answered for any historical date.
 
 **Full-execution criterion**:
 
