@@ -531,3 +531,21 @@ are supplementary; losing them is non-blocking.
 - **`FEATURE_GROUP_PROCESSING_COMPLETED: status: success, rows: 92716, elapsed_s: 6.71`** ✅
 
 **B-015 paper-trade gate now has BOTH lst_yields + lending_rates** — full carry_staked_basis input is unblocked.
+
+## Defense-in-depth diagnostic — 2026-05-17 ~21:00 UTC (ikenna-slot-2)
+
+Even with the SchemaError fix, the original gap (loader-emits-92k but
+processing-completed-rows=0 with no event in between) revealed a class of
+silent-row-drop bugs that could resurface for OTHER feature_groups. Shipped a
+generic per-iteration trace at `features-service@aaa6b319`:
+
+`_run_daily_feature_loop` now emits `FEATURE_GROUP_DAILY_FLOW_TRACE` per
+(date, feature_group) with `raw_rows` + `features_rows` + `write_ok` +
+closed-set `skip_reason` (`loader_returned_empty` / `calculator_returned_empty`
+/ `write_features_returned_falsy`). Any future feature_group hitting the same
+loader-vs-writer asymmetry will surface in a single event without needing a
+purpose-built diagnostic.
+
+basedpyright clean; touches only `_run_daily_feature_loop` (no business-logic
+change). Cost: 1 extra event per (day, feature_group) iteration → negligible
+PubSub volume vs the diagnostic value when a silent-row-drop happens.
