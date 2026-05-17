@@ -96,8 +96,12 @@ stale tarball IS the cause of my first failed VM today.
       `features-onchain-defi-20260516-235216`. Cross-ref:
       `execution_service_betfairlightweight_requests_dep_conflict_2026_05_16.md`.
 - [ ] [DESIGN] P1. Add `uv pip compile` pre-flight to `create-code-tarballs.sh` per-asset-group set.
-- [ ] [SCRIPT] P1. Hard-redirect or hard-fail the deprecated `launch-features-{onchain,}-backfill-vm.sh` wrappers so
-      they cannot silently use the legacy module + stale tarball.
+- [x] ✅ **[SCRIPT] P1. Both deprecated wrappers now hard-redirect to consolidated launcher.**
+      `launch-features-onchain-backfill-vm.sh` already redirected (pre-existing). `launch-features-backfill-vm.sh`
+      hard-redirect shipped at `deployment-service@760d59b` (slot-1-main 2026-05-17 04:35 UTC). Mapping translates
+      legacy positional dashes → consolidated `--feature-family` underscores; calendar family special-cases to
+      `--asset-group GLOBAL`. Legacy per-family gcloud-create code path left in place only as hard-fail safety net
+      for partial-args callers.
 
 ## Cross-references
 
