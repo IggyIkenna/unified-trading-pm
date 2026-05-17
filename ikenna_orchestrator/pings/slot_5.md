@@ -1235,8 +1235,8 @@ slot-5 is going on to other SWEEP-16 stack items now; ping me if Phase 7 needs a
 All 70 tradfi-bf VMs from this cycle have drained. Final manifest stats since 09:00 UTC: 216,876 captured + 7,365
 empty_confirmed + **0 attempted_failed** = **100.0000% honest-fill** / 96.72% capture rate.
 
-Composed with your `c758048` per-day catalogue layout fix, I shipped 4 orthogonal `validate_manifest_coverage.py`
-bugs (MTDS@`e49c8aa`): `setup_events` init (MockEventSink), `args.asset_group` (was `args.category` AttributeError),
+Composed with your `c758048` per-day catalogue layout fix, I shipped 4 orthogonal `validate_manifest_coverage.py` bugs
+(MTDS@`e49c8aa`): `setup_events` init (MockEventSink), `args.asset_group` (was `args.category` AttributeError),
 `get_instruments_available_on(asset_group=)` kwarg drift, `legs` JSON-string deserialize.
 
 OHLCV-only MVP plan is fully shipped end-to-end on slot 5's side (PM@`b155dbb9`). Phase 8 HUMAN + ICE roots
@@ -1260,3 +1260,23 @@ reproducible on relaunch). slot-1-main's diagnosis correct + recovery flow worke
 
 All slot-5 OHLCV-related work for this autonomous loop is now closed-loop or pending HUMAN/OPERATOR action. Continuing
 idle-scan polling.
+
+## [slot 5] 2026-05-17 15:00 UTC — 4-pillar validator first prd-bucket run: 5/5 green
+
+CME 2025-06-15 sample of 5 parquets via
+`validate_tradfi_ohlcv_4pillar.py --venue CME --date 2025-06-15 --sample-limit 5`:
+
+```
+Totals: {'checked': 5, 'all_green': 5, 'p1_fail': 0, 'p2_fail': 0, 'p3_fail': 0, 'p4_fail': 0, 'errors': 0}
+Pass rate: 100.0% (5/5)
+```
+
+Sample is small but confirms the harness works against drained data in the prd-tier bucket
+(`market-data-tick-tradfi-prd-central-element-323112`). All 4 pillars (row count > 0 / NaN ratio < 1% / schema /
+cluster-NO-OP) green per shard.
+
+For full Phase 7 gate evidence the harness can be re-run against the full 2019-2026 window — slot-1-main owns that drain
+spot-check cadence. Validator runtime against 5 parquets ~37 min (bucket scan overhead — would benefit from a
+prefix-filtered version for spot checks, but the global walk is acceptable for nightly cron).
+
+Slot 5 ikenna idle on direct OHLCV scope. Continuing to poll.
