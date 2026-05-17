@@ -92,29 +92,35 @@ single shard for `trades` / `book_snapshot_5`).
 
 ## 3. TRADFI — per venue × data_type matrix
 
-Expected dates: `VenueMapping.get_expected_trading_dates(venue, start, end)` — **trading days only** (no weekends,
-holidays excluded). Instrument*type axis: equity, futures_chain, options_chain, index. Tick-window rule: `tbbo` /
-`trades` only expected inside tick windows (Databento cost management); outside tick windows only
-`ohlcv*\*`is expected — see`codex/02-data/availability-manifest-and-data-status.md` §`is_in_tradfi_tick_window`.
+**OHLCV-only MVP (operator direction 2026-05-15)** — see
+`plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`. `trades` + `tbbo` (L1/L2 tick data) moved to
+post-cutover; only `ohlcv_1m` (cheap pre-aggregated bars) collected in MVP. `TRADFI_TICK_DATA_WINDOWS = []`
+in UAC (`unified_api_contracts/registry/market_data_categories.py`) — `is_in_tradfi_tick_window()` returns False
+for every date, suppressing every tbbo/trades fetch attempt in MTDS orchestrator.py:3014. Historical windows
+preserved in `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` for post-cutover restoration plan
+(`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`).
 
-| venue  | expected data_types    | notes                                                                                         |
-| ------ | ---------------------- | --------------------------------------------------------------------------------------------- |
-| CBOE   | ohlcv_15m              | Options index — limited subscription                                                          |
-| CME    | ohlcv_1m, tbbo, trades | Full tick window + minute OHLCV; options_chain, futures_chain via instruments-service refresh |
-| FX     | ohlcv_24h              | Daily only (cost envelope)                                                                    |
-| ICE    | ohlcv_1m, tbbo, trades | Same cost model as CME                                                                        |
-| NASDAQ | ohlcv_1m, tbbo, trades | Equity venue                                                                                  |
-| NYSE   | ohlcv_1m, tbbo, trades | Equity venue                                                                                  |
+Expected dates: `VenueMapping.get_expected_trading_dates(venue, start, end)` — **trading days only** (no weekends,
+holidays excluded). Instrument_type axis: equity, futures_chain, options_chain, index.
+
+| venue  | expected data_types | notes                                                                                                          |
+| ------ | ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| CBOE   | ohlcv_15m           | Options index — limited subscription                                                                           |
+| CME    | ohlcv_1m            | Backdated to 2019-01-01 per operator full-period ask; options_chain + futures_chain via instruments-service    |
+| FX     | ohlcv_24h           | Daily only (cost envelope)                                                                                     |
+| ICE    | ohlcv_1m            | Backdated to 2019-01-01 per operator full-period ask                                                           |
+| NASDAQ | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                      |
+| NYSE   | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                      |
 
 ### TRADFI coverage axes
 
-| data_type   | Coverage axis                                         | Expected shards (per trading day)    | `record_empty` expected                                                           |
-| ----------- | ----------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------- |
-| `trades`    | per-venue × per-instrument × daily (tick window only) | venues × active equities / contracts | Yes — outside tick window = `capture_status=empty_confirmed` (expected by design) |
-| `tbbo`      | per-venue × per-instrument × daily (tick window only) | same as `trades`                     | Yes                                                                               |
-| `ohlcv_1m`  | per-venue × per-instrument × daily                    | venues × active equities / contracts | Yes — halted instruments = empty_confirmed                                        |
-| `ohlcv_15m` | per-venue × per-instrument × daily                    | CBOE × options index                 | Yes                                                                               |
-| `ohlcv_24h` | per-venue × per-pair × daily                          | FX × G10 crosses                     | Yes                                                                               |
+| data_type   | Coverage axis                                                | Expected shards (per trading day)    | `record_empty` expected                                                                                       |
+| ----------- | ------------------------------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `trades`    | DEFERRED-post-cutover (was: per-venue × per-instr × daily)   | n/a (suppressed via empty windows)   | n/a — fetch suppressed entirely; existing rows re-classified by Phase 5 phantom-reconcile                     |
+| `tbbo`      | DEFERRED-post-cutover (was: per-venue × per-instr × daily)   | n/a (suppressed via empty windows)   | n/a — same as `trades`                                                                                        |
+| `ohlcv_1m`  | per-venue × per-instrument × daily                           | venues × active equities / contracts | Yes — halted instruments = empty_confirmed                                                                    |
+| `ohlcv_15m` | per-venue × per-instrument × daily                           | CBOE × options index                 | Yes                                                                                                           |
+| `ohlcv_24h` | per-venue × per-pair × daily                                 | FX × G10 crosses                     | Yes                                                                                                           |
 
 ## 4. DEFI — per venue × data_type matrix (venue = `PROTOCOL-CHAIN`)
 
