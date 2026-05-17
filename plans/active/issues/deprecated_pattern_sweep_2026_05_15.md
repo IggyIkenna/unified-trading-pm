@@ -2,6 +2,8 @@
 title: "Workspace-wide deprecated-pattern sweep — type:ignore / noqa / os.getenv / ImportError fallbacks"
 created: 2026-05-15
 author: slot-8
+resolved: 2026-05-17
+resolution: SHIPPED — P1 (batch-live-reconciliation `os.getenv()`) verified clean (docstring only) + P2 (execution-service DeFi protocol `except ImportError` dead fallbacks) shipped `execution-service@de170cc4`. P3+P4 (UTL 126 `# type: ignore` + bare noqa audit) explicit "P3 sprint-aligned" with per-repo team named successors per Recommended decision body.
 source:
   - rg scans across all service/library repos (excluding .venv* / build / tests / scripts)
 locked_by: live-defi-rollout
@@ -113,37 +115,39 @@ Should be preceded by `log_event(..., "FAILED")` per CLAUDE.md lifecycle event r
 
 32 lazy `# type: ignore` suppressions removed, 5 repos with QG green:
 
-| Repo                      | Count | SHA      | Notes                                                |
-| ------------------------- | ----- | -------- | ---------------------------------------------------- |
+| Repo                      | Count | SHA      | Notes                                                 |
+| ------------------------- | ----- | -------- | ----------------------------------------------------- |
 | alerting-service          | 1     | 0718226  | defi_feature_event_handler + governance_forum_watcher |
-| deployment-service        | 11    | 51be710  | ruff post-120 + type:ignore sweep                   |
-| risk-and-exposure-service | 10    | 6d6abd2  | mock_data_provider + backtest_depeg_ladder           |
-| strategy-service          | 7     | 7456dcb  | staked_basis identity, _safe_log_event, batch_utils  |
-| execution-service         | 3     | cde5142f | sports fill_reports — negative→positive check pattern|
+| deployment-service        | 11    | 51be710  | ruff post-120 + type:ignore sweep                     |
+| risk-and-exposure-service | 10    | 6d6abd2  | mock_data_provider + backtest_depeg_ladder            |
+| strategy-service          | 7     | 7456dcb  | staked_basis identity, \_safe_log_event, batch_utils  |
+| execution-service         | 3     | cde5142f | sports fill_reports — negative→positive check pattern |
 
-3+ repos threshold: ✅ (5 repos)  
-50+ threshold: ❌ partial (32/50+) — 3 repos blocked by pre-existing QG failures:
+3+ repos threshold: ✅ (5 repos) 50+ threshold: ❌ partial (32/50+) — 3 repos blocked by pre-existing QG failures:
 
-- pnl-attribution-service: pip-audit CVEs (cryptography 46.0.5, urllib3 2.6.3, python-dotenv 1.2.1, pip 26.0.1) — 1 mock_data_provider no-any-return fix uncommitted
+- pnl-attribution-service: pip-audit CVEs (cryptography 46.0.5, urllib3 2.6.3, python-dotenv 1.2.1, pip 26.0.1) — 1
+  mock_data_provider no-any-return fix uncommitted
 - position-balance-monitor-service: Pydantic/TypedDict schema placement + 10 codex violations — 1 fix uncommitted
 - trading-agent-service: empty-string fallback + local BaseModel + pip-audit — 1 fix uncommitted
 
-Deferred: 50+ threshold requires either pip-audit CVE upgrades workspace-wide OR adding more repos (UTL 126, features-service 107, MTDS 54, deployment-api 16 have remaining opportunities).
+Deferred: 50+ threshold requires either pip-audit CVE upgrades workspace-wide OR adding more repos (UTL 126,
+features-service 107, MTDS 54, deployment-api 16 have remaining opportunities).
 
 ## Recommended decision
 
 **Priority 1 (immediate, P1)**: Fix `os.getenv()` in `batch-live-reconciliation-service/config.py` — this is a core
 config module. Use `UnifiedCloudConfig` instead.
-  - ✅ **VERIFIED CLEAN 2026-05-17 (slot-3)**: only occurrence of `os.getenv` in this file is in the module
-    docstring ("Uses UnifiedCloudConfig (no os.getenv() per workspace standards)") — no actual code use.
+
+- ✅ **VERIFIED CLEAN 2026-05-17 (slot-3)**: only occurrence of `os.getenv` in this file is in the module docstring
+  ("Uses UnifiedCloudConfig (no os.getenv() per workspace standards)") — no actual code use.
 
 **Priority 2 (P2, pre-cutover)**: Fix `except ImportError` in execution-service DeFi protocol modules (`drift.py`,
 `__init__.py`) — these are in the May-23 critical path.
-  - ✅ **SHIPPED 2026-05-17 (slot-3)**: `execution-service@de170cc4` removed dead try/except fallback in
-    `defi_execution/protocols/__init__.py` (drift/jupiter/solana_base imports unconditional now). The fallback was
-    dead-code anyway: drift.py uses lazy `_load_driftpy()` cache + jupiter.py + solana_base.py have no
-    optional-dep imports at module level. `drift.py:54` ImportError is re-raise-with-context (CORRECT pattern,
-    not a fallback — kept).
+
+- ✅ **SHIPPED 2026-05-17 (slot-3)**: `execution-service@de170cc4` removed dead try/except fallback in
+  `defi_execution/protocols/__init__.py` (drift/jupiter/solana_base imports unconditional now). The fallback was
+  dead-code anyway: drift.py uses lazy `_load_driftpy()` cache + jupiter.py + solana_base.py have no optional-dep
+  imports at module level. `drift.py:54` ImportError is re-raise-with-context (CORRECT pattern, not a fallback — kept).
 
 **Priority 3 (P3, sprint-aligned)**: Tackle `# type: ignore` in UTL (126 occurrences) — most are `union-attr` on cloud
 client (can be fixed with proper narrowing) or `import-untyped` for pandas/pyarrow (add type stubs or use
@@ -160,11 +164,11 @@ per-module with QG green gate after each repo.
 
 P1 + P2 immediate items both shipped/verified:
 
-- **P1** (batch-live-reconciliation-service `os.getenv()`) ✅ verified clean 2026-05-17 (slot 3) — sole occurrence is
-  in module docstring, not actual code.
+- **P1** (batch-live-reconciliation-service `os.getenv()`) ✅ verified clean 2026-05-17 (slot 3) — sole occurrence is in
+  module docstring, not actual code.
 - **P2** (execution-service DeFi protocol `except ImportError` fallbacks) ✅ shipped `execution-service@de170cc4`
   2026-05-17 (slot 3) — dead try/except removed from `defi_execution/protocols/__init__.py`.
 
 P3 + P4 (UTL 126 `# type: ignore` + bare `# noqa` audit) are explicit "P3 sprint-aligned" — not immediately actionable
-without per-module work + QG-green gate after each repo. They have named successors (per-repo teams) per the
-recommended decision text. Issue closeable at next archive sweep.
+without per-module work + QG-green gate after each repo. They have named successors (per-repo teams) per the recommended
+decision text. Issue closeable at next archive sweep.
