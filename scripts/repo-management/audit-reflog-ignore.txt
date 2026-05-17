@@ -65,3 +65,7 @@ market-tick-data-service
 
 # Reflog nontrivial reset (e.g. HEAD^) — local dev; not a discard incident 2026-04-20
 unified-trading-system-ui
+
+# Intentional reset from rebase/ff-pull workflow during 2026-05-14/15 multi-agent session
+# All confirmed safe — work was either already on origin/live-defi-rollout or was rebased forward
+execution-service:8c260f681
