@@ -366,7 +366,16 @@ Line-coverage % alone is wrong metric. **Target the surfaces that fail cutover.*
       deploy_script_deps, manifest_writer_emission, custody_wallet, kill_switch_circuit_breakers,
       error_classification, per_archetype_calculators, backtest_strategy_engines, default) each with target_pct +
       rationale + glob_patterns. Phase 8.B consumer (check_coverage_targets.py) follows separately.
-- [ ] [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces.
+- [x] ✅ [AGENT] P0. Per-repo `coverage_targets_local.yaml` pinning each repo's surfaces. — shipped 2026-05-17
+      (slot-8) across 21 service repos: alerting-service@08ffb6a, batch-live-reconciliation-service@f157fb9,
+      client-reporting-api@64594e2, deployment-api@dac2224, deployment-service@6c2c0c0, execution-service@950573e39,
+      features-service@da9497eb, fund-administration-service@e87f9ba, instruments-service@2c7b887,
+      market-data-processing-service@a887313, market-tick-data-service@24e3b80, ml-inference-service@0398bca,
+      ml-training-service@5ca792d, pnl-attribution-service@56e518d, position-balance-monitor-service@1336d4c,
+      risk-and-exposure-service@751b184, strategy-service@5eadc7a, trading-agent-service@093e6f8,
+      unified-api-contracts@26f80ee, unified-trading-api@ab187ab, unified-trading-library@c6358b1a. Generator at
+      `unified-trading-pm/scripts/quality_gates/generate_coverage_targets_local.py` walks coverage_targets.yaml +
+      auto-detects per-repo surface applicability via glob match. Idempotent (refuses to overwrite without --force).
 
 **Phase 8.B — Per-surface coverage push** (7 parallel sub-agents, 3.5 cal-AI-days). Surfaces SPAN repos; spawn per
 surface, not per repo:

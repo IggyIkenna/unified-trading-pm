@@ -35,7 +35,8 @@
     "scripts/quality_gates/snapshot_to_parquet.py",
     "scripts/quality_gates/check_snapshot_staleness.py",
     "scripts/quality_gates/coverage_snapshot_emit.py",
-    "scripts/quality_gates/coverage_snapshot_to_parquet.py"
+    "scripts/quality_gates/coverage_snapshot_to_parquet.py",
+    "scripts/quality_gates/generate_coverage_targets_local.py"
   ],
   "extraPaths": ["../unified-internal-contracts", "../unified-api-contracts"],
   "venvPath": ".",
