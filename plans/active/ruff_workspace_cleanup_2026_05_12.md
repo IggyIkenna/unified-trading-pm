@@ -197,12 +197,9 @@ residual count. Hand-fix is a separate follow-up plan, NOT this one's scope.
 
 ## Follow-up todos (not in this plan's sweep wave)
 
-- [ ] [AGENT] P0. UAC residual lint: 130 non-RUF003 ruff errors remain in `unified-api-contracts` after Cluster A RUF003
-      sweep (2026-05-14 audit). Run `cd unified-api-contracts && ruff check unified_api_contracts/ --fix` scoped to
-      auto-fixable rules; for remainder add targeted `# noqa: <code>` with inline rationale per
-      `codex/06-coding-standards/ruff-discipline.md` substitution table. QG (`bash scripts/quality-gates.sh`) must reach
-      clean ruff exit. Assign to Harsh slot on next cycle once UAC multi-slot activity (Ikenna slots 2+3+6 May-23 push)
-      clears.
+- [x] [AGENT] P0. UAC residual lint: 130 non-RUF003 ruff errors remain in `unified-api-contracts` after Cluster A RUF003
+      sweep (2026-05-14 audit). ✅ `ruff check . → All checks passed!` verified 2026-05-17 (slot-5); QG exits 0. Already
+      fixed by parallel agent prior to this slot's pickup. uac@`2fcb1bb` is current clean head.
 
 ## Cross-references
 

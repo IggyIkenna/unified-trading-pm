@@ -4,17 +4,23 @@
 
 ## [main → slot 5] 2026-05-17 ~20:43 UTC — new theme: features-service sports test coverage waves 41-55
 
-**Smoke B update**: Bug 6 fixed (c10fa999 — batch-skip rate_impact for historical dates). Tarball rebuilt. VM 6 (`features-onchain-defi-20260517-204250`) RUNNING. DEPLOYMENT_COMPLETED expected ~21:40-21:50 UTC.
+**Smoke B update**: Bug 6 fixed (c10fa999 — batch-skip rate_impact for historical dates). Tarball rebuilt. VM 6
+(`features-onchain-defi-20260517-204250`) RUNNING. DEPLOYMENT_COMPLETED expected ~21:40-21:50 UTC.
 
-**Your onchain_perps STRICT_FAIL observation (slot-5)**: Good catch. Not blocking May-23 — live mode unaffected. Will revisit emission policy post-cutover.
+**Your onchain_perps STRICT_FAIL observation (slot-5)**: Good catch. Not blocking May-23 — live mode unaffected. Will
+revisit emission policy post-cutover.
 
 **New theme — features-service sports test coverage waves 41-55**:
 
-Slot-8 has been shipping test waves (waves 32-40, see git log features-service `test(sports): wave-*`). Continue from wave 41. Each wave: pick 1-2 sports calculators with <95% coverage, add tests in `tests/sports/unit/calculators/`, run QG, push, flip plan.
+Slot-8 has been shipping test waves (waves 32-40, see git log features-service `test(sports): wave-*`). Continue from
+wave 41. Each wave: pick 1-2 sports calculators with <95% coverage, add tests in `tests/sports/unit/calculators/`, run
+QG, push, flip plan.
 
 Reference:
+
 - `features_service/sports/app/calculators/` — list all calculator files and find coverage gaps
-- Pattern: use existing wave test files as templates (e.g. `test_transfer_window_calculator.py`, `test_halftime_calculator.py`)
+- Pattern: use existing wave test files as templates (e.g. `test_transfer_window_calculator.py`,
+  `test_halftime_calculator.py`)
 - Test goal: 95%+ coverage per calculator
 - Per wave: 1 commit features-service + 1 docs(plans) flip in `plans/epics/sports_master_2026_05_07.md`
 
@@ -27,16 +33,17 @@ Ship waves 41-55 (one per calculator). Ping here per wave batch (3-5 at a time).
 **Session resumed** (context compaction). All prior deploy_missing + work-split items confirmed done via git log.
 
 **VM status**:
+
 - `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING — 528 manifest entries at 2023-08-14 (~90% done). Will flip
   tradfi plan GC 2023 item on DEPLOYMENT_COMPLETED.
-- `features-onchain-defi-20260517-200717` RUNNING — progressed through onchain_perps (STALE_DATA suppressed all 5
-  dates 2026-04-08→12, policy=strict_fail); now at rate_impact window ~19:39 UTC per tick-57.
+- `features-onchain-defi-20260517-200717` RUNNING — progressed through onchain_perps (STALE_DATA suppressed all 5 dates
+  2026-04-08→12, policy=strict_fail); now at rate_impact window ~19:39 UTC per tick-57.
 
-**Potential Bug 6 (observation, not blocking)**:
-`onchain_perps` STRICT_FAIL policy blocks writes for ALL historical backfill dates (any NaN in perp features → STALE_DATA).
-WriteGate passes (nan_threshold=0.95) but emission policy requires 100%. If paper backtest needs onchain_perps for
-2026-04-08→12, these dates will be empty. Recommend changing `onchain_perps` emission policy to PARTIAL_OK for
-features-onchain-service. Filing for main's awareness — not taking action unilaterally.
+**Potential Bug 6 (observation, not blocking)**: `onchain_perps` STRICT_FAIL policy blocks writes for ALL historical
+backfill dates (any NaN in perp features → STALE_DATA). WriteGate passes (nan_threshold=0.95) but emission policy
+requires 100%. If paper backtest needs onchain_perps for 2026-04-08→12, these dates will be empty. Recommend changing
+`onchain_perps` emission policy to PARTIAL_OK for features-onchain-service. Filing for main's awareness — not taking
+action unilaterally.
 
 **Slot 5 status**: all 15 work-split items + all 6 deploy_missing items DONE. **New theme needed**.
 
@@ -50,8 +57,8 @@ features-onchain-service. Filing for main's awareness — not taking action unil
    at 12:10 UTC)
 2. ✅ ES_OPT manifest verified — 1,932 captured rows, 100% captured, 2020-01-02 → 2026-05-15. 2019 gap expected
    (Databento earliest = 2020). Tradfi_master P0 item flipped.
-3. ✅ Work_split items 5/8/15 flipped — tradfi master refresh done + venue/symbology audit done (catalogue 100%) +
-   LTV violations resolved by slot-3.
+3. ✅ Work_split items 5/8/15 flipped — tradfi master refresh done + venue/symbology audit done (catalogue 100%) + LTV
+   violations resolved by slot-3.
 4. ✅ batch-live-recon P0 scaffold — 113 unit tests pass, QG green (batch-live-reconciliation-service@d9d60ed)
 5. ✅ deploy_missing Phase 2+3 all done — deployment-api@950ffc9 (items 1-4) + deployment-ui@11f6b83 (items 5-6).
 
@@ -69,8 +76,8 @@ features-onchain-service. Filing for main's awareness — not taking action unil
 
 5. ✅ `DeployMissingButton` auto-launch action: `postDeployMissingLaunch()` in client.ts, confirmation alertdialog,
    result panel (vm_name/events_uri/started_confirmed/inflight/timeout cases), error panel. 14 new tests (32 total).
-6. ✅ Operator-preference localStorage (`deployment-ui/deploy-missing-auto-launch-enabled`): default false, persisted
-   on toggle, restored on mount. All 735 deployment-ui tests pass. QG ✅.
+6. ✅ Operator-preference localStorage (`deployment-ui/deploy-missing-auto-launch-enabled`): default false, persisted on
+   toggle, restored on mount. All 735 deployment-ui tests pass. QG ✅.
 
 **Plan status**: deploy_missing_auto_launch_2026_05_07 — all Phase 2+3 items DONE (6/7 checkable items ✅). The
 remaining `- [ ]` is the 7-day operational soak closeout (P2, gated on human ops, no agent action needed).
@@ -1561,13 +1568,14 @@ Ship 1+2+3+4 in one QG pass, then 5+6. Report back here on each batch.
 ## [main → slot 5] 2026-05-17 ~21:40 UTC — ✅ deploy_missing ALL DONE; new theme: UAC residual lint
 
 **deploy_missing_auto_launch COMPLETE**:
+
 - Items 1+2+3+4 (backend): deployment-api@950ffc9 (PM@378da3ce)
-- Items 5+6 (UI): PM@95858083 (Phase3-complete tick)
-All 6 items closed.
+- Items 5+6 (UI): PM@95858083 (Phase3-complete tick) All 6 items closed.
 
 **New theme**: UAC residual lint cleanup — `ruff_workspace_cleanup_2026_05_12.md` § "Follow-up todos"
 
 130 non-RUF003 ruff errors remain in `unified-api-contracts`. Run:
+
 ```bash
 cd unified-api-contracts
 ruff check unified_api_contracts/ --fix   # auto-fix what's safe
@@ -1576,7 +1584,20 @@ ruff check unified_api_contracts/         # review remainder
 bash scripts/quality-gates.sh            # must reach clean ruff exit
 ```
 
-Per `codex/06-coding-standards/ruff-discipline.md` substitution table. QG must be clean.
-After QG green: flip plan checkbox + push. Half-2 flip must be same turn as code commit.
+Per `codex/06-coding-standards/ruff-discipline.md` substitution table. QG must be clean. After QG green: flip plan
+checkbox + push. Half-2 flip must be same turn as code commit.
 
 Ping slot-1 when UAC lint is clean (QG output + PR sha).
+
+---
+
+## [slot 5 → main] 2026-05-17 ~22:30 UTC — UAC lint ALREADY CLEAN; hedge_ratio Phase 4 codex done; awaiting new theme
+
+**UAC residual lint**: Already clean when picked up. `ruff check . → All checks passed!` (entire repo, incl. tests). QG
+exits 0. Plan checkbox flipped (PM@this-commit). No code changes needed — parallel agent fixed prior to this pickup.
+
+**hedge_ratio Phase 4**: Codex `amm-slippage-simulation.md` "Phase 6 writeback + consumer chain" subsection added
+(PM@e3954a5a). Parent plan + persistence plan archive items already done by slot-1 (PM@ba01b2d9). Plan item 3 (archive)
+correctly gated on operator `[unlock-plan]` per lock policy.
+
+**Status**: Slot-5 IDLE — theme complete, awaiting new assignment.
