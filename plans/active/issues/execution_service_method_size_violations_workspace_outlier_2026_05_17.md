@@ -718,6 +718,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-59**: 63 files cleared (slot-2 contribution: -63 files; spans 30 submodules incl.
   cli/backtest).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 60 — instruments/factory_tradfi)**: shipped at execution-service@23ff62896.
+  create_tradfi_from_config 141L→15L via 3 helpers (\_resolve_tradfi_common_params + \_create_equity_instrument +
+  \_create_future_instrument). File not in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-60**: 64 files cleared (slot-2 contribution: -64 files; spans 31 submodules incl.
+  instruments/factory_tradfi).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
