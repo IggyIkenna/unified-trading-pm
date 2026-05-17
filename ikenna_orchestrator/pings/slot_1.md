@@ -1624,7 +1624,7 @@ Next tick (270s): check EXIT_STATUS again; if DEPLOYMENT_COMPLETED → ping _age
 
 ---
 
-## [slot 1 main] 2026-05-17 ~17:49 UTC — Autonomous loop tick-23: slot-6 5-item sweep ✅ + slot-7 64/377 + Smoke B 24k events
+## [slot 1 main] 2026-05-17 ~17:49 UTC — Autonomous loop tick-23 (parallel): slot-6 5-item sweep ✅ + slot-7 64/377 + Smoke B 24k events
 
 **New LDR commits since tick-22**:
 - `2652f679` — slot-6 items 3+6 flipped: audit_records plan archived ✅ + custody KMS/DeFi alert-codes done ✅
@@ -1633,32 +1633,31 @@ Next tick (270s): check EXIT_STATUS again; if DEPLOYMENT_COMPLETED → ping _age
 **Slot-6 status** (items 3/4/6/7/8 all done this session):
 - Phase 7.C (manifest schema migration fleet) — operator-gated, NOT started, GCS snapshot from 7.B is safety net
 - DAI IRM (`aave-lending-rate-val-`) VM status unknown — slot-6 unresponsive to 3 pings; escalated in ping file
-- No new slot-6 response; monitoring
 
 **Slot-7 Phase B** (execution-service method-size refactor):
 - Tick-26: E501 lint sweep + test harness proxy fixes (`execution-service@19d6af0d1`), 316 remaining
-- Tick-27: +3 methods cleared (ResultSerializer.generate_run_id, MultiLegOrchestrator._submit_leg_with_timeout, DeribitOrdersMixin._parse_order_response) → `execution-service@cec3ee56f`, 313 remaining, **64/377 total**
-- 100/377 milestone flip deferred: not yet reached (313 remaining of 377)
+- Tick-27: +3 methods cleared → `execution-service@cec3ee56f`, 313 remaining, **64/377 total**
 
 **Smoke B** (`features-onchain-defi-20260517-171908`):
-- VM status: RUNNING (confirmed `gcloud` 17:44 UTC)
-- Event count: 24,151 files @ hour=16, latest timestamp `2026-05-17T16:44:42 UTC`
-- No STOPPED/DEPLOYMENT_COMPLETED event yet; scan returned 0 non-heartbeat events in last 20 files
-- Will notify harsh-side on `_agent_pings.md` when COMPLETED fires
+- VM RUNNING (confirmed 17:44 UTC). 24,151 files @ hour=16, latest 16:44:42 UTC.
 
-**Slot-4**: acknowledged at tick-10 (131/187 allowlist baseline, ~30% cleared). Working on tick-11+, no new self-report since ack.
+**Operator queue** (7 items): Databento RT key / DeFi MTDS backfill / OHLCV spend / ICE roots / Phase 7.C / TradFi-fwd cron / Smoke B → paper backtest on completion.
 
-**Slot-8**: OHLCV-only refocus dispatched 08:35 UTC (Phase 5 — TradFi phantom re-classify). No self-report yet.
+---
 
-**Inventory**: 482 cal AI-days / 52% done / 69 plans (updated this tick).
+## [slot 1 main] 2026-05-17 ~16:46 UTC — Autonomous loop tick-24: Smoke B still RUNNING, 29,455 events
 
-**Operator action queue** (unchanged):
-1. ❌ Databento RT key (slot-3) — Real-Time streaming tier upgrade
-2. ❌ DeFi MTDS backfill approval — Pyth Solana + Chainlink EVM + DEX-perp multi-year scope
-3. ❌ Databento OHLCV spend sign-off (~$50-200)
-4. ❌ ICE roots pick (Brent/Gasoil/Sugar)
-5. ❌ manifest_schema_final_gate Phase 7.C [HUMAN+AGENT]
-6. ❌ TradFi-fwd cron (Option 1 Cloud Run vs Option 2 Cron-VM)
-7. 🟡 Smoke B VM RUNNING — harsh-side ping in _agent_pings.md on DEPLOYMENT_COMPLETED
+**Smoke B VM status** (`features-onchain-defi-20260517-171908`):
+- STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
+- Event stream: **29,455 events** in hour=16 (up from 26,041 at tick-23, +3,414 in ~2 min = ~1,700 events/min).
+  VM actively computing — throughput confirmed healthy.
+- run.log: 133 lines, last entry 16:23 "Processing: utilization". Log buffered locally; event stream is live signal.
+- Utilization phase elapsed: ~23 min (started 16:23 UTC). Multi-chain Aave V3 scan (many pools × 5 dates).
 
-Next tick: Smoke B completion check + slot-5 pvl-p23b endpoint report + slot-4/7/8 self-reports.
+**Remote**: 2 new slot commits (slot-2 batch-48 + slot-7 tick-27 Phase B). OddsApi BLOCKED-CREDENTIALS (intra-slot).
+
+**No new harsh pings** — slot-9 still CYCLE-CLOSE.
+
+**Operator queue** (6 items — unchanged).
+
+Next tick: EXIT_STATUS check + event count; if DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
