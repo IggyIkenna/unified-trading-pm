@@ -2,6 +2,24 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~23:10 UTC — Phase B batch 1 done (9 violations cleared); switching to sports waves
+
+**Phase B batch 1 shipped** (`execution-service@c187bff06`):
+
+Cleared 9 method-size violations in algorithms/impl/ by extracting private helpers:
+
+- `vwap_execution.py:on_order` 160L→45L (4 helpers)
+- `adaptive_twap.py:on_order` 126L→87L, `_on_slice_timer` 104L→50L
+- `almgren_chriss.py:on_order` 167L→89L, `_on_slice` 112L→70L
+- `passive_aggressive_execution.py:on_order` 173L→75L (3 helpers)
+- `hybrid_optimal_spawn.py:_spawn_hybrid_child_fresh` 158L→80L
+- `pov_dynamic.py:_on_pov_slice` 113L→40L
+- `vwap_core.py:_get_market_price` 110L→30L
+
+**Now switching to new theme**: features-service sports test coverage waves 41-55. Starting wave 41 now.
+
+---
+
 ## [main → slot 5] 2026-05-17 ~20:43 UTC — new theme: features-service sports test coverage waves 41-55
 
 **Smoke B update**: Bug 6 fixed (c10fa999 — batch-skip rate_impact for historical dates). Tarball rebuilt. VM 6
@@ -1611,14 +1629,18 @@ correctly gated on operator `[unlock-plan]` per lock policy.
 **New theme**: execution-service method-size Phase B — `algorithms/` + `data/loaders/` subdirectories.
 
 These directories contain the workspace's largest violation methods:
+
 - 436L `execution_service/data/loaders/tick_data.py:TickDataLoader.load_trades`
 - 428L `execution_service/data/loader.py:UCSDataLoader.load_trades`
 - 299L `execution_service/algorithms/impl/twap.py:TWAPExecAlgorithm.on_order`
 - Similar large methods in `algorithms/impl/vwap.py`, `algorithms/impl/pov.py`
 
-**Do NOT overlap with slot-2** (working docstring-trim sweep in defi_arbitrage files) or **slot-7** (if still running, was at 110/377 on smaller violations 51-60L bucket). Your target: methods ≥100L in `algorithms/` and `data/loaders/` only.
+**Do NOT overlap with slot-2** (working docstring-trim sweep in defi_arbitrage files) or **slot-7** (if still running,
+was at 110/377 on smaller violations 51-60L bucket). Your target: methods ≥100L in `algorithms/` and `data/loaders/`
+only.
 
 **Approach**:
+
 ```bash
 cd execution-service
 # Find your target violations:
@@ -1642,7 +1664,7 @@ for root, _, files in os.walk('execution_service'):
 
 **Strategy**: Extract large methods into `_helper_method()` submethods. Keep behavior identical. Add no new logic.
 
-**QG**: `cd execution-service && bash scripts/quality-gates.sh` (must pass).
-**Half-1+Half-2**: code commit + `docs(plans):` flip in same turn. Per-file batches, 3-5 files per commit.
+**QG**: `cd execution-service && bash scripts/quality-gates.sh` (must pass). **Half-1+Half-2**: code commit +
+`docs(plans):` flip in same turn. Per-file batches, 3-5 files per commit.
 
 Ping slot-1 when first batch shipped (SHA + violation count cleared). Next milestone: reduce by ≥20 violations.
