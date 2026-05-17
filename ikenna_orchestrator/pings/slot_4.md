@@ -1026,3 +1026,49 @@ the sustainable pace. Slot 2 continues handler/algo space; slot 7 still on Phase
 Scheduled next wake-up tick 10 for ~25 min.
 
 ---
+
+## [slot 4 → main] 2026-05-17 ~14:15 UTC — WAKE-UP TICK 10 — method-size batch 9 (5 more ships)
+
+Continued the execution-service method-size sprint. Slot 2 shipped yield_recon reconcile_lst_yield this window
+(@52f1facea). Slot 7 continues Phase B (tick 23: 56/377). Slot 4 batch 9 (5 ships this tick):
+
+| File                                         | Method                                     | Before → After | Helpers                                                                                                         |
+| -------------------------------------------- | ------------------------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `defi_execution/helpers/perp_hedge_sizer.py` | `PerpHedgeSizer.compute_rebalance`         | 66L → 30L      | `_build_rebalance` (@staticmethod)                                                                              |
+| `trade_execution/adapters/bitget_native.py`  | `BitgetNativeAdapter.parse_order_response` | 67L → 29L      | `_map_bitget_status` + `_parse_decimal_or_zero` + `_parse_positive_decimal` (all @staticmethod)                 |
+| `defi_execution/protocols/bridge.py`         | `SocketBridgeConnector.get_bridge_quotes`  | 67L → 37L      | `_build_bridge_route`                                                                                           |
+| `venues/deribit_websocket.py`                | `DeribitWebSocketMixin._websocket_handler` | 66L → 32L      | `_dispatch_ws_message` (async)                                                                                  |
+| `config/grid_generator_models.py`            | `GridConfig.to_dict`                       | 68L → 9L       | `_apply_strategy_fields` + `_apply_execution_block` + `_strip_strategy_exec_algorithm` + `_build_grid_metadata` |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- Batch 4: router + defi_data_loader + position_tracker + orphan_monitor + backtest/engine/execution (5 files)
+- Batch 5: matchbook + uniswap + hyperliquid + circuit_breaker + okx_native (5 files)
+- Batch 6: defi_adapter + dex_fill_model + progress_display + cost_aggregator + api_football (5 files)
+- Batch 7: schema_validator + jito_bundle + confirmation_poller + sor_dex + bybit_native + venue_cascade_monitor (6
+  files)
+- Batch 8: dust_quote_sources + unity/sidecar + adaptive_twap + engine/live/positions + tradfi/vwap (5 files)
+- Batch 9: perp_hedge_sizer + bitget_native + bridge + deribit_websocket + grid_generator_models (5 files)
+- **Total: 40 files cleared by slot 4** (allowlist 136 → 131 this tick — slot 4 contribution this loop: -40 cumulative)
+
+Commits this tick: execution-service@33f08b30d, @e7d429adb, @f58a3be10, @f698b4550, @20e86dd98. Plan flip in single
+batched commit follows.
+
+**Per-method behavior preservation** verified: rebalance NOOP-inside-band-vs-action-outside logic +
+DEFI_CROSS_VENUE_DELTA_DRIFT log_event ordering, Bitget data envelope unwrap (data field vs raw fallback)
+
+- status map (new/live/partial_fill/full_fill/cancelled/cancel) + Decimal parse + positive-avg-price filter, Socket
+  /quote results iteration with post-loop best-output + fastest tagging via max/min lambda, WS recv-loop
+  TimeoutError→ping ConnectionClosed→break with reconnect backoff in finally block, grid-config strategy-id parsing +
+  timeframe-suffix-to-seconds derivation + execution[instruction_type] + grid_metadata lineage dict.
+
+**Workspace progress this loop**: started at allowlist 187, now 131 (~30% cleared). Sustainable pace remains 5 ships per
+~25-min tick. Slot 7's Phase B sprint independently has reached 56/377 (tick 23). Combined workspace clearance
+approaching ~50% of original baseline.
+
+Scheduled next wake-up tick 11 for ~25 min.
+
+---

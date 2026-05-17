@@ -238,8 +238,25 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
      loop, adaptive-twap factor computation + min(base\*factor, qty) selection, position venue_positions + venue_types
      dict updates + PnL fallback derive, VWAP normalised-weights distribution + final-slice rounding catch-up.
 
-   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8**: 36 files cleared (187→136 baseline-equivalent; slot 4
-   contribution: -36 files; allowlist now 136). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168,
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 9)** — 5 additional files cleared at
+   execution-service@33f08b30d (defi_execution/helpers/perp_hedge_sizer.py compute_rebalance 66L→30L, +1 @staticmethod
+   helper \_build_rebalance consolidates both NOOP + SHORT/COVER RebalanceInstruction constructions), @e7d429adb
+   (trade_execution/adapters/bitget_native.py parse_order_response 67L→29L, +3 @staticmethod helpers
+   \_map_bitget_status + \_parse_decimal_or_zero + \_parse_positive_decimal; mirrors okx_native + bybit_native
+   parse-helper pattern across all 3 CEX adapters), @f58a3be10 (defi_execution/protocols/bridge.py get_bridge_quotes
+   67L→37L, +1 helper \_build_bridge_route pulls single-route construction out of the for-loop body), @f698b4550
+   (venues/deribit_websocket.py \_websocket_handler 66L→32L, +1 helper \_dispatch_ws_message pulls
+   subscription/heartbeat/response routing out of the recv loop), @20e86dd98 (config/grid_generator_models.py to_dict
+   68L→9L, +4 helpers \_apply_strategy_fields + \_apply_execution_block + \_strip_strategy_exec_algorithm
+   @staticmethod + \_build_grid_metadata; aggressive config-builder decomposition). Allowlist 136 → 131 files. AST clean
+   per file. Per-method behavior preservation: rebalance NOOP-vs-band logic + DEFI_CROSS_VENUE_DELTA_DRIFT emit
+   ordering, Bitget data envelope unwrap + status map (6 keys)
+   - Decimal parse + positive-avg-price filter, Socket /quote results iteration with best-output + fastest tagging
+     post-loop, WS recv-loop with TimeoutError ping + ConnectionClosed break + reconnect backoff in finally, grid-config
+     strategy-id parsing + timeframe→seconds derivation + execution[instruction_type] + grid_metadata lineage.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6+7+8+9**: 41 files cleared (187→131 baseline-equivalent; slot 4
+   contribution: -41 files; allowlist now 131). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168,
    -19 from baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
    execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
    \_check_flash_loan_liquidity (REJECTED-or-proceed gate) + \_record_flash_borrow (track + return) +
