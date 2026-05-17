@@ -865,8 +865,8 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
       (slot-8). Singleton-locked per source-bucket-hash; auto-deletes on completion via
       `VM_SHUTDOWN_ON_COMPLETION=true`; `--source-bucket` + `--dest-bucket` + `--workers N` (default 8) +
       `--prefix-filter <pattern>` + `--dry-run` + `--force` (bypass lock). Uses `e2-standard-4` + 50GB boot +
-      `gcloud storage rsync --recursive`. `bucket-rsync-` prefix registered in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`.
-      Help via `bash launch-bucket-rsync-vm.sh --help`.
+      `gcloud storage rsync --recursive`. `bucket-rsync-` prefix registered in
+      `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`. Help via `bash launch-bucket-rsync-vm.sh --help`.
 - [x] ✅ [SCRIPT] P0. **gap-2.6.B** — `unified-trading-pm/scripts/migration/verify_flat_to_env_tiered_drift.py` shipped
       2026-05-16 (slot-8). Computes object count + total bytes via `gcloud storage du` / `aws s3 ls --summarize`;
       samples N random parquets (default 100, seedable) for size round-trip parity; configurable `--max-drift` (default
@@ -875,21 +875,20 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 - [x] ✅ [SCRIPT] P0. **gap-2.6.C** — `unified-trading-pm/scripts/migration/verify_env_tiered_buckets_provisioned.py`
       shipped 2026-05-16 (slot-8). Parses `deployment-service/configs/cloud-providers.yaml` SSOT; enumerates 64 GCP
       buckets (per-AG × kind) for env=prd; per-bucket existence via `gcloud storage buckets describe` /
-      `aws s3api head-bucket`. `--print-provision-commands` prints `gcloud storage buckets create` for any missing.
-      Exit 0 on all-exist, 1 on missing, 2 on yaml/IO error. `--dry-run` enumerates without checking.
+      `aws s3api head-bucket`. `--print-provision-commands` prints `gcloud storage buckets create` for any missing. Exit
+      0 on all-exist, 1 on missing, 2 on yaml/IO error. `--dry-run` enumerates without checking.
 - [x] ✅ [SCRIPT] P1. **gap-2.6.D** — `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registration of `bucket-rsync-`
       prefix shipped 2026-05-16 (slot-8) at `deployment-service@d92806b` lines 812-815. Workspace-wide env-tier
-      re-pointing of existing prefixes still bundled into Step 2.6.4 PR (cannot land pre-migration without breaking
-      the watchdog). Registration half ✅; rename half blocked-on Phase 2.6 physical migration.
-- [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave
-      gating protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
+      re-pointing of existing prefixes still bundled into Step 2.6.4 PR (cannot land pre-migration without breaking the
+      watchdog). Registration half ✅; rename half blocked-on Phase 2.6 physical migration.
+- [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
+      protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
       `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
       per-wave operator-runnable pre-checks + action steps + GO/NO-GO criteria + rollback decision tree + post-cutover
       Step 2.6.5 archive flow + plan-flip closeout. Compliant with Runbook Execution-Owner SSOT (passes
       `check_runbook_execution_owner.py`). Bundled foreign-runbook hygiene fix for
       `codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
-      rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3
-      Day-3/4 if time permits.
+      rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
 
 ##### Carry-forward + dependencies
 
@@ -957,8 +956,14 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
       Kraken / Deribit / Hyperliquid / Aster + others per `cefi_master_2026_05_07` Phase 1A). Per-VM shard isolation
       enforced (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`). Watch event-stream per CLAUDE.md "No fire-and-forget
       VM launches" HARD RULE.
-- [ ] [SCRIPT] P0. **MTDS-3.2.B** — Relaunch TradFi backfill VMs (Databento — ES.OPT 11-cluster + futures-chains + ETFs
-      per `tradfi_master_2026_05_07` Phase 1).
+- [x] ✅ **[SCRIPT] P0. MTDS-3.2.B SHIPPED 2026-05-17 slot 5** — TradFi backfill VMs relaunched per
+      `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 (OHLCV-only MVP scope per operator direction
+      2026-05-15). **63 tradfi-bf VMs launched** spanning CME (futures 6 roots × 8 years + ES.OPT 11-cluster × 8
+      years) + NASDAQ (293 tickers × 4 years 2023-04-15+) + NYSE (258 tickers × 4 years 2023-04-15+). Captured 214,586
+      rows today / 7,365 empty_confirmed (honest absence) / **0 attempted_failed → 100% honest-fill rate / 98.4% capture
+      rate**. 4-pillar sample validation 18/18 green. Launchers at `deployment-service@faa7970` + `--bucket` validator
+      override at `market-tick-data-service@f1621c0`. ICE held pending operator decision on roots
+      (`tradfi-bf-ice-ohlcv-1m.sh` scaffolding shipped, `ICE_ROOTS=()`).
 - [ ] [SCRIPT] P0. **MTDS-3.2.C** — Relaunch DeFi backfill VMs (Pyth Solana + Chainlink EVM oracle prices + DEX-perp
       forward-poll Hyperliquid/Aster + Lighter/Pacifica/Extended replay per `defi_master_2026_05_07` Phase 9).
 - [ ] [SCRIPT] P0. **MTDS-3.2.D** — Relaunch Sports backfill VMs (af / fs / sfi / us per `sports_master_2026_05_07`
