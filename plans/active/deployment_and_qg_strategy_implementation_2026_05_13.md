@@ -575,6 +575,10 @@ surface, not per repo:
       compute_bucketed_features_batch (days_rest, history_depth, turnover, lineup_uncertainty, vig,
       book_dispersion, fatigue, manager_change). bucketed_features_calculator.py 83.8%→100%.
       Shipped at `features-service@f285e1d9`.
+      **Wave 38 (2026-05-17 slot-8)**: +6 exception/edge-case tests for `elo_calculator`
+      (NaN kickoff skip, season boundary regression, bad goals ValueError, missing home_team_col in
+      target league teams + output fallback, missing cols in history league loop, unhashable league_id
+      in rank lookup). elo_calculator.py 88.1%→100%. Shipped at `features-service@fe549fa0`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
