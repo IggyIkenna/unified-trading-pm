@@ -900,3 +900,42 @@ Scheduled next wake-up tick 7 for ~25 min. Will continue picking small-overflow 
 operator override.
 
 ---
+
+## [slot 4 → main] 2026-05-17 ~13:00 UTC — WAKE-UP TICK 7 — method-size batch 6 (5 more ships)
+
+Continued the execution-service method-size sprint. Slot 4 batch 6 (5 ships this tick):
+
+| File                                                      | Method                                                                                    | Before → After          | Helpers                                                               |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------- |
+| `adapters/defi_adapter.py`                                | `DefiAdapter._simulate_transaction`                                                       | 62L → 18L               | `_post_tenderly_simulate` + `_emit_simulation_revert` (@staticmethod) |
+| `engine/backtest/fill_models/dex_fill_model.py`           | `DexFillModel.simulate_fill`                                                              | 62L → 27L               | `_fill_error` (@staticmethod)                                         |
+| `engine/backtest/progress_display.py`                     | `ProgressDisplay._extract_instruction_legs`                                               | 62L → 12L               | `_as_dict` + `_algo_for_type` + `_legs_for_role` (all @staticmethod)  |
+| `matching_engine/defi/cost_aggregator.py`                 | `DefiCostAggregator.estimate_recursive_loop_cost` (+ `build_defi_fill_context` docstring) | 64L → 31L (+ 55L → 15L) | `_resolve_slippage_bps` (@staticmethod)                               |
+| `sports_execution/adapters/bookmaker_api/api_football.py` | `ApiFootballAdapter.get_odds` + `get_fixtures_with_odds`                                  | 64L+60L → 26L+25L       | `_emit_venue_error_events` (@staticmethod, shared)                    |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- Batch 4: router + defi_data_loader + position_tracker + orphan_monitor + backtest/engine/execution (5 files)
+- Batch 5: matchbook + uniswap + hyperliquid + circuit_breaker + okx_native (5 files)
+- Batch 6: defi_adapter + dex_fill_model + progress_display + cost_aggregator + api_football (5 files)
+- **Total: 24 files cleared by slot 4** (allowlist 152 → 147 this tick — slot 4 contribution this loop: -24 cumulative)
+
+Commits this tick: execution-service@fa5ac4ed8, @9e3a0995a, @fe562cb92, @3aa989008, @51d85a8ba. Plan flip follows as
+combined commit. All Half-1 per shippable unit; Half-2 batched.
+
+**Per-method behavior preservation** verified: Tenderly POST shape (jsonrpc/method/params/id) + 15s timeout + HTTPError
+path returns True (proceed) vs revert path emits + returns False, fill-result dict schema preserved through
+@staticmethod consolidator, config primary+secondary role iteration with venue-prefix parse, gas-action
+FLASH_OPEN/SUPPLY + flash-provider AAVE_V3/NONE switching, ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED dual-emit
+with classify_venue_error + raw_code fallback to type(exc).**name**.
+
+**Pattern observation** (tick 7): 5 ships in ~25 min sustainable. Pool of single-method 51-65L files still has
+candidates (matchbook/uniswap/hyperliquid done — remaining concentrate in engine/backtest, algorithms/impl,
+defi_execution/protocols, sports_execution/adapters). Will continue.
+
+Scheduled next wake-up tick 8 for ~25 min.
+
+---

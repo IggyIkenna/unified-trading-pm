@@ -188,8 +188,23 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    routing, slippage check + balance update order, oid tracking on both filled+resting paths, under-lock ordering for
    state transitions, OKX status map fallback to 'pending').
 
-   **Slot-4 cumulative across batches 1+2+3+4+5**: 20 files cleared (187→152 baseline-equivalent; slot 4 contribution:
-   -20 files; allowlist now 152). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 6)** — 5 additional files cleared at
+   execution-service@fa5ac4ed8 (adapters/defi_adapter.py \_simulate_transaction 62L→18L, +2 helpers
+   \_post_tenderly_simulate + \_emit_simulation_revert @staticmethod), @9e3a0995a
+   (engine/backtest/fill_models/dex_fill_model.py simulate_fill 62L→27L, +1 helper \_fill_error @staticmethod
+   consolidates 3 error-return dicts), @fe562cb92 (engine/backtest/progress_display.py \_extract_instruction_legs
+   62L→12L, +3 helpers \_as_dict + \_algo_for_type + \_legs_for_role all @staticmethod), @3aa989008
+   (matching_engine/defi/cost_aggregator.py estimate_recursive_loop_cost 64L→31L, +1 helper \_resolve_slippage_bps
+   @staticmethod for 3-tier slippage pick; build_defi_fill_context 55L→15L via docstring trim only), @51d85a8ba
+   (sports_execution/adapters/bookmaker_api/api_football.py get_odds + get_fixtures_with_odds 64L+60L → 26L+25L, +1
+   shared @staticmethod helper \_emit_venue_error_events parametrised on endpoint + extra_details). Allowlist 152 → 147
+   files. AST clean per file. Per-method behavior preservation: Tenderly POST shape (jsonrpc/method/params/id) + 15s
+   timeout, fill-result dict schema (success/amount_out/execution_price/ slippage_bps/error), config narrowing per
+   primary+secondary role, gas-action FLASH_OPEN/SUPPLY mapping + flash-provider AAVE_V3/NONE switch,
+   ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED dual-emit with classify_venue_error.
+
+   **Slot-4 cumulative across batches 1+2+3+4+5+6**: 25 files cleared (187→147 baseline-equivalent; slot 4 contribution:
+   -25 files; allowlist now 147). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from
    baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
    execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
    \_check_flash_loan_liquidity (REJECTED-or-proceed gate) + \_record_flash_borrow (track + return) +
