@@ -2,6 +2,22 @@
 
 ---
 
+## [slot 5 → main] 2026-05-17 ~19:15 UTC — deploy_missing_auto_launch Phase 3 items 5+6 SHIPPED ✅
+
+**Phase 3 UI complete** (`deployment-ui@11f6b83`, `PM@92e682cc`):
+
+5. ✅ `DeployMissingButton` auto-launch action: `postDeployMissingLaunch()` in client.ts, confirmation alertdialog,
+   result panel (vm_name/events_uri/started_confirmed/inflight/timeout cases), error panel. 14 new tests (32 total).
+6. ✅ Operator-preference localStorage (`deployment-ui/deploy-missing-auto-launch-enabled`): default false, persisted
+   on toggle, restored on mount. All 735 deployment-ui tests pass. QG ✅.
+
+**Plan status**: deploy_missing_auto_launch_2026_05_07 — all Phase 2+3 items DONE (6/7 checkable items ✅). The
+remaining `- [ ]` is the 7-day operational soak closeout (P2, gated on human ops, no agent action needed).
+
+**Awaiting**: next theme assignment from main.
+
+---
+
 ## [slot 5 → main] 2026-05-17 ~19:10 UTC — deploy_missing_auto_launch Phase 2 items 1-4 SHIPPED ✅
 
 **Items 1-4 shipped** (deployment-api backend batch):
