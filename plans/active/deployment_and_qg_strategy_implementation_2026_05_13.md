@@ -654,6 +654,14 @@ surface, not per repo:
       _team_form_cards_corners red_cards 286-287; _team_form_rest_congestion empty-dates 307) +
       venue_context 96.0%→+% (capacity_col 178-179; rest_col 244; cumulative_travel 252).
       Shipped `features-service@2ca9f7c0`.
+      **Wave 58 (2026-05-17 slot-8)**: travel_calculator 96.3%→+% (_get_team_home_venue_coords
+      venue_counts.empty 82; _compute_cumulative_travel NaN-venue 131, unknown-venue 135,
+      NaN-lat-lon 140; line 303 confirmed dead code) + transfer_window_calculator 97.1%→+%
+      (_compute_squad_stability no-player-id 200; _most_recent_window_close passthrough 215;
+      _shock_starter_turnover_stability no-starters xi_sets<2 452; non-numeric fixture_id
+      629-630; lines 404, 642 confirmed dead code) + odds_prob_space line 221 confirmed
+      dead code (NaN bookmaker crashes classify_bookmaker upstream).
+      Shipped `features-service@16ee1b46`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
