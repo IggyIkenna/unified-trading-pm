@@ -555,80 +555,85 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    incl. engine/modes/batch).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 34 — matching_engine/adversarial)**: adversarial.py shipped at
-   execution-service@55dbbfdff (match_order 119L→36L via \_apply_reject_fills (probabilistic RejectFills gate:
-   rate check + reject MatchResult construction) + \_stamp_latency_inject (event emit + debug log; no sleep in
-   batch mode) + \_scale_by_book_spoof (Decimal scale → effective_quantity; passthrough if absent)). Allowlist
-   -1. basedpyright clean.
+   execution-service@55dbbfdff (match_order 119L→36L via \_apply_reject_fills (probabilistic RejectFills gate: rate
+   check + reject MatchResult construction) + \_stamp_latency_inject (event emit + debug log; no sleep in batch mode) +
+   \_scale_by_book_spoof (Decimal scale → effective_quantity; passthrough if absent)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-34**: 38 files cleared (slot-2 contribution: -38 files; spans 15
-   submodules incl. matching_engine/adversarial).
+   **Slot-2 cumulative across batches 3-34**: 38 files cleared (slot-2 contribution: -38 files; spans 15 submodules
+   incl. matching_engine/adversarial).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 35 — engine/startup)**: order_recovery.py shipped at
-   execution-service@464756a95 (recover_venue 137L→35L via \_reconcile_exchange_orphans (cancel stale orphans
-   with confirm_cancel + ORDER_CANCEL_UNCONFIRMED + re-register recent ones as PENDING) + \_mark_internal_orphans
-   (mark absent internal orders EXCHANGE_REJECTED + ORDER_ORPHANED event) + \_apply_partial_fills (apply
-   exchange filled_qty to internal state)). Allowlist -1. basedpyright clean.
+   execution-service@464756a95 (recover_venue 137L→35L via \_reconcile_exchange_orphans (cancel stale orphans with
+   confirm_cancel + ORDER_CANCEL_UNCONFIRMED + re-register recent ones as PENDING) + \_mark_internal_orphans (mark
+   absent internal orders EXCHANGE_REJECTED + ORDER_ORPHANED event) + \_apply_partial_fills (apply exchange filled_qty
+   to internal state)). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-35**: 39 files cleared (slot-2 contribution: -39 files; spans 16
-   submodules incl. engine/startup).
+   **Slot-2 cumulative across batches 3-35**: 39 files cleared (slot-2 contribution: -39 files; spans 16 submodules
+   incl. engine/startup).
 
    **Ratchet-down 2026-05-17 (slot-2 batch 36 — engine/validation/configuration_validator)**: shipped at
    execution-service@373215cee (check_execution_algorithms 140L→33L via \_validate_trade_algorithm +
-   \_validate_swap_algorithm + \_validate_other_algorithms; same 3-block split for TRADE / SWAP / other
-   instruction types). Allowlist -1. basedpyright clean.
+   \_validate_swap_algorithm + \_validate_other_algorithms; same 3-block split for TRADE / SWAP / other instruction
+   types). Allowlist -1. basedpyright clean.
 
    **Ratchet-down 2026-05-17 (slot-2 batch 37 — engine/validation/config_validator)**: shipped at
-   execution-service@34c09fa36 (check_execution_algorithms 143L→33L via same 3-helper extraction pattern as
-   batch 36 — this is the PreflightConfigValidator counterpart of ConfigurationValidator). Allowlist -1.
-   basedpyright clean.
+   execution-service@34c09fa36 (check_execution_algorithms 143L→33L via same 3-helper extraction pattern as batch 36 —
+   this is the PreflightConfigValidator counterpart of ConfigurationValidator). Allowlist -1. basedpyright clean.
 
    **Ratchet-down 2026-05-17 (slot-2 batch 38 — engine/backtest/actors/tp_sl_monitor_actor)**: shipped at
-   execution-service@e1847b3eb (_check_tp_sl 139L→36L via _emit_tp_hit + _emit_sl_hit helpers parameterized by
+   execution-service@e1847b3eb (\_check_tp_sl 139L→36L via \_emit_tp_hit + \_emit_sl_hit helpers parameterized by
    direction; LONG/SHORT mirror-symmetric blocks unified into two helpers). Allowlist -1. basedpyright clean.
 
    **Ratchet-down 2026-05-17 (slot-2 batch 39 — engine/backtest/actors/evaluator)**: shipped at
-   execution-service@769303f22 (evaluate_performance 144L→49L via _extract_config_params + _resolve_account +
-   _get_final_balance + _apply_commission_fallback + _build_result_dict; also promoted `from typing import cast`
-   from inside-function to module level). Allowlist -1. basedpyright clean.
+   execution-service@769303f22 (evaluate_performance 144L→49L via \_extract_config_params + \_resolve_account +
+   \_get_final_balance + \_apply_commission_fallback + \_build_result_dict; also promoted `from typing import cast` from
+   inside-function to module level). Allowlist -1. basedpyright clean.
 
    **Ratchet-down 2026-05-17 (slot-2 batch 40 — engine/backtest/actors/signal_driven_v3_base)**: shipped at
-   execution-service@7f5f93c28 (__init__ 146L→8L via _parse_instructions + _init_timing_config + _init_state +
-   _init_trade_config + _init_actors; fee bps conversion inlined). Allowlist -1. basedpyright clean.
+   execution-service@7f5f93c28 (**init** 146L→8L via \_parse_instructions + \_init_timing_config + \_init_state +
+   \_init_trade_config + \_init_actors; fee bps conversion inlined). Allowlist -1. basedpyright clean.
 
-   **Ratchet-down 2026-05-17 (slot-2 batch 41 — engine/live/orchestrator)**: shipped at
-   execution-service@3313ce6e6 (execute_order 147L→29L via _make_rejection + _validate_order +
-   _check_circuit_breaker + _report_compliance_pre_order + _submit_to_oms). Allowlist -1. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-2 batch 41 — engine/live/orchestrator)**: shipped at execution-service@3313ce6e6
+   (execute_order 147L→29L via \_make_rejection + \_validate_order + \_check_circuit_breaker +
+   \_report_compliance_pre_order + \_submit_to_oms). Allowlist -1. basedpyright clean.
 
    **Ratchet-down 2026-05-17 (slot-2 batch 42 — algorithms/impl/passive_aggressive_spawn)**: shipped at
-   execution-service@aa0153aa7 (_start_aggressive_phase 152L→20L via _compute_aggressive_slice_params +
-   _record_aggressive_child + _try_spawn_first_slice_immediately + _schedule_aggressive_slices).
-   Allowlist -1. basedpyright clean.
-
-   **Ratchet-down 2026-05-17 (slot-2 batch 43 — defi_execution/protocols/solana_base)**: shipped at
-   execution-service@15052b068 (send_transaction 153L→34L via _paper_trade_result + _sign_and_send_tx +
-   _extract_tx_error_status + _build_tx_result). Allowlist -1. basedpyright clean.
-
-   **Ratchet-down 2026-05-17 (slot-2 batch 44 — algorithms/impl/hybrid_optimal)**: shipped at
-   execution-service@362c35974 (on_order 163L→16L via _detect_and_log_regime + _compute_ac_schedule +
-   _build_valid_amounts + _schedule_children). Allowlist -1. basedpyright clean.
-
-   **Ratchet-down 2026-05-17 (slot-2 batch 45 — instruments/factory)**: shipped at
-   execution-service@c4063b597 (create_and_register 178L→23L via _extract_instrument_id_from_config +
-   _check_existing_in_catalog + _find_gcs_definition + _apply_gcs_or_fallback). Allowlist -1. basedpyright clean.
-
-   **Ratchet-down 2026-05-17 (slot-2 batch 46 — engine/backtest/preflight)**: shipped at
-   execution-service@f9ebdf995 (check_all 201L→35L via _run_step1_config_schema +
-   _run_steps2to5_validators + _run_steps6to8_data_checks + _run_steps9to10_compat_checks). Allowlist -1.
+   execution-service@aa0153aa7 (\_start_aggressive_phase 152L→20L via \_compute_aggressive_slice_params +
+   \_record_aggressive_child + \_try_spawn_first_slice_immediately + \_schedule_aggressive_slices). Allowlist -1.
    basedpyright clean.
 
-   **Ratchet-down 2026-05-17 (slot-2 batch 47 — instruments/config_creator)**: shipped at
-   execution-service@051b21a16 (create_from_config 205L→15L via _create_from_config_tradfi +
-   _create_from_config_defi_instruction + _create_from_config_cefi_defi_clob + _build_crypto_perpetual).
-   Allowlist -1. basedpyright clean.
+   **Ratchet-down 2026-05-17 (slot-2 batch 43 — defi_execution/protocols/solana_base)**: shipped at
+   execution-service@15052b068 (send_transaction 153L→34L via \_paper_trade_result + \_sign_and_send_tx +
+   \_extract_tx_error_status + \_build_tx_result). Allowlist -1. basedpyright clean.
 
-   **Slot-2 cumulative across batches 3-47**: 51 files cleared (slot-2 contribution: -51 files; spans 18
-   submodules incl. engine/validation ×2, engine/backtest ×1, engine/backtest/actors ×3, engine/live ×1,
-   algorithms/impl ×2, defi_execution/protocols ×8, instruments ×3 total).
+   **Ratchet-down 2026-05-17 (slot-2 batch 44 — algorithms/impl/hybrid_optimal)**: shipped at
+   execution-service@362c35974 (on_order 163L→16L via \_detect_and_log_regime + \_compute_ac_schedule +
+   \_build_valid_amounts + \_schedule_children). Allowlist -1. basedpyright clean.
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 45 — instruments/factory)**: shipped at execution-service@c4063b597
+   (create_and_register 178L→23L via \_extract_instrument_id_from_config + \_check_existing_in_catalog +
+   \_find_gcs_definition + \_apply_gcs_or_fallback). Allowlist -1. basedpyright clean.
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 46 — engine/backtest/preflight)**: shipped at execution-service@f9ebdf995
+   (check_all 201L→35L via \_run_step1_config_schema + \_run_steps2to5_validators + \_run_steps6to8_data_checks +
+   \_run_steps9to10_compat_checks). Allowlist -1. basedpyright clean.
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 47 — instruments/config_creator)**: shipped at execution-service@051b21a16
+   (create_from_config 205L→15L via \_create_from_config_tradfi + \_create_from_config_defi_instruction +
+   \_create_from_config_cefi_defi_clob + \_build_crypto_perpetual). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-47**: 51 files cleared (slot-2 contribution: -51 files; spans 18 submodules
+   incl. engine/validation ×2, engine/backtest ×1, engine/backtest/actors ×3, engine/live ×1, algorithms/impl ×2,
+   defi_execution/protocols ×8, instruments ×3 total).
+
+   **Ratchet-down 2026-05-17 (slot-2 batch 48 — data/config_builder)**: shipped at execution-service@6bbce4ddf
+   (build_trades_config 228L→44L via \_run_cache_setup + \_load_missing_data + \_validate_price_scale instance methods +
+   7 module-level helpers (\_get_base_path, \_discover_local_trade_files, \_resolve_instrument_precision,
+   \_resolve_domain_info, \_execute_gcs_load, \_execute_local_load, \_build_backtest_data_configs)). Allowlist -1.
+   basedpyright 0 errors. AST clean.
+
+   **Slot-2 cumulative across batches 3-48**: 52 files cleared (slot-2 contribution: -52 files; spans 19 submodules
+   incl. data/config_builder).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
