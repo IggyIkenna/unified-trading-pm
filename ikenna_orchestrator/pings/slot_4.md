@@ -860,3 +860,43 @@ Scheduled next wake-up tick 6 for ~25 min. Will continue picking small-overflow 
 operator override.
 
 ---
+
+## [slot 4 → main] 2026-05-17 ~12:35 UTC — WAKE-UP TICK 6 — method-size batch 5 (5 more ships)
+
+Continued the execution-service method-size sprint. Slot 2 shipped 2 more this window (solver_auction + pov_dynamic
+single-method refactors, files still in allowlist with other overflows remaining). Slot 4 batch 5 (5 ships this tick):
+
+| File                                               | Method                                      | Before → After | Helpers                                                                             |
+| -------------------------------------------------- | ------------------------------------------- | -------------- | ----------------------------------------------------------------------------------- |
+| `sports_execution/adapters/exchanges/matchbook.py` | `MatchbookAdapter.get_odds`                 | 59L → 25L      | `_handle_venue_error` (NoReturn)                                                    |
+| `venues/uniswap.py`                                | `UniswapConnector.swap_exact_output`        | 60L → 21L      | `_compute_exact_output_input`                                                       |
+| `defi_execution/protocols/hyperliquid.py`          | `HyperliquidProtocol._parse_order_response` | 61L → 18L      | `_build_filled_order_result` + `_build_resting_order_result`                        |
+| `engine/circuit_breaker.py`                        | `_VenueCircuitBreaker.record_failure`       | 62L → 14L      | `_emit_unknown_venue_event` + `_advance_state_on_failure`                           |
+| `trade_execution/adapters/okx_native.py`           | `OKXNativeAdapter.parse_order_response`     | 62L → 28L      | `_map_okx_status` + `_parse_decimal_field` + `_parse_avg_price` (all @staticmethod) |
+
+**Cumulative across slot 4 method-size pickup (this autonomous loop)**:
+
+- Batch 1: auth + tradfi-twap + claim_reward_handler (3 files)
+- Batch 2: eth_balance_tracker + kalshi-exchange (2 files)
+- Batch 3: swap_twap + rpc_fallback + custom_instruments + unity/bridge (4 files)
+- Batch 4: router + defi_data_loader + position_tracker + orphan_monitor + backtest/engine/execution (5 files)
+- Batch 5: matchbook + uniswap + hyperliquid + circuit_breaker + okx_native (5 files)
+- **Total: 19 files cleared by slot 4** (allowlist 159 → 152 this tick — slot 4 contribution this loop: -19 cumulative)
+
+Commits this tick: execution-service@f23410569, @dbd23c48d, @24ee89c99, @a3b11ac36, @1687c5091. Plan flip: PM@<next-sha>
+(single batched flip commit follows). All Half-1 per shippable unit; Half-2 batched as 1 plan update at tick end to
+avoid per-commit prettier churn on the 200+ line issue doc.
+
+**Per-method behavior preservation** verified: matchbook venue-error classification + 2 UEI emits + raise chain, Uniswap
+reverse-quote math (price ratio + fee + price-impact bps), HL filled/resting status-map + oid tracking, circuit_breaker
+rate-based DEGRADED/OPEN transitions under self.\_lock, OKX state-map + Decimal-parse + avg-price positive-only filter.
+AST clean per file.
+
+**Cross-slot tally observation**: at allowlist 152 with slot 2 still working in handler/algorithm space + slot 7 still
+on Phase B (per their tick 20: 48/377), and slot 4 contributing 19 files this loop, the workspace has now cleared
+roughly 35-40 files from the 187-baseline (~20%) in the autonomous-loop session. Productive pattern.
+
+Scheduled next wake-up tick 7 for ~25 min. Will continue picking small-overflow (55-65L) files until pool dries or
+operator override.
+
+---

@@ -173,14 +173,29 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    execution-service@367b6d0f3 (engine/backtest/engine/execution.py \_execute_backtest 56L→33L, +2 helpers
    \_log_backtest_inputs + \_validate_backtest_results @staticmethod). Allowlist 160 → 159 files. AST clean.
 
-   **Slot-4 cumulative across batches 1+2+3+4**: 15 files cleared (187→159 baseline-equivalent, -15 contributed).
-   **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from baseline). **Ratchet-down 2026-05-17
-   (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at execution-service@5d1f40c71
-   (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers \_check_flash_loan_liquidity (REJECTED-or-proceed
-   gate) + \_record_flash_borrow (track + return) + \_settle_flash_repay (clear + fee calc)), @1dde42821
-   (engine/handlers/sell_reward_handler.py execute 81L→47L, +1 helper \_match_sell — venue-conditional CEX L2_MBP MARKET
-   vs DEX ALPHA_ZERO LIMIT switch). Allowlist 168 → 166 files. basedpyright clean. Same per-method behavior
-   preservation.
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 5)** — 5 additional files cleared at
+   execution-service@f23410569 (sports_execution/adapters/exchanges/matchbook.py get_odds 59L→25L, +1 helper
+   \_handle_venue_error NoReturn — pulls classify_venue_error + ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED +
+   BookmakerUnavailableError raise path into typed helper), @dbd23c48d (venues/uniswap.py swap_exact_output 60L→21L, +1
+   helper \_compute_exact_output_input — pulls reverse-quote math: price ratio + fee + price-impact bps), @24ee89c99
+   (defi_execution/protocols/hyperliquid.py \_parse_order_response 61L→18L, +2 helpers \_build_filled_order_result +
+   \_build_resting_order_result — both track oid in \_live_orders), @a3b11ac36 (engine/circuit_breaker.py record_failure
+   62L→14L, +2 helpers \_emit_unknown_venue_event + \_advance_state_on_failure — rate-based DEGRADED/OPEN transitions
+   preserved), @1687c5091 (trade_execution/adapters/okx_native.py parse_order_response 62L→28L, +3 @staticmethod helpers
+   \_map_okx_status + \_parse_decimal_field + \_parse_avg_price). Allowlist 157 → 152 files (note: slot 2's
+   solver_auction + pov_dynamic refactors landed in this window but those files still have other 50+L methods so remain
+   in allowlist). AST clean per file. basedpyright clean. Per-method semantics preserved (CanonicalError isinstance
+   routing, slippage check + balance update order, oid tracking on both filled+resting paths, under-lock ordering for
+   state transitions, OKX status map fallback to 'pending').
+
+   **Slot-4 cumulative across batches 1+2+3+4+5**: 20 files cleared (187→152 baseline-equivalent; slot 4 contribution:
+   -20 files; allowlist now 152). **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from
+   baseline). **Ratchet-down 2026-05-17 (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at
+   execution-service@5d1f40c71 (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers
+   \_check_flash_loan_liquidity (REJECTED-or-proceed gate) + \_record_flash_borrow (track + return) +
+   \_settle_flash_repay (clear + fee calc)), @1dde42821 (engine/handlers/sell_reward_handler.py execute 81L→47L, +1
+   helper \_match_sell — venue-conditional CEX L2_MBP MARKET vs DEX ALPHA_ZERO LIMIT switch). Allowlist 168 → 166 files.
+   basedpyright clean. Same per-method behavior preservation.
 
    **Slot-2 cumulative across batches 3+4+5+6**: 10 files cleared (187→166, -21 from baseline). All
    engine/handlers/{borrow,lend,stake,swap,sports,trade,transfer,flash_loan,sell_reward}\_handler.py are now
