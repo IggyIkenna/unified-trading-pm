@@ -169,7 +169,11 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
      (venue-scoring weights + LIMIT/MARKET fee selection, LOCF risk-param fallback chain, position counter + entry-state
      init, ORDER_ORPHANED UEI + cancel-confirm retry semantics).
 
-   **Slot-4 cumulative across batches 1+2+3+4**: 14 files cleared (187→160 baseline-equivalent, -14 contributed).
+   **Ratchet-down 2026-05-17 (slot-4 cross-slot pickup, batch 4 continuation)** — 1 additional file cleared at
+   execution-service@367b6d0f3 (engine/backtest/engine/execution.py \_execute_backtest 56L→33L, +2 helpers
+   \_log_backtest_inputs + \_validate_backtest_results @staticmethod). Allowlist 160 → 159 files. AST clean.
+
+   **Slot-4 cumulative across batches 1+2+3+4**: 15 files cleared (187→159 baseline-equivalent, -15 contributed).
    **Slot-2 cumulative across batches 3+4+5**: 8 files cleared (187→168, -19 from baseline). **Ratchet-down 2026-05-17
    (slot-2 cross-slot pickup, batch 6)** — additional 2 files cleared at execution-service@5d1f40c71
    (engine/handlers/flash_loan_handler.py execute 79L→33L, +3 helpers \_check_flash_loan_liquidity (REJECTED-or-proceed
