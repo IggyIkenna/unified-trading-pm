@@ -426,6 +426,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-23**: 27 files cleared (slot-2 contribution: -27 files; 10 handlers + 8
    defi protocols + 5 services + 1 preprocessor + 1 service_config + 1 algo_library + 1 CEX adapter).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 24 — algo_library sweep)**: multicall_batcher.py shipped at
+   execution-service@d89f09ba8 (encode_step_to_call 74L→20L via 6 per-step-type module-level \_encode\_* helpers:
+   \_encode_approve (ERC20 selector + spender padded 32B + uint256 amount), \_encode_swap (Uniswap
+   exactInputSingle), \_encode_supply_or_repay (Aave V3 pool), \_encode_wrap (WETH.deposit value-carry),
+   \_encode_unwrap (WETH.withdraw + amount uint256)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3-24**: 28 files cleared (slot-2 contribution: -28 files; 10 handlers + 8
+   defi protocols + 5 services + 1 preprocessor + 1 service_config + 2 algo_library + 1 CEX adapter).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
