@@ -297,6 +297,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3+4+5+6+7+8+9**: 13 files cleared (slot-2 contribution: -13 files; 10 handlers
    + 3 defi protocols).
 
+   **Ratchet-down 2026-05-17 (slot-2 batch 10 — defi_execution/protocols sweep continues)**: raydium.py shipped at
+   execution-service@0f2c38fd8 (get_pool_info 61L→9L via \_fetch_pool_payload + \_build_pool_info_from_payload
+   parse-helper split; add_liquidity 96L→34L, remove_liquidity 76L→21L via same orca-pattern helper set
+   (\_submit_clmm_ix + \_simulated_tx_result + per-op paper/log helpers)). Allowlist -1. basedpyright clean.
+
+   **Slot-2 cumulative across batches 3+4+5+6+7+8+9+10**: 14 files cleared (slot-2 contribution: -14 files; 10
+   handlers + 4 defi protocols).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
