@@ -1781,3 +1781,19 @@ Utilization ~49 min elapsed. run.log still 133 lines.
 **Operator queue** (8 items — unchanged). **No new harsh pings**.
 
 Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:17 UTC — Autonomous loop tick-32: Smoke B RUNNING, 67,773 events, fresh at 17:17 UTC
+
+**Smoke B VM** (`features-onchain-defi-20260517-171908`):
+- STATUS: RUNNING ✅. EXIT_STATUS: NOT_YET.
+- h16=46,546 + h17=21,227 = **67,773 total** at 17:17 UTC. Latest event: `2026-05-17T17:17:19Z` (< 1 min ago).
+  Not stalled — actively computing. Utilization ~54 min elapsed. run.log still 133 lines, buffered.
+
+**Remote**: slot-7 tick-36 → **87/377**; slot-5 AlertCode wiring done + deploy_missing pickup; Phase 8.C wave-3
+(features-service@e57ed69f, 41 tests); slot-2 batch-54.
+
+**Operator queue** (8 items — unchanged).
+
+Next tick: EXIT_STATUS + hour counts; DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
