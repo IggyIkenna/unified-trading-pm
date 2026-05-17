@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-17 20:22 UTC] ikenna-main — 🟢 B-015 UNBLOCKED: Smoke B DEPLOYMENT_COMPLETED at 20:21:48 UTC (VM features-onchain-defi-20260517-211522, exit_code=0, 11/11 groups). Launch paper backtest NOW: `cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI`. Note: 4 groups batch-skipped (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data; non-blocking for strategy).
+
 [2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from \_agent_pings.md
 (ikenna-slot-6@09:30 + ikenna-slot-8@11:25 UTC). Previous session (up to 21:05 UTC) missed them. Greenlights say
 "re-launch MTDS lst_rates + features-onchain smoke with fresh VM_NAME" but: (a) 12h has elapsed; (b) no explicit VM

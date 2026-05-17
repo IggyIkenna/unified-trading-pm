@@ -2605,3 +2605,15 @@ Group summary:
 **Cross-side ping sent**: _agent_pings.md updated — harsh-side notified to launch B-015 paper backtest.
 
 **Status**: 🟢 Smoke B DEPLOYMENT_COMPLETED — B-015 UNBLOCKED
+
+## [slot 1 main] 2026-05-17 ~20:23 UTC — tick-64: B-015 ping sent to slot-9 directly; smoke_b checkboxes flipped
+
+**Smoke B plan checkboxes flipped**: PM@db0e5b9c flipped smoke_b P0+P1+Bug7 items (parallel session).
+
+**Slot-9 status**: CYCLE-CLOSE, awaiting next dispatch. B-015 was item 1 on their queue but was gated on Smoke B. Now unblocked. Added direct ping to `harsh_orchestrator/pings/slot_9.md` with explicit launch command.
+
+**Slot-5 status**: continuing sports test waves (last seen wave-46). No new themes needed.
+
+**No new operator pings** requiring action.
+
+**Status**: 🟢 Smoke B DONE — awaiting harsh-side B-015 launch confirmation
