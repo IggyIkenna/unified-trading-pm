@@ -218,13 +218,14 @@ highest on the 99%-repos identified in Phase 4.
 
 ### Phase 3 — Tarball SHA pinning + manifest discipline (1 cal-AI-day)
 
-- [ ] [AGENT] P0. **Update `deployment-service/scripts/vm/create-code-tarballs.sh`** — name tarballs
+- [x] ✅ [AGENT] P0. **Update `deployment-service/scripts/vm/create-code-tarballs.sh`** — name tarballs
       `<repo>@<commit-sha>.tar.gz`; write sibling `<repo>@<commit-sha>.manifest.json` containing
       `{repo, commit_sha, pyproject_version, git_status_clean, created_at, created_by}`. Refuses to upload if
-      `git status` is dirty (override flag `--allow-dirty-tarball` with audit log).
-- [ ] [AGENT] P0. **Update VM launcher scripts** at `deployment-service/scripts/vm/` — at boot, read manifest.json
+      `git status` is dirty (override flag `--allow-dirty-tarball` with audit log). — deployment-service@2f6b8b5
+- [x] ✅ [AGENT] P0. **Update VM launcher scripts** at `deployment-service/scripts/vm/` — at boot, read manifest.json
       sibling of the tarball; assert `commit_sha` matches expected; fail loud on drift via UAC `ManifestShaDriftError`
-      (NEW in `unified_api_contracts.canonical.crosscutting.deployment.errors`).
+      (NEW in `unified_api_contracts.canonical.crosscutting.deployment.errors`). — deployment-service@2f6b8b5
+      (setup-data-pipeline-vm.sh: post-download manifest fetch + ManifestShaDriftError on VM_EXPECTED_SHA_* mismatch)
 - [ ] [AGENT] P0. **Async image-build trigger** — tarball write fires `cloud-build` on same commit-sha. Wired in
       `create-code-tarballs.sh` POST upload step. So when promoting dev→staging, image already exists.
 
