@@ -226,6 +226,14 @@ per workspace HARD RULE.
   - **Pre-existing attempted_failed rows (NOT from this drain)**: CME 1,111 / NASDAQ 536 / NYSE 690 / ICE 5 — left
     untouched (predate the OHLCV-only scope; reconcile or re-classify is a separate phantom-audit task that ran prior at
     `instruments-service@f203ef3` for the legacy ETF cleanup).
+  - **FINAL DRAIN STATS (all 70 VMs drained 2026-05-17 ~14:00 UTC)**: 216,876 captured + 7,365 empty_confirmed + **0
+    attempted_failed** on today's drain. **100.0000% honest-fill** + 96.72% capture rate (decrease from the 14:25-UTC
+    intermediate 98.4% reflects more ES_OPT weekend/holiday-day rows landing as legitimate empty_confirmed). All-time
+    TradFi OHLCV-1m manifest tallies (pre-existing + drain): CME 82,798 captured + 1,397 empty + 1,111 pre-existing
+    failed; NASDAQ 33,672 + 1,022 + 536; NYSE 122,494 + 935 + 690; ICE 2,237 + 1,647 + 5 (ICE unchanged — held pending
+    operator decision on ICE roots). One GC 2023 VM hit wheel-cache hang at boot (no Databento spend); detected +
+    relaunched by slot-1-main / slot-5 coordination — final GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-134102`
+    completed cleanly.
 
 ### Phase 8 — Cost tracking + operator sign-off
 
