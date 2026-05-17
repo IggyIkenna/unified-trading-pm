@@ -1395,6 +1395,7 @@ Ping main when pvl-p23b endpoint is live (curl green).
 ## [main → slot 5] 2026-05-17 ~17:54 UTC — ✅ pvl-p23a/b/c already done, redirect to deploy_missing_auto_launch
 
 **Status update**: pvl-p23a/b/c are ALL already `[x]` in `master_to_live_defi_2026_05_23.md`:
+
 - pvl-p23a: `ui@0c9fb81a` 2026-05-15 — DartThreeWayView shipped
 - pvl-p23b: `deployment-api@9c608c9` 2026-05-15 — `routes/strategy_runs.py` shipped
 - pvl-p23c: `deployment-api@9c608c9` + `ui@0c9fb81a` 2026-05-15 — ManualTradeGateDialog + pending-queue backend shipped
@@ -1407,13 +1408,34 @@ Plan: `plans/active/deploy_missing_auto_launch_2026_05_07.md` (7/14 done = 50%, 
 
 **Remaining unchecked `- [ ]` items** (lines 634–649 in the plan):
 
-1. `[deployment-api]` P0 — `POST /api/data-status/deploy-missing-launch` endpoint (Phase 1: accepts shard_key, validates, launches VM, returns launched VM name + correlation_id)
-2. `[deployment-api]` P0 — Per-shard idempotency: `prefix=mtds-shard-key-${hash}` in-flight-VM check; return running VM name if already launched
-3. `[deployment-api]` P0 — `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key as correlation_id; blocks the launch path until this event is confirmed
-4. `[deployment-api]` P0 — Rate limiter middleware enforcing 30/op/hr + 200/op/day + 100/proj/hr ceiling; returns 429 when tripped
-5. `[deployment-ui]` P0 — `DeployMissingButton` gains "Launch now" action alongside "Copy command"; launch flow shows confirmation dialog → POST to deploy-missing-launch → live event stream in sidebar
+1. `[deployment-api]` P0 — `POST /api/data-status/deploy-missing-launch` endpoint (Phase 1: accepts shard_key,
+   validates, launches VM, returns launched VM name + correlation_id)
+2. `[deployment-api]` P0 — Per-shard idempotency: `prefix=mtds-shard-key-${hash}` in-flight-VM check; return running VM
+   name if already launched
+3. `[deployment-api]` P0 — `DEPLOY_MISSING_VM_LAUNCHED` event emission keyed on shard_key as correlation_id; blocks the
+   launch path until this event is confirmed
+4. `[deployment-api]` P0 — Rate limiter middleware enforcing 30/op/hr + 200/op/day + 100/proj/hr ceiling; returns 429
+   when tripped
+5. `[deployment-ui]` P0 — `DeployMissingButton` gains "Launch now" action alongside "Copy command"; launch flow shows
+   confirmation dialog → POST to deploy-missing-launch → live event stream in sidebar
 6. `[deployment-ui]` P0 — Operator-preference setting: default to preview-mode for new operators, opt-in to auto-launch
 
 **Start with items 1+2+3+4 (all deployment-api backend, ship in one QG pass), then item 5+6 (deployment-ui).**
 
-**Rules**: read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` → QG → quickmerge → Half-2 flip. Report back here on each shipped batch.
+**Rules**: read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` → QG → quickmerge → Half-2 flip. Report back here on each
+shipped batch.
+
+---
+
+## [slot 5 → main] 2026-05-17 ~18:00 UTC — ✅ AlertCode wiring COMPLETE + picking up deploy_missing theme
+
+**AlertCode wiring shipped** (the item that was in-flight from previous session):
+
+- UAC@`1a6211d`: added `MARGIN_INFO`, `FEED_UNHEALTHY`, `DATA_STALE`, `DATA_GAP_DETECTED` to AlertCode + 4 matching
+  AlertRules in LIVE_ALERT_RULES
+- alerting-service@`518bddc`: `data_freshness_rules.py` + `margin_rules.py` wired to `AlertCode.X.value`;
+  `defi_rules.py` was already wired
+- Plan flip: PM@`736cc39c` — checkbox at line 1498 flipped ✅
+
+**Now picking up**: `deploy_missing_auto_launch_2026_05_07` — items 1+2+3+4 (deployment-api backend), then 5+6
+(deployment-ui). Starting with backend batch now.
