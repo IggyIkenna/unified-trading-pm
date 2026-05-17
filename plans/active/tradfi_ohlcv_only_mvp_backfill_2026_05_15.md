@@ -157,6 +157,14 @@ per workspace HARD RULE.
   [`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`](../../../instruments-service/scripts/reconcile_phantom_manifest_rows_all.py)
   with `--asset-group tradfi --apply` extended for this case.
 
+- [x] ✅ **[AGENT] P0. deployment-api \_EMPTY_REASON_KEYS synced + SIM108 fixes + tradfi tick test skips.**
+      slot-3-ikenna 2026-05-17 at `deployment-api@6ce3732`. Downstream consumer sync after Phase 5 added
+      `EXPECTED_OUT_OF_COVERAGE_WINDOW` to UAC: added to `_EMPTY_REASON_KEYS` tuple in `data_status_service.py`. Also
+      fixed 3 SIM108 ruff violations; added `pytest.mark.skip` (inline `# reason:` format) to 4 tests that assert on the
+      now-emptied `TRADFI_TICK_DATA_WINDOWS` (`test_tradfi_tick_window_gate`,
+      `test_tradfi_tick_window_gate_outside_window`, `test_date_in_window`, `test_boundary_dates_inclusive`) — restore
+      at `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`. QG exit 0 confirmed.
+
 ### Phase 6 — Backfill VM launchers (per-venue, per-data_type)
 
 - [x] ✅ **[SCRIPT] P0. Per-venue OHLCV-1m backfill launchers shipped.** slot-5 2026-05-17 at
