@@ -651,3 +651,18 @@ Wave-2 (130 tests, 4 delta_one calculators) landed at `features-service@e9a2ee2c
 **Wave-3 confirmed**: sports.calculators (67.2% coverage gap) + calendar/cross_instrument gaps. Continue. Report back with commit SHA + coverage delta after wave-3 ships.
 
 **Note**: the OHLCV Phase 5 dispatch from 08:35 UTC is fully retracted (as you acknowledged). Wave-3 is the correct active work.
+
+---
+
+## [main → slot 8] 2026-05-17 ~19:35 UTC — ✅ Waves 18-26 batch-acked (PM flips confirmed)
+
+PM plan flips confirmed for waves 18-26 (sports calculators):
+- Wave 18 — steam_detector (34 tests) — features-service@2a189c73
+- Wave 19 — relative_context_calculator (24 tests) — features-service@61c385db
+- Wave 20 — poisson_xg_calculator (29 tests) — features-service@298374a4
+- Wave 21 — team_xg (25 tests) — features-service@26ea2cac
+- Waves 22-23 — replacement_model + xg_decomposition (33+43 tests) — features-service@f7cf28bf+@6e73340e
+- Waves 24-25 — squad_value + weather (from @501cf218)
+- Wave 26 — venue_context (27 tests, from @33f7cd0b)
+
+Excellent velocity. Continue sports calculator waves. Next milestone ack when wave-30+ lands.

@@ -70,7 +70,12 @@ trace showed `do_wait` in kernel — waiting for a child process that never exit
 - [x] ✅ [AGENT] P0. Bug 2 investigation — utilization subprocess stall root cause + timeout guard — slot-6 owns —
       features-service@30e449d7 (root cause: synchronous PubSub log_event per-row on 134k rows; fix: cap
       emit_aave_utilization_events at \_MAX_UTILIZATION_EVENTS=500; GCS async write fix at 64682456 from parallel agent)
-- [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after Bug 1+2 fix — VM
-      `features-onchain-defi-20260517-191412` RUNNING (launched 2026-05-17 19:14 UTC; v1 was stale-tarball — killed
-      and relaunched after tarball rebuild with fixes @30e449d7+@64682456)
+- [x] ✅ [AGENT] P0. Bug 3 (startup NameError) — `Callable` import inside `TYPE_CHECKING` block evaluated at runtime
+      in `cast(Callable[..., object], fn)` — features-service@818d8ecc (slot-8; moved to unconditional import).
+      Caused VMs `192145` + `192529` to DEPLOYMENT_FAILED (exit_code=1, 17s). Tarball rebuilt to include fix at
+      `2026-05-17T18:30:09Z`.
+- [x] ✅ [AGENT] P0. Smoke B re-run (2026-04-08→2026-04-12) after all 3 bugs fixed — VM
+      `features-onchain-defi-20260517-193018` RUNNING (launched 2026-05-17 18:30 UTC; all 3 bugs confirmed in tarball
+      @30e449d7+@64682456+@818d8ecc; log confirms `lending_rates` ✅ `lst_yields` ✅ `onchain_perps` started cleanly
+      with no Int64 error — Bug 1 confirmed fixed in production. Awaiting `utilization` + DEPLOYMENT_COMPLETED.)
 - [ ] [AGENT] P1. Harsh-side paper backtest launch blocked on Smoke B passing — pending Smoke B re-run

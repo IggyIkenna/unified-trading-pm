@@ -2270,3 +2270,27 @@ Monitor: `gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-
 **harsh-slot-9**: CYCLE-CLOSE. Will notify when 193018 → DEPLOYMENT_COMPLETED.
 
 **Next**: check back in 270s for utilization completion (Bug 2 validation) or DEPLOYMENT_COMPLETED.
+
+---
+
+## [slot 1 main] 2026-05-17 ~19:35 UTC — tick-52: Smoke B VM 193018 confirmed clean; pings batch-acked
+
+**Smoke B VM `193018` — status RUNNING, all 3 bugs confirmed in tarball**:
+- Bug 1 (perp_funding Int64 cast): ✅ `onchain_perps` started at 18:33:42 UTC with NO Int64 error — `Loaded 11835 derivative ticker rows` (cast is working).
+- Bug 2 (utilization stall): ⏳ PENDING — awaiting `utilization` processing block to complete without stall.
+- Bug 3 (_shim.py NameError): ✅ VM started and ran past startup without crash — `818d8ecc` fix confirmed in tarball.
+- `lending_rates` ✅ wrote 134k/116k/116k/101k/90k rows for 04-08/09/10/11/12.
+- `lst_yields` ✅ wrote 13/13/13/15/15 rows for all 5 dates.
+- `onchain_perps` started at 18:33:42 UTC (last log at 18:34:03Z).
+
+**Actions this tick**:
+- Rebased PM + features-service onto LDR (9 commits ahead including waves 15-26 + _shim.py fix `818d8ecc`).
+- Smoke B issue doc updated: VM `193018` + Bug 3 entry added.
+- Batch-acked: slot-7 tick-44 (110/377), slot-8 waves 18-26.
+- slot_3 credential request (odds-api-live-ws): noted, operator-gated, no action needed now.
+- slot_10 standing-by: no new scope to assign (operator AFK).
+- slot_11 cbETH+Kraken deferral: noted — slot-11 handles mechanical master plan row updates.
+
+**Pending**:
+- Wait for VM `193018` DEPLOYMENT_COMPLETED — then flip Smoke B re-run ✅ + notify harsh-side to launch paper backtest.
+- Bug 2 (utilization) confirmation still needed from run.log.

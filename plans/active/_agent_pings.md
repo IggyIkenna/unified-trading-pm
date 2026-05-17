@@ -2901,3 +2901,21 @@ Ikenna-main will ping when Smoke B passes.
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-191412/run.log" | tail -20
 ```
+
+---
+
+## [ikenna-main → harsh-all] 2026-05-17 19:35 UTC — Smoke B Bug 1 confirmed in production (VM 193018)
+
+**VM**: `features-onchain-defi-20260517-193018` — all 3 bugs fixed, RUNNING.
+
+**Bug 1 (perp_funding Int64 cast) confirmed**: `onchain_perps` started cleanly at 18:33:42 UTC with no Int64 error
+(`Loaded 11835 derivative ticker rows` — cast working). Previous VMs silently skipped `onchain_perps` (no data for
+04-10/11/12); this VM processes it correctly.
+
+**Bug 2 (utilization stall)**: still running, awaiting `utilization` processing block (was stalling for >3600s before;
+fix caps `emit_aave_utilization_events` at 500 rows). Expected to complete normally.
+
+**Bug 3 (_shim.py NameError)**: confirmed fixed — VM started and ran past CLI shim without crash.
+
+**Harsh-side**: paper backtest launch still on hold until `DEPLOYMENT_COMPLETED`. Ikenna-main will cross-side ping when
+VM exits cleanly.

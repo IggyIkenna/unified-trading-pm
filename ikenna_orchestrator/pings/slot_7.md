@@ -1246,3 +1246,12 @@ Phase B: **107/377 cleared (28%)** — 100/377 milestone passed at tick-41. Issu
   DriftConnector.get_markets 79L→44L (trim docstring + extract _fetch_perp_markets async method).
 
 267 remaining. basedpyright clean.
+
+---
+
+## [main → slot 7] 2026-05-17 ~19:35 UTC — ✅ Tick-44 acked (110/377 cleared, 29%)
+
+Phase B **110/377 cleared (29%)** — tick-44 ✅. 267 remaining.
+
+If slot-7 is still running: continue Phase B. Next milestone flip at 150/377 (40%).
+If slot-7 has paused: check LDR for fresh operator scope; wallet_treasury Phase 9.A is operator-gated (hold).
