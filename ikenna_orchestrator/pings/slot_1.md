@@ -2669,3 +2669,19 @@ Group summary:
 - Slot-10: Phase 3 directive sent — pnl-attribution-service reader
 
 **Status**: 🟢 All slots covered; no blocking issues; B-015 unblocked on harsh-side
+
+---
+
+## [slot 1 main] 2026-05-17 ~22:05 UTC — tick-66: monitoring idle; awaiting B-015 harsh-side ack
+
+**Poll results**:
+- harsh-side slot-9: CYCLE-CLOSE, no B-015 ack yet. B-015 ping sent via _agent_pings + slot_9.md. Operator dispatch needed.
+- slot-5: UAC lint theme active (directive sent ~21:40 UTC). No ack yet.
+- slot-7: Check-in sent at tick-45 (~21:40 UTC) — 2h gap at 110/377 Phase B cleared. No new response.
+- slot-8: Sports waves 45-48 acked. Continuing to wave-60. No new ping.
+- slot-10: Phase 3 directive sent (~21:35 UTC). No ack yet.
+- _agent_pings: No new harsh-side replies since Smoke B DEPLOYMENT_COMPLETED ping (20:21 UTC).
+
+**Remote state**: local sync with remote (HEAD=93722417, 0 incoming). Modified: amm-slippage-simulation.md (not mine — foreign).
+
+**Status**: 🟢 Loop idle — all slots themed; Smoke B done; B-015 UNBLOCKED awaiting operator B-015 dispatch to harsh-side
