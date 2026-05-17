@@ -1696,3 +1696,32 @@ Next tick: EXIT_STATUS + event count; DEPLOYMENT_COMPLETED → ping harsh + flip
 **Operator queue** (6 items — unchanged).
 
 Next tick: EXIT_STATUS + event count; if DEPLOYMENT_COMPLETED → ping harsh + flip checkbox.
+
+---
+
+## [slot 1 main] 2026-05-17 ~17:55 UTC — Autonomous loop tick-27: Phase U4 wiring shipped, pvl-23 all done, slot-5 redirected
+
+**New LDR commits since tick-23** (3aa→f2→91→...):
+- `3aa85ef6` — ci(workspace-qg): re-render with transitive BFS dep closure (slot-8 earlier pass fixed)
+- `6e17cd0e` — ci: tab-mirror-to-ldr auto-FF workflow added
+- `ddd34715` — ci: 6 PM workflow templates committed (by Harsh side)
+- `c052c838` — fix .env.example bucket + suffix discipline
+- `13b94ca9` — feat(pvl-p23c): ManualTradeGateDialog + pending instruction API client (shipped 2026-05-14)
+- `0c9fb81a` — feat(dart): pvl-p23a DartThreeWayView + pvl-p23b/c wiring (shipped 2026-05-15)
+- `6e705085` / `90896373` / `76f9e186` — feat(ui): Phase U4 — demote/override/lifecycle/promote wired to real backend
+
+**Key finding**: pvl-p23a/b/c ALL already `[x]` in master plan (shipped 2026-05-14/15). Dispatch to slot-5 this tick was redundant → redirected slot-5 to `deploy_missing_auto_launch_2026_05_07` (5 remaining P0 items: POST endpoint + idempotency + event emission + rate-limiter + UI button).
+
+**Phase U4 UI wiring**: 3 commits landed (promote/lifecycle/demote wired to real backend). Plan flip needed — checking `promote_workflow_may23_cli_path` or `deploy_missing_auto_launch`. Defer to next tick (need to identify which plan owns Phase U4 items).
+
+**Smoke B** (`features-onchain-defi-20260517-171908`): 36,235 events, latest `2026-05-17T16:52:59 UTC` (AAVE_V3 utilization cbBTC/BASE), VM still RUNNING. Notional 2-hour-in mark, still processing.
+
+**Slot-7 Phase B**: tick-28 shipped (`execution-service@88f756034` +3 methods), **67/377 cleared**, 310 remaining.
+
+**Slot-4**: tick-10 acked (131/187 allowlist cleared), working tick-11+.
+**Slot-8**: OHLCV Phase 5 dispatched, no self-report yet.
+**Slot-6**: 5 items done (3/4/6/7/8), Phase 7.C operator-gated, DAI IRM unknown, unresponsive.
+
+**Inventory**: 482 cal AI-days / 52% done / 69 plans.
+
+Next tick: Phase U4 plan-flip identification, Smoke B completion, slot-5 deploy-missing-launch progress.
