@@ -643,6 +643,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
    **Slot-2 cumulative across batches 3-49**: 53 files cleared (slot-2 contribution: -53 files; spans 20 submodules
    incl. data/ohlcv_converter).
 
+- **Batch 50** (2026-05-17): `cli/backtest_args.py` — `parse_args` 236L→28L via 10 `_add_*_args(parser)` module-level
+  helpers (\_add_config_args + \_add_time_args + \_add_data_args + \_add_exec_args + \_add_signal_args +
+  \_add_instrument_args + \_add_position_args + \_add_output_args + \_add_dependency_args + \_add_meta_args). Allowlist
+  -1. basedpyright 0 errors. execution-service@3693bf430.
+
+  **Slot-2 cumulative across batches 3-50**: 54 files cleared (slot-2 contribution: -54 files; spans 21 submodules incl.
+  cli/backtest_args).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
