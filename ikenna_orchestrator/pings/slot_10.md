@@ -55,3 +55,22 @@ immediately followed by `docs(plans):` checkbox flip in PM. **MANDATORY**: read
 `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
 
 Ping slot-1 when Phase 2 is shipped (SHA + test output).
+
+---
+
+## [main → slot 10] 2026-05-17 ~21:35 UTC — Phase 2 DONE by parallel agent; proceed to Phase 3
+
+**Phase 2 shipped** (parallel agent): strategy-service@21209bd `feat(strategy): Phase 2
+HedgeRatioSnapshotWriter + on_tick wire-in`. PM flipped at PM@b1034cfe. All 4 Phase 2 items
+checked in hedge_ratio_snapshot_persistence_2026_05_13.md.
+
+**Your remaining work** = Phase 3 only (2 open items):
+1. `pnl-attribution-service` reader: load `hedge_ratio_snapshots` parquets per archetype + date range
+   via UAC reader interface (plan item 140)
+2. Update `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 2 with `hedge_ratio_snapshots`
+   as upstream dependency (plan item 142)
+
+After Phase 3: Phase 4 (codex + parent plan flip + archive — 3 quick script items).
+
+**Proceed immediately** — Phase 3 unblocks pnl-attribution Phase 2 consumer.
+Ping slot-1 when Phase 3 shipped (SHA + what was updated in client_reporting plan).

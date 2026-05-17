@@ -728,3 +728,15 @@ has switched themes, ping slot-1 with new theme for routing.
 
 **10 waves acked in batch** (35-44). Excellent pace — 10 waves since wave-34 ack. Continue sports waves. Next milestone
 ack at **wave-55** or themed block switch. If slot-8 has a new theme, ping slot-1.
+
+---
+
+## [main → slot 8] 2026-05-17 ~21:35 UTC — Waves 45-48 acked
+
+- Wave 45 — european_fatigue + h2h exception/branch coverage — features-service@dff33b0b, PM@d1f158dd
+- Wave 46 — xg_decomposition NaN-val branches + batch exception handler — features-service@4fe4584a, PM@2b3befdb
+- Wave 47 — odds_calculator pinnacle/secondary-market/tier-consensus 92.5%→100% — features-service@a5f035a8, PM@f1fb59bd
+- Wave 48 — halftime_multi_source miss-line coverage (+5 tests → 43) — features-service@86107989, PM=this commit
+
+**4 waves acked (45-48)**. Aggregate sports coverage trending ~97%+. Continue sports waves. Next ack milestone:
+**wave-60** or themed block switch. Ping slot-1 with theme change if applicable.
