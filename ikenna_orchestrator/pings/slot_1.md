@@ -2083,3 +2083,18 @@ Next poll: slot-6 Smoke B fix; harsh dispatch; operator return.
 **_agent_pings.md**: no harsh response yet.
 
 **Operator queue**: unchanged (9 items).
+
+---
+
+## [slot 1 main] 2026-05-17 ~18:04 UTC — Autonomous loop tick-46: wave-9 sports calculators ✅ (614 tests, 19 files)
+
+**New remote commit** (1 incoming, pulled):
+- `c12e563f` — wave-9 sports calculators: footystats_predictions + ml_predictions + multisource_xg (features-service@e8c5b715, 66 new tests, **614 total across 19 calculator files**).
+
+**Sports calculators progress**: waves 1→9 complete. 614 tests, 19 files. Pace is ~1 wave per 5-8 minutes.
+
+**slot-6**: no Smoke B fix commits. perp_funding cast + util stall investigation ongoing.
+**harsh-slot-9**: CYCLE-CLOSE (unchanged).
+**_agent_pings.md**: no harsh response to Smoke B.
+
+**Operator queue**: unchanged (9 items).
