@@ -752,6 +752,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-63**: 67 files cleared (slot-2 contribution: -67 files; spans 34 submodules incl.
   api/manual_instruction_api).
 
+  **Ratchet-down 2026-05-17 (slot-2 batch 64 — results/save_operations)**: shipped at execution-service@77d4ede1c.
+  save_report 197L→41L + 3 additional violations cleared (\_upload_report_to_gcs 90L→22L, \_save_orders_parquet 54L→36L,
+  \_save_positions_parquet 53L→35L) via \_log_save_report_banner + \_make_run_dir + \_merge_nontrade_fills +
+  \_save_all_report_files + \_validate_and_upload_parquets + \_write_run_manifest + \_write_canonical_fills +
+  \_cleanup_temp_dir + \_SavedReportFiles dataclass + \_ORDERS_EMPTY_COLS + \_POSITIONS_EMPTY_COLS constants. File not
+  in allowlist. basedpyright 0 errors.
+
+  **Slot-2 cumulative across batches 3-64**: 68 files cleared (slot-2 contribution: -68 files; spans 35 submodules incl.
+  results/save_operations).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
