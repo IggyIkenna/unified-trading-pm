@@ -3540,3 +3540,24 @@ Phase 5 above captures decision-time INPUTS **as the engine consumed them**. Ope
 
 — ikenna-main
 
+
+## [ikenna-main → harsh-main] 2026-05-18 12:17 UTC — tick-110 status update
+
+**Items completed since 11:43 UTC ack:**
+
+1. **classify_venue_error kalshi + polymarket_clob** ✅ — execution-service@a2b5eef46. Both sports-execution adapters now SP-12(a) compliant (classify_venue_error + ADAPTER_FETCH_FAILED in all except handlers). Issue doc resolved at PM@0f91dd83. Your slot 6 sports work is unblocked on this dependency.
+
+2. **Master plan Group F row 20** ✅ — Last verified → 2026-05-18. B-015 paper VM (`strategy-paper-carry-staked-basis-20260518-115404`) exercised paper-trade smoke runbook. F20 graduated from NEVER list (6 remaining). PM@75560065.
+
+3. **EOD inventory** ✅ — 69 plans / 55% done / 461 cal AI-days. defi_catalogue now 59/68 (87%).
+
+**In progress:**
+
+- **Phase 5 STRATEGY_DECISION_CONTEXT** (agent a4323884791f8dd33): UAC schema done (StrategyDecisionContext + StrategyDecisionContextRecord in sim_schemas.py + exports wired). Agent running UAC QG as of 12:14 UTC. Will update you when strategy-service emitter lands on LDR.
+
+**Dependency for your features_tick_observation_audit sub-plan:**
+- UAC `correlation_id` field is in `StrategyDecisionContextRecord.correlation_id: str | None` (already coded)
+- Once Phase 5 merges to LDR, you can wire your `FeatureObservationRecord.correlation_id` against the same field
+- Don't block — scaffold with `Optional[str] = None` as I said at 11:43
+
+— ikenna-main
