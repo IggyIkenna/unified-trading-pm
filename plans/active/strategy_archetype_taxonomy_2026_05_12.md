@@ -436,6 +436,30 @@ Slot-3 created the missing per-archetype docs for the 3 V-1 archetypes (PM@`f323
 **Scope boundary**: Slot-8 Vol Trading 18 per-archetype docs + `market-making-event-settled.md` retention doc remain on
 Slot 8's stack (not yet shipped). This V-3 covers only the 3 V-1 Carry archetypes.
 
+### Item V-4 — Count-drift codex sweep ✅ SHIPPED 2026-05-18 slot-3
+
+Slot-3 updated 4 codex docs to reflect 55 → 57 archetype count post V-1 additions (PM@`f5107fe4`):
+
+- `codex/00-SSOT-INDEX.md` ✅ — "9 families × 55 archetypes" → "9 families × 57 archetypes"; "StrategyArchetype (55)" →
+  "(57)"; "55 strategy archetypes" → "57 strategy archetypes"
+- `codex/09-strategy/architecture-v2/README.md` ✅ — "## 55 Archetypes" → "## 57 Archetypes"; "1 of 55 archetypes" → "1
+  of 57"; "Total: 55 archetypes" → "57"; Carry & Yield row: renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` →
+  `CARRY_BASIS_PERP_INV` + added `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV`; 8 docs → 10 docs; historical
+  narrative updated with V-1 rename + +2 addition
+- `codex/09-strategy/architecture-v2/strategy-registry-v2.md` ✅ — "9 families / 55 archetypes" → "9 families / 57
+  archetypes" in the PARTIALLY SUPERSEDED banner canonical-counts note
+- `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` ✅ — "55 archetypes" → "57 archetypes"
+  (frontmatter + body); CARRY_RECURSIVE_BORROW_PERP_HEDGED row renamed + 2 new stub rows added for
+  `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV`
+
+**Also verified**: `MARKET_MAKING_EVENT_SETTLED` `# legacy` bug from V-2 was already fixed at uac@`2e53d1b` (not slot-3
+work; pre-existing fix). CLAUDE.md + `master_to_live_defi_2026_05_23.md` have no archetype count references (confirmed
+clean).
+
+**Scope boundary**: `strategy-summary.md` lines 807/815 say "55 archetypes" in a historical narrative context (correct —
+they describe the size of the manifest JSON before Phase 9 further expansion); not updated. Plans/epics with "18
+archetypes" or "53 archetypes" are all historical baseline markers (correct context; not updated).
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
