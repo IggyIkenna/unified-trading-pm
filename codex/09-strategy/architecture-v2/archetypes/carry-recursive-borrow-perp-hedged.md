@@ -75,6 +75,13 @@ hedge it).
 `PerpLegConfig` (UAC `recursive_loop_orchestrator.py`) fields: `perp_venue` (HYPERLIQUID | BYBIT), `perp_pair`,
 `target_net_delta`, `usdc_margin_buffer_min_pct=0.30`.
 
+```yaml
+# Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
+# DeFi on-chain lending loop runs on ethereum, arbitrum, base (same cells as Family 1).
+# CeFi perp leg (Hyperliquid / Bybit) has no ChainKind and is not chain-gated.
+allowed_chains: [ethereum, arbitrum, base]
+```
+
 ## USDC margin buffer + top-up automation
 
 `HedgeSizerConfig` from `unified_api_contracts/internal/architecture_v2/perp_hedge_sizer.py`:

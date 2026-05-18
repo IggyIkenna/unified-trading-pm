@@ -1015,6 +1015,11 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       carry_staked_basis: [ethereum, solana, arbitrum]. APD: [ethereum, arbitrum, solana, base, optimism]
       (DeFi-leg only; CeFi not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18 slot 3)
       **NOTE**: strategy-service enforcement code is Phase 3 code impl — separate item, not yet shipped.
+- [x] ✅ [DOC] P1. **Phase 3 extension — `allowed_chains` to remaining DeFi recursive-borrow archetypes.** Same pattern
+      as Phase 3 above (doc-only; code enforcement separate). carry-recursive-staked: [ethereum]. carry-recursive-borrow-
+      lending-only: [ethereum, arbitrum, base] (per top-7 cell table). carry-recursive-borrow-perp-hedged: [ethereum,
+      arbitrum, base] (DeFi on-chain leg; CeFi perp leg not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18
+      slot 3)
 - [ ] [HUMAN] P1. **Phase 4 — asset_group classification decision (operator).** CLOB-on-chain venues (Lighter / Pacifica
       / Extended) sit at the boundary between DeFi (on-chain settlement) and CeFi (centralised order book matching). Two
       options: (a) extend DeFi asset_group to include them (current default; minor mental tension); (b) new `clob_dex`

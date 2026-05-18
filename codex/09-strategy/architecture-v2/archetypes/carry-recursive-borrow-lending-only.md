@@ -77,6 +77,13 @@ Per-cell overrides via catalog builder `_build_carry_recursive_borrow_lending_on
 `ltv_target = liquidation_threshold - 0.05`, `rebalance_threshold_lower_hf=1.10`, `oracle_staleness_max_seconds=86400`.
 `gas_budget_usd_per_loop_iter`: 25 (eth), 0.50 (arb), 0.20 (base). `recursion_depth_max`: 8 (eth), 10 (arb), 12 (base).
 
+```yaml
+# Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
+# On-chain lending loop runs on ethereum, arbitrum, and base per the top-7 cell table.
+# CeFi venues (no perp leg in Family 1) are not chain-gated.
+allowed_chains: [ethereum, arbitrum, base]
+```
+
 ## Execution semantics
 
 Per loop iteration (1...N): single ATOMIC bundle = (STAKE → TRANSFER → LEND → BORROW). Flash mode uses

@@ -82,6 +82,12 @@ health_factor_kill: 1.25
 max_allocated_equity_pct: 0.25
 rebalance_cadence: 1h
 execution_policy_ref: defi-lending-default-v4
+
+# Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
+# On-chain leg (staking + lending loop) is ethereum-only today; Arbitrum added when
+# Arbitrum Aave V3 stETH E-Mode cells are validated (see cell table in carry-recursive-borrow-lending-only.md).
+# CeFi venues are not chain-gated.
+allowed_chains: [ethereum]
 ```
 
 ## Execution semantics
