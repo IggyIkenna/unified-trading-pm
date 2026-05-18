@@ -320,3 +320,9 @@ buckets, bucket constant tests stale; (4) 73 xdist false failures — event syst
 workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 worker) is correct but UTL overrides to
 2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL —
 escalating to main for assignment.
+
+[2026-05-18 17:15 UTC] [main → slot 4] — 🟡 **UNCOMMITTED RUFF FORMAT** — deep audit of `.tabs/4/features-service` shows **8 files dirty** (`.pre-commit-config.yaml` + `batch_handler.py` source + 6 test files). All confirmed pure ruff reformats (UTC import sort, line-wrap, no logic changes). Operator left as-is per "let slot 4 stay idle". On re-engage:
+  1. `cd .tabs/4/features-service && git status` — verify the 8 files still dirty.
+  2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts"`
+  3. Then resume sustain queue items per work_split § Slot 4.
+Also: batch-live-reconciliation-service worktree is 4 commits behind LDR — rebase on re-engage.

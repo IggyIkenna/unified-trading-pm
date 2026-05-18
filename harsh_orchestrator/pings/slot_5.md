@@ -335,3 +335,9 @@ repay→COMPLETED_FAILED, insufficient liquidity→REJECTED on borrow, Morpho 0-
 TestFlashLoanReceiverForkExecution (auto-skip without creds: flash gas>0, flash+swap combined gas). QG ✅ (425s). Also
 rebased all 3 repos to LDR post-OOM. Moving to UTL LDR pull + QG (operator request), then item 12: slippage model
 boundary tests.
+
+[2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of `.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py + instruction_loader.py + leveraged_leg_controller.py + 12 more). All confirmed pure ruff line-wrap reformats (no semantic changes). Operator left as-is to avoid edit-collision with your active shipping. **When you finish current work**:
+  1. `cd .tabs/5/execution-service && git status` — confirm files still dirty.
+  2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts (slot 5)"`
+  3. Push before next QG run — pre-commit will reformat them again otherwise.
+Also flagged: `# type: ignore[union-attr]` in freshness_gate tests (`a9cbf5c4`) — minor rule violation worth removing on next pass.
