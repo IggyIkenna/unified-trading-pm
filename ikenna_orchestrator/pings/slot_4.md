@@ -1,5 +1,30 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 15 complete; cumulative 61 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 15)
+
+4 allowlist entries cleared. Allowlist 61 → 57 entries (3 code refactors + 1 free removal).
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `algo_library/intent_engine.py` | `_build_deleverage_steps` 53L→27L | aave_venue local var + compact kwargs + return list literal |
+| `algorithms/impl/vwap_core.py` | `_get_l2_price` 70L→46L | `_compute_adjusted_price` 35L |
+| `data/loaders/base.py` | `_normalize_timestamp_columns_for_backtest` 85L→15L | `_set_ts_event_column` @staticmethod 26L + `_normalize_trade_columns` @staticmethod 47L |
+| `matching_engine/engine.py` | free removal — upstream tick-46a had already cleared all methods | n/a |
+
+**Commits**: execution-service@48ec90d23 (Half-1) · PM@3b4ac021 (Half-2 flip)
+
+**Slot-4 cumulative**: 61 files cleared (allowlist now 57; baseline was 187 at 2026-05-17).
+
+### P0/P1 issues scan (batch 15)
+
+No new actionable P0/P1 issues found. Continuing method-size ratchet as primary task.
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 14 complete; cumulative 57 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
