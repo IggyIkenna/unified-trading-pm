@@ -536,6 +536,12 @@ smoke begins.
       (trigger_price=None raises ValueError in phase1), line 74 (on_mark_price early-return after complete);
       benchmark_registry line 104 (registered() sorted names), line 131 (register_benchmark_fill convenience wrapper).
       QG: 7333 passed (30 pre-existing unchanged). execution-service@0ff550f2.
+- [x] ✅ **S13. SUSTAIN — execution-service AlmgrenChriss coverage + fix 33 pre-existing test failures + lint** —
+      AlmgrenChrissCalculator: calculate_kappa (line 123), calculate_kappa invalid params (line 50),
+      calculate_schedule_from_kappa (line 133). Pre-existing fix: harness delegation methods added to
+      test_algo_impl_adaptive_twap/_hybrid_optimal/_passive_aggressive (33 tests unblocked). Bug fix:
+      save_operations.save_report returns None (not path) when skip_local=True. Lint: trade_converter.py
+      5 E501 violations from batch-23. QG: tests clean. execution-service@b184eaef.
 
 #### Coordination
 

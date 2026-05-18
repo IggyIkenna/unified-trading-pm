@@ -336,8 +336,27 @@ TestFlashLoanReceiverForkExecution (auto-skip without creds: flash gas>0, flash+
 rebased all 3 repos to LDR post-OOM. Moving to UTL LDR pull + QG (operator request), then item 12: slippage model
 boundary tests.
 
-[2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of `.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py + instruction_loader.py + leveraged_leg_controller.py + 12 more). All confirmed pure ruff line-wrap reformats (no semantic changes). Operator left as-is to avoid edit-collision with your active shipping. **When you finish current work**:
-  1. `cd .tabs/5/execution-service && git status` — confirm files still dirty.
-  2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts (slot 5)"`
-  3. Push before next QG run — pre-commit will reformat them again otherwise.
-Also flagged: `# type: ignore[union-attr]` in freshness_gate tests (`a9cbf5c4`) — minor rule violation worth removing on next pass.
+[2026-05-18 UTC] slot-5 — ✅ **S10+S11+S12+S13 DONE (SUSTAIN coverage — execution-service)**. All 4 items shipped
+execution-service branch (live-defi-rollout):
+- S10: execution-service@51395abf — sor single-venue warning (line 181) + cost_model zero-commission (line 210) + mev_router KeyError (line 94). 3 tests.
+- S11: execution-service@d201117e — vwap zero-weight-sum (line 89, mocked) + pov zero participation_rate→MAX_BUCKETS (line 90) + tradfi/twap tiny-qty-skip (line 105). 3 tests.
+- S12: execution-service@0ff550f2 — exit_algo lines 42+74 + benchmark_registry lines 104+131. 4 tests.
+- S13: execution-service@b184eaef — AlmgrenChriss public API lines 50/123/133 (3 new tests) + fixed 33 pre-existing test harness failures (adaptive_twap/_hybrid_optimal/_passive_aggressive delegation methods missing post-refactor) + save_operations return-None bug + trade_converter 5 E501 lint violations (from batch-23).
+
+🔒 **OWNED SURFACE (DO NOT TOUCH while I'm active)**:
+- `execution_service/` test files: `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`, `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
+- `execution_service/results/save_operations.py` (return None bug fix)
+- `execution_service/data/trade_converter.py` (lint fixes)
+- **Next**: ruff format commit for 16 dirty source files per operator instruction below, then S14+ SUSTAIN gap scanning.
+
+**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 7365 passed, 0 failed after S13.
+
+[2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of
+`.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py +
+instruction_loader.py + leveraged_leg_controller.py + 12 more). All confirmed pure ruff line-wrap reformats (no semantic
+changes). Operator left as-is to avoid edit-collision with your active shipping. **When you finish current work**:
+
+1. `cd .tabs/5/execution-service && git status` — confirm files still dirty.
+2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts (slot 5)"`
+3. Push before next QG run — pre-commit will reformat them again otherwise. Also flagged: `# type: ignore[union-attr]`
+   in freshness_gate tests (`a9cbf5c4`) — minor rule violation worth removing on next pass.
