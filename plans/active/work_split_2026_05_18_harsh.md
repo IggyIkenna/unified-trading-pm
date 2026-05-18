@@ -129,13 +129,15 @@ smoke begins.
 - [x] ✅ **1. B-016 APD paper VM health check — N/A** — slot-3 polling 2026-05-18 06:57 UTC surfaced that B-016 was
       DEFERRED 2026-05-15 (MTDS CeFi tick coverage insufficient for any 7-day window — see slot_3 ping Q1 from
       2026-05-15 05:18 UTC). No VM exists to check. Item dropped; proceed to item 2.
-- [ ] **2. defi_simulation_realism_2026_05_10 final item (98%, 46/47)** — 1 checkbox left. Plan path:
-      [`defi_simulation_realism_2026_05_10.md`](defi_simulation_realism_2026_05_10.md). Identify, ship, flip.
-      Mechanical close-out.
-- [ ] **3. strategy_service_phase10_codex_drift — Drift 2 only** (P3 nice-to-have, slot 6 buffer item 3) —
-      [`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`](issues/strategy_service_phase10_codex_drift_2026_05_15.md).
-      Drift 1 routed elsewhere; Drift 2 (defi_lp/mev → family mapping docstring-only): add 2 codex pointer lines.
-      Done-def: drift 2 closed.
+- [ ] **2. defi_simulation_realism_2026_05_10 final item (98%, 46/47)** — ROUTED TO SLOT-1: only remaining
+      unchecked AGENT-tagged item is Phase 9E (update `master_to_live_defi_2026_05_23.md` Group F items 17+18 status
+      rows). That plan is slot-1-owned per CLAUDE.md. Content suggestion for slot 1: Group F item 17 "Continuous
+      Verification: consumes new matching engine per defi_simulation_realism Phase 2 design (PM@d66b0f9f + ae804766)";
+      Group F item 18 "Continuous Verification: Phase 8C Tenderly-fork live-vs-simulated reconciliation per
+      defi_simulation_realism Phase 8." Slot-3 pinged main at PM@5520e125.
+- [x] ✅ **3. strategy_service_phase10_codex_drift — Drift 2 only** — PM@5520e125. 2 codex pointer lines added:
+      `market-making.md` (defi_lp/ → MARKET_MAKING) + `arbitrage-structural.md` (mev/ → ARBITRAGE_STRUCTURAL), both
+      citing enforcement test `strategy-service@f01d12d`. Drift 2 closed.
 
 #### Reserve queue
 
