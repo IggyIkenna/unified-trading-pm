@@ -600,6 +600,12 @@ smoke begins.
       _compute_is_outside_range no bounds→False, None sample→False, ns before/after/within range,
       us before/within range; _filter_by_time_window no bounds→all rows, empty→empty.
       103 total tests in file pass. execution-service@dae5ac5f.
+- [x] ✅ **S18. SUSTAIN — execution-service slashing_tail_risk zero-to-coverage (18 tests)** —
+      slashing_tail_risk.py (0→covered): TestSlashingTailRisk — _decimal_sqrt basic/zero/negative→ValueError,
+      _fit_severity_stats empty/single/known-values (mean=4 std=2), _fit_hill_alpha <25→2.0 + sufficient→positive,
+      _poisson_sample λ=0→0 + small λ + large λ>30 (normal-approx path), _empirical_p_exceeds empty/all/none/partial,
+      ProbabilityOfLossCurve.p_at_threshold below-min/above-max clamp + linear interpolation.
+      121 total tests in file pass. execution-service@c27bd6d5.
 
 #### Coordination
 
