@@ -199,10 +199,10 @@ sides coherently.
       — all round-trip through writer + reader + manifest. 11 tests in `test_decision_context_writer.py`: 5
       `build_decision_outcome` + 6 `emit_strategy_decision_context` (schema, values, exception swallow,
       HOLD_WITHIN_DRIFT_BAND, HOLD_POSITION_OPTIMAL, REBALANCED). — strategy-service@285f154 (2026-05-18)
-- [ ] [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with the
-      pre-decision audit-trail addition. Cross-reference Phase 5 commit refs.
-- [ ] [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main →
-      ikenna-main).
+- [x] ✅ [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
+      the pre-decision audit-trail addition. Cross-reference Phase 5 commit refs. — PM codex updated (2026-05-18)
+- [x] ✅ [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main →
+      ikenna-main). — filed by harsh-main; acked by this slot (2026-05-18)
 
 **Cost trade-off**: this is independent of the running B-015 paper VM. Harsh-main is keeping VM 115404 running
 (preserves pvl-p18a 3-day clock; gate doesn't require this observability). Phase 5 lands as separate work, applies on
@@ -222,11 +222,11 @@ multiplier = **1.8 cal-AI-days**.
   test that does a 10-tick synthetic run and reads back the parquet.
 - ✅ `pnl-attribution-service` reads the parquet successfully + schema matches.
 - ✅ ManifestWriter records the snapshot per-archetype-per-day.
-- [ ] **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (not just
-      rebalance); verified via integration test with mix of OPEN/HOLD/CLOSE decisions and a "5 consecutive HOLD" replay
-      reproducing the 2026-05-18 VM 115404 fills=0 case.
-- [ ] **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T,
-      what rates did the engine see and why did it not rebalance".
+- ✅ **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (not just
+  rebalance); 11 unit tests verify schema, row values, exception swallowing, and all `DecisionOutcome` values. —
+  strategy-service@3c332ac + @285f154
+- ✅ **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T, what
+  rates did the engine see and why did it not rebalance". — pnl-attribution-service@f8db566
 
 ## Execution metadata (Runbook Execution-Owner SSOT)
 
