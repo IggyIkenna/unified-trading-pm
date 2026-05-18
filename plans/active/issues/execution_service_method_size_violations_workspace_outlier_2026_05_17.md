@@ -1144,6 +1144,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_resolve_pov_l2_spread_adjustment. on_order 99L→19L via \_log_pov_on_order_entry + \_pov_init_order_state.
   \_pov_resolve_slice_context 61L→49L via \_pov_resolve_child_qty. Allowlist 29→28 files. All methods <50L. AST clean.
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 26 — algorithms/impl/vwap_execution.py)**: shipped at
+  execution-service@b15278afd. \_store\_and\_schedule\_vwap 69L→27L via \_vwap\_store\_parent\_state +
+  \_vwap\_schedule\_market\_fok. \_spawn\_child 107L→32L via \_vwap\_resolve\_spawn\_qty +
+  \_vwap\_do\_spawn\_child. \_submit\_primary 75L→28L via \_vwap\_do\_final\_spawn.
+  Allowlist 28→27 files. All methods <50L. AST clean. ruff 0 errors.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
