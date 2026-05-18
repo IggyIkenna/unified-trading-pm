@@ -28,6 +28,37 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 17 complete; cumulative 67 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 17)
+
+3 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 54 → 51 entries.
+Resolved merge conflicts with parallel slot (another slot was doing concurrent refactoring on same files).
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `engine/backtest/actors/tp_sl_generator.py` | `generate_random_tp_sl_for_signal` 83L→32L | `_select_tightness` @staticmethod 13L, `_resolve_signal_seed` @staticmethod 15L |
+| `engine/backtest/actors/signal_driven_shared.py` | `add_exit` 85L→42L | `_accumulate_exit` 42L (mirrors `_accumulate_entry` pattern) |
+| `config/grid_generator_core.py` | `_get_config_for_instruction_type` 85L→30L | `_get_lend_borrow_base_config` @staticmethod 29L, `_get_stake_base_config` @staticmethod 29L |
+
+- execution-service Half-1: `ae6426a0a` (execution-service ldr)
+- unified-trading-pm Half-2: `a2589009` (PM ldr)
+- Cumulative slot-4 total: **67 files cleared**, allowlist now **51**
+
+### Remaining allowlist (51 entries) — top batch-18 candidates
+
+1-violation files (ordered by tractability):
+- `algorithms/impl/adaptive_twap.py`: `on_order` 88L — single violation, complex (nautilus callback)
+- `engine/backtest/actors/signal_driven_v3_utils.py`: `calculate_exec_params` 89L — single violation
+- `engine/backtest/actors/signal_driven_shared.py` (now cleared) [already done above]
+- `defi_execution/protocols/drift.py`: `place_order` 104L — single violation
+- `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` 141L — single violation
+- `config/grid_generator_core.py` (now cleared) [already done above]
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 16 complete; cumulative 64 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
