@@ -146,7 +146,7 @@ org-naming tidy):
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
       ✅ DONE 2026-05-18 — PM@245ab3e7: last_reviewed 2026-05-18, ModeHandler run_batch/run_live wrappers
       documented, new § "Test-suite status" (7266 passing / 0 failures @ features@0e73bc90).
-- [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
+- [x] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
       2026-05-11.** There are 7+ near-identical `_get_workspace_root()` copies across
       `features_service/{commodity,delta_one,calendar,cross_instrument,volatility,multi_timeframe,onchain,sports}/engine/mock_data_provider.py`
       — each is dev-only mock-seed-path discovery
@@ -161,6 +161,10 @@ org-naming tidy):
       the legacy `UNIFIED_TRADING_WORKSPACE_ROOT` fallback was dropped — it tripped the `Env canon` QG check since it's
       not in `EnvVars`, features-svc@`71023f20`) — so QG codex-compliance is clean on this; this todo is the proper
       de-dup to a UTL helper, not a blocker.
+      ✅ DONE 2026-05-18 slot-8-ikenna — UTL@`63acda1b`: new `unified_trading_library/dev_paths.py` with
+      `get_workspace_root()` + `seed_writer.py` updated to use it. features-service@`172e431e`: all 8
+      mock_data_provider.py files updated (import os removed, local function removed, UTL import added); 3 test files
+      updated to remove TestGetWorkspaceRoot classes that tested the now-lifted local function. 57 targeted tests pass.
 
 ### Phase 2 — Full byte-for-byte parity run (BLOCKED on data)
 
