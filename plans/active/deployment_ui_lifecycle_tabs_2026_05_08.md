@@ -178,7 +178,7 @@ todos:
 
   - id: b3-deploy-tab-fresh-deployments-only
     content: |
-      - [ ] [SCRIPT] P0. Restructure Deploy tab to be the home for FRESH deployments only — operator picks a service
+      - [x] ✅ [SCRIPT] P0. Restructure Deploy tab to be the home for FRESH deployments only — operator picks a service
         + parameters + clicks Deploy; this fires a single Cloud Build / VM launch / Cloud Run revision rollout. Move
         the existing `<DeployForm>` here. Re-deploys (run-it-again-with-same-params) live in Monitor, NOT Deploy —
         the row's re-deploy action carries forward run-time state (correlation_id, chunk-shape, run_id for
@@ -187,7 +187,7 @@ todos:
 
   - id: b4-data-status-scope-reduction-pricing-data-only
     content: |
-      - [ ] [SCRIPT] P0. Restructure Data Status tab to scope to data + pricing correctness only — instruments,
+      - [x] ✅ [SCRIPT] P0. Restructure Data Status tab to scope to data + pricing correctness only — instruments,
         MTDS, MDPS, features-*. Strategy / execution / ML signals + metrics are NOT in Data-Status; they live in
         Monitor → Experiments (for ephemeral) or Monitor → Live (for live-cluster freshness). Why: Data-Status is
         about "did the catalog / tick / feature data land on disk correctly?" — a manifest-driven correctness
@@ -217,7 +217,7 @@ todos:
 
   - id: b7-mode-prefetch-context
     content: |
-      - [ ] [SCRIPT] P0. New React context `LifecyclePrefetchContext` (TanStack Query is already used per existing
+      - [x] ✅ [SCRIPT] P0. New React context `LifecyclePrefetchContext` (TanStack Query is already used per existing
         deployment-ui patterns; just add prefetch keys for each Monitor sub-tab on cold-start + on cloud-target
         change). On UI mount + on cloud-toggle, fire four parallel queries: `/api/monitor/backfill`,
         `/api/monitor/experiments`, `/api/monitor/live`, `/api/monitor/scheduled`. Cache TTL 60s default. Operator
@@ -242,7 +242,7 @@ todos:
 
   - id: c1-monitor-backfill-endpoint
     content: |
-      - [ ] [SCRIPT] P0. Add `GET /api/monitor/backfill?cloud=<gcp|aws>` route — lists every running + recent
+      - [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/backfill?cloud=<gcp|aws>` route — lists every running + recent
         EPHEMERAL_BATCH job per cloud-target. Joins VM-name lookup (Phase A.2 lifecycle_class filter) with the
         events bucket (last STARTED / progress / STOPPED / FAILED per correlation_id). Per-entry response:
         `{name, lifecycle_class, asset_group, owning_plan, started_at, progress: {dates_done, dates_total,

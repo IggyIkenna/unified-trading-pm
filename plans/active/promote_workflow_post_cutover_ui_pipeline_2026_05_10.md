@@ -44,6 +44,12 @@ estimate_calibration_note: |
 
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
 
+> **🔵 SLOT-7 AUDIT 2026-05-18**: All items in this plan require backend integration (Firestore
+> `MinimalCandidateManifest`, promote-api endpoint, DART `ManualTradeGateDialog` wiring) that is explicitly blocked
+> until after May-23 cutover per CLAUDE.md promote-workflow-architecture SSOT. Zero pre-stageable UI items exist
+> without the backend contract. Status = DEFERRED-POST-CUTOVER (named successor = this plan itself). No code changes
+> until May-23 cutover lands. — deployment-ui@e9e90d9 / PM@26336f55.
+
 > **🟢 OPERATOR-PICKS-TRACK AT CUTOVER — RATIFIED 2026-05-10 cross-plan audit Q12.** Both CLI track + UI track ship by
 > May-23 per [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md). At
 > cutover boundary, operator picks ONE track per run. This plan extends the UI track post-cutover (target 2026-07-04)
