@@ -666,6 +666,17 @@ surface, not per repo:
       confirmed structurally unreachable defensive dead code (see Wave-analysis per-file
       notes above). Aggregate 99.7% = effective maximum without source code modification.
       32 files at 100%, 9 files at 98.4-99.6% (dead-code-only misses).
+      **delta_one test suite bug-fix (2026-05-17 slot-8)**: fixed 5 cross-family test bugs +
+      2 source bugs clearing 33 failures (0 → 1323 passing): (1) numba_kernels.py — remove
+      typing.cast() from all @njit functions (Numba nopython rejects typing.cast); (2)
+      smoke.py — fix _SMOKE_MATRIX_PATH from parent.parent/scripts/smoke_matrix.py →
+      parent.parent.parent/scripts/delta_one/smoke_matrix.py; (3) test_config.py — fix
+      config_path parents[2→3] (resolved to tests/ not repo root); (4) test_feature_freshness.py
+      — fix expected thresholds to match UAC FEATURE_FRESHNESS contract (max_age=300 warn=150,
+      not 120/60); (5) test_temporal.py — fix import path calendar.app → calendar.engine;
+      (6) test_persistence_event_details.py — add missing patch for _expected_unattempted.log_event;
+      (7) test_smoke_matrix.py — fix _REPO_ROOT parents[2→3] + path to scripts/delta_one/.
+      Shipped at `features-service@7b830849`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:
