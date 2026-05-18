@@ -1176,6 +1176,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_process_entry_fill + \_process_exit_fill. Allowlist 21→20 files. All helpers ≤50L. AST clean. Slot-4 cumulative
   across batches 1-28: 89 files cleared.
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 28 — data/validator.py)**: shipped at execution-service@cbb3b4219.
+  validate_gcs_trades_availability 230L→33L via \_vl_gcs_setup + \_vl_gcs_check_instruction_data +
+  \_vl_gcs_data_type_label + \_vl_gcs_resolve_inst_category + \_vl_gcs_build_not_found_error +
+  \_vl_gcs_build_exception_error. validate_local_trades_files 76L→38L via \_vl_resolve_dataset_folder +
+  \_vl_check_trade_files. validate_time_window_in_files 91L→37L via \_vl_find_timestamp_col +
+  \_vl_resolve_file_ts_range. Allowlist 20→19 files. All methods <50L. AST clean. ruff 0 errors. Slot-5 cumulative
+  across batches 21-28: 8 files cleared (data/validator + algorithms/impl ×5 + data/loader_base + data/loader_transforms).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
