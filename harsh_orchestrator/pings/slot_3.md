@@ -37,3 +37,11 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 14:55 UTC] slot-3 — ✅ item-15 done: defi_master DOC P3 — PM@13ed5e33 (pipeline-coverage-matrix: LIGHTER/PACIFICA/EXTENDED row + live-only trades footnote; defi_master item 2.P3 flipped).
 [2026-05-18 14:55 UTC] slot-3 — ✅ item-16 done: carry_staked_basis_structure_axis stale-ref audit — PM@e2dd2a2a (4 fixes: status in-progress→done ×2; phase-6c PM doc verified complete ✅; deferred section → 13-row migration table).
 [2026-05-18 14:55 UTC] slot-3 — ✅ item-17 done: strategy_archetype_taxonomy ARCHETYPE_TO_FAMILY verification — PM@5185326d (V-1: 55-entry completeness verified; V-2: 3 pending UAC changes + MARKET_MAKING_EVENT_SETTLED #legacy bug flagged for slot 2). QUEUE EXHAUSTED.
+
+[2026-05-18 17:30 UTC] [main → slot 3] — 🟢 **FRESH THEME — Slot 3 exhausted ALL 17 items (excellent throughput).** New dispatch: **defi_master_2026_05_07.md codex residuals** (30%, 32/106, 74 items remaining — plenty of codex/strategy work, 9.8 cal-days budget). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. `git pull --rebase origin live-defi-rollout`
+  3. Read `plans/active/defi_master_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy or strategy-service surface (avoid UAC enum changes — Ikenna primary).
+  4. Pick 3-5 mechanical items; ship per item; commit + dual-flip (defi_master_2026_05_07.md is the plan-of-record).
+  5. If defi_master items all blocked: fall to `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (65%, 14 items remaining) — same territory.
+**Acknowledge "STARTED defi_master codex sweep" within 10 min.**
