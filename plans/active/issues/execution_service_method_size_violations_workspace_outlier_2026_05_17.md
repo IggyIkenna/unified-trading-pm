@@ -1190,6 +1190,8 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
     all interleaved in a single 435L method). Requires dedicated slot with QG run to confirm green before commit.
     Still in FUNCTION_SIZE_EXTRA_EXCLUDES. Next owner: assign when test infra is warm.
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 29 — data/orderbook_converter.py)**: shipped at execution-service@2c2b4d057. _check_skip_if_exists 80L→30L via _check_df_catalog_exists; _filter_by_time_window 105L→26L via _detect_ts_is_nanoseconds + _apply_ts_filter_and_log; _build_snapshot_deltas 158L→37L via _DeltaRecord NamedTuple + _build_clear_record + _build_level_records + _set_f_last_flag; convert_orderbook_parquet_to_catalog 195L→50L via _load_parquet_df + _detect_timestamp_cols + _run_snapshot_batch_loop + _write_catalog_batch. 4 violations cleared. Allowlist 19→18 files. Slot-4 cumulative across batches 1-29: 90 files cleared.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:

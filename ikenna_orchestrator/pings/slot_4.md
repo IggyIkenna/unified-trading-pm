@@ -1,5 +1,35 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 29 complete; cumulative 90 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File | What changed | Helpers extracted |
+| ---- | ------------ | ----------------- |
+| data/orderbook_converter.py | _check_skip_if_exists 80L→30L; _filter_by_time_window 105L→26L; _build_snapshot_deltas 158L→37L; convert_orderbook_parquet_to_catalog 195L→50L | _DeltaRecord NamedTuple, _check_df_catalog_exists, _detect_timestamp_cols, _load_parquet_df, _detect_ts_is_nanoseconds, _apply_ts_filter_and_log, _build_clear_record, _build_level_records, _set_f_last_flag, _write_catalog_batch, _run_snapshot_batch_loop |
+
+- execution-service Half-1: `2c2b4d057` (ldr)
+- unified-trading-pm Half-2: this commit
+- 4 violations cleared; 10 module-level helpers + 1 NamedTuple extracted; all ≤50L; AST clean; ruff 0 errors
+- Cumulative slot-4 total: **90 files cleared**, allowlist now **18**
+
+### Remaining allowlist (18 entries) — top batch-30 candidates
+
+- engine/backtest/actors/evaluator_pnl.py: 2 viols (239L, 179L)
+- engine/backtest/actors/evaluator_trades.py: 4 viols (254L, 163L, 89L, 51L)
+- engine/backtest/engine/results.py: 1 viol (227L)
+- engine/backtest/runner.py: 2 viols (237L, 118L) — complex, assessed ~15 helpers needed
+- engine/routing/instruction_router.py — BLOCKED (foreign dirty file)
+- engine/backtest/node_builder.py
+- engine/backtest/non_trade_processor.py
+- instruments/factory_cefi_defi.py
+- results/extractor.py
+- data/checker.py, data/gcs_data_loading.py, data/loader.py, data/loader_gcs.py, data/loaders/tick_data.py
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 28 complete; cumulative 89 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
