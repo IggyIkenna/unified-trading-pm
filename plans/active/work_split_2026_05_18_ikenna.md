@@ -224,21 +224,18 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 ```
 
 1. - [x] ✅ **deployment-api callsite sweep** (27 callsites → 0): all 27 inline URI composers migrated to
-         `resolve_bucket_name()` or noqa markers per QG STEP 5.69. — deployment-api@297b406 (2026-05-18 slot 6)
+         `resolve_bucket_name()` or noqa markers per QG STEP 5.69. — deployment-api@eec6b5d + @297b406 (2026-05-18 slot 6)
 
 **Part B — `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6 cutover runbook**: (Plan currently 34%, 106
 cal left. Today's target: Phase 2.6 Step 4 complete + Step 5 prep)
 
-2. - [ ] **Phase 2.6 Step 4 completion audit**: read plan Phase 2.6 section; verify all delegate-flip callsites from
-         TODAY's slots 2/3/5/6 are landed on LDR before write-pause. Create audit checklist. (research 1.2×, ~2 = 2.4
-         cal)
-3. - [ ] **Phase 2.6 Step 5 prep**: prepare archive plan for old flat buckets (30-day hold, not delete). Codify
-         procedure: `gsutil mv gs://{old-flat}/ gs://{archive-flat}-20260518/`. Draft runbook item for operator to run
-         post-write-resume. (infra 0.8×, ~3 = 2.4 cal)
-4. - [ ] **Write-resume verification plan**: after operator triggers write-pause + deploys delegate-flip code changes:
-         verify services write to new env-tiered paths by checking manifest captures in new bucket layout. (infra 0.8×,
-         ~2 = 1.6 cal)
-5. - [ ] **Plan checkboxes flip** for Phase 2.6 items complete. Push `docs(plans):` flips. (0.5 cal)
+2. - [x] ✅ **Phase 2.6 Step 4 completion audit** — ABSORBED by Slot 1 main: PM@7fc93710 "write-pause pre-checks
+         COMPLETE — 27/27 repos QG 5.69 at 0". All delegate-flip callsites confirmed on LDR.
+3. - [x] ✅ **Phase 2.6 Step 5 prep** — DONE by Slot 7 (per main orchestrator ack 2026-05-18 ~09:50 UTC).
+         archive-flat-buckets.sh + write-resume checklist: deployment-service@9f158d5 + PM@773a3726.
+4. - [x] ✅ **Write-resume verification plan** — DONE by Slot 1 main: write-resume checklist in code_freeze plan
+         at PM@773a3726. Operator-triggered write-pause window items documented in § "Write-pause coordination checklist".
+5. - [x] ✅ **Plan checkboxes flip** — this backfill commit (PM@backfill 2026-05-18). (0.5 cal)
 
 ---
 
