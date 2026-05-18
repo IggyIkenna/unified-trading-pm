@@ -104,6 +104,10 @@ smoke begins.
 - [ ] **11. DEEP RESERVE — workspace-wide stale-import sweep beyond ruff** — scan all active Python repos for unused conditional imports + typing-only imports surviving the ruff F401 sweep. Done-def: report listing per-repo counts + fix 10+ mechanical instances.
 - [ ] **12. DEEP RESERVE — pyproject.toml workspace audit residuals** — audit remaining repos for line-length 100→120 alignment + coverage-floor 70% minimum + pre-commit config drift vs canonical PM template. Done-def: 5+ repos audited + 3+ mechanical fixes shipped.
 - [ ] **13. DEEP RESERVE — shell-script lint sweep across scripts/ directories** — run `shellcheck` across `scripts/`, `deployment-service/scripts/`, `unified-trading-pm/scripts/`. Done-def: shellcheck report + 5+ mechanical SC2086/SC2155/SC2046 quote-and-array fixes.
+- [ ] **14. MEGA RESERVE — type-ignore sweep continuation (remaining 18+ of 50+ workspace targets)** — Continue slot-2 cycle-3 item-5 (pip-audit CVE blocked earlier). After CVEs cleared, ship remaining 18/50+ `# type: ignore` removals. Done-def: 30+ removals + per-repo QG green. **~3 cal-days**.
+- [ ] **15. MEGA RESERVE — workspace-wide pyproject.toml audit deep sweep** — audit all 26+ active Python repos for: (a) line-length 100→120 alignment; (b) coverage-floor 70% min; (c) ruff exclude-list drift; (d) pre-commit hook drift vs canonical PM template. Done-def: per-repo audit report + 8+ mechanical fixes. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — deprecated-pattern sweep continuation — os.getenv + ImportError fallback rare cases** — after slot-2 prior sweeps, remaining ImportError fallback / `os.getenv` / `pip install` violations in scripts/ + tooling. Done-def: 0 violations workspace-wide + QG STEP enforces. **~3 cal-days**.
+- [ ] **17. MEGA RESERVE — execution-service additional Phase B C901 sweep (if violations re-emerge)** — after batch 104 fully cleared, monitor for new C901 violations from slot-5 Phase 9 test commits. Done-def: 0 C901 net new + execution-service QG green. **~2 cal-days**.
 
 #### Coordination
 
@@ -153,6 +157,10 @@ smoke begins.
       (1) carry-staked-basis SHIPPED label; (2) plans/ai/ → plans/active/ stale-dir fix; (3) ## See also expanded with
       defi_master_2026_05_07 + defi_archetypes_canonicalisation active plan links; (4) APD ## See also:
       defi_archetypes_canonicalisation (Stream B+D) + arbitrage_price_dispersion_finalisation (Phase A) links added.
+- [ ] **14. MEGA RESERVE — defi_catalogue_chain_primitives codex-side residuals (85%, 58/68)** — 10 items left. Plan: [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md). Pick 3-5 codex-side mechanical items (avoid UAC enum changes — Ikenna primary). Done-def: 3+ items closed. **~5 cal-days**.
+- [ ] **15. MEGA RESERVE — defi_master codex hygiene + close-out items (30%, 32/106)** — 74 items left. Plan: [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md). Pick 2-3 codex/strategy-service items that are mechanical (avoid carry/APD code-changes — those are slot 5). Done-def: 2+ items closed. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — carry_staked_basis_structure_axis_2026_05_04 status audit** — plan is locked (carry archetype canonical). Verify all DONE blocks reference correct UAC enum members + plan file paths. Sweep for stale references. Done-def: audit report + 3+ cross-link fixes. **~2 cal-days**.
+- [ ] **17. MEGA RESERVE — strategy_archetype_taxonomy_2026_05_12 close-out items** — complete the codex/09-strategy taxonomy plan: verify ARCHETYPE_TO_FAMILY dict is up-to-date with shipped families. Plan: [`strategy_archetype_taxonomy_2026_05_12.md`](strategy_archetype_taxonomy_2026_05_12.md). Done-def: 2+ items closed. **~2 cal-days**.
 
 #### Coordination
 
@@ -192,6 +200,10 @@ smoke begins.
 - [ ] **11. DEEP RESERVE — features-service Wave 60+ coverage continuation** — last shipped Wave 58 (halftime_columns + odds_columns @100%). Identify next 2 feature groups under 100% coverage; add 4-6 tests per group. Done-def: Wave 60 shipped (2+ feature groups to 100%).
 - [ ] **12. DEEP RESERVE — system-integration-tests cross-asset scenario expansion** — add 3-4 cross-asset scenarios beyond Phase 8 honest-coverage shipped today (`sit@47a1e04`): try defi+cefi hybrid carry, tradfi+sports backtest parity, prediction-only backtest smoke. Done-def: 3+ scenarios + sit QG green.
 - [ ] **13. DEEP RESERVE — alerting-service additional severity routing + escalation edge cases** — build on item 2 already shipped (`alerting@af7122f`). Add: P0 page failure → fallback email; P1 email retry + dedupe; P2 slack rate-limit handling. Done-def: 5+ edge-case tests + alerting QG green.
+- [ ] **14. MEGA RESERVE — features-service Wave 60+/61+/62+ rolling coverage waves** — after Wave 58 (halftime + odds), pick 3 consecutive waves. Each wave: 2 feature groups to 100% coverage + 4-6 tests/group. Done-def: 3 waves shipped (6+ feature groups to 100%). **~5 cal-days**.
+- [ ] **15. MEGA RESERVE — alerting_service_live_rules runtime residuals (77%, 50/65 — runtime SIDE)** — 15 items left. Plan: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Pick runtime/service-side items (codex side = slot 6). Done-def: 3+ items closed + alerting QG green. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — batch-live-reconciliation-service end-to-end test coverage extension** — build on item 14 (edge cases). Add cross-asset_group reconciliation (cefi vs defi parity), per-archetype rollup tests, schema-drift recovery semantics. Done-def: 6+ tests + batch-live-reconciliation QG green. **~3 cal-days**.
+- [ ] **17. MEGA RESERVE — system-integration-tests Phase 8+ deep extension** — after Phase 8 honest-coverage shipped (`sit@47a1e04`), add Phase 9 mode-switch scenarios + Phase 10 cutover dress-rehearsal smoke. Done-def: 5+ scenarios + sit QG green. **~3 cal-days**.
 
 #### Coordination
 
@@ -246,6 +258,10 @@ smoke begins.
       ✅ 6 tests in TestAssetGroupMixedRuleFiring (test_var_calculator.py): cefi/defi/tradfi independent directives, sports DATA_STALE, data-stale-with-exec-down, dual-failure-beats-data-stale, recovery-window-restores-delta-neutral-exit, recon-down-non-stale. risk QG green (73s) — risk-and-exposure-service@5eb6c1e
 - [ ] **12. DEEP RESERVE — pnl-attribution-service per-archetype EOD scenario extension** — build on item 19 (TestEndOfDayRollup). Add: per-asset_group rollup (cefi/defi/tradfi separation); cross-day reconciliation with corrections; partial-fill attribution. Done-def: 4+ tests + pnl QG green.
 - [ ] **13. DEEP RESERVE — execution-service adapter error-path coverage (UAC error classification)** — audit each adapter (`adapters/exchanges/*`, `adapters/onchain/*`) for missing `classify_venue_error()` + `ADAPTER_FETCH_FAILED` emission. Add tests where coverage gap. Done-def: audit report + 5+ tests.
+- [ ] **14. MEGA RESERVE — writegate_honest_coverage_endtoend residuals deeper (48%, 118/246)** — 128 items left. Plan: [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md). Pick 4-6 mechanical service-side items (avoid UAC schema + cross-service emission contract changes — Ikenna primary). Done-def: 4+ items closed. **~5 cal-days**.
+- [ ] **15. MEGA RESERVE — risk-and-exposure-service end-to-end test coverage extension** — build on items 14+18 (TestWarnOnlyAndStrictFailEmissionPolicies + TestStressExtendedScenarios). Add: end-to-end portfolio stress (10+ archetypes), recovery-window semantics, cross-asset_group risk-rule firing. Done-def: 8+ tests + risk QG green. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — execution-service Phase 9 cost models + DefiErrorCode hardening** — build on slot-5 cycle-3 items 1-2 (Phase 9 DeFi cost models, defi error code 30→TBD). Add: per-protocol cost model precision tests (AAVE / Morpho / Compound); error code → recovery action mapping coverage. Done-def: 6+ tests + execution-service QG green. **~3 cal-days**.
+- [ ] **17. MEGA RESERVE — pnl-attribution-service per-asset_group rollup hardening** — build on items 13+19 (per-venue cost attribution + EOD rollup). Add per-asset_group rollup decomposition (cefi/defi/tradfi separation), cross-day reconciliation with corrections. Done-def: 5+ tests + pnl QG green. **~3 cal-days**.
 
 #### Coordination
 
@@ -328,6 +344,10 @@ smoke begins.
       missing template; all 18 updated refs verified live; last_reviewed bumped to 2026-05-18).
 - [x] ✅ **13. DEEP RESERVE — UTL emission_publisher additional test coverage** — build on item 1 (utl_qg_preexisting_failures fix sweep, UTL@d3488b7+30db050). Add tests for: cross-service emission idempotency, emission failure retry semantics, batch vs live emission parity. Done-def: 4+ tests + UTL QG green.
       — UTL@cb1163d (5 tests added: TestEmissionIdempotency×2, TestBatchLiveParity×2, TestEmissionFailurePropagation×1; QG: 5382 passed, 58 pre-existing failures in cloud_interface/test_run_lifecycle unrelated to emission_publisher).
+- [ ] **14. MEGA RESERVE — defi_catalogue_chain_primitives codex-side split with slot 3 (codex/09-strategy half)** — coordinate with slot 3 item 14 — slot 3 takes archetype-doc side; slot 6 takes codex/09-strategy/cross-cutting/ side (pnl-attribution, operational-modes, simulator-config). Done-def: 2-3 items closed. **~4 cal-days**.
+- [ ] **15. MEGA RESERVE — codex/04-architecture/ drift audit** — sweep `batch-live-architecture.md` + `cloud-agnostic-migration.md` + `runtime-deployment-topology.md` for stale references post-recent shipped commits. Done-def: 3+ docs audited + drift fixes. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — codex/02-data/honest-absence-downstream-handling.md hardening** — build on slot-5 item 1 (writegate Phase 2.E.4 DOCS already shipped). Add cross-link examples per data_type + per asset_group consumer-class behaviour. Done-def: 2+ codex sections extended + grep-clean. **~2 cal-days**.
+- [ ] **17. MEGA RESERVE — codex/10-audit/ repo-readiness yamls update** — update per-service `codex/10-audit/repos/<service>.yaml` for repos with shipped items today (alerting, sit, batch-live, execution, risk, pnl, UTL). Done-def: 5+ service yamls refreshed. **~2 cal-days**.
 
 #### Coordination
 
@@ -362,6 +382,10 @@ smoke begins.
 - [ ] **11. DEEP RESERVE — deployment-api additional integration tests** — build on item 20 (Firebase auth integration, deployment-api@715ac1a). Add: cost endpoint auth + rate-limit; VM events endpoint pagination + filter combinations; treasury endpoint Firebase-vs-API-key parity. Done-def: 8+ tests + deployment-api QG green.
 - [ ] **12. DEEP RESERVE — deployment-ui smoketest extension** — extend playwright smoketests beyond critical-path flows. Add: cost dashboard date-range navigation; VM detail page error states; auth-redirect flows. Done-def: 5+ smoketests + pnpm green.
 - [ ] **13. DEEP RESERVE — VM zombie watchdog test hardening** — extend `vm_zombie_watchdog.py` tests for: VM_PREFIX_TO_BUCKET coverage of new VM prefix patterns; STARTED-but-no-progress edge case; FAILED-but-restarting edge case. Done-def: 4+ tests + deployment-service QG green.
+- [ ] **14. MEGA RESERVE — deployment_ui_lifecycle_tabs (30.0 cal-days budget — pick 4-5 mechanical UI items)** — biggest slot-7 plan. Plan: [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md). Pick 4-5 mechanical tab/component implementations (avoid items needing operator backend approval). Done-def: 4+ items closed + pnpm build green + vitest green. **~6 cal-days**.
+- [ ] **15. MEGA RESERVE — promote_workflow_post_cutover_ui_pipeline UI pre-staging (post-cutover scope — can pre-stage)** — 20.0 cal-days budget. Plan: [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](promote_workflow_post_cutover_ui_pipeline_2026_05_10.md). Pre-stage UI components for promote-button workflow; mark items DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 3+ items pre-staged. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — data_status_drilldown_shard_atom_alignment final items deployment-api/ui slice** — 83%, 34/41. Plan: [`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md). 4 items deployment-api/ui (per slot-5 audit — assigned slot 7). Done-def: 4+ items closed. **~2 cal-days**.
+- [ ] **17. MEGA RESERVE — deployment-api+ui Firebase auth + RBAC hardening** — after item 20 Firebase auth integration (deployment-api@715ac1a). Add: RBAC role checks per endpoint, audit-log emission for sensitive actions, refresh-token expiry handling. Done-def: 6+ tests + deployment-api QG green. **~3 cal-days**.
 
 #### Coordination
 
@@ -402,6 +426,10 @@ smoke begins.
 - [x] ✅ **12. DEEP RESERVE — workspace-manifest.json drift check vs actual dep graph** — run `check-dependency-alignment.py --json` + cross-check vs pyproject.toml internal deps across all active repos. Done-def: alignment report + any drift fixed.
       — PASS: aligned=True, 0 issues. PM@e6e6c76f.
 - [ ] **13. DEEP RESERVE — pre-commit hook coverage extension** — compare per-repo `.pre-commit-config.yaml` vs canonical PM template + add missing hooks (prettier on .md/.yaml, shellcheck on .sh, basedpyright on .py). Done-def: 5+ repos hardened + canonical template drift = 0.
+- [ ] **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — build on item 19 (workspace-constraints audit). Audit each Python repo's pyproject.toml vs workspace-constraints.toml pinned versions; identify drift. Done-def: drift report + 5+ repo alignments. **~3 cal-days**.
+- [ ] **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — build on item 5 (UTL HMAC tests). Add: event ratchet test pattern for STRATEGY_LIFECYCLE_CHANGED/SEEDED + DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE count drift; emission_publisher cross-service idempotency. Done-def: 10+ tests + UTL QG green. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — build on item 18 (cassette parity). Run cassette schema parity tests across UAC external/ dirs (80+ subdirs). Refresh cassettes where drift detected. Done-def: cassette parity green + 3+ refreshes. **~3 cal-days**.
+- [ ] **17. MEGA RESERVE — semver-agent label + tag audit across 21 Python repos** — build on item 14 (semver-agent label audit). Verify per-repo `feat/fix/feat!` label-to-commit mapping is correct; cross-check shipped tags vs commit history. Done-def: audit report + 2+ corrections. **~2 cal-days**.
 
 #### Coordination
 
@@ -438,6 +466,10 @@ smoke begins.
 - [ ] **11. DEEP RESERVE — MTDS additional adapter coverage (databento + polymarket_clob)** — extend MTDS handler coverage to databento_l1_l2_l3 + polymarket_clob handlers. Same shape as item 1 (3-handler pickup). Done-def: 2 adapters above 90% + MTDS QG green.
 - [ ] **12. DEEP RESERVE — MDPS canonical_writer error classification audit** — audit MDPS canonical_writer paths for missing `classify_venue_error()` + `record_failed()` emission. Done-def: audit report + 3+ classification gaps fixed.
 - [ ] **13. DEEP RESERVE — PBM mode parity edge cases** — build on item 8 (TestDegradedConditionModeParity, mdps@92d9be5). Add: sparse data (90%+ NaN rows), partial-shard captures, recovery from BATCH_TARDIS → LIVE_WEBSOCKET transition mid-shard. Done-def: 4+ tests + PBM QG green.
+- [ ] **14. MEGA RESERVE — live_pipeline_mtds_mdps_features (15.0 cal-days budget — pick 4-5 service-side items)** — perfect slot-9 fit (MTDS + MDPS + features). Plan: [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md). Pick 4-5 mechanical service-side items (avoid cross-service contract changes). Done-def: 4+ items closed + per-service QG green. **~5 cal-days**.
+- [ ] **15. MEGA RESERVE — MTDS adapter coverage continuation (deribit + binance + bybit handlers)** — after item 11 (databento + polymarket_clob), extend coverage on perp venues. Same Tier-1 SPL stake-pool / multi-call architecture pattern. Done-def: 3 adapters above 90% + MTDS QG green. **~3 cal-days**.
+- [ ] **16. MEGA RESERVE — MDPS canonical_writer error classification audit (continuation of deep reserve 12)** — extend item 12. Audit all canonical_writer paths for `classify_venue_error()` + `record_failed()` emission completeness; fix gaps. Done-def: audit report + 5+ classification gaps fixed. **~3 cal-days**.
+- [ ] **17. MEGA RESERVE — PBM canonical_writer mode parity + cross-archetype dispatch tests** — build on item 5 (PBM canonical_writer integration tests, mdps@4ad6060). Add: cross-archetype dispatch under degraded conditions; manifest re-sync after pause/resume. Done-def: 6+ tests + PBM QG green. **~3 cal-days**.
 
 #### Coordination
 
