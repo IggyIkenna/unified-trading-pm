@@ -883,13 +883,14 @@ smoke begins.
       Pre-stage 10+ UI components for promote-button workflow + DART manual-trade gate UI. Mark items
       DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 10+ items pre-staged + pnpm build green. **~20 cal-days**.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
-      2026-05-18 slot-7**: 74.38%→78.9% in this session (deployment-api@f7c9f4e, 3550 tests):
-      service_status 19.2%→83.4% (23 new tests), deployments mock 64.9%→70.6% (10 new tests),
-      sports_venues 100%, builds 79.1%, service_status_checkers 81.9%.
-      Gap to 90%: ~2079 lines (3954 missed / 18752 stmts). Next targets:
-      routes/deployments.py (140 missed), routes/deployment_state.py (179 missed),
-      services/data_status_service.py (610 missed), routes/data_status.py (346 missed),
-      services/data_status_drilldown.py (328 missed), services/shard_detail.py (268 missed).
+      2026-05-18 slot-7**: 74.38%→~79%+ in this session (deployment-api@501b201, 3571 tests):
+      service_status 19.2%→83.4% (23 new), deployments mock 64.9%→70.6% (10 new),
+      sports_venues 100%, builds 79.1%, service_status_checkers 81.9%,
+      _cloud_builds_trigger 25.6%→~65%+ (21 new tests @501b201).
+      Gap to 90%: ~2050 lines estimated. Next targets:
+      clients/deployment_service_client.py (135 missed), routes/deployments.py (140 missed),
+      routes/deployment_state.py (179 missed), routes/data_status.py (346 missed),
+      services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed).
       Done-def: deployment-api coverage ≥90% + QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
