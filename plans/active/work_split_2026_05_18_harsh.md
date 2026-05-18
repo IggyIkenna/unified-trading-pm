@@ -359,7 +359,7 @@ smoke begins.
       — PM@9874c794 (runtime-deployment-topology.md: URDI phantom removed; batch-live-architecture.md: broken archive plan path fixed; cloud-agnostic-migration.md: no drift found). 3/3 docs audited, 2 fixes applied.
 - [x] ✅ **16. MEGA RESERVE — codex/02-data/honest-absence-downstream-handling.md hardening** — build on slot-5 item 1 (writegate Phase 2.E.4 DOCS already shipped). Add cross-link examples per data_type + per asset_group consumer-class behaviour. Done-def: 2+ codex sections extended + grep-clean. **~2 cal-days**.
       — PM@2ce13809 (2 section extensions: (1) "Cross-references for reason taxonomy" callout with Phase 3.D reconciler links; (2) "Per-asset-group × data_type routing quick-reference" table 10 rows covering cefi/defi/tradfi/sports/prediction; + gs:// bucket path → resolve_bucket_name() note; last_reviewed 2026-05-18).
-- [ ] **17. MEGA RESERVE — codex/10-audit/ repo-readiness yamls update** — update per-service `codex/10-audit/repos/<service>.yaml` for repos with shipped items today (alerting, sit, batch-live, execution, risk, pnl, UTL). Done-def: 5+ service yamls refreshed. **~2 cal-days**.
+- [x] ✅ **17. MEGA RESERVE — codex/10-audit/ repo-readiness yamls update** — update per-service `codex/10-audit/repos/<service>.yaml` for repos with shipped items today (alerting, sit, batch-live, execution, risk, pnl, UTL). Done-def: 5+ service yamls refreshed. **~2 cal-days**.
 
 #### Coordination
 
