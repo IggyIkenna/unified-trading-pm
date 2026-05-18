@@ -3578,4 +3578,6 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_7: 🟢 Phase B execution-service refactoring, ~149/377 (~40%) cleared, continuing tick-62.
 - slot_8: defi_catalogue + writegate 6.8 — 16 min (dispatched 10:11). Within window.
 
-**Status**: 🟢 B-015 tick-5 imminent. All slots active or within window. Check-in slot_2.
+**B-015 tick-5 CONFIRMED**: `[continuous tick 5] 2026-05-18 10:27:17 | fills=0 | PnL=$0.00` — **5/72** (6.9%). Gate satisfies 2026-05-21 06:27 UTC. No errors. ✅
+
+**Status**: 🟢 B-015 healthy. All slots active or within window. Check-in sent to slot_2.
