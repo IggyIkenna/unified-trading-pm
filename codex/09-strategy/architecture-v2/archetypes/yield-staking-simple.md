@@ -66,6 +66,12 @@ exit_preference: DEX_SWAP # or PROTOCOL_WITHDRAWAL
 max_allocated_pct: 1.0 # can hold 100% staked for pure yield strategies
 execution_policy_ref: defi-direct-v2
 rebalance_cadence_days: 30 # e.g., claim rewards + restake monthly
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+target_leverage: 1.0        # [1, 10]; always 1.0 for pure staking (no borrowed capital)
+target_net_delta: 0.0       # net directional delta (0 = delta-neutral vs staking underlying)
+max_underlying_move_pct: 3.0  # vol-cap clamp: skip entry if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

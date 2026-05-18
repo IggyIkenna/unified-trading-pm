@@ -72,6 +72,12 @@ max_single_name_pct: 0.02 # no more than 2% equity in one name
 share_class: USD
 venues: [IBKR]
 execution_policy_ref: tradfi-basket-execution-v2
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+target_leverage: 1.0        # [1, 10]; gross leverage across long+short basket
+target_net_delta: 0.0       # net directional delta (0 = dollar-neutral long-short basket)
+max_underlying_move_pct: 3.0  # vol-cap clamp: skip entry if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

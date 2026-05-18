@@ -97,6 +97,12 @@ take_profit_vega_pct: 0.25 # realize at 25% vega-P&L gain
 stop_loss_vega_pct: 0.40 # stop at 40% vega-P&L loss
 share_class: USDT
 execution_policy_ref: options-mm-v2 # use MM-aware algo for tight spreads
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+target_leverage: 1.0        # [1, 10]; options notional vs equity; delta-hedge via perp leg
+target_net_delta: 0.0       # net directional delta (0 = delta-hedged; vega-only exposure)
+max_underlying_move_pct: 3.0  # vol-cap clamp: skip entry if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

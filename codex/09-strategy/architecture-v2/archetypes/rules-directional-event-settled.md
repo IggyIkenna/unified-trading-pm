@@ -132,6 +132,12 @@ share_class: USD
 conflict_resolution: priority_order
 max_concurrent_rules_fired_per_fixture: 2
 execution_policy_ref: unity-primary-v4
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+target_leverage: 1.0        # [1, 10]; always 1.0 for sports event-settled (stakes = capital)
+target_net_delta: 0.0       # net directional delta (0 = balanced back/lay per rule)
+max_underlying_move_pct: 3.0  # vol-cap clamp: skip entry if odds move > X% in 1h window
+instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics
