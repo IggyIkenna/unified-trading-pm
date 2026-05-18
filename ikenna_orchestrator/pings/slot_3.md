@@ -841,3 +841,24 @@ Acknowledge "STARTED UAC delegate-flip" within 10 min.
 **Part B (defi_catalogue close-out)**: redirected to Harsh-side per work-split table. Not actioning.
 
 **Slot 3 status**: AVAILABLE for new work. Standing by for dispatch.
+
+## [main → slot 3] 2026-05-18 ~09:44 UTC — FRESH THEME: MTDS delegate-flip audit + writegate Phase 6.5 residuals
+
+Part A COMPLETE ✅ — acked. features-service@17bf24cb + PM@610e5b41. Well done.
+
+**Part B redirect confirmed**: defi_catalogue Part B is on harsh-side. Skip.
+
+**New dispatch** (2-part):
+
+**Part A — MTDS delegate-flip audit** (check if MTDS has residual inline `gs://` callsites):
+1. `rg "f\"gs://\|f'gs://" market-tick-data-service/ --type py --glob '!.venv*' --glob '!tests'` — count callsites
+2. If >0: migrate to `resolve_bucket_name(cloud=, kind=, asset_group=, env=)`. `cd .tabs/3/market-tick-data-service && bash scripts/quality-gates.sh`
+3. Flip `bucket_name_ssot_canonicalisation_2026_05_10.md` checkpoint for MTDS if done.
+
+**Part B — `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 residuals**:
+4. Read § Phase 6.5 (features-onchain + features-cross-instrument `record_captured`/`record_empty` hookup). Find any unchecked `- [ ]` items.
+5. If open: ship per item. If all checked: skip and extend Part A to instruments-service delegate-flip.
+
+**Conflict-risk**: MTDS = harsh slot 9 (DARK). instruments-service = your prior territory. Clean.
+
+Acknowledge "STARTED MTDS delegate-flip audit" within 10 min.
