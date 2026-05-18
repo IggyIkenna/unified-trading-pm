@@ -91,14 +91,15 @@ shipping ≥1y of Aave V3 + Compound V3 historical SUPPLY_APY / BORROW_APY / UTI
 These banners were in the original plan as `- [ ]` todos and were never added (plan was descoped before implementation
 started).
 
-- [ ] [PM] P0. Add top-of-file banner to `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`:
-      `🟡 IN-FLIGHT REFACTOR — recursive-borrow implementation successor plan     (defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md) consumes the lending-indices DEFERRED note as a     P0 prerequisite for Phase 9 backtest.`
+- [x] ✅ [PM] P0. Update top-of-file banner in `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` to
+      reference post-cutover successor plan (updated existing banner; lending-indices DEFERRED note + Phase 9 backtest
+      prereq preserved). — 2026-05-18 slot 3.
 - [ ] [PM] P0. Add sub-bullet to `master_to_live_defi_2026_05_23.md` Group F item 18 (2-year batch backtest run)
-      pointing at this successor plan's Phase 12.
-- [ ] [PM] P0. Add top-of-file banner to `defi_master_2026_05_07.md` declaring this plan as canonical implementation
-      track for recursive-borrow archetypes.
-- [ ] [PM] P0. Add top-of-file banner to `alerting_service_live_rules_2026_05_07.md` pointing at Phase 8
-      (`HealthFactorMonitor` + `LiquidationProximityCircuit`) as new alerting consumer with kill-switch tier-up.
+      pointing at this successor plan's Phase 12. **SLOT-1-ONLY** — queued for slot 1 on next master-plan refresh.
+- [x] ✅ [PM] P0. Update top-of-file banner in `defi_master_2026_05_07.md` to reference post-cutover plan as canonical
+      Phase 10+ implementation track; pre-cutover Phases 1-9 carrier clarified as `2026_05_10.md`. — 2026-05-18 slot 3.
+- [x] ✅ [PM] P0. Update top-of-file banner in `alerting_service_live_rules_2026_05_07.md` to reference Phase 8 of
+      post-cutover plan (`HealthFactorMonitor` + `LiquidationProximityCircuit`; kill-switch tier-up). — 2026-05-18 slot 3.
 
 ---
 

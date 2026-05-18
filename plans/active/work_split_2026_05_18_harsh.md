@@ -292,12 +292,17 @@ smoke begins.
       allowed_chains to carry-recursive-staked [ethereum], carry-recursive-borrow-lending-only [ethereum, arbitrum, base],
       carry-recursive-borrow-perp-hedged [ethereum, arbitrum, base]. Phase 3 extension (DeFi on-chain legs only; CeFi not
       chain-gated). Plan item added to defi_master + flipped in same commit.
-- [x] ✅ **20. defi_recursive_borrow_archetypes stale plan-flip sweep** — PM@this. Flipped 5 already-shipped codex
+- [x] ✅ **20. defi_recursive_borrow_archetypes stale plan-flip sweep** — PM@d273b3ff. Flipped 5 already-shipped codex
       items across 2 plans: (1) defi_recursive_borrow Phase 8 [docs] P2 cefi-perp-leg-bybit.md (doc existed since
       ec344724); (2–6) defi_recursive_borrow_post_cutover Phase 10 items: flash-loan-receiver extended-receiver
       (a411c240), venue-collateral Family 1+2 sections (ec344724), recursive-borrow-backtest-scenarios (c5a25181),
       batch-live-architecture archetype-grain section (ec344724), cefi-perp-leg-bybit (ec344724). 1 item kept open:
       recursive-borrow-backtest-2026-05.md (BLOCKED-DATA, gates on Phase 9).
+- [x] ✅ **21. post-cutover plan banner alignment sweep** — PM@this. Updated 3 cross-plan banners to reference
+      post-cutover successor plan: (1) defi_archetypes_canonicalisation banner → post-cutover plan consuming
+      lending-indices DEFERRED; (2) defi_master banner → post-cutover plan as Phase 10+ canonical track; (3)
+      alerting_service_live_rules Phase 8 banner → post-cutover plan. Flipped 3/4 [PM] P0 banner items in post-cutover
+      plan; item 2 (master_to_live_defi sub-bullet) left SLOT-1-ONLY.
 
 #### Coordination
 

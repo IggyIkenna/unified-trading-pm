@@ -29,14 +29,13 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_2026_05_10.md` is the canonical implementation track for
-> `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2). Phases 4+5 ✅
-> CREDENTIALS UNBLOCKED 2026-05-15 (`tenderly-api-key`, `tenderly-fork-rpc-url`, `hyperliquid-testnet-trade-key`,
-> `bybit_api_key`, `bybit_api_secret` all vaulted per spawn-prompt update). Tenderly-fork integration tests + HL/Bybit
-> testnet smoke now executable; remaining BLOCKED items in that plan are the Phase-4-deployed flash-loan receiver
-> address (operator-deploy step) and any per-environment fork RPC setup. Check that plan for current status before
-> modifying any recursive-borrow scope here. Banner added 2026-05-15; updated 2026-05-17 to reflect credential
-> unblock.**
+> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` is the canonical implementation
+> track for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2) —
+> Phases 10+ (Solidity, execution-service, strategy-service, UI). Pre-cutover Phases 1-9 carried in
+> `defi_recursive_borrow_archetypes_2026_05_10.md`. Credentials: `tenderly-api-key`, `tenderly-fork-rpc-url`,
+> `hyperliquid-testnet-trade-key`, `bybit_api_key`, `bybit_api_secret` all vaulted (unblocked 2026-05-15). Check the
+> post-cutover plan for Phase 10+ status before modifying any recursive-borrow scope here. Banner updated 2026-05-18
+> slot 3 to reflect post-cutover successor plan.**
 
 # DeFi Master — asset_group umbrella
 
