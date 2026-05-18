@@ -1559,3 +1559,17 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/backtest/data_loader.py::DataLoader.load_data_for_instrument`: 150L→28L (extract `_load_trades_for_instrument` 43L + `_load_cefi_book_configs` 27L + `_load_swaps_for_instrument` 34L; data_loader.py ALL CLEAR; fixed typo "usebenchmark")
 
 **Running count**: ~156/377 cleared (~41%); continuing tick-66.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-66 Phase B continued
+
+**Tick-66 deliverables** (5 files, execution-service@d3df0d4a7):
+- `sports_execution/adapters/exchanges/kalshi.py::list_open_orders`: 52L→48L (compact 6× UNKNOWN_VENUE_ERROR_RECEIVED log_event dict)
+- `data/ohlcv_converter.py::convert_ohlcv_parquet_to_catalog`: 53L→45L (compact _build_ohlcv_bars_list call args)
+- `data/trade_converter.py::convert_trades_parquet_to_catalog`: 59L→37L (extract `_check_skip_if_exists` @staticmethod 23L)
+- `data/config_builder.py::_load_missing_data`: 60L→46L (compact _execute_gcs_load call args)
+- `algorithms/impl/passive_aggressive_spawn.py::_schedule_aggressive_slices`: 62L→38L (extract `_schedule_timer_slice` 24L)
+- `algorithms/impl/passive_aggressive_spawn.py::_start_aggressive_phase`: 61L→29L (extract `_run_aggressive_scheduling` 21L)
+
+**Running count**: ~162/377 cleared (~43%); 37 violations remain; continuing tick-67.
