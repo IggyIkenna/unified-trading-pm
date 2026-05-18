@@ -223,8 +223,10 @@ update_cursor_index() {
   local old_path="$1"
   local new_path="$2"
 
-  local old_encoded=$(echo "$old_path" | sed 's|/|-|g')
-  local new_encoded=$(echo "$new_path" | sed 's|/|-|g')
+  local old_encoded
+  old_encoded=$(echo "$old_path" | sed 's|/|-|g')
+  local new_encoded
+  new_encoded=$(echo "$new_path" | sed 's|/|-|g')
 
   local old_index="${HOME}/.cursor/projects/${old_encoded}-unified-trading-system-repos"
   local new_index="${HOME}/.cursor/projects/${new_encoded}-unified-trading-system-repos"

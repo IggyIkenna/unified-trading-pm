@@ -281,7 +281,8 @@ update_claude_code() {
   if [ -f "$settings_file" ]; then
     local workspace_repos="${workspace_root}/unified-trading-system-repos"
     # Escape spaces for the permission string
-    local escaped_path=$(echo "$workspace_repos" | sed 's/ /\\ /g')
+    local escaped_path
+    escaped_path=$(echo "$workspace_repos" | sed 's/ /\\ /g')
 
     # Check if path already in settings
     if ! grep -q "$escaped_path" "$settings_file" 2>/dev/null; then
@@ -334,7 +335,8 @@ verify_setup() {
   # Check Python interpreter exists
   local python_path="${workspace_root}/unified-trading-system-repos/.venv-workspace/bin/python"
   if [ -f "$python_path" ] || [ -L "$python_path" ]; then
-    local python_version=$("$python_path" --version 2>&1)
+    local python_version
+    python_version=$("$python_path" --version 2>&1)
     log_success "Python interpreter found: ${python_version}"
   else
     log_warning "Python interpreter not found: ${python_path}"

@@ -47,13 +47,15 @@ done
 mkdir -p "$LOG_DIR"
 
 log() {
-  local ts="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+  local ts
+  ts="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
   echo "[$ts] $*" | tee -a "$LOG_FILE"
 }
 
 alert_operator() {
   # Append to a watch file the operator can tail (or set up a Telegram bot hook)
-  local ts="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+  local ts
+  ts="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
   echo "[$ts] 🚨 OPERATOR ALERT: $*" | tee -a "$LOG_FILE" >&2
   echo "[$ts] $*" >> "${LOG_DIR}/operator_alerts.log"
 }

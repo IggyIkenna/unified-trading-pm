@@ -66,7 +66,8 @@ halt_order_flow() {
   echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo ""
 
-  local payload="{\"reason\": \"pre-deployment-halt\", \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
+  local payload
+  payload="{\"reason\": \"pre-deployment-halt\", \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
 
   if dispatch_event "halt-order-flow" "$payload"; then
     echo ""
@@ -86,7 +87,8 @@ resume_order_flow() {
   echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo ""
 
-  local payload="{\"reason\": \"post-deployment-resume\", \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
+  local payload
+  payload="{\"reason\": \"post-deployment-resume\", \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
 
   if dispatch_event "resume-order-flow" "$payload"; then
     echo ""
