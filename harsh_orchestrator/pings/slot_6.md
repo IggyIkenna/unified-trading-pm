@@ -482,3 +482,5 @@ Self-pivot through items 1 → 9. Ping STARTED + per-item DONE in this file.
   3. Avoid UAC schema changes (Ikenna primary) + MTDS source changes (slot 9 territory). Pick 3-4 mechanical codex / sit / UTL items.
 **Fallback if blocked**: `bucket_name_ssot_canonicalisation_2026_05_10.md` (73%, 6 items left — workspace SSOT refactor).
 **Acknowledge "STARTED expected_unattempted_propagation_chain" within 10 min.**
+
+[2026-05-18 UTC] slot-6 — STARTED expected_unattempted_propagation_chain residuals + bucket_name_ssot fallback. ✅ bucket_name_ssot v2-hardening DONE: check_inline_bucket_uri.py upgraded from regex to AST-walk; 4 new docstring-false-positive tests; 16/16 pass — PM@64cbffeb. expected_unattempted plan: all remaining items are either explicitly DEFERRED (P2 post-live-cutover) or require production MTDS/MDPS runs (slot 9 territory). Self-pivoting to next available item.
