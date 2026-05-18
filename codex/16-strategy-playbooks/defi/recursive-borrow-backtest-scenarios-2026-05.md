@@ -125,4 +125,4 @@ Data envelope:
 - `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md` — Family 1 spec
 - `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md` — Family 2 spec
 - `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — per-cell collateral + LTV rules
-- `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — the plan driving Phase 12 implementation
+- `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` — the plan driving Phase 12 implementation (Phase 10+)

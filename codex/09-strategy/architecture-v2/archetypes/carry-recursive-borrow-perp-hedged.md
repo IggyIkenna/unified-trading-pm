@@ -4,9 +4,11 @@
 > [carry-recursive-borrow-lending-only.md](./carry-recursive-borrow-lending-only.md) (Family 1)
 
 > **Status:** Design-shipped 2026-05-12 (UAC enum + ARCHETYPE_CONFIG_SEED + PerpHedgeSizer schemas). Implementation
-> gated on Phase 4 Solidity + Phase 5 orchestrator + Phase 6 Hyperliquid LIVE + Phase 7 PerpHedgeSizer + Phase 8
-> monitor + Phase 12 backtest per
-> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md).
+> gated on Phase 4 Solidity + Phase 5 orchestrator per
+> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+> (Phases 1-9); Phase 6 Hyperliquid LIVE + Phase 7 PerpHedgeSizer + Phase 8 monitor + Phase 12 backtest per
+> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](../../../../plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+> (Phase 10+).
 
 ## What it does
 
@@ -121,7 +123,7 @@ latency (default 5000ms). `CLOSE_LEADER_IF_HEDGE_FAILS` triggers a flash-unwind 
 
 **Code-backport status:** SHIPPED — `execution-service@2a185b7e8` ships `RecursiveLoopOrchestrator` with perp-leg config
 slot. `RecursiveLeverageReceiver.sol` deployed Sepolia at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`. HL+Bybit
-adapters wired in execution-service per Phases 6+7 of `defi_recursive_borrow_archetypes_2026_05_10.md`.
+adapters wired in execution-service per Phases 6+7 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` (Phase 10+).
 
 ## Kill-switch surface (additive to Family 1)
 

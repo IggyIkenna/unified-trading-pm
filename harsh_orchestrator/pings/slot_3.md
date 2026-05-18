@@ -538,3 +538,5 @@ authenticated session for each venue to call:
 - Item 22: archetype doc broken-link sweep — 3 fixes: restaking-reward-economics ../../→../ in carry-recursive-staked +
   yield-staking-simple; APD finalisation plan active→archive. PM@bd018a91.
 Continuing defi_archetypes/defi_master codex residuals.
+
+[2026-05-18 22:00 UTC] slot-3 — STARTED item 23: plan-ref corrections in 4 codex docs (carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged, cefi-perp-leg-bybit, recursive-borrow-backtest-scenarios) that incorrectly reference old 2026_05_10 plan for Phase 10+ content now in post-cutover plan.
