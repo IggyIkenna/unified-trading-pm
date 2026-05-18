@@ -1,5 +1,33 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 13 complete; cumulative 55 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint round N
+
+### Round summary (batch 13)
+
+5 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 68 → 63 entries.
+
+| File                                            | Method (before→after)                                                        | Helpers extracted                                                     |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `adapters/order_adapter.py`                     | `submit_order` 95L→37L                                                       | `_get_cached_order` + `_log_order_created` + `_log_post_submit_audit` |
+| `algorithms/tradfi/implementation_shortfall.py` | `schedule` 90L→36L                                                           | `_compute_ac_fractions` + `_build_child_orders` @staticmethod         |
+| `custody/copper.py`                             | `sign_transaction` 99L→31L                                                   | `_poll_for_completion` async                                          |
+| `algorithms/atomic_bundle_executor.py`          | `validate_atomic_bundle` 61L→47L (docstring trim) + `execute_bundle` 84L→43L | `_build_bundle_success_result`                                        |
+| `data/loaders/defi.py`                          | `load_swaps` 77L→32L + `load_liquidity` 75L→35L                              | `_get_or_create_loop` + `_load_first_nonempty_path`                   |
+
+**Commits**: execution-service@fe0836b07 (Half-1) · PM@2dd9cb28 (Half-2 flip)
+
+**Slot-4 cumulative**: 55 files cleared (allowlist now 63; baseline was 187 at 2026-05-17).
+
+### P0/P1 issues scan
+
+No new actionable P0/P1 issues found. All active P0/P1s are either resolved, old (2026-05-13–15), or require operator
+decisions. The `unused_import_audit_2026_05_18.md` is P3 cosmetic lint — all target files blocked on foreign dirty files
+in other slots.
+
+---
+
 ## [slot 4 → main] 2026-05-16 11:37 UTC — BOOT ACK (day-2 of 15 May split)
 
 **Status**: 🟢 SLOT 4 ACTIVE — picking up 15 May stack, day 2.
