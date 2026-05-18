@@ -1021,6 +1021,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-15**: 61 files cleared (allowlist now 57).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 16 — live_handler + multi_leg + catalog_validator)**: 3 net-new files cleared
+  at execution-service@e8525b230 (cli/handlers/live_execution_handler.py — _execute_sports_instruction 90L→27L via
+  _execute_sports_bet async helper 32L; engine/multi_leg_orchestrator.py — _handle_follower_failure 99L→22L via
+  _fire_compensation_trade async helper 44L; engine/validation/catalog_validator.py —
+  validate_data_config_compatibility 172L→26L via _resolve_config_book_type @staticmethod 24L +
+  _build_instruments_by_type @staticmethod 14L + _check_per_instrument_compat @staticmethod 44L). Allowlist 57→54.
+  AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-16**: 64 files cleared (allowlist now 54).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
