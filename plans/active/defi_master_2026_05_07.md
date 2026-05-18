@@ -480,10 +480,10 @@ these venues.
       including NVDA, USDCAD, BRENTOIL, XAU, XAG, SNDK exotics). Rate-limit budget already validated — 12 RPS handles
       top-30 comfortably. Unlocks cross-asset stat-arb / FX-perp arb against CeFi FX. [AUDIT 2026-05-07: FRESH —
       HANDOVER Item D; deferred pending strategy demand signal]
-- [ ] [DOC] P3. **Per-trade gap documentation in coverage matrix** — codex `02-data/pipeline-coverage-matrix.md`: mark
+- [x] ✅ [DOC] P3. **Per-trade gap documentation in coverage matrix** — codex `02-data/pipeline-coverage-matrix.md`: mark
       `data_type=trades` as "live-only, no historical" for LIGHTER / PACIFICA / EXTENDED. Downstream strategies that
       need per-trade should use OHLCV bars OR forward-poll-built history (~few months, growing from forward-poll launch
-      date). [AUDIT 2026-05-07: FRESH — HANDOVER Item E; honest-coverage transparency]
+      date). [AUDIT 2026-05-07: FRESH — HANDOVER Item E; honest-coverage transparency] PM@13ed5e33
 - [ ] [VERIFY] P0. **Final state verification of Lighter + Pacifica historical backfill VMs** —
       `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. Manifest should show
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
