@@ -270,9 +270,10 @@ smoke begins.
       (a) Linux path builds MEM_WRAP correctly; (b) macOS-simulated path emits warning + empty MEM_WRAP;
       (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke tests + UTL QG green.
       — PM@263e25b6 (5/5 assertions pass; test-qg-mem-cap.sh added to quality-gates-base/tests/).
-- [ ] **6. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh (slot 6 item 9)** — verify
+- [x] ✅ **6. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh (slot 6 item 9)** — verify
       `quality-gates.md` cross-links to the new `quality-gates-memory-governance.md`. Sweep for stale references to
       the OLD `cpu_count // 4` default. Done-def: cross-link added + 0 stale references.
+      — PM@782f5acc (Memory Governance subsection added; 0 stale cpu_count // 4 refs confirmed in quality-gates.md).
 - [ ] **7. codify "VM verify at T+10min" rule** — drop new section in
       `codex/05-infrastructure/vm-tarball-deployment.md` capturing the rule shipped via 2026-05-18 05:15 UTC ping
       (post-launch verification at T+10min before claiming VM "launched"). Done-def: codex section landed + cross-link
