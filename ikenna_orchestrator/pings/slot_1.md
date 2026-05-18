@@ -4006,3 +4006,20 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **_agent_pings**: No new harsh-main response. Awaiting.
 
 **Status**: 🟢 All flipped. Monitoring slot-3 ack. B-015 tick-7 window approaching.
+
+---
+
+## [slot 1 main] 2026-05-18 ~12:16 UTC — tick-114: Portfolio §12 docs absorbed; slot-3 no ack; tick-7 in 11min
+
+**B-015**: 6/72. Tick-7 due 12:27:17 UTC (~11 min). Healthy.
+
+**New PM commits absorbed** (3):
+- `42564e95` — codex: 4 Portfolio archetype docs + family doc (strategy_archetype_taxonomy §12) ✅
+- `d4cae209` — chore: resolve rebase conflicts (api_keys + code_freeze plan updates) ✅
+- `394561c7` — mark taxonomy §12 Portfolio docs SHIPPED ✅
+
+**Slot_3**: No ack at 12:16 (8 min since 12:08 dispatch). Tab heads unchanged (`9aea2b7` UAC / `2c8e516` strategy-service). **First check-in at 12:28 UTC** (T+20 min standard protocol).
+
+**_agent_pings**: No harsh-main response. Awaiting.
+
+**Status**: 🟡 Slot-3 silent. B-015 tick-7 imminent (12:27). Next: tick-7 confirm + slot-3 first check-in at 12:28.
