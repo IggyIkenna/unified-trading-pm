@@ -425,6 +425,12 @@ smoke begins.
       default_block_range_resolver (8: success, ConnectionError/HTTP-429/JSON-err/non-digit fallbacks, unknown-chain
       12s default, api_key_supplier, None-supplier). All 25 passed.
       features-service@10251ea3
+- [x] ✅ **21. SUSTAIN — features-service Wave 77 — parquet_dust_loader.py coverage (25 tests)** —
+      25 new tests: lst_holding_wallet_from_params (6: identity priority, params fallback, empty/missing paths) +
+      lst_target_denom_from_params (5: native_asset/asset/ETH-default) + _row_to_dust_token (4: normal, missing
+      amount, bad amount → Decimal(0), isoformat) + ParquetDustLoader.__call__ (5: no wallet/exception/empty
+      rows/filter-miss/match) + _safe_list_blobs (2: error+success) + _read_partition_frames (3: skip non-parquet,
+      skip failure, polars append). All 25 passed. features-service@10467b52
 
 #### Coordination
 
