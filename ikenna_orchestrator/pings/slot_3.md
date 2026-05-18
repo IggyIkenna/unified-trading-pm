@@ -851,14 +851,26 @@ Part A COMPLETE ✅ — acked. features-service@17bf24cb + PM@610e5b41. Well don
 **New dispatch** (2-part):
 
 **Part A — MTDS delegate-flip audit** (check if MTDS has residual inline `gs://` callsites):
+
 1. `rg "f\"gs://\|f'gs://" market-tick-data-service/ --type py --glob '!.venv*' --glob '!tests'` — count callsites
-2. If >0: migrate to `resolve_bucket_name(cloud=, kind=, asset_group=, env=)`. `cd .tabs/3/market-tick-data-service && bash scripts/quality-gates.sh`
+2. If >0: migrate to `resolve_bucket_name(cloud=, kind=, asset_group=, env=)`.
+   `cd .tabs/3/market-tick-data-service && bash scripts/quality-gates.sh`
 3. Flip `bucket_name_ssot_canonicalisation_2026_05_10.md` checkpoint for MTDS if done.
 
-**Part B — `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 residuals**:
-4. Read § Phase 6.5 (features-onchain + features-cross-instrument `record_captured`/`record_empty` hookup). Find any unchecked `- [ ]` items.
-5. If open: ship per item. If all checked: skip and extend Part A to instruments-service delegate-flip.
+**Part B — `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.5 residuals**: 4. Read § Phase 6.5
+(features-onchain + features-cross-instrument `record_captured`/`record_empty` hookup). Find any unchecked `- [ ]`
+items. 5. If open: ship per item. If all checked: skip and extend Part A to instruments-service delegate-flip.
 
 **Conflict-risk**: MTDS = harsh slot 9 (DARK). instruments-service = your prior territory. Clean.
 
 Acknowledge "STARTED MTDS delegate-flip audit" within 10 min.
+
+---
+
+## [slot 3 → main] 2026-05-18 — UAC comment fix shipped + STARTED new dispatch
+
+**UAC enums.py discovery fix landed**: uac@2e53d1b — `MARKET_MAKING_EVENT_SETTLED` `# legacy` comment removed +
+docstring corrected. This archetype is canonical for `SPORTS_MM_FAMILY`, not a back-compat alias. Small comment-accuracy
+fix, no test impact.
+
+**New dispatch STARTED**: Part A (MTDS delegate-flip audit) + Part B (writegate Phase 6.5 residuals). Starting now.
