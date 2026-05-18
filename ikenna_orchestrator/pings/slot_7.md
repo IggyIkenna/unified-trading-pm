@@ -1295,3 +1295,16 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 - `engine/backtest/engine/results.py::ResultsMixin._collect_runtime_checks`: 78L→27L (extract `_parse_account_report` module fn)
 
 **Running count**: 113/377 cleared (~30%); continuing on 51-75L violations in non-algorithms/, non-data/ files per slot-5 coordination. Slot-5 handles ≥100L in algorithms/ + data/.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-46 Phase B continued
+
+**Tick-46 deliverables** (6 methods in 5 files, execution-service@59060778a):
+- `matching_engine/engine.py::_match_lending`: ruff-reformatted 58L→43L (err-var pattern)
+- `results/serializer.py::serialize_fast`: 51L→44L (extract inner format_date to _format_date)
+- `results/extractor.py::extract_basic_counts`: 75L→30L (extract _count_filled_orders)
+- `engine/validation/data_availability_validator.py::check_market_tick_data`: 75L→36L (extract _get_instrument_data_type_folder + _get_tick_filename)
+- `engine/validation/backtest_validator.py::validate_data_availability`: 75L→43L (extract _validate_missing_catalog_data)
+
+**Running count**: ~119/377 cleared (~32%); continuing tick-47.
