@@ -1068,6 +1068,11 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-21**: 78 files cleared (allowlist now 40).
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 21 — algorithms/impl/twap.py + twap_scheduling.py)**: shipped at
+  execution-service@5138500e4. TWAPExecAlgorithm.on_order 298L→~30L via 7 helpers; schedule_children 189L +
+  spawn_child 201L + submit_final_slice 193L → ≤48L each via 13 helpers. Allowlist 40→38 files. AST clean,
+  behavior-preserving (all logging channels preserved).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
