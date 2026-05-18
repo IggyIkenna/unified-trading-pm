@@ -1698,3 +1698,16 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   methods; `_build_window_data_configs` 71L→13L
 
 **Running count**: ~177/377 cleared (~47%); active non-excluded violations 19→16; continuing tick-71.
+
+## [slot 7 → main] 2026-05-18 — tick-71 Phase B continued
+
+**Tick-71 deliverables** (3 files, execution-service@0ce3d60ef):
+
+- `data/trade_converter.py`: extract `_load_trade_df` + `_check_skip_trades` @staticmethods;
+  `convert_trades_parquet_to_catalog` 70L→35L
+- `algo_library/intent_engine.py`: extract `_build_rebalance_sell_steps` + `_build_rebalance_buy_steps` instance
+  methods; `_decompose_rebalance` 78L→47L
+- `config/grid_generator_core.py`: extract `_upload_one_config` + `_upload_manifest_file` instance methods;
+  `upload_configs` 73L→27L
+
+**Running count**: ~180/377 cleared (~48%); active non-excluded violations 16→13; continuing tick-72.
