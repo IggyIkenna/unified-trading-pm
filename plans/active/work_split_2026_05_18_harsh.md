@@ -274,10 +274,11 @@ smoke begins.
       `quality-gates.md` cross-links to the new `quality-gates-memory-governance.md`. Sweep for stale references to
       the OLD `cpu_count // 4` default. Done-def: cross-link added + 0 stale references.
       — PM@782f5acc (Memory Governance subsection added; 0 stale cpu_count // 4 refs confirmed in quality-gates.md).
-- [ ] **7. codify "VM verify at T+10min" rule** — drop new section in
+- [x] ✅ **7. codify "VM verify at T+10min" rule** — drop new section in
       `codex/05-infrastructure/vm-tarball-deployment.md` capturing the rule shipped via 2026-05-18 05:15 UTC ping
       (post-launch verification at T+10min before claiming VM "launched"). Done-def: codex section landed + cross-link
       from CLAUDE.md "no fire-and-forget VM launches" line.
+      — PM@8adb0284 (T+10min section + CLAUDE.md cross-link).
 
 #### Coordination
 
