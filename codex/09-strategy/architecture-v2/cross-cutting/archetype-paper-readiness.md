@@ -2,7 +2,7 @@
 name: archetype-paper-readiness
 overview:
   Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in the
-  canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 55 archetypes; full coverage matrix at
+  canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 57 archetypes; full coverage matrix at
   `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy
   archetype must clear before being eligible for `OperationalMode.PAPER`.
 type: codex-ssot
@@ -21,8 +21,8 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 18
 > ship.
 
 > **Source file note (corrected 2026-05-12 per `codex_audit_strategy_2026_05_12.md` ST-4)**: the 4-state taxonomy is for
-> **strategy archetypes** per UAC `StrategyArchetype` (55 members) — the same set documented in
-> `codex/09-strategy/architecture-v2/README.md` "55 Archetypes" + the matrix in `category-instrument-coverage.md`. It is
+> **strategy archetypes** per UAC `StrategyArchetype` (57 members) — the same set documented in
+> `codex/09-strategy/architecture-v2/README.md` "57 Archetypes" + the matrix in `category-instrument-coverage.md`. It is
 > NOT a taxonomy of `strategy_service/portfolio_allocator/archetypes.py`, which holds the 8 **PortfolioAllocator
 > archetype engines** (risk-parity / factor / tactical-overlay / multi-strategy / etc.) — those are allocator engines, a
 > different concept. An earlier version of this doc pointed at the allocator file by mistake.
@@ -66,125 +66,127 @@ Archetypes that fail ANY gate stay in `paper-shippable` until the gap closes.
 
 ## Per-archetype matrix (populated 2026-05-17 by slot-5 per `pvl-p18b`)
 
-Source of truth for engine registration: `strategy_service/engine/strategies/v2/factory.py`
-`ARCHETYPE_ENGINE_REGISTRY` (26 archetypes registered; 27 stub/placeholder — not in factory).
+Source of truth for engine registration: `strategy_service/engine/strategies/v2/factory.py` `ARCHETYPE_ENGINE_REGISTRY`
+(26 archetypes registered; 27 stub/placeholder — not in factory).
 
 **Legend**: paper-runnable ✅ | paper-shippable ◐ | backtest-only ◯ | stub/placeholder ☐
 
 ### CARRY_AND_YIELD family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `CARRY_STAKED_BASIS`                   | ◐ paper-shippable | Engine: `carry_and_yield/staked_basis.py`. Dynamic hedge wired (strategy-service@`6431955`). B-015 paper run pending — `pvl-p18a`. |
-| `CARRY_BASIS_DATED`                    | ◯ backtest-only | Engine: `carry_and_yield/basis_dated.py`. No paper plumbing. Post-cutover.     |
-| `CARRY_BASIS_PERP`                     | ◯ backtest-only | Engine: `carry_and_yield/basis_perp.py`. No paper plumbing. Post-cutover.      |
-| `CARRY_RECURSIVE_STAKED`               | ◯ backtest-only | Engine: `carry_and_yield/recursive_staked.py`. No paper plumbing. Post-cutover. |
-| `CARRY_RECURSIVE_BORROW_LENDING_ONLY`  | ◯ backtest-only | Reuses `CarryRecursiveStakedEngine`. `defi_recursive_borrow_archetypes_2026_05_10.md`. No paper plumbing. Post-cutover. |
-| `CARRY_RECURSIVE_BORROW_PERP_HEDGED`   | ◯ backtest-only | Reuses `CarryRecursiveStakedEngine`. Post-cutover.                               |
-| `YIELD_ROTATION_LENDING`               | ◯ backtest-only | Engine: `carry_and_yield/rotation_lending.py`. No paper plumbing. Post-cutover. |
-| `YIELD_STAKING_SIMPLE`                 | ◯ backtest-only | Engine: `carry_and_yield/staking_simple.py`. No paper plumbing. Post-cutover.   |
+| Archetype                             | State             | Evidence / owning plan                                                                                                             |
+| ------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `CARRY_STAKED_BASIS`                  | ◐ paper-shippable | Engine: `carry_and_yield/staked_basis.py`. Dynamic hedge wired (strategy-service@`6431955`). B-015 paper run pending — `pvl-p18a`. |
+| `CARRY_BASIS_DATED`                   | ◯ backtest-only   | Engine: `carry_and_yield/basis_dated.py`. No paper plumbing. Post-cutover.                                                         |
+| `CARRY_BASIS_PERP`                    | ◯ backtest-only   | Engine: `carry_and_yield/basis_perp.py`. No paper plumbing. Post-cutover.                                                          |
+| `CARRY_RECURSIVE_STAKED`              | ◯ backtest-only   | Engine: `carry_and_yield/recursive_staked.py`. No paper plumbing. Post-cutover.                                                    |
+| `CARRY_RECURSIVE_BORROW_LENDING_ONLY` | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine`. `defi_recursive_borrow_archetypes_2026_05_10.md`. No paper plumbing. Post-cutover.            |
+| `CARRY_BASIS_PERP_INV`                | ◯ backtest-only   | Reuses `CarryRecursiveStakedEngine` (renamed from `CARRY_RECURSIVE_BORROW_PERP_HEDGED` 2026-05-18). Post-cutover.                  |
+| `CARRY_STAKED_BASIS_DATED`            | ☐ stub            | Engine: `CarryStakedBasisEngine` (ALLOWED_ARCHETYPES extended, uac@0196842). No paper plumbing. Post-cutover.                      |
+| `CARRY_BASIS_DATED_INV`               | ☐ stub            | Engine: `CarryBasisDatedEngine` (ALLOWED_ARCHETYPES extended, uac@0196842). No paper plumbing. Post-cutover.                       |
+| `YIELD_ROTATION_LENDING`              | ◯ backtest-only   | Engine: `carry_and_yield/rotation_lending.py`. No paper plumbing. Post-cutover.                                                    |
+| `YIELD_STAKING_SIMPLE`                | ◯ backtest-only   | Engine: `carry_and_yield/staking_simple.py`. No paper plumbing. Post-cutover.                                                      |
 
 ### ARBITRAGE_STRUCTURAL family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `ARBITRAGE_PRICE_DISPERSION`           | ◐ paper-shippable | Engine: `arbitrage_structural/price_dispersion.py`. `arbitrage_price_dispersion_finalisation_2026_05_09.md`. B-015 paper run pending — `pvl-p18a`. |
-| `LIQUIDATION_CAPTURE`                  | ◯ backtest-only | Engine: `arbitrage_structural/liquidation_capture.py`. DeFi-only. Post-cutover. |
-| `ARBITRAGE_MEV_SANDWICH`               | ☐ stub | File: `mev/sandwich_theoretical.py` (theoretical; NOT in `ARCHETYPE_ENGINE_REGISTRY`). Post-cutover. |
-| `ARBITRAGE_MEV_JIT_LIQUIDITY`          | ◯ backtest-only | Engine: `mev/jit_liquidity.py`. In factory. MEV simulation requires Tenderly. Post-cutover. |
-| `ARBITRAGE_MEV_BACKRUN`                | ◯ backtest-only | Engine: `mev/backrun.py`. In factory. Post-cutover.                              |
-| `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`     | ◯ backtest-only | Engine: `mev/liquidation_bundle.py`. In factory. Post-cutover.                  |
-| `ARBITRAGE_CROSS_DOMAIN_EVENT`         | ☐ stub | No engine file. Not in factory. PREDICTION×SPORTS cross-domain. Post-cutover.  |
+| Archetype                          | State             | Evidence / owning plan                                                                                                                             |
+| ---------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ARBITRAGE_PRICE_DISPERSION`       | ◐ paper-shippable | Engine: `arbitrage_structural/price_dispersion.py`. `arbitrage_price_dispersion_finalisation_2026_05_09.md`. B-015 paper run pending — `pvl-p18a`. |
+| `LIQUIDATION_CAPTURE`              | ◯ backtest-only   | Engine: `arbitrage_structural/liquidation_capture.py`. DeFi-only. Post-cutover.                                                                    |
+| `ARBITRAGE_MEV_SANDWICH`           | ☐ stub            | File: `mev/sandwich_theoretical.py` (theoretical; NOT in `ARCHETYPE_ENGINE_REGISTRY`). Post-cutover.                                               |
+| `ARBITRAGE_MEV_JIT_LIQUIDITY`      | ◯ backtest-only   | Engine: `mev/jit_liquidity.py`. In factory. MEV simulation requires Tenderly. Post-cutover.                                                        |
+| `ARBITRAGE_MEV_BACKRUN`            | ◯ backtest-only   | Engine: `mev/backrun.py`. In factory. Post-cutover.                                                                                                |
+| `ARBITRAGE_MEV_LIQUIDATION_BUNDLE` | ◯ backtest-only   | Engine: `mev/liquidation_bundle.py`. In factory. Post-cutover.                                                                                     |
+| `ARBITRAGE_CROSS_DOMAIN_EVENT`     | ☐ stub            | No engine file. Not in factory. PREDICTION×SPORTS cross-domain. Post-cutover.                                                                      |
 
 ### MARKET_MAKING family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `MARKET_MAKING_CONTINUOUS`             | ◯ backtest-only | Legacy engine: `market_making/continuous.py`. In factory. No updated paper path. Post-cutover. |
-| `MARKET_MAKING_EVENT_SETTLED`          | ◯ backtest-only | Legacy engine: `market_making/event_settled.py`. In factory. Post-cutover.       |
-| `MARKET_MAKING_PASSIVE_SPREAD`         | ☐ stub | Not in factory. Phase 9 expansion 2026-04-25. Post-cutover.                     |
-| `MARKET_MAKING_INVENTORY_SKEW`         | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `MARKET_MAKING_ML_LEAN`                | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `MARKET_MAKING_QUEUE_MICROSTRUCTURE`   | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `MARKET_MAKING_PREDICTION`             | ☐ stub | Not in factory. Prediction markets MM. Post-cutover.                            |
+| Archetype                            | State           | Evidence / owning plan                                                                         |
+| ------------------------------------ | --------------- | ---------------------------------------------------------------------------------------------- |
+| `MARKET_MAKING_CONTINUOUS`           | ◯ backtest-only | Legacy engine: `market_making/continuous.py`. In factory. No updated paper path. Post-cutover. |
+| `MARKET_MAKING_EVENT_SETTLED`        | ◯ backtest-only | Legacy engine: `market_making/event_settled.py`. In factory. Post-cutover.                     |
+| `MARKET_MAKING_PASSIVE_SPREAD`       | ☐ stub          | Not in factory. Phase 9 expansion 2026-04-25. Post-cutover.                                    |
+| `MARKET_MAKING_INVENTORY_SKEW`       | ☐ stub          | Not in factory. Post-cutover.                                                                  |
+| `MARKET_MAKING_ML_LEAN`              | ☐ stub          | Not in factory. Post-cutover.                                                                  |
+| `MARKET_MAKING_QUEUE_MICROSTRUCTURE` | ☐ stub          | Not in factory. Post-cutover.                                                                  |
+| `MARKET_MAKING_PREDICTION`           | ☐ stub          | Not in factory. Prediction markets MM. Post-cutover.                                           |
 
 ### DEFI_LP family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `DEFI_LP_CONCENTRATED`                 | ◯ backtest-only | Engine: `defi_lp/concentrated.py`. In factory. No paper wiring. Post-cutover.   |
-| `DEFI_LP_POOL`                         | ◯ backtest-only | Engine: `defi_lp/pool.py`. In factory. Post-cutover.                            |
-| `DEFI_LP_VAULT`                        | ◯ backtest-only | Engine: `defi_lp/vault.py`. In factory. Post-cutover.                           |
+| Archetype              | State           | Evidence / owning plan                                                        |
+| ---------------------- | --------------- | ----------------------------------------------------------------------------- |
+| `DEFI_LP_CONCENTRATED` | ◯ backtest-only | Engine: `defi_lp/concentrated.py`. In factory. No paper wiring. Post-cutover. |
+| `DEFI_LP_POOL`         | ◯ backtest-only | Engine: `defi_lp/pool.py`. In factory. Post-cutover.                          |
+| `DEFI_LP_VAULT`        | ◯ backtest-only | Engine: `defi_lp/vault.py`. In factory. Post-cutover.                         |
 
 ### EVENT_DRIVEN family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `EVENT_DRIVEN`                         | ◯ backtest-only | Engine: `event_driven/event_driven.py`. In factory. Post-cutover.               |
+| Archetype      | State           | Evidence / owning plan                                            |
+| -------------- | --------------- | ----------------------------------------------------------------- |
+| `EVENT_DRIVEN` | ◯ backtest-only | Engine: `event_driven/event_driven.py`. In factory. Post-cutover. |
 
 ### ML_DIRECTIONAL family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `ML_DIRECTIONAL_CONTINUOUS`            | ◯ backtest-only | Engine: `ml_directional/continuous.py`. ML model dependency (ml-training-service). Post-cutover. |
-| `ML_DIRECTIONAL_EVENT_SETTLED`         | ◯ backtest-only | Engine: `ml_directional/event_settled.py`. ML model dependency. Post-cutover.  |
+| Archetype                      | State           | Evidence / owning plan                                                                           |
+| ------------------------------ | --------------- | ------------------------------------------------------------------------------------------------ |
+| `ML_DIRECTIONAL_CONTINUOUS`    | ◯ backtest-only | Engine: `ml_directional/continuous.py`. ML model dependency (ml-training-service). Post-cutover. |
+| `ML_DIRECTIONAL_EVENT_SETTLED` | ◯ backtest-only | Engine: `ml_directional/event_settled.py`. ML model dependency. Post-cutover.                    |
 
 ### RULES_DIRECTIONAL family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `RULES_DIRECTIONAL_CONTINUOUS`         | ◯ backtest-only | Engine: `rules_directional/continuous.py`. In factory. Post-cutover.            |
-| `RULES_DIRECTIONAL_EVENT_SETTLED`      | ◯ backtest-only | Engine: `rules_directional/event_settled.py`. Sports value betting variant. Post-cutover. |
+| Archetype                         | State           | Evidence / owning plan                                                                    |
+| --------------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `RULES_DIRECTIONAL_CONTINUOUS`    | ◯ backtest-only | Engine: `rules_directional/continuous.py`. In factory. Post-cutover.                      |
+| `RULES_DIRECTIONAL_EVENT_SETTLED` | ◯ backtest-only | Engine: `rules_directional/event_settled.py`. Sports value betting variant. Post-cutover. |
 
 ### STAT_ARB_PAIRS family
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `STAT_ARB_PAIRS_FIXED`                 | ◯ backtest-only | Engine: `stat_arb_pairs/pairs_fixed.py`. In factory. Post-cutover.              |
-| `STAT_ARB_CROSS_SECTIONAL`             | ◯ backtest-only | Engine: `stat_arb_pairs/cross_sectional.py`. In factory. Post-cutover.          |
+| Archetype                  | State           | Evidence / owning plan                                                 |
+| -------------------------- | --------------- | ---------------------------------------------------------------------- |
+| `STAT_ARB_PAIRS_FIXED`     | ◯ backtest-only | Engine: `stat_arb_pairs/pairs_fixed.py`. In factory. Post-cutover.     |
+| `STAT_ARB_CROSS_SECTIONAL` | ◯ backtest-only | Engine: `stat_arb_pairs/cross_sectional.py`. In factory. Post-cutover. |
 
 ### VOL_TRADING family (18 archetypes, Phase 9 expansion 2026-04-25)
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `VOL_TRADING_OPTIONS`                  | ◯ backtest-only | Legacy engine: `vol_trading/options.py`. In factory. Retained for back-compat. Post-cutover. |
-| `VOL_ARB_RV_IV`                        | ☐ stub | Not in factory. Phase 9 granular expansion. Post-cutover.                       |
-| `VOL_SPREAD_STRUCTURES`                | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_CARRY`                            | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_OVERLAY_COVERED_CALLS`            | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_OVERLAY_PROTECTIVE_PUT`           | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_STRADDLE`                         | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_SYNTHETIC_DELTA`                  | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_MARKET_MAKING`                    | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_ML_LEAN`                          | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_0DTE_GAMMA_SCALPING`              | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_0DTE_PIN_RISK`                    | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_TERM_STRUCTURE_ARB`               | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_TERM_STRUCTURE_SLOPE`             | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_DISPERSION`                       | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_VARIANCE_SWAP`                    | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_LEAPS_CONVEXITY`                  | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_CROSS_ASSET_SPREAD`               | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `VOL_RATIO_SPREAD`                     | ☐ stub | Not in factory. Post-cutover.                                                   |
+| Archetype                    | State           | Evidence / owning plan                                                                       |
+| ---------------------------- | --------------- | -------------------------------------------------------------------------------------------- |
+| `VOL_TRADING_OPTIONS`        | ◯ backtest-only | Legacy engine: `vol_trading/options.py`. In factory. Retained for back-compat. Post-cutover. |
+| `VOL_ARB_RV_IV`              | ☐ stub          | Not in factory. Phase 9 granular expansion. Post-cutover.                                    |
+| `VOL_SPREAD_STRUCTURES`      | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_CARRY`                  | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_OVERLAY_COVERED_CALLS`  | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_OVERLAY_PROTECTIVE_PUT` | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_STRADDLE`               | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_SYNTHETIC_DELTA`        | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_MARKET_MAKING`          | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_ML_LEAN`                | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_0DTE_GAMMA_SCALPING`    | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_0DTE_PIN_RISK`          | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_TERM_STRUCTURE_ARB`     | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_TERM_STRUCTURE_SLOPE`   | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_DISPERSION`             | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_VARIANCE_SWAP`          | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_LEAPS_CONVEXITY`        | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_CROSS_ASSET_SPREAD`     | ☐ stub          | Not in factory. Post-cutover.                                                                |
+| `VOL_RATIO_SPREAD`           | ☐ stub          | Not in factory. Post-cutover.                                                                |
 
 ### PORTFOLIO family (cross-category, Phase 9 2026-04-25)
 
-| Archetype                              | State          | Evidence / owning plan                                                           |
-| -------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `PORTFOLIO_MULTI_STRATEGY`             | ☐ stub | Not in factory. Cross-category. Post-cutover.                                   |
-| `PORTFOLIO_RISK_PARITY`                | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `PORTFOLIO_FACTOR_ALLOCATION`          | ☐ stub | Not in factory. Post-cutover.                                                   |
-| `PORTFOLIO_TACTICAL_OVERLAY`           | ☐ stub | Not in factory. Post-cutover.                                                   |
+| Archetype                     | State  | Evidence / owning plan                        |
+| ----------------------------- | ------ | --------------------------------------------- |
+| `PORTFOLIO_MULTI_STRATEGY`    | ☐ stub | Not in factory. Cross-category. Post-cutover. |
+| `PORTFOLIO_RISK_PARITY`       | ☐ stub | Not in factory. Post-cutover.                 |
+| `PORTFOLIO_FACTOR_ALLOCATION` | ☐ stub | Not in factory. Post-cutover.                 |
+| `PORTFOLIO_TACTICAL_OVERLAY`  | ☐ stub | Not in factory. Post-cutover.                 |
 
 ### Summary counts (2026-05-17)
 
-| State              | Count | Notes                                                      |
-| ------------------ | ----- | ---------------------------------------------------------- |
-| ✅ paper-runnable  | 0     | No archetype has completed ≥3-day paper run yet            |
-| ◐ paper-shippable  | 2     | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending) |
-| ◯ backtest-only    | 24    | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired |
-| ☐ stub/placeholder | 27    | Not in factory; Phase 9 expansion names or theoretical     |
-| **Total**          | **53** |                                                           |
+| State              | Count  | Notes                                                           |
+| ------------------ | ------ | --------------------------------------------------------------- |
+| ✅ paper-runnable  | 0      | No archetype has completed ≥3-day paper run yet                 |
+| ◐ paper-shippable  | 2      | CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION (B-015 pending) |
+| ◯ backtest-only    | 24     | In `ARCHETYPE_ENGINE_REGISTRY`; paper plumbing not yet wired    |
+| ☐ stub/placeholder | 27     | Not in factory; Phase 9 expansion names or theoretical          |
+| **Total**          | **53** |                                                                 |
 
 ## Solana-specific addendum
 

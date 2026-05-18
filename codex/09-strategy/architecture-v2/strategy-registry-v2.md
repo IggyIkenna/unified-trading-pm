@@ -6,7 +6,7 @@ scope: [engineer, admin]
 
 > **PARTIALLY SUPERSEDED 2026-04-25 by Phase 9 — counts below are the 2026-04-21 baseline; UAC enums are canonical.**
 > Concrete numbers in this doc (`18 archetypes`, `96 entries`, `8 families`) reflect the 2026-04-21 registry snapshot.
-> Per the `enum-wins` governance rule (`strategy-summary.md:27`), the canonical counts are: 9 families / 55 archetypes /
+> Per the `enum-wins` governance rule (`strategy-summary.md:27`), the canonical counts are: 9 families / 57 archetypes /
 > 14 InstructionActionV2 actions (per UAC `StrategyFamily` / `StrategyArchetype` / `InstructionActionV2`). The flatten
 > arithmetic still holds at the cell-level (each cell's `representative_slot_labels` flatten to N entries) — the total
 > entry count grew with the Phase 9 + recursive-staked-split additions but the mechanism is unchanged. Refresh trigger:
