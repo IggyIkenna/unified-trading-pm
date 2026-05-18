@@ -352,7 +352,8 @@ execution-service branch (live-defi-rollout):
 - `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`, `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
 - `execution_service/results/save_operations.py`
 - `execution_service/data/trade_converter.py`
-- **Next**: S14+ SUSTAIN gap scanning.
+- `execution-service@5dec3c4b` — S14: amm_math (7 tests) + algo_comparison (6 tests). QG: 7391 passed.
+- **Next**: S15+ SUSTAIN gap scanning.
 
 **Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 7365+ passed after S13.
 

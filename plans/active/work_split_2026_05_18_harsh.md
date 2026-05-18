@@ -542,6 +542,13 @@ smoke begins.
       test_algo_impl_adaptive_twap/_hybrid_optimal/_passive_aggressive (33 tests unblocked). Bug fix:
       save_operations.save_report returns None (not path) when skip_local=True. Lint: trade_converter.py
       5 E501 violations from batch-23. QG: tests clean. execution-service@b184eaef.
+- [x] ✅ **S14. SUSTAIN — execution-service amm_math + algo_comparison zero-to-coverage (13 tests)** —
+      amm_math.py (0→covered): TestAMMQuotes — constant_product basic + zero_reserves guard, stable_swap
+      like-kind low impact, weighted 50/50, get_amm_quote dispatches all 4 pool types, detect_pool_type
+      known + unknown fallback. algo_comparison.py (0→covered): TestAlgoComparisonRunner — raises on no
+      algos, single algo report, captures error gracefully, all-failed→no recommendation, two algos
+      more-slices wins, summary() keys. Also: ruff format batch (20 files @1ea6dcf8), drain_mode
+      type:ignore removal @2c1d63b7. QG: 7391 passed. execution-service@5dec3c4b.
 
 #### Coordination
 
