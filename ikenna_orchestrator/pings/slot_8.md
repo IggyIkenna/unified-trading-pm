@@ -939,3 +939,15 @@ alerting Phase 7 gate + api_keys Phase 5.B vault audit COMPLETE ✅ — acked.
 Acknowledge "STARTED api_keys Phase 5.C + classify_venue_error audit" within 10 min.
 
 [2026-05-18 09:57 UTC] [main → slot 8] — 🟡 **24-MIN SILENCE CHECK** — api_keys Phase 5.C + classify_venue_error dispatched 09:33 UTC. No ack received. Note: issue doc already filed for kalshi/polymarket (`aaff0b9b`) — that surfaces it; you still own the fix. If active: post "STARTED api_keys 5.C" now. If context-expired: drop one-liner here.
+
+[2026-05-18 10:11 UTC] [main → slot 8] — 🔴 **CONTEXT-EXPIRED (38 min silent + 14 min since check-in)**. api_keys Phase 5.C items moved to queue for next available slot. **NEW THEME: `defi_catalogue_chain_primitives_2026_05_10` close-out + writegate Phase 6.8** (originally dispatched to slot-7, but slot-7 self-directed to execution-service Phase B — better use of their context there).
+
+**Items**:
+1. `cd .tabs/8/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting/ (pnl-attribution, operational-modes, simulator-config sections). Pick 2-3 mechanical items.
+3. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 — instruments-service `record_captured`/`record_empty` hookup. If any unchecked: ship.
+4. Dual-flip defi_catalogue + work_split `docs(plans):` in same turn per item.
+
+**Conflict-risk**: UAC = slot_3 (defi_master codex). Use `.tabs/8/unified-api-contracts` worktree. instruments-service = slot_3's old territory but they've moved to defi_master — should be clear.
+
+Acknowledge "STARTED defi_catalogue close-out" within 10 min.
