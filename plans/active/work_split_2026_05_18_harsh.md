@@ -142,9 +142,16 @@ smoke begins.
       + target_net_delta + vol-cap clamp); Stream C PM-plan (archived leveraged_leg_controller Phase 4 GATE note).
       Back-flipped Stream B + Stream C success criteria (already done per plan body). Remaining open: Stream A
       [SCRIPT] probe + [strategy-service] P1; Stream D P1 remaining archetype docs.
-- [ ] **11. DEEP RESERVE — codex/09-strategy/ archetype docstring drift sweep** — pick 2-3 archetypes from codex/09-strategy/architecture-v2/archetypes/ and audit for stale line-refs / SHIPPED-marker accuracy / cross-link health. Done-def: 2-3 codex files updated + grep-clean.
+- [x] ✅ **11. DEEP RESERVE — codex/09-strategy/ archetype docstring drift sweep** — PM@0405fa79. 3 archetypes
+      updated: defi-lp-concentrated (SHIPPED label + LegController ATOMIC 2-leg section); defi-lp-vault (SHIPPED label
+      + LegController ATOMIC 1-leg section); market-making-continuous (stale target-engine path → SHIPPED
+      v2/market_making/continuous.py; duplicate IL-in-a-nutshell section removed). All 3 files grep-clean with
+      Code-backport status markers.
 - [ ] **12. DEEP RESERVE — simulation_scenarios_topology_price_shocks codex-side items (54%, 40/74)** — 34 items remaining. Plan: [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md). Pick 2-3 codex-only items (avoid sim-engine code changes — those need risk service ownership).
-- [ ] **13. DEEP RESERVE — carry_staked_basis + APD archetype cross-link audit in codex** — verify codex docs reference correct UAC enum members + plan file paths. Sweep for stale `carry_staked_basis_structure_axis_2026_05_04` references. Done-def: cross-link table + 5+ fixes.
+- [x] ✅ **13. DEEP RESERVE — carry_staked_basis + APD archetype cross-link audit in codex** — PM@38ff42f0. 5 fixes:
+      (1) carry-staked-basis SHIPPED label; (2) plans/ai/ → plans/active/ stale-dir fix; (3) ## See also expanded with
+      defi_master_2026_05_07 + defi_archetypes_canonicalisation active plan links; (4) APD ## See also:
+      defi_archetypes_canonicalisation (Stream B+D) + arbitrage_price_dispersion_finalisation (Phase A) links added.
 
 #### Coordination
 
