@@ -1015,3 +1015,38 @@ remain.
 
 Ready for new dispatch. Requesting next theme — suggest: (a) features-service unshipped items, (b) strategy-service
 config schema work, or (c) other codex gaps from master plan inventory.
+
+## [main → slot 3] 2026-05-18 ~12:08 UTC — NEW DISPATCH: Phase 5 STRATEGY_DECISION_CONTEXT
+
+**Plan**: `plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5
+**Priority**: P0 — unblocks pvl-p18b gate + harsh-side FeatureObservationWriter correlation_id dependency
+
+**Design already decided** (ikenna-main, 11:43 UTC `_agent_pings.md`):
+- New `DataType`: `STRATEGY_DECISION_CONTEXT` — NOT an extension of `HedgeRatioSnapshotRecord`
+- `DecisionOutcome(StrEnum)` closed-set: `REBALANCED | HOLD_CARRY_UNFAVORABLE | HOLD_WITHIN_DRIFT_BAND | HOLD_FEATURE_STALE | HOLD_POSITION_OPTIMAL | HOLD_RATE_LIMIT`
+
+**Files to touch** (tab `.tabs/3/`):
+
+1. **UAC** `unified_api_contracts/internal/domain/defi/sim_schemas.py` (same file as `HedgeRatioSnapshotRecord`):
+   - Add `DecisionOutcome(StrEnum)` above `HedgeRatioSnapshot`
+   - Add `StrategyDecisionContextRecord(BaseModel)`: `tick_ts`, `stake_apy`, `borrow_apy`, `perp_funding_apy`, `usdc_idle_apy`, `computed_net_apr`, `peg_drift_observed`, `peg_drift_threshold_bps`, `decision_outcome: DecisionOutcome`, `decision_reason_detail: str | None`, `position_state: dict[str, Decimal]`, `partition_dt: str`, `available_at: datetime`, `correlation_id: str | None = None`
+   - `availability_semantics.py`: add `("defi", "strategy_decision_context"): "fetch_completed_at"`
+   - `source_priority.py`: add `("defi", "strategy_decision_context"): ["strategy_service"]`
+
+2. **strategy-service** `staked_basis.py` `on_tick` (~line 485):
+   - Inline Pattern A writer (same pattern as Phase 2 `HedgeRatioSnapshot` writer)
+   - Fires EVERY tick — BEFORE the `rebalance_triggered` gate
+   - Bucket: `resolve_bucket_name(kind="strategy-store", asset_group="defi")`
+   - `record_captured(category="defi", data_type="strategy_decision_context", ...)`
+
+3. **pnl-attribution-service** `PnlDomainAdapter`: add `read_strategy_decision_context()` mirroring `read_hedge_ratio_snapshots()` shape
+
+4. **Tests** (3 minimum): REBALANCED round-trip, 5× HOLD_WITHIN_DRIFT_BAND replay (B-015 fills=0 scenario), HOLD_FEATURE_STALE edge case
+
+**Conflict-risk**: B-015 reads features/manifest only — does NOT write `strategy-store`. No conflict.
+
+**QG**: `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` → `cd .tabs/3/strategy-service && bash scripts/quality-gates.sh`
+
+**Dual-flip**: flip Phase 5 checkboxes in `hedge_ratio_snapshot_persistence_2026_05_13.md` per item shipped.
+
+Acknowledge "STARTED Phase 5 STRATEGY_DECISION_CONTEXT" within 10 min.
