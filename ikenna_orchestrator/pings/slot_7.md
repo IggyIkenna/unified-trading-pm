@@ -1541,3 +1541,12 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/backtest/engine/setup.py::SetupMixin._setup_catalog_and_instrument`: 119L→32L (extract `_collect_instrument_categories` @staticmethod 19L + `_load_defs_from_gcs` @staticmethod 40L + `_resolve_catalog_path` @staticmethod 22L; fixed typos "atcatalog", "RELOAD=trueto")
 
 **Running count**: ~154/377 cleared (~41%); continuing tick-64.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-64 Phase B continued
+
+**Tick-64 deliverables** (1 method in 1 file, execution-service@697b9131a):
+- `engine/backtest/engine/setup.py::SetupMixin._calculate_instruction_alpha`: 147L→29L (extract `_load_market_data_for_alpha_calc` 22L + `_load_single_instrument_for_alpha` @staticmethod 34L + `_collect_non_trade_fills` 15L + `_build_alpha_results_and_summary` @staticmethod 47L; dropped dead `results` list; setup.py now ALL CLEAR)
+
+**Running count**: ~155/377 cleared (~41%); continuing tick-65.
