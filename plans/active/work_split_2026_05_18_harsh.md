@@ -343,9 +343,9 @@ smoke begins.
 - [ ] **2. PBM canonical_writer extension — MDPS-side parametrized archetype dispatch hardening** — slot 9 shipped
       `mdps@4ad6060` (25 tests, 3 classes) on 2026-05-15. Identify 1-2 gaps surfaced during that work (any "fall-through
       contract" residuals); add 3-5 tests. Done-def: gap closed + PBM QG green.
-- [ ] **3. solana_lst_native_staking_adapters_2026_05_14 final item (95%, 21/22)** — 1 checkbox left. Plan path:
+- [x] ✅ **3. solana_lst_native_staking_adapters_2026_05_14 final item (95%, 21/22)** — 1 checkbox left. Plan path:
       [`solana_lst_native_staking_adapters_2026_05_14.md`](solana_lst_native_staking_adapters_2026_05_14.md). Close
-      out.
+      out. (deployment-service@ea1356b — launchers + watchdog prefixes; plan now 22/22 100%)
 
 #### Reserve queue
 
