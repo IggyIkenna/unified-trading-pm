@@ -1352,6 +1352,16 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-51 Phase B continued
+
+**Tick-51 deliverables** (2 methods in 2 files, execution-service@921bb264c):
+- `services/funding_recon_engine.py::FundingReconEngine.reconcile`: 55L→34L (_finalize_and_alert 37L)
+- `engine/backtest/actors/evaluator.py::StrategyEvaluator.evaluate_performance`: 59L→50L (_gather_stats 30L)
+
+**Running count**: ~130/377 cleared (~35%); 51-75L bucket exhausted. Moving to 76-100L.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
