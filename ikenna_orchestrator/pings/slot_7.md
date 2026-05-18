@@ -1532,3 +1532,12 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/backtest/engine/setup.py::SetupMixin._setup_config_and_instruments`: 108L→43L (extract `_extract_venue_name_from_config` @staticmethod 18L + `_extract_instrument_id_from_config` @staticmethod 41L; fixed typos "namefrom", "compatiblewith")
 
 **Running count**: ~153/377 cleared (~41%); continuing tick-63.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-63 Phase B continued
+
+**Tick-63 deliverables** (1 method in 1 file, execution-service@11e0f80a4):
+- `engine/backtest/engine/setup.py::SetupMixin._setup_catalog_and_instrument`: 119L→32L (extract `_collect_instrument_categories` @staticmethod 19L + `_load_defs_from_gcs` @staticmethod 40L + `_resolve_catalog_path` @staticmethod 22L; fixed typos "atcatalog", "RELOAD=trueto")
+
+**Running count**: ~154/377 cleared (~41%); continuing tick-64.
