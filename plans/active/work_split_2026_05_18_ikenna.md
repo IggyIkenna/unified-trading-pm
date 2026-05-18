@@ -106,11 +106,13 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   --glob '!.venv*' --glob '!tests'
 ```
 
-1. - [ ] **UTL callsite sweep** (23 callsites → 0): search + migrate each callsite to `resolve_bucket_name(...)`. Run QG
-         after: `cd .tabs/2/unified-trading-library && bash scripts/quality-gates.sh`. Push:
-         `git push origin HEAD:live-defi-rollout`. (refactor 0.4×, ~8 = 3.2 cal)
-2. - [ ] **batch-live-recon callsite sweep** (7 callsites → 0): same pattern. QG + push. (refactor 0.4×, ~4 = 1.6 cal)
-3. - [ ] **strategy-service callsite sweep** (2 callsites → 0): same pattern. QG + push. (refactor 0.4×, ~2 = 0.8 cal)
+1. - [x] ✅ **UTL callsite sweep** (consumer callsites: asset_group.py + options_cluster_lookup.py migrated; L3 wrappers
+         in cloud_constants.py deferred to write-pause per checklist note) — utl@5b9e386c (2026-05-18 slot 2
+         continuation)
+2. - [x] ✅ **batch-live-recon callsite sweep** (6 get_bucket_name → resolve_bucket_name in config.py; fixed
+         market_data_tick → kind "market-data") — batch-recon@64dc955 (2026-05-18 slot 2 continuation)
+3. - [x] ✅ **strategy-service callsite sweep** (3 get_bucket_name + 1 hardcoded bucket → resolve_bucket_name in
+         strategy_config_loader.py + gcs_feature_provider.py) — strategy@5d6c963 (2026-05-18 slot 2 continuation)
 4. - [ ] **Flip plan checkboxes** in `bucket_name_ssot_canonicalisation_2026_05_10.md` for each repo completed. Target:
          plan reaches 19+/22 done. (infra 0.8×, ~1 = 0.8 cal)
 5. - [ ] **Reserve**: `alerting_service_live_rules_2026_05_07` — 15 remaining items (2 cal days) if all delegate-flip
@@ -141,11 +143,12 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 and ship them.
 
 3. - [x] ✅ **Chain-primitive UAC schema additions** — ChainKind(StrEnum) 24-member + CHAIN_BRIDGE_GRAPH + genesis dates
-         (STARKNET/HYPERLIQUID_L1) + HYPERLIQUID_RPC_TEMPLATES / STARKNET_RPC_TEMPLATES; exported from __init__.py.
+         (STARKNET/HYPERLIQUID_L1) + HYPERLIQUID_RPC_TEMPLATES / STARKNET_RPC_TEMPLATES; exported from **init**.py.
          defi_master Phase 1 closed. — uac@9aea2b7 (2026-05-18 slot 3)
 4. - [ ] **MTDS wiring for chain primitives** — per-protocol handlers referencing new UAC types. (design 0.6×, ~4 = 2.4
          cal) **DEFERRED** — successor: defi_master Phase 2 (instruments-service CLOB adapters).
-5. - [x] ✅ **Plan checkboxes flip** — defi_master Phase 1 flipped + work_split items 3+5 flipped. — PM (2026-05-18 slot 3)
+5. - [x] ✅ **Plan checkboxes flip** — defi_master Phase 1 flipped + work_split items 3+5 flipped. — PM (2026-05-18
+         slot 3)
 
 **Conflict notes**: features-service bucket_naming is distinct from Harsh slot 4's test coverage work.
 
