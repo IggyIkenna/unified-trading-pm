@@ -803,9 +803,7 @@ smoke begins.
       (375x667) and iPhone Pro (414x896); covers home/deployments/data-status/costs/kill-switch load + hamburger +
       horizontal overflow. TypeScript clean; 719 Vitest pass. **~3 cal-days**.
 - [x] ✅ **S14. SUSTAIN — deployment-api error response standardization** [deployment-api] — **SHIPPED 2026-05-18 slot-7** — deployment-api@4c629ea: 10 violations fixed across 5 routes (vm_events 4×, shard_detail 3×, client_treasury 1×, risk_routes 1×, execution_backtest_launch 1×); stderr leak → generic message; 2 test assertions updated. Done-def: 10+ fixes ✅. **~3 cal-days**.
-- [ ] **S15. SUSTAIN — deployment-api/ui i18n readiness audit** [deployment-ui] — identify hardcoded user-facing
-      strings; flag for i18n extraction. Done-def: hardcoded-string report + 10+ strings extracted to translation file
-      (en-US baseline). **~3 cal-days**.
+- [x] ✅ **S15. SUSTAIN — deployment-api/ui i18n readiness audit** [deployment-api + deployment-ui] — **SHIPPED 2026-05-18 slot-7** — deployment-api@45a5ab5 + deployment-ui@59a7874: messages.py (10 typed error constants) + strings.ts (45 typed UI constants); 55 strings extracted across deployments.py + manual_pending.py + DeploymentsList.tsx + VmDeploymentDetails.tsx. Done-def: 55 strings extracted ✅ (10+ target). **~3 cal-days**.
 
 #### Coordination
 
