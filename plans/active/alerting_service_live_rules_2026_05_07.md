@@ -343,7 +343,7 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       `TELEGRAM_MESSAGE_SENT severity=INFO`. Smoke message text: "alerting-service Phase 4 Telegram SMOKE — Tab L
       confirms: SM secrets in GCP + AWS; HTTP path verified end-to-end". Operator should see message in chat with
       timestamp `2026-05-10 18:57:19 UTC`.
-- [ ] [SCRIPT] P0. **`alerting-service/alerting_service/config.py` — wire SM hot-reload for the Telegram credentials.**
+- [x] [SCRIPT] P0. **`alerting-service/alerting_service/config.py` — wire SM hot-reload for the Telegram credentials.**
       Current state: `AlertingSystemConfig.telegram_bot_token` + `telegram_chat_id` are pydantic-settings fields read
       from `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` env-vars (UnifiedCloudConfig pattern). For SM-backed values the VM
       bootstrap (`setup-data-pipeline-vm.sh`) needs to: (1) read the secret values from GCP/AWS SM at VM-start using
@@ -354,7 +354,10 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       parallel agents" rule — alerting-service is Harsh's repo per its README; Tab L (Ikenna's tab) doesn't unilaterally
       push code edits to alerting-service when the SM push + smoke + launcher all already enable Phase 7 to fire today
       using `.act-secrets` env-vars. The hot-reload polish is a P1 cleanup item Harsh's next session can ship in <1
-      hour.
+      hour. **(evidence: alerting-service@9d4150d — `_PagingCredentialsReloader` class in `config_reloaders.py`;
+      polls SM every 300s for `alerting-telegram-bot-token` + `alerting-telegram-chat-id` + `alerting-telegram-chat-id-ops`;
+      thread-safe atomic swap; wired in `start_paging_credentials_reloader()` / `stop_paging_credentials_reloader()`;
+      18-test coverage at alerting@89361d6 — QG ✅ 80%. BACKFILLED 2026-05-18 slot 6.)**
 - [ ] [SCRIPT] P1. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
       1st-tier=Ikenna, 2nd-tier=Harsh, 30-min auto-escalate. Capture policy ID in
       `unified-trading-pm/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`. **DEFERRED** — Telegram-as-primary
