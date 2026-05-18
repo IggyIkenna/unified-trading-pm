@@ -1022,84 +1022,107 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-4 cumulative across batches 1-15**: 61 files cleared (allowlist now 57).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 16 — live_handler + multi_leg + catalog_validator)**: 3 net-new files cleared
-  at execution-service@e8525b230 (cli/handlers/live_execution_handler.py — _execute_sports_instruction 90L→27L via
-  _execute_sports_bet async helper 32L; engine/multi_leg_orchestrator.py — _handle_follower_failure 99L→22L via
-  _fire_compensation_trade async helper 44L; engine/validation/catalog_validator.py —
-  validate_data_config_compatibility 172L→26L via _resolve_config_book_type @staticmethod 24L +
-  _build_instruments_by_type @staticmethod 14L + _check_per_instrument_compat @staticmethod 44L). Allowlist 57→54.
-  AST clean. ruff 0 errors.
+  at execution-service@e8525b230 (cli/handlers/live_execution_handler.py — \_execute_sports_instruction 90L→27L via
+  \_execute_sports_bet async helper 32L; engine/multi_leg_orchestrator.py — \_handle_follower_failure 99L→22L via
+  \_fire_compensation_trade async helper 44L; engine/validation/catalog_validator.py —
+  validate_data_config_compatibility 172L→26L via \_resolve_config_book_type @staticmethod 24L +
+  \_build_instruments_by_type @staticmethod 14L + \_check_per_instrument_compat @staticmethod 44L). Allowlist 57→54. AST
+  clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-16**: 64 files cleared (allowlist now 54).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 17 — tp_sl_generator + signal_driven_shared + grid_generator_core)**: 3
   net-new files cleared at execution-service@ae6426a0a. tp_sl_generator: generate_random_tp_sl_for_signal 83L→32L via
-  _select_tightness @staticmethod 13L + _resolve_signal_seed @staticmethod 15L (resolved merge conflict with parallel
-  slot that used _signal_seed_from_timestamp — dropped duplicate, unified on _resolve_signal_seed).
-  signal_driven_shared: add_exit 85L→42L via _accumulate_exit 42L helper mirroring _accumulate_entry pattern (resolved
-  merge conflict with parallel slot). grid_generator_core: _get_config_for_instruction_type 85L→30L via
-  _get_lend_borrow_base_config @staticmethod 29L + _get_stake_base_config @staticmethod 29L. Allowlist 54→51.
-  AST clean. ruff 0 errors.
+  \_select_tightness @staticmethod 13L + \_resolve_signal_seed @staticmethod 15L (resolved merge conflict with parallel
+  slot that used \_signal_seed_from_timestamp — dropped duplicate, unified on \_resolve_signal_seed).
+  signal_driven_shared: add_exit 85L→42L via \_accumulate_exit 42L helper mirroring \_accumulate_entry pattern (resolved
+  merge conflict with parallel slot). grid_generator_core: \_get_config_for_instruction_type 85L→30L via
+  \_get_lend_borrow_base_config @staticmethod 29L + \_get_stake_base_config @staticmethod 29L. Allowlist 54→51. AST
+  clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-17**: 67 files cleared (allowlist now 51).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 18 — adaptive_twap + signal_driven_v3_utils)**: 2 entries cleared at
-  execution-service@7bd19a1bf. adaptive_twap.py: on_order 88L→40L via _init_parent_state @instance 39L (init
-  price history, store parent state, return n_slices + start_time; resolves parallel-slot merge). signal_driven_v3_utils.py:
-  calculate_exec_params 89L cleared by parallel slot 6f544699d via _calc_dynamic_horizon + _calc_sce_exec_params
-  (my duplicate work discarded; allowlist removal shipped together). Allowlist 51→49. AST clean. ruff 0 errors.
+  execution-service@7bd19a1bf. adaptive_twap.py: on_order 88L→40L via \_init_parent_state @instance 39L (init price
+  history, store parent state, return n_slices + start_time; resolves parallel-slot merge). signal_driven_v3_utils.py:
+  calculate_exec_params 89L cleared by parallel slot 6f544699d via \_calc_dynamic_horizon + \_calc_sce_exec_params (my
+  duplicate work discarded; allowlist removal shipped together). Allowlist 51→49. AST clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-18**: 69 files cleared (allowlist now 49).
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 19 — results/serializer + defi_execution/protocols/drift)**: 2 entries
-  cleared at execution-service@3e99f2972. results/serializer.py: serialize_benchmark_comparison 104L→12L via
-  _serialize_benchmark_result @staticmethod 17L + _serialize_algo_result @staticmethod 19L +
-  _build_comparison_summary @staticmethod 28L. defi_execution/protocols/drift.py: place_order 104L→19L via
-  _build_driftpy_params 30L (driftpy inside-imports + direction/order_type_map/precision conversion) +
-  _make_paper_trade_result 19L + _execute_live_order async 36L (send + log + return). Allowlist 49→47. AST clean.
+  **Ratchet-down 2026-05-18 (slot-4 batch 19 — results/serializer + defi_execution/protocols/drift)**: 2 entries cleared
+  at execution-service@3e99f2972. results/serializer.py: serialize_benchmark_comparison 104L→12L via
+  \_serialize_benchmark_result @staticmethod 17L + \_serialize_algo_result @staticmethod 19L +
+  \_build_comparison_summary @staticmethod 28L. defi_execution/protocols/drift.py: place_order 104L→19L via
+  \_build_driftpy_params 30L (driftpy inside-imports + direction/order_type_map/precision conversion) +
+  \_make_paper_trade_result 19L + \_execute_live_order async 36L (send + log + return). Allowlist 49→47. AST clean.
   ruff + basedpyright 0 errors.
 
   **Slot-4 cumulative across batches 1-19**: 71 files cleared (allowlist now 47).
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 20 — engine/backtest/instruction_loader + 2×instruction_validator)**: 3 entries cleared at execution-service@38c539a0c. engine/backtest/instruction_loader.py: convert_instructions_to_schedule 140L→30L via _normalize_instructions_df 8L + _extract_trade_instruments 18L + _split_and_log_non_trade 28L + _make_timing_trigger 23L + _build_trade_schedule 38L (fixed 2 pre-existing E501 in sibling methods). utils/validation/instruction_validator.py: validate_instructions_dataframe 125L→22L via _check_instrument_type_mapping 17L + _check_tp_sl_type_support 20L + _check_tp_sl_logic_consistency 28L. validation/instruction_validator.py: same 3-helper extraction (136L→22L). Allowlist 47→44. AST clean. ruff 0 errors.
+  **Ratchet-down 2026-05-18 (slot-4 batch 20 — engine/backtest/instruction_loader + 2×instruction_validator)**: 3
+  entries cleared at execution-service@38c539a0c. engine/backtest/instruction_loader.py:
+  convert_instructions_to_schedule 140L→30L via \_normalize_instructions_df 8L + \_extract_trade_instruments 18L +
+  \_split_and_log_non_trade 28L + \_make_timing_trigger 23L + \_build_trade_schedule 38L (fixed 2 pre-existing E501 in
+  sibling methods). utils/validation/instruction_validator.py: validate_instructions_dataframe 125L→22L via
+  \_check_instrument_type_mapping 17L + \_check_tp_sl_type_support 20L + \_check_tp_sl_logic_consistency 28L.
+  validation/instruction_validator.py: same 3-helper extraction (136L→22L). Allowlist 47→44. AST clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-20**: 74 files cleared (allowlist now 44).
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 21 — enhanced_comparison + recursive_loop_orchestrator + report_timeline_extractor + leveraged_leg_controller)**: 4 entries cleared at execution-service@5c2618cc7. benchmark/enhanced_comparison.py: compute_enhanced_metrics 125L→42L via _extract_algorithm_config @staticmethod 18L + _extract_instrument_venue @staticmethod 11L + _compute_regime_metrics @staticmethod 33L (already had helpers from earlier context; compute_enhanced_metrics body slimmed to use them). defi_execution/orchestrators/recursive_loop_orchestrator.py: _persistent_open 125L→49L via _make_open_fail_result 23L + _handle_hf_abort 32L + _handle_open_failed 22L + _record_iter_completed 31L instance helpers (both early-exit failure paths share _make_open_fail_result). results/report_timeline_extractor.py: build_equity_curve 132L→34L via _collect_all_fills_from_alpha @staticmethod 35L + _accumulate_equity_points @staticmethod 28L + _build_equity_from_timestamps @staticmethod 37L. algo_library/leveraged_leg_controller.py: compute_drift 133L→36L via docstring trim (48L→1L) + _apply_reward_inflow module-level 22L + _compute_leg_drift_entry module-level 31L (for/else → early-return semantics preserved). Allowlist 44→40. AST clean. ruff 0 errors.
+  **Ratchet-down 2026-05-18 (slot-4 batch 21 — enhanced_comparison + recursive_loop_orchestrator +
+  report_timeline_extractor + leveraged_leg_controller)**: 4 entries cleared at execution-service@5c2618cc7.
+  benchmark/enhanced_comparison.py: compute_enhanced_metrics 125L→42L via \_extract_algorithm_config @staticmethod 18L +
+  \_extract_instrument_venue @staticmethod 11L + \_compute_regime_metrics @staticmethod 33L (already had helpers from
+  earlier context; compute_enhanced_metrics body slimmed to use them).
+  defi_execution/orchestrators/recursive_loop_orchestrator.py: \_persistent_open 125L→49L via \_make_open_fail_result
+  23L + \_handle_hf_abort 32L + \_handle_open_failed 22L + \_record_iter_completed 31L instance helpers (both early-exit
+  failure paths share \_make_open_fail_result). results/report_timeline_extractor.py: build_equity_curve 132L→34L via
+  \_collect_all_fills_from_alpha @staticmethod 35L + \_accumulate_equity_points @staticmethod 28L +
+  \_build_equity_from_timestamps @staticmethod 37L. algo_library/leveraged_leg_controller.py: compute_drift 133L→36L via
+  docstring trim (48L→1L) + \_apply_reward_inflow module-level 22L + \_compute_leg_drift_entry module-level 31L
+  (for/else → early-return semantics preserved). Allowlist 44→40. AST clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-21**: 78 files cleared (allowlist now 40).
 
   **Ratchet-down 2026-05-18 (slot-5 batch 21 — algorithms/impl/twap.py + twap_scheduling.py)**: shipped at
-  execution-service@5138500e4. TWAPExecAlgorithm.on_order 298L→~30L via 7 helpers; schedule_children 189L +
-  spawn_child 201L + submit_final_slice 193L → ≤48L each via 13 helpers. Allowlist 40→38 files. AST clean,
-  behavior-preserving (all logging channels preserved).
+  execution-service@5138500e4. TWAPExecAlgorithm.on_order 298L→~30L via 7 helpers; schedule_children 189L + spawn_child
+  201L + submit_final_slice 193L → ≤48L each via 13 helpers. Allowlist 40→38 files. AST clean, behavior-preserving (all
+  logging channels preserved).
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 22 — algo_library/dust_router_runner + algo_library/sor_cross_chain + engine/validation/backtest_validator)**: shipped at
-  execution-service@215c10027. dust_router_runner: \_build_reward_attribution_rows 137L→37L via \_resolve_reward_stream_meta
-  + \_converted_row + \_held_row + \_deferred_row instance helpers (pre-existing `# type: ignore[arg-type]` preserved on
-  `distributor_kind=kind`). sor_cross_chain: \_evaluate_cross_chain_route 137L→49L via \_compute_bridge_in_params +
-  \_compute_bridge_out_params + \_make_bridge_in_leg + \_make_swap_legs + \_make_bridge_out_leg (5-tuple return avoids
-  double get_bridge_cost in main). backtest_validator: validate_instruction_data_availability 141L→44L via
-  \_extract_backtest_config + \_gather_instrument_list + \_detect_data_requirements + \_load_trades_and_validate +
-  \_load_and_validate_instrument. Allowlist 38→35. AST clean. ruff 0 errors.
+  **Ratchet-down 2026-05-18 (slot-4 batch 22 — algo_library/dust_router_runner + algo_library/sor_cross_chain +
+  engine/validation/backtest_validator)**: shipped at execution-service@215c10027. dust_router_runner:
+  \_build_reward_attribution_rows 137L→37L via \_resolve_reward_stream_meta
+  - \_converted_row + \_held_row + \_deferred_row instance helpers (pre-existing `# type: ignore[arg-type]` preserved on
+    `distributor_kind=kind`). sor_cross_chain: \_evaluate_cross_chain_route 137L→49L via \_compute_bridge_in_params +
+    \_compute_bridge_out_params + \_make_bridge_in_leg + \_make_swap_legs + \_make_bridge_out_leg (5-tuple return avoids
+    double get_bridge_cost in main). backtest_validator: validate_instruction_data_availability 141L→44L via
+    \_extract_backtest_config + \_gather_instrument_list + \_detect_data_requirements + \_load_trades_and_validate +
+    \_load_and_validate_instrument. Allowlist 38→35. AST clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-22**: 81 files cleared (allowlist now 35).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 23 — data/converter_orderbook + data/trade_converter)**: shipped at
   execution-service@01b128498. converter_orderbook.py: convert_orderbook_parquet_to_catalog 118L→33L via
   \_run_batch_loop 46L + \_check_df_time_window_skip 39L; \_process_batch 106L→31L via \_build_row_deltas 43L;
-  \_should_skip_conversion_with_time_window 75L→24L. trade_converter.py: convert_trades_parquet_to_catalog 230L→42L
-  via \_normalize_trade_df + \_vectorize_trade_df + \_build_trade_tick_list + \_write_trade_ticks;
-  convert_trades_to_bars 146L→43L via \_normalize_instrument_id_for_bars + \_aggregate_to_bars_df.
-  Allowlist 33→31. AST clean. ruff 0 errors.
+  \_should_skip_conversion_with_time_window 75L→24L. trade_converter.py: convert_trades_parquet_to_catalog 230L→42L via
+  \_normalize_trade_df + \_vectorize_trade_df + \_build_trade_tick_list + \_write_trade_ticks; convert_trades_to_bars
+  146L→43L via \_normalize_instrument_id_for_bars + \_aggregate_to_bars_df. Allowlist 33→31. AST clean. ruff 0 errors.
 
   **Slot-4 cumulative across batches 1-23**: 83 files cleared (allowlist now 31).
 
   **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
-  execution-service@56865ab83. loader_base.py: __init__ 86L→~30L via _resolve_bucket_and_domain +
-  _init_fuse_behavior; _infer_category 83L→10L via 5 domain-specific staticmethod helpers.
-  loader_transforms.py: _infer_category 83L→10L (same pattern); _normalize_timestamp_columns_for_backtest
-  217L→16L via 5 helpers (_convert_ts_event, _convert_defi_timestamp, _convert_standard_timestamp,
-  _normalize_defi_derivative_columns, _normalize_standard_columns). Allowlist 35→33 files. AST clean.
+  execution-service@56865ab83. loader_base.py: **init** 86L→~30L via \_resolve_bucket_and_domain + \_init_fuse_behavior;
+  \_infer_category 83L→10L via 5 domain-specific staticmethod helpers. loader_transforms.py: \_infer_category 83L→10L
+  (same pattern); \_normalize_timestamp_columns_for_backtest 217L→16L via 5 helpers (\_convert_ts_event,
+  \_convert_defi_timestamp, \_convert_standard_timestamp, \_normalize_defi_derivative_columns,
+  \_normalize_standard_columns). Allowlist 35→33 files. AST clean.
+
+  **Ratchet-down 2026-05-18 (slot-5 batch 23 — algorithms/impl/hybrid_optimal_spawn.py)**: shipped at
+  execution-service@1797be080. \_get_market_price 88L→22L via \_get_l1_mbp_price + \_resolve_l2_spread_adjustment.
+  \_spawn_hybrid_child_fresh 68L→20L via \_do_spawn_market_for_hybrid + \_register_hybrid_child. Also fixed
+  .pre-commit-config.yaml gitleaks --config to use .gitleaks.toml (relative symlink) — env var not expanded by prek.
+  Allowlist 31→30 files. AST clean. ruff 0 errors.
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
