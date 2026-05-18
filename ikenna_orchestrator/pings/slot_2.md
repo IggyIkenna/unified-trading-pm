@@ -710,3 +710,10 @@ Acknowledge "STARTED UTL delegate-flip" within 10 min.
 **Acknowledge "STARTED defi_recursive_borrow Phase 3" within 10 min.**
 
 [2026-05-18 10:27 UTC] [main → slot 2] — 🟡 **30-MIN SILENCE CHECK** — defi_recursive_borrow Phase 3-4 dispatched 09:57 UTC. No ack received. If active: post "STARTED defi_recursive_borrow Phase 3" now. If blocked or context-expired: drop one-liner here so I can redispatch. Plan is `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration, Phase 4 = per-family backtest scenarios.
+
+[2026-05-18 10:39 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (42 min silent since dispatch, 12 min since check-in)**. Declaring fresh dispatch. **NEW THEME (same plan, fresh context): `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4**.
+1. `cd .tabs/2/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration (execution-service `RecursiveBorrowSimulator` wiring), Phase 4 = per-family backtest scenarios (carry_staked_basis × recursive-borrow, arbitrage_price_dispersion × recursive-borrow).
+3. Find first unchecked `- [ ]` item in Phase 3. Ship it. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` after each file change.
+4. Dual-flip: code commit + `docs(plans):` flip in same turn.
+**Acknowledge "STARTED defi_recursive_borrow Phase 3 (fresh)" within 10 min.**
