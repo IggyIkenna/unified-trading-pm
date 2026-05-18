@@ -52,6 +52,13 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **ARCHIVED 2026-05-18 (slot 10)** — 100% complete (15/15 checkboxes flipped per slot-2 Wave 3 closeout 2026-05-13;
+> plan body line ~533 explicitly: "Plan eligible for archive (pending operator direction on archival window)").
+> Preserved for archaeology. Deferred items already migrated: Phase 3 AWS-toggle validation →
+> `aws_migration_defi_first_2026_05_07.md` Phase N; promote*workflow sub-todo 1.Y (DEFERRED-AFTER-CONSOLIDATION-PHASE2)
+> flipped in `promote_workflow*\*` plan. Per-item DEFERRED-PER-AUDIT / DEFERRED-AFTER-AWS-PHASE-1 annotations in body
+> carry their named successors.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.

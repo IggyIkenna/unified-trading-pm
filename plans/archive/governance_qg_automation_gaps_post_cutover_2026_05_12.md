@@ -28,6 +28,11 @@ estimate_calibrated_ai_days: 3.0
 
 # Governance HARD RULE automation + QG ratchet gaps (post-cutover)
 
+> **ARCHIVED 2026-05-18 (slot 10)** — 100% complete (7/7 checkboxes flipped, every item carries a `**MIGRATED FROM:**`
+> annotation citing the source audit finding). Preserved for archaeology. Successor work (where applicable) lives in
+> `codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md` +
+> `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` (named in frontmatter `related_plans`).
+
 > **MIGRATED FROM:** `codex_vs_citadel_infrastructure_audit_2026_05_10` — Phase 5 POST_CUTOVER consolidation 2026-05-12.
 > Source area issue docs in `plans/archive/issues/codex_audit_governance_2026_05_12.md` +
 > `codex_audit_data_2026_05_12.md` + `codex_audit_strategy_2026_05_12.md` + `codex_audit_ui_2026_05_12.md` +

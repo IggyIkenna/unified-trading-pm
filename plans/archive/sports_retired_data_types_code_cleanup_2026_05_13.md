@@ -28,6 +28,10 @@ model_tier: sonnet-doable
 thinking: medium
 ---
 
+> **ARCHIVED 2026-05-18 (slot 10)** — 100% complete (12/12 checkboxes flipped). Preserved for archaeology. No deferred
+> work outstanding — the single "Deferred discovery" item (TRANSFERMARKT_VALUES alias) was migrated + SHIPPED 2026-05-15
+> (IS@2a024ab + UAC@5662ff5) in this same plan body. No successor required.
+
 # Sports retired data_types — code cleanup follow-up
 
 ## Why
