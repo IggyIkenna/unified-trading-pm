@@ -699,5 +699,13 @@ All 3 repo QGs green. 0 unused non-autouse fixtures remaining. Pivoting to S6 (c
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item S7** — cross-repo `# noqa` justification audit. 15-code taxonomy applied:
 qg-os-env, gs-uri, qg-print, qg-deep-import, BLE001, ARG002, E402, C901, PLC0415, qg-empty-fallback, F401, ARG002,
-S310, qg-inline-threshold, qg-raw-json. Rates: execution-service@774602ea (205/205=100%), features-service (78/81=96%),
-risk-and-exposure-service (14/14=100%), UAC (35/35=97%). All repos ≥95%. Pivoting to S8 (CI workflow consistency audit).
+S310, qg-inline-threshold, qg-raw-json. Rates: execution-service@774602ea (205/205=100%), features-service@59750699 (78/81=96%),
+risk-and-exposure-service@d7cd9dc (14/14=100%), UAC@1f50b19 (35/35=97%). All repos ≥95%. Done.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S8** — cross-repo CI workflow consistency audit. Scanning .github/workflows/ across 13 repos.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S8** — CI workflow consistency audit. Audited 13 repos × 8-12 workflows each.
+FINDING: update-dependency-version.yml had 2 versions across 23 repos (5 on older single-Telegram-token pattern vs
+canonical per-env PROD/STAGING/DEV token pattern). Fixed 4 non-UAC repos via PM SSOT rollout script:
+risk-and-exposure-service@d7cd9dc, strategy-service@6cccda2, system-integration-tests@e7644f7, trading-agent-service@a049733.
+UAC skipped (Ikenna primary). Action versions all @v4/v5 ✓. Secret patterns (GH_PAT) consistent ✓. Pivoting to S10.

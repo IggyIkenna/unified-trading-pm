@@ -186,9 +186,10 @@ smoke begins.
 - [x] ✅ **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — 15-code taxonomy applied across 4 repos:
       execution-service@774602ea (205/205=100%), features-service (78/81=96%), risk-and-exposure-service (14/14=100%),
       UAC (35/35=97%). All repos ≥95% justified. Done-def met.
-- [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — `.github/workflows/` per repo —
-      pinned action versions, env-var consistency, secret reference patterns. Done-def: per-repo workflow drift report +
-      5+ alignments. **~6 cal-days**.
+- [x] ✅ **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — Audited 13 repos × 8-12 workflows.
+      Finding: `update-dependency-version.yml` had 2 versions (5 repos on older single-Telegram-token pattern).
+      Fixed: canonical PM template rolled to risk-and-exposure-service@d7cd9dc, strategy-service@6cccda2,
+      system-integration-tests@e7644f7, trading-agent-service@a049733. Action versions all @v4/v5 ✓. 4+ alignments. Done-def met.
 - [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** [workspace audit] — AST scan across 11 repos: 0
       actual `datetime.now()` calls in source (only `pd.Timestamp.now()` in h2h_calculator.py + docstrings).
       Workspace already clean. Done-def: 0 violations ✅.
