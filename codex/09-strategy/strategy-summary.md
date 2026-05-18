@@ -184,7 +184,7 @@ construction it spans family instances (its `primary_category` is `CROSS_CATEGOR
 **Distinguishing test called out in the docs:** is the edge _mechanical_ (guaranteed conditional on correct execution)
 or _statistical_ (profitable on average with spread risk)? Mechanical → Arbitrage. Statistical → Vol Trading / Stat Arb.
 
-**9. Portfolio** — _added 2026-04-25, family doc pending under `architecture-v2/families/portfolio.md`_
+**9. Portfolio** — _added 2026-04-25. Family doc: [`architecture-v2/families/portfolio.md`](./architecture-v2/families/portfolio.md)_
 
 - **Alpha source:** Meta-allocation across instances of the other 8 families. The Portfolio family does NOT generate its
   own per-trade signals — it produces `AllocationDirective` events that re-weight or activate/deactivate child strategy
@@ -472,23 +472,24 @@ reasoning over the whole universe — this is what distinguishes it from running
 
 The Portfolio family adds 4 cross-category sleeve archetypes. Each is itself a strategy instance: receives equity, runs
 through risk gates, kill-switch machinery, and share-class accounting like any other strategy — but its emitted
-instructions are `AllocationDirective` events to child strategy instances rather than per-instrument `TRADE`s. Per-
-archetype docs pending.
+instructions are `AllocationDirective` events to child strategy instances rather than per-instrument `TRADE`s.
 
-**`PORTFOLIO_MULTI_STRATEGY`** _(per-archetype doc pending)_ — Equal-weighted (or fixed-weight) multi-strategy sleeve.
-Allocates across N child strategy instances spanning multiple families (e.g. ML Directional + Carry + Vol Trading) with
-operator-mandated weights. Rebalances on a fixed cadence (daily / weekly / monthly).
+**[`PORTFOLIO_MULTI_STRATEGY`](./architecture-v2/archetypes/portfolio-multi-strategy.md)** — Equal-weighted (or
+fixed-weight) multi-strategy sleeve. Allocates across N child strategy instances spanning multiple families (e.g. ML
+Directional + Carry + Vol Trading) with operator-mandated weights. Rebalances on a fixed cadence (daily / weekly /
+monthly).
 
-**`PORTFOLIO_RISK_PARITY`** _(per-archetype doc pending)_ — Risk-parity allocation across child strategy instances.
-Per-strategy realised-vol estimate → inverse-vol weighting → child equity targets. Re-runs at the rebalance cadence.
+**[`PORTFOLIO_RISK_PARITY`](./architecture-v2/archetypes/portfolio-risk-parity.md)** — Risk-parity allocation across
+child strategy instances. Per-strategy realised-vol estimate → inverse-vol weighting → child equity targets. Re-runs at
+the rebalance cadence.
 
-**`PORTFOLIO_FACTOR_ALLOCATION`** _(per-archetype doc pending)_ — Factor-exposure allocation: declares target loadings
-on systemic factors (carry / momentum / vol / size / quality), allocates to child strategies whose realised exposures
-load onto those factors. Used for mandate-driven sleeves.
+**[`PORTFOLIO_FACTOR_ALLOCATION`](./architecture-v2/archetypes/portfolio-factor-allocation.md)** — Factor-exposure
+allocation: declares target loadings on systemic factors (carry / momentum / vol / size / quality), allocates to child
+strategies whose realised exposures load onto those factors. Used for mandate-driven sleeves.
 
-**`PORTFOLIO_TACTICAL_OVERLAY`** _(per-archetype doc pending)_ — Operator/regime-driven tactical re-weighting on top of
-a base allocation. Regime classifier or operator command → per-strategy multiplier on base weight. Higher-frequency
-rebalancing than the other 3 (intraday possible).
+**[`PORTFOLIO_TACTICAL_OVERLAY`](./architecture-v2/archetypes/portfolio-tactical-overlay.md)** — Operator/regime-driven
+tactical re-weighting on top of a base allocation. Regime classifier or operator command → per-strategy multiplier on
+base weight. Higher-frequency rebalancing than the other 3 (intraday possible).
 
 ---
 
