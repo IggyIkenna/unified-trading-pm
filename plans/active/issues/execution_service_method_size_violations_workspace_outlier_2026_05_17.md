@@ -1002,6 +1002,15 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-13**: 55 files cleared (allowlist now 63).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 14 — engine/validation + venues/deribit_orders)**: 2 net-new files cleared at
+  execution-service@8fd663b0a (engine/validation/data_availability_validator.py — check_book_type_data_requirements
+  83L→31L via \_check_instrument_book_type_dates 42L; venues/deribit_orders.py — submit_order 107L→42L via
+  \_classify_deribit_instrument_type + \_compute_final_amount + \_build_order_request_params + \_make_rejected_result;
+  get_available_instruments 104L→44L via \_format_deribit_instrument; check_market_tick_data conflict resolved accepting
+  upstream module-level helpers). Allowlist 63→61. AST clean. ruff + basedpyright 0 errors.
+
+  **Slot-4 cumulative across batches 1-14**: 57 files cleared (allowlist now 61).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
@@ -1037,6 +1046,5 @@ Not attempting any fix in this autonomous loop — 377 methods would burn slot 7
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: 377 violations; Phase B in progress (slot 2, ~103/377 cleared)
+**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: 377 violations; Phase B in progress (slot 2, ~103/377
+cleared)
