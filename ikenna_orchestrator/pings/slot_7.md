@@ -1512,3 +1512,13 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `utils/validation/instruction_validator.py::validate_tp_sl_logic`: 113L→33L (extract `_validate_tp_sl_side` @staticmethod 46L)
 
 **Running count**: ~149/377 cleared (~40%); continuing tick-61.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-61 Phase B continued
+
+**Tick-61 deliverables** (2 methods in 2 files, execution-service@7c5840080):
+- `engine/backtest/data_loader.py::DataLoader.build_data_configurations`: 110L→49L (extract `_build_window_data_configs` 49L; also fixed typo "andare" → "and are")
+- `engine/backtest/engine/setup.py::SetupMixin._build_node_configurations`: 111L→47L (extract `_build_venue_configs` 21L + `_build_exec_algo_configs` 27L + `_build_run_config_and_venue` 21L; fixed typos "inL1_MBP", "intoconfig", "venue(s)venue")
+
+**Running count**: ~151/377 cleared (~40%); continuing tick-62.
