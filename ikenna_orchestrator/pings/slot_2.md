@@ -708,3 +708,5 @@ Acknowledge "STARTED UTL delegate-flip" within 10 min.
 3. Ship per item. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` (Phase 3 needs execution-service contract changes).
 4. Dual-flip plan + work_split `docs(plans):` in same turn.
 **Acknowledge "STARTED defi_recursive_borrow Phase 3" within 10 min.**
+
+[2026-05-18 10:27 UTC] [main → slot 2] — 🟡 **30-MIN SILENCE CHECK** — defi_recursive_borrow Phase 3-4 dispatched 09:57 UTC. No ack received. If active: post "STARTED defi_recursive_borrow Phase 3" now. If blocked or context-expired: drop one-liner here so I can redispatch. Plan is `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration, Phase 4 = per-family backtest scenarios.

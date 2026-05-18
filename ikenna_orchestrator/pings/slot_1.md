@@ -3556,3 +3556,26 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: defi_catalogue + writegate 6.8 — 6 min (dispatched 10:11). Within window.
 
 **Status**: 🟢 All active. Tick 5 window imminent (10 min). No action needed.
+
+---
+
+## [slot 1 main] 2026-05-18 ~10:27 UTC — tick-96: B-015 tick-5 window; slot-2 check-in; slot-3 acked defi_master
+
+**B-015**: 4/72 ticks at last GCS read (09:27:36Z). Tick 5 fires at 10:27:17 UTC (this tick window). Log uploaded every 30s — tick-5 should appear on next GCS read.
+
+**New commits since tick-95** (4 absorbed):
+- `85502fc5` — MDPS item 16 done: 11 canonical_writer error-path tests ✅ (slot-6 before pivot)
+- `f7877569` — slot-3 Phase 2.D complete + defi_master dispatch ack ✅
+- `01476191` — writegate Phase 2.D flip: assert_available_at_present wired + QG green ✅
+- `d36db3e3` — slot-7 flip tick-61: data_loader.py 110L→49L + setup.py 111L→47L ✅
+
+**Slot states** (10:27 UTC):
+- slot_2: 🟡 **CHECK-IN SENT** — defi_recursive_borrow Phase 3-4, 30 min no ack (dispatched 09:57). Check-in in slot_2.md now.
+- slot_3: ✅ **ACKed defi_master codex close-out** (10:04 UTC, "Pulling LDR + reading plan now"). 22 min on theme. Active.
+- slot_4: session close; done.
+- slot_5: 🟢 execution-service delegate-flip active.
+- slot_6: 🟢 live_pipeline Phase 1 MTDS/MDPS active. ACK received.
+- slot_7: 🟢 Phase B execution-service refactoring, ~149/377 (~40%) cleared, continuing tick-62.
+- slot_8: defi_catalogue + writegate 6.8 — 16 min (dispatched 10:11). Within window.
+
+**Status**: 🟢 B-015 tick-5 imminent. All slots active or within window. Check-in slot_2.
