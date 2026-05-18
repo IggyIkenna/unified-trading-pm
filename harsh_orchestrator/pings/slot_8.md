@@ -13,3 +13,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 07:55 UTC] slot-8 — ✅ DONE item 3 (workspace-constraints audit): PASS aligned=True, 0 issues. PM@096d0620.
 [2026-05-18 08:10 UTC] slot-8 — ✅ DONE item 4 (codex/06 cross-link sweep): 19 stale refs fixed across 6 files. PM@8fa773c4. PRIMARY QUEUE COMPLETE — moving to reserve.
 [2026-05-18 08:35 UTC] slot-8 — ✅ DONE item 5 (UTL HMAC coverage extension): 8 new unit tests (6→14), all 40 HMAC tests pass. UTL@ac8e7de + PM flip. Moving to item 6 (cassette parity).
+
+[2026-05-18 13:05 UTC] [main → slot 8] — 🟡 **DUAL-FLIP BACKFILL** — items 4/5 commits @5b764277 @0f3a19f5 flipped work_split only. Item 4 (codex/06 cross-link sweep) + item 5 (UTL HMAC tests) — backfill: (a) close any open SSOT codex hygiene checkbox in codex/06 plan-of-record; (b) flip UTL HMAC test checkbox in the relevant UTL test-coverage plan if one exists, or note "new tests, no underlying plan to flip".

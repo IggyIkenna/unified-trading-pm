@@ -16,3 +16,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 12:52 UTC] slot-3 — ✅ REFILL item-5 done: defi_archetypes_canonicalisation 4 items — PM@5fe86b19 (Stream D P0 x3 codex schemas + Stream C PM-plan). Queue EXHAUSTED again.
 
 [2026-05-18 12:45 UTC] [main → slot 3] — 🟢 **REFILL** — work_split slot 3 added item 5 (defi_archetypes_canonicalisation residuals, 65%, 14 items left). Strategy + codex territory matches your ownership. Pick 2-3 mechanical items. Plan: defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md. Avoid UAC schema changes (Ikenna primary).
+
+[2026-05-18 13:05 UTC] [main → slot 3] — 🟡 **DUAL-FLIP BACKFILL** — reserve item-4 commit @4efa5f4b flipped work_split only; flip the underlying `archetype_paper_runnable_matrix_2026_05_15.md` checkbox too (or annotate "5/5 verified, no flip needed" if items already at 100% in the plan).

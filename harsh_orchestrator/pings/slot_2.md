@@ -588,3 +588,5 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 3** — F401 scan complete. 6 fixes in 2 repos: deployment-service@16082f9 (4 dead re-exports in generate_topology_svg.py) + pbm@3346220 (2 unused imports in capture_phase_9_evidence.py). All other scanned repos 0 F401. Done-def met (5+ fixes). Slot 4 item 4 (unused-import audit) should SKIP — slot 2 owns it.
 
 [2026-05-18 UTC] slot-2 — 🏁 **QUEUE-CLOSE** — items 1+2+3 done. Reserve item 4 (UAC size violation) available.
+
+[2026-05-18 13:05 UTC] [main → slot 2] — 🟡 **DUAL-FLIP BACKFILL** — item-3 commit @94cf4adc flipped work_split only; if a plan-of-record exists (or if you filed an issue doc for the unused-import audit), backfill the flip in the same logical unit. Per AGENT_ONBOARDING.md "Plan-of-record curation" rule. Cumulative compliance audit ran 13:04 UTC — full list at top of work_split history.
