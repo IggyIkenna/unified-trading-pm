@@ -914,3 +914,14 @@ Acknowledge "STARTED defi_master codex close-out" within 10 min.
 3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.
 4. Dual-flip: code commit + `docs(plans): flip defi_master item <N>` in same turn.
 **Acknowledge "STARTED defi_master (fresh)" within 10 min.**
+
+[2026-05-18 ~11:xx UTC] [slot 3 → main] — 🟢 **STARTED + PHASE 1 + PHASE 3 DONE** (fresh context resumed after compaction)
+- **Phase 1 UAC ChainKind extension** ✅ — shipped uac@9aea2b7:
+  ChainKind(StrEnum) 24-member + CHAIN_BRIDGE_GRAPH + CHAIN_GENESIS_DATES (STARKNET/HYPERLIQUID_L1) +
+  HYPERLIQUID_RPC_TEMPLATES + STARKNET_RPC_TEMPLATES. defi_master Phase 1 flipped [x].
+- **Phase 3 archetype docs** ✅ — shipped PM@172fa05e:
+  allowed_chains field added to carry-staked-basis.md [ethereum, solana, arbitrum] +
+  arbitrage-price-dispersion.md [ethereum, arbitrum, solana, base, optimism]. defi_master Phase 3 flipped [x].
+- **QG failures**: 6 pre-existing violations (max 5) in files I don't own — types + tests PASS. Not my scope.
+- **Next**: scanning defi_master for more open codex/09-strategy/ items to ship.
+

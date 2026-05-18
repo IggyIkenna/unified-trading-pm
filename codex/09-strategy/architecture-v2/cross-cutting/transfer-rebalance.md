@@ -94,16 +94,21 @@ rebalance_policy:
 
 ## Bridge selection (DeFi)
 
-Cross-chain moves have multiple bridge options:
+Cross-chain moves have multiple bridge options. The canonical 1-hop bridge graph is
+`unified_api_contracts.canonical.crosscutting.defi.CHAIN_BRIDGE_GRAPH` — use it to enumerate valid rebalance
+paths rather than hardcoding chain pairs here. Multi-hop paths (e.g. Starknet → Ethereum → Arbitrum) are not
+in `CHAIN_BRIDGE_GRAPH` and must be decomposed by the rebalancer into sequential 1-hop legs.
 
-| Bridge             | Chains                   | Speed           | Cost            |
-| ------------------ | ------------------------ | --------------- | --------------- |
-| Across             | ETH↔ARB/OP/BASE         | Fast (sec–min)  | Low             |
-| Stargate           | Most EVM                 | Medium          | Medium          |
-| LayerZero native   | Most EVM                 | Medium          | Medium          |
-| Wormhole           | EVM↔Solana              | Medium          | Medium          |
-| CCTP (USDC native) | ETH↔ARB/OP/BASE/AVAX    | Fast            | Low (mint/burn) |
-| Native bridges     | Optimism/Arbitrum native | Slow (hours-7d) | Lowest          |
+| Bridge                   | Chains                      | Speed               | Cost            |
+| ------------------------ | --------------------------- | ------------------- | --------------- |
+| Across                   | ETH↔ARB/OP/BASE             | Fast (sec–min)      | Low             |
+| Stargate                 | Most EVM                    | Medium              | Medium          |
+| LayerZero native         | Most EVM                    | Medium              | Medium          |
+| Wormhole                 | EVM↔Solana                  | Medium              | Medium          |
+| CCTP (USDC native)       | ETH↔ARB/OP/BASE/AVAX        | Fast                | Low (mint/burn) |
+| Native bridges           | Optimism/Arbitrum native    | Slow (hours–7d)     | Lowest          |
+| Hyperliquid native       | HYPERLIQUID_L1↔ARBITRUM     | Fast (~minutes)     | Low (USDC-only) |
+| StarkGate                | STARKNET↔ETHEREUM           | Very slow (~8h out) | Low             |
 
 Bridge selection policy is an artifact-versioned rule table similar to execution policies.
 
