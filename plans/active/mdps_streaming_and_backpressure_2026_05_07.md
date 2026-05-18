@@ -272,7 +272,7 @@ todos:
 
   - id: phase-2-resource-profiler-wiring
     content: |
-      - [ ] [AGENT] P1. Phase 2 — Wire MDPS to ResourceProfiler.on_memory_warning for admission control.
+      - [x] ✅ [AGENT] P1. Phase 2 — Wire MDPS to ResourceProfiler.on_memory_warning for admission control. **SHIPPED 2026-05-18 MDPS@`6c560f4`** — `BatchOrchestrationMixin._init_backpressure` + `_on_memory_warning` + `_unpause_if_safe` + submission gate loop; `cli/main.py` `_start_resource_profiler()` + emergency ManifestWriter flush; 4 unit tests in `tests/unit/test_memory_backpressure.py` passing.
 
       **DEFERRED-AFTER-PHASE-1.2B 2026-05-10 PM** — plan execution DAG line ~423 ("Phase 2 has dep only on Phase 1.2
       callsite") gates Phase 2 on Phase 1.2B landing. Phase 1.2B blocked on architectural decision per
