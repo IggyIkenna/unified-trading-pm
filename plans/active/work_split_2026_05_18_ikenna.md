@@ -279,21 +279,27 @@ This checklist fires when operator signals write-pause ready:
 
 ```
 Pre-write-pause (prepare now, agent-runnable):
-- [ ] All 103 delegate-flip callsites landed on LDR (slots 2/3/5/6 done)
-- [ ] QG clean on all 8 repos post-migration
-- [ ] Write-pause runbook prepared (slot 6 item 3)
+- [x] All 27 repos QG 5.69 passing at 0 — DONE 2026-05-18 ~10:40 UTC (check_inline_bucket_uri.py confirms)
+- [x] QG clean on all repos post-migration — DONE (27/27 [OK])
+- [x] Write-pause runbook prepared — DONE (deployment-service@9f158d5 archive-flat-buckets.sh + write-resume checklist in code_freeze plan PM@773a3726)
+- NOTE: L3 get_bucket_name (UTL core/cloud_constants.py) still active — intentional, flips DURING write-pause window
+- NOTE: L5 deployment-api _BUCKET_TEMPLATES still flat — intentional, flips DURING write-pause window
 
 Write-pause window (operator-triggered, ~30 min):
-- [ ] OPERATOR: pause MTDS + instruments-service
-- [ ] OPERATOR: redeploy services pulling latest LDR (picks up resolve_bucket_name)
-- [ ] Agent (Slot 1): verify manifest writes landing in new env-tiered buckets
-- [ ] Agent (Slot 6): run write-resume verification per item 4
+- [ ] OPERATOR: pause MTDS + instruments-service backfill launches
+- [ ] AGENT: flip L3 UTL get_bucket_name → resolve_bucket_name() (36+ consumers); run QG; push
+- [ ] AGENT: flip L5 deployment-api _BUCKET_TEMPLATES → resolve_bucket_name(); redeploy; smoke
+- [ ] OPERATOR: redeploy services after L3/L5 land (picks up env-tiered resolve_bucket_name)
+- [ ] Agent (Slot 1): verify manifest writes landing in new env-tiered buckets (write-resume checklist)
 
 Post-write-pause (agent-runnable):
 - [ ] Cross-ping Harsh-main: "write-pause complete, services resumed on new paths"
-- [ ] Update code_freeze plan Phase 2.6 Step 4 ✅ COMPLETE
+- [ ] Update code_freeze plan Phase 2.6 Step 4 ✅ COMPLETE (flip GAP-2.4.D checkbox)
 - [ ] Run reconcile_phantom_manifest_rows_all across all asset_groups to confirm 0 phantoms
+- [ ] Run archive-flat-buckets.sh --env prod --cloud both (Step 2.6.5)
 ```
+
+> **🟢 PRE-WRITE-PAUSE CHECKS COMPLETE** (2026-05-18 ~10:40 UTC) — All 27 repos at 0. L3/L5 flip ready to execute on operator write-pause signal. Operator ping required to proceed.
 
 ---
 
