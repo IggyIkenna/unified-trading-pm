@@ -1,5 +1,25 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-18 ~12:12 UTC — tick-110: 7I DONE + classify_venue_error DONE + Phase 5 SDC in progress
+
+**Items DONE this session:**
+
+- **7I**: Master plan Group F row 20 Last verified → 2026-05-18 (B-015 paper VM smoke); F20 graduated from NEVER list (6 remaining). PM@75560065 + flip PM@3d84772b.
+- **classify_venue_error kalshi + polymarket_clob**: execution-service@a2b5eef46; issue doc resolved at PM@0f91dd83. Both files now SP-12(a) compliant.
+- **EOD inventory regenerator**: 69 plans / 55% done / 461 cal AI-days left. defi_catalogue 59/68 (87%).
+
+**In progress:**
+
+- **Phase 5 STRATEGY_DECISION_CONTEXT** (agent a4323884791f8dd33): UAC `StrategyDecisionContext`/`StrategyDecisionContextRecord` + strategy-service on_tick emitter + pnl-attribution reader. Agent running UAC QG as of 12:12 UTC.
+
+**Still BLOCKED:**
+
+- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator signal.
+- defi_recursive_borrow Phase 3-4: BLOCKED-OPERATOR.
+- api_keys Phase 5.C CoinGecko: BLOCKED-CREDENTIALS.
+
+---
+
 ## [slot 1 main] 2026-05-17 ~20:50 UTC — tick-57: Smoke B VM 204250 RUNNING (all 6 bugs fixed)
 
 **Bug 6 found + fixed**: VM 200717 DEPLOYMENT_FAILED (exit_code=1) at 19:35 UTC. `LookaheadBiasError` in
