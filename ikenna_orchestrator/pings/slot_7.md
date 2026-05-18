@@ -1413,6 +1413,15 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-57 Phase B hotfix
+
+**Tick-57 hotfix** (1 method, execution-service@8b4cf4cb3):
+- `engine/backtest/data_loader.py::_process_inst_type_req`: trim 53L→48L (tick-54 helper landed over limit; collapse 6-line logger.info to 1 line)
+
+**Running count**: ~141/377 cleared (~37%); continuing tick-58.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
