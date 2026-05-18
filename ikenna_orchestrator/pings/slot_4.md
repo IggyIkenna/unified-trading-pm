@@ -28,6 +28,34 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 22 complete; cumulative 81 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 22)
+
+3 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 38 → 35 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `algo_library/dust_router_runner.py` | `_build_reward_attribution_rows` 137L→37L | `_resolve_reward_stream_meta` + `_converted_row` + `_held_row` + `_deferred_row` |
+| `algo_library/sor_cross_chain.py` | `_evaluate_cross_chain_route` 137L→49L | `_compute_bridge_in_params` + `_compute_bridge_out_params` + `_make_bridge_in_leg` + `_make_swap_legs` + `_make_bridge_out_leg` |
+| `engine/validation/backtest_validator.py` | `validate_instruction_data_availability` 141L→44L | `_extract_backtest_config` + `_gather_instrument_list` + `_detect_data_requirements` + `_load_trades_and_validate` + `_load_and_validate_instrument` |
+
+- execution-service Half-1: `215c10027` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **81 files cleared**, allowlist now **35**
+
+### Remaining allowlist (35 entries) — top batch-23 candidates
+
+- `engine/backtest/engine/results.py`, `core.py`, `setup.py` — large backtest engine methods
+- `engine/backtest/actors/evaluator_pnl.py`, `evaluator_trades.py`, `signal_driven_v3_handlers.py`
+- `algorithms/impl/almgren_chriss.py`, `hybrid_optimal_spawn.py`, `passive_aggressive_execution.py`, `pov_dynamic.py`, `vwap_execution.py`
+- `data/checker.py`, `data/loader.py`, `data/loader_base.py`, `data/loader_gcs.py`, `data/loader_transforms.py`
+- `engine/routing/instruction_router.py` — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 21 complete; cumulative 78 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing

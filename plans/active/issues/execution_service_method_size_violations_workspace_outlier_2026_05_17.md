@@ -1073,6 +1073,17 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   spawn_child 201L + submit_final_slice 193L → ≤48L each via 13 helpers. Allowlist 40→38 files. AST clean,
   behavior-preserving (all logging channels preserved).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 22 — algo_library/dust_router_runner + algo_library/sor_cross_chain + engine/validation/backtest_validator)**: shipped at
+  execution-service@215c10027. dust_router_runner: \_build_reward_attribution_rows 137L→37L via \_resolve_reward_stream_meta
+  + \_converted_row + \_held_row + \_deferred_row instance helpers (pre-existing `# type: ignore[arg-type]` preserved on
+  `distributor_kind=kind`). sor_cross_chain: \_evaluate_cross_chain_route 137L→49L via \_compute_bridge_in_params +
+  \_compute_bridge_out_params + \_make_bridge_in_leg + \_make_swap_legs + \_make_bridge_out_leg (5-tuple return avoids
+  double get_bridge_cost in main). backtest_validator: validate_instruction_data_availability 141L→44L via
+  \_extract_backtest_config + \_gather_instrument_list + \_detect_data_requirements + \_load_trades_and_validate +
+  \_load_and_validate_instrument. Allowlist 38→35. AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-22**: 81 files cleared (allowlist now 35).
+
   **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
   execution-service@56865ab83. loader_base.py: __init__ 86L→~30L via _resolve_bucket_and_domain +
   _init_fuse_behavior; _infer_category 83L→10L via 5 domain-specific staticmethod helpers.
