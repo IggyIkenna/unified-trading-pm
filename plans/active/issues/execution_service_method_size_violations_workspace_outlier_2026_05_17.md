@@ -1064,6 +1064,10 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-20**: 74 files cleared (allowlist now 44).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 21 — enhanced_comparison + recursive_loop_orchestrator + report_timeline_extractor + leveraged_leg_controller)**: 4 entries cleared at execution-service@5c2618cc7. benchmark/enhanced_comparison.py: compute_enhanced_metrics 125L→42L via _extract_algorithm_config @staticmethod 18L + _extract_instrument_venue @staticmethod 11L + _compute_regime_metrics @staticmethod 33L (already had helpers from earlier context; compute_enhanced_metrics body slimmed to use them). defi_execution/orchestrators/recursive_loop_orchestrator.py: _persistent_open 125L→49L via _make_open_fail_result 23L + _handle_hf_abort 32L + _handle_open_failed 22L + _record_iter_completed 31L instance helpers (both early-exit failure paths share _make_open_fail_result). results/report_timeline_extractor.py: build_equity_curve 132L→34L via _collect_all_fills_from_alpha @staticmethod 35L + _accumulate_equity_points @staticmethod 28L + _build_equity_from_timestamps @staticmethod 37L. algo_library/leveraged_leg_controller.py: compute_drift 133L→36L via docstring trim (48L→1L) + _apply_reward_inflow module-level 22L + _compute_leg_drift_entry module-level 31L (for/else → early-return semantics preserved). Allowlist 44→40. AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-21**: 78 files cleared (allowlist now 40).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:

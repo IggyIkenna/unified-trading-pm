@@ -28,6 +28,36 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 21 complete; cumulative 78 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 21)
+
+4 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 44 → 40 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `benchmark/enhanced_comparison.py` | `compute_enhanced_metrics` 125L→42L | `_extract_algorithm_config` @static 18L + `_extract_instrument_venue` @static 11L + `_compute_regime_metrics` @static 33L |
+| `defi_execution/orchestrators/recursive_loop_orchestrator.py` | `_persistent_open` 125L→49L | `_make_open_fail_result` 23L + `_handle_hf_abort` 32L + `_handle_open_failed` 22L + `_record_iter_completed` 31L |
+| `results/report_timeline_extractor.py` | `build_equity_curve` 132L→34L | `_collect_all_fills_from_alpha` @static 35L + `_accumulate_equity_points` @static 28L + `_build_equity_from_timestamps` @static 37L |
+| `algo_library/leveraged_leg_controller.py` | `compute_drift` 133L→36L | docstring trim (48L→1L) + `_apply_reward_inflow` module-level 22L + `_compute_leg_drift_entry` module-level 31L |
+
+- execution-service Half-1: `5c2618cc7` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **78 files cleared**, allowlist now **40**
+
+### Remaining allowlist (40 entries) — top batch-22 candidates
+
+1-violation files (single remaining method >50L):
+- `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
+- `algo_library/dust_router_runner.py`: `_build_reward_attribution_rows` ~137L
+- `algo_library/sor_cross_chain.py`: `_evaluate_cross_chain_route` ~137L
+- `config/grid_generator_v2.py`: multiple violations remain
+- `config/grid_v2_registry.py`: multiple violations remain
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 20 complete; cumulative 74 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
