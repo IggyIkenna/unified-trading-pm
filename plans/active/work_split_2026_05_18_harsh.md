@@ -147,7 +147,10 @@ smoke begins.
       + LegController ATOMIC 1-leg section); market-making-continuous (stale target-engine path → SHIPPED
       v2/market_making/continuous.py; duplicate IL-in-a-nutshell section removed). All 3 files grep-clean with
       Code-backport status markers.
-- [ ] **12. DEEP RESERVE — simulation_scenarios_topology_price_shocks codex-side items (54%, 40/74)** — 34 items remaining. Plan: [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md). Pick 2-3 codex-only items (avoid sim-engine code changes — those need risk service ownership).
+- [x] ✅ **12. DEEP RESERVE — simulation_scenarios_topology_price_shocks codex-side items** — PM@3431713e. Shipped
+      items 8.D/8.E/8.F: kill-switch-circuit-breaker.md § "Scenario-driven trips" (6-rule trip table);
+      autonomous-recovery-matrix.md § "Scenario-driven recovery validation" (G1-G4 + HF/CAS gates paired with
+      scenario_ids); backtest-groups.md § "Scenario-overlay mode" (fourth axis on Group B/C + axes table + CLI flag).
 - [x] ✅ **13. DEEP RESERVE — carry_staked_basis + APD archetype cross-link audit in codex** — PM@38ff42f0. 5 fixes:
       (1) carry-staked-basis SHIPPED label; (2) plans/ai/ → plans/active/ stale-dir fix; (3) ## See also expanded with
       defi_master_2026_05_07 + defi_archetypes_canonicalisation active plan links; (4) APD ## See also:

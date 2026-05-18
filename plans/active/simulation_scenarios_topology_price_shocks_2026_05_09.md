@@ -704,11 +704,13 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       provenance column + `available_at` discipline under overlay (downgrade to warning, never silently shifted) +
       manifest `scenario_id` column + cross-reference to `honest-absence-downstream-handling.md` +
       `availability-manifest-and-data-status.md`.
-- [ ] [AGENT] P0. **8.D UPDATE `kill-switch-circuit-breaker.md`.** Add § "Scenario-driven trips" — how synthetic
-      scenarios validate breaker rules; per-rule expected-trip mapping.
-- [ ] [AGENT] P0. **8.E UPDATE `autonomous-recovery-matrix.md`.** Add § "Scenario-driven recovery validation" — every
-      recovery row gets a paired scenario_id that exercises it.
-- [ ] [AGENT] P0. **8.F UPDATE `backtest-groups.md`.** Add scenario-overlay mode as a backtest-group axis.
+- [x] [AGENT] P0. **8.D UPDATE `kill-switch-circuit-breaker.md`.** ✅ PM@3431713e. Added § "Scenario-driven trips" —
+      ScenarioRunner trip mechanics + per-rule expected-trip table (6 rules × kill-switch scope).
+- [x] [AGENT] P0. **8.E UPDATE `autonomous-recovery-matrix.md`.** ✅ PM@3431713e. Added § "Scenario-driven recovery
+      validation" — G1/G2/G3/G4 + HF1/HF2/CAS1 decision tree gates each paired with scenario_id + assertion checked;
+      ScenarioMatrixRunner usage example.
+- [x] [AGENT] P0. **8.F UPDATE `backtest-groups.md`.** ✅ PM@3431713e. Added § "Scenario-overlay mode" — fourth axis
+      on Group B/C; axes summary table (A/B/C × archetype/config/exec-policy/scenario-id); CLI flag; cross-ref.
 - [ ] [AGENT] P0. **8.G UPDATE `live-pipeline-architecture.md`.** Add § "Scenario tap points" — 7 layer tap point list +
       reuse-prod-codepath note.
 - [ ] [AGENT] P0. **8.H UPDATE `replay-subsystem.md`.** Add § "Scenario overlay on replay" — how the replay subsystem
