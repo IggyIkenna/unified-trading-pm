@@ -621,3 +621,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item 13** — shell-script lint sweep. Running shellcheck across PM scripts/ + service scripts/ to find SC2155/SC2086/SC2046 violations.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 13** — PM@a9e6c8c4. 10 SC2155 fixes in 4 PM scripts: harsh_auto_poll.sh (2), trading-kill-switch.sh (2), setup-workspace-root.sh (2), migrate-all-paths.sh (4). Scan found 20+ violations workspace-wide; shipped 10 mechanical fixes. Done-def met (5+ fixes). work_split item 13 flipped.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 14** — type-ignore sweep continuation. Scanning alerting-service + instruments-service for dead type: ignore (basedpyright excludes tests/).
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 14** — alerting-service@d9d8604 (44 removals) + instruments-service@dd67839 (68 removals) = 112 dead type: ignore removed. Done-def: 30+ ✅. work_split item 14 flipped.

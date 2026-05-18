@@ -159,7 +159,8 @@ cleanup_cursor_state_cache() {
   local deleted_size=0
   for state_file in "${state_files[@]}"; do
     if [ -f "$state_file" ]; then
-      local size=$(du -sh "$state_file" | cut -f1)
+      local size
+      size=$(du -sh "$state_file" | cut -f1)
       rm -f "$state_file"
       log_success "Deleted: $(basename "$state_file") ($size)"
     fi
@@ -171,7 +172,8 @@ cleanup_cursor_state_cache() {
 # ── Migrate agent transcripts from ALL old workspace indexes ──────────────────
 migrate_all_agent_transcripts() {
   local new_path="$1"
-  local new_encoded=$(echo "$new_path" | sed 's|/|-|g')
+  local new_encoded
+  new_encoded=$(echo "$new_path" | sed 's|/|-|g')
 
   # Target: new .code-workspace index location
   local target_index="${HOME}/.cursor/projects/${new_encoded}-unified-trading-system-repos-unified-trading-system-repos-code-workspace"
@@ -197,7 +199,8 @@ migrate_all_agent_transcripts() {
       local copied=0
       for conv_dir in "$old_dir"/*; do
         if [ -d "$conv_dir" ]; then
-          local conv_id=$(basename "$conv_dir")
+          local conv_id
+          conv_id=$(basename "$conv_dir")
           if [ ! -d "$target_transcripts/$conv_id" ]; then
             cp -R "$conv_dir" "$target_transcripts/" 2>/dev/null && ((copied++)) || true
           fi
