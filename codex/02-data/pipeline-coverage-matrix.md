@@ -205,12 +205,16 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 | HYPERLIQUID                                              | yes (S3 ≥2025-03-22) | yes (≥2023-04-15) | yes                      | – (no feed)         | –             | –             |
 | ASTER                                                    | yes                  | –                 | yes                      | – (broken endpoint) | –             | –             |
 | GMX, DRIFT                                               | –                    | –                 | – (perp_funding instead) | –                   | –             | –             |
+| LIGHTER-ZKSYNC, PACIFICA-SOLANA, EXTENDED-STARKNET       | **live-only** ¹      | –                 | – (perp_funding)         | –                   | –             | –             |
 
 Adapters: `market_interface/adapters/{binance,bybit,okx,deribit,coinbase}.py`,
 `cefi/tardis_incremental_book_adapter.py`, `onchain_perps/{hyperliquid,aster}_adapter.py`.
 
 **Asymmetries:** `options_chain` is Deribit-only. `liquidations` absent from all spot venues + HYPERLIQUID + ASTER.
-`derivative_ticker` perp-only.
+`derivative_ticker` perp-only. ¹ `trades` for LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET is **live-only, no
+historical tape** — upstream adapters lack an archival endpoint; strategies needing per-trade history must use `ohlcv_1m`
+bars or forward-poll history built post-launch (LIGHTER ≥2026-04-17, PACIFICA ≥2025-06-01, EXTENDED
+BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master_2026_05_07.md` item 2.P3.
 
 ### DEFI (data_types by category)
 
