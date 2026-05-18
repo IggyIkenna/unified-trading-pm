@@ -281,6 +281,18 @@ smoke begins.
       correct) + V-2 (3 pending UAC changes flagged for slot 2; MARKET_MAKING_EVENT_SETTLED #legacy comment bug noted).
       Done-def met (2 items closed).
 
+#### New-dispatch queue (main ping 2026-05-18 21:00 UTC — defi_archetypes_canonicalisation theme)
+
+- [x] ✅ **18. defi_archetypes_canonicalisation Stream A P1 confirm** — PM@29dd6f7a. CONFIRMED: _build_carry_staked_basis
+      auto-regenerates from VENUE_COLLATERAL_MATRIX via accepted_perp_collateral(). No hardcodes. Design note: OKX-FUTURES
+      in venue list; bare OKX (wstETH=True) not present — by design, awaiting SCRIPT P0 probe. [SCRIPT] P0 reclassified
+      BLOCKED-CREDENTIALS (playbook doc exists; needs Deribit/Bybit/OKX API keys for live haircut probe). Credential ask
+      filed in ping.
+- [x] ✅ **19. defi_master allowed_chains extension — 3 recursive-borrow archetype docs** — PM@f6fc4b6d. Added
+      allowed_chains to carry-recursive-staked [ethereum], carry-recursive-borrow-lending-only [ethereum, arbitrum, base],
+      carry-recursive-borrow-perp-hedged [ethereum, arbitrum, base]. Phase 3 extension (DeFi on-chain legs only; CeFi not
+      chain-gated). Plan item added to defi_master + flipped in same commit.
+
 #### Coordination
 
 - **Owned repos**: strategy-service + codex.

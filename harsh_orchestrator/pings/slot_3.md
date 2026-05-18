@@ -513,3 +513,8 @@ What I need: Read-only API key or authenticated session for each venue to call:
 Account to use: existing operator trading accounts for each venue
 Unblocks: venue-collateral-2026-05-07.md § "Caveats — pending live-API probe" — confirms exact haircut ratios (currently web-doc conservative placeholders: Deribit 7.5%, Bybit 10%, OKX 10%)
 Without it: carry_staked_basis slot generation uses correct acceptance flags (already flipped 2026-05-09) but with conservative haircut placeholders; under-utilises margin pool (safe error) not a correctness bug
+
+[2026-05-18 21:30 UTC] slot-3 — ✅ **DONE items 18-19**:
+- Item 18: Stream A [strategy-service] P1 CONFIRMED (auto-regenerates from VENUE_COLLATERAL_MATRIX). [SCRIPT] P0 BLOCKED-CREDENTIALS. PM@29dd6f7a.
+- Item 19: allowed_chains added to carry-recursive-staked [ethereum] + carry-recursive-borrow-lending-only/perp-hedged [ethereum, arbitrum, base]. defi_master Phase 3 extension. PM@f6fc4b6d.
+Searching for next codex items in defi_master / defi_archetypes plans.
