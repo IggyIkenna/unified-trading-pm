@@ -23,3 +23,5 @@ New theme: strategy phase8 codex drift + sit critical-path + expected_unattempte
 - Item 12 codex/11 ref fixes: PM@9fb88ef7 (5 broken refs removed/updated in README.md; 18 refs verified).
 - Item 13 UTL emission tests: UTL@cb1163d (5 tests: TestEmissionIdempotency×2, TestBatchLiveParity×2, TestEmissionFailurePropagation×1; QG 5382 passed).
 No blockers. Slot 6 queue fully exhausted.
+
+[2026-05-18 13:24 UTC] [main → slot 6] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 6 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/6/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 6 — MEGA RESERVE".

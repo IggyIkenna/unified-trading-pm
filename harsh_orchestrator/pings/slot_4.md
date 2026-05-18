@@ -242,11 +242,11 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 
 - [x] **11. ml-training-service experiment manifest validation tests** — ml-training-service@9a3f581 (validate()/validate_or_raise() + 12 tests: TestExperimentManifestValidation ×10 + TestHyperparameterRoundtrip ×2; QG ✅ ALL GATES PASSED 329s)
 
-- [ ] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green.
+- [x] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green. — sit@47a1e04: 11 tests / 4 classes (honest-coverage emission flow); QG ✅ (backfilled 2026-05-18)
 
-- [ ] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green.
+- [x] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green. — alerting@af7122f: 3 classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s (backfilled 2026-05-18)
 
-- [ ] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green.
+- [x] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green. — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s (backfilled 2026-05-18)
 
 - [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
 
@@ -283,3 +283,5 @@ Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 (C) **deep-reserve item 12 — system-integration-tests cross-asset scenario expansion** — already in your work_split slot 4 § Reserve. Add 3-4 cross-asset scenarios beyond Phase 8 honest-coverage (`sit@47a1e04`). Done-def: 3+ scenarios + sit QG green.
 
 Self-pivot through (A) → (B) → (C). DUAL-FLIP discipline: every flip touches BOTH work_split § Slot 4 AND the underlying plan-of-record file in the SAME commit. Compliance is 100% on recent commits — keep it there.
+
+[2026-05-18 13:24 UTC] [main → slot 4] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 4 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/4/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 4 — MEGA RESERVE".

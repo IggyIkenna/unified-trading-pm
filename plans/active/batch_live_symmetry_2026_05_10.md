@@ -503,6 +503,15 @@ progress + manifest read fallback chain still green for legacy consumers.
 `master_to_live_defi` 🔴 BLOCK F18 · `manifest_schema_final_gate` RE-VERIFY · `live_pipeline_mtds_mdps_features`
 BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 manifest schema stable.
 
+### Shipped test coverage (pre-reconciler-ship)
+
+- [x] [TEST] P1. **`reconcile_shard` edge-case test coverage** — 4 test classes / 16 tests covering: empty shard
+      (both-empty=MATCH; batch-empty-live-nonempty=ROW_COUNT_MISMATCH); single-row (identical=MATCH, within-tolerance,
+      outside-tolerance=VALUE_MISMATCH); schema-drift (different keys=SCHEMA_MISMATCH, extra column); very-large shard
+      (10k rows identical=MATCH; one mismatch=VALUE_MISMATCH; custom comparator). basedpyright clean (invariant-dict
+      fix: `_RowDict = dict[str, object]`). (evidence: batch-live-reconciliation-service@a214cd1 2026-05-18; QG ✅ 67s.
+      **BACKFILLED** from slot-4 work-split item 14 — plan-of-record flip per CLAUDE.md Half-2 rule.)
+
 ### Todos
 
 - [ ] [AGENT] P0. **`batch-live-reconciliation-service/engine/orchestrator.py`** — greenfield ship per pre-audit § 1

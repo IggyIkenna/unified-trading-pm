@@ -256,7 +256,8 @@ smoke begins.
       🔴 AUDITED: ALL 6 open items blocked on Phase 2.6 — Phase 0c-watchdog must land AFTER Phase 2.6 (converting watchdog to env-tiered paths BEFORE flat→env-tiered data flip causes false zombie kills on healthy VMs); Phase 0d = GCP data migration (needs live infra); dependency_checker.py = BLOCKED on UTL BaseDependencyChecker migration; get_bucket_name delegate = DEFERRED to Phase 2.6 (operator-resolved Q6); v2 AST-walk = P2 deferred; audit table = BLOCKED on Phase 2.6 completion. No slot-5 items available until Phase 2.6 lands.
 - [x] **11. DEEP RESERVE — risk-and-exposure-service additional rule firing edge cases** — build on item 14+18 (TestWarnOnlyAndStrictFailEmissionPolicies + TestStressExtendedScenarios). Add: per-asset_group rule firing in mixed-archetype portfolios; rule firing with stale data; rule firing during recovery window. Done-def: 5+ tests + risk QG green.
       ✅ 6 tests in TestAssetGroupMixedRuleFiring (test_var_calculator.py): cefi/defi/tradfi independent directives, sports DATA_STALE, data-stale-with-exec-down, dual-failure-beats-data-stale, recovery-window-restores-delta-neutral-exit, recon-down-non-stale. risk QG green (73s) — risk-and-exposure-service@5eb6c1e
-- [ ] **12. DEEP RESERVE — pnl-attribution-service per-archetype EOD scenario extension** — build on item 19 (TestEndOfDayRollup). Add: per-asset_group rollup (cefi/defi/tradfi separation); cross-day reconciliation with corrections; partial-fill attribution. Done-def: 4+ tests + pnl QG green.
+- [x] **12. DEEP RESERVE — pnl-attribution-service per-archetype EOD scenario extension** — build on item 19 (TestEndOfDayRollup). Add: per-asset_group rollup (cefi/defi/tradfi separation); cross-day reconciliation with corrections; partial-fill attribution. Done-def: 4+ tests + pnl QG green.
+      ✅ 4 tests in TestPerArchetypeEodExtension (test_archetype_pnl.py): mixed CARRY+APD fills → separate archetype keys (no bleed-over); cross-day correction row included in net EOD (net=350); partial fill value preserved as-is; write_archetype_buckets with correction → correct date-partitioned GCS path (1 upload call). pnl QG green (59s) — pnl-attribution-service@0bc6785
 - [ ] **13. DEEP RESERVE — execution-service adapter error-path coverage (UAC error classification)** — audit each adapter (`adapters/exchanges/*`, `adapters/onchain/*`) for missing `classify_venue_error()` + `ADAPTER_FETCH_FAILED` emission. Add tests where coverage gap. Done-def: audit report + 5+ tests.
 - [ ] **14. MEGA RESERVE — writegate_honest_coverage_endtoend residuals deeper (48%, 118/246)** — 128 items left. Plan: [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md). Pick 4-6 mechanical service-side items (avoid UAC schema + cross-service emission contract changes — Ikenna primary). Done-def: 4+ items closed. **~5 cal-days**.
 - [ ] **15. MEGA RESERVE — risk-and-exposure-service end-to-end test coverage extension** — build on items 14+18 (TestWarnOnlyAndStrictFailEmissionPolicies + TestStressExtendedScenarios). Add: end-to-end portfolio stress (10+ archetypes), recovery-window semantics, cross-asset_group risk-rule firing. Done-def: 8+ tests + risk QG green. **~3 cal-days**.
@@ -446,9 +447,7 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. MTDS handler coverage extensions — 3 handlers pickup** — pick 3 MTDS handlers below current coverage
-      target (90%); add 4-6 tests per handler matching the shape of jitoSOL / bSOL / sanctumSOL Tier-1 pattern slot 9
-      shipped 2026-05-15. Done-def: 3 handlers above 90% + MTDS QG green.
+- [x] ✅ **1. MTDS handler coverage extensions — 3 handlers pickup** — vault_share_price 75.8%→98.7%, native_staking 79.3%→93.5%, eigenlayer_rewards 77.5%→96.1% (+40 tests, 1495 passed) — mtds@d39568d
 - [ ] **2. PBM canonical_writer extension — MDPS-side parametrized archetype dispatch hardening** — slot 9 shipped
       `mdps@4ad6060` (25 tests, 3 classes) on 2026-05-15. Identify 1-2 gaps surfaced during that work (any "fall-through
       contract" residuals); add 3-5 tests. Done-def: gap closed + PBM QG green.

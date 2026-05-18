@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-18
 ---
 
 # P&L Attribution — Cross-Cutting Concern
@@ -241,6 +242,11 @@ realised_amount
 
 ### Factor Definitions
 
+> ⚠️ **Rows marked with bold** (`CARRY_LENDING_SUPPLY`, `CARRY_LENDING_BORROW`, `CARRY_BASE_REBASING`, `GAS`) are
+> **proposed sub-factors not yet in the `PnLFactor` enum**. They are documented here to formalize the intent; adding
+> them requires a UAC PR per the closed-set process described in the enum docstring. Until the PR lands, code MUST
+> use `CARRY` for lending yield and `FEES` for gas (tagged at EXECUTION layer).
+
 | Factor                      | Computation                                                                                                                                                                                                                                                                                                                                          | Sign Convention                                         |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | DELTA                       | `sum(position_qty × (price_now - price_prev))` per instrument                                                                                                                                                                                                                                                                                        | Positive = profitable direction                         |
@@ -293,7 +299,7 @@ realised_amount
 Every `CanonicalFill` triggers an attribution update:
 
 ```python
-# strategy-service/strategy_service/pnl_calculator.py (simplified)
+# strategy_service/engine/core/pnl_calculator.py (simplified)
 def attribute_fill(fill: CanonicalFill, position: Position, config: StrategyConfig) -> PnLAttribution:
     factors = {}
 
@@ -339,11 +345,13 @@ def attribute_funding(position: Position, funding_rate: Decimal, interval_hours:
         total_pnl=funding_pnl,
     )
 
-# Carry attribution (daily for lending/staking)
-def attribute_carry(collateral: Decimal, apy: Decimal, days: int = 1) -> PnLAttribution:
-    carry_pnl = collateral * apy * Decimal(days) / Decimal("365")
+# Carry attribution — lending yield uses on-chain index growth per §4 Hard Rule.
+# BANNED: carry_pnl = collateral * apy * days / 365  ← APY proxy, never use this.
+# CORRECT for CARRY_LENDING_SUPPLY:
+def attribute_carry_lending(atoken_balance: Decimal, liquidity_index_now: Decimal, liquidity_index_prev: Decimal) -> PnLAttribution:
+    carry_pnl = atoken_balance * (liquidity_index_now / liquidity_index_prev - 1)
     return PnLAttribution(
-        factors={"CARRY": carry_pnl},
+        factors={"CARRY_LENDING_SUPPLY": carry_pnl},
         total_pnl=carry_pnl,
     )
 ```
@@ -411,7 +419,8 @@ T+1 Batch (runs daily at 02:00):
 ### GCS Attribution Output
 
 ```
-gs://pnl/{strategy_id}/{client_id}/{date}/
+# Illustrative path — actual bucket resolved via resolve_bucket_name("pnl") (bucket-name SSOT rule).
+{resolve_bucket_name("pnl")}/{strategy_id}/{client_id}/{date}/
   ├── attribution_summary.json       # factor totals for the day
   ├── attribution_detail.parquet     # per-fill and per-event attribution
   ├── positions_opening.json         # SOD positions
@@ -705,7 +714,7 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 
 | Concept                | SSOT                                | Location                                                  |
 | ---------------------- | ----------------------------------- | --------------------------------------------------------- |
-| PnL calculator         | PnLCalculator                       | `strategy-service/strategy_service/pnl_calculator.py`     |
+| PnL calculator         | PnLCalculator                       | `strategy_service/engine/core/pnl_calculator.py`          |
 | Settlement service     | SettlementService                   | `strategy-service/strategy_service/settlement_service.py` |
 | PnL attribution schema | UIC                                 | `unified-api-contracts (internal/)/`                      |
 | Fill schema            | CanonicalFill (UIC)                 | `unified-api-contracts (internal/)/`                      |
