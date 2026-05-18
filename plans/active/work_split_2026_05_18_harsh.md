@@ -235,9 +235,9 @@ smoke begins.
 - [ ] **5. features-service Phase B coverage waves continuation (Wave 59+)** — last shipped Wave 58
       (halftime_columns + odds_columns @100%). Pick next wave from features-service test/coverage gap list.
       Done-def: 1 wave shipped (2+ feature groups to 100% coverage).
-- [ ] **6. defi_basedpyright_features_service_2026_05_15 final items (94%, 51/54)** — 3 checkboxes left. Plan path:
-      [`defi_basedpyright_features_service_2026_05_15.md`](defi_basedpyright_features_service_2026_05_15.md).
-      Mechanical basedpyright cleanup.
+- [x] ✅ **6. defi_basedpyright_features_service_2026_05_15 final items (100%, 54/54)** — all 3 remaining checkboxes
+      flipped: onchain/ 96→0 errors (wave A+B, 20 files), QG verified (basedpyright ✅, ruff ✅, coverage 78.76%),
+      defi_master basedpyright item updated. — features-service@f141061d + PM@(flip commit)
 - [ ] **11. DEEP RESERVE — features-service Wave 60+ coverage continuation** — last shipped Wave 58 (halftime_columns + odds_columns @100%). Identify next 2 feature groups under 100% coverage; add 4-6 tests per group. Done-def: Wave 60 shipped (2+ feature groups to 100%).
 - [x] ✅ **12. DEEP RESERVE — system-integration-tests cross-asset scenario expansion** — 21 tests (3 scenarios), QG ✅ 81 passed. sit@f546a8e
 - [x] ✅ **13. DEEP RESERVE — alerting-service additional severity routing + escalation edge cases** — 6 tests: PD 429/500 graceful degradation, dedup at router, Slack 429, wildcard routing. QG ✅. alerting@7965a53

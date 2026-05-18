@@ -121,10 +121,11 @@ Same patterns as execution-service fix:
       (`delta_one/app/data_loader.py`, `commodity/cli/handlers/_fetch_runner.py`, `sports/_fetch_runner.py`, etc.) were
       already cleaned as part of waves 4-5 sweeps. Plan-body assumption from the original scoping was incorrect — there
       is no adapters/ surface to fix.
-- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors). —
-      **DEFERRED-OTHER-SLOT 2026-05-17 slot-8**: onchain/ remains at 96 errors but is foreign-active (slot-2 +
-      features-onchain pipeline work in flight per LDR commits aaa6b319 + cb787082 + 50273e1f). Slot-8 will not touch to
-      avoid index contention; another slot picks up post-onchain-pipeline stabilization.
+- [x] ✅ [DEFERRED-OTHER-SLOT] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors). —
+      **DONE slot-4 2026-05-18**: 96→0 errors across 20 files (wave A+B). Wave A: onchain_validity_engine.py (54 errors),
+      smoke.py (importlib casts), feature_builder_registry.py (_REGISTRY rename). Wave B: 17 remaining files (calculators,
+      collectors, engine, handlers). cast() for pd.Series.get(), polars group_by keys, rng.choice(), hex→Decimal,
+      pd.isna(float|str|None), method overrides. — features-service@f141061d
 - [x] ✅ [AGENT] P0. Fix remaining errors in other modules. — features-service@dad0b74a (slot-8 wave 4 2026-05-17)
   - [x] ✅ calendar/ family (15 errors): yfinance_earnings_adapter, batch_handler, corporate_actions_handler,
         config_reloaders, economic_calendar_loader, calendar_orchestrator, mock_data_provider, feature_builder_registry
@@ -141,11 +142,12 @@ Same patterns as execution-service fix:
       .to_list() Any iterations, importlib module attribute accesses (smoke.py). Return type fix:
       \_sector_momentum_divergence NDArray[float64]→NDArray[np.int8]. CALCULATOR_REGISTRY cast for dict invariance.
       cross_instrument/ now at 0 reportAny; total features-service: 96 remaining (onchain/ only, DEFERRED-OTHER-SLOT).
-- [ ] [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. — **PARTIAL
-      DONE**: basedpyright at 96 errors (827→96, 88% reduction); remaining 96 confined to onchain/ (foreign-active).
-      Full 0 requires onchain slot to complete; QG run skipped pending their cleanup.
-- [ ] [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain reaches 0
-      (cross-slot handshake required).
+- [x] ✅ [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. —
+      **DONE slot-4 2026-05-18**: basedpyright 0 errors confirmed (`timeout 120 basedpyright features_service/onchain/`),
+      ruff ✅, coverage 78.76% > 70% floor. Pre-existing test failures (volatility/sports missing modules, Ikenna hard-coded
+      path) confirmed unchanged by stash-test. Committed + pushed features-service@f141061d.
+- [x] ✅ [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain reaches 0
+      (cross-slot handshake required). — **DONE slot-4 2026-05-18**: see defi_master flip below.
 
 ## Temporary states + their canonical follow-up plans
 
