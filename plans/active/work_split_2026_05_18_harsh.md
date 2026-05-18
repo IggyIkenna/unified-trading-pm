@@ -549,6 +549,13 @@ smoke begins.
       algos, single algo report, captures error gracefully, all-failed→no recommendation, two algos
       more-slices wins, summary() keys. Also: ruff format batch (20 files @1ea6dcf8), drain_mode
       type:ignore removal @2c1d63b7. QG: 7391 passed. execution-service@5dec3c4b.
+- [x] ✅ **S15. SUSTAIN — execution-service multicall_batcher + solver_auction zero-to-coverage (16 tests)** —
+      multicall_batcher.py (0→covered): TestMulticallBatcher — encode APPROVE/SWAP/WRAP/unknown steps,
+      _is_atomic_group with/without flash loan, create_batches empty + grouping by multicall_group,
+      estimate_gas_savings keys + small-batch negative savings guard (MULTICALL_BASE_GAS overhead).
+      solver_auction.py (0→covered): TestBatchAuctionEngine — register_default_solvers (3 solvers),
+      submit_intent adds to pending, run_auction no intents → empty, run with pool state, score_solutions
+      min_out filter, _simulate_amm_output constant-product output. QG: 7407 passed. execution-service@0e1a641c.
 
 #### Coordination
 
