@@ -1321,6 +1321,18 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-48 Phase B continued
+
+**Tick-48 deliverables** (4 methods in 4 files, execution-service@802b71e28):
+- `engine/backtest/actors/tp_sl_generator.py::generate_tp_sl`: 71L→29L (_select_tp_sl_ranges staticmethod)
+- `engine/validation/catalog_validator.py::check_book_type_data_requirements`: 74L→29L (_validate_instrument_data)
+- `engine/backtest/actors/signal_driven_shared.py::add_entry`: 74L→40L (_accumulate_entry)
+- `engine/backtest/actors/signal_driven_v3_utils.py::cancel_pending_twap_children`: 72L→31L (_try_cancel_via_exec_algos + _try_cancel_open_matching_orders)
+
+**Running count**: ~125/377 cleared (~33%); continuing tick-49.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
