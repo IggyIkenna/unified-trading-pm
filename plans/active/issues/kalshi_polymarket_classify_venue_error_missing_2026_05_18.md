@@ -39,3 +39,24 @@ Files to change:
 - `execution_service/sports_execution/adapters/exchanges/polymarket_clob.py`
 Also check: `execution_service/sports_execution/prediction_markets/kalshi.py` (separate module)
 and `execution_service/trade_execution/adapters/polymarket_adapter.py`.
+
+## Resolution
+
+**RESOLVED 2026-05-18** — execution-service@a2b5eef46
+
+- `kalshi.py`: added `classify_venue_error` + `ErrorAction` imports from UAC
+  `canonical.crosscutting.errors`; added `ADAPTER_FETCH_FAILED` + `UNKNOWN_VENUE_ERROR_RECEIVED`
+  imports from UTL events; all 5 `except aiohttp.ClientError` handlers in `_submit_order`,
+  `cancel_bet`, `get_balance`, `_submit_order_post`, `get_positions`, and `list_open_orders`
+  now classify + emit `ADAPTER_FETCH_FAILED`.
+- `polymarket_clob.py`: added `classify_venue_error` + `ErrorAction` imports; added
+  `ADAPTER_FETCH_FAILED` to existing UTL events import; upgraded all `aiohttp.ClientError`
+  and `Exception` handlers in `place_bet`, `cancel_bet`, `place_order`, and `list_open_orders`
+  to full SP-12(a) pattern (classify → emit ADAPTER_FETCH_FAILED + UNKNOWN_VENUE_ERROR_RECEIVED).
+- `prediction_markets/kalshi.py`: stub only (no HTTP calls) — no fix needed.
+- `trade_execution/adapters/polymarket_adapter.py`: delegates to PolymarketCLOBAdapter — fix
+  applied upstream; no independent classification needed.
+- basedpyright: 0 errors on both files.
+- ruff: 0 errors on both files.
+- QG pre-existing failures in `trade_converter.py` / `data_loader.py` (E501) are not owned by
+  this fix; reported separately.
