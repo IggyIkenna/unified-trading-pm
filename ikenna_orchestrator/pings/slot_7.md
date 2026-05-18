@@ -1382,6 +1382,16 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-54 Phase B continued
+
+**Tick-54 deliverables** (2 methods in 2 files, execution-service@518ccbb39):
+- `engine/backtest/data_loader.py::build_instruction_based_data_configs`: 81L→27L (extract `_process_inst_type_req` 46L)
+- `engine/routing/instruction_router.py::route_signal`: 81L→34L (extract `_build_signal_result` 30L)
+
+**Running count**: ~136/377 cleared (~36%); continuing tick-55.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
