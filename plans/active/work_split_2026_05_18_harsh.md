@@ -309,6 +309,7 @@ smoke begins.
 - [x] ✅ **17. MEGA RESERVE — pnl-attribution-service per-asset_group rollup hardening** — 13 tests in test_asset_group_pnl_rollup.py: TestPerAssetGroupRollupDecomposition (5: cefi/defi/tradfi/sports/prediction independence), TestCrossDayReconciliationWithCorrections (4: net P&L across correction rows), TestFxAttributionPresence (4: fx_attribution None vs populated). pnl-attribution-service@802d8bd. QG green (63s). Done-def met. **~3 cal-days**.
 
 - [x] ✅ **S1. SUSTAIN — execution-service basedpyright strictness (25→0 errors)** — fixed 7 files: auth.py (_raise_auth_failure→NoReturn), config_reloaders.py (json.loads cast), hyperliquid_bridge.py (web3 sign_transaction Any + resp.json casts), bridge.py (usedBridgeNames cast), hyperliquid.py (_private_key/_wallet_address str|None base compat), solana_base.py (SPL parsed data cast chain), position_manager.py (portfolio:object). QG 7233 passed (30 pre-existing unchanged). execution-service@f671a5f7.
+- [x] ✅ **S2. SUSTAIN — pnl-attribution-service basedpyright strictness (30→0 errors)** — fixed 7 files: breakdown.py (asset_group→asset_class field name bug), domain_adapter.py (cloud str→Literal cast), cli/main.py (kwargs forwarding + operations dict invariance), orchestrator.py (pandas Any pyright ignores), pnl_input_builder.py (frames list annotation + gas_used str conversions + fill_ts cast), reward_attribution.py (cast row.layer→RewardPnLLayer), sports_pnl.py (Decimal(str(total_pnl)) fix). QG green. pnl-attribution-service@431950f.
 
 #### Coordination
 
