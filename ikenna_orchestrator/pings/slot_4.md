@@ -1,5 +1,37 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 30 complete; cumulative 94 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File | What changed | Helpers extracted |
+| ---- | ------------ | ----------------- |
+| data/checker.py | check_gcs_file_exists 212L→33L; check_data_availability 106L→27L | _GCS_DATA_TYPE_MAP, _gcs_override_test_date, _gcs_assert_loader, _gcs_resolve_instrument_parts, _gcs_resolve_category, _gcs_build_path, _gcs_check_blob, _gcs_lookup_and_check, _chk_init_result, _chk_resolve_source, _chk_check_trades, _chk_finalize_trades |
+| benchmark/comparison.py | run_comparison 199L→37L; _get_algorithm_references 127L→3L | _ALGORITHM_REFERENCES constant, _log_comparison_header, _setup_signal_driven_config, _run_and_log_benchmark, _run_all_algorithms, _build_algo_result |
+
+- execution-service data/checker.py Half-1: `9e1d6b29b` (ldr)
+- execution-service benchmark/comparison.py Half-1: `f8e20a620` (ldr)
+- unified-trading-pm Half-2: this commit
+- 4 violations cleared (2+2); all ≤50L; AST clean; ruff 0 errors
+- Cumulative slot-4 total: **94 files cleared**, allowlist now **16**
+
+### Remaining allowlist (16 entries)
+
+- BLOCKED: engine/routing/instruction_router.py (foreign dirty file)
+- DEFERRED: data/loaders/tick_data.py (slot-5 defer — streaming 435L method)
+- data/gcs_data_loading.py (3 viols: 123L, 85L, 305L)
+- data/loader.py (4 viols: 428L, 94L, 87L, 122L)
+- data/loader_gcs.py (5 viols: 289L, 90L, 94L, 87L, 122L)
+- config/grid_generator_v2.py (3 viols: 157L, 199L, 215L)
+- config/grid_v2_registry.py (3 viols: 130L, 163L, 205L)
+- instruments/factory_cefi_defi.py (3 viols: 235L, 249L, 95L)
+- results/extractor.py (3 viols: 132L, 194L, 216L)
+- engine/backtest cluster (7 entries): evaluator_pnl, evaluator_trades, core, results, node_builder, non_trade_processor, runner
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 29 complete; cumulative 90 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
