@@ -343,13 +343,18 @@ execution-service branch (live-defi-rollout):
 - S12: execution-service@0ff550f2 — exit_algo lines 42+74 + benchmark_registry lines 104+131. 4 tests.
 - S13: execution-service@b184eaef — AlmgrenChriss public API lines 50/123/133 (3 new tests) + fixed 33 pre-existing test harness failures (adaptive_twap/_hybrid_optimal/_passive_aggressive delegation methods missing post-refactor) + save_operations return-None bug + trade_converter 5 E501 lint violations (from batch-23).
 
-🔒 **OWNED SURFACE (DO NOT TOUCH while I'm active)**:
-- `execution_service/` test files: `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`, `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
-- `execution_service/results/save_operations.py` (return None bug fix)
-- `execution_service/data/trade_converter.py` (lint fixes)
-- **Next**: ruff format commit for 16 dirty source files per operator instruction below, then S14+ SUSTAIN gap scanning.
+✅ **Operator-directed cleanup (also shipped 2026-05-18)**:
+- `execution-service@1ea6dcf8` — ruff format: 20 source files pure line-wrap reformats committed + pushed.
+- `execution-service@2c1d63b7` — removed all 23 `# type: ignore[union-attr]` from `test_drain_mode.py`; refactored `_reload_drain()→object` to module-level `import drain_mod` + `importlib.reload(drain_mod)`. basedpyright: 0 errors.
 
-**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 7365 passed, 0 failed after S13.
+🔒 **OWNED SURFACE (DO NOT TOUCH while I'm active)**:
+- `tests/unit/test_drain_mode.py` (drain_mode type: ignore fix)
+- `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`, `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
+- `execution_service/results/save_operations.py`
+- `execution_service/data/trade_converter.py`
+- **Next**: S14+ SUSTAIN gap scanning.
+
+**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 7365+ passed after S13.
 
 [2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of
 `.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py +
