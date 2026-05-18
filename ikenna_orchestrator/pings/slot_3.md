@@ -1080,3 +1080,22 @@ Implementing now per design spec.
 
 **Slot 3 work_split fully exhausted.** Scanning for next dispatch or available open items.
 **No 🟡 BLOCKED.** Ready for next theme.
+
+---
+
+[2026-05-18 UTC] Slot 3 — **V-1 UAC ENUM CHANGES DONE** (autonomous, post-context-compaction).
+
+Found 3 pending UAC changes in `strategy_archetype_taxonomy_2026_05_12.md §V-1` (operator decision ✅ 2026-05-12, not yet executed):
+
+1. ✅ **Rename** `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` — clean rename (added 2026-05-11, no GCS data, no live VMs). Updated: UAC enums, archetype_config, risk_rules/archetype, recursive_loop_orchestrator, venue_constants, risk_rule, 2 test files; strategy-service factory, archetype_defaults, recursive_staked, carry_basis_dated, staked_basis, catalog, conftest + 3 test files.
+2. ✅ **Added** `CARRY_STAKED_BASIS_DATED` — dated-contract variant of staked basis. TIER_MID_VARIANCE, CarryStakedBasisEngine (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test coverage.
+3. ✅ **Added** `CARRY_BASIS_DATED_INV` — inverse of CARRY_BASIS_DATED. TIER_STABLE_STRUCTURAL, CarryBasisDatedEngine (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test coverage.
+
+**Also fixed (pre-existing, found during QG run):**
+- STEP 5.72: `STARKNET` + `HYPERLIQUID_L1` added to `MAINNET_CHAIN_IDS` in `chain_env.py` (invariant violation — were in GENESIS_DATES but not MAINNET_CHAIN_IDS).
+- `conftest.py` patched wrong function name (`emit_decision_context` → `emit_strategy_decision_context`) — caused 857 test ERRORs in v2 engine test suite.
+
+**Commits:**
+- uac@`0196842` — enum + config + risk_rules + chain_env + tests (QG ✅)
+- strategy-service@`a636a29` — factory + defaults + catalog + engines + tests (QG ✅)
+- PM@`f8328617` — plan flip V-1
