@@ -506,10 +506,14 @@ principle (batch has 4-state capture taxonomy; live has none for outages).
 decision 2026-05-08: keep both `TICK_STALENESS` (MDPS, downstream-detected) and `CONNECTIVITY_GAP` (MTDS,
 upstream-detected) as complementary signals.
 
-- [ ] [SCRIPT] P1. **`LiveConnectivityWatchdog` wrapper per venue** in MTDS. Per (venue, ws-connection): heartbeat
+- [x] [SCRIPT] P1. **`LiveConnectivityWatchdog` wrapper per venue** in MTDS. Per (venue, ws-connection): heartbeat
       timeout detection (per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline — see calibration todo below);
       `gap_state` tracking via state machine (`HEALTHY → STALE → GAP → RECOVERING → HEALTHY`); emit typed event on every
-      transition. Wraps existing per-venue WS adapter without touching adapter internals (decorator pattern).
+      transition. Wraps existing per-venue WS adapter without touching adapter internals (decorator pattern). ✅
+      **VERIFIED-DONE 2026-05-18 by slot 2** — `LiveConnectivityWatchdog` fully implemented at
+      `market_interface/connectivity_watchdog.py` (HEALTHY/GAP state machine, 3-event emission). Wired into
+      `api/main.py` startup (`c09a0e2`) + per-adapter heartbeat hooks (`4faef39` — "Item #5 closure"). Uses
+      `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLASS` defaults (empirical per-venue calibration is item 531 below).
 - [x] [SCRIPT] P1. **`CONNECTIVITY_GAP_DETECTED` / `CONNECTIVITY_RECOVERED` / `CONNECTIVITY_GAP_BACKFILLED` event
       types** added to UAC `LifecycleEventType`. ✅ **VERIFIED-DONE 2026-05-16 by slot 2** — all 3 enum values already
       shipped at `unified-api-contracts/unified_api_contracts/internal/events.py:105-107` with full event metadata
@@ -520,17 +524,33 @@ upstream-detected) as complementary signals.
 - [ ] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
       window via REST batch fetch; call `record_captured` per filled row; emit `CONNECTIVITY_GAP_BACKFILLED` when
       complete. Per CLAUDE.md "Manifest concurrency principle" — read-once + per-date freshness check + CAS write.
-      Honors per-venue rate limits.
+      Honors per-venue rate limits. **2026-05-18 slot 2 status**: watchdog emits `CONNECTIVITY_RECOVERED` (wired in
+      `4faef39`); `mark_backfilled()` stub exists but NO REST consumer performs the actual backfill. Remaining work:
+      PubSub subscriber in MTDS `live/` that listens for `CONNECTIVITY_RECOVERED`, fetches gap window via REST adapter,
+      calls `record_captured` per row, then `watchdog.mark_backfilled()`. Requires per-venue REST adapter wiring.
 - [ ] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
       to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
-      zero/partial inputs. Connects via the same manifest contract MDPS already reads.
+      zero/partial inputs. Connects via the same manifest contract MDPS already reads. **2026-05-18 slot 2 status**:
+      `UPSTREAM_LIVE_GAP` does NOT yet exist in UAC `RecordFailedReason` enum. MDPS `dependency_checker.py` checks GCS
+      blob presence (not manifest status) — no manifest-reading path exists yet. Remaining work: (1) add
+      `UPSTREAM_LIVE_GAP` to UAC `RecordFailedReason`; (2) add manifest-read method to MDPS `DependencyChecker` that
+      inspects MTDS `attempted_failed` rows; (3) route to `record_failed_for_shard` in `batch_workers.py` /
+      `live_workers.py` when upstream gap row detected.
 - [ ] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
       per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
       engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
-      Phase 8.
+      Phase 8. **2026-05-18 slot 2 status**: `circuit_breaker.py` has `force_open(venue, reason)` + recovery via
+      HALF_OPEN state. No CONNECTIVITY_GAP event subscriber exists in execution-service. Remaining work: (1) add PubSub
+      subscriber for `CONNECTIVITY_GAP_DETECTED`; (2) on receipt, call `force_open(venue, reason="MTDS_GAP")`; (3) on
+      `CONNECTIVITY_RECOVERED`, call `circuit_breaker.allow_recovery(venue)` to enter HALF_OPEN probe.
 - [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
-      `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`.
+      `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`. **2026-05-18 slot 2 status**: `VENUE_HEARTBEAT_THRESHOLDS`
+      dict in UAC `venue_thresholds.py` is empty (live telemetry not yet accumulated).
+      `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLASS` provides fallback defaults (cefi_ws=5s, defi_ws=10s, tradfi_replay=30s).
+      Calibration requires 7-day live observation data — not implementable without running MTDS live for a week.
+      **DEFERRED** to successor plan: `venue_heartbeat_calibration_2026_05_post23.md` (named successor to be created
+      after May-23 cutover has live MTDS running).
 - [x] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-architecture.md` with a "live=batch 4-state
       capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
       auto-backfill loop. ✅ **SHIPPED 2026-05-16 by slot 2** at PM@<TBD> — new "Live=batch 4-state capture parity"
