@@ -384,3 +384,5 @@ Item 8 (PBM mode parity degraded): mdps@92d9be5. Item 9 (LST tokens audit + sanc
 uac@2654a7d (ezETH genesis + RENZO venue + sanctumSOL genesis + SANCTUM venue) + mtds@2497c81
 (sanctumSOL Tier-1 SPL stake pool, genesis guard, freshness skip, test fixes for 5 tests, QG bump 10→11).
 Queue exhausted — awaiting next dispatch.
+
+[2026-05-18 13:10 UTC] [main → slot 9] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to your section at 12:55 UTC (PM@ed3776bf). `cd .tabs/9/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
