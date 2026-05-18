@@ -9,7 +9,7 @@ topology_requirements:
 
 # Archetype: `DEFI_LP_VAULT`
 
-> **Family:** `MARKET_MAKING`. **Settlement model:** ERC-4626 deposit / redeem. **Code module:**
+> **Family:** `MARKET_MAKING`. **Settlement model:** ERC-4626 deposit / redeem. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/vault.py`.
 
 ## What it does
@@ -40,6 +40,16 @@ NEUTRAL --apy >= min_apy--> DEPOSITED --apy < min_apy OR drawdown >= max-->  WIT
 - `vault_share_price_<vault_address>`
 - `vault_share_price_apy_bps_<vault_address>`
 - `vault_drawdown_bps_<vault_address>`
+
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` resolves vault deposit/redeem as a 1-leg ATOMIC instruction
+(single ERC-4626 `deposit` or `redeem` call). No multi-leg sequencing required — the vault contract handles the
+underlying token swap internally.
+
+**Code-backport status:** DEFERRED — `defi_lp/vault.py` currently emits `AtomicInstruction` hand-built without
+`LegController`. Backport tracked in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs ship
+now per operator decision 2026-05-07.
 
 ## Risks
 

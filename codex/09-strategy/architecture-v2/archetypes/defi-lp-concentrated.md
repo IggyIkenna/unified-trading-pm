@@ -11,7 +11,7 @@ topology_requirements:
 # Archetype: `DEFI_LP_CONCENTRATED`
 
 > **Family:** `MARKET_MAKING` (provides liquidity vs taking it). **Settlement model:** ATOMIC mint/burn via Uniswap V3
-> NonfungiblePositionManager. **Code module:**
+> NonfungiblePositionManager. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/defi_lp/concentrated.py`.
 
 ## What it does
@@ -79,6 +79,16 @@ execution-service sequences them through the same V3 position manager.
 sqrt_price_upper, liquidity, amount0_initial, amount1_initial) carried in `params`.
 
 A future extension adds dedicated `LP_MINT` / `LP_BURN` enum values for clearer wire-level routing, but is not blocking.
+
+### LegController integration
+
+`LegController.update(slot, tick, execution_mode=ATOMIC)` resolves the rebalance burn + mint as a 2-leg ATOMIC bundle:
+leg-1 = `LP_BURN` (existing position), leg-2 = `LP_MINT` (new range). The NonfungiblePositionManager multicall is the
+atomic unit; execution-service sequences both legs through the same call.
+
+**Code-backport status:** DEFERRED — `defi_lp/concentrated.py` currently emits `AtomicInstruction` pairs hand-built
+without `LegController`. Backport tracked in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase.
+Docs ship now per operator decision 2026-05-07.
 
 ## Risks
 

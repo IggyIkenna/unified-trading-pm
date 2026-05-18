@@ -12,8 +12,8 @@ topology_requirements:
 # Archetype: `MARKET_MAKING_CONTINUOUS`
 
 > **Family:** [Market Making](../families/market-making.md) **Settlement model:** Continuous — quote lifecycle is
-> long-running; inventory oscillates around a target; P&L is realized continuously. **Code module (target):**
-> `strategy-service/engine/strategies/market_making_continuous_engine.py`
+> long-running; inventory oscillates around a target; P&L is realized continuously. **Code module (SHIPPED):**
+> `strategy-service/strategy_service/engine/strategies/v2/market_making/continuous.py`
 
 ## What it does
 
@@ -92,23 +92,6 @@ Key realities:
 The user's question: _"when you lend to a pool, it's not guaranteed, right? if you take money out and it moves one way
 in a straight line without collecting enough fees, don't you get fucked?"_ — Yes. This is **impermanent loss** (IL), and
 the severity + mechanics differ per protocol.
-
-### IL in a nutshell
-
-Impermanent loss is the opportunity cost of providing liquidity vs just holding. When price moves:
-
-- If you had held the two assets, your value = holding value
-- Because you provided liquidity, the AMM rebalances — you end up with more of the losing asset and less of the winning
-  asset
-- IL = |holding value − LP value|
-- Called "impermanent" because if price returns to entry, IL disappears; but if you close the position mid-move, the
-  loss is realized
-
-Key realities:
-
-- IL is **not guaranteed to be offset by fees**. You can absolutely lose money net-of-fees in directional markets
-- Magnitude scales with price move magnitude + with concentration (V3 concentrated LP has amplified IL vs V2 full-range)
-- Protocols with higher volume per TVL tend to have better fee / IL ratios
 
 ### Per-protocol dynamics
 
