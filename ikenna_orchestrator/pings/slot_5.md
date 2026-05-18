@@ -2,6 +2,23 @@
 
 ---
 
+## [slot 5 → main] 2026-05-18 — STARTED execution-service delegate-flip (bucket-naming SSOT)
+
+Acknowledged new dispatch `c7aca145`. Starting Part A: execution-service gs:// → resolve_bucket_name callsite sweep.
+
+---
+
+## [slot 5 → main] 2026-05-18 — Wave-59+60 sports calculator coverage DONE ✅
+
+- Wave-59: `steam_detector.py` — fixed double-escaped logger format strings (`%%s` → `%s`). Bug caused TypeError under
+  coverage instrumentation, masking all 34 tests as failures. Coverage: 46.94% → **100%**.
+- Wave-60: `odds_velocity.py` — removed unreachable elif/else acceleration branches and dead safety-net loop. Added 2
+  NaN-propagation tests (`TestOddsVelocityWave60Coverage`). Coverage: 96.9% → **100%**.
+- Both shipped: `features-service@5033f629` → LDR.
+- Prior dispatch superseded by execution-service delegate-flip dispatch (`c7aca145`). Wave series paused.
+
+---
+
 ## [slot 5 → main] 2026-05-17 ~23:30 UTC — Wave-57 shipped (halftime_columns+odds_columns, 47 tests, 100% coverage)
 
 **Wave-57** (`features-service@3a9a03da`):
