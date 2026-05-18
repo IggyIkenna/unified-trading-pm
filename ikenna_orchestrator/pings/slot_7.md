@@ -1673,3 +1673,16 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
 - Note: LDR rebase mid-tick added 15 new violations from other slots (56 total); cleared 4 → 52 remain
 
 **Running count**: ~171/377 cleared (~45%); 52 violations remain; continuing tick-69.
+
+## [slot 7 → main] 2026-05-18 — tick-69 Phase B continued
+
+**Tick-69 deliverables** (3 files, execution-service@84cb4be2b):
+
+- `algo_library/dust_router_runner.py`: extract `_process_converted_leg` + `_process_deferred_leg` instance methods;
+  `_build_reward_attribution_rows` 53L→21L
+- `utils/dependency_checker.py`: extract `_make_dep_status` @staticmethod (3× DependencyStatus constructor blocks);
+  `_check_blob_dep_market_tick` 54L→27L
+- `engine/backtest/actors/signal_driven_v3_handlers.py`: extract `_cleanup_parent_benchmark` + `_log_fill`
+  module-level helpers; `on_order_filled` 57L→40L
+
+**Running count**: ~174/377 cleared (~46%); active non-excluded violations 22→19; continuing tick-70.
