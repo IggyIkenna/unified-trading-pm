@@ -252,31 +252,40 @@ todos:
 
   - id: c2-monitor-experiments-endpoint
     content: |
-      - [ ] [SCRIPT] P0. Add `GET /api/monitor/experiments?cloud=<gcp|aws>` route — lists every running + recent
+      - [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/experiments?cloud=<gcp|aws>` route — lists every running + recent
         EPHEMERAL_EXPERIMENT job. Joins experiment-registry (Phase BB.1) with run-state from the experiment-
         tracking bucket (per-run_id metrics + artifacts). Per-entry response: `{run_id, name, owner,
         experiment_kind: ml_training|strategy_backtest|execution_backtest, started_at, current_step,
         progress: {fraction, eta}, hyperparams: {...}, metrics_tail: [{step, key, value}, ...],
         result_blob_uri, status}`. NEW route module
         `deployment-api/deployment_api/routes/monitor_experiments.py`.
+        **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (ml-train-*, strategy-backtest-*,
+        execution-backtest-*); infers experiment_kind; Phase BB.1 experiment-registry join is post-cutover scope.
+        deployment-api@f585227.
 
   - id: c3-monitor-live-endpoint
     content: |
-      - [ ] [SCRIPT] P0. Add `GET /api/monitor/live?cloud=<gcp|aws>` route — lists every LONG_LIVED_LIVE deployment
+      - [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/live?cloud=<gcp|aws>` route — lists every LONG_LIVED_LIVE deployment
         cluster from the Phase E.1 registry, joined with runtime state (Cloud Run service status, GKE deployment
         health). Per-entry response: `{name, lifecycle_class, cloud_target, deployment_kind, asset_group,
         archetype_owners, replicas, health, last_heartbeat_at, freshness_per_data_type: {...},
         recent_events: [...]}`. Lifecycle action endpoints:
         `POST /api/monitor/live/{name}/{start|stop|pause|restart|drain}`. SSE event-tail
         `/api/monitor/live/{name}/events` reuses existing `deploy_events_sse.py:76` machinery. NEW route module.
+        **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (strategy-paper-*,
+        strategy-live-*, defi-recursive-*); 7-day archive window; Phase E.1 registry join is post-cutover scope.
+        deployment-api@f585227.
 
   - id: c4-monitor-scheduled-endpoint
     content: |
-      - [ ] [SCRIPT] P0. Add `GET /api/monitor/scheduled?cloud=<gcp|aws>` route — lists every scheduler from the
+      - [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/scheduled?cloud=<gcp|aws>` route — lists every scheduler from the
         Phase D registry joined with current Cloud Scheduler / EventBridge / VM-cron live state. Per-entry response
         as before (alive/dead/stale/paused/missing). Lifecycle action endpoints:
         `POST /api/monitor/scheduled/{name}/{run-now|pause|resume}`,
         `POST /api/monitor/scheduled/deploy-missing` (the registry-driven deploy-missing button).
+        **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (cron-*, scheduled-*,
+        honest-coverage-*, qg-snapshot-*, vm-cron-*); phase_d_registry_available=false signals UI for placeholder;
+        Phase D SchedulerSpec SSOT join is post-cutover scope. deployment-api@f585227.
 
   - id: c5-streaming-logs-endpoint
     content: |
@@ -287,10 +296,12 @@ todos:
 
   - id: c6-aggregated-status-endpoints-removed-folded-into-monitor
     content: |
-      - [ ] [SCRIPT] P1. Per the restructure, the originally-planned aggregated `/api/{batch,scheduled,live}/status`
+      - [x] ✅ [SCRIPT] P1. Per the restructure, the originally-planned aggregated `/api/{batch,scheduled,live}/status`
         endpoints (previous draft Phase C.3) are FOLDED into the four Monitor sub-tab endpoints (C.1-C.4). Phase
         B.7 prefetch fires the four queries directly. NO duplicate aggregation route; the Monitor sub-tab queries
         ARE the prefetch surface.
+        **CONFIRMED 2026-05-18 slot-7** — c1/c2/c3/c4 route scaffold implements this decision; no aggregation
+        routes created. The prefetch context (b7-ext, deployment-ui@e9e90d9) calls these 4 directly.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase D — Scheduler registry SSOT (env-scoped)
