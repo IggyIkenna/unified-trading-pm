@@ -199,10 +199,7 @@ smoke begins.
       `quality-gates.md`: DAY-1/FIX-REQUIRED → ENABLED (STEPs 5.75/5.77/5.78; shipped Tab 3 2026-05-14). Table
       anchor refs updated. Plan-of-record: `batch_live_symmetry_2026_05_10.md` Tab 1 residuals section.
       PM@f8c6fcab.
-- [x] ✅ **C. system-integration-tests cross-asset scenario expansion** — 3 scenarios 19 tests (DeFi+CeFi hybrid carry
-      6 tests, TradFi+Sports manifest parity 5 tests, prediction backtest smoke 7 tests). TypedDict return types; no
-      `# type: ignore`; CanonicalFill uses `OrderSide.BUY` + `Decimal` quantities; `fills[0].category` not `.asset_group`.
-      QG ✅ 55s. sit@5ad7b29.
+- [x] ✅ **C. system-integration-tests cross-asset scenario expansion** — 21 tests across 3 scenarios: DeFi+CeFi hybrid carry (6), TradFi+Sports batch parity (8), prediction binary backtest (7). TypedDict return types, QG ✅ 81 passed. sit@f546a8e
 
 #### Reserve queue
 
@@ -213,7 +210,7 @@ smoke begins.
       [`defi_basedpyright_features_service_2026_05_15.md`](defi_basedpyright_features_service_2026_05_15.md).
       Mechanical basedpyright cleanup.
 - [ ] **11. DEEP RESERVE — features-service Wave 60+ coverage continuation** — last shipped Wave 58 (halftime_columns + odds_columns @100%). Identify next 2 feature groups under 100% coverage; add 4-6 tests per group. Done-def: Wave 60 shipped (2+ feature groups to 100%).
-- [x] ✅ **12. DEEP RESERVE — system-integration-tests cross-asset scenario expansion** — 3 scenarios 19 tests: DeFi+CeFi hybrid carry, TradFi+Sports manifest parity, prediction backtest smoke. TypedDict-typed, no type:ignore, QG ✅ 55s. sit@5ad7b29.
+- [x] ✅ **12. DEEP RESERVE — system-integration-tests cross-asset scenario expansion** — 21 tests (3 scenarios), QG ✅ 81 passed. sit@f546a8e
 - [ ] **13. DEEP RESERVE — alerting-service additional severity routing + escalation edge cases** — build on item 2 already shipped (`alerting@af7122f`). Add: P0 page failure → fallback email; P1 email retry + dedupe; P2 slack rate-limit handling. Done-def: 5+ edge-case tests + alerting QG green.
 - [ ] **14. MEGA RESERVE — features-service Wave 60+/61+/62+ rolling coverage waves** — after Wave 58 (halftime + odds), pick 3 consecutive waves. Each wave: 2 feature groups to 100% coverage + 4-6 tests/group. Done-def: 3 waves shipped (6+ feature groups to 100%). **~5 cal-days**.
 - [ ] **15. MEGA RESERVE — alerting_service_live_rules runtime residuals (77%, 50/65 — runtime SIDE)** — 15 items left. Plan: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Pick runtime/service-side items (codex side = slot 6). Done-def: 3+ items closed + alerting QG green. **~3 cal-days**.
