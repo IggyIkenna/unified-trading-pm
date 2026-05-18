@@ -1,7 +1,7 @@
 ---
 scope: [engineer, ml-engineer, admin]
 status: stable
-last_reviewed: 2026-05-08
+last_reviewed: 2026-05-18
 ---
 
 # features-service architecture
@@ -126,10 +126,14 @@ Some lifts ship in the same logical unit as Phase 5; others ride alongside Phase
 in same commit as the UTL lift, per the workspace "no double SSOT" rule). Phase 5 todo list owns the authoritative
 status table.
 
-### Canonical `ModeHandler` ABC (lifted 2026-05-08, UTL@abeb5bc3)
+### Canonical `ModeHandler` ABC (lifted 2026-05-08, UTL@abeb5bc3; convenience wrappers added 2026-05-18, UTL@e74427d1)
 
 Per-family CLI mode handlers (batch / live / target) inherit a single `ModeHandler` ABC at
 `unified_trading_library.feature_service_base.ModeHandler` (file `mode_handler.py`).
+
+**Convenience wrappers** (added 2026-05-18): `ModeHandler` now exposes `run_batch(**kwargs) -> bool` and
+`run_live(**kwargs) -> bool` as concrete helpers that delegate to `run(mode="batch", **kwargs)` /
+`run(mode="live", **kwargs)`. Callers that always operate in one mode can use these instead of passing `mode=` explicitly.
 
 **Why lifted.** Pre-2026-05-08, the 4 families `volatility / delta_one / onchain / sports` each shipped a structurally-
 identical local `ModeHandler` ABC at `features_service/<family>/cli/handlers/base_handler.py`. Same `__init__` (logger
@@ -316,3 +320,18 @@ Plan:
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
 - Plan-of-record:
   [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
+- QG cleanup plan (Phase 1 complete, 0 test failures as of 2026-05-18):
+  [`../../plans/active/features_service_qg_cleanup_2026_05_11.md`](../../plans/active/features_service_qg_cleanup_2026_05_11.md)
+
+## Test-suite status (2026-05-18)
+
+Phase 1.3 of `features_service_qg_cleanup_2026_05_11.md` resolved all pre-existing test failures:
+
+- **7266 tests passing, 22 skipped, 0 failures** (features-service@`0e73bc90`)
+- Key fixes: calendar `LookaheadBiasError` (candle-close window + as_of=next-midnight); delta_one
+  polars→pandas conversion in `BaseFeatureCalculator`; onchain `log_event` patch target + batch-skip + LST methods;
+  sports `steam_detector` `%%s` format strings; `asyncio.get_event_loop()→asyncio.run()` across commodity / MTF /
+  volatility / cross_instrument; cross_instrument `event_logging` `Path.cwd()` resolution; `yfinance` import guard
+  (`pytest.importorskip("lxml")`); codex-compliance `timedelta` module-level import.
+- All 8 families run the full unit + integration suite under the per-family test layout
+  (`PYTEST_UNIT_DIR="tests/"`) per `quality-gates.sh`.
