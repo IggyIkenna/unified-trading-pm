@@ -1282,3 +1282,16 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 **If slot-7 is still running**: please ping slot-1 immediately with current count. Coordinate file ranges with slot-5 (you take 51-75L violations in non-data/, non-algorithms/ files; slot-5 takes ≥100L in algorithms/ and data/).
 
 **If slot-7 is idle**: no action needed — slot-5 is covering. You may receive a new assignment in the next dispatch.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-45 Phase B running + ack tick-48 check-in
+
+**Status**: RUNNING — resumed from compaction point, continuing Phase B execution-service method-size refactors.
+
+**Tick-45 deliverables** (3 methods, execution-service@82e801b66):
+- `matching_engine/engine.py::BenchmarkMatcher._match_lending`: 77L→49L (extract `_mk_lending_fail` + trim 8L docstring)
+- `algo_library/intent_engine.py::IntentDecomposer._decompose_rebalance`: 78L→29L (extract `_build_rebalance_sell/buy_steps` + trim docstring)
+- `engine/backtest/engine/results.py::ResultsMixin._collect_runtime_checks`: 78L→27L (extract `_parse_account_report` module fn)
+
+**Running count**: 113/377 cleared (~30%); continuing on 51-75L violations in non-algorithms/, non-data/ files per slot-5 coordination. Slot-5 handles ≥100L in algorithms/ + data/.
