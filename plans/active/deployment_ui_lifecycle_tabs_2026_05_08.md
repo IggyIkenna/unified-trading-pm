@@ -399,7 +399,7 @@ todos:
 
   - id: h1-env-tier-codex-doc
     content: |
-      - [ ] [AGENT] P0. NEW codex doc `codex/05-infrastructure/deployment-ui-environment-tiers.md` capturing the
+      - [x] ✅ **SHIPPED 2026-05-18 slot-7** [AGENT] P0. NEW codex doc `codex/05-infrastructure/deployment-ui-environment-tiers.md` capturing the
         env-tier topology for deployment-UI/API itself: dev (localhost), staging (Cloud Run on staging GCP project +
         AWS staging mirror, hosted at `staging.<research-domain>/deployment`), prod (Cloud Run on prod GCP project +
         AWS prod mirror, hosted at `<research-domain>/deployment`). Each env has its own deployment-api Cloud Run
@@ -410,11 +410,13 @@ todos:
 
   - id: h2-deployment-api-env-aware-config
     content: |
-      - [ ] [SCRIPT] P0. Update deployment-api to read `CLOUD_DEPLOYMENT_ENV` env var at boot and scope every
+      - [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-api@78b68c4** [SCRIPT] P0. Update deployment-api to read `CLOUD_DEPLOYMENT_ENV` env var at boot and scope every
         registry read (scheduler / live-cluster / experiment) by the resolved tier. Bucket suffixes per env per the
         existing `bucket-isolation-model.md` SSOT (e.g. `<pid>-events-staging` vs `<pid>-events-prod`). Cloud
         Scheduler list / EventBridge list filtered to the project per env. Auth: deployment-api per env uses its
         own service account scoped to that env's projects. NO cross-env data leakage.
+        Added `env: str` to BackfillMonitorResponse, ExperimentMonitorResponse, LiveMonitorResponse,
+        ScheduledMonitorResponse — populated from settings.DEPLOYMENT_ENV at request time.
 
   - id: h3-deployment-ui-env-badge-and-domain-resolution
     content: |
