@@ -1711,3 +1711,19 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   `upload_configs` 73L→27L
 
 **Running count**: ~180/377 cleared (~48%); active non-excluded violations 16→13; continuing tick-72.
+
+## [slot 7 → main] 2026-05-18 — tick-72 Phase B continued
+
+**Tick-72 deliverables** (4 files, execution-service@6bed27f16):
+
+- `config/grid_generator_core.py`: extract `_make_lend_borrow_config` + `_make_stake_config` @staticmethods;
+  `_get_config_for_instruction_type` 85L→31L
+- `services/instruction_alpha_calculator.py`: extract `_parse_instruction_header` + `_is_heartbeat_instruction`
+  module-level helpers + `_resolve_market_price` instance method; `calculate_instruction_alpha` 65L→50L
+- `data/orderbook_converter.py`: extract `_extract_row_timestamps` module-level + `_should_skip_conversion`
+  @staticmethod + `_log_book_convert_info` module-level; `_build_snapshot_deltas` 56L→24L,
+  `convert_orderbook_parquet_to_catalog` 61L→47L
+- `algo_library/sor_cross_chain.py`: compact 11-line bridge_out block to 3 lines using `sc/ad/to/bop/bot` aliases;
+  `_evaluate_cross_chain_route` 56L→48L
+
+**Running count**: ~185/377 cleared (~49%); active non-excluded violations 13→11; continuing tick-73.
