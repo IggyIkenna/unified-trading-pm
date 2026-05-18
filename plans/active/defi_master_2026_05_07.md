@@ -471,9 +471,11 @@ these venues.
       no LST cross-margin per 2026-05-15 live probe + docs review).
 - [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
-      Starknet event subgraph against the Extended Settlement contract — add `STARKNET_RPC_TEMPLATE` to UAC
-      `CHAIN_RPC_TEMPLATES` (currently only zkSync + Solana; Starknet needs adding). Falls back to forward-poll only if
-      both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
+      Starknet event subgraph against the Extended Settlement contract.
+      **NOTE 2026-05-18 slot-3**: `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) —
+      the "add Starknet RPC template" prerequisite is unblocked. Remaining: (1) historical endpoint research on
+      docs.extended.exchange + (2) Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C).
+      Falls back to forward-poll only if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
       `cefi-extended-starknet-history-backfill-{ts}` VM]
 - [ ] [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
       `_LIGHTER_BACKFILL_TOP_SYMBOLS = (BTC, ETH, SOL,     HYPE, TON)`; expand to top-30 (Lighter has 170 perps
