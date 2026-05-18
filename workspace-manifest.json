@@ -1781,7 +1781,8 @@
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
-      "skipped_gates": []
+      "skipped_gates": [],
+      "semver_policy": "agent"
     },
     "unified-trading-system-ui": {
       "type": "ui",
