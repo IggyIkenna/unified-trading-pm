@@ -674,9 +674,14 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 
 **Success criteria for clearance to start backfills**:
 
-- [ ] [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage).
+- [x] ✅ [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage).
+      **VERIFIED 2026-05-18 slot-7** via `reconcile_phantom_manifest_rows_all.py --dry-run` across cefi (2619 real /
+      0 phantom), defi (30/0), tradfi (567/0), sports (917/0), prediction (263/0). All 5 AGs clean.
 - [ ] [VALIDATE] P0. Manifest data-status panel shows `expected_unattempted` rows with correct reasons for all
       instruments outside MVP scope (not blank, not `attempted_failed`).
+      **BLOCKING NOTE 2026-05-18 slot-7**: live manifest query shows 0 `expected_unattempted` rows across cefi/defi/tradfi
+      (cefi: 1.3M attempted_failed, defi: 6.9K, tradfi: 5.9K — no expected_unattempted written yet). Phase 1+2 wiring
+      is in code but hasn't been exercised by a fresh MTDS production run. Unblocked by fresh MTDS run (slot 9 surface).
 - [ ] [VALIDATE] P0. A fresh MTDS dry-run on a sample date generates 0 new `attempted_failed` rows for instruments that
       instruments-service says don't exist (i.e., Phase 1 wiring is live).
 - [ ] [VALIDATE] P1. A fresh MDPS dry-run on a sample date generates `expected_unattempted` rows (not empty) for shards

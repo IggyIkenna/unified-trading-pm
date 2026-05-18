@@ -441,6 +441,21 @@ smoke begins.
 - [x] ✅ **17. MEGA RESERVE — deployment-api+ui Firebase auth + RBAC hardening** — after item 20 Firebase auth integration (deployment-api@715ac1a). Add: RBAC role checks per endpoint, audit-log emission for sensitive actions, refresh-token expiry handling. Done-def: 6+ tests + deployment-api QG green. **~3 cal-days**.
       — require_permission added to vm_admin (cancel/pause/resume → DEPLOY_TRIGGER), chaos_injections (POST/DELETE → SYSTEM_ADMIN), kill_switch arm/disarm (RISK_OVERRIDE). 11 tests in TestVmAdminRbac + TestChaosInjectionsRbac. QG 3082 passed. deployment-api@e591fb9.
 
+#### New-dispatch queue (orchestrator ping 2026-05-18 09:12 UTC)
+
+- [x] ✅ **D. expected_unattempted_propagation_chain_2026_05_12 — Phase 6 [VALIDATE] P0 phantom count** —
+      Ran `reconcile_phantom_manifest_rows_all.py --dry-run` across all 5 asset_groups (2026-05-18 slot-7).
+      cefi: 2619 real / 0 phantom; defi: 30/0; tradfi: 567/0; sports: 917/0; prediction: 263/0.
+      All 5 AGs clean. Flipped [VALIDATE] P0 checkbox in plan-of-record.
+      **REMAINING 9 items blocked**: items 678-684 need fresh MTDS run (0 expected_unattempted in live manifests
+      — wiring in code, not yet exercised); P2 DeFi classifier + Sports classifier DEFERRED post-live-cutover.
+      Parent epic [FLIP] gate blocked on VALIDATE items 2-5.
+- [ ] **E. mock_data_pipeline_benchmarking_2026_05_10 final 2 items (94%, 29/31)** — CONFIRMED BLOCKED:
+      3.C-followup (CEFI_BOOK_SNAPSHOT_5_SPEC) DEFERRED — "Do NOT add until Phase 3.D confirms";
+      3.D (Prod-reader schema-parity) PARTIAL/DEFERRED — reader wire-in shipped (strategy@a03d12e,
+      ml-inference@0206358, mtds@82639e0, utl@7eceaba); subprocess VM run + operator sign-off pending.
+      No code changes possible without VM subprocess mode. Stays open.
+
 #### Deep sustain queue (~100 cal-days, depth so slot doesn't go idle waiting on dispatch)
 
 > Added 2026-05-18 by slot-1 main per operator direction. All items are mechanical, non-blocking
@@ -462,7 +477,6 @@ smoke begins.
 - [ ] **S13. SUSTAIN — deployment-ui mobile-responsive smoketest extension** [deployment-ui] — extend playwright tests with mobile viewports (375x667, 414x896). Verify critical flows. Done-def: 8+ mobile smoketests + pnpm green. **~3 cal-days**.
 - [ ] **S14. SUSTAIN — deployment-api error response standardization** [deployment-api] — audit all endpoints for consistent error response shape (status code, error code, message, details). Done-def: 30+ endpoints conform to standard error schema + 10+ fixes. **~3 cal-days**.
 - [ ] **S15. SUSTAIN — deployment-api/ui i18n readiness audit** [deployment-ui] — identify hardcoded user-facing strings; flag for i18n extraction. Done-def: hardcoded-string report + 10+ strings extracted to translation file (en-US baseline). **~3 cal-days**.
-
 
 #### Coordination
 
