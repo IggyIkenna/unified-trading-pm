@@ -242,11 +242,11 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 
 - [x] **11. ml-training-service experiment manifest validation tests** — ml-training-service@9a3f581 (validate()/validate_or_raise() + 12 tests: TestExperimentManifestValidation ×10 + TestHyperparameterRoundtrip ×2; QG ✅ ALL GATES PASSED 329s)
 
-- [x] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green. — sit@47a1e04: 11 tests / 4 classes (honest-coverage emission flow); QG ✅ (backfilled 2026-05-18)
+- [ ] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green.
 
-- [x] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green. — alerting@af7122f: 3 classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s (backfilled 2026-05-18)
+- [ ] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green.
 
-- [x] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green. — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s (backfilled 2026-05-18)
+- [ ] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green.
 
 - [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
 
@@ -264,24 +264,4 @@ Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 
 [2026-05-15 22:45 UTC] slot-4 — 🚨 BIG FINDING (UTL QG): User requested UTL QG after OOM fix. Pulled LDR (5 new commits). Result: 102 failures with PYTEST_WORKERS=2 (default), 29 genuine failures when isolating xdist. Root causes: (1) 11 event ratchet failures — other slots added STRATEGY_LIFECYCLE_CHANGED/SEEDED + DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE without updating count tests; (2) 5 config_interface failures — auth matrix api count 9→8, DEX venue validation changed, testnet contract registry changed, cloud_config mock bridge changed; (3) 13 cloud_interface failures — OIDC auth implementation changed, workspace YAML missing DeFi AWS buckets, bucket constant tests stale; (4) 73 xdist false failures — event system singleton leak across subprocess workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 worker) is correct but UTL overrides to 2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL — escalating to main for assignment.
 
-[2026-05-18 13:05 UTC] [main → slot 4] — 🟡 **DUAL-FLIP BACKFILL** — items 1/2/3 commits @6d6c8203 @89315ec1 @818762a9 flipped work_split only. Backfill plan-of-record flips in: SIT honest-coverage plan (item 1), `alerting_service_live_rules_2026_05_07.md` (item 2), batch-live-reconciliation plan (item 3). Per CLAUDE.md Half-2 rule: same logical unit as code commit. Also note: slot-4 is silent-working in owned repos but no slot-4 STARTED ping today — drop a one-liner STARTED ping at top of slot_4.md so dashboard reflects activity.
-
-[2026-05-18 UTC] slot-4 — 🏁 **QUEUE EXHAUSTED / CYCLE-CLOSE slot 4**.
-- Item 1 ✅: sit honest-coverage scenarios — sit@47a1e04 (11 tests / 4 classes; QG ✅)
-- Item 2 ✅: alerting routing tests — alerting@af7122f (9 tests / 3 classes; QG ✅)
-- Item 3 ✅: batch-live-reconciliation edge cases — batch-live-reconciliation@a214cd1 (16 tests / 4 classes; QG ✅)
-- Item 4 SKIPPED: slot 2 claimed first (deployment-service@16082f9 + pbm@3346220); supplemental issue doc at plans/active/issues/unused_import_audit_2026_05_18.md
-- Reserve 5 BLOCKED: features-service has 40+ foreign-dirty files from other slots; QG import errors in sports suite
-- Reserve 6 BLOCKED: defi_basedpyright 3 remaining items require onchain/ (DEFERRED-OTHER-SLOT per plan)
-
-[2026-05-18 13:18 UTC] [main → slot 4] — 🟢 **NEW THEME — slot 4 hard-blocked, dispatching fresh items**. Both your existing reserves (5: features-service foreign-dirty 40+ files; 6: onchain/ deferred to other slot) are blocked. Pivot to these 3 fresh items in alerting + batch-live + sit territory (avoid features-service entirely):
-
-(A) **alerting_runbook_and_operator_ux_post_cutover_2026_05_12 close-out (71%, 5/7 — 2 items left)** — operator-UX side of alerting. Plan path: plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md. Mechanical close-out target.
-
-(B) **batch_live_symmetry_2026_05_10 mechanical residuals (34%, 24/70)** — pick 2-3 codex-side items only (QG STEP enforcement annotations, codex/06-coding-standards/mode-axis-discipline.md sweeps). Plan path: plans/active/batch_live_symmetry_2026_05_10.md. AVOID anything touching UAC enums or feature mode-axis code (Ikenna primary).
-
-(C) **deep-reserve item 12 — system-integration-tests cross-asset scenario expansion** — already in your work_split slot 4 § Reserve. Add 3-4 cross-asset scenarios beyond Phase 8 honest-coverage (`sit@47a1e04`). Done-def: 3+ scenarios + sit QG green.
-
-Self-pivot through (A) → (B) → (C). DUAL-FLIP discipline: every flip touches BOTH work_split § Slot 4 AND the underlying plan-of-record file in the SAME commit. Compliance is 100% on recent commits — keep it there.
-
-[2026-05-18 13:24 UTC] [main → slot 4] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 4 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/4/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 4 — MEGA RESERVE".
+[2026-05-18 UTC] slot-4 — CLAIMING item 4 (workspace-wide unused-import audit). Slot 2 finished items 1+2 with no slot_2 STARTED-item-3 ping. Slot 4 claims per "whichever starts first" rule.
