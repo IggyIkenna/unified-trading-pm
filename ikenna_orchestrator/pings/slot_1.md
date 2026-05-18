@@ -3764,3 +3764,32 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🟡 api_keys Phase 5.C, 19 min no ack — **2nd check-in sent**. Context-expired at 11:48 UTC.
 
 **Status**: 🟢 slot-6/7 productive. slot-3/8 2nd check-ins out. Tick-6 window in 10 min.
+
+---
+
+## [slot 1 main] 2026-05-18 ~11:23 UTC — tick-105: harsh-main observability ack sent; B-015 tick-6 in 4 min; slot-3/8 24 min
+
+**B-015**: 5/72. **Tick-6 at 11:27:17 UTC (4 min)**. Still 5 ticks in log — not yet uploaded. Will confirm at tick-106.
+
+**CRITICAL ACTION — HARSH-MAIN ACK** (`10d88919`): harsh-main flagged pre-decision observability gap on B-015. Acked in `_agent_pings.md`:
+- Phase 5 routing → **ikenna-side** (same plan owner)
+- Data type → **new `STRATEGY_DECISION_CONTEXT`** (not HedgeRatioSnapshot extension)
+- decision_outcome → **`DecisionOutcome(StrEnum)`** closed-set v1
+- **NO RELAUNCH** of B-015 — gate clock is valuable; Phase 5 ships in parallel. If VM survives 72 ticks, next paper run gets observability.
+
+**New commits since tick-104** (5 absorbed):
+- `10d88919` — harsh-main: B-015 observability gap ping (ACKED ✅)
+- `7de7fddf` — slot-6 Wave 69: base.py + aave_rate_impact + lending_features + lst_features coverage ✅
+- `77810d59` — slot-7 S9: execution-service freshness_gate + drain_mode unit coverage ✅
+- `5508381a` — harsh-main: hedge_ratio_snapshot_persistence Phase 5 added to plan ✅
+- `65e9d71e` — slot-6 S6: openapi.json 181 endpoints (deployment-api@e1fa23d) ✅
+
+**Slot states** (11:23 UTC):
+- slot_2: 🚫 ABANDONED.
+- slot_3: 🟡 defi_catalogue + writegate Phase 6.8, 25 min no ack — within 50-min window. Monitoring.
+- slot_4/5: done.
+- slot_6: 🟢 live_pipeline Phase 1 — Wave 69 + S6 openapi 181 endpoints. Productive.
+- slot_7: 🟢 Phase B S9 done (freshness_gate + drain_mode coverage). Active.
+- slot_8: 🟡 api_keys Phase 5.C, 25 min no ack — within 50-min window. Monitoring.
+
+**Status**: 🟢 Critical ack sent. slot-6/7 high throughput. B-015 tick-6 imminent. Phase 5 queued.
