@@ -1159,6 +1159,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_vwap_schedule_market_fok. \_spawn_child 107L→32L via \_vwap_resolve_spawn_qty + \_vwap_do_spawn_child.
   \_submit_primary 75L→28L via \_vwap_do_final_spawn. Allowlist 28→27 files. All methods <50L. AST clean. ruff 0 errors.
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 27 — algorithms/impl/almgren_chriss.py)**: shipped at
+  execution-service@15b083927. \_get\_market\_price 90L→25L via \_get\_ac\_l1\_mbp\_price +
+  \_resolve\_ac\_l2\_spread\_adjustment. on\_order 91L→27L via \_ac\_compute\_trajectory.
+  \_ac\_store\_and\_schedule 50L→47L via \_ac\_schedule\_final\_alert. \_on\_slice 72L→27L via
+  \_ac\_do\_spawn\_slice. \_on\_final 84L→27L via \_ac\_do\_final\_spawn.
+  Allowlist 27→26 files. All methods <50L. AST clean. ruff 0 errors.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
