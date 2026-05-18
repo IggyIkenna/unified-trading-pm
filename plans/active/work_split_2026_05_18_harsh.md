@@ -418,6 +418,12 @@ smoke begins.
       empty-RPC warning, bound factory delegates to stream_factory) + TestMakeSolanaScanner (5: Helius URL, custom
       venue URL, empty-key warning, max_signatures forwarded, rpc object passed). All 18 passed.
       features-service@9661f8ab
+- [x] ✅ **20. SUSTAIN — features-service Wave 76 — default_factories.py coverage (25 tests)** —
+      25 new tests: _NullSolanaRpc (3) + _to_signature_dict_list (6) + _to_transaction_dict (3) + _to_meta_dict (2) +
+      default_solana_rpc_factory (3: empty URL/construction failure/normal) + _resolve_block_for_timestamp via
+      default_block_range_resolver (8: success, ConnectionError/HTTP-429/JSON-err/non-digit fallbacks, unknown-chain
+      12s default, api_key_supplier, None-supplier). All 25 passed.
+      features-service@10251ea3
 
 #### Coordination
 
