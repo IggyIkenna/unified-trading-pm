@@ -1686,3 +1686,15 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   module-level helpers; `on_order_filled` 57L→40L
 
 **Running count**: ~174/377 cleared (~46%); active non-excluded violations 22→19; continuing tick-70.
+
+## [slot 7 → main] 2026-05-18 — tick-70 Phase B continued
+
+**Tick-70 deliverables** (3 files, execution-service@b4c74d02e):
+
+- `data/config_builder.py`: add `_prepare_loading_context` module-level helper (consolidates 4L setup);
+  `build_trades_config` 51L→48L
+- `data/ohlcv_converter.py`: add `_load_ohlcv_df` @staticmethod; `convert_ohlcv_parquet_to_catalog` 53L→47L
+- `engine/backtest/data_loader.py`: extract `_extend_primary_data_configs` + `_extend_book_data_configs` instance
+  methods; `_build_window_data_configs` 71L→13L
+
+**Running count**: ~177/377 cleared (~47%); active non-excluded violations 19→16; continuing tick-71.
