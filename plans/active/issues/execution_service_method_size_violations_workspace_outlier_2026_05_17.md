@@ -1184,6 +1184,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_vl_resolve_file_ts_range. Allowlist 20→19 files. All methods <50L. AST clean. ruff 0 errors. Slot-5 cumulative
   across batches 21-28: 8 files cleared (data/validator + algorithms/impl ×5 + data/loader_base + data/loader_transforms).
 
+  **Deferred from slot-5 2026-05-18 session (data/loaders/ remaining scope)**:
+  - [ ] **P2 DEFERRED** `data/loaders/tick_data.py` — `load_trades` 435L + `load_book_snapshots` 125L. Both too
+    complex to refactor safely without test validation (streaming + FUSE mount + timestamp normalization + filtering
+    all interleaved in a single 435L method). Requires dedicated slot with QG run to confirm green before commit.
+    Still in FUNCTION_SIZE_EXTRA_EXCLUDES. Next owner: assign when test infra is warm.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
