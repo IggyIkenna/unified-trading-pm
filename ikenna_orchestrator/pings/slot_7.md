@@ -1169,46 +1169,46 @@ because the issue is statused P2 post-cutover — proceed regardless.
 
 [2026-05-17 /loop tick 37] slot-7 — execution-service Phase B (+3, 90/377 cleared):
 
-- `execution-service@b6a1cca91` — GridConfigGenerator._generate_sor_secondary_instruments 65L→47L
-  via _filter_usdc_usdt_pools module-level (17-line USDC-USDT filter block → 1 call);
-  PassiveAggressiveExecutionMixin.on_order_accepted 65L→18L via _handle_parent_order_accepted method +
-  docstring trim; POVDynamicExecAlgorithm._schedule_pov_children 65L→39L via _pov_bucket_callback
-  module-level (replaces make_callback closure) + docstring trim + comment removal.
+- `execution-service@b6a1cca91` — GridConfigGenerator.\_generate_sor_secondary_instruments 65L→47L via
+  \_filter_usdc_usdt_pools module-level (17-line USDC-USDT filter block → 1 call);
+  PassiveAggressiveExecutionMixin.on_order_accepted 65L→18L via \_handle_parent_order_accepted method + docstring trim;
+  POVDynamicExecAlgorithm.\_schedule_pov_children 65L→39L via \_pov_bucket_callback module-level (replaces make_callback
+  closure) + docstring trim + comment removal.
 
 287 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 38] slot-7 — execution-service Phase B (+3, 93/377 cleared):
 
-- `execution-service@cf655bcbc` — LiveExecutionHandler._run_live_async 65L→45L via _start_uvicorn_server
-  async helper (uvicorn Config+Server+try/except block → 1 call); DeribitOrdersMixin.get_positions
-  67L→29L via _parse_deribit_position_entry method + 6-line docstring trim; DeribitOrdersMixin.get_open_orders
-  66L→27L via _parse_deribit_open_order_entry method + 6-line docstring trim.
+- `execution-service@cf655bcbc` — LiveExecutionHandler.\_run_live_async 65L→45L via \_start_uvicorn_server async helper
+  (uvicorn Config+Server+try/except block → 1 call); DeribitOrdersMixin.get_positions 67L→29L via
+  \_parse_deribit_position_entry method + 6-line docstring trim; DeribitOrdersMixin.get_open_orders 66L→27L via
+  \_parse_deribit_open_order_entry method + 6-line docstring trim.
 
 284 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 39] slot-7 — execution-service Phase B (+3, 96/377 cleared):
 
-- `execution-service@cd567f1a3` — GridConfigGenerator.generate_grid_configs 67L→44L via _make_grid_config
-  method (for-loop body → 1 call); UniswapConnector.swap_exact_input 67L→47L via 18-line docstring trim
-  to 1 line + 2 comment line removal; DustRouterRunner.maybe_realise 68L→47L via _build_dust_result method
-  (rar_rows + leg_id_hint + DustRouterResult construction) + 6-line docstring trim.
+- `execution-service@cd567f1a3` — GridConfigGenerator.generate_grid_configs 67L→44L via \_make_grid_config method
+  (for-loop body → 1 call); UniswapConnector.swap_exact_input 67L→47L via 18-line docstring trim to 1 line + 2 comment
+  line removal; DustRouterRunner.maybe_realise 68L→47L via \_build_dust_result method (rar_rows + leg_id_hint +
+  DustRouterResult construction) + 6-line docstring trim.
 
 281 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 40] slot-7 — execution-service Phase B (+3, 99/377 cleared):
 
-- `execution-service@d8230705c` — BaseDataLoader.__init__ 68L→41L via _resolve_bucket_domain static
-  (30-line if/elif/else → 2 lines); IntentDecomposer._decompose_deleverage 69L→8L via _build_deleverage_steps
-  module-level (all 5 ExecutionStep constructors extracted) + docstring trim; LiveExecutionHandler._get_defi_adapter
-  69L→33L + _build_defi_adapter static helper (connector build block) + docstring trim + 3 comment removal.
+- `execution-service@d8230705c` — BaseDataLoader.**init** 68L→41L via \_resolve_bucket_domain static (30-line
+  if/elif/else → 2 lines); IntentDecomposer.\_decompose_deleverage 69L→8L via \_build_deleverage_steps module-level (all
+  5 ExecutionStep constructors extracted) + docstring trim; LiveExecutionHandler.\_get_defi_adapter 69L→33L +
+  \_build_defi_adapter static helper (connector build block) + docstring trim + 3 comment removal.
 
 278 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 41] slot-7 — execution-service Phase B (+3, 102/377 cleared):
 
 - `execution-service@47734d7d7` — BenchmarkMatcher.match 69L→48L (trim 22L docstring);
-  KrakenCeFiAdapter.parse_order_response 69L→43L (trim 15L docstring + extract _parse_decimal @staticmethod);
-  LiveExecutionHandler._execute_instructions 69L→47L (trim docstring + extract _handle_defi_instruction class method).
+  KrakenCeFiAdapter.parse_order_response 69L→43L (trim 15L docstring + extract \_parse_decimal @staticmethod);
+  LiveExecutionHandler.\_execute_instructions 69L→47L (trim docstring + extract \_handle_defi_instruction class method).
 
 **MILESTONE 100/377 crossed** (now 102/377). basedpyright clean.
 
@@ -1217,18 +1217,18 @@ because the issue is statused P2 post-cutover — proceed regardless.
 [2026-05-17 /loop tick 42] slot-7 — execution-service Phase B (+3, 105/377 cleared):
 
 - `execution-service@c59222a6c` — VWAPExecutionMixin.on_order_accepted 70L→45L (trim docstring + extract
-  _schedule_vwap_fok_children: n_intervals/slice_quantities/log+schedule loop);
-  HybridOptimalSpawnMixin._detect_regime 70L→34L (trim docstring + extract _read_book_metrics: order book
-  volatility/trend/volume estimation); UniswapConnector.burn_position 70L→41L (trim docstring + extract
-  _execute_npm_decrease_and_collect tuple-return + _maybe_burn_nft try/except pattern).
+  \_schedule_vwap_fok_children: n_intervals/slice_quantities/log+schedule loop); HybridOptimalSpawnMixin.\_detect_regime
+  70L→34L (trim docstring + extract \_read_book_metrics: order book volatility/trend/volume estimation);
+  UniswapConnector.burn_position 70L→41L (trim docstring + extract \_execute_npm_decrease_and_collect tuple-return +
+  \_maybe_burn_nft try/except pattern).
 
 272 remaining. basedpyright clean.
 
 [2026-05-17 /loop tick 43] slot-7 — execution-service Phase B (+2, 107/377 cleared):
 
-- `execution-service@31f6a300a` — DataAvailabilityValidator.check_defi_data_availability 70L→34L (trim 10L
-  docstring + extract _check_defi_for_date: per-date flash_loan/risk_params/rewards prefix checks);
-  IntentDecomposer._decompose_yield 71L→25L (trim 8L docstring + extract _build_yield_deploy_step module-level:
+- `execution-service@31f6a300a` — DataAvailabilityValidator.check_defi_data_availability 70L→34L (trim 10L docstring +
+  extract \_check_defi_for_date: per-date flash_loan/risk_params/rewards prefix checks);
+  IntentDecomposer.\_decompose_yield 71L→25L (trim 8L docstring + extract \_build_yield_deploy_step module-level:
   ETH/WETH→STAKE, USDC/USDT/DAI→SUPPLY, else→SUPPLY).
 
 270 remaining. basedpyright clean.
@@ -1240,10 +1240,9 @@ Phase B: **107/377 cleared (28%)** — 100/377 milestone passed at tick-41. Issu
 [2026-05-17 /loop tick 44] slot-7 — execution-service Phase B (+3, 110/377 cleared):
 
 - `execution-service@5912da263` — ResultSerializer.serialize_fast 79L→50L (trim 21L docstring + extract
-  _build_fast_metadata module-level: metadata dict assembly);
-  ExecutionOrchestrator.execute_instruction 79L→44L (remove 10 redundant comment lines + extract
-  _handle_execution_error: venue/error_code/classify/log_event/latency-record);
-  DriftConnector.get_markets 79L→44L (trim docstring + extract _fetch_perp_markets async method).
+  \_build_fast_metadata module-level: metadata dict assembly); ExecutionOrchestrator.execute_instruction 79L→44L (remove
+  10 redundant comment lines + extract \_handle_execution_error: venue/error_code/classify/log_event/latency-record);
+  DriftConnector.get_markets 79L→44L (trim docstring + extract \_fetch_perp_markets async method).
 
 267 remaining. basedpyright clean.
 
@@ -1253,8 +1252,8 @@ Phase B: **107/377 cleared (28%)** — 100/377 milestone passed at tick-41. Issu
 
 Phase B **110/377 cleared (29%)** — tick-44 ✅. 267 remaining.
 
-If slot-7 is still running: continue Phase B. Next milestone flip at 150/377 (40%).
-If slot-7 has paused: check LDR for fresh operator scope; wallet_treasury Phase 9.A is operator-gated (hold).
+If slot-7 is still running: continue Phase B. Next milestone flip at 150/377 (40%). If slot-7 has paused: check LDR for
+fresh operator scope; wallet_treasury Phase 9.A is operator-gated (hold).
 
 ---
 
@@ -1262,10 +1261,11 @@ If slot-7 has paused: check LDR for fresh operator scope; wallet_treasury Phase 
 
 **Last ack**: tick-44 at 110/377 cleared (29%). ~2h gap since then.
 
-**Check-in**: Is slot-7 still running Phase B? If so, what's the current count?
-Next milestone: 150/377 (40%) — send ping when reached.
+**Check-in**: Is slot-7 still running Phase B? If so, what's the current count? Next milestone: 150/377 (40%) — send
+ping when reached.
 
 **Key updates from slot-1**:
+
 - Smoke B DEPLOYMENT_COMPLETED at 20:21 UTC (VM 211522, exit_code=0, 11/11 groups) — Bugs 1-7 all fixed
 - B-015 paper backtest UNBLOCKED — harsh-side notified
 
@@ -1277,9 +1277,11 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 **Status check**: Last ack was tick-44 at 110/377 cleared (29%). 3h+ gap with no response.
 
-**Update**: slot-5 has been reassigned to Phase B (algorithms/ + data/loaders/ ≥100L bucket) to cover the MIA gap. Slot-2 is continuing smaller violations.
+**Update**: slot-5 has been reassigned to Phase B (algorithms/ + data/loaders/ ≥100L bucket) to cover the MIA gap.
+Slot-2 is continuing smaller violations.
 
-**If slot-7 is still running**: please ping slot-1 immediately with current count. Coordinate file ranges with slot-5 (you take 51-75L violations in non-data/, non-algorithms/ files; slot-5 takes ≥100L in algorithms/ and data/).
+**If slot-7 is still running**: please ping slot-1 immediately with current count. Coordinate file ranges with slot-5
+(you take 51-75L violations in non-data/, non-algorithms/ files; slot-5 takes ≥100L in algorithms/ and data/).
 
 **If slot-7 is idle**: no action needed — slot-5 is covering. You may receive a new assignment in the next dispatch.
 
@@ -1290,22 +1292,29 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 **Status**: RUNNING — resumed from compaction point, continuing Phase B execution-service method-size refactors.
 
 **Tick-45 deliverables** (3 methods, execution-service@82e801b66):
-- `matching_engine/engine.py::BenchmarkMatcher._match_lending`: 77L→49L (extract `_mk_lending_fail` + trim 8L docstring)
-- `algo_library/intent_engine.py::IntentDecomposer._decompose_rebalance`: 78L→29L (extract `_build_rebalance_sell/buy_steps` + trim docstring)
-- `engine/backtest/engine/results.py::ResultsMixin._collect_runtime_checks`: 78L→27L (extract `_parse_account_report` module fn)
 
-**Running count**: 113/377 cleared (~30%); continuing on 51-75L violations in non-algorithms/, non-data/ files per slot-5 coordination. Slot-5 handles ≥100L in algorithms/ + data/.
+- `matching_engine/engine.py::BenchmarkMatcher._match_lending`: 77L→49L (extract `_mk_lending_fail` + trim 8L docstring)
+- `algo_library/intent_engine.py::IntentDecomposer._decompose_rebalance`: 78L→29L (extract
+  `_build_rebalance_sell/buy_steps` + trim docstring)
+- `engine/backtest/engine/results.py::ResultsMixin._collect_runtime_checks`: 78L→27L (extract `_parse_account_report`
+  module fn)
+
+**Running count**: 113/377 cleared (~30%); continuing on 51-75L violations in non-algorithms/, non-data/ files per
+slot-5 coordination. Slot-5 handles ≥100L in algorithms/ + data/.
 
 ---
 
 ## [slot 7 → main] 2026-05-18 — tick-46 Phase B continued
 
 **Tick-46 deliverables** (6 methods in 5 files, execution-service@59060778a):
+
 - `matching_engine/engine.py::_match_lending`: ruff-reformatted 58L→43L (err-var pattern)
-- `results/serializer.py::serialize_fast`: 51L→44L (extract inner format_date to _format_date)
-- `results/extractor.py::extract_basic_counts`: 75L→30L (extract _count_filled_orders)
-- `engine/validation/data_availability_validator.py::check_market_tick_data`: 75L→36L (extract _get_instrument_data_type_folder + _get_tick_filename)
-- `engine/validation/backtest_validator.py::validate_data_availability`: 75L→43L (extract _validate_missing_catalog_data)
+- `results/serializer.py::serialize_fast`: 51L→44L (extract inner format_date to \_format_date)
+- `results/extractor.py::extract_basic_counts`: 75L→30L (extract \_count_filled_orders)
+- `engine/validation/data_availability_validator.py::check_market_tick_data`: 75L→36L (extract
+  \_get_instrument_data_type_folder + \_get_tick_filename)
+- `engine/validation/backtest_validator.py::validate_data_availability`: 75L→43L (extract
+  \_validate_missing_catalog_data)
 
 **Running count**: ~119/377 cleared (~32%); continuing tick-47.
 
@@ -1314,8 +1323,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-47 Phase B continued
 
 **Tick-47 deliverables** (2 methods in 2 files, execution-service@b593307e8):
-- `engine/backtest/preflight.py::check_all`: 52L→15L (extract _run_all_preflight_steps instance method, 48L)
-- `utils/dependency_checker.py::_check_blob_dep_market_tick`: 54L→26L (extract _mk_dep_status module-level helper, 12L)
+
+- `engine/backtest/preflight.py::check_all`: 52L→15L (extract \_run_all_preflight_steps instance method, 48L)
+- `utils/dependency_checker.py::_check_blob_dep_market_tick`: 54L→26L (extract \_mk_dep_status module-level helper, 12L)
 
 **Running count**: ~121/377 cleared (~32%); continuing tick-48.
 
@@ -1324,10 +1334,12 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-48 Phase B continued
 
 **Tick-48 deliverables** (4 methods in 4 files, execution-service@802b71e28):
-- `engine/backtest/actors/tp_sl_generator.py::generate_tp_sl`: 71L→29L (_select_tp_sl_ranges staticmethod)
-- `engine/validation/catalog_validator.py::check_book_type_data_requirements`: 74L→29L (_validate_instrument_data)
-- `engine/backtest/actors/signal_driven_shared.py::add_entry`: 74L→40L (_accumulate_entry)
-- `engine/backtest/actors/signal_driven_v3_utils.py::cancel_pending_twap_children`: 72L→31L (_try_cancel_via_exec_algos + _try_cancel_open_matching_orders)
+
+- `engine/backtest/actors/tp_sl_generator.py::generate_tp_sl`: 71L→29L (\_select_tp_sl_ranges staticmethod)
+- `engine/validation/catalog_validator.py::check_book_type_data_requirements`: 74L→29L (\_validate_instrument_data)
+- `engine/backtest/actors/signal_driven_shared.py::add_entry`: 74L→40L (\_accumulate_entry)
+- `engine/backtest/actors/signal_driven_v3_utils.py::cancel_pending_twap_children`: 72L→31L
+  (\_try_cancel_via_exec_algos + \_try_cancel_open_matching_orders)
 
 **Running count**: ~125/377 cleared (~33%); continuing tick-49.
 
@@ -1336,8 +1348,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-49 Phase B continued
 
 **Tick-49 deliverables** (2 methods in 2 files, execution-service@da3463370):
-- `defi_execution/orchestrators/recursive_loop_orchestrator.py::_flash_open`: 71L→33L (_build_flash_open_result 41L)
-- `algo_library/sor_cross_chain.py::get_optimal_route`: 72L→21L (_select_best_route 31L)
+
+- `defi_execution/orchestrators/recursive_loop_orchestrator.py::_flash_open`: 71L→33L (\_build_flash_open_result 41L)
+- `algo_library/sor_cross_chain.py::get_optimal_route`: 72L→21L (\_select_best_route 31L)
 
 **Running count**: ~127/377 cleared (~34%); continuing tick-50.
 
@@ -1346,7 +1359,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-50 Phase B continued
 
 **Tick-50 deliverables** (1 method in 1 file, execution-service@69b1cbfab):
-- `config/grid_generator_core.py::upload_configs`: 73L→27L (_upload_single_config 25L + _upload_manifest 26L instance methods)
+
+- `config/grid_generator_core.py::upload_configs`: 73L→27L (\_upload_single_config 25L + \_upload_manifest 26L instance
+  methods)
 
 **Running count**: ~128/377 cleared (~34%); continuing tick-51.
 
@@ -1355,8 +1370,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-51 Phase B continued
 
 **Tick-51 deliverables** (2 methods in 2 files, execution-service@921bb264c):
-- `services/funding_recon_engine.py::FundingReconEngine.reconcile`: 55L→34L (_finalize_and_alert 37L)
-- `engine/backtest/actors/evaluator.py::StrategyEvaluator.evaluate_performance`: 59L→50L (_gather_stats 30L)
+
+- `services/funding_recon_engine.py::FundingReconEngine.reconcile`: 55L→34L (\_finalize_and_alert 37L)
+- `engine/backtest/actors/evaluator.py::StrategyEvaluator.evaluate_performance`: 59L→50L (\_gather_stats 30L)
 
 **Running count**: ~130/377 cleared (~35%); 51-75L bucket exhausted. Moving to 76-100L.
 
@@ -1365,9 +1381,11 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-52 Phase B continued
 
 **Tick-52 deliverables** (3 methods in 3 files, execution-service@309810f09):
+
 - `utils/validation/instruction_validator.py::validate_instruction_inflight`: 77L→47L (docstring+blank+comment trim)
 - `validation/instruction_validator.py::validate_instruction_inflight`: 77L→47L (same edit)
-- `engine/backtest/actors/tp_sl_generator.py::generate_random_tp_sl_for_signal`: 83L→42L (_signal_seed_from_timestamp 11L)
+- `engine/backtest/actors/tp_sl_generator.py::generate_random_tp_sl_for_signal`: 83L→42L (\_signal_seed_from_timestamp
+  11L)
 
 **Running count**: ~133/377 cleared (~35%); continuing tick-53.
 
@@ -1376,6 +1394,7 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-53 Phase B continued
 
 **Tick-53 deliverables** (1 method, execution-service@c6846ef4f):
+
 - `engine/backtest/actors/signal_driven_shared.py::add_exit`: 85L→30L (extract `_accumulate_exit` helper 42L)
 
 **Running count**: ~134/377 cleared (~36%); continuing tick-54.
@@ -1385,6 +1404,7 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-54 Phase B continued
 
 **Tick-54 deliverables** (2 methods in 2 files, execution-service@518ccbb39):
+
 - `engine/backtest/data_loader.py::build_instruction_based_data_configs`: 81L→27L (extract `_process_inst_type_req` 46L)
 - `engine/routing/instruction_router.py::route_signal`: 81L→34L (extract `_build_signal_result` 30L)
 
@@ -1395,8 +1415,11 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-55 Phase B continued
 
 **Tick-55 deliverables** (2 methods in 1 file, execution-service@ab6a4ed97):
-- `engine/backtest/actors/signal_driven_v3_handlers.py::handle_instruction_found`: 83L→39L (extract `_log_tp_sl_instruction` 20L + `_execute_instruction_via_tick` 24L)
-- `engine/backtest/actors/signal_driven_v3_handlers.py::execute_instruction`: 83L→32L (extract `_setup_and_enter_position` 42L)
+
+- `engine/backtest/actors/signal_driven_v3_handlers.py::handle_instruction_found`: 83L→39L (extract
+  `_log_tp_sl_instruction` 20L + `_execute_instruction_via_tick` 24L)
+- `engine/backtest/actors/signal_driven_v3_handlers.py::execute_instruction`: 83L→32L (extract
+  `_setup_and_enter_position` 42L)
 
 **Running count**: ~138/377 cleared (~37%); continuing tick-56.
 
@@ -1405,9 +1428,12 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-56 Phase B continued
 
 **Tick-56 deliverables** (3 methods in 3 files, execution-service@6f544699d):
-- `config/grid_generator_core.py::_get_config_for_instruction_type`: 85L→30L (extract into existing `_get_lend_borrow_base_config` + `_get_stake_base_config` staticmethods)
+
+- `config/grid_generator_core.py::_get_config_for_instruction_type`: 85L→30L (extract into existing
+  `_get_lend_borrow_base_config` + `_get_stake_base_config` staticmethods)
 - `benchmark/comparison.py::_ensure_signals_available`: 86L→33L (extract `_check_signals_for_date_range` 36L)
-- `engine/backtest/actors/signal_driven_v3_utils.py::calculate_exec_params`: 89L→22L (extract `_calc_sce_exec_params` 31L + `_calc_dynamic_horizon` 30L)
+- `engine/backtest/actors/signal_driven_v3_utils.py::calculate_exec_params`: 89L→22L (extract `_calc_sce_exec_params`
+  31L + `_calc_dynamic_horizon` 30L)
 
 **Running count**: ~141/377 cleared (~37%); continuing tick-57.
 
@@ -1416,7 +1442,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-57 Phase B hotfix
 
 **Tick-57 hotfix** (1 method, execution-service@8b4cf4cb3):
-- `engine/backtest/data_loader.py::_process_inst_type_req`: trim 53L→48L (tick-54 helper landed over limit; collapse 6-line logger.info to 1 line)
+
+- `engine/backtest/data_loader.py::_process_inst_type_req`: trim 53L→48L (tick-54 helper landed over limit; collapse
+  6-line logger.info to 1 line)
 
 **Running count**: ~141/377 cleared (~37%); continuing tick-58.
 
@@ -1425,7 +1453,9 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 ## [slot 7 → main] 2026-05-18 — tick-58 Phase B continued
 
 **Tick-58 deliverables** (2 methods in 2 files, execution-service@3ba1d3b30):
-- `engine/backtest/instruction_loader.py::load_instructions`: 97L→34L (extract `_extract_instruction_data_from_config` 20L + `_load_instructions_df` 22L)
+
+- `engine/backtest/instruction_loader.py::load_instructions`: 97L→34L (extract `_extract_instruction_data_from_config`
+  20L + `_load_instructions_df` 22L)
 - `engine/backtest/node_builder.py::build_exec_algorithm_configs`: 97L→37L (extract `_determine_algo_type` 27L)
 
 **Running count**: ~143/377 cleared (~38%); continuing tick-59.
@@ -1434,21 +1464,25 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
-**New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
+**New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7
+(strategy/risk)**.
 
 Gate 4 FIRED 2026-05-13 for β-audit, but actual `record_*` callsites still need wiring.
 
-**Pattern per service**: (1) UAC `SERVICE_OUTPUT_POLICIES` entry; (2) `record_*` at output-write boundaries; (3) `publish_with_manifest_lookup()` integration; (4) per-output-type UAC schema; (5) unit + integration tests.
+**Pattern per service**: (1) UAC `SERVICE_OUTPUT_POLICIES` entry; (2) `record_*` at output-write boundaries; (3)
+`publish_with_manifest_lookup()` integration; (4) per-output-type UAC schema; (5) unit + integration tests.
 
 **Items**:
-1. Phase 6.6 — ml-training-service: `record_captured`/`record_empty` at model artifact write boundaries + UAC entry + tests
+
+1. Phase 6.6 — ml-training-service: `record_captured`/`record_empty` at model artifact write boundaries + UAC entry +
+   tests
 2. Phase 6.6 — ml-inference-service: same pattern
 3. Phase 6.7 — strategy-service: signal output → `record_captured` at strategy output write boundary
 4. Phase 6.7 — risk-and-exposure-service: same pattern
 5. Flip `writegate_honest_coverage_endtoend_2026_05_06.md` checkboxes per service + push `docs(plans):` flips
 
-**Plan**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.6/6.7
-**Conflict-risk**: strategy-service + execution-service bucket-naming = Slots 2/5. Writegate wiring is DIFFERENT surface.
+**Plan**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.6/6.7 **Conflict-risk**:
+strategy-service + execution-service bucket-naming = Slots 2/5. Writegate wiring is DIFFERENT surface.
 
 Acknowledge "STARTED writegate Phase 6.6 ml-training" within 10 min.
 
@@ -1456,19 +1490,19 @@ Acknowledge "STARTED writegate Phase 6.6 ml-training" within 10 min.
 
 ### 2026-05-18T09:24:16Z — Slot 7 STARTED (redirected from writegate to Phase 2.6 Step 5 prep)
 
-Theme: archive-flat-buckets.sh script + write-resume verification plan
-Status: COMPLETE ✅
+Theme: archive-flat-buckets.sh script + write-resume verification plan Status: COMPLETE ✅
 
-| Part | Deliverable | Commit | Status |
-| ---- | ----------- | ------ | ------ |
-| A | `deployment-service/scripts/archive-flat-buckets.sh` | deployment-service@9f158d5 | ✅ DONE |
-| B | Write-resume verification checklist (appended to code_freeze plan) | PM@773a3726 | ✅ DONE |
-| C | Phase 2.6 Step 5 checkboxes flipped in code_freeze plan | PM@773a3726 | ✅ DONE |
+| Part | Deliverable                                                        | Commit                     | Status  |
+| ---- | ------------------------------------------------------------------ | -------------------------- | ------- |
+| A    | `deployment-service/scripts/archive-flat-buckets.sh`               | deployment-service@9f158d5 | ✅ DONE |
+| B    | Write-resume verification checklist (appended to code_freeze plan) | PM@773a3726                | ✅ DONE |
+| C    | Phase 2.6 Step 5 checkboxes flipped in code_freeze plan            | PM@773a3726                | ✅ DONE |
 
 Summary:
-- `archive-flat-buckets.sh`: 503-line bash script. Accepts --env/--cloud/--retention-days/--dry-run.
-  Dry-run on by default (production guardrail). Sets 30-day Delete lifecycle on 50 GCP + 50 AWS flat
-  buckets from Tiers 1-7 of the Phase 2.6 migration inventory. bash -n syntax check passes.
+
+- `archive-flat-buckets.sh`: 503-line bash script. Accepts --env/--cloud/--retention-days/--dry-run. Dry-run on by
+  default (production guardrail). Sets 30-day Delete lifecycle on 50 GCP + 50 AWS flat buckets from Tiers 1-7 of the
+  Phase 2.6 migration inventory. bash -n syntax check passes.
 - Write-resume checklist: 4 checks (env-tiered writes, QG 5.69=0, deployment-api smoke, zero flat reads).
   Operator-runnable with pass/fail criteria and Wave 7 unlock condition.
 
@@ -1477,28 +1511,39 @@ Summary:
 Phase 2.6 Step 5 COMPLETE ✅ — acked. Queue exhausted. New dispatch:
 
 **Part A — `defi_catalogue_chain_primitives_2026_05_10` close-out** (85%, 10 items open):
-1. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting sections (pnl-attribution, operational-modes, simulator-config, chain primitive UAC additions)
+
+1. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in
+   codex/09-strategy/cross-cutting sections (pnl-attribution, operational-modes, simulator-config, chain primitive UAC
+   additions)
 2. Ship per item. `cd .tabs/7/unified-api-contracts && bash scripts/quality-gates.sh` after UAC changes.
 3. Dual-flip defi_catalogue + work_split in same `docs(plans):` commit.
 
-**Part B — writegate Phase 6.8** (instruments-service `record_captured`/`record_empty` manifest hookup, if not done):
-4. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 items. If all checked — skip and extend Part A.
+**Part B — writegate Phase 6.8** (instruments-service `record_captured`/`record_empty` manifest hookup, if not done): 4.
+Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 items. If all checked — skip and extend
+Part A.
 
-**Conflict-risk**: instruments-service manifest = Ikenna slot 3 (defi_catalogue Part B). Check `.tabs/3/instruments-service` before starting Phase 6.8.
+**Conflict-risk**: instruments-service manifest = Ikenna slot 3 (defi_catalogue Part B). Check
+`.tabs/3/instruments-service` before starting Phase 6.8.
 
 Acknowledge "STARTED defi_catalogue close-out" within 10 min.
+
 - Both new [x] checkboxes in code_freeze plan § "Outstanding NEW work (gap-2.6.A through gap-2.6.E)".
 
-[2026-05-18 09:57 UTC] [main → slot 7] — 🟡 **24-MIN SILENCE CHECK** — defi_catalogue close-out dispatched at 09:33 UTC. No ack received. If active: post "STARTED defi_catalogue close-out" now. If writegate Phase 6.8 already all-checked: focus on extending Part A (defi_catalogue remaining 10 items). If context-expired: drop one-liner here.
+[2026-05-18 09:57 UTC] [main → slot 7] — 🟡 **24-MIN SILENCE CHECK** — defi_catalogue close-out dispatched at 09:33 UTC.
+No ack received. If active: post "STARTED defi_catalogue close-out" now. If writegate Phase 6.8 already all-checked:
+focus on extending Part A (defi_catalogue remaining 10 items). If context-expired: drop one-liner here.
 
 ---
 
 ## [slot 7 → main] 2026-05-18 — tick-59 Phase B continued
 
 **Tick-59 deliverables** (3 methods in 3 files, execution-service@8c2809c12):
+
 - `benchmark/enhanced_comparison.py::compare_results`: 100L→45L (extract `_compute_leaders_by_regime` 41L)
-- `results/serializer.py::serialize_report`: 99L→46L (extract `_format_date_tz` 7L + `_build_report_config_obj` 17L + `_build_report_metadata` 20L)
-- `engine/orchestrator.py::_submit_orders_with_timing`: 99L→41L (extract `_submit_single_child_order` async 26L + `_handle_order_submission_error` 38L)
+- `results/serializer.py::serialize_report`: 99L→46L (extract `_format_date_tz` 7L + `_build_report_config_obj` 17L +
+  `_build_report_metadata` 20L)
+- `engine/orchestrator.py::_submit_orders_with_timing`: 99L→41L (extract `_submit_single_child_order` async 26L +
+  `_handle_order_submission_error` 38L)
 
 **Running count**: ~146/377 cleared (~39%); continuing tick-60.
 
@@ -1507,9 +1552,13 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-60 Phase B continued
 
 **Tick-60 deliverables** (3 methods in 3 files, execution-service@0733e79d0):
-- `engine/orchestrator.py::on_fill`: 124L→33L (extract `_compute_fill_emission_policy` 17L + `_alert_fill_blocked` 17L + `_build_instruction_fill_result` 27L + `_submit_algo_follow_orders` 30L)
-- `validation/instruction_validator.py::validate_tp_sl_logic`: 115L→33L (extract `_validate_tp_sl_side` @staticmethod 46L)
-- `utils/validation/instruction_validator.py::validate_tp_sl_logic`: 113L→33L (extract `_validate_tp_sl_side` @staticmethod 46L)
+
+- `engine/orchestrator.py::on_fill`: 124L→33L (extract `_compute_fill_emission_policy` 17L + `_alert_fill_blocked` 17L +
+  `_build_instruction_fill_result` 27L + `_submit_algo_follow_orders` 30L)
+- `validation/instruction_validator.py::validate_tp_sl_logic`: 115L→33L (extract `_validate_tp_sl_side` @staticmethod
+  46L)
+- `utils/validation/instruction_validator.py::validate_tp_sl_logic`: 113L→33L (extract `_validate_tp_sl_side`
+  @staticmethod 46L)
 
 **Running count**: ~149/377 cleared (~40%); continuing tick-61.
 
@@ -1518,8 +1567,12 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-61 Phase B continued
 
 **Tick-61 deliverables** (2 methods in 2 files, execution-service@7c5840080):
-- `engine/backtest/data_loader.py::DataLoader.build_data_configurations`: 110L→49L (extract `_build_window_data_configs` 49L; also fixed typo "andare" → "and are")
-- `engine/backtest/engine/setup.py::SetupMixin._build_node_configurations`: 111L→47L (extract `_build_venue_configs` 21L + `_build_exec_algo_configs` 27L + `_build_run_config_and_venue` 21L; fixed typos "inL1_MBP", "intoconfig", "venue(s)venue")
+
+- `engine/backtest/data_loader.py::DataLoader.build_data_configurations`: 110L→49L (extract `_build_window_data_configs`
+  49L; also fixed typo "andare" → "and are")
+- `engine/backtest/engine/setup.py::SetupMixin._build_node_configurations`: 111L→47L (extract `_build_venue_configs`
+  21L + `_build_exec_algo_configs` 27L + `_build_run_config_and_venue` 21L; fixed typos "inL1_MBP", "intoconfig",
+  "venue(s)venue")
 
 **Running count**: ~151/377 cleared (~40%); continuing tick-62.
 
@@ -1528,8 +1581,12 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-62 Phase B continued
 
 **Tick-62 deliverables** (2 methods in 2 files, execution-service@816dbffd2):
-- `results/extractor.py::ResultExtractor.extract_pnl_from_engine`: 112L→40L (extract `_extract_pnl_from_stats` 23L + `_extract_pnl_from_account_balance` 22L; DRY: two near-identical account-balance fallbacks → single helper)
-- `engine/backtest/engine/setup.py::SetupMixin._setup_config_and_instruments`: 108L→43L (extract `_extract_venue_name_from_config` @staticmethod 18L + `_extract_instrument_id_from_config` @staticmethod 41L; fixed typos "namefrom", "compatiblewith")
+
+- `results/extractor.py::ResultExtractor.extract_pnl_from_engine`: 112L→40L (extract `_extract_pnl_from_stats` 23L +
+  `_extract_pnl_from_account_balance` 22L; DRY: two near-identical account-balance fallbacks → single helper)
+- `engine/backtest/engine/setup.py::SetupMixin._setup_config_and_instruments`: 108L→43L (extract
+  `_extract_venue_name_from_config` @staticmethod 18L + `_extract_instrument_id_from_config` @staticmethod 41L; fixed
+  typos "namefrom", "compatiblewith")
 
 **Running count**: ~153/377 cleared (~41%); continuing tick-63.
 
@@ -1538,7 +1595,10 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-63 Phase B continued
 
 **Tick-63 deliverables** (1 method in 1 file, execution-service@11e0f80a4):
-- `engine/backtest/engine/setup.py::SetupMixin._setup_catalog_and_instrument`: 119L→32L (extract `_collect_instrument_categories` @staticmethod 19L + `_load_defs_from_gcs` @staticmethod 40L + `_resolve_catalog_path` @staticmethod 22L; fixed typos "atcatalog", "RELOAD=trueto")
+
+- `engine/backtest/engine/setup.py::SetupMixin._setup_catalog_and_instrument`: 119L→32L (extract
+  `_collect_instrument_categories` @staticmethod 19L + `_load_defs_from_gcs` @staticmethod 40L + `_resolve_catalog_path`
+  @staticmethod 22L; fixed typos "atcatalog", "RELOAD=trueto")
 
 **Running count**: ~154/377 cleared (~41%); continuing tick-64.
 
@@ -1547,7 +1607,11 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-64 Phase B continued
 
 **Tick-64 deliverables** (1 method in 1 file, execution-service@697b9131a):
-- `engine/backtest/engine/setup.py::SetupMixin._calculate_instruction_alpha`: 147L→29L (extract `_load_market_data_for_alpha_calc` 22L + `_load_single_instrument_for_alpha` @staticmethod 34L + `_collect_non_trade_fills` 15L + `_build_alpha_results_and_summary` @staticmethod 47L; dropped dead `results` list; setup.py now ALL CLEAR)
+
+- `engine/backtest/engine/setup.py::SetupMixin._calculate_instruction_alpha`: 147L→29L (extract
+  `_load_market_data_for_alpha_calc` 22L + `_load_single_instrument_for_alpha` @staticmethod 34L +
+  `_collect_non_trade_fills` 15L + `_build_alpha_results_and_summary` @staticmethod 47L; dropped dead `results` list;
+  setup.py now ALL CLEAR)
 
 **Running count**: ~155/377 cleared (~41%); continuing tick-65.
 
@@ -1556,7 +1620,10 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-65 Phase B continued
 
 **Tick-65 deliverables** (1 method in 1 file, execution-service@6df769e4b):
-- `engine/backtest/data_loader.py::DataLoader.load_data_for_instrument`: 150L→28L (extract `_load_trades_for_instrument` 43L + `_load_cefi_book_configs` 27L + `_load_swaps_for_instrument` 34L; data_loader.py ALL CLEAR; fixed typo "usebenchmark")
+
+- `engine/backtest/data_loader.py::DataLoader.load_data_for_instrument`: 150L→28L (extract `_load_trades_for_instrument`
+  43L + `_load_cefi_book_configs` 27L + `_load_swaps_for_instrument` 34L; data_loader.py ALL CLEAR; fixed typo
+  "usebenchmark")
 
 **Running count**: ~156/377 cleared (~41%); continuing tick-66.
 
@@ -1565,12 +1632,17 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-66 Phase B continued
 
 **Tick-66 deliverables** (5 files, execution-service@d3df0d4a7):
-- `sports_execution/adapters/exchanges/kalshi.py::list_open_orders`: 52L→48L (compact 6× UNKNOWN_VENUE_ERROR_RECEIVED log_event dict)
-- `data/ohlcv_converter.py::convert_ohlcv_parquet_to_catalog`: 53L→45L (compact _build_ohlcv_bars_list call args)
-- `data/trade_converter.py::convert_trades_parquet_to_catalog`: 59L→37L (extract `_check_skip_if_exists` @staticmethod 23L)
-- `data/config_builder.py::_load_missing_data`: 60L→46L (compact _execute_gcs_load call args)
-- `algorithms/impl/passive_aggressive_spawn.py::_schedule_aggressive_slices`: 62L→38L (extract `_schedule_timer_slice` 24L)
-- `algorithms/impl/passive_aggressive_spawn.py::_start_aggressive_phase`: 61L→29L (extract `_run_aggressive_scheduling` 21L)
+
+- `sports_execution/adapters/exchanges/kalshi.py::list_open_orders`: 52L→48L (compact 6× UNKNOWN_VENUE_ERROR_RECEIVED
+  log_event dict)
+- `data/ohlcv_converter.py::convert_ohlcv_parquet_to_catalog`: 53L→45L (compact \_build_ohlcv_bars_list call args)
+- `data/trade_converter.py::convert_trades_parquet_to_catalog`: 59L→37L (extract `_check_skip_if_exists` @staticmethod
+  23L)
+- `data/config_builder.py::_load_missing_data`: 60L→46L (compact \_execute_gcs_load call args)
+- `algorithms/impl/passive_aggressive_spawn.py::_schedule_aggressive_slices`: 62L→38L (extract `_schedule_timer_slice`
+  24L)
+- `algorithms/impl/passive_aggressive_spawn.py::_start_aggressive_phase`: 61L→29L (extract `_run_aggressive_scheduling`
+  21L)
 
 **Running count**: ~162/377 cleared (~43%); 37 violations remain; continuing tick-67.
 
@@ -1579,7 +1651,25 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 ## [slot 7 → main] 2026-05-18 — tick-67 Phase B continued
 
 **Tick-67 deliverables** (2 files, execution-service@6ba53d526):
-- `sports_execution/adapters/exchanges/polymarket_clob.py`: extract `_emit_venue_error` @staticmethod (18L); place_bet 71L→37L, cancel_bet 75L→30L, place_order 89L→41L, list_open_orders 83L→33L (4 violations cleared)
-- `data/config_builder.py::build_trades_config`: 72L→49L (compact _load_missing_data 24L→7L + _log_data_summary 10L→5L + _resolve_domain_info 3L→1L)
+
+- `sports_execution/adapters/exchanges/polymarket_clob.py`: extract `_emit_venue_error` @staticmethod (18L); place_bet
+  71L→37L, cancel_bet 75L→30L, place_order 89L→41L, list_open_orders 83L→33L (4 violations cleared)
+- `data/config_builder.py::build_trades_config`: 72L→49L (compact \_load_missing_data 24L→7L + \_log_data_summary
+  10L→5L + \_resolve_domain_info 3L→1L)
 
 **Running count**: ~167/377 cleared (~44%); 32 violations remain; continuing tick-68.
+
+## [slot 7 → main] 2026-05-18 — tick-68 Phase B continued
+
+**Tick-68 deliverables** (4 files, execution-service@1a79e48a1):
+
+- `utils/validation/instruction_validator.py` + `validation/instruction_validator.py`: extract `_record_error`
+  @staticmethod (replace 6× errors.append+raise pattern); `_validate_tp_sl_side` 54L→42L (×2)
+- `engine/multi_leg_orchestrator.py`: extract `_build_unwound_result` + `_emit_compensation_completed` @staticmethods;
+  `_fire_compensation_trade` 55L→47L
+- `data/converter_orderbook.py`: extract `_write_batch_to_catalog` @staticmethod; `_run_batch_loop` 58L→45L
+- Note: call-compaction approach abandoned — ruff-format magic trailing comma expands multi-arg calls; switched to
+  helper extraction only
+- Note: LDR rebase mid-tick added 15 new violations from other slots (56 total); cleared 4 → 52 remain
+
+**Running count**: ~171/377 cleared (~45%); 52 violations remain; continuing tick-69.
