@@ -57,17 +57,17 @@ estimate_calibration_note: |
 
 ## Slot stack — ~100-128 cal AI-days across 8 implementer slots
 
-| Slot      | Theme                                                                                              | Cal AI-days | Status (2026-05-18) |
-| --------- | -------------------------------------------------------------------------------------------------- | ----------- | ------------------- |
-| 1         | Main orchestrator (continuous, uncounted)                                                          | —           | 🟢 IN PROGRESS |
-| 2         | Delegate-flip: UTL (23) + batch-live-recon (7) + strategy (2)                                      | ~14         | 🔄 UTL agent running |
-| 3         | Delegate-flip: UAC (5) + features-service (2) + defi_catalogue close                               | ~16         | ✅ Part A DONE (uac@ae8b4d6); Part B → Harsh-side |
-| 4         | AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4                                          | ~18         | 🔄 Agent dispatched |
-| 5         | Delegate-flip: execution-service (33) + UI (4) + api_keys Phase 5.B                                | ~18         | ✅ exec+UI DONE (prior); api_keys 5.B/5.C → Slot 8 |
-| 6         | Delegate-flip: deployment-api (27) + code_freeze Phase 2 runbook verify                            | ~14         | 🔄 deployment-api agent running |
-| 7         | ~~writegate Phase 6.6+6.7 impl~~ REDIRECTED: Phase 2.6 Step 5 prep + write-resume verification    | ~20→~8      | 🔄 Agent dispatched (Gate 4 CLOSED 2026-05-15) |
-| 8         | ~~batch_live_symmetry Tab 2 codex~~ REDIRECTED: alerting SCRIPT items + api_keys Phase 5.B/5.C    | ~14         | 🔄 Agent dispatched (Tab 2 + Gate 4 already done) |
-| **Total** | (8 implementer slots)                                                                              | **~114**    | |
+| Slot      | Theme                                                                                          | Cal AI-days | Status (2026-05-18)                                |
+| --------- | ---------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------- |
+| 1         | Main orchestrator (continuous, uncounted)                                                      | —           | 🟢 IN PROGRESS                                     |
+| 2         | Delegate-flip: UTL (23) + batch-live-recon (7) + strategy (2)                                  | ~14         | 🔄 UTL agent running                               |
+| 3         | Delegate-flip: UAC (5) + features-service (2) + defi_catalogue close                           | ~16         | ✅ Part A DONE (uac@ae8b4d6); Part B → Harsh-side  |
+| 4         | AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4                                      | ~18         | 🔄 Agent dispatched                                |
+| 5         | Delegate-flip: execution-service (33) + UI (4) + api_keys Phase 5.B                            | ~18         | ✅ exec+UI DONE (prior); api_keys 5.B/5.C → Slot 8 |
+| 6         | Delegate-flip: deployment-api (27) + code_freeze Phase 2 runbook verify                        | ~14         | 🔄 deployment-api agent running                    |
+| 7         | ~~writegate Phase 6.6+6.7 impl~~ REDIRECTED: Phase 2.6 Step 5 prep + write-resume verification | ~20→~8      | 🔄 Agent dispatched (Gate 4 CLOSED 2026-05-15)     |
+| 8         | ~~batch_live_symmetry Tab 2 codex~~ REDIRECTED: alerting SCRIPT items + api_keys Phase 5.B/5.C | ~14         | 🔄 Agent dispatched (Tab 2 + Gate 4 already done)  |
+| **Total** | (8 implementer slots)                                                                          | **~114**    |                                                    |
 
 ---
 
@@ -131,9 +131,10 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   --glob '!.venv*' --glob '!tests'
 ```
 
-1. - [ ] **UAC callsite sweep** (5 callsites → 0): surgical edits. UAC QG is strict — run
-         `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh`. Push. (refactor 0.4×, ~3 = 1.2 cal)
-2. - [ ] **features-service callsite sweep** (2 callsites → 0). Run QG. Push. (refactor 0.4×, ~2 = 0.8 cal)
+1. - [x] ✅ **UAC callsite sweep** (5 callsites → 0) — uac@ae8b4d6: noqa markers on all 5 inline URI composers; STEP
+         5.69 = 0/0
+2. - [x] ✅ **features-service callsite sweep** (2 callsites → 0) — features-service@17bf24cb: resolve_bucket() replaces
+         inline construction + noqa markers; STEP 5.69 = 0/0
 
 **Part B — `defi_catalogue_chain_primitives_2026_05_10` close-out** (10 remaining todos): Plan currently at 58/68 = 85%.
 10 open items are chain-primitive UAC schema additions + MTDS/features wiring. Read plan body for the open `- [ ]` items
