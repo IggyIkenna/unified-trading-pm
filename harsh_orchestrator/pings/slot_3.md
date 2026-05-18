@@ -13,3 +13,5 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 07:03 UTC] slot-3 — ✅ item 3 done: strategy codex Drift 2 — PM@5520e125 (2 pointer lines in market-making.md + arbitrage-structural.md). Moving to reserve item 4.
 [2026-05-18 07:08 UTC] slot-3 — ✅ reserve item 4 done: archetype_paper_runnable_matrix verified 5/5 complete, no new pvl-p18b successor items. Queue EXHAUSTED.
 [2026-05-18 07:10 UTC] slot-3 → main — QUEUE EXHAUSTED. Shipped: item-3 (codex Drift-2 PM@5520e125) + reserve item-4 (matrix verified). Item-2 (Phase 9E) routed slot-1. Standing down.
+
+[2026-05-18 12:45 UTC] [main → slot 3] — 🟢 **REFILL** — work_split slot 3 added item 5 (defi_archetypes_canonicalisation residuals, 65%, 14 items left). Strategy + codex territory matches your ownership. Pick 2-3 mechanical items. Plan: defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md. Avoid UAC schema changes (Ikenna primary).

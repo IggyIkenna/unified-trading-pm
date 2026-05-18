@@ -94,11 +94,7 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. execution-service Phase B C901/complexity sweep batches 98-105 (continuation)** — Continue the
-      cumulative sweep. Each batch: 2-4 violations cleared, target ~10-15 violations cleared total. Same pattern as
-      prior batches (helper extract / trim / split). QG green after each batch. Commit per batch + push +
-      `docs(plans): flip batch N — X violations cleared — execution-service@<sha>` (use slot_2 ping or a Phase B
-      tracker plan if one exists).
+- [x] ✅ **1. execution-service Phase B C901/complexity sweep batches 98-105 (continuation)** — C901 was fully cleared by batch 97. Batches 98-104 cleared all remaining 31 E501+I001 violations (31→0). Lint fully clean. execution-service@0d32d9c4. Pre-existing test failures noted (30 unit tests failing before batch 98 @ab2fbe80 — test harness missing `_read_book_metrics`/`_parse_candle_horizon_secs` methods; slot 5 test surface); filed finding in issues/.
 - [ ] **2. ruff_workspace_cleanup_2026_05_12 residual items** — 14 items remaining (17/31 = 55%). Pick the 3-4
       smallest mechanical items (likely ruff-flag adoptions or single-file refactors). Plan path:
       [`ruff_workspace_cleanup_2026_05_12.md`](ruff_workspace_cleanup_2026_05_12.md).
@@ -129,12 +125,10 @@ smoke begins.
 - [x] ✅ **1. B-016 APD paper VM health check — N/A** — slot-3 polling 2026-05-18 06:57 UTC surfaced that B-016 was
       DEFERRED 2026-05-15 (MTDS CeFi tick coverage insufficient for any 7-day window — see slot_3 ping Q1 from
       2026-05-15 05:18 UTC). No VM exists to check. Item dropped; proceed to item 2.
-- [ ] **2. defi_simulation_realism_2026_05_10 final item (98%, 46/47)** — ROUTED TO SLOT-1: only remaining
-      unchecked AGENT-tagged item is Phase 9E (update `master_to_live_defi_2026_05_23.md` Group F items 17+18 status
-      rows). That plan is slot-1-owned per CLAUDE.md. Content suggestion for slot 1: Group F item 17 "Continuous
-      Verification: consumes new matching engine per defi_simulation_realism Phase 2 design (PM@d66b0f9f + ae804766)";
-      Group F item 18 "Continuous Verification: Phase 8C Tenderly-fork live-vs-simulated reconciliation per
-      defi_simulation_realism Phase 8." Slot-3 pinged main at PM@5520e125.
+- [x] ✅ **2. defi_simulation_realism_2026_05_10 final item (98%, 46/47)** — closed by slot-1 main 2026-05-18
+      @PM@538aa2fd. Phase 9E = master plan refresh (slot-1-owned per CLAUDE.md G-14). Group F items 17+18 Continuous
+      Verification rows extended with defi_simulation_realism Phase 2 design + Phase 8C Tenderly-fork reconciliation
+      references; Last verified flipped to 2026-05-18. Plan closes 47/47.
 - [x] ✅ **3. strategy_service_phase10_codex_drift — Drift 2 only** — PM@5520e125. 2 codex pointer lines added:
       `market-making.md` (defi_lp/ → MARKET_MAKING) + `arbitrage-structural.md` (mev/ → ARBITRAGE_STRUCTURAL), both
       citing enforcement test `strategy-service@f01d12d`. Drift 2 closed.
@@ -144,6 +138,12 @@ smoke begins.
 - [x] ✅ **4. archetype_paper_runnable_matrix follow-ups** — verified 5/5 complete. No new items from pvl-p18b:
       carry_staked_basis state update to `paper-runnable` gated on ≥3-day soak (B-015 VM running since 05:31:38Z;
       clock expires ~2026-05-21). APD still `backtest-only` pending APD orchestrator. No action needed.
+- [ ] **5. REFILL — defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07 residuals (65%, 26/40)** —
+      added 2026-05-18 by slot-1 main after slot-3 reached QUEUE EXHAUSTED at 07:08 UTC. 14 items remaining. Strategy
+      + codex territory matches slot-3 ownership. Pick 2-3 mechanical items (codex docstring drift, archetype enum
+      cross-refs, per-archetype venue subset annotations). Plan path:
+      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md).
+      Avoid items that change UAC schemas (Ikenna primary).
 
 #### Coordination
 
@@ -214,6 +214,18 @@ smoke begins.
       Plan path: [`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md).
       Pick mechanical items only.
       🔴 AUDITED: 4 items deployment-api/ui (slot 7 conflict rule); 2 items DEFERRED (UAC+UTL+predictions); 1 item infrastructure_master owner. No slot-5 surface available.
+- [ ] **5. REFILL — test-coverage extension reserve on slot-5 owned surfaces** — added 2026-05-18 by slot-1 main
+      after slot-5 QUEUE EXHAUSTED at 08:00 UTC (items 2/3/4 all BLOCKED). Slot-5 has consistently shipped 4-6
+      tests/item across 19 items 2026-05-15. Identify 3-4 uncovered surface areas across
+      `execution-service` (Phase 9 / fork / risk / adapter error paths), `risk-and-exposure-service`
+      (rule firing edge cases, recovery semantics), `pnl-attribution-service` (cost attribution edge cases).
+      Done-def: 12+ new tests across 3+ files + per-repo QG green. Conflict rule: execution-service Phase 9 =
+      slot-5 (you), execution-service lint = slot 2 (separate surface).
+- [ ] **6. REFILL — bucket_name_ssot_canonicalisation_2026_05_10 residuals (73%, 16/22)** — added 2026-05-18 by
+      slot-1 main. 6 items remaining. Workspace-wide SSOT refactor — likely additional `gs://` f-string sweep across
+      service-side scripts that bypass `resolve_bucket_name(...)`. Plan path:
+      [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md).
+      Avoid items that change UAC schemas (Ikenna primary). Pick if item 5 has any blockers.
 
 #### Coordination
 
