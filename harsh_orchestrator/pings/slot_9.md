@@ -4,6 +4,8 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-18 22:30 UTC] harsh-slot-9 — ✅ DONE item 14 (MEGA RESERVE — live_pipeline_mtds_mdps_features). Dispatch note: mtds_databento_path_streaming fully done + item 15 already done; only item 14 open. Phase 15 of live_pipeline: 15.2/15.3/15.4 operator-required. Picked: 21-test test_websocket_streaming_handler.py (parse_shard_spec/validate_config/_resolve_connector/run async/standalone run). Resolved MTDS git debt (rebase+push ruff commit). 1720 passed, 15 pre-existing violations. mtds@8f78f24 + pm@5c241be6. 🏁 QUEUE EXHAUSTED — all items done. Awaiting fresh dispatch.
+
 [2026-05-17 20:22 UTC] ikenna-main — 🟢 B-015 UNBLOCKED: Smoke B DEPLOYMENT_COMPLETED at 20:21:48 UTC (VM features-onchain-defi-20260517-211522, exit_code=0, 11/11 groups). Launch paper backtest NOW: `cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI`. Note: 4 groups batch-skipped (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data; non-blocking for strategy).
 
 [2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from \_agent_pings.md
