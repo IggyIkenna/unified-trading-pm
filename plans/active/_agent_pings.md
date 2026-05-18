@@ -3138,3 +3138,39 @@ Note: scrapers themselves are `DEFERRED-INDEFINITELY 2026-05-12 per operator` pe
 
 **Codifies a new rule** (filing as plan-todo in separate commit): post-launch verification at T+10min before claiming VM "launched". Tick-78 pattern (push "launched" ping → go idle → VM crashes silently 4 min later) repeated across 5 of the 5 strategy-paper VM attempts this cycle.
 
+---
+
+## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
+
+VM `strategy-paper-carry-staked-basis-20260518-104907` (1st post-fix launch, 2026-05-18 ~05:19 UTC) **got PAST betfair/playwright/bs4** (my 3-dep install fix worked ✅) but failed 3.5 min in at 05:22:45 UTC on the NEXT eager-import bomb:
+
+```
+ImportError: cannot import name 'CrossChainSOR' from partially initialized module
+'execution_service.algo_library.sor_cross_chain' (most likely due to a circular import)
+```
+
+**Cycle** (all top-level eager imports):
+
+```
+algo_library/__init__.py:74 → sor_cross_chain
+sor_cross_chain.py:28      → services.bridge_cost_model
+services/__init__.py:25    → onchain_execution_service
+onchain_execution_service.py:29 → algo_library.sor_cross_chain  ← cycle closes here
+```
+
+`onchain_execution_service.py:29` tries to bind `CrossChainSOR` while `sor_cross_chain.py` is only partially initialised (still on its line-28 import of `services.bridge_cost_model`). Class not defined yet.
+
+**Origin**: `execution-service@4612ffeb` (2026-04-16, "live sports handler wiring, on-chain execution hardening"). Bug existed for 1 month, hidden because every prior strategy-paper VM died earlier in the chain (solana/solders/nautilus-trader/betfair/playwright/bs4 — none reached `algo_library.sor_cross_chain`).
+
+**Fix shipped** at [`execution-service@d6238165`](execution-service) — `fix(services): break circular import — lazy-load CrossChainSOR in onchain_execution_service`:
+
+- Moved runtime imports `CrossChainSOR, CrossChainSORConfig` from module-level (line 29-32) into the single use-site `_create_cross_sor` method (line 710).
+- Type annotation `-> CrossChainSOR:` remains valid via existing `from __future__ import annotations` + `TYPE_CHECKING` block.
+- basedpyright clean (0 errors, 0 warnings on the file).
+
+**Locally verified** (per operator-requested smoke-test-before-scale-out): both `from execution_service.providers.tenderly import TenderlyExecutionProvider` (the exact chain that crashed on VM) AND the 4 imports `colocated_engine.py` actually uses (TenderlyExecutionProvider + AAVEConnector + UniswapConnector + HyperliquidConnector) all import cleanly in `execution-service/.venv`.
+
+**Next**: rebuild tarballs (execution-service changed → strategy-service paper VMs need fresh code) → re-launch paper VM → monitor through first tick.
+
+**Sub-thread to ikenna-main**: the import architecture in `execution-service` is fragile — `services/__init__.py` and `algo_library/__init__.py` both do eager-import-everything at package top. Lazy-load was an isolated fix for ONE cycle; the full lazy-init refactor is post-cutover scope. Filing as plan-todo for the post-cutover backlog separately.
+
