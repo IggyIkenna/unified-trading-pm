@@ -201,14 +201,19 @@ smoke begins.
 - [ ] **2. expected_unattempted_propagation_chain_2026_05_12 residuals (77%, 34/44)** — 10 items left. Plan path:
       [`expected_unattempted_propagation_chain_2026_05_12.md`](expected_unattempted_propagation_chain_2026_05_12.md).
       Pick 2-3 mechanical service-side wiring items only (avoid UAC schema changes).
+      🔴 AUDITED: all 10 remaining items BLOCKED — Pass 3/4 apply-flips DEFERRED (need MDPS/features infra semantics);
+      Phase 6 VALIDATE items need VM/GCP manifest access; P2 DeFi classifier crossref DEFERRED post-live-cutover;
+      P2 sports classifier extension DEFERRED. No mechanical slot-5 items available.
 
 #### Reserve queue
 
 - [ ] **3. mock_data_pipeline_benchmarking_2026_05_10 final items (94%, 29/31)** — 2 checkboxes left. Plan path:
       [`mock_data_pipeline_benchmarking_2026_05_10.md`](mock_data_pipeline_benchmarking_2026_05_10.md). Close out.
+      🔴 AUDITED: 3.C-followup DEFERRED ("Do NOT add until Phase 3.D confirms"); 3.D PARTIAL/DEFERRED (needs VM subprocess mode + operator sign-off).
 - [ ] **4. data_status_drilldown_shard_atom_alignment_2026_05_07 final items (83%, 34/41)** — 7 checkboxes left.
       Plan path: [`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md).
       Pick mechanical items only.
+      🔴 AUDITED: 4 items deployment-api/ui (slot 7 conflict rule); 2 items DEFERRED (UAC+UTL+predictions); 1 item infrastructure_master owner. No slot-5 surface available.
 
 #### Coordination
 
