@@ -170,6 +170,11 @@ banners.
       canonical_question_group axis cross-link, prediction-specific empty reasons
       (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS / SOURCE_RETURNED_ZERO), successor pointer to
       predictions_master_2026_05_07.md.
+- [x] [DOC] P2. **RESIDUALS sweep** `codex/06-coding-standards/quality-gates.md` STEP L1/L2/L3 stale-status
+      cleanup. Tab 3 shipped STEPs 5.75/5.77/5.78 on 2026-05-14 but doc showed "FIX-REQUIRED" + "pending wire-in".
+      Updated: L1 DAY-1 ENABLE → ENABLED (5.75); L2 FIX-REQUIRED ~21 → ENABLED (5.77, 0 violations); L3 FIX-REQUIRED
+      2 → ENABLED partial (5.78; UAC/UTL clean; UI deliberate-copy DEFERRED). Table anchor refs also updated.
+      DONE 2026-05-18: PM@f8c6fcab.
 
 ### Spawn prompt
 

@@ -195,6 +195,13 @@ smoke begins.
       parity test shipped (unified-trading-system-ui@e1b7b232: 4 tests; vitest ✅). Group G: STALE_OPEN_ALERT
       dashboard design decided (deployment-ui AlertStatusPanel, polls `GET /api/alerts?status=stale&limit=20`);
       routed to slot 7 via ping. Plan-of-record: `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`.
+- [x] ✅ **B. batch_live_symmetry_2026_05_10 codex residuals** — STEP L1/L2/L3 stale-status sweep in
+      `quality-gates.md`: DAY-1/FIX-REQUIRED → ENABLED (STEPs 5.75/5.77/5.78; shipped Tab 3 2026-05-14). Table
+      anchor refs updated. Plan-of-record: `batch_live_symmetry_2026_05_10.md` Tab 1 residuals section.
+      PM@f8c6fcab.
+- [ ] **C. system-integration-tests cross-asset scenario expansion** — add 3-4 cross-asset scenarios beyond
+      Phase 8 honest-coverage (`sit@47a1e04`): defi+cefi hybrid carry, tradfi+sports parity, prediction-only smoke.
+      Done-def: 3+ scenarios + sit QG green. Plan-of-record: work_split § slot 4 item 12 (deep reserve).
 
 #### Reserve queue
 
