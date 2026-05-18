@@ -28,6 +28,33 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 23 complete; cumulative 83 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 23)
+
+2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 33 → 31 entries.
+
+| File | Methods cleared | Helpers extracted |
+|------|-----------------|--------------------|
+| `data/converter_orderbook.py` | `convert_orderbook_parquet_to_catalog` 118L→33L; `_process_batch` 106L→31L; `_should_skip_conversion_with_time_window` 75L→24L | `_run_batch_loop` + `_check_df_time_window_skip` + `_build_row_deltas` |
+| `data/trade_converter.py` | `convert_trades_parquet_to_catalog` 230L→42L; `convert_trades_to_bars` 146L→43L | `_normalize_trade_df` + `_vectorize_trade_df` + `_build_trade_tick_list` + `_write_trade_ticks` + `_normalize_instrument_id_for_bars` + `_aggregate_to_bars_df` |
+
+- execution-service Half-1: `01b128498` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **83 files cleared**, allowlist now **31**
+
+### Remaining allowlist (31 entries) — top batch-24 candidates
+
+- `data/validator.py`: `validate_gcs_trades_availability` 231L, `validate_time_window_in_files` 92L
+- `data/orderbook_converter.py`: `convert_orderbook_parquet_to_catalog` 195L, `_build_snapshot_deltas` 158L
+- `data/checker.py`: large methods
+- `results/extractor.py`: `extract_summary` 216L, `extract_returns_from_positions` 194L
+- `engine/routing/instruction_router.py` — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 22 complete; cumulative 81 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing

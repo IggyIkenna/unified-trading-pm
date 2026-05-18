@@ -1084,6 +1084,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-22**: 81 files cleared (allowlist now 35).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 23 — data/converter_orderbook + data/trade_converter)**: shipped at
+  execution-service@01b128498. converter_orderbook.py: convert_orderbook_parquet_to_catalog 118L→33L via
+  \_run_batch_loop 46L + \_check_df_time_window_skip 39L; \_process_batch 106L→31L via \_build_row_deltas 43L;
+  \_should_skip_conversion_with_time_window 75L→24L. trade_converter.py: convert_trades_parquet_to_catalog 230L→42L
+  via \_normalize_trade_df + \_vectorize_trade_df + \_build_trade_tick_list + \_write_trade_ticks;
+  convert_trades_to_bars 146L→43L via \_normalize_instrument_id_for_bars + \_aggregate_to_bars_df.
+  Allowlist 33→31. AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-23**: 83 files cleared (allowlist now 31).
+
   **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
   execution-service@56865ab83. loader_base.py: __init__ 86L→~30L via _resolve_bucket_and_domain +
   _init_fuse_behavior; _infer_category 83L→10L via 5 domain-specific staticmethod helpers.
