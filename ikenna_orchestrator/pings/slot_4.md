@@ -1,5 +1,31 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 16 complete; cumulative 64 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 16)
+
+3 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 57 → 54 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `cli/handlers/live_execution_handler.py` | `_execute_sports_instruction` 90L→27L | `_execute_sports_bet` async 32L |
+| `engine/multi_leg_orchestrator.py` | `_handle_follower_failure` 99L→22L | `_fire_compensation_trade` async 44L |
+| `engine/validation/catalog_validator.py` | `validate_data_config_compatibility` 172L→26L | `_resolve_config_book_type` @staticmethod 24L + `_build_instruments_by_type` @staticmethod 14L + `_check_per_instrument_compat` @staticmethod 44L |
+
+Also: batch 15 allowlist fix committed at `execution-service@358310787` (3 entries missed in batch 15 code commit).
+
+**Commits**: execution-service@e8525b230 (Half-1) · PM@86ae5f8b (Half-2 flip)
+
+**Slot-4 cumulative**: 64 files cleared (allowlist now 54; baseline was 187 at 2026-05-17).
+
+### P0/P1 issues scan (batch 16)
+
+No new actionable P0/P1 issues. Continuing method-size ratchet.
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 15 complete; cumulative 61 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
