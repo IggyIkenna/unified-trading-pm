@@ -11,7 +11,7 @@ topology_requirements:
 # Archetype: `CARRY_STAKED_BASIS`
 
 > **Family:** [Carry & Yield](../families/carry-and-yield.md) **Settlement model:** Continuous; market-neutral
-> multi-step paired position. **Code module:**
+> multi-step paired position. **Code module (SHIPPED):**
 > `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`
 
 ## What it does
@@ -108,7 +108,7 @@ Adding a venue or LST to `VENUE_COLLATERAL_MATRIX` automatically expands the cat
 regeneration. No engine code changes, no catalog code changes — just a new matrix row.
 
 Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
-[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/ai/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
+[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
 
 | perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (post-Stream A flip) |
 | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -368,7 +368,13 @@ No engine, catalog, or strategy code change needed.
 
 ## See also
 
-- Plan:
+- **Active umbrella plan**:
+  [`plans/active/defi_master_2026_05_07.md`](../../../../plans/active/defi_master_2026_05_07.md) — Fork 1 owns live
+  carry_staked_basis deployment
+- **Venue-matrix / canonicalisation plan**:
+  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+  (Stream A: venue collateral live probe; Stream D: target_leverage / vol-cap config schema)
+- **Archived origin plan** (provenance of `CarryStakedBasisRankAllocator` Phase 8):
   [`plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md`](../../../../plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md)
 - Family: [`carry-and-yield.md`](../families/carry-and-yield.md)
 - Recursive variant: [`carry-recursive-staked.md`](carry-recursive-staked.md)
