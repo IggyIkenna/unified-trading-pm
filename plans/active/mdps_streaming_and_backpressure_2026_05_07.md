@@ -537,13 +537,15 @@ upstream-detected) as complementary signals.
       (3) ⏳ wiring to `record_failed_for_shard` in orchestration path is BLOCKED on MTDS item 520 (MTDS must first
       write `attempted_failed` rows on `CONNECTIVITY_GAP_DETECTED`). Detection scaffold is live and no-ops until
       MTDS starts emitting gap rows.
-- [ ] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
+- [x] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
       per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
       engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
-      Phase 8. **2026-05-18 slot 2 status**: `circuit_breaker.py` has `force_open(venue, reason)` + recovery via
-      HALF_OPEN state. No CONNECTIVITY_GAP event subscriber exists in execution-service. Remaining work: (1) add PubSub
-      subscriber for `CONNECTIVITY_GAP_DETECTED`; (2) on receipt, call `force_open(venue, reason="MTDS_GAP")`; (3) on
-      `CONNECTIVITY_RECOVERED`, call `circuit_breaker.allow_recovery(venue)` to enter HALF_OPEN probe.
+      Phase 8. ✅ **SHIPPED 2026-05-18 slot 2** — execution-service@`8c9f7893c` + mtds@`46531e5`. Three execution-service
+      files: (1) `circuit_breaker.py`: `allow_recovery()` → OPEN→HALF_OPEN bypass on `CONNECTIVITY_RECOVERED`; (2)
+      `engine/connectivity_gap_bridge.py` (NEW): `on_connectivity_gap_detected` → `force_open(venue, "MTDS_GAP …")`,
+      `on_connectivity_recovered` → `allow_recovery(venue)`; (3) `live_execution_handler.py`: wires
+      `subscribe_coordination_events` at startup. MTDS side: `connectivity_watchdog.py` now calls
+      `publish_coordination_event` on HEALTHY→GAP (`_tick`) and GAP→HEALTHY (`heartbeat`) transitions.
 - [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
       `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`. **2026-05-18 slot 2 status**: `VENUE_HEARTBEAT_THRESHOLDS`
