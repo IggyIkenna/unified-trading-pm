@@ -38,3 +38,11 @@ MTDS market_interface/unit suite was non-green since 2026-05-14.
 ## Recommended decision
 
 ✅ RESOLVED — all 6 remaining failures fixed at mtds@1515170.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-15; 53→0 failures at mtds@1515170

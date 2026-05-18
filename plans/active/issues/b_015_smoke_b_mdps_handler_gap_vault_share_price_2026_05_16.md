@@ -136,3 +136,11 @@ Operator-confirmed Option A implemented at `features-service@550cdaba`:
 
 Cross-ping to Harsh slot 9 filed at `plans/active/_agent_pings.md` § 2026-05-16 requesting Smoke B re-launch with unique
 `VM_NAME`. Issue will be archived once Smoke B reaches STARTED + manifest captured > 0.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; Option A fix shipped features-service@550cdaba

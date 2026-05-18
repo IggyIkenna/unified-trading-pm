@@ -72,3 +72,11 @@ could cause QG failures if new services follow the doc examples.
    May-23 critical path.
 2. **No code changes needed** — all code contracts verified accurate.
 3. **P3 priority** — assign to a slot with available capacity after May-23 cutover.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; 15 docs audited + stale refs fixed; slot-6 shipped

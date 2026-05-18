@@ -94,3 +94,11 @@ Drift 2: Low risk. Organizational confusion only.
 | ------------------------------------------------------------- | ------------------------ | ------------- |
 | Diagnose execution-service SOR empty-eligible_venues behavior | ✅ DIAGNOSED + WARN-FIX SHIPPED 2026-05-17 (slot-3) — `execution-service@7957371d` `_resolve_venue` now emits WARNING when both target_venue + eligible_venues are empty (falls through to UNKNOWN_VENUE sentinel — strategy-side bug, no longer silent). 3 new tests in `tests/unit/v2/test_router_and_handlers.py`. | Slot 3 |
 | Add family-map assertion test for defi_lp / mev subdirs       | ✅ SHIPPED 2026-05-17 (slot-3) — `strategy-service@f01d12d` `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (4 tests green) | Slot 3 |
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; drifts diagnosed + WARN-fix shipped; slot-3 today

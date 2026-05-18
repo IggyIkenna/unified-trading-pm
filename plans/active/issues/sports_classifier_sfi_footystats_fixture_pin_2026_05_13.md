@@ -100,3 +100,11 @@ prevention in instruments-service is deferred.
 - `sports_classifier_player_values_cadence_2026_05_13.md` (sibling, same operator direction)
 - `sports_classifier_weather_no_fixture_2026_05_13.md` (sibling, same operator direction)
 - `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` (sibling P1 on Script 3 — both gate sports apply-flips)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14 slot 4; fixture-pin rule + 5 tests shipped

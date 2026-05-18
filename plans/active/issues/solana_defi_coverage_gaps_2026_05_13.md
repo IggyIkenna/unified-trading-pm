@@ -286,3 +286,11 @@ grep -rn "MARINADE\|JITO\|DRIFT" \
 # Re-run capture audit (slot 3's script):
 cat /tmp/audit_solana_defi.py  # in slot-3 worktree
 ```
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; split into 5 successor plans A-E, all completed

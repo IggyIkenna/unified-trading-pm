@@ -172,3 +172,11 @@ P1 + P2 immediate items both shipped/verified:
 P3 + P4 (UTL 126 `# type: ignore` + bare `# noqa` audit) are explicit "P3 sprint-aligned" — not immediately actionable
 without per-module work + QG-green gate after each repo. They have named successors (per-repo teams) per the recommended
 decision text. Issue closeable at next archive sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; P1+P2 shipped, P3+P4 sprint-aligned successor plans

@@ -87,3 +87,11 @@ execution:
 5. **MTDS Phase 5 Helius wire-in** at `MTDS@348c171`.
 
 All paths green. Issue archive-ready.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; API key vaulted; MTDS + execution-service wired

@@ -94,3 +94,11 @@ matching the strategy-paper/strategy-live pattern. Uploaded the updated setup sc
 
 Both other VM_TASKs (`mtds-backfill`, `instruments-backfill`, etc.) that hit this same conflict in the future should add
 themselves to the same allowlist or accept the pyproject-level fix once the systemic SIT-side resolution lands.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; validator fix + VM setup script fix

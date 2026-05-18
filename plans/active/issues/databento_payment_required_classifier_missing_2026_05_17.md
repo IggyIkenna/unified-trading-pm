@@ -93,3 +93,11 @@ on existing 401/429/fallback codes). All green.
   itself failed" (any HTTP error / exception / timeout). The fix preserves that boundary.
 
 execution: owner: ikenna-main cadence: one-shot verifier: 8/8 unit tests pass on MTDS QG last_executed: 2026-05-17
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; classifier entries added UAC@50f3939

@@ -206,3 +206,11 @@ impl."
 Immediate drifts 1-5 ✅ shipped 2026-05-15 by slot 6 (per audit-update body line 133-141). Remaining P3-P5 items have
 named owners (slot 1 codex docs + features-onchain publisher) and explicit successors. Primary audit deliverable
 (codex/code parity for staked-basis + APD archetypes) closed. Issue archivable at next sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; drifts 1-5 fixed by slot-6; P3-P5 deferred to successor

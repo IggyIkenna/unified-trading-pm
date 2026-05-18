@@ -68,3 +68,11 @@ escalation at `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md`
 **Net infra state**: lending-indices bucket has real data for ALL 5 days (2026-04-15..19) at the new canonical path.
 slot-2's fixes for the 2 calculator bugs here + the 3 additional issues in the consolidated escalation will unblock
 harsh-slot-9's Phase 2 paper-trade rerun.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; lookahead + early-exit bugs fixed in features-service

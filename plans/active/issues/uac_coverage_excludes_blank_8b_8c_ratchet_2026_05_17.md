@@ -95,3 +95,11 @@ moved canonical/crosscutting INTO the canonical home; it's the new SSOT; measure
 
 - 2026-05-17 (slot-8): finding filed. AWAITING operator pick A vs B.
 - Phase 8.B/8.C plan-flip pending decision.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Phase 8 ratchet gap; pyproject omit-blanks investigation pending

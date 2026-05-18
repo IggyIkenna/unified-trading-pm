@@ -260,3 +260,11 @@ corrections (all rows fall through to `SOURCE_RETURNED_ZERO`) and exit cleanly �
 - Slot 2 (ikenna tab/2) implemented Wave 3 defi catalog cross-ref 2026-05-14 (UTL@513d79fb, instruments-service@3670534)
 - Earlier context: `_classify_cefi:296-298` docstring TODO explicit; `_classify_defi:256-279` lacks catalog branch
   silently
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14; UTL@513d79fb + instruments-service@3670534

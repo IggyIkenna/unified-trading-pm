@@ -76,3 +76,11 @@ addition to an Ikenna slot (cross-repo design work) with alerting-service consum
 **Successor plan**: This issue should resolve to `deployment_and_qg_strategy_implementation_2026_05_13.md` Phase D.5+D.7
 follow-up or a new `plans/active/alerting_service_schema_provenance_2026_05_14.md`. Target resolution: ≤7 days per
 Findings Triage discipline.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14; features-service@6a01b98

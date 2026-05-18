@@ -86,3 +86,11 @@ This is a **lessons-learned issue**, not a rollback or fix request.
 - **Manifest evolution**: `plans/active/manifest_evolution_master_2026_05_10.md`
 - **Empirical confirmation**: slot-5 report 2026-05-17, tradfi_ohlcv_only_mvp_backfill_2026_05_15 Phase 5
 - **Writer migration SHAs**: UAC@8867891, UTL@958634f9, UTL@547ff3c (MANIFEST_SCHEMA_VERSION 7→8)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: LESSONS-LEARNED; process gap documented 2026-05-17; empirically safe

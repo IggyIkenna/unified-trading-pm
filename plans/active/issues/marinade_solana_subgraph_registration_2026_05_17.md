@@ -80,3 +80,11 @@ execution:
   cadence: one-shot
   verifier: mSOL APR parquet emitted to gs://lst-rates-{pid}/raw_tick_data/by_date/day=*/asset_group=defi/venue=MARINADE/chain=SOLANA/...
   last_executed: NEVER
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Tier 2 coverage gap; operator path selection pending

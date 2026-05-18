@@ -78,3 +78,11 @@ parallel via `pytest-xdist`. Likely affects `test_data_loader.py`, `test_feature
 
 **Workaround**: slot-4 fixed the 1 sports test failure (`LookaheadBiasError` message update, `features@7ef55a7f`). The
 volatility failures remain as pre-existing issues.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: 35% failures (13/48) remain unresolved

@@ -37,3 +37,11 @@ would require mocking the HTTP layer + timing the aggregation logic, which is a 
    `tests/unit/test_defi_handler_benchmarks.py` + `@pytest.mark.benchmark` marks. Gate behind `--run-benchmarks` flag so
    QG stays fast.
 3. **Existing harness**: `scripts/benchmark_tardis_stream.py` — covers CeFi only.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Deferred past May-23; no action before cutover

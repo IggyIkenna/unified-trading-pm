@@ -159,3 +159,11 @@ REST-fetch use case.
 expands beyond Tardis. Until then, REST adapters can be marked as DEPRECATED in MTDS docstrings.
 
 **Issue archive-ready.**
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; ASTER + HYPERLIQUID live via WS connectors

@@ -208,3 +208,11 @@ Status summary across the 5 broken-perp venues:
 **Slot 3 item 3 (work_split_2026_05_15_ikenna.md) effectively complete**: all in-scope adapter fixes shipped.
 2 remaining items are operator-blocked (ASTER backfill VM approval + EXTENDED-STARKNET canonical API URL).
 Issue doc remains active until both operator decisions land + reconciler runs operationally.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; superseded by diagnosed doc; all 7 perp venues live

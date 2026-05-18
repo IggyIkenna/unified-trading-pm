@@ -67,3 +67,11 @@ features-service already handles cross_asset data production).
 
 execution: owner: operator cadence: one-shot (design decision) verifier: cross_asset appears in
 sharding.instruments-service.yaml + produces manifest rows last_executed: NEVER (pending operator decision)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: BLOCKED-OPERATOR-DECISION; Option 1 recommended but awaiting operator ack

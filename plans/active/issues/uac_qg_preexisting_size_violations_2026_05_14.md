@@ -68,3 +68,11 @@ one, QG will fail → that's the correct behaviour.
 Immediate risk (Codex max-violations false-alarm) closed by `CODEX_MAX_VIOLATIONS=5` ratchet shipped 2026-05-14.
 P2 + P3 items both have named successors per "Status taxonomy" rule. No further short-term action needed; medium-term
 refactors will land when those plans naturally touch the affected files. Issue closeable at next archive sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; CODEX_MAX_VIOLATIONS=5 ratchet applied

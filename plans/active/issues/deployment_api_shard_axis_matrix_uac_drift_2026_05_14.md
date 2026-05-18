@@ -115,3 +115,11 @@ Fixes applied to 4 test files:
   lookup from UAC constant (now 83 feature_groups)
 
 All 13 previously-failing tests now pass.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14; 13 test failures fixed; all SHARD_AXIS_MATRIX tests pass

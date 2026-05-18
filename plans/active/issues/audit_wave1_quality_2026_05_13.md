@@ -225,3 +225,11 @@ cycle; P2 model-tier policy is operator + Ikenna decision.
 - `plans/active/defi_simulation_realism_2026_05_10.md` — bulk SHA update `c5dd45eb` → `38b3e8a5`
 - `cursor-configs/CLAUDE.md` (later) — add "Multi-stage VM ops cross-side re-poll" rule + tighten model-tier triggers
 - `plans/PLAN_FORMAT.md` (later) — tighten Full-Execution Criterion mandatory block
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; 19 findings cataloged; P0 items re-opened per findings triage

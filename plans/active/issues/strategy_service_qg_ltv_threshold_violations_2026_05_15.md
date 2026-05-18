@@ -46,3 +46,11 @@ Inline thresholds are a May-23 correctness risk: they can silently diverge from 
 **Priority**: P2 — not blocking May-23 cutover (pre-existing); but strategy-service QG will remain red until resolved.
 
 Owner: slot responsible for strategy-service risk monitor (likely slot 3 or slot 6 per MEV/risk theme).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; all 13 thresholds annotated + verified

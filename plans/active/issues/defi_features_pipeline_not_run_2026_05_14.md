@@ -546,3 +546,11 @@ single event without needing a purpose-built diagnostic.
 
 basedpyright clean; touches only `_run_daily_feature_loop` (no business-logic change). Cost: 1 extra event per (day,
 feature_group) iteration → negligible PubSub volume vs the diagnostic value when a silent-row-drop happens.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; 8 VM attempts + 3 infra fixes; gate unblocked

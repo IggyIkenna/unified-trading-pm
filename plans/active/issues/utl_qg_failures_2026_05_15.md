@@ -58,3 +58,11 @@ UTL's event logging system uses module-level singletons (`_event_sink`, `_sink_s
 **Priority 3** (P2, backlog): Fix UTL event system singletons to use proper pytest fixture scoping — prevents state leakage between xdist workers. SSOT: `unified_trading_library/events/setup.py` (wherever `_event_sink` global lives).
 
 Slot-4 diagnosis: the OOM fix (base-service.sh defaulting to 1 worker) is in place, but UTL overrides to 2 workers AND has 29 genuine content failures from other slots' commits that independently need fixing.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; 29 failures fixed; PYTEST_WORKERS default 2→1

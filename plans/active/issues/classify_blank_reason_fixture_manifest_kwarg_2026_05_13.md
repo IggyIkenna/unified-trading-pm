@@ -110,3 +110,11 @@ reconciliation VMs — see manifest_cross_asset_rescan_design_2026_05_08).
 Tarball refresh is operator-executable.
 
 **Status**: P1 → resolved at source-code level; P1 remains for tarball refresh + re-run verification.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14; tarball refresh + Script 3 re-run verified

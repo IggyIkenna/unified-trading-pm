@@ -135,3 +135,11 @@ Cap of 500 was insufficient — 500 × 274ms = 137s blocking time already satura
       Prior FAILED VMs: 204250 (Bug 7), 204428+204443 (killed), 200717 (Bug 6), 203044 (pre-Bug-6).
 - [x] ✅ [AGENT] P1. Harsh-side paper backtest B-015 UNBLOCKED — cross-side ping sent to _agent_pings.md at tick-63
       (PM@573764e0).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Schema drift + stall issues partially addressed; follow-up needed

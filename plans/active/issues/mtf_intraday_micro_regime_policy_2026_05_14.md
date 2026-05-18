@@ -77,3 +77,11 @@ features-service maintainer / operator triage.
   Comment updated to reflect 8 total entries + rationale. 2 new tests in `test_service_emission_policy.py`.
 - **FS@140b6fe5** — `_SEEDED_FEATURE_GROUPS` in `batch_handler.py`: added `"intraday_regime"` + `"micro_regime"`.
   Updated docstring + comment. `TestSingleTfGroupsNanFill` class + 2 tests in `test_emission_policy.py`.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-15; UAC@1f8bcbc + features-service@140b6fe5

@@ -90,3 +90,11 @@ pattern is well-established at sister files in deployment-api.
 - `inline_bucket_uri_baseline.yaml` (current ratchet floor: 27 for deployment-api)
 - Sister files already migrated: `data_status_drilldown.py` / `deploy_missing.py` / `data_status_service.py`
 - deployment-api@`4b9dbbf` (this session's Phase A noqa fix)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Structural cloud-agnostic migration gap; P2 deferred

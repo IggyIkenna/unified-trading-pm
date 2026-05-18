@@ -124,3 +124,11 @@ stale tarball IS the cause of my first failed VM today.
 
 execution: owner: slot-2 (features-service / risk-and-exposure-service owners) cadence: one-shot verifier: relaunch
 features-onchain-defi VM via consolidated launcher → uv install succeeds → events flow last_executed: NEVER
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; 3 dep-pin fixes + pre-flight scan added

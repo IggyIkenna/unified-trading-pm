@@ -137,3 +137,11 @@ credential side.
 
 **Remaining work — BFG history scrub** demoted to P3-hygiene per same rationale as the GCP SA key issue. Both will be
 batched into the same maintenance-window scrub successor task.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: PAT already revoked (401 confirmed); history scrub deferred P3 to successor

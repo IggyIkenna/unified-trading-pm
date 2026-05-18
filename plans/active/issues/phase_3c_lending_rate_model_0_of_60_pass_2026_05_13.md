@@ -595,3 +595,11 @@ outliers >50bps: none
 ```
 
 **GATE CONFIRMED GREEN across correct block range.** Phase 3C is fully operationally verified.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; GATE GREEN 100% (10/10 events)

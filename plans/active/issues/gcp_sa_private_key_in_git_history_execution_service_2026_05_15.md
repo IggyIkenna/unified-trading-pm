@@ -219,3 +219,11 @@ permissions (`bigquery.admin` / `storage.admin` / `cloudscheduler.admin` / `comp
 `secretmanager.secretAccessor` / `run.admin`). The remaining 5 active keys on this SA are all from 2022-2026 with NO
 expiry — recommend operator audits + retires the oldest keys (`fe1dbc6a16b6`, `508598064df6`, `704322c4f4af` — all
 from 2022) as separate hardening task post-cutover.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Credential already revoked (dead); history scrub deferred P3 to successor

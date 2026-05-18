@@ -301,9 +301,10 @@ smoke begins.
 - [x] ✅ **1. pre-commit hook standardization (slot 8 item 15)** — audit `.pre-commit-config.yaml` across
       26+ active repos; align to canonical PM template + propagate. Done-def: 0 drift across active repos.
       — 24/26 repos updated (added gitleaks hook + multi-line entry: format). deployment-api + deployment-ui skipped (slot 7 SOLE owner — slot 7 to run rollout-pre-commit-configs.sh). SHAs: alerting-service@41112b7, execution-service@803d7e3a, unified-trading-pm@fae60a76 + 21 others on LDR.
-- [ ] **2. issue-doc triage sweep (slot 8 item 16)** — `plans/active/issues/` accumulated ~40+ issue docs. Triage:
+- [x] ✅ **2. issue-doc triage sweep (slot 8 item 16)** — `plans/active/issues/` accumulated ~40+ issue docs. Triage:
       (a) close docs whose finding is shipped, (b) merge duplicates, (c) flag stale (≥7 days no activity). Done-def:
       triage scoreboard added to each doc + 10+ closed/merged.
+      — 68 docs triaged: 53 CLOSED-SHIPPED, 15 OPEN/BLOCKED. Triage scoreboard section added to all 68. PM@(flip commit).
 - [ ] **3. workspace-constraints.toml audit (slot 8 item 19)** — verify all repos honor workspace-constraints.toml
       pin versions. Done-def: 0 drift report.
 - [ ] **4. codex/06 cross-link sweep (slot 8 item 20)** — sweep codex/06-coding-standards/ for stale cross-links

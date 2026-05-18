@@ -141,3 +141,11 @@ cadence: one-shot memray audit + per-repo fix passes
 verifier: UTL QG peak RSS < 1 GB; total concurrent-QG peak < 6 GB across
   6 slots; GHA QG wall-clock unchanged or improved
 last_executed: NEVER
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; root-cause fixed utl@93ff771; mitigation in place

@@ -71,3 +71,11 @@ done
 - P1: Propagate `major-bump-issue-handler.yml` (Telegram multi-env routing)
 - P2: Add repo-filter guard in rollout script for UI-only templates, then propagate `workspace-qg.yml`
 - P2: Deploy `uac-registry-sync.yml` + `uic-openapi-sync.yml` to `unified-trading-system-ui` only
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; all 3 templates rolled out and verified

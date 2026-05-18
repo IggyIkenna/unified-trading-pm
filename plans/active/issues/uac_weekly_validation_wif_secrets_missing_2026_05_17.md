@@ -80,3 +80,11 @@ for Option A/B.
 - Per CLAUDE.md "External Data Is Always Available — Never Silently Defer Adapters": this is a
   **CI-credential** concern, not a data-availability one — provider APIs are reachable, just GHA-side auth
   isn't configured.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Secrets not configured; weekly cron failing 5+ weeks

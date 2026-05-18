@@ -400,3 +400,11 @@ drift is rare).
   ```
 - `/tmp/oom_repro_*_rss.log` — 64 RSS curve logs from today's bisection runs (slot6_full, slot6_int_libdeps, slot6_t9,
   fix_t9_v2, utl_full_qg, utl_pytest_alone, utl_basedpyright_alone, etc.).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Root-cause fixed; P1-P3 follow-ups documented in successor plans

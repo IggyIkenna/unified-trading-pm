@@ -45,3 +45,11 @@ Assign to Ikenna slot next touching features-service. Mechanical extract-method 
    `_accumulate_position(stable, position, per_venue, gross_long, gross_short)` helper.
 3. `_calculate_from_mtds():56L → ≤50L`: extract the MTDS fetch + transform into `_fetch_eigen_mtds_rates()` helper,
    leaving `_calculate_from_mtds()` as an orchestrator.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14; features-service@29cd4ea6

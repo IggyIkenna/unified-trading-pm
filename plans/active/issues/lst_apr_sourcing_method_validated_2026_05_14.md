@@ -189,3 +189,11 @@ sub-agent picks up this thread).
       ✅ **DONE 2026-05-17 (slot-3)**: filed at `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md`
       with 3 paths (Path A — The Graph subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope
       for May-23). Default if no operator response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; on-chain exchangeRate() validated canonical

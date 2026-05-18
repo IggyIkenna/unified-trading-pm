@@ -85,3 +85,11 @@ via `datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, ...)`). Bypasses the SDK
 previously-failing tuples). Expected: rows > 0 now, exit_code=0 with captured data.
 
 Issue can be moved to `plans/archive/issues/` at next sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; fixed MTDS@f19ff5f with pretty_ts=False workaround

@@ -207,3 +207,11 @@ Operator triage / break into themed sub-issues:
 
 This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not** a blocker for the 117-test-fixture
 sweep closure (utl@`26ded7d`).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; 4 of 5 categories cleared; 1 P3 deferred

@@ -68,3 +68,11 @@ All 5 failures fixed in-session by slot-3 (within-scope root-cause analysis + mi
 | C (smarkets UAC registry) | Added `smarkets` entry to `BETTING_SPORTS_VENUES` in `unified_api_contracts/registry/venue_manifest/betting_sports.py` | UAC@0710ba8 |
 
 Post-fix QG result: **0 failures, 3751+ passed** (MTDS full suite with `PYTEST_UNIT_DIR="tests/"`). STEP 5.23 (deep UAC import in `orchestrator.py`/`api/main.py`) and codex 14-vs-13 violation remain as pre-existing foreign-file issues outside slot-3 scope.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: 5 pre-existing failures; foreign repo surface (slot-3 cannot fix)

@@ -224,3 +224,11 @@ NaN, don't forward-fill"); cosmetic issue in data-status panel only.
 Sample cefi attempted_failed rows might benefit from `CEFI_VENUE_LAUNCH_DATES` additions (existing dict covers 14
 venues; not exhaustive). Manual audit of cefi candidates' venues would identify which venues are missing from
 `CEFI_VENUE_LAUNCH_DATES`. Out of scope for this session.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-13; 599k defi rows corrected EXPECTED_PRE_VENUE_LAUNCH

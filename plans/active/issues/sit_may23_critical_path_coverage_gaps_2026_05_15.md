@@ -88,3 +88,11 @@ during cross-slot deferral sweep 2026-05-16.
 
 **Severity**: BLOCKER for May-23 gate if CI gate is required for paper → live_early promotion. **Owner**: SIT +
 strategy-service team **Estimated effort**: 1-2 AI-days per scenario (3 scenarios = 4-5 AI-days)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; 3 SIT scenarios shipped

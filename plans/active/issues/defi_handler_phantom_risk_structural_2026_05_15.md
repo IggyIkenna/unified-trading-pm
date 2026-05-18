@@ -99,3 +99,11 @@ even after Ikenna's apply-flips clears the backlog.
 execution: owner: harsh-slot-9 (Phase 1 lst_rates hardening) + TBD sweep (Phase 2) cadence: one-shot (Phase 1 before
 B-015 re-smoke; Phase 2 within next cycle) verifier: QG green + re-smoke with zero phantom rows in manifest (4-pillar
 check) last_executed: NEVER
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; MTDS@f657431 + c1e6963 hardened

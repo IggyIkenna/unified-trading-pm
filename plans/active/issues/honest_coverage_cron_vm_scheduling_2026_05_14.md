@@ -70,3 +70,11 @@ gs://central-element-323112-honest-coverage/{date}/coverage.json exists after VM
 **Slot-8 collision note** (2026-05-15): slot-8 (ikenna side) independently shipped a Python launcher
 (`deployment-api@d6e72c6`) before discovering slot-2's terraform. Reverted at `deployment-api@3afc016`. Slot-2's bash
 approach is canonical (simpler, no dep on deployment-api image).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-15; UI@365c32f + deployment-service@19454f1

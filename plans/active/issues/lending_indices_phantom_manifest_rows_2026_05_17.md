@@ -142,3 +142,11 @@ will inherit the correct probe.
 - 2026-04-15 + 16: captured (real data from VM 003742 retry, written 2026-05-16T23:25 UTC)
 - 2026-04-17, 18, 19: captured (pre-existing 2026-05-09 data at new path)
 - B-015 paper-trade upstream is now COMPLETE for the full 5-day smoke window.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; phantom rows resolved, B-015 window corrected

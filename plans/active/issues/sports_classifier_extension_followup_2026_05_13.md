@@ -196,3 +196,11 @@ Task 1 (2026-05-14 session) shipped:
 
 Parent issue is now RESOLVED. Script 3 sports apply-flips remain held per operator direction (Ikenna's hold). The
 write-side weather gate is the only DEFERRED item (P2, low priority, filed in child issue doc).
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14 Wave 3 slot 4; all sports classifier child issues shipped

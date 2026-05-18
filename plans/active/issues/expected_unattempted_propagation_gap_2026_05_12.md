@@ -128,3 +128,11 @@ FIRED 2026-05-13** with Phase 1+2+3+4+PART C all complete:
 
 P2 follow-ups (DeFi classifier UAC-enum crossref test; sports classifier `EXPECTED_PAUSED_LEAGUE` /
 `EXPECTED_PRE_SEASON` reasons) tracked at successor plan body lines 775-780. Issue closeable at next archive sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; Gate 1 fired; successor plan complete

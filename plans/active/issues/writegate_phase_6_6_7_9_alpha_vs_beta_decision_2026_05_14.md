@@ -77,3 +77,11 @@ the honest-coverage architecture.
    1843-1850 in master plan) so Post-Gate-4 items are clearly unblocked.
 
 **Slot 7 owns this doc** — no successor plan needed; Gate 4 is closed.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-13; Gate 4 fired, audit complete

@@ -79,3 +79,11 @@ cannot self-fix without touching the PM SSOT template.
 line — Option A shipped (verified 2026-05-17 via grep). Inline comment cites this exact issue: "Per-family test layout:
 tests/<family>/unit/ holds 350+ test files invisible to the default tests/unit/ path." Per CLAUDE.md § "PYTEST_UNIT_DIR
 per-family override", this is the canonical pattern. Issue closeable at next archive sweep.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; PYTEST_UNIT_DIR override shipped PM@c7786b2f

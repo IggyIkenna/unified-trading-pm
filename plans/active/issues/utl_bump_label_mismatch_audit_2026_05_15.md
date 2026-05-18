@@ -49,3 +49,11 @@ The mislabeled commits caused PATCH bumps when MINOR bumps should have fired. Th
 3. **Historical mismatches**: Cannot be retroactively relabeled. Document in this issue; no action needed on shipped versions.
 
 **Priority**: P2 — next-bump is correct today; rule gap will re-surface on next export-wiring commit.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Audit complete; enforcement tooling deferred P2

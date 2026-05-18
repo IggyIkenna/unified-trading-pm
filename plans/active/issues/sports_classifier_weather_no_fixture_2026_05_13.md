@@ -97,3 +97,11 @@ implemented. File this as a follow-up in `instruments-service` weather adapter. 
   technically correct for "weather data missing"). The real win is the write-side prevention which is operational
   efficiency, not data correctness.
 - Could be deferred to a follow-up cycle without blocking apply-flips.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; instruments-service@f799109 shipped

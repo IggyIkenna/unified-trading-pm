@@ -96,3 +96,11 @@ COMPOUND_V3 fix (P1) still `BLOCKED-OPERATOR-DECISION` — operator needs to con
 (normalize asset name from Comet contract address + correct borrow_apy formula).
 
 Issue stays open as a tracking ticket; remaining work is bounded + clearly owned.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Gap 1 shipped; Gap 2 (KAMINO) still blocked on credentials

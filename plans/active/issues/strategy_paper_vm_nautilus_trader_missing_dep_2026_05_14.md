@@ -87,3 +87,11 @@ Suggested owner: harsh-slot-9 or any defi slot in next wave (30-60 min fix for O
 required). Real fork execution can still be invoked by passing `--execution_provider tenderly` explicitly.
 
 Fix: `e2e-testing@4e4a5da` — `fix(e2e): paper mode uses benchmark fills — remove tenderly auto-override`
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14 slot-2; lazy tenderly import; paper mode uses benchmark fills

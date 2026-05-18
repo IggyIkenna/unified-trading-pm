@@ -80,3 +80,11 @@ cutover since the Phase 7 ≥99% gate has been evidenced via the ad-hoc manifest
 
 `DEFERRED` per CLAUDE.md status taxonomy — named successor IS this issue doc; operator can dispatch as a post-cutover
 small-cleanup task.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; script rewritten for per-day manifest MTDS@c758048

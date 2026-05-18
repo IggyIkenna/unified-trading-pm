@@ -82,3 +82,11 @@ days post-cutover).
   continuous-verification path. This issue is the natural follow-up.
 - See `unified_api_contracts/registry/expected_coverage.py` — NASDAQ + NYSE were also missing from `_TRADFI` scope
   (fixed at uac@`f47e37d` same day); this is the sister missing-piece on the operational/cron axis.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Daily scheduler missing; manual-only; cron infra needed

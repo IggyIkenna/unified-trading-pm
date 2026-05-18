@@ -49,3 +49,11 @@ Option 2 is the faster unblock; option 1 is the correct long-term fix.
 The 8 skipped tests in `test_core_coverage.py` require real backfilled client data (GCS parquets from live environment).
 They're correctly marked `skip` in dev without data. These tests would cover significant additional surface if run in
 integration mode.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; coverage 75.10%, 52→2 failures cleared

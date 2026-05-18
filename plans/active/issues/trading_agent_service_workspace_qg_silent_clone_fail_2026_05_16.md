@@ -111,3 +111,11 @@ return; non-blocking for May-23 — trading-agent-service is post-cutover work p
 
 **Status of original issue closes**: silent-clone-fail symptom is now LOUD (visibility fix shipped); the underlying
 credential issue is a routine operator-rotation task that doesn't block May-23 cutover.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but credentials gap remains

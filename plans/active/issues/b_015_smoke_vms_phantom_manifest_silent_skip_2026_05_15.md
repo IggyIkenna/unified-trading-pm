@@ -98,3 +98,11 @@ audit is COMPLETE (clean result, no action needed).
 execution: owner: ikenna slot 8 (phantom audit + apply-flips) + harsh slot 9 (B-015 hold + re-verification) cadence:
 one-shot verifier: bucket count > 0 + sample parquet inspection + manifest captured_status matches on-disk
 last_executed: NEVER
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; VM 8 wrote 5 parquets, gate unblocked

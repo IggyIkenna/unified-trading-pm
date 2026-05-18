@@ -114,3 +114,11 @@ one-shot warning at startup logging which path was taken.
 - `sports_classifier_extension_followup_2026_05_13.md` (parent audit)
 - `sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md` (sibling)
 - `sports_classifier_weather_no_fixture_2026_05_13.md` (sibling)
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-14 slot 4; UAC refdata_cadence + UTL classifier extension shipped

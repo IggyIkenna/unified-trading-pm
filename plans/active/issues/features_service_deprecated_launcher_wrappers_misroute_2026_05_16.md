@@ -67,3 +67,11 @@ bash deployment-service/scripts/vm/launch-features-vm.sh \
     --mode batch \
     --launch-mode full
 ```
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-17; deprecated launcher redirects fixed

@@ -72,3 +72,11 @@ remainder if needed.
 - Companion: `plans/active/issues/defi_features_pipeline_not_run_2026_05_14.md` (slot-3's finding)
 - Cross-side ping: `plans/active/_agent_pings.md` § "2026-05-16 ikenna-main → ikenna-slot-3 / harsh-slot-9"
 - CLAUDE.md § "GCS backfill approval gate (codified here)" — ≥1 week → operator approval required
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: OPEN  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Operator approval pending for 46-day backfill execution

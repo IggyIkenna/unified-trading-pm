@@ -117,3 +117,11 @@ The QG floor of 70% is respected by all 6 repos. B-014 coverage deployment is co
   `features_service_qg_test_path_mismatch_2026_05_15.md` (slot 4 owns resolution)
 - ml-training failures → fixed by `ml-training-service@7e18af8` (coverage now ≥80%)
 - All 6 B-014 repos above 70% QG floor ✅
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved; all 6 repos above 70% floor
