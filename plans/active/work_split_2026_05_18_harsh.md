@@ -448,9 +448,7 @@ smoke begins.
 #### Mechanical queue
 
 - [x] ✅ **1. MTDS handler coverage extensions — 3 handlers pickup** — vault_share_price 75.8%→98.7%, native_staking 79.3%→93.5%, eigenlayer_rewards 77.5%→96.1% (+40 tests, 1495 passed) — mtds@d39568d
-- [ ] **2. PBM canonical_writer extension — MDPS-side parametrized archetype dispatch hardening** — slot 9 shipped
-      `mdps@4ad6060` (25 tests, 3 classes) on 2026-05-15. Identify 1-2 gaps surfaced during that work (any "fall-through
-      contract" residuals); add 3-5 tests. Done-def: gap closed + PBM QG green.
+- [x] ✅ **2. PBM canonical_writer extension — MDPS-side parametrized archetype dispatch hardening** — 24 tests covering 6 uncovered branches: resolve_pipeline_mode_from_source (None/missing/valid/unknown), mdps_data_type_key (pass-through + fallback), _infer_instrument_type UNKNOWN path, _infer_chain (column + 4-part id), _infer_league_id; QG green — mdps@cce0da5
 - [x] ✅ **3. solana_lst_native_staking_adapters_2026_05_14 final item (95%, 21/22)** — 1 checkbox left. Plan path:
       [`solana_lst_native_staking_adapters_2026_05_14.md`](solana_lst_native_staking_adapters_2026_05_14.md). Close
       out. (deployment-service@ea1356b — launchers + watchdog prefixes; plan now 22/22 100%)
