@@ -437,6 +437,12 @@ smoke begins.
       amount, bad amount → Decimal(0), isoformat) + ParquetDustLoader.__call__ (5: no wallet/exception/empty
       rows/filter-miss/match) + _safe_list_blobs (2: error+success) + _read_partition_frames (3: skip non-parquet,
       skip failure, polars append). All 25 passed. features-service@10467b52
+- [x] ✅ **22. SUSTAIN — features-service Wave 78 — lst_rewards_bootstrap.py coverage (19 tests)** —
+      19 new tests: discover_chains_in_registry (5: matching layer, None-distributor excluded, layer-mismatch,
+      multi-chain, empty) + _build_required_venues (8: SOLANA/HELIUS, EVM chains, ALCHEMY, dedup/sort,
+      unknown chain, empty) + bootstrap_seasonal_rewards_collector (6: returns BootstrapResult, chains_wired,
+      reloader.start(), no-chains warning, prefer_etherscan_for routing, solana → make_solana_scanner). All 19
+      passed. features-service@35fa1725
 
 #### Coordination
 
