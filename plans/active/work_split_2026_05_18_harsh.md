@@ -193,9 +193,10 @@ smoke begins.
 - [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** [workspace audit] — AST scan across 11 repos: 0
       actual `datetime.now()` calls in source (only `pd.Timestamp.now()` in h2h_calculator.py + docstrings).
       Workspace already clean. Done-def: 0 violations ✅.
-- [ ] **S10. SUSTAIN — cross-repo test data fixture utilization audit** [workspace test cleanup] — fixtures in
-      `tests/fixtures/` — identify unused or stale (last referenced commit >90d). Done-def: per-repo fixture utilization
-      report + 5+ cleanups. **~5 cal-days**.
+- [x] ✅ **S10. SUSTAIN — cross-repo test data fixture utilization audit** [workspace test cleanup] — Scanned
+      execution-service + strategy-service. Removed 5 stale fixtures: execution-service@e7126b94 (sbobet_match_page.html —
+      stub adapter, no HTML parsing) + strategy-service@c4a41d9 (4 YAML fixtures: btc_usdt_1h, uniswap_v3_pools,
+      premier_league_arb, es_nq_futures — backtest scripts referenced in docs don't exist). Done-def: 5+ cleanups ✅.
 - [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — public API
       functions/classes should have docstrings. Per-repo: run interrogate or similar; identify gaps; add stubs for major
       modules. Done-def: per-repo docstring coverage ≥70% on public API. **~6 cal-days**.
