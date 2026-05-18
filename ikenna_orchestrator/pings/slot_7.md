@@ -1362,3 +1362,10 @@ Gate 4 FIRED 2026-05-13 for β-audit, but actual `record_*` callsites still need
 **Conflict-risk**: strategy-service + execution-service bucket-naming = Slots 2/5. Writegate wiring is DIFFERENT surface.
 
 Acknowledge "STARTED writegate Phase 6.6 ml-training" within 10 min.
+
+---
+
+### 2026-05-18T09:24:16Z — Slot 7 STARTED (redirected from writegate to Phase 2.6 Step 5 prep)
+
+Theme: archive-flat-buckets.sh script + write-resume verification plan
+Status: READING code_freeze plan — Phase 2.6 Step 5 section read. gap-2.6.A through gap-2.6.E confirmed [x]. Step 2.6.5 archive script not yet created. Beginning Part A.

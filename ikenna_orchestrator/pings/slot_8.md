@@ -2,6 +2,72 @@
 
 ---
 
+### 2026-05-18 09:20 UTC — Slot 8 RESTARTED (corrected assignment)
+Theme: alerting SCRIPT items + api_keys Phase 5.B credential scaffold
+Status: COMPLETE
+
+**Boot audit findings + resolution:**
+- Alerting SM hot-reload — ALREADY SHIPPED. Flipped in alerting plan (was incorrectly marked open).
+- Alerting staging Cloud Run deploy — BLOCKED-OPERATOR. Status note updated in plan.
+- Alerting ALERT_THRESHOLDS UAC update — BLOCKED-UPSTREAM. Status note updated in plan.
+- Phase 8 rehearsal extension — BLOCKED-UPSTREAM. Stale DEFERRED note corrected.
+- Polymarket SM secret — EXISTS. 5.B.1 + 5.B.4 checkboxes FLIPPED.
+- Kalshi SM secret — NOT FOUND. Full KalshiAdapter IS shipped. CREDENTIAL APPROVAL REQUEST below.
+- Helius SM secret — EXISTS. 5.C Helius verified.
+- CoinGecko SM secret — NOT FOUND. CREDENTIAL APPROVAL REQUEST below.
+- Manifold — OUT OF SCOPE (not in predictions_master MVP). 5.B.3 SCOPED OUT.
+
+---
+
+## CREDENTIAL APPROVAL REQUEST — kalshi_api_key + kalshi_private_key_pem
+
+**Date**: 2026-05-18  
+**Slot**: 8  
+**Status**: BLOCKED-CREDENTIALS
+
+Vendor: Kalshi (CFTC-regulated prediction market exchange, https://kalshi.com)  
+What I need:
+- `kalshi-api-key` — Kalshi API key ID (account-level key, not a password)
+- `kalshi-private-key-pem` — RSA private key PEM for RSA-PSS request signing (Kalshi auth model)
+- Tier: standard trading API (no paid tier — trading account required with funded balance)
+
+Account to use: existing operator Kalshi trading account OR new account signup at https://kalshi.com/sign-up  
+Provisioning: `gcloud secrets create kalshi-api-key --project=central-element-323112` + add version with key value  
+
+Unblocks:
+- `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5.B.2
+- prediction asset_group × `arbitrage_price_dispersion` archetype (Kalshi vs Polymarket spread detection)
+- `predictions_master_2026_05_07.md` prediction execution pipeline
+
+Without it: integration tests skip (`@pytest.mark.requires_credentials`); unit tests + full adapter already ship
+at `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth, place/
+cancel/positions/balance fully implemented; 53 unit tests passing).
+
+---
+
+## CREDENTIAL APPROVAL REQUEST — coingecko_api_key
+
+**Date**: 2026-05-18  
+**Slot**: 8  
+**Status**: BLOCKED-CREDENTIALS
+
+Vendor: CoinGecko (crypto market data, https://coingecko.com/api)  
+What I need:
+- `coingecko-api-key` — CoinGecko API key (Demo tier = free but requires registration; Pro tier = $129/month)
+- Tier recommendation: Demo (free) for DeFi token price data — LST prices + DEX token prices
+
+Account to use: existing operator account OR new signup at https://www.coingecko.com/en/api  
+Provisioning: `gcloud secrets create coingecko-api-key --project=central-element-323112` + add version  
+
+Unblocks:
+- `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 5.C
+- DeFi-data credentials for LST price feeds (fallback to CoinGecko when on-chain price feeds unavailable)
+- `carry_staked_basis` archetype requires CoinGecko as fallback LST yield data source
+
+Without it: CoinGecko adapter dormant (unit tests against mocked contract pass); integration tests skip.
+
+---
+
 ## [slot-8 → main] 2026-05-18 ~09:15 UTC — ACK tick-80 dispatch; 2 items shipped
 
 **Dispatched item acked**: "e2e-testing/scripts/sports/ → features-service QG wiring" — DONE at `features-service@cd5cd29a`.

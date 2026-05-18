@@ -57,17 +57,17 @@ estimate_calibration_note: |
 
 ## Slot stack — ~100-128 cal AI-days across 8 implementer slots
 
-| Slot      | Theme                                                                                              | Cal AI-days |
-| --------- | -------------------------------------------------------------------------------------------------- | ----------- |
-| 1         | Main orchestrator (continuous, uncounted)                                                          | —           |
-| 2         | Delegate-flip: UTL (23) + batch-live-recon (7) + strategy (2)                                      | ~14         |
-| 3         | Delegate-flip: UAC (5) + features-service (2) + defi_catalogue close                               | ~16         |
-| 4         | AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4                                          | ~18         |
-| 5         | Delegate-flip: execution-service (33) + UI (4) + api_keys Phase 5.B                                | ~18         |
-| 6         | Delegate-flip: deployment-api (27) + code_freeze Phase 2 runbook verify                            | ~14         |
-| 7         | writegate Phase 6.6+6.7 impl (ml-training + ml-inference + strategy + execution + position + risk) | ~20         |
-| 8         | batch_live_symmetry Tab 2 codex + alerting_service_live_rules 15 remaining                         | ~14         |
-| **Total** | (8 implementer slots)                                                                              | **~114**    |
+| Slot      | Theme                                                                                              | Cal AI-days | Status (2026-05-18) |
+| --------- | -------------------------------------------------------------------------------------------------- | ----------- | ------------------- |
+| 1         | Main orchestrator (continuous, uncounted)                                                          | —           | 🟢 IN PROGRESS |
+| 2         | Delegate-flip: UTL (23) + batch-live-recon (7) + strategy (2)                                      | ~14         | 🔄 UTL agent running |
+| 3         | Delegate-flip: UAC (5) + features-service (2) + defi_catalogue close                               | ~16         | ✅ Part A DONE (uac@ae8b4d6); Part B → Harsh-side |
+| 4         | AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4                                          | ~18         | 🔄 Agent dispatched |
+| 5         | Delegate-flip: execution-service (33) + UI (4) + api_keys Phase 5.B                                | ~18         | ✅ exec+UI DONE (prior); api_keys 5.B/5.C → Slot 8 |
+| 6         | Delegate-flip: deployment-api (27) + code_freeze Phase 2 runbook verify                            | ~14         | 🔄 deployment-api agent running |
+| 7         | ~~writegate Phase 6.6+6.7 impl~~ REDIRECTED: Phase 2.6 Step 5 prep + write-resume verification    | ~20→~8      | 🔄 Agent dispatched (Gate 4 CLOSED 2026-05-15) |
+| 8         | ~~batch_live_symmetry Tab 2 codex~~ REDIRECTED: alerting SCRIPT items + api_keys Phase 5.B/5.C    | ~14         | 🔄 Agent dispatched (Tab 2 + Gate 4 already done) |
+| **Total** | (8 implementer slots)                                                                              | **~114**    | |
 
 ---
 

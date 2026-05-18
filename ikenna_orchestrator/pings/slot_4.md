@@ -25,6 +25,22 @@ No new actionable P0/P1 issues found. Continuing method-size ratchet as primary 
 
 ---
 
+## [slot 4 → main] 2026-05-18T09:21:08Z — Slot 4 STARTED (AWS migration + defi_recursive_borrow)
+
+Theme: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4
+Status: READING plans
+
+Boot analysis:
+- aws_migration_defi_first_2026_05_07.md: Phase 2 (2 open items), Phase 3 (5 open items), Phase 4 (4 open items)
+- defi_recursive_borrow_archetypes_2026_05_10.md: Phases 3-4 are SUBSTANTIALLY COMPLETE per prior slot-5 work (2026-05-15/17). Remaining open items are:
+  - Phase 4: mainnet+Base deploy BLOCKED-OPERATOR-DECISION (wallet key required)
+  - Phase 6 Hyperliquid LIVE wire-up: 1 open P0 item (run-to-completion on testnet)
+  - Phase 9-13: BLOCKED-DATA (window 2026-05-19+)
+
+Proceeding to: (A) AWS Phase 2-4 verification + BLOCKED-OPERATOR documentation; (B) defi_recursive_borrow Phase 6 Hyperliquid open item.
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 14 complete; cumulative 57 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
