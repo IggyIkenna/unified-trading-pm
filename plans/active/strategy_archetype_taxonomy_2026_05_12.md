@@ -382,6 +382,33 @@ SCOPE EXTENSION 2 + SCOPE EXTENSION 3 Harsh absorption). Operator confirmed pace
 
 ## Operator decisions needed (next round, surfaced after slot 2/5/6/8 progress)
 
+## ✅ Verification status — 2026-05-18 (slot-3 audit PM@e2dd2a2a)
+
+### Item V-1 — ARCHETYPE_TO_FAMILY completeness ✅ VERIFIED
+
+`unified_api_contracts/internal/architecture_v2/enums.py` `ARCHETYPE_TO_FAMILY` dict audited 2026-05-18:
+
+- **Total entries**: 55 (matches `strategy-summary.md` count of 55)
+- **Family coverage**: all 9 families represented (ML_DIRECTIONAL ×2, RULES_DIRECTIONAL ×2, CARRY_AND_YIELD ×8,
+  ARBITRAGE_STRUCTURAL ×7, MARKET_MAKING ×10, EVENT_DRIVEN ×1, VOL_TRADING ×19, STAT_ARB ×2, PORTFOLIO ×4)
+- **All 55 enum members have exactly one ARCHETYPE_TO_FAMILY entry** — no orphans, no duplicates confirmed.
+
+**Pending UAC changes** (slot 2 owns — NOT done yet as of 2026-05-18):
+- `CARRY_RECURSIVE_BORROW_PERP_HEDGED` NOT yet renamed → `CARRY_BASIS_PERP_INV` (operator decision ✅ 2026-05-12)
+- `CARRY_STAKED_BASIS_DATED` NOT yet added to enum + dict (pre-deprecation total should be 56)
+- `CARRY_BASIS_DATED_INV` NOT yet added to enum + dict
+
+### Item V-2 — Taxonomy plan correction flags ✅ DOCUMENTED
+
+Two discrepancies found between this plan's operator decisions and current UAC state:
+
+1. **§9 `MARKET_MAKING_EVENT_SETTLED` legacy flag**: UAC line 91 marks it `# legacy` but operator decision
+   (§9 "RETAIN, not legacy") says to KEEP it as a first-class archetype. The enum VALUE and ARCHETYPE_TO_FAMILY
+   entry are correct (present + mapped); only the inline `# legacy` comment is wrong. Slot 2 to fix comment.
+2. **Archetype count**: strategy-summary.md says 55; post-`CARRY_STAKED_BASIS_DATED` addition will be 56.
+   The count in `strategy-summary.md` will auto-correct once slot 2 adds the new enum member + ARCHETYPE_TO_FAMILY
+   entry, per "the enum wins" drift correction note in strategy-summary.md.
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
