@@ -3581,3 +3581,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015 tick-5 CONFIRMED**: `[continuous tick 5] 2026-05-18 10:27:17 | fills=0 | PnL=$0.00` — **5/72** (6.9%). Gate satisfies 2026-05-21 06:27 UTC. No errors. ✅
 
 **Status**: 🟢 B-015 healthy. All slots active or within window. Check-in sent to slot_2.
+
+---
+
+## [slot 1 main] 2026-05-18 ~10:33 UTC — tick-97: slot-6 MDPS item 17; slot-7 tick-62 (~41%); slot-8 check-in sent
+
+**B-015**: 5/72. Log still at 10:27:17 (last tick). Next tick at 11:27:17 UTC. No errors.
+
+**New commits since tick-96** (3 absorbed):
+- `946c368c` — MDPS item 17: 8 cross-archetype + manifest re-sync parity tests (1321+ passed) ✅ (slot-6 live_pipeline Phase 1)
+- `cb1bda20` — slot-7 tick-62: extractor.py 112L→40L + setup.py 108L→43L (execution-service@816dbffd2) ✅
+- `292c6912` — batch-19: serializer+drift cleared, slot-4 cumulative 71 files ✅
+
+**Slot states** (10:33 UTC):
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 36 min since dispatch (09:57), 6 min since check-in. Not yet context-expired (threshold ~50 min). Watch at tick-98.
+- slot_3: defi_master codex close-out — 29 min (dispatched 10:04). Within window. No action.
+- slot_4: execution-service Phase B (cumulative 71 files — still running or was slot-7 labeled as 4?). Monitoring.
+- slot_5: 🟢 execution-service delegate-flip + api_keys Phase 5.B active.
+- slot_6: 🟢 live_pipeline Phase 1 active — MDPS item 17 shipped ✅. Healthy output.
+- slot_7: 🟢 Phase B tick-62, ~153/377 (~41%) cleared. Continuing tick-63.
+- slot_8: 🟡 **CHECK-IN SENT** — defi_catalogue + writegate 6.8, 22 min no ack (dispatched 10:11). Check-in in slot_8.md now.
+
+**Status**: 🟢 Good throughput. slot-6/7 producing. slot-2 silence approaching threshold (tick-98 = ~47 min). slot-8 check-in sent.

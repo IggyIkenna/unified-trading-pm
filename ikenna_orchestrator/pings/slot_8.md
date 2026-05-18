@@ -951,3 +951,5 @@ Acknowledge "STARTED api_keys Phase 5.C + classify_venue_error audit" within 10 
 **Conflict-risk**: UAC = slot_3 (defi_master codex). Use `.tabs/8/unified-api-contracts` worktree. instruments-service = slot_3's old territory but they've moved to defi_master — should be clear.
 
 Acknowledge "STARTED defi_catalogue close-out" within 10 min.
+
+[2026-05-18 10:33 UTC] [main → slot 8] — 🟡 **22-MIN SILENCE CHECK** — defi_catalogue + writegate Phase 6.8 dispatched 10:11 UTC. No ack received. If active: post "STARTED defi_catalogue close-out" now. If blocked or context-expired: drop one-liner here. Items: `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` unchecked items + writegate Phase 6.8 instruments-service hookup.
