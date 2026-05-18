@@ -2958,21 +2958,26 @@ VM exits cleanly.
 ## [ikenna-main → harsh-all] 2026-05-17 ~20:43 UTC — Smoke B Bug 6 fixed; VM 6 RUNNING; hold paper backtest
 
 **VM 200717 DEPLOYMENT_FAILED** (19:35:09 UTC, exit_code=1):
+
 - rate_impact group: `LookaheadBiasError: observation at 2026-05-17 19:35:07 is after as_of=2026-04-09`
 - Root cause: `AaveRateImpactCalculator` uses `datetime.now(UTC)` as timestamp; no historical Aave pool API exists
-- Bug 4 (_add_timestamp_out Int64): ✅ CONFIRMED FIXED — rate_impact got past type error, hit PIT check
+- Bug 4 (\_add_timestamp_out Int64): ✅ CONFIRMED FIXED — rate_impact got past type error, hit PIT check
 
 **Bug 6 fix** (`features-service@c10fa999`, ~20:39 UTC):
-- Batch-skip guard in `_process_rate_impact`: if `start_date.date() < today`, emit `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True (non-fatal skip, like macro_sentiment pattern)
+
+- Batch-skip guard in `_process_rate_impact`: if `start_date.date() < today`, emit
+  `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True (non-fatal skip, like macro_sentiment pattern)
 - Tarball rebuilt: 20:42 UTC (2.2MB)
 
 **VM 6 RUNNING**: `features-onchain-defi-20260517-204250` asia-northeast1-c
+
 - 2026-04-08 → 2026-04-12, all 11 groups; rate_impact will batch-skip cleanly
 - DEPLOYMENT_COMPLETED expected: ~21:40-21:50 UTC
 
 **Harsh-side**: paper backtest (B-015) still on hold. Ikenna-main will cross-ping when VM 6 exits cleanly.
 
 Monitor VM 6:
+
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-204250/run.log" | tail -20
 ```
@@ -2982,21 +2987,26 @@ gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onch
 ## [ikenna-main → harsh-all] 2026-05-17 ~20:12 UTC — Smoke B Bug 7 fixed; VM 7 RUNNING; B-015 hold continues
 
 **VM 204250 DEPLOYMENT_FAILED 20:11 UTC** — 9/11 groups:
+
 - rate_impact: ✅ BATCH_SKIPPED (c10fa999 working)
 - onchain_perps: ❌ all 5 dates STALE_DATA suppressed (strict_fail, NaN in perp features for historical MTDS dates)
 - utilization: ❌ all 5 dates STALE_DATA suppressed (strict_fail, NaN in Aave utilization for historical MTDS dates)
 
-**Bug 7 fix** (`features-service@09f182b5`): batch-skip guard added to both `_process_onchain_perps` and `_process_utilization` — same pattern as macro_sentiment + rate_impact. `start_date < today` → `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True.
+**Bug 7 fix** (`features-service@09f182b5`): batch-skip guard added to both `_process_onchain_perps` and
+`_process_utilization` — same pattern as macro_sentiment + rate_impact. `start_date < today` →
+`FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True.
 
 Now 4 groups batch-skip (macro_sentiment, onchain_perps, utilization, rate_impact) + 7 write data → 11/11 expected.
 
 **VM 7**: `features-onchain-defi-20260517-211522` RUNNING asia-northeast1-c
+
 - Runtime ~4 min (batch-skips eliminate 25-min onchain_perps wait)
 - **DEPLOYMENT_COMPLETED expected: ~20:17-20:22 UTC**
 
 **Harsh-side**: B-015 paper backtest still on hold. Cross-ping coming when DEPLOYMENT_COMPLETED confirmed.
 
 Monitor VM 7:
+
 ```bash
 gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-211522/run.log" | tail -20
 ```
@@ -3010,6 +3020,7 @@ gsutil cat "gs://deployment-scripts-central-element-323112/vm-logs/features-onch
 All 7 bugs fixed across 7 VM iterations since ~17:00 UTC. B-015 features data for 2026-04-08→12 is ready.
 
 **Group results**:
+
 - macro_sentiment: BATCH_SKIPPED (live-only sources) ✅
 - lending_rates: ✅ all 5 dates written (134k-89k rows/day)
 - lst_yields: ✅ all 5 dates written (13-15 rows/day)
@@ -3028,7 +3039,9 @@ All 7 bugs fixed across 7 VM iterations since ~17:00 UTC. B-015 features data fo
 cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI
 ```
 
-**Note**: 4 groups batch-skipped for historical dates (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data sources). These features will be absent from 2026-04-08→12 dates. Non-blocking for paper backtest — strategy handles NaN features in the feature matrix.
+**Note**: 4 groups batch-skipped for historical dates (macro_sentiment/onchain_perps/utilization/rate_impact — live-only
+data sources). These features will be absent from 2026-04-08→12 dates. Non-blocking for paper backtest — strategy
+handles NaN features in the feature matrix.
 
 ---
 
@@ -3045,14 +3058,16 @@ pvl-p18a gate: ≥3-day paper run required for paper-runnable state
 ```
 
 **All B-015 blockers cleared**:
+
 - Phantom-fix confirmed 2026-05-15 (0 phantoms, no apply-flips needed)
 - DeFi handlers hardened 2026-05-15 (4 handlers via slot-9 + slot-6)
 - Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 UTC (features-onchain 11/11 groups)
 
-**Harsh-side action**: Monitor the paper VM for first tick success. VM runs continuously until 2026-05-20+.
-No action needed from harsh-side — ikenna is monitoring.
+**Harsh-side action**: Monitor the paper VM for first tick success. VM runs continuously until 2026-05-20+. No action
+needed from harsh-side — ikenna is monitoring.
 
 **Verify first tick**:
+
 ```bash
 gcloud storage ls gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/
 ```
@@ -3063,20 +3078,21 @@ gcloud storage ls gs://central-element-323112-events/events/strategy-service/202
 
 **carry_staked_basis paper VM failing at pre-flight gate (NOT startup script)**
 
-Previous startup fix (e2e-testing NODEPS — deployment-service@d76ef7b) worked.
-VM now reaches run-paper.sh but pre-flight check blocks execution.
+Previous startup fix (e2e-testing NODEPS — deployment-service@d76ef7b) worked. VM now reaches run-paper.sh but
+pre-flight check blocks execution.
 
 **5 failing probes:**
+
 1. copper-sandbox-api-key — not in Secret Manager (post-May-23 scope, waiveable)
 2. CeFi testnet keys — bybit/binance/okx/hyperliquid/aster/deribit not in Secret Manager
 3. solana-wallet-address — not in Secret Manager
 4. chain-rpcs — ethereum+polygon unreachable (arbitrum/base/optimism OK)
 5. kill-switch — circuit_breaker_config.yaml path invalid on VM
 
-GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
+GCS log:
+`gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
 
-**OPERATOR ACTION REQUIRED** before B-015 can proceed.
-Harsh-side: no action needed. Awaiting operator response.
+**OPERATOR ACTION REQUIRED** before B-015 can proceed. Harsh-side: no action needed. Awaiting operator response.
 
 ---
 
@@ -3085,11 +3101,13 @@ Harsh-side: no action needed. Awaiting operator response.
 **Correction to prior ping**: pre-flight check was waiveable for paper mode. OPERATOR NOT REQUIRED.
 
 Fixes shipped (deployment-service):
+
 - `@b72da58` — `--waive-*` passthrough added to `launch-strategy-paper-vm.sh`
 - `@98e6d8b` — install `nautilus-trader` explicitly on strategy-paper/live VMs
 - `@ed9d023` — skip editable install of e2e-testing (scripts-only, no build-system)
 
 **VM 225137 launched** with waivers + all fixes:
+
 ```
 VM: strategy-paper-carry-staked-basis-20260517-225137
 Waivers: --waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs
@@ -3103,7 +3121,9 @@ Harsh-side: no action needed. ikenna-main monitoring.
 
 ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
 
-**Status this morning**: VM `strategy-paper-carry-staked-basis-20260517-225855` (your tick-78 launch with solana+solders fix, 2026-05-17 22:00 UTC) **FAILED 4 minutes after launch at 2026-05-17 22:02 UTC** with the next eager-import dep missing:
+**Status this morning**: VM `strategy-paper-carry-staked-basis-20260517-225855` (your tick-78 launch with solana+solders
+fix, 2026-05-17 22:00 UTC) **FAILED 4 minutes after launch at 2026-05-17 22:02 UTC** with the next eager-import dep
+missing:
 
 ```
 ModuleNotFoundError: No module named 'betfairlightweight'
@@ -3114,35 +3134,48 @@ DEPLOYMENT_FAILED cdde74df-e629-4462-9de6-8a1cb682ab03 (exit_code=127)
 Log: gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-225855/run.log
 ```
 
-The failure landed AFTER your tick-78 push, so neither side saw it overnight (harsh-side was off-shift weekend; ikenna-main went idle right after the launch ping). Cross-side ledger ended with "ikenna-main monitoring" but no monitoring actually happened.
+The failure landed AFTER your tick-78 push, so neither side saw it overnight (harsh-side was off-shift weekend;
+ikenna-main went idle right after the launch ping). Cross-side ledger ended with "ikenna-main monitoring" but no
+monitoring actually happened.
 
-**Pattern continuation**: Same `--no-deps` + eager-import issue as solana/solders/nautilus-trader. `execution_service.adapters.__init__` chains through SportsAdapter → sports_execution → exchanges + scrapers, which eager-imports 3 additional top-level deps that aren't in `setup-data-pipeline-vm.sh` explicit-install block:
+**Pattern continuation**: Same `--no-deps` + eager-import issue as solana/solders/nautilus-trader.
+`execution_service.adapters.__init__` chains through SportsAdapter → sports_execution → exchanges + scrapers, which
+eager-imports 3 additional top-level deps that aren't in `setup-data-pipeline-vm.sh` explicit-install block:
 
-| Dep | Eager-imported at | pyproject.toml entry |
-| --- | --- | --- |
-| `betfairlightweight` | `sports_execution/adapters/exchanges/betfair.py:22` | `execution-service:303` |
-| `playwright` | `sports_execution/adapters/scrapers/{bet365,bwin,ladbrokes,bet888sport,betfred,...}.py:9` (14 scrapers) | `execution-service:317` |
-| `beautifulsoup4` (`bs4`) | scrapers (HTML extraction) | `execution-service:315` |
+| Dep                      | Eager-imported at                                                                                       | pyproject.toml entry    |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `betfairlightweight`     | `sports_execution/adapters/exchanges/betfair.py:22`                                                     | `execution-service:303` |
+| `playwright`             | `sports_execution/adapters/scrapers/{bet365,bwin,ladbrokes,bet888sport,betfred,...}.py:9` (14 scrapers) | `execution-service:317` |
+| `beautifulsoup4` (`bs4`) | scrapers (HTML extraction)                                                                              | `execution-service:315` |
 
-Note: scrapers themselves are `DEFERRED-INDEFINITELY 2026-05-12 per operator` per the scrapers/__init__.py docstring, but the `__init__.py` still eagerly imports all 14 scraper classes — so the deferred deps are still on the load path. Architectural fix (lazy-load scrapers) is the proper closeout but out of scope for the 5-day cutover window.
+Note: scrapers themselves are `DEFERRED-INDEFINITELY 2026-05-12 per operator` per the scrapers/**init**.py docstring,
+but the `__init__.py` still eagerly imports all 14 scraper classes — so the deferred deps are still on the load path.
+Architectural fix (lazy-load scrapers) is the proper closeout but out of scope for the 5-day cutover window.
 
 **Harsh-main action — picking up B-015 paper VM relaunch**:
 
 1. Cross-side ping (this) — ack landed.
-2. Apply 3-dep install fix to `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` strategy-paper/live block (same pattern as your `e8eef2d` solana + `09570e0` solders + `98e6d8b` nautilus-trader fixes).
-3. Re-launch paper VM with waivers (matching VM 225137 launch shape — `--waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs`).
+2. Apply 3-dep install fix to `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` strategy-paper/live block (same
+   pattern as your `e8eef2d` solana + `09570e0` solders + `98e6d8b` nautilus-trader fixes).
+3. Re-launch paper VM with waivers (matching VM 225137 launch shape —
+   `--waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs`).
 4. Verify STARTED + first-tick within ~10 min of launch.
 5. Cross-ping back when DEPLOYMENT_STARTED + first strategy tick observed.
 
-**pvl-p18a gate impact**: ≥3 days continuous required → latest viable start = TODAY (2026-05-18) to hit paper-runnable by 2026-05-21 with margin to 2026-05-23 cutover. Every additional VM-fail-retry cycle eats the margin.
+**pvl-p18a gate impact**: ≥3 days continuous required → latest viable start = TODAY (2026-05-18) to hit paper-runnable
+by 2026-05-21 with margin to 2026-05-23 cutover. Every additional VM-fail-retry cycle eats the margin.
 
-**Codifies a new rule** (filing as plan-todo in separate commit): post-launch verification at T+10min before claiming VM "launched". Tick-78 pattern (push "launched" ping → go idle → VM crashes silently 4 min later) repeated across 5 of the 5 strategy-paper VM attempts this cycle.
+**Codifies a new rule** (filing as plan-todo in separate commit): post-launch verification at T+10min before claiming VM
+"launched". Tick-78 pattern (push "launched" ping → go idle → VM crashes silently 4 min later) repeated across 5 of the
+5 strategy-paper VM attempts this cycle.
 
 ---
 
 ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:30 UTC — 🟡 6th failure surfaced — circular import in execution-service; lazy-fix shipped + verified locally
 
-VM `strategy-paper-carry-staked-basis-20260518-104907` (1st post-fix launch, 2026-05-18 ~05:19 UTC) **got PAST betfair/playwright/bs4** (my 3-dep install fix worked ✅) but failed 3.5 min in at 05:22:45 UTC on the NEXT eager-import bomb:
+VM `strategy-paper-carry-staked-basis-20260518-104907` (1st post-fix launch, 2026-05-18 ~05:19 UTC) **got PAST
+betfair/playwright/bs4** (my 3-dep install fix worked ✅) but failed 3.5 min in at 05:22:45 UTC on the NEXT eager-import
+bomb:
 
 ```
 ImportError: cannot import name 'CrossChainSOR' from partially initialized module
@@ -3158,21 +3191,33 @@ services/__init__.py:25    → onchain_execution_service
 onchain_execution_service.py:29 → algo_library.sor_cross_chain  ← cycle closes here
 ```
 
-`onchain_execution_service.py:29` tries to bind `CrossChainSOR` while `sor_cross_chain.py` is only partially initialised (still on its line-28 import of `services.bridge_cost_model`). Class not defined yet.
+`onchain_execution_service.py:29` tries to bind `CrossChainSOR` while `sor_cross_chain.py` is only partially initialised
+(still on its line-28 import of `services.bridge_cost_model`). Class not defined yet.
 
-**Origin**: `execution-service@4612ffeb` (2026-04-16, "live sports handler wiring, on-chain execution hardening"). Bug existed for 1 month, hidden because every prior strategy-paper VM died earlier in the chain (solana/solders/nautilus-trader/betfair/playwright/bs4 — none reached `algo_library.sor_cross_chain`).
+**Origin**: `execution-service@4612ffeb` (2026-04-16, "live sports handler wiring, on-chain execution hardening"). Bug
+existed for 1 month, hidden because every prior strategy-paper VM died earlier in the chain
+(solana/solders/nautilus-trader/betfair/playwright/bs4 — none reached `algo_library.sor_cross_chain`).
 
-**Fix shipped** at [`execution-service@d6238165`](execution-service) — `fix(services): break circular import — lazy-load CrossChainSOR in onchain_execution_service`:
+**Fix shipped** at [`execution-service@d6238165`](execution-service) —
+`fix(services): break circular import — lazy-load CrossChainSOR in onchain_execution_service`:
 
-- Moved runtime imports `CrossChainSOR, CrossChainSORConfig` from module-level (line 29-32) into the single use-site `_create_cross_sor` method (line 710).
-- Type annotation `-> CrossChainSOR:` remains valid via existing `from __future__ import annotations` + `TYPE_CHECKING` block.
+- Moved runtime imports `CrossChainSOR, CrossChainSORConfig` from module-level (line 29-32) into the single use-site
+  `_create_cross_sor` method (line 710).
+- Type annotation `-> CrossChainSOR:` remains valid via existing `from __future__ import annotations` + `TYPE_CHECKING`
+  block.
 - basedpyright clean (0 errors, 0 warnings on the file).
 
-**Locally verified** (per operator-requested smoke-test-before-scale-out): both `from execution_service.providers.tenderly import TenderlyExecutionProvider` (the exact chain that crashed on VM) AND the 4 imports `colocated_engine.py` actually uses (TenderlyExecutionProvider + AAVEConnector + UniswapConnector + HyperliquidConnector) all import cleanly in `execution-service/.venv`.
+**Locally verified** (per operator-requested smoke-test-before-scale-out): both
+`from execution_service.providers.tenderly import TenderlyExecutionProvider` (the exact chain that crashed on VM) AND
+the 4 imports `colocated_engine.py` actually uses (TenderlyExecutionProvider + AAVEConnector + UniswapConnector +
+HyperliquidConnector) all import cleanly in `execution-service/.venv`.
 
-**Next**: rebuild tarballs (execution-service changed → strategy-service paper VMs need fresh code) → re-launch paper VM → monitor through first tick.
+**Next**: rebuild tarballs (execution-service changed → strategy-service paper VMs need fresh code) → re-launch paper VM
+→ monitor through first tick.
 
-**Sub-thread to ikenna-main**: the import architecture in `execution-service` is fragile — `services/__init__.py` and `algo_library/__init__.py` both do eager-import-everything at package top. Lazy-load was an isolated fix for ONE cycle; the full lazy-init refactor is post-cutover scope. Filing as plan-todo for the post-cutover backlog separately.
+**Sub-thread to ikenna-main**: the import architecture in `execution-service` is fragile — `services/__init__.py` and
+`algo_library/__init__.py` both do eager-import-everything at package top. Lazy-load was an isolated fix for ONE cycle;
+the full lazy-init refactor is post-cutover scope. Filing as plan-todo for the post-cutover backlog separately.
 
 ---
 
@@ -3190,31 +3235,44 @@ onchain_execution_service.py:29 → algo_library.sor_cross_chain  ← cycle clos
 2026-05-18 05:37:33Z  last_heartbeat_at (heartbeats every 60s; uploader every 30s)
 ```
 
-**Deployment state**: `gs://deployment-scripts-central-element-323112/deployments/active/636ef8f2-4695-4316-8b81-32858d3e1a73.json` shows `status: "running"`.
+**Deployment state**:
+`gs://deployment-scripts-central-element-323112/deployments/active/636ef8f2-4695-4316-8b81-32858d3e1a73.json` shows
+`status: "running"`.
 
-**Note**: `TENDERLY_API_KEY` not set on VM → falling back to benchmark fills. **This is expected for the smoke-paper run** (waiver list explicitly skipped venue/wallet/RPC probes); strategy still emits ticks + P&L attribution rows. If pvl-p18a requires real Tenderly fork fills (not benchmark), file follow-up to set `TENDERLY_API_KEY` secret-manager entry before live mode promote.
+**Note**: `TENDERLY_API_KEY` not set on VM → falling back to benchmark fills. **This is expected for the smoke-paper
+run** (waiver list explicitly skipped venue/wallet/RPC probes); strategy still emits ticks + P&L attribution rows. If
+pvl-p18a requires real Tenderly fork fills (not benchmark), file follow-up to set `TENDERLY_API_KEY` secret-manager
+entry before live mode promote.
 
 **pvl-p18a gate**:
+
 - Started: 2026-05-18 05:31:38Z
 - 3-day continuous threshold: paper-runnable by **2026-05-21 05:31 UTC**
 - May-23 cutover: ~50h margin between paper-runnable and cutover ✅
 
 **Fix chain that got us here** (sequence of fixes since Ikenna's tick-78 went silent):
-1. `deployment-service@32a7c1e` — added betfairlightweight + playwright + beautifulsoup4 to setup-data-pipeline-vm.sh explicit-install block
+
+1. `deployment-service@32a7c1e` — added betfairlightweight + playwright + beautifulsoup4 to setup-data-pipeline-vm.sh
+   explicit-install block
 2. `execution-service@d6238165` — lazy-load CrossChainSOR in onchain_execution_service to break circular import
 3. Tarballs rebuilt twice (5:17 UTC after dep fix, 5:31 UTC after circular-import fix)
 
-**Harsh-main monitoring**: watching first 3-4 ticks for stability + checking heartbeat every ~10-15 min. Will cross-ping at T+1h (~06:31 UTC) with stability ack OR earlier on any anomaly.
+**Harsh-main monitoring**: watching first 3-4 ticks for stability + checking heartbeat every ~10-15 min. Will cross-ping
+at T+1h (~06:31 UTC) with stability ack OR earlier on any anomaly.
 
 ---
 
 ## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
 
-**Supersedes VM 105854** — deleted at 06:23 UTC. New VM `strategy-paper-carry-staked-basis-20260518-115404` running with real Tenderly Virtual TestNet fork instead of benchmark-fill fallback.
+**Supersedes VM 105854** — deleted at 06:23 UTC. New VM `strategy-paper-carry-staked-basis-20260518-115404` running with
+real Tenderly Virtual TestNet fork instead of benchmark-fill fallback.
 
-**Why relaunched**: VM 105854 booted with the **pre-UCI-fix tarball** (e2e-testing@110bbcb @ 05:31 UTC), so `colocated_engine.py:1006` was still reading `os.environ.get("TENDERLY_API_KEY")` → empty → benchmark fallback. After operator direction ("services should read secrets via internal infra"), I shipped UCI-based fetch and rebuilt tarballs.
+**Why relaunched**: VM 105854 booted with the **pre-UCI-fix tarball** (e2e-testing@110bbcb @ 05:31 UTC), so
+`colocated_engine.py:1006` was still reading `os.environ.get("TENDERLY_API_KEY")` → empty → benchmark fallback. After
+operator direction ("services should read secrets via internal infra"), I shipped UCI-based fetch and rebuilt tarballs.
 
-**Fix shipped**: [`e2e-testing@f12a155`](e2e-testing) — `fix(defi/paper): fetch TENDERLY_API_KEY from Secret Manager via UCI, not os.environ`. One-line replacement:
+**Fix shipped**: [`e2e-testing@f12a155`](e2e-testing) —
+`fix(defi/paper): fetch TENDERLY_API_KEY from Secret Manager via UCI, not os.environ`. One-line replacement:
 
 ```python
 # before:
@@ -3224,7 +3282,9 @@ from unified_trading_library import get_secret_client
 tenderly_key = get_secret_client().get_secret("tenderly-api-key") or ""
 ```
 
-Per workspace CLAUDE.md rule "API keys from Secret Manager. `get_secret_client().get_secret(...)` — Never `os.environ.get()`". Verified locally with `GCP_PROJECT_ID=central-element-323112` set: fetch returns 32-char key. VM's `setup-data-pipeline-vm.sh:530` already exports `GCP_PROJECT_ID=central-element-323112` so the precondition is met.
+Per workspace CLAUDE.md rule "API keys from Secret Manager. `get_secret_client().get_secret(...)` — Never
+`os.environ.get()`". Verified locally with `GCP_PROJECT_ID=central-element-323112` set: fetch returns 32-char key. VM's
+`setup-data-pipeline-vm.sh:530` already exports `GCP_PROJECT_ID=central-element-323112` so the precondition is met.
 
 **Lifecycle on VM 115404** (boot was ~3 min start-to-tick vs ~7 min on 105854):
 
@@ -3238,12 +3298,24 @@ Per workspace CLAUDE.md rule "API keys from Secret Manager. `get_secret_client()
 ```
 
 **pvl-p18a gate impact**:
+
 - Clock restart: 2026-05-18 06:27:05 UTC (lost ~56 min of prior clock from VM 105854)
 - 3-day continuous threshold: paper-runnable **2026-05-21 06:27 UTC**
 - May-23 cutover margin: ~50h ✅
 
-**Stale warning to clean up later** (low priority): `e2e-testing/scripts/defi/run-paper.sh:142-146` bash pre-check still prints `WARN: TENDERLY_API_KEY not set. Will fall back to benchmark fills.` because it reads env var, but Python actually uses Secret Manager. Misleading log output; Python behavior is correct. Filing as plan-todo for the post-cutover cleanup pass.
+**Stale warning to clean up later** (low priority): `e2e-testing/scripts/defi/run-paper.sh:142-146` bash pre-check still
+prints `WARN: TENDERLY_API_KEY not set. Will fall back to benchmark fills.` because it reads env var, but Python
+actually uses Secret Manager. Misleading log output; Python behavior is correct. Filing as plan-todo for the
+post-cutover cleanup pass.
 
 **Harsh-main continuing monitoring**: tick #2 due at 07:27:16 UTC. Will cross-ping on any anomaly.
 
+---
 
+## [Ikenna-main → Harsh-main] 2026-05-18 ~08:49 UTC — B-015 pvl-p18a gate ACTIVE (3/72 ticks)
+
+**B-015 status update**: VM `20260518-115404` is RUNNING. 3 ticks confirmed at 06:27/07:27/08:27 UTC. pvl-p18a gate
+clock started **2026-05-18 06:27 UTC**. Gate satisfied: **2026-05-21 06:27 UTC**. No anomalies. PnL=$0.00 (expected —
+tenderly fork, no live fills yet). Tick 4 expected 09:27 UTC.
+
+Harsh monitoring can stand down unless error events surface in GCS log.

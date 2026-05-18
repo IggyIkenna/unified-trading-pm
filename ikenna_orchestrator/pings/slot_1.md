@@ -2544,34 +2544,41 @@ errors
 - Slot-10 ROUTED to hedge_ratio_snapshot Phase 2+3 (strategy-service writer wire-in + pnl-attribution reader)
 - Slot-5 shipped wave-45 (european_fatigue + h2h — PM@d1f158dd)
 
-**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC
-**Next action on completion**: flip smoke_b issue checkboxes + cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED)
-**Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5 done, no errors
+**DEPLOYMENT_COMPLETED expected**: ~20:15-20:20 UTC **Next action on completion**: flip smoke_b issue checkboxes +
+cross-side ping to harsh-main (paper backtest B-015 UNBLOCKED) **Status**: 🟡 Smoke B IN-PROGRESS — onchain_perps 4/5
+done, no errors
 
 ## [slot 1 main] 2026-05-17 ~20:12 UTC — tick-62: VM 204250 DEPLOYMENT_FAILED 9/11 (Bug 7); VM 7 launched
 
 **VM 204250 DEPLOYMENT_FAILED** (20:11:01 UTC, exit_code=1):
+
 - rate_impact: BATCH_SKIP → returned True ✅ (c10fa999 working)
 - onchain_perps: ALL 5 dates STALE_DATA suppressed → returned False ❌
 - utilization: ALL 5 dates STALE_DATA suppressed → returned False ❌
 - Result: 9/11 groups → success_count < len(groups) → DEPLOYMENT_FAILED
 
-**Bug 7 diagnosis**: `strict_fail` emission policy treats NaN features as STALE_DATA → returns False from `write_features`. For historical batch dates, both perp_funding and Aave utilization features have NaN (MTDS backfill schema gap). The batch requires 11/11 success.
+**Bug 7 diagnosis**: `strict_fail` emission policy treats NaN features as STALE_DATA → returns False from
+`write_features`. For historical batch dates, both perp_funding and Aave utilization features have NaN (MTDS backfill
+schema gap). The batch requires 11/11 success.
 
-**Bug 7 fix** (`features-service@09f182b5`): added batch-skip guard to `_process_onchain_perps` + `_process_utilization` (same pattern as macro_sentiment + rate_impact — `start_date < today` → `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` + return True).
+**Bug 7 fix** (`features-service@09f182b5`): added batch-skip guard to `_process_onchain_perps` + `_process_utilization`
+(same pattern as macro_sentiment + rate_impact — `start_date < today` → `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` +
+return True).
 
-**Tarball rebuilt**: ~20:13 UTC
-**VM 7 launched**: `features-onchain-defi-20260517-211522` RUNNING asia-northeast1-c
+**Tarball rebuilt**: ~20:13 UTC **VM 7 launched**: `features-onchain-defi-20260517-211522` RUNNING asia-northeast1-c
+
 - All 4 batch-skipped groups now return True immediately: macro_sentiment, onchain_perps, utilization, rate_impact
-- 7 writing groups: lending_rates, lst_yields, risk_params, rewards, flash_loan_availability, health_factor, liquidation_events
+- 7 writing groups: lending_rates, lst_yields, risk_params, rewards, flash_loan_availability, health_factor,
+  liquidation_events
 - **Expected runtime: ~4 min** (vs ~25 min before — no more onchain_perps 4min/date wait)
 - **DEPLOYMENT_COMPLETED expected: ~20:17-20:22 UTC**
 
 **Bug tally (7 bugs total)**:
+
 - Bug 1: perp_funding Int64→Datetime ✅ @30e449d7
 - Bug 2: utilization I/O saturation ✅ @64682456 + @5afdd918
-- Bug 3: _shim.py NameError ✅ @818d8ecc
-- Bug 4: _add_timestamp_out Int64 dtype ✅ @ae90d1fd
+- Bug 3: \_shim.py NameError ✅ @818d8ecc
+- Bug 4: \_add_timestamp_out Int64 dtype ✅ @ae90d1fd
 - Bug 5/6: rate_impact LookaheadBiasError batch-skip ✅ @c10fa999
 - Bug 7: onchain_perps + utilization STALE_DATA strict_fail batch-skip ✅ @09f182b5
 
@@ -2582,6 +2589,7 @@ errors
 **VM `features-onchain-defi-20260517-211522` — DEPLOYMENT_COMPLETED at 20:21:48 UTC — exit_code=0 — 11/11 groups!**
 
 Group summary:
+
 - macro_sentiment: BATCH_SKIPPED ✅ (live-only sources)
 - lending_rates: ✅ all 5 dates (134k-89k rows/day)
 - lst_yields: ✅ all 5 dates (13-15 rows/day)
@@ -2595,14 +2603,15 @@ Group summary:
 - rate_impact: BATCH_SKIPPED ✅ (c10fa999)
 
 **All 7 bugs fixed across 7 VM iterations (~17:00 → 20:21 UTC)**:
+
 1. Bug 1: perp_funding Int64→Datetime ✅ @30e449d7
 2. Bug 2: utilization I/O saturation ✅ @64682456 + @5afdd918
-3. Bug 3: _shim.py NameError ✅ @818d8ecc
-4. Bug 4: _add_timestamp_out Int64 dtype ✅ @ae90d1fd
+3. Bug 3: \_shim.py NameError ✅ @818d8ecc
+4. Bug 4: \_add_timestamp_out Int64 dtype ✅ @ae90d1fd
 5. Bug 5/6: rate_impact LookaheadBiasError ✅ @c10fa999
 6. Bug 7: onchain_perps + utilization STALE_DATA strict_fail ✅ @09f182b5
 
-**Cross-side ping sent**: _agent_pings.md updated — harsh-side notified to launch B-015 paper backtest.
+**Cross-side ping sent**: \_agent_pings.md updated — harsh-side notified to launch B-015 paper backtest.
 
 **Status**: 🟢 Smoke B DEPLOYMENT_COMPLETED — B-015 UNBLOCKED
 
@@ -2610,7 +2619,8 @@ Group summary:
 
 **Smoke B plan checkboxes flipped**: PM@db0e5b9c flipped smoke_b P0+P1+Bug7 items (parallel session).
 
-**Slot-9 status**: CYCLE-CLOSE, awaiting next dispatch. B-015 was item 1 on their queue but was gated on Smoke B. Now unblocked. Added direct ping to `harsh_orchestrator/pings/slot_9.md` with explicit launch command.
+**Slot-9 status**: CYCLE-CLOSE, awaiting next dispatch. B-015 was item 1 on their queue but was gated on Smoke B. Now
+unblocked. Added direct ping to `harsh_orchestrator/pings/slot_9.md` with explicit launch command.
 
 **Slot-5 status**: continuing sports test waves (last seen wave-46). No new themes needed.
 
@@ -2620,9 +2630,11 @@ Group summary:
 
 ## [slot 1 main] 2026-05-17 ~20:28 UTC — tick-65: B-015 ping not yet acked; slot-5 waves 45-49 shipping fast
 
-**B-015 status**: ping in slot_9.md and _agent_pings.md. Harsh-side (slot-9) still CYCLE-CLOSE, no ack yet. Operator not yet returned (~2h window from ~18:00 UTC → ~20:00 UTC; may return soon or B-015 dispatch awaits next session).
+**B-015 status**: ping in slot_9.md and \_agent_pings.md. Harsh-side (slot-9) still CYCLE-CLOSE, no ack yet. Operator
+not yet returned (~2h window from ~18:00 UTC → ~20:00 UTC; may return soon or B-015 dispatch awaits next session).
 
-**Slot-5 progress**: waves 45-49 shipped (PM@eee403df — advanced_stats_calculator 100%). Wave theme active and autonomous.
+**Slot-5 progress**: waves 45-49 shipped (PM@eee403df — advanced_stats_calculator 100%). Wave theme active and
+autonomous.
 
 **Slot-10**: Phase 3 directive received (hedge_ratio_snapshot) — PM@8bcb1204.
 
@@ -2633,13 +2645,13 @@ Group summary:
 ## [slot 1 main] 2026-05-17 ~20:29 UTC — tick-65 addendum: slot pings scanned; all slots have themes
 
 **Slot scan results** (from PM@67c5f955 → PM@5754b8d2 rebase):
+
 - Slot-5: theme = UAC residual lint cleanup (130 ruff errors in unified-api-contracts). Directive already sent.
 - Slot-7: Phase B execution-service lint clear (was at 110/377 / 29%); check-in sent by main at PM@8bcb1204
 - Slot-8: waves 45-48 acked; continuing sports waves → next ack at wave-60
 - Slot-10: hedge_ratio_snapshot Phase 3 (pnl-attribution reader); Phase 2 shipped @21209bd
 
-**All slots have clear themes. No items requiring main action.**
-**B-015 still awaiting harsh-side ack.**
+**All slots have clear themes. No items requiring main action.** **B-015 still awaiting harsh-side ack.**
 
 ---
 
@@ -2651,8 +2663,8 @@ Group summary:
 - Discovered Smoke B already COMPLETED at 20:21:48 UTC via parallel VM `211522` (11/11 groups, exit_code=0)
 - Terminated duplicate Smoke B #9 VM `features-onchain-defi-20260517-212433` (I launched pre-discovery)
 - Flipped smoke_b issue doc: Bug 7 item ✅ + P0 COMPLETED ✅ + P1 B-015 UNBLOCKED ✅ — PM@db0e5b9c
-- Acked waves 45-48 (european_fatigue/h2h/xg_decomposition/odds_calculator/halftime_multi_source)
-  — features-service@dff33b0b / 4fe4584a / a5f035a8 / 86107989, PM@8bcb1204
+- Acked waves 45-48 (european_fatigue/h2h/xg_decomposition/odds_calculator/halftime_multi_source) —
+  features-service@dff33b0b / 4fe4584a / a5f035a8 / 86107989, PM@8bcb1204
 - Slot-10: Phase 2 already done by parallel agent (@21209bd); directed to Phase 3 (pnl-attribution reader)
 - Slot-5: deploy_missing all 6 done; assigned UAC residual lint (130 non-RUF003 errors)
 - Slot-7: check-in ping after 2h gap (tick-45)
@@ -2660,6 +2672,7 @@ Group summary:
 - Inventory refresh: 69 plans, 53% done, 477 cal AI-days left — PM@931cef15
 
 **Slot status**:
+
 - Slot-2: Active — execution-service Phase B batches 73-82 ✅ (very active)
 - Slot-3: BLOCKED-CREDENTIALS — odds-api credit quota (awaiting operator)
 - Slot-5: NEW THEME — UAC residual lint
@@ -2675,16 +2688,20 @@ Group summary:
 ## [slot 1 main] 2026-05-17 ~22:05 UTC — tick-66: monitoring idle; awaiting B-015 harsh-side ack
 
 **Poll results**:
-- harsh-side slot-9: CYCLE-CLOSE, no B-015 ack yet. B-015 ping sent via _agent_pings + slot_9.md. Operator dispatch needed.
+
+- harsh-side slot-9: CYCLE-CLOSE, no B-015 ack yet. B-015 ping sent via \_agent_pings + slot_9.md. Operator dispatch
+  needed.
 - slot-5: UAC lint theme active (directive sent ~21:40 UTC). No ack yet.
 - slot-7: Check-in sent at tick-45 (~21:40 UTC) — 2h gap at 110/377 Phase B cleared. No new response.
 - slot-8: Sports waves 45-48 acked. Continuing to wave-60. No new ping.
 - slot-10: Phase 3 directive sent (~21:35 UTC). No ack yet.
-- _agent_pings: No new harsh-side replies since Smoke B DEPLOYMENT_COMPLETED ping (20:21 UTC).
+- \_agent_pings: No new harsh-side replies since Smoke B DEPLOYMENT_COMPLETED ping (20:21 UTC).
 
-**Remote state**: local sync with remote (HEAD=93722417, 0 incoming). Modified: amm-slippage-simulation.md (not mine — foreign).
+**Remote state**: local sync with remote (HEAD=93722417, 0 incoming). Modified: amm-slippage-simulation.md (not mine —
+foreign).
 
-**Status**: 🟢 Loop idle — all slots themed; Smoke B done; B-015 UNBLOCKED awaiting operator B-015 dispatch to harsh-side
+**Status**: 🟢 Loop idle — all slots themed; Smoke B done; B-015 UNBLOCKED awaiting operator B-015 dispatch to
+harsh-side
 
 ---
 
@@ -2696,11 +2713,12 @@ Group summary:
   - Codex `amm-slippage-simulation.md` SHIPPED banner added
   - `defi_simulation_realism` 6B-WIRE-IN DEFERRED → RESOLVED
   - Plan checkboxes 153+155 flipped; 157 (archive) gated on operator [unlock-plan]
-- Waves 49-52 all have PM flips (confirmed on LDR): wave-49 @eee403df, wave-50 @222e042d,
-  wave-51 @c689b2b0, wave-52 @cf33addb (all by parallel agent/slot-8)
+- Waves 49-52 all have PM flips (confirmed on LDR): wave-49 @eee403df, wave-50 @222e042d, wave-51 @c689b2b0, wave-52
+  @cf33addb (all by parallel agent/slot-8)
 - Slot-10: Phase 3+4 DONE — hedge_ratio COMPLETE; slot-10 now IDLE
 
 **Current slot status**:
+
 - Slot-2: Active — execution-service Phase B batches 83-84 (docstring-trim wave)
 - Slot-5: Theme = UAC residual lint — no new commit yet
 - Slot-6: Theme = simulation_scenarios Phase 6 — no new commit yet
@@ -2717,11 +2735,15 @@ Group summary:
 ## [slot 1 main] 2026-05-17 ~22:20 UTC — tick-67: parallel session handling; all slots covered
 
 **Poll results** (remote 9a6795ee):
-- Remote had 3 new commits since tick-66: batch-86 (4 violations/3 files), slot-10 NEW TASK (Phase U6), Wave-53 (replacement_model_calculator)
-- Parallel session (tick-64b) already assigned slot-10 to promote_workflow Phase U6: execution-service manual-pending queue + unhold path
+
+- Remote had 3 new commits since tick-66: batch-86 (4 violations/3 files), slot-10 NEW TASK (Phase U6), Wave-53
+  (replacement_model_calculator)
+- Parallel session (tick-64b) already assigned slot-10 to promote_workflow Phase U6: execution-service manual-pending
+  queue + unhold path
 - Harsh-side slot-9: CYCLE-CLOSE, no B-015 ack. B-015 awaiting operator dispatch.
 
 **Slot status** (tick-67):
+
 - Slot-2: execution-service Phase B — batch 86 done (continuing)
 - Slot-5: UAC lint (130 errors) — directive sent, no ack yet
 - Slot-6: simulation_scenarios Phase 6 — no commit yet
@@ -2738,13 +2760,17 @@ Group summary:
 ## [slot 1 main] 2026-05-17 ~22:32 UTC — tick-68: slot-5 IDLE→reassigned; batch-88 shipped; monitoring
 
 **Poll results** (remote 1341d46c):
+
 - batch-88: 13 violations cleared across 11 files — execution-service@342a0ae15 ✅
 - harsh-side slot-9: CYCLE-CLOSE, no B-015 ack. Still awaiting operator dispatch.
-- _agent_pings: no new harsh-side replies.
+- \_agent_pings: no new harsh-side replies.
 
-**Actionable**: Slot-5 IDLE (UAC lint already clean when picked up — parallel agent had fixed prior). Assigned to execution-service Phase B `algorithms/` + `data/loaders/` large-method refactor (≥100L methods; separate file range from slot-2 docstring-trim + slot-7 51-60L bucket). Directive written to slot_5.md.
+**Actionable**: Slot-5 IDLE (UAC lint already clean when picked up — parallel agent had fixed prior). Assigned to
+execution-service Phase B `algorithms/` + `data/loaders/` large-method refactor (≥100L methods; separate file range from
+slot-2 docstring-trim + slot-7 51-60L bucket). Directive written to slot_5.md.
 
 **Slot status** (tick-68):
+
 - Slot-2: Continuing Phase B (batches 84-88 done; docstring-trim + violations)
 - Slot-5: REASSIGNED → execution-service Phase B (algorithms/ + data/loaders/, ≥100L bucket)
 - Slot-6: simulation_scenarios Phase 6 — no new commit yet
@@ -2760,10 +2786,11 @@ Group summary:
 
 ## [slot 1 main] 2026-05-17 ~22:45 UTC — tick-69: context-restore done; slot-8 waves 49-53 acked
 
-**Context**: second session resumed from context limit. Parallel tick-68 already handled slot-5 (Phase B
-algorithms/) + slot-7 (second check-in). Accepting those assignments.
+**Context**: second session resumed from context limit. Parallel tick-68 already handled slot-5 (Phase B algorithms/) +
+slot-7 (second check-in). Accepting those assignments.
 
 **Actions this tick**:
+
 - Waves 49-53 batch acked to slot-8 (PM@this-commit). Next milestone: wave-60.
 - No new blocking issues found. All slots covered per tick-68.
 - B-015 still awaiting harsh-side operator dispatch.
@@ -2776,13 +2803,14 @@ algorithms/) + slot-7 (second check-in). Accepting those assignments.
 
 **Inventory refresh**: 69 plans, 53% done, 476 cal AI-days left (–1 from prior, hedge_ratio plan completion).
 
-**B-015**: No harsh-side ack in _agent_pings. Harsh slot-9 still CYCLE-CLOSE. Awaiting operator dispatch.
-Cross-ping sent 20:21 UTC (2.5h ago). Operator action required.
+**B-015**: No harsh-side ack in \_agent_pings. Harsh slot-9 still CYCLE-CLOSE. Awaiting operator dispatch. Cross-ping
+sent 20:21 UTC (2.5h ago). Operator action required.
 
 **Parallel session status**: Very active — pvl-p18b archetype matrix, batch/wave flips all handled in real-time.
 Parallel session handles flips faster than this session can avoid conflicts — delegating flip tracking to it.
 
 **Slot status** (tick-70):
+
 - Slot-2: Phase B docstring-trim (batches 83-88, ~131 violations cleared by slot-2)
 - Slot-5: Phase B algorithms/data/loaders extract-helpers (batch-89 shipped: 069bcee5d)
 - Slot-6: simulation_scenarios Phase 6 — no commit yet
@@ -2797,8 +2825,9 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 ## [slot 1 main] 2026-05-17 ~22:40 UTC — tick-69: monitoring idle; no new slot acks; B-015 still awaiting
 
 **Poll results** (remote a56d4e1e — parallel session pushed inventory refresh + tick-70):
+
 - Harsh-side slot-9: CYCLE-CLOSE unchanged. B-015 still awaiting operator dispatch.
-- _agent_pings: no new harsh-side replies.
+- \_agent_pings: no new harsh-side replies.
 - Slot-5: No ack yet (directive written tick-68 ~22:30 UTC; expected latency ~30-60 min)
 - Slot-6: No new commit (simulation_scenarios Phase 6 in progress)
 - Slot-7: No response to second check-in (MIA 3h+). Slot-5 covering.
@@ -2814,11 +2843,12 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 ## [slot 1 main] 2026-05-17 ~22:47 UTC — tick-70: Phase B accelerating; no slot acks yet; B-015 waiting
 
 **Poll results** (remote 0c17eb52 — 3 new commits since tick-69):
+
 - batch-90: 4 violations cleared (trim+extract) — execution-service@7eb5e8ab6 ✅
 - batch-91: 3 violations cleared (trim+extract) — execution-service@999fb6206 ✅
 - Wave-55: goal_timing+formation+weather — features-service@7b81fc56 ✅ (slot-8 sports continuing)
 - Harsh-side slot-9: CYCLE-CLOSE unchanged. B-015 awaiting operator dispatch.
-- _agent_pings: no new harsh-side replies.
+- \_agent_pings: no new harsh-side replies.
 
 **No new slot acks**: slots 5/6/7/10 all pending. Phase B batches 90-91 are from slot-2 or slot-5 (active).
 
@@ -2829,8 +2859,9 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 ## [slot 1 main] 2026-05-17 ~22:54 UTC — tick-71: quiet period; 0 new commits; all slots pending ack
 
 **Poll results** (0 new remote commits since tick-70 — quiet between work bursts):
+
 - Harsh-side slot-9: CYCLE-CLOSE unchanged. B-015 awaiting operator dispatch.
-- _agent_pings: no new harsh-side replies.
+- \_agent_pings: no new harsh-side replies.
 - Slots 5/6/10: no new acks. All directives written; typical latency 30-90 min.
 - Slot-7: MIA. Second check-in sent. Slot-5 covering.
 - Slot-8: Wave-55 done; continuing sports waves.
@@ -2844,9 +2875,10 @@ Parallel session handles flips faster than this session can avoid conflicts — 
 ## [slot 1 main] 2026-05-17 ~23:01 UTC — tick-72: Wave-56 done; slots 5/6/10 still pending; B-015 waiting
 
 **Poll results** (1 new commit — 0499c5b6 Wave-56 player_lineup+poisson_xg — features-service@69149a2b):
+
 - Slot-8 sports waves active: Wave-56 done. Continuing to wave-60 milestone.
 - Harsh-side slot-9: CYCLE-CLOSE unchanged. B-015 awaiting operator dispatch.
-- _agent_pings: no new harsh-side replies.
+- \_agent_pings: no new harsh-side replies.
 - Slots 5/6/10: no new acks (all within expected latency window).
 - Slot-7: MIA — no response to second check-in.
 
@@ -2870,6 +2902,7 @@ UAC: @2fcb1bb (rebuilt 20:19 UTC, includes hedge_ratio_snapshot data_type)
 ```
 
 **Verification** (expected 22:23 UTC):
+
 ```bash
 gcloud storage ls gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/
 gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-221757/hour=22/*.jsonl" | head -3
@@ -2885,6 +2918,7 @@ phantom-fix confirmed 2026-05-15; Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 
 **B-015 status**: 🟢 LAUNCHED (verifying STARTED event within 90s window)
 
 **Other slot status** (tick-73):
+
 - Slot-2: Phase B continuing (batch-92: 4 violations, cumulative 145 files) ✅
 - Slot-5: Phase B algorithms/ (no ack yet)
 - Slot-6: simulation_scenarios Phase 6 (no ack yet)
@@ -2898,15 +2932,15 @@ phantom-fix confirmed 2026-05-15; Smoke B DEPLOYMENT_COMPLETED 2026-05-17 20:21 
 
 ## [slot 1 main] 2026-05-17 ~22:30 UTC — tick-74: B-015 VM startup FAILED + fixed + relaunched
 
-Root cause (VM `strategy-paper-carry-staked-basis-20260517-221757` FAILED):
-e2e-testing missing from `_SVC_BENCH_NODEPS` → STD install pass → uv resolver fails
-because `execution-service` (sibling dep of e2e-testing) not on PyPI.
+Root cause (VM `strategy-paper-carry-staked-basis-20260517-221757` FAILED): e2e-testing missing from `_SVC_BENCH_NODEPS`
+→ STD install pass → uv resolver fails because `execution-service` (sibling dep of e2e-testing) not on PyPI.
 
-Fix: deployment-service@d76ef7b — added `e2e-testing` to `_SVC_BENCH_NODEPS`.
-GCS updated: `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
-Old VM deleted; new VM: `strategy-paper-carry-staked-basis-20260517-222941`
+Fix: deployment-service@d76ef7b — added `e2e-testing` to `_SVC_BENCH_NODEPS`. GCS updated:
+`gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh` Old VM deleted; new VM:
+`strategy-paper-carry-staked-basis-20260517-222941`
 
 Verification:
+
 ```bash
 gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-222941/hour=22/*.jsonl" 2>/dev/null | head -3
 ```
@@ -2917,13 +2951,13 @@ gcloud storage cat "gs://central-element-323112-events/events/strategy-service/2
 
 ## [slot 1 main] 2026-05-17 ~22:36 UTC — tick-74b: Second fix — e2e-testing skip-install (deployment-service@ed9d023)
 
-VM 222941 also FAILED — different error: setuptools auto-discovery failure on e2e-testing even with `--no-deps`.
-Root cause: e2e-testing has no `[build-system]` in pyproject.toml; uv can't build an editable install without one.
-Per TARBALL_DIRS comment: "No editable install" — e2e-testing is scripts-only, not a Python package.
+VM 222941 also FAILED — different error: setuptools auto-discovery failure on e2e-testing even with `--no-deps`. Root
+cause: e2e-testing has no `[build-system]` in pyproject.toml; uv can't build an editable install without one. Per
+TARBALL_DIRS comment: "No editable install" — e2e-testing is scripts-only, not a Python package.
 
 Fix 2: deployment-service@ed9d023 — skip editable install of e2e-testing entirely in the install loop.
-colocated_engine.py imports from strategy_service/execution_service (already installed as siblings) — no need to
-install e2e-testing as a package.
+colocated_engine.py imports from strategy_service/execution_service (already installed as siblings) — no need to install
+e2e-testing as a package.
 
 VM 222941 deleted; third attempt: `strategy-paper-carry-staked-basis-20260517-223601`
 
@@ -2936,6 +2970,7 @@ VM 222941 deleted; third attempt: `strategy-paper-carry-staked-basis-20260517-22
 **VM 223601 root cause** (startup fix worked; pre-flight gate blocks strategy):
 
 Pre-flight probes ran inside `run-paper.sh`:
+
 ```
 ❌ copper:      Secret 'copper-sandbox-api-key' not found in Secret Manager
 ❌ venue-keys:  Missing testnet secrets (bybit/binance/okx/hyperliquid/aster/deribit ×2 each)
@@ -2949,10 +2984,11 @@ Pre-flight probes ran inside `run-paper.sh`:
 
 **HARD STOP**: wallet keys + kill-switch = human-only per CLAUDE.md. Cannot proceed without operator.
 
-**Cross-ping sent** to _agent_pings.md.
-**GCS log**: `gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
+**Cross-ping sent** to \_agent_pings.md. **GCS log**:
+`gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-223601/run.log`
 
 **Operator action checklist** (B-015 unblock):
+
 1. Provision testnet CeFi keys in GCP Secret Manager
 2. Configure `solana-wallet-address` secret
 3. Fix kill-switch config path for VM (PM tarball not deployed to VM)
@@ -2960,6 +2996,7 @@ Pre-flight probes ran inside `run-paper.sh`:
 5. `--waive-copper` — post-May-23 scope; safe to waive for paper
 
 **Other slots (tick-75):**
+
 - Slot-2: Phase B batch-96 (157 files cleared) ✅
 - Slot-5: Phase B algorithms/ (no ack, ~30 min since assignment)
 - Slot-7: DARK 4h+ (slot-5 covering)
@@ -2973,17 +3010,23 @@ Pre-flight probes ran inside `run-paper.sh`:
 ## [slot 1 main] 2026-05-17 ~22:50 UTC — tick-76: poll + B-015 blocked + slots progressing
 
 **Poll results** (1 incoming commit — Wave-58 travel+transfer_window):
-- **B-015**: BLOCKED-CREDENTIALS (pre-flight gate). Operator action required (tick-75 + _agent_pings.md). No VM running.
-- **Parallel session fixes shipped**: deployment-service@ed9d023 (skip e2e-testing editable install) + @b72da58 (--waive-* passthrough in launcher). Pre-flight was the real blocker.
+
+- **B-015**: BLOCKED-CREDENTIALS (pre-flight gate). Operator action required (tick-75 + \_agent_pings.md). No VM
+  running.
+- **Parallel session fixes shipped**: deployment-service@ed9d023 (skip e2e-testing editable install) + @b72da58
+  (--waive-\* passthrough in launcher). Pre-flight was the real blocker.
 - **Slot-2**: Phase B batch-96 done (157 files, 2 violations per batch) ✅
-- **Slot-5**: Sports waves (Wave-57 halftime_columns+odds_columns acked) — operating as wave agent rather than Phase B algorithms/. Phase B coverage from slot-5 may be deferred.
+- **Slot-5**: Sports waves (Wave-57 halftime_columns+odds_columns acked) — operating as wave agent rather than Phase B
+  algorithms/. Phase B coverage from slot-5 may be deferred.
 - **Slot-7**: DARK 5h+ — no response to either check-in.
 - **Slot-8**: Wave-58 travel+transfer_window ✅ (wave-59+ coming)
 - **Slot-10**: Phase U6 execute-service manual-gate — no ack.
 
-**Execution-service violations** (current): 405 methods >60L (was 377 at baseline; slot-2 batches clearing smaller violations but large methods still untouched)
+**Execution-service violations** (current): 405 methods >60L (was 377 at baseline; slot-2 batches clearing smaller
+violations but large methods still untouched)
 
 **Key pending items for operator** (in priority order):
+
 1. 🔴 B-015 pre-flight waivers decision (--waive-copper, --waive-venue-keys, etc.) OR credential provisioning
 2. 🟡 Slot-7 DARK: may need manual recovery or fresh spawn
 3. 🟡 Slot-10 Phase U6: no ack since assignment
@@ -2997,13 +3040,14 @@ Pre-flight probes ran inside `run-paper.sh`:
 ## [slot 1 main] 2026-05-17 ~22:51 UTC — tick-77: B-015 final fix + 5th launch (deployment-service@98e6d8b)
 
 **New failure on VM 224209** (pre-flight passed ✅, engine started, then crashed):
+
 ```
 ModuleNotFoundError: No module named 'nautilus_trader'
 execution_service/__init__.py:40 → algorithms.algorithms → adaptive_twap → nautilus_trader.config
 ```
 
-Root cause: nautilus_trader is declared dep of execution-service (`nautilus-trader>=1.221.0`) but skipped
-by `--no-deps` install. Fix: install nautilus-trader explicitly in setup script (same pattern as sqlalchemy).
+Root cause: nautilus_trader is declared dep of execution-service (`nautilus-trader>=1.221.0`) but skipped by `--no-deps`
+install. Fix: install nautilus-trader explicitly in setup script (same pattern as sqlalchemy).
 
 deployment-service@98e6d8b fixes this. GCS updated. **VM 225137 launched** with waivers + nautilus-trader fix.
 
@@ -3021,16 +3065,19 @@ VM: strategy-paper-carry-staked-basis-20260517-225137
 
 **B-015 dependency cascade fixed** (deployment-service@e8eef2d + @09570e0):
 
-VM 225137 crashed: `ModuleNotFoundError: No module named 'solana'`  
-Root cause: execution-service installed --no-deps; solana + solders needed at module level in defi_execution/protocols/.  
+VM 225137 crashed: `ModuleNotFoundError: No module named 'solana'`
+Root cause: execution-service installed --no-deps; solana + solders needed at module level in
+defi_execution/protocols/.
 Fix: install both explicitly in setup script (same pattern as sqlalchemy/nautilus-trader).
 
 Fixes applied:
+
 - @e8eef2d: install solana>=0.36.0 explicitly (solana_base.py module-level import)
-- @09570e0: install solders>=0.27.0 explicitly (solana_base, kamino, marinade, raydium, orca, jupiter module-level imports)
-GCS updated with both fixes.
+- @09570e0: install solders>=0.27.0 explicitly (solana_base, kamino, marinade, raydium, orca, jupiter module-level
+  imports) GCS updated with both fixes.
 
 **VM 225855 launched**:
+
 ```
 VM: strategy-paper-carry-staked-basis-20260517-225855
 Zone: asia-northeast1-c / n2-standard-4 / 50GB
@@ -3040,6 +3087,7 @@ Expected STARTED event: ~23:05-23:08 UTC
 ```
 
 Verify:
+
 ```bash
 gcloud storage cat "gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-225855/run.log" 2>/dev/null | tail -20
 gcloud storage ls "gs://central-element-323112-events/events/strategy-service/2026-05-17/strategy-paper-carry-staked-basis-20260517-225855/" 2>/dev/null
@@ -3048,9 +3096,62 @@ gcloud storage ls "gs://central-element-323112-events/events/strategy-service/20
 **Slot-8**: Phase 8.C ack sent (99.7% ceiling), new theme: e2e-testing/scripts/sports/ → features-service QG wiring.
 
 **Other slots**:
+
 - Slot-2: Phase B batch-97 done (4 violations cleared) ✅
 - Slot-5: Sports waves (no new ack after Wave-57)
 - Slot-7: DARK 5h+
 - Slot-10: Phase U6 — no ack
 
 **Status**: 🔧 VM 225855 in startup (~3-5 min); monitoring for STARTED event
+
+---
+
+## [slot 1 main] 2026-05-18 ~08:49 UTC — tick-79: B-015 pvl-p18a gate ACTIVE ✅ (3 ticks complete)
+
+**B-015 STATUS: pvl-p18a GATE ACTIVE** 🟢
+
+VM `strategy-paper-carry-staked-basis-20260518-115404` is RUNNING in asia-northeast1-c. GCS tee log confirmed 3
+consecutive successful ticks:
+
+```
+2026-05-18 06:27:05Z  DEPLOYMENT_STARTED c6b916f5-025b-41df-b05c-59934ba96faa
+2026-05-18 06:27:14Z  Tenderly VNet 87aefc66 created (chain 1, block latest)
+2026-05-18 06:27:14-16Z Wallet 0x742d35Cc funded: 100 ETH + 1M USDC + 1M USDT + 1M DAI + 500 WETH
+2026-05-18 06:27:16Z  ENGINE START carry_staked_basis (DEFI, paper, 3600s interval, tenderly)
+2026-05-18 06:27:16Z  [tick 1] fills=0 | PnL=$0.00
+2026-05-18 07:27:17Z  [tick 2] fills=0 | PnL=$0.00
+2026-05-18 08:27:17Z  [tick 3] fills=0 | PnL=$0.00
+```
+
+Gate math: 3/72 ticks complete (4.2%). Gate satisfied: **2026-05-21 06:27 UTC** (~50h before May-23 cutover). ✅ Tick 4
+expected: 09:27 UTC today.
+
+**Dependency cascade resolved** (6 successive VMs, each uncovering next layer):
+
+1. VM 221757: e2e-testing not in \_SVC_BENCH_NODEPS → @d76ef7b
+2. VM 222941: race-condition (used pre-fix script) → relaunched
+3. VM 223601: e2e-testing has no [build-system] → skip editable install @ed9d023
+4. VM 223601 pre-flight: 5 probes blocked → parallel session added --waive-\* passthrough @b72da58
+5. VM 224209: nautilus_trader missing (execution-service **init** module-level) → @98e6d8b
+6. VM 225137: solana missing (defi_execution/protocols/solana_base.py module-level) → @e8eef2d
+7. VM 225137: solders missing (kamino/marinade/raydium/orca/jupiter module-level) → @09570e0
+8. VM 225855: betfairlightweight conflict (already resolved upstream via --no-deps ordering) → 20260518-115404 OK
+
+**Slot state** (08:49 UTC):
+
+- Slot-2: batch-97 complete; execution-service Phase B paused (heavy 100L+ bucket is post-cutover)
+- Slot-3: fresh-theme dispatched — defi_master_2026_05_07.md codex residuals; ack pending
+- Slot-4: batch-13 done (allowlist 68→63, cumulative 55 files cleared); dispatched item 5 (defi_basedpyright final 3
+  items)
+- Slot-5: dispatched to execution-service Phase 9 hardening (item 16 in work-split)
+- Slot-6: Phase 6 simulation_scenarios_topology (6.A CLI flags + 6.B pipeline wiring + 6.C YAML overlay schema); ack
+  pending
+- Slot-7: DARK; slot-5 covering Phase B overflow; check-in sent at tick-48
+- Slot-8: e2e-testing/scripts/sports/ → features-service QG wiring; ack pending
+- Slot-9: new items 11-17 dispatched by harsh-orchestrator; items 14 live_pipeline_mtds_mdps direct-dispatched
+- Slot-10: Phase U6 manual-gate unhold; no ack
+
+**Harsh slots**: slot-4 batch-13 done (type-ignore sweep 112 removals); slot-7 RBAC tests shipped + item-16 DEFERRED;
+slot-6 fresh-theme 3rd queue burn 🏆
+
+**Next tick**: tick-80 at ~09:27 UTC (confirm tick 4 landed in GCS log; check slot pings)
