@@ -16,7 +16,7 @@ between batch and live modes.
 Pub/Sub subscriptions (risk-breach, circuit-breaker, fill-events, etc.)
   → AlertSubscriber.stream()
   → route_event() — rules + dedup + cooldown
-  → PagerDuty / Telegram / Slack (actual delivery)
+  → PagerDuty / Telegram (actual delivery — Slack deprecated, AL-6 2026-05-12)
   → GCS audit log (alerting/history/date={date}/)
 ```
 
@@ -111,6 +111,32 @@ SSOTs:
 - Coalesce impl: `alerting-service/alerting_service/notifiers/router.py` (`_COALESCE_WINDOW_SECONDS`,
   `_COALESCED_EVENT_NAMES`, `_check_coalesce_window`).
 - Tests: `alerting-service/tests/unit/notifiers/test_router_coalesce.py` (22 unit tests covering all coalesce shapes).
+
+## DeFi Operational Alert Codes (Phase 1.E, 2026-05-13)
+
+8 codes added at UAC@`086144e` — DeFi pre-cutover operational readiness for `carry_staked_basis` +
+`arbitrage_price_dispersion`. AlertCode closed set: 61 → 69.
+
+| AlertCode                        | Severity | Channels             | Threshold key                           | Purpose                                                     |
+| -------------------------------- | -------- | -------------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `VENUE_HALTED`                   | HIGH     | PagerDuty + Telegram | —                                       | Exchange/DEX halted trading (venue-wide)                    |
+| `LENDING_POOL_PAUSED`            | HIGH     | PagerDuty + Telegram | —                                       | Aave/Compound pool paused (supply/borrow disabled)          |
+| `LENDING_BORROW_CAP_REACHED`     | WARN     | Telegram only        | —                                       | Pool borrow cap hit (transient — may clear in one block)    |
+| `LENDING_UTILIZATION_HIGH`       | WARN     | Telegram only        | `lending_utilization_high_bps` = 9000   | Early warning before Aave kink at 9500 bps                  |
+| `MARKET_DATA_STALE`              | HIGH     | PagerDuty + Telegram | `market_data_stale_seconds` = 300       | Generic consuming-service staleness (complements per-instrument `TICK_STALENESS`) |
+| `GAS_PRICE_SPIKE`                | WARN     | Telegram only        | `gas_price_spike_gwei` = 200            | Gas economics alert; does not halt                          |
+| `GAS_BUDGET_EXCEEDED`            | HIGH     | PagerDuty + Telegram | `gas_budget_exceeded_eth` = 1           | Execution gas budget blown; operator review required        |
+| `KILL_SWITCH_ORACLE_DIVERGENCE`  | CRITICAL | PagerDuty + Telegram | `oracle_staleness_seconds` (threshold)  | Oracle price deviation OR staleness; `KillSwitchScope.GLOBAL` — halts ALL strategies |
+
+`KILL_SWITCH_ORACLE_DIVERGENCE` sets `triggers_kill_switch=True` + `kill_switch_scope=KillSwitchScope.GLOBAL` — covers
+both oracle price deviation and oracle staleness as equally unsafe signals.
+
+SSOTs:
+- UAC `unified_api_contracts.alerting.AlertCode` (codes) + `LIVE_ALERT_RULES` (routing rules) + `ALERT_THRESHOLDS`
+  (thresholds) — all at UAC@`086144e`.
+- 12 taxonomy tests in `unified-api-contracts/tests/internal/unit/test_alerting_taxonomy.py`.
+- Plan: `alerting_service_live_rules_2026_05_07.md` § "Phase 1.E — Venue / lending / market-data / gas / oracle
+  kill-switch AlertCode extensions".
 
 ## Live-Pipeline Alert Tier Table
 

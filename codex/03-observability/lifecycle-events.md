@@ -148,6 +148,26 @@ Per [`../04-architecture/live-strategy-config-hot-reload.md`](../04-architecture
 | -------------------------- | -------------------------------------------------------------------- |
 | `STRATEGY_CONFIG_RELOADED` | `StrategyConfigReloader` applied a config delta; payload is the diff |
 
+### Kill-switch bus (alerting → execution, Pub/Sub)
+
+When alerting-service fires a `KILL_SWITCH_*` alert code, it publishes a typed `KillSwitchEvent` to the
+`kill-switch-bus` Pub/Sub topic. This is a **domain event** (not a `log_event()` lifecycle event) — it does not
+appear in the lifecycle event stream. Execution-service and strategy-service subscribe to this topic and auto-halt
+without operator intervention.
+
+`KillSwitchEvent` payload: `{code: AlertCode, scope: KillSwitchScope, triggered_at, correlation_id}`.
+
+`KillSwitchScope` values: `GLOBAL` (halt all strategies), `VENUE` (halt named venue adapters only),
+`ARCHETYPE` (halt named strategy archetype only). Per-code scope is validated at `AlertRule` construction time —
+`KILL_SWITCH_*` codes require non-None scope; all other codes must have `kill_switch_scope=None`.
+
+SSOTs:
+- alerting-service Phase 1.C: `alerting-service/alerting_service/notifiers/router.py` (`_publish_kill_switch_event`
+  helper, post-channel-dispatch wire). alerting-service@`8eda37c`.
+- UAC: `unified_api_contracts.canonical.crosscutting.alerting.codes.KillSwitchScope` (enum).
+- Tests: `alerting-service/tests/integration/test_kill_switch_publisher_hook.py` (5 integration tests).
+- Per-code scope mapping: `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch family".
+
 ### Per-instrument progress (silent-success-with-zero-output detector)
 
 Adapters that fan out across instruments MUST emit per-instrument progress events with row counts so a clean
