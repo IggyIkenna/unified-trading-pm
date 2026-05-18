@@ -643,3 +643,28 @@ allowlist); my Half-2 entries note the SHA at which my push landed even when slo
 **Truly STOPPING**: 100+ remaining allowlist files are the heavier `engine/backtest` + `algorithms/impl` cluster
 (majority 100L+ functions) — material refactors that warrant dedicated cycles, not a tail-end one-shot sweep.
 Post-cutover Phase B per the issue doc. No new operator/cross-slot signals in the last hour requiring action.
+
+---
+
+## [main → slot 2] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: delegate-flip UTL+batch-live-recon+strategy-service
+
+**New Ikenna work split landed** (`c7aca145`): your slot = **bucket_name_ssot delegate-flip** across 3 repos.
+
+Find callsites:
+```bash
+rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
+  unified-trading-library/ batch-live-reconciliation-service/ strategy-service/ \
+  --glob '!.venv*' --glob '!tests'
+```
+
+**Items**:
+1. UTL (23 callsites → 0): `cd .tabs/2/unified-trading-library && bash scripts/quality-gates.sh` after each batch
+2. batch-live-recon (7 callsites → 0): `cd .tabs/2/batch-live-reconciliation-service && bash scripts/quality-gates.sh`
+3. strategy-service (2 callsites → 0): `cd .tabs/2/strategy-service && bash scripts/quality-gates.sh`
+4. Flip `bucket_name_ssot_canonicalisation_2026_05_10.md` checkboxes per repo completed
+
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`
+**Half-1+Half-2**: code commit + `docs(plans):` flip in same turn. Push each repo separately.
+**Conflict-risk**: NONE — UTL/batch-live-recon are not in Harsh's active surface today.
+
+Acknowledge "STARTED UTL delegate-flip" within 10 min.

@@ -1308,3 +1308,25 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 - `engine/validation/backtest_validator.py::validate_data_availability`: 75L→43L (extract _validate_missing_catalog_data)
 
 **Running count**: ~119/377 cleared (~32%); continuing tick-47.
+
+---
+
+## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
+
+**New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
+
+Gate 4 FIRED 2026-05-13 for β-audit, but actual `record_*` callsites still need wiring.
+
+**Pattern per service**: (1) UAC `SERVICE_OUTPUT_POLICIES` entry; (2) `record_*` at output-write boundaries; (3) `publish_with_manifest_lookup()` integration; (4) per-output-type UAC schema; (5) unit + integration tests.
+
+**Items**:
+1. Phase 6.6 — ml-training-service: `record_captured`/`record_empty` at model artifact write boundaries + UAC entry + tests
+2. Phase 6.6 — ml-inference-service: same pattern
+3. Phase 6.7 — strategy-service: signal output → `record_captured` at strategy output write boundary
+4. Phase 6.7 — risk-and-exposure-service: same pattern
+5. Flip `writegate_honest_coverage_endtoend_2026_05_06.md` checkboxes per service + push `docs(plans):` flips
+
+**Plan**: `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.6/6.7
+**Conflict-risk**: strategy-service + execution-service bucket-naming = Slots 2/5. Writegate wiring is DIFFERENT surface.
+
+Acknowledge "STARTED writegate Phase 6.6 ml-training" within 10 min.

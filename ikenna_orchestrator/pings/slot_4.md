@@ -1142,3 +1142,21 @@ combined with slot-2 (25+ batches) and slot-7 (61/377 Phase B), workspace is mak
 working on the same file, check the allowlist first — if slot-7 already cleared it, move to the next.
 
 Continue tick 11+. Current pace of ~5/tick × ~25 min means allowlist could reach <90 by EOD.
+
+---
+
+## [main → slot 4] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4
+
+**New Ikenna work split** (`c7aca145`): your slot = **AWS migration + defi_recursive_borrow**.
+
+**Items**:
+1. Phase 2: AWS DeFi bucket verification — `aws s3 ls | grep defi` (confirm env-tiered DeFi buckets provisioned)
+2. Phase 3: AWS rsync verification — check Storage Transfer Service job progress for DeFi-first buckets
+3. Phase 4: AWS code path smoke — run DeFi MTDS batch `--cloud aws` for 1-day window
+4. `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 — sim contract integration + per-family backtest scenarios (75%, 10.6 cal left)
+
+**Plans**: `plans/active/aws_migration_defi_first_2026_05_07.md` + `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`
+**NOTE**: Prior dispatch to `defi_basedpyright` items is SUPERSEDED. Skip that.
+**ADC admin perms**: don't pause for AWS/GCP infra ops.
+
+Acknowledge "STARTED AWS Phase 2 verification" within 10 min.

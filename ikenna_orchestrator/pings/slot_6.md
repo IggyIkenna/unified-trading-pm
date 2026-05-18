@@ -644,3 +644,28 @@ unified pipeline. `ScenarioContext` propagates via config-reloader pattern.
 Schema published to `unified-api-contracts/schemas/scenario_overlay.schema.json`.
 
 QG after each repo (strategy-service + UAC). Half-2 flip in same turn. Ping slot-1 when Phase 6 shipped.
+
+---
+
+## [main → slot 6] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: delegate-flip deployment-api (27) + code_freeze Phase 2.6
+
+**New Ikenna work split** (`c7aca145`): your slot = **delegate-flip deployment-api + code_freeze runbook**.
+
+Find callsites:
+```bash
+rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
+  deployment-api/ --glob '!.venv*' --glob '!tests'
+```
+
+**Part A — Delegate-flip**:
+1. deployment-api (27 callsites → 0): batch by module. `cd .tabs/6/deployment-api && bash scripts/quality-gates.sh` after each batch
+**Conflict-risk**: deployment-api RBAC tests = Harsh slot 7. Bucket-naming is DIFFERENT surface. `git fetch` before push.
+
+**Part B — `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6**:
+2. Phase 2.6 Step 4 completion audit: verify all delegate-flip callsites from slots 2/3/5/6 landed on LDR before write-pause. Create checklist.
+3. Phase 2.6 Step 5 prep: archive plan for old flat buckets (30-day hold procedure)
+
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` + `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`
+**NOTE**: Prior dispatch to "simulation_scenarios_topology" is SUPERSEDED by this split.
+
+Acknowledge "STARTED deployment-api delegate-flip" within 10 min.

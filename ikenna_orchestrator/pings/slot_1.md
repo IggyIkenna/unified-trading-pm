@@ -3218,3 +3218,32 @@ slot-6 fresh-theme 3rd queue burn 🏆
 - All ikenna slots (3/4/5/6/8/10): dispatched, no acks yet
 
 **Status**: 🟢 Slot-2 rethemed. Tick-4 window approaching.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:06 UTC — tick-83: NEW IKENNA WORK SPLIT dispatched; tick-4 21 min out
+
+**B-015**: VM `20260518-115404` RUNNING. Still 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (21 min). VM RUNNING confirmed.
+
+**NEW IKENNA WORK SPLIT** (`c7aca145` — 09:02 UTC): Cycle 2 Day-3 — delegate-flip campaign + cutover work.
+
+Dispatched all 7 ikenna slots with correct assignments:
+- **Slot 2**: UTL (23) + batch-live-recon (7) + strategy-service (2) delegate-flip → `bucket_name_ssot` plan
+- **Slot 3**: UAC (5) + features-service (2) delegate-flip + defi_catalogue close (10 items) 
+- **Slot 4**: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4
+- **Slot 5**: execution-service (33) + UI (4) delegate-flip + api_keys Phase 5.B/5.C scaffold
+- **Slot 6**: deployment-api (27) delegate-flip + code_freeze Phase 2.6 Step 4/5
+- **Slot 7**: writegate Phase 6.6 (ml-training + ml-inference) + 6.7 (strategy + risk)
+- **Slot 8**: batch_live_symmetry Tab 2 codex docs + alerting_service_live_rules 15 remaining items
+
+Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPERSEDED by this split.
+
+**Total delegate-flip callsites to migrate**: 103 (UTL 23 + UAC 5 + features 2 + execution 33 + UI 4 + deployment-api 27 + batch-live-recon 7 + strategy 2).
+
+**Harsh slots**: slot-2 all-17-done; fresh Phase 9 theme dispatched. Slot-3/6 awaiting defi_master/simulation acks. Slot-9 silent 33+ min.
+
+**Incoming commits since tick-82**:
+- `26336f55`: harsh slot-7 items 14+15 flipped (deployment-ui lifecycle_tabs + promote_workflow)
+- `c7aca145`: NEW Ikenna work split (delegate-flip + cutover, 8-slot allocation)
+
+**Status**: 🟢 All ikenna slots dispatched to correct assignments. Tick-4 window approaching.

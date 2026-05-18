@@ -794,3 +794,29 @@ Without it: integration tests skip; unit + scaffold shipped at MTDS@cab6f57 (29 
 
 Adapter scaffold + 29 unit tests shipped at MTDS@cab6f57 (2026-05-17). Plan-flip at PM@dd6d4248. Status:
 `BLOCKED-CREDENTIALS` — waiting for operator ack on credit quota upgrade.
+
+---
+
+## [main → slot 3] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: delegate-flip UAC+features-service + defi_catalogue close
+
+**New Ikenna work split** (`c7aca145`): your slot = **delegate-flip + defi_catalogue**.
+
+Find callsites:
+```bash
+rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
+  unified-api-contracts/ features-service/ \
+  --glob '!.venv*' --glob '!tests'
+```
+
+**Part A — Delegate-flip**:
+1. UAC (5 callsites → 0): `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh`
+2. features-service (2 callsites → 0): `cd .tabs/3/features-service && bash scripts/quality-gates.sh`
+
+**Part B — `defi_catalogue_chain_primitives_2026_05_10` close-out** (58/68 = 85%, 10 items open):
+3. Chain-primitive UAC schema additions for remaining uncovered protocols
+4. MTDS wiring for chain primitives
+
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` + `plans/active/defi_catalogue_chain_primitives_2026_05_10.md`
+**NOTE**: Prior dispatch to `defi_master_2026_05_07.md` is SUPERSEDED by this split. Skip defi_master.
+
+Acknowledge "STARTED UAC delegate-flip" within 10 min.

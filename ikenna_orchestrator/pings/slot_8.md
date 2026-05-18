@@ -818,3 +818,19 @@ Steps:
 **Half-1+Half-2**: code commit + `docs(plans):` flip in same turn.
 Ping slot-1 when shipped.
 
+
+---
+
+## [main → slot 8] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: batch_live_symmetry Tab 2 codex + alerting rules close
+
+**New Ikenna work split** (`c7aca145`): your slot = **batch_live_symmetry codex docs + alerting_service_live_rules close**.
+
+**Items**:
+1. Tab 2 — `cefi-batch-live.md` codex doc: write/update `codex/10-batch-live/cefi-batch-live.md` (~200 lines: architecture, data flow, invariants, batch=live contract proof)
+2. Tab 2 — `mode-axis-discipline.md` codex doc: write/update `codex/` SSOT for `--mode batch|live` axis + `PIPELINE_MODE` enforcement
+3. `alerting_service_live_rules_2026_05_07` — 15 remaining items (plan at 51/66 = 77%); pick open `- [ ]` items
+
+**Plans**: `plans/active/batch_live_symmetry_2026_05_10.md` + `plans/active/alerting_service_live_rules_2026_05_07.md`
+**NOTE**: Prior dispatch to "e2e-testing QG wiring" is SUPERSEDED by this split.
+
+Acknowledge "STARTED batch_live_symmetry Tab 2" within 10 min.

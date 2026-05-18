@@ -1681,3 +1681,31 @@ for root, _, files in os.walk('execution_service'):
 `docs(plans):` flip in same turn. Per-file batches, 3-5 files per commit.
 
 Ping slot-1 when first batch shipped (SHA + violation count cleared). Next milestone: reduce by ≥20 violations.
+
+---
+
+## [main → slot 5] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: delegate-flip execution-service+UI + api_keys Phase 5.B
+
+**New Ikenna work split** (`c7aca145`): your slot = **delegate-flip execution-service + UI + api_keys scaffold**.
+
+Find callsites:
+```bash
+rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
+  execution-service/ --glob '!.venv*' --glob '!tests'
+# UI (TypeScript):
+rg "get_bucket_name\|gs://.*\$\{" unified-trading-system-ui/ --type ts --type tsx
+```
+
+**Part A — Delegate-flip**:
+1. execution-service (33 callsites → 0): batch by module. `cd .tabs/5/execution-service && bash scripts/quality-gates.sh` after each batch
+2. UI (4 callsites → 0): fix + push
+
+**Part B — `api_keys_wallets_accounts_readiness_2026_05_10` Phase 5.B + 5.C**:
+3. Polymarket/Kalshi prediction credential scaffold (auth adapter + unit tests, `@pytest.mark.requires_credentials`)
+4. CoinGecko + Helius DeFi-data credential scaffold
+
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` + `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`
+**Conflict-risk**: execution-service lint (C901/E501) = Harsh slot 2. Bucket-naming is DIFFERENT surface. `git fetch` before each batch.
+**NOTE**: Prior dispatch to "execution Phase 9 hardening" is SUPERSEDED by this split.
+
+Acknowledge "STARTED execution-service delegate-flip" within 10 min.
