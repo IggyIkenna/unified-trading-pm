@@ -1,4 +1,9 @@
-# CARRY_RECURSIVE_BORROW_PERP_HEDGED - Family 2 archetype
+# CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to `CARRY_BASIS_PERP_INV` (2026-05-18)
+
+> **⚠️ RENAMED**: This archetype was renamed to `CARRY_BASIS_PERP_INV` on 2026-05-18 per
+> `strategy_archetype_taxonomy_2026_05_12.md` §5. The UAC enum, strategy-service factory, and catalog have all been
+> updated. **Canonical doc**: [carry-basis-perp-inv.md](carry-basis-perp-inv.md). This file is kept for historical
+> reference only.
 
 > **Sibling archetypes:** [carry-recursive-staked.md](./carry-recursive-staked.md) (Family 0) -
 > [carry-recursive-borrow-lending-only.md](./carry-recursive-borrow-lending-only.md) (Family 1)
@@ -123,7 +128,8 @@ latency (default 5000ms). `CLOSE_LEADER_IF_HEDGE_FAILS` triggers a flash-unwind 
 
 **Code-backport status:** SHIPPED — `execution-service@2a185b7e8` ships `RecursiveLoopOrchestrator` with perp-leg config
 slot. `RecursiveLeverageReceiver.sol` deployed Sepolia at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`. HL+Bybit
-adapters wired in execution-service per Phases 6+7 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` (Phase 10+).
+adapters wired in execution-service per Phases 6+7 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`
+(Phase 10+).
 
 ## Kill-switch surface (additive to Family 1)
 

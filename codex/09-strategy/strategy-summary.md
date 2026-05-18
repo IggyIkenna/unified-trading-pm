@@ -12,12 +12,12 @@ reference-only.
 
 **Core mental model:** Every strategy decomposes into:
 
-| Layer                  | Count | What it captures                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Families               | 9     | Orthogonal alpha styles (ML Directional, Rules Directional, Carry & Yield, Arbitrage/Structural, Market Making, Event-Driven, Vol Trading, Stat Arb/Pairs, **Portfolio**). PORTFOLIO added 2026-04-25 (cross-category sleeves) per Phase 9 of `dart_ui_strategy_filtering_and_onboarding_2026_04_24.md`.                                                                                                                                                      |
+| Layer                  | Count | What it captures                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Families               | 9     | Orthogonal alpha styles (ML Directional, Rules Directional, Carry & Yield, Arbitrage/Structural, Market Making, Event-Driven, Vol Trading, Stat Arb/Pairs, **Portfolio**). PORTFOLIO added 2026-04-25 (cross-category sleeves) per Phase 9 of `dart_ui_strategy_filtering_and_onboarding_2026_04_24.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Archetypes             | 57    | Specific code paths within a family (e.g.`CARRY_BASIS_PERP`, `ML_DIRECTIONAL_CONTINUOUS`). 2026-04-25 Phase 9 expansion grew the surface from 18 to 53: VOL family 1→19, MM family 2→10 (incl. 3 DeFi LP variants), ARBITRAGE_STRUCTURAL 2→7 (incl. 4 MEV + cross-domain event arb), PORTFOLIO 0→4. Subsequent additions: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → **55**. 2026-05-12 operator taxonomy decision: `CARRY_RECURSIVE_BORROW_PERP_HEDGED` renamed `CARRY_BASIS_PERP_INV` (net 0); added `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV` → **57** (uac@0196842, 2026-05-18). **SSOT**: `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` + `ARCHETYPE_TO_FAMILY` dict — that file is canonical; this doc reflects it. |
-| Axes of composition    | 7     | signal × edge × staking × venue × expression × hold-policy × share-class                                                                                                                                                                                                                                                                                                                                                                                      |
-| Cross-cutting concerns | 10    | Risk gates, venue selection, execution policies, transfers, allocator, MEV, benchmark fills, capital isolation, trade expression, venue-account coordination                                                                                                                                                                                                                                                                                                  |
+| Axes of composition    | 7     | signal × edge × staking × venue × expression × hold-policy × share-class                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Cross-cutting concerns | 10    | Risk gates, venue selection, execution policies, transfers, allocator, MEV, benchmark fills, capital isolation, trade expression, venue-account coordination                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 A strategy's identity has **5 layers** : family → archetype → instance → config → derived categories. Communication with
 execution happens through a **polymorphic `StrategyInstruction`** with 14 action types (TRADE, SWAP, LEND, BORROW,
@@ -62,8 +62,8 @@ the Phase 9 DeFi LP archetypes (LP_MINT + LP_BURN are 2 distinct enum members, n
    expanded the archetype set to 53 to cover MEV, DeFi LP, full vol-surface trading, prediction MM, cross-category event
    arb, and portfolio sleeves; the subsequent `CARRY_RECURSIVE_STAKED` split — into
    `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — brought the total to **55**;
-   2026-05-18 operator taxonomy decision renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` and
-   added `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV` → **57**.)
+   2026-05-18 operator taxonomy decision renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` and added
+   `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV` → **57**.)
 2. **Categories become derived labels** , not routing axes — no more `CEFI_ML_DIRECTIONAL_BTC` vs
    `TRADFI_ML_DIRECTIONAL_SPY` duplication.
 3. **Unify capital flow** across DeFi bridges, CEX wallet transfers, Unity sports pools, and TradFi tunnels via a single
@@ -186,7 +186,8 @@ construction it spans family instances (its `primary_category` is `CROSS_CATEGOR
 **Distinguishing test called out in the docs:** is the edge _mechanical_ (guaranteed conditional on correct execution)
 or _statistical_ (profitable on average with spread risk)? Mechanical → Arbitrage. Statistical → Vol Trading / Stat Arb.
 
-**9. Portfolio** — _added 2026-04-25. Family doc: [`architecture-v2/families/portfolio.md`](./architecture-v2/families/portfolio.md)_
+**9. Portfolio** — _added 2026-04-25. Family doc:
+[`architecture-v2/families/portfolio.md`](./architecture-v2/families/portfolio.md)_
 
 - **Alpha source:** Meta-allocation across instances of the other 8 families. The Portfolio family does NOT generate its
   own per-trade signals — it produces `AllocationDirective` events that re-weight or activate/deactivate child strategy
@@ -235,12 +236,16 @@ resolution (priority / unanimity / highest-confidence) → emit `TRADE`.
 Same rules engine but targeting sports / prediction markets. Flow adds market-availability check, odds gate, best-odds
 routing; bets settle standard WON/LOST/VOID.
 
-## Carry & Yield (8)
+## Carry & Yield (10)
 
-**`CARRY_BASIS_DATED`** —
-[archetypes/carry-basis-dated.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md)
-Long spot + short dated future. Captures futures–spot premium (contango) or discount (backwardation) as the spread
-converges to zero at expiry. Near-atomic paired entry; exits on convergence, expiry, or stop-loss on adverse widening.
+**`CARRY_BASIS_DATED`** — [archetypes/carry-basis-dated.md](architecture-v2/archetypes/carry-basis-dated.md) Long spot +
+short dated future. Captures futures–spot premium (contango) as the spread converges to zero at expiry. Near-atomic
+paired entry; exits on convergence, expiry, or stop-loss on adverse widening.
+
+**`CARRY_BASIS_DATED_INV`** — [archetypes/carry-basis-dated-inv.md](architecture-v2/archetypes/carry-basis-dated-inv.md)
+Inverse of CARRY_BASIS_DATED: short dated future + long cash. Captures backwardation (futures < spot) as spread
+converges to zero at expiry. Typical in commodity supply-crunch regimes (oil/gas) and crypto bear markets. Added
+2026-05-18 per operator taxonomy decision (strategy_archetype_taxonomy_2026_05_12.md §V-1).
 
 **`CARRY_BASIS_PERP`** —
 [archetypes/carry-basis-perp.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
@@ -248,10 +253,16 @@ Long spot + short perpetual. Captures funding rate while delta-neutral; ATOMIC w
 Binance cross-margin netting — "enormous capital efficiency"), LEADER_HEDGE cross-venue. Rebalance triggers: funding
 drops below exit, better funding elsewhere, delta drift, equity change.
 
-**`CARRY_STAKED_BASIS`** —
-[archetypes/carry-staked-basis.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
-Three-leg: stake native → LST → pledge LST on lending protocol → borrow base → short perp. Earns staking yield + funding
-simultaneously on same capital. Net carry = staking yield + funding − borrow cost − fees. Kill switch on stETH depeg.
+**`CARRY_STAKED_BASIS`** — [archetypes/carry-staked-basis.md](architecture-v2/archetypes/carry-staked-basis.md) Stake
+native → LST → transfer to perp venue as cross-margin → short perp. Earns staking yield + funding simultaneously. Net
+carry = staking_apy_total + funding − fees. LST_AS_MARGIN only (no SPLIT_STAKE, no COLLATERAL_BORROW). Kill switch on
+stETH depeg.
+
+**`CARRY_STAKED_BASIS_DATED`** —
+[archetypes/carry-staked-basis-dated.md](architecture-v2/archetypes/carry-staked-basis-dated.md) Dated-contract variant
+of CARRY_STAKED_BASIS: stake LST + short a quarterly/monthly dated futures contract instead of a perp. Locks in the
+basis premium at entry (no funding-rate variability); staking yield accrues during hold. Best when dated basis >
+expected perp funding. Added 2026-05-18 per operator taxonomy decision.
 
 **`CARRY_RECURSIVE_STAKED`** —
 [archetypes/carry-recursive-staked.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md)
@@ -266,12 +277,13 @@ LTV; borrow ETH; swap back to LST on Uniswap V3; redeposit; repeat. Closed-form 
 SPREAD not directional exposure. Top-7 May-23 cells across Aave V3 Ethereum / Arbitrum / Base; expected APR 6-10% net
 for canonical wstETH/WETH cell. Added 2026-05-12.
 
-**`CARRY_RECURSIVE_BORROW_PERP_HEDGED`** —
-[archetypes/carry-recursive-borrow-perp-hedged.md](architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md)
-Family 2 — Family 1 + USDC-margined ETH perp short for delta neutrality. Net APR formula
-`R_lend + R_fund + R_usdc - gas - slippage` ≈ 17.4% for wstETH/WETH cell at +12% funding regime. HL PRIMARY + Bybit
-SECONDARY (50% cap first 30d post-cutover per Feb-2025 hack). PerpHedgeSizer rebalances on band breach > 5% of E_actual.
-Added 2026-05-12.
+**`CARRY_BASIS_PERP_INV`** — [archetypes/carry-basis-perp-inv.md](architecture-v2/archetypes/carry-basis-perp-inv.md)
+Family 2 — recursive on-chain borrow loop (Aave V3 / Morpho wstETH/WETH E-Mode) + USDC-margined ETH perp short for delta
+neutrality. Net APR = R_lend + R_fund + R_usdc − gas − slippage ≈ 17.4% for wstETH/WETH cell at +12% funding. HL
+PRIMARY + Bybit SECONDARY (50% cap first 30 days). PerpHedgeSizer rebalances on delta-drift > 5% of E_actual. Renamed
+from CARRY_RECURSIVE_BORROW_PERP_HEDGED 2026-05-18; see
+[carry-recursive-borrow-perp-hedged.md](architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md) for historical
+doc.
 
 **`YIELD_ROTATION_LENDING`** —
 [archetypes/yield-rotation-lending.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md)
