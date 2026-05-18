@@ -335,8 +335,9 @@ AMM concentrated-liquidity "active LP" (now split into `DEFI_LP_CONCENTRATED`), 
 `DEFI_LP_POOL`). Inventory-aware skewing, delta-proxy repricer (sub-ms). Highest latency budget of any archetype (40 ms,
 premium tier, strategy-service co-located with execution).
 
-**`MARKET_MAKING_EVENT_SETTLED`** _(legacy; new sports/prediction MM strategies use `MARKET_MAKING_PREDICTION` for
-binary clobs and the granular CEFI variants for sports exchanges)_ —
+**`MARKET_MAKING_EVENT_SETTLED`** _(canonical sports exchange MM archetype — Betfair / Smarkets / Matchbook / Betdaq
+back-lay quoting. NOT legacy. Prediction CLOBs use `MARKET_MAKING_PREDICTION`. Retained per §9 operator decision in
+`strategy_archetype_taxonomy_2026_05_12.md`)_ —
 [archetypes/market-making-event-settled.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md)
 Back + lay quoting on sports exchanges (Betfair, Smarkets, Matchbook, Betdaq) and prediction markets (Polymarket).
 
