@@ -1011,6 +1011,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-14**: 57 files cleared (allowlist now 61).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 15 — intent_engine + vwap_core + loaders/base + engine.py free)**: 4 entries
+  cleared at execution-service@48ec90d23 (algo_library/intent_engine.py — \_build_deleverage_steps 53L→27L via
+  aave_venue local var + compact kwargs + return list literal; algorithms/impl/vwap_core.py — \_get_l2_price 70L→46L via
+  \_compute_adjusted_price 35L helper; data/loaders/base.py — \_normalize_timestamp_columns_for_backtest 85L→15L via
+  \_set_ts_event_column @staticmethod 26L + \_normalize_trade_columns @staticmethod 47L; matching_engine/engine.py —
+  free removal, upstream tick-46a already cleared all methods). Allowlist 61→57. AST clean. ruff + basedpyright 0
+  errors.
+
+  **Slot-4 cumulative across batches 1-15**: 61 files cleared (allowlist now 57).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
