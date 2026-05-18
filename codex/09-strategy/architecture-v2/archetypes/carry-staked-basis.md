@@ -210,6 +210,14 @@ hedge_deadline_ms: "5000" # perp hedge deadline
 peg_drift_threshold_bps:
   "25" # Phase 6B dynamic-hedge hysteresis band; rebalance fires when
   # |lst_native_rate_now - lst_native_rate_last_rebalance| × 1e4 > this. Default 25 ≈ 3σ daily.
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+# target_leverage = 1.0 is correct for LST_AS_MARGIN — the LST IS the full margin, no leverage multiplier.
+# The field is present because StrategyInstanceDefinition is universal across all archetypes.
+target_leverage: "1.0"      # always 1.0 for carry_staked_basis; LST_AS_MARGIN does not support >1x
+target_net_delta: "0.0"     # delta-neutral: LST long leg + perp short hedge = net ~0 delta
+max_underlying_move_pct: "5.0"  # vol-cap clamp: pause rebalance if >5% move in 1h (wider than APD)
+instrument_volatility_registry_lookup: "true"  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ### Features expected (upstream `features-onchain` must publish)

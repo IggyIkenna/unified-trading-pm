@@ -97,6 +97,12 @@ execution_ordering:
   abort_on_adverse_move_bps: 10
 execution_policy_ref: arb-fast-v2
 share_class: USD
+
+# Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
+target_leverage: 1.0        # [1, 10]; hard-clamped by per-instrument vol cap at entry
+target_net_delta: 0.0       # net directional delta target (0 = delta-neutral arb)
+max_underlying_move_pct: 3.0  # vol-cap clamp: abort/skip if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

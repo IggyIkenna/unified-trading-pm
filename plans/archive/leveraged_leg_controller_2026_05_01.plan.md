@@ -111,6 +111,11 @@ Phase 4 — Strategy backports (PARALLEL within Phase 4 after Phases 2+3)
    ├─ 4.10 position-balance-monitor-service/.../sports_arb_engine.py — Kelly stakes via controller
    └─ 4.11 GATE — every archetype's parity test still green; quality-gates.sh on every modified repo
 
+> **Doc-rewrite update (2026-05-16):** All 11 archetype codex docs now reference `LegController.update` with
+> `**Code-backport status:**` lines declaring SHIPPED/DEFERRED per archetype. Shipped via
+> `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` Stream C (PM@552a3e6e + PM@8bcf0f96).
+> Code backport for the remaining archetypes proceeds independently; doc rewrites are complete and unblocked.
+
 Phase 5 — Risk-and-exposure integration (after Phase 4)
    ├─ 5.1 risk-and-exposure-service subscribes to LegPortfolioState updates
    ├─ 5.2 Emit LEVERAGE_BREACH alert when leg drift exceeds tighter threshold than rebalance trigger
