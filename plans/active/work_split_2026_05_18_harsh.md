@@ -197,9 +197,10 @@ smoke begins.
       execution-service + strategy-service. Removed 5 stale fixtures: execution-service@e7126b94 (sbobet_match_page.html —
       stub adapter, no HTML parsing) + strategy-service@c4a41d9 (4 YAML fixtures: btc_usdt_1h, uniswap_v3_pools,
       premier_league_arb, es_nq_futures — backtest scripts referenced in docs don't exist). Done-def: 5+ cleanups ✅.
-- [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — public API
-      functions/classes should have docstrings. Per-repo: run interrogate or similar; identify gaps; add stubs for major
-      modules. Done-def: per-repo docstring coverage ≥70% on public API. **~6 cal-days**.
+- [x] ✅ **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — AST scan across 7 repos.
+      All at ≥70% except instruments-service (41.6%). Fixed instruments-service@942cfc2: 415 one-line stubs added across
+      76 files → 100% coverage (296/711 → 711/711). Other repos: exec 86.7%, features 82.0%, risk 85.4%, strategy 78.1%,
+      mtds 87.3%, deployment 83.3%, trading-agent 73.0%. All ≥70% ✅. Done-def met.
 - [x] ✅ **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — AST scan across 11 repos: 6 violations
       found in execution-service async paths (hyperliquid.py × 4, hyperliquid_bridge.py × 2). Converted to aiohttp
       with ThreadedResolver sessions; updated 14 tests to aioresponses. jito_bundle.py sync _post_json via asyncio.to_thread:
