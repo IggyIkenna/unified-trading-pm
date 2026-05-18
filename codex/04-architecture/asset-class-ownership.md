@@ -122,7 +122,7 @@ etc.
 | Market instrument connectivity | instruments-service (ref data)   | `adapters/betfair.py`, `adapters/polymarket.py` (shells exist, error classification wired)                                                                                                           |
 | Internal storage contracts     | UIC                              | `sports.py` (fixture storage schema)                                                                                                                                                                 |
 | Domain data client             | UDC/UTL                          | `sports/fixtures_client.py` (GCS read/write)                                                                                                                                                         |
-| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser, not USRI/URDI**                                                                                                                             |
+| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser instead of the in-service reference-data adapters** (USRI/URDI retired 2026 — merged into instruments-service `sports/` sub-package)         |
 | Feature computation            | features-service (sports family) | Features from fixture/odds data                                                                                                                                                                      |
 | Config                         | UCI                              | Which leagues, which venues, polling intervals                                                                                                                                                       |
 
@@ -140,8 +140,10 @@ etc.
 
 - instruments-service `sports/fixture_parser.py` duplicates UAC normalize logic — should be deleted, use USRI → UAC
   instead
-- USRI is a 192-line stub — needs API Football connectivity + UAC normalize wiring
-- instruments-service `--SPORTS` doesn't call USRI or URDI — uses local code
+- `instruments-service/sports/` stub (formerly USRI; **Retired 2026** — merged into instruments-service) is a 192-line
+  stub — needs API Football connectivity + UAC normalize wiring
+- instruments-service `--SPORTS` doesn't call the in-service reference-data adapters (formerly USRI/URDI; **Retired
+  2026**) — uses local code
 - `new-sports-batting-services` has independent `Fixture`, `Team`, `League` models — migration target, not SSOT
 
 **Migration path** (from `new-sports-batting-services`):

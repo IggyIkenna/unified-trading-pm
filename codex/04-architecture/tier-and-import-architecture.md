@@ -56,9 +56,11 @@ TIER 0 — Pure Leaves (no cloud I/O, no trading state, zero inter-lib deps)
       unified-trading-library (UEI)          EventSink Protocol, setup_events, log_event, MockEventSink
       execution-algo-library (EAL)            TWAP, VWAP, pure compute algorithms, zero inter-lib deps
       ibkr-gateway-infra                      Deploys and manages the IB Gateway Java process (long-lived). All IBKR
-                                              connectivity routes through this — UMI, UTEI, UPI, URDI adapters use it for
-                                              live trading and integration tests. No unified-* imports. TWS uses proprietary
-                                              socket protocol; mock at ib_insync layer for tests (not HTTP VCR).
+                                              connectivity routes through this — UMI + execution-service + position-balance-
+                                              monitor-service + instruments-service adapters use it (formerly the UMI/UTEI/UPI/URDI
+                                              interfaces; **Retired 2026** — merged into their respective services). No
+                                              unified-* imports. TWS uses proprietary socket protocol; mock at ib_insync
+                                              layer for tests (not HTTP VCR).
 
     T0-L2b (UAC canonical-dependent; builds after L2a):
       unified_api_contracts.internal (UAC-internal)
@@ -138,22 +140,22 @@ deployment-service import from it; services receive injected protocol config via
 
 ## Import Routing Map
 
-| Symbol                                               | Import from                                           |
-| ---------------------------------------------------- | ----------------------------------------------------- |
-| StorageClient, get_storage_client                    | unified_cloud_interface                               |
-| SecretClient, get_secret_client                      | unified_cloud_interface                               |
-| CloudProvider, BlobMetadata                          | unified_cloud_interface                               |
-| UnifiedCloudConfig, BaseConfig                       | unified_config_interface                              |
-| setup_events, log_event, MockEventSink               | unified_trading_library.events                        |
+| Symbol                                               | Import from                                          |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| StorageClient, get_storage_client                    | unified_cloud_interface                              |
+| SecretClient, get_secret_client                      | unified_cloud_interface                              |
+| CloudProvider, BlobMetadata                          | unified_cloud_interface                              |
+| UnifiedCloudConfig, BaseConfig                       | unified_config_interface                             |
+| setup_events, log_event, MockEventSink               | unified_trading_library.events                       |
 | get_secret_client, handle_api_errors                 | unified_trading_services (→ unified_trading_library) |
 | GCSEventSink, setup_service                          | unified_trading_services (→ unified_trading_library) |
 | ServiceCLI, BatchOrchestrator, with_retry            | unified_trading_services (→ unified_trading_library) |
-| InstrumentsDomainClient, DataCompletionChecker       | unified_domain_client                                 |
-| PATH_REGISTRY, get_reader, get_writer                | unified_domain_client                                 |
-| CanonicalTick, BaseWebSocketClient, VenueRateLimiter | unified_market_interface                              |
-| UnifiedOrderManager, OrderTracker                    | unified_trade_execution_interface                     |
-| FeatureCalculatorRegistry, BaseFeatureService        | unified_feature_calculator (UFC repo)                 |
-| get_reference_adapter, BaseReferenceAdapter          | unified_reference_data_interface                      |
+| InstrumentsDomainClient, DataCompletionChecker       | unified_domain_client                                |
+| PATH_REGISTRY, get_reader, get_writer                | unified_domain_client                                |
+| CanonicalTick, BaseWebSocketClient, VenueRateLimiter | unified_market_interface                             |
+| UnifiedOrderManager, OrderTracker                    | unified_trade_execution_interface                    |
+| FeatureCalculatorRegistry, BaseFeatureService        | unified_feature_calculator (UFC repo)                |
+| get_reference_adapter, BaseReferenceAdapter          | unified_reference_data_interface                     |
 
 ## Topology / Level Map
 
