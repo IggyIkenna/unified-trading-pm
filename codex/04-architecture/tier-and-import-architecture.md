@@ -145,9 +145,9 @@ deployment-service import from it; services receive injected protocol config via
 | CloudProvider, BlobMetadata                          | unified_cloud_interface                               |
 | UnifiedCloudConfig, BaseConfig                       | unified_config_interface                              |
 | setup_events, log_event, MockEventSink               | unified_trading_library.events                        |
-| get_secret_client, handle_api_errors                 | unified_trading_services (→ unified_trading_services) |
-| GCSEventSink, setup_service                          | unified_trading_services (→ unified_trading_services) |
-| ServiceCLI, BatchOrchestrator, with_retry            | unified_trading_services (→ unified_trading_services) |
+| get_secret_client, handle_api_errors                 | unified_trading_services (→ unified_trading_library) |
+| GCSEventSink, setup_service                          | unified_trading_services (→ unified_trading_library) |
+| ServiceCLI, BatchOrchestrator, with_retry            | unified_trading_services (→ unified_trading_library) |
 | InstrumentsDomainClient, DataCompletionChecker       | unified_domain_client                                 |
 | PATH_REGISTRY, get_reader, get_writer                | unified_domain_client                                 |
 | CanonicalTick, BaseWebSocketClient, VenueRateLimiter | unified_market_interface                              |
