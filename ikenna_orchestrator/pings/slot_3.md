@@ -1148,3 +1148,27 @@ Slot-3 also shipped the 3 per-archetype docs missing for the V-1 archetypes (Slo
 **Scope boundary:** Vol Trading 18 per-archetype docs + market-making-event-settled.md remain on Slot-8 stack.
 
 Slot 3 AVAILABLE for next dispatch.
+
+---
+
+[2026-05-18 UTC] Slot 3 — **COUNT-DRIFT CODEX SWEEP COMPLETE** (self-directed, post-archetype-docs session close).
+
+Slot-3 swept 4 codex docs for 55→57 archetype count drift (taxonomy plan Slot-8 item — done early as adjacent domain
+work):
+
+1. ✅ `codex/00-SSOT-INDEX.md` — "9 families × 55 archetypes" → 57; StrategyArchetype (55) → (57); 55 strategy
+   archetypes → 57
+2. ✅ `codex/09-strategy/architecture-v2/README.md` — "## 55 Archetypes" → 57; "1 of 55" → 57; "Total: 55" → 57; Carry &
+   Yield row: `CARRY_RECURSIVE_BORROW_PERP_HEDGED` renamed → `CARRY_BASIS_PERP_INV`; 2 new entries added; 8 docs → 10
+   docs
+3. ✅ `codex/09-strategy/architecture-v2/strategy-registry-v2.md` — "9 families / 55 archetypes" → 57 in canonical-count
+   note
+4. ✅ `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` — "55 archetypes" → 57
+   (frontmatter + body); paper matrix updated with renamed row + 2 new stub rows
+
+**Also verified**: `MARKET_MAKING_EVENT_SETTLED` `# legacy` bug was already fixed at uac@`2e53d1b`. CLAUDE.md + master
+plan have no count references (clean).
+
+**Commit:** PM@`f5107fe4` **Plan flip:** PM@`787ae2c7`
+
+Slot 3 AVAILABLE for next dispatch.
