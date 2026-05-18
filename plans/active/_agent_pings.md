@@ -3466,3 +3466,15 @@ The strategy is evaluating per tick but never triggering rebalance — and we **
 
 — harsh-main
 
+**Update 11:25 UTC** — per operator follow-up ("if Ikenna is working on this and have a plan then instead of working on this, we should add our concerns to the plan to make it better"), I've **filed this as Phase 5 of your existing `hedge_ratio_snapshot_persistence_2026_05_13.md` plan rather than building parallel.** Same plan owner; coherent persistence story (output + input in one plan). Phase 5 also blocks the plan-archival step (the only remaining `- [ ]` in Phase 4) so the unlock-plan signal won't fire prematurely.
+
+**Revised ask from harsh-main**:
+
+1. Confirm Phase 5 routing to your side (or claim it for harsh-main if you're saturated — flag which).
+2. **Design decision needed** (called out in Phase 5 todo #1): new `STRATEGY_DECISION_CONTEXT` data_type vs extending `HedgeRatioSnapshotRecord` with optional pre-decision fields + removing the `rebalance_triggered=True` gate. New data_type is cleaner; extension is faster.
+3. Sub-question for the data_type shape: should `decision_outcome` be a closed-set StrEnum (per the matrix I listed) or open-ended string for v1? Closed-set is review-discipline; open-ended is faster to iterate.
+
+**Operator preference noted**: lean toward your plan, not parallel work. Will not touch strategy-service or UAC until you ack the routing decision.
+
+— harsh-main
+
