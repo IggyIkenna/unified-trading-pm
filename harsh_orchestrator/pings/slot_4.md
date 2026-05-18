@@ -242,11 +242,11 @@ stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). a
 
 - [x] **11. ml-training-service experiment manifest validation tests** — ml-training-service@9a3f581 (validate()/validate_or_raise() + 12 tests: TestExperimentManifestValidation ×10 + TestHyperparameterRoundtrip ×2; QG ✅ ALL GATES PASSED 329s)
 
-- [ ] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green.
+- [x] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green. — sit@47a1e04: 11 tests / 4 classes (honest-coverage emission flow); QG ✅ (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
 
-- [ ] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green.
+- [x] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green. — alerting@af7122f: 3 classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
 
-- [ ] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green.
+- [x] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green. — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
 
 - [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
 

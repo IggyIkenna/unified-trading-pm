@@ -67,14 +67,14 @@ covers the lot after May-23.
       Compose with rehearsal procedure (AL-16). **MIGRATED FROM:** AL-22. **DONE 2026-05-14**: Chose option (b) — no
       `AlertFeedback` model exists; downgraded to "manual review during quarterly DR rehearsal" with named on-call
       owner. Upgrade note added.
-- [ ] [DESIGN] P2. **Group D — Block-list / category-instrument-coverage TS mirror parity (ST-11).** Either generate the
+- [x] [DESIGN] P2. **Group D — Block-list / category-instrument-coverage TS mirror parity (ST-11).** Either generate the
       `.ts` from codex doc / UAC matrix, or add CI parity check mirroring UAC cassette-parity. Fix likely belongs in UI
       repo; this plan owns the design call + cross-repo plan-spawning if implementation is complex. **MIGRATED FROM:**
       ST-11. **DESIGN CALL 2026-05-14**: CI parity check (not generation). Add
       `__tests__/scripts/block-list-parity.test.ts` to `unified-trading-system-ui` mirroring the orphan-audit pattern.
       Test reads `lib/architecture-v2/block-list.ts` BL-IDs and compares against
-      `codex/09-strategy/architecture-v2/block-list.md` BL-\* tokens. Implementation is **DEFERRED** to UI repo slot
-      (requires UI-repo QG). Successor: add as agenda item for next Harsh UI slot.
+      `codex/09-strategy/architecture-v2/block-list.md` BL-\* tokens. **DONE 2026-05-18**: 4 parity tests shipped
+      (codex-exists, ts→md, md→ts, count-agreement); all pass (10 BL-IDs both ways). unified-trading-system-ui@e1b7b232.
 - [x] [DOC] P3. **Group E — Two-pass QG model § in testing codex (TS-19).** Add 3-line subsection to
       `codex/06-coding-standards/quality-gates.md` clarifying that Pass 2 (`quickmerge --agent`) does NOT re-run tests.
       **MIGRATED FROM:** TS-19. **DONE 2026-05-14**: subsection added after `--agent` flag description.
@@ -86,8 +86,9 @@ covers the lot after May-23.
       for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI tile in
       deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half). **DESIGN CALL 2026-05-14**: UI
       tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls
-      `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED** to deployment-ui slot. Successor: add as
-      agenda item for Harsh deployment-ui slot post May-23.
+      `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED-POST-CUTOVER** to deployment-ui slot
+      (slot 7 owns deployment-ui). Routed to slot 7 via ping 2026-05-18. Successor: slot_7.md ping
+      `[2026-05-18 14:05 UTC] [slot-4 → slot-7] SUCCESSOR ROUTING — Group G STALE_OPEN_ALERT dashboard`.
 
 ## Done definition
 
