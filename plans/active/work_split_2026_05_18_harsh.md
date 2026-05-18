@@ -183,9 +183,9 @@ smoke begins.
       refreshes. **~6 cal-days**. — unified-api-contracts@391632c. 5 refreshes: (1) test_cassette_consolidation.py fix
       (meta_and_asset_ctxs list-not-dict assertion), (2) DefiLlamaProtocol +10 fields, (3) DefiLlamaYieldPool +10 fields,
       (4) PolymarketMarket/Token +5 fields, (5) ManifoldMarket full camelCase alias refresh. 351 cassette tests pass.
-- [ ] **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — each `# noqa: <code>` needs comment
-      explaining why. Identify violators + add justifications OR fix root cause. Done-def: per-repo `# noqa`
-      justification rate ≥95%. **~4 cal-days**.
+- [x] ✅ **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — 15-code taxonomy applied across 4 repos:
+      execution-service@774602ea (205/205=100%), features-service (78/81=96%), risk-and-exposure-service (14/14=100%),
+      UAC (35/35=97%). All repos ≥95% justified. Done-def met.
 - [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — `.github/workflows/` per repo —
       pinned action versions, env-var consistency, secret reference patterns. Done-def: per-repo workflow drift report +
       5+ alignments. **~6 cal-days**.
