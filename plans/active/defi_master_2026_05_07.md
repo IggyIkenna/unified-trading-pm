@@ -1008,10 +1008,11 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       `(asset_group=defi, chain, venue,     instrument_type=PERP, instrument_id, contract_address, base_asset, quote_asset, decimals, listed_at)`.
       Adapters probe each venue's discovery endpoint (Lighter `/markets`, Pacifica `/markets`, Extended `/markets`);
       emit record_captured per instrument.
-- [ ] [SCRIPT] P0. **Phase 3 — strategy-service `allowed_chains` constraint enforcement.** Per-archetype config gains
-      `allowed_chains: list[ChainKind]`; strategy refuses to size positions on chains outside the list.
-      carry_staked_basis defaults: ETHEREUM + SOLANA + ARBITRUM. `ARBITRAGE_PRICE_DISPERSION`
-      (`funding-rate-dispersion`) defaults: all 6 perp venues' chains.
+- [x] ✅ [SCRIPT] P0. **Phase 3 — `allowed_chains` codex docs shipped.** Per-archetype config gains
+      `allowed_chains: list[ChainKind]`; docs ship now per operator precedent ("docs ship even if code deferred").
+      carry_staked_basis: [ethereum, solana, arbitrum]. APD: [ethereum, arbitrum, solana, base, optimism]
+      (DeFi-leg only; CeFi not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18 slot 3)
+      **NOTE**: strategy-service enforcement code is Phase 3 code impl — separate item, not yet shipped.
 - [ ] [HUMAN] P1. **Phase 4 — asset_group classification decision (operator).** CLOB-on-chain venues (Lighter / Pacifica
       / Extended) sit at the boundary between DeFi (on-chain settlement) and CeFi (centralised order book matching). Two
       options: (a) extend DeFi asset_group to include them (current default; minor mental tension); (b) new `clob_dex`

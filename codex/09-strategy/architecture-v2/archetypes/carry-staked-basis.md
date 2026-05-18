@@ -218,6 +218,12 @@ target_leverage: "1.0"      # always 1.0 for carry_staked_basis; LST_AS_MARGIN d
 target_net_delta: "0.0"     # delta-neutral: LST long leg + perp short hedge = net ~0 delta
 max_underlying_move_pct: "5.0"  # vol-cap clamp: pause rebalance if >5% move in 1h (wider than APD)
 instrument_volatility_registry_lookup: "true"  # use realized_vol_20 (1h candles) from FSS
+
+# Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
+# Strategy refuses to size on-chain positions outside this list. CeFi perp venues are not
+# chain-gated (they have no ChainKind). Defaults cover Jito/mSOL on Solana, stETH/rETH on
+# Ethereum mainnet, and the primary L2 for gas-efficient on-chain execution.
+allowed_chains: [ethereum, solana, arbitrum]
 ```
 
 ### Features expected (upstream `features-onchain` must publish)

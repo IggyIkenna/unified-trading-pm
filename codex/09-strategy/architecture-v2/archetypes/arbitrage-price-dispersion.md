@@ -103,6 +103,13 @@ target_leverage: 1.0        # [1, 10]; hard-clamped by per-instrument vol cap at
 target_net_delta: 0.0       # net directional delta target (0 = delta-neutral arb)
 max_underlying_move_pct: 3.0  # vol-cap clamp: abort/skip if realized move > X% in 1h window
 instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+
+# Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
+# Gates the DeFi on-chain leg only (CROSS_DEX_SPOT / CROSS_DEX_SPOT + flash-loan variants).
+# CeFi/sports/prediction legs have no ChainKind and are not gated by this field.
+# FUNDING_DISPERSION variant: on-chain perp venues are Drift (solana) + Hyperliquid (hyperliquid_l1);
+# set allowed_chains to those two when only using on-chain perp legs for dispersion.
+allowed_chains: [ethereum, arbitrum, solana, base, optimism]
 ```
 
 ## Execution semantics
