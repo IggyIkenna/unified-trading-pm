@@ -1377,4 +1377,18 @@ Acknowledge "STARTED writegate Phase 6.6 ml-training" within 10 min.
 ### 2026-05-18T09:24:16Z — Slot 7 STARTED (redirected from writegate to Phase 2.6 Step 5 prep)
 
 Theme: archive-flat-buckets.sh script + write-resume verification plan
-Status: READING code_freeze plan — Phase 2.6 Step 5 section read. gap-2.6.A through gap-2.6.E confirmed [x]. Step 2.6.5 archive script not yet created. Beginning Part A.
+Status: COMPLETE ✅
+
+| Part | Deliverable | Commit | Status |
+| ---- | ----------- | ------ | ------ |
+| A | `deployment-service/scripts/archive-flat-buckets.sh` | deployment-service@9f158d5 | ✅ DONE |
+| B | Write-resume verification checklist (appended to code_freeze plan) | PM@773a3726 | ✅ DONE |
+| C | Phase 2.6 Step 5 checkboxes flipped in code_freeze plan | PM@773a3726 | ✅ DONE |
+
+Summary:
+- `archive-flat-buckets.sh`: 503-line bash script. Accepts --env/--cloud/--retention-days/--dry-run.
+  Dry-run on by default (production guardrail). Sets 30-day Delete lifecycle on 50 GCP + 50 AWS flat
+  buckets from Tiers 1-7 of the Phase 2.6 migration inventory. bash -n syntax check passes.
+- Write-resume checklist: 4 checks (env-tiered writes, QG 5.69=0, deployment-api smoke, zero flat reads).
+  Operator-runnable with pass/fail criteria and Wave 7 unlock condition.
+- Both new [x] checkboxes in code_freeze plan § "Outstanding NEW work (gap-2.6.A through gap-2.6.E)".
