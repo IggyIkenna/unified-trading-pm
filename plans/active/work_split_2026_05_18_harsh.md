@@ -254,9 +254,10 @@ smoke begins.
 
 #### Reserve queue
 
-- [ ] **5. UTL bash smoke tests for QG_MEM_CAP (slot 6 item 7)** — Add UTL-side bash smoke tests verifying:
+- [x] ✅ **5. UTL bash smoke tests for QG_MEM_CAP (slot 6 item 7)** — Add UTL-side bash smoke tests verifying:
       (a) Linux path builds MEM_WRAP correctly; (b) macOS-simulated path emits warning + empty MEM_WRAP;
       (c) `QG_MEM_CAP=0` silences warning. Done-def: 3+ bash smoke tests + UTL QG green.
+      — PM@263e25b6 (5/5 assertions pass; test-qg-mem-cap.sh added to quality-gates-base/tests/).
 - [ ] **6. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh (slot 6 item 9)** — verify
       `quality-gates.md` cross-links to the new `quality-gates-memory-governance.md`. Sweep for stale references to
       the OLD `cpu_count // 4` default. Done-def: cross-link added + 0 stale references.
