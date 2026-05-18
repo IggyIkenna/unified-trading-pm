@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-18
 ---
 
 # Honest Absence — Downstream Handling SSOT
@@ -217,6 +217,13 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 
 ---
 
+**Cross-references for the reason taxonomy**:
+- § [Reader-side fallback for legacy rows](#reader-side-fallback-for-legacy-rows-codified-2026-05-07--operator-gap-finding) — how consumers handle `error_reason=None` in rows written before Phase 2.E.1
+- § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
+- Prospective per-asset-group backfill runbook: `codex/02-data/expected-absence-backfill-runbook.md` *(planned — see writegate Phase 3.D.5 for volume estimates per asset_group)*
+
+---
+
 ## Per-service consumer-class audit (2026-05-07 — operator direction)
 
 Different services have different right-answers when they read a manifest row that says `empty_confirmed[reason=...]` or
@@ -235,6 +242,29 @@ this contract.
 | **Strategy (live)**                                 | strategy-service (live mode)                                                                                     | Allocator skips the asset; rebalance proceeds across the remaining universe.                                                                                                       | Same.                                              | **Block trade emission** for assets affected; alert. Live mode is unforgiving.                                                          |
 | **Reconciliation (batch-vs-live)**                  | batch-live-reconciliation-service                                                                                | Both sides should agree on the absence; if one side has data and the other doesn't with the same reason, flag the discrepancy.                                                     | Same — both sides should agree.                    | Both sides should also agree; if only one side flags `attempted_failed`, the bug is on that side.                                       |
 | **Position / Risk monitor**                         | position-balance-monitor-service, risk-and-exposure-service                                                      | No-op (these services consume position events, not feature parquets).                                                                                                              | No-op.                                             | Alert if it would block a downstream calc the position depends on.                                                                      |
+
+### Per-asset-group × data_type routing quick-reference
+
+The consumer-class rules above apply uniformly. The table below shows the most common reason codes per asset_group ×
+data_type combination — the patterns engineers hit most in practice:
+
+| asset_group  | data_type           | Most common `EXPECTED_*` reason(s)                                      | Consumer class (typical)                                   |
+| ------------ | ------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `cefi`       | `ohlcv_24h`         | `EXPECTED_INSTRUMENT_DELISTED`; `EXPECTED_INSTRUMENT_NOT_LISTED`        | Feature rolling-window (adjust denominator)                |
+| `cefi`       | `funding_rate`      | `EXPECTED_INSTRUMENT_DELISTED`; `SOURCE_RETURNED_ZERO` (no perp on day) | Strategy live — skip trade; ML — NaN-fill                  |
+| `defi`       | `lending_indices`   | `EXPECTED_PRE_GENESIS_CHAIN`; `EXPECTED_PRE_SOURCE_COVERAGE_START`      | Feature same-day single-sample — emit `record_empty`        |
+| `defi`       | `lst_rates`         | `EXPECTED_PRE_SOURCE_COVERAGE_START`; `EXPECTED_INSTRUMENT_NOT_LISTED`  | Feature rolling-window (adjust denominator)                |
+| `defi`       | `gas_fees`          | `EXPECTED_PRE_GENESIS_CHAIN`                                            | Feature same-day single-sample — emit `record_empty`        |
+| `tradfi`     | `ohlcv_1d`          | `EXPECTED_HOLIDAY`; `EXPECTED_WEEKEND`; `EXPECTED_PARTIAL_HALF_DAY`     | Feature rolling-window (adjust denominator)                |
+| `tradfi`     | `ohlcv_15m`         | `EXPECTED_OUTSIDE_TRADING_HOURS`; `EXPECTED_HOLIDAY`                   | Feature rolling-window (adjust denominator); intraday only |
+| `sports`     | `match_odds`        | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_PRE_SEASON`; `EXPECTED_POST_SEASON` | Feature rolling-window (adjust denominator)                |
+| `sports`     | `match_results`     | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`       | ML training — NaN-fill                                     |
+| `prediction` | `market_prices`     | `EXPECTED_INSTRUMENT_NOT_LISTED`; `EXPECTED_INSTRUMENT_DELISTED`        | ML training — NaN-fill; execution — skip                   |
+
+Use the `n_valid` sibling column on all rolling-window calcs so downstream consumers can observe the effective
+denominator. For same-day single-sample calcs with `empty_confirmed`, emit `record_empty(reason=NO_INPUT_AVAILABLE)`
+for the calc's own output row rather than NaN-filling (the difference: NaN-fill is a value; `record_empty` is honest
+absence with a typed reason).
 
 ### Worked example — 20-day moving average with 2 expected-missing days
 
@@ -595,7 +625,7 @@ continuous-verification path for the manifest's `empty_confirmed` / `expected_un
 | Ad-hoc launcher    | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`       | Per-asset-group filter via `--asset-group`          |
 | Scheduler setup    | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`         | Creates `honest-coverage-daily` Cloud Scheduler job |
 | Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all` | Runs inside VM, writes to GCS                       |
-| Output bucket      | `gs://central-element-323112-honest-coverage/{date}/coverage.json`         | Consumed by deployment-api                          |
+| Output bucket      | resolved via `resolve_bucket_name("honest-coverage")/{date}/coverage.json` (actual bucket: `central-element-323112-honest-coverage`) | Consumed by deployment-api |
 | API consumer       | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C)           | UI-facing honest-coverage endpoint                  |
 
 ### Cron schedule
