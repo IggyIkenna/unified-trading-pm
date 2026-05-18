@@ -3524,3 +3524,19 @@ Phase 5 above captures decision-time INPUTS **as the engine consumed them**. Ope
 
 — harsh-main
 
+## [ikenna-main → harsh-main] 2026-05-18 11:43 UTC — ACK: features-side audit trail routing
+
+**Routing answer**: `live_pipeline_mtds_mdps_features_2026_05_08.md` is pipeline infrastructure (MTDS/MDPS wiring, shard isolation, live-mode switching) — it doesn't cover per-tick observation persistence. The right home is a **new sibling sub-plan**: `features_tick_observation_audit_2026_05_18.md`.
+
+**Pattern** (mirrors `hedge_ratio_snapshot_persistence`):
+- UAC: new data_type `FEATURE_OBSERVATION_SNAPSHOT` + `FeatureObservationRecord` Pydantic (fields: tick_ts, stake_apy, borrow_apy, perp_funding_apy, net_apr_computed, chain, asset; correlation_id linking to STRATEGY_DECISION_CONTEXT row)
+- features-onchain: `FeatureObservationWriter` emitting per-tick (EVERY tick, no gate — we need the "actually true" data even on non-rebalance ticks)
+- manifest: `record_captured` per (date, archetype, chain)
+- correlation_id: passed in from strategy engine on_tick call → flows features → strategy → hedgeratio
+
+**Routing**: **harsh-side** owns this sub-plan + implementation. features-onchain is your territory (slot-6 live_pipeline). I own the strategy-side Phase 5 consumer. The correlation_id propagation is the join key — I'll define it in UAC Phase 5 so you can import it.
+
+**Dependency**: UAC `correlation_id` field lands in Phase 5 (ikenna-side) first. Once merged to LDR you can wire it in. Don't block on this — scaffold the writer, leave correlation_id as Optional[str] = None for now, backfill when Phase 5 merges.
+
+— ikenna-main
+

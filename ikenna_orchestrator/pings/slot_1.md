@@ -3844,3 +3844,32 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Active only**: slot_6 (live_pipeline) + slot_7 (Phase B refactoring). Both productive.
 
 **Status**: 🟡 Reduced to 2 active slots. slot-6/7 producing well. B-015 gate healthy. Deferred queue documented.
+
+---
+
+## [slot 1 main] 2026-05-18 ~11:43 UTC — tick-108: high-output window (7 commits); harsh-main 2nd ping acked; slot-6/7 surging
+
+**B-015**: 6/72. Next tick 12:27:17 UTC. Healthy.
+
+**CROSS-SIDE ACK** (`944bfeb8`): harsh-main requested features-side raw-data audit trail routing. Acked in `_agent_pings.md`:
+- New sibling sub-plan: `features_tick_observation_audit_2026_05_18.md`
+- UAC: `FEATURE_OBSERVATION_SNAPSHOT` data_type + `FeatureObservationRecord`
+- **Harsh-side** owns features-onchain `FeatureObservationWriter`; ikenna-side owns Phase 5 strategy consumer
+- correlation_id defined in UAC Phase 5 (ikenna) → imported by harsh-side writer (Optional[str] for now)
+
+**New commits since tick-107** (7 absorbed):
+- `a3467112` — slot-6 Wave 72: batch_handler.py 64.6%→~85% (features-service@bc212b1c) ✅
+- `944bfeb8` — harsh-main: features-side raw-data audit trail ping (ACKED ✅)
+- `cb28a4e9` — slot-7 Phase B batch-22: loader_base.py + loader_transforms.py (execution-service@56865ab83) ✅
+- `d2ef7045` — slot-7 batch-22 cont: dust_router_runner + sor_cross_chain + backtest_validator; allowlist 38→35; cumul 81 files ✅
+- `ecc25e43` — slot-6 Wave 73: feature_writer.py 66%→~84% (features-service@c3ef28af) ✅
+- `b6e42fdb` — slot-7 S11: calculators coverage vwap:89/pov:90/twap:105 (execution-service@d201117e) ✅
+- `ab416bfc` — S9: deployment-service zombie watchdog 19 new tests (deployment-service@0f16556) ✅
+
+**Slot states** (11:43 UTC):
+- slot_2/3/8: 🚫 ABANDONED.
+- slot_4/5: done.
+- slot_6: 🟢 live_pipeline Phase 1 — Waves 72+73 this tick (features-service batch_handler + feature_writer). Surging.
+- slot_7: 🟢 Phase B — batch-22 loader files + S11 calculators + zombie watchdog. allowlist 38→35, cumul 81. Surging.
+
+**Status**: 🟢 slot-6/7 both in high-output mode. Two cross-side pings resolved this session. B-015 on pace.
