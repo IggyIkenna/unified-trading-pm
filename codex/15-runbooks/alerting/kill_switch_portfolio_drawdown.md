@@ -12,6 +12,11 @@ related:
   - codex/15-runbooks/alerting/operator-playbook.md
   - codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md
   - codex/15-runbooks/alerting/balance_drift.md
+execution:
+  owner: on-call operator (Ikenna / Harsh by rotation)
+  cadence: on-demand (incident response) + quarterly DR drill
+  verifier: all strategies halted (strategy-service event log); positions in flat-only mode; operator sign-off before re-arm
+  last_executed: never
 ---
 
 # `KILL_SWITCH_PORTFOLIO_DRAWDOWN` Runbook

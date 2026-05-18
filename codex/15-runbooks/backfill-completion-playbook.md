@@ -4,6 +4,11 @@ status: active
 audience: dev / operator
 last_updated: 2026-05-01
 scope: [engineer, admin]
+execution:
+  owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap)
+  cadence: per-backfill-batch (event-driven, not scheduled)
+  verifier: manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green
+  last_executed: 2026-05-17
 ---
 
 # Backfill completion playbook

@@ -12,6 +12,11 @@ related:
   - codex/15-runbooks/alerting/operator-playbook.md
   - codex/15-runbooks/alerting/kill_switch_venue_disconnect.md
   - codex/15-runbooks/alerting/order_rejection_spike.md
+execution:
+  owner: on-call operator (Ikenna / Harsh by rotation)
+  cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages)
+  verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue
+  last_executed: never
 ---
 
 # `CIRCUIT_BREAKER_OPEN` Runbook

@@ -15,6 +15,11 @@ related:
   - codex/15-runbooks/alerting/defi_health_factor_critical.md
   - codex/15-runbooks/alerting/circuit_breaker_open.md
   - codex/04-architecture/flash-loan-receiver.md
+execution:
+  owner: on-call operator (Ikenna / Harsh by rotation)
+  cadence: on-demand (incident response) + quarterly DR drill
+  verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm
+  last_executed: never
 ---
 
 # `KILL_SWITCH_DEFI_LIQUIDATION_RISK` Runbook

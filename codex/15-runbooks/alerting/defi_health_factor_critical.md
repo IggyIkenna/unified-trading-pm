@@ -11,6 +11,11 @@ related:
   - codex/15-runbooks/alerting/operator-playbook.md
   - codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md
   - codex/15-runbooks/alerting/defi_weeth_depeg.md
+execution:
+  owner: on-call operator (Ikenna / Harsh by rotation)
+  cadence: on-demand (incident response)
+  verifier: health factor recovers above threshold; no kill-switch fired; position audit passes
+  last_executed: never
 ---
 
 # `DEFI_HEALTH_FACTOR_CRITICAL` Runbook
