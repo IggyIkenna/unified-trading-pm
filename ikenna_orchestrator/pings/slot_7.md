@@ -1362,6 +1362,17 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-52 Phase B continued
+
+**Tick-52 deliverables** (3 methods in 3 files, execution-service@309810f09):
+- `utils/validation/instruction_validator.py::validate_instruction_inflight`: 77L→47L (docstring+blank+comment trim)
+- `validation/instruction_validator.py::validate_instruction_inflight`: 77L→47L (same edit)
+- `engine/backtest/actors/tp_sl_generator.py::generate_random_tp_sl_for_signal`: 83L→42L (_signal_seed_from_timestamp 11L)
+
+**Running count**: ~133/377 cleared (~35%); continuing tick-53.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
