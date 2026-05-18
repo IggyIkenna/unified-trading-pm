@@ -10,7 +10,7 @@ deployment_modes: null
 business_modes: null
 version: "0.3.167"
 status: "active"
-last_updated: "2026-03-11"
+last_updated: "2026-05-18"
 
 # ==============================================================================
 # CODE READINESS
@@ -18,7 +18,7 @@ last_updated: "2026-03-11"
 
 code_readiness:
   current_stage: "CR4"
-  readiness_note: "CR4 reached (1000+ tests, QG --quick pass). CR3: UTL->UEI dep integration pending."
+  readiness_note: "CR4 active 2026-05-18: QG fully green, 5382 tests passing (batch/live parity + HMAC + emission_publisher idempotency). UTL@cb1163d on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -28,11 +28,11 @@ code_readiness:
     notes: ""
 
   cr2_unit_tests:
-    status: "not_assessed"
+    status: "passed"
     criteria: "QG unit stage green; coverage >= 80%; --cov-report=xml written"
-    coverage_pct: null
+    coverage_pct: 83
     coverage_floor_pct: 80
-    evidence: ""
+    evidence: "UTL@cb1163d 2026-05-18: 5382 tests green (emission_publisher idempotency, HMAC unicode/boundary/mutation, batch-live parity tests)"
     notes: ""
 
   cr3_integration_tests:
@@ -53,13 +53,13 @@ code_readiness:
     notes: ""
 
   cr4_quality_gate:
-    status: "not_assessed"
+    status: "passed"
     criteria:
       "bash scripts/quality-gates.sh Pass 1 fully green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts"
-    last_run_date: null
-    basedpyright_errors: null
-    ruff_errors: null
-    evidence: ""
+    last_run_date: "2026-05-18"
+    basedpyright_errors: 0
+    ruff_errors: 0
+    evidence: "UTL@cb1163d 2026-05-18: bash scripts/quality-gates.sh green; 0 basedpyright errors; 0 ruff errors"
     notes: ""
 
   cr5_quickmerge:

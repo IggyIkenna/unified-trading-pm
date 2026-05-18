@@ -10,7 +10,7 @@ deployment_modes: ["batch", "live"]
 business_modes: ["batch", "live"]
 version: "0.1.0"
 status: "active"
-last_updated: "2026-03-11"
+last_updated: "2026-05-18"
 
 # ==============================================================================
 # CODE READINESS
@@ -18,7 +18,7 @@ last_updated: "2026-03-11"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Not yet assessed. Phase 3 blocked on upstream library readiness."
+  readiness_note: "Active 2026-05-18: 6 kill-switch edge cases + AssetGroupMixedRuleFiring tests added; basedpyright drift 17->0 resolved. risk@5eb6c1e on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -28,11 +28,11 @@ code_readiness:
     notes: ""
 
   cr2_unit_tests:
-    status: "not_assessed"
+    status: "in_progress"
     criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
     coverage_pct: null
     coverage_floor_pct: 70
-    evidence: ""
+    evidence: "risk@5eb6c1e 2026-05-18: TestAssetGroupMixedRuleFiring 6 kill-switch edge cases; basedpyright 17->0 fixed"
     notes: ""
 
   cr3_integration_tests:
@@ -53,13 +53,13 @@ code_readiness:
     notes: ""
 
   cr4_quality_gate:
-    status: "not_assessed"
+    status: "in_progress"
     criteria:
       "bash scripts/quality-gates.sh Pass 1 fully green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts"
-    last_run_date: null
-    basedpyright_errors: null
+    last_run_date: "2026-05-18"
+    basedpyright_errors: 0
     ruff_errors: null
-    evidence: ""
+    evidence: "risk@5408d9f 2026-05-18: basedpyright reportAny drift cleared 17->0 in mock-data + backtest scripts"
     notes: ""
 
   cr5_quickmerge:

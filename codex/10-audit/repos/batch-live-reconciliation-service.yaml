@@ -10,7 +10,7 @@ deployment_modes: ["batch", "live"]
 business_modes: ["batch", "live"]
 version: "0.1.0"
 status: "active"
-last_updated: "2026-03-11"
+last_updated: "2026-05-18"
 
 # ==============================================================================
 # CODE READINESS
@@ -18,7 +18,7 @@ last_updated: "2026-03-11"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Not yet assessed. Phase 3 blocked on upstream library readiness."
+  readiness_note: "Active 2026-05-18: 4-class edge-case suite for reconcile_shard (empty/single/schema-drift/large) added. batch-live-reconciliation@a214cd1 on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -28,11 +28,11 @@ code_readiness:
     notes: ""
 
   cr2_unit_tests:
-    status: "not_assessed"
+    status: "in_progress"
     criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
     coverage_pct: null
     coverage_floor_pct: 70
-    evidence: ""
+    evidence: "batch-live@a214cd1 2026-05-18: reconcile_shard 4-class edge-case suite (empty/single/schema-drift/large)"
     notes: ""
 
   cr3_integration_tests:

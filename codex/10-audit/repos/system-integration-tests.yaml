@@ -10,7 +10,7 @@ deployment_modes: null
 business_modes: null
 version: "0.2.0"
 status: "scaffolded"
-last_updated: "2026-03-11"
+last_updated: "2026-05-18"
 
 # ==============================================================================
 # CODE READINESS
@@ -18,13 +18,13 @@ last_updated: "2026-03-11"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Not yet assessed. Phase 3 blocked on upstream library readiness."
+  readiness_note: "Active 2026-05-18: Phase 8 honest-coverage emission-flow scenarios added. system-integration-tests@47a1e04 on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
     criteria:
       "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code; audit §2 passes"
-    evidence: ""
+    evidence: "sit@47a1e04 2026-05-18: Phase 8 honest-coverage emission-flow scenarios implemented"
     notes: ""
 
   cr2_unit_tests:
