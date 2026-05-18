@@ -195,8 +195,10 @@ sides coherently.
       `record_captured(category="defi", data_type="strategy_decision_context", ...)`. Implemented in
       `decision_context_writer._record_manifest()` as best-effort ManifestWriter.record_captured with
       `PipelineMode.BATCH_STRATEGY_SERVICE`. — strategy-service@3c332ac (2026-05-18)
-- [ ] [AGENT] P0. Unit tests (3 minimum): synthetic OPEN decision, synthetic HOLD decision, synthetic CLOSE decision —
-      all round-trip through writer + reader + manifest.
+- [x] ✅ [AGENT] P0. Unit tests (3 minimum): synthetic OPEN decision, synthetic HOLD decision, synthetic CLOSE decision
+      — all round-trip through writer + reader + manifest. 11 tests in `test_decision_context_writer.py`: 5
+      `build_decision_outcome` + 6 `emit_strategy_decision_context` (schema, values, exception swallow,
+      HOLD_WITHIN_DRIFT_BAND, HOLD_POSITION_OPTIMAL, REBALANCED). — strategy-service@285f154 (2026-05-18)
 - [ ] [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with the
       pre-decision audit-trail addition. Cross-reference Phase 5 commit refs.
 - [ ] [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main →
