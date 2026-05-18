@@ -1573,3 +1573,13 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `algorithms/impl/passive_aggressive_spawn.py::_start_aggressive_phase`: 61L→29L (extract `_run_aggressive_scheduling` 21L)
 
 **Running count**: ~162/377 cleared (~43%); 37 violations remain; continuing tick-67.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-67 Phase B continued
+
+**Tick-67 deliverables** (2 files, execution-service@6ba53d526):
+- `sports_execution/adapters/exchanges/polymarket_clob.py`: extract `_emit_venue_error` @staticmethod (18L); place_bet 71L→37L, cancel_bet 75L→30L, place_order 89L→41L, list_open_orders 83L→33L (4 violations cleared)
+- `data/config_builder.py::build_trades_config`: 72L→49L (compact _load_missing_data 24L→7L + _log_data_summary 10L→5L + _resolve_domain_info 3L→1L)
+
+**Running count**: ~167/377 cleared (~44%); 32 violations remain; continuing tick-68.
