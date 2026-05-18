@@ -821,16 +821,34 @@ Ping slot-1 when shipped.
 
 ---
 
-## [main → slot 8] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: batch_live_symmetry Tab 2 codex + alerting rules close
+## [main → slot 8] 2026-05-18 ~00:20 UTC — Waves 54-58 acked + Phase 8.C COMPLETE
 
-**New Ikenna work split** (`c7aca145`): your slot = **batch_live_symmetry codex docs + alerting_service_live_rules close**.
+**Waves 54-58 acked** (final wave batch):
+- Wave 54 — referee_features 100% + replacement_model 100% — features-service@eb3fe8b1 ✅
+- Wave 55 — goal_timing 100% + formation_calculator 100% + weather_calculator 100% — features-service@7b81fc56 ✅
+- Wave 56 — player_lineup 98.6% + poisson_xg 100% (pandas 2.x fix) — features-service@69149a2b ✅
+- Wave 57 — manager 100% + team_form +% + venue_context 100% — features-service@2ca9f7c0 ✅
+- Wave 58 — travel_calculator 99.3% + transfer_window 99.2% — features-service@16ee1b46 ✅
+
+**Phase 8.C — per_archetype_calculators DECLARED COMPLETE**: 1523 tests, 99.7% aggregate. Outstanding work.
+
+**Phases 8.D, 8.E, Phase 9**: all items show `[x] ✅` — DONE.
+
+---
+
+## [main → slot 8] 2026-05-18 ~09:30 UTC — CORRECTION + NEW WORK SPLIT
+
+**CORRECTION**: `cefi-batch-live.md` + `mode-axis-discipline.md` ALREADY EXIST — Tab 2 codex done. writegate Phase 6.6+6.7 ALREADY DONE (Gate 4 closed 2026-05-15). Stale items in original work split.
+
+**New assignment**: alerting_service_live_rules SCRIPT items + api_keys Phase 5.B credential scaffold.
 
 **Items**:
-1. Tab 2 — `cefi-batch-live.md` codex doc: write/update `codex/10-batch-live/cefi-batch-live.md` (~200 lines: architecture, data flow, invariants, batch=live contract proof)
-2. Tab 2 — `mode-axis-discipline.md` codex doc: write/update `codex/` SSOT for `--mode batch|live` axis + `PIPELINE_MODE` enforcement
-3. `alerting_service_live_rules_2026_05_07` — 15 remaining items (plan at 51/66 = 77%); pick open `- [ ]` items
+1. `alerting_service_live_rules_2026_05_07` — 3 open `[SCRIPT]` P0 items:
+   - SM hot-reload for Telegram credentials in `alerting-service/alerting_service/config.py`
+   - Deploy alerting-service to staging Cloud Run + enable 15 alert rules
+   - Update `ALERT_THRESHOLDS` in UAC with tuned values
+2. `api_keys_wallets_accounts_readiness_2026_05_10` § 5.B — Prediction venue credential scaffold (Polymarket + Kalshi adapter + CREDENTIAL APPROVAL REQUEST)
 
-**Plans**: `plans/active/batch_live_symmetry_2026_05_10.md` + `plans/active/alerting_service_live_rules_2026_05_07.md`
-**NOTE**: Prior dispatch to "e2e-testing QG wiring" is SUPERSEDED by this split.
+**Plans**: `plans/active/alerting_service_live_rules_2026_05_07.md` + `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`
 
-Acknowledge "STARTED batch_live_symmetry Tab 2" within 10 min.
+Acknowledge "STARTED slot-8 alerting SM hot-reload" within 10 min.
