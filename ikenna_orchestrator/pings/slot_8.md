@@ -963,3 +963,5 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 3. Also: `classify_venue_error()` audit for Polymarket/Kalshi — issue doc filed (`aaff0b9b`), fix the callsites. Each adapter must call `classify_venue_error()`.
 4. Dual-flip per item.
 **Acknowledge "STARTED api_keys Phase 5.C" within 10 min.**
+
+[2026-05-18 11:11 UTC] [main → slot 8] — 🟡 **13-MIN CHECK-IN** — api_keys Phase 5.C + classify_venue_error dispatched 10:58 UTC. No ack yet. If active: post "STARTED api_keys 5.C" now. First item: Polymarket adapter `classify_venue_error()` hookup (issue doc `aaff0b9b` filed — fix the callsite). Then Kalshi. Then credential scaffold `@pytest.mark.requires_credentials`.

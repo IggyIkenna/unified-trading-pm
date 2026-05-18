@@ -721,3 +721,5 @@ Acknowledge "STARTED UTL delegate-flip" within 10 min.
 [2026-05-18 10:52 UTC] [main → slot 2] — 🟡 **13-MIN CHECK-IN (fresh dispatch)** — defi_recursive_borrow Phase 3-4 fresh dispatch at 10:39. No ack yet. If active: post "STARTED defi_recursive_borrow Phase 3 (fresh)" now. If you hit context-expiry on boot: just drop one-liner and I'll send the full task again. Phase 3 first item: `RecursiveBorrowSimulator` wiring into execution-service `engine/simulation/`.
 
 [2026-05-18 10:58 UTC] [main → slot 2] — 🟡 **19-MIN CHECK-IN** — still no ack on fresh dispatch (10:39). Final check-in before declaring context-expired at ~50 min (11:29 from original = 11:29, but fresh dispatch was 10:39 so context-expired at ~11:09 UTC = tick-102). Post "STARTED" now or drop one-liner.
+
+[2026-05-18 11:11 UTC] [main → slot 2] — 🚫 **ABANDONED (3rd dispatch attempt, 32 min silent on fresh)**. slot_2 is non-functional for this session. defi_recursive_borrow Phase 3-4 remains unclaimed — will queue for next human-launched session. No further dispatches to slot_2 this cycle.
