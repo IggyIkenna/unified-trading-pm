@@ -262,28 +262,54 @@ QG green on both repos. Ready for next queue.
 
 ---
 
-[2026-05-18 06:50 UTC] [main → slot 7] — RE-THEMED via --reset-slot. Prior theme: 2026-05-15 deployment-api/UI Phase 4 + endpoint extensions. New theme: deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
-[2026-05-18 06:55 UTC] slot-7 — STARTED deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
-[2026-05-18 08:30 UTC] slot-7 — DONE items 1/3/4. Item 2 SOAK-GATE (eligible 2026-05-24). Summary: Phase 2F INFRA verified+closed; 4 ImportError violations cleared (deployment-api@fbb74e3); QG snapshot stale finding filed (qg_snapshot_cron_stale_2026_05_18.md, BLOCKED-OPERATOR-DECISION). Item 2 annotated with soak start 2026-05-17.
+[2026-05-18 06:50 UTC] [main → slot 7] — RE-THEMED via --reset-slot. Prior theme: 2026-05-15 deployment-api/UI Phase 4 +
+endpoint extensions. New theme: deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
+[2026-05-18 06:55 UTC] slot-7 — STARTED deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot
+7). [2026-05-18 08:30 UTC] slot-7 — DONE items 1/3/4. Item 2 SOAK-GATE (eligible 2026-05-24). Summary: Phase 2F INFRA
+verified+closed; 4 ImportError violations cleared (deployment-api@fbb74e3); QG snapshot stale finding filed
+(qg_snapshot_cron_stale_2026_05_18.md, BLOCKED-OPERATOR-DECISION). Item 2 annotated with soak start 2026-05-17.
 
-[2026-05-18 13:10 UTC] [main → slot 7] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to your section at 12:55 UTC (PM@ed3776bf). `cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
+[2026-05-18 13:10 UTC] [main → slot 7] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to
+your section at 12:55 UTC (PM@ed3776bf).
+`cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped
+items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
 
-[2026-05-18 13:24 UTC] [main → slot 7] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 7 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 7 — MEGA RESERVE".
+[2026-05-18 13:24 UTC] [main → slot 7] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8
+commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` §
+Slot 7 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits
+41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12
+cal-days more depth) added 13:21 UTC (PM@739bf747).
+`cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships.
+Themes per slot in work_split § "Slot 7 — MEGA RESERVE".
 
-[2026-05-18 13:32 UTC] [main → slot 7] — 🟡 **STATUS REQUEST** — 35+ min silent (last activity ~13:18). Work_split slot 7 has 8 unchecked items (deep reserves 11/12/13 + mega reserves 14/15/16/17). Item 14 = deployment_ui_lifecycle_tabs (30 cal-days plan, plenty of mechanical work). Drop a STARTED ack or BLOCKED reason in slot_7.md when you can.
+[2026-05-18 13:32 UTC] [main → slot 7] — 🟡 **STATUS REQUEST** — 35+ min silent (last activity ~13:18). Work_split slot
+7 has 8 unchecked items (deep reserves 11/12/13 + mega reserves 14/15/16/17). Item 14 = deployment_ui_lifecycle_tabs (30
+cal-days plan, plenty of mechanical work). Drop a STARTED ack or BLOCKED reason in slot_7.md when you can.
 
-[2026-05-18 14:05 UTC] [slot-4 → slot-7] — 📌 **SUCCESSOR ROUTING** — alerting_runbook Group G (AL-21 UX half): STALE_OPEN_ALERT dashboard tile. Design decided: tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Deadline 2026-08-31 (post-cutover backlog). Plan-of-record: `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` § Group G. Slot 7 owns deployment-ui → pick up when you have bandwidth (non-urgent post-cutover item).
+[2026-05-18 14:05 UTC] [slot-4 → slot-7] — 📌 **SUCCESSOR ROUTING** — alerting_runbook Group G (AL-21 UX half):
+STALE_OPEN_ALERT dashboard tile. Design decided: tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps
+alerting stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Deadline 2026-08-31 (post-cutover backlog).
+Plan-of-record: `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` § Group G. Slot 7 owns
+deployment-ui → pick up when you have bandwidth (non-urgent post-cutover item).
 
-[2026-05-18 UTC] slot-7 — 🏁 **SESSION RESUME + DUAL-FLIP BACKFILL COMPLETE**. Items 14+15 plan-of-record dual-flip backfilled (PM@a364e912): deployment_ui_lifecycle_tabs_2026_05_08.md b3/b4/b7/c1 checkboxes now ✅; promote_workflow_post_cutover_ui_pipeline_2026_05_10.md DEFERRED-POST-CUTOVER banner added. All slot 7 items complete (1-17 ✅, 2 DEFERRED-ACKNOWLEDGED, 16 DEFERRED-POST-CUTOVER). STALE_OPEN_ALERT routing from slot 4 (deadline 2026-08-31) acknowledged — post-cutover backlog, no action today. QUEUE EXHAUSTED.
+[2026-05-18 UTC] slot-7 — 🏁 **SESSION RESUME + DUAL-FLIP BACKFILL COMPLETE**. Items 14+15 plan-of-record dual-flip
+backfilled (PM@a364e912): deployment_ui_lifecycle_tabs_2026_05_08.md b3/b4/b7/c1 checkboxes now ✅;
+promote_workflow_post_cutover_ui_pipeline_2026_05_10.md DEFERRED-POST-CUTOVER banner added. All slot 7 items complete
+(1-17 ✅, 2 DEFERRED-ACKNOWLEDGED, 16 DEFERRED-POST-CUTOVER). STALE_OPEN_ALERT routing from slot 4 (deadline 2026-08-31)
+acknowledged — post-cutover backlog, no action today. QUEUE EXHAUSTED.
 
-[2026-05-18 09:12 UTC] [main → slot 7] — 🟢 **FRESH THEME — queue exhausted (17/17 items, soak-gate on item 2 = 2026-05-24).** New dispatch: **`mock_data_pipeline_benchmarking_2026_05_10` final 2 items (94%, 29/31) → chain to `expected_unattempted_propagation_chain_2026_05_12` residuals (77%, 34/44, 10 items)**.
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
-  2. `git pull --rebase origin live-defi-rollout`
-  3. Read `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — find 2 unchecked `- [ ]` items. Ship quickly.
-  4. Chain to `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` (10 unchecked items). Pick 3-5.
-  5. QG per repo. Dual-flip work_split + plan-of-record in same `docs(plans):` commit.
-**Conflict-risk**: MTDS = slot 9 (harsh). Check for MTDS commits before pushing.
-**Acknowledge "STARTED mock_data_pipeline final items" within 10 min.**
+[2026-05-18 09:12 UTC] [main → slot 7] — 🟢 **FRESH THEME — queue exhausted (17/17 items, soak-gate on item 2 =
+2026-05-24).** New dispatch: **`mock_data_pipeline_benchmarking_2026_05_10` final 2 items (94%, 29/31) → chain to
+`expected_unattempted_propagation_chain_2026_05_12` residuals (77%, 34/44, 10 items)**.
+
+1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+2. `git pull --rebase origin live-defi-rollout`
+3. Read `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — find 2 unchecked `- [ ]` items. Ship quickly.
+4. Chain to `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` (10 unchecked items). Pick 3-5.
+5. QG per repo. Dual-flip work_split + plan-of-record in same `docs(plans):` commit. **Conflict-risk**: MTDS = slot 9
+   (harsh). Check for MTDS commits before pushing. **Acknowledge "STARTED mock_data_pipeline final items" within 10
+   min.**
+
 # Slot 7 ping file — re-themed 2026-05-15
 
 > Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N). Full Q&A lives in
@@ -446,42 +472,37 @@ deployment-api@3acda8e. Plan flipped.
 
 [2026-05-15 19:15 UTC] slot-7 — ✅ DONE queue item 8: deployment-ui deployment diff viewer — DeploymentDiffPanel
 component in DeploymentsList; Compare SHAs toggle button (data-testid="toggle-diff-btn"); form inputs + submit;
-added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green.
-deployment-ui@2c221ac. Plan flipped. Starting item 9: deployment-api cost estimate endpoint.
+added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green. deployment-ui@2c221ac.
+Plan flipped. Starting item 9: deployment-api cost estimate endpoint.
 
 [2026-05-15 19:45 UTC] slot-7 — ✅ DONE queue item 9: deployment-api cost estimate endpoint — POST
 /api/vm/cost-estimate; VmCostEstimateRequest + VmCostEstimateResponse models; n1/n2 GCP pricing table for
 asia-northeast1; compute+disk breakdown; count multiplier; unknown machine type fallback with flag; 9 unit tests; QG
 green. deployment-api@d3a001a. Plan flipped. Starting item 10: deployment-ui cost estimate panel.
 
-[2026-05-15 20:15 UTC] slot-7 — ✅ DONE queue item 10: deployment-ui cost estimate panel —
-VmCostEstimatePanel component (machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate POST;
-compute+disk+total breakdown; dry_run badge; unknown machine type warning); wired into MlExperiments form before
-Submit; fetchVmCostEstimate API function added to deploymentApi.ts; 5 vitest tests; 63 total; QG green.
-deployment-ui@5147f4b. Plan flipped. Starting item 13: responsive mobile layout audit.
+[2026-05-15 20:15 UTC] slot-7 — ✅ DONE queue item 10: deployment-ui cost estimate panel — VmCostEstimatePanel component
+(machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate POST; compute+disk+total breakdown; dry_run
+badge; unknown machine type warning); wired into MlExperiments form before Submit; fetchVmCostEstimate API function
+added to deploymentApi.ts; 5 vitest tests; 63 total; QG green. deployment-ui@5147f4b. Plan flipped. Starting item 13:
+responsive mobile layout audit.
 
-[2026-05-15 20:45 UTC] slot-7 — ✅ DONE queue item 13: deployment-ui responsive mobile layout audit —
-Header: hamburger toggle (md:hidden) + mobile nav dropdown with all 8 routes;
-DeploymentHistory: overflow-x-auto table wrapper;
-MlExperiments: 4 form grids → grid-cols-1 sm:grid-cols-2;
-StrategyBacktests: form grid → sm:grid-cols-2;
-Dart: status grid → sm:grid-cols-3, form grids → sm:grid-cols-2 + sm:grid-cols-3;
-ClientSubscriptions: service grid → sm:grid-cols-2.
+[2026-05-15 20:45 UTC] slot-7 — ✅ DONE queue item 13: deployment-ui responsive mobile layout audit — Header: hamburger
+toggle (md:hidden) + mobile nav dropdown with all 8 routes; DeploymentHistory: overflow-x-auto table wrapper;
+MlExperiments: 4 form grids → grid-cols-1 sm:grid-cols-2; StrategyBacktests: form grid → sm:grid-cols-2; Dart: status
+grid → sm:grid-cols-3, form grids → sm:grid-cols-2 + sm:grid-cols-3; ClientSubscriptions: service grid → sm:grid-cols-2.
 pnpm build + QG green (63 tests). deployment-ui@fd4fa83. Plan flipped.
 
-[2026-05-15 20:45 UTC] slot-7 — 🏁 EXTENDED QUEUE CYCLE-CLOSE. All items 3-13 done:
-(3) WebSocket UI ✅ @8bace71 (4) admin VM endpoints ✅ @af80be6 (5) VM log streaming ✅ @13b0194
-(6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac
-(9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅ @5147f4b (13) mobile layout ✅ @fd4fa83.
-QG green on both repos. Ready for next queue.
+[2026-05-15 20:45 UTC] slot-7 — 🏁 EXTENDED QUEUE CYCLE-CLOSE. All items 3-13 done: (3) WebSocket UI ✅ @8bace71 (4)
+admin VM endpoints ✅ @af80be6 (5) VM log streaming ✅ @13b0194 (6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff
+endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac (9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅
+@5147f4b (13) mobile layout ✅ @fd4fa83. QG green on both repos. Ready for next queue.
 
 ---
 
 ## [2026-05-15 22:30 UTC] [main → slot 7] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
 
-> 🏁 CYCLE-CLOSE acked. Outstanding — 13/13 items shipped. Re-anchoring as
-> todo-checkbox list per operator request. 7-item fresh extension (~14 AI-days).
-> Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+> 🏁 CYCLE-CLOSE acked. Outstanding — 13/13 items shipped. Re-anchoring as todo-checkbox list per operator request.
+> 7-item fresh extension (~14 AI-days). Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
 
 ### Already done this cycle
 
@@ -497,23 +518,41 @@ QG green on both repos. Ready for next queue.
 - [x] **10. deployment-ui cost estimate panel** — deployment-ui@5147f4b
 - [x] **11. deployment-ui Phase 11 recursive-borrow polish** — (backfilled)
 - [x] **12. deployment-api request-tracing middleware** — (backfilled, CorrelationIdMiddleware)
-- [x] **13. deployment-ui responsive mobile layout audit** — deployment-ui@fd4fa83 (8 routes, 63 vitest tests, pnpm build green)
+- [x] **13. deployment-ui responsive mobile layout audit** — deployment-ui@fd4fa83 (8 routes, 63 vitest tests, pnpm
+      build green)
 
 ### Fresh extension (items 14-20, ~14 AI-days)
 
-- [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health; VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11 unit tests; QG green.
+- [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health;
+      VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11
+      unit tests; QG green.
 
-- [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult types; 8 vitest tests; QG green.
+- [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component
+      (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult
+      types; 8 vitest tests; QG green.
 
-- [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models; _parse_blob + _aggregate + _mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 + _parse_blob 3 + _aggregate 4 + prod no-blobs 1); QG green.
+- [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET
+      /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models;
+      \_parse_blob + \_aggregate + \_mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 +
+      \_parse_blob 3 + \_aggregate 4 + prod no-blobs 1); QG green.
 
-- [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts(); Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
+- [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date
+      picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts();
+      Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
 
-- [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses _list_real_events from vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad since, prod no-blobs); QG green.
+- [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET
+      /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses \_list_real_events from
+      vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad
+      since, prod no-blobs); QG green.
 
-- [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name + VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types + fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
+- [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical
+      event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name +
+      VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types +
+      fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
 
-- [x] **20. deployment-api Firebase auth middleware integration tests** — deployment-api@715ac1a: 11 integration tests covering verify_firebase_token (missing header, non-Bearer, empty, expired, wrong-issuer, wrong-audience, valid token) + verify_any_auth (valid API key, invalid API key, no-auth 401, valid Firebase token); QG green.
+- [x] **20. deployment-api Firebase auth middleware integration tests** — deployment-api@715ac1a: 11 integration tests
+      covering verify_firebase_token (missing header, non-Bearer, empty, expired, wrong-issuer, wrong-audience, valid
+      token) + verify_any_auth (valid API key, invalid API key, no-auth 401, valid Firebase token); QG green.
 
 **Conflict rules**: deployment-api + deployment-ui = slot 7 OWNS; UAC = surgical only (Ikenna primary).
 
@@ -535,41 +574,80 @@ QG green on both repos. Ready for next queue.
 
 ---
 
-[2026-05-18 06:50 UTC] [main → slot 7] — RE-THEMED via --reset-slot. Prior theme: 2026-05-15 deployment-api/UI Phase 4 + endpoint extensions. New theme: deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
-[2026-05-18 06:55 UTC] slot-7 — STARTED deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
-[2026-05-18 08:30 UTC] slot-7 — DONE items 1/3/4. Item 2 SOAK-GATE (eligible 2026-05-24). Summary: Phase 2F INFRA verified+closed; 4 ImportError violations cleared (deployment-api@fbb74e3); QG snapshot stale finding filed (qg_snapshot_cron_stale_2026_05_18.md, BLOCKED-OPERATOR-DECISION). Item 2 annotated with soak start 2026-05-17.
+[2026-05-18 06:50 UTC] [main → slot 7] — RE-THEMED via --reset-slot. Prior theme: 2026-05-15 deployment-api/UI Phase 4 +
+endpoint extensions. New theme: deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
+[2026-05-18 06:55 UTC] slot-7 — STARTED deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot
+7). [2026-05-18 08:30 UTC] slot-7 — DONE items 1/3/4. Item 2 SOAK-GATE (eligible 2026-05-24). Summary: Phase 2F INFRA
+verified+closed; 4 ImportError violations cleared (deployment-api@fbb74e3); QG snapshot stale finding filed
+(qg_snapshot_cron_stale_2026_05_18.md, BLOCKED-OPERATOR-DECISION). Item 2 annotated with soak start 2026-05-17.
 
-[2026-05-18 13:10 UTC] [main → slot 7] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to your section at 12:55 UTC (PM@ed3776bf). `cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
+[2026-05-18 13:10 UTC] [main → slot 7] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to
+your section at 12:55 UTC (PM@ed3776bf).
+`cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped
+items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
 
-[2026-05-18 13:24 UTC] [main → slot 7] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 7 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 7 — MEGA RESERVE".
+[2026-05-18 13:24 UTC] [main → slot 7] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8
+commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` §
+Slot 7 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits
+41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12
+cal-days more depth) added 13:21 UTC (PM@739bf747).
+`cd .tabs/7/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships.
+Themes per slot in work_split § "Slot 7 — MEGA RESERVE".
 
-[2026-05-18 13:32 UTC] [main → slot 7] — 🟡 **STATUS REQUEST** — 35+ min silent (last activity ~13:18). Work_split slot 7 has 8 unchecked items (deep reserves 11/12/13 + mega reserves 14/15/16/17). Item 14 = deployment_ui_lifecycle_tabs (30 cal-days plan, plenty of mechanical work). Drop a STARTED ack or BLOCKED reason in slot_7.md when you can.
+[2026-05-18 13:32 UTC] [main → slot 7] — 🟡 **STATUS REQUEST** — 35+ min silent (last activity ~13:18). Work_split slot
+7 has 8 unchecked items (deep reserves 11/12/13 + mega reserves 14/15/16/17). Item 14 = deployment_ui_lifecycle_tabs (30
+cal-days plan, plenty of mechanical work). Drop a STARTED ack or BLOCKED reason in slot_7.md when you can.
 
-[2026-05-18 14:05 UTC] [slot-4 → slot-7] — 📌 **SUCCESSOR ROUTING** — alerting_runbook Group G (AL-21 UX half): STALE_OPEN_ALERT dashboard tile. Design decided: tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Deadline 2026-08-31 (post-cutover backlog). Plan-of-record: `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` § Group G. Slot 7 owns deployment-ui → pick up when you have bandwidth (non-urgent post-cutover item).
+[2026-05-18 14:05 UTC] [slot-4 → slot-7] — 📌 **SUCCESSOR ROUTING** — alerting_runbook Group G (AL-21 UX half):
+STALE_OPEN_ALERT dashboard tile. Design decided: tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps
+alerting stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Deadline 2026-08-31 (post-cutover backlog).
+Plan-of-record: `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` § Group G. Slot 7 owns
+deployment-ui → pick up when you have bandwidth (non-urgent post-cutover item).
 
-[2026-05-18 UTC] slot-7 — 🏁 **SESSION RESUME + DUAL-FLIP BACKFILL COMPLETE**. Items 14+15 plan-of-record dual-flip backfilled (PM@a364e912): deployment_ui_lifecycle_tabs_2026_05_08.md b3/b4/b7/c1 checkboxes now ✅; promote_workflow_post_cutover_ui_pipeline_2026_05_10.md DEFERRED-POST-CUTOVER banner added. All slot 7 items complete (1-17 ✅, 2 DEFERRED-ACKNOWLEDGED, 16 DEFERRED-POST-CUTOVER). STALE_OPEN_ALERT routing from slot 4 (deadline 2026-08-31) acknowledged — post-cutover backlog, no action today. QUEUE EXHAUSTED.
+[2026-05-18 UTC] slot-7 — 🏁 **SESSION RESUME + DUAL-FLIP BACKFILL COMPLETE**. Items 14+15 plan-of-record dual-flip
+backfilled (PM@a364e912): deployment_ui_lifecycle_tabs_2026_05_08.md b3/b4/b7/c1 checkboxes now ✅;
+promote_workflow_post_cutover_ui_pipeline_2026_05_10.md DEFERRED-POST-CUTOVER banner added. All slot 7 items complete
+(1-17 ✅, 2 DEFERRED-ACKNOWLEDGED, 16 DEFERRED-POST-CUTOVER). STALE_OPEN_ALERT routing from slot 4 (deadline 2026-08-31)
+acknowledged — post-cutover backlog, no action today. QUEUE EXHAUSTED.
 
-[2026-05-18 09:12 UTC] [main → slot 7] — 🟢 **FRESH THEME — queue exhausted (17/17 items, soak-gate on item 2 = 2026-05-24).** New dispatch: **`mock_data_pipeline_benchmarking_2026_05_10` final 2 items (94%, 29/31) → chain to `expected_unattempted_propagation_chain_2026_05_12` residuals (77%, 34/44, 10 items)**.
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
-  2. `git pull --rebase origin live-defi-rollout`
-  3. Read `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — find 2 unchecked `- [ ]` items. Ship quickly.
-  4. Chain to `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` (10 unchecked items). Pick 3-5.
-  5. QG per repo. Dual-flip work_split + plan-of-record in same `docs(plans):` commit.
-**Conflict-risk**: MTDS = slot 9 (harsh). Check for MTDS commits before pushing.
-**Acknowledge "STARTED mock_data_pipeline final items" within 10 min.**
+[2026-05-18 09:12 UTC] [main → slot 7] — 🟢 **FRESH THEME — queue exhausted (17/17 items, soak-gate on item 2 =
+2026-05-24).** New dispatch: **`mock_data_pipeline_benchmarking_2026_05_10` final 2 items (94%, 29/31) → chain to
+`expected_unattempted_propagation_chain_2026_05_12` residuals (77%, 34/44, 10 items)**.
 
-[2026-05-18 14:35 UTC] [main → slot 7] — 🟢 **DEEP SUSTAIN QUEUE — ~100 cal-days available**. Operator directive: keep slot 7 going for hours without dispatch. 15 mechanical non-blocking items (S1-S15) added at work_split § Slot 7 § "Deep sustain queue". Themes: deployment_ui_lifecycle_tabs (30 cal-days plan) + promote_workflow post-cutover UI pre-stage (20 cal-days) + deployment-api coverage uplift to 90% + deployment-ui playwright e2e + Firebase RBAC audit + OpenAPI spec gen + WCAG AA audit + rate-limit audit + VM watchdog hardening + dashboard widget cross-check + dark-mode audit + audit-log emission + mobile-responsive smoketests + error response standardization + i18n readiness. All in deployment-api+ui territory (SOLE owner) — no cross-side deps. `cd .tabs/7/unified-trading-pm && git pull --rebase origin live-defi-rollout` to see them.
+1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+2. `git pull --rebase origin live-defi-rollout`
+3. Read `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — find 2 unchecked `- [ ]` items. Ship quickly.
+4. Chain to `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` (10 unchecked items). Pick 3-5.
+5. QG per repo. Dual-flip work_split + plan-of-record in same `docs(plans):` commit. **Conflict-risk**: MTDS = slot 9
+   (harsh). Check for MTDS commits before pushing. **Acknowledge "STARTED mock_data_pipeline final items" within 10
+   min.**
 
-[2026-05-18 09:25 UTC] slot-7 — STARTED mock_data_pipeline_benchmarking final 2 items → chain to expected_unattempted_propagation_chain (10 items). Auditing now.
+[2026-05-18 14:35 UTC] [main → slot 7] — 🟢 **DEEP SUSTAIN QUEUE — ~100 cal-days available**. Operator directive: keep
+slot 7 going for hours without dispatch. 15 mechanical non-blocking items (S1-S15) added at work_split § Slot 7 § "Deep
+sustain queue". Themes: deployment_ui_lifecycle_tabs (30 cal-days plan) + promote_workflow post-cutover UI pre-stage (20
+cal-days) + deployment-api coverage uplift to 90% + deployment-ui playwright e2e + Firebase RBAC audit + OpenAPI spec
+gen + WCAG AA audit + rate-limit audit + VM watchdog hardening + dashboard widget cross-check + dark-mode audit +
+audit-log emission + mobile-responsive smoketests + error response standardization + i18n readiness. All in
+deployment-api+ui territory (SOLE owner) — no cross-side deps.
+`cd .tabs/7/unified-trading-pm && git pull --rebase origin live-defi-rollout` to see them.
 
-[2026-05-18 17:15 UTC] [main → slot 7] — 🟡 **MINOR UNCOMMITTED CHANGE** — deep audit of `.tabs/7/unified-trading-pm` shows 2 files dirty: `workspace-manifest.json` (`ci_status: FAILING → LOCAL_PASS` for deployment-service) + `WORKSPACE_MANIFEST_DAG.svg` (auto-regen). Both correctly produced by slot 7 dependency-graph work. On natural pause:
-  1. `cd .tabs/7/unified-trading-pm && git status` — verify the 2 files dirty.
-  2. `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg && git commit -m "chore(manifest): set deployment-service ci_status=LOCAL_PASS + regen DAG (slot 7)"`
-  3. Continue deep-sustain queue. Tab worktree is otherwise clean across deployment-api / deployment-ui / deployment-service.
+[2026-05-18 09:25 UTC] slot-7 — STARTED mock_data_pipeline_benchmarking final 2 items → chain to
+expected_unattempted_propagation_chain (10 items). Auditing now.
 
-[2026-05-18 UTC] slot-7 — 🟢 **ACTIVE — deep-sustain queue progress**. SOLE OWNER: deployment-api + deployment-ui. DO NOT TOUCH these repos from other slots.
+[2026-05-18 17:15 UTC] [main → slot 7] — 🟡 **MINOR UNCOMMITTED CHANGE** — deep audit of `.tabs/7/unified-trading-pm`
+shows 2 files dirty: `workspace-manifest.json` (`ci_status: FAILING → LOCAL_PASS` for deployment-service) +
+`WORKSPACE_MANIFEST_DAG.svg` (auto-regen). Both correctly produced by slot 7 dependency-graph work. On natural pause:
+
+1. `cd .tabs/7/unified-trading-pm && git status` — verify the 2 files dirty.
+2. `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg && git commit -m "chore(manifest): set deployment-service ci_status=LOCAL_PASS + regen DAG (slot 7)"`
+3. Continue deep-sustain queue. Tab worktree is otherwise clean across deployment-api / deployment-ui /
+   deployment-service.
+
+[2026-05-18 UTC] slot-7 — 🟢 **ACTIVE — deep-sustain queue progress**. SOLE OWNER: deployment-api + deployment-ui. DO
+NOT TOUCH these repos from other slots.
 
 **SHIPPED TODAY (2026-05-18):**
+
 - S5 ✅ deployment-api@71ba947 — Firebase auth RBAC guard on 4 launch endpoints + 8 tests
 - S6 ✅ deployment-api@e1fa23d — OpenAPI spec 170 paths/181 endpoints generated
 - S7 ✅ deployment-ui@c8cab31 — WCAG AA axe audit: 7 pages 0 critical violations, 13 fixes
@@ -579,12 +657,25 @@ QG green on both repos. Ready for next queue.
 - S11 ✅ deployment-ui@0ee228f — dark-mode audit (8 components migrated to CSS vars)
 
 **IN PROGRESS / NEXT:**
-- S12: deployment-api audit-log emission coverage (sensitive endpoints — treasury, key rotation, RBAC changes). Not started. Will touch deployment-api/ only.
-- S13: deployment-ui mobile-responsive smoketest extension (playwright viewports). Will touch deployment-ui/ tests/ only.
+
+- S12: deployment-api audit-log emission coverage (sensitive endpoints — treasury, key rotation, RBAC changes). Not
+  started. Will touch deployment-api/ only.
+- S13: deployment-ui mobile-responsive smoketest extension (playwright viewports). Will touch deployment-ui/ tests/
+  only.
 - S14: deployment-api error response standardization. deployment-api/ only.
 - S15: i18n readiness audit. deployment-ui/ only.
 
 **FILES I OWN (do not touch from other slots):**
+
 - `/home/hk/unified-trading-system-repos/.tabs/7/deployment-api/` (all files)
 - `/home/hk/unified-trading-system-repos/.tabs/7/deployment-ui/` (all files)
-- `/home/hk/unified-trading-system-repos/.tabs/7/deployment-service/tests/unit/test_vm_zombie_watchdog.py` (surgical — done)
+- `/home/hk/unified-trading-system-repos/.tabs/7/deployment-service/tests/unit/test_vm_zombie_watchdog.py` (surgical —
+  done)
+
+---
+
+[2026-05-18 EOD] slot-7 — 🏁 **SESSION CLOSE**. S3 deployment-api coverage uplift: 74.38%→~83%.
+Committed: DataAnalyticsService turbo/cache/stats/aggregate tests (37 tests, deployment-api@8773458).
+Deferred to next session: services/data_status_service.py (610 missed), data_status_drilldown.py (328),
+shard_detail.py (268), utils/cache.py (92), utils/path_combinatorics.py (93), deploy_missing_launch.py (69).
+S3 remains `- [ ]` (not yet ≥90%). All other S1-S15 items remain as previously flipped. Operator directed EOD stop.
