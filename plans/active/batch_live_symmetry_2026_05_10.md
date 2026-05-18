@@ -378,13 +378,14 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **commodity family** — lift
-      `features-service (commodity family)/.../service.py:CommodityFeatureService` to ModeHandler ABC per template at
-      `features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py:24`.
-      `LiveHandler` + `BatchHandler` subclasses; abstract `compute()` + `execute()`.
-- [ ] [SCRIPT] P0. **cross_instrument family** — same lift pattern.
-- [ ] [SCRIPT] P0. **multi_timeframe family** — same.
-- [ ] [SCRIPT] P0. **calendar family** — same.
+- [x] ✅ [SCRIPT] P0. **commodity family** — `ComputeHandler(BaseModeHandler)` in
+      `features_service/commodity/cli/main.py`. — features-service (confirmed 2026-05-18 backfill)
+- [x] ✅ [SCRIPT] P0. **cross_instrument family** — `ComputeHandler(BaseModeHandler)` in
+      `features_service/cross_instrument/cli/main.py`. — features-service (confirmed 2026-05-18 backfill)
+- [x] ✅ [SCRIPT] P0. **multi_timeframe family** — `ComputeHandler(BaseModeHandler)` + `InfoHandler(BaseModeHandler)` in
+      `features_service/multi_timeframe/cli/main.py`. — features-service (confirmed 2026-05-18 backfill)
+- [x] ✅ [SCRIPT] P0. **calendar family** — `CalendarBatchModeHandler(BaseModeHandler)` in
+      `features_service/calendar/cli/handlers/batch_handler.py`. — features-service (confirmed 2026-05-18 backfill)
 - [ ] [SCRIPT] P0. Per family: `bash scripts/quality-gates.sh` + `git push origin live-defi-rollout`.
 - [ ] [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4 families
       from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline).

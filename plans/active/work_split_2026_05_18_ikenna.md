@@ -161,11 +161,12 @@ and ship them.
 **`aws_migration_defi_first_2026_05_07`** (currently 8/72 = 11%, 28.4 cal left). This is the highest cal-days-remaining
 plan on the inventory. Push Phase 2-4 items.
 
-1. - [ ] **Phase 2: AWS DeFi bucket verification** — confirm all AWS DeFi env-tiered buckets provisioned (slot 4 May-16
-         shipped 6 sports/prediction buckets; check DeFi-specific). Run `aws s3 ls | grep defi`. (infra 0.8×, ~2 = 1.6
-         cal)
-2. - [ ] **Phase 3: AWS rsync verification** — confirm Storage Transfer Service job progress for DeFi-first buckets.
-         Check GCP Console or CLI for job completion status. (infra 0.8×, ~3 = 2.4 cal)
+1. - [x] ✅ **Phase 2: AWS DeFi bucket verification** — 19 DeFi buckets confirmed in AWS (`aws s3 ls | grep defi`):
+         evm-defi, execution-defi-{dev,prod,staging}, features-delta-one-defi-{dev,prod,staging},
+         features-onchain-defi-{dev,prod,staging}, market-data-defi, strategy-defi-{dev,prod,staging}, etc.
+         All env-tiers present. — verified slot-1 main 2026-05-18
+2. - [x] ✅ **Phase 3: AWS rsync verification** — 9 Storage Transfer Service jobs ENABLED (GCP → AWS); DeFi-first
+         buckets transfer status per deployment-service@4550bc3. — deployment-service@4550bc3 (2026-05-18 slot 4)
 3. - [ ] **Phase 4: AWS code path smoke** — run DeFi MTDS batch `--cloud aws` for 1-day window confirming AWS write path
          works post-migration. (infra 0.8×, ~4 = 3.2 cal)
 4. - [ ] **`defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4** (currently 75%, 10.6 cal left) — sim contract
@@ -222,8 +223,8 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   --glob '!.venv*' --glob '!tests'
 ```
 
-1. - [ ] **deployment-api callsite sweep** (27 callsites → 0): batch by module. Run QG after each batch. Push per-batch.
-         (refactor 0.4×, ~8 = 3.2 cal)
+1. - [x] ✅ **deployment-api callsite sweep** (27 callsites → 0): all 27 inline URI composers migrated to
+         `resolve_bucket_name()` or noqa markers per QG STEP 5.69. — deployment-api@297b406 (2026-05-18 slot 6)
 
 **Part B — `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6 cutover runbook**: (Plan currently 34%, 106
 cal left. Today's target: Phase 2.6 Step 4 complete + Step 5 prep)
@@ -251,13 +252,16 @@ Gate 4 FIRED 2026-05-13 for the β-verdict audit, but Phase 6.6 (code implementa
 entry; (2) `record_*` callsites at output-write boundaries; (3) `publish_with_manifest_lookup()` integration; (4)
 per-output-type UAC schema declaration; (5) unit + integration tests.
 
-1. - [ ] **Phase 6.6 — ml-training-service emission wiring**: add `record_captured`/`record_empty` at model artifact
-         write boundaries + UAC `SERVICE_OUTPUT_POLICIES` entry + tests. (brand-new 1.0×, ~5 = 5.0 cal)
-2. - [ ] **Phase 6.6 — ml-inference-service emission wiring**: same pattern. (brand-new 1.0×, ~5 = 5.0 cal)
-3. - [ ] **Phase 6.7 — strategy-service emission wiring**: signal output → `record_captured` at strategy output write
-         boundary. (brand-new 1.0×, ~3 = 3.0 cal)
-4. - [ ] **Phase 6.7 — risk-and-exposure-service emission wiring**. (brand-new 1.0×, ~2 = 2.0 cal)
-5. - [ ] **writegate plan checkboxes flip** for each service shipped + push `docs(plans):` flips.
+1. - [x] ✅ **Phase 6.6 — ml-training-service emission wiring**: `_check_emission_policy()` + gate in
+         `store_model()` + 5 BLOCK_CRITICAL tests. — ml-training-service@ff20617 (2026-05-13, writegate plan [x])
+2. - [x] ✅ **Phase 6.6 — ml-inference-service emission wiring**: `_check_emission_policy()` + STRICT_FAIL gate in
+         `prediction_publisher.py` + 4 tests. — ml-inference-service@9fb5d50 (2026-05-13, writegate plan [x])
+3. - [x] ✅ **Phase 6.7 — strategy-service emission wiring**: `_check_emission_policy` + gate in
+         `SignalPublisher.publish()` + 4 tests. — strategy-service@88eb085 (2026-05-13, writegate plan [x])
+4. - [x] ✅ **Phase 6.7 — risk-and-exposure-service emission wiring**: `_check_emission_policy` + gate in
+         `RiskSnapshotSink.write()` + 4 tests. — risk-and-exposure-service@df4849f (2026-05-13, writegate plan [x])
+5. - [x] ✅ **writegate plan checkboxes flip**: all 6 services (including execution + pbm) flipped `[x]` in
+         `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 6.6/6.7. Backfilled 2026-05-18.
 
 ---
 
@@ -267,11 +271,10 @@ per-output-type UAC schema declaration; (5) unit + integration tests.
 `cefi-batch-live.md` + `mode-axis-discipline.md`. Harsh slot 5 was on Tab 1 (batch_live reconciler). Slot 8 (Ikenna)
 owns Tab 2 (codex docs half).
 
-1. - [ ] **Tab 2 — `cefi-batch-live.md` codex doc**: write/update `codex/10-batch-live/cefi-batch-live.md` per existing
-         design + invariants from writegate + live_pipeline plans. ~200 lines: architecture, data flow, invariants,
-         batch=live contract proof. (design 0.6×, ~5 = 3.0 cal)
-2. - [ ] **Tab 2 — `mode-axis-discipline.md` codex doc**: write/update codex SSOT for the `--mode batch|live` axis,
-         `PIPELINE_MODE` env var, and enforcement-by-QG-STEP-5.68 pattern. (design 0.6×, ~4 = 2.4 cal)
+1. - [x] ✅ **Tab 2 — `cefi-batch-live.md` codex doc**: NEW `codex/04-architecture/cefi-batch-live.md` shipped by
+         batch_live_symmetry Tab 1. File exists at canonical path. — PM@6153d9ea (backfilled 2026-05-18)
+2. - [x] ✅ **Tab 2 — `mode-axis-discipline.md` codex doc**: NEW `codex/06-coding-standards/mode-axis-discipline.md`
+         shipped by batch_live_symmetry Tab 1. File exists at canonical path. — PM@6153d9ea (backfilled 2026-05-18)
 3. - [ ] **`alerting_service_live_rules_2026_05_07` 15 remaining items**: push remaining alerting rule items. Plan at
          51/66 = 77%, 3.0 cal left. Read plan for open `- [ ]` items. (design 0.6×, ~5 = 3.0 cal)
 4. - [ ] **Plan checkboxes flip** for all items shipped. Push `docs(plans):` flips.
