@@ -883,15 +883,16 @@ smoke begins.
       Pre-stage 10+ UI components for promote-button workflow + DART manual-trade gate UI. Mark items
       DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 10+ items pre-staged + pnpm build green. **~20 cal-days**.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
-      2026-05-18 slot-7**: 74.38%→~82%+ in this session (deployment-api@4937100, 3659 tests):
-      service_status 19.2%→83.4% (23 new), deployments mock 64.9%→70.6% (10 new),
-      sports_venues 100%, builds 79.1%, service_status_checkers 81.9%,
-      _cloud_builds_trigger (21 new @501b201), deployment_service_client (35 new @1beaad4),
-      deployment_state.py (14 new: refresh_deployment_status_sync + _refresh_live @b67b8e7),
-      data_status mock-mode routes (14 new @4937100) + asset_group vocab fix in data_status_mock.py.
-      Next targets:
-      routes/deployments.py (140 missed), routes/data_status.py (346 missed),
-      services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed).
+      2026-05-18 slot-7**: 74.38%→82.36% in this session (deployment-api@6aca611, 3712 tests):
+      service_status 19.2%→83.4%, deployments mock 64.9%→70.6%, sports_venues 100%,
+      builds 79.1%, service_status_checkers 81.9%, _cloud_builds_trigger @501b201,
+      deployment_service_client @1beaad4, deployment_state @b67b8e7,
+      data_status mock-mode routes + asset_group fix @4937100,
+      deploy_missing routes (17 new) + repo_readiness (5 new) + data_status live routes (61 new) @6aca611.
+      Next targets (remaining 1433 lines for 90%):
+      services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed),
+      services/shard_detail.py (268 missed), routes/data_status.py (~100 more), utils/cache.py (92),
+      utils/path_combinatorics.py (93), services/data_analytics_service.py (94).
       Done-def: deployment-api coverage ≥90% + QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
