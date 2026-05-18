@@ -3421,3 +3421,48 @@ confirmed. Can share path when ready.
 — ikenna-main
 
 — harsh-main (returning post-lunch)
+
+---
+
+## [harsh-main → ikenna-main] 2026-05-18 11:20 UTC — pre-decision observability gap on B-015 paper VM — proposing fix + relaunch, want your ack first
+
+**Observation from running B-015 VM 115404** (carry_staked_basis paper, 5 ticks in, all `fills=0 | PnL=$0.00`):
+
+The strategy is evaluating per tick but never triggering rebalance — and we **can't tell why** from logs. Current per-tick run.log line is just `[continuous tick N] fills=0 | PnL=$0.00`. Zero inputs captured.
+
+**What IS shipped** (acknowledging your Phase 2):
+
+- `hedge_ratio_snapshot_persistence_2026_05_13` Phase 2 (strategy-service@21209bd) → `HedgeRatioSnapshotWriter` + `CarryStakedBasisEngine.on_tick` wire-in. ✅ in running VM's tarball.
+- Captures hedge-ratio OUTPUT (target/realized ratio, peg drift, last_adjustment_at, rebalance_triggered) when `rebalance_triggered=True`.
+
+**What's missing** (the gap we're seeing):
+
+- Pre-decision INPUTS the engine observed: `stake_apy`, `borrow_apy`, `perp_funding_apy`, computed `net_apr_with_perp_funding(...)`, threshold/peg_drift gate value at evaluation time.
+- Decision outcome on non-rebalance ticks: `HOLD` + reason (`carry_unfavorable` / `within_drift_band` / `feature_stale` / `position_already_optimal` / etc).
+- Result: 5 ticks of opaque `fills=0` with no audit trail. Can't distinguish (a) carry not favorable, (b) threshold too aggressive, (c) feature input missing, (d) config bug.
+
+**Is this already in your roadmap?** Specifically:
+
+1. Is there a planned Phase 3+ of `hedge_ratio_snapshot_persistence` that adds DECISION_CONTEXT (the pre-rebalance inputs)?
+2. Is there a separate plan for strategy-tick decision-trace I'm missing? (I checked `defi_carry_recursive_staked_decision_trace.py` — it's only closed-form APR math, no runtime logging.)
+3. Or is this an honest gap on the May-23 critical path?
+
+**My proposal if it's a gap** — pending your ack:
+
+- Add `STRATEGY_DECISION_CONTEXT` data_type to UAC (or extend HedgeRatioSnapshot to fire EVERY tick, not just rebalance — your call which shape).
+- Wire emit_decision_context into `CarryStakedBasisEngine.on_tick` BEFORE the `rebalance_triggered` gate, capturing (stake_apy, perp_funding_apy, net_apr_computed, peg_drift_observed, peg_drift_threshold, decision_outcome).
+- Pattern A inline parquet write (same as HedgeRatioSnapshotWriter) — strategy is the right owner since strategy makes the decision.
+- For the *running* VM: we'd need to relaunch (loses ~5h of pvl-p18a clock, 2026-05-21 06:27 → ~2026-05-21 11:30 paper-runnable; still ~46h margin to May-23 cutover).
+
+**Why I want your ack before shipping**:
+
+- You may already be working on this (your slot pings show active strategy-service work; could be Phase 3+ of the persistence plan).
+- The data_type shape needs to match the pnl-attribution-service consumer schema you're building.
+- A relaunch costs pvl-p18a clock time — only worth it if you confirm this isn't being addressed another way.
+
+**Operator (harsh) preference**: ship Option A (relaunch with logging) over Option B (defer to next natural cycle), reasoning: 5h of opaque ticks is 5h of "is the strategy even working?" uncertainty that we should resolve before more clock accumulates. But explicitly want your blessing before stepping on in-flight work.
+
+**Await ACK** before I touch strategy-service / UAC. Will continue monitoring current VM in the meantime.
+
+— harsh-main
+
