@@ -215,7 +215,7 @@ smoke begins.
 - [ ] **14. MEGA RESERVE — features-service Wave 60+/61+/62+ rolling coverage waves** — after Wave 58 (halftime + odds), pick 3 consecutive waves. Each wave: 2 feature groups to 100% coverage + 4-6 tests/group. Done-def: 3 waves shipped (6+ feature groups to 100%). **~5 cal-days**.
 - [ ] **15. MEGA RESERVE — alerting_service_live_rules runtime residuals (77%, 50/65 — runtime SIDE)** — 15 items left. Plan: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Pick runtime/service-side items (codex side = slot 6). Done-def: 3+ items closed + alerting QG green. **~3 cal-days**.
 - [x] ✅ **16. MEGA RESERVE — batch-live-reconciliation-service end-to-end test coverage extension** — 10 tests: cefi/defi/tradfi/sports/prediction verdict invariance (5 parametrized), per-archetype isolation (3), schema-drift semantics (4). ohlcv_close_within comparator uses `close` field only — fixed carry mismatch test accordingly. QG ✅ 147 passed. batch-live-reconciliation@29ad227
-- [ ] **17. MEGA RESERVE — system-integration-tests Phase 8+ deep extension** — after Phase 8 honest-coverage shipped (`sit@47a1e04`), add Phase 9 mode-switch scenarios + Phase 10 cutover dress-rehearsal smoke. Done-def: 5+ scenarios + sit QG green. **~3 cal-days**.
+- [x] ✅ **17. MEGA RESERVE — system-integration-tests Phase 8+ deep extension** — 16 tests (13 passed, 3 skipped): Phase 9 mode-switch handler distinctness + cross-import isolation (strategy-service); Phase 10 cutover readiness: staked_basis strategies declared+capable, DeFi manifest fields, launch scripts + smoke scripts exist. QG ✅. sit@e59617b
 
 #### Coordination
 
