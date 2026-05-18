@@ -903,6 +903,17 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
       `check_runbook_execution_owner.py`). Bundled foreign-runbook hygiene fix for
       `codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
       rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
+- [x] ✅ [SCRIPT] P0. **Phase 2.6 Step 5 prep** — `deployment-service/scripts/archive-flat-buckets.sh` created —
+      deployment-service@9f158d5. Accepts `--env` / `--cloud` / `--retention-days` / `--dry-run`. Sets 30-day
+      Delete lifecycle policy on all flat (no-env-tier) GCP + AWS buckets from the Phase 2.6 migration inventory
+      (Tiers 1-7; ~50 GCP + ~50 AWS bucket names). Dry-run by default (production guardrail). Syntax: `bash -n` passes.
+      Operator runs post-delegate-flip per Step 2.6.5:
+      `bash deployment-service/scripts/archive-flat-buckets.sh --env prod --cloud both --retention-days 30 --no-dry-run`.
+- [x] ✅ [DOC] P0. **Write-resume verification checklist** — documented in § "Write-resume verification checklist
+      (after delegate-flip deployed)" at end of this plan — PM@773a3726. 4-check procedure:
+      (1) manifest writes land in env-tiered paths, (2) QG STEP 5.69 baseline at 0 across all repos,
+      (3) deployment-api smoke returns env-tiered bucket names, (4) no flat-name reads in last 5 min.
+      All 4 pass → Phase 2.6 write-resume CONFIRMED + write-pause LIFT authorized (Wave 7).
 
 ##### Carry-forward + dependencies
 
