@@ -1073,7 +1073,7 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
 - [x] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
       refreshed. ✅ Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
       `mtds-lending-indices-20260511-204908` + manifest verification of 65 captured rows).
-- [ ] [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed. **DEFERRED —
+- [x] ✅ [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed. — PM@`75560065` 2026-05-18. Row 20 Last verified updated → 2026-05-18 (B-015 paper VM `strategy-paper-carry-staked-basis-20260518-115404` live; pvl-p18a gate clock running); F20 graduated from NEVER list (6 remaining). Rows 17/18 already at 2026-05-18 per defi_simulation_realism Phase 2 close. Rows 19/21 remain PENDING (operator-gated / cron-pending). **DEFERRED —
       slot 1 ownership** per `work_split_2026_05_12_ikenna.md` row 1 "Main orchestrator + governance + master plan
       refresh". Slot 2 has shipped enough DeFi-side progress that the Group F item 17/18/19/20 rows should reflect: item
       17 (real wallet 7-day proof) BLOCKED on slot 4 wallet provisioning (UAC@`d721b6a` shipped 2026-05-12; ready for
