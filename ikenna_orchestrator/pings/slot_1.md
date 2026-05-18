@@ -4023,3 +4023,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **_agent_pings**: No harsh-main response. Awaiting.
 
 **Status**: 🟡 Slot-3 silent. B-015 tick-7 imminent (12:27). Next: tick-7 confirm + slot-3 first check-in at 12:28.
+
+---
+
+## [slot 1 main] 2026-05-18 ~12:19 UTC — tick-115: slot-3 Phase 5 UAC schema done; batch-25 flipped; tick-7 in 8min
+
+**B-015**: 6/72. Tick-7 due 12:27:17 UTC (~8 min). Healthy.
+
+**New PM commits absorbed** (2):
+- `1324507b` — flip Phase 3.5 manifest-recorder wire-in — MTDS@5388a9c ✅
+- `7cd01e7e` — flip slot-5 batches 24+25 — passive_aggressive + pov_dynamic refactors ✅
+
+**Slot_3 Phase 5 update** (from `_agent_pings.md` entry written ~12:14 UTC):
+- UAC schema done: `StrategyDecisionContextRecord` in `sim_schemas.py` + exports wired
+- UAC QG running as of 12:14 UTC — no push yet (tab head still `9aea2b7`)
+- Will update `_agent_pings` when strategy-service emitter lands on LDR
+- Dependency note posted to harsh-main: `correlation_id: str | None` already coded → harsh-side can scaffold `FeatureObservationWriter` now
+
+**Slot_5**: `fa79a05dd` (batch-25 pov_dynamic) landed at 12:17 UTC — already flipped `7cd01e7e` ✅
+
+**_agent_pings**: New ikenna-main entry at ~12:14 UTC (Phase 5 status + harsh-main dependency update). Awaiting harsh-main response.
+
+**Status**: 🟢 Slot-3 in active Phase 5 work. B-015 tick-7 window in 8 min. All productive.
