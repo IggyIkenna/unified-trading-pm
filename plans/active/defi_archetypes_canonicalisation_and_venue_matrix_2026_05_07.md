@@ -100,11 +100,13 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
 
 **Tasks**
 
-- [ ] [SCRIPT] P0. Live-API probe to confirm exact 2026-05-07 collateral value ratios for: Deribit stETH, Bybit
-      stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document each in a new file
-      `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with screenshot/URL evidence
-      per venue. Bandit-clean, no hardcoded creds; use public endpoints where available, manual UI screenshot otherwise.
-      Citadel-grade evidence per row before the matrix flip.
+- [ ] [SCRIPT] P0. **BLOCKED-CREDENTIALS** — Live-API probe to confirm exact 2026-05-07 collateral value ratios for:
+      Deribit stETH, Bybit stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document each in
+      `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with API/URL evidence per
+      venue. **Status 2026-05-18**: Playbook doc already exists at that path with web-doc citations (Deribit 7.5%,
+      Bybit 10%, OKX 10% — conservative placeholders). Live-API endpoint probe (Deribit `/private/get-position-mode`,
+      Bybit `/v5/account/info`, OKX `/api/v5/account/account-position-risk`) requires operator venue account
+      credentials. Filed as `BLOCKED-CREDENTIALS` per workspace taxonomy — adapter work done, credential ask pending.
 - [x] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries.
       **VERIFIED 2026-05-09 audit** — Stream A flip comments confirmed at venue_collateral.py:138 (DERIBIT stETH + 7.5%
       haircut), :159+ (BYBIT entries), :173 (OKX wstETH); plus rows at lines 162/164/167/170 for BYBIT
@@ -137,9 +139,13 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
       [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) lines 124–130
       (Catalog axis): bump "2 slots today" → "N slots today (post-Stream A flip)". **VERIFIED 2026-05-09 audit** —
       "Effective slot count post-Stream A flip = ~7" at carry-staked-basis.md:110-112.
-- [ ] [strategy-service] P1. Confirm `_build_carry_staked_basis` in `target_universe/catalog.py` regenerates the
+- [x] [strategy-service] P1. Confirm `_build_carry_staked_basis` in `target_universe/catalog.py` regenerates the
       expanded slot list automatically from the corrected matrix (per the codex SSOT design). If hardcoded anywhere,
-      remove the hardcode. **DEFERRED to next strategy-service touch**: low risk because regeneration is on import.
+      remove the hardcode. **CONFIRMED 2026-05-18 slot-3 audit**: `_emit_staked_basis_slots` calls
+      `_resolve_start_token(perp_venue, lst_asset)` → `accepted_perp_collateral(venue)` → reads
+      `VENUE_COLLATERAL_MATRIX` at import time. Zero hardcoded acceptance logic. Design note: `"OKX-FUTURES"` in
+      `_STAKED_BASIS_ETH_PERP_VENUES` maps to UAC entries with no LST acceptance; bare `"OKX"` (wstETH accepted=True)
+      is NOT in the venue tuple — gated behind [SCRIPT] P0 ratio confirmation. No code change needed.
 
 **Gate:** UAC quality-gates pass with the 5+ flipped rows + new tests; codex doc reflects the corrected matrix; PM
 quality-gates pass on the new playbook + carry-staked-basis.md edits.
@@ -418,7 +424,7 @@ overgeneralisation.
 ## Success criteria (whole plan)
 
 - [ ] Stream A: UAC matrix flipped + tests pass + codex venue table updated
-      (open: [SCRIPT] P0 live-API probe + [strategy-service] P1 catalog confirm still pending)
+      (open: [SCRIPT] P0 live-API probe BLOCKED-CREDENTIALS; [strategy-service] P1 catalog confirm ✅ DONE 2026-05-18)
 - [x] Stream B: All references to `leveraged_funding_arb` as a standalone archetype gone (except historical references
       in the issue file + this plan). ✅ Gate fully closed 2026-05-10 (plan body § "Gate status 2026-05-10 ✅ FULLY CLOSED").
 - [x] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport flag.

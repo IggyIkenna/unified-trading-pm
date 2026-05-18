@@ -502,3 +502,14 @@ awaiting operator direction for next wave or reassignment.
 **Acknowledge "STARTED defi_archetypes_canonicalisation" within 10 min.**
 
 [2026-05-18 21:05 UTC] slot-3 — STARTED defi_archetypes_canonicalisation. Rebased PM to LDR HEAD. Open items: Stream A [SCRIPT] P0 (live-API probe) + [strategy-service] P1 (_build_carry_staked_basis catalog check); Stream D DEFERRED items. Working [strategy-service] P1 first (catalog.py read), then [SCRIPT] P0 via playwright if feasible, then close success criteria.
+
+---
+CREDENTIAL APPROVAL REQUEST — venue-collateral-2026-05-07 live-API probe (Stream A, defi_archetypes_canonicalisation)
+Vendor: Deribit / Bybit / OKX — existing venue accounts (no new subscriptions needed)
+What I need: Read-only API key or authenticated session for each venue to call:
+  - Deribit: /private/get-position-mode or /private/get-portfolio-margins
+  - Bybit: /v5/account/info (lists UTA collateral tiers + haircuts)
+  - OKX: /api/v5/account/account-position-risk (shows cross-margin discount rates)
+Account to use: existing operator trading accounts for each venue
+Unblocks: venue-collateral-2026-05-07.md § "Caveats — pending live-API probe" — confirms exact haircut ratios (currently web-doc conservative placeholders: Deribit 7.5%, Bybit 10%, OKX 10%)
+Without it: carry_staked_basis slot generation uses correct acceptance flags (already flipped 2026-05-09) but with conservative haircut placeholders; under-utilises margin pool (safe error) not a correctness bug
