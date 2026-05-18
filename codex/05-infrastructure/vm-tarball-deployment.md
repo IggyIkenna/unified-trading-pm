@@ -318,6 +318,50 @@ wrapper — not per-launcher one-offs.
 > - `codex/02-data/honest-absence-downstream-handling.md` (the 1440-NaN incident framing) — both are part of the
 >   observability contract, not in addition to it.
 
+### Post-launch verification — T+10min check (codified 2026-05-18)
+
+**Rule (from CLAUDE.md "No fire-and-forget VM launches"):** A VM is not "launched" until it has been verified at
+T+10 minutes post-`gcloud instances create`. A successful `gcloud` API response only means GCP accepted the create
+request — it does not confirm the VM booted, the startup script ran, or the workload is emitting heartbeats.
+
+**Required check at T+10min:**
+
+```bash
+# 1. Confirm VM is RUNNING (not STAGING / TERMINATED)
+gcloud compute instances describe <vm-name> --zone=<zone> --format='value(status)'
+# Expected: RUNNING
+
+# 2. Confirm STARTED heartbeat emitted
+gsutil cat gs://deployment-scripts-central-element-323112/deployments/active/<deployment_id>.json \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status'), d.get('last_heartbeat'))"
+# Expected: status=running, last_heartbeat within last 90s
+
+# 3. (Optional) Tail the GCS log for the first evidence of real work
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | head -40
+```
+
+**What counts as verified:**
+
+1. `gcloud instances describe` returns `status=RUNNING`.
+2. Deployment registry JSON shows `status=running` with a heartbeat timestamp within 90s of now.
+3. No `ERROR` / `Exception` in the first 40 lines of `run.log`.
+
+**If the T+10min check fails:**
+
+- STAGING → VM never booted (startup script silently rejected, quota issue, zone capacity). Check
+  `gcloud compute operations list --filter="targetLink~<vm-name>"`.
+- Registry missing → heartbeat daemon not started (startup script fault). SSH in, check
+  `/var/log/syslog | grep startup-script`.
+- `TERMINATED` within 10min → workload crashed at startup. Read `EXIT_STATUS` + full `run.log`.
+
+**Why 10 minutes:** startup script installs Python, pulls tarballs, and starts the workload. On a standard `n1-standard-4`
+with a cold image and a 120MB tarball, boot-to-first-heartbeat is typically 4-7 minutes. 10 minutes provides margin for
+slow GCS pulls without burning excessive agent turn time.
+
+**Enforcement:** CLAUDE.md § "No fire-and-forget VM launches (CRITICAL)" prohibits declaring a VM
+launched without this check. Agent turns that post `gcloud instances create` and immediately report "VM launched" without
+a T+10min verification step are non-compliant — the operator is expected to reopen the agent turn and demand the check.
+
 ### Workload identity — VM metadata keys
 
 The launcher injects identity via GCE instance metadata (visible to the VM as

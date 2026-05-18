@@ -161,7 +161,7 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
   segment must be in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`.
-- **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit.
+- **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
