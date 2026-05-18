@@ -224,24 +224,28 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. strategy_service_phase8_codex_drift (slot 6 item 2)** —
+- [x] ✅ **1. strategy_service_phase8_codex_drift (slot 6 item 2)** —
       [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](issues/strategy_service_phase8_codex_drift_2026_05_15.md).
       5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` +
       `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code.
-- [ ] **2. sit_may23_critical_path_coverage_gaps (slot 6 item 4)** —
+      — PM@54b06a2c (slot 6, 2026-05-15). Issue RESOLVED 2026-05-17. Checkbox backfill by slot-6 2026-05-18.
+- [x] ✅ **2. sit_may23_critical_path_coverage_gaps (slot 6 item 4)** —
       [`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`](issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md).
       SIT scenarios for: (a) DeFi paper carry, (b) DeFi paper APD, (c) mode-switch live/batch gate, (d) batch-live
       DeFi parity smoke. **Check slot 4 item 1 overlap before duplicating.** Done-def: gaps not already filled by
       slot 4 + sit QG green.
-- [ ] **3. expected_unattempted_propagation_gap (slot 6 item 5)** —
+      — system-integration-tests@3872ce2 (slot 7 Ikenna, 2026-05-16). Issue RESOLVED 2026-05-16. Checkbox backfill by slot-6 2026-05-18.
+- [x] ✅ **3. expected_unattempted_propagation_gap (slot 6 item 5)** —
       [`plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md`](issues/expected_unattempted_propagation_gap_2026_05_12.md).
       Wire `record_expected_unattempted()` into MTDS/MDPS/features/ML skip paths through the UTL emission_publisher
       chain. Done-def: 4 services emit `expected_unattempted` events + tests. **Conflict-risk**: MTDS = slot 9
       surface, coordinate.
-- [ ] **4. codex_04_architecture_drift_audit cleanup (slot 6 item 6)** —
+      — uac@0457b0e + mdps@3f70cf6 + features-service@a58480fb (Gate 1 FIRED 2026-05-13). Issue RESOLVED 2026-05-17. Checkbox backfill by slot-6 2026-05-18.
+- [x] ✅ **4. codex_04_architecture_drift_audit cleanup (slot 6 item 6)** —
       [`plans/active/issues/codex_04_architecture_drift_audit_2026_05_15.md`](issues/codex_04_architecture_drift_audit_2026_05_15.md).
       4 docs with `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` →
       `basedpyright` references. Mechanical fixes ~30 min. Done-def: 8 docs updated + grep confirms 0 stale refs.
+      — PM@bdbd899f (2 files, slot-3 2026-05-17) + PM@564766e3 (README.md + tier-and-import-architecture.md, slot-6 2026-05-18). Category B clean. Done.
 
 #### Reserve queue
 
