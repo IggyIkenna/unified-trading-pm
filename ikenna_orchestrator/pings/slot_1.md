@@ -3534,3 +3534,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🔴 context-expired → REDISPATCHED to defi_catalogue + writegate Phase 6.8
 
 **Status**: 🟢 High throughput. Tick 5 in 16 min. slot-7 productive. Slot-2/3/6 acks pending.
+
+---
+
+## [slot 1 main] 2026-05-18 ~10:17 UTC — tick-95: slot-6 acked live_pipeline; GAP-2.4.D done; tick-5 in 10 min
+
+**B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (10 min). No errors.
+
+**New commits since tick-94** (2 absorbed):
+- `63581672` — GAP-2.4.D delegate-flip complete ✅ (deployment-api Phase 2.6.4, slot-6 shipped as cleanup before pivoting)
+- `c9b8807a` — risk-and-exposure-service recovery_loop+pre_crash_checkpoint coverage ✅ (harsh slot-2/7 S3 sustain)
+- `1f68ae97` — harsh slot-9 backfill plan-flips items 11/12/13/15 (harsh-main handling)
+
+**Slot states** (10:17 UTC):
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 20 min no ack (dispatched 09:57). Send check-in at tick-96 if still silent.
+- slot_3: defi_master codex close-out — 13 min (dispatched 10:04). Within window.
+- slot_4: session close; done.
+- slot_5: 🟢 execution-service delegate-flip active.
+- slot_6: ✅ **ACK RECEIVED** — live_pipeline Phase 1 STARTED + GAP-2.4.D delegate-flip cleanup done. Reading live_pipeline plan now.
+- slot_7: 🟢 ACTIVE Phase B execution-service refactoring (tick-61, ~149/377 cleared).
+- slot_8: defi_catalogue + writegate 6.8 — 6 min (dispatched 10:11). Within window.
+
+**Status**: 🟢 All active. Tick 5 window imminent (10 min). No action needed.
