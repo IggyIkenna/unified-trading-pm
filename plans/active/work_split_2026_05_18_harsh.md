@@ -346,9 +346,10 @@ smoke begins.
 
 #### Reserve queue
 
-- [ ] **5. UTL HMAC signing coverage extension (slot 8 item 17)** — DEFERRED because UTL QG had xdist isolation
+- [x] ✅ **5. UTL HMAC signing coverage extension (slot 8 item 17)** — DEFERRED because UTL QG had xdist isolation
       issue. Slot 6 shipped UTL@d3488b7 + UTL@30db050 to fix xdist; UTL QG now green. Slot 8 can now pick this up.
       Done-def: HMAC coverage extension shipped + UTL QG green.
+      — 8 new unit tests added (6→14): unicode str, empty bytes, different-secret diverge, tampered/wrong-secret rejection, input non-mutation, signed_at UTC ISO format, key-order independence. All 40 HMAC tests pass (14 unit + 26 security). UTL@ac8e7de.
 - [ ] **6. workspace-wide cassette parity refresh (slot 8 item 18)** — run cassette schema parity tests across UAC
       external dirs. Done-def: parity green + any drift fixed.
 
