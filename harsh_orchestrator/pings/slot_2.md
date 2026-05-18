@@ -646,3 +646,5 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
   3. Read `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 9 items. Pick: (a) per-protocol cost model precision tests (AAVE/Morpho/Compound); (b) error code → recovery action mapping; (c) DefiErrorCode 30-code coverage tests.
   4. `cd execution-service` — ship per item + QG; dual-flip work_split + plan-of-record in same `docs(plans):` commit.
 **Acknowledge "STARTED Phase 9 cost models" within 10 min.**
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED execution-service Phase 9 cost models + DefiErrorCode hardening** — slot-5 item 16 (unclaimed). Writing per-protocol precision tests (AAVE/Morpho/Compound) + DefiErrorCode 30-code routing coverage. Target: 6+ new tests + execution-service QG green.
