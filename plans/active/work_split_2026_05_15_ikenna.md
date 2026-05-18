@@ -715,6 +715,10 @@ redesign accepted today.
 - ✅ **`mtds_databento_path_streaming_2026_05_07`** (1.2 cal) — Databento streaming path. Slot 3 context fit. (design
   0.6×, ~2 = 1.2 cal) — **DONE 2026-05-16 (prior slot-3)**: plan `status: done`. Phase 1 at MTDS@d8358f9, Phase 2+3
   DEFERRED-PER-PLAN (no wall-clock bottleneck). 2 test regressions from Phase 1 fixed at MTDS@139e2e6 (2026-05-17).
+- ✅ **[DISCOVERED 2026-05-18] aave_rate_impact_calculator pre-existing test regression** —
+  `test_get_rate_params_known_symbol` hardcoded `Decimal("0.90")` for USDC `optimal_utilization`; UAC SSOT updated to
+  0.92 when Bug 6 fix shipped; test became stale. Fixed to assert against live UAC SSOT value.
+  features-service@87667bf0. (0.1 cal)
 
 #### Slot 4 — **[SWEEP-16]** items (+6 cal — sports/prediction expansion)
 
