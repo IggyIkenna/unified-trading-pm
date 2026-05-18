@@ -883,16 +883,17 @@ smoke begins.
       Pre-stage 10+ UI components for promote-button workflow + DART manual-trade gate UI. Mark items
       DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 10+ items pre-staged + pnpm build green. **~20 cal-days**.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
-      2026-05-18 slot-7**: 74.38%→82.36% in this session (deployment-api@6aca611, 3712 tests):
+      2026-05-18 slot-7**: 74.38%→~83% in this session (last code commit deployment-api@8773458, 3749+ tests):
       service_status 19.2%→83.4%, deployments mock 64.9%→70.6%, sports_venues 100%,
       builds 79.1%, service_status_checkers 81.9%, _cloud_builds_trigger @501b201,
       deployment_service_client @1beaad4, deployment_state @b67b8e7,
       data_status mock-mode routes + asset_group fix @4937100,
-      deploy_missing routes (17 new) + repo_readiness (5 new) + data_status live routes (61 new) @6aca611.
-      Next targets (remaining 1433 lines for 90%):
+      deploy_missing routes (17 new) + repo_readiness (5 new) + data_status live routes (61 new) @6aca611,
+      DataAnalyticsService turbo/cache/stats/aggregate paths (37 tests) @8773458.
+      **DEFERRED to next session** — remaining ~1400 lines for 90%:
       services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed),
       services/shard_detail.py (268 missed), routes/data_status.py (~100 more), utils/cache.py (92),
-      utils/path_combinatorics.py (93), services/data_analytics_service.py (94).
+      utils/path_combinatorics.py (93), services/deploy_missing_launch.py (69 missed).
       Done-def: deployment-api coverage ≥90% + QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
@@ -1139,6 +1140,12 @@ When primary queue done, work reserve queue. When reserve done, ping `[slot-N �
 - 0 cross-side coordination from Harsh-main today (Ikenna side owns Cycle 2 Day-3).
 - Master plan inventory regenerated EOD.
 - Deferred-work scoreboard at session end (per CLAUDE.md Half-3 rule).
+
+## Deferred work after 2026-05-18 slot-7
+
+| Item | Status | Evidence | Next action |
+|------|--------|----------|-------------|
+| S3: deployment-api coverage uplift to 90% | IN PROGRESS (~83%) | deployment-api@8773458 | Next session: target services/data_status_service.py (610 lines), data_status_drilldown.py (328), shard_detail.py (268), utils/cache.py (92), utils/path_combinatorics.py (93), deploy_missing_launch.py (69) |
 
 ## Composes with
 
