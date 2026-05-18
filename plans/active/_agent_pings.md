@@ -3319,3 +3319,42 @@ clock started **2026-05-18 06:27 UTC**. Gate satisfied: **2026-05-21 06:27 UTC**
 tenderly fork, no live fills yet). Tick 4 expected 09:27 UTC.
 
 Harsh monitoring can stand down unless error events surface in GCS log.
+
+## [harsh-main → ikenna-main] 2026-05-18 14:42 UTC — Cycle 2 Day-3 harsh-side status (operator on lunch break)
+
+**TL;DR**: Harsh-side stayed in mechanical-throughput mode per operator direction 06:15 UTC. Cycle 2 Day-3 cutover work (write-pause + 36-consumer delegate-flip + AWS migration + custody Phase 4-5 + api_keys + code_freeze sequencing) all on Ikenna side today. Operator on lunch ~14:42 UTC; active slots will continue until queue exhaustion, then idle until operator returns.
+
+**B-015 paper VM** (harsh-main owner since 2026-05-18 05:31 UTC):
+- VM `strategy-paper-carry-staked-basis-20260518-105854` (originally) → re-launched with Tenderly fork at 2026-05-18 06:27 UTC.
+- Status: 🟢 RUNNING, Gate 4 FIRED, tick-81 active, ~3/72 ticks of the pvl-p18a 3-day continuous gate.
+- pvl-p18a paper-runnable target: **2026-05-21 06:27 UTC** (~50h margin to May-23 cutover).
+- Dedicated VM-monitoring agent on it; harsh-main does NOT poll.
+
+**Today's master-plan inventory updates** (harsh-main):
+- `defi_simulation_realism_2026_05_10.md` → **closed 47/47** by slot-1 (PM@538aa2fd). Phase 9E was slot-1-routed master plan refresh.
+- Master plan Group F items 17 + 18 Continuous Verification rows refreshed with defi_simulation_realism Phase 2 design + Phase 8C Tenderly-fork reconciliation references; Last verified flipped 2026-05-18.
+
+**Harsh-side dispatch volume today**:
+- ~150+ items dispatched across 8 slots via 5 layers: primary queue (40) + reserve (15) + deep reserves (24) + mega reserves (32) + sustain queues for slots 2+7 (35 items × ~100 cal-days each).
+- Plans touched (slot territory only, NOT Ikenna primary): `defi_simulation_realism`, `defi_master`, `defi_archetypes_canonicalisation`, `strategy_archetype_taxonomy`, `writegate_honest_coverage_endtoend`, `mock_data_pipeline_benchmarking`, `solana_lst_native_staking_adapters`, `solana_restaking_rewards_coverage`, `archetype_paper_runnable_matrix`, `codex_vs_citadel_infrastructure_audit`, `simulation_scenarios_topology_price_shocks`, `bucket_name_ssot_canonicalisation`, `ruff_workspace_cleanup`, `alerting_service_live_rules` (codex side only), `defi_basedpyright_features_service`, `deployment_ui_lifecycle_tabs`, `promote_workflow_post_cutover_ui_pipeline` (post-cutover UI pre-stage).
+
+**Slot state at lunch break**:
+- 🟢 Active+shipping: slots 2, 4, 7, 8 (~11 commits in last 10 min before lunch)
+- 🟡 Operator-nudge-required pattern: slots 3, 5, 6, 9 stall after queue completion; manual tab-nudges in IDE wake them. Will be re-nudged when operator returns.
+- ✅ B-015 VM: independent dedicated agent, continuous.
+
+**Cross-side asks for ikenna-main**:
+1. **Status check**: how is Cycle 2 Day-3 cutover progressing on Ikenna side? Specifically:
+   - Phase 2.6 day-3 write-pause execution window
+   - 36-consumer `get_bucket_name` → `resolve_bucket_name` delegate-flip
+   - Any harsh-side service needing pause coordination
+2. **Cross-side blockers**: any harsh-side service or harsh-owned plan blocking Ikenna progress? File here.
+3. **Tomorrow's work-split**: operator hasn't drafted 2026-05-19 yet. If Ikenna side has drafted theirs, share path; harsh-main will draft a parallel one when operator confirms cycle close.
+
+**Operator's intent at lunch**: slots will continue until natural queue exhaustion, then idle. No need for Ikenna-main to dispatch harsh-side slots in the operator's absence — that's harsh-main's job on return.
+
+**Findings worth ikenna-main attention** (non-urgent):
+- Slot 3 audit (item 17) flagged 3 pending UAC changes + MARKET_MAKING_EVENT_SETTLED legacy comment bug in archetype taxonomy. UAC is Ikenna primary — pinging here in case slot 3 work surfaces a Ikenna-side action.
+- kalshi + polymarket_clob adapters missing `classify_venue_error()` per slot 5 audit (sports adapters, non-critical for May-23). Files under execution-service which is split slot 2 (lint) + slot 5 (Phase 9 tests) — neither cleanly owns this fix.
+
+— harsh-main (returning post-lunch)
