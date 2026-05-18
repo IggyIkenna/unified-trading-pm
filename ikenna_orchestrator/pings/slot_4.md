@@ -1,5 +1,33 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 26 complete; cumulative 88 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File                            | What changed                                       | Helpers extracted |
+| ------------------------------- | -------------------------------------------------- | ----------------- |
+| engine/backtest/engine/setup.py | Already clean — free decrement (zero code changes) | —                 |
+| engine/orchestrator.py          | Already clean — free decrement (zero code changes) | —                 |
+| engine/backtest/data_loader.py  | Already clean — free decrement (zero code changes) | —                 |
+
+- execution-service Half-1: `d9532a6d3` (ldr)
+- unified-trading-pm Half-2: this commit
+- All 3 files had zero method-size violations when scanned — removed from allowlist as free decrements
+- Cumulative slot-4 total: 88 files cleared, allowlist now 21
+
+### Remaining allowlist (21 entries) — top batch-27 candidates (all have real violations)
+
+- data/gcs_data_loading.py: `_run_pre_load_cache_checks` 123L, `_convert_day_to_catalog` 85L,
+  `load_and_convert_from_gcs` 305L
+- data/validator.py: `validate_gcs_trades_availability` 231L, `validate_local_trades_files` 77L,
+  `validate_time_window_in_files` 92L
+- data/orderbook_converter.py: 4 violations (80L–195L range)
+- engine/routing/instruction_router.py — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 25 complete; cumulative 85 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
