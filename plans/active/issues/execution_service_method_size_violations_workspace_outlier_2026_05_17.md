@@ -1050,6 +1050,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-18**: 69 files cleared (allowlist now 49).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 19 — results/serializer + defi_execution/protocols/drift)**: 2 entries
+  cleared at execution-service@3e99f2972. results/serializer.py: serialize_benchmark_comparison 104L→12L via
+  _serialize_benchmark_result @staticmethod 17L + _serialize_algo_result @staticmethod 19L +
+  _build_comparison_summary @staticmethod 28L. defi_execution/protocols/drift.py: place_order 104L→19L via
+  _build_driftpy_params 30L (driftpy inside-imports + direction/order_type_map/precision conversion) +
+  _make_paper_trade_result 19L + _execute_live_order async 36L (send + log + return). Allowlist 49→47. AST clean.
+  ruff + basedpyright 0 errors.
+
+  **Slot-4 cumulative across batches 1-19**: 71 files cleared (allowlist now 47).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:

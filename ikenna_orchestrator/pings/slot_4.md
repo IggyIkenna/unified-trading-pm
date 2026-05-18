@@ -28,6 +28,34 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 19 complete; cumulative 71 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 19)
+
+2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 49 → 47 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `results/serializer.py` | `serialize_benchmark_comparison` 104L→12L | `_serialize_benchmark_result` @static 17L + `_serialize_algo_result` @static 19L + `_build_comparison_summary` @static 28L |
+| `defi_execution/protocols/drift.py` | `place_order` 104L→19L | `_build_driftpy_params` 30L (driftpy inside-imports + direction/order_type_map/precision) + `_make_paper_trade_result` 19L + `_execute_live_order` async 36L |
+
+- execution-service Half-1: `3e99f2972` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **71 files cleared**, allowlist now **47**
+
+### Remaining allowlist (47 entries) — top batch-20 candidates
+
+1-violation files:
+- `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
+- `engine/routing/instruction_router.py`: `route_instruction` ~130L
+- `results/report_timeline_extractor.py`: ~132L violation
+- `algo_library/dust_router_runner.py`: `_build_reward_attribution_rows` ~137L
+- `algo_library/sor_cross_chain.py`: `_evaluate_cross_chain_route` ~137L
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 18 complete; cumulative 69 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
@@ -42,7 +70,7 @@
 | `engine/backtest/actors/signal_driven_v3_utils.py` | `calculate_exec_params` 89L — cleared by parallel slot `6f544699d` | `_calc_dynamic_horizon` + `_calc_sce_exec_params`; duplicate work discarded, allowlist removal shipped in my commit |
 
 - execution-service Half-1: `7bd19a1bf` (ldr)
-- unified-trading-pm Half-2: in progress (this commit)
+- unified-trading-pm Half-2: `853887ae` (ldr)
 - Cumulative slot-4 total: **69 files cleared**, allowlist now **49**
 
 ### Remaining allowlist (49 entries) — top batch-19 candidates
