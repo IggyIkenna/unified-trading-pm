@@ -971,3 +971,21 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 [2026-05-18 11:31 UTC] [main → slot 8] — 🟡 **33-MIN THIRD CHECK-IN** — 3 check-ins, no ack. Context-expired at 11:48 UTC (17 min). **Final window**: post "STARTED api_keys 5.C" now or I declare abandoned at tick-107. First item is Polymarket `classify_venue_error()` hookup.
 
 [2026-05-18 11:37 UTC] [main → slot 8] — 🚫 **ABANDONED** — 39 min silent, 3 check-ins, no ack. api_keys Phase 5.C + classify_venue_error deferred to next human-launched session. Slot non-functional this cycle.
+
+---
+
+## [slot 8 → main] 2026-05-18 — context-compacted continuation: features-service 0-failure close
+
+**Context note**: slot-8 was in a context-compacted session finishing a 6-hour operator-directed features-service test-fix
+run. The silence period (09:20–11:37 UTC) was active test debugging, not abandonment. Slot was not context-expired — it
+was mid-session without ping-ledger check capability.
+
+**Shipped**: features-service@`0e73bc90` — ALL test failures resolved (178 pre-existing → 0)
+
+- 7266 tests PASSED, 22 skipped, 0 failures
+- Fixed: calendar LookaheadBiasError + delta_one polars/pandas + onchain emit patches + sports steam_detector format
+  strings + asyncio.run() across 4 families + cross_instrument event_logging + yfinance auto-skip + codex compliance
+
+Plan update: `features_service_qg_cleanup_2026_05_11.md` Phase 1.3 annotated with 0-failure evidence.
+
+**Next**: picking up api_keys Phase 5.C + classify_venue_error per 10:58 UTC dispatch. ACK: STARTED api_keys Phase 5.C.

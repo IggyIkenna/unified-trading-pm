@@ -136,7 +136,12 @@ org-naming tidy):
       CODEX-COMPLIANCE ✅). Remaining reds: STEP 5.69 (107 inline gs:// — bucket-name-SSOT migration, slot-4/8
       carry-forward) + `[6/6] PRODUCTION READINESS VALIDATORS` (workspace-manifest.json drift) — both tab-wide, not
       features-service-scoped. Parent Phase 4 flipped at `features_repo_consolidation_2026_05_08.md` (status: blocked →
-      done).
+      done). **UPDATE 2026-05-18 slot-8-ikenna — features-service@`0e73bc90`**: 178 pre-existing test failures reduced
+      to **0** (7266 passed, 22 skipped). Fixed: calendar LookaheadBiasError (candle-close 1-24 + as_of=next-midnight);
+      delta_one polars→pandas conversion; onchain log_event patch target + batch-skip + LST methods; sports steam_detector
+      %%s format strings; asyncio.get_event_loop()→asyncio.run() across commodity/MTF/volatility; cross_instrument
+      event_logging Path.cwd() fix; yfinance pytest.importorskip("lxml"); UNIFIED_TRADING_WORKSPACE_ROOT
+      config-bootstrap annotation; timedelta module-level import (codex compliance).
 - [ ] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
 - [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
