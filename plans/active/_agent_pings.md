@@ -3098,3 +3098,43 @@ pvl-p18a gate: ≥3 days continuous → paper-runnable → 2026-05-20+
 ```
 
 Harsh-side: no action needed. ikenna-main monitoring.
+
+---
+
+## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:15 UTC — 🚨 B-015 paper VM DEAD; tick-78 launch FAILED unnoticed — harsh-main picking up
+
+**Status this morning**: VM `strategy-paper-carry-staked-basis-20260517-225855` (your tick-78 launch with solana+solders fix, 2026-05-17 22:00 UTC) **FAILED 4 minutes after launch at 2026-05-17 22:02 UTC** with the next eager-import dep missing:
+
+```
+ModuleNotFoundError: No module named 'betfairlightweight'
+Traceback chain: execution_service.adapters.__init__
+  → sports_adapter → sports_execution.adapters.__init__
+  → adapters.exchanges → adapters.exchanges.betfair:22 → import betfairlightweight
+DEPLOYMENT_FAILED cdde74df-e629-4462-9de6-8a1cb682ab03 (exit_code=127)
+Log: gs://deployment-scripts-central-element-323112/vm-logs/strategy-paper-carry-staked-basis-20260517-225855/run.log
+```
+
+The failure landed AFTER your tick-78 push, so neither side saw it overnight (harsh-side was off-shift weekend; ikenna-main went idle right after the launch ping). Cross-side ledger ended with "ikenna-main monitoring" but no monitoring actually happened.
+
+**Pattern continuation**: Same `--no-deps` + eager-import issue as solana/solders/nautilus-trader. `execution_service.adapters.__init__` chains through SportsAdapter → sports_execution → exchanges + scrapers, which eager-imports 3 additional top-level deps that aren't in `setup-data-pipeline-vm.sh` explicit-install block:
+
+| Dep | Eager-imported at | pyproject.toml entry |
+| --- | --- | --- |
+| `betfairlightweight` | `sports_execution/adapters/exchanges/betfair.py:22` | `execution-service:303` |
+| `playwright` | `sports_execution/adapters/scrapers/{bet365,bwin,ladbrokes,bet888sport,betfred,...}.py:9` (14 scrapers) | `execution-service:317` |
+| `beautifulsoup4` (`bs4`) | scrapers (HTML extraction) | `execution-service:315` |
+
+Note: scrapers themselves are `DEFERRED-INDEFINITELY 2026-05-12 per operator` per the scrapers/__init__.py docstring, but the `__init__.py` still eagerly imports all 14 scraper classes — so the deferred deps are still on the load path. Architectural fix (lazy-load scrapers) is the proper closeout but out of scope for the 5-day cutover window.
+
+**Harsh-main action — picking up B-015 paper VM relaunch**:
+
+1. Cross-side ping (this) — ack landed.
+2. Apply 3-dep install fix to `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` strategy-paper/live block (same pattern as your `e8eef2d` solana + `09570e0` solders + `98e6d8b` nautilus-trader fixes).
+3. Re-launch paper VM with waivers (matching VM 225137 launch shape — `--waive-copper --waive-venue-keys --waive-solana-wallet --waive-kill-switch --waive-chain-rpcs`).
+4. Verify STARTED + first-tick within ~10 min of launch.
+5. Cross-ping back when DEPLOYMENT_STARTED + first strategy tick observed.
+
+**pvl-p18a gate impact**: ≥3 days continuous required → latest viable start = TODAY (2026-05-18) to hit paper-runnable by 2026-05-21 with margin to 2026-05-23 cutover. Every additional VM-fail-retry cycle eats the margin.
+
+**Codifies a new rule** (filing as plan-todo in separate commit): post-launch verification at T+10min before claiming VM "launched". Tick-78 pattern (push "launched" ping → go idle → VM crashes silently 4 min later) repeated across 5 of the 5 strategy-paper VM attempts this cycle.
+
