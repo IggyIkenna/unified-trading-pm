@@ -625,3 +625,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item 14** — type-ignore sweep continuation. Scanning alerting-service + instruments-service for dead type: ignore (basedpyright excludes tests/).
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 14** — alerting-service@d9d8604 (44 removals) + instruments-service@dd67839 (68 removals) = 112 dead type: ignore removed. Done-def: 30+ ✅. work_split item 14 flipped.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 15** — workspace-wide pyproject.toml audit: line-length, coverage floor, ruff exclude drift, pre-commit hook drift across 26+ repos.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 15** — 8 fixes shipped: orchastrator@6752349 (gitleaks hook + ruff.format), batch-live-recon@ae1280c, deployment-service@15662a5, market-data-processing@3a85f51, risk-and-exposure@a9d58fc, execution-service@40995f1f, UTL@48f4ceb (ruff.format sections added). All 26+ repos audited: line-length=120 universal ✓, gitleaks present in all but deployment-api (slot-7 territory, skipped). Done-def: 8+ fixes ✅.
