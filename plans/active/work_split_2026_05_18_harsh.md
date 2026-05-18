@@ -586,6 +586,14 @@ smoke begins.
       solver_auction.py (0→covered): TestBatchAuctionEngine — register_default_solvers (3 solvers),
       submit_intent adds to pending, run_auction no intents → empty, run with pool state, score_solutions
       min_out filter, _simulate_amm_output constant-product output. QG: 7407 passed. execution-service@0e1a641c.
+- [x] ✅ **S16. SUSTAIN — execution-service schema_validator zero-to-coverage (17 tests)** —
+      schema_validator.py (0→covered): TestSchemaValidator — instantiation/empty state, validate() unknown
+      data_type→error, validate_trades() non-existent file→error, _mbp_depth_columns depth=2 col names +
+      depth=0 empty, _validate_trade_sides valid A/B + invalid BUY/SELL→error, _validate_prices negative→error
+      + very large→warning, _validate_ohlc_relationships bad high + bad low→errors, _validate_volume
+      negative→error, _validate_swap_amounts non-positive→2 errors, _validate_transaction_hashes non-0x→warning,
+      _check_chronological_order out-of-order→warning, aliases (DatabentoSchemaValidator + DeFiSchemaValidator).
+      All 91 tests in file pass. execution-service@d4cbd3b7.
 
 #### Coordination
 
