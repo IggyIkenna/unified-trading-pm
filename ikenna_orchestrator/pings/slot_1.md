@@ -3817,3 +3817,30 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🟡 api_keys Phase 5.C — **3rd check-in sent**, context-expired at 11:48 UTC (17 min). Declare abandoned at tick-107 if no ack.
 
 **Status**: 🟢 B-015 6/72 confirmed. slot-6/7 high output. slot-3/8 final window closes 11:48.
+
+---
+
+## [slot 1 main] 2026-05-18 ~11:37 UTC — tick-107: slot-3/8 ABANDONED; slot-6 Wave 71; only 6+7 active; deferred work noted
+
+**B-015**: 6/72. Next tick 12:27:17 UTC. Healthy.
+
+**New commits since tick-106** (1 absorbed):
+- `cfe9d5f0` — slot-6 Wave 71: lst_seasonal_rewards_collector + parser → 100% (features-service@4d1a6647) ✅
+
+**Slot states** (11:37 UTC):
+- slot_2: 🚫 ABANDONED (since tick-103).
+- slot_3: 🚫 **ABANDONED** — 39 min, 3 check-ins, no ack. defi_catalogue + writegate Phase 6.8 deferred.
+- slot_4/5: done.
+- slot_6: 🟢 live_pipeline Phase 1 — Wave 71 done. Consistent output (Waves 67-71 in this session).
+- slot_7: 🟢 Phase B — twap.py, S9/S10 coverage done. Active commits flowing.
+- slot_8: 🚫 **ABANDONED** — 39 min, 3 check-ins, no ack. api_keys Phase 5.C + classify_venue_error deferred.
+
+**Deferred work queue** (for next human-launched session):
+- defi_recursive_borrow Phase 3-4 (slot_2 stalled)
+- defi_catalogue_chain_primitives + writegate Phase 6.8 (slot_3 stalled)
+- api_keys Phase 5.C + classify_venue_error Polymarket/Kalshi (slot_8 stalled)
+- Phase 5 STRATEGY_DECISION_CONTEXT data_type + on_tick emit (newly queued, ikenna-side)
+
+**Active only**: slot_6 (live_pipeline) + slot_7 (Phase B refactoring). Both productive.
+
+**Status**: 🟡 Reduced to 2 active slots. slot-6/7 producing well. B-015 gate healthy. Deferred queue documented.

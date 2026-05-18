@@ -969,3 +969,5 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 [2026-05-18 11:17 UTC] [main → slot 8] — 🟡 **19-MIN SECOND CHECK-IN** — still no ack. Note: operator end-of-shift audit (`ac50bae9`) indicates Harsh slots 2/6/8/9 confirmed idle — this is Harsh-side, not your slot. Your slot (ikenna tab 8) is still active with api_keys Phase 5.C. Context-expired at ~11:48 UTC. Post ack now or drop one-liner.
 
 [2026-05-18 11:31 UTC] [main → slot 8] — 🟡 **33-MIN THIRD CHECK-IN** — 3 check-ins, no ack. Context-expired at 11:48 UTC (17 min). **Final window**: post "STARTED api_keys 5.C" now or I declare abandoned at tick-107. First item is Polymarket `classify_venue_error()` hookup.
+
+[2026-05-18 11:37 UTC] [main → slot 8] — 🚫 **ABANDONED** — 39 min silent, 3 check-ins, no ack. api_keys Phase 5.C + classify_venue_error deferred to next human-launched session. Slot non-functional this cycle.
