@@ -3328,3 +3328,37 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Delegate-flip progress**: UAC 5 callsites done. 98 remaining across 7 repos.
 
 **Status**: 🟢 Momentum building on delegate-flip. Tick-4 imminent.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:25 UTC — tick-88: tick-4 window open; ikenna slots dispatched; harsh slots active
+
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks confirmed. Tick 4 window opens NOW (09:27 UTC). GCS log not yet showing tick 4 (2 min until expected). Checking next tick.
+
+**Incoming commits since tick-87** (rebased cleanly):
+- `ee5af285` — alerting_service_live_rules flip item 15 + work_split item 15 (slot-2 deep sustain seeded)
+- `0e9350dd` — execution-service tick-49 flip: _flash_open 71L→33L, get_optimal_route 72L→21L
+- `95592993` — slot-3 scope correction + slot-7 STARTED ack catch-up
+- `446af4d6` — UTL item 15 flip: 16 ratchet/idempotency tests
+- `b96c9ffc` — execution-service tick-48 flip: 4 methods 71-74L→<50L
+
+**Ikenna slot acks** (dispatched 09:06 UTC, 19 min lag):
+- slot_2 (UTL/batch-live-recon/strategy delegate-flip): **no ack yet** — normal cold-start
+- slot_3 (UAC/features-service delegate-flip + defi_catalogue): **no ack yet**
+- slot_4 (AWS Phase 2-4 + defi_recursive_borrow Phase 3-4): **no ack yet**
+- slot_5 (execution-service/UI delegate-flip + api_keys Phase 5.B): **no ack yet**
+- slot_6 (deployment-api delegate-flip + code_freeze Phase 2.6): **no ack yet**
+- slot_7 (writegate Phase 6.6/6.7): **no ack yet**
+- slot_8 (alerting SM hot-reload + api_keys Phase 5.B): **no ack yet**
+
+**Harsh slot states**:
+- slot_2: DEEP SUSTAIN QUEUE (20 mechanical items seeded, working execution-service lint territory)
+- slot_3: scope correction dispatched (defi_master codex sweep redirect)
+- slot_4: item 5 direct dispatch (defi_basedpyright features-service final 3 items)
+- slot_6: simulation_scenarios_topology residuals (34 items, 9.2 cal-days)
+- slot_7: STARTED mock_data_pipeline final items → expected_unattempted propagation chain (09:25 UTC ✅)
+- slot_9: DARK (46+ min silent, declared at tick-87; item-14 queued for reassignment)
+
+**Delegate-flip total progress**: 5/103 callsites done (UAC). 98 remaining.
+
+**Status**: 🟢 All slots active. Tick-4 imminent. First delegate-flip acks expected ~09:30-09:40 UTC.
