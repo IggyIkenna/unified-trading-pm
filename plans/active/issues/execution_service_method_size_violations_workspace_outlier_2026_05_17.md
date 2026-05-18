@@ -1194,6 +1194,8 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 30 — data/checker.py + benchmark/comparison.py)**: data/checker.py shipped at execution-service@9e1d6b29b: check_gcs_file_exists 212L→33L via _GCS_DATA_TYPE_MAP constant + _gcs_override_test_date + _gcs_assert_loader + _gcs_resolve_instrument_parts + _gcs_resolve_category + _gcs_build_path + _gcs_check_blob + _gcs_lookup_and_check; check_data_availability 106L→27L via _chk_init_result + _chk_resolve_source + _chk_check_trades + _chk_finalize_trades. benchmark/comparison.py shipped at execution-service@f8e20a620: run_comparison 199L→37L + _get_algorithm_references 127L→3L via _ALGORITHM_REFERENCES module constant + _run_and_log_benchmark + _run_all_algorithms + _build_algo_result instance methods + module-level _log_comparison_header + _setup_signal_driven_config. 4 violations cleared. Allowlist 18→16 files. Slot-4 cumulative across batches 1-30: 94 files cleared.
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 29 — engine/routing/instruction_router.py)**: shipped at execution-service@17480ee86. route_instruction 129L→36L via _route_compose_preflight (30L) + _route_log_error_action (31L) + _route_handle_error (27L). 1 violation cleared. Allowlist 19→15 files (net; parallel slot-4 batches 29-30 also landed). Slot-5 cumulative across batches 21-29: 9 files cleared.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
