@@ -44,6 +44,7 @@ scope: [engineer]
     - [Three-Phase Pattern (current)](#three-phase-pattern-current)
     - [BASEDPYRIGHT_CACHE_DIR](#basedpyright_cache_dir)
     - [run_timeout Helper](#run_timeout-helper)
+    - [Memory Governance (OOM Prevention)](#memory-governance-oom-prevention)
 11. [Python Version Consistency](#python-version-consistency)
     - [Run Quality Gates = Single Command (No Setup First)](#run-quality-gates--single-command-no-setup-first)
     - [Quickmerge Activates Venv](#quickmerge-activates-venv)
@@ -1119,6 +1120,22 @@ run_timeout 120 basedpyright unified_trading_services/
 **Note:** The `perl` fallback is essential for macOS environments where GNU coreutils may not be installed. If
 `run_timeout` is not found (exit 127), run `workspace-bootstrap.sh` to install the standalone binary — do not source
 `quality-gates.sh` as a workaround.
+
+### Memory Governance (OOM Prevention)
+
+When 8+ parallel slot agents each run `quality-gates.sh` concurrently, peak memory can exceed available RAM and trigger
+the kernel OOM-killer — taking down VS Code and all worker sessions. Memory governance rules are documented in
+[`quality-gates-memory-governance.md`](quality-gates-memory-governance.md).
+
+**Key knobs** (see that doc for defaults, per-box recommendations, and macOS compatibility notes):
+
+| Knob              | Declared in             | Default  | Purpose                                              |
+| ----------------- | ----------------------- | -------- | ---------------------------------------------------- |
+| `QG_MEM_CAP`      | `base-service.sh`       | `10G`    | Per-subprocess hard cap via `systemd-run` cgroup     |
+| `PYTEST_WORKERS`  | `base-service.sh`       | `1`      | xdist worker count (was `cpu_count // 4` pre-2026-05)|
+| `diagnosticMode`  | `.vscode/settings.json` | open files only | IDE basedpyright crawl scope                |
+
+Read [`quality-gates-memory-governance.md`](quality-gates-memory-governance.md) before adjusting any of these knobs.
 
 ---
 
