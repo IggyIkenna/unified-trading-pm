@@ -214,7 +214,7 @@ todos:
 
   - id: phase-1-mdps-streaming-callsite
     content: |
-      - [ ] [AGENT] P1. Phase 1.2 (now Phase 1.2B) — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle.
+      - [x] ✅ [AGENT] P1. Phase 1.2 (now Phase 1.2B) — Migrate MDPS `_streaming_write_per_tf` to the new lifecycle. **SHIPPED 2026-05-18 MDPS@`15c1889`** — `CandleStreamingWriteContext` + `open_candle_streaming_writer` + `write_streaming_chunk` + `close_candle_streaming_writer` added to `canonical_writer.py`; `_streaming_write_per_tf` in `live_workers.py` rewired to per-batch open/write/close (pd.concat materialisation eliminated, peak mem ≈ 1 batch × 1.5); 4 unit tests in `test_streaming_write_per_tf.py` (per_batch_flush, memory_ceiling, exception_mid_stream, shard_level_isolation). QG green. Slot 2 tab/ikennaigboaka/2.
 
       **Phase 1A SHIPPED 2026-05-15 MDPS@`0077f1d`** — `write_candle_parquet` migrated to UTL `open_candle_writer + _utl_write_chunk + finalize_local()` (R1 GCS-first approach per operator 2026-05-14 direction). Direct `StreamingParquetWriter` instantiation eliminated from MDPS canonical_writer.py. Phase 1B (`open_candle_streaming_writer` helper) + Phase 1C (`_streaming_write_per_tf` refactor) + Phase 2 + Phase 4 remain open.
 
@@ -535,8 +535,8 @@ upstream-detected) as complementary signals.
       capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
       auto-backfill loop. ✅ **SHIPPED 2026-05-16 by slot 2** at PM@<TBD> — new "Live=batch 4-state capture parity"
       section appended to § "Anti-drift guards" before § "Batch-only service exemptions". Covers: live mode MUST NOT
-      introduce a 5th state; per-event mapping table (GAP_DETECTED → attempted_failed UPSTREAM_LIVE_GAP / BACKFILLED
-      → captured / RECOVERED+empty → empty_confirmed EXPECTED_VENUE_QUIET / planned outage → expected_unattempted);
+      introduce a 5th state; per-event mapping table (GAP_DETECTED → attempted_failed UPSTREAM_LIVE_GAP / BACKFILLED →
+      captured / RECOVERED+empty → empty_confirmed EXPECTED_VENUE_QUIET / planned outage → expected_unattempted);
       operational signal vs manifest row distinction; cross-link to UAC event metadata classes (lines 820-890) +
       alerting taxonomy.
 
