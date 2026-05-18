@@ -184,9 +184,9 @@ smoke begins.
 - [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — `.github/workflows/` per repo —
       pinned action versions, env-var consistency, secret reference patterns. Done-def: per-repo workflow drift report +
       5+ alignments. **~6 cal-days**.
-- [ ] **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** [workspace audit] — per CLAUDE.md "UTC datetimes
-      always" — `datetime.now()` → `datetime.now(timezone.utc)`. Sweep source code (exclude tests). Done-def: 0 naive
-      datetime calls in source. **~3 cal-days**.
+- [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** [workspace audit] — AST scan across 11 repos: 0
+      actual `datetime.now()` calls in source (only `pd.Timestamp.now()` in h2h_calculator.py + docstrings).
+      Workspace already clean. Done-def: 0 violations ✅.
 - [ ] **S10. SUSTAIN — cross-repo test data fixture utilization audit** [workspace test cleanup] — fixtures in
       `tests/fixtures/` — identify unused or stale (last referenced commit >90d). Done-def: per-repo fixture utilization
       report + 5+ cleanups. **~5 cal-days**.
@@ -195,9 +195,9 @@ smoke begins.
       modules. Done-def: per-repo docstring coverage ≥70% on public API. **~6 cal-days**.
 - [ ] **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — per CLAUDE.md "Async HTTP:
       aiohttp not requests" — find `requests.get` in async code paths. Done-def: 0 violations. **~3 cal-days**.
-- [ ] **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** [workspace audit] — per CLAUDE.md "Built-in
-      generics: list[str], dict[str, int]". Sweep for `from typing import List, Dict, Tuple, Set` and replace. Done-def:
-      0 violations. **~3 cal-days**.
+- [x] ✅ **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** [workspace audit] — 0 violations found.
+      Scanned all repos: no `from typing import List/Dict/Tuple/Set` or `List[/Dict[/Tuple[/Set[` usage in source.
+      Workspace already clean. Done-def: 0 violations ✅.
 - [ ] **S14. SUSTAIN — workspace-wide bare `except:` sweep** [workspace audit] — per CLAUDE.md "No bare except:".
       Identify + replace with `except <specific-type>:`. Done-def: 0 bare excepts in source. **~4 cal-days**.
 - [ ] **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** [workspace config audit] — verify `build/`,

@@ -665,3 +665,13 @@ After S3: S4 (type:ignore continuation), S5 (unused-fixture sweep), S15 (pyproje
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item S4** — cross-repo `# type: ignore` justification audit. Scanning for orphan type: ignore comments without WHY explanation and fixing root cause (preferred) or adding justifications.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item S4** — cross-repo `# type: ignore` justification audit. 453 justifications across 8 repos: execution-service@4c0b6c3f (168), features-service@319eb813 (119), UTL@466a124 (118), deployment-service@d4883b7 (39), UAC@c37b3c9 (16), instruments-service@11ceaa5 (8), alerting@fc5e972 (1), risk@42a2bba (1). 100% justified in all repos. Pivoting to S5.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S9** — workspace-wide naive datetime.now() sweep. Scanning source code (exclude tests) for datetime.now() without timezone.utc.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S9** — workspace-wide naive datetime sweep. 0 violations found. AST scan across 11 repos: workspace already clean (only pd.Timestamp.now() false positives + docstring mentions). Pivoting to S13 (typing List/Dict sweep).
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S13** — cross-repo `from typing import List/Dict/Tuple/Set` sweep. Scanning for old-style typing imports in source (not tests).
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S13** — `from typing import List/Dict` sweep. Scanning for old-style typing imports.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S13** — 0 violations found. Workspace already clean: no List[/Dict[/Tuple[/Set[ usage in source code across all repos. Pivoting to S12 (requests → aiohttp audit).
