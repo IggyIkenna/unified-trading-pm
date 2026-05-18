@@ -42,7 +42,7 @@ Total staking yield earned on 2.5 ETH vs 1 ETH of capital = 2.5x nominal
 Net yield = 2.5 × total_lst_yield − 1.5 × borrow_rate − fees − depeg_risk_provision
 
 For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx) `total_lst_yield` is itself the SUM of THREE
-on-chain-discoverable layers (see [restaking-reward-economics.md](../../cross-cutting/restaking-reward-economics.md)):
+on-chain-discoverable layers (see [restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md)):
 
   total_lst_yield = CARRY_BASE                       (exchange_rate appreciation)
                   + CARRY_AVS_CONTINUOUS_realised    (EigenLayer/Karak/Symbiotic per-token, dust-converted to ETH)

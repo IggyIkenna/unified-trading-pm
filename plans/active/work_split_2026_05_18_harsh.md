@@ -284,26 +284,30 @@ smoke begins.
 
 #### New-dispatch queue (main ping 2026-05-18 21:00 UTC — defi_archetypes_canonicalisation theme)
 
-- [x] ✅ **18. defi_archetypes_canonicalisation Stream A P1 confirm** — PM@29dd6f7a. CONFIRMED: _build_carry_staked_basis
-      auto-regenerates from VENUE_COLLATERAL_MATRIX via accepted_perp_collateral(). No hardcodes. Design note: OKX-FUTURES
-      in venue list; bare OKX (wstETH=True) not present — by design, awaiting SCRIPT P0 probe. [SCRIPT] P0 reclassified
-      BLOCKED-CREDENTIALS (playbook doc exists; needs Deribit/Bybit/OKX API keys for live haircut probe). Credential ask
-      filed in ping.
+- [x] ✅ **18. defi_archetypes_canonicalisation Stream A P1 confirm** — PM@29dd6f7a. CONFIRMED:
+      \_build_carry_staked_basis auto-regenerates from VENUE_COLLATERAL_MATRIX via accepted_perp_collateral(). No
+      hardcodes. Design note: OKX-FUTURES in venue list; bare OKX (wstETH=True) not present — by design, awaiting SCRIPT
+      P0 probe. [SCRIPT] P0 reclassified BLOCKED-CREDENTIALS (playbook doc exists; needs Deribit/Bybit/OKX API keys for
+      live haircut probe). Credential ask filed in ping.
 - [x] ✅ **19. defi_master allowed_chains extension — 3 recursive-borrow archetype docs** — PM@f6fc4b6d. Added
-      allowed_chains to carry-recursive-staked [ethereum], carry-recursive-borrow-lending-only [ethereum, arbitrum, base],
-      carry-recursive-borrow-perp-hedged [ethereum, arbitrum, base]. Phase 3 extension (DeFi on-chain legs only; CeFi not
-      chain-gated). Plan item added to defi_master + flipped in same commit.
+      allowed_chains to carry-recursive-staked [ethereum], carry-recursive-borrow-lending-only [ethereum, arbitrum,
+      base], carry-recursive-borrow-perp-hedged [ethereum, arbitrum, base]. Phase 3 extension (DeFi on-chain legs only;
+      CeFi not chain-gated). Plan item added to defi_master + flipped in same commit.
 - [x] ✅ **20. defi_recursive_borrow_archetypes stale plan-flip sweep** — PM@d273b3ff. Flipped 5 already-shipped codex
       items across 2 plans: (1) defi_recursive_borrow Phase 8 [docs] P2 cefi-perp-leg-bybit.md (doc existed since
       ec344724); (2–6) defi_recursive_borrow_post_cutover Phase 10 items: flash-loan-receiver extended-receiver
       (a411c240), venue-collateral Family 1+2 sections (ec344724), recursive-borrow-backtest-scenarios (c5a25181),
       batch-live-architecture archetype-grain section (ec344724), cefi-perp-leg-bybit (ec344724). 1 item kept open:
       recursive-borrow-backtest-2026-05.md (BLOCKED-DATA, gates on Phase 9).
-- [x] ✅ **21. post-cutover plan banner alignment sweep** — PM@this. Updated 3 cross-plan banners to reference
+- [x] ✅ **21. post-cutover plan banner alignment sweep** — PM@aab95382. Updated 3 cross-plan banners to reference
       post-cutover successor plan: (1) defi_archetypes_canonicalisation banner → post-cutover plan consuming
       lending-indices DEFERRED; (2) defi_master banner → post-cutover plan as Phase 10+ canonical track; (3)
       alerting_service_live_rules Phase 8 banner → post-cutover plan. Flipped 3/4 [PM] P0 banner items in post-cutover
       plan; item 2 (master_to_live_defi sub-bullet) left SLOT-1-ONLY.
+- [x] ✅ **22. archetype doc broken-link sweep** — PM@this. Fixed 3 broken cross-references: (1) carry-recursive-staked
+      restaking-reward-economics: ../../cross-cutting/ → ../cross-cutting/ (one level too deep); (2) yield-staking-simple
+      same fix; (3) arbitrage-price-dispersion APD finalisation plan: plans/active/ → plans/archive/ (plan archived
+      2026-05-09).
 
 #### Coordination
 
@@ -400,8 +404,8 @@ smoke begins.
       Phase 9 mode-switch handler distinctness + cross-import isolation (strategy-service); Phase 10 cutover readiness:
       staked_basis strategies declared+capable, DeFi manifest fields, launch scripts + smoke scripts exist. QG ✅.
       sit@e59617b
-- [x] ✅ **18. SUSTAIN — features-service Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage** —
-      28 new tests: FlashLoanCalculator (source_name/feature_names/init/calculate_features empty+normal+zero-borrow+
+- [x] ✅ **18. SUSTAIN — features-service Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage** — 28 new
+      tests: FlashLoanCalculator (source_name/feature_names/init/calculate_features empty+normal+zero-borrow+
       multi-pool+schema+source-col + fetch_data success/no-pools/ConnectionError/TimeoutError/missing-symbol) +
       AaveLendingCalculator (same shape, rate_spread=supply−borrow, ValueError path). Also removed 2 stale
       TestModeHandlerBase tests (run_batch/run_live — not in canonical UTL ModeHandler since lift 2026-05-08) +
@@ -577,16 +581,15 @@ smoke begins.
 - [x] ✅ **S13. SUSTAIN — execution-service AlmgrenChriss coverage + fix 33 pre-existing test failures + lint** —
       AlmgrenChrissCalculator: calculate_kappa (line 123), calculate_kappa invalid params (line 50),
       calculate_schedule_from_kappa (line 133). Pre-existing fix: harness delegation methods added to
-      test_algo_impl_adaptive_twap/_hybrid_optimal/_passive_aggressive (33 tests unblocked). Bug fix:
-      save_operations.save_report returns None (not path) when skip_local=True. Lint: trade_converter.py
-      5 E501 violations from batch-23. QG: tests clean. execution-service@b184eaef.
-- [x] ✅ **S14. SUSTAIN — execution-service amm_math + algo_comparison zero-to-coverage (13 tests)** —
-      amm_math.py (0→covered): TestAMMQuotes — constant_product basic + zero_reserves guard, stable_swap
-      like-kind low impact, weighted 50/50, get_amm_quote dispatches all 4 pool types, detect_pool_type
-      known + unknown fallback. algo_comparison.py (0→covered): TestAlgoComparisonRunner — raises on no
-      algos, single algo report, captures error gracefully, all-failed→no recommendation, two algos
-      more-slices wins, summary() keys. Also: ruff format batch (20 files @1ea6dcf8), drain_mode
-      type:ignore removal @2c1d63b7. QG: 7391 passed. execution-service@5dec3c4b.
+      test_algo_impl_adaptive_twap/\_hybrid_optimal/\_passive_aggressive (33 tests unblocked). Bug fix:
+      save_operations.save_report returns None (not path) when skip_local=True. Lint: trade_converter.py 5 E501
+      violations from batch-23. QG: tests clean. execution-service@b184eaef.
+- [x] ✅ **S14. SUSTAIN — execution-service amm_math + algo_comparison zero-to-coverage (13 tests)** — amm_math.py
+      (0→covered): TestAMMQuotes — constant_product basic + zero_reserves guard, stable_swap like-kind low impact,
+      weighted 50/50, get_amm_quote dispatches all 4 pool types, detect_pool_type known + unknown fallback.
+      algo_comparison.py (0→covered): TestAlgoComparisonRunner — raises on no algos, single algo report, captures error
+      gracefully, all-failed→no recommendation, two algos more-slices wins, summary() keys. Also: ruff format batch (20
+      files @1ea6dcf8), drain_mode type:ignore removal @2c1d63b7. QG: 7391 passed. execution-service@5dec3c4b.
 - [x] ✅ **S15. SUSTAIN — execution-service multicall_batcher + solver_auction zero-to-coverage (16 tests)** —
       multicall_batcher.py (0→covered): TestMulticallBatcher — encode APPROVE/SWAP/WRAP/unknown steps,
       _is_atomic_group with/without flash loan, create_batches empty + grouping by multicall_group,
@@ -880,8 +883,14 @@ smoke begins.
       slot-7** — deployment-ui@1a6f2d1: 10 Playwright tests in tests/smoke/mobile_responsive.spec.ts across iPhone SE
       (375x667) and iPhone Pro (414x896); covers home/deployments/data-status/costs/kill-switch load + hamburger +
       horizontal overflow. TypeScript clean; 719 Vitest pass. **~3 cal-days**.
-- [x] ✅ **S14. SUSTAIN — deployment-api error response standardization** [deployment-api] — **SHIPPED 2026-05-18 slot-7** — deployment-api@4c629ea: 10 violations fixed across 5 routes (vm_events 4×, shard_detail 3×, client_treasury 1×, risk_routes 1×, execution_backtest_launch 1×); stderr leak → generic message; 2 test assertions updated. Done-def: 10+ fixes ✅. **~3 cal-days**.
-- [x] ✅ **S15. SUSTAIN — deployment-api/ui i18n readiness audit** [deployment-api + deployment-ui] — **SHIPPED 2026-05-18 slot-7** — deployment-api@45a5ab5 + deployment-ui@59a7874: messages.py (10 typed error constants) + strings.ts (45 typed UI constants); 55 strings extracted across deployments.py + manual_pending.py + DeploymentsList.tsx + VmDeploymentDetails.tsx. Done-def: 55 strings extracted ✅ (10+ target). **~3 cal-days**.
+- [x] ✅ **S14. SUSTAIN — deployment-api error response standardization** [deployment-api] — **SHIPPED 2026-05-18
+      slot-7** — deployment-api@4c629ea: 10 violations fixed across 5 routes (vm_events 4×, shard_detail 3×,
+      client_treasury 1×, risk_routes 1×, execution_backtest_launch 1×); stderr leak → generic message; 2 test
+      assertions updated. Done-def: 10+ fixes ✅. **~3 cal-days**.
+- [x] ✅ **S15. SUSTAIN — deployment-api/ui i18n readiness audit** [deployment-api + deployment-ui] — **SHIPPED
+      2026-05-18 slot-7** — deployment-api@45a5ab5 + deployment-ui@59a7874: messages.py (10 typed error constants) +
+      strings.ts (45 typed UI constants); 55 strings extracted across deployments.py + manual_pending.py +
+      DeploymentsList.tsx + VmDeploymentDetails.tsx. Done-def: 55 strings extracted ✅ (10+ target). **~3 cal-days**.
 
 #### Coordination
 

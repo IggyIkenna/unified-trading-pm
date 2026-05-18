@@ -338,28 +338,35 @@ boundary tests.
 
 [2026-05-18 UTC] slot-5 — ✅ **S10+S11+S12+S13 DONE (SUSTAIN coverage — execution-service)**. All 4 items shipped
 execution-service branch (live-defi-rollout):
-- S10: execution-service@51395abf — sor single-venue warning (line 181) + cost_model zero-commission (line 210) + mev_router KeyError (line 94). 3 tests.
-- S11: execution-service@d201117e — vwap zero-weight-sum (line 89, mocked) + pov zero participation_rate→MAX_BUCKETS (line 90) + tradfi/twap tiny-qty-skip (line 105). 3 tests.
+
+- S10: execution-service@51395abf — sor single-venue warning (line 181) + cost_model zero-commission (line 210) +
+  mev_router KeyError (line 94). 3 tests.
+- S11: execution-service@d201117e — vwap zero-weight-sum (line 89, mocked) + pov zero participation_rate→MAX_BUCKETS
+  (line 90) + tradfi/twap tiny-qty-skip (line 105). 3 tests.
 - S12: execution-service@0ff550f2 — exit_algo lines 42+74 + benchmark_registry lines 104+131. 4 tests.
-- S13: execution-service@b184eaef — AlmgrenChriss public API lines 50/123/133 (3 new tests) + fixed 33 pre-existing test harness failures (adaptive_twap/_hybrid_optimal/_passive_aggressive delegation methods missing post-refactor) + save_operations return-None bug + trade_converter 5 E501 lint violations (from batch-23).
+- S13: execution-service@b184eaef — AlmgrenChriss public API lines 50/123/133 (3 new tests) + fixed 33 pre-existing test
+  harness failures (adaptive_twap/\_hybrid_optimal/\_passive_aggressive delegation methods missing post-refactor) +
+  save_operations return-None bug + trade_converter 5 E501 lint violations (from batch-23).
 
 ✅ **Operator-directed cleanup (also shipped 2026-05-18)**:
+
 - `execution-service@1ea6dcf8` — ruff format: 20 source files pure line-wrap reformats committed + pushed.
-- `execution-service@2c1d63b7` — removed all 23 `# type: ignore[union-attr]` from `test_drain_mode.py`; refactored `_reload_drain()→object` to module-level `import drain_mod` + `importlib.reload(drain_mod)`. basedpyright: 0 errors.
+- `execution-service@2c1d63b7` — removed all 23 `# type: ignore[union-attr]` from `test_drain_mode.py`; refactored
+  `_reload_drain()→object` to module-level `import drain_mod` + `importlib.reload(drain_mod)`. basedpyright: 0 errors.
 
 🔒 **OWNED SURFACE (DO NOT TOUCH while I'm active)**:
+
 - `tests/unit/test_drain_mode.py` (drain_mode type: ignore fix)
-- `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`, `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
+- `tests/unit/test_algo_library_calculators.py`, `tests/unit/test_algo_impl_adaptive_twap.py`,
+  `tests/unit/test_algo_impl_hybrid_optimal.py`, `tests/unit/test_algo_impl_passive_aggressive.py`
 - `execution_service/results/save_operations.py`
 - `execution_service/data/trade_converter.py`
 - `execution-service@5dec3c4b` — S14: amm_math (7 tests) + algo_comparison (6 tests). QG: 7391 passed.
 - `execution-service@0e1a641c` — S15: multicall_batcher (10 tests) + solver_auction (6 tests). QG: 7407 passed.
-- `execution-service@d4cbd3b7` — S16: schema_validator (17 tests). 91 tests in file pass.
-- `execution-service@dae5ac5f` — S17: orderbook_converter (12 tests). 103 total in file pass.
-- `execution-service@c27bd6d5` — S18: slashing_tail_risk (18 tests). 121 total in file pass.
-- **Next**: S19+ SUSTAIN gap scanning.
+- **Next**: S16+ SUSTAIN gap scanning.
 
-**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 121 in test_algo_library_full.py pass after S18.
+**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test
+work. Tests themselves: 7407 passed after S15.
 
 [2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of
 `.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py +

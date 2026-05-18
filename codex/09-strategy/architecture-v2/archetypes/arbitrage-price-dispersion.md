@@ -99,10 +99,10 @@ execution_policy_ref: arb-fast-v2
 share_class: USD
 
 # Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
-target_leverage: 1.0        # [1, 10]; hard-clamped by per-instrument vol cap at entry
-target_net_delta: 0.0       # net directional delta target (0 = delta-neutral arb)
-max_underlying_move_pct: 3.0  # vol-cap clamp: abort/skip if realized move > X% in 1h window
-instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+target_leverage: 1.0 # [1, 10]; hard-clamped by per-instrument vol cap at entry
+target_net_delta: 0.0 # net directional delta target (0 = delta-neutral arb)
+max_underlying_move_pct: 3.0 # vol-cap clamp: abort/skip if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) from FSS
 
 # Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
 # Gates the DeFi on-chain leg only (CROSS_DEX_SPOT / CROSS_DEX_SPOT + flash-loan variants).
@@ -223,8 +223,8 @@ Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short —
 - Unity integration (primary sports venue):
   [../../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md)
 - MEV protection for DeFi arb: [../cross-cutting/mev-protection.md](../cross-cutting/mev-protection.md)
-- **Venue-matrix / canonicalisation plan** (Stream B: funding-rate-dispersion multi-venue + Stream D: target_leverage
-  / vol-cap config schema):
+- **Venue-matrix / canonicalisation plan** (Stream B: funding-rate-dispersion multi-venue + Stream D: target_leverage /
+  vol-cap config schema):
   [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
-- **Active finalisation plan** (APD execution orchestrator Phase A):
-  [`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`](../../../../plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md)
+- **Finalisation plan** (APD execution orchestrator Phase A; archived 2026-05-09):
+  [`plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md`](../../../../plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)

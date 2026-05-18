@@ -487,34 +487,54 @@ shared-state leak guard (kill/restart CSB ≠ APD). — e2e@56bc8c8
 awaiting operator direction for next wave or reassignment.
 
 [2026-05-18 14:55 UTC] [main → slot 3] — 🏁 **END-OF-SHIFT AUDIT** (operator stopped slot 3 ~14:45 UTC).
+
 - **Commits today**: 15 across items 1-18 (all 11 assigned items flipped ✅).
 - **Dual-flip compliance**: 9/9 scored — every flip touched ping + plan file. Fully compliant.
-- **Tab worktree state**: 3 repos (PM / strategy-service / UAC) all CLEAN — no uncommitted files, no ruff formatting pending. Worktree lag (102 / 2 / 3 commits behind LDR) is normal for retired slot; will rebase on next boot.
-- **Off-scope incidents**: 1 minor (semver-rollout bot touched `work_split_2026_05_15_ikenna.md` — bot edit, not slot 3 action). Earlier same-cycle scope correction (14:38 UTC) for code_freeze + post-cutover scan was acked.
-- **Plans touched**: defi_simulation_realism, master_to_live_defi, defi_archetypes, archetype_paper_runnable_matrix, carry_staked_basis_structure_axis, strategy_archetype_taxonomy, defi_master pipeline-coverage-matrix.
+- **Tab worktree state**: 3 repos (PM / strategy-service / UAC) all CLEAN — no uncommitted files, no ruff formatting
+  pending. Worktree lag (102 / 2 / 3 commits behind LDR) is normal for retired slot; will rebase on next boot.
+- **Off-scope incidents**: 1 minor (semver-rollout bot touched `work_split_2026_05_15_ikenna.md` — bot edit, not slot 3
+  action). Earlier same-cycle scope correction (14:38 UTC) for code_freeze + post-cutover scan was acked.
+- **Plans touched**: defi_simulation_realism, master_to_live_defi, defi_archetypes, archetype_paper_runnable_matrix,
+  carry_staked_basis_structure_axis, strategy_archetype_taxonomy, defi_master pipeline-coverage-matrix.
 - **Verdict**: ✅ **HEALTHY — slot retired clean**. Top throughput on harsh-side today 🏆.
 
-[2026-05-18 21:00 UTC] [main → slot 3] — 🟢 **FRESH THEME — queue exhausted again** (top throughput today 🏆). Pick: **defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md residuals** (65%, 14 items left). Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-  2. Read `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy or strategy-service surface.
-  3. Avoid UAC enum changes (Ikenna primary). Pick 3-4 mechanical codex items, ship per item with dual-flip.
-**Fallback if blocked**: `defi_master_2026_05_07.md` codex residuals (74 items, 30% done).
-**Acknowledge "STARTED defi_archetypes_canonicalisation" within 10 min.**
+[2026-05-18 21:00 UTC] [main → slot 3] — 🟢 **FRESH THEME — queue exhausted again** (top throughput today 🏆). Pick:
+**defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md residuals** (65%, 14 items left). Recipe:
 
-[2026-05-18 21:05 UTC] slot-3 — STARTED defi_archetypes_canonicalisation. Rebased PM to LDR HEAD. Open items: Stream A [SCRIPT] P0 (live-API probe) + [strategy-service] P1 (_build_carry_staked_basis catalog check); Stream D DEFERRED items. Working [strategy-service] P1 first (catalog.py read), then [SCRIPT] P0 via playwright if feasible, then close success criteria.
+1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — find unchecked `- [ ]` items in
+   codex/09-strategy or strategy-service surface.
+3. Avoid UAC enum changes (Ikenna primary). Pick 3-4 mechanical codex items, ship per item with dual-flip. **Fallback if
+   blocked**: `defi_master_2026_05_07.md` codex residuals (74 items, 30% done). **Acknowledge "STARTED
+   defi_archetypes_canonicalisation" within 10 min.**
+
+[2026-05-18 21:05 UTC] slot-3 — STARTED defi_archetypes_canonicalisation. Rebased PM to LDR HEAD. Open items: Stream A
+[SCRIPT] P0 (live-API probe) + [strategy-service] P1 (\_build_carry_staked_basis catalog check); Stream D DEFERRED
+items. Working [strategy-service] P1 first (catalog.py read), then [SCRIPT] P0 via playwright if feasible, then close
+success criteria.
 
 ---
-CREDENTIAL APPROVAL REQUEST — venue-collateral-2026-05-07 live-API probe (Stream A, defi_archetypes_canonicalisation)
-Vendor: Deribit / Bybit / OKX — existing venue accounts (no new subscriptions needed)
-What I need: Read-only API key or authenticated session for each venue to call:
-  - Deribit: /private/get-position-mode or /private/get-portfolio-margins
-  - Bybit: /v5/account/info (lists UTA collateral tiers + haircuts)
-  - OKX: /api/v5/account/account-position-risk (shows cross-margin discount rates)
-Account to use: existing operator trading accounts for each venue
-Unblocks: venue-collateral-2026-05-07.md § "Caveats — pending live-API probe" — confirms exact haircut ratios (currently web-doc conservative placeholders: Deribit 7.5%, Bybit 10%, OKX 10%)
-Without it: carry_staked_basis slot generation uses correct acceptance flags (already flipped 2026-05-09) but with conservative haircut placeholders; under-utilises margin pool (safe error) not a correctness bug
 
-[2026-05-18 21:30 UTC] slot-3 — ✅ **DONE items 18-19**:
-- Item 18: Stream A [strategy-service] P1 CONFIRMED (auto-regenerates from VENUE_COLLATERAL_MATRIX). [SCRIPT] P0 BLOCKED-CREDENTIALS. PM@29dd6f7a.
-- Item 19: allowed_chains added to carry-recursive-staked [ethereum] + carry-recursive-borrow-lending-only/perp-hedged [ethereum, arbitrum, base]. defi_master Phase 3 extension. PM@f6fc4b6d.
-Searching for next codex items in defi_master / defi_archetypes plans.
+CREDENTIAL APPROVAL REQUEST — venue-collateral-2026-05-07 live-API probe (Stream A, defi_archetypes_canonicalisation)
+Vendor: Deribit / Bybit / OKX — existing venue accounts (no new subscriptions needed) What I need: Read-only API key or
+authenticated session for each venue to call:
+
+- Deribit: /private/get-position-mode or /private/get-portfolio-margins
+- Bybit: /v5/account/info (lists UTA collateral tiers + haircuts)
+- OKX: /api/v5/account/account-position-risk (shows cross-margin discount rates) Account to use: existing operator
+  trading accounts for each venue Unblocks: venue-collateral-2026-05-07.md § "Caveats — pending live-API probe" —
+  confirms exact haircut ratios (currently web-doc conservative placeholders: Deribit 7.5%, Bybit 10%, OKX 10%) Without
+  it: carry_staked_basis slot generation uses correct acceptance flags (already flipped 2026-05-09) but with
+  conservative haircut placeholders; under-utilises margin pool (safe error) not a correctness bug
+
+[2026-05-18 21:30 UTC] slot-3 — ✅ **DONE items 18-21** (context-resumed):
+
+- Item 18: Stream A [strategy-service] P1 CONFIRMED. [SCRIPT] P0 BLOCKED-CREDENTIALS. PM@29dd6f7a.
+- Item 19: allowed_chains extension 3 recursive-borrow archetype docs. PM@f6fc4b6d. Flip: PM@a228cf01.
+- Item 20: stale plan-flip sweep — 5 already-shipped codex items across defi_recursive_borrow + post-cutover plans.
+  PM@d273b3ff.
+- Item 21: post-cutover banner alignment sweep — 3 cross-plan banners updated to reference post-cutover successor plan.
+  PM@aab95382.
+- Item 22: archetype doc broken-link sweep — 3 fixes: restaking-reward-economics ../../→../ in carry-recursive-staked +
+  yield-staking-simple; APD finalisation plan active→archive. PM@this.
+Continuing defi_archetypes/defi_master codex residuals.
