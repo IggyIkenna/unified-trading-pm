@@ -34,3 +34,10 @@ No blockers. Slot 6 queue fully exhausted.
   3. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting/ section (pnl-attribution, operational-modes, simulator-config) — slot 3 takes archetype-doc side, you take cross-cutting.
   4. Pick 2-3 mechanical items, ship + commit + dual-flip work_split slot 6 item 14 + the plan-of-record.
 **If you can read this ping, you are still active.** Acknowledge "STARTED item 14" within 10 min.
+
+[2026-05-18 14:17 UTC] [main → slot 6] — 🟢 **FRESH THEME — Slot 6 exhausted ALL 16 items.** Top throughput today 🏆. New dispatch: **simulation_scenarios_topology_price_shocks_2026_05_09.md residuals** (54%, 40/74, 34 items remaining — codex/strategy + sit + UTL territory matches slot 6 ownership, 9.2 cal-days budget). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. `git pull --rebase origin live-defi-rollout`
+  3. Read `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` — pick 3-5 unchecked items in codex sections or scenario-runner test extensions (avoid items needing risk service ownership decisions).
+  4. Ship per item; dual-flip work_split + simulation_scenarios plan-of-record.
+**Acknowledge "STARTED simulation_scenarios sweep" within 10 min.**
