@@ -321,6 +321,13 @@ smoke begins.
       (8.I) honest-absence-downstream-handling.md § "Scenario-driven gap injection" — DropRows + ManifestPhantom mutation
       types; per-row scenario_id provenance; alerting-suppression rule; MANIFEST tap layer scope. Grep check: 6 files with
       scenario content — meets plan Phase 8 full-execution criterion (≥6 UPDATE docs).
+- [x] ✅ **25. simulation_scenarios Phase 8 B+C — 2 NEW codex docs** — PM@7a735152. Created 2 new docs: (8.B)
+      codex/04-architecture/scenario-outcome-assertions.md: 9-category OutcomeCategory enum table; 6-tuple assertion
+      contract; PASS/FAIL/WARN semantics; matrix-red = cutover-block; scenario-fail vs real-fire (synthetic=True);
+      alerting wire pattern (log-only; paging suppressed); (8.C) codex/02-data/scenario-overlay-semantics.md: overlay
+      parquet schema (scenario_id/run_id/synthetic); GCS path; per-row provenance chain; available_at discipline
+      (LOOKAHEAD_DOWNGRADE marker); manifest scenario_id column (post-cutover Phase 3.G). find codex -name "scenario-*"
+      | wc -l → 3 (meets plan Phase 8 NEW docs criterion).
 
 #### Coordination
 

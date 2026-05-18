@@ -689,14 +689,17 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       values + reuse-prod-codepath principle + injection-point map + per-layer applier semantics + `synthetic=true`
       event-stream provenance + LookaheadBias compatibility note + cross-references to `live-pipeline-architecture.md` +
       `replay-subsystem.md`. Stub at Phase 1 commit; full content lands here.
-- [ ] [AGENT] P0. **8.B NEW `codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy closed
+- [x] ✅ [AGENT] P0. **8.B NEW `codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy closed
       enum + per-archetype matrix shape + fail semantics (matrix-red = cutover-block) + scenario-fail vs real-fire event
       distinction (`synthetic=true`) + alerting wire pattern + cross-reference to `kill-switch-circuit-breaker.md` +
-      `autonomous-recovery-matrix.md`.
-- [ ] [AGENT] P0. **8.C NEW `codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema + per-row
+      `autonomous-recovery-matrix.md`. — PM@7a735152 (2026-05-18 slot 3). Nine OutcomeCategory table; 6-tuple per-assertion
+      contract; PASS/FAIL/WARN semantics; synthetic=True safeguard; alerting wire (log-only path).
+- [x] ✅ [AGENT] P0. **8.C NEW `codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema + per-row
       provenance column + `available_at` discipline under overlay (downgrade to warning, never silently shifted) +
       manifest `scenario_id` column + cross-reference to `honest-absence-downstream-handling.md` +
-      `availability-manifest-and-data-status.md`.
+      `availability-manifest-and-data-status.md`. — PM@7a735152 (2026-05-18 slot 3). Schema (scenario_id/run_id/synthetic
+      columns); GCS path; provenance chain MTDS→features→signal→report; available_at downgrade rule;
+      MANIFEST tap layer scope (post-cutover Phase 3.G).
 - [x] [AGENT] P0. **8.D UPDATE `kill-switch-circuit-breaker.md`.** ✅ PM@3431713e. Added § "Scenario-driven trips" —
       ScenarioRunner trip mechanics + per-rule expected-trip table (6 rules × kill-switch scope).
 - [x] [AGENT] P0. **8.E UPDATE `autonomous-recovery-matrix.md`.** ✅ PM@3431713e. Added § "Scenario-driven recovery
