@@ -684,3 +684,9 @@ hyperliquid_bridge.py (2: withdraw_usdc_from_hyperliquid, get_bridge_pending). A
 ThreadedResolver sessions. 14 tests updated from responses/patch to aioresponses. jito_bundle.py _post_json
 intentionally sync (asyncio.to_thread pattern) — not a violation. 0 violations workspace-wide in source.
 execution-service@6ac52287. Pivoting to S5 (unused-fixture sweep).
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S5** — cross-repo unused-fixture sweep. Scanning conftest.py files for fixtures never referenced in test files.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S5** — cross-repo unused-fixture sweep. 13 confirmed-unused fixtures removed
+from 4 repos. execution-service@7db9c881 (7), features-service@ee7d1694 (4), risk-and-exposure-service@caaffac (1).
+All 3 repo QGs green. 0 unused non-autouse fixtures remaining. Pivoting to S6 (cassette parity refresh).

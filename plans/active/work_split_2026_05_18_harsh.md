@@ -172,9 +172,12 @@ smoke begins.
       across 8 repos: execution-service@4c0b6c3f (168), features-service@319eb813 (119), UTL@466a124 (118),
       deployment-service@d4883b7 (39), UAC@c37b3c9 (16), instruments-service@11ceaa5 (8), alerting-service@fc5e972 (1),
       risk-and-exposure-service@42a2bba (1). 100% justified in all repos — 0 unjustified remain. Done-def met.
-- [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** [workspace test cleanup] — conftest.py fixtures never referenced
-      — identify + remove. Done-def: per-repo 0 unused fixtures (`pytest --collect-only` + grep cross-check). **~5
-      cal-days**.
+- [x] ✅ **S5. SUSTAIN — cross-repo unused-fixture sweep** [workspace test cleanup] — AST+regex scan across 8 repos: 13
+      confirmed-unused fixtures removed from 4 repos. execution-service@7db9c881 (7 fixtures: sample_fill,
+      sample_market_data, sample_config, sample_trade_data, sample_bet_execution, sample_odds, cassette_root fixture).
+      features-service@ee7d1694 (4 fixtures: sample_book_data, sample_funding_data, mock_gcs_data,
+      mock_cross_timeframe_features). risk-and-exposure-service@caaffac (1 fixture: sample_position + import cleanup).
+      0 unused fixtures remaining in scanned repos. Done-def: 0 unused fixtures ✅.
 - [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** [UAC external test surfaces] — UAC external/ subdirs
       (80+ subdirs) — run cassette schema parity tests; refresh drifted cassettes. Done-def: cassette parity green + 5+
       refreshes. **~6 cal-days**.
