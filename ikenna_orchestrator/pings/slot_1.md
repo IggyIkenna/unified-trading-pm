@@ -3247,3 +3247,21 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - `c7aca145`: NEW Ikenna work split (delegate-flip + cutover, 8-slot allocation)
 
 **Status**: 🟢 All ikenna slots dispatched to correct assignments. Tick-4 window approaching.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:08 UTC — tick-84: post-dispatch quiet; tick-4 19 min out
+
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (19 min). No errors.
+
+**Incoming commit**: `a364e912` — harsh slot-7 backfill dual-flip for items 14+15 (deployment_ui lifecycle_tabs + promote_workflow). Dual-flip discipline correctly applied retroactively.
+
+**No new slot acks** since tick-83 dispatches (2 min ago — normal lag). All 7 ikenna slots have correct assignments.
+
+**Harsh slot-9 escalation**: 35-min silence since item-14 dispatch. Sent second check-in ping. If no ack by tick-85, item 14 stays queued — ikenna slots will pick up live_pipeline work after cutover dispatches settle.
+
+**Delegate-flip summary** (103 callsites across 8 repos):
+- UTL: 23 | UAC: 5 | features-service: 2 | execution-service: 33
+- UI: 4 | deployment-api: 27 | batch-live-recon: 7 | strategy-service: 2
+
+**Status**: 🟢 Tick-4 window approaching. Slots processing.
