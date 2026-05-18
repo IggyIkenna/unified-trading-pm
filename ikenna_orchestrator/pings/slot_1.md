@@ -4115,3 +4115,20 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Deferred**: `defi_recursive_borrow Phase 3-4` still unassigned.
 
 **Status**: 🟢 Nominal. Monitoring tick-8 (13:27 UTC).
+
+## [slot 1 main] 2026-05-18 ~12:44 UTC — tick-120: Phase 5 items 3+5 SHIPPED; B-015 tick-8 window approaching
+
+**Phase 5 STRATEGY_DECISION_CONTEXT** — 🎉 MAJOR PROGRESS:
+- `strategy-service@3c332ac` (feat: Phase 5 — StrategyDecisionContext emitter wired into on_tick) — ON LDR ✅
+- PM@4fc824b2 flipped items 3+5 (on_tick wire-in + manifest entry)
+- Items 1+2 (UAC schema): ✅ PM@0c3b61b0
+- Items 3+5 (strategy-service emitter): ✅ PM@4fc824b2
+- Items 4, 6, 7 (pnl-attribution reader + tests + QG): still pending — slot_3 continuing
+
+**B-015**: 7/72 (unchanged). Tick-8 expected 13:27:18 UTC — ~43 min. Gate intact.
+
+**New PM commits absorbed**: `4fc824b2` (flip Phase 5 items 3+5) — clean rebase.
+
+**harsh-main**: No new _agent_pings response. Still awaiting.
+
+**Status**: 🟢 Phase 5 ~5/7 items done. B-015 nominal. Tick-8 in ~43 min.
