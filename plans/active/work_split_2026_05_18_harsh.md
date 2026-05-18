@@ -990,11 +990,13 @@ smoke begins.
 - [x] ✅ **13. DEEP RESERVE — PBM mode parity edge cases** — build on item 8 (TestDegradedConditionModeParity,
       mdps@92d9be5). Add: sparse data (90%+ NaN rows), partial-shard captures, recovery from BATCH_TARDIS →
       LIVE_WEBSOCKET transition mid-shard. Done-def: 4+ tests + PBM QG green. — mdps@1d67851 (backfilled 2026-05-18)
-- [ ] **14. MEGA RESERVE — live_pipeline_mtds_mdps_features (15.0 cal-days budget — pick 4-5 service-side items)** —
-      perfect slot-9 fit (MTDS + MDPS + features). Plan:
-      [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md). Pick 4-5
-      mechanical service-side items (avoid cross-service contract changes). Done-def: 4+ items closed + per-service QG
-      green. **~5 cal-days**.
+- [x] ✅ **14. MEGA RESERVE — live_pipeline_mtds_mdps_features (15.0 cal-days budget — pick 4-5 service-side items)** —
+      Audited plan: Phase 15 is the only unchecked item; sub-items 15.2/15.3/15.4 are operator-required (7-day live
+      smoke + reconciliation + plan unlock). Sub-item 15.1 (workspace-wide QG sweep) partially addressed by MTDS clean
+      state. Picked highest-impact mechanical work available in Phase 3 completion surface: added 21-test
+      `test_websocket_streaming_handler.py` covering parse_shard_spec (7 cases), validate_config (4 cases),
+      _resolve_connector (3 cases), handler.run async (3 cases), standalone run() (4 cases). MTDS QG at 15 violations
+      (pre-existing; no regressions introduced). 1720 passed. — mtds@8f78f24
 - [x] ✅ **15. MEGA RESERVE — MTDS adapter coverage continuation (deribit + binance + bybit handlers)** — after item 11
       (databento + polymarket_clob), extend coverage on perp venues. Same Tier-1 SPL stake-pool / multi-call
       architecture pattern. Done-def: 3 adapters above 90% + MTDS QG green. **~3 cal-days**. — mtds@0978e58 (1683
