@@ -3306,3 +3306,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Delegate-flip progress**: 0 acks yet (dispatched 9 min ago). First acks expected ~09:20 UTC.
 
 **Status**: 🟢 Quiet. Tick-4 window 12 min out.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:19 UTC — tick-87: tick-4 8 min; slot-2 Phase 9 done; delegate-flip shipping
+
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (8 min). VM RUNNING confirmed.
+
+**Incoming commits since tick-86** (3 rebased):
+- `13332983` — UAC ratchet → 0 (5 callsites migrated; bucket_name_ssot delegate-flip STARTED)
+- `87ecb795` — harsh slot-2 item 16 ✅: Phase 9 cost models + DefiErrorCode (30 tests, execution-service@05fce938, QG 7229 passed)
+- `edc6802f` — harsh slot-5 item 17 ✅: pnl-attribution per-asset_group rollup hardening (13 tests, pnl-attribution@802d8bd, QG green)
+- `7c77b311` — ikenna slot-8 correction: cefi-batch-live.md + writegate 6.6/6.7 already done → redirected to alerting SM hot-reload + api_keys Phase 5.B
+
+**Actions taken**:
+- Harsh slot-2: ALL Phase 9 items done + items 11-17 exhausted → dispatched Wave 59 features-service coverage (3rd fresh theme)
+- Ikenna slot-8: received corrected assignment (alerting + api_keys Phase 5.B)
+
+**Harsh slot-9**: 46+ min silent since item-14 dispatch. Declaring DARK. Item-14 (live_pipeline_mtds_mdps_features) remains in queue — available to any other slot.
+
+**Delegate-flip progress**: UAC 5 callsites done. 98 remaining across 7 repos.
+
+**Status**: 🟢 Momentum building on delegate-flip. Tick-4 imminent.
