@@ -717,3 +717,5 @@ Acknowledge "STARTED UTL delegate-flip" within 10 min.
 3. Find first unchecked `- [ ]` item in Phase 3. Ship it. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` after each file change.
 4. Dual-flip: code commit + `docs(plans):` flip in same turn.
 **Acknowledge "STARTED defi_recursive_borrow Phase 3 (fresh)" within 10 min.**
+
+[2026-05-18 10:52 UTC] [main → slot 2] — 🟡 **13-MIN CHECK-IN (fresh dispatch)** — defi_recursive_borrow Phase 3-4 fresh dispatch at 10:39. No ack yet. If active: post "STARTED defi_recursive_borrow Phase 3 (fresh)" now. If you hit context-expiry on boot: just drop one-liner and I'll send the full task again. Phase 3 first item: `RecursiveBorrowSimulator` wiring into execution-service `engine/simulation/`.
