@@ -307,6 +307,8 @@ smoke begins.
 - [x] ✅ **16. MEGA RESERVE — execution-service Phase 9 cost models + DefiErrorCode hardening** — 30 tests: 24 in test_aave_error_classification.py (_classify_revert_reason 11 + _map_revert_error 3 + UAC routing 10) + 6 in TestPerProtocolCostModelPrecision (AAVE/Morpho/Compound zero fee, L2 gas cheaper, gas>0 on-chain). execution-service@05fce938. QG: 7229 passed (30 pre-existing failures unchanged). Done-def met. **~3 cal-days**.
 - [x] ✅ **17. MEGA RESERVE — pnl-attribution-service per-asset_group rollup hardening** — 13 tests in test_asset_group_pnl_rollup.py: TestPerAssetGroupRollupDecomposition (5: cefi/defi/tradfi/sports/prediction independence), TestCrossDayReconciliationWithCorrections (4: net P&L across correction rows), TestFxAttributionPresence (4: fx_attribution None vs populated). pnl-attribution-service@802d8bd. QG green (63s). Done-def met. **~3 cal-days**.
 
+- [x] ✅ **S1. SUSTAIN — execution-service basedpyright strictness (25→0 errors)** — fixed 7 files: auth.py (_raise_auth_failure→NoReturn), config_reloaders.py (json.loads cast), hyperliquid_bridge.py (web3 sign_transaction Any + resp.json casts), bridge.py (usedBridgeNames cast), hyperliquid.py (_private_key/_wallet_address str|None base compat), solana_base.py (SPL parsed data cast chain), position_manager.py (portfolio:object). QG 7233 passed (30 pre-existing unchanged). execution-service@f671a5f7.
+
 #### Coordination
 
 - **Owned repos**: execution-service (Phase 9 / fork / risk) + risk-and-exposure-service + pnl-attribution-service.
