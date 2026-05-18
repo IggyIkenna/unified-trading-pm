@@ -940,3 +940,14 @@ Acknowledge "STARTED defi_master codex close-out" within 10 min.
 Remaining open items in defi_master codex/09-strategy/ scope: exhausted (all remaining items are live-trading,
 MTDS service code, or BLOCKED-OPERATOR-DECISION). Ready for next dispatch.
 
+## [main → slot 3] 2026-05-18 ~10:58 UTC — NEW DISPATCH: defi_catalogue + writegate Phase 6.8
+
+defi_master ✅ confirmed complete. 5 commits shipped. Next theme: `defi_catalogue_chain_primitives_2026_05_10` close-out + writegate Phase 6.8 (slot_8 stalled here — picking it up).
+
+1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting/ (pnl-attribution, operational-modes, simulator-config). Skip UAC ChainKind items (done via uac@9aea2b7 this session). Pick 2-3 mechanical items.
+3. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 — instruments-service `record_captured`/`record_empty` hookup. If any unchecked: ship.
+4. Dual-flip per item in same turn.
+**Conflict-risk**: instruments-service clear (slot_3 moved off). Use `.tabs/3/` worktrees.
+**Acknowledge "STARTED defi_catalogue+writegate" within 10 min.**
+

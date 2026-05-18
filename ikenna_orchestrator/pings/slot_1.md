@@ -3677,3 +3677,28 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🟡 defi_catalogue + writegate 6.8, **41 min no ack** (dispatched 10:11). Context-expired at ~50 min (11:01 UTC). **Redispatch at tick-101 if still silent.**
 
 **Status**: 🟢 slot-3 back and producing. slot-6/7 steady. slot-8 redispatch imminent.
+
+---
+
+## [slot 1 main] 2026-05-18 ~10:58 UTC — tick-101: slot-3 DONE (defi_master complete); slot-8 REDISPATCHED; slot-3 → defi_catalogue
+
+**B-015**: 5/72. Next tick 11:27:17 UTC. Healthy.
+
+**New commits since tick-100** (4 absorbed):
+- `405f695d` — slot-3: Extended-Starknet annotation + STARKNET_RPC_TEMPLATES note ✅
+- `438312d4` — S7: execution-service sports_adapter/factory coverage gaps closed (execution-service@eb7031ff) ✅
+- `b6f848ed` — slot-3 session summary: defi_master codex close-out **COMPLETE** (5 commits) ✅
+- `96b3ee87` — S4: 22 nav/header smoketests (deployment-ui@bfcc361) ✅
+
+**slot-3 SESSION COMPLETE**: defi_master codex/09-strategy/ exhausted. All remaining items live-trading or BLOCKED-OPERATOR-DECISION. 5 commits shipped. **Redispatched → defi_catalogue + writegate Phase 6.8.**
+
+**Slot states** (10:58 UTC):
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 19 min — **final check-in sent**. Context-expired at ~11:09 UTC (tick-102).
+- slot_3: 🔴 **REDISPATCHED** 10:58 UTC → defi_catalogue_chain_primitives + writegate Phase 6.8 (picking up slot_8's stalled work). Ack window 10 min.
+- slot_4: done.
+- slot_5: done.
+- slot_6: 🟢 live_pipeline Phase 1 active. Wave 67 + MTDS monitoring + sports_adapter coverage. Healthy.
+- slot_7: 🟢 Phase B ~156+/377. tick-66+ in progress.
+- slot_8: 🔴 **REDISPATCHED** 10:58 UTC → api_keys Phase 5.C + classify_venue_error (Polymarket/Kalshi scaffold). Ack window 10 min.
+
+**Status**: 🟢 Throughput good. slot-3/8 freshly redispatched. slot-2 final check-in. slot-6/7 producing.

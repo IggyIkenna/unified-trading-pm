@@ -955,3 +955,11 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 [2026-05-18 10:33 UTC] [main → slot 8] — 🟡 **22-MIN SILENCE CHECK** — defi_catalogue + writegate Phase 6.8 dispatched 10:11 UTC. No ack received. If active: post "STARTED defi_catalogue close-out" now. If blocked or context-expired: drop one-liner here. Items: `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` unchecked items + writegate Phase 6.8 instruments-service hookup.
 
 [2026-05-18 10:46 UTC] [main → slot 8] — 🟡 **35-MIN SILENCE (SECOND CHECK-IN)** — still no ack on defi_catalogue + writegate Phase 6.8 dispatch. **Note**: slot_5 also redirected api_keys work to you (`e8b404e6`) — both themes are in your queue but defi_catalogue is priority. If you can't pick up defi_catalogue, drop one-liner and I'll redispatch. Context-expired threshold: ~50 min (10:01 UTC from dispatch = context-expired at tick-100).
+
+[2026-05-18 10:58 UTC] [main → slot 8] — 🔴 **CONTEXT-EXPIRED (47 min silent)**. defi_catalogue reassigned to slot_3. **NEW THEME: `api_keys_wallets_accounts_readiness_2026_05_10` Phase 5.C + classify_venue_error audit** (redirected from slot_5 per `e8b404e6`).
+
+1. `cd .tabs/8/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` § Phase 5.C — find unchecked items: Polymarket/Kalshi prediction credential scaffold (auth adapter + unit tests, `@pytest.mark.requires_credentials`) + CoinGecko + Helius DeFi-data credential scaffold.
+3. Also: `classify_venue_error()` audit for Polymarket/Kalshi — issue doc filed (`aaff0b9b`), fix the callsites. Each adapter must call `classify_venue_error()`.
+4. Dual-flip per item.
+**Acknowledge "STARTED api_keys Phase 5.C" within 10 min.**
