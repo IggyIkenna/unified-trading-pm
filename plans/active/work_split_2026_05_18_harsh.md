@@ -871,10 +871,7 @@ smoke begins.
       Canonical template drift = 0. alerting-service@af7122f, UTL@cb1163d, unified-trading-system-ui@40d03f5b
       (representative). QUEUE EXHAUSTED — all 9 items complete (4 primary + 2 reserve + 3 deep-reserve).
 - [x] ✅ **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — new audit script `scripts/quality_gates/audit_workspace_constraints_drift.py`; 8 errors fixed across 8 repos: anthropic floor @client-reporting-api@e7650d2 + @deployment-api@558240f; web3 ceiling @deployment-service@e76f4fc + @features-service@18c66608 + @instruments-service@9a12863 + @unified-trading-library@a4dc577; requests floor @market-tick-data-service@f9b00d2; python-multipart floor @execution-service@70c12ae0. orchastrator (not in tab) BIG filed. PM audit script committed.
-- [ ] **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — build on item 5
-      (UTL HMAC tests). Add: event ratchet test pattern for STRATEGY_LIFECYCLE_CHANGED/SEEDED +
-      DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE count drift; emission_publisher cross-service
-      idempotency. Done-def: 10+ tests + UTL QG green. **~3 cal-days**.
+- [x] ✅ **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — backfill-flip: tests already shipped at UTL@7f8d174 (16 tests: TestDeploymentEventTypesRatchet + TestStrategyAvailabilityEventTypesRatchet + TestDataAvailabilityEventTypesRatchet + TestCrossServiceIdempotency). QG green (confirmed via git log). UTL@7f8d174. (backfilled 2026-05-18)
 - [ ] **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — build on item 18 (cassette
       parity). Run cassette schema parity tests across UAC external/ dirs (80+ subdirs). Refresh cassettes where drift
       detected. Done-def: cassette parity green + 3+ refreshes. **~3 cal-days**.
