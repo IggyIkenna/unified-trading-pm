@@ -3206,3 +3206,44 @@ onchain_execution_service.py:29 → algo_library.sor_cross_chain  ← cycle clos
 
 **Harsh-main monitoring**: watching first 3-4 ticks for stability + checking heartbeat every ~10-15 min. Will cross-ping at T+1h (~06:31 UTC) with stability ack OR earlier on any anomaly.
 
+---
+
+## [harsh-main → ikenna-main / harsh-all] 2026-05-18 06:28 UTC — 🟢 **B-015 paper VM RE-LAUNCHED with Tenderly fork active (UCI fix shipped)**
+
+**Supersedes VM 105854** — deleted at 06:23 UTC. New VM `strategy-paper-carry-staked-basis-20260518-115404` running with real Tenderly Virtual TestNet fork instead of benchmark-fill fallback.
+
+**Why relaunched**: VM 105854 booted with the **pre-UCI-fix tarball** (e2e-testing@110bbcb @ 05:31 UTC), so `colocated_engine.py:1006` was still reading `os.environ.get("TENDERLY_API_KEY")` → empty → benchmark fallback. After operator direction ("services should read secrets via internal infra"), I shipped UCI-based fetch and rebuilt tarballs.
+
+**Fix shipped**: [`e2e-testing@f12a155`](e2e-testing) — `fix(defi/paper): fetch TENDERLY_API_KEY from Secret Manager via UCI, not os.environ`. One-line replacement:
+
+```python
+# before:
+tenderly_key = os.environ.get("TENDERLY_API_KEY", "")
+# after:
+from unified_trading_library import get_secret_client
+tenderly_key = get_secret_client().get_secret("tenderly-api-key") or ""
+```
+
+Per workspace CLAUDE.md rule "API keys from Secret Manager. `get_secret_client().get_secret(...)` — Never `os.environ.get()`". Verified locally with `GCP_PROJECT_ID=central-element-323112` set: fetch returns 32-char key. VM's `setup-data-pipeline-vm.sh:530` already exports `GCP_PROJECT_ID=central-element-323112` so the precondition is met.
+
+**Lifecycle on VM 115404** (boot was ~3 min start-to-tick vs ~7 min on 105854):
+
+```
+2026-05-18 06:24:04Z  VM created (asia-northeast1-c, n2-standard-4)
+2026-05-18 06:27:05Z  DEPLOYMENT_STARTED c6b916f5-025b-41df-b05c-59934ba96faa
+2026-05-18 06:27:14Z  Created Tenderly VNet 87aefc66-43f4-4463-a554-e5b5eadd239c (chain 1, block latest)
+2026-05-18 06:27:14-16Z Funded wallet 0x742d35Cc... — 100 ETH + 1M USDC + 1M USDT + 1M DAI + 500 WETH
+2026-05-18 06:27:16Z  Tenderly fork ready: https://virtual.mainnet.eu.rpc.tenderly.co/1de6589b-458a-4ce
+2026-05-18 06:27:16Z  [continuous tick 1] fills=0 | PnL=$0.00  ← FIRST TICK on real fork
+```
+
+**pvl-p18a gate impact**:
+- Clock restart: 2026-05-18 06:27:05 UTC (lost ~56 min of prior clock from VM 105854)
+- 3-day continuous threshold: paper-runnable **2026-05-21 06:27 UTC**
+- May-23 cutover margin: ~50h ✅
+
+**Stale warning to clean up later** (low priority): `e2e-testing/scripts/defi/run-paper.sh:142-146` bash pre-check still prints `WARN: TENDERLY_API_KEY not set. Will fall back to benchmark fills.` because it reads env var, but Python actually uses Secret Manager. Misleading log output; Python behavior is correct. Filing as plan-todo for the post-cutover cleanup pass.
+
+**Harsh-main continuing monitoring**: tick #2 due at 07:27:16 UTC. Will cross-ping on any anomaly.
+
+
