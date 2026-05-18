@@ -315,6 +315,12 @@ smoke begins.
       code-backport line 124 (Phases 6+7 ref) also updated; (3) cefi-perp-leg-bybit frontmatter related_plans Phase 10 →
       post-cutover plan; (4) recursive-borrow-backtest-scenarios Phase 12 see-also → post-cutover plan. flash-loan-receiver
       + runbook left unchanged (Phase 4 = old plan = correct).
+- [x] ✅ **24. simulation_scenarios Phase 8 G+H+I codex sections** — PM@ed0079f8. Added scenario sections to 3 existing
+      codex docs: (8.G) live-pipeline-architecture.md § "Scenario tap points" — 7-layer table + reuse-prod-codepath note;
+      (8.H) replay-subsystem.md § "Scenario overlay on replay" — composition contract + ordering invariant + pseudocode;
+      (8.I) honest-absence-downstream-handling.md § "Scenario-driven gap injection" — DropRows + ManifestPhantom mutation
+      types; per-row scenario_id provenance; alerting-suppression rule; MANIFEST tap layer scope. Grep check: 6 files with
+      scenario content — meets plan Phase 8 full-execution criterion (≥6 UPDATE docs).
 
 #### Coordination
 

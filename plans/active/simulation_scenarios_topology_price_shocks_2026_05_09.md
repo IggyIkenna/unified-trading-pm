@@ -704,12 +704,18 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       ScenarioMatrixRunner usage example.
 - [x] [AGENT] P0. **8.F UPDATE `backtest-groups.md`.** ✅ PM@3431713e. Added § "Scenario-overlay mode" — fourth axis
       on Group B/C; axes summary table (A/B/C × archetype/config/exec-policy/scenario-id); CLI flag; cross-ref.
-- [ ] [AGENT] P0. **8.G UPDATE `live-pipeline-architecture.md`.** Add § "Scenario tap points" — 7 layer tap point list +
-      reuse-prod-codepath note.
-- [ ] [AGENT] P0. **8.H UPDATE `replay-subsystem.md`.** Add § "Scenario overlay on replay" — how the replay subsystem
-      composes with overlays for batch backtest.
-- [ ] [AGENT] P0. **8.I UPDATE `honest-absence-downstream-handling.md`.** Add § "Scenario-driven gap injection" — how
-      each consumer-class behaves under synthetic gaps; per-row `scenario_id` provenance respected.
+- [x] ✅ [AGENT] P0. **8.G UPDATE `live-pipeline-architecture.md`.** Add § "Scenario tap points" — 7 layer tap point list +
+      reuse-prod-codepath note. — PM@ed0079f8 (2026-05-18 slot 3). 7-layer table (RAW_TICK/FEATURE-MDPS/FEATURE-features/
+      SIGNAL/ORDER/EVENT/MANIFEST) with pre-cutover wire status; reuse-prod-codepath note; cross-reference to
+      scenario-injection-architecture.md added.
+- [x] ✅ [AGENT] P0. **8.H UPDATE `replay-subsystem.md`.** Add § "Scenario overlay on replay" — how the replay subsystem
+      composes with overlays for batch backtest. — PM@ed0079f8 (2026-05-18 slot 3). ReplayPublisher + ScenarioOverlayApplier
+      composition contract; ordering invariant (watermark KV before overlay); batch-backtest pseudocode;
+      post-cutover scope pointer.
+- [x] ✅ [AGENT] P0. **8.I UPDATE `honest-absence-downstream-handling.md`.** Add § "Scenario-driven gap injection" — how
+      each consumer-class behaves under synthetic gaps; per-row `scenario_id` provenance respected. — PM@ed0079f8
+      (2026-05-18 slot 3). DropRows + ManifestPhantom mutation types; per-row scenario_id provenance; alerting suppression;
+      attribution audit; MANIFEST tap layer scope (post-cutover).
 
 **Full-execution criterion**:
 
