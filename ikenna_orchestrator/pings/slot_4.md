@@ -1,30 +1,58 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 25 complete; cumulative 85 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File                                | What changed                                        | Helpers extracted                                                                                                                                  |
+| ----------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| defi_execution/protocols/uniswap.py | \_execute_live_swap 75L→38L; mint_position 106L→46L | \_approve_token_for_router, \_try_execute_swap, \_compute_validated_ticks, \_compute_wei_amounts, \_approve_both_tokens_for_npm, \_submit_npm_mint |
+
+- execution-service Half-1: `9b2cc7ea6` (ldr)
+- unified-trading-pm Half-2: this commit
+- Bonus: moved 2× inline `import time as _time` to module level (fixes 2 pre-existing import-inside-fn codex violations)
+- Concurrent slot clears merged via rebase: pov_dynamic.py + vwap_execution.py + loader_gcs.py (3 more cleared by other
+  slots)
+- Cumulative slot-4 total: 85 files cleared, allowlist now 24
+
+### Remaining allowlist (24 entries) — top batch-26 candidates
+
+- data/checker.py: check_gcs_file_exists 212L, check_data_availability 106L
+- data/validator.py: validate_gcs_trades_availability 231L, validate_local_trades_files 77L,
+  validate_time_window_in_files 92L
+- data/orderbook_converter.py: convert_orderbook_parquet_to_catalog 195L, \_build_snapshot_deltas 158L
+- results/extractor.py: extract_summary 216L, extract_returns_from_positions 194L
+- engine/routing/instruction_router.py — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 Cycle 2 Day-3 — AWS Phase 2/3/5b + Bybit counterparty cap DONE
 
 **Status**: 🟢 SESSION COMPLETE
 
 ### What shipped this session
 
-| Item | Repo | SHA | Evidence |
-|------|------|-----|----------|
-| ECR repos script + `iam-bucket-policies.aws.yaml` | deployment-service | 4550bc3 | 8 ECR repos created in ap-northeast-1; 12 total now |
-| AWS plan flip Phase 2 IAM + Phase 3 ECR + Phase 5b Glue crawlers | unified-trading-pm | d7e33fcc | All 5 Glue crawlers RUNNING post-transfer |
-| `CounterpartyRatioCapTrigger` + `COUNTERPARTY_RATIO_CAP` rule + Bybit 4th rule + `bybit_notional_cap_pct_of_hl=0.50` | unified-api-contracts | c29114c | QG 122s all passing |
-| Recursive-borrow plan flip (Bybit counterparty cap P0) | unified-trading-pm | b035b35c | checkbox flipped |
+| Item                                                                                                                 | Repo                  | SHA      | Evidence                                            |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------- | -------- | --------------------------------------------------- |
+| ECR repos script + `iam-bucket-policies.aws.yaml`                                                                    | deployment-service    | 4550bc3  | 8 ECR repos created in ap-northeast-1; 12 total now |
+| AWS plan flip Phase 2 IAM + Phase 3 ECR + Phase 5b Glue crawlers                                                     | unified-trading-pm    | d7e33fcc | All 5 Glue crawlers RUNNING post-transfer           |
+| `CounterpartyRatioCapTrigger` + `COUNTERPARTY_RATIO_CAP` rule + Bybit 4th rule + `bybit_notional_cap_pct_of_hl=0.50` | unified-api-contracts | c29114c  | QG 122s all passing                                 |
+| Recursive-borrow plan flip (Bybit counterparty cap P0)                                                               | unified-trading-pm    | b035b35c | checkbox flipped                                    |
 
 ### Deferred work after 2026-05-18 slot-4 session
 
-| Item | Plan | Status | Unblock needed |
-|------|------|--------|----------------|
-| `apply-bucket-policies.sh` (actually apply S3 bucket policies via `aws s3api put-bucket-policy`) | aws_migration Phase 2 QG P0 | BLOCKED-OPERATOR — IAM role setup needed on AWS prod | Write script + operator confirms IAM roles are active |
-| AWS Phase 4 Secrets Manager inventory + DeFi secret mirror | aws_migration Phase 4 | BLOCKED-OPERATOR — wallet keys must be rotated/created by operator | Operator action per plan item |
-| Phase 4 Secrets Manager wiring in `ApiKeyReloader` for `CLOUD_PROVIDER=aws` | aws_migration Phase 4 | BLOCKED-OPERATOR | Depends on secret inventory |
-| Recursive-borrow Phase 4 mainnet + Base receiver deploy | defi_recursive_borrow Phase 4 | BLOCKED-OPERATOR-DECISION — wallet key required | Operator provides EVM wallet + funds |
-| Recursive-borrow Phase 5 run-to-completion | defi_recursive_borrow Phase 5 | BLOCKED-OPERATOR-DECISION — depends on Phase 4 receiver address | Phase 4 deploy |
-| Recursive-borrow Phases 9-12 (backtest replay / results panel / paper smoke) | defi_recursive_borrow | BLOCKED-DATA — window 2026-05-19 to 2026-05-23 | Wait for data window |
-| Phase 13 / paper launch | defi_recursive_borrow | BLOCKED-OPERATOR-DECISION | Depends on Phases 4+5 |
-| risk-and-exposure-service venue-cap table wiring for COUNTERPARTY_RATIO_CAP | defi_recursive_borrow / risk | OPEN — plan item says "codify in risk-and-exposure-service venue-cap table" | UAC rule seeded; R&E service wiring still needed |
+| Item                                                                                             | Plan                          | Status                                                                      | Unblock needed                                        |
+| ------------------------------------------------------------------------------------------------ | ----------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `apply-bucket-policies.sh` (actually apply S3 bucket policies via `aws s3api put-bucket-policy`) | aws_migration Phase 2 QG P0   | BLOCKED-OPERATOR — IAM role setup needed on AWS prod                        | Write script + operator confirms IAM roles are active |
+| AWS Phase 4 Secrets Manager inventory + DeFi secret mirror                                       | aws_migration Phase 4         | BLOCKED-OPERATOR — wallet keys must be rotated/created by operator          | Operator action per plan item                         |
+| Phase 4 Secrets Manager wiring in `ApiKeyReloader` for `CLOUD_PROVIDER=aws`                      | aws_migration Phase 4         | BLOCKED-OPERATOR                                                            | Depends on secret inventory                           |
+| Recursive-borrow Phase 4 mainnet + Base receiver deploy                                          | defi_recursive_borrow Phase 4 | BLOCKED-OPERATOR-DECISION — wallet key required                             | Operator provides EVM wallet + funds                  |
+| Recursive-borrow Phase 5 run-to-completion                                                       | defi_recursive_borrow Phase 5 | BLOCKED-OPERATOR-DECISION — depends on Phase 4 receiver address             | Phase 4 deploy                                        |
+| Recursive-borrow Phases 9-12 (backtest replay / results panel / paper smoke)                     | defi_recursive_borrow         | BLOCKED-DATA — window 2026-05-19 to 2026-05-23                              | Wait for data window                                  |
+| Phase 13 / paper launch                                                                          | defi_recursive_borrow         | BLOCKED-OPERATOR-DECISION                                                   | Depends on Phases 4+5                                 |
+| risk-and-exposure-service venue-cap table wiring for COUNTERPARTY_RATIO_CAP                      | defi_recursive_borrow / risk  | OPEN — plan item says "codify in risk-and-exposure-service venue-cap table" | UAC rule seeded; R&E service wiring still needed      |
 
 ---
 
@@ -34,10 +62,11 @@
 
 ### Round summary (batch 24)
 
-1 entry cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Net allowlist 29 → 28 entries (concurrent clears from other slots also merged in during rebase).
+1 entry cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Net allowlist 29 → 28 entries (concurrent clears from other slots
+also merged in during rebase).
 
-| File | Methods cleared | Helpers extracted |
-|------|-----------------|--------------------|
+| File                                       | Methods cleared                                                | Helpers extracted                                                                                                                                                                                                                                          |
+| ------------------------------------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `services/instruction_alpha_calculator.py` | `calculate_instruction_alpha` 192L→49L; `get_summary` 141L→29L | 6 module-level: `_parse_instruction_timestamp`, `_parse_fill_price_and_quantity`, `_make_heartbeat_skip`, `_build_alpha_result`, `_fail_price_sanity`, `_accumulate_alpha_by_type`, `_accumulate_alpha_by_bundle`; 1 instance: `_compute_and_record_alpha` |
 
 - execution-service Half-1: `7e1a25ddd` (ldr)
@@ -62,10 +91,10 @@
 
 2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 33 → 31 entries.
 
-| File | Methods cleared | Helpers extracted |
-|------|-----------------|--------------------|
-| `data/converter_orderbook.py` | `convert_orderbook_parquet_to_catalog` 118L→33L; `_process_batch` 106L→31L; `_should_skip_conversion_with_time_window` 75L→24L | `_run_batch_loop` + `_check_df_time_window_skip` + `_build_row_deltas` |
-| `data/trade_converter.py` | `convert_trades_parquet_to_catalog` 230L→42L; `convert_trades_to_bars` 146L→43L | `_normalize_trade_df` + `_vectorize_trade_df` + `_build_trade_tick_list` + `_write_trade_ticks` + `_normalize_instrument_id_for_bars` + `_aggregate_to_bars_df` |
+| File                          | Methods cleared                                                                                                                | Helpers extracted                                                                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data/converter_orderbook.py` | `convert_orderbook_parquet_to_catalog` 118L→33L; `_process_batch` 106L→31L; `_should_skip_conversion_with_time_window` 75L→24L | `_run_batch_loop` + `_check_df_time_window_skip` + `_build_row_deltas`                                                                                          |
+| `data/trade_converter.py`     | `convert_trades_parquet_to_catalog` 230L→42L; `convert_trades_to_bars` 146L→43L                                                | `_normalize_trade_df` + `_vectorize_trade_df` + `_build_trade_tick_list` + `_write_trade_ticks` + `_normalize_instrument_id_for_bars` + `_aggregate_to_bars_df` |
 
 - execution-service Half-1: `01b128498` (ldr)
 - unified-trading-pm Half-2: this commit
@@ -89,10 +118,10 @@
 
 3 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 38 → 35 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `algo_library/dust_router_runner.py` | `_build_reward_attribution_rows` 137L→37L | `_resolve_reward_stream_meta` + `_converted_row` + `_held_row` + `_deferred_row` |
-| `algo_library/sor_cross_chain.py` | `_evaluate_cross_chain_route` 137L→49L | `_compute_bridge_in_params` + `_compute_bridge_out_params` + `_make_bridge_in_leg` + `_make_swap_legs` + `_make_bridge_out_leg` |
+| File                                      | Method (before→after)                             | Helpers extracted                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `algo_library/dust_router_runner.py`      | `_build_reward_attribution_rows` 137L→37L         | `_resolve_reward_stream_meta` + `_converted_row` + `_held_row` + `_deferred_row`                                                                     |
+| `algo_library/sor_cross_chain.py`         | `_evaluate_cross_chain_route` 137L→49L            | `_compute_bridge_in_params` + `_compute_bridge_out_params` + `_make_bridge_in_leg` + `_make_swap_legs` + `_make_bridge_out_leg`                      |
 | `engine/validation/backtest_validator.py` | `validate_instruction_data_availability` 141L→44L | `_extract_backtest_config` + `_gather_instrument_list` + `_detect_data_requirements` + `_load_trades_and_validate` + `_load_and_validate_instrument` |
 
 - execution-service Half-1: `215c10027` (ldr)
@@ -103,7 +132,8 @@
 
 - `engine/backtest/engine/results.py`, `core.py`, `setup.py` — large backtest engine methods
 - `engine/backtest/actors/evaluator_pnl.py`, `evaluator_trades.py`, `signal_driven_v3_handlers.py`
-- `algorithms/impl/almgren_chriss.py`, `hybrid_optimal_spawn.py`, `passive_aggressive_execution.py`, `pov_dynamic.py`, `vwap_execution.py`
+- `algorithms/impl/almgren_chriss.py`, `hybrid_optimal_spawn.py`, `passive_aggressive_execution.py`, `pov_dynamic.py`,
+  `vwap_execution.py`
 - `data/checker.py`, `data/loader.py`, `data/loader_base.py`, `data/loader_gcs.py`, `data/loader_transforms.py`
 - `engine/routing/instruction_router.py` — BLOCKED (foreign dirty file)
 
@@ -117,12 +147,12 @@
 
 4 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 44 → 40 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `benchmark/enhanced_comparison.py` | `compute_enhanced_metrics` 125L→42L | `_extract_algorithm_config` @static 18L + `_extract_instrument_venue` @static 11L + `_compute_regime_metrics` @static 33L |
-| `defi_execution/orchestrators/recursive_loop_orchestrator.py` | `_persistent_open` 125L→49L | `_make_open_fail_result` 23L + `_handle_hf_abort` 32L + `_handle_open_failed` 22L + `_record_iter_completed` 31L |
-| `results/report_timeline_extractor.py` | `build_equity_curve` 132L→34L | `_collect_all_fills_from_alpha` @static 35L + `_accumulate_equity_points` @static 28L + `_build_equity_from_timestamps` @static 37L |
-| `algo_library/leveraged_leg_controller.py` | `compute_drift` 133L→36L | docstring trim (48L→1L) + `_apply_reward_inflow` module-level 22L + `_compute_leg_drift_entry` module-level 31L |
+| File                                                          | Method (before→after)               | Helpers extracted                                                                                                                   |
+| ------------------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `benchmark/enhanced_comparison.py`                            | `compute_enhanced_metrics` 125L→42L | `_extract_algorithm_config` @static 18L + `_extract_instrument_venue` @static 11L + `_compute_regime_metrics` @static 33L           |
+| `defi_execution/orchestrators/recursive_loop_orchestrator.py` | `_persistent_open` 125L→49L         | `_make_open_fail_result` 23L + `_handle_hf_abort` 32L + `_handle_open_failed` 22L + `_record_iter_completed` 31L                    |
+| `results/report_timeline_extractor.py`                        | `build_equity_curve` 132L→34L       | `_collect_all_fills_from_alpha` @static 35L + `_accumulate_equity_points` @static 28L + `_build_equity_from_timestamps` @static 37L |
+| `algo_library/leveraged_leg_controller.py`                    | `compute_drift` 133L→36L            | docstring trim (48L→1L) + `_apply_reward_inflow` module-level 22L + `_compute_leg_drift_entry` module-level 31L                     |
 
 - execution-service Half-1: `5c2618cc7` (ldr)
 - unified-trading-pm Half-2: this commit
@@ -131,6 +161,7 @@
 ### Remaining allowlist (40 entries) — top batch-22 candidates
 
 1-violation files (single remaining method >50L):
+
 - `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
 - `algo_library/dust_router_runner.py`: `_build_reward_attribution_rows` ~137L
 - `algo_library/sor_cross_chain.py`: `_evaluate_cross_chain_route` ~137L
@@ -147,11 +178,11 @@
 
 3 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 47 → 44 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `engine/backtest/instruction_loader.py` | `convert_instructions_to_schedule` 140L→30L | `_normalize_instructions_df` 8L + `_extract_trade_instruments` 18L + `_split_and_log_non_trade` 28L + `_make_timing_trigger` 23L + `_build_trade_schedule` 38L |
-| `utils/validation/instruction_validator.py` | `validate_instructions_dataframe` 125L→22L | `_check_instrument_type_mapping` 17L + `_check_tp_sl_type_support` 20L + `_check_tp_sl_logic_consistency` 28L |
-| `validation/instruction_validator.py` | `validate_instructions_dataframe` 136L→22L | same 3-helper extraction (pd.isna variant) |
+| File                                        | Method (before→after)                       | Helpers extracted                                                                                                                                              |
+| ------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine/backtest/instruction_loader.py`     | `convert_instructions_to_schedule` 140L→30L | `_normalize_instructions_df` 8L + `_extract_trade_instruments` 18L + `_split_and_log_non_trade` 28L + `_make_timing_trigger` 23L + `_build_trade_schedule` 38L |
+| `utils/validation/instruction_validator.py` | `validate_instructions_dataframe` 125L→22L  | `_check_instrument_type_mapping` 17L + `_check_tp_sl_type_support` 20L + `_check_tp_sl_logic_consistency` 28L                                                  |
+| `validation/instruction_validator.py`       | `validate_instructions_dataframe` 136L→22L  | same 3-helper extraction (pd.isna variant)                                                                                                                     |
 
 - execution-service Half-1: `38c539a0c` (ldr)
 - unified-trading-pm Half-2: this commit
@@ -160,6 +191,7 @@
 ### Remaining allowlist (44 entries) — top batch-21 candidates
 
 1-violation files:
+
 - `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
 - `engine/routing/instruction_router.py`: `route_instruction` ~130L (BLOCKED — foreign dirty)
 - `results/report_timeline_extractor.py`: ~132L violation
@@ -176,10 +208,10 @@
 
 2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 49 → 47 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `results/serializer.py` | `serialize_benchmark_comparison` 104L→12L | `_serialize_benchmark_result` @static 17L + `_serialize_algo_result` @static 19L + `_build_comparison_summary` @static 28L |
-| `defi_execution/protocols/drift.py` | `place_order` 104L→19L | `_build_driftpy_params` 30L (driftpy inside-imports + direction/order_type_map/precision) + `_make_paper_trade_result` 19L + `_execute_live_order` async 36L |
+| File                                | Method (before→after)                     | Helpers extracted                                                                                                                                            |
+| ----------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `results/serializer.py`             | `serialize_benchmark_comparison` 104L→12L | `_serialize_benchmark_result` @static 17L + `_serialize_algo_result` @static 19L + `_build_comparison_summary` @static 28L                                   |
+| `defi_execution/protocols/drift.py` | `place_order` 104L→19L                    | `_build_driftpy_params` 30L (driftpy inside-imports + direction/order_type_map/precision) + `_make_paper_trade_result` 19L + `_execute_live_order` async 36L |
 
 - execution-service Half-1: `3e99f2972` (ldr)
 - unified-trading-pm Half-2: this commit
@@ -188,6 +220,7 @@
 ### Remaining allowlist (47 entries) — top batch-20 candidates
 
 1-violation files:
+
 - `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
 - `engine/routing/instruction_router.py`: `route_instruction` ~130L
 - `results/report_timeline_extractor.py`: ~132L violation
@@ -204,9 +237,9 @@
 
 2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 51 → 49 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `algorithms/impl/adaptive_twap.py` | `on_order` 88L→40L | `_init_parent_state` @instance 39L — price history init + parent state store + return (n_slices, start_time) |
+| File                                               | Method (before→after)                                              | Helpers extracted                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `algorithms/impl/adaptive_twap.py`                 | `on_order` 88L→40L                                                 | `_init_parent_state` @instance 39L — price history init + parent state store + return (n_slices, start_time)        |
 | `engine/backtest/actors/signal_driven_v3_utils.py` | `calculate_exec_params` 89L — cleared by parallel slot `6f544699d` | `_calc_dynamic_horizon` + `_calc_sce_exec_params`; duplicate work discarded, allowlist removal shipped in my commit |
 
 - execution-service Half-1: `7bd19a1bf` (ldr)
@@ -216,6 +249,7 @@
 ### Remaining allowlist (49 entries) — top batch-19 candidates
 
 1-violation files:
+
 - `defi_execution/protocols/drift.py`: `place_order` ~104L
 - `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
 - `engine/routing/instruction_router.py`: ~130L violation
@@ -230,14 +264,14 @@
 
 ### Round summary (batch 17)
 
-3 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 54 → 51 entries.
-Resolved merge conflicts with parallel slot (another slot was doing concurrent refactoring on same files).
+3 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 54 → 51 entries. Resolved merge
+conflicts with parallel slot (another slot was doing concurrent refactoring on same files).
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `engine/backtest/actors/tp_sl_generator.py` | `generate_random_tp_sl_for_signal` 83L→32L | `_select_tightness` @staticmethod 13L, `_resolve_signal_seed` @staticmethod 15L |
-| `engine/backtest/actors/signal_driven_shared.py` | `add_exit` 85L→42L | `_accumulate_exit` 42L (mirrors `_accumulate_entry` pattern) |
-| `config/grid_generator_core.py` | `_get_config_for_instruction_type` 85L→30L | `_get_lend_borrow_base_config` @staticmethod 29L, `_get_stake_base_config` @staticmethod 29L |
+| File                                             | Method (before→after)                      | Helpers extracted                                                                            |
+| ------------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `engine/backtest/actors/tp_sl_generator.py`      | `generate_random_tp_sl_for_signal` 83L→32L | `_select_tightness` @staticmethod 13L, `_resolve_signal_seed` @staticmethod 15L              |
+| `engine/backtest/actors/signal_driven_shared.py` | `add_exit` 85L→42L                         | `_accumulate_exit` 42L (mirrors `_accumulate_entry` pattern)                                 |
+| `config/grid_generator_core.py`                  | `_get_config_for_instruction_type` 85L→30L | `_get_lend_borrow_base_config` @staticmethod 29L, `_get_stake_base_config` @staticmethod 29L |
 
 - execution-service Half-1: `ae6426a0a` (execution-service ldr)
 - unified-trading-pm Half-2: `a2589009` (PM ldr)
@@ -246,6 +280,7 @@ Resolved merge conflicts with parallel slot (another slot was doing concurrent r
 ### Remaining allowlist (51 entries) — top batch-18 candidates
 
 1-violation files (ordered by tractability):
+
 - `algorithms/impl/adaptive_twap.py`: `on_order` 88L — single violation, complex (nautilus callback)
 - `engine/backtest/actors/signal_driven_v3_utils.py`: `calculate_exec_params` 89L — single violation
 - `engine/backtest/actors/signal_driven_shared.py` (now cleared) [already done above]
@@ -263,10 +298,10 @@ Resolved merge conflicts with parallel slot (another slot was doing concurrent r
 
 3 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 57 → 54 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `cli/handlers/live_execution_handler.py` | `_execute_sports_instruction` 90L→27L | `_execute_sports_bet` async 32L |
-| `engine/multi_leg_orchestrator.py` | `_handle_follower_failure` 99L→22L | `_fire_compensation_trade` async 44L |
+| File                                     | Method (before→after)                         | Helpers extracted                                                                                                                                 |
+| ---------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cli/handlers/live_execution_handler.py` | `_execute_sports_instruction` 90L→27L         | `_execute_sports_bet` async 32L                                                                                                                   |
+| `engine/multi_leg_orchestrator.py`       | `_handle_follower_failure` 99L→22L            | `_fire_compensation_trade` async 44L                                                                                                              |
 | `engine/validation/catalog_validator.py` | `validate_data_config_compatibility` 172L→26L | `_resolve_config_book_type` @staticmethod 24L + `_build_instruments_by_type` @staticmethod 14L + `_check_per_instrument_compat` @staticmethod 44L |
 
 Also: batch 15 allowlist fix committed at `execution-service@358310787` (3 entries missed in batch 15 code commit).
@@ -289,12 +324,12 @@ No new actionable P0/P1 issues. Continuing method-size ratchet.
 
 4 allowlist entries cleared. Allowlist 61 → 57 entries (3 code refactors + 1 free removal).
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `algo_library/intent_engine.py` | `_build_deleverage_steps` 53L→27L | aave_venue local var + compact kwargs + return list literal |
-| `algorithms/impl/vwap_core.py` | `_get_l2_price` 70L→46L | `_compute_adjusted_price` 35L |
-| `data/loaders/base.py` | `_normalize_timestamp_columns_for_backtest` 85L→15L | `_set_ts_event_column` @staticmethod 26L + `_normalize_trade_columns` @staticmethod 47L |
-| `matching_engine/engine.py` | free removal — upstream tick-46a had already cleared all methods | n/a |
+| File                            | Method (before→after)                                            | Helpers extracted                                                                       |
+| ------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `algo_library/intent_engine.py` | `_build_deleverage_steps` 53L→27L                                | aave_venue local var + compact kwargs + return list literal                             |
+| `algorithms/impl/vwap_core.py`  | `_get_l2_price` 70L→46L                                          | `_compute_adjusted_price` 35L                                                           |
+| `data/loaders/base.py`          | `_normalize_timestamp_columns_for_backtest` 85L→15L              | `_set_ts_event_column` @staticmethod 26L + `_normalize_trade_columns` @staticmethod 47L |
+| `matching_engine/engine.py`     | free removal — upstream tick-46a had already cleared all methods | n/a                                                                                     |
 
 **Commits**: execution-service@48ec90d23 (Half-1) · PM@3b4ac021 (Half-2 flip)
 
@@ -308,17 +343,19 @@ No new actionable P0/P1 issues found. Continuing method-size ratchet as primary 
 
 ## [slot 4 → main] 2026-05-18T09:21:08Z — Slot 4 STARTED (AWS migration + defi_recursive_borrow)
 
-Theme: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4
-Status: READING plans
+Theme: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4 Status: READING plans
 
 Boot analysis:
+
 - aws_migration_defi_first_2026_05_07.md: Phase 2 (2 open items), Phase 3 (5 open items), Phase 4 (4 open items)
-- defi_recursive_borrow_archetypes_2026_05_10.md: Phases 3-4 are SUBSTANTIALLY COMPLETE per prior slot-5 work (2026-05-15/17). Remaining open items are:
+- defi_recursive_borrow_archetypes_2026_05_10.md: Phases 3-4 are SUBSTANTIALLY COMPLETE per prior slot-5 work
+  (2026-05-15/17). Remaining open items are:
   - Phase 4: mainnet+Base deploy BLOCKED-OPERATOR-DECISION (wallet key required)
   - Phase 6 Hyperliquid LIVE wire-up: 1 open P0 item (run-to-completion on testnet)
   - Phase 9-13: BLOCKED-DATA (window 2026-05-19+)
 
-Proceeding to: (A) AWS Phase 2-4 verification + BLOCKED-OPERATOR documentation; (B) defi_recursive_borrow Phase 6 Hyperliquid open item.
+Proceeding to: (A) AWS Phase 2-4 verification + BLOCKED-OPERATOR documentation; (B) defi_recursive_borrow Phase 6
+Hyperliquid open item.
 
 ---
 
@@ -330,14 +367,14 @@ Proceeding to: (A) AWS Phase 2-4 verification + BLOCKED-OPERATOR documentation; 
 
 2 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 63 → 61 entries.
 
-| File | Method (before→after) | Helpers extracted |
-|------|-----------------------|-------------------|
-| `engine/validation/data_availability_validator.py` | `check_book_type_data_requirements` 83L→31L | `_check_instrument_book_type_dates` 42L |
-| `venues/deribit_orders.py` | `submit_order` 107L→42L + `get_available_instruments` 104L→44L | `_classify_deribit_instrument_type` + `_compute_final_amount` + `_build_order_request_params` + `_make_rejected_result` + `_format_deribit_instrument` |
+| File                                               | Method (before→after)                                          | Helpers extracted                                                                                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `engine/validation/data_availability_validator.py` | `check_book_type_data_requirements` 83L→31L                    | `_check_instrument_book_type_dates` 42L                                                                                                                |
+| `venues/deribit_orders.py`                         | `submit_order` 107L→42L + `get_available_instruments` 104L→44L | `_classify_deribit_instrument_type` + `_compute_final_amount` + `_build_order_request_params` + `_make_rejected_result` + `_format_deribit_instrument` |
 
-Note: `check_market_tick_data` in data_availability_validator.py had a merge conflict — upstream slot had
-refactored it using module-level helpers `_get_instrument_data_type_folder` / `_get_tick_filename`. Accepted
-upstream version; my `check_book_type_data_requirements` refactor merged cleanly.
+Note: `check_market_tick_data` in data_availability_validator.py had a merge conflict — upstream slot had refactored it
+using module-level helpers `_get_instrument_data_type_folder` / `_get_tick_filename`. Accepted upstream version; my
+`check_book_type_data_requirements` refactor merged cleanly.
 
 **Commits**: execution-service@8fd663b0a (Half-1) · PM@90523e9c (Half-2 flip)
 
@@ -1472,13 +1509,15 @@ Continue tick 11+. Current pace of ~5/tick × ~25 min means allowlist could reac
 **New Ikenna work split** (`c7aca145`): your slot = **AWS migration + defi_recursive_borrow**.
 
 **Items**:
+
 1. Phase 2: AWS DeFi bucket verification — `aws s3 ls | grep defi` (confirm env-tiered DeFi buckets provisioned)
 2. Phase 3: AWS rsync verification — check Storage Transfer Service job progress for DeFi-first buckets
 3. Phase 4: AWS code path smoke — run DeFi MTDS batch `--cloud aws` for 1-day window
-4. `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 — sim contract integration + per-family backtest scenarios (75%, 10.6 cal left)
+4. `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 — sim contract integration + per-family backtest scenarios
+   (75%, 10.6 cal left)
 
-**Plans**: `plans/active/aws_migration_defi_first_2026_05_07.md` + `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`
-**NOTE**: Prior dispatch to `defi_basedpyright` items is SUPERSEDED. Skip that.
-**ADC admin perms**: don't pause for AWS/GCP infra ops.
+**Plans**: `plans/active/aws_migration_defi_first_2026_05_07.md` +
+`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` **NOTE**: Prior dispatch to `defi_basedpyright` items is
+SUPERSEDED. Skip that. **ADC admin perms**: don't pause for AWS/GCP infra ops.
 
 Acknowledge "STARTED AWS Phase 2 verification" within 10 min.

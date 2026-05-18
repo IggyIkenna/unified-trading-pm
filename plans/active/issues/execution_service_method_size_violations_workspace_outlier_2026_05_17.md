@@ -1121,6 +1121,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-24**: 84 files cleared (allowlist now 28).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 25 — defi_execution/protocols/uniswap.py)**: shipped at
+  execution-service@9b2cc7ea6. \_execute_live_swap 75L→38L via \_approve_token_for_router (approve try/except) +
+  \_try_execute_swap (exactInputSingle try/except). mint_position 106L→46L via \_compute_validated_ticks +
+  \_compute_wei_amounts + \_approve_both_tokens_for_npm + \_submit_npm_mint. Also moved 2× inline `import time as _time`
+  to module level (fixes 2 pre-existing import-inside-fn codex violations). Removes defi_execution/protocols/uniswap.py
+  from allowlist. Net allowlist 28→24 (concurrent slot clears of pov_dynamic.py + vwap_execution.py + loader_gcs.py
+  merged in during rebase). AST clean.
+
+  **Slot-4 cumulative across batches 1-25**: 85 files cleared (allowlist now 24).
+
   **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
   execution-service@56865ab83. loader_base.py: **init** 86L→~30L via \_resolve_bucket_and_domain + \_init_fuse_behavior;
   \_infer_category 83L→10L via 5 domain-specific staticmethod helpers. loader_transforms.py: \_infer_category 83L→10L
@@ -1145,10 +1155,9 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_pov_resolve_slice_context 61L→49L via \_pov_resolve_child_qty. Allowlist 29→28 files. All methods <50L. AST clean.
 
   **Ratchet-down 2026-05-18 (slot-5 batch 26 — algorithms/impl/vwap_execution.py)**: shipped at
-  execution-service@b15278afd. \_store\_and\_schedule\_vwap 69L→27L via \_vwap\_store\_parent\_state +
-  \_vwap\_schedule\_market\_fok. \_spawn\_child 107L→32L via \_vwap\_resolve\_spawn\_qty +
-  \_vwap\_do\_spawn\_child. \_submit\_primary 75L→28L via \_vwap\_do\_final\_spawn.
-  Allowlist 28→27 files. All methods <50L. AST clean. ruff 0 errors.
+  execution-service@b15278afd. \_store_and_schedule_vwap 69L→27L via \_vwap_store_parent_state +
+  \_vwap_schedule_market_fok. \_spawn_child 107L→32L via \_vwap_resolve_spawn_qty + \_vwap_do_spawn_child.
+  \_submit_primary 75L→28L via \_vwap_do_final_spawn. Allowlist 28→27 files. All methods <50L. AST clean. ruff 0 errors.
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
