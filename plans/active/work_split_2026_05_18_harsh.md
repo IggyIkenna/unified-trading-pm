@@ -310,7 +310,8 @@ smoke begins.
       — PM@5bb94de6 (strategy-summary.md header table: Archetypes 53→55; 0 stale unified_trading_services/pyright
       refs found; LegController additions from 8bcf0f96 are in per-archetype docs; defi_lp+mev family pointers from
       5520e125 are in families/ docs).
-- [ ] **11. DEEP RESERVE — codex/07-runbooks/ hygiene audit** — audit runbooks for owner/cadence/verifier/last_executed fields per CLAUDE.md "Runbook Execution-Owner SSOT". Done-def: 5+ runbooks audited + missing fields filled.
+- [x] ✅ **11. DEEP RESERVE — codex/07-runbooks/ hygiene audit** — audit runbooks for owner/cadence/verifier/last_executed fields per CLAUDE.md "Runbook Execution-Owner SSOT". Done-def: 5+ runbooks audited + missing fields filled.
+      — PM@41e94220 (5 runbooks patched: backfill-completion-playbook.md + 4 alerting runbooks; all now have owner/cadence/verifier/last_executed in frontmatter).
 - [ ] **12. DEEP RESERVE — codex/11-project-management/ doc currency check** — sweep codex/11 for stale references (defunct plan paths, dead links, outdated metrics). Done-def: cross-link table + 5+ fixes.
 - [ ] **13. DEEP RESERVE — UTL emission_publisher additional test coverage** — build on item 1 (utl_qg_preexisting_failures fix sweep, UTL@d3488b7+30db050). Add tests for: cross-service emission idempotency, emission failure retry semantics, batch vs live emission parity. Done-def: 4+ tests + UTL QG green.
 
