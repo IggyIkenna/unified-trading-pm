@@ -870,9 +870,7 @@ smoke begins.
       unified-trading-system-ui): gitleaks secret scanning hook propagated. deployment-api skipped (slot 7 owns).
       Canonical template drift = 0. alerting-service@af7122f, UTL@cb1163d, unified-trading-system-ui@40d03f5b
       (representative). QUEUE EXHAUSTED — all 9 items complete (4 primary + 2 reserve + 3 deep-reserve).
-- [ ] **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — build on item 19
-      (workspace-constraints audit). Audit each Python repo's pyproject.toml vs workspace-constraints.toml pinned
-      versions; identify drift. Done-def: drift report + 5+ repo alignments. **~3 cal-days**.
+- [x] ✅ **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — new audit script `scripts/quality_gates/audit_workspace_constraints_drift.py`; 8 errors fixed across 8 repos: anthropic floor @client-reporting-api@e7650d2 + @deployment-api@558240f; web3 ceiling @deployment-service@e76f4fc + @features-service@18c66608 + @instruments-service@9a12863 + @unified-trading-library@a4dc577; requests floor @market-tick-data-service@f9b00d2; python-multipart floor @execution-service@70c12ae0. orchastrator (not in tab) BIG filed. PM audit script committed.
 - [ ] **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — build on item 5
       (UTL HMAC tests). Add: event ratchet test pattern for STRATEGY_LIFECYCLE_CHANGED/SEEDED +
       DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE count drift; emission_publisher cross-service
