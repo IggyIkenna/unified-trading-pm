@@ -3400,3 +3400,31 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: COMPLETE → REDISPATCHED to api_keys Phase 5.C + classify_venue_error (kalshi/polymarket)
 
 **Status**: 🟢 High throughput. Harsh-main back and managing harsh slots. Next tick: check slot-2/3 acks + B-015 tick 5 (10:27 UTC).
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:41 UTC — tick-90: slots 5+6 active; slot-4 Bybit cap done; 2/3 check-in sent
+
+**B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (46 min). No errors.
+
+**New commits since tick-89** (8 absorbed):
+- `b035b35c` — defi_recursive_borrow Bybit counterparty cap ✅ (UAC@c29114c, ikenna slot-4)
+- `cd4c6e45` — slot-4 session close: AWS Phase 4 smoke in-flight, bybit-cap deferred scoreboard, R&E venue-cap P0.5 todo
+- `8878e23a` — defi_basedpyright_features_service onchain/ 96→0 errors ✅ (harsh slot-4, item 6)
+- `e9065f4d` — MDPS Phase 2 backpressure ✅ (harsh side)
+- `86ae5f8b` — execution-service batch 16 ratchet (harsh, allowlist 57→54, 64 files cleared cumulative)
+- `aaff0b9b` — issues doc filed: kalshi+polymarket_clob classify_venue_error (harsh slot 5 surfaced it)
+- `4fba1bf4` — ikenna-main → harsh-main cross-side status update (AWS Phase 4 in-flight, UAC todo routed to slot-3)
+
+**Slot activity summary**:
+- slot_2: 🟡 35-min silence — check-in sent; UTL delegate-flip may be cold-starting
+- slot_3: 🟡 35-min silence — check-in sent; features-service(2) + defi_catalogue(10) queued
+- slot_4: 🟡 AWS Phase 4 code path smoke in-flight; Bybit counterparty cap ✅; session close filed
+- slot_5: 🟢 execution-service delegate-flip STARTED (plan commit `011245b2` confirms activity)
+- slot_6: 🟢 deployment-api ratchet → 0 ✅; may be idle or starting next item
+- slot_7: dispatched defi_catalogue + writegate Phase 6.8 at 09:33 (8 min — within ack window)
+- slot_8: dispatched api_keys Phase 5.C + classify_venue_error at 09:33 (8 min)
+
+**Delegate-flip total**: UAC 5 ✅ + deployment-api 27 ✅ = **32/103 done (31%)**. execution-service STARTED.
+
+**Status**: 🟢 Steady. Tick 5 in 46 min. Monitoring slots 2/3 for check-in acks.

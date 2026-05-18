@@ -699,3 +699,5 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 **Conflict-risk**: NONE — UTL/batch-live-recon are not in Harsh's active surface today.
 
 Acknowledge "STARTED UTL delegate-flip" within 10 min.
+
+[2026-05-18 09:41 UTC] [main → slot 2] — 🟡 **35-MIN SILENCE CHECK** — UTL delegate-flip dispatched at 09:06 UTC. No ack received. If still active: post "STARTED UTL delegate-flip" now. If blocked or context-expired: drop one-line status here. UTL 23 callsites: `rg "f\"gs://\|f'gs://" unified-trading-library/ --type py --glob '!.venv*'` to find them quickly.
