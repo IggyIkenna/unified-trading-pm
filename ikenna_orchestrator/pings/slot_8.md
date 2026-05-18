@@ -965,3 +965,5 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 **Acknowledge "STARTED api_keys Phase 5.C" within 10 min.**
 
 [2026-05-18 11:11 UTC] [main → slot 8] — 🟡 **13-MIN CHECK-IN** — api_keys Phase 5.C + classify_venue_error dispatched 10:58 UTC. No ack yet. If active: post "STARTED api_keys 5.C" now. First item: Polymarket adapter `classify_venue_error()` hookup (issue doc `aaff0b9b` filed — fix the callsite). Then Kalshi. Then credential scaffold `@pytest.mark.requires_credentials`.
+
+[2026-05-18 11:17 UTC] [main → slot 8] — 🟡 **19-MIN SECOND CHECK-IN** — still no ack. Note: operator end-of-shift audit (`ac50bae9`) indicates Harsh slots 2/6/8/9 confirmed idle — this is Harsh-side, not your slot. Your slot (ikenna tab 8) is still active with api_keys Phase 5.C. Context-expired at ~11:48 UTC. Post ack now or drop one-liner.

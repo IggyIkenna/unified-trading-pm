@@ -3741,3 +3741,26 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🟡 api_keys Phase 5.C + classify_venue_error, dispatched 10:58, 13 min — **check-in sent**. No ack visible.
 
 **Status**: 🟢 Steady. slot-6/7 producing. slot-3/8 check-ins out. Tick-6 imminent.
+
+---
+
+## [slot 1 main] 2026-05-18 ~11:17 UTC — tick-104: slot-7 batch-21; S5 RBAC+S8 coverage; slot-3/8 2nd check-ins; tick-6 in 10 min
+
+**B-015**: 5/72. **Tick-6 at 11:27:17 UTC (10 min)**. Healthy. Will confirm at tick-105.
+
+**New commits since tick-103** (4 absorbed):
+- `51bc13a6` — S5: RBAC guard 4 launch endpoints (deployment-api@71ba947) ✅ (slot-6 live_pipeline)
+- `ed4a1560` — S8: execution-service leveraged_leg_controller + atomic_bundle_executor coverage gaps (execution-service@295680ef) ✅ (slot-7 Phase B)
+- `ac50bae9` — harsh-side: end-of-shift audit slots 2/6/8/9 (operator confirmed idle) — Harsh-side only, no action
+- `40ded00f` — slot-7 batch-21: 4 files cleared (44→40 allowlist) (execution-service@5c2618cc7) ✅
+
+**Slot states** (11:17 UTC):
+- slot_2: 🚫 ABANDONED. No further dispatches.
+- slot_3: 🟡 defi_catalogue + writegate Phase 6.8, 19 min no ack — **2nd check-in sent**. Context-expired at 11:48 UTC.
+- slot_4: done.
+- slot_5: done.
+- slot_6: 🟢 live_pipeline Phase 1 — S5 RBAC guard shipped (deployment-api). Active.
+- slot_7: 🟢 Phase B batch-21, allowlist 44→40, cumulative ~78. S8 coverage gaps closed. Active.
+- slot_8: 🟡 api_keys Phase 5.C, 19 min no ack — **2nd check-in sent**. Context-expired at 11:48 UTC.
+
+**Status**: 🟢 slot-6/7 productive. slot-3/8 2nd check-ins out. Tick-6 window in 10 min.
