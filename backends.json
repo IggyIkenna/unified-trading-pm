@@ -1,0 +1,20 @@
+{
+  "_comment": "Shared backend registry. Each operator's dashboard reads this to populate the top-bar pill switcher. Backends run on operator machines (harsh-this-box, ikenna-this-box) and — eventually — VMs. Add a new entry for each backend you want the dashboard to be able to talk to.",
+  "_url_note": "Use an empty string (or omit) when the backend is SAME-ORIGIN as wherever the dashboard is served. The dashboard falls back to BOOTSTRAP_URL (localhost:8765 in dev, same-origin in production behind nginx). Set a real URL for cross-machine backends — e.g. https://ikenna.epiphanytechnologies.com when Ikenna's box is reachable.",
+  "_integration_note": "Read by the orchastrator backend via ORCHASTRATOR_BACKENDS env var. Source of truth lives here (in PM repo) so both operators see the same list.",
+  "backends": [
+    {
+      "id": "harsh-this-box",
+      "label": "Harsh (this box)",
+      "url": "",
+      "account_id": "harsh-primary",
+      "default": true
+    },
+    {
+      "id": "demo",
+      "label": "Demo (mock)",
+      "url": "/demo",
+      "account_id": "harsh-primary"
+    }
+  ]
+}

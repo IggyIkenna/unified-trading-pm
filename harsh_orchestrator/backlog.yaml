@@ -1,0 +1,111 @@
+# Harsh-side backlog for the orchastrator-managed workflow.
+#
+# This file is the SSOT for tasks that orchastrator-spawned workers
+# (slots ≥50 during Phase 0, broader range during full rollout) pick up
+# via /api/slots/{id}/boot.
+#
+# Authoring convention (matches the work_split + continuation_prompts shape
+# from the file-based workflow, just structured):
+#   id              — short stable ref (e.g. T-001, infra-001, slot4-audit-1)
+#   tier + priority — dispatch ordering (lower priority = higher rank within tier)
+#   repos           — which repo(s) this task touches; dispatcher uses this
+#                     for collision_group (one worker per repo at a time)
+#   prereqs         — completed_tasks (other task ids that must be done first)
+#                     + conditions (named boolean gates flipped by operator)
+#   brief           — multi-line operator narrative, free-form
+#   done_definition — explicit "this is done when..." criteria
+#
+# Worker reads via standard /boot response. /done with sha + evidence
+# moves the task off the queue.
+#
+# How to edit:
+#   1. Add or modify entries here.
+#   2. POST /api/backlog/reload (or click "Reload YAML" in dashboard's
+#      Backlog panel) — server re-parses the file and dispatches to
+#      whichever slot calls /boot next. SQLite preserves status of
+#      already-dispatched tasks; only new ids are inserted.
+#
+# Integration: orchastrator backend reads this file via
+# ORCHASTRATOR_BACKLOG env var. See ../../orchastrator/scripts/dev.sh.
+
+version: 1
+
+# Phase gates (operator-controlled bools). Tasks list these in
+# prereqs.conditions; dispatcher refuses to assign until all are true.
+# Empty for now — Phase 0 tasks are independent.
+conditions: {}
+
+tasks:
+  # ───── Phase 0 throwaway tasks ─────────────────────────────────────────
+  # Purpose: validate the orchastrator-spawned worker lifecycle end-to-end
+  # against the PM-repo config setup. These are observe-and-report tasks
+  # that don't modify any files — just verify /boot → /progress → /done
+  # flows cleanly with the new per-slot worktree cwd in .tabs/<N>/.
+  # Delete these once Phase 0 passes.
+  - id: PHASE0-1
+    title: "Phase 0 ping: count files in workspace root"
+    tier: 1
+    priority: 10
+    repos:
+      - pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Run a single command in your worktree's parent directory:
+        ls /home/hk/unified-trading-system-repos | wc -l
+      Then post one /progress with the count, then /done with evidence
+      listing the count + the top 5 dir entries by name.
+
+      No file modifications. No commits. This is purely a "did /boot,
+      /progress, /done work end-to-end through the new PM-repo config?"
+      smoke test.
+
+      Tip: your worktree path is in the /boot response's `worktree` field.
+      Run the ls from wherever you boot in.
+    done_definition: |
+      - /progress called at least once with a status message
+      - /done called with evidence string containing:
+          * an integer file count (workspace_root file/dir count)
+          * the first 5 entries by name (alphabetical)
+      - No git commits made (operator will verify `git status` is clean)
+
+  - id: PHASE0-2
+    title: "Phase 0 ping: tmux + claude version capture"
+    tier: 1
+    priority: 20
+    repos:
+      - pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      Verify your worker's runtime environment. Run:
+        tmux -V
+        claude --version 2>/dev/null || echo 'claude --version not supported'
+      Capture both outputs.
+
+      No file modifications. No commits. Post one /progress + /done.
+    done_definition: |
+      - /done evidence contains both `tmux X.Y` and the claude version line
+      - No git commits
+
+  - id: PHASE0-3
+    title: "Phase 0 ping: list 3 most-recent commits in orchastrator repo"
+    tier: 1
+    priority: 30
+    repos:
+      - pm
+    prereqs:
+      completed_tasks: []
+      conditions: []
+    brief: |
+      cd into /home/hk/unified-trading-system-repos/orchastrator and run:
+        git log -3 --oneline
+      Capture the output. Then come back to your worktree.
+
+      No file modifications. No commits. /done with the 3 oneline entries
+      in evidence.
+    done_definition: |
+      - /done evidence contains exactly 3 commit lines (sha + subject)
+      - No git commits made by you
