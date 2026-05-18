@@ -530,12 +530,13 @@ upstream-detected) as complementary signals.
       calls `record_captured` per row, then `watchdog.mark_backfilled()`. Requires per-venue REST adapter wiring.
 - [ ] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
       to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
-      zero/partial inputs. Connects via the same manifest contract MDPS already reads. **2026-05-18 slot 2 status**:
-      `UPSTREAM_LIVE_GAP` does NOT yet exist in UAC `RecordFailedReason` enum. MDPS `dependency_checker.py` checks GCS
-      blob presence (not manifest status) — no manifest-reading path exists yet. Remaining work: (1) add
-      `UPSTREAM_LIVE_GAP` to UAC `RecordFailedReason`; (2) add manifest-read method to MDPS `DependencyChecker` that
-      inspects MTDS `attempted_failed` rows; (3) route to `record_failed_for_shard` in `batch_workers.py` /
-      `live_workers.py` when upstream gap row detected.
+      zero/partial inputs. Connects via the same manifest contract MDPS already reads.
+      **2026-05-18 slot 2 progress (partial)**: (1) ✅ `UPSTREAM_LIVE_GAP` added to UAC `RecordFailedReason` at
+      uac@`60c0ee9`; (2) ✅ `DependencyChecker.check_upstream_manifest_has_live_gap()` added to MDPS at
+      mdps@`5729750` — reads MTDS manifest, detects `attempted_failed` gap rows, returns (venue, data_type) pairs;
+      (3) ⏳ wiring to `record_failed_for_shard` in orchestration path is BLOCKED on MTDS item 520 (MTDS must first
+      write `attempted_failed` rows on `CONNECTIVITY_GAP_DETECTED`). Detection scaffold is live and no-ops until
+      MTDS starts emitting gap rows.
 - [ ] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
       per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
       engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
