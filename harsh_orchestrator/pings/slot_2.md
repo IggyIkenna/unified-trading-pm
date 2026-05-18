@@ -613,3 +613,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item 11** — workspace-wide stale-import sweep beyond ruff. Scanning scripts/ dirs + bare import patterns across alerting-service, execution-service, mtds, risk-and-exposure-service + additional repos.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 11** — execution-service@a7d3e78f. 30 F401 fixes: 4 in scripts/ (os, BenchmarkFillInput, json, tempfile) + 26 in stubs/nautilus_trader/ (12 .pyi files). TYPE_CHECKING scan across 8 repos found 0 truly-unused imports beyond string annotations. Done-def met: 30 fixes >> 10+ threshold. work_split item 11 flipped.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 12** — pyproject.toml workspace audit: line-length 100→120 + coverage floor 70% + pre-commit config drift. Scanning scripts/ in multiple repos.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 12** — pyproject.toml audit. 13 repos checked. 3 fixes: instruments-service@a0b710b (75→77), batch-live-reconciliation@c1a750e (70→80), UTL@fa95669 (70→80). All aligned fail_under ↔ MIN_COVERAGE. work_split item 12 flipped.
