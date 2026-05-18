@@ -127,7 +127,7 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
 - Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
   SSOT: `codex/02-data/service-output-emission-semantics.md`.
 
-SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`.
+SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md` (§ "Reason taxonomy" — expanded taxonomy for `record_empty(reason=...)` callsites; § "Per-service consumer-class audit" — per-service skip/alert rules for `EXPECTED_*` + `attempted_failed` reasons).
 
 ### Shard-granularity SSOT (CRITICAL)
 
