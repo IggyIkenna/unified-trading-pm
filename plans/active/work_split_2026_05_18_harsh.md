@@ -136,12 +136,11 @@ smoke begins.
 - [x] ✅ **4. archetype_paper_runnable_matrix follow-ups** — verified 5/5 complete. No new items from pvl-p18b:
       carry_staked_basis state update to `paper-runnable` gated on ≥3-day soak (B-015 VM running since 05:31:38Z;
       clock expires ~2026-05-21). APD still `backtest-only` pending APD orchestrator. No action needed.
-- [ ] **5. REFILL — defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07 residuals (65%, 26/40)** —
-      added 2026-05-18 by slot-1 main after slot-3 reached QUEUE EXHAUSTED at 07:08 UTC. 14 items remaining. Strategy
-      + codex territory matches slot-3 ownership. Pick 2-3 mechanical items (codex docstring drift, archetype enum
-      cross-refs, per-archetype venue subset annotations). Plan path:
-      [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md).
-      Avoid items that change UAC schemas (Ikenna primary).
+- [x] ✅ **5. REFILL — defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07 residuals** — PM@5fe86b19.
+      Shipped 4 items: Stream D P0 (APD + carry-basis-perp + carry-staked-basis config schemas: target_leverage [1,10]
+      + target_net_delta + vol-cap clamp); Stream C PM-plan (archived leveraged_leg_controller Phase 4 GATE note).
+      Back-flipped Stream B + Stream C success criteria (already done per plan body). Remaining open: Stream A
+      [SCRIPT] probe + [strategy-service] P1; Stream D P1 remaining archetype docs.
 
 #### Coordination
 

@@ -285,10 +285,10 @@ controller layer).
       carry-basis-dated, carry-recursive-borrow-lending-only (SHIPPED), carry-recursive-borrow-perp-hedged (SHIPPED),
       yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool. Operator pulled from post-cutover
       deferral 2026-05-15 ("its just docs, why not").
-- [ ] [PM-plan] P1. Once the 11 doc rewrites land, update the archived
+- [x] [PM-plan] P1. Once the 11 doc rewrites land, update the archived
       [`leveraged_leg_controller_2026_05_01`](../archive/leveraged_leg_controller_2026_05_01.plan.md)'s Phase 4 GATE
       description (in a follow-up commit) to note "doc rewrites shipped 2026-05-07; code backport proceeds
-      independently."
+      independently." ✅ PM@5fe86b19 — Phase 4 GATE updated with doc-rewrite 2026-05-16 note.
 
 **Gate:** All 11 archetype docs reference `LegController.update`. None describe legs as "hand-built" without flagging
 that as a deferred-backport state.
@@ -368,16 +368,13 @@ variant (6% → 18% net at 3x).
 
 **Tasks**
 
-- [ ] [codex] P0.
-      [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
-      config schema (currently lines ~84–105): add `target_leverage: float = 1.0`, `target_net_delta: float = 0.0`, and
-      the volatility-cap clamp behaviour (`max_underlying_move_pct` + `instrument_volatility_registry_lookup`). Document
-      defaults + bounds (e.g. `target_leverage ∈ [1, 10]`, hard-clamped by per-instrument vol cap).
-- [ ] [codex] P0. [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) config
-      schema (currently lines ~74–87): same additions.
-- [ ] [codex] P0. [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
-      config schema: same additions; document that `target_leverage = 1.0` is the typical value (LST_AS_MARGIN doesn't
-      natively leverage the way funding-dispersion does, but the field is universal per `StrategyInstanceDefinition`).
+- [x] [codex] P0. ✅ PM@5fe86b19 — `arbitrage-price-dispersion.md` config schema: added
+      `target_leverage: 1.0` [1,10] + `target_net_delta: 0.0` + `max_underlying_move_pct: 3.0` +
+      `instrument_volatility_registry_lookup: true`. Defaults + bounds documented.
+- [x] [codex] P0. ✅ PM@5fe86b19 — `carry-basis-perp.md` config schema: same additions (delta-neutral carry hedge; wider
+      vol-cap clamp comment).
+- [x] [codex] P0. ✅ PM@5fe86b19 — `carry-staked-basis.md` config schema: same additions; documented that
+      `target_leverage = 1.0` always for LST_AS_MARGIN (field universal per StrategyInstanceDefinition).
 - [ ] [codex] P1. Remaining archetype docs — same `target_leverage` / `target_net_delta` schema entries. Defaults can
       vary per archetype; the field is universal.
 - [ ] [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields where the
@@ -417,10 +414,15 @@ overgeneralisation.
 ## Success criteria (whole plan)
 
 - [ ] Stream A: UAC matrix flipped + tests pass + codex venue table updated
-- [ ] Stream B: All references to `leveraged_funding_arb` as a standalone archetype gone (except historical references
-      in the issue file + this plan)
-- [ ] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport flag
-- [ ] Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp
+      (open: [SCRIPT] P0 live-API probe + [strategy-service] P1 catalog confirm still pending)
+- [x] Stream B: All references to `leveraged_funding_arb` as a standalone archetype gone (except historical references
+      in the issue file + this plan). ✅ Gate fully closed 2026-05-10 (plan body § "Gate status 2026-05-10 ✅ FULLY CLOSED").
+- [x] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport flag.
+      ✅ Done: 4 docs @PM@552a3e6e (carry-staked-basis, carry-basis-perp, APD, carry-recursive-staked) +
+      7 docs @PM@8bcf0f96 (carry-basis-dated, carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged,
+      yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool).
+- [ ] Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp.
+      P0 items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining archetype docs pending.
 - [x] Stream E: Master plan + `defi_master` use precise venue subsets per archetype (PM@pending — master + defi_master
       body updated 2026-05-14)
 - [ ] Cross-cutting: PM `quality-gates.sh` passes; UAC `quality-gates.sh` passes (Stream A); codex links resolve;
