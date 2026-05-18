@@ -1765,14 +1765,17 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
 
 #### Phase 2.E.4 — Update CLAUDE.md "Three-category empty-output decision" rule
 
-- [ ] [DOCS] P0. CLAUDE.md "Three-category empty-output decision" section: update to reference the expanded taxonomy +
+- [x] [DOCS] P0. CLAUDE.md "Three-category empty-output decision" section: update to reference the expanded taxonomy +
       the codex doc § "Reason taxonomy" + the per-service consumer-class audit. The 3-category model stays as the
       WRITE-side discipline (path A/B/C); the reason taxonomy is the EXPRESSION of those categories + the
       calendar-pre-skip cases as structured manifest rows.
-- [ ] [DOCS] P0. CLAUDE.md cross-link from "Honest absence vs fake placeholders" → codex doc § "Reason taxonomy" and §
+      ✅ Sections trimmed 2026-05-14; cross-links added to SSOT line in "Manifest + honest absence" — pm@30ccfd3c
+- [x] [DOCS] P0. CLAUDE.md cross-link from "Honest absence vs fake placeholders" → codex doc § "Reason taxonomy" and §
       "Per-service consumer-class audit."
-- [ ] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` so all repos see the
+      ✅ "Honest absence vs fake placeholders" section trimmed 2026-05-14; § refs added to surviving SSOT line — pm@30ccfd3c
+- [x] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` so all repos see the
       updated rule.
+      ✅ cursor-configs/CLAUDE.md is symlinked via .claude/CLAUDE.md in all repos — propagation is automatic; sync script not needed
 
 ---
 

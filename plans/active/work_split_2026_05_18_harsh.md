@@ -192,11 +192,12 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. writegate_honest_coverage_endtoend_2026_05_06 residual items** — 48% done (118/246). Many items still
+- [x] **1. writegate_honest_coverage_endtoend_2026_05_06 residual items** — 48% done (118/246). Many items still
       open. Plan path:
       [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md).
       **Pick 2-3 mechanical items only** — avoid items requiring architectural decisions or cross-service emission
       contract changes (those = Ikenna primary).
+      ✅ Phase 2.E.4 DOCS (3 checkboxes): CLAUDE.md "Manifest + honest absence" SSOT line now cross-links § "Reason taxonomy" + § "Per-service consumer-class audit" — pm@30ccfd3c
 - [ ] **2. expected_unattempted_propagation_chain_2026_05_12 residuals (77%, 34/44)** — 10 items left. Plan path:
       [`expected_unattempted_propagation_chain_2026_05_12.md`](expected_unattempted_propagation_chain_2026_05_12.md).
       Pick 2-3 mechanical service-side wiring items only (avoid UAC schema changes).
