@@ -134,8 +134,10 @@ The values used here are best-guess from on-chain explorers.
 
 ## Deferred work
 
-- [ ] [DEFERRED] **NICE-TO-HAVE**: MTDS wiring for Solayer/Picasso/Cambrian restaking reward streams. These adapters
+- [x] [DEFERRED] **NICE-TO-HAVE**: MTDS wiring for Solayer/Picasso/Cambrian restaking reward streams. These adapters
       provide reference data (instrument discovery) only. Market data capture (actual per-epoch reward rates) requires
-      MTDS source wiring — tracked in `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`.
-- [ ] [DEFERRED] **NICE-TO-HAVE**: Verify Picasso + Cambrian program IDs / vault addresses when official documentation
-      is published. Update `_defi_chain_data.py` + adapter files.
+      MTDS source wiring — **migrated to** `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` (Plan E item 6 row).
+- [x] [DEFERRED] **NICE-TO-HAVE**: Verify Picasso + Cambrian program IDs / vault addresses when official documentation
+      is published. Update `_defi_chain_data.py` + adapter files. **Blocked-external**: no official docs published yet;
+      deferred until Picasso/Cambrian publish official program IDs. Successor: update via
+      `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` when unblocked.
