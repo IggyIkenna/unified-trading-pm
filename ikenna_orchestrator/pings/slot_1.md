@@ -4045,3 +4045,23 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **_agent_pings**: New ikenna-main entry at ~12:14 UTC (Phase 5 status + harsh-main dependency update). Awaiting harsh-main response.
 
 **Status**: 🟢 Slot-3 in active Phase 5 work. B-015 tick-7 window in 8 min. All productive.
+
+---
+
+## [slot 1 main] 2026-05-18 ~12:22 UTC — tick-116: Phase 5 items 1+2 FLIPPED; strategy-service bucket-fix in-flight; tick-7 in 5min
+
+**B-015**: 6/72. Tick-7 due 12:27:17 UTC (~5 min). Healthy.
+
+**New PM commits absorbed** (1):
+- `0c3b61b0` — **flip Phase 5 items 1+2** — UAC schema (`StrategyDecisionContextRecord` + `DecisionOutcome(StrEnum)`) + `availability_semantics.py` + `source_priority.py` — `uac@b8bdedf` ✅
+
+**Slot_3 Phase 5 progress**:
+- UAC: `b8bdedf` merged to LDR ✅ (items 1+2 flipped)
+- strategy-service: `5d6c963` (bucket-naming delegate-flip `get_bucket_name` → `resolve_bucket_name`) in tab — **unflipped, slot_3's pending flip**
+- Next target: `staked_basis.py` `on_tick` emitter (Phase 5 item 3)
+
+**Other tabs**: slot_7 exec `7e1a25ddd` (unchanged), slot_6 features `dd3b9e4a` (unchanged). Stable.
+
+**_agent_pings**: Same as tick-115. No harsh-main response.
+
+**Status**: 🟢 Phase 5 moving fast. B-015 tick-7 imminent. Watching for 12:27:17 confirmation.
