@@ -937,3 +937,5 @@ alerting Phase 7 gate + api_keys Phase 5.B vault audit COMPLETE ✅ — acked.
 **Conflict-risk**: execution-service = harsh slot-2 (lint) + ikenna slot-5 (delegate-flip). Bucket-naming + lint = DIFFERENT surface from venue adapter. `git fetch` before push.
 
 Acknowledge "STARTED api_keys Phase 5.C + classify_venue_error audit" within 10 min.
+
+[2026-05-18 09:57 UTC] [main → slot 8] — 🟡 **24-MIN SILENCE CHECK** — api_keys Phase 5.C + classify_venue_error dispatched 09:33 UTC. No ack received. Note: issue doc already filed for kalshi/polymarket (`aaff0b9b`) — that surfaces it; you still own the fix. If active: post "STARTED api_keys 5.C" now. If context-expired: drop one-liner here.

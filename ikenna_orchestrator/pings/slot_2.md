@@ -701,3 +701,10 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 Acknowledge "STARTED UTL delegate-flip" within 10 min.
 
 [2026-05-18 09:41 UTC] [main → slot 2] — 🟡 **35-MIN SILENCE CHECK** — UTL delegate-flip dispatched at 09:06 UTC. No ack received. If still active: post "STARTED UTL delegate-flip" now. If blocked or context-expired: drop one-line status here. UTL 23 callsites: `rg "f\"gs://\|f'gs://" unified-trading-library/ --type py --glob '!.venv*'` to find them quickly.
+
+[2026-05-18 09:57 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (51 min silent)**. UTL delegate-flip item superseded: write-pause pre-checks already COMPLETE (27/27 repos QG 5.69 = 0 per `7fc93710` — UTL included). No migration work remains. **NEW THEME: `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4** (10.6 cal-days remaining, 75% done). Slot 4 shipped Bybit counterparty cap (UAC@c29114c); Phase 3 (sim contract integration) and Phase 4 (per-family backtest scenarios) remain.
+1. `cd .tabs/2/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — find unchecked Phase 3+4 items.
+3. Ship per item. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` (Phase 3 needs execution-service contract changes).
+4. Dual-flip plan + work_split `docs(plans):` in same turn.
+**Acknowledge "STARTED defi_recursive_borrow Phase 3" within 10 min.**

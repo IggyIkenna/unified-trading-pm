@@ -3453,3 +3453,30 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Delegate-flip structural status**: 27/27 repos at 0 violations (write-pause pre-checks `7fc93710`). Individual repo ratchets still completing in parallel for audit trail.
 
 **Status**: 🟢 High throughput. Write-pause milestone crossed. Next tick: slot-2 ack or declare context-expired.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:57 UTC — tick-92: slot-2 context-expired; 7/8 check-ins; features Wave 59 done
+
+**B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (30 min). No errors.
+
+**New commits since tick-91** (4 absorbed):
+- `114a0994` — features-service Wave 59 coverage ✅ (eigen 65.9→100%, aave_rate 71.9→97.8%) — harsh slot-4/5 item 5
+- `d739d90c` / `811237de` / `b3e55598` — execution-service ticks 55/56/57 (harsh slot-2 S9 refactor, methods <50L)
+- `86fd50f9` — batch-live basedpyright uplift + QG `|| true` bug issue doc (harsh slot-2 sustain)
+
+**Actions this tick**:
+1. **slot_2 CONTEXT-EXPIRED** (51 min silent) — UTL delegate-flip superseded (QG 5.69 already at 0 workspace-wide). REDISPATCHED to `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 (sim contract integration + per-family backtest, 10.6 cal-days).
+2. **slot_7 check-in** (24 min) — defi_catalogue close-out; no ack.
+3. **slot_8 check-in** (24 min) — api_keys Phase 5.C + classify_venue_error; no ack.
+
+**Slot states** (09:57 UTC):
+- slot_2: 🔴 context-expired → REDISPATCHED to defi_recursive_borrow Phase 3-4
+- slot_3: MTDS delegate-flip + writegate Phase 6.5 (dispatched 09:44, 13 min — within ack window)
+- slot_4: session close; AWS + Bybit cap done; deferred scoreboard
+- slot_5: 🟢 execution-service delegate-flip STARTED
+- slot_6: live_pipeline Phase 1 MTDS/MDPS (dispatched 09:50, 7 min)
+- slot_7: 🟡 24-min check-in sent — defi_catalogue + writegate 6.8
+- slot_8: 🟡 24-min check-in sent — api_keys 5.C + classify_venue_error
+
+**Status**: 🟢 Active. Tick 5 in 30 min. Watch slot-2 ack on new theme.
