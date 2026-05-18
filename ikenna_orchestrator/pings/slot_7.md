@@ -1501,3 +1501,14 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/orchestrator.py::_submit_orders_with_timing`: 99L→41L (extract `_submit_single_child_order` async 26L + `_handle_order_submission_error` 38L)
 
 **Running count**: ~146/377 cleared (~39%); continuing tick-60.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-60 Phase B continued
+
+**Tick-60 deliverables** (3 methods in 3 files, execution-service@0733e79d0):
+- `engine/orchestrator.py::on_fill`: 124L→33L (extract `_compute_fill_emission_policy` 17L + `_alert_fill_blocked` 17L + `_build_instruction_fill_result` 27L + `_submit_algo_follow_orders` 30L)
+- `validation/instruction_validator.py::validate_tp_sl_logic`: 115L→33L (extract `_validate_tp_sl_side` @staticmethod 46L)
+- `utils/validation/instruction_validator.py::validate_tp_sl_logic`: 113L→33L (extract `_validate_tp_sl_side` @staticmethod 46L)
+
+**Running count**: ~149/377 cleared (~40%); continuing tick-61.
