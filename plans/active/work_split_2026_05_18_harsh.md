@@ -309,6 +309,12 @@ smoke begins.
       restaking-reward-economics: ../../cross-cutting/ → ../cross-cutting/ (one level too deep); (2) yield-staking-simple
       same fix; (3) arbitrage-price-dispersion APD finalisation plan: plans/active/ → plans/archive/ (plan archived
       2026-05-09).
+- [x] ✅ **23. recursive-borrow codex docs plan-ref corrections** — PM@5404a41f. Fixed 4 docs that referenced old
+      2026_05_10 plan for Phase 10+ content: (1) carry-recursive-borrow-lending-only Status note: Phase 12 backtest now
+      correctly points to post-cutover plan; (2) carry-recursive-borrow-perp-hedged Status note: Phases 6+7+8+12 → post-cutover;
+      code-backport line 124 (Phases 6+7 ref) also updated; (3) cefi-perp-leg-bybit frontmatter related_plans Phase 10 →
+      post-cutover plan; (4) recursive-borrow-backtest-scenarios Phase 12 see-also → post-cutover plan. flash-loan-receiver
+      + runbook left unchanged (Phase 4 = old plan = correct).
 
 #### Coordination
 

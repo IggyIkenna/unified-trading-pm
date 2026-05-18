@@ -539,4 +539,4 @@ authenticated session for each venue to call:
   yield-staking-simple; APD finalisation plan active→archive. PM@bd018a91.
 Continuing defi_archetypes/defi_master codex residuals.
 
-[2026-05-18 22:00 UTC] slot-3 — STARTED item 23: plan-ref corrections in 4 codex docs (carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged, cefi-perp-leg-bybit, recursive-borrow-backtest-scenarios) that incorrectly reference old 2026_05_10 plan for Phase 10+ content now in post-cutover plan.
+[2026-05-18 22:00 UTC] slot-3 — ✅ DONE item 23: plan-ref corrections — 4 docs updated to reference post-cutover plan for Phase 10+ content. carry-recursive-borrow-lending-only Status note (Phase 12), carry-recursive-borrow-perp-hedged Status note + code-backport line 124 (Phases 6+7+8+12), cefi-perp-leg-bybit frontmatter Phase 10, recursive-borrow-backtest-scenarios Phase 12 see-also. PM@5404a41f.
