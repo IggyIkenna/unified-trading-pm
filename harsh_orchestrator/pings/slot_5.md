@@ -355,9 +355,10 @@ execution-service branch (live-defi-rollout):
 - `execution-service@5dec3c4b` — S14: amm_math (7 tests) + algo_comparison (6 tests). QG: 7391 passed.
 - `execution-service@0e1a641c` — S15: multicall_batcher (10 tests) + solver_auction (6 tests). QG: 7407 passed.
 - `execution-service@d4cbd3b7` — S16: schema_validator (17 tests). 91 tests in file pass.
-- **Next**: S17+ SUSTAIN gap scanning.
+- `execution-service@dae5ac5f` — S17: orderbook_converter (12 tests). 103 total in file pass.
+- **Next**: S18+ SUSTAIN gap scanning.
 
-**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 91 in test_algo_library_full.py pass after S16.
+**Pre-existing infra QG failures (NOT blocking me)**: STEP 5.37/5.72/5.79/5.82 — pre-date my session, unrelated to test work. Tests themselves: 103 in test_algo_library_full.py pass after S17.
 
 [2026-05-18 17:15 UTC] [main → slot 5] — 🟡 **UNCOMMITTED RUFF FORMAT (urgent before next QG)** — deep audit of
 `.tabs/5/execution-service` shows **16 source files dirty** (data_loader.py + multi_leg_orchestrator.py +

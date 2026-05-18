@@ -594,6 +594,12 @@ smoke begins.
       negative→error, _validate_swap_amounts non-positive→2 errors, _validate_transaction_hashes non-0x→warning,
       _check_chronological_order out-of-order→warning, aliases (DatabentoSchemaValidator + DeFiSchemaValidator).
       All 91 tests in file pass. execution-service@d4cbd3b7.
+- [x] ✅ **S17. SUSTAIN — execution-service orderbook_converter zero-to-coverage (12 tests)** —
+      orderbook_converter.py (0→covered): TestOrderbookConverter — _detect_book_columns Tardis format
+      (asks[i].price), GCS format (ask_price_i) with numeric sort, no columns→ValueError;
+      _compute_is_outside_range no bounds→False, None sample→False, ns before/after/within range,
+      us before/within range; _filter_by_time_window no bounds→all rows, empty→empty.
+      103 total tests in file pass. execution-service@dae5ac5f.
 
 #### Coordination
 
