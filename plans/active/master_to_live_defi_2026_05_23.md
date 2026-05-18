@@ -41,6 +41,15 @@ overview:
 
 > **✅ Gate 3 FIRED 2026-05-17 14:42 UTC — 0 phantoms all 5 asset_groups. Operator decision: ACCEPT.**
 
+> **🟢 VM RUNNING — B-015 paper backtest 2026-05-18 05:31 UTC** (BE-AWARE)
+>
+> `strategy-paper-carry-staked-basis-20260518-105854` (asia-northeast1-c, n2-standard-4) running paper
+> backtest in `--continuous --tick-interval 3600` mode. First tick 2026-05-18 05:31:38Z. pvl-p18a gate clock
+> started; paper-runnable threshold 2026-05-21 05:31 UTC. Owner: harsh-main (picked up from
+> ikenna tick-78 silent failure). Status JSON:
+> `gs://deployment-scripts-central-element-323112/deployments/active/636ef8f2-4695-4316-8b81-32858d3e1a73.json`.
+> Cross-side ping: `plans/active/_agent_pings.md` 2026-05-18 05:38 UTC.
+
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
 > [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) is establishing codex SSOTs for mode-axis
