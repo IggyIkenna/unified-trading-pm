@@ -265,3 +265,10 @@ Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 [2026-05-15 22:45 UTC] slot-4 — 🚨 BIG FINDING (UTL QG): User requested UTL QG after OOM fix. Pulled LDR (5 new commits). Result: 102 failures with PYTEST_WORKERS=2 (default), 29 genuine failures when isolating xdist. Root causes: (1) 11 event ratchet failures — other slots added STRATEGY_LIFECYCLE_CHANGED/SEEDED + DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE without updating count tests; (2) 5 config_interface failures — auth matrix api count 9→8, DEX venue validation changed, testnet contract registry changed, cloud_config mock bridge changed; (3) 13 cloud_interface failures — OIDC auth implementation changed, workspace YAML missing DeFi AWS buckets, bucket constant tests stale; (4) 73 xdist false failures — event system singleton leak across subprocess workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 worker) is correct but UTL overrides to 2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL — escalating to main for assignment.
 
 [2026-05-18 UTC] slot-4 — CLAIMING item 4 (workspace-wide unused-import audit). Slot 2 finished items 1+2 with no slot_2 STARTED-item-3 ping. Slot 4 claims per "whichever starts first" rule.
+
+[2026-05-18 14:20 UTC] [main → slot 4] — 🟢 **DIRECT DISPATCH — reserve queue confirmed open.** You shipped A/B/C; items 5/6/11/13/14/15/16/17 still queued (~17 cal-days). **Start with item 5: defi_basedpyright_features_service final items (94%, 51/54 — only 3 items left)**. Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. Read `plans/active/defi_basedpyright_features_service_2026_05_15.md` — find unchecked `- [ ]` items (3 left).
+  3. Ship per item — mechanical basedpyright cleanup in features-service.
+  4. After item 5: chain through 6 (features-service Wave 59+ from your work_split § Slot 4 reserve), then deep/mega 11/13/14/15/16/17. Plenty of work.
+**Acknowledge "STARTED item 5" within 10 min.**
