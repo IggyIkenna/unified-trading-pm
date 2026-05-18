@@ -310,8 +310,9 @@ smoke begins.
       (a) close docs whose finding is shipped, (b) merge duplicates, (c) flag stale (≥7 days no activity). Done-def:
       triage scoreboard added to each doc + 10+ closed/merged.
       — 68 docs triaged: 53 CLOSED-SHIPPED, 15 OPEN/BLOCKED. Triage scoreboard section added to all 68. PM@(flip commit).
-- [ ] **3. workspace-constraints.toml audit (slot 8 item 19)** — verify all repos honor workspace-constraints.toml
+- [x] ✅ **3. workspace-constraints.toml audit (slot 8 item 19)** — verify all repos honor workspace-constraints.toml
       pin versions. Done-def: 0 drift report.
+      — PASS: check-dependency-alignment.py --json → aligned=True, 0 issues. 5 internal version constraint pre-existing issues (UTL 0.3.167 vs repos requiring ≥0.4.0) are semver-agent lag, not workspace-constraints.toml violations — tracked by version-alignment-gate separately.
 - [ ] **4. codex/06 cross-link sweep (slot 8 item 20)** — sweep codex/06-coding-standards/ for stale cross-links
       (post-recent renames). Done-def: 0 broken anchors.
 
