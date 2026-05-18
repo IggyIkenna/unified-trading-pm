@@ -1113,11 +1113,11 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-18 (slot-4 batch 24 — services/instruction_alpha_calculator)**: shipped at
   execution-service@7e1a25ddd. calculate_instruction_alpha 192L→49L via 6 module-level helpers:
-  \_parse_instruction_timestamp, \_parse_fill_price_and_quantity, \_make_heartbeat_skip,
-  \_build_alpha_result, \_fail_price_sanity + instance method \_compute_and_record_alpha.
-  get_summary 141L→29L via \_accumulate_alpha_by_type + \_accumulate_alpha_by_bundle (both
-  module-level). Removes services/instruction_alpha_calculator.py from allowlist.
-  Net allowlist 29→28 (concurrent slot-5 clears merged in during rebase). AST clean.
+  \_parse_instruction_timestamp, \_parse_fill_price_and_quantity, \_make_heartbeat_skip, \_build_alpha_result,
+  \_fail_price_sanity + instance method \_compute_and_record_alpha. get_summary 141L→29L via
+  \_accumulate_alpha_by_type + \_accumulate_alpha_by_bundle (both module-level). Removes
+  services/instruction_alpha_calculator.py from allowlist. Net allowlist 29→28 (concurrent slot-5 clears merged in
+  during rebase). AST clean.
 
   **Slot-4 cumulative across batches 1-24**: 84 files cleared (allowlist now 28).
 
@@ -1133,6 +1133,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_spawn_hybrid_child_fresh 68L→20L via \_do_spawn_market_for_hybrid + \_register_hybrid_child. Also fixed
   .pre-commit-config.yaml gitleaks --config to use .gitleaks.toml (relative symlink) — env var not expanded by prek.
   Allowlist 31→30 files. AST clean. ruff 0 errors.
+
+  **Ratchet-down 2026-05-18 (slot-5 batch 24 — algorithms/impl/passive_aggressive_execution.py)**: shipped at
+  execution-service@ca499af3f. \_pah_schedule_passive_spawn 52L→12L via \_pah_schedule_spawn_alert. on_order 87L→38L via
+  \_pah_compute_and_register_state. on_order_filled 83L→31L via \_pah_record_fill_and_update_state +
+  \_pah_maybe_refill_passive. Allowlist 30→29 files. AST clean. ruff 0 errors.
+
+  **Ratchet-down 2026-05-18 (slot-5 batch 25 — algorithms/impl/pov_dynamic.py)**: shipped at
+  execution-service@fa79a05dd. \_get_market_price 89L→28L via \_get_pov_l1_mbp_price +
+  \_resolve_pov_l2_spread_adjustment. on_order 99L→19L via \_log_pov_on_order_entry + \_pov_init_order_state.
+  \_pov_resolve_slice_context 61L→49L via \_pov_resolve_child_qty. Allowlist 29→28 files. All methods <50L. AST clean.
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
