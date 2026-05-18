@@ -17,6 +17,7 @@ from pathlib import Path
 
 from check_inline_bucket_uri import (  # type: ignore[import-not-found]
     _INLINE_URI_RE,
+    _ast_docstring_lines,
     _iter_py_files,
     _resolve_scopes,
     count_inline_uris_in_file,
@@ -82,6 +83,77 @@ def test_count_zero_when_no_inline_uris(tmp_path: Path) -> None:
         """,
     )
     assert count_inline_uris_in_file(f) == []
+
+
+# ── v2 AST-walk: docstring false-positive avoidance ─────────────────────────
+
+
+def test_count_skips_plain_string_docstring_with_uri_example(tmp_path: Path) -> None:
+    """v2: a gs:// reference inside a plain-string docstring is not an f-string — never flagged."""
+    f = _write(
+        tmp_path / "mod.py",
+        '''
+        def resolve(bucket: str, path: str) -> str:
+            """Compose a URI like gs://{bucket}/{path} using resolve_bucket_uri().
+
+            Example call:
+                resolve_bucket_uri(cloud="gcp", kind="market-data", path="x")
+            """
+            from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_uri
+            return resolve_bucket_uri(cloud="gcp", kind="market-data", path=path, asset_group="cefi")
+        ''',
+    )
+    assert count_inline_uris_in_file(f) == []
+
+
+def test_count_skips_fstring_docstring_containing_uri(tmp_path: Path) -> None:
+    """v2: an f-string docstring (JoinedStr) with gs:// is skipped via _ast_docstring_lines."""
+    f = _write(
+        tmp_path / "naming.py",
+        '''
+        def make_uri(bucket: str, path: str) -> str:
+            f"""Return a URI of the form gs://{bucket}/{path}.
+
+            Prefer resolve_bucket_uri() over building the URI directly.
+            """
+            from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_uri
+            return resolve_bucket_uri(cloud="gcp", kind="market-data", path=path, asset_group="cefi")
+        ''',
+    )
+    assert count_inline_uris_in_file(f) == []
+
+
+def test_count_flags_real_inline_uri_outside_docstring(tmp_path: Path) -> None:
+    """v2: a gs:// f-string outside any docstring is still flagged."""
+    f = _write(
+        tmp_path / "bad.py",
+        '''
+        def bad(bucket: str, path: str) -> str:
+            """Build a URI (SHOULD use resolve_bucket_uri instead)."""
+            return f"gs://{bucket}/{path}"
+        ''',
+    )
+    hits = count_inline_uris_in_file(f)
+    assert len(hits) == 1
+
+
+def test_ast_docstring_lines_covers_module_class_function() -> None:
+    """_ast_docstring_lines detects docstrings at all three scopes."""
+    import ast as _ast  # local re-import to avoid shadowing
+
+    source = '''
+"""Module docstring with gs://{x}/path example."""
+
+class Foo:
+    """Class docstring."""
+
+    def method(self) -> str:
+        """Method docstring."""
+        return "x"
+'''
+    tree = _ast.parse(source)
+    lines = _ast_docstring_lines(tree)
+    assert len(lines) >= 3  # module + class + method docstrings each contribute lines
 
 
 # ── Walker exclusions ────────────────────────────────────────────────────────

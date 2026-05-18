@@ -35,10 +35,11 @@ the to-be-removed inline bucket-name templates land in ``code_freeze`` Phase 2.6
 re-run with ``--update-baseline`` to lower the recorded counts. NEVER raise a
 baseline (a new inline formatter is a bug, not a baseline item).
 
-v1 is grep-based (the formatter is always a single-line f-string in practice).
-v2 hardening = an AST-walk that distinguishes ``f"gs://{x}/..."`` from a
-``resolve_bucket_uri(...)`` call and ignores docstring/comment occurrences — the
-same shape as QG STEP 5.65's AST-walk. v1 ships first.
+v2 is AST-walk based: distinguishes ``f"gs://{x}/..."`` (inline URI build, flagged)
+from ``resolve_bucket_uri(...)`` calls (not flagged), and ignores f-strings that
+are docstrings — eliminating false positives from documentation examples such as
+``bucket_naming.py:16-17``. Falls back to the v1 regex scan for files with syntax
+errors. Same shape as QG STEP 5.65's AST-walk.
 
 Usage::
 
@@ -55,6 +56,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import sys
 from collections.abc import Iterable, Iterator
@@ -230,23 +232,93 @@ def _iter_py_files(root: Path) -> Iterator[Path]:
         yield path
 
 
-def count_inline_uris_in_file(path: Path) -> list[int]:
-    """Return the line numbers (1-based) of inline ``gs://`` / ``s3://`` f-string
-    formatters in ``path`` that do NOT carry a ``# noqa: gs-uri`` marker."""
+def _ast_docstring_lines(tree: ast.AST) -> frozenset[int]:
+    """Return line numbers occupied by module/class/function docstrings.
+
+    Both plain-string and f-string docstrings are captured so that URIs used
+    as documentation examples are not flagged by the AST walker.
+    """
+    lines: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if not node.body:
+            continue
+        first = node.body[0]
+        if not isinstance(first, ast.Expr):
+            continue
+        val = first.value
+        if not isinstance(val, (ast.Constant, ast.JoinedStr)):
+            continue
+        start: int | None = getattr(val, "lineno", None)
+        end: int | None = getattr(val, "end_lineno", start)
+        if start is not None:
+            for ln in range(start, (end if end is not None else start) + 1):
+                lines.add(ln)
+    return frozenset(lines)
+
+
+def _fstring_has_cloud_uri(node: ast.JoinedStr) -> bool:
+    """Return True if any literal constant part of the f-string contains ``gs://`` or ``s3://``."""
+    for child in ast.walk(node):
+        if isinstance(child, ast.Constant) and isinstance(child.value, str):
+            if "gs://" in child.value or "s3://" in child.value:
+                return True
+    return False
+
+
+def _count_inline_uris_regex(source: str) -> list[int]:
+    """v1 fallback: regex-based line scan (used when AST parse fails due to syntax errors)."""
     hits: list[int] = []
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return hits
-    for lineno, line in enumerate(text.splitlines(), start=1):
+    for lineno, line in enumerate(source.splitlines(), start=1):
         stripped = line.lstrip()
         if stripped.startswith("#"):
-            continue  # whole-line comment
+            continue
         if NOQA_MARKER in line:
-            continue  # grandfathered
+            continue
         if _INLINE_URI_RE.search(line):
             hits.append(lineno)
     return hits
+
+
+def count_inline_uris_in_file(path: Path) -> list[int]:
+    """Return the line numbers (1-based) of inline ``gs://`` / ``s3://`` f-string
+    formatters in ``path`` that do NOT carry a ``# noqa: gs-uri`` marker.
+
+    v2: AST-walk that skips docstrings (plain-string and f-string) to eliminate
+    false positives from documentation examples. Falls back to the v1 regex scan
+    for files that fail to parse (syntax errors).
+    """
+    hits: list[int] = []
+    try:
+        source = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return hits
+
+    try:
+        tree = ast.parse(source, filename=str(path))
+    except SyntaxError:
+        return _count_inline_uris_regex(source)
+
+    source_lines = source.splitlines()
+    docstring_lines = _ast_docstring_lines(tree)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.JoinedStr):
+            continue
+        lineno: int | None = getattr(node, "lineno", None)
+        if lineno is None:
+            continue
+        if lineno in docstring_lines:
+            continue  # URI is a documentation example, not a live build
+        if not _fstring_has_cloud_uri(node):
+            continue
+        source_line = source_lines[lineno - 1] if lineno <= len(source_lines) else ""
+        if NOQA_MARKER in source_line:
+            continue  # grandfathered inline URI
+        hits.append(lineno)
+
+    return sorted(hits)
 
 
 @dataclass(frozen=True)
