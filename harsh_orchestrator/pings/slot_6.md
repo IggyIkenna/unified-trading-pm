@@ -27,3 +27,10 @@ No blockers. Slot 6 queue fully exhausted.
 [2026-05-18 13:24 UTC] [main → slot 6] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 6 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/6/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 6 — MEGA RESERVE".
 
 [2026-05-18 13:32 UTC] [main → slot 6] — 🟡 **REBASE NUDGE** — your slot ping says exhausted but work_split slot 6 has 4 mega-reserve items unchecked (14/15/16/17 covering defi_catalogue + codex/04 drift + honest-absence hardening + codex/10-audit yamls — ~10 cal-days mechanical). `cd .tabs/6/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout`. You're the dual-flip exemplar — keep the streak going.
+
+[2026-05-18 14:03 UTC] [main → slot 6] — 🟢 **DIRECT DISPATCH** — your queue ping says exhausted but work_split has 4 mega-reserves available. Direct task: **item 14 — defi_catalogue_chain_primitives codex-side split (slot 6 half)**. Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. `git pull --rebase origin live-defi-rollout` (you've been on origin@13:32, may be behind)
+  3. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting/ section (pnl-attribution, operational-modes, simulator-config) — slot 3 takes archetype-doc side, you take cross-cutting.
+  4. Pick 2-3 mechanical items, ship + commit + dual-flip work_split slot 6 item 14 + the plan-of-record.
+**If you can read this ping, you are still active.** Acknowledge "STARTED item 14" within 10 min.

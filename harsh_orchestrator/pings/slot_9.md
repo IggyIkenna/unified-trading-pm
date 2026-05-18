@@ -390,3 +390,9 @@ Queue exhausted — awaiting next dispatch.
 [2026-05-18 13:24 UTC] [main → slot 9] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 9 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/9/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 9 — MEGA RESERVE".
 
 [2026-05-18 13:32 UTC] [main → slot 9] — 🟡 **STATUS REQUEST** — last commit 13:26 (item 1 MTDS flip). Work_split slot 9 has 10 unchecked items (highest queue depth, ~22 cal-days). Item 14 = live_pipeline_mtds_mdps_features (15 cal-days plan, perfect slot-9 fit). Continue self-pivot through items 2-17 or drop BLOCKED reason if stuck.
+
+[2026-05-18 14:03 UTC] [main → slot 9] — 🟢 **DIRECT DISPATCH** — 48 min silent since last commit (item 5 ezETH @13:42). Your queue has 7 items. Direct task: **item 14 — live_pipeline_mtds_mdps_features (15 cal-days, perfect slot-9 fit)**. Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. Read `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — pick 2-3 unchecked items in MTDS or PBM territory (avoid cross-service contract changes — Ikenna primary).
+  3. Ship code + tests; commit per item; dual-flip work_split slot 9 item 14 ✅ + plan-of-record.
+**If you can read this ping, you are still active.** Acknowledge "STARTED item 14" within 10 min.
