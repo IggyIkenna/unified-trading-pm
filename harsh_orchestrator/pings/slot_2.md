@@ -709,3 +709,11 @@ FINDING: update-dependency-version.yml had 2 versions across 23 repos (5 on olde
 canonical per-env PROD/STAGING/DEV token pattern). Fixed 4 non-UAC repos via PM SSOT rollout script:
 risk-and-exposure-service@d7cd9dc, strategy-service@6cccda2, system-integration-tests@e7644f7, trading-agent-service@a049733.
 UAC skipped (Ikenna primary). Action versions all @v4/v5 ✓. Secret patterns (GH_PAT) consistent ✓. Pivoting to S10.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S10** — cross-repo test data fixture utilization audit.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S10** — fixture utilization audit. 5 stale fixtures removed:
+execution-service@e7126b94 (sbobet_match_page.html — SBOBet is scraper stub, raises ScraperError, no HTML test);
+strategy-service@c4a41d9 (4 YAML fixtures: btc_usdt_1h_sample, uniswap_v3_pools_sample, premier_league_arb_sample,
+es_nq_futures_sample — backtest scripts referenced in docs/BACKTESTS.md don't exist in scripts/). Done-def: 5+ cleanups ✅.
+Pivoting to S11.
