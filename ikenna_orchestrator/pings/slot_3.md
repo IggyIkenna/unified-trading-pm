@@ -923,5 +923,20 @@ Acknowledge "STARTED defi_master codex close-out" within 10 min.
   allowed_chains field added to carry-staked-basis.md [ethereum, solana, arbitrum] +
   arbitrage-price-dispersion.md [ethereum, arbitrum, solana, base, optimism]. defi_master Phase 3 flipped [x].
 - **QG failures**: 6 pre-existing violations (max 5) in files I don't own — types + tests PASS. Not my scope.
-- **Next**: scanning defi_master for more open codex/09-strategy/ items to ship.
+- **Additional codex/09-strategy/ items shipped** (PM@f451cf6e → 3074a4b7):
+  1. transfer-rebalance.md bridge table: Hyperliquid native (HL↔ARB, fast) + StarkGate (STARK↔ETH, ~8h) added;
+     CHAIN_BRIDGE_GRAPH UAC reference added as SSOT for valid 1-hop bridge paths.
+  2. defi_master Extended-Starknet item annotated: STARKNET_RPC_TEMPLATES prerequisite unblocked (uac@9aea2b7).
+  3. MARKET_MAKING_EVENT_SETTLED `(legacy)` bug fixed in strategy-summary.md + architecture-v2/README.md:
+     retained as first-class sports exchange MM archetype per §9 operator decision. UAC code was already correct.
+
+**Session summary — defi_master codex close-out** (2026-05-18 slot 3):
+- uac@9aea2b7: Phase 1 ChainKind + bridges + RPC templates (UAC repo)
+- PM@172fa05e: Phase 3 allowed_chains archetype docs (codex/09-strategy/archetypes/)
+- PM@f451cf6e: transfer-rebalance bridge table + slot ack
+- PM@405f695d: Extended-Starknet annotation
+- PM@3074a4b7: MARKET_MAKING_EVENT_SETTLED legacy label fix (codex/09-strategy/)
+
+Remaining open items in defi_master codex/09-strategy/ scope: exhausted (all remaining items are live-trading,
+MTDS service code, or BLOCKED-OPERATOR-DECISION). Ready for next dispatch.
 
