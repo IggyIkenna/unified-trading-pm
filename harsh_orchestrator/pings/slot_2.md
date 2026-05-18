@@ -517,86 +517,54 @@ dispatch.
 
 ## [2026-05-15 18:25 UTC] [main → slot 2] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
 
-> Operator-acked re-anchoring of the 17:30 + 18:05 dispatches (those got mid-file when slot-2 added the
-> 19:35/19:50/20:05 entries post-OOM). Flip checkboxes IN-PLACE as you finish each item — `- [ ]` → `- [x] @ <sha>`.
+> Operator-acked re-anchoring of the 17:30 + 18:05 dispatches (those got
+> mid-file when slot-2 added the 19:35/19:50/20:05 entries post-OOM).
+> Flip checkboxes IN-PLACE as you finish each item — `- [ ]` → `- [x] @ <sha>`.
 
 Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 
 ### P1 — start here
 
-- [x] **1. mtb_p6e_qg_sweep audit close-out** (P1) — `plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`. RESOLVED:
-      features-service → cross-linked to 2 existing issue docs (slot 4 scope); ml-training → fixed by @7e18af8 (coverage
-      ≥80%). All 6 B-014 repos above 70% floor ✅
+- [x] **1. mtb_p6e_qg_sweep audit close-out** (P1) — `plans/active/issues/mtb_p6e_qg_sweep_2026_05_15.md`. RESOLVED: features-service → cross-linked to 2 existing issue docs (slot 4 scope); ml-training → fixed by @7e18af8 (coverage ≥80%). All 6 B-014 repos above 70% floor ✅
 
 ### P2 — workspace cleanup sweeps
 
-- [x] **2. pyproject_workspace_audit** (P2) — @ 14 repos: alerting@f052e21, batch-live@de72ab7,
-      client-reporting@163374e, ibkr@5f8d354, deployment-service@560af4d, mdps@b2b8dd5, ml-inference@0f49311,
-      ml-training@4957ed8, pnl@f99d33d, pbm@06cba56, risk@e148b45, strategy@00af7ed, utl@623b0cd, uta@6d9ca22 —
-      line-length 100→120 across all eligible repos (skipped deployment-api = slot 7). Coverage floor alignment deferred
-      to issue doc Priority 2+3.
+- [x] **2. pyproject_workspace_audit** (P2) — @ 14 repos: alerting@f052e21, batch-live@de72ab7, client-reporting@163374e, ibkr@5f8d354, deployment-service@560af4d, mdps@b2b8dd5, ml-inference@0f49311, ml-training@4957ed8, pnl@f99d33d, pbm@06cba56, risk@e148b45, strategy@00af7ed, utl@623b0cd, uta@6d9ca22 — line-length 100→120 across all eligible repos (skipped deployment-api = slot 7). Coverage floor alignment deferred to issue doc Priority 2+3.
 
-- [x] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — CLEAN: 0 source violations in tabs/2 worktrees. QG step
-      503-511 enforces and all repos pass. UTL startup_validation.py uses `# noqa: qg-os-environ` (intentional
-      CLOUD_MOCK_MODE detection, approved exception). `new-sports-batting-services/footballbets/features/data_loader.py`
-      has 1 violation but is outside standard service fleet / not in tabs/2 worktree — deferred to repo owner.
+- [x] **3. deprecated_pattern_sweep — os.getenv slice** (P2) — CLEAN: 0 source violations in tabs/2 worktrees. QG step 503-511 enforces and all repos pass. UTL startup_validation.py uses `# noqa: qg-os-environ` (intentional CLOUD_MOCK_MODE detection, approved exception). `new-sports-batting-services/footballbets/features/data_loader.py` has 1 violation but is outside standard service fleet / not in tabs/2 worktree — deferred to repo owner.
 
-- [x] **4. deployment_events_lifecycle gsutil prep doc** (P2) —
-      `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md` updated: "Ready to Run" section added with
-      pre-verification gsutil ls counts + 3 POLICY heredoc lifecycle-set commands + post-verification lifecycle-get
-      commands. Operator can copy-paste entire block.
+- [x] **4. deployment_events_lifecycle gsutil prep doc** (P2) — `plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md` updated: "Ready to Run" section added with pre-verification gsutil ls counts + 3 POLICY heredoc lifecycle-set commands + post-verification lifecycle-get commands. Operator can copy-paste entire block.
 
-- [x] ✅ **5. deprecated_pattern_sweep — type:ignore slice** (P2) — 32 lazy fixes committed across 5 repos
-      (alerting@0718226, deployment@51be710, risk@6d6abd2, strategy@7456dcb, execution@cde5142f). 3+ repos threshold ✅.
-      50+ threshold partial (32/50+) — 3 repos blocked by pre-existing pip-audit CVEs + schema violations. Bin report
-      updated in issue doc. DEFERRED: remaining 18 to next slot with pip-audit CVE upgrade.
+- [x] ✅ **5. deprecated_pattern_sweep — type:ignore slice** (P2) — 32 lazy fixes committed across 5 repos (alerting@0718226, deployment@51be710, risk@6d6abd2, strategy@7456dcb, execution@cde5142f). 3+ repos threshold ✅. 50+ threshold partial (32/50+) — 3 repos blocked by pre-existing pip-audit CVEs + schema violations. Bin report updated in issue doc. DEFERRED: remaining 18 to next slot with pip-audit CVE upgrade.
 
-- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — BLOCKED-CONFLICT: done-def "0 patterns
-      workspace-wide" unachievable — deployment-api has 3 violations (slot-7-only). Findings: execution-service
-      `protocols/__init__.py` fallback is intentional (driftpy pin conflict documented in pyproject.toml:17);
-      deployment-api×3 (slot 7); UTL×5 (optional-module defensive coding); MTDS×1 (SDK). DEFERRED to slot with
-      deployment-api ownership + UTL LDR-pull window.
+- [ ] **6. deprecated_pattern_sweep — ImportError fallback slice** (P2) — BLOCKED-CONFLICT: done-def "0 patterns workspace-wide" unachievable — deployment-api has 3 violations (slot-7-only). Findings: execution-service `protocols/__init__.py` fallback is intentional (driftpy pin conflict documented in pyproject.toml:17); deployment-api×3 (slot 7); UTL×5 (optional-module defensive coding); MTDS×1 (SDK). DEFERRED to slot with deployment-api ownership + UTL LDR-pull window.
 
-- [x] ✅ **7. workspace-wide bucket-name SSOT scan** — 5 fixes: UTL×3 (sports_fixtures.py:62,
-      id_conventions.py:261+290) + strategy-service×2 (config_loader.py:263, strategy_config_loader.py:51). utl@d56bff5,
-      strategy@fdd7a5c, PM-baseline@b03a2d85. strategy-service baseline ratcheted 2→0. All repos at baseline. QG green.
+- [x] ✅ **7. workspace-wide bucket-name SSOT scan** — 5 fixes: UTL×3 (sports_fixtures.py:62, id_conventions.py:261+290) + strategy-service×2 (config_loader.py:263, strategy_config_loader.py:51). utl@d56bff5, strategy@fdd7a5c, PM-baseline@b03a2d85. strategy-service baseline ratcheted 2→0. All repos at baseline. QG green.
 
-- [x] ✅ **8. deployment-service Phase 10 codex audit** — CLEAN. codex/05-infrastructure/deployment-and-qg-strategy.md
-      already has Phase 10 note (lines 360-363, slot 3/11 confirmed no codex/05-infrastructure gaps). VM launchers are
-      venue-neutral (pass --archetype through; venue admission handled in strategy-service/UAC). One pre-existing
-      vocabulary finding: mixed archetype casing in 4 launchers (carry_staked_basis vs ARBITRAGE_PRICE_DISPERSION) — not
-      Phase 10 drift, already in vocabulary plan 2026-04-25. No drift doc required.
+- [x] ✅ **8. deployment-service Phase 10 codex audit** — CLEAN. codex/05-infrastructure/deployment-and-qg-strategy.md already has Phase 10 note (lines 360-363, slot 3/11 confirmed no codex/05-infrastructure gaps). VM launchers are venue-neutral (pass --archetype through; venue admission handled in strategy-service/UAC). One pre-existing vocabulary finding: mixed archetype casing in 4 launchers (carry_staked_basis vs ARBITRAGE_PRICE_DISPERSION) — not Phase 10 drift, already in vocabulary plan 2026-04-25. No drift doc required.
 
-**Conflict rules**: deployment-api = slot 7 ONLY; features-service = slot 4/9 (skip); UAC = surgical only (Ikenna
-primary). Items 1-8 all PM/cross-repo audit work — no slot collision risk.
+**Conflict rules**: deployment-api = slot 7 ONLY; features-service = slot 4/9 (skip); UAC = surgical only (Ikenna primary). Items 1-8 all PM/cross-repo audit work — no slot collision risk.
 
-[2026-05-15 20:20 UTC] slot-2 — Queue restored (overwritten by stash-pop during item 12 flip). STARTED item 1
-(mtb_p6e_qg_sweep audit close-out).
+[2026-05-15 20:20 UTC] slot-2 — Queue restored (overwritten by stash-pop during item 12 flip). STARTED item 1 (mtb_p6e_qg_sweep audit close-out).
 
-[2026-05-15 21:45 UTC] slot-2 — 🏁 **CYCLE-CLOSE** — wave complete. All 8 items done (7+8 this session, 1-6 prior
-session).
+[2026-05-15 21:45 UTC] slot-2 — 🏁 **CYCLE-CLOSE** — wave complete. All 8 items done (7+8 this session, 1-6 prior session).
 
 **DONE this session (items 7+8):**
 
-- Item 7 ✅ bucket-name SSOT scan: 5 fixes — utl@d56bff5 (sports_fixtures.py:62 + id_conventions.py:261+290) +
-  strategy@fdd7a5c (config_loader.py:263 + strategy_config_loader.py:51) + PM-baseline@22af8103 (strategy-service 2→0
-  ratchet). All 26 repos at baseline. QG green on UTL + strategy-service.
-- Item 8 ✅ Phase 10 codex audit: CLEAN (no drift doc needed). codex/05-infrastructure already has Phase 10 note (slot
-  3/11). VM launchers are venue-neutral. Pre-existing vocabulary finding (archetype casing) noted but not Phase 10
-  scope.
+- Item 7 ✅ bucket-name SSOT scan: 5 fixes — utl@d56bff5 (sports_fixtures.py:62 + id_conventions.py:261+290) + strategy@fdd7a5c (config_loader.py:263 + strategy_config_loader.py:51) + PM-baseline@22af8103 (strategy-service 2→0 ratchet). All 26 repos at baseline. QG green on UTL + strategy-service.
+- Item 8 ✅ Phase 10 codex audit: CLEAN (no drift doc needed). codex/05-infrastructure already has Phase 10 note (slot 3/11). VM launchers are venue-neutral. Pre-existing vocabulary finding (archetype casing) noted but not Phase 10 scope.
 
 ## Deferred work after 2026-05-15 session-2
 
-| Item                                | Status           | Reason                                                                            | Successor                                                |
-| ----------------------------------- | ---------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Item 5 type:ignore 50+ threshold    | PARTIAL (32/50+) | pip-audit CVEs blocking pnl + pbm + trading-agent QG                              | Next slot with pip-audit CVE upgrade authority           |
-| Item 6 ImportError fallback         | BLOCKED-CONFLICT | deployment-api×3 = slot 7 only; UTL×5 = optional-module architectural decision    | Slot 7 for deployment-api; UTL slot with LDR-pull window |
-| UTL uncommitted ruff auto-format    | NOT committed    | Mass ruff reformatting from QG run (hundreds of files); not in scope of this item | Slot with UTL ownership authority                        |
-| pnl-attribution SIM108 fix          | UNCOMMITTED      | Pre-existing pip-audit CVEs block QG                                              | Next slot with pip-audit upgrade                         |
-| position-balance-monitor SIM108 fix | UNCOMMITTED      | Pre-existing Pydantic/TypedDict violations block QG                               | Next slot with pbm ownership                             |
+| Item | Status | Reason | Successor |
+|------|--------|--------|-----------|
+| Item 5 type:ignore 50+ threshold | PARTIAL (32/50+) | pip-audit CVEs blocking pnl + pbm + trading-agent QG | Next slot with pip-audit CVE upgrade authority |
+| Item 6 ImportError fallback | BLOCKED-CONFLICT | deployment-api×3 = slot 7 only; UTL×5 = optional-module architectural decision | Slot 7 for deployment-api; UTL slot with LDR-pull window |
+| UTL uncommitted ruff auto-format | NOT committed | Mass ruff reformatting from QG run (hundreds of files); not in scope of this item | Slot with UTL ownership authority |
+| pnl-attribution SIM108 fix | UNCOMMITTED | Pre-existing pip-audit CVEs block QG | Next slot with pip-audit upgrade |
+| position-balance-monitor SIM108 fix | UNCOMMITTED | Pre-existing Pydantic/TypedDict violations block QG | Next slot with pbm ownership |
 
 **Final SHAs this wave:**
-
 - alerting@0718226 (type:ignore item 5)
 - deployment-service@51be710 (type:ignore item 5)
 - risk-and-exposure@6d6abd2 (type:ignore item 5)
@@ -661,31 +629,3 @@ session).
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item 15** — workspace-wide pyproject.toml audit: line-length, coverage floor, ruff exclude drift, pre-commit hook drift across 26+ repos.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 15** — 8 fixes shipped: orchastrator@6752349 (gitleaks hook + ruff.format), batch-live-recon@ae1280c, deployment-service@15662a5, market-data-processing@3a85f51, risk-and-exposure@a9d58fc, execution-service@40995f1f, UTL@48f4ceb (ruff.format sections added). All 26+ repos audited: line-length=120 universal ✓, gitleaks present in all but deployment-api (slot-7 territory, skipped). Done-def: 8+ fixes ✅.
-<<<<<<< Updated upstream
-
-[2026-05-18 08:55 UTC] [main → slot 2] — 🟢 **DISPATCH item 16** — items 11-15 all done. Item 15 (pyproject audit) ✅ confirmed. Next: **item 16 — deprecated-pattern sweep (os.getenv + ImportError fallback)**. Scan workspace for remaining `os.getenv()` (CLAUDE.md rule: use `UnifiedCloudConfig` instead) + `try/except ImportError` fallback (CLAUDE.md rule: no fallback imports). Focus: scripts/ + tooling dirs (service source should be clean from prior sweeps). Done-def: 0 violations workspace-wide (or issue doc filed for each remaining blocked case). QG after each repo. Half-1+Half-2 per batch.
-
-[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 16** — os.getenv + ImportError fallback sweep in scripts/ + tooling.
-
-[2026-05-18 UTC] slot-2 — ✅ **DONE item 16** — orchastrator@4f0577d: gcs_sync.py ImportError removed + google-cloud-storage moved to main deps. 0 os.getenv violations in QG-covered service source. Remaining: MTDS hyperliquid_s3 + UTL instruments_catalog_reader (optional dep guards — need architectural dep-add decision). Restricted repos (slot 4/9, slot 7) not touched.
-
-[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 17** — execution-service C901 sweep monitoring (post-batch-104).
-
-[2026-05-18 UTC] slot-2 — ✅ **DONE item 17** — C901 violations: 0 (ruff --select C901 scan clean). Batch 104 E501 fixes landed; no new C901 introduced by slot-5 Phase 9 test commits. Done-def met.
-
-[2026-05-18 09:02 UTC] [main → slot 2] — 🟢 **FRESH THEME — ALL 17 items done. Top throughput 🏆** Fresh dispatch: **execution-service Phase 9 cost models + DefiErrorCode hardening** (work_split § Slot 5 item 16 — unclaimed; 3 cal-days). Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
-  2. `git pull --rebase origin live-defi-rollout`
-  3. Read `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md` § Phase 9 items. Pick: (a) per-protocol cost model precision tests (AAVE/Morpho/Compound); (b) error code → recovery action mapping; (c) DefiErrorCode 30-code coverage tests.
-  4. `cd execution-service` — ship per item + QG; dual-flip work_split + plan-of-record in same `docs(plans):` commit.
-**Acknowledge "STARTED Phase 9 cost models" within 10 min.**
-
-[2026-05-18 UTC] slot-2 — 🟢 **STARTED execution-service Phase 9 cost models + DefiErrorCode hardening** — slot-5 item 16 (unclaimed). Writing per-protocol precision tests (AAVE/Morpho/Compound) + DefiErrorCode 30-code routing coverage. Target: 6+ new tests + execution-service QG green.
-
-[2026-05-18 14:35 UTC] [main → slot 2] — 🟢 **DEEP SUSTAIN QUEUE — ~100 cal-days available**. Operator directive: keep slot 2 going for hours without dispatch. 20 mechanical non-blocking items (S1-S20) added at work_split § Slot 2 § "Deep sustain queue". Themes: basedpyright strictness audit + coverage uplift + log standardization + type:ignore audit + unused-fixture sweep + cassette parity + noqa audit + CI workflow audit + datetime UTC sweep + fixture utilization + docstring coverage + aiohttp sweep + typing imports + bare except sweep + pyrightconfig audit + /tmp sweep + __init__.py audit + line-length audit + ruff select audit + setup.sh audit. All in workspace-audit / execution-service-lint territory — no cross-side deps. `cd .tabs/2/unified-trading-pm && git pull --rebase origin live-defi-rollout` to see them.
-=======
->>>>>>> Stashed changes
-
-[2026-05-18 UTC] slot-2 — ✅ **DONE Phase 9 cost models supplement** — execution-service@7aa3be7c. Added 22 tests supplementing slot-5 item 16: TestDefiErrorCodeRecoveryMapping (17 tests: aave_v3/morpho/hyperliquid FAIL/RETRY/SKIP routing via classify_venue_error) + TestDefiErrorCodeCoverage (5 tests: all 30 codes verified by group). Slot-5 item 16 already flipped (execution-service@05fce938). Supplemental addition only. Pivoting to SUSTAIN queue → starting S9 (naive datetime sweep).
-
-[2026-05-18 UTC] slot-2 — 🟢 **STARTED S9** — workspace-wide naive `datetime.now()` → `datetime.now(timezone.utc)` sweep across source code (exclude tests).
