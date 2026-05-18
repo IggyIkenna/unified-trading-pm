@@ -3175,3 +3175,21 @@ slot-6 fresh-theme 3rd queue burn 🏆
 **Priority next tick (09:27 UTC)**: confirm tick 4 in GCS log. If missing → escalate (VM may have crashed silently).
 
 **Status**: 🟢 Steady state. All slots dispatched or have themes.
+
+---
+
+## [slot 1 main] 2026-05-18 ~08:58 UTC — tick-81: tick-4 window 29 min out; Gate 4 FIRED confirmed
+
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (29 min). No errors. VM status = RUNNING confirmed.
+
+**Master plan update**: `ebc50edb` — inventory regenerated 2026-05-18 08:54 UTC. 69 plans, 54% done, 471 cal AI-days left. Row-6 Last-verified updated to **2026-05-13 (Gate 4 🟢 FIRED)**: writegate Phase 6.6/6.7/6.8/6.9 all complete; β-verdict (per-service emission boundary canonical) confirmed across all 9 services. This is a May-23 readiness gate item — now locked.
+
+**No new slot acks** since tick-80. All dispatches still pending. Quiet interval normal — slots processing.
+
+**Harsh-side activity** (all IST timestamps, ~5:30 ahead of UTC):
+- Slot-2: item 15 ✅; item 16 dispatched (os.getenv sweep)  
+- Slot-3: 17/17 done 🏆; fresh-theme defi_master dispatched
+- Slot-6: 16/16 done 🏆; simulation_scenarios_topology dispatched
+- Slot-9: direct-dispatched item-14 (live_pipeline_mtds_mdps); silent 25+ min
+
+**Status**: 🟢 Quiet. Next milestone: tick-4 at 09:27 UTC.
