@@ -854,11 +854,11 @@ smoke begins.
       Pre-stage 10+ UI components for promote-button workflow + DART manual-trade gate UI. Mark items
       DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 10+ items pre-staged + pnpm build green. **~20 cal-days**.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
-      2026-05-18 slot-7**: 26 monitor route tests shipped (deployment-api@0bffd18, QG green). Current coverage: 72.4%.
-      Gap to 90%: ~3300 lines. Next: cost auth+rate-limit, deploy-ready, snapshots. Build on item 20 (Firebase auth
-      integration). Add tests for: cost endpoint auth + rate-limit, VM events filter pagination, treasury rollup
-      Firebase-vs-API-key parity, deploy-ready tracking endpoint, snapshot endpoints. Done-def: 20+ tests +
-      deployment-api coverage ≥90% + QG green. **~10 cal-days**.
+      2026-05-18 slot-7**: 26 monitor route tests shipped (deployment-api@0bffd18); RBAC + infra_health 15 tests
+      shipped (deployment-api@7313f4c, rbac.py 97.7%, infra_health.py 100%, QG green). Current coverage: 72.9%.
+      Gap to 90%: ~3200 lines. Next highest-impact: user_management.py (112 missed), deployment_service_client.py
+      (135 missed), builds.py (136 missed), shard_detail.py (268 missed). Done-def: deployment-api coverage ≥90% +
+      QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
       open/close/content), mobile hamburger (open/close/link/close-on-nav), nav routing
