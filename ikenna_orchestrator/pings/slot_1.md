@@ -4132,3 +4132,17 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **harsh-main**: No new _agent_pings response. Still awaiting.
 
 **Status**: 🟢 Phase 5 ~5/7 items done. B-015 nominal. Tick-8 in ~43 min.
+
+## [slot 1 main] 2026-05-18 ~12:48 UTC — tick-121: stale wakeup; B-015 tick-8 pending; slot-5 AlmgrenChriss shipped
+
+**Note**: Stale tick-119 wakeup. Ticks 118/119/120 already committed. Running as tick-121. Two wakeups pending at 13:37+13:39 UTC for tick-8 window — not scheduling another.
+
+**B-015**: 7/72 (unchanged). Tick-8 at 13:27:17 UTC — ~39 min. Gate intact.
+
+**New PM commits absorbed**: `3bfbe646` (flip S13 — execution-service@b184eaef AlmgrenChriss + 33 test fixes + slot-5 ping update). Slot-5 making strong progress.
+
+**Phase 5**: strategy-service@3c332ac on LDR. Items 1+2+3+5 done. Items 4+6+7 (pnl-attribution reader + tests + QG) pending with slot_3.
+
+**harsh-main**: No response. Awaiting.
+
+**Status**: 🟢 Nominal. Monitoring tick-8 (13:27 UTC). 2 wakeups already scheduled to catch it.
