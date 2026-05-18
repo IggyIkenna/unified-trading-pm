@@ -694,16 +694,29 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4 of
         the new rotation-runbook.md with explicit "excluded" list + rationale.
 
-- [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.**
-  - [ ] **5.B.1** — Polymarket API key provisioned (added to `_TRADE_KEY_PATTERNS` 2026-05-09; secret value not yet in
-        Secret Manager per audit).
-  - [ ] **5.B.2** — Kalshi API key (already in `_TRADE_KEY_PATTERNS`; verify provisioned in Secret Manager).
-  - [ ] **5.B.3** — Manifold API key if archetype scope includes Manifold.
-  - [ ] **5.B.4** — Per-venue prediction adapter at `execution-service/.../venues/polymarket.py` if not exists (audit
-        found feature calculators but not execution adapter).
+- [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 vault audit 2026-05-18)
+  - [x] **5.B.1** — Polymarket API key provisioned. **DONE 2026-05-18**: SM secret `polymarket-api-key` EXISTS in
+        vault (created 2026-03-02, v1 enabled; verified `gcloud secrets describe`). Added to `_TRADE_KEY_PATTERNS`
+        2026-05-09. Secret value is live.
+  - [ ] **5.B.2** — Kalshi API key. **BLOCKED-CREDENTIALS 2026-05-18** — SM secrets `kalshi-api-key` +
+        `kalshi-private-key-pem` NOT FOUND in `central-element-323112`. Full `KalshiAdapter` (RSA-PSS auth,
+        place/cancel/positions/balance, 53 unit tests) is shipped at
+        `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py`. CREDENTIAL APPROVAL
+        REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
+  - [x] **5.B.3** — Manifold API key. **SCOPED OUT 2026-05-18**: `predictions_master_2026_05_07.md` does not
+        include Manifold in MVP scope. Manifold UAC schemas + `_PREDICTION_SOURCES` exist but no execution adapter
+        needed for May-23 gate. No SM secret provisioning required.
+  - [x] **5.B.4** — Per-venue prediction adapter. **DONE 2026-05-18**: Execution adapters verified at:
+        (a) `execution-service/execution_service/trade_execution/adapters/polymarket_adapter.py`;
+        (b) `execution-service/execution_service/sports_execution/prediction_markets/polymarket.py`;
+        (c) `execution-service/execution_service/sports_execution/adapters/exchanges/polymarket_clob.py` +
+        `kalshi.py`. "Feature calculators but not execution adapter" in prior audit was stale — adapters shipped.
 
-- [ ] [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius keys provisioned in Secret Manager (added to
-      `_DATA_KEY_PATTERNS` 2026-05-09).
+- [ ] [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius provisioned in Secret Manager.
+      (slot-8 vault audit 2026-05-18):
+      - **Helius** `helius-api-key`: EXISTS in vault (created 2026-05-15, v1 enabled). DONE.
+      - **CoinGecko** `coingecko-api-key`: NOT FOUND. **BLOCKED-CREDENTIALS**. CREDENTIAL APPROVAL REQUEST
+        filed in `ikenna_orchestrator/pings/slot_8.md`.
 
 **Phase 5 done definition** (full-execution criterion):
 

@@ -460,10 +460,10 @@ reviews + tunes thresholds.
       FIRED** — Phase 7 launch deferred per gate (Phases 4 [PARTIAL — Tab L Telegram-only] / 5 [✅] / 6 [✅] need GREEN
       — Phase 4 gap is the in-process SM hot-reload Harsh ships next, see Phase 4 todo).
 - [ ] [SCRIPT] P0. Deploy alerting-service to `staging` Cloud Run + flip routing config to enable all 15 alert rules.
-      **DEFERRED-AFTER-PHASE-4-WIRING** — Telegram/staging-noise channel needs the SM hot-reload todo above to land
-      before staging deploy is meaningful (otherwise it runs against `.act-secrets`, which only exist on the operator's
-      workstation). The launcher Tab L shipped is what fires after the Cloud Run deploy + Telegram-staging-noise chat ID
-      is decided (operator open question 2 of this plan).
+      **BLOCKED-OPERATOR (updated 2026-05-18)**: Phase 4 SM hot-reload is DONE (flipped above at alerting-service@9d4150d).
+      Gate is clear. Remaining unblock: operator must (1) confirm staging Telegram noise-channel chat ID (open
+      question 2 of this plan), (2) run `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh`.
+      Launcher is ready. SM criterion met.
 - [ ] [HUMAN] P0. Operator: launch the quietness baseline VM via
       `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` after Phase 4 wiring is GREEN. Verify
       VM emits `STARTED` event within 90s (per CLAUDE.md "No fire-and-forget VM launches"); recheck event stream every
@@ -472,6 +472,8 @@ reviews + tunes thresholds.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
+      **BLOCKED-UPSTREAM (2026-05-18)**: gates on Phase 7 quietness baseline run. Cannot proceed until Phase 7
+      completes. Current UAC seed values are correct Phase 1 starting points per §"Threshold seeding rationale".
 - [ ] [HUMAN] P0. Acceptance criterion: 48h continuous run with 0 PagerDuty-severity false positives, ≤2
       Telegram-severity false positives.
 
@@ -561,8 +563,9 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       subscriber-failure-isolation.)
 - [ ] [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
-      **DEFERRED**: rehearsal script (`alerting-service/scripts/inject_synthetic_alert.py`) doesn't exist yet — Phase 8
-      rehearsal harness is itself a downstream item. Will land alongside the rehearsal script.
+      **BLOCKED-UPSTREAM (2026-05-18)**: rehearsal script IS shipped (`alerting-service@6d4f222` — 76 codes). Prior
+      DEFERRED note was stale. Gate: Phase 8 HUMAN rehearsal session has not run yet (blocked on Phase 7 quietness
+      baseline). Extension should land alongside the operator rehearsal session.
 - [x] [AGENT] P1. **Codex update**: `codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
