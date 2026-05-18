@@ -142,7 +142,7 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 | Linting                     | ruff check (E, F, W, I rules)                                                                                                   | Pre-commit hooks, quality gates                                         |
 | Config                      | Extend `UnifiedCloudConfig` from `unified_config_interface`                                                                     | Checklist item 03b                                                      |
 | Error handling              | Use `@handle_api_errors`, `@handle_storage_errors`                                                                              | Checklist item 04b                                                      |
-| Logging                     | `setup_events()` or `setup_service()` + `log_event()` (unified_trading_library.events / unified_trading_services); no `print()` | Checklist item 04, event-logging.mdc                                    |
+| Logging                     | `setup_events()` or `setup_service()` + `log_event()` (unified_trading_library.events); no `print()` | Checklist item 04, event-logging.mdc                                    |
 | Event logging               | `log_event()` for lifecycle/domain events                                                                                       | `test_event_logging.py`                                                 |
 | Datetimes                   | UTC-aware everywhere                                                                                                            | Checklist item 04f                                                      |
 | Imports                     | All at top of file, grouped                                                                                                     | `.cursorrules`                                                          |
@@ -329,7 +329,7 @@ Open a PR to this document adding a row to the table above. The PR must include:
 ### The Pattern
 
 ```python
-from unified_trading_services import handle_api_errors, handle_storage_errors
+from unified_trading_library import handle_api_errors, handle_storage_errors
 
 @handle_api_errors(max_retries=3)
 async def fetch_external_data():
@@ -370,11 +370,11 @@ MAX_RETRIES = 5  # Should be in config
 
 ```python
 from unified_trading_library.events import setup_events, log_event
-from unified_trading_services import GracefulShutdownHandler
+from unified_trading_library import GracefulShutdownHandler
 
 def main():
     setup_events(service_name="my-service", mode="batch")
-    # Or: from unified_trading_services import setup_service, GCSEventSink, log_event (with sink config)
+    # Or: from unified_trading_library import setup_service, GCSEventSink, log_event (with sink config)
     shutdown_handler = GracefulShutdownHandler(cleanup_callback=cleanup)
     log_event("STARTED")
     # ... service logic ...
@@ -437,7 +437,7 @@ from google.cloud import storage
 client = storage.Client()
 
 # CORRECT: cloud-agnostic abstraction
-from unified_trading_services import get_storage_client, get_secret_client, get_compute_backend
+from unified_trading_library import get_storage_client, get_secret_client, get_compute_backend
 
 # Storage operations
 client = get_storage_client()  # Auto-detects GCP/AWS from CLOUD_PROVIDER env

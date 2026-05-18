@@ -212,7 +212,7 @@ async def handle_request(request: Request) -> Response:
 | Tier | Libraries                                                                                                    |
 | ---- | ------------------------------------------------------------------------------------------------------------ |
 | T0   | `unified_trading_library.events` (UEI), `unified_market_interface` (UMI)                                     |
-| T1   | `unified_config_interface` (UCI), `unified_trading_library` (UTL), `unified_reference_data_interface` (URDI) |
+| T1   | `unified_config_interface` (UCI), `unified_trading_library` (UTL), `unified_reference_data_interface` (instruments-service) |
 
 `BaseFeatureServiceV2` imports:
 

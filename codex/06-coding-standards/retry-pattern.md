@@ -14,7 +14,7 @@ All retryable I/O in the unified trading system must use the standard `@with_ret
 ## Standard Pattern: Exponential Backoff with Jitter
 
 ```python
-from unified_trading_services.retry import with_retry
+from unified_trading_library.retry import with_retry
 
 @with_retry(max_attempts=3, base_delay_s=0.5, jitter=True)
 async def call_external_api(client: SomeClient, payload: dict[str, str]) -> dict[str, str]:
@@ -81,7 +81,7 @@ Retry on transient failures:
 
 ## Rules
 
-- Import `with_retry` from `unified_trading_services.retry` — never reimplement.
+- Import `with_retry` from `unified_trading_library.retry` — never reimplement.
 - Do not use `tenacity`, `retry`, or any third-party retry library. One decorator, one pattern.
 - Do not retry inside a circuit breaker's `OPEN` state — the decorator must check breaker state first.
 - Always pass `max_attempts` explicitly — do not rely on defaults for production call sites.

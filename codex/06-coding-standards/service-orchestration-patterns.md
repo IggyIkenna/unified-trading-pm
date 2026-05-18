@@ -131,7 +131,7 @@ class InstrumentsServiceConfig(UnifiedCloudConfig):
 What is NOT in service config:
 
 - Bucket names — resolved by `UTL get_bucket_name("instruments", category)`
-- API URLs — URDI adapters read their own URLs from UCI provider manifest
+- API URLs — instruments-service adapters read their own URLs from UCI provider manifest
 - Deployment state — owned by `UTL ServiceBootstrap`
 - Venue lists — owned by `UAC VenueMapping`
 
@@ -154,16 +154,16 @@ async def fetch_instruments_for_all_venues(
     instrument_type: str | None = None,
     api_keys: dict[str, str] | None = None,
 ) -> list[InstrumentRecord]:
-    # URDI owns: venue→adapter mapping, credential routing, response normalisation
+    # instruments-service owns: venue→adapter mapping, credential routing, response normalisation
     # This file owns: parallelism, dedup, error policy
     adapter = get_adapter_for_canonical_venue(canonical, api_key=api_key)
     records = await adapter.get_instruments(instrument_type=instrument_type)
 ```
 
-The adapter maintains no local translation tables. All naming translation (`canonical venue -> URDI adapter key`) and
+The adapter maintains no local translation tables. All naming translation (`canonical venue -> instruments-service adapter key`) and
 credential routing (`adapter key -> data source -> API key`) is owned by the interface itself.
 
-**Why:** Services never know about vendor-specific details. Adding a new venue means adding an adapter in URDI, not
+**Why:** Services never know about vendor-specific details. Adding a new venue means adding an adapter in instruments-service, not
 touching the service.
 
 **Reference:** `instruments-service/instruments_service/adapters/urdi_reference_provider.py`
@@ -240,13 +240,13 @@ async def _fetch_one(canonical: str, adapter_key: str) -> list[InstrumentRecord]
         records = await adapter.get_instruments(instrument_type=instrument_type)
         return records
     except NotImplementedError:
-        logger.debug("URDI[%s]: instrument_type=%r not supported", canonical, instrument_type)
+        logger.debug("instruments-service[%s]: instrument_type=%r not supported", canonical, instrument_type)
         return []
     except (OSError, ConnectionError, TimeoutError) as exc:
-        logger.warning("URDI[%s]: network error (retryable): %s", canonical, exc)
+        logger.warning("instruments-service[%s]: network error (retryable): %s", canonical, exc)
         return []
     except ValueError as exc:
-        logger.error("URDI[%s]: adapter error: %s", canonical, exc)
+        logger.error("instruments-service[%s]: adapter error: %s", canonical, exc)
         return []
     # Programming errors propagate — fail the shard
 ```
@@ -357,7 +357,7 @@ UMI is for market data only. It provides vendor adapters for downloading price/t
 - Vendor adapters (Databento, Tardis, Hyperliquid, etc.)
 - VCR cassette recording for deterministic replay
 
-Services use UMI for market data, URDI for reference data. Never the other way around.
+Services use UMI for market data, instruments-service for reference data. Never the other way around.
 
 ---
 

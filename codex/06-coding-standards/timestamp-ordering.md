@@ -51,7 +51,7 @@ exchange_time ≤ received_time ≤ processed_time ≤ published_time
 Call `validate_timestamp_ordering()` before persisting or publishing any event that carries these four fields.
 
 ```python
-from unified_trading_services.timestamps import validate_timestamp_ordering
+from unified_trading_library.timestamps import validate_timestamp_ordering
 
 validate_timestamp_ordering(
     exchange_time=event.exchange_time,

@@ -378,7 +378,7 @@ all 57+ repos via parallel agents if needed.
 | Coverage min 40% / 70%                     | --cov-fail-under=$MIN_COVERAGE; MIN_COVERAGE=70 in template | quality-gates-service-template.sh [3]                                                           | ✓ In template; all repos must set fail_under           |
 | No dict[str, Any] in public API            | rg ": Any\|-> Any\|\[Any\]"                                 | quality-gates-service-template.sh [5]                                                           | ✓ In template                                          |
 | Raw response.json()                        | rg response.json() without model_validate                   | quality-gates-service-template.sh [5]                                                           | ✓ In template                                          |
-| Domain clients from UDC not UTS            | rg unified_trading_services.\*DomainClient                  | quality-gates-service-template.sh [5]                                                           | ✓ In template                                          |
+| Domain clients from UDC not UTL            | rg unified_trading_services.\*DomainClient                  | quality-gates-service-template.sh [5]                                                           | ✓ In template                                          |
 
 **Service-import check (add to template):** For repos with `type: service` in workspace-manifest.json, quality-gates.sh
 MUST fail if pyproject.toml (or [tool.uv.sources]) lists any other **service** repo as a path dependency. Canonical
@@ -983,7 +983,7 @@ unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh
    - No `os.getenv()` outside `config.py` (use config classes)
    - No naive `datetime.now()` (use `datetime.now(timezone.utc)`)
    - No bare `except:` (use specific exceptions or decorators)
-   - No `google.cloud` imports (use `unified_trading_services` abstractions)
+   - No `google.cloud` imports (use `unified_trading_library` abstractions)
    - No `requests` in async code (use `aiohttp`)
    - No `asyncio.run()` in loops (use `asyncio.gather()`)
    - No `time.sleep()` in async functions (use `asyncio.sleep()`)
@@ -1114,7 +1114,7 @@ tasks — without sourcing `quality-gates.sh`. Use this when calling `basedpyrig
 **Usage:**
 
 ```bash
-run_timeout 120 basedpyright unified_trading_services/
+run_timeout 120 basedpyright unified_trading_library/
 ```
 
 **Note:** The `perl` fallback is essential for macOS environments where GNU coreutils may not be installed. If
@@ -1434,7 +1434,7 @@ Add to `pyproject.toml`:
 
 ```toml
 [tool.basedpyright]
-include = ["<package_name>"]   # e.g. "unified_trading_services"
+include = ["<package_name>"]   # e.g. "unified_trading_library"
 exclude = ["tests", "**/__pycache__", ".venv*", "build", "dist"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
