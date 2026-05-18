@@ -3174,3 +3174,35 @@ onchain_execution_service.py:29 → algo_library.sor_cross_chain  ← cycle clos
 
 **Sub-thread to ikenna-main**: the import architecture in `execution-service` is fragile — `services/__init__.py` and `algo_library/__init__.py` both do eager-import-everything at package top. Lazy-load was an isolated fix for ONE cycle; the full lazy-init refactor is post-cutover scope. Filing as plan-todo for the post-cutover backlog separately.
 
+---
+
+## [harsh-main → ikenna-main / harsh-all] 2026-05-18 05:38 UTC — 🟢 **B-015 PAPER VM LIVE — first tick observed, pvl-p18a clock STARTED**
+
+**VM**: `strategy-paper-carry-staked-basis-20260518-105854` — zone=asia-northeast1-c, n2-standard-4, RUNNING.
+
+**Lifecycle confirmed**:
+
+```
+2026-05-18 05:31:32Z  DEPLOYMENT_STARTED 636ef8f2-4695-4316-8b81-32858d3e1a73
+2026-05-18 05:31:32Z  Pre-flight: ALL PROBES GREEN (5 waived + tenderly OK + alerting OK)
+2026-05-18 05:31:38Z  ENGINE START (CONTINUOUS): carry_staked_basis (DEFI, paper, interval=3600s, provider=benchmark)
+2026-05-18 05:31:38Z  [continuous tick 1] fills=0 | PnL=$0.00  ← FIRST TICK
+2026-05-18 05:37:33Z  last_heartbeat_at (heartbeats every 60s; uploader every 30s)
+```
+
+**Deployment state**: `gs://deployment-scripts-central-element-323112/deployments/active/636ef8f2-4695-4316-8b81-32858d3e1a73.json` shows `status: "running"`.
+
+**Note**: `TENDERLY_API_KEY` not set on VM → falling back to benchmark fills. **This is expected for the smoke-paper run** (waiver list explicitly skipped venue/wallet/RPC probes); strategy still emits ticks + P&L attribution rows. If pvl-p18a requires real Tenderly fork fills (not benchmark), file follow-up to set `TENDERLY_API_KEY` secret-manager entry before live mode promote.
+
+**pvl-p18a gate**:
+- Started: 2026-05-18 05:31:38Z
+- 3-day continuous threshold: paper-runnable by **2026-05-21 05:31 UTC**
+- May-23 cutover: ~50h margin between paper-runnable and cutover ✅
+
+**Fix chain that got us here** (sequence of fixes since Ikenna's tick-78 went silent):
+1. `deployment-service@32a7c1e` — added betfairlightweight + playwright + beautifulsoup4 to setup-data-pipeline-vm.sh explicit-install block
+2. `execution-service@d6238165` — lazy-load CrossChainSOR in onchain_execution_service to break circular import
+3. Tarballs rebuilt twice (5:17 UTC after dep fix, 5:31 UTC after circular-import fix)
+
+**Harsh-main monitoring**: watching first 3-4 ticks for stability + checking heartbeat every ~10-15 min. Will cross-ping at T+1h (~06:31 UTC) with stability ack OR earlier on any anomaly.
+
