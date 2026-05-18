@@ -241,10 +241,16 @@ deprecate `MARKET_MAKING_CONTINUOUS`. Until then, keep both.
 **Pure option vol arb** (cross-venue same-strike same-term price-dispersion) → `ARBITRAGE_PRICE_DISPERSION` (NOT a Vol
 Trading archetype; price-dispersion arb).
 
-### 12. Portfolio — doc completion
+### 12. Portfolio — doc completion ✅ SHIPPED 2026-05-18 slot 3
 
-All 4 Portfolio archetypes are doc-pending: `PORTFOLIO_MULTI_STRATEGY` / `PORTFOLIO_RISK_PARITY` /
-`PORTFOLIO_FACTOR_ALLOCATION` / `PORTFOLIO_TACTICAL_OVERLAY`. Complete pre-May-23.
+All 4 Portfolio archetype docs created at PM@`747bd623`:
+- `architecture-v2/archetypes/portfolio-multi-strategy.md` ✅
+- `architecture-v2/archetypes/portfolio-risk-parity.md` ✅
+- `architecture-v2/archetypes/portfolio-factor-allocation.md` ✅
+- `architecture-v2/archetypes/portfolio-tactical-overlay.md` ✅
+- `architecture-v2/families/portfolio.md` ✅ (family doc)
+
+`strategy-summary.md` updated: "(per-archetype doc pending)" labels removed; links to new docs added.
 
 ### 13. Code/config wiring — share-class × archetype × venue universe matrix
 
