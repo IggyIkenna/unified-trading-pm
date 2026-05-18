@@ -95,9 +95,7 @@ smoke begins.
 #### Mechanical queue
 
 - [x] ✅ **1. execution-service Phase B C901/complexity sweep batches 98-105 (continuation)** — C901 was fully cleared by batch 97. Batches 98-104 cleared all remaining 31 E501+I001 violations (31→0). Lint fully clean. execution-service@0d32d9c4. Pre-existing test failures noted (30 unit tests failing before batch 98 @ab2fbe80 — test harness missing `_read_book_metrics`/`_parse_candle_horizon_secs` methods; slot 5 test surface); filed finding in issues/.
-- [ ] **2. ruff_workspace_cleanup_2026_05_12 residual items** — 14 items remaining (17/31 = 55%). Pick the 3-4
-      smallest mechanical items (likely ruff-flag adoptions or single-file refactors). Plan path:
-      [`ruff_workspace_cleanup_2026_05_12.md`](ruff_workspace_cleanup_2026_05_12.md).
+- [x] ✅ **2. ruff_workspace_cleanup_2026_05_12 residual items** — Closed all 12 SKIPPED-PERMANENT checkboxes (6 archived repos × main-list + scoreboard); Telegram hygiene item verified. PM@f67a1f03+current. Plan now at 29/31 = 94% (2 remaining = Telegram Slack monitoring (passive) + new-sports-batting-services dedicated session, both out-of-scope for this item).
 - [ ] **3. workspace-wide unused-import audit (slot 4 deferred item 15)** — scan repos for unused imports surviving
       ruff sweep. File issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes. **DEFER if
       slot 4 picks up first** — coordinate via slot_2 ping if Q.

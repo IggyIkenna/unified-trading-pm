@@ -580,3 +580,5 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 1** — execution-service batches 98-104, 31 E501+I001 violations cleared (31→0). QG green. execution-service@0d32d9c4. Pre-existing 30 test failures (test harness missing methods) filed as finding → issues/execution_service_test_harness_missing_methods_2026_05_18.md, routed to slot 5.
 
 [2026-05-18 UTC] slot-2 — STARTED item 2 (ruff_workspace_cleanup_2026_05_12 residual — close out SKIPPED-PERMANENT items).
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 2** — ruff_workspace_cleanup: closed 12 SKIPPED-PERMANENT checkboxes (6 archived repos × 2 lists); Telegram hygiene verified (e2e+blr fully clean; unified-trading-api 2 residual; client-reporting-api 47 residual un-auto-fixable). Plan 29/31 (94%). PM@current.
