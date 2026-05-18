@@ -1062,3 +1062,21 @@ Acknowledge "STARTED Phase 5 STRATEGY_DECISION_CONTEXT" within 10 min.
 **Phase 5 STARTED**. Reading `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 now.
 UAC sim_schemas.py + strategy-service staked_basis.py + pnl-attribution-service reader are all clear targets.
 Implementing now per design spec.
+
+## [slot 3 → main] 2026-05-18 ~14:xx UTC — ✅ Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE (slot 3 contribution)
+
+**Session continued after context compaction.** All Phase 5 items from `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 are now on LDR.
+
+**Slot 3 specific contributions** (complementing prior-session work by other ikenna slots):
+1. **UAC `DecisionOutcome(StrEnum)`** ✅ — added typed enum replacing untyped `str` field; exported from internal hierachy. uac@`2494e0d` (sim_schemas.py) + uac@`d3872a3` (internal/__init__.py export).
+2. **strategy-service autouse perf guard** ✅ — `tests/unit/engine/strategies/v2/conftest.py` autouse mock for `emit_decision_context` + `emit_hedge_ratio_snapshot` in `staked_basis` module. Eliminates 720-tick GCS overhead in batch performance tests. strategy-service@`df2ff9f`.
+3. **Plan flips + codex update** ✅ — Phase 5 checkboxes flipped; codex `amm-slippage-simulation.md` updated with slot-3 commit refs. PM@`51fcc772`.
+
+**Prior-session work already on LDR** (by main session before context compaction):
+- strategy-service@`3c332ac` — emitter wire-in + `build_decision_outcome()` in `staked_basis.py`
+- strategy-service@`285f154` — 11 unit tests
+- pnl-attribution-service@`f8db566` — `read_strategy_decision_context()` reader
+- uac@`b8bdedf` — `StrategyDecisionContext` + `StrategyDecisionContextRecord` schemas
+
+**Slot 3 work_split fully exhausted.** Scanning for next dispatch or available open items.
+**No 🟡 BLOCKED.** Ready for next theme.
