@@ -1734,9 +1734,15 @@ For each writer service in the order MTDS / MDPS / instruments-service / feature
 For each downstream service, audit the read-path code against the codex SSOT § "Per-service consumer-class audit" table
 and fix any drift. The audit produces a yes/no answer per (consumer-class × reason) pair:
 
-- [ ] [AUDIT] P0. **execution-service**: every reading callsite (live trade emission + signal-broadcast) consults
+- [x] [AUDIT] P0. **execution-service**: every reading callsite (live trade emission + signal-broadcast) consults
       manifest reason and skips trade for `EXPECTED_*` reasons; alerts + skips for `attempted_failed`. No "trade anyway,
       NaN-fill the price" patterns.
+      ✅ Audit complete (slot 5, 2026-05-18): execution-service uses blob-existence checks (DependencyChecker) rather than
+      direct manifest capture_status/error_reason reads — consistent with Phase 3.D.2 finding. validate_can_run raises
+      DependencyError on missing required deps (no NaN-fill path); optional deps do not block. EXPECTED_* vs
+      attempted_failed distinction is presence/absence of blob (both absent → DependencyError → no trade). 4 audit tests
+      added in TestWritegateConsumerClassAudit: missing-required→DependencyError; strategy-absent blocks CeFi;
+      optional-absent does not block; all-required → executes. execution-service@1135de1d.
 - [ ] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
       discount.
@@ -1927,11 +1933,13 @@ The retrospective backfill is potentially several million row writes per asset_g
 weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeFi has ~few thousand chain-pre- genesis
 rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run `--apply-flips`:
 
-- [ ] [DOCS] P0. Document the per-asset-group expected backfill volume in
+- [x] [DOCS] P0. Document the per-asset-group expected backfill volume in
       `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
       volume, then `--apply-flips` per asset_group sequentially.
-- [ ] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
+      ✅ File shipped 2026-05-07 with full per-asset-group volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901 rows). PM@codex-update-slot5.
+- [x] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
       helper.
+      ✅ Updated stale "(planned)" reference at honest-absence-downstream-handling.md § "Cross-references for the reason taxonomy" to "shipped 2026-05-07" + proper links to reconciler script, enumerator script, and classify_legacy_empty_row(). PM@codex-update-slot5.
 
 QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback unit-tested;
 per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.

@@ -220,7 +220,7 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 **Cross-references for the reason taxonomy**:
 - § [Reader-side fallback for legacy rows](#reader-side-fallback-for-legacy-rows-codified-2026-05-07--operator-gap-finding) — how consumers handle `error_reason=None` in rows written before Phase 2.E.1
 - § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
-- Prospective per-asset-group backfill runbook: `codex/02-data/expected-absence-backfill-runbook.md` *(planned — see writegate Phase 3.D.5 for volume estimates per asset_group)*
+- Per-asset-group backfill runbook (shipped 2026-05-07): [`codex/02-data/expected-absence-backfill-runbook.md`](./expected-absence-backfill-runbook.md) — volumes per asset_group, invocation recipe, reconciler + enumerator scripts (`instruments-service/scripts/reconcile_expected_absence_reasons.py` + `enumerate_expected_universe.py`), UTL reader-side fallback `classify_legacy_empty_row()`
 
 ---
 
