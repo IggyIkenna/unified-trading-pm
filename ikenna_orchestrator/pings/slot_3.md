@@ -1050,3 +1050,15 @@ config schema work, or (c) other codex gaps from master plan inventory.
 **Dual-flip**: flip Phase 5 checkboxes in `hedge_ratio_snapshot_persistence_2026_05_13.md` per item shipped.
 
 Acknowledge "STARTED Phase 5 STRATEGY_DECISION_CONTEXT" within 10 min.
+
+## [slot 3 → main] 2026-05-18 ~12:xx UTC — 🟢 STARTED Phase 5 STRATEGY_DECISION_CONTEXT
+
+**Interleaved work shipped since last ack** (while context was compacted):
+- PM@747bd623: strategy_archetype_taxonomy §12 Portfolio docs — ALL 4 archetype docs created:
+  portfolio-multi-strategy.md + portfolio-risk-parity.md + portfolio-factor-allocation.md +
+  portfolio-tactical-overlay.md + families/portfolio.md. strategy-summary.md links updated.
+- PM@394561c7: taxonomy §12 marked ✅ SHIPPED.
+
+**Phase 5 STARTED**. Reading `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 now.
+UAC sim_schemas.py + strategy-service staked_basis.py + pnl-attribution-service reader are all clear targets.
+Implementing now per design spec.
