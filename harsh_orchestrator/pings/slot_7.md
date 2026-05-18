@@ -566,3 +566,25 @@ QG green on both repos. Ready for next queue.
   1. `cd .tabs/7/unified-trading-pm && git status` — verify the 2 files dirty.
   2. `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg && git commit -m "chore(manifest): set deployment-service ci_status=LOCAL_PASS + regen DAG (slot 7)"`
   3. Continue deep-sustain queue. Tab worktree is otherwise clean across deployment-api / deployment-ui / deployment-service.
+
+[2026-05-18 UTC] slot-7 — 🟢 **ACTIVE — deep-sustain queue progress**. SOLE OWNER: deployment-api + deployment-ui. DO NOT TOUCH these repos from other slots.
+
+**SHIPPED TODAY (2026-05-18):**
+- S5 ✅ deployment-api@71ba947 — Firebase auth RBAC guard on 4 launch endpoints + 8 tests
+- S6 ✅ deployment-api@e1fa23d — OpenAPI spec 170 paths/181 endpoints generated
+- S7 ✅ deployment-ui@c8cab31 — WCAG AA axe audit: 7 pages 0 critical violations, 13 fixes
+- S8 ✅ deployment-api@5f3b3f1 — per-endpoint rate limiting (6 endpoints, 8 unit tests)
+- S9 ✅ deployment-service@0f16556 — VM zombie watchdog test hardening (19 new tests)
+- S10 ✅ deployment-ui@6d3d082 — dashboard widget cross-check (8 widgets audited, 6 fixes)
+- S11 ✅ deployment-ui@0ee228f — dark-mode audit (8 components migrated to CSS vars)
+
+**IN PROGRESS / NEXT:**
+- S12: deployment-api audit-log emission coverage (sensitive endpoints — treasury, key rotation, RBAC changes). Not started. Will touch deployment-api/ only.
+- S13: deployment-ui mobile-responsive smoketest extension (playwright viewports). Will touch deployment-ui/ tests/ only.
+- S14: deployment-api error response standardization. deployment-api/ only.
+- S15: i18n readiness audit. deployment-ui/ only.
+
+**FILES I OWN (do not touch from other slots):**
+- `/home/hk/unified-trading-system-repos/.tabs/7/deployment-api/` (all files)
+- `/home/hk/unified-trading-system-repos/.tabs/7/deployment-ui/` (all files)
+- `/home/hk/unified-trading-system-repos/.tabs/7/deployment-service/tests/unit/test_vm_zombie_watchdog.py` (surgical — done)
