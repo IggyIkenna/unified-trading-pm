@@ -228,9 +228,9 @@ smoke begins.
       Canonical base `["E","F","W","I"]`. 3 repos drift: batch-live-reconciliation (missing W), deployment-service
       (missing W), e2e-testing (empty) — all outside slot-2 scope. All in-scope repos have base rules. Done-def:
       in-scope repos canonical ✅; 3 out-of-scope drifts documented for respective owning slots.
-- [ ] **S20. SUSTAIN — cross-repo `setup.sh` consistency audit** [workspace audit] — verify every repo has
-      `scripts/setup.sh` from PM SSOT template (idempotent, no interactive). Done-def: per-repo setup.sh exists +
-      matches canonical. **~3 cal-days**.
+- [x] ✅ **S20. SUSTAIN — cross-repo `setup.sh` consistency audit** [workspace audit] — All 26 repos have
+      `scripts/setup.sh`. md5 comparison vs PM canonical: 0 drift across all repos. Workspace already canonical.
+      Done-def: all repos have setup.sh + match canonical ✅.
 
 #### Coordination
 
