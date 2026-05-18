@@ -168,9 +168,10 @@ smoke begins.
 - [x] ✅ **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
       schema-drift, very-large (memory pressure). Done-def: 4+ edge-case tests + batch-live-reconciliation QG green.
       — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s
-- [ ] **4. workspace-wide unused-import audit (slot 4 item 15)** — scan repos for unused imports surviving ruff
-      sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes. **COORDINATE with slot 2
-      item 3 — whichever slot starts first owns it; the other slot skips and picks reserve.**
+- [x] ~~**4. workspace-wide unused-import audit (slot 4 item 15)**~~ — **SKIPPED** (slot 2 item 3 claimed first;
+      slot 2 shipped 6 fixes @ deployment-service@16082f9 + pbm@3346220). Slot 4 filed supplemental issue doc:
+      `plans/active/issues/unused_import_audit_2026_05_18.md` (11 remaining violations in repos with
+      pre-existing QG failures; P3 priority, routed to owning slots). → Picking up reserve queue.
 
 #### Reserve queue
 
