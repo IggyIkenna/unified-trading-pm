@@ -28,6 +28,32 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 24 complete; cumulative 84 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 24)
+
+1 entry cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Net allowlist 29 → 28 entries (concurrent clears from other slots also merged in during rebase).
+
+| File | Methods cleared | Helpers extracted |
+|------|-----------------|--------------------|
+| `services/instruction_alpha_calculator.py` | `calculate_instruction_alpha` 192L→49L; `get_summary` 141L→29L | 6 module-level: `_parse_instruction_timestamp`, `_parse_fill_price_and_quantity`, `_make_heartbeat_skip`, `_build_alpha_result`, `_fail_price_sanity`, `_accumulate_alpha_by_type`, `_accumulate_alpha_by_bundle`; 1 instance: `_compute_and_record_alpha` |
+
+- execution-service Half-1: `7e1a25ddd` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **84 files cleared**, allowlist now **28**
+
+### Remaining allowlist (28 entries) — top batch-25 candidates
+
+- `data/checker.py`: `check_gcs_file_exists` 212L, `check_data_availability` 106L
+- `data/validator.py`: `validate_gcs_trades_availability` 231L, `validate_time_window_in_files` 92L
+- `data/orderbook_converter.py`: `convert_orderbook_parquet_to_catalog` 195L, `_build_snapshot_deltas` 158L
+- `results/extractor.py`: `extract_summary` 216L, `extract_returns_from_positions` 194L
+- `engine/routing/instruction_router.py` — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 23 complete; cumulative 83 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing

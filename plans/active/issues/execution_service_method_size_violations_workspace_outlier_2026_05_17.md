@@ -1111,6 +1111,16 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-23**: 83 files cleared (allowlist now 31).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 24 — services/instruction_alpha_calculator)**: shipped at
+  execution-service@7e1a25ddd. calculate_instruction_alpha 192L→49L via 6 module-level helpers:
+  \_parse_instruction_timestamp, \_parse_fill_price_and_quantity, \_make_heartbeat_skip,
+  \_build_alpha_result, \_fail_price_sanity + instance method \_compute_and_record_alpha.
+  get_summary 141L→29L via \_accumulate_alpha_by_type + \_accumulate_alpha_by_bundle (both
+  module-level). Removes services/instruction_alpha_calculator.py from allowlist.
+  Net allowlist 29→28 (concurrent slot-5 clears merged in during rebase). AST clean.
+
+  **Slot-4 cumulative across batches 1-24**: 84 files cleared (allowlist now 28).
+
   **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
   execution-service@56865ab83. loader_base.py: **init** 86L→~30L via \_resolve_bucket_and_domain + \_init_fuse_behavior;
   \_infer_category 83L→10L via 5 domain-specific staticmethod helpers. loader_transforms.py: \_infer_category 83L→10L
