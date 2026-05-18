@@ -168,9 +168,10 @@ smoke begins.
       execution-service@73cb74f0 (60 fixes), instruments-service@28e1286 (2), features-service@9d3137f2 (1),
       UTL@c0a2095 (5), deployment-service@43dea99 (4), UAC@5ff27df (5). 0 violations workspace-wide in source. QG
       clean on changed files. Done-def met.
-- [ ] **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** [workspace audit] — each `# type: ignore` should
-      have a comment explaining WHY. Identify orphans + add justifications, OR fix root cause (preferred). Done-def:
-      per-repo `# type: ignore` justification rate ≥95% OR violation removed. **~8 cal-days**.
+- [x] ✅ **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** [workspace audit] — 453 justifications added
+      across 8 repos: execution-service@4c0b6c3f (168), features-service@319eb813 (119), UTL@466a124 (118),
+      deployment-service@d4883b7 (39), UAC@c37b3c9 (16), instruments-service@11ceaa5 (8), alerting-service@fc5e972 (1),
+      risk-and-exposure-service@42a2bba (1). 100% justified in all repos — 0 unjustified remain. Done-def met.
 - [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** [workspace test cleanup] — conftest.py fixtures never referenced
       — identify + remove. Done-def: per-repo 0 unused fixtures (`pytest --collect-only` + grep cross-check). **~5
       cal-days**.
