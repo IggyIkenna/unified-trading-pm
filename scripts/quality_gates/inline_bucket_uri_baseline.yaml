@@ -22,11 +22,11 @@ repos:
   alerting-service:
     count: 0
   batch-live-reconciliation-service:
-    count: 7
+    count: 0
   client-reporting-api:
     count: 0
   deployment-api:
-    count: 27
+    count: 0
   deployment-service:
     count: 0
   deployment-ui:
@@ -34,9 +34,9 @@ repos:
   e2e-testing:
     count: 0
   execution-service:
-    count: 33
+    count: 0
   features-service:
-    count: 2
+    count: 0
   fund-administration-service:
     count: 0
   ibkr-gateway-infra:
@@ -64,12 +64,12 @@ repos:
   trading-agent-service:
     count: 0
   unified-api-contracts:
-    count: 5
+    count: 0
   unified-trading-api:
     count: 0
   unified-trading-library:
-    count: 23
+    count: 0
   unified-trading-pm:
     count: 0
   unified-trading-system-ui:
-    count: 4
+    count: 0
