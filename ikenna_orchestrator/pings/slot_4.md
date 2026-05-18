@@ -28,6 +28,34 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 18 complete; cumulative 69 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 18)
+
+2 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 51 → 49 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `algorithms/impl/adaptive_twap.py` | `on_order` 88L→40L | `_init_parent_state` @instance 39L — price history init + parent state store + return (n_slices, start_time) |
+| `engine/backtest/actors/signal_driven_v3_utils.py` | `calculate_exec_params` 89L — cleared by parallel slot `6f544699d` | `_calc_dynamic_horizon` + `_calc_sce_exec_params`; duplicate work discarded, allowlist removal shipped in my commit |
+
+- execution-service Half-1: `7bd19a1bf` (ldr)
+- unified-trading-pm Half-2: in progress (this commit)
+- Cumulative slot-4 total: **69 files cleared**, allowlist now **49**
+
+### Remaining allowlist (49 entries) — top batch-19 candidates
+
+1-violation files:
+- `defi_execution/protocols/drift.py`: `place_order` ~104L
+- `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
+- `engine/routing/instruction_router.py`: ~130L violation
+- `results/report_timeline_extractor.py`: ~132L violation
+- `algo_library/dust_router_runner.py`: ~137L violation
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 17 complete; cumulative 67 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing

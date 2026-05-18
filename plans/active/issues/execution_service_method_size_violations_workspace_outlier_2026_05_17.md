@@ -1042,6 +1042,14 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-17**: 67 files cleared (allowlist now 51).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 18 — adaptive_twap + signal_driven_v3_utils)**: 2 entries cleared at
+  execution-service@7bd19a1bf. adaptive_twap.py: on_order 88L→40L via _init_parent_state @instance 39L (init
+  price history, store parent state, return n_slices + start_time; resolves parallel-slot merge). signal_driven_v3_utils.py:
+  calculate_exec_params 89L cleared by parallel slot 6f544699d via _calc_dynamic_horizon + _calc_sce_exec_params
+  (my duplicate work discarded; allowlist removal shipped together). Allowlist 51→49. AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-18**: 69 files cleared (allowlist now 49).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
