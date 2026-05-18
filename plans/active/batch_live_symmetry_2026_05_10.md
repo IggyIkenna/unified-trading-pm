@@ -36,11 +36,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Batch=Live design symmetry — 8-tab execution plan
 
@@ -161,20 +159,14 @@ banners.
       pending). (PM@HEAD)
 - [x] [AGENT] P1. **UPDATE** `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
       timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
-- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section.
-      DONE 2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
-      cross-refs, successor pointer to tradfi_master_2026_05_07.md). Cross-link from
-      cefi-batch-live.md remains symmetric.
-- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section.
-      DONE 2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues,
-      canonical_question_group axis cross-link, prediction-specific empty reasons
-      (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS / SOURCE_RETURNED_ZERO), successor pointer to
-      predictions_master_2026_05_07.md.
-- [x] [DOC] P2. **RESIDUALS sweep** `codex/06-coding-standards/quality-gates.md` STEP L1/L2/L3 stale-status
-      cleanup. Tab 3 shipped STEPs 5.75/5.77/5.78 on 2026-05-14 but doc showed "FIX-REQUIRED" + "pending wire-in".
-      Updated: L1 DAY-1 ENABLE → ENABLED (5.75); L2 FIX-REQUIRED ~21 → ENABLED (5.77, 0 violations); L3 FIX-REQUIRED
-      2 → ENABLED partial (5.78; UAC/UTL clean; UI deliberate-copy DEFERRED). Table anchor refs also updated.
-      DONE 2026-05-18: PM@f8c6fcab.
+- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section. DONE
+      2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
+      cross-refs, successor pointer to tradfi_master_2026_05_07.md). Cross-link from cefi-batch-live.md remains
+      symmetric.
+- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section. DONE
+      2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues, canonical_question_group
+      axis cross-link, prediction-specific empty reasons (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS /
+      SOURCE_RETURNED_ZERO), successor pointer to predictions_master_2026_05_07.md.
 
 ### Spawn prompt
 
@@ -507,15 +499,6 @@ progress + manifest read fallback chain still green for legacy consumers.
 **Estimated**: ~1 calendar day active + ongoing 7-day soak calibration. **Cross-plan**: 3 banners —
 `master_to_live_defi` 🔴 BLOCK F18 · `manifest_schema_final_gate` RE-VERIFY · `live_pipeline_mtds_mdps_features`
 BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 manifest schema stable.
-
-### Shipped test coverage (pre-reconciler-ship)
-
-- [x] [TEST] P1. **`reconcile_shard` edge-case test coverage** — 4 test classes / 16 tests covering: empty shard
-      (both-empty=MATCH; batch-empty-live-nonempty=ROW_COUNT_MISMATCH); single-row (identical=MATCH, within-tolerance,
-      outside-tolerance=VALUE_MISMATCH); schema-drift (different keys=SCHEMA_MISMATCH, extra column); very-large shard
-      (10k rows identical=MATCH; one mismatch=VALUE_MISMATCH; custom comparator). basedpyright clean (invariant-dict
-      fix: `_RowDict = dict[str, object]`). (evidence: batch-live-reconciliation-service@a214cd1 2026-05-18; QG ✅ 67s.
-      **BACKFILLED** from slot-4 work-split item 14 — plan-of-record flip per CLAUDE.md Half-2 rule.)
 
 ### Todos
 

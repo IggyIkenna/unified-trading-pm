@@ -71,16 +71,16 @@ execution:
 
 **✅ RESOLVED** — Helius RPC integration fully shipped:
 
-1. **API key vaulted** 2026-05-15 by operator at `helius-api-key` (GCP Secret Manager, central-element-323112,
-   MTDS SA granted `roles/secretmanager.secretAccessor`). Reference: PM@`23a4d1d0`.
+1. **API key vaulted** 2026-05-15 by operator at `helius-api-key` (GCP Secret Manager, central-element-323112, MTDS SA
+   granted `roles/secretmanager.secretAccessor`). Reference: PM@`23a4d1d0`.
 
-2. **MTDS native_staking handler wired** at `market-tick-data-service@4cea371` (slot 2):
-   `_fetch_jito_mev_apy()` calls public Jito Kobe API; emits `total_apy = base_apy + mev_apy * (1 - commission_pct)`.
-   Tests: 5 unit + 1 `@pytest.mark.requires_credentials` live integration (17 pass, 1 skipped).
-   Live verification 2026-05-16: base=3.58% mev=0.12% total=3.69% for top validator at 7% commission.
+2. **MTDS native_staking handler wired** at `market-tick-data-service@4cea371` (slot 2): `_fetch_jito_mev_apy()` calls
+   public Jito Kobe API; emits `total_apy = base_apy + mev_apy * (1 - commission_pct)`. Tests: 5 unit + 1
+   `@pytest.mark.requires_credentials` live integration (17 pass, 1 skipped). Live verification 2026-05-16: base=3.58%
+   mev=0.12% total=3.69% for top validator at 7% commission.
 
-3. **execution-service capture_golden_swaps wired** at `execution-service@a300f7caa` (slot 7):
-   Helius Solana RPC wiring into capture_golden_swaps for CLMM+AMM.
+3. **execution-service capture_golden_swaps wired** at `execution-service@a300f7caa` (slot 7): Helius Solana RPC wiring
+   into capture_golden_swaps for CLMM+AMM.
 
 4. **slot 3 follow-on** at PM@`fb4a1135`: flipped slot 3 items 4/5/6/7 including Helius.
 

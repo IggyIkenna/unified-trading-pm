@@ -52,8 +52,8 @@ OK: workspace-manifest.json valid (schema + topological)
 OK: No broken links in plans/active/*.md
 ```
 
-The 2026-05-14 failure was a transient state from in-flight manifest/plan churn during the freeze-gate cycle.
-Subsequent slot 1 main + slot 8 commits (workspace-manifest refresh + plan-archival sweep + cross_asset_group audit
-phase shipments) brought the workspace back to OK. Issue closeable at next archive sweep.
+The 2026-05-14 failure was a transient state from in-flight manifest/plan churn during the freeze-gate cycle. Subsequent
+slot 1 main + slot 8 commits (workspace-manifest refresh + plan-archival sweep + cross_asset_group audit phase
+shipments) brought the workspace back to OK. Issue closeable at next archive sweep.
 
 Cross-link: PM workspace-validators clean as of `unified-trading-pm@HEAD` 2026-05-16 20:08 UTC.

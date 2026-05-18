@@ -37,9 +37,7 @@ _SUCCESSOR_RE = re.compile(
     r"MIGRATED TO:|successor:|→\s+plans/active/|See:\s+plans/active/|see\s+plans/active/",
     re.IGNORECASE,
 )
-_ARCHIVE_OK_TOKENS_RE = re.compile(
-    r"\bpost.cutover\b|\bout of scope\b|\bDEFERRED\b", re.IGNORECASE
-)
+_ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b|\bDEFERRED\b", re.IGNORECASE)
 _ACTIVE_FNAME_RE = re.compile(r"^[a-z0-9_]+(_\d{4}_\d{2}_\d{2})?\.md$")
 _ISSUE_FNAME_RE = re.compile(r"^[a-z0-9_]+_\d{4}_\d{2}_\d{2}\.md$")
 

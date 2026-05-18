@@ -147,11 +147,10 @@ This is the only phase that requires a wholly new data_type.
       DEFI_STAKING_NATIVE_STAKING_RATES with epoch/validator_vote_account/commission_pct/base_apy/ mev_apy/total_apy
       columns registered)
 - [x] [instruments-service] P1. Create `adapters/defi/solana_native_staking.py`: - Sources: Solana RPC
-      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key —
-      ✅ UNBLOCKED 2026-05-15 `helius-api-key` vaulted; MTDS@4cea371 + MTDS@348c171 wired). - Data type:
-      `native_staking_rates` per epoch (daily-ish, ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet
-      genesis). - Unit tests: 8 tests pass. (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring +
-      8 unit tests)
+      `getInflationRate` + `getEpochInfo` (no API key); Helius APY endpoint (requires Helius API key — ✅ UNBLOCKED
+      2026-05-15 `helius-api-key` vaulted; MTDS@4cea371 + MTDS@348c171 wired). - Data type: `native_staking_rates` per
+      epoch (daily-ish, ~2.5 day granularity). - Backfill start: 2020-03-16 (Solana mainnet genesis). - Unit tests: 8
+      tests pass. (instruments-service@9d7cfc7 — SolanaNativeStakingAdapter + factory wiring + 8 unit tests)
 - [x] [MTDS] P1. Add `native_staking_handler.py` (or extend existing Solana handler) for `native_staking_rates`
       data_type. Follow writegate Phase 6 emission policy. (MTDS@1ec3a46 — NativeStakingHandler + \_epoch_for_date +
       \_schedule_rate + \_fetch_live_rates; live RPC for current epoch, deterministic inflation schedule for historical;
@@ -174,10 +173,10 @@ MTDS handler writes 1 row per epoch per validator to manifest.
 > to `ikenna_orchestrator/pings/slot_3.md` and HOLD until `[ack]`.
 
 - [x] [deployment-service] P0. Verify JITO-SOLANA adapter is functional against current Jito API endpoint. **DONE
-      2026-05-15 (slot-3)**: `curl https://kobe.mainnet.jito.network/api/v1/stake_pool_stats` → returns valid JSON
-      with aggregated_mev_rewards, tvl, apy (~5.7%), num_validators=754. Endpoint live.
-- [x] [deployment-service] P0. Verify MARINADE-SOLANA adapter is functional against current Marinade API endpoint. **DONE
-      2026-05-15 (slot-3)**: `curl https://api.marinade.finance/msol/apy/30d` → returns
+      2026-05-15 (slot-3)**: `curl https://kobe.mainnet.jito.network/api/v1/stake_pool_stats` → returns valid JSON with
+      aggregated_mev_rewards, tvl, apy (~5.7%), num_validators=754. Endpoint live.
+- [x] [deployment-service] P0. Verify MARINADE-SOLANA adapter is functional against current Marinade API endpoint.
+      **DONE 2026-05-15 (slot-3)**: `curl https://api.marinade.finance/msol/apy/30d` → returns
       `{"value":0.0638..., "end_price":1.3806}`. Endpoint live. APY=6.39%.
 - [x] ✅ [deployment-service] P0. **[BLOCKED-CREDENTIALS — pinging operator]** Add VM launchers: - `jito-solana-backfill` —
       JITO-SOLANA `lst_rates` from 2022-08-01 → 2026-05-14. - `marinade-backfill` — MARINADE-SOLANA `lst_rates` from

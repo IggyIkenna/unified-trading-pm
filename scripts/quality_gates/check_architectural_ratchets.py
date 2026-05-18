@@ -151,9 +151,7 @@ def _write_baseline(baseline_path: Path, violations: list[RatchetViolation]) -> 
         "violation_count": len(violations),
         "rule": "architectural-ratchets",
         "source": "governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C",
-        "baseline_files": [
-            {"rule": v.rule_name, "path": str(v.path), "detail": v.detail} for v in violations
-        ],
+        "baseline_files": [{"rule": v.rule_name, "path": str(v.path), "detail": v.detail} for v in violations],
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
@@ -196,10 +194,7 @@ def main() -> int:
             if v is not None:
                 all_violations.append(v)
 
-    print(
-        f"Ran {len(ratchets)} ratchet(s) across {files_scanned} target file(s); "
-        f"{len(all_violations)} violation(s)."
-    )
+    print(f"Ran {len(ratchets)} ratchet(s) across {files_scanned} target file(s); {len(all_violations)} violation(s).")
 
     if baseline_write:
         _write_baseline(baseline_path, all_violations)

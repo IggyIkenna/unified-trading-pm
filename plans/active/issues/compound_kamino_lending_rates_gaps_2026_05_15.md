@@ -47,8 +47,8 @@ missing: lst_yields for staking_venue='jito' AND lending_rates for lending_venue
 
 Two blockers compound here:
 
-- Solana LST (JitoSOL) only has ~monthly cadence in lst-rates bucket (separate gap; Helius BLOCKED-CREDENTIALS
-  ✅ UNBLOCKED 2026-05-15 — `helius-api-key` vaulted; MTDS@4cea371 wired Jito MEV APY; jitoSOL daily APR cadence now
+- Solana LST (JitoSOL) only has ~monthly cadence in lst-rates bucket (separate gap; Helius BLOCKED-CREDENTIALS ✅
+  UNBLOCKED 2026-05-15 — `helius-api-key` vaulted; MTDS@4cea371 wired Jito MEV APY; jitoSOL daily APR cadence now
   implementable)
 - KAMINO lending handler not implemented
 

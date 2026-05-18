@@ -48,7 +48,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Global SSOT: shard dimension `category` → `asset_group`
 
 ## Why this plan exists

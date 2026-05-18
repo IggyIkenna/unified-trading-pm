@@ -10,7 +10,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 ---
 
 name: Consolidated Remaining Work overview: | Single source of truth for all remaining todos. Last updated: 2026-02-28.

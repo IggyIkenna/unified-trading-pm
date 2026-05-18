@@ -4,7 +4,9 @@ last_reviewed: 2026-05-17
 execution:
   owner: "credential-ops (operator) + per-class secondary owner declared in body"
   cadence: "per-class (see body table — typically 90d/30d/event-driven)"
-  verifier: "gh secret list --repo IggyIkenna/<repo> + Secret Manager versions API (verify latest enabled version date within cadence)"
+  verifier:
+    "gh secret list --repo IggyIkenna/<repo> + Secret Manager versions API (verify latest enabled version date within
+    cadence)"
   last_executed: "see per-class rotation log appended in body"
 ---
 

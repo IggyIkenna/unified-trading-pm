@@ -104,11 +104,7 @@ def _bucket_stats(uri: str) -> BucketStats:
             check=False,
         )
         # Strip empty lines + directory-marker lines (end with /)
-        count = sum(
-            1
-            for line in result2.stdout.splitlines()
-            if line.strip() and not line.strip().endswith("/")
-        )
+        count = sum(1 for line in result2.stdout.splitlines() if line.strip() and not line.strip().endswith("/"))
         return BucketStats(uri=uri, object_count=count, total_bytes=total_bytes)
     if _is_s3(uri):
         result = subprocess.run(
@@ -152,11 +148,7 @@ def _list_parquet_objects(uri: str, limit: int = 5000) -> list[str]:
         )
     else:
         return []
-    parquets = [
-        line.strip()
-        for line in result.stdout.splitlines()
-        if line.strip().endswith(".parquet")
-    ]
+    parquets = [line.strip() for line in result.stdout.splitlines() if line.strip().endswith(".parquet")]
     return parquets[:limit]
 
 
@@ -181,11 +173,17 @@ def _object_size(uri: str) -> int:
         key = "/".join(uri.split("/")[3:])
         result = subprocess.run(
             [
-                "aws", "s3api", "head-object",
-                "--bucket", bucket,
-                "--key", key,
-                "--query", "ContentLength",
-                "--output", "text",
+                "aws",
+                "s3api",
+                "head-object",
+                "--bucket",
+                bucket,
+                "--key",
+                key,
+                "--query",
+                "ContentLength",
+                "--output",
+                "text",
             ],
             capture_output=True,
             text=True,
@@ -201,9 +199,7 @@ def _object_size(uri: str) -> int:
     return -1
 
 
-def _sample_parquet_parity(
-    source_uri: str, dest_uri: str, sample_n: int, seed: int
-) -> tuple[int, int]:
+def _sample_parquet_parity(source_uri: str, dest_uri: str, sample_n: int, seed: int) -> tuple[int, int]:
     """Return (sample_count, sample_match) for random parquet round-trip check.
 
     For each sampled source parquet, locate the same-relative-path dest parquet
@@ -227,9 +223,7 @@ def _sample_parquet_parity(
     return (len(sample), matches)
 
 
-def _compute_drift(
-    source: BucketStats, dest: BucketStats, sample_count: int, sample_match: int
-) -> DriftReport:
+def _compute_drift(source: BucketStats, dest: BucketStats, sample_count: int, sample_match: int) -> DriftReport:
     def _rel(a: int, b: int) -> float:
         if a == 0:
             return 0.0 if b == 0 else 1.0
@@ -246,9 +240,7 @@ def _compute_drift(
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Verify drift between flat-source and env-tiered-dest bucket pair."
-    )
+    parser = argparse.ArgumentParser(description="Verify drift between flat-source and env-tiered-dest bucket pair.")
     parser.add_argument("--source", required=True, help="gs://... or s3://... flat source bucket URI")
     parser.add_argument("--dest", required=True, help="gs://... or s3://... env-tiered dest bucket URI")
     parser.add_argument(
@@ -334,9 +326,7 @@ def main() -> int:
         )
         return 1
 
-    print(
-        f"\n✅ Drift ≤ {max_drift:.4%} AND sample match ≥ {min_sample_match:.2%} — Wave verify PASS."
-    )
+    print(f"\n✅ Drift ≤ {max_drift:.4%} AND sample match ≥ {min_sample_match:.2%} — Wave verify PASS.")
     return 0
 
 

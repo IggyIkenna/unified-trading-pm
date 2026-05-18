@@ -24,11 +24,11 @@ we can conclude that execution-service==0.1.1 cannot be used.
 ```
 
 **The bug**: execution-service's `pyproject.toml` declares:
+
 - `betfairlightweight>=2.20`
 - `requests>=2.33.0`
 
-But every non-yanked release of `betfairlightweight>=2.20` requires `requests<2.33.0`. So the
-intersection is empty.
+But every non-yanked release of `betfairlightweight>=2.20` requires `requests<2.33.0`. So the intersection is empty.
 
 ## Why it matters
 
@@ -56,19 +56,19 @@ System-integration-tests workspace-qg will keep failing at install. Slot owners 
 ## RESOLVED (validator side) — 2026-05-16 (slot 4 cross-slot pickup)
 
 **Diagnosis**: The conflict is BY DESIGN — workspace pins `requests>=2.33.0,<3.0.0` for CVE-2026-25645 floor;
-`betfairlightweight` declares transitive `requests<2.33.0` on PyPI for every release we'd use. This is a
-PyPI-metadata property, not a workspace bug. The institutional resolution is documented at
+`betfairlightweight` declares transitive `requests<2.33.0` on PyPI for every release we'd use. This is a PyPI-metadata
+property, not a workspace bug. The institutional resolution is documented at
 `.cursor/rules/dependencies/requests-betfairlightweight-workspace-resolution.mdc`:
 
 1. Keep `requests` at the workspace floor in `workspace-constraints.toml` (NO security regression).
-2. execution-service (sole consumer) declares `[tool.uv] override-dependencies = ["requests>=2.33.0,<3.0.0"]` —
-   already in place at `execution-service/pyproject.toml:19-22`.
+2. execution-service (sole consumer) declares `[tool.uv] override-dependencies = ["requests>=2.33.0,<3.0.0"]` — already
+   in place at `execution-service/pyproject.toml:19-22`.
 3. Global validator omits `betfairlightweight` from the flat compile graph.
 
 **Shipped 2026-05-16 at `unified-trading-pm@b2106766`**: implemented step 3 — the validator's
-`EXCLUDE_FROM_GLOBAL_COMPILE` frozenset was aspirational in the cursor rule but missing from the script. Added with
-the single-package entry (`betfairlightweight`) + inline docstring referencing the cursor rule. Validator now exits
-0 ("OK: Workspace constraints resolve").
+`EXCLUDE_FROM_GLOBAL_COMPILE` frozenset was aspirational in the cursor rule but missing from the script. Added with the
+single-package entry (`betfairlightweight`) + inline docstring referencing the cursor rule. Validator now exits 0 ("OK:
+Workspace constraints resolve").
 
 SIT's workspace-qg `uv sync` failure was a separate flavour of the same issue — SIT installs from
 `workspace-constraints.toml` directly and hit the same unsatisfiable. The validator fix doesn't affect SIT's uv sync;

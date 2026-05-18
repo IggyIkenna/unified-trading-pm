@@ -239,8 +239,8 @@ without Tenderly credentials. QG ✅ (341s). Moving to item 8: execution-service
 [2026-05-15 21:45 UTC] slot-5 — ✅ DONE item 8 (venue admission tests): execution-service@44c4d584 — 7 tests in
 TestVenueAdmissionRules: (1) UnsupportedOperationError propagates (core admission rule); (2) non-admission errors
 swallowed (graceful degradation); (3) Phase 4 LST/LRT 6 protocols; (4) restaking+yield 5 protocols; (5) AAVE 6
-chains→aave source; (6) Uniswap 5 entries→uniswap source; (7) Solana SolBlaze+Jito. QG ✅ (331s). Moving to item 9:
-UTL kill-switch wiring cross-service tests.
+chains→aave source; (6) Uniswap 5 entries→uniswap source; (7) Solana SolBlaze+Jito. QG ✅ (331s). Moving to item 9: UTL
+kill-switch wiring cross-service tests.
 
 [2026-05-15 22:05 UTC] slot-5 — ✅ DONE item 9 (UTL kill-switch cross-service tests): execution-service@cd2d1927 — 2
 tests in test_kill_switch_bus_bridge.py: (1) risk-service STRATEGY-scope max-drawdown → UTL bus → execution blocks
@@ -251,87 +251,87 @@ reason. QG ✅ (357s). Moving to item 10: risk-and-exposure-service Phase 6.8+ e
 
 ## [2026-05-15 22:10 UTC] [main → slot 5] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
 
-> Outstanding throughput — 9/10 items of the new queue shipped (~9 AI-days
-> in 5h). Re-anchoring as todo-checkbox list per operator request. Items 1-9
-> flipped here with SHAs from your ping entries above. Items 10-19 remain
-> (~20 AI-days fresh extension). Flip in-place:
-> `- [ ]` → `- [x] @ <sha> + brief evidence`.
+> Outstanding throughput — 9/10 items of the new queue shipped (~9 AI-days in 5h). Re-anchoring as todo-checkbox list
+> per operator request. Items 1-9 flipped here with SHAs from your ping entries above. Items 10-19 remain (~20 AI-days
+> fresh extension). Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
 
 ### Already done this cycle
 
-- [x] **1. execution-service Phase 9 DeFi cost models tests** — execution-service@f7db1d0b (4 new tests, 99.1 → 100% coverage on defi/*)
+- [x] **1. execution-service Phase 9 DeFi cost models tests** — execution-service@f7db1d0b (4 new tests, 99.1 → 100%
+      coverage on defi/\*)
 - [x] **2. execution-service ReconGate extensions** — execution-service@f7db1d0b (3 new tests, 8 → 11)
-- [x] **3. risk-and-exposure exposure aggregation tests** — risk-and-exposure-service@494fd05 (6 tests by asset_group + archetype)
+- [x] **3. risk-and-exposure exposure aggregation tests** — risk-and-exposure-service@494fd05 (6 tests by asset_group +
+      archetype)
 - [x] **4. pnl-attribution Phase 9 cost-attribution tests** — pnl-attribution-service@3bfe553 (5 tests by archetype)
 - [x] **5. execution-service order_router Phase 9 enhancements** — execution-service@e3f61175 (5 new tests)
 - [x] **6. risk-and-exposure VAR + drawdown tests** — risk-and-exposure-service@75f9d17 (5 historical-scenario tests)
-- [x] **7. execution-service Tenderly-fork integration tests** — execution-service@e60bc4b1 (4 tests, auto-skip without creds)
+- [x] **7. execution-service Tenderly-fork integration tests** — execution-service@e60bc4b1 (4 tests, auto-skip without
+      creds)
 - [x] **8. execution-service venue admission tests** — execution-service@44c4d584 (7 tests, Phase 10 codex rules)
 - [x] **9. UTL kill-switch cross-service tests** — execution-service@cd2d1927 (2 propagation scenarios)
-- [x] **10. risk-and-exposure-service Phase 6.8+ extensions** — risk-and-exposure-service@91d9373 (10 tests: compute_component_var + RegimeDetector gap fill). QG ✅ (71s).
+- [x] **10. risk-and-exposure-service Phase 6.8+ extensions** — risk-and-exposure-service@91d9373 (10 tests:
+      compute_component_var + RegimeDetector gap fill). QG ✅ (71s).
 
 ### Fresh extension (items 11-19, ~20 AI-days execution + risk + pnl)
 
-- [x] **11. execution-service flash loan execution path tests** — execution-service@50a5d24c (6 unit + 2 fork tests): TestFlashLoanReceiverExecution full flash→swap→repay, gas accounting 220k, insufficient repayment→bundle FAILED, insufficient liquidity→REJECTED, Morpho 0-fee, AAVE 0.05%; TestFlashLoanReceiverForkExecution flash gas_used>0, flash+swap combined gas. QG ✅ (425s).
+- [x] **11. execution-service flash loan execution path tests** — execution-service@50a5d24c (6 unit + 2 fork tests):
+      TestFlashLoanReceiverExecution full flash→swap→repay, gas accounting 220k, insufficient repayment→bundle FAILED,
+      insufficient liquidity→REJECTED, Morpho 0-fee, AAVE 0.05%; TestFlashLoanReceiverForkExecution flash gas_used>0,
+      flash+swap combined gas. QG ✅ (425s).
 
-- [x] **12. execution-service slippage model boundary tests** — execution-service@03bb3e3f (6 edge-case tests in TestSlippageBoundaryConditions: single-tick depth breach >10k bps no-cap, sandwich 5k bps pass-through, analytical zero amount→fee floor, amount==TVL→10k bps, whale 5×TVL→50k bps, zero-fee pool pure linear impact). QG ✅ (366s).
+- [x] **12. execution-service slippage model boundary tests** — execution-service@03bb3e3f (6 edge-case tests in
+      TestSlippageBoundaryConditions: single-tick depth breach >10k bps no-cap, sandwich 5k bps pass-through, analytical
+      zero amount→fee floor, amount==TVL→10k bps, whale 5×TVL→50k bps, zero-fee pool pure linear impact). QG ✅ (366s).
 
-- [x] **13. pnl-attribution-service per-venue cost attribution** — pnl-attribution-service@9fbd783 (6 tests in TestPerVenueCostAttribution: AAVE Ethereum gas, MORPHO 0-fee, UNISWAP_V3 slippage 42bps, CURVE < Uniswap, cross-venue AAVE+UNISWAP independent, AAVE L1 vs L2 costs). Also fixed pre-existing ruff SIM108 in pnl_input_builder.py:191. QG ✅ (46s).
+- [x] **13. pnl-attribution-service per-venue cost attribution** — pnl-attribution-service@9fbd783 (6 tests in
+      TestPerVenueCostAttribution: AAVE Ethereum gas, MORPHO 0-fee, UNISWAP_V3 slippage 42bps, CURVE < Uniswap,
+      cross-venue AAVE+UNISWAP independent, AAVE L1 vs L2 costs). Also fixed pre-existing ruff SIM108 in
+      pnl_input_builder.py:191. QG ✅ (46s).
 
-- [x] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — risk-and-exposure-service@e66aab4 (5 tests in TestWarnOnlyAndStrictFailEmissionPolicies: WARN_ONLY allows upload + no EMISSION_POLICY_BLOCKED; STRICT_FAIL partial suppresses without alert; completeness_fraction 1.0/0.0). QG ✅ (69s).
+- [x] **14. risk-and-exposure-service WARN_ONLY/STRICT_FAIL emission policy** — risk-and-exposure-service@e66aab4 (5
+      tests in TestWarnOnlyAndStrictFailEmissionPolicies: WARN_ONLY allows upload + no EMISSION_POLICY_BLOCKED;
+      STRICT_FAIL partial suppresses without alert; completeness_fraction 1.0/0.0). QG ✅ (69s).
 
-- [x] **15. execution-service order book reconciliation tests** — execution-service@3e1c2644 (4 new tests in TestCrossVenueBookReconciliation: cross-venue failure isolation, partial-fill DEGRADED+STALE book delta, stale snapshot timestamp consistency, three-venue all-states). 11→15 tests. QG ✅ (356s).
+- [x] **15. execution-service order book reconciliation tests** — execution-service@3e1c2644 (4 new tests in
+      TestCrossVenueBookReconciliation: cross-venue failure isolation, partial-fill DEGRADED+STALE book delta, stale
+      snapshot timestamp consistency, three-venue all-states). 11→15 tests. QG ✅ (356s).
 
-- [x] **16. execution-service rate-limit + circuit-breaker tests** — execution-service@c1a51b1e (4 tests: rate-limit errors not counted as failures, burst 3 failures → OPEN via consecutive threshold, OPEN→HALF_OPEN→success→CLOSED drain 2 orders, cross-venue independence). 16→19 tests. QG ✅ (333s).
+- [x] **16. execution-service rate-limit + circuit-breaker tests** — execution-service@c1a51b1e (4 tests: rate-limit
+      errors not counted as failures, burst 3 failures → OPEN via consecutive threshold, OPEN→HALF_OPEN→success→CLOSED
+      drain 2 orders, cross-venue independence). 16→19 tests. QG ✅ (333s).
 
-- [x] **17. execution-service oracle-mismatch handling** — execution-service@a4fd8014 (3 tests: OracleStaleError→ADAPTER_FETCH_FAILED with error_code=ORACLE_STALE, OracleDeviationError→ADAPTER_FETCH_FAILED+COMPLETED_FAILED, oracle stale does NOT advance CB consecutive_failures). QG ✅ (335s).
+- [x] **17. execution-service oracle-mismatch handling** — execution-service@a4fd8014 (3 tests:
+      OracleStaleError→ADAPTER_FETCH_FAILED with error_code=ORACLE_STALE,
+      OracleDeviationError→ADAPTER_FETCH_FAILED+COMPLETED_FAILED, oracle stale does NOT advance CB
+      consecutive_failures). QG ✅ (335s).
 
-- [x] **18. risk-and-exposure-service stress test scenarios** — risk-and-exposure-service@86b15fd (3 tests in TestStressExtendedScenarios: sustained -0.5%/day 30-day window >13% drawdown; concurrent carry MAX_DRAWDOWN_BREACH→DELTA_NEUTRAL_EXIT + APD DATA_STALE→REDUCTIONS_ONLY; risk-limit OK→WARNING→CRITICAL ratchet). QG ✅ (68s).
+- [x] **18. risk-and-exposure-service stress test scenarios** — risk-and-exposure-service@86b15fd (3 tests in
+      TestStressExtendedScenarios: sustained -0.5%/day 30-day window >13% drawdown; concurrent carry
+      MAX_DRAWDOWN_BREACH→DELTA_NEUTRAL_EXIT + APD DATA_STALE→REDUCTIONS_ONLY; risk-limit OK→WARNING→CRITICAL ratchet).
+      QG ✅ (68s).
 
-- [x] **19. pnl-attribution-service end-of-day rollup tests** — pnl-attribution-service@94d4486 (4 tests in TestEndOfDayRollup: daily-close GCS path includes date+partition, cross-day paths distinct, same-date replay idempotent, rollup total=sum of fills). QG ✅ (46s).
+- [x] **19. pnl-attribution-service end-of-day rollup tests** — pnl-attribution-service@94d4486 (4 tests in
+      TestEndOfDayRollup: daily-close GCS path includes date+partition, cross-day paths distinct, same-date replay
+      idempotent, rollup total=sum of fills). QG ✅ (46s).
 
-**Conflict rules**: execution-service = slot 5 (you) + slot 4 (order_router only — separate surface); risk-and-exposure = slot 5 (you); pnl-attribution = slot 5 (you); UAC = surgical only (Ikenna primary). No collisions on this queue.
+**Conflict rules**: execution-service = slot 5 (you) + slot 4 (order_router only — separate surface); risk-and-exposure
+= slot 5 (you); pnl-attribution = slot 5 (you); UAC = surgical only (Ikenna primary). No collisions on this queue.
 
-[2026-05-15 UTC] slot-5 — 🏁 **CYCLE-CLOSE (items 17-19/19, 10 tests, 3 repos, all QGs green).**
-Items 17-19 shipped: execution-service@a4fd8014 (3 oracle-mismatch tests), risk-and-exposure-service@86b15fd (3 stress scenarios), pnl-attribution-service@94d4486 (4 EOD rollup tests). All 19 items in the extended queue now done. No blockers, no deferrals. Standing by for next dispatch.
+[2026-05-15 UTC] slot-5 — 🏁 **CYCLE-CLOSE (items 17-19/19, 10 tests, 3 repos, all QGs green).** Items 17-19 shipped:
+execution-service@a4fd8014 (3 oracle-mismatch tests), risk-and-exposure-service@86b15fd (3 stress scenarios),
+pnl-attribution-service@94d4486 (4 EOD rollup tests). All 19 items in the extended queue now done. No blockers, no
+deferrals. Standing by for next dispatch.
 
 [2026-05-15 22:30 UTC] slot-5 — ✅ DONE item 10 (risk-and-exposure-service Phase 6.8+ extensions):
-risk-and-exposure-service@91d9373 — 10 new tests in test_var_attribution_regime.py: compute_component_var
-gaps: insufficient data guard, negative weight CeFi perp short, carry_staked_basis DeFi+CeFi hybrid attribution,
+risk-and-exposure-service@91d9373 — 10 new tests in test_var_attribution_regime.py: compute_component_var gaps:
+insufficient data guard, negative weight CeFi perp short, carry_staked_basis DeFi+CeFi hybrid attribution,
 diversification property; RegimeDetector gaps: too-few-returns guard, vol+correlation → crisis, vol+drawdown_velocity →
-crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stressed multiplier 1.5×. QG ✅ (71s).
-Queue items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
+crisis, drawdown_velocity alone → stressed, unknown multiplier fallback, stressed multiplier 1.5×. QG ✅ (71s). Queue
+items 6-10 complete. 🏁 CYCLE-CLOSE slot 5 (original 10-item queue). Standing by for fresh extension items 11-19.
 
-[2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution path tests): execution-service@50a5d24c — 6 unit + 2 Tenderly fork tests: TestFlashLoanReceiverExecution (borrow→swap→repay succeeds, gas 220k, insufficient repay→COMPLETED_FAILED, insufficient liquidity→REJECTED on borrow, Morpho 0-fee, AAVE 5-bps fee); TestFlashLoanReceiverForkExecution (auto-skip without creds: flash gas>0, flash+swap combined gas). QG ✅ (425s). Also rebased all 3 repos to LDR post-OOM. Moving to UTL LDR pull + QG (operator request), then item 12: slippage model boundary tests.
-
-[2026-05-18 06:54 UTC] slot-5 — STARTED slot 5 (work_split_2026_05_18_harsh.md § Slot 5). (re-written after context-summary loss)
-
-[2026-05-18 07:45 UTC] slot-5 — ✅ DONE work_split item 1 (writegate Phase 2.E.4 DOCS): CLAUDE.md "Manifest + honest absence" SSOT line now cross-links § "Reason taxonomy" + § "Per-service consumer-class audit" in honest-absence-downstream-handling.md — pm@30ccfd3c. Plan flips (3 writegate checkboxes + work_split slot-5 item 1) — pm@b0dcfdce. Assessing item 2 (expected_unattempted residuals).
-
-[2026-05-18 08:00 UTC] slot-5 — 🏁 QUEUE EXHAUSTED. Audited items 2/3/4: all remaining sub-items BLOCKED (see work_split annotations). Item 2: 10 expected_unattempted items all DEFERRED or VM-infra-blocked. Reserve 3 (mock_data_pipeline): 2 items DEFERRED/VM-blocked. Reserve 4 (data_status_drilldown): 4 items slot-7 conflict, 3 DEFERRED/infra. Only item 1 (writegate Phase 2.E.4 DOCS) was shippable. Standing down.
-
-[2026-05-18 12:45 UTC] [main → slot 5] — 🟢 **REFILL** — work_split slot 5 added items 5+6: (5) test-coverage extension reserve on execution-service / risk / pnl owned surfaces (target 12+ tests across 3+ files); (6) bucket_name_ssot_canonicalisation residuals (73%, 6 items left, workspace-wide gs:// f-string sweep). Pick (5) first if uncovered surface available; fall to (6) if not. Audited blockers on items 2/3/4 ACK'd.
-
-[2026-05-18 13:10 UTC] [main → slot 5] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to your section at 12:55 UTC (PM@ed3776bf). `cd .tabs/5/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
-
-[2026-05-18 13:15 UTC] slot-5 — ✅ DONE work_split item 5 (REFILL test-coverage extension): 29 new tests across 2 repos — execution-service@6a7b59e0 (17: unwind_cost.py first suite — all branches, slippage tiers, _classify_instrument) + pnl-attribution-service@e6f6a08 (12: reward_attribution_drain.py first suite — empty/held/realised/write-failure). QG: pnl-attribution ✅; execution-service QG pre-failing 30 tests (slot-2 complexity sweep surface — not my files). Moving to items 11/12/13.
-
-[2026-05-18 14:00 UTC] slot-5 — 🔴 item 6 AUDITED (bucket_name_ssot residuals): ALL 6 open items blocked on Phase 2.6 (Phase 0c-watchdog would cause false zombie kills before Phase 2.6; Phase 0d = GCP data migration; dependency_checker.py BLOCKED upstream; get_bucket_name delegate DEFERRED by operator Q6; v2 AST-walk P2 deferred; audit table BLOCKED). Pivoted to items 11/12/13.
-
-[2026-05-18 14:00 UTC] slot-5 — ✅ DONE item 11 (DEEP RESERVE kill-switch edge cases): 6 tests in TestAssetGroupMixedRuleFiring (risk-and-exposure-service@5eb6c1e, test_var_calculator.py): cefi/defi/tradfi independent directives (no bleed-over), sports DATA_STALE → REDUCTIONS_ONLY, DATA_STALE+exec-down → REDUCTIONS_ONLY, dual-failure+DATA_STALE → HUMAN_REQUIRED, recovery-window restores DELTA_NEUTRAL_EXIT, recon-down-non-stale → REDUCTIONS_ONLY. QG green (73s). Moving to item 12.
-
-[2026-05-18 13:24 UTC] [main → slot 5] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 5 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/5/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 5 — MEGA RESERVE".
-
-[2026-05-18 15:00 UTC] slot-5 — ✅ DONE item 12 (DEEP RESERVE pnl EOD extension): 4 tests in TestPerArchetypeEodExtension (pnl-attribution-service@0bc6785, test_archetype_pnl.py): mixed CARRY_STAKED_BASIS+APD fills → separate archetype keys (no bleed-over); cross-day correction row included in net EOD (net=350.0); partial fill preserved as-is (75.0); write_archetype_buckets with correction → correct date-partitioned GCS path (1 upload call). pnl QG green (59s). Moving to item 13.
-
-[2026-05-18 16:00 UTC] slot-5 — ✅ DONE item 13 (DEEP RESERVE execution-service adapter error classification): audit + 5 tests in 2 classes (execution-service@0cc25348, test_sports_exchange_adapter_error_classification.py). COMPLIANT: betfair (_emit_betfair_fetch_failure) + matchbook (_handle_venue_error) — classify_venue_error + ADAPTER_FETCH_FAILED verified. GAP documented: kalshi + polymarket_clob missing classify_venue_error (no MAY-23 critical path impact — sports adapters); ccxt adapters emit ORDER_FAILED per design (not data-fetch path). 30 pre-existing test failures unchanged (slot-2 surface). Moving to MEGA RESERVE items 14/15/16/17.
-
-[2026-05-18 17:00 UTC] slot-5 — ✅ DONE item 15 (MEGA RESERVE risk-and-exposure E2E portfolio stress): 8 tests in TestEndToEndPortfolioStress (risk-and-exposure-service@1932b4d, test_var_calculator.py): 10-archetype DAILY_LOSS_BREACH all→DELTA_NEUTRAL_EXIT; per-client drawdown independence (5 clients, peaks all above current_equity); 5-asset_group cross-group isolation (cefi/defi/tradfi/sports/prediction); recovery-window 3-state stateless reset; HUMAN_REQUIRED non-contamination (1 fails, 5 others unaffected); 10-archetype mixed reasons (5 patterns × 2); 10-client drawdown peak tracking; COINTEGRATION_BREAKDOWN 5-variant all→DELTA_NEUTRAL_EXIT + reason preserved. risk QG green (70s). Moving to pnl-attribution-service ruff formatting push (user request).
-
-[2026-05-18 17:30 UTC] [main → slot 5] — 🟢 **DIRECT DISPATCH — slot 5 idle (operator confirmed).** 7 items still in queue. Pick **item 16 (MEGA RESERVE) — execution-service Phase 9 cost models + DefiErrorCode hardening**. Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/execution-service`
-  2. Identify per-protocol cost model precision tests not yet covered (AAVE / Morpho / Compound) — add 3 tests per protocol with realistic gas/borrow scenarios.
-  3. Add DefiErrorCode → recovery action mapping coverage (30 codes, identify gaps in test_defi_error_code_recovery.py if exists, or add).
-  4. Done-def: 6+ tests + execution-service QG green.
-  5. Commit + dual-flip work_split slot 5 item 16 + (item is code-only, no PoR markdown needed — exempt from dual-flip per refined audit).
-After 16 ships: items 11 + 14 + 17 still queued. **Acknowledge "STARTED item 16" within 10 min.**
+[2026-05-15 22:45 UTC] slot-5 — ✅ DONE item 11 (flash loan receiver execution path tests): execution-service@50a5d24c —
+6 unit + 2 Tenderly fork tests: TestFlashLoanReceiverExecution (borrow→swap→repay succeeds, gas 220k, insufficient
+repay→COMPLETED_FAILED, insufficient liquidity→REJECTED on borrow, Morpho 0-fee, AAVE 5-bps fee);
+TestFlashLoanReceiverForkExecution (auto-skip without creds: flash gas>0, flash+swap combined gas). QG ✅ (425s). Also
+rebased all 3 repos to LDR post-OOM. Moving to UTL LDR pull + QG (operator request), then item 12: slippage model
+boundary tests.

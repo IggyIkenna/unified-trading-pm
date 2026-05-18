@@ -30,7 +30,6 @@ estimate_calibration_note: |
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
 
 # BaseFeatureCalculator validation flip
@@ -57,36 +56,35 @@ The Wave-8 BaseFC-ValidationFlip task was scoped against ~12 calculators with `f
 ## Done definition
 
 - [x] **[AGENT] P1**. **Decided 2026-05-15 (slot 7 Ikenna)**: adopt **Option (a)** — flip ONLY canonical UTL
-      `BaseFeatureCalculator` subclasses (35 calcs in features-service across `cross_instrument` + `multi_timeframe`
-      + onchain canonical paths); leave legacy `FeatureCalculator` pandas subclasses alone as deprecated. Rationale:
+      `BaseFeatureCalculator` subclasses (35 calcs in features-service across `cross_instrument` + `multi_timeframe` +
+      onchain canonical paths); leave legacy `FeatureCalculator` pandas subclasses alone as deprecated. Rationale:
       narrow blast radius, isolates the change to the polars-canonical surface, no need to migrate 39 legacy pandas
       calcs simultaneously. Counted feature_group overrides: 32 concrete + 3 base files = 35 sites (audit grep
-      2026-05-15). Phase 6 mandatory-validation flip lives in `features_repo_consolidation_2026_05_08.md` (parent
-      plan); this plan's items 2-4 do the actual class-var migration.
+      2026-05-15). Phase 6 mandatory-validation flip lives in `features_repo_consolidation_2026_05_08.md` (parent plan);
+      this plan's items 2-4 do the actual class-var migration.
 - [x] **[AGENT] P1**. Migrate concrete calculators from `@property @abstractmethod`/`@property @override` pattern to
-      `feature_group: ClassVar[str] = "..."` + `feature_family: ClassVar[str] = "<family>"`. Per-family commits.
-      **DONE 2026-05-16 (slot 7)**: (a) cross_instrument family — `features-service@71643dec` migrated 20/20
-      concrete calculators; base adds `feature_family: ClassVar[str] = "cross_instrument"` inherited by all subs.
-      (b) onchain family — `features-service@151dffab` added `feature_group: ClassVar[str]` to 19 concrete calcs
-      (extracted from `@FeatureCalculatorRegistry.register("<name>")` decorator) + `feature_family` on
-      `OnChainCalculator` base. (c) multi_timeframe family — `features-service@87ba9cf6` extended LOCAL ABC to
+      `feature_group: ClassVar[str] = "..."` + `feature_family: ClassVar[str] = "<family>"`. Per-family commits. **DONE
+      2026-05-16 (slot 7)**: (a) cross_instrument family — `features-service@71643dec` migrated 20/20 concrete
+      calculators; base adds `feature_family: ClassVar[str] = "cross_instrument"` inherited by all subs. (b) onchain
+      family — `features-service@151dffab` added `feature_group: ClassVar[str]` to 19 concrete calcs (extracted from
+      `@FeatureCalculatorRegistry.register("<name>")` decorator) + `feature_family` on `OnChainCalculator` base. (c)
+      multi_timeframe family — `features-service@87ba9cf6` extended LOCAL ABC to
       `_CanonicalBaseFeatureCalculator[pl.DataFrame]` (matching cross_instrument); widened `calculate()` to
       `(df, **params)` canonical signature (orchestrator caller compatible); added `feature_family = "multi_timeframe"`
-      on base; migrated 9 concrete calcs. (d) delta_one family — `features-service@f9622291` migrated 3 concrete
-      calcs; base adds `feature_family = "delta_one"`. **Combined: 51 calcs migrated** across 4 polars families.
+      on base; migrated 9 concrete calcs. (d) delta_one family — `features-service@f9622291` migrated 3 concrete calcs;
+      base adds `feature_family = "delta_one"`. **Combined: 51 calcs migrated** across 4 polars families.
       `validate_class_attributes()` returns OK on every migrated calc; basedpyright clean.
 - [x] **[SCRIPT] P1**. Flip UTL canonical `BaseFeatureCalculator.validate_class_attributes()` from opt-in (callable
       helper) to mandatory (`__init_subclass__` enforcement). UTL commit. **DONE 2026-05-16**:
-      `unified-trading-library@ccc9b7bf` — added `__init_subclass__` that calls `validate_class_attributes()`
-      on every concrete subclass; abstract subclasses (still have `@abstractmethod` outstanding) exempt via
-      MRO walk in new `_has_outstanding_abstract_methods()` classmethod (ABCMeta sets `__abstractmethods__`
-      AFTER `__init_subclass__` runs, so eager scan needed). Test
-      `test_register_legacy_calc_without_attrs_succeeds` updated to
-      `test_register_concrete_calc_without_attrs_raises`; new
-      `test_concrete_leaf_of_abstract_intermediate_validates` covers the intermediate-ABC pattern.
+      `unified-trading-library@ccc9b7bf` — added `__init_subclass__` that calls `validate_class_attributes()` on every
+      concrete subclass; abstract subclasses (still have `@abstractmethod` outstanding) exempt via MRO walk in new
+      `_has_outstanding_abstract_methods()` classmethod (ABCMeta sets `__abstractmethods__` AFTER `__init_subclass__`
+      runs, so eager scan needed). Test `test_register_legacy_calc_without_attrs_succeeds` updated to
+      `test_register_concrete_calc_without_attrs_raises`; new `test_concrete_leaf_of_abstract_intermediate_validates`
+      covers the intermediate-ABC pattern.
 - [x] **[AGENT] P1**. Plan-flip cite: `unified-trading-pm` plan-flip commit pointing at the per-family + UTL commits.
-      **DONE 2026-05-16**: this commit. cross_instrument@`features-service@71643dec` + onchain@`features-service@151dffab`
-      + UTL@`unified-trading-library@ccc9b7bf`. Plan fully closed.
+      **DONE 2026-05-16**: this commit. cross_instrument@`features-service@71643dec` +
+      onchain@`features-service@151dffab` + UTL@`unified-trading-library@ccc9b7bf`. Plan fully closed.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 

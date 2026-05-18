@@ -66,7 +66,6 @@ estimate_calibration_note: |
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Context
 
 > **🟢 SCOPE CLARIFICATION — RATIFIED 2026-05-10 cross-plan audit L4.** Two areas where May-10 plans pulled scope

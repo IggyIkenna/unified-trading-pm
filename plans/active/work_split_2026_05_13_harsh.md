@@ -21,11 +21,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Harsh's daily work-split — 2026-05-13 (Day-4 close — Harsh-side ONLY)
 

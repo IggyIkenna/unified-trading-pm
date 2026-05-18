@@ -23,7 +23,6 @@ priority: P0
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **🟢 RESERVE WORK — pulled from api_football_minimal_flattening_removal_2026_05_07**
 >
 > Phases 1-3 shipped on 2026-05-08. Phase 3.B + 3.C are operator-driven live-API + forward-poll verification steps

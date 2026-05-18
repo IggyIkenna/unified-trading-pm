@@ -1,5 +1,6 @@
 violation_count: 0
 rule: codex-doc-freshness
-source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
+source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
+  governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
 baseline_files: []

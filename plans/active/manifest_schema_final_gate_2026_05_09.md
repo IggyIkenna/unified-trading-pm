@@ -560,17 +560,16 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 ### Phase 7 — gcs Phase 3 bundled walk (May 13-15, operator-gated)
 
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.A — Pre-flight: Phase 0.A artifact still current; Phase 1+2+3+4+5 all shipped + QG
-      green; Phase 6 drain confirmed. **DONE 2026-05-16 21:30 UTC by slot 1 main**: Phase 1 3/3 + Phase 2 5/5 +
-      Phase 3 4/4 + Phase 4 9/10 (1 deferred per `4.DEFAULT-REMOVAL-v8kwargs DEFERRED`) + Phase 5 2/2 + Phase 6 3/3
-      all ✅ per `regenerate_active_plan_inventory.py` sweep. Workspace-qg pre-existing failures non-blocking for
-      v8 (architectural — captured in `workspace_qg_yml_redesign_2026_05_15.md` issue doc). Pre-flight GREEN.
-      Operator AFK direction 2026-05-16: race-to-finish, no operator action needed since all credentials vaulted.
+      green; Phase 6 drain confirmed. **DONE 2026-05-16 21:30 UTC by slot 1 main**: Phase 1 3/3 + Phase 2 5/5 + Phase 3
+      4/4 + Phase 4 9/10 (1 deferred per `4.DEFAULT-REMOVAL-v8kwargs DEFERRED`) + Phase 5 2/2 + Phase 6 3/3 all ✅ per
+      `regenerate_active_plan_inventory.py` sweep. Workspace-qg pre-existing failures non-blocking for v8 (architectural
+      — captured in `workspace_qg_yml_redesign_2026_05_15.md` issue doc). Pre-flight GREEN. Operator AFK direction
+      2026-05-16: race-to-finish, no operator action needed since all credentials vaulted.
 - [x] ✅ [HUMAN+AGENT] P0. Phase 7.B — Snapshot critical state: per-bucket
       `gcloud storage cp -r gs://{pid}-raw-tick/_index/ gs://{pid}-pre-migration-snapshot/raw-tick-2026-05-13/_index/`.
-      Covers manifest pre-bundled-walk; restore path if any drift class breaks the manifest in-flight.
-      **DONE 2026-05-16 21:40 UTC by slot 1 main**: created
-      `gs://central-element-323112-pre-migration-snapshot/` (asia-northeast1, standard); snapshotted 9 raw-tick
-      buckets' `_index/` directories in parallel:
+      Covers manifest pre-bundled-walk; restore path if any drift class breaks the manifest in-flight. **DONE 2026-05-16
+      21:40 UTC by slot 1 main**: created `gs://central-element-323112-pre-migration-snapshot/` (asia-northeast1,
+      standard); snapshotted 9 raw-tick buckets' `_index/` directories in parallel:
       `market-data-tick-{cefi,defi,tradfi,sports,prediction}{,prd}-central-element-323112` → snapshot path
       `pre-migration-snapshot/<bucket-name>/raw-tick-2026-05-16/_index/`. Total ~370 MB snapshotted; restore path
       available if Phase 7.C-7.F bundled walk causes manifest drift.

@@ -33,7 +33,6 @@ related:
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Session 2026-05-07 — Deployment-UI close-out tracker
 
 Single-pane-of-glass for the data-status panel issues surfaced during the 2026-05-07 walkthrough. Each row references

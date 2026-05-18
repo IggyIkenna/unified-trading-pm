@@ -1,8 +1,8 @@
 # Coverage-Raise Spawn Prompt Template
 
-> **Phase 7 deliverable** of `deployment_and_qg_strategy_implementation_2026_05_13.md` (P1).
-> Paste this into the spawn prompt for any sub-agent tasked with raising coverage on a leaf service.
-> One sub-agent per repo; spawn N in parallel via a single message with N `Task` tool uses.
+> **Phase 7 deliverable** of `deployment_and_qg_strategy_implementation_2026_05_13.md` (P1). Paste this into the spawn
+> prompt for any sub-agent tasked with raising coverage on a leaf service. One sub-agent per repo; spawn N in parallel
+> via a single message with N `Task` tool uses.
 
 ---
 
@@ -112,16 +112,16 @@ Task #2: REPO=execution-service          SURFACES_IN_SCOPE=src/execution/error_c
 Task #3: REPO=strategy-service           SURFACES_IN_SCOPE=src/strategy/archetypes/*
 ```
 
-Each Task is a fresh sub-agent — paste the preamble + parameters + body
-in full into each prompt. Do NOT assume cross-task shared state.
+Each Task is a fresh sub-agent — paste the preamble + parameters + body in full into each prompt. Do NOT assume
+cross-task shared state.
 
 ---
 
 ## Per-tab-worktree discipline (HARD RULE)
 
 Sub-agents MUST operate in `.tabs/<N>/<repo>/` worktrees (per
-[per-tab-worktrees.md](../codex/05-infrastructure/per-tab-worktrees.md)). The
-spawn prompt above uses `$WORKTREE_PATH` for this. Bootstrap:
+[per-tab-worktrees.md](../codex/05-infrastructure/per-tab-worktrees.md)). The spawn prompt above uses `$WORKTREE_PATH`
+for this. Bootstrap:
 
 ```bash
 bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8
@@ -129,10 +129,9 @@ bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8
 bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot 9
 ```
 
-Without per-tab worktrees, multiple sub-agents running against the same root
-`<repo>/` directory will contend on the index — basedpyright cache thrash,
-stash collisions, and lost commits. This has bitten this workspace before;
-DO NOT skip the worktree step even for "quick" spawns.
+Without per-tab worktrees, multiple sub-agents running against the same root `<repo>/` directory will contend on the
+index — basedpyright cache thrash, stash collisions, and lost commits. This has bitten this workspace before; DO NOT
+skip the worktree step even for "quick" spawns.
 
 ---
 
@@ -142,4 +141,5 @@ DO NOT skip the worktree step even for "quick" spawns.
 - [coverage_targets.yaml](../scripts/quality_gates/coverage_targets.yaml) — surface→target map
 - [check_coverage_targets.py](../scripts/quality_gates/check_coverage_targets.py) — ratchet
 - [per-tab-worktrees.md](../codex/05-infrastructure/per-tab-worktrees.md) — worktree bootstrap
-- [deployment_and_qg_strategy_implementation_2026_05_13.md](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md) — Phase 7 + 8
+- [deployment_and_qg_strategy_implementation_2026_05_13.md](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md)
+  — Phase 7 + 8

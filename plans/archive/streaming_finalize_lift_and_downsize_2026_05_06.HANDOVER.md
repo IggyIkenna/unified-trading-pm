@@ -10,7 +10,6 @@ created: 2026-05-06
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Handover — five follow-ups from the 2026-05-06 streaming-finalize ship
 
 The streaming-finalize path landed in `market-tick-data-service` (commits `22e2b2f` + `f07f3f9`) and validated

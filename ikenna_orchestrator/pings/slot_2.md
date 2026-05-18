@@ -1,5 +1,27 @@
 # Slot 2 ping ledger — ikenna-defi-catalogue-tab
 
+## [Slot 2 → Slot 1] 2026-05-18 Phase 1.2B SHIPPED ✅
+
+**Timestamp**: 2026-05-18 **Status**: ✅ SHIPPED
+
+### What shipped
+
+- **MDPS@`15c1889`** — Phase 1.2B: UTL streaming candle write lifecycle in `_streaming_write_per_tf`.
+  `CandleStreamingWriteContext` dataclass + `open_candle_streaming_writer` / `write_streaming_chunk` /
+  `close_candle_streaming_writer` added to `canonical_writer.py`. `live_workers.py` `_streaming_write_per_tf`
+  rewired: per-batch open/write/close replaces `pd.concat` materialisation. Peak memory ≈ 1 batch × 1.5.
+  Shard-level failure isolation preserved. 4 new unit tests (per_batch_flush, memory_ceiling,
+  exception_mid_stream, shard_level_isolation) — all green. QG green.
+- **PM@`260a1923`** — Plan checkbox flipped: `mdps_streaming_and_backpressure_2026_05_07.md` Phase 1.2B.
+
+### Pending next
+
+- **Phase 2** (`mdps_streaming_and_backpressure_2026_05_07.md`): Wire MDPS `ResourceProfiler.on_memory_warning`
+  to admission control — gate new shard submissions when RSS > threshold. Now unblocked by Phase 1.2B.
+- Boot-ack posted to slot_2.md (this entry). Slot 2 ready for reallocation or Phase 2 assignment.
+
+---
+
 ## [main → slot 2] 2026-05-14 GMX/DRIFT Phase 1C skip instruction — ✅ ACKNOWLEDGED
 
 **Timestamp**: 2026-05-14 **Status**: ✅ ACKNOWLEDGED
@@ -417,9 +439,9 @@ Half-1+Half-2 plan-flip discipline strictly enforced per CLAUDE.md 2026-05-15 st
    lst_rates; CEFI/TRADFI/test_mode unchanged. 7 new tests; 38/38 onchain routing tests green; basedpyright clean.
    Plan-flip + issue doc RESOLVED section + cross-ping to harsh-slot-9 all shipped in same agent turn at
    `unified-trading-pm@1dcc0bdd`.
-2. ✅ **Items 4-7 status-update flips** at `unified-trading-pm@4ff8258f`. Item 4 (wave2_polymarket) verified-done;
-   item 5 (cme_polymarket_arb) status BLOCKED-UPSTREAM + post-May-23 (1.8 cal budget insufficient for Phases 3-5);
-   item 6 (cross_asset_group_catalogue_audit Phase 6A DeFi) verified-done (Phase 6A already [x]); item 7
+2. ✅ **Items 4-7 status-update flips** at `unified-trading-pm@4ff8258f`. Item 4 (wave2_polymarket) verified-done; item
+   5 (cme_polymarket_arb) status BLOCKED-UPSTREAM + post-May-23 (1.8 cal budget insufficient for Phases 3-5); item 6
+   (cross_asset_group_catalogue_audit Phase 6A DeFi) verified-done (Phase 6A already [x]); item 7
    (cross_asset_instruments scope) DONE per 2026-05-15 triage, BLOCKED-OPERATOR-DECISION.
 3. ✅ **Item 3 partial — 5 stale-flip items in defi_catalogue plan** at `unified-trading-pm@e4b533d3`. 6A closed-as-
    stale (duplicate of 3-LENDING.1); 7B/7D/7F/7G verified-done via Phase 2J/3J/4J/4K already-shipped doc updates.
@@ -446,25 +468,25 @@ STOPPING.
 
 ## 2026-05-16T~20:15Z — slot-2 EXTENDED SESSION (autonomous follow-on, per operator direction "keep going")
 
-After session-close at ~12:25Z, operator directed (no-stopping autonomous loop). 11 additional substantive
-deliverables shipped over ~7h:
+After session-close at ~12:25Z, operator directed (no-stopping autonomous loop). 11 additional substantive deliverables
+shipped over ~7h:
 
 1. ✅ **3K codex update** — `codex/02-data/availability-manifest-and-data-status.md` updated for Phase 1A bundled
    data_types (PM@`aab47b12`).
 2. ✅ **7E PARTIAL** — 3K half done; 6J half blocked-upstream (PM@`fc3d8725`).
-3. ✅ **6F manifest phantom audit** — DEFI raw_tick_data RAN-CLEAN (0 phantoms / 311,602 real captures /
-   88,557 prefixes; PM@`9f12b004`).
+3. ✅ **6F manifest phantom audit** — DEFI raw_tick_data RAN-CLEAN (0 phantoms / 311,602 real captures / 88,557
+   prefixes; PM@`9f12b004`).
 4. ✅ **3-LENDING.5 reconciler** — sub-agent dispatched (`a8d9a9f29f77e0c48`) shipped
    `instruments-service/scripts/reconcile_lending_indices_phantom.py` at IS@`88d48da` (10 unit tests / basedpyright
    clean); PM Half-2 at PM@`e6feab2a`.
 5. ✅ **BIG FINDING — vocab drift issue doc** — diagnosed systemic kebab/snake `data_type` drift across 6 of 7 DeFi
-   canonical manifests (~116,000 legacy kebab rows); issue doc PM@`798e0e8c` + root-cause confirmation
-   PM@`c4f90786` + per-bucket safety table PM@`10f06f54`.
+   canonical manifests (~116,000 legacy kebab rows); issue doc PM@`798e0e8c` + root-cause confirmation PM@`c4f90786` +
+   per-bucket safety table PM@`10f06f54`.
 6. ✅ **Canonicalisation migration script** — sub-agent dispatched (`ae6f1f5261a016e0c`) shipped
-   `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py` at IS@`b2726c6`
-   (8 unit tests / basedpyright clean); PM Half-2 at PM@`8612148e`.
-7. ✅ **CRITICAL CORRECTION — lst-rates + oracle-prices CORRUPT rows finding** — drill-down audit revealed kebab
-   rows have garbage venue (`venue=LST_RATES`); separate issue doc PM@`2bfed827`.
+   `instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py` at IS@`b2726c6` (8 unit tests /
+   basedpyright clean); PM Half-2 at PM@`8612148e`.
+7. ✅ **CRITICAL CORRECTION — lst-rates + oracle-prices CORRUPT rows finding** — drill-down audit revealed kebab rows
+   have garbage venue (`venue=LST_RATES`); separate issue doc PM@`2bfed827`.
 8. ✅ **Cross-slot impact realized** — slot 4 picked up my issue docs and shipped:
    - Option A canonicalisation `--apply` against production manifests: **115,785 vocab flips across 6 buckets**.
    - Option D corrupt-row drop script at IS@`70849b6`: **6,972 corrupt rows dropped** (lst-rates + oracle-prices).
@@ -476,8 +498,8 @@ deliverables shipped over ~7h:
 **Outstanding handoffs (still pending)**:
 
 - ⏳ `harsh-slot-9` Smoke B re-launch — no VM yet as of ~20:15 UTC.
-- ⏳ Operator [ack] on Phase B (perp-funding `--derive-chain-from-venue` extension; ~3,298 rows) per per-bucket
-   safety table in archived vocab-drift issue.
+- ⏳ Operator [ack] on Phase B (perp-funding `--derive-chain-from-venue` extension; ~3,298 rows) per per-bucket safety
+  table in archived vocab-drift issue.
 - ⏳ Re-run reconciler dry-run with bug fixes (running in background; ~19 min ETA).
 
 STOPPING (will resume if operator surfaces new routing or background tasks need follow-up).
@@ -492,22 +514,24 @@ After the canonicalisation deliverables, ran follow-up real-data audits + caught
     (0.54%)** — all SOURCE_RETURNED_ZERO. Manifest operationally clean. PM@`56f4e553`. Log archived at
     `/tmp/lending_indices_phantom_dryrun_v2_20260516.log`.
 
-11. ✅ **NEW P1 issue doc — vocab drift canonicalisation DIDN'T STICK** at PM@`276eeb82`. Live re-audit shows
-    closeout commit `fe6141d1` was premature: 4 of 6 buckets still have kebab rows post-migration (lending-indices
-    24,976 / perp-funding 3,298 / dex-swaps 28,171 / dex-pools 55,854 — total **112,299 leakage**).
-    Hypothesis: consolidator UPSERT-by-row-key (where data_type is part of key) treats kebab + snake as different
-    rows. Option G recommended: extend canonicalisation script to DELETE kebab rows before flipping. Operator nod
-    needed.
+11. ✅ **NEW P1 issue doc — vocab drift canonicalisation DIDN'T STICK** at PM@`276eeb82`. Live re-audit shows closeout
+    commit `fe6141d1` was premature: 4 of 6 buckets still have kebab rows post-migration (lending-indices 24,976 /
+    perp-funding 3,298 / dex-swaps 28,171 / dex-pools 55,854 — total **112,299 leakage**). Hypothesis: consolidator
+    UPSERT-by-row-key (where data_type is part of key) treats kebab + snake as different rows. Option G recommended:
+    extend canonicalisation script to DELETE kebab rows before flipping. Operator nod needed.
 
 **Session totals (extended)**:
+
 - **PM commits today**: ~30 (boot ack + 7 plan flips + 8 issue docs / closures + 14 plan-of-record updates)
 - **features-service commits today**: 1 (B-015 Option A `550cdaba`)
-- **instruments-service commits today**: 2 (reconciler `88d48da` + canonicalise `b2726c6`) + 1 bug-fix follow-up (`70074a0`)
-- **Cross-slot impact**: 2 issue docs (vocab drift + corruption) closed-out by slot 4 with 115,785 row flips +
-  6,972 corrupt drops in production.
+- **instruments-service commits today**: 2 (reconciler `88d48da` + canonicalise `b2726c6`) + 1 bug-fix follow-up
+  (`70074a0`)
+- **Cross-slot impact**: 2 issue docs (vocab drift + corruption) closed-out by slot 4 with 115,785 row flips + 6,972
+  corrupt drops in production.
 - **New P1 issue surfaced**: canonicalisation didn't stick (112,299 rows still leak); needs operator triage.
 
 **Operational still-pending**:
+
 - Harsh slot 9: Smoke B re-launch (no VM yet as of ~20:25 UTC).
 - Operator: triage P1 vocab-drift-canonicalisation-didnt-stick (Option G recommended).
 - Operator: --apply on reconciler to flip 351 SOURCE_RETURNED_ZERO phantoms (after consolidator race resolved).
@@ -515,7 +539,8 @@ After the canonicalisation deliverables, ran follow-up real-data audits + caught
 
 Session-end STOPPING. Substantive work delivered across the day. Reconciler proves the lending-indices manifest is
 healthy at 99.5% real captures. Vocab drift partial: corruption-rows successfully dropped by slot 4 (oracle-prices
-+ lst-rates clean); column-canonicalisation still ineffective for 4 of 6 buckets pending Option G fix.
+
+- lst-rates clean); column-canonicalisation still ineffective for 4 of 6 buckets pending Option G fix.
 
 ---
 
@@ -523,29 +548,30 @@ healthy at 99.5% real captures. Vocab drift partial: corruption-rows successfull
 
 After session-close, operator-routed **[SWEEP-16]** items landed in this ping file. Picked up 6 items:
 
-12. ✅ **SWEEP-16 items 2-6**: 3 archive-flip-verifies (`solana_amm` / `solana_venue_naming` / `solana_perp_dex`) +
-    2 close-outs (`solana_lst_native_staking` 21/22 BLOCKED-CREDENTIALS-correct + `solana_restaking_rewards` 16/18
+12. ✅ **SWEEP-16 items 2-6**: 3 archive-flip-verifies (`solana_amm` / `solana_venue_naming` / `solana_perp_dex`) + 2
+    close-outs (`solana_lst_native_staking` 21/22 BLOCKED-CREDENTIALS-correct + `solana_restaking_rewards` 16/18
     DEFERRED-NICE-TO-HAVE-correct). Work-split flipped at PM@`59276dfc`.
 
 13. ✅ **SWEEP-16 item 1 partial** — `mdps_streaming_and_backpressure_2026_05_07` items 2+7 (UAC CONNECTIVITY enums
     VERIFIED-ALREADY-SHIPPED + codex `batch-live-architecture.md` § "Live=batch 4-state capture parity" section
     APPENDED). PM@`69330f81`. Remaining items 1/3/4/5/6 (LiveConnectivityWatchdog + auto-backfill + MDPS write-gate
-    + execution circuit-breaker + 7-day calibration) substantial multi-repo design — deferred to next slot-2 session.
+    - execution circuit-breaker + 7-day calibration) substantial multi-repo design — deferred to next slot-2 session.
 
 14. ✅ **NEW P1 issue surfaced** — `vocab_drift_canonicalisation_didnt_stick_2026_05_16.md` (PM@`276eeb82`):
-    canonicalisation `--apply` ran but didn't stick (consolidator UPSERT semantics restored kebab); 112,299 row
-    leakage detected.
+    canonicalisation `--apply` ran but didn't stick (consolidator UPSERT semantics restored kebab); 112,299 row leakage
+    detected.
 
 15. ✅ **MASSIVE CROSS-SLOT IMPACT** — slot 4 picked up my Option G recommendation + shipped at
     `instruments-service@705ba5e` 2026-05-16 20:29-20:30 UTC. Verified clean: 112,299 kebab rows dropped across 4
     buckets. Issue auto-RESOLVED.
 
 **Total session impact** (extended autonomous loop, ~9h):
+
 - 15 substantive deliverables (11 earlier + 4 post-SWEEP-16)
 - ~30+ PM commits across plans / issues / orchestrator / codex
 - 5 code commits across 3 service repos (features-service / instruments-service × 3 / UAC verified-only)
-- 4 cross-slot impact realizations: my issue docs picked up + shipped by slot 4 (115,785 vocab flips + 6,972
-  corrupt drops + 112,299 Option G drops) + slot 1 cross-pinging on premature closeout
+- 4 cross-slot impact realizations: my issue docs picked up + shipped by slot 4 (115,785 vocab flips + 6,972 corrupt
+  drops + 112,299 Option G drops) + slot 1 cross-pinging on premature closeout
 - Reconciler operational: 99.5% real captures / 0.54% phantoms (clean signal)
 
 Truly STOPPING. Operator AFK ~9h+ now; substantial cross-slot work delivered + all SWEEP-16 items addressed.
@@ -554,17 +580,18 @@ Truly STOPPING. Operator AFK ~9h+ now; substantial cross-slot work delivered + a
 
 ## [main → slot 2] 2026-05-16 12:15 UTC — **[SWEEP-16]** items added to your stack (operator race-to-finish direction)
 
-Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8
-Ikenna slots; no operator action needed (credentials all vaulted).
+Operator direction 2026-05-16: race ahead; allocate ALL remaining May-23 cutover work across the 8 Ikenna slots; no
+operator action needed (credentials all vaulted).
 
-See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your
-SWEEP-16 items (additive to your existing stack; take after current top-of-stack lands).
+See **`plans/active/work_split_2026_05_15_ikenna.md` § "Pre-cutover sweep — race-to-finish"** for your SWEEP-16 items
+(additive to your existing stack; take after current top-of-stack lands).
 
 Pickup discipline:
-* Items annotated **[SWEEP-16]** in the work-split below your slot section
-* Each item starts with the marker so easy to grep
-* Half-1+Half-2 flip discipline per item (no batch flips)
-* Spot-check LDR before starting any item to see if Harsh-side shipped it already
+
+- Items annotated **[SWEEP-16]** in the work-split below your slot section
+- Each item starts with the marker so easy to grep
+- Half-1+Half-2 flip discipline per item (no batch flips)
+- Spot-check LDR before starting any item to see if Harsh-side shipped it already
 
 Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026-05-17.
 
@@ -575,6 +602,7 @@ Race-to-finish target: workspace dashboard ≤200 cal-days remaining by EOD 2026
 After extended overnight work, final verification of slot-2 cross-slot impact:
 
 **All 6 DeFi canonical manifests verified CLEAN** (snake-only, zero kebab rows):
+
 - `lending-indices`: 39,877 rows (was 64,853 with 24,976 kebab)
 - `dex-swaps`: 46,281 rows (was 74,452 with 28,171 kebab)
 - `dex-pools`: 72,682 rows (was 128,536 with 55,854 kebab)
@@ -584,41 +612,44 @@ After extended overnight work, final verification of slot-2 cross-slot impact:
 
 **Total kebab rows purged**: 122,757 — slot 4's Option D + Option G fully worked.
 
-**Today's lending_rates investigation closed**: slot-1-main root-caused at `features-service@50273e1f` (SchemaError
-in `pl.concat` due to MTDS Datetime[ns,UTC] vs Compound Int64 timestamp drift). Verified at VM 13: 92,716 rows
-written. My defense-in-depth `FEATURE_GROUP_DAILY_FLOW_TRACE` (features-service@aaa6b319) catches any future
-silent-row-drop class bug across ALL feature_groups, not just lending_rates.
+**Today's lending_rates investigation closed**: slot-1-main root-caused at `features-service@50273e1f` (SchemaError in
+`pl.concat` due to MTDS Datetime[ns,UTC] vs Compound Int64 timestamp drift). Verified at VM 13: 92,716 rows written. My
+defense-in-depth `FEATURE_GROUP_DAILY_FLOW_TRACE` (features-service@aaa6b319) catches any future silent-row-drop class
+bug across ALL feature_groups, not just lending_rates.
 
-**features-onchain VM 091513 STOPPED cleanly** 09:19 UTC after 4-min run; auto-deleted; events archived.
-8 features-onchain VMs ran today total (072313/075413/082230/085414/085456/090444/090519/091513).
+**features-onchain VM 091513 STOPPED cleanly** 09:19 UTC after 4-min run; auto-deleted; events archived. 8
+features-onchain VMs ran today total (072313/075413/082230/085414/085456/090444/090519/091513).
 
 **Net SLOT-2 contribution across the cycle (2026-05-16 → 17)**:
+
 - ~40+ PM commits
 - 7 code commits across 4 service repos (features-service x2 + IS x3 + UAC verified-only + 1 fixup)
 - 3 sub-agent dispatches successfully shipped (3-LENDING.5 reconciler + canonicalisation script + tests)
-- 4 cross-slot impact realisations (slot 4 shipped my Options A+D+G → 122,757 rows purged; slot 1 cross-pinged premature closeout)
+- 4 cross-slot impact realisations (slot 4 shipped my Options A+D+G → 122,757 rows purged; slot 1 cross-pinged premature
+  closeout)
 - FLOW_TRACE diagnostic as defense-in-depth for future silent-row-drop bugs
 - B-015 Option A architectural unblock (features-service@550cdaba)
 
-**Truly STOPPING**: nothing left actionable for slot 2 today without operator/cross-slot signals. Harsh slot 9 Smoke
-B re-launch awaited; Phase B perp-funding derive-chain not needed (Option G already cleaned it); MDPS streaming
-items 1/3/4/5/6 substantive multi-repo design deferred to next cycle.
-
+**Truly STOPPING**: nothing left actionable for slot 2 today without operator/cross-slot signals. Harsh slot 9 Smoke B
+re-launch awaited; Phase B perp-funding derive-chain not needed (Option G already cleaned it); MDPS streaming items
+1/3/4/5/6 substantive multi-repo design deferred to next cycle.
 
 ---
 
 ## [slot 2 → main] 2026-05-17 Late session — execution-service method-size ratchet sweep COMPLETE for slot-2
 
-**Timestamp**: 2026-05-17 (late session). **Status**: 🟢 SHIPPED & FLIPPED — 36 files cleared, 32 commits across execution-service + matching docs(plans) flips on PM.
+**Timestamp**: 2026-05-17 (late session). **Status**: 🟢 SHIPPED & FLIPPED — 36 files cleared, 32 commits across
+execution-service + matching docs(plans) flips on PM.
 
 **Slot-2 contribution to slot-7's execution-service method-size sprint (post-cutover P2 issue
 `execution_service_method_size_violations_workspace_outlier_2026_05_17.md`)**: **36 files cleared from
 `FUNCTION_SIZE_EXTRA_EXCLUDES`** across 14 submodules. Allowlist moved from 187 (Phase A baseline) → 99 currently
 (slot-7 + slot-4 + slot-5 + slot-2 cumulative). My specific contributions span:
 
-- engine/handlers/{borrow,lend,stake,swap,sports,trade,transfer,flash_loan,sell_reward}_handler.py (10)
+- engine/handlers/{borrow,lend,stake,swap,sports,trade,transfer,flash_loan,sell_reward}\_handler.py (10)
 - defi_execution/protocols/{marinade,kamino,orca,raydium,jupiter,aave,aster,base}.py (8)
-- services/{pnl_calculator,lst_collateral_resolver,bridge_cost_model,funding_recon_engine,execution_cost_estimator}.py (5)
+- services/{pnl_calculator,lst_collateral_resolver,bridge_cost_model,funding_recon_engine,execution_cost_estimator}.py
+  (5)
 - engine/preprocessors/wrap_preprocessor.py (1)
 - service_config.py (1)
 - algo_library/{leg_controller_runner,multicall_batcher}.py (2)
@@ -632,8 +663,8 @@ items 1/3/4/5/6 substantive multi-repo design deferred to next cycle.
 - instruments/definitions_loader.py (1)
 
 **Refactor pattern**: helper-extraction with per-method behavior preservation; basedpyright clean every commit;
-allowlist removed in same commit as code change; Half-2 PM plan flip in immediate next agent turn. All 32 ship
-commits followed by `docs(plans): flip slot-2 batch N — ...` on PM within seconds.
+allowlist removed in same commit as code change; Half-2 PM plan flip in immediate next agent turn. All 32 ship commits
+followed by `docs(plans): flip slot-2 batch N — ...` on PM within seconds.
 
 **Cross-slot interaction**: slot 7 was sweeping the same allowlist concurrently — 4 files (`pnl_calculator.py`,
 `leg_controller_runner.py`, `multicall_batcher.py`, `algorithms/registry.py`) were touched by both sides; slot 7's

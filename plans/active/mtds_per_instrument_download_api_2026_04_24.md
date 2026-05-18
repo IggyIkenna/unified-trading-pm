@@ -14,11 +14,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # MTDS per-instrument download API — bundle + per-symbol search via predicate pushdown
 

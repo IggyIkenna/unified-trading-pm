@@ -105,11 +105,7 @@ def main() -> int:
         return 1
     deps: dict[str, object] = deps_raw
 
-    specs = [
-        str(v)
-        for k, v in deps.items()
-        if isinstance(v, str) and k not in EXCLUDE_FROM_GLOBAL_COMPILE
-    ]
+    specs = [str(v) for k, v in deps.items() if isinstance(v, str) and k not in EXCLUDE_FROM_GLOBAL_COMPILE]
     if not specs:
         if not quiet:
             print("ERROR: No dependency specs in workspace-constraints.toml", file=sys.stderr)

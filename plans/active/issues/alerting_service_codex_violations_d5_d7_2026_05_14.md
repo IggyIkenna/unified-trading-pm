@@ -3,7 +3,9 @@ title: alerting-service D.5+D.7 codex compliance violations (schema provenance +
 created: 2026-05-14
 author: slot-6 (Harsh)
 resolved: 2026-05-14
-resolution: SHIPPED — alerting-service@6a01b98 + UAC@0d7c8ca (slot-11 2026-05-14). UAC schemas added for GovernanceProposal + IssuePauseEvent; alerting-service subscribers now import + model_validate.
+resolution:
+  SHIPPED — alerting-service@6a01b98 + UAC@0d7c8ca (slot-11 2026-05-14). UAC schemas added for GovernanceProposal +
+  IssuePauseEvent; alerting-service subscribers now import + model_validate.
 status: RESOLVED — alerting-service@6a01b98 + UAC@0d7c8ca (2026-05-14 slot-11)
 source:
   - alerting-service QG STEP 5.xx codex-compliance check

@@ -145,8 +145,7 @@ def _check_bucket(spec: BucketSpec) -> bool:
 def _provision_command(spec: BucketSpec) -> str:
     if spec.cloud == "gcp":
         return (
-            f"gcloud storage buckets create gs://{spec.name} "
-            "--location=asia-northeast1 --uniform-bucket-level-access"
+            f"gcloud storage buckets create gs://{spec.name} --location=asia-northeast1 --uniform-bucket-level-access"
         )
     if spec.cloud == "aws":
         return f"aws s3api create-bucket --bucket {spec.name} --region us-east-1"
@@ -160,16 +159,11 @@ def _iter_clouds(cloud_arg: str) -> Iterable[str]:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Verify env-tiered buckets provisioned per cloud-providers.yaml SSOT."
-    )
+    parser = argparse.ArgumentParser(description="Verify env-tiered buckets provisioned per cloud-providers.yaml SSOT.")
     parser.add_argument(
         "--yaml-path",
         type=Path,
-        default=Path(__file__).resolve().parents[2].parent
-        / "deployment-service"
-        / "configs"
-        / "cloud-providers.yaml",
+        default=Path(__file__).resolve().parents[2].parent / "deployment-service" / "configs" / "cloud-providers.yaml",
         help="Path to cloud-providers.yaml SSOT",
     )
     parser.add_argument(
@@ -236,8 +230,7 @@ def main() -> int:
         all_specs.extend(_enumerate_buckets(typed_yaml, c, env, project_id, aws_account_id))
 
     print(
-        f"Enumerated {len(all_specs)} bucket(s) from {yaml_path.name} "
-        f"(cloud={cloud}, env={env}, project={project_id})."
+        f"Enumerated {len(all_specs)} bucket(s) from {yaml_path.name} (cloud={cloud}, env={env}, project={project_id})."
     )
 
     if dry_run:
@@ -256,9 +249,7 @@ def main() -> int:
     if missing:
         print("\nMISSING buckets:")
         for spec in missing:
-            print(
-                f"  {spec.cloud}: {spec.name}  ({spec.kind} / {spec.asset_group or '<shared>'})"
-            )
+            print(f"  {spec.cloud}: {spec.name}  ({spec.kind} / {spec.asset_group or '<shared>'})")
         if print_commands:
             print("\nProvision commands:")
             for spec in missing:
@@ -269,10 +260,7 @@ def main() -> int:
         )
         return 1
 
-    print(
-        f"\n✅ All {len(all_specs)} buckets exist for env={env} cloud={cloud}. "
-        "Wave 1 prerequisite met."
-    )
+    print(f"\n✅ All {len(all_specs)} buckets exist for env={env} cloud={cloud}. Wave 1 prerequisite met.")
     return 0
 
 

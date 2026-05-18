@@ -1567,9 +1567,9 @@ All API services in this cluster conform to the following pattern. Deviations ar
 ### Architecture
 
 - **Pure FastAPI** — no Python service engine code lives in these repos.
-- API services import from unified libraries (`unified_trading_library`, `unified_config_interface`, etc.) but
-  **never** import from service repos (e.g., `execution-service`, `market-data-processing-service`). Services are
-  proxied over HTTP/internal network.
+- API services import from unified libraries (`unified_trading_library`, `unified_config_interface`, etc.) but **never**
+  import from service repos (e.g., `execution-service`, `market-data-processing-service`). Services are proxied over
+  HTTP/internal network.
 - Each repo is independently deployable to Cloud Run with its own `cloudbuild.yaml`.
 
 ### Type Safety

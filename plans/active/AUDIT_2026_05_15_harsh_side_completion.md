@@ -17,29 +17,29 @@ sources:
 # Harsh-side Day-4 (2026-05-15) completion audit
 
 > **Purpose** — operator asked: of items closed today by parallel agents, which actually shipped (commit on
-> `origin/live-defi-rollout` matches the claimed SHA), which are pending, which are BLOCKED, which need reassignment.
-> A concurrent ikenna-side audit agent is running; this doc is harsh-side only and does NOT touch the ikenna ledger or
+> `origin/live-defi-rollout` matches the claimed SHA), which are pending, which are BLOCKED, which need reassignment. A
+> concurrent ikenna-side audit agent is running; this doc is harsh-side only and does NOT touch the ikenna ledger or
 > ikenna pings (cross-side coordination still flows through `plans/active/_agent_pings.md`).
 >
 > **TL;DR** — Slot throughput today is exceptional and **SHA-honest**: every spot-checked SHA across 17 repos resolves
 > to a real commit on `origin/live-defi-rollout` matching the slot's stated description. **No phantom claims found.**
-> Real gaps are (a) one operator-decision pending for B-015 re-launch, (b) one IAM gate pending Ikenna for honest-coverage
-> Cloud Scheduler, (c) ~6 unassigned downstream issues filed today that need owner-routing.
+> Real gaps are (a) one operator-decision pending for B-015 re-launch, (b) one IAM gate pending Ikenna for
+> honest-coverage Cloud Scheduler, (c) ~6 unassigned downstream issues filed today that need owner-routing.
 
 ---
 
 ## Executive scoreboard (slot-by-slot)
 
-| Slot | Theme | Items shipped + SHA-verified | Active / in-flight | BLOCKED | Reassignment needed? |
-| ---- | ----- | ---------------------------- | ------------------ | ------- | -------------------- |
-| 2 | Deployment infra & lint sweep | **20 ✅** across deployment-service + PM | Item 1 (mtb_p6e close-out) STARTED post-restore | Items 7+10 IAM-gated (Cloud Scheduler) | No — operator/Ikenna unblock only |
-| 3 | Strategy + DeFi paper backtests | **15 ✅** across strategy-service + e2e-testing + UAC | New 10-item queue active (items 1-10) | B-016 DEFERRED (no CeFi 7-day window) | No — auto re-activates on features-service CeFi batch |
-| 4 | Test failures + lifecycle coverage | **15 ✅** across features/instruments/ml-training/ml-inference/sit/alerting/batch-live-recon/execution/UAC | Items 8-15 of new queue pending | None | **YES — features-service volatility 48 failures unowned** (see issue gap §3) |
-| 5 | Risk + execution alpha + kill-switch | **22 ✅** across execution + risk + pnl + UTL | Items 10-19 of fresh extension pending | None | No |
-| 6 | Custody + signing + UTL + codex | **22 ✅** across execution + UTL + UAC + PM (codex) | New 9-item queue (just dispatched 22:15 UTC) | None | No |
-| 7 | Deployment API + UI + Phase 4 cron | **18 ✅** across deployment-api + deployment-ui + UAC + alerting + PM | Item 13 (mobile responsive audit) STARTED | None | No |
-| 8 | UTL coverage + QG ratchet rollout | **17 ✅** across PM + UTL + features + ibkr + alerting + 6 service-repo B-014 stubs | New 10-item meta-QG queue, several DONE | None — DT-3/DT-4 are PRE_CUTOVER carve-out per design | No |
-| 9 | MTDS + PBM + DeFi carry backtest | **17 ✅** across mtds + mdps + PM + UAC | 53-test triage just STARTED 22:15 UTC | **B-015 BLOCKED-OPERATOR-DECISION** (greenlight from Ikenna landed but slot 9 missed window — needs explicit auth to re-launch in this session vs carry to 2026-05-16) | No |
+| Slot | Theme                                | Items shipped + SHA-verified                                                                               | Active / in-flight                              | BLOCKED                                                                                                                                                                | Reassignment needed?                                                         |
+| ---- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 2    | Deployment infra & lint sweep        | **20 ✅** across deployment-service + PM                                                                   | Item 1 (mtb_p6e close-out) STARTED post-restore | Items 7+10 IAM-gated (Cloud Scheduler)                                                                                                                                 | No — operator/Ikenna unblock only                                            |
+| 3    | Strategy + DeFi paper backtests      | **15 ✅** across strategy-service + e2e-testing + UAC                                                      | New 10-item queue active (items 1-10)           | B-016 DEFERRED (no CeFi 7-day window)                                                                                                                                  | No — auto re-activates on features-service CeFi batch                        |
+| 4    | Test failures + lifecycle coverage   | **15 ✅** across features/instruments/ml-training/ml-inference/sit/alerting/batch-live-recon/execution/UAC | Items 8-15 of new queue pending                 | None                                                                                                                                                                   | **YES — features-service volatility 48 failures unowned** (see issue gap §3) |
+| 5    | Risk + execution alpha + kill-switch | **22 ✅** across execution + risk + pnl + UTL                                                              | Items 10-19 of fresh extension pending          | None                                                                                                                                                                   | No                                                                           |
+| 6    | Custody + signing + UTL + codex      | **22 ✅** across execution + UTL + UAC + PM (codex)                                                        | New 9-item queue (just dispatched 22:15 UTC)    | None                                                                                                                                                                   | No                                                                           |
+| 7    | Deployment API + UI + Phase 4 cron   | **18 ✅** across deployment-api + deployment-ui + UAC + alerting + PM                                      | Item 13 (mobile responsive audit) STARTED       | None                                                                                                                                                                   | No                                                                           |
+| 8    | UTL coverage + QG ratchet rollout    | **17 ✅** across PM + UTL + features + ibkr + alerting + 6 service-repo B-014 stubs                        | New 10-item meta-QG queue, several DONE         | None — DT-3/DT-4 are PRE_CUTOVER carve-out per design                                                                                                                  | No                                                                           |
+| 9    | MTDS + PBM + DeFi carry backtest     | **17 ✅** across mtds + mdps + PM + UAC                                                                    | 53-test triage just STARTED 22:15 UTC           | **B-015 BLOCKED-OPERATOR-DECISION** (greenlight from Ikenna landed but slot 9 missed window — needs explicit auth to re-launch in this session vs carry to 2026-05-16) | No                                                                           |
 
 **Aggregate**: ~146 items shipped today across 8 slots. ~50 items dispatched but not yet shipped (~25 of those are
 fresh-extension items dispatched in the most recent 4-hour wave; only 1 is a true assignment gap).
@@ -84,9 +84,8 @@ commits within the same agent turn.
 - Coverage push 70→72% — [deployment-service@a6f1478](../../deployment-service)
 - Phase 8 codex audit — [unified-trading-pm@f981a40b](../../unified-trading-pm)
 - VM tarball cleanup tool — [deployment-service@3c42df5](../../deployment-service)
-- 4-batch CODE_BUCKET fleet sweep (48 launchers, 4 SHAs) —
-  [@7c2ed43](../../deployment-service) + [@92ff746](../../deployment-service) +
-  [@070df84](../../deployment-service) + [@9c4144b](../../deployment-service)
+- 4-batch CODE_BUCKET fleet sweep (48 launchers, 4 SHAs) — [@7c2ed43](../../deployment-service) +
+  [@92ff746](../../deployment-service) + [@070df84](../../deployment-service) + [@9c4144b](../../deployment-service)
 - Cloud Scheduler SSOT consolidation — [deployment-service@8cc0644](../../deployment-service) +
   [unified-trading-pm@d624cb7c](../../unified-trading-pm)
 - VM_PREFIX validation — [deployment-service@29eb7ad](../../deployment-service)
@@ -106,6 +105,7 @@ commits within the same agent turn.
 deployment-service Phase 10 codex audit. **Item 1** (mtb_p6e_qg_sweep audit close-out) was just STARTED post-OOM.
 
 **BLOCKED**:
+
 - Items 7 + 10 (Cloud Scheduler `honest-coverage-daily` create + E2E smoke) — IAM-gated; needs Ikenna to run
   `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as `ikenna@odum-research.com`. **Smoke
   workaround already verified**: bucket created + 287 KiB `coverage.json` produced via manual VM at 12:03 UTC. Daily
@@ -152,8 +152,9 @@ deployment-service Phase 10 codex audit. **Item 1** (mtb_p6e_qg_sweep audit clos
 `compound_kamino_lending_rates_gaps` Compound V3 only (P0), `strategy_service_qg_ltv_threshold_violations` (P1),
 `strategy_service_qg_step6_production_readiness_newly_exposed` (P1), 6 buffer items.
 
-**BLOCKED**: B-016 DEFERRED — auto-reactivates when CeFi `features-service --asset-group cefi --feature-family delta_one`
-batch produces a continuous 7-day window with ≥4 venues. Master-plan credential ask filed.
+**BLOCKED**: B-016 DEFERRED — auto-reactivates when CeFi
+`features-service --asset-group cefi --feature-family delta_one` batch produces a continuous 7-day window with ≥4
+venues. Master-plan credential ask filed.
 
 **Reassignment needed**: No.
 
@@ -163,8 +164,8 @@ batch produces a continuous 7-day window with ≥4 venues. Master-plan credentia
 
 **SHIPPED (15 items, all SHA-verified)**:
 
-- features-service per-family lifecycle coverage (8 test files) —
-  [features-service@8545412c](../../features-service) + [@2afd4337](../../features-service)
+- features-service per-family lifecycle coverage (8 test files) — [features-service@8545412c](../../features-service) +
+  [@2afd4337](../../features-service)
 - ml-inference Phase 6.6 (7 tests) — [ml-inference-service@320ac6e](../../ml-inference-service) +
   [@d4f524b](../../ml-inference-service)
 - features-onchain UAC service-key fix (BIG FIND) — [unified-api-contracts@8c70dc5](../../unified-api-contracts) +
@@ -195,12 +196,13 @@ workspace-wide unused-import audit.
 **BLOCKED**: None.
 
 **Reassignment needed — YES (1 item)**:
+
 - **`features_service_volatility_test_failures_2026_05_15.md`** — 48 pre-existing volatility-family failures with 3
-  documented root causes (renamed orchestrator class; deleted live_data_source module; xdist interference).
-  Slot 4 explicitly noted "outside slot-4 scope — needs slot with volatility ownership". Currently nobody owns this.
-  **Proposed routing**: features-service is slot 4's primary repo; the architectural cleanup (orchestrator rename
-  follow-on) is closer to slot 4 than any other slot. Recommend operator decide whether to absorb into slot 4's queue
-  next dispatch OR file as POST_CUTOVER (pre-existing, doesn't break May-23 if accepted as known baseline).
+  documented root causes (renamed orchestrator class; deleted live_data_source module; xdist interference). Slot 4
+  explicitly noted "outside slot-4 scope — needs slot with volatility ownership". Currently nobody owns this. **Proposed
+  routing**: features-service is slot 4's primary repo; the architectural cleanup (orchestrator rename follow-on) is
+  closer to slot 4 than any other slot. Recommend operator decide whether to absorb into slot 4's queue next dispatch OR
+  file as POST_CUTOVER (pre-existing, doesn't break May-23 if accepted as known baseline).
 
 ---
 
@@ -214,18 +216,19 @@ SHAs: [execution-service@69d02cb0](../../execution-service) (DefiErrorCode 30 co
 [@e3f61175](../../execution-service) (order_router Phase 9) + [@e60bc4b1](../../execution-service) (Tenderly fork) +
 [@44c4d584](../../execution-service) (venue admission) + [@cd2d1927](../../execution-service) (cross-service
 kill-switch); [risk-and-exposure-service@4ffe980](../../risk-and-exposure-service) (UTL kill-switch — actually UTL repo)
-+ [@fd10112](../../risk-and-exposure-service) (Phase 6.7 BLOCK_CRITICAL) + [@9d62a58](../../risk-and-exposure-service)
-(throttle/rate-limit) + [@494fd05](../../risk-and-exposure-service) (exposure aggregation) +
-[@75f9d17](../../risk-and-exposure-service) (VAR/drawdown);
-[pnl-attribution-service@f3899ef](../../pnl-attribution-service) + [@fbf4269](../../pnl-attribution-service) +
-[@63170a3](../../pnl-attribution-service) + [@3bfe553](../../pnl-attribution-service);
-[deployment-api@54a8a16](../../deployment-api) (SHARD_AXIS_MATRIX 21→32);
-[unified-trading-pm@6342dfe9](../../unified-trading-pm) (pvl-p18b matrix).
+
+- [@fd10112](../../risk-and-exposure-service) (Phase 6.7 BLOCK_CRITICAL) + [@9d62a58](../../risk-and-exposure-service)
+  (throttle/rate-limit) + [@494fd05](../../risk-and-exposure-service) (exposure aggregation) +
+  [@75f9d17](../../risk-and-exposure-service) (VAR/drawdown);
+  [pnl-attribution-service@f3899ef](../../pnl-attribution-service) + [@fbf4269](../../pnl-attribution-service) +
+  [@63170a3](../../pnl-attribution-service) + [@3bfe553](../../pnl-attribution-service);
+  [deployment-api@54a8a16](../../deployment-api) (SHARD_AXIS_MATRIX 21→32);
+  [unified-trading-pm@6342dfe9](../../unified-trading-pm) (pvl-p18b matrix).
 
 **Pending in fresh extension queue** (items 10-19 dispatched 22:10 UTC): risk-and-exposure Phase 6.8+, flash loan
 execution path tests, slippage model boundary tests, per-venue cost attribution, risk emission policy, order book
-reconciliation extension, rate-limit + circuit-breaker tests, oracle-mismatch handling, risk stress test scenarios,
-pnl end-of-day rollup tests.
+reconciliation extension, rate-limit + circuit-breaker tests, oracle-mismatch handling, risk stress test scenarios, pnl
+end-of-day rollup tests.
 
 **BLOCKED**: None.
 
@@ -238,9 +241,9 @@ pnl end-of-day rollup tests.
 **SHIPPED (22 items, all SHA-verified)** — see [pings/slot_6.md](../../harsh_orchestrator/pings/slot_6.md). Headline
 SHAs: [unified-trading-pm@f1429168](../../unified-trading-pm) (codex 13→30 DefiErrorCode) +
 [@dd502602](../../unified-trading-pm) (honest-coverage Phase 8) + [@1051d3b6](../../unified-trading-pm)
-(MASTER_READINESS A-G refresh); [unified-api-contracts@d981502](../../unified-api-contracts) (Oracle errors export) +
+(MASTER*READINESS A-G refresh); [unified-api-contracts@d981502](../../unified-api-contracts) (Oracle errors export) +
 [@a6a0f09](../../unified-api-contracts) (wallet provisioning round-trip);
-[execution-service@3ef4c712](../../execution-service) (HL_*+ORACLE_*+RECURSIVE_LOOP coverage) +
+[execution-service@3ef4c712](../../execution-service) (HL*_+ORACLE\__+RECURSIVE_LOOP coverage) +
 [@f1dee093](../../execution-service) (LocalKeyCustodyProvider 33 tests) + [@c1fa8072](../../execution-service) (KMS
 mocks) + [@d06ec579](../../execution-service) (bare log_event fix) + [@9d50f02d](../../execution-service) (native
 adapter contracts + Kraken status casing fix) + [@fc5a8de9](../../execution-service) (PinnacleAdapterStub fix);
@@ -254,8 +257,8 @@ drift audit clean → issue doc filed.
 **Pending in fresh queue** (9 items dispatched 22:15 UTC): utl_qg_preexisting_failures fix sweep (P1);
 strategy_service_phase8_codex_drift (P1); strategy_service_phase10_codex_drift Drift 2 only (P3);
 sit_may23_critical_path_coverage_gaps (P1) — coordinate with slot 4 (slot 4 already shipped some of this in
-[sit@fba72b7](../../system-integration-tests)); expected_unattempted_propagation_gap (P1); buffer items 6-9
-(codex/04 drift cleanup, QG_MEM_CAP smoke tests, UAC size violation 1-file, codex/06 SSOT cross-link).
+[sit@fba72b7](../../system-integration-tests)); expected_unattempted_propagation_gap (P1); buffer items 6-9 (codex/04
+drift cleanup, QG_MEM_CAP smoke tests, UAC size violation 1-file, codex/06 SSOT cross-link).
 
 **BLOCKED**: None.
 
@@ -269,18 +272,19 @@ sit_may23_critical_path_coverage_gaps (P1) — coordinate with slot 4 (slot 4 al
 SHAs: [unified-api-contracts@1f80129](../../unified-api-contracts) (QG_SNAPSHOT_STALE);
 [unified-trading-pm@94f61350](../../unified-trading-pm) (check_snapshot_staleness.py);
 [alerting-service@cc3cdb8](../../alerting-service) (Phase 4.A integration tests);
-[deployment-api@e373860](../../deployment-api) (last_snapshot_date) + [@8b62cb6](../../deployment-api)
-(honest-coverage route tests) + [@f407c54](../../deployment-api) (4 launch endpoints + vm/events) +
-[@b1ee896](../../deployment-api) (builds/history) + [@4951d10](../../deployment-api) (WebSocket VM event streaming) +
-[@8aabe72](../../deployment-api) (Prometheus telemetry) + [@af80be6](../../deployment-api) (admin VM endpoints) +
-[@13b0194](../../deployment-api) (VM log streaming) + [@3acda8e](../../deployment-api) (deployment diff endpoint) +
-[@d3a001a](../../deployment-api) (cost estimate endpoint) + [@604b625](../../deployment-api) (Phase 11 backend);
-[deployment-ui@b535429](../../deployment-ui) (snapshot age badge) + [@85b8641](../../deployment-ui) (HonestCoverageCard
-+ ClientReportingTab tests) + [@d3d657b](../../deployment-ui) (/ops/live-deployments) +
-[@8bace71](../../deployment-ui) (WebSocket UI integration) + [@a3d0516](../../deployment-ui) (Phase 11 recursive-borrow
-UI) + [@3119577](../../deployment-ui) (WCAG AA + ARIA) + [@71c658e](../../deployment-ui) (ErrorBoundary) +
-[@cb4f2bf](../../deployment-ui) (VM log viewer) + [@2c221ac](../../deployment-ui) (deployment diff viewer) +
-[@5147f4b](../../deployment-ui) (cost estimate panel).
+[deployment-api@e373860](../../deployment-api) (last_snapshot_date) + [@8b62cb6](../../deployment-api) (honest-coverage
+route tests) + [@f407c54](../../deployment-api) (4 launch endpoints + vm/events) + [@b1ee896](../../deployment-api)
+(builds/history) + [@4951d10](../../deployment-api) (WebSocket VM event streaming) + [@8aabe72](../../deployment-api)
+(Prometheus telemetry) + [@af80be6](../../deployment-api) (admin VM endpoints) + [@13b0194](../../deployment-api) (VM
+log streaming) + [@3acda8e](../../deployment-api) (deployment diff endpoint) + [@d3a001a](../../deployment-api) (cost
+estimate endpoint) + [@604b625](../../deployment-api) (Phase 11 backend); [deployment-ui@b535429](../../deployment-ui)
+(snapshot age badge) + [@85b8641](../../deployment-ui) (HonestCoverageCard
+
+- ClientReportingTab tests) + [@d3d657b](../../deployment-ui) (/ops/live-deployments) + [@8bace71](../../deployment-ui)
+  (WebSocket UI integration) + [@a3d0516](../../deployment-ui) (Phase 11 recursive-borrow UI) +
+  [@3119577](../../deployment-ui) (WCAG AA + ARIA) + [@71c658e](../../deployment-ui) (ErrorBoundary) +
+  [@cb4f2bf](../../deployment-ui) (VM log viewer) + [@2c221ac](../../deployment-ui) (deployment diff viewer) +
+  [@5147f4b](../../deployment-ui) (cost estimate panel).
 
 **Pending**: Item 13 (mobile responsive layout audit) STARTED 20:15 UTC — currently in flight per latest ping.
 
@@ -293,8 +297,7 @@ UI) + [@3119577](../../deployment-ui) (WCAG AA + ARIA) + [@71c658e](../../deploy
 ### Slot 8 — UTL coverage + QG ratchet rollout + meta-QG
 
 **SHIPPED (17 items, all SHA-verified)** — see [pings/slot_8.md](../../harsh_orchestrator/pings/slot_8.md). Headline
-SHAs: B-014 Phase 3 SSOT path rollout to 6 service repos:
-[ml-inference-service@8116b23](../../ml-inference-service) +
+SHAs: B-014 Phase 3 SSOT path rollout to 6 service repos: [ml-inference-service@8116b23](../../ml-inference-service) +
 [market-data-processing-service@2ff9258](../../market-data-processing-service) +
 [ml-training-service@00a97aa](../../ml-training-service) + [alerting-service@4795ccf](../../alerting-service) +
 [market-tick-data-service@acec41d](../../market-tick-data-service) +
@@ -322,33 +325,32 @@ dispatch.
 ### Slot 9 — MTDS + PBM + DeFi carry backtest
 
 **SHIPPED (17 items, all SHA-verified)** — see [pings/slot_9.md](../../harsh_orchestrator/pings/slot_9.md). Headline
-SHAs: All 4 DeFi handlers eigenlayer-hardened
-[market-tick-data-service@f657431](../../market-tick-data-service) (lst_rates) +
-[@3bca360](../../market-tick-data-service) (evm_defi/gas_fee/solana_defi); MTDS UAC facade audit + Helius RPC tests
-[@8693c57](../../market-tick-data-service); structural phantom risk issue doc
+SHAs: All 4 DeFi handlers eigenlayer-hardened [market-tick-data-service@f657431](../../market-tick-data-service)
+(lst_rates) + [@3bca360](../../market-tick-data-service) (evm_defi/gas_fee/solana_defi); MTDS UAC facade audit + Helius
+RPC tests [@8693c57](../../market-tick-data-service); structural phantom risk issue doc
 [unified-trading-pm@9c666020](../../unified-trading-pm); PACIFICA + LIGHTER perp funding tests
 [market-tick-data-service@0c40d02](../../market-tick-data-service); 5 DeFi handler retry-and-backoff tests
-[@dcd6f5f](../../market-tick-data-service); Pyth oracle integration tests
-[@d63fda5](../../market-tick-data-service); Pyth ETH/BTC/SOL symbol coverage
-[@487c9d0](../../market-tick-data-service); perp funding normalization 7 venues
+[@dcd6f5f](../../market-tick-data-service); Pyth oracle integration tests [@d63fda5](../../market-tick-data-service);
+Pyth ETH/BTC/SOL symbol coverage [@487c9d0](../../market-tick-data-service); perp funding normalization 7 venues
 [@7b8f6b6](../../market-tick-data-service); MTDS schema versioning [@52d5227](../../market-tick-data-service); MTDS
 graceful shutdown [@6a71ddf](../../market-tick-data-service); MTDS calendar boundaries
-[@14d212a](../../market-tick-data-service); MTDS adapter rate-limit + cache
-[@b1360a5](../../market-tick-data-service); MTDS CLI flag validation [@40de2cc](../../market-tick-data-service); PBM
-batch-to-live mode parity [market-data-processing-service@3f72029](../../market-data-processing-service); PBM
-service-output emission tests [@c7219f6](../../market-data-processing-service); PBM phantom-prevention
+[@14d212a](../../market-tick-data-service); MTDS adapter rate-limit + cache [@b1360a5](../../market-tick-data-service);
+MTDS CLI flag validation [@40de2cc](../../market-tick-data-service); PBM batch-to-live mode parity
+[market-data-processing-service@3f72029](../../market-data-processing-service); PBM service-output emission tests
+[@c7219f6](../../market-data-processing-service); PBM phantom-prevention
 [@9f7b1ab](../../market-data-processing-service) + [@2428656](../../market-data-processing-service); features-service
 PREDICTION run_tag wire-in [features-service@2ebdae09](../../features-service);
 [market-tick-data-service@b9b37c8](../../market-tick-data-service) (run_tag wired into MTDS GCS path).
 
-**Pending**: Just STARTED MTDS market_interface 53-test-failure triage at 22:15 UTC (operator-acked dispatch from
-17:20 UTC; missed during post-OOM resume).
+**Pending**: Just STARTED MTDS market_interface 53-test-failure triage at 22:15 UTC (operator-acked dispatch from 17:20
+UTC; missed during post-OOM resume).
 
 **BLOCKED — needs operator decision**:
+
 - **B-015 Phase 2 launch authorization** — Ikenna slots 6+8 posted phantom-fix DONE greenlights at 09:30 UTC + 11:25 UTC
   (**slot 9 acknowledged spotting them only at 21:55 UTC**, ~12h after the greenlight). Slot 9 explicitly asks: am I
-  still authorized to launch the smoke VM in this session, or does this carry forward to 2026-05-16 Day-1?
-  **Operator decision required** before slot 9 can pivot back to B-015.
+  still authorized to launch the smoke VM in this session, or does this carry forward to 2026-05-16 Day-1? **Operator
+  decision required** before slot 9 can pivot back to B-015.
 
 **Reassignment needed**: No — slot 9 is the correct owner for both 53-test triage and B-015 re-launch.
 
@@ -368,39 +370,39 @@ flips, no SHAs claimed without backing commits. **The "SHA cited but no commit" 
 - **Slot 5** at 18:30 UTC backfilled items 3+4 (risk@494fd05 + pnl@3bfe553) — code had shipped, pings missed; backfill
   ping is explicit ("DONE items 3+4 (backfilled — code was shipped, pings missed)"). PM has a matching backfill flip
   commit `bb8d7a9a docs(plans): backfill DONE pings for items 3+4`.
-- **Slot 7** post-OOM at 17:00 UTC backfilled items 3+11+12 (deployment-ui@8bace71 + a3d0516 + middleware.py) —
-  explicit "POST-OOM RESUME + BACKFILL" ping. PM has `987d1269 docs(plans): backfill slot-7 DONE pings for items
-  3/11/12 post-OOM`.
+- **Slot 7** post-OOM at 17:00 UTC backfilled items 3+11+12 (deployment-ui@8bace71 + a3d0516 + middleware.py) — explicit
+  "POST-OOM RESUME + BACKFILL" ping. PM has
+  `987d1269 docs(plans): backfill slot-7 DONE pings for items 3/11/12 post-OOM`.
 
 Both are honest reporting and should NOT be flagged.
 
 ### C. Issue docs filed today (20 docs) — routing status
 
-| Issue doc | Filed by | Severity | Routed / status |
-| --------- | -------- | -------- | --------------- |
-| `b_015_smoke_vms_phantom_manifest_silent_skip` | ikenna-main | P0 | Ikenna phantom-fix DONE @09:30/11:25 UTC; slot 9 awaiting operator re-launch decision |
-| `defi_handler_phantom_risk_structural` | slot-9 | P1 | ✅ CLOSED — all 4 handlers hardened (mtds@f657431 + @3bca360) |
-| `gcp_sa_private_key_in_git_history_execution_service` | ikenna-slot-6 | P0 SECURITY | OPERATOR-OWNED hard-stop (key rotation + history rewrite) |
-| `github_pat_in_instruments_service_env` | ikenna-slot-6 | P1 SECURITY | OPERATOR-OWNED |
-| `mtb_p6e_qg_sweep` | slot-2 | P1 | ✅ RESOLVED via cross-link to existing issue docs + ml-training fix@7e18af8 |
-| `service_registry_drift_audit` | slot-2 | informational | ✅ CLOSED — 0 orphans, 88 OK, 56 heartbeat-only |
-| `vm_image_build_caching_gaps` | slot-2 | P2 | ✅ Mechanical fixes shipped (3 repos); doc remaining items deferred |
-| `deployment_events_lifecycle_audit` | slot-2 | P2 | OPERATOR-QUEUED — 3 gsutil commands ready to run |
-| `codex_04_architecture_drift_audit` | slot-6 | P3 | Slot 6 buffer item 6 (post-May-23 batch) |
-| `codex_audit_deployment_template_phase8_drift` | slot-8 | P2 | ✅ DT-1/DT-2 fixed; DT-3/DT-4 PRE_CUTOVER per design |
-| `compound_kamino_lending_rates_gaps` | slot-3 (today) | P0 | Slot 3 active queue item 2 (Compound V3 only; Kamino BLOCKED-CREDENTIALS) |
-| `deprecated_pattern_sweep` | slot-8 | P1 | Slot 2 active queue items 3/5/6 (3-slice sweep) |
-| `features_service_qg_test_path_mismatch` | slot-4 | P1 | ✅ CLOSED — PYTEST_UNIT_DIR fix shipped (PM@c7786b2f + features@ccd44d97) |
-| **`features_service_volatility_test_failures`** | slot-4 | P1 | **🚨 UNASSIGNED — 48 failures; slot-4 explicitly out-of-scope; needs owner** |
-| `mtds_defi_handler_perf_benchmark_gap` | slot-9 | P3 | DEFERRED — DeFi handlers are 1-shot HTTP fetchers, existing harness is CeFi-only |
-| `pyproject_workspace_audit` | slot-8 | P1 | Slot 2 active queue item 2 |
-| `sit_may23_critical_path_coverage_gaps` | slot-8 | P1 | Slot 6 active queue item 4 (coordinate with slot 4 sit@fba72b7) |
-| `strategy_service_phase8_codex_drift` | slot-3 | P1 | Slot 6 active queue item 2 |
-| `strategy_service_phase10_codex_drift` | slot-3 | P3 | Slot 6 active queue item 3 (Drift 2 only — Drift 1 routed to slot 1 main) |
-| `strategy_service_qg_ltv_threshold_violations` | slot-5 | P1 | Slot 3 active queue item 3 |
+| Issue doc                                             | Filed by       | Severity      | Routed / status                                                                       |
+| ----------------------------------------------------- | -------------- | ------------- | ------------------------------------------------------------------------------------- |
+| `b_015_smoke_vms_phantom_manifest_silent_skip`        | ikenna-main    | P0            | Ikenna phantom-fix DONE @09:30/11:25 UTC; slot 9 awaiting operator re-launch decision |
+| `defi_handler_phantom_risk_structural`                | slot-9         | P1            | ✅ CLOSED — all 4 handlers hardened (mtds@f657431 + @3bca360)                         |
+| `gcp_sa_private_key_in_git_history_execution_service` | ikenna-slot-6  | P0 SECURITY   | OPERATOR-OWNED hard-stop (key rotation + history rewrite)                             |
+| `github_pat_in_instruments_service_env`               | ikenna-slot-6  | P1 SECURITY   | OPERATOR-OWNED                                                                        |
+| `mtb_p6e_qg_sweep`                                    | slot-2         | P1            | ✅ RESOLVED via cross-link to existing issue docs + ml-training fix@7e18af8           |
+| `service_registry_drift_audit`                        | slot-2         | informational | ✅ CLOSED — 0 orphans, 88 OK, 56 heartbeat-only                                       |
+| `vm_image_build_caching_gaps`                         | slot-2         | P2            | ✅ Mechanical fixes shipped (3 repos); doc remaining items deferred                   |
+| `deployment_events_lifecycle_audit`                   | slot-2         | P2            | OPERATOR-QUEUED — 3 gsutil commands ready to run                                      |
+| `codex_04_architecture_drift_audit`                   | slot-6         | P3            | Slot 6 buffer item 6 (post-May-23 batch)                                              |
+| `codex_audit_deployment_template_phase8_drift`        | slot-8         | P2            | ✅ DT-1/DT-2 fixed; DT-3/DT-4 PRE_CUTOVER per design                                  |
+| `compound_kamino_lending_rates_gaps`                  | slot-3 (today) | P0            | Slot 3 active queue item 2 (Compound V3 only; Kamino BLOCKED-CREDENTIALS)             |
+| `deprecated_pattern_sweep`                            | slot-8         | P1            | Slot 2 active queue items 3/5/6 (3-slice sweep)                                       |
+| `features_service_qg_test_path_mismatch`              | slot-4         | P1            | ✅ CLOSED — PYTEST_UNIT_DIR fix shipped (PM@c7786b2f + features@ccd44d97)             |
+| **`features_service_volatility_test_failures`**       | slot-4         | P1            | **🚨 UNASSIGNED — 48 failures; slot-4 explicitly out-of-scope; needs owner**          |
+| `mtds_defi_handler_perf_benchmark_gap`                | slot-9         | P3            | DEFERRED — DeFi handlers are 1-shot HTTP fetchers, existing harness is CeFi-only      |
+| `pyproject_workspace_audit`                           | slot-8         | P1            | Slot 2 active queue item 2                                                            |
+| `sit_may23_critical_path_coverage_gaps`               | slot-8         | P1            | Slot 6 active queue item 4 (coordinate with slot 4 sit@fba72b7)                       |
+| `strategy_service_phase8_codex_drift`                 | slot-3         | P1            | Slot 6 active queue item 2                                                            |
+| `strategy_service_phase10_codex_drift`                | slot-3         | P3            | Slot 6 active queue item 3 (Drift 2 only — Drift 1 routed to slot 1 main)             |
+| `strategy_service_qg_ltv_threshold_violations`        | slot-5         | P1            | Slot 3 active queue item 3                                                            |
 
-**Of 20 issue docs filed today, 6 are CLOSED, 6 are routed to active queues, 5 are operator/IAM-gated, 2 are
-DEFERRED with rationale. 1 is UNASSIGNED** — the volatility test failures — and is the only true assignment gap.
+**Of 20 issue docs filed today, 6 are CLOSED, 6 are routed to active queues, 5 are operator/IAM-gated, 2 are DEFERRED
+with rationale. 1 is UNASSIGNED** — the volatility test failures — and is the only true assignment gap.
 
 ### D. Operator decisions awaiting (3)
 
@@ -431,11 +433,10 @@ custody-providers correction (May-23 = CLOUD_KMS_ENCRYPTED, not Copper/CEFFU). A
 
 ## Recommended actions for operator (in priority order)
 
-1. **B-015 re-launch decision** — answer slot 9's 21:55 UTC question. Either authorize this-session re-launch (greenlight
-   already sitting at 12h old) or defer to 2026-05-16 Day-1 with explicit "carry-forward" instruction.
-2. **Cloud Scheduler one-liner** — run
-   `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as `ikenna@odum-research.com` to unblock slot
-   2 items 7+10 (item 4 of new queue).
+1. **B-015 re-launch decision** — answer slot 9's 21:55 UTC question. Either authorize this-session re-launch
+   (greenlight already sitting at 12h old) or defer to 2026-05-16 Day-1 with explicit "carry-forward" instruction.
+2. **Cloud Scheduler one-liner** — run `bash deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh` as
+   `ikenna@odum-research.com` to unblock slot 2 items 7+10 (item 4 of new queue).
 3. **Volatility 48-failures routing** — pick: (a) absorb into slot 4 next dispatch, or (b) file as POST_CUTOVER
    pre-existing baseline. If (a), the issue doc has all 3 root causes pre-documented.
 4. **Slot 9 fresh queue** after triage close — slot 9 will need a new dispatch once 53-test triage CYCLE-CLOSEs (likely

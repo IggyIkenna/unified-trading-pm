@@ -18,7 +18,6 @@ depends_on:
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Refactor G1.13 — Demo upsell-overlay tempt-logic
 
 ## Context

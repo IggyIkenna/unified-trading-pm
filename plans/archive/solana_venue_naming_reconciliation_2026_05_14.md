@@ -19,7 +19,6 @@ effective_concurrent_slots: 1
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
 
 # Solana DeFi venue naming reconciliation — Plan D
@@ -137,20 +136,19 @@ grep -n "f\".*-{self._chain}\"\|f\".*SOLANA" \
 
 ## Phase 3 — VM migration + verification
 
-- [x] [SCRIPT] P1. **OPERATOR-AUTHORIZED**: Launch migration VM. **DONE 2026-05-15 (slot-3)**: Ran locally with ADC admin
-      perms (no VM needed — network available, all Category A parquets were phantom captures so no actual GCS copies
-      required). `VM_NAME=slot3-solana-venue-migration-20260515 MANIFEST_PER_VM_SHARDS=true DEPLOYMENT_ENV=prd
-      python scripts/migrate_solana_bare_name_venues.py --apply --confirm`. Result: parquets_migrated=0
-      manifest_rows_updated=0 rows_phantom_marked=228 (169 Cat A + 59 Cat B). Backup at
+- [x] [SCRIPT] P1. **OPERATOR-AUTHORIZED**: Launch migration VM. **DONE 2026-05-15 (slot-3)**: Ran locally with ADC
+      admin perms (no VM needed — network available, all Category A parquets were phantom captures so no actual GCS
+      copies required).
+      `VM_NAME=slot3-solana-venue-migration-20260515 MANIFEST_PER_VM_SHARDS=true DEPLOYMENT_ENV=prd     python scripts/migrate_solana_bare_name_venues.py --apply --confirm`.
+      Result: parquets_migrated=0 manifest_rows_updated=0 rows_phantom_marked=228 (169 Cat A + 59 Cat B). Backup at
       `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.20260515-135146.bak.parquet`.
       (instruments-service migration script already committed @2639f8e)
 
-- [x] [SCRIPT] P1. Post-migration verification. **DONE 2026-05-15 (slot-3)**: Manifest re-queried from GCS:
-      MARINADE captured=0 attempted_failed=30 ✅; DRIFT captured=0 attempted_failed=29 ✅; JITO captured=0
-      attempted_failed=30 ✅; ORCA captured=0 attempted_failed=31 ✅; RAYDIUM captured=0 attempted_failed=31 ✅;
-      KAMINO captured=0 attempted_failed=64 ✅; SOLEND captured=0 attempted_failed=29 ✅; MARGINFI captured=0
-      attempted_failed=30 ✅. PROTOCOL-SOLANA rows all `empty_confirmed` (adapters run, honest absence). Total rows:
-      1,606,190 (unchanged).
+- [x] [SCRIPT] P1. Post-migration verification. **DONE 2026-05-15 (slot-3)**: Manifest re-queried from GCS: MARINADE
+      captured=0 attempted_failed=30 ✅; DRIFT captured=0 attempted_failed=29 ✅; JITO captured=0 attempted_failed=30
+      ✅; ORCA captured=0 attempted_failed=31 ✅; RAYDIUM captured=0 attempted_failed=31 ✅; KAMINO captured=0
+      attempted_failed=64 ✅; SOLEND captured=0 attempted_failed=29 ✅; MARGINFI captured=0 attempted_failed=30 ✅.
+      PROTOCOL-SOLANA rows all `empty_confirmed` (adapters run, honest absence). Total rows: 1,606,190 (unchanged).
 
 ## Phase 4 — Codex update
 

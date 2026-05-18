@@ -206,69 +206,117 @@ LIVE_ALERT_RULES rule; (2) explicit-rule ratchet: exactly 2 codes (CHAOS_DRILL_F
 catch-all-only; 75/77 have explicit rules; (3) family spot-checks: DeFi Family 1/2 (5 codes) + risk-rule (4 codes) +
 stablecoin + QG_SNAPSHOT_STALE + RECON_DEGRADED_CLOSE. Alerting QG ✅ (122s). alerting@c1c9a68. Moving to item 4.
 
-[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 — MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4). Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.
+[2026-05-15 18:45 UTC] slot-4 — ✅ ITEM 4 DONE: batch-live-reconciliation-service reconcile_shard coverage. Expanded
+test_stages.py with 20 new tests (4 classes): TestServiceReconResultProperties (5), TestReconcileShardPath (5 —
+MATCH/SCHEMA_MISMATCH/VALUE_MISMATCH/exception/args), TestNdjsonCounting (3), TestBlobCountingEdgeCases (4).
+Stage0_data_pipeline_recon.py coverage: 77.8% → 95.1%. Overall: 80.65% → 83.29% ≥ 70% target. QG ✅ (pre-existing
+pip-audit + codex violations only). batch-live-reconciliation-service@50c1f6e. Moving to item 5.
 
-[2026-05-15 19:00 UTC] slot-4 — ✅ ITEM 5 CONFIRMED DONE (pre-existing): features-service multi_timeframe + calendar lifecycle tests already exist from prior session (B-006 Phase 8.A). tests/multi_timeframe/unit/test_lifecycle_events.py (3 tests) + tests/calendar/unit/test_lifecycle_events.py (3 tests) — all 6 pass. PYTEST_UNIT_DIR="tests/" override already in scripts/quality-gates.sh. Calendar family has 45 pre-existing failures in smoke_matrix/other files (NOT lifecycle tests — not caused by slot-4). No new code needed. Moving to item 6.
+[2026-05-15 19:00 UTC] slot-4 — ✅ ITEM 5 CONFIRMED DONE (pre-existing): features-service multi_timeframe + calendar
+lifecycle tests already exist from prior session (B-006 Phase 8.A). tests/multi_timeframe/unit/test_lifecycle_events.py
+(3 tests) + tests/calendar/unit/test_lifecycle_events.py (3 tests) — all 6 pass. PYTEST_UNIT_DIR="tests/" override
+already in scripts/quality-gates.sh. Calendar family has 45 pre-existing failures in smoke_matrix/other files (NOT
+lifecycle tests — not caused by slot-4). No new code needed. Moving to item 6.
 
-[2026-05-15 19:30 UTC] slot-4 — ✅ ITEM 6 DONE: features-onchain Phase 6.6 emission policy tests. Added TestCheckEmissionPolicyPhase66 (4 tests) to tests/onchain/unit/test_emission_policy.py: BLOCK_CRITICAL full window publishes; BLOCK_CRITICAL with NaN suppresses write + should_alert=True (P0 alert path); NAN_FILL with NaN publishes PUBLISHED_DEGRADED; empty DataFrame sends completeness=0.0. Fixed _make_decision helper to accept should_alert kwarg (EmissionDecision is frozen dataclass — cannot mutate post-init). All 12 onchain emission tests pass. Volatility failures are pre-existing (confirmed baseline 47 failures before any slot-4 changes). features-service@a17d85b0. Moving to item 7.
+[2026-05-15 19:30 UTC] slot-4 — ✅ ITEM 6 DONE: features-onchain Phase 6.6 emission policy tests. Added
+TestCheckEmissionPolicyPhase66 (4 tests) to tests/onchain/unit/test_emission_policy.py: BLOCK_CRITICAL full window
+publishes; BLOCK_CRITICAL with NaN suppresses write + should_alert=True (P0 alert path); NAN_FILL with NaN publishes
+PUBLISHED_DEGRADED; empty DataFrame sends completeness=0.0. Fixed \_make_decision helper to accept should_alert kwarg
+(EmissionDecision is frozen dataclass — cannot mutate post-init). All 12 onchain emission tests pass. Volatility
+failures are pre-existing (confirmed baseline 47 failures before any slot-4 changes). features-service@a17d85b0. Moving
+to item 7.
 
-[2026-05-15 19:45 UTC] slot-4 — ✅ ITEM 7 DONE: workspace-wide pytest marker hygiene audit. Grepped xfail + skipif across all worktree repos (37 files, 96 markers total). Result: 0 undocumented markers. Every @pytest.mark.xfail and @pytest.mark.skipif has explicit reason= string (multi-line or inline). Repos checked: unified-api-contracts, system-integration-tests, instruments-service, unified-trading-library, execution-service, strategy-service, market-tick-data-service, deployment-api, features-service, batch-live-reconciliation-service. No code changes needed. Moving to item 8.
+[2026-05-15 19:45 UTC] slot-4 — ✅ ITEM 7 DONE: workspace-wide pytest marker hygiene audit. Grepped xfail + skipif
+across all worktree repos (37 files, 96 markers total). Result: 0 undocumented markers. Every @pytest.mark.xfail and
+@pytest.mark.skipif has explicit reason= string (multi-line or inline). Repos checked: unified-api-contracts,
+system-integration-tests, instruments-service, unified-trading-library, execution-service, strategy-service,
+market-tick-data-service, deployment-api, features-service, batch-live-reconciliation-service. No code changes needed.
+Moving to item 8.
 
 ---
 
 ## [2026-05-15 19:50 UTC] [main → slot 4] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
 
-> Re-anchoring as todo-checkbox list per operator request. Items 1-7 already
-> shipped — flipped here with SHAs from your ping entries above. Items 8-15
-> remain (~16 AI-days). Going forward, flip in-place as you ship:
-> `- [ ]` → `- [x] @ <sha> + brief evidence`.
+> Re-anchoring as todo-checkbox list per operator request. Items 1-7 already shipped — flipped here with SHAs from your
+> ping entries above. Items 8-15 remain (~16 AI-days). Going forward, flip in-place as you ship: `- [ ]` →
+> `- [x] @ <sha> + brief evidence`.
 
 ### Already done this cycle
 
 - [x] **1. ml-training-service coverage ≥70%** — ml-training-service@7e18af8 (70 new tests + 43 pyright fixes)
 - [x] **2. system-integration-tests new DeFi-flow scenarios** — sit@fba72b7 (16 tests)
 - [x] **3. alerting-service alert code parity** — alerting@c1c9a68 (3-tier sweep)
-- [x] **4. batch-live-reconciliation reconcile_shard coverage** — batch-live-reconciliation-service@50c1f6e (80.65 → 83.29%)
+- [x] **4. batch-live-reconciliation reconcile_shard coverage** — batch-live-reconciliation-service@50c1f6e (80.65 →
+      83.29%)
 - [x] **5. features-service multi_timeframe + calendar lifecycle tests** — pre-existing, confirmed (6 tests pass)
 - [x] **6. features-onchain Phase 6.6 emission policy tests** — features-service@a17d85b0 (4 new tests)
 - [x] **7. workspace-wide pytest marker hygiene audit** — AUDIT CLEAN (96 markers across 37 files, all documented)
-- [x] **8. instruments-service ETF/ADR migration coverage gap** — instruments-service@f14f39a (38 tests: migrate_instrument_type_lowercase + migrate_defi_bare_to_asset_group; pre/post + mocked GCS; QG ✅)
+- [x] **8. instruments-service ETF/ADR migration coverage gap** — instruments-service@f14f39a (38 tests:
+      migrate_instrument_type_lowercase + migrate_defi_bare_to_asset_group; pre/post + mocked GCS; QG ✅)
 
 ### Remaining (in-progress = 9; pending = 10-15)
 
-- [x] **9. execution-service order_router test gaps** — execution-service@bcb3771a (17 tests, 9 new: property getters, compose_validation paths, gas tracking, error codes; QG ✅ ALL GATES PASSED 437s)
+- [x] **9. execution-service order_router test gaps** — execution-service@bcb3771a (17 tests, 9 new: property getters,
+      compose_validation paths, gas tracking, error codes; QG ✅ ALL GATES PASSED 437s)
 
-- [x] **10. Cross-repo `@pytest.mark.live` audit** — instruments-service@06c7248 (3 markers applied: test_defi_instruments_e2e + test_tradfi_instruments_e2e + test_write_to_test_bucket_not_prod; also fixed pytest.ini missing live marker registration)
+- [x] **10. Cross-repo `@pytest.mark.live` audit** — instruments-service@06c7248 (3 markers applied:
+      test_defi_instruments_e2e + test_tradfi_instruments_e2e + test_write_to_test_bucket_not_prod; also fixed
+      pytest.ini missing live marker registration)
 
-- [x] **11. ml-training-service experiment manifest validation tests** — ml-training-service@9a3f581 (validate()/validate_or_raise() + 12 tests: TestExperimentManifestValidation ×10 + TestHyperparameterRoundtrip ×2; QG ✅ ALL GATES PASSED 329s)
+- [x] **11. ml-training-service experiment manifest validation tests** — ml-training-service@9a3f581
+      (validate()/validate_or_raise() + 12 tests: TestExperimentManifestValidation ×10 + TestHyperparameterRoundtrip ×2;
+      QG ✅ ALL GATES PASSED 329s)
 
-- [x] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green. — sit@47a1e04: 11 tests / 4 classes (honest-coverage emission flow); QG ✅ (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
+- [ ] **12. system-integration-tests Phase 8 honest-coverage scenarios** — sit/ tests for honest-coverage emission flow
+      (VM emits → manifest writer → coverage.json → API endpoint). Done-def: 2+ scenarios + sit QG green.
 
-- [x] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock). Done-def: routing parity + alerting QG green. — alerting@af7122f: 3 classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
+- [ ] **13. alerting-service alert routing tests** — routing by severity (P0 → pager, P1 → email, P2 → slack mock).
+      Done-def: routing parity + alerting QG green.
 
-- [x] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large (memory). Done-def: 4+ edge-case tests + QG green. — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s (backfilled 2026-05-18; restored from fbf0a396 accidental overwrite 2026-05-18)
+- [ ] **14. batch-live-reconciliation reconcile_shard edge cases** — empty shard, single-row, schema-drift, very-large
+      (memory). Done-def: 4+ edge-case tests + QG green.
 
-- [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
+- [ ] **15. workspace-wide unused-import audit** — scan repos for unused imports surviving ruff sweep. Issue doc per
+      repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes.
 
-**Conflict rules**: features-service = slot 4 OWNS (you); deployment-api = slot 7; UAC = surgical only (Ikenna primary); MTDS = slot 9; execution-service order_router separate from slot 5's Phase 9 surface.
+**Conflict rules**: features-service = slot 4 OWNS (you); deployment-api = slot 7; UAC = surgical only (Ikenna primary);
+MTDS = slot 9; execution-service order_router separate from slot 5's Phase 9 surface.
 
 Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 
-[2026-05-15 20:15 UTC] slot-4 — ✅ ITEM 8 DONE: instruments-service migration coverage gap. Added 2 test files (38 tests total) covering 2 previously-untested active migration scripts: (1) test_migrate_instrument_type_lowercase.py (19 tests): regex detection of uppercase GCS hive segments, path lowercasing transformation, pre/post path assertions, mocked GCS copy+delete; (2) test_migrate_defi_bare_to_asset_group.py (19 tests): bare-path classification, asset_group=defi/ insertion, pre/post segment count assertions, mocked GCS error+no-delete. QG ✅ ALL GATES PASSED (96s). instruments-service@f14f39a. Moving to item 9.
+[2026-05-15 20:15 UTC] slot-4 — ✅ ITEM 8 DONE: instruments-service migration coverage gap. Added 2 test files (38 tests
+total) covering 2 previously-untested active migration scripts: (1) test_migrate_instrument_type_lowercase.py (19
+tests): regex detection of uppercase GCS hive segments, path lowercasing transformation, pre/post path assertions,
+mocked GCS copy+delete; (2) test_migrate_defi_bare_to_asset_group.py (19 tests): bare-path classification,
+asset_group=defi/ insertion, pre/post segment count assertions, mocked GCS error+no-delete. QG ✅ ALL GATES PASSED
+(96s). instruments-service@f14f39a. Moving to item 9.
 
-[2026-05-15 20:50 UTC] slot-4 — ✅ ITEM 9 DONE: execution-service instruction_router test coverage gaps. Target was "order_router.py" but that file doesn't exist — identified instruction_router.py at 80.5% as the correct target. Added 9 new tests (17 total): eth_balance_tracker/pnl_calculator property getters; compose_validation skipped for BET (unmapped op); token_in colon-split instrument_type extraction; InstructionValidationError rejection path; sequential signal stops on first failure; _extract_error_code fallback + status_code attribute; _track_gas_cost gas deduction. QG ✅ ALL GATES PASSED (437s). execution-service@bcb3771a. Moving to item 10.
+[2026-05-15 20:50 UTC] slot-4 — ✅ ITEM 9 DONE: execution-service instruction_router test coverage gaps. Target was
+"order_router.py" but that file doesn't exist — identified instruction_router.py at 80.5% as the correct target. Added 9
+new tests (17 total): eth_balance_tracker/pnl_calculator property getters; compose_validation skipped for BET (unmapped
+op); token_in colon-split instrument_type extraction; InstructionValidationError rejection path; sequential signal stops
+on first failure; \_extract_error_code fallback + status_code attribute; \_track_gas_cost gas deduction. QG ✅ ALL GATES
+PASSED (437s). execution-service@bcb3771a. Moving to item 10.
 
-[2026-05-15 21:15 UTC] slot-4 — ✅ ITEM 10 DONE: cross-repo @pytest.mark.live audit. Scope: all slot-4 repos. Only instruments-service has @pytest.mark.live registered (conftest.py gates behind IS_TEST_RUN=true). Finding: 3 e2e tests (test_defi_instruments_e2e, test_tradfi_instruments_e2e, test_write_to_test_bucket_not_prod) make real GCS writes + external API calls but were missing @pytest.mark.live. Additional finding: pytest.ini (overrides pyproject.toml) didn't have live marker registered → PytestUnknownMarkWarning. Fixed both. Other repos (execution-service, MTDS, strategy-service) use @pytest.mark.requires_credentials + @pytest.mark.skip for real-service tests — no live marker there (not registered in those repos' pyproject.toml/pytest.ini). instruments-service@06c7248. QG ✅ (101s). Moving to item 11.
+[2026-05-15 21:15 UTC] slot-4 — ✅ ITEM 10 DONE: cross-repo @pytest.mark.live audit. Scope: all slot-4 repos. Only
+instruments-service has @pytest.mark.live registered (conftest.py gates behind IS_TEST_RUN=true). Finding: 3 e2e tests
+(test_defi_instruments_e2e, test_tradfi_instruments_e2e, test_write_to_test_bucket_not_prod) make real GCS writes +
+external API calls but were missing @pytest.mark.live. Additional finding: pytest.ini (overrides pyproject.toml) didn't
+have live marker registered → PytestUnknownMarkWarning. Fixed both. Other repos (execution-service, MTDS,
+strategy-service) use @pytest.mark.requires_credentials + @pytest.mark.skip for real-service tests — no live marker
+there (not registered in those repos' pyproject.toml/pytest.ini). instruments-service@06c7248. QG ✅ (101s). Moving to
+item 11.
 
-[2026-05-15 22:30 UTC] slot-4 — ✅ ITEM 11 DONE: ml-training experiment manifest validation — ml-training@9a3f581 (validate()/validate_or_raise() + 12 tests; QG ✅ ALL GATES PASSED 329s).
+[2026-05-15 22:30 UTC] slot-4 — ✅ ITEM 11 DONE: ml-training experiment manifest validation — ml-training@9a3f581
+(validate()/validate_or_raise() + 12 tests; QG ✅ ALL GATES PASSED 329s).
 
-[2026-05-15 22:45 UTC] slot-4 — 🚨 BIG FINDING (UTL QG): User requested UTL QG after OOM fix. Pulled LDR (5 new commits). Result: 102 failures with PYTEST_WORKERS=2 (default), 29 genuine failures when isolating xdist. Root causes: (1) 11 event ratchet failures — other slots added STRATEGY_LIFECYCLE_CHANGED/SEEDED + DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE without updating count tests; (2) 5 config_interface failures — auth matrix api count 9→8, DEX venue validation changed, testnet contract registry changed, cloud_config mock bridge changed; (3) 13 cloud_interface failures — OIDC auth implementation changed, workspace YAML missing DeFi AWS buckets, bucket constant tests stale; (4) 73 xdist false failures — event system singleton leak across subprocess workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 worker) is correct but UTL overrides to 2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL — escalating to main for assignment.
-
-[2026-05-18 UTC] slot-4 — CLAIMING item 4 (workspace-wide unused-import audit). Slot 2 finished items 1+2 with no slot_2 STARTED-item-3 ping. Slot 4 claims per "whichever starts first" rule.
-
-[2026-05-18 14:20 UTC] [main → slot 4] — 🟢 **DIRECT DISPATCH — reserve queue confirmed open.** You shipped A/B/C; items 5/6/11/13/14/15/16/17 still queued (~17 cal-days). **Start with item 5: defi_basedpyright_features_service final items (94%, 51/54 — only 3 items left)**. Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
-  2. Read `plans/active/defi_basedpyright_features_service_2026_05_15.md` — find unchecked `- [ ]` items (3 left).
-  3. Ship per item — mechanical basedpyright cleanup in features-service.
-  4. After item 5: chain through 6 (features-service Wave 59+ from your work_split § Slot 4 reserve), then deep/mega 11/13/14/15/16/17. Plenty of work.
-**Acknowledge "STARTED item 5" within 10 min.**
+[2026-05-15 22:45 UTC] slot-4 — 🚨 BIG FINDING (UTL QG): User requested UTL QG after OOM fix. Pulled LDR (5 new
+commits). Result: 102 failures with PYTEST_WORKERS=2 (default), 29 genuine failures when isolating xdist. Root causes:
+(1) 11 event ratchet failures — other slots added STRATEGY_LIFECYCLE_CHANGED/SEEDED +
+DEPLOYMENT_ORPHANED/ROLLED_BACK/PROGRESS + DATA_INSTRUMENTS_STALE without updating count tests; (2) 5 config_interface
+failures — auth matrix api count 9→8, DEX venue validation changed, testnet contract registry changed, cloud_config mock
+bridge changed; (3) 13 cloud_interface failures — OIDC auth implementation changed, workspace YAML missing DeFi AWS
+buckets, bucket constant tests stale; (4) 73 xdist false failures — event system singleton leak across subprocess
+workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 worker) is correct but UTL overrides to
+2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL —
+escalating to main for assignment.

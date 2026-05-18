@@ -522,14 +522,14 @@ detector, operators must manually walk the open-alert list every cutover-week to
 
 ### Per-code SLA defaults (closed-set; extend in registry)
 
-| Code class                                    | `alert_type` | `clear_sla_seconds` |
-| --------------------------------------------- | ------------ | ------------------- |
-| `CIRCUIT_BREAKER_*`                           | paired       | 1800 (30min)        |
-| `KILL_SWITCH_*`                               | paired       | 300 (5min — manual operator-acked clear) |
-| `BACKFILL_VM_FAILED`                          | transient    | —                   |
-| `MANIFEST_*_DRIFT`                            | paired       | 7200 (2h — manifest consolidator cycle) |
-| `ML_SIGNAL_STALENESS`                         | paired       | 600 (10min)         |
-| `STALE_OPEN_ALERT` (the meta-alert itself)    | transient    | —                   |
+| Code class                                 | `alert_type` | `clear_sla_seconds`                      |
+| ------------------------------------------ | ------------ | ---------------------------------------- |
+| `CIRCUIT_BREAKER_*`                        | paired       | 1800 (30min)                             |
+| `KILL_SWITCH_*`                            | paired       | 300 (5min — manual operator-acked clear) |
+| `BACKFILL_VM_FAILED`                       | transient    | —                                        |
+| `MANIFEST_*_DRIFT`                         | paired       | 7200 (2h — manifest consolidator cycle)  |
+| `ML_SIGNAL_STALENESS`                      | paired       | 600 (10min)                              |
+| `STALE_OPEN_ALERT` (the meta-alert itself) | transient    | —                                        |
 
 ### QG hook (deferred to alerting-service slot pickup)
 

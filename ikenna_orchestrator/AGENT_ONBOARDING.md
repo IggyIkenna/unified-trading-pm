@@ -59,11 +59,12 @@ commit/integrate it. (2026-05-13: multiple slots had 20-30 dirty files in UAC/UT
 OOM-killer fired and took down VS Code + all worker sessions. Trigger: parallel QGs across 8 slots compounded with the
 IDE basedpyright langserver crawling the 30-repo workspace.
 
-**Landed at `unified-trading-pm@c3cb11f6`** (auto-applies to every repo via `scripts/quality-gates-base/base-service.sh`):
+**Landed at `unified-trading-pm@c3cb11f6`** (auto-applies to every repo via
+`scripts/quality-gates-base/base-service.sh`):
 
 1. **`QG_MEM_CAP` env** (default 10G) wraps pytest + basedpyright in
-   `systemd-run --user --scope -p MemoryMax=$QG_MEM_CAP -p MemorySwapMax=0` — runaway subprocess dies with exit 137,
-   the box stays alive instead of OOM-killing peer processes.
+   `systemd-run --user --scope -p MemoryMax=$QG_MEM_CAP -p MemorySwapMax=0` — runaway subprocess dies with exit 137, the
+   box stays alive instead of OOM-killing peer processes.
 2. **`PYTEST_WORKERS` default 1** (was `cpu_count // 4`). Repos that need more set it explicitly BEFORE
    `source base-service.sh` (per `PYTEST_UNIT_DIR` override pattern).
 
@@ -74,14 +75,18 @@ IDE basedpyright langserver crawling the 30-repo workspace.
   "basedpyright.analysis.diagnosticMode": "openFilesOnly",
   "basedpyright.analysis.useLibraryCodeForTypes": false,
   "basedpyright.analysis.exclude": [
-    ".tabs/**", ".venv*/**", "build/**", "node_modules/**", "__pycache__/**", ".playwright-mcp/**"
+    ".tabs/**",
+    ".venv*/**",
+    "build/**",
+    "node_modules/**",
+    "__pycache__/**",
+    ".playwright-mcp/**"
   ]
 }
 ```
 
 **Relax-when-needed knobs** (in order of escalation): bump `PYTEST_WORKERS` per-repo first → then `QG_MEM_CAP` → then
-disable `MEM_WRAP` last. Full SSOT + per-step rationale:
-`codex/06-coding-standards/quality-gates-memory-governance.md`.
+disable `MEM_WRAP` last. Full SSOT + per-step rationale: `codex/06-coding-standards/quality-gates-memory-governance.md`.
 
 **No QG behaviour change** unless a process actually exceeds 10 GB — in which case it dies with exit 137 instead of
 OOM-killing peers. Cross-side ack landed 2026-05-16.

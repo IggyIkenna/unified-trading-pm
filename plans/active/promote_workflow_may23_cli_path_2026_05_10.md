@@ -40,11 +40,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
 
@@ -261,13 +259,12 @@ paper/live deployment exists.
     missing dep — NOT a wire-in failure). Wire-ins (afd0c16 + ab6bfd2) VERIFIED. Filing separate issue for
     nautilus_trader missing dep: `plans/active/issues/strategy_paper_vm_nautilus_trader_missing_dep_2026_05_14.md`.
 
-- [x] ✅ [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** — shipped
-      2026-05-17 (slot-8) at `deployment-service@5ab69b9`. Successor gate cleared: lifecycle Phase A.2 had
-      already landed (`VM_PREFIX_TO_BUCKET` is `dict[str, VmPrefixSpec | None]` already). Upgraded both
-      `"strategy-paper-"` and `"strategy-live-"` from raw `None` to
-      `VmPrefixSpec(bucket=None, lifecycle_class=LifecycleClass.LONG_LIVED_LIVE)`. Smoke-import validated: total
-      prefixes 147 unchanged. deployment-ui lifecycle tab queries can now filter strategy VMs by
-      lifecycle_class.
+- [x] ✅ [AGENT] P1. **1.X DEFERRED-AFTER-LIFECYCLE-A2 — wrap strategy prefixes in `VmPrefixSpec`** — shipped 2026-05-17
+      (slot-8) at `deployment-service@5ab69b9`. Successor gate cleared: lifecycle Phase A.2 had already landed
+      (`VM_PREFIX_TO_BUCKET` is `dict[str, VmPrefixSpec | None]` already). Upgraded both `"strategy-paper-"` and
+      `"strategy-live-"` from raw `None` to `VmPrefixSpec(bucket=None, lifecycle_class=LifecycleClass.LONG_LIVED_LIVE)`.
+      Smoke-import validated: total prefixes 147 unchanged. deployment-ui lifecycle tab queries can now filter strategy
+      VMs by lifecycle_class.
 
 - [x] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
       `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:

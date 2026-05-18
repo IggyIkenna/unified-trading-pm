@@ -12,7 +12,6 @@ audit_passes: [evidence-map, classification, duplication-scan, orphan-integratio
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Reconciliation Evidence Map — 2026-04-25
 
 Read-only audit of every file in `plans/active/` (143 plan files + 6 meta files) against committed code state on

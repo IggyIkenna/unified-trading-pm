@@ -11,11 +11,9 @@ locked_since: 2026-05-12
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # Continuation prompts — 2026-05-12 — density-push cycle
 

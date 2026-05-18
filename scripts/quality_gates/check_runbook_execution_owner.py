@@ -174,15 +174,10 @@ def main() -> int:
         if v is not None:
             violations.append(v)
 
-    print(
-        f"Scanned {len(runbooks)} runbook file(s) under {workspace_root}; "
-        f"{len(violations)} violation(s)."
-    )
+    print(f"Scanned {len(runbooks)} runbook file(s) under {workspace_root}; {len(violations)} violation(s).")
 
     if baseline_write:
-        _write_baseline(
-            baseline_path, len(violations), [v.path.relative_to(workspace_root) for v in violations]
-        )
+        _write_baseline(baseline_path, len(violations), [v.path.relative_to(workspace_root) for v in violations])
         print(f"✅ Wrote baseline ({len(violations)} violations) to {baseline_path}")
         return 0
 

@@ -5,8 +5,8 @@ created: 2026-05-15
 
 # Deployment Flow — Operator Perspective
 
-> Covers the promotion path from local development through staging to main, with QG gates, version graduation,
-> and the paper-to-live strategy promotion path. Complements `ci-cd-flow.md` (engineer view).
+> Covers the promotion path from local development through staging to main, with QG gates, version graduation, and the
+> paper-to-live strategy promotion path. Complements `ci-cd-flow.md` (engineer view).
 >
 > Cross-references: `codex/08-workflows/ci-cd-flow.md`; `codex/08-workflows/version-graduation.md`;
 > `codex/04-architecture/promote-workflow-architecture.md`; `CLAUDE.md` § "Git discipline".
@@ -58,6 +58,7 @@ bash scripts/quickmerge.sh "fix: dep" --dep-branch "feat/X"  # cross-repo featur
 Quickmerge: fast-forwards staging to HEAD, creates PR targeting main, triggers full CI.
 
 **Operator safety checklist before pushing to staging**:
+
 - `git fetch` first — 0 incoming on staging before pushing
 - Never `git push` directly — quickmerge is the only sanctioned path
 - Breaking change (`feat!:`)? Use `--to-staging` to avoid premature main promotion
@@ -68,11 +69,13 @@ Quickmerge: fast-forwards staging to HEAD, creates PR targeting main, triggers f
 ## Gate 3 — Main Promotion + Semver Bump
 
 CI on staging triggers `semver-agent.yml`:
+
 1. Parses latest commit prefix (`feat:` → minor, `fix:` → patch, `feat!:` → minor on 0.x.x)
 2. Calls `update-dependency-version.yml` in downstream repos via `repository_dispatch`
 3. On success: bumps version in `pyproject.toml` → creates staging commit → CI runs again → if green, promotes to main
 
 **Major bumps** are blocked from auto-promotion:
+
 - `request-major-bump.yml` creates an Issue with `major-bump-pending` label
 - Operator comments `/approve` on the issue to execute
 - See `codex/08-workflows/version-graduation.md` for full 1.0.0 graduation procedure
@@ -108,12 +111,13 @@ bash e2e-testing/scripts/defi/run-live.sh --strategy carry_staked_basis --asset-
 ## Dependency Cascade Flow
 
 When repo A is promoted and bumped:
+
 1. `semver-agent.yml` in repo A emits `repository_dispatch` to downstream repos B, C, D
 2. `update-dependency-version.yml` in B/C/D updates pyproject.toml minimum pin → staging commit
 3. B/C/D CI runs → if green, their semver-agents trigger cascading to their own downstreams
 
-Minor/patch bumps: direct commit to staging with `[skip ci]` to avoid unbounded cascade.
-Major bumps: create branch + PR requiring human review (breaking change could need code changes).
+Minor/patch bumps: direct commit to staging with `[skip ci]` to avoid unbounded cascade. Major bumps: create branch + PR
+requiring human review (breaking change could need code changes).
 
 See `codex/08-workflows/dependency-cascade.md` for topology and cap rules.
 
@@ -121,15 +125,16 @@ See `codex/08-workflows/dependency-cascade.md` for topology and cap rules.
 
 ## Emergency Procedures
 
-| Scenario | Action |
-|---|---|
-| Staging CI broken | Fix root cause + push fix to staging. Never skip CI. |
-| Wrong version bumped | `gh workflow run request-major-bump.yml` to repin, then investigate semver-agent config |
-| Cascading dependency failure | Add `dependency_caps` entry in workspace-manifest.json to stop cascade at that repo |
-| Force-sync needed | Run `run-version-alignment.sh` first, then `admin-force-sync-all-to-main.sh` — warns of semver-agent revert risk |
-| Live strategy kill switch | Human-only. Use deployment-ui kill-switch panel or `gcloud compute instances stop <vm>` |
+| Scenario                     | Action                                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Staging CI broken            | Fix root cause + push fix to staging. Never skip CI.                                                             |
+| Wrong version bumped         | `gh workflow run request-major-bump.yml` to repin, then investigate semver-agent config                          |
+| Cascading dependency failure | Add `dependency_caps` entry in workspace-manifest.json to stop cascade at that repo                              |
+| Force-sync needed            | Run `run-version-alignment.sh` first, then `admin-force-sync-all-to-main.sh` — warns of semver-agent revert risk |
+| Live strategy kill switch    | Human-only. Use deployment-ui kill-switch panel or `gcloud compute instances stop <vm>`                          |
 
-**Hard-stop list (human-only, never agent)**: wallet keys, kill-switch arming, force-push to main, version 1.0.0 graduation.
+**Hard-stop list (human-only, never agent)**: wallet keys, kill-switch arming, force-push to main, version 1.0.0
+graduation.
 
 ---
 

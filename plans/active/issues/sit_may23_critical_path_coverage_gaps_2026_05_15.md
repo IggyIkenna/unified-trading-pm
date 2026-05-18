@@ -3,7 +3,10 @@ title: "SIT May-23 Critical Path Coverage Gaps"
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-16
-resolution: SHIPPED — all 3 scenarios at `system-integration-tests@3872ce2` (slot 7 item 1). defi_carry_staked_basis_paper + defi_apd_paper + defi_paper_to_live_early_gate + dedicated suite `tests/scenarios/test_may23_critical_paths.py`. 28 framework+may23 tests pass; basedpyright clean.
+resolution:
+  SHIPPED — all 3 scenarios at `system-integration-tests@3872ce2` (slot 7 item 1). defi_carry_staked_basis_paper +
+  defi_apd_paper + defi_paper_to_live_early_gate + dedicated suite `tests/scenarios/test_may23_critical_paths.py`. 28
+  framework+may23 tests pass; basedpyright clean.
 source:
   - system-integration-tests/tests/scenarios/defi_scenarios.py
   - system-integration-tests/tests/overnight/test_archetype_cascade.py
@@ -70,15 +73,15 @@ additional parametrized cells, or as a new `tests/scenarios/test_may23_critical_
 
 ## RESOLVED — 2026-05-16 (slot 7 #1)
 
-All 3 scenarios shipped at `system-integration-tests@3872ce2` per
-`work_split_2026_05_15_ikenna.md` slot 7 item 1 (MAY-23 BLOCKER, marked ✅):
+All 3 scenarios shipped at `system-integration-tests@3872ce2` per `work_split_2026_05_15_ikenna.md` slot 7 item 1
+(MAY-23 BLOCKER, marked ✅):
 
-| Scenario | Surface |
-| --- | --- |
-| `defi_carry_staked_basis_paper` | `tests/scenarios/defi_scenarios.py` (carry signal + mock fills + manifest captured) |
-| `defi_apd_paper` | same — with explicit not-silently-skipped routing assertion |
-| `defi_paper_to_live_early_gate` | same — promote → VM STARTED + DART day-1 blocking gate |
-| Suite aggregate | `tests/scenarios/test_may23_critical_paths.py` — dedicated suite making the gate dependency explicit (presence + per-gate semantics + suite aggregate) |
+| Scenario                        | Surface                                                                                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `defi_carry_staked_basis_paper` | `tests/scenarios/defi_scenarios.py` (carry signal + mock fills + manifest captured)                                                                    |
+| `defi_apd_paper`                | same — with explicit not-silently-skipped routing assertion                                                                                            |
+| `defi_paper_to_live_early_gate` | same — promote → VM STARTED + DART day-1 blocking gate                                                                                                 |
+| Suite aggregate                 | `tests/scenarios/test_may23_critical_paths.py` — dedicated suite making the gate dependency explicit (presence + per-gate semantics + suite aggregate) |
 
 `defi_scenarios.py::get_scenarios` extended 5 → 8. 28 framework + may23 tests pass; basedpyright clean. Issue closeable
 at next archive sweep.

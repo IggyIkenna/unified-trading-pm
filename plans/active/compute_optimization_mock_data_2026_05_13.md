@@ -172,9 +172,9 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       ProcessPoolExecutor, serial path default=1 unchanged. Note: onchain + volatility families already have
       `max_workers` in their BatchHandler; sports was the gap. 2026-05-14 slot 7.)
 - [x] [SCRIPT] P1. Identify any feature_group whose `required_inputs` DAG forces serial computation; flag for
-      post-cutover refactor (not blocking May-23 — those stages just run on the smallest SKU that fits memory).
-      **DONE 2026-05-16 (slot 7)**: Audit of all 77 feature_groups across 7 families (calendar, cross_instrument,
-      delta_one, multi_timeframe, onchain, sports, volatility) via `feature_definitions.yaml` reveals:
+      post-cutover refactor (not blocking May-23 — those stages just run on the smallest SKU that fits memory). **DONE
+      2026-05-16 (slot 7)**: Audit of all 77 feature_groups across 7 families (calendar, cross_instrument, delta_one,
+      multi_timeframe, onchain, sports, volatility) via `feature_definitions.yaml` reveals:
 
       **Truly cross-family serial chains** (post-cutover refactor candidates):
       * `multi_timeframe/tf_structure_context` ← depends on `delta_one_market_structure` + `delta_one_fibonacci` +

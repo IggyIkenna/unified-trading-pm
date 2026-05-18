@@ -76,9 +76,7 @@ def _parse_version_tuple(version: str) -> tuple[int, ...] | None:
 
 def _scan_workspace(workspace_root: Path) -> int:
     """Return 0 if no drift, 1 if drift detected."""
-    repos: list[Path] = sorted(
-        [p for p in workspace_root.iterdir() if (p / "pyproject.toml").exists()]
-    )
+    repos: list[Path] = sorted([p for p in workspace_root.iterdir() if (p / "pyproject.toml").exists()])
 
     # Build peer name → current version map
     name_to_version: dict[str, str] = {}
@@ -122,20 +120,14 @@ def _scan_workspace(workspace_root: Path) -> int:
             if f_padded > c_padded:
                 drifts.append((repo.name, dep_name, floor, current))
 
-    print(
-        f"Scanned {len(repos)} repo(s); {len(name_to_version)} peer pkg(s); "
-        f"{len(drifts)} pin-drift(s)."
-    )
+    print(f"Scanned {len(repos)} repo(s); {len(name_to_version)} peer pkg(s); {len(drifts)} pin-drift(s).")
 
     if drifts:
         print()
         print("❌ PIN DRIFT — these floors exceed peer current versions:")
         for consumer, dep_name, floor, current in drifts:
             peer_repo = name_to_repo.get(dep_name, "?")
-            print(
-                f"  {consumer}/pyproject.toml: "
-                f"{dep_name}>={floor}  (peer {peer_repo} at {current})"
-            )
+            print(f"  {consumer}/pyproject.toml: {dep_name}>={floor}  (peer {peer_repo} at {current})")
         print()
         print(
             "Resolution: lower the floor in the consumer's pyproject.toml OR bump the peer's "

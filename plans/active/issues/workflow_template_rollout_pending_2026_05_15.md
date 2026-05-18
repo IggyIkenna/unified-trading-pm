@@ -3,7 +3,11 @@ title: workflow-template rollout pending — 22 repos, 3 templates, script bug f
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-17
-resolution: SHIPPED — all 3 templates (semver-agent.yml + major-bump-issue-handler.yml + workspace-qg.yml) rolled out across 21 Python repos. Verified 2026-05-17 by sampling 5 repos (mtds/features/execution/strategy/deployment) — all 3 workflows present. UI-only templates (uac-registry-sync + uic-openapi-sync) remain UI-only (no rollout to non-UI repos by design).
+resolution:
+  SHIPPED — all 3 templates (semver-agent.yml + major-bump-issue-handler.yml + workspace-qg.yml) rolled out across 21
+  Python repos. Verified 2026-05-17 by sampling 5 repos (mtds/features/execution/strategy/deployment) — all 3 workflows
+  present. UI-only templates (uac-registry-sync + uic-openapi-sync) remain UI-only (no rollout to non-UI repos by
+  design).
 source:
   - scripts/workflow-templates/rollout-workflow-templates.sh
   - scripts/workflow-templates/semver-agent.yml.tmpl
@@ -12,31 +16,36 @@ locked_by: live-defi-rollout
 
 ## What I found
 
-`bash scripts/workflow-templates/rollout-workflow-templates.sh --dry-run` shows **3 templates need propagation** across **22 repos**.
+`bash scripts/workflow-templates/rollout-workflow-templates.sh --dry-run` shows **3 templates need propagation** across
+**22 repos**.
 
 ### Critical script bug (FIXED — PM@542f0e26)
 
-`rollout-workflow-templates.sh` only substituted `{{DEP_REPOS}}` for `.tmpl` files but NOT `__REPO_NAME__` or `__SOURCE_DIR__`. Running the rollout would have overwritten correctly-deployed per-repo `semver-agent.yml` files with raw template placeholders (`__REPO_NAME__`, `__SOURCE_DIR__`), breaking CI semver-agent for all 22 repos.
+`rollout-workflow-templates.sh` only substituted `{{DEP_REPOS}}` for `.tmpl` files but NOT `__REPO_NAME__` or
+`__SOURCE_DIR__`. Running the rollout would have overwritten correctly-deployed per-repo `semver-agent.yml` files with
+raw template placeholders (`__REPO_NAME__`, `__SOURCE_DIR__`), breaking CI semver-agent for all 22 repos.
 
-**Fix applied**: added `repo_underscore="${repo//-/_}"` + sed substitution for `__REPO_NAME__`/`__SOURCE_DIR__` in the `.tmpl` processing block.
+**Fix applied**: added `repo_underscore="${repo//-/_}"` + sed substitution for `__REPO_NAME__`/`__SOURCE_DIR__` in the
+`.tmpl` processing block.
 
 ### Templates needing propagation (post-fix, legitimate content changes)
 
-| Template | Change | Repos affected |
-|---|---|---|
-| `semver-agent.yml.tmpl` | Codex repo consolidated into PM (`unified-trading-pm/codex/10-audit/` vs old `unified-trading-codex/`); new "Dispatch schema-changed to PM" step for T0 libraries; removed `concurrency` block | 22 repos |
-| `major-bump-issue-handler.yml` | Multi-environment Telegram routing (prod/staging/dev tokens) | 22 repos |
-| `update-dependency-version.yml` | Direct copy update (check diff) | 22 repos |
+| Template                        | Change                                                                                                                                                                                         | Repos affected |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `semver-agent.yml.tmpl`         | Codex repo consolidated into PM (`unified-trading-pm/codex/10-audit/` vs old `unified-trading-codex/`); new "Dispatch schema-changed to PM" step for T0 libraries; removed `concurrency` block | 22 repos       |
+| `major-bump-issue-handler.yml`  | Multi-environment Telegram routing (prod/staging/dev tokens)                                                                                                                                   | 22 repos       |
+| `update-dependency-version.yml` | Direct copy update (check diff)                                                                                                                                                                | 22 repos       |
 
 ### New templates to create (not yet in any repos)
 
-| Template | Target | Notes |
-|---|---|---|
-| `uac-registry-sync.yml` | `unified-trading-system-ui` only | Dispatched on `uac-registry-updated` event |
-| `uic-openapi-sync.yml` | `unified-trading-system-ui` only | Dispatched on `uac-openapi-updated` event |
+| Template                | Target                                      | Notes                                      |
+| ----------------------- | ------------------------------------------- | ------------------------------------------ |
+| `uac-registry-sync.yml` | `unified-trading-system-ui` only            | Dispatched on `uac-registry-updated` event |
+| `uic-openapi-sync.yml`  | `unified-trading-system-ui` only            | Dispatched on `uac-openapi-updated` event  |
 | `workspace-qg.yml.tmpl` | All service repos with `.github/workflows/` | Cross-repo QG trigger with `{{DEP_REPOS}}` |
 
-**Note**: `uac-registry-sync.yml` and `uic-openapi-sync.yml` should only go to `unified-trading-system-ui`, not all repos. The rollout script currently deploys them everywhere — this needs a repo-filter guard before running.
+**Note**: `uac-registry-sync.yml` and `uic-openapi-sync.yml` should only go to `unified-trading-system-ui`, not all
+repos. The rollout script currently deploys them everywhere — this needs a repo-filter guard before running.
 
 ## How to propagate
 
@@ -57,11 +66,13 @@ for repo in alerting-service batch-live-reconciliation-service ...; do
 done
 ```
 
-**Before running**: add repo-filter guard in rollout script for `uac-registry-sync.yml` and `uic-openapi-sync.yml` (UI-only templates).
+**Before running**: add repo-filter guard in rollout script for `uac-registry-sync.yml` and `uic-openapi-sync.yml`
+(UI-only templates).
 
 ## Why it matters
 
-- Semver-agent references old `unified-trading-codex` repo that no longer exists as a standalone repo — will fail at checkout step when triggered
+- Semver-agent references old `unified-trading-codex` repo that no longer exists as a standalone repo — will fail at
+  checkout step when triggered
 - Major-bump Telegram notifications go to wrong channel if per-env routing not applied
 - New `workspace-qg.yml` template enables cross-repo QG triggering on dep updates
 

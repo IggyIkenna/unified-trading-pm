@@ -170,30 +170,22 @@ sub-agent picks up this thread).
       `python3 scripts/smoke_test_cbeth_history.py` from the workspace `.venv-workspace`. Follow-up: add a weekly /
       per-PR-touching-`lst_rates_handler` smoke trigger if cross-source drift becomes a recurring concern.
 - [ ] [SCRIPT] P2. Add `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no
-      auth), emit `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp.
-      **DEFERRED-POST-CUTOVER (NICE-TO-HAVE)**: requires new UTL `external_apis/` subpackage (architectural decision)
-      + new event type `MANIFEST_CROSS_SOURCE_DRIFT`. On-chain canonical source already wired; this is a secondary
-      smoke for drift detection only. Successor: file a separate plan once UTL `external_apis/` subpackage shape is
-      decided (currently 1 candidate consumer; needs ≥2 to justify a new subpackage).
+      auth), emit `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER
+      (NICE-TO-HAVE)**: requires new UTL `external_apis/` subpackage (architectural decision) + new event type
+      `MANIFEST_CROSS_SOURCE_DRIFT`. On-chain canonical source already wired; this is a secondary smoke for drift
+      detection only. Successor: file a separate plan once UTL `external_apis/` subpackage shape is decided (currently 1
+      candidate consumer; needs ≥2 to justify a new subpackage).
 - [x] [PLAN] P2. Cross-link this issue doc from `defi_master_2026_05_07.md` § "Real residual concerns" (after "Solana
       coverage genuinely thin" bullet). (shipped in this commit)
 - [x] [PLAN] P2. Slot 1 main: add a row to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator"
       reading:
       `coinbase-api-key → NOT NEEDED for cbETH conversion-rate/APY (public endpoint); only needed for order placement`
-      so the row is not mistakenly filed as a blocker.
-      ✅ **DONE** — verified 2026-05-17 by slot-3: `master_to_live_defi_2026_05_23.md` line 1976 has the exact row with
-      `NOT NEEDED (cbETH)` status + the public-endpoint rationale.
+      so the row is not mistakenly filed as a blocker. ✅ **DONE** — verified 2026-05-17 by slot-3:
+      `master_to_live_defi_2026_05_23.md` line 1976 has the exact row with `NOT NEEDED (cbETH)` status + the
+      public-endpoint rationale.
 - [x] [DESIGN] P2. File a separate `BLOCKED-OPERATOR-DECISION` for Marinade Solana subgraph registration (Tier 2 mSOL
       historical coverage); cross-link from
-      [`solana_lst_native_staking_adapters_2026_05_14.md`](../solana_lst_native_staking_adapters_2026_05_14.md).
-      ✅ **DONE 2026-05-17 (slot-3)**: filed at `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md`
-      with 3 paths (Path A — The Graph subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope
-      for May-23). Default if no operator response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).
-
----
-
-## Triage — 2026-05-18
-
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-17; on-chain exchangeRate() validated canonical
+      [`solana_lst_native_staking_adapters_2026_05_14.md`](../solana_lst_native_staking_adapters_2026_05_14.md). ✅
+      **DONE 2026-05-17 (slot-3)**: filed at `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md`
+      with 3 paths (Path A — The Graph subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope for
+      May-23). Default if no operator response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).

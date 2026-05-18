@@ -258,31 +258,32 @@ on:
   workflow_dispatch:
 ```
 
-Then run `bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh` to propagate the change
-to all 21 repos. Estimated time: ~5 min.
+Then run `bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh` to propagate the change to
+all 21 repos. Estimated time: ~5 min.
 
 ### Roll-forward future workflow changes
 
 1. Edit the template in `unified-trading-pm/scripts/workflow-templates/workspace-qg.yml.tmpl`.
 2. Run `rollout-workflow-templates.sh --template workspace-qg.yml.tmpl` (rendered to every Python repo).
 3. Each repo's owner commits + pushes the auto-rendered `workspace-qg.yml`. Auto-FF mirror lands on LDR.
-4. Per-repo first run on the change surfaces any pre-existing QG failures (per Findings Triage HARD RULE,
-   "pre-existing is NOT a triage criterion — fix now if you can").
+4. Per-repo first run on the change surfaces any pre-existing QG failures (per Findings Triage HARD RULE, "pre-existing
+   is NOT a triage criterion — fix now if you can").
 
 ### dep_repos auto-rendering
 
 `{{DEP_REPOS}}` is substituted at rollout time from `workspace-manifest.json` (canonical). Hand-crafted phantom-dep
 references in old per-repo files (`unified-cloud-interface` / `unified-config-interface` / `unified-internal-contracts`
-+ duplicate `unified-trading-library`) were silently corrected by the Phase B migration; future drift is prevented
-by the manifest-as-SSOT contract.
+
+- duplicate `unified-trading-library`) were silently corrected by the Phase B migration; future drift is prevented by
+  the manifest-as-SSOT contract.
 
 ### Continuous verification
 
-| Field | Value |
-| --- | --- |
-| Item | CI workflow consistency across 21 Python repos |
-| Cutover criterion | All 21 repos have `workspace-qg.yml` (not `quality-gates.yml`); template rendered from PM SSOT |
+| Field                   | Value                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Item                    | CI workflow consistency across 21 Python repos                                                                                |
+| Cutover criterion       | All 21 repos have `workspace-qg.yml` (not `quality-gates.yml`); template rendered from PM SSOT                                |
 | Continuous verification | `gh workflow list --repo IggyIkenna/<repo> --json name` returns `workspace-qg`; per-repo `quality-gates.yml` no longer exists |
-| Cadence | Weekly drift-check (one repo per day across the week) |
-| Owner | Slot 1 main pre-cutover; post-cutover cron VM (TBD) |
-| Last verified | 2026-05-16 (Phase B rollout — see `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT") |
+| Cadence                 | Weekly drift-check (one repo per day across the week)                                                                         |
+| Owner                   | Slot 1 main pre-cutover; post-cutover cron VM (TBD)                                                                           |
+| Last verified           | 2026-05-16 (Phase B rollout — see `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT") |

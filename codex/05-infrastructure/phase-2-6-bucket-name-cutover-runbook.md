@@ -35,19 +35,19 @@ execution:
 
 ## Wave structure overview
 
-| Wave | Window      | Step                | Action                                                                                             |
-| ---- | ----------- | ------------------- | -------------------------------------------------------------------------------------------------- |
-| 1    | T-1h → T0   | Phase 2.0 + Step 2.6.1 | Pre-drain final consolidate + write-pause confirm + env-tiered bucket provisioning            |
-| 2    | T0 → T+4h   | Step 2.6.2 (Tier 1-3) | Rsync canary + static reference + features cross-asset (8 parallel VMs)                         |
-| 2v   | T+4h → T+5h | Verify Wave 2       | `verify_flat_to_env_tiered_drift.py` per bucket; operator GO/NO-GO                                 |
-| 3    | T+5h → T+10h | Step 2.6.2 (Tier 4-5) | Rsync features per-asset_group + ML stores (6 parallel VMs)                                    |
-| 3v   | T+10h → T+11h | Verify Wave 3     | drift-verify + operator GO/NO-GO                                                                    |
-| 4    | T+11h → T+17h | Step 2.6.2 (Tier 6) | Rsync strategy + execution (4 parallel VMs)                                                       |
-| 4v   | T+17h → T+18h | Verify Wave 4     | drift-verify + operator GO/NO-GO                                                                    |
-| 5    | T+18h → T+24h | Step 2.6.2 (Tier 7) | Rsync market-data large tier (4-8 parallel `n2-standard-16` VMs)                                  |
-| 5v   | T+24h → T+25h | Verify Wave 5     | drift-verify + operator GO/NO-GO                                                                    |
-| 6    | T+25h → T+26h | Step 2.6.4         | Delegate-flip workspace-wide PR + deployment-api redeploy + smoke test                              |
-| 7    | T+26h → T+27h | Step 2.6.3 LIFT    | Write-pause LIFT — Phase 3 backfill VMs cleared to launch against env-tiered buckets                |
+| Wave | Window        | Step                   | Action                                                                               |
+| ---- | ------------- | ---------------------- | ------------------------------------------------------------------------------------ |
+| 1    | T-1h → T0     | Phase 2.0 + Step 2.6.1 | Pre-drain final consolidate + write-pause confirm + env-tiered bucket provisioning   |
+| 2    | T0 → T+4h     | Step 2.6.2 (Tier 1-3)  | Rsync canary + static reference + features cross-asset (8 parallel VMs)              |
+| 2v   | T+4h → T+5h   | Verify Wave 2          | `verify_flat_to_env_tiered_drift.py` per bucket; operator GO/NO-GO                   |
+| 3    | T+5h → T+10h  | Step 2.6.2 (Tier 4-5)  | Rsync features per-asset_group + ML stores (6 parallel VMs)                          |
+| 3v   | T+10h → T+11h | Verify Wave 3          | drift-verify + operator GO/NO-GO                                                     |
+| 4    | T+11h → T+17h | Step 2.6.2 (Tier 6)    | Rsync strategy + execution (4 parallel VMs)                                          |
+| 4v   | T+17h → T+18h | Verify Wave 4          | drift-verify + operator GO/NO-GO                                                     |
+| 5    | T+18h → T+24h | Step 2.6.2 (Tier 7)    | Rsync market-data large tier (4-8 parallel `n2-standard-16` VMs)                     |
+| 5v   | T+24h → T+25h | Verify Wave 5          | drift-verify + operator GO/NO-GO                                                     |
+| 6    | T+25h → T+26h | Step 2.6.4             | Delegate-flip workspace-wide PR + deployment-api redeploy + smoke test               |
+| 7    | T+26h → T+27h | Step 2.6.3 LIFT        | Write-pause LIFT — Phase 3 backfill VMs cleared to launch against env-tiered buckets |
 
 **Hard rule**: if ANY wave verify fails, STOP. Diagnose. Decide (a) re-run that wave, (b) extend the write-pause window,
 or (c) rollback the wave + recover from snapshot per Phase 2.1 Step F. NEVER proceed to the next wave with an unresolved
@@ -173,8 +173,8 @@ Wave 4 verify + GO/NO-GO at T+17h → T+18h.
 
 4-8 parallel `n2-standard-16` VMs:
 
-- **Tier 7 (market-data large tier)**: `market-data-tick-{cefi,tradfi,defi,sports,prediction}-*` +
-  `instruments-store-*` per asset_group.
+- **Tier 7 (market-data large tier)**: `market-data-tick-{cefi,tradfi,defi,sports,prediction}-*` + `instruments-store-*`
+  per asset_group.
 
 These are the largest buckets (100GB-2TB each per `code_freeze_migrate_backfill_sequencing` § "Per-bucket sizing").
 Allow the full 6h window.
@@ -201,7 +201,8 @@ Wave 5 verify + GO/NO-GO at T+24h → T+25h.
 ### GO/NO-GO
 
 - Delegate-flip PR merged + workspace-wide CI green (QG STEP 5.69 all 0).
-- Watchdog dict re-point landed; `vm_zombie_watchdog.py` `python3 -c "import deployment_service.scripts.vm.vm_zombie_watchdog"` clean import.
+- Watchdog dict re-point landed; `vm_zombie_watchdog.py`
+  `python3 -c "import deployment_service.scripts.vm.vm_zombie_watchdog"` clean import.
 - deployment-api smoke green on env-tiered reads.
 - No `gs://` URI errors in Cloud Run logs (last 30 min).
 
@@ -265,8 +266,14 @@ NEVER skip a verify; NEVER proceed to the next wave with an unresolved failure (
 
 ## References
 
-- Master plan: [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md) § Phase 2.6
-- Bucket-name SSOT: [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
-- Yaml SSOT: [`deployment-service/configs/cloud-providers.yaml`](../../../deployment-service/configs/cloud-providers.yaml)
+- Master plan:
+  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+  § Phase 2.6
+- Bucket-name SSOT:
+  [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+- Yaml SSOT:
+  [`deployment-service/configs/cloud-providers.yaml`](../../../deployment-service/configs/cloud-providers.yaml)
 - QG STEP 5.69 (inline-URI ratchet): `scripts/quality-gates-base/base-service.sh:1578-1623`
-- VM watchdog: [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py) — `VM_PREFIX_TO_BUCKET` dict
+- VM watchdog:
+  [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
+  — `VM_PREFIX_TO_BUCKET` dict

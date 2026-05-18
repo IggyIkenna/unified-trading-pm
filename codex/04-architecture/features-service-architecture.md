@@ -112,15 +112,15 @@ depth table" — `feature_family` is the top-level shard axis above `feature_gro
 Seven cross-family helpers identified by Phase 0 audit as duplicated boilerplate, lifted into UTL so families inherit
 the canonical implementation:
 
-| Helper                     | Purpose                                                                        | Status (2026-05-08)                                                            |
-| -------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `LookaheadBiasError`       | Strict-mode raise when `input.available_at > target_ts - horizon`              | Lifted; 6-of-8 family adoption pending in `ml_and_features_master` Phase 2A/2B |
-| `WatermarkAlignmentFanin`  | Multi-source watermark alignment for live fan-in                               | Greenfield in UTL                                                              |
+| Helper                     | Purpose                                                                        | Status (2026-05-08)                                                                                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LookaheadBiasError`       | Strict-mode raise when `input.available_at > target_ts - horizon`              | Lifted; 6-of-8 family adoption pending in `ml_and_features_master` Phase 2A/2B                                                                                                                    |
+| `WatermarkAlignmentFanin`  | Multi-source watermark alignment for live fan-in                               | Greenfield in UTL                                                                                                                                                                                 |
 | `BaseFeatureCalculator`    | Per-family abstract calculator base (lifecycle + write-gate + lookahead guard) | Lifted from per-family duplicates; **mandatory-validation `__init_subclass__` flip landed 2026-05-16 (UTL@ccc9b7bf, 48 calcs migrated)** — see § "Canonical BaseFeatureCalculator contract" below |
-| `BroadcastSink`            | Live-mode publish helper (Redis Streams + GCS dual-write)                      | Lifted                                                                         |
-| `LiveDataSource`           | Live-mode input adapter (subscribe + watermark)                                | Lifted                                                                         |
-| `BuilderEntry`             | Family registry entry shape (CLI dispatch + Health-API contract surface)       | Lifted                                                                         |
-| `FeatureBatchHandler` base | Batch-mode handler base (CLI → calculator → manifest write-gate)               | Lifted                                                                         |
+| `BroadcastSink`            | Live-mode publish helper (Redis Streams + GCS dual-write)                      | Lifted                                                                                                                                                                                            |
+| `LiveDataSource`           | Live-mode input adapter (subscribe + watermark)                                | Lifted                                                                                                                                                                                            |
+| `BuilderEntry`             | Family registry entry shape (CLI dispatch + Health-API contract surface)       | Lifted                                                                                                                                                                                            |
+| `FeatureBatchHandler` base | Batch-mode handler base (CLI → calculator → manifest write-gate)               | Lifted                                                                                                                                                                                            |
 
 Some lifts ship in the same logical unit as Phase 5; others ride alongside Phase 6 / Phase 7 (per-family inline removal
 in same commit as the UTL lift, per the workspace "no double SSOT" rule). Phase 5 todo list owns the authoritative
@@ -178,8 +178,8 @@ aggregator contract (registers handler builder via `BuilderEntry`), CLI dispatch
 
 Every concrete feature calculator subclasses
 `unified_trading_library.feature_calculator.registry.BaseFeatureCalculator[DataFrameT]` (either directly or via a
-per-family intermediate). The canonical ABC is generic over `DataFrameT` constrained to `pd.DataFrame` or
-`pl.DataFrame` (PEP-696 default `pd.DataFrame` keeps the pre-Generic pandas contract working unchanged).
+per-family intermediate). The canonical ABC is generic over `DataFrameT` constrained to `pd.DataFrame` or `pl.DataFrame`
+(PEP-696 default `pd.DataFrame` keeps the pre-Generic pandas contract working unchanged).
 
 **Mandatory class-attribute contract** (enforced at class-definition time by `__init_subclass__` per
 `basefc_validation_flip_2026_05_10.md` item 3, flipped 2026-05-16 at `unified-trading-library@ccc9b7bf`):
@@ -192,30 +192,29 @@ class MyCalculator(BaseFeatureCalculator[pl.DataFrame]):
     def calculate(self, df: pl.DataFrame, **params: object) -> pl.DataFrame: ...
 ```
 
-A missing or empty `feature_group` / `feature_family` raises `TypeError` at class-definition time. Abstract
-subclasses (still have outstanding `@abstractmethod`) are exempt — they're scaffolding by design. Detection uses an
-eager MRO walk in `_has_outstanding_abstract_methods()` because ABCMeta computes `__abstractmethods__` AFTER
-`__init_subclass__` runs.
+A missing or empty `feature_group` / `feature_family` raises `TypeError` at class-definition time. Abstract subclasses
+(still have outstanding `@abstractmethod`) are exempt — they're scaffolding by design. Detection uses an eager MRO walk
+in `_has_outstanding_abstract_methods()` because ABCMeta computes `__abstractmethods__` AFTER `__init_subclass__` runs.
 
 **Per-family inheritance shape** (post-migration 2026-05-16):
 
-| Family            | Local base inherits                                                  | `feature_family` set on              | Status                                                    |
-| ----------------- | -------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| cross_instrument  | `BaseFeatureCalculator[pl.DataFrame]` (UTL canonical)                | local base (`"cross_instrument"`)    | 20/20 calcs migrated `features-service@71643dec`          |
-| onchain           | `BaseFeatureCalculator` (UTL canonical, pandas default) via `OnChainCalculator` | `OnChainCalculator` (`"onchain"`)    | 19/19 calcs migrated `features-service@151dffab`          |
-| multi_timeframe   | `BaseFeatureCalculator[pl.DataFrame]` (UTL canonical, lifted 2026-05-16) | local base (`"multi_timeframe"`)     | 9/9 calcs migrated `features-service@87ba9cf6`            |
-| delta_one         | `BaseFeatureCalculator[pl.DataFrame]` (legacy paradigm)              | per-calc                             | legacy paradigm — opt-in validate                         |
-| volatility        | local pandas `FeatureCalculator(BaseFeatureCalculator, ABC)`         | per-calc                             | legacy paradigm — opt-in validate                         |
-| sports / commodity / calendar | local family ABCs                                             | per-calc                             | legacy paradigms — opt-in validate                        |
+| Family                        | Local base inherits                                                             | `feature_family` set on           | Status                                           |
+| ----------------------------- | ------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| cross_instrument              | `BaseFeatureCalculator[pl.DataFrame]` (UTL canonical)                           | local base (`"cross_instrument"`) | 20/20 calcs migrated `features-service@71643dec` |
+| onchain                       | `BaseFeatureCalculator` (UTL canonical, pandas default) via `OnChainCalculator` | `OnChainCalculator` (`"onchain"`) | 19/19 calcs migrated `features-service@151dffab` |
+| multi_timeframe               | `BaseFeatureCalculator[pl.DataFrame]` (UTL canonical, lifted 2026-05-16)        | local base (`"multi_timeframe"`)  | 9/9 calcs migrated `features-service@87ba9cf6`   |
+| delta_one                     | `BaseFeatureCalculator[pl.DataFrame]` (legacy paradigm)                         | per-calc                          | legacy paradigm — opt-in validate                |
+| volatility                    | local pandas `FeatureCalculator(BaseFeatureCalculator, ABC)`                    | per-calc                          | legacy paradigm — opt-in validate                |
+| sports / commodity / calendar | local family ABCs                                                               | per-calc                          | legacy paradigms — opt-in validate               |
 
 48 concrete calcs across the 3 polars families now declare `feature_group: ClassVar[str]` (vs the prior
-`@property @override def feature_group(self) -> str:` pattern, which incidentally still typechecks because the
-property descriptor is truthy at class-level — legacy paradigms remain on opt-in until their own follow-on flip).
+`@property @override def feature_group(self) -> str:` pattern, which incidentally still typechecks because the property
+descriptor is truthy at class-level — legacy paradigms remain on opt-in until their own follow-on flip).
 
-**Why this matters.** The manifest writer keys rows by `feature_group`; the GCS path partitions by
-`feature_family`. Class-attribute declaration lets static tooling (basedpyright, registry inspectors,
-documentation generators) read the values without instantiating the calculator — a pre-condition for the
-deployment-UI data-status drilldown's per-`(feature_family, feature_group)` rollup.
+**Why this matters.** The manifest writer keys rows by `feature_group`; the GCS path partitions by `feature_family`.
+Class-attribute declaration lets static tooling (basedpyright, registry inspectors, documentation generators) read the
+values without instantiating the calculator — a pre-condition for the deployment-UI data-status drilldown's
+per-`(feature_family, feature_group)` rollup.
 
 ## Deployment topology
 

@@ -411,7 +411,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **SUPERSEDED 2026-04-25 by
 > [consolidated_operational_validation_2026_04_15.plan.md](./consolidated_operational_validation_2026_04_15.plan.md).**
 > Original scope retained for history. Frontmatter `remaining_todos_consolidated_into:` was already present; this commit

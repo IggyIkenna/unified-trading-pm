@@ -71,7 +71,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Plans → Code → Tested → Deployable: Unified Audit and Plan Alignment
 
 **Status:** Canonical (supersedes pm_codex, other_alignment, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF) **Created:** 2026-03-04

@@ -72,7 +72,21 @@ def _walk_repo_python_files(repo_path: Path) -> list[str]:
         if f.suffix not in (".py", ".sh"):
             continue
         parts = f.relative_to(repo_path).parts
-        if any(skip in parts for skip in (".venv", "venv", "build", "dist", "node_modules", "__pycache__", ".git", ".pytest_cache", ".mypy_cache", ".ruff_cache")):
+        if any(
+            skip in parts
+            for skip in (
+                ".venv",
+                "venv",
+                "build",
+                "dist",
+                "node_modules",
+                "__pycache__",
+                ".git",
+                ".pytest_cache",
+                ".mypy_cache",
+                ".ruff_cache",
+            )
+        ):
             continue
         out.append(f"{repo_path.name}/{f.relative_to(repo_path).as_posix()}")
     return out
@@ -133,7 +147,14 @@ def main() -> int:
         print("ERROR: no repos found", file=sys.stderr)
         return 2
 
-    skip_repos = {"unified-trading-pm", "unified-trading-system-ui", "deployment-ui", "e2e-testing", "system-integration-tests", "ibkr-gateway-infra"}
+    skip_repos = {
+        "unified-trading-pm",
+        "unified-trading-system-ui",
+        "deployment-ui",
+        "e2e-testing",
+        "system-integration-tests",
+        "ibkr-gateway-infra",
+    }
 
     for repo_name in target_repos:
         if repo_name in skip_repos:

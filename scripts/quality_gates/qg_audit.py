@@ -349,10 +349,7 @@ def main() -> int:
         "--output",
         "-o",
         default=None,
-        help=(
-            "Output path (.json or .yaml). "
-            "Default: <pm>/audits/qg_audit_<YYYYMMDD_HHMMSS>.json"
-        ),
+        help=("Output path (.json or .yaml). Default: <pm>/audits/qg_audit_<YYYYMMDD_HHMMSS>.json"),
     )
     parser.add_argument("--repo", help="Audit a single repo (instead of all)")
     parser.add_argument(
@@ -362,9 +359,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, help="Only audit first N repos (for testing)")
     parser.add_argument("--quick", action="store_true", help="QG --quick mode (skip integration tests)")
     parser.add_argument("--timeout", type=int, default=1800, help="Per-repo timeout in seconds (default 1800)")
-    parser.add_argument(
-        "--workers", type=int, default=1, help="PYTEST_WORKERS (default 1; sequential single-worker)"
-    )
+    parser.add_argument("--workers", type=int, default=1, help="PYTEST_WORKERS (default 1; sequential single-worker)")
     args = parser.parse_args()
 
     if args.repo:

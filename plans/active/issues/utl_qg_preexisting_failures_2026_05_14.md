@@ -119,56 +119,50 @@ UTL-touching agent to inspect "is this failure pre-existing or mine?". Composite
 
 Operator triage / break into themed sub-issues:
 
-1. ✅ **Cloud SDK import** (`instrument_lifecycle_loader.py` + `client_lifecycle/onboarding.py`):
-   DONE 2026-05-16 (slot 7). `instrument_lifecycle_loader.py` already routes through `cloud_interface`
-   (verified — `from unified_trading_library.cloud_interface import StorageClient, get_storage_client` at
-   line 38). `client_lifecycle/onboarding.py::GCSStateStore` refactored at
-   `unified-trading-library@dfbe83c2` to use `get_storage_client()` + `StorageClient.blob_exists()` /
-   `download_bytes()` / `upload_bytes()` (replaced `storage.Client()` / `bucket.blob()` /
-   `blob.download_as_text()` / `from google.cloud.exceptions import NotFound`). basedpyright clean.
-   Remaining `from google.cloud import` matches in `cloud_interface/providers/*.py` are the abstraction layer
-   itself (legitimate); inside-function matches in `firestore_lifecycle.py` / `candidate_manifest_store.py` /
-   `instruments_catalog_reader.py` / `presigned_urls.py` carry `qg-inside-import` noqa markers.
+1. ✅ **Cloud SDK import** (`instrument_lifecycle_loader.py` + `client_lifecycle/onboarding.py`): DONE 2026-05-16 (slot
+   7). `instrument_lifecycle_loader.py` already routes through `cloud_interface` (verified —
+   `from unified_trading_library.cloud_interface import StorageClient, get_storage_client` at line 38).
+   `client_lifecycle/onboarding.py::GCSStateStore` refactored at `unified-trading-library@dfbe83c2` to use
+   `get_storage_client()` + `StorageClient.blob_exists()` / `download_bytes()` / `upload_bytes()` (replaced
+   `storage.Client()` / `bucket.blob()` / `blob.download_as_text()` / `from google.cloud.exceptions import NotFound`).
+   basedpyright clean. Remaining `from google.cloud import` matches in `cloud_interface/providers/*.py` are the
+   abstraction layer itself (legitimate); inside-function matches in `firestore_lifecycle.py` /
+   `candidate_manifest_store.py` / `instruments_catalog_reader.py` / `presigned_urls.py` carry `qg-inside-import` noqa
+   markers.
 2. **Backward-compat shims** (3 instances): targeted deletions; check callers first. ~1 hour.
-3. ✅ **Function/method size** (22 violations): DONE 2026-05-16 (slot 7). All 9 originally-excluded
-   paths in `SIZE_EXTRA_EXCLUDES` refactored under the 50-line budget this session — trimmed list at
+3. ✅ **Function/method size** (22 violations): DONE 2026-05-16 (slot 7). All 9 originally-excluded paths in
+   `SIZE_EXTRA_EXCLUDES` refactored under the 50-line budget this session — trimmed list at
    `unified-trading-library@0b79a4b3`. Cleared: `treasury/*`, `post_trade/*`, `allocation/engine.py`,
    `circuit_breaker/recovery.py`, `streaming/live_aggregator.py`, `synthetic/harness.py`,
-   `client_lifecycle/onboarding.py`, `feature_service_base/live_aggregator.py`, `kill_switch/bus.py`.
-   Final 5 cleared this turn: `treasury/approval_bus.py::collect_approvals` 100→39L
-   `unified-trading-library@f34af1be`; `synthetic/harness.py::_run_stage` 80→26L + `synthetic/harness.py::run`
-   59→24L `unified-trading-library@175eaf1d` (extracted `_execute_stage_body` + `_record_failed_stage`);
-   `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52→47L +
-   `post_trade/settler.py::settle_trade` 53→43L `unified-trading-library@5a3a341b` (call-site condensation).
-   **Additional refactors after the initial trim**: `service_runtime.py::from_env_and_args` 100→49L
-   `unified-trading-library@d75ae5d7` (extracted `_resolve_asset_groups` + `_resolve_testnet_mode` +
-   `_validate_gcp_required`) — removed from exclusion list. `service_cli.py::ServiceCLI.run` 108→39L
-   `unified-trading-library@0e0feced` (extracted `_prepare_argv` + `_install_synthetic_input_override` +
-   `_wire_runtime_env`) — also removed.
-   **Further refactors after the second trim**:
-   `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65→39L
+   `client_lifecycle/onboarding.py`, `feature_service_base/live_aggregator.py`, `kill_switch/bus.py`. Final 5 cleared
+   this turn: `treasury/approval_bus.py::collect_approvals` 100→39L `unified-trading-library@f34af1be`;
+   `synthetic/harness.py::_run_stage` 80→26L + `synthetic/harness.py::run` 59→24L `unified-trading-library@175eaf1d`
+   (extracted `_execute_stage_body` + `_record_failed_stage`);
+   `post_trade/hwm_crystallization.py::crystallize_at_period_boundary` 52→47L + `post_trade/settler.py::settle_trade`
+   53→43L `unified-trading-library@5a3a341b` (call-site condensation). **Additional refactors after the initial trim**:
+   `service_runtime.py::from_env_and_args` 100→49L `unified-trading-library@d75ae5d7` (extracted
+   `_resolve_asset_groups` + `_resolve_testnet_mode` + `_validate_gcp_required`) — removed from exclusion list.
+   `service_cli.py::ServiceCLI.run` 108→39L `unified-trading-library@0e0feced` (extracted `_prepare_argv` +
+   `_install_synthetic_input_override` + `_wire_runtime_env`) — also removed. **Further refactors after the second
+   trim**: `features_interface/prediction/sports_odds_features.py::OddsSpreadFeatures.compute_for_fixture` 65→39L
    `unified-trading-library@d5780025` (extracted `_resolve_polymarket_price`; collapsed return dict);
-   `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65→43L
-   `unified-trading-library@17640cba` (compressed contract docstring + return-exceptions comment block).
-   **Further refactor 2026-05-16 (slot 7)**:
-   `io/streaming_shard_finalizer.py::_route_row_groups` 52→16L `unified-trading-library@fe2710bf`
-   (extracted `_route_chunk_to_writer` lazy-pool-entry helper + `_close_writers_on_exception`
-   FD-leak-safe cleanup helper). 7/7 streaming_shard_finalizer tests pass.
-   **Remaining 1 path in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` only — ManifestWriter public API
-   methods are docstring-heavy contract documentation (e.g. `record_captured` 266L total but body is
-   188L of correct multi-state handling logic; refactoring further would scatter contract semantics
-   across helpers that downstream services rely on grep-discovery for).
+   `streaming/parallel_per_symbol_runner.py::ParallelPerSymbolRunner.run` 65→43L `unified-trading-library@17640cba`
+   (compressed contract docstring + return-exceptions comment block). **Further refactor 2026-05-16 (slot 7)**:
+   `io/streaming_shard_finalizer.py::_route_row_groups` 52→16L `unified-trading-library@fe2710bf` (extracted
+   `_route_chunk_to_writer` lazy-pool-entry helper + `_close_writers_on_exception` FD-leak-safe cleanup helper). 7/7
+   streaming_shard_finalizer tests pass. **Remaining 1 path in `SIZE_EXTRA_EXCLUDES`**: `manifest_writer.py` only —
+   ManifestWriter public API methods are docstring-heavy contract documentation (e.g. `record_captured` 266L total but
+   body is 188L of correct multi-state handling logic; refactoring further would scatter contract semantics across
+   helpers that downstream services rely on grep-discovery for).
 
-   **Net session result**: SIZE_EXTRA_EXCLUDES went 9 → 1 path. 47 methods refactored under the
-   50-line budget cumulatively.
+   **Net session result**: SIZE_EXTRA_EXCLUDES went 9 → 1 path. 47 methods refactored under the 50-line budget
+   cumulatively.
 
-   **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start):
-   the original 22 — current count after the 117-test sweep included additional internals). Commits:
-   `cloud_interface/protocol.py::from_env` 51→26L `unified-trading-library@ae622fe8`;
-   `feature_service_base/live_aggregator.py::_emit_stale_data` 51→32L (same commit);
-   `kill_switch/bus.py::arm` 51→45L (same commit);
-   `streaming/utc_aligned_scheduler.py::run_forever` 52→38L `unified-trading-library@403f4b34`;
-   `streaming/live_aggregator.py::run` 53→33L (same commit);
+   **Earlier-session refactor ledger** (cumulative 25 of 51 cleared at session start): the original 22 — current count
+   after the 117-test sweep included additional internals). Commits: `cloud_interface/protocol.py::from_env` 51→26L
+   `unified-trading-library@ae622fe8`; `feature_service_base/live_aggregator.py::_emit_stale_data` 51→32L (same commit);
+   `kill_switch/bus.py::arm` 51→45L (same commit); `streaming/utc_aligned_scheduler.py::run_forever` 52→38L
+   `unified-trading-library@403f4b34`; `streaming/live_aggregator.py::run` 53→33L (same commit);
    `post_trade/statement_emitter.py::emit_daily_statement` 54→47L `unified-trading-library@92e99a84`;
    `treasury/withdrawal_audit_log.py::append` 57→39L (same commit, +1 reportAny error eliminated);
    `kill_switch/bus.py::disarm` 60→48L `unified-trading-library@cc8323e5`;
@@ -184,25 +178,23 @@ Operator triage / break into themed sub-issues:
    `post_trade/settler.py::update_hwm_ledger` 78→36L `unified-trading-library@652abdc3`;
    `manifest_writer.py::_write_to_gcs` 66→29L `unified-trading-library@54265159`;
    `manifest_writer.py::_write_with_generation_match` 66→34L `unified-trading-library@6fff25f0`;
-   `synthetic/harness.py::run` 112→48L `unified-trading-library@e6fff423`;
-   `client_lifecycle/onboarding.py::advance` 105→46L `unified-trading-library@6bfd6e64`.
-   **25 of 51 method-size violations cleared (~49%)**. 26 remaining are mostly
-   docstring-heavy methods (body is correct; long docstrings carry contract documentation
-   for adapter authors / public surfaces — refactoring those would lose contract value).
+   `synthetic/harness.py::run` 112→48L `unified-trading-library@e6fff423`; `client_lifecycle/onboarding.py::advance`
+   105→46L `unified-trading-library@6bfd6e64`. **25 of 51 method-size violations cleared (~49%)**. 26 remaining are
+   mostly docstring-heavy methods (body is correct; long docstrings carry contract documentation for adapter authors /
+   public surfaces — refactoring those would lose contract value).
+
 4. ✅ **urllib3 CVE bump**: DONE 2026-05-16 (slot 7 verification). All 8 repos that explicitly pin urllib3
-   (`batch-live-reconciliation-service` / `client-reporting-api` / `ibkr-gateway-infra` /
-   `pnl-attribution-service` / `system-integration-tests` / `trading-agent-service` / `unified-trading-api` /
-   `unified-trading-library`) are on `urllib3>=2.7.0,<3.0.0` per workspace-wide
-   `cryptography/python-dotenv` constraint bump.
-5. ✅ **Deep UAC imports** (10 callsites): DONE 2026-05-16 (slot 7). 11 of 11 UTL deep-import sites lifted.
-   First 9 at `unified-trading-library@bd6a27ef`: `CircuitBreakerId` (5 sites: 5 reconcile modules),
-   `ServiceEmissionPolicy` (2 sites: streaming/live_aggregator + feature_service_base/live_aggregator),
-   `EmptyConfirmedReason` (manifest_writer lazy), and `KillSwitchArmRequest/KillSwitchId/KillSwitchProvenance`
-   (treasury/withdrawal_reconciler lazy). Final 2 lifted at `unified-trading-library@ca1ccafc` after
-   `unified-api-contracts@48315a0` re-exported the helpers on root: `emission_latency_ms_for_source`
-   (availability_stamping) + `STRATEGY_FAMILY_REGISTRY / StrategyFamily / StrategyFamilyId`
-   (risk/family_aggregator). UAC root facade also re-exports `get_primary_source`,
-   `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`,
+   (`batch-live-reconciliation-service` / `client-reporting-api` / `ibkr-gateway-infra` / `pnl-attribution-service` /
+   `system-integration-tests` / `trading-agent-service` / `unified-trading-api` / `unified-trading-library`) are on
+   `urllib3>=2.7.0,<3.0.0` per workspace-wide `cryptography/python-dotenv` constraint bump.
+5. ✅ **Deep UAC imports** (10 callsites): DONE 2026-05-16 (slot 7). 11 of 11 UTL deep-import sites lifted. First 9 at
+   `unified-trading-library@bd6a27ef`: `CircuitBreakerId` (5 sites: 5 reconcile modules), `ServiceEmissionPolicy` (2
+   sites: streaming/live_aggregator + feature_service_base/live_aggregator), `EmptyConfirmedReason` (manifest_writer
+   lazy), and `KillSwitchArmRequest/KillSwitchId/KillSwitchProvenance` (treasury/withdrawal_reconciler lazy). Final 2
+   lifted at `unified-trading-library@ca1ccafc` after `unified-api-contracts@48315a0` re-exported the helpers on root:
+   `emission_latency_ms_for_source` (availability_stamping) +
+   `STRATEGY_FAMILY_REGISTRY / StrategyFamily / StrategyFamilyId` (risk/family_aggregator). UAC root facade also
+   re-exports `get_primary_source`, `get_primary_source_with_latency`, `get_source_priority`, `has_source_priority`,
    `read_with_source_priority`, and `family_for_archetype` for future callers.
 
 This issue doc is the audit-trail record per slot-3-harsh done-def; it is **not** a blocker for the 117-test-fixture

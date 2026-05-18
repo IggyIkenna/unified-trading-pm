@@ -28,7 +28,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Sports Migration Gap Fix Plan
 
 > Follows: SPORTS_BETTING_PREVIOUS_FULL_MIGRATION.md (COMPLETE) Date: 2026-03-02 (updated 2026-03-02) Status: ACTIVE —

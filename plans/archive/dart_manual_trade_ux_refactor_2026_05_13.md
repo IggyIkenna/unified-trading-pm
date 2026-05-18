@@ -43,7 +43,6 @@ execution:
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **🟢 PULLED FORWARD May-23 cutover (operator direction 2026-05-13)** — the Phase C remainder is no longer deferred to
 > a successor-plan triage; it ships pre-cutover. Operator rationale: workspace has throughput margin (~5-6x); no
 > descope, perfect cutover. ~2.4 cal-AI-days against ~1,880 cal-day capacity in next 9 days.

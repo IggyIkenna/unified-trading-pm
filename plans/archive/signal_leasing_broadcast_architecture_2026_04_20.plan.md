@@ -14,7 +14,6 @@ reconciliation_date: 2026-04-25
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 85/0 (100%) done. Plan header
 > explicitly says 'All 8 phases complete. Plan remains locked — requires human [unlock-plan] tag to archive.' Awaiting
 > human approval. See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors.

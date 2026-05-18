@@ -28,7 +28,6 @@ isProject: false
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 ## Context
 
 The rolling forward-poll (codex §4) now lands `sports_reference/by_date/day={D}/entity=fixtures/fixtures.parquet` for

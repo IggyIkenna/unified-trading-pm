@@ -10,12 +10,12 @@ locked_by: live-defi-rollout
 
 ## Resolution summary (2026-05-16 slot-8)
 
-| Finding | Status |
-|---------|--------|
-| 1. ruff line-length=100 in 15 repos | ✅ DONE — 14 of 15 already migrated since filing; last (deployment-api) bumped 2026-05-16 at `deployment-api@54b4b27`. |
+| Finding                                         | Status                                                                                                                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. ruff line-length=100 in 15 repos             | ✅ DONE — 14 of 15 already migrated since filing; last (deployment-api) bumped 2026-05-16 at `deployment-api@54b4b27`.                                                                                 |
 | 2. coverage fail_under below 70 floor (3 repos) | ✅ DONE — all 3 raised to 70 at `position-balance-monitor-service@bfb48dc` + `unified-trading-library@1e3ec43d` + `ml-inference-service@f3b7089`. Actual coverage was 77/78/75 (well above new floor). |
-| 3. 12 repos missing pyproject.toml | ✅ VERIFIED INAPPLICABLE — features sub-services live INSIDE `features-service/` (not separate dirs); 3 UI repos use `package.json` not pyproject; fund-administration deferred-after-cutover. |
-| 4. PM pyrightconfig.json standard mode | 🟡 DEFERRED — PM is not a Python package; scripts type-checked elsewhere. Re-eval if PM scripts grow to library-grade. |
+| 3. 12 repos missing pyproject.toml              | ✅ VERIFIED INAPPLICABLE — features sub-services live INSIDE `features-service/` (not separate dirs); 3 UI repos use `package.json` not pyproject; fund-administration deferred-after-cutover.         |
+| 4. PM pyrightconfig.json standard mode          | 🟡 DEFERRED — PM is not a Python package; scripts type-checked elsewhere. Re-eval if PM scripts grow to library-grade.                                                                                 |
 
 ---
 
@@ -119,23 +119,25 @@ script; total 4-6 AI-hours.
 
 **Priority 1 DONE** — line-length 100→120 applied to all 14 eligible repos (deployment-api skipped = slot 7):
 
-| Repo | SHA |
-|---|---|
-| alerting-service | f052e21 |
+| Repo                              | SHA     |
+| --------------------------------- | ------- |
+| alerting-service                  | f052e21 |
 | batch-live-reconciliation-service | de72ab7 |
-| client-reporting-api | 163374e |
-| ibkr-gateway-infra | 5f8d354 |
-| deployment-service | 560af4d |
-| market-data-processing-service | b2b8dd5 |
-| ml-inference-service | 0f49311 |
-| ml-training-service | 4957ed8 |
-| pnl-attribution-service | f99d33d |
-| position-balance-monitor-service | 06cba56 |
-| risk-and-exposure-service | e148b45 |
-| strategy-service | 00af7ed |
-| unified-trading-library | 623b0cd |
-| unified-trading-api | 6d9ca22 |
+| client-reporting-api              | 163374e |
+| ibkr-gateway-infra                | 5f8d354 |
+| deployment-service                | 560af4d |
+| market-data-processing-service    | b2b8dd5 |
+| ml-inference-service              | 0f49311 |
+| ml-training-service               | 4957ed8 |
+| pnl-attribution-service           | f99d33d |
+| position-balance-monitor-service  | 06cba56 |
+| risk-and-exposure-service         | e148b45 |
+| strategy-service                  | 00af7ed |
+| unified-trading-library           | 623b0cd |
+| unified-trading-api               | 6d9ca22 |
 
 Note: deployment-api (15th repo from Finding 1) assigned to slot 7 — skipped per conflict rules.
 
-**Priority 2+3 OPEN** — coverage floor alignment (`position-balance-monitor-service` 58→70, `unified-trading-library` 65→80, `ml-inference-service` verify 66) + features sub-service inheritance verification. Requires per-repo QG runs. Deferred to per-repo owners.
+**Priority 2+3 OPEN** — coverage floor alignment (`position-balance-monitor-service` 58→70, `unified-trading-library`
+65→80, `ml-inference-service` verify 66) + features sub-service inheritance verification. Requires per-repo QG runs.
+Deferred to per-repo owners.

@@ -94,9 +94,7 @@ class ImportChecker:
         path_str = str(file_path).replace("\\", "/")
         return f"/{package}/" in path_str or path_str.startswith(package + "/")
 
-    def _check_line(
-        self, file_path: Path, line_no: int, line: str
-    ) -> ImportViolation | None:
+    def _check_line(self, file_path: Path, line_no: int, line: str) -> ImportViolation | None:
         """Return a violation for a single line, or None if the line is fine."""
         if self._is_exempt(line):
             return None
@@ -110,9 +108,7 @@ class ImportChecker:
         import_match = FROM_IMPORT_PATTERN.match(line)
         if not import_match:
             return None
-        return ImportViolation(
-            str(file_path), line_no, line.rstrip(), package, module_path, import_match.group(3)
-        )
+        return ImportViolation(str(file_path), line_no, line.rstrip(), package, module_path, import_match.group(3))
 
     def check_file(self, file_path: Path) -> list[ImportViolation]:
         """Check a single file for import violations."""

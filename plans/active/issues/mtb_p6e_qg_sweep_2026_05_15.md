@@ -3,7 +3,9 @@ title: mtb-p6e-final-qg-sweep — B-014 rollout 6-repo QG results
 created: 2026-05-15
 author: slot-8
 resolved: 2026-05-15
-resolution: SHIPPED — slot-2 close-out 2026-05-15. ml-training 14 failures fixed by `ml-training-service@7e18af8` (coverage ≥80%). features-service failures cross-linked to companion issues. All 6 B-014 repos above 70% QG floor ✅.
+resolution:
+  SHIPPED — slot-2 close-out 2026-05-15. ml-training 14 failures fixed by `ml-training-service@7e18af8` (coverage ≥80%).
+  features-service failures cross-linked to companion issues. All 6 B-014 repos above 70% QG floor ✅.
 source:
   - plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md
   - harsh_orchestrator/pings/slot_8.md [2026-05-15 07:10 UTC]
@@ -96,13 +98,13 @@ The QG floor of 70% is respected by all 6 repos. B-014 coverage deployment is co
 1. **features-service 211 failures**: Tracked in successor issue docs (slot 4 owned):
    - `plans/active/issues/features_service_volatility_test_failures_2026_05_15.md` — 48 volatility failures (class
      rename: `VolatilityOrchestrationService` → `VolatilityFeaturesOrchestrator`). Slot 4 scope.
-   - `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md` — PYTEST_UNIT_DIR fix surfaced 350 per-family
-     tests. Remaining ~163 sports-fixture failures tracked there. Slot 4 scope.
+   - `plans/active/issues/features_service_qg_test_path_mismatch_2026_05_15.md` — PYTEST_UNIT_DIR fix surfaced 350
+     per-family tests. Remaining ~163 sports-fixture failures tracked there. Slot 4 scope.
    - **No action required from this audit** — cross-links established.
 
-2. **ml-training 14 failures**: RESOLVED by another slot — `ml-training-service@7e18af8` (`feat(tests): ml-training-service
-   coverage ≥80% + fix 15 pre-existing failures + 43 type errors`). Coverage now ≥80%; `fail_under=80` passes. No action
-   required.
+2. **ml-training 14 failures**: RESOLVED by another slot — `ml-training-service@7e18af8`
+   (`feat(tests): ml-training-service coverage ≥80% + fix 15 pre-existing failures + 43 type errors`). Coverage now
+   ≥80%; `fail_under=80` passes. No action required.
 
 3. **No issue doc for coverage below 70%**: Criteria was "file issue doc for any repo below 70%". No repo is below 70%.
    This doc captures the QG failures for tracking purposes.

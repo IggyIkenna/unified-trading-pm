@@ -62,47 +62,46 @@ this plan owns the QG/automation half.)
 ## Todos
 
 - [x] ✅ [DESIGN] P2. **Group A — Plan-discipline grep-checks (G-2 + G-5 + G-13).** Shipped at
-      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_plan_discipline.py` covers all 3 sub-rules:
-      (a) `A-deferred-no-banner` — 57 violations; (b) `B-active-filename` — 5 violations + `B-issue-filename` checks;
-      (c) `C-archive-no-successor` — 169 violations. Total baseline 231; ratchet-down mode prevents regression while
-      plans get touched. Baseline file at `scripts/quality_gates/plan_discipline_baseline.yaml`. PM `quality-gates.sh`
-      wired. **MIGRATED FROM:** G-2, G-5, G-13.
+      `unified-trading-pm@<pending>`: `scripts/quality_gates/check_plan_discipline.py` covers all 3 sub-rules: (a)
+      `A-deferred-no-banner` — 57 violations; (b) `B-active-filename` — 5 violations + `B-issue-filename` checks; (c)
+      `C-archive-no-successor` — 169 violations. Total baseline 231; ratchet-down mode prevents regression while plans
+      get touched. Baseline file at `scripts/quality_gates/plan_discipline_baseline.yaml`. PM `quality-gates.sh` wired.
+      **MIGRATED FROM:** G-2, G-5, G-13.
 - [x] ✅ [DESIGN] P2. **Group A.1 — Runbook Execution-Owner SSOT codification (HARD RULE in CLAUDE.md).** Ship
       `scripts/quality_gates/check_runbook_execution_owner.py` + baseline file + wire into PM's `quality-gates.sh`.
       Walks workspace for `*runbook*.md` (excluding archive) and asserts each declares
       `execution.{owner,cadence,verifier,last_executed}`. Initial baseline = 9 violations (codified at
-      `scripts/quality_gates/runbook_execution_owner_baseline.yaml`); ratchet-down mode prevents regression while
-      future PRs migrate the 9 existing runbooks to canonical format. Origin issue:
-      `plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md`. Shipped at
-      `unified-trading-pm@<pending>`. **MIGRATED FROM:** CLAUDE.md § "Runbook Execution-Owner SSOT (HARD RULE)".
+      `scripts/quality_gates/runbook_execution_owner_baseline.yaml`); ratchet-down mode prevents regression while future
+      PRs migrate the 9 existing runbooks to canonical format. Origin issue:
+      `plans/archive/issues/runbook_execution_governance_gaps_2026_05_08.md`. Shipped at `unified-trading-pm@<pending>`.
+      **MIGRATED FROM:** CLAUDE.md § "Runbook Execution-Owner SSOT (HARD RULE)".
 - [x] ✅ [DESIGN] P2. **Group B — Codex freshness ratchet (G-12 + D-18).** Ship
-      `scripts/quality_gates/check_codex_doc_freshness.py` + baseline file + wire into PM `quality-gates.sh`.
-      Walks `codex/02-data/` + `codex/04-architecture/` + `codex/05-infrastructure/` + `codex/11-project-management/`
-      (206 docs total) and asserts every `*.md` has `last_reviewed: YYYY-MM-DD` frontmatter + age ≤ 90 days
+      `scripts/quality_gates/check_codex_doc_freshness.py` + baseline file + wire into PM `quality-gates.sh`. Walks
+      `codex/02-data/` + `codex/04-architecture/` + `codex/05-infrastructure/` + `codex/11-project-management/` (206
+      docs total) and asserts every `*.md` has `last_reviewed: YYYY-MM-DD` frontmatter + age ≤ 90 days
       (`--staleness-days` configurable). Initial baseline = 188 violations (codified at
-      `scripts/quality_gates/codex_doc_freshness_baseline.yaml`); ratchet-down mode prevents regression while
-      future PRs add `last_reviewed:` stamps to existing docs. Shipped at `unified-trading-pm@<pending>`.
-      **MIGRATED FROM:** G-12, D-18.
+      `scripts/quality_gates/codex_doc_freshness_baseline.yaml`); ratchet-down mode prevents regression while future PRs
+      add `last_reviewed:` stamps to existing docs. Shipped at `unified-trading-pm@<pending>`. **MIGRATED FROM:** G-12,
+      D-18.
 - [x] ✅ [DESIGN] P2. **Group C — Architectural ratchets (ST-19 + PB-19 + UI-18).** Generic ratchet helper shipped at
       `unified-trading-pm@<pending>`: `scripts/quality_gates/check_architectural_ratchets.py` + per-rule yaml config at
-      `scripts/quality_gates/architectural_ratchets.yaml` + zero-baseline file + PM `quality-gates.sh` wiring.
-      Supports 3 semantics per rule: `banned_substring`, `banned_pattern` (regex), `banned_unless_contains` +
-      optional `condition_pattern`. Current 3 rules:
-      - **ST-19**: `strategy-service/strategy_service/engine/backtest/**/*.py` — class with `[Bb]acktest` in name
-        MUST contain `V2EngineOrchestrator`; **0 violations** (runner.py already compliant).
-      - **PB-19**: PBMS `core/` + `engine/` — banned `if mode == "live"|"batch"|"paper"` patterns; **0 violations**.
-      - **UI-18**: 19 Python service repo `package.json` — banned React/Next/Vite/Webpack deps; **0 violations**
-        (no python service has package.json currently).
-      Baseline 0 across all 3 rules; any new violation = regression. **MIGRATED FROM:** ST-19, PB-19, UI-18.
-- [x] ✅ [DESIGN] P2. **Group D — Generated-artefact drift gate (UI-13).** Shipped + IMMEDIATELY CORRECTED:
-      First pass at `unified-trading-pm@501dbe6d` wired `scripts/quality_gates/check_openapi_drift.py` in warn-only
-      mode. Per ikenna-main investigation in `openapi_mirror_drift_2026_05_16.md` § INVESTIGATION, the check compares
+      `scripts/quality_gates/architectural_ratchets.yaml` + zero-baseline file + PM `quality-gates.sh` wiring. Supports
+      3 semantics per rule: `banned_substring`, `banned_pattern` (regex), `banned_unless_contains` + optional
+      `condition_pattern`. Current 3 rules: - **ST-19**: `strategy-service/strategy_service/engine/backtest/**/*.py` —
+      class with `[Bb]acktest` in name MUST contain `V2EngineOrchestrator`; **0 violations** (runner.py already
+      compliant). - **PB-19**: PBMS `core/` + `engine/` — banned `if mode == "live"|"batch"|"paper"` patterns; **0
+      violations**. - **UI-18**: 19 Python service repo `package.json` — banned React/Next/Vite/Webpack deps; **0
+      violations** (no python service has package.json currently). Baseline 0 across all 3 rules; any new violation =
+      regression. **MIGRATED FROM:** ST-19, PB-19, UI-18.
+- [x] ✅ [DESIGN] P2. **Group D — Generated-artefact drift gate (UI-13).** Shipped + IMMEDIATELY CORRECTED: First pass
+      at `unified-trading-pm@501dbe6d` wired `scripts/quality_gates/check_openapi_drift.py` in warn-only mode. Per
+      ikenna-main investigation in `openapi_mirror_drift_2026_05_16.md` § INVESTIGATION, the check compares
       structurally-different files: `unified-trading-api/openapi.json` (61 paths, slim FastAPI facade) vs
-      `unified-trading-system-ui/lib/registry/openapi.json` (479 paths, aggregated mirror of multiple backends).
-      Hash comparison always shows drift by design — semantic is wrong. **Corrective fix shipped 2026-05-16**:
-      QG wiring removed from `scripts/quality-gates.sh`; script docstring rewritten with DEPRECATED banner pointing
-      at the architectural fix needed (find canonical aggregator output). Group D **contract** still codified;
-      runtime check disabled until aggregator path identified (post-cutover scope). **MIGRATED FROM:** UI-13.
+      `unified-trading-system-ui/lib/registry/openapi.json` (479 paths, aggregated mirror of multiple backends). Hash
+      comparison always shows drift by design — semantic is wrong. **Corrective fix shipped 2026-05-16**: QG wiring
+      removed from `scripts/quality-gates.sh`; script docstring rewritten with DEPRECATED banner pointing at the
+      architectural fix needed (find canonical aggregator output). Group D **contract** still codified; runtime check
+      disabled until aggregator path identified (post-cutover scope). **MIGRATED FROM:** UI-13.
 - [x] ✅ [DESIGN] P3. **Group E — Operator-attentiveness automation (G-8).** Resolved via the no-cron option: verified
       2026-05-16 (slot-8) — the "1 min polling cadence" wording lives in `ikenna_orchestrator/AGENT_ONBOARDING.md`
       (intra-side onboarding doc) as a descriptive line, NOT in `cursor-configs/CLAUDE.md` tagged as HARD RULE. The
@@ -116,8 +115,8 @@ this plan owns the QG/automation half.)
       alerts must clear within `clear_sla_seconds` (default 3600s) or alerting-service raises `STALE_OPEN_ALERT` with
       the original alert_id/code/elapsed time in details; (3) implementation surface
       (`alerting-service/alerting_service/lifecycle/stale_audit.py` + per-code metadata registry); (4) per-code SLA
-      defaults table; (5) future QG step proposal for registry completeness. Implementation deferred to
-      alerting-service slot pickup (contract is the QG half per the original spec). **MIGRATED FROM:** AL-21.
+      defaults table; (5) future QG step proposal for registry completeness. Implementation deferred to alerting-service
+      slot pickup (contract is the QG half per the original spec). **MIGRATED FROM:** AL-21.
 
 ## Done definition
 

@@ -36,11 +36,9 @@ estimate_calibration_note: |
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # DeFi simulation realism — matching engine + risk modeling extension
 
@@ -158,13 +156,13 @@ Owner: ikenna (cross-cutting design); harsh implements.
       rebalance_triggered, captured_at. Consumed by position-balance-monitor + Phase 6C dynamic-vs-static backtest
       comparison.)
 - [x] [AGENT] P0. **1G — UAC QG green** post-Phase-1. **DONE 2026-05-16 (slot 7)**: rate_model.py + sim_schemas.py both
-      basedpyright clean individually (0 errors). The 5 `reportUnsupportedDunderAll` errors flagged in the
-      2026-05-12 status note (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord /
-      PerpFundingRecord named in `unified_api_contracts/internal/__init__.py` `__all__` but not imported) fixed
-      at `unified-api-contracts@570cb58` — added all 5 to the existing defi import block alphabetically.
-      Smoke test `from unified_api_contracts.internal import DexPoolDayRecord, LendingIndexRecord,
-      LiquidationRecord, LstRateRecord, PerpFundingRecord` returns OK. basedpyright re-run on internal/__init__.py
-      shows no `reportUnsupportedDunderAll` errors for these symbols.
+      basedpyright clean individually (0 errors). The 5 `reportUnsupportedDunderAll` errors flagged in the 2026-05-12
+      status note (DexPoolDayRecord / LendingIndexRecord / LiquidationRecord / LstRateRecord / PerpFundingRecord named
+      in `unified_api_contracts/internal/__init__.py` `__all__` but not imported) fixed at
+      `unified-api-contracts@570cb58` — added all 5 to the existing defi import block alphabetically. Smoke test
+      `from unified_api_contracts.internal import DexPoolDayRecord, LendingIndexRecord,     LiquidationRecord, LstRateRecord, PerpFundingRecord`
+      returns OK. basedpyright re-run on internal/**init**.py shows no `reportUnsupportedDunderAll` errors for these
+      symbols.
 
 **Codex SSOT update (Phase 1 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` exists since 2026-05-10
 with Phases 2-8 content stubs. **Day-1 slot-6 ship 2026-05-11 (PM@`3b76a5ef`)**: extended with NEW section #10
@@ -419,8 +417,9 @@ Owner: ikenna for design + harsh for implementation.
       the carry / leveraged-funding-arb P&L attribution).
 - [x] [AGENT] P0. **4D — Backfill historical proposals** for the last 2 years across all 4 protocols. ✅
       deployment-service@`b682e37` — `launch-governance-backfill-vm.sh` + `governance-backfill-` prefix in
-      VM_PREFIX_TO_BUCKET. To run: `bash deployment-service/scripts/vm/launch-governance-backfill-vm.sh 2024-01-01 2026-05-17`.
-      Coverage validates that any "what if proposal X passed" can be answered for any historical date.
+      VM_PREFIX_TO_BUCKET. To run:
+      `bash deployment-service/scripts/vm/launch-governance-backfill-vm.sh 2024-01-01 2026-05-17`. Coverage validates
+      that any "what if proposal X passed" can be answered for any historical date.
 
 **Full-execution criterion**:
 

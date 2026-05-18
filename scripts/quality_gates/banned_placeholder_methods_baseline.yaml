@@ -67,4 +67,5 @@ entries:
   # Both original entries (vix_gap_placeholder + output_writer_service.upload_bytes)
   # now FULLY CLEAR. STEP 5.67 banned-placeholder ratchet at 0 baseline + 0 new.
 
-entries_postscript: "all originally-baselined banned-placeholder occurrences fully removed 2026-05-17. New occurrences will fail CI."
+entries_postscript:
+  "all originally-baselined banned-placeholder occurrences fully removed 2026-05-17. New occurrences will fail CI."

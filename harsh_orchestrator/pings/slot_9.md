@@ -4,8 +4,6 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-18 06:54 UTC] slot-9 — STARTED slot 9 (work_split_2026_05_18_harsh.md § Slot 9). Theme: MTDS handler coverage + PBM canonical_writer extension + plan close-outs.
-
 [2026-05-17 20:22 UTC] ikenna-main — 🟢 B-015 UNBLOCKED: Smoke B DEPLOYMENT_COMPLETED at 20:21:48 UTC (VM features-onchain-defi-20260517-211522, exit_code=0, 11/11 groups). Launch paper backtest NOW: `cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI`. Note: 4 groups batch-skipped (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data; non-blocking for strategy).
 
 [2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from \_agent_pings.md
@@ -360,15 +358,22 @@ After launch:
       verified), parametrized archetype dispatch CeFi→tardis / DeFi→onchain_subgraph / TradFi→databento /
       Prediction→polymarket_clob (13), cross-asset isolation + fall-through contract (4). PBM QG green. mdps@4ad6060.
 
-- [x] **6. MTDS Solana handler retry policy** — ✅ 4 tests TestGetWithRetryPolicy: 429→retry→success (2 GETs + sleep), 503→retry→success, max_retries=3 exhausted raises after 4 attempts, non-retryable 400 raises immediately (no sleep). Blockhash invalidation N/A (handler is HTTP-fetch only). MTDS QG green. mtds@f395c5e.
+- [x] **6. MTDS Solana handler retry policy** — ✅ 4 tests TestGetWithRetryPolicy: 429→retry→success (2 GETs + sleep),
+      503→retry→success, max_retries=3 exhausted raises after 4 attempts, non-retryable 400 raises immediately (no
+      sleep). Blockhash invalidation N/A (handler is HTTP-fetch only). MTDS QG green. mtds@f395c5e.
 
-- [x] **7. MTDS eigenlayer handler coverage extension** — ✅ 4 tests TestEigenlayerSafePattern: record_captured on success, record_empty on zero rows, record_failed on exception (no record_captured = phantom guard), recorder.close() in finally. MTDS QG green. mtds@b052a78.
+- [x] **7. MTDS eigenlayer handler coverage extension** — ✅ 4 tests TestEigenlayerSafePattern: record_captured on
+      success, record_empty on zero rows, record_failed on exception (no record_captured = phantom guard),
+      recorder.close() in finally. MTDS QG green. mtds@b052a78.
 
-- [x] **8. PBM mode parity — degraded conditions** — ✅ 3 tests TestDegradedConditionModeParity: NaN rows stamped correctly (available_at non-null for all rows), pre-stamped available_at preserved (idempotent), extra column does not break schema parity (record_captured called for both BATCH_TARDIS + LIVE_WEBSOCKET). PBM QG green. mdps@92d9be5.
+- [x] **8. PBM mode parity — degraded conditions** — ✅ 3 tests TestDegradedConditionModeParity: NaN rows stamped
+      correctly (available_at non-null for all rows), pre-stamped available_at preserved (idempotent), extra column does
+      not break schema parity (record_captured called for both BATCH_TARDIS + LIVE_WEBSOCKET). PBM QG green.
+      mdps@92d9be5.
 
-- [x] **9. MTDS lst_rates handler — additional LST tokens audit** — ✅ Audited 13 EVM + 3 Solana. weETH already
-      present (EtherFi). ezETH: UAC genesis-only (2024-01-24, RENZO venue); multi-call architecture gap noted
-      (RestakeManager.calculateTVLs requires 2-contract call — not supported by single-call _query_rate). sanctumSOL:
+- [x] **9. MTDS lst_rates handler — additional LST tokens audit** — ✅ Audited 13 EVM + 3 Solana. weETH already present
+      (EtherFi). ezETH: UAC genesis-only (2024-01-24, RENZO venue); multi-call architecture gap noted
+      (RestakeManager.calculateTVLs requires 2-contract call — not supported by single-call \_query_rate). sanctumSOL:
       full Tier-1 SPL stake-pool implementation added (same decode_jito_stake_pool_rate() as jitoSOL/bSOL; pool account
       SANCTUM_INF_POOL_ACCOUNT needs on-chain verification). uac@2654a7d + mtds@2497c81.
 
@@ -379,22 +384,7 @@ Self-pivot through items 1 → 9. **Item 1 (B-015 VMs) FIRST**, then 2-9. Ping S
 
 ---
 
-[2026-05-15 UTC] harsh-slot-9 — 🏁 CYCLE-CLOSE (resumed session post-compaction). All 9 queue items DONE.
-Item 8 (PBM mode parity degraded): mdps@92d9be5. Item 9 (LST tokens audit + sanctumSOL impl):
-uac@2654a7d (ezETH genesis + RENZO venue + sanctumSOL genesis + SANCTUM venue) + mtds@2497c81
-(sanctumSOL Tier-1 SPL stake pool, genesis guard, freshness skip, test fixes for 5 tests, QG bump 10→11).
-Queue exhausted — awaiting next dispatch.
-
-[2026-05-18 13:10 UTC] [main → slot 9] — ℹ️ **DEEP RESERVES AVAILABLE** — 3 new mechanical items (11/12/13) added to your section at 12:55 UTC (PM@ed3776bf). `cd .tabs/9/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Slot 6 just shipped items 8/9/10 from theirs — pattern works. Self-pivot to your 11/12/13 when current item ships.
-
-[2026-05-18 13:24 UTC] [main → slot 9] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 9 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/9/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 9 — MEGA RESERVE".
-
-[2026-05-18 13:32 UTC] [main → slot 9] — 🟡 **STATUS REQUEST** — last commit 13:26 (item 1 MTDS flip). Work_split slot 9 has 10 unchecked items (highest queue depth, ~22 cal-days). Item 14 = live_pipeline_mtds_mdps_features (15 cal-days plan, perfect slot-9 fit). Continue self-pivot through items 2-17 or drop BLOCKED reason if stuck.
-
-[2026-05-18 14:03 UTC] [main → slot 9] — 🟢 **DIRECT DISPATCH** — 48 min silent since last commit (item 5 ezETH @13:42). Your queue has 7 items. Direct task: **item 14 — live_pipeline_mtds_mdps_features (15 cal-days, perfect slot-9 fit)**. Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
-  2. Read `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — pick 2-3 unchecked items in MTDS or PBM territory (avoid cross-service contract changes — Ikenna primary).
-  3. Ship code + tests; commit per item; dual-flip work_split slot 9 item 14 ✅ + plan-of-record.
-**If you can read this ping, you are still active.** Acknowledge "STARTED item 14" within 10 min.
-
-[2026-05-18 09:08 UTC] [main → slot 9] — 🟡 **35-MIN SILENCE CHECK** — direct dispatch sent at 08:33 UTC (item 14 live_pipeline_mtds_mdps_features). No ack received. If still active: acknowledge "STARTED item 14" now. If blocked: drop reason in this file. If idle/context-expired: item 14 stays queued — another slot will pick up after ikenna cutover dispatches settle.
+[2026-05-15 UTC] harsh-slot-9 — 🏁 CYCLE-CLOSE (resumed session post-compaction). All 9 queue items DONE. Item 8 (PBM
+mode parity degraded): mdps@92d9be5. Item 9 (LST tokens audit + sanctumSOL impl): uac@2654a7d (ezETH genesis + RENZO
+venue + sanctumSOL genesis + SANCTUM venue) + mtds@2497c81 (sanctumSOL Tier-1 SPL stake pool, genesis guard, freshness
+skip, test fixes for 5 tests, QG bump 10→11). Queue exhausted — awaiting next dispatch.

@@ -22,7 +22,6 @@ estimate_calibration_note: |
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 # Features ModeHandler ABC lift — successor plan
 
 > **Status (2026-05-08 EOD)**: **COMPLETE**. UTL canonical `ModeHandler` shipped UTL@abeb5bc3 (lift + 11 unit tests at

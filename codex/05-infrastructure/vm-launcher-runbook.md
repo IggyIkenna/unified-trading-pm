@@ -6,7 +6,9 @@ last_reviewed: 2026-05-17
 execution:
   owner: "deployment-platform"
   cadence: "per VM-launcher add/change"
-  verifier: "bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in deployment-service/scripts/vm/launch-*.sh"
+  verifier:
+    "bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in
+    deployment-service/scripts/vm/launch-*.sh"
   last_executed: "2026-05-17 (slot-8 frontmatter codification)"
 ---
 

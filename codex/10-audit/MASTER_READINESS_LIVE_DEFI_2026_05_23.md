@@ -187,7 +187,7 @@ The 7-group readiness applies to:
 > - Group F item 19 (custody): corrected to CLOUD_KMS_ENCRYPTED for May-23; Copper+CEFFU deferred to June-1 (aligned
 >   with `codex/04-architecture/custody-providers.md` which is the live SSOT — drift-audited clean per slot 6 item 5).
 > - batch-live-reconciliation-service: UTL `batch_live_reconciler` confirmed shipped + concurrency-tested.
-> - DeFi error classification: 30 codes in `DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*_ + 2 ORACLE\__);
+> - DeFi error classification: 30 codes in `DefiErrorCode` (13 Aave + 7 RECURSIVE*LOOP + 8 HL*\_ + 2 ORACLE\_\_);
 >   CLAUDE.md updated 2026-05-15 per slot 6 item 5 drift audit — codex/04-architecture/defi-execution-overview.md is
 >   accurate SSOT.
 > - No structural changes to 23-item A-G model.

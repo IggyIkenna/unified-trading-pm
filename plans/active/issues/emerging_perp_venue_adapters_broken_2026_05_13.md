@@ -197,22 +197,14 @@ Next steps:
 
 Status summary across the 5 broken-perp venues:
 
-| Venue                 | Status                            | Owner / next action                                                                |
-| --------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| Venue                 | Status                                | Owner / next action                                                                                                                                                                                      |
+| --------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ASTER**             | ✅ adapter fixed; backfill VM RUNNING | VM `mtds-perp-funding-backfill` (asia-northeast1-c, 35.221.88.242, RUNNING) launched 2026-05-16; covers ASTER 2024-09-25→today + 4 other perp venues. ADC admin perms used per CLAUDE.md infra-ops rule. |
-| **EXTENDED-STARKNET** | ⚠ BLOCKED-OPERATOR-DECISION       | Operator must provide canonical API URL (pinged 2026-05-15)                        |
-| **HYPERLIQUID**       | ✅ reverse-phantom reconciler shipped | Run reconciler on full HYPERLIQUID residual (instruments-service@35f920e)        |
-| **LIGHTER-ZKSYNC**    | ✅ MTDS wired @78e3b28             | Captures should resume on next batch; verify via manifest                          |
-| **PACIFICA-SOLANA**   | ✅ MTDS wired @78e3b28             | Captures should resume on next batch; verify via manifest                          |
+| **EXTENDED-STARKNET** | ⚠ BLOCKED-OPERATOR-DECISION          | Operator must provide canonical API URL (pinged 2026-05-15)                                                                                                                                              |
+| **HYPERLIQUID**       | ✅ reverse-phantom reconciler shipped | Run reconciler on full HYPERLIQUID residual (instruments-service@35f920e)                                                                                                                                |
+| **LIGHTER-ZKSYNC**    | ✅ MTDS wired @78e3b28                | Captures should resume on next batch; verify via manifest                                                                                                                                                |
+| **PACIFICA-SOLANA**   | ✅ MTDS wired @78e3b28                | Captures should resume on next batch; verify via manifest                                                                                                                                                |
 
-**Slot 3 item 3 (work_split_2026_05_15_ikenna.md) effectively complete**: all in-scope adapter fixes shipped.
-2 remaining items are operator-blocked (ASTER backfill VM approval + EXTENDED-STARKNET canonical API URL).
-Issue doc remains active until both operator decisions land + reconciler runs operationally.
-
----
-
-## Triage — 2026-05-18
-
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-16; superseded by diagnosed doc; all 7 perp venues live
+**Slot 3 item 3 (work_split_2026_05_15_ikenna.md) effectively complete**: all in-scope adapter fixes shipped. 2
+remaining items are operator-blocked (ASTER backfill VM approval + EXTENDED-STARKNET canonical API URL). Issue doc
+remains active until both operator decisions land + reconciler runs operationally.

@@ -3,7 +3,10 @@ title: "Phase 10 Codex Audit — strategy-service backtest/family/venue-admissio
 created: 2026-05-15
 author: slot-3
 resolved: 2026-05-17
-resolution: SHIPPED — both drifts. Drift 1 (eligible_venues silent fallthrough) diagnosed + WARN-fix at `execution-service@7957371d` + 3 unit tests. Drift 2 (defi_lp/mev subdir family-map alignment) test at `strategy-service@f01d12d` + 4 unit tests.
+resolution:
+  SHIPPED — both drifts. Drift 1 (eligible_venues silent fallthrough) diagnosed + WARN-fix at
+  `execution-service@7957371d` + 3 unit tests. Drift 2 (defi_lp/mev subdir family-map alignment) test at
+  `strategy-service@f01d12d` + 4 unit tests.
 source:
   - "codex/04-architecture/backtest-groups.md"
   - "codex/09-strategy/architecture-v2/axes/venue-eligibility.md"
@@ -90,15 +93,7 @@ Drift 2: Low risk. Organizational confusion only.
 
 ## Deferred work
 
-| Item                                                          | Status                   | Owner         |
-| ------------------------------------------------------------- | ------------------------ | ------------- |
+| Item                                                          | Status                                                                                                                                                                                                                                                                                                                | Owner  |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | Diagnose execution-service SOR empty-eligible_venues behavior | ✅ DIAGNOSED + WARN-FIX SHIPPED 2026-05-17 (slot-3) — `execution-service@7957371d` `_resolve_venue` now emits WARNING when both target_venue + eligible_venues are empty (falls through to UNKNOWN_VENUE sentinel — strategy-side bug, no longer silent). 3 new tests in `tests/unit/v2/test_router_and_handlers.py`. | Slot 3 |
-| Add family-map assertion test for defi_lp / mev subdirs       | ✅ SHIPPED 2026-05-17 (slot-3) — `strategy-service@f01d12d` `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (4 tests green) | Slot 3 |
-
----
-
-## Triage — 2026-05-18
-
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-17; drifts diagnosed + WARN-fix shipped; slot-3 today
+| Add family-map assertion test for defi_lp / mev subdirs       | ✅ SHIPPED 2026-05-17 (slot-3) — `strategy-service@f01d12d` `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (4 tests green)                                                                                                                                                                         | Slot 3 |

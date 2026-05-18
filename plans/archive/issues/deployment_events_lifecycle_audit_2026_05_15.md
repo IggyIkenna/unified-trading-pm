@@ -17,13 +17,12 @@ All 3 recommended lifecycle policies applied on-cloud + codified in
 2. `gs://central-element-323112-deployment-events/` — `quality_gates_snapshot/` 30-day retention ✅
 3. `gs://central-element-323112-events/` — `events/` 90-day retention ✅
 
-Verified via `gsutil lifecycle get` immediately post-apply. `vm-logs/` directory count was 4145 at apply time;
-will decay to <500 within 30 days as logs aged > 14 days roll off. Honest-coverage bucket intentionally NOT
-lifecycle'd (reviewed 2027-05).
+Verified via `gsutil lifecycle get` immediately post-apply. `vm-logs/` directory count was 4145 at apply time; will
+decay to <500 within 30 days as logs aged > 14 days roll off. Honest-coverage bucket intentionally NOT lifecycle'd
+(reviewed 2027-05).
 
-Per CLAUDE.md "Plans Run To Actual Completion" HARD RULE — ADC admin perms on `central-element-323112` cover
-GCS lifecycle (delete-only, no in-flight modification, lowest-risk infra op).
-
+Per CLAUDE.md "Plans Run To Actual Completion" HARD RULE — ADC admin perms on `central-element-323112` cover GCS
+lifecycle (delete-only, no in-flight modification, lowest-risk infra op).
 
 ## What I Found
 
@@ -240,4 +239,5 @@ echo "=== Lifecycle on events ==="
 gsutil lifecycle get gs://central-element-323112-events/
 ```
 
-Expected output: each `gsutil lifecycle get` returns a JSON `rule` block with the `Delete` action. The actual deletion runs asynchronously (GCS applies lifecycle rules overnight).
+Expected output: each `gsutil lifecycle get` returns a JSON `rule` block with the `Delete` action. The actual deletion
+runs asynchronously (GCS applies lifecycle rules overnight).

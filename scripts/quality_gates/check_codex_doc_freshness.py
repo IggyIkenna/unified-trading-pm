@@ -112,14 +112,10 @@ def _check_doc(path: Path, staleness_days: int, today: datetime.date) -> Freshne
         return FreshnessViolation(path, "no-last_reviewed-field")
     last_reviewed = _parse_last_reviewed(last_reviewed_raw)
     if last_reviewed is None:
-        return FreshnessViolation(
-            path, "invalid-last_reviewed-format", str(last_reviewed_raw)[:40]
-        )
+        return FreshnessViolation(path, "invalid-last_reviewed-format", str(last_reviewed_raw)[:40])
     age = (today - last_reviewed).days
     if age > staleness_days:
-        return FreshnessViolation(
-            path, "stale", f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})"
-        )
+        return FreshnessViolation(path, "stale", f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})")
     return None
 
 
@@ -151,9 +147,7 @@ def _write_baseline(baseline_path: Path, count: int, violations: list[FreshnessV
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Check codex docs declare last_reviewed: + are no older than N days."
-    )
+    parser = argparse.ArgumentParser(description="Check codex docs declare last_reviewed: + are no older than N days.")
     parser.add_argument(
         "--workspace-root",
         type=Path,

@@ -3,7 +3,10 @@ title: Emerging perp venue adapters — root-cause diagnosis (ASTER 0%, HYPERLIQ
 created: 2026-05-13
 author: ikenna-slot-8
 resolved: 2026-05-16
-resolution: SHIPPED — Option A effectively shipped via WS-connector path. ASTER LIVE at `b0419960` (7th WS connector); HYPERLIQUID LIVE at `74e77ebf` (2nd DeFi WS connector). REST-side diagnosed issues sidestepped by WS subscription path. All 7 perp venues LIVE per live_pipeline 3.5 — May-23 perp coverage gate GREEN.
+resolution:
+  SHIPPED — Option A effectively shipped via WS-connector path. ASTER LIVE at `b0419960` (7th WS connector); HYPERLIQUID
+  LIVE at `74e77ebf` (2nd DeFi WS connector). REST-side diagnosed issues sidestepped by WS subscription path. All 7 perp
+  venues LIVE per live_pipeline 3.5 — May-23 perp coverage gate GREEN.
 severity: P0
 parent_issue: emerging_perp_venue_adapters_broken_2026_05_13.md
 source:
@@ -140,23 +143,22 @@ can patch ASTER URLs immediately if operator confirms canonical Aster Finance en
 
 **Option A effectively shipped via WS-connector path** — both venues now LIVE via WebSocket:
 
-- **ASTER** ✅ LIVE: 7th WS connector landed at `b0419960` ("live_pipeline 3.5 — 7th WS connector (ASTER) — ALL 7
-  perp venues LIVE")
-- **HYPERLIQUID** ✅ LIVE: 2nd DeFi WS connector at `74e77ebf` ("live_pipeline Phase 3.5 — 2nd DeFi WS connector
-  landed (HYPERLIQUID)")
+- **ASTER** ✅ LIVE: 7th WS connector landed at `b0419960` ("live_pipeline 3.5 — 7th WS connector (ASTER) — ALL 7 perp
+  venues LIVE")
+- **HYPERLIQUID** ✅ LIVE: 2nd DeFi WS connector at `74e77ebf` ("live_pipeline Phase 3.5 — 2nd DeFi WS connector landed
+  (HYPERLIQUID)")
 
-The original REST-fetch failures (`fetch_trades` stub for HYPERLIQUID; broken base URLs for ASTER) are sidestepped
-by the WS subscription path. Perp tick data now flows via WebSocket subscriptions rather than the broken REST
-adapters.
+The original REST-fetch failures (`fetch_trades` stub for HYPERLIQUID; broken base URLs for ASTER) are sidestepped by
+the WS subscription path. Perp tick data now flows via WebSocket subscriptions rather than the broken REST adapters.
 
 The diagnosed REST-side issues remain technically unfixed but are NOW non-blocking for May-23 cutover since the live
-data pipeline uses WS exclusively. Historical/backfill backfills via Tardis (paid commercial tier) cover the
-REST-fetch use case.
+data pipeline uses WS exclusively. Historical/backfill backfills via Tardis (paid commercial tier) cover the REST-fetch
+use case.
 
 **All 7 perp venues LIVE per live_pipeline 3.5** — May-23 perp coverage gate is GREEN.
 
-**Follow-up (post-cutover, P3)**: file successor plan for REST-adapter cleanup if historical-backfill use case
-expands beyond Tardis. Until then, REST adapters can be marked as DEPRECATED in MTDS docstrings.
+**Follow-up (post-cutover, P3)**: file successor plan for REST-adapter cleanup if historical-backfill use case expands
+beyond Tardis. Until then, REST adapters can be marked as DEPRECATED in MTDS docstrings.
 
 **Issue archive-ready.**
 

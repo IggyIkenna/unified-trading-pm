@@ -143,16 +143,13 @@ todos:
         playbook stub with TL;DR, 9-root mapping table, basis-calc reference, leg-balancing assumptions,
         kill-switch rules, anti-patterns. Full content lands as Phases 2-5 ship.
     status: done
-
 ---
 
 ## Deferred work — migrated to:
 
-See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` /
-`DEFERRED-POST-CUTOVER` / etc. annotations next to each `- [ ]` item in body for the
-specific successor / blocker per-item. No single migration target — this plan tracks
-multiple per-item dispositions.
-
+See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
+annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
+— this plan tracks multiple per-item dispositions.
 
 # CME × Polymarket Cross-Venue Event-Arb Plan
 

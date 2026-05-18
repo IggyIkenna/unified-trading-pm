@@ -3,7 +3,9 @@ title: UAC QG pre-existing size violations (5 total)
 created: 2026-05-14
 author: ikenna-slot-2
 resolved: 2026-05-14
-resolution: SHIPPED — short-term fix landed (CODEX_MAX_VIOLATIONS=5 in scripts/quality-gates.sh). QG passes with pre-existing budget. P2 + P3 follow-ups are nice-to-haves tracked via solana_lst_native_staking_adapters + future-touch.
+resolution:
+  SHIPPED — short-term fix landed (CODEX_MAX_VIOLATIONS=5 in scripts/quality-gates.sh). QG passes with pre-existing
+  budget. P2 + P3 follow-ups are nice-to-haves tracked via solana_lst_native_staking_adapters + future-touch.
 source:
   - unified-api-contracts QG run 2026-05-14 (Task 5 Phase 1 session)
 locked_by: live-defi-rollout
@@ -65,14 +67,6 @@ one, QG will fail → that's the correct behaviour.
 
 ## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
 
-Immediate risk (Codex max-violations false-alarm) closed by `CODEX_MAX_VIOLATIONS=5` ratchet shipped 2026-05-14.
-P2 + P3 items both have named successors per "Status taxonomy" rule. No further short-term action needed; medium-term
-refactors will land when those plans naturally touch the affected files. Issue closeable at next archive sweep.
-
----
-
-## Triage — 2026-05-18
-
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-17; CODEX_MAX_VIOLATIONS=5 ratchet applied
+Immediate risk (Codex max-violations false-alarm) closed by `CODEX_MAX_VIOLATIONS=5` ratchet shipped 2026-05-14. P2 + P3
+items both have named successors per "Status taxonomy" rule. No further short-term action needed; medium-term refactors
+will land when those plans naturally touch the affected files. Issue closeable at next archive sweep.

@@ -462,7 +462,6 @@ todos:
     content: |
       - [ ] [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
         env-tier hosting. B6 gate.
-
 ---
 
 # Deployment-UI Lifecycle Tabs — Cross-Cutting Activation Plan

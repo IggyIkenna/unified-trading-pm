@@ -15,10 +15,10 @@ locked_since: 2026-05-16
 
 ## ✅ RESOLUTION 2026-05-16 (slot-8)
 
-**Root cause confirmed**: `launch-aave-lending-rate-validation-vm.sh` startup-script has `set -euo pipefail` at line
-129. When validation exits non-zero (e.g., FAILED gate with pass_rate < threshold per `run_lending_rate_validation.py`
-final `log_event("STOPPED" if passed_gate else "FAILED")` + `sys.exit(1)`), the `set -e` halted the startup script
-BEFORE reaching the `shutdown -h now` step at line 214. VM stayed alive indefinitely.
+**Root cause confirmed**: `launch-aave-lending-rate-validation-vm.sh` startup-script has `set -euo pipefail` at
+line 129. When validation exits non-zero (e.g., FAILED gate with pass_rate < threshold per
+`run_lending_rate_validation.py` final `log_event("STOPPED" if passed_gate else "FAILED")` + `sys.exit(1)`), the
+`set -e` halted the startup script BEFORE reaching the `shutdown -h now` step at line 214. VM stayed alive indefinitely.
 
 **Fix shipped** at `deployment-service@472f9ca`: brackets the `python3 scripts/run_lending_rate_validation.py ...` call
 with `set +e` / `set -e` so `EXIT_CODE` is captured and the final `shutdown -h now` runs regardless of validation
@@ -26,8 +26,8 @@ outcome. Final log upload (`gsutil cp || true`) was already non-blocking.
 
 The validation script ALREADY emitted STOPPED — original issue-doc Recommended decision (A) was based on incomplete
 reading. The script does `log_event("STOPPED" if passed_gate else "FAILED")` at end. Only the **VM shutdown** was
-missing. Recommended decision (B) (watchdog re-pointing) is no longer needed since the launcher itself now
-self-deletes deterministically.
+missing. Recommended decision (B) (watchdog re-pointing) is no longer needed since the launcher itself now self-deletes
+deterministically.
 
 Next phase_3c re-run will exercise the fix; expect STOPPED event + VM deletion within ~30s + 30s sleep + ~10s gcloud
 shutdown round-trip.
@@ -35,18 +35,18 @@ shutdown round-trip.
 ## What I found
 
 The `aave-lending-rate-val-` VM type (Phase 3C Aave V3 lending rate validation harness) runs the validation script,
-writes `results.json` to `gs://central-element-323112-defi-validation/results/lending/<date>/<correlation_id>/`,
-then **stays alive indefinitely** without:
+writes `results.json` to `gs://central-element-323112-defi-validation/results/lending/<date>/<correlation_id>/`, then
+**stays alive indefinitely** without:
 
 - Emitting a `STOPPED` event to `gs://central-element-323112-events/events/lending-rate-validation/`
 - Calling `gcloud compute instances delete <self>` to clean up
 
 Observed today: VM `aave-lending-rate-val-20260516-121530` launched at 12:15:30 UTC by `ikenna-main`. Validation
-completed at 11:18:49Z (the script's clock — ~3 min runtime). VM was still `RUNNING` 7 hours later when I noticed
-during orchestrator cycle audit. Serial console showed only systemd housekeeping after 11:21 UTC (no python work).
+completed at 11:18:49Z (the script's clock — ~3 min runtime). VM was still `RUNNING` 7 hours later when I noticed during
+orchestrator cycle audit. Serial console showed only systemd housekeeping after 11:21 UTC (no python work).
 
-Manually deleted at 18:42 UTC. Cost impact: ~7 hours of `n2-standard-4` idle compute = ~$0.50, but the pattern is
-the bug, not the cost.
+Manually deleted at 18:42 UTC. Cost impact: ~7 hours of `n2-standard-4` idle compute = ~$0.50, but the pattern is the
+bug, not the cost.
 
 ## Why it matters
 
@@ -55,24 +55,25 @@ Per CLAUDE.md HARD RULE "No fire-and-forget VM launches (CRITICAL)":
 > STARTED within 60s + ≥1 progress event/hour + STOPPED/FAILED at exit
 
 This VM emits STARTED (verified earlier today) but NEVER emits STOPPED. The
-[`vm_zombie_watchdog.py`](../../deployment-service/vm_zombie_watchdog.py) per-prefix threshold for `aave-lending-rate-val-`
-is probably set incorrectly OR the launcher's shutdown step is missing.
+[`vm_zombie_watchdog.py`](../../deployment-service/vm_zombie_watchdog.py) per-prefix threshold for
+`aave-lending-rate-val-` is probably set incorrectly OR the launcher's shutdown step is missing.
 
-Compounding: if multiple phase_3c re-runs happen during DAI IRM iteration (which slot 6 may do soon when they fix
-DAI's interest-rate-strategy), each re-run leaves an idle VM behind. With slot 6 likely doing 5-10 iterations,
-that's 5-10 idle n2-standard-4 instances accumulating $3-5/day each.
+Compounding: if multiple phase_3c re-runs happen during DAI IRM iteration (which slot 6 may do soon when they fix DAI's
+interest-rate-strategy), each re-run leaves an idle VM behind. With slot 6 likely doing 5-10 iterations, that's 5-10
+idle n2-standard-4 instances accumulating $3-5/day each.
 
 ## Root cause hypothesis
 
-Looking at [`deployment-service/scripts/vm/launch-aave-lending-rate-validation-vm.sh`](../../deployment-service/scripts/vm/launch-aave-lending-rate-validation-vm.sh)
+Looking at
+[`deployment-service/scripts/vm/launch-aave-lending-rate-validation-vm.sh`](../../deployment-service/scripts/vm/launch-aave-lending-rate-validation-vm.sh)
 header comment:
 
 > Watchdog registration: VM prefix "aave-lending-rate-val-" is registered in VM_PREFIX_TO_BUCKET in
 > vm_zombie_watchdog.py (None = heartbeat-only since this VM does NOT write per-VM manifest shards).
 
 The launcher relies on the zombie watchdog to clean up; the validation script itself doesn't shut down. But
-heartbeat-only watchdog means it only kills VMs that stop emitting heartbeat — not VMs that emit nothing after
-the workload completes.
+heartbeat-only watchdog means it only kills VMs that stop emitting heartbeat — not VMs that emit nothing after the
+workload completes.
 
 ## Recommended decision
 

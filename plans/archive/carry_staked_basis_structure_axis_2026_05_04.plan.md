@@ -231,7 +231,6 @@ following open phases were migrated to successor plans at archive time (status f
 | phase-8c-staking-apy-total-aggregator | `todo` — `staking_apy_total` features-onchain | → same plan Phase 5 |
 | phase-8d-archetype-ranker-wiring | `todo` — `AllocatorArchetype` wiring | → same plan Phase 5 |
 
-
 # CARRY_STAKED_BASIS — structure axis + tracer comparison
 
 ## Why this plan exists

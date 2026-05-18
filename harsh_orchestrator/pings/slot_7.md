@@ -160,42 +160,37 @@ deployment-api@3acda8e. Plan flipped.
 
 [2026-05-15 19:15 UTC] slot-7 — ✅ DONE queue item 8: deployment-ui deployment diff viewer — DeploymentDiffPanel
 component in DeploymentsList; Compare SHAs toggle button (data-testid="toggle-diff-btn"); form inputs + submit;
-added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green.
-deployment-ui@2c221ac. Plan flipped. Starting item 9: deployment-api cost estimate endpoint.
+added/removed/changed DiffSection tables; error state; 6 vitest tests; pnpm build + QG green. deployment-ui@2c221ac.
+Plan flipped. Starting item 9: deployment-api cost estimate endpoint.
 
 [2026-05-15 19:45 UTC] slot-7 — ✅ DONE queue item 9: deployment-api cost estimate endpoint — POST
 /api/vm/cost-estimate; VmCostEstimateRequest + VmCostEstimateResponse models; n1/n2 GCP pricing table for
 asia-northeast1; compute+disk breakdown; count multiplier; unknown machine type fallback with flag; 9 unit tests; QG
 green. deployment-api@d3a001a. Plan flipped. Starting item 10: deployment-ui cost estimate panel.
 
-[2026-05-15 20:15 UTC] slot-7 — ✅ DONE queue item 10: deployment-ui cost estimate panel —
-VmCostEstimatePanel component (machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate POST;
-compute+disk+total breakdown; dry_run badge; unknown machine type warning); wired into MlExperiments form before
-Submit; fetchVmCostEstimate API function added to deploymentApi.ts; 5 vitest tests; 63 total; QG green.
-deployment-ui@5147f4b. Plan flipped. Starting item 13: responsive mobile layout audit.
+[2026-05-15 20:15 UTC] slot-7 — ✅ DONE queue item 10: deployment-ui cost estimate panel — VmCostEstimatePanel component
+(machine type dropdown + runtime/disk/count inputs; fetchVmCostEstimate POST; compute+disk+total breakdown; dry_run
+badge; unknown machine type warning); wired into MlExperiments form before Submit; fetchVmCostEstimate API function
+added to deploymentApi.ts; 5 vitest tests; 63 total; QG green. deployment-ui@5147f4b. Plan flipped. Starting item 13:
+responsive mobile layout audit.
 
-[2026-05-15 20:45 UTC] slot-7 — ✅ DONE queue item 13: deployment-ui responsive mobile layout audit —
-Header: hamburger toggle (md:hidden) + mobile nav dropdown with all 8 routes;
-DeploymentHistory: overflow-x-auto table wrapper;
-MlExperiments: 4 form grids → grid-cols-1 sm:grid-cols-2;
-StrategyBacktests: form grid → sm:grid-cols-2;
-Dart: status grid → sm:grid-cols-3, form grids → sm:grid-cols-2 + sm:grid-cols-3;
-ClientSubscriptions: service grid → sm:grid-cols-2.
+[2026-05-15 20:45 UTC] slot-7 — ✅ DONE queue item 13: deployment-ui responsive mobile layout audit — Header: hamburger
+toggle (md:hidden) + mobile nav dropdown with all 8 routes; DeploymentHistory: overflow-x-auto table wrapper;
+MlExperiments: 4 form grids → grid-cols-1 sm:grid-cols-2; StrategyBacktests: form grid → sm:grid-cols-2; Dart: status
+grid → sm:grid-cols-3, form grids → sm:grid-cols-2 + sm:grid-cols-3; ClientSubscriptions: service grid → sm:grid-cols-2.
 pnpm build + QG green (63 tests). deployment-ui@fd4fa83. Plan flipped.
 
-[2026-05-15 20:45 UTC] slot-7 — 🏁 EXTENDED QUEUE CYCLE-CLOSE. All items 3-13 done:
-(3) WebSocket UI ✅ @8bace71 (4) admin VM endpoints ✅ @af80be6 (5) VM log streaming ✅ @13b0194
-(6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac
-(9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅ @5147f4b (13) mobile layout ✅ @fd4fa83.
-QG green on both repos. Ready for next queue.
+[2026-05-15 20:45 UTC] slot-7 — 🏁 EXTENDED QUEUE CYCLE-CLOSE. All items 3-13 done: (3) WebSocket UI ✅ @8bace71 (4)
+admin VM endpoints ✅ @af80be6 (5) VM log streaming ✅ @13b0194 (6) deployment-ui VM log viewer ✅ @cb4f2bf (7) diff
+endpoint ✅ @3acda8e (8) diff viewer UI ✅ @2c221ac (9) cost estimate endpoint ✅ @d3a001a (10) cost estimate panel ✅
+@5147f4b (13) mobile layout ✅ @fd4fa83. QG green on both repos. Ready for next queue.
 
 ---
 
 ## [2026-05-15 22:30 UTC] [main → slot 7] — 📋 ACTIVE QUEUE — please flip checkboxes as you ship
 
-> 🏁 CYCLE-CLOSE acked. Outstanding — 13/13 items shipped. Re-anchoring as
-> todo-checkbox list per operator request. 7-item fresh extension (~14 AI-days).
-> Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
+> 🏁 CYCLE-CLOSE acked. Outstanding — 13/13 items shipped. Re-anchoring as todo-checkbox list per operator request.
+> 7-item fresh extension (~14 AI-days). Flip in-place: `- [ ]` → `- [x] @ <sha> + brief evidence`.
 
 ### Already done this cycle
 
@@ -211,23 +206,41 @@ QG green on both repos. Ready for next queue.
 - [x] **10. deployment-ui cost estimate panel** — deployment-ui@5147f4b
 - [x] **11. deployment-ui Phase 11 recursive-borrow polish** — (backfilled)
 - [x] **12. deployment-api request-tracing middleware** — (backfilled, CorrelationIdMiddleware)
-- [x] **13. deployment-ui responsive mobile layout audit** — deployment-ui@fd4fa83 (8 routes, 63 vitest tests, pnpm build green)
+- [x] **13. deployment-ui responsive mobile layout audit** — deployment-ui@fd4fa83 (8 routes, 63 vitest tests, pnpm
+      build green)
 
 ### Fresh extension (items 14-20, ~14 AI-days)
 
-- [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health; VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11 unit tests; QG green.
+- [x] **14. deployment-api VM health-check endpoint** — deployment-api@921a5a8: GET /api/vm/{vm_name}/health;
+      VmHealthResult (state green/amber/red/unknown + is_terminal + thresholds); public wrappers in vm_events.py; 11
+      unit tests; QG green.
 
-- [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult types; 8 vitest tests; QG green.
+- [x] **15. deployment-ui VM health-status badges** — deployment-ui@213b8e9: VmHealthBadge component
+      (green/amber/red/unknown); Health column wired into /ops/live-deployments table; fetchVmHealth + VmHealthResult
+      types; 8 vitest tests; QG green.
 
-- [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models; _parse_blob + _aggregate + _mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 + _parse_blob 3 + _aggregate 4 + prod no-blobs 1); QG green.
+- [x] **16. deployment-api Phase 12 cost aggregation endpoint** — deployment-api@de84c7c: GET
+      /api/costs/daily?date=YYYY-MM-DD; VmCostRow + AssetGroupCostRow + ArchetypeCostRow + DailyCostResponse models;
+      \_parse_blob + \_aggregate + \_mock_response; reads gs://cost_summary/ JSONL; 15 unit tests (mock mode 6 +
+      \_parse_blob 3 + \_aggregate 4 + prod no-blobs 1); QG green.
 
-- [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts(); Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
+- [x] **17. deployment-ui Phase 12 cost dashboard** — deployment-ui@417d68c: /ops/costs route; DailyCosts page (date
+      picker, total card, by-asset-group + by-archetype + by-VM tables); DailyCostResponse types + fetchDailyCosts();
+      Costs nav in Header; 8 vitest tests (694 total); pnpm build green.
 
-- [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses _list_real_events from vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad since, prod no-blobs); QG green.
+- [x] **18. deployment-api VM events filter endpoint** — deployment-api@a038145: GET
+      /api/vm/{vm_name}/events?since=&type=&limit=; type filter + limit cap; reuses \_list_real_events from
+      vm_events.py; mock mode returns filtered events; 8 unit tests (type filter, limit, 400 for unknown prefix/bad
+      since, prod no-blobs); QG green.
 
-- [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name + VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types + fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
+- [x] **19. deployment-ui VM events timeline component** — deployment-ui@fb7baae: VmEventsTimeline component (vertical
+      event list, collapsible JSON details, type/limit filter, refresh, error/empty states); VmDetail page (VM name +
+      VmHealthBadge + timeline); /ops/vms/:vmName route; VMLifecycleEvent + VMEventListResult types +
+      fetchVmFilteredEvents(); 5 vitest tests (699 total); pnpm build green.
 
-- [x] **20. deployment-api Firebase auth middleware integration tests** — deployment-api@715ac1a: 11 integration tests covering verify_firebase_token (missing header, non-Bearer, empty, expired, wrong-issuer, wrong-audience, valid token) + verify_any_auth (valid API key, invalid API key, no-auth 401, valid Firebase token); QG green.
+- [x] **20. deployment-api Firebase auth middleware integration tests** — deployment-api@715ac1a: 11 integration tests
+      covering verify_firebase_token (missing header, non-Bearer, empty, expired, wrong-issuer, wrong-audience, valid
+      token) + verify_any_auth (valid API key, invalid API key, no-auth 401, valid Firebase token); QG green.
 
 **Conflict rules**: deployment-api + deployment-ui = slot 7 OWNS; UAC = surgical only (Ikenna primary).
 

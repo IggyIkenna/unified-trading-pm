@@ -376,7 +376,6 @@ reconciliation_date: 2026-04-25
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
 incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
-
 > **ORPHAN CANDIDATE 2026-04-25.** Scope appears unconnected to the live system. Reason: 0 checkboxes, no `locked_by`,
 > no concrete commit evidence. Plan structure incomplete. Either restructure with checkboxes or archive. See
 > `_reconciliation_evidence_map_2026_04_25.md` for the integration check.
