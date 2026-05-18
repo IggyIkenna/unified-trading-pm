@@ -1401,4 +1401,20 @@ Summary:
   buckets from Tiers 1-7 of the Phase 2.6 migration inventory. bash -n syntax check passes.
 - Write-resume checklist: 4 checks (env-tiered writes, QG 5.69=0, deployment-api smoke, zero flat reads).
   Operator-runnable with pass/fail criteria and Wave 7 unlock condition.
+
+## [main → slot 7] 2026-05-18 ~09:33 UTC — FRESH THEME: defi_catalogue close-out + writegate Phase 6.8
+
+Phase 2.6 Step 5 COMPLETE ✅ — acked. Queue exhausted. New dispatch:
+
+**Part A — `defi_catalogue_chain_primitives_2026_05_10` close-out** (85%, 10 items open):
+1. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting sections (pnl-attribution, operational-modes, simulator-config, chain primitive UAC additions)
+2. Ship per item. `cd .tabs/7/unified-api-contracts && bash scripts/quality-gates.sh` after UAC changes.
+3. Dual-flip defi_catalogue + work_split in same `docs(plans):` commit.
+
+**Part B — writegate Phase 6.8** (instruments-service `record_captured`/`record_empty` manifest hookup, if not done):
+4. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 items. If all checked — skip and extend Part A.
+
+**Conflict-risk**: instruments-service manifest = Ikenna slot 3 (defi_catalogue Part B). Check `.tabs/3/instruments-service` before starting Phase 6.8.
+
+Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - Both new [x] checkboxes in code_freeze plan § "Outstanding NEW work (gap-2.6.A through gap-2.6.E)".

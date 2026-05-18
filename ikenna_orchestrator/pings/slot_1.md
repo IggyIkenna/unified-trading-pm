@@ -3362,3 +3362,41 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **Delegate-flip total progress**: 5/103 callsites done (UAC). 98 remaining.
 
 **Status**: 🟢 All slots active. Tick-4 imminent. First delegate-flip acks expected ~09:30-09:40 UTC.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:33 UTC — tick-89: tick-4 confirmed; major completions; slot-7/8 redispatched
+
+**B-015**: VM `20260518-115404` RUNNING. **Tick 4 confirmed at 09:27:17 UTC** (4/72). No errors. PnL=$0.00. Gate pvl-p18a on track. Tick 5 expected 10:27 UTC.
+
+**Completions since tick-88** (7 new remote commits absorbed):
+- `9330f30a` — deployment-api ratchet → 0 ✅ (ikenna slot-6, 27 callsites done)
+- `d7e33fcc` — aws-migration Phase 2 IAM yaml + Phase 3 ECR repos + Phase 5b Glue crawlers ✅ (ikenna slot-4)
+- `011245b2` — slot-5 wave-59+60 done → STARTED execution-service delegate-flip (33 callsites)
+- `0458b169` — slot-7 Phase 2.6 Step 5 prep DONE ✅ (`deployment-service@9f158d5`, archive-flat-buckets.sh 503 lines)
+- `e01e46aa` — slot-8 alerting Phase 7 gate + api_keys 5.B vault audit DONE ✅
+- `b075702e` — harsh slot-2 Phase 9 supplement DONE + STARTED S9 (naive datetime sweep)
+- `49f5da08` — harsh slot-2 STARTED S9 confirmed
+
+**Harsh-main returned post-lunch** — cross-side ping shows harsh orchestrator back. NOT dispatching harsh slots (harsh-main's job). Cross-side BIG FINDING noted:
+- kalshi + polymarket_clob adapters missing `classify_venue_error()` → assigned to ikenna slot-8 dispatch
+- MARKET_MAKING_EVENT_SETTLED legacy comment in archetype taxonomy → UAC Ikenna territory (noting as todo)
+
+**Delegate-flip progress**:
+- UAC: 5/5 ✅ (ratchet → 0)
+- deployment-api: 27/27 ✅ (ratchet → 0)
+- execution-service: STARTED (slot-5, 33 callsites)
+- UTL/batch-live-recon/strategy: in progress (slot-2, no ack yet — 27 min)
+- features-service: assigned slot-3 (no ack yet)
+- **Total done: 32/103 (31%)**
+
+**Ikenna slot states after dispatch**:
+- slot_2: UTL(23)+batch-live-recon(7)+strategy(2) — active, no ack yet
+- slot_3: features-service(2)+defi_catalogue Part B — active, no ack yet
+- slot_4: AWS Phase 4 code path smoke + defi_recursive_borrow Phase 3-4 — active (Phases 2+3 done)
+- slot_5: execution-service delegate-flip STARTED (33 callsites) — active
+- slot_6: code_freeze Phase 2.6 audit + write-resume checklist — appears DONE (Phase 2.6 Step 5 delivered)
+- slot_7: COMPLETE → REDISPATCHED to defi_catalogue close-out + writegate Phase 6.8
+- slot_8: COMPLETE → REDISPATCHED to api_keys Phase 5.C + classify_venue_error (kalshi/polymarket)
+
+**Status**: 🟢 High throughput. Harsh-main back and managing harsh slots. Next tick: check slot-2/3 acks + B-015 tick 5 (10:27 UTC).

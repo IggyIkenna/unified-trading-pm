@@ -920,3 +920,20 @@ Ping slot-1 when shipped.
 **Plans**: `plans/active/alerting_service_live_rules_2026_05_07.md` + `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`
 
 Acknowledge "STARTED slot-8 alerting SM hot-reload" within 10 min.
+
+## [main → slot 8] 2026-05-18 ~09:33 UTC — COMPLETION ACK + FRESH THEME: api_keys Phase 5.C + classify_venue_error audit
+
+alerting Phase 7 gate + api_keys Phase 5.B vault audit COMPLETE ✅ — acked.
+
+**Cross-side finding from harsh-main**: kalshi + polymarket_clob adapters missing `classify_venue_error()` — execution-service surface, neither lint-slot nor Phase-9-slot cleanly owns it. You have context from Phase 5.B credential scaffold. Take it.
+
+**Items**:
+1. `api_keys_wallets_accounts_readiness_2026_05_10` § 5.C — Helius (Solana DeFi data) + CoinGecko credential scaffold (auth adapter + unit tests, `@pytest.mark.requires_credentials`, CREDENTIAL APPROVAL REQUEST ping)
+2. Add `classify_venue_error()` to `kalshi` adapter in execution-service (pattern: check existing `classify_venue_error` in any cefi adapter, mirror for prediction venues). `cd .tabs/8/execution-service && bash scripts/quality-gates.sh`.
+3. Add `classify_venue_error()` to `polymarket_clob` adapter in execution-service — same pattern.
+4. Dual-flip `api_keys_wallets_accounts_readiness_2026_05_10.md` + work_split per item.
+
+**Plans**: `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` + `plans/active/alerting_service_live_rules_2026_05_07.md`
+**Conflict-risk**: execution-service = harsh slot-2 (lint) + ikenna slot-5 (delegate-flip). Bucket-naming + lint = DIFFERENT surface from venue adapter. `git fetch` before push.
+
+Acknowledge "STARTED api_keys Phase 5.C + classify_venue_error audit" within 10 min.
