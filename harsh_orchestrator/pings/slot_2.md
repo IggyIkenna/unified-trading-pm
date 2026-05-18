@@ -602,3 +602,10 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 13:24 UTC] [main → slot 2] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 2 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/2/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 2 — MEGA RESERVE".
 
 [2026-05-18 13:32 UTC] [main → slot 2] — 🟡 **REBASE NUDGE** — your slot ping says QUEUE-CLOSE but work_split slot 2 has 7 unchecked items (4 mega-reserves 14/15/16/17 + 3 from earlier). Run `cd .tabs/2/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them. Item 14 = type-ignore continuation (~3 cal-days mechanical) — good warm-start.
+
+[2026-05-18 13:40 UTC] [main → slot 2] — 🟢 **DIRECT DISPATCH** — your tab worktree is synced (0 ahead/behind LDR, HEAD@a80afc88). You DO see items 11-17 in work_split § "Slot 2". **Just start item 11**: workspace-wide stale-import sweep beyond ruff. Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. `for r in alerting-service execution-service mtds risk-and-exposure-service ; do echo "=== $r ==="; (cd ../$r && rg "^import [a-z_]+$" --type py -g '!build' -g '!.venv*' 2>&1 | head -10); done`
+  3. Pick 5+ unused imports; fix in-place; QG green per repo.
+  4. Commit + push + dual-flip work_split item 11 ✅ + drop DONE ping.
+**If you can read this ping, you are still active.** Acknowledge by pinging "STARTED item 11" in this file within 10 min.

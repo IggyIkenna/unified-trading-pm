@@ -26,3 +26,9 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 13:50 UTC] slot-3 — ✅ item-12 done: simulation_scenarios Phase 8 codex (8.D/8.E/8.F) — PM@3431713e (kill-switch § "Scenario-driven trips"; autonomous-recovery-matrix § "Scenario-driven recovery validation"; backtest-groups § "Scenario-overlay mode"). Queue EXHAUSTED.
 
 [2026-05-18 13:24 UTC] [main → slot 3] — 🟡 **TWO REMINDERS**: (1) **DUAL-FLIP DISCIPLINE** — cycle 8 audit found 2/8 commits dual-flip compliant (regression from 6/6 cycle 7). Every flip MUST touch BOTH `work_split_2026_05_18_harsh.md` § Slot 3 AND the underlying plan-of-record file in the SAME `docs(plans):` commit. Slot 6 is exemplar — see commits 41e94220, 9fb88ef7, 2a47034c. (2) **MEGA RESERVES AVAILABLE** — 4 new items per slot (numbered 14/15/16/17, total ~12 cal-days more depth) added 13:21 UTC (PM@739bf747). `cd .tabs/3/unified-trading-pm && git fetch && git rebase origin/live-defi-rollout` to see them when current work ships. Themes per slot in work_split § "Slot 3 — MEGA RESERVE".
+
+[2026-05-18 13:40 UTC] [main → slot 3] — 🟢 **DIRECT DISPATCH** — your tab worktree is synced (0 ahead/behind LDR, HEAD@a80afc88). You shipped items 11/12/13 cleanly. Your next item is mega-reserve 14: defi_catalogue_chain_primitives codex residuals (85%, 58/68). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — look for unchecked `- [ ]` items, pick 3 codex-side mechanical ones (avoid UAC enum changes — Ikenna primary).
+  3. Ship + commit per item; dual-flip work_split slot 3 item 14 ✅ + plan-of-record item.
+**If you can read this ping, you are still active.** Acknowledge by pinging "STARTED item 14" in this file within 10 min.
