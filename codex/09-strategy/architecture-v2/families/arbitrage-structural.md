@@ -282,3 +282,4 @@ def react_to_equity_change(self, new_equity_usd: Decimal) -> list[StrategyInstru
 - Venue-account coordination (for cross-CEX simultaneous execution):
   [../cross-cutting/venue-account-coordination.md](../cross-cutting/venue-account-coordination.md)
 - Unity for sports cross-book: [../../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md)
+- **Subdir → family enforcement**: `strategy-service/strategy_service/engine/strategies/v2/mev/` archetypes map to `ARBITRAGE_STRUCTURAL`; enforced by `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (strategy-service@f01d12d).
