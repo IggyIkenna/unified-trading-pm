@@ -3265,3 +3265,26 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - UI: 4 | deployment-api: 27 | batch-live-recon: 7 | strategy-service: 2
 
 **Status**: 🟢 Tick-4 window approaching. Slots processing.
+
+---
+
+## [slot 1 main] 2026-05-18 ~09:12 UTC — tick-85: slot-3+7 rethemed; tick-4 15 min out
+
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks. Tick 4 expected 09:27 UTC (15 min). No errors.
+
+**Incoming commits since tick-84** (5 rebased):
+- `c55c175b` — harsh slot-7 session-close: dual-flip backfill done, ALL 17 items ✅ (soak gate on item-2 = 2026-05-24)
+- `8855eaca` — harsh slot-3 Stream D P1: 14 archetype docs updated (target_leverage/target_net_delta) — PM@8855eaca
+- `ae7e0991` — harsh slot-3 item-18 flip: defi_archetypes Stream D gate closed
+- `377defde` — harsh slot-3 item-18 DONE + queue exhausted (19/19 items 🏆)
+- `1953846e` — harsh slot-2 STARTED Phase 9 cost models + DefiErrorCode ✅ ack received
+
+**Actions taken**:
+- Harsh slot-3: ALL 19 items done 🏆 → re-dispatched to `defi_master_2026_05_07.md` codex residuals (74 items, 9.8 cal)
+- Harsh slot-7: all 17 done + soak-gate → dispatched `mock_data_pipeline_benchmarking` final 2 items → chain `expected_unattempted_propagation_chain` (10 items)
+
+**Harsh slot-9**: still silent (39 min since item-14 dispatch). Second check-in sent at tick-84.
+
+**Ikenna slots**: dispatches sent 6 min ago — expect first acks ~09:15-09:20 UTC.
+
+**Status**: 🟢 All active harsh slots rethemed. Tick-4 window 15 min.

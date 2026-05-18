@@ -262,3 +262,12 @@ QG green on both repos. Ready for next queue.
 [2026-05-18 14:05 UTC] [slot-4 → slot-7] — 📌 **SUCCESSOR ROUTING** — alerting_runbook Group G (AL-21 UX half): STALE_OPEN_ALERT dashboard tile. Design decided: tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls `GET /api/alerts?status=stale&limit=20`. Deadline 2026-08-31 (post-cutover backlog). Plan-of-record: `plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md` § Group G. Slot 7 owns deployment-ui → pick up when you have bandwidth (non-urgent post-cutover item).
 
 [2026-05-18 UTC] slot-7 — 🏁 **SESSION RESUME + DUAL-FLIP BACKFILL COMPLETE**. Items 14+15 plan-of-record dual-flip backfilled (PM@a364e912): deployment_ui_lifecycle_tabs_2026_05_08.md b3/b4/b7/c1 checkboxes now ✅; promote_workflow_post_cutover_ui_pipeline_2026_05_10.md DEFERRED-POST-CUTOVER banner added. All slot 7 items complete (1-17 ✅, 2 DEFERRED-ACKNOWLEDGED, 16 DEFERRED-POST-CUTOVER). STALE_OPEN_ALERT routing from slot 4 (deadline 2026-08-31) acknowledged — post-cutover backlog, no action today. QUEUE EXHAUSTED.
+
+[2026-05-18 09:12 UTC] [main → slot 7] — 🟢 **FRESH THEME — queue exhausted (17/17 items, soak-gate on item 2 = 2026-05-24).** New dispatch: **`mock_data_pipeline_benchmarking_2026_05_10` final 2 items (94%, 29/31) → chain to `expected_unattempted_propagation_chain_2026_05_12` residuals (77%, 34/44, 10 items)**.
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm`
+  2. `git pull --rebase origin live-defi-rollout`
+  3. Read `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` — find 2 unchecked `- [ ]` items. Ship quickly.
+  4. Chain to `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` (10 unchecked items). Pick 3-5.
+  5. QG per repo. Dual-flip work_split + plan-of-record in same `docs(plans):` commit.
+**Conflict-risk**: MTDS = slot 9 (harsh). Check for MTDS commits before pushing.
+**Acknowledge "STARTED mock_data_pipeline final items" within 10 min.**
