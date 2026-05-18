@@ -375,8 +375,12 @@ variant (6% → 18% net at 3x).
       vol-cap clamp comment).
 - [x] [codex] P0. ✅ PM@5fe86b19 — `carry-staked-basis.md` config schema: same additions; documented that
       `target_leverage = 1.0` always for LST_AS_MARGIN (field universal per StrategyInstanceDefinition).
-- [ ] [codex] P1. Remaining archetype docs — same `target_leverage` / `target_net_delta` schema entries. Defaults can
-      vary per archetype; the field is universal.
+- [x] ✅ [codex] P1. Remaining archetype docs — same `target_leverage` / `target_net_delta` schema entries. Defaults can
+      vary per archetype; the field is universal. PM@8855eaca — 14 docs with `## Config schema` updated (carry-basis-dated,
+      event-driven, liquidation-capture, market-making-continuous ×2, market-making-event-settled, ml-directional-continuous,
+      ml-directional-event-settled, rules-directional-continuous, rules-directional-event-settled, stat-arb-cross-sectional,
+      stat-arb-pairs-fixed, vol-trading-options, yield-rotation-lending, yield-staking-simple). Docs without yaml config
+      schemas (carry-recursive-borrow-*, defi-lp-*, arbitrage-mev-*) use different formats — not in scope.
 - [ ] [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields where the
       schema declares them. **DEFERRED to deployment-ui touch**; tracker here.
 - [ ] [paper-trade configs] P1. Paper-trade YAML templates need `target_leverage` field examples. **DEFERRED**.
@@ -421,8 +425,8 @@ overgeneralisation.
       ✅ Done: 4 docs @PM@552a3e6e (carry-staked-basis, carry-basis-perp, APD, carry-recursive-staked) +
       7 docs @PM@8bcf0f96 (carry-basis-dated, carry-recursive-borrow-lending-only, carry-recursive-borrow-perp-hedged,
       yield-staking-simple, yield-rotation-lending, liquidation-capture, defi-lp-pool).
-- [ ] Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp.
-      P0 items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining archetype docs pending.
+- [x] ✅ Stream D: All affected archetype config schemas have `target_leverage` + `target_net_delta` + vol-cap clamp.
+      P0 items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining 14 docs ✅ @PM@8855eaca.
 - [x] Stream E: Master plan + `defi_master` use precise venue subsets per archetype (PM@pending — master + defi_master
       body updated 2026-05-14)
 - [ ] Cross-cutting: PM `quality-gates.sh` passes; UAC `quality-gates.sh` passes (Stream A); codex links resolve;
