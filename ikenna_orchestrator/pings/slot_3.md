@@ -879,26 +879,35 @@ fix, no test impact.
 
 **Phase 2.D SHIPPED**: instruments-service@8464082 + PM@01476191
 
-1. `assert_available_at_present` wired into `_gated_sink_write` — raises `LookaheadBiasError` if `available_at` missing/null
-2. All `stamp_available_at_explicit` calls moved BEFORE `_gated_sink_write` across ~15 callsites in orchestrator.py (previously stamped AFTER the write, leaving GCS parquets without `available_at`)
+1. `assert_available_at_present` wired into `_gated_sink_write` — raises `LookaheadBiasError` if `available_at`
+   missing/null
+2. All `stamp_available_at_explicit` calls moved BEFORE `_gated_sink_write` across ~15 callsites in orchestrator.py
+   (previously stamped AFTER the write, leaving GCS parquets without `available_at`)
 3. `TestAvailableAtPresent` (4 tests: missing/null/present/empty) added to `test_orchestrator_write_gate.py`
 4. QG exit 0 (2721 passed)
 5. Also fixed 4 pre-existing lint errors in adjacent test files (RUF002/003/059)
 6. Plan flips: writegate plan lines 1655-1661 all `[x]`
 
-**Key discovery**: This was not a trivial 1-liner — the orchestrator wrote unstamped DataFrames to GCS and only stamped a copy for the manifest writer. The GCS parquets lacked `available_at` entirely. Fixed by reordering stamp before write at all callsites.
+**Key discovery**: This was not a trivial 1-liner — the orchestrator wrote unstamped DataFrames to GCS and only stamped
+a copy for the manifest writer. The GCS parquets lacked `available_at` entirely. Fixed by reordering stamp before write
+at all callsites.
 
-**New dispatch STARTED**: defi_master codex close-out (codex/09-strategy/ unchecked items). Pulling LDR + reading plan now.
+**New dispatch STARTED**: defi_master codex close-out (codex/09-strategy/ unchecked items). Pulling LDR + reading plan
+now.
 
 ## [main → slot 3] 2026-05-18 ~10:04 UTC — COMPLETION ACK + FRESH THEME: defi_master codex close-out
 
-MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b) ✅ — all acked. Queue exhausted again.
+MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b) ✅ — all acked. Queue exhausted
+again.
 
-**New dispatch**: `defi_master_2026_05_07.md` codex close-out — strategy codex in UAC/instruments territory (your domain).
+**New dispatch**: `defi_master_2026_05_07.md` codex close-out — strategy codex in UAC/instruments territory (your
+domain).
 
 **Items**:
+
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections (archetypes, primitives, operational docs). Skip Group F live-trading items (operator-gated).
+2. Read `plans/active/defi_master_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy/ sections
+   (archetypes, primitives, operational docs). Skip Group F live-trading items (operator-gated).
 3. Ship 2-3 items per batch. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC changes.
 4. Dual-flip defi_master + work_split `docs(plans):` in same turn per item.
 
@@ -906,56 +915,103 @@ MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e
 
 Acknowledge "STARTED defi_master codex close-out" within 10 min.
 
-[2026-05-18 10:39 UTC] [main → slot 3] — 🟡 **35-MIN SILENCE CHECK** — defi_master codex close-out dispatched 10:04 UTC. No ack visible in ping file. If active: post "STARTED defi_master" now + first item you're targeting. If blocked: drop one-liner. Plan: `plans/active/defi_master_2026_05_07.md` codex/09-strategy/ unchecked items (skip Group F).
+[2026-05-18 10:39 UTC] [main → slot 3] — 🟡 **35-MIN SILENCE CHECK** — defi_master codex close-out dispatched 10:04 UTC.
+No ack visible in ping file. If active: post "STARTED defi_master" now + first item you're targeting. If blocked: drop
+one-liner. Plan: `plans/active/defi_master_2026_05_07.md` codex/09-strategy/ unchecked items (skip Group F).
 
-[2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH: `defi_master_2026_05_07.md` codex close-out — same theme, fresh context.**
+[2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH:
+`defi_master_2026_05_07.md` codex close-out — same theme, fresh context.**
+
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_master_2026_05_07.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/ (archetypes, primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
-3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.
-4. Dual-flip: code commit + `docs(plans): flip defi_master item <N>` in same turn.
-**Acknowledge "STARTED defi_master (fresh)" within 10 min.**
+2. Read `plans/active/defi_master_2026_05_07.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/
+   (archetypes, primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
+3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship.
+   `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.
+4. Dual-flip: code commit + `docs(plans): flip defi_master item <N>` in same turn. **Acknowledge "STARTED defi_master
+   (fresh)" within 10 min.**
 
-[2026-05-18 ~11:xx UTC] [slot 3 → main] — 🟢 **STARTED + PHASE 1 + PHASE 3 DONE** (fresh context resumed after compaction)
-- **Phase 1 UAC ChainKind extension** ✅ — shipped uac@9aea2b7:
-  ChainKind(StrEnum) 24-member + CHAIN_BRIDGE_GRAPH + CHAIN_GENESIS_DATES (STARKNET/HYPERLIQUID_L1) +
-  HYPERLIQUID_RPC_TEMPLATES + STARKNET_RPC_TEMPLATES. defi_master Phase 1 flipped [x].
-- **Phase 3 archetype docs** ✅ — shipped PM@172fa05e:
-  allowed_chains field added to carry-staked-basis.md [ethereum, solana, arbitrum] +
-  arbitrage-price-dispersion.md [ethereum, arbitrum, solana, base, optimism]. defi_master Phase 3 flipped [x].
+[2026-05-18 ~11:xx UTC] [slot 3 → main] — 🟢 **STARTED + PHASE 1 + PHASE 3 DONE** (fresh context resumed after
+compaction)
+
+- **Phase 1 UAC ChainKind extension** ✅ — shipped uac@9aea2b7: ChainKind(StrEnum) 24-member + CHAIN_BRIDGE_GRAPH +
+  CHAIN_GENESIS_DATES (STARKNET/HYPERLIQUID_L1) + HYPERLIQUID_RPC_TEMPLATES + STARKNET_RPC_TEMPLATES. defi_master Phase
+  1 flipped [x].
+- **Phase 3 archetype docs** ✅ — shipped PM@172fa05e: allowed_chains field added to carry-staked-basis.md [ethereum,
+  solana, arbitrum] + arbitrage-price-dispersion.md [ethereum, arbitrum, solana, base, optimism]. defi_master Phase 3
+  flipped [x].
 - **QG failures**: 6 pre-existing violations (max 5) in files I don't own — types + tests PASS. Not my scope.
 - **Additional codex/09-strategy/ items shipped** (PM@f451cf6e → 3074a4b7):
   1. transfer-rebalance.md bridge table: Hyperliquid native (HL↔ARB, fast) + StarkGate (STARK↔ETH, ~8h) added;
      CHAIN_BRIDGE_GRAPH UAC reference added as SSOT for valid 1-hop bridge paths.
   2. defi_master Extended-Starknet item annotated: STARKNET_RPC_TEMPLATES prerequisite unblocked (uac@9aea2b7).
-  3. MARKET_MAKING_EVENT_SETTLED `(legacy)` bug fixed in strategy-summary.md + architecture-v2/README.md:
-     retained as first-class sports exchange MM archetype per §9 operator decision. UAC code was already correct.
+  3. MARKET_MAKING_EVENT_SETTLED `(legacy)` bug fixed in strategy-summary.md + architecture-v2/README.md: retained as
+     first-class sports exchange MM archetype per §9 operator decision. UAC code was already correct.
 
 **Session summary — defi_master codex close-out** (2026-05-18 slot 3):
+
 - uac@9aea2b7: Phase 1 ChainKind + bridges + RPC templates (UAC repo)
 - PM@172fa05e: Phase 3 allowed_chains archetype docs (codex/09-strategy/archetypes/)
 - PM@f451cf6e: transfer-rebalance bridge table + slot ack
 - PM@405f695d: Extended-Starknet annotation
 - PM@3074a4b7: MARKET_MAKING_EVENT_SETTLED legacy label fix (codex/09-strategy/)
 
-Remaining open items in defi_master codex/09-strategy/ scope: exhausted (all remaining items are live-trading,
-MTDS service code, or BLOCKED-OPERATOR-DECISION). Ready for next dispatch.
+Remaining open items in defi_master codex/09-strategy/ scope: exhausted (all remaining items are live-trading, MTDS
+service code, or BLOCKED-OPERATOR-DECISION). Ready for next dispatch.
 
 ## [main → slot 3] 2026-05-18 ~10:58 UTC — NEW DISPATCH: defi_catalogue + writegate Phase 6.8
 
-defi_master ✅ confirmed complete. 5 commits shipped. Next theme: `defi_catalogue_chain_primitives_2026_05_10` close-out + writegate Phase 6.8 (slot_8 stalled here — picking it up).
+defi_master ✅ confirmed complete. 5 commits shipped. Next theme: `defi_catalogue_chain_primitives_2026_05_10`
+close-out + writegate Phase 6.8 (slot_8 stalled here — picking it up).
 
 1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in codex/09-strategy/cross-cutting/ (pnl-attribution, operational-modes, simulator-config). Skip UAC ChainKind items (done via uac@9aea2b7 this session). Pick 2-3 mechanical items.
-3. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 — instruments-service `record_captured`/`record_empty` hookup. If any unchecked: ship.
-4. Dual-flip per item in same turn.
-**Conflict-risk**: instruments-service clear (slot_3 moved off). Use `.tabs/3/` worktrees.
-**Acknowledge "STARTED defi_catalogue+writegate" within 10 min.**
+2. Read `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` — find unchecked `- [ ]` items in
+   codex/09-strategy/cross-cutting/ (pnl-attribution, operational-modes, simulator-config). Skip UAC ChainKind items
+   (done via uac@9aea2b7 this session). Pick 2-3 mechanical items.
+3. Read `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 6.8 — instruments-service
+   `record_captured`/`record_empty` hookup. If any unchecked: ship.
+4. Dual-flip per item in same turn. **Conflict-risk**: instruments-service clear (slot_3 moved off). Use `.tabs/3/`
+   worktrees. **Acknowledge "STARTED defi_catalogue+writegate" within 10 min.**
 
-[2026-05-18 11:11 UTC] [main → slot 3] — 🟡 **13-MIN CHECK-IN** — defi_catalogue + writegate Phase 6.8 dispatched 10:58 UTC. No ack visible. If active: post "STARTED defi_catalogue+writegate" now. If context-expired on boot: drop one-liner and I'll resend. First item: scan `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` for unchecked codex/09-strategy/cross-cutting/ items.
+[2026-05-18 11:11 UTC] [main → slot 3] — 🟡 **13-MIN CHECK-IN** — defi_catalogue + writegate Phase 6.8 dispatched 10:58
+UTC. No ack visible. If active: post "STARTED defi_catalogue+writegate" now. If context-expired on boot: drop one-liner
+and I'll resend. First item: scan `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` for unchecked
+codex/09-strategy/cross-cutting/ items.
 
-[2026-05-18 11:17 UTC] [main → slot 3] — 🟡 **19-MIN SECOND CHECK-IN** — still no ack. Last call before context-expired (~50 min from dispatch = 11:48 UTC). If you're booting fresh: acknowledge now. If you're stuck: drop one-liner and I'll pivot theme.
+[2026-05-18 11:17 UTC] [main → slot 3] — 🟡 **19-MIN SECOND CHECK-IN** — still no ack. Last call before context-expired
+(~50 min from dispatch = 11:48 UTC). If you're booting fresh: acknowledge now. If you're stuck: drop one-liner and I'll
+pivot theme.
 
-[2026-05-18 11:31 UTC] [main → slot 3] — 🟡 **33-MIN THIRD CHECK-IN** — 3 check-ins sent, no ack. Context-expired at 11:48 UTC (17 min). **Final window**: acknowledge now or I'll declare abandoned at tick-107. Theme: defi_catalogue_chain_primitives + writegate Phase 6.8.
+[2026-05-18 11:31 UTC] [main → slot 3] — 🟡 **33-MIN THIRD CHECK-IN** — 3 check-ins sent, no ack. Context-expired at
+11:48 UTC (17 min). **Final window**: acknowledge now or I'll declare abandoned at tick-107. Theme:
+defi_catalogue_chain_primitives + writegate Phase 6.8.
 
-[2026-05-18 11:37 UTC] [main → slot 3] — 🚫 **ABANDONED** — 39 min silent, 3 check-ins, no ack. defi_catalogue_chain_primitives + writegate Phase 6.8 deferred to next human-launched session. Slot non-functional this cycle.
+[2026-05-18 11:37 UTC] [main → slot 3] — 🚫 **ABANDONED** — 39 min silent, 3 check-ins, no ack.
+defi_catalogue_chain_primitives + writegate Phase 6.8 deferred to next human-launched session. Slot non-functional this
+cycle.
 
+## [slot 3 → main] 2026-05-18 ~12:xx UTC — 🟢 RESUMED after context compaction — defi_catalogue + writegate audit COMPLETE
+
+Dispatch received (reactivated by user after context compaction). Investigation findings:
+
+**writegate Phase 6.8**: ✅ ALREADY COMPLETE — PART A (25 `.add()` → `record_captured()`, instruments-service@27fbc90) +
+PART B (`publish_with_policy()` wired, instruments-service@29d511d) both shipped. Gate 4 closed. No work needed.
+
+**defi_catalogue codex/09-strategy/cross-cutting/** (pnl-attribution, operational-modes, simulator-config):
+
+- `pnl-attribution.md`: complete, no open items
+- `operational-modes-matrix.md`: complete, no open items
+- `simulator-config.md`: does NOT exist in cross-cutting folder
+- No `- [ ]` unchecked markers found in any cross-cutting doc
+
+**defi_catalogue open items audit**:
+
+- 6C/6D/6E: VM backfill launches — infra ops, not in my scope this session
+- 6J/7E: Blocked on 6C/6D/6E backfills completing (blocked-upstream)
+- 7I: slot-1 owned, DEFERRED per work_split
+- 8A/8B/8C: Group F live-trading, operator-gated
+
+**Slot 3 Part B work per work_split exhausted.** Item 4 (MTDS wiring) was explicitly DEFERRED. No mechanical items
+remain.
+
+Ready for new dispatch. Requesting next theme — suggest: (a) features-service unshipped items, (b) strategy-service
+config schema work, or (c) other codex gaps from master plan inventory.
