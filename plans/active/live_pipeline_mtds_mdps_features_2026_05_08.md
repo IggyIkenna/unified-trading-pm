@@ -1643,18 +1643,14 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
 
 ### ⏭ Left — in priority order (next agent / Ikenna)
 
-1. **Phase 3.5 `ShardManifestRecorder` wire-in — IN FLIGHT on LDR.** `mtds@ab17cc3` shipped `MTDSShardManifestRecorder`
-   (all-6-asset_group v5 row keys) + `connector_registry.py` + `tests/unit/test_live_manifest_recorder.py`;
-   `mtds@8782225` shipped the `MTDSShardManifestRecorder.close()` half (the Q1 reconciliation). **STILL OPEN on top of
-   `8782225`**: (a) wire `manifest_recorder=MTDSShardManifestRecorder(...)` into `websocket_streaming_handler.py` (it's
-   `=None` — check whether `8782225`/a follow-up did this); (b) `live/__init__.py` export of
-   `MTDSShardManifestRecorder`; (c) `ShardManifestRecorder.close()` on the Protocol in `websocket_runner.py` +
-   `LiveWebsocketRunner.run()` finally-block calling `manifest_recorder.close()` (check whether `8782225` added the
-   Protocol method or only the recorder method); (d) optionally refactor the handler's inline
-   `WS_FEED_CONNECTOR_FACTORIES` to use `connector_registry.register_ws_feed_connector`. **Reference (DO NOT merge):**
-   Harsh slot 5's `tab/hk/5@cc62f02` has a (superseded) cefi-only `StreamingShardManifestRecorder`
-   - (a)/(b)/(c) done against THAT recorder — can be cherry-picked-by-hand onto `8782225`'s `MTDSShardManifestRecorder`
-     if useful, but it's a reference only. See `## Open questions Q1`.
+1. ✅ **Phase 3.5 `ShardManifestRecorder` wire-in — DONE MTDS@5388a9c (2026-05-18 slot-6).** `mtds@ab17cc3` shipped
+   `MTDSShardManifestRecorder` (all-6-asset_group v5 row keys) + `connector_registry.py`; `mtds@8782225` added
+   `MTDSShardManifestRecorder.close()` + `ShardManifestRecorder.close()` Protocol method + runner finally-block call.
+   `mtds@5388a9c` (slot-6) completed the wire-in: (a) `websocket_streaming_handler.py` now passes
+   `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket,
+   batch_size=1))` instead of `None`; (b) `live/__init__.py` exports `MTDSShardManifestRecorder`; (c) conflict markers
+   from `test_bybit_ws_connector.py` + `test_deribit_ws_connector.py` cleaned; (d) handler wire-in gate test added to
+   `test_live_manifest_recorder.py`. Full QG green.
 2. ✅ **Phase 3.2 DONE** — pop_reconnect_flag() set-and-reset tests for all 16 WSFeedConnectors — MTDS@a6a045a
    (2026-05-18 slot-6).
 3. **Phase 3.5** — per-venue `WSFeedConnector` concrete adapters in the de-risk order: defi → cefi spot/perp → cefi
@@ -1670,12 +1666,9 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
 
 ### Exact next step
 
-On `live-defi-rollout` (after `git fetch && git rebase`): open `mtds@8782225` — confirm whether it left the handler at
-`manifest_recorder=None`; if so, the smallest next shippable unit is the wire-in: `live/__init__.py` export +
-`websocket_streaming_handler.py` `manifest_recorder=MTDSShardManifestRecorder(bucket=bucket, vm_name=vm_name)` + (if not
-already present) `ShardManifestRecorder.close()` on the `websocket_runner.py` Protocol + the runner's finally-block
-call + a unit test that the runner calls `recorder.close()` on shutdown. Then close `## Open questions Q1`. After that:
-Phase 3.5 per-venue adapter fan-out (defi first).
+✅ **Wire-in complete — MTDS@5388a9c (2026-05-18 slot-6).** `websocket_streaming_handler.py` now passes a real
+`MTDSShardManifestRecorder` to `LiveWebsocketRunner`. Next: Phase 3.5 per-venue adapter fan-out (defi first) +
+Phase 13.1/13.2/13.3 VM-launcher entries.
 
 ### Cross-plan items NOT touched this shift (open in their own plans-of-record)
 
