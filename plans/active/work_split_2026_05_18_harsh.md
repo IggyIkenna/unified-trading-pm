@@ -158,10 +158,10 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. system-integration-tests Phase 8 honest-coverage scenarios (slot 4 item 12)** — sit/ tests for
+- [x] ✅ **1. system-integration-tests Phase 8 honest-coverage scenarios (slot 4 item 12)** — sit/ tests for
       honest-coverage emission flow (VM emits → manifest writer → coverage.json → API endpoint). **Check overlap
       with slot 4's prior sit DeFi paper flows shipped @sit@fba72b7 before duplicating.** Done-def: 2+ scenarios +
-      sit QG green.
+      sit QG green. — sit@47a1e04: 11 tests / 4 scenario classes (captured/empty_confirmed/attempted_failed/mixed); QG ✅ 56s
 - [ ] **2. alerting-service alert routing tests (slot 4 item 13)** — routing by severity (P0 → pager, P1 → email,
       P2 → slack mock). Done-def: routing parity + alerting-service QG green.
 - [ ] **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
