@@ -407,6 +407,13 @@ smoke begins.
       TestModeHandlerBase tests (run_batch/run_live — not in canonical UTL ModeHandler since lift 2026-05-08) +
       ruff-format residuals in test_batch_handler.py + test_feature_writer_pure.py. QG ✅ 0 failures from 7472 tests.
       features-service@3482b22b
+- [x] ✅ **19. SUSTAIN — features-service Wave 75 — scanner_factories.py coverage (18 tests)** —
+      18 new tests: TestMakeEtherscanScannerChainRouting (7: known-chain URL, ARBITRUM URL, unknown-chain fallback,
+      lowercase normalisation, key venue routing, empty-key warning, timeout kwarg) + TestEtherscanChainMapping (2:
+      same-keys assertion, all 7 expected chains) + TestMakeWeb3Scanner (4: alchemy key path, empty-alchemy warning,
+      empty-RPC warning, bound factory delegates to stream_factory) + TestMakeSolanaScanner (5: Helius URL, custom
+      venue URL, empty-key warning, max_signatures forwarded, rpc object passed). All 18 passed.
+      features-service@9661f8ab
 
 #### Coordination
 

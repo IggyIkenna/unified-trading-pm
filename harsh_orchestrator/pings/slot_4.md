@@ -405,3 +405,9 @@ Waiting for main orchestrator to assign next tasks. No open blockers. No cross-s
 
 Features-service QG note: pre-existing ~198 failures remain (volatility 48 + calendar + other families — NOT caused by
 slot-4). New tests all pass in isolation. Basedpyright clean on all new test files.
+
+[2026-05-18 UTC] slot-4 — STARTED re-engage: ruff format commit confirmed (0fb99ad7); features-service fast-forwarded to 0e73bc90; batch-live-reconciliation fast-forwarded to 64dc955. Beginning coverage Wave 74+ on features-service (owned surface).
+
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage. 28 new tests in test_flash_loan_and_aave_lending_calculators.py; both calculators 0%→~100% (source_name/feature_names/init/calculate_features/fetch_data all paths). Removed 2 stale run_batch/run_live tests from test_cli_and_tradfi.py (pre-existing failures — methods not in canonical ModeHandler since UTL lift 2026-05-08). QG ✅ 0 failures from 7472. features-service@3482b22b. Moving to Wave 75.
+
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 75 — scanner_factories.py coverage. 18 new tests in test_scanner_factories.py; make_etherscan_scanner (chain routing + key venue + empty-key warning + timeout kwarg) + make_web3_scanner (alchemy key + empty-key/RPC warnings + bound factory delegation) + make_solana_scanner (Helius URL + custom venue + empty-key + max_signatures + rpc pass-through). All 18 passed. features-service@9661f8ab. Moving to Wave 76.
