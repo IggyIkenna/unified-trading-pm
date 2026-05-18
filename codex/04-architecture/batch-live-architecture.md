@@ -1,13 +1,13 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-18
 ---
 
 # Batch / Live Architecture — single SSOT
 
 This is the single SSOT for the batch / live architecture. It folds in the previous separate docs
 (`batch-live-pipeline.md` + `batch-live-symmetry.md`, both deleted 2026-05-08 per
-[`../../plans/active/codex_refactor_2026_05_08.md`](../../plans/active/codex_refactor_2026_05_08.md) Phase D.6) so the
+[`../../plans/archive/codex_refactor_2026_05_08.plan.md`](../../plans/archive/codex_refactor_2026_05_08.plan.md) Phase D.6) so the
 principle, the 4 seams, the anti-drift guards, the service audit matrix, the matching engine, alpha decomposition, the
 sports-specific notes, anti-patterns, and the instruments-live exception all live in one file.
 

@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-18
 ---
 
 # Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, Cluster Shapes, Diagrams
@@ -261,7 +261,7 @@ see/experience differently.
 
 **instruments-service**
 
-- **Batch:** Fetches full instrument universe from venues (URDI), writes to GCS. One-shot per run.
+- **Batch:** Fetches full instrument universe from venue APIs, writes to GCS. One-shot per run.
 - **Live:** Polls venue APIs periodically (~15 min). Publishes PubSub events when instruments are added, removed, or
   change status (e.g., halted, delisted). Other services listen and react.
 - **Data produced:** `instruments_universe` (GCS parquet), instrument change events (PubSub)
