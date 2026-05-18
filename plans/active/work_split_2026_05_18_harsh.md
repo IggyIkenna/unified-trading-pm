@@ -445,9 +445,7 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. MTDS handler coverage extensions — 3 handlers pickup** — pick 3 MTDS handlers below current coverage
-      target (90%); add 4-6 tests per handler matching the shape of jitoSOL / bSOL / sanctumSOL Tier-1 pattern slot 9
-      shipped 2026-05-15. Done-def: 3 handlers above 90% + MTDS QG green.
+- [x] ✅ **1. MTDS handler coverage extensions — 3 handlers pickup** — vault_share_price 75.8%→98.7%, native_staking 79.3%→93.5%, eigenlayer_rewards 77.5%→96.1% (+40 tests, 1495 passed) — mtds@d39568d
 - [ ] **2. PBM canonical_writer extension — MDPS-side parametrized archetype dispatch hardening** — slot 9 shipped
       `mdps@4ad6060` (25 tests, 3 classes) on 2026-05-15. Identify 1-2 gaps surfaced during that work (any "fall-through
       contract" residuals); add 3-5 tests. Done-def: gap closed + PBM QG green.
