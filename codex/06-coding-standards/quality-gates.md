@@ -137,9 +137,9 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json`                   | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet) | `codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch                                                       |
 | 5.81 | tarball-env-block — deployment-api must gate staging/prod tarball uploads behind env-tier check           | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-api only; pending-ratchet)     | `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1)                                                                                          |
 | 5.82 | image-build-on-staging-merge — staging branch workflow must trigger Cloud Build                           | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)            | `deployment-and-qg-strategy.md` § image-build cutover path; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5                            |
-| L1   | data*type enum contains `LIVE*`/`BATCH\_` prefixed members                                                | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable)                                                        | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork                                                                |
-| L2   | mode-conditional branches outside seams                                                                   | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-fix-required-21-violations)                                | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode`                                                                       |
-| L3   | `RuntimeMode` declared outside UAC SSOT                                                                   | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-fix-required-2-violations)                                             | `scripts/quality-gates-base/base-service.sh` (pending wire-in)                          | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode`                                                              |
+| L1   | data*type enum contains `LIVE*`/`BATCH\_` prefixed members                                                | [STEP L1: DataType Mode-Prefix Ban](#step-l1-datatype-mode-prefix-ban-day-1-enable)                                                        | `scripts/quality-gates-base/base-service.sh` STEP 5.75 (ENABLED 2026-05-14)                          | "Batch = Live: Unified Pipeline Architecture" — unified DataType enum, no per-mode fork                                                                |
+| L2   | mode-conditional branches outside seams                                                                   | [STEP L2: Mode-Conditional-Outside-Seam](#step-l2-mode-conditional-outside-seam-enabled)                                | `scripts/quality-gates-base/base-service.sh` STEP 5.77 (ENABLED 2026-05-14, 0 violations)                          | `mode-axis-discipline.md` AP-1 — business logic must not branch on `RuntimeMode`                                                                       |
+| L3   | `RuntimeMode` declared outside UAC SSOT                                                                   | [STEP L3: RuntimeMode Single SSOT](#step-l3-runtimemode-single-ssot-enabled-partial)                                             | `scripts/quality-gates-base/base-service.sh` STEP 5.78 (ENABLED 2026-05-14; UI deliberate-copy DEFERRED)                          | `mode-axis-discipline.md` AP-3 — SSOT: `unified_api_contracts.internal.modes.RuntimeMode`                                                              |
 | L7   | `record_captured()` missing `assert_available_at_present`                                                 | [STEP L7: record_captured assert_available_at_present](#step-l7-record_captured-assert_available_at_present-ongoing-sweep)                 | `scripts/quality-gates-base/base-service.sh` (ongoing ratchet)                          | "`available_at` is per-row, write-time" — UTL guard internal; L7 catches callsites that bypass                                                         |
 
 When a STEP appears in CI output (e.g. `STEP 5.62 FAILED: api/main.py missing make_health_router`), open the enforcement
@@ -2167,9 +2167,9 @@ This is equivalent to the GitHub Actions `quality-gates.yml` workflow for librar
 
 ---
 
-### STEP L1: DataType Mode-Prefix Ban (DAY-1 ENABLE)
+### STEP L1: DataType Mode-Prefix Ban (ENABLED as STEP 5.75)
 
-**Status**: DAY-1 ENABLE — 0 violations found in pre-audit.
+**Status**: ENABLED — STEP 5.75 wired 2026-05-14. 0 violations in pre-audit; gate enabled at zero ratchet cost.
 
 **What it catches**: `DataType` enum members with `LIVE_` or `BATCH_` prefix, e.g.:
 
@@ -2188,15 +2188,15 @@ invariant.
 5.70), not by the data_type name.
 
 **Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk on UAC DataType enum + consumer service enums.
-Wire-in pending (pre-audit confirmed 0 violations so gate enables at zero ratchet cost on Day-1).
+ENABLED as STEP 5.75 in `scripts/quality-gates-base/base-service.sh` (2026-05-14).
 
 **Composes with**: STEP L5 (unified DataType enum, no per-mode fork) · STEP 5.70 (`pipeline_mode` at `record_*`).
 
 ---
 
-### STEP L2: Mode-Conditional-Outside-Seam (FIX-REQUIRED, ~21 violations)
+### STEP L2: Mode-Conditional-Outside-Seam (ENABLED as STEP 5.77)
 
-**Status**: FIX-REQUIRED — ~21 violations across service codebase. Enable AFTER fix-batch lands (Tab 3 scope).
+**Status**: ENABLED — STEP 5.77 wired 2026-05-14. Pre-audit ~21 violations resolved; Tab 3 fix-batch shipped; 0 violations across features/strategy/MDPS/instruments-service.
 
 **What it catches**: `if runtime_mode == "live":` / `if runtime_mode == RuntimeMode.LIVE:` / `if mode == "batch":`
 branches inside business logic (i.e., outside the 4 seams defined in `batch-live-architecture.md §2`).
@@ -2221,16 +2221,15 @@ else:
 
 **Pre-audit violation count**: ~21 (exact list in `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`).
 
-**Enforcement**: `scripts/quality-gates-base/base-service.sh` — AST-walk for `If` nodes whose test is a mode-enum
-comparison, excluding the 4 seam files. Wire-in pending Tab 3 fix-batch.
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` STEP 5.77 — AST-walk for `If` nodes whose test is a mode-enum comparison, excluding the 4 seam files. ENABLED 2026-05-14 after Tab 3 fix-batch (0 violations confirmed).
 
 **Composes with**: STEP L3 (RuntimeMode SSOT) · `mode-axis-discipline.md` AP-1 · `batch-live-architecture.md §2`.
 
 ---
 
-### STEP L3: RuntimeMode Single SSOT (FIX-REQUIRED, 2 violations)
+### STEP L3: RuntimeMode Single SSOT (ENABLED as STEP 5.78, partial)
 
-**Status**: FIX-REQUIRED — 2 violations. Enable AFTER fix-batch lands (Tab 3 scope).
+**Status**: ENABLED (partial) — STEP 5.78 wired 2026-05-14. UAC/UTL clean (UTL re-exports RuntimeMode from UAC canonical). UI deliberate-copy (`unified-internal-contracts/modes.py`) DEFERRED post-cutover — design call needed.
 
 **What it catches**: `RuntimeMode` declared outside the UTL canonical / UAC re-export path:
 
@@ -2248,8 +2247,7 @@ class RuntimeMode(StrEnum):  # in a non-canonical UAC file
 - UAC re-exports `RuntimeMode` from UTL canonical (fixing UAC-internal violation).
 - UI imports `RuntimeMode` from UAC schema bundle (fixing UI redeclaration — see `batch-live-architecture.md §12`).
 
-**Enforcement**: `scripts/quality-gates-base/base-service.sh` — `rg 'class RuntimeMode'` across workspace, excluding the
-canonical file. Wire-in pending Tab 3 fix-batch.
+**Enforcement**: `scripts/quality-gates-base/base-service.sh` STEP 5.78 — `rg 'class RuntimeMode'` across workspace, excluding the canonical file. ENABLED 2026-05-14 after Tab 3 fix-batch.
 
 **Composes with**: STEP L2 (mode-conditional branches) · `mode-axis-discipline.md` AP-3 ·
 `batch-live-architecture.md §12`.
