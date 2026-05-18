@@ -178,9 +178,11 @@ smoke begins.
       features-service@ee7d1694 (4 fixtures: sample_book_data, sample_funding_data, mock_gcs_data,
       mock_cross_timeframe_features). risk-and-exposure-service@caaffac (1 fixture: sample_position + import cleanup).
       0 unused fixtures remaining in scanned repos. Done-def: 0 unused fixtures ✅.
-- [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** [UAC external test surfaces] — UAC external/ subdirs
+- [x] ✅ **S6. SUSTAIN — workspace-wide cassette parity deep refresh** [UAC external test surfaces] — UAC external/ subdirs
       (80+ subdirs) — run cassette schema parity tests; refresh drifted cassettes. Done-def: cassette parity green + 5+
-      refreshes. **~6 cal-days**.
+      refreshes. **~6 cal-days**. — unified-api-contracts@391632c. 5 refreshes: (1) test_cassette_consolidation.py fix
+      (meta_and_asset_ctxs list-not-dict assertion), (2) DefiLlamaProtocol +10 fields, (3) DefiLlamaYieldPool +10 fields,
+      (4) PolymarketMarket/Token +5 fields, (5) ManifoldMarket full camelCase alias refresh. 351 cassette tests pass.
 - [ ] **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — each `# noqa: <code>` needs comment
       explaining why. Identify violators + add justifications OR fix root cause. Done-def: per-repo `# noqa`
       justification rate ≥95%. **~4 cal-days**.
