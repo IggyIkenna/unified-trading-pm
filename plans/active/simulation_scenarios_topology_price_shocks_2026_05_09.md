@@ -657,8 +657,9 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 - [ ] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
       time_window). Launches a backtest VM via the deployment-service launcher (per VM launcher script SSOT). Returns
       `run_id`. Async; result polled via 7.C.
-- [ ] [AGENT] P1. **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read parquet
-      from GCS; cache results.
+- [x] [AGENT] P1. ✅ **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read parquet
+      from GCS; cache results. — deployment-api@cb1918d (2026-05-18 slot 6). Matrix: in-memory from SCENARIO_ARCHETYPE_MATRIX.
+      Report: 501 scaffold — ScenarioReportEmitter (Phase 2.C) deferred per compressed scope; GCS path wires when Phase 2.C ships.
 - [ ] [AGENT] P1. **7.D deployment-ui `Scenarios` tab.** New tab next to Data-Status. Three views: scenario library
       browser (per asset_group), per-archetype regression matrix grid (cells colored pass/fail/not-run), per-scenario
       drilldown (assertions + observed + report links). Re-uses existing `TypedReasonBadges` + `FailurePillarStack`
