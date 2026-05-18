@@ -394,6 +394,13 @@ smoke begins.
       Phase 9 mode-switch handler distinctness + cross-import isolation (strategy-service); Phase 10 cutover readiness:
       staked_basis strategies declared+capable, DeFi manifest fields, launch scripts + smoke scripts exist. QG ✅.
       sit@e59617b
+- [x] ✅ **18. SUSTAIN — features-service Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage** —
+      28 new tests: FlashLoanCalculator (source_name/feature_names/init/calculate_features empty+normal+zero-borrow+
+      multi-pool+schema+source-col + fetch_data success/no-pools/ConnectionError/TimeoutError/missing-symbol) +
+      AaveLendingCalculator (same shape, rate_spread=supply−borrow, ValueError path). Also removed 2 stale
+      TestModeHandlerBase tests (run_batch/run_live — not in canonical UTL ModeHandler since lift 2026-05-08) +
+      ruff-format residuals in test_batch_handler.py + test_feature_writer_pure.py. QG ✅ 0 failures from 7472 tests.
+      features-service@3482b22b
 
 #### Coordination
 
