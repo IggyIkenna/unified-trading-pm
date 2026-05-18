@@ -876,10 +876,10 @@ smoke begins.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
       2026-05-18 slot-7**: 74.38% after user_management (deployment-api@720a03e); 75.06% after
       data_status_mock + service_status_fast_data + service_status_execution helpers (deployment-api@93c3668, 69 new
-      tests); 75.6% after epics route tests (deployment-api@edeb30e, 32 new tests). Gap to 90%: ~2697 lines. Next
-      targets: routes/data_status.py (346 missed), services/shard_detail.py (268 missed), routes/deployment_state.py
-      (179 missed), routes/service_status.py (156 missed). Done-def: deployment-api coverage ≥90% + QG green.
-      **~10 cal-days**.
+      tests); 75.6% after epics route tests (deployment-api@edeb30e, 32 new tests); 76.3% after checklist route +
+      rollup_worker tests (deployment-api@2d3e9b8, 58 new tests). Gap to 90%: ~2565 lines. Next targets:
+      service_status_checkers.py (107 missed), routes/builds.py (136 missed). Done-def: deployment-api coverage ≥90%
+      + QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
       open/close/content), mobile hamburger (open/close/link/close-on-nav), nav routing
