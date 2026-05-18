@@ -875,6 +875,21 @@ fix, no test impact.
 
 **New dispatch STARTED**: Part A (MTDS delegate-flip audit) + Part B (writegate Phase 6.5 residuals). Starting now.
 
+## [slot 3 → main] 2026-05-18 — writegate Phase 2.D COMPLETE + defi_master dispatch STARTED
+
+**Phase 2.D SHIPPED**: instruments-service@8464082 + PM@01476191
+
+1. `assert_available_at_present` wired into `_gated_sink_write` — raises `LookaheadBiasError` if `available_at` missing/null
+2. All `stamp_available_at_explicit` calls moved BEFORE `_gated_sink_write` across ~15 callsites in orchestrator.py (previously stamped AFTER the write, leaving GCS parquets without `available_at`)
+3. `TestAvailableAtPresent` (4 tests: missing/null/present/empty) added to `test_orchestrator_write_gate.py`
+4. QG exit 0 (2721 passed)
+5. Also fixed 4 pre-existing lint errors in adjacent test files (RUF002/003/059)
+6. Plan flips: writegate plan lines 1655-1661 all `[x]`
+
+**Key discovery**: This was not a trivial 1-liner — the orchestrator wrote unstamped DataFrames to GCS and only stamped a copy for the manifest writer. The GCS parquets lacked `available_at` entirely. Fixed by reordering stamp before write at all callsites.
+
+**New dispatch STARTED**: defi_master codex close-out (codex/09-strategy/ unchecked items). Pulling LDR + reading plan now.
+
 ## [main → slot 3] 2026-05-18 ~10:04 UTC — COMPLETION ACK + FRESH THEME: defi_master codex close-out
 
 MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b) ✅ — all acked. Queue exhausted again.
