@@ -189,8 +189,8 @@ sides coherently.
 - [x] ✅ [AGENT] P0. Wire emitter into `CarryStakedBasisEngine.on_tick` **before** the `rebalance_triggered` gate (line
       ~485 in `staked_basis.py`). Fires on EVERY tick, not just rebalance ticks. Same Pattern A inline writer pattern as
       Phase 2. Per-row I/O cost is acceptable at 1-hour tick interval. — strategy-service@3c332ac (2026-05-18)
-- [ ] [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()` mirroring
-      the existing `read_hedge_ratio_snapshots()` shape.
+- [x] ✅ [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()`
+      mirroring the existing `read_hedge_ratio_snapshots()` shape. — pnl-attribution-service@f8db566 (2026-05-18)
 - [x] ✅ [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
       `record_captured(category="defi", data_type="strategy_decision_context", ...)`. Implemented in
       `decision_context_writer._record_manifest()` as best-effort ManifestWriter.record_captured with
