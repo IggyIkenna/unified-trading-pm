@@ -572,3 +572,11 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 - execution-service@cde5142f (type:ignore item 5)
 - utl@d56bff5 (bucket-name item 7)
 - PM@22af8103 (item 7 flip + baseline ratchet)
+
+## 2026-05-18 session — work_split_2026_05_18_harsh.md
+
+[2026-05-18 UTC] slot-2 — STARTED item 1 (execution-service Phase B C901/complexity sweep batches 98-105).
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 1** — execution-service batches 98-104, 31 E501+I001 violations cleared (31→0). QG green. execution-service@0d32d9c4. Pre-existing 30 test failures (test harness missing methods) filed as finding → issues/execution_service_test_harness_missing_methods_2026_05_18.md, routed to slot 5.
+
+[2026-05-18 UTC] slot-2 — STARTED item 2 (ruff_workspace_cleanup_2026_05_12 residual — close out SKIPPED-PERMANENT items).
