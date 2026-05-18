@@ -1,5 +1,32 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 14 complete; cumulative 57 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 14)
+
+2 files cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES` via helper-extraction. Allowlist 63 → 61 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `engine/validation/data_availability_validator.py` | `check_book_type_data_requirements` 83L→31L | `_check_instrument_book_type_dates` 42L |
+| `venues/deribit_orders.py` | `submit_order` 107L→42L + `get_available_instruments` 104L→44L | `_classify_deribit_instrument_type` + `_compute_final_amount` + `_build_order_request_params` + `_make_rejected_result` + `_format_deribit_instrument` |
+
+Note: `check_market_tick_data` in data_availability_validator.py had a merge conflict — upstream slot had
+refactored it using module-level helpers `_get_instrument_data_type_folder` / `_get_tick_filename`. Accepted
+upstream version; my `check_book_type_data_requirements` refactor merged cleanly.
+
+**Commits**: execution-service@8fd663b0a (Half-1) · PM@90523e9c (Half-2 flip)
+
+**Slot-4 cumulative**: 57 files cleared (allowlist now 61; baseline was 187 at 2026-05-17).
+
+### P0/P1 issues scan (batch 14)
+
+No new actionable P0/P1 issues found. Continuing method-size ratchet as primary task.
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 13 complete; cumulative 55 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint round N
