@@ -96,15 +96,16 @@ smoke begins.
 
 - [x] ✅ **1. execution-service Phase B C901/complexity sweep batches 98-105 (continuation)** — C901 was fully cleared by batch 97. Batches 98-104 cleared all remaining 31 E501+I001 violations (31→0). Lint fully clean. execution-service@0d32d9c4. Pre-existing test failures noted (30 unit tests failing before batch 98 @ab2fbe80 — test harness missing `_read_book_metrics`/`_parse_candle_horizon_secs` methods; slot 5 test surface); filed finding in issues/.
 - [x] ✅ **2. ruff_workspace_cleanup_2026_05_12 residual items** — Closed all 12 SKIPPED-PERMANENT checkboxes (6 archived repos × main-list + scoreboard); Telegram hygiene item verified. PM@f67a1f03+current. Plan now at 29/31 = 94% (2 remaining = Telegram Slack monitoring (passive) + new-sports-batting-services dedicated session, both out-of-scope for this item).
-- [ ] **3. workspace-wide unused-import audit (slot 4 deferred item 15)** — scan repos for unused imports surviving
-      ruff sweep. File issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes. **DEFER if
-      slot 4 picks up first** — coordinate via slot_2 ping if Q.
+- [x] ✅ **3. workspace-wide unused-import audit (slot 4 deferred item 15)** — Slot 2 claimed first (6 F401 fixes): deployment-service@16082f9 (4 dead re-exports in generate_topology_svg.py) + pbm@3346220 (2 unused in capture_phase_9_evidence.py). All other in-scope repos 0 F401. Done-def met. → Slot 4 item 4 should skip (slot 2 owns).
 
 #### Reserve queue (pick if primary done early)
 
 - [ ] **4. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) — slot 6 buffer item 8. UAC has
       5 pre-existing size violations. Take **the SMALLEST/clearest-cut one** only; refactor only that one; leave
       others for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+- [ ] **11. DEEP RESERVE — workspace-wide stale-import sweep beyond ruff** — scan all active Python repos for unused conditional imports + typing-only imports surviving the ruff F401 sweep. Done-def: report listing per-repo counts + fix 10+ mechanical instances.
+- [ ] **12. DEEP RESERVE — pyproject.toml workspace audit residuals** — audit remaining repos for line-length 100→120 alignment + coverage-floor 70% minimum + pre-commit config drift vs canonical PM template. Done-def: 5+ repos audited + 3+ mechanical fixes shipped.
+- [ ] **13. DEEP RESERVE — shell-script lint sweep across scripts/ directories** — run `shellcheck` across `scripts/`, `deployment-service/scripts/`, `unified-trading-pm/scripts/`. Done-def: shellcheck report + 5+ mechanical SC2086/SC2155/SC2046 quote-and-array fixes.
 
 #### Coordination
 
@@ -141,6 +142,9 @@ smoke begins.
       + target_net_delta + vol-cap clamp); Stream C PM-plan (archived leveraged_leg_controller Phase 4 GATE note).
       Back-flipped Stream B + Stream C success criteria (already done per plan body). Remaining open: Stream A
       [SCRIPT] probe + [strategy-service] P1; Stream D P1 remaining archetype docs.
+- [ ] **11. DEEP RESERVE — codex/09-strategy/ archetype docstring drift sweep** — pick 2-3 archetypes from codex/09-strategy/architecture-v2/archetypes/ and audit for stale line-refs / SHIPPED-marker accuracy / cross-link health. Done-def: 2-3 codex files updated + grep-clean.
+- [ ] **12. DEEP RESERVE — simulation_scenarios_topology_price_shocks codex-side items (54%, 40/74)** — 34 items remaining. Plan: [`simulation_scenarios_topology_price_shocks_2026_05_09.md`](simulation_scenarios_topology_price_shocks_2026_05_09.md). Pick 2-3 codex-only items (avoid sim-engine code changes — those need risk service ownership).
+- [ ] **13. DEEP RESERVE — carry_staked_basis + APD archetype cross-link audit in codex** — verify codex docs reference correct UAC enum members + plan file paths. Sweep for stale `carry_staked_basis_structure_axis_2026_05_04` references. Done-def: cross-link table + 5+ fixes.
 
 #### Coordination
 
@@ -161,8 +165,9 @@ smoke begins.
       sit QG green. — sit@47a1e04: 11 tests / 4 scenario classes (captured/empty_confirmed/attempted_failed/mixed); QG ✅ 56s
 - [x] ✅ **2. alerting-service alert routing tests (slot 4 item 13)** — routing by severity (P0 → pager, P1 → email,
       P2 → slack mock). Done-def: routing parity + alerting-service QG green. — alerting@af7122f: 3 new classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s
-- [ ] **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
+- [x] ✅ **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
       schema-drift, very-large (memory pressure). Done-def: 4+ edge-case tests + batch-live-reconciliation QG green.
+      — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s
 - [ ] **4. workspace-wide unused-import audit (slot 4 item 15)** — scan repos for unused imports surviving ruff
       sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes. **COORDINATE with slot 2
       item 3 — whichever slot starts first owns it; the other slot skips and picks reserve.**
@@ -175,6 +180,9 @@ smoke begins.
 - [ ] **6. defi_basedpyright_features_service_2026_05_15 final items (94%, 51/54)** — 3 checkboxes left. Plan path:
       [`defi_basedpyright_features_service_2026_05_15.md`](defi_basedpyright_features_service_2026_05_15.md).
       Mechanical basedpyright cleanup.
+- [ ] **11. DEEP RESERVE — features-service Wave 60+ coverage continuation** — last shipped Wave 58 (halftime_columns + odds_columns @100%). Identify next 2 feature groups under 100% coverage; add 4-6 tests per group. Done-def: Wave 60 shipped (2+ feature groups to 100%).
+- [ ] **12. DEEP RESERVE — system-integration-tests cross-asset scenario expansion** — add 3-4 cross-asset scenarios beyond Phase 8 honest-coverage shipped today (`sit@47a1e04`): try defi+cefi hybrid carry, tradfi+sports backtest parity, prediction-only backtest smoke. Done-def: 3+ scenarios + sit QG green.
+- [ ] **13. DEEP RESERVE — alerting-service additional severity routing + escalation edge cases** — build on item 2 already shipped (`alerting@af7122f`). Add: P0 page failure → fallback email; P1 email retry + dedupe; P2 slack rate-limit handling. Done-def: 5+ edge-case tests + alerting QG green.
 
 #### Coordination
 
@@ -223,6 +231,9 @@ smoke begins.
       service-side scripts that bypass `resolve_bucket_name(...)`. Plan path:
       [`bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md).
       Avoid items that change UAC schemas (Ikenna primary). Pick if item 5 has any blockers.
+- [ ] **11. DEEP RESERVE — risk-and-exposure-service additional rule firing edge cases** — build on item 14+18 (TestWarnOnlyAndStrictFailEmissionPolicies + TestStressExtendedScenarios). Add: per-asset_group rule firing in mixed-archetype portfolios; rule firing with stale data; rule firing during recovery window. Done-def: 5+ tests + risk QG green.
+- [ ] **12. DEEP RESERVE — pnl-attribution-service per-archetype EOD scenario extension** — build on item 19 (TestEndOfDayRollup). Add: per-asset_group rollup (cefi/defi/tradfi separation); cross-day reconciliation with corrections; partial-fill attribution. Done-def: 4+ tests + pnl QG green.
+- [ ] **13. DEEP RESERVE — execution-service adapter error-path coverage (UAC error classification)** — audit each adapter (`adapters/exchanges/*`, `adapters/onchain/*`) for missing `classify_venue_error()` + `ADAPTER_FETCH_FAILED` emission. Add tests where coverage gap. Done-def: audit report + 5+ tests.
 
 #### Coordination
 
@@ -291,6 +302,9 @@ smoke begins.
 - [ ] **10. REFILL — strategy_archetype_taxonomy_2026_05_12 residuals** — codex hygiene work matching slot 6's
       strategy-service-codex ownership. Sweep `codex/09-strategy/` for any drift surfaced by slot 3's Phase 8/10
       codex audits or by recent commits this week. Done-def: 1-2 codex docs updated + grep-clean.
+- [ ] **11. DEEP RESERVE — codex/07-runbooks/ hygiene audit** — audit runbooks for owner/cadence/verifier/last_executed fields per CLAUDE.md "Runbook Execution-Owner SSOT". Done-def: 5+ runbooks audited + missing fields filled.
+- [ ] **12. DEEP RESERVE — codex/11-project-management/ doc currency check** — sweep codex/11 for stale references (defunct plan paths, dead links, outdated metrics). Done-def: cross-link table + 5+ fixes.
+- [ ] **13. DEEP RESERVE — UTL emission_publisher additional test coverage** — build on item 1 (utl_qg_preexisting_failures fix sweep, UTL@d3488b7+30db050). Add tests for: cross-service emission idempotency, emission failure retry semantics, batch vs live emission parity. Done-def: 4+ tests + UTL QG green.
 
 #### Coordination
 
@@ -305,19 +319,26 @@ smoke begins.
 
 #### Mechanical queue
 
-- [ ] **1. deployment-ui + deployment-api Phase 2F final items (data_status_ui_phase_2f 80%, 4/5)** — 1 item left.
+- [x] ✅ **1. deployment-ui + deployment-api Phase 2F final items (data_status_ui_phase_2f 80%, 4/5)** — 1 item left.
       Plan path: [`data_status_ui_phase_2f.md`](data_status_ui_phase_2f.md). Close out.
+      — INFRA cron VM verified complete (slot-2 2026-05-15): `launch-honest-coverage-vm.sh` + watchdog prefixes + DEPLOYMENT_ENV all in place. Cloud Scheduler activation = Ikenna/owner territory. Plan closed — DONE-2026-05-18 block added. PM@(flip commit).
 - [ ] **2. deploy_missing_auto_launch_2026_05_07 final item (93%, 13/14)** — 1 item left. Plan path:
       [`deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md). Close out.
-- [ ] **3. deployment-api / deployment-ui Phase 4 cron infra status check** — verify
+      ⏳ **SOAK GATE** — Phase 2 shipped deployment-api@950ffc9 2026-05-17. 7-day soak eligible flip 2026-05-24. 0 compromise events verified 2026-05-18. Annotated in plan. Cannot flip until 2026-05-24.
+- [x] ✅ **3. deployment-api / deployment-ui Phase 4 cron infra status check** — verify
       `gs://central-element-323112-deployment-events/quality_gates_snapshot/` is still being updated daily by the
       cron VM (B-018 shipped 2026-05-14). Spot-check today's snapshot. File finding if stale.
+      — Snapshot stale: latest prefix 2026-05-14 (4 days). Finding filed: `issues/qg_snapshot_cron_stale_2026_05_18.md`. BLOCKED-OPERATOR-DECISION (Cloud Scheduler activation = Ikenna/owner). PM@(flip commit).
 
 #### Reserve queue
 
-- [ ] **4. deployment-api + deployment-ui ImportError fallback sweep (deployment-api×3 from slot 2 carry-over)** —
+- [x] ✅ **4. deployment-api + deployment-ui ImportError fallback sweep (deployment-api×3 from slot 2 carry-over)** —
       slot 2's deferred item 6 had deployment-api×3 violations. Slot 7 owns deployment-api → take this. Done-def:
       3 violations cleared + deployment-api QG green.
+      — 4 violations found + cleared (builds_history.py, data_status.py, shard_detail.py, data_query_service.py). Also fixed pre-existing RUF100 noqa comment issue in shard_detail.py. QG green. deployment-api@fbb74e3.
+- [ ] **11. DEEP RESERVE — deployment-api additional integration tests** — build on item 20 (Firebase auth integration, deployment-api@715ac1a). Add: cost endpoint auth + rate-limit; VM events endpoint pagination + filter combinations; treasury endpoint Firebase-vs-API-key parity. Done-def: 8+ tests + deployment-api QG green.
+- [ ] **12. DEEP RESERVE — deployment-ui smoketest extension** — extend playwright smoketests beyond critical-path flows. Add: cost dashboard date-range navigation; VM detail page error states; auth-redirect flows. Done-def: 5+ smoketests + pnpm green.
+- [ ] **13. DEEP RESERVE — VM zombie watchdog test hardening** — extend `vm_zombie_watchdog.py` tests for: VM_PREFIX_TO_BUCKET coverage of new VM prefix patterns; STARTED-but-no-progress edge case; FAILED-but-restarting edge case. Done-def: 4+ tests + deployment-service QG green.
 
 #### Coordination
 
@@ -353,6 +374,9 @@ smoke begins.
 - [x] ✅ **6. workspace-wide cassette parity refresh (slot 8 item 18)** — run cassette schema parity tests across UAC
       external dirs. Done-def: parity green + any drift fixed.
       — 316 passed, 49 skipped, 0 failed. No drift to fix. UAC parity fully green.
+- [ ] **11. DEEP RESERVE — semver-agent label audit across active repos** — audit `.github/workflows/semver-bump.yml` + label-mismatch report across 21 Python repos. Done-def: 0 drift OR drift report filed.
+- [ ] **12. DEEP RESERVE — workspace-manifest.json drift check vs actual dep graph** — run `check-dependency-alignment.py --json` + cross-check vs pyproject.toml internal deps across all active repos. Done-def: alignment report + any drift fixed.
+- [ ] **13. DEEP RESERVE — pre-commit hook coverage extension** — compare per-repo `.pre-commit-config.yaml` vs canonical PM template + add missing hooks (prettier on .md/.yaml, shellcheck on .sh, basedpyright on .py). Done-def: 5+ repos hardened + canonical template drift = 0.
 
 #### Coordination
 
@@ -386,6 +410,9 @@ smoke begins.
       requires 2-contract call (RestakeManager.calculateTVLs); single-call `_query_rate` does not support. Either
       (a) implement multi-call support, OR (b) file deferral with `EXPECTED_VENDOR_SOURCE_LIMITATION` reason. P3 —
       pick if reserve time.
+- [ ] **11. DEEP RESERVE — MTDS additional adapter coverage (databento + polymarket_clob)** — extend MTDS handler coverage to databento_l1_l2_l3 + polymarket_clob handlers. Same shape as item 1 (3-handler pickup). Done-def: 2 adapters above 90% + MTDS QG green.
+- [ ] **12. DEEP RESERVE — MDPS canonical_writer error classification audit** — audit MDPS canonical_writer paths for missing `classify_venue_error()` + `record_failed()` emission. Done-def: audit report + 3+ classification gaps fixed.
+- [ ] **13. DEEP RESERVE — PBM mode parity edge cases** — build on item 8 (TestDegradedConditionModeParity, mdps@92d9be5). Add: sparse data (90%+ NaN rows), partial-shard captures, recovery from BATCH_TARDIS → LIVE_WEBSOCKET transition mid-shard. Done-def: 4+ tests + PBM QG green.
 
 #### Coordination
 
