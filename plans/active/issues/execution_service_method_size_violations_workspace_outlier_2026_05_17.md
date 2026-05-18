@@ -855,64 +855,64 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 75 — benchmark/metrics)**: shipped at execution-service@e9b99db86.
   compute_statistical_metrics (93L→42L) + compute_path_aware_metrics (162L→35L) + compute_aggregate_metrics (77L→38L)
-  via _empty_statistical_metrics + _compute_weighted_mean_std_n + _compute_z_score + _empty_path_metrics + _get_fill_ts +
-  _weighted_alpha + _compute_cumulative_alpha_curve + _measure_adverse_at_delta + _compute_adverse_selection +
-  _extract_alpha_weights_wins. 3 violations cleared. File not in allowlist. basedpyright 0 errors.
+  via \_empty_statistical_metrics + \_compute_weighted_mean_std_n + \_compute_z_score + \_empty_path_metrics +
+  \_get_fill_ts + \_weighted_alpha + \_compute_cumulative_alpha_curve + \_measure_adverse_at_delta +
+  \_compute_adverse_selection + \_extract_alpha_weights_wins. 3 violations cleared. File not in allowlist. basedpyright
+  0 errors.
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 76 — engine/backtest/actors/evaluator_metrics)**: shipped at execution-service@adb9b8864.
-  get_position_info (97L→24L) + calculate_drawdown (152L→33L) + calculate_returns (85L→25L)
-  via _safe_float + _get_current_price + _compute_unrealized_pnl + _get_display_price + _build_position_result +
-  _max_dd_from_account_report + _max_dd_from_equity_curve + _max_dd_from_pnl_stats + _max_dd_from_final_balance +
-  _compute_base_returns + _get_returns_from_analyzer + _get_returns_from_trade_stats. 3 violations cleared. File not in allowlist.
-  basedpyright 0 errors.
+  **Ratchet-down 2026-05-17 (slot-2 batch 76 — engine/backtest/actors/evaluator_metrics)**: shipped at
+  execution-service@adb9b8864. get_position_info (97L→24L) + calculate_drawdown (152L→33L) + calculate_returns (85L→25L)
+  via \_safe_float + \_get_current_price + \_compute_unrealized_pnl + \_get_display_price + \_build_position_result +
+  \_max_dd_from_account_report + \_max_dd_from_equity_curve + \_max_dd_from_pnl_stats + \_max_dd_from_final_balance +
+  \_compute_base_returns + \_get_returns_from_analyzer + \_get_returns_from_trade_stats. 3 violations cleared. File not
+  in allowlist. basedpyright 0 errors.
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 77 — engine/backtest/almgren_chriss_sweep)**: shipped at execution-service@e11c0857d.
-  almgren_chriss_optimal_schedule (52L→28L) + simulate_almgren_chriss (140L→28L).
-  Extracted _get_fill_price + _execute_sim_fills + _compute_sim_metrics. 2 violations cleared. File not in allowlist.
+  **Ratchet-down 2026-05-17 (slot-2 batch 77 — engine/backtest/almgren_chriss_sweep)**: shipped at
+  execution-service@e11c0857d. almgren_chriss_optimal_schedule (52L→28L) + simulate_almgren_chriss (140L→28L). Extracted
+  \_get_fill_price + \_execute_sim_fills + \_compute_sim_metrics. 2 violations cleared. File not in allowlist.
   basedpyright 0 errors.
 
   **Ratchet-down 2026-05-17 (slot-2 batch 78 — engine/risk/preflight_gate)**: shipped at execution-service@63971d89d.
-  build_rule_eval_context (67L→24L) + run_risk_preflight (138L→32L).
-  Extracted _extract_identity_fields + _copy_account_state_into_ctx + _handle_block + _handle_scale_down + _handle_test_only.
-  2 violations cleared. File not in allowlist. basedpyright 0 errors.
+  build_rule_eval_context (67L→24L) + run_risk_preflight (138L→32L). Extracted \_extract_identity_fields +
+  \_copy_account_state_into_ctx + \_handle_block + \_handle_scale_down + \_handle_test_only. 2 violations cleared. File
+  not in allowlist. basedpyright 0 errors.
 
   **Ratchet-down 2026-05-17 (slot-2 batch 79 — config/grid_utils)**: shipped at execution-service@1fa76d6fd.
-  generate_per_algo_grid_configs (135L→20L) + get_all_strategy_variants (51L→39L).
-  Extracted _build_per_type_combos + _build_cross_combo_config. 2 violations cleared. basedpyright 0 errors.
+  generate_per_algo_grid_configs (135L→20L) + get_all_strategy_variants (51L→39L). Extracted \_build_per_type_combos +
+  \_build_cross_combo_config. 2 violations cleared. basedpyright 0 errors.
 
   **Ratchet-down 2026-05-17 (slot-2 batch 80 — api/preview_routes)**: shipped at execution-service@7a5a54310.
-  preview_unwind (131L→28L). Extracted _validate_unwind_request + _select_and_scale_positions + _compute_unwind_estimates.
-  1 violation cleared. basedpyright 0 errors.
+  preview_unwind (131L→28L). Extracted \_validate_unwind_request + \_select_and_scale_positions +
+  \_compute_unwind_estimates. 1 violation cleared. basedpyright 0 errors.
 
   **Ratchet-down 2026-05-17 (slot-2 batch 81 — utils/market_hours)**: shipped at execution-service@6f1256c23.
-  align_tradfi_time_window (129L→22L) + check_tradfi_market_open (65L→46L).
-  Extracted _align_tradfi_start + _align_tradfi_end_after_close + _align_tradfi_end_before_open + _align_tradfi_end.
-  2 violations cleared. basedpyright 0 errors.
+  align_tradfi_time_window (129L→22L) + check_tradfi_market_open (65L→46L). Extracted \_align_tradfi_start +
+  \_align_tradfi_end_after_close + \_align_tradfi_end_before_open + \_align_tradfi_end. 2 violations cleared.
+  basedpyright 0 errors.
 
   **Ratchet-down 2026-05-17 (slot-2 batch 82 — cli/batch_backtest)**: shipped at execution-service@6528a1375.
-  run_single_backtest (129L→13L) + run_batch_backtests (96L→15L) + main (113L→32L).
-  Extracted _resolve_and_load + _build_backtest_cmd + _handle_backtest_subprocess +
-  _collect_batch_results + _check_batch_completeness + _add_batch_args + _validate_and_filter_configs.
-  3 violations cleared. basedpyright 0 errors.
+  run_single_backtest (129L→13L) + run_batch_backtests (96L→15L) + main (113L→32L). Extracted \_resolve_and_load +
+  \_build_backtest_cmd + \_handle_backtest_subprocess + \_collect_batch_results + \_check_batch_completeness +
+  \_add_batch_args + \_validate_and_filter_configs. 3 violations cleared. basedpyright 0 errors.
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 83 — cli/defi_arbitrage_dispersion_decision_trace)**: shipped at execution-service@113c91897.
-  _run_cross_chain (58L→31L) + _run_cross_venue_funding (129L→29L).
-  Extracted _build_cross_chain_pair_rows + _load_funding_venue_aprs + _build_coin_venue_rows + _build_eligible_coins + _print_level3_subweights.
-  2 violations cleared. basedpyright 0 errors.
+  **Ratchet-down 2026-05-17 (slot-2 batch 83 — cli/defi_arbitrage_dispersion_decision_trace)**: shipped at
+  execution-service@113c91897. \_run_cross_chain (58L→31L) + \_run_cross_venue_funding (129L→29L). Extracted
+  \_build_cross_chain_pair_rows + \_load_funding_venue_aprs + \_build_coin_venue_rows + \_build_eligible_coins +
+  \_print_level3_subweights. 2 violations cleared. basedpyright 0 errors.
 
   **Slot-2 cumulative across batches 3-83**: 95 files cleared (slot-2 contribution: -95 files; spans 53 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 84 — docstring-trim sweep)**: shipped at execution-service@3800615e9.
-  mifid_reporter 2v (log_order_submitted_mifid 51L + log_trade_reported_mifid 51L),
-  instruction_convert 1v (manual_request_to_instruction 52L), audit_log 1v (persist_audit_log 52L),
-  position_manager 1v (close_all_positions 51L). 5 violations cleared via single-line docstrings.
+  mifid_reporter 2v (log_order_submitted_mifid 51L + log_trade_reported_mifid 51L), instruction_convert 1v
+  (manual_request_to_instruction 52L), audit_log 1v (persist_audit_log 52L), position_manager 1v (close_all_positions
+  51L). 5 violations cleared via single-line docstrings.
 
   **Slot-2 cumulative across batches 3-84**: 99 files cleared (slot-2 contribution: -99 files; spans 56 submodules).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 85 — docstring-trim sweep)**: shipped at execution-service@8a54ed3cf.
-  registry 1v (convert_to_nautilus_format 54L), amm_math 1v (quote_concentrated_liquidity 55L),
-  _storage 1v (create_storage_checker 55L), seasonal_points 1v (compute_implied_apr 55L),
-  rate_impact_engine 1v (_simulate_morpho 55L). 5 violations cleared.
+  **Ratchet-down 2026-05-17 (slot-2 batch 85 — docstring-trim sweep)**: shipped at execution-service@8a54ed3cf. registry
+  1v (convert_to_nautilus_format 54L), amm_math 1v (quote_concentrated_liquidity 55L), \_storage 1v
+  (create_storage_checker 55L), seasonal_points 1v (compute_implied_apr 55L), rate_impact_engine 1v (\_simulate_morpho
+  55L). 5 violations cleared.
 
   **Slot-2 cumulative across batches 3-85**: 104 files cleared (slot-2 contribution: -104 files; spans 61 submodules).
 
@@ -923,28 +923,26 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   **Slot-2 cumulative across batches 3-86**: 108 files cleared (slot-2 contribution: -108 files; spans 63 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 87 — docstring-trim sweep)**: shipped at execution-service@e2a359757.
-  backtest_domains 1v, simulate_proposal 1v, instruments/utils 1v, trade_execution/factory 1v,
-  gcs_data_loading 1v, backtest_checks 1v, converters 1v, gcs_cache_helper 1v,
-  timeline_builder 1v, vwap_core 1v. 10 violations cleared.
+  backtest_domains 1v, simulate_proposal 1v, instruments/utils 1v, trade_execution/factory 1v, gcs_data_loading 1v,
+  backtest_checks 1v, converters 1v, gcs_cache_helper 1v, timeline_builder 1v, vwap_core 1v. 10 violations cleared.
 
   **Slot-2 cumulative across batches 3-87**: 118 files cleared (slot-2 contribution: -118 files; spans 70 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 88 — docstring-trim sweep)**: shipped at execution-service@342a0ae15.
-  instrument_resolver 1v, backtest_checks 1v, report_timeline_extractor 1v, native_staking 2v,
-  trades_loader 2v, restaking_avs 1v, selector 1v, ranking 1v, loader_base 1v,
-  loader_transforms 1v, proposal_simulator 1v. 13 violations cleared.
+  instrument_resolver 1v, backtest_checks 1v, report_timeline_extractor 1v, native_staking 2v, trades_loader 2v,
+  restaking_avs 1v, selector 1v, ranking 1v, loader_base 1v, loader_transforms 1v, proposal_simulator 1v. 13 violations
+  cleared.
 
   **Slot-2 cumulative across batches 3-88**: 131 files cleared (slot-2 contribution: -131 files; spans 79 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 89 — helper extraction)**: shipped at execution-service@069bcee5d.
-  _convert.py:instruction_to_vwap_config 57L→46L, _timeline_extraction.py:extract_fills_from_timeline 56L→30L,
+  \_convert.py:instruction_to_vwap_config 57L→46L, \_timeline_extraction.py:extract_fills_from_timeline 56L→30L,
   strategy_instructions/gcs.py:download_instructions_df 56L→40L. 3 violations cleared.
 
   **Slot-2 cumulative across batches 3-89**: 134 files cleared (slot-2 contribution: -134 files; spans 81 submodules).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 90 — trim+extract)**: shipped at execution-service@7eb5e8ab6.
-  price_scale 1v (58L→43L), dates 1v (62L→36L), freshness_gate 1v (63L→47L),
-  engine/backtest/core 1v (64L→42L). 4 violations cleared.
+  **Ratchet-down 2026-05-17 (slot-2 batch 90 — trim+extract)**: shipped at execution-service@7eb5e8ab6. price_scale 1v
+  (58L→43L), dates 1v (62L→36L), freshness_gate 1v (63L→47L), engine/backtest/core 1v (64L→42L). 4 violations cleared.
 
   **Slot-2 cumulative across batches 3-90**: 138 files cleared (slot-2 contribution: -138 files; spans 84 submodules).
 
@@ -956,41 +954,53 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 92 — trim+extract)**: shipped at execution-service@45a58e0eb.
   catalog_resolution:resolve_catalog_path 61L→32L, custody/factory:get_custody_provider 61L→46L,
-  gcs_data_loading:_verify_full_cache 57L→39L, orderbook_converter:_log_empty_time_window 55L→48L. 4 violations cleared.
+  gcs_data_loading:\_verify_full_cache 57L→39L, orderbook_converter:\_log_empty_time_window 55L→48L. 4 violations
+  cleared.
 
   **Slot-2 cumulative across batches 3-92**: 145 files cleared (slot-2 contribution: -145 files; spans 88 submodules).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 93 — arg compaction + docstring trim)**: shipped at execution-service@da1302447.
-  kraken_rest_adapter:place_order 54L→49L, config_builder:_execute_gcs_load 51L→49L,
-  book_builder:_load_local_book_data 51L→50L, backtest/preflight:check_all 51L→50L. 4 violations cleared.
+  **Ratchet-down 2026-05-17 (slot-2 batch 93 — arg compaction + docstring trim)**: shipped at
+  execution-service@da1302447. kraken_rest_adapter:place_order 54L→49L, config_builder:\_execute_gcs_load 51L→49L,
+  book_builder:\_load_local_book_data 51L→50L, backtest/preflight:check_all 51L→50L. 4 violations cleared.
 
   **Slot-2 cumulative across batches 3-93**: 149 files cleared (slot-2 contribution: -149 files; spans 90 submodules).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 94 — docstring trim + arg compaction)**: shipped at execution-service@ab4e6b07c.
-  adaptive_twap:_on_slice_timer 51L→47L, intent_engine:_build_deleverage_steps 52L→36L,
+  **Ratchet-down 2026-05-17 (slot-2 batch 94 — docstring trim + arg compaction)**: shipped at
+  execution-service@ab4e6b07c. adaptive_twap:\_on_slice_timer 51L→47L, intent_engine:\_build_deleverage_steps 52L→36L,
   ohlcv_converter:convert_ohlcv_parquet_to_catalog 52L→45L. 3 violations cleared.
 
   **Slot-2 cumulative across batches 3-94**: 152 files cleared (slot-2 contribution: -152 files; spans 92 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 95 — arg compaction)**: shipped at execution-service@ab6f9ee22.
-  passive_aggressive_execution:_pah_schedule_passive_spawn 52L→50L,
-  result_formatter:_check_timestamp_bounds 53L→49L, funding_recon_engine:reconcile 54L→50L. 3 violations cleared.
+  passive_aggressive_execution:\_pah_schedule_passive_spawn 52L→50L, result_formatter:\_check_timestamp_bounds 53L→49L,
+  funding_recon_engine:reconcile 54L→50L. 3 violations cleared.
 
   **Slot-2 cumulative across batches 3-95**: 155 files cleared (slot-2 contribution: -155 files; spans 93 submodules).
 
   **Ratchet-down 2026-05-17 (slot-2 batch 96 — arg compaction)**: shipped at execution-service@512f69d1f.
-  cli/run_scenario:main 53L→47L, utils/dependency_checker:_check_blob_dep_market_tick 53L→50L. 2 violations cleared.
+  cli/run_scenario:main 53L→47L, utils/dependency_checker:\_check_blob_dep_market_tick 53L→50L. 2 violations cleared.
 
   **Slot-2 cumulative across batches 3-96**: 157 files cleared (slot-2 contribution: -157 files; spans 94 submodules).
 
-  **Ratchet-down 2026-05-17 (slot-2 batch 97 — arg compaction + helper extraction)**: shipped at execution-service@ab2fbe80b.
-  config_builder:_load_missing_data 55L→49L (merge 4 signature param pairs + inline local-load call),
-  mock_feed_connector:_handle_place_bet 55L→48L (inline BET_ACK _write + merge signature pairs),
-  mock_data_provider:run_mock_pipeline 60L→42L (extract _dispatch_instrument_fills helper + trim docstring),
-  ccxt_common:place_order_sim 60L→49L (trim docstring + merge 7 CanonicalOrder constructor arg pairs). 4 violations cleared.
-  mock_feed_connector + ccxt_common now fully clean. Allowlist -2.
+  **Ratchet-down 2026-05-17 (slot-2 batch 97 — arg compaction + helper extraction)**: shipped at
+  execution-service@ab2fbe80b. config_builder:\_load_missing_data 55L→49L (merge 4 signature param pairs + inline
+  local-load call), mock_feed_connector:\_handle_place_bet 55L→48L (inline BET_ACK \_write + merge signature pairs),
+  mock_data_provider:run_mock_pipeline 60L→42L (extract \_dispatch_instrument_fills helper + trim docstring),
+  ccxt_common:place_order_sim 60L→49L (trim docstring + merge 7 CanonicalOrder constructor arg pairs). 4 violations
+  cleared. mock_feed_connector + ccxt_common now fully clean. Allowlist -2.
 
   **Slot-2 cumulative across batches 3-97**: 159 files cleared (slot-2 contribution: -159 files; spans 95 submodules).
+
+  **Ratchet-down 2026-05-17 (slot-4 batch 13 — adapters/algorithms/custody/defi_loader)**: 5 net-new files cleared at
+  execution-service@fe0836b07 (adapters/order_adapter.py — submit_order 95L→37L via \_get_cached_order +
+  \_log_order_created + \_log_post_submit_audit; algorithms/tradfi/implementation_shortfall.py — schedule 90L→36L via
+  \_compute_ac_fractions + \_build_child_orders @staticmethod; custody/copper.py — sign_transaction 99L→31L via
+  \_poll_for_completion async; algorithms/atomic_bundle_executor.py — validate_atomic_bundle 61L→47L docstring-trim +
+  execute_bundle 84L→43L via \_build_bundle_success_result; data/loaders/defi.py — load_swaps 77L→32L + load_liquidity
+  75L→35L via \_get_or_create_loop + \_load_first_nonempty_path; f-string logging → % format). Allowlist 68→63. AST
+  clean. ruff + basedpyright 0 errors.
+
+  **Slot-4 cumulative across batches 1-13**: 55 files cleared (allowlist now 63).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
