@@ -28,6 +28,35 @@
 
 ---
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 20 complete; cumulative 74 files cleared
+
+**Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
+
+### Round summary (batch 20)
+
+3 entries cleared from `FUNCTION_SIZE_EXTRA_EXCLUDES`. Allowlist 47 → 44 entries.
+
+| File | Method (before→after) | Helpers extracted |
+|------|-----------------------|-------------------|
+| `engine/backtest/instruction_loader.py` | `convert_instructions_to_schedule` 140L→30L | `_normalize_instructions_df` 8L + `_extract_trade_instruments` 18L + `_split_and_log_non_trade` 28L + `_make_timing_trigger` 23L + `_build_trade_schedule` 38L |
+| `utils/validation/instruction_validator.py` | `validate_instructions_dataframe` 125L→22L | `_check_instrument_type_mapping` 17L + `_check_tp_sl_type_support` 20L + `_check_tp_sl_logic_consistency` 28L |
+| `validation/instruction_validator.py` | `validate_instructions_dataframe` 136L→22L | same 3-helper extraction (pd.isna variant) |
+
+- execution-service Half-1: `38c539a0c` (ldr)
+- unified-trading-pm Half-2: this commit
+- Cumulative slot-4 total: **74 files cleared**, allowlist now **44**
+
+### Remaining allowlist (44 entries) — top batch-21 candidates
+
+1-violation files:
+- `engine/validation/backtest_validator.py`: `validate_instruction_data_availability` ~141L
+- `engine/routing/instruction_router.py`: `route_instruction` ~130L (BLOCKED — foreign dirty)
+- `results/report_timeline_extractor.py`: ~132L violation
+- `algo_library/dust_router_runner.py`: `_build_reward_attribution_rows` ~137L
+- `algo_library/sor_cross_chain.py`: `_evaluate_cross_chain_route` ~137L
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 19 complete; cumulative 71 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing

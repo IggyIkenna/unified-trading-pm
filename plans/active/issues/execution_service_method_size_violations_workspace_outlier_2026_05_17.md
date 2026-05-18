@@ -1060,6 +1060,10 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-19**: 71 files cleared (allowlist now 47).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 20 — engine/backtest/instruction_loader + 2×instruction_validator)**: 3 entries cleared at execution-service@38c539a0c. engine/backtest/instruction_loader.py: convert_instructions_to_schedule 140L→30L via _normalize_instructions_df 8L + _extract_trade_instruments 18L + _split_and_log_non_trade 28L + _make_timing_trigger 23L + _build_trade_schedule 38L (fixed 2 pre-existing E501 in sibling methods). utils/validation/instruction_validator.py: validate_instructions_dataframe 125L→22L via _check_instrument_type_mapping 17L + _check_tp_sl_type_support 20L + _check_tp_sl_logic_consistency 28L. validation/instruction_validator.py: same 3-helper extraction (136L→22L). Allowlist 47→44. AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-20**: 74 files cleared (allowlist now 44).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
