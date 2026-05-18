@@ -1170,6 +1170,12 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   execution-service@d9532a6d3. All 3 files had zero method-size violations when scanned. Free decrements — no source
   edits. Allowlist 24→21 files. Slot-4 cumulative across batches 1-26: 88 files cleared.
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 28 — engine/backtest/actors/signal_driven_v3_handlers.py)**: shipped at
+  execution-service@14472be17. execute_exit 144L→44L via \_resolve_exit_benchmark + \_create_exit_order_and_log +
+  \_submit_and_record_exit. on_order_filled 181L→43L via \_is_maker_fill + \_resolve_fill_context +
+  \_process_entry_fill + \_process_exit_fill. Allowlist 21→20 files. All helpers ≤50L. AST clean. Slot-4 cumulative
+  across batches 1-28: 89 files cleared.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:

@@ -1,5 +1,30 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 28 complete; cumulative 89 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File                                                | What changed                                    | Helpers extracted                                                                                                                                                   |
+| --------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| engine/backtest/actors/signal_driven_v3_handlers.py | execute_exit 144L→44L; on_order_filled 181L→43L | \_resolve_exit_benchmark, \_create_exit_order_and_log, \_submit_and_record_exit, \_is_maker_fill, \_resolve_fill_context, \_process_entry_fill, \_process_exit_fill |
+
+- execution-service Half-1: `14472be17` (ldr)
+- unified-trading-pm Half-2: this commit
+- 7 module-level helpers extracted; all ≤50L; AST clean
+- Cumulative slot-4 total: 89 files cleared, allowlist now 20
+
+### Remaining allowlist (20 entries) — top batch-29 candidates
+
+- engine/backtest/actors/evaluator_pnl.py: 2 viols (239L, 179L)
+- engine/backtest/actors/evaluator_trades.py: 4 viols (254L, 163L, 89L, 51L)
+- engine/backtest/engine/results.py: 1 viol (227L)
+- engine/backtest/runner.py: 2 viols (237L, 118L)
+- engine/routing/instruction_router.py — BLOCKED (foreign dirty file)
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 26 complete; cumulative 88 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
