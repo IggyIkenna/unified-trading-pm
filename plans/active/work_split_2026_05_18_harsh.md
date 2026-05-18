@@ -167,8 +167,9 @@ smoke begins.
       sit QG green. — sit@47a1e04: 11 tests / 4 scenario classes (captured/empty_confirmed/attempted_failed/mixed); QG ✅ 56s
 - [x] ✅ **2. alerting-service alert routing tests (slot 4 item 13)** — routing by severity (P0 → pager, P1 → email,
       P2 → slack mock). Done-def: routing parity + alerting-service QG green. — alerting@af7122f: 3 new classes / 9 tests (SERVICE_DEGRADED P1, wildcard P2, severity_filter→PD); QG ✅ 129s
-- [ ] **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
+- [x] ✅ **3. batch-live-reconciliation reconcile_shard edge cases (slot 4 item 14)** — empty shard, single-row,
       schema-drift, very-large (memory pressure). Done-def: 4+ edge-case tests + batch-live-reconciliation QG green.
+      — batch-live-reconciliation@a214cd1: 4 classes / 16 tests (empty/single/schema-drift/10k-load); QG ✅ 67s
 - [ ] **4. workspace-wide unused-import audit (slot 4 item 15)** — scan repos for unused imports surviving ruff
       sweep. Issue doc per repo + fix mechanical ones. Done-def: cleanup report + 5+ fixes. **COORDINATE with slot 2
       item 3 — whichever slot starts first owns it; the other slot skips and picks reserve.**
