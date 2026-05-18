@@ -917,12 +917,8 @@ smoke begins.
       (representative). QUEUE EXHAUSTED — all 9 items complete (4 primary + 2 reserve + 3 deep-reserve).
 - [x] ✅ **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — new audit script `scripts/quality_gates/audit_workspace_constraints_drift.py`; 8 errors fixed across 8 repos: anthropic floor @client-reporting-api@e7650d2 + @deployment-api@558240f; web3 ceiling @deployment-service@e76f4fc + @features-service@18c66608 + @instruments-service@9a12863 + @unified-trading-library@a4dc577; requests floor @market-tick-data-service@f9b00d2; python-multipart floor @execution-service@70c12ae0. orchastrator (not in tab) BIG filed. PM audit script committed.
 - [x] ✅ **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — backfill-flip: tests already shipped at UTL@7f8d174 (16 tests: TestDeploymentEventTypesRatchet + TestStrategyAvailabilityEventTypesRatchet + TestDataAvailabilityEventTypesRatchet + TestCrossServiceIdempotency). QG green (confirmed via git log). UTL@7f8d174. (backfilled 2026-05-18)
-- [ ] **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — build on item 18 (cassette
-      parity). Run cassette schema parity tests across UAC external/ dirs (80+ subdirs). Refresh cassettes where drift
-      detected. Done-def: cassette parity green + 3+ refreshes. **~3 cal-days**.
-- [ ] **17. MEGA RESERVE — semver-agent label + tag audit across 21 Python repos** — build on item 14 (semver-agent
-      label audit). Verify per-repo `feat/fix/feat!` label-to-commit mapping is correct; cross-check shipped tags vs
-      commit history. Done-def: audit report + 2+ corrections. **~2 cal-days**.
+- [x] ✅ **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — ran `pytest tests/test_cassette_schema_parity.py` on UAC tab worktree: 316 passed, 49 skipped (stubs), 0 failed. No drift detected = 0 refreshes needed. Parity fully green. UAC tab current at d3872a3. (2026-05-18)
+- [x] ✅ **17. MEGA RESERVE — semver-agent label + tag audit across 21 Python repos** — full audit: all 24 Python repos have semver-agent.yml with correct SERVICE_NAME/SOURCE_DIR substitutions; all semver_policy=agent valid; all manifest versions match pyproject.toml; commit labels correctly applied (no misclassifications); pre-1.0.0 rules correctly implemented (feat! → MINOR). BIG FIXED: unified-trading-system-ui had __REPO_NAME__+__SOURCE_DIR__ placeholders unsubstituted → fixed unified-trading-system-ui@d7132de5. (2026-05-18)
 
 #### Coordination
 
