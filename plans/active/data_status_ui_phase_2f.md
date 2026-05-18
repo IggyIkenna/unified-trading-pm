@@ -102,6 +102,20 @@ None — all gaps resolved (2 code fixes, 2 issue docs).
 
 - Honest-coverage cron VM scheduling → `plans/active/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md`
 - cross_asset instruments-service scope → `plans/active/issues/cross_asset_instruments_service_scope_2026_05_14.md`
-- [ ] [INFRA] P2. Wire cron VM launcher for the data-status refresh job: create a singleton-locked launcher under
+- [x] ✅ [INFRA] P2. Wire cron VM launcher for the data-status refresh job: create a singleton-locked launcher under
       `deployment-service/scripts/vm/`, register prefix in `VM_PREFIX_TO_BUCKET` (vm_zombie_watchdog.py), launch with
-      `DEPLOYMENT_ENV` set. **DEFERRED**: held until live cutover is closer. Successor: this item.
+      `DEPLOYMENT_ENV` set. **DONE 2026-05-18** — deployment-service@2026-05-15 (slot-2 shipped): `launch-honest-coverage-vm.sh`
+      + `launch-measure-honest-coverage-vm.sh` + `setup-honest-coverage-scheduler.sh` all exist. Watchdog has
+      `honest-coverage-` + `measure-honest-coverage-` prefixes registered. `DEPLOYMENT_ENV` handled via
+      `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"`. Cloud Scheduler activation requires Ikenna owner account — see
+      `setup-honest-coverage-scheduler.sh` comment; Cloud Run Job `honest-coverage-daily-launcher` was created 2026-05-15.
+
+## DONE-2026-05-18 — Plan close (slot-7)
+
+All 5 todos resolved:
+
+- GAP-3 SPORTS/PREDICTION filter: deployment-api PM@a59d1571
+- GAP-4 breakdown rows interactive: deployment-ui@dd6c1cc
+- GAP-1 honest-coverage 404 issue doc: PM@a59d1571
+- GAP-2 cross_asset scope issue doc: PM@a59d1571
+- INFRA cron VM launcher: deployment-service@2026-05-15 (slot-2); Cloud Scheduler activation = Ikenna operator task

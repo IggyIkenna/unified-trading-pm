@@ -246,3 +246,9 @@ Self-pivot through items 14 → 20. Ping STARTED + per-item DONE in this file.
 - [x] 20. deployment-api Firebase auth integration tests — deployment-api@715ac1a (11 tests)
 
 QG green on both repos. Ready for next queue.
+
+---
+
+[2026-05-18 06:50 UTC] [main → slot 7] — RE-THEMED via --reset-slot. Prior theme: 2026-05-15 deployment-api/UI Phase 4 + endpoint extensions. New theme: deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
+[2026-05-18 06:55 UTC] slot-7 — STARTED deployment-api/deployment-ui maintenance (work_split_2026_05_18_harsh.md § Slot 7).
+[2026-05-18 08:30 UTC] slot-7 — DONE items 1/3/4. Item 2 SOAK-GATE (eligible 2026-05-24). Summary: Phase 2F INFRA verified+closed; 4 ImportError violations cleared (deployment-api@fbb74e3); QG snapshot stale finding filed (qg_snapshot_cron_stale_2026_05_18.md, BLOCKED-OPERATOR-DECISION). Item 2 annotated with soak start 2026-05-17.

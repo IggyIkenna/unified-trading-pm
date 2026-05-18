@@ -287,21 +287,28 @@ smoke begins.
       (post-launch verification at T+10min before claiming VM "launched"). Done-def: codex section landed + cross-link
       from CLAUDE.md "no fire-and-forget VM launches" line.
       — PM@8adb0284 (T+10min section + CLAUDE.md cross-link).
-- [ ] **8. REFILL — codex_vs_citadel_infrastructure_audit_2026_05_10 final items (91%, 30/33)** — added 2026-05-18
+- [x] ✅ **8. REFILL — codex_vs_citadel_infrastructure_audit_2026_05_10 final items (91%, 30/33)** — added 2026-05-18
       by slot-1 main after slot-6 EXHAUSTED. 3 items remaining: (a) Phase 2.C Operator review pending (skip — operator
       action); (b) Phase 6.B Operator sign-off (skip — operator action); (c) **Phase 7.A Master plan row** for
       Group A "Codex vs Citadel audit signed off; pre-cutover items shipped" — slot-1-owned but if Phase 2.C/6.B
       operator action lands, slot-6 ships 7.A. **Mechanical alternative**: audit the audit doc's `## Findings` for
       any unflipped sub-items + close them in-line if mechanical. Plan path:
       [`codex_vs_citadel_infrastructure_audit_2026_05_10.md`](codex_vs_citadel_infrastructure_audit_2026_05_10.md).
-- [ ] **9. REFILL — alerting_service_live_rules_2026_05_07 residuals (77%, 50/65)** — added 2026-05-18 by slot-1
+      — CONFIRMED: `## Findings` section has 0 unflipped sub-items (all 12 area issue docs show ✅ DONE). Remaining
+      3 items (2.C/6.B/7.A) are operator-gated. Mechanical portion exhausted.
+- [x] ✅ **9. REFILL — alerting_service_live_rules_2026_05_07 residuals (77%, 50/65)** — added 2026-05-18 by slot-1
       main. 15 items remaining. Pick codex-side ones (codex/04-architecture/alerting-batch-live.md +
       codex/03-observability/lifecycle-events.md updates per shipped 44 LIVE_ALERT_RULES + 6 new AlertCodes). Plan
       path: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Avoid
       alerting-service runtime changes (slot 4 territory) — only codex hygiene side.
-- [ ] **10. REFILL — strategy_archetype_taxonomy_2026_05_12 residuals** — codex hygiene work matching slot 6's
+      — PM@441195b9 (alerting-batch-live.md: Slack removed + Phase 1.E 8 DeFi codes section; lifecycle-events.md:
+      kill-switch bus events subsection; alert-code-taxonomy.md: ~63→~69 count + 5 kill-switch codes).
+- [x] ✅ **10. REFILL — strategy_archetype_taxonomy_2026_05_12 residuals** — codex hygiene work matching slot 6's
       strategy-service-codex ownership. Sweep `codex/09-strategy/` for any drift surfaced by slot 3's Phase 8/10
       codex audits or by recent commits this week. Done-def: 1-2 codex docs updated + grep-clean.
+      — PM@5bb94de6 (strategy-summary.md header table: Archetypes 53→55; 0 stale unified_trading_services/pyright
+      refs found; LegController additions from 8bcf0f96 are in per-archetype docs; defi_lp+mev family pointers from
+      5520e125 are in families/ docs).
 - [ ] **11. DEEP RESERVE — codex/07-runbooks/ hygiene audit** — audit runbooks for owner/cadence/verifier/last_executed fields per CLAUDE.md "Runbook Execution-Owner SSOT". Done-def: 5+ runbooks audited + missing fields filled.
 - [ ] **12. DEEP RESERVE — codex/11-project-management/ doc currency check** — sweep codex/11 for stale references (defunct plan paths, dead links, outdated metrics). Done-def: cross-link table + 5+ fixes.
 - [ ] **13. DEEP RESERVE — UTL emission_publisher additional test coverage** — build on item 1 (utl_qg_preexisting_failures fix sweep, UTL@d3488b7+30db050). Add tests for: cross-service emission idempotency, emission failure retry semantics, batch vs live emission parity. Done-def: 4+ tests + UTL QG green.
