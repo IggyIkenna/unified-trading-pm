@@ -142,8 +142,10 @@ org-naming tidy):
       %%s format strings; asyncio.get_event_loop()→asyncio.run() across commodity/MTF/volatility; cross_instrument
       event_logging Path.cwd() fix; yfinance pytest.importorskip("lxml"); UNIFIED_TRADING_WORKSPACE_ROOT
       config-bootstrap annotation; timedelta module-level import (codex compliance).
-- [ ] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
+- [x] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
       `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
+      ✅ DONE 2026-05-18 — PM@245ab3e7: last_reviewed 2026-05-18, ModeHandler run_batch/run_live wrappers
+      documented, new § "Test-suite status" (7266 passing / 0 failures @ features@0e73bc90).
 - [ ] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
       2026-05-11.** There are 7+ near-identical `_get_workspace_root()` copies across
       `features_service/{commodity,delta_one,calendar,cross_instrument,volatility,multi_timeframe,onchain,sports}/engine/mock_data_provider.py`
