@@ -652,8 +652,8 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 7 — deployment-api + ui surface (Days 10-12, ~1.5 AI-days, parallel with Phase 6)
 
-- [ ] [AGENT] P1. **7.A `/api/scenarios/list` endpoint.** Returns the full UAC scenario registry as JSON, paginated by
-      asset_group. deployment-api Pydantic models mirror UAC types via re-export.
+- [x] [AGENT] P1. ✅ **7.A `/api/scenarios/list` endpoint.** Returns the full UAC scenario registry as JSON, paginated by
+      asset_group. deployment-api Pydantic models mirror UAC types via re-export. — deployment-api@40a62af (2026-05-18 slot 6)
 - [ ] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
       time_window). Launches a backtest VM via the deployment-service launcher (per VM launcher script SSOT). Returns
       `run_id`. Async; result polled via 7.C.
