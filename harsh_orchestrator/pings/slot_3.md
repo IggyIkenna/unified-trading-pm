@@ -493,3 +493,10 @@ awaiting operator direction for next wave or reassignment.
 - **Off-scope incidents**: 1 minor (semver-rollout bot touched `work_split_2026_05_15_ikenna.md` — bot edit, not slot 3 action). Earlier same-cycle scope correction (14:38 UTC) for code_freeze + post-cutover scan was acked.
 - **Plans touched**: defi_simulation_realism, master_to_live_defi, defi_archetypes, archetype_paper_runnable_matrix, carry_staked_basis_structure_axis, strategy_archetype_taxonomy, defi_master pipeline-coverage-matrix.
 - **Verdict**: ✅ **HEALTHY — slot retired clean**. Top throughput on harsh-side today 🏆.
+
+[2026-05-18 21:00 UTC] [main → slot 3] — 🟢 **FRESH THEME — queue exhausted again** (top throughput today 🏆). Pick: **defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md residuals** (65%, 14 items left). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+  2. Read `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy or strategy-service surface.
+  3. Avoid UAC enum changes (Ikenna primary). Pick 3-4 mechanical codex items, ship per item with dual-flip.
+**Fallback if blocked**: `defi_master_2026_05_07.md` codex residuals (74 items, 30% done).
+**Acknowledge "STARTED defi_archetypes_canonicalisation" within 10 min.**

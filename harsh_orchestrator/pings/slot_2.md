@@ -649,3 +649,11 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 - **Items flipped**: 17 of 27 (sustain queue partial, expected — only ~2h working hours on it).
 - **Tab worktree state**: execution-service has **1 unpushed commit `c2193e0c`** on `tab/hk/6 tab/hk/2` — ruff format 23 files. **Not pushed to LDR** because rebase hit conflicts on intent_engine.py + dependency_checker.py (slot 5 + other slots concurrently modified). When slot 2 re-engages: rebase onto origin/LDR + resolve conflicts (likely take origin for slot 5's logic + re-apply ruff format on top).
 - **Verdict**: ✅ HEALTHY work, 1 cleanup item deferred.
+
+[2026-05-18 21:00 UTC] [main → slot 2] — 🟢 **DIRECT DISPATCH** — 18 unchecked items in sustain queue. Pick **item S3** (workspace-wide stale-import sweep beyond ruff F401). Recipe:
+  1. `git pull --rebase origin live-defi-rollout`
+  2. Scan slot-2-owned scope (execution-service lint surface + workspace audit). Sample command:
+     `for r in execution-service alerting-service risk-and-exposure-service mtds; do echo === $r ===; (cd /home/hk/unified-trading-system-repos/$r 2>/dev/null && rg "^import [a-z_]+$" --type py -g '!build' -g '!.venv*' 2>&1 | head -5); done`
+  3. Pick 5+ unused imports, fix in-place, QG green per repo, commit + dual-flip work_split slot 2 item S3.
+After S3: S4 (type:ignore continuation), S5 (unused-fixture sweep), S15 (pyproject audit), S20 (setup.sh consistency).
+**Acknowledge "STARTED item S3" within 10 min.**

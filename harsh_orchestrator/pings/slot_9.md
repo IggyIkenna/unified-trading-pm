@@ -398,3 +398,10 @@ skip, test fixes for 5 tests, QG bump 10→11). Queue exhausted — awaiting nex
   - `position-balance-monitor-service`: clean.
   - `market-data-processing-service`: clean.
 - **Verdict**: ✅ HEALTHY work, 2 cleanup items deferred (MTDS ruff + PM workspace-manifest review).
+
+[2026-05-18 21:00 UTC] [main → slot 9] — 🟢 **FRESH THEME — queue nearly empty (1 unchecked)**. Pick: **mtds_databento_path_streaming_2026_05_07.md** (93%, 1 item left — quick close-out, ~1 cal-day). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/market-tick-data-service && git pull --rebase origin live-defi-rollout`
+  2. Read `plans/active/mtds_databento_path_streaming_2026_05_07.md` — find the 1 unchecked `- [ ]` item.
+  3. Ship + commit + dual-flip + push.
+**After databento close-out**: continue MTDS adapter coverage continuation — mega-reserve item 15 (deribit/binance/bybit handler ≥90% coverage, ~3 cal-days). Or pick MDPS canonical_writer error classification audit (deep reserve item 12 territory).
+**Acknowledge "STARTED databento path streaming close-out" within 10 min.**

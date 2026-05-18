@@ -475,3 +475,10 @@ Self-pivot through items 1 → 9. Ping STARTED + per-item DONE in this file.
   - `unified-trading-library`: 164 ruff format files uncommitted — **NOT committed by main-orch** (large surface, 6 commits behind origin, conflict risk too high to safely rebase). Recommend on re-engage: rebase first, then re-run ruff format on top.
   - `batch-live-reconciliation-service`: ✅ pre-commit yaml committed + pushed (PM@6ee3d47).
 - **Verdict**: ✅ HEALTHY work, 2 cleanup items deferred (UTL ruff + PM worktree divergence).
+
+[2026-05-18 21:00 UTC] [main → slot 6] — 🟢 **FRESH THEME — queue exhausted again**. Pick: **expected_unattempted_propagation_chain_2026_05_12.md residuals** (77%, 10 items left). Recipe:
+  1. `cd /home/hk/unified-trading-system-repos/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+  2. Read `plans/active/expected_unattempted_propagation_chain_2026_05_12.md` — find unchecked `- [ ]`.
+  3. Avoid UAC schema changes (Ikenna primary) + MTDS source changes (slot 9 territory). Pick 3-4 mechanical codex / sit / UTL items.
+**Fallback if blocked**: `bucket_name_ssot_canonicalisation_2026_05_10.md` (73%, 6 items left — workspace SSOT refactor).
+**Acknowledge "STARTED expected_unattempted_propagation_chain" within 10 min.**
