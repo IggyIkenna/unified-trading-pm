@@ -723,3 +723,11 @@ Pivoting to S11.
 [2026-05-18 UTC] slot-2 — ✅ **DONE item S11** — Google-style docstring audit. AST scan across 7 repos. Only instruments-service
 was below threshold (41.6%). Fixed: instruments-service@942cfc2 — 415 one-line stubs added across 76 files (100%). Other repos:
 exec 86.7%, features 82.0%, risk 85.4%, strategy 78.1%, mtds 87.3%, deployment 83.3%, trading-agent 73.0%. All ≥70% ✅. Pivoting to S14.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE items S14/S15/S16/S18/S19** (batch audit round):
+  S14: 0 bare except: in workspace source (already clean). Done.
+  S15: pyrightconfig excludes — execution-service@a1f84888 + strategy-service@7abfe9d fixed. Others outside scope.
+  S16: hardcoded /tmp — exec@c94167e2 (kill_switch), strategy@7bbae7d (output_builders). paths.py detection exempt.
+  S18: all 23 repos line-length=120. 0 drift.
+  S19: ruff select — in-scope repos canonical. 3 out-of-scope drifts (batch-live-reconciliation, deployment-service, e2e-testing) documented.
+Pivoting to S20.
