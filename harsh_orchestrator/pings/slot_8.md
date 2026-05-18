@@ -4,6 +4,26 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
+[2026-05-18 UTC] slot-8 — 🟢 STARTED items 14-17 MEGA RESERVE. Beginning item 14: workspace-constraints.toml deep audit (per-repo dep version drift).
+
+[2026-05-18 UTC] slot-8 — ✅ DONE item 14 workspace-constraints deep audit. 8 errors fixed (8 repos), PM audit script PM@0274f170. 🔶 BIG: orchastrator repo not in slot-8 tab — has pydantic>=2.9.0 (canonical >=2.12.5) + google-cloud-storage>=2.18.0 (canonical >=3.8.0) + 6 missing ceilings. Human-owned repo. Main to assign.
+
+[2026-05-18 UTC] slot-8 — ✅ DONE item 15 backfill: UTL event ratchet + cross-service idempotency tests already at UTL@7f8d174 (16 tests). Flipped.
+
+[2026-05-18 UTC] slot-8 — ✅ DONE item 16: UAC cassette parity 316 passed, 0 failed, 49 skipped (stubs). No refreshes needed.
+
+[2026-05-18 UTC] slot-8 — ✅ DONE item 17: semver-agent audit — all 24 Python repos correct. BIG FIXED: unified-trading-system-ui@d7132de5 had __REPO_NAME__ placeholder leak. All MEGA RESERVE items 14-17 complete. QUEUE EXHAUSTED.
+
+[2026-05-18 UTC] slot-8 — 🏁 **CYCLE-CLOSE (items 14-17 MEGA RESERVE complete)**
+
+Items shipped this session:
+- ✅ Item 14: workspace-constraints deep audit — 8 pyproject.toml fixes (anthropic/web3/requests/python-multipart) + PM audit script PM@0274f170
+- ✅ Item 15: backfill flip — UTL@7f8d174 tests already shipped
+- ✅ Item 16: cassette parity run — 316 passed, 0 drift
+- ✅ Item 17: semver audit — 24 repos clean; unified-trading-system-ui@d7132de5 placeholder fix
+
+Findings filed: orchastrator pyproject drift (not in tab — main to assign). No open blockers.
+
 [2026-05-15 22:40 UTC] slot-8 — 🟢 STARTED items 11-20 (fresh queue). Beginning item 11: workspace-manifest.json drift
 audit.
 
