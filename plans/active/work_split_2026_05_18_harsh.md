@@ -189,6 +189,13 @@ smoke begins.
       `plans/active/issues/unused_import_audit_2026_05_18.md` (11 remaining violations in repos with
       pre-existing QG failures; P3 priority, routed to owning slots). → Picking up reserve queue.
 
+#### New-dispatch queue (main ping 2026-05-18 13:18 UTC)
+
+- [x] ✅ **A. alerting_runbook_and_operator_ux_post_cutover_2026_05_12 close-out (5/7 → 7/7)** — Group D: block-list
+      parity test shipped (unified-trading-system-ui@e1b7b232: 4 tests; vitest ✅). Group G: STALE_OPEN_ALERT
+      dashboard design decided (deployment-ui AlertStatusPanel, polls `GET /api/alerts?status=stale&limit=20`);
+      routed to slot 7 via ping. Plan-of-record: `alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`.
+
 #### Reserve queue
 
 - [ ] **5. features-service Phase B coverage waves continuation (Wave 59+)** — last shipped Wave 58
