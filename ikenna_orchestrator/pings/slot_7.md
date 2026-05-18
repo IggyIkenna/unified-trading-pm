@@ -1490,3 +1490,14 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - Both new [x] checkboxes in code_freeze plan § "Outstanding NEW work (gap-2.6.A through gap-2.6.E)".
 
 [2026-05-18 09:57 UTC] [main → slot 7] — 🟡 **24-MIN SILENCE CHECK** — defi_catalogue close-out dispatched at 09:33 UTC. No ack received. If active: post "STARTED defi_catalogue close-out" now. If writegate Phase 6.8 already all-checked: focus on extending Part A (defi_catalogue remaining 10 items). If context-expired: drop one-liner here.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-59 Phase B continued
+
+**Tick-59 deliverables** (3 methods in 3 files, execution-service@8c2809c12):
+- `benchmark/enhanced_comparison.py::compare_results`: 100L→45L (extract `_compute_leaders_by_regime` 41L)
+- `results/serializer.py::serialize_report`: 99L→46L (extract `_format_date_tz` 7L + `_build_report_config_obj` 17L + `_build_report_metadata` 20L)
+- `engine/orchestrator.py::_submit_orders_with_timing`: 99L→41L (extract `_submit_single_child_order` async 26L + `_handle_order_submission_error` 38L)
+
+**Running count**: ~146/377 cleared (~39%); continuing tick-60.
