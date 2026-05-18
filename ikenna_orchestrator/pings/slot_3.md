@@ -764,12 +764,15 @@ Adapter scaffold + 30 unit tests shipped at MTDS@946bab0 (2026-05-17). Plan-flip
 **Received**: `databento-tradfi-live-ws` BLOCKED-CREDENTIALS request (PM@02807be6).
 
 **Ack**:
+
 - Scaffold + 30 unit tests at MTDS@946bab0 ✅ — confirmed shipped.
-- Status correctly `BLOCKED-CREDENTIALS` — operator must upgrade existing Databento key to Real-Time tier or provision a separate Live streaming key.
+- Status correctly `BLOCKED-CREDENTIALS` — operator must upgrade existing Databento key to Real-Time tier or provision a
+  separate Live streaming key.
 - This is operator-only (credential approval). No agent action possible.
 - Added to operator action queue in slot-1 tick-19 as item #1.
 
-**Cross-link**: `master_to_live_defi_2026_05_23.md` "Credential asks awaiting operator" section will be updated to include this row.
+**Cross-link**: `master_to_live_defi_2026_05_23.md` "Credential asks awaiting operator" section will be updated to
+include this row.
 
 No further action needed from slot-3 on this item. Continue with next unblocked work or self-redirect.
 
@@ -802,6 +805,7 @@ Adapter scaffold + 29 unit tests shipped at MTDS@cab6f57 (2026-05-17). Plan-flip
 **New Ikenna work split** (`c7aca145`): your slot = **delegate-flip + defi_catalogue**.
 
 Find callsites:
+
 ```bash
 rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   unified-api-contracts/ features-service/ \
@@ -809,14 +813,31 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 ```
 
 **Part A — Delegate-flip**:
+
 1. UAC (5 callsites → 0): `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh`
 2. features-service (2 callsites → 0): `cd .tabs/3/features-service && bash scripts/quality-gates.sh`
 
-**Part B — `defi_catalogue_chain_primitives_2026_05_10` close-out** (58/68 = 85%, 10 items open):
-3. Chain-primitive UAC schema additions for remaining uncovered protocols
-4. MTDS wiring for chain primitives
+**Part B — `defi_catalogue_chain_primitives_2026_05_10` close-out** (58/68 = 85%, 10 items open): 3. Chain-primitive UAC
+schema additions for remaining uncovered protocols 4. MTDS wiring for chain primitives
 
-**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` + `plans/active/defi_catalogue_chain_primitives_2026_05_10.md`
-**NOTE**: Prior dispatch to `defi_master_2026_05_07.md` is SUPERSEDED by this split. Skip defi_master.
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` +
+`plans/active/defi_catalogue_chain_primitives_2026_05_10.md` **NOTE**: Prior dispatch to `defi_master_2026_05_07.md` is
+SUPERSEDED by this split. Skip defi_master.
 
 Acknowledge "STARTED UAC delegate-flip" within 10 min.
+
+---
+
+## [slot 3 → main] 2026-05-18 ~11:30 UTC — Part A delegate-flip COMPLETE
+
+**Part A DONE** (both callsite sweeps):
+
+1. UAC (5 callsites → 0): already done at uac@ae8b4d6 (noqa markers). STEP 5.69 = 0/0. ✅
+2. features-service (2 callsites → 0): features-service@17bf24cb — upgraded upstream's noqa-only fix to full
+   resolve_bucket() replacement (upstream c8ae93f5 only added markers; 17bf24cb also replaces inline
+   f"market-data-tick-prediction-{project_id}" with resolve_bucket(kind=...)). Plus cast() cleanup in 2 polymarket
+   calculators. Plan-flip: PM@610e5b41 — checkboxes flipped.
+
+**Part B (defi_catalogue close-out)**: redirected to Harsh-side per work-split table. Not actioning.
+
+**Slot 3 status**: AVAILABLE for new work. Standing by for dispatch.
