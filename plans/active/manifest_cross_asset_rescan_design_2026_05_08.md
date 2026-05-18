@@ -199,9 +199,12 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       registered gaps excluded from phantom check via `is_pre_launch_date` + `is_in_known_gap`. Eliminates bulk of 16.8%
       sports false-positive rate.
 
-- [ ] [DESIGN] P1. Add `## Reconciliation execution order` section to this plan documenting the pass sequence with exact
+- [x] [DESIGN] P1. Add `## Reconciliation execution order` section to this plan documenting the pass sequence with exact
       `--data-types` values per pass, derived from authoritative scan of each service's `record_captured()` callsites.
-      **DEFERRED**: needs per-service data_type ownership audit (1 AI-day).
+      **DONE 2026-05-18 (slot 10)** — section added below before "Dry-run command set"; expands the 4-pass table above
+      with inputs/outputs/failure-mode/recovery semantics per pass + shard-atom alignment cite. Cross-references
+      `data_status_drilldown_shard_atom_alignment_2026_05_07.md` +
+      `codex/02-data/availability-manifest-and-data-status.md`. Done-def cite: PM@<this commit>.
 - [ ] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
@@ -230,6 +233,86 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       `ASSET_GROUP_CONFIG` hardcoded bucket strings with
       `resolve_bucket_name(cloud=Cloud.GCP, kind="market-data-tick", asset_group=ag)` (and `kind="instruments-store"`
       for sports). Remove hardcoded `PROJECT_ID` constant.
+
+## Reconciliation execution order
+
+> Expands the "Reconciliation dependency ordering" 4-pass table above with per-pass inputs/outputs, failure-mode +
+> recovery semantics, and the shard-atom alignment rule. The SERIAL gate (pass 1 → 2) and read-after-write barrier (pass
+> 2 → 3) are correctness-load-bearing — dry-run reads commute, but `--apply-flips` requires strict ordering.
+
+### Pass 1 — instruments-service reference rows (SERIAL, root)
+
+- **Scope**: `--data-types instruments,venue_trading_calendar` for every asset_group sequentially.
+- **Inputs**: `instruments-store-<ag>-<env>-<pid>/instrument_availability/by_date/day=…/venue=…/instruments.parquet`;
+  the manifest's `captured/empty_confirmed/attempted_failed/expected_unattempted` state per (ag, day, venue).
+- **Outputs**: phantom `captured` → `attempted_failed` flips and null-reason → `SOURCE_RETURNED_ZERO` stamps on
+  reference rows only. These flips define what instruments WERE listable per (day, venue) and therefore drive every
+  downstream service's "expected vs missing" classification.
+- **Failure mode**: a phantom in instruments-service silently mutates every downstream `empty_confirmed` reason for the
+  same shard from `EXPECTED_INSTRUMENT_NOT_LISTED` to `EXPECTED_UPSTREAM_GAP` (or vice-versa) — a Class-A correctness
+  bug that only surfaces in `data_status_drilldown` if reference rows are flipped first.
+- **Recovery**: idempotent (`--unphantom` re-runs are no-ops on flipped rows); on partial failure re-launch the same
+  `VM_NAME` so `MANIFEST_PER_VM_SHARDS=true` per-VM shards converge without double-write. SERIAL gate: pass 2 must NOT
+  start until pass 1 reports `STOPPED` on the deployment-service VM ledger.
+
+### Pass 2 — MTDS raw market data (PARALLEL across asset_groups, serial after pass 1)
+
+- **Scope**: every MTDS-owned `--data-types` (ohlcv, trades, tbbo, book_snapshot, lending_rates, lst_yields, dex_pools,
+  perp_funding, oracle_prices, etc. — full list at line ~181) across all 5 asset_groups simultaneously.
+- **Inputs**: pass-1-flipped reference manifest (read-after-write barrier); per-venue/per-shard parquets in
+  `market-data-tick-<ag>-<env>-<pid>/raw_tick_data/by_date/day=…/venue=…/`.
+- **Outputs**: market-data manifest flips + typed-reason stamps; per-VM shard parquets under
+  `_index/per_vm/<vm>.parquet` that the consolidator merges into canonical `_index/availability_index.parquet` within ~5
+  min of VM completion.
+- **Failure mode**: a venue/shard with `data_type=trades` flipped but a paired `tbbo` row still claimed `captured` by
+  phantom produces inconsistent honest-coverage in `data_status_drilldown`. Axis-7 paired-schema handling in
+  [`reconcile_phantom_manifest_rows_all.py:507`](../instruments-service/scripts/reconcile_phantom_manifest_rows_all.py#L507)
+  guards against this within pass 2.
+- **Recovery**: each (ag, data_type) is its own VM job — failed jobs can be re-launched without affecting parallel jobs.
+  Per-VM shard isolation prevents cross-VM write races; if the consolidator misses a per-VM parquet it stays in
+  `_index/per_vm/` until the next consolidator tick — no data loss.
+
+### Pass 3 — MDPS processed outputs (PARALLEL, serial after pass 2)
+
+- **Scope**: `--data-types ohlcv_1h` (or whichever MDPS-owned pipeline_mode outputs are present per asset_group; varies
+  between cefi/defi/tradfi/sports/prediction).
+- **Inputs**: MTDS-flipped raw manifest from pass 2; MDPS-written processed parquets in
+  `market-data-tick-<ag>-<env>-<pid>/processed/by_date/…` (path varies per asset_group).
+- **Outputs**: MDPS manifest flips; MDPS rows refer to the same shard atom as MTDS but at the processed-output
+  granularity (per `data_status_drilldown_shard_atom_alignment_2026_05_07.md`).
+- **Failure mode**: MDPS phantom flipped before MTDS pass completes can mis-classify the empty_confirmed reason (e.g.,
+  `EXPECTED_NO_OHLCV_FOR_INSTRUMENT` when the underlying tick rows were phantoms now flipped to `attempted_failed`). The
+  serial gate prevents this.
+- **Recovery**: identical to pass 2 — per-VM-shard isolation, re-launch failed jobs.
+
+### Pass 4 — features services (PARALLEL, serial after pass 3)
+
+- **Scope**: features-specific data_types per family (delta_one, volatility, onchain, calendar, sports, multi-timeframe,
+  cross-instrument, prediction). **Inputs**: pass-3-flipped MDPS manifest +
+  `features-<family>-<ag>-<env>-<pid>/by_date/…`.
+- **Outputs**: features manifest flips with feature-specific `empty_confirmed` reasons.
+- **Failure mode**: flipping features before passes 1-3 complete can stamp `EXPECTED_NO_FEATURE_INPUT` on rows whose
+  input WAS captured but a phantom in pass 2/3 hid it. **Recovery**: identical to passes 2-3.
+
+### Shard atom alignment (cite CLAUDE.md "Shard-granularity SSOT")
+
+All four passes flip rows at the **same shard atom** the writer used, the manifest consolidator emits, the deployment-UI
+drilldown reads, and downstream pre-flight gates check. Atoms: `(asset_group, day, venue, data_type)` for MTDS + MDPS;
+`(asset_group, day, family, feature_key)` for features; `(asset_group, day, venue)` for instruments-service. Drift
+between writer atom + manifest atom + reconciliation flip atom is a silent correctness bug per CLAUDE.md
+"Shard-granularity SSOT (CRITICAL)" + `plans/epics/infrastructure_master_2026_05_07.md` 4-pillar validation. Reconcilers
+derive the atom from the manifest schema at runtime; do NOT introduce reconciler-specific shard partitioning.
+
+### Cross-references
+
+- **`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`** — per-service shard atom contract; the
+  4-pass order above assumes those atoms match between writer + reconciler + drilldown.
+- **`codex/02-data/availability-manifest-and-data-status.md`** § "Phantom audit — re-runnable recipe" + § "Per-Service
+  Shard Dimension Matrix" — canonical recipe + dimension table the rescan scripts implement against.
+- **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** Phase 2.6 — bucket-rename window unblocking the
+  `PRE_CUTOVER` todo at line ~222 (switch reconcilers to `resolve_bucket_name`).
+- **CLAUDE.md** "Shard-granularity SSOT (CRITICAL)" + "Live = batch (CRITICAL)" — workspace contracts these passes
+  preserve.
 
 ## Dry-run command set — all 5 asset_groups (run on same-region GCE VM, asia-northeast1-c)
 
