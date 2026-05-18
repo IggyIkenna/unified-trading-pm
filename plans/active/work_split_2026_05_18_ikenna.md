@@ -115,8 +115,8 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
          strategy_config_loader.py + gcs_feature_provider.py) — strategy@5d6c963 (2026-05-18 slot 2 continuation)
 4. - [x] ✅ **Flip plan checkboxes** in `bucket_name_ssot_canonicalisation_2026_05_10.md` for each repo completed.
          Done-def #3 status annotation updated with 2026-05-18 consumer-callsite progress (UTL/batch-recon/strategy
-         SHAs); checkbox count stays 16/22 (L3 wrapper + large repos pending write-pause). — PM@`(this commit)`
-         (2026-05-18 slot 2)
+         SHAs); checkbox count stays 16/22 (L3 wrapper + large repos pending write-pause). — PM@`92d427e0` (2026-05-18
+         slot 2)
 5. - [ ] **Reserve**: `alerting_service_live_rules_2026_05_07` — 15 remaining items (2 cal days) if all delegate-flip
          items close early. (design 0.6×, ~5 = 3.0 cal)
 
