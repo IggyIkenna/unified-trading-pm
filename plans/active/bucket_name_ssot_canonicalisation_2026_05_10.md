@@ -1615,3 +1615,161 @@ inline-formatter violation, but it should go through `resolve_bucket_name(kind="
 | Phase 0c — staging/dev provision (Group-A/B buckets)                                  | ❌ NOT STARTED                                                                                                                                                                                                                                                                 | Deferred to code_freeze Phase 2.6 window per plan                                                 |
 | Phase 5A phantom audit (GCE VM)                                                       | 🔴 DEFERRED — CLAUDE.md requires GCE VM (same-region)                                                                                                                                                                                                                          | Needs dedicated GCE VM launch in asia-northeast1-c; deferred to next Slot 3 session or Harsh slot |
 | Phase 0c-watchdog — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET retrofit              | 🔴 DEFERRED — separate operator decision on HEARTBEAT_BUCKET env-tier                                                                                                                                                                                                          | See `- [ ] Phase 0c-watchdog` checkbox (line ~144); operator decision needed before impl          |
+
+---
+
+## 2026-05-18 (slot 10) — workspace-wide grep audit for Done-def #6 zero-drift verification
+
+Per the `[AGENT] P1` item at line ~527: re-ran the workspace-wide grep audit on 2026-05-18 to verify the "zero remaining
+drift sites" target. Three pattern families inspected: (a) inline `gs://` / `s3://` f-string URI builders in service
+source via QG STEP 5.69 (`check_inline_bucket_uri.py` AST-walk), (b) inline `"bucket_template": "..."` string-template
+fields in service `dependency_checker.py` modules + builders, (c) legacy `get_bucket_name(...)` + `BUCKET_PREFIXES`
+consumers per Layer 3 of the pre-audit manifest.
+
+**Headline**: zero-drift NOT yet achieved — 65 service-source inline-URI sites still fail QG STEP 5.69 baseline across 8
+repos (most are Cat-B URI-composers from already-resolved bucket vars; many already carry a `# noqa: gs-uri` marker on
+the `gs://` line of a multi-line f-string but the checker AST records the JoinedStr lineno at the opening line, so the
+noqa isn't seen — this is a checker false-positive issue documented inline in the per-site classification below). The
+L2-tail / L3 / L5 drift categories from the 2026-05-11 PARTIAL table are unchanged — still DEFERRED-AFTER code_freeze
+Phase 2.6 per their named successors. Checkbox at line ~527 stays `- [ ]` — Done-def #6 fully met only after Phase 2.6
+reader-repoint + delegate flip + dependency_checker template migration.
+
+Issue doc filed at `plans/active/issues/bucket_name_ssot_residual_drift_2026_05_18.md` with the full residual list and
+recommended follow-up items.
+
+### Pattern (a) — inline `gs://`/`s3://` f-string URI builders in service source (QG STEP 5.69 scope)
+
+Scope: every `.py` file under repo root **excluding** `scripts/`, `tests/`, `test_*.py`, `*_test.py`, `__pycache__/`,
+`.venv*/`, `build/`, archived trees, and any line with `# noqa: gs-uri`. AST-walk identifies `JoinedStr` nodes whose
+constants contain `gs://` or `s3://`.
+
+**Workspace sweep result** (2026-05-18 18:30 UTC):
+`python3 unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py --workspace-root <ws>` — **8 repos FAIL**
+their `count: 0` baseline, **20 repos pass** at baseline 0:
+
+| Repo                                | Sites | Δ vs 2026-05-11 table             | Notes                                                                                                                                              |
+| ----------------------------------- | ----: | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deployment-api`                    |    28 | +28 (was lowered to 0 @`297b406`) | **REGRESSION** — 28 new f-string URI builders landed since 2026-05-11; most are status/drilldown URI composers from an already-resolved bucket var |
+| `execution-service`                 |    16 | −17 (was 33)                      | Already-known; some carry noqa on the `gs://` line but checker reads the opener (multi-line f-string concat false-positive)                        |
+| `batch-live-reconciliation-service` |     7 | unchanged                         | All in `stage0_config_pull.py` + `stage0_data_pipeline_recon.py`; error-message URI composers from resolved bucket var                             |
+| `new-sports-batting-services`       |     7 | NEW in audit                      | External `footballbets` repo — NOT in the baseline yaml (not a workspace SSOT consumer); out-of-scope for the bucket_name_ssot plan                |
+| `unified-trading-system-ui`         |     4 | unchanged                         | All in `context/api-contracts/` mirror — UAC AST sync target, not edited directly                                                                  |
+| `unified-trading-library`           |     1 | −22 (was 23)                      | `bq_catalog.py:49` — multi-line DDL f-string with noqa on the gs:// continuation line (line 56) but checker reads JoinedStr at line 49             |
+| `instruments-service`               |     1 | +1 (was 0 @`5210149`)             | `sports_dependency.py:100` — new URI composer since 2026-05-11 baseline ratchet                                                                    |
+| `orchastrator`                      |     1 | NEW in audit                      | `server/gcs_sync.py:97` — orchestrator local-state upload; not in baseline yaml                                                                    |
+
+**Cleared workspace-wide** (0 sites): `alerting-service`, `client-reporting-api`, `deployment-service`, `deployment-ui`,
+`e2e-testing`, `features-service`, `ibkr-gateway-infra`, `market-data-processing-service`, `market-tick-data-service`,
+`ml-inference-service`, `ml-training-service`, `pnl-attribution-service`, `position-balance-monitor-service`,
+`risk-and-exposure-service`, `strategy-service`, `system-integration-tests`, `trading-agent-service`,
+`unified-api-contracts`, `unified-trading-api`, `unified-trading-pm` — 20 repos at baseline 0.
+
+#### Per-site listing (Pattern a)
+
+| Repo                              | File:line                                                                      | Pattern                                                           | Status                                |
+| --------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------- |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_config_pull.py:60`            | error-msg URI composer, bucket var already resolved               | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_config_pull.py:94`            | error-msg URI composer (`f"...: gs://{bucket}/{blob}"`)           | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_config_pull.py:99`            | error-msg URI composer                                            | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_config_pull.py:104`           | error-msg URI composer                                            | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_data_pipeline_recon.py:126`   | error-msg URI composer                                            | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_data_pipeline_recon.py:147`   | error-msg URI composer                                            | intentional — needs noqa marker       |
+| batch-live-reconciliation-service | `batch_live_reconciliation_service/stages/stage0_data_pipeline_recon.py:157`   | error-msg URI composer                                            | intentional — needs noqa marker       |
+| deployment-api                    | `deployment_api/routes/backfill_launch.py:451`                                 | URI composer from resolved bucket                                 | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/routes/execution_backtest_launch.py:108`                       | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/routes/ml_experiment_launch.py:130`                            | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/routes/services.py:218`                                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/routes/services.py:281`                                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/routes/strategy_backtest_launch.py:112`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_query_service.py:469`                            | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_query_service.py:528`                            | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:807`                         | URI composer (`f"gs://{bucket}/{name}"` parquet probe)            | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:851`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:869`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:893`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:894`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:905`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:912`                         | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1029`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1558`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1587`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1625`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1803`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:1871`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:2254`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_drilldown.py:2574`                        | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/data_status_hierarchical.py:369`                      | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/deploy_missing_launch.py:74`                          | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/shard_detail.py:627`                                  | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/shard_detail.py:939`                                  | URI composer                                                      | regression — needs noqa or resolver   |
+| deployment-api                    | `deployment_api/services/shard_detail.py:1113`                                 | URI composer                                                      | regression — needs noqa or resolver   |
+| execution-service                 | `execution_service/data/gcs_data_loading.py:805`                               | URI composer in error path                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/data/gcs_data_loading.py:812`                               | URI composer in error path                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/data/validator.py:284`                                      | URI composer in error path                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/data/validator.py:294`                                      | URI composer in error path                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/catalog_validator.py:78`                  | multi-line f-string concat; noqa marker on line 79 (continuation) | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/catalog_validator.py:121`                 | multi-line f-string concat                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/catalog_validator.py:177`                 | multi-line f-string concat                                        | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:100`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:138`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:199`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:207`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:215`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/data_availability_validator.py:300`       | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/dependency_validator.py:84`               | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/instruction_validator.py:57`              | URI composer                                                      | intentional — multi-line noqa issue   |
+| execution-service                 | `execution_service/engine/validation/instrument_validator.py:90`               | URI composer                                                      | intentional — multi-line noqa issue   |
+| instruments-service               | `instruments_service/reference_data/sports_dependency.py:100`                  | URI composer (new since 2026-05-11 baseline ratchet)              | regression — needs noqa or resolver   |
+| new-sports-batting-services       | `footballbets/cli/odds_api.py:227`                                             | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/cli/odds_api.py:236`                                             | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/cli/odds_api.py:1994`                                            | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/cli/odds_api.py:2049`                                            | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/features/data_loader.py:1538`                                    | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/features/data_loader.py:1546`                                    | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| new-sports-batting-services       | `footballbets/features/data_loader.py:1569`                                    | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
+| orchastrator                      | `server/gcs_sync.py:97`                                                        | orchestrator local-state upload `gs_uri` log                      | intentional — out-of-scope (tooling)  |
+| unified-trading-library           | `unified_trading_library/domain_client/catalog/bq_catalog.py:49`               | multi-line DDL f-string; noqa on gs:// line 56 (checker FP)       | intentional — multi-line noqa issue   |
+| unified-trading-system-ui         | `context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:52` | UAC mirror inside UI repo — synced from upstream UAC              | intentional — mirror sync target      |
+| unified-trading-system-ui         | `context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:69` | UAC mirror                                                        | intentional — mirror sync target      |
+| unified-trading-system-ui         | `context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:86` | UAC mirror                                                        | intentional — mirror sync target      |
+| unified-trading-system-ui         | `context/internal-contracts/schemas/testing/seed_ml_artifacts.py:259`          | UAC internal-contracts mirror — seed script                       | intentional — mirror sync target      |
+
+### Pattern (b) — `"bucket_template": "..."` literal string-template fields
+
+Inline `"bucket_template": "<format-string>"` entries in `dependency_checker.py` modules + shard-distribution
+calculators. **84 hits across 9 repos** (`rg '"bucket_template"' --type py -g '!.venv*' -g '!build' -g '!tests'`):
+deployment-service (7 files), features-service (3), unified-api-contracts (2), unified-trading-library (1),
+strategy-service (1), ml-training-service (1), ml-inference-service (1), market-data-processing-service (1),
+execution-service (1). This is the L2-tail drift category from the existing audit table (line ~561). Status
+DEFERRED-AFTER the UTL `BaseDependencyChecker` migration OR code_freeze Phase 2.6 (whichever lands first) — the
+dependency_checker probe templates must flip in lockstep with the flat→env-tiered data migration. Not a NEW finding; the
+count is consistent with the pre-audit manifest.
+
+### Pattern (c) — legacy `get_bucket_name(...)` + `BUCKET_PREFIXES` consumers (Layer-3 drift)
+
+`rg 'get_bucket_name\(' --type py -g '!.venv*' -g '!build' -g '!tests'` returns **89 hits across 12 repos**:
+instruments-service (11), execution-service (6), deployment-service (6), features-service (5), unified-trading-library
+(3 — owner of the legacy fn itself), market-tick-data-service (3), pnl-attribution-service (2),
+market-data-processing-service (2), unified-trading-pm (2 scripts), new-sports-batting-services (1), e2e-testing (1),
+batch-live-reconciliation-service (1). `rg 'BUCKET_PREFIXES'` returns 9 hits across 6 repos (the constants module
+itself + readers in `market-tick-data-service`, `batch-live-reconciliation-service`, `unified-trading-pm/scripts/`).
+
+This is Layer 3 from the existing audit table (line ~562) — Status DEFERRED-AFTER code_freeze Phase 2.6 step 2.6.4
+(delegate-flip during write-pause) per Done-def #3. Hit count is in the same order as the pre-audit manifest ~92
+candidate files; not a NEW finding.
+
+### Decision
+
+Checkbox at line ~527 **stays unchecked**. Done-def #6 zero-drift verification requires:
+
+1. **Pattern (a)**: the 8 FAIL repos either migrate URI composers to `resolve_bucket_uri(...)` or annotate the f-string
+   opener line with `# noqa: gs-uri` (most cleanly: collapse multi-line f-string concatenations so the noqa lands on the
+   JoinedStr opener), then ratchet baseline DOWN via `--update-baseline`. The deployment-api +28 regression is the
+   biggest delta and needs a dedicated triage. Tracked in the new issue doc.
+2. **Pattern (b)**: dependency_checker templates flip in code_freeze Phase 2.6 (Done-def #3, step 2.6.4) alongside the
+   flat→env-tiered data migration.
+3. **Pattern (c)**: legacy `get_bucket_name` + `BUCKET_PREFIXES` delegate-flip in code_freeze Phase 2.6 step 2.6.4.
+
+When all three reach zero (or all residuals carry documented `# noqa: gs-uri` markers + baseline ratcheted to 0 across
+the workspace), the checkbox at line ~527 may be flipped with this audit + the Phase-2.6 owner's done-def evidence as
+the cite.
