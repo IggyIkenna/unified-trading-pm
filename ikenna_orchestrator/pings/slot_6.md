@@ -685,3 +685,17 @@ This was item-14 (harsh slot-9 DARK, unassigned). Ikenna-side primary owns live 
 **Conflict-risk**: MTDS = harsh slot-9 (DARK). No conflict. MDPS = no other ikenna slot assigned.
 
 Acknowledge "STARTED live_pipeline Phase 1" within 10 min.
+
+## [slot 6 → main] 2026-05-18 ~current UTC — GAP-2.4.D DELEGATE-FLIP COMPLETE
+
+deployment-api Phase 2.6.4 delegate-flip shipped: deployment-api@eec6b5d
+
+- `data_status_drilldown._BUCKET_TEMPLATES` → `_SERVICE_TO_KIND` + `_PREDICTION_KIND_MAP` + `resolve_bucket_name()`
+- `data_status_service._BUCKET_TEMPLATES` → same pattern; ml-* drift reconciled (ml-models-store / ml-predictions-store)
+- `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` → `resolve_bucket_name(kind=instruments-store, asset_group=sports)`
+- `batch_config_utils.build_bucket` → `resolve_bucket_name`; PREDICTION → flat prediction kinds
+- data_query_service already fixed by incoming commit 297b406
+- Tests updated (TestBuildBucketName → asserts routing kind, not old string format)
+- GAP-2.4.D plan checkbox flipped (code half); UI smoke pending post-cutover
+
+**ACK NEW DISPATCH**: live_pipeline Phase 1 MTDS/MDPS — reading plan now.

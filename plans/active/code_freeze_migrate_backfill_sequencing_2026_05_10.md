@@ -495,8 +495,8 @@ one-walk migration so manifest only rewrites once.
       delete after manifest + downstream verification confirms zero readers still hit flat names. bucket_name_ssot plan
       Phase 0d. **Composes with Phase 2.5 cross-asset rescan**: rescan reads env-tiered buckets, not flat ones; rescan
       launcher reads from yaml SSOT post-migration so the read-path matches the write-path.
-- [ ] [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
-      Phase 0g cross-check)** — Update reader/writer audit table verifying every consumer post-Phase-0d hits env-tiered
+- [x] ✅ [DOC] P0. **GAP-2.4.D (NEW per operator decision (b) 2026-05-11; deployment-api reader-repoint added 2026-05-11
+      Phase 0g cross-check)** — deployment-api@eec6b5d 2026-05-18. _BUCKET_TEMPLATES replaced with _SERVICE_TO_KIND + resolve_bucket_name() across data_status_drilldown, data_status_service, upcoming_fixtures, batch_config_utils; ml-* drift reconciled (ml-models-store / ml-predictions-store per yaml SSOT); PREDICTION routing to flat prediction kinds added; tests updated. data_query_service sports URI already landed in incoming commit 297b406. Reader-repoint code complete; UI smoke pending post-cutover. Update reader/writer audit table verifying every consumer post-Phase-0d hits env-tiered
       bucket names (not flat). bucket_name_ssot plan done-def #6 extension. **Includes the deployment-api
       reader-repoint** (Layer 5 in the bucket_name_ssot pre-audit manifest): replace deployment-api's internal
       flat-shape bucket templates (`DataStatusService._BUCKET_TEMPLATES`, `data_status_drilldown._BUCKET_TEMPLATES`,
