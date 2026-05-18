@@ -637,8 +637,10 @@ In-plan P2:
       KYC tier. Defer config field past May-23.
 - [ ] [ops] **P2**. Bybit live VM singleton-locked (per `Singleton-locked launchers` rule) — API key + IP whitelist mean
       only one VM-IP can authenticate simultaneously; without lock, zombie launcher could double-trade.
-- [ ] [docs] **P2**. Codex doc `codex/04-architecture/cefi-perp-leg-bybit.md` (NEW) — capture this topology +
-      Feb-2025-hack risk addendum; cross-ref Family 2 plan + master plan B-risk row.
+- [x] ✅ [docs] **P2**. Codex doc `codex/04-architecture/cefi-perp-leg-bybit.md` (NEW) — capture this topology +
+      Feb-2025-hack risk addendum; cross-ref Family 2 plan + master plan B-risk row. — PM@ikenna-slot-2 (created
+      2026-05-15); verified present + complete 2026-05-18 slot 3. Sections: Bybit UTA overview, USDC deposit route,
+      Feb-2025 hack addendum, funding cadence vs HL, kill-switch integration, See also.
 
 Cross-plan annotations needed (Findings Triage):
 

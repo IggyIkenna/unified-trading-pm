@@ -292,6 +292,12 @@ smoke begins.
       allowed_chains to carry-recursive-staked [ethereum], carry-recursive-borrow-lending-only [ethereum, arbitrum, base],
       carry-recursive-borrow-perp-hedged [ethereum, arbitrum, base]. Phase 3 extension (DeFi on-chain legs only; CeFi not
       chain-gated). Plan item added to defi_master + flipped in same commit.
+- [x] ✅ **20. defi_recursive_borrow_archetypes stale plan-flip sweep** — PM@this. Flipped 5 already-shipped codex
+      items across 2 plans: (1) defi_recursive_borrow Phase 8 [docs] P2 cefi-perp-leg-bybit.md (doc existed since
+      ec344724); (2–6) defi_recursive_borrow_post_cutover Phase 10 items: flash-loan-receiver extended-receiver
+      (a411c240), venue-collateral Family 1+2 sections (ec344724), recursive-borrow-backtest-scenarios (c5a25181),
+      batch-live-architecture archetype-grain section (ec344724), cefi-perp-leg-bybit (ec344724). 1 item kept open:
+      recursive-borrow-backtest-2026-05.md (BLOCKED-DATA, gates on Phase 9).
 
 #### Coordination
 
