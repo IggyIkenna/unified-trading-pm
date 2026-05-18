@@ -120,11 +120,11 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-18 12:12 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-18 13:03 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
-| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md) | cefi_master_2026_05_07 | infra | 45/124 | 36% | 103.2 | 2026-05-23 |
+| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md) | cefi_master_2026_05_07 | infra | 44/124 | 35% | 104.5 | 2026-05-23 |
 | [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md) | cross_cutting_may_23_2026 | brand-new | — | — | 30.0 | — |
 | [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md) | cross_cutting_may_23_2026 | infra | 10/72 | 14% | 27.6 | 2026-06-04 |
 | [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md) | master | design | 59/68 | 87% | 27.2 | 2026-05-23 |
@@ -170,7 +170,6 @@ _Last regenerated: 2026-05-18 12:12 UTC via `scripts/plans/regenerate_active_pla
 | [`gate_3_phantom_audit_runbook_2026_05_13`](./gate_3_phantom_audit_runbook_2026_05_13.md) | infrastructure_master_2026_05_07 | infra | — | — | 0.8 | — |
 | [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](./scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md) | master | refactor | — | — | 0.8 | — |
 | [`features_service_qg_cleanup_2026_05_11`](./features_service_qg_cleanup_2026_05_11.md) | infrastructure_master_2026_05_07 | refactor | 4/11 | 36% | 0.8 | — |
-| [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md) | master | design | 15/26 | 58% | 0.8 | 2026-05-21 |
 | [`defi_simulation_realism_2026_05_10`](./defi_simulation_realism_2026_05_10.md) | master | design | 46/47 | 98% | 0.7 | 2026-05-23 |
 | [`deploy_missing_auto_launch_2026_05_07`](./deploy_missing_auto_launch_2026_05_07.md) | cross_cutting_may_23_2026 | infra | 13/14 | 93% | 0.5 | — |
 | [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md) | cefi_master_2026_05_07 | design | 31/47 | 66% | 0.5 | — |
@@ -181,6 +180,7 @@ _Last regenerated: 2026-05-18 12:12 UTC via `scripts/plans/regenerate_active_pla
 | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | master | infra | 15/17 | 88% | 0.4 | 2026-05-23 |
 | [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md) | cross_cutting_may_23_2026 | design | 6/7 | 86% | 0.3 | 2026-08-31 |
 | [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md) | master | design | — | — | 0.3 | — |
+| [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md) | master | design | 23/24 | 96% | 0.1 | 2026-05-21 |
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) | infrastructure_master_2026_05_07 | refactor | 30/31 | 97% | 0.0 | — |
 | [`archetype_paper_runnable_matrix_2026_05_15`](./archetype_paper_runnable_matrix_2026_05_15.md) | master | design | 5/5 | 100% | 0.0 | — |
 | [`context_fill_optimization_2026_05_14`](./context_fill_optimization_2026_05_14.md) | infrastructure_master_2026_05_07 | design | 3/3 | 100% | 0.0 | — |

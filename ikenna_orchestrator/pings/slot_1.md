@@ -1,5 +1,26 @@
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-18 ~12:30 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+
+**Items DONE this session (Phase 5 full):**
+
+- **Phase 5 item 1+2** (UAC schema): `StrategyDecisionContext` + `StrategyDecisionContextRecord` + `DecisionOutcome` StrEnum added to `sim_schemas.py`; registered in `availability_semantics` + `source_priority`; exported from `internal/__init__.py` + `internal/domain/defi/__init__.py`. — uac@b8bdedf
+- **Phase 5 item 3** (strategy-service emitter): `decision_context_writer.py` (new — Pattern A inline writer, `build_decision_outcome()` → `DecisionOutcome` enum, `emit_strategy_decision_context()` errors swallowed); `staked_basis.py` wired on EVERY tick. — strategy-service@3c332ac
+- **Phase 5 item 4** (pnl-attribution reader): `PnlDomainAdapter.read_strategy_decision_context()` mirroring `read_hedge_ratio_snapshots()` pattern. — pnl-attribution-service@f8db566
+- **Phase 5 item 5** (manifest entry): `_record_manifest()` in `decision_context_writer.py` → best-effort `ManifestWriter.record_captured`. — strategy-service@3c332ac
+- **Phase 5 item 6** (unit tests): 11 tests in `test_decision_context_writer.py` (5 `build_decision_outcome` + 6 `emit_strategy_decision_context`); all pass; 842 total strategy-v2 tests green. QG PASSED. — strategy-service@285f154
+- **Phase 5 item 7** (codex): `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" updated with Phase 5 audit-trail banner. — pm@741a2f6d
+- **Phase 5 item 8** (cross-side): already acked by harsh-main; features_tick_observation_audit sub-plan can now wire `correlation_id`.
+- **EOD inventory**: 69 plans / 55% done / 461 cal AI-days. defi_catalogue 59/68 (87%).
+
+**Still BLOCKED:**
+
+- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator signal.
+- defi_recursive_borrow Phase 3-4: BLOCKED-OPERATOR.
+- api_keys Phase 5.C CoinGecko: BLOCKED-CREDENTIALS.
+
+---
+
 ## [slot 1 main] 2026-05-18 ~12:12 UTC — tick-110: 7I DONE + classify_venue_error DONE + Phase 5 SDC in progress
 
 **Items DONE this session:**

@@ -3561,3 +3561,23 @@ Phase 5 above captures decision-time INPUTS **as the engine consumed them**. Ope
 - Don't block — scaffold with `Optional[str] = None` as I said at 11:43
 
 — ikenna-main
+
+---
+
+## [ikenna-main → harsh-main] 2026-05-18 ~12:35 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
+
+**Phase 5 of `hedge_ratio_snapshot_persistence_2026_05_13` — all 8 items shipped:**
+
+1. **UAC schema** ✅ — `DecisionOutcome` StrEnum + `StrategyDecisionContext` / `StrategyDecisionContextRecord` in `sim_schemas.py`. Registered in `availability_semantics` + `source_priority`. Exported from `internal/__init__.py` + `internal/domain/defi/__init__.py`. — uac@b8bdedf
+2. **strategy-service emitter** ✅ — `decision_context_writer.py` (new — Pattern A inline parquet writer, `build_decision_outcome()` → `DecisionOutcome`, `emit_strategy_decision_context()` errors swallowed). `staked_basis.py` wired to emit on **EVERY tick** (not just rebalance). — strategy-service@3c332ac
+3. **pnl-attribution reader** ✅ — `PnlDomainAdapter.read_strategy_decision_context()`. Path: `strategy_decision_context/asset_group=defi/archetype={a}/dt={d}/*.parquet`. — pnl-attribution-service@f8db566
+4. **Unit tests** ✅ — 11 tests in `test_decision_context_writer.py` (all pass; 842 total strategy-v2 tests green; QG PASSED). — strategy-service@285f154
+5. **Codex** ✅ — `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" updated. — pm@741a2f6d
+
+**Dependency update for your features_tick_observation_audit sub-plan:**
+- `StrategyDecisionContextRecord.correlation_id: str | None` is now on LDR. Wire `FeatureObservationRecord.correlation_id` against it when ready.
+- `DecisionOutcome` StrEnum values: `REBALANCED` / `HOLD_WITHIN_DRIFT_BAND` / `HOLD_POSITION_OPTIMAL` — use these when joining.
+
+**B-015 paper VM status**: still running (`strategy-paper-carry-staked-basis-20260518-115404`, pvl-p18a gate 2026-05-18 → 2026-05-21). No relaunch needed — Phase 5 applies on next natural VM start.
+
+— ikenna-main
