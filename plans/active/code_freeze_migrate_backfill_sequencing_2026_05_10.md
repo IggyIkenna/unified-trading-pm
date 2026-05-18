@@ -1718,3 +1718,122 @@ Day 3.
 
 **Day-4 plan**: monitor workspace QG full sweep completion (running in slot 3 worktree background); commit results;
 final cycle-close DONE-2026-05-15 block + final cross-side ping at 2026-05-15 actual freeze-gate fire.
+
+---
+
+## Write-resume verification checklist (after delegate-flip deployed)
+
+> **Authored**: 2026-05-18 Slot 7 (Ikenna side) — Phase 2.6 Step 5 prep.
+> **When to run**: immediately after Step 2.6.4 delegate-flip workspace PR merges + deployment-api redeploys
+> (Wave 6 of the 7-wave gating protocol). All 4 checks must pass before lifting the write-pause (Wave 7).
+>
+> **Owner**: operator (Wave 6 → Wave 7 transition checkpoint).
+> **Cadence**: one-shot after delegate-flip. Re-run if any check fails + root-cause resolved.
+> **Verifier**: slot 1 main or operator.
+> **Last executed**: (pending — runs post-delegate-flip)
+
+### What to check
+
+**Check 1 — Manifest writes land in env-tiered paths**
+
+Run within 60 seconds of Phase 3 first backfill VM start:
+
+```bash
+# GCP: check for recent parquet files in env-tiered bucket names:
+gsutil ls "gs://market-data-tick-cefi-prd-${GCP_PROJECT_ID}/" | head -5
+gsutil ls "gs://market-data-tick-defi-prd-${GCP_PROJECT_ID}/" | head -5
+gsutil ls "gs://instruments-store-cefi-prd-${GCP_PROJECT_ID}/" | head -5
+# Expected: non-empty output within 60s of first Phase 3 backfill VM emitting STARTED event
+
+# AWS: mirror check
+aws s3 ls "s3://unified-trading-market-data-cefi-prd-${AWS_ACCOUNT_ID}/" | head -5
+```
+
+Pass criterion: at least one bucket in each asset_group family shows recent objects.
+
+**Check 2 — QG STEP 5.69 baseline at 0 across all repos**
+
+```bash
+# From workspace root (or unified-trading-pm slot):
+python3 unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py \
+  --workspace-root /path/to/workspace
+# Expected output for all repos: "OK (0 inline bucket URIs found)"
+# Any non-zero: that repo's delegate-flip PR did not land; check deployment log
+```
+
+Pass criterion: every repo reports 0.
+
+**Check 3 — deployment-api smoke returns env-tiered bucket names**
+
+```bash
+# Requires deployment-api running locally or on staging:
+curl -s 'http://localhost:8004/api/v1/data-status/coverage?asset_group=cefi&data_type=ohlcv_1h' \
+  | jq '.bucket'
+# Expected: "market-data-tick-cefi-prd-central-element-323112"
+# Got flat name? deployment-api not yet redeployed with delegate-flip; redeploy + recheck
+
+curl -s 'http://localhost:8004/api/v1/data-status/coverage?asset_group=defi&data_type=dex_pool_state' \
+  | jq '.bucket'
+# Expected: "market-data-tick-defi-prd-central-element-323112"
+```
+
+Pass criterion: all asset_group x data_type probes return env-tiered names (contains `-prd-`).
+
+**Check 4 — No flat-name reads in the last 5 minutes**
+
+```bash
+# GCP Cloud Logging: zero reads on flat bucket names since delegate-flip:
+gcloud logging read \
+  'resource.type="gcs_bucket" AND resource.labels.bucket_name=~"market-data-tick-cefi-central-element-323112"' \
+  --freshness=5m --format=json | jq 'length'
+# Expected: 0
+
+gcloud logging read \
+  'resource.type="gcs_bucket" AND resource.labels.bucket_name=~"market-data-tick-defi-central-element-323112"' \
+  --freshness=5m --format=json | jq 'length'
+# Expected: 0
+
+# AWS CloudTrail equivalent (check last 5 min):
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=ResourceName,AttributeValue=unified-trading-market-data-cefi-${AWS_ACCOUNT_ID} \
+  --start-time "$(date -u --date='5 minutes ago' +%Y-%m-%dT%H:%M:%SZ)" \
+  --max-results 10 | jq '.Events | length'
+# Expected: 0
+```
+
+Pass criterion: all flat-name read counts return 0.
+
+### Pass criteria summary — Phase 2.6 write-resume CONFIRMED
+
+| Check | Command | Expected | Status |
+| ----- | ------- | -------- | ------ |
+| 1. Env-tiered writes | `gsutil ls gs://market-data-tick-cefi-prd-*/` | non-empty | (pending) |
+| 2. QG STEP 5.69 = 0 | `check_inline_bucket_uri.py` | 0 for all repos | (pending) |
+| 3. deployment-api smoke | `curl .../coverage | jq .bucket` | contains `-prd-` | (pending) |
+| 4. Zero flat reads (5m) | `gcloud logging read` | 0 | (pending) |
+
+**All 4 pass** -> write-pause LIFT authorized (Wave 7). Phase 2.6 COMPLETE. Update done-definition checkboxes.
+
+**Any fail** -> identify which service is still reading/writing flat names:
+
+1. Check if that service's delegate-flip PR was included in the Wave 6 workspace PR.
+2. If missing: add the service to the Wave 6 PR, redeploy, wait 60s, re-run all 4 checks.
+3. If present but still reading flat: check if the service VM was restarted post-deploy (some services cache
+   the bucket name at startup — requires VM restart, not just config update).
+
+### Archive step follow-up (Day +1, after write-resume confirmed)
+
+Once write-resume is confirmed, proceed to archive the flat buckets per Step 2.6.5:
+
+```bash
+# Set 30-day delete lifecycle on all flat buckets (dry-run first):
+bash deployment-service/scripts/archive-flat-buckets.sh \
+  --env prod --cloud both --retention-days 30 --dry-run
+
+# Review dry-run output, then apply:
+bash deployment-service/scripts/archive-flat-buckets.sh \
+  --env prod --cloud both --retention-days 30 --no-dry-run
+```
+
+After 30 days: re-run Check 4 with `--freshness=30d`. If still 0 reads: delete flat buckets per
+Step 2.6.5 done-definition.
