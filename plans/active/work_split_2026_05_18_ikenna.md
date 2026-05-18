@@ -140,11 +140,12 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 10 open items are chain-primitive UAC schema additions + MTDS/features wiring. Read plan body for the open `- [ ]` items
 and ship them.
 
-3. - [ ] **Chain-primitive UAC schema additions** — UAC `DefiChainPrimitive` / `ChainConfig` additions for remaining
-         protocols not yet covered. (design 0.6×, ~6 = 3.6 cal)
+3. - [x] ✅ **Chain-primitive UAC schema additions** — ChainKind(StrEnum) 24-member + CHAIN_BRIDGE_GRAPH + genesis dates
+         (STARKNET/HYPERLIQUID_L1) + HYPERLIQUID_RPC_TEMPLATES / STARKNET_RPC_TEMPLATES; exported from __init__.py.
+         defi_master Phase 1 closed. — uac@9aea2b7 (2026-05-18 slot 3)
 4. - [ ] **MTDS wiring for chain primitives** — per-protocol handlers referencing new UAC types. (design 0.6×, ~4 = 2.4
-         cal)
-5. - [ ] **Plan checkboxes flip** for all items shipped. Push `docs(plans):` flip commits. (0.5 cal)
+         cal) **DEFERRED** — successor: defi_master Phase 2 (instruments-service CLOB adapters).
+5. - [x] ✅ **Plan checkboxes flip** — defi_master Phase 1 flipped + work_split items 3+5 flipped. — PM (2026-05-18 slot 3)
 
 **Conflict notes**: features-service bucket_naming is distinct from Harsh slot 4's test coverage work.
 

@@ -999,10 +999,10 @@ derive expected universe). 5-phase remediation. Operator decision required on as
 **Cross-plan banner**: coordinate with `dex_perp_onboarding_handover_2026_05_07.HANDOVER` Items A/C/E and writegate
 Phase 3.D.5 v2 enumerator (must handle CLOB venues).
 
-- [ ] [SCRIPT] P0. **Phase 1 — UAC ChainKind extension.** Add `HYPERLIQUID_L1` + `STARKNET` chain entries to UAC
-      `unified_api_contracts.canonical.crosscutting._defi.ChainKind` enum. Add `CHAIN_RPC_TEMPLATES` entries
-      (Hyperliquid L1 and Starknet endpoints). Add `bridge_to` graph capturing which chains can bridge to which
-      (Hyperliquid L1 ↔ Arbitrum via native bridge; Starknet ↔ Ethereum via STARK proof bridge).
+- [x] ✅ [SCRIPT] P0. **Phase 1 — UAC ChainKind extension.** Add `HYPERLIQUID_L1` + `STARKNET` chain entries to UAC
+      `unified_api_contracts.canonical.crosscutting.defi.ChainKind` enum + `CHAIN_BRIDGE_GRAPH` + genesis dates +
+      `HYPERLIQUID_RPC_TEMPLATES` / `STARKNET_RPC_TEMPLATES` (following SOLANA pattern). Exported from `__init__.py`.
+      — uac@9aea2b7 (2026-05-18 slot 3)
 - [ ] [SCRIPT] P0. **Phase 2 — instruments-service CLOB discovery adapters.** Lighter (zkSync) / Pacifica (Solana) /
       Extended (Starknet). Per-instrument catalog rows in instruments-store-defi:
       `(asset_group=defi, chain, venue,     instrument_type=PERP, instrument_id, contract_address, base_asset, quote_asset, decimals, listed_at)`.
