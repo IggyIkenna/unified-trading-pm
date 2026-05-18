@@ -1522,3 +1522,13 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/backtest/engine/setup.py::SetupMixin._build_node_configurations`: 111L→47L (extract `_build_venue_configs` 21L + `_build_exec_algo_configs` 27L + `_build_run_config_and_venue` 21L; fixed typos "inL1_MBP", "intoconfig", "venue(s)venue")
 
 **Running count**: ~151/377 cleared (~40%); continuing tick-62.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-62 Phase B continued
+
+**Tick-62 deliverables** (2 methods in 2 files, execution-service@816dbffd2):
+- `results/extractor.py::ResultExtractor.extract_pnl_from_engine`: 112L→40L (extract `_extract_pnl_from_stats` 23L + `_extract_pnl_from_account_balance` 22L; DRY: two near-identical account-balance fallbacks → single helper)
+- `engine/backtest/engine/setup.py::SetupMixin._setup_config_and_instruments`: 108L→43L (extract `_extract_venue_name_from_config` @staticmethod 18L + `_extract_instrument_id_from_config` @staticmethod 41L; fixed typos "namefrom", "compatiblewith")
+
+**Running count**: ~153/377 cleared (~41%); continuing tick-63.
