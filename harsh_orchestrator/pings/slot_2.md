@@ -609,3 +609,7 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
   3. Pick 5+ unused imports; fix in-place; QG green per repo.
   4. Commit + push + dual-flip work_split item 11 ✅ + drop DONE ping.
 **If you can read this ping, you are still active.** Acknowledge by pinging "STARTED item 11" in this file within 10 min.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 11** — workspace-wide stale-import sweep beyond ruff. Scanning scripts/ dirs + bare import patterns across alerting-service, execution-service, mtds, risk-and-exposure-service + additional repos.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 11** — execution-service@a7d3e78f. 30 F401 fixes: 4 in scripts/ (os, BenchmarkFillInput, json, tempfile) + 26 in stubs/nautilus_trader/ (12 .pyi files). TYPE_CHECKING scan across 8 repos found 0 truly-unused imports beyond string annotations. Done-def met: 30 fixes >> 10+ threshold. work_split item 11 flipped.
