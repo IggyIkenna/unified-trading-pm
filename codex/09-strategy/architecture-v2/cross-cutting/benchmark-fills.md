@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-05-18
 ---
 
 # Cross-Cutting: Benchmark Fills Contract
@@ -209,4 +210,4 @@ Enforced at QG: test-suite validates all registered algos.
 - Backtest groups: [../../../04-architecture/backtest-groups.md](../../../04-architecture/backtest-groups.md)
 - Strategy-execution protocol:
   [../../../04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md)
-- Batch=live memory feedback: `memory/feedback_unified_backtest_architecture.md`
+- Batch=live architecture: `codex/04-architecture/batch-live-architecture.md`
