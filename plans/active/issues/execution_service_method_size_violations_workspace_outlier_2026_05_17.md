@@ -1031,6 +1031,17 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Slot-4 cumulative across batches 1-16**: 64 files cleared (allowlist now 54).
 
+  **Ratchet-down 2026-05-18 (slot-4 batch 17 — tp_sl_generator + signal_driven_shared + grid_generator_core)**: 3
+  net-new files cleared at execution-service@ae6426a0a. tp_sl_generator: generate_random_tp_sl_for_signal 83L→32L via
+  _select_tightness @staticmethod 13L + _resolve_signal_seed @staticmethod 15L (resolved merge conflict with parallel
+  slot that used _signal_seed_from_timestamp — dropped duplicate, unified on _resolve_signal_seed).
+  signal_driven_shared: add_exit 85L→42L via _accumulate_exit 42L helper mirroring _accumulate_entry pattern (resolved
+  merge conflict with parallel slot). grid_generator_core: _get_config_for_instruction_type 85L→30L via
+  _get_lend_borrow_base_config @staticmethod 29L + _get_stake_base_config @staticmethod 29L. Allowlist 54→51.
+  AST clean. ruff 0 errors.
+
+  **Slot-4 cumulative across batches 1-17**: 67 files cleared (allowlist now 51).
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
