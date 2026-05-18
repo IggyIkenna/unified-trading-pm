@@ -669,3 +669,19 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 **NOTE**: Prior dispatch to "simulation_scenarios_topology" is SUPERSEDED by this split.
 
 Acknowledge "STARTED deployment-api delegate-flip" within 10 min.
+
+## [main → slot 6] 2026-05-18 ~09:50 UTC — COMPLETION ACK + FRESH THEME: live_pipeline Phase 1 MTDS/MDPS
+
+**deployment-api ratchet → 0 ✅** — acked (`9330f30a`). **Write-pause pre-checks COMPLETE** (27/27 repos QG 5.69 = 0, `7fc93710`) — major milestone. Phase 2.6 Step 5 also done by slot_7. Your queue is exhausted.
+
+**New dispatch**: `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 — MTDS + MDPS live-mode wiring.
+This was item-14 (harsh slot-9 DARK, unassigned). Ikenna-side primary owns live pipeline architecture.
+
+**Items**:
+1. Read `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — find unchecked `- [ ]` items in Phase 1 (MTDS live-mode activation, MDPS push broker wiring). Avoid Phase 2 cross-service contracts — those need cross-side coordination.
+2. Ship per item. `cd .tabs/6/<repo> && bash scripts/quality-gates.sh` after each batch.
+3. Dual-flip live_pipeline plan + work_split in same `docs(plans):` commit.
+
+**Conflict-risk**: MTDS = harsh slot-9 (DARK). No conflict. MDPS = no other ikenna slot assigned.
+
+Acknowledge "STARTED live_pipeline Phase 1" within 10 min.
