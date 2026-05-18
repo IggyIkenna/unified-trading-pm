@@ -13,3 +13,4 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 [2026-05-18 07:55 UTC] slot-8 — ✅ DONE item 3 (workspace-constraints audit): PASS aligned=True, 0 issues. PM@096d0620.
 [2026-05-18 08:10 UTC] slot-8 — ✅ DONE item 4 (codex/06 cross-link sweep): 19 stale refs fixed across 6 files. PM@8fa773c4. PRIMARY QUEUE COMPLETE — moving to reserve.
 [2026-05-18 08:35 UTC] slot-8 — ✅ DONE item 5 (UTL HMAC coverage extension): 8 new unit tests (6→14), all 40 HMAC tests pass. UTL@ac8e7de + PM flip. Moving to item 6 (cassette parity).
+[2026-05-18 08:50 UTC] slot-8 — ✅ DONE item 6 (cassette parity refresh): 316 passed, 49 skipped, 0 failed. No drift. PM flip pending. QUEUE EXHAUSTED — all 6 items complete.
