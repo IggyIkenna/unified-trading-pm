@@ -180,29 +180,30 @@ sides coherently.
 
 - [x] ✅ [SCRIPT] P0. Add `DataType.STRATEGY_DECISION_CONTEXT` to UAC — design decision: separate data_type (not
       extending HedgeRatioSnapshotRecord) per plan's rationale (different cadence, different fields). — uac@b8bdedf
-      (2026-05-18)
+      (2026-05-18). `DecisionOutcome(StrEnum)` typed enum added (replaces untyped `str` field) uac@2494e0d (2026-05-18
+      slot 3).
 - [x] ✅ [SCRIPT] P0. Define `StrategyDecisionContextRecord` parquet schema covering: `stake_apy_bps`, `borrow_apy_bps`,
       `perp_funding_apy_bps`, `usdc_idle_apy_bps`, `computed_net_apr_bps`, `peg_drift_observed_bps`,
-      `peg_drift_threshold_bps`, `decision_outcome`, `decision_reason_detail`, `position_state_long_units`,
-      `position_state_short_units`, standard `partition_dt`/`available_at`/`correlation_id`. Registered in
-      availability_semantics + source_priority. — uac@b8bdedf (2026-05-18)
-- [x] ✅ [AGENT] P0. Wire emitter into `CarryStakedBasisEngine.on_tick` **before** the `rebalance_triggered` gate (line
-      ~485 in `staked_basis.py`). Fires on EVERY tick, not just rebalance ticks. Same Pattern A inline writer pattern as
-      Phase 2. Per-row I/O cost is acceptable at 1-hour tick interval. — strategy-service@3c332ac (2026-05-18)
-- [x] ✅ [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()`
-      mirroring the existing `read_hedge_ratio_snapshots()` shape. — pnl-attribution-service@f8db566 (2026-05-18)
-- [x] ✅ [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
-      `record_captured(category="defi", data_type="strategy_decision_context", ...)`. Implemented in
-      `decision_context_writer._record_manifest()` as best-effort ManifestWriter.record_captured with
-      `PipelineMode.BATCH_STRATEGY_SERVICE`. — strategy-service@3c332ac (2026-05-18)
-- [x] ✅ [AGENT] P0. Unit tests (3 minimum): synthetic OPEN decision, synthetic HOLD decision, synthetic CLOSE decision
-      — all round-trip through writer + reader + manifest. 11 tests in `test_decision_context_writer.py`: 5
-      `build_decision_outcome` + 6 `emit_strategy_decision_context` (schema, values, exception swallow,
-      HOLD_WITHIN_DRIFT_BAND, HOLD_POSITION_OPTIMAL, REBALANCED). — strategy-service@285f154 (2026-05-18)
-- [x] ✅ [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
-      the pre-decision audit-trail addition. Cross-reference Phase 5 commit refs. — PM codex updated (2026-05-18)
-- [x] ✅ [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main →
-      ikenna-main). — filed by harsh-main; acked by this slot (2026-05-18)
+      `peg_drift_threshold_bps`, `decision_outcome: DecisionOutcome`, `decision_reason_detail`,
+      `position_state_long_units`, `position_state_short_units`, standard
+      `partition_dt`/`available_at`/`correlation_id`. Registered in availability_semantics + source_priority. —
+      uac@b8bdedf (2026-05-18). Enum typed uac@2494e0d.
+- [x] ✅ [AGENT] P0. Wire emitter into `CarryStakedBasisEngine.on_tick` **before** the `rebalance_triggered` gate —
+      Pattern A inline, fires on EVERY tick. `decision_context_writer.py` + `build_decision_outcome()`.
+      strategy-service@`3c332ac` (emitter wire-in) + strategy-service@`285f154` (11 unit tests) +
+      strategy-service@`df2ff9f` (autouse perf guard, slot 3 2026-05-18).
+- [x] ✅ [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()` —
+      mirrors `read_hedge_ratio_snapshots()` shape. pnl-attribution-service@`f8db566`.
+- [x] ✅ [AGENT] P0. Manifest entry — `_record_manifest()` included in `emit_strategy_decision_context()`; calls
+      `ManifestWriter.record_captured(data_type="strategy_decision_context", category="defi")`.
+      strategy-service@`3c332ac`.
+- [x] ✅ [AGENT] P0. Unit tests — 11 tests: `REBALANCED` round-trip, 5x `HOLD_WITHIN_DRIFT_BAND` variants,
+      `HOLD_FEATURE_STALE`, exception swallow, schema match, row value verification. strategy-service@`285f154`. Autouse
+      perf guard (720-tick batch overhead eliminated): strategy-service@`df2ff9f`.
+- [x] ✅ [SCRIPT] P0. Updated `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" —
+      added "Phase 5 pre-decision audit trail" subsection with full commit refs. unified-trading-pm@see-flip-commit.
+- [x] ✅ [SCRIPT] P0. Cross-side notify filed (harsh-main → ikenna-main `_agent_pings.md` 2026-05-18 11:20 UTC) + acked
+      (ikenna-main → harsh-main `_agent_pings.md`:3469 2026-05-18 11:23 UTC).
 
 **Cost trade-off**: this is independent of the running B-015 paper VM. Harsh-main is keeping VM 115404 running
 (preserves pvl-p18a 3-day clock; gate doesn't require this observability). Phase 5 lands as separate work, applies on
@@ -222,11 +223,11 @@ multiplier = **1.8 cal-AI-days**.
   test that does a 10-tick synthetic run and reads back the parquet.
 - ✅ `pnl-attribution-service` reads the parquet successfully + schema matches.
 - ✅ ManifestWriter records the snapshot per-archetype-per-day.
-- ✅ **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (not just
-  rebalance); 11 unit tests verify schema, row values, exception swallowing, and all `DecisionOutcome` values. —
-  strategy-service@3c332ac + @285f154
-- ✅ **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T, what
-  rates did the engine see and why did it not rebalance". — pnl-attribution-service@f8db566
+- [x] ✅ **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (HOLD +
+      rebalance); 11 unit tests cover REBALANCED + 5x HOLD variants + HOLD_FEATURE_STALE + exception swallow.
+      strategy-service@`3c332ac` + strategy-service@`285f154` + strategy-service@`df2ff9f`.
+- [x] ✅ **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T,
+      what rates did the engine see and why did it not rebalance". pnl-attribution-service@`f8db566`.
 
 ## Execution metadata (Runbook Execution-Owner SSOT)
 

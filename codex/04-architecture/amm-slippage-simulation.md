@@ -1170,13 +1170,14 @@ realized P&L delta + max-drawdown delta + tail-event survival rate.
 > **✅ Phase 5 — Pre-decision audit trail shipped 2026-05-18** (B-015 paper VM: 5 consecutive `fills=0` hold-ticks were
 > opaque — Phases 1-4 only emit on `rebalance_triggered=True`):
 >
-> - **UAC@b8bdedf**: `DecisionOutcome` StrEnum + `StrategyDecisionContext` / `StrategyDecisionContextRecord` schemas;
->   `availability_semantics` + `source_priority` entries for `("defi", "strategy_decision_context")`.
+> - **UAC@b8bdedf**: `StrategyDecisionContext` / `StrategyDecisionContextRecord` schemas; `availability_semantics` +
+>   `source_priority` entries for `("defi", "strategy_decision_context")`. **UAC@2494e0d** + **UAC@d3872a3**:
+>   `DecisionOutcome(StrEnum)` typed enum + export from `unified_api_contracts.internal` (slot 3 2026-05-18).
 > - **strategy-service@3c332ac**: `decision_context_writer.py` (Pattern A inline) + wire-in in
 >   `CarryStakedBasisEngine.on_tick` — emits on EVERY tick (not just rebalance); outcomes: `REBALANCED` /
 >   `HOLD_WITHIN_DRIFT_BAND` / `HOLD_POSITION_OPTIMAL`.
 > - **strategy-service@285f154**: 11 unit tests (`test_decision_context_writer.py`) — schema, row values, exception
->   swallowing, all `DecisionOutcome` values.
+>   swallowing, all `DecisionOutcome` values. **strategy-service@df2ff9f**: autouse perf guard (slot 3 2026-05-18).
 > - **pnl-attribution-service@f8db566**: `read_strategy_decision_context()` reader in `PnlDomainAdapter`.
 >
 > Sub-plan Phase 5 closed: `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5.
