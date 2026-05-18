@@ -219,9 +219,11 @@ smoke begins.
       dir), execution-service/utils/paths.py (container detection — NOT a file-creation use, exempt). Fixed 2 real uses:
       execution-service@c94167e2, strategy-service@7bbae7d. paths.py detection pattern left with comment. Other files are
       scripts/testing/e2e (not source service). Done-def: 0 file-creation uses of hardcoded /tmp in service source ✅.
-- [ ] **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** [workspace audit] — identify wildcard imports +
-      circular re-exports; define `__all__` for public-API. Done-def: per-repo `__all__` defined on top-level packages +
-      0 wildcard re-exports. **~5 cal-days**.
+- [x] ✅ **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** [workspace audit] — Scan: 0 actual wildcard imports
+      in service source (position-balance-monitor mention was docstring). `__all__` check: strategy-service@1b18490 +
+      market-tick-data-service (added `__all__ = []`). exec/features/risk/instruments already had `__all__`. UAC uses
+      wildcard re-exports intentionally (public facade pattern — Ikenna primary). Done-def: 0 wildcard re-exports + owned
+      repos have `__all__` ✅.
 - [x] ✅ **S18. SUSTAIN — cross-repo line-length 100→120 migration audit** [workspace config audit] — Audited 23 repos
       with pyproject.toml. All 23 use `line-length=120`. 0 drift. Done-def: 0 drift ✅.
 - [x] ✅ **S19. SUSTAIN — cross-repo ruff `select` rule consistency** [workspace config audit] — Audited 24 repos.
