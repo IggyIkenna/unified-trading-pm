@@ -675,3 +675,12 @@ After S3: S4 (type:ignore continuation), S5 (unused-fixture sweep), S15 (pyproje
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item S13** — `from typing import List/Dict` sweep. Scanning for old-style typing imports.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item S13** — 0 violations found. Workspace already clean: no List[/Dict[/Tuple[/Set[ usage in source code across all repos. Pivoting to S12 (requests → aiohttp audit).
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item S12** — workspace-wide `requests.get` in async code paths audit.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S12** — workspace-wide `requests` → `aiohttp` audit. 6 violations found in
+execution-service async paths: hyperliquid.py (4: connect, _get_account_value_live, place_order, cancel_order) +
+hyperliquid_bridge.py (2: withdraw_usdc_from_hyperliquid, get_bridge_pending). All converted to aiohttp with
+ThreadedResolver sessions. 14 tests updated from responses/patch to aioresponses. jito_bundle.py _post_json
+intentionally sync (asyncio.to_thread pattern) — not a violation. 0 violations workspace-wide in source.
+execution-service@6ac52287. Pivoting to S5 (unused-fixture sweep).

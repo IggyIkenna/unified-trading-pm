@@ -193,8 +193,10 @@ smoke begins.
 - [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — public API
       functions/classes should have docstrings. Per-repo: run interrogate or similar; identify gaps; add stubs for major
       modules. Done-def: per-repo docstring coverage ≥70% on public API. **~6 cal-days**.
-- [ ] **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — per CLAUDE.md "Async HTTP:
-      aiohttp not requests" — find `requests.get` in async code paths. Done-def: 0 violations. **~3 cal-days**.
+- [x] ✅ **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — AST scan across 11 repos: 6 violations
+      found in execution-service async paths (hyperliquid.py × 4, hyperliquid_bridge.py × 2). Converted to aiohttp
+      with ThreadedResolver sessions; updated 14 tests to aioresponses. jito_bundle.py sync _post_json via asyncio.to_thread:
+      intentional, not a violation. 0 violations workspace-wide. — execution-service@6ac52287. Done-def: 0 violations ✅.
 - [x] ✅ **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** [workspace audit] — 0 violations found.
       Scanned all repos: no `from typing import List/Dict/Tuple/Set` or `List[/Dict[/Tuple[/Set[` usage in source.
       Workspace already clean. Done-def: 0 violations ✅.
