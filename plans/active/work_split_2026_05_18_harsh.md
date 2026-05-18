@@ -328,8 +328,9 @@ smoke begins.
 - [x] ✅ **3. workspace-constraints.toml audit (slot 8 item 19)** — verify all repos honor workspace-constraints.toml
       pin versions. Done-def: 0 drift report.
       — PASS: check-dependency-alignment.py --json → aligned=True, 0 issues. 5 internal version constraint pre-existing issues (UTL 0.3.167 vs repos requiring ≥0.4.0) are semver-agent lag, not workspace-constraints.toml violations — tracked by version-alignment-gate separately.
-- [ ] **4. codex/06 cross-link sweep (slot 8 item 20)** — sweep codex/06-coding-standards/ for stale cross-links
+- [x] ✅ **4. codex/06 cross-link sweep (slot 8 item 20)** — sweep codex/06-coding-standards/ for stale cross-links
       (post-recent renames). Done-def: 0 broken anchors.
+      — 19 stale refs fixed across 6 files (unified_trading_services→unified_trading_library x10, URDI→instruments-service x9). PM worktree@8fa773c4.
 
 #### Reserve queue
 
