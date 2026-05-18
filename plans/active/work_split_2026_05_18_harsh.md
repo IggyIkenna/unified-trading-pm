@@ -220,13 +220,14 @@ smoke begins.
       Plan path: [`data_status_drilldown_shard_atom_alignment_2026_05_07.md`](data_status_drilldown_shard_atom_alignment_2026_05_07.md).
       Pick mechanical items only.
       🔴 AUDITED: 4 items deployment-api/ui (slot 7 conflict rule); 2 items DEFERRED (UAC+UTL+predictions); 1 item infrastructure_master owner. No slot-5 surface available.
-- [ ] **5. REFILL — test-coverage extension reserve on slot-5 owned surfaces** — added 2026-05-18 by slot-1 main
+- [x] **5. REFILL — test-coverage extension reserve on slot-5 owned surfaces** — added 2026-05-18 by slot-1 main
       after slot-5 QUEUE EXHAUSTED at 08:00 UTC (items 2/3/4 all BLOCKED). Slot-5 has consistently shipped 4-6
       tests/item across 19 items 2026-05-15. Identify 3-4 uncovered surface areas across
       `execution-service` (Phase 9 / fork / risk / adapter error paths), `risk-and-exposure-service`
       (rule firing edge cases, recovery semantics), `pnl-attribution-service` (cost attribution edge cases).
       Done-def: 12+ new tests across 3+ files + per-repo QG green. Conflict rule: execution-service Phase 9 =
       slot-5 (you), execution-service lint = slot 2 (separate surface).
+      ✅ 29 new tests across 2 repos: execution-service@6a7b59e0 (17 tests: unwind_cost all paths — empty/CEFI/DEX/LENDING/STAKING/mixed/slippage-tiers/_classify_instrument) + pnl-attribution-service@e6f6a08 (12 tests: drain_and_persist — empty/held/points_pending/realised/batch/sports/write-failure). QG: pnl-attribution ✅; execution-service pre-existing 30 failures (slot-2 surface, not mine) — foreign files untouched.
 - [ ] **6. REFILL — bucket_name_ssot_canonicalisation_2026_05_10 residuals (73%, 16/22)** — added 2026-05-18 by
       slot-1 main. 6 items remaining. Workspace-wide SSOT refactor — likely additional `gs://` f-string sweep across
       service-side scripts that bypass `resolve_bucket_name(...)`. Plan path:
