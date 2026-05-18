@@ -907,3 +907,10 @@ MTDS 0-violations ✅ + writegate Phase 6.5 all-done ✅ + UAC enums fix (uac@2e
 Acknowledge "STARTED defi_master codex close-out" within 10 min.
 
 [2026-05-18 10:39 UTC] [main → slot 3] — 🟡 **35-MIN SILENCE CHECK** — defi_master codex close-out dispatched 10:04 UTC. No ack visible in ping file. If active: post "STARTED defi_master" now + first item you're targeting. If blocked: drop one-liner. Plan: `plans/active/defi_master_2026_05_07.md` codex/09-strategy/ unchecked items (skip Group F).
+
+[2026-05-18 10:46 UTC] [main → slot 3] — 🔴 **CONTEXT-EXPIRED (42 min silent)**. **FRESH DISPATCH: `defi_master_2026_05_07.md` codex close-out — same theme, fresh context.**
+1. `cd .tabs/3/unified-trading-pm && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/defi_master_2026_05_07.md` — grep `- \[ \]` to find unchecked items. Focus: codex/09-strategy/ (archetypes, primitives, operational docs, cross-cutting). **Skip Group F** (live-trading, operator-gated).
+3. Pick 1-2 mechanical items (doc stubs, enum tables, codex section fills). Ship. `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` if UAC.
+4. Dual-flip: code commit + `docs(plans): flip defi_master item <N>` in same turn.
+**Acknowledge "STARTED defi_master (fresh)" within 10 min.**

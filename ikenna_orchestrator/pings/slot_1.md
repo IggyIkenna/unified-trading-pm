@@ -3629,3 +3629,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🟡 defi_catalogue + writegate 6.8 (+ api_keys queued from slot_5), 28 min no ack (dispatched 10:11). Check-in sent 10:33. Watch for ack.
 
 **Status**: 🟢 High output. slot-7 near Phase B completion. slot-5 done. slot-2/3 acks pending. slot-8 quiet.
+
+---
+
+## [slot 1 main] 2026-05-18 ~10:46 UTC — tick-99: slot-6 MTDS Phase 3.2; slot-7 batch-20 (74); slot-3 REDISPATCHED; slot-8 2nd check-in
+
+**B-015**: 5/72. Next tick 11:27:17 UTC. Healthy.
+
+**New commits since tick-98** (3 absorbed):
+- `98e423a3` — slot-6 Phase 3.2: reconnect-STALE tests all 16 WSFeedConnectors (MTDS@a6a045a) ✅
+- `b612b4c5` — execution_policies 86.8%→100%, 18 tests (execution-service@36730ff1) ✅
+- `8f46df0a` — slot-7 batch-20: instruction_loader + 2×instruction_validator; allowlist 47→44; cumulative 74 files ✅
+
+**Slot states** (10:46 UTC):
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4 (fresh dispatch 10:39), 7 min — within window. No ack yet.
+- slot_3: 🔴 **REDISPATCHED** — 42 min silent. Fresh dispatch: defi_master codex close-out (same theme). Ack "STARTED defi_master (fresh)" expected within 10 min.
+- slot_4: done.
+- slot_5: ✅ session complete.
+- slot_6: 🟢 live_pipeline Phase 1 active — MTDS Phase 3.2 done + execution_policies 100% ✅. Healthy output.
+- slot_7: 🟢 Phase B batch-20, cumulative 74/377+. continuing tick-66.
+- slot_8: 🟡 **2ND CHECK-IN SENT** — 35 min no ack (dispatched 10:11). defi_catalogue + writegate 6.8 + api_keys queued. Context-expired at ~50 min (10:01 from dispatch → 11:01 UTC = tick-100 window).
+
+**Status**: 🟢 slot-6 producing steadily. slot-7 refactoring at pace. slot-2/3/8 acks pending.
