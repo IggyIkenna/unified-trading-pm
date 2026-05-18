@@ -1653,16 +1653,15 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
    `test_live_manifest_recorder.py`. Full QG green.
 2. ✅ **Phase 3.2 DONE** — pop_reconnect_flag() set-and-reset tests for all 16 WSFeedConnectors — MTDS@a6a045a
    (2026-05-18 slot-6).
-3. **Phase 3.5** — per-venue `WSFeedConnector` concrete adapters in the de-risk order: defi → cefi spot/perp → cefi
-   options/futures → tradfi → sports → prediction. The runner is venue-agnostic; this is purely populating
-   `WS_FEED_CONNECTOR_FACTORIES` (use `connector_registry.register_ws_feed_connector`). The plan calls for sub-agent
-   fan-out (one per asset*group) — best done with fresh context. Per-venue smoke tests under
-   `tests/integration/test_live_smoke*<venue>.py` (skipped on CI without secrets).
-4. **Phase 13.1/13.2/13.3** — VM-launcher entries for the MTDS-websocket / MDPS-streaming / features-`live/` runners
-   under `deployment-service/scripts/vm/` + `VM_PREFIX_TO_BUCKET` dict entries (paired with Phase 3/4/5). Phase 13.4
-   (watchdog) ✅ Ikenna slot 4.
-5. **Phase 15** — workspace QG sweep + 7-day live smoke — gates on 3/5/6 landing; per the 2026-05-11 deconflict this is
-   Ikenna slot 7's.
+3. ✅ **Phase 3.5 DONE** — all 18 WSFeedConnectors shipped (DRIFT-SOLANA, HYPERLIQUID, BINANCE-FUTURES, BYBIT-FUTURES,
+   OKX-FUTURES, DERIBIT, ASTER, KRAKEN-FUTURES, BINANCE-SPOT, BYBIT-SPOT, OKX-SPOT, COINBASE-SPOT, KRAKEN-SPOT,
+   PHOENIX, CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS via Databento, ODDS_API, POLYMARKET, KALSHI). All registered via
+   `connector_registry.register_ws_feed_connector` — `register_all()` loads all. MTDS@99fc7b3 (slot-3, 2026-05-17).
+4. ✅ **Phase 13.1/13.2/13.3 DONE** — 4 launchers under `deployment-service/scripts/vm/` (`launch-mtds-live.sh` +
+   `launch-mdps-features-live.sh` + `launch-features-cross-cutting.sh` + `launch-replay-cascade.sh`). 14 prefixes
+   registered in `VM_PREFIX_TO_BUCKET` (`mtds-live-{ag}-` × 5 + `mdps-features-live-{ag}-` × 5 + `features-xc-` +
+   `replay-`). Phase 13.4 (watchdog) ✅ Ikenna slot 4.
+5. **Phase 15** — workspace QG sweep + 7-day live smoke — gates on operational cluster launch; Ikenna slot 7 owns.
 
 ### Exact next step
 

@@ -699,3 +699,19 @@ deployment-api Phase 2.6.4 delegate-flip shipped: deployment-api@eec6b5d
 - GAP-2.4.D plan checkbox flipped (code half); UI smoke pending post-cutover
 
 **ACK NEW DISPATCH**: live_pipeline Phase 1 MTDS/MDPS — reading plan now.
+
+## [slot 6 → main] 2026-05-18 ~14:45 UTC — LIVE_PIPELINE PHASE 1 CODE-COMPLETE
+
+All code items in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 shipped:
+
+**This session (slot-6):**
+- **Phase 3.2** ✅ — pop_reconnect_flag() set-and-reset contract tests for all 16 WSFeedConnectors (MTDS@a6a045a). Plan-flip: PM@98e423a3.
+- **Phase 3.5 ShardManifestRecorder wire-in** ✅ — `websocket_streaming_handler.py` now passes `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket, batch_size=1))` instead of `None`. `live/__init__.py` exports `MTDSShardManifestRecorder`. Leftover `<<<<<<< HEAD` conflict markers in bybit/deribit test files cleaned. Handler wire-in gate test added. Full QG green (MTDS@5388a9c). Plan-flip: PM@1324507b.
+
+**Pre-existing (confirmed complete, updated plan "Left" section to reflect reality):**
+- **Phase 3.5 per-venue adapters** ✅ — 18 venues registered (slot-3, MTDS@99fc7b3).
+- **Phase 13** ✅ — 4 launchers + 14 VM prefixes in watchdog dict (slot-4, deployment-service@shipped).
+
+**Only remaining item**: Phase 15 — 7-day live smoke — gates on operational cluster launch + real credentials. Not a code item.
+
+**Slot queue exhausted. Awaiting next dispatch.**
