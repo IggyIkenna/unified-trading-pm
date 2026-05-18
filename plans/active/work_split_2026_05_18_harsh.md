@@ -141,9 +141,9 @@ smoke begins.
 
 #### Reserve queue
 
-- [ ] **4. archetype_paper_runnable_matrix follow-ups** — plan shows 100% (5/5) but check any successor items
-      surfaced during pvl-p18b. Plan path:
-      [`archetype_paper_runnable_matrix_2026_05_15.md`](archetype_paper_runnable_matrix_2026_05_15.md).
+- [x] ✅ **4. archetype_paper_runnable_matrix follow-ups** — verified 5/5 complete. No new items from pvl-p18b:
+      carry_staked_basis state update to `paper-runnable` gated on ≥3-day soak (B-015 VM running since 05:31:38Z;
+      clock expires ~2026-05-21). APD still `backtest-only` pending APD orchestrator. No action needed.
 
 #### Coordination
 
