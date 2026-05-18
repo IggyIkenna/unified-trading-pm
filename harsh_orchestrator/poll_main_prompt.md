@@ -24,6 +24,35 @@
        owned-repo activity check before flagging.
    - B-015 VM monitored by dedicated agent — main does NOT poll the VM.
 
+### Slot-retire audit (mandatory when a slot stops)
+
+When a slot declares QUEUE EXHAUSTED, is stopped by operator, or has been silent ≥3 cycles after
+direct-dispatch nudges, run an end-of-shift audit before considering the slot retired:
+
+1. **Work-volume**: commits today, items flipped per work_split § Slot N, plans touched.
+2. **Dual-flip compliance** (refined audit): every flip commit must touch the underlying
+   plan-of-record (when the work_split item names a `plans/active/*.md` path). Code-only and
+   codex-only items are exempt.
+3. **Tab worktree state per repo** in `.tabs/N/<repo>/`:
+   - `git status --short` — any uncommitted files?
+   - `git rev-list --left-right --count HEAD...origin/live-defi-rollout` — how far behind LDR?
+   - **Ruff formatting changes** are NOT to be discarded — they are part of git CI (pre-commit
+     hooks + quality-gates). If a tab worktree has uncommitted ruff format changes:
+     a. Verify they're scoped to slot N's owned repos.
+     b. Stage + commit + push as `chore(format): apply ruff format` (or include in the next
+        functional commit if grouped with related work).
+     c. Do NOT discard via `git restore` / `git checkout` — that loses CI-required formatting.
+4. **Off-scope incidents**: did the slot touch foreign ping files, Ikenna-owned plans
+   (`code_freeze_*`, `cefi_master_*`, `tradfi_master_*`, `manifest_evolution_master_*`), UAC
+   enum changes, or post-cutover plans? Log any in the slot's audit summary.
+5. **Verdict**: healthy / minor concerns / scope drift detected.
+6. **Recommended commits before retire**: list any uncommitted files worth committing
+   (especially ruff formatting per #3 above). Main-orchestrator commits them directly if
+   slot N's tab agent is stopped.
+
+Audit output goes to the operator (text reply). Update slot N's ping file with the audit
+verdict + final SHA tally.
+
 2. **After acting**, ScheduleWakeup for next fire:
    - default 240s (4 min — slightly past cache window, but only ~1 cache miss per cycle)
    - 60-120s if blocker triage active
