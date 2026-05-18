@@ -1652,13 +1652,15 @@ grep.
       `match_end_time_source = "low_default_kickoff_plus_120min"`. Manifest row gets
       `attempted_failed[reason=MatchEndTimeUndetected]` if NO cascade source resolves AND fallback is used — operator
       can re-attempt later via successor plan.
-- [ ] [SCRIPT] P0. instruments-service stale comment fix: `engine/orchestrator.py:4980` "ManifestWriter v5" →
-      "ManifestWriter v6".
-- [ ] [SCRIPT] P0. Wire `assert_available_at_present` (UTL helper) into `InstrumentsWriteGate._gated_sink_write` so any
-      ingester forgetting to stamp `available_at` fails loud.
-- [ ] [TEST] P0. Per-source ingester test: feed a sample API response → assert `available_at` column populated correctly
-      per UAC semantic.
-- [ ] [QG] P0. instruments-service quality-gates.sh green.
+- [x] [SCRIPT] P0. instruments-service stale comment fix: `engine/orchestrator.py:4980` "ManifestWriter v5" →
+      "ManifestWriter v6". — comment not found (already fixed prior session) instruments-service@8464082
+- [x] [SCRIPT] P0. Wire `assert_available_at_present` (UTL helper) into `InstrumentsWriteGate._gated_sink_write` so any
+      ingester forgetting to stamp `available_at` fails loud. — instruments-service@8464082; also moved all
+      stamp_available_at_explicit calls to BEFORE \_gated_sink_write so written parquets carry the column
+- [x] [TEST] P0. Per-source ingester test: feed a sample API response → assert `available_at` column populated correctly
+      per UAC semantic. — TestAvailableAtPresent (4 tests: missing, null, present, empty) in
+      test_orchestrator_write_gate.py
+- [x] [QG] P0. instruments-service quality-gates.sh green. — instruments-service@8464082 QG exit 0
 
 QG between Phase 2 and Phase 3: every Phase 2 service has QG green; integration smoke run end-to-end produces honest
 manifest verbs across all 4 services for a 1-day × 1-venue test run.
@@ -1736,13 +1738,12 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
 
 - [x] [AUDIT] P0. **execution-service**: every reading callsite (live trade emission + signal-broadcast) consults
       manifest reason and skips trade for `EXPECTED_*` reasons; alerts + skips for `attempted_failed`. No "trade anyway,
-      NaN-fill the price" patterns.
-      ✅ Audit complete (slot 5, 2026-05-18): execution-service uses blob-existence checks (DependencyChecker) rather than
-      direct manifest capture_status/error_reason reads — consistent with Phase 3.D.2 finding. validate_can_run raises
-      DependencyError on missing required deps (no NaN-fill path); optional deps do not block. EXPECTED_* vs
-      attempted_failed distinction is presence/absence of blob (both absent → DependencyError → no trade). 4 audit tests
-      added in TestWritegateConsumerClassAudit: missing-required→DependencyError; strategy-absent blocks CeFi;
-      optional-absent does not block; all-required → executes. execution-service@1135de1d.
+      NaN-fill the price" patterns. ✅ Audit complete (slot 5, 2026-05-18): execution-service uses blob-existence checks
+      (DependencyChecker) rather than direct manifest capture*status/error_reason reads — consistent with Phase 3.D.2
+      finding. validate_can_run raises DependencyError on missing required deps (no NaN-fill path); optional deps do not
+      block. EXPECTED*\* vs attempted_failed distinction is presence/absence of blob (both absent → DependencyError → no
+      trade). 4 audit tests added in TestWritegateConsumerClassAudit: missing-required→DependencyError; strategy-absent
+      blocks CeFi; optional-absent does not block; all-required → executes. execution-service@1135de1d.
 - [ ] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
       discount.
@@ -1772,14 +1773,14 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
 - [x] [DOCS] P0. CLAUDE.md "Three-category empty-output decision" section: update to reference the expanded taxonomy +
       the codex doc § "Reason taxonomy" + the per-service consumer-class audit. The 3-category model stays as the
       WRITE-side discipline (path A/B/C); the reason taxonomy is the EXPRESSION of those categories + the
-      calendar-pre-skip cases as structured manifest rows.
-      ✅ Sections trimmed 2026-05-14; cross-links added to SSOT line in "Manifest + honest absence" — pm@30ccfd3c
+      calendar-pre-skip cases as structured manifest rows. ✅ Sections trimmed 2026-05-14; cross-links added to SSOT
+      line in "Manifest + honest absence" — pm@30ccfd3c
 - [x] [DOCS] P0. CLAUDE.md cross-link from "Honest absence vs fake placeholders" → codex doc § "Reason taxonomy" and §
-      "Per-service consumer-class audit."
-      ✅ "Honest absence vs fake placeholders" section trimmed 2026-05-14; § refs added to surviving SSOT line — pm@30ccfd3c
+      "Per-service consumer-class audit." ✅ "Honest absence vs fake placeholders" section trimmed 2026-05-14; § refs
+      added to surviving SSOT line — pm@30ccfd3c
 - [x] [SCRIPT] P0. Run `bash unified-trading-pm/scripts/propagation/sync-claude-md-to-all-repos.sh` so all repos see the
-      updated rule.
-      ✅ cursor-configs/CLAUDE.md is symlinked via .claude/CLAUDE.md in all repos — propagation is automatic; sync script not needed
+      updated rule. ✅ cursor-configs/CLAUDE.md is symlinked via .claude/CLAUDE.md in all repos — propagation is
+      automatic; sync script not needed
 
 ---
 
@@ -1935,11 +1936,13 @@ rows; sports has ~thousands of paused-league rows). Operator decision per asset_
 
 - [x] [DOCS] P0. Document the per-asset-group expected backfill volume in
       `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
-      volume, then `--apply-flips` per asset_group sequentially.
-      ✅ File shipped 2026-05-07 with full per-asset-group volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901 rows). PM@codex-update-slot5.
+      volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full per-asset-group
+      volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901
+      rows). PM@codex-update-slot5.
 - [x] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
-      helper.
-      ✅ Updated stale "(planned)" reference at honest-absence-downstream-handling.md § "Cross-references for the reason taxonomy" to "shipped 2026-05-07" + proper links to reconciler script, enumerator script, and classify_legacy_empty_row(). PM@codex-update-slot5.
+      helper. ✅ Updated stale "(planned)" reference at honest-absence-downstream-handling.md § "Cross-references for
+      the reason taxonomy" to "shipped 2026-05-07" + proper links to reconciler script, enumerator script, and
+      classify_legacy_empty_row(). PM@codex-update-slot5.
 
 QG between Phase 3.D and Phase 4: every asset_group's backfill scan-only run reviewed; reader-side fallback unit-tested;
 per-consumer integration tests demonstrate same downstream behaviour for legacy + new manifest rows.
@@ -3808,10 +3811,10 @@ against seeded fixtures.
       Phase 5 follow-up — needs same-region VM + cross-asset-group manifest read). Once cells are filled, the QG ratchet
       at `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` reads this doc as the frozen baseline.
 - [x] [TEST] P1. **SIT Phase 8 honest-coverage emission flow scenarios** — 4 test classes / 11 tests in
-      `system-integration-tests/` covering: VM emits via `log_event` → `ManifestWriter.record_captured` → coverage
-      JSON endpoint roundtrip → API response shape assertions. Validates honest-coverage emission contract end-to-end.
-      (evidence: system-integration-tests@47a1e04 2026-05-18; sit QG ✅. **BACKFILLED** from slot-4 work-split item 12
-      — plan-of-record flip per CLAUDE.md Half-2 rule.)
+      `system-integration-tests/` covering: VM emits via `log_event` → `ManifestWriter.record_captured` → coverage JSON
+      endpoint roundtrip → API response shape assertions. Validates honest-coverage emission contract end-to-end.
+      (evidence: system-integration-tests@47a1e04 2026-05-18; sit QG ✅. **BACKFILLED** from slot-4 work-split item 12 —
+      plan-of-record flip per CLAUDE.md Half-2 rule.)
 - [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
 - [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
