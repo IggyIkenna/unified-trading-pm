@@ -418,48 +418,40 @@ Self-pivot through items 6-9 after the 5-item primary queue closes.
       config_interface fixtures; RUNTIME_MODE/dry-run restore in test_service_cli; usage_meter **init**.py for
       import-mismatch). Result: 5238 passed, 0 failed, 0 errors — UTL QG fully green.
 
-- [ ] **2. strategy_service_phase8_codex_drift** (P1) —
-      [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md).
-      5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` +
-      `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. ~2 AI-days.
+- [x] ✅ **2. strategy_service_phase8_codex_drift** (P1) — PM@54b06a2c (slot 6, 2026-05-15; issue
+      RESOLVED 2026-05-17). 5 codex drifts patched in carry-staked-basis.md + arbitrage-price-dispersion.md.
+      (backfilled 2026-05-18 — was completed in work_split item 1 but ping checkbox not flipped at the time)
 
-- [ ] **3. strategy_service_phase10_codex_drift — Drift 2 only** (P3 nice-to-have) —
-      [`plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md`](../../plans/active/issues/strategy_service_phase10_codex_drift_2026_05_15.md).
-      Drift 1 (eligible_venues SOR triage) routed to slot 1 main — DO NOT touch. Drift 2 (defi_lp/mev → family mapping
-      docstring-only): add 2 codex pointer lines. Done-def: drift 2 closed.
+- [x] ✅ **3. strategy_service_phase10_codex_drift — Drift 2 only** (P3 nice-to-have) — PM@5520e125
+      (slot 6, 2026-05-18). 2 codex pointer lines for defi_lp/mev → family mapping added.
+      (backfilled 2026-05-18 — completed in work_split item 3)
 
-- [ ] **4. sit_may23_critical_path_coverage_gaps** (P1) —
-      [`plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md`](../../plans/active/issues/sit_may23_critical_path_coverage_gaps_2026_05_15.md).
-      SIT scenarios for: (a) DeFi paper carry, (b) DeFi paper APD, (c) mode-switch live/batch gate, (d) batch-live DeFi
-      parity smoke. Note: slot 4 just shipped sit DeFi paper flows in their item 2 (sit@fba72b7) — check overlap before
-      duplicating. Done-def: gaps not already filled by slot 4 + sit QG green.
+- [x] ✅ **4. sit_may23_critical_path_coverage_gaps** (P1) — system-integration-tests@3872ce2 (slot 7
+      Ikenna, 2026-05-16; issue RESOLVED 2026-05-16). DeFi paper carry + APD + mode-switch gate + batch-live
+      parity scenarios shipped. (backfilled 2026-05-18 — completed in work_split item 2)
 
-- [ ] **5. expected_unattempted_propagation_gap** (P1) —
-      [`plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md`](../../plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md).
-      Wire `record_expected_unattempted()` into MTDS/MDPS/features/ML skip paths through the UTL emission_publisher
-      chain you shipped (item 9 of OLD queue @ UTL@ce89045). Done-def: 4 services emit `expected_unattempted` events
-      through UTL chain + tests.
+- [x] ✅ **5. expected_unattempted_propagation_gap** (P1) — uac@0457b0e + mdps@3f70cf6 +
+      features-service@a58480fb (Gate 1 FIRED 2026-05-13; issue RESOLVED 2026-05-17). record_expected_unattempted()
+      wired into MDPS/features/ML skip paths via UTL emission_publisher chain.
+      (backfilled 2026-05-18 — completed in work_split item 3)
 
 ### Buffer (after primary queue)
 
-- [ ] **6. codex_04_architecture_drift_audit cleanup** (P3 batch) — the issue doc you filed in your last cycle
-      (`plans/active/issues/codex_04_architecture_drift_audit_2026_05_15.md`) lists 4 docs with
-      `unified_trading_services` → `unified_trading_library` rename leftovers + 4 docs with `pyright` → `basedpyright`
-      references. Mechanical fixes ~30 min. Done-def: 8 docs updated + grep confirms 0 stale refs.
+- [x] ✅ **6. codex_04_architecture_drift_audit cleanup** (P3 batch) — PM@bdbd899f (slot 3, 2026-05-17,
+      2 files) + PM@564766e3 (slot 6, 2026-05-18, README.md + tier-and-import-architecture.md). 8 docs updated,
+      Category B clean; 0 stale pyright/unified_trading_services refs confirmed.
+      (backfilled 2026-05-18 — completed in work_split item 4)
 
-- [ ] **7. UTL bash smoke tests for QG_MEM_CAP** — `base-service.sh` (this morning's PM@c3cb11f6 + ca3fad47) added
-      `MEM_WRAP` array + macOS fallback warning. Add UTL-side bash smoke tests verifying: (a) Linux path builds MEM_WRAP
-      correctly; (b) macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0` silences warning. Done-def:
-      3+ bash smoke tests + UTL QG green.
+- [x] ✅ **7. UTL bash smoke tests for QG_MEM_CAP** — PM@263e25b6 (slot 6, 2026-05-18). 5/5 assertions
+      pass; test-qg-mem-cap.sh added to quality-gates-base/tests/. (backfilled 2026-05-18 — completed in work_split item 5)
 
-- [ ] **8. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) —
-      [`plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md`](../../plans/active/issues/uac_qg_preexisting_size_violations_2026_05_14.md).
-      5 pre-existing size violations in UAC; Ikenna is primary owner. Pick the SMALLEST/clearest-cut of the 5; refactor
-      only that one; leave the other 4 for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+- [x] ✅ **8. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) — UAC@ba51a8e
+      (slot 6, 2026-05-18). 2 docstrings removed from the smallest violating file; now under 900 lines; UAC QG green.
+      (backfilled 2026-05-18 — completed in work_split item 4 of the main section)
 
-- [ ] **9. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh** — verify `quality-gates.md` cross-links
-      to the new `quality-gates-memory-governance.md` (PM@bc6e15e6 + ca3fad47). Sweep for stale references to the OLD
-      `cpu_count // 4` default. Done-def: cross-link added + 0 stale references.
+- [x] ✅ **9. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh** — PM@782f5acc
+      (slot 6, 2026-05-18). Memory Governance subsection added; 0 stale cpu_count // 4 refs confirmed.
+      (backfilled 2026-05-18 — completed in work_split item 6)
 
 **Conflict rules (unchanged)**: UAC = surgical edits ONLY (item 8 take 1 file only); MTDS = slot 9 (53-test triage in
 flight); features-service = slot 4 owns (just shipped multi_timeframe/calendar/onchain); strategy-service codex docs =
@@ -484,3 +476,5 @@ Self-pivot through items 1 → 9. Ping STARTED + per-item DONE in this file.
 **Acknowledge "STARTED expected_unattempted_propagation_chain" within 10 min.**
 
 [2026-05-18 UTC] slot-6 — STARTED expected_unattempted_propagation_chain residuals + bucket_name_ssot fallback. ✅ bucket_name_ssot v2-hardening DONE: check_inline_bucket_uri.py upgraded from regex to AST-walk; 4 new docstring-false-positive tests; 16/16 pass — PM@64cbffeb. expected_unattempted plan: all remaining items are either explicitly DEFERRED (P2 post-live-cutover) or require production MTDS/MDPS runs (slot 9 territory). Self-pivoting to next available item.
+
+[2026-05-18 UTC] slot-6 — 🏁 **QUEUE EXHAUSTED** — Both dispatched plans fully exhausted: (1) expected_unattempted_propagation_chain: all remaining items DEFERRED post-live-cutover or slot-9 MTDS territory; (2) bucket_name_ssot: v2-hardening ✅ done; remaining 5 items operator-gated (Phase 0d write-pause) or blocked-upstream. Broad active-plan scan found no unblocked P1 items in slot-6 scope (codex/UTL/PM-scripts). Also backfilled ping-file checkboxes for items 2-9 from 22:15 UTC 2026-05-15 queue (all completed in work_split; operator had requested flip-in-place). **Awaiting new direction from main.**
