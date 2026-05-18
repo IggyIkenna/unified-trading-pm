@@ -500,3 +500,5 @@ awaiting operator direction for next wave or reassignment.
   3. Avoid UAC enum changes (Ikenna primary). Pick 3-4 mechanical codex items, ship per item with dual-flip.
 **Fallback if blocked**: `defi_master_2026_05_07.md` codex residuals (74 items, 30% done).
 **Acknowledge "STARTED defi_archetypes_canonicalisation" within 10 min.**
+
+[2026-05-18 21:05 UTC] slot-3 — STARTED defi_archetypes_canonicalisation. Rebased PM to LDR HEAD. Open items: Stream A [SCRIPT] P0 (live-API probe) + [strategy-service] P1 (_build_carry_staked_basis catalog check); Stream D DEFERRED items. Working [strategy-service] P1 first (catalog.py read), then [SCRIPT] P0 via playwright if feasible, then close success criteria.
