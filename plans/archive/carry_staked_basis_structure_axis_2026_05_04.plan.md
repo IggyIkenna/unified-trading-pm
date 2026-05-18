@@ -109,11 +109,11 @@ todos:
   - id: phase-4b-upstream-funding-oi-calculator
     content: |
       - [x] [HUMAN+AGENT] P0. **features-delta-one funding_oi backfill — VMs launched 2026-05-05.** The `funding_oi` calculator at `features-delta-one-service/.../app/calculators/funding_oi.py:16 class FundingOI` reads `funding_rate` + `open_interest` (+ optional `mark_price`/`index_price`) from `derivative_ticker` and emits a 12-column feature frame: `funding_rate_raw`, `funding_rate_annualized` (=`rate × 3 × 365`, the metric `CarryBasisPerpRankAllocator` consumes), `funding_positive`/`funding_negative`/`funding_extreme_*` flags, `open_interest_raw`, `oi_change`/`oi_change_pct`, `basis`/`basis_pct`, plus rolling stats `funding_ma_{w}` / `funding_std_{w}` / `funding_min_{w}` / `funding_max_{w}` / `oi_ma_{w}`. Two backfill VMs running 2026-05-05: `features-delta-one-defi-backfill-20260505-115343` (HYPERLIQUID + GMX, 2021-09-01 → 2026-04-14) + `features-delta-one-cefi-backfill-20260505-115407` (BINANCE-FUTURES + BYBIT + OKX-SWAP + DERIBIT + BITGET-FUTURES + KRAKEN-FUTURES + BITFINEX-FUTURES + HYPERLIQUID, 2022-11-02 → 2026-04-14). Auto-shutdown on completion.
-    status: in-progress
+    status: done
   - id: phase-4b-upstream-lst-rates-gaps
     content: |
       - [x] [AGENT] P0. **MTDS Solana decoder + EVM hardening shipped 2026-05-05** at MTDS `039cfc1`. New `cli/handlers/solana_lst_archival.py` with 3-tier flow: Tier 1 (Alchemy `getAccountInfo` + SPL stake-pool Borsh decoder, current-state, **Jito only — Marinade IDL deferred**), Tier 2 (The Graph subgraph daily snapshots, **structurally complete but no-op until UAC `SUBGRAPH_IDS["jito"|"marinade"]["SOLANA"]` populated** — when added, lights up automatically without MTDS code change), Tier 3 (REST fallback, current-day only). EVM `_query_rate_with_retry` adds 3-attempt retry + structured per-failure logging (token, block, attempt, exc class, msg) for the weETH/ankrETH gap diagnosis. 16 unit tests, QG green. Backfill VM `mtds-lst-rates-20260505-121442` running 2026-04-05 → 2026-05-05 to fill the gap and pick up retry hardening for any prior transient failures.
-    status: in-progress
+    status: done
     note: "For historical Solana days without subgraph: handler records `empty_confirmed` (legitimate 'we tried, no source has it') instead of fudging today's REST rate into a 2024 partition — explicitly noted in module + handler docstrings. See follow-up phase-4b-uac-solana-subgraph-ids."
   - id: phase-4b-uac-solana-subgraph-ids
     content: |
@@ -152,8 +152,8 @@ todos:
   - id: phase-6c-tests-+-pm-doc-rewrite
     content: |
       - [x] [SCRIPT] P0. strategy-service local — 47 carry-and-yield-related unit tests + full unit suite (1,279 tests) all green after SPLIT_STAKE deletion. `test_target_universe.py::test_no_archetype_has_fewer_than_three_rows` carries a documented CARRY_STAKED_BASIS exception (floor lowered to 1) — the count tracks `VENUE_COLLATERAL_MATRIX` directly; no synthetic floor. `test_archetype_engines_filled.py` cases rewritten: HYPERLIQUID/stETH always rejects (no LST_AS_MARGIN available), unknown-perp-venue rejects, no-borrow-apy uses DRIFT/JitoSOL.
-      - [ ] [AGENT] P1. unified-trading-pm — rewrite `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`: drop the SPLIT_STAKE table row, restate the firm rule (LST must be accepted as cross-margin at the perp venue or the trade is rejected at preflight), document the dominance argument from 6a `note`, point at Phase 7 for matrix expansion. Cross-link the per-archetype ranker family (Phase 8).
-    status: in-progress
+      - [x] ✅ [AGENT] P1. unified-trading-pm — rewrite `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`: drop the SPLIT_STAKE table row, restate the firm rule (LST must be accepted as cross-margin at the perp venue or the trade is rejected at preflight), document the dominance argument from 6a `note`, point at Phase 7 for matrix expansion. Cross-link the per-archetype ranker family (Phase 8). **VERIFIED COMPLETE 2026-05-18 (slot-3 audit PM@d503b4b3)**: doc has SPLIT_STAKE deletion section (§"Why SPLIT_STAKE was deleted"), firm rule at §"What it does" l.24-28, dominance argument at l.58-70, Phase 7 ref at §"Eligibility — derived, not declared", ranker cross-link at §"Per-archetype rank allocator".
+    status: done
   - id: phase-6d-strategy-qg-+-quickmerge
     content: |
       - [ ] [SCRIPT] P0. strategy-service Pass 1 `quality-gates.sh` then `quickmerge.sh "feat: delete SPLIT_STAKE from CARRY_STAKED_BASIS, LST_AS_MARGIN-only" --agent`. Branch: live-defi-rollout (per workspace-manifest.json).
@@ -212,8 +212,24 @@ isProject: false
 
 ## Deferred work — migrated to:
 
-**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
-incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+**2026-05-18 audit (slot-3 PM@d503b4b3) — corrected**: original archive claim of "no open items" was inaccurate; the
+following open phases were migrated to successor plans at archive time (status fields corrected above):
+
+| Phase | Status at archive | Migrated to |
+| ----- | ---------------- | ----------- |
+| phase-4b-upstream-funding-oi-calculator | was `in-progress` (all `[x]`; stale) | → corrected to `done` |
+| phase-4b-upstream-lst-rates-gaps | was `in-progress` (all `[x]`; stale) | → corrected to `done` |
+| phase-4b-tier3-historical-rest | `todo` — Jito/Marinade REST date-lookup | → `market-tick-data-service` codebase |
+| phase-4b-tracer-run | `blocked` — 30-day tracer run (operator-side) | → operator-side production run |
+| phase-6c-pm-doc-rewrite | was `in-progress`; verified complete 2026-05-18 | → corrected to `done` |
+| phase-6d-strategy-qg | `todo` — QG + quickmerge post-6c | → superseded; strategy-service QG run separately |
+| phase-7a-matrix-eth-lst-coverage-audit | `todo` — per-LST×venue acceptance audit | → `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (Stream A) |
+| phase-7b-matrix-haircut-correctness | `todo` — `get_collateral_haircut` SSOT | → same plan Stream A follow-through |
+| phase-7c-catalog-auto-expand | `todo` — post-7a slot count test update | → same plan Stream A follow-through |
+| phase-8a-base-rank-allocator | `todo` — `BaseRankAllocator` extraction | → `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 |
+| phase-8b-seven-subclass-allocators | `todo` — 7 `*RankAllocator` subclasses | → same plan Phase 5 |
+| phase-8c-staking-apy-total-aggregator | `todo` — `staking_apy_total` features-onchain | → same plan Phase 5 |
+| phase-8d-archetype-ranker-wiring | `todo` — `AllocatorArchetype` wiring | → same plan Phase 5 |
 
 
 # CARRY_STAKED_BASIS — structure axis + tracer comparison
