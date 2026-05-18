@@ -399,10 +399,11 @@ SCOPE EXTENSION 2 + SCOPE EXTENSION 3 Harsh absorption). Operator confirmed pace
   ARBITRAGE_STRUCTURAL ×7, MARKET_MAKING ×10, EVENT_DRIVEN ×1, VOL_TRADING ×19, STAT_ARB ×2, PORTFOLIO ×4)
 - **All 55 enum members have exactly one ARCHETYPE_TO_FAMILY entry** — no orphans, no duplicates confirmed.
 
-**Pending UAC changes** (slot 2 owns — NOT done yet as of 2026-05-18):
-- `CARRY_RECURSIVE_BORROW_PERP_HEDGED` NOT yet renamed → `CARRY_BASIS_PERP_INV` (operator decision ✅ 2026-05-12)
-- `CARRY_STAKED_BASIS_DATED` NOT yet added to enum + dict (pre-deprecation total should be 56)
-- `CARRY_BASIS_DATED_INV` NOT yet added to enum + dict
+**✅ UAC changes DONE — slot 3 — 2026-05-18 — uac@0196842 + strategy-service@a636a29:**
+- `CARRY_RECURSIVE_BORROW_PERP_HEDGED` ✅ renamed → `CARRY_BASIS_PERP_INV` in UAC enum, ARCHETYPE_TO_FAMILY, archetype_config, risk_rules, chain_env (STEP 5.72 fix), tests
+- `CARRY_STAKED_BASIS_DATED` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults (TIER_MID_VARIANCE) + factory (CarryStakedBasisEngine) + catalog (3 seed slots) + tests
+- `CARRY_BASIS_DATED_INV` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults (TIER_STABLE_STRUCTURAL) + factory (CarryBasisDatedEngine) + catalog (3 seed slots) + tests
+- Pre-deprecation total: 57 (55 pre + rename-unchanged + 2 additions)
 
 ### Item V-2 — Taxonomy plan correction flags ✅ DOCUMENTED
 
