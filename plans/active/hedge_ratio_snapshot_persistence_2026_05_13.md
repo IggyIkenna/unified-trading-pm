@@ -153,35 +153,65 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
 - [x] ✅ [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
       writeback pattern + consumer chain. ✅ Added FULLY SHIPPED banner with UAC@2fcb1bb + strategy-service@21209bd +
       pnl-attribution-service@ee96d3c commit refs.
-- [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with
-      this sub-plan's commit reference. ✅ DEFERRED note updated to RESOLVED 2026-05-17 with all 3 commit refs.
+- [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with this
+      sub-plan's commit reference. ✅ DEFERRED note updated to RESOLVED 2026-05-17 with all 3 commit refs.
 - [ ] [SCRIPT] P0. Archive this sub-plan. **🔒 LOCKED**: `locked_by: live-defi-rollout` — operator must add
-      `[unlock-plan]` to a commit before archival. **BLOCKED by Phase 5 below** — plan can only archive once decision-context emitter ships per harsh-main discovery 2026-05-18.
+      `[unlock-plan]` to a commit before archival. **BLOCKED by Phase 5 below** — plan can only archive once
+      decision-context emitter ships per harsh-main discovery 2026-05-18.
 
 ### Phase 5 — Pre-decision INPUTS observability (scope addition 2026-05-18 by harsh-main)
 
-**Why Phase 5 exists** (discovered on running B-015 paper VM `strategy-paper-carry-staked-basis-20260518-115404` at 2026-05-18 11:20 UTC):
+**Why Phase 5 exists** (discovered on running B-015 paper VM `strategy-paper-carry-staked-basis-20260518-115404` at
+2026-05-18 11:20 UTC):
 
-The VM ran 5 consecutive ticks with `fills=0 | PnL=$0.00`. Phases 1-4 of this plan correctly persist the OUTPUT of `compute_dynamic_hedge_ratio()` when `rebalance_triggered=True`, but the writer never fires when no rebalance happens — so the engine's INPUTS (stake_apy observed, perp_funding observed, computed net_apr, peg-drift threshold value, decision-not-to-rebalance reason) are not captured anywhere. Result: 5 hours of opaque ticks with no audit trail to distinguish (a) carry not favorable, (b) threshold too aggressive, (c) feature stale, (d) config bug.
+The VM ran 5 consecutive ticks with `fills=0 | PnL=$0.00`. Phases 1-4 of this plan correctly persist the OUTPUT of
+`compute_dynamic_hedge_ratio()` when `rebalance_triggered=True`, but the writer never fires when no rebalance happens —
+so the engine's INPUTS (stake_apy observed, perp_funding observed, computed net_apr, peg-drift threshold value,
+decision-not-to-rebalance reason) are not captured anywhere. Result: 5 hours of opaque ticks with no audit trail to
+distinguish (a) carry not favorable, (b) threshold too aggressive, (c) feature stale, (d) config bug.
 
-This is a Phase 6C / pvl-p18b consumer-side requirement that Phase 3 of this plan (`PnlDomainAdapter.read_hedge_ratio_snapshots`) cannot satisfy — pnl-attribution + p18b matrix need to reason about *why* a rebalance didn't fire, not just *what happened* when one did. Filing as scope extension to this same plan (rather than spawning sibling) per operator direction 2026-05-18: persistence story should cover both output + input sides coherently.
+This is a Phase 6C / pvl-p18b consumer-side requirement that Phase 3 of this plan
+(`PnlDomainAdapter.read_hedge_ratio_snapshots`) cannot satisfy — pnl-attribution + p18b matrix need to reason about
+_why_ a rebalance didn't fire, not just _what happened_ when one did. Filing as scope extension to this same plan
+(rather than spawning sibling) per operator direction 2026-05-18: persistence story should cover both output + input
+sides coherently.
 
 **Scope additions**:
 
-- [x] ✅ [SCRIPT] P0. Add `DataType.STRATEGY_DECISION_CONTEXT` to UAC — design decision: separate data_type (not extending HedgeRatioSnapshotRecord) per plan's rationale (different cadence, different fields). — uac@b8bdedf (2026-05-18)
-- [x] ✅ [SCRIPT] P0. Define `StrategyDecisionContextRecord` parquet schema covering: `stake_apy_bps`, `borrow_apy_bps`, `perp_funding_apy_bps`, `usdc_idle_apy_bps`, `computed_net_apr_bps`, `peg_drift_observed_bps`, `peg_drift_threshold_bps`, `decision_outcome`, `decision_reason_detail`, `position_state_long_units`, `position_state_short_units`, standard `partition_dt`/`available_at`/`correlation_id`. Registered in availability_semantics + source_priority. — uac@b8bdedf (2026-05-18)
-- [ ] [AGENT] P0. Wire emitter into `CarryStakedBasisEngine.on_tick` **before** the `rebalance_triggered` gate (line ~485 in `staked_basis.py`). Fires on EVERY tick, not just rebalance ticks. Same Pattern A inline writer pattern as Phase 2. Per-row I/O cost is acceptable at 1-hour tick interval.
-- [ ] [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()` mirroring the existing `read_hedge_ratio_snapshots()` shape.
-- [ ] [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" — `record_captured(category="defi", data_type="strategy_decision_context", ...)`.
-- [ ] [AGENT] P0. Unit tests (3 minimum): synthetic OPEN decision, synthetic HOLD decision, synthetic CLOSE decision — all round-trip through writer + reader + manifest.
-- [ ] [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with the pre-decision audit-trail addition. Cross-reference Phase 5 commit refs.
-- [ ] [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main → ikenna-main).
+- [x] ✅ [SCRIPT] P0. Add `DataType.STRATEGY_DECISION_CONTEXT` to UAC — design decision: separate data_type (not
+      extending HedgeRatioSnapshotRecord) per plan's rationale (different cadence, different fields). — uac@b8bdedf
+      (2026-05-18)
+- [x] ✅ [SCRIPT] P0. Define `StrategyDecisionContextRecord` parquet schema covering: `stake_apy_bps`, `borrow_apy_bps`,
+      `perp_funding_apy_bps`, `usdc_idle_apy_bps`, `computed_net_apr_bps`, `peg_drift_observed_bps`,
+      `peg_drift_threshold_bps`, `decision_outcome`, `decision_reason_detail`, `position_state_long_units`,
+      `position_state_short_units`, standard `partition_dt`/`available_at`/`correlation_id`. Registered in
+      availability_semantics + source_priority. — uac@b8bdedf (2026-05-18)
+- [x] ✅ [AGENT] P0. Wire emitter into `CarryStakedBasisEngine.on_tick` **before** the `rebalance_triggered` gate (line
+      ~485 in `staked_basis.py`). Fires on EVERY tick, not just rebalance ticks. Same Pattern A inline writer pattern as
+      Phase 2. Per-row I/O cost is acceptable at 1-hour tick interval. — strategy-service@3c332ac (2026-05-18)
+- [ ] [AGENT] P0. Extend `pnl-attribution-service` `PnlDomainAdapter` with `read_strategy_decision_context()` mirroring
+      the existing `read_hedge_ratio_snapshots()` shape.
+- [x] ✅ [AGENT] P0. Manifest entry per CLAUDE.md "Availability manifest v5+" —
+      `record_captured(category="defi", data_type="strategy_decision_context", ...)`. Implemented in
+      `decision_context_writer._record_manifest()` as best-effort ManifestWriter.record_captured with
+      `PipelineMode.BATCH_STRATEGY_SERVICE`. — strategy-service@3c332ac (2026-05-18)
+- [ ] [AGENT] P0. Unit tests (3 minimum): synthetic OPEN decision, synthetic HOLD decision, synthetic CLOSE decision —
+      all round-trip through writer + reader + manifest.
+- [ ] [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with the
+      pre-decision audit-trail addition. Cross-reference Phase 5 commit refs.
+- [ ] [SCRIPT] P0. Cross-side notify (already filed: `plans/active/_agent_pings.md` 2026-05-18 11:20 UTC harsh-main →
+      ikenna-main).
 
-**Cost trade-off**: this is independent of the running B-015 paper VM. Harsh-main is keeping VM 115404 running (preserves pvl-p18a 3-day clock; gate doesn't require this observability). Phase 5 lands as separate work, applies on next natural VM relaunch (post-pvl-p18a or live-promote cycle). No clock loss.
+**Cost trade-off**: this is independent of the running B-015 paper VM. Harsh-main is keeping VM 115404 running
+(preserves pvl-p18a 3-day clock; gate doesn't require this observability). Phase 5 lands as separate work, applies on
+next natural VM relaunch (post-pvl-p18a or live-promote cycle). No clock loss.
 
-**Owner** (per parent plan): assigned to whoever picks up the work — Ikenna's slot 5 / slot 7 (active strategy-service work) is a natural fit, but harsh-main can also execute if Ikenna ack'd. Awaiting ikenna-main ack on the cross-side ping.
+**Owner** (per parent plan): assigned to whoever picks up the work — Ikenna's slot 5 / slot 7 (active strategy-service
+work) is a natural fit, but harsh-main can also execute if Ikenna ack'd. Awaiting ikenna-main ack on the cross-side
+ping.
 
-**Estimate**: design class — UAC schema + writer + on_tick wire-in + consumer reader + tests. ~3 baseline × 0.6 multiplier = **1.8 cal-AI-days**.
+**Estimate**: design class — UAC schema + writer + on_tick wire-in + consumer reader + tests. ~3 baseline × 0.6
+multiplier = **1.8 cal-AI-days**.
 
 ## Full-execution criterion
 
@@ -190,8 +220,11 @@ This is a Phase 6C / pvl-p18b consumer-side requirement that Phase 3 of this pla
   test that does a 10-tick synthetic run and reads back the parquet.
 - ✅ `pnl-attribution-service` reads the parquet successfully + schema matches.
 - ✅ ManifestWriter records the snapshot per-archetype-per-day.
-- [ ] **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (not just rebalance); verified via integration test with mix of OPEN/HOLD/CLOSE decisions and a "5 consecutive HOLD" replay reproducing the 2026-05-18 VM 115404 fills=0 case.
-- [ ] **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T, what rates did the engine see and why did it not rebalance".
+- [ ] **Phase 5**: `CarryStakedBasisEngine` emits a `strategy_decision_context` row on **every** tick (not just
+      rebalance); verified via integration test with mix of OPEN/HOLD/CLOSE decisions and a "5 consecutive HOLD" replay
+      reproducing the 2026-05-18 VM 115404 fills=0 case.
+- [ ] **Phase 5**: `pnl-attribution-service` reads `strategy_decision_context` parquets + can answer "for tick at T,
+      what rates did the engine see and why did it not rebalance".
 
 ## Execution metadata (Runbook Execution-Owner SSOT)
 
