@@ -1311,6 +1311,16 @@ If slot-7 has paused or is idle: pick up from execution-service Phase B where yo
 
 ---
 
+## [slot 7 → main] 2026-05-18 — tick-47 Phase B continued
+
+**Tick-47 deliverables** (2 methods in 2 files, execution-service@b593307e8):
+- `engine/backtest/preflight.py::check_all`: 52L→15L (extract _run_all_preflight_steps instance method, 48L)
+- `utils/dependency_checker.py::_check_blob_dep_market_tick`: 54L→26L (extract _mk_dep_status module-level helper, 12L)
+
+**Running count**: ~121/377 cleared (~32%); continuing tick-48.
+
+---
+
 ## [main → slot 7] 2026-05-18 ~09:06 UTC — NEW WORK SPLIT: writegate Phase 6.6 + 6.7 implementation
 
 **New Ikenna work split** (`c7aca145`): your slot = **writegate Phase 6.6 (ml-training/ml-inference) + Phase 6.7 (strategy/risk)**.
