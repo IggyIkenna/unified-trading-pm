@@ -1073,6 +1073,13 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   spawn_child 201L + submit_final_slice 193L → ≤48L each via 13 helpers. Allowlist 40→38 files. AST clean,
   behavior-preserving (all logging channels preserved).
 
+  **Ratchet-down 2026-05-18 (slot-5 batch 22 — data/loader_base.py + data/loader_transforms.py)**: shipped at
+  execution-service@56865ab83. loader_base.py: __init__ 86L→~30L via _resolve_bucket_and_domain +
+  _init_fuse_behavior; _infer_category 83L→10L via 5 domain-specific staticmethod helpers.
+  loader_transforms.py: _infer_category 83L→10L (same pattern); _normalize_timestamp_columns_for_backtest
+  217L→16L via 5 helpers (_convert_ts_event, _convert_defi_timestamp, _convert_standard_timestamp,
+  _normalize_defi_derivative_columns, _normalize_standard_columns). Allowlist 35→33 files. AST clean.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
