@@ -110,6 +110,44 @@ ships post-cutover for known transient failure classes).
   idempotent via the watermark KV (a duplicate replay of an already-finalized window is a no-op).
 - Dry-run mode: `--dry-run` lets operator verify the replay window + estimated wall-clock without publishing events.
 
+## Scenario overlay on replay
+
+Scenario overlays compose with the replay subsystem for batch backtest runs: replay re-drives historical windows through
+the prod pipeline; a `ScenarioOverlay` is applied at the selected tap layer on top of the replayed events.
+
+**Composition contract:**
+
+1. `ReplayPublisher` writes events with `pipeline_mode=live_websocket` and the original-time `available_at`.
+2. `ScenarioOverlayApplier` intercepts events at the configured `ScenarioOverlayLayer` (e.g., `ORDER` pre-cutover;
+   `RAW_TICK` / `FEATURE` post-cutover) _after_ replay has emitted the canonical row — same hook location as in a live
+   run.
+3. `synthetic=true` is stamped on every mutated row so the alerting-service suppresses paging and the operator dashboard
+   can distinguish scenario-fire from historical-real rows.
+4. `scenario_id` is threaded through the scenario run's `ScenarioReport` parquet (per-row `scenario_id` column) —
+   attribution is unambiguous even when a replay window covers multiple scenarios sequentially.
+
+**Ordering invariant**: replay watermark KV check runs before the scenario overlay hook. A scenario mutation never
+affects the watermark write; `REPLAY_BACKSTOP_REACHED` halts the replay before any overlay is applied, preserving the
+honest-absence guarantee.
+
+**Batch-backtest pattern** (`ScenarioMatrixRunner`):
+
+```
+launch replay VM (shard, start, end)
+    ↓
+ReplayPublisher re-drives events at original-time available_at
+    ↓
+ScenarioOverlayApplier.apply() at ORDER tap layer (pre-cutover)
+    ↓
+execution-service matching-engine-mode processes mutated order book
+    ↓
+ScenarioReport parquet emitted per cell (archetype × scenario_id)
+```
+
+Post-cutover: additional tap layers (RAW_TICK, FEATURE) compose the same way — replay precedes overlay; watermark KV
+is unaffected. Full post-cutover scope tracked in
+[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+
 ## Anti-patterns
 
 - Don't introduce `pipeline_mode=replay`. Output goes to `pipeline_mode=live_websocket`. Replay vs live is operational,
@@ -125,4 +163,5 @@ ships post-cutover for known transient failure classes).
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 7 (replay subsystem) + Phase 2C (UTL replay-cascade helpers).
 - Sibling: [`live-pipeline-architecture.md`](./live-pipeline-architecture.md).
+- Scenario injection: [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) — overlay layer enum + composition contract.
 - Foundation: [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md).

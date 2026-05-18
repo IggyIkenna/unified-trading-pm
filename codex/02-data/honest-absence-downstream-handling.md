@@ -658,3 +658,44 @@ heartbeats but does NOT kill honest-coverage VMs (they are inherently short-live
 - Plan: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2B + B-018 Phase 8.A.
 - Deployment codex: `codex/05-infrastructure/vm-tarball-deployment.md` (tarball creation for VM code).
 - QG enforcement: STEP 5.66 (`MANIFEST_PER_VM_SHARDS=true`) + STEP 5.61 (STARTED/STOPPED lifecycle).
+
+## Scenario-driven gap injection
+
+The scenario harness can produce **synthetic gaps** via two `ScenarioMutationSpec` types from
+[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md):
+
+- **`DropRows`**: drops one or more data rows mid-sequence at the `MANIFEST` tap layer, causing the manifest writer to
+  emit `empty_confirmed[SOURCE_RETURNED_ZERO]` or `attempted_failed` depending on the harness config.
+- **`ManifestPhantom`**: injects a phantom manifest row with a configurable `capture_status` (any of the 4-state
+  taxonomy: `captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`) and a specified reason code.
+
+### Per-row `scenario_id` provenance
+
+Every manifest row produced by a scenario injection carries:
+
+- `synthetic=true` on the emitted event (alerting-service suppresses paging on `synthetic=true` rows)
+- `scenario_id: str` — the snake\_case scenario identifier from the UAC `SCENARIO_REGISTRY`
+
+Downstream consumers receiving a scenario-injected gap row MUST use the `scenario_id` column to distinguish
+scenario-fire from real-fire when computing quality metrics or firing alerts. The `ScenarioReport` parquet produced by
+`ScenarioMatrixRunner` carries per-row `scenario_id` for attribution.
+
+### Consumer-class behavior under synthetic gaps
+
+The consumer-class rules from the [Per-service consumer-class audit](#per-service-consumer-class-audit-2026-05-07--operator-direction)
+table apply unchanged for synthetic gaps — the consumer does not need to know the gap is synthetic in order to apply the
+correct handling (skip / NaN-fill / alert). The two scenario-aware differences are:
+
+1. **Alerting suppression**: alerting-service checks `synthetic=true` before firing a page. Human-facing alerts do NOT
+   fire for scenario rows. Internal `SCENARIO_OUTCOME_ASSERTION_FAILED` alerts still fire (they are test-harness signals,
+   not production pages).
+2. **Attribution audit**: downstream services that write secondary manifests (features-service, strategy-service) must
+   propagate `scenario_id` on their own output rows so the full scenario-fire provenance chain is traceable from
+   MTDS input → features output → strategy signal.
+
+### Manifest-layer scope
+
+`MANIFEST` tap layer is DEFERRED to post-cutover per Phase 3.G. Pre-cutover scenario-driven gap injection is limited to
+the `ORDER` layer (adversarial fill rejection / matching-engine adversarial mode) — these do not produce manifest gaps
+directly. Full gap-injection scenarios (DropRows + ManifestPhantom) activate post-cutover per
+[`../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
