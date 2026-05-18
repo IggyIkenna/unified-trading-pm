@@ -508,15 +508,11 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `dependency_checker.py`, deployment-api Layer-5) land in code_freeze Phase 2.6 / are migrated — re-run
       `--update-baseline` then). v2 AST-walk (distinguish `f\"gs://{x}/...\"` from `resolve_bucket_uri(...)`, ignore
       docstrings) = a hardening follow-up matching STEP 5.65's pattern — captured as the new `- [ ]` below."
-- [ ] **[SCRIPT] P2**. **DEFERRED (follow-up to Done-def #5 — v2 hardening)** — replace the v1 grep-based
-      `check_inline_bucket_uri.py` with an AST-walk that (a) distinguishes a real inline URI build (`f"gs://{x}/..."`)
-      from a `resolve_bucket_uri(...)` / `resolve_bucket_name(...)` call, (b) ignores occurrences inside docstrings /
-      comments (kills the ~handful of docstring false-positives in the v1 baseline, e.g. `bucket_naming.py:16-17`), (c)
-      flags inline bucket-NAME construction (`f"features-delta-one-{ag}-{pid}"`) more precisely than the per-line scheme
-      heuristic — same shape as QG STEP 5.65's removed-symbol AST-walk. After v2 lands, re-run `--update-baseline` (the
-      count drops as docstring false-positives are excluded). status: todo — note: "2026-05-11 slot 4 — v1 grep-based
-      ships first per the design; v2 is the precision hardening; not urgent (v1 already catches NEW inline formatters
-      via the count ratchet)."
+- [x] ✅ **[SCRIPT] P2**. **DONE 2026-05-18 (slot 6)** — replaced v1 grep-based `check_inline_bucket_uri.py` with
+      AST-walk: (a) `ast.parse()` JoinedStr walk distinguishes real inline URI f-strings from plain-string calls; (b)
+      `_ast_docstring_lines()` helper skips both plain-string and f-string docstrings (eliminates
+      `bucket_naming.py:16-17`-class false positives); (c) `_count_inline_uris_regex()` fallback for syntax-error files.
+      4 new tests; 16/16 pass. ruff/format clean. — PM@64cbffeb
 - [x] **[SCRIPT] P1**. Add yaml-vs-resolver parity unit test (already shipped at UTL@`24f9b2cb` for 10 DeFi bucket
       entries; extend coverage to features-\* + sports + tradfi). **Shipped UTL@`e8dc6e3` (slot 4 2026-05-11)**:
       `_SNAPSHOT_YAML` extended with `features-volatility` / `features-onchain` (per-asset_group) + `features-sports` /
