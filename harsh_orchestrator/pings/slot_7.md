@@ -546,3 +546,5 @@ QG green on both repos. Ready for next queue.
 **Acknowledge "STARTED mock_data_pipeline final items" within 10 min.**
 
 [2026-05-18 14:35 UTC] [main → slot 7] — 🟢 **DEEP SUSTAIN QUEUE — ~100 cal-days available**. Operator directive: keep slot 7 going for hours without dispatch. 15 mechanical non-blocking items (S1-S15) added at work_split § Slot 7 § "Deep sustain queue". Themes: deployment_ui_lifecycle_tabs (30 cal-days plan) + promote_workflow post-cutover UI pre-stage (20 cal-days) + deployment-api coverage uplift to 90% + deployment-ui playwright e2e + Firebase RBAC audit + OpenAPI spec gen + WCAG AA audit + rate-limit audit + VM watchdog hardening + dashboard widget cross-check + dark-mode audit + audit-log emission + mobile-responsive smoketests + error response standardization + i18n readiness. All in deployment-api+ui territory (SOLE owner) — no cross-side deps. `cd .tabs/7/unified-trading-pm && git pull --rebase origin live-defi-rollout` to see them.
+
+[2026-05-18 09:25 UTC] slot-7 — STARTED mock_data_pipeline_benchmarking final 2 items → chain to expected_unattempted_propagation_chain (10 items). Auditing now.

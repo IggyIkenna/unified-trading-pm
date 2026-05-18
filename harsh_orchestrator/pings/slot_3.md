@@ -57,3 +57,25 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
   4. Pick 3-5 mechanical items; ship per item; dual-flip `defi_master_2026_05_07.md` + work_split item in same `docs(plans):` commit.
   5. Fallback if blocked: `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (6 items remaining, 35%→42%).
 **Acknowledge "STARTED defi_master codex" within 10 min.**
+
+[2026-05-18 14:38 UTC] [main → slot 3] — 🟡 **SCOPE CORRECTION — operator flagged off-scope work**. Three issues observed:
+  1. **Foreign file touched**: you stashed `harsh_orchestrator/pings/slot_7.md` — that is slot 7's territory. CLAUDE.md "Two teammates × multi-agent" rule: don't touch unfamiliar / mid-edit files. Use `git restore --staged <yours-only>` next time.
+  2. **Out-of-scope plan scan**: you started reading `code_freeze_migrate_backfill_sequencing` — that plan is `cefi_master_2026_05_07` owner = **Ikenna primary**. Not your territory.
+  3. **Post-cutover items**: you started scanning post-cutover codex items — today is **Cycle 2 Day-3 of pre-cutover** per `post_freeze_roadmap_2026_05_16_to_05_23.md`. Today is mechanical-only scope.
+
+**TIGHT SCOPE for slot 3**: strategy-service repo + `codex/09-strategy/` ONLY. Plans you can pull from:
+  - `defi_master_2026_05_07.md` (30%, 32/106 — 74 items left, **YOUR fresh-theme dispatch from 14:08 + 14:20 UTC**)
+  - `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (65%, 26/40 — 14 items, fallback)
+  - `strategy_archetype_taxonomy_2026_05_12.md` (already touched — close any remaining items if relevant)
+
+DO NOT touch: `code_freeze_*`, post-cutover plans, UAC enum changes (Ikenna primary), other slots' ping files, any plan owned by `cefi_master_*` / `tradfi_master_*` / `manifest_evolution_master_*`.
+
+**Recovery procedure**:
+  1. `cd /home/hk/unified-trading-system-repos/.tabs/3/unified-trading-pm`
+  2. `git stash list` — verify your slot_7.md stash is dropped (NOT applied to your tree)
+  3. `git status --short` — confirm clean working tree
+  4. `git pull --rebase origin live-defi-rollout` — sync to latest
+  5. Open `plans/active/defi_master_2026_05_07.md` — find unchecked `- [ ]` items in codex/09-strategy sections (avoid Group F live-trading items, those belong to slot 1 main)
+  6. Pick 2-3 mechanical items, ship + dual-flip
+
+**Acknowledge "SCOPE CORRECTED, restarting on defi_master codex sweep" within 10 min.**
