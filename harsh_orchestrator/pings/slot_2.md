@@ -731,3 +731,12 @@ exec 86.7%, features 82.0%, risk 85.4%, strategy 78.1%, mtds 87.3%, deployment 8
   S18: all 23 repos line-length=120. 0 drift.
   S19: ruff select — in-scope repos canonical. 3 out-of-scope drifts (batch-live-reconciliation, deployment-service, e2e-testing) documented.
 Pivoting to S20.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S20** — setup.sh audit. All 26 repos have scripts/setup.sh. 0 md5 drift vs PM canonical.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item S17** — __init__.py public-API audit. 0 wildcard imports in service source.
+strategy-service@1b18490 + market-tick-data-service: __all__ = [] added. exec/features/risk/instruments already had __all__.
+
+[2026-05-18 UTC] slot-2 — 🏁 **SLOT 2 QUEUE EXHAUSTED** — All S-items done (S1-S20 complete). Entire slot-2 sustain queue 
+cleared. Total shipped this session: S10, S11, S14, S15, S16, S17, S18, S19, S20 (+ S7/S8/S9/S12/S13 from prior session).
+No remaining items in slot-2 queue. Standing by for reallocation.
