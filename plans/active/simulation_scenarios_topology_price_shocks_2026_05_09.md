@@ -637,16 +637,9 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 6 — Backtest harness wire-in (Days 10-11, ~1.5 AI-days, parallel with Phase 7)
 
-- [ ] [AGENT] P0. **6.A Unified backtest CLI flags.** Per `codex/06-coding-standards/cli-convention.md` axes: extend the
-      unified backtest entry (the one Group F item 18 uses) with `--scenario-id <id>` (single-scenario run) +
-      `--scenario-matrix <archetype>` (matrix run) + `--scenario-overlay-yaml <path>` (ad-hoc declarative). Mutually
-      exclusive with each other.
-- [ ] [AGENT] P0. **6.B Pipeline wiring.** Backtest entry instantiates `ScenarioContext` from CLI flag + injects into
-      the unified pipeline (MTDS feed → MDPS → features → strategy → execution-matching-engine). `ScenarioContext`
-      propagates via the existing config-reloader pattern (no new IPC).
-- [ ] [AGENT] P0. **6.C YAML overlay schema.** `ScenarioOverlay` Pydantic round-trips via
-      `unified_api_contracts.scenario_overlay.ScenarioOverlay.model_validate_yaml`. Schema published to
-      `unified-api-contracts/schemas/scenario_overlay.schema.json` for IDE / UI authoring.
+- [x] [AGENT] P0. **6.A Unified backtest CLI flags.** ✅ strategy-service@2c8e516 — mutually-exclusive argparse group `--scenario-id` / `--scenario-matrix` / `--scenario-overlay-yaml` added to `run_2yr_config_grid_backtest.py`; 4 new CLI tests pass.
+- [x] [AGENT] P0. **6.B Pipeline wiring.** ✅ strategy-service@2c8e516 — `ScenarioOverlay` resolved from CLI flag threaded through `_run_grid_for_archetype` → `_replay_slot_with_config`; `ScenarioOverlayApplier` applied per-day via UTL top-level import; 28 tests pass.
+- [x] [AGENT] P0. **6.C YAML overlay schema.** ✅ UAC@3677f54 — `model_validate_yaml` classmethod on `ScenarioOverlay`; `unified_api_contracts/scenario_overlay.py` facade; `schemas/scenario_overlay.schema.json` generated via Pydantic `model_json_schema()`.
 
 **Full-execution criterion**:
 
