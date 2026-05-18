@@ -4,18 +4,20 @@
 
 ### 2026-05-18 09:20 UTC — Slot 8 RESTARTED (corrected assignment)
 Theme: alerting SCRIPT items + api_keys Phase 5.B credential scaffold
-Status: COMPLETE
+Status: COMPLETE @ PM@5b9b30fd
 
 **Boot audit findings + resolution:**
-- Alerting SM hot-reload — ALREADY SHIPPED. Flipped in alerting plan (was incorrectly marked open).
-- Alerting staging Cloud Run deploy — BLOCKED-OPERATOR. Status note updated in plan.
-- Alerting ALERT_THRESHOLDS UAC update — BLOCKED-UPSTREAM. Status note updated in plan.
-- Phase 8 rehearsal extension — BLOCKED-UPSTREAM. Stale DEFERRED note corrected.
-- Polymarket SM secret — EXISTS. 5.B.1 + 5.B.4 checkboxes FLIPPED.
-- Kalshi SM secret — NOT FOUND. Full KalshiAdapter IS shipped. CREDENTIAL APPROVAL REQUEST below.
-- Helius SM secret — EXISTS. 5.C Helius verified.
-- CoinGecko SM secret — NOT FOUND. CREDENTIAL APPROVAL REQUEST below.
-- Manifold — OUT OF SCOPE (not in predictions_master MVP). 5.B.3 SCOPED OUT.
+- Alerting SM hot-reload — ALREADY SHIPPED at alerting-service@9d4150d + alerting@89361d6. Status corrected in plan.
+- Alerting staging Cloud Run deploy — BLOCKED-OPERATOR. Phase 4 gate cleared; operator needs staging Telegram chat ID.
+- Alerting ALERT_THRESHOLDS UAC update — BLOCKED-UPSTREAM (Phase 7 quietness baseline not yet run).
+- Phase 8 rehearsal extension — BLOCKED-UPSTREAM. Stale DEFERRED note corrected (inject_synthetic_alert.py IS shipped).
+- Polymarket SM secret — EXISTS (vault confirmed). 5.B.1 + 5.B.4 FLIPPED.
+- Kalshi SM secret — NOT FOUND. Full KalshiAdapter IS shipped at execution-service. CREDENTIAL APPROVAL REQUEST filed below.
+- Helius SM secret — EXISTS (2026-05-15). 5.C Helius DONE.
+- CoinGecko SM secret — NOT FOUND. CREDENTIAL APPROVAL REQUEST filed below.
+- Manifold — OUT OF SCOPE. 5.B.3 SCOPED OUT.
+
+**Commits**: PM@5b9b30fd (plan flips + status updates)
 
 ---
 
