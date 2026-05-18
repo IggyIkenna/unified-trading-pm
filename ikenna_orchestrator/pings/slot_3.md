@@ -1018,18 +1018,23 @@ config schema work, or (c) other codex gaps from master plan inventory.
 
 ## [main → slot 3] 2026-05-18 ~12:08 UTC — NEW DISPATCH: Phase 5 STRATEGY_DECISION_CONTEXT
 
-**Plan**: `plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5
-**Priority**: P0 — unblocks pvl-p18b gate + harsh-side FeatureObservationWriter correlation_id dependency
+**Plan**: `plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 **Priority**: P0 — unblocks pvl-p18b
+gate + harsh-side FeatureObservationWriter correlation_id dependency
 
 **Design already decided** (ikenna-main, 11:43 UTC `_agent_pings.md`):
+
 - New `DataType`: `STRATEGY_DECISION_CONTEXT` — NOT an extension of `HedgeRatioSnapshotRecord`
-- `DecisionOutcome(StrEnum)` closed-set: `REBALANCED | HOLD_CARRY_UNFAVORABLE | HOLD_WITHIN_DRIFT_BAND | HOLD_FEATURE_STALE | HOLD_POSITION_OPTIMAL | HOLD_RATE_LIMIT`
+- `DecisionOutcome(StrEnum)` closed-set:
+  `REBALANCED | HOLD_CARRY_UNFAVORABLE | HOLD_WITHIN_DRIFT_BAND | HOLD_FEATURE_STALE | HOLD_POSITION_OPTIMAL | HOLD_RATE_LIMIT`
 
 **Files to touch** (tab `.tabs/3/`):
 
 1. **UAC** `unified_api_contracts/internal/domain/defi/sim_schemas.py` (same file as `HedgeRatioSnapshotRecord`):
    - Add `DecisionOutcome(StrEnum)` above `HedgeRatioSnapshot`
-   - Add `StrategyDecisionContextRecord(BaseModel)`: `tick_ts`, `stake_apy`, `borrow_apy`, `perp_funding_apy`, `usdc_idle_apy`, `computed_net_apr`, `peg_drift_observed`, `peg_drift_threshold_bps`, `decision_outcome: DecisionOutcome`, `decision_reason_detail: str | None`, `position_state: dict[str, Decimal]`, `partition_dt: str`, `available_at: datetime`, `correlation_id: str | None = None`
+   - Add `StrategyDecisionContextRecord(BaseModel)`: `tick_ts`, `stake_apy`, `borrow_apy`, `perp_funding_apy`,
+     `usdc_idle_apy`, `computed_net_apr`, `peg_drift_observed`, `peg_drift_threshold_bps`,
+     `decision_outcome: DecisionOutcome`, `decision_reason_detail: str | None`, `position_state: dict[str, Decimal]`,
+     `partition_dt: str`, `available_at: datetime`, `correlation_id: str | None = None`
    - `availability_semantics.py`: add `("defi", "strategy_decision_context"): "fetch_completed_at"`
    - `source_priority.py`: add `("defi", "strategy_decision_context"): ["strategy_service"]`
 
@@ -1039,13 +1044,16 @@ config schema work, or (c) other codex gaps from master plan inventory.
    - Bucket: `resolve_bucket_name(kind="strategy-store", asset_group="defi")`
    - `record_captured(category="defi", data_type="strategy_decision_context", ...)`
 
-3. **pnl-attribution-service** `PnlDomainAdapter`: add `read_strategy_decision_context()` mirroring `read_hedge_ratio_snapshots()` shape
+3. **pnl-attribution-service** `PnlDomainAdapter`: add `read_strategy_decision_context()` mirroring
+   `read_hedge_ratio_snapshots()` shape
 
-4. **Tests** (3 minimum): REBALANCED round-trip, 5× HOLD_WITHIN_DRIFT_BAND replay (B-015 fills=0 scenario), HOLD_FEATURE_STALE edge case
+4. **Tests** (3 minimum): REBALANCED round-trip, 5× HOLD_WITHIN_DRIFT_BAND replay (B-015 fills=0 scenario),
+   HOLD_FEATURE_STALE edge case
 
 **Conflict-risk**: B-015 reads features/manifest only — does NOT write `strategy-store`. No conflict.
 
-**QG**: `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` → `cd .tabs/3/strategy-service && bash scripts/quality-gates.sh`
+**QG**: `cd .tabs/3/unified-api-contracts && bash scripts/quality-gates.sh` →
+`cd .tabs/3/strategy-service && bash scripts/quality-gates.sh`
 
 **Dual-flip**: flip Phase 5 checkboxes in `hedge_ratio_snapshot_persistence_2026_05_13.md` per item shipped.
 
@@ -1054,48 +1062,89 @@ Acknowledge "STARTED Phase 5 STRATEGY_DECISION_CONTEXT" within 10 min.
 ## [slot 3 → main] 2026-05-18 ~12:xx UTC — 🟢 STARTED Phase 5 STRATEGY_DECISION_CONTEXT
 
 **Interleaved work shipped since last ack** (while context was compacted):
+
 - PM@747bd623: strategy_archetype_taxonomy §12 Portfolio docs — ALL 4 archetype docs created:
   portfolio-multi-strategy.md + portfolio-risk-parity.md + portfolio-factor-allocation.md +
   portfolio-tactical-overlay.md + families/portfolio.md. strategy-summary.md links updated.
 - PM@394561c7: taxonomy §12 marked ✅ SHIPPED.
 
-**Phase 5 STARTED**. Reading `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 now.
-UAC sim_schemas.py + strategy-service staked_basis.py + pnl-attribution-service reader are all clear targets.
-Implementing now per design spec.
+**Phase 5 STARTED**. Reading `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 now. UAC sim_schemas.py +
+strategy-service staked_basis.py + pnl-attribution-service reader are all clear targets. Implementing now per design
+spec.
 
 ## [slot 3 → main] 2026-05-18 ~14:xx UTC — ✅ Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE (slot 3 contribution)
 
-**Session continued after context compaction.** All Phase 5 items from `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5 are now on LDR.
+**Session continued after context compaction.** All Phase 5 items from `hedge_ratio_snapshot_persistence_2026_05_13.md`
+Phase 5 are now on LDR.
 
 **Slot 3 specific contributions** (complementing prior-session work by other ikenna slots):
-1. **UAC `DecisionOutcome(StrEnum)`** ✅ — added typed enum replacing untyped `str` field; exported from internal hierachy. uac@`2494e0d` (sim_schemas.py) + uac@`d3872a3` (internal/__init__.py export).
-2. **strategy-service autouse perf guard** ✅ — `tests/unit/engine/strategies/v2/conftest.py` autouse mock for `emit_decision_context` + `emit_hedge_ratio_snapshot` in `staked_basis` module. Eliminates 720-tick GCS overhead in batch performance tests. strategy-service@`df2ff9f`.
-3. **Plan flips + codex update** ✅ — Phase 5 checkboxes flipped; codex `amm-slippage-simulation.md` updated with slot-3 commit refs. PM@`51fcc772`.
+
+1. **UAC `DecisionOutcome(StrEnum)`** ✅ — added typed enum replacing untyped `str` field; exported from internal
+   hierachy. uac@`2494e0d` (sim_schemas.py) + uac@`d3872a3` (internal/**init**.py export).
+2. **strategy-service autouse perf guard** ✅ — `tests/unit/engine/strategies/v2/conftest.py` autouse mock for
+   `emit_decision_context` + `emit_hedge_ratio_snapshot` in `staked_basis` module. Eliminates 720-tick GCS overhead in
+   batch performance tests. strategy-service@`df2ff9f`.
+3. **Plan flips + codex update** ✅ — Phase 5 checkboxes flipped; codex `amm-slippage-simulation.md` updated with slot-3
+   commit refs. PM@`51fcc772`.
 
 **Prior-session work already on LDR** (by main session before context compaction):
+
 - strategy-service@`3c332ac` — emitter wire-in + `build_decision_outcome()` in `staked_basis.py`
 - strategy-service@`285f154` — 11 unit tests
 - pnl-attribution-service@`f8db566` — `read_strategy_decision_context()` reader
 - uac@`b8bdedf` — `StrategyDecisionContext` + `StrategyDecisionContextRecord` schemas
 
-**Slot 3 work_split fully exhausted.** Scanning for next dispatch or available open items.
-**No 🟡 BLOCKED.** Ready for next theme.
+**Slot 3 work_split fully exhausted.** Scanning for next dispatch or available open items. **No 🟡 BLOCKED.** Ready for
+next theme.
 
 ---
 
 [2026-05-18 UTC] Slot 3 — **V-1 UAC ENUM CHANGES DONE** (autonomous, post-context-compaction).
 
-Found 3 pending UAC changes in `strategy_archetype_taxonomy_2026_05_12.md §V-1` (operator decision ✅ 2026-05-12, not yet executed):
+Found 3 pending UAC changes in `strategy_archetype_taxonomy_2026_05_12.md §V-1` (operator decision ✅ 2026-05-12, not
+yet executed):
 
-1. ✅ **Rename** `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` — clean rename (added 2026-05-11, no GCS data, no live VMs). Updated: UAC enums, archetype_config, risk_rules/archetype, recursive_loop_orchestrator, venue_constants, risk_rule, 2 test files; strategy-service factory, archetype_defaults, recursive_staked, carry_basis_dated, staked_basis, catalog, conftest + 3 test files.
-2. ✅ **Added** `CARRY_STAKED_BASIS_DATED` — dated-contract variant of staked basis. TIER_MID_VARIANCE, CarryStakedBasisEngine (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test coverage.
-3. ✅ **Added** `CARRY_BASIS_DATED_INV` — inverse of CARRY_BASIS_DATED. TIER_STABLE_STRUCTURAL, CarryBasisDatedEngine (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test coverage.
+1. ✅ **Rename** `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` — clean rename (added 2026-05-11, no GCS
+   data, no live VMs). Updated: UAC enums, archetype_config, risk_rules/archetype, recursive_loop_orchestrator,
+   venue_constants, risk_rule, 2 test files; strategy-service factory, archetype_defaults, recursive_staked,
+   carry_basis_dated, staked_basis, catalog, conftest + 3 test files.
+2. ✅ **Added** `CARRY_STAKED_BASIS_DATED` — dated-contract variant of staked basis. TIER_MID_VARIANCE,
+   CarryStakedBasisEngine (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test
+   coverage.
+3. ✅ **Added** `CARRY_BASIS_DATED_INV` — inverse of CARRY_BASIS_DATED. TIER_STABLE_STRUCTURAL, CarryBasisDatedEngine
+   (ALLOWED_ARCHETYPES extended), 3 catalog seed slots, UAC archetype_config + risk_rules, test coverage.
 
 **Also fixed (pre-existing, found during QG run):**
-- STEP 5.72: `STARKNET` + `HYPERLIQUID_L1` added to `MAINNET_CHAIN_IDS` in `chain_env.py` (invariant violation — were in GENESIS_DATES but not MAINNET_CHAIN_IDS).
-- `conftest.py` patched wrong function name (`emit_decision_context` → `emit_strategy_decision_context`) — caused 857 test ERRORs in v2 engine test suite.
+
+- STEP 5.72: `STARKNET` + `HYPERLIQUID_L1` added to `MAINNET_CHAIN_IDS` in `chain_env.py` (invariant violation — were in
+  GENESIS_DATES but not MAINNET_CHAIN_IDS).
+- `conftest.py` patched wrong function name (`emit_decision_context` → `emit_strategy_decision_context`) — caused 857
+  test ERRORs in v2 engine test suite.
 
 **Commits:**
+
 - uac@`0196842` — enum + config + risk_rules + chain_env + tests (QG ✅)
 - strategy-service@`a636a29` — factory + defaults + catalog + engines + tests (QG ✅)
 - PM@`f8328617` — plan flip V-1
+
+---
+
+[2026-05-18 UTC] Slot 3 — **ARCHETYPE DOCS COMPLETE** (self-directed, post-V-1 session close).
+
+Slot-3 also shipped the 3 per-archetype docs missing for the V-1 archetypes (Slot-8 routing item per taxonomy plan):
+
+1. ✅ `codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` — canonical doc for CARRY_BASIS_PERP_INV;
+   recursive borrow loop + CeFi perp hedge; replaces old carry-recursive-borrow-perp-hedged.md (redirect banner added to
+   old file)
+2. ✅ `codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md` — CARRY_BASIS_DATED_INV; inverse dated
+   basis (short future + long cash, captures backwardation); full config schema + risk profile + example instances
+3. ✅ `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md` — CARRY_STAKED_BASIS_DATED;
+   dated-contract variant (staking yield + locked basis premium at expiry); Deribit/Drift initial seed catalog; features
+   expected; comparison table vs perp variant
+4. ✅ `codex/09-strategy/strategy-summary.md` — Carry & Yield count 8 → 10; new archetype entries; updated links from
+   vscode-webview:// URLs to relative paths
+
+**Commit:** PM@`f3236961` **Taxonomy plan updated:** V-3 verification block added (slot-3 doc completion evidence).
+**Scope boundary:** Vol Trading 18 per-archetype docs + market-making-event-settled.md remain on Slot-8 stack.
+
+Slot 3 AVAILABLE for next dispatch.

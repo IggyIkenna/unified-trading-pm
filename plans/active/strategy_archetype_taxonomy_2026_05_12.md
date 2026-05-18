@@ -244,6 +244,7 @@ Trading archetype; price-dispersion arb).
 ### 12. Portfolio — doc completion ✅ SHIPPED 2026-05-18 slot 3
 
 All 4 Portfolio archetype docs created at PM@`747bd623`:
+
 - `architecture-v2/archetypes/portfolio-multi-strategy.md` ✅
 - `architecture-v2/archetypes/portfolio-risk-parity.md` ✅
 - `architecture-v2/archetypes/portfolio-factor-allocation.md` ✅
@@ -400,21 +401,40 @@ SCOPE EXTENSION 2 + SCOPE EXTENSION 3 Harsh absorption). Operator confirmed pace
 - **All 55 enum members have exactly one ARCHETYPE_TO_FAMILY entry** — no orphans, no duplicates confirmed.
 
 **✅ UAC changes DONE — slot 3 — 2026-05-18 — uac@0196842 + strategy-service@a636a29:**
-- `CARRY_RECURSIVE_BORROW_PERP_HEDGED` ✅ renamed → `CARRY_BASIS_PERP_INV` in UAC enum, ARCHETYPE_TO_FAMILY, archetype_config, risk_rules, chain_env (STEP 5.72 fix), tests
-- `CARRY_STAKED_BASIS_DATED` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults (TIER_MID_VARIANCE) + factory (CarryStakedBasisEngine) + catalog (3 seed slots) + tests
-- `CARRY_BASIS_DATED_INV` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults (TIER_STABLE_STRUCTURAL) + factory (CarryBasisDatedEngine) + catalog (3 seed slots) + tests
+
+- `CARRY_RECURSIVE_BORROW_PERP_HEDGED` ✅ renamed → `CARRY_BASIS_PERP_INV` in UAC enum, ARCHETYPE_TO_FAMILY,
+  archetype_config, risk_rules, chain_env (STEP 5.72 fix), tests
+- `CARRY_STAKED_BASIS_DATED` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults
+  (TIER_MID_VARIANCE) + factory (CarryStakedBasisEngine) + catalog (3 seed slots) + tests
+- `CARRY_BASIS_DATED_INV` ✅ added to enum + ARCHETYPE_TO_FAMILY + archetype_config + risk_rules + archetype_defaults
+  (TIER_STABLE_STRUCTURAL) + factory (CarryBasisDatedEngine) + catalog (3 seed slots) + tests
 - Pre-deprecation total: 57 (55 pre + rename-unchanged + 2 additions)
 
 ### Item V-2 — Taxonomy plan correction flags ✅ DOCUMENTED
 
 Two discrepancies found between this plan's operator decisions and current UAC state:
 
-1. **§9 `MARKET_MAKING_EVENT_SETTLED` legacy flag**: UAC line 91 marks it `# legacy` but operator decision
-   (§9 "RETAIN, not legacy") says to KEEP it as a first-class archetype. The enum VALUE and ARCHETYPE_TO_FAMILY
-   entry are correct (present + mapped); only the inline `# legacy` comment is wrong. Slot 2 to fix comment.
-2. **Archetype count**: strategy-summary.md says 55; post-`CARRY_STAKED_BASIS_DATED` addition will be 56.
-   The count in `strategy-summary.md` will auto-correct once slot 2 adds the new enum member + ARCHETYPE_TO_FAMILY
-   entry, per "the enum wins" drift correction note in strategy-summary.md.
+1. **§9 `MARKET_MAKING_EVENT_SETTLED` legacy flag**: UAC line 91 marks it `# legacy` but operator decision (§9 "RETAIN,
+   not legacy") says to KEEP it as a first-class archetype. The enum VALUE and ARCHETYPE_TO_FAMILY entry are correct
+   (present + mapped); only the inline `# legacy` comment is wrong. Slot 2 to fix comment.
+2. **Archetype count**: strategy-summary.md says 55; post-`CARRY_STAKED_BASIS_DATED` addition will be 56. The count in
+   `strategy-summary.md` will auto-correct once slot 2 adds the new enum member + ARCHETYPE_TO_FAMILY entry, per "the
+   enum wins" drift correction note in strategy-summary.md.
+
+### Item V-3 — Per-archetype doc completion (3 new/renamed docs) ✅ SHIPPED 2026-05-18 slot-3
+
+Slot-3 created the missing per-archetype docs for the 3 V-1 archetypes (PM@`f3236961`):
+
+- `codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` ✅ — canonical doc for renamed archetype;
+  recursive borrow loop + CeFi perp hedge; replaces `carry-recursive-borrow-perp-hedged.md` (redirect banner added)
+- `codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md` ✅ — new archetype; inverse dated basis (short
+  future + long cash captures backwardation); full config schema + risk profile
+- `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md` ✅ — new archetype; dated-contract variant
+  of staked basis; staking yield + locked basis premium at expiry; Deribit/Drift/Bybit catalog slots
+- `codex/09-strategy/strategy-summary.md` ✅ — Carry & Yield count 8 → 10; new archetype entries; updated links
+
+**Scope boundary**: Slot-8 Vol Trading 18 per-archetype docs + `market-making-event-settled.md` retention doc remain on
+Slot 8's stack (not yet shipped). This V-3 covers only the 3 V-1 Carry archetypes.
 
 ## Composes with
 
