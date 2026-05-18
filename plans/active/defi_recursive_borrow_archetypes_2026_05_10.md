@@ -605,6 +605,12 @@ In-plan P0 (blocks Phase 5-8 implementation):
 
 In-plan P1 (blocks polish, may defer to Phase 9-12):
 
+- [ ] [risk-and-exposure-service] **P0.5**. Wire `COUNTERPARTY_RATIO_CAP` rule into risk-and-exposure-service
+      pre-flight evaluator. UAC seeded (rule + trigger at `unified-api-contracts@c29114c`). R&E service must call
+      `iter_applicable_rules(venue="bybit", rule_id=COUNTERPARTY_RATIO_CAP)` at Layer 2 + evaluate
+      `CounterpartyRatioCapTrigger` against live HL notional from position-balance state. Blocks hard enforcement
+      of the 30-day Bybit cap. **DEFERRED**: successor = next risk-and-exposure-service slot allocation.
+      **MIGRATED FROM: 2026-05-18 slot-4 deferred-work scoreboard.**
 - [ ] [features-service (onchain family)] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per
       `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
 - [ ] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting

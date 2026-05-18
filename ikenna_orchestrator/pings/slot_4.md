@@ -1,5 +1,33 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-18 Cycle 2 Day-3 — AWS Phase 2/3/5b + Bybit counterparty cap DONE
+
+**Status**: 🟢 SESSION COMPLETE
+
+### What shipped this session
+
+| Item | Repo | SHA | Evidence |
+|------|------|-----|----------|
+| ECR repos script + `iam-bucket-policies.aws.yaml` | deployment-service | 4550bc3 | 8 ECR repos created in ap-northeast-1; 12 total now |
+| AWS plan flip Phase 2 IAM + Phase 3 ECR + Phase 5b Glue crawlers | unified-trading-pm | d7e33fcc | All 5 Glue crawlers RUNNING post-transfer |
+| `CounterpartyRatioCapTrigger` + `COUNTERPARTY_RATIO_CAP` rule + Bybit 4th rule + `bybit_notional_cap_pct_of_hl=0.50` | unified-api-contracts | c29114c | QG 122s all passing |
+| Recursive-borrow plan flip (Bybit counterparty cap P0) | unified-trading-pm | b035b35c | checkbox flipped |
+
+### Deferred work after 2026-05-18 slot-4 session
+
+| Item | Plan | Status | Unblock needed |
+|------|------|--------|----------------|
+| `apply-bucket-policies.sh` (actually apply S3 bucket policies via `aws s3api put-bucket-policy`) | aws_migration Phase 2 QG P0 | BLOCKED-OPERATOR — IAM role setup needed on AWS prod | Write script + operator confirms IAM roles are active |
+| AWS Phase 4 Secrets Manager inventory + DeFi secret mirror | aws_migration Phase 4 | BLOCKED-OPERATOR — wallet keys must be rotated/created by operator | Operator action per plan item |
+| Phase 4 Secrets Manager wiring in `ApiKeyReloader` for `CLOUD_PROVIDER=aws` | aws_migration Phase 4 | BLOCKED-OPERATOR | Depends on secret inventory |
+| Recursive-borrow Phase 4 mainnet + Base receiver deploy | defi_recursive_borrow Phase 4 | BLOCKED-OPERATOR-DECISION — wallet key required | Operator provides EVM wallet + funds |
+| Recursive-borrow Phase 5 run-to-completion | defi_recursive_borrow Phase 5 | BLOCKED-OPERATOR-DECISION — depends on Phase 4 receiver address | Phase 4 deploy |
+| Recursive-borrow Phases 9-12 (backtest replay / results panel / paper smoke) | defi_recursive_borrow | BLOCKED-DATA — window 2026-05-19 to 2026-05-23 | Wait for data window |
+| Phase 13 / paper launch | defi_recursive_borrow | BLOCKED-OPERATOR-DECISION | Depends on Phases 4+5 |
+| risk-and-exposure-service venue-cap table wiring for COUNTERPARTY_RATIO_CAP | defi_recursive_borrow / risk | OPEN — plan item says "codify in risk-and-exposure-service venue-cap table" | UAC rule seeded; R&E service wiring still needed |
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 16 complete; cumulative 64 files cleared
 
 **Status**: 🟢 SLOT 4 ACTIVE — method-size refactor sprint continuing
