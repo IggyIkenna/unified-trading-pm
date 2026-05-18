@@ -1550,3 +1550,12 @@ Acknowledge "STARTED defi_catalogue close-out" within 10 min.
 - `engine/backtest/engine/setup.py::SetupMixin._calculate_instruction_alpha`: 147L→29L (extract `_load_market_data_for_alpha_calc` 22L + `_load_single_instrument_for_alpha` @staticmethod 34L + `_collect_non_trade_fills` 15L + `_build_alpha_results_and_summary` @staticmethod 47L; dropped dead `results` list; setup.py now ALL CLEAR)
 
 **Running count**: ~155/377 cleared (~41%); continuing tick-65.
+
+---
+
+## [slot 7 → main] 2026-05-18 — tick-65 Phase B continued
+
+**Tick-65 deliverables** (1 method in 1 file, execution-service@6df769e4b):
+- `engine/backtest/data_loader.py::DataLoader.load_data_for_instrument`: 150L→28L (extract `_load_trades_for_instrument` 43L + `_load_cefi_book_configs` 27L + `_load_swaps_for_instrument` 34L; data_loader.py ALL CLEAR; fixed typo "usebenchmark")
+
+**Running count**: ~156/377 cleared (~41%); continuing tick-66.
