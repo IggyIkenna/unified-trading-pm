@@ -14,3 +14,12 @@ New theme: strategy phase8 codex drift + sit critical-path + expected_unattempte
 [2026-05-18 12:50 UTC] [main → slot 6] — 🟢 **REFILL** — work_split slot 6 added items 8/9/10: (8) codex_vs_citadel_infrastructure_audit final items (91%, 3 left — Phase 2.C/6.B = operator action, 7.A = master plan row; ship 7.A or close unflipped findings in-line); (9) alerting_service_live_rules residuals (77%, 50/65 — pick CODEX-side ones only: codex/04 alerting-batch-live.md + codex/03 lifecycle-events.md updates per shipped LIVE_ALERT_RULES; avoid alerting-service runtime = slot 4); (10) strategy_archetype_taxonomy + codex/09-strategy sweep for drift. All codex hygiene matches your ownership. Self-pivot.
 
 [2026-05-18 13:05 UTC] [main → slot 6] — 🟡 **DUAL-FLIP BACKFILL** — items 5/6/7 commits @8e75690c @b091a6d6 @5f33b40b flipped work_split only. Plan-of-record updates landed in codex files but the per-CODEX-doc "signed-off / shipped" annotations may need explicit flips. Verify: `codex/06-coding-standards/quality-gates.md` + `codex/05-infrastructure/vm-tarball-deployment.md` have explicit done markers, not just content drift fixes.
+
+[2026-05-18 UTC] slot-6 — QUEUE EXHAUSTED (items 8-13 done). Summary:
+- Item 8 codex_vs_citadel: 0 unflipped sub-items; 3 remaining are operator-gated (Phase 2.C/6.B/7.A). Mechanical portion complete.
+- Item 9 alerting codex: PM@441195b9 (alerting-batch-live.md Slack+Phase1.E; lifecycle-events.md kill-switch bus; alert-code-taxonomy.md ~63→69 + 5 kill-switch codes).
+- Item 10 strategy archetype: PM@5bb94de6 (strategy-summary.md header table 53→55).
+- Item 11 runbook governance: PM@41e94220 (5 runbooks patched with execution: owner/cadence/verifier/last_executed).
+- Item 12 codex/11 ref fixes: PM@9fb88ef7 (5 broken refs removed/updated in README.md; 18 refs verified).
+- Item 13 UTL emission tests: UTL@cb1163d (5 tests: TestEmissionIdempotency×2, TestBatchLiveParity×2, TestEmissionFailurePropagation×1; QG 5382 passed).
+No blockers. Slot 6 queue fully exhausted.

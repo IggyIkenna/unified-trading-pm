@@ -189,6 +189,50 @@ The same `benchmark_fill` function is used by:
 
 Determinism guarantees that Group B P&L + Group C exec_alpha ≈ Live P&L (within microstructure noise).
 
+## Scenario-overlay mode (fourth axis on Group B and C)
+
+Scenario overlay is **not a fourth group** — it is a fourth axis within Group B and Group C experiments. A single Group B
+run can be re-executed in scenario mode to validate stress robustness without re-tuning config.
+
+### How it works
+
+`ScenarioOverlayApplier` (UTL `unified_trading_library.scenario.applier`) intercepts the tick stream at the feature layer
+and injects a synthetic condition (price crash, HF breach, venue outage) declared by the `ScenarioOverlay` Pydantic
+dataclass. Every injected row carries `synthetic=true`; downstream fills and P&L are excluded from the Group B alpha
+measurement.
+
+### What it validates
+
+Group B in scenario mode answers: **"does this archetype + config handle the stress correctly?"** — not "is it
+profitable under the stress". The pass criterion is `ScenarioOutcomeAssertion` (kill switch fired, position flattened,
+health factor gate triggered — per the expected outcome declared in `UAC registry/scenarios/`).
+
+Group C in scenario mode answers: **"does the execution policy apply the right algo under stress?"** — e.g., switches
+from TWAP to market on extreme fill urgency when synthetic slippage spikes.
+
+### Axes summary
+
+| Axis           | Group A | Group B | Group C |
+| -------------- | ------- | ------- | ------- |
+| Archetype      | —       | Fixed   | Fixed   |
+| Config hash    | —       | Dynamic | Fixed   |
+| Exec policy    | —       | Fixed   | Dynamic |
+| **Scenario ID**| —       | **Optional overlay axis** | **Optional overlay axis** |
+
+### CLI flag
+
+```bash
+# Group B with scenario overlay
+python -m strategy_service.backtest --archetype carry_staked_basis \
+  --config-hash abc123 --scenario-id DEFI_LST_DEPEG_STETH_5PCT
+```
+
+The `--scenario-id` flag is declared per `codex/06-coding-standards/cli-convention.md` axes and wires
+`ScenarioContext` into the batch engine entry point (item 6.A/6.B — pending).
+
+**Reference:** `UAC registry/scenarios/` (UAC@`33630a6`); `UTL scenario/applier.py` (UTL@`3797fed5`);
+injection architecture: `codex/04-architecture/scenario-injection-architecture.md` (8.A SHIPPED slot 7 Day-4 2026-05-12).
+
 ## Anti-patterns to avoid
 
 **Don't bake execution-quality assumptions into Group B**

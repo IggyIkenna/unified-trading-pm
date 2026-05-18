@@ -216,3 +216,8 @@ Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short —
 - Unity integration (primary sports venue):
   [../../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md)
 - MEV protection for DeFi arb: [../cross-cutting/mev-protection.md](../cross-cutting/mev-protection.md)
+- **Venue-matrix / canonicalisation plan** (Stream B: funding-rate-dispersion multi-venue + Stream D: target_leverage
+  / vol-cap config schema):
+  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+- **Active finalisation plan** (APD execution orchestrator Phase A):
+  [`plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md`](../../../../plans/active/arbitrage_price_dispersion_finalisation_2026_05_09.md)

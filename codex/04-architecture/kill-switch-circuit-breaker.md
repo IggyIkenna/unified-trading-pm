@@ -423,6 +423,40 @@ before any action."
 
 ---
 
+## Scenario-driven trips
+
+The `ScenarioRunner` (UTL `unified_trading_library.scenario.runner`) validates breaker and kill-switch rules by injecting
+synthetic `ScenarioOverlay` conditions at the features layer. Each overlay carries `synthetic=true` in its event payload;
+downstream consumers (strategy-service, execution-service) handle it identically to real data, so the full kill-switch
+propagation path exercises.
+
+**How a scenario trip works:**
+
+1. `ScenarioRunner.run(scenario_id, archetype)` applies the overlay via `ScenarioOverlayApplier` — e.g., forces
+   `HEALTH_FACTOR < 1.0` or `failure_rate >= 0.60` on a venue.
+2. The modified tick propagates through the normal pipeline (features → strategy → execution).
+3. `ScenarioOutcomeAssertion` checker verifies the expected breaker / kill-switch event fires within the assertion window.
+4. `ScenarioReport.all_passed` is the pass/fail gate. `synthetic=true` events are excluded from P&L attribution.
+
+**Per-rule expected-trip mapping (selected):**
+
+| Scenario ID (`UAC registry/scenarios/`)         | Breaker / switch that MUST fire            | Kill-switch scope         |
+| ----------------------------------------------- | ------------------------------------------ | ------------------------- |
+| `DEFI_AAVE_HEALTH_FACTOR_BREACH_1_05`           | `KILL_PER_ARCHETYPE_CARRY_RECURSIVE_STAKED` | `KILL_PER_ARCHETYPE`      |
+| `DEFI_LST_DEPEG_STETH_5PCT`                     | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS`    | `KILL_PER_ARCHETYPE`      |
+| `DEFI_LIQUIDATION_CASCADE_CASCADE_SCENARIO`     | `KILL_ALL_LIVE` (>50% venues OPEN)          | `KILL_ALL_LIVE`           |
+| `CEFI_MULTI_VENUE_REJECTION_RATE_SPIKE`         | `CIRCUIT_OPEN` on target venue             | circuit breaker           |
+| `CEFI_POSITION_DRIFT_CRITICAL_5PCT`             | `STOP_NEW_ONLY` on affected strategy       | `KILL_PER_ARCHETYPE`      |
+| `DEFI_RECURSIVE_LOOP_SAFETY_ABORT_HF_LOW`       | `LOOP_ABORTED_HF_LOW` + `BLOCK_NEW`        | circuit breaker           |
+
+**Assertion timing:** by default the checker expects the event within `assertion_window_seconds=30`. Scenarios that
+exercise exponential backoff (cascade → multi-venue OPEN) may need a longer window declared in the scenario seed.
+
+**Reference:** `UAC registry/scenarios/defi.py` + `cefi.py` (UAC@`33630a6`); `UTL scenario/runner.py` (UTL@`3797fed5`);
+full outcome taxonomy in `codex/04-architecture/scenario-outcome-assertions.md` (item 8.B, pending).
+
+---
+
 ## Related
 
 - `autonomous-recovery-matrix.md` — full decision tree for every failure scenario

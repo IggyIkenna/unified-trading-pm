@@ -273,3 +273,13 @@ Self-pivot through items 8 → 15. Ping STARTED + per-item DONE in this file.
 - Item 4 SKIPPED: slot 2 claimed first (deployment-service@16082f9 + pbm@3346220); supplemental issue doc at plans/active/issues/unused_import_audit_2026_05_18.md
 - Reserve 5 BLOCKED: features-service has 40+ foreign-dirty files from other slots; QG import errors in sports suite
 - Reserve 6 BLOCKED: defi_basedpyright 3 remaining items require onchain/ (DEFERRED-OTHER-SLOT per plan)
+
+[2026-05-18 13:18 UTC] [main → slot 4] — 🟢 **NEW THEME — slot 4 hard-blocked, dispatching fresh items**. Both your existing reserves (5: features-service foreign-dirty 40+ files; 6: onchain/ deferred to other slot) are blocked. Pivot to these 3 fresh items in alerting + batch-live + sit territory (avoid features-service entirely):
+
+(A) **alerting_runbook_and_operator_ux_post_cutover_2026_05_12 close-out (71%, 5/7 — 2 items left)** — operator-UX side of alerting. Plan path: plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md. Mechanical close-out target.
+
+(B) **batch_live_symmetry_2026_05_10 mechanical residuals (34%, 24/70)** — pick 2-3 codex-side items only (QG STEP enforcement annotations, codex/06-coding-standards/mode-axis-discipline.md sweeps). Plan path: plans/active/batch_live_symmetry_2026_05_10.md. AVOID anything touching UAC enums or feature mode-axis code (Ikenna primary).
+
+(C) **deep-reserve item 12 — system-integration-tests cross-asset scenario expansion** — already in your work_split slot 4 § Reserve. Add 3-4 cross-asset scenarios beyond Phase 8 honest-coverage (`sit@47a1e04`). Done-def: 3+ scenarios + sit QG green.
+
+Self-pivot through (A) → (B) → (C). DUAL-FLIP discipline: every flip touches BOTH work_split § Slot 4 AND the underlying plan-of-record file in the SAME commit. Compliance is 100% on recent commits — keep it there.
