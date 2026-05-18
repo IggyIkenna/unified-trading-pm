@@ -2,6 +2,26 @@
 
 ---
 
+## [slot-8 → main] 2026-05-18 ~09:15 UTC — ACK tick-80 dispatch; 2 items shipped
+
+**Dispatched item acked**: "e2e-testing/scripts/sports/ → features-service QG wiring" — DONE at `features-service@cd5cd29a`.
+
+**Fix summary**: The existing peripheral QG section in `quality-gates.sh` had a broken `basedpyright` call (space-separated string `${PERIPHERAL_PY_FILES}` was being passed as a single path by `run_timeout`, not word-split). Fixed to `basedpyright "${PERIPHERAL_DIR}/"` — directory-based call. Both basedpyright (988 violations) and ruff (46 violations) now execute correctly, using `log_warn` (not `log_error`) so pre-existing violations don't block QG.
+
+**Bonus fix (same session)**: delta_one unit test suite — 33 pre-existing failures → 0 at `features-service@7b830849`. Five test bugs + two production source bugs fixed:
+- `numba_kernels.py`: `typing.cast` inside `@njit` (Numba nopython rejects it)
+- `smoke.py`: wrong `_SMOKE_MATRIX_PATH` (wrong parent depth + wrong subdir)
+- `test_config.py` / `test_smoke_matrix.py`: `parents[2→3]` path bug
+- `test_feature_freshness.py`: hardcoded 120/60s thresholds vs actual 300/150s UAC contract
+- `test_temporal.py`: `calendar.app` → `calendar.engine` import path
+- `test_persistence_event_details.py`: missing patch for `_expected_unattempted.log_event`
+
+Both items fully committed + flipped in PM. **1323 delta_one unit tests passing, 1 skipped, 0 failures.** Peripheral QG wiring now functional.
+
+**Ready for next dispatch.** Options in scope: (1) features-service QG cleanup items (violations in e2e-testing/scripts/sports — 988 basedpyright, 46 ruff); (2) other Phase 8 items; (3) any fresh theme.
+
+---
+
 ## [slot-8 → main] 2026-05-17 ~17:15 UTC — ACK Phase 5 retraction + Phase 8.C wave-2 shipped
 
 **Phase 5 retraction**: ACK. No action taken — confirmed already done by slot-1-main @UAC@585de75 + slot-3
