@@ -100,9 +100,7 @@ smoke begins.
 
 #### Reserve queue (pick if primary done early)
 
-- [ ] **4. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) — slot 6 buffer item 8. UAC has
-      5 pre-existing size violations. Take **the SMALLEST/clearest-cut one** only; refactor only that one; leave
-      others for Ikenna. Done-def: 1 file under 900 lines + UAC QG green.
+- [x] ✅ **4. uac_qg_preexisting_size_violations — Harsh-side surgical 1 file** (P2) — UAC@ba51a8e. Removed 2 docstring paragraph-separator blank lines from `PreflightSkipReason` class docstring (902L→900L). Removed `./unified_api_contracts/internal/events.py` from `SIZE_EXTRA_EXCLUDES`; stale comment updated. ruff check+format both stable; full UAC QG passes with `✅ File size OK`.
 - [ ] **11. DEEP RESERVE — workspace-wide stale-import sweep beyond ruff** — scan all active Python repos for unused conditional imports + typing-only imports surviving the ruff F401 sweep. Done-def: report listing per-repo counts + fix 10+ mechanical instances.
 - [ ] **12. DEEP RESERVE — pyproject.toml workspace audit residuals** — audit remaining repos for line-length 100→120 alignment + coverage-floor 70% minimum + pre-commit config drift vs canonical PM template. Done-def: 5+ repos audited + 3+ mechanical fixes shipped.
 - [ ] **13. DEEP RESERVE — shell-script lint sweep across scripts/ directories** — run `shellcheck` across `scripts/`, `deployment-service/scripts/`, `unified-trading-pm/scripts/`. Done-def: shellcheck report + 5+ mechanical SC2086/SC2155/SC2046 quote-and-array fixes.
