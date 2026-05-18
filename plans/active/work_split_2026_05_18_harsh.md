@@ -467,10 +467,7 @@ smoke begins.
 #### Reserve queue
 
 - [x] ✅ **4. solana_restaking_rewards_coverage_2026_05_13 final items (89%, 16/18)** — 2 DEFERRED NICE-TO-HAVE items closed out: (1) MTDS wiring migrated → issue doc; (2) program-ID verification blocked-external → issue doc. Plan now 18/18.
-- [ ] **5. MTDS lst_rates handler — ezETH/RENZO multi-call architecture gap** — slot 9 noted on 2026-05-15: ezETH
-      requires 2-contract call (RestakeManager.calculateTVLs); single-call `_query_rate` does not support. Either
-      (a) implement multi-call support, OR (b) file deferral with `EXPECTED_VENDOR_SOURCE_LIMITATION` reason. P3 —
-      pick if reserve time.
+- [x] ✅ **5. MTDS lst_rates handler — ezETH/RENZO multi-call architecture gap** — option (b): ezETH added to registry with `unsupported_reason` + loop skip logic; absence now explicit not silent; 3 tests verify skip behavior — mtds@5dcda13
 - [ ] **11. DEEP RESERVE — MTDS additional adapter coverage (databento + polymarket_clob)** — extend MTDS handler coverage to databento_l1_l2_l3 + polymarket_clob handlers. Same shape as item 1 (3-handler pickup). Done-def: 2 adapters above 90% + MTDS QG green.
 - [ ] **12. DEEP RESERVE — MDPS canonical_writer error classification audit** — audit MDPS canonical_writer paths for missing `classify_venue_error()` + `record_failed()` emission. Done-def: audit report + 3+ classification gaps fixed.
 - [ ] **13. DEEP RESERVE — PBM mode parity edge cases** — build on item 8 (TestDegradedConditionModeParity, mdps@92d9be5). Add: sparse data (90%+ NaN rows), partial-shard captures, recovery from BATCH_TARDIS → LIVE_WEBSOCKET transition mid-shard. Done-def: 4+ tests + PBM QG green.
