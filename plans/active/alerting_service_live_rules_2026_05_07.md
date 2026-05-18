@@ -619,6 +619,10 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
       `AlertingSystemConfig`; added `_is_runtime_alert()` helper (fnmatch against `LIVE_ALERT_RULES`); modified
       `_deliver_message()` to route `LIVE_ALERT_RULES` events to ops channel when `telegram_chat_id_ops` is set, else
       fall back to `telegram_chat_id`. 3 new tests in `TestTelegramOpsChannelRouting`. Shipped alerting-service@14002b1.
+- [x] [TEST] P1. **Severity routing integration tests** — 3 new test classes / 9 tests covering: SERVICE_DEGRADED P1
+      → email routing; wildcard-pattern P2 → Slack mock; severity_filter → PagerDuty channel path. Verifies routing
+      parity across severity tiers end-to-end. (evidence: alerting-service@af7122f 2026-05-18; QG ✅ 129s.
+      **BACKFILLED** from slot-4 work-split item 13 — plan-of-record flip per CLAUDE.md Half-2 rule.)
 - [ ] [OPERATOR] P1. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings once operator
       has created the ops Telegram channel and knows the new chat_id. No code change needed — env var wired directly.
       **DEFERRED-PER-USER**: gated on operator providing new chat_id.

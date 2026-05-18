@@ -3801,6 +3801,11 @@ against seeded fixtures.
       same-region GCE VM. Reference impl: TBD `unified-trading-pm/scripts/qg/measure-honest-coverage.py` (writegate
       Phase 5 follow-up — needs same-region VM + cross-asset-group manifest read). Once cells are filled, the QG ratchet
       at `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` reads this doc as the frozen baseline.
+- [x] [TEST] P1. **SIT Phase 8 honest-coverage emission flow scenarios** — 4 test classes / 11 tests in
+      `system-integration-tests/` covering: VM emits via `log_event` → `ManifestWriter.record_captured` → coverage
+      JSON endpoint roundtrip → API response shape assertions. Validates honest-coverage emission contract end-to-end.
+      (evidence: system-integration-tests@47a1e04 2026-05-18; sit QG ✅. **BACKFILLED** from slot-4 work-split item 12
+      — plan-of-record flip per CLAUDE.md Half-2 rule.)
 - [ ] [SCRIPT] P0. LookaheadBiasError end-to-end smoke test: pick 1 strategy / 1 model / 1 fixture; run feature compute
       at `kickoff − 24h`; assert no input row consumed has `available_at > kickoff − 24h`; CI-runnable.
 - [ ] [SCRIPT] P0. Write-gate quartet integration test (per asset_group × per bundled data_type matrix): row=0 →
