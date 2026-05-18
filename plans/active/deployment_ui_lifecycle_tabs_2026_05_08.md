@@ -420,9 +420,10 @@ todos:
 
   - id: h3-deployment-ui-env-badge-and-domain-resolution
     content: |
-      - [ ] [SCRIPT] P0. Add env badge to deployment-UI Header — read-only, computed from `window.location.hostname`
+      - [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-ui@75202df** [SCRIPT] P0. Add env badge to deployment-UI Header — read-only, computed from `window.location.hostname`
         per Phase A.5 helper. Visual: green DEV / amber STAGING / red PROD. Clicking the badge shows a tooltip with
         the resolved env + the API base URL + the current cloud-target. NEVER a toggle.
+        resolveEnvTier() added; tooltip via useState onBlur dismiss; tsc+build green.
 
   - id: h4-staging-and-prod-domain-deployment
     content: |
