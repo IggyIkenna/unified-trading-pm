@@ -383,8 +383,10 @@ smoke begins.
 - [x] ✅ **6. workspace-wide cassette parity refresh (slot 8 item 18)** — run cassette schema parity tests across UAC
       external dirs. Done-def: parity green + any drift fixed.
       — 316 passed, 49 skipped, 0 failed. No drift to fix. UAC parity fully green.
-- [ ] **11. DEEP RESERVE — semver-agent label audit across active repos** — audit `.github/workflows/semver-bump.yml` + label-mismatch report across 21 Python repos. Done-def: 0 drift OR drift report filed.
-- [ ] **12. DEEP RESERVE — workspace-manifest.json drift check vs actual dep graph** — run `check-dependency-alignment.py --json` + cross-check vs pyproject.toml internal deps across all active repos. Done-def: alignment report + any drift fixed.
+- [x] ✅ **11. DEEP RESERVE — semver-agent label audit across active repos** — audit `.github/workflows/semver-bump.yml` + label-mismatch report across 21 Python repos. Done-def: 0 drift OR drift report filed.
+      — 3 issues found + fixed: (a) e2e-testing missing semver-agent.yml → created (e2e-testing@4f8bce2); (b) deployment-ui missing semver_policy in manifest → fixed (PM@e6e6c76f); (c) 8 stale features-*-service entries in manifest (disk-absent) → filed issue-doc below. PM@e6e6c76f.
+- [x] ✅ **12. DEEP RESERVE — workspace-manifest.json drift check vs actual dep graph** — run `check-dependency-alignment.py --json` + cross-check vs pyproject.toml internal deps across all active repos. Done-def: alignment report + any drift fixed.
+      — PASS: aligned=True, 0 issues. PM@e6e6c76f.
 - [ ] **13. DEEP RESERVE — pre-commit hook coverage extension** — compare per-repo `.pre-commit-config.yaml` vs canonical PM template + add missing hooks (prettier on .md/.yaml, shellcheck on .sh, basedpyright on .py). Done-def: 5+ repos hardened + canonical template drift = 0.
 
 #### Coordination
