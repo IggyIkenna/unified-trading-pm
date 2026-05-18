@@ -629,3 +629,17 @@ Total ~20 AI-days. Self-pivot, ping STARTED + per-item DONE in this file.
 [2026-05-18 UTC] slot-2 — 🟢 **STARTED item 15** — workspace-wide pyproject.toml audit: line-length, coverage floor, ruff exclude drift, pre-commit hook drift across 26+ repos.
 
 [2026-05-18 UTC] slot-2 — ✅ **DONE item 15** — 8 fixes shipped: orchastrator@6752349 (gitleaks hook + ruff.format), batch-live-recon@ae1280c, deployment-service@15662a5, market-data-processing@3a85f51, risk-and-exposure@a9d58fc, execution-service@40995f1f, UTL@48f4ceb (ruff.format sections added). All 26+ repos audited: line-length=120 universal ✓, gitleaks present in all but deployment-api (slot-7 territory, skipped). Done-def: 8+ fixes ✅.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 16** — os.getenv + ImportError fallback sweep in scripts/ + tooling.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 16** — orchastrator@4f0577d: gcs_sync.py ImportError removed + google-cloud-storage moved to main deps. 0 os.getenv violations in QG-covered service source. Remaining: MTDS hyperliquid_s3 + UTL instruments_catalog_reader (optional dep guards — need architectural dep-add decision). Restricted repos (slot 4/9, slot 7) not touched.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED item 17** — execution-service C901 sweep monitoring (post-batch-104).
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE item 17** — C901 violations: 0 (ruff --select C901 scan clean). Batch 104 E501 fixes landed; no new C901 introduced by slot-5 Phase 9 test commits. Done-def met.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED execution-service Phase 9 cost models + DefiErrorCode hardening** — slot-5 item 16 (unclaimed). Writing per-protocol precision tests (AAVE/Morpho/Compound) + DefiErrorCode 30-code routing coverage. Target: 6+ new tests + execution-service QG green.
+
+[2026-05-18 UTC] slot-2 — ✅ **DONE Phase 9 cost models supplement** — execution-service@7aa3be7c. Added 22 tests supplementing slot-5 item 16: TestDefiErrorCodeRecoveryMapping (17 tests: aave_v3/morpho/hyperliquid FAIL/RETRY/SKIP routing via classify_venue_error) + TestDefiErrorCodeCoverage (5 tests: all 30 codes verified by group). Slot-5 item 16 already flipped (execution-service@05fce938). Supplemental addition only. Pivoting to SUSTAIN queue.
+
+[2026-05-18 UTC] slot-2 — 🟢 **STARTED S9** — workspace-wide naive `datetime.now()` → `datetime.now(timezone.utc)` sweep across source code (exclude tests).
