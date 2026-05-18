@@ -304,7 +304,7 @@ smoke begins.
       lending-indices DEFERRED; (2) defi_master banner → post-cutover plan as Phase 10+ canonical track; (3)
       alerting_service_live_rules Phase 8 banner → post-cutover plan. Flipped 3/4 [PM] P0 banner items in post-cutover
       plan; item 2 (master_to_live_defi sub-bullet) left SLOT-1-ONLY.
-- [x] ✅ **22. archetype doc broken-link sweep** — PM@this. Fixed 3 broken cross-references: (1) carry-recursive-staked
+- [x] ✅ **22. archetype doc broken-link sweep** — PM@bd018a91. Fixed 3 broken cross-references: (1) carry-recursive-staked
       restaking-reward-economics: ../../cross-cutting/ → ../cross-cutting/ (one level too deep); (2) yield-staking-simple
       same fix; (3) arbitrage-price-dispersion APD finalisation plan: plans/active/ → plans/archive/ (plan archived
       2026-05-09).

@@ -536,5 +536,5 @@ authenticated session for each venue to call:
 - Item 21: post-cutover banner alignment sweep — 3 cross-plan banners updated to reference post-cutover successor plan.
   PM@aab95382.
 - Item 22: archetype doc broken-link sweep — 3 fixes: restaking-reward-economics ../../→../ in carry-recursive-staked +
-  yield-staking-simple; APD finalisation plan active→archive. PM@this.
+  yield-staking-simple; APD finalisation plan active→archive. PM@bd018a91.
 Continuing defi_archetypes/defi_master codex residuals.
