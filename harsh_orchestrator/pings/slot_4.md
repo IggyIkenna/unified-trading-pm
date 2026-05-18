@@ -326,3 +326,82 @@ escalating to main for assignment.
   2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts"`
   3. Then resume sustain queue items per work_split § Slot 4.
 Also: batch-live-reconciliation-service worktree is 4 commits behind LDR — rebase on re-engage.
+
+---
+
+## 2026-05-18 session — features-service Wave 70-73 rolling coverage continuation
+
+[2026-05-18 UTC] slot-4 — 📋 **SESSION SUMMARY (2026-05-18): features-service onchain/ coverage waves 70-73**.
+Continued rolling coverage waves on `features_service/onchain/` after picking up the 2026-05-18 work-split queue items
+1-3 (sit honest-coverage scenarios ✅ + alerting routing ✅ + batch-live reconcile_shard edge cases ✅ per item 14 in
+work_split). After queue items completed, pivoted to reserve queue items 5/6 and then the MEGA RESERVE coverage waves.
+
+### Waves completed this session
+
+**Wave 70** — `features-service@a55c053b` — NEW FILE: `tests/onchain/unit/test_lst_seasonal_rewards_orchestrator.py`
+(11 tests, 0 pre-existing). Target: `lst_seasonal_rewards_collector.py`. Coverage: closed 6 previously-uncovered
+branches.
+- `EmptyChainEventScanner.scan_distributor_transfers` (lines 118-119) — always returns []
+- `LSTSeasonalRewardsCollector.__init__` (lines 152-153) — null filter + set conversion
+- `collect_for_day` lst_filter branch (line 166 continue) — pufETH excluded when filter=['weETH']
+- `collect_for_day` logger.info block (lines 173-184) — all LSTs processed when no filter
+- `_collect_one_stream` scanner-None debug path (lines 196-204) — empty when no scanner registered
+- `_collect_one_stream` except block (lines 212-221) — ConnectionError / TimeoutError / ValueError all → []
+- Key pattern learned: inner test classes implementing Scanner Protocol MUST keep original param names (to match keyword
+  arg calls from source) and use `del param` in body (for basedpyright unused-param compliance). Prefixing with `_`
+  causes `TypeError: got unexpected keyword argument` at runtime.
+
+**Wave 71** — `features-service@4d1a6647` — Two near-100% modules closed in single commit:
+1. `test_lst_seasonal_rewards_orchestrator.py` extended: `test_collect_for_day_non_seasonal_streams_skipped()` — mixed
+   CARRY_BASE + CARRY_ISSUER_SEASONAL registry; only SEASONAL scanned; CARRY_BASE hits line 170 `continue`. Closed
+   `lst_seasonal_rewards_collector.py` to ~100%.
+2. `test_parser.py` extended: `test_incremental_mode_normalised_to_live_by_validate_args()` in `TestValidateArgs` —
+   covers `cli/parser.py` line 142 where `validate_args()` itself normalises `incremental→live` (previously only
+   `normalize_args` was tested for this branch). Closed `parser.py` to ~100%.
+
+**Wave 72** — `features-service@bc212b1c` — `test_batch_handler.py` extended: 15 new tests across 5 new classes.
+Coverage: `batch_handler.py` 64.6% → ~85%.
+- `TestHandleDependencyReport`: `_handle_dependency_report` dependency-not-in-batch skip path (line 58-80) + all-failed
+  result (lines 94-108) + partial-fail (line 125)
+- `TestCheckDependencies`: parallel async dependency check loops (lines 152-161)
+- `TestProcessGroups`: parallel group dispatch + first-fail fallthrough (lines 179-195)
+- `TestPreflightGuard`: `_run_write_gate`-style preflight true→exits-early (lines 334-342) + run
+  ConnectionError→False (lines 373+377-379)
+- `TestLogRunError`: `_log_run_error` FEATURE_WRITE_FAILED emit (lines 424-436) + None df branch (lines 452-454)
+- Plus 4 standalone async tests: `_initialize_services` sets attributes; `_process_feature_group` raises when
+  uninitialized; preflight returns True exits early; connection error returns False.
+- Fixed pre-existing type annotation: `list` → `list[MagicMock]` for basedpyright compliance.
+
+**Wave 73** — `features-service@c3ef28af` — `test_feature_writer_pure.py` extended: 11 new tests across 7 new classes.
+Coverage: `feature_writer.py` 66% → ~84%.
+- `TestAddTimestampOutTypeBranches`: Utf8 string timestamp cast branch (line 304) + Int64 microsecond epoch branch (line
+  307)
+- `TestHandleWriteError`: `_handle_write_error` emits FEATURE_WRITE_REJECTED with reason="exception" (lines 238-247)
+- `TestRunWriteGate`: alignment-fail → `_emit_write_rejected` + return None (lines 170-177)
+- `TestApplyEmissionGate`: suppressed+should_alert=True → `log_event` called (lines 214-225) + suppressed+no_alert →
+  no event (line 233)
+- `TestValidateAlignment`: invalid alignment result → return False (lines 371-378)
+- `TestWriteSeasonalRewards`: empty rows → False (lines 476-478) + non-empty rows → group+write → True (lines 479-486)
+  using `LstSeasonalRewardRow` from UAC `unified_api_contracts.internal`
+- `TestCheckExists`: blob_exists=True → True + blob_exists=False → False (lines 490-496)
+
+### Work-split plan state
+
+Item 14 in `plans/active/work_split_2026_05_18_harsh.md` is **fully up to date** — all Wave 70-73 evidence already
+recorded with SHAs in the MEGA RESERVE item 14 checkbox. Item was flipped ✅ in the same agent turn as each wave.
+
+Queue items 12-15 from the 2026-05-15 extended queue:
+- [x] 12. system-integration-tests Phase 8 honest-coverage — done ✅ sit@47a1e04 (work_split item 1)
+- [x] 13. alerting-service alert routing tests — done ✅ alerting@af7122f (work_split item 2)
+- [x] 14. batch-live-reconciliation reconcile_shard edge cases — done ✅ batch-live-reconciliation@a214cd1 (work_split item 3)
+- [x] 15. workspace-wide unused-import audit — SKIPPED (slot 2 claimed; supplemental issue doc filed)
+
+**All 4 carry-over items from the 2026-05-15 extended queue are now complete.**
+
+### Current status
+
+🏁 **STANDING BY** — all work-split queue items complete (work_split items 1-17 all ✅). Coverage waves 70-73 shipped.
+Waiting for main orchestrator to assign next tasks. No open blockers. No cross-side dependencies.
+
+Features-service QG note: pre-existing ~198 failures remain (volatility 48 + calendar + other families — NOT caused by
+slot-4). New tests all pass in isolation. Basedpyright clean on all new test files.
