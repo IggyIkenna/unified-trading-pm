@@ -84,8 +84,8 @@ depends_on:
 > Parquets confirmed on GCS at new paths (e.g. `day=*/pipeline_mode=batch_databento/asset_group=tradfi/`). NO DATA LOSS.
 > **Axis-10 fix SHIPPED: instruments-service@8accb30** — adds pipeline_mode= templates for cefi/defi/tradfi/prediction.
 > **DO NOT run Phase 6 --apply** — these are false positives; --apply would corrupt real captured rows.
-> Phase 3.6 re-audit (Axis-10 fix): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / cefi ⏳ / defi ⏳
-> Operator sign-off step 7 (HUMAN-ONLY): blocked on cefi/defi re-audit completing.
+> Phase 3.6 re-audit (Axis-10 fix): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 (311,602 real) / cefi ⏳
+> Operator sign-off step 7 (HUMAN-ONLY): blocked on cefi re-audit completing.
 > See `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md` for full RCA.
 
 todos:
@@ -426,8 +426,8 @@ todos:
       Steps 1-6 COMPLETE (2026-05-19): 31 VMs TERMINATED, all exit status 0. No data loss confirmed.
       Step 6 (Phase 3.6 phantom gate): post-migration audit found false-positive phantoms (Axis-10 reconciler
       bug). Fix shipped at instruments-service@8accb30. Re-audit with fixed reconciler running (5 asset_groups).
-      prediction: 0 phantoms ✅ | sports: 0 phantoms ✅ | tradfi: 0 phantoms ✅ | cefi/defi: pending re-audit.
-      Step 7 (operator sign-off): HUMAN-ONLY, blocked on re-audit completing with 0 phantoms across all 5.
+      prediction: 0 phantoms ✅ | sports: 0 phantoms ✅ | tradfi: 0 phantoms ✅ | defi: 0/311,602 ✅ | cefi: ⏳ pending.
+      Step 7 (operator sign-off): HUMAN-ONLY, blocked on cefi re-audit completing (4/5 confirmed ✅).
 
   - id: phase-4-consumer-sweep-explicit-pipeline-mode
     content: |

@@ -68,6 +68,10 @@ week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-
 > > > > > > > N can now write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` successor plan — agent
 > > > > > > > wires `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` into Cloud Run `--update-secrets` at that time.
 
+[2026-05-19 18:42 UTC] ikenna-slot-3 → harsh-slot-9 — **🟢 DEFI PHANTOM-FIX CONFIRMED: 0 phantoms / 311,602 real captures. B-015 re-smoke UNBLOCKED.**
+Axis-10 fix (instruments-service@8accb30) + Phase 3.6 re-audit result: `defi` 0 phantoms ✅ (177,114 GCS prefixes probed, 18:42 UTC). NO `--apply-flips` needed — all rows confirmed at new `pipeline_mode=batch_*/` paths. DeFi handlers (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360) can proceed with B-015 re-smoke. CeFi re-audit still running (ETA ~18:58 UTC).
+See `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3.6 + `codex/02-data/pipeline-mode-partition.md`.
+
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived below. Superseded by work_split_2026_05_19_ikenna.md + work_split_2026_05_19_harsh.md. Booting agents: read your work-split for today's tasks — do NOT act on archived entries. -->
 
 <!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18) — all resolved / superseded:

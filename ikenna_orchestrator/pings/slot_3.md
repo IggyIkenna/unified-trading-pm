@@ -1416,12 +1416,17 @@ Slot 3 cannot touch master plan per slot-precedence rule.
 8. PM@`b9f701a16` — Phase 3 execution note: steps 1-6 complete, step 7 pending re-audit.
 9. PM@`54ce00884` — Phase 0/1A/1B stale status=todo → done; Phase 6 NOT NEEDED note added.
 
-**Phase 3.6 re-audit with Axis-10 fix (background tasks running):**
+**Phase 3.6 re-audit with Axis-10 fix (UPDATED 18:42 UTC):**
 - prediction: 14,403 → 0 phantoms ✅ CONFIRMED
 - sports: 559,961 → 0 phantoms ✅ CONFIRMED
-- tradfi/cefi/defi: ⏳ PENDING (large manifests, may take 10-15 min more)
+- tradfi: 245,907 → 0 phantoms ✅ CONFIRMED
+- defi: 311,602 → 0 phantoms ✅ CONFIRMED (18:42 UTC; 177,114 GCS prefixes probed)
+- cefi: ⏳ running (ETA ~18:58 UTC; 1.29M captured rows)
 
-**Pending operator action:** Once re-audit confirms 0 phantoms for tradfi/cefi/defi → Phase 3 step 7 per-asset-group
-sign-off (HUMAN-ONLY). No further agent action needed on phantom cleanup track.
+**Cross-side ping filed:** `_agent_pings.md` 18:42 UTC → harsh-slot-9: defi ✅, B-015 re-smoke unblocked.
+No `--apply-flips` needed for defi (all rows at new pipeline_mode= paths).
 
-Slot 3 AVAILABLE for next dispatch.
+**Pending operator action (4/5 confirmed):** Once cefi re-audit confirms 0 phantoms → Phase 3 step 7 per-asset-group
+sign-off (HUMAN-ONLY). Step 7 checkboxes in `gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3 content.
+
+Slot 3 AVAILABLE for next dispatch (monitoring cefi audit).
