@@ -380,8 +380,13 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       **SHIPPED 2026-05-18** (slot 4): `deployment-service/scripts/aws/setup-ecr-repos.sh` created and run with
       `--apply`. All 8 repos created in ap-northeast-1 (427895769566). ECR now has 12 repos total (4 pre-existing +
       8 new). Verified via `aws ecr describe-repositories`. deployment-service@4550bc3.
-- [ ] [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise per-service
-      (`REPO_NAME` env var). Land 8 PRs (one per repo) with the buildspec + minimal CodeBuild project trigger.
+- [x] ✅ [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise per-service
+      (`REPO_NAME` env var). **SHIPPED 2026-05-19** (slot 3): canonical template (REPO_NAME=$(basename $(pwd)), flat ECR
+      push, PM QG clone, dynamic GH dispatch URL) propagated to all 7 service repos + deployment-service URL fix.
+      deployment-service@10dcea9, features-service@2fbcb16d, strategy-service@ff8efb8, execution-service@ec6644cc,
+      risk-and-exposure-service@07f36af, position-balance-monitor-service@6f65750, alerting-service@8008758,
+      deployment-api@83b95a5. Old REGISTRY_REPO/SERVICE_NAME template replaced (wrong ECR URI: unified-trading-system/$svc
+      vs correct flat/$svc).
 - [ ] [SCRIPT] P0. Wire CodeBuild webhooks from GitHub → per-service. Use the existing GitHub PAT in `.act-secrets` (or
       rotate via Secrets Manager).
 - [ ] [SCRIPT] P0. Smoke: trigger one CodeBuild run on `instruments-service`, confirm image lands in ECR + pulls
