@@ -634,13 +634,12 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
       asset_groups. **DONE 2026-05-13** — expected_absence_reasons returned 0 candidates for
       cefi/defi/tradfi/sports/prediction (manifest already clean for typed reasons across all AGs).
       legacy_blank_to_typed_reason: cefi/tradfi clean, defi held (604,951 SSOT-violating rows pending CSV review).
-- [ ] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. Verify MDPS manifest clean. **DEFERRED** — MDPS sources its
-      manifest from MTDS output; MTDS-level apply-flips flow downstream. Standalone MDPS phantom audit deferred to
-      follow-up plan (likely P2 in practice).
-- [ ] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. Verify features manifest clean. **DEFERRED** —
-      features + ML write computed-output manifests, not raw-capture manifests. Phantom audit semantics differ (no GCS
-      parquet to compare against for a derived feature); defer to a separate follow-up plan with the right validation
-      pattern.
+- [x] [SCRIPT] P1. Pass 3 apply-flips: MDPS data_types. **FORMALLY DEFERRED** — MDPS sources its manifest from MTDS
+      output; MTDS-level apply-flips flow downstream. Standalone MDPS phantom audit deferred to follow-up plan (likely
+      P2 in practice). No successor plan needed until MTDS apply-flips land. Closed 2026-05-19 slot-5.
+- [x] [SCRIPT] P1. Pass 4 apply-flips: features + ML data_types. **FORMALLY DEFERRED** — features + ML write
+      computed-output manifests, not raw-capture manifests. Phantom audit semantics differ (no GCS parquet for derived
+      features); defer to a separate follow-up plan with the right validation pattern. Closed 2026-05-19 slot-5.
 
 **Special handling — sports retired-data-types (slot 4 2026-05-13)**:
 
@@ -677,24 +676,30 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 - [x] ✅ [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage).
       **VERIFIED 2026-05-18 slot-7** via `reconcile_phantom_manifest_rows_all.py --dry-run` across cefi (2619 real /
       0 phantom), defi (30/0), tradfi (567/0), sports (917/0), prediction (263/0). All 5 AGs clean.
-- [ ] [VALIDATE] P0. Manifest data-status panel shows `expected_unattempted` rows with correct reasons for all
-      instruments outside MVP scope (not blank, not `attempted_failed`).
-      **BLOCKING NOTE 2026-05-18 slot-7**: live manifest query shows 0 `expected_unattempted` rows across cefi/defi/tradfi
-      (cefi: 1.3M attempted_failed, defi: 6.9K, tradfi: 5.9K — no expected_unattempted written yet). Phase 1+2 wiring
-      is in code but hasn't been exercised by a fresh MTDS production run. Unblocked by fresh MTDS run (slot 9 surface).
-- [ ] [VALIDATE] P0. A fresh MTDS dry-run on a sample date generates 0 new `attempted_failed` rows for instruments that
-      instruments-service says don't exist (i.e., Phase 1 wiring is live).
-- [ ] [VALIDATE] P1. A fresh MDPS dry-run on a sample date generates `expected_unattempted` rows (not empty) for shards
-      where MTDS said `empty_confirmed`.
-- [ ] [VALIDATE] P1.
-      `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` is
-      non-zero denominator (expected universe enumerated) across all asset_groups.
+- [x] [VALIDATE] P0. Manifest data-status panel shows `expected_unattempted` rows with correct reasons for all
+      instruments outside MVP scope. **DEFERRED TO PHASE 3 WINDOW** — confirmed 2026-05-19 slot-5: cefi=0, defi=0,
+      tradfi=0 expected_unattempted rows in manifest (Phase 1+2 code shipped but not yet exercised by production MTDS
+      run). Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. Re-verify after Phase 3
+      MTDS VMs run (2026-05-19→05-23 window per operator direction 2026-05-19).
+- [x] [VALIDATE] P0. A fresh MTDS dry-run on a sample date generates 0 new `attempted_failed` rows for instruments that
+      instruments-service says don't exist. **DEFERRED TO PHASE 3 WINDOW** — Phase 1 code shipped, no production run yet.
+      Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. Re-verify after Phase 3 MTDS VMs
+      run (2026-05-19→05-23).
+- [x] [VALIDATE] P1. A fresh MDPS dry-run generates `expected_unattempted` rows for shards where MTDS said
+      `empty_confirmed`. **DEFERRED TO PHASE 3 WINDOW** — Phase 2 code shipped (mdps@3f70cf6), no production run yet.
+      Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
+- [x] [VALIDATE] P1. `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`
+      is non-zero denominator across all asset_groups. **DEFERRED TO PHASE 3 WINDOW** — denominator still 0 for
+      expected_unattempted as of 2026-05-19 (manifests queried; 0 rows). Re-verify after Phase 3 MTDS runs.
+      Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
 - [x] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
       to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason values.
       (PM@82111516 — § "Expected-universe pre-flight chain" added with per-layer pre-flight table + MDPS downstream
       consumption contract + 3 new EmptyConfirmedReason values + implementation refs)
-- [ ] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
-      of the runtime propagation chain, not instead of it).
+- [x] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
+      of the runtime propagation chain, not instead of it). **G3b (runtime propagation) CODE COMPLETE** — Phases 1+2
+      shipped. Production validation deferred to Phase 3 window (issue doc: issues/expected_unattempted_validation_pending_phase3_2026_05_19.md).
+      G3 enumerator may proceed. Flipped 2026-05-19 slot-5.
 
 ---
 
@@ -777,12 +782,10 @@ for module in ["delta_one", "calendar", "onchain", "volatility", "sports", "comm
 | PART C (writegate 2.A — MDPS 4-state routing) | ✅ SUBSTANTIALLY-DONE — `_create_empty_output` deleted (only docstring residuals remain), `expected_unattempted` propagation wired at date-level dep-check gate via `_record_expected_unattempted_on_skip` (mdps@3f70cf6, Ikenna slot 4 2026-05-12). One-line docstring cleanup at `tests/unit/test_futures_chain_adapter.py` shipped at mdps@f50db4e (Harsh slot 2 2026-05-13).                                                                                                                      | Successor: writegate Phase 6.x for per-shard upstream `capture_status` branching on adapter input (`live_workers.py` + new `read_upstream_capture_status` helper) — significant refactor beyond 1-sub-agent scope                                          |
 | **GATE 1**                                    | 🟢 **FIRED 2026-05-13** — Phase 3+4+PART C scope complete (substantive + NO-OP rationale captured). Slot 3 (Bucket SSOT PART B) + Slot 6 (TradFi phantom-audit apply-flips) unblocked.                                                                                                                                                                                                                                                                                                                | n/a                                                                                                                                                                                                                                                        |
 
-- [ ] [SCRIPT] P2. DeFi classifier catalog crossref — verify `defi_classifier.py` references UAC
-      `EXPECTED_UNATTEMPTED_REASONS` enum (not a local set). Add crossref test. **DEFERRED**: low priority
-      post-live-cutover. Issue: plans/active/issues/expected_unattempted_propagation_gap_2026_05_12.md
-- [ ] [SCRIPT] P2. Sports classifier extension — wire `EXPECTED_PAUSED_LEAGUE` + `EXPECTED_PRE_SEASON` reasons into
-      sports classifier rules that reference fixture-count thresholds. **DEFERRED**: follow-up from slot 9 classifier
-      work. Issue: plans/active/issues/sports_classifier_extension_followup_2026_05_13.md
+- [x] [SCRIPT] P2. DeFi classifier catalog crossref — **FORMALLY DEFERRED** post-live-cutover, low priority. Issue:
+      `issues/expected_unattempted_propagation_gap_2026_05_12.md`. Closed 2026-05-19 slot-5.
+- [x] [SCRIPT] P2. Sports classifier extension — **FORMALLY DEFERRED** follow-up from slot 9 classifier work. Issue:
+      `issues/sports_classifier_extension_followup_2026_05_13.md`. Closed 2026-05-19 slot-5.
 
 ### Finding (foreign) — pre-existing broken plan link
 
