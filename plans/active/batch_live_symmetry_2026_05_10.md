@@ -657,9 +657,11 @@ land.
       Aster) testnet rate limits per pre-audit § 6 risk #4.
 - [ ] [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9 COMMAND
       #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
-- [ ] [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
+- [x] ✅ [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
       `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` with archetype-specific
       drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`).
+      risk-exposure@c2f0652: ArchetypeKillSwitchThresholds dataclass + CARRY_STAKED_BASIS_KILL_SWITCH_THRESHOLDS
+      (cap_bps=500/5%, position_breach_pct=20%) + evaluate_archetype_breach() + 8 tests. QG PASS 2026-05-19.
 - [ ] [AGENT] P1. **post-cutover** — `leveraged_funding_arb` end-to-end identical recipe (May-23 cutover lands BOTH
       archetypes, but leveraged_funding_arb is the hedge leg of carry_staked_basis — a single coordinated paper-soak may
       suffice; operator confirms during Tab 8 paper-soak).
