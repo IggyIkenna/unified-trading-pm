@@ -23,11 +23,11 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 15 todos / 0 done; v2 enumerator extends v1 with instruments-catalog × dates × data_types cross-product at per-instrument grain. BLOCKED on G4 v8 schema (manifest_schema_final_gate). Design class (UAC SSOT design + enumerator semantics across 5 asset_groups). Baseline 10 (~0.7 AI-day per substantive todo); × 0.6 = 6.
 ---
 
-> **🟡 BLOCKED-ON G4 v8 SCHEMA** — execution can't start until `manifest_schema_final_gate_2026_05_09` ships the atomic
-> v7→v8 rename + `record_captured(service_emission_state=)` MANDATORY enforcement. Per the umbrella's gate sequence,
-> this plan's enumerator launch (G3) runs ONCE on the v8 manifest, NOT pre-v8 then re-run post-v8. Design
->
-> - execution phases below are paste-ready; flip `status:` to `in-progress` when G4 lands.
+> **🟡 BLOCKED-ON G4 Phase 7 GCS MIGRATION FLEET** (updated 2026-05-19 slot 8) — CODE GATE DONE: v7→v8 rename
+> (manifest_schema_final_gate Phase 2.D ✅) + `record_captured(service_emission_state=)` MANDATORY enforcement
+> (Phase 4.DEFAULT-REMOVAL ✅). Remaining blocker: GCS migration fleet (Phase 7.C-G of
+> `manifest_schema_final_gate_2026_05_09` — HUMAN+AGENT; requires operator to launch migration VMs + sign off).
+> Phase 4 VM launches (this plan) can proceed immediately after Phase 7.G sign-off.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >
@@ -265,16 +265,19 @@ using pyarrow column-projection on the 190M-row manifest (pyarrow scans in ~30s 
 
 ### Phase 4 — Production launch (P1, ~0.5 day wall-clock; 2-4 hrs per asset_group)
 
-- [ ] [VM] P1. Launch v2 enumerator VMs per asset_group (~10 total: 7 cefi venues + 1 defi + 1 tradfi + 1 sports + 1
+- [ ] **[BLOCKED-OPERATOR]** [VM] P1. Launch v2 enumerator VMs per asset_group (~10 total: 7 cefi venues + 1 defi + 1 tradfi + 1 sports + 1
       prediction). Apply CLAUDE.md "No fire-and-forget VM launches" rule: verify STARTED event within 60s + ≥1 progress
       event per hour + STOPPED/FAILED at exit per VM. Total wall-clock ~3-4 hrs running in parallel.
-- [ ] [VM] P1. Manifest consolidator daemon merges per-VM shards into canonical manifest. Expected: ~190M rows in
-      `_index/availability_index.parquet`.
-- [ ] [VERIFY] P1. Post-run verification (per "Plans Run To Actual Completion" HARD RULE):
+      **BLOCKED**: awaits `manifest_schema_final_gate_2026_05_09` Phase 7.C-G (GCS migration VM fleet — HUMAN+AGENT)
+      + Phase 7.G operator sign-off. Code gate is fully done (2026-05-19). Unblocked by: slot-8 ping to operator.
+- [ ] **[BLOCKED-OPERATOR]** [VM] P1. Manifest consolidator daemon merges per-VM shards into canonical manifest. Expected: ~190M rows in
+      `_index/availability_index.parquet`. **BLOCKED**: same as above (precedes consolidation).
+- [ ] **[BLOCKED-OPERATOR]** [VERIFY] P1. Post-run verification (per "Plans Run To Actual Completion" HARD RULE):
       `bash     gsutil ls gs://{pid}-events/events/instruments-service/{today}/expected-universe-v2-*/   # STARTED+STOPPED for every VM     python -c "import pyarrow.parquet as pq; t = pq.read_table('gs://{manifest_bucket}/_index/availability_index.parquet', columns=['capture_status']); from collections import Counter; print(Counter(t['capture_status'].to_pylist()))"     # expect: expected_unattempted count ~190M; captured + empty_confirmed + attempted_failed unchanged     `
-- [ ] [VERIFY] P1. Per-asset-group spot-check: sample 100 random `(instrument_id, day)` pairs per asset_group; assert
+      **BLOCKED**: same as above.
+- [ ] **[BLOCKED-OPERATOR]** [VERIFY] P1. Per-asset-group spot-check: sample 100 random `(instrument_id, day)` pairs per asset_group; assert
       lifecycle bounds enforced (no rows pre-`active_from` / post-`active_to` for cefi; no rows pre-genesis for defi;
-      etc.).
+      etc.). **BLOCKED**: same as above.
 
 ### Phase 5 — Codex SSOT updates (P1, ~0.25 day) — per "Post-Plan-Phase Codex Audit" HARD RULE
 
