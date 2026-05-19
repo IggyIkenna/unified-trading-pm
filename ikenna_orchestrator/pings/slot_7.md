@@ -1760,3 +1760,11 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   `place_order` 104L→49L
 
 **Running count**: ~191/377 cleared (~51%); active non-excluded violations 6→5; continuing tick-76 (setup.py).
+
+## [slot 7 → main] 2026-05-19 — tick-76a Phase B continued
+
+**Tick-76a deliverables** (1 file, execution-service@e9037dfa2):
+
+- `engine/backtest/instruction_loader.py`: extract 5 static helpers (`_normalize_instructions_df`, `_get_trade_instrument_ids`, `_split_trade_non_trade`, `_make_swap_timing_trigger`, `_build_trade_schedule`); `convert_instructions_to_schedule` 140L→42L
+
+**Running count**: ~192/377 cleared (~51%); active non-excluded violations 5→4 (instruction_loader cleared); continuing tick-76b (setup.py 4 violations).
