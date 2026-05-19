@@ -120,7 +120,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-19 11:28 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-05-19 11:41 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -132,7 +132,7 @@ _Last regenerated: 2026-05-19 11:28 UTC via `scripts/plans/regenerate_active_pla
 | [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md) | master | design | 60/87 | 69% | 20.0 | 2026-05-23 |
 | [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md) | master | infra | 0/64 | 0% | 20.0 | 2026-07-04 |
 | [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md) | master | brand-new | — | — | 20.0 | post-cutover (target 2026-06-01) |
-| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md) | cross_cutting_may_23_2026 | design | 32/70 | 46% | 16.3 | 2026-05-23 |
+| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md) | cross_cutting_may_23_2026 | design | 33/70 | 47% | 15.9 | 2026-05-23 |
 | [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md) | master | infra | 0/16 | 0% | 15.2 | post-cutover (target 2026-07-15) |
 | [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md) | master | brand-new | — | — | 15.0 | — |
 | [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) | instruments_live_master_2026_05_08 | design | — | — | 15.0 | 2026-05-23 |
@@ -151,7 +151,7 @@ _Last regenerated: 2026-05-19 11:28 UTC via `scripts/plans/regenerate_active_pla
 | [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md) | instruments_live_master_2026_05_08 | design | 54/66 | 82% | 2.4 | 2026-05-23 |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 56/167 | 34% | 2.4 | — |
 | [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md) | manifest_evolution_master_2026_05_08 | refactor | 18/23 | 78% | 2.2 | — |
-| [`agent_orchestrator_slack_notifications_2026_05_19`](./agent_orchestrator_slack_notifications_2026_05_19.md) | **orphan** | brand-new | — | — | 2.0 | — |
+| [`agent_orchestrator_slack_notifications_2026_05_19`](./agent_orchestrator_slack_notifications_2026_05_19.md) | master | brand-new | — | — | 2.0 | — |
 | [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) | instruments_live_master_2026_05_08 | design | 7/20 | 35% | 1.9 | — |
 | [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) | cross_cutting_may_23_2026 | design | 12/20 | 60% | 1.9 | 2026-05-23 |
 | [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md) | master | research | 0/5 | 0% | 1.8 | — |
@@ -183,7 +183,7 @@ _Last regenerated: 2026-05-19 11:28 UTC via `scripts/plans/regenerate_active_pla
 | [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) | cross_cutting_may_23_2026 | design | 7/7 | 100% | 0.0 | 2026-05-23 |
 | [`missing_question_docs_disposition_2026_05_10`](./missing_question_docs_disposition_2026_05_10.md) | master | design | 3/3 | 100% | 0.0 | pre-cutover (P0 — May-23 plans cite ghos |
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) | infrastructure_master_2026_05_07 | refactor | 31/31 | 100% | 0.0 | — |
-| **TOTAL** (59 plans) | 1 orphans, 0 TBD | — | — | **56% done** | **427** | — |
+| **TOTAL** (59 plans) | 0 orphans, 0 TBD | — | — | **56% done** | **427** | — |
 <!-- AUTO-INVENTORY-END -->
 
 ---
