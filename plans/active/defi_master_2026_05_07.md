@@ -510,18 +510,29 @@ these venues.
 > `fapi.asterdex.com` (Binance-compatible, 406 live PERPETUAL symbols); added `_ASTER_FUNDING_START_DATE = "2024-09-25"`
 > pre-launch guard to emit `EXPECTED_PRE_VENUE_LAUNCH` for pre-launch dates instead of blank `SOURCE_RETURNED_ZERO`.
 
-- [ ] [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
+- [x] ✅ [AGENT] P0. Tail chains 25% coverage diagnosis: Aurora / Celo / Fantom / Mantle / Metis / Moonbeam each have 1
       protocol live; per-chain protocol expansion deferred-post-cutover unless `carry_staked_basis` /
       `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) requires those chains. [AUDIT 2026-05-07: FRESH —
       actionable diagnostic only; expansion deferred]
+      **DIAGNOSIS COMPLETE 2026-05-19**: Confirmed zero protocol-chain entries for Aurora/Celo/Fantom/Mantle/Metis/
+      Moonbeam in live DeFi registry. Neither `carry_staked_basis` nor `arbitrage_price_dispersion` requires any
+      tail chain for May-23. Protocol expansion is DEFERRED-POST-CUTOVER → `defi_catalogue_chain_primitives_2026_05_10.md`
+      § tail-chain expansion. No action needed for May-23 gate.
 - [ ] [AGENT] P0. Mid-tier 60% coverage: Arb / Avax / Base / BSC / Linea / Op / Polygon — 32/53 protocols. Per-protocol
       backfill needed for 21 protocols/chain. Subgraph schema-mismatch fixes for PancakeSwap V3, SushiSwap V3, Aerodrome
       V3, Camelot V3 (per `defi_e2e_pipeline`). [AUDIT 2026-05-07: FRESH — actionable; UAC@0169a0a PROTOCOL_LAUNCH_DATES
       helps clip denominator]
-- [ ] [AGENT] P0. 988 dates missing — query manifest, identify per-(chain, protocol, data_type) gaps, prioritize
+- [x] ✅ [AGENT] P0. 988 dates missing — query manifest, identify per-(chain, protocol, data_type) gaps, prioritize
       `carry_staked_basis` chain set first (Ethereum + Solana mostly done; Arbitrum + Base critical). [AUDIT 2026-05-07:
       FRESH — actionable; UAC@f22f4b1 CHAIN_GENESIS_DATES + UAC@0169a0a PROTOCOL_LAUNCH_DATES SSOTs help re-clip 988
       number downward]
+      **DIAGNOSIS COMPLETE 2026-05-08 (Tab 6)**: Audit filed at
+      `plans/archive/issues/defi_988_missing_dates_audit_2026_05_08.md`. Finding: 1.3M non-captured rows across 10
+      DeFi buckets; 99% are SSOT-correct pre-genesis/pre-launch clipping; only 13,632 rows / 2,234 distinct dates
+      actionable. Remaining actionable items: (1) ASTER perp-funding FIXED 2026-05-15 mtds@f9824d0 — dead URL fixed;
+      (2) DEX subgraph schema fixes (PancakeSwap/SushiSwap/Aerodrome/Camelot V3) ~1.4k rows — in Mid-tier P0 below;
+      (3) Stage 4 rescan-all-manifests gate (manifest_migration_master Stage 4) re-clips denominator. Diagnosis done
+      — execution gated on Stage 4 rescan + mid-tier DEX schema fixes.
 - [ ] [AGENT] P1. Use `poolGetSnapshots` for historical TVL when querying past dates (DeFi pool query path). [AUDIT
       2026-05-07: FRESH — actionable; `grep poolGetSnapshots` returns 0 hits in workspace, confirming this DeFi-pool
       query path migration has not yet shipped] (folded from venue_axis_asset_group_vocabulary_2026_04_25)
