@@ -72,6 +72,14 @@ CLI output that didn't match what the CI ratchet would compute (if it existed).
       opt-in (was hardcoded ON, defeating manifest skip) — `deployment-service@d673323`.
       Without `--force`: `MODE: --force OFF (default) — manifest-driven skip ACTIVE` printed
       at launch. Re-launched 7 VMs at 19:54 UTC in no-force mode; manifest will filter.
+- [x] **P0-0c. ✅ deployment-service**: EXIT-trap log upload across 14 inline-script VM
+      launchers — `deployment-service@6b4610c`. New helper `lc_log_upload_trap_block` in
+      `lib/launcher_common.sh` emits a snippet that tees stdout+stderr to `/var/log/run.log`
+      and installs a `trap EXIT` handler uploading to canonical
+      `gs://deployment-scripts-<project>/vm-logs/<vm-name>/run.log` with 3-attempt retry.
+      Fires on success, error, signal, `set -e` propagation. Closes the demonstrated
+      mtds-solana-drift-backfill bug (TERMINATED with no log uploaded). Unblocks Phase 8
+      verification — post-mortem on any failed VM now always has evidence.
 
 ## Pre-Audit Before Execution (per Citadel-Grade Planning Standards)
 

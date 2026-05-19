@@ -133,6 +133,36 @@ Per `honest_coverage_formula_consolidation_2026_05_19.md`:
   fills in), a fresh MTDS sweep will pick up newly-discovered instruments — and since MTDS handlers respect
   `--force=false` (per audit, orchestrator.py:1985), that sweep is cheap (only the deltas get fetched).
 
+## [slot 1 main] 2026-05-19 ~20:35 UTC — VM LOG UPLOAD HARDENED ACROSS 14 LAUNCHERS
+
+**Trigger**: T+10min audit found `mtds-solana-drift-backfill` TERMINATED after 7min with no run.log uploaded;
+operator declared "fix the lack of logging events thats essential."
+
+**Root cause**: inline-startup-script launchers used `set -euo pipefail` + final-line `gsutil cp` →
+any error before that line aborts the script before the upload, silently losing all VM logs.
+
+**Fix** — `deployment-service@6b4610c`: new `lc_log_upload_trap_block` helper in
+`scripts/vm/lib/launcher_common.sh` (lines 158-228). Emits a bash snippet that:
+- Tees stdout+stderr to `/var/log/run.log`
+- Installs `trap EXIT` upload handler with 3-attempt retry → canonical path
+  `gs://deployment-scripts-<project>/vm-logs/<vm-name>/run.log`
+- Schedules `shutdown -h +1` so upload flushes before VM goes away
+
+Patched 14 launchers in one commit (1 manual: solana-drift; 1 manual: instruments-backfill; 12 via Agent
+sub-task): defi, dex-pools, eigenlayer, gas-fees-fleet, liquidations, perp-funding, solana-drift, solana-gas,
+sports-odds, sports-entity-sweep, sports-full-sweep, sports-instruments-reference, instruments-backfill.
+All 14 pass `bash -n`; trap snippet substitution verified end-to-end in a heredoc render test.
+
+**Verification**: re-launched `mtds-solana-drift-backfill` at 20:33 UTC (after deleting the terminated VM).
+T+10min wakeup scheduled to confirm run.log appears at
+`gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`.
+
+**Composes with**: CLAUDE.md "No fire-and-forget VM launches" rule — every VM now emits a reliable post-mortem
+artifact regardless of exit shape. Phase 8 of honest_coverage plan depends on this.
+
+**Plan-flip Half-2**: `honest_coverage_formula_consolidation_2026_05_19.md` P0-0c flipped to `[x]`. Same agent
+turn as code commit per CLAUDE.md.
+
 **Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
 
 **Rationale (operator)**: live-inference runs on long-lived VMs, not scale-to-zero serverless. Cold-start
