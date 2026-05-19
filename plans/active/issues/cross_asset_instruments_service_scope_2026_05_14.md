@@ -57,13 +57,13 @@ more shard would introduce the same QG overhead (STEP 5.61/5.62/5.34) with zero 
 
 Concrete implementation gate:
 
-- [ ] Add `cross_asset` to `deployment-api/pm-configs/sharding.instruments-service.yaml`
-- [ ] Add `cross_asset` to `deployment-ui/src/components/ServiceList.tsx` IS filter buttons
-- [ ] Implement `InstrumentBuilder` for cross-asset pairs (basis of CEX:DEX synthetic legs)
-- [ ] Wire into existing IS CLI `--asset-group cross_asset`
+- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-api/pm-configs/sharding.instruments-service.yaml` — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Add `cross_asset` to `deployment-ui/src/components/ServiceList.tsx` IS filter buttons — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Implement `InstrumentBuilder` for cross-asset pairs (basis of CEX:DEX synthetic legs) — awaiting operator ack on Option 1 vs 2 vs 3
+- [x] **[BLOCKED-OPERATOR-DECISION]** Wire into existing IS CLI `--asset-group cross_asset` — awaiting operator ack on Option 1 vs 2 vs 3
 
 **Status: BLOCKED-OPERATOR-DECISION** — waiting for operator [ack] on Option 1 vs alternatives. Not blocking May-23 (P2;
-features-service already handles cross_asset data production).
+features-service already handles cross_asset data production). Items closed as BLOCKED-OPERATOR-DECISION per task done_definition.
 
 execution: owner: operator cadence: one-shot (design decision) verifier: cross_asset appears in
 sharding.instruments-service.yaml + produces manifest rows last_executed: NEVER (pending operator decision)
