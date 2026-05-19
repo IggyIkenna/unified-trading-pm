@@ -115,12 +115,12 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 
 **Part A — code_freeze remaining Phase 2 gaps** (open `[GAP]` items not covered by slot 2):
 
-1. - [ ] **GAP-2.2.B** — Update CLAUDE.md "Honest absence" HARD RULE with Phase 2.2 GCS migration reference. (design
-         0.6×, ~1 = 0.6 cal)
-2. - [ ] **GAP-2.3.A** — Append Phase 2.X OHLCV legacy filename rename sub-section to code_freeze plan. (design 0.6×, ~2
-         = 1.2 cal)
-3. - [ ] **GAP-2.3.B** — Audit features-service readers for `ticks.parquet` literal path references. (research 1.2×, ~2
-         = 2.4 cal)
+1. - [x] ✅ **GAP-2.2.B** — Update CLAUDE.md "Honest absence" HARD RULE with Phase 2.2 GCS migration reference. (design
+         0.6×, ~1 = 0.6 cal) — PM@`22d632c4`
+2. - [x] ✅ **GAP-2.3.A** — Append Phase 2.X OHLCV legacy filename rename sub-section to code_freeze plan. (design 0.6×,
+         ~2 = 1.2 cal) — PM@`1467b823`
+3. - [x] ✅ **GAP-2.3.B** — Audit features-service readers for `ticks.parquet` literal path references. (research 1.2×,
+         ~2 = 2.4 cal) — PM@`1467b823` (no breaking changes; 3 bundled-type paths safe)
 4. - [ ] **Phase 2.5** — Run `manifest_cross_asset_rescan_design_2026_05_08.md` cross-asset `--apply-flips` sequence per
          the plan. (infra 0.8×, ~3 = 2.4 cal)
 5. - [ ] **gcs_migration_bundle Phase 3** — Complete remaining items in
@@ -170,11 +170,14 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 **Part A — writegate Phase 6.6/6.7** (plan at 52%, 11.5 cal left):
 
 1. - [x] ✅ **Phase 6.6 — ml-training-service emission wiring** — `_check_emission_policy()` + BLOCK_CRITICAL gate in
-         `store_model()`; `training_completeness_fraction` param; 5 tests. — ml-training-service@ff20617 (pre-shipped 2026-05-13)
-2. - [x] ✅ **Phase 6.6 — ml-inference-service emission wiring** — `_check_emission_policy()` + `_filter_by_emission_policy()`
-         + `_upload_one_mode()` in `prediction_publisher.py`; 4 STRICT_FAIL tests. — ml-inference-service@9fb5d50 (pre-shipped 2026-05-13)
-3. - [x] ✅ **Phase 6.7 — strategy-service emission wiring** — `_check_emission_policy` + gate in `SignalPublisher.publish()`;
-         4 tests. — strategy-service@88eb085 (pre-shipped 2026-05-13)
+         `store_model()`; `training_completeness_fraction` param; 5 tests. — ml-training-service@ff20617 (pre-shipped
+         2026-05-13)
+2. - [x] ✅ **Phase 6.6 — ml-inference-service emission wiring** — `_check_emission_policy()` +
+         `_filter_by_emission_policy()`
+   - `_upload_one_mode()` in `prediction_publisher.py`; 4 STRICT_FAIL tests. — ml-inference-service@9fb5d50 (pre-shipped
+     2026-05-13)
+3. - [x] ✅ **Phase 6.7 — strategy-service emission wiring** — `_check_emission_policy` + gate in
+         `SignalPublisher.publish()`; 4 tests. — strategy-service@88eb085 (pre-shipped 2026-05-13)
 4. - [x] ✅ **Phase 6.7 — risk-and-exposure-service emission wiring** — `_check_emission_policy` + gate in
          `RiskSnapshotSink.write()`; 4 tests. — risk-and-exposure-service@df4849f (pre-shipped 2026-05-13)
 
@@ -186,7 +189,8 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
          Phase 3.5 COMPLETE. — MTDS@99fc7b3 (pre-shipped 2026-05-17)
 6. - [x] ✅ **Phase 4 MDPS live consumer** — LiveStreamAggregator + 7 Protocol adapters + consumer wiring shipped. —
          mdps@0068b2f (pre-shipped 2026-05-11)
-7. - [ ] **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference gap-blocking). (0.5 cal)
+7. - [ ] **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference
+         gap-blocking). (0.5 cal)
 
 ---
 
