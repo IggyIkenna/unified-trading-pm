@@ -1198,6 +1198,8 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-19 (slot-5 batch 30 — engine/backtest/engine/results.py)**: shipped at execution-service@750e8001d. _extract_results 226L→49L via 7 helpers: _er_extract_summary_checks (26L) + _er_alpha_instr (18L) + _er_alpha_cache static (21L) + _er_resolve_run_id (23L) + _er_exec_algo static (19L) + _er_resolve_instruction_type static (8L) + _er_build_orders_and_timeline (28L). 1 violation cleared. Allowlist 15→14 files. Slot-5 cumulative across batches 21-30: 10 files cleared.
 
+  **Ratchet-down 2026-05-19 (slot-4 batch 31 — data/gcs_data_loading.py)**: shipped at execution-service@a98d95a51. _run_pre_load_cache_checks 123L→49L via _preld_check_existing_scale (35L) + _preld_resolve_and_validate_cache (44L); _convert_day_to_catalog 85L→24L via _convert_tbbo_to_bars (21L) + _convert_to_bars (30L); load_and_convert_from_gcs 305L→47L via _GcsLoadContext TypedDict + _gcs_load_one_day (46L) + _gcs_run_all_days (27L) + _gcs_filter_and_convert (50L) + _gcs_check_local_cache_hit (20L) + _gcs_build_day_window (17L) + _gcs_tradfi_validate_log (24L) + _gcs_debug_path_log (18L) + _gcs_resolve_dates_to_process (13L) + _gcs_log_summary (10L) + _mk_day_result (6L). 3 violations cleared. Allowlist 14→13 files. Slot-4 cumulative across batches 1-31: 97 files cleared.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:

@@ -1,5 +1,33 @@
 # Slot 4 — Ping Ledger
 
+## [slot 4 → main] 2026-05-19 (autonomous loop) — batch 31 complete; cumulative 97 files cleared
+
+**Status**: 🟢 ROUND COMPLETE
+
+### What shipped this round
+
+| File | What changed | Helpers extracted |
+| ---- | ------------ | ----------------- |
+| data/gcs_data_loading.py | _run_pre_load_cache_checks 123L→49L; _convert_day_to_catalog 85L→24L; load_and_convert_from_gcs 305L→47L | _preld_check_existing_scale, _preld_resolve_and_validate_cache, _convert_tbbo_to_bars, _convert_to_bars, _GcsLoadContext TypedDict, _GcsDayResult TypedDict, _mk_day_result, _gcs_build_day_window, _gcs_debug_path_log, _gcs_tradfi_validate_log, _gcs_filter_and_convert, _gcs_check_local_cache_hit, _gcs_load_one_day, _gcs_run_all_days, _gcs_log_summary, _gcs_resolve_dates_to_process |
+
+- execution-service data/gcs_data_loading.py Half-1: `a98d95a51` (ldr)
+- unified-trading-pm Half-2: this commit
+- 3 violations cleared; 14 helpers extracted; all ≤50L; AST clean; ruff 0 errors
+- Cumulative slot-4 total: **97 files cleared**, allowlist now **13**
+
+### Remaining allowlist (13 entries)
+
+- DEFERRED: data/loaders/tick_data.py (slot-5 defer — streaming 435L method)
+- data/loader.py (4 viols: 428L, 94L, 87L, 122L)
+- data/loader_gcs.py (5 viols: 289L, 90L, 94L, 87L, 122L)
+- config/grid_generator_v2.py (3 viols: 157L, 199L, 215L)
+- config/grid_v2_registry.py (3 viols: 130L, 163L, 205L)
+- instruments/factory_cefi_defi.py (3 viols: 235L, 249L, 95L)
+- results/extractor.py (3 viols: 132L, 194L, 216L)
+- engine/backtest cluster (6 entries): evaluator_pnl, evaluator_trades, core, node_builder, non_trade_processor, runner
+
+---
+
 ## [slot 4 → main] 2026-05-18 (autonomous loop) — batch 30 complete; cumulative 94 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
