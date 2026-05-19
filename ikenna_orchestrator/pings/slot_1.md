@@ -4569,3 +4569,37 @@ echo -n "<key>" | gcloud secrets create <secret-name> --data-file=- \
 Once all in place, the paper VM launcher's `--waive-*` flags can be dropped one by one.
 
 — ikenna-main slot 1
+
+---
+
+## [slot 1 main] 2026-05-19 ~19:40 UTC — CREDENTIAL APPROVAL — Helius Solana mainnet RPC
+
+For Phase G.1 (MatchingEngineExecutionProvider Solana extension) + carry_staked_basis Solana legs
+synthetic sim per Phase 5 MVP plan.
+
+```
+CREDENTIAL APPROVAL REQUEST — helius-solana-rpc
+Vendor: Helius (dashboard.helius.dev)
+What I need: API key from a new account; cost = free tier (1M credits/month, 10 RPS)
+Account to use: existing operator email (ikenna@odum-research.com or equivalent)
+Unblocks:
+  - Phase G.1: MatchingEngineExecutionProvider Solana AMM routing for carry_staked_basis
+  - carry_staked_basis JitoSOL/mSOL/bSOL synthetic paper sim using mainnet read-only data
+  - Future: features-onchain LST APR reads for Solana LSTs
+Without it: Solana legs of carry_staked_basis stay refused (NotImplementedError); paper
+evidence is ETH-only.
+```
+
+Provisioning command once API key in hand:
+```bash
+HELIUS_KEY="<paste>"
+echo -n "https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}" | \
+  gcloud secrets create helius-solana-rpc --data-file=- \
+  --project=central-element-323112 --labels=env=mainnet,vendor=helius
+```
+
+The Phase G.1 sub-agent dispatched in parallel will reference `helius-solana-rpc` secret
+name and gracefully handle absence (logs warning + falls back to refusing Solana instructions)
+until the operator provisions.
+
+— ikenna-main slot 1
