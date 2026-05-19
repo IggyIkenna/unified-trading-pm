@@ -474,11 +474,11 @@ reviews + tunes thresholds.
       (3) `alerting-quietness-20260519-105730` failed rc=1 — STARTED event published OK but 5 PubSub subscriptions missing
           (`risk_alerts_circuit_breaker_triggers`, `balance_discrepancy_alerts`, `order_rejection_spikes`,
           `service_error_events`, `margin-events`), all created + subscriber IAM granted;
-      (4) `alerting-quietness-20260519-110752` — awaiting STARTED event confirmation.
-      Verify `STARTED` event in
-      `gs://central-element-323112-events/events/alerting-service/2026-05-19/alerting-quietness-20260519-110752/` within
-      90s of VM boot; recheck every 12h for `QUIETNESS_BASELINE_CHECKPOINT` events. Auto-shutdown at T+48h (~2026-05-21
-      11:07 UTC).
+      (4) `alerting-quietness-20260519-110752` CONFIRMED: DEPLOYMENT_STARTED at 10:11:02 UTC; subscriber streaming;
+          VM RUNNING + heartbeat active. Note: alerting-service uses PubSubEventSink (not GCS sink) so STARTED event
+          is in PubSub topic `alerting-service-events`, not the GCS event path.
+      Recheck log every 12h: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260519-110752/run.log`.
+      Auto-shutdown at T+48h (~2026-05-21 11:07 UTC).
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
