@@ -106,6 +106,13 @@
       "module": "strategy_service.cli.main",
       "extra_args": "--mode batch --start-date 2026-03-10 --end-date 2026-03-17 --dry-run",
       "$note": "CLI requires --mode, --start-date, --end-date. --dry-run prevents cloud writes."
+    },
+    "agent-orchestrator": {
+      "repo": "agent-orchestrator",
+      "port": 8026,
+      "module": "server.server",
+      "extra_args": "",
+      "$note": "FastAPI orchestrator for parallel Claude Code worker agents. Boot via uvicorn (not python -m): `uvicorn server.server:app --port 8026`. Dashboard is a separate Vite app at agent-orchestrator/dashboard/ (npm run dev), default port 5173 in scripts/dev.sh. Cloud Run target uses PORT=8080 internally per Dockerfile. Operator tooling — exempt from QG STEPs 5.61 + 5.34 per plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md."
     }
   }
 }
