@@ -1487,8 +1487,8 @@ grep.
       `raw_symbol` (e.g. `ESM6` → March 2026 → near-term front). New helper
       `unified_api_contracts.canonical.domain.futures.derive_expiry_bucket(symbol: str, today: date) -> str` OR a new
       `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully.
-- [ ] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
-      workspace vocabulary.
+- [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
+      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via VENUE_REGISTRY)
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
       `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
