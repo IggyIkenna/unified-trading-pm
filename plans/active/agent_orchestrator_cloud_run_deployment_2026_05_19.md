@@ -122,15 +122,15 @@ todos:
 
   - id: p6-codex-claudemd-updates
     content: |
-      - [ ] [AGENT] P6. Phase 6 — Codex SSOT + CLAUDE.md updates (can run concurrent with P5 1-week soak)
-        - [ ] New codex doc unified-trading-pm/codex/04-architecture/agent-orchestrator-overview.md (purpose, deployment shape mirroring UI's pattern, secret model via GCP Secret Manager, auth flip rationale, GCS state mirror, dashboard URL + local-dev URL + port 8026)
-        - [ ] Update unified-trading-pm/codex/08-workflows/local-dev.md: add port 8026 entry + "agent-orchestrator local dev" subsection (`uv sync && scripts/dev.sh`)
-        - [ ] Update CLAUDE.md "Key repo map": register agent-orchestrator alongside DART + client-reporting + deployment-api as a workspace service. Note: ikenna_orchestrator/ + harsh_orchestrator/ LEDGER.md files remain as offline-review fallback but agent-orchestrator dashboard is authoritative work-split surface
-        - [ ] Update agent-orchestrator/README.md "Quick start" + "public URL" sections to point at the new odum-research.com URLs (replace orch.epiphanytechnologies.com)
-        - [ ] Update agent-orchestrator/docs/OPERATIONS.md "Behind a public domain" section: replace the laptop-nginx+Let's-Encrypt recipe with the Firebase-Hosting+Cloud-Run recipe used by the rest of the workspace
-        - [ ] Strike completed TODO.md items: "Off-laptop continuity" (Phase 5), "Strict auth" (Phase 3), "Slack notification when blocked" (handed off to slack-followup plan)
+      - [x] ✅ [AGENT] P6. Phase 6 — Codex SSOT + CLAUDE.md updates (can run concurrent with P5 1-week soak) — unified-trading-pm@1277a0cb + agent-orchestrator@ac8c36e
+        - [x] ✅ New codex doc unified-trading-pm/codex/04-architecture/agent-orchestrator-overview.md (purpose, deployment shape mirroring UI's pattern, secret model via GCP Secret Manager, auth flip rationale, GCS state mirror, dashboard URL + local-dev URL + port 8026)
+        - [x] ✅ Update unified-trading-pm/codex/08-workflows/local-dev.md: add port 8026 entry + "agent-orchestrator local dev" subsection (`uv sync && scripts/dev.sh`)
+        - [x] ✅ Update CLAUDE.md "Key repo map": register agent-orchestrator alongside DART + client-reporting + deployment-api as a workspace service. Note: ikenna_orchestrator/ + harsh_orchestrator/ LEDGER.md files remain as offline-review fallback but agent-orchestrator dashboard is authoritative work-split surface
+        - [x] ✅ Update agent-orchestrator/README.md "Quick start" + "public URL" sections to point at the new odum-research.com URLs (PENDING P5 flag added per done_definition)
+        - [x] ✅ Update agent-orchestrator/docs/OPERATIONS.md "Behind a public domain" section: replace the laptop-nginx+Let's-Encrypt recipe with the Firebase-Hosting+Cloud-Run recipe used by the rest of the workspace (PENDING P5 banner added)
+        - [x] ✅ Strike completed TODO.md items: "Off-laptop continuity" (Phase 5), "Strict auth" (Phase 3), "Slack notification when blocked" (handed off to slack-followup plan)
       Full-execution criterion: `grep agent-orchestrator unified-trading-pm/cursor-configs/CLAUDE.md` returns the new repo-map entry. New codex file head-50 reads cleanly with frontmatter. Old `orch.epiphanytechnologies.com` references in agent-orchestrator/docs/ replaced (verified via `grep -r epiphanytechnologies agent-orchestrator/ | wc -l` returns 0 except in historical TODO.md "Done since" entries).
-    status: todo
+    status: done
 
 isProject: true
 ---
