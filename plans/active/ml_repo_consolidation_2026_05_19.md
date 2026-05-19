@@ -370,6 +370,78 @@ inference AND downstream by strategy-service** AND **DART UI service-list shows 
 health-endpoints** AND **codex Phase 9 SSOT-INDEX registers `ml-service-architecture.md`**. Operational completion
 required per "Plans Run To Actual Completion" HARD RULE.
 
+## Phase 0 audit findings — folded in 2026-05-19
+
+Pre-audit artifact:
+[`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md)
+(598 lines). New plan todos extracted below; risk register sharpened.
+
+### Confirmations + corrections
+
+- **🟢 Phase 4 (a) sed-rewrite scope is genuinely trivial**: pre-audit § (b) confirms **0 external Python imports**.
+  Only ~3-4 string-literal updates needed (path constants in `system-integration-tests/test_batch_live_symmetry.py`,
+  shell-command literals in `unified-trading-library/synthetic/harness.py`,
+  `unified-trading-pm/scripts/openapi/generate_*.py`).
+- **🟢 Topic-name renames are NOT needed**: `ML_MODEL_COORDINATION_TOPIC = "ml_model_coordination_events"` is the
+  SAME literal in training publisher + inference subscriber. `CASCADE_TOPIC_NAME = "cascade_predictions"` matches
+  across inference publisher + strategy-service subscriber. **Plan Phase 4 (b) atomic-sequencing concern DEMOTED
+  from CRITICAL to LOW-RISK**.
+- **dep-set size win for split is bigger than estimated**: inference-only Docker image ~400-500MB vs flat-union
+  ~1100-1200MB → ~55-60% leaner (vs the plan's <30% regression cap). Achievable ONLY with the split.
+
+### New todos (P0/P1 cutover-critical, P2/P3 nice-to-have)
+
+- [ ] **P0 [NAME-COLLISION-FIX]** [AGENT] Phase 4 (a) RENAME — `ml_inference_service/io/loader.py:FeatureSubscriber`
+  collides with `ml_inference_service/app/core/feature_subscriber.py:FeatureSubscriber` (two distinct classes,
+  same name, same package). Rename the `io/loader.py:24` symbol to `IoFeatureSubscriber` BEFORE Phase 3
+  subtree-merge OR during Phase 4 (a) import-rewrite sweep. Otherwise the merged `ml_service.inference.*`
+  package has ambiguous symbols.
+- [ ] **P1 [BLOCKED-OPERATOR-DECISION]** [HUMAN] Phase 4 (h) conditional-deps split
+  (`[project.optional-dependencies] training = [...]`) violates workspace "flat deps only" rule (CLAUDE.md
+  `### Dependencies + builds`). Operator must explicitly sanction ml-service as the workspace-wide exception OR
+  rule out the split. **Operator ping filed** in `ikenna_orchestrator/pings/slot_1.md` 2026-05-19. Default
+  recommendation: SANCTION the exception — 55-60% inference-image-size reduction is operationally significant
+  for live-inference cold-start latency; flat-deps rule rationale (predictable dep resolution) is preserved by
+  the `[project.dependencies]` being flat + the optional-group being closed-set.
+- [ ] **P1** [AGENT] Phase 5 lift — `pre_crash_checkpoint.py` (`register_pre_crash_handlers()`,
+  `_memory_watchdog()`) currently only in inference repo. Cross-cutting utility — lift to UTL
+  `unified_trading_library.lifecycle.pre_crash`. Every service benefits.
+- [ ] **P1** [AGENT] Phase 5 lift — `config_reloaders.py` near-identical between the 2 source repos (verified
+  via `diff -u`). Primary UTL lift candidate — `ConfigReloaderBase` in
+  `unified_trading_library.config_interface.config_reloader_base`. Composes with strategy-twin plan's 4×
+  config_reloaders lift (5 → 1 base class workspace-wide).
+- [ ] **P1** [AGENT] Phase 9 codex sweep scope confirmed — **455 file:line refs** across
+  `unified-trading-pm/cursor-configs/` + `unified-trading-pm/codex/` reference the 2 source repo names. Phase 9
+  (h) bulk-sed rewrite. Plan a single sed sweep across both directories; verify no false-positives in archived
+  docs.
+- [ ] **P1** [AGENT] Phase 7 cleanup — legacy top-level `ml-training-service/tests/test_*.py` files (~30)
+  duplicate the structured `tests/unit/test_*.py` set. Consolidate during Phase 7 (post-archive); keep only the
+  structured set in merged `ml-service/tests/training/`.
+- [ ] **P2** [AGENT] Phase 1 lift — `ML_MODEL_COORDINATION_TOPIC`, `CASCADE_TOPIC_NAME`, `MTF_TOPIC_NAMES`
+  currently duplicated as string literals between publisher/subscriber. Lift to UAC
+  `unified_api_contracts.canonical.crosscutting.events.topics` (or equivalent). NOT cutover-blocking; current
+  literals match across repos so wire protocol is stable.
+- [ ] **P2** [AGENT] Phase 5 — ml-service is a candidate for `ManifestFreshnessCache` adoption (UTL
+  `unified_trading_library.manifest_freshness.ManifestFreshnessCache`). Neither source repo currently uses it.
+  Post-merge consolidation phase.
+- [ ] **P2** [AGENT] Phase 4 (c) — `ml_inference_service.api.prediction_stream` SSE endpoint is INFERENCE-only;
+  the merged `make_health_router` aggregator must continue routing `/stream/predictions` via the inference
+  sub-app router (not a global ml-service router). Verify in Phase 4 (c) consolidation.
+- [ ] **P2** [AGENT] Phase 4 (g) verify `PYTEST_UNIT_DIR="tests/"` override applied — inference's `tests/perf/`
+  exists only in inference repo. Without the override the merged QG silently skips perf tests.
+- [ ] **P2** [AGENT] Phase 8B audit — `verify_service_token` from `auth_s2s.py` is built per-repo via
+  `create_s2s_auth_dependency("ml-{training,inference}-service")`. Post-merge → single
+  `create_s2s_auth_dependency("ml-service")` BUT downstream callers in deployment-api / strategy-service may pass
+  the old service names in S2S tokens. Audit S2S token issuance + verification cutover.
+
+### Risk register additions (post-audit)
+
+| Risk                                                                              | Severity   | Mitigation                                                                                                                                  |
+| --------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FeatureSubscriber` name-collision blocks clean subtree-merge                     | 🟡 Medium  | P0 rename above; land BEFORE Phase 3 OR during Phase 4 (a) — strict ordering required                                                       |
+| Flat-deps rule violation rejected by operator → bloated live-inference image      | 🟢 Low     | Operator ping filed; if rejected, fall back to single flat-union image (accept ~55-60% bloat; document in plan)                             |
+| Topic-name match assumption breaks post-merge (someone changes the literal)       | 🟢 Low     | P2 lift to UAC promotes the shared constant; bulk verify pre-Phase-3 + post-Phase-4 via `rg ML_MODEL_COORDINATION_TOPIC` workspace-wide       |
+
 ## Codex SSOT updates (mandatory enumeration — HARD RULE)
 
 See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 ships without all 8 verified.

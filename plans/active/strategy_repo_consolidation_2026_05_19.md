@@ -403,6 +403,76 @@ strategy-service as single entry with 4 health-endpoints** AND **codex Phase 9 S
 `strategy-service-architecture.md`**. Boot parity captured at deployment registry. Smoke-test green is NOT sufficient —
 operational completion required per "Plans Run To Actual Completion" HARD RULE.
 
+## Phase 0 audit findings — folded in 2026-05-19
+
+Pre-audit artifact:
+[`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](./issues/strategy_repo_consolidation_preaudit_2026_05_19.md)
+(735 lines). New plan todos extracted below; risk register sharpened.
+
+### Corrections to plan assumptions
+
+- **🔴 Phase 4 (a) sed-rewrite scope materially expanded**: original plan asserted "Fact-report 2026-05-19 showed
+  ZERO cross-repo Python imports". Pre-audit found **25 import statements across 7 files in 5 sibling repos**, including
+  TWO production consumers (`deployment-api/deployment_api/routes/treasury_routes.py`,
+  `execution-service/execution_service/algo_library/leg_controller_runner.py`) AND
+  `e2e-testing/scripts/defi/colocated_engine.py` — the **primary May-23 promote-CLI path** per CLAUDE.md. Phase 4
+  (a) is no longer trivial; it has cutover-critical path consumers. Exact file:line list in artifact § (b).
+- **`ManifestFreshnessCache` adoption is N/A** — none of the 4 repos use it. Drop from Phase 5 scope; keep only
+  ServiceBootstrap + kill-switch subscriber + config_reloaders lifts.
+- **Kill-switch event taxonomy is already UAC-canonical** — Phase 1 confirms 0-PR scope. Only the subscriber
+  boilerplate (~80-100 LOC × 4) needs UTL lift in Phase 5.
+
+### New todos (P0/P1 cutover-critical, P2/P3 nice-to-have)
+
+- [ ] **P0** [AGENT] Phase 4 (a) rewrite the 7 external-consumer files identified in artifact § (b). Order:
+  (1) `e2e-testing/scripts/defi/colocated_engine.py` FIRST (primary May-23 promote-CLI path; cutover-critical),
+  (2) `deployment-api/deployment_api/routes/treasury_routes.py`,
+  (3) `execution-service/execution_service/algo_library/leg_controller_runner.py`,
+  (4-7) test files. Each rewrite is `from <old_pkg> X` → `from strategy_service.<sub> X`. Verify each consumer
+  boots green BEFORE archiving source repos in Phase 7.
+- [ ] **P0** [AGENT] Phase 0.5 (NEW — sequencing fix) Resolve `pyproject.toml` conflicts (artifact § (g)) BEFORE
+  Phase 3 subtree-merge: unify `unified-trading-library>=0.3.0`, `uvicorn[standard]>=0.29.0`, drop pnl's
+  `pre-commit` in favour of `prek>=0.3.0`. Carry over editable `[tool.uv.sources.market-tick-data-service]` from
+  PBM. Land as a single strategy-service `pyproject.toml` PR before Phase 3.
+- [ ] **P0** [DECISION] Topic-prefix compatibility decision — pre-audit (h) recommends **KEEP legacy topic
+  prefixes** (`risk-monitor.*`, `position-monitor.*`, `pnl-attribution.*`) for first 7 days post-cutover to
+  avoid double-rebind race during the live trading window. Rename via follow-up plan. Operator confirm —
+  default YES unless cross-cutting reason to rename atomically.
+- [ ] **P0** [AGENT] Phase 4 (g) verify `PYTEST_UNIT_DIR="tests/"` override applied — PBM's
+  `tests/position_interface/unit/` layout triggers the per-family rule per CLAUDE.md. Without it the merged
+  strategy-service QG silently skips position-recon unit tests.
+- [ ] **P1** [AGENT] Phase 4 cleanup — remove `try/except ImportError` guards from
+  `system-integration-tests/tests/smoke/test_sports_arb_pipeline.py` (banned per CLAUDE.md
+  `.cursor/rules/no-empty-fallbacks.mdc`); imports become unconditional intra-package post-merge.
+- [ ] **P1** [AGENT+DECISION] Architectural-collision resolution — existing `strategy_service/models/position.py` +
+  `strategy_service/models/pnl.py` will coexist with new `strategy_service/{position,pnl}/` sub-packages.
+  Symbols don't collide but layout confuses readers. Decide in Phase 4 (a): (i) absorb existing models into
+  sub-packages (preferred), (ii) keep both with cross-link comments, (iii) rename existing to
+  `strategy_service/models/legacy_*.py`. Not cutover-blocking.
+- [ ] **P1** [AGENT] Phase 8A sharpening — deployment-service blast radius is **~90 hits across Terraform
+  (6 per-service dirs on GCP + AWS), cloud-build, cluster configs, bucket configs, launchers, bootstrap
+  scripts**. Phase 8A is the LARGEST single-repo edit in this plan. Plan `terraform destroy` of the 3 retiring
+  service modules in conjunction with `terraform apply` of the updated strategy-service module — do NOT leave
+  orphan Terraform-managed resources after archive.
+- [ ] **P1** [AGENT] Phase 5 lifts sharpened — `config_reloaders.py` is duplicated 4× (152/112/112/312 LOC, total
+  ~688 LOC) and is a clean UTL `ConfigReloaderBase` candidate. Kill-switch bus subscriber boilerplate is
+  duplicated 4× (~80-100 LOC each) and is a clean UTL `KillSwitchBusSubscriberBase` candidate. Both confirmed
+  by artifact § (f). Ship as 2 UTL PRs in Phase 5.
+- [ ] **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
+  entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`,
+  `pnl-attribution-std`). Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any
+  launcher / cron / VM bootstrap script invoking the legacy command names; rewrite in Phase 8A.
+
+### Risk register additions (post-audit)
+
+| Risk                                                                              | Severity   | Mitigation                                                                                                                       |
+| --------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 4 (a) sed-rewrite breaks `colocated_engine.py` mid-cutover                  | 🔴 High    | Rewrite `colocated_engine.py` FIRST in Phase 4 (a); run paper-trade smoke before continuing; gate Phase 7 archive on cutover-CLI green |
+| Phase 8A Terraform destroy/apply sequencing error leaves orphan resources         | 🟡 Medium  | Phase 8A todo above; pre-flight `terraform plan` per module; staged-merge per asset_group |
+| pyproject conflicts cause Phase 3 subtree-merge to fail or build flat-broken image | 🟡 Medium  | Phase 0.5 (above) resolves explicitly BEFORE Phase 3 |
+| Topic-prefix rename race during live trading window                                | 🟡 Medium  | KEEP legacy prefixes for 7 days; named-successor plan for rename |
+| Existing `strategy_service/models/{position,pnl}.py` layout confusion             | 🟢 Low     | P1 architectural resolution; not cutover-blocking |
+
 ## Codex SSOT updates (mandatory enumeration — HARD RULE)
 
 See Phase 9 — 8 enumerated codex paths (a-h). Plan-review-blocking if Phase 9 ships without all 8 verified.

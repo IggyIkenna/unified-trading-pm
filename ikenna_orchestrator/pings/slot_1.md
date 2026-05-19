@@ -5,6 +5,58 @@
 
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
+## [slot 1 main] 2026-05-19 ~13:30 UTC — OPERATOR DECISION REQUEST — ml-service flat-deps rule exception
+
+**Status**: `[BLOCKED-OPERATOR-DECISION]` — needs Ikenna ack before Phase 4 (h) of ml consolidation can proceed.
+
+**Plan**: [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) — Phase 0 audit findings, todo #4.
+
+**The decision**:
+
+Phase 4 (h) of the ml-service consolidation proposes splitting Docker deps via:
+
+```toml
+[project.dependencies] = [<inference + shared deps>]  # ~16 deps
+[project.optional-dependencies]
+training = ["polars", "pyarrow", "db-dtypes", "xgboost", "catboost", "ta-lib",
+            "tqdm", "optuna", "joblib", "matplotlib", "boto3", "aiobotocore", "pillow"]  # ~11-13 deps
+```
+
+This **violates workspace "flat deps only" rule** per CLAUDE.md `### Dependencies + builds`:
+
+> "Flat deps only — one `[project.dependencies]` per `pyproject.toml`. No extras."
+
+**Why I'm asking** — the size win is operationally significant:
+
+| Image                         | Size flat-union | Size w/ split | Reduction   |
+| ----------------------------- | --------------- | ------------- | ----------- |
+| ml-service (training-capable) | ~1100-1200MB    | ~1100-1200MB  | 0%          |
+| ml-service-inference (live)   | ~1100-1200MB    | ~400-500MB    | **~55-60%** |
+
+55-60% leaner live-inference image → meaningfully faster cold-start, less network egress, smaller k8s scheduling
+footprint. The plan's <30% regression cap is achievable ONLY with the split. Flat-union is operationally workable
+but objectively worse for the live-inference latency path.
+
+**Three options**:
+
+1. **SANCTION ml-service as the workspace flat-deps rule exception** (recommended). Document in CLAUDE.md
+   `### Dependencies + builds` as the sole exception with explicit rationale (inference-image cold-start latency).
+   Closed-set optional group; flat `[project.dependencies]` preserved. No precedent for arbitrary future exceptions.
+2. **HOLD THE LINE on flat-deps** — ship single flat-union image; accept ~55-60% bloat on live-inference; document the
+   trade-off in plan body. Cold-start latency takes the hit; no rule erosion.
+3. **ALTERNATIVE** — split into TWO repos (ml-training-service + ml-inference-service stay separate, undoing the
+   consolidation). Rejected by operator 2026-05-19; recorded for completeness.
+
+**Ack form**: reply to this ping with `[ack] option <1|2|3>` + 1-line rationale. Default if no ack by Phase 4 (h)
+agent-dispatch time: option 1 (sanction the exception) — operationally significant enough to not silently degrade.
+
+**Blast radius if option 1**: CLAUDE.md edit (1 line), ml-service `pyproject.toml` comment block (5 lines),
+`codex/06-coding-standards/dependency-management.md` cross-reference (1 paragraph). Total <20 LOC of governance text.
+
+**Cross-side note**: not relevant to Harsh side; intra-side intra-operator decision.
+
+---
+
 ## [slot 1 main] 2026-05-18 ~12:30 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE
 
 **Items DONE this session (Phase 5 full):**
