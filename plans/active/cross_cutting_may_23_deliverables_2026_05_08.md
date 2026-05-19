@@ -73,12 +73,16 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       Remaining: price-arb subtypes + ML prediction per-group + prediction-markets 4 sub-types (Polymarket/Kalshi/
       Opinion-Trade/CME-event-arb) — prediction-market archetypes not yet in StrategyArchetype enum; Harsh T6 owns. —
       uac@3b6d6ad
-- [ ] [SCRIPT] **Per-archetype venue matrix populated** — every (archetype, venue, instrument-type) combination known to
-      be feasible is a row, even if not launching this cycle. Owner: Harsh T6.
-- [ ] [SCRIPT] **Per-archetype config parameters declared** (collateral, hedge ratios, position caps, kill-switch
-      thresholds). Owner: Harsh T6.
-- [ ] [BUILD] **Strategy catalogue UI** reflects the full universe (filter by asset_group / archetype / venue /
-      live-vs-backtest). Owner: Harsh T6.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Per-archetype venue matrix populated** — every (archetype,
+      venue, instrument-type) combination known to be feasible is a row, even if not launching this cycle. Owner: Harsh
+      T6. Named successor: this plan (resume when Harsh T6 UAC session assigned; registry in UAC
+      `ARCHETYPE_CAPABILITY_REGISTRY`).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Per-archetype config parameters declared** (collateral, hedge
+      ratios, position caps, kill-switch thresholds). Owner: Harsh T6. Named successor: this plan (resume when Harsh T6
+      UAC session assigned; `ArchetypeConfig` SSOT at `uac/internal/architecture_v2/archetype_config.py`).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [BUILD] **Strategy catalogue UI** reflects the full universe (filter by
+      asset_group / archetype / venue / live-vs-backtest). Owner: Harsh T6. Named successor: this plan (requires
+      unified-trading-system-ui + unified-trading-api; resume when dedicated UI session assigned).
 
 ### #2 Strategy IDs
 
@@ -91,11 +95,14 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       existing slot-label grammar carries no `vN` field — instead, material config changes produce a new `slot_id` with
       the changed axis value; the existing `STRATEGY_REGISTRY` keys ARE the canonical IDs. Tab 6.A's escalation issue
       doc remains the durable record of why the plan-body design was a regression.
-- [ ] [SCRIPT] **Strategy ID registry populated** for every catalogue row. Owner: Harsh T6.
-- [ ] [SCRIPT] **Strategy ID refactor sweep** — every code-path that creates a trade/fill/signal/model-inference uses
-      strategy IDs (not free-form strings). Mechanical sweep across execution-service, strategy-service,
-      ml-inference-service, pnl-attribution-service, batch-live-reconciliation-service, position-balance-monitor,
-      alerting-service, deployment-api. Owner: Harsh T6.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Strategy ID registry populated** for every catalogue row.
+      Owner: Harsh T6. Named successor: this plan (resume after venue matrix + config parameters land; registry keyed by
+      `format_strategy_id()` 6-axis grammar per `uac@5083d65`).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Strategy ID refactor sweep** — every code-path that creates a
+      trade/fill/signal/model-inference uses strategy IDs (not free-form strings). Mechanical sweep across
+      execution-service, strategy-service, ml-inference-service, pnl-attribution-service,
+      batch-live-reconciliation-service, position-balance-monitor, alerting-service, deployment-api. Owner: Harsh T6.
+      Named successor: this plan (8-service sweep; schedule as dedicated multi-repo session).
 
 ### #3 Clients + Accounts
 
@@ -119,8 +126,9 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       `StrategyArchetype` enum (the pre-revert single-edit migration); 28 unit tests in
       `tests/unit/test_capital_allocation.py`; re-exported through existing `strategy.py` facade alongside
       `ArchetypeConfig` (uac@18bdc6e — A1's parallel work) + `ClientDefinition` + `ClientRegistry`.)
-- [ ] [SCRIPT] **Client-account-strategy tagging propagated** through every live trade + batch backtest result. Hooks
-      into the strategy ID refactor sweep above. Owner: Harsh T6.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Client-account-strategy tagging propagated** through every
+      live trade + batch backtest result. Hooks into the strategy ID refactor sweep above. Owner: Harsh T6. Named
+      successor: this plan (gates on strategy ID refactor sweep landing; resume after sweep session).
 
 ### #4 UI replication / DART manual-trade lane
 
@@ -140,8 +148,10 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       allocation respect · post-May-23 deferrals). Cross-link added to peer doc `operational-modes-matrix.md` via
       `unified-trading-pm@2a0d105d` (parallel-agent commit, content correct). Plan open questions #2 + #4 resolutions
       captured.
-- [ ] [BUILD] **DART manual DeFi swap / lend / borrow / stake** for the carry-staked-basis archetype across enabled
-      chains. Owner: Harsh T6.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [BUILD] **DART manual DeFi swap / lend / borrow / stake** for the
+      carry-staked-basis archetype across enabled chains. Owner: Harsh T6. Named successor: this plan (requires
+      execution-service BUILD #1 backend wiring + unified-trading-system-ui DeFi form; `operation_type` D1 resolved at
+      uac@14a0292 2026-05-13; schedule as execution-service + UI session).
 - [x] [BUILD] **DART manual CeFi order placement** across the 4 live CeFi venues (Bybit / Deribit / Binance / OKX).
       Owner: Harsh T6. **SHIPPED 2026-05-12 (Harsh slot 6)**: Aster added to VENUES
       (`unified-trading-system-ui@21666537`); `single-order-form.tsx` venue + algo dropdowns switched from
@@ -161,9 +171,14 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       in-process state visible via /status, audit-log called, /audit/{id} 501 TBD). Audit-log writer is BLOCKED on
       slot-4 `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0i (`manual-audit` kind in `cloud-providers.yaml`)
       — handled gracefully in `_persist_audit_log` via try/except so the API stays live.
-- [ ] [BUILD] **DART manual sports bet placement** for sports backtest exec validation. Owner: Harsh T6.
-- [ ] [BUILD] **DART manual prediction-market trade** for Polymarket / Kalshi / Opinion-Trade / CME-event-arb backtest.
-      Owner: Harsh T6.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [BUILD] **DART manual sports bet placement** for sports backtest exec
+      validation. Owner: Harsh T6. Named successor: this plan (requires execution-service BUILD #4 backend +
+      unified-trading-system-ui sports form; D4 side-validator spec approved uac@51f6e28 2026-05-13; backtest-only scope
+      per open question #2 resolution).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [BUILD] **DART manual prediction-market trade** for Polymarket / Kalshi /
+      Opinion-Trade / CME-event-arb backtest. Owner: Harsh T6. Named successor: this plan (requires execution-service
+      BUILD #5 backend + unified-trading-system-ui prediction form; backtest-only per open question #4 resolution
+      pm@ab595616 2026-05-08).
 
 ## Execution DAG
 
@@ -972,11 +987,10 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log _writ
   ```
   Then open the manual trading panel + verify Venue/Algo selects show API-driven options (fallback to constants while
   API loads). Provenance: Harsh slot-6 pre-audit 2026-05-12 + grep-then-read verification + Day-2/Day-3 UI fix.
-- [ ] **D3 — P2 — `dart-manual-trade-spec.md` § 5 still says strategy_id grammar is "🟡 BLOCKED pending operator triage"
-      but this plan's open question #2/#3 (lines 172-184) marks it ✅ RESOLVED 2026-05-08 via Option A** (existing
-      6-axis UAC v2 `archetype@venue-asset-instrument-period-quote-env` grammar is canonical; no `vN`). Doc-drift in the
-      spec doc Harsh T6 implements against. Fix as a 2-line consistency edit when BUILD wiring starts (or sooner — it's
-      the deliverable-#4 SSOT). Provenance: Harsh slot-6 pre-audit 2026-05-12.
+- [x] ✅ **D3 — P2 — `dart-manual-trade-spec.md` § 5 doc-drift resolved** — spec no longer contains "🟡 BLOCKED pending
+      operator triage"; § 5 shows `✅ RESOLVED 2026-05-08 via Option A` (`uac@5083d65`) with canonical 6-axis grammar
+      `archetype@venue-asset-instrument-period-quote-env` and reference back to this plan's Q2/Q3 resolutions. Verified
+      2026-05-19 slot-5 (grep confirmed 0 BLOCKED lines in spec). Provenance: Harsh slot-6 pre-audit 2026-05-12.
 
 ### Status as of 2026-05-12 (Day 1, Harsh slot 6)
 
@@ -1037,14 +1051,12 @@ stale. Remaining D2 work is UI-side (switch dropdowns from `constants.ts` to dyn
       `{"BUY","SELL"}` (safe default; matching-engine validates further). Harsh BUILD #4/#5 wiring can proceed on this
       spec.
 
-- [ ] **D5 — P2 — `_SUPPORTED_ALGOS` hardcoded list in `manual_instruction_api.py:113` covers only CeFi exec algos
-      (MARKET / TWAP / VWAP / ICEBERG / SOR / BEST_PRICE / BENCHMARK_FILL).** For BUILD #1 (DeFi) the operator needs to
-      select an `OperationType` verb (SWAP / STAKE / UNSTAKE / LEND / BORROW etc.) rather than an algo. For BUILD #4/#5
-      (sports/prediction) the operator places a single bet/order — likely `MARKET` is sufficient (matching-engine fills
-      against the canonical CLOB / odds book). For BUILD #2 the current algo list is correct. Bundles into D1 (the
-      `order_type` semantic-mismatch design call) — D1's resolution determines whether `algo` becomes
-      asset-group-conditional or splits into `algo`+`operation_type`. No standalone D5 fix until D1 lands. Provenance:
-      Harsh slot-6 Day-2 audit 2026-05-12.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **D5 — P2 — `_SUPPORTED_ALGOS` hardcoded list** in
+      `manual_instruction_api.py:113` covers only CeFi exec algos. D1 resolved (uac@14a0292 2026-05-13 — `operation_type:
+      str = ""` added to `ManualInstruction`); D5 fix now technically unblocked but bundles into BUILD #1 backend wiring
+      (execution-service). Resolution design: `_SUPPORTED_ALGOS` stays CeFi-only; DeFi BUILD #1 uses `operation_type`
+      field instead of `algo`; sports/prediction BUILD #4/#5 use `MARKET` algo. Named successor: this plan (fix in BUILD
+      #1 execution-service session alongside operation_type wiring). Provenance: Harsh slot-6 Day-2 audit 2026-05-12.
 
 #### Cross-side handshake status (Day-3, Ikenna slot 8, 2026-05-13)
 
