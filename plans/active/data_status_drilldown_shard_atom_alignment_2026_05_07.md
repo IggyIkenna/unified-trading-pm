@@ -421,7 +421,8 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
       drill-down hierarchy SSOT with per-asset_group depth table, backend endpoint contract, frontend component
       contract, per-leaf download + Deploy-Missing surgical-recovery flow, failure modes the drill-down catches. Created
       as a NEW doc rather than editing `availability-manifest-and-data-status.md` to respect the active concurrent-edit
-      on that file.
+      on that file. ⚠️ **Re-created 2026-05-19 PM@a6af9d1c**: file was accidentally deleted in f58bc8a9 (Phase B.1
+      sweep targeted 05-infrastructure/ but swept 02-data/ too). Restored from last known content at f5be06ce.
 - [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
