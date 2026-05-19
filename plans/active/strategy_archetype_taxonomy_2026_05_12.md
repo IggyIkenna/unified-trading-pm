@@ -524,6 +524,11 @@ Also pinged Slot 1 main about `master_to_live_defi_2026_05_23.md:264` stale "Car
 `category-instrument-coverage.md:11` said "53 v2 strategy archetypes". The V-4 sweep added a 2026-05-18 currency note in
 the changelog (lines 1441-1443) but the scope header itself was missed. Fixed (PM@`85f7fe34`).
 
+### Item V-10 — architecture-v2/README.md arbitrage doc count 7 → 6 ✅ SHIPPED 2026-05-19 slot-3
+
+README table row for Arbitrage / Structural said "7 docs" but `arbitrage-cross-domain-event.md` doesn't exist — only 6
+docs present. Corrected to "6 docs (1 pending Slot 8)" (PM@`f7ded4ef`).
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
