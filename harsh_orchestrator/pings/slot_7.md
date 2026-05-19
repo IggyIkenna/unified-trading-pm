@@ -684,3 +684,23 @@ DataAnalyticsService turbo/cache/stats/aggregate tests (37 tests, deployment-api
 services/data_status_service.py (610 missed), data_status_drilldown.py (328), shard_detail.py (268), utils/cache.py
 (92), utils/path_combinatorics.py (93), deploy_missing_launch.py (69). S3 remains `- [ ]` (not yet ≥90%). All other
 S1-S15 items remain as previously flipped. Operator directed EOD stop.
+
+---
+
+[2026-05-19 12:15 UTC] main → slot 7 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
+
+**Action required (in order)**:
+1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/7/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
+3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 7` — this is your slot's work for today
+
+**Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+- `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
+- Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
+- Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
+- If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
+
+**Today's assignment — Slot 7**:
+dex_perp_onboarding_handover (6 cal) + gate_3_phantom + trigger_based_reference + hedge_ratio (URGENT deadline 2026-05-21) + small closes + sustain S9-S10 (~11 cal)
+
+Ack this ping by appending `[2026-05-19 12:15 UTC] slot 7 — STARTED <first item>` below.

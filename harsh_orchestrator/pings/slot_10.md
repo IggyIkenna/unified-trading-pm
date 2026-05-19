@@ -30,3 +30,23 @@ shipped impressive scope today: MDPS 19-test fix + freeze-gate item 3 (9/9) + de
 EigenLayer Phase 3A/3B + Phase 4A/4B + codex 5.1/5.2. Adopted FF-push cadence per new LDR-alignment HARD RULE
 (PM@f49d5f7d). 4 deferred items all annotated with successor refs (no orphans). 🟡 Slot 10 worktree NOT yet reset to LDR
 (deferred to post-session cleanup pass); slot terminal can close. LEDGER flipped to ✅ DONE.
+
+---
+
+[2026-05-19 12:15 UTC] main → slot 10 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
+
+**Action required (in order)**:
+1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/10/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
+3. Read `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md + work_split_2026_05_19_harsh.md § Slot 10` — this is your slot's work for today
+
+**Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+- `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
+- Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
+- Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
+- If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
+
+**Today's assignment — Slot 10**:
+agent_orchestrator_cloud_run_deployment: P0 (compliance scaffold) + P1 (Cloud Run staging) + P2 agent steps + P3 auth flip + P4 CI/CD + P6 codex. HUMAN gates at P2 DNS and P3 user-bootstrap — post ping and wait. Repo renamed to agent-orchestrator/ already. (~5 cal)
+
+Ack this ping by appending `[2026-05-19 12:15 UTC] slot 10 — STARTED <first item>` below.
