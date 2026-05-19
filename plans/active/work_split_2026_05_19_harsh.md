@@ -58,7 +58,8 @@ estimate_calibration_note: |
 | 8         | bucket_name_ssot residuals (2.7) + expected_universe_v2 close (1.6) + manifest_cross_asset_rescan (1.2) + available_at_lookahead (0.5) + deploy_missing_auto_launch final (0.5) + sustain S11–S15                                    | ~10         | bucket_name_ssot, expected_universe_v2, manifest_cross_asset_rescan                                 |
 | 9         | compute_optimization close (1.9) + codex_vs_citadel close (1.4) + promote_workflow_may23 support + deployment_and_qg close (0.4) + missing_question_docs (0.9) + pm_coordination_ledger (0.3) + sustain S16–S20                      | ~9          | compute_optimization, codex_vs_citadel, deployment_and_qg, missing_question_docs                    |
 | 10        | agent_orchestrator_cloud_run_deployment: P0 (rename+scaffold) + P1 (Cloud Run staging) + P3 agent steps (auth flip) + P4 (CI/CD) + P6 (codex). **HUMAN gates at P2 (DNS/Squarespace) + P3 (user bootstrap) block P2→P5 progression** | ~5          | agent_orchestrator_cloud_run_deployment_2026_05_19                                                  |
-| **Total** |                                                                                                                                                                                                                                      | **~121**    |                                                                                                     |
+| 11        | agent_orchestrator_slack_notifications: P0 (--update-secrets wire) + P1 (slack.py module) + P2 (event hook wiring) + P3 (staging smoke) + P4 (codex). **No human gates — runs end to end. P0 waits for deployment plan P1.**            | ~2          | agent_orchestrator_slack_notifications_2026_05_19                                                   |
+| **Total** |                                                                                                                                                                                                                                      | **~123**    |                                                                                                     |
 
 ---
 
@@ -330,6 +331,49 @@ clone.
 
 ---
 
+### Slot 11 — agent-orchestrator Slack notifications (P0–P4) — ~2 cal AI-days
+
+**Plan**: `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md`
+**Repo**: `agent-orchestrator/`
+**No human gates** — runs entirely autonomously.
+**Dependency**: P0 (secret mount) waits for Slot 10 P1 (Cloud Run staging service must exist). P1 code work can start immediately.
+
+**Credentials already provisioned in Secret Manager** (central-element-323112):
+- `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` — real webhook URL ✅
+- `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` — real value ✅
+- All 4 other Slack app secrets ✅
+
+1. - [ ] **P1 — Implement `server/notifications/slack.py`** (~1.2 cal) _(start immediately, no Cloud Run dependency)_
+   - `server/notifications/__init__.py` (empty)
+   - `server/notifications/slack.py` — `notify_slot_blocked()`, `notify_slot_stale()`, `notify_slot_failed()`, each POSTing JSON to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` via `httpx.AsyncClient`; no-op if env var empty
+   - All calls wrapped in `try/except Exception: pass` — Slack outage never crashes server
+   - Add `httpx` to `pyproject.toml` flat `[project.dependencies]`
+   - Unit tests `tests/test_slack_notifications.py` — mock `httpx.AsyncClient.post`; assert payload shape for all 3 event types; assert no-op on empty webhook
+   - Full-exec: `bash scripts/check.sh` passes; basedpyright `server/notifications/` clean; unit tests green
+
+2. - [ ] **P2 — Wire hooks into server event handlers** (~0.5 cal)
+   - `rg "add_blocked|stale|failed|blocked" server/ --type py` to locate all event emission points
+   - Wire `await notify_slot_blocked()` / `notify_slot_stale()` / `notify_slot_failed()` at each transition
+   - Full-exec: local smoke (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK=""` — no-op confirmed); `bash scripts/check.sh` still passes
+
+3. - [ ] **P0 — Wire `--update-secrets` on Cloud Run staging** (~0.3 cal) _(after Slot 10 P1 done)_
+   - Look up staging SA: `gcloud run services describe agent-orchestrator-staging --region europe-west4 --project central-element-323112 --format='get(spec.template.spec.serviceAccountName)'`
+   - IAM bind SA to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` + `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET`
+   - `gcloud run services update agent-orchestrator-staging --update-secrets=AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest,AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET=AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET:latest --region europe-west4 --project central-element-323112`
+
+4. - [ ] **P3 — Staging smoke** (~0.5 cal) _(after P0 + deploy-staging CI deploys new code)_
+   - Trigger a test notification via staging URL → verify message appears in `#agent-orchestrator-alerts` within 10s
+   - Confirm Cloud Run logs show `hooks.slack.com 200`
+   - Post ack ping to `_agent_pings.md`: `[DATE] harsh-slot-11 — Slack notifications live on staging; #agent-orchestrator-alerts received test message. P3 done.`
+
+5. - [ ] **P4 — Codex update** (~0.2 cal)
+   - Add "Slack notifications" section to `codex/04-architecture/agent-orchestrator-overview.md`
+   - Strike "Slack notification when blocked" from `agent-orchestrator/TODO.md`
+
+6. - [ ] **Plan flips** for all items. (0.1 cal)
+
+---
+
 ## Done-definition (2026-05-19 EOD)
 
 - Slot 2: alerting_live_rules 100% + wave3x closed + manifest_schema_final_gate closed + S3–S6 sweeps done.
@@ -345,6 +389,7 @@ clone.
 - Slot 10: agent-orchestrator P0 (rename+scaffold+QG) + P1 (Cloud Run staging live) + P2 agent steps (firebase.json) +
   P3 agent steps (auth flip) + P4 (CI/CD green) + P6 (codex). Human gates at P2 DNS + P3 user bootstrap require Ikenna
   ack before progression.
+- Slot 11: Slack notifications P1 (slack.py + unit tests) + P2 (event hook wiring) + P0 (--update-secrets, after Slot 10 P1) + P3 (staging smoke → message in #agent-orchestrator-alerts) + P4 (codex). No human gates.
 
 ---
 
