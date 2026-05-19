@@ -39,8 +39,10 @@ overview:
   start writing code in the affected area.
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
-
+> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing
+> risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 →
+> 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4
+> repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
 
 > **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
 > merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
@@ -128,77 +130,176 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-05-19 15:04 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
-| Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
-|---|---|---|---|---|---|---|
-| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md) | cefi_master_2026_05_07 | infra | 53/124 | 43% | 92.8 | 2026-05-23 |
-| [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md) | cross_cutting_may_23_2026 | brand-new | — | — | 30.0 | — |
-| [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md) | cross_cutting_may_23_2026 | infra | 12/73 | 16% | 26.7 | 2026-06-04 |
-| [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md) | master | infra | 0/64 | 0% | 20.0 | 2026-07-04 |
-| [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md) | master | brand-new | — | — | 20.0 | post-cutover (target 2026-06-01) |
-| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md) | master | design | 61/87 | 70% | 19.3 | 2026-05-23 |
-| [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md) | master | design | 62/68 | 91% | 18.1 | 2026-05-23 |
-| [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md) | master | brand-new | 23/63 | 37% | 15.2 | — |
-| [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md) | master | brand-new | — | — | 15.0 | — |
-| [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md) | instruments_live_master_2026_05_08 | design | — | — | 15.0 | 2026-05-23 |
-| [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](./phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md) | **orphan** | brand-new | 0/28 | 0% | 15.0 | 2026-05-23 |
-| [`strategy_repo_consolidation_2026_05_19`](./strategy_repo_consolidation_2026_05_19.md) | ml_and_features_master_2026_05_07 | infra | 1/16 | 6% | 11.2 | 2026-05-23 |
-| [`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md) | cefi_master_2026_05_07 | design | 140/247 | 57% | 10.4 | — |
-| [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md) | cross_cutting_may_23_2026 | design | 51/70 | 73% | 8.1 | 2026-05-23 |
-| [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md) | **orphan** | brand-new | 0/5 | 0% | 8.0 | post-2026-05-23 |
-| [`defi_master_2026_05_07`](./defi_master_2026_05_07.md) | README | design | 48/107 | 45% | 7.8 | — |
-| [`agent_orchestrator_workers_on_vms_2026_05_19`](./agent_orchestrator_workers_on_vms_2026_05_19.md) | **orphan** | infra | — | — | 6.4 | — |
-| [`ml_repo_consolidation_2026_05_19`](./ml_repo_consolidation_2026_05_19.md) | ml_and_features_master_2026_05_07 | infra | 2/17 | 12% | 5.3 | 2026-05-23 |
-| [`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md) | **orphan** | brand-new | 0/7 | 0% | 5.0 | — |
-| [`agent_orchestrator_cloud_run_deployment_2026_05_19`](./agent_orchestrator_cloud_run_deployment_2026_05_19.md) | master | infra | — | — | 4.8 | — |
-| [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md) | master | refactor | — | — | 4.8 | 2026-05-13 |
-| [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md) | manifest_evolution_master_2026_05_08 | infra | — | — | 4.8 | 2026-05-15 |
-| [`hard_schema_enforcement_2026_05_08`](./hard_schema_enforcement_2026_05_08.md) | cross_cutting_may_23_2026 | design | — | — | 4.8 | — |
-| [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md) | master | design | — | — | 4.8 | — |
-| [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md) | master | design | — | — | 2.4 | 2026-06-04 |
-| [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 56/167 | 34% | 2.4 | — |
-| [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md) | instruments_live_master_2026_05_08 | design | 55/66 | 83% | 2.2 | 2026-05-23 |
-| [`agent_orchestrator_slack_notifications_2026_05_19`](./agent_orchestrator_slack_notifications_2026_05_19.md) | master | infra | — | — | 2.0 | — |
-| [`hard_schema_phase1_field_flip_migration_2026_05_19`](./hard_schema_phase1_field_flip_migration_2026_05_19.md) | **orphan** | refactor | — | — | 2.0 | — |
-| [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md) | master | research | 0/5 | 0% | 1.8 | — |
-| [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md) | manifest_evolution_master_2026_05_08 | refactor | 19/23 | 83% | 1.7 | — |
-| [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md) | master | infra | 0/16 | 0% | 1.6 | 2026-06-15 |
-| [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) | master | design | 50/78 | 64% | 1.5 | 2026-05-23 |
-| [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) | master | design | — | — | 1.5 | 2026-05-15 |
-| [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md) | master | research | 30/33 | 91% | 1.4 | 2026-05-23 |
-| [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md) | cross_cutting_may_23_2026 | design | — | — | 1.2 | 2026-05-23 |
-| [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md) | manifest_evolution_master_2026_05_08 | design | 29/56 | 52% | 1.0 | 2026-05-23 |
-| [`gate_3_phantom_audit_runbook_2026_05_13`](./gate_3_phantom_audit_runbook_2026_05_13.md) | infrastructure_master_2026_05_07 | infra | — | — | 0.8 | — |
-| [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](./scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md) | master | refactor | — | — | 0.8 | — |
-| [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) | cross_cutting_may_23_2026 | design | 18/20 | 90% | 0.5 | 2026-05-23 |
-| [`mock_data_pipeline_benchmarking_2026_05_10`](./mock_data_pipeline_benchmarking_2026_05_10.md) | manifest_evolution_master_2026_05_08 | design | 29/31 | 94% | 0.5 | 2026-05-23 |
-| [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md) | cross_cutting_may_23_2026 | infra | 88/90 | 98% | 0.4 | 2026-05-23 |
-| [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | master | infra | 15/17 | 88% | 0.4 | 2026-05-23 |
-| [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md) | master | design | — | — | 0.3 | — |
-| [`dex_perp_and_venue_data_expansion_2026_05_12`](./dex_perp_and_venue_data_expansion_2026_05_12.md) | master | brand-new | 33/34 | 97% | 0.2 | 2026-05-23 |
-| [`wave3x_residual_ssots_2026_05_08`](./wave3x_residual_ssots_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 22/23 | 96% | 0.2 | 2026-05-23 |
-| [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md) | cross_cutting_may_23_2026 | design | 7/7 | 100% | 0.0 | 2026-08-31 |
-| [`api_football_minimal_flattening_removal_2026_05_07`](./api_football_minimal_flattening_removal_2026_05_07.md) | master | refactor | 16/16 | 100% | 0.0 | — |
-| [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md) | cefi_master_2026_05_07 | design | 47/47 | 100% | 0.0 | — |
-| [`cross_cutting_may_23_deliverables_2026_05_08`](./cross_cutting_may_23_deliverables_2026_05_08.md) | cross_cutting_may_23_2026 | design | 30/30 | 100% | 0.0 | 2026-05-23 |
-| [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md) | cross_cutting_may_23_2026 | design | 41/41 | 100% | 0.0 | — |
-| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | master | design | 40/40 | 100% | 0.0 | — |
-| [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md) | master | design | 154/154 | 100% | 0.0 | — |
-| [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](./dex_perp_onboarding_handover_2026_05_07.HANDOVER.md) | cefi_master_2026_05_07 | design | 12/12 | 100% | 0.0 | — |
-| [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md) | manifest_evolution_master_2026_05_08 | brand-new | 44/44 | 100% | 0.0 | 2026-05-15 |
-| [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | design | 15/15 | 100% | 0.0 | — |
-| [`features_service_qg_cleanup_2026_05_11`](./features_service_qg_cleanup_2026_05_11.md) | infrastructure_master_2026_05_07 | refactor | 11/11 | 100% | 0.0 | — |
-| [`features_tick_observation_audit_2026_05_18`](./features_tick_observation_audit_2026_05_18.md) | **orphan** | brand-new | 19/19 | 100% | 0.0 | — |
-| [`manifest_cross_asset_rescan_design_2026_05_08`](./manifest_cross_asset_rescan_design_2026_05_08.md) | manifest_evolution_master_2026_05_08 | infra | 6/6 | 100% | 0.0 | — |
-| [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) | cross_cutting_may_23_2026 | design | 7/7 | 100% | 0.0 | 2026-05-23 |
-| [`missing_question_docs_disposition_2026_05_10`](./missing_question_docs_disposition_2026_05_10.md) | master | design | 3/3 | 100% | 0.0 | pre-cutover (P0 — May-23 plans cite ghos |
-| [`mtds_per_instrument_download_api_2026_04_24`](./mtds_per_instrument_download_api_2026_04_24.md) | cross_cutting_may_23_2026 | design | 20/20 | 100% | 0.0 | — |
-| [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) | infrastructure_master_2026_05_07 | refactor | 31/31 | 100% | 0.0 | — |
-| [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md) | master | infra | 16/16 | 100% | 0.0 | post-cutover (target 2026-07-15) |
-| [`simulation_scenarios_topology_price_shocks_2026_05_09`](./simulation_scenarios_topology_price_shocks_2026_05_09.md) | master | design | 74/74 | 100% | 0.0 | 2026-05-23 |
-| [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) | instruments_live_master_2026_05_08 | design | 20/20 | 100% | 0.0 | — |
-| **TOTAL** (66 plans) | 6 orphans, 0 TBD | — | — | **61% done** | **400** | — |
+<<<<<<< Updated upstream _Last regenerated: 2026-05-19 15:04 UTC via
+`scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner
+agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._ ======= _Last
+regenerated: 2026-05-19 15:25 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc.
+TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into
+the appropriate epic._
+
+> > > > > > > Stashed changes
+
+| Plan                                                                                                                        | Owner                              | Class     | Checkboxes | % done | Cal left | Deadline                         |
+| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------- | ---------- | ------ | -------- | -------------------------------- |
+| [`code_freeze_migrate_backfill_sequencing_2026_05_10`](./code_freeze_migrate_backfill_sequencing_2026_05_10.md)             | cefi_master_2026_05_07             | infra     | 53/124     | 43%    | 92.8     | 2026-05-23                       |
+| [`deployment_ui_lifecycle_tabs_2026_05_08`](./deployment_ui_lifecycle_tabs_2026_05_08.md)                                   | cross_cutting_may_23_2026          | brand-new | —          | —      | 30.0     | —                                |
+| [`aws_migration_defi_first_2026_05_07`](./aws_migration_defi_first_2026_05_07.md)                                           | cross_cutting_may_23_2026          | infra     | 12/73      | 16%    | 26.7     | 2026-06-04                       |
+| [`promote_workflow_post_cutover_ui_pipeline_2026_05_10`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)         | master                             | infra     | 0/64       | 0%     | 20.0     | 2026-07-04                       |
+| [`sports_scrapers_post_cutover_2026_06_01`](./sports_scrapers_post_cutover_2026_06_01.md)                                   | master                             | brand-new | —          | —      | 20.0     | post-cutover (target 2026-06-01) |
+| [`api_keys_wallets_accounts_readiness_2026_05_10`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                     | master                             | design    | 61/87      | 70%    | 19.3     | 2026-05-23                       |
+| [`defi_catalogue_chain_primitives_2026_05_10`](./defi_catalogue_chain_primitives_2026_05_10.md)                             | master                             | design    | 62/68      | 91%    | 18.1     | 2026-05-23                       |
+| [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](./defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md) | master                             | brand-new | 23/63      | 37%    | 15.2     | —                                |
+| [`cme_polymarket_arb_2026_05_08`](./cme_polymarket_arb_2026_05_08.md)                                                       | master                             | brand-new | —          | —      | 15.0     | —                                |
+| [`live_pipeline_mtds_mdps_features_2026_05_08`](./live_pipeline_mtds_mdps_features_2026_05_08.md)                           | instruments_live_master_2026_05_08 | design    | —          | —      | 15.0     | 2026-05-23                       |
+
+<<<<<<< Updated upstream |
+[`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](./phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+| **orphan** | brand-new | 0/28 | 0% | 15.0 | 2026-05-23 | |
+[`strategy_repo_consolidation_2026_05_19`](./strategy_repo_consolidation_2026_05_19.md) |
+ml_and_features_master_2026_05_07 | infra | 1/16 | 6% | 11.2 | 2026-05-23 | |
+[`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md) |
+cefi_master_2026_05_07 | design | 140/247 | 57% | 10.4 | — | |
+[`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md) | cross_cutting_may_23_2026 | design | 51/70 |
+73% | 8.1 | 2026-05-23 | | [`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md) |
+**orphan** | brand-new | 0/5 | 0% | 8.0 | post-2026-05-23 | | [`defi_master_2026_05_07`](./defi_master_2026_05_07.md) |
+README | design | 48/107 | 45% | 7.8 | — | |
+[`agent_orchestrator_workers_on_vms_2026_05_19`](./agent_orchestrator_workers_on_vms_2026_05_19.md) | **orphan** | infra
+| — | — | 6.4 | — | | [`ml_repo_consolidation_2026_05_19`](./ml_repo_consolidation_2026_05_19.md) |
+ml_and_features_master_2026_05_07 | infra | 2/17 | 12% | 5.3 | 2026-05-23 | |
+[`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md) | **orphan**
+| brand-new | 0/7 | 0% | 5.0 | — | |
+[`agent_orchestrator_cloud_run_deployment_2026_05_19`](./agent_orchestrator_cloud_run_deployment_2026_05_19.md) | master
+| infra | — | — | 4.8 | — | ======= |
+[`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](./phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
+| master | brand-new | 0/28 | 0% | 15.0 | 2026-05-23 | |
+[`strategy_repo_consolidation_2026_05_19`](./strategy_repo_consolidation_2026_05_19.md) | master | infra | 1/16 | 6% |
+11.2 | 2026-05-23 | |
+[`writegate_honest_coverage_endtoend_2026_05_06`](./writegate_honest_coverage_endtoend_2026_05_06.md) |
+cefi_master_2026_05_07 | design | 140/247 | 57% | 10.4 | — | | [`defi_master_2026_05_07`](./defi_master_2026_05_07.md) |
+README | design | 42/107 | 39% | 8.6 | — | | [`batch_live_symmetry_2026_05_10`](./batch_live_symmetry_2026_05_10.md) |
+cross_cutting_may_23_2026 | design | 51/70 | 73% | 8.1 | 2026-05-23 | |
+[`wave3x_track_d_implementation_2026_05_19`](./wave3x_track_d_implementation_2026_05_19.md) | master | brand-new | 0/5 |
+0% | 8.0 | post-2026-05-23 | |
+[`agent_orchestrator_workers_on_vms_2026_05_19`](./agent_orchestrator_workers_on_vms_2026_05_19.md) |
+infrastructure_master_2026_05_07 | infra | — | — | 6.4 | — | |
+[`ml_repo_consolidation_2026_05_19`](./ml_repo_consolidation_2026_05_19.md) | master | infra | 2/17 | 12% | 5.3 |
+2026-05-23 | |
+[`available_at_schema_lift_post_cutover_2026_05_19`](./available_at_schema_lift_post_cutover_2026_05_19.md) | master |
+brand-new | 0/7 | 0% | 5.0 | — | |
+[`agent_orchestrator_cloud_run_deployment_2026_05_19`](./agent_orchestrator_cloud_run_deployment_2026_05_19.md) |
+infrastructure_master_2026_05_07 | infra | — | — | 4.8 | — |
+
+> > > > > > > Stashed changes | [`features_repo_consolidation_2026_05_08`](./features_repo_consolidation_2026_05_08.md)
+> > > > > > > | master | refactor | — | — | 4.8 | 2026-05-13 | |
+> > > > > > > [`gcs_migration_bundle_pipeline_mode_2026_05_08`](./gcs_migration_bundle_pipeline_mode_2026_05_08.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | infra | — | — | 4.8 | 2026-05-15 | |
+> > > > > > > [`hard_schema_enforcement_2026_05_08`](./hard_schema_enforcement_2026_05_08.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | — | — | 4.8 | — | |
+> > > > > > > [`strategy_archetype_taxonomy_2026_05_12`](./strategy_archetype_taxonomy_2026_05_12.md) | master | design
+> > > > > > > | — | — | 4.8 | — | |
+> > > > > > > [`post_freeze_roadmap_2026_05_16_to_05_23`](./post_freeze_roadmap_2026_05_16_to_05_23.md) | master |
+> > > > > > > design | — | — | 2.4 | 2026-06-04 | |
+> > > > > > > [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 56/167 | 34% |
+> > > > > > > 2.4 | — | | [`alerting_service_live_rules_2026_05_07`](./alerting_service_live_rules_2026_05_07.md) |
+> > > > > > > instruments_live_master_2026_05_08 | design | 55/66 | 83% | 2.2 | 2026-05-23 | <<<<<<< Updated upstream |
+> > > > > > > [`agent_orchestrator_slack_notifications_2026_05_19`](./agent_orchestrator_slack_notifications_2026_05_19.md)
+> > > > > > > | master | infra | — | — | 2.0 | — |
+
+# | [`hard_schema_phase1_field_flip_migration_2026_05_19`](./hard_schema_phase1_field_flip_migration_2026_05_19.md) | **orphan** | refactor | — | — | 2.0 | — |
+
+| [`agent_orchestrator_slack_notifications_2026_05_19`](./agent_orchestrator_slack_notifications_2026_05_19.md) |
+infrastructure_master_2026_05_07 | infra | — | — | 2.0 | — | |
+[`hard_schema_phase1_field_flip_migration_2026_05_19`](./hard_schema_phase1_field_flip_migration_2026_05_19.md) | master
+| refactor | — | — | 2.0 | — |
+
+> > > > > > > Stashed changes |
+> > > > > > > [`venue_heartbeat_calibration_2026_05_post23`](./venue_heartbeat_calibration_2026_05_post23.md) | master |
+> > > > > > > research | 0/5 | 0% | 1.8 | — | |
+> > > > > > > [`bucket_name_ssot_canonicalisation_2026_05_10`](./bucket_name_ssot_canonicalisation_2026_05_10.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | refactor | 19/23 | 83% | 1.7 | — | |
+> > > > > > > [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](./tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
+> > > > > > > | master | infra | 0/16 | 0% | 1.6 | 2026-06-15 | |
+> > > > > > > [`promote_workflow_may23_cli_path_2026_05_10`](./promote_workflow_may23_cli_path_2026_05_10.md) | master |
+> > > > > > > design | 50/78 | 64% | 1.5 | 2026-05-23 | |
+> > > > > > > [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) | master | design | — | —
+> > > > > > > | 1.5 | 2026-05-15 | |
+> > > > > > > [`codex_vs_citadel_infrastructure_audit_2026_05_10`](./codex_vs_citadel_infrastructure_audit_2026_05_10.md)
+> > > > > > > | master | research | 30/33 | 91% | 1.4 | 2026-05-23 | |
+> > > > > > > [`mtds_databento_path_streaming_2026_05_07`](./mtds_databento_path_streaming_2026_05_07.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | — | — | 1.2 | 2026-05-23 | |
+> > > > > > > [`manifest_schema_final_gate_2026_05_09`](./manifest_schema_final_gate_2026_05_09.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | design | 29/56 | 52% | 1.0 | 2026-05-23 | |
+> > > > > > > [`gate_3_phantom_audit_runbook_2026_05_13`](./gate_3_phantom_audit_runbook_2026_05_13.md) |
+> > > > > > > infrastructure_master_2026_05_07 | infra | — | — | 0.8 | — | |
+> > > > > > > [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](./scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
+> > > > > > > | master | refactor | — | — | 0.8 | — | |
+> > > > > > > [`compute_optimization_mock_data_2026_05_13`](./compute_optimization_mock_data_2026_05_13.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | 18/20 | 90% | 0.5 | 2026-05-23 | |
+> > > > > > > [`mock_data_pipeline_benchmarking_2026_05_10`](./mock_data_pipeline_benchmarking_2026_05_10.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | design | 29/31 | 94% | 0.5 | 2026-05-23 | |
+> > > > > > > [`deployment_and_qg_strategy_implementation_2026_05_13`](./deployment_and_qg_strategy_implementation_2026_05_13.md)
+> > > > > > > | cross_cutting_may_23_2026 | infra | 88/90 | 98% | 0.4 | 2026-05-23 | |
+> > > > > > > [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](./tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) | master |
+> > > > > > > infra | 15/17 | 88% | 0.4 | 2026-05-23 | |
+> > > > > > > [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md) | master | design | — | — |
+> > > > > > > 0.3 | — | |
+> > > > > > > [`dex_perp_and_venue_data_expansion_2026_05_12`](./dex_perp_and_venue_data_expansion_2026_05_12.md) |
+> > > > > > > master | brand-new | 33/34 | 97% | 0.2 | 2026-05-23 | |
+> > > > > > > [`wave3x_residual_ssots_2026_05_08`](./wave3x_residual_ssots_2026_05_08.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | design | 22/23 | 96% | 0.2 | 2026-05-23 | |
+> > > > > > > [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12`](./alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
+> > > > > > > | cross_cutting_may_23_2026 | design | 7/7 | 100% | 0.0 | 2026-08-31 | |
+> > > > > > > [`api_football_minimal_flattening_removal_2026_05_07`](./api_football_minimal_flattening_removal_2026_05_07.md)
+> > > > > > > | master | refactor | 16/16 | 100% | 0.0 | — | |
+> > > > > > > [`available_at_lookahead_bias_completion_2026_05_08`](./available_at_lookahead_bias_completion_2026_05_08.md)
+> > > > > > > | cefi_master_2026_05_07 | design | 47/47 | 100% | 0.0 | — | |
+> > > > > > > [`cross_cutting_may_23_deliverables_2026_05_08`](./cross_cutting_may_23_deliverables_2026_05_08.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | 30/30 | 100% | 0.0 | 2026-05-23 | |
+> > > > > > > [`data_status_drilldown_shard_atom_alignment_2026_05_07`](./data_status_drilldown_shard_atom_alignment_2026_05_07.md)
+> > > > > > > | cross_cutting_may_23_2026 | design | 41/41 | 100% | 0.0 | — | |
+> > > > > > > [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+> > > > > > > | master | design | 40/40 | 100% | 0.0 | — | |
+> > > > > > > [`defi_recursive_borrow_archetypes_2026_05_10`](./defi_recursive_borrow_archetypes_2026_05_10.md) | master
+> > > > > > > | design | 154/154 | 100% | 0.0 | — | |
+> > > > > > > [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](./dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)
+> > > > > > > | cefi_master_2026_05_07 | design | 12/12 | 100% | 0.0 | — | |
+> > > > > > > [`expected_unattempted_propagation_chain_2026_05_12`](./expected_unattempted_propagation_chain_2026_05_12.md)
+> > > > > > > | manifest_evolution_master_2026_05_08 | brand-new | 44/44 | 100% | 0.0 | 2026-05-15 | |
+> > > > > > > [`expected_universe_v2_design_2026_05_08`](./expected_universe_v2_design_2026_05_08.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | design | 15/15 | 100% | 0.0 | — | |
+> > > > > > > [`features_service_qg_cleanup_2026_05_11`](./features_service_qg_cleanup_2026_05_11.md) |
+> > > > > > > infrastructure_master_2026_05_07 | refactor | 11/11 | 100% | 0.0 | — | <<<<<<< Updated upstream
+
+# | [`features_tick_observation_audit_2026_05_18`](./features_tick_observation_audit_2026_05_18.md) | **orphan** | brand-new | 19/19 | 100% | 0.0 | — |
+
+| [`features_tick_observation_audit_2026_05_18`](./features_tick_observation_audit_2026_05_18.md) | master | brand-new |
+19/19 | 100% | 0.0 | — |
+
+> > > > > > > Stashed changes |
+> > > > > > > [`manifest_cross_asset_rescan_design_2026_05_08`](./manifest_cross_asset_rescan_design_2026_05_08.md) |
+> > > > > > > manifest_evolution_master_2026_05_08 | infra | 6/6 | 100% | 0.0 | — | |
+> > > > > > > [`mdps_streaming_and_backpressure_2026_05_07`](./mdps_streaming_and_backpressure_2026_05_07.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | 7/7 | 100% | 0.0 | 2026-05-23 | |
+> > > > > > > [`missing_question_docs_disposition_2026_05_10`](./missing_question_docs_disposition_2026_05_10.md) |
+> > > > > > > master | design | 3/3 | 100% | 0.0 | pre-cutover (P0 — May-23 plans cite ghos | |
+> > > > > > > [`mtds_per_instrument_download_api_2026_04_24`](./mtds_per_instrument_download_api_2026_04_24.md) |
+> > > > > > > cross_cutting_may_23_2026 | design | 20/20 | 100% | 0.0 | — | |
+> > > > > > > [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md) |
+> > > > > > > infrastructure_master_2026_05_07 | refactor | 31/31 | 100% | 0.0 | — | |
+> > > > > > > [`simulation_scenarios_post_cutover_2026_06_01`](./simulation_scenarios_post_cutover_2026_06_01.md) |
+> > > > > > > master | infra | 16/16 | 100% | 0.0 | post-cutover (target 2026-07-15) | |
+> > > > > > > [`simulation_scenarios_topology_price_shocks_2026_05_09`](./simulation_scenarios_topology_price_shocks_2026_05_09.md)
+> > > > > > > | master | design | 74/74 | 100% | 0.0 | 2026-05-23 | |
+> > > > > > > [`trigger_based_reference_data_2026_04_13`](./trigger_based_reference_data_2026_04_13.md) |
+> > > > > > > instruments_live_master_2026_05_08 | design | 20/20 | 100% | 0.0 | — | <<<<<<< Updated upstream
+
+# | **TOTAL** (66 plans) | 6 orphans, 0 TBD | — | — | **61% done** | **400** | — |
+
+| **TOTAL** (66 plans) | 0 orphans, 0 TBD | — | — | **61% done** | **401** | — |
+
+> > > > > > > Stashed changes
+
 <!-- AUTO-INVENTORY-END -->
 
 ---
@@ -2013,6 +2114,6 @@ Authorized edit by slot 11 per orchestrator direction 2026-05-14 15:30 UTC (item
 
 Items that cannot auto-close — require operator review + explicit `[ack]` before being flipped.
 
-| Item | Plan | Gate | What operator must do | Added |
-| ---- | ---- | ---- | --------------------- | ----- |
+| Item                                        | Plan                                                                | Gate                                   | What operator must do                                                                                                                                                                                                                                                                                         | Added             |
+| ------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | deployment-ui G.3 — B6 operator UX sign-off | `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` Phase G.3 | B6 (business gate — final before prod) | Review 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction + env-tier hosting on staging (`staging.odum-research.com`); run G.2 staging deploy runbook first (`deployment-service/runbooks/deployment-ui-staging-deploy.md`); then comment `[ack] G.3 approved` in this plan to unblock prod deploy | 2026-05-19 slot-6 |
