@@ -1,5 +1,13 @@
 ---
 scope: [engineer, admin]
+title: Smoke Testing Playbook
+type: runbook
+status: active
+execution:
+  owner: on-call engineer (slot-1 main)
+  cadence: on-demand (triggered by staging→main promotion gate)
+  verifier: slot-1 orchestrator reviews SIT smoke results in CI
+  last_executed: 2026-05-19
 ---
 
 # Smoke Testing Playbook
