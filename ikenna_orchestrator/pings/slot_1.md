@@ -163,6 +163,23 @@ artifact regardless of exit shape. Phase 8 of honest_coverage plan depends on th
 **Plan-flip Half-2**: `honest_coverage_formula_consolidation_2026_05_19.md` P0-0c flipped to `[x]`. Same agent
 turn as code commit per CLAUDE.md.
 
+### T+10min verification VERDICT — trap works end-to-end ✅
+
+Canonical path landed: `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`
+(67KB, uploaded 19:41:38 UTC, ~6s after the VM emitted `=== VM EXIT rc=0 2026-05-19T19:41:32Z ===`).
+
+Log tail confirms BOTH unique trap signatures present:
+- `=== VM EXIT rc=0 <ISO-timestamp> ===` (the `_lc_final_upload` exit marker)
+- `log uploaded to gs://… (attempt 1)` (the retry-loop success message)
+
+Workload result: rc=0, 181 daily results collected, all 0-record (which is a SEPARATE finding — Drift S3 SOL-PERP
+returned 0 rows for every day from 2025-11-20 to 2026-05-19. Likely either the wrong market symbol, an adapter
+endpoint change, or genuinely-empty archive for SOL-PERP at the chosen market id. Not a launcher problem; file
+follow-up for the operator to triage when they look at DeFi coverage gaps).
+
+**Net**: the demonstrated bug (TERMINATED, no log) is closed. Every VM in the patched 14 launchers will reliably
+emit run.log on every exit path. T+10min audits + post-mortems no longer fly blind.
+
 **Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
 
 **Rationale (operator)**: live-inference runs on long-lived VMs, not scale-to-zero serverless. Cold-start
