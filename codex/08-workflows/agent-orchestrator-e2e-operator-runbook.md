@@ -258,7 +258,7 @@ From `agent-orchestrator/docs/OPERATIONS.md` § "Validation smoke tests":
 
 ```bash
 # Pre-flight check
-curl -sf http://localhost:8026/healthz | python3 -m json.tool
+curl -sf http://localhost:8026/api/healthz | python3 -m json.tool
 curl -s  http://localhost:8026/api/state | python3 -m json.tool
 
 # /blocked round-trip (Test E — fastest, no Claude session needed)
@@ -271,7 +271,7 @@ curl -s  http://localhost:8026/api/state | python3 -m json.tool
 
 | Endpoint                        | Purpose                                           |
 | ------------------------------- | ------------------------------------------------- |
-| `GET /healthz`                  | Server alive? Returns mode + uptime_seconds       |
+| `GET /api/healthz`              | Server alive? Returns mode + uptime_seconds       |
 | `GET /health`                   | UTL-standard health probe (workspace convention)  |
 | `GET /readiness`                | Cloud Run readiness probe (DB + backlog checks)   |
 | `GET /api/state`                | Slots, blocked queue, conditions, backlog summary |

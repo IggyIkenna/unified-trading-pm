@@ -224,7 +224,8 @@ Firebase Hosting fronts the Vite dashboard (static files) and rewrites API traff
   "hosting": {
     "rewrites": [
       { "source": "/api/**", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
-      { "source": "/healthz", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
+      { "source": "/health{,/**}", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
+      { "source": "/readiness", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
       { "source": "**", "destination": "/index.html" }
     ]
   }
