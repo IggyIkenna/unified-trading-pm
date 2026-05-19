@@ -593,6 +593,10 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
   - [ ] prediction signed off — date: \_**\_ — operator: \_\_**
 - **Done-definition**: 5/5 asset_groups signed off + zero phantoms + bundled walk metrics emitted (5 drift-class
   histograms + bytes-moved + wall-clock per asset_group).
+- **Post-sign-off trigger (2026-05-19 slot-8, operator-acked)**: after all 5 asset_groups signed off, launch
+  `expected_universe_v2` Phase 4 VM fleet (`bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh
+  --asset-group {cefi|defi|tradfi|sports|prediction}`). See `expected_universe_v2_design_2026_05_08.md` Phase 4
+  (deferred to this gate per BLK-89befd81 operator answer 2026-05-19).
 
 ### Phase 8 — Cross-asset rescan triage review (May 15)
 
