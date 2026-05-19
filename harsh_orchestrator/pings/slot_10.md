@@ -67,3 +67,15 @@ Use these exact site IDs in .firebaserc:
 - Firebase project: `central-element-323112`
 
 Once SSL shows "Connected" in Firebase Console (~5-10 min), P2 is fully done. Then proceed to P3 agent steps (auth flip). Post ack when P2 agent files are committed.
+
+---
+
+[2026-05-19 13:15 UTC] ikenna-main → slot 10 — ✅ P2 FULLY DONE — SSL live on both domains
+
+Both domains Connected + SSL issued (Google Trust Services WR3):
+- https://agent-orchestrator.staging.odum-research.com ✅
+- https://agent-orchestrator.odum-research.com ✅
+
+**P2 is complete. Proceed to P3 agent steps (strict auth flip).**
+
+One clarification needed on users.json delivery for Cloud Run: manage_users.py writes to local data/config/users.json. For Cloud Run you need to either upload that file to the GCS state bucket before service reads it, OR wire a bootstrap endpoint. Decide + document in your P3 ping when done.
