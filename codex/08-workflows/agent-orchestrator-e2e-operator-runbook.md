@@ -23,13 +23,13 @@ last_executed: P1 first-deploy 2026-05-19
 
 ## Where to access
 
-| Environment                         | URL                                                                     | Status                                                       |
-| ----------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Staging (UAT) — **current primary** | `https://agent-orchestrator-staging-1060025368044.europe-west4.run.app` | Live (P1 shipped 2026-05-19)                                 |
-| Staging custom domain               | `https://agent-orchestrator.staging.odum-research.com`                  | DNS+SSL live (P2 shipped); Firebase Hosting pending          |
-| Production                          | `https://agent-orchestrator.odum-research.com`                          | Pending P5 prod cutover                                      |
-| Legacy fallback                     | `https://orch.epiphanytechnologies.com`                                 | Harsh's laptop; 1-day fallback after P5, then decommissioned |
-| Local dev                           | `http://localhost:5173` (Vite) + backend `http://localhost:8026`        | `bash scripts/dev.sh` from `agent-orchestrator/`             |
+| Environment                         | URL                                                                     | Status                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Staging (UAT) — **current primary** | `https://agent-orchestrator-staging-1060025368044.europe-west4.run.app` | Live (P1 shipped 2026-05-19)                                                      |
+| Staging custom domain               | `https://agent-orchestrator.staging.odum-research.com`                  | **LIVE** — P2 shipped 2026-05-19 (Firebase Hosting + Cloud Run rewrites verified) |
+| Production                          | `https://agent-orchestrator.odum-research.com`                          | Pending P5 prod cutover                                                           |
+| Legacy fallback                     | `https://orch.epiphanytechnologies.com`                                 | Harsh's laptop; 1-day fallback after P5, then decommissioned                      |
+| Local dev                           | `http://localhost:5173` (Vite) + backend `http://localhost:8026`        | `bash scripts/dev.sh` from `agent-orchestrator/`                                  |
 
 Until P5 cutover, use the staging URL for daily work. The legacy fallback is authoritative for live state (Harsh's
 laptop holds `state.db`).
