@@ -204,7 +204,8 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          updated across 8 repos. Post-rollout dry-run: 0 drift remaining. SHAs: risk-and-exposure-service@ba2eb78,
          strategy-service@47247c9, system-integration-tests@0e24b1c, trading-agent-service@afd76f0,
          unified-api-contracts@3624173, unified-trading-api@6357612, e2e-testing@9a6cb2d, unified-trading-system-ui@8ff38717
-8. - [ ] **Plan flips** for all items. (0.5 cal)
+8. - [x] ✅ **Plan flips** for all items — all 7 items flipped: items 1/2 backfilled 2026-05-19 (PM@39fcc4f7),
+         items 3/4 backfilled (PM@cd798869), item 5 PM@44f01d90, items 6/7 PM@fbfaacfa+ff2b04f5.
 
 ---
 
