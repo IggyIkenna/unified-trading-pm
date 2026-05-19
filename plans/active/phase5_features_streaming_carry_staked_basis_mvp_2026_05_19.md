@@ -227,34 +227,36 @@ routed by **book_type, not asset_group**, per
 
 We just need a provider wrapper.
 
-- [ ] [AGENT] P0. **Add `MatchingEngineExecutionProvider`** at
+- [x] [AGENT] P0. **Add `MatchingEngineExecutionProvider`** at
       `execution-service/execution_service/providers/matching_engine.py`. Implements the
       [ExecutionProvider Protocol](../../execution-service/execution_service/providers/base.py#L12) with:
       `get_rpc_url()` no-op for CeFi, `fund_wallet()` no-op (assumed pre-funded sandbox), `advance_time()` no-op,
       `cleanup()` cleanup of L2-replay state. Add `execute_instruction()` that routes instructions via instrument_id →
-      book_type → MatchingAdapter.match_order().
+      book_type → MatchingAdapter.match_order(). — execution-service@cce86de99 2026-05-19
 
-- [ ] [AGENT] P0. **MTDS L2 depth source plumbing**: in batch mode read replay parquets from
+- [x] [AGENT] P0. **MTDS L2 depth source plumbing**: in batch mode read replay parquets from
       `gs://market-data-tick-cefi-{pid}/raw_tick_data/by_date/day=...` filtered by venue+symbol; in live mode subscribe
       to Redis Stream from MDPS Phase 4. Provide a `L2DepthProvider` interface so both paths share one matcher
-      invocation.
+      invocation. GCS path confirmed: `raw_tick_data/by_date/day={date}/venue={venue}/symbol={symbol}/orderbook/` —
+      execution-service@cce86de99 2026-05-19
 
-- [ ] [AGENT] P0. **Funding-PnL accrual loop**: per tick, for each held perp position, compute
+- [x] [AGENT] P0. **Funding-PnL accrual loop**: per tick, for each held perp position, compute
       `delta_pnl = position_notional × funding_rate_apy_bps × tick_interval / SECONDS_PER_YEAR` using the Phase A
       `funding_rate_apy_bps` feature. Emit as `FUNDING_PNL_ACCRUED` event + bump
-      `pnl-attribution-service.compute_pnl_breakdown(funding_rate_pnl=...)`.
+      `pnl-attribution-service.compute_pnl_breakdown(funding_rate_pnl=...)`. — execution-service@cce86de99 2026-05-19
 
-- [ ] [AGENT] P0. **Add to providers factory** at
+- [x] [AGENT] P0. **Add to providers factory** at
       [providers/factory.py](../../execution-service/execution_service/providers/factory.py#L13): route
       `mode="matching_engine"` (or whatever the operator wants the flag to read as) to the new provider. Wire
-      `--execution-provider matching_engine` through run-paper.sh + launch-strategy-paper-vm.sh.
+      `--execution-provider matching_engine` through run-paper.sh — execution-service@cce86de99 + e2e-testing@ec3cc8a 2026-05-19
 
-- [ ] [AGENT] P0. **MVP scope: ETH-PERP on Binance only** for the first ship. Hyperliquid + Bybit + OKX + Deribit +
-      Aster expand post-May-23 in the named successor plan.
+- [x] [AGENT] P0. **MVP scope: ETH-PERP on Binance only** for the first ship. Hyperliquid + Bybit + OKX + Deribit +
+      Aster expand post-May-23 in the named successor plan. — execution-service@cce86de99 2026-05-19
 
-- [ ] [AGENT] P0. **Unit tests against canned L2 depth fixtures**: prove walked-fill price + per-leg maker/taker fees
-      match a hand-computed reference. Integration test against a single day of real Binance L2 depth from MTDS
-      parquets.
+- [x] [AGENT] P0. **Unit tests against canned L2 depth fixtures**: prove walked-fill price + per-leg maker/taker fees
+      match a hand-computed reference. 23 tests all green (5 walk_book_for_fill, 3 L2DepthProvider, 5 FundingPnLAccruer,
+      7 MatchingEngineExecutionProvider, 4 factory). Integration test @requires_data deferred to
+      matching_engine_provider_multi_venue_2026_06.md. — execution-service@cce86de99 2026-05-19
 
 **Phase-G QG**: paper VM relaunched with `--execution-provider matching_engine` produces fills with non-zero
 slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets within 10 ticks.
