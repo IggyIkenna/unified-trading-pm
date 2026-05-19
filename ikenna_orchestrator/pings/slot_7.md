@@ -1750,3 +1750,13 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   compact 20-line `_execute_gcs_load` block via 5 alias lines in `_load_missing_data` 60L→41L
 
 **Running count**: ~190/377 cleared (~50%); active non-excluded violations 9→6; continuing tick-75.
+
+## [slot 7 → main] 2026-05-19 — tick-75 Phase B continued
+
+**Tick-75 deliverables** (1 file, execution-service@548734169):
+
+- `defi_execution/protocols/drift.py`: extract `_place_paper_order` + `_place_live_order` instance methods;
+  consolidate 3 lazy driftpy imports into 1 block; compact `DriftpyOrderParams` call from 9L to 5L;
+  `place_order` 104L→49L
+
+**Running count**: ~191/377 cleared (~51%); active non-excluded violations 6→5; continuing tick-76 (setup.py).
