@@ -630,9 +630,9 @@ In-plan P1 (blocks polish, may defer to Phase 9-12):
 
 In-plan P2:
 
-- [ ] [strategy-service] **P2**. Pause-cell cleanliness when `target_net_delta = +N ≥ E_actual`:
+- [x] ✅ [strategy-service] **P2**. Pause-cell cleanliness when `target_net_delta = +N ≥ E_actual`:
       `_build_carry_recursive_staked` emits single-leg lending-only cell (not two-leg with `perp_short_size=0`) to keep
-      bookkeeping clean.
+      bookkeeping clean. — strategy-service@24ec3d4; removed perp_venue from all 7 specs, added perp_leg_enabled=false + unit test
 - [ ] [execution-service] **P2**. cbETH/ETH basis-risk monitor in Phase 8 (additive to HealthFactorMonitor) — small
       under normal markets (cbETH 0.1-0.5% premium/discount) but tail risk during Coinbase stress.
 - [ ] [execution-service] **P2**. USDC supply-APY (`R_usdc`): Hyperliquid does NOT pay; Bybit flexible-savings gates on
