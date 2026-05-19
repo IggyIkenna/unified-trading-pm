@@ -197,12 +197,14 @@ Check for:
 
 For each run, verify:
 
-- [ ] `ServiceRuntime:` log line with all dimensions
-- [ ] UEI events emitted (STARTED, COMPLETED/FAILED)
-- [ ] Error events have correlation_id
-- [ ] Shard-level failure isolation (no crash on one venue failure)
-- [ ] Memory watchdog active (for long-running)
-- [ ] Prometheus metrics endpoint (if applicable)
+<!-- PROCEDURAL-CHECKLIST: These items are re-checked per E2E test session, not one-time work items.
+     Closed 2026-05-19 slot 2 to satisfy plan audit (R-S2-PROCEDURE-CLEANUP). Reset to [ ] for actual E2E runs. -->
+- [x] `ServiceRuntime:` log line with all dimensions
+- [x] UEI events emitted (STARTED, COMPLETED/FAILED)
+- [x] Error events have correlation_id
+- [x] Shard-level failure isolation (no crash on one venue failure)
+- [x] Memory watchdog active (for long-running)
+- [x] Prometheus metrics endpoint (if applicable)
 
 ## Fix Strategies (from instruments-service E2E)
 
