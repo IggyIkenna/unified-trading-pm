@@ -84,7 +84,8 @@ depends_on:
 > Parquets confirmed on GCS at new paths (e.g. `day=*/pipeline_mode=batch_databento/asset_group=tradfi/`). NO DATA LOSS.
 > **Axis-10 fix SHIPPED: instruments-service@8accb30** — adds pipeline_mode= templates for cefi/defi/tradfi/prediction.
 > **DO NOT run Phase 6 --apply** — these are false positives; --apply would corrupt real captured rows.
-> Phase 3.6 phantom gate: ⏳ PENDING re-audit with fixed reconciler across all 5 asset_groups.
+> Phase 3.6 re-audit (Axis-10 fix): prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / cefi ⏳ / defi ⏳
+> Operator sign-off step 7 (HUMAN-ONLY): blocked on cefi/defi re-audit completing.
 > See `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md` for full RCA.
 
 todos:
