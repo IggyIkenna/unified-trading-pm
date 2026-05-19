@@ -494,12 +494,14 @@ Operator-validation question 2026-05-19 surfaced 4 gaps in the original 10-phase
   `subsurface={risk,position,pnl,strategy}` label dimension. ServiceBootstrap in Phase 4 (e) already covers
   lifecycle-event emission; this is the parallel pass for log + metric + trace infra. Slot 4 extends Phase 4
   by ~0.5 cal-day.
-- [ ] **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
+- [x] ✅ **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
   subtree-merge. `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/`
   pulls package + tests + scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in
   each archived source repo's `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
   `codex/04-architecture/strategy-service-architecture.md` and related codex pages." 1-line addendum to
-  Phase 3 recipe; <5 min work.
+  Phase 3 recipe; <5 min work. — VERIFIED 2026-05-19: `git show {92515fde,cb200745,c67fb13d} --stat | grep docs/`
+  returns empty — docs/ correctly excluded from all 3 subtree-merge commits. Handoff to Phase 7 (slot 6):
+  include "docs/ not migrated" note in DEPRECATION_NOTICE.md per above.
 - [ ] **P2 NEW** [AGENT slot 7] Phase 8A addendum — GitHub Actions workflows in source repos going dark.
   Each archived repo carries ~9 workflow files (~27 total across risk + position + pnl). Most are templated
   copies (`workspace-qg.yml`, `semver-agent.yml`, `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) that
