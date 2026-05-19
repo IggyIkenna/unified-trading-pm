@@ -173,7 +173,7 @@ org-naming tidy):
 
 ### Phase 2 — Full byte-for-byte parity run (BLOCKED on data)
 
-- [ ] [AGENT] P0. Phase 2.1 — **BLOCKED until `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills
+- [x] **FORMALLY DEFERRED** [AGENT] P0. Phase 2.1 — **BLOCKED until `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills
       land a 7-day reference window of live feature-input data on GCS.** Then: (1) check out the 8 source
       `features-*-service` repos at their last-pre-consolidation commit (archived read-only on GitHub but cloneable;
       local sibling clones still have the pre-archival HEAD); (2) run each of the 8 source CLIs over the 7-day window →
@@ -182,10 +182,12 @@ org-naming tidy):
       `${WORKSPACE_ROOT}/.feature_parity_diff/postmerge/<f>/`; (4)
       `python unified-trading-pm/scripts/dev/feature_parity_diff.py` — assert schema match, row-count match, value match
       (within float tolerance) per family; (5) any divergence → diagnose + fix or document as an accepted difference
-      with rationale.
-- [ ] [AGENT] P0. Phase 2.2 — Parity run green → flip `features_repo_consolidation_2026_05_08.md` Phase 6 checkbox
+      with rationale. **FORMALLY DEFERRED 2026-05-19 slot-5** — gated on Phase 3 backfills landing a 7-day GCS window
+      (expected 2026-05-19→05-23 per operator). Named successor: this plan Phase 2 (resume when data lands). Status:
+      BLOCKED-UPSTREAM (no data).
+- [x] **FORMALLY DEFERRED** [AGENT] P0. Phase 2.2 — Parity run green → flip `features_repo_consolidation_2026_05_08.md` Phase 6 checkbox
       `- [x]` with the run evidence (commands + machine + duration + per-family pass); remove the `**DEFERRED**`
-      annotation.
+      annotation. **FORMALLY DEFERRED 2026-05-19 slot-5** — depends on Phase 2.1; same gate.
 
 `execution:` for Phase 2 — owner: harsh slot 2 (or whichever slot owns features work when Phase 3 backfills land);
 cadence: one-shot; verifier: `feature_parity_diff.py` exit 0 / per-family pass; last_executed: NEVER (blocked on data).
