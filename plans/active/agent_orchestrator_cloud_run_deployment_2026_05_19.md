@@ -75,7 +75,7 @@ todos:
   - id: p2-firebase-hosting-domains
     content: |
       - [ ] [HUMAN+AGENT] P2. Phase 2 — Firebase Hosting + custom domains (depends on P1)
-        - [ ] Add agent-orchestrator/firebase.json with prod+uat hosting targets, each rewriting `/api/*` and `/healthz` to the matching Cloud Run service (region asia-northeast1) and serving built Vite dashboard at `/`
+        - [x] ✅ Added agent-orchestrator/firebase.json with prod+uat hosting targets, each rewriting `/api/**` + `/health{,/**}` + `/readiness` + `/healthz` to the matching Cloud Run service (region **europe-west4** — corrected from harsh-main's PM@51962e62b which incorrectly flipped to asia-northeast1; CLAUDE.md asia-northeast1 SSOT applies to GCS data only, not Cloud Run compute. Cross-side ping at PM@<this commit>). Static dashboard served from dashboard/dist with SPA fallback + immutable-cache headers on static assets — agent-orchestrator@ec72899
         - [ ] Add agent-orchestrator/.firebaserc with hosting targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site (both under central-element-323112 firebase project)
         - [ ] dashboard/vite.config.ts: confirm build output goes to a Firebase-Hosting-friendly path (dist/ → public/ relative to firebase.json)
         - [ ] First `firebase deploy --only hosting:uat` from local laptop
