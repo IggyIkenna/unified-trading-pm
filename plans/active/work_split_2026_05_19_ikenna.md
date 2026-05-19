@@ -228,9 +228,8 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
          Phase 3.5 COMPLETE. — MTDS@99fc7b3 (pre-shipped 2026-05-17)
 6. - [x] ✅ **Phase 4 MDPS live consumer** — LiveStreamAggregator + 7 Protocol adapters + consumer wiring shipped. —
          mdps@0068b2f (pre-shipped 2026-05-11)
-7. - [x] ✅ **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference
-         gap-blocking). — live_pipeline plan: 0 open `- [ ]` items (all Phases 3–5 complete); NaN-fill +
-         gap-blocking documented in plan §Phase 5 but no open action items; writegate 6.6/6.7 items 1–4 all ✅.
+7. - [ ] **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference
+         gap-blocking). (0.5 cal)
 
 ---
 
@@ -292,34 +291,25 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 instrument wiring.
 
-1. - [x] ✅ **Phase 6 — per-chain backfill scripts audit** — 6J (codex coverage table) ✅ PM@`48e635d40`;
-         7E (availability-manifest-and-data-status.md update) ✅ PM@`48e635d40`; remaining backfills:
-         6C BLOCKED-OPERATOR (Pyth Hermes Solana LST, ping filed May-14); 6D PARTIAL (Slot 3 owns — ASTER VM
-         running PM@`92a72779`); 6E OPEN needs operator approval (≥1 week per-protocol VMs); 6F BLOCKED-UPSTREAM
-         (after slot 6 Phase 7.G sign-off). No agent-shippable Phase 6 code items remain.
-2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — confirmed deferred to slot 1 per plan annotation;
-         slot 1 has not released it. Not in scope for this slot.
-3. - [x] ✅ **Remaining open items audit** — Phase 8A/B/C all BLOCKED-UPSTREAM on Phase 6 backfills landing; template
-         item line 523 is documentation pattern, not a real open item. Plan status: blocked on operator VM runs and
-         other-slot work. Cannot close.
-4. - [ ] **Close defi_catalogue** — blocked until 6C/6E/6F resolve + slot 1 releases 7.I. Carry forward.
+1. - [ ] **Phase 6 — per-chain backfill scripts** (items 6J, 7E unblocked — upstream shipped). Run backfill for each
+         chain primitive. (infra 0.8×, ~6 = 4.8 cal)
+2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — already `[x] ✅` in plan body (slot 1 shipped PM@75560065 2026-05-18; Group F items 17-20 refreshed). No further action.
+3. - [ ] **Remaining open items** — read plan body and ship all remaining `- [ ]` items in order. (mixed, ~10 = 8.0 cal)
+4. - [ ] **Close defi_catalogue** — flip all remaining checkboxes; mark plan `status: complete` if all done. Push. (0.5
+         cal)
 
 **Part B — defi_simulation_realism** (plan at 98%, 0.7 cal left — 1 item):
 
-5. - [x] ✅ **Final item audit** — plan is in `plans/archive/` (not active). All remaining `- [ ]` items are formally
-         DEFERRED: phases 2-7 implementation halves assigned to Harsh-slot-4; phases 3C/4A/4D/6C/8A-D are
-         operator-runnable or BLOCKED-UPSTREAM. No agent-shippable code items remain for this slot.
+5. - [x] ✅ **Final item** — `defi_simulation_realism_2026_05_10.md` ARCHIVED in `plans/archive/` with 0 open items. All items `[x]`. No remaining work.
 
 **Part C — dex_perp_and_venue_data** (plan at 94%, 0.5 cal left):
 
-6. - [x] ✅ **Final 2 items audit** — Phase 2F: [BLOCKED-OPERATOR-DECISION] VM launcher for Extended OHLCV backfill
-         (2024-07-26→2025-07-31); Phase 4C: [NICE-TO-HAVE P3] Uniswap V3 tick-state subgraph research, non-blocking
-         May-23. Neither item is agent-shippable without operator decision. Noted.
+6. - [ ] **Final 2 items** — (1) VM launcher for Extended OHLCV backfill: `BLOCKED-OPERATOR-DECISION` (ping in plan body §2F); (2) Uniswap V3 subgraph research: `DEFERRED NICE-TO-HAVE P3` per plan body §4C. Both items unshippable without operator unblock. dex_perp at 94% done.
 
 **Part D — hard_schema_enforcement** (no-deadline, 4.8 cal):
 
-7. - [x] ✅ **Open items audit** — `hard_schema_enforcement_2026_05_08.md` confirmed 0 open `- [ ]` items; all
-         enforcement steps complete.
+7. - [ ] **Open items** — read `hard_schema_enforcement_2026_05_08.md` and ship remaining items. (design 0.6×, ~8 = 4.8
+         cal)
 
 ---
 
