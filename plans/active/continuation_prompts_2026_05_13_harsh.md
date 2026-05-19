@@ -96,7 +96,7 @@ C. PART B apply-flips reconciler — POLL the cross-side _agent_pings.md every ~
    ping. When it lands, run reconcile_legacy_blank_to_typed_reason.py --apply-flips for cefi/defi/tradfi on
    same-region GCE VM. Triage sports/prediction residuals as separate findings (slot 9 owns classifier extension).
 D. Q7(b) pnl/positions/risk-store-defi shape — if Ikenna's answer lands mid-shift via cross-side ping or
-   operator chat, ship the rename in same logical unit; otherwise leave `- [ ]` with annotation.
+   operator chat, ship the rename in same logical unit; otherwise leave item unchecked with annotation.
 
 DONE-DEFINITION:
 - `gcloud storage buckets list | grep manual-audit` → 3 buckets each on GCP + AWS, retention verified
@@ -300,7 +300,7 @@ Sub-agent A (UAC revert + venue cleanup):
   (market_data_categories.py — CF-1/CF-2/CF-9/CF-10 in catalogue audit)
 - Verify VENUES_BY_ASSET_GROUP["defi"] includes them (add if missing)
 - Verify defi_venue_capabilities.py entries intact (perp_funding / liquidations / oracle_prices)
-- Flip catalogue audit Phase 1C from "✅ DONE axis_override" back to `- [ ]` with new shape narrative
+- Flip catalogue audit Phase 1C from "✅ DONE axis_override" back to unchecked with new shape narrative
 
 Sub-agent B (strategy-service capability query):
 - carry_staked_basis + arbitrage_price_dispersion archetype perp-hedge venue eligibility: change from
