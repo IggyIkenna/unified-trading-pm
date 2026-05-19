@@ -193,6 +193,9 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 11. - [x] ✅ **Batch-32 method-size refactor — instruments/factory_cefi_defi.py** — all 3 violations (235L, 249L, 95L)
           extracted to private helpers; all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
           allowlist. execution-service@ca97b10db (2026-05-19; allowlist 12→11, slot-4 cumulative 98 files cleared)
+12. - [x] ✅ **Batch-32 method-size refactor — config/grid_v2_registry.py** — all 3 violations (130L, 163L, 205L)
+          extracted to private helpers; all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
+          allowlist. execution-service@911b4ffde (2026-05-19; allowlist 11→10, slot-4 cumulative 99 files cleared)
 
 ---
 
