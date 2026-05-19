@@ -697,13 +697,19 @@ def iter_parquet_uris_for_slice(
     """List parquet URIs under ``gs://{bucket}/{prefix_slice}``."""
     if list_fn is not None:
         return list_fn(bucket, prefix_slice)
-    proc = subprocess.run(  # noqa: S603 — gcloud is a trusted tool
-        ["gcloud", "storage", "ls", "--recursive", f"gs://{bucket}/{prefix_slice}"],
-        check=True,
+    # gsutil ls -r with ** wildcard handles partial-prefix matching (e.g. day=2019-**).
+    # gcloud storage ls --recursive does NOT support prefix matching without trailing /,
+    # and returns exit code 1 on no matches — making it unusable for year-slice prefixes.
+    # gsutil ls also exits 1 on zero matches, so check=False + inspect returncode.
+    proc = subprocess.run(  # noqa: S603 — gsutil is a trusted tool
+        ["gsutil", "ls", "-r", f"gs://{bucket}/{prefix_slice}**"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=600,
     )
+    if proc.returncode not in (0, 1):
+        raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
     return [line.strip() for line in proc.stdout.splitlines() if line.strip().endswith(".parquet")]
 
 
