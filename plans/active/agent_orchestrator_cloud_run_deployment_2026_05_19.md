@@ -153,8 +153,8 @@ isProject: true
 > 1. Match workspace pattern: ONE GCP project (`central-element-323112`) with env tier (staging vs prod as separate
 >    Cloud Run services).
 > 2. Service name: `agent-orchestrator` (disambiguates from any `orchestrator-service` collision in the workspace).
-> 3. DNS records: operator (Ikenna) will paste records into odum-research.com DNS provider when Firebase Console
->    provides them at Phase 2 kickoff. Provider TBD at that moment.
+> 3. DNS records: operator (Ikenna) will paste records into **Squarespace DNS** (confirmed 2026-05-19) when Firebase
+>    Console provides them at Phase 2 kickoff.
 > 4. Harsh's laptop deploy stays as fallback for 1 week after Phase 5 prod cutover; decommissioned cleanly after.
 > 5. Plan-first workflow per CLAUDE.md doc→plan→code.
 > 6. **No separate Firebase project / no edits inside `unified-trading-system-ui`** (operator clarification mid-draft):
@@ -166,6 +166,14 @@ isProject: true
 >    landing AFTER P5 prod cutover (this plan is the prerequisite — once the backend is on Cloud Run + dashboard is at a
 >    stable URL, the worker-VM + account-failover + Slack work all sit cleanly on top). See **Out of scope** table
 >    below.
+> 8. **Operator-only steps (Ikenna handles manually — agent pings when ready)** (operator-confirmed 2026-05-19):
+>    - **Squarespace DNS record paste** (Phase 2: 2 records per subdomain × 2 subdomains = 4 record pastes total).
+>    - **Slack workspace setup**: Slack app creation, webhook URL, bot token, channel `#agent-orchestrator-alerts` — all
+>      handled by Ikenna in the Slack admin UI as part of the Slack successor plan. Agent waits for credentials before
+>      wiring.
+>    - **Firebase Console "Add custom domain" clicks** (Phase 2: required to get Firebase to issue the DNS records that
+>      then go to Squarespace).
+>    - All other Phase 0-6 steps: agent executes autonomously without waiting.
 
 ---
 
