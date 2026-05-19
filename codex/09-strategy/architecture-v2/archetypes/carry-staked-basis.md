@@ -193,6 +193,9 @@ capital_budget_share_class: USDC
 capital_budget_amount: 1000000
 
 # Required engine params (passed via initial_config dict):
+# All 6 required params are validated at engine construction (__init__): ValueError is raised
+# at boot if any are absent — earlier than tick-time preflight. Missing params cause immediate
+# startup failure (not a silent default).
 staking_protocol: JITO # JITO / MARINADE today; LIDO / ROCKETPOOL / ETHERFI when an ETH-perp venue lands LST margin
 native_asset: SOL # SOL today; ETH when an ETH-perp venue lands LST margin
 lst_asset: JitoSOL # JitoSOL / mSOL today

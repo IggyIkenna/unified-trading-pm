@@ -77,7 +77,12 @@ duplicate.
 
 ## Config schema
 
+> **⚠️ SUPERSEDED (generic schema below)** — the generic `opportunity_type`/`eligible_venues`/`eligible_markets`
+> schema below was the original design. The two deployed variants are documented in the concrete sections
+> that follow. Use those for new strategy-instance configs.
+
 ```yaml
+# LEGACY GENERIC SCHEMA — for reference only; use variant sections below for actual configs
 opportunity_type: CROSS_BOOK_SPORTS # or CROSS_DEX_SPOT, CROSS_CEX_SPOT, CROSS_VENUE_VOL, SURFACE_NOARB, FUNDING_DISPERSION
 eligible_venues:
   - UNITY # with child_books preference list
@@ -111,6 +116,34 @@ instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) f
 # set allowed_chains to those two when only using on-chain perp legs for dispersion.
 allowed_chains: [ethereum, arbitrum, solana, base, optimism]
 ```
+
+### Variant A — Price-dispersion path (CURRENT IMPLEMENTATION in `price_dispersion.py`)
+
+REQUIRED_PARAMS = `{"candidate_venues"}` — engine raises `ValueError` at boot if absent or contains fewer than 2 venues.
+
+```yaml
+# Required:
+candidate_venues: [BINANCE, BYBIT]  # ≥2 venues required; raises ValueError at boot if absent or <2
+
+# Optional (engine defaults shown):
+dispersion_bps: "30"       # minimum cross-venue price gap to trigger entry
+cost_bps: "10"             # round-trip transaction cost estimate
+stake_fraction: "0.1"      # fraction of capital per opportunity
+hedge_deadline_ms: "5000"  # max ms between leader fill and hedge submission
+
+# Universal StrategyInstanceDefinition fields:
+target_leverage: "1.0"
+target_net_delta: "0.0"
+max_underlying_move_pct: "3.0"
+instrument_volatility_registry_lookup: "true"
+allowed_chains: [ethereum, arbitrum, solana, base, optimism]
+share_class: USD
+```
+
+### Variant B — Funding-rate dispersion (not yet implemented; placeholder)
+
+Uses paired positions on two perp venues to capture funding-rate spread. Config shape TBD when implemented.
+Relevant on-chain perp venues: Drift (solana) + Hyperliquid (hyperliquid_l1).
 
 ## Execution semantics
 
