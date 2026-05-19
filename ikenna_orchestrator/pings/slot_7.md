@@ -1727,3 +1727,14 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   `_evaluate_cross_chain_route` 56L→48L
 
 **Running count**: ~185/377 cleared (~49%); active non-excluded violations 13→11; continuing tick-73.
+
+## [slot 7 → main] 2026-05-19 — tick-73 Phase B continued
+
+**Tick-73 deliverables** (2 files, execution-service@3031564b9):
+
+- `engine/backtest/actors/evaluator.py`: compact `_gather_stats` (11L) + `_build_result_dict` (17L) calls via short
+  aliases `e/p/ii/v/sb/cp/bc/rp/up/fb/dbal/tp/cm/npnl/upbc/pi/ps/ts/di/ri`; `evaluate_performance` 56L→34L
+- `data/converter_orderbook.py`: extract `_make_clear_delta` + `_apply_f_last_flag` @staticmethods; compact two
+  `_add_book_levels` calls via `apc/aac/bpc/bac/ii/pp/sp/seq/te/ti` aliases; `_build_row_deltas` 78L→25L
+
+**Running count**: ~187/377 cleared (~50%); active non-excluded violations 11→9; continuing tick-74.
