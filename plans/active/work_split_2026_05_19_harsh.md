@@ -141,7 +141,14 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          `PATH=/opt/homebrew/bin:$PATH bash scripts/aws/provision-aws-buckets.sh --apply`
          (or `--apply --envs prd` for prod-only first). Note: existing prod-named buckets from 2026-05-08 are NOT
          deleted; prd-named counterparts are created; data migration is GAP-2.4.C. (infra 0.8×, ~4 = 3.2 cal)
-8. - [ ] **GAP-2.4.C** — Migrate flat-bucket data into env-tiered AWS structure. (infra 0.8×, ~5 = 4.0 cal)
+8. - [ ] [BLOCKED-CREDENTIALS] **GAP-2.4.C** — migrate-defi-buckets-prod-to-prd.sh written (deployment-service@a527be5):
+         syncs 10 DeFi buckets from old "prod" names → correct "prd" names. Handles pnl/positions/risk prefix
+         asymmetry (unified-trading-pnl-store-defi-prod-* → pnl-store-defi-prd-*). BLOCKED on GAP-2.4.B physical
+         execution first (prd destination buckets must exist). Operator sequence:
+         (1) bash scripts/aws/provision-aws-buckets.sh --apply --envs prd
+         (2) bash scripts/aws/migrate-defi-buckets-prod-to-prd.sh --apply
+         (3) bash scripts/aws/migrate-defi-buckets-prod-to-prd.sh --verify
+         Sources kept for 30-day archival window. (infra 0.8×, ~5 = 4.0 cal)
 9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
 
 ---
