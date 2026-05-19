@@ -241,7 +241,7 @@ graph TB
 
 `●` = direct dependency · `○` = not required · `⟪f⟫` = future/scaffolded
 
-| Service                              | UTS | UCI | UEI | UCLI | AC  | UIC | URDI | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
+| Service                              | UTS | UCI | UEI | UCLI | AC  | UIC | ~~URDI~~ | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
 | ------------------------------------ | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
 | instruments-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
 | market-tick-data-service             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |

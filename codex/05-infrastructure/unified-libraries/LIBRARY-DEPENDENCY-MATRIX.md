@@ -147,7 +147,7 @@ NOTE: The following T2 repos have been merged into services (no longer standalon
 All 17 active/scaffolded services × all 16 libraries. `●` = direct dependency. `○` = not required. `⟪f⟫` =
 future/scaffolded service.
 
-| Service                                  | UTS | UCI | UEI | UCLI | AC  | UIC | URDI | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
+| Service                                  | UTS | UCI | UEI | UCLI | AC  | UIC | ~~URDI~~ | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
 | ---------------------------------------- | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
 | **instruments-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
 | **market-tick-data-service**             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |

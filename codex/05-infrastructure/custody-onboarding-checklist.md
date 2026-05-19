@@ -178,7 +178,7 @@ For each May-23 cutover wallet (≥10 mainnet wallets per Plan Phase 4.A: 2 arch
 
 - [ ] **B.4.1** Provision testnet equivalents of every mainnet wallet in
       `gs://wallet-config-{pid}/testnet/wallet_provisioning.json`.
-- [ ] **B.4.2** Fund each via Sepolia faucet (Alchemy / Infura) + Solana devnet airdrop.
+- [ ] **B.4.2** Fund each via Sepolia faucet (Alchemy / QuickNode) + Solana devnet airdrop.
 - [ ] **B.4.3** Singleton-locked
       `launch-defi-paper-trade-vm.sh --signing-surface=CLOUD_KMS_ENCRYPTED --testnet --asset-group=defi` signs a
       transaction; verify event-stream emits per-wallet `CLOUD_KMS_TX_SIGNED` + tx hash visible on Sepolia Etherscan (or
