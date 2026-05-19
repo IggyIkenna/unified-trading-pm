@@ -8,6 +8,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Day-4 continuation prompts (Harsh-side, 2026-05-13)
 
 > **Paste one prompt per fresh Claude Code session** in `cd .tabs/<N>/`. Each prompt is self-contained — agent reads

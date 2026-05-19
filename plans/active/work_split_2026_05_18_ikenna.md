@@ -18,6 +18,11 @@ estimate_calibration_note: |
   mode. ~8 implementer slots × ~12-16 cal AI-days each = ~100-128 cal AI-days total.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Ikenna's daily work-split — 2026-05-18 (Cycle 2 Day-3)
 
 > **Cycle 2 context**: Post-freeze Day-3 per

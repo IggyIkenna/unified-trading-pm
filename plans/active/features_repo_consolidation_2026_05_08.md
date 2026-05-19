@@ -944,6 +944,11 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
 > [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) Tab 4 lifts `commodity` / `cross_instrument` /

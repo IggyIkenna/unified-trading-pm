@@ -23,6 +23,11 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 > **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds `HealthFactorMonitor` +
 > `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
 > (`DEFI_HEALTH_FACTOR_CRITICAL` / `DEFI_LIQUIDATION_IMMINENT` / `DEFI_FUNDING_RATE_FLIP` alert codes already added to
@@ -476,13 +481,13 @@ reviews + tunes thresholds.
       RUNNING + heartbeat active. Note: alerting-service uses PubSubEventSink (not GCS sink) so STARTED event is in
       PubSub topic `alerting-service-events`, not the GCS event path. Recheck log every 12h:
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260519-110752/run.log`.
-      Auto-shutdown at T+48h (~2026-05-21 11:07 UTC).
-      **⚠️ POST-LAUNCH FAILURE 2026-05-19 11:11 UTC**: VM `alerting-quietness-20260519-110752` KILLED after 1h —
-      exit_code=137 (SIGKILL from vm-exec stall watchdog). Root cause: `orchestrator.run_subscriber_loop()` produced
-      zero log output during quiet period (no alerts received) → vm-exec stall threshold=3600s hit → SIGKILL. VM
-      self-deleted. **FIX SHIPPED**: alerting-service@5717987 adds periodic heartbeat log every 30min to keep log
-      alive. **ACTION REQUIRED**: operator must restart Phase 7 VM using updated alerting-service tarball.
-      Re-launch: `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh`.
+      Auto-shutdown at T+48h (~2026-05-21 11:07 UTC). **⚠️ POST-LAUNCH FAILURE 2026-05-19 11:11 UTC**: VM
+      `alerting-quietness-20260519-110752` KILLED after 1h — exit_code=137 (SIGKILL from vm-exec stall watchdog). Root
+      cause: `orchestrator.run_subscriber_loop()` produced zero log output during quiet period (no alerts received) →
+      vm-exec stall threshold=3600s hit → SIGKILL. VM self-deleted. **FIX SHIPPED**: alerting-service@5717987 adds
+      periodic heartbeat log every 30min to keep log alive. **ACTION REQUIRED**: operator must restart Phase 7 VM using
+      updated alerting-service tarball. Re-launch:
+      `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh`.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
@@ -577,11 +582,11 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       subscriber-failure-isolation.)
 - [x] ✅ [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
-      (evidence: alerting-service@2f63775 — `--verify-kill-switch` flag added to
-      `scripts/inject_synthetic_alert.py`; injects KILL_SWITCH_DEFI_LIQUIDATION_RISK/PORTFOLIO_DRAWDOWN/VENUE_DISCONNECT,
-      asserts each emits one KillSwitchEvent to in-process bus with correct scope GLOBAL×2/VENUE×1; prints PASS/FAIL per
-      code. In-process bus propagation verified in isolation; full end-to-end (execution-service halt on PubSub topic)
-      verified when operator runs during Phase 8 rehearsal session on live VM. QG ✅ 133s.)
+      (evidence: alerting-service@2f63775 — `--verify-kill-switch` flag added to `scripts/inject_synthetic_alert.py`;
+      injects KILL_SWITCH_DEFI_LIQUIDATION_RISK/PORTFOLIO_DRAWDOWN/VENUE_DISCONNECT, asserts each emits one
+      KillSwitchEvent to in-process bus with correct scope GLOBAL×2/VENUE×1; prints PASS/FAIL per code. In-process bus
+      propagation verified in isolation; full end-to-end (execution-service halt on PubSub topic) verified when operator
+      runs during Phase 8 rehearsal session on live VM. QG ✅ 133s.)
 - [x] [AGENT] P1. **Codex update**: `codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)

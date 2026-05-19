@@ -24,6 +24,11 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
@@ -1751,25 +1756,28 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       blocks CeFi; optional-absent does not block; all-required → executes. execution-service@1135de1d.
 - [x] ✅ [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
-      discount. — ml-training-service@4e83099 (manifest_gap_handler.apply_manifest_quality_flags() + wired into _load_features_and_targets() + 8 unit tests; slot-5, 2026-05-19)
+      discount. — ml-training-service@4e83099 (manifest_gap_handler.apply_manifest_quality_flags() + wired into
+      \_load_features_and_targets() + 8 unit tests; slot-5, 2026-05-19)
 - [x] ✅ [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
       `attempted_failed` (live model can't infer through gaps). — ml-inference-service@52caa74
-      (manifest_inference_guard.check_manifest_for_inference() + _check_manifest_guard() wired into
+      (manifest_inference_guard.check_manifest_for_inference() + \_check_manifest_guard() wired into
       InferenceOrchestrator.run_inference() + 10 unit tests; slot-5, 2026-05-19)
 - [x] ✅ [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
       window size, adjust denominator for `EXPECTED_*` + `SOURCE_RETURNED_ZERO`, skip + emit
-      `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling column.
-      — features-service@c2fed5e2 (manifest_window_guard: WindowManifestResult + n_valid_{w} columns in realized_vol; 10 tests; slot-5 2026-05-19)
+      `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling column. —
+      features-service@c2fed5e2 (manifest*window_guard: WindowManifestResult + n_valid*{w} columns in realized_vol; 10
+      tests; slot-5 2026-05-19)
 - [x] ✅ [AUDIT] P0. **features-\* — same-day single-sample calcs**: NaN-fill output OR emit
-      `record_empty(reason=NO_INPUT_AVAILABLE)` (per-calc choice; document in calc docstring).
-      — features-service@c2fed5e2 (check_window_manifest with dates=[date_str] covers same-day; n_valid=2 in lst_features; slot-5 2026-05-19)
+      `record_empty(reason=NO_INPUT_AVAILABLE)` (per-calc choice; document in calc docstring). —
+      features-service@c2fed5e2 (check_window_manifest with dates=[date_str] covers same-day; n_valid=2 in lst_features;
+      slot-5 2026-05-19)
 - [x] ✅ [AUDIT] P0. **features-cross-instrument — paired/cross-leg calcs**: if EITHER leg `empty_confirmed`, emit
       `record_empty(reason=LEG_ABSENT_<which>)`; if EITHER leg `attempted_failed`, propagate
-      `record_failed(reason=UPSTREAM_LEG_FAILED)`.
-      — features-service@c2fed5e2 (manifest_leg_guard: LegManifestResult.should_skip_empty/should_propagate_failed; 9 tests; slot-5 2026-05-19)
-- [x] ✅ [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
-      (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
-      — strategy-service@b3da1d4 (manifest_allocation_guard: AllocationManifestResult; 11 tests; slot-5 2026-05-19)
+      `record_failed(reason=UPSTREAM_LEG_FAILED)`. — features-service@c2fed5e2 (manifest_leg_guard:
+      LegManifestResult.should_skip_empty/should_propagate_failed; 9 tests; slot-5 2026-05-19)
+- [x] ✅ [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any
+      absence (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`. —
+      strategy-service@b3da1d4 (manifest_allocation_guard: AllocationManifestResult; 11 tests; slot-5 2026-05-19)
 - [x] ✅ [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has
       data and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the
       other has `attempted_failed`, flag. — batch-live-reconciliation-service@69b784d (stage0_manifest_reason_check: 14

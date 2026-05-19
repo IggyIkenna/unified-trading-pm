@@ -31,6 +31,11 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Bucket-name SSOT canonicalisation
 
 > **Severity**: P1 — silent operational failure surface. The disagreement caused 7 of 55 deleted-but-needed empty
@@ -143,7 +148,9 @@ this plan and **Q4** below (operator decision).
       artefacts."
 - [x] **[SCRIPT] P1**. **Phase 0c-watchdog — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET retrofit to
       `resolve_bucket_name()`** (MIGRATED FROM
-      `plans/archive/issues/watchdog_env_tiered_events_architecture_2026_05_11.md` Gap 1). ✅ deployment-service@d3a96cf — 72 f-strings replaced with pre-computed constants via resolve_bucket_name(); 6 plain-string entries wrapped in VmPrefixSpec; shard-loop bug fixed (spec.bucket not VmPrefixSpec object); QG green 2026-05-19.
+      `plans/archive/issues/watchdog_env_tiered_events_architecture_2026_05_11.md` Gap 1). ✅ deployment-service@d3a96cf
+      — 72 f-strings replaced with pre-computed constants via resolve_bucket_name(); 6 plain-string entries wrapped in
+      VmPrefixSpec; shard-loop bug fixed (spec.bucket not VmPrefixSpec object); QG green 2026-05-19.
       `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict (lines ~100-450) hardcodes ~72
       flat bucket-name entries like `f"market-data-tick-sports-{PROJECT_ID}"`. When env-tiering rolls out, these
       silently miss the env-tier suffix → false-negative on shard-freshness checks → real zombies stay invisible. Fix:
@@ -544,11 +551,11 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       bucket + zero readers still hit flat names) runs after the Phase-2.6 provisioning + flat→env-tiered data
       migration + the L3 delegate flip (Done-def #3 = step 2.6.4) + the L5 reader-repoint (GAP-2.4.D) — that's the
       Phase-2.6 owner's done-def; checkbox stays `- [ ]` until then. GAP-2.4.D in
-      `code_freeze_migrate_backfill_sequencing_2026_05_10.md` extends this Done-def #6."
-      **2026-05-19 addendum (slot 8)**: Phase 0c-watchdog done — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET is now
-      zero-drift (all 72 f-strings → resolve_bucket_name() constants; deployment-service@d3a96cf). Remaining drift
-      sites: dependency_checker.py (BLOCKED-operator), legacy get_bucket_name (off-limits this cycle), deployment-api
-      templates (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion.
+      `code_freeze_migrate_backfill_sequencing_2026_05_10.md` extends this Done-def #6." **2026-05-19 addendum
+      (slot 8)**: Phase 0c-watchdog done — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET is now zero-drift (all 72
+      f-strings → resolve_bucket_name() constants; deployment-service@d3a96cf). Remaining drift sites:
+      dependency_checker.py (BLOCKED-operator), legacy get_bucket_name (off-limits this cycle), deployment-api templates
+      (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 

@@ -15,6 +15,11 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # features-service QG-codex cleanup + full parity run + org transfer
 
 ## What this is
@@ -980,9 +985,9 @@ Items routed OUT of this plan (tracked in their own homes):
       sweep all 8 in one pass. Surfaced via slot-3 Phase 4.FEATURES test verification 2026-05-12; the test FAILs were
       pre-existing (not introduced by Phase 4.FEATURES sweep at `features-service@842ff741`+`@229a0963`).
       Annotate-not-fix per CLAUDE.md Findings Triage Discipline — this is post-consolidation path-resolution residue
-      owned by the features-consolidation tail / features-sports maintainer, not by writegate slice (c).
-      **✅ FIXED 2026-05-19 slot-5-harsh** — verified: all 8 `features_service/<family>/smoke.py` files already have
-      the corrected path (`parent.parent.parent / "scripts" / "<family>" / "smoke_matrix.py"`); 0 test failures
+      owned by the features-consolidation tail / features-sports maintainer, not by writegate slice (c). **✅ FIXED
+      2026-05-19 slot-5-harsh** — verified: all 8 `features_service/<family>/smoke.py` files already have the corrected
+      path (`parent.parent.parent / "scripts" / "<family>" / "smoke_matrix.py"`); 0 test failures
       (features-service@`0e73bc90` per 2026-05-18 slot-8-ikenna update: 7266 passed, 22 skipped).
 
 ## DONE-2026-05-11 — Harsh slot 2 end-of-shift handover (sessions 2-4 + wrap-up)

@@ -84,7 +84,7 @@ depends_on: []
 todos:
   - id: phase-0-pre-audit-manifest
     content: |
-      - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+      - [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source repo
         (`ml-training-service`, `ml-inference-service`):
         (a) every Python module + class + public function + post-merge sub-package landing
@@ -113,7 +113,10 @@ todos:
         Output drives every later phase. **Foot-gun**: model promotion topic-name changes invalidate
         ml-inference's `model_promotion_subscriber` until subscribers + publishers align — sequence Phase 4 (b)
         atomically.
-    status: todo
+        Evidence: slot-1 produced `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` (2026-05-19).
+        Key findings: 0 external Python imports workspace-wide; 35 unique dep union; config_reloaders.py near-identical
+        (UTL lift candidate); ML_MODEL_COORDINATION_TOPIC is wire-protocol constant (no rename needed).
+    status: done
 
   - id: phase-1-uac-utl-schema-prep
     content: |
@@ -301,8 +304,8 @@ todos:
 
   - id: phase-0-side-effect-soft-freeze-announcement
     content: |
-      - [ ] [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan soft-freeze announcement on plans touching the 2
-        affected repos. Banner:
+      - [x] ✅ [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan soft-freeze announcement on plans touching the 2
+        affected repos. Banner inserted to 20 plans (2026-05-19) — ml-training-service + ml-inference-service. Banner:
         ```
         > **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** —
         > ml-training-service + ml-inference-service are being merged into new `ml-service` repo
@@ -312,7 +315,17 @@ todos:
         ```
         Banner-remove owned by this plan's Phase 10. Affected plan list per fact-report 2026-05-19 — enumerate
         in Phase 0 pre-audit artifact and link from each banner.
-    status: todo
+        Evidence: 20 plans patched 2026-05-19 (slot-8). Plans: AUDIT_2026_05_15_harsh_side_completion,
+        alerting_service_live_rules_2026_05_07, bucket_name_ssot_canonicalisation_2026_05_10,
+        codex_vs_citadel_infrastructure_audit_2026_05_10, compute_optimization_mock_data_2026_05_13,
+        continuation_prompts_2026_05_13_harsh, continuation_prompts_harsh_2026_05_15,
+        cross_cutting_may_23_deliverables_2026_05_08, deployment_and_qg_strategy_implementation_2026_05_13,
+        expected_unattempted_propagation_chain_2026_05_12, features_repo_consolidation_2026_05_08,
+        features_service_qg_cleanup_2026_05_11, master_to_live_defi_2026_05_23,
+        mock_data_pipeline_benchmarking_2026_05_10, ruff_workspace_cleanup_2026_05_12,
+        strategy_repo_consolidation_2026_05_19, work_split_2026_05_13_harsh, work_split_2026_05_18_ikenna,
+        work_split_2026_05_19_ikenna, writegate_honest_coverage_endtoend_2026_05_06.
+    status: done
 ---
 
 ## Architecture sketch — post-merge ml-service

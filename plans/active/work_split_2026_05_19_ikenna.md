@@ -20,6 +20,11 @@ estimate_calibration_note: |
   462 total / 236 May-23 critical-path / 97 no-deadline = 333 spreadable.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Ikenna's daily work-split — 2026-05-19 (full backlog sweep)
 
 > **Today = Cycle 2 Day-4 (last day).** Must close Cycle 2 by EOD: write-pause window + L3/L5 delegate-flip + archive
@@ -35,31 +40,31 @@ estimate_calibration_note: |
 
 ## 🔴 TOP PRIORITY DISPATCH 2026-05-19 ~14:00 UTC — Repo consolidation push
 
-Strategy + ML repo consolidations (filed earlier today, pre-cutover race for 2026-05-23) take priority over
-previously assigned themes for slots 3-9. Existing themes DEFERRED to Cycle 3 (2026-05-20+ work-split) —
-original slot sections preserved below with `🔴 THEME DISPLACED` banners; do not pick up the deferred items
-unless your reassigned phase ships early.
+Strategy + ML repo consolidations (filed earlier today, pre-cutover race for 2026-05-23) take priority over previously
+assigned themes for slots 3-9. Existing themes DEFERRED to Cycle 3 (2026-05-20+ work-split) — original slot sections
+preserved below with `🔴 THEME DISPLACED` banners; do not pick up the deferred items unless your reassigned phase ships
+early.
 
 **Plans (filed 2026-05-19; Phase 0 audits DONE; Phase 1+ unblocked)**:
 
-- [`plans/active/strategy_repo_consolidation_2026_05_19.md`](./strategy_repo_consolidation_2026_05_19.md) —
-  12 cal-AI-days. Pre-audit artifact:
+- [`plans/active/strategy_repo_consolidation_2026_05_19.md`](./strategy_repo_consolidation_2026_05_19.md) — 12
+  cal-AI-days. Pre-audit artifact:
   [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](./issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
-- [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md) —
-  6 cal-AI-days. Pre-audit artifact:
+- [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md) — 6 cal-AI-days. Pre-audit
+  artifact:
   [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
 
 **Reassignment table** (slots 3-9; slot 1 + slot 2 unchanged):
 
-| Slot | Reassigned theme                                                                  | Plan                          | Phases   | Cal AI-days | Depends on        |
-| ---- | --------------------------------------------------------------------------------- | ----------------------------- | -------- | ----------- | ----------------- |
-| 3    | strategy: pyproject conflict resolution → UAC/UTL schema prep → in-place scaffold | strategy_repo_consolidation   | 0.5 / 1 / 2 | ~2       | —                 |
-| 4    | strategy: subtree-merge + import-rewrite (colocated_engine.py FIRST — May-23 critical-path consumer) | strategy_repo_consolidation | 3 / 4    | ~4       | slot 3 Phase 2    |
-| 5    | strategy: UTL lifts — `ConfigReloaderBase` (4× ~688 LOC) + `KillSwitchBusSubscriberBase` (4× ~80 LOC) | strategy_repo_consolidation | 5        | ~2       | slot 4 Phase 4    |
-| 6    | strategy: Phase 6 parity (boot + QG + functional) → Phase 7 archive 3 source repos | strategy_repo_consolidation   | 6 / 7    | ~2       | slot 4 Phase 4    |
-| 7    | strategy: Phase 8A deployment-service sweep (~90 hits, Terraform destroy/apply sequencing) | strategy_repo_consolidation | 8A       | ~3       | slot 6 Phase 7    |
-| 8    | strategy: Phase 9 codex sweep (8 enumerated paths + ~150 incidental refs) → Phase 10 workspace QG sweep | strategy_repo_consolidation | 9 / 10  | ~2       | slot 7 Phase 8A   |
-| 9    | ML consolidation **full plan** (single-slot ownership, all 10 phases — smaller surface) | ml_repo_consolidation         | 0–10     | ~6       | —                 |
+| Slot | Reassigned theme                                                                                        | Plan                        | Phases      | Cal AI-days | Depends on      |
+| ---- | ------------------------------------------------------------------------------------------------------- | --------------------------- | ----------- | ----------- | --------------- |
+| 3    | strategy: pyproject conflict resolution → UAC/UTL schema prep → in-place scaffold                       | strategy_repo_consolidation | 0.5 / 1 / 2 | ~2          | —               |
+| 4    | strategy: subtree-merge + import-rewrite (colocated_engine.py FIRST — May-23 critical-path consumer)    | strategy_repo_consolidation | 3 / 4       | ~4          | slot 3 Phase 2  |
+| 5    | strategy: UTL lifts — `ConfigReloaderBase` (4× ~688 LOC) + `KillSwitchBusSubscriberBase` (4× ~80 LOC)   | strategy_repo_consolidation | 5           | ~2          | slot 4 Phase 4  |
+| 6    | strategy: Phase 6 parity (boot + QG + functional) → Phase 7 archive 3 source repos                      | strategy_repo_consolidation | 6 / 7       | ~2          | slot 4 Phase 4  |
+| 7    | strategy: Phase 8A deployment-service sweep (~90 hits, Terraform destroy/apply sequencing)              | strategy_repo_consolidation | 8A          | ~3          | slot 6 Phase 7  |
+| 8    | strategy: Phase 9 codex sweep (8 enumerated paths + ~150 incidental refs) → Phase 10 workspace QG sweep | strategy_repo_consolidation | 9 / 10      | ~2          | slot 7 Phase 8A |
+| 9    | ML consolidation **full plan** (single-slot ownership, all 10 phases — smaller surface)                 | ml_repo_consolidation       | 0–10        | ~6          | —               |
 
 **Dependency DAG**:
 
@@ -70,21 +75,22 @@ Slot 9 (ML full plan, independent)
 ```
 
 **Critical-path callout**: Slot 4 must rewrite `e2e-testing/scripts/defi/colocated_engine.py` FIRST in Phase 4 (a)
-sed-sweep. This file is the primary May-23 promote-CLI path per CLAUDE.md; breaking it mid-cutover blocks live
-trading. Verify it boots green BEFORE proceeding to the other 6 external-consumer rewrites.
+sed-sweep. This file is the primary May-23 promote-CLI path per CLAUDE.md; breaking it mid-cutover blocks live trading.
+Verify it boots green BEFORE proceeding to the other 6 external-consumer rewrites.
 
 **Auto-flip BLOCKED-CUTOVER**: if slot 6 Phase 6 parity gate is RED at 2026-05-22 EOD, plans auto-flip to
-`BLOCKED-CUTOVER` and Phase 7 archive defers to post-cutover. Sub-packages remain merged (correctness preserved),
-source repos remain un-archived. No late-binding hacks.
+`BLOCKED-CUTOVER` and Phase 7 archive defers to post-cutover. Sub-packages remain merged (correctness preserved), source
+repos remain un-archived. No late-binding hacks.
 
 **Outstanding ops on this push**:
-- ✅ Operator decision on ml-service flat-deps rule (RESOLVED 2026-05-19 ~14:00 UTC — Option 2 picked, single
-  flat-deps Docker image).
+
+- ✅ Operator decision on ml-service flat-deps rule (RESOLVED 2026-05-19 ~14:00 UTC — Option 2 picked, single flat-deps
+  Docker image).
 - ✅ Per-slot ping files updated (slot_3.md through slot_9.md notified of theme change).
 
-**Slot 2 overflow rule**: slot 2's code_freeze Phase 2.6 close is operator-gated. If slot 2 finishes early
-(write-pause completes + L3/L5 flips landed), overflow capacity goes to slot 7 (Phase 8A) — the largest single
-piece of remaining work.
+**Slot 2 overflow rule**: slot 2's code_freeze Phase 2.6 close is operator-gated. If slot 2 finishes early (write-pause
+completes + L3/L5 flips landed), overflow capacity goes to slot 7 (Phase 8A) — the largest single piece of remaining
+work.
 
 ---
 
@@ -171,9 +177,9 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 ### Slot 3 — code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry Tabs 1–3 — ~35 cal AI-days
 
 > **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — see top-of-file § "🔴 TOP PRIORITY DISPATCH". Slot 3 NEW theme:
-> **strategy_repo_consolidation Phase 0.5 + 1 + 2** (pyproject conflict resolution → UAC/UTL schema prep →
-> in-place scaffold) — ~2 cal-AI-days, unblocks slot 4. Below items DEFERRED to Cycle 3 work-split (2026-05-20+).
-> Do NOT pick them up unless your Phase 2 scaffold ships before EOD.
+> **strategy_repo_consolidation Phase 0.5 + 1 + 2** (pyproject conflict resolution → UAC/UTL schema prep → in-place
+> scaffold) — ~2 cal-AI-days, unblocks slot 4. Below items DEFERRED to Cycle 3 work-split (2026-05-20+). Do NOT pick
+> them up unless your Phase 2 scaffold ships before EOD.
 
 **Part A — code_freeze remaining Phase 2 gaps** (open `[GAP]` items not covered by slot 2):
 
@@ -188,18 +194,17 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher
          `launch-cross-asset-rescan-vm.sh` **now complete** with `--pass 1|2|3|4` sequential enforcement
          (deployment-service@880bc3a
-     - instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
-       sports/prediction apply-flips (operator [ack] required — use
-       `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
+   - instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
+     sports/prediction apply-flips (operator [ack] required — use `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
 5. - [x] ✅ **gcs_migration_bundle Phase 2.5 + Phase 3 RELAUNCHED (bug fix)** — Phase 2.5 (OHLCV ticks.parquet →
          {instrument_id}.parquet rename) implemented + 50 tests green + dry-run verified (ohlcv_legacy_filename=1
-         detected on real CeFi data). PM@`916742464`. Phase 3 fleet first launched 11:23 UTC, crashed on `gcloud
-         storage ls` (no prefix-match support for hive paths); relaunched 11:58 UTC with fix: `gsutil ls -r
-         **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.
-         31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`
+         detected on real CeFi data). PM@`916742464`. Phase 3 fleet first launched 11:23 UTC, crashed on
+         `gcloud    storage ls` (no prefix-match support for hive paths); relaunched 11:58 UTC with fix:
+         `gsutil ls -r    **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.    31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`
          (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.
 
-**RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per [`pings/slot_3.md`](../../ikenna_orchestrator/pings/slot_3.md))**:
+**RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per
+[`pings/slot_3.md`](../../ikenna_orchestrator/pings/slot_3.md))**:
 
 > ⚠️ **CO-DUTY ACTIVE**: Phase 3 VM fleet running (30 VMs from item 5). Slot 3 owns T+10min post-launch verification +
 > ≥1 progress/hour check-in + STOPPED/FAILED ack at exit (per CLAUDE.md "No fire-and-forget VM launches"). Audit work
@@ -234,9 +239,9 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 
 > **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 4 NEW theme: **strategy_repo_consolidation Phase 3 + 4**
 > (subtree-merge + internal import-rewrite + unified CLI). **CRITICAL: rewrite
-> `e2e-testing/scripts/defi/colocated_engine.py` FIRST** in Phase 4 (a) sed-sweep — primary May-23 promote-CLI
-> path. Verify it boots green BEFORE the other 6 external-consumer rewrites. Pre-audit § (b) has exact file:line
-> list. ~4 cal-AI-days. Blocked-on: slot 3 Phase 2 scaffold lands first.
+> `e2e-testing/scripts/defi/colocated_engine.py` FIRST** in Phase 4 (a) sed-sweep — primary May-23 promote-CLI path.
+> Verify it boots green BEFORE the other 6 external-consumer rewrites. Pre-audit § (b) has exact file:line list. ~4
+> cal-AI-days. Blocked-on: slot 3 Phase 2 scaffold lands first.
 
 **Part A — api_keys_wallets_accounts_readiness Phase 3 (Copper) + Phase 4 (DeFi mainnet)** (plan at 63%, 23.7 cal left):
 
@@ -284,10 +289,11 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
           \_setup_gen_context); all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES allowlist.
           execution-service@f27e5fc13 (2026-05-19; allowlist 10→9, slot-4 cumulative 100 files cleared)
 
-**RE-DISPATCH 2026-05-19 (items 1-13 ✅; new pickup per [`pings/slot_4.md`](../../ikenna_orchestrator/pings/slot_4.md))**:
+**RE-DISPATCH 2026-05-19 (items 1-13 ✅; new pickup per
+[`pings/slot_4.md`](../../ikenna_orchestrator/pings/slot_4.md))**:
 
-14. - [ ] **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items
-          11-13. Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
+14. - [ ] **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items 11-13.
+          Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
           `FUNCTION_SIZE_EXTRA_EXCLUDES`, run QG green, commit + flip checkbox in same agent turn. Once
           execution-service allowlist is 0, scan unified-trading-api/ml-inference/ml-training/strategy-service
           allowlists; pick smallest for next stream. Cumulative target 100 → 109+ by EOD. If recurring pattern across
@@ -298,11 +304,11 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 
 ### Slot 5 — writegate Phase 6.6/6.7 + live_pipeline Phase 3–5 — ~30 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 5 NEW theme: **strategy_repo_consolidation Phase 5** —
-> UTL lifts: (1) `ConfigReloaderBase` to absorb 4× duplicated `config_reloaders.py` (152/112/112/312 LOC,
-> ~688 LOC total), (2) `KillSwitchBusSubscriberBase` to absorb 4× duplicated kill-switch subscriber boilerplate
-> (~80-100 LOC each). Two UTL PRs + one strategy-service PR removing local copies. ~2 cal-AI-days. Blocked-on:
-> slot 4 Phase 4 (imports rewritten before lifts).
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 5 NEW theme: **strategy_repo_consolidation Phase 5** — UTL lifts:
+> (1) `ConfigReloaderBase` to absorb 4× duplicated `config_reloaders.py` (152/112/112/312 LOC, ~688 LOC total), (2)
+> `KillSwitchBusSubscriberBase` to absorb 4× duplicated kill-switch subscriber boilerplate (~80-100 LOC each). Two UTL
+> PRs + one strategy-service PR removing local copies. ~2 cal-AI-days. Blocked-on: slot 4 Phase 4 (imports rewritten
+> before lifts).
 
 **Part A — writegate Phase 6.6/6.7** (plan at 52%, 11.5 cal left):
 
@@ -333,12 +339,12 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
 
 ### Slot 6 — deployment_ui_lifecycle_tabs (full 6-tab restructure) — ~30 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 6 NEW theme: **strategy_repo_consolidation Phase 6 + 7**.
-> Phase 6 = symmetry / parity validation (boot parity for every {operation × asset_group}, QG parity vs source-repo
-> baselines, functional parity 7-day live-window sample per surface via `scripts/dev/strategy_parity_diff.py`).
-> Phase 7 = `gh repo archive` of risk + position + pnl source repos once parity green. Operator-gated `gh archive`
-> step — file ping in `_agent_pings.md`. ~2 cal-AI-days. Blocked-on: slot 4 Phase 4. **Hard stop**: do NOT proceed
-> to Phase 7 archive if Phase 6 RED — flip plan to `BLOCKED-CUTOVER` and notify operator.
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 6 NEW theme: **strategy_repo_consolidation Phase 6 + 7**. Phase 6
+> = symmetry / parity validation (boot parity for every {operation × asset_group}, QG parity vs source-repo baselines,
+> functional parity 7-day live-window sample per surface via `scripts/dev/strategy_parity_diff.py`). Phase 7 =
+> `gh repo archive` of risk + position + pnl source repos once parity green. Operator-gated `gh archive` step — file
+> ping in `_agent_pings.md`. ~2 cal-AI-days. Blocked-on: slot 4 Phase 4. **Hard stop**: do NOT proceed to Phase 7
+> archive if Phase 6 RED — flip plan to `BLOCKED-CUTOVER` and notify operator.
 
 **Plan**: `deployment_ui_lifecycle_tabs_2026_05_08.md` (30.0 cal, no progress yet — TBD baseline).
 
@@ -360,30 +366,30 @@ Status, Logs, Strategy, Kill-switch, Config.
 > [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) is **89% done (33/37 ✅)**.
 > Plan body shows Phase A.1-A.5 + B.1-B.4 + F.1-F.2 + G.1 all ✅ (incl. 2026-05-19 backfills by slot 6 itself at
 > deployment-ui@`ba009b2` + deployment-api@`ffd97c1` + utl@`424e03af`). Only 4 items genuinely open, all
-> `[HUMAN]`/`[HUMAN+AGENT]`: F.3 (CLAUDE.md VM naming update), H.4 (Cloud Run provisioning), G.2 (staging deploy),
-> G.3 (operator sign-off). Re-dispatch per [`pings/slot_6.md`](../../ikenna_orchestrator/pings/slot_6.md):
+> `[HUMAN]`/`[HUMAN+AGENT]`: F.3 (CLAUDE.md VM naming update), H.4 (Cloud Run provisioning), G.2 (staging deploy), G.3
+> (operator sign-off). Re-dispatch per [`pings/slot_6.md`](../../ikenna_orchestrator/pings/slot_6.md):
 
 8. - [ ] **Work-split correction** — flip items 1-7 above to `[x] ✅` with evidence SHAs from plan body. One commit.
-          (0.5 cal)
+         (0.5 cal)
 9. - [ ] **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
-          experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
-          cal)
-10. - [ ] **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with
-           Cloud Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI
-           pattern. Operator-runnable. (design 0.6×, ~3 = 1.8 cal)
+         experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
+         cal)
+10. - [ ] **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with Cloud
+          Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI pattern.
+          Operator-runnable. (design 0.6×, ~3 = 1.8 cal)
 11. - [ ] **G.2 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md` with exact
-           `gcloud run deploy` / `firebase deploy` sequence + per-axis verification checklist. (design 0.6×, ~2 = 1.2
-           cal)
+          `gcloud run deploy` / `firebase deploy` sequence + per-axis verification checklist. (design 0.6×, ~2 = 1.2
+          cal)
 12. - [ ] **G.3 surface to operator-pending** — add to master plan operator-pending section flagging G.3 as final B6
-           gate after G.2 lands. (design 0.6×, ~0.5 = 0.3 cal)
+          gate after G.2 lands. (design 0.6×, ~0.5 = 0.3 cal)
 
 ---
 
 ### Slot 7 — cross_cutting_deliverables + simulation_scenarios_topology + defi_master — ~27 cal AI-days
 
 > **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 7 NEW theme: **strategy_repo_consolidation Phase 8A** —
-> deployment-service sweep. **LARGEST single-repo edit in the plan**: ~90 hits across Terraform (6 per-service
-> dirs on GCP + AWS), cloud-build configs, cluster configs, bucket configs, launchers, bootstrap scripts. Plan
+> deployment-service sweep. **LARGEST single-repo edit in the plan**: ~90 hits across Terraform (6 per-service dirs on
+> GCP + AWS), cloud-build configs, cluster configs, bucket configs, launchers, bootstrap scripts. Plan
 > `terraform destroy` of the 3 retiring service modules in conjunction with `terraform apply` of the updated
 > strategy-service module — do NOT leave orphan Terraform-managed resources. Collapse 4 launchers to
 > `launch-strategy-vm.sh --operation {risk-monitor,position-recon,pnl-attribution,strategy-batch,strategy-live,backtest}`.
@@ -421,50 +427,49 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 **Part D — hard_schema Phase 5 (bonus — picked up after slot items exhausted):**
 
-9. - [x] ✅ **STEP 5.83 Layer-2 checker** — `check_uac_hard_required_fields.py` + base-service.sh STEP 5.83 wired:
-         (a) UAC regression guard: asserts `validate_instrument_records` + 3 closed-set rule landmarks in
+9. - [x] ✅ **STEP 5.83 Layer-2 checker** — `check_uac_hard_required_fields.py` + base-service.sh STEP 5.83 wired: (a)
+         UAC regression guard: asserts `validate_instrument_records` + 3 closed-set rule landmarks in
          `instrument_validation.py` still present; (b) bundled shard-key kwargs AST-walk: literal
-         `record_captured(data_type="<bundled>", …)` calls missing required shard-key kwarg → FAIL.
-         Smoke-tested: both [OK] against real UAC + empty source. Complements prior base-library.sh
-         STEP 5.83 (PM@03a320846) which guards the Pydantic model_validator. — PM@429b64b2b + PM@8427ac070
+         `record_captured(data_type="<bundled>", …)` calls missing required shard-key kwarg → FAIL. Smoke-tested: both
+         [OK] against real UAC + empty source. Complements prior base-library.sh STEP 5.83 (PM@03a320846) which guards
+         the Pydantic model_validator. — PM@429b64b2b + PM@8427ac070
 
 **Part E — hard_schema Phase 1 design+audit pass (RE-DISPATCH after item-9 close, 2026-05-19):**
 
 10. - [x] ✅ **Phase 1 field-flip design+audit** — PM@16861e1ed. Field inventory (8 InstrumentRecord fields × 5
-         asset_groups), consumer-sweep (all 🟢 SAFE / 🟡 DEFENSIVE, zero 🔴 BREAKS), sports `fixture_id` phantom
-         verdict (non-optional on all per-fixture schemas; `CanonicalInjury` legitimately optional), back-fill
-         migration scope, phased DAG (A–F). Plan file: `hard_schema_phase1_field_flip_migration_2026_05_19.md`.
-         Real Phase A gap found: `base_asset_decimals` / `quote_asset_decimals` not yet validator-enforced.
-         (refactor 0.4×, ~30 baseline = ~12 cal AI-days)
+          asset_groups), consumer-sweep (all 🟢 SAFE / 🟡 DEFENSIVE, zero 🔴 BREAKS), sports `fixture_id` phantom
+          verdict (non-optional on all per-fixture schemas; `CanonicalInjury` legitimately optional), back-fill
+          migration scope, phased DAG (A–F). Plan file: `hard_schema_phase1_field_flip_migration_2026_05_19.md`. Real
+          Phase A gap found: `base_asset_decimals` / `quote_asset_decimals` not yet validator-enforced. (refactor 0.4×,
+          ~30 baseline = ~12 cal AI-days)
 
 ---
 
 ### Slot 8 — defi_catalogue close + defi_simulation_realism + dex_perp — ~29 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** —
-> codex SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new `strategy-service-architecture.md`
-> already stub-created, register in `00-SSOT-INDEX.md`, update `promote-workflow-architecture.md`,
-> `launcher-script-ssot.md`, `vm-tarball-deployment.md`, `cli-convention.md`,
-> `cli-promote-paths.md`, and bulk-rewrite ~150 incidental codex/cursor-configs refs to the 3 source repo
-> names). Phase 10 = workspace QG sweep + cross-plan banner cleanup + inventory regenerator + final commit
-> sweep. ~2 cal-AI-days. Blocked-on: slot 7 Phase 8A complete (Terraform must be applied before codex docs
-> reference new launcher topology).
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** — codex
+> SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new `strategy-service-architecture.md` already
+> stub-created, register in `00-SSOT-INDEX.md`, update `promote-workflow-architecture.md`, `launcher-script-ssot.md`,
+> `vm-tarball-deployment.md`, `cli-convention.md`, `cli-promote-paths.md`, and bulk-rewrite ~150 incidental
+> codex/cursor-configs refs to the 3 source repo names). Phase 10 = workspace QG sweep + cross-plan banner cleanup +
+> inventory regenerator + final commit sweep. ~2 cal-AI-days. Blocked-on: slot 7 Phase 8A complete (Terraform must be
+> applied before codex docs reference new launcher topology).
 
 **Part A — defi_catalogue_chain_primitives** (plan at 87%, 27.2 cal left):
 
 Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 instrument wiring.
 
-1. - [ ] [BLOCKED-OPERATOR] **Phase 6 — per-chain backfill scripts** (6J/7E already done ✅). Remaining:
-         6C (Pyth Hermes Solana LST ≥1yr, BLOCKED-OPERATOR ping filed 2026-05-14), 6D (Lighter/Pacifica — slot 3 owns),
-         6E (vaults+restaking+DEX ≥2yr, needs operator [ack] per ≥1-week backfill rule). Cannot proceed without
-         operator backfill approval. (infra 0.8×, ~6 = 4.8 cal)
+1. - [ ] [BLOCKED-OPERATOR] **Phase 6 — per-chain backfill scripts** (6J/7E already done ✅). Remaining: 6C (Pyth Hermes
+         Solana LST ≥1yr, BLOCKED-OPERATOR ping filed 2026-05-14), 6D (Lighter/Pacifica — slot 3 owns), 6E
+         (vaults+restaking+DEX ≥2yr, needs operator [ack] per ≥1-week backfill rule). Cannot proceed without operator
+         backfill approval. (infra 0.8×, ~6 = 4.8 cal)
 2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — already `[x] ✅` in plan body (slot 1 shipped
          PM@75560065 2026-05-18; Group F items 17-20 refreshed). No further action.
-3. - [ ] [BLOCKED-UPSTREAM] **Remaining open items** — 6C/6E BLOCKED-OPERATOR (backfill approval pending);
-         8A/8B BLOCKED-UPSTREAM (gated on Phase 6 completion); 8C BLOCKED-OPERATOR (human-only hard stop, wallet keys).
-         No actionable items without operator unblock. (mixed, ~10 = 8.0 cal)
-4. - [ ] [BLOCKED-UPSTREAM] **Close defi_catalogue** — cannot close: 6C/6E/8A/8B/8C all blocked (see item 3).
-         Plan stays active at 87% until Phase 6 backfill operator acks land. (0.5 cal)
+3. - [ ] [BLOCKED-UPSTREAM] **Remaining open items** — 6C/6E BLOCKED-OPERATOR (backfill approval pending); 8A/8B
+         BLOCKED-UPSTREAM (gated on Phase 6 completion); 8C BLOCKED-OPERATOR (human-only hard stop, wallet keys). No
+         actionable items without operator unblock. (mixed, ~10 = 8.0 cal)
+4. - [ ] [BLOCKED-UPSTREAM] **Close defi_catalogue** — cannot close: 6C/6E/8A/8B/8C all blocked (see item 3). Plan stays
+         active at 87% until Phase 6 backfill operator acks land. (0.5 cal)
 
 **Part B — defi_simulation_realism** (plan at 98%, 0.7 cal left — 1 item):
 
@@ -488,17 +493,17 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 ### Slot 9 — batch_live_symmetry Tabs 4–7 + cme_polymarket_arb + promote_workflow_may23 — ~31 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 9 NEW theme: **ml_repo_consolidation FULL PLAN** —
-> all 10 phases, single-slot ownership (smaller surface than strategy twin). Plan:
-> [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md). Pre-audit
-> artifact: [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 9 NEW theme: **ml_repo_consolidation FULL PLAN** — all 10 phases,
+> single-slot ownership (smaller surface than strategy twin). Plan:
+> [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md). Pre-audit artifact:
+> [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
 > ~6 cal-AI-days. Independent of strategy-twin slots (3-8) — execute in parallel.
 >
-> **Critical P0 sequencing**: rename `ml_inference_service/io/loader.py:FeatureSubscriber` →
-> `IoFeatureSubscriber` BEFORE Phase 3 subtree-merge (name-collision with
-> `app/core/feature_subscriber.py:FeatureSubscriber` — pre-audit § (a) inference table). Phase 2 = `gh repo create
-> IggyIkenna/ml-service --private --add-readme` (operator-gated). Phase 4 (h) = single flat-deps Docker image
-> (operator picked Option 2 2026-05-19; see [`ikenna_orchestrator/pings/slot_1.md`](../../ikenna_orchestrator/pings/slot_1.md)).
+> **Critical P0 sequencing**: rename `ml_inference_service/io/loader.py:FeatureSubscriber` → `IoFeatureSubscriber`
+> BEFORE Phase 3 subtree-merge (name-collision with `app/core/feature_subscriber.py:FeatureSubscriber` — pre-audit § (a)
+> inference table). Phase 2 = `gh repo create IggyIkenna/ml-service --private --add-readme` (operator-gated). Phase 4
+> (h) = single flat-deps Docker image (operator picked Option 2 2026-05-19; see
+> [`ikenna_orchestrator/pings/slot_1.md`](../../ikenna_orchestrator/pings/slot_1.md)).
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 
@@ -506,17 +511,22 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
          calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal)
 2. - [ ] **Tab 5 — feature emission wiring** — per plan §Tab 5. (brand-new 1.0×, ~5 = 5.0 cal)
 3. - [x] ✅ **Tabs 6–7** — Tab 6 Service-readiness Group A shipped: blr@9905bde QG pass + PR #5 → staging 2026-05-19.
-         Tab 7 (UI ExecutionModeContext) deferred to operator (requires Playwright + dev server). (brand-new 1.0×, ~4 = 4.0 cal)
+         Tab 7 (UI ExecutionModeContext) deferred to operator (requires Playwright + dev server). (brand-new 1.0×, ~4 =
+         4.0 cal)
 
 **Part B — cme_polymarket_arb Phase 1** (no-deadline, 15.0 cal):
 
-4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146 (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
-5. - [ ] **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by predictions_master Phase 5. Working on Phase 3 (MTDS binary-outcome shard atom) as unblocked proxy. (brand-new 1.0×, ~5 = 5.0 cal)
+4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146
+         (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
+5. - [ ] **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by
+         predictions_master Phase 5. Working on Phase 3 (MTDS binary-outcome shard atom) as unblocked proxy. (brand-new
+         1.0×, ~5 = 5.0 cal)
 
 **Part C — promote_workflow_may23 residuals** (plan at 62%, 1.6 cal left):
 
-6. - [x] ✅ **Remaining open items** — all remaining `- [ ]` items in promote_workflow are OPERATOR-ONLY (run preflight-cutover.sh,
-         2yr backtest, Copper provisioning, testnet smoke, Tenderly fork dry-run). No agent-executable items remaining. (design 0.6×)
+6. - [x] ✅ **Remaining open items** — all remaining `- [ ]` items in promote_workflow are OPERATOR-ONLY (run
+         preflight-cutover.sh, 2yr backtest, Copper provisioning, testnet smoke, Tenderly fork dry-run). No
+         agent-executable items remaining. (design 0.6×)
 7. - [x] ✅ **Plan flips** for all shipped. (0.5 cal)
 
 ---

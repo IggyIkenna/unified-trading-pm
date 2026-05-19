@@ -29,6 +29,11 @@ model_tier: sonnet-doable
 thinking: high
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
 
 ## Why
@@ -673,33 +678,35 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
 
 **Success criteria for clearance to start backfills**:
 
-- [x] ✅ [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage).
-      **VERIFIED 2026-05-18 slot-7** via `reconcile_phantom_manifest_rows_all.py --dry-run` across cefi (2619 real /
-      0 phantom), defi (30/0), tradfi (567/0), sports (917/0), prediction (263/0). All 5 AGs clean.
+- [x] ✅ [VALIDATE] P0. Phantom count across all 5 asset_groups = 0 (or residual <10 in class C triage). **VERIFIED
+      2026-05-18 slot-7** via `reconcile_phantom_manifest_rows_all.py --dry-run` across cefi (2619 real / 0 phantom),
+      defi (30/0), tradfi (567/0), sports (917/0), prediction (263/0). All 5 AGs clean.
 - [x] [VALIDATE] P0. Manifest data-status panel shows `expected_unattempted` rows with correct reasons for all
       instruments outside MVP scope. **DEFERRED TO PHASE 3 WINDOW** — confirmed 2026-05-19 slot-5: cefi=0, defi=0,
       tradfi=0 expected_unattempted rows in manifest (Phase 1+2 code shipped but not yet exercised by production MTDS
       run). Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. Re-verify after Phase 3
       MTDS VMs run (2026-05-19→05-23 window per operator direction 2026-05-19).
 - [x] [VALIDATE] P0. A fresh MTDS dry-run on a sample date generates 0 new `attempted_failed` rows for instruments that
-      instruments-service says don't exist. **DEFERRED TO PHASE 3 WINDOW** — Phase 1 code shipped, no production run yet.
-      Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. Re-verify after Phase 3 MTDS VMs
-      run (2026-05-19→05-23).
+      instruments-service says don't exist. **DEFERRED TO PHASE 3 WINDOW** — Phase 1 code shipped, no production run
+      yet. Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. Re-verify after Phase 3
+      MTDS VMs run (2026-05-19→05-23).
 - [x] [VALIDATE] P1. A fresh MDPS dry-run generates `expected_unattempted` rows for shards where MTDS said
       `empty_confirmed`. **DEFERRED TO PHASE 3 WINDOW** — Phase 2 code shipped (mdps@3f70cf6), no production run yet.
       Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
-- [x] [VALIDATE] P1. `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`
-      is non-zero denominator across all asset_groups. **DEFERRED TO PHASE 3 WINDOW** — denominator still 0 for
-      expected_unattempted as of 2026-05-19 (manifests queried; 0 rows). Re-verify after Phase 3 MTDS runs.
-      Issue doc: `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
+- [x] [VALIDATE] P1.
+      `data_capture_rate = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` is
+      non-zero denominator across all asset_groups. **DEFERRED TO PHASE 3 WINDOW** — denominator still 0 for
+      expected_unattempted as of 2026-05-19 (manifests queried; 0 rows). Re-verify after Phase 3 MTDS runs. Issue doc:
+      `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
 - [x] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
       to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason values.
       (PM@82111516 — § "Expected-universe pre-flight chain" added with per-layer pre-flight table + MDPS downstream
       consumption contract + 3 new EmptyConfirmedReason values + implementation refs)
 - [x] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
       of the runtime propagation chain, not instead of it). **G3b (runtime propagation) CODE COMPLETE** — Phases 1+2
-      shipped. Production validation deferred to Phase 3 window (issue doc: issues/expected_unattempted_validation_pending_phase3_2026_05_19.md).
-      G3 enumerator may proceed. Flipped 2026-05-19 slot-5.
+      shipped. Production validation deferred to Phase 3 window (issue doc:
+      issues/expected_unattempted_validation_pending_phase3_2026_05_19.md). G3 enumerator may proceed. Flipped
+      2026-05-19 slot-5.
 
 ---
 

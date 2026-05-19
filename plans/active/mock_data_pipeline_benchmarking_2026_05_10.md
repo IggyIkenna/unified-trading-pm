@@ -27,6 +27,11 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
+> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
+> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+> work + plan-flip backfills continue.
+
 # Mock-data pipeline benchmarking
 
 > **Status 2026-05-12 17:05 UTC (slot-7 Day-2 EOD)**: Phases 0-7 ✅ shipped + Phase 5.B/5.C/6.A-C ✅ ran end-to-end on
