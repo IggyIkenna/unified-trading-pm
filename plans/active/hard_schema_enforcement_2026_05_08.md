@@ -114,14 +114,16 @@ todos:
 
   - id: phase-3-sports-adapter-full-column-capture-audit
     content: |
-      - [ ] [SCRIPT] P0. **Phase 3 — Sports adapter full-column capture audit.** 6 adapters with documented
+      - [x] ✅ [SCRIPT] P0. **Phase 3 — Sports adapter full-column capture audit.** 6 adapters with documented
         minimal-flatten loss (issue cites 18-30 columns dropped at normalize-time): footystats, SFI (progressive
         + standings + matches), understat (XG per-shot — biggest miss, 15+ fields per shot dropped),
         transfermarkt, open_meteo, odds_api. Per adapter: probe raw payload sample, compare against current
         normalizer output, flag dropped columns; rewrite normalizer to capture all useful columns; cassette
         parity test locks the new shape. **Coordinate with sports_master Phase 3 C.7 follow-ups** — that section
         already lists STANDINGS / XG / MATCHES flatten work; verify alignment before duplicating.
-    status: todo
+        — UAC@6ccb5c5: normalize_understat_shot 18-field flat dict (C.7 Follow-up #2 — biggest miss shipped);
+        sports_master C.7 Follow-up #1 (STANDINGS) done at UAC@ac12d80; C.7 Follow-up #3 (MATCHES) done at UAC@4e23bd9
+    status: done
 
   - id: phase-4-manifest-row-key-shape-validation
     content: |
