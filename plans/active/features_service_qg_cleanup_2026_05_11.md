@@ -138,14 +138,14 @@ org-naming tidy):
       features-service-scoped. Parent Phase 4 flipped at `features_repo_consolidation_2026_05_08.md` (status: blocked →
       done). **UPDATE 2026-05-18 slot-8-ikenna — features-service@`0e73bc90`**: 178 pre-existing test failures reduced
       to **0** (7266 passed, 22 skipped). Fixed: calendar LookaheadBiasError (candle-close 1-24 + as_of=next-midnight);
-      delta_one polars→pandas conversion; onchain log_event patch target + batch-skip + LST methods; sports steam_detector
-      %%s format strings; asyncio.get_event_loop()→asyncio.run() across commodity/MTF/volatility; cross_instrument
-      event_logging Path.cwd() fix; yfinance pytest.importorskip("lxml"); UNIFIED_TRADING_WORKSPACE_ROOT
-      config-bootstrap annotation; timedelta module-level import (codex compliance).
+      delta_one polars→pandas conversion; onchain log_event patch target + batch-skip + LST methods; sports
+      steam_detector %%s format strings; asyncio.get_event_loop()→asyncio.run() across commodity/MTF/volatility;
+      cross_instrument event_logging Path.cwd() fix; yfinance pytest.importorskip("lxml");
+      UNIFIED_TRADING_WORKSPACE_ROOT config-bootstrap annotation; timedelta module-level import (codex compliance).
 - [x] [AGENT] P1. Phase 1.4 — Codex SSOT audit pass per CLAUDE.md "Post-Plan-Phase Codex Audit": verify
-      `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted.
-      ✅ DONE 2026-05-18 — PM@245ab3e7: last_reviewed 2026-05-18, ModeHandler run_batch/run_live wrappers
-      documented, new § "Test-suite status" (7266 passing / 0 failures @ features@0e73bc90).
+      `codex/04-architecture/features-service-architecture.md` reflects the cleaned-up shape; update if drifted. ✅ DONE
+      2026-05-18 — PM@245ab3e7: last_reviewed 2026-05-18, ModeHandler run_batch/run_live wrappers documented, new §
+      "Test-suite status" (7266 passing / 0 failures @ features@0e73bc90).
 - [x] [AGENT] P2. Phase 1.5 — Lift `_get_workspace_root()` to ONE shared UTL helper. **MIGRATED FROM: sub-agent C report
       2026-05-11.** There are 7+ near-identical `_get_workspace_root()` copies across
       `features_service/{commodity,delta_one,calendar,cross_instrument,volatility,multi_timeframe,onchain,sports}/engine/mock_data_provider.py`
@@ -160,11 +160,11 @@ org-naming tidy):
       `os.environ.get("WORKSPACE_ROOT", "")  # noqa: qg-os-env  # noqa: qg-empty-fallback` (matching `multi_timeframe`;
       the legacy `UNIFIED_TRADING_WORKSPACE_ROOT` fallback was dropped — it tripped the `Env canon` QG check since it's
       not in `EnvVars`, features-svc@`71023f20`) — so QG codex-compliance is clean on this; this todo is the proper
-      de-dup to a UTL helper, not a blocker.
-      ✅ DONE 2026-05-18 slot-8-ikenna — UTL@`63acda1b`: new `unified_trading_library/dev_paths.py` with
-      `get_workspace_root()` + `seed_writer.py` updated to use it. features-service@`172e431e`: all 8
-      mock_data_provider.py files updated (import os removed, local function removed, UTL import added); 3 test files
-      updated to remove TestGetWorkspaceRoot classes that tested the now-lifted local function. 57 targeted tests pass.
+      de-dup to a UTL helper, not a blocker. ✅ DONE 2026-05-18 slot-8-ikenna — UTL@`63acda1b`: new
+      `unified_trading_library/dev_paths.py` with `get_workspace_root()` + `seed_writer.py` updated to use it.
+      features-service@`172e431e`: all 8 mock_data_provider.py files updated (import os removed, local function removed,
+      UTL import added); 3 test files updated to remove TestGetWorkspaceRoot classes that tested the now-lifted local
+      function. 57 targeted tests pass.
 
 ### Phase 2 — Full byte-for-byte parity run (BLOCKED on data)
 
@@ -187,13 +187,20 @@ cadence: one-shot; verifier: `feature_parity_diff.py` exit 0 / per-family pass; 
 
 ### Phase 3 — F9 org-naming transfer (non-blocking; do anytime once features-service is solid)
 
-- [ ] [AGENT] P2. Phase 3.1 — Transfer the `features-service` GitHub repo from `CosmicTrader` org to `IggyIkenna` org
+- [x] ✅ [AGENT] P2. Phase 3.1 — Transfer the `features-service` GitHub repo from `CosmicTrader` org to `IggyIkenna` org
       (or — if a transfer is impractical — re-create under `IggyIkenna` + push the full history + archive the
       `CosmicTrader` copy). Update every clone's `origin` remote. Confirm `workspace-manifest.json` line for
       `features-service` already points at `IggyIkenna` (it does — the manifest was pre-set; this aligns reality to it).
-- [ ] [AGENT] P2. Phase 3.2 — Update any plan/codex/CI reference that hardcodes `CosmicTrader/features-service` →
+      — features-service@d3d6e28 (audit-backfilled 2026-05-19): origin already
+      `git@github.com:IggyIkenna/features-service.git`; CI workflows commit
+      `ci(workflows): add canonical .github/workflows for IggyIkenna/features-service` confirms repo is under IggyIkenna
+      org; workspace-manifest.json `github_url` = `https://github.com/IggyIkenna/features-service`.
+- [x] ✅ [AGENT] P2. Phase 3.2 — Update any plan/codex/CI reference that hardcodes `CosmicTrader/features-service` →
       `IggyIkenna/features-service` (the DEPRECATION_NOTICE.md banners on the 8 archived repos already point at
-      `IggyIkenna/features-service`, so those are fine).
+      `IggyIkenna/features-service`, so those are fine). — audit-backfilled 2026-05-19:
+      `grep -rn "CosmicTrader/features" codex/` returns 0 hits; CI workflows all reference
+      `IggyIkenna/features-service`; workspace-manifest.json github_url already `IggyIkenna/features-service`; only
+      historical plan text retains `CosmicTrader` mentions (expected, not live references).
 
 ## Done definition
 

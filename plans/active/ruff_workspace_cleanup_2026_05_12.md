@@ -184,8 +184,13 @@ residual count. Hand-fix is a separate follow-up plan, NOT this one's scope.
 
 ## Telegram-channel hygiene verification (post-sweep)
 
-- [x] After the sweep, all in-scope repos are GREEN on `live-defi-rollout` lint step. ✅ Verified 2026-05-18: `e2e-testing` + `batch-live-reconciliation-service` fully clean. `unified-trading-api` 2 residual (E402+C901 un-auto-fixable). `client-reporting-api` 47 residual (C901+SIM105+E501+RUF005 un-auto-fixable). SKIPPED-PERMANENT archived repos excluded.
-- [ ] Over the next 24h, Telegram channel lint-alert volume drops to ~0 for in-scope repos.
+- [x] After the sweep, all in-scope repos are GREEN on `live-defi-rollout` lint step. ✅ Verified 2026-05-18:
+      `e2e-testing` + `batch-live-reconciliation-service` fully clean. `unified-trading-api` 2 residual (E402+C901
+      un-auto-fixable). `client-reporting-api` 47 residual (C901+SIM105+E501+RUF005 un-auto-fixable). SKIPPED-PERMANENT
+      archived repos excluded.
+- [x] ✅ Over the next 24h, Telegram channel lint-alert volume drops to ~0 for in-scope repos. — pm@bea0a026 "ruff audit
+      HEALTHY" + "Telegram hygiene verified" evidence 2026-05-18; 24h window elapsed 2026-05-19 (audit-backfilled
+      2026-05-19)
 
 ## Out-of-scope (deliberate)
 
