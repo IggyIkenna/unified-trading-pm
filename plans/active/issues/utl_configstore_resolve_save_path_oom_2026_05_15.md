@@ -337,60 +337,49 @@ drift is rare).
 
 ### P1 — needs owner assignment
 
-- [ ] **deployment-api conftest audit** (Section 2.2) — slot 7 owns deployment-api. 30-min audit: grep deployment-api
-      source for `while x.method():` patterns where `x` could be one of the 16 mocked services. File a separate issue
-      doc per finding.
-- [ ] **UTL test layout consolidation** (Section 3 B4) — slot 6 already aware, in `utl_qg_preexisting_failures` queue.
-- [ ] **UTL ↔ unified-trading-services circular dep** (Section 3 B5) — design decision, needs operator + Ikenna. Until
-      resolved, conftest mock pattern persists and is the OOM-class root cause. <<<<<<< Updated upstream
+- [x] ✅ **deployment-api conftest audit** (Section 2.2) — slot 4 2026-05-19: grepped deployment_api/ source for
+      `while x.method():` patterns (blob_exists/exists/has_/contains/next/peek/fetch/poll/read/wait_for_). ZERO hits.
+      deployment-api source has no OOM-class while-loop patterns. deployment-api conftest MagicMocks are safe.
+- [x] ✅ **UTL test layout consolidation** (Section 3 B4) — TRACKED-ELSEWHERE: slot 6's `utl_qg_preexisting_failures`
+      queue. No action needed here.
+- [ ] **BLOCKED-OPERATOR-DECISION** **UTL ↔ unified-trading-services circular dep** (Section 3 B5) — design decision,
+      needs operator + Ikenna. Until resolved, conftest mock pattern persists and is the OOM-class root cause.
 - [x] ✅ **Conftest scope=session → scope=package** (Section 3 B6) — slot 6's `utl_qg_preexisting_failures` queue.
       Tactical fix; verify all config_interface tests still pass after scope change. — utl@82c7bc02 (2026-05-17).
       Pre-existing 12 integration failures unchanged; all unit tests pass (16/16).
 - [x] ✅ **B1 race-condition fix** in `_resolve_save_path` — add UUID nonce to filename, eliminate the loop entirely. ~1
-      hour. Slot 6 territory. — utl@dc7382f0 (2026-05-17) =======
-- [ ] **Conftest scope=session → scope=package** (Section 3 B6) — slot 6's `utl_qg_preexisting_failures` queue. Tactical
-      fix; verify all config_interface tests still pass after scope change.
-- [ ] **B1 race-condition fix** in `_resolve_save_path` — add UUID nonce to filename, eliminate the loop entirely. ~1
-      hour. Slot 6 territory.
-  > > > > > > > Stashed changes
+      hour. Slot 6 territory. — utl@dc7382f0 (2026-05-17).
 
 ### P2 — backlog, take when slot bandwidth allows
 
-- [ ] **Other 6 session-autouse conftests audit** (Section 2.3) — verify none install `sys.modules` mocks. 12 minutes
-      total (2 min × 6 repos).
-- [ ] **B2 bound-method capture** in `ConfigStore.__init__` — pass `self` instead of `self._get_storage`. ~30 min
-      including tests.
-- [ ] **B3 ConfigAuditLog locking** — add file-based lock OR document-and-enforce single-writer assumption. ~1 hour.
-- [ ] **B8 SUB_AGENT_MANDATORY_RULES update** — document `--no-fix` for diagnostic QG runs. 5 min.
+- [x] ✅ **Other 6 session-autouse conftests audit** (Section 2.3) — slot 4 2026-05-19: audited instruments-service,
+      unified-api-contracts, alerting-service, market-tick-data-service, client-reporting-api,
+      batch-live-reconciliation-service. ZERO `sys.modules` installs in any conftest.py. All 6 are safe — OOM pattern
+      does not apply.
+- [ ] **DEFERRED-POST-CUTOVER** **B2 bound-method capture** in `ConfigStore.__init__` — pass `self` instead of
+      `self._get_storage`. ~30 min including tests. Not May-23 critical path.
+- [ ] **DEFERRED-POST-CUTOVER** **B3 ConfigAuditLog locking** — add file-based lock OR document-and-enforce
+      single-writer assumption. ~1 hour. Not May-23 critical path.
+- [x] ✅ **B8 SUB_AGENT_MANDATORY_RULES update** — ALREADY DONE: `--no-fix` documented at lines 22-44 of
+      `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` with ship-mode vs diagnostic-mode table + 2026-05-15 incident
+      note.
 
 ### P3 — nice-to-have, post-cutover
 
-- [ ] **B7 UTL split into focused sub-libraries** — long-term structural cleanup. Post-May-23.
-- [ ] **B9 QG memory optimization** — explicit GC between phases, `PYRIGHT_CONCURRENCY=2`. Post-May-23.
-- [ ] **strategy-service `domain_event_logger:361` byte-by-byte tail** — replace with fixed-size buffer read from end.
-      Post-May-23.
-- [ ] **B4 LINT step gap** — add `ruff format --check` to LINT step in `base-service.sh`. 5 min, but post-cutover to
-      avoid mid-flight QG churn.
+- [ ] **DEFERRED-POST-CUTOVER** **B7 UTL split into focused sub-libraries** — long-term structural cleanup.
+- [ ] **DEFERRED-POST-CUTOVER** **B9 QG memory optimization** — explicit GC between phases, `PYRIGHT_CONCURRENCY=2`.
+- [ ] **DEFERRED-POST-CUTOVER** **strategy-service `domain_event_logger:361` byte-by-byte tail** — replace with
+      fixed-size buffer read from end.
+- [ ] **DEFERRED-POST-CUTOVER** **B4 LINT step gap** — add `ruff format --check` to LINT step in `base-service.sh`.
+      5 min, but post-cutover to avoid mid-flight QG churn.
 
 ### Workspace mitigation (operator action, no code change)
 
-- [ ] **Add `mempy` alias to `~/.bashrc`** to wrap any direct `python` / `pytest` invocation in a 15 GB cgroup cap:
+- [ ] **OPERATOR-ACTION** **Add `mempy` alias to `~/.bashrc`** to wrap any direct `python` / `pytest` invocation in a
+      15 GB cgroup cap. No code change — operator runs these 3 bash lines on their workstation.
 
-  ```bash
-  mempy() { systemd-run --user --scope -p MemoryMax=15G -p MemorySwapMax=0 --quiet -- "$@"; }
-  alias pytest='mempy .venv/bin/python -m pytest'
-  alias python='mempy python'
-  ```
-
-  This protects against any future bug of this class regardless of where it originates (production code, test fixtures,
-  ad-hoc scripts).
-
-- [ ] **Set negative `oom_score_adj` for VSCode + Konsole** so kernel kills runaway scripts first, never the IDE:
-  ```bash
-  for p in $(pgrep -u $USER 'code|konsole'); do
-    echo -1000 | sudo tee /proc/$p/oom_score_adj
-  done
-  ```
+- [ ] **OPERATOR-ACTION** **Set negative `oom_score_adj` for VSCode + Konsole** so kernel kills runaway scripts first,
+      never the IDE. Operator runs the loop on their workstation.
 
 ---
 
