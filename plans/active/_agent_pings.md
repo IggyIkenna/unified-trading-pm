@@ -38,6 +38,11 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-19 09:45 UTC] ikenna-main — ACTION REQUIRED FOR HARSH: GitHub repo `orchestrator-service` renamed to
+`agent-orchestrator`. Run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in your local
+clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already uses correct repo name. See
+`plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` P0 rename done @ unified-trading-pm@d78cb9342.
+
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived below. Superseded by work_split_2026_05_19_ikenna.md + work_split_2026_05_19_harsh.md. Booting agents: read your work-split for today's tasks — do NOT act on archived entries. -->
 
 <!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18) — all resolved / superseded:
