@@ -515,11 +515,11 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       unverified per pre-audit). — 12 stage files confirmed implemented (139-495 lines each, 0 stubs); verified
       2026-05-19.
 - [x] ✅ [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption. — blr@69b784d:
-      stage0_manifest_reason_check.py uses `read_availability_index()` from UTL + `CaptureStatus` enum;
-      reads batch vs live manifest rows per date, compares capture_status + error_reason. Backfilled 2026-05-19.
+      stage0_manifest_reason_check.py uses `read_availability_index()` from UTL + `CaptureStatus` enum; reads batch vs
+      live manifest rows per date, compares capture_status + error_reason. Backfilled 2026-05-19.
 - [x] ✅ [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison. — blr@7cadbe0:
-      stage3_execution_recon.py computes `alpha_pnl_gap = |live_pnl - batch_pnl| / notional` per-trade;
-      emits alert when gap exceeds alpha_pnl_gap_max threshold. Backfilled 2026-05-19.
+      stage3_execution_recon.py computes `alpha_pnl_gap = |live_pnl - batch_pnl| / notional` per-trade; emits alert when
+      gap exceeds alpha_pnl_gap_max threshold. Backfilled 2026-05-19.
 - [x] ✅ [SCRIPT] P0. **Threshold decision wiring** — read `RECON_GREEN_THRESHOLDS` from UAC; emit
       `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. — batch-live-recon@2c6f214:
       import `RECON_GREEN_THRESHOLDS` from UAC thresholds.py; orchestrator emits `BATCH_VS_LIVE_RECON_DRIFTED`
@@ -527,7 +527,7 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       QG ✅ 2026-05-19
 - [x] ✅ [SCRIPT] P0. **Alerting hook** — `BATCH_VS_LIVE_RECON_DRIFTED` event subscribed by alerting-service rule. —
       alerting-service@f5a35a4: evaluate_batch_vs_live_recon_drifted() added to reconciliation_rules.py + exported via
-      __init__.py; WARNING (1x-2x threshold) → telegram, CRITICAL (>2x) → pagerduty+telegram. UAC facade: uac@4f2dd19.
+      **init**.py; WARNING (1x-2x threshold) → telegram, CRITICAL (>2x) → pagerduty+telegram. UAC facade: uac@4f2dd19.
       QG ✅ 2026-05-19
 - [x] ✅ [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
@@ -644,13 +644,15 @@ land.
 - [ ] [SCRIPT] P0. **Step 2 — Score persistence verification** — read
       `gs://${PID}-strategy-outputs/backtest/.../*.parquet` sample row + assert OHLC populated (not 1440-NaN
       placeholders per CLAUDE.md "Honest absence" rule).
-- [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per pre-audit §
-      1 Tab 8 step 3. — deployment@2b53165: wraps run-paper.sh, prefix defi-paper-, preflight check, singleton-locked,
-      LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per
+      pre-audit § 1 Tab 8 step 3. — deployment@2b53165: wraps run-paper.sh, prefix defi-paper-, preflight check,
+      singleton-locked, LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
 - [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
       `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`.
-- [ ] [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
-      verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch.
+- [x] ✅ [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
+      verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch. —
+      e2e-testing@9063d14: preflight-cutover.sh Probe 8 added — alchemy-api-key Secret Manager + eth_getCode on Aave V3
+      Pool (0x87870B...) + Uniswap SwapRouter02 (0x68b346...) via CHAIN_RPC_TEMPLATES[1] Alchemy ETH mainnet.
 - [ ] [SCRIPT] P0. **Tenderly fork pre-flight** — execution-service integration test pre-flight + pre-deploy fork-swap
       smoke per pre-audit § 6 risk #5.
 - [ ] [SCRIPT] P0. **Pre-soak rate-limit audit** — confirm 6 perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid,
@@ -659,9 +661,9 @@ land.
       #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
 - [x] ✅ [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
       `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` with archetype-specific
-      drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`).
-      risk-exposure@c2f0652: ArchetypeKillSwitchThresholds dataclass + CARRY_STAKED_BASIS_KILL_SWITCH_THRESHOLDS
-      (cap_bps=500/5%, position_breach_pct=20%) + evaluate_archetype_breach() + 8 tests. QG PASS 2026-05-19.
+      drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`). risk-exposure@c2f0652:
+      ArchetypeKillSwitchThresholds dataclass + CARRY_STAKED_BASIS_KILL_SWITCH_THRESHOLDS (cap_bps=500/5%,
+      position_breach_pct=20%) + evaluate_archetype_breach() + 8 tests. QG PASS 2026-05-19.
 - [ ] [AGENT] P1. **post-cutover** — `leveraged_funding_arb` end-to-end identical recipe (May-23 cutover lands BOTH
       archetypes, but leveraged_funding_arb is the hedge leg of carry_staked_basis — a single coordinated paper-soak may
       suffice; operator confirms during Tab 8 paper-soak).
