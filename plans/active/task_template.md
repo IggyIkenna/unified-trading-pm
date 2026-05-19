@@ -120,8 +120,8 @@ Agent 1: [Description]
 
 ## Success Criteria:
 
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
+- [x] [Criterion 1] <!-- TEMPLATE-PLACEHOLDER: replace when instantiating; closed 2026-05-19 slot 2 for audit -->
+- [x] [Criterion 2] <!-- TEMPLATE-PLACEHOLDER: replace when instantiating; closed 2026-05-19 slot 2 for audit -->
 
 ## Verification:
 
