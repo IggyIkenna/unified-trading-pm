@@ -454,12 +454,12 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to `COPPER_MPC` /
       `FIREBLOCKS_MPC` on client-provided creds. See "R9 sub-(a) — RESOLVED" section above for full rationale +
       per-wallet flippability architecture. Split into 3.C.1 (cutover path) + 3.C.2 (post-cutover Fireblocks).
-  - [ ] [AGENT] P0. **3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 cutover path).** Implementation:
+  - [x] ✅ [AGENT] P0. **3.C.1 — Cloud-KMS-encrypted wallet provisioning (May-23 cutover path).** Implementation:
         `execution-service/execution_service/custody/cloud_kms.py` (NEW) implementing `CustodyProvider` protocol — fetch
         envelope-encrypted private key from Secret Manager → call GCP `cloudkms.decrypt` (or AWS `kms.decrypt`) with the
         per-wallet CMK URI → in-memory decrypt → web3.py / solana-py signing → discard plaintext. Per-wallet CMK URI
         carried on `WalletProvisioningConfig.kms_key_uri` (UAC@`d721b6a`, shipped 2026-05-12). KMS Decrypter IAM bound
-        to trading-VM SA only.
+        to trading-VM SA only. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
     - **Verification**: smoke test on Sepolia + Solana devnet via singleton-locked launcher
       `launch-defi-paper-trade-vm.sh` signs a transaction; latency budget ≤200ms KMS decrypt + ≤100ms web3 signing.
     - **Sub-residual**: per-wallet CMK rotation cadence (90-day default, configurable per asset_group);
