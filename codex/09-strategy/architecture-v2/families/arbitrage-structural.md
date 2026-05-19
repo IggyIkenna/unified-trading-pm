@@ -12,7 +12,8 @@ scope: [engineer, admin]
 >
 > **Typical hold policies:** ATOMIC (multi-leg simultaneous) or VERY_SHORT_HOLD (minutes to hours).
 >
-> **Archetype count:** 2 — distinguished by alpha mechanism (dispersion vs protocol bonus).
+> **Archetype count:** 7 — distinguished by alpha mechanism and execution model. (2 original + 5 added: 4 MEV variants +
+> `ARBITRAGE_CROSS_DOMAIN_EVENT` per taxonomy V-1, uac@0196842.)
 
 ## Alpha thesis
 
@@ -39,14 +40,19 @@ you actually lock in the spread?), not directional risk.
 - Pure directional ML/rules with incidental dispersion as P&L component — goes to [ML Directional](ml-directional.md) or
   [Rules Directional](rules-directional.md)
 
-## 2 Archetypes
+## 7 Archetypes
 
-| Archetype                                                                   | Edge mechanism                                                                           | Examples                                                                                                                                                                                                                                                                                                                        |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`ARBITRAGE_PRICE_DISPERSION`](../archetypes/arbitrage-price-dispersion.md) | Price spread between venues on same/equivalent instrument                                | Cross-CEX arb, cross-DEX arb, flash-loan DEX arb, sports cross-book arb, cross-category (Polymarket-Betfair), **cross-venue vol arb (same option quoted at different IVs on Deribit vs OKX options)**, **hard no-arb violations within a single surface (butterfly / calendar / put-call parity)**, funding-rate-dispersion arb |
-| [`LIQUIDATION_CAPTURE`](../archetypes/liquidation-capture.md)               | Protocol-paid bonus for repaying an underwater position + seizing collateral at discount | Aave liquidation bots, Compound liquidation, Euler, Morpho                                                                                                                                                                                                                                                                      |
+| Archetype                                                                               | Edge mechanism                                                                                                 | Execution model                  | When to use                                                                                                    |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [`ARBITRAGE_PRICE_DISPERSION`](../archetypes/arbitrage-price-dispersion.md)             | Price spread between venues on same/equivalent instrument                                                      | Atomic or leg-and-hedge          | Cross-CEX, cross-DEX, sports cross-book, cross-category (Polymarket-Betfair), vol arb, funding-rate dispersion |
+| [`LIQUIDATION_CAPTURE`](../archetypes/liquidation-capture.md)                           | Protocol-paid bonus for repaying an underwater position + seizing collateral at discount                       | Leg-and-hedge (capital required) | Aave / Compound / Euler / Morpho / Kamino liquidation bots                                                     |
+| [`ARBITRAGE_MEV_BACKRUN`](../archetypes/arbitrage-mev-backrun.md)                       | Large swap left DEX pools momentarily out-of-sync; arb in next-tx slot                                         | ATOMIC single tx                 | Post-swap DEX price recovery; Ethereum / L2                                                                    |
+| [`ARBITRAGE_MEV_SANDWICH`](../archetypes/arbitrage-mev-sandwich.md)                     | Bracket a victim's large swap with front-run + back-run; capture adverse price movement                        | ATOMIC 3-tx bundle               | **Theoretical only — no live engine.** Regulatory risk; retained for completeness.                             |
+| [`ARBITRAGE_MEV_JIT_LIQUIDITY`](../archetypes/arbitrage-mev-jit-liquidity.md)           | Mint concentrated-LP position before imminent large swap; collect fees; burn next block                        | ATOMIC 2-block                   | Uniswap V3 / Algebra concentrated-liquidity pools; low-capital, near-zero inventory                            |
+| [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](../archetypes/arbitrage-mev-liquidation-bundle.md) | Flash-loan funded liquidation in a single atomic bundle; zero capital required                                 | ATOMIC single tx                 | Aave / Compound / Euler on 6 EVM chains + Kamino on Solana; extends LIQUIDATION_CAPTURE                        |
+| `ARBITRAGE_CROSS_DOMAIN_EVENT` _(per-archetype doc pending)_                            | Same real-world event priced in ≥2 venue domains (sports book / prediction CLOB / CME binary); arb across them | Leg-and-hedge                    | Sports book ↔ Polymarket ↔ Kalshi; CME binary options; added 2026-05-18 per taxonomy V-1                     |
 
-## Shared primitives (both archetypes)
+## Shared primitives (all archetypes)
 
 - **Dispersion/opportunity scanner**: continuous monitoring of prices, health factors, or dislocation signals; detect
   when edge exceeds cost threshold
@@ -275,11 +281,18 @@ def react_to_equity_change(self, new_equity_usd: Decimal) -> list[StrategyInstru
 ## Cross-references
 
 - Archetypes: [arbitrage-price-dispersion](../archetypes/arbitrage-price-dispersion.md),
-  [liquidation-capture](../archetypes/liquidation-capture.md)
+  [liquidation-capture](../archetypes/liquidation-capture.md),
+  [arbitrage-mev-backrun](../archetypes/arbitrage-mev-backrun.md),
+  [arbitrage-mev-sandwich](../archetypes/arbitrage-mev-sandwich.md),
+  [arbitrage-mev-jit-liquidity](../archetypes/arbitrage-mev-jit-liquidity.md),
+  [arbitrage-mev-liquidation-bundle](../archetypes/arbitrage-mev-liquidation-bundle.md), arbitrage-cross-domain-event
+  _(per-archetype doc pending — Slot 8)_
 - ATOMIC multi-leg:
   [../../../04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md)
 - MEV protection: [../cross-cutting/mev-protection.md](../cross-cutting/mev-protection.md)
 - Venue-account coordination (for cross-CEX simultaneous execution):
   [../cross-cutting/venue-account-coordination.md](../cross-cutting/venue-account-coordination.md)
 - Unity for sports cross-book: [../../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md)
-- **Subdir → family enforcement**: `strategy-service/strategy_service/engine/strategies/v2/mev/` archetypes map to `ARBITRAGE_STRUCTURAL`; enforced by `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (strategy-service@f01d12d).
+- **Subdir → family enforcement**: `strategy-service/strategy_service/engine/strategies/v2/mev/` archetypes map to
+  `ARBITRAGE_STRUCTURAL`; enforced by `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py`
+  (strategy-service@f01d12d).
