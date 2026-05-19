@@ -983,6 +983,30 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 4. MatchStatus adapter migration: replace `{"FT","AET","PEN"}` literal sets with `AF_COMPLETED_CODES` across IS adapters
 5. FIXTURES schema split (SCHEDULE + OUTCOMES): coordinate with writegate strict-mode flip
 
+### Trigger-based mapping storage + backfill (migrated from trigger_based_reference_data_2026_04_13)
+
+> **MIGRATED FROM**: `plans/active/trigger_based_reference_data_2026_04_13.md` Phase A2.4-5 + A3.2-4 + A4.1 + C1b.
+> Already-shipped items (A2.1-3, A3.1) were flipped in the source plan (pm@<flip-sha>).
+
+- [ ] [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/` (trigger-dated)**
+      — Change `_fetch_transfermarkt_data` write path from `by_date/` only to also write
+      `sports_reference/master/entity=teams/`, `sports_reference/master/entity=team_mapping/`,
+      `sports_reference/master/entity=player_values/` (accumulating) +
+      `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/` (point-in-time).
+      ML training needs point-in-time squad values to avoid lookahead bias.
+- [ ] [CODE] P2. **team_mapping append-only** — read existing master parquet, merge new rows, write back.
+      Depends on GCS write-path item above.
+- [ ] [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5.
+- [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026
+      (from `get_reference_refresh_dates()`), run instruments-service with `--season=X --start-date=trigger_date
+      --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh` pattern but iterates trigger
+      dates not date ranges.
+- [ ] [SCRIPT] P2. **VM fleet run** for trigger-date backfill (parallelize by league). Operational.
+- [ ] [QG] P2. Validate GCS snapshots exist for all trigger dates × leagues × seasons.
+- [ ] [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities (teams/team_mapping/player_values).
+      Depends on write-path item (must have data at `master/`/`snapshots/` to denominate against).
+- [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
+
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).

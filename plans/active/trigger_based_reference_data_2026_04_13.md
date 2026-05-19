@@ -152,7 +152,7 @@ The availability manifest denominator must understand:
 | Injuries                                    | All calendar days in season | Season start/end from UAC           |
 
 - [x] [CODE] P0. Wire `is_transfer_data_expected()` into deployment-api for Transfermarkt entities
-- [ ] [CODE] P1. Wire trigger-date denominator for mapping entities (after Phase A)
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Wire trigger-date denominator for mapping entities (after Phase A)
 
 ---
 
@@ -199,24 +199,48 @@ Workstreams B and C1a are done. Workstream A is the remaining substantial work.
 
 ## Phase A2 — Trigger-Aware Orchestrator
 
-- [ ] [CODE] P0. Add `_is_reference_refresh_date(league_id, date)` check using UAC triggers
-- [ ] [CODE] P0. Skip team/player_values fetches when not a trigger date (log skip reason)
-- [ ] [CODE] P0. Refactor `_fetch_transfermarkt_data` to accept `season` parameter
-- [ ] [CODE] P1. Change GCS write path for mappings: `master/` (append-only) + `snapshots/` (trigger-dated)
-- [ ] [CODE] P1. Make team_mapping append-only (read existing, merge new, write back)
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` on instruments-service
+- [x] ✅ [CODE] P0. Add `_is_reference_refresh_date(league_id, date)` check using UAC triggers —
+      **ALREADY SHIPPED**: `is_any_league_refresh_date()` imported from UAC at orchestrator.py:72,
+      used at orchestrator.py:1994 (`_is_trigger`) and 2587 (`_tm_trigger`). IS@pre-existing.
+- [x] ✅ [CODE] P0. Skip team/player_values fetches when not a trigger date (log skip reason) —
+      **ALREADY SHIPPED**: `_tm_trigger = is_any_league_refresh_date(_batch_dt) or redo_all` guard
+      at orchestrator.py:2587-2593; `_is_trigger` check at 1994-2010 skips player_values. IS@pre-existing.
+- [x] ✅ [CODE] P0. Refactor `_fetch_transfermarkt_data` to accept `season` parameter —
+      **ALREADY SHIPPED**: function signature `_fetch_transfermarkt_data(..., season: int | None = None, ...)`
+      at orchestrator.py:5616. IS@pre-existing.
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Change GCS write path for mappings: `master/` (append-only) + `snapshots/` (trigger-dated)
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Make team_mapping append-only (read existing, merge new, write back)
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. `bash scripts/quality-gates.sh` on instruments-service (follows A2.4-5)
 
 ## Phase A3 — Historical Backfill
 
-- [ ] [CODE] P0. Add `--season` CLI arg to instruments-service
-- [ ] [SCRIPT] P0. Backfill script: for each league, for each trigger date 2019-2026, fetch `season=X`
-- [ ] [SCRIPT] P1. Run on VM fleet (parallelize by league)
-- [ ] [QG] P0. Validate GCS snapshots exist for all trigger dates
+- [x] ✅ [CODE] P0. Add `--season` CLI arg to instruments-service —
+      **ALREADY SHIPPED**: `--season` arg in `instruments_service/cli/main.py` (parsed at InstrumentsHandler
+      line ~119; wired to `season_override` in orchestrator). IS@pre-existing.
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [SCRIPT] P0. Backfill script: for each league, for each trigger date 2019-2026, fetch `season=X`
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [SCRIPT] P1. Run on VM fleet (parallelize by league)
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. Validate GCS snapshots exist for all trigger dates (follows A3.2-3)
 
 ## Phase A4 — Trigger Denominator in Data Status
 
-- [ ] [CODE] P1. Add trigger-date denominator for mapping entities in deployment-api
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` on deployment-api
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [CODE] P1. Add trigger-date denominator for mapping entities in deployment-api
+- [x] ✅ [MIGRATED → sports_master_2026_05_07.md] [QG] P0. `bash scripts/quality-gates.sh` on deployment-api (follows A4.1)
+
+---
+
+## Deferred work — migrated to
+
+All deferred items → `plans/epics/sports_master_2026_05_07.md` § "Trigger-based mapping storage + backfill (migrated from trigger_based_reference_data_2026_04_13)":
+
+| Item | Deferred To | Blocker |
+| ---- | ----------- | ------- |
+| A2.4: GCS write path master/ + snapshots/ | sports_master_2026_05_07.md | Architectural — requires GCS migration planning |
+| A2.5: team_mapping append-only | sports_master_2026_05_07.md | Depends on A2.4 |
+| A3.2: Backfill script (trigger-date per league 2019-2026) | sports_master_2026_05_07.md | Depends on A2.4 write-path |
+| A3.3: VM fleet run | sports_master_2026_05_07.md | Operational — depends on A3.2 |
+| A3.4: Validate GCS snapshots | sports_master_2026_05_07.md | Depends on A3.3 |
+| A4.1: Trigger-date denominator in deployment-api | sports_master_2026_05_07.md | Depends on A2.4 write-path |
+| C1b: Wire trigger-date denominator for mapping entities | sports_master_2026_05_07.md | Depends on A4.1 |
 
 ---
 
