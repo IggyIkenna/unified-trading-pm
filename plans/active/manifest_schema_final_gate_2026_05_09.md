@@ -732,10 +732,8 @@ Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Code
   2026-05-11.)
 - Phase 3 boundary → CREATE `codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
   workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL →
-  `gs://{pid}-rescan-triage/`). **❌ NOT YET SHIPPED** — Phase 3 code shipped 2026-05-11 (`deployment-service@19fad8c` +
-  `deployment-api@c8a1cd4` + `instruments-service@a264f21`) but the codex stub is absent; OWNER ikenna-slot-6. Per the
-  "Post-Plan-Phase Codex Audit" HARD RULE the stub should ride with the Phase-3 ship. (slot-6 codex-audit finding
-  2026-05-11; was missing from this section entirely — added by slot 6.)
+  `gs://{pid}-rescan-triage/`). **✅ SHIPPED 2026-05-19** — `unified-trading-pm@<sha>` (slot 7 WORKSTEP-S10;
+  Post-Plan-Phase Codex Audit HARD RULE gap from Phase-3 ship 2026-05-11 retroactively closed).
 - Phase 4 boundary → UPDATE `codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
   step.
 - Phase 7 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" with bundled-walk
