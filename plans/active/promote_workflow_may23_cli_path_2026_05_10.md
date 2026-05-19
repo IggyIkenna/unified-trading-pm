@@ -704,9 +704,10 @@ for Group G item 23.**
   - Approve / Deny / Timeout (default 30s) buttons.
   - Emits `MANUAL_APPROVED` / `MANUAL_REJECTED` events via deployment-api. (ui@13b94ca9 — ManualTradeGateDialog with 1s
     poll, approve/reject per card, 3 vitest tests; dart-terminal wired)
-- [ ] [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
+- [x] ✅ [AGENT] P0. **execution-service unhold path** — strategy-service emits instruction in `MANUAL` mode →
       execution-service holds in manual-pending queue → on `MANUAL_APPROVED` event, unholds and executes; on
       `MANUAL_REJECTED` or timeout, drops + emits cancellation.
+      — ES@`1e119a61` 2026-05-14 (ManualPendingQueue singleton + approve/reject/expire + 4 HTTP endpoints).
 - [ ] [SCRIPT] P0. **Playwright e2e** — operator-approve flow against real testnet trade (uses Phase 4.B perp testnet
       wiring).
 
