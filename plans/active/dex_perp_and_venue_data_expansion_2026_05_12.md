@@ -177,10 +177,14 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2F: Extended backfill planning
 
-- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION] Write VM launcher for Extended OHLCV backfill (2024-07-26 →
-      2025-07-31).** Under `deployment-service/scripts/vm/` — singleton-locked launcher, register VM prefix in
-      `vm_zombie_watchdog.py`. OHLCV backfill: API serves historical from 2024-07-26. Funding backfill: only from
-      2025-08-01 (already captured). Pre-2025-08-01 funding dates: emit `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
+- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION]** **[DEFERRED-OPERATOR-DECISION]** Write VM launcher for Extended
+      OHLCV backfill (2024-07-26 → 2025-07-31). Under `deployment-service/scripts/vm/` — singleton-locked launcher,
+      register VM prefix in `vm_zombie_watchdog.py`. OHLCV backfill: API serves historical from 2024-07-26. Funding
+      backfill: only from 2025-08-01 (already captured). Pre-2025-08-01 funding dates: emit
+      `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
+      Forward-poll launcher exists (`launch-cefi-onchain-forward-poll.sh` prefix `cefi-extended-`). Backfill launcher
+      needs separate operator go-ahead on window + VM cost. 2026-05-19 slot 2: no operator ack found in _agent_pings.md;
+      leaving gated.
 
 - [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** ✅ **DONE 2026-05-16 (slot-3)** —
       `market-tick-data-service/scripts/probe_drift_trades_window.py` at MTDS@`21ccab6`. One-shot probe of
@@ -251,12 +255,15 @@ feature available to downstream strategy-service consumers.
 
 ### 4C: Graph Studio / Uniswap subgraph research (PARALLEL with 4A/4B)
 
-- [ ] [DESIGN] P3. **Research plan: Uniswap V3 tick-state subgraph on Graph Studio.** **NICE-TO-HAVE — not blocking
+- [x] ✅ [DESIGN] P3. **Research plan: Uniswap V3 tick-state subgraph on Graph Studio.** **NICE-TO-HAVE — not blocking
       May-23 cutover.** Outline: (1) validate CLMM slippage math via Dune SQL (free, exploratory — proof-of-concept
       before committing infra); (2) production path = Graph Studio custom subgraph emitting per-tick liquidity per block
       on Mint/Burn/Swap events; (3) Alchemy archive `eth_call` for spot-check at 26 CU/call. Write findings as a todo in
       `defi_master_2026_05_07.md` research section once validated, NOT as a code commitment here. **DEFERRED: no
       implementation this plan — research only.**
+      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2 (R-S2-DEX-PERP-VENUE-DATA-EXPANSION): plan explicitly deferred this
+      to post-cutover research. Named successor: `plans/active/uniswap_v3_tick_subgraph_<date>.md` (create when Dune SQL
+      validation confirms CLMM math). Not blocking May-23.
 
 **Phase 4 success criteria:** Archetype doc updated + pushed. Verification script executable and outputs structured
 report. No QG gates for the doc-only changes (PM repo uses doc-fast-path to main).
