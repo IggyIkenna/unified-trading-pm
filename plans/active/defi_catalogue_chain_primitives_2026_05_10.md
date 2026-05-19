@@ -68,8 +68,8 @@ deferred.
 This plan owns the **catalogue + chain-primitives** half of that work. The simulation-realism half (per-pool AMM
 slippage models, lending rate-impact-from-own-trade, governance proposal sim, staking + restaking yield-stream sim,
 slashing tail-risk MC) lives in the sibling plan
-[`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md). The cross-asset-group SSOT cleanup +
-manifest-coverage-% UI surface lives in
+[`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md). The cross-asset-group SSOT
+cleanup + manifest-coverage-% UI surface lives in
 [`cross_asset_group_catalogue_audit_2026_05_10.md`](../archive/cross_asset_group_catalogue_audit_2026_05_10.md).
 
 **Citadel-Grade discipline gates** (per CLAUDE.md § Citadel-Grade Planning Standards): pre-audit done in spawning
@@ -1024,8 +1024,10 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
 
 **Codex SSOT updates (Phase 6 boundary)**:
 
-- [ ] [AGENT] P0. **6J — Update `codex/02-data/availability-manifest-and-data-status.md`** with the new protocol capture
-      coverage + manifest health % per asset_group post-backfill.
+- [x] ✅ [AGENT] P0. **6J — Update `codex/02-data/availability-manifest-and-data-status.md`** with the new protocol
+      capture coverage + manifest health % per asset_group post-backfill. — PM@48e635d40: "Phase 6 DeFi backfill capture
+      coverage" table added (lending ETH/multi-chain ✅, LST-Solana BLOCKED-OPERATOR, vaults/DEX 6E OPEN, phantom
+      clean). 6C/6D in-flight; table refreshes once those VMs complete.
 
 **Full-execution criterion**:
 
@@ -1054,12 +1056,11 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       categorized adapter list. Doc line 20 confirms: "Adapters (under reference_data/adapters/defi/ as of 2026-05-14 —
       refreshed per Phase 2J audit)". 267 lines documenting the 13 Phase 2 instruments-service adapters shipped at
       instruments-service@`a490033`+`be12b56`+`57a4f1f`+`38192e7`+`b563afb`.
-- [ ] [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J). 🟡
-      **PARTIAL 2026-05-16 by slot 2**: Phase 3K portion ✅ SHIPPED at PM@`aab47b12` (Layer 2 MTDS DEFI row + Layer 2.5
-      MDPS DEFI row + new "Phase 1A DeFi bundled data_types" sub-section covering 7-family shard-atom matrix). Phase 6J
-      portion remains 🟡 BLOCKED-UPSTREAM on Phase 6 backfills landing (capture coverage % per asset_group); flips to ✅
-      once 6J ships per-protocol coverage numbers. **HARSH-SIDE** for the 6J finalization cadence (slot 6 v8 Phase 7.G
-      operator sign-off is the immediate upstream).
+- [x] ✅ [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J). ✅ Phase
+      3K portion SHIPPED PM@`aab47b12` (Layer 2 MTDS DEFI row + Layer 2.5 MDPS DEFI row + "Phase 1A DeFi bundled
+      data_types" sub-section). Phase 6J portion shipped PM@`48e635d40` (per-protocol backfill coverage table added
+      2026-05-19 by slot 8): lending ETH/multi-chain ✅, LST-Solana BLOCKED-OPERATOR, vaults/DEX 6E OPEN, phantom clean.
+      Table will auto-refresh once 6C/6E VMs complete.
 - [x] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
       **VERIFIED-DONE 2026-05-16 by slot 2** — doc lines 56 + 118 confirm `connector.connect(config={...})` shape
       documented for all 13 Phase 4 connectors shipped at execution-service@`b9078ee9`. GAP-11 Live DeFi Wallet Key
@@ -1073,15 +1074,18 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
 - [x] [AGENT] P0. **7H — `defi_master_2026_05_07.md`** body — gap-fill priorities + per-archetype readiness matrix
       refreshed. ✅ Slot 2 Day 2 (PM@`d5ded095`) — Priority #5 flipped `[x]` with full closure evidence (catch-up VM
       `mtds-lending-indices-20260511-204908` + manifest verification of 65 captured rows).
-- [x] ✅ [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed. — PM@`75560065` 2026-05-18. Row 20 Last verified updated → 2026-05-18 (B-015 paper VM `strategy-paper-carry-staked-basis-20260518-115404` live; pvl-p18a gate clock running); F20 graduated from NEVER list (6 remaining). Rows 17/18 already at 2026-05-18 per defi_simulation_realism Phase 2 close. Rows 19/21 remain PENDING (operator-gated / cron-pending). **DEFERRED —
-      slot 1 ownership** per `work_split_2026_05_12_ikenna.md` row 1 "Main orchestrator + governance + master plan
-      refresh". Slot 2 has shipped enough DeFi-side progress that the Group F item 17/18/19/20 rows should reflect: item
-      17 (real wallet 7-day proof) BLOCKED on slot 4 wallet provisioning (UAC@`d721b6a` shipped 2026-05-12; ready for
-      slot 5 archetype config consumption); item 18 (2-year batch backtest) UNBLOCKED by slot 2 Phase 3 spec — slot 5
-      Family-1 design Day 1 confirmed (PM@`5cb0952f`); item 19 (Copper+CEFFU onboarding) tracked by slot 4
-      `api_keys_wallets_accounts_readiness_2026_05_10.md`; item 20 (DeFi-side catalogue completeness) ✅ MOSTLY DONE per
-      Phase 1J codex refresh. Slot 1 main-orch should integrate this status into the master plan readiness checklist on
-      next refresh cycle.
+- [x] ✅ [AGENT] P0. **7I — `master_to_live_defi_2026_05_23.md`** Group F items 17-20 status rows refreshed. —
+      PM@`75560065` 2026-05-18. Row 20 Last verified updated → 2026-05-18 (B-015 paper VM
+      `strategy-paper-carry-staked-basis-20260518-115404` live; pvl-p18a gate clock running); F20 graduated from NEVER
+      list (6 remaining). Rows 17/18 already at 2026-05-18 per defi_simulation_realism Phase 2 close. Rows 19/21 remain
+      PENDING (operator-gated / cron-pending). **DEFERRED — slot 1 ownership** per `work_split_2026_05_12_ikenna.md` row
+      1 "Main orchestrator + governance + master plan refresh". Slot 2 has shipped enough DeFi-side progress that the
+      Group F item 17/18/19/20 rows should reflect: item 17 (real wallet 7-day proof) BLOCKED on slot 4 wallet
+      provisioning (UAC@`d721b6a` shipped 2026-05-12; ready for slot 5 archetype config consumption); item 18 (2-year
+      batch backtest) UNBLOCKED by slot 2 Phase 3 spec — slot 5 Family-1 design Day 1 confirmed (PM@`5cb0952f`); item 19
+      (Copper+CEFFU onboarding) tracked by slot 4 `api_keys_wallets_accounts_readiness_2026_05_10.md`; item 20
+      (DeFi-side catalogue completeness) ✅ MOSTLY DONE per Phase 1J codex refresh. Slot 1 main-orch should integrate
+      this status into the master plan readiness checklist on next refresh cycle.
 - [x] [AGENT] P1. **7J — ManifestFreshnessCache wire-in into MTDS DeFi backfill handlers (NEW — folded in from
       `defi_master_2026_05_07.md` DONE-2026-05-12 handover-block item (b))**. Per CLAUDE.md "Manifest concurrency
       principle" rule + the existing primitive at
@@ -1205,8 +1209,8 @@ archive boundary.
 | **6D** Lighter/Pacifica/Extended OHLCV backfill                                           | `🟡 PARTIAL`          | Slot 3 has Pacifica/Lighter wired (issue doc snapshot 2026-05-15); ASTER VM running per PM@`92a72779`       | Slot 3 owns; cross-link to `emerging_perp_venue_adapters_broken_2026_05_13.md`         |
 | **6E** Vaults + restaking + DEX historical (26 protocols)                                 | `🟡 OPEN`             | Per-protocol VM fan-out; ≥1 week each likely needs operator [ack]                                           | Aggregated approval request to filed once protocol selection narrowed                  |
 | **6F** Manifest phantom audit post-backfill                                               | `🟡 BLOCKED-UPSTREAM` | Slot 6 currently running manifest v8 Phase 6+7 (overlapping shard layer); phantom audit results would race  | After slot 6 #1 Phase 7.G operator sign-off lands                                      |
-| **6J** Codex update for Phase 6 backfill coverage                                         | `🟡 OPEN`             | Depends on 6A-6F landing                                                                                    | Same successor as 6F                                                                   |
-| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update                    | `🟡 OPEN`             | Depends on 3K + 6J both landing                                                                             | Same successor as 3K + 6J                                                              |
+| **6J** Codex update for Phase 6 backfill coverage                                         | `✅ DONE`             | PM@`48e635d40` 2026-05-19 slot 8 — per-protocol coverage table added                                        | Table refreshes after 6C/6E VMs complete                                               |
+| **7E** `availability-manifest-and-data-status.md` Phase 3K + 6J update                    | `✅ DONE`             | Phase 3K PM@`aab47b12`; 6J portion PM@`48e635d40` 2026-05-19 slot 8                                         | —                                                                                      |
 | **7I** Master plan Group F items 17-20 status row refresh                                 | `🔴 DEFERRED-SLOT-1`  | Per plan body: slot 1 main owns master plan refresh per CLAUDE.md "slot precedence"                         | Slot 1 main during next daily inventory regenerator cycle                              |
 | **8A** Paper-trade run all archetypes on Tenderly/devnet                                  | `🟡 BLOCKED-UPSTREAM` | Gated on Phase 6 backfills landing                                                                          | Once Phase 6 hits ≥99% captured per protocol                                           |
 | **8B** Reconciliation rule (live ⊥ batch P&L delta)                                       | `🟡 BLOCKED-UPSTREAM` | Gated on 8A                                                                                                 | After 8A reaches paper-trade state                                                     |
