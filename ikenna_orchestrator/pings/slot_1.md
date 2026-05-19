@@ -4511,3 +4511,61 @@ past `shutdown -h now`, leaving all 31 VMs idle-RUNNING (burning cost, doing not
 UTC; Python setup in progress; migration expected to start ~12:15-12:20 UTC.
 
 — ikenna-main slot 1
+
+---
+
+## [slot 1 main] 2026-05-19 ~15:40 UTC — CREDENTIAL APPROVAL BATCH — 12 testnet keys + 3 sandbox + Solana wallet
+
+For May-23 paper-evidence run + post-cutover live testnet validation. ALL of these are
+preflight probe gates today; without them, `e2e-testing/scripts/defi/preflight-cutover.sh`
+requires `--waive-<probe>` (currently waiving all of them on the paper VM).
+
+For the May-23 paper run, **synthetic CeFi sim via matching engine** is the technical path
+(no testnet venues called); these creds unblock the **post-May-23 live-testnet validation
+phase** and the eventual cutover. Knock-out time: ~5min per signup × 13 forms = ~1hr operator
+time, async.
+
+### Group 1 — Copper sandbox (DeFi custody preflight)
+- `copper-sandbox-api-key`
+- `copper-sandbox-api-secret`
+- `copper-org-id`
+- Vendor: Copper.co (existing operator account? need org ID + sandbox HMAC pair)
+- What I need: sandbox API credentials + org ID for testnet portfolio-list HMAC sign-test
+- Unblocks: preflight Probe 1; live custody flow gates post-cutover
+- Without it: `--waive-copper` (current state)
+
+### Group 2 — Perp venue testnet trade keys (12 secrets, 6 venues × 2 each)
+- `bybit-testnet-trade-api-key` + `bybit-testnet-trade-api-secret`
+  → testnet.bybit.com signup
+- `binance-testnet-trade-api-key` + `binance-testnet-trade-api-secret`
+  → testnet.binance.vision signup
+- `okx-testnet-trade-api-key` + `okx-testnet-trade-api-secret`
+  → app.okx.com → demo-trading API
+- `hyperliquid-testnet-trade-api-key` + `hyperliquid-testnet-trade-api-secret`
+  → **WE HAVE `hyperliquid-testnet-trade-key` ALREADY** (one secret) — rename to the
+  `-api-key` shape + provision a matching `-api-secret`. app.hyperliquid.xyz/trade?network=testnet
+- `aster-testnet-trade-api-key` + `aster-testnet-trade-api-secret`
+  → Aster testnet signup
+- `deribit-testnet-trade-api-key` + `deribit-testnet-trade-api-secret`
+  → test.deribit.com signup
+- Unblocks: preflight Probe 2 venue-keys for all 6; ability to call real testnet perp APIs
+  for the hedge leg post-May-23
+- Without it: `--waive-venue-keys` (current state); synthetic-CeFi-sim path works for paper
+
+### Group 3 — Solana wallet
+- `solana-wallet-address` (Secret Manager) OR env `SOLANA_WALLET_ADDRESS`
+- Funded with **≥0.01 SOL on mainnet**
+- Vendor: `solana-keygen new` (free, no signup), then fund via faucet/CEX swap
+- Unblocks: preflight Probe 3; Solana LST archetypes (JitoSOL/mSOL/bSOL)
+- Without it: `--waive-solana-wallet` (current state); EVM-only carry_staked_basis still works
+
+### Plan reference
+File these into Secret Manager via:
+```bash
+echo -n "<key>" | gcloud secrets create <secret-name> --data-file=- \
+  --project=central-element-323112 --labels=env=testnet,vendor=<vendor>
+```
+
+Once all in place, the paper VM launcher's `--waive-*` flags can be dropped one by one.
+
+— ikenna-main slot 1
