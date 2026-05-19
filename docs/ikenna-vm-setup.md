@@ -29,7 +29,7 @@ You'll run **two Cursor windows side-by-side**:
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | EC2 instance   | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB / Intel Granite Rapids)                                                                                            |
 | Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                                                                      |
-| Public IP      | `35.78.213.80`                                                                                                                                                            |
+| Public IP      | `13.113.200.22`                                                                                                                                                           |
 | Boot disk      | 300 GB gp3 (~4.8 GB used)                                                                                                                                                 |
 | OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                                                             |
 | Pre-installed  | nginx, certbot, git, build tools, tmux, uv 0.11.15, Python 3.13.13                                                                                                        |
@@ -52,22 +52,26 @@ You'll run **two Cursor windows side-by-side**:
 
 ### Status snapshot
 
-| Item                                                                         | State                                                                                                                                                                                         |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| EC2 VM `m8i.4xlarge` running                                                 | ✅ done (Harsh)                                                                                                                                                                               |
-| 27 workspace repos + 12 slot worktrees                                       | ✅ done (Harsh)                                                                                                                                                                               |
-| All sibling repos on `live-defi-rollout` (agent-orchestrator on `main`)      | ✅ done (Harsh)                                                                                                                                                                               |
-| `agent-orchestrator` `uv sync` (Python deps)                                 | ✅ done (Harsh)                                                                                                                                                                               |
-| JWT secret generated + in `.env.local`                                       | ✅ done (Harsh) — value also backed up to AWS Secrets Manager as `agent-orchestrator-jwt-secret`                                                                                              |
-| `orchestrator.service` systemd unit installed + running                      | ✅ done (Harsh) — `sudo systemctl status orchestrator` confirms                                                                                                                               |
-| nginx :80 reverse proxy → 127.0.0.1:8765                                     | ✅ done (Harsh) — external smoke: `curl http://35.78.213.80/api/healthz` returns 200                                                                                                          |
-| `data/config/backends.json` updated with `ikenna-vm` as default              | ✅ done (Harsh) — committed to `IggyIkenna/agent-orchestrator:main@66923e7`                                                                                                                   |
-| **DNS** `api.agent-orchestrator.odum-research.com` → `35.78.213.80`          | 🔧 **Ikenna only** (Squarespace)                                                                                                                                                              |
-| **TLS** via certbot                                                          | 🔧 needs DNS first                                                                                                                                                                            |
-| **GitHub auth** on VM (so agents can git push/pull)                          | 🔧 Ikenna identity required                                                                                                                                                                   |
-| **Anthropic / Claude CLI** auth on VM                                        | ✅ done (slot-1 2026-05-19) — Node 22 + `claude` 2.1.144 installed, OAuth via Max plan; `~/.claude/.credentials.json` confirms `subscriptionType=max`, `rateLimitTier=default_claude_max_20x` |
-| **Bootstrap users** on backend                                               | 🔧 Ikenna picks his password                                                                                                                                                                  |
-| **Firebase Hosting deploy** of SPA (currently 404s — site exists, no bundle) | 🔧 Ikenna's Firebase project                                                                                                                                                                  |
+| Item                                                                    | State                                                                                                                                                                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EC2 VM `m8i.4xlarge` running                                            | ✅ done (Harsh)                                                                                                                                                                               |
+| 27 workspace repos + 12 slot worktrees                                  | ✅ done (Harsh)                                                                                                                                                                               |
+| All sibling repos on `live-defi-rollout` (agent-orchestrator on `main`) | ✅ done (Harsh)                                                                                                                                                                               |
+| `agent-orchestrator` `uv sync` (Python deps)                            | ✅ done (Harsh)                                                                                                                                                                               |
+| JWT secret generated + in `.env.local`                                  | ✅ done (Harsh) — value also backed up to AWS Secrets Manager as `agent-orchestrator-jwt-secret`                                                                                              |
+| `orchestrator.service` systemd unit installed + running                 | ✅ done (Harsh) — `sudo systemctl status orchestrator` confirms                                                                                                                               |
+| nginx :80 reverse proxy → 127.0.0.1:8765                                | ✅ done (Harsh) — external smoke: `curl http://13.113.200.22/api/healthz` returns 200                                                                                                         |
+| `data/config/backends.json` updated with `ikenna-vm` as default         | ✅ done (Harsh) — committed to `IggyIkenna/agent-orchestrator:main@66923e7`                                                                                                                   |
+| **Elastic IP** (`13.113.200.22`, was `35.78.213.80` auto-assigned)      | ✅ done (slot-1 2026-05-19) — `eipalloc-07b7bfe509d63c477` attached, IP now stable across stop/start                                                                                          |
+| **DNS** `api.agent-orchestrator.odum-research.com` → `13.113.200.22`    | ✅ done (slot-1 2026-05-19) — Squarespace UI on the `.com` (not `.co.uk`) zone; propagated globally                                                                                           |
+| **CAA** `letsencrypt.org` added to odum-research.com                    | ✅ done (slot-1 2026-05-19) — existing CAA was `0 issue "pki.goog"` only, blocked LE; appended `0 issue "letsencrypt.org"`                                                                    |
+| **TLS** via certbot                                                     | ✅ done (slot-1 2026-05-19) — `--nginx -d api.agent-orchestrator.odum-research.com`, expires 2026-08-17, certbot.timer auto-renew scheduled                                                   |
+| **GitHub auth** on VM (so agents can git push/pull)                     | ✅ done (slot-1 2026-05-19) — `~/.ssh/github_ed25519` generated; pub key added to ikenna's GitHub; `ssh -T git@github.com` returns "Hi IggyIkenna!"                                           |
+| **GCP ADC** on VM (so agents can read GCS / secrets)                    | ✅ done (slot-1 2026-05-19) — `gcloud auth application-default login --no-browser` + `gcloud auth login --no-browser` (both via Mac remote-bootstrap); GH_PAT secret read smoke passes        |
+| **Anthropic / Claude CLI** auth on VM                                   | ✅ done (slot-1 2026-05-19) — Node 22 + `claude` 2.1.144 installed, OAuth via Max plan; `~/.claude/.credentials.json` confirms `subscriptionType=max`, `rateLimitTier=default_claude_max_20x` |
+| **Bootstrap users** on backend                                          | ✅ done (slot-1 2026-05-19) — `manage_users.py add ikenna` w/ argon2id hash; `verify` smoke passes; bash history cleared                                                                      |
+| **CORS allow-list for Firebase origins**                                | ✅ done (slot-1 2026-05-19) — `IggyIkenna/agent-orchestrator:main@8daa12d` adds prod + staging + `*.web.app` origins; orchestrator systemd unit restarted to pick up; preflight returns 200   |
+| **Firebase Hosting deploy** of SPA                                      | ✅ done (slot-1 2026-05-19) — `IggyIkenna/agent-orchestrator:main@dab9ac3` drops dead Cloud Run rewrites from `firebase.json`; both prod + UAT targets serving HTTP 200                       |
 
 ### Sequenced commands for your main agent
 
@@ -81,14 +85,14 @@ Operator-only UI action. Add A record:
 Host:  api.agent-orchestrator
 Type:  A
 TTL:   3600
-Value: 35.78.213.80
+Value: 13.113.200.22
 ```
 
 Wait + verify propagation:
 
 ```bash
 dig api.agent-orchestrator.odum-research.com +short
-# expect: 35.78.213.80
+# expect: 13.113.200.22
 ```
 
 **2. (VM) GitHub SSH key**
@@ -245,7 +249,7 @@ aws secretsmanager get-secret-value \
 chmod 600 ~/.ssh/agent-orchestrator-key
 
 # Smoke test
-ssh -i ~/.ssh/agent-orchestrator-key ubuntu@35.78.213.80 'echo ok'
+ssh -i ~/.ssh/agent-orchestrator-key ubuntu@13.113.200.22 'echo ok'
 ```
 
 ---
@@ -256,7 +260,7 @@ Add to your `~/.ssh/config` on the Mac:
 
 ```
 Host agent-orchestrator-vm
-  HostName 35.78.213.80
+  HostName 13.113.200.22
   User ubuntu
   IdentityFile ~/.ssh/agent-orchestrator-key
   ServerAliveInterval 60
@@ -434,7 +438,7 @@ in the repo — copy to `/etc/systemd/system/`, edit paths, `systemctl enable --
 
 ## Step 10 — Public access (nginx + Let's Encrypt)
 
-1. Add DNS A record in Squarespace: `api.agent-orchestrator.odum-research.com` → `35.78.213.80`
+1. Add DNS A record in Squarespace: `api.agent-orchestrator.odum-research.com` → `13.113.200.22`
 2. Wait 5-10 min for propagation (verify with `dig api.agent-orchestrator.odum-research.com +short`)
 3. Configure nginx as reverse proxy:
 
@@ -560,7 +564,7 @@ When you want to manage agents/slots via the dashboard:
 
 ```bash
 # SSH in
-ssh -i ~/.ssh/agent-orchestrator-key ubuntu@35.78.213.80
+ssh -i ~/.ssh/agent-orchestrator-key ubuntu@13.113.200.22
 
 # Or with config alias
 ssh agent-orchestrator-vm
