@@ -741,6 +741,19 @@ respectively).
       ([feature_writer.py](../../../features-onchain-service/features_onchain_service/app/core/feature_writer.py)) is
       the canary — flip the suppress to a raise once chain is live; that single edit verifies end-to-end.
 
+## Sub-plans (referenced from this epic)
+
+- **`plans/active/ml_repo_consolidation_2026_05_19.md`** (~6 cal-AI-days, P0, deadline 2026-05-23, `infra` class) —
+  Merge `ml-training-service` + `ml-inference-service` into a new `ml-service` repo with sub-packages
+  `ml_service/training/` and `ml_service/inference/`; archive both source repos via `gh repo archive`. ONE Docker image
+  (conditional training-deps Docker layer to keep live-inference image lean), ONE flat `pyproject.toml`, ONE Health-API
+  exposing aggregated freshness, ONE CLI with `--operation` discriminating train / evaluate / hyperparam /
+  batch-inference / live-inference / cascade-inference. Mirrors `features_repo_consolidation_2026_05_08.md` 10-phase
+  pattern. Pre-cutover race; flips to `BLOCKED-CUTOVER` if Phase 6 parity slips. Soft freeze on structural changes in
+  both source repos for duration. Phase 4D consumers (strategy-service calibrated-signal consumption) will reference
+  `ml-service` post-merge — coordinate downstream-import-rewrite sweep. Sibling:
+  `plans/active/strategy_repo_consolidation_2026_05_19.md` (independent execution).
+
 ## Coordination with sibling plans
 
 - **writegate_honest_coverage_endtoend_2026_05_06**: this umbrella consumes writegate's `LookaheadBiasError`,

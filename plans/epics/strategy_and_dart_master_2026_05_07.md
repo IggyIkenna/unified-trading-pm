@@ -489,6 +489,14 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   `codex/09-strategy/mvp-universe-per-asset-group.md`.
 - **`plans/active/strategy_archetype_taxonomy_2026_05_12.md`** — archetype taxonomy refinement (separately
   cross-referenced earlier; parent_epic already set).
+- **`plans/active/strategy_repo_consolidation_2026_05_19.md`** (~12 cal-AI-days, P0, deadline 2026-05-23, `infra` class)
+  — Subtree-merge `risk-and-exposure-service` + `position-balance-monitor-service` + `pnl-attribution-service` into the
+  existing `strategy-service` repo as sub-packages (`strategy_service/risk/`, `/position/`, `/pnl/`); archive 3 source
+  repos via `gh repo archive`. ONE Docker image, ONE flat `pyproject.toml`, ONE Health-API exposing aggregated
+  freshness, ONE CLI with `--operation` discriminating risk-monitor / position-recon / pnl-attribution / strategy-batch
+  / strategy-live / backtest. Mirrors `features_repo_consolidation_2026_05_08.md` 10-phase pattern. Pre-cutover race;
+  flips to `BLOCKED-CUTOVER` if Phase 6 parity slips. Soft freeze on structural changes in the 4 affected repos for
+  duration. Sibling: `plans/active/ml_repo_consolidation_2026_05_19.md` (independent execution).
 
 **MVP scope SSOT for backtest config-grid + ML training sizing**:
 [`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) defines
