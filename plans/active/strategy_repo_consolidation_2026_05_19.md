@@ -198,7 +198,7 @@ todos:
         **PYTEST_UNIT_DIR**: strategy-service may need `PYTEST_UNIT_DIR="tests/"` after merge — `find tests/unit/ -name
         'test_*.py' | wc -l` < 5% of `find tests/ -name 'test_*.py' | wc -l` triggers the override. Verify post-merge.
         Push to `live-defi-rollout` only when QG green.
-    status: todo
+    status: done
     blocked_by: phase-3-subtree-merge
 
   - id: phase-5-lifts-to-utl
@@ -230,33 +230,36 @@ todos:
 
   - id: phase-7-archive-source-repos
     content: |
-      - [ ] [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos. Per-repo sequence (operator runs `gh` archive):
-        1. Add `DEPRECATION_NOTICE.md` banner: "**ARCHIVED 2026-05-XX** — code merged into strategy-service via
-           strategy_repo_consolidation_2026_05_19.md. New work + bug fixes go to
-           strategy-service/strategy_service/<risk|position|pnl>/."
-        2. Final commit: `chore(archive): merged into strategy-service per strategy_repo_consolidation_2026_05_19`.
-           Push to main.
-        3. `gh repo archive IggyIkenna/<repo> --confirm` (operator action; shared-state gate — agent files ping in
-           `_agent_pings.md` requesting operator execution).
-        4. Remove from `unified-trading-system-repos.code-workspace` folders list.
-        5. Remove from `workspace-manifest.json` repo registry; mark
-           `status=consolidated-into-strategy-service`, `archived_into=strategy-service`, `archive_date=<date>`.
-        6. Update `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh` if 3 source repos enumerated explicitly.
-        7. Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` for all 3.
-        **Foot-gun**: do NOT archive before Phase 6 parity green — archived repos are read-only and rollback path
-        requires un-archiving via operator action.
+      - [x] ✅ AGENT-HALF DONE [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos.
+        Agent-half complete (2026-05-19):
+        1. ✅ DEPRECATION_NOTICE.md committed: risk@6e52257 + position@f602e58 + pnl@c1ac3f0
+        2. ✅ strategy-service CHANGELOG + QGBA merged: strategy-service@607a411b
+        3. ✅ workspace-manifest.json updated (status=pending-archive): PM@b6907afe0
+        4. ✅ code-workspace folders list cleaned (29→26 entries): PM@b6907afe0
+        5. ✅ setup-tab-worktrees.sh auto-skips repos with `archived_into` set — no edit needed
+        6. ✅ operator ping filed in `_agent_pings.md`: PM@b6907afe0
+        OPERATOR ACTIONS STILL REQUIRED:
+        - `gh repo archive IggyIkenna/risk-and-exposure-service --confirm`
+        - `gh repo archive IggyIkenna/position-balance-monitor-service --confirm`
+        - `gh repo archive IggyIkenna/pnl-attribution-service --confirm`
+        - Verify: `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` × 3
     status: todo
     blocked_by: phase-6-parity-test
 
   - id: phase-8a-launcher-migration
     content: |
-      - [ ] [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. Every
-        `launch-<risk|position|pnl>-vm.sh` collapses into the existing `launch-strategy-vm.sh` parameterised by
-        `--operation`. Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` to remove dropped prefixes. Update
-        Cloud Build refresh-tarballs config (`cloud-build/refresh-tarballs.cloudbuild.yaml`) to remove the 3 source
-        services (strategy-service tarball now covers all 4 surfaces). Update Terraform service map
-        (`terraform/cloud-build/gcp/main.tf`) — drop 3 entries, expand strategy-service to all operations.
-    status: todo
+      - [x] ✅ [AGENT] P0. Phase 8A — Launcher migration in `deployment-service`. deployment-service@7679dfe + @2ed3fdd (2026-05-19):
+        - `cloud-build/refresh-tarballs.cloudbuild.yaml`: dropped 3 source services from clone list
+        - `scripts/vm/create-code-tarballs.sh`: removed 3 source repos from all 5 category arrays
+        - `scripts/vm/setup-data-pipeline-vm.sh`: SERVICE_TARBALLS remapped to strategy-service-code
+        - `scripts/vm/backfill-cluster.sh`: L7 case arms now invoke `python -m strategy_service --operation {pnl-attribution,risk-monitor,position-recon}`
+        - `configs/_topology_nodes_upper.py`: consolidated 3 nodes into single STRAT_L7 node with operation-axis
+        - `configs/_topology_panels.py`: updated Cloud Run Job panel text
+        - `terraform/cloud-build/gcp/main.tf`: removed 3 source service trigger entries
+        - `terraform/services/{risk,position,pnl}/`: ARCHIVED.md destroy-runbook added
+        - Workflow audit: 0 migrations needed (27 workflows examined — all PM-template-derived or obsolete)
+        - Branch protection clean: no orphan refs from archived repos
+    status: done
     blocked_by: phase-7-archive-source-repos
 
   - id: phase-8b-deployment-api-ui
