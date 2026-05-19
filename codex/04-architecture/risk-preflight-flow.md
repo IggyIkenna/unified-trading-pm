@@ -418,4 +418,4 @@ not on individual SCALE_DOWN events.
 - Layer 4 venue-side ErrorAction: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Capital-at-risk ceiling composition: [capital-efficiency-patterns.md](capital-efficiency-patterns.md)
 - Plan-of-record:
-  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md)
+  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md)

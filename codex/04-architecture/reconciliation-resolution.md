@@ -49,7 +49,7 @@ fill model). Per CLAUDE.md `Batch = Live`: _"execution alpha = live fills P&L âˆ
 ### Comparison keys
 
 Both sides emit rows partitioned by `pipeline_mode` (batch / paper / live) per
-[`pipeline-mode-partition.md`](pipeline-mode-partition.md). Matching is on:
+[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md). Matching is on:
 
 - **`(strategy_id, instrument, timestamp_bucket)`** â€” primary diff key (timestamp_bucket = bar granularity, e.g. 1m / 1h
   depending on the stage).

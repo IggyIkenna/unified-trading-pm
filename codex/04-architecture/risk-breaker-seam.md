@@ -197,9 +197,9 @@ operator-unkilled, subsequent Layer 2 SCALE_DOWNs start a fresh window.
 
 The operator ratified Framing 2 ("distinct enums with escalation seam") over Framing 1 ("unified single enum") on
 2026-05-10. The decision is recorded in
-[`risk_simulations_limits_alerting_2026_05_10.md` Phase 7.E](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md#phase-7--codex-ssots-day-12-05-ai-day)
+[`risk_simulations_limits_alerting_2026_05_10.md` Phase 7.E](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md#phase-7--codex-ssots-day-12-05-ai-day)
 and
-[`disaster_recovery_circuit_breakers_2026_05_10.md` Phase 8.F](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md#phase-8--codex-ssots-day-12-05-ai-day).
+[`disaster_recovery_circuit_breakers_2026_05_10.md` Phase 8.F](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md#phase-8--codex-ssots-day-12-05-ai-day).
 This doc is co-owned by both plans — risk plan Phase 7.E ships the doc; DR plan Phase 8.F cross-references it; both
 plans cite the seam in their `## Cross-plan coordination` sections.
 
@@ -212,5 +212,5 @@ plans cite the seam in their `## Cross-plan coordination` sections.
   [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Layer 4 ErrorAction taxonomy: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Co-owned plans:
-  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md) +
-  [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
+  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md) +
+  [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md)

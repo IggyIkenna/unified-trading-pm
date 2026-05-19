@@ -16,7 +16,7 @@ last_reviewed: 2026-05-17
 > asset_groups × `wallets-prod` + `wallets-staging` KeyRings) in `asia-northeast1`, 90-day auto-rotation, IAM Decrypter
 > bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only. **End-to-end smoke test PASSED**:
 > encrypt + decrypt round-trip on staging CMK returned matching plaintext. Issue doc closed at
-> [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
+> [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/archive/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
 >
 > **🟢 POD / Elysium client scope clarified 2026-05-12** — see
 > [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md).

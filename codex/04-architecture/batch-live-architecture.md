@@ -376,7 +376,7 @@ layer adds (or loses) relative to the idealised fill. Computed as:
 
 > **AMM matching-engine fidelity gate (codex audit EX-17 2026-05-12)**: the simulated-fill side of `execution_alpha`
 > must stay within tolerance of on-chain `Swap` events for the May-23 cutover archetypes. Owner-plan:
-> [`plans/active/defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md)
+> [`plans/active/defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md)
 > Phases 2 + 8C. Continuous-verification path: golden-set harness at
 > [`amm-slippage-simulation.md`](./amm-slippage-simulation.md) § "Golden test set harness" runs in execution-service
 > `scripts/quality-gates.sh` against the per-pool snapshot fixtures; tolerance gate fails the matching-engine vs

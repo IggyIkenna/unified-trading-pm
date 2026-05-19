@@ -271,7 +271,7 @@ Layer 2 SCALE_DOWNs start a fresh rolling-window for the seam.
 In addition to venue-rejection-rate sliding-windows (the classic state machine above) and risk-controller seam events
 (per [`risk-breaker-seam.md`](risk-breaker-seam.md)), circuit breakers consume a third input axis: **per-state-surface
 reconciler drift events**. The
-[`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
+[`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md)
 Phase 3 ships 8 reconcilers, each emitting typed drift events that the matching `CircuitBreakerId` subscribes to.
 
 | Reconciler                                             | What it diffs                                                                                      | Drift event feeds breaker                                                                            |

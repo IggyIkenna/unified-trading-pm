@@ -24,7 +24,7 @@ payload + consumer. Codified here so future designs reuse the matching mechanism
 
 Both mechanisms compose with `ApiKeyReloader` / `start_domain_config_reloaders` — "service is effectively a config"
 applies uniformly. Reference: Sweep 3 of
-[`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
+[`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
 
 ---
 

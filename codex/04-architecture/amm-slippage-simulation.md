@@ -10,7 +10,7 @@ last_reviewed: 2026-05-17
 > (defi_simulation_realism_2026_05_10 Phase 9A).
 
 This doc is the architecture-side companion to
-[`defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md). It declares the
+[`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md). It declares the
 mathematical models + their input shapes + their validation thresholds for every simulation primitive. The plan ships
 the implementation; this doc locks the contract.
 
@@ -1488,7 +1488,7 @@ per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT b
 
 ## Cross-references
 
-- Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/active/defi_simulation_realism_2026_05_10.md) — owns
+- Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) — owns
   implementation.
 - Plan:
   [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)

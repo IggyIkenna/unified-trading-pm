@@ -315,7 +315,7 @@ Plan:
 - VM tarball deployment:
   [`../05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
-- Live pipeline architecture: [`live-pipeline-architecture.md`](live-pipeline-architecture.md)
+- Live pipeline architecture: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
 - Plan-of-record:
   [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)

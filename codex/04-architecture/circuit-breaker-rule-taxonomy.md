@@ -84,7 +84,7 @@ group by which cutover archetype primarily uses them.
 | `CLOCK_SKEW_MS`              | Local clock vs venue ts skew ≥ threshold ms (timestamp-mismatch correctness risk). |
 
 **Adding a new breaker** (review-blocking checklist per
-[`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)):
+[`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md)):
 
 1. Append the identifier to `CircuitBreakerId` (UAC `canonical/crosscutting/circuit_breaker.py`).
 2. Add a `BreakerConfig` entry to **each applicable** per-archetype registry seed
@@ -350,4 +350,4 @@ The 4-set strategy behaviours are service-side decisions on top of the bus event
 - Per-archetype registries:
   `unified_api_contracts/registry/circuit_breakers/{carry_staked_basis,arbitrage_price_dispersion}.py`.
 - Plan:
-  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md).
+  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md).

@@ -342,5 +342,5 @@ Both ship in the same logical cycle — operator sees the recovery notification 
 - UAC SSOT: `unified_api_contracts.canonical.crosscutting.kill_switch` (UAC@a7a99b5).
 - UTL SSOT: `unified_trading_library.kill_switch.bus` (predates DR plan; audited in Phase 0.C).
 - Plan:
-  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/active/disaster_recovery_circuit_breakers_2026_05_10.md)
+  [`disaster_recovery_circuit_breakers_2026_05_10.md`](../../plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md)
   Phase 2 (bus + audit-log) + Phase 7 (UI surface).

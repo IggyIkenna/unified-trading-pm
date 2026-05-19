@@ -92,7 +92,7 @@ The closed-set decision a rule's evaluator returns. Four values; each maps to a 
 
 The full event-emission cross-product is codified in the [§ 7 SSOT seam diagram](#§-7-ssot-seam-diagram-verbatim) below
 and at the
-[risk plan body](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10);
+[risk plan body](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10);
 reviewers must reject changes that drift the two.
 
 ### `RiskRuleTrigger` (UAC `canonical/crosscutting/risk_rule.py`)
@@ -138,7 +138,7 @@ registry-only change (no new trigger type needed).
 ## § 7 SSOT seam diagram (verbatim)
 
 The `RiskRuleConsequence` × 5-canonical-SSOT cross-product table is mirrored from
-[`risk_simulations_limits_alerting_2026_05_10.md` § "§ 7 SSOT reconciliation seam (Framing 1)"](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10).
+[`risk_simulations_limits_alerting_2026_05_10.md` § "§ 7 SSOT reconciliation seam (Framing 1)"](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md#-7-ssot-reconciliation-seam-framing-1--picked-2026-05-10).
 Reviewers reject any PR that drifts this table from the plan-body source-of-truth.
 
 | Consequence  | Risk-gates Layer       | Event(s) emitted                                                                                       | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md))                                       | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](../../plans/active/alerting_service_live_rules_2026_05_07.md))                                                                                                                                                      | Composes with strategy kill-switch behaviour (4-set)                                                                                                                 | AlertCode mapping (UAC@d00326d)                                                            |
@@ -170,6 +170,6 @@ Reviewers reject any PR that drifts this table from the plan-body source-of-trut
   [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Autonomous recovery (Layer 4 ErrorAction): [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Plan-of-record:
-  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md)
+  [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md)
 - Alerting-service rule registry:
   [plans/active/alerting_service_live_rules_2026_05_07.md](../../plans/active/alerting_service_live_rules_2026_05_07.md)
