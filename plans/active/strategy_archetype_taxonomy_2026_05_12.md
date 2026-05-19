@@ -482,6 +482,18 @@ Additional active references found and fixed in follow-on commits (PM@`d17236bb`
 All remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` references in the PM repo are now in historical change-log narratives
 (correct context; intentionally preserved). Full workspace audit confirmed clean.
 
+### Item V-6 — carry-and-yield family doc 6 → 10 archetypes ✅ SHIPPED 2026-05-19 slot-3
+
+`codex/09-strategy/architecture-v2/families/carry-and-yield.md` was last written when the family had 6 archetypes. After
+V-1 additions (uac@0196842) the canonical count is 10. Slot-3 updated (PM@`a28a315e`):
+
+- Frontmatter archetype count: `6` → `10` with V-1 provenance note
+- Alpha thesis: 6 bullets → 10 bullets (added CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP_INV, CARRY_STAKED_BASIS_DATED,
+  CARRY_RECURSIVE_BORROW_LENDING_ONLY)
+- Section heading: `## 6 Archetypes` → `## 10 Archetypes`
+- Archetype table: 6 rows → 10 rows with 4 new entries and their position structures / rates / when-to-use
+- Cross-references section: 4 new archetype doc links added
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
