@@ -489,8 +489,11 @@ todos:
 
   - id: g1-workspace-qg-sweep
     content: |
-      - [ ] [SCRIPT] P0. `bash scripts/quality-gates.sh` on every repo in `repo_gates`; UI vitest with `pool: forks`
+      - [x] ✅ **SHIPPED 2026-05-19 slot-6** [SCRIPT] P0. `bash scripts/quality-gates.sh` on every repo in `repo_gates`; UI vitest with `pool: forks`
         per workspace rule.
+        deployment-ui@ba009b2: ✅ ALL UI QG PASSED. deployment-api@ffd97c1: ✅ ALL QG PASSED (82.35% coverage).
+        utl@424e03af: ✅ ALL QG PASSED. Also fixed 2 pre-existing failures found during sweep:
+        CounterpartyRatioCapTrigger dispatch (UTL + deployment-api risk routes) + _EMPTY_REASON_KEYS drift (3 new UAC enum values).
 
   - id: g2-staging-d3
     content: |
