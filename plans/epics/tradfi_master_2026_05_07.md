@@ -380,12 +380,21 @@ mass-fail every existing futures row.
       dry-run + apply, per-blob CAS via `if_generation_match`, `2*workers` HTTP pool per workspace rules). **COMPLETED
       2026-05-14**: IS@db070da (script) + IS@e1ca983 (15 unit tests). Live GCS run DEFERRED pending workspace-wide Phase
       1B propagation; run on GCE VM per operator direction.
-- [ ] 🟡 **TRACKED-ELSEWHERE** [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands
+- [x] ✅ **TRACKED-ELSEWHERE** [SCRIPT] P0. **Coordination commit with hard-schema-enforcement**. The schema flip lands
       in tradfi-master scope first; the workspace-wide hard-schema enforcement (under
       `hard_schema_enforcement_2026_05_08` plan) ships AFTER to avoid mass-fail during transit. [REFRESH 2026-05-16 slot
       5: this item is the tradfi-side mirror of `hard_schema_enforcement_2026_05_08.md`. Coordination is the cross-plan
       banner discipline, not a code-action. Tradfi schema flip already landed (UAC@dd407ae + IS@db070da). Workspace-wide
       enforcement tracked in the other plan; flip closes when that plan's Phase 1B propagation lands.]
+      **CLOSED 2026-05-19 slot 4**: hard_schema_enforcement shipped all phases (model_validator uac@80aef10, per-row
+      record_failed IS@3c2da42, QG STEP 5.83 PM@f13a259f). Coordination gate satisfied.
+- [ ] **DEFERRED P3** [SCRIPT]. **InstrumentRecord.expiry full type-level nullable→required flip (FUTURE + OPTION)**
+      **MIGRATED FROM: `hard_schema_enforcement_2026_05_08.md` 2026-05-19.**
+      Model_validator approach (uac@80aef10) provides runtime enforcement. Full Pydantic type flip
+      (`datetime | None = None` → `datetime`) requires all downstream `InstrumentRecord` consumers to update call
+      sites + would be a breaking API change. Not May-23 critical path. **Run after**: (1) live GCS migration script
+      completes (IS@db070da `migrate_tradfi_expiry_schema.py`), (2) instruments-service adapter confirms zero-null
+      expiry rows in production. Then flip UAC `InstrumentRecord.expiry` field type + basedpyright catch of consumers.
 - [x] [VERIFY] P0. Post-migration smoke: spot-check 20 random parquets across 2018-2026 — `pq.read_schema(uri).names`
       includes all 5 hard-required futures fields (expiry/last-trading/first-notice/delivery/settlement); options-chain
       rows have non-null expiration. Manifest queries return ZERO rows where these fields are null for data_type ∈

@@ -21,7 +21,7 @@ overview: >-
 
 type: mixed
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -197,6 +197,19 @@ estimate_calibration_note: |
 > Child of: [`plans/epics/manifest_evolution_master_2026_05_08.md`](../epics/manifest_evolution_master_2026_05_08.md)
 >
 > This plan's phases land in gate(s): **G2** (cluster validation AST guard) + **G7** (workspace audit)
+
+## Deferred work — migrated to: `tradfi_master_2026_05_07.md`
+
+- **InstrumentRecord.expiry full type-level nullable→required flip** (FUTURE + OPTION): model_validator (uac@80aef10)
+  provides runtime enforcement. Full Pydantic type-level flip is a post-May-23 breaking change; migrated to
+  tradfi_master_2026_05_07.md as DEFERRED P3 item. 2026-05-19 slot 4.
+
+## Closure note (2026-05-19 slot 4)
+
+All 7 plan todos completed: uac@3157f45 (RecordFailedReason taxonomy) + uac@37d1ddb (CeFi/DeFi validators) +
+uac@80aef10 (FUTURE+OPTION validators) + instruments-service@3c2da42 (per-row record_failed) + uac@436bed0 (Sports
+fixture_id) + UTL@0caa08e3 (MalformedRowKeyError) + PM@429b64b2 (STEP 5.83 QG). Codex updated. One deferred item
+(full type-level expiry flip) migrated to tradfi_master P3. Plan status: active → done.
 
 # Hard Schema Enforcement at Write Boundary — Workspace-Wide
 
