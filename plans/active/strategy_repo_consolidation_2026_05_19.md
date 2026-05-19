@@ -507,13 +507,14 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       VM-launchers) that AREN'T templated. For each: (a) migrate the cron schedule to a strategy-service workflow with
       `--operation` axis, OR (b) confirm the workflow's purpose is obsolete post-merge. Slot 7 ownership; ~0.5 cal-day.
       Workflow templates SSOT: `unified-trading-pm/scripts/workflow-templates/`.
-- [x] ✅ **P3 NEW** [AGENT slot 6] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md / QUALITY_GATE_BYPASS_AUDIT.md
-      / IMPLEMENTATION_VERIFICATION.md / UV_AND_DATABASE_UPDATES.md / QUALITY_GATES_REPORT.md). Each source repo has
-      these. Post-merge decision: (a) `CHANGELOG.md` content prepended to `strategy-service/CHANGELOG.md` under "##
-      Consolidation 2026-05-19" heading; (b) `QUALITY_GATE_BYPASS_AUDIT.md` content merged into strategy-service's QGBA
-      per service-sub-package row; (c) `IMPLEMENTATION_VERIFICATION.md` + `QUALITY_GATES_REPORT.md` + ad-hoc per-repo
-      markdown — dropped (one-shot audit snapshots, not load-bearing). Slot 6 owns this as Phase 7 cleanup (~0.25
-      cal-day). — strategy-service@607a411b (CHANGELOG created + 158 QGBA rows merged from all 3 source repos; 2026-05-19)
+- [x] ✅ **P3 NEW** [AGENT slot 6] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
+      QUALITY_GATE_BYPASS_AUDIT.md / IMPLEMENTATION_VERIFICATION.md / UV_AND_DATABASE_UPDATES.md /
+      QUALITY_GATES_REPORT.md). Each source repo has these. Post-merge decision: (a) `CHANGELOG.md` content prepended to
+      `strategy-service/CHANGELOG.md` under "## Consolidation 2026-05-19" heading; (b) `QUALITY_GATE_BYPASS_AUDIT.md`
+      content merged into strategy-service's QGBA per service-sub-package row; (c) `IMPLEMENTATION_VERIFICATION.md` +
+      `QUALITY_GATES_REPORT.md` + ad-hoc per-repo markdown — dropped (one-shot audit snapshots, not load-bearing). Slot
+      6 owns this as Phase 7 cleanup (~0.25 cal-day). — strategy-service@607a411b (CHANGELOG created + 158 QGBA rows
+      merged from all 3 source repos; 2026-05-19)
 - [ ] **P3 NEW** [AGENT slot 7] Phase 8A addendum — GitHub repo settings (branch protection rules + required status
       checks + semver-agent config) on archived source repos do NOT auto-migrate. strategy-service ALREADY has its own
       settings — verify post-archive that strategy-service required-checks reflects the consolidated workflow set (no
@@ -532,6 +533,31 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
 | pyproject conflicts cause Phase 3 subtree-merge to fail or build flat-broken image | 🟡 Medium | Phase 0.5 (above) resolves explicitly BEFORE Phase 3                                                                                   |
 | Topic-prefix rename race during live trading window                                | 🟡 Medium | KEEP legacy prefixes for 7 days; named-successor plan for rename                                                                       |
 | Existing `strategy_service/models/{position,pnl}.py` layout confusion              | 🟢 Low    | P1 architectural resolution; not cutover-blocking                                                                                      |
+
+## Workflow audit — source repos going dark
+
+**Audited 2026-05-19 by slot 7 (Phase 8A).**
+
+Each source repo (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`) carries 9
+workflow files. Audit outcome:
+
+| Workflow file                   | Template-derived?        | Custom content                                      | Migration decision                                                                 |
+| ------------------------------- | ------------------------ | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `agent-audit.yml`               | No — per-repo custom     | Runs audit agent on THIS repo + quickmerge          | **Obsolete** — repo is archived; strategy-service has its own agent-audit.yml      |
+| `plan-alignment-agent.yml`      | No — per-repo custom     | PR advisory comment using Claude on THIS repo's PRs | **Obsolete** — repo is archived; strategy-service has its own plan-alignment-agent |
+| `major-bump-issue-handler.yml`  | Yes (PM template)        | No custom content                                   | **Goes dark with repo** — no migration needed; strategy-service uses same template |
+| `request-major-bump.yml`        | Yes (PM template)        | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+| `semver-agent.yml`              | Yes (PM template, .tmpl) | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+| `staging-lock-check.yml`        | Yes (PM template)        | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+| `tab-mirror-to-ldr.yml`         | Yes (PM template)        | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+| `update-dependency-version.yml` | Yes (PM template)        | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+| `workspace-qg.yml`              | Yes (PM template, .tmpl) | No custom content                                   | **Goes dark with repo** — strategy-service uses same template                      |
+
+**Result**: 0 custom workflows require migration to strategy-service. All 9 workflows in each source repo are either
+template-derived (go dark gracefully) or per-repo advisory tools that are obsolete once the repo is archived.
+
+**Branch protection audit** (strategy-service/main): required status check = `["quality-gates"]` only. No orphan
+references to archived-repo workflow names. No patch needed.
 
 ## Codex SSOT updates (mandatory enumeration — HARD RULE)
 

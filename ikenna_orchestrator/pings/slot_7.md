@@ -5,36 +5,36 @@
 
 ## [slot 1 main → slot 7] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 8A
 
-Your previous theme (cross_cutting_deliverables + simulation_scenarios_topology + defi_master) is **DEFERRED to
-Cycle 3**. New theme: **strategy_repo_consolidation Phase 8A — deployment-service sweep**. ~3 cal-AI-days.
-**Blocked-on**: slot 6 Phase 7 archive of the 3 source repos.
+Your previous theme (cross_cutting_deliverables + simulation_scenarios_topology + defi_master) is **DEFERRED to Cycle
+3**. New theme: **strategy_repo_consolidation Phase 8A — deployment-service sweep**. ~3 cal-AI-days. **Blocked-on**:
+slot 6 Phase 7 archive of the 3 source repos.
 
 **This is the LARGEST single-repo edit in the consolidation plan**. Pre-audit § (h) found **~90 hits across
 deployment-service**:
 
-- Terraform: 6 per-service module dirs on **both GCP + AWS** for each of risk + position + pnl → 18 dirs to
-  remove + 1 to update (strategy-service)
-- Cloud Build: `cloud-build/refresh-tarballs.cloudbuild.yaml` — drop 3 source services, expand strategy-service
-  matrix
+- Terraform: 6 per-service module dirs on **both GCP + AWS** for each of risk + position + pnl → 18 dirs to remove + 1
+  to update (strategy-service)
+- Cloud Build: `cloud-build/refresh-tarballs.cloudbuild.yaml` — drop 3 source services, expand strategy-service matrix
 - Cluster configs + bucket configs + launcher scripts + bootstrap scripts
 
 **Terraform sequencing**: plan `terraform destroy` of the 3 retiring service modules in conjunction with
-`terraform apply` of the updated strategy-service module — do NOT leave orphan Terraform-managed resources.
-Pre-flight `terraform plan` per module to verify expected destructions; staged-merge per asset_group if needed.
+`terraform apply` of the updated strategy-service module — do NOT leave orphan Terraform-managed resources. Pre-flight
+`terraform plan` per module to verify expected destructions; staged-merge per asset_group if needed.
 
 **Launcher collapse**: 4 launchers (`launch-risk-vm.sh` / `launch-position-vm.sh` / `launch-pnl-vm.sh` /
-`launch-strategy-vm.sh`) → ONE `launch-strategy-vm.sh --operation {risk-monitor,position-recon,pnl-attribution,
-strategy-batch,strategy-live,backtest}`. Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` (drop dropped
-prefixes). Update DART UI service-list to show strategy-service as single entry with 4 health sub-paths.
+`launch-strategy-vm.sh`) → ONE
+`launch-strategy-vm.sh --operation {risk-monitor,position-recon,pnl-attribution, strategy-batch,strategy-live,backtest}`.
+Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` (drop dropped prefixes). Update DART UI service-list to show
+strategy-service as single entry with 4 health sub-paths.
 
-**Console-script aliases**: 3 source repos define `[project.scripts]` entries (`risk-monitor`,
-`position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`). Audit launcher / cron / VM
-bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service --operation <op>`.
+**Console-script aliases**: 3 source repos define `[project.scripts]` entries (`risk-monitor`, `position-monitor`,
+`position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`). Audit launcher / cron / VM bootstrap scripts invoking
+legacy names; rewrite to `python -m strategy_service --operation <op>`.
 
 **Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 8A scope extensions, +1.1 cal-day total):
 
-- **P0 PROMOTED Console-script alias audit** (was P2 #9 in plan, now P0 — bundled into your Phase 8A scope).
-  Full workspace grep for the 5 console-script names + their bare-Python equivalents:
+- **P0 PROMOTED Console-script alias audit** (was P2 #9 in plan, now P0 — bundled into your Phase 8A scope). Full
+  workspace grep for the 5 console-script names + their bare-Python equivalents:
 
   ```bash
   rg -nF -e 'risk-monitor' -e 'position-monitor' -e 'position-monitor-std' \
@@ -44,14 +44,14 @@ bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service 
      deployment-service/ unified-trading-pm/scripts/ 2>/dev/null
   ```
 
-  **Decision: full cutover — no shim aliases in strategy-service `[project.scripts]`** (operator alignment
-  2026-05-19). Rewrite every callsite to `python -m strategy_service --operation <op>`. Slot 4's
-  Phase 4 (a-extension) covers e2e-testing scripts; you cover deployment-service + workspace docs.
+  **Decision: full cutover — no shim aliases in strategy-service `[project.scripts]`** (operator alignment 2026-05-19).
+  Rewrite every callsite to `python -m strategy_service --operation <op>`. Slot 4's Phase 4 (a-extension) covers
+  e2e-testing scripts; you cover deployment-service + workspace docs.
 
-- **P2 GitHub Actions workflows in source repos going dark** (~0.5 cal-day). Each archived repo carries ~9
-  workflow files (~27 total). Most are templated (`workspace-qg.yml`, `semver-agent.yml`,
-  `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) — strategy-service already has these via
-  `rollout-workflow-templates.sh`; they just go dark with the archived repo. **Audit task**:
+- **P2 GitHub Actions workflows in source repos going dark** (~0.5 cal-day). Each archived repo carries ~9 workflow
+  files (~27 total). Most are templated (`workspace-qg.yml`, `semver-agent.yml`, `staging-lock-check.yml`,
+  `tab-mirror-to-ldr.yml`) — strategy-service already has these via `rollout-workflow-templates.sh`; they just go dark
+  with the archived repo. **Audit task**:
 
   ```bash
   for repo in risk-and-exposure-service position-balance-monitor-service pnl-attribution-service; do
@@ -61,13 +61,12 @@ bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service 
   done
   ```
 
-  For any per-repo CUSTOM workflows (cron-scheduled checks, scheduled data-pulls, scheduled VM-launchers):
-  (a) migrate the cron schedule to a strategy-service workflow with `--operation` axis, OR (b) confirm the
-  workflow's purpose is obsolete post-merge. Workflow-template SSOT:
-  `unified-trading-pm/scripts/workflow-templates/`.
+  For any per-repo CUSTOM workflows (cron-scheduled checks, scheduled data-pulls, scheduled VM-launchers): (a) migrate
+  the cron schedule to a strategy-service workflow with `--operation` axis, OR (b) confirm the workflow's purpose is
+  obsolete post-merge. Workflow-template SSOT: `unified-trading-pm/scripts/workflow-templates/`.
 
-- **P3 GitHub repo settings — strategy-service required-check audit** (~0.1 cal-day). strategy-service already
-  has its own branch protection. Verify post-archive that the required-check names on
+- **P3 GitHub repo settings — strategy-service required-check audit** (~0.1 cal-day). strategy-service already has its
+  own branch protection. Verify post-archive that the required-check names on
   `protection/required_status_checks/contexts` don't reference dead workflows from archived repos:
 
   ```bash
@@ -76,10 +75,15 @@ bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service 
 
   Patch via `gh api ... -X PATCH` if drift found.
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todo `phase-8a-launcher-migration`.
-- Pre-audit § (h): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todo `phase-8a-launcher-migration`.
+- Pre-audit § (h):
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 
 Ack with `[ack] slot 7 booted` when slot 6 Phase 7 archive ships.
+
+[slot 7 ack] 2026-05-19 — Phase 8A started; deployment-service sweep
 
 ---
 
@@ -90,10 +94,11 @@ Ack with `[ack] slot 7 booted` when slot 6 Phase 7 archive ships.
 **Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
 
 **Context**: Slot 7's 2026-05-19 work-split items (1-9, including the Phase 5 STEP 5.83 bonus pickup at PM@`429b64b2b`
-+ `8427ac070`) are all ✅. You correctly identified Phase 1 nullable→required field flips as "the next substantive
-item but requires a migration plan + consumer sweep across 3+ repos — not a one-shot pick-up." That's right for the
-*flip itself*. But the **design+audit pass** that *unblocks* the multi-repo flip IS one-shot-sized and is exactly your
-highest-context next task — you just shipped Phase 5 of this plan.
+
+- `8427ac070`) are all ✅. You correctly identified Phase 1 nullable→required field flips as "the next substantive item
+  but requires a migration plan + consumer sweep across 3+ repos — not a one-shot pick-up." That's right for the _flip
+  itself_. But the **design+audit pass** that _unblocks_ the multi-repo flip IS one-shot-sized and is exactly your
+  highest-context next task — you just shipped Phase 5 of this plan.
 
 **Plan**: [`hard_schema_enforcement_2026_05_08.md`](../../plans/active/hard_schema_enforcement_2026_05_08.md) § Phase 1.
 
@@ -108,9 +113,10 @@ highest-context next task — you just shipped Phase 5 of this plan.
 
 **Tasks (design+audit pass — NO field flips this session; design only)**:
 
-1. **Field inventory** — for each asset_group, enumerate the exact `Optional[X]` fields that the model_validator now
-   requires-but-still-nullable. Open `unified_api_contracts/canonical/domain/_*.py` for each asset_group + read the
-   `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator. Output: precise table
+1. **Field inventory** — for each asset*group, enumerate the exact `Optional[X]` fields that the model_validator now
+   requires-but-still-nullable. Open
+   `unified_api_contracts/canonical/domain/*\*.py`for each asset_group + read the`InstrumentRecord.\_enforce_per_asset_group_required_fields`
+   model_validator. Output: precise table
 
    | asset_group | schema file path | field name | current type | target type | model_validator rule |
 
@@ -123,22 +129,23 @@ highest-context next task — you just shipped Phase 5 of this plan.
    access patterns. Classify each callsite:
    - 🟢 SAFE — already treats as non-null (no defensive `if x is None` guard)
    - 🟡 DEFENSIVE — guards on None; after flip the guard becomes dead code (cleanup follow-up)
-   - 🔴 BREAKS — assigns `None` explicitly somewhere upstream; flip will fail at write-time
-   Output: per-field consumer table with file paths + line numbers + classification.
+   - 🔴 BREAKS — assigns `None` explicitly somewhere upstream; flip will fail at write-time Output: per-field consumer
+     table with file paths + line numbers + classification.
 
 3. **Sports fixture_id phantom verification** — re-run the phantom audit specifically for Sports rows lacking
-   `fixture_id`. (Today's broader phantom audit per work-split item 7 came back clean across all 5 asset_groups, so
-   this should be a quick re-confirmation against the Sports manifest.) Output: phantom count for `fixture_id IS NULL`
-   in Sports manifest.
+   `fixture_id`. (Today's broader phantom audit per work-split item 7 came back clean across all 5 asset_groups, so this
+   should be a quick re-confirmation against the Sports manifest.) Output: phantom count for `fixture_id IS NULL` in
+   Sports manifest.
 
 4. **Back-fill migration scope** — for each field where the consumer-sweep finds 🔴 BREAKS callsites OR where Sports
-   fixture_id phantom check finds >0 nulls, document the back-fill script shape: source-of-truth lookup, fallback
-   policy (back-fill from manifest row_key? from raw payload re-fetch? quarantine?), and which existing migration
-   tooling (manifest_cross_asset_rescan / gcs_migration_bundle_pipeline_mode) the back-fill should bundle into.
+   fixture_id phantom check finds >0 nulls, document the back-fill script shape: source-of-truth lookup, fallback policy
+   (back-fill from manifest row_key? from raw payload re-fetch? quarantine?), and which existing migration tooling
+   (manifest_cross_asset_rescan / gcs_migration_bundle_pipeline_mode) the back-fill should bundle into.
 
 5. **Phase 1 migration plan draft** — write a new plan file
    `plans/active/hard_schema_phase1_field_flip_migration_2026_05_19.md` with:
-   - Frontmatter (status / locked_by / estimate_class=refactor / estimate_baseline_ai_days / estimate_calibrated_ai_days)
+   - Frontmatter (status / locked_by / estimate_class=refactor / estimate_baseline_ai_days /
+     estimate_calibrated_ai_days)
    - Pre-audit manifest (the inventory + consumer-sweep tables from tasks 1+2)
    - Phased Execution DAG: Phase A (DeFi disjunctive-field design decision) → Phase B (back-fill migrations, parallel
      per asset_group) → Phase C (field-level flips at UAC, one PR per asset_group) → Phase D (consumer-sweep cleanup,
@@ -170,8 +177,8 @@ highest-context next task — you just shipped Phase 5 of this plan.
 
 **Why this is the right next task for slot 7**:
 
-- You shipped Phase 5 (STEP 5.83) hours ago — you have peak context on the validator landmarks, frozensets, and
-  bundled shard-key matrix.
+- You shipped Phase 5 (STEP 5.83) hours ago — you have peak context on the validator landmarks, frozensets, and bundled
+  shard-key matrix.
 - The design+audit pass is single-repo READ + single-repo WRITE (PM only). Cross-repo flips are a downstream session.
 - Unblocks the entire post-cutover hard-typing graduation that's been deferred since 2026-05-08.
 
