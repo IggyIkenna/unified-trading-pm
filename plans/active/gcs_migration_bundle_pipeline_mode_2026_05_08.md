@@ -305,7 +305,7 @@ todos:
 
   - id: phase-2-5-ohlcv-legacy-filename-rename
     content: |
-      - [ ] [AGENT] P0. **Phase 2.5 — OHLCV legacy filename → per-instrument rename** (GAP-2.3 from
+      - [x] ✅ [AGENT] P0. **Phase 2.5 — OHLCV legacy filename → per-instrument rename** (GAP-2.3 from
         `code_freeze_migrate_backfill_sequencing_2026_05_10.md`).
         SEQUENTIAL after Phase 2. Bundles into the same single-walk migration pass — per CLAUDE.md
         "Single-walk discipline (HARD RULE)" added 2026-05-19.
@@ -350,8 +350,8 @@ todos:
         `ticks.parquet` for OHLCV data must be updated to dynamic `{instrument_id}.parquet`. Audit confirmed
         (2026-05-19) that current features-* readers only use `ticks.parquet` for intentionally-bundled types —
         no fix required today. Revisit if new MTDS OHLCV readers are added.
-    status: open
-    note: "GAP-2.3 from code_freeze plan. Added 2026-05-19 slot-3 per work_split_2026_05_19_ikenna.md."
+    status: done
+    note: "GAP-2.3 from code_freeze plan. Added 2026-05-19 slot-3 per work_split_2026_05_19_ikenna.md. Shipped unified-trading-pm@916742464."
 
   - id: phase-3-execution-plan-and-vm-launch
     content: |
@@ -777,8 +777,8 @@ Per phase — see each todo. Plan-level final gate:
 
 ## DONE-2026-05-08 — Tab 3 (gcs-migration-manifest-tab) shipped
 
-Tab 3 of [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this session.
-Phases shipped on `live-defi-rollout`:
+Tab 3 of [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this
+session. Phases shipped on `live-defi-rollout`:
 
 | Phase / Item                                                 | Commit(s)                                                                       | Notes                                                                                              |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
