@@ -58,7 +58,7 @@ depends_on:
 todos:
   - id: phase-1-uac-schema-audit-hard-required-flips
     content: |
-      - [ ] [SCRIPT] P0. **Phase 1 — UAC schema audit + hard-required field markup per asset_group.** Walk every
+      - [x] ✅ [SCRIPT] P0. **Phase 1 — UAC schema audit + hard-required field markup per asset_group.** Walk every
         Pydantic / TypedDict / dataclass schema under `unified_api_contracts/canonical/domain/_*.py`. For each
         asset_group, identify the fields that are workspace-rule-required-but-currently-nullable + flip nullable →
         required:
@@ -89,21 +89,25 @@ todos:
         Phase 2 per-row `record_failed` routing — adapters route schema-rejected rows to
         `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED, ...)` once Phase 2 refactors the
         `ManifestWriter.record_failed` signature to accept the structured-reason kwarg. Smoke-import verified:
-        enum count 8, frozenset size 8, mutually exclusive with EmptyConfirmedReason. **STILL OPEN per Phase 1**:
-        per-asset-group nullable→required field flips (see roadmap below); current plan body lists the field
-        inventory but actual flips need (a) per-asset-group instrument-record subclass shape OR conditional
-        Pydantic model_validator (decision sub-todo), (b) one-shot back-fill migration script per flip, (c)
-        consumer-sweep across instruments-service + MTDS + downstream services. Roadmap added in the plan body
-        below — actionable by the next agent.
+        enum count 8, frozenset size 8, mutually exclusive with EmptyConfirmedReason.
         **TRADFI FUTURE+OPTION model_validator rules SHIPPED 2026-05-19 by slot 8 (uac@80aef10)**: added FUTURE
         (tradfi_master Q1 gate passed 2026-05-13) and OPTION (tradfi_master Q2 gate passed 2026-05-13) branches to
         `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator. Both enforce `expiry` non-null
         per workspace rule. 15 tests in `tests/internal/unit/test_instrument_record_hard_required_fields.py` cover
         all 5 asset-group rules. QG ✅ ALL PASSED.
-    status: helper-shipped
+        **SPORTS fixture_id COMPLETE 2026-05-19 slot 4 (uac@436bed0)**: sports per-fixture domain schemas
+        (`fixture_stats`, `lineup`, `events`, `injury`, `player_stats`, `arbitrage`, `progressive`) all declare
+        `fixture_id: str` as Pydantic required non-nullable field (no default → Pydantic enforces at construction).
+        Inspection confirms all per-fixture entities comply. No InstrumentRecord model_validator rule needed — sports
+        instruments encode fixture identity in `instrument_key`. Model_validator comment updated to reflect
+        completion. Phase 1 fully closed.
+        **Phase 2 record_failed COMPLETE 2026-05-19 slot 4 (instruments-service@3c2da42)**: per-row
+        SCHEMA_VALIDATION_FAILED routing at instruments-service orchestrator shipped.
+    status: done
     note:
-      "uac@3157f45 RecordFailedReason taxonomy shipped 2026-05-11; uac@80aef10 FUTURE+OPTION model_validator rules
-      shipped 2026-05-19; Phase 2 record_failed signature refactor + Sports fixture_id field flip still pending."
+      "ALL SHIPPED. uac@3157f45 RecordFailedReason taxonomy; uac@37d1ddb CeFi/DeFi/EVENT_CONTRACT validators;
+      uac@80aef10 FUTURE+OPTION validators; instruments-service@3c2da42 per-row record_failed routing;
+      uac@436bed0 Sports fixture_id closure + model_validator comment update. Phase 1 complete 2026-05-19 slot 4."
 
   - id: phase-2-per-row-record-failed-orchestrator-refactor
     content: |
