@@ -77,8 +77,11 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    [`heartbeat_cli.py`](../../../deployment-service/deployment_service/vm/heartbeat_cli.py), and optional self-delete
    when `VM_SHUTDOWN_ON_COMPLETION=true` (see § Observability & Lifecycle). **Do not** assume SSH or manual instance
    delete for routine runs.
-8. **Same region as GCS data**: `ZONE=asia-northeast1-c` for all data-pipeline VMs. Cross-region transfer cost + latency
-   makes this non-negotiable.
+8. **Same region as GCS data**: `ZONE=asia-northeast1-c` (default) for all data-pipeline VMs. Cross-region transfer
+   cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in `asia-northeast1-b`
+   or `asia-northeast1-a` — same region, zero cross-region egress. NEVER fall back to a different region (e.g.
+   `us-central1`). Incident: 2026-05-19 defi-2022 was briefly created in `us-central1-a` before being caught and moved
+   back to `asia-northeast1-b`.
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
 Violating any of these means you're doing something off-pattern — document why in the launcher script header.
@@ -320,9 +323,9 @@ wrapper — not per-launcher one-offs.
 
 ### Post-launch verification — T+10min check (codified 2026-05-18)
 
-**Rule (from CLAUDE.md "No fire-and-forget VM launches"):** A VM is not "launched" until it has been verified at
-T+10 minutes post-`gcloud instances create`. A successful `gcloud` API response only means GCP accepted the create
-request — it does not confirm the VM booted, the startup script ran, or the workload is emitting heartbeats.
+**Rule (from CLAUDE.md "No fire-and-forget VM launches"):** A VM is not "launched" until it has been verified at T+10
+minutes post-`gcloud instances create`. A successful `gcloud` API response only means GCP accepted the create request —
+it does not confirm the VM booted, the startup script ran, or the workload is emitting heartbeats.
 
 **Required check at T+10min:**
 
@@ -354,13 +357,13 @@ gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.
   `/var/log/syslog | grep startup-script`.
 - `TERMINATED` within 10min → workload crashed at startup. Read `EXIT_STATUS` + full `run.log`.
 
-**Why 10 minutes:** startup script installs Python, pulls tarballs, and starts the workload. On a standard `n1-standard-4`
-with a cold image and a 120MB tarball, boot-to-first-heartbeat is typically 4-7 minutes. 10 minutes provides margin for
-slow GCS pulls without burning excessive agent turn time.
+**Why 10 minutes:** startup script installs Python, pulls tarballs, and starts the workload. On a standard
+`n1-standard-4` with a cold image and a 120MB tarball, boot-to-first-heartbeat is typically 4-7 minutes. 10 minutes
+provides margin for slow GCS pulls without burning excessive agent turn time.
 
-**Enforcement:** CLAUDE.md § "No fire-and-forget VM launches (CRITICAL)" prohibits declaring a VM
-launched without this check. Agent turns that post `gcloud instances create` and immediately report "VM launched" without
-a T+10min verification step are non-compliant — the operator is expected to reopen the agent turn and demand the check.
+**Enforcement:** CLAUDE.md § "No fire-and-forget VM launches (CRITICAL)" prohibits declaring a VM launched without this
+check. Agent turns that post `gcloud instances create` and immediately report "VM launched" without a T+10min
+verification step are non-compliant — the operator is expected to reopen the agent turn and demand the check.
 
 ### Workload identity — VM metadata keys
 

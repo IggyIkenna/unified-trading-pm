@@ -168,6 +168,9 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
   segment must be in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`.
+  **Zone**: default `asia-northeast1-c`. STOCKOUT fallback = `asia-northeast1-b` or `asia-northeast1-a` (same region).
+  NEVER fall back to another region (e.g. `us-central1`) — all GCS data is in asia-northeast1; cross-region egress
+  adds cost and latency and is caught during T+10min zone audit.
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
