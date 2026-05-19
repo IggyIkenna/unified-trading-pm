@@ -49,6 +49,39 @@ The following services have been removed or consolidated as part of the post-tra
 
 ---
 
+## Planned Deprecation — 2026-05-23 Consolidation (IN-FLIGHT)
+
+The following 5 repos are being consolidated into 2 target repos pre-2026-05-23 cutover, mirroring the
+features-service precedent (2026-05-08).
+
+### Strategy consolidation (3 repos → `strategy-service` in-place)
+
+| Source repo                         | Status                       | Target sub-package                  | Plan                                                                            |
+| ----------------------------------- | ---------------------------- | ----------------------------------- | ------------------------------------------------------------------------------- |
+| `risk-and-exposure-service`         | PLANNED-ARCHIVE 2026-05-19   | `strategy_service/risk/`            | `plans/active/strategy_repo_consolidation_2026_05_19.md`                        |
+| `position-balance-monitor-service`  | PLANNED-ARCHIVE 2026-05-19   | `strategy_service/position/`        | `plans/active/strategy_repo_consolidation_2026_05_19.md`                        |
+| `pnl-attribution-service`           | PLANNED-ARCHIVE 2026-05-19   | `strategy_service/pnl/`             | `plans/active/strategy_repo_consolidation_2026_05_19.md`                        |
+
+Target architecture SSOT: `04-architecture/strategy-service-architecture.md` (status: stub until Phase 9).
+
+### ML consolidation (2 repos → new `ml-service`)
+
+| Source repo             | Status                       | Target sub-package           | Plan                                                              |
+| ----------------------- | ---------------------------- | ---------------------------- | ----------------------------------------------------------------- |
+| `ml-training-service`   | PLANNED-ARCHIVE 2026-05-19   | `ml_service/training/`       | `plans/active/ml_repo_consolidation_2026_05_19.md`                |
+| `ml-inference-service`  | PLANNED-ARCHIVE 2026-05-19   | `ml_service/inference/`      | `plans/active/ml_repo_consolidation_2026_05_19.md`                |
+
+Target architecture SSOT: `04-architecture/ml-service-architecture.md` (status: stub until Phase 9).
+
+**Soft freeze (both consolidations)**: no new public-API surfaces, no new top-level packages, no module renames
+in any of the 5 source repos until Phase 7 archive lands. Internal bugfixes + test work continue. Cross-plan
+banner coordination per `codex/05-infrastructure/plan-aware-merge-resolution.md`.
+
+**Auto-flip to `BLOCKED-CUTOVER`** if Phase 6 parity slips — sub-packages remain merged (correctness preserved),
+source repos remain alive un-archived, archive deferred post-cutover. No late-binding hacks.
+
+---
+
 ## Archived Documentation
 
 Archived documentation for these services can be found in:
