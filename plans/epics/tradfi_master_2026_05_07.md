@@ -323,6 +323,13 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       covering older dates — they are honest absence, not noise. The earlier "2,211 abandoned" framing was
       pre-VIX-source-layering; that framing is stale per the CLAUDE.md "VIX 15m source layering" SSOT.
 
+- [ ] [SCRIPT] P2. **TradFi 5,212 legacy-blank apply-flips run** — `reconcile_legacy_blank_to_typed_reason
+      --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run 2026-05-17) confirmed upgrade logic correct (0
+      uncertain cases): 5,099 rows `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` +
+      113 rows `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Use `launch-manifest-recon-all-vm.sh`
+      with `--apply-flips` variant or a separate VM. **MIGRATED FROM:
+      `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md`** (§ "TradFi Side-Finding").
+
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
 
 - [x] [AGENT] P1. Per-venue completion %: CME ES, CME MES, CBOE VIX, NYSE ETFs, NASDAQ ETFs. Surface to deployment-ui. —

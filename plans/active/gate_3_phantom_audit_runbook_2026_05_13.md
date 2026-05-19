@@ -264,7 +264,7 @@ would upgrade if `--apply-flips` were passed:
 **Required action**: Run `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a VM.
 
 **Status**:
-`- [ ] [DEFERRED] P2. TradFi 5,212 legacy-blank apply-flips run — use launch-manifest-recon-all-vm.sh with --apply-flips variant or launch a separate vm. Successor: tradfi_master_2026_05_07.md.`
+`- [x] ✅ [MIGRATED] P2. TradFi 5,212 legacy-blank apply-flips run — migrated to tradfi_master_2026_05_07.md § "TradFi 5,212 legacy-blank apply-flips run" (pm@ca914697). pm@<flip-sha>.`
 
 **Why not done now**: The CSV report was on the VM (now self-deleted). A fresh VM run with `--apply-flips` is safe
 (scan-only already confirmed the upgrade logic is correct; 0 uncertain cases).
@@ -291,6 +291,14 @@ would upgrade if `--apply-flips` were passed:
 - **Readonly on manifest**: `--dry-run` flag prevents any manifest writes.
 - **Cluster-validation enabled**: Script validates instrument-cluster consistency for bundled data_types.
 - **Per-shard isolation** (if multi-worker): `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true` prevent manifest write races.
+
+---
+
+## Deferred work — migrated to
+
+| Item | Migrated To | Status |
+| ---- | ----------- | ------ |
+| TradFi 5,212 legacy-blank apply-flips run | `plans/epics/tradfi_master_2026_05_07.md` § "TradFi 5,212 legacy-blank apply-flips run" | `- [ ] [SCRIPT] P2` — awaiting VM run |
 
 ---
 
