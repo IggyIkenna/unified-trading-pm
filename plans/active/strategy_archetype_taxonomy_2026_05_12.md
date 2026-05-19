@@ -474,8 +474,13 @@ Slot-3 found and updated 6 codex docs + 1 active plan that still referenced the 
 - `codex/09-strategy/architecture-v2/category-instrument-coverage.md` ✅ — currency note + 57-count annotation added
 - `plans/active/compute_optimization_mock_data_2026_05_13.md` ✅ — deferred item archetype list
 
+Additional active references found and fixed in follow-on commits (PM@`d17236bb`, `e9e5f976`):
+
+- `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` ✅ — Family 2 definition + ground-truth note annotated
+- `plans/active/defi_master_2026_05_07.md` ✅ — IN-FLIGHT banner + ready-to-go-live list
+
 All remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` references in the PM repo are now in historical change-log narratives
-(correct context; intentionally preserved).
+(correct context; intentionally preserved). Full workspace audit confirmed clean.
 
 ## Composes with
 
