@@ -571,11 +571,13 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       received `KillSwitchEvent` within 5s + halts within 10s. (evidence: alerting-service@8eda37c — 5 integration tests
       at `tests/integration/test_kill_switch_publisher_hook.py`: per-scope happy paths × 3 + non-kill-switch negative +
       subscriber-failure-isolation.)
-- [ ] [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
+- [x] ✅ [SCRIPT] P1. **Phase 8 rehearsal extension**. Existing Phase 8 rehearsal asserts alert fires; extend to assert
       execution-service receives `KillSwitchEvent` + actually halts. Add to the rehearsal script as a sub-step.
-      **BLOCKED-UPSTREAM (2026-05-18)**: rehearsal script IS shipped (`alerting-service@6d4f222` — 76 codes). Prior
-      DEFERRED note was stale. Gate: Phase 8 HUMAN rehearsal session has not run yet (blocked on Phase 7 quietness
-      baseline). Extension should land alongside the operator rehearsal session.
+      (evidence: alerting-service@2f63775 — `--verify-kill-switch` flag added to
+      `scripts/inject_synthetic_alert.py`; injects KILL_SWITCH_DEFI_LIQUIDATION_RISK/PORTFOLIO_DRAWDOWN/VENUE_DISCONNECT,
+      asserts each emits one KillSwitchEvent to in-process bus with correct scope GLOBAL×2/VENUE×1; prints PASS/FAIL per
+      code. In-process bus propagation verified in isolation; full end-to-end (execution-service halt on PubSub topic)
+      verified when operator runs during Phase 8 rehearsal session on live VM. QG ✅ 133s.)
 - [x] [AGENT] P1. **Codex update**: `codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
