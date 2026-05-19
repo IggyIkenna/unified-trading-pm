@@ -206,8 +206,8 @@ Implementation lives at `execution-service/execution_service/yield_streams/` (NE
 ## See also
 
 - [pnl-attribution.md](./pnl-attribution.md) — CARRY decomposition + REWARD_REALISATION_SLIPPAGE factor definitions
-- [../../04-architecture/amm-slippage-simulation.md](../../../04-architecture/amm-slippage-simulation.md) — forward-yield
-  stochastic models (Phase 5A-E) + composite simulator code skeleton
+- [../../04-architecture/amm-slippage-simulation.md](../../../04-architecture/amm-slippage-simulation.md) —
+  forward-yield stochastic models (Phase 5A-E) + composite simulator code skeleton
 - `unified_api_contracts.internal.architecture_v2.restaking_rewards` — schema + registries
 - `unified_api_contracts.internal.architecture_v2.leveraged_legs` — LeveragedLegController consumes the realised total
   APY for `target_leverage_source="carry_quality"`

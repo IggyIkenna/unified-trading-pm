@@ -69,14 +69,14 @@ the legacy filter mapping can be deleted.
 > **Recount (AL-4 reconciliation 2026-05-12; updated 2026-05-13 for Phase 1.E).** The "39 codes as of 2026-05-07"
 > headline was last updated at the 2026-05-07 baseline; the closed set has since grown via shipments tracked below.
 > Authoritative member-count is the length of `AlertCode` in
-> `unified_api_contracts/canonical/crosscutting/alerting/codes.py`. Current breakdown (~69 members,
-> UAC@`086144e`) — re-derive from `codes.py` rather than this prose if you need an exact number:
+> `unified_api_contracts/canonical/crosscutting/alerting/codes.py`. Current breakdown (~69 members, UAC@`086144e`) —
+> re-derive from `codes.py` rather than this prose if you need an exact number:
 >
 > - **5** Kill-switch family (`KILL_SWITCH_*` — +1 `KILL_SWITCH_ORACLE_DIVERGENCE` Phase 1.E); **4** Circuit-breaker;
->   **8** DeFi-original + **5** DeFi recursive-borrow archetype (2026-05-12 Phase 8); **4** Margin ladder;
->   **8** Position/reconciliation; **5** Order; **3** Multi-leg; **4** Service health; **1** Cross-cloud egress;
->   **5** ML lifecycle (2026-05-08); **4** Risk-rule consequence (2026-05-10); **2** Kill-switch recovery (2026-05-10);
->   **4** Tick-staleness / connectivity-gap (2026-05-11); **7** DeFi operational (Phase 1.E 2026-05-13: `VENUE_HALTED`,
+>   **8** DeFi-original + **5** DeFi recursive-borrow archetype (2026-05-12 Phase 8); **4** Margin ladder; **8**
+>   Position/reconciliation; **5** Order; **3** Multi-leg; **4** Service health; **1** Cross-cloud egress; **5** ML
+>   lifecycle (2026-05-08); **4** Risk-rule consequence (2026-05-10); **2** Kill-switch recovery (2026-05-10); **4**
+>   Tick-staleness / connectivity-gap (2026-05-11); **7** DeFi operational (Phase 1.E 2026-05-13: `VENUE_HALTED`,
 >   `LENDING_POOL_PAUSED`, `LENDING_BORROW_CAP_REACHED`, `LENDING_UTILIZATION_HIGH`, `MARKET_DATA_STALE`,
 >   `GAS_PRICE_SPIKE`, `GAS_BUDGET_EXCEEDED`).
 
@@ -94,8 +94,8 @@ The closed-set sanity test `tests/internal/unit/test_alerting_taxonomy.py` enfor
 
 - **Kill-switch family (`KILL_SWITCH_*`)** — five codes: `KILL_SWITCH_DEFI_LIQUIDATION_RISK`,
   `KILL_SWITCH_PORTFOLIO_DRAWDOWN`, `KILL_SWITCH_VENUE_DISCONNECT`, `KILL_SWITCH_ML_MODEL_FAILURE` (added 2026-05-08),
-  `KILL_SWITCH_ORACLE_DIVERGENCE` (added 2026-05-13 Phase 1.E — GLOBAL scope, covers oracle deviation + staleness).
-  All `triggers_kill_switch=True`, all CRITICAL + PagerDuty + Telegram.
+  `KILL_SWITCH_ORACLE_DIVERGENCE` (added 2026-05-13 Phase 1.E — GLOBAL scope, covers oracle deviation + staleness). All
+  `triggers_kill_switch=True`, all CRITICAL + PagerDuty + Telegram.
 - **Circuit-breaker (`CIRCUIT_BREAKER_*`)** — `OPEN` (CRITICAL), `BACKOFF_ESCALATING` (HIGH), `DEGRADED` / `CLOSED`
   (WARN).
 - **DeFi-specific (`DEFI_*`)** — original 8: health-factor / weETH-depeg / aave-utilization-spike / funding-rate-flip /

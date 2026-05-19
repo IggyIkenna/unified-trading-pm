@@ -38,9 +38,9 @@ Default env binding per the 3-tier model:
 ## 1. Pricing numbers — codex markdown is the SSOT, no per-env divergence
 
 **Why no split:** Pricing anchor ranges live in one markdown table
-([pricing-building-blocks.md](../../14-customer-journeys/commercial-model/pricing-building-blocks.md)) + the richer IM / Reg Umbrella mechanics
-in sibling files. Numbers are identical across all environments — staging uses the same Tier A / Tier B tables as prod.
-Internal cost column stays codex-private per rule 08.
+([pricing-building-blocks.md](../../14-customer-journeys/commercial-model/pricing-building-blocks.md)) + the richer IM /
+Reg Umbrella mechanics in sibling files. Numbers are identical across all environments — staging uses the same Tier A /
+Tier B tables as prod. Internal cost column stays codex-private per rule 08.
 
 **Implementation:**
 
@@ -408,14 +408,16 @@ violation. The only legitimate per-env difference is the values in config + the 
 
 - [bucket-isolation-model.md](../../05-infrastructure/bucket-isolation-model.md) — 3-tier `mock | dev | prod` GCS
   pattern
-- [staging-odum-research-co-uk.md](../../14-customer-journeys/environments/staging-odum-research-co-uk.md) — staging env SSOT
-- [production-odum-research-com.md](../../14-customer-journeys/environments/production-odum-research-com.md) — prod env SSOT
+- [staging-odum-research-co-uk.md](../../14-customer-journeys/environments/staging-odum-research-co-uk.md) — staging env
+  SSOT
+- [production-odum-research-com.md](../../14-customer-journeys/environments/production-odum-research-com.md) — prod env
+  SSOT
 - [local-dev.md](../../08-workflows/local-dev.md) — local dev pattern + mock-mode axis matrix
 - [pricing-building-blocks.md](../../14-customer-journeys/commercial-model/pricing-building-blocks.md) — item #1 SSOT
 - [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
 - [`_ssot-rules/08-pricing-principles.md`](../../14-customer-journeys/_ssot-rules/08-pricing-principles.md)
-- [`_ssot-rules/12-service-family-scope-rules.md`](../../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md) —
-  `UserContext.audience` + custom-claims mapping
+- [`_ssot-rules/12-service-family-scope-rules.md`](../../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
+  — `UserContext.audience` + custom-claims mapping
 - [stage-3c-derivation-engine.md](stage-3c-derivation-engine.md) §1.2 — `cost()` formula + rule 07/08 enforcement
 - [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)
   — runtime topology SSOT

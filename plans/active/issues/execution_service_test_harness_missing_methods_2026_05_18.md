@@ -18,8 +18,9 @@ LDR state before any slot-2 lint changes. Two failure patterns:
    at `hybrid_optimal_spawn.py:120`. Method `_read_book_metrics` was added to the implementation but not to the test
    harness class `_HybridHarness` in the test file.
 
-2. `test_algo_impl_passive_aggressive.py` — `AttributeError: '_PAHCoreHarness' object has no attribute '_parse_candle_horizon_secs'`
-   at `passive_aggressive_core.py:129`. Same pattern — new method added without updating test harness.
+2. `test_algo_impl_passive_aggressive.py` —
+   `AttributeError: '_PAHCoreHarness' object has no attribute '_parse_candle_horizon_secs'` at
+   `passive_aggressive_core.py:129`. Same pattern — new method added without updating test harness.
 
 3. `test_algo_impl_adaptive_twap.py` — `TestATWAPParseParams::test_string_values_rejected` + others.
 

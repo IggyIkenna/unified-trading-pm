@@ -100,8 +100,8 @@ misconfiguration can never write to staging or prod.
 When an admin assigns entitlements via `/admin/users/[id]/modify` (which hits
 [app/api/v1/users/[uid]/route.ts](unified-trading-system-ui/app/api/v1/users/%5Buid%5D/route.ts) PUT, served by Admin
 SDK + Firestore), Firebase custom claims are set on the user's token. The UI reads those claims and renders the services
-portal sliced to match. See [cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) for the full
-mechanism.
+portal sliced to match. See [cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) for the
+full mechanism.
 
 The legacy `user-management-api` Cloud Run service that previously did this work is retired as of 2026-04-25. Its source
 is preserved at `archive/user-management-api-2026-04-25/` for reference but is **not the system of record** — all admin
@@ -110,6 +110,6 @@ operations route through the native `/api/v1/*` Next.js handlers in the portal.
 ## Related
 
 - [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — who can set up whom
-- [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) — what sliced entitlements look like
-  in the UI
+- [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) — what sliced entitlements look
+  like in the UI
 - [../playbooks/03-warm-prospect-demo.md](../playbooks/03-warm-prospect-demo.md) — demo-persona provisioning flow

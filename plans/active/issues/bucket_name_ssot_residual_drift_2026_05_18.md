@@ -28,7 +28,7 @@ verification. **Drift NOT yet at zero** across the three pattern families inspec
 | `new-sports-batting-services`       |     7 | External `footballbets` repo — NOT in workspace baseline yaml; out-of-scope                                                                                                                                     |
 | `unified-trading-system-ui`         |     4 | `context/api-contracts/...` mirror (UAC AST sync target) — not edited directly                                                                                                                                  |
 | `unified-trading-library`           |     1 | `bq_catalog.py:49` — multi-line DDL f-string with noqa on gs:// continuation line                                                                                                                               |
-| `instruments-service`               |     1 | `sports_dependency.py:100` — ✅ FIXED 2026-05-19 (slot 10): noqa moved to opener line — instruments-service@18b5ee6                                                                                              |
+| `instruments-service`               |     1 | `sports_dependency.py:100` — ✅ FIXED 2026-05-19 (slot 10): noqa moved to opener line — instruments-service@18b5ee6                                                                                             |
 | `orchastrator`                      |     1 | `server/gcs_sync.py:97` — orchestrator local-state upload; not in baseline yaml                                                                                                                                 |
 
 Full per-site listing with file:line refs is embedded in the plan body under § "2026-05-18 (slot 10) — workspace-wide

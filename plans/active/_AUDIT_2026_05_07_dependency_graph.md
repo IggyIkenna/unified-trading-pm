@@ -56,24 +56,24 @@ The 23 active plans (20 audited 2026-05-07 + 3 new keystones) cover everything.
 | Manifest write-side honesty (record_empty / record_failed / record_expected_empty)          | [`writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)                                        |
 | Manifest legacy-row migration (write-side back-fill)                                        | [`manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)                                                 |
 | Strategy engine v2 finalization (V1-RETIRE done, futures-roll + Unity UAT remain)           | [`strategy_architecture_v2_finalization_2026_04_19.plan.md`](../archive/strategy_architecture_v2_finalization_2026_04_19.plan.md)             |
-| DART operator UX (substantively shipped, 7 polish items)                                    | [`dart_ux_cockpit_refactor_2026_04_29.plan.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.plan.md)                                                  |
+| DART operator UX (substantively shipped, 7 polish items)                                    | [`dart_ux_cockpit_refactor_2026_04_29.plan.md`](../archive/dart_ux_cockpit_refactor_2026_04_29.plan.md)                                       |
 | **CeFi backfills, venues, instruments, date ranges**                                        | [`cefi_master_2026_05_07.md`](../epics/cefi_master_2026_05_07.md)                                                                             |
 | **DeFi backfills, protocols, chains, LST tokens, 6 perp-venue hedges**                      | [`defi_master_2026_05_07.md`](defi_master_2026_05_07.md)                                                                                      |
 | **TradFi backfills, ES.OPT 11-cluster, Databento, MDPS**                                    | [`tradfi_master_2026_05_07.md`](../epics/tradfi_master_2026_05_07.md)                                                                         |
 | **Sports backfills, 6 sources, leagues, fixture/odds/lineups/weather**                      | [`sports_master_2026_05_07.md`](../epics/sports_master_2026_05_07.md)                                                                         |
 | **Predictions / Polymarket / Kalshi canonical-question-group**                              | [`predictions_master_2026_05_07.md`](../epics/predictions_master_2026_05_07.md)                                                               |
 | **Shard granularity SSOT, data-status drilldown, deployment-build infra**                   | [`infrastructure_master_2026_05_07.md`](../epics/infrastructure_master_2026_05_07.md)                                                         |
-| Asset-group vocabulary (3 absorbed items remain)                                            | [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md)                                |
+| Asset-group vocabulary (3 absorbed items remain)                                            | [`venue_axis_asset_group_vocabulary_2026_04_25.plan.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md)                     |
 | Instruments-service + MTDS completion                                                       | [`instruments_and_market_tick_data_completion_2026_05_01.plan.md`](../archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md) |
 | MTDS per-instrument download API                                                            | [`mtds_per_instrument_download_api_2026_04_24.md`](mtds_per_instrument_download_api_2026_04_24.md)                                            |
-| Feature DAG UAC SSOT + LookaheadBiasError honesty                                           | [`feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`](../archive/feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md)              |
-| Features consolidation + drilldown (P2/P3)                                                  | [`features_consolidation_and_drilldown_2026_05_06.plan.md`](../archive/features_consolidation_and_drilldown_2026_05_06.plan.md)                          |
-| ML training feature-read perf (1-3 day pure-win)                                            | [`ml_training_feature_read_perf_2026_05_06.plan.md`](../archive/ml_training_feature_read_perf_2026_05_06.plan.md)                                        |
-| ML advanced pipeline (cross-asset-group ML scaffolding)                                     | [`consolidated_ml_advanced_pipeline_2026_04_15.plan.md`](../archive/consolidated_ml_advanced_pipeline_2026_04_15.plan.md)                                |
-| Cluster e2e operational validation (cross-cutting)                                          | [`consolidated_operational_validation_2026_04_15.plan.md`](../archive/consolidated_operational_validation_2026_04_15.plan.md)                            |
-| Strategy-and-UI consolidation (rescope candidate)                                           | [`consolidated_strategy_and_ui_2026_04_15.plan.md`](../archive/consolidated_strategy_and_ui_2026_04_15.plan.md)                                          |
+| Feature DAG UAC SSOT + LookaheadBiasError honesty                                           | [`feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md`](../archive/feature_dag_uac_ssot_and_features_coverage_2026_05_06.plan.md)   |
+| Features consolidation + drilldown (P2/P3)                                                  | [`features_consolidation_and_drilldown_2026_05_06.plan.md`](../archive/features_consolidation_and_drilldown_2026_05_06.plan.md)               |
+| ML training feature-read perf (1-3 day pure-win)                                            | [`ml_training_feature_read_perf_2026_05_06.plan.md`](../archive/ml_training_feature_read_perf_2026_05_06.plan.md)                             |
+| ML advanced pipeline (cross-asset-group ML scaffolding)                                     | [`consolidated_ml_advanced_pipeline_2026_04_15.plan.md`](../archive/consolidated_ml_advanced_pipeline_2026_04_15.plan.md)                     |
+| Cluster e2e operational validation (cross-cutting)                                          | [`consolidated_operational_validation_2026_04_15.plan.md`](../archive/consolidated_operational_validation_2026_04_15.plan.md)                 |
+| Strategy-and-UI consolidation (rescope candidate)                                           | [`consolidated_strategy_and_ui_2026_04_15.plan.md`](../archive/consolidated_strategy_and_ui_2026_04_15.plan.md)                               |
 | **NEW: Alerting live rules SSOT + thresholds + paging + rehearsal**                         | [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md)                                                      |
-| **NEW: deployment-api work-stream-A endpoints (`/api/backfill/launch` + `/api/vm/events`)** | [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md)                                          |
+| **NEW: deployment-api work-stream-A endpoints (`/api/backfill/launch` + `/api/vm/events`)** | [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md)                               |
 | **NEW: AWS dual-cloud buildout DeFi+CeFi-instruments first**                                | [`aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md)                                                            |
 
 ### Anomalies from §6 still open (not yet captured in any plan)
@@ -138,8 +138,8 @@ These are cross-cutting policies surfaced in this session. Should become CLAUDE.
 5. **Open `audit_followups_2026_05_07.md`** for the 7 anomalies above. ~1h author.
 6. **Land cloud-agnostic-script-pattern codex doc** (workspace rule #1 above). ~1h.
 7. **Implement `deployment-api` work-stream-A endpoints** per
-   [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md) 3-phase plan.
-   1-2 days.
+   [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md)
+   3-phase plan. 1-2 days.
 
 ### What this session shipped (close-out manifest)
 
@@ -169,8 +169,8 @@ The 3 operator action items flagged in §7 are now closed-or-scoped:
      SERVICE existed; the live-rules SSOT did not.
 
 2. **Deployment-api work-stream-A**: sub-plan landed as
-   [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md) (commit
-   `c6fe668d` by parallel agent). 3 phases — UAC types (`BackfillLaunchRequest`, `BackfillLaunchResult`,
+   [`deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md)
+   (commit `c6fe668d` by parallel agent). 3 phases — UAC types (`BackfillLaunchRequest`, `BackfillLaunchResult`,
    `VMLifecycleEvent`, `VMEventListResult`, `BackfillLaunchTaskKind` StrEnum), POST/GET endpoints, QG. Implementation
    can start immediately.
 

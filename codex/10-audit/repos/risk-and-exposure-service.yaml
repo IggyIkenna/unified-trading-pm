@@ -18,7 +18,9 @@ last_updated: "2026-05-18"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Active 2026-05-18: 6 kill-switch edge cases + AssetGroupMixedRuleFiring tests added; basedpyright drift 17->0 resolved. risk@5eb6c1e on live-defi-rollout."
+  readiness_note:
+    "Active 2026-05-18: 6 kill-switch edge cases + AssetGroupMixedRuleFiring tests added; basedpyright drift 17->0
+    resolved. risk@5eb6c1e on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -32,7 +34,8 @@ code_readiness:
     criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
     coverage_pct: null
     coverage_floor_pct: 70
-    evidence: "risk@5eb6c1e 2026-05-18: TestAssetGroupMixedRuleFiring 6 kill-switch edge cases; basedpyright 17->0 fixed"
+    evidence:
+      "risk@5eb6c1e 2026-05-18: TestAssetGroupMixedRuleFiring 6 kill-switch edge cases; basedpyright 17->0 fixed"
     notes: ""
 
   cr3_integration_tests:

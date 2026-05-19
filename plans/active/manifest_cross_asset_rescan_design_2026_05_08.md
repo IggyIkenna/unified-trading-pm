@@ -43,8 +43,8 @@ estimate_calibration_note: |
 
 # Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)
 
-> Item 5 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md). Tab 3 (Ikenna) designs the
-> rescan flip schema; Harsh Tab 4 runs the rescan VM (mechanical execution). The actual rescan Python script
+> Item 5 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md). Tab 3 (Ikenna)
+> designs the rescan flip schema; Harsh Tab 4 runs the rescan VM (mechanical execution). The actual rescan Python script
 > (`cross_asset_rescan.py`) is Harsh Tab 4's scope; this doc + the launcher are Tab 3's scope. Launcher script
 > (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) is queued as a follow-up; not shipped in this
 > session due to rate-limit cap on the launcher sub-agent.
@@ -208,11 +208,11 @@ parallel. Only the `--apply-flips` run requires strict ordering.
 - [x] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
-      **DONE 2026-05-19 (slot 2)** — deployment-service@880bc3a + instruments-service@5a0b115. Added `--pass 1|2|3|4|all`
-      flag, `wait_for_vm_stopped()` helper (polls TERMINATED, max 8h), sequential 4-pass orchestration when `--apply`
-      used without `--pass` (dry-run single-VM unchanged). `RESCAN_PASS` env var propagated to VM metadata; Python side
-      reads it to pass `--data-types` to reconciler. Stale "Blocker: launcher not yet shipped" note was false —
-      launcher existed; only ordering was missing.
+      **DONE 2026-05-19 (slot 2)** — deployment-service@880bc3a + instruments-service@5a0b115. Added
+      `--pass 1|2|3|4|all` flag, `wait_for_vm_stopped()` helper (polls TERMINATED, max 8h), sequential 4-pass
+      orchestration when `--apply` used without `--pass` (dry-run single-VM unchanged). `RESCAN_PASS` env var propagated
+      to VM metadata; Python side reads it to pass `--data-types` to reconciler. Stale "Blocker: launcher not yet
+      shipped" note was false — launcher existed; only ordering was missing.
 - [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
       before `--apply-flips`. (deployment-service@b5f25cc + @2ca80d5 2026-05-13): 5 VMs completed — Gate 3 results
       section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in

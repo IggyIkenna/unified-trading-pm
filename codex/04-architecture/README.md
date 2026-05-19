@@ -37,8 +37,8 @@ last_reviewed: 2026-05-17
   a fully independent unit of work.
 - **Client isolation**: one execution thread per client-strategy pair. Market data is shared; positions are never
   shared.
-- **Cloud-agnostic**: all services use `unified-trading-library` abstractions. `CLOUD_PROVIDER` env var switches
-  between GCP and AWS.
+- **Cloud-agnostic**: all services use `unified-trading-library` abstractions. `CLOUD_PROVIDER` env var switches between
+  GCP and AWS.
 - **Deterministic**: batch runs produce identical output for identical inputs. Live runs log enough state for post-hoc
   reconstruction.
 

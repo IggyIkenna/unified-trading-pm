@@ -209,4 +209,6 @@ def react_to_equity_change(self, new_equity_usd: Decimal) -> list[StrategyInstru
   [../cross-cutting/venue-account-coordination.md](../cross-cutting/venue-account-coordination.md)
 - Unity for sports MM: [../../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md)
 - Execution policy for MM quotes: [../cross-cutting/execution-policies.md](../cross-cutting/execution-policies.md)
-- **Subdir → family enforcement**: `strategy-service/strategy_service/engine/strategies/v2/defi_lp/` archetypes map to `MARKET_MAKING`; enforced by `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py` (strategy-service@f01d12d).
+- **Subdir → family enforcement**: `strategy-service/strategy_service/engine/strategies/v2/defi_lp/` archetypes map to
+  `MARKET_MAKING`; enforced by `tests/unit/engine/strategies/v2/test_subdir_family_alignment.py`
+  (strategy-service@f01d12d).

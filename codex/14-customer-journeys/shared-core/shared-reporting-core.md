@@ -8,9 +8,9 @@ scope: [engineer, admin, sales]
 > filtered per audience; component tree is the same. Cites [rule 03](../_ssot-rules/03-same-system-principle.md) +
 > [rule 05](../_ssot-rules/05-building-block-dimensions.md) blocks 1-3.
 
-**Engineering source** (authoritative): [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md).
-This doc re-frames the reporting surface for the experience layer and the commercial model; it does not duplicate the
-engineering content.
+**Engineering source** (authoritative):
+[../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md). This doc re-frames the reporting
+surface for the experience layer and the commercial model; it does not duplicate the engineering content.
 
 ## Why one surface
 

@@ -86,8 +86,8 @@ covers the lot after May-23.
       for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI tile in
       deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half). **DESIGN CALL 2026-05-14**: UI
       tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls
-      `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED-POST-CUTOVER** to deployment-ui slot
-      (slot 7 owns deployment-ui). Routed to slot 7 via ping 2026-05-18. Successor: slot_7.md ping
+      `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED-POST-CUTOVER** to deployment-ui slot (slot 7
+      owns deployment-ui). Routed to slot 7 via ping 2026-05-18. Successor: slot_7.md ping
       `[2026-05-18 14:05 UTC] [slot-4 → slot-7] SUCCESSOR ROUTING — Group G STALE_OPEN_ALERT dashboard`.
 
 ## Done definition

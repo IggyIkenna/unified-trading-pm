@@ -31,18 +31,18 @@ scope (avoids init cycles when cloud loads `UnifiedCloudConfig`). See `07-securi
 
 ## 1. Orthogonal axes (prefer one switch per concern)
 
-| Axis                   | Env var (`EnvVars`)      | Enum                | Default    | What it controls                                                                  |
-| ---------------------- | ------------------------ | ------------------- | ---------- | --------------------------------------------------------------------------------- |
-| Deployment tier        | `ENVIRONMENT`            | `EnvironmentMode`   | dev        | Config bucket, secret policy, dashboards                                          |
-| Data plane             | `DATA_MODE`              | `DataMode`          | real       | Mock generators vs real feeds/storage reads                                       |
-| Transport / job shape  | `RUNTIME_MODE`           | `RuntimeMode`       | live       | Streaming/event vs batch/historical jobs                                          |
-| Cloud stack            | `CLOUD_PROVIDER`         | `CloudProvider`     | gcp        | GCP vs AWS vs **local emulators**                                                 |
-| Venue environment      | `TESTNET_MODE`           | `TestnetMode`       | mainnet    | **Which** endpoint/chain per venue (resolved in UAC)                              |
-| Data availability      | `PHASE_MODE`             | `PhaseMode`         | phase3     | Pipelines that may be absent in early phases                                      |
-| Strategy maturity      | (persisted / config)     | `TestingStage` ⚠️   | MOCK       | **DEPRECATED** — use `OperationalMode` + `ExecutionTarget` + `ExecutionTrigger`; kept for 6 consumer call-sites; migrate via `decompose()` |
-| How the service trades | `OPERATIONAL_MODE`       | `OperationalMode`   | live       | live vs manual vs backtest vs **paper**                                           |
-| Execution destination  | (via `ExecutionTarget`)  | `ExecutionTarget`   | mainnet    | Where orders go: mainnet / testnet / fork / simulation — independent of mode      |
-| Instruction source     | (via `ExecutionTrigger`) | `ExecutionTrigger`  | automated  | Who generates the instruction: automated strategy vs manual operator              |
+| Axis                   | Env var (`EnvVars`)      | Enum               | Default   | What it controls                                                                                                                           |
+| ---------------------- | ------------------------ | ------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Deployment tier        | `ENVIRONMENT`            | `EnvironmentMode`  | dev       | Config bucket, secret policy, dashboards                                                                                                   |
+| Data plane             | `DATA_MODE`              | `DataMode`         | real      | Mock generators vs real feeds/storage reads                                                                                                |
+| Transport / job shape  | `RUNTIME_MODE`           | `RuntimeMode`      | live      | Streaming/event vs batch/historical jobs                                                                                                   |
+| Cloud stack            | `CLOUD_PROVIDER`         | `CloudProvider`    | gcp       | GCP vs AWS vs **local emulators**                                                                                                          |
+| Venue environment      | `TESTNET_MODE`           | `TestnetMode`      | mainnet   | **Which** endpoint/chain per venue (resolved in UAC)                                                                                       |
+| Data availability      | `PHASE_MODE`             | `PhaseMode`        | phase3    | Pipelines that may be absent in early phases                                                                                               |
+| Strategy maturity      | (persisted / config)     | `TestingStage` ⚠️  | MOCK      | **DEPRECATED** — use `OperationalMode` + `ExecutionTarget` + `ExecutionTrigger`; kept for 6 consumer call-sites; migrate via `decompose()` |
+| How the service trades | `OPERATIONAL_MODE`       | `OperationalMode`  | live      | live vs manual vs backtest vs **paper**                                                                                                    |
+| Execution destination  | (via `ExecutionTarget`)  | `ExecutionTarget`  | mainnet   | Where orders go: mainnet / testnet / fork / simulation — independent of mode                                                               |
+| Instruction source     | (via `ExecutionTrigger`) | `ExecutionTrigger` | automated | Who generates the instruction: automated strategy vs manual operator                                                                       |
 
 Axes are **intentionally independent**: e.g. `CLOUD_PROVIDER=local` with `DATA_MODE=real` can mean “real API calls but
 emulated GCS/PubSub” if that combination is supported for the service.

@@ -91,10 +91,10 @@ instruments_eligible:
 execution_policy_ref: event-driven-fast-v2
 
 # Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
-target_leverage: 1.0        # [1, 10]; hard-clamped by per-instrument vol cap at entry
-target_net_delta: 0.0       # net directional delta (0 = delta-neutral post-event)
-max_underlying_move_pct: 3.0  # vol-cap clamp: skip entry if realized move > X% in 1h window
-instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+target_leverage: 1.0 # [1, 10]; hard-clamped by per-instrument vol cap at entry
+target_net_delta: 0.0 # net directional delta (0 = delta-neutral post-event)
+max_underlying_move_pct: 3.0 # vol-cap clamp: skip entry if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

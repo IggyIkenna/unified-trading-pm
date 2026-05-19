@@ -133,7 +133,8 @@ Per-family CLI mode handlers (batch / live / target) inherit a single `ModeHandl
 
 **Convenience wrappers** (added 2026-05-18): `ModeHandler` now exposes `run_batch(**kwargs) -> bool` and
 `run_live(**kwargs) -> bool` as concrete helpers that delegate to `run(mode="batch", **kwargs)` /
-`run(mode="live", **kwargs)`. Callers that always operate in one mode can use these instead of passing `mode=` explicitly.
+`run(mode="live", **kwargs)`. Callers that always operate in one mode can use these instead of passing `mode=`
+explicitly.
 
 **Why lifted.** Pre-2026-05-08, the 4 families `volatility / delta_one / onchain / sports` each shipped a structurally-
 identical local `ModeHandler` ABC at `features_service/<family>/cli/handlers/base_handler.py`. Same `__init__` (logger
@@ -155,16 +156,16 @@ cleanup errors route through UTL `classify_and_emit_error` with `_service_name` 
 
 **Adoption status (2026-05-19, all 8 families on UTL ModeHandler):**
 
-| Family             | Status          | Pre-lift parent                                                               | Notes                                                                                                                                                       |
-| ------------------ | --------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `volatility`       | UTL ModeHandler | local `features_service.volatility.cli.handlers.base_handler.ModeHandler`     | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
-| `delta_one`        | UTL ModeHandler | local `features_service.delta_one.cli.handlers.base_handler.ModeHandler`      | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
-| `onchain`          | UTL ModeHandler | local `features_service.onchain.cli.handlers.base_handler.ModeHandler`        | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
-| `sports`           | UTL ModeHandler | local `features_service.sports.cli.handlers.base_handler.ModeHandler`         | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
-| `commodity`        | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-commodity-service"`; QG green @519625f7                  |
-| `cross_instrument` | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-cross-instrument-service"`; QG green @519625f7           |
-| `multi_timeframe`  | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` + `InfoHandler(ModeHandler)`; QG green @519625f7                                         |
-| `calendar`         | UTL ModeHandler | UTL `unified_trading_library.service_cli.BaseModeHandler` (pre-consolidation) | `CalendarBatchModeHandler(BaseModeHandler)` — already wired at consolidation (features-service@82abe801); Tab 4 confirmed alignment; QG green @519625f7     |
+| Family             | Status          | Pre-lift parent                                                               | Notes                                                                                                                                                   |
+| ------------------ | --------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `volatility`       | UTL ModeHandler | local `features_service.volatility.cli.handlers.base_handler.ModeHandler`     | Migrated features-service@7335bbef; local copy deleted                                                                                                  |
+| `delta_one`        | UTL ModeHandler | local `features_service.delta_one.cli.handlers.base_handler.ModeHandler`      | Migrated features-service@7335bbef; local copy deleted                                                                                                  |
+| `onchain`          | UTL ModeHandler | local `features_service.onchain.cli.handlers.base_handler.ModeHandler`        | Migrated features-service@7335bbef; local copy deleted                                                                                                  |
+| `sports`           | UTL ModeHandler | local `features_service.sports.cli.handlers.base_handler.ModeHandler`         | Migrated features-service@7335bbef; local copy deleted                                                                                                  |
+| `commodity`        | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-commodity-service"`; QG green @519625f7              |
+| `cross_instrument` | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-cross-instrument-service"`; QG green @519625f7       |
+| `multi_timeframe`  | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` + `InfoHandler(ModeHandler)`; QG green @519625f7                                     |
+| `calendar`         | UTL ModeHandler | UTL `unified_trading_library.service_cli.BaseModeHandler` (pre-consolidation) | `CalendarBatchModeHandler(BaseModeHandler)` — already wired at consolidation (features-service@82abe801); Tab 4 confirmed alignment; QG green @519625f7 |
 
 All 8 families are now on UTL ModeHandler. The previous "bare class" and "stays separate" design notes are superseded by
 Tab 4 (batch_live_symmetry_2026_05_10.md). If a future bare-class family is added, adoption follows the same pattern:
@@ -267,8 +268,8 @@ economic-events PubSub feed going live (Phase 7 scope). Pre-cutover, calendar fe
 ### ModeHandler lift status — Tab 4 COMPLETE (2026-05-19)
 
 Tab 4 (`batch_live_symmetry_2026_05_10.md`) shipped at features-service@954fe85c (QG green @519625f7). All 8 families
-are now on UTL ModeHandler — the adoption table above (§ Canonical ModeHandler ABC) reflects the final state. No
-further bare-class families remain. Bare-class compat-path hard-delete scheduled post-prod-deploy (Tab 4 item 7).
+are now on UTL ModeHandler — the adoption table above (§ Canonical ModeHandler ABC) reflects the final state. No further
+bare-class families remain. Bare-class compat-path hard-delete scheduled post-prod-deploy (Tab 4 item 7).
 
 ## Migration history
 
@@ -315,7 +316,8 @@ Plan:
 - VM tarball deployment:
   [`../05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
-- Live pipeline architecture: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
+- Live pipeline architecture:
+  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
 - ML lifecycle (downstream of features): [`ml-experiment-lifecycle.md`](ml-experiment-lifecycle.md)
 - Plan-of-record:
   [`../../plans/active/features_repo_consolidation_2026_05_08.md`](../../plans/active/features_repo_consolidation_2026_05_08.md)
@@ -327,10 +329,10 @@ Plan:
 Phase 1.3 of `features_service_qg_cleanup_2026_05_11.md` resolved all pre-existing test failures:
 
 - **7266 tests passing, 22 skipped, 0 failures** (features-service@`0e73bc90`)
-- Key fixes: calendar `LookaheadBiasError` (candle-close window + as_of=next-midnight); delta_one
-  polars→pandas conversion in `BaseFeatureCalculator`; onchain `log_event` patch target + batch-skip + LST methods;
-  sports `steam_detector` `%%s` format strings; `asyncio.get_event_loop()→asyncio.run()` across commodity / MTF /
-  volatility / cross_instrument; cross_instrument `event_logging` `Path.cwd()` resolution; `yfinance` import guard
+- Key fixes: calendar `LookaheadBiasError` (candle-close window + as_of=next-midnight); delta_one polars→pandas
+  conversion in `BaseFeatureCalculator`; onchain `log_event` patch target + batch-skip + LST methods; sports
+  `steam_detector` `%%s` format strings; `asyncio.get_event_loop()→asyncio.run()` across commodity / MTF / volatility /
+  cross_instrument; cross_instrument `event_logging` `Path.cwd()` resolution; `yfinance` import guard
   (`pytest.importorskip("lxml")`); codex-compliance `timedelta` module-level import.
-- All 8 families run the full unit + integration suite under the per-family test layout
-  (`PYTEST_UNIT_DIR="tests/"`) per `quality-gates.sh`.
+- All 8 families run the full unit + integration suite under the per-family test layout (`PYTEST_UNIT_DIR="tests/"`) per
+  `quality-gates.sh`.

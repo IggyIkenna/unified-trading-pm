@@ -71,7 +71,8 @@ The IM briefing transcludes or references (never duplicates):
   — regulatory framework
 - [../../07-security/compliance.md](../../07-security/compliance.md) — MiFID II / FCA events
 - [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md) — 4-catalogue pattern
-- [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md) — what the IM prospect will see in pb3b
+- [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md) — what the IM prospect will see in
+  pb3b
 
 ## IR presentations surfaced here
 

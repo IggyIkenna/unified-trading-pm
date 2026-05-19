@@ -137,7 +137,8 @@ Concepts that appear in multiple playbooks:
 - [catalogues.md](playbook-concepts/catalogues.md) — umbrella over the 4 catalogues (Data, Strategy, ML Model, Execution
   Algo)
 - [visibility-slicing.md](playbook-concepts/visibility-slicing.md) — admin-sees-all / demo-sliced / prod-sliced model
-- [client-reporting.md](playbook-concepts/client-reporting.md) — the ONE reporting surface used by both IM and Reg Umbrella
+- [client-reporting.md](playbook-concepts/client-reporting.md) — the ONE reporting surface used by both IM and Reg
+  Umbrella
 - [fund-org-hierarchy.md](playbook-concepts/fund-org-hierarchy.md) — org → Pooled/SMA → funds → clients
 - [sma-vs-pooled.md](playbook-concepts/sma-vs-pooled.md) — the structural decision point
 - [investor-relations.md](playbook-concepts/investor-relations.md) — board/plan/IM/platform/regulatory presentations

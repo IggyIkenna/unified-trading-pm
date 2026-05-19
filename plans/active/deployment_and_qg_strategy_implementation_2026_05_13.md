@@ -562,132 +562,101 @@ surface, not per repo:
       44 files. **Wave 32 (2026-05-17 slot-8)**: 30 new tests for `transfer_window_calculator` (\_resolve_league,
       \_compute_squad_stability, \_shock_starter_turnover_stability, compute_transfer_window_batch; all 38
       TRANSFER_WINDOW_COLUMNS verified). Also fixed pd.Index[int] runtime bug (not subscriptable in pandas 2.3.3).
-      Shipped at `features-service@38c27ff6`. 1274 calculator tests across 45 files.
-      **Wave 33 (2026-05-17 slot-8)**: 52 new tests for `referee_features` (_card_rate_band,
-      compute_referee_context, _default_referee_features, compute_referee_features_for_referee,
-      compute_referee_features_from_events, compute_referee_features, compute_referee_features_batch;
-      all 20 REFEREE_FEATURE_COLUMNS verified including timing/bias/VAR/strictness/consistency).
-      Shipped at `features-service@394430e1`. 1326 calculator tests across 46 files.
-      **Wave 34 (2026-05-17 slot-8)**: 66 new tests for `halftime_calculator` (_poisson_pmf, _apply_core_htft_rates,
-      _apply_score_state_features, _apply_ht_stat_features, _apply_ht_flag_features,
-      _compute_historical_ht_patterns, _compute_second_half_predictions, compute_halftime_features,
-      compute_halftime_for_fixture; all 100 HALFTIME_COLUMNS paths covered).
-      Shipped at `features-service@a26e82e5`. 1392 calculator tests across 47 files.
-      **Wave 35 (2026-05-17 slot-8)**: +12 tests extending `transfer_window_calculator` to cover
-      _shock_squad_structural_change (value/minutes/position-group turnover), _shock_new_signing_integration
-      (minutes-share, starters count + xi share), and _compute_shock_features dispatch (3 tests).
-      transfer_window_calculator.py coverage 62.4%→86.8%. Calculator aggregate 93.7%.
-      Shipped at `features-service@60bbc03f`.
-      **Wave 36 (2026-05-17 slot-8)**: +3 exception-handler tests for `injury_impact_calculator`
-      (home/away isolation paths + batch fallback). injury_impact_calculator.py 88.2%→100%.
-      Calculator aggregate 93.8%. Shipped at `features-service@78970e7d`.
-      **Wave 37 (2026-05-17 slot-8)**: +8 exception-handler tests for `bucketed_features_calculator`
-      covering all 8 `except (ValueError, TypeError, KeyError, IndexError)` branches in
-      compute_bucketed_features_batch (days_rest, history_depth, turnover, lineup_uncertainty, vig,
-      book_dispersion, fatigue, manager_change). bucketed_features_calculator.py 83.8%→100%.
-      Shipped at `features-service@f285e1d9`.
-      **Wave 38 (2026-05-17 slot-8)**: +6 exception/edge-case tests for `elo_calculator`
-      (NaN kickoff skip, season boundary regression, bad goals ValueError, missing home_team_col in
-      target league teams + output fallback, missing cols in history league loop, unhashable league_id
-      in rank lookup). elo_calculator.py 88.1%→100%. Shipped at `features-service@fe549fa0`.
-      **Wave 39 (2026-05-17 slot-8)**: +4 edge-case tests for `season_context`
-      (is_promo_relg_col lines 281-282+289, total_matchdays=0 else branch 303-305,
-      regime from fixtures_history 315-324+364, exception handler 400-402).
-      season_context.py 87.8%→100%. Shipped at `features-service@b7b19e25`.
-      **Wave 40 (2026-05-17 slot-8)**: +3 direction_agreement tests for `odds_prob_space`
-      (T-6h snap with bookmaker_key covers lines 212-254: loop body, ≥2 probs agreement,
-      all-zero-delta→1.0, <2 probs→NaN). odds_prob_space.py 83.0%→~95%+.
-      Shipped at `features-service@625f9711`.
-      **Wave 41 (2026-05-17 slot-8)**: +10 tests for `transfer_window_calculator` (both
-      has_lineups+has_transfers branches 310/312, new_signing_integration early return 399,
-      turnover_stability len<2 449 + empty-xi-sets 452, batch lineups 508-510/558-567,
-      timezone localize 530, shock data path 595-612, exception NaN row 620-636).
-      transfer_window_calculator.py 86.8%→90%+. Shipped at `features-service@5960cdeb`. 50 tests total.
-      **Wave 42 (2026-05-17 slot-8)**: +9 tests for `halftime_calculator` (possession branch
-      142-146, _apply_per_fixture_ht_form body 234-256 + call 338, event_enrichment body
-      268-287 + call 340, historical_ht_patterns early return 369, draw_hold_rate 487, +
-      1 new test_ht_draw_sets_draw_hold_rate in TestComputeHalftimeForFixture).
-      halftime_calculator.py 88.2%→100%. Aggregate 96.6%. Shipped `features-service@f6b8fff4`. 74 tests.
-      **Wave 43 (2026-05-17 slot-8)**: footystats_predictions 92.1%→100% — exception handler
-      133-135 patched via _safe_float side_effect. Shipped `features-service@aecd4c6a`. 17 tests.
-      **Wave 44 (2026-05-17 slot-8)**: squad_value 90.9%→100% + odds_velocity 91.5%→96.9%.
-      squad_value: home exception 167-168 + away 179-180 + batch exception 264-274 via patch.
-      odds_velocity: velocity NaN 79, opening-odds else 209, CLV missing-col 310-312, sharp CLV
-      missing-col 336-337. Aggregate 97.0%. Shipped `features-service@a6cf42ad`. 32+32 tests.
-      **Wave 45 (2026-05-17 slot-8)**: european_fatigue 265-276,282 exception fallback (2 tests)
-      + h2h 222 sort-by-date, 270-276 ht_goals_pct branches, 281-284 days_since_last (5 tests).
-      79 total tests passed. Shipped `features-service@dff33b0b`.
-      **Wave 46 (2026-05-17 slot-8)**: xg_decomposition 94.5%→100% — NaN-val return-0.0
-      branches in 6 helper funcs (104,138,155,172,189,206) + batch exception handler 437-442.
-      50 tests. Shipped `features-service@4fe4584a`.
-      **Wave 47 (2026-05-17 slot-8)**: odds_calculator 92.5%→100% — pinnacle diff (162),
-      sharp-money (175-177), asian_handicap_line (191), secondary market odds (201-203,205),
-      tier-consensus early return (266). 30 tests. Shipped `features-service@a5f035a8`.
-      **Wave 48 (2026-05-17 slot-8)**: halftime_multi_source miss-line coverage — detect_ht_break_minute
-      timer_seconds too-few-rows (line 41) + no-large-gap (line 47), pivot path line 215 via
-      team+timer_seconds format, all optional stat columns 245-301 (corners/fouls/dangerous_attacks/
-      attacks/shots_total/shots_off_target/dominance), team_fx.empty continue (line 442). +5 tests →
-      43 total. Shipped `features-service@86107989`.
-      **Wave 49 (2026-05-17 slot-8)**: advanced_stats_calculator 91.4%→100% — single test with
-      away_team_id not in team_stats covers all 12 miss lines: df_side.empty continue at
-      197/209/250/257/264/273/282/291/300, team_df.empty continue at 234, offsides lines 243-244.
-      34 tests. Shipped `features-service@1e488974`.
-      **Wave 50 (2026-05-17 slot-8)**: team_goals 92.1%→100% — _str_col missing-col (20),
-      set_piece_goals body (151-154), set_piece_conceded body (159-162), xg_against rolling
-      (209-210), possession rolling (230), goal_diff_season else (256). +6 tests → 32.
-      Shipped `features-service@6381d8ec`.
-      **Wave 51 (2026-05-17 slot-8)**: sfi_progressive_calculator 95.6%→100% — too-few-after-coerce
-      (206), collapsed<3 (251), NaN counter continue (271), counter_freeze no-valid-run (282),
-      opn==0 drift NaN (397), exception handler (480-482). +6 tests → 63.
-      Shipped `features-service@f0c5ac04`.
-      **Wave 52 (2026-05-17 slot-8)**: bench_sub_calculator 95.0%→100% — home_subs_count else
-      branch (152), exception handler defaults (257-264). +2 tests → 27.
-      Shipped `features-service@961382e1`.
-      **Wave 53 (2026-05-17 slot-8)**: replacement_model_calculator 95.0%→100% — uncertainty=0.0
-      when all unavailable positions map to UNKNOWN (174), exception handler (285-292). +2 tests → 35.
-      Shipped `features-service@9b8f433b`.
-      **Wave 54 (2026-05-17 slot-8)**: referee_features + replacement_model 100% — home_penalty_attribution
-      (324), successful call (445), exception handlers (447-454, 529-530). +4 tests → 56 referee_features.
-      Shipped `features-service@eb3fe8b1`.
-      **Wave 55 (2026-05-17 slot-8)**: goal_timing 98.7%→100% + formation_calculator 96.9%→100% +
-      weather_calculator 99.0%→100% — no-goal-events early return (225), no-goals-for-fixture
-      continue (253), exception handler (216-221), precipitation_mm in batch (164).
-      Aggregate: 98.9%→99.1%. Shipped `features-service@7b81fc56`.
-      **Wave 56 (2026-05-17 slot-8)**: player_lineup 97.9%→98.6% (line 130: all-NaN ages std→0.0;
-      lines 242+247 confirmed structurally unreachable defensive dead code) + poisson_xg
-      96.1%→100% (lines 232-233, 238-239: model_xg_col blend in batch; also fixed
-      fillna(ndarray) pandas 2.x incompatibility in source).
-      Aggregate: 99.1%→99.2%. Shipped `features-service@69149a2b`.
-      **Wave 57 (2026-05-17 slot-8)**: manager_calculator 97.1%→100% (_str_col dead-code
-      direct test 86-89; _compute_style_shift_attack empty-full_history 251;
-      _compute_style_shift_defense empty-full_history 289 + pre-xga-empty 295) +
-      team_form 97.4%→+% (_team_form_ppg_windows empty 240; _team_form_streaks empty 262;
-      _team_form_cards_corners red_cards 286-287; _team_form_rest_congestion empty-dates 307) +
-      venue_context 96.0%→+% (capacity_col 178-179; rest_col 244; cumulative_travel 252).
-      Shipped `features-service@2ca9f7c0`.
-      **Wave 58 (2026-05-17 slot-8)**: travel_calculator 96.3%→99.3% (_get_team_home_venue_coords
-      venue_counts.empty 82; _compute_cumulative_travel NaN-venue 131, unknown-venue 135,
-      NaN-lat-lon 140; line 303 confirmed dead code) + transfer_window_calculator 97.1%→99.2%
-      (_compute_squad_stability no-player-id 200; _most_recent_window_close passthrough 215;
-      _shock_starter_turnover_stability no-starters xi_sets<2 452; non-numeric fixture_id
-      629-630; lines 404, 642 confirmed dead code) + odds_prob_space line 221 confirmed
-      dead code (NaN bookmaker crashes classify_bookmaker upstream).
-      Aggregate: 99.2%→99.7%. Shipped `features-service@16ee1b46`.
-      **CEILING REACHED**: 1523 tests passing. Remaining 16 misses across 9 files are ALL
-      confirmed structurally unreachable defensive dead code (see Wave-analysis per-file
-      notes above). Aggregate 99.7% = effective maximum without source code modification.
-      32 files at 100%, 9 files at 98.4-99.6% (dead-code-only misses).
-      **delta_one test suite bug-fix (2026-05-17 slot-8)**: fixed 5 cross-family test bugs +
-      2 source bugs clearing 33 failures (0 → 1323 passing): (1) numba_kernels.py — remove
-      typing.cast() from all @njit functions (Numba nopython rejects typing.cast); (2)
-      smoke.py — fix _SMOKE_MATRIX_PATH from parent.parent/scripts/smoke_matrix.py →
-      parent.parent.parent/scripts/delta_one/smoke_matrix.py; (3) test_config.py — fix
-      config_path parents[2→3] (resolved to tests/ not repo root); (4) test_feature_freshness.py
-      — fix expected thresholds to match UAC FEATURE_FRESHNESS contract (max_age=300 warn=150,
-      not 120/60); (5) test_temporal.py — fix import path calendar.app → calendar.engine;
-      (6) test_persistence_event_details.py — add missing patch for _expected_unattempted.log_event;
-      (7) test_smoke_matrix.py — fix _REPO_ROOT parents[2→3] + path to scripts/delta_one/.
-      Shipped at `features-service@7b830849`.
+      Shipped at `features-service@38c27ff6`. 1274 calculator tests across 45 files. **Wave 33 (2026-05-17 slot-8)**: 52
+      new tests for `referee_features` (\_card_rate_band, compute_referee_context, \_default_referee_features,
+      compute_referee_features_for_referee, compute_referee_features_from_events, compute_referee_features,
+      compute_referee_features_batch; all 20 REFEREE_FEATURE_COLUMNS verified including
+      timing/bias/VAR/strictness/consistency). Shipped at `features-service@394430e1`. 1326 calculator tests across 46
+      files. **Wave 34 (2026-05-17 slot-8)**: 66 new tests for `halftime_calculator` (\_poisson_pmf,
+      \_apply_core_htft_rates, \_apply_score_state_features, \_apply_ht_stat_features, \_apply_ht_flag_features,
+      \_compute_historical_ht_patterns, \_compute_second_half_predictions, compute_halftime_features,
+      compute_halftime_for_fixture; all 100 HALFTIME_COLUMNS paths covered). Shipped at `features-service@a26e82e5`.
+      1392 calculator tests across 47 files. **Wave 35 (2026-05-17 slot-8)**: +12 tests extending
+      `transfer_window_calculator` to cover \_shock_squad_structural_change (value/minutes/position-group turnover),
+      \_shock_new_signing_integration (minutes-share, starters count + xi share), and \_compute_shock_features dispatch
+      (3 tests). transfer_window_calculator.py coverage 62.4%→86.8%. Calculator aggregate 93.7%. Shipped at
+      `features-service@60bbc03f`. **Wave 36 (2026-05-17 slot-8)**: +3 exception-handler tests for
+      `injury_impact_calculator` (home/away isolation paths + batch fallback). injury_impact_calculator.py 88.2%→100%.
+      Calculator aggregate 93.8%. Shipped at `features-service@78970e7d`. **Wave 37 (2026-05-17 slot-8)**: +8
+      exception-handler tests for `bucketed_features_calculator` covering all 8
+      `except (ValueError, TypeError, KeyError, IndexError)` branches in compute_bucketed_features_batch (days_rest,
+      history_depth, turnover, lineup_uncertainty, vig, book_dispersion, fatigue, manager_change).
+      bucketed_features_calculator.py 83.8%→100%. Shipped at `features-service@f285e1d9`. **Wave 38 (2026-05-17
+      slot-8)**: +6 exception/edge-case tests for `elo_calculator` (NaN kickoff skip, season boundary regression, bad
+      goals ValueError, missing home_team_col in target league teams + output fallback, missing cols in history league
+      loop, unhashable league_id in rank lookup). elo_calculator.py 88.1%→100%. Shipped at `features-service@fe549fa0`.
+      **Wave 39 (2026-05-17 slot-8)**: +4 edge-case tests for `season_context` (is_promo_relg_col lines 281-282+289,
+      total_matchdays=0 else branch 303-305, regime from fixtures_history 315-324+364, exception handler 400-402).
+      season_context.py 87.8%→100%. Shipped at `features-service@b7b19e25`. **Wave 40 (2026-05-17 slot-8)**: +3
+      direction_agreement tests for `odds_prob_space` (T-6h snap with bookmaker_key covers lines 212-254: loop body, ≥2
+      probs agreement, all-zero-delta→1.0, <2 probs→NaN). odds_prob_space.py 83.0%→~95%+. Shipped at
+      `features-service@625f9711`. **Wave 41 (2026-05-17 slot-8)**: +10 tests for `transfer_window_calculator` (both
+      has_lineups+has_transfers branches 310/312, new_signing_integration early return 399, turnover_stability len<2
+      449 + empty-xi-sets 452, batch lineups 508-510/558-567, timezone localize 530, shock data path 595-612, exception
+      NaN row 620-636). transfer_window_calculator.py 86.8%→90%+. Shipped at `features-service@5960cdeb`. 50 tests
+      total. **Wave 42 (2026-05-17 slot-8)**: +9 tests for `halftime_calculator` (possession branch 142-146,
+      \_apply_per_fixture_ht_form body 234-256 + call 338, event_enrichment body 268-287 + call 340,
+      historical_ht_patterns early return 369, draw_hold_rate 487, + 1 new test_ht_draw_sets_draw_hold_rate in
+      TestComputeHalftimeForFixture). halftime_calculator.py 88.2%→100%. Aggregate 96.6%. Shipped
+      `features-service@f6b8fff4`. 74 tests. **Wave 43 (2026-05-17 slot-8)**: footystats_predictions 92.1%→100% —
+      exception handler 133-135 patched via \_safe_float side_effect. Shipped `features-service@aecd4c6a`. 17 tests.
+      **Wave 44 (2026-05-17 slot-8)**: squad_value 90.9%→100% + odds_velocity 91.5%→96.9%. squad_value: home exception
+      167-168 + away 179-180 + batch exception 264-274 via patch. odds_velocity: velocity NaN 79, opening-odds else 209,
+      CLV missing-col 310-312, sharp CLV missing-col 336-337. Aggregate 97.0%. Shipped `features-service@a6cf42ad`.
+      32+32 tests. **Wave 45 (2026-05-17 slot-8)**: european_fatigue 265-276,282 exception fallback (2 tests) + h2h 222
+      sort-by-date, 270-276 ht_goals_pct branches, 281-284 days_since_last (5 tests). 79 total tests passed. Shipped
+      `features-service@dff33b0b`. **Wave 46 (2026-05-17 slot-8)**: xg_decomposition 94.5%→100% — NaN-val return-0.0
+      branches in 6 helper funcs (104,138,155,172,189,206) + batch exception handler 437-442. 50 tests. Shipped
+      `features-service@4fe4584a`. **Wave 47 (2026-05-17 slot-8)**: odds_calculator 92.5%→100% — pinnacle diff (162),
+      sharp-money (175-177), asian_handicap_line (191), secondary market odds (201-203,205), tier-consensus early return
+      (266). 30 tests. Shipped `features-service@a5f035a8`. **Wave 48 (2026-05-17 slot-8)**: halftime_multi_source
+      miss-line coverage — detect_ht_break_minute timer_seconds too-few-rows (line 41) + no-large-gap (line 47), pivot
+      path line 215 via team+timer_seconds format, all optional stat columns 245-301 (corners/fouls/dangerous_attacks/
+      attacks/shots_total/shots_off_target/dominance), team_fx.empty continue (line 442). +5 tests → 43 total. Shipped
+      `features-service@86107989`. **Wave 49 (2026-05-17 slot-8)**: advanced_stats_calculator 91.4%→100% — single test
+      with away_team_id not in team_stats covers all 12 miss lines: df_side.empty continue at
+      197/209/250/257/264/273/282/291/300, team_df.empty continue at 234, offsides lines 243-244. 34 tests. Shipped
+      `features-service@1e488974`. **Wave 50 (2026-05-17 slot-8)**: team_goals 92.1%→100% — \_str_col missing-col (20),
+      set_piece_goals body (151-154), set_piece_conceded body (159-162), xg_against rolling (209-210), possession
+      rolling (230), goal_diff_season else (256). +6 tests → 32. Shipped `features-service@6381d8ec`. **Wave 51
+      (2026-05-17 slot-8)**: sfi_progressive_calculator 95.6%→100% — too-few-after-coerce (206), collapsed<3 (251), NaN
+      counter continue (271), counter_freeze no-valid-run (282), opn==0 drift NaN (397), exception handler (480-482). +6
+      tests → 63. Shipped `features-service@f0c5ac04`. **Wave 52 (2026-05-17 slot-8)**: bench_sub_calculator 95.0%→100%
+      — home_subs_count else branch (152), exception handler defaults (257-264). +2 tests → 27. Shipped
+      `features-service@961382e1`. **Wave 53 (2026-05-17 slot-8)**: replacement_model_calculator 95.0%→100% —
+      uncertainty=0.0 when all unavailable positions map to UNKNOWN (174), exception handler (285-292). +2 tests → 35.
+      Shipped `features-service@9b8f433b`. **Wave 54 (2026-05-17 slot-8)**: referee_features + replacement_model 100% —
+      home_penalty_attribution (324), successful call (445), exception handlers (447-454, 529-530). +4 tests → 56
+      referee_features. Shipped `features-service@eb3fe8b1`. **Wave 55 (2026-05-17 slot-8)**: goal_timing 98.7%→100% +
+      formation_calculator 96.9%→100% + weather_calculator 99.0%→100% — no-goal-events early return (225),
+      no-goals-for-fixture continue (253), exception handler (216-221), precipitation_mm in batch (164). Aggregate:
+      98.9%→99.1%. Shipped `features-service@7b81fc56`. **Wave 56 (2026-05-17 slot-8)**: player_lineup 97.9%→98.6% (line
+      130: all-NaN ages std→0.0; lines 242+247 confirmed structurally unreachable defensive dead code) + poisson_xg
+      96.1%→100% (lines 232-233, 238-239: model_xg_col blend in batch; also fixed fillna(ndarray) pandas 2.x
+      incompatibility in source). Aggregate: 99.1%→99.2%. Shipped `features-service@69149a2b`. **Wave 57 (2026-05-17
+      slot-8)**: manager_calculator 97.1%→100% (\_str_col dead-code direct test 86-89; \_compute_style_shift_attack
+      empty-full_history 251; \_compute_style_shift_defense empty-full_history 289 + pre-xga-empty 295) + team_form
+      97.4%→+% (\_team_form_ppg_windows empty 240; \_team_form_streaks empty 262; \_team_form_cards_corners red_cards
+      286-287; \_team_form_rest_congestion empty-dates 307) + venue_context 96.0%→+% (capacity_col 178-179; rest_col
+      244; cumulative_travel 252). Shipped `features-service@2ca9f7c0`. **Wave 58 (2026-05-17 slot-8)**:
+      travel_calculator 96.3%→99.3% (\_get_team_home_venue_coords venue_counts.empty 82; \_compute_cumulative_travel
+      NaN-venue 131, unknown-venue 135, NaN-lat-lon 140; line 303 confirmed dead code) + transfer_window_calculator
+      97.1%→99.2% (\_compute_squad_stability no-player-id 200; \_most_recent_window_close passthrough 215;
+      \_shock_starter_turnover_stability no-starters xi_sets<2 452; non-numeric fixture_id 629-630; lines 404, 642
+      confirmed dead code) + odds_prob_space line 221 confirmed dead code (NaN bookmaker crashes classify_bookmaker
+      upstream). Aggregate: 99.2%→99.7%. Shipped `features-service@16ee1b46`. **CEILING REACHED**: 1523 tests passing.
+      Remaining 16 misses across 9 files are ALL confirmed structurally unreachable defensive dead code (see
+      Wave-analysis per-file notes above). Aggregate 99.7% = effective maximum without source code modification. 32
+      files at 100%, 9 files at 98.4-99.6% (dead-code-only misses). **delta_one test suite bug-fix (2026-05-17
+      slot-8)**: fixed 5 cross-family test bugs + 2 source bugs clearing 33 failures (0 → 1323 passing): (1)
+      numba_kernels.py — remove typing.cast() from all @njit functions (Numba nopython rejects typing.cast); (2)
+      smoke.py — fix \_SMOKE_MATRIX_PATH from parent.parent/scripts/smoke_matrix.py →
+      parent.parent.parent/scripts/delta_one/smoke_matrix.py; (3) test_config.py — fix config_path parents[2→3]
+      (resolved to tests/ not repo root); (4) test_feature_freshness.py — fix expected thresholds to match UAC
+      FEATURE_FRESHNESS contract (max_age=300 warn=150, not 120/60); (5) test_temporal.py — fix import path calendar.app
+      → calendar.engine; (6) test_persistence_event_details.py — add missing patch for \_expected_unattempted.log_event;
+      (7) test_smoke_matrix.py — fix \_REPO_ROOT parents[2→3] + path to scripts/delta_one/. Shipped at
+      `features-service@7b830849`.
 - [x] [AGENT] P1. Backtest / strategy engine coverage to 90% (strategy-service v2 archetypes). (strategy-service@4ede3b2
       — B-010: 38 new tests; total archetype coverage 88.37% -> 93.18%; basis_dated 59%->100%, staked_basis 82%->99%)
 - [ ] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. Error classification coverage to 95%. **🟡 BLOCKED 2026-05-17 (slot-8)**:

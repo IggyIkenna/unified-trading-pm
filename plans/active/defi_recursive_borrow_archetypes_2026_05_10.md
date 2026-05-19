@@ -1412,23 +1412,24 @@ day-grain; sample parquet probe confirms non-zero rates per day; instruments-ser
 instrument-day rows as alive. **Then** this plan's Phase 2+ unblocks.
 
 > **DE-DUPLICATED 2026-05-19** (operator-directed via audit pass): the 11 spec-hint todos previously retained here (UAC
-> `SUPPLY_APY`/`BORROW_APY`/`UTILISATION`/`LIQUIDATION_THRESHOLD`/`EMODE_PARAMS` enum addition, Bug 1 Aave V3 silent-zero
-> fix, Bug 2 Compound V3 multi-chain schema, Bug 3 `instruments-store-defi` 2022 metadata floor, 5 lending-rate adapters,
-> backfill VM launcher, run-to-completion verification) have been removed to eliminate structural-drift risk. They live
-> canonically in [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md)
-> Phase 1 (UAC SSOT) + Phase 3 (MTDS adapters + bug fixes + production backfill VM). Catalogue plan owns ship + verify;
-> this plan consumes via Phase 9 backtest replay. Rationale: prior pattern of carrying duplicate trackers across plans
-> caused the Phase 6 Hyperliquid attribution miss surfaced in the 2026-05-19 audit (per-plan checkbox drift when canonical
-> owner ships). Done definition + Full-execution criterion paragraphs that described the deleted spec-hint scope have also
-> been removed; see catalogue plan Phase 3. This plan's Phase 1 done-def is the Reframed Phase 1 done definition stated
-> above (catalogue Phase 3 manifest reports `captured` for Aave V3 ETH + Compound V3 ETH/ARB/BASE across 2022-03-01 →
+> `SUPPLY_APY`/`BORROW_APY`/`UTILISATION`/`LIQUIDATION_THRESHOLD`/`EMODE_PARAMS` enum addition, Bug 1 Aave V3
+> silent-zero fix, Bug 2 Compound V3 multi-chain schema, Bug 3 `instruments-store-defi` 2022 metadata floor, 5
+> lending-rate adapters, backfill VM launcher, run-to-completion verification) have been removed to eliminate
+> structural-drift risk. They live canonically in
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md) Phase 1 (UAC SSOT) +
+> Phase 3 (MTDS adapters + bug fixes + production backfill VM). Catalogue plan owns ship + verify; this plan consumes
+> via Phase 9 backtest replay. Rationale: prior pattern of carrying duplicate trackers across plans caused the Phase 6
+> Hyperliquid attribution miss surfaced in the 2026-05-19 audit (per-plan checkbox drift when canonical owner ships).
+> Done definition + Full-execution criterion paragraphs that described the deleted spec-hint scope have also been
+> removed; see catalogue plan Phase 3. This plan's Phase 1 done-def is the Reframed Phase 1 done definition stated above
+> (catalogue Phase 3 manifest reports `captured` for Aave V3 ETH + Compound V3 ETH/ARB/BASE across 2022-03-01 →
 > present).
 
 - [x] ✅ [SCRIPT] P0. Manifest reconciler one-shot: `instruments-service/scripts/reconcile_lending_indices_phantom.py` —
       apply CLAUDE.md manifest-phantom-audit pattern, classify any pre-existing `empty_confirmed` rows that should be
       `attempted_failed` post-Bug-1-fix. — 403 SOURCE_RETURNED_ZERO phantoms flipped in GCS manifest (AAVEV3=248,
-      COMPOUNDV3=124, SPARK=31; chains: ETH=93, ARB=62, OPT=62, BASE=62, BSC=31, AVAX=31, LINEA=31, POL=31);
-      GCS-only, no local code changes; apply-flips exit 0 2026-05-19
+      COMPOUNDV3=124, SPARK=31; chains: ETH=93, ARB=62, OPT=62, BASE=62, BSC=31, AVAX=31, LINEA=31, POL=31); GCS-only,
+      no local code changes; apply-flips exit 0 2026-05-19
 
 ## Phase 2 — UAC config schema extension (1 AI-day)
 

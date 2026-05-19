@@ -60,36 +60,38 @@ Ping slot-1 when Phase 2 is shipped (SHA + test output).
 
 ## [main → slot 10] 2026-05-17 ~21:35 UTC — Phase 2 DONE by parallel agent; proceed to Phase 3
 
-**Phase 2 shipped** (parallel agent): strategy-service@21209bd `feat(strategy): Phase 2
-HedgeRatioSnapshotWriter + on_tick wire-in`. PM flipped at PM@b1034cfe. All 4 Phase 2 items
+**Phase 2 shipped** (parallel agent): strategy-service@21209bd
+`feat(strategy): Phase 2 HedgeRatioSnapshotWriter + on_tick wire-in`. PM flipped at PM@b1034cfe. All 4 Phase 2 items
 checked in hedge_ratio_snapshot_persistence_2026_05_13.md.
 
 **Your remaining work** = Phase 3 only (2 open items):
-1. `pnl-attribution-service` reader: load `hedge_ratio_snapshots` parquets per archetype + date range
-   via UAC reader interface (plan item 140)
-2. Update `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 2 with `hedge_ratio_snapshots`
-   as upstream dependency (plan item 142)
+
+1. `pnl-attribution-service` reader: load `hedge_ratio_snapshots` parquets per archetype + date range via UAC reader
+   interface (plan item 140)
+2. Update `client_reporting_pnl_attribution_mvp_2026_05_10.md` Phase 2 with `hedge_ratio_snapshots` as upstream
+   dependency (plan item 142)
 
 After Phase 3: Phase 4 (codex + parent plan flip + archive — 3 quick script items).
 
-**Proceed immediately** — Phase 3 unblocks pnl-attribution Phase 2 consumer.
-Ping slot-1 when Phase 3 shipped (SHA + what was updated in client_reporting plan).
+**Proceed immediately** — Phase 3 unblocks pnl-attribution Phase 2 consumer. Ping slot-1 when Phase 3 shipped (SHA +
+what was updated in client_reporting plan).
 
 ---
 
 ## [main → slot 10] 2026-05-17 ~22:10 UTC — Phase 3 DONE ✅; Phase 4 DONE ✅ (archive gated)
 
-**Phase 3 DONE**: pnl-attribution-service@ee96d3c `feat(pnl-attribution): add read_hedge_ratio_snapshots
-reader to PnlDomainAdapter` — PM@93722417.
+**Phase 3 DONE**: pnl-attribution-service@ee96d3c
+`feat(pnl-attribution): add read_hedge_ratio_snapshots reader to PnlDomainAdapter` — PM@93722417.
 
 **Phase 4 DONE by slot-1-main** (PM@ba01b2d9):
-- Codex `amm-slippage-simulation.md` updated with FULLY SHIPPED banner (UAC@2fcb1bb +
-  strategy-service@21209bd + pnl-attribution@ee96d3c)
+
+- Codex `amm-slippage-simulation.md` updated with FULLY SHIPPED banner (UAC@2fcb1bb + strategy-service@21209bd +
+  pnl-attribution@ee96d3c)
 - `defi_simulation_realism` 6B-WIRE-IN DEFERRED note → RESOLVED 2026-05-17
 - Plan checkboxes 153+155 flipped ✅
 
-**Archive gated**: plan is `locked_by: live-defi-rollout` — operator must add `[unlock-plan]`
-before archival. Note in plan item 157.
+**Archive gated**: plan is `locked_by: live-defi-rollout` — operator must add `[unlock-plan]` before archival. Note in
+plan item 157.
 
 **Your hedge_ratio assignment is COMPLETE.** Well done — Phases 0-4 all shipped in one session.
 
@@ -102,11 +104,13 @@ before archival. Note in plan item 157.
 **Plan**: `promote_workflow_may23_cli_path_2026_05_10.md` — Phase U6: execution-service unhold path
 
 **What's already done** (context):
+
 - UI: `ManualTradeGateDialog` component ships (ui@13b94ca9) — approve/deny/timeout buttons, MANUAL_APPROVED /
   MANUAL_REJECTED events via deployment-api
 - strategy-service already emits instruction in `MANUAL` mode when `live_early` promote gate is active
 
 **Your task** — execution-service manual-pending queue + unhold path:
+
 1. When execution-service receives an instruction with `mode=MANUAL`, hold it in a per-archetype pending queue
    (in-memory dict keyed by `correlation_id` or `instruction_id`)
 2. Subscribe to `MANUAL_APPROVED` events from deployment-api event stream; on receipt:
@@ -118,8 +122,7 @@ before archival. Note in plan item 157.
    - Emit `MANUAL_CANCELLED` event with reason (`rejected` or `timeout`)
 4. Unit tests: 3 cases — approved-and-executed, rejected-and-dropped, timeout-and-dropped
 
-**QG**: `cd execution-service && bash scripts/quality-gates.sh` after changes.
-**Half-1+Half-2**: code commit immediately followed by `docs(plans):` checkbox flip.
+**QG**: `cd execution-service && bash scripts/quality-gates.sh` after changes. **Half-1+Half-2**: code commit
+immediately followed by `docs(plans):` checkbox flip.
 
-Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action.
-Ping slot-1 when shipped (SHA + QG result).
+Read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` before any action. Ping slot-1 when shipped (SHA + QG result).

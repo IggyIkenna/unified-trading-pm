@@ -21,8 +21,8 @@ weighting → child equity targets. Each child contributes equally to total port
 over the estimation window).
 
 Unlike `PORTFOLIO_MULTI_STRATEGY` (static weights), risk parity adapts weights dynamically: a child strategy that
-becomes more volatile automatically receives less equity; a child whose P&L stabilizes receives more. The
-rebalance fires on cadence and also when drift exceeds `rebalance_threshold`.
+becomes more volatile automatically receives less equity; a child whose P&L stabilizes receives more. The rebalance
+fires on cadence and also when drift exceeds `rebalance_threshold`.
 
 ## Position / flow
 
@@ -61,13 +61,13 @@ child_strategy_ids:
   - "CARRY_BASIS_PERP@uniswap-hyperliquid-eth-usdt-prod"
   - "STAT_ARB_PAIRS_FIXED@ibkr-goog-meta-daily-usd-prod"
 
-vol_lookback_days: 20              # trailing window for per-child P&L volatility estimate
-vol_estimation_frequency: DAILY    # how often to re-estimate σ_i (DAILY | INTRADAY_4H)
-rebalance_cadence: DAILY           # weight recomputation + directive re-emission cadence
-rebalance_threshold: 0.10          # intra-cadence rebalance if any weight drifts > 10%
-min_child_weight: 0.05             # floor: no child gets less than 5% equity
-max_child_weight: 0.60             # ceiling: no child gets more than 60% equity
-min_active_fraction: 0.5           # suspend if < 50% of children active
+vol_lookback_days: 20 # trailing window for per-child P&L volatility estimate
+vol_estimation_frequency: DAILY # how often to re-estimate σ_i (DAILY | INTRADAY_4H)
+rebalance_cadence: DAILY # weight recomputation + directive re-emission cadence
+rebalance_threshold: 0.10 # intra-cadence rebalance if any weight drifts > 10%
+min_child_weight: 0.05 # floor: no child gets less than 5% equity
+max_child_weight: 0.60 # ceiling: no child gets more than 60% equity
+min_active_fraction: 0.5 # suspend if < 50% of children active
 share_class: USD
 
 # Leverage + net-delta (universal):
@@ -90,9 +90,9 @@ Identical to `PORTFOLIO_MULTI_STRATEGY` — emits `AllocationDirective` only, no
 
 ## Relationship to Portfolio Allocator service
 
-Risk-parity at the strategy level is distinct from the Portfolio Allocator's `RISK_PARITY` allocator archetype
-(which operates at the client-level equity → strategy allocation layer). This archetype is a strategy-level
-risk-parity computation running INSIDE the portfolio sleeve. They can be stacked:
+Risk-parity at the strategy level is distinct from the Portfolio Allocator's `RISK_PARITY` allocator archetype (which
+operates at the client-level equity → strategy allocation layer). This archetype is a strategy-level risk-parity
+computation running INSIDE the portfolio sleeve. They can be stacked:
 
 ```
 Portfolio Allocator (RISK_PARITY archetype, client level)

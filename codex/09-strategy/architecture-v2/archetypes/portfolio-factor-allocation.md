@@ -21,9 +21,9 @@ allocates equity to child strategies whose realised factor exposures best match 
 sleeves where the operator must maintain specific factor tilts (e.g. "40% carry exposure, 30% momentum, 30% vol
 premium").
 
-Unlike risk parity (minimise risk concentration) or multi-strategy (fixed weights), factor allocation optimises
-for a specific **factor profile** — it allocates more equity to children that efficiently load on the target factors,
-and less to children with redundant or off-mandate exposures.
+Unlike risk parity (minimise risk concentration) or multi-strategy (fixed weights), factor allocation optimises for a
+specific **factor profile** — it allocates more equity to children that efficiently load on the target factors, and less
+to children with redundant or off-mandate exposures.
 
 ## Position / flow
 
@@ -50,13 +50,13 @@ and less to children with redundant or off-mandate exposures.
 
 ## Canonical factors
 
-| Factor | Definition | Data source |
-| --- | --- | --- |
-| `carry` | Funding rate + staking yield premium over risk-free | MTDS lending_indices + MTDS funding_rates |
-| `momentum` | 20-day risk-adjusted return per strategy | Strategy P&L events |
-| `vol_premium` | Realized vol vs implied vol spread | features-service volatility family |
-| `size` | AUM-normalized return (smaller strategies score higher per $ managed) | strategy-service equity state |
-| `quality` | Sharpe ratio over factor_lookback_days | strategy-service P&L attribution |
+| Factor        | Definition                                                            | Data source                               |
+| ------------- | --------------------------------------------------------------------- | ----------------------------------------- |
+| `carry`       | Funding rate + staking yield premium over risk-free                   | MTDS lending_indices + MTDS funding_rates |
+| `momentum`    | 20-day risk-adjusted return per strategy                              | Strategy P&L events                       |
+| `vol_premium` | Realized vol vs implied vol spread                                    | features-service volatility family        |
+| `size`        | AUM-normalized return (smaller strategies score higher per $ managed) | strategy-service equity state             |
+| `quality`     | Sharpe ratio over factor_lookback_days                                | strategy-service P&L attribution          |
 
 The factor set is declared in UAC `unified_api_contracts.canonical.crosscutting.factors.StrategyFactor` (enum).
 Non-registered factors → config-load-time error.
@@ -71,15 +71,15 @@ child_strategy_ids:
   - "STAT_ARB_PAIRS_FIXED@ibkr-goog-meta-daily-usd-prod"
   - "YIELD_STAKING_SIMPLE@lido-eth-usdt-prod"
 
-target_factor_exposures:           # must reference canonical StrategyFactor enum keys
+target_factor_exposures: # must reference canonical StrategyFactor enum keys
   carry: 0.40
   momentum: 0.20
   vol_premium: 0.30
   quality: 0.10
 
-factor_lookback_days: 60           # OLS regression window for factor loading estimation
-rebalance_cadence: WEEKLY          # factor re-estimation + directive re-emission
-rebalance_threshold: 0.08          # intra-cadence rebalance if factor exposure drifts > 8pp
+factor_lookback_days: 60 # OLS regression window for factor loading estimation
+rebalance_cadence: WEEKLY # factor re-estimation + directive re-emission
+rebalance_threshold: 0.08 # intra-cadence rebalance if factor exposure drifts > 8pp
 min_child_weight: 0.05
 max_child_weight: 0.50
 min_active_fraction: 0.5
@@ -97,13 +97,13 @@ Identical to `PORTFOLIO_MULTI_STRATEGY` — emits `AllocationDirective` only, no
 ## Risk / P&L attribution
 
 - **P&L** = weighted sum of child realized P&Ls.
-- **Factor attribution**: sleeve-level P&L decomposed into factor contributions via the same regression used for
-  weight computation. Attribution events emitted per factor per cadence tick.
+- **Factor attribution**: sleeve-level P&L decomposed into factor contributions via the same regression used for weight
+  computation. Attribution events emitted per factor per cadence tick.
 - **Risk gate**: fires at sleeve level on total equity drawdown.
 - **Model risk**: OLS loadings are estimates with noise; factor exposures can drift between rebalance windows.
   `rebalance_threshold` provides intra-window correction.
-- **Insufficient history guard**: children with < `factor_lookback_days` history receive `min_child_weight` until
-  their loading estimate is reliable.
+- **Insufficient history guard**: children with < `factor_lookback_days` history receive `min_child_weight` until their
+  loading estimate is reliable.
 
 ## Relationship to Portfolio Allocator service
 

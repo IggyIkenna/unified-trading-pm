@@ -244,8 +244,8 @@ realised_amount
 
 > ⚠️ **Rows marked with bold** (`CARRY_LENDING_SUPPLY`, `CARRY_LENDING_BORROW`, `CARRY_BASE_REBASING`, `GAS`) are
 > **proposed sub-factors not yet in the `PnLFactor` enum**. They are documented here to formalize the intent; adding
-> them requires a UAC PR per the closed-set process described in the enum docstring. Until the PR lands, code MUST
-> use `CARRY` for lending yield and `FEES` for gas (tagged at EXECUTION layer).
+> them requires a UAC PR per the closed-set process described in the enum docstring. Until the PR lands, code MUST use
+> `CARRY` for lending yield and `FEES` for gas (tagged at EXECUTION layer).
 
 | Factor                      | Computation                                                                                                                                                                                                                                                                                                                                          | Sign Convention                                         |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |

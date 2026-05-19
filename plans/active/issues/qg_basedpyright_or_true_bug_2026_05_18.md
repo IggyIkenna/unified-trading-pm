@@ -17,27 +17,28 @@ wait $BP_PID || true
 PYRIGHT_EXIT=$?
 ```
 
-With `|| true`, PYRIGHT_EXIT is **always 0** regardless of whether basedpyright found errors.
-The `if [ "$PYRIGHT_EXIT" -ne 0 ]` block that triggers `log_fail "Type check FAILED"` NEVER fires.
+With `|| true`, PYRIGHT_EXIT is **always 0** regardless of whether basedpyright found errors. The
+`if [ "$PYRIGHT_EXIT" -ne 0 ]` block that triggers `log_fail "Type check FAILED"` NEVER fires.
 
 The only remaining catch is the warnings check:
+
 ```bash
 WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
 ```
-This catches warnings but NOT errors. A repo with "16 errors, 0 warnings" passes QG as if
-type-checked clean.
 
-**Confirmed:** `batch-live-reconciliation-service` had 16 basedpyright errors (14 from pyarrow
-missing type stubs + 2 `reportAny` cast violations) — QG reported "✅ ALL QUALITY GATES PASSED"
-for all prior commits despite these errors. Fixed in batch-live-reconciliation@983e4ad.
+This catches warnings but NOT errors. A repo with "16 errors, 0 warnings" passes QG as if type-checked clean.
 
-**Root cause:** `|| true` was added to prevent `set -e` from killing the script when basedpyright
-exits non-zero. But it inadvertently also zeroed out `PYRIGHT_EXIT`.
+**Confirmed:** `batch-live-reconciliation-service` had 16 basedpyright errors (14 from pyarrow missing type stubs + 2
+`reportAny` cast violations) — QG reported "✅ ALL QUALITY GATES PASSED" for all prior commits despite these errors.
+Fixed in batch-live-reconciliation@983e4ad.
+
+**Root cause:** `|| true` was added to prevent `set -e` from killing the script when basedpyright exits non-zero. But it
+inadvertently also zeroed out `PYRIGHT_EXIT`.
 
 ## Why it matters
 
-- **All repos with basedpyright errors are silently passing type checks.** The zero-error type-check
-  guarantee that the QG is supposed to enforce does not hold.
+- **All repos with basedpyright errors are silently passing type checks.** The zero-error type-check guarantee that the
+  QG is supposed to enforce does not hold.
 - Repos that have type errors are shipping to `live-defi-rollout` without any CI gate.
 - Difficult to audit scope — need to run `basedpyright $SOURCE_DIR/` in every repo to find affected repos.
 
@@ -60,14 +61,14 @@ With `set -e`, `;` does NOT protect against non-zero intermediate commands — u
 { wait $BP_PID; PYRIGHT_EXIT=$?; } || true
 ```
 
-The `|| true` applies to the block; `PYRIGHT_EXIT=$?` always succeeds (assignment exit = 0),
-so the `|| true` is no-op but the inner `PYRIGHT_EXIT=$?` correctly captured the wait exit code.
+The `|| true` applies to the block; `PYRIGHT_EXIT=$?` always succeeds (assignment exit = 0), so the `|| true` is no-op
+but the inner `PYRIGHT_EXIT=$?` correctly captured the wait exit code.
 
-**Pre-fix sweep required:** Before landing the fix, scan all 26 active Python repos for
-basedpyright errors (`timeout 120 .venv/bin/basedpyright $SOURCE_DIR/`) and fix each one.
-Otherwise the QG fix will immediately break all repos with pre-existing errors.
+**Pre-fix sweep required:** Before landing the fix, scan all 26 active Python repos for basedpyright errors
+(`timeout 120 .venv/bin/basedpyright $SOURCE_DIR/`) and fix each one. Otherwise the QG fix will immediately break all
+repos with pre-existing errors.
 
-**Scope owned by slot 2** (workspace-wide audit). Batch-live-reconciliation already cleaned
-(983e4ad) — 0 errors after fix.
+**Scope owned by slot 2** (workspace-wide audit). Batch-live-reconciliation already cleaned (983e4ad) — 0 errors after
+fix.
 
 **Priority:** P1 — affects type safety guarantee for all 26 active repos.

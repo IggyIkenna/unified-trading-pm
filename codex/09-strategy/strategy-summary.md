@@ -418,9 +418,9 @@ historical; buy when cheap. Delta-hedged; P&L from vega + gamma scalping.
 **`VOL_SPREAD_STRUCTURES`** _(per-archetype doc pending)_ — Structured option-spread expressions of a vol view: bull
 spreads, bear spreads, condors, iron flies. Defined-risk vega expression.
 
-**`VOL_CARRY`** — [archetypes/vol-carry.md](architecture-v2/archetypes/vol-carry.md) Sell short-dated options
-(straddle / strangle / iron condor) + delta-hedge via underlying perp. Harvests persistent IV-over-RV premium at 7-21
-DTE tenors. Net carry = theta + vega_carry − gamma_hedge_cost − fees. Roll at ≤3 DTE to avoid pin risk.
+**`VOL_CARRY`** — [archetypes/vol-carry.md](architecture-v2/archetypes/vol-carry.md) Sell short-dated options (straddle
+/ strangle / iron condor) + delta-hedge via underlying perp. Harvests persistent IV-over-RV premium at 7-21 DTE tenors.
+Net carry = theta + vega_carry − gamma_hedge_cost − fees. Roll at ≤3 DTE to avoid pin risk.
 
 **`VOL_OVERLAY_COVERED_CALLS`** _(per-archetype doc pending)_ — Long underlying + short OTM calls. Income generation
 overlay on a long-only book. Common in TradFi equity overlays.

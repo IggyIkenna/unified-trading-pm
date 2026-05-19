@@ -87,27 +87,27 @@ net ≈ carry_pnl + theta_pnl − delta_hedge_cost − fees
 underlying: BTC
 venue: DERIBIT
 surface_model_ref: svi-btc-v3
-target_dte_entry: 14           # target DTE at entry (7-21 range)
-roll_before_expiry_dte: 3      # roll to next expiry at ≤3 DTE
-min_carry_threshold_vp: 3.0    # minimum (IV − RV_14d) in vol points to enter
-expression: straddle            # straddle | strangle | iron_condor | short_put_spread
-strangle_delta_target: 0.20    # for strangle: target option delta per wing (20d)
+target_dte_entry: 14 # target DTE at entry (7-21 range)
+roll_before_expiry_dte: 3 # roll to next expiry at ≤3 DTE
+min_carry_threshold_vp: 3.0 # minimum (IV − RV_14d) in vol points to enter
+expression: straddle # straddle | strangle | iron_condor | short_put_spread
+strangle_delta_target: 0.20 # for strangle: target option delta per wing (20d)
 max_vega_notional_usd: 50_000
-delta_hedge_band_pct: 0.05     # rehedge when |portfolio_delta| > 5% of vega_notional
+delta_hedge_band_pct: 0.05 # rehedge when |portfolio_delta| > 5% of vega_notional
 hedge_venue: DERIBIT
 hedge_instrument: "DERIBIT:PERPETUAL:BTC-PERPETUAL"
-take_profit_theta_pct: 0.50    # realize at 50% of initial premium collected
-stop_loss_vega_pct: 0.75       # exit if vega loss > 75% of premium collected
-iv_stop_rv_multiple: 1.5       # exit if 5d RV > 1.5× entry IV (vol regime change)
-high_vol_regime_iv_threshold: 0.80  # skip entry if ATM IV > 80% (BTC; tune per asset)
+take_profit_theta_pct: 0.50 # realize at 50% of initial premium collected
+stop_loss_vega_pct: 0.75 # exit if vega loss > 75% of premium collected
+iv_stop_rv_multiple: 1.5 # exit if 5d RV > 1.5× entry IV (vol regime change)
+high_vol_regime_iv_threshold: 0.80 # skip entry if ATM IV > 80% (BTC; tune per asset)
 share_class: USDT
-execution_policy_ref: options-taker-v1  # taker algo — priority on fill to avoid leg risk
+execution_policy_ref: options-taker-v1 # taker algo — priority on fill to avoid leg risk
 
 # Leverage + net-delta controls:
-target_leverage: 1.0            # [1, 10]; short options notional vs equity
-target_net_delta: 0.0           # net directional delta (0 = delta-hedged)
-max_underlying_move_pct: 3.0    # vol-cap clamp: pause new entries if 1h move > X%
-instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+target_leverage: 1.0 # [1, 10]; short options notional vs equity
+target_net_delta: 0.0 # net directional delta (0 = delta-hedged)
+max_underlying_move_pct: 3.0 # vol-cap clamp: pause new entries if 1h move > X%
+instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

@@ -269,11 +269,11 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       source layering wired per MEMORY/CLAUDE.md (Yahoo rolling window + Barchart preload for 2020-01-02 → 2025-11-12);
       17 days were filled manually 2026-05-06 per CLAUDE.md "VIX 15m source layering" closeout. Re-verify the actual gap
       window; this todo may be effectively closed]
-- [x] ✅ **DONE 2026-05-17** [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM to completion. [REFRESH 2026-05-17 slot 5:
-      VM `tradfi-bf-es-opt-light-2020-20260517-083847` TERMINATED. Manifest verified 2026-05-17: 1,932 CME
-      options_chain ohlcv_1m rows captured, 100% captured status, date range 2020-01-02 → 2026-05-15. No 2019 data in
-      Databento GLBX.MDP3 (Databento earliest = 2020-01-02 for options chain contracts — expected). Full ES_OPT
-      2020-2026 coverage confirmed. GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING.]
+- [x] ✅ **DONE 2026-05-17** [SCRIPT] P0. Run ES_OPT 2020-2022 fill VM to completion. [REFRESH 2026-05-17 slot 5: VM
+      `tradfi-bf-es-opt-light-2020-20260517-083847` TERMINATED. Manifest verified 2026-05-17: 1,932 CME options_chain
+      ohlcv_1m rows captured, 100% captured status, date range 2020-01-02 → 2026-05-15. No 2019 data in Databento
+      GLBX.MDP3 (Databento earliest = 2020-01-02 for options chain contracts — expected). Full ES_OPT 2020-2026 coverage
+      confirmed. GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING.]
 - [x] [AGENT] P0. IBIT NASDAQ trades cold backfill — 31 rows all `empty_confirmed` from July 2024 only. — ✅
       **OPERATIONALLY SHIPPED 2026-05-16** (slot 5): operator unblocked Databento + MTDS@`741eb5d` + MTDS@`f19ff5f` bug
       fixes; VM `tradfi-bf-ibit-adhoc-adhoc-20260516-133434` (e2-standard-4, asia-northeast1-c, XNAS.ITCH dataset)

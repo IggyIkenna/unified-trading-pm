@@ -230,8 +230,8 @@ includes a line in the PR body pointing at the specific revenue-projection-2026-
 the caller carries the `pricing.read_internal` capability claim; callers without the claim get an
 `InternalCostLeakageError` + compliance event (rule 08 enforcement, wired in UAC
 `internal/architecture_v2/derivation_cost.py`). See
-[`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md) and
-[`../infra-spec/stage-3e-g2-env-split.md`](../../16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md) §5.
+[`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md)
+and [`../infra-spec/stage-3e-g2-env-split.md`](../../16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md) §5.
 
 No internal cost numbers leak to client-facing surfaces. The commercial-model docs are codex-private; demo, quote, and
 website surfaces do not reference internal cost.
@@ -261,5 +261,5 @@ website surfaces do not reference internal cost.
 - [building-block-packaging.md](building-block-packaging.md) — which blocks compose which packages
 - [fixed-vs-variable-commercials.md](fixed-vs-variable-commercials.md) — Tier A vs Tier B decision
 - [exclusivity-and-noncompete.md](exclusivity-and-noncompete.md) — block 12 modifier, IP-power tier anchors
-- [../infra-spec/stage-3c-derivation-engine.md](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md) — Stage 3C reads this doc
-  once numbers populate
+- [../infra-spec/stage-3c-derivation-engine.md](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md) —
+  Stage 3C reads this doc once numbers populate

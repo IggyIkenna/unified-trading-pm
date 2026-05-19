@@ -214,10 +214,10 @@ peg_drift_threshold_bps:
 # Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
 # target_leverage = 1.0 is correct for LST_AS_MARGIN — the LST IS the full margin, no leverage multiplier.
 # The field is present because StrategyInstanceDefinition is universal across all archetypes.
-target_leverage: "1.0"      # always 1.0 for carry_staked_basis; LST_AS_MARGIN does not support >1x
-target_net_delta: "0.0"     # delta-neutral: LST long leg + perp short hedge = net ~0 delta
-max_underlying_move_pct: "5.0"  # vol-cap clamp: pause rebalance if >5% move in 1h (wider than APD)
-instrument_volatility_registry_lookup: "true"  # use realized_vol_20 (1h candles) from FSS
+target_leverage: "1.0" # always 1.0 for carry_staked_basis; LST_AS_MARGIN does not support >1x
+target_net_delta: "0.0" # delta-neutral: LST long leg + perp short hedge = net ~0 delta
+max_underlying_move_pct: "5.0" # vol-cap clamp: pause rebalance if >5% move in 1h (wider than APD)
+instrument_volatility_registry_lookup: "true" # use realized_vol_20 (1h candles) from FSS
 
 # Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
 # Strategy refuses to size on-chain positions outside this list. CeFi perp venues are not

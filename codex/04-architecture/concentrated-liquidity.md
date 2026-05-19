@@ -148,8 +148,8 @@ concentrated ranges.
 - Code:
   [`execution-service/execution_service/matching_engine/amm.py`](../../../execution-service/execution_service/matching_engine/amm.py)
   — pool class implementations.
-- Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) Phase 2A-H +
-  Phase 9B.
+- Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) Phase
+  2A-H + Phase 9B.
 - Reference: [Uniswap V3 Whitepaper](https://uniswap.org/whitepaper-v3.pdf) (Adams, Zinsmeister, Salem, Robinson, Keefer
   2021).
 - Reference: [Uniswap V4 Whitepaper](https://github.com/Uniswap/v4-core/blob/main/docs/whitepaper-v4.pdf).

@@ -264,8 +264,8 @@ May-23 unless explicitly added.
 - **Plan**:
   [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md) is
   the buildout plan for everything ✗ in this catalogue.
-- **Plan**: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) consumes
-  this catalogue (per-pool-shape models per protocol; per-protocol staking yield decomposition).
+- **Plan**: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md)
+  consumes this catalogue (per-pool-shape models per protocol; per-protocol staking yield decomposition).
 - **Codex**: [`defi-data-type-taxonomy.md`](defi-data-type-taxonomy.md) — what data we capture per protocol per
   data_type.
 - **Codex**: [`chain-rpc-mev-tenderly.md`](../05-infrastructure/chain-rpc-mev-tenderly.md) — chain-level RPC + MEV +

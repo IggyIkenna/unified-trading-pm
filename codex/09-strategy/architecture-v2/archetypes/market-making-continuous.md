@@ -209,10 +209,10 @@ execution_policy_ref: cefi-mm-v3
 share_class: USDT
 
 # Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
-target_leverage: 1.0        # [1, 10]; MM keeps 1.0 (inventory risk via max_inventory, not leverage)
-target_net_delta: 0.0       # net directional delta (0 = balanced book target)
-max_underlying_move_pct: 3.0  # vol-cap clamp: widen quotes rather than skip for CLOB MM
-instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+target_leverage: 1.0 # [1, 10]; MM keeps 1.0 (inventory risk via max_inventory, not leverage)
+target_net_delta: 0.0 # net directional delta (0 = balanced book target)
+max_underlying_move_pct: 3.0 # vol-cap clamp: widen quotes rather than skip for CLOB MM
+instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Config schema (LP example, Uniswap V3)
@@ -232,10 +232,10 @@ share_class: USDC
 execution_policy_ref: defi-lp-v2
 
 # Leverage + net-delta controls (universal per StrategyInstanceDefinition; Stream D 2026-05-07):
-target_leverage: 1.0        # [1, 10]; LP position is unlevered; hedge leg controls net delta
-target_net_delta: 0.0       # net directional delta (0 = IL-hedged; hedge_on_cex provides delta)
-max_underlying_move_pct: 3.0  # vol-cap clamp: skip re-entry if realized move > X% in 1h window
-instrument_volatility_registry_lookup: true  # use realized_vol_20 (1h candles) from FSS
+target_leverage: 1.0 # [1, 10]; LP position is unlevered; hedge leg controls net delta
+target_net_delta: 0.0 # net directional delta (0 = IL-hedged; hedge_on_cex provides delta)
+max_underlying_move_pct: 3.0 # vol-cap clamp: skip re-entry if realized move > X% in 1h window
+instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) from FSS
 ```
 
 ## Execution semantics

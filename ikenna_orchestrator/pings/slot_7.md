@@ -1900,11 +1900,11 @@ tick-76b (setup.py 4 violations).
    - Completes the export chain started in `uac@fa7e868`
 
 3. **Forward-poll launcher** — `deployment-service@c5d2fa1`:
-   - `scripts/vm/launch-cefi-onchain-forward-poll.sh` — per-venue singleton-locked, covers LIGHTER + PACIFICA + EXTENDED + HYPERLIQUID + ASTER
+   - `scripts/vm/launch-cefi-onchain-forward-poll.sh` — per-venue singleton-locked, covers LIGHTER + PACIFICA +
+     EXTENDED + HYPERLIQUID + ASTER
    - VM prefixes: cefi-lighter-/cefi-pacifica-/cefi-extended-/cefi-hyperliquid-/aster-fwd- (all in vm_zombie_watchdog)
    - Unblocks CARRY_BASIS_PERP + ARBITRAGE_PRICE_DISPERSION signal generation
 
 4. **Plan flips** — `unified-trading-pm@131729a6a` (work_split items 6+7+8) + defi_master forward-poll launcher checkbox
 
-**defi_master items shipped**: forward-poll launcher P0 now `[x] ✅`
-**work_split items 6/7/8**: all flipped ✅
+**defi_master items shipped**: forward-poll launcher P0 now `[x] ✅` **work_split items 6/7/8**: all flipped ✅

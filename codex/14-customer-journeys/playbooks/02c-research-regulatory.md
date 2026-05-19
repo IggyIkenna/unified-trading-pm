@@ -38,8 +38,8 @@ Deep-briefing content covering:
    officer, and supervision oversight. The client firm runs day-to-day operations.
 
 4. **Client reporting** — **same reporting surface** as the IM playbook (see
-   [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)). Umbrella clients use Odum's reporting
-   infrastructure for regulatory filings, investor reporting, performance reporting — everything.
+   [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)). Umbrella clients use Odum's
+   reporting infrastructure for regulatory filings, investor reporting, performance reporting — everything.
 
 5. **Fund structure options** — Pooled vs SMA (see
    [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md)). Same structural decision as IM.

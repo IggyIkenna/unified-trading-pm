@@ -86,8 +86,8 @@ for data — verify with `/api/v1/admin/stats`.
 ## Related
 
 - [firebase-production.md](firebase-production.md) — the next tier
-- [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — what "create org / fund / client"
-  means structurally
+- [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — what "create org / fund /
+  client" means structurally
 - [../playbooks/03-warm-prospect-demo.md](../playbooks/03-warm-prospect-demo.md) — what the prospect experience looks
   like once provisioned
 - [../roadmap/next-waves.md](../roadmap/next-waves.md) — ticket #12 tracking for the actual Firebase-staging

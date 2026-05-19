@@ -87,8 +87,8 @@ leg-1 = `LP_BURN` (existing position), leg-2 = `LP_MINT` (new range). The Nonfun
 atomic unit; execution-service sequences both legs through the same call.
 
 **Code-backport status:** DEFERRED — `defi_lp/concentrated.py` currently emits `AtomicInstruction` pairs hand-built
-without `LegController`. Backport tracked in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase.
-Docs ship now per operator decision 2026-05-07.
+without `LegController`. Backport tracked in `defi_recursive_borrow_archetypes_2026_05_10.md` factory-wiring phase. Docs
+ship now per operator decision 2026-05-07.
 
 ## Risks
 

@@ -523,30 +523,31 @@ upstream-detected) as complementary signals.
       `AlertCode` taxonomy at `alerting/rules.py` already fires per event-type. No further code change needed.
 - [x] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
       window via REST batch fetch; call `record_captured` per filled row; emit `CONNECTIVITY_GAP_BACKFILLED` when
-      complete. ✅ **SHIPPED 2026-05-19 slot 2** — framework + Protocol scaffold at mtds@`129290f`:
-      `GapBackfillRunner` subscribes to `CONNECTIVITY_RECOVERED`, filters to matching (venue, data_type) shard, calls
-      `RestBackfillProvider.fetch_gap()` per instrument via `asyncio.to_thread`, writes via `TickSink.flush()`,
-      records via `ShardManifestRecorder.record_captured()`, then calls `watchdog.mark_backfilled()`.
-      Safe no-op (`MTDS_BACKFILL_PROVIDER_MISSING` log event) when `provider=None` — per-venue REST adapters
-      (Phase 3.6 rollout, plan `backfill_runner.py` § per-venue) are the remaining work.
+      complete. ✅ **SHIPPED 2026-05-19 slot 2** — framework + Protocol scaffold at mtds@`129290f`: `GapBackfillRunner`
+      subscribes to `CONNECTIVITY_RECOVERED`, filters to matching (venue, data_type) shard, calls
+      `RestBackfillProvider.fetch_gap()` per instrument via `asyncio.to_thread`, writes via `TickSink.flush()`, records
+      via `ShardManifestRecorder.record_captured()`, then calls `watchdog.mark_backfilled()`. Safe no-op
+      (`MTDS_BACKFILL_PROVIDER_MISSING` log event) when `provider=None` — per-venue REST adapters (Phase 3.6 rollout,
+      plan `backfill_runner.py` § per-venue) are the remaining work.
 - [x] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
       to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
-      zero/partial inputs. Connects via the same manifest contract MDPS already reads. ✅ **SHIPPED 2026-05-19 slots 1+2**:
-      (1) ✅ `UPSTREAM_LIVE_GAP` added to UAC `RecordFailedReason` at uac@`60c0ee9`; (2) ✅
+      zero/partial inputs. Connects via the same manifest contract MDPS already reads. ✅ **SHIPPED 2026-05-19 slots
+      1+2**: (1) ✅ `UPSTREAM_LIVE_GAP` added to UAC `RecordFailedReason` at uac@`60c0ee9`; (2) ✅
       `DependencyChecker.check_upstream_manifest_has_live_gap()` at mdps@`5729750`; (3) ✅ MTDS gap rows —
       `ShardManifestRecorder.record_failed()` + `MTDSShardManifestRecorder.record_failed()` + watchdog-aware
       `_record_empty_window` at mtds@`494e0d5`; (4) ✅ MDPS orchestration wiring — `_process_instrument_file` live-gap
-      pre-check at mdps@`14cf74c` + `_gate_live_gap_data_types` wired into `process_category` with 4 unit tests
-      at mdps@`ebe2f06`. Filters gapped (venue, data_type) pairs from processing loop.
+      pre-check at mdps@`14cf74c` + `_gate_live_gap_data_types` wired into `process_category` with 4 unit tests at
+      mdps@`ebe2f06`. Filters gapped (venue, data_type) pairs from processing loop.
 - [x] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
       per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
       engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
-      Phase 8. ✅ **SHIPPED 2026-05-18 slot 2** — execution-service@`8c9f7893c` + mtds@`46531e5`. Three execution-service
-      files: (1) `circuit_breaker.py`: `allow_recovery()` → OPEN→HALF_OPEN bypass on `CONNECTIVITY_RECOVERED`; (2)
-      `engine/connectivity_gap_bridge.py` (NEW): `on_connectivity_gap_detected` → `force_open(venue, "MTDS_GAP …")`,
-      `on_connectivity_recovered` → `allow_recovery(venue)`; (3) `live_execution_handler.py`: wires
-      `subscribe_coordination_events` at startup. MTDS side: `connectivity_watchdog.py` now calls
-      `publish_coordination_event` on HEALTHY→GAP (`_tick`) and GAP→HEALTHY (`heartbeat`) transitions.
+      Phase 8. ✅ **SHIPPED 2026-05-18 slot 2** — execution-service@`8c9f7893c` + mtds@`46531e5`. Three
+      execution-service files: (1) `circuit_breaker.py`: `allow_recovery()` → OPEN→HALF_OPEN bypass on
+      `CONNECTIVITY_RECOVERED`; (2) `engine/connectivity_gap_bridge.py` (NEW): `on_connectivity_gap_detected` →
+      `force_open(venue, "MTDS_GAP …")`, `on_connectivity_recovered` → `allow_recovery(venue)`; (3)
+      `live_execution_handler.py`: wires `subscribe_coordination_events` at startup. MTDS side:
+      `connectivity_watchdog.py` now calls `publish_coordination_event` on HEALTHY→GAP (`_tick`) and GAP→HEALTHY
+      (`heartbeat`) transitions.
 - [x] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
       `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`. **DEFERRED** — requires 7-day live MTDS telemetry not yet

@@ -243,7 +243,7 @@ SHAs: [unified-trading-pm@f1429168](../../unified-trading-pm) (codex 13→30 Def
 [@dd502602](../../unified-trading-pm) (honest-coverage Phase 8) + [@1051d3b6](../../unified-trading-pm)
 (MASTER*READINESS A-G refresh); [unified-api-contracts@d981502](../../unified-api-contracts) (Oracle errors export) +
 [@a6a0f09](../../unified-api-contracts) (wallet provisioning round-trip);
-[execution-service@3ef4c712](../../execution-service) (HL*_+ORACLE\__+RECURSIVE_LOOP coverage) +
+[execution-service@3ef4c712](../../execution-service) (HL*\_+ORACLE\_\_+RECURSIVE_LOOP coverage) +
 [@f1dee093](../../execution-service) (LocalKeyCustodyProvider 33 tests) + [@c1fa8072](../../execution-service) (KMS
 mocks) + [@d06ec579](../../execution-service) (bare log_event fix) + [@9d50f02d](../../execution-service) (native
 adapter contracts + Kraken status casing fix) + [@fc5a8de9](../../execution-service) (PinnacleAdapterStub fix);

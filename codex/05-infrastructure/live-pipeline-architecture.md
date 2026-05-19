@@ -270,23 +270,24 @@ ship, the Deploy-Missing button degrades to "no launcher registered" per the wor
 ## Scenario tap points
 
 Scenarios ride the **same prod codepath** as live + batch — per the reuse-prod-codepath principle in
-[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md). Overlay
-mutations inject at exactly one of seven pipeline-tap layers (`ScenarioOverlayLayer` enum in UAC):
+[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md).
+Overlay mutations inject at exactly one of seven pipeline-tap layers (`ScenarioOverlayLayer` enum in UAC):
 
-| Layer      | Pipeline boundary in this architecture                                     | Pre-cutover wire status              |
-| ---------- | -------------------------------------------------------------------------- | ------------------------------------ |
-| `RAW_TICK` | MTDS adapter `_post_fetch` hook (tick / book / funding rows)               | DEFERRED — Phase 3.A post-cutover    |
-| `FEATURE`  | MDPS feature-layer hook (after honest-absence guard in orchestrator.py)    | DEFERRED — Phase 3.B post-cutover    |
-| `FEATURE`  | features-service `_compute_*` exit (per-calculator tap)                    | DEFERRED — Phase 3.C post-cutover    |
-| `SIGNAL`   | strategy-service `signal_generator` emit boundary                          | DEFERRED — Phase 3.D post-cutover    |
-| `ORDER`    | execution-service order submit + matching-engine adversarial mode          | **WIRED** — Phase 3.E pre-cutover    |
-| `EVENT`    | Cross-cutting event stream injection (chain-slot / venue-halt / tx-status) | DEFERRED — post-cutover              |
-| `MANIFEST` | ManifestWriter `record_*` hook (phantom-row or honest-empty injection)     | DEFERRED — Phase 3.G post-cutover    |
+| Layer      | Pipeline boundary in this architecture                                     | Pre-cutover wire status           |
+| ---------- | -------------------------------------------------------------------------- | --------------------------------- |
+| `RAW_TICK` | MTDS adapter `_post_fetch` hook (tick / book / funding rows)               | DEFERRED — Phase 3.A post-cutover |
+| `FEATURE`  | MDPS feature-layer hook (after honest-absence guard in orchestrator.py)    | DEFERRED — Phase 3.B post-cutover |
+| `FEATURE`  | features-service `_compute_*` exit (per-calculator tap)                    | DEFERRED — Phase 3.C post-cutover |
+| `SIGNAL`   | strategy-service `signal_generator` emit boundary                          | DEFERRED — Phase 3.D post-cutover |
+| `ORDER`    | execution-service order submit + matching-engine adversarial mode          | **WIRED** — Phase 3.E pre-cutover |
+| `EVENT`    | Cross-cutting event stream injection (chain-slot / venue-halt / tx-status) | DEFERRED — post-cutover           |
+| `MANIFEST` | ManifestWriter `record_*` hook (phantom-row or honest-empty injection)     | DEFERRED — Phase 3.G post-cutover |
 
 **Reuse-prod-codepath note**: the harness does NOT instantiate a parallel backtest engine. It observes the unified
-pipeline (MTDS → MDPS → features-\* → strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode)
-with one well-bounded overlay layer per run. `synthetic=true` metadata on every emitted event distinguishes
-scenario-fire from real-fire so alerting-service suppresses paging while still recording the event.
+pipeline (MTDS → MDPS → features-\* → strategy-service ↔ position-balance + risk +
+execution-service-in-matching-engine-mode) with one well-bounded overlay layer per run. `synthetic=true` metadata on
+every emitted event distinguishes scenario-fire from real-fire so alerting-service suppresses paging while still
+recording the event.
 
 All layers except `ORDER` are post-cutover scope per
 [`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
@@ -313,6 +314,8 @@ For the full authoring guide, mutation types, and outcome-assertion categories, 
   [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md),
   [`../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
 - Foundation docs: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
-- Scenario injection: [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) — tap-layer enum + reuse-prod-codepath contract
-  (single SSOT — replaces former batch-live-pipeline.md + batch-live-symmetry.md),
+- Scenario injection:
+  [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) —
+  tap-layer enum + reuse-prod-codepath contract (single SSOT — replaces former batch-live-pipeline.md +
+  batch-live-symmetry.md),
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)

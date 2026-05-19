@@ -144,8 +144,8 @@ execution-service matching-engine-mode processes mutated order book
 ScenarioReport parquet emitted per cell (archetype × scenario_id)
 ```
 
-Post-cutover: additional tap layers (RAW_TICK, FEATURE) compose the same way — replay precedes overlay; watermark KV
-is unaffected. Full post-cutover scope tracked in
+Post-cutover: additional tap layers (RAW_TICK, FEATURE) compose the same way — replay precedes overlay; watermark KV is
+unaffected. Full post-cutover scope tracked in
 [`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
 
 ## Anti-patterns
@@ -163,5 +163,7 @@ is unaffected. Full post-cutover scope tracked in
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 7 (replay subsystem) + Phase 2C (UTL replay-cascade helpers).
 - Sibling: [`live-pipeline-architecture.md`](./live-pipeline-architecture.md).
-- Scenario injection: [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) — overlay layer enum + composition contract.
+- Scenario injection:
+  [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) —
+  overlay layer enum + composition contract.
 - Foundation: [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md).

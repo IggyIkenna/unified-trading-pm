@@ -52,7 +52,8 @@ Schema depth is compatible across most but not all combinations. Known incompati
 | Sports venues                           | Sports fixtures      | Pre-match / in-play       | Yes         | Rich schema with event-lifecycle fields                                                   |
 
 For the full compatibility matrix including blocker predicates, see
-[`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) (Stage 3B).
+[`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) (Stage
+3B).
 
 ## (c) Lifecycle behaviour — replace / cancel / amend semantics
 
@@ -145,9 +146,10 @@ minimal schema, they are routed to:
 - [rule 05 — building-block dimensions](../_ssot-rules/05-building-block-dimensions.md) — block 5 (instructions
   integration), block 6 (research / promote excluded from signals-only), block 13 (custom premium for non-fit)
 - [rule 08 — pricing principles](../_ssot-rules/08-pricing-principles.md) — schema depth as block-5 pricing dimension
-- [`../infra-spec/stage-3b-instruction-schema-contract.md`](../../16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md) —
-  Stage 3B runtime contract
-- [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) — compatibility predicates
+- [`../infra-spec/stage-3b-instruction-schema-contract.md`](../../16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md)
+  — Stage 3B runtime contract
+- [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) —
+  compatibility predicates
 - [strategy-origin-vs-stack-depth.md](strategy-origin-vs-stack-depth.md) — the cell this fit-check resolves
 - [../experience/dart-briefing.md](../experience/dart-briefing.md) — pb2b briefing that runs the fit-check
 - [../experience/dart-demo.md](../experience/dart-demo.md) — pb3c demo gated on fit-check resolution

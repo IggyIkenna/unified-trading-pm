@@ -962,11 +962,12 @@ Every mutation emits a UTL event that propagates to cache invalidation.
   availability by integration mode
 - [`stage-3e-refactor-plan.md`](stage-3e-refactor-plan.md) — G1 item "derivation engine — ship to
   `strategy-service/availability/`"
-- [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — phase-aware access
-  control rationale
-- [`../_ssot-rules/06-show-dont-show-discipline.md`](../../14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md) — LOCKED-VISIBLE vs
-  HIDDEN-ENTIRELY semantics
-- [`../_ssot-rules/08-pricing-principles.md`](../../14-customer-journeys/_ssot-rules/08-pricing-principles.md) — `cost(...)` tier structure
+- [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) —
+  phase-aware access control rationale
+- [`../_ssot-rules/06-show-dont-show-discipline.md`](../../14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md)
+  — LOCKED-VISIBLE vs HIDDEN-ENTIRELY semantics
+- [`../_ssot-rules/08-pricing-principles.md`](../../14-customer-journeys/_ssot-rules/08-pricing-principles.md) —
+  `cost(...)` tier structure
 - [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
   — integration-depth uplift extension
 - [`../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)

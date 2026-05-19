@@ -215,21 +215,21 @@ isProject: false
 **2026-05-18 audit (slot-3 PM@d503b4b3) — corrected**: original archive claim of "no open items" was inaccurate; the
 following open phases were migrated to successor plans at archive time (status fields corrected above):
 
-| Phase | Status at archive | Migrated to |
-| ----- | ---------------- | ----------- |
-| phase-4b-upstream-funding-oi-calculator | was `in-progress` (all `[x]`; stale) | → corrected to `done` |
-| phase-4b-upstream-lst-rates-gaps | was `in-progress` (all `[x]`; stale) | → corrected to `done` |
-| phase-4b-tier3-historical-rest | `todo` — Jito/Marinade REST date-lookup | → `market-tick-data-service` codebase |
-| phase-4b-tracer-run | `blocked` — 30-day tracer run (operator-side) | → operator-side production run |
-| phase-6c-pm-doc-rewrite | was `in-progress`; verified complete 2026-05-18 | → corrected to `done` |
-| phase-6d-strategy-qg | `todo` — QG + quickmerge post-6c | → superseded; strategy-service QG run separately |
-| phase-7a-matrix-eth-lst-coverage-audit | `todo` — per-LST×venue acceptance audit | → `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (Stream A) |
-| phase-7b-matrix-haircut-correctness | `todo` — `get_collateral_haircut` SSOT | → same plan Stream A follow-through |
-| phase-7c-catalog-auto-expand | `todo` — post-7a slot count test update | → same plan Stream A follow-through |
-| phase-8a-base-rank-allocator | `todo` — `BaseRankAllocator` extraction | → `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5 |
-| phase-8b-seven-subclass-allocators | `todo` — 7 `*RankAllocator` subclasses | → same plan Phase 5 |
-| phase-8c-staking-apy-total-aggregator | `todo` — `staking_apy_total` features-onchain | → same plan Phase 5 |
-| phase-8d-archetype-ranker-wiring | `todo` — `AllocatorArchetype` wiring | → same plan Phase 5 |
+| Phase                                   | Status at archive                               | Migrated to                                                                                 |
+| --------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| phase-4b-upstream-funding-oi-calculator | was `in-progress` (all `[x]`; stale)            | → corrected to `done`                                                                       |
+| phase-4b-upstream-lst-rates-gaps        | was `in-progress` (all `[x]`; stale)            | → corrected to `done`                                                                       |
+| phase-4b-tier3-historical-rest          | `todo` — Jito/Marinade REST date-lookup         | → `market-tick-data-service` codebase                                                       |
+| phase-4b-tracer-run                     | `blocked` — 30-day tracer run (operator-side)   | → operator-side production run                                                              |
+| phase-6c-pm-doc-rewrite                 | was `in-progress`; verified complete 2026-05-18 | → corrected to `done`                                                                       |
+| phase-6d-strategy-qg                    | `todo` — QG + quickmerge post-6c                | → superseded; strategy-service QG run separately                                            |
+| phase-7a-matrix-eth-lst-coverage-audit  | `todo` — per-LST×venue acceptance audit         | → `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (Stream A) |
+| phase-7b-matrix-haircut-correctness     | `todo` — `get_collateral_haircut` SSOT          | → same plan Stream A follow-through                                                         |
+| phase-7c-catalog-auto-expand            | `todo` — post-7a slot count test update         | → same plan Stream A follow-through                                                         |
+| phase-8a-base-rank-allocator            | `todo` — `BaseRankAllocator` extraction         | → `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` Phase 5                     |
+| phase-8b-seven-subclass-allocators      | `todo` — 7 `*RankAllocator` subclasses          | → same plan Phase 5                                                                         |
+| phase-8c-staking-apy-total-aggregator   | `todo` — `staking_apy_total` features-onchain   | → same plan Phase 5                                                                         |
+| phase-8d-archetype-ranker-wiring        | `todo` — `AllocatorArchetype` wiring            | → same plan Phase 5                                                                         |
 
 # CARRY_STAKED_BASIS — structure axis + tracer comparison
 

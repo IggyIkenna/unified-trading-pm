@@ -421,8 +421,8 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
       drill-down hierarchy SSOT with per-asset_group depth table, backend endpoint contract, frontend component
       contract, per-leaf download + Deploy-Missing surgical-recovery flow, failure modes the drill-down catches. Created
       as a NEW doc rather than editing `availability-manifest-and-data-status.md` to respect the active concurrent-edit
-      on that file. ⚠️ **Re-created 2026-05-19 PM@a6af9d1c**: file was accidentally deleted in f58bc8a9 (Phase B.1
-      sweep targeted 05-infrastructure/ but swept 02-data/ too). Restored from last known content at f5be06ce.
+      on that file. ⚠️ **Re-created 2026-05-19 PM@a6af9d1c**: file was accidentally deleted in f58bc8a9 (Phase B.1 sweep
+      targeted 05-infrastructure/ but swept 02-data/ too). Restored from last known content at f5be06ce.
 - [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
@@ -599,9 +599,9 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
       the UI can render "showing N–M of T" + a load-more button. Bump cap from 30 → 200 (or remove with explicit
       pagination). Distinct from the hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail
       panel sample. Source:
-      [`../archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
-      (deployment-service@99acc13 + deployment-api@0b853ba — pagination params + total_instruments_unfiltered; also
-      fixed field name mismatch: `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel so the
+      [`../archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) § Q5
+      todo 1. (deployment-service@99acc13 + deployment-api@0b853ba — pagination params + total_instruments_unfiltered;
+      also fixed field name mismatch: `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel so the
       instruments list actually renders at runtime)
 - [x] **[deployment-ui]** P1. `VenueDetailPanel.tsx:200-208` — add pagination controls to the `top_instruments`
       rendering. When `total_instruments_unfiltered > top_instruments.length`, render "Show more (N remaining)" + count

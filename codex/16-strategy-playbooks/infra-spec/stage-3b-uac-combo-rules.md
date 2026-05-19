@@ -12,17 +12,18 @@ scope: [engineer, admin]
 >
 > **Sources (authoritative):**
 >
-> - [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — `lifecycle_phase` is a
->   named dimension orthogonal to `maturity`.
-> - [`_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) — commercial-path axes.
-> - [`_ssot-rules/05-building-block-dimensions.md`](../../14-customer-journeys/_ssot-rules/05-building-block-dimensions.md) — 13 building blocks
->   are the entitlement dimension.
-> - [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md) — data-sensitive
->   blocks carry a licensing-constraint flag.
+> - [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) —
+>   `lifecycle_phase` is a named dimension orthogonal to `maturity`.
+> - [`_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) —
+>   commercial-path axes.
+> - [`_ssot-rules/05-building-block-dimensions.md`](../../14-customer-journeys/_ssot-rules/05-building-block-dimensions.md)
+>   — 13 building blocks are the entitlement dimension.
+> - [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
+>   — data-sensitive blocks carry a licensing-constraint flag.
 > - [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
 >   — `instruction_schema_fit` dimension (signals-only / client-strategy+downstream / full-pipeline).
-> - [`_ssot-rules/_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) §"On building-block dimensions (rule
->   05)" + §"On DART commercial model (rule 04)".
+> - [`_ssot-rules/_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) §"On
+>   building-block dimensions (rule 05)" + §"On DART commercial model (rule 04)".
 > - [`../../09-strategy/architecture-v2/category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md)
 >   — 18 archetypes × 4 categories × 8 instrument types matrix with representative slot labels + 10 block-list groups
 >   (BL-1..BL-10).
@@ -422,7 +423,8 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `data_license_tier == institutional_only ∧ view_surface == public_marketing`
 - **Reason:** licensing (rule 07 boundary)
-- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
+- **Evidence:**
+  [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
   §"Enforcement rules" #1–#5 — "Line items never reference raw data", "No 'Tier A raw data' combinations".
   Derivation-engine logs rule-07 breach to compliance per rule 07 §#6.
 
@@ -486,7 +488,8 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `entitlement.tier == TIER_A ∧ framing == raw_data_feed`
 - **Reason:** licensing (rule 07 × rule 08 joint violation)
-- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
+- **Evidence:**
+  [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
   §"Enforcement rules" #5 — "No 'Tier A raw data' combinations. If a Tier A quote line reads as a raw-data pass-through,
   it's a joint rule-07 and rule-08 violation. Rewrite." Note: rule 07 §#5 does NOT condition on the upstream
   `data_license_tier`; raw-data framing on a Tier A line is forbidden regardless of whether the underlying licence
@@ -507,8 +510,8 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `slot.fund_structure ≠ allocator.fund_structure ∧ allocator.fund_structure ∈ {POOLED, SMA}`
 - **Reason:** commercial / reporting (SMA vs Pooled share-class wiring differs; slots cannot be migrated mid-lifecycle)
-- **Evidence:** [`_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) + memory note 2026-04-19 "Playbook
-  SSOT shipped" — "SMA vs Pooled structural decision applies to both IM + Reg Umbrella."
+- **Evidence:** [`_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) + memory note
+  2026-04-19 "Playbook SSOT shipped" — "SMA vs Pooled structural decision applies to both IM + Reg Umbrella."
 
 ### BL-22: Org-scope mismatch on `CLIENT_EXCLUSIVE` allocation
 

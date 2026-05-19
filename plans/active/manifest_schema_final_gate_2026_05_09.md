@@ -611,13 +611,18 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 - [x] ✅ [AGENT] P0. Phase 9.A — Verify E3 7-item launcher checklist passes for every MTDS adapter (Phase 4 shipped +
       grep-clean): VERIFIED 2026-05-17 — all 7 items PASS:
-  1. ✅ UTL `manifest_writer.py` `MANIFEST_SCHEMA_VERSION=8` + `pipeline_mode: PipelineMode` (no default) in all public `record_*` methods.
+  1. ✅ UTL `manifest_writer.py` `MANIFEST_SCHEMA_VERSION=8` + `pipeline_mode: PipelineMode` (no default) in all public
+     `record_*` methods.
   2. ✅ All 23 MTDS handlers that write manifest pass `pipeline_mode=PipelineMode.BATCH_<source>` explicitly.
-  3. ✅ Manifest concurrency principle: `ManifestFreshnessCache(bucket=..., ttl_seconds=60)` in 9 DeFi handlers (Phase 7J); `DEFAULT_TTL_SECONDS=60` + `is_captured()` + `_maybe_refresh()` in UTL `manifest_freshness.py`.
-  4. ✅ Per-VM shard isolation envvars: all 17 MTDS launcher `.sh` scripts pass `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`.
-  5. ✅ ServiceBootstrap handles STARTED/STOPPED; orchestrator emits `PROCESSING_STARTED` + `PROCESSING_COMPLETED`; handlers emit per-skip `MANIFEST_FRESHNESS_SKIP` events.
+  3. ✅ Manifest concurrency principle: `ManifestFreshnessCache(bucket=..., ttl_seconds=60)` in 9 DeFi handlers (Phase
+     7J); `DEFAULT_TTL_SECONDS=60` + `is_captured()` + `_maybe_refresh()` in UTL `manifest_freshness.py`.
+  4. ✅ Per-VM shard isolation envvars: all 17 MTDS launcher `.sh` scripts pass `VM_NAME` +
+     `MANIFEST_PER_VM_SHARDS=true`.
+  5. ✅ ServiceBootstrap handles STARTED/STOPPED; orchestrator emits `PROCESSING_STARTED` + `PROCESSING_COMPLETED`;
+     handlers emit per-skip `MANIFEST_FRESHNESS_SKIP` events.
   6. ✅ Phase 6.C already `[x]` — tarballs refreshed via `create-code-tarballs.sh --all`.
-  7. ✅ `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registers all MTDS VM prefixes (mtds-backfill-{ag}-, mtds-gas-fees-, mtds-lst-rates-, mtds-perp-funding-, etc.).
+  7. ✅ `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` registers all MTDS VM prefixes (mtds-backfill-{ag}-,
+     mtds-gas-fees-, mtds-lst-rates-, mtds-perp-funding-, etc.).
 - [ ] [HUMAN+AGENT] P0. Phase 9.B — Launch MTDS VM fleet per asset_group. Parallel by zone where dependency-free
       (cefi/defi/tradfi/sports/prediction can run concurrently per per-VM shard isolation rule).
 - **Done-definition**: every MTDS VM emits STARTED within 60s + watchdog dict has zero unregistered RUNNING prefixes.
@@ -1030,7 +1035,7 @@ Phase 5.A/B".
 
 | Finding doc                                                                                                                                    | Scope                                                                                                                                                                                                    | Severity |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](../archive/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                              | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
+| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](../archive/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                   | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
 | [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry                                                          | P1       |
 | [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md)                                   | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows                                                                       | P1       |
 

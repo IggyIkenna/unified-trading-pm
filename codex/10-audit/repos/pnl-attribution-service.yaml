@@ -18,7 +18,9 @@ last_updated: "2026-05-18"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Active 2026-05-18: reward_attribution_drain.drain_and_persist 12 tests added; hedge_ratio_snapshots reader landed. pnl-attribution@e6f6a08 on live-defi-rollout."
+  readiness_note:
+    "Active 2026-05-18: reward_attribution_drain.drain_and_persist 12 tests added; hedge_ratio_snapshots reader landed.
+    pnl-attribution@e6f6a08 on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -32,7 +34,9 @@ code_readiness:
     criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
     coverage_pct: null
     coverage_floor_pct: 70
-    evidence: "pnl-attribution@e6f6a08 2026-05-18: 12 tests for reward_attribution_drain.drain_and_persist; read_hedge_ratio_snapshots reader added"
+    evidence:
+      "pnl-attribution@e6f6a08 2026-05-18: 12 tests for reward_attribution_drain.drain_and_persist;
+      read_hedge_ratio_snapshots reader added"
     notes: ""
 
   cr3_integration_tests:

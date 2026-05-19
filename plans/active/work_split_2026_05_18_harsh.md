@@ -165,9 +165,9 @@ smoke begins.
 - [x] ✅ **S2. SUSTAIN — workspace-wide test coverage uplift to 80%** [alerting-service] — alerting-service@69a9f4a:
       coverage floor raised 76→80 to match actual coverage. QG ✅. Remaining repos = slot-2 surface.
 - [x] ✅ **S3. SUSTAIN — cross-repo log statement standardization sweep** [workspace audit] — 72 fixes across 6 repos:
-      execution-service@73cb74f0 (60 fixes), instruments-service@28e1286 (2), features-service@9d3137f2 (1),
-      UTL@c0a2095 (5), deployment-service@43dea99 (4), UAC@5ff27df (5). 0 violations workspace-wide in source. QG
-      clean on changed files. Done-def met.
+      execution-service@73cb74f0 (60 fixes), instruments-service@28e1286 (2), features-service@9d3137f2 (1), UTL@c0a2095
+      (5), deployment-service@43dea99 (4), UAC@5ff27df (5). 0 violations workspace-wide in source. QG clean on changed
+      files. Done-def met.
 - [x] ✅ **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** [workspace audit] — 453 justifications added
       across 8 repos: execution-service@4c0b6c3f (168), features-service@319eb813 (119), UTL@466a124 (118),
       deployment-service@d4883b7 (39), UAC@c37b3c9 (16), instruments-service@11ceaa5 (8), alerting-service@fc5e972 (1),
@@ -176,54 +176,59 @@ smoke begins.
       confirmed-unused fixtures removed from 4 repos. execution-service@7db9c881 (7 fixtures: sample_fill,
       sample_market_data, sample_config, sample_trade_data, sample_bet_execution, sample_odds, cassette_root fixture).
       features-service@ee7d1694 (4 fixtures: sample_book_data, sample_funding_data, mock_gcs_data,
-      mock_cross_timeframe_features). risk-and-exposure-service@caaffac (1 fixture: sample_position + import cleanup).
-      0 unused fixtures remaining in scanned repos. Done-def: 0 unused fixtures ✅.
-- [x] ✅ **S6. SUSTAIN — workspace-wide cassette parity deep refresh** [UAC external test surfaces] — UAC external/ subdirs
-      (80+ subdirs) — run cassette schema parity tests; refresh drifted cassettes. Done-def: cassette parity green + 5+
-      refreshes. **~6 cal-days**. — unified-api-contracts@391632c. 5 refreshes: (1) test_cassette_consolidation.py fix
-      (meta_and_asset_ctxs list-not-dict assertion), (2) DefiLlamaProtocol +10 fields, (3) DefiLlamaYieldPool +10 fields,
-      (4) PolymarketMarket/Token +5 fields, (5) ManifoldMarket full camelCase alias refresh. 351 cassette tests pass.
-- [x] ✅ **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — 15-code taxonomy applied across 4 repos:
-      execution-service@774602ea (205/205=100%), features-service (78/81=96%), risk-and-exposure-service (14/14=100%),
-      UAC (35/35=97%). All repos ≥95% justified. Done-def met.
-- [x] ✅ **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — Audited 13 repos × 8-12 workflows.
-      Finding: `update-dependency-version.yml` had 2 versions (5 repos on older single-Telegram-token pattern).
-      Fixed: canonical PM template rolled to risk-and-exposure-service@d7cd9dc, strategy-service@6cccda2,
-      system-integration-tests@e7644f7, trading-agent-service@a049733. Action versions all @v4/v5 ✓. 4+ alignments. Done-def met.
+      mock_cross_timeframe_features). risk-and-exposure-service@caaffac (1 fixture: sample_position + import cleanup). 0
+      unused fixtures remaining in scanned repos. Done-def: 0 unused fixtures ✅.
+- [x] ✅ **S6. SUSTAIN — workspace-wide cassette parity deep refresh** [UAC external test surfaces] — UAC external/
+      subdirs (80+ subdirs) — run cassette schema parity tests; refresh drifted cassettes. Done-def: cassette parity
+      green + 5+ refreshes. **~6 cal-days**. — unified-api-contracts@391632c. 5 refreshes: (1)
+      test_cassette_consolidation.py fix (meta_and_asset_ctxs list-not-dict assertion), (2) DefiLlamaProtocol +10
+      fields, (3) DefiLlamaYieldPool +10 fields, (4) PolymarketMarket/Token +5 fields, (5) ManifoldMarket full camelCase
+      alias refresh. 351 cassette tests pass.
+- [x] ✅ **S7. SUSTAIN — cross-repo `# noqa` justification audit** [workspace audit] — 15-code taxonomy applied across 4
+      repos: execution-service@774602ea (205/205=100%), features-service (78/81=96%), risk-and-exposure-service
+      (14/14=100%), UAC (35/35=97%). All repos ≥95% justified. Done-def met.
+- [x] ✅ **S8. SUSTAIN — cross-repo CI workflow consistency audit** [workspace CI audit] — Audited 13 repos × 8-12
+      workflows. Finding: `update-dependency-version.yml` had 2 versions (5 repos on older single-Telegram-token
+      pattern). Fixed: canonical PM template rolled to risk-and-exposure-service@d7cd9dc, strategy-service@6cccda2,
+      system-integration-tests@e7644f7, trading-agent-service@a049733. Action versions all @v4/v5 ✓. 4+ alignments.
+      Done-def met.
 - [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** [workspace audit] — AST scan across 11 repos: 0
-      actual `datetime.now()` calls in source (only `pd.Timestamp.now()` in h2h_calculator.py + docstrings).
-      Workspace already clean. Done-def: 0 violations ✅.
+      actual `datetime.now()` calls in source (only `pd.Timestamp.now()` in h2h_calculator.py + docstrings). Workspace
+      already clean. Done-def: 0 violations ✅.
 - [x] ✅ **S10. SUSTAIN — cross-repo test data fixture utilization audit** [workspace test cleanup] — Scanned
-      execution-service + strategy-service. Removed 5 stale fixtures: execution-service@e7126b94 (sbobet_match_page.html —
-      stub adapter, no HTML parsing) + strategy-service@c4a41d9 (4 YAML fixtures: btc_usdt_1h, uniswap_v3_pools,
+      execution-service + strategy-service. Removed 5 stale fixtures: execution-service@e7126b94 (sbobet_match_page.html
+      — stub adapter, no HTML parsing) + strategy-service@c4a41d9 (4 YAML fixtures: btc_usdt_1h, uniswap_v3_pools,
       premier_league_arb, es_nq_futures — backtest scripts referenced in docs don't exist). Done-def: 5+ cleanups ✅.
-- [x] ✅ **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — AST scan across 7 repos.
-      All at ≥70% except instruments-service (41.6%). Fixed instruments-service@942cfc2: 415 one-line stubs added across
-      76 files → 100% coverage (296/711 → 711/711). Other repos: exec 86.7%, features 82.0%, risk 85.4%, strategy 78.1%,
-      mtds 87.3%, deployment 83.3%, trading-agent 73.0%. All ≥70% ✅. Done-def met.
-- [x] ✅ **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — AST scan across 11 repos: 6 violations
-      found in execution-service async paths (hyperliquid.py × 4, hyperliquid_bridge.py × 2). Converted to aiohttp
-      with ThreadedResolver sessions; updated 14 tests to aioresponses. jito_bundle.py sync _post_json via asyncio.to_thread:
-      intentional, not a violation. 0 violations workspace-wide. — execution-service@6ac52287. Done-def: 0 violations ✅.
+- [x] ✅ **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** [workspace audit] — AST scan across 7
+      repos. All at ≥70% except instruments-service (41.6%). Fixed instruments-service@942cfc2: 415 one-line stubs added
+      across 76 files → 100% coverage (296/711 → 711/711). Other repos: exec 86.7%, features 82.0%, risk 85.4%, strategy
+      78.1%, mtds 87.3%, deployment 83.3%, trading-agent 73.0%. All ≥70% ✅. Done-def met.
+- [x] ✅ **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** [workspace audit] — AST scan across 11 repos: 6
+      violations found in execution-service async paths (hyperliquid.py × 4, hyperliquid_bridge.py × 2). Converted to
+      aiohttp with ThreadedResolver sessions; updated 14 tests to aioresponses. jito_bundle.py sync \_post_json via
+      asyncio.to_thread: intentional, not a violation. 0 violations workspace-wide. — execution-service@6ac52287.
+      Done-def: 0 violations ✅.
 - [x] ✅ **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** [workspace audit] — 0 violations found.
       Scanned all repos: no `from typing import List/Dict/Tuple/Set` or `List[/Dict[/Tuple[/Set[` usage in source.
       Workspace already clean. Done-def: 0 violations ✅.
 - [x] ✅ **S14. SUSTAIN — workspace-wide bare `except:` sweep** [workspace audit] — AST/rg scan across all 13 repos.
       Result: 0 bare `except:` in source. Workspace already clean. Done-def: 0 violations ✅.
-- [x] ✅ **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** [workspace config audit] — Audited 24 repos.
-      Many had only `['tests']`. Fixed 2 repos in scope: execution-service@a1f84888, strategy-service@7abfe9d — added
-      `__pycache__`, `.venv*`, `build`, `dist` to exclude list. instruments-service already had canonical set. Other repos
-      with drift (deployment-service, pnl-attribution-service, etc.) are outside slot-2 scope. Done-def: owned repos canonical ✅.
+- [x] ✅ **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** [workspace config audit] — Audited 24
+      repos. Many had only `['tests']`. Fixed 2 repos in scope: execution-service@a1f84888, strategy-service@7abfe9d —
+      added `__pycache__`, `.venv*`, `build`, `dist` to exclude list. instruments-service already had canonical set.
+      Other repos with drift (deployment-service, pnl-attribution-service, etc.) are outside slot-2 scope. Done-def:
+      owned repos canonical ✅.
 - [x] ✅ **S16. SUSTAIN — workspace-wide hardcoded `"/tmp"` sweep** [workspace audit] — 17 files found. 3 in source:
-      execution-service/engine/kill_switch.py (state file default), strategy-service/engine/core/output_builders.py (debug
-      dir), execution-service/utils/paths.py (container detection — NOT a file-creation use, exempt). Fixed 2 real uses:
-      execution-service@c94167e2, strategy-service@7bbae7d. paths.py detection pattern left with comment. Other files are
-      scripts/testing/e2e (not source service). Done-def: 0 file-creation uses of hardcoded /tmp in service source ✅.
-- [x] ✅ **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** [workspace audit] — Scan: 0 actual wildcard imports
-      in service source (position-balance-monitor mention was docstring). `__all__` check: strategy-service@1b18490 +
-      market-tick-data-service (added `__all__ = []`). exec/features/risk/instruments already had `__all__`. UAC uses
-      wildcard re-exports intentionally (public facade pattern — Ikenna primary). Done-def: 0 wildcard re-exports + owned
-      repos have `__all__` ✅.
+      execution-service/engine/kill_switch.py (state file default), strategy-service/engine/core/output_builders.py
+      (debug dir), execution-service/utils/paths.py (container detection — NOT a file-creation use, exempt). Fixed 2
+      real uses: execution-service@c94167e2, strategy-service@7bbae7d. paths.py detection pattern left with comment.
+      Other files are scripts/testing/e2e (not source service). Done-def: 0 file-creation uses of hardcoded /tmp in
+      service source ✅.
+- [x] ✅ **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** [workspace audit] — Scan: 0 actual wildcard
+      imports in service source (position-balance-monitor mention was docstring). `__all__` check:
+      strategy-service@1b18490 + market-tick-data-service (added `__all__ = []`). exec/features/risk/instruments already
+      had `__all__`. UAC uses wildcard re-exports intentionally (public facade pattern — Ikenna primary). Done-def: 0
+      wildcard re-exports + owned repos have `__all__` ✅.
 - [x] ✅ **S18. SUSTAIN — cross-repo line-length 100→120 migration audit** [workspace config audit] — Audited 23 repos
       with pyproject.toml. All 23 use `line-length=120`. 0 drift. Done-def: 0 drift ✅.
 - [x] ✅ **S19. SUSTAIN — cross-repo ruff `select` rule consistency** [workspace config audit] — Audited 24 repos.
@@ -321,28 +326,28 @@ smoke begins.
       lending-indices DEFERRED; (2) defi_master banner → post-cutover plan as Phase 10+ canonical track; (3)
       alerting_service_live_rules Phase 8 banner → post-cutover plan. Flipped 3/4 [PM] P0 banner items in post-cutover
       plan; item 2 (master_to_live_defi sub-bullet) left SLOT-1-ONLY.
-- [x] ✅ **22. archetype doc broken-link sweep** — PM@bd018a91. Fixed 3 broken cross-references: (1) carry-recursive-staked
-      restaking-reward-economics: ../../cross-cutting/ → ../cross-cutting/ (one level too deep); (2) yield-staking-simple
-      same fix; (3) arbitrage-price-dispersion APD finalisation plan: plans/active/ → plans/archive/ (plan archived
-      2026-05-09).
+- [x] ✅ **22. archetype doc broken-link sweep** — PM@bd018a91. Fixed 3 broken cross-references: (1)
+      carry-recursive-staked restaking-reward-economics: ../../cross-cutting/ → ../cross-cutting/ (one level too deep);
+      (2) yield-staking-simple same fix; (3) arbitrage-price-dispersion APD finalisation plan: plans/active/ →
+      plans/archive/ (plan archived 2026-05-09).
 - [x] ✅ **23. recursive-borrow codex docs plan-ref corrections** — PM@5404a41f. Fixed 4 docs that referenced old
       2026_05_10 plan for Phase 10+ content: (1) carry-recursive-borrow-lending-only Status note: Phase 12 backtest now
-      correctly points to post-cutover plan; (2) carry-recursive-borrow-perp-hedged Status note: Phases 6+7+8+12 → post-cutover;
-      code-backport line 124 (Phases 6+7 ref) also updated; (3) cefi-perp-leg-bybit frontmatter related_plans Phase 10 →
-      post-cutover plan; (4) recursive-borrow-backtest-scenarios Phase 12 see-also → post-cutover plan. flash-loan-receiver
-      + runbook left unchanged (Phase 4 = old plan = correct).
+      correctly points to post-cutover plan; (2) carry-recursive-borrow-perp-hedged Status note: Phases 6+7+8+12 →
+      post-cutover; code-backport line 124 (Phases 6+7 ref) also updated; (3) cefi-perp-leg-bybit frontmatter
+      related_plans Phase 10 → post-cutover plan; (4) recursive-borrow-backtest-scenarios Phase 12 see-also →
+      post-cutover plan. flash-loan-receiver + runbook left unchanged (Phase 4 = old plan = correct).
 - [x] ✅ **24. simulation_scenarios Phase 8 G+H+I codex sections** — PM@ed0079f8. Added scenario sections to 3 existing
-      codex docs: (8.G) live-pipeline-architecture.md § "Scenario tap points" — 7-layer table + reuse-prod-codepath note;
-      (8.H) replay-subsystem.md § "Scenario overlay on replay" — composition contract + ordering invariant + pseudocode;
-      (8.I) honest-absence-downstream-handling.md § "Scenario-driven gap injection" — DropRows + ManifestPhantom mutation
-      types; per-row scenario_id provenance; alerting-suppression rule; MANIFEST tap layer scope. Grep check: 6 files with
-      scenario content — meets plan Phase 8 full-execution criterion (≥6 UPDATE docs).
+      codex docs: (8.G) live-pipeline-architecture.md § "Scenario tap points" — 7-layer table + reuse-prod-codepath
+      note; (8.H) replay-subsystem.md § "Scenario overlay on replay" — composition contract + ordering invariant +
+      pseudocode; (8.I) honest-absence-downstream-handling.md § "Scenario-driven gap injection" — DropRows +
+      ManifestPhantom mutation types; per-row scenario_id provenance; alerting-suppression rule; MANIFEST tap layer
+      scope. Grep check: 6 files with scenario content — meets plan Phase 8 full-execution criterion (≥6 UPDATE docs).
 - [x] ✅ **25. simulation_scenarios Phase 8 B+C — 2 NEW codex docs** — PM@7a735152. Created 2 new docs: (8.B)
       codex/04-architecture/scenario-outcome-assertions.md: 9-category OutcomeCategory enum table; 6-tuple assertion
       contract; PASS/FAIL/WARN semantics; matrix-red = cutover-block; scenario-fail vs real-fire (synthetic=True);
       alerting wire pattern (log-only; paging suppressed); (8.C) codex/02-data/scenario-overlay-semantics.md: overlay
       parquet schema (scenario_id/run_id/synthetic); GCS path; per-row provenance chain; available_at discipline
-      (LOOKAHEAD_DOWNGRADE marker); manifest scenario_id column (post-cutover Phase 3.G). find codex -name "scenario-*"
+      (LOOKAHEAD_DOWNGRADE marker); manifest scenario_id column (post-cutover Phase 3.G). find codex -name "scenario-\*"
       | wc -l → 3 (meets plan Phase 8 NEW docs criterion).
 
 #### Coordination
@@ -447,31 +452,28 @@ smoke begins.
       TestModeHandlerBase tests (run_batch/run_live — not in canonical UTL ModeHandler since lift 2026-05-08) +
       ruff-format residuals in test_batch_handler.py + test_feature_writer_pure.py. QG ✅ 0 failures from 7472 tests.
       features-service@3482b22b
-- [x] ✅ **19. SUSTAIN — features-service Wave 75 — scanner_factories.py coverage (18 tests)** —
-      18 new tests: TestMakeEtherscanScannerChainRouting (7: known-chain URL, ARBITRUM URL, unknown-chain fallback,
-      lowercase normalisation, key venue routing, empty-key warning, timeout kwarg) + TestEtherscanChainMapping (2:
-      same-keys assertion, all 7 expected chains) + TestMakeWeb3Scanner (4: alchemy key path, empty-alchemy warning,
-      empty-RPC warning, bound factory delegates to stream_factory) + TestMakeSolanaScanner (5: Helius URL, custom
-      venue URL, empty-key warning, max_signatures forwarded, rpc object passed). All 18 passed.
-      features-service@9661f8ab
-- [x] ✅ **20. SUSTAIN — features-service Wave 76 — default_factories.py coverage (25 tests)** —
-      25 new tests: _NullSolanaRpc (3) + _to_signature_dict_list (6) + _to_transaction_dict (3) + _to_meta_dict (2) +
-      default_solana_rpc_factory (3: empty URL/construction failure/normal) + _resolve_block_for_timestamp via
-      default_block_range_resolver (8: success, ConnectionError/HTTP-429/JSON-err/non-digit fallbacks, unknown-chain
-      12s default, api_key_supplier, None-supplier). All 25 passed.
-      features-service@10251ea3
-- [x] ✅ **21. SUSTAIN — features-service Wave 77 — parquet_dust_loader.py coverage (25 tests)** —
-      25 new tests: lst_holding_wallet_from_params (6: identity priority, params fallback, empty/missing paths) +
-      lst_target_denom_from_params (5: native_asset/asset/ETH-default) + _row_to_dust_token (4: normal, missing
-      amount, bad amount → Decimal(0), isoformat) + ParquetDustLoader.__call__ (5: no wallet/exception/empty
-      rows/filter-miss/match) + _safe_list_blobs (2: error+success) + _read_partition_frames (3: skip non-parquet,
+- [x] ✅ **19. SUSTAIN — features-service Wave 75 — scanner_factories.py coverage (18 tests)** — 18 new tests:
+      TestMakeEtherscanScannerChainRouting (7: known-chain URL, ARBITRUM URL, unknown-chain fallback, lowercase
+      normalisation, key venue routing, empty-key warning, timeout kwarg) + TestEtherscanChainMapping (2: same-keys
+      assertion, all 7 expected chains) + TestMakeWeb3Scanner (4: alchemy key path, empty-alchemy warning, empty-RPC
+      warning, bound factory delegates to stream_factory) + TestMakeSolanaScanner (5: Helius URL, custom venue URL,
+      empty-key warning, max_signatures forwarded, rpc object passed). All 18 passed. features-service@9661f8ab
+- [x] ✅ **20. SUSTAIN — features-service Wave 76 — default_factories.py coverage (25 tests)** — 25 new tests:
+      \_NullSolanaRpc (3) + \_to_signature_dict_list (6) + \_to_transaction_dict (3) + \_to_meta_dict (2) +
+      default_solana_rpc_factory (3: empty URL/construction failure/normal) + \_resolve_block_for_timestamp via
+      default_block_range_resolver (8: success, ConnectionError/HTTP-429/JSON-err/non-digit fallbacks, unknown-chain 12s
+      default, api_key_supplier, None-supplier). All 25 passed. features-service@10251ea3
+- [x] ✅ **21. SUSTAIN — features-service Wave 77 — parquet_dust_loader.py coverage (25 tests)** — 25 new tests:
+      lst_holding_wallet_from_params (6: identity priority, params fallback, empty/missing paths) +
+      lst_target_denom_from_params (5: native_asset/asset/ETH-default) + \_row_to_dust_token (4: normal, missing amount,
+      bad amount → Decimal(0), isoformat) + ParquetDustLoader.**call** (5: no wallet/exception/empty
+      rows/filter-miss/match) + \_safe_list_blobs (2: error+success) + \_read_partition_frames (3: skip non-parquet,
       skip failure, polars append). All 25 passed. features-service@10467b52
-- [x] ✅ **22. SUSTAIN — features-service Wave 78 — lst_rewards_bootstrap.py coverage (19 tests)** —
-      19 new tests: discover_chains_in_registry (5: matching layer, None-distributor excluded, layer-mismatch,
-      multi-chain, empty) + _build_required_venues (8: SOLANA/HELIUS, EVM chains, ALCHEMY, dedup/sort,
-      unknown chain, empty) + bootstrap_seasonal_rewards_collector (6: returns BootstrapResult, chains_wired,
-      reloader.start(), no-chains warning, prefer_etherscan_for routing, solana → make_solana_scanner). All 19
-      passed. features-service@35fa1725
+- [x] ✅ **22. SUSTAIN — features-service Wave 78 — lst_rewards_bootstrap.py coverage (19 tests)** — 19 new tests:
+      discover_chains_in_registry (5: matching layer, None-distributor excluded, layer-mismatch, multi-chain, empty) +
+      \_build_required_venues (8: SOLANA/HELIUS, EVM chains, ALCHEMY, dedup/sort, unknown chain, empty) +
+      bootstrap_seasonal_rewards_collector (6: returns BootstrapResult, chains_wired, reloader.start(), no-chains
+      warning, prefer_etherscan_for routing, solana → make_solana_scanner). All 19 passed. features-service@35fa1725
 
 #### Coordination
 
@@ -645,32 +647,31 @@ smoke begins.
       gracefully, all-failed→no recommendation, two algos more-slices wins, summary() keys. Also: ruff format batch (20
       files @1ea6dcf8), drain_mode type:ignore removal @2c1d63b7. QG: 7391 passed. execution-service@5dec3c4b.
 - [x] ✅ **S15. SUSTAIN — execution-service multicall_batcher + solver_auction zero-to-coverage (16 tests)** —
-      multicall_batcher.py (0→covered): TestMulticallBatcher — encode APPROVE/SWAP/WRAP/unknown steps,
-      _is_atomic_group with/without flash loan, create_batches empty + grouping by multicall_group,
-      estimate_gas_savings keys + small-batch negative savings guard (MULTICALL_BASE_GAS overhead).
-      solver_auction.py (0→covered): TestBatchAuctionEngine — register_default_solvers (3 solvers),
-      submit_intent adds to pending, run_auction no intents → empty, run with pool state, score_solutions
-      min_out filter, _simulate_amm_output constant-product output. QG: 7407 passed. execution-service@0e1a641c.
-- [x] ✅ **S16. SUSTAIN — execution-service schema_validator zero-to-coverage (17 tests)** —
-      schema_validator.py (0→covered): TestSchemaValidator — instantiation/empty state, validate() unknown
-      data_type→error, validate_trades() non-existent file→error, _mbp_depth_columns depth=2 col names +
-      depth=0 empty, _validate_trade_sides valid A/B + invalid BUY/SELL→error, _validate_prices negative→error
-      + very large→warning, _validate_ohlc_relationships bad high + bad low→errors, _validate_volume
-      negative→error, _validate_swap_amounts non-positive→2 errors, _validate_transaction_hashes non-0x→warning,
-      _check_chronological_order out-of-order→warning, aliases (DatabentoSchemaValidator + DeFiSchemaValidator).
-      All 91 tests in file pass. execution-service@d4cbd3b7.
-- [x] ✅ **S17. SUSTAIN — execution-service orderbook_converter zero-to-coverage (12 tests)** —
-      orderbook_converter.py (0→covered): TestOrderbookConverter — _detect_book_columns Tardis format
-      (asks[i].price), GCS format (ask_price_i) with numeric sort, no columns→ValueError;
-      _compute_is_outside_range no bounds→False, None sample→False, ns before/after/within range,
-      us before/within range; _filter_by_time_window no bounds→all rows, empty→empty.
-      103 total tests in file pass. execution-service@dae5ac5f.
-- [x] ✅ **S18. SUSTAIN — execution-service slashing_tail_risk zero-to-coverage (18 tests)** —
-      slashing_tail_risk.py (0→covered): TestSlashingTailRisk — _decimal_sqrt basic/zero/negative→ValueError,
-      _fit_severity_stats empty/single/known-values (mean=4 std=2), _fit_hill_alpha <25→2.0 + sufficient→positive,
-      _poisson_sample λ=0→0 + small λ + large λ>30 (normal-approx path), _empirical_p_exceeds empty/all/none/partial,
-      ProbabilityOfLossCurve.p_at_threshold below-min/above-max clamp + linear interpolation.
-      121 total tests in file pass. execution-service@c27bd6d5.
+      multicall_batcher.py (0→covered): TestMulticallBatcher — encode APPROVE/SWAP/WRAP/unknown steps, \_is_atomic_group
+      with/without flash loan, create_batches empty + grouping by multicall_group, estimate_gas_savings keys +
+      small-batch negative savings guard (MULTICALL_BASE_GAS overhead). solver_auction.py (0→covered):
+      TestBatchAuctionEngine — register_default_solvers (3 solvers), submit_intent adds to pending, run_auction no
+      intents → empty, run with pool state, score_solutions min_out filter, \_simulate_amm_output constant-product
+      output. QG: 7407 passed. execution-service@0e1a641c.
+- [x] ✅ **S16. SUSTAIN — execution-service schema_validator zero-to-coverage (17 tests)** — schema_validator.py
+      (0→covered): TestSchemaValidator — instantiation/empty state, validate() unknown data_type→error,
+      validate_trades() non-existent file→error, \_mbp_depth_columns depth=2 col names + depth=0 empty,
+      \_validate_trade_sides valid A/B + invalid BUY/SELL→error, \_validate_prices negative→error + very large→warning,
+      \_validate_ohlc_relationships bad high + bad low→errors, \_validate_volume negative→error, \_validate_swap_amounts
+      non-positive→2 errors, \_validate_transaction_hashes non-0x→warning, \_check_chronological_order
+      out-of-order→warning, aliases (DatabentoSchemaValidator + DeFiSchemaValidator). All 91 tests in file pass.
+      execution-service@d4cbd3b7.
+- [x] ✅ **S17. SUSTAIN — execution-service orderbook_converter zero-to-coverage (12 tests)** — orderbook_converter.py
+      (0→covered): TestOrderbookConverter — \_detect_book_columns Tardis format (asks[i].price), GCS format
+      (ask_price_i) with numeric sort, no columns→ValueError; \_compute_is_outside_range no bounds→False, None
+      sample→False, ns before/after/within range, us before/within range; \_filter_by_time_window no bounds→all rows,
+      empty→empty. 103 total tests in file pass. execution-service@dae5ac5f.
+- [x] ✅ **S18. SUSTAIN — execution-service slashing_tail_risk zero-to-coverage (18 tests)** — slashing_tail_risk.py
+      (0→covered): TestSlashingTailRisk — \_decimal_sqrt basic/zero/negative→ValueError, \_fit_severity_stats
+      empty/single/known-values (mean=4 std=2), \_fit_hill_alpha <25→2.0 + sufficient→positive, \_poisson_sample λ=0→0 +
+      small λ + large λ>30 (normal-approx path), \_empirical_p_exceeds empty/all/none/partial,
+      ProbabilityOfLossCurve.p_at_threshold below-min/above-max clamp + linear interpolation. 121 total tests in file
+      pass. execution-service@c27bd6d5.
 
 #### Coordination
 
@@ -795,13 +796,14 @@ smoke begins.
 #### Mechanical queue
 
 - [x] ✅ **1. deployment-ui + deployment-api Phase 2F final items (data_status_ui_phase_2f 80%, 4/5)** — 1 item left.
-      Plan path: [`data_status_ui_phase_2f.md`](../archive/data_status_ui_phase_2f.md). Close out. — INFRA cron VM verified
-      complete (slot-2 2026-05-15): `launch-honest-coverage-vm.sh` + watchdog prefixes + DEPLOYMENT_ENV all in place.
-      Cloud Scheduler activation = Ikenna/owner territory. Plan closed — DONE-2026-05-18 block added. PM@(flip commit).
+      Plan path: [`data_status_ui_phase_2f.md`](../archive/data_status_ui_phase_2f.md). Close out. — INFRA cron VM
+      verified complete (slot-2 2026-05-15): `launch-honest-coverage-vm.sh` + watchdog prefixes + DEPLOYMENT_ENV all in
+      place. Cloud Scheduler activation = Ikenna/owner territory. Plan closed — DONE-2026-05-18 block added. PM@(flip
+      commit).
 - [ ] **2. deploy_missing_auto_launch_2026_05_07 final item (93%, 13/14)** — 1 item left. Plan path:
-      [`deploy_missing_auto_launch_2026_05_07.md`](../archive/deploy_missing_auto_launch_2026_05_07.md). Close out. ⏳ **SOAK
-      GATE** — Phase 2 shipped deployment-api@950ffc9 2026-05-17. 7-day soak eligible flip 2026-05-24. 0 compromise
-      events verified 2026-05-18. Annotated in plan. Cannot flip until 2026-05-24.
+      [`deploy_missing_auto_launch_2026_05_07.md`](../archive/deploy_missing_auto_launch_2026_05_07.md). Close out. ⏳
+      **SOAK GATE** — Phase 2 shipped deployment-api@950ffc9 2026-05-17. 7-day soak eligible flip 2026-05-24. 0
+      compromise events verified 2026-05-18. Annotated in plan. Cannot flip until 2026-05-24.
 - [x] ✅ **3. deployment-api / deployment-ui Phase 4 cron infra status check** — verify
       `gs://central-element-323112-deployment-events/quality_gates_snapshot/` is still being updated daily by the cron
       VM (B-018 shipped 2026-05-14). Spot-check today's snapshot. File finding if stale. — Snapshot stale: latest prefix
@@ -884,17 +886,15 @@ smoke begins.
       DEFERRED-POST-CUTOVER if backend-dependent. Done-def: 10+ items pre-staged + pnpm build green. **~20 cal-days**.
 - [ ] **S3. SUSTAIN — deployment-api integration test coverage uplift to 90%** [deployment-api] — **IN PROGRESS
       2026-05-18 slot-7**: 74.38%→~83% in this session (last code commit deployment-api@8773458, 3749+ tests):
-      service_status 19.2%→83.4%, deployments mock 64.9%→70.6%, sports_venues 100%,
-      builds 79.1%, service_status_checkers 81.9%, _cloud_builds_trigger @501b201,
-      deployment_service_client @1beaad4, deployment_state @b67b8e7,
-      data_status mock-mode routes + asset_group fix @4937100,
-      deploy_missing routes (17 new) + repo_readiness (5 new) + data_status live routes (61 new) @6aca611,
-      DataAnalyticsService turbo/cache/stats/aggregate paths (37 tests) @8773458.
-      **DEFERRED to next session** — remaining ~1400 lines for 90%:
-      services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed),
+      service_status 19.2%→83.4%, deployments mock 64.9%→70.6%, sports_venues 100%, builds 79.1%,
+      service_status_checkers 81.9%, \_cloud_builds_trigger @501b201, deployment_service_client @1beaad4,
+      deployment_state @b67b8e7, data_status mock-mode routes + asset_group fix @4937100, deploy_missing routes (17
+      new) + repo_readiness (5 new) + data_status live routes (61 new) @6aca611, DataAnalyticsService
+      turbo/cache/stats/aggregate paths (37 tests) @8773458. **DEFERRED to next session** — remaining ~1400 lines for
+      90%: services/data_status_service.py (610 missed), services/data_status_drilldown.py (328 missed),
       services/shard_detail.py (268 missed), routes/data_status.py (~100 more), utils/cache.py (92),
-      utils/path_combinatorics.py (93), services/deploy_missing_launch.py (69 missed).
-      Done-def: deployment-api coverage ≥90% + QG green. **~10 cal-days**.
+      utils/path_combinatorics.py (93), services/deploy_missing_launch.py (69 missed). Done-def: deployment-api coverage
+      ≥90% + QG green. **~10 cal-days**.
 - [x] ✅ **S4. SUSTAIN — deployment-ui playwright e2e coverage extension** [deployment-ui] — **SHIPPED 2026-05-18
       slot-7** — deployment-ui@bfcc361: 22 new smoketests: env-tier DEV badge (green text + color class + tooltip
       open/close/content), mobile hamburger (open/close/link/close-on-nav), nav routing
@@ -1005,10 +1005,24 @@ smoke begins.
       unified-trading-system-ui): gitleaks secret scanning hook propagated. deployment-api skipped (slot 7 owns).
       Canonical template drift = 0. alerting-service@af7122f, UTL@cb1163d, unified-trading-system-ui@40d03f5b
       (representative). QUEUE EXHAUSTED — all 9 items complete (4 primary + 2 reserve + 3 deep-reserve).
-- [x] ✅ **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — new audit script `scripts/quality_gates/audit_workspace_constraints_drift.py`; 8 errors fixed across 8 repos: anthropic floor @client-reporting-api@e7650d2 + @deployment-api@558240f; web3 ceiling @deployment-service@e76f4fc + @features-service@18c66608 + @instruments-service@9a12863 + @unified-trading-library@a4dc577; requests floor @market-tick-data-service@f9b00d2; python-multipart floor @execution-service@70c12ae0. orchastrator (not in tab) BIG filed. PM audit script committed.
-- [x] ✅ **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — backfill-flip: tests already shipped at UTL@7f8d174 (16 tests: TestDeploymentEventTypesRatchet + TestStrategyAvailabilityEventTypesRatchet + TestDataAvailabilityEventTypesRatchet + TestCrossServiceIdempotency). QG green (confirmed via git log). UTL@7f8d174. (backfilled 2026-05-18)
-- [x] ✅ **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — ran `pytest tests/test_cassette_schema_parity.py` on UAC tab worktree: 316 passed, 49 skipped (stubs), 0 failed. No drift detected = 0 refreshes needed. Parity fully green. UAC tab current at d3872a3. (2026-05-18)
-- [x] ✅ **17. MEGA RESERVE — semver-agent label + tag audit across 21 Python repos** — full audit: all 24 Python repos have semver-agent.yml with correct SERVICE_NAME/SOURCE_DIR substitutions; all semver_policy=agent valid; all manifest versions match pyproject.toml; commit labels correctly applied (no misclassifications); pre-1.0.0 rules correctly implemented (feat! → MINOR). BIG FIXED: unified-trading-system-ui had __REPO_NAME__+__SOURCE_DIR__ placeholders unsubstituted → fixed unified-trading-system-ui@d7132de5. (2026-05-18)
+- [x] ✅ **14. MEGA RESERVE — workspace-constraints.toml deep audit (per-repo dep version drift)** — new audit script
+      `scripts/quality_gates/audit_workspace_constraints_drift.py`; 8 errors fixed across 8 repos: anthropic floor
+      @client-reporting-api@e7650d2 + @deployment-api@558240f; web3 ceiling @deployment-service@e76f4fc +
+      @features-service@18c66608 + @instruments-service@9a12863 + @unified-trading-library@a4dc577; requests floor
+      @market-tick-data-service@f9b00d2; python-multipart floor @execution-service@70c12ae0. orchastrator (not in tab)
+      BIG filed. PM audit script committed.
+- [x] ✅ **15. MEGA RESERVE — UTL test coverage extension (HMAC + emission_publisher + event ratchet)** — backfill-flip:
+      tests already shipped at UTL@7f8d174 (16 tests: TestDeploymentEventTypesRatchet +
+      TestStrategyAvailabilityEventTypesRatchet + TestDataAvailabilityEventTypesRatchet + TestCrossServiceIdempotency).
+      QG green (confirmed via git log). UTL@7f8d174. (backfilled 2026-05-18)
+- [x] ✅ **16. MEGA RESERVE — workspace-wide cassette parity refresh (UAC external dirs)** — ran
+      `pytest tests/test_cassette_schema_parity.py` on UAC tab worktree: 316 passed, 49 skipped (stubs), 0 failed. No
+      drift detected = 0 refreshes needed. Parity fully green. UAC tab current at d3872a3. (2026-05-18)
+- [x] ✅ **17. MEGA RESERVE — semver-agent label + tag audit across 21 Python repos** — full audit: all 24 Python repos
+      have semver-agent.yml with correct SERVICE_NAME/SOURCE_DIR substitutions; all semver_policy=agent valid; all
+      manifest versions match pyproject.toml; commit labels correctly applied (no misclassifications); pre-1.0.0 rules
+      correctly implemented (feat! → MINOR). BIG FIXED: unified-trading-system-ui had **REPO_NAME**+**SOURCE_DIR**
+      placeholders unsubstituted → fixed unified-trading-system-ui@d7132de5. (2026-05-18)
 
 #### Coordination
 
@@ -1031,8 +1045,8 @@ smoke begins.
       (pass-through + fallback), \_infer_instrument_type UNKNOWN path, \_infer_chain (column + 4-part id),
       \_infer_league_id; QG green — mdps@cce0da5
 - [x] ✅ **3. solana_lst_native_staking_adapters_2026_05_14 final item (95%, 21/22)** — 1 checkbox left. Plan path:
-      [`solana_lst_native_staking_adapters_2026_05_14.md`](../archive/solana_lst_native_staking_adapters_2026_05_14.md). Close out.
-      (deployment-service@ea1356b — launchers + watchdog prefixes; plan now 22/22 100%)
+      [`solana_lst_native_staking_adapters_2026_05_14.md`](../archive/solana_lst_native_staking_adapters_2026_05_14.md).
+      Close out. (deployment-service@ea1356b — launchers + watchdog prefixes; plan now 22/22 100%)
 
 #### Reserve queue
 
@@ -1056,7 +1070,7 @@ smoke begins.
       smoke + reconciliation + plan unlock). Sub-item 15.1 (workspace-wide QG sweep) partially addressed by MTDS clean
       state. Picked highest-impact mechanical work available in Phase 3 completion surface: added 21-test
       `test_websocket_streaming_handler.py` covering parse_shard_spec (7 cases), validate_config (4 cases),
-      _resolve_connector (3 cases), handler.run async (3 cases), standalone run() (4 cases). MTDS QG at 15 violations
+      \_resolve_connector (3 cases), handler.run async (3 cases), standalone run() (4 cases). MTDS QG at 15 violations
       (pre-existing; no regressions introduced). 1720 passed. — mtds@8f78f24
 - [x] ✅ **15. MEGA RESERVE — MTDS adapter coverage continuation (deribit + binance + bybit handlers)** — after item 11
       (databento + polymarket_clob), extend coverage on perp venues. Same Tier-1 SPL stake-pool / multi-call
@@ -1143,8 +1157,8 @@ When primary queue done, work reserve queue. When reserve done, ping `[slot-N �
 
 ## Deferred work after 2026-05-18 slot-7
 
-| Item | Status | Evidence | Next action |
-|------|--------|----------|-------------|
+| Item                                      | Status             | Evidence               | Next action                                                                                                                                                                                                   |
+| ----------------------------------------- | ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S3: deployment-api coverage uplift to 90% | IN PROGRESS (~83%) | deployment-api@8773458 | Next session: target services/data_status_service.py (610 lines), data_status_drilldown.py (328), shard_detail.py (268), utils/cache.py (92), utils/path_combinatorics.py (93), deploy_missing_launch.py (69) |
 
 ## Composes with

@@ -336,7 +336,8 @@ without explicit risk approval.
 
 ## Cost Tracking in PnL Attribution
 
-Post-trade costs feed into the PnL attribution pipeline (see [pnl-attribution.md](../../architecture-v2/cross-cutting/pnl-attribution.md)):
+Post-trade costs feed into the PnL attribution pipeline (see
+[pnl-attribution.md](../../architecture-v2/cross-cutting/pnl-attribution.md)):
 
 ```
 ActualCost breakdown:

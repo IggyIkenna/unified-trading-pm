@@ -44,6 +44,7 @@ clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already 
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` P0 rename done @ unified-trading-pm@d78cb9342.
 ✅ [2026-05-19 ~14:00 UTC] harsh-slot-3 ACK — local dir renamed (orchestrator-service → agent-orchestrator), .tabs/3/agent-orchestrator worktree created on tab/hk/3 from main@a3031fd; scripts/check.sh green (ruff + basedpyright 0 errors + prettier + tsc). Remote already correct (IggyIkenna/agent-orchestrator). P0 complete on hk machine.
 
+<<<<<<< Updated upstream
 [2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction cross-asset-rescan apply-flips
 unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential pass-ordering enforcement
 (deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker on
@@ -55,6 +56,10 @@ week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-
 
 [2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9,
 channel `#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
+=======
+[2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9, channel
+`#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
+>>>>>>> Stashed changes
 (central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `AGENT_ORCHESTRATOR_SLACK_APP_ID`,
 `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`, `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET` (placeholder — needs real value from
 Slack Basic Info page), `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same placeholder). Also in workspace `.act-secrets`.

@@ -1182,25 +1182,60 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
   \_vl_gcs_build_exception_error. validate_local_trades_files 76L→38L via \_vl_resolve_dataset_folder +
   \_vl_check_trade_files. validate_time_window_in_files 91L→37L via \_vl_find_timestamp_col +
   \_vl_resolve_file_ts_range. Allowlist 20→19 files. All methods <50L. AST clean. ruff 0 errors. Slot-5 cumulative
-  across batches 21-28: 8 files cleared (data/validator + algorithms/impl ×5 + data/loader_base + data/loader_transforms).
+  across batches 21-28: 8 files cleared (data/validator + algorithms/impl ×5 + data/loader_base +
+  data/loader_transforms).
 
   **Deferred from slot-5 2026-05-18 session (data/loaders/ remaining scope)**:
-  - [ ] **P2 DEFERRED** `data/loaders/tick_data.py` — `load_trades` 435L + `load_book_snapshots` 125L. Both too
-    complex to refactor safely without test validation (streaming + FUSE mount + timestamp normalization + filtering
-    all interleaved in a single 435L method). Requires dedicated slot with QG run to confirm green before commit.
-    Still in FUNCTION_SIZE_EXTRA_EXCLUDES. Next owner: assign when test infra is warm.
+  - [ ] **P2 DEFERRED** `data/loaders/tick_data.py` — `load_trades` 435L + `load_book_snapshots` 125L. Both too complex
+        to refactor safely without test validation (streaming + FUSE mount + timestamp normalization + filtering all
+        interleaved in a single 435L method). Requires dedicated slot with QG run to confirm green before commit. Still
+        in FUNCTION_SIZE_EXTRA_EXCLUDES. Next owner: assign when test infra is warm.
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 29 — data/orderbook_converter.py)**: shipped at execution-service@2c2b4d057. _check_skip_if_exists 80L→30L via _check_df_catalog_exists; _filter_by_time_window 105L→26L via _detect_ts_is_nanoseconds + _apply_ts_filter_and_log; _build_snapshot_deltas 158L→37L via _DeltaRecord NamedTuple + _build_clear_record + _build_level_records + _set_f_last_flag; convert_orderbook_parquet_to_catalog 195L→50L via _load_parquet_df + _detect_timestamp_cols + _run_snapshot_batch_loop + _write_catalog_batch. 4 violations cleared. Allowlist 19→18 files. Slot-4 cumulative across batches 1-29: 90 files cleared.
+  **Ratchet-down 2026-05-18 (slot-4 batch 29 — data/orderbook_converter.py)**: shipped at execution-service@2c2b4d057.
+  \_check_skip_if_exists 80L→30L via \_check_df_catalog_exists; \_filter_by_time_window 105L→26L via
+  \_detect_ts_is_nanoseconds + \_apply_ts_filter_and_log; \_build_snapshot_deltas 158L→37L via \_DeltaRecord
+  NamedTuple + \_build_clear_record + \_build_level_records + \_set_f_last_flag; convert_orderbook_parquet_to_catalog
+  195L→50L via \_load_parquet_df + \_detect_timestamp_cols + \_run_snapshot_batch_loop + \_write_catalog_batch. 4
+  violations cleared. Allowlist 19→18 files. Slot-4 cumulative across batches 1-29: 90 files cleared.
 
-  **Ratchet-down 2026-05-18 (slot-4 batch 30 — data/checker.py + benchmark/comparison.py)**: data/checker.py shipped at execution-service@9e1d6b29b: check_gcs_file_exists 212L→33L via _GCS_DATA_TYPE_MAP constant + _gcs_override_test_date + _gcs_assert_loader + _gcs_resolve_instrument_parts + _gcs_resolve_category + _gcs_build_path + _gcs_check_blob + _gcs_lookup_and_check; check_data_availability 106L→27L via _chk_init_result + _chk_resolve_source + _chk_check_trades + _chk_finalize_trades. benchmark/comparison.py shipped at execution-service@f8e20a620: run_comparison 199L→37L + _get_algorithm_references 127L→3L via _ALGORITHM_REFERENCES module constant + _run_and_log_benchmark + _run_all_algorithms + _build_algo_result instance methods + module-level _log_comparison_header + _setup_signal_driven_config. 4 violations cleared. Allowlist 18→16 files. Slot-4 cumulative across batches 1-30: 94 files cleared.
+  **Ratchet-down 2026-05-18 (slot-4 batch 30 — data/checker.py + benchmark/comparison.py)**: data/checker.py shipped at
+  execution-service@9e1d6b29b: check_gcs_file_exists 212L→33L via \_GCS_DATA_TYPE_MAP constant +
+  \_gcs_override_test_date + \_gcs_assert_loader + \_gcs_resolve_instrument_parts + \_gcs_resolve_category +
+  \_gcs_build_path + \_gcs_check_blob + \_gcs_lookup_and_check; check_data_availability 106L→27L via \_chk_init_result +
+  \_chk_resolve_source + \_chk_check_trades + \_chk_finalize_trades. benchmark/comparison.py shipped at
+  execution-service@f8e20a620: run_comparison 199L→37L + \_get_algorithm_references 127L→3L via \_ALGORITHM_REFERENCES
+  module constant + \_run_and_log_benchmark + \_run_all_algorithms + \_build_algo_result instance methods + module-level
+  \_log_comparison_header + \_setup_signal_driven_config. 4 violations cleared. Allowlist 18→16 files. Slot-4 cumulative
+  across batches 1-30: 94 files cleared.
 
-  **Ratchet-down 2026-05-18 (slot-5 batch 29 — engine/routing/instruction_router.py)**: shipped at execution-service@17480ee86. route_instruction 129L→36L via _route_compose_preflight (30L) + _route_log_error_action (31L) + _route_handle_error (27L). 1 violation cleared. Allowlist 19→15 files (net; parallel slot-4 batches 29-30 also landed). Slot-5 cumulative across batches 21-29: 9 files cleared.
+  **Ratchet-down 2026-05-18 (slot-5 batch 29 — engine/routing/instruction_router.py)**: shipped at
+  execution-service@17480ee86. route_instruction 129L→36L via \_route_compose_preflight (30L) + \_route_log_error_action
+  (31L) + \_route_handle_error (27L). 1 violation cleared. Allowlist 19→15 files (net; parallel slot-4 batches 29-30
+  also landed). Slot-5 cumulative across batches 21-29: 9 files cleared.
 
-  **Ratchet-down 2026-05-19 (slot-5 batch 30 — engine/backtest/engine/results.py)**: shipped at execution-service@750e8001d. _extract_results 226L→49L via 7 helpers: _er_extract_summary_checks (26L) + _er_alpha_instr (18L) + _er_alpha_cache static (21L) + _er_resolve_run_id (23L) + _er_exec_algo static (19L) + _er_resolve_instruction_type static (8L) + _er_build_orders_and_timeline (28L). 1 violation cleared. Allowlist 15→14 files. Slot-5 cumulative across batches 21-30: 10 files cleared.
+  **Ratchet-down 2026-05-19 (slot-5 batch 30 — engine/backtest/engine/results.py)**: shipped at
+  execution-service@750e8001d. \_extract_results 226L→49L via 7 helpers: \_er_extract_summary_checks (26L) +
+  \_er_alpha_instr (18L) + \_er_alpha_cache static (21L) + \_er_resolve_run_id (23L) + \_er_exec_algo static (19L) +
+  \_er_resolve_instruction_type static (8L) + \_er_build_orders_and_timeline (28L). 1 violation cleared. Allowlist 15→14
+  files. Slot-5 cumulative across batches 21-30: 10 files cleared.
 
-  **Ratchet-down 2026-05-19 (slot-4 batch 31 — data/gcs_data_loading.py)**: shipped at execution-service@a98d95a51. _run_pre_load_cache_checks 123L→49L via _preld_check_existing_scale (35L) + _preld_resolve_and_validate_cache (44L); _convert_day_to_catalog 85L→24L via _convert_tbbo_to_bars (21L) + _convert_to_bars (30L); load_and_convert_from_gcs 305L→47L via _GcsLoadContext TypedDict + _gcs_load_one_day (46L) + _gcs_run_all_days (27L) + _gcs_filter_and_convert (50L) + _gcs_check_local_cache_hit (20L) + _gcs_build_day_window (17L) + _gcs_tradfi_validate_log (24L) + _gcs_debug_path_log (18L) + _gcs_resolve_dates_to_process (13L) + _gcs_log_summary (10L) + _mk_day_result (6L). 3 violations cleared. Allowlist 14→13 files. Slot-4 cumulative across batches 1-31: 97 files cleared.
+  **Ratchet-down 2026-05-19 (slot-4 batch 31 — data/gcs_data_loading.py)**: shipped at execution-service@a98d95a51.
+  \_run_pre_load_cache_checks 123L→49L via \_preld_check_existing_scale (35L) + \_preld_resolve_and_validate_cache
+  (44L); \_convert_day_to_catalog 85L→24L via \_convert_tbbo_to_bars (21L) + \_convert_to_bars (30L);
+  load_and_convert_from_gcs 305L→47L via \_GcsLoadContext TypedDict + \_gcs_load_one_day (46L) + \_gcs_run_all_days
+  (27L) + \_gcs_filter_and_convert (50L) + \_gcs_check_local_cache_hit (20L) + \_gcs_build_day_window (17L) +
+  \_gcs_tradfi_validate_log (24L) + \_gcs_debug_path_log (18L) + \_gcs_resolve_dates_to_process (13L) +
+  \_gcs_log_summary (10L) + \_mk_day_result (6L). 3 violations cleared. Allowlist 14→13 files. Slot-4 cumulative across
+  batches 1-31: 97 files cleared.
 
-  **Ratchet-down 2026-05-19 (slot-5 batch 31 — results/extractor.py)**: shipped at execution-service@78ba90954. extract_pnl_from_portfolio 131L→20L via 4 helpers: _epfp_get_stats_pnls (18L) + _epfp_sum_stats_pnls (26L) + _epfp_sum_realized_unrealized (29L) + _epfp_balance_fallback (29L). extract_returns_from_positions 193L→27L via 4 helpers: _erp_method1 static (22L) + _erp_method2 static (21L) + _erp_update_position (28L) + _erp_method3 static (41L). extract_summary 215L→33L via 4 helpers + 1 module-level: _filled_orders_fallback module helper (5L) + _es_extract_fills (31L) + _es_call_evaluator (16L) + _es_build_perf_summary (48L) + _es_fallback_summary (12L). 3 violations cleared. Allowlist 14→13 files (net; slot-4 batch 31 gcs_data_loading.py also landed concurrently). Slot-5 cumulative across batches 21-31: 11 files cleared (allowlist now 13).
+  **Ratchet-down 2026-05-19 (slot-5 batch 31 — results/extractor.py)**: shipped at execution-service@78ba90954.
+  extract_pnl_from_portfolio 131L→20L via 4 helpers: \_epfp_get_stats_pnls (18L) + \_epfp_sum_stats_pnls (26L) +
+  \_epfp_sum_realized_unrealized (29L) + \_epfp_balance_fallback (29L). extract_returns_from_positions 193L→27L via 4
+  helpers: \_erp_method1 static (22L) + \_erp_method2 static (21L) + \_erp_update_position (28L) + \_erp_method3 static
+  (41L). extract_summary 215L→33L via 4 helpers + 1 module-level: \_filled_orders_fallback module helper (5L) +
+  \_es_extract_fills (31L) + \_es_call_evaluator (16L) + \_es_build_perf_summary (48L) + \_es_fallback_summary (12L). 3
+  violations cleared. Allowlist 14→13 files (net; slot-4 batch 31 gcs_data_loading.py also landed concurrently). Slot-5
+  cumulative across batches 21-31: 11 files cleared (allowlist now 13).
 
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction

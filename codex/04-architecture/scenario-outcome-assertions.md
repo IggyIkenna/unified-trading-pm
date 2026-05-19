@@ -17,17 +17,17 @@ related_plans:
 `OutcomeCategory` (UAC `canonical/crosscutting/scenario_overlay.py` @`33630a6`) is a **closed-set enum** — new
 categories require a PR to UAC + review sign-off before use:
 
-| `OutcomeCategory`         | What it asserts                                                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `STRATEGY_HALTED`         | Strategy instance stops emitting signals / orders for the duration of the scenario window                        |
-| `STRATEGY_SCALED_DOWN`    | Strategy reduces position size or allocation by ≥X% (X in assertion config)                                     |
-| `RISK_BREAKER_TRIPPED`    | A named `CircuitBreakerId` fires within `expected_within_seconds`                                                |
-| `ORDER_REJECTED`          | Execution-service adversarial-mode rejects the order at the matching-engine layer                                |
-| `ORDER_CANCELLED_ON_STALE` | An in-flight order is cancelled due to stale oracle / book feed within the scenario window                       |
-| `KILL_SWITCH_ARMED`       | A named `KillSwitchId` arms within `expected_within_seconds`                                                     |
-| `ALERT_FIRED`             | One or more `AlertCode`s are emitted by alerting-service (log-only path; PagerDuty suppressed for `synthetic=True`) |
-| `PNL_BOUNDED_BY`          | Realised-PnL loss does not exceed the configured `max_loss_bps` within the scenario window                       |
-| `RECONCILIATION_FLAGGED`  | batch-live-reconciliation-service flags a discrepancy within the scenario window                                 |
+| `OutcomeCategory`          | What it asserts                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `STRATEGY_HALTED`          | Strategy instance stops emitting signals / orders for the duration of the scenario window                           |
+| `STRATEGY_SCALED_DOWN`     | Strategy reduces position size or allocation by ≥X% (X in assertion config)                                         |
+| `RISK_BREAKER_TRIPPED`     | A named `CircuitBreakerId` fires within `expected_within_seconds`                                                   |
+| `ORDER_REJECTED`           | Execution-service adversarial-mode rejects the order at the matching-engine layer                                   |
+| `ORDER_CANCELLED_ON_STALE` | An in-flight order is cancelled due to stale oracle / book feed within the scenario window                          |
+| `KILL_SWITCH_ARMED`        | A named `KillSwitchId` arms within `expected_within_seconds`                                                        |
+| `ALERT_FIRED`              | One or more `AlertCode`s are emitted by alerting-service (log-only path; PagerDuty suppressed for `synthetic=True`) |
+| `PNL_BOUNDED_BY`           | Realised-PnL loss does not exceed the configured `max_loss_bps` within the scenario window                          |
+| `RECONCILIATION_FLAGGED`   | batch-live-reconciliation-service flags a discrepancy within the scenario window                                    |
 
 ## Per-assertion 6-tuple contract
 
@@ -52,20 +52,21 @@ The two-archetype pre-cutover matrix (`carry_staked_basis` × `ARBITRAGE_PRICE_D
 `unified_api_contracts/registry/scenario_archetype_matrix.py` (UAC @`556b96f`).
 
 Each matrix cell is a `(archetype, scenario_id)` pair. Per cell:
+
 - One `ScenarioOutcomeAssertion` list (one or more expected outcomes)
 - One `ScenarioReport` result after the run
 
-The matrix is **closed at design-ship time** — adding a new scenario to an archetype requires updating the registry
-PLUS adding matching outcome assertions. Partial cells (scenario defined in registry but no assertion for an archetype)
-are flagged as `ASSERTION_MISSING` and treated as FAIL at matrix review.
+The matrix is **closed at design-ship time** — adding a new scenario to an archetype requires updating the registry PLUS
+adding matching outcome assertions. Partial cells (scenario defined in registry but no assertion for an archetype) are
+flagged as `ASSERTION_MISSING` and treated as FAIL at matrix review.
 
 ## PASS / FAIL / WARN semantics
 
-| Result  | Condition                                                                                                |
-| ------- | -------------------------------------------------------------------------------------------------------- |
-| `PASS`  | All assertions in the cell observed within their `expected_within_seconds` SLA                           |
-| `FAIL`  | Any assertion not observed within SLA; OR observation arrived but wrong `consequence` / `breaker_id`     |
-| `WARN`  | Assertion observed outside SLA but within a configured `warn_window_seconds` grace period; flagged for investigation |
+| Result | Condition                                                                                                            |
+| ------ | -------------------------------------------------------------------------------------------------------------------- |
+| `PASS` | All assertions in the cell observed within their `expected_within_seconds` SLA                                       |
+| `FAIL` | Any assertion not observed within SLA; OR observation arrived but wrong `consequence` / `breaker_id`                 |
+| `WARN` | Assertion observed outside SLA but within a configured `warn_window_seconds` grace period; flagged for investigation |
 
 **Matrix-red = cutover-block**: any `FAIL` in the per-archetype matrix is a **cutover-blocking finding** (Group F item
 17.5 of `master_to_live_defi_2026_05_23.md`). `WARN` is not blocking but must be triaged within 24h.
@@ -99,7 +100,8 @@ where `i` is the `ALERT_FIRED` assertion index.
 
 - Parent: [`scenario-injection-architecture.md`](scenario-injection-architecture.md) — tap-layer enum + mutation types
 - Kill-switch trips: [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — § "Scenario-driven trips"
-- Recovery validation: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) — § "Scenario-driven recovery validation"
+- Recovery validation: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) — § "Scenario-driven recovery
+  validation"
 - Backtest groups: [`backtest-groups.md`](backtest-groups.md) — § "Scenario-overlay mode" (fourth axis)
 - Master plan gate: `plans/active/master_to_live_defi_2026_05_23.md` Group F item 17.5 (scenario regression matrix)
 - Plan driving Phase 12: `plans/active/simulation_scenarios_post_cutover_2026_06_01.md`

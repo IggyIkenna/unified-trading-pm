@@ -18,7 +18,9 @@ last_updated: "2026-05-18"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Active 2026-05-18: 4-class edge-case suite for reconcile_shard (empty/single/schema-drift/large) added. batch-live-reconciliation@a214cd1 on live-defi-rollout."
+  readiness_note:
+    "Active 2026-05-18: 4-class edge-case suite for reconcile_shard (empty/single/schema-drift/large) added.
+    batch-live-reconciliation@a214cd1 on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"

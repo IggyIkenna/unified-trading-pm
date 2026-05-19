@@ -1,17 +1,13 @@
-> **ARCHIVED 2026-05-19** — 100% complete (5/5 items); deferred follow-ups migrated to named issue docs; preserved for archaeology.
+> **ARCHIVED 2026-05-19** — 100% complete (5/5 items); deferred follow-ups migrated to named issue docs; preserved for
+> archaeology.
 
 ---
-title: Data Status UI Phase 2F — deployment-api/UI gap fixes (4 gaps from 6C smoke)
-created: 2026-05-14
-author: harsh-slot-7
-type: active-plan
-status: active
-estimate_class: design
-estimate_baseline_ai_days: 3
-estimate_calibrated_ai_days: 1.8
-locked_by: live-defi-rollout
-locked_since: 2026-05-14
-migrated_from: cross_asset_group_catalogue_audit_2026_05_10.md Phase 6C carry-forward
+
+title: Data Status UI Phase 2F — deployment-api/UI gap fixes (4 gaps from 6C smoke) created: 2026-05-14 author:
+harsh-slot-7 type: active-plan status: active estimate_class: design estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 1.8 locked_by: live-defi-rollout locked_since: 2026-05-14 migrated_from:
+cross_asset_group_catalogue_audit_2026_05_10.md Phase 6C carry-forward
+
 ---
 
 # Data Status UI Phase 2F — deployment-api/UI gap fixes
@@ -106,11 +102,12 @@ None — all gaps resolved (2 code fixes, 2 issue docs).
 - cross_asset instruments-service scope → `plans/active/issues/cross_asset_instruments_service_scope_2026_05_14.md`
 - [x] ✅ [INFRA] P2. Wire cron VM launcher for the data-status refresh job: create a singleton-locked launcher under
       `deployment-service/scripts/vm/`, register prefix in `VM_PREFIX_TO_BUCKET` (vm_zombie_watchdog.py), launch with
-      `DEPLOYMENT_ENV` set. **DONE 2026-05-18** — deployment-service@2026-05-15 (slot-2 shipped): `launch-honest-coverage-vm.sh`
-      + `launch-measure-honest-coverage-vm.sh` + `setup-honest-coverage-scheduler.sh` all exist. Watchdog has
-      `honest-coverage-` + `measure-honest-coverage-` prefixes registered. `DEPLOYMENT_ENV` handled via
-      `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"`. Cloud Scheduler activation requires Ikenna owner account — see
-      `setup-honest-coverage-scheduler.sh` comment; Cloud Run Job `honest-coverage-daily-launcher` was created 2026-05-15.
+      `DEPLOYMENT_ENV` set. **DONE 2026-05-18** — deployment-service@2026-05-15 (slot-2 shipped):
+      `launch-honest-coverage-vm.sh` + `launch-measure-honest-coverage-vm.sh` + `setup-honest-coverage-scheduler.sh` all
+      exist. Watchdog has `honest-coverage-` + `measure-honest-coverage-` prefixes registered. `DEPLOYMENT_ENV` handled
+      via `DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-prod}"`. Cloud Scheduler activation requires Ikenna owner account — see
+      `setup-honest-coverage-scheduler.sh` comment; Cloud Run Job `honest-coverage-daily-launcher` was created
+      2026-05-15.
 
 ## DONE-2026-05-18 — Plan close (slot-7)
 

@@ -574,8 +574,7 @@ SSOT: UAC `unified_api_contracts.internal.architecture_v2.enums.InstructionActio
 Plus parallel **`AccountInstruction`** (operator-driven) for CLOSE_ALL, SET_MARGIN_MODE, EMERGENCY_LIQUIDATE,
 TRANSFER_SUBACCOUNT.
 
-Full spec:
-[../../04-architecture/strategy-execution-protocol.md](../../04-architecture/strategy-execution-protocol.md).
+Full spec: [../../04-architecture/strategy-execution-protocol.md](../../04-architecture/strategy-execution-protocol.md).
 
 ## 5 Protocol Rules (strategy ↔ execution)
 

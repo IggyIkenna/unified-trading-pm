@@ -1,15 +1,11 @@
 > **ARCHIVED 2026-05-19** — 100% complete (3/3 items); preserved for archaeology.
 
 ---
-title: "Context fill-up optimization — reduce compact cycle frequency"
-created: 2026-05-14
-author: harsh-main
-type: improvement
-estimate_class: design
-estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.3
-locked_by: live-defi-rollout
-locked_since: 2026-05-14
+
+title: "Context fill-up optimization — reduce compact cycle frequency" created: 2026-05-14 author: harsh-main type:
+improvement estimate_class: design estimate_baseline_ai_days: 0.5 estimate_calibrated_ai_days: 0.3 locked_by:
+live-defi-rollout locked_since: 2026-05-14
+
 ---
 
 ## Problem

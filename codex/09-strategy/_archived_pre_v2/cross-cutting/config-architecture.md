@@ -1,7 +1,8 @@
 # Strategy Config Architecture — Cross-Cutting Concern
 
-**See also:** [Operational modes matrix](../../architecture-v2/cross-cutting/operational-modes-matrix.md) — how `DATA_MODE`, `RUNTIME_MODE`, `TESTNET_MODE`,
-`OperationalMode`, and related env axes compose across services; SIT expectations when changing deploy matrices.
+**See also:** [Operational modes matrix](../../architecture-v2/cross-cutting/operational-modes-matrix.md) — how
+`DATA_MODE`, `RUNTIME_MODE`, `TESTNET_MODE`, `OperationalMode`, and related env axes compose across services; SIT
+expectations when changing deploy matrices.
 
 ## Hard Rules
 
@@ -167,8 +168,9 @@ are different instances.
 
 ### 6. Positions are per-client, strategies are templates
 
-See [client-onboarding.md](../../../08-workflows/client-onboarding.md) for the full rule. Key point: one strategy instance per
-`(client_id, strategy_id)` tuple. The strategy template code is shared; positions diverge due to execution timing.
+See [client-onboarding.md](../../../08-workflows/client-onboarding.md) for the full rule. Key point: one strategy
+instance per `(client_id, strategy_id)` tuple. The strategy template code is shared; positions diverge due to execution
+timing.
 
 ## Strategy Config vs Execution Config Boundary
 

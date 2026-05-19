@@ -160,11 +160,12 @@ async def fetch_instruments_for_all_venues(
     records = await adapter.get_instruments(instrument_type=instrument_type)
 ```
 
-The adapter maintains no local translation tables. All naming translation (`canonical venue -> instruments-service adapter key`) and
-credential routing (`adapter key -> data source -> API key`) is owned by the interface itself.
+The adapter maintains no local translation tables. All naming translation
+(`canonical venue -> instruments-service adapter key`) and credential routing (`adapter key -> data source -> API key`)
+is owned by the interface itself.
 
-**Why:** Services never know about vendor-specific details. Adding a new venue means adding an adapter in instruments-service, not
-touching the service.
+**Why:** Services never know about vendor-specific details. Adding a new venue means adding an adapter in
+instruments-service, not touching the service.
 
 **Reference:** `instruments-service/instruments_service/adapters/urdi_reference_provider.py`
 

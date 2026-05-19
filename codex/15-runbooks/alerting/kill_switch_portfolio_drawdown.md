@@ -15,7 +15,8 @@ related:
 execution:
   owner: on-call operator (Ikenna / Harsh by rotation)
   cadence: on-demand (incident response) + quarterly DR drill
-  verifier: all strategies halted (strategy-service event log); positions in flat-only mode; operator sign-off before re-arm
+  verifier:
+    all strategies halted (strategy-service event log); positions in flat-only mode; operator sign-off before re-arm
   last_executed: never
 ---
 

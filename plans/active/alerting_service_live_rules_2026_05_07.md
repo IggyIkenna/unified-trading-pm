@@ -74,8 +74,7 @@ targets + operator playbook + rehearsal procedure** required to enable live trad
 - Config: `AlertingSystemConfig` with `routing_rules` default-factory at
   [`config.py:11-199`](alerting-service/alerting_service/config.py#L11-L199)
 - KillSwitchBus subscriber wired via UTL (Phase 3c, commit `7b74ed8`)
-- E2E test plan:
-  [`plans/active/end-to-end-testing/020_alerting_service.md`](end-to-end-testing/020_alerting_service.md)
+- E2E test plan: [`plans/active/end-to-end-testing/020_alerting_service.md`](end-to-end-testing/020_alerting_service.md)
   — covers PubSub subscriptions, downstream commands, frontend API surface
 - UAC envelope:
   [`unified_api_contracts/internal/alerting/alerts.py`](unified-api-contracts/unified_api_contracts/internal/alerting/alerts.py)
@@ -467,17 +466,16 @@ reviews + tunes thresholds.
       `deployment-service@ee01702`. **DONE 2026-05-19**: all Phase 7 prerequisites resolved; VM running.
 - [x] ✅ [HUMAN] P0. Operator-approved launch — VM `alerting-quietness-20260519-110752` RUNNING 2026-05-19
       (asia-northeast1-c, staging, 48h duration, PD disabled, routing to UTS Staging Noise channel `-5209487754`).
-      Launch history (infra gaps fixed along the way):
-      (1) `alerting-quietness-20260519-104344` failed rc=2 — CLI `--operation alerts` not a valid arg, fixed `deployment-service@bda7790`;
-      (2) `alerting-quietness-20260519-105238` failed rc=1 — PubSub topic `alerting-service-events` missing, created manually
-          + publisher IAM grant to Compute SA;
-      (3) `alerting-quietness-20260519-105730` failed rc=1 — STARTED event published OK but 5 PubSub subscriptions missing
-          (`risk_alerts_circuit_breaker_triggers`, `balance_discrepancy_alerts`, `order_rejection_spikes`,
-          `service_error_events`, `margin-events`), all created + subscriber IAM granted;
-      (4) `alerting-quietness-20260519-110752` CONFIRMED: DEPLOYMENT_STARTED at 10:11:02 UTC; subscriber streaming;
-          VM RUNNING + heartbeat active. Note: alerting-service uses PubSubEventSink (not GCS sink) so STARTED event
-          is in PubSub topic `alerting-service-events`, not the GCS event path.
-      Recheck log every 12h: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260519-110752/run.log`.
+      Launch history (infra gaps fixed along the way): (1) `alerting-quietness-20260519-104344` failed rc=2 — CLI
+      `--operation alerts` not a valid arg, fixed `deployment-service@bda7790`; (2) `alerting-quietness-20260519-105238`
+      failed rc=1 — PubSub topic `alerting-service-events` missing, created manually + publisher IAM grant to Compute
+      SA; (3) `alerting-quietness-20260519-105730` failed rc=1 — STARTED event published OK but 5 PubSub subscriptions
+      missing (`risk_alerts_circuit_breaker_triggers`, `balance_discrepancy_alerts`, `order_rejection_spikes`,
+      `service_error_events`, `margin-events`), all created + subscriber IAM granted; (4)
+      `alerting-quietness-20260519-110752` CONFIRMED: DEPLOYMENT_STARTED at 10:11:02 UTC; subscriber streaming; VM
+      RUNNING + heartbeat active. Note: alerting-service uses PubSubEventSink (not GCS sink) so STARTED event is in
+      PubSub topic `alerting-service-events`, not the GCS event path. Recheck log every 12h:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260519-110752/run.log`.
       Auto-shutdown at T+48h (~2026-05-21 11:07 UTC).
       **⚠️ POST-LAUNCH FAILURE 2026-05-19 11:11 UTC**: VM `alerting-quietness-20260519-110752` KILLED after 1h —
       exit_code=137 (SIGKILL from vm-exec stall watchdog). Root cause: `orchestrator.run_subscriber_loop()` produced
@@ -667,10 +665,10 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
 
 ## Coordination notes
 
-- **alerting-service is Harsh's repo** per [`README.md`](../epics/README.md). All code edits to
-  alerting-service/ MUST be pair-coordinated, NOT pushed unilaterally. UAC additions (Phases 1) are owner-neutral and
-  can ship without coordination. Producer-emitter migrations (Phase 3) touch services owned by both Ikenna + Harsh —
-  coordinate per-service.
+- **alerting-service is Harsh's repo** per [`README.md`](../epics/README.md). All code edits to alerting-service/ MUST
+  be pair-coordinated, NOT pushed unilaterally. UAC additions (Phases 1) are owner-neutral and can ship without
+  coordination. Producer-emitter migrations (Phase 3) touch services owned by both Ikenna + Harsh — coordinate
+  per-service.
 - **AWS parity**: `alerting-service` already has `buildspec.aws.yaml` — Phase 4 paging-targets work should land both GCP
   Secret Manager + AWS Secrets Manager entries.
 - **No `_create_full_day_empty_output`-style placeholder anti-pattern** in alert taxonomy: `LIVE_ALERT_RULES` is

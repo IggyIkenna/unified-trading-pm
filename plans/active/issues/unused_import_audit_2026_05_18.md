@@ -9,27 +9,26 @@ locked_by: live-defi-rollout
 
 ## What I found
 
-Ruff F401 scan across 12 active Python service repos (2026-05-18). All violations are
-`[*]` (auto-fixable by ruff). Summary:
+Ruff F401 scan across 12 active Python service repos (2026-05-18). All violations are `[*]` (auto-fixable by ruff).
+Summary:
 
-| Repo | Violations | Files | Fixable now? |
-|------|-----------|-------|--------------|
-| deployment-service | 4 | `configs/generate_topology_svg.py:33` | ❌ SKIP — explicit re-export comment; intentional |
-| execution-service | 4 | `scripts/run_execution_alpha_measurement.py` (os, BenchmarkFillInput) · `scripts/run_execution_alpha_parallel.py` (json, tempfile) | ❌ BLOCKED — slot 2 in-flight (11 foreign dirty files + pre-existing lint failures) |
-| instruments-service | 5 | `tests/scripts/test_canonicalize_defi_manifest_data_types_2026_05_16.py` (contextlib, os, tempfile, pytest) · `tests/scripts/test_reconcile_lending_indices_phantom.py` (pytest) | ❌ BLOCKED — foreign dirty files + pre-existing lint failures |
-| market-tick-data-service | 2 | `tests/unit/test_drift_solana_ws_connector.py` (json) · `tests/unit/test_kraken_futures_ws_connector.py` (json) | ❌ BLOCKED — slot 9 in-flight (14 foreign dirty files) |
-| All others (8 repos) | 0 | — | ✅ clean |
+| Repo                     | Violations | Files                                                                                                                                                                            | Fixable now?                                                                        |
+| ------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| deployment-service       | 4          | `configs/generate_topology_svg.py:33`                                                                                                                                            | ❌ SKIP — explicit re-export comment; intentional                                   |
+| execution-service        | 4          | `scripts/run_execution_alpha_measurement.py` (os, BenchmarkFillInput) · `scripts/run_execution_alpha_parallel.py` (json, tempfile)                                               | ❌ BLOCKED — slot 2 in-flight (11 foreign dirty files + pre-existing lint failures) |
+| instruments-service      | 5          | `tests/scripts/test_canonicalize_defi_manifest_data_types_2026_05_16.py` (contextlib, os, tempfile, pytest) · `tests/scripts/test_reconcile_lending_indices_phantom.py` (pytest) | ❌ BLOCKED — foreign dirty files + pre-existing lint failures                       |
+| market-tick-data-service | 2          | `tests/unit/test_drift_solana_ws_connector.py` (json) · `tests/unit/test_kraken_futures_ws_connector.py` (json)                                                                  | ❌ BLOCKED — slot 9 in-flight (14 foreign dirty files)                              |
+| All others (8 repos)     | 0          | —                                                                                                                                                                                | ✅ clean                                                                            |
 
 ### Repos scanned (0 violations)
 
-alerting-service, alerting-service, batch-live-reconciliation-service, ml-inference-service,
-pnl-attribution-service, risk-and-exposure-service, strategy-service, system-integration-tests.
+alerting-service, alerting-service, batch-live-reconciliation-service, ml-inference-service, pnl-attribution-service,
+risk-and-exposure-service, strategy-service, system-integration-tests.
 
 ## Why it matters
 
-Low-severity lint debt (no correctness risk). The 11 fixable violations in 3 repos are all
-trivially removed by `ruff check --select F401 --fix <file>`. Verified locally — auto-fix
-applies cleanly with no downstream breakage.
+Low-severity lint debt (no correctness risk). The 11 fixable violations in 3 repos are all trivially removed by
+`ruff check --select F401 --fix <file>`. Verified locally — auto-fix applies cleanly with no downstream breakage.
 
 ## Recommended decision
 
@@ -44,6 +43,7 @@ ruff check --select F401 --fix <affected_files>
 **Priority**: P3 (cosmetic lint — no correctness or coverage impact).
 
 **Ownership routing**:
+
 - execution-service `scripts/` → slot 2 (lint surface) or any slot with clean execution-service window
 - instruments-service `tests/scripts/` → any instruments-service slot with clean window
 - market-tick-data-service `tests/unit/` → slot 9 or any MTDS slot with clean window

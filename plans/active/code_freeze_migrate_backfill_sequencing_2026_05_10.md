@@ -304,10 +304,10 @@ technical enforcer; this section is the operator-readable checklist.
       sweep: `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh` ✅ **26 repos OK / 0 failed** +
       `bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup --skip-typecheck`
       ran across 26 repos. **2 workspace-wide QG-runner foot-guns surfaced + ✅ patched same-commit**
-      ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](../archive/issues/qg_runner_worktree_foot_guns_2026_05_12.md)): (1)
-      `.git`-as-DIR-only check in `run-all-quality-gates.sh:156` silently skipped every slot-worktree repo (first-run
-      false-pass with `OK: 34 | Failed: 0`); fixed to also accept `.git` FILE shape (`git worktree` link). (2)
-      `_PM_REPO=basename(REPO_ROOT)` / `_PM_WS=dirname(REPO_ROOT)` in `base-service.sh` STEPs 5.67 + 5.69 + 5.70
+      ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](../archive/issues/qg_runner_worktree_foot_guns_2026_05_12.md)):
+      (1) `.git`-as-DIR-only check in `run-all-quality-gates.sh:156` silently skipped every slot-worktree repo
+      (first-run false-pass with `OK: 34 | Failed: 0`); fixed to also accept `.git` FILE shape (`git worktree` link).
+      (2) `_PM_REPO=basename(REPO_ROOT)` / `_PM_WS=dirname(REPO_ROOT)` in `base-service.sh` STEPs 5.67 + 5.69 + 5.70
       produced wrong workspace-root/scope args to AST-walk scripts (slot-number prefix in relative paths broke baseline
       matching); fixed to use `basename(PROJECT_ROOT)` for scope + `REPO_ROOT` directly for workspace-root. **Post-patch
       verification**: STEPs 5.65 + 5.67 + 5.69 + 5.70 ALL ✅ green workspace-wide. **Remaining 26 failures** are

@@ -18,7 +18,9 @@ last_updated: "2026-05-18"
 
 code_readiness:
   current_stage: "CR4"
-  readiness_note: "CR4 active 2026-05-18: QG fully green, 5382 tests passing (batch/live parity + HMAC + emission_publisher idempotency). UTL@cb1163d on live-defi-rollout."
+  readiness_note:
+    "CR4 active 2026-05-18: QG fully green, 5382 tests passing (batch/live parity + HMAC + emission_publisher
+    idempotency). UTL@cb1163d on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -32,7 +34,9 @@ code_readiness:
     criteria: "QG unit stage green; coverage >= 80%; --cov-report=xml written"
     coverage_pct: 83
     coverage_floor_pct: 80
-    evidence: "UTL@cb1163d 2026-05-18: 5382 tests green (emission_publisher idempotency, HMAC unicode/boundary/mutation, batch-live parity tests)"
+    evidence:
+      "UTL@cb1163d 2026-05-18: 5382 tests green (emission_publisher idempotency, HMAC unicode/boundary/mutation,
+      batch-live parity tests)"
     notes: ""
 
   cr3_integration_tests:

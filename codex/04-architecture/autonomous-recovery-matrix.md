@@ -316,24 +316,25 @@ wiring) maps a disarming `RecoveryDecision` to `KillSwitchBus.disarm(...)` + emi
 ## Scenario-driven recovery validation
 
 Every decision tree gate in this doc has a paired UAC scenario that exercises it. The `ScenarioRunner` applies a
-synthetic overlay, forces the condition, and asserts the expected recovery action fires within `assertion_window_seconds`.
+synthetic overlay, forces the condition, and asserts the expected recovery action fires within
+`assertion_window_seconds`.
 
 **Recovery row → scenario pairing:**
 
-| Gate label | Decision tree node | Paired scenario ID                              | Assertion checked                                   |
-| ---------- | ------------------ | ----------------------------------------------- | --------------------------------------------------- |
-| G1         | >50% venues OPEN   | `CEFI_MULTI_VENUE_REJECTION_RATE_SPIKE`         | `STOP_NEW_ONLY` fires; strategy pauses target-track |
-| G2         | NO/YES recon       | `CEFI_POSITION_DRIFT_CRITICAL_5PCT` (recon leg) | `RECON_DEGRADED_CLOSE` emitted; post-close recon    |
-| G3         | DUAL_FAILURE       | `CEFI_POSITION_DRIFT_CRITICAL_5PCT` + network   | `DUAL_FAILURE_DETECTED` CRITICAL PD fires           |
-| G4         | Drift > 5% CRITICAL | `CEFI_POSITION_DRIFT_CRITICAL_5PCT`            | `STOP_NEW_ONLY` + strategy pause; Telegram + PD     |
+| Gate label | Decision tree node  | Paired scenario ID                              | Assertion checked                                   |
+| ---------- | ------------------- | ----------------------------------------------- | --------------------------------------------------- |
+| G1         | >50% venues OPEN    | `CEFI_MULTI_VENUE_REJECTION_RATE_SPIKE`         | `STOP_NEW_ONLY` fires; strategy pauses target-track |
+| G2         | NO/YES recon        | `CEFI_POSITION_DRIFT_CRITICAL_5PCT` (recon leg) | `RECON_DEGRADED_CLOSE` emitted; post-close recon    |
+| G3         | DUAL_FAILURE        | `CEFI_POSITION_DRIFT_CRITICAL_5PCT` + network   | `DUAL_FAILURE_DETECTED` CRITICAL PD fires           |
+| G4         | Drift > 5% CRITICAL | `CEFI_POSITION_DRIFT_CRITICAL_5PCT`             | `STOP_NEW_ONLY` + strategy pause; Telegram + PD     |
 
 **DeFi-specific recovery pairings:**
 
-| Gate label | Condition                            | Paired scenario ID                          | Assertion checked                                          |
-| ---------- | ------------------------------------ | ------------------------------------------- | ---------------------------------------------------------- |
-| HF1        | HF < 1.0 emergency close            | `DEFI_AAVE_HEALTH_FACTOR_BREACH_1_05`      | All positions closed; `KILL_PER_ARCHETYPE` fired            |
-| HF2        | LST depeg kill                       | `DEFI_LST_DEPEG_STETH_5PCT`               | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` fired               |
-| CAS1       | Liquidation cascade → all-venue OPEN | `DEFI_LIQUIDATION_CASCADE_CASCADE_SCENARIO` | `KILL_ALL_LIVE` + firm-wide halt                            |
+| Gate label | Condition                            | Paired scenario ID                          | Assertion checked                                |
+| ---------- | ------------------------------------ | ------------------------------------------- | ------------------------------------------------ |
+| HF1        | HF < 1.0 emergency close             | `DEFI_AAVE_HEALTH_FACTOR_BREACH_1_05`       | All positions closed; `KILL_PER_ARCHETYPE` fired |
+| HF2        | LST depeg kill                       | `DEFI_LST_DEPEG_STETH_5PCT`                 | `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` fired    |
+| CAS1       | Liquidation cascade → all-venue OPEN | `DEFI_LIQUIDATION_CASCADE_CASCADE_SCENARIO` | `KILL_ALL_LIVE` + firm-wide halt                 |
 
 **Running the matrix:**
 
@@ -348,8 +349,8 @@ Scenarios with `synthetic=true` are excluded from P&L attribution. The `Scenario
 `assertion_passed` booleans + the event that was (or wasn't) emitted within the assertion window.
 
 **Reference:** `UAC registry/scenarios/defi.py` + `cefi.py` (UAC@`33630a6`); `UTL scenario/runner.py` +
-`scenario/checker.py` (UTL@`3797fed5`); injection architecture: `codex/04-architecture/scenario-injection-architecture.md`
-(8.A, SHIPPED UTL@`66904fe0` slot 7 Day-4 2026-05-12).
+`scenario/checker.py` (UTL@`3797fed5`); injection architecture:
+`codex/04-architecture/scenario-injection-architecture.md` (8.A, SHIPPED UTL@`66904fe0` slot 7 Day-4 2026-05-12).
 
 ## Related
 

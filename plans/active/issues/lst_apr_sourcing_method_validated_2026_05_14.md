@@ -185,7 +185,8 @@ sub-agent picks up this thread).
       public-endpoint rationale.
 - [x] [DESIGN] P2. File a separate `BLOCKED-OPERATOR-DECISION` for Marinade Solana subgraph registration (Tier 2 mSOL
       historical coverage); cross-link from
-      [`solana_lst_native_staking_adapters_2026_05_14.md`](../../archive/solana_lst_native_staking_adapters_2026_05_14.md). ✅
-      **DONE 2026-05-17 (slot-3)**: filed at `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md`
-      with 3 paths (Path A — The Graph subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope for
-      May-23). Default if no operator response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).
+      [`solana_lst_native_staking_adapters_2026_05_14.md`](../../archive/solana_lst_native_staking_adapters_2026_05_14.md).
+      ✅ **DONE 2026-05-17 (slot-3)**: filed at
+      `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md` with 3 paths (Path A — The Graph
+      subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope for May-23). Default if no operator
+      response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).

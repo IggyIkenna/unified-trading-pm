@@ -9,8 +9,8 @@ last_reviewed: 2026-05-18
 > per-trade signals — they produce `AllocationDirective` events that re-weight or activate/deactivate child strategy
 > instances based on portfolio-level objectives.
 >
-> **Primary edge method:** Allocator-driven (risk-parity, factor-exposure, regime-detection, or operator mandate at
-> the strategy level, not the instrument level).
+> **Primary edge method:** Allocator-driven (risk-parity, factor-exposure, regime-detection, or operator mandate at the
+> strategy level, not the instrument level).
 >
 > **Typical hold policies:** HOLD_UNTIL_DIRECTIVE (cadence-triggered rebalance).
 >
@@ -24,9 +24,9 @@ volatilities, factor loadings, regime indicators, operator mandate) rather than 
 
 **Portfolio archetypes are strategy instances, not the Portfolio Allocator service.** The distinction:
 
-| Concept | What it is |
-| --- | --- |
-| **Portfolio Allocator service** | A dedicated service ABOVE all strategies; allocates equity to strategy instances per client; runs allocator algorithms (FIXED, SHARPE_WEIGHTED, RISK_PARITY, KELLY, etc.). See [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md). |
+| Concept                          | What it is                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portfolio Allocator service**  | A dedicated service ABOVE all strategies; allocates equity to strategy instances per client; runs allocator algorithms (FIXED, SHARPE_WEIGHTED, RISK_PARITY, KELLY, etc.). See [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md).                                    |
 | **Portfolio archetype strategy** | A strategy INSTANCE that itself receives equity, emits `AllocationDirective` events to child strategies, and runs through risk-gate / kill-switch / share-class machinery like any other strategy. Composable: a Portfolio strategy can itself be allocated capital by the Portfolio Allocator service. |
 
 **Why a family, not a cross-cutting concern:** Portfolio archetypes run through the same framework as ML Directional or
@@ -39,12 +39,12 @@ cadence-run strategies; tactical overlay may reduce to 10 000 ms for intraday re
 
 ## 4 Archetypes
 
-| Archetype | Allocation rule | Rebalance cadence |
-| --- | --- | --- |
-| [`PORTFOLIO_MULTI_STRATEGY`](../archetypes/portfolio-multi-strategy.md) | Fixed operator-mandated weights across N child strategies | Daily / weekly / monthly |
-| [`PORTFOLIO_RISK_PARITY`](../archetypes/portfolio-risk-parity.md) | Inverse-vol weighting; equal risk contribution across children | Daily |
-| [`PORTFOLIO_FACTOR_ALLOCATION`](../archetypes/portfolio-factor-allocation.md) | Factor-exposure targeting; allocates to children by factor loadings | Weekly |
-| [`PORTFOLIO_TACTICAL_OVERLAY`](../archetypes/portfolio-tactical-overlay.md) | Regime-classifier or operator-command multiplier on a base weight | Intraday to daily |
+| Archetype                                                                     | Allocation rule                                                     | Rebalance cadence        |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------ |
+| [`PORTFOLIO_MULTI_STRATEGY`](../archetypes/portfolio-multi-strategy.md)       | Fixed operator-mandated weights across N child strategies           | Daily / weekly / monthly |
+| [`PORTFOLIO_RISK_PARITY`](../archetypes/portfolio-risk-parity.md)             | Inverse-vol weighting; equal risk contribution across children      | Daily                    |
+| [`PORTFOLIO_FACTOR_ALLOCATION`](../archetypes/portfolio-factor-allocation.md) | Factor-exposure targeting; allocates to children by factor loadings | Weekly                   |
+| [`PORTFOLIO_TACTICAL_OVERLAY`](../archetypes/portfolio-tactical-overlay.md)   | Regime-classifier or operator-command multiplier on a base weight   | Intraday to daily        |
 
 ## What Portfolio archetypes share
 
@@ -63,4 +63,5 @@ cadence-run strategies; tactical overlay may reduce to 10 000 ms for intraday re
 - Portfolio Allocator service: [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md)
 - Capital flow model: [`../../../04-architecture/capital-flow-model.md`](../../../04-architecture/capital-flow-model.md)
 - Strategy-level risk gates: [`../cross-cutting/risk-gates.md`](../cross-cutting/risk-gates.md)
-- Kill-switch: [`../../../04-architecture/kill-switch-circuit-breaker.md`](../../../04-architecture/kill-switch-circuit-breaker.md)
+- Kill-switch:
+  [`../../../04-architecture/kill-switch-circuit-breaker.md`](../../../04-architecture/kill-switch-circuit-breaker.md)

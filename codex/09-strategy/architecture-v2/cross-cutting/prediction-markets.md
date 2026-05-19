@@ -330,7 +330,8 @@ Codification gap:
 
 ## Integration gaps
 
-Full gap register: [`prediction-markets-codification-gaps.md`](../../operational/prediction-markets-codification-gaps.md). G1–G7 cover
+Full gap register:
+[`prediction-markets-codification-gaps.md`](../../operational/prediction-markets-codification-gaps.md). G1–G7 cover
 use-case enum (G1), instrument ID convention (G2), semantic market matching (G3), automated classifier (G4), venue
 registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
 

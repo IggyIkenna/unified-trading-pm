@@ -71,14 +71,15 @@ def _ver_gt(a: str, b: str) -> bool:
     return _ver_tuple(a) > _ver_tuple(b)
 
 
-
 @dataclass
 class DriftEntry:
     repo: str
     dep_name: str
     dep_raw: str
     canon_raw: str
-    kind: str  # "floor_below_canon" | "ceiling_above_canon" | "exact_pin" | "warn_tighter_ceiling" | "not_in_constraints"
+    kind: (
+        str  # "floor_below_canon" | "ceiling_above_canon" | "exact_pin" | "warn_tighter_ceiling" | "not_in_constraints"
+    )
     detail: str
 
 
@@ -163,84 +164,98 @@ def audit_repo(repo_path: Path, constraints: dict[str, str]) -> RepoResult:
             dep_pin_ver_m = re.search(r"==\s*(\S+)", dep_spec)
             if dep_is_exact_pin and canon_pin_ver_m and dep_pin_ver_m:
                 if canon_pin_ver_m.group(1) != dep_pin_ver_m.group(1):
-                    result.errors.append(DriftEntry(
+                    result.errors.append(
+                        DriftEntry(
+                            repo=repo_path.name,
+                            dep_name=dep_name,
+                            dep_raw=dep_raw,
+                            canon_raw=canon_raw,
+                            kind="exact_pin_mismatch",
+                            detail=f"=={dep_pin_ver_m.group(1)} != canonical =={canon_pin_ver_m.group(1)}",
+                        )
+                    )
+            # If repo doesn't pin at all or uses range, that's also wrong for exact-pin canonicals
+            elif not dep_is_exact_pin:
+                result.errors.append(
+                    DriftEntry(
                         repo=repo_path.name,
                         dep_name=dep_name,
                         dep_raw=dep_raw,
                         canon_raw=canon_raw,
-                        kind="exact_pin_mismatch",
-                        detail=f"=={dep_pin_ver_m.group(1)} != canonical =={canon_pin_ver_m.group(1)}",
-                    ))
-            # If repo doesn't pin at all or uses range, that's also wrong for exact-pin canonicals
-            elif not dep_is_exact_pin:
-                result.errors.append(DriftEntry(
-                    repo=repo_path.name,
-                    dep_name=dep_name,
-                    dep_raw=dep_raw,
-                    canon_raw=canon_raw,
-                    kind="missing_exact_pin",
-                    detail=f"canonical requires exact pin {canon_raw}, repo has: {dep_spec!r}",
-                ))
+                        kind="missing_exact_pin",
+                        detail=f"canonical requires exact pin {canon_raw}, repo has: {dep_spec!r}",
+                    )
+                )
             continue
 
         if dep_is_exact_pin and not canon_is_exact_pin:
             # Repo uses exact pin but canonical is a range — violation
-            result.errors.append(DriftEntry(
-                repo=repo_path.name,
-                dep_name=dep_name,
-                dep_raw=dep_raw,
-                canon_raw=canon_raw,
-                kind="exact_pin_on_range_dep",
-                detail=f"exact pin {dep_spec!r} — canonical is a range: {canon_raw}",
-            ))
+            result.errors.append(
+                DriftEntry(
+                    repo=repo_path.name,
+                    dep_name=dep_name,
+                    dep_raw=dep_raw,
+                    canon_raw=canon_raw,
+                    kind="exact_pin_on_range_dep",
+                    detail=f"exact pin {dep_spec!r} — canonical is a range: {canon_raw}",
+                )
+            )
             continue
 
         # Floor: repo uses lower floor than canonical → error (could pull in old vulnerable version)
         if dep_floor and canon_floor:
             if _ver_lt(dep_floor, canon_floor):
-                result.errors.append(DriftEntry(
-                    repo=repo_path.name,
-                    dep_name=dep_name,
-                    dep_raw=dep_raw,
-                    canon_raw=canon_raw,
-                    kind="floor_below_canon",
-                    detail=f">={dep_floor} < canonical >={canon_floor}",
-                ))
+                result.errors.append(
+                    DriftEntry(
+                        repo=repo_path.name,
+                        dep_name=dep_name,
+                        dep_raw=dep_raw,
+                        canon_raw=canon_raw,
+                        kind="floor_below_canon",
+                        detail=f">={dep_floor} < canonical >={canon_floor}",
+                    )
+                )
 
         # Floor: repo uses higher floor than canonical → just informational (fine)
 
         # Ceiling: repo allows higher version than canonical ceiling → error (could pull in breaking release)
         if dep_ceiling and canon_ceiling:
             if _ver_gt(dep_ceiling, canon_ceiling):
-                result.errors.append(DriftEntry(
-                    repo=repo_path.name,
-                    dep_name=dep_name,
-                    dep_raw=dep_raw,
-                    canon_raw=canon_raw,
-                    kind="ceiling_above_canon",
-                    detail=f"<{dep_ceiling} > canonical <{canon_ceiling} — wider than allowed",
-                ))
+                result.errors.append(
+                    DriftEntry(
+                        repo=repo_path.name,
+                        dep_name=dep_name,
+                        dep_raw=dep_raw,
+                        canon_raw=canon_raw,
+                        kind="ceiling_above_canon",
+                        detail=f"<{dep_ceiling} > canonical <{canon_ceiling} — wider than allowed",
+                    )
+                )
             elif _ver_lt(dep_ceiling, canon_ceiling):
                 # Tighter ceiling — warn only
-                result.warnings.append(DriftEntry(
-                    repo=repo_path.name,
-                    dep_name=dep_name,
-                    dep_raw=dep_raw,
-                    canon_raw=canon_raw,
-                    kind="warn_tighter_ceiling",
-                    detail=f"<{dep_ceiling} < canonical <{canon_ceiling} — more restrictive (may need widening)",
-                ))
+                result.warnings.append(
+                    DriftEntry(
+                        repo=repo_path.name,
+                        dep_name=dep_name,
+                        dep_raw=dep_raw,
+                        canon_raw=canon_raw,
+                        kind="warn_tighter_ceiling",
+                        detail=f"<{dep_ceiling} < canonical <{canon_ceiling} — more restrictive (may need widening)",
+                    )
+                )
 
         # Missing ceiling — warn if canonical has one
         if not dep_ceiling and canon_ceiling:
-            result.warnings.append(DriftEntry(
-                repo=repo_path.name,
-                dep_name=dep_name,
-                dep_raw=dep_raw,
-                canon_raw=canon_raw,
-                kind="missing_ceiling",
-                detail=f"no upper bound; canonical has <{canon_ceiling}",
-            ))
+            result.warnings.append(
+                DriftEntry(
+                    repo=repo_path.name,
+                    dep_name=dep_name,
+                    dep_raw=dep_raw,
+                    canon_raw=canon_raw,
+                    kind="missing_ceiling",
+                    detail=f"no upper bound; canonical has <{canon_ceiling}",
+                )
+            )
 
     return result
 
@@ -253,7 +268,9 @@ def fix_dep_in_file(pyproject_path: Path, dep_name: str, new_spec: str) -> bool:
         # Match only quoted dep entries (inside the dependencies array) — not comments
         pat = re.compile(
             r'(?m)^(\s*")'  # start of a quoted dep line (indented)
-            + r'(' + re.escape(variant) + r'(?:\[[^\]]*\])?)'
+            + r"("
+            + re.escape(variant)
+            + r"(?:\[[^\]]*\])?)"
             + r'([^"]+)'
             + r'(")',
             re.IGNORECASE,
@@ -271,7 +288,7 @@ def fix_dep_in_file(pyproject_path: Path, dep_name: str, new_spec: str) -> bool:
 
 def _build_fixed_spec(err: DriftEntry, canon_raw: str) -> str:
     """Build the corrected spec, preserving tighter floors when only ceiling is wrong."""
-    dep_spec = re.sub(r'^[^><=!]*', '', err.dep_raw)  # strip dep name prefix
+    dep_spec = re.sub(r"^[^><=!]*", "", err.dep_raw)  # strip dep name prefix
     dep_floor = _parse_version_floor(dep_spec)
     canon_floor = _parse_version_floor(canon_raw)
     canon_ceiling = _parse_version_ceiling(canon_raw)
@@ -324,8 +341,7 @@ def main() -> int:
     if args.repo:
         repo_dirs = [WORKSPACE_ROOT / args.repo]
     else:
-        repo_dirs = sorted([p for p in WORKSPACE_ROOT.iterdir()
-                            if p.is_dir() and (p / "pyproject.toml").exists()])
+        repo_dirs = sorted([p for p in WORKSPACE_ROOT.iterdir() if p.is_dir() and (p / "pyproject.toml").exists()])
 
     results: list[RepoResult] = []
     for repo_dir in repo_dirs:
@@ -360,28 +376,39 @@ def main() -> int:
         for r in results:
             if not r.errors and not r.warnings and not r.unknown_deps:
                 continue
-            out["repos"].append({  # type: ignore[union-attr]
-                "repo": r.repo,
-                "dep_count": r.dep_count,
-                "checked": r.checked,
-                "errors": [{"dep": e.dep_name, "kind": e.kind, "detail": e.detail, "dep_raw": e.dep_raw, "canon": e.canon_raw} for e in r.errors],
-                "warnings": [{"dep": w.dep_name, "kind": w.kind, "detail": w.detail} for w in r.warnings],
-                "unknown_deps": r.unknown_deps,
-            })
+            out["repos"].append(
+                {  # type: ignore[union-attr]
+                    "repo": r.repo,
+                    "dep_count": r.dep_count,
+                    "checked": r.checked,
+                    "errors": [
+                        {
+                            "dep": e.dep_name,
+                            "kind": e.kind,
+                            "detail": e.detail,
+                            "dep_raw": e.dep_raw,
+                            "canon": e.canon_raw,
+                        }
+                        for e in r.errors
+                    ],
+                    "warnings": [{"dep": w.dep_name, "kind": w.kind, "detail": w.detail} for w in r.warnings],
+                    "unknown_deps": r.unknown_deps,
+                }
+            )
         print(json.dumps(out, indent=2))
         return 0 if total_errors == 0 else 1
 
     # Human-readable output
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f" Workspace constraints drift audit — {len(repo_dirs)} repos")
     print(f" Constraints: {CONSTRAINTS_PATH.name} ({len(constraints)} packages)")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     for r in results:
         if not r.errors and (args.errors_only or not r.warnings):
             continue
         if r.errors or r.warnings:
-            print(f"{'─'*60}")
+            print(f"{'─' * 60}")
             print(f" {r.repo}  ({r.dep_count} deps, {r.checked} checked vs constraints)")
             if r.errors:
                 print("  ❌ ERRORS:")
@@ -394,7 +421,7 @@ def main() -> int:
                 for w in r.warnings:
                     print(f"     [{w.kind}] {w.dep_name}: {w.detail}")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f" SUMMARY: {total_errors} error(s), {total_warnings} warning(s), {total_unknown} unknown dep(s)")
     repos_with_errors = [r.repo for r in results if r.errors]
     if repos_with_errors:
@@ -403,7 +430,7 @@ def main() -> int:
         print(" To auto-fix: python scripts/quality_gates/audit_workspace_constraints_drift.py --fix")
     else:
         print(" ✅ No errors — all checked deps within canonical constraint bounds.")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     return 0 if total_errors == 0 else 1
 

@@ -42,9 +42,9 @@ estimate_calibration_note: |
 
 # Expected_universe v2 enumerator — design (2026-05-08, Tab 3 separate scope)
 
-> Item 4 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md). v2 extends the v1 enumerator
-> with a cross-bucket join on the instruments-service catalog so the manifest's expected universe is instrument-grain
-> (not just venue-grain).
+> Item 4 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md). v2 extends the v1
+> enumerator with a cross-bucket join on the instruments-service catalog so the manifest's expected universe is
+> instrument-grain (not just venue-grain).
 
 ## Why
 

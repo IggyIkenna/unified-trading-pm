@@ -1647,15 +1647,15 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
    `MTDSShardManifestRecorder` (all-6-asset_group v5 row keys) + `connector_registry.py`; `mtds@8782225` added
    `MTDSShardManifestRecorder.close()` + `ShardManifestRecorder.close()` Protocol method + runner finally-block call.
    `mtds@5388a9c` (slot-6) completed the wire-in: (a) `websocket_streaming_handler.py` now passes
-   `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket,
-   batch_size=1))` instead of `None`; (b) `live/__init__.py` exports `MTDSShardManifestRecorder`; (c) conflict markers
-   from `test_bybit_ws_connector.py` + `test_deribit_ws_connector.py` cleaned; (d) handler wire-in gate test added to
+   `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket, batch_size=1))`
+   instead of `None`; (b) `live/__init__.py` exports `MTDSShardManifestRecorder`; (c) conflict markers from
+   `test_bybit_ws_connector.py` + `test_deribit_ws_connector.py` cleaned; (d) handler wire-in gate test added to
    `test_live_manifest_recorder.py`. Full QG green.
 2. ✅ **Phase 3.2 DONE** — pop_reconnect_flag() set-and-reset tests for all 16 WSFeedConnectors — MTDS@a6a045a
    (2026-05-18 slot-6).
 3. ✅ **Phase 3.5 DONE** — all 18 WSFeedConnectors shipped (DRIFT-SOLANA, HYPERLIQUID, BINANCE-FUTURES, BYBIT-FUTURES,
-   OKX-FUTURES, DERIBIT, ASTER, KRAKEN-FUTURES, BINANCE-SPOT, BYBIT-SPOT, OKX-SPOT, COINBASE-SPOT, KRAKEN-SPOT,
-   PHOENIX, CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS via Databento, ODDS_API, POLYMARKET, KALSHI). All registered via
+   OKX-FUTURES, DERIBIT, ASTER, KRAKEN-FUTURES, BINANCE-SPOT, BYBIT-SPOT, OKX-SPOT, COINBASE-SPOT, KRAKEN-SPOT, PHOENIX,
+   CME/ICE/NYSE/NASDAQ/CBOE/ARCA/BATS via Databento, ODDS_API, POLYMARKET, KALSHI). All registered via
    `connector_registry.register_ws_feed_connector` — `register_all()` loads all. MTDS@99fc7b3 (slot-3, 2026-05-17).
 4. ✅ **Phase 13.1/13.2/13.3 DONE** — 4 launchers under `deployment-service/scripts/vm/` (`launch-mtds-live.sh` +
    `launch-mdps-features-live.sh` + `launch-features-cross-cutting.sh` + `launch-replay-cascade.sh`). 14 prefixes
@@ -1666,8 +1666,8 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
 ### Exact next step
 
 ✅ **Wire-in complete — MTDS@5388a9c (2026-05-18 slot-6).** `websocket_streaming_handler.py` now passes a real
-`MTDSShardManifestRecorder` to `LiveWebsocketRunner`. Next: Phase 3.5 per-venue adapter fan-out (defi first) +
-Phase 13.1/13.2/13.3 VM-launcher entries.
+`MTDSShardManifestRecorder` to `LiveWebsocketRunner`. Next: Phase 3.5 per-venue adapter fan-out (defi first) + Phase
+13.1/13.2/13.3 VM-launcher entries.
 
 ### Cross-plan items NOT touched this shift (open in their own plans-of-record)
 

@@ -124,16 +124,16 @@ Cap of 500 was insufficient — 500 × 274ms = 137s blocking time already satura
       features-service@c10fa999 (batch-skip in orchestrator, same pattern as macro_sentiment — slot-1-main) +
       features-service@40494dd7 (timestamp pinned to end_date in calculator — parallel agent). Tarball rebuilt
       @19:43:44Z (features-service-code.tar.gz = @c10fa999 active; @40494dd7 manifest also present).
-- [x] ✅ [AGENT] P0. Bug 7 (`success_count=9/11` → DEPLOYMENT_FAILED) — `_log_window_outcome` returned `days_written >
-      0`; STALE_DATA emission policy suppressed ALL writes for historical dates (onchain_perps + utilization, 5 dates
-      each) → `days_written=0` → `False` for 2 groups → `9==11=False` → exit_code=1. VM 204250 FAILED at 20:11 UTC.
-      Two layered fixes: features-service@09f182b5 (batch-skip guards for onchain_perps + utilization, parallel agent) +
-      features-service@ebbb3c53 (safety net: returns True when days_with_data > 0, slot-1-main). Tarball rebuilt at
-      2026-05-17T20:19:03Z.
-- [x] ✅ [AGENT] P0. Smoke B DEPLOYMENT_COMPLETED — VM `features-onchain-defi-20260517-211522` exit_code=0 at
-      20:21:48 UTC — 11/11 groups (7 batch-skip + 6 written). 7 bugs fixed across 7 VM iterations (~17:00 → 20:21 UTC).
-      Prior FAILED VMs: 204250 (Bug 7), 204428+204443 (killed), 200717 (Bug 6), 203044 (pre-Bug-6).
-- [x] ✅ [AGENT] P1. Harsh-side paper backtest B-015 UNBLOCKED — cross-side ping sent to _agent_pings.md at tick-63
+- [x] ✅ [AGENT] P0. Bug 7 (`success_count=9/11` → DEPLOYMENT_FAILED) — `_log_window_outcome` returned
+      `days_written >     0`; STALE_DATA emission policy suppressed ALL writes for historical dates (onchain_perps +
+      utilization, 5 dates each) → `days_written=0` → `False` for 2 groups → `9==11=False` → exit_code=1. VM 204250
+      FAILED at 20:11 UTC. Two layered fixes: features-service@09f182b5 (batch-skip guards for onchain_perps +
+      utilization, parallel agent) + features-service@ebbb3c53 (safety net: returns True when days_with_data > 0,
+      slot-1-main). Tarball rebuilt at 2026-05-17T20:19:03Z.
+- [x] ✅ [AGENT] P0. Smoke B DEPLOYMENT_COMPLETED — VM `features-onchain-defi-20260517-211522` exit_code=0 at 20:21:48
+      UTC — 11/11 groups (7 batch-skip + 6 written). 7 bugs fixed across 7 VM iterations (~17:00 → 20:21 UTC). Prior
+      FAILED VMs: 204250 (Bug 7), 204428+204443 (killed), 200717 (Bug 6), 203044 (pre-Bug-6).
+- [x] ✅ [AGENT] P1. Harsh-side paper backtest B-015 UNBLOCKED — cross-side ping sent to \_agent_pings.md at tick-63
       (PM@573764e0).
 
 ---

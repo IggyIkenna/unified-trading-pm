@@ -21,14 +21,14 @@ Boundary rule: See `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.m
 
 Epics live under `plans/epics/` (YAML format, schema: `codex/11-project-management/epics/epic-schema.yaml`):
 
-| File                                         | Purpose                                            |
-| -------------------------------------------- | -------------------------------------------------- |
-| `plans/epics/cefi_master_2026_05_07.md`      | CeFi master epic — perp + spot venues              |
-| `plans/epics/defi-epic.yaml`                 | DeFi scope + success criteria                      |
-| `plans/epics/tradfi_master_2026_05_07.md`    | TradFi instruments epic                            |
-| `plans/epics/sports_master_2026_05_07.md`    | Sports data + strategy epic                        |
-| `plans/epics/predictions_master_2026_05_07.md` | Predictions market epic                          |
-| `plans/epics/infrastructure_master_2026_05_07.md` | Infrastructure + shard-isolation epic         |
+| File                                              | Purpose                               |
+| ------------------------------------------------- | ------------------------------------- |
+| `plans/epics/cefi_master_2026_05_07.md`           | CeFi master epic — perp + spot venues |
+| `plans/epics/defi-epic.yaml`                      | DeFi scope + success criteria         |
+| `plans/epics/tradfi_master_2026_05_07.md`         | TradFi instruments epic               |
+| `plans/epics/sports_master_2026_05_07.md`         | Sports data + strategy epic           |
+| `plans/epics/predictions_master_2026_05_07.md`    | Predictions market epic               |
+| `plans/epics/infrastructure_master_2026_05_07.md` | Infrastructure + shard-isolation epic |
 
 ---
 

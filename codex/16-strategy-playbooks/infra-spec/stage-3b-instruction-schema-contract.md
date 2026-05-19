@@ -22,9 +22,10 @@ scope: [engineer, admin]
 >   `schema_depth` sub-dimension.
 > - [`stage-3b-downstream-analytics-capability-matrix.md`](stage-3b-downstream-analytics-capability-matrix.md) — what
 >   downstream analytics each integration mode supports, keyed off the same boundary.
-> - [`../_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) — the three DART paths.
-> - [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — the "same-system
->   partitioned view" framing underpinning rule 10.
+> - [`../_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) —
+>   the three DART paths.
+> - [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) —
+>   the "same-system partitioned view" framing underpinning rule 10.
 
 ---
 

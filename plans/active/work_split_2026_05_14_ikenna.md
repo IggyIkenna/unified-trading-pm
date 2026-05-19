@@ -284,11 +284,11 @@ C).
    on same-region GCE VM, verify sample parquets OHLC-populated + manifest captured rows match planned scope. (infra
    0.8×, ~3 = 2.4 cal) **DONE**: 4-venue OHLCV backfill (CME/ICE/NASDAQ/NYSE) from 2019-01-01 → present; ≥99%
    honest-fill per `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` Phase 7 validation. **Backfilled 2026-05-17.**
-5. ✅ **`tradfi_master_2026_05_07` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4 =
-   4.8 cal) **DONE 2026-05-17**: (a) ES_OPT 2020-2026 confirmed captured (1,932 manifest rows, 100% captured); (b) ES_OPT
-   plan item flipped to `[x] ✅`; (c) GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING; (d) Remaining
-   P3/P4 items (features-delta-one, features-volatility, ML backtest) are post-cutover scope; (e) 2019 data gap confirmed
-   as expected (Databento earliest = 2020-01-02 for options chain).
+5. ✅ **`tradfi_master_2026_05_07` master plan refresh** — push remaining open todos workspace-wide. (research 1.2×, ~4
+   = 4.8 cal) **DONE 2026-05-17**: (a) ES_OPT 2020-2026 confirmed captured (1,932 manifest rows, 100% captured); (b)
+   ES_OPT plan item flipped to `[x] ✅`; (c) GC 2023 VM `tradfi-bf-cme-ohlcv-1m-gc-2023-20260517-195854` RUNNING; (d)
+   Remaining P3/P4 items (features-delta-one, features-volatility, ML backtest) are post-cutover scope; (e) 2019 data
+   gap confirmed as expected (Databento earliest = 2020-01-02 for options chain).
 6. ✅ **`solana_defi_coverage_gaps` successor plan C** — Jito MEV / restaking integration design. (design 0.6×, ~4 = 2.4
    cal) **DONE**: 5 Solana AMM/oracle adapters (Meteora/Phoenix/Jupiter/Lifinity/Pyth) + 78 tests — IS@5665de8 +
    UAC@2dd984e + PM@d3b75916. All 25 plan checkboxes done.
@@ -298,9 +298,9 @@ C).
    `_sports_per_league_entities`. Remaining open: deployment-api smoke-test validation (data-status panel renders
    empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE for retired types — scheduled for next vm cycle).
 8. ✅ **`tradfi_master_2026_05_07` venue + symbology coverage audit** — cross-ref against
-   `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal) **DONE 2026-05-17**: `cross_asset_group_catalogue_audit_2026_05_10`
-   archived at 100% per 2026-05-17 audit. ICE US softs disambiguation plan
-   (`ice_us_softs_dataset_disambiguation`) is tracked separately as a post-cutover item. Venue/symbology coverage
+   `cross_asset_group_catalogue_audit`. (research 1.2×, ~3 = 3.6 cal) **DONE 2026-05-17**:
+   `cross_asset_group_catalogue_audit_2026_05_10` archived at 100% per 2026-05-17 audit. ICE US softs disambiguation
+   plan (`ice_us_softs_dataset_disambiguation`) is tracked separately as a post-cutover item. Venue/symbology coverage
    is complete for the May-23 MVP instrument universe (CME/ICE/NASDAQ/NYSE per OHLCV-only plan).
 9. ✅ **TradFi venue calendar SSOT** — `MarketSession` scaffold (operator answered Yes 2026-05-13 — prefer real venue
    schedules where possible, time unconstrained). (design 0.6×, ~3 = 1.8 cal) — UAC@f4d0cec (`classify_session`

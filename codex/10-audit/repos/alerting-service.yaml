@@ -18,7 +18,9 @@ last_updated: "2026-05-18"
 
 code_readiness:
   current_stage: "CR0"
-  readiness_note: "Active development 2026-05-18. Data-freshness + margin rules wired to UAC AlertCode; severity-based routing P1/P2 parity tests added. alerting-service@af7122f on live-defi-rollout."
+  readiness_note:
+    "Active development 2026-05-18. Data-freshness + margin rules wired to UAC AlertCode; severity-based routing P1/P2
+    parity tests added. alerting-service@af7122f on live-defi-rollout."
 
   cr1_functionality:
     status: "not_assessed"
@@ -32,7 +34,9 @@ code_readiness:
     criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
     coverage_pct: null
     coverage_floor_pct: 70
-    evidence: "alerting-service@af7122f 2026-05-18: severity-routing parity tests P1/P2; data_freshness+margin_rules to UAC AlertCode wired"
+    evidence:
+      "alerting-service@af7122f 2026-05-18: severity-routing parity tests P1/P2; data_freshness+margin_rules to UAC
+      AlertCode wired"
     notes: ""
 
   cr3_integration_tests:

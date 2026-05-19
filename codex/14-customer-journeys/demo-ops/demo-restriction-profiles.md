@@ -124,7 +124,8 @@ Stored in Stage 3B's UAC combo registry keyed by profile_id. Stage 3C's derivati
 `access_control(user, route, item, phase)` by looking up the profile, expanding to (blocks, scope, maturity_filter,
 locked_visible_set, hidden_entirely_set), and returning `visible | locked-visible | hidden`.
 
-See [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) and
+See [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md)
+and
 [`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md).
 
 ## What a profile does not do

@@ -259,8 +259,8 @@ one-time cost. Gas hits P&L immediately as a realized transaction cost.
 ## Instrument Filtering
 
 Ethena sUSDe is a yield-bearing token with a curated instrument set (1-3 instruments). Per
-[instrument-filtering.md](../../operational/instrument-filtering.md), LST/yield protocols have **no filtering needed** --
-the adapter returns all instruments.
+[instrument-filtering.md](../../operational/instrument-filtering.md), LST/yield protocols have **no filtering needed**
+-- the adapter returns all instruments.
 
 ## E2E Manual Trading Workflow
 

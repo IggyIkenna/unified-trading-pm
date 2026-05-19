@@ -452,7 +452,8 @@ For EtherFi staking, the strategy manages two reward token streams:
 For Lido (`staking_protocol="LIDO"`), there are no separate reward tokens -- yield accrues entirely through wstETH/ETH
 rate appreciation. The reward lifecycle is inactive.
 
-See [cross-cutting/reward-lifecycle.md](../../architecture-v2/cross-cutting/reward-lifecycle.md) for the full cross-strategy specification.
+See [cross-cutting/reward-lifecycle.md](../../architecture-v2/cross-cutting/reward-lifecycle.md) for the full
+cross-strategy specification.
 
 ## Token Wrapping
 
