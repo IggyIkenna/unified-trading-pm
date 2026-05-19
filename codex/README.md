@@ -29,6 +29,7 @@ extends it, per-service captures what is unique.
 | `01-domain/`             | Business domain: instruments, asset classes, signal-based strategies, client model                              |
 | `02-data/`               | Data schemas, subscription/publishing model, partitioning, data quality                                         |
 | `02-venues/`             | Venue registry, prime brokers, integration specs                                                                |
+| `03-deployment/`         | Deployment surface docs: data-status UI surface, honest-coverage % display                                     |
 | `03-observability/`      | 3-tier event logging (lifecycle + resource + domain), alerting, monitoring                                      |
 | `03-services/`           | Per-service documentation and specifications                                                                    |
 | `04-architecture/`       | Batch-live symmetry, deployment topology, concurrency, pipeline DAG                                             |
@@ -42,6 +43,8 @@ extends it, per-service captures what is unique.
 | `12-agent-workflow/`     | AI agent workflow guides, task templates, sub-agent patterns                                                    |
 | `13-codex-governance/`   | SSOT boundary rules, section registry, governance README                                                        |
 | `14-customer-journeys/`  | **Customer playbook SSOT**: 3 audiences × 3 environments × 3 auth tiers × 4 catalogues + 177-page triage matrix |
+| `15-runbooks/`           | Live-trading on-call runbooks: alerting, backfill, position reconciliation, smoke testing, kill-switch            |
+| `16-strategy-playbooks/` | Domain strategy + infra playbooks (DeFi, ML, strategy, infra-spec)                                              |
 
 ### Start Here
 
