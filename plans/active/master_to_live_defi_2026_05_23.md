@@ -2003,3 +2003,13 @@ Authorized edit by slot 11 per orchestrator direction 2026-05-14 15:30 UTC (item
 | cbETH LST APR (`lst_coinbase_adapter.py`)      | coinbase-api-key, coinbase-api-secret | **DEFERRED-POST-CUTOVER** | Canonical source is on-chain `exchangeRate()` call (already wired in `lst_rates_handler.py`). Coinbase API matches on-chain to 10 decimal places — it is not an independent source. No credential needed for May-23. See `plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md`.                                              | Coinbase Institutional REST as richer secondary source — post-cutover Coinbase integration plan (not yet created). |
 | Kraken CeFi adapter (`kraken_rest_adapter.py`) | kraken-api-key, kraken-api-secret     | **DEFERRED-POST-CUTOVER** | Historic Kraken ticks + funding rates covered by Tardis (existing `BLOCKED-CREDENTIALS` in master plan). Live Kraken API is optional — 7th of 7+ CeFi venues; Binance/Bybit/OKX/Deribit/Hyperliquid/Aster already cover both carry_staked_basis + arbitrage_price_dispersion cells. Adapter scaffold + unit tests ship and stay in codebase. | Post-cutover live Kraken streaming plan (not yet created).                                                         |
 | `coinbase-api-key` (market-data context note)  | coinbase-api-key                      | **NOT NEEDED (cbETH)**    | `coinbase-api-key` in `codex/07-security/secrets-management.md` (`KEY_NOT_IN_SM`) is for _order placement_ (Coinbase brokerage API), NOT for `wrapped-assets` endpoint which is unauthenticated and reads directly from the on-chain contract. Do NOT file a BLOCKED-CREDENTIALS for cbETH rate data.                                        | n/a                                                                                                                |
+
+---
+
+## Operator-pending gates (awaiting explicit sign-off)
+
+Items that cannot auto-close — require operator review + explicit `[ack]` before being flipped.
+
+| Item | Plan | Gate | What operator must do | Added |
+| ---- | ---- | ---- | --------------------- | ----- |
+| deployment-ui G.3 — B6 operator UX sign-off | `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` Phase G.3 | B6 (business gate — final before prod) | Review 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction + env-tier hosting on staging (`staging.odum-research.com`); run G.2 staging deploy runbook first (`deployment-service/runbooks/deployment-ui-staging-deploy.md`); then comment `[ack] G.3 approved` in this plan to unblock prod deploy | 2026-05-19 slot-6 |

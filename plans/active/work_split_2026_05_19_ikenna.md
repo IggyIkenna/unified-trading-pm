@@ -381,14 +381,14 @@ Status, Logs, Strategy, Kill-switch, Config.
 9. - [x] ✅ **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
          experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
          cal) — PM@2816975af (done by slot 6 itself, backfilled 2026-05-19)
-10. - [ ] **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with Cloud
+10. - [x] ✅ **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with Cloud
           Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI pattern.
-          Operator-runnable. (design 0.6×, ~3 = 1.8 cal)
-11. - [ ] **G.2 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md` with exact
+          Operator-runnable. (design 0.6×, ~3 = 1.8 cal) — deployment-service@10fddb6
+11. - [x] ✅ **G.2 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md` with exact
           `gcloud run deploy` / `firebase deploy` sequence + per-axis verification checklist. (design 0.6×, ~2 = 1.2
-          cal)
-12. - [ ] **G.3 surface to operator-pending** — add to master plan operator-pending section flagging G.3 as final B6
-          gate after G.2 lands. (design 0.6×, ~0.5 = 0.3 cal)
+          cal) — deployment-service@10fddb6
+12. - [x] ✅ **G.3 surface to operator-pending** — add to master plan operator-pending section flagging G.3 as final B6
+          gate after G.2 lands. (design 0.6×, ~0.5 = 0.3 cal) — PM this commit
 
 ---
 
