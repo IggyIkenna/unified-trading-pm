@@ -248,7 +248,7 @@ We just need a provider wrapper.
 - [x] [AGENT] P0. **Add to providers factory** at
       [providers/factory.py](../../execution-service/execution_service/providers/factory.py#L13): route
       `mode="matching_engine"` (or whatever the operator wants the flag to read as) to the new provider. Wire
-      `--execution-provider matching_engine` through run-paper.sh — execution-service@cce86de99 + e2e-testing@ec3cc8a 2026-05-19
+      `--execution-provider matching_engine` through run-paper.sh + colocated_engine.py routing block — execution-service@cce86de99 + e2e-testing@4ee08d2 2026-05-19
 
 - [x] [AGENT] P0. **MVP scope: ETH-PERP on Binance only** for the first ship. Hyperliquid + Bybit + OKX + Deribit +
       Aster expand post-May-23 in the named successor plan. — execution-service@cce86de99 2026-05-19
