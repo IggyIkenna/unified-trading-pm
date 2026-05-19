@@ -303,6 +303,56 @@ todos:
     status: done
     note: "Shipped 2026-05-08 — see commit cited inline above."
 
+  - id: phase-2-5-ohlcv-legacy-filename-rename
+    content: |
+      - [ ] [AGENT] P0. **Phase 2.5 — OHLCV legacy filename → per-instrument rename** (GAP-2.3 from
+        `code_freeze_migrate_backfill_sequencing_2026_05_10.md`).
+        SEQUENTIAL after Phase 2. Bundles into the same single-walk migration pass — per CLAUDE.md
+        "Single-walk discipline (HARD RULE)" added 2026-05-19.
+
+        **Problem**: MTDS evolved from writing a single bundled `ticks.parquet` per venue/data_type/day to writing
+        per-instrument `{instrument_id}.parquet` files. The 2026-05-05 incident: MDPS reader was hardcoded to the
+        legacy filename; MTDS switched to per-instrument names; silent placeholder rows masked the drift for months.
+
+        **Scope**: only OHLCV/trade tick market data (MTDS-written) is affected. Features-service consumers using
+        `ticks.parquet` for sports odds (`venue=ODDS_API/data_type=odds/ticks.parquet`), DeFi rewards
+        (`venue=EIGENLAYER-ETHEREUM/data_type=rewards/ticks.parquet`), and delta_one options
+        (`underlying={u}/ticks.parquet`) are INTENTIONALLY BUNDLED — they are NOT affected by this rename and must
+        NOT be touched. (GAP-2.3.B audit 2026-05-19: no features-* readers break from this rename.)
+
+        **Steps to add to `migrate_one_parquet()`** as drift-class (f):
+        1. **Inventory**: identify parquet paths matching pattern `*/data_type=ticks/ticks.parquet` OR
+           `*/data_type=candles/ticks.parquet` OR `*/data_type=trades/ticks.parquet` under MTDS-owned buckets
+           (`raw-tick-data-*`). Exclude sports/DeFi-rewards/options-underlying paths (heuristic: exclude paths
+           containing `ODDS_API`, `EIGENLAYER`, `underlying=`).
+        2. **Extract instrument_id**: read the parquet footer (Parquet metadata) for `instrument_id` column value
+           of the first row. **Do NOT heuristically parse from path** — the 2026-05-05 incident showed paths can
+           be misleading. If `instrument_id` is absent from the parquet schema, emit `drift_class=OHLCV_NO_INSTRUMENT_ID`
+           and skip (requires operator decision on how to rename these).
+        3. **Rename**: target path replaces `ticks.parquet` with `{instrument_id}.parquet`. All other hive-key
+           segments (pipeline_mode=, asset_group=, day=, venue=, data_type=) are already canonicalized by Phase 2
+           steps (a)-(e) — apply them first, then apply (f).
+        4. **Manifest update**: rewrite the manifest row_key to reflect the new path (same pattern as Phase 2 step
+           4d — update `path` column + row_key columns in per-VM shard parquet).
+        5. **Verification gates** (post-Phase-2.5 run):
+           - `gcloud storage ls --recursive gs://{pid}-raw-tick/**/ticks.parquet` returns ZERO results for MTDS buckets.
+           - Manifest row count delta = ZERO (rename is path-only; no data created or destroyed).
+           - `instrument_id` column populated in every renamed parquet (sample-check 100 files via `pyarrow.parquet.read_metadata`).
+           - `gcloud storage ls --recursive gs://{pid}-raw-tick/**/ODDS_API/**/ticks.parquet` returns SAME count as
+             pre-run (sports odds files untouched).
+
+        **Test additions** to `tests/test_gcs_migration_bundle.py`:
+        - Fixture: MTDS-written `ticks.parquet` with `instrument_id=BTCUSDT` → renamed to `BTCUSDT.parquet`.
+        - Edge case: missing `instrument_id` column → drift_class=OHLCV_NO_INSTRUMENT_ID, no rename, no manifest update.
+        - Exclusion: sports-odds path `venue=ODDS_API/data_type=odds/ticks.parquet` → untouched (NOOP).
+
+        **Downstream consumer fix** (same logical unit, per GAP-2.3.B): any features-* readers that hardcode
+        `ticks.parquet` for OHLCV data must be updated to dynamic `{instrument_id}.parquet`. Audit confirmed
+        (2026-05-19) that current features-* readers only use `ticks.parquet` for intentionally-bundled types —
+        no fix required today. Revisit if new MTDS OHLCV readers are added.
+    status: open
+    note: "GAP-2.3 from code_freeze plan. Added 2026-05-19 slot-3 per work_split_2026_05_19_ikenna.md."
+
   - id: phase-3-execution-plan-and-vm-launch
     content: |
       - [ ] [HUMAN+AGENT] P0. Phase 3 — Execute the migration. Operator-gated; agent prepares + verifies, operator

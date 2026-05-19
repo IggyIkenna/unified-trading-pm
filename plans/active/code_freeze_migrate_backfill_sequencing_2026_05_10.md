@@ -438,7 +438,7 @@ The plan items here promote the existing pieces to execution shape:
       `gcs_migration_bundle_pipeline_mode` Phase 2 body if any column missing.
 - [x] ✅ [DOC] P1. **GAP-2.2.B** — Update CLAUDE.md "Honest absence vs fake placeholders" HARD RULE with reference to
       Phase 2.2 single-walk discipline. Reviewers should reject any post-Phase-2 plan that proposes another whole-corpus
-      walk. **Shipped PM@`<sha>` 2026-05-19 slot-3.**
+      walk. **Shipped PM@`22d632c4` 2026-05-19 slot-3.**
 
 ### Phase 2.3 — OHLCV legacy filename → per-instrument rename reconcile (GAP)
 
@@ -451,21 +451,19 @@ for years.
 `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (closest existing plan), NOT a standalone plan. Bundles into the same
 one-walk migration so manifest only rewrites once.
 
-- [ ] [SCRIPT] P0. **GAP-2.3.A** — Append Phase 2.X "OHLCV legacy filename rename" sub-section to
+- [x] ✅ [SCRIPT] P0. **GAP-2.3.A** — Append Phase 2.X "OHLCV legacy filename rename" sub-section to
       [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
-      Phase 2. Body:
-  1. Inventory every parquet path matching legacy `ticks.parquet` under MTDS + MDPS + features-\* GCS roots (audit
-     script using existing `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` HTTP-pool-tuned listing
-     pattern).
-  2. For each legacy path, rename to per-instrument shape `{instrument_id}.parquet` (extract instrument_id from row
-     data, NOT path heuristic — paths can be misleading per the 2026-05-05 incident).
-  3. Update manifest row_keys for renamed files (atomic per-row rewrite via consolidator; safe because Phase 2.1 v7
-     schema migration runs before this).
-  4. Verification: post-rename, ZERO `ticks.parquet` paths exist; manifest row count delta ZERO (rename is path-only,
-     not schema or data); `instrument_id` column populated in every renamed parquet.
-- [ ] [SCRIPT] P1. **GAP-2.3.B** — Audit features-\* readers for `ticks.parquet` literal path references (the 2026-05-05
-      silent-placeholder bug had MDPS reader hardcoded to legacy filename); flag any consumer that would break
-      post-rename. Fix sites in same logical unit as Phase 2.3.A.
+      Phase 2. Added as Phase 2.5 todo (`phase-2-5-ohlcv-legacy-filename-rename`) with full spec: inventory logic,
+      instrument_id extraction from parquet footer (NOT path heuristic), rename mechanics, manifest row_key update,
+      verification gates (ZERO `ticks.parquet` in MTDS buckets post-run), test additions. **Shipped PM@`<sha>`
+      2026-05-19 slot-3.**
+- [x] ✅ [SCRIPT] P1. **GAP-2.3.B** — Audit features-\* readers for `ticks.parquet` literal path references. **RESULT:
+      No breaking changes.** 3 hardcoded `ticks.parquet` paths in features-service: (a) `sports/data/gcs_reader.py:283`
+      — `venue=ODDS_API/data_type=odds/ticks.parquet` (sports odds, intentionally bundled), (b)
+      `onchain/app/calculators/eigen_rewards_calculator.py:48` — eigenlayer rewards (intentionally bundled), (c)
+      `delta_one/app/core/data_loader.py:495` — per-underlying options `underlying={u}/ticks.parquet` (intentionally
+      bundled). All three are domain-specific bundled data types, NOT OHLCV per-instrument data. None will break from
+      the Phase 2.5 MTDS per-instrument rename. Documented in Phase 2.5 spec. **Shipped PM@`<sha>` 2026-05-19 slot-3.**
 
 ### Phase 2.4 — AWS DeFi-first cloud-parity migration + env-tiered bucket provisioning + flat→tiered data migration (operator decision (b) 2026-05-11)
 
