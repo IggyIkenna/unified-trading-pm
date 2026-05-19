@@ -1,0 +1,333 @@
+---
+plan_type: code+infra
+asset_group: cross-cutting
+owner: ikenna
+created: 2026-05-19
+last_updated: 2026-05-19
+locked_by: live-defi-rollout
+locked_since: 2026-05-19
+name: hard-schema-phase1-field-flip-migration-2026-05-19
+overview: >-
+  Design+audit output from slot 7 re-dispatch (work_split_2026_05_19_ikenna item 10).
+  Successor plan to hard_schema_enforcement_2026_05_08.md Phase 1 (status: helper-shipped).
+  Phase 1's "nullable → required" scope audit reveals that the original framing was partially
+  incorrect: base_asset/quote_asset are already non-nullable (str = ""), expiry stays nullable
+  at declaration level (legitimately None for non-futures types), DeFi disjunctive fields can't
+  flip without subclass refactor. The REAL outstanding Phase 1 work is: (a) DeFi decimals
+  model_validator rules (base_asset_decimals + quote_asset_decimals — NOT yet enforced);
+  (b) back-fill audit for null decimals in historical DeFi instrument rows. All other "flips"
+  are either already enforced by model_validator, already non-optional at declaration level,
+  or require the subclass refactor which is post-cutover scope.
+
+type: mixed
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C3
+  deployment: D1
+  business: none
+
+repo_gates:
+  - repo: unified-api-contracts
+    code: C2
+    deployment: none
+    business: none
+  - repo: instruments-service
+    code: C1
+    deployment: none
+    business: none
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+
+depends_on:
+  - hard-schema-enforcement-2026-05-08
+  - defi-catalogue-chain-primitives-2026-05-10
+
+todos:
+  - id: phase-a-defi-decimals-validator
+    content: |
+      - [ ] [CODE] P0. **Phase A — DeFi decimals model_validator rule.**
+        `InstrumentRecord._enforce_per_asset_group_required_fields` currently enforces:
+          (1) CeFi SPOT_PAIR/PERPETUAL → base_asset + quote_asset non-empty
+          (2) DeFi ONCHAIN → pool_address OR base_asset_contract_address non-empty
+          (3) EVENT_CONTRACT → expiry non-null
+          (4) FUTURE → expiry non-null
+          (5) OPTION → expiry non-null
+        **Gap**: no rule for `base_asset_decimals` or `quote_asset_decimals`. These are
+        required for on-chain price calculation in MTDS DeFi handlers (dex_pools reads
+        token0/token1 decimals for price; A_TOKEN/DEBT_TOKEN reads base decimals for
+        normalization). Add two rules:
+          6. DeFi `base_asset_decimals` non-null for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`
+             (POOL / LENDING / LST / YIELD_BEARING / A_TOKEN / DEBT_TOKEN / STAKING / SPOT_ASSET).
+             Rationale: every DeFi instrument has a primary token with a decimals value (18 for
+             most ERC-20s, 6 for USDC, 8 for WBTC). Null decimals = silent price normalization bug.
+          7. DeFi `quote_asset_decimals` non-null for TWO-ASSET DeFi types: `{POOL}` only.
+             LENDING/LST/STAKING/A_TOKEN/DEBT_TOKEN/SPOT_ASSET are single-asset → quote decimals
+             legitimately None. POOL (Uniswap V3 / Curve / Balancer) requires both token0 and
+             token1 decimals for price computation.
+        Implementation: extend `_enforce_per_asset_group_required_fields` with two `elif`
+        branches OR fold into the existing DeFi on-chain branch as additional checks.
+        Unit tests: extend `tests/internal/unit/test_instrument_record_hard_required_fields.py`.
+    status: todo
+
+  - id: phase-b-null-decimals-gcs-audit-script
+    content: |
+      - [ ] [SCRIPT] P0. **Phase B — Null-decimals GCS audit script.**
+        Write `instruments-service/scripts/audit_defi_null_decimals_2026_05_19.py`:
+        ```python
+        # Usage: python audit_defi_null_decimals_2026_05_19.py --asset-group defi --dry-run
+        # Scans gs://instruments-store-defi-prod-{PROJECT_ID}/.../*.parquet
+        # Reads base_asset_decimals + quote_asset_decimals columns
+        # For each row where instrument_type in DEFI_ONCHAIN_INSTRUMENT_TYPES:
+        #   - null base_asset_decimals → record to audit report (pool_address, venue, date)
+        # For POOL rows: null quote_asset_decimals → same
+        # Output: JSON summary + sample rows for manual classification
+        ```
+        The script must respect CLAUDE.md "Plans Run To Actual Completion":
+        - Reads from GCS via `unified_trading_library.cloud_interface`
+        - Prints null-count summary by venue + instrument_type
+        - Outputs `audit_defi_null_decimals_{date}.json` to local path
+        - Does NOT write to GCS (read-only audit)
+        Pre-condition: Phase A model_validator shipped so new rows won't add to null count.
+    status: todo
+
+  - id: phase-c-cefi-empty-string-audit
+    content: |
+      - [ ] [SCRIPT] P1. **Phase C — CeFi empty-string base/quote audit (verification only).**
+        `InstrumentRecord.base_asset` and `quote_asset` are already `str = ""` (non-nullable
+        at declaration level). Model_validator Rule 1 enforces non-empty at write-time. This
+        phase is a verification that the existing constraint is working:
+        Scan `gs://instruments-store-cefi-prod-{PROJECT_ID}/.../*.parquet` for rows where
+        `base_asset == ""` or `quote_asset == ""` AND `instrument_type` is in
+        `CEFI_PAIR_INSTRUMENT_TYPES`. Expected count: 0 (any non-zero is a bug in the adapter
+        or a pre-Phase-1 legacy row). Output: count per venue + sample rows if any.
+        If count > 0: file separate issue doc with adapter fix required.
+        Note: this is a DEFENSIVE verification, not a migration. The declaration already
+        enforces `str`; the model_validator enforces non-empty. Nothing to flip.
+    status: todo
+
+  - id: phase-d-per-field-declaration-status-table
+    content: |
+      - [ ] [DOCS] P1. **Phase D — Per-field declaration status table in plan body.**
+        Update the "Per-asset-group schema-flip roadmap" section in
+        `hard_schema_enforcement_2026_05_08.md` with the corrected per-field status:
+        | Field | Current type | Model validator | Declaration flip needed? |
+        |---|---|---|---|
+        | `base_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str; add Field(min_length=1) if desired |
+        | `quote_asset` | `str = ""` | ✅ Rule 1 (CeFi) | No — already str |
+        | `pool_address` | `str \| None` | ✅ Rule 2 (disjunctive) | No — disjunctive can't express in type alone |
+        | `base_asset_contract_address` | `str \| None` | ✅ Rule 2 (disjunctive) | No — same |
+        | `base_asset_decimals` | `int \| None` | ❌ NOT YET (Phase A this plan) | Phase A ships validator; declaration stays Optional |
+        | `quote_asset_decimals` | `int \| None` | ❌ NOT YET for POOL (Phase A) | Phase A ships validator for POOL type |
+        | `expiry` | `datetime \| None` | ✅ Rules 3/4/5 (FUTURE/OPTION/EVENT_CONTRACT) | No — legitimately None for non-futures |
+        | Sports `fixture_id` | `str` on all per-fixture entities | Already non-optional | None needed |
+        | `CanonicalInjury.fixture_id` | `str \| None` | N/A — legitimate optional | Pre-season injuries don't have a fixture_id |
+    status: todo
+
+  - id: phase-e-subclass-design-deferred
+    content: |
+      - [ ] [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
+        For fields where the declaration flip would add real type-safety value but can't be
+        expressed without subclasses (primarily `expiry` for FUTURE/OPTION):
+        The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)` with
+        `expiry: datetime` non-optional) requires:
+        (a) instruments-service adapters return typed subclasses (not base InstrumentRecord)
+        (b) consumers narrow the type at read boundaries
+        (c) parquet read path infers the subtype from `instrument_type` column
+        This is a significant refactor. Defer until after May-23 cutover. Named successor:
+        this plan itself (`hard_schema_phase1_field_flip_migration_2026_05_19.md`).
+        **DO NOT move this to a different post-cutover plan without operator ack.**
+    status: todo
+
+  - id: phase-f-codex-update
+    content: |
+      - [ ] [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.**
+        Update `codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord
+        hard-required field enforcement" with the corrected scope table (same as Phase D
+        but in the codex SSOT). Cross-reference this plan + `hard_schema_enforcement_2026_05_08.md`.
+    status: todo
+
+isProject: false
+estimate_class: refactor
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 2.0
+estimate_calibration_note: |
+  Design+audit phase completed 2026-05-19 slot 7 re-dispatch (work_split item 10). Remaining
+  work: Phase A (1 validator rule extension, ~1 AI-day), Phase B (1 audit script, ~0.5 AI-day),
+  Phase C (1 audit script, ~0.3 AI-day), Phases D/F (docs, ~0.2 AI-day). Total ~2 cal AI-days.
+  refactor class (0.4× multiplier) because majority of work is extending existing Phase 1
+  model_validator + writing audit scripts with existing tooling pattern.
+---
+
+> **Successor to**: [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md) Phase 1
+> (status: `helper-shipped` — foundation shipped, field flips pending).
+>
+> **Do NOT archive `hard_schema_enforcement_2026_05_08.md`** — it is locked and contains Phases 2-5 context.
+> This plan is the granular action plan for Phase 1's outstanding work only.
+
+# Hard Schema Phase 1 — Field-Flip Migration Plan
+
+## Design + audit output (slot 7 re-dispatch 2026-05-19)
+
+This plan documents the findings from the Phase 1 design+audit pass assigned to slot 7
+(work_split_2026_05_19_ikenna.md item 10). The audit was intentionally design-only with
+no field flips; this plan is the required output.
+
+---
+
+## Task 1: Field inventory — Optional→required candidates with model_validator cross-ref
+
+### InstrumentRecord fields audited
+
+| Field | Current declaration | Model validator rule | Audit finding |
+|---|---|---|---|
+| `base_asset` | `str = ""` (NOT nullable) | ✅ Rule 1: CeFi SPOT_PAIR/PERPETUAL → non-empty | **Already non-nullable.** Plan's "flip" = constraint hardening. Validator covers runtime. |
+| `quote_asset` | `str = ""` (NOT nullable) | ✅ Rule 1: same | **Already non-nullable.** Same as base_asset. |
+| `pool_address` | `str \| None = None` | ✅ Rule 2: DeFi ONCHAIN → pool_address OR base_asset_contract_address | **Disjunctive — cannot flip individually.** Declaration stays Optional. Validator is SSOT. |
+| `base_asset_contract_address` | `str \| None = None` | ✅ Rule 2: disjunctive | **Same as pool_address.** |
+| `base_asset_decimals` | `int \| None = None` | ❌ **NOT YET ENFORCED** | **Phase A gap.** Required for all DEFI_ONCHAIN types (price normalisation). |
+| `quote_asset_decimals` | `int \| None = None` | ❌ **NOT YET ENFORCED** | **Phase A gap.** Required for POOL type only (two-asset; single-asset types legitimately have no quote). |
+| `expiry` | `datetime \| None = None` | ✅ Rules 3/4/5: FUTURE/OPTION/EVENT_CONTRACT → non-null | **Legitimately None for non-futures.** Declaration stays Optional. Validator covers required types. |
+| `atoken_address` | `str \| None = None` | None | A_TOKEN instruments should have this; currently no validator. Phase A can add if needed. |
+| `debt_token_address` | `str \| None = None` | None | DEBT_TOKEN instruments should have this; currently no validator. Phase A can add if needed. |
+
+### Sports per-fixture schemas audited (fixture_id nullability)
+
+| Schema | File | `fixture_id` type | Finding |
+|---|---|---|---|
+| `CanonicalFixtureStats` | `fixture_stats.py:20` | `str` | ✅ Already non-optional |
+| `CanonicalEvent` | `events.py:29` | `str` | ✅ Already non-optional |
+| `CanonicalLineup` | `lineup.py:48` | `str` | ✅ Already non-optional |
+| `CanonicalPlayerStats` | `player_stats.py:21` | `str` | ✅ Already non-optional |
+| `CanonicalInjury` | `__init__.py:596` | `str \| None` | ✅ **Legitimately optional** — injuries can be pre-season/training (no fixture context) |
+| `arbitrage.py` classes | `arbitrage.py:46,67` | `str` | ✅ Already non-optional |
+| `betting.py` classes | `betting.py:61,82` | `str` | ✅ Already non-optional |
+| `ProgressiveFixtureStats` | `progressive.py:22,109` | `str` | ✅ Already non-optional |
+| `ProcessedOdds` | `processed_odds.py:21` | `str` | ✅ Already non-optional |
+
+**Sports verdict**: `fixture_id` is already non-optional on all per-fixture entities. `CanonicalInjury.fixture_id`
+is legitimately nullable (pre-season/training injuries have no fixture). **No flip needed.**
+
+---
+
+## Task 2: Consumer-sweep classification
+
+### CeFi `base_asset` / `quote_asset`
+
+| File | Line | Pattern | Classification |
+|---|---|---|---|
+| `instruments-service/cefi/tardis.py` | 500, 532 | `inst.base_asset or ""` | 🟡 DEFENSIVE — redundant after model_validator; harmless no-op |
+| `instruments-service/cefi/ccxt_adapter.py` | 203, 234 | `inst.base_asset != X` / `inst.base_asset == X and inst.expiry` | 🟢 SAFE — direct comparison works fine |
+| `instruments-service/catalogue/catalogue_builder.py` | 70 | `record.raw_symbol or record.base_asset` | 🟡 DEFENSIVE — raw_symbol fallback; no impact |
+
+**No 🔴 BREAKS for CeFi fields.**
+
+### DeFi `pool_address` / `base_asset_contract_address`
+
+Direct reads from `InstrumentRecord.pool_address` in service code are NOT in strategy-service
+(that code reads from a `position.pool_address` which is a different schema). No InstrumentRecord
+pool_address consumers found in services that would break on a declaration change.
+
+| Asset | Classification |
+|---|---|
+| `pool_address` declaration flip | N/A — disjunctive rule prevents solo flip; stays Optional |
+| `base_asset_contract_address` declaration flip | N/A — same |
+
+### TradFi `expiry`
+
+| File | Line | Pattern | Classification |
+|---|---|---|---|
+| `instruments-service/catalogue/catalogue_builder.py` | 86 | `record.expiry.date() if record.expiry is not None else None` | 🟡 DEFENSIVE — correct for non-futures; would break if expiry flipped to non-null universally |
+| `instruments-service/catalogue/catalogue_builder.py` | 108 | `if record.expiry is not None:` | 🟡 DEFENSIVE — same |
+| `instruments-service/tradfi/futures_factory.py` | 267 | `if not record.expiry: return early` | 🟡 DEFENSIVE — explicit None handling for "skip non-expiry instruments" logic |
+| `instruments-service/tradfi/futures_factory.py` | 287 | `record.expiry.date() if isinstance(record.expiry, datetime)` | 🟡 DEFENSIVE — correct |
+| `strategy-service/portfolio_allocator/archetypes.py` | 602, 716 | `bool(s.expiry)` / `not s.expiry` | 🟡 DEFENSIVE — "dated mode requires expiry" check; would become no-op for FUTURE instruments |
+
+**All consumers are 🟡 DEFENSIVE** — they handle None correctly for non-futures instrument types.
+A universal `expiry: datetime` declaration flip would require updating these consumers to remove
+None checks (or they'd generate basedpyright `reportUnnecessaryComparison` errors). The correct
+fix is the **subclass approach** (Phase E) not a global declaration flip.
+
+**No 🔴 BREAKS found.** All defensive consumers would degrade to no-ops after validator.
+
+---
+
+## Task 3: Sports `fixture_id` phantom verification
+
+**Verdict**: No phantom. All per-fixture entities already have `fixture_id: str` (non-optional).
+`CanonicalInjury.fixture_id: str | None` is justified (pre-season/training injury records
+not associated with a fixture).
+
+**Action**: NONE. Document in Phase D table. Remove "Sports fixture_id" from the "pending" list
+in `hard_schema_enforcement_2026_05_08.md` Phase 1 roadmap section.
+
+---
+
+## Task 4: Back-fill migration scope per field
+
+| Field(s) | Migration needed? | Tooling to use | When |
+|---|---|---|---|
+| `base_asset` / `quote_asset` empty rows | **Audit only** (Phase C) | New `audit_cefi_empty_base_quote.py` using instruments GCS reader pattern | Before Phase A |
+| `pool_address` / `base_asset_contract_address` null rows | **None** — model_validator already ensures new rows comply; historical null rows are from pre-Phase-1 adapters | N/A | After catalogue Phase 2-3 completes the protocol address backfills |
+| `base_asset_decimals` null rows (Phase A gap) | **Audit + targeted re-fetch** (Phase B) | New `audit_defi_null_decimals_2026_05_19.py` → re-fetch from catalogue adapter or on-chain registry | After Phase A validator ships |
+| `quote_asset_decimals` null rows for POOL type | Same as base_asset_decimals | Same script, filter for POOL instrument_type | Same as above |
+| `expiry` null rows for FUTURE/OPTION | **Existing script** `migrate_tradfi_expiry_schema.py` handles this | Run `migrate_tradfi_expiry_schema.py --dry-run` to identify residual null-expiry futures rows | Not blocking — model_validator catches new writes |
+| Sports `fixture_id` | **None** — already non-optional everywhere relevant | N/A | N/A |
+
+### Existing migration tooling inventory (instruments-service/scripts/)
+
+- `migrate_tradfi_expiry_schema.py` — handles null expiry back-fill for TradFi futures; already run per tradfi_master Q1
+- `audit_fixtures_via_api_football.py` — pattern for sports per-fixture audit
+- `reconcile_phantom_manifest_rows.py` / `reconcile_phantom_manifest_rows_all.py` — manifest phantom identification pattern
+- `canonicalize_defi_manifest_data_types_2026_05_16.py` — DeFi parquet migration pattern (SSOT for new DeFi scripts)
+- `backfill_sports_fixture_stats_manifest.py` — sports entity backfill pattern
+
+**Phase A + Phase B new scripts** follow the `canonicalize_defi_manifest_data_types_2026_05_16.py` pattern:
+GCS reader → null-field filter → JSON audit report → optional targeted re-fetch.
+
+---
+
+## Phased DAG
+
+```
+Phase A: DeFi decimals model_validator rules (UAC)
+    └── deps: DEFI_ONCHAIN_INSTRUMENT_TYPES constants (already defined); catalogue Phase 2-3 adapter writes
+    └── output: 2 new validator rules + unit tests
+
+Phase B: Null-decimals GCS audit script (instruments-service)
+    └── deps: Phase A (model_validator ships so new rows comply before audit runs)
+    └── output: JSON audit report of historical null decimals
+
+Phase C: CeFi empty-string audit (instruments-service)
+    └── deps: None (read-only verification)
+    └── output: count of empty base_asset/quote_asset rows per venue
+
+Phase D: Update hard_schema_enforcement plan body — corrected scope table
+    └── deps: Phases A/B/C findings (to fill in audit results)
+    └── output: plan body "Per-asset-group schema-flip roadmap" updated with current status
+
+Phase F: Codex update — validation-and-errors.md
+    └── deps: Phase D (same content)
+    └── output: codex doc updated
+
+Phase E: Subclass design (DEFERRED — post-cutover)
+    └── deps: May-23 cutover shipped; instruments-service Type narrowing refactor scheduled
+    └── named successor: this plan (not a new plan)
+```
+
+Phases A + C are parallelisable (no dependency between them).
+Phases D + F are parallelisable and follow A/B/C.
+
+---
+
+## Temporary states + their canonical follow-up plans
+
+| Temporary state | Follow-up plan | ETA |
+|---|---|---|
+| `base_asset_decimals` / `quote_asset_decimals` not enforced (model_validator gap) | Phase A of this plan | Next session after operator write-pause window |
+| Subclass approach for declaration-level `expiry` enforcement | Phase E of this plan | Post-cutover (after May-23) |
+| CeFi empty-string rows (if any found in Phase C) | Issue doc + adapter fix per findings | Same session as Phase C |
+</content>
