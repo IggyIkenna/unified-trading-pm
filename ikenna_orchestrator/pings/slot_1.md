@@ -4413,3 +4413,29 @@ the foreign-dirty state. NEVER `git checkout HEAD -- <file>` on a foreign dirty 
 my mental checklist.
 
 — ikenna-main slot 1
+
+---
+
+## [slot 1 main] 2026-05-19 ~11:58 UTC — INCIDENT: Phase 3 fleet crash + relaunch (gcloud storage ls bug)
+
+**What happened**: all 31 gcs-migration-bundle VMs launched 11:23 UTC crashed on startup at
+`iter_parquet_uris_for_slice`. Root cause: `gcloud storage ls --recursive gs://bucket/path/day=2019-`
+does not support partial-prefix matching for hive-partition paths — exits 1 even when matching objects
+exist. Additionally, startup script had `set -euo pipefail` which caused the Python crash to propagate
+past `shutdown -h now`, leaving all 31 VMs idle-RUNNING (burning cost, doing nothing).
+
+**Fixes shipped**:
+- PM@726a3bf — `iter_parquet_uris_for_slice`: switched to `gsutil ls -r gs://...prefix**`, `check=False`,
+  treat returncode 1 (zero matches) as empty list — so VMs skip years with no data gracefully.
+- deployment-service@5b917c1 — startup script: capture python3 exit with `|| MIGRATION_EXIT=$?` instead
+  of letting `set -e` abort; unconditionally call `shutdown -h now` with pass/fail log line.
+
+**Codex note**: SSOT `codex/05-infrastructure/vm-tarball-deployment.md` does not yet document the
+`gcloud storage ls` partial-prefix limitation. **TODO**: add a rule "Use `gsutil ls -r prefix**` not
+`gcloud storage ls --recursive path` for hive-partition prefix scanning." Filed as deferred item in
+`gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 7 codex updates.
+
+**Fleet status**: all 31 VMs deleted + relaunched 11:58 UTC; all RUNNING asia-northeast1-c as of 12:06
+UTC; Python setup in progress; migration expected to start ~12:15-12:20 UTC.
+
+— ikenna-main slot 1
