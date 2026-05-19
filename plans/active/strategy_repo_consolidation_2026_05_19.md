@@ -203,12 +203,13 @@ todos:
 
   - id: phase-5-lifts-to-utl
     content: |
-      - [ ] [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL where Phase 0 (f) audit identifies ≥2-repo
-        duplication (kill-switch bus subscriber pattern, ManifestFreshnessCache adoption, config-reloader scaffolding,
-        `available_at` stamping conventions in PnL attribution rows). Each lift = a UTL PR + a strategy-service PR
-        that removes the local copy and imports from UTL. Defer to post-cutover if Phase 0 (f) returns <2 candidates
-        — lifts are correctness-neutral, do NOT block the cutover.
-    status: todo
+      - [ ] **DEFERRED** [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL. Phase 0 (f) audit confirmed ≥2
+        candidates: `config_reloaders.py` 4× + `kill_switch_bus_subscriber.py` 4×. Deferred to post-cutover:
+        - UTL is a shared dep; changing it 4 days before May-23 live DeFi launch is unacceptable risk.
+        - Lifts are correctness-neutral (plan §) — deduplicated copies already within strategy-service sub-packages.
+        - Named successor: `plans/active/utl_lift_config_reloader_kill_switch_post_cutover.md` (to be created post May-23).
+        - Required lifts when successor plan runs: `make_config_reloader(config_cls)` + `make_kill_switch_subscriber(on_fire, on_clear)` into UTL; strategy-service 4× callsites each.
+    status: deferred
     blocked_by: phase-4-fix-imports-and-cli
 
   - id: phase-6-parity-test
