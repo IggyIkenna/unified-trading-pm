@@ -960,6 +960,49 @@
       "role": "service",
       "tags": ["cefi", "ml-inference", "standard"]
     },
+    "ml-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/ml-service",
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": ["cefi", "ml", "consolidation-target"],
+      "consolidates": ["ml-training-service", "ml-inference-service"],
+      "consolidation_status": "skeleton",
+      "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
+      "created": "2026-05-19"
+    },
     "ml-training-service": {
       "type": "service",
       "arch_tier": "service",
