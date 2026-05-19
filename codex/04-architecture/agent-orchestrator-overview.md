@@ -132,6 +132,37 @@ workspace port registry. The Vite dev server for the dashboard is always on `:51
 
 ---
 
+## Slack notifications
+
+Implemented in `server/notifications/slack.py` (shipped `agent-orchestrator@ceaaefe`). Three async
+functions post to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (GCP Secret Manager, `central-element-323112`):
+
+| Function               | Event                  | Slack emoji         |
+| ---------------------- | ---------------------- | ------------------- |
+| `notify_slot_blocked`  | slot transitions → blocked | `:octagonal_sign:` |
+| `notify_slot_stale`    | slot silent > threshold  | `:warning:`         |
+| `notify_slot_failed`   | slot transitions → failed  | `:x:`               |
+
+**Non-fatal failure pattern** — every call site wraps in `try/except Exception: pass`. A Slack
+outage or missing webhook URL never propagates to the server process.
+
+**No-op in local dev** — if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is empty or unset, all three
+functions return immediately. No mock or stub needed; tests patch `_WEBHOOK_URL` directly.
+
+**Secret inventory** (all in Secret Manager):
+
+| Secret                                    | Used for                                    |
+| ----------------------------------------- | ------------------------------------------- |
+| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | Incoming webhook — POST notifications       |
+| `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` | Mounted for future slash-command verification |
+| `AGENT_ORCHESTRATOR_SLACK_APP_ID`         | Reference only (app ID `A0B4N3802N9`)       |
+| `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`      | OAuth future use                            |
+| `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET`  | OAuth future use                            |
+
+SSOT: `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md`.
+
+---
+
 ## Deployment script
 
 `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` (created at P1 of the
@@ -153,4 +184,4 @@ Full deployment plan (P0–P6):
 Successor plans (post-P5):
 - `plans/active/agent_orchestrator_workers_on_vms_2026_05_XX.md` — worker execution on VMs
 - `plans/active/agent_orchestrator_multi_account_failover_2026_05_XX.md` — multi-account failover
-- `plans/active/agent_orchestrator_slack_notifications_2026_05_XX.md` — Slack push notifications
+- `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` — Slack push notifications (P1 shipped ceaaefe)
