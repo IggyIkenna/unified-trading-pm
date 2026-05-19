@@ -171,10 +171,10 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
-  - **Pre-migration drain (GCS migration gate — HARD RULE)**: before ANY bucket SSOT cutover or GCS migration,
-    ALL running VMs across BOTH GCP + AWS fleets MUST be gracefully stopped and manifest consolidated first.
-    Recipe: inventory via `vm_zombie_watchdog.py` + per-prefix SIGTERM + wait for STOPPED event + run manifest
-    consolidator + snapshot to `_index/snapshots/pre_migration_<date>.parquet`. SSOT:
+  - **Pre-migration drain (GCS migration gate — HARD RULE)**: before ANY bucket SSOT cutover or GCS migration, ALL
+    running VMs across BOTH GCP + AWS fleets MUST be gracefully stopped and manifest consolidated first. Recipe:
+    inventory via `vm_zombie_watchdog.py` + per-prefix SIGTERM + wait for STOPPED event + run manifest consolidator +
+    snapshot to `_index/snapshots/pre_migration_<date>.parquet`. SSOT:
     `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0.
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
@@ -190,6 +190,17 @@ in-flight work. **Do not touch files outside your clear context.**
   foreign code.
 - **Untracked file in a dep repo = NOT YOURS.**
 - QG fails on file you don't own → tell the user.
+- **Autostash conflict during rebase → `git rebase --abort`, do not patch around.** If `git pull --rebase --autostash`
+  (or `git rebase --autostash`) reports `Applying autostash resulted in conflicts. Your changes are safe in the stash.`,
+  the autostash holds **foreign-dirty** content that conflicted with the rebased HEAD. Safe recovery: `git rebase
+  --abort` returns the repo to its pre-rebase state with the autostash intact. Then explicitly stash only YOUR files
+  by name (`git stash push -- path/to/your_file`), redo the rebase, and pop your stash back. **NEVER
+  `git checkout HEAD -- <conflicted_file>` to clear markers and then `git stash drop`** — that destroys the foreign
+  agent's only copy of their WIP. The dropped-commit hash printed by `git stash drop` is reachable via
+  `git stash store <hash>` until next GC, but treat that as a near-miss incident, not a routine path.
+  Incident reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit, logged
+  in `ikenna_orchestrator/pings/slot_1.md`). Full SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7
+  — troubleshooting".
 
 ### Clear context = implement, don't ask
 
