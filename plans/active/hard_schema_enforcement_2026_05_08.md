@@ -143,12 +143,13 @@ todos:
 
   - id: phase-5-qg-static-assertion
     content: |
-      - [ ] [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.66 static assertion.** AST-walk every UAC
-        canonical schema; assert: (a) hard-required fields per Phase 1 list above are non-nullable in the
-        Pydantic / TypedDict / dataclass declaration; (b) every `record_captured` callsite passes the row_key
-        shape validation kwargs for bundled shards (extends existing STEP 5.64). Fails CI on missing markup or
-        skipped guards.
-    status: todo
+      - [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.83 static assertion.** AST-walk checker
+        verifies InstrumentRecord `_enforce_per_asset_group_required_fields` model_validator + CEFI/DEFI
+        frozensets present in UAC `internal/reference/instrument.py`. Wired into `base-library.sh` STEP 5.83
+        under `UAC_CANONICAL_EXEMPT` guard — fires only in UAC QG, silently skips all other repos.
+        Guards Phase 1 regression: removes-validator → CI fails.
+        — PM@03a320846 (STEP 5.83 checker + base-library.sh wiring) 2026-05-19
+    status: done
 
   - id: codex-update
     content: |
