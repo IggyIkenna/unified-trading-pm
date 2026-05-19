@@ -183,6 +183,9 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
          cal) — deployment-service@6dfac41 (2026-05-17; RecursiveLeverageReceiver.sol Option A + 11 foundry tests;
          security review passed; mainnet deploy BLOCKED-OPERATOR-DECISION wallet key human-only; backfilled 2026-05-19)
 9. - [x] ✅ **Plan flips** for all shipped items. (0.5 cal) — backfill commit this turn
+10. - [x] ✅ **Phase 4.C — CCTP bridge adapter** — api_keys §4.C (discovered open during boot, implemented this session).
+          uac@a0238d3 + execution-service@05bdad628 (2026-05-19; CCTPBridgeConnector full: burn-and-mint USDC bridge,
+          10 EVM chains, 5 CCTP error codes, testnet_contracts.yaml addresses, 25 unit tests green)
 
 ---
 
