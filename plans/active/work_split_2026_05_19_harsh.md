@@ -253,8 +253,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 5. - [x] ✅ **deploy_missing_auto_launch final item** — plan 100% complete + archived at PM@bda2306a (WORKSTEP-S7 closed item 14/14: Phase 4 closeout + 7-day soak ✅ 0 compromise events). `dm-` prefix registered in VM_PREFIX_TO_BUCKET (deployment-service@d3a96cf). Verified 2026-05-19.
 6. - [x] ✅ **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** — UTL public API: 16 missing docstrings filled across 6 modules (api_key_reloader / service_cli / lifecycle_reloader / honest_coverage_ratchet / survivorship_guard / point_in_time); pre-existing test fix (naive→UTC). UTL@812acd1. Remaining 608 gap: next-cycle sweep.
 7. - [x] ✅ **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** — AST scan: 2 confirmed violations in execution-service/defi_execution/hyperliquid_bridge.py (withdraw_usdc_from_hyperliquid + get_bridge_pending); converted to aiohttp.ClientSession. All other requests usages are in sync contexts or tests. execution-service@6bb36da7.
-8. - [ ] **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** → use builtins `list[...]`/`dict[...]`.
-         (refactor 0.4×, ~2 = 0.8 cal)
+8. - [x] ✅ **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** — AST scan: 1 real violation in PM scripts/validation/audit-library-imports.py (10 usages); converted to list[]/dict[] + added `from __future__ import annotations`. Deployment-service docstring mentions only (not code). Zero annotation violations remain workspace-wide. PM@9c5f1490.
 9. - [ ] **S14. SUSTAIN — workspace-wide bare `except:` sweep** → `except Exception:` minimum. (refactor 0.4×, ~2 = 0.8
          cal)
 10. - [ ] **Plan flips** for all shipped. (0.5 cal)
