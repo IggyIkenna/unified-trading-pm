@@ -1196,6 +1196,8 @@ in `uac_qg_preexisting_size_violations_2026_05_14.md`).
 
   **Ratchet-down 2026-05-18 (slot-5 batch 29 — engine/routing/instruction_router.py)**: shipped at execution-service@17480ee86. route_instruction 129L→36L via _route_compose_preflight (30L) + _route_log_error_action (31L) + _route_handle_error (27L). 1 violation cleared. Allowlist 19→15 files (net; parallel slot-4 batches 29-30 also landed). Slot-5 cumulative across batches 21-29: 9 files cleared.
 
+  **Ratchet-down 2026-05-19 (slot-5 batch 30 — engine/backtest/engine/results.py)**: shipped at execution-service@750e8001d. _extract_results 226L→49L via 7 helpers: _er_extract_summary_checks (26L) + _er_alpha_instr (18L) + _er_alpha_cache static (21L) + _er_resolve_run_id (23L) + _er_exec_algo static (19L) + _er_resolve_instruction_type static (8L) + _er_build_orders_and_timeline (28L). 1 violation cleared. Allowlist 15→14 files. Slot-5 cumulative across batches 21-30: 10 files cleared.
+
 2. **Phase B — concentrated 30%** (~3 cal AI-days, **POST-CUTOVER**): refactor the 3 hottest submodules
    (`engine/backtest` 41 + `algorithms/impl` 33 + `defi_execution/protocols` 30) using the same helper-extraction
    patterns this session applied to UTL/MTDS/strategy-service:
