@@ -371,6 +371,11 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       mirroring GCP SA matrix. `scripts/aws/apply-bucket-policies.sh` applies prod_write_protection + glue_read_access
       + athena_results_write policies to 12 DeFi prod S3 buckets. Both scripts idempotent, default dry-run. Operator
       next step: `aws auth admin_od` then `bash scripts/aws/setup-iam-roles.sh --apply && bash scripts/aws/apply-bucket-policies.sh --apply`.
+- [ ] [SCRIPT] P1. **DEFERRED** Add `defi-validation` key to `aws.storage` in `cloud-providers.yaml` — GCP has
+      `${GCP_PROJECT_ID}-defi-validation` (line 195) but AWS section has no equivalent. DeFi validation VMs use
+      `resolve_bucket_name(kind="defi-validation")` and will 404 on `CLOUD_PROVIDER=aws`. Fix: add
+      `defi-validation: "unified-trading-defi-validation-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"` to `aws.storage`.
+      Discovered 2026-05-19 (slot 3 Phase 1.D audit). **MIGRATED FROM:** Phase 1.D non-DeFi audit finding.
 
 ### Phase 3 — ECR repos + per-service buildspec.aws.yaml (1 day, **PARALLEL** with Phase 2)
 

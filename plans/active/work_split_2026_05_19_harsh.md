@@ -112,8 +112,11 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          (infra 0.8×, ~6 = 4.8 cal)
 2. - [ ] **Phase 1.C — ECR setup + dual-cloud image push** — create ECR per service in ap-northeast-1. (infra 0.8×, ~3 =
          2.4 cal)
-3. - [ ] **Phase 1.D — AWS S3 non-DeFi bucket parity** — extend bucket_config.yaml with AWS entries for sports +
-         prediction + tradfi buckets. (infra 0.8×, ~3 = 2.4 cal)
+3. - [x] ✅ **Phase 1.D — AWS S3 non-DeFi bucket parity** — extend bucket_config.yaml with AWS entries for sports +
+         prediction + tradfi buckets. (infra 0.8×, ~3 = 2.4 cal) — deployment-service@bf35a0c: added tradfi
+         `unified-trading-databento-batch-registry-{account_id}` + test to infrastructure_buckets.aws; sports/prediction
+         covered by existing aws_bucket_mappings + cloud-providers.yaml; defi-validation gap captured as P1 DEFERRED
+         todo in aws_migration plan.
 4. - [ ] **Phase 2.A — Per-venue sub-key provisioning prep** — scaffold credential request list; file operator ping for
          manual provisioning. (infra 0.8×, ~1 = 0.8 cal)
 5. - [ ] **Phase 4.A — DeFi mainnet wallet provisioning verify** — confirm CLOUD_KMS_ENCRYPTED wallet generation works
