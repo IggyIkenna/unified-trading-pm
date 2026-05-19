@@ -1,0 +1,298 @@
+---
+title: agent-orchestrator — Cloud Run deploy + infra reference
+created: 2026-05-19
+author: ikenna-claude-subagent
+status: active
+---
+
+# agent-orchestrator — Cloud Run Deploy + Infra Reference
+
+> Architecture SSOT: `codex/04-architecture/agent-orchestrator-overview.md` Operator runbook:
+> `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` Plan-of-record:
+> `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` Launcher SSOT:
+> `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers"
+
+---
+
+## Cloud Run service shape
+
+Two independent services — one per env. No silent default.
+
+| Env  | Cloud Run service            | Image tag     | Region       | GCP project            |
+| ---- | ---------------------------- | ------------- | ------------ | ---------------------- |
+| prod | `agent-orchestrator`         | `:production` | europe-west4 | central-element-323112 |
+| UAT  | `agent-orchestrator-staging` | `:uat`        | europe-west4 | central-element-323112 |
+
+**First-live revision** (UAT, P1 2026-05-19): `agent-orchestrator-staging-00006-5vt`
+
+**Resource allocation** (UAT — same shape applies to prod):
+
+| Resource      | Value                                                                    |
+| ------------- | ------------------------------------------------------------------------ |
+| Memory        | 1Gi (UTL transitive imports use ~527 MB on cold start; 512Mi caused OOM) |
+| CPU           | 1 vCPU                                                                   |
+| Min instances | 0                                                                        |
+| Max instances | 3                                                                        |
+| Concurrency   | Cloud Run default (80)                                                   |
+
+**Runtime env**:
+
+```
+ORCHESTRATOR_MODE=live         # set via --set-env-vars at deploy
+PORT=8080                      # set in Dockerfile; Cloud Run uses this
+ORCHESTRATOR_PUBLIC_URL=...    # from config/docker-build.env.{uat|production}
+```
+
+**Secrets** (bound via `--update-secrets` after P3 auth flip):
+
+```
+ORCHASTRATOR_JWT_SECRET=ORCHASTRATOR_JWT_SECRET:latest
+AGENT_ORCHESTRATOR_SLACK_WEBHOOK=AGENT_ORCHESTRATOR_SLACK_WEBHOOK:latest
+AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET=AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET:latest
+```
+
+---
+
+## Image build flow
+
+Image registry: `europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator`
+
+Deploy script: `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh`
+
+```bash
+# UAT deploy via Cloud Build (recommended for CI)
+bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat --cloud
+
+# UAT deploy via local docker build (faster for iteration)
+bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat
+
+# Prod deploy (manual workflow_dispatch only — NOT CI-automated)
+bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=prod --cloud
+```
+
+**Cloud Build cache**: `deployment-service/scripts/cloud-run/cloudbuild-agent-orchestrator.yaml` pulls the prior image
+tag via `--cache-from` before building. This cuts warm-build time from 5m20s to ~1m46s when only Python source changes
+(deps layer is cache-hit).
+
+**Source repo location**: `deployment-service/scripts/cloud-run/` reads `../../../agent-orchestrator` (sibling in the
+workspace). The deploy script resolves this at runtime.
+
+---
+
+## Dockerfile shape
+
+Location: `agent-orchestrator/Dockerfile`
+
+Key design decisions:
+
+```dockerfile
+ARG PROJECT_ID
+FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest AS base
+
+# ... copy source + install deps ...
+
+ENTRYPOINT []   # CRITICAL: clears inherited python ENTRYPOINT from UTL base image
+CMD ["sh", "-c", "uvicorn server.server:app --host 0.0.0.0 --port ${PORT}"]
+```
+
+**Why `ENTRYPOINT []`**: The UTL base image sets `ENTRYPOINT ["python"]` so UTL services can do `CMD ["-m", "X"]`.
+Combined with a shell-form CMD, this produces `python sh -c "uvicorn ..."` which crashes with exit(2) trying to open
+"sh" as a Python script. Cleared at P1 (`agent-orchestrator@a3031fd`).
+
+**What this image contains**:
+
+| Copied           | Purpose                                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `server/`        | FastAPI app + all modules                                                                                                     |
+| `agents/`        | Boot-prompt markdown templates (read at runtime by `POST /api/prompts/reload`)                                                |
+| `scripts/`       | `manage_users.py` + `check.sh` (for Cloud Run exec debugging)                                                                 |
+| `data/config/`   | Committed operator config — backlog, accounts, backends (`.dockerignore` excludes `data/state/` and `data/config/users.json`) |
+| `pyproject.toml` | Dep specification (uv.sources stripped before install)                                                                        |
+
+**What this image does NOT contain**:
+
+- Vite dashboard build (served by Firebase Hosting at P2+; API-only image)
+- tmux binary (workers-on-VMs successor plan addresses worker execution)
+- pre-commit / dev tooling
+
+---
+
+## Runtime env vars
+
+Set via `--set-env-vars` at `gcloud run deploy` time. Controlled by
+`agent-orchestrator/config/docker-build.env.{production,uat}`.
+
+```
+ORCHESTRATOR_MODE=live
+ORCHESTRATOR_PUBLIC_URL=https://agent-orchestrator.staging.odum-research.com  # (uat)
+ORCHESTRATOR_PUBLIC_URL=https://agent-orchestrator.odum-research.com           # (prod)
+```
+
+Post-P5: add `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` for state snapshot uploads.
+
+---
+
+## How to roll back
+
+```bash
+# List recent revisions
+gcloud run revisions list \
+  --service agent-orchestrator-staging \
+  --region europe-west4 \
+  --project central-element-323112
+
+# Roll back to a specific revision (replace NNNNN with revision number)
+gcloud run services update-traffic agent-orchestrator-staging \
+  --region europe-west4 \
+  --project central-element-323112 \
+  --to-revisions agent-orchestrator-staging-NNNNN=100
+```
+
+Prod rollback: same command with `agent-orchestrator` (no `-staging`).
+
+---
+
+## How to debug (no SSH on Cloud Run)
+
+Cloud Run containers have no SSH. Use `docker run` locally to exec into the image:
+
+```bash
+# Pull the UAT image
+docker pull europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat
+
+# Run interactively (clear ENTRYPOINT, override CMD with shell)
+docker run --rm -it \
+  --entrypoint "" \
+  -e ORCHESTRATOR_MODE=mock \
+  europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat \
+  /bin/bash
+```
+
+**ARM64 vs AMD64 caveat**: the image is `--platform=linux/amd64`. On an ARM64 Mac (M1/M2/M3), Docker runs it under
+emulation. Python execution works but is significantly slower. For quick checks, `python -c "..."` is fine; for anything
+CPU-bound, run on a linux/amd64 VM.
+
+**Cloud Run logs** (fastest debugging path):
+
+```bash
+gcloud logs read \
+  --service agent-orchestrator-staging \
+  --region europe-west4 \
+  --project central-element-323112 \
+  --limit 50
+```
+
+---
+
+## P1 first-build issues and fixes
+
+Three blocking issues encountered during first deployment (P1 2026-05-19). Documented here so future re-deploys don't
+repeat them:
+
+| Issue                             | Root cause                                                                                    | Fix                                                  | Commit                       |
+| --------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------- |
+| Container crash on startup        | UTL base image `ENTRYPOINT ["python"]` + shell-form CMD → `python sh -c "..."` crash (exit 2) | `ENTRYPOINT []` in Dockerfile                        | `agent-orchestrator@a3031fd` |
+| OOM on cold start                 | UTL transitive imports use ~527 MB; Cloud Run default 512Mi too small                         | Memory 512Mi → 1Gi in `deploy-agent-orchestrator.sh` | `deployment-service@b4725fb` |
+| `FileNotFoundError: backlog.yaml` | `data/config/` not copied in Dockerfile; server calls `load_backlog()` at startup             | `COPY data/config/ ./data/config/`                   | `agent-orchestrator@d56e70f` |
+
+All three are now baked into the Dockerfile and deploy script. New builds should reach `/health` 200 OK without any of
+these re-occurring.
+
+---
+
+## Firebase Hosting fabric (post-P2)
+
+Firebase Hosting fronts the Vite dashboard (static files) and rewrites API traffic to Cloud Run. Mirrors
+`unified-trading-system-ui` (DART) fabric.
+
+**Hosting sites** (created 2026-05-19, `central-element-323112` Firebase project):
+
+| Site ID                        | Domain                                         | Status                                   |
+| ------------------------------ | ---------------------------------------------- | ---------------------------------------- |
+| `agent-orchestrator-uat-site`  | `agent-orchestrator.staging.odum-research.com` | DNS+SSL live; Firebase deploy pending P2 |
+| `agent-orchestrator-prod-site` | `agent-orchestrator.odum-research.com`         | DNS+SSL live; Firebase deploy pending P5 |
+
+**DNS** (Squarespace, provisioned 2026-05-19):
+
+- `agent-orchestrator.staging` → `agent-orchestrator-uat-site.web.app` (CNAME)
+- `agent-orchestrator` → `agent-orchestrator-prod-site.web.app` (CNAME)
+
+**Rewrite shape** (to be added in `agent-orchestrator/firebase.json` at P2):
+
+```json
+{
+  "hosting": {
+    "rewrites": [
+      { "source": "/api/**", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
+      { "source": "/healthz", "run": { "serviceId": "agent-orchestrator-staging", "region": "europe-west4" } },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}
+```
+
+**Deploy command** (P2+):
+
+```bash
+# Deploy dashboard to Firebase Hosting (UAT)
+firebase deploy --only hosting:uat \
+  --project central-element-323112 \
+  -c agent-orchestrator/firebase.json
+```
+
+---
+
+## GCS state bucket (post-P5)
+
+```
+gs://agent-orchestrator-state-prod/
+  Region:    europe-west4
+  Retention: 30-day version retention
+  IAM:       bound to prod Cloud Run service account
+```
+
+Set `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` on prod Cloud Run service. The `SnapshotLoop` in
+`server/gcs_sync.py` uploads `state.json` every 30 min when this env var is set.
+
+One-time state migration at P5: `gsutil cp data/state/state.json gs://agent-orchestrator-state-prod/state.json`
+
+---
+
+## Deploy script — launcher registration
+
+`deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` is registered as a Cloud Run launcher (not a VM
+launcher) in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers". It does NOT need a
+`VM_PREFIX_TO_BUCKET` entry or watchdog registration.
+
+The script:
+
+- Requires `--env=prod|uat` (exits 2 without it)
+- Supports `--cloud` for Cloud Build path (recommended) or local `docker buildx build`
+- Sets `ORCHESTRATOR_MODE=live` via `--set-env-vars`
+- Sets `ORCHESTRATOR_PUBLIC_URL` per env
+- Memory override: `--memory=1Gi` (deployed at P1)
+- References `cloudbuild-agent-orchestrator.yaml` for cache-from warm builds
+
+---
+
+## Cost estimate
+
+| Component                      | Monthly cost                 |
+| ------------------------------ | ---------------------------- |
+| Cloud Run idle (0–3 instances) | ~$5–15                       |
+| Firebase Hosting (static CDN)  | Free tier (expected traffic) |
+| GCS state bucket (<10 MB)      | <$1                          |
+| **Total**                      | **~$15–25/mo**               |
+
+Accepted by operator (plan decision 2026-05-19).
+
+---
+
+## See also
+
+- `agent-orchestrator/docs/OPERATIONS.md` — full operator workflows
+- `agent-orchestrator/README.md` — architecture overview + local dev
+- `codex/04-architecture/agent-orchestrator-overview.md` — service architecture SSOT
+- `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — day-to-day runbook
+- `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers" — script registry
+- `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` — full deployment DAG
