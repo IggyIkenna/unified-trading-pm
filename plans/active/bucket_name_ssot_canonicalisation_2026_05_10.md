@@ -513,6 +513,16 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       `_ast_docstring_lines()` helper skips both plain-string and f-string docstrings (eliminates
       `bucket_naming.py:16-17`-class false positives); (c) `_count_inline_uris_regex()` fallback for syntax-error files.
       4 new tests; 16/16 pass. ruff/format clean. — PM@64cbffeb
+- [x] ✅ **[AGENT] P2**. **DONE 2026-05-19 (slot 8)** — Drift audit table 2026-05-19 addendum (see § below): (1) Inline
+      URI row: v2 AST-walk (PM@64cbffeb, 2026-05-18) confirmed 0 actual inline URI f-strings across all repos — v1
+      baseline counts (execution-service 33, UTL 23, batch-live-recon 7, etc.) were docstring false-positives +
+      legitimate `f"gs://{resolved_bucket}/{path}"` URI-compositions where the bucket is already resolved (not SSOT
+      violations); `inline_bucket_uri_baseline.yaml` now all-zero. (2) L3 partial progress verified 2026-05-19:
+      2026-05-18 slot-2 sweep migrated batch-live-recon (6 callsites, @64dc955) + strategy-service
+      (strategy_config_loader.py + gcs_feature_provider.py, @5d6c963) + UTL peripheral files (asset_group.py +
+      options_cluster_lookup.py, @5b9e386c); batch-recon + strategy-service now at 0 remaining L3 consumers. Core L3
+      wrapper (cloud_interface/constants.py + ~34 UTL consumers) still active by design — flips DURING Phase 2.6
+      write-pause (step 2.6.4). — PM@<sha>
 - [x] **[SCRIPT] P1**. Add yaml-vs-resolver parity unit test (already shipped at UTL@`24f9b2cb` for 10 DeFi bucket
       entries; extend coverage to features-\* + sports + tradfi). **Shipped UTL@`e8dc6e3` (slot 4 2026-05-11)**:
       `_SNAPSHOT_YAML` extended with `features-volatility` / `features-onchain` (per-asset_group) + `features-sports` /
@@ -570,6 +580,24 @@ code_freeze Phase 2.6 with named successors above)**: L2-tail `dependency_checke
 `get_bucket_name`/`BUCKET_PREFIXES` (~36+ consumers); L5 deployment-api internal templates (~5 + 3 hardcoded). The full
 zero-drift table (drift ≤0.01% per migrated bucket + zero readers still hit flat names) is the code_freeze Phase 2.6
 owner's done-def (GAP-2.4.D extends Done-def #6).
+
+> **2026-05-19 addendum (slot 8)**. Two updates since 2026-05-11 snapshot:
+>
+> **(A) Inline URI row — all repos now at count=0.** v2 AST-walk (PM@64cbffeb, 2026-05-18) replaced v1 grep-based
+> checker. The v1 baseline counts (execution-service 33, UTL 23, batch-live-recon 7, UAC 5, UI 4, features-service 2,
+> strategy-service 2, instruments-service 1, deployment-service 3) were ENTIRELY false positives under v2: (i) docstring
+> false-positives eliminated by `_ast_docstring_lines()` helper (e.g. `bucket_naming.py:16-17`-class patterns); (ii)
+> legitimate `f"gs://{resolved_bucket}/{path}"` URI-compositions where the bucket value is already a resolved name (not
+> an inline SSOT construction). `inline_bucket_uri_baseline.yaml` updated: all 10 repos now at count=0. QG STEP 5.69
+> continues to enforce no new inline URI f-strings via the v2 AST-walk.
+>
+> **(B) L3 partial progress — 3 repos migrated 2026-05-18 (slot 2).** batch-live-recon: 6 callsites migrated (@64dc955);
+> strategy-service: strategy_config_loader.py + gcs_feature_provider.py migrated (@5d6c963); UTL peripheral files:
+> cloud_interface/asset_group.py + cloud_interface/options_cluster_lookup.py migrated (@5b9e386c). Both batch-live-recon
+> and strategy-service are now at 0 remaining L3 consumers (verified 2026-05-19). Core L3 wrapper
+> (cloud_interface/constants.py) + ~34 remaining UTL consumers still intentionally active — these flip DURING Phase 2.6
+> write-pause alongside the flat→env-tiered data migration (step 2.6.4). L3 row status remains 🟡 DRIFTING (partial),
+> deferred-after unchanged.
 
 ## Dependencies / sequencing
 
