@@ -117,8 +117,11 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          `unified-trading-databento-batch-registry-{account_id}` + test to infrastructure_buckets.aws; sports/prediction
          covered by existing aws_bucket_mappings + cloud-providers.yaml; defi-validation gap captured as P1 DEFERRED
          todo in aws_migration plan.
-4. - [ ] **Phase 2.A — Per-venue sub-key provisioning prep** — scaffold credential request list; file operator ping for
-         manual provisioning. (infra 0.8×, ~1 = 0.8 cal)
+4. - [x] ✅ **Phase 2.A — Per-venue sub-key provisioning prep** — scaffold credential request list; file operator ping
+         for manual provisioning. (infra 0.8×, ~1 = 0.8 cal) — PM@b1c54b49: filled secrets-migration-tracking.md
+         with DeFi-first matrix (6 perp venues + on-chain RPC + alerting + KMS wallet groups); operator ping in
+         harsh_orchestrator/pings/slot_3.md with exact AWS CLI provisioning steps. Flags exec-odum-aster-cefi as
+         NOT_IN_REGISTRY gap.
 5. - [ ] **Phase 4.A — DeFi mainnet wallet provisioning verify** — confirm CLOUD_KMS_ENCRYPTED wallet generation works
          on AWS KMS as well as GCP KMS. (infra 0.8×, ~2 = 1.6 cal)
 6. - [ ] **GAP-2.4.A** — Verify aws_migration writes use same Phase 1.B bucket naming as GCP. (research 1.2×, ~1 = 1.2
