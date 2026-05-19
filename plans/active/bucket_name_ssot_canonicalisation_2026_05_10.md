@@ -1747,7 +1747,7 @@ their `count: 0` baseline, **20 repos pass** at baseline 0:
 | execution-service                 | `execution_service/engine/validation/dependency_validator.py:84`               | URI composer                                                      | intentional — multi-line noqa issue   |
 | execution-service                 | `execution_service/engine/validation/instruction_validator.py:57`              | URI composer                                                      | intentional — multi-line noqa issue   |
 | execution-service                 | `execution_service/engine/validation/instrument_validator.py:90`               | URI composer                                                      | intentional — multi-line noqa issue   |
-| instruments-service               | `instruments_service/reference_data/sports_dependency.py:100`                  | URI composer (new since 2026-05-11 baseline ratchet)              | regression — needs noqa or resolver   |
+| instruments-service               | `instruments_service/reference_data/sports_dependency.py:100`                  | URI composer (new since 2026-05-11 baseline ratchet)              | ✅ FIXED — noqa moved to opener line — instruments-service@18b5ee6 (slot 10, 2026-05-19) |
 | new-sports-batting-services       | `footballbets/cli/odds_api.py:227`                                             | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
 | new-sports-batting-services       | `footballbets/cli/odds_api.py:236`                                             | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
 | new-sports-batting-services       | `footballbets/cli/odds_api.py:1994`                                            | external `footballbets` repo URI composer                         | intentional — out-of-scope (external) |
@@ -1761,6 +1761,13 @@ their `count: 0` baseline, **20 repos pass** at baseline 0:
 | unified-trading-system-ui         | `context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:69` | UAC mirror                                                        | intentional — mirror sync target      |
 | unified-trading-system-ui         | `context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:86` | UAC mirror                                                        | intentional — mirror sync target      |
 | unified-trading-system-ui         | `context/internal-contracts/schemas/testing/seed_ml_artifacts.py:259`          | UAC internal-contracts mirror — seed script                       | intentional — mirror sync target      |
+
+### 2026-05-19 (slot 10) — instruments-service false-positive resolved
+
+`sports_dependency.py:100` was the sole instruments-service STEP 5.69 site. Root cause: Python merges adjacent implicit
+f-string literals into a single `JoinedStr` AST node with `lineno` = first line; the `# noqa: gs-uri` marker was on the
+continuation line (101, the `gs://` line), invisible to the checker. Fix: moved marker to opener line 100 with
+explanatory comment. instruments-service baseline stays at 0. Commit: instruments-service@18b5ee6.
 
 ### Pattern (b) — `"bucket_template": "..."` literal string-template fields
 
