@@ -1,3 +1,5 @@
+> **ARCHIVED 2026-05-19** — 100% complete (3/3 items); preserved for archaeology.
+
 ---
 title: "Context fill-up optimization — reduce compact cycle frequency"
 created: 2026-05-14
