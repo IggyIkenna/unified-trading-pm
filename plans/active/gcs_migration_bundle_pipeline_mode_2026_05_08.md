@@ -77,11 +77,13 @@ depends_on:
   - manifest-migration-master-2026-05-07
   - writegate-honest-coverage-endtoend-2026-05-06
 
-> **🟢 VM RUNNING — Phase 3 fleet IN-PROGRESS 2026-05-19 (slot 3 check-in ~14:45 UTC)**
-> 27/31 VMs TERMINATED (defi ✅, cefi ✅, sports ✅, tradfi-2020/2021/2022/2023/2026 ✅, prediction-2025 ✅).
-> 4 RUNNING: tradfi-2024 (456K URIs, ~25 min remaining), prediction-2026 (422K URIs, ~35 min remaining).
-> Note: tradfi-2023 completed 14:35 UTC (365K rows, 0 failed); tradfi-2025 completed 14:39 UTC (351K rows, 0 failed).
-> Do NOT launch new market-data-tick-* VMs during migration window.
+> **✅ VM FLEET COMPLETE — Phase 3 migration finished 2026-05-19 ~16:01 UTC (slot 3 CO-DUTY close)**
+> All 31 VMs TERMINATED. defi ✅ cefi ✅ sports ✅ tradfi (2020–2026) ✅ prediction-2025 ✅ prediction-2026 ✅
+> Phase 3.6 phantom audit: prediction 🔴 BLOCKED — 14,403 POLYMARKET phantoms (pre-existing; see
+> `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`). defi/cefi/sports/tradfi audits in-progress.
+> Phase 3 operator sign-off BLOCKED until: (a) prediction operator [ack] for Phase 6 --apply;
+> (b) defi/cefi/sports/tradfi audits confirm 0 phantoms.
+> Do NOT launch market-data-tick-prediction VMs until prediction Phase 3.6 passes.
 
 todos:
   - id: phase-0-pre-audit-gcs-state
@@ -765,6 +767,17 @@ Per phase — see each todo. Plan-level final gate:
   **`cefi_master_2026_05_07`** — banner each during their asset_group's migration window (per Phase 3 estimated
   wall-clock).
 
+## Deferred work after 2026-05-19 slot-3 CO-DUTY session
+
+| Item                                                       | Status                       | Blocker                                                                                           | Successor                                                               |
+| ---------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Phase 3.6 phantom gate — prediction                        | 🔴 BLOCKED                   | 14,403 POLYMARKET phantoms; operator [ack] needed for Phase 6 `--apply`                           | Operator ack → Phase 6 `--apply` for prediction → 0 phantoms → sign-off |
+| Phase 3.6 phantom gate — defi/cefi/sports/tradfi           | ⏳ PENDING                   | Background audits still running (task IDs: `bt2z59y9n` / `b60wk5m8q` / `bdr7rr817` / `buecm6jby`) | Read audit outputs when complete; confirm 0 → report to operator        |
+| Phase 3 operator sign-off step 7                           | 🔴 BLOCKED                   | All 5 Phase 3.6 gates must pass                                                                   | Human-only: operator marks each asset_group inline in this plan         |
+| Phase 6 residual phantom cleanup — prediction              | 🔴 BLOCKED-OPERATOR-DECISION | Option A vs B per `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`             | Run `--asset-group prediction --apply` after operator [ack]             |
+| Phase 6 residual phantom cleanup — defi/cefi/sports/tradfi | ⏳ PENDING                   | Phase 3.6 audit results per asset_group                                                           | Run `--apply` per asset_group if audits show any residuals              |
+| Plan banner removal                                        | ⏳ PENDING                   | All 5 operator sign-offs complete                                                                 | Remove `✅ VM FLEET COMPLETE` banner after sign-off                     |
+
 ## Temporary states + their canonical follow-up plans
 
 - **Reader fallback paths** in Phase 5 are temporary by design — Phase 8 (T+30d, deferred to ~2026-06-15) deletes them.
@@ -790,22 +803,22 @@ Per phase — see each todo. Plan-level final gate:
 Tab 3 of [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this
 session. Phases shipped on `live-defi-rollout`:
 
-| Phase / Item                                                 | Commit(s)                                                                       | Notes                                                                                              |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Phase 0 — Pre-audit doc                                      | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (flip)                        | 521-line operator-runnable doc + 8 sections (a)–(h) tagged WORKSPACE-LOCAL vs REQUIRES VM RUN.     |
-| Phase 1A — UAC `PipelineMode` SSOT                           | `unified-api-contracts@8bc3f2a`                                                 | Closed-set StrEnum + helpers + `pipeline_mode_for_source` round-trip tests.                        |
-| Phase 1B — UTL `ManifestWriter` `pipeline_mode` kwarg        | `unified-trading-library@87134364`                                              | New kwarg on all 5 record\_\* methods + `_ROW_KEY_COLUMNS` extension + 11 unit tests.              |
-| Phase 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field       | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5` (flip)          | Option B (thin reader helper, no value-type change). 12 unit tests.                                |
-| Phase 2 — Canonical migration script                         | `unified-trading-pm@5a3c360a` (script + tests + conftest) + `@cc6fe4ce` (flip)  | 694-line script + 23 unit tests, dry-run by default, leverages UTL `manifest_migrations`.          |
-| Phase 5.1 — UTL `read_manifest_with_source_priority` reader  | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) | NEW `manifest_reader_fallback.py` 356 lines + 469-line tests. 5-level fallback chain.              |
-| Phase 7.1 + 7.2 — Codex (pipeline-mode-partition + manifest) | `unified-trading-pm@e8530de8`                                                   | Status table with all 6 shipped phases + commit shas; v8 pipeline_mode column in v5+ schema.       |
-| Phase 7.3 + 7.4 — Codex (drilldown + SSOT-INDEX)             | `unified-trading-pm@7ac15cf4`                                                   | pipeline_mode as outermost partition note; SSOT-INDEX register entry.                              |
-| Phase 7.5 — Codex (vm-tarball-deployment gsutil HARD RULE)   | `unified-trading-pm@02d7ab495` (slot 8, 2026-05-19)                            | New section "GCS path scanning — gsutil ls vs gcloud storage ls" — codifies `gsutil ls -r prefix**` rule; refs Phase 3 fleet crash + 31-VM idle incident (PM@726a3bf + deployment-service@5b917c1). Requested by slot 1 ping. |
-| Phase 7.6 — UTL `gcs_blob_ops.py` + codex + CLAUDE.md        | `unified-trading-library@63f6ebc7` + `unified-trading-pm@<sha>` (2026-05-19)   | `gcs_blob_ops.py` URI-based helpers in UTL cloud_interface; `BlobMetadata.crc32c` field; migration script uses UTL; codex doc `gcs-object-operations.md`; CLAUDE.md rule. 250× perf (subprocess→REST). |
-| Foot-gun #3 issue doc (workspace governance)                 | (content via `@351e0a2e` Tab 5 hijack but durable on origin)                    | Documents 4 foot-gun #3 incidents in this session + recommends `git commit -o <files>` mitigation. |
-| Manifest v7→v8 schema migration design (Tab 3 sep item 3)    | `unified-trading-pm@10ac1f5f`                                                   | DRAFT pending Tab 2 Phase 11 slice b spec for `ServiceEmissionStateEnum` closed-set values.        |
-| Expected_universe v2 design (Tab 3 sep item 4)               | `unified-trading-pm@6320a8b5`                                                   | Catalog-aware cross-bucket join, ~190M rows estimate.                                              |
-| Cross-asset rescan design (Tab 3 sep item 5)                 | `unified-trading-pm@cc67e904`                                                   | Class A/B/C flip schema; launcher script DEFERRED (sub-agent rate-limited).                        |
+| Phase / Item                                                 | Commit(s)                                                                       | Notes                                                                                                                                                                                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 — Pre-audit doc                                      | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (flip)                        | 521-line operator-runnable doc + 8 sections (a)–(h) tagged WORKSPACE-LOCAL vs REQUIRES VM RUN.                                                                                                                                |
+| Phase 1A — UAC `PipelineMode` SSOT                           | `unified-api-contracts@8bc3f2a`                                                 | Closed-set StrEnum + helpers + `pipeline_mode_for_source` round-trip tests.                                                                                                                                                   |
+| Phase 1B — UTL `ManifestWriter` `pipeline_mode` kwarg        | `unified-trading-library@87134364`                                              | New kwarg on all 5 record\_\* methods + `_ROW_KEY_COLUMNS` extension + 11 unit tests.                                                                                                                                         |
+| Phase 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field       | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5` (flip)          | Option B (thin reader helper, no value-type change). 12 unit tests.                                                                                                                                                           |
+| Phase 2 — Canonical migration script                         | `unified-trading-pm@5a3c360a` (script + tests + conftest) + `@cc6fe4ce` (flip)  | 694-line script + 23 unit tests, dry-run by default, leverages UTL `manifest_migrations`.                                                                                                                                     |
+| Phase 5.1 — UTL `read_manifest_with_source_priority` reader  | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) | NEW `manifest_reader_fallback.py` 356 lines + 469-line tests. 5-level fallback chain.                                                                                                                                         |
+| Phase 7.1 + 7.2 — Codex (pipeline-mode-partition + manifest) | `unified-trading-pm@e8530de8`                                                   | Status table with all 6 shipped phases + commit shas; v8 pipeline_mode column in v5+ schema.                                                                                                                                  |
+| Phase 7.3 + 7.4 — Codex (drilldown + SSOT-INDEX)             | `unified-trading-pm@7ac15cf4`                                                   | pipeline_mode as outermost partition note; SSOT-INDEX register entry.                                                                                                                                                         |
+| Phase 7.5 — Codex (vm-tarball-deployment gsutil HARD RULE)   | `unified-trading-pm@02d7ab495` (slot 8, 2026-05-19)                             | New section "GCS path scanning — gsutil ls vs gcloud storage ls" — codifies `gsutil ls -r prefix**` rule; refs Phase 3 fleet crash + 31-VM idle incident (PM@726a3bf + deployment-service@5b917c1). Requested by slot 1 ping. |
+| Phase 7.6 — UTL `gcs_blob_ops.py` + codex + CLAUDE.md        | `unified-trading-library@63f6ebc7` + `unified-trading-pm@<sha>` (2026-05-19)    | `gcs_blob_ops.py` URI-based helpers in UTL cloud_interface; `BlobMetadata.crc32c` field; migration script uses UTL; codex doc `gcs-object-operations.md`; CLAUDE.md rule. 250× perf (subprocess→REST).                        |
+| Foot-gun #3 issue doc (workspace governance)                 | (content via `@351e0a2e` Tab 5 hijack but durable on origin)                    | Documents 4 foot-gun #3 incidents in this session + recommends `git commit -o <files>` mitigation.                                                                                                                            |
+| Manifest v7→v8 schema migration design (Tab 3 sep item 3)    | `unified-trading-pm@10ac1f5f`                                                   | DRAFT pending Tab 2 Phase 11 slice b spec for `ServiceEmissionStateEnum` closed-set values.                                                                                                                                   |
+| Expected_universe v2 design (Tab 3 sep item 4)               | `unified-trading-pm@6320a8b5`                                                   | Catalog-aware cross-bucket join, ~190M rows estimate.                                                                                                                                                                         |
+| Cross-asset rescan design (Tab 3 sep item 5)                 | `unified-trading-pm@cc67e904`                                                   | Class A/B/C flip schema; launcher script DEFERRED (sub-agent rate-limited).                                                                                                                                                   |
 
 **Pending (operator-gated or follow-up sub-agents):**
 

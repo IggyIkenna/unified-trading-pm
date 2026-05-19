@@ -6,11 +6,15 @@
 ## [slot 1 main → slot 3] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 0.5+1+2
 
 Your previous theme (code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry Tabs 1–3) is **DEFERRED to Cycle 3
-(2026-05-20+)**. New theme today: **strategy_repo_consolidation Phase 0.5 + 1 + 2** — pyproject conflict
-resolution → UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.** ~2 cal-AI-days.
+(2026-05-20+)**. New theme today: **strategy_repo_consolidation Phase 0.5 + 1 + 2** — pyproject conflict resolution →
+UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.** ~2 cal-AI-days.
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — see § "Phase 0 audit findings" + todos `phase-1-uac-utl-schema-prep`, `phase-2-skeleton`.
-- Pre-audit artifact (read first): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md) — § (g) has pyproject conflict resolutions; § (a) has post-merge sub-package landings.
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — see § "Phase 0 audit findings" + todos `phase-1-uac-utl-schema-prep`, `phase-2-skeleton`.
+- Pre-audit artifact (read first):
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md)
+  — § (g) has pyproject conflict resolutions; § (a) has post-merge sub-package landings.
 - Phase 0 done by slot 1 main 2026-05-19. Phase 1+ unblocked.
 - Boot fresh per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`.
 
@@ -23,26 +27,61 @@ resolution → UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.*
 
 **Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 3 scope, +0.05 cal-day):
 
-- **Drop source-repo `docs/` during subtree-merge.** The Phase 3 `git read-tree --prefix=strategy_service/<sub>/`
-  recipe pulls package + tests + scripts only. `docs/` intentionally NOT merged — codex is workspace SSOT.
-  When you draft the DEPRECATION_NOTICE.md banner template (slot 6 owns the actual write in Phase 7), pass
-  forward this line: "docs/ content not migrated — see `codex/04-architecture/strategy-service-architecture.md`
-  and related codex pages."
+- **Drop source-repo `docs/` during subtree-merge.** The Phase 3 `git read-tree --prefix=strategy_service/<sub>/` recipe
+  pulls package + tests + scripts only. `docs/` intentionally NOT merged — codex is workspace SSOT. When you draft the
+  DEPRECATION_NOTICE.md banner template (slot 6 owns the actual write in Phase 7), pass forward this line: "docs/
+  content not migrated — see `codex/04-architecture/strategy-service-architecture.md` and related codex pages."
 
 Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started Phase 0.5.
 
 **[ack] slot 3 — 2026-05-19 ~14:50 UTC — Phases 0.5+1+2 ALL COMPLETE + GAP-2.4.A DONE**
 
-- Phase 0.5 (pyproject dep union): already shipped at strategy-service@eee8bbb by another slot; confirmed identical to spec
+- Phase 0.5 (pyproject dep union): already shipped at strategy-service@eee8bbb by another slot; confirmed identical to
+  spec
 - Phase 1 (UAC/UTL schema prep): N/A — 0 UAC PRs needed per pre-audit §(e)
 - Phase 2 (skeleton scaffolding): at strategy-service@eee8bbb (risk/position/pnl sub-packages + CLI stubs + dep union)
 - Plan flips: PM@08f46b40d (Phases 0/0.5/1/2 in strategy_repo_consolidation plan)
 - GAP-2.4.A: done PM@30b2ce193 (code_freeze plan flip), work_split item 10 backfilled PM@d640f776d
-- CO-DUTY ACTIVE: Phase 3 GCS migration fleet — 27/31 TERMINATED; 2 still running (tradfi-2024 ~456K URIs, prediction-2026 ~422K URIs)
+- CO-DUTY ACTIVE: Phase 3 GCS migration fleet — 27/31 TERMINATED; 2 still running (tradfi-2024 ~456K URIs,
+  prediction-2026 ~422K URIs)
   - tradfi-2023: ✅ 14:35 UTC (365K rows, 0 failed)
   - tradfi-2025: ✅ 14:39 UTC (351K rows, 0 failed)
   - tradfi-2024 + prediction-2026: RUNNING — expect TERMINATED ~15:10-15:20 UTC
 - Slot 3 assigned items: ALL DONE. Awaiting VM completion for STOPPED ack + plan banner removal.
+
+---
+
+## [slot 3 → OPERATOR] 2026-05-19 ~16:20 UTC — 🚨 Phase 3.6 OPERATOR ESCALATION — prediction Polymarket phantoms
+
+**All 31 Phase 3 migration VMs: ✅ TERMINATED** (prediction-2026 TERMINATED ~16:01 UTC, exit status 0).
+
+**Phase 3.6 post-migration phantom audit result — prediction asset_group:**
+
+```
+Real captures:    0
+Phantom captures: 14,403  (POLYMARKET: 14,235; blank venue: 168)
+
+data_type:  trades=11,943  prediction_trades=2,460
+```
+
+**Diagnosis**: Pre-existing condition. All 14,403 rows have `capture_status=captured` in the prediction manifest but NO
+POLYMARKET parquets have EVER been written to `gs://market-data-tick-prediction-central-element-323112/`. The migration
+did not introduce these — the migration moves existing parquets; if no parquets exist for POLYMARKET, nothing moves.
+These manifest entries were created during Polymarket adapter development but real data ingestion never ran.
+
+**Gate impact**: Phase 3.6 requires 0 phantoms across all 5 asset_groups. Prediction is currently 14,403.
+
+**Issue doc**: `plans/active/issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`
+
+**Operator decision required** (select one):
+
+- **[ack] Option A** — run Phase 6 `--apply` for prediction (flip 14,403 → `attempted_failed`; clears gate; unblocks
+  prediction data pipeline to retry). Agent runs immediately on your [ack].
+- **[ack] Option B** — hold prediction Phase 6; proceed with defi/cefi/sports/tradfi sign-off only now; investigate
+  prediction Polymarket status separately.
+
+**Other 4 asset_groups**: defi/cefi/sports/tradfi Phase 3.6 audits still running (background tasks). Will report results
+as soon as available. Those 4 are INDEPENDENT of the prediction blocker.
 
 ---
 
@@ -55,8 +94,8 @@ Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started
 
 **Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
 
-**Context**: Slot 3's 2026-05-19 work-split items 1-9 all ✅. Item 4 (Phase 2.5 cross-asset-rescan `--apply-flips`)
-hit `[BLOCKED-OPERATOR-APPROVAL]` for sports (99,620 phantoms) + prediction (50). Today's Task B unblock
+**Context**: Slot 3's 2026-05-19 work-split items 1-9 all ✅. Item 4 (Phase 2.5 cross-asset-rescan `--apply-flips`) hit
+`[BLOCKED-OPERATOR-APPROVAL]` for sports (99,620 phantoms) + prediction (50). Today's Task B unblock
 (deployment-service@`880bc3a` + instruments-service@`5a0b115` `--pass 1|2|3|4` sequential enforcement) resolved the
 secondary blocker — only operator credential approval remains. Slot 3 is now exhausted on assigned items.
 
@@ -64,25 +103,26 @@ Re-dispatch to the next highest-context substantive item slot 3 has peak context
 broader Phase 2.4 cross-cloud parity audit pass. Slot 3 shipped GAP-2.2.B + GAP-2.3.A + GAP-2.3.B this cycle and
 gcs_migration_bundle Phase 4 (PM@`22e23663`) — they own the bucket-name SSOT + Phase 2 GAP audit context.
 
-**Plan**: [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+**Plan**:
+[`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 § Phase 2.4.
 
 **Tasks (audit + write-only this session; no infra mutation)**:
 
-1. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
-   `resolve_bucket_name()` SSOT path (not inline `gs://` / `s3://` f-strings). Open `aws_migration_defi_first_2026_05_07.md`
-   + the migration script files; grep for `resolve_bucket_name` callsites vs raw bucket strings. Document findings as
-   a `- [x] ✅` flip in code_freeze plan §Phase 2.4 if SSOT-clean, or as a specific fix-list if drift found.
+1. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B `resolve_bucket_name()`
+   SSOT path (not inline `gs://` / `s3://` f-strings). Open `aws_migration_defi_first_2026_05_07.md`
+   - the migration script files; grep for `resolve_bucket_name` callsites vs raw bucket strings. Document findings as a
+     `- [x] ✅` flip in code_freeze plan §Phase 2.4 if SSOT-clean, or as a specific fix-list if drift found.
 
 2. **Cross-cloud parity matrix** — for every DeFi-relevant data_type that writes to BOTH GCP and AWS post-Phase-2.4,
-   confirm: (a) bucket name resolved via UAC SSOT on both sides; (b) yaml `cloud-providers.yaml` declares both
-   tiered buckets; (c) Glue catalog crawled equivalent path. Output: a 2-column table
-   `| data_type | parity_status |` (🟢 clean / 🟡 partial / 🔴 drift) embedded in code_freeze §2.4 GAP audit section.
+   confirm: (a) bucket name resolved via UAC SSOT on both sides; (b) yaml `cloud-providers.yaml` declares both tiered
+   buckets; (c) Glue catalog crawled equivalent path. Output: a 2-column table `| data_type | parity_status |` (🟢 clean
+   / 🟡 partial / 🔴 drift) embedded in code_freeze §2.4 GAP audit section.
 
-3. **GAP-2.4.B/C/D status sweep** — these are operator-gated infra ops (provision env-tiered buckets, migrate flat
-   data, doc deployment-api reader-repoint). For each: confirm pre-work (script existence, dry-run shape, yaml
-   readiness) is done so the operator action is single-button. Output: pre-readiness checklist per GAP. Do NOT run
-   the actual migration.
+3. **GAP-2.4.B/C/D status sweep** — these are operator-gated infra ops (provision env-tiered buckets, migrate flat data,
+   doc deployment-api reader-repoint). For each: confirm pre-work (script existence, dry-run shape, yaml readiness) is
+   done so the operator action is single-button. Output: pre-readiness checklist per GAP. Do NOT run the actual
+   migration.
 
 4. **Plan flip + commit cadence** per CLAUDE.md Half-1+2: each GAP audit → code commit (if any) +
    `docs(plans): flip GAP-2.4.X — <evidence>` flip commit in the same agent turn.
@@ -101,11 +141,10 @@ gcs_migration_bundle Phase 4 (PM@`22e23663`) — they own the bucket-name SSOT +
 
 **ETA**: research 1.2× × ~8 baseline = ~9.6 cal AI-days.
 
-**Why slot 3**: peak context on Phase 2 GAPs (3 shipped this cycle) + bucket_name_ssot consumer landscape + gcs_migration_bundle
-Phase 4 audit just done. Cross-cloud parity is the natural next layer in their context graph.
+**Why slot 3**: peak context on Phase 2 GAPs (3 shipped this cycle) + bucket_name_ssot consumer landscape +
+gcs_migration_bundle Phase 4 audit just done. Cross-cloud parity is the natural next layer in their context graph.
 
 ---
-
 
 ---
 
