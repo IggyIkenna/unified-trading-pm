@@ -531,12 +531,12 @@ upstream-detected) as complementary signals.
 - [ ] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
       to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
       zero/partial inputs. Connects via the same manifest contract MDPS already reads.
-      **2026-05-18 slot 2 progress (partial)**: (1) ✅ `UPSTREAM_LIVE_GAP` added to UAC `RecordFailedReason` at
+      **2026-05-19 slot 2 progress**: (1) ✅ `UPSTREAM_LIVE_GAP` added to UAC `RecordFailedReason` at
       uac@`60c0ee9`; (2) ✅ `DependencyChecker.check_upstream_manifest_has_live_gap()` added to MDPS at
-      mdps@`5729750` — reads MTDS manifest, detects `attempted_failed` gap rows, returns (venue, data_type) pairs;
-      (3) ⏳ wiring to `record_failed_for_shard` in orchestration path is BLOCKED on MTDS item 520 (MTDS must first
-      write `attempted_failed` rows on `CONNECTIVITY_GAP_DETECTED`). Detection scaffold is live and no-ops until
-      MTDS starts emitting gap rows.
+      mdps@`5729750`; (3) ✅ MTDS prerequisite shipped — `ShardManifestRecorder.record_failed()` + `MTDSShardManifestRecorder.record_failed()` added;
+      `LiveWebsocketRunner` now checks watchdog GAP state in `_record_empty_window` and writes `attempted_failed(UPSTREAM_LIVE_GAP)` at
+      mtds@`494e0d5`; (4) ⏳ MDPS orchestration wiring (`_process_instrument_file` live-gap pre-check calling
+      `check_upstream_manifest_has_live_gap` + `record_failed_for_shard`) — IN PROGRESS this session.
 - [x] [SCRIPT] P1. **execution-service circuit-breaker pause on `CONNECTIVITY_GAP_DETECTED`**. Per-venue +
       per-instrument circuit-breaker; pause new orders + drain in-flight orders (do NOT cancel — let venue-side matching
       engine resolve). Resume on `CONNECTIVITY_RECOVERED`. Reuses the kill-switch bus from `alerting_service_live_rules`
