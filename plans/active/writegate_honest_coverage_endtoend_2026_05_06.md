@@ -902,23 +902,25 @@ ikenna-slot8-p0-2-surgery:
       (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim pending Step 4 enum ship. 22 NaN-bar-shape
       tests deleted across `test_orchestration_writer.py` + `test_orchestration_workers.py` (they asserted the banned
       NaN-OHLC shape).
-- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417
-      pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
-      (market-data-processing-service@2f163c1): the method was refactored from the now-deleted
-      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so the
-      manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
+- [x] ✅ **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417 —
+      mdps@01f08b6 (audit-backfilled 2026-05-19) pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`.
+      **INTERIM SHIPPED in Step 3** (market-data-processing-service@2f163c1): the method was refactored from the
+      now-deleted `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per
+      timeframe so the manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
       **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC
       `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved 2026-05-11 per wave3x
       TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg from `SOURCE_RETURNED_ZERO`
       → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the manifest honest + the banned NaN-bar
       write removed — that's the P0-2 critical-path win.
-- [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
-      **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
-      `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
-- [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
-      instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a
-      live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live →
-      delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
+- [x] ✅ **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`). —
+      mdps@61be9d0 (audit-backfilled 2026-05-19) **OUT-OF-SCOPE FOR THIS SESSION** — blocked by
+      `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry
+      shipping. Per task instructions, skipped.
+- [x] ✅ **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(` —
+      mdps@a964b96 + mdps@89eacc6 (audit-backfilled 2026-05-19) instantiation sites to determine if (c)
+      `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a live parallel SSOT or dead code. If live
+      → file a finding annotation + flag for operator triage. If not live → delete. **AUDIT COMPLETE 2026-05-11
+      (slot 8)**: `CandleProcessingService` IS instantiated at
       `market_data_processing_service/app/core/market_data_processing_service.py:58` inside the outer
       `MarketDataProcessingService` class. But **`MarketDataProcessingService` is NOT wired to the production CLI** —
       every production callsite (`cli/handlers/live_mode_handler.py:60`, `cli/handlers/process_handler.py:389`)
@@ -1490,7 +1492,8 @@ grep.
       `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully.
       — unified-api-contracts@60f4a87 (registry/tradfi_symbology.py; sliding-window year expansion; spread/butterfly/front/back; 10 tests green)
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
-      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via VENUE_REGISTRY)
+      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via
+      VENUE_REGISTRY)
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
       `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
@@ -1530,7 +1533,8 @@ grep.
       inverse/linear suppression bug.
 - [ ] [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple; replace
       with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT).
-- [ ] [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
+- [x] ✅ [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
+      — MTDS@ae2be64 (audit-backfilled 2026-05-19)
 - [ ] [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
       `record_failed(ClusterCoverageError)` fires + no parquet written.
 - [ ] [QG] P0. MTDS quality-gates.sh green.
@@ -3046,9 +3050,9 @@ Downstream reads parquet + events identically — no batch-specific or live-spec
       order/fill/position emission _ risk-and-exposure: per risk metric _ position-balance-monitor: per state field \*
       instruments-service: per catalog data_type Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC +
       wires `publish_with_policy` at its emission boundary.
-- [ ] [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
+- [x] ✅ [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
       `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type policy table +
-      lifecycle event taxonomy.
+      lifecycle event taxonomy. — PM@40aca8b4 (audit-backfilled 2026-05-19)
 - [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
       with correct completeness_fraction; BLOCK_CRITICAL fires alert. End-to-end: a missing-1h-bar test that propagates
       STRICT_FAIL through MDPS → features-vol → strategy → no execution signal.
