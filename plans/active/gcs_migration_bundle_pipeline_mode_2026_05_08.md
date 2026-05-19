@@ -77,6 +77,12 @@ depends_on:
   - manifest-migration-master-2026-05-07
   - writegate-honest-coverage-endtoend-2026-05-06
 
+> **🟢 VM RUNNING — Phase 3 fleet LAUNCHED 2026-05-19 11:23 UTC. 31 VMs across all 5 asset_groups
+> (cefi/defi/tradfi/sports/prediction), 1 VM per year. All in asia-northeast1 (30 in -c, 1 in -b).
+> Pre-migration drain: manifest-consolidator + watchdog stopped + restarted. Manifest snapshots taken.
+> Monitor: `gcloud compute instances list --project=central-element-323112 --filter="name~gcs-migration-bundle"`
+> Do NOT launch new market-data-tick-* VMs during migration window.**
+
 todos:
   - id: phase-0-pre-audit-gcs-state
     content: |
@@ -355,8 +361,12 @@ todos:
 
   - id: phase-3-execution-plan-and-vm-launch
     content: |
-      - [ ] [HUMAN+AGENT] P0. Phase 3 — Execute the migration. Operator-gated; agent prepares + verifies, operator
-        triggers the run. SEQUENTIAL after Phase 2.
+      - [ ] [HUMAN+AGENT] P0. Phase 3 — Execute the migration. **IN-PROGRESS 2026-05-19 11:23 UTC.**
+        Operator granted permission. 31 VMs launched across all 5 asset_groups (1 VM/year).
+        Pre-migration drain complete (manifest-consolidator + watchdog stopped + restarted).
+        Manifest snapshots at gs://deployment-scripts-central-element-323112/pre-migration-snapshots/.
+        Phase 2.5 (OHLCV ticks.parquet→{instrument_id}.parquet) bundled into same walk.
+        deployment-service@a9f9c90 (launcher + watchdog prefix registration).
 
         Steps:
         1. Final pre-flight verification: Phase 0 artifact still current; Phase 1 schema additions deployed

@@ -131,10 +131,12 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
      - instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
        sports/prediction apply-flips (operator [ack] required — use
        `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
-5. - [x] ✅ **gcs_migration_bundle Phase 4** — Consumer sweep audit complete. All production callsites already pass
-         `pipeline_mode=` (MTDS DefiManifestRecorder, MDPS record_empty_for_shard, instruments-service orchestrator,
-         features-service compute). PM@`22e23663` Phase 4 flipped DONE in plan. Phase 3 (VM fleet migration) =
-         [BLOCKED-OPERATOR] — requires operator to trigger + cost-audit first. Phases 6/9 unblock after Phase 3.
+5. - [x] ✅ **gcs_migration_bundle Phase 2.5 + Phase 3 LAUNCHED** — Phase 2.5 (OHLCV ticks.parquet →
+         {instrument_id}.parquet rename) implemented + 50 tests green + dry-run verified (ohlcv_legacy_filename=1
+         detected on real CeFi data). PM@`916742464`. Phase 3 fleet launched 2026-05-19 11:23 UTC: 30 VMs across
+         cefi/defi/tradfi/sports/prediction (1 VM/year). Manifest-consolidator + watchdog stopped for drain;
+         will restart post-migration. deployment-service@`a9f9c90` (launcher + watchdog prefix registration).
+         Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after Phase 3 phantom gate is green.
 
 **Part B — batch_live_symmetry Tabs 1–3** (plan at 34%, 19.7 cal left):
 
@@ -313,6 +315,7 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 instrument wiring.
 
+<<<<<<< Updated upstream
 1. - [ ] [BLOCKED-OPERATOR] **Phase 6 — per-chain backfill scripts** (6J/7E already done ✅). Remaining:
          6C (Pyth Hermes Solana LST ≥1yr, BLOCKED-OPERATOR ping filed 2026-05-14), 6D (Lighter/Pacifica — slot 3 owns),
          6E (vaults+restaking+DEX ≥2yr, needs operator [ack] per ≥1-week backfill rule). Cannot proceed without
@@ -324,6 +327,15 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
          No actionable items without operator unblock. (mixed, ~10 = 8.0 cal)
 4. - [ ] [BLOCKED-UPSTREAM] **Close defi_catalogue** — cannot close: 6C/6E/8A/8B/8C all blocked (see item 3).
          Plan stays active at 87% until Phase 6 backfill operator acks land. (0.5 cal)
+=======
+1. - [ ] **Phase 6 — per-chain backfill scripts** (items 6J, 7E unblocked — upstream shipped). Run backfill for each
+         chain primitive. (infra 0.8×, ~6 = 4.8 cal)
+2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — already `[x] ✅` in plan body (slot 1 shipped
+         PM@75560065 2026-05-18; Group F items 17-20 refreshed). No further action.
+3. - [ ] **Remaining open items** — read plan body and ship all remaining `- [ ]` items in order. (mixed, ~10 = 8.0 cal)
+4. - [ ] **Close defi_catalogue** — flip all remaining checkboxes; mark plan `status: complete` if all done. Push. (0.5
+         cal)
+>>>>>>> Stashed changes
 
 **Part B — defi_simulation_realism** (plan at 98%, 0.7 cal left — 1 item):
 
