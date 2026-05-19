@@ -472,7 +472,7 @@ these venues.
       Item B; unblocks Solana 2nd perp-hedge venue diversification beyond Drift] **DONE** (2026-05-15): UAC@dbdeb16 —
       PACIFICA-SOLANA: USDC accepted (primary margin); SOL/JitoSOL/mSOL explicit accepted=False (USDC-only linear perp,
       no LST cross-margin per 2026-05-15 live probe + docs review).
-- [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
+- [x] **[BLOCKED-OPERATOR-DECISION]** [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
       Starknet event subgraph against the Extended Settlement contract. **NOTE 2026-05-18 slot-3**:
       `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) — the "add Starknet RPC
@@ -480,7 +480,7 @@ these venues.
       Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C). Falls back to forward-poll only
       if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
       `cefi-extended-starknet-history-backfill-{ts}` VM]
-- [ ] [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
       `_LIGHTER_BACKFILL_TOP_SYMBOLS = (BTC, ETH, SOL,     HYPE, TON)`; expand to top-30 (Lighter has 170 perps
       including NVDA, USDCAD, BRENTOIL, XAU, XAG, SNDK exotics). Rate-limit budget already validated — 12 RPS handles
       top-30 comfortably. Unlocks cross-asset stat-arb / FX-perp arb against CeFi FX. [AUDIT 2026-05-07: FRESH —
@@ -744,7 +744,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 - [x] ✅ [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
       `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
       Ikenna slot 4 successor + Harsh implementation. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
-- [ ] [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation per
+- [x] **[DEFERRED-AFTER-CUTOVER]** [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation per
       `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
       `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
 
@@ -908,8 +908,8 @@ shipping with the Fork-1 prep batches below).
       prediction canonical-question, sports fixture-bundles all write to their asset-group canonical buckets
       (`market-data-tick-{cefi,tradfi,prediction,sports}-{pid}`) which ARE already in the poll list — no dedicated
       per-data_type buckets there.
-- [ ] [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction /
-      ml-\* buckets (slot-6 finding 2026-05-11).** When the features-service / execution-service / ml-\* pipelines run
+- [x] **[DEFERRED]** [SCRIPT] P2. **Future consolidator-poll-list gap — features-\* / execution-store / strategy-store-prediction /
+      ml-\* buckets (slot-6 finding 2026-05-11).** **[MIGRATED TO: code_freeze Phase 2.6]** When the features-service / execution-service / ml-\* pipelines run
       end-to-end and write manifest rows to their per-asset-group buckets — AND if they run multi-VM with
       `MANIFEST_PER_VM_SHARDS=true` — those buckets MUST be added to the consolidator `BUCKETS` list or their canonical
       `_index/availability_index.parquet` will drift stale. Currently NOT a gap: probed 2026-05-11 —
@@ -935,7 +935,7 @@ shipping with the Fork-1 prep batches below).
       poll-list is now correct vs the authoritative source = `get_write_bucket_name()` callsites +
       `_BUCKET_CATEGORY_OVERRIDES`). Fix when touching the watchdog dict next: point those 5 prefixes at their dedicated
       buckets. Operator relaunch of the watchdog VM required to pick it up (per CLAUDE.md VM-Naming-Convention rule).
-- [ ] [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path
+- [x] ✅ **[FIXED]** [SCRIPT] P1. **EIGENLAYER `rewards` shard-key drift — manifest row `data_type=rewards` vs parquet path
       `data_type=eigenlayer_rewards/` (slot-6 phantom-audit finding 2026-05-11).** The DeFi phantom recon
       (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run` on
       `defi-phantom-recon-defi-20260511-192115`, completed 2026-05-11 13:58 UTC) reported **1298 "phantom captures", ALL
@@ -965,7 +965,7 @@ shipping with the Fork-1 prep batches below).
       coordinate with the shard-granularity-SSOT umbrella (`infrastructure_master_2026_05_07.md`). **Net phantom-audit
       result for DeFi**: 1298 reported, all false-positive (path drift), **real residual = 0** (data exists) — but the
       shard-key drift is a latent inconsistency that needs the handler fix.
-- [ ] [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its
+- [x] ✅ **[FIXED — deployment-service@a2b3c92]** [SCRIPT] P1. **`create-code-tarballs.sh` has a stale repo list + non-graceful skip** — its
       `DEFI_REPOS`/EXTRA*REPOS list references `features-service (onchain family)` (consolidated into `features-service`
       by the 2026-05-08 features-* consolidation); the "SKIP <repo> — not found" path trips `set -e` so a missing repo
       aborts the whole tarball build with `EXIT=1` (it logs the SKIP message but then dies). Blocks
