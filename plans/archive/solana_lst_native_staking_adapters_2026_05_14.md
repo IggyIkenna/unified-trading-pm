@@ -13,6 +13,8 @@ estimate_calibrated_ai_days: 4
 deadline: 2026-05-23
 ---
 
+> **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
+
 > **MIGRATED FROM**: `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` § "Recommended decision — Successor
 > plan A — Solana LST + native staking adapters" (filed 2026-05-13 by slot 3 audit).
 
@@ -178,10 +180,12 @@ MTDS handler writes 1 row per epoch per validator to manifest.
 - [x] [deployment-service] P0. Verify MARINADE-SOLANA adapter is functional against current Marinade API endpoint.
       **DONE 2026-05-15 (slot-3)**: `curl https://api.marinade.finance/msol/apy/30d` → returns
       `{"value":0.0638..., "end_price":1.3806}`. Endpoint live. APY=6.39%.
-- [x] ✅ [deployment-service] P0. **[BLOCKED-CREDENTIALS — pinging operator]** Add VM launchers: - `jito-solana-backfill` —
-      JITO-SOLANA `lst_rates` from 2022-08-01 → 2026-05-14. - `marinade-backfill` — MARINADE-SOLANA `lst_rates` from
-      2021-02-01 → 2026-05-14. - Both: `VM_NAME=<prefix>` + `MANIFEST_PER_VM_SHARDS=true` + singleton-locked. - Register
-      both VM prefixes in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`. (deployment-service@ea1356b — launchers created + watchdog registered; launch held pending operator [ack])
+- [x] ✅ [deployment-service] P0. **[BLOCKED-CREDENTIALS — pinging operator]** Add VM launchers: -
+      `jito-solana-backfill` — JITO-SOLANA `lst_rates` from 2022-08-01 → 2026-05-14. - `marinade-backfill` —
+      MARINADE-SOLANA `lst_rates` from 2021-02-01 → 2026-05-14. - Both: `VM_NAME=<prefix>` +
+      `MANIFEST_PER_VM_SHARDS=true` + singleton-locked. - Register both VM prefixes in `VM_PREFIX_TO_BUCKET` in
+      `vm_zombie_watchdog.py`. (deployment-service@ea1356b — launchers created + watchdog registered; launch held
+      pending operator [ack])
 
 **CREDENTIAL APPROVAL REQUEST — JITO-SOLANA/MARINADE-SOLANA Backfill**
 
