@@ -23,12 +23,14 @@ related_codex:
   - codex/02-data/availability-manifest-and-data-status.md
   - codex/02-data/service-output-emission-semantics.md
 estimate_class: brand-new
-estimate_baseline_ai_days: 12.0
-estimate_calibrated_ai_days: 12.0
+estimate_baseline_ai_days: 15.0
+estimate_calibrated_ai_days: 15.0
 estimate_calibration_note: |
-  Class=brand-new (per-venue funding adapter + 30-day backfill + live wiring + strategy consumer)
-  multiplier=1.0×. Operator pace 2026-05-12 → 2026-05-19 averaged ~180 cal-AI-days/day, so 12 cal-AI-days
-  fits a ≤4-day calendar window with 3 concurrent slots.
+  Class=brand-new. Original 12 cal-AI-days (per-venue funding adapter + 30-day backfill + live
+  wiring + strategy consumer + cloud-providers rollback + features-service deploy + paper verify).
+  +3 cal-AI-days for Phase G MatchingEngineExecutionProvider (matcher exists; wrapper + L2 depth
+  source + funding-PnL loop + factory wiring + tests). Operator pace 2026-05-12 → 2026-05-19
+  averaged ~180 cal-AI-days/day, so 15 cal-AI-days fits a ≤4-day calendar window with 3+ slots.
 ---
 
 ## Why this plan exists
@@ -193,7 +195,59 @@ bucket-name resolver should produce non-env-split shapes for Group B kinds.
 - [ ] [SCRIPT] P0. **24-hour soak**: features-service emits a feature parquet every N seconds for
       every active feature_group, no FAILED events, no manifest gaps.
 
-## Phase-F: paper VM relaunch + fills>0 verification (P0, ~0.5 day, SEQUENTIAL after A-E)
+## Phase-G: MatchingEngineExecutionProvider for realistic CeFi paper fills (P0, ~2-3 days, PARALLEL with A-E)
+
+**Why P0**: even with Phase 5 features flowing, the strategy emits CeFi PERP_SHORT instructions
+that today have NO realistic fill path. `TenderlyExecutionProvider` only handles DeFi (on-chain
+swaps); `BenchmarkFillProvider` fills CeFi instructions at oracle mid-price with zero slippage —
+which produces correct directional PnL but ZERO alpha-execution-PnL signal, so paper-evidence
+cannot validate the execution-algo selection layer of carry_staked_basis. Phase G is the bridge
+from "strategy decides" → "realistic fill executes" → "PnL with realistic slippage accrues".
+
+The matching engine framework ALREADY EXISTS at
+[execution-service/execution_service/matching_engine/](../../execution-service/execution_service/matching_engine/)
+routed by **book_type, not asset_group**, per
+[engine.py:4-9](../../execution-service/execution_service/matching_engine/engine.py#L4-L9):
+- L0Matcher (sports TOB), L1Matcher (TradFi trades), **L2Matcher (CeFi depth-walking)**,
+  AMMMatcher (DeFi), BenchmarkMatcher (LEND/STAKE/BORROW)
+- TradeMatcher routes passive (LIMIT, maker fee) vs aggressive (MARKET/IOC/FOK, taker fee)
+
+We just need a provider wrapper.
+
+- [ ] [AGENT] P0. **Add `MatchingEngineExecutionProvider`** at
+      `execution-service/execution_service/providers/matching_engine.py`. Implements the
+      [ExecutionProvider Protocol](../../execution-service/execution_service/providers/base.py#L12)
+      with: `get_rpc_url()` no-op for CeFi, `fund_wallet()` no-op (assumed pre-funded sandbox),
+      `advance_time()` no-op, `cleanup()` cleanup of L2-replay state. Add `execute_instruction()`
+      that routes instructions via instrument_id → book_type → MatchingAdapter.match_order().
+
+- [ ] [AGENT] P0. **MTDS L2 depth source plumbing**: in batch mode read replay parquets from
+      `gs://market-data-tick-cefi-{pid}/raw_tick_data/by_date/day=...` filtered by venue+symbol; in
+      live mode subscribe to Redis Stream from MDPS Phase 4. Provide a `L2DepthProvider` interface
+      so both paths share one matcher invocation.
+
+- [ ] [AGENT] P0. **Funding-PnL accrual loop**: per tick, for each held perp position, compute
+      `delta_pnl = position_notional × funding_rate_apy_bps × tick_interval / SECONDS_PER_YEAR`
+      using the Phase A `funding_rate_apy_bps` feature. Emit as `FUNDING_PNL_ACCRUED` event +
+      bump `pnl-attribution-service.compute_pnl_breakdown(funding_rate_pnl=...)`.
+
+- [ ] [AGENT] P0. **Add to providers factory** at
+      [providers/factory.py](../../execution-service/execution_service/providers/factory.py#L13):
+      route `mode="matching_engine"` (or whatever the operator wants the flag to read as) to the
+      new provider. Wire `--execution-provider matching_engine` through run-paper.sh +
+      launch-strategy-paper-vm.sh.
+
+- [ ] [AGENT] P0. **MVP scope: ETH-PERP on Binance only** for the first ship. Hyperliquid +
+      Bybit + OKX + Deribit + Aster expand post-May-23 in the named successor plan.
+
+- [ ] [AGENT] P0. **Unit tests against canned L2 depth fixtures**: prove walked-fill price + per-leg
+      maker/taker fees match a hand-computed reference. Integration test against a single day of
+      real Binance L2 depth from MTDS parquets.
+
+**Phase-G QG**: paper VM relaunched with `--execution-provider matching_engine` produces fills with
+non-zero slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets within 10 ticks.
+
+## Phase-F: paper VM relaunch + fills>0 verification (P0, ~0.5 day, SEQUENTIAL after A-E + G)
 
 - [ ] [SCRIPT] P0. **Rebuild e2e-testing tarball** with strategy-service consumer changes from
       Phase-A. Push.
@@ -219,6 +273,7 @@ bucket-name resolver should produce non-env-split shapes for Group B kinds.
 | D | cloud-providers.yaml | resolve_bucket_name returns non-env-split shape | smoke-test in features-service QG | — |
 | E | features-service Cloud Run | 24h continuous emission, no FAILED events | `/health` + alerting-service rule | — |
 | F | paper VM fills>0 | first 10 ticks emit ≥1 fill | Cloud Logging filter | — |
+| G | MatchingEngineExecutionProvider | fills in `colocated_engine/fills/` parquets show non-zero `slippage_bps` + non-zero `funding_rate_pnl` | parquet inspector cron | — |
 
 ## Codex SSOT updates
 
@@ -232,3 +287,8 @@ bucket-name resolver should produce non-env-split shapes for Group B kinds.
 - single-venue funding (Phase A MVP) → `funding_rate_apy_bps_multi_venue_2026_06.md` (post-cutover)
 - single-LST staking (Phase B MVP) → `staking_apy_bps_multi_lst_2026_06.md` (post-cutover)
 - health_factor deferred → `wallet_health_factor_2026_06.md` (post-cutover)
+- single-venue matching (Phase G MVP = Binance only) → `matching_engine_provider_multi_venue_2026_06.md`
+  (post-cutover; expands to Hyperliquid/Bybit/OKX/Deribit/Aster)
+- real CeFi testnet execution (replaces synthetic matching-engine sim) →
+  `cefi_testnet_real_execution_2026_06.md` (post-cutover; needs the 12 testnet credentials per
+  `_agent_pings.md` 2026-05-19 batch)
