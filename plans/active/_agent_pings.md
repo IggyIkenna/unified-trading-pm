@@ -38,6 +38,9 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+<!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived below. Superseded by work_split_2026_05_19_ikenna.md + work_split_2026_05_19_harsh.md. Booting agents: read your work-split for today's tasks — do NOT act on archived entries. -->
+
+<!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18) — all resolved / superseded:
 [2026-05-15 11:25 UTC] ikenna-slot-8 → harsh-slot-9 — ✅ **B-015 PHANTOM AUDIT COMPLETE — 0 phantoms, manifest CLEAN.
 Root cause REVISED: stale concurrent-worker lock, not phantom rows. Re-launch with unique VM_NAME.**
 
@@ -3581,3 +3584,4 @@ Phase 5 above captures decision-time INPUTS **as the engine consumed them**. Ope
 **B-015 paper VM status**: still running (`strategy-paper-carry-staked-basis-20260518-115404`, pvl-p18a gate 2026-05-18 → 2026-05-21). No relaunch needed — Phase 5 applies on next natural VM start.
 
 — ikenna-main
+-->

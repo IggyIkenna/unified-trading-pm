@@ -1,3 +1,9 @@
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
+> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
+> § Slot 1 for your tasks today. This file is kept for audit trail only.
+
+---
+
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
 ## [slot 1 main] 2026-05-18 ~12:30 UTC — tick-111: Phase 5 STRATEGY_DECISION_CONTEXT COMPLETE

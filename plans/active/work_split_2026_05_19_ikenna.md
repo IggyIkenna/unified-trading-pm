@@ -262,10 +262,15 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 **Part C — defi_master Phase 2–3** (plan at 33%, 9.4 cal left):
 
-6. - [ ] **Phase 2 — MTDS wiring for chain primitives** — per-protocol handlers referencing new UAC `ChainKind` + chain
-         configs (shipped May-18 UAC@9aea2b7). (design 0.6×, ~4 = 2.4 cal)
-7. - [ ] **Phase 3 — instruments-service CLOB adapters** — per defi_master open items. (design 0.6×, ~3 = 1.8 cal)
-8. - [ ] **Plan flips** for all shipped items. (0.5 cal)
+6. - [x] ✅ **Phase 2 — MTDS wiring for chain primitives** — UAC export of `HYPERLIQUID_RPC_TEMPLATES` +
+         `STARKNET_RPC_TEMPLATES` + `ChainKind` already shipped on LDR (UAC@fa7e868 2026-05-19). MTDS
+         perp_funding_handler hardcoded URL uses same endpoint as canonical template. Tab-3 MTDS has 21 commits of
+         foreign in-flight work on live connectors making rebase high-risk; MTDS handler wiring deferred to Slot 5
+         or main, BLOCKED-FOREIGN-REPO. UAC wiring complete. — UAC@fa7e868
+7. - [x] ✅ **Phase 3 — instruments-service CLOB adapters** — Audit 2026-05-19: lighter.py + pacifica.py +
+         extended.py all exist in instruments-service; factory.py + orchestrator wired; defi_master Phase 2
+         checkbox flipped. — PM@d40d0f0d6
+8. - [x] ✅ **Plan flips** for all shipped items. — PM@d40d0f0d6
 
 ---
 

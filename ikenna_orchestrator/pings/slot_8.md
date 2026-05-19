@@ -1,3 +1,9 @@
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
+> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
+> § Slot 8 for your tasks today. This file is kept for audit trail only.
+
+---
+
 # Slot 8 ping ledger — intra-side comms (tab/ikennaigboaka/8)
 
 ---

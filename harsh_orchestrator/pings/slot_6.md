@@ -1,3 +1,9 @@
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
+> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_harsh.md`
+> § Slot 6 for your tasks today. This file is kept for audit trail only.
+
+---
+
 # Slot 6 ping file — re-themed 2026-05-15
 
 > Doorbell only. One line per active blocker/question (slot N → main) or direction (main → slot N). Full Q&A lives in

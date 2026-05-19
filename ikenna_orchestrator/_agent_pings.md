@@ -31,6 +31,9 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+<!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived. Superseded by work_split_2026_05_19_ikenna.md. Booting agents: read your work-split — do NOT act on archived entries here. -->
+
+<!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18):
 <!-- 2026-05-19: all 2026-05-12/13 entries cleared (handled; stale). -->
 <!-- Next ping will be appended below this line. -->
 
@@ -989,4 +992,5 @@ manifest-eligible GCS artifacts and wiring is complete.
 
 Source: `work_split_2026_05_14_ikenna.md` § Slot 10 items 4+5 (folded into slot 7 per § SLOT 9-10-11 REASSIGNMENT).
 
+-->
 -->
