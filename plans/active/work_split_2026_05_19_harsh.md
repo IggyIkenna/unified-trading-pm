@@ -240,8 +240,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 3. - [ ] **manifest_cross_asset_rescan close** (plan at 50%, 1.2 cal left) — read plan. (infra 0.8×, ~2 = 1.2 cal)
 4. - [ ] **available_at_lookahead_bias close** (plan at 66%, 0.5 cal left) — read plan for remaining items. (design
          0.6×, ~1 = 0.5 cal)
-5. - [ ] **deploy_missing_auto_launch final item** (plan at 93%, 0.5 cal left) — the 1 remaining `- [ ]` item. Ship it.
-         (infra 0.8×, ~0.6 = 0.5 cal)
+5. - [x] ✅ **deploy_missing_auto_launch final item** — plan 100% complete + archived at PM@bda2306a (WORKSTEP-S7 closed item 14/14: Phase 4 closeout + 7-day soak ✅ 0 compromise events). `dm-` prefix registered in VM_PREFIX_TO_BUCKET (deployment-service@d3a96cf). Verified 2026-05-19.
 6. - [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** (refactor 0.4×, ~3 = 1.2 cal)
 7. - [ ] **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** — any sync `requests` call in an async service
          context. (refactor 0.4×, ~2 = 0.8 cal)
