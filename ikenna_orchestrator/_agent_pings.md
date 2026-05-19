@@ -31,6 +31,11 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+<!-- 2026-05-19: all 2026-05-12/13 entries cleared (handled; stale). -->
+<!-- Next ping will be appended below this line. -->
+
+<!-- ARCHIVED PINGS (handled 2026-05-19) — moved out of active section:
+
 [2026-05-13 13:47 UTC] [slot 7 → main] STATUS-2026-05-12: ✅ DONE Phase 6.4 cross_instrument + Phase 6.5
 delta-one/onchain/calendar/commodity emission-policy wiring (5 modules, 20 tests, UTL top-level exports fixed, UAC seeds
 added). Full SESSION HANDOVER at pings/slot_7.md. Now unblocking Phase 6.9 + continuing with simulation_scenarios
@@ -983,3 +988,5 @@ manifest-eligible GCS artifacts and wiring is complete.
    Phase 6.9 completion 2026-05-13 is newer.
 
 Source: `work_split_2026_05_14_ikenna.md` § Slot 10 items 4+5 (folded into slot 7 per § SLOT 9-10-11 REASSIGNMENT).
+
+-->
