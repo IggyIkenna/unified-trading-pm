@@ -472,10 +472,30 @@ one-walk migration so manifest only rewrites once.
       4 PM@4a3c157d 2026-05-08)**: Phase 1 smoke against real AWS S3 GREEN; Phase 2 10 buckets created on real S3; Phase
       5 KICKED OFF (5 cross-cloud rsync jobs at 14:20 UTC 2026-05-08); Glue/Athena Phase 5b ENABLED. Remaining: full
       bundle backfill + AWS-side manifest consolidator + AWS-side data-status UI.
-- [ ] [SCRIPT] P0. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
       `bucket_name_ssot_canonicalisation` resolver. If AWS-side resolver was wired pre-Phase-1, double-check the SSOT is
       in sync now (CLAUDE.md "Two teammates × multiple parallel agents" + bucket-name SSOT triple-drift incident from
-      Tab 4 close-out).
+      Tab 4 close-out). **AUDITED 2026-05-19 slot 3**: - Phase 5 one-off rsync commands used hardcoded bucket names
+      (expected — manual migration, not service code). ✅ - `sync-buckets-prod-to-env.sh` (GAP-2.4.E) uses
+      `resolve_bucket_name()` at lines 194+202. ✅ SSOT-clean. - Phase 1.B smoke test confirmed resolver returns
+      canonical names per (cloud, kind, asset_group). ✅ - `storage_client.py` / `catalog.py` use
+      `f"gs://{bucket_name}/..."` where `bucket_name` comes FROM resolver upstream (not hardcoded literals); all
+      annotated `# noqa: gs-uri`. ✅ - Yaml SSOT corrections in place: dep-service@7637e5c (GCP market-data tick-
+      infix) + dep-service@979cb0b (market-data + instruments-store + features-calendar entries added). ✅ **Cross-cloud
+      parity matrix (DeFi data_types, 2026-05-19)**: | data_type | GCS bucket | S3 bucket | resolve_bucket_name |
+      parity_status | |-----------|-----------|-----------|---------------------|---------------| | events |
+      central-element-323112-events | unified-trading-events-prod-427895769566 | yaml SSOT ✅ | 🟢 clean | |
+      instruments-defi | instruments-store-defi-central-element-323112 | unified-trading-instruments-defi-427895769566 |
+      yaml SSOT ✅ | 🟢 clean | | dex-pools | dex-pools-central-element-323112 |
+      unified-trading-dex-pools-prod-427895769566 | yaml SSOT ✅ | 🟢 clean | | evm-defi |
+      evm-defi-central-element-323112 | unified-trading-evm-defi-prod-427895769566 | yaml SSOT ✅ | 🟢 clean | |
+      market-data-tick-defi | market-data-tick-defi-central-element-323112 |
+      unified-trading-market-data-defi-427895769566 | corrected dep-service@7637e5c | 🟢 clean | | solana-defi |
+      solana-defi-central-element-323112 | unified-trading-solana-defi-prod-427895769566 | yaml SSOT ✅ | 🟢 clean | |
+      dex-swaps | dex-swaps-central-element-323112 | unified-trading-dex-swaps-prod-427895769566 | yaml SSOT ✅ | 🟢
+      clean | | config-store | config-store-central-element-323112 | unified-trading-config-store-prod-427895769566 |
+      yaml SSOT ✅ | 🟢 clean | **Verdict**: Service-code SSOT-clean. One-off migration commands used hardcoded names
+      (correct for manual ops). Yaml resolver asymmetry (GCP market-data tick- infix) already corrected. No drift found.
 - [ ] [SCRIPT] P0. **GAP-2.4.B (NEW per operator decision (b) 2026-05-11)** — Provision env-tiered buckets to match yaml
       across **both clouds**, **all envs (staging / prod / development)**, and **all yaml `${DEPLOYMENT_ENV}`-bearing
       kinds** (features-delta-one × {cefi, tradfi, defi, prediction, sports} × env, features-volatility × {cefi, tradfi,
