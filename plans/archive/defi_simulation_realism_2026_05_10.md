@@ -34,6 +34,8 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
@@ -718,8 +720,8 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
       PM@`3b76a5ef` + `d66b0f9f` + `816aed73`.)
 - [x] [AGENT] P0. **9E — Update `master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 status rows. ✅ Slot 1
       completed master plan refresh 2026-05-18: item 17 updated with "defi_simulation_realism Phase 2 design SHIPPED
-      2026-05-18 (PM@`d66b0f9f` + `ae804766`) — real gas + real market impact + realistic matching engine design artifact
-      landed"; item 18 updated with "Phase 8C Tenderly-fork live-vs-simulated reconciliation harness per
+      2026-05-18 (PM@`d66b0f9f` + `ae804766`) — real gas + real market impact + realistic matching engine design
+      artifact landed"; item 18 updated with "Phase 8C Tenderly-fork live-vs-simulated reconciliation harness per
       defi_simulation_realism Phase 8". Cross-side ping via `_agent_pings.md` PM@`f9df943f` → slot-1 refresh
       PM@master-plan-row-updates-2026-05-18. Plan is now 47/47 (100%). (PM@slot4-WORKSTEP-S5 2026-05-19)
 
@@ -897,7 +899,7 @@ Day-1 by slot 6) + **6 plan flips**. Per-phase status leaving this session:
 | Phase 8A/B/C/D (backtest fidelity validation + sign-off)     | `- [ ]` DEFERRED                                   | depends on all Phases 3-7 wired into end-to-end; operator-runnable; sign-off is May-23 cutover gate.                                                                                                                                                               |
 | Phase 9A (`amm-slippage-simulation.md`)                      | `- [x]` shipped Day-1 by slot 6                    | Validation-results section folds in when Phase 3C / 8C harnesses complete.                                                                                                                                                                                         |
 | Phase 9B/9C/9D (codex SSOT updates)                          | `- [x]` shipped Day-1 by slot 6                    | —                                                                                                                                                                                                                                                                  |
-| Phase 9E (master plan refresh)                               | `- [x]` ✅ shipped 2026-05-18 (slot-1)              | Group F items 17 + 18 Continuous Verification rows extended with defi_simulation_realism Phase 2 design + Phase 8C Tenderly-fork reconciliation references; Last verified flipped to 2026-05-18. Plan closes 47/47.                                            |
+| Phase 9E (master plan refresh)                               | `- [x]` ✅ shipped 2026-05-18 (slot-1)             | Group F items 17 + 18 Continuous Verification rows extended with defi_simulation_realism Phase 2 design + Phase 8C Tenderly-fork reconciliation references; Last verified flipped to 2026-05-18. Plan closes 47/47.                                                |
 | Golden test set harness                                      | `- [x]` **corpus shipped** @`626d4c8af` 2026-05-13 | Real on-chain corpora: V3=135, V2=40, Curve=35, Balancer=37, Solidly=38 rows. All 5 shapes 100% pass rate. `capture_pool_window()` wired with per-swap block-1 snapshots. **DEFERRED-SOLANA**: Solana CLMM/AMM — requires Helius archive RPC; not Alchemy-mainnet. |
 
 **Code-only Phase 8 ledger**: Phases 8A/B/C/D are operator-runnable backtest scripts that consume the now-shipped Phase
