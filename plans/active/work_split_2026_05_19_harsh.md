@@ -122,8 +122,12 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          with DeFi-first matrix (6 perp venues + on-chain RPC + alerting + KMS wallet groups); operator ping in
          harsh_orchestrator/pings/slot_3.md with exact AWS CLI provisioning steps. Flags exec-odum-aster-cefi as
          NOT_IN_REGISTRY gap.
-5. - [ ] **Phase 4.A — DeFi mainnet wallet provisioning verify** — confirm CLOUD_KMS_ENCRYPTED wallet generation works
-         on AWS KMS as well as GCP KMS. (infra 0.8×, ~2 = 1.6 cal)
+5. - [x] ✅ **Phase 4.A — DeFi mainnet wallet provisioning verify** — confirmed CLOUD_KMS_ENCRYPTED wallet generation
+         works on AWS KMS as well as GCP KMS. PM@HEAD: cloud_kms.py has full boto3 AWS path (lines 173-212); 4×
+         AWS-specific tests in TestCloudKmsAwsPath + TestKmsRotationAndKeyNotFound pass; QG 7457 passed (10
+         pre-existing failures outside scope: hyperliquid_bridge + test_mock_data_provider); expanded
+         custody-onboarding-checklist.md § B.2 with full AWS envelope-encrypt runbook (B.2.1–B.2.6 including
+         `aws kms encrypt` + Secrets Manager store + WalletProvisioningConfig ARN format). (infra 0.8×, ~2 = 1.6 cal)
 6. - [ ] **GAP-2.4.A** — Verify aws_migration writes use same Phase 1.B bucket naming as GCP. (research 1.2×, ~1 = 1.2
          cal)
 7. - [ ] **GAP-2.4.B** — Provision env-tiered AWS buckets to match GCP yaml schema. Run
