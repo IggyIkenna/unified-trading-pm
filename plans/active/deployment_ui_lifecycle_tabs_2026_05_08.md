@@ -479,9 +479,10 @@ todos:
 
   - id: f3-naming-convention-rule-into-claudemd
     content: |
-      - [ ] [HUMAN+AGENT] P1. Update CLAUDE.md "VM Naming Convention" section with the new `lifecycle_class`
+      - [x] ✅ [HUMAN+AGENT] P1. Update CLAUDE.md "VM Naming Convention" section with the new `lifecycle_class`
         requirement (Phase A.2) + the experiment-VM run_id-suffix rule. Operator review then ship via the standard
         PM commit. Symlinks propagate to all repo-mirrors automatically.
+        — PM@2816975af (2026-05-19 slot 6). lifecycle_class required on every VmPrefixSpec; exp-ml-/exp-strategy-/exp-execution- run_id suffix rule added.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase G — Final validation gate
