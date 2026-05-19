@@ -108,7 +108,8 @@ todos:
         strike_threshold): expected_count}` per UAC SSOT.
         **SHIPPED 2026-05-19** mtds@b59b63e — PartitionedTickWriter event_contract_bundle_counts + envelope
         properties; orchestrator finalize loop with record_captured_from_counts per (root, resolution_month) bundle;
-        UAC event_contract in BUNDLED_DATA_TYPES (uac@f70b975); extract_event_contract_shard_key exported (uac@f70b975).
+        UAC event_contract in BUNDLED_DATA_TYPES (uac@f70b975); extract_event_contract_shard_key exported (uac@f70b975);
+        EVENT_CONTRACT_ROOT_CLUSTERS (9 roots, _per_cluster_min_rows=1) + DATA_TYPE_TO_CLUSTER_REGISTRY wired (uac@2751910).
         TEMPORARY: expected == observed until Phase 4 instruments-service catalog.
     status: done
 

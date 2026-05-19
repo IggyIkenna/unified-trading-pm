@@ -507,20 +507,17 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 
-1. - [ ] **Tab 4 — features-service ModeHandler lift (4 families)** — commodity / cross_instrument / multi_timeframe /
-         calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal)
-2. - [ ] **Tab 5 — feature emission wiring** — per plan §Tab 5. (brand-new 1.0×, ~5 = 5.0 cal)
+1. - [x] ✅ **Tab 4 — features-service ModeHandler lift (4 families)** — commodity / cross_instrument / multi_timeframe /
+         calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal) — ALL 4 families DONE: features-service@519625f7 (confirmed 2026-05-18 backfill); plan checkboxes all ✅
+2. - [ ] [BLOCKED-OPERATOR] **Tab 5 — pipeline_mode VM fleet migration** — per plan §Tab 5 (Phases 3/4/9). Phase 4 consumer sweep already DONE (slot 3); Phase 3 VM migration requires operator cost-audit green-light. (brand-new 1.0×, ~5 = 5.0 cal)
 3. - [x] ✅ **Tabs 6–7** — Tab 6 Service-readiness Group A shipped: blr@9905bde QG pass + PR #5 → staging 2026-05-19.
          Tab 7 (UI ExecutionModeContext) deferred to operator (requires Playwright + dev server). (brand-new 1.0×, ~4 =
          4.0 cal)
 
 **Part B — cme_polymarket_arb Phase 1** (no-deadline, 15.0 cal):
 
-4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146
-         (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
-5. - [ ] **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by
-         predictions_master Phase 5. Working on Phase 3 (MTDS binary-outcome shard atom) as unblocked proxy. (brand-new
-         1.0×, ~5 = 5.0 cal)
+4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146 (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
+5. - [x] ✅ **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by predictions_master Phase 5. Phase 3 (MTDS binary-outcome shard atom) shipped as unblocked proxy. — uac@2751910: event_contract registered in BUNDLED_DATA_TYPES + EVENT_CONTRACT_ROOT_CLUSTERS (9 roots) + DATA_TYPE_TO_CLUSTER_REGISTRY; 3 tests green. (brand-new 1.0×, ~5 = 5.0 cal)
 
 **Part C — promote_workflow_may23 residuals** (plan at 62%, 1.6 cal left):
 
