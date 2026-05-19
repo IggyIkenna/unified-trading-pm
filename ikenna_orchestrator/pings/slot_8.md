@@ -1180,3 +1180,30 @@ Without it: Phase 3 subtree-merge cannot proceed
 - strategy_repo_consolidation Phase 9+10: BLOCKED on slot 7 Phase 8A (which is BLOCKED on slots 3-6 upstream)
 - ml_repo_consolidation Phase 2+: BLOCKED-OPERATOR (repo creation)
 - Available for reallocation to any unblocked track
+
+---
+
+## [slot 8] 2026-05-19 — strategy_repo_consolidation Phase 0 SIDE EFFECT + codex gsutil HARD RULE
+
+**Shipped while waiting for operator unblocks**:
+
+1. **Codex: gsutil vs gcloud-storage-ls HARD RULE** — PM@`02d7ab495`
+   - New section "GCS path scanning — gsutil ls vs gcloud storage ls" in `codex/05-infrastructure/vm-tarball-deployment.md`
+   - Documents production incident (2026-05-19, 31 VMs idle) caused by `gcloud storage ls --recursive` failing with rc=1 on partial hive-partition prefix match
+   - Correct pattern: `gsutil ls -r gs://bucket/prefix**` with `check=False` + treat rc=1/empty-stdout as empty list
+   - Refs PM@726a3bf + deployment-service@5b917c1 (slot 1 bug fixes). Filed Phase 7.5 evidence row in `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
+
+2. **strategy_repo_consolidation Phase 0 SIDE EFFECT** — PM@`ec98aef9c` (after rebase)
+   - Soft-freeze banner added to 20 active plans with code-level scope over the 4 affected repos
+   - Banner: "🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19"
+   - Plans patched: AUDIT_2026_05_15, alerting_service, batch_live_symmetry, bucket_name_ssot, codex_vs_citadel, compute_optimization, cross_cutting_may_23, defi_archetypes, defi_master, defi_recursive_borrow, deployment_and_qg_strategy, features_repo_consolidation, features_service_qg_cleanup, live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation, mock_data_pipeline_benchmarking, promote_workflow_may23, ruff_workspace_cleanup, writegate_honest_coverage
+   - Phase 0 SIDE EFFECT checkbox flipped in strategy_repo_consolidation plan (status: done)
+
+**Current Slot 8 state**:
+- strategy_repo_consolidation Phase 9+10: BLOCKED on slot 7 Phase 8A
+- strategy_repo_consolidation Phase 0 SIDE EFFECT: ✅ DONE (PM@ec98aef9c)
+- ml_repo_consolidation Phase 2+: BLOCKED-OPERATOR (repo creation)
+- Codex gsutil HARD RULE: ✅ DONE (PM@02d7ab495)
+- Available for reallocation to any unblocked track
+
+— slot 8
