@@ -1007,11 +1007,14 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       `unified_api_contracts.canonical.crosscutting.defi.ChainKind` enum + `CHAIN_BRIDGE_GRAPH` + genesis dates +
       `HYPERLIQUID_RPC_TEMPLATES` / `STARKNET_RPC_TEMPLATES` (following SOLANA pattern). Exported from `__init__.py`. —
       uac@9aea2b7 (2026-05-18 slot 3)
-- [ ] [SCRIPT] P0. **Phase 2 — instruments-service CLOB discovery adapters.** Lighter (zkSync) / Pacifica (Solana) /
+- [x] ✅ [SCRIPT] P0. **Phase 2 — instruments-service CLOB discovery adapters.** Lighter (zkSync) / Pacifica (Solana) /
       Extended (Starknet). Per-instrument catalog rows in instruments-store-defi:
       `(asset_group=defi, chain, venue,     instrument_type=PERP, instrument_id, contract_address, base_asset, quote_asset, decimals, listed_at)`.
       Adapters probe each venue's discovery endpoint (Lighter `/markets`, Pacifica `/markets`, Extended `/markets`);
-      emit record_captured per instrument.
+      emit record_captured per instrument. **Audit 2026-05-19 slot-3**: All 3 adapters present in instruments-service
+      (lighter.py + pacifica.py + extended.py), all registered in reference_data/factory.py, all in orchestrator
+      \_SOLANA_DEFI_VENUES + \_L2_DEX_PERP_VENUES lists. InstrumentRecord emitted per market from each adapter. —
+      instruments-service pre-2026-05-18.
 - [x] ✅ [SCRIPT] P0. **Phase 3 — `allowed_chains` codex docs shipped.** Per-archetype config gains
       `allowed_chains: list[ChainKind]`; docs ship now per operator precedent ("docs ship even if code deferred").
       carry_staked_basis: [ethereum, solana, arbitrum]. APD: [ethereum, arbitrum, solana, base, optimism] (DeFi-leg
@@ -1395,17 +1398,17 @@ Active sub-plans owned by or closely coordinated with this epic:
 | Plan                                                                                                                                   | Role                                                                                                                | Status |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
 | [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active |
-| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                                     | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active |
+| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                            | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active |
 | [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active |
 | [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active |
-| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)                     | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active |
-| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                             | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active |
-| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)           | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active |
+| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)            | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active |
+| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active |
 | [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active |
 | [`api_keys_wallets_accounts_readiness_2026_05_10.md`](./api_keys_wallets_accounts_readiness_2026_05_10.md)                             | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | Active |
-| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                         | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active |
-| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                                   | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active |
-| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                                 | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active |
+| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active |
+| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active |
+| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active |
 | [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active |
 
 ## Folded plans (archived 2026-05-07)
