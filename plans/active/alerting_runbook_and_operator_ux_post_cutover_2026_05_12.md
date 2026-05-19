@@ -82,13 +82,15 @@ covers the lot after May-23.
       `integration-testing-layers.md:219-234` matrix: "DeFi on-chain integration → Tenderly VNet fork fixture
       (`execution-service/tests/defi_execution/integration/conftest.py`)" + "IBKR → `MagicMock(spec=IB)`". **MIGRATED
       FROM:** TS-20. **DONE 2026-05-14**: two rows added to the decision matrix.
-- [ ] [DESIGN] P2. **Group G — STALE_OPEN_ALERT operator dashboard (AL-21 UX half).** Wire the operator-facing surface
+- [x] [DESIGN] P2. **Group G — STALE_OPEN_ALERT operator dashboard (AL-21 UX half).** Wire the operator-facing surface
       for the STALE_OPEN_ALERT meta-alert (the QG/automation contract lives in the governance plan). UI tile in
       deployment-ui OR alerting-service dashboard. **MIGRATED FROM:** AL-21 (UX half). **DESIGN CALL 2026-05-14**: UI
       tile in `deployment-ui` AlertStatusPanel (NOT alerting-service — keeps alerting stateless). Tile polls
       `GET /api/alerts?status=stale&limit=20`. Implementation is **DEFERRED-POST-CUTOVER** to deployment-ui slot (slot 7
       owns deployment-ui). Routed to slot 7 via ping 2026-05-18. Successor: slot_7.md ping
       `[2026-05-18 14:05 UTC] [slot-4 → slot-7] SUCCESSOR ROUTING — Group G STALE_OPEN_ALERT dashboard`.
+      **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: successor routing confirmed (slot_7.md ping 2026-05-18); plan body
+      documents named successor per status taxonomy rule. Item closeable per audit.
 
 ## Done definition
 
