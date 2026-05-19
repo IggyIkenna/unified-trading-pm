@@ -155,18 +155,22 @@ populated buckets are non-env-split (`strategy-store-cefi-{pid}`) OR have an inc
 `-prd-` mismatch). Until env-split rollout completes the bucket-name resolver should produce non-env-split shapes for
 Group B kinds.
 
-- [ ] [AGENT] P0. **Edit
+- [x] [AGENT] P0. **Edit
       [deployment-service/configs/cloud-providers.yaml](../../deployment-service/configs/cloud-providers.yaml)** Group B
-      mappings to drop `${DEPLOYMENT_ENV_SHORT}-` for: `features-onchain`, `features-cefi`, `strategy-store`,
-      `execution-store`, `ml-artifacts`. Add an explicit note that this is a temporary rollback until env-split
-      provisioning lands; named successor: `plans/active/bucket_env_split_rollout_2026_06.md`.
+      mappings to drop `${DEPLOYMENT_ENV_SHORT}-` for: `features-onchain`, `features-delta-one`, `features-volatility`,
+      `features-xinstrument`, `features-mtf`, `strategy-store`, `execution-store`, `ml-artifacts`,
+      `ml-training-artifacts`. Temp rollback banner + named successor `bucket_env_split_rollout_2026_06.md`. —
+      deployment-service@0235749
 
-- [ ] [AGENT] P0. **Update
+- [x] [AGENT] P0. **Update
       [unified_trading_library/cloud_interface/bucket_naming.py](../../unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py)**
-      if logic-level changes needed (probably none; config-only).
+      if logic-level changes needed (probably none; config-only). — NO CHANGE NEEDED: yaml is the SSOT; bucket_naming.py
+      is purely a yaml-template resolver with no env-split hard-coding. Confirmed clean.
 
-- [ ] [SCRIPT] P0. **Smoke-test resolve_bucket_name** for each affected kind returns the non-env-split shape that
-      actually exists in GCS.
+- [x] [SCRIPT] P0. **Smoke-test resolve_bucket_name** for each affected kind returns the non-env-split shape that
+      actually exists in GCS. — PASSED: all 9 kinds (strategy-store/cefi, features-onchain/defi,
+      features-delta-one/cefi, features-volatility/defi, features-xinstrument/cefi, features-mtf/defi, ml-artifacts,
+      ml-training-artifacts, execution-store/cefi) resolve to non-env-split names confirmed against GCS inventory.
 
 ## Phase-E: features-service live deploy (P0, ~1 day, SEQUENTIAL after A+B)
 
@@ -254,15 +258,15 @@ slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets wit
 
 ## Success criteria (Continuous Verification)
 
-| Group | Item                            | Cutover Criterion                                                                                                                                          | Continuous Verification                     | Last verified |
-| ----- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------- |
-| A     | funding_rate_apy_bps live       | 2026-05-22 23:00 UTC: parquet for current hour exists in `gs://features-cefi-{pid}/by_date/day=$(today)/feature_group=perp_funding_rates/features.parquet` | hourly cron `verify_funding_freshness.sh`   | —             |
-| B     | staking_apy_bps live            | 2026-05-22 23:00 UTC: parquet for current day exists in features-onchain bucket                                                                            | daily cron `verify_lst_yields_freshness.sh` | —             |
-| C     | lst_native_rate                 | 2026-05-22 23:00 UTC: parquet for current day                                                                                                              | daily cron                                  | —             |
-| D     | cloud-providers.yaml            | resolve_bucket_name returns non-env-split shape                                                                                                            | smoke-test in features-service QG           | —             |
-| E     | features-service Cloud Run      | 24h continuous emission, no FAILED events                                                                                                                  | `/health` + alerting-service rule           | —             |
-| F     | paper VM fills>0                | first 10 ticks emit ≥1 fill                                                                                                                                | Cloud Logging filter                        | —             |
-| G     | MatchingEngineExecutionProvider | fills in `colocated_engine/fills/` parquets show non-zero `slippage_bps` + non-zero `funding_rate_pnl`                                                     | parquet inspector cron                      | —             |
+| Group | Item                            | Cutover Criterion                                                                                                                                          | Continuous Verification                     | Last verified                                         |
+| ----- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| A     | funding_rate_apy_bps live       | 2026-05-22 23:00 UTC: parquet for current hour exists in `gs://features-cefi-{pid}/by_date/day=$(today)/feature_group=perp_funding_rates/features.parquet` | hourly cron `verify_funding_freshness.sh`   | —                                                     |
+| B     | staking_apy_bps live            | 2026-05-22 23:00 UTC: parquet for current day exists in features-onchain bucket                                                                            | daily cron `verify_lst_yields_freshness.sh` | —                                                     |
+| C     | lst_native_rate                 | 2026-05-22 23:00 UTC: parquet for current day                                                                                                              | daily cron                                  | —                                                     |
+| D     | cloud-providers.yaml            | resolve_bucket_name returns non-env-split shape                                                                                                            | smoke-test in features-service QG           | 2026-05-19 (deployment-service@0235749, 9/9 kinds OK) |
+| E     | features-service Cloud Run      | 24h continuous emission, no FAILED events                                                                                                                  | `/health` + alerting-service rule           | —                                                     |
+| F     | paper VM fills>0                | first 10 ticks emit ≥1 fill                                                                                                                                | Cloud Logging filter                        | —                                                     |
+| G     | MatchingEngineExecutionProvider | fills in `colocated_engine/fills/` parquets show non-zero `slippage_bps` + non-zero `funding_rate_pnl`                                                     | parquet inspector cron                      | —                                                     |
 
 ## Codex SSOT updates
 
