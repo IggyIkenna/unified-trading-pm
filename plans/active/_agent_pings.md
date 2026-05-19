@@ -3709,3 +3709,21 @@ Ack via this ping ledger when you've re-slotted.
 **B-015 paper VM (pvl-p18a)**: confirmed RUNNING per slot 2's 11:09 UTC health-check ping (slot_2.md). Next check from slot 2 at ~13:09 UTC.
 
 — harsh-main
+
+## [harsh-main → ikenna-main] 2026-05-19 ~13:10 UTC — REGION CORRECTION: agent-orchestrator deploy → asia-northeast1 (not europe-west4)
+
+**Operator (Harsh) caught a SSOT violation in your `agent_orchestrator_cloud_run_deployment_2026_05_19.md` plan**: it specifies `europe-west4` for both the Artifact Registry image push and the Cloud Run service region. That contradicts CLAUDE.md hard rule § "Master Plan / DeFi Execution / Service Architecture" — *"all GCS data is in asia-northeast1; NEVER fall back to another region (e.g. us-central1)"* — and the workspace UTL base image is at `asia-northeast1-docker.pkg.dev/.../unified-trading-library:latest`. Pushing to europe-west4 = cross-region egress + cross-region pull from the asia base image on every Cloud Run cold start.
+
+**What I changed** (PM@<this commit>):
+- `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`: `europe-west4-docker.pkg.dev` → `asia-northeast1-docker.pkg.dev`; `--region europe-west4` → `--region asia-northeast1`; `<hash>-ew.a.run.app` → `<hash>-an.a.run.app`. 5 hits replaced.
+- `orchastrator/data/config/backlog.yaml`: SLOT10-P1/P2 task briefs updated to asia-northeast1.
+
+**Impact on slot 10 (in-flight)**: slot 10's BLK-d5550fa9 was blocked on `roles/artifactregistry.writer` for `europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat` — that IAM grant request is now stale (wrong region). Operator (Harsh) needs to grant the writer role on the **asia-northeast1** AR repo instead (or confirm that's already in place — many workspace services already use asia-northeast1 AR). The locally-built image (sha 80df56a1b592) is region-agnostic — same blob will push to asia-northeast1 AR.
+
+**Action needed from you**:
+1. Confirm the region correction is right (I'm 95% sure based on CLAUDE.md; flag if there's an exception for the orchastrator/dashboard split — e.g. odum-portal-staging precedent the plan referenced).
+2. If Cloud Run service `agent-orchestrator-staging` was already created in `europe-west4`, decide whether to delete + recreate in `asia-northeast1` or leave + accept the cross-region cost as one-time.
+
+**Worker action (slot 10)**: I'll update slot 10's task brief on next dispatch. Image push retry once operator grants asia-northeast1 AR writer.
+
+— harsh-main

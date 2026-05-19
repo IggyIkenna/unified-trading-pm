@@ -64,15 +64,15 @@ todos:
         - [ ] Create deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh mirroring deploy-ui.sh shape (rejects missing --env; supports --env=prod|uat + --cloud + --build-env-file= override)
         - [ ] Add config/docker-build.env.{production,uat} (server-side env: ORCHASTRATOR_MODE=live, ORCHASTRATOR_PUBLIC_URL, dashboard build needs only ORCHASTRATOR_API_BASE_URL since it's a Vite SPA not Next.js)
         - [ ] Cloudbuild YAML at scripts/cloudbuild-agent-orchestrator.yaml — pulls prior :uat or :production tag as cache source
-        - [ ] First image build + push: europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat
-        - [ ] First `gcloud run deploy --env=uat` creates Cloud Run service `agent-orchestrator-staging` in central-element-323112/europe-west4 (matches odum-portal-staging convention)
-      Full-execution criterion: `curl https://agent-orchestrator-staging-<hash>-ew.a.run.app/healthz` returns `{"status":"ok","mode":"live","uptime_seconds":<int>}` (200). `gcloud run services describe agent-orchestrator-staging --region europe-west4 --project central-element-323112` shows `Conditions: Ready=True` + last revision SHA matching deployed commit. Verified via: `gcloud run services list --project central-element-323112 --region europe-west4 --filter "metadata.name=agent-orchestrator-staging"`.
+        - [ ] First image build + push: asia-northeast1-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat
+        - [ ] First `gcloud run deploy --env=uat` creates Cloud Run service `agent-orchestrator-staging` in central-element-323112/asia-northeast1 (matches odum-portal-staging convention)
+      Full-execution criterion: `curl https://agent-orchestrator-staging-<hash>-an.a.run.app/healthz` returns `{"status":"ok","mode":"live","uptime_seconds":<int>}` (200). `gcloud run services describe agent-orchestrator-staging --region asia-northeast1 --project central-element-323112` shows `Conditions: Ready=True` + last revision SHA matching deployed commit. Verified via: `gcloud run services list --project central-element-323112 --region asia-northeast1 --filter "metadata.name=agent-orchestrator-staging"`.
     status: todo
 
   - id: p2-firebase-hosting-domains
     content: |
       - [ ] [HUMAN+AGENT] P2. Phase 2 — Firebase Hosting + custom domains (depends on P1)
-        - [ ] Add agent-orchestrator/firebase.json with prod+uat hosting targets, each rewriting `/api/*` and `/healthz` to the matching Cloud Run service (region europe-west4) and serving built Vite dashboard at `/`
+        - [ ] Add agent-orchestrator/firebase.json with prod+uat hosting targets, each rewriting `/api/*` and `/healthz` to the matching Cloud Run service (region asia-northeast1) and serving built Vite dashboard at `/`
         - [ ] Add agent-orchestrator/.firebaserc with hosting targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site (both under central-element-323112 firebase project)
         - [ ] dashboard/vite.config.ts: confirm build output goes to a Firebase-Hosting-friendly path (dist/ → public/ relative to firebase.json)
         - [ ] First `firebase deploy --only hosting:uat` from local laptop
@@ -110,7 +110,7 @@ todos:
       - [ ] [HUMAN+AGENT] P5. Phase 5 — Prod cutover + Harsh laptop decommission (depends on P4 + ≥1-day staging soak + **hard gate: workers-on-VMs successor plan reaches D3**)
         - [ ] **HARD PREREQUISITE** for the "shut down laptop nginx" step below: `agent_orchestrator_workers_on_vms_2026_05_XX.md` (TBD slug) must reach D3 first. Reason: Cloud Run containers cannot tmux-spawn; killing Harsh's laptop with workers still tmux-spawning there kills the workers. Workers must move to VMs before laptop decommission.
         - [ ] Manual `gcloud run deploy --env=prod` (workflow_dispatch on deploy-prod.yml) — first prod deployment
-        - [ ] Configure prod GCS state bucket: create gs://agent-orchestrator-state-prod/ (europe-west4, lifecycle: 30-day version retention); IAM bind to prod Cloud Run SA
+        - [ ] Configure prod GCS state bucket: create gs://agent-orchestrator-state-prod/ (asia-northeast1, lifecycle: 30-day version retention); IAM bind to prod Cloud Run SA
         - [ ] Set ORCHASTRATOR_GCS_BUCKET=agent-orchestrator-state-prod on prod Cloud Run (covers TODO.md "Off-laptop continuity" requirement)
         - [ ] One-shot state migration: gsutil cp Harsh's laptop data/state/state.json → gs://agent-orchestrator-state-prod/state.json (validated via diff after prod startup reads it back)
         - [ ] Bootstrap users on prod (ikenna + harsh, separate JWT secret from staging)
