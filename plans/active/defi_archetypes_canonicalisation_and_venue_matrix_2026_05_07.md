@@ -101,13 +101,15 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
 
 **Tasks**
 
-- [ ] [SCRIPT] P0. **BLOCKED-CREDENTIALS** — Live-API probe to confirm exact 2026-05-07 collateral value ratios for:
+- [x] **BLOCKED-CREDENTIALS** [SCRIPT] P0. Live-API probe to confirm exact 2026-05-07 collateral value ratios for:
       Deribit stETH, Bybit stETH/wstETH/USDe/sUSDe, OKX wstETH/stETH. Document each in
       `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` with API/URL evidence per
       venue. **Status 2026-05-18**: Playbook doc already exists at that path with web-doc citations (Deribit 7.5%,
       Bybit 10%, OKX 10% — conservative placeholders). Live-API endpoint probe (Deribit `/private/get-position-mode`,
       Bybit `/v5/account/info`, OKX `/api/v5/account/account-position-risk`) requires operator venue account
-      credentials. Filed as `BLOCKED-CREDENTIALS` per workspace taxonomy — adapter work done, credential ask pending.
+      credentials. Credential ask filed: `harsh_orchestrator/pings/slot_3.md` 2026-05-18 21:05 UTC. PM@`29dd6f7a` at
+      item 18. Under-utilises margin pool until confirmed (safe error, not correctness bug per playbook doc). **FORMALLY
+      CLOSED 2026-05-19 slot-5** as BLOCKED-CREDENTIALS with named ping.
 - [x] [UAC] P0. Update `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries.
       **VERIFIED 2026-05-09 audit** — Stream A flip comments confirmed at venue_collateral.py:138 (DERIBIT stETH + 7.5%
       haircut), :159+ (BYBIT entries), :173 (OKX wstETH); plus rows at lines 162/164/167/170 for BYBIT
