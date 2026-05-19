@@ -200,22 +200,24 @@ todos:
 
   - id: b5-data-status-mode-toggle-batch-scheduled-live
     content: |
-      - [ ] [SCRIPT] P0. Add a 3-way mode toggle (Batch / Scheduled-Today / Live) at the top of `DataStatusTab.tsx`.
+      - [x] ✅ [SCRIPT] P0. Add a 3-way mode toggle (Batch / Scheduled-Today / Live) at the top of `DataStatusTab.tsx`.
         Each mode reads from a different bucket-set / time-slice: Batch = the historical buckets the tab already
         reads; Scheduled-Today = today's-date slice (what should have run today + has it run); Live = live-write
         buckets per asset_group (per `instruments_live_master_2026_05_08.md` Phase 1 — same path as batch in
         most cases, but the UI surfaces "freshness" as the metric instead of "coverage"). Toggle invalidates the
         `/api/data-status` query key and refetches. NO new bucket convention — reuses the same paths the rest of
         the workspace already writes to (per `batch-live-architecture.md` SSOT).
+        — deployment-ui@1771932 (2026-05-19 slot 6; toggle pre-existed, live-mode wired to LiveFreshnessPanel)
 
   - id: b6-live-freshness-widget
     content: |
-      - [ ] [SCRIPT] P1. NEW `LiveFreshnessPanel` component rendered when DataStatus mode-toggle = Live. Per
+      - [x] ✅ [SCRIPT] P1. NEW `LiveFreshnessPanel` component rendered when DataStatus mode-toggle = Live. Per
         (asset_group, data_type, shard) shows: last-write-timestamp, expected-cadence (from Phase D scheduler
         registry), staleness-indicator (green = fresh, amber = within tolerance, red = beyond tolerance + auto-
         emits `INSTRUMENTS_LIVE_UPSTREAM_STALE` per `instruments_live_master_2026_05_08.md` Phase A.5 if not
         already emitted). Reads from the SAME `/api/data-status` endpoint; the freshness math is a UI computation
         over the existing `available_at` per-row column.
+        — deployment-ui@567c8a1 (component 2026-05-13) + @1771932 (wired 2026-05-19 slot 6)
 
   - id: b7-mode-prefetch-context
     content: |
