@@ -368,10 +368,12 @@ todos:
 
   - id: e2-live-cluster-deploy-and-lifecycle-actions
     content: |
-      - [ ] [SCRIPT] P0. Implement start / stop / pause / restart / drain per cloud-target. Cloud Run: revision
+      - [x] ✅ [SCRIPT] P0. Implement start / stop / pause / restart / drain per cloud-target. Cloud Run: revision
         scale-to-0 for stop, set min-instances=N for start, traffic-split for drain. GKE/EKS: deployment scale +
         rolling-restart. Idempotent. State persists. Reuses existing `vm_deployments.py` patterns where
         applicable.
+        — deployment-api@4c4f221 (2026-05-19 slot 6). 5 POST routes backed by LiveClusterSpec UAC SSOT;
+        per-kind command builders (Cloud Run/GKE+EKS/ECS); mock/dry_run returns preview command. 24 unit tests.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase BB — Experiment tracker (greenfield slice)
@@ -536,8 +538,8 @@ todos:
 >
 > **Phase B.1 tab-count revision**: when A.2 ships, also revise Phase B.1's tab list from **6 tabs to 7 tabs** (add
 > Kill-switch tab per
-> [`disaster_recovery_circuit_breakers_2026_05_10.md`](../archive/disaster_recovery_circuit_breakers_2026_05_10.md) Phase 7.B — see
-> banner already added there 2026-05-10 PM at lines 37-43 of that plan).
+> [`disaster_recovery_circuit_breakers_2026_05_10.md`](../archive/disaster_recovery_circuit_breakers_2026_05_10.md)
+> Phase 7.B — see banner already added there 2026-05-10 PM at lines 37-43 of that plan).
 
 ## Status — Phase progression (last update 2026-05-08, EOD — Phase A foundation 5/5 ✅ SHIPPED)
 
