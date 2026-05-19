@@ -3,7 +3,7 @@ title:
   "Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
   surface infra + doc completion"
 type: design
-status: active
+status: done
 asset_group: cross-cutting
 priority: P0
 created: 2026-05-12
@@ -534,6 +534,23 @@ docs present. Corrected to "6 docs (1 pending Slot 8)" (PM@`f7ded4ef`).
 README Docs column said "10 docs" for Market Making (only 5 exist) and "19 docs" for Vol Trading (only 2 exist). The
 counts reflected archetype targets, not actual files. Corrected to "5 docs (5 pending Slot 8)" and "2 docs (17 pending
 Slot 6/8)" (PM@`f36f2cd4`).
+
+### Item V-12 — 23 missing per-archetype codex docs shipped ✅ SHIPPED 2026-05-19 slot-4
+
+All 23 pending archetype docs written and pushed. README table updated to reflect actual counts.
+
+**Batch 1** (PM@`642014e1`) — 9 Vol Trading docs:
+`vol-arb-rv-iv.md`, `vol-spread-structures.md`, `vol-overlay-covered-calls.md`, `vol-overlay-protective-put.md`,
+`vol-straddle.md`, `vol-synthetic-delta.md`, `vol-market-making.md`, `vol-ml-lean.md`, `vol-0dte-gamma-scalping.md`
+
+**Batch 2** (PM@`6d4011ae`) — 14 docs (8 Vol + 5 MM + 1 Arb):
+`vol-0dte-pin-risk.md`, `vol-term-structure-arb.md`, `vol-term-structure-slope.md`, `vol-dispersion.md`,
+`vol-variance-swap.md`, `vol-leaps-convexity.md`, `vol-cross-asset-spread.md`, `vol-ratio-spread.md`,
+`market-making-passive-spread.md`, `market-making-inventory-skew.md`, `market-making-ml-lean.md`,
+`market-making-queue-microstructure.md`, `market-making-prediction.md`, `arbitrage-cross-domain-event.md`
+
+**README updated** (this commit): Arbitrage `7 docs`, Market Making `10 docs`, Vol Trading `19 docs`, Document Layout
+comment updated to `57 docs — all archetypes documented`. All 57 archetypes now have canonical docs.
 
 ## Composes with
 
