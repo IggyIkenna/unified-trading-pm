@@ -80,7 +80,10 @@ computing borrow_apy correctly.
 
 ## Action items for orchestrator
 
-- [ ] [OPERATOR-DECISION] Confirm COMPOUND_V3 fix priority: which Comet markets to target first?
+- [x] ✅ [OPERATOR-DECISION] Confirm COMPOUND_V3 fix priority: which Comet markets to target first?
+      (backfilled 2026-05-19 slot 2) Decision implicit in implementation at `features-service@f448bb1a`:
+      `_COMPOUND_V3_COMET_TO_TOKEN` targets ETH mainnet WETH/USDC/WBTC + Arbitrum USDC + Polygon USDC.
+      Issue frontmatter `resolved: 2026-05-17` confirms both gaps shipped.
 - [x] [BLOCKED-CREDENTIALS → UNBLOCKED] KAMINO Helius RPC key unblocked 2026-05-15 — `helius-api-key` vaulted; MTDS SA
       granted access. KAMINO handler implementation no longer blocked by credentials; restatus to standard P2 follow-up
       now that the credential is live.
