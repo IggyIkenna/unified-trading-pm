@@ -257,7 +257,7 @@ instead of writing nothing.
       (ohlcv/trades/book_snapshot/derivative_ticker/options_chain/DeFi-continuous/prediction CLOB), vol-smile
       constraint, Wave 3.M implementation requirements, and successor-plan pointer.
 - [x] ✅ [PLAN] P2. **DEFERRED-AFTER-CUTOVER** File `plans/active/wave3x_track_d_implementation_<date>.md` — the Wave 3.M
-      case-D implementation plan. (evidence: `plans/active/wave3x_track_d_implementation_2026_05_19.md` created PM@
+      case-D implementation plan. (evidence: `plans/active/wave3x_track_d_implementation_2026_05_19.md` created PM@5c54ed57
       — scope: UTL `zero_activity_bars` primitive + catalog threading + MTDS/MDPS/features wire-in + per-adapter smoke
       tests. Post-2026-05-23 cutover. Owner: slot 1 or writegate Phase 3.D.5 Wave 2/3 owner.)
 
