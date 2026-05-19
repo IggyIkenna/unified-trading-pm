@@ -102,13 +102,15 @@ todos:
 
   - id: phase-2-per-row-record-failed-orchestrator-refactor
     content: |
-      - [ ] [SCRIPT] P0. **Phase 2 — Per-row schema validation gate at instruments-service orchestrator.** Today
+      - [x] ✅ [SCRIPT] P0. **Phase 2 — Per-row schema validation gate at instruments-service orchestrator.** Today
         `engine/orchestrator.py` venue-shard-wide try/except causes ALL rows to fail when ONE row violates schema.
         Refactor: split each shard into per-row try/except; valid rows → `record_captured`; invalid rows →
         `record_failed(reason=SCHEMA_VALIDATION_FAILED, error_detail={field, expected_type, observed_value})`.
         Same pattern UTL `instruments_write_gate.py` already partially supports. **CLAUDE.md "shard-level failure
         isolation" rule applies** — no `raise` inside per-row loop.
-    status: todo
+        **SHIPPED 2026-05-19 instruments-service@3c2da42**: replaced venue-shard failure with per-record
+        SCHEMA_VALIDATION_FAILED events; venue only added to validation_failed_venues when ALL its records fail.
+    status: done
 
   - id: phase-3-sports-adapter-full-column-capture-audit
     content: |
