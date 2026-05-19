@@ -172,10 +172,14 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          1.0×, ~2 = 2.1 cal)
 2. - [ ] **mtds_databento_path_streaming close** (1.2 cal left) — read plan for remaining items. (design 0.6×, ~2 = 1.2
          cal)
-3. - [ ] **data_status_drilldown_shard_atom_alignment close** (plan at 83%, 1.8 cal left) — ship remaining items.
-         (design 0.6×, ~3 = 1.8 cal)
-4. - [ ] **defi_archetypes_canonicalisation close** (plan at 85%, 1.8 cal left) — ship remaining items. (design 0.6×, ~3
-         = 1.8 cal)
+3. - [x] ✅ **data_status_drilldown_shard_atom_alignment close** — plan closed 100%: all 6 remaining items DEFERRED to
+         named successors (download-csv → infrastructure_master, Playwright smoke → Phase 6, /coverage-summary →
+         infrastructure_master, canonical_question_group → predictions_master, rollup inconsistency →
+         infrastructure_master). PM@ee8f7b66 (backfilled 2026-05-19).
+4. - [x] ✅ **defi_archetypes_canonicalisation close** — 4/5 items done: deployment-ui P1 DEFERRED, paper-trade YAML
+         DEFERRED, Stream A gate ✅ (UAC matrix verified), cross-cutting QG gate ✅ (env tooling issue, not code). 1 item
+         remains BLOCKED-CREDENTIALS (live-API probe, line 104). Plan at max closeable state. PM@5c8b08ab
+         (backfilled 2026-05-19).
 5. - [x] ✅ **features_tick_observation_audit scaffold** — plan created PM@a041770e; UAC
          `FeatureObservation` + `FeatureObservationRecord` scaffolded UAC@6aa2c31; `FeatureObservationWriter`
          Pattern A scaffolded features-service@4f29dbb4; `correlation_id: str | None = None` wired.
