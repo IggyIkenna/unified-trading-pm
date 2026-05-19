@@ -109,19 +109,19 @@ formalises the work as a named-successor per CLAUDE.md "Temporary state must hav
 
 Pick up the deferred wire-ins from pre-cutover plan Phase 3:
 
-- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** `market-tick-data-service` adapters' fetch-result post-processing.
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **3.A MTDS raw-tick overlay.** `market-tick-data-service` adapters' fetch-result post-processing.
       **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 3.A. status: todo
 
-- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** `mdps/engine/orchestrator.py` after honest-absence guard.
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **3.B MDPS feature-layer overlay.** `mdps/engine/orchestrator.py` after honest-absence guard.
       **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 3.B. status: todo
 
-- [ ] [AGENT] P0. **3.C features-\* overlay tap.** `features-service/feature_calculator/<calculator>.py`. **MIGRATED
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **3.C features-\* overlay tap.** `features-service/feature_calculator/<calculator>.py`. **MIGRATED
       FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 3.C. status: todo
 
-- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **MIGRATED FROM:**
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **MIGRATED FROM:**
       simulation_scenarios_topology_price_shocks_2026_05_09 Phase 3.D. status: todo
 
-- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** `unified_trading_library/manifest/writer.py`. **MIGRATED
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **3.G Manifest-layer scenario_id column.** `unified_trading_library/manifest/writer.py`. **MIGRATED
       FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 3.G. status: todo
 
 ### Phase 2 — Full per-asset_group scenario library (P0, ~6 AI-days, parallel sub-agents per asset_group)
@@ -134,7 +134,7 @@ Pick up the deferred wire-ins from pre-cutover plan Phase 3:
 > Pre-cutover plan owns the 6 May-23 critical-path scenarios for `carry_staked_basis` + `leveraged_funding_arb`
 > archetypes; this plan extends the matrix to the broader regression set post-cutover.
 
-- [ ] [AGENT] P0. **4.A CeFi (≥8 scenarios)** — `cefi_tick_gap_15min`, `cefi_funding_spike_10x` (already in
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.A CeFi (≥8 scenarios)** — `cefi_tick_gap_15min`, `cefi_funding_spike_10x` (already in
       pre-cutover), `cefi_venue_circuit_breaker_trip` (already in pre-cutover), `cefi_book_thin`,
       `cefi_perp_basis_inversion`, `cefi_options_chain_partial_strikes`, `cefi_liquidation_cascade`,
       `cefi_funding_settlement_skew`. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase
@@ -142,56 +142,56 @@ Pick up the deferred wire-ins from pre-cutover plan Phase 3:
       `cefi_options_chain_partial_strikes`, `cefi_liquidation_cascade`, `cefi_funding_settlement_skew`. The other 2
       scenarios ship via the pre-cutover plan; this plan only references them for the regression matrix. status: todo
 
-- [ ] [AGENT] P0. **4.B DeFi (≥8 scenarios)** — `defi_oracle_deviation_30sigma` (already in pre-cutover),
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.B DeFi (≥8 scenarios)** — `defi_oracle_deviation_30sigma` (already in pre-cutover),
       `defi_gas_surge_50x` (already in pre-cutover), `defi_liquidity_drain_lending_pool` (already in pre-cutover),
       `defi_lst_depeg_5pct`, `defi_subgraph_lag_60min`, `defi_chain_reorg_5block`, `defi_flash_loan_revert`,
       `defi_aave_utilization_99pct`. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 4.B.
       status: todo
 
-- [ ] [AGENT] P0. **4.C TradFi (≥6 scenarios)** — `tradfi_options_chain_partial_4_of_11_clusters_missing`,
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.C TradFi (≥6 scenarios)** — `tradfi_options_chain_partial_4_of_11_clusters_missing`,
       `tradfi_es_circuit_breaker_l1`, `tradfi_globex_disconnect`, `tradfi_econ_release_volatility_burst`,
       `tradfi_databento_429_burst`, `tradfi_vix_15m_yahoo_gap_extension`. **MIGRATED FROM:**
       simulation_scenarios_topology_price_shocks_2026_05_09 Phase 4.C. status: todo
 
-- [ ] [AGENT] P0. **4.D Sports (4 scenarios)** — `sports_kickoff_delay_60min`, `sports_fixture_cancellation_late`,
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.D Sports (4 scenarios)** — `sports_kickoff_delay_60min`, `sports_fixture_cancellation_late`,
       `sports_lineup_late_publish`, `sports_odds_provider_outage`. **MIGRATED FROM:**
       simulation_scenarios_topology_price_shocks_2026_05_09 Phase 4.D. status: todo
 
-- [ ] [AGENT] P0. **4.E Prediction (4 scenarios)** — `prediction_market_resolve_premature_polymarket`,
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.E Prediction (4 scenarios)** — `prediction_market_resolve_premature_polymarket`,
       `prediction_canonical_question_group_partial_market_set`, `prediction_clob_book_thin`,
       `prediction_settlement_disputed`. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase
       4.E. status: todo
 
-- [ ] [AGENT] P0. **4.F Cross-asset (4 scenarios)** — `cross_asset_correlation_break_btc_eth`,
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **4.F Cross-asset (4 scenarios)** — `cross_asset_correlation_break_btc_eth`,
       `cross_venue_staleness_perp_60s` (already in pre-cutover), `cross_chain_bridge_outage`,
       `cross_archetype_capital_contention`. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09
       Phase 4.F. status: todo
 
 ### Phase 3 — Backtest harness CLI + scenario integration (P0, ~2 AI-days)
 
-- [ ] [AGENT] P0. **6.A Unified backtest CLI flags.** Per `codex/06-coding-standards/cli-convention.md` axes: extend the
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **6.A Unified backtest CLI flags.** Per `codex/06-coding-standards/cli-convention.md` axes: extend the
       backtest CLI with `--scenario <id>`. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09
       Phase 6.A. status: todo
 
-- [ ] [AGENT] P0. **6.B Pipeline wiring.** Backtest entry instantiates `ScenarioContext` from CLI flag + injects into
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **6.B Pipeline wiring.** Backtest entry instantiates `ScenarioContext` from CLI flag + injects into
       pipeline. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 6.B. status: todo
 
 ### Phase 4 — Codex SSOT sweep (P0, ~1 AI-day)
 
-- [ ] [AGENT] P0. **Phase 7 codex updates** — document scenario taxonomy + applier patterns + per-asset_group
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **Phase 7 codex updates** — document scenario taxonomy + applier patterns + per-asset_group
       conventions in `codex/04-architecture/scenario-injection-architecture.md` (NEW) +
       `codex/03-services/simulation-scenarios.md` (NEW) + `codex/02-data/scenario-overlay-write-time-semantics.md`
       (NEW). **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 7. status: todo
 
 ### Phase 5 — DART manual-trade rehearsal with scenario injection (P0, ~2 AI-days)
 
-- [ ] [AGENT] P0. **Phase 8 DART rehearsal** — exercise scenario injection from operator UI; close-loop on
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **Phase 8 DART rehearsal** — exercise scenario injection from operator UI; close-loop on
       manual-approval gate during scenario run. **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09
       Phase 8. status: todo
 
 ### Phase 6 — Full per-archetype regression matrix on real VMs (P0, ~3 AI-days)
 
-- [ ] [AGENT] P0. **Phase 9 full matrix** — every scenario × every archetype (LIVE + BATCH archetypes), real VM runs,
+- [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **Phase 9 full matrix** — every scenario × every archetype (LIVE + BATCH archetypes), real VM runs,
       per-cell pass/fail report. Cell count grows from pre-cutover 12 to ~150-200 (depending on archetype count).
       **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 9. status: todo
 
