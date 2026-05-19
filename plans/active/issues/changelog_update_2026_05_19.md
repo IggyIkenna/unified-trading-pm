@@ -35,7 +35,12 @@ slot-1 main as owner for weekly updates. Adds ~15 min/week of maintenance.
 **Action items (if Option B chosen):**
 
 - [ ] Create `CHANGELOG.md` at repo root following Keep a Changelog format
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
 - [ ] Add weekly update responsibility to `ikenna_orchestrator/LEDGER.md` slot-1 duties
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
 - [ ] Add `CHANGELOG.md` presence check to `quality-gates.sh` STEP 5.7x (codex template update required)
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: conditional on Option B selection; no ack found.
 
 **Current status:** Pending operator decision (A vs B). No blocking impact on May-23 gate.
+Recommended = Option A (do nothing until 1.0.0 graduation). 2026-05-19 slot 2 audit: no operator ack for
+Option B found in _agent_pings.md. Items gated on operator pick.
