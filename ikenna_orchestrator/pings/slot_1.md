@@ -7,7 +7,27 @@
 
 ## [slot 1 main] 2026-05-19 ~13:30 UTC — OPERATOR DECISION REQUEST — ml-service flat-deps rule exception
 
-**Status**: `[BLOCKED-OPERATOR-DECISION]` — needs Ikenna ack before Phase 4 (h) of ml consolidation can proceed.
+**Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
+
+**Rationale (operator)**: live-inference runs on long-lived VMs, not scale-to-zero serverless. Cold-start
+is a one-time cost per VM bringup, not per-prediction. The 55-60% image size win is real but the operational
+cost it would avoid (cold-start latency) mostly doesn't apply to our topology. Rule purity worth more than
+marginal tarball-refresh / GCS-egress savings.
+
+**Applied**:
+- ml-service `pyproject.toml` is flat-deps (35 deps in one list); no optional-dependencies group.
+- ONE Docker image (~1100-1200MB) regardless of `--operation`.
+- Phase 4 (h) of [`ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md)
+  rewritten — no `INFERENCE_ONLY` build-arg, no conditional dep group, regression-cap clause dropped.
+- `codex/04-architecture/ml-service-architecture.md` updated — Docker layer separation section removed,
+  single-image deployment documented.
+- CLAUDE.md `### Dependencies + builds` unchanged — no exception added; flat-deps rule preserved workspace-wide.
+
+---
+
+### Original ping (preserved for audit trail)
+
+**Status**: ~~`[BLOCKED-OPERATOR-DECISION]`~~ — needs Ikenna ack before Phase 4 (h) of ml consolidation can proceed.
 
 **Plan**: [`plans/active/ml_repo_consolidation_2026_05_19.md`](../../plans/active/ml_repo_consolidation_2026_05_19.md) — Phase 0 audit findings, todo #4.
 

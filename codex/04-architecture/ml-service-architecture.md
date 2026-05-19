@@ -15,8 +15,9 @@ last_reviewed: 2026-05-19
 ## TL;DR
 
 Two previously-separate workspace repos consolidated into a single new [`ml-service`](../../../ml-service/) repo
-with sub-packages per surface. ONE Docker image (with conditional training-deps layer to keep the live-inference
-build lean), ONE [`pyproject.toml`](../../../ml-service/pyproject.toml), ONE Health-API aggregator, ONE CLI
+with sub-packages per surface. ONE Docker image (single flat-deps build — see deployment topology section for
+rationale on rejecting the inference-only split), ONE [`pyproject.toml`](../../../ml-service/pyproject.toml),
+ONE Health-API aggregator, ONE CLI
 dispatcher parameterised by `--operation`. Subtree-merged with full per-repo git history preserved. Both
 predecessor repos (`ml-training-service`, `ml-inference-service`) are archived post-merge; new code lands in
 `ml-service` only.
@@ -54,8 +55,8 @@ ml-service/                              # NEW repo
 │       ├── engine/                     # model_loader, orchestrator, schemas
 │       ├── io/                         # I/O handling
 │       └── pre_crash_checkpoint.py     # recovery mechanism
-├── pyproject.toml                      # ONE flat dependency list (conditional training deps via build flag)
-├── Dockerfile                          # ONE image with build-arg INFERENCE_ONLY={true,false}
+├── pyproject.toml                      # ONE flat [project.dependencies] list (~35 deps; no extras)
+├── Dockerfile                          # ONE image (~1.2GB; flat-deps build; no conditional layers)
 ├── scripts/{training,inference}/
 └── tests/{training,inference}/
 ```
@@ -94,17 +95,19 @@ level). Per-surface sub-bootstraps available for granular kill-switch routing �
 consolidates the 2 source repos' patterns into a single dispatcher (model-promotion + training-complete +
 prediction-emitted event types).
 
-## Deployment topology + Docker layer separation
+## Deployment topology
 
-Live-inference Docker image must NOT carry the full training deps (sklearn / xgboost / lightgbm / optuna /
-shap). Approach:
+ONE Docker image, ~1100-1200MB, identical regardless of `--operation`. Built from a single flat
+`[project.dependencies]` list (~35 deps). NO conditional dep groups, NO `INFERENCE_ONLY` build-arg.
 
-- `pyproject.toml`: `[project.optional-dependencies] training = [...]` (closed set of heavy deps);
-  `[project.dependencies]` carries only inference + shared deps
-- `Dockerfile`: `ARG INFERENCE_ONLY=false`; conditional `RUN uv pip install ml-service[training]` when false
-- Build matrix: `ml-service:<sha>` (training-capable) + `ml-service-inference:<sha>` (inference-only)
-- Image-size gate: live-inference image regression vs ml-inference-service pre-merge baseline must be <30%
-  (Phase 4 (h) gate in the consolidation plan)
+**Decision rationale (operator pick 2026-05-19, Option 2)**: a conditional training-deps split would have
+produced a ~400-500MB live-inference image (55-60% leaner) at the cost of carving an exception in the
+workspace flat-deps rule (CLAUDE.md `### Dependencies + builds`). The size win was considered against the
+deployment topology — live-inference runs on long-lived VMs (`launch-ml-vm.sh` per asset-group flavor), not
+scale-to-zero serverless. Cold-start is a one-time cost per VM bringup, not per-prediction. The image-pull
+delta (~700MB extra at deploy time, multiplied across the VM fleet × redeploy cadence) was deemed less
+operationally significant than preserving rule purity. **Result**: flat-deps rule unchanged workspace-wide;
+ml-service carries training deps it doesn't import at inference time; no Phase 6 image-size regression gate.
 
 ## Launcher + Cloud Build
 
@@ -150,8 +153,10 @@ strategy-service is also a consumer.
   driven by operational topology + shared model registry + shared UAC contracts.
 - Do NOT add asset-group-specific training / inference variants. `--asset-group` is a CLI axis, not a
   package-layout axis.
-- Do NOT bloat the live-inference Docker image with training deps. Use the `INFERENCE_ONLY` build-arg path;
-  Phase 4 (h) gate enforces this.
+- Do NOT introduce `[project.optional-dependencies]` to split training vs inference deps. Operator picked the
+  flat-deps path 2026-05-19 (Option 2) — single image, no conditional layers. See deployment topology section
+  for rationale. The 55-60% inference-image-size win does NOT justify carving a workspace flat-deps exception
+  given live-inference's long-lived VM topology (cold-start mostly N/A).
 - Do NOT define event taxonomies locally in `ml_service/training/` etc. — all event types live in UAC under
   `unified_api_contracts.canonical.crosscutting.lifecycle` or `unified_api_contracts.domain.ml`.
 - Do NOT couple training output rows directly to inference input rows in-process. Continue going through the

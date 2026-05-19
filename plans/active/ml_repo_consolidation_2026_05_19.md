@@ -188,10 +188,13 @@ todos:
         (g) run `bash scripts/quality-gates.sh` in ml-service — STEP 5.61 ServiceBootstrap, STEP 5.62
             api/main.py + make_health_router, STEP 5.34 typed config_reloaders, STEP 5.66 per-VM shard isolation,
             STEP 5.69 bucket-name SSOT must all pass;
-        (h) **Docker layer separation** for inference-vs-training image weight: introduce conditional dep group
-            (e.g. `[project.optional-dependencies] training = [...]`) so production live-inference Docker can build
-            without sklearn/xgboost/optuna stack. Update Dockerfile build args accordingly. Verify image size
-            regression vs ml-inference-service baseline is <30%.
+        (h) **Single flat-deps Docker image** (operator decision 2026-05-19, Option 2 — hold the flat-deps line):
+            ONE `pyproject.toml` with one flat `[project.dependencies]` list (35 deps); ONE Docker image
+            (~1100-1200MB) regardless of `--operation`. NO conditional dep group, NO `INFERENCE_ONLY` build-arg.
+            Rationale: live-inference runs on long-lived VMs (not scale-to-zero serverless); cold-start is a
+            one-time cost per VM bringup, not per-prediction. 55-60% size win would not buy a meaningful
+            operational benefit on this topology. Flat-deps rule per CLAUDE.md `### Dependencies + builds`
+            preserved workspace-wide; no exceptions added. Image-size regression cap removed from Phase 6 parity.
     status: todo
     blocked_by: phase-3-subtree-merge
 
@@ -269,8 +272,9 @@ todos:
         (a) **NEW** `codex/04-architecture/ml-service-architecture.md` — full SSOT covering: 2 sub-packages
             (training + inference), CLI dispatch keyed by `--operation`, Health-API aggregator, model registry +
             promotion topology, feature-subscriber/prediction-publisher pub-sub wiring, ServiceBootstrap
-            consolidation, deployment topology (single VM per asset-group × operation flavor with conditional
-            training-deps Docker layer per Phase 4 (h)), migration history cross-link, anti-patterns.
+            consolidation, deployment topology (single VM per asset-group × operation flavor with single
+            flat-deps Docker image per operator decision 2026-05-19 Option 2), migration history cross-link,
+            anti-patterns.
         (b) **UPDATE** `codex/00-SSOT-INDEX.md` — register new architecture page; drop 2 archived repos.
         (c) **UPDATE** `codex/02-data/README.md` — ML data lineage now references `ml-service` (was 2 repos).
         (d) **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — promote workflow references
@@ -344,7 +348,7 @@ strategy twin** (only 2 source repos, smaller surface, simpler import audit). Ri
 | Risk                                                                                            | Mitigation                                                                                                                    |
 | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Phase 6 parity slips on numerical-equality gate (sklearn/xgboost determinism varies by version) | Strict seed pinning; deterministic-mode flags on libraries; tolerance bump to model-metric equality vs byte-identical weights |
-| Live-inference Docker image bloat from training deps                                            | Phase 4 (h) conditional dep group + Dockerfile build-arg separation; size regression gate <30% vs baseline                    |
+| Live-inference Docker image bloat from training deps                                            | RESOLVED 2026-05-19 — operator picked Option 2 (hold flat-deps); single ~1.2GB image accepted (cold-start cost mostly N/A for long-lived VM topology) |
 | Model registry pub-sub topic-rename window                                                      | Phase 0 (h) + Phase 4 atomic — topic-rename in single deploy, publishers + subscribers updated in lockstep                    |
 | Operator delay on `gh repo create ml-service` blocks Phase 2                                    | Phase 2 is gated [HUMAN+AGENT]; agent pings via `_agent_pings.md` immediately on Phase 1 completion                           |
 | Hidden cross-repo import surfaces Phase 0 misses                                                | Same as strategy twin — exhaustive grep + Phase 4 (g) verification                                                            |
@@ -386,8 +390,10 @@ Pre-audit artifact:
   SAME literal in training publisher + inference subscriber. `CASCADE_TOPIC_NAME = "cascade_predictions"` matches
   across inference publisher + strategy-service subscriber. **Plan Phase 4 (b) atomic-sequencing concern DEMOTED
   from CRITICAL to LOW-RISK**.
-- **dep-set size win for split is bigger than estimated**: inference-only Docker image ~400-500MB vs flat-union
-  ~1100-1200MB → ~55-60% leaner (vs the plan's <30% regression cap). Achievable ONLY with the split.
+- **dep-set size win for split was bigger than estimated** (~55-60% leaner inference image) BUT operator picked
+  Option 2 (hold flat-deps line) 2026-05-19: live-inference runs on long-lived VMs, not scale-to-zero serverless,
+  so cold-start savings are marginal. Single flat-deps image (~1.2GB) accepted. Image-size regression cap
+  dropped from Phase 6.
 
 ### New todos (P0/P1 cutover-critical, P2/P3 nice-to-have)
 
@@ -396,13 +402,16 @@ Pre-audit artifact:
   same name, same package). Rename the `io/loader.py:24` symbol to `IoFeatureSubscriber` BEFORE Phase 3
   subtree-merge OR during Phase 4 (a) import-rewrite sweep. Otherwise the merged `ml_service.inference.*`
   package has ambiguous symbols.
-- [ ] **P1 [BLOCKED-OPERATOR-DECISION]** [HUMAN] Phase 4 (h) conditional-deps split
-  (`[project.optional-dependencies] training = [...]`) violates workspace "flat deps only" rule (CLAUDE.md
-  `### Dependencies + builds`). Operator must explicitly sanction ml-service as the workspace-wide exception OR
-  rule out the split. **Operator ping filed** in `ikenna_orchestrator/pings/slot_1.md` 2026-05-19. Default
-  recommendation: SANCTION the exception — 55-60% inference-image-size reduction is operationally significant
-  for live-inference cold-start latency; flat-deps rule rationale (predictable dep resolution) is preserved by
-  the `[project.dependencies]` being flat + the optional-group being closed-set.
+- [x] **P1 [RESOLVED 2026-05-19]** [HUMAN] Phase 4 (h) conditional-deps split decision — operator picked
+  **Option 2 (hold the flat-deps line)** 2026-05-19. Rationale: live-inference runs on long-lived VMs, not
+  scale-to-zero serverless; cold-start is a one-time cost per VM bringup, not per-prediction. 55-60% image-size
+  reduction would not buy meaningful operational benefit on this topology. Single flat-deps `pyproject.toml`
+  (35 deps flat), single ~1.2GB Docker image regardless of `--operation`. CLAUDE.md flat-deps rule preserved
+  workspace-wide; no exceptions added. Ping at `ikenna_orchestrator/pings/slot_1.md` updated to RESOLVED.
+  Original recommendation was Option 1 (sanction the exception) on cold-start latency grounds, but that
+  argument overweighted a cost that mostly doesn't apply to our long-lived VM topology; operator pushback
+  was correct on cost-benefit. Plan Phase 4 (h) rewritten + risk-register entry marked RESOLVED + codex stub
+  `ml-service-architecture.md` updated to remove Docker layer separation section.
 - [ ] **P1** [AGENT] Phase 5 lift — `pre_crash_checkpoint.py` (`register_pre_crash_handlers()`,
   `_memory_watchdog()`) currently only in inference repo. Cross-cutting utility — lift to UTL
   `unified_trading_library.lifecycle.pre_crash`. Every service benefits.
