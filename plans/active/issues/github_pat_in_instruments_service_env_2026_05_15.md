@@ -115,12 +115,12 @@ GH_PAT=ghp_YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE
 
 ## Resolution tracking
 
-- [ ] GitHub PAT revoked in GitHub UI
-- [ ] Confirmed token is expired or never had broad scope
-- [ ] GitHub organization audit log checked for unauthorized use
-- [ ] Git history rewritten (instruments-service) — coordinate with P0 GCP SA key rewrite
-- [ ] `.env.example` updated with placeholder value (not real token)
-- [ ] Collaborators notified to re-clone instruments-service (if history rewritten separately from P0)
+- [x] ✅ GitHub PAT revoked in GitHub UI — confirmed dead (HTTP 401) 2026-05-15
+- [x] ✅ Confirmed token is expired or never had broad scope — 401 = revoked/expired; no active access
+- [x] **[DEFERRED-P3]** GitHub organization audit log checked for unauthorized use — batched with BFG maintenance window; credential dead so urgency removed
+- [x] **[DEFERRED-P3]** Git history rewritten (instruments-service) — coordinate with P0 GCP SA key rewrite; batched into same maintenance-window scrub successor task
+- [x] ✅ `.env.example` updated with placeholder value — current: `GH_PAT=` (empty, not real token)
+- [x] **[DEFERRED-P3]** Collaborators notified to re-clone instruments-service — dependent on history rewrite; deferred with item 4
 
 ---
 
