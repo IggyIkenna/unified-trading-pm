@@ -56,15 +56,15 @@ early.
 
 **Reassignment table** (slots 3-9; slot 1 + slot 2 unchanged):
 
-| Slot | Reassigned theme                                                                                        | Plan                        | Phases      | Cal AI-days | Depends on      |
-| ---- | ------------------------------------------------------------------------------------------------------- | --------------------------- | ----------- | ----------- | --------------- |
-| 3    | strategy: pyproject conflict resolution → UAC/UTL schema prep → in-place scaffold                       | strategy_repo_consolidation | 0.5 / 1 / 2 | ~2          | —               |
-| 4    | strategy: subtree-merge + import-rewrite (colocated_engine.py FIRST — May-23 critical-path consumer)    | strategy_repo_consolidation | 3 / 4       | ~4          | slot 3 Phase 2  |
-| 5    | strategy: UTL lifts — `ConfigReloaderBase` (4× ~688 LOC) + `KillSwitchBusSubscriberBase` (4× ~80 LOC)   | strategy_repo_consolidation | 5           | ~2          | slot 4 Phase 4  |
-| 6    | strategy: Phase 6 parity (boot + QG + functional) → Phase 7 archive 3 source repos                      | strategy_repo_consolidation | 6 / 7       | ~2          | slot 4 Phase 4  |
-| 7    | strategy: Phase 8A deployment-service sweep (~90 hits, Terraform destroy/apply sequencing)              | strategy_repo_consolidation | 8A          | ~3          | slot 6 Phase 7  |
-| 8    | **ML consolidation full plan** (single-slot ownership, all 10 phases — reassigned 2026-05-19 ~15:30 UTC from slot 9; slot 8 already shipped Phase 0+1 organically) | ml_repo_consolidation       | 0–10        | ~6          | —               |
-| 9    | 🟢 **STANDING DOWN** — slot not booted today (operator opened only 8 slots). Worktree reset to LDR + ml-service worktree provisioned (`tab/ikennaigboaka/9`). Available for future boot. | —                          | —           | —           | —               |
+| Slot | Reassigned theme                                                                                                                                                                         | Plan                        | Phases      | Cal AI-days | Depends on     |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------- | ----------- | -------------- |
+| 3    | strategy: pyproject conflict resolution → UAC/UTL schema prep → in-place scaffold                                                                                                        | strategy_repo_consolidation | 0.5 / 1 / 2 | ~2          | —              |
+| 4    | strategy: subtree-merge + import-rewrite (colocated_engine.py FIRST — May-23 critical-path consumer)                                                                                     | strategy_repo_consolidation | 3 / 4       | ~4          | slot 3 Phase 2 |
+| 5    | strategy: UTL lifts — `ConfigReloaderBase` (4× ~688 LOC) + `KillSwitchBusSubscriberBase` (4× ~80 LOC)                                                                                    | strategy_repo_consolidation | 5           | ~2          | slot 4 Phase 4 |
+| 6    | strategy: Phase 6 parity (boot + QG + functional) → Phase 7 archive 3 source repos                                                                                                       | strategy_repo_consolidation | 6 / 7       | ~2          | slot 4 Phase 4 |
+| 7    | strategy: Phase 8A deployment-service sweep (~90 hits, Terraform destroy/apply sequencing)                                                                                               | strategy_repo_consolidation | 8A          | ~3          | slot 6 Phase 7 |
+| 8    | **ML consolidation full plan** (single-slot ownership, all 10 phases — reassigned 2026-05-19 ~15:30 UTC from slot 9; slot 8 already shipped Phase 0+1 organically)                       | ml_repo_consolidation       | 0–10        | ~6          | —              |
+| 9    | 🟢 **STANDING DOWN** — slot not booted today (operator opened only 8 slots). Worktree reset to LDR + ml-service worktree provisioned (`tab/ikennaigboaka/9`). Available for future boot. | —                           | —           | —           | —              |
 
 **NOTE on strategy Phase 9 + 10** (codex sweep + workspace QG): previously assigned to slot 8 before ML reassignment.
 Now PENDING — slot 1 main will dispatch in next reallocation pass (likely slot 3 once Phase 0.5+1+2 ships, or slot 6
@@ -205,8 +205,8 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          {instrument_id}.parquet rename) implemented + 50 tests green + dry-run verified (ohlcv_legacy_filename=1
          detected on real CeFi data). PM@`916742464`. Phase 3 fleet first launched 11:23 UTC, crashed on
          `gcloud    storage ls` (no prefix-match support for hive paths); relaunched 11:58 UTC with fix:
-         `gsutil ls -r    **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.    31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`
-         (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.
+         `gsutil ls -r    **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.    31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`   (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.    **+Phase 7.6 (operator-directed follow-on)** ✅ UTL`gcs_blob_ops.py`helpers shipped —   `unified-trading-library@63f6ebc7`+`unified-trading-pm@253ad8cbb`(2026-05-19). Migration script    refactored to use UTL gcs_copy_object/gcs_delete_object/gcs_describe_object instead of inline GCS client.    New codex doc`codex/05-infrastructure/gcs-object-operations.md` +
+         CLAUDE.md rule added. 250× perf gain.
 
 **RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per
 [`pings/slot_3.md`](../../ikenna_orchestrator/pings/slot_3.md))**:
@@ -218,8 +218,8 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 10. - [x] ✅ **code_freeze GAP-2.4.A + Phase 2.4 cross-cloud parity audit** — verify aws_migration_defi_first writes use
           UAC `resolve_bucket_name()` SSOT; build cross-cloud parity matrix per DeFi data_type (🟢/🟡/🔴); sweep
           GAP-2.4.B/C/D pre-readiness checklist. Audit + write-only this session (do NOT run migrations). Runs in
-          parallel with Phase 3 VM monitoring. (research 1.2×, ~8 baseline = ~9.6 cal AI-days)
-          — ✅ PM@30b2ce193; 8/8 DeFi data_types cross-cloud parity 🟢 clean; GAP-2.4.A flipped in code_freeze plan (backfilled 2026-05-19)
+          parallel with Phase 3 VM monitoring. (research 1.2×, ~8 baseline = ~9.6 cal AI-days) — ✅ PM@30b2ce193; 8/8
+          DeFi data_types cross-cloud parity 🟢 clean; GAP-2.4.A flipped in code_freeze plan (backfilled 2026-05-19)
 
 **Part B — batch_live_symmetry Tabs 1–3** (plan at 34%, 19.7 cal left):
 
@@ -386,9 +386,9 @@ Status, Logs, Strategy, Kill-switch, Config.
 9. - [x] ✅ **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
          experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
          cal) — PM@2816975af (done by slot 6 itself, backfilled 2026-05-19)
-10. - [x] ✅ **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with Cloud
-          Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI pattern.
-          Operator-runnable. (design 0.6×, ~3 = 1.8 cal) — deployment-service@10fddb6
+10. - [x] ✅ **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with
+          Cloud Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI
+          pattern. Operator-runnable. (design 0.6×, ~3 = 1.8 cal) — deployment-service@10fddb6
 11. - [x] ✅ **G.2 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md` with exact
           `gcloud run deploy` / `firebase deploy` sequence + per-axis verification checklist. (design 0.6×, ~2 = 1.2
           cal) — deployment-service@10fddb6
@@ -462,27 +462,27 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 > **🔴 THEME DISPLACED + REASSIGNED 2026-05-19 ~15:30 UTC** — Slot 8 NEW theme is now **ml_repo_consolidation FULL
 > PLAN** (~6 cal-AI-days, all 10 phases, single-slot ownership). Slot 8 already shipped Phase 0 + Phase 1 organically
 > (commits [`1113ffee9`](https://github.com/IggyIkenna/unified-trading-pm/commit/1113ffee9) Phase 1 schema-prep done,
-> [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80) BLOCKED-OPERATOR on Phase 2)
-> while my earlier dispatch had ML on slot 9. Phase 2 (`gh repo create IggyIkenna/ml-service`) UNBLOCKED 2026-05-19
-> ~15:09 UTC by slot 1 main + worktree provisioned at `.tabs/8/ml-service` on `tab/ikennaigboaka/8`. Slot 8
-> proceeds with Phase 2 (b-i) bootstrap next.
+> [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80) BLOCKED-OPERATOR on Phase 2) while my
+> earlier dispatch had ML on slot 9. Phase 2 (`gh repo create IggyIkenna/ml-service`) UNBLOCKED 2026-05-19 ~15:09 UTC by
+> slot 1 main + worktree provisioned at `.tabs/8/ml-service` on `tab/ikennaigboaka/8`. Slot 8 proceeds with Phase 2
+> (b-i) bootstrap next.
 >
-> **Plan**: [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md).
-> **Pre-audit**: [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
-> **Decisions already taken**: Phase 4 (h) = single flat-deps Docker (operator picked Option 2 2026-05-19);
-> Phase 0.5 (FeatureSubscriber → IoFeatureSubscriber rename) = DONE in `ml-inference-service@042c41d`.
+> **Plan**: [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md). **Pre-audit**:
+> [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
+> **Decisions already taken**: Phase 4 (h) = single flat-deps Docker (operator picked Option 2 2026-05-19); Phase 0.5
+> (FeatureSubscriber → IoFeatureSubscriber rename) = DONE in `ml-inference-service@042c41d`.
 >
 > Slot 8's **previous** strategy-twin Phase 9+10 assignment (codex sweep) is REASSIGNED to whichever slot picks it up
 > after their strategy consolidation work clears (likely slot 3 once Phase 0.5+1+2 ships, or slot 6 after Phase 7
 > archive). Slot 1 main will dispatch in next reallocation pass.
 >
-> **PREVIOUS BANNER (deferred reassignment context — strategy Phase 9+10 codex sweep)** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** — codex
-> SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new `strategy-service-architecture.md` already
-> stub-created, register in `00-SSOT-INDEX.md`, update `promote-workflow-architecture.md`, `launcher-script-ssot.md`,
-> `vm-tarball-deployment.md`, `cli-convention.md`, `cli-promote-paths.md`, and bulk-rewrite ~150 incidental
-> codex/cursor-configs refs to the 3 source repo names). Phase 10 = workspace QG sweep + cross-plan banner cleanup +
-> inventory regenerator + final commit sweep. ~2 cal-AI-days. Blocked-on: slot 7 Phase 8A complete (Terraform must be
-> applied before codex docs reference new launcher topology).
+> **PREVIOUS BANNER (deferred reassignment context — strategy Phase 9+10 codex sweep)** — Slot 8 NEW theme:
+> **strategy_repo_consolidation Phase 9 + 10** — codex SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new
+> `strategy-service-architecture.md` already stub-created, register in `00-SSOT-INDEX.md`, update
+> `promote-workflow-architecture.md`, `launcher-script-ssot.md`, `vm-tarball-deployment.md`, `cli-convention.md`,
+> `cli-promote-paths.md`, and bulk-rewrite ~150 incidental codex/cursor-configs refs to the 3 source repo names). Phase
+> 10 = workspace QG sweep + cross-plan banner cleanup + inventory regenerator + final commit sweep. ~2 cal-AI-days.
+> Blocked-on: slot 7 Phase 8A complete (Terraform must be applied before codex docs reference new launcher topology).
 
 **Part A — defi_catalogue_chain_primitives** (plan at 87%, 27.2 cal left):
 
@@ -522,12 +522,13 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 ### Slot 9 — batch_live_symmetry Tabs 4–7 + cme_polymarket_arb + promote_workflow_may23 — ~31 cal AI-days
 
-> **🟢 STANDING DOWN 2026-05-19 ~15:30 UTC** — Slot 9 not booted today (operator opened only 8 slots). ML
-> consolidation theme **REASSIGNED to slot 8** (organic pickup: slot 8 shipped Phase 0 + Phase 1 before reassignment
-> was formalised — see slot 8 commits [`1113ffee9`](https://github.com/IggyIkenna/unified-trading-pm/commit/1113ffee9)
-> + [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80)). Slot 9 worktree provisioned
-> for ml-service + reset to LDR (`tab/ikennaigboaka/9`); ready for future boot if needed. Previous "🔴 THEME
-> DISPLACED" banner content (~6 cal-AI-days ML full-plan dispatch) moved to slot 8 — see Slot 8 section.
+> **🟢 STANDING DOWN 2026-05-19 ~15:30 UTC** — Slot 9 not booted today (operator opened only 8 slots). ML consolidation
+> theme **REASSIGNED to slot 8** (organic pickup: slot 8 shipped Phase 0 + Phase 1 before reassignment was formalised —
+> see slot 8 commits [`1113ffee9`](https://github.com/IggyIkenna/unified-trading-pm/commit/1113ffee9)
+>
+> - [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80)). Slot 9 worktree provisioned for
+>   ml-service + reset to LDR (`tab/ikennaigboaka/9`); ready for future boot if needed. Previous "🔴 THEME DISPLACED"
+>   banner content (~6 cal-AI-days ML full-plan dispatch) moved to slot 8 — see Slot 8 section.
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 
