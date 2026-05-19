@@ -113,9 +113,10 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
 
 Quality gates enforce schema placement:
 
-- **UAC external/canonical** (`scripts/check_schema_organization.py`): Schemas in `unified_api_contracts/schemas/` must
-  be used in at least one of: `unified_api_contracts/canonical/normalize/`, `unified_api_contracts/external/`, or
-  `tests/`. If not used, the schema is internal-only and should live in `unified_api_contracts.internal`.
+- **UAC external/canonical** (`scripts/check_schema_organization.py`): Schemas in `unified_api_contracts/canonical/domain/` or
+  `unified_api_contracts/canonical/crosscutting/` must be used in at least one of: `unified_api_contracts/normalize_utils/`,
+  `unified_api_contracts/external/`, or `tests/`. If not used, the schema is internal-only and should live in
+  `unified_api_contracts.internal`.
 - **UAC internal** (`scripts/check_schema_organization.py`): Domain schemas under `internal/domain/<service-name>/`;
   imports from `unified_api_contracts.canonical` only.
 - **Other repos** (`unified-trading-pm/scripts/validation/check_schema_provenance.py`): Local
