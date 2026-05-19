@@ -134,20 +134,22 @@ workspace port registry. The Vite dev server for the dashboard is always on `:51
 
 ## Slack notifications
 
-Implemented in `server/notifications/slack.py` (shipped `agent-orchestrator@ceaaefe`). Three async
-functions post to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (GCP Secret Manager, `central-element-323112`):
+Module `server/notifications/slack.py` (P1: `agent-orchestrator@ceaaefe`). Three async functions
+post to `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (GCP Secret Manager, `central-element-323112`):
 
-| Function               | Event                  | Slack emoji         |
-| ---------------------- | ---------------------- | ------------------- |
-| `notify_slot_blocked`  | slot transitions → blocked | `:octagonal_sign:` |
-| `notify_slot_stale`    | slot silent > threshold  | `:warning:`         |
-| `notify_slot_failed`   | slot transitions → failed  | `:x:`               |
+| Function               | Wired in                               | Event                        | Slack emoji          |
+| ---------------------- | -------------------------------------- | ---------------------------- | -------------------- |
+| `notify_slot_blocked`  | `server/server.py:blocked_slot`        | slot transitions → blocked   | `:octagonal_sign:`   |
+| `notify_slot_stale`    | `server/health.py:HealthMonitor.check_once` (working-stale pass) | slot silent > 25 min | `:warning:` |
+| `notify_slot_failed`   | `server/health.py:HealthMonitor.check_once` (idle-stale pass)    | idle worker heartbeat loop dead | `:x:` |
 
-**Non-fatal failure pattern** — every call site wraps in `try/except Exception: pass`. A Slack
-outage or missing webhook URL never propagates to the server process.
+Wiring shipped at `agent-orchestrator@eea2f69`.
 
-**No-op in local dev** — if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is empty or unset, all three
-functions return immediately. No mock or stub needed; tests patch `_WEBHOOK_URL` directly.
+**Non-fatal failure pattern** — every call site wraps in `contextlib.suppress(Exception)`. A Slack
+outage or missing webhook URL never propagates to the server process or health monitor.
+
+**No-op in local dev** — if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is empty or unset, `_post()` returns
+immediately. No mock or stub needed; tests patch `_WEBHOOK_URL` directly.
 
 **Secret inventory** (all in Secret Manager):
 
