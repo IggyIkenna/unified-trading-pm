@@ -316,6 +316,10 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Verification**:
     `aws iam list-roles --query 'Roles[?starts_with(RoleName, \`uts-\`)].RoleName'`lists every service's role;`aws iam
     list-attached-role-policies --role-name <role>` matches the yaml.
+  - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-iam-roles.sh` shipped upstream (deployment-service
+    LDR ~2026-05-19). Script covers role creation but `aws_iam_roles.yaml` SSOT config file not yet created.
+    Remaining: (a) create `configs/aws_iam_roles.yaml` from script definitions; (b) run with `--apply` flag via
+    `aws` CLI. **[BLOCKED-AWS-CLI]** — `aws` CLI not installed in dev env; needs operator install + `aws sso login`.
 
 - [ ] [SCRIPT] P0. **1.C — ECR setup + dual-cloud image push.** Create ECR repository per service in `ap-northeast-1`.
       Update `cloudbuild.yaml` + `buildspec.aws.yaml` to push the same image to both
@@ -323,8 +327,11 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
       `427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/...:latest`.
   - **Verification**: `aws ecr describe-repositories --region ap-northeast-1 | jq '.repositories | length'` matches GCP
     Artifact Registry repository count; `docker pull` succeeds from both endpoints with the same digest.
+  - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-ecr-repos.sh` already existed. `buildspec.aws.yaml`
+    updated upstream. Remaining: run `setup-ecr-repos.sh --apply` + verify dual-push in cloudbuild.yaml.
+    **[BLOCKED-AWS-CLI]** — same blocker as 1.B.
 
-- [ ] [SCRIPT] P0. **1.D — AWS S3 non-DeFi bucket parity.** Extend `deployment-service/configs/bucket_config.yaml`
+- [x] [SCRIPT] P0. **1.D — AWS S3 non-DeFi bucket parity.** Extend `deployment-service/configs/bucket_config.yaml`
       `infrastructure_buckets.aws` (currently DeFi-only at line 232) with CeFi / TradFi / sports / prediction entries
       mirroring the GCP set. Apply via `setup-buckets.py` (whatever name the existing script has). Run cross-cloud
       `gcloud storage rsync gs://<bucket> s3://<bucket>` for each historical-data bucket per Tab 4 2026-05-08 DeFi
@@ -332,6 +339,9 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Verification**:
     `aws s3 ls --region ap-northeast-1 | grep -E "unified-trading-(market-data|sports|prediction|tradfi)"` returns
     expected bucket count; sample-read returns expected rows.
+  - **DONE** — deployment-service@`e2e2fef` 2026-05-19 slot 2: added 10 non-DeFi entries (cefi×2, tradfi×2, sports×2,
+    prediction×2 + upstream Databento tradfi×2); 33 total AWS infrastructure_buckets. Config parity achieved;
+    `provision-aws-buckets.sh --apply` (upstream-shipped) will create buckets when `aws` CLI available.
 
 - [ ] [SCRIPT] P0. **1.E — AWS Secrets Manager replication.** For every secret in GCP Secret Manager, create an AWS
       Secrets Manager equivalent in `ap-northeast-1`. Naming convention codified in
@@ -340,20 +350,27 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
       round-trips through AWS Secrets Manager (Block H7 caveat: AWS half may be more stub than thought).
   - **Verification**: every credential listed in Phase 9.A `credentials-matrix.md` exists in BOTH GCP Secret Manager AND
     AWS Secrets Manager; `UnifiedCloudConfig(provider="aws").get_secret(<name>)` returns expected value.
+  - **[BLOCKED-AWS-CLI]** 2026-05-19 slot 2: no replication script exists yet; needs `aws secretsmanager` CLI.
+    Script scaffolding needed + `aws` CLI install + `aws sso login`. Operator: install `awscli` in dev env.
 
 - [ ] [SCRIPT] P1. **1.F — AWS SNS/SQS + EventBridge mirroring.** Create AWS SNS topic + SQS subscription + DLQ per GCP
       Pub/Sub topic. Create AWS EventBridge rule per Cloud Scheduler job. Cross-cloud event routing not in scope for
       May-23 — mirror is sufficient.
   - **Verification**: `aws sns list-topics` count matches `gcloud pubsub topics list` count; `aws events list-rules`
     matches `gcloud scheduler jobs list`.
+  - **[BLOCKED-AWS-CLI]** 2026-05-19 slot 2: P1 — not blocking May-23 critical path. Needs `aws sns/events` CLI.
+    Unblocks after 1.B + 1.E (IAM + SM) land.
 
 - [ ] [AGENT] P1. **1.G — Per-VM-launcher AWS-EC2 equivalents.** Per VM-launcher-SSOT rule, every
       `gcloud compute instances create` script under `deployment-service/scripts/vm/launch-*-vm.sh` needs an AWS twin
       `launch-*-vm-aws.sh` using `aws ec2 run-instances`. Add AWS-side `VM_PREFIX_TO_BUCKET` registry equivalent in
       `deployment-service/scripts/vm/vm_zombie_watchdog_aws.py`.
+  - **[BLOCKED-AWS-CLI]** 2026-05-19 slot 2: P1; scripts can be authored but need `aws ec2` CLI for validation.
+    ~40+ launch scripts to twin; significant scope. Candidate for DEFERRED-POST-CUTOVER with operator ack.
 
 - [ ] [AGENT] P1. **1.H — Cross-cloud Workload Identity Federation.** GCP SA assumes AWS IAM role for services spanning
       both clouds (per `aws-iam-matrix.md`). Configure trust policy on AWS roles + WIF pool on GCP project.
+  - **[BLOCKED-AWS-CLI]** 2026-05-19 slot 2: P1; gated on 1.B (IAM roles must exist first). Needs aws CLI + gcloud.
 
 **Phase 1 done definition** (full-execution criterion):
 
@@ -375,6 +392,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       read-only / trade / withdraw sub-keys. Pin VM egress IPs to whitelist per scope where venue supports it. Provision
       into Secret Manager paths defined by Phase 0.D `secret-manager-naming.md`:
       `<venue>-<scope>-{api-key,api-secret,passphrase}`.
+  - **[BLOCKED-OPERATOR]** 2026-05-19 slot 2: [HUMAN]-tagged; manual operator web-UI flow per venue. Agent cannot
+    provision venue sub-keys. Operator must complete before May-23 cutover.
 
 - [x] [AGENT] P0. **2.B — Native adapter build for 6 venues.** Replace CCXT pass-through with native REST + WS clients
       for: Bybit, Binance, OKX, Kraken, Bitfinex, Bitget. Pattern: factor common HMAC + rate-limit + reconnection logic
