@@ -257,8 +257,11 @@ per workspace HARD RULE.
   Original: Track actual Databento PAYG spend per VM run; emit `DATABENTO_PAYG_SPEND` event from each VM at completion
   (USD spend per dataset-month-symbol). Roll up to a single dashboard row in deployment-ui.
 
-- [ ] [HUMAN] P0. Operator sign-off on actual spend vs projected (~$50-200 estimated for the full 2019-2026 ohlcv_1m
-      backfill across CME/ICE/NASDAQ/NYSE — projection refined post-Phase 7).
+- [ ] [HUMAN] [BLOCKED-OPERATOR-DECISION — pinging operator] P0. Operator sign-off on actual spend vs projected
+      (~$50-200 estimated for the full 2019-2026 ohlcv_1m backfill across CME/ICE/NASDAQ/NYSE). Drain completed
+      2026-05-17 ~14:00 UTC: 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed. DATABENTO_PAYG_SPEND
+      events emitted (MTDS@1b0a207) but GCS event stream search shows early VMs (pre-10:05 UTC) pre-date emission
+      code ship — actual spend requires Databento billing portal query. Ping in slot_7.md 2026-05-19.
 
 ### Phase 9 — Spawn successor plan for L1-L3 post-cutover
 
@@ -270,7 +273,7 @@ per workspace HARD RULE.
 
 ## Pending operator decisions
 
-- [ ] **[OPERATOR-DECISION] P1. ICE roots pick for `launch-tradfi-bf-ice-ohlcv-1m.sh`**. Scaffolding ships with empty
+- [ ] **[OPERATOR-DECISION] [BLOCKED-OPERATOR-DECISION — pinging operator] P1. ICE roots pick for `launch-tradfi-bf-ice-ohlcv-1m.sh`**. Scaffolding ships with empty
       `ICE_ROOTS=()` in
       [`deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-1m.sh`](../../../deployment-service/scripts/vm/launch-tradfi-bf-ice-ohlcv-1m.sh).
       ICE has 2 Databento datasets: `IFEU.IMPACT` (London — Brent crude `BRN.FUT`, Gasoil `G.FUT`, Sugar `SB.FUT`, Cocoa

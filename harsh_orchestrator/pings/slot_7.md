@@ -691,6 +691,12 @@ S1-S15 items remain as previously flipped. Operator directed EOD stop.
 
 ---
 
+[2026-05-19 19:15 UTC] slot-7 → operator — OPERATOR APPROVAL REQUESTS for tradfi_ohlcv_only_mvp_backfill_2026_05_15.md:
+
+1. **Phase 8 cost sign-off**: Backfill completed 2026-05-17 ~14:00 UTC. 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed across CME/NASDAQ/NYSE. Estimated ~$50-200 PAYG. DATABENTO_PAYG_SPEND events in GCS: early VMs (pre-10:05 UTC) pre-date emission code ship — actual figure needs Databento billing portal query (https://app.databento.com/billing). Please review and sign off on actual spend.
+
+2. **ICE roots pick**: `launch-tradfi-bf-ice-ohlcv-1m.sh` has empty `ICE_ROOTS=()`. Slot-5 proposed defaults: `("BRN" "G")` for IFEU (Brent + Gasoil) + `("CT" "CC" "KC" "SB" "OJ" "DX")` for IFUS (6 ICE softs). Each adds ~8 year-shard VMs, estimated <$10 PAYG for full 2019-2026 window. Please pick: (a) all 8, (b) BRN+G only (most liquid), (c) none for MVP, (d) custom subset.
+
 [2026-05-19 12:15 UTC] main → slot 7 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
