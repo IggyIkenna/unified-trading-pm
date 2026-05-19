@@ -128,8 +128,13 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          pre-existing failures outside scope: hyperliquid_bridge + test_mock_data_provider); expanded
          custody-onboarding-checklist.md § B.2 with full AWS envelope-encrypt runbook (B.2.1–B.2.6 including
          `aws kms encrypt` + Secrets Manager store + WalletProvisioningConfig ARN format). (infra 0.8×, ~2 = 1.6 cal)
-6. - [ ] **GAP-2.4.A** — Verify aws_migration writes use same Phase 1.B bucket naming as GCP. (research 1.2×, ~1 = 1.2
-         cal)
+6. - [x] ✅ **GAP-2.4.A** — Verified and fixed aws_migration bucket naming drift. deployment-service@8ea4be7:
+         (1) setup-defi-buckets.sh used ${DEPLOYMENT_ENV} (long: 'prod') but cloud-providers.yaml uses
+         ${DEPLOYMENT_ENV_SHORT} ('prd') — resolver returns 'prd', bucket created with 'prod' → 404 on every write.
+         Fixed by adding ENV_SHORT mapping (prod→prd / staging→stg / development→dev) and using ${ENV_SHORT} in all
+         10 bucket templates. (2) pnl/positions/risk-store-defi: script had unified-trading- prefix, yaml+GCP do not
+         — fixed by removing prefix to match SSOT. Resolver reads yaml correctly; provisioning script was the source
+         of drift. Buckets not yet created (GAP-2.4.B pending) — fix lands before --apply run. (research 1.2×, ~1 = 1.2 cal)
 7. - [ ] **GAP-2.4.B** — Provision env-tiered AWS buckets to match GCP yaml schema. Run
          `deployment-service/scripts/vm/provision-aws-buckets.sh`. (infra 0.8×, ~4 = 3.2 cal)
 8. - [ ] **GAP-2.4.C** — Migrate flat-bucket data into env-tiered AWS structure. (infra 0.8×, ~5 = 4.0 cal)
