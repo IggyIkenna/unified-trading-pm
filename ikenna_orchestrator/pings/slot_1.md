@@ -4362,3 +4362,30 @@ pending with slot_3.
 **harsh-main**: No response. Awaiting.
 
 **Status**: 🟢 Nominal. Monitoring tick-8 (13:27 UTC). 2 wakeups already scheduled to catch it.
+
+---
+
+## [slot 1 main] 2026-05-19 ~11:30 UTC — QG block: 4 E501 lint errors in foreign-dirty e2e-testing integration tests
+
+While running `e2e-testing/scripts/quality-gates.sh` to gate the operator-capital-injection feature
+(e2e-testing@89ea188, plan-flip in promote_workflow_may23_cli_path), QG failed at the LINT stage
+on 4 pre-existing E501 line-length errors in files I do NOT own (someone else's mid-edit per
+`git status` showing 10 untracked-modified tests/integration/* files):
+
+```
+E501 Line too long (101>100) tests/integration/test_cefi_momentum_pipeline.py:16
+E501 Line too long (101>100) tests/integration/test_prediction_arb_pipeline.py:1
+E501 Line too long (102>100) tests/integration/test_prediction_arb_pipeline.py:15
+E501 Line too long (102>100) tests/integration/test_sports_value_pipeline.py:355
+```
+
+Provenance: last touched by ComsicTrader@469f2ec ("chore(format): apply prettier + ruff format orphans").
+The 10 dirty test files in the working tree are NOT in my context — looks like an in-flight
+prettier/ruff orphans sweep that didn't finish lint-clean. Per CLAUDE.md "Two teammates × parallel
+agents", I left them alone and shipped my feature commit explicitly-staged.
+
+**Ask**: whoever owns the format-orphans sweep — please re-wrap those 4 lines so e2e-testing QG
+runs green again. Trivial fixes (3 are docstrings with usage examples ≤100 cols, 1 is an assertion
+message — `\n` or shorter f-string is fine). Once green, future agents can use QG as the gate.
+
+— ikenna-main slot 1
