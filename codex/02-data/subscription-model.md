@@ -163,7 +163,7 @@ At runtime, each service runs a `BaseDependencyChecker` that validates upstream 
 from unified_trading_services import BaseDependencyChecker
 
 checker = BaseDependencyChecker(service_name="features-service (delta-one family)")
-report = checker.check_dependencies(date=processing_date, category="CEFI")
+report = checker.check_dependencies(date=processing_date, asset_group="CEFI")
 
 if not report.all_satisfied:
     for failure in report.failures:

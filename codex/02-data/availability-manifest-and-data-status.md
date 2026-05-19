@@ -1156,7 +1156,7 @@ zero_filled = writer.write_with_zero_fill(
     actual_records,                # list[AvailabilityRecord] — rows produced this run
     expected_catalogue=catalogue,  # Iterable[InstrumentRecord] — from instruments-service
     ref_date=date(2026, 4, 17),
-    category="cefi",
+    asset_group="cefi",
     venue="BINANCE_FUTURES",
     instrument_type="perpetual",
     chain=None,

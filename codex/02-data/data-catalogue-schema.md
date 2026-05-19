@@ -113,7 +113,7 @@ writer = ManifestWriter(project_id="my-project")
 writer.write(
     service_name="instruments-service",
     dataset_id="instruments_cefi_binance",
-    category="cefi",
+    asset_group="cefi",
     venue="binance",
     date="2026-03-21",
     row_count=1234,

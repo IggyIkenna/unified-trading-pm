@@ -169,7 +169,7 @@ ColumnSchema(
     dtype="float64",
     nullable=True,  # Base nullability
     description="Funding rate (CEFI perpetuals only)",
-    # Dimension override: required when category=CEFI and instrument_type=PERPETUAL
+    # Dimension override: required when asset_group=CEFI and instrument_type=PERPETUAL
 )
 ```
 
