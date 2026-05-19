@@ -96,7 +96,7 @@ SmartOrderRouter for CeFi order management. ELIMINATED 2026-03-26 — merged int
 **UDEI** – unified-defi-execution-interface; formerly a T2 library providing BaseAMMAdapter, Uniswap/Curve/Aave
 adapters. ELIMINATED 2026-03-26 — merged into execution-service.
 
-**URDI** – unified-reference-data-interface; formerly a T1/T2 library providing reference data adapters, instrument
+**unified-reference-data-interface** – formerly a T1/T2 library (now retired) providing reference data adapters, instrument
 definitions, IBKR corp actions. ELIMINATED 2026-03-26 — merged into instruments-service.
 
 **UPI** – unified-position-interface; formerly a T2 library providing CanonicalPosition, CanonicalBalance, CCXT/OKX/IBKR

@@ -58,7 +58,7 @@ Never commit credentials. See `07-security/secrets-management.md`.
 ## VCR Cassette Matrix
 
 > **DERIVED-MATRIX BANNER (codified 2026-05-12 per TS-8 audit)** â€” this table was a 2026-Q1 pre-collapse layout that
-> referenced interfaces (UMI/UTEI/UPI/URDI/USEI/UDEI/UCI) and cassette paths (`unified-api-contracts/mocks/<iface>/`)
+> referenced interfaces (UMI/UTEI/UPI/instruments-service/USEI/UDEI/UCI) and cassette paths (`unified-api-contracts/mocks/<iface>/`)
 > that no longer exist. The interface repos collapsed into `execution-service` / `instruments-service` /
 > `position-balance-monitor-service` / `market-tick-data-service`; cassettes live at
 > `unified_api_contracts/external/<venue>/mocks/*.yaml` (per
@@ -73,7 +73,7 @@ Historical layout (pre-collapse, 2026-Q1; retained for archival reference only â
 | ------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------ | ------- |
 | UMI (market-tick-data-service/market_tick_data_service/market_interface) | binance, deribit, coinbase, hyperliquid           | `unified-api-contracts/mocks/umi/`         | pending |
 | UTEI (unified-trade-execution-interface)                                 | binance, deribit, ibkr                            | `unified-api-contracts/mocks/utei/`        | pending |
-| URDI (unified-reference-data-interface)                                  | databento, polygon                                | `unified-api-contracts/mocks/urdi/`        | pending |
+| instruments-service (formerly unified-reference-data-interface)          | databento, polygon                                | `unified-api-contracts/mocks/instruments-service/` | pending |
 | UPI (unified-position-interface)                                         | binance, ibkr                                     | `unified-api-contracts/mocks/upi/`         | pending |
 | USEI (unified-sports-execution-interface)                                | betfair, pinnacle, polymarket                     | `unified-api-contracts/mocks/usei/`        | pending |
 | UDEI (unified-defi-execution-interface)                                  | aave, uniswap, thegraph                           | `unified-api-contracts/mocks/udei/`        | pending |

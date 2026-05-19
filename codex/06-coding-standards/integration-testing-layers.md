@@ -68,7 +68,7 @@ VCR-based integration tests do NOT run standalone from AC. They EXECUTE from wit
 
 - `unified-cloud-interface` (cloud SDK adapters)
 - `market-tick-data-service/market_tick_data_service/market_interface` (UMI consumer post-collapse — market data)
-- `instruments-service` (reference data — formerly URDI)
+- `instruments-service` (reference data — formerly unified-reference-data-interface)
 - `execution-service` (UTEI/USEI/UDEI consumer post-collapse — trade + sports + DeFi execution)
 - `position-balance-monitor-service` (UPI consumer post-collapse — position balance)
 

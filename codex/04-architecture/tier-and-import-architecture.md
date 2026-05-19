@@ -57,7 +57,7 @@ TIER 0 — Pure Leaves (no cloud I/O, no trading state, zero inter-lib deps)
       execution-algo-library (EAL)            TWAP, VWAP, pure compute algorithms, zero inter-lib deps
       ibkr-gateway-infra                      Deploys and manages the IB Gateway Java process (long-lived). All IBKR
                                               connectivity routes through this — UMI + execution-service + position-balance-
-                                              monitor-service + instruments-service adapters use it (formerly the UMI/UTEI/UPI/URDI
+                                              monitor-service + instruments-service adapters use it (formerly the UMI/UTEI/UPI/unified-reference-data-interface
                                               interfaces; **Retired 2026** — merged into their respective services). No
                                               unified-* imports. TWS uses proprietary socket protocol; mock at ib_insync
                                               layer for tests (not HTTP VCR).
@@ -93,7 +93,7 @@ TIER 2 — Domain/Market Interfaces (protocols + schemas + connectivity, no clou
   - unified-defi-execution-interface (UDEI) → execution-service (BaseAMMAdapter, Uniswap/Curve/DeFi pool adapters)
   - unified-sports-execution-interface (USEI) → execution-service (BaseSportsAdapter, Betfair/Smarkets adapters)
   - unified-position-interface (UPI) → position-balance-monitor-service (position/account schemas + CCXT/OKX/IBKR adapters)
-  - unified-reference-data-interface (URDI) → instruments-service (REST venue adapters, API key resolution, IBKR corp actions)
+  - unified-reference-data-interface (retired) → instruments-service (REST venue adapters, API key resolution, IBKR corp actions)
   Do NOT import from or reference these eliminated repos.
 
 TIER 3 — Domain Data Client (cloud storage I/O, uses UCLI + UTS)
@@ -188,7 +188,7 @@ The T0 tier contains two sub-tiers due to a single permitted intra-UAC import di
   library.
 
 > Note: `unified-config-interface` is T1, not T0. The audit spec listing it as T0 was outdated and has been corrected
-> here. The canonical tier assignment is: UAC=T0-base, UIC=T0-consumer, UCI=T1a, UTL=T1b. URDI/T1c eliminated.
+> here. The canonical tier assignment is: UAC=T0-base, UIC=T0-consumer, UCI=T1a, UTL=T1b. unified-reference-data-interface/T1c eliminated.
 
 **T2, T3:** unchanged — see the 5-Tier Dependency Model section above.
 

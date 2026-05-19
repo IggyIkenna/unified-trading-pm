@@ -190,7 +190,7 @@ EPL and Bundesliga teams already covered by `api_football/team_mappings.py`.
 
 ```
 instruments-service --asset-group PREDICTION
-  └─ PolymarketReferenceDataAdapter → Gamma API → InstrumentRecord[]
+  └─ instruments-service PolymarketReferenceDataAdapter → Gamma API → InstrumentRecord[]
        └─ Writes to: instruments-store-prediction-{project}/by_date/day={date}/
 
 market-tick-data-service --asset-group PREDICTION

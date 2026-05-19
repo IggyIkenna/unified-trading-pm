@@ -211,7 +211,7 @@ Layer 2 (per-service writers — parallel after Layer 1)
   ├── writegate Phase 2.A  — MDPS _create_empty_output delete + 37 A/B/C migration + v3 path delete + v6 column wiring
   ├── writegate Phase 2.B  — MTDS partition validation + workspace-wide manifest.add() → record_captured() migration
   ├── writegate Phase 2.C  — features-sports _ensure_timestamp delete + 4 stub exporter wiring
-  ├── writegate Phase 2.D  — URDI sports schema bump (event_time only)
+  ├── writegate Phase 2.D  — instruments-service sports schema bump (event_time only)
   ├── predictions Phase 2  — instruments-service MARKET_LIFECYCLE + MTDS Polymarket rekey + features-cross-instrument
   ├── data_status Phase 1A — sports fixture_id writers (instruments-service / MTDS / features-sports)
   └── data_status Phase 1B — job_id writers (ml-training / ml-inference / strategy-service / execution-service)

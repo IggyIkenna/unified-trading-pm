@@ -30,7 +30,7 @@ graph TB
         UIC_INT["unified_api_contracts.internal<br/>MessagingTopic · EventEnvelope<br/>(subpackage of AC)"]
         UEI["unified-trading-library<br/>EventSink · log_event · MockEventSink"]
         UCLI["unified-cloud-interface<br/>StorageClient · SecretClient · QueueClient"]
-        URDI["instruments-service<br/>REST venue adapters · corp actions"]
+        IS_REF["instruments-service<br/>REST venue adapters · corp actions"]
         EAL["execution-algo-library<br/>TWAP · VWAP · pure compute"]
         MEL["matching-engine-library<br/>pure order matching · zero deps"]
     end
@@ -92,7 +92,7 @@ graph TB
     classDef t1 fill:#0d2a1e,stroke:#2ecc71,color:#ccffe0
     classDef t2 fill:#2a1e0d,stroke:#f39c12,color:#fff4cc
     classDef t3 fill:#2a0d0d,stroke:#e67e22,color:#ffe8cc
-    class AC,UIC_INT,UEI,UCLI,URDI,EAL,MEL t0
+    class AC,UIC_INT,UEI,UCLI,IS_REF,EAL,MEL t0
     class UCI,UTS t1
     class UMI,UTEI,UDEI,USEI,UML,UFC,UPI t2
     class UDC t3
@@ -116,7 +116,7 @@ graph TB
         UFC2["UFC (T2)"]
         UPI2["UPI (T2) ⟪f⟫"]
         UDC2["UDC (T3)"]
-        URDI2["URDI (T0)"]
+        IS_REF2["instruments-service ref-data (T0)"]
         EAL2["EAL (T0)"]
         MEL2["MEL (T0)"]
         AC2["AC (T0)"]
@@ -158,7 +158,7 @@ graph TB
 
     %% Layer 1
     IS --> UTS2
-    IS --> URDI2
+    IS --> IS_REF2
     IS --> UMI2
     IS --> UDC2
 
@@ -241,7 +241,7 @@ graph TB
 
 `●` = direct dependency · `○` = not required · `⟪f⟫` = future/scaffolded
 
-| Service                              | UTS | UCI | UEI | UCLI | AC  | UIC | ~~URDI~~ | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
+| Service                              | UTS | UCI | UEI | UCLI | AC  | UIC | ref-if | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
 | ------------------------------------ | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
 | instruments-service                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
 | market-tick-data-service             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |

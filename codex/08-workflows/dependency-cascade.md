@@ -135,7 +135,7 @@ repos as "pinned to old version — update needed."
 
 ## Reverse Dependency Sync
 
-When T0 libraries (UAC, UIC, UEI, UCI, UTL) change schemas:
+When T0 libraries (UAC, UIC, UEI, UCI, UTL, instruments-service) change schemas:
 
 1. semver-agent dispatches `schema-changed` to PM
 2. PM `schema-changed-handler.yml` clones the changed repo, reads the diff

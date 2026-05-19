@@ -15,8 +15,8 @@ Manager and inject them at runtime via factory/constructor parameters.
 ### 1. Active Repos with Execution/Data Adapters (UMI, execution-service, instruments-service, position-balance-monitor-service, UFI, UEI, UCI)
 
 NOTE: UTEI (unified-trade-execution-interface), UDEI (unified-defi-execution-interface), USEI
-(unified-sports-execution-interface) have been merged into **execution-service**. URDI
-(unified-reference-data-interface) merged into **instruments-service**. UPI (unified-position-interface) merged into
+(unified-sports-execution-interface) have been merged into **execution-service**. unified-reference-data-interface (retired)
+merged into **instruments-service**. UPI (unified-position-interface) merged into
 **position-balance-monitor-service**. Additionally: UMLi (unified-ml-interface) merged into **unified-trading-library**
 (ml/ sub-package). UDC (unified-domain-client) merged into **unified-trading-library** (domain_client/ sub-package).
 USRI (unified-sports-reference-interface) merged into **unified-reference-data-interface** (sports/ sub-package).

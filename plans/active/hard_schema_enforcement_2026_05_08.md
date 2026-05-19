@@ -269,12 +269,12 @@ Phase 1's "nullable → required" flips require a workspace-wide audit of `Instr
 
 1. **Per-asset-group `InstrumentRecord` subclass** (e.g. `CefiSpotInstrument` / `DefiPoolInstrument` /
    `TradFiFuturesInstrument`) with the relevant fields non-nullable. Cleanest type-safety but requires a
-   discriminated-union shape at the read boundary + URDI adapter migration.
+   discriminated-union shape at the read boundary + instruments-service adapter migration.
 2. **Pydantic `model_validator(mode="after")` on `InstrumentRecord`** that asserts per-`instrument_type` field
    requirements at runtime (e.g. `if instrument_type in {SPOT, PERPETUAL}: assert base_asset and quote_asset`).
    Lightest-touch but defers errors to runtime instead of type-check.
 3. **Conditional-required per work-split (b)** — flip all the fields to non-nullable at the schema level + allow
-   instrument-records to pass through the URDI adapter with sentinel values during the tradfi-master Q1+Q2 transition
+   instrument-records to pass through the instruments-service adapter with sentinel values during the tradfi-master Q1+Q2 transition
    window, then flip the sentinels to hard-required post-tradfi-Q1+Q2 land. Operator preference per 2026-05-11
    aggressive May-15 push.
 

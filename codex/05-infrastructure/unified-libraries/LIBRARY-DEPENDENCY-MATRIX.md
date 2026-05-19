@@ -36,7 +36,7 @@ last_reviewed: 2026-05-17
 │  AC_INT = unified_api_contracts.internal   unified-config-interface (UCI)                │
 │  unified-trading-library (UEI)    execution-algo-library (EAL)                  │
 │  matching-engine-library (MEL)                                                    │
-│  NOTE: unified-reference-data-interface (URDI) merged into instruments-service   │
+│  NOTE: unified-reference-data-interface (retired) merged into instruments-service   │
 └──────────────────────────────────────┬───────────────────────────────────────────┘
                                        │ T0 imports only
 ┌──────────────────────────────────────▼───────────────────────────────────────────┐
@@ -147,7 +147,7 @@ NOTE: The following T2 repos have been merged into services (no longer standalon
 All 17 active/scaffolded services × all 16 libraries. `●` = direct dependency. `○` = not required. `⟪f⟫` =
 future/scaffolded service.
 
-| Service                                  | UTS | UCI | UEI | UCLI | AC  | UIC | ~~URDI~~ | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
+| Service                                  | UTS | UCI | UEI | UCLI | AC  | UIC | ref-if | EAL | MEL | UMI | UTEI | UDEI | USEI | UML | UFC | UPI | UDC |
 | ---------------------------------------- | :-: | :-: | :-: | :--: | :-: | :-: | :--: | :-: | :-: | :-: | :--: | :--: | :--: | :-: | :-: | :-: | :-: |
 | **instruments-service**                  |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ●   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
 | **market-tick-data-service**             |  ●  |  ●  |  ●  |  ○   |  ○  |  ○  |  ○   |  ○  |  ○  |  ●  |  ○   |  ○   |  ○   |  ○  |  ○  |  ○  |  ●  |
@@ -168,7 +168,7 @@ future/scaffolded service.
 
 **Column key:** UTS=unified-trading-services, UCI=unified-config-interface, UEI=unified-trading-library,
 UCLI=unified-cloud-interface, AC=unified-api-contracts (incl. AC_INT=unified_api_contracts.internal subpackage),
-UIC=unified-internal-contracts (ELIMINATED — merged into UAC internal/), URDI=unified-reference-data-interface
+UIC=unified-internal-contracts (ELIMINATED — merged into UAC internal/), ref-if=unified-reference-data-interface
 (ELIMINATED — merged into instruments-service), EAL=execution-algo-library, MEL=matching-engine-library,
 UMI=market-tick-data-service/market_tick_data_service/market_interface, UTEI=unified-trade-execution-interface
 (ELIMINATED — merged into execution-service), UDEI=unified-defi-execution-interface (ELIMINATED — merged into
@@ -195,7 +195,7 @@ position-balance-monitor-service), UDC=unified-domain-client
 | ~~UTEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
 | ~~UDEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
 | ~~USEI~~ (ELIMINATED)                                                        |       —        | Merged into execution-service                                                          |
-| ~~URDI~~ (ELIMINATED)                                                        |       —        | Merged into instruments-service                                                        |
+| ~~unified-reference-data-interface~~ (ELIMINATED)                                                        |       —        | Merged into instruments-service                                                        |
 | ~~UPI~~ (ELIMINATED)                                                         |       —        | Merged into position-balance-monitor-service                                           |
 | **UCLI** (unified-cloud-interface)                                           |    0 direct    | All get via UTS transitively                                                           |
 | **AC_INT** (unified_api_contracts.internal)                                  |    0 direct    | Via UTS transitively (part of unified-api-contracts)                                   |

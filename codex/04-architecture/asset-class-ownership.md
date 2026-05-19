@@ -24,7 +24,7 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 | Normalize (instrument)                   | UAC                                            | `external/{venue}/normalize.py`                                        |
 | Error codes                              | UAC                                            | `canonical/crosscutting/errors/cefi.py`, `onchain_perps.py`            |
 | Venue registry                           | UAC                                            | `registry/venue_constants.py`, `VenueMapping`                          |
-| Instrument discovery                     | instruments-service (ref data — formerly URDI) | `adapters/tardis.py`, `adapters/binance.py`, `adapters/aster.py`, etc. |
+| Instrument discovery                     | instruments-service (ref data — formerly unified-reference-data-interface) | `adapters/tardis.py`, `adapters/binance.py`, `adapters/aster.py`, etc. |
 | Market data (ticks)                      | UMI                                            | `adapters/cefi/` (Tardis WebSocket, CCXT REST)                         |
 | Instrument orchestration                 | instruments-service                            | `--CEFI` flag, `_process_cefi_exchanges()`                             |
 | Market data orchestration                | market-tick-data-service                       | CeFi download handlers                                                 |
@@ -32,7 +32,7 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 
 ### Current state: CLEAN
 
-- instruments-service CeFi path uses reference data adapters (formerly URDI Tardis adapter)
+- instruments-service CeFi path uses reference data adapters (formerly unified-reference-data-interface Tardis adapter)
 - 17 venues producing 387,626 instruments
 - All error codes classified (100%)
 - VENUE_ZERO_INSTRUMENTS events for failures
@@ -61,7 +61,7 @@ Databento (CME, ICE, NASDAQ, NYSE, CBOE), IBKR, Yahoo Finance, ECB, OFR, Barchar
 
 ### Current state: CLEAN
 
-- instruments-service TradFi path uses reference data adapters (formerly URDI Databento adapter)
+- instruments-service TradFi path uses reference data adapters (formerly unified-reference-data-interface Databento adapter)
 - 5 venues producing 959,203 instruments
 - All error codes classified (100%)
 - Symbology moved from instruments-service to UAC registry
@@ -122,7 +122,7 @@ etc.
 | Market instrument connectivity | instruments-service (ref data)   | `adapters/betfair.py`, `adapters/polymarket.py` (shells exist, error classification wired)                                                                                                           |
 | Internal storage contracts     | UIC                              | `sports.py` (fixture storage schema)                                                                                                                                                                 |
 | Domain data client             | UDC/UTL                          | `sports/fixtures_client.py` (GCS read/write)                                                                                                                                                         |
-| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser instead of the in-service reference-data adapters** (USRI/URDI retired 2026 — merged into instruments-service `sports/` sub-package)         |
+| Instrument orchestration       | instruments-service              | `--SPORTS` flag — **CURRENTLY BROKEN: uses local parser instead of the in-service reference-data adapters** (USRI/unified-reference-data-interface retired 2026 — merged into instruments-service `sports/` sub-package)         |
 | Feature computation            | features-service (sports family) | Features from fixture/odds data                                                                                                                                                                      |
 | Config                         | UCI                              | Which leagues, which venues, polling intervals                                                                                                                                                       |
 
@@ -131,7 +131,7 @@ etc.
 **What's correct:**
 
 - UAC has comprehensive schemas: 6 external sources, canonical models, league/team registry, error codes
-- instruments-service has Betfair + Polymarket reference adapter shells (formerly URDI)
+- instruments-service has Betfair + Polymarket reference adapter shells (formerly unified-reference-data-interface)
 - UIC has fixture storage contract
 - UDC has fixtures_client for GCS operations
 - `new-sports-batting-services` has proven end-to-end implementation (feature calculators, mappings, ML pipeline)
@@ -142,7 +142,7 @@ etc.
   instead
 - `instruments-service/sports/` stub (formerly USRI; **Retired 2026** — merged into instruments-service) is a 192-line
   stub — needs API Football connectivity + UAC normalize wiring
-- instruments-service `--SPORTS` doesn't call the in-service reference-data adapters (formerly USRI/URDI; **Retired
+- instruments-service `--SPORTS` doesn't call the in-service reference-data adapters (formerly USRI/unified-reference-data-interface; **Retired
   2026**) — uses local code
 - `new-sports-batting-services` has independent `Fixture`, `Team`, `League` models — migration target, not SSOT
 

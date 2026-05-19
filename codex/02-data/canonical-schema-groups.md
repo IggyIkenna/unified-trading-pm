@@ -81,7 +81,7 @@ absence is part of the contract.
 
 | Schema                     | Purpose                                                         |
 | -------------------------- | --------------------------------------------------------------- |
-| `InstrumentRecord`         | Single SSOT; replaces URDI + instruments-service custom schemas |
+| `InstrumentRecord`         | Single SSOT; replaces retired unified-reference-data-interface + instruments-service custom schemas |
 | `ExpiryCalendar`           | Venue expiry dates                                              |
 | `UniverseSnapshot`         | As-of instruments + `venue_availability` dict                   |
 | `IndexCompositionSnapshot` | Perp index basket constituents                                  |
