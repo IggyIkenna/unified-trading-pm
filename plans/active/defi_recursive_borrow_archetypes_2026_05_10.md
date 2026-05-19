@@ -572,11 +572,12 @@ In-plan P0 (blocks Phase 5-8 implementation):
       ONE canonical connector. Pick `defi_execution/protocols/hyperliquid.py` as canon (already uses parsed UAC
       schemas); delete or shim the other. Same logical unit as Phase 6 live wire-up. (33d064b86 execution-service
       2026-05-15 — venues/hyperliquid.py deleted)
-- [ ] [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce +
+- [x] ✅ [execution-service] **P0**. Phase 6 Hyperliquid LIVE wire-up: EIP-712 signing (action hash + nonce +
       `vaultAddress` envelope; ChainId 1337 mainnet / 421614 testnet — verify against current Hyperliquid SDK); REST
       POST to `https://api.hyperliquid.xyz/exchange`; WS `user_events` subscription. Replace
       `available_margin = equity × 0.9` placeholder (line 259) with parsed
-      `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`.
+      `HyperliquidUserState.marginSummary.accountValue − totalMarginUsed`. — execution-service@de43118 (audit-backfilled
+      2026-05-19)
 - [x] [execution-service] **P0**. Hyperliquid bridge address + USDC deposit/withdrawal helpers under `defi_execution/`:
       operator deposits USDC on Arbitrum → bridge to HL L1 → arrives in trading wallet. **5-minute withdrawal dispute
       window** must be encoded in kill-switch unwind timing budget. Bridge address
@@ -632,7 +633,8 @@ In-plan P2:
 
 - [x] ✅ [strategy-service] **P2**. Pause-cell cleanliness when `target_net_delta = +N ≥ E_actual`:
       `_build_carry_recursive_staked` emits single-leg lending-only cell (not two-leg with `perp_short_size=0`) to keep
-      bookkeeping clean. — strategy-service@24ec3d4; removed perp_venue from all 7 specs, added perp_leg_enabled=false + unit test
+      bookkeeping clean. — strategy-service@24ec3d4; removed perp_venue from all 7 specs, added perp_leg_enabled=false +
+      unit test
 - [ ] [execution-service] **P2**. cbETH/ETH basis-risk monitor in Phase 8 (additive to HealthFactorMonitor) — small
       under normal markets (cbETH 0.1-0.5% premium/discount) but tail risk during Coinbase stress.
 - [ ] [execution-service] **P2**. USDC supply-APY (`R_usdc`): Hyperliquid does NOT pay; Bybit flexible-savings gates on
@@ -1540,7 +1542,8 @@ inside `executeOperation`. Two design options:
 - [x] ✅ [Solidity] P0. **Option A action-encoder** chosen: `RecursiveLeverageReceiver.sol` — Action struct, per-action
       target+selector whitelist, nonReentrant, sweep(token), named errors. — deployment-service@6dfac41 (backfilled
       2026-05-17 slot-5)
-- [ ] [Solidity] P1. **Option B**: N/A — Option A chosen per design decision.
+- [x] ✅ [Solidity] P1. **Option B**: N/A — Option A chosen per design decision. — deployment-service@6dfac41
+      (audit-backfilled 2026-05-19)
 - [x] ✅ [Solidity] P0. Foundry test suite (11 tests) in `contracts/test/RecursiveLeverageReceiver.t.sol`: atomic
       open/close, failed repayment, mid-callback revert, re-entrancy, target/selector not allowed, sweep, unauthorized
       initiator, cross-chain deploy idempotency. — deployment-service@6dfac41 (backfilled 2026-05-17 slot-5)

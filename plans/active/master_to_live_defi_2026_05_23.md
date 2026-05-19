@@ -1352,16 +1352,16 @@ repo previously unlisted). Group A–E required by May 23; Group F/G n/a until n
 Today exposes `/api/data-status`, `/api/deployments/{service}/deploy`, `/api/cloud-builds/*`, `/api/vm-deployments`, SSE
 `/stream/deploy-events`. Does NOT launch backfills, ML experiments, or strategy backtests as first-class actions.
 
-- [ ] [API] `POST /api/backfill/launch` — `(service, asset_group, venue, data_type, start, end, force)` → fires
-      per-asset-group launcher in `deployment-service/scripts/vm/`
-- [ ] [API] `POST /api/ml/experiment/launch` — accepts experiment manifest, spins ml-training VM with experiment job_id
-- [ ] [API] `POST /api/strategy/backtest/launch` — `(strategy_id, window, archetype_config)` → spins strategy-service
-      backtest
-- [ ] [API] `POST /api/execution/backtest/launch` — execution-alpha measurement on historical fills
-- [ ] [API] `GET /api/vm/events/{vm_name}?since=<ts>` — streams GCS event logs from `gs://{pid}-events/`
-- [ ] [API] `GET /api/builds/history` — tarball + Docker-image lineage (branch, commit, build trigger, deployer, target
-      service, asset_group, target cloud)
-- [ ] [API] AuthN via Firebase token forwarded from UTS-UI / Deployment-UI
+- [x] ✅ [API] `POST /api/backfill/launch` — `(service, asset_group, venue, data_type, start, end, force)` → fires
+      per-asset-group launcher in `deployment-service/scripts/vm/` — deployment-api@cade1e1 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] `POST /api/ml/experiment/launch` — accepts experiment manifest, spins ml-training VM with experiment job_id — deployment-api@f407c54 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] `POST /api/strategy/backtest/launch` — `(strategy_id, window, archetype_config)` → spins strategy-service
+      backtest — deployment-api@f407c54 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] `POST /api/execution/backtest/launch` — execution-alpha measurement on historical fills — deployment-api@f407c54 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] `GET /api/vm/events/{vm_name}?since=<ts>` — streams GCS event logs from `gs://{pid}-events/` — deployment-api@a038145 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] `GET /api/builds/history` — tarball + Docker-image lineage (branch, commit, build trigger, deployer, target
+      service, asset_group, target cloud) — deployment-api@b1ee896 (audit-backfilled 2026-05-19)
+- [x] ✅ [API] AuthN via Firebase token forwarded from UTS-UI / Deployment-UI — deployment-api@299908f (audit-backfilled 2026-05-19)
 - Reference: existing `deployment_api/routes/_code_builds_aws.py` for dual-cloud pattern
 
 ### B · Live Deployment UI tab
@@ -1552,16 +1552,16 @@ self-superseded artefacts.
 - [x] [SCRIPT] `instruments_service_template_refactor_8e653acc` → archive
 - [x] [SCRIPT] `availability_manifest_v4_and_data_status_2026_04_13` → archive (manifest now v6)
 - [x] [SCRIPT] `defi_pipeline_extension_followups_2026_05_03` → archive (`status: complete`)
-- [ ] [SCRIPT] `dashboard_services_grid_collapse_2026_04_21` → archive **once final 3 todos land** (deferred — plan
-      explicitly says "Ready for [unlock-plan] + archive once final 3 todos land")
+- [x] ✅ [SCRIPT] `dashboard_services_grid_collapse_2026_04_21` → archive **once final 3 todos land** (deferred — plan
+      explicitly says "Ready for [unlock-plan] + archive once final 3 todos land") — PM@0c34d59c archived as 100% complete (audit-backfilled 2026-05-19)
 
 **Active count: 148 → 131 after Stage 1.**
 
 **Convert to ICEBOX / paused (3):**
 
-- [ ] [SCRIPT] `hybrid_sampler_5s_resolution_2026_03_30` → ICEBOX (`orphan_candidate: true`)
-- [ ] [SCRIPT] `mempool_feed_integration_2026_06_01` → remove from `active/` (paused, future-dated)
-- [ ] [SCRIPT] `signal_leasing_broadcast_architecture_2026_04_20` → archive on next `[unlock-plan]` pass (8 phases done)
+- [x] ✅ [SCRIPT] `hybrid_sampler_5s_resolution_2026_03_30` → ICEBOX (`orphan_candidate: true`) — PM@0c34d59c in archive (audit-backfilled 2026-05-19)
+- [x] ✅ [SCRIPT] `mempool_feed_integration_2026_06_01` → remove from `active/` (paused, future-dated) — PM@0c34d59c in archive (audit-backfilled 2026-05-19)
+- [x] ✅ [SCRIPT] `signal_leasing_broadcast_architecture_2026_04_20` → archive on next `[unlock-plan]` pass (8 phases done) — PM@e396759b in archive (audit-backfilled 2026-05-19)
 
 **Frontmatter backfill (one-shot script):**
 
@@ -1786,10 +1786,8 @@ Agent 5):
       (`last_updated` / `asset_group` / `locked_by` / 5 plans with no frontmatter at all); re-tag cluster children with
       `parent:` field — work-stream G. **DONE 2026-05-06** — Stage 1 archived 17 self-tagged superseded plans (one
       deferred per "Ready for [unlock-plan]" rule); per-plan checkboxes flipped under work-stream G § "Archive Stage 1".
-- [ ] Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A). **IN FLIGHT 2026-05-07** — Phase 1
-      UAC types shipped (UAC@`a70b3f6`: `BackfillLaunchRequest`, `BackfillLaunchResult`, `VMLifecycleEvent`,
-      `VMEventListResult`, `BackfillLaunchTaskKind` 23-value StrEnum + 15 unit tests). Phase 2 (POST/GET handlers) +
-      Phase 3 (QG) pending. Owner: Harsh Day 3 (Agent 1 work_stream_a tab).
+- [x] ✅ Ship deployment-api `/api/backfill/launch` + `/api/vm/events` (work-stream A). **IN FLIGHT 2026-05-07** — Phase 1
+      UAC types shipped (UAC@`a70b3f6`). Phase 2+3 routes shipped: deployment-api@cade1e1 (backfill/launch) + deployment-api@a038145 (vm events) + deployment-api@f407c54 (ml/strategy/execution launch). All handlers + QG complete. (audit-backfilled 2026-05-19)
 - [ ] Decide research-service repo question (work-stream C). **PENDING** — fold into deployment-api default; no decision
       logged. Owner: operator + Agent 4.
 - [x] AWS migration cost analysis (work-stream D.1) → user signs off scope. **DONE 2026-05-07** — research artefact
