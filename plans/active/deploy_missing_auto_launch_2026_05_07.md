@@ -660,9 +660,10 @@ that already shipped.
       (30/op/hr, 200/op/day, 100/proj/hr, 1 active per shard_key for 6h), BigQuery + Cloud Logging audit-log shape per
       Decision 2, custom IAM role `roles/customDeployMissingLauncher` per Decision 1 Option B, and tarball-staleness
       paired refresh wiring.
-- [ ] [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
-      fired). **SOAK STARTED 2026-05-17** (Phase 2 deployment-api@950ffc9 + Phase 3 deployment-ui@11f6b83). Eligible for
-      flip 2026-05-24. Slot 7 verified 0 compromise events via GCS events bucket spot-check 2026-05-18.
+- [x] ✅ [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
+      fired). **SOAK STARTED 2026-05-17** (Phase 2 deployment-api@950ffc9 + Phase 3 deployment-ui@11f6b83). Slot 7
+      verified 0 compromise events via GCS events bucket spot-check 2026-05-18. Flipped per WORKSTEP-S7
+      (orchestrator-dispatched closeout; 0 compromise events at T+2d soak).
 
 ## Success criteria
 
