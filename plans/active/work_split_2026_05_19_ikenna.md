@@ -210,10 +210,11 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 > ≥1 progress/hour check-in + STOPPED/FAILED ack at exit (per CLAUDE.md "No fire-and-forget VM launches"). Audit work
 > below runs in parallel between check-ins.
 
-10. - [ ] **code_freeze GAP-2.4.A + Phase 2.4 cross-cloud parity audit** — verify aws_migration_defi_first writes use
+10. - [x] ✅ **code_freeze GAP-2.4.A + Phase 2.4 cross-cloud parity audit** — verify aws_migration_defi_first writes use
           UAC `resolve_bucket_name()` SSOT; build cross-cloud parity matrix per DeFi data_type (🟢/🟡/🔴); sweep
           GAP-2.4.B/C/D pre-readiness checklist. Audit + write-only this session (do NOT run migrations). Runs in
           parallel with Phase 3 VM monitoring. (research 1.2×, ~8 baseline = ~9.6 cal AI-days)
+          — ✅ PM@30b2ce193; 8/8 DeFi data_types cross-cloud parity 🟢 clean; GAP-2.4.A flipped in code_freeze plan (backfilled 2026-05-19)
 
 **Part B — batch_live_symmetry Tabs 1–3** (plan at 34%, 19.7 cal left):
 
