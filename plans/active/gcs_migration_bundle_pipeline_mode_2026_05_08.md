@@ -502,8 +502,11 @@ todos:
             level.
 
         QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: |
+      5.1 SHIPPED 2026-05-08 (unified-trading-library@52f123d6). 5.2 SHIPPED 2026-05-19
+      (market-tick-data-service@33b2ae5). 5.3 SHIPPED 2026-05-19 (unified-api-contracts@fefd720).
+      All 3 sub-items shipped. Phase 8 (T+30d reader fallback removal ~2026-06-15) is the follow-up.
 
   - id: phase-6-residual-phantom-cleanup
     content: |
