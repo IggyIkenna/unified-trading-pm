@@ -49,13 +49,13 @@ todos:
         - [ ] Pre-audit: grep workspace for `orchestrator-service` references (imports, scripts, codex) — confirm or refute the "unrelated trading orchestrator-service module" hypothesis; if collision exists, choose disambiguation (agent-orchestrator wins, document the other in scope)
         - [ ] Rename local directory orchestrator-service/ → agent-orchestrator/; push GitHub repo rename IggyIkenna/orchestrator-service → IggyIkenna/agent-orchestrator (preserves PRs + redirects old URLs)
         - [ ] Fix `orchastrator` typo across docs/server/scripts/dashboard (Harsh's original misspelling — ~40 references)
-        - [ ] Add server/api/main.py with ServiceBootstrap (QG STEP 5.61) — pattern from client-reporting-api/api/main.py:49-55
-        - [ ] Add make_health_router from UTL with data_freshness callback (QG STEP 5.62)
-        - [ ] Add server/config_reloaders.py typed against AgentOrchestratorConfig (QG STEP 5.34) — no `object`/`getattr`
+        - [ ] Add UTL as pyproject dep + wire `make_health_router` into existing `server/server.py` with state.json mtime-based `data_freshness` callback (QG STEP 5.62 — only one of the three STEPs applied; see exemption note below)
+        - [ ] ~~ServiceBootstrap (QG STEP 5.61)~~ — **EXEMPT** (operator decision 2026-05-19): ServiceBootstrap is a CLI dispatcher for batch/live trading services with `--asset-group`/`--mode` patterns; orchestrator has no such CLI (uvicorn-only). Client-reporting-api's source comment confirms its instantiation is a token gesture. Operator chose lightest path. Codex doc at P6 documents the exemption.
+        - [ ] ~~typed `config_reloaders.py` (QG STEP 5.34)~~ — **EXEMPT** (operator decision 2026-05-19): orchestrator's `server/config.py` is module-level env-driven functions, not a typed config class; full compliance requires a config-class refactor that's a separate workstream. Codex doc at P6 documents the exemption.
         - [ ] Pyproject + Dockerfile match workspace pattern: `ARG PROJECT_ID` + `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
         - [ ] Allocate port 8026 in unified-trading-pm/scripts/dev/ui-api-mapping.json (next available in 80xx sequence)
-        - [ ] quality-gates.sh wiring referencing PM base-service.sh
-      Full-execution criterion: `bash scripts/quality-gates.sh` passes locally on the renamed repo with QG STEPs 5.61/5.62/5.34 green; basedpyright server/ clean (timeout 120s); ruff format+check clean. Verified via: `bash scripts/quality-gates.sh 2>&1 | tail -20` shows "ALL GATES PASSED".
+        - [ ] quality-gates.sh wiring — keep existing `scripts/check.sh` for now (operator-tooling exemption); PM `base-service.sh` integration deferred to follow-up
+      Full-execution criterion: `bash scripts/check.sh` passes locally on the renamed repo with ruff + basedpyright + prettier + tsc clean; `/health` and `/readiness` endpoints respond 200 on `uvicorn server.server:app`; new Dockerfile builds against the workspace UTL base image. Verified via: `bash scripts/check.sh 2>&1 | tail -5` shows clean exit + `curl localhost:8765/health` returns expected shape.
     status: todo
 
   - id: p1-cloud-run-staging
