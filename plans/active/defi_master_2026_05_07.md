@@ -727,9 +727,9 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 - [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
       P0-relevant for May 23 Group F]
-- [ ] [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
+- [x] ✅ [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
       `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
-      Ikenna slot 4 successor + Harsh implementation.
+      Ikenna slot 4 successor + Harsh implementation. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
 - [ ] [AGENT] P0 **DEFERRED-AFTER-CUTOVER (2026-06-01)**. `FireblocksCustodyProvider` implementation per
       `api_keys_wallets` Plan Phase 3.C.2 — gated on client June-1 credential delivery. Successor plan:
       `plans/active/fireblocks_copper_client_integration_2026_06_01.md`.
@@ -964,16 +964,18 @@ shipping with the Fork-1 prep batches below).
       `continue`past`set     -e`(e.g.`if [[-d "$path"]]; then create_tarball ...; else log "SKIP ...";     fi`). Owner:
       features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`(archived?)
       or`infrastructure_master_2026_05_07`. **MIGRATE** to whichever owns the features-\* consolidation tail.
-- [ ] [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill handlers
-      (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding 2026-05-11).** Root
-      cause of the Priority-#5 full-history backfill VM blowing up from a ~60-90min estimate to ~4-17h:
-      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (and its
+- [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
+      handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
+      2026-05-11).** Root cause of the Priority-#5 full-history backfill VM blowing up from a ~60-90min estimate to
+      ~4-17h: — MTDS@6146913 (lending/gas/lst handlers) + MTDS@9802f48
+      (liquidation*events/perp_funding/solana_lst_archival) + MTDS@63ae34d (dex/liquidations handlers) (audit-backfilled
+      2026-05-19) `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` (and its
       `DefiManifestRecorder` in `_defi_manifest.py`) is **write-only** — `record_captured`/`record_empty`, no
       `read`/`is_captured`/skip. When a backfill is launched over a date range it fetches **every** post-launch day from
       the Messari subgraph regardless of whether the manifest already shows that
       `(asset_group, chain, protocol, data_type, day)` as `captured`; the only short-circuit is the pre-floor-date /
       chain-genesis check (date < protocol launch → `record_empty(EXPECTED_PRE_GENESIS_CHAIN)` without fetching) — a
-      _different_ check from "manifest already has this day captured." So a full-history re-run re-does years of
+      \_different* check from "manifest already has this day captured." So a full-history re-run re-does years of
       already-captured OPTIMISM/ARBITRUM AAVEV3 history (idempotent — same parquet path+content, same `captured` row —
       so no corruption, just wasted compute + subgraph rate-limit quota). The UTL primitive **already exists**
       (`unified_trading_library.manifest_freshness.ManifestFreshnessCache(ttl_seconds=60)` — shipped per
