@@ -395,13 +395,15 @@ todos:
 
   - id: bb2-experiment-emission-utl-helper
     content: |
-      - [ ] [SCRIPT] P0. NEW UTL helper
+      - [x] ✅ [SCRIPT] P0. NEW UTL helper
         `unified_trading_library/experiment_tracker.py` — `start_experiment(kind, owner, hyperparams) -> run_id`,
         `emit_metric(run_id, step, key, value)`, `emit_step(run_id, step_name, progress)`,
         `complete_experiment(run_id, result_blob_uri)`, `fail_experiment(run_id, error)`. Integrates with the
         existing `setup_events()` / `log_event()` machinery so every experiment lifecycle event also flows to the
         events bucket. Strategy backtest harness, ML training entry-points, execution-service backtest harness all
         adopt this helper — single emission surface.
+        — unified-trading-library@49de7c12 (2026-05-19 slot 6). 5 functions wrapping log_event() via
+        EXPERIMENT_{STARTED,METRIC,STEP,COMPLETED,FAILED} constants; UUIDv7 run IDs; 14 unit tests.
 
   - id: bb3-experiment-monitor-subtab-wiring
     content: |
