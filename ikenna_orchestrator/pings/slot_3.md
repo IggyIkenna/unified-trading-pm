@@ -1396,3 +1396,32 @@ Slot-1 main owns this file. Suggest updating line 264's strategy archetypes cell
 the total from `53` → `57`.
 
 Slot 3 cannot touch master plan per slot-precedence rule.
+
+---
+
+[2026-05-19 UTC ~17:30-18:30] Slot 3 — **CO-DUTY CLOSE + Axis-10 fix + Phase 7 codex complete**
+
+**CO-DUTY CLOSED**: All 31 Phase 3 migration VMs TERMINATED. Post-migration phantom audit found false positives
+(Axis-10 reconciler bug). Root cause confirmed + fix shipped. See corrected operator ping above (SUPERSEDES ~16:20 ping).
+
+**Shipped this session:**
+1. `instruments-service@8accb30` — Axis-10 reconciler fix: adds `pipeline_mode=batch_*/` prefix_tpls to
+   `ASSET_GROUP_CONFIG` for cefi/defi/tradfi/prediction. QG passed. DO NOT run Phase 6 --apply.
+2. PM@`6af1ac872` — Half-2 flip: corrected operator ping + gcs_migration plan banner + deferred-work table.
+3. PM@`bc34f5693` — Phase 3 addendum (docs/ excluded from subtree-merge, verified + flipped).
+4. PM@`fe70a0798` — Phase 5 reader-fallback status=done.
+5. PM@`2e35af600` — pipeline-mode-partition.md codex update (Phase 3 post-migration data fills).
+6. PM@`e828d542e` — availability-manifest.md: category=→asset_group= migration complete 2026-05-19.
+7. PM@`a8c2f6e5c` — Phase 7 status=done (all codex SSOT updates complete).
+8. PM@`b9f701a16` — Phase 3 execution note: steps 1-6 complete, step 7 pending re-audit.
+9. PM@`54ce00884` — Phase 0/1A/1B stale status=todo → done; Phase 6 NOT NEEDED note added.
+
+**Phase 3.6 re-audit with Axis-10 fix (background tasks running):**
+- prediction: 14,403 → 0 phantoms ✅ CONFIRMED
+- sports: 559,961 → 0 phantoms ✅ CONFIRMED
+- tradfi/cefi/defi: ⏳ PENDING (large manifests, may take 10-15 min more)
+
+**Pending operator action:** Once re-audit confirms 0 phantoms for tradfi/cefi/defi → Phase 3 step 7 per-asset-group
+sign-off (HUMAN-ONLY). No further agent action needed on phantom cleanup track.
+
+Slot 3 AVAILABLE for next dispatch.
