@@ -86,7 +86,7 @@
       "name": "\ud83e\uddea E2E Testing"
     },
     {
-      "path": "../../orchestrator-service"
+      "path": "../../agent-orchestrator"
     }
   ],
   "settings": {
@@ -313,17 +313,17 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-library",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-system-ui",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/orchestrator-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/orchestrator-service"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/agent-orchestrator",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/agent-orchestrator"
     ],
     "git.scanRepositories": [
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-api",
@@ -352,7 +352,7 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/trading-agent-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-api-contracts",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/e2e-testing",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/orchestrator-service"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/agent-orchestrator"
     ],
     "git.maxRepositoryCount": 30,
     "git.repositoryScanMaxDepth": 0,
