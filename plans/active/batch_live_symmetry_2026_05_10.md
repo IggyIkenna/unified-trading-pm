@@ -514,8 +514,12 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 - [x] ✅ [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content
       unverified per pre-audit). — 12 stage files confirmed implemented (139-495 lines each, 0 stubs); verified
       2026-05-19.
-- [ ] [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption.
-- [ ] [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison.
+- [x] ✅ [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption. — blr@69b784d:
+      stage0_manifest_reason_check.py uses `read_availability_index()` from UTL + `CaptureStatus` enum;
+      reads batch vs live manifest rows per date, compares capture_status + error_reason. Backfilled 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison. — blr@7cadbe0:
+      stage3_execution_recon.py computes `alpha_pnl_gap = |live_pnl - batch_pnl| / notional` per-trade;
+      emits alert when gap exceeds alpha_pnl_gap_max threshold. Backfilled 2026-05-19.
 - [x] ✅ [SCRIPT] P0. **Threshold decision wiring** — read `RECON_GREEN_THRESHOLDS` from UAC; emit
       `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. — batch-live-recon@2c6f214:
       import `RECON_GREEN_THRESHOLDS` from UAC thresholds.py; orchestrator emits `BATCH_VS_LIVE_RECON_DRIFTED`
