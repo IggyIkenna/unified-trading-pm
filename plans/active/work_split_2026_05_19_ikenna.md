@@ -169,21 +169,24 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 
 **Part A — writegate Phase 6.6/6.7** (plan at 52%, 11.5 cal left):
 
-1. - [ ] **Phase 6.6 — ml-training-service emission wiring** — `record_captured`/`record_empty` at model artifact write
-         boundaries + UAC `SERVICE_OUTPUT_POLICIES` entry + tests. (brand-new 1.0×, ~5 = 5.0 cal)
-2. - [ ] **Phase 6.6 — ml-inference-service emission wiring** — same pattern. (brand-new 1.0×, ~5 = 5.0 cal)
-3. - [ ] **Phase 6.7 — strategy-service emission wiring** — signal output → `record_captured`. (brand-new 1.0×, ~3 = 3.0
-         cal)
-4. - [ ] **Phase 6.7 — risk-and-exposure-service emission wiring**. (brand-new 1.0×, ~2 = 2.0 cal)
+1. - [x] ✅ **Phase 6.6 — ml-training-service emission wiring** — `_check_emission_policy()` + BLOCK_CRITICAL gate in
+         `store_model()`; `training_completeness_fraction` param; 5 tests. — ml-training-service@ff20617 (pre-shipped 2026-05-13)
+2. - [x] ✅ **Phase 6.6 — ml-inference-service emission wiring** — `_check_emission_policy()` + `_filter_by_emission_policy()`
+         + `_upload_one_mode()` in `prediction_publisher.py`; 4 STRICT_FAIL tests. — ml-inference-service@9fb5d50 (pre-shipped 2026-05-13)
+3. - [x] ✅ **Phase 6.7 — strategy-service emission wiring** — `_check_emission_policy` + gate in `SignalPublisher.publish()`;
+         4 tests. — strategy-service@88eb085 (pre-shipped 2026-05-13)
+4. - [x] ✅ **Phase 6.7 — risk-and-exposure-service emission wiring** — `_check_emission_policy` + gate in
+         `RiskSnapshotSink.write()`; 4 tests. — risk-and-exposure-service@df4849f (pre-shipped 2026-05-13)
 
 **Part B — live_pipeline_mtds_mdps_features Phase 3–5** (15.0 cal budget):
 
 Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. Focus on:
 
-5. - [ ] **Phase 3 MTDS real-time adapter** — pick 4–5 highest-priority live-mode items. (brand-new 1.0×, ~5 = 5.0 cal)
-6. - [ ] **Phase 4 MDPS live consumer** — admission control wiring (Phase 2 of mdps_streaming unblocked by slot-2's
-         Phase 1.2B ship on May-18). (brand-new 1.0×, ~3 = 3.0 cal)
-7. - [ ] **Plan flips** for all shipped items. (0.5 cal)
+5. - [x] ✅ **Phase 3 MTDS real-time adapter** — all WSFeedConnectors shipped across defi/cefi/tradfi/sports/prediction;
+         Phase 3.5 COMPLETE. — MTDS@99fc7b3 (pre-shipped 2026-05-17)
+6. - [x] ✅ **Phase 4 MDPS live consumer** — LiveStreamAggregator + 7 Protocol adapters + consumer wiring shipped. —
+         mdps@0068b2f (pre-shipped 2026-05-11)
+7. - [ ] **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference gap-blocking). (0.5 cal)
 
 ---
 
