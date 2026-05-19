@@ -68,10 +68,10 @@ availability_semantics + source_priority registered; UAC `quality-gates.sh` pass
       registered in `source_priority.py`. — UAC@(slot-6 Phase 1 scaffold)
 - [x] ✅ [UAC] P0. `FeatureObservation` + `FeatureObservationRecord` exported from
       `internal/domain/defi/__init__.py` + `internal/__init__.py`. — UAC@(slot-6 Phase 1 scaffold)
-- [ ] [UAC] P0. Unit test: `test_feature_observation_record_roundtrip` in
-      `tests/internal/unit/test_domain_schemas.py` — instantiate `FeatureObservationRecord`
-      with all fields + assert model_dump roundtrip. Run `quality-gates.sh`.
-- [ ] [UAC] P0. QG: `bash scripts/quality-gates.sh` passes (basedpyright + ruff + cassette parity).
+- [x] ✅ [UAC] P0. Unit test: `test_feature_observation_record_roundtrip` in
+      `tests/internal/unit/test_domain_schemas.py` — 3 tests: full roundtrip with all fields; correlation_id=None;
+      defaults check. — uac@9892679 (slot-5 2026-05-19)
+- [x] ✅ [UAC] P0. QG: `bash scripts/quality-gates.sh` passes (basedpyright + ruff + cassette parity). — uac@9892679
 
 ---
 
@@ -83,19 +83,14 @@ availability_semantics + source_priority registered; UAC `quality-gates.sh` pass
       created with `emit_feature_observation(observation, correlation_id, *, project_id, dry_run)`.
       Pattern A: build FeatureObservationRecord → write local parquet → upload to GCS →
       delete temp file. Errors swallowed + logged. dry_run suppresses GCS I/O. — features-service@(slot-6 Phase 2 scaffold)
-- [ ] [features-service] P1. Wire `emit_feature_observation` into
-      `features_service/onchain/engine/orchestrator.py` (or the tick-dispatch path).
-      Call on every tick, passing `correlation_id=None` for now. Target: every on_tick
-      call emits one snapshot row.
-- [ ] [features-service] P1. Unit tests in
-      `tests/onchain/unit/test_feature_observation_writer.py`:
-      (1) dry_run=True → no GCS call; (2) emit produces correct partition_dt;
-      (3) correlation_id=None round-trips as None; (4) Decimal fields converted for pyarrow.
-      Run `quality-gates.sh`.
-- [ ] [features-service] P2. Manifest wiring: after each tick's batch of observations,
-      call `manifest_writer.record_captured(data_type="feature_observation_snapshot",
-      asset_group="defi", dt=partition_dt, archetype=archetype, chain=chain)`.
-      Shard atom: (date, archetype, chain) — matches the GCS hive path.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [features-service] P1. Wire `emit_feature_observation` into
+      `features_service/onchain/engine/orchestrator.py` (or the tick-dispatch path). Named successor: this plan Phase
+      2.2 (requires identifying per-tick APY extraction from polars DataFrame + orchestrator wiring session).
+- [x] ✅ [features-service] P1. Unit tests in `tests/onchain/unit/test_feature_observation_writer.py`:
+      (1) dry_run=True → no GCS call; (2) emit produces correct partition_dt; (3) correlation_id=None round-trips as
+      None; (4) Decimal→float conversion for pyarrow. QG passes. — features-service@b957f41a (slot-5 2026-05-19)
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [features-service] P2. Manifest wiring. Named successor: this plan
+      Phase 2.3 (gates on orchestrator wiring Phase 2.2 landing).
 
 ---
 
@@ -104,15 +99,14 @@ availability_semantics + source_priority registered; UAC `quality-gates.sh` pass
 **Dependency**: Ikenna Phase 5 (`StrategyDecisionContextRecord.correlation_id`) is already on
 LDR (ikenna-main 12:35 UTC ✅). This phase wires the key end-to-end.
 
-- [ ] [features-service] P1. Propagate `correlation_id` into `emit_feature_observation`:
-      the strategy engine passes its `correlation_id` (from `AtomicInstruction.instruction_id`)
-      to features-service on_tick calls. Update function signature + engine wiring.
-      `correlation_id: str | None = None` field already in `FeatureObservationRecord`.
-- [ ] [features-service] P1. Integration test (mocked GCS): emit a record with
-      `correlation_id="test-123"`, read back the parquet, assert `correlation_id == "test-123"`.
-- [ ] [PM/codex] P2. Add `correlation_id` to the audit chain doc at
-      `codex/04-architecture/amm-slippage-simulation.md` § "Audit chain" (alongside
-      StrategyDecisionContext Phase 5 section).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [features-service] P1. Propagate `correlation_id` into
+      `emit_feature_observation` from engine tick. Named successor: this plan Phase 3 (gates on Phase 2.2 orchestrator
+      wiring; `str | None = None` scaffold already in `FeatureObservationRecord`).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [features-service] P1. Integration test (mocked GCS)
+      `correlation_id` roundtrip. Named successor: this plan Phase 3 (write after Phase 3 propagation lands).
+- [x] ✅ [PM/codex] P2. Add `correlation_id` to audit chain doc at
+      `codex/04-architecture/amm-slippage-simulation.md` — added Phase 6 block with full chain diagram +
+      FeatureObservationRecord schema + writer refs. — pm@(this commit) (slot-5 2026-05-19)
 
 ---
 
@@ -120,20 +114,19 @@ LDR (ikenna-main 12:35 UTC ✅). This phase wires the key end-to-end.
 
 **Owner**: Ikenna (strategy-side Phase 5 consumer). Tracked here for cross-side visibility.
 
-- [ ] [pnl-attribution-service] P2. `PnlDomainAdapter.read_feature_observation_snapshot()`
-      method. Path: `feature_observation_snapshot/asset_group=defi/archetype={a}/
-      chain={c}/dt={d}/*.parquet`. **DEFERRED to ikenna-side work** per routing decision.
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [pnl-attribution-service] P2.
+      `PnlDomainAdapter.read_feature_observation_snapshot()`. DEFERRED to ikenna-side work per routing decision.
       Named successor: ikenna strategy/pnl-attribution workstream.
 
 ---
 
 ## Success criteria
 
-- [ ] UAC QG passes with `FeatureObservation` + `FeatureObservationRecord`
-- [ ] features-service QG passes with `FeatureObservationWriter` + unit tests
-- [ ] `emit_feature_observation` called on every features-onchain tick
-- [ ] `correlation_id` flows end-to-end: engine tick → features writer → GCS parquet
-- [ ] Audit query: given `correlation_id`, SQL join returns strategy decision + feature observation
+- [x] ✅ UAC QG passes with `FeatureObservation` + `FeatureObservationRecord` — uac@9892679
+- [x] ✅ features-service QG passes with `FeatureObservationWriter` + unit tests — features@b957f41a
+- [x] **FORMALLY DEFERRED** `emit_feature_observation` called on every features-onchain tick (Phase 2.2 wiring pending)
+- [x] **FORMALLY DEFERRED** `correlation_id` flows end-to-end (Phase 3 propagation pending Phase 2.2)
+- [x] **FORMALLY DEFERRED** Audit query end-to-end (pending Phase 2.2 + Phase 3 completion)
 
 ## Temporary states + their canonical follow-up plans
 

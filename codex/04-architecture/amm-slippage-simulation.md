@@ -1181,6 +1181,25 @@ realized P&L delta + max-drawdown delta + tail-event survival rate.
 > - **pnl-attribution-service@f8db566**: `read_strategy_decision_context()` reader in `PnlDomainAdapter`.
 >
 > Sub-plan Phase 5 closed: `hedge_ratio_snapshot_persistence_2026_05_13.md` Phase 5.
+>
+> **✅ Phase 6 — Features-onchain audit trail scaffold shipped 2026-05-19** (slot-5):
+>
+> Full audit chain target:
+> ```
+> correlation_id → StrategyDecisionContextRecord (strategy-service, Phase 5 ✅)
+>               → FeatureObservationRecord (features-onchain-service, Phase 6 scaffold ✅)
+>               → MTDS source rows (GCS parquet path + row ID)
+> ```
+>
+> - **UAC@4f29dbb (features-service scaffold) + UAC@9892679**: `FeatureObservation` / `FeatureObservationRecord`
+>   Pydantic schemas in `sim_schemas.py`; `("defi", "feature_observation_snapshot")` in `availability_semantics` +
+>   `source_priority`; exported from `internal/domain/defi/__init__.py` + `internal/__init__.py`.
+>   `correlation_id: str | None = None` wired (propagation from engine tick pending Phase 3 of
+>   `features_tick_observation_audit_2026_05_18.md`).
+> - **features-service@4f29dbb**: `feature_observation_writer.py` — `emit_feature_observation()` Pattern A inline
+>   writer; 4 unit tests in `test_feature_observation_writer.py`. Engine wiring pending (Phase 2.2 of sub-plan).
+>
+> Sub-plan: `features_tick_observation_audit_2026_05_18.md`.
 
 `carry_staked_basis` shorts SOL perp against long jitoSOL; ratio assumes 1:1 SOL-equivalent but jitoSOL/SOL drifts with
 peg behavior + accrual.
