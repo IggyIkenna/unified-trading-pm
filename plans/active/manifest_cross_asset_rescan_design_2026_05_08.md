@@ -4,7 +4,7 @@ type: plan
 plan_type: design
 asset_group: cross-cutting
 owner: ikenna
-status: active
+status: done
 priority: P1
 created: 2026-05-08
 last_updated: 2026-05-12
@@ -486,3 +486,20 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
   `manifest_v7_schema_migration_design_2026_05_08`) — rescan must respect new v8 immutable columns
   (`service_emission_state`). Note: v8 plan's Phase 3 bundles cross-asset rescan class-A auto-fixes into the same
   parquet walk; this design doc is the SSOT for the rescan semantics.
+
+## Deferred work — migrated to successor plans
+
+| Item | Successor plan |
+| ---- | -------------- |
+| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`) | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.A (deployment-service@c8a1cd4) |
+| `cross_asset_rescan.py` script + 5-axis drift fix | ✅ SHIPPED in `manifest_schema_final_gate_2026_05_09.md` Phase 3.D |
+| Sports/prediction apply-flips (99,620 sports phantoms) | `sports_master_2026_05_07.md` § "Phantom recon + failure triage" |
+| `resolve_bucket_name` migration for 3 reconciler scripts | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 |
+| Operator sign-off (class-C triage + sign-off section) | `manifest_schema_final_gate_2026_05_09.md` Phase 8.A + 8.B |
+| Codex SSOT updates (phantom audit doc + rescan stub) | `manifest_schema_final_gate_2026_05_09.md` Phase codex items |
+
+## Closure note (2026-05-19 slot 4)
+
+Design plan complete. All AI-executable checkboxes are `[x]`. Cross-asset rescan launcher + script shipped in
+`manifest_schema_final_gate_2026_05_09.md`. Remaining deferred items tracked in successor plans above. Operator
+sign-off (Phase 8.A+8.B) is a HUMAN-only gate in manifest_schema_final_gate. Status: active → done.
