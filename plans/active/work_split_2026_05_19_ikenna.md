@@ -145,7 +145,8 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 8. - [x] ✅ **Tab 3 — QG STEPs L2/L3/L7 AST sweeps** per batch_live_symmetry plan §Tab 3. (refactor 0.4×, ~4 = 1.6 cal)
          — batch_live_symmetry §Tab 3 all ✅; PM@`5772f57b` (STEP 5.75+5.76) + PM@`fac14af3` (STEP 5.77 L2) +
          PM@`882faaa0` (STEP 5.78 L3); 0 workspace violations pre-flight; L7 sweep complete
-9. - [ ] **Plan checkboxes flip** for all items shipped. (0.5 cal)
+9. - [x] ✅ **Plan checkboxes flip** for all items shipped. (0.5 cal) — PM@`450967d4` all slot-3 checkboxes flipped;
+         gcs_migration Phase 4 + batch_live_symmetry Tabs 1-3 verified DONE
 
 ---
 
