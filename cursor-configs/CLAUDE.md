@@ -184,6 +184,10 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
     snapshot to `_index/snapshots/pre_migration_<date>.parquet`. SSOT:
     `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0.
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
+- **GCS object ops in migration scripts**: use `unified_trading_library.cloud_interface.gcs_copy_object` /
+  `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops.
+  250× faster (REST API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32).
+  SSOT: `codex/05-infrastructure/gcs-object-operations.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)

@@ -66,30 +66,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from google.cloud import storage as gcs_storage_type
-
-# Lazy singleton — initialised on first GCS call, shared across all threads.
-# google-cloud-storage Client is thread-safe for concurrent requests.
-_GCS_CLIENT: gcs_storage_type.Client | None = None
-
-
-def _get_gcs_client() -> gcs_storage_type.Client:
-    global _GCS_CLIENT  # noqa: PLW0603
-    if _GCS_CLIENT is None:
-        from google.cloud import storage as gcs_storage  # type: ignore[import-not-found]
-        _GCS_CLIENT = gcs_storage.Client()
-    return _GCS_CLIENT
-
-
-def _split_gcs_uri(uri: str) -> tuple[str, str]:
-    assert uri.startswith("gs://"), f"Not a GCS URI: {uri}"
-    without_scheme = uri[5:]
-    bucket_name, _, obj_path = without_scheme.partition("/")
-    return bucket_name, obj_path
-
 logger = logging.getLogger("gcs_migration_bundle")
 
 # ---------------------------------------------------------------------------
@@ -109,6 +85,11 @@ for _p in (UAC_PATH, UTL_PATH):
 from unified_api_contracts.canonical.crosscutting.pipeline_mode import (  # type: ignore[import-not-found]
     PipelineMode,
     pipeline_mode_for_source,
+)
+from unified_trading_library.cloud_interface import (  # type: ignore[import-not-found]
+    gcs_copy_object,
+    gcs_delete_object,
+    gcs_describe_object,
 )
 from unified_trading_library.manifest_migrations import (  # type: ignore[import-not-found]  # noqa: qg-deep-import
     MissingVMShardIsolationError,
@@ -434,33 +415,12 @@ def src_uri_str(uri: str) -> str:
     return uri if len(uri) < 80 else uri[:77] + "..."
 
 
-def _gcloud_storage_object_describe(uri: str) -> dict[str, object]:
-    """Return blob metadata as a dict with crc32c and size keys."""
-    bucket_name, obj_path = _split_gcs_uri(uri)
-    client = _get_gcs_client()
-    blob = client.bucket(bucket_name).blob(obj_path)
-    blob.reload()
-    return {
-        "crc32c": blob.crc32c,
-        "crc32cChecksum": blob.crc32c,
-        "size": str(blob.size) if blob.size is not None else "0",
-    }
-
-
-def _gcloud_storage_cp(source: str, target: str) -> None:
-    """Server-side copy ``source`` → ``target`` via GCS rewrite API. No egress."""
-    src_bucket_name, src_obj = _split_gcs_uri(source)
-    dst_bucket_name, dst_obj = _split_gcs_uri(target)
-    client = _get_gcs_client()
-    src_blob = client.bucket(src_bucket_name).blob(src_obj)
-    dst_bucket = client.bucket(dst_bucket_name)
-    dst_bucket.copy_blob(src_blob, dst_bucket, dst_obj)
-
-
-def _gcloud_storage_rm(uri: str) -> None:
-    """Delete a GCS object via the client API."""
-    bucket_name, obj_path = _split_gcs_uri(uri)
-    _get_gcs_client().bucket(bucket_name).blob(obj_path).delete()
+def _describe_as_dict(uri: str) -> dict[str, object]:
+    """Adapter: gcs_describe_object → dict for internal crc32c/size verification."""
+    meta = gcs_describe_object(uri)
+    if meta is None:
+        return {"size": "0", "crc32c": None, "crc32cChecksum": None}
+    return {"size": str(meta.size), "crc32c": meta.crc32c, "crc32cChecksum": meta.crc32c}
 
 
 # ---------------------------------------------------------------------------
@@ -547,9 +507,9 @@ def migrate_one_parquet(
     source_uri: str,
     *,
     apply: bool,
-    cp_fn: Callable[[str, str], None] = _gcloud_storage_cp,
-    rm_fn: Callable[[str], None] = _gcloud_storage_rm,
-    describe_fn: Callable[[str], dict[str, object]] = _gcloud_storage_object_describe,
+    cp_fn: Callable[[str, str], None] = gcs_copy_object,
+    rm_fn: Callable[[str], None] = gcs_delete_object,
+    describe_fn: Callable[[str], dict[str, object]] = _describe_as_dict,
     read_instrument_id_fn: Callable[[str], str | None] = _read_instrument_id_from_parquet_footer,
 ) -> MigrationResult:
     """Migrate a single parquet to canonical hive shape.
@@ -936,9 +896,9 @@ def run_migration(
     apply: bool,
     workers: int,
     list_fn: Callable[[str, str], list[str]] | None = None,
-    cp_fn: Callable[[str, str], None] = _gcloud_storage_cp,
-    rm_fn: Callable[[str], None] = _gcloud_storage_rm,
-    describe_fn: Callable[[str], dict[str, object]] = _gcloud_storage_object_describe,
+    cp_fn: Callable[[str, str], None] = gcs_copy_object,
+    rm_fn: Callable[[str], None] = gcs_delete_object,
+    describe_fn: Callable[[str], dict[str, object]] = _describe_as_dict,
     read_instrument_id_fn: Callable[[str], str | None] = _read_instrument_id_from_parquet_footer,
     v8_backfill_fn: Callable[..., V7ToV8MigrationResult] | None = None,
     rescan_fn: Callable[..., CrossAssetRescanResult] | None = None,
