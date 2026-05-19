@@ -95,9 +95,9 @@ estimate_calibration_note: |
          comment explaining why. (refactor 0.4×, ~2 = 0.8 cal) — 137/137 already use specific error codes; 0 bare. Workspace clean. No changes needed.
 7. - [x] ✅ **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
          shared. (refactor 0.4×, ~2 = 0.8 cal) — 29 candidates audited; all are autouse=True / fixture-chained / integration infrastructure. 0 truly orphaned. Workspace clean.
-8. - [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** —
+8. - [x] ✅ **S6. SUSTAIN — workspace-wide cassette parity deep refresh** —
          `cd unified-api-contracts &&    pytest tests/test_cassette_schema_parity.py`. Fix any mismatches. (research
-         1.2×, ~2 = 2.4 cal)
+         1.2×, ~2 = 2.4 cal) — 316 passed, 49 skipped. Also fixed 5 QG failures (BATCH_FEATURES_ONCHAIN_SERVICE missing from PipelineMode + EMISSION_LATENCY): UAC@127012b
 9. - [ ] **Plan flips** for all items shipped. (0.5 cal)
 
 ---
