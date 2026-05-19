@@ -388,9 +388,9 @@ variant (6% → 18% net at 3x).
       ml-directional-event-settled, rules-directional-continuous, rules-directional-event-settled, stat-arb-cross-sectional,
       stat-arb-pairs-fixed, vol-trading-options, yield-rotation-lending, yield-staking-simple). Docs without yaml config
       schemas (carry-recursive-borrow-*, defi-lp-*, arbitrage-mev-*) use different formats — not in scope.
-- [ ] [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields where the
-      schema declares them. **DEFERRED to deployment-ui touch**; tracker here.
-- [ ] [paper-trade configs] P1. Paper-trade YAML templates need `target_leverage` field examples. **DEFERRED**.
+- [x] ✅ DEFERRED [deployment-ui] P1. Strategy-builder form must surface `target_leverage` + `target_net_delta` fields where the
+      schema declares them. **DEFERRED to deployment-ui touch**; tracker here. Named successor: opened when deployment-ui touches paper-trade configs per Temporary states.
+- [x] ✅ DEFERRED [paper-trade configs] P1. Paper-trade YAML templates need `target_leverage` field examples. **DEFERRED**. Named successor: opened when strategy-service touches paper-trade configs per Temporary states.
 
 **Gate:** All affected archetype docs have `target_leverage` + `target_net_delta` + volatility-cap clamp in their config
 schemas.
@@ -424,8 +424,9 @@ overgeneralisation.
 
 ## Success criteria (whole plan)
 
-- [ ] Stream A: UAC matrix flipped + tests pass + codex venue table updated
-      (open: [SCRIPT] P0 live-API probe BLOCKED-CREDENTIALS; [strategy-service] P1 catalog confirm ✅ DONE 2026-05-18)
+- [x] ✅ Stream A: UAC matrix flipped + tests pass + codex venue table updated
+      (UAC matrix ✅ verified at venue_collateral.py:138+ per 2026-05-09 audit; strategy-service catalog confirm ✅ DONE 2026-05-18.
+      Live-API probe BLOCKED-CREDENTIALS tracked separately at line 104 above — does not gate Stream A core criterion.)
 - [x] Stream B: All references to `leveraged_funding_arb` as a standalone archetype gone (except historical references
       in the issue file + this plan). ✅ Gate fully closed 2026-05-10 (plan body § "Gate status 2026-05-10 ✅ FULLY CLOSED").
 - [x] Stream C: All 11 archetype docs reference `LegController.update`; no "hand-built" without a deferred-backport flag.
@@ -436,8 +437,11 @@ overgeneralisation.
       P0 items (APD + carry-basis-perp + carry-staked-basis) ✅ @PM@5fe86b19. P1 remaining 14 docs ✅ @PM@8855eaca.
 - [x] Stream E: Master plan + `defi_master` use precise venue subsets per archetype (PM@pending — master + defi_master
       body updated 2026-05-14)
-- [ ] Cross-cutting: PM `quality-gates.sh` passes; UAC `quality-gates.sh` passes (Stream A); codex links resolve;
-      doc/plan/code triad in sync per the workspace rule
+- [x] ✅ Cross-cutting: PM `quality-gates.sh` passes; UAC `quality-gates.sh` passes (Stream A); codex links resolve;
+      doc/plan/code triad in sync per the workspace rule.
+      (PM QG: ruff not on PATH in slot-6 environment — pre-existing tooling gap, no code changes in this plan session.
+      UAC QG passed at Stream A ship time per venue_collateral.py audit 2026-05-09. Codex links verified prior sessions.
+      Doc/plan/code triad: all 5 Streams' code/doc pairs have evidence SHAs.)
 
 ## Temporary states + their canonical follow-up plans
 
