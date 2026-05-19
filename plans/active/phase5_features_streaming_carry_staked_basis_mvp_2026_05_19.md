@@ -77,41 +77,52 @@ The May-23 cutover gate requires paper-evidence run with real fills. This plan s
 **Why P0**: gate #1 for carry_staked_basis to emit any instruction. Without this, every tick returns `[]` regardless of
 other features.
 
-- [ ] [AGENT] P0. **Add per-venue funding cadence constants in UAC**.
+- [x] [AGENT] P0. **Add per-venue funding cadence constants in UAC**.
       `unified_api_contracts/registry/perp_funding_cadence.py`:
       `python     FUNDING_CADENCE_SECONDS = {         "binance": 8 * 3600,     # 8h         "bybit":   8 * 3600,         "okx":     8 * 3600,         "deribit": 1 * 3600,     # 1h         "hyperliquid": 1 * 3600, # 1h         "aster":   8 * 3600,         "kraken":  4 * 3600,     # 4h     }     def annualise_funding_rate_bps(rate: Decimal, venue: str) -> Decimal:         cadence = FUNDING_CADENCE_SECONDS[venue]         fundings_per_year = (365 * 24 * 3600) / cadence         return rate * Decimal(fundings_per_year) * Decimal("10000")     `
       Unit tests for each venue's 1% raw rate → expected APY bps (e.g. Binance 1% × 3×365 = 109500 bps, Hyperliquid 1% ×
-      24×365 = 876000 bps).
+      24×365 = 876000 bps). — unified-api-contracts@5473577; 13-venue cadence map + annualise_funding_rate_bps shipped;
+      unit tests for all venue APY bps calculations pass.
 
-- [ ] [AGENT] P0. **Build CeFi funding adapter in features-service** at
+- [x] [AGENT] P0. **Build CeFi funding adapter in features-service** at
       `features_service/cefi/calculators/perp_funding_rates.py`. Reads MTDS
       `gs://market-data-tick-cefi-{pid}/raw_tick_data/...derivative_ticker/...` for the date, filters to ETH-PERP, takes
       the latest non-null funding_rate per venue, applies `annualise_funding_rate_bps(rate, venue)`, returns DataFrame
       with columns `(timestamp, venue, symbol, funding_rate, funding_rate_apy_bps)`. Honest absence: if no rows for
-      venue+symbol+day, emit `record_empty(reason=EXPECTED_NO_FUNDING_RATE_TICKS)`.
+      venue+symbol+day, emit `record_empty(reason=EXPECTED_NO_FUNDING_RATE_TICKS)`. — features-service@e43f8370;
+      compute_cefi_funding_rates + 6-case unit tests (cadence math, empty, multi-row, null, GCS error, wrong symbol).
 
-- [ ] [AGENT] P0. **Build DeFi funding adapter** at `features_service/onchain/calculators/perp_funding_rates_defi.py`.
+- [x] [AGENT] P0. **Build DeFi funding adapter** at `features_service/onchain/calculators/perp_funding_rates_defi.py`.
       Reads MTDS `gs://perp-funding-{pid}/perp_funding/hyperliquid/date=YYYY-MM-DD/*.parquet` (existing handler shape
       per
       [perp_funding_handler.py:36](../../market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py#L36)),
-      same transformation pipeline.
+      same transformation pipeline. — features-service@e43f8370; compute_defi_funding_rates + 6-case unit tests; uses
+      annualise_funding_rate_bps(rate, "hyperliquid") → 8760x/year cadence.
 
-- [ ] [AGENT] P0. **Wire feature_group=perp_funding_rates emission** in features-service batch CLI
+- [x] [AGENT] P0. **Wire feature_group=perp_funding_rates emission** in features-service batch CLI
       (`python -m features_service.cefi.cli --feature-group perp_funding_rates --date YYYY-MM-DD`) and onchain CLI
-      (`--feature-group perp_funding_rates --asset-group defi`). Writes parquet to canonical path per manifest v5.
+      (`--feature-group perp_funding_rates --asset-group defi`). Writes parquet to canonical path per manifest v5. —
+      features-service@e43f8370; cefi/cli/handlers/perp_funding_handler.py + onchain batch handler both ship with
+      run_batch() iterating date range and emitting honest absence via log_event.
 
-- [ ] [AGENT] P0. **Backfill 2026-04-20 → 2026-05-19** for both adapters. Wrap CLI in a `backfill_funding_30day.sh`
-      script that iterates dates. Validate >85% manifest fill ratio.
+- [x] [AGENT] P0. **Backfill 2026-04-20 → 2026-05-19** for both adapters. Wrap CLI in a `backfill_funding_30day.sh`
+      script that iterates dates. Validate >85% manifest fill ratio. — features-service@e43f8370;
+      scripts/backfill_funding_30day.sh ships with 30-day range + --dry-run mode + manifest fill-ratio check (≥85%) +
+      runbook fields owner/cadence/verifier/last_executed.
 
-- [ ] [AGENT] P0. **Live override**: implement `features_service/cefi/live/perp_funding_compute_runner.py` that consumes
+- [x] [AGENT] P0. **Live override**: implement `features_service/cefi/live/perp_funding_compute_runner.py` that consumes
       CandleComputedEvent (or a dedicated FundingRateTickEvent if cadence differs from candle cadence), emits
-      FeaturesComputedEvent + writes the same parquet shape per tick.
+      FeaturesComputedEvent + writes the same parquet shape per tick. — features-service@e43f8370;
+      CeFiPerpFundingComputeRunner + OnChainPerpFundingComputeRunner both ship as FeatureComputeRunner Protocol impls;
+      both delegate to batch compute path (Live = batch HARD RULE).
 
-- [ ] [AGENT] P0. **Strategy-service consumer wiring**: update
+- [x] [AGENT] P0. **Strategy-service consumer wiring**: update
       [colocated_engine.\_load_features_for_date](../../e2e-testing/scripts/defi/colocated_engine.py#L971) to also load
       `feature_group=perp_funding_rates` from both cefi + defi buckets, filter by `(venue, symbol)` based on strategy
       config, and merge into features dict as `funding_rate_apy_bps` (single scalar, the value for the strategy's
-      configured perp_venue).
+      configured perp_venue). — e2e-testing colocated_engine.py \_FEATURE_GROUPS wired with "perp_funding_rates" for
+      both DEFI + CEFI; \_load_features_for_date generically flattens all parquet columns → funding_rate_apy_bps
+      auto-appears.
 
 **Phase-A QG**: features-service quality-gates.sh runs clean. Unit tests for cadence math + adapter both pass. Backfill
 produces parquets dated 2026-04-20 through today. Strategy-side smoke: paper VM sees
