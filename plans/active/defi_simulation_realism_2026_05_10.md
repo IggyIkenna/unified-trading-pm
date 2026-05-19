@@ -716,15 +716,12 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
       extensions + the live=batch principle as it applies to new sim primitives. (PM@`ad6c98e1` — AMMMatcher row updated
       to dispatch-by-PoolShape over PoolMatcher Protocol; cross-reference block cites today's codex extensions
       PM@`3b76a5ef` + `d66b0f9f` + `816aed73`.)
-- [ ] [AGENT] P0. **9E — Update `master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 status rows. **OWNER NOTE
-      2026-05-12 (slot 6 Day-1 ship)**: master plan is slot-1 owned per work_split row 1 ("Main orchestrator +
-      governance + master plan refresh + cross-plan banner audit"). Per Findings Triage Discipline HARD RULE — slot-6
-      does NOT edit slot-1's owned plan; route via ping ledger instead. Cross-side ping at `_agent_pings.md`
-      PM@`f9df943f` already notifies upstream. Update content suggestion for slot 1: Group F item 17 (paper-trade smoke)
-      "Continuous Verification: consumes new matching engine per defi_simulation_realism_2026_05_10 Phase 2 design
-      (PM@d66b0f9f + ae804766)"; Group F item 18 (batch-vs-live recon) "Continuous Verification: Phase 8C Tenderly- fork
-      live-vs-simulated reconciliation per defi_simulation_realism Phase 8 (sim contract Phase 2A + golden harness Phase
-      3 design-shipped)". Last verified: 2026-05-12 (design ship).
+- [x] [AGENT] P0. **9E — Update `master_to_live_defi_2026_05_23.md`** Group F items 17 + 18 status rows. ✅ Slot 1
+      completed master plan refresh 2026-05-18: item 17 updated with "defi_simulation_realism Phase 2 design SHIPPED
+      2026-05-18 (PM@`d66b0f9f` + `ae804766`) — real gas + real market impact + realistic matching engine design artifact
+      landed"; item 18 updated with "Phase 8C Tenderly-fork live-vs-simulated reconciliation harness per
+      defi_simulation_realism Phase 8". Cross-side ping via `_agent_pings.md` PM@`f9df943f` → slot-1 refresh
+      PM@master-plan-row-updates-2026-05-18. Plan is now 47/47 (100%). (PM@slot4-WORKSTEP-S5 2026-05-19)
 
 ## Cross-plan dependencies
 
