@@ -1754,8 +1754,10 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
       discount. ✅ manifest_gap_handler.apply_manifest_quality_flags() + wired into _load_features_and_targets() +
       8 unit tests. — ml-training-service@4e83099 (slot-5, 2026-05-19)
-- [ ] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
-      `attempted_failed` (live model can't infer through gaps).
+- [x] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
+      `attempted_failed` (live model can't infer through gaps). ✅ manifest_inference_guard.check_manifest_for_inference()
+      + _check_manifest_guard() wired into InferenceOrchestrator.run_inference() + 10 unit tests (all status paths, asset_group
+      isolation, date filter, fail-open). — ml-inference-service@52caa74 (slot-5, 2026-05-19)
 - [ ] [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
       window size, adjust denominator for `EXPECTED_*` + `SOURCE_RETURNED_ZERO`, skip + emit
       `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling column.
