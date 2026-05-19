@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 1 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 1 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -10,18 +9,28 @@
 
 **Items DONE this session (Phase 5 full):**
 
-- **Phase 5 item 1+2** (UAC schema): `StrategyDecisionContext` + `StrategyDecisionContextRecord` + `DecisionOutcome` StrEnum added to `sim_schemas.py`; registered in `availability_semantics` + `source_priority`; exported from `internal/__init__.py` + `internal/domain/defi/__init__.py`. — uac@b8bdedf
-- **Phase 5 item 3** (strategy-service emitter): `decision_context_writer.py` (new — Pattern A inline writer, `build_decision_outcome()` → `DecisionOutcome` enum, `emit_strategy_decision_context()` errors swallowed); `staked_basis.py` wired on EVERY tick. — strategy-service@3c332ac
-- **Phase 5 item 4** (pnl-attribution reader): `PnlDomainAdapter.read_strategy_decision_context()` mirroring `read_hedge_ratio_snapshots()` pattern. — pnl-attribution-service@f8db566
-- **Phase 5 item 5** (manifest entry): `_record_manifest()` in `decision_context_writer.py` → best-effort `ManifestWriter.record_captured`. — strategy-service@3c332ac
-- **Phase 5 item 6** (unit tests): 11 tests in `test_decision_context_writer.py` (5 `build_decision_outcome` + 6 `emit_strategy_decision_context`); all pass; 842 total strategy-v2 tests green. QG PASSED. — strategy-service@285f154
-- **Phase 5 item 7** (codex): `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" updated with Phase 5 audit-trail banner. — pm@741a2f6d
-- **Phase 5 item 8** (cross-side): already acked by harsh-main; features_tick_observation_audit sub-plan can now wire `correlation_id`.
+- **Phase 5 item 1+2** (UAC schema): `StrategyDecisionContext` + `StrategyDecisionContextRecord` + `DecisionOutcome`
+  StrEnum added to `sim_schemas.py`; registered in `availability_semantics` + `source_priority`; exported from
+  `internal/__init__.py` + `internal/domain/defi/__init__.py`. — uac@b8bdedf
+- **Phase 5 item 3** (strategy-service emitter): `decision_context_writer.py` (new — Pattern A inline writer,
+  `build_decision_outcome()` → `DecisionOutcome` enum, `emit_strategy_decision_context()` errors swallowed);
+  `staked_basis.py` wired on EVERY tick. — strategy-service@3c332ac
+- **Phase 5 item 4** (pnl-attribution reader): `PnlDomainAdapter.read_strategy_decision_context()` mirroring
+  `read_hedge_ratio_snapshots()` pattern. — pnl-attribution-service@f8db566
+- **Phase 5 item 5** (manifest entry): `_record_manifest()` in `decision_context_writer.py` → best-effort
+  `ManifestWriter.record_captured`. — strategy-service@3c332ac
+- **Phase 5 item 6** (unit tests): 11 tests in `test_decision_context_writer.py` (5 `build_decision_outcome` + 6
+  `emit_strategy_decision_context`); all pass; 842 total strategy-v2 tests green. QG PASSED. — strategy-service@285f154
+- **Phase 5 item 7** (codex): `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment"
+  updated with Phase 5 audit-trail banner. — pm@741a2f6d
+- **Phase 5 item 8** (cross-side): already acked by harsh-main; features_tick_observation_audit sub-plan can now wire
+  `correlation_id`.
 - **EOD inventory**: 69 plans / 55% done / 461 cal AI-days. defi_catalogue 59/68 (87%).
 
 **Still BLOCKED:**
 
-- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator signal.
+- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator
+  signal.
 - defi_recursive_borrow Phase 3-4: BLOCKED-OPERATOR.
 - api_keys Phase 5.C CoinGecko: BLOCKED-CREDENTIALS.
 
@@ -31,17 +40,22 @@
 
 **Items DONE this session:**
 
-- **7I**: Master plan Group F row 20 Last verified → 2026-05-18 (B-015 paper VM smoke); F20 graduated from NEVER list (6 remaining). PM@75560065 + flip PM@3d84772b.
-- **classify_venue_error kalshi + polymarket_clob**: execution-service@a2b5eef46; issue doc resolved at PM@0f91dd83. Both files now SP-12(a) compliant.
+- **7I**: Master plan Group F row 20 Last verified → 2026-05-18 (B-015 paper VM smoke); F20 graduated from NEVER list (6
+  remaining). PM@75560065 + flip PM@3d84772b.
+- **classify_venue_error kalshi + polymarket_clob**: execution-service@a2b5eef46; issue doc resolved at PM@0f91dd83.
+  Both files now SP-12(a) compliant.
 - **EOD inventory regenerator**: 69 plans / 55% done / 461 cal AI-days left. defi_catalogue 59/68 (87%).
 
 **In progress:**
 
-- **Phase 5 STRATEGY_DECISION_CONTEXT** (agent a4323884791f8dd33): UAC `StrategyDecisionContext`/`StrategyDecisionContextRecord` + strategy-service on_tick emitter + pnl-attribution reader. Agent running UAC QG as of 12:12 UTC.
+- **Phase 5 STRATEGY_DECISION_CONTEXT** (agent a4323884791f8dd33): UAC
+  `StrategyDecisionContext`/`StrategyDecisionContextRecord` + strategy-service on_tick emitter + pnl-attribution reader.
+  Agent running UAC QG as of 12:12 UTC.
 
 **Still BLOCKED:**
 
-- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator signal.
+- L3/L5 write-pause flip: UTL `get_bucket_name` + deployment-api `_BUCKET_TEMPLATES` — PENDING-WRITE-PAUSE operator
+  signal.
 - defi_recursive_borrow Phase 3-4: BLOCKED-OPERATOR.
 - api_keys Phase 5.C CoinGecko: BLOCKED-CREDENTIALS.
 
@@ -3112,10 +3126,9 @@ VM: strategy-paper-carry-staked-basis-20260517-225137
 
 **B-015 dependency cascade fixed** (deployment-service@e8eef2d + @09570e0):
 
-VM 225137 crashed: `ModuleNotFoundError: No module named 'solana'`
-Root cause: execution-service installed --no-deps; solana + solders needed at module level in
-defi_execution/protocols/.
-Fix: install both explicitly in setup script (same pattern as sqlalchemy/nautilus-trader).
+VM 225137 crashed: `ModuleNotFoundError: No module named 'solana'` Root cause: execution-service installed --no-deps;
+solana + solders needed at module level in defi_execution/protocols/. Fix: install both explicitly in setup script (same
+pattern as sqlalchemy/nautilus-trader).
 
 Fixes applied:
 
@@ -3210,6 +3223,7 @@ slot-6 fresh-theme 3rd queue burn 🏆
 **B-015**: VM `20260518-115404` RUNNING. 3/72 ticks confirmed. Tick 4 expected 09:27 UTC (32 min). No errors in GCS log.
 
 **Dispatches since tick-79**:
+
 - Harsh slot-2: item 15 (pyproject deep sweep) ✅ — dispatched item 16 (os.getenv + ImportError sweep)
 - Harsh slot-3: fresh-theme defi_master codex dispatched; ack pending
 - Harsh slot-6: simulation_scenarios_topology Phase 6 dispatched; ack pending
@@ -3227,14 +3241,19 @@ slot-6 fresh-theme 3rd queue burn 🏆
 
 ## [slot 1 main] 2026-05-18 ~08:58 UTC — tick-81: tick-4 window 29 min out; Gate 4 FIRED confirmed
 
-**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (29 min). No errors. VM status = RUNNING confirmed.
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (29 min). No errors. VM status
+= RUNNING confirmed.
 
-**Master plan update**: `ebc50edb` — inventory regenerated 2026-05-18 08:54 UTC. 69 plans, 54% done, 471 cal AI-days left. Row-6 Last-verified updated to **2026-05-13 (Gate 4 🟢 FIRED)**: writegate Phase 6.6/6.7/6.8/6.9 all complete; β-verdict (per-service emission boundary canonical) confirmed across all 9 services. This is a May-23 readiness gate item — now locked.
+**Master plan update**: `ebc50edb` — inventory regenerated 2026-05-18 08:54 UTC. 69 plans, 54% done, 471 cal AI-days
+left. Row-6 Last-verified updated to **2026-05-13 (Gate 4 🟢 FIRED)**: writegate Phase 6.6/6.7/6.8/6.9 all complete;
+β-verdict (per-service emission boundary canonical) confirmed across all 9 services. This is a May-23 readiness gate
+item — now locked.
 
 **No new slot acks** since tick-80. All dispatches still pending. Quiet interval normal — slots processing.
 
 **Harsh-side activity** (all IST timestamps, ~5:30 ahead of UTC):
-- Slot-2: item 15 ✅; item 16 dispatched (os.getenv sweep)  
+
+- Slot-2: item 15 ✅; item 16 dispatched (os.getenv sweep)
 - Slot-3: 17/17 done 🏆; fresh-theme defi_master dispatched
 - Slot-6: 16/16 done 🏆; simulation_scenarios_topology dispatched
 - Slot-9: direct-dispatched item-14 (live_pipeline_mtds_mdps); silent 25+ min
@@ -3248,16 +3267,22 @@ slot-6 fresh-theme 3rd queue burn 🏆
 **B-015**: VM `20260518-115404` RUNNING. Still 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (25 min). No errors.
 
 **Incoming commits since tick-81**:
+
 - `6e366031` — harsh slot-2 items 16+17 ✅ done (ImportError sweep + C901 monitor = 0)
-  - Item 16: orchastrator@4f0577d — gcs_sync.py ImportError removed + fail-loud. 2 residuals flagged (MTDS hyperliquid_s3 + UTL instruments_catalog_reader — optional dep guards, need arch decision)
+  - Item 16: orchastrator@4f0577d — gcs_sync.py ImportError removed + fail-loud. 2 residuals flagged (MTDS
+    hyperliquid_s3 + UTL instruments_catalog_reader — optional dep guards, need arch decision)
   - Item 17: execution-service C901 = 0 ruff-clean; no regression from slot-5 Phase 9 tests
 - `5303f8d6` — harsh slot-4 item 16 ✅ done (batch-live-reconciliation cross-asset rollup, 10 tests, QG ✅ 147 passed)
-- `b4e26612` — features-service delta_one test-suite bug-fix flip (semver-rollout[bot]; slot-8 work from 2026-05-17; 33 failures cleared → 1323 passing)
+- `b4e26612` — features-service delta_one test-suite bug-fix flip (semver-rollout[bot]; slot-8 work from 2026-05-17; 33
+  failures cleared → 1323 passing)
 
 **Actions taken**:
-- Harsh slot-2: ALL 17 items done 🏆 → dispatched fresh theme: execution-service Phase 9 cost models + DefiErrorCode hardening
+
+- Harsh slot-2: ALL 17 items done 🏆 → dispatched fresh theme: execution-service Phase 9 cost models + DefiErrorCode
+  hardening
 
 **Remaining silent slots** (ack still pending since prior dispatches):
+
 - Harsh slot-3: defi_master codex (fresh-theme ~35 min old)
 - Harsh slot-4: item-5 defi_basedpyright final 3 (~12 min since dispatch)
 - Harsh slot-6: simulation_scenarios_topology (~45 min since dispatch)
@@ -3270,13 +3295,15 @@ slot-6 fresh-theme 3rd queue burn 🏆
 
 ## [slot 1 main] 2026-05-18 ~09:06 UTC — tick-83: NEW IKENNA WORK SPLIT dispatched; tick-4 21 min out
 
-**B-015**: VM `20260518-115404` RUNNING. Still 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (21 min). VM RUNNING confirmed.
+**B-015**: VM `20260518-115404` RUNNING. Still 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (21 min). VM RUNNING
+confirmed.
 
 **NEW IKENNA WORK SPLIT** (`c7aca145` — 09:02 UTC): Cycle 2 Day-3 — delegate-flip campaign + cutover work.
 
 Dispatched all 7 ikenna slots with correct assignments:
+
 - **Slot 2**: UTL (23) + batch-live-recon (7) + strategy-service (2) delegate-flip → `bucket_name_ssot` plan
-- **Slot 3**: UAC (5) + features-service (2) delegate-flip + defi_catalogue close (10 items) 
+- **Slot 3**: UAC (5) + features-service (2) delegate-flip + defi_catalogue close (10 items)
 - **Slot 4**: AWS migration Phase 2-4 + defi_recursive_borrow Phase 3-4
 - **Slot 5**: execution-service (33) + UI (4) delegate-flip + api_keys Phase 5.B/5.C scaffold
 - **Slot 6**: deployment-api (27) delegate-flip + code_freeze Phase 2.6 Step 4/5
@@ -3285,11 +3312,14 @@ Dispatched all 7 ikenna slots with correct assignments:
 
 Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPERSEDED by this split.
 
-**Total delegate-flip callsites to migrate**: 103 (UTL 23 + UAC 5 + features 2 + execution 33 + UI 4 + deployment-api 27 + batch-live-recon 7 + strategy 2).
+**Total delegate-flip callsites to migrate**: 103 (UTL 23 + UAC 5 + features 2 + execution 33 + UI 4 + deployment-api
+27 + batch-live-recon 7 + strategy 2).
 
-**Harsh slots**: slot-2 all-17-done; fresh Phase 9 theme dispatched. Slot-3/6 awaiting defi_master/simulation acks. Slot-9 silent 33+ min.
+**Harsh slots**: slot-2 all-17-done; fresh Phase 9 theme dispatched. Slot-3/6 awaiting defi_master/simulation acks.
+Slot-9 silent 33+ min.
 
 **Incoming commits since tick-82**:
+
 - `26336f55`: harsh slot-7 items 14+15 flipped (deployment-ui lifecycle_tabs + promote_workflow)
 - `c7aca145`: NEW Ikenna work split (delegate-flip + cutover, 8-slot allocation)
 
@@ -3301,13 +3331,16 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (19 min). No errors.
 
-**Incoming commit**: `a364e912` — harsh slot-7 backfill dual-flip for items 14+15 (deployment_ui lifecycle_tabs + promote_workflow). Dual-flip discipline correctly applied retroactively.
+**Incoming commit**: `a364e912` — harsh slot-7 backfill dual-flip for items 14+15 (deployment_ui lifecycle_tabs +
+promote_workflow). Dual-flip discipline correctly applied retroactively.
 
 **No new slot acks** since tick-83 dispatches (2 min ago — normal lag). All 7 ikenna slots have correct assignments.
 
-**Harsh slot-9 escalation**: 35-min silence since item-14 dispatch. Sent second check-in ping. If no ack by tick-85, item 14 stays queued — ikenna slots will pick up live_pipeline work after cutover dispatches settle.
+**Harsh slot-9 escalation**: 35-min silence since item-14 dispatch. Sent second check-in ping. If no ack by tick-85,
+item 14 stays queued — ikenna slots will pick up live_pipeline work after cutover dispatches settle.
 
 **Delegate-flip summary** (103 callsites across 8 repos):
+
 - UTL: 23 | UAC: 5 | features-service: 2 | execution-service: 33
 - UI: 4 | deployment-api: 27 | batch-live-recon: 7 | strategy-service: 2
 
@@ -3320,6 +3353,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: VM `20260518-115404` RUNNING. 3/72 ticks. Tick 4 expected 09:27 UTC (15 min). No errors.
 
 **Incoming commits since tick-84** (5 rebased):
+
 - `c55c175b` — harsh slot-7 session-close: dual-flip backfill done, ALL 17 items ✅ (soak gate on item-2 = 2026-05-24)
 - `8855eaca` — harsh slot-3 Stream D P1: 14 archetype docs updated (target_leverage/target_net_delta) — PM@8855eaca
 - `ae7e0991` — harsh slot-3 item-18 flip: defi_archetypes Stream D gate closed
@@ -3327,8 +3361,10 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - `1953846e` — harsh slot-2 STARTED Phase 9 cost models + DefiErrorCode ✅ ack received
 
 **Actions taken**:
+
 - Harsh slot-3: ALL 19 items done 🏆 → re-dispatched to `defi_master_2026_05_07.md` codex residuals (74 items, 9.8 cal)
-- Harsh slot-7: all 17 done + soak-gate → dispatched `mock_data_pipeline_benchmarking` final 2 items → chain `expected_unattempted_propagation_chain` (10 items)
+- Harsh slot-7: all 17 done + soak-gate → dispatched `mock_data_pipeline_benchmarking` final 2 items → chain
+  `expected_unattempted_propagation_chain` (10 items)
 
 **Harsh slot-9**: still silent (39 min since item-14 dispatch). Second check-in sent at tick-84.
 
@@ -3344,7 +3380,9 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **0 incoming commits since tick-85** — sync clean.
 
-**Notable**: `a85dac72` (landed before tick-85) — ikenna slot-7 Phase B tick-47 shipped (preflight.py 52L→15L + dep_checker 54L→26L, execution-service@b593307e8). Slot-7 is still on Phase B when new dispatch to writegate Phase 6.6/6.7 was sent. Slot-7 needs to transition — they'll pick up writegate after current session.
+**Notable**: `a85dac72` (landed before tick-85) — ikenna slot-7 Phase B tick-47 shipped (preflight.py 52L→15L +
+dep_checker 54L→26L, execution-service@b593307e8). Slot-7 is still on Phase B when new dispatch to writegate Phase
+6.6/6.7 was sent. Slot-7 needs to transition — they'll pick up writegate after current session.
 
 **No new acks** from any slot since tick-85 dispatches (3 min lag — normal).
 
@@ -3361,16 +3399,23 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: VM `20260518-115404` RUNNING. 3/72 ticks in GCS log. Tick 4 expected 09:27 UTC (8 min). VM RUNNING confirmed.
 
 **Incoming commits since tick-86** (3 rebased):
+
 - `13332983` — UAC ratchet → 0 (5 callsites migrated; bucket_name_ssot delegate-flip STARTED)
-- `87ecb795` — harsh slot-2 item 16 ✅: Phase 9 cost models + DefiErrorCode (30 tests, execution-service@05fce938, QG 7229 passed)
-- `edc6802f` — harsh slot-5 item 17 ✅: pnl-attribution per-asset_group rollup hardening (13 tests, pnl-attribution@802d8bd, QG green)
-- `7c77b311` — ikenna slot-8 correction: cefi-batch-live.md + writegate 6.6/6.7 already done → redirected to alerting SM hot-reload + api_keys Phase 5.B
+- `87ecb795` — harsh slot-2 item 16 ✅: Phase 9 cost models + DefiErrorCode (30 tests, execution-service@05fce938, QG
+  7229 passed)
+- `edc6802f` — harsh slot-5 item 17 ✅: pnl-attribution per-asset_group rollup hardening (13 tests,
+  pnl-attribution@802d8bd, QG green)
+- `7c77b311` — ikenna slot-8 correction: cefi-batch-live.md + writegate 6.6/6.7 already done → redirected to alerting SM
+  hot-reload + api_keys Phase 5.B
 
 **Actions taken**:
-- Harsh slot-2: ALL Phase 9 items done + items 11-17 exhausted → dispatched Wave 59 features-service coverage (3rd fresh theme)
+
+- Harsh slot-2: ALL Phase 9 items done + items 11-17 exhausted → dispatched Wave 59 features-service coverage (3rd fresh
+  theme)
 - Ikenna slot-8: received corrected assignment (alerting + api_keys Phase 5.B)
 
-**Harsh slot-9**: 46+ min silent since item-14 dispatch. Declaring DARK. Item-14 (live_pipeline_mtds_mdps_features) remains in queue — available to any other slot.
+**Harsh slot-9**: 46+ min silent since item-14 dispatch. Declaring DARK. Item-14 (live_pipeline_mtds_mdps_features)
+remains in queue — available to any other slot.
 
 **Delegate-flip progress**: UAC 5 callsites done. 98 remaining across 7 repos.
 
@@ -3380,16 +3425,19 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~09:25 UTC — tick-88: tick-4 window open; ikenna slots dispatched; harsh slots active
 
-**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks confirmed. Tick 4 window opens NOW (09:27 UTC). GCS log not yet showing tick 4 (2 min until expected). Checking next tick.
+**B-015**: VM `20260518-115404` RUNNING. 3/72 ticks confirmed. Tick 4 window opens NOW (09:27 UTC). GCS log not yet
+showing tick 4 (2 min until expected). Checking next tick.
 
 **Incoming commits since tick-87** (rebased cleanly):
+
 - `ee5af285` — alerting_service_live_rules flip item 15 + work_split item 15 (slot-2 deep sustain seeded)
-- `0e9350dd` — execution-service tick-49 flip: _flash_open 71L→33L, get_optimal_route 72L→21L
+- `0e9350dd` — execution-service tick-49 flip: \_flash_open 71L→33L, get_optimal_route 72L→21L
 - `95592993` — slot-3 scope correction + slot-7 STARTED ack catch-up
 - `446af4d6` — UTL item 15 flip: 16 ratchet/idempotency tests
 - `b96c9ffc` — execution-service tick-48 flip: 4 methods 71-74L→<50L
 
 **Ikenna slot acks** (dispatched 09:06 UTC, 19 min lag):
+
 - slot_2 (UTL/batch-live-recon/strategy delegate-flip): **no ack yet** — normal cold-start
 - slot_3 (UAC/features-service delegate-flip + defi_catalogue): **no ack yet**
 - slot_4 (AWS Phase 2-4 + defi_recursive_borrow Phase 3-4): **no ack yet**
@@ -3399,6 +3447,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8 (alerting SM hot-reload + api_keys Phase 5.B): **no ack yet**
 
 **Harsh slot states**:
+
 - slot_2: DEEP SUSTAIN QUEUE (20 mechanical items seeded, working execution-service lint territory)
 - slot_3: scope correction dispatched (defi_master codex sweep redirect)
 - slot_4: item 5 direct dispatch (defi_basedpyright features-service final 3 items)
@@ -3414,9 +3463,11 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~09:33 UTC — tick-89: tick-4 confirmed; major completions; slot-7/8 redispatched
 
-**B-015**: VM `20260518-115404` RUNNING. **Tick 4 confirmed at 09:27:17 UTC** (4/72). No errors. PnL=$0.00. Gate pvl-p18a on track. Tick 5 expected 10:27 UTC.
+**B-015**: VM `20260518-115404` RUNNING. **Tick 4 confirmed at 09:27:17 UTC** (4/72). No errors. PnL=$0.00. Gate
+pvl-p18a on track. Tick 5 expected 10:27 UTC.
 
 **Completions since tick-88** (7 new remote commits absorbed):
+
 - `9330f30a` — deployment-api ratchet → 0 ✅ (ikenna slot-6, 27 callsites done)
 - `d7e33fcc` — aws-migration Phase 2 IAM yaml + Phase 3 ECR repos + Phase 5b Glue crawlers ✅ (ikenna slot-4)
 - `011245b2` — slot-5 wave-59+60 done → STARTED execution-service delegate-flip (33 callsites)
@@ -3425,11 +3476,14 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - `b075702e` — harsh slot-2 Phase 9 supplement DONE + STARTED S9 (naive datetime sweep)
 - `49f5da08` — harsh slot-2 STARTED S9 confirmed
 
-**Harsh-main returned post-lunch** — cross-side ping shows harsh orchestrator back. NOT dispatching harsh slots (harsh-main's job). Cross-side BIG FINDING noted:
+**Harsh-main returned post-lunch** — cross-side ping shows harsh orchestrator back. NOT dispatching harsh slots
+(harsh-main's job). Cross-side BIG FINDING noted:
+
 - kalshi + polymarket_clob adapters missing `classify_venue_error()` → assigned to ikenna slot-8 dispatch
 - MARKET_MAKING_EVENT_SETTLED legacy comment in archetype taxonomy → UAC Ikenna territory (noting as todo)
 
 **Delegate-flip progress**:
+
 - UAC: 5/5 ✅ (ratchet → 0)
 - deployment-api: 27/27 ✅ (ratchet → 0)
 - execution-service: STARTED (slot-5, 33 callsites)
@@ -3438,6 +3492,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - **Total done: 32/103 (31%)**
 
 **Ikenna slot states after dispatch**:
+
 - slot_2: UTL(23)+batch-live-recon(7)+strategy(2) — active, no ack yet
 - slot_3: features-service(2)+defi_catalogue Part B — active, no ack yet
 - slot_4: AWS Phase 4 code path smoke + defi_recursive_borrow Phase 3-4 — active (Phases 2+3 done)
@@ -3446,7 +3501,8 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_7: COMPLETE → REDISPATCHED to defi_catalogue close-out + writegate Phase 6.8
 - slot_8: COMPLETE → REDISPATCHED to api_keys Phase 5.C + classify_venue_error (kalshi/polymarket)
 
-**Status**: 🟢 High throughput. Harsh-main back and managing harsh slots. Next tick: check slot-2/3 acks + B-015 tick 5 (10:27 UTC).
+**Status**: 🟢 High throughput. Harsh-main back and managing harsh slots. Next tick: check slot-2/3 acks + B-015 tick 5
+(10:27 UTC).
 
 ---
 
@@ -3455,6 +3511,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (46 min). No errors.
 
 **New commits since tick-89** (8 absorbed):
+
 - `b035b35c` — defi_recursive_borrow Bybit counterparty cap ✅ (UAC@c29114c, ikenna slot-4)
 - `cd4c6e45` — slot-4 session close: AWS Phase 4 smoke in-flight, bybit-cap deferred scoreboard, R&E venue-cap P0.5 todo
 - `8878e23a` — defi_basedpyright_features_service onchain/ 96→0 errors ✅ (harsh slot-4, item 6)
@@ -3464,6 +3521,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - `4fba1bf4` — ikenna-main → harsh-main cross-side status update (AWS Phase 4 in-flight, UAC todo routed to slot-3)
 
 **Slot activity summary**:
+
 - slot_2: 🟡 35-min silence — check-in sent; UTL delegate-flip may be cold-starting
 - slot_3: 🟡 35-min silence — check-in sent; features-service(2) + defi_catalogue(10) queued
 - slot_4: 🟡 AWS Phase 4 code path smoke in-flight; Bybit counterparty cap ✅; session close filed
@@ -3482,13 +3540,17 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (37 min). No errors.
 
-**MAJOR MILESTONE — `7fc93710`**: write-pause pre-checks COMPLETE — 27/27 repos QG 5.69 at 0. All inline `gs://` callsites structurally eliminated from service source. Delegate-flip campaign effectively DONE at structural level. Write-pause can proceed when operator signals.
+**MAJOR MILESTONE — `7fc93710`**: write-pause pre-checks COMPLETE — 27/27 repos QG 5.69 at 0. All inline `gs://`
+callsites structurally eliminated from service source. Delegate-flip campaign effectively DONE at structural level.
+Write-pause can proceed when operator signals.
 
 **New commits since tick-90** (2 absorbed):
+
 - `9b943fd8` — lifecycle_tabs c2/c3/c4/c6 + sustain S1 ✅ (harsh slot-7 deep sustain — deployment UI routes)
 - `8d7ee92f` / `003fd149` — execution-service tick-53/54 flips (harsh slot-2 S9 refactor work)
 
 **Slot states** (09:50 UTC):
+
 - slot_2: 🟡 44-min silence, check-in 9 min ago — UTL delegate-flip; watching for ack; may be cold-starting
 - slot_3: dispatched MTDS delegate-flip + writegate Phase 6.5 at 09:44 (6 min) — within ack window
 - slot_4: 🔶 session close filed (AWS Phase 4 smoke + Bybit cap done); deferred scoreboard written
@@ -3497,7 +3559,8 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_7: defi_catalogue + writegate Phase 6.8 (dispatched 09:33, 17 min — approaching check-in threshold)
 - slot_8: api_keys Phase 5.C + classify_venue_error (dispatched 09:33, 17 min — approaching check-in threshold)
 
-**Delegate-flip structural status**: 27/27 repos at 0 violations (write-pause pre-checks `7fc93710`). Individual repo ratchets still completing in parallel for audit trail.
+**Delegate-flip structural status**: 27/27 repos at 0 violations (write-pause pre-checks `7fc93710`). Individual repo
+ratchets still completing in parallel for audit trail.
 
 **Status**: 🟢 High throughput. Write-pause milestone crossed. Next tick: slot-2 ack or declare context-expired.
 
@@ -3508,16 +3571,21 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (30 min). No errors.
 
 **New commits since tick-91** (4 absorbed):
+
 - `114a0994` — features-service Wave 59 coverage ✅ (eigen 65.9→100%, aave_rate 71.9→97.8%) — harsh slot-4/5 item 5
 - `d739d90c` / `811237de` / `b3e55598` — execution-service ticks 55/56/57 (harsh slot-2 S9 refactor, methods <50L)
 - `86fd50f9` — batch-live basedpyright uplift + QG `|| true` bug issue doc (harsh slot-2 sustain)
 
 **Actions this tick**:
-1. **slot_2 CONTEXT-EXPIRED** (51 min silent) — UTL delegate-flip superseded (QG 5.69 already at 0 workspace-wide). REDISPATCHED to `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 (sim contract integration + per-family backtest, 10.6 cal-days).
+
+1. **slot_2 CONTEXT-EXPIRED** (51 min silent) — UTL delegate-flip superseded (QG 5.69 already at 0 workspace-wide).
+   REDISPATCHED to `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4 (sim contract integration + per-family
+   backtest, 10.6 cal-days).
 2. **slot_7 check-in** (24 min) — defi_catalogue close-out; no ack.
 3. **slot_8 check-in** (24 min) — api_keys Phase 5.C + classify_venue_error; no ack.
 
 **Slot states** (09:57 UTC):
+
 - slot_2: 🔴 context-expired → REDISPATCHED to defi_recursive_borrow Phase 3-4
 - slot_3: MTDS delegate-flip + writegate Phase 6.5 (dispatched 09:44, 13 min — within ack window)
 - slot_4: session close; AWS + Bybit cap done; deferred scoreboard
@@ -3535,14 +3603,18 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (23 min). No errors.
 
 **New commits since tick-92** (2 absorbed):
+
 - `acd66648` — slot-3 ack: MTDS 0-violations ✅ + Phase 6.5 all-done ✅ + UAC enums fix (uac@2e53d1b)
 - `c8b3b04c` — harsh slot-2 S2: pnl-attribution-service basedpyright 30→0 errors ✅
 
 **Actions this tick**:
-- **slot_3 DONE** (MTDS already at 0, Phase 6.5 already complete, UAC enums comment fixed) → REDISPATCHED to `defi_master_2026_05_07.md` codex close-out (strategy/archetypes/primitives, UAC territory)
+
+- **slot_3 DONE** (MTDS already at 0, Phase 6.5 already complete, UAC enums comment fixed) → REDISPATCHED to
+  `defi_master_2026_05_07.md` codex close-out (strategy/archetypes/primitives, UAC territory)
 - Slots 7/8: check-ins from 09:57 (7 min ago) — within normal response window; monitoring
 
 **Slot states** (10:04 UTC):
+
 - slot_2: defi_recursive_borrow Phase 3-4 (dispatched 09:57, 7 min — watching for ack)
 - slot_3: REDISPATCHED → defi_master codex close-out (dispatched 10:04)
 - slot_4: session close; done for session
@@ -3560,18 +3632,25 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (16 min). No errors.
 
 **New commits since tick-93** (5 absorbed):
+
 - `0fa7f22f` — features-service Wave 60 aave_risk+aave_utilization coverage ✅
 - `67a30705` — features-service Wave 60+61 items 11+14 ✅
-- `af609ad7` / `c7fac668` — Phase H env-tier codex doc + Monitor env-scoping + env badge in Header deployed (h1/h2/h3 — harsh slot-7 deployment-UI deep sustain)
+- `af609ad7` / `c7fac668` — Phase H env-tier codex doc + Monitor env-scoping + env badge in Header deployed (h1/h2/h3 —
+  harsh slot-7 deployment-UI deep sustain)
 - `1401b19c` / `216c396f` — execution-service ticks 59+60 (harsh slot-2 S9 / ikenna slot-7 Phase B)
 
-**Key finding — slot-7**: NOT doing defi_catalogue. Self-directed to **execution-service Phase B method-length refactoring** (tick-60 Phase B, 149/377 methods ~40% cleared). This is HIGH-VALUE work (basedpyright strictness + method complexity reduction). Letting them run — do NOT redirect.
+**Key finding — slot-7**: NOT doing defi_catalogue. Self-directed to **execution-service Phase B method-length
+refactoring** (tick-60 Phase B, 149/377 methods ~40% cleared). This is HIGH-VALUE work (basedpyright strictness + method
+complexity reduction). Letting them run — do NOT redirect.
 
 **Actions this tick**:
-- **slot_8 CONTEXT-EXPIRED** (38 min total, 14 min since check-in) → REDISPATCHED to defi_catalogue close-out + writegate Phase 6.8 (the work slot_7 left behind)
+
+- **slot_8 CONTEXT-EXPIRED** (38 min total, 14 min since check-in) → REDISPATCHED to defi_catalogue close-out +
+  writegate Phase 6.8 (the work slot_7 left behind)
 - Slot_7: CONFIRMED ACTIVE — Phase B execution-service refactoring, self-directed ✅
 
 **Slot states** (10:11 UTC):
+
 - slot_2: defi_recursive_borrow Phase 3-4 (dispatched 09:57, 14 min — watching for ack)
 - slot_3: defi_master codex close-out (dispatched 10:04, 7 min — within window)
 - slot_4: session close; done
@@ -3589,16 +3668,21 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 4/72 ticks. Tick 5 expected 10:27 UTC (10 min). No errors.
 
 **New commits since tick-94** (2 absorbed):
-- `63581672` — GAP-2.4.D delegate-flip complete ✅ (deployment-api Phase 2.6.4, slot-6 shipped as cleanup before pivoting)
+
+- `63581672` — GAP-2.4.D delegate-flip complete ✅ (deployment-api Phase 2.6.4, slot-6 shipped as cleanup before
+  pivoting)
 - `c9b8807a` — risk-and-exposure-service recovery_loop+pre_crash_checkpoint coverage ✅ (harsh slot-2/7 S3 sustain)
 - `1f68ae97` — harsh slot-9 backfill plan-flips items 11/12/13/15 (harsh-main handling)
 
 **Slot states** (10:17 UTC):
-- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 20 min no ack (dispatched 09:57). Send check-in at tick-96 if still silent.
+
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 20 min no ack (dispatched 09:57). Send check-in at tick-96 if still
+  silent.
 - slot_3: defi_master codex close-out — 13 min (dispatched 10:04). Within window.
 - slot_4: session close; done.
 - slot_5: 🟢 execution-service delegate-flip active.
-- slot_6: ✅ **ACK RECEIVED** — live_pipeline Phase 1 STARTED + GAP-2.4.D delegate-flip cleanup done. Reading live_pipeline plan now.
+- slot_6: ✅ **ACK RECEIVED** — live_pipeline Phase 1 STARTED + GAP-2.4.D delegate-flip cleanup done. Reading
+  live_pipeline plan now.
 - slot_7: 🟢 ACTIVE Phase B execution-service refactoring (tick-61, ~149/377 cleared).
 - slot_8: defi_catalogue + writegate 6.8 — 6 min (dispatched 10:11). Within window.
 
@@ -3608,24 +3692,30 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~10:27 UTC — tick-96: B-015 tick-5 window; slot-2 check-in; slot-3 acked defi_master
 
-**B-015**: 4/72 ticks at last GCS read (09:27:36Z). Tick 5 fires at 10:27:17 UTC (this tick window). Log uploaded every 30s — tick-5 should appear on next GCS read.
+**B-015**: 4/72 ticks at last GCS read (09:27:36Z). Tick 5 fires at 10:27:17 UTC (this tick window). Log uploaded every
+30s — tick-5 should appear on next GCS read.
 
 **New commits since tick-95** (4 absorbed):
+
 - `85502fc5` — MDPS item 16 done: 11 canonical_writer error-path tests ✅ (slot-6 before pivot)
 - `f7877569` — slot-3 Phase 2.D complete + defi_master dispatch ack ✅
 - `01476191` — writegate Phase 2.D flip: assert_available_at_present wired + QG green ✅
 - `d36db3e3` — slot-7 flip tick-61: data_loader.py 110L→49L + setup.py 111L→47L ✅
 
 **Slot states** (10:27 UTC):
-- slot_2: 🟡 **CHECK-IN SENT** — defi_recursive_borrow Phase 3-4, 30 min no ack (dispatched 09:57). Check-in in slot_2.md now.
-- slot_3: ✅ **ACKed defi_master codex close-out** (10:04 UTC, "Pulling LDR + reading plan now"). 22 min on theme. Active.
+
+- slot_2: 🟡 **CHECK-IN SENT** — defi_recursive_borrow Phase 3-4, 30 min no ack (dispatched 09:57). Check-in in
+  slot_2.md now.
+- slot_3: ✅ **ACKed defi_master codex close-out** (10:04 UTC, "Pulling LDR + reading plan now"). 22 min on theme.
+  Active.
 - slot_4: session close; done.
 - slot_5: 🟢 execution-service delegate-flip active.
 - slot_6: 🟢 live_pipeline Phase 1 MTDS/MDPS active. ACK received.
 - slot_7: 🟢 Phase B execution-service refactoring, ~149/377 (~40%) cleared, continuing tick-62.
 - slot_8: defi_catalogue + writegate 6.8 — 16 min (dispatched 10:11). Within window.
 
-**B-015 tick-5 CONFIRMED**: `[continuous tick 5] 2026-05-18 10:27:17 | fills=0 | PnL=$0.00` — **5/72** (6.9%). Gate satisfies 2026-05-21 06:27 UTC. No errors. ✅
+**B-015 tick-5 CONFIRMED**: `[continuous tick 5] 2026-05-18 10:27:17 | fills=0 | PnL=$0.00` — **5/72** (6.9%). Gate
+satisfies 2026-05-21 06:27 UTC. No errors. ✅
 
 **Status**: 🟢 B-015 healthy. All slots active or within window. Check-in sent to slot_2.
 
@@ -3636,20 +3726,26 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. Log still at 10:27:17 (last tick). Next tick at 11:27:17 UTC. No errors.
 
 **New commits since tick-96** (3 absorbed):
-- `946c368c` — MDPS item 17: 8 cross-archetype + manifest re-sync parity tests (1321+ passed) ✅ (slot-6 live_pipeline Phase 1)
+
+- `946c368c` — MDPS item 17: 8 cross-archetype + manifest re-sync parity tests (1321+ passed) ✅ (slot-6 live_pipeline
+  Phase 1)
 - `cb1bda20` — slot-7 tick-62: extractor.py 112L→40L + setup.py 108L→43L (execution-service@816dbffd2) ✅
 - `292c6912` — batch-19: serializer+drift cleared, slot-4 cumulative 71 files ✅
 
 **Slot states** (10:33 UTC):
-- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 36 min since dispatch (09:57), 6 min since check-in. Not yet context-expired (threshold ~50 min). Watch at tick-98.
+
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4 — 36 min since dispatch (09:57), 6 min since check-in. Not yet
+  context-expired (threshold ~50 min). Watch at tick-98.
 - slot_3: defi_master codex close-out — 29 min (dispatched 10:04). Within window. No action.
 - slot_4: execution-service Phase B (cumulative 71 files — still running or was slot-7 labeled as 4?). Monitoring.
 - slot_5: 🟢 execution-service delegate-flip + api_keys Phase 5.B active.
 - slot_6: 🟢 live_pipeline Phase 1 active — MDPS item 17 shipped ✅. Healthy output.
 - slot_7: 🟢 Phase B tick-62, ~153/377 (~41%) cleared. Continuing tick-63.
-- slot_8: 🟡 **CHECK-IN SENT** — defi_catalogue + writegate 6.8, 22 min no ack (dispatched 10:11). Check-in in slot_8.md now.
+- slot_8: 🟡 **CHECK-IN SENT** — defi_catalogue + writegate 6.8, 22 min no ack (dispatched 10:11). Check-in in slot_8.md
+  now.
 
-**Status**: 🟢 Good throughput. slot-6/7 producing. slot-2 silence approaching threshold (tick-98 = ~47 min). slot-8 check-in sent.
+**Status**: 🟢 Good throughput. slot-6/7 producing. slot-2 silence approaching threshold (tick-98 = ~47 min). slot-8
+check-in sent.
 
 ---
 
@@ -3658,22 +3754,28 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. Next tick 11:27:17 UTC. No errors. Healthy.
 
 **New commits since tick-97** (5 absorbed):
+
 - `efea9f91` — slot-7 tick-63: setup.py 119L→32L (execution-service@11e0f80a4) ✅
 - `a50b4a92` — slot-7 tick-64: setup.py 147L→29L + **ALL CLEAR** (execution-service@697b9131a) ✅
 - `76bfe885` — slot-5 S5: execution-service market_hours 17 tests, coverage 72%→≥90% (execution-service@ba60562e) ✅
 - `e8b404e6` — slot-5 backfill: exec-service+UI delegate-flip done; api_keys redirected to slot 8 ✅
 - `5190465d` — slot-7 tick-65: data_loader.py 150L→28L **ALL CLEAR** (execution-service@6df769e4b) ✅
 
-**Key event**: slot-7 "ALL CLEAR" on tick-64/65 — execution-service Phase B nearly/fully complete. Watch for slot-7 completion report.
+**Key event**: slot-7 "ALL CLEAR" on tick-64/65 — execution-service Phase B nearly/fully complete. Watch for slot-7
+completion report.
 
 **Slot states** (10:39 UTC):
-- slot_2: 🔴 **REDISPATCHED** — 42 min silent. Fresh context: defi_recursive_borrow Phase 3-4 (Phase 3 = RecursiveBorrowSimulator wiring). Ack "STARTED defi_recursive_borrow Phase 3 (fresh)" expected within 10 min.
+
+- slot_2: 🔴 **REDISPATCHED** — 42 min silent. Fresh context: defi_recursive_borrow Phase 3-4 (Phase 3 =
+  RecursiveBorrowSimulator wiring). Ack "STARTED defi_recursive_borrow Phase 3 (fresh)" expected within 10 min.
 - slot_3: 🟡 **CHECK-IN SENT** — defi_master codex close-out, 35 min no visible ack. Check-in in slot_3.md.
 - slot_4: done (session close). `292c6912` "slot-4 cumulative 71 files" — likely mislabeled slot-7 batch.
-- slot_5: ✅ **SESSION COMPLETE** — exec-service+UI delegate-flip done + market_hours tests shipped. api_keys redirected to slot_8 per plan-flip.
+- slot_5: ✅ **SESSION COMPLETE** — exec-service+UI delegate-flip done + market_hours tests shipped. api_keys redirected
+  to slot_8 per plan-flip.
 - slot_6: 🟢 live_pipeline Phase 1 MTDS/MDPS active. MDPS items 16+17 shipped.
 - slot_7: 🟢 Phase B tick-63/64/65, multiple ALL CLEARs — close to Phase B completion. ~160+/377.
-- slot_8: 🟡 defi_catalogue + writegate 6.8 (+ api_keys queued from slot_5), 28 min no ack (dispatched 10:11). Check-in sent 10:33. Watch for ack.
+- slot_8: 🟡 defi_catalogue + writegate 6.8 (+ api_keys queued from slot_5), 28 min no ack (dispatched 10:11). Check-in
+  sent 10:33. Watch for ack.
 
 **Status**: 🟢 High output. slot-7 near Phase B completion. slot-5 done. slot-2/3 acks pending. slot-8 quiet.
 
@@ -3684,18 +3786,22 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. Next tick 11:27:17 UTC. Healthy.
 
 **New commits since tick-98** (3 absorbed):
+
 - `98e423a3` — slot-6 Phase 3.2: reconnect-STALE tests all 16 WSFeedConnectors (MTDS@a6a045a) ✅
 - `b612b4c5` — execution_policies 86.8%→100%, 18 tests (execution-service@36730ff1) ✅
 - `8f46df0a` — slot-7 batch-20: instruction_loader + 2×instruction_validator; allowlist 47→44; cumulative 74 files ✅
 
 **Slot states** (10:46 UTC):
+
 - slot_2: 🟡 defi_recursive_borrow Phase 3-4 (fresh dispatch 10:39), 7 min — within window. No ack yet.
-- slot_3: 🔴 **REDISPATCHED** — 42 min silent. Fresh dispatch: defi_master codex close-out (same theme). Ack "STARTED defi_master (fresh)" expected within 10 min.
+- slot_3: 🔴 **REDISPATCHED** — 42 min silent. Fresh dispatch: defi_master codex close-out (same theme). Ack "STARTED
+  defi_master (fresh)" expected within 10 min.
 - slot_4: done.
 - slot_5: ✅ session complete.
 - slot_6: 🟢 live_pipeline Phase 1 active — MTDS Phase 3.2 done + execution_policies 100% ✅. Healthy output.
 - slot_7: 🟢 Phase B batch-20, cumulative 74/377+. continuing tick-66.
-- slot_8: 🟡 **2ND CHECK-IN SENT** — 35 min no ack (dispatched 10:11). defi_catalogue + writegate 6.8 + api_keys queued. Context-expired at ~50 min (10:01 from dispatch → 11:01 UTC = tick-100 window).
+- slot_8: 🟡 **2ND CHECK-IN SENT** — 35 min no ack (dispatched 10:11). defi_catalogue + writegate 6.8 + api_keys queued.
+  Context-expired at ~50 min (10:01 from dispatch → 11:01 UTC = tick-100 window).
 
 **Status**: 🟢 slot-6 producing steadily. slot-7 refactoring at pace. slot-2/3/8 acks pending.
 
@@ -3706,22 +3812,27 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. Next tick 11:27:17 UTC. Healthy.
 
 **New commits since tick-99** (5 absorbed):
+
 - `71e42e48` — slot-3: defi_master Phase 1 + work_split items 3+5 flipped ✅
-- `172fa05e` — slot-3: allowed_chains added to carry-staked-basis + arbitrage-price-dispersion archetype codex ✅ (defi_master Phase 3)
+- `172fa05e` — slot-3: allowed_chains added to carry-staked-basis + arbitrage-price-dispersion archetype codex ✅
+  (defi_master Phase 3)
 - `1ff4b30e` — S3 partial progress: 26 monitor tests, 72.4% coverage (slot-6 MTDS monitoring) ✅
 - `aeb3b7c7` — slot-6 Wave 67: adapter coverage 100% (features-service@f5fa85f6) ✅
 - `f451cf6e` — slot-3: Hyperliquid/StarkGate bridges to transfer-rebalance + ack ✅
 
-**slot-3 ACK** (fresh context resumed): Phase 1 UAC ChainKind 24-member StrEnum + CHAIN_BRIDGE_GRAPH + HYPERLIQUID/STARKNET_RPC_TEMPLATES (uac@9aea2b7). Phase 3 archetype docs (PM@172fa05e). Scanning for more open items.
+**slot-3 ACK** (fresh context resumed): Phase 1 UAC ChainKind 24-member StrEnum + CHAIN_BRIDGE_GRAPH +
+HYPERLIQUID/STARKNET_RPC_TEMPLATES (uac@9aea2b7). Phase 3 archetype docs (PM@172fa05e). Scanning for more open items.
 
 **Slot states** (10:52 UTC):
+
 - slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 13 min — **check-in sent**. No ack yet.
 - slot_3: ✅ **ACTIVE** — defi_master Phase 1+3 shipped. Scanning for next items. Excellent output.
 - slot_4: done.
 - slot_5: done.
 - slot_6: 🟢 live_pipeline Phase 1 — Wave 67 adapter 100%, MTDS monitor tests 72.4%. Active.
 - slot_7: 🟢 Phase B ~156/377 (41%). tick-66 in progress.
-- slot_8: 🟡 defi_catalogue + writegate 6.8, **41 min no ack** (dispatched 10:11). Context-expired at ~50 min (11:01 UTC). **Redispatch at tick-101 if still silent.**
+- slot_8: 🟡 defi_catalogue + writegate 6.8, **41 min no ack** (dispatched 10:11). Context-expired at ~50 min (11:01
+  UTC). **Redispatch at tick-101 if still silent.**
 
 **Status**: 🟢 slot-3 back and producing. slot-6/7 steady. slot-8 redispatch imminent.
 
@@ -3732,21 +3843,27 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. Next tick 11:27:17 UTC. Healthy.
 
 **New commits since tick-100** (4 absorbed):
+
 - `405f695d` — slot-3: Extended-Starknet annotation + STARKNET_RPC_TEMPLATES note ✅
 - `438312d4` — S7: execution-service sports_adapter/factory coverage gaps closed (execution-service@eb7031ff) ✅
 - `b6f848ed` — slot-3 session summary: defi_master codex close-out **COMPLETE** (5 commits) ✅
 - `96b3ee87` — S4: 22 nav/header smoketests (deployment-ui@bfcc361) ✅
 
-**slot-3 SESSION COMPLETE**: defi_master codex/09-strategy/ exhausted. All remaining items live-trading or BLOCKED-OPERATOR-DECISION. 5 commits shipped. **Redispatched → defi_catalogue + writegate Phase 6.8.**
+**slot-3 SESSION COMPLETE**: defi_master codex/09-strategy/ exhausted. All remaining items live-trading or
+BLOCKED-OPERATOR-DECISION. 5 commits shipped. **Redispatched → defi_catalogue + writegate Phase 6.8.**
 
 **Slot states** (10:58 UTC):
-- slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 19 min — **final check-in sent**. Context-expired at ~11:09 UTC (tick-102).
-- slot_3: 🔴 **REDISPATCHED** 10:58 UTC → defi_catalogue_chain_primitives + writegate Phase 6.8 (picking up slot_8's stalled work). Ack window 10 min.
+
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 19 min — **final check-in sent**. Context-expired at
+  ~11:09 UTC (tick-102).
+- slot_3: 🔴 **REDISPATCHED** 10:58 UTC → defi_catalogue_chain_primitives + writegate Phase 6.8 (picking up slot_8's
+  stalled work). Ack window 10 min.
 - slot_4: done.
 - slot_5: done.
 - slot_6: 🟢 live_pipeline Phase 1 active. Wave 67 + MTDS monitoring + sports_adapter coverage. Healthy.
 - slot_7: 🟢 Phase B ~156+/377. tick-66+ in progress.
-- slot_8: 🔴 **REDISPATCHED** 10:58 UTC → api_keys Phase 5.C + classify_venue_error (Polymarket/Kalshi scaffold). Ack window 10 min.
+- slot_8: 🔴 **REDISPATCHED** 10:58 UTC → api_keys Phase 5.C + classify_venue_error (Polymarket/Kalshi scaffold). Ack
+  window 10 min.
 
 **Status**: 🟢 Throughput good. slot-3/8 freshly redispatched. slot-2 final check-in. slot-6/7 producing.
 
@@ -3757,14 +3874,18 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. **Tick-6 at 11:27:17 UTC (22 min)**. Healthy.
 
 **New commits since tick-101** (1 absorbed):
+
 - `9dcc6c84` — slot-6 Wave 68: live_handler + lst_seasonal_rewards + feature_builder_registry 100% ✅
 
 **Slot states** (11:05 UTC):
-- slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 26 min — within window. 3rd attempt total. Watch at tick-103 for ack or abandon.
+
+- slot_2: 🟡 defi_recursive_borrow Phase 3-4, fresh dispatch 10:39, 26 min — within window. 3rd attempt total. Watch at
+  tick-103 for ack or abandon.
 - slot_3: 🟡 defi_catalogue + writegate Phase 6.8, dispatched 10:58, 7 min — within ack window. No action.
 - slot_4: done.
 - slot_5: done.
-- slot_6: 🟢 live_pipeline Phase 1 — Wave 68: live_handler + lst_seasonal_rewards + feature_builder_registry 100% ✅. Healthy output.
+- slot_6: 🟢 live_pipeline Phase 1 — Wave 68: live_handler + lst_seasonal_rewards + feature_builder_registry 100% ✅.
+  Healthy output.
 - slot_7: 🟢 Phase B ~156+/377. tick-66+ in progress.
 - slot_8: 🟡 api_keys Phase 5.C + classify_venue_error, dispatched 10:58, 7 min — within ack window. No action.
 
@@ -3779,7 +3900,9 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **New commits since tick-102**: 0. Quiet window.
 
 **Slot states** (11:11 UTC):
-- slot_2: 🚫 **ABANDONED** — 3rd dispatch attempt, 32 min silent on fresh. No further dispatches this session. defi_recursive_borrow Phase 3-4 queued for next human-launched session.
+
+- slot_2: 🚫 **ABANDONED** — 3rd dispatch attempt, 32 min silent on fresh. No further dispatches this session.
+  defi_recursive_borrow Phase 3-4 queued for next human-launched session.
 - slot_3: 🟡 defi_catalogue + writegate Phase 6.8, dispatched 10:58, 13 min — **check-in sent**. No ack visible.
 - slot_4: done.
 - slot_5: done.
@@ -3796,12 +3919,15 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 5/72. **Tick-6 at 11:27:17 UTC (10 min)**. Healthy. Will confirm at tick-105.
 
 **New commits since tick-103** (4 absorbed):
+
 - `51bc13a6` — S5: RBAC guard 4 launch endpoints (deployment-api@71ba947) ✅ (slot-6 live_pipeline)
-- `ed4a1560` — S8: execution-service leveraged_leg_controller + atomic_bundle_executor coverage gaps (execution-service@295680ef) ✅ (slot-7 Phase B)
+- `ed4a1560` — S8: execution-service leveraged_leg_controller + atomic_bundle_executor coverage gaps
+  (execution-service@295680ef) ✅ (slot-7 Phase B)
 - `ac50bae9` — harsh-side: end-of-shift audit slots 2/6/8/9 (operator confirmed idle) — Harsh-side only, no action
 - `40ded00f` — slot-7 batch-21: 4 files cleared (44→40 allowlist) (execution-service@5c2618cc7) ✅
 
 **Slot states** (11:17 UTC):
+
 - slot_2: 🚫 ABANDONED. No further dispatches.
 - slot_3: 🟡 defi_catalogue + writegate Phase 6.8, 19 min no ack — **2nd check-in sent**. Context-expired at 11:48 UTC.
 - slot_4: done.
@@ -3818,13 +3944,17 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **B-015**: 5/72. **Tick-6 at 11:27:17 UTC (4 min)**. Still 5 ticks in log — not yet uploaded. Will confirm at tick-106.
 
-**CRITICAL ACTION — HARSH-MAIN ACK** (`10d88919`): harsh-main flagged pre-decision observability gap on B-015. Acked in `_agent_pings.md`:
+**CRITICAL ACTION — HARSH-MAIN ACK** (`10d88919`): harsh-main flagged pre-decision observability gap on B-015. Acked in
+`_agent_pings.md`:
+
 - Phase 5 routing → **ikenna-side** (same plan owner)
 - Data type → **new `STRATEGY_DECISION_CONTEXT`** (not HedgeRatioSnapshot extension)
 - decision_outcome → **`DecisionOutcome(StrEnum)`** closed-set v1
-- **NO RELAUNCH** of B-015 — gate clock is valuable; Phase 5 ships in parallel. If VM survives 72 ticks, next paper run gets observability.
+- **NO RELAUNCH** of B-015 — gate clock is valuable; Phase 5 ships in parallel. If VM survives 72 ticks, next paper run
+  gets observability.
 
 **New commits since tick-104** (5 absorbed):
+
 - `10d88919` — harsh-main: B-015 observability gap ping (ACKED ✅)
 - `7de7fddf` — slot-6 Wave 69: base.py + aave_rate_impact + lending_features + lst_features coverage ✅
 - `77810d59` — slot-7 S9: execution-service freshness_gate + drain_mode unit coverage ✅
@@ -3832,6 +3962,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - `65e9d71e` — slot-6 S6: openapi.json 181 endpoints (deployment-api@e1fa23d) ✅
 
 **Slot states** (11:23 UTC):
+
 - slot_2: 🚫 ABANDONED.
 - slot_3: 🟡 defi_catalogue + writegate Phase 6.8, 25 min no ack — within 50-min window. Monitoring.
 - slot_4/5: done.
@@ -3845,23 +3976,29 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~11:31 UTC — tick-106: B-015 tick-6 ✅; slot-6/7 wave-70+S10; slot-3/8 final check-ins (17 min to expire)
 
-**B-015**: **6/72 ticks CONFIRMED**. `[continuous tick 6] 2026-05-18 11:27:17 | fills=0 | PnL=$0.00`. 8.3% gate. Next tick 12:27:17 UTC. No errors. ✅
+**B-015**: **6/72 ticks CONFIRMED**. `[continuous tick 6] 2026-05-18 11:27:17 | fills=0 | PnL=$0.00`. 8.3% gate. Next
+tick 12:27:17 UTC. No errors. ✅
 
-**harsh-main Phase 5 ack**: decisions posted in `_agent_pings.md` (11:23 UTC). harsh-main's 11:25 update refined to Phase 5 of existing plan — consistent with ack. No further action needed. Phase 5 queued for ikenna slots.
+**harsh-main Phase 5 ack**: decisions posted in `_agent_pings.md` (11:23 UTC). harsh-main's 11:25 update refined to
+Phase 5 of existing plan — consistent with ack. No further action needed. Phase 5 queued for ikenna slots.
 
 **New commits since tick-105** (4 absorbed):
+
 - `2fbf2773` — slot-7 Phase B batch-21: twap.py + twap_scheduling.py (execution-service@5138500e4) ✅
 - `45de119f` — S7: WCAG AA 13 violations fixed, 7 pages 0 critical (deployment-ui@c8cab31) ✅
 - `b45e76d7` — slot-6 Wave 70: LSTSeasonalRewardsCollector orchestrator 11 tests (features-service@a55c053b) ✅
 - `f08b0f9e` — S10: single-line coverage 3 tests (execution-service@51395abf) ✅
 
 **Slot states** (11:31 UTC):
+
 - slot_2: 🚫 ABANDONED.
-- slot_3: 🟡 defi_catalogue + writegate Phase 6.8 — **3rd check-in sent**, context-expired at 11:48 UTC (17 min). Declare abandoned at tick-107 if no ack.
+- slot_3: 🟡 defi_catalogue + writegate Phase 6.8 — **3rd check-in sent**, context-expired at 11:48 UTC (17 min).
+  Declare abandoned at tick-107 if no ack.
 - slot_4/5: done.
 - slot_6: 🟢 live_pipeline Phase 1 — Wave 70 LSTSeasonalRewards + WCAG fixes. Productive.
 - slot_7: 🟢 Phase B — twap.py + twap_scheduling.py + S10 coverage. Active ~78+ cumulative.
-- slot_8: 🟡 api_keys Phase 5.C — **3rd check-in sent**, context-expired at 11:48 UTC (17 min). Declare abandoned at tick-107 if no ack.
+- slot_8: 🟡 api_keys Phase 5.C — **3rd check-in sent**, context-expired at 11:48 UTC (17 min). Declare abandoned at
+  tick-107 if no ack.
 
 **Status**: 🟢 B-015 6/72 confirmed. slot-6/7 high output. slot-3/8 final window closes 11:48.
 
@@ -3872,9 +4009,11 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 6/72. Next tick 12:27:17 UTC. Healthy.
 
 **New commits since tick-106** (1 absorbed):
+
 - `cfe9d5f0` — slot-6 Wave 71: lst_seasonal_rewards_collector + parser → 100% (features-service@4d1a6647) ✅
 
 **Slot states** (11:37 UTC):
+
 - slot_2: 🚫 ABANDONED (since tick-103).
 - slot_3: 🚫 **ABANDONED** — 39 min, 3 check-ins, no ack. defi_catalogue + writegate Phase 6.8 deferred.
 - slot_4/5: done.
@@ -3883,6 +4022,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_8: 🚫 **ABANDONED** — 39 min, 3 check-ins, no ack. api_keys Phase 5.C + classify_venue_error deferred.
 
 **Deferred work queue** (for next human-launched session):
+
 - defi_recursive_borrow Phase 3-4 (slot_2 stalled)
 - defi_catalogue_chain_primitives + writegate Phase 6.8 (slot_3 stalled)
 - api_keys Phase 5.C + classify_venue_error Polymarket/Kalshi (slot_8 stalled)
@@ -3898,22 +4038,27 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **B-015**: 6/72. Next tick 12:27:17 UTC. Healthy.
 
-**CROSS-SIDE ACK** (`944bfeb8`): harsh-main requested features-side raw-data audit trail routing. Acked in `_agent_pings.md`:
+**CROSS-SIDE ACK** (`944bfeb8`): harsh-main requested features-side raw-data audit trail routing. Acked in
+`_agent_pings.md`:
+
 - New sibling sub-plan: `features_tick_observation_audit_2026_05_18.md`
 - UAC: `FEATURE_OBSERVATION_SNAPSHOT` data_type + `FeatureObservationRecord`
 - **Harsh-side** owns features-onchain `FeatureObservationWriter`; ikenna-side owns Phase 5 strategy consumer
 - correlation_id defined in UAC Phase 5 (ikenna) → imported by harsh-side writer (Optional[str] for now)
 
 **New commits since tick-107** (7 absorbed):
+
 - `a3467112` — slot-6 Wave 72: batch_handler.py 64.6%→~85% (features-service@bc212b1c) ✅
 - `944bfeb8` — harsh-main: features-side raw-data audit trail ping (ACKED ✅)
 - `cb28a4e9` — slot-7 Phase B batch-22: loader_base.py + loader_transforms.py (execution-service@56865ab83) ✅
-- `d2ef7045` — slot-7 batch-22 cont: dust_router_runner + sor_cross_chain + backtest_validator; allowlist 38→35; cumul 81 files ✅
+- `d2ef7045` — slot-7 batch-22 cont: dust_router_runner + sor_cross_chain + backtest_validator; allowlist 38→35; cumul
+  81 files ✅
 - `ecc25e43` — slot-6 Wave 73: feature_writer.py 66%→~84% (features-service@c3ef28af) ✅
 - `b6e42fdb` — slot-7 S11: calculators coverage vwap:89/pov:90/twap:105 (execution-service@d201117e) ✅
 - `ab416bfc` — S9: deployment-service zombie watchdog 19 new tests (deployment-service@0f16556) ✅
 
 **Slot states** (11:43 UTC):
+
 - slot_2/3/8: 🚫 ABANDONED.
 - slot_4/5: done.
 - slot_6: 🟢 live_pipeline Phase 1 — Waves 72+73 this tick (features-service batch_handler + feature_writer). Surging.
@@ -3925,23 +4070,29 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~11:53 UTC — tick-109: batch-23 cumul 83; ruff audit HEALTHY; B-015 6/72 nominal
 
-**B-015**: 6/72 (8.3%). Tick-6 confirmed 11:27:17 UTC. Next tick 12:27:17 UTC. Healthy — fills=0 PnL=$0.00 per design (no rebalance signal yet). Gate clock intact.
+**B-015**: 6/72 (8.3%). Tick-6 confirmed 11:27:17 UTC. Next tick 12:27:17 UTC. Healthy — fills=0 PnL=$0.00 per design
+(no rebalance signal yet). Gate clock intact.
 
 **New commits since tick-108** (4 absorbed):
+
 - `757526e4` — harsh-main ruff orphans audit: slots 4/5/7 tab worktrees checked — verdict HEALTHY (no contamination) ✅
 - `02897cc2` — S10: deployment-ui@6d3d082 — 8 widgets audited, 6 fixes, QG green ✅
 - `24add2f6` — S12: execution-service@0ff550f2 — exit_algo/benchmark_registry coverage (4 tests lines 42/74/104/131) ✅
 - `5ae813f8` — batch-23: converter_orderbook + trade_converter; allowlist 33→31; slot-4 cumul 83 files ✅
 
-**_agent_pings**: No new response from harsh-main to features routing ack (11:43 UTC). Waiting. No action needed — ball is in harsh-main's court.
+**\_agent_pings**: No new response from harsh-main to features routing ack (11:43 UTC). Waiting. No action needed — ball
+is in harsh-main's court.
 
 **Slot states** (11:53 UTC):
+
 - slot_2/3/8: 🚫 ABANDONED (deferred queue unchanged).
 - slot_4/5: done.
-- slot_6: 🟢 live_pipeline Phase 1 — Waves 72+73 committed this session. No new ping since GAP-2.4.D ack but commits flowing.
+- slot_6: 🟢 live_pipeline Phase 1 — Waves 72+73 committed this session. No new ping since GAP-2.4.D ack but commits
+  flowing.
 - slot_7: 🟢 Phase B — batch-22/23 (cumul 83 files, allowlist 33→31), S11/S12 coverage. Steady output.
 
 **Deferred work queue** (next human session — unchanged):
+
 - defi_recursive_borrow Phase 3-4
 - defi_catalogue_chain_primitives + writegate Phase 6.8
 - api_keys Phase 5.C + classify_venue_error Polymarket/Kalshi
@@ -3958,12 +4109,17 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **New PM commits since tick-109**: 0. No new flips or pings. Origin at `a196bbc3` = our tick-109 push.
 
 **Tab audit** (slot_6 + slot_7 worktrees probed directly):
-- slot_6 (`features-service`): Latest `dd3b9e4a` (fix: move patch import top of test_xg_decomp, E402 lint). Wave-50 (`6381d8ec`) already flipped at `222e042d`. Two minor unflipped fix commits (`dd3b9e4a` + `ebbb3c53` emission-policy non-fatal) — both supporting fixes, no standalone plan items. Not blocking.
+
+- slot_6 (`features-service`): Latest `dd3b9e4a` (fix: move patch import top of test_xg_decomp, E402 lint). Wave-50
+  (`6381d8ec`) already flipped at `222e042d`. Two minor unflipped fix commits (`dd3b9e4a` + `ebbb3c53` emission-policy
+  non-fatal) — both supporting fixes, no standalone plan items. Not blocking.
 - slot_7 (`execution-service`): Latest `01b128498` (batch-23 cumul 83 files) already flipped at `5ae813f8`. Tab stable.
 
-**_agent_pings**: No new harsh-main response. Still awaiting ack on features routing (our 11:43 UTC entry is still last).
+**\_agent_pings**: No new harsh-main response. Still awaiting ack on features routing (our 11:43 UTC entry is still
+last).
 
 **Slot states** (12:00 UTC):
+
 - slot_2/3/8: 🚫 ABANDONED.
 - slot_4/5: done.
 - slot_6: 🟢 Wave-50 done + 2 minor fixes. Stable.
@@ -3980,12 +4136,13 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **New PM commits since tick-110**: 0. Origin still at `8b06e2df`.
 
 **Tab heads** (no change from tick-110):
+
 - slot_5 exec: `1797be080` (batch-23 hybrid_optimal_spawn) ✅
 - slot_6 features: `dd3b9e4a` (Wave-50 fix) — no new waves
 - slot_7 exec: `01b128498` (batch-23 cumul 83) ✅
 - slot_7 dui: `0ee228f` (S11 dark-mode) ✅
 
-**_agent_pings**: No new harsh-main response. Awaiting. No action needed.
+**\_agent_pings**: No new harsh-main response. Awaiting. No action needed.
 
 **Status**: 🟢 Quiet. Holding for B-015 tick-7 confirmation at 12:27:17 UTC.
 
@@ -3996,13 +4153,18 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 6/72. Tick-7 due 12:27:17 UTC (~19 min). Healthy.
 
 **New PM commits absorbed via rebase** (3 commits: `6d3f9340`, `7ccc9446`, `f12de4da`):
-- `6d3f9340` — **slot 3 RESUMED** after context compaction: defi_catalogue + writegate Phase 6.8 audit COMPLETE (writegate 6.8 already done in prior session; defi_catalogue all items verified done/blocked)
+
+- `6d3f9340` — **slot 3 RESUMED** after context compaction: defi_catalogue + writegate Phase 6.8 audit COMPLETE
+  (writegate 6.8 already done in prior session; defi_catalogue all items verified done/blocked)
 - `7ccc9446` — flip S12 — deployment-api@9f47791 7 audit emissions + 19 tests ✅
 - `f12de4da` — flip S13 — deployment-ui@1a6f2d1 10 mobile Playwright tests ✅
 
-**SLOT 3 ACTION**: Slot_3 alive + requesting dispatch. **Dispatched** to Phase 5 STRATEGY_DECISION_CONTEXT (`hedge_ratio_snapshot_persistence_2026_05_13.md`). Design decided: new `STRATEGY_DECISION_CONTEXT` data_type + `DecisionOutcome(StrEnum)` 6-value closed-set. Dispatch written to `slot_3.md` 12:08 UTC.
+**SLOT 3 ACTION**: Slot_3 alive + requesting dispatch. **Dispatched** to Phase 5 STRATEGY_DECISION_CONTEXT
+(`hedge_ratio_snapshot_persistence_2026_05_13.md`). Design decided: new `STRATEGY_DECISION_CONTEXT` data_type +
+`DecisionOutcome(StrEnum)` 6-value closed-set. Dispatch written to `slot_3.md` 12:08 UTC.
 
 **Slot states** (12:08 UTC):
+
 - slot_2/8: 🚫 ABANDONED.
 - slot_3: 🟡 DISPATCHED — Phase 5 STRATEGY_DECISION_CONTEXT. 10-min ack window (12:18 UTC).
 - slot_4: done.
@@ -4010,7 +4172,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 - slot_6: 🟢 features-service sports. Tab stable.
 - slot_7: 🟢 MULTI-TRACK exec Phase B + deployment-ui. Tab stable.
 
-**_agent_pings**: No new harsh-main response. Awaiting.
+**\_agent_pings**: No new harsh-main response. Awaiting.
 
 **Status**: 🟢 Slot-3 recovered + dispatched to P0 work. B-015 nominal. Active slots: 3/5/6/7.
 
@@ -4023,14 +4185,16 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **New PM commits absorbed** (1): `3d84772b` — flip item 7I — Group F CV matrix refresh done ✅
 
 **Tab audit** (all already-flipped):
-- slot_5 exec: `a2b5eef46` (Kalshi+Polymarket, ✅ `0f91dd83`) → new: `7e1a25ddd` (batch-24a, ✅ `31762e4a`) + `ca499af3f` (batch-24 passive_aggressive, ✅ covered)
+
+- slot_5 exec: `a2b5eef46` (Kalshi+Polymarket, ✅ `0f91dd83`) → new: `7e1a25ddd` (batch-24a, ✅ `31762e4a`) +
+  `ca499af3f` (batch-24 passive_aggressive, ✅ covered)
 - slot_6 features: `dd3b9e4a` (unchanged) — no new commits
 - slot_7 exec: `7e1a25ddd` (batch-24a, ✅ `31762e4a`) — progressed from `01b128498`
 - slot_7 dui: `1a6f2d1` (S13, ✅ `f12de4da`) — progressed from `0ee228f`
 
 **Slot_3 ack**: Dispatch sent 12:08 UTC. No ack yet at 12:12 (4 min). **First check-in at 12:18 UTC** (10-min window).
 
-**_agent_pings**: No new harsh-main response. Awaiting.
+**\_agent_pings**: No new harsh-main response. Awaiting.
 
 **Status**: 🟢 All flipped. Monitoring slot-3 ack. B-015 tick-7 window approaching.
 
@@ -4041,13 +4205,15 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 6/72. Tick-7 due 12:27:17 UTC (~11 min). Healthy.
 
 **New PM commits absorbed** (3):
+
 - `42564e95` — codex: 4 Portfolio archetype docs + family doc (strategy_archetype_taxonomy §12) ✅
 - `d4cae209` — chore: resolve rebase conflicts (api_keys + code_freeze plan updates) ✅
 - `394561c7` — mark taxonomy §12 Portfolio docs SHIPPED ✅
 
-**Slot_3**: No ack at 12:16 (8 min since 12:08 dispatch). Tab heads unchanged (`9aea2b7` UAC / `2c8e516` strategy-service). **First check-in at 12:28 UTC** (T+20 min standard protocol).
+**Slot_3**: No ack at 12:16 (8 min since 12:08 dispatch). Tab heads unchanged (`9aea2b7` UAC / `2c8e516`
+strategy-service). **First check-in at 12:28 UTC** (T+20 min standard protocol).
 
-**_agent_pings**: No harsh-main response. Awaiting.
+**\_agent_pings**: No harsh-main response. Awaiting.
 
 **Status**: 🟡 Slot-3 silent. B-015 tick-7 imminent (12:27). Next: tick-7 confirm + slot-3 first check-in at 12:28.
 
@@ -4058,18 +4224,22 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 6/72. Tick-7 due 12:27:17 UTC (~8 min). Healthy.
 
 **New PM commits absorbed** (2):
+
 - `1324507b` — flip Phase 3.5 manifest-recorder wire-in — MTDS@5388a9c ✅
 - `7cd01e7e` — flip slot-5 batches 24+25 — passive_aggressive + pov_dynamic refactors ✅
 
 **Slot_3 Phase 5 update** (from `_agent_pings.md` entry written ~12:14 UTC):
+
 - UAC schema done: `StrategyDecisionContextRecord` in `sim_schemas.py` + exports wired
 - UAC QG running as of 12:14 UTC — no push yet (tab head still `9aea2b7`)
 - Will update `_agent_pings` when strategy-service emitter lands on LDR
-- Dependency note posted to harsh-main: `correlation_id: str | None` already coded → harsh-side can scaffold `FeatureObservationWriter` now
+- Dependency note posted to harsh-main: `correlation_id: str | None` already coded → harsh-side can scaffold
+  `FeatureObservationWriter` now
 
 **Slot_5**: `fa79a05dd` (batch-25 pov_dynamic) landed at 12:17 UTC — already flipped `7cd01e7e` ✅
 
-**_agent_pings**: New ikenna-main entry at ~12:14 UTC (Phase 5 status + harsh-main dependency update). Awaiting harsh-main response.
+**\_agent_pings**: New ikenna-main entry at ~12:14 UTC (Phase 5 status + harsh-main dependency update). Awaiting
+harsh-main response.
 
 **Status**: 🟢 Slot-3 in active Phase 5 work. B-015 tick-7 window in 8 min. All productive.
 
@@ -4080,16 +4250,20 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 **B-015**: 6/72. Tick-7 due 12:27:17 UTC (~5 min). Healthy.
 
 **New PM commits absorbed** (1):
-- `0c3b61b0` — **flip Phase 5 items 1+2** — UAC schema (`StrategyDecisionContextRecord` + `DecisionOutcome(StrEnum)`) + `availability_semantics.py` + `source_priority.py` — `uac@b8bdedf` ✅
+
+- `0c3b61b0` — **flip Phase 5 items 1+2** — UAC schema (`StrategyDecisionContextRecord` + `DecisionOutcome(StrEnum)`) +
+  `availability_semantics.py` + `source_priority.py` — `uac@b8bdedf` ✅
 
 **Slot_3 Phase 5 progress**:
+
 - UAC: `b8bdedf` merged to LDR ✅ (items 1+2 flipped)
-- strategy-service: `5d6c963` (bucket-naming delegate-flip `get_bucket_name` → `resolve_bucket_name`) in tab — **unflipped, slot_3's pending flip**
+- strategy-service: `5d6c963` (bucket-naming delegate-flip `get_bucket_name` → `resolve_bucket_name`) in tab —
+  **unflipped, slot_3's pending flip**
 - Next target: `staked_basis.py` `on_tick` emitter (Phase 5 item 3)
 
 **Other tabs**: slot_7 exec `7e1a25ddd` (unchanged), slot_6 features `dd3b9e4a` (unchanged). Stable.
 
-**_agent_pings**: Same as tick-115. No harsh-main response.
+**\_agent_pings**: Same as tick-115. No harsh-main response.
 
 **Status**: 🟢 Phase 5 moving fast. B-015 tick-7 imminent. Watching for 12:27:17 confirmation.
 
@@ -4097,31 +4271,39 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~12:25 UTC — tick-117: uniswap.py refactored; slot-3 strategy-service next; tick-7 in 2min
 
-**B-015**: 6/72. Tick-7 expected at 12:27:17 UTC (~2 min). GCS log flushing every 30s — will confirm next cycle. Healthy.
+**B-015**: 6/72. Tick-7 expected at 12:27:17 UTC (~2 min). GCS log flushing every 30s — will confirm next cycle.
+Healthy.
 
 **New PM commits absorbed** (1):
-- `c2df3be1` — flip batch-25 execution-service: `uniswap.py` `_execute_live_swap` 75L→38L + `mint_position` 106L→46L — `execution-service@9b2cc7ea6` ✅ (significant: live DeFi swap refactor)
 
-**Slot_3 Phase 5**: Strategy-service tab still at `5d6c963` (bucket-naming fix, unflipped). Slot_3 running strategy-service QG or implementing `staked_basis.py` emitter. No push yet.
+- `c2df3be1` — flip batch-25 execution-service: `uniswap.py` `_execute_live_swap` 75L→38L + `mint_position` 106L→46L —
+  `execution-service@9b2cc7ea6` ✅ (significant: live DeFi swap refactor)
+
+**Slot_3 Phase 5**: Strategy-service tab still at `5d6c963` (bucket-naming fix, unflipped). Slot_3 running
+strategy-service QG or implementing `staked_basis.py` emitter. No push yet.
 
 **Slot_5**: `b15278afd` (batch-26 vwap_execution) in tab — already flipped `7e438d1f` ✅.
 
-**_agent_pings**: No harsh-main response.
+**\_agent_pings**: No harsh-main response.
 
 **Status**: 🟢 Phase 5 item 3 (emitter) in progress. B-015 tick-7 imminent. Confirming next cycle.
 
 ## [slot 1 main] 2026-05-18 ~12:34 UTC — tick-118: B-015 TICK-7 CONFIRMED (7/72); slot_3 UAC 2 more items; strategy-service pending
 
-**B-015**: ✅ TICK-7 CONFIRMED — 12:27:18 UTC | fills=0 | PnL=$0.00. **7/72 (9.7%)**. Next tick-8 at 13:27:18 UTC. Gate clock intact, no issues.
+**B-015**: ✅ TICK-7 CONFIRMED — 12:27:18 UTC | fills=0 | PnL=$0.00. **7/72 (9.7%)**. Next tick-8 at 13:27:18 UTC. Gate
+clock intact, no issues.
 
 **New PM commits absorbed**: 0 new since tick-117. Branch up to date after rebase.
 
 **Slot_3 Phase 5**:
-- UAC tab (`tab/ikennaigboaka/3`) HEAD: `d3872a3` (export DecisionOutcome from unified_api_contracts.internal) — 2 commits beyond `b8bdedf` (items 1+2 already flipped). Still on tab branch, not yet promoted to LDR.
+
+- UAC tab (`tab/ikennaigboaka/3`) HEAD: `d3872a3` (export DecisionOutcome from unified_api_contracts.internal) — 2
+  commits beyond `b8bdedf` (items 1+2 already flipped). Still on tab branch, not yet promoted to LDR.
 - strategy-service tab HEAD: `5d6c963` (bucket-naming refactor) — Phase 5 on_tick emitter NOT yet shipped.
 - Status: in progress, implementing.
 
-**harsh-main**: No new _agent_pings response. Last entry: ikenna-main→harsh-main at 12:17 UTC (tick-110 status update). Awaiting.
+**harsh-main**: No new \_agent_pings response. Last entry: ikenna-main→harsh-main at 12:17 UTC (tick-110 status update).
+Awaiting.
 
 **Deferred queue**: `defi_recursive_borrow Phase 3-4` still unassigned. All other deferred items resolved or in flight.
 
@@ -4129,15 +4311,18 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 ## [slot 1 main] 2026-05-18 ~12:39 UTC — tick-119: stale wakeup absorbed; B-015 7/72; slot_3 Phase 5 pending; a4e3cc85 absorbed
 
-**Note**: This tick fired from a stale tick-117 wakeup (pre-compaction). tick-118 was already completed at PM@62b1d97b (~12:34 UTC). No protocol gap.
+**Note**: This tick fired from a stale tick-117 wakeup (pre-compaction). tick-118 was already completed at PM@62b1d97b
+(~12:34 UTC). No protocol gap.
 
 **B-015**: 7/72 (unchanged). GCS log last entry: tick-7 at 12:27:17 UTC. Next tick-8 expected 13:27:17 UTC. ~48 min.
 
-**PM commits absorbed since tick-118**: `a4e3cc85` (flip Slot 2 items 1/2/3 — bucket-naming SSOT delegate-flip complete). Absorbed cleanly.
+**PM commits absorbed since tick-118**: `a4e3cc85` (flip Slot 2 items 1/2/3 — bucket-naming SSOT delegate-flip
+complete). Absorbed cleanly.
 
-**Slot_3 Phase 5**: strategy-service tab still `5d6c963` (bucket-naming). Phase 5 on_tick emitter NOT yet pushed. In progress.
+**Slot_3 Phase 5**: strategy-service tab still `5d6c963` (bucket-naming). Phase 5 on_tick emitter NOT yet pushed. In
+progress.
 
-**harsh-main**: No new _agent_pings response. Last entry: ikenna-main→harsh-main 12:17 UTC.
+**harsh-main**: No new \_agent_pings response. Last entry: ikenna-main→harsh-main 12:17 UTC.
 
 **Deferred**: `defi_recursive_borrow Phase 3-4` still unassigned.
 
@@ -4146,6 +4331,7 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 ## [slot 1 main] 2026-05-18 ~12:44 UTC — tick-120: Phase 5 items 3+5 SHIPPED; B-015 tick-8 window approaching
 
 **Phase 5 STRATEGY_DECISION_CONTEXT** — 🎉 MAJOR PROGRESS:
+
 - `strategy-service@3c332ac` (feat: Phase 5 — StrategyDecisionContext emitter wired into on_tick) — ON LDR ✅
 - PM@4fc824b2 flipped items 3+5 (on_tick wire-in + manifest entry)
 - Items 1+2 (UAC schema): ✅ PM@0c3b61b0
@@ -4156,19 +4342,22 @@ Prior dispatches (defi_master, defi_basedpyright, simulation_scenarios) are SUPE
 
 **New PM commits absorbed**: `4fc824b2` (flip Phase 5 items 3+5) — clean rebase.
 
-**harsh-main**: No new _agent_pings response. Still awaiting.
+**harsh-main**: No new \_agent_pings response. Still awaiting.
 
 **Status**: 🟢 Phase 5 ~5/7 items done. B-015 nominal. Tick-8 in ~43 min.
 
 ## [slot 1 main] 2026-05-18 ~12:48 UTC — tick-121: stale wakeup; B-015 tick-8 pending; slot-5 AlmgrenChriss shipped
 
-**Note**: Stale tick-119 wakeup. Ticks 118/119/120 already committed. Running as tick-121. Two wakeups pending at 13:37+13:39 UTC for tick-8 window — not scheduling another.
+**Note**: Stale tick-119 wakeup. Ticks 118/119/120 already committed. Running as tick-121. Two wakeups pending at
+13:37+13:39 UTC for tick-8 window — not scheduling another.
 
 **B-015**: 7/72 (unchanged). Tick-8 at 13:27:17 UTC — ~39 min. Gate intact.
 
-**New PM commits absorbed**: `3bfbe646` (flip S13 — execution-service@b184eaef AlmgrenChriss + 33 test fixes + slot-5 ping update). Slot-5 making strong progress.
+**New PM commits absorbed**: `3bfbe646` (flip S13 — execution-service@b184eaef AlmgrenChriss + 33 test fixes + slot-5
+ping update). Slot-5 making strong progress.
 
-**Phase 5**: strategy-service@3c332ac on LDR. Items 1+2+3+5 done. Items 4+6+7 (pnl-attribution reader + tests + QG) pending with slot_3.
+**Phase 5**: strategy-service@3c332ac on LDR. Items 1+2+3+5 done. Items 4+6+7 (pnl-attribution reader + tests + QG)
+pending with slot_3.
 
 **harsh-main**: No response. Awaiting.
 

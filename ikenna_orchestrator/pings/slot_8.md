@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 8 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 8 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -31,12 +30,9 @@ Theme: alerting SCRIPT items + api_keys Phase 5.B credential scaffold Status: CO
 
 ## CREDENTIAL APPROVAL REQUEST — kalshi_api_key + kalshi_private_key_pem
 
-**Date**: 2026-05-18
-**Slot**: 8
-**Status**: BLOCKED-CREDENTIALS
+**Date**: 2026-05-18 **Slot**: 8 **Status**: BLOCKED-CREDENTIALS
 
-Vendor: Kalshi (CFTC-regulated prediction market exchange, https://kalshi.com)
-What I need:
+Vendor: Kalshi (CFTC-regulated prediction market exchange, https://kalshi.com) What I need:
 
 - `kalshi-api-key` — Kalshi API key ID (account-level key, not a password)
 - `kalshi-private-key-pem` — RSA private key PEM for RSA-PSS request signing (Kalshi auth model)
@@ -59,18 +55,15 @@ cancel/positions/balance fully implemented; 53 unit tests passing).
 
 ## CREDENTIAL APPROVAL REQUEST — coingecko_api_key
 
-**Date**: 2026-05-18
-**Slot**: 8
-**Status**: BLOCKED-CREDENTIALS
+**Date**: 2026-05-18 **Slot**: 8 **Status**: BLOCKED-CREDENTIALS
 
-Vendor: CoinGecko (crypto market data, https://coingecko.com/api)
-What I need:
+Vendor: CoinGecko (crypto market data, https://coingecko.com/api) What I need:
 
 - `coingecko-api-key` — CoinGecko API key (Demo tier = free but requires registration; Pro tier = $129/month)
 - Tier recommendation: Demo (free) for DeFi token price data — LST prices + DEX token prices
 
-Account to use: existing operator account OR new signup at https://www.coingecko.com/en/api
-Provisioning: `gcloud secrets create coingecko-api-key --project=central-element-323112` + add version
+Account to use: existing operator account OR new signup at https://www.coingecko.com/en/api Provisioning:
+`gcloud secrets create coingecko-api-key --project=central-element-323112` + add version
 
 Unblocks:
 

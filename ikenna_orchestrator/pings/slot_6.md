@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 6 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 6 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -11,13 +10,15 @@
 LDR sync complete. New theme: `deployment_ui_lifecycle_tabs_2026_05_08.md` (~30 cal AI-days).
 
 **Pre-audit findings (commit 567c8a1, May 13)**:
+
 - b1 (App.tsx 6-tab shell): DONE — deployment-ui@567c8a1 (History→Monitor rename, Status tab removed)
 - b2 (Monitor 4 sub-tabs): DONE — deployment-ui@567c8a1 (Backfill/Experiments/Live/Scheduled)
 - b6 (LiveFreshnessPanel): component shipped in same commit, gated on b5 (mode toggle) for wiring
 - b8 (StreamingLogsPanel): component shipped in same commit, gated on c5 (logs endpoint) for wiring
 - Plan checkboxes for b1/b2 were NEVER flipped — backfilling now in this commit.
 
-**Open work this session**: b5 (DataStatus mode toggle), c5 (SSE logs endpoint), d1-d3 (scheduler registry), e1-e2 (live-cluster registry), bb1-bb3 (experiment tracker).
+**Open work this session**: b5 (DataStatus mode toggle), c5 (SSE logs endpoint), d1-d3 (scheduler registry), e1-e2
+(live-cluster registry), bb1-bb3 (experiment tracker).
 
 ---
 
@@ -644,25 +645,25 @@ Pick up alerting-service or any remaining non-operator-gated items from your pla
 
 ## [main → slot 6] 2026-05-17 ~21:45 UTC — Smoke B DONE ✅; new theme: Simulation Scenarios Phase 6
 
-**Smoke B DEPLOYMENT_COMPLETED** at 20:21 UTC (VM 211522, exit_code=0, 11/11 groups, 7 bugs fixed).
-All Smoke B work closed — B-015 paper backtest UNBLOCKED on harsh-side.
+**Smoke B DEPLOYMENT_COMPLETED** at 20:21 UTC (VM 211522, exit_code=0, 11/11 groups, 7 bugs fixed). All Smoke B work
+closed — B-015 paper backtest UNBLOCKED on harsh-side.
 
-**Your prior alerting-service work** (AlertCode wiring @518bddc) is the last agent-doable item.
-Remaining alerting items are [HUMAN] or [SCRIPT]-with-SM-credentials — operator-gated.
+**Your prior alerting-service work** (AlertCode wiring @518bddc) is the last agent-doable item. Remaining alerting items
+are [HUMAN] or [SCRIPT]-with-SM-credentials — operator-gated.
 
 **New theme**: `simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 6 — Backtest harness wire-in
 
 Phases 1-5 are DONE. Phase 6 is ready:
 
-**6.A** — Unified backtest CLI flags: extend backtest entry with `--scenario-id`, `--scenario-matrix`, 
+**6.A** — Unified backtest CLI flags: extend backtest entry with `--scenario-id`, `--scenario-matrix`,
 `--scenario-overlay-yaml` (mutually exclusive). Per `codex/06-coding-standards/cli-convention.md`.
 
-**6.B** — Pipeline wiring: backtest entry instantiates `ScenarioContext` from CLI flag + injects into 
-unified pipeline. `ScenarioContext` propagates via config-reloader pattern.
+**6.B** — Pipeline wiring: backtest entry instantiates `ScenarioContext` from CLI flag + injects into unified pipeline.
+`ScenarioContext` propagates via config-reloader pattern.
 
-**6.C** — YAML overlay schema: `ScenarioOverlay` pydantic round-trips via 
-`unified_api_contracts.scenario_overlay.ScenarioOverlay.model_validate_yaml`. 
-Schema published to `unified-api-contracts/schemas/scenario_overlay.schema.json`.
+**6.C** — YAML overlay schema: `ScenarioOverlay` pydantic round-trips via
+`unified_api_contracts.scenario_overlay.ScenarioOverlay.model_validate_yaml`. Schema published to
+`unified-api-contracts/schemas/scenario_overlay.schema.json`.
 
 QG after each repo (strategy-service + UAC). Half-2 flip in same turn. Ping slot-1 when Phase 6 shipped.
 
@@ -673,33 +674,41 @@ QG after each repo (strategy-service + UAC). Half-2 flip in same turn. Ping slot
 **New Ikenna work split** (`c7aca145`): your slot = **delegate-flip deployment-api + code_freeze runbook**.
 
 Find callsites:
+
 ```bash
 rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   deployment-api/ --glob '!.venv*' --glob '!tests'
 ```
 
 **Part A — Delegate-flip**:
-1. deployment-api (27 callsites → 0): batch by module. `cd .tabs/6/deployment-api && bash scripts/quality-gates.sh` after each batch
-**Conflict-risk**: deployment-api RBAC tests = Harsh slot 7. Bucket-naming is DIFFERENT surface. `git fetch` before push.
 
-**Part B — `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6**:
-2. Phase 2.6 Step 4 completion audit: verify all delegate-flip callsites from slots 2/3/5/6 landed on LDR before write-pause. Create checklist.
-3. Phase 2.6 Step 5 prep: archive plan for old flat buckets (30-day hold procedure)
+1. deployment-api (27 callsites → 0): batch by module. `cd .tabs/6/deployment-api && bash scripts/quality-gates.sh`
+   after each batch **Conflict-risk**: deployment-api RBAC tests = Harsh slot 7. Bucket-naming is DIFFERENT surface.
+   `git fetch` before push.
 
-**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` + `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`
-**NOTE**: Prior dispatch to "simulation_scenarios_topology" is SUPERSEDED by this split.
+**Part B — `code_freeze_migrate_backfill_sequencing_2026_05_10` Phase 2.6**: 2. Phase 2.6 Step 4 completion audit:
+verify all delegate-flip callsites from slots 2/3/5/6 landed on LDR before write-pause. Create checklist. 3. Phase 2.6
+Step 5 prep: archive plan for old flat buckets (30-day hold procedure)
+
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` +
+`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` **NOTE**: Prior dispatch to
+"simulation_scenarios_topology" is SUPERSEDED by this split.
 
 Acknowledge "STARTED deployment-api delegate-flip" within 10 min.
 
 ## [main → slot 6] 2026-05-18 ~09:50 UTC — COMPLETION ACK + FRESH THEME: live_pipeline Phase 1 MTDS/MDPS
 
-**deployment-api ratchet → 0 ✅** — acked (`9330f30a`). **Write-pause pre-checks COMPLETE** (27/27 repos QG 5.69 = 0, `7fc93710`) — major milestone. Phase 2.6 Step 5 also done by slot_7. Your queue is exhausted.
+**deployment-api ratchet → 0 ✅** — acked (`9330f30a`). **Write-pause pre-checks COMPLETE** (27/27 repos QG 5.69 = 0,
+`7fc93710`) — major milestone. Phase 2.6 Step 5 also done by slot_7. Your queue is exhausted.
 
-**New dispatch**: `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 — MTDS + MDPS live-mode wiring.
-This was item-14 (harsh slot-9 DARK, unassigned). Ikenna-side primary owns live pipeline architecture.
+**New dispatch**: `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 — MTDS + MDPS live-mode wiring. This was
+item-14 (harsh slot-9 DARK, unassigned). Ikenna-side primary owns live pipeline architecture.
 
 **Items**:
-1. Read `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — find unchecked `- [ ]` items in Phase 1 (MTDS live-mode activation, MDPS push broker wiring). Avoid Phase 2 cross-service contracts — those need cross-side coordination.
+
+1. Read `plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md` — find unchecked `- [ ]` items in Phase 1 (MTDS
+   live-mode activation, MDPS push broker wiring). Avoid Phase 2 cross-service contracts — those need cross-side
+   coordination.
 2. Ship per item. `cd .tabs/6/<repo> && bash scripts/quality-gates.sh` after each batch.
 3. Dual-flip live_pipeline plan + work_split in same `docs(plans):` commit.
 
@@ -712,7 +721,8 @@ Acknowledge "STARTED live_pipeline Phase 1" within 10 min.
 deployment-api Phase 2.6.4 delegate-flip shipped: deployment-api@eec6b5d
 
 - `data_status_drilldown._BUCKET_TEMPLATES` → `_SERVICE_TO_KIND` + `_PREDICTION_KIND_MAP` + `resolve_bucket_name()`
-- `data_status_service._BUCKET_TEMPLATES` → same pattern; ml-* drift reconciled (ml-models-store / ml-predictions-store)
+- `data_status_service._BUCKET_TEMPLATES` → same pattern; ml-\* drift reconciled (ml-models-store /
+  ml-predictions-store)
 - `upcoming_fixtures._SPORTS_BUCKET_TEMPLATE` → `resolve_bucket_name(kind=instruments-store, asset_group=sports)`
 - `batch_config_utils.build_bucket` → `resolve_bucket_name`; PREDICTION → flat prediction kinds
 - data_query_service already fixed by incoming commit 297b406
@@ -726,14 +736,22 @@ deployment-api Phase 2.6.4 delegate-flip shipped: deployment-api@eec6b5d
 All code items in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 shipped:
 
 **This session (slot-6):**
-- **Phase 3.2** ✅ — pop_reconnect_flag() set-and-reset contract tests for all 16 WSFeedConnectors (MTDS@a6a045a). Plan-flip: PM@98e423a3.
-- **Phase 3.5 ShardManifestRecorder wire-in** ✅ — `websocket_streaming_handler.py` now passes `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket, batch_size=1))` instead of `None`. `live/__init__.py` exports `MTDSShardManifestRecorder`. Leftover `<<<<<<< HEAD` conflict markers in bybit/deribit test files cleaned. Handler wire-in gate test added. Full QG green (MTDS@5388a9c). Plan-flip: PM@1324507b.
+
+- **Phase 3.2** ✅ — pop_reconnect_flag() set-and-reset contract tests for all 16 WSFeedConnectors (MTDS@a6a045a).
+  Plan-flip: PM@98e423a3.
+- **Phase 3.5 ShardManifestRecorder wire-in** ✅ — `websocket_streaming_handler.py` now passes
+  `MTDSShardManifestRecorder(writer=ManifestWriter(service_name="market-tick-data-service", catalogue_bucket=bucket, batch_size=1))`
+  instead of `None`. `live/__init__.py` exports `MTDSShardManifestRecorder`. Leftover `<<<<<<< HEAD` conflict markers in
+  bybit/deribit test files cleaned. Handler wire-in gate test added. Full QG green (MTDS@5388a9c). Plan-flip:
+  PM@1324507b.
 
 **Pre-existing (confirmed complete, updated plan "Left" section to reflect reality):**
+
 - **Phase 3.5 per-venue adapters** ✅ — 18 venues registered (slot-3, MTDS@99fc7b3).
 - **Phase 13** ✅ — 4 launchers + 14 VM prefixes in watchdog dict (slot-4, deployment-service@shipped).
 
-**Only remaining item**: Phase 15 — 7-day live smoke — gates on operational cluster launch + real credentials. Not a code item.
+**Only remaining item**: Phase 15 — 7-day live smoke — gates on operational cluster launch + real credentials. Not a
+code item.
 
 **Slot queue exhausted. Awaiting next dispatch.**
 
@@ -742,16 +760,17 @@ All code items in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 shipp
 **What shipped this session (slot 6)**:
 
 - **Phase 7.A** ✅ `GET /api/scenarios/list` — deployment-api@40a62af, flipped PM@66b7ae05
-- **Phase 7.C** ✅ `GET /api/scenarios/matrix/{archetype}` (in-memory) + `GET /api/scenarios/report/{run_id}` (501 scaffold, Phase 2.C deferred) — deployment-api@cb1918d, flipped PM@1fefa3f4
+- **Phase 7.C** ✅ `GET /api/scenarios/matrix/{archetype}` (in-memory) + `GET /api/scenarios/report/{run_id}` (501
+  scaffold, Phase 2.C deferred) — deployment-api@cb1918d, flipped PM@1fefa3f4
 - 13 unit tests, basedpyright 0 errors
 
 **Unallocated items needing dispatch**:
 
-| Item | Work | Blocker | Suggested slot |
-|------|------|---------|----------------|
-| **7.B** `POST /api/scenarios/run` | deployment-api POST endpoint + `launch-scenario-runner-vm.sh` script in deployment-service | `launch-scenario-runner-vm.sh` does not exist; needs deployment-service VM launcher context | Harsh-side slot with deployment-service context (matches Harsh role: implement-from-spec, single-repo) |
-| **7.D** deployment-ui Scenarios tab | New tab in `unified-trading-system-ui` — scenario library browser, matrix grid (pass/fail cells), drilldown | No hard blocker; needs UI context + `TypedReasonBadges`/`FailurePillarStack` patterns | Harsh-side UI slot |
-| **7.E** Operator-author flow | `POST /api/scenarios/draft` + YAML editor + UAC PR commit | Depends on 7.D tab existing | Post-7.D |
+| Item                                | Work                                                                                                        | Blocker                                                                                     | Suggested slot                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **7.B** `POST /api/scenarios/run`   | deployment-api POST endpoint + `launch-scenario-runner-vm.sh` script in deployment-service                  | `launch-scenario-runner-vm.sh` does not exist; needs deployment-service VM launcher context | Harsh-side slot with deployment-service context (matches Harsh role: implement-from-spec, single-repo) |
+| **7.D** deployment-ui Scenarios tab | New tab in `unified-trading-system-ui` — scenario library browser, matrix grid (pass/fail cells), drilldown | No hard blocker; needs UI context + `TypedReasonBadges`/`FailurePillarStack` patterns       | Harsh-side UI slot                                                                                     |
+| **7.E** Operator-author flow        | `POST /api/scenarios/draft` + YAML editor + UAC PR commit                                                   | Depends on 7.D tab existing                                                                 | Post-7.D                                                                                               |
 
 **Slot 6 queue exhausted.** Awaiting next dispatch from main.
 
@@ -760,14 +779,15 @@ All code items in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 shipp
 ## [slot 6 → main] 2026-05-18 ~current UTC — BACKFILLS COMPLETE + dispatch request
 
 Work_split_2026_05_18_ikenna.md Slot 6 items 2-5 backfilled (PM@b7b8f171):
+
 - Items 2-4 absorbed by Slot 1 main + Slot 7 (write-pause pre-checks + archive-flat-buckets.sh)
 - Item 5: this backfill commit
 
 All prior Slot 6-8 work_split stale checkboxes are now flipped (b1f9eef3 + b7b8f171).
 
 **Proactive action** (per "Clear context = implement, don't ask" rule): Starting simulation_scenarios Phase 7 —
-`/api/scenarios/list` endpoint (7.A) in deployment-api. Phase 6 (CLI + YAML overlay) is done ✅. Phase 7 is the
-natural next step per plan. All 3 items (7.A–7.C) are read-only Python endpoints, no VM launch or UI work.
+`/api/scenarios/list` endpoint (7.A) in deployment-api. Phase 6 (CLI + YAML overlay) is done ✅. Phase 7 is the natural
+next step per plan. All 3 items (7.A–7.C) are read-only Python endpoints, no VM launch or UI work.
 
-Request: if main has a higher-priority P0 task to redirect slot 6 to, ping back. Otherwise slot 6 will ship 7.A+7.C
-and report results.
+Request: if main has a higher-priority P0 task to redirect slot 6 to, ping back. Otherwise slot 6 will ship 7.A+7.C and
+report results.

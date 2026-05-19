@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 4 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 4 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -12,9 +11,9 @@
 
 ### What shipped this round
 
-| File | What changed | Helpers extracted |
-| ---- | ------------ | ----------------- |
-| data/gcs_data_loading.py | _run_pre_load_cache_checks 123L→49L; _convert_day_to_catalog 85L→24L; load_and_convert_from_gcs 305L→47L | _preld_check_existing_scale, _preld_resolve_and_validate_cache, _convert_tbbo_to_bars, _convert_to_bars, _GcsLoadContext TypedDict, _GcsDayResult TypedDict, _mk_day_result, _gcs_build_day_window, _gcs_debug_path_log, _gcs_tradfi_validate_log, _gcs_filter_and_convert, _gcs_check_local_cache_hit, _gcs_load_one_day, _gcs_run_all_days, _gcs_log_summary, _gcs_resolve_dates_to_process |
+| File                     | What changed                                                                                               | Helpers extracted                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data/gcs_data_loading.py | \_run_pre_load_cache_checks 123L→49L; \_convert_day_to_catalog 85L→24L; load_and_convert_from_gcs 305L→47L | \_preld_check_existing_scale, \_preld_resolve_and_validate_cache, \_convert_tbbo_to_bars, \_convert_to_bars, \_GcsLoadContext TypedDict, \_GcsDayResult TypedDict, \_mk_day_result, \_gcs_build_day_window, \_gcs_debug_path_log, \_gcs_tradfi_validate_log, \_gcs_filter_and_convert, \_gcs_check_local_cache_hit, \_gcs_load_one_day, \_gcs_run_all_days, \_gcs_log_summary, \_gcs_resolve_dates_to_process |
 
 - execution-service data/gcs_data_loading.py Half-1: `a98d95a51` (ldr)
 - unified-trading-pm Half-2: this commit
@@ -40,10 +39,10 @@
 
 ### What shipped this round
 
-| File | What changed | Helpers extracted |
-| ---- | ------------ | ----------------- |
-| data/checker.py | check_gcs_file_exists 212L→33L; check_data_availability 106L→27L | _GCS_DATA_TYPE_MAP, _gcs_override_test_date, _gcs_assert_loader, _gcs_resolve_instrument_parts, _gcs_resolve_category, _gcs_build_path, _gcs_check_blob, _gcs_lookup_and_check, _chk_init_result, _chk_resolve_source, _chk_check_trades, _chk_finalize_trades |
-| benchmark/comparison.py | run_comparison 199L→37L; _get_algorithm_references 127L→3L | _ALGORITHM_REFERENCES constant, _log_comparison_header, _setup_signal_driven_config, _run_and_log_benchmark, _run_all_algorithms, _build_algo_result |
+| File                    | What changed                                                     | Helpers extracted                                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data/checker.py         | check_gcs_file_exists 212L→33L; check_data_availability 106L→27L | \_GCS_DATA_TYPE_MAP, \_gcs_override_test_date, \_gcs_assert_loader, \_gcs_resolve_instrument_parts, \_gcs_resolve_category, \_gcs_build_path, \_gcs_check_blob, \_gcs_lookup_and_check, \_chk_init_result, \_chk_resolve_source, \_chk_check_trades, \_chk_finalize_trades |
+| benchmark/comparison.py | run_comparison 199L→37L; \_get_algorithm_references 127L→3L      | \_ALGORITHM_REFERENCES constant, \_log_comparison_header, \_setup_signal_driven_config, \_run_and_log_benchmark, \_run_all_algorithms, \_build_algo_result                                                                                                                 |
 
 - execution-service data/checker.py Half-1: `9e1d6b29b` (ldr)
 - execution-service benchmark/comparison.py Half-1: `f8e20a620` (ldr)
@@ -62,7 +61,8 @@
 - config/grid_v2_registry.py (3 viols: 130L, 163L, 205L)
 - instruments/factory_cefi_defi.py (3 viols: 235L, 249L, 95L)
 - results/extractor.py (3 viols: 132L, 194L, 216L)
-- engine/backtest cluster (7 entries): evaluator_pnl, evaluator_trades, core, results, node_builder, non_trade_processor, runner
+- engine/backtest cluster (7 entries): evaluator_pnl, evaluator_trades, core, results, node_builder,
+  non_trade_processor, runner
 
 ---
 
@@ -72,9 +72,9 @@
 
 ### What shipped this round
 
-| File | What changed | Helpers extracted |
-| ---- | ------------ | ----------------- |
-| data/orderbook_converter.py | _check_skip_if_exists 80L→30L; _filter_by_time_window 105L→26L; _build_snapshot_deltas 158L→37L; convert_orderbook_parquet_to_catalog 195L→50L | _DeltaRecord NamedTuple, _check_df_catalog_exists, _detect_timestamp_cols, _load_parquet_df, _detect_ts_is_nanoseconds, _apply_ts_filter_and_log, _build_clear_record, _build_level_records, _set_f_last_flag, _write_catalog_batch, _run_snapshot_batch_loop |
+| File                        | What changed                                                                                                                                      | Helpers extracted                                                                                                                                                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| data/orderbook_converter.py | \_check_skip_if_exists 80L→30L; \_filter_by_time_window 105L→26L; \_build_snapshot_deltas 158L→37L; convert_orderbook_parquet_to_catalog 195L→50L | \_DeltaRecord NamedTuple, \_check_df_catalog_exists, \_detect_timestamp_cols, \_load_parquet_df, \_detect_ts_is_nanoseconds, \_apply_ts_filter_and_log, \_build_clear_record, \_build_level_records, \_set_f_last_flag, \_write_catalog_batch, \_run_snapshot_batch_loop |
 
 - execution-service Half-1: `2c2b4d057` (ldr)
 - unified-trading-pm Half-2: this commit

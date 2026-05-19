@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_harsh.md`
-> § Slot 4 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_harsh.md` § Slot 4 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -327,26 +326,29 @@ workers (pre-existing structural issue). The OOM fix (base-service.sh default=1 
 2 workers. Issue doc: plans/active/issues/utl_qg_failures_2026_05_15.md. PM@415e2f03. Slot-4 does NOT own UTL —
 escalating to main for assignment.
 
-[2026-05-18 17:15 UTC] [main → slot 4] — 🟡 **UNCOMMITTED RUFF FORMAT** — deep audit of `.tabs/4/features-service` shows **8 files dirty** (`.pre-commit-config.yaml` + `batch_handler.py` source + 6 test files). All confirmed pure ruff reformats (UTC import sort, line-wrap, no logic changes). Operator left as-is per "let slot 4 stay idle". On re-engage:
-  1. `cd .tabs/4/features-service && git status` — verify the 8 files still dirty.
-  2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts"`
-  3. Then resume sustain queue items per work_split § Slot 4.
-Also: batch-live-reconciliation-service worktree is 4 commits behind LDR — rebase on re-engage.
+[2026-05-18 17:15 UTC] [main → slot 4] — 🟡 **UNCOMMITTED RUFF FORMAT** — deep audit of `.tabs/4/features-service` shows
+**8 files dirty** (`.pre-commit-config.yaml` + `batch_handler.py` source + 6 test files). All confirmed pure ruff
+reformats (UTC import sort, line-wrap, no logic changes). Operator left as-is per "let slot 4 stay idle". On re-engage:
+
+1. `cd .tabs/4/features-service && git status` — verify the 8 files still dirty.
+2. `git add -A && git commit -m "chore(format): apply ruff format trailing artifacts"`
+3. Then resume sustain queue items per work_split § Slot 4. Also: batch-live-reconciliation-service worktree is 4
+   commits behind LDR — rebase on re-engage.
 
 ---
 
 ## 2026-05-18 session — features-service Wave 70-73 rolling coverage continuation
 
-[2026-05-18 UTC] slot-4 — 📋 **SESSION SUMMARY (2026-05-18): features-service onchain/ coverage waves 70-73**.
-Continued rolling coverage waves on `features_service/onchain/` after picking up the 2026-05-18 work-split queue items
-1-3 (sit honest-coverage scenarios ✅ + alerting routing ✅ + batch-live reconcile_shard edge cases ✅ per item 14 in
+[2026-05-18 UTC] slot-4 — 📋 **SESSION SUMMARY (2026-05-18): features-service onchain/ coverage waves 70-73**. Continued
+rolling coverage waves on `features_service/onchain/` after picking up the 2026-05-18 work-split queue items 1-3 (sit
+honest-coverage scenarios ✅ + alerting routing ✅ + batch-live reconcile_shard edge cases ✅ per item 14 in
 work_split). After queue items completed, pivoted to reserve queue items 5/6 and then the MEGA RESERVE coverage waves.
 
 ### Waves completed this session
 
-**Wave 70** — `features-service@a55c053b` — NEW FILE: `tests/onchain/unit/test_lst_seasonal_rewards_orchestrator.py`
-(11 tests, 0 pre-existing). Target: `lst_seasonal_rewards_collector.py`. Coverage: closed 6 previously-uncovered
-branches.
+**Wave 70** — `features-service@a55c053b` — NEW FILE: `tests/onchain/unit/test_lst_seasonal_rewards_orchestrator.py` (11
+tests, 0 pre-existing). Target: `lst_seasonal_rewards_collector.py`. Coverage: closed 6 previously-uncovered branches.
+
 - `EmptyChainEventScanner.scan_distributor_transfers` (lines 118-119) — always returns []
 - `LSTSeasonalRewardsCollector.__init__` (lines 152-153) — null filter + set conversion
 - `collect_for_day` lst_filter branch (line 166 continue) — pufETH excluded when filter=['weETH']
@@ -358,6 +360,7 @@ branches.
   causes `TypeError: got unexpected keyword argument` at runtime.
 
 **Wave 71** — `features-service@4d1a6647` — Two near-100% modules closed in single commit:
+
 1. `test_lst_seasonal_rewards_orchestrator.py` extended: `test_collect_for_day_non_seasonal_streams_skipped()` — mixed
    CARRY_BASE + CARRY_ISSUER_SEASONAL registry; only SEASONAL scanned; CARRY_BASE hits line 170 `continue`. Closed
    `lst_seasonal_rewards_collector.py` to ~100%.
@@ -367,12 +370,13 @@ branches.
 
 **Wave 72** — `features-service@bc212b1c` — `test_batch_handler.py` extended: 15 new tests across 5 new classes.
 Coverage: `batch_handler.py` 64.6% → ~85%.
+
 - `TestHandleDependencyReport`: `_handle_dependency_report` dependency-not-in-batch skip path (line 58-80) + all-failed
   result (lines 94-108) + partial-fail (line 125)
 - `TestCheckDependencies`: parallel async dependency check loops (lines 152-161)
 - `TestProcessGroups`: parallel group dispatch + first-fail fallthrough (lines 179-195)
-- `TestPreflightGuard`: `_run_write_gate`-style preflight true→exits-early (lines 334-342) + run
-  ConnectionError→False (lines 373+377-379)
+- `TestPreflightGuard`: `_run_write_gate`-style preflight true→exits-early (lines 334-342) + run ConnectionError→False
+  (lines 373+377-379)
 - `TestLogRunError`: `_log_run_error` FEATURE_WRITE_FAILED emit (lines 424-436) + None df branch (lines 452-454)
 - Plus 4 standalone async tests: `_initialize_services` sets attributes; `_process_feature_group` raises when
   uninitialized; preflight returns True exits early; connection error returns False.
@@ -380,12 +384,13 @@ Coverage: `batch_handler.py` 64.6% → ~85%.
 
 **Wave 73** — `features-service@c3ef28af` — `test_feature_writer_pure.py` extended: 11 new tests across 7 new classes.
 Coverage: `feature_writer.py` 66% → ~84%.
-- `TestAddTimestampOutTypeBranches`: Utf8 string timestamp cast branch (line 304) + Int64 microsecond epoch branch (line
-  307)
+
+- `TestAddTimestampOutTypeBranches`: Utf8 string timestamp cast branch (line 304) + Int64 microsecond epoch branch
+  (line 307)
 - `TestHandleWriteError`: `_handle_write_error` emits FEATURE_WRITE_REJECTED with reason="exception" (lines 238-247)
 - `TestRunWriteGate`: alignment-fail → `_emit_write_rejected` + return None (lines 170-177)
-- `TestApplyEmissionGate`: suppressed+should_alert=True → `log_event` called (lines 214-225) + suppressed+no_alert →
-  no event (line 233)
+- `TestApplyEmissionGate`: suppressed+should_alert=True → `log_event` called (lines 214-225) + suppressed+no_alert → no
+  event (line 233)
 - `TestValidateAlignment`: invalid alignment result → return False (lines 371-378)
 - `TestWriteSeasonalRewards`: empty rows → False (lines 476-478) + non-empty rows → group+write → True (lines 479-486)
   using `LstSeasonalRewardRow` from UAC `unified_api_contracts.internal`
@@ -397,9 +402,11 @@ Item 14 in `plans/active/work_split_2026_05_18_harsh.md` is **fully up to date**
 recorded with SHAs in the MEGA RESERVE item 14 checkbox. Item was flipped ✅ in the same agent turn as each wave.
 
 Queue items 12-15 from the 2026-05-15 extended queue:
+
 - [x] 12. system-integration-tests Phase 8 honest-coverage — done ✅ sit@47a1e04 (work_split item 1)
 - [x] 13. alerting-service alert routing tests — done ✅ alerting@af7122f (work_split item 2)
-- [x] 14. batch-live-reconciliation reconcile_shard edge cases — done ✅ batch-live-reconciliation@a214cd1 (work_split item 3)
+- [x] 14. batch-live-reconciliation reconcile_shard edge cases — done ✅ batch-live-reconciliation@a214cd1 (work_split
+      item 3)
 - [x] 15. workspace-wide unused-import audit — SKIPPED (slot 2 claimed; supplemental issue doc filed)
 
 **All 4 carry-over items from the 2026-05-15 extended queue are now complete.**
@@ -412,14 +419,34 @@ Waiting for main orchestrator to assign next tasks. No open blockers. No cross-s
 Features-service QG note: pre-existing ~198 failures remain (volatility 48 + calendar + other families — NOT caused by
 slot-4). New tests all pass in isolation. Basedpyright clean on all new test files.
 
-[2026-05-18 UTC] slot-4 — STARTED re-engage: ruff format commit confirmed (0fb99ad7); features-service fast-forwarded to 0e73bc90; batch-live-reconciliation fast-forwarded to 64dc955. Beginning coverage Wave 74+ on features-service (owned surface).
+[2026-05-18 UTC] slot-4 — STARTED re-engage: ruff format commit confirmed (0fb99ad7); features-service fast-forwarded to
+0e73bc90; batch-live-reconciliation fast-forwarded to 64dc955. Beginning coverage Wave 74+ on features-service (owned
+surface).
 
-[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage. 28 new tests in test_flash_loan_and_aave_lending_calculators.py; both calculators 0%→~100% (source_name/feature_names/init/calculate_features/fetch_data all paths). Removed 2 stale run_batch/run_live tests from test_cli_and_tradfi.py (pre-existing failures — methods not in canonical ModeHandler since UTL lift 2026-05-08). QG ✅ 0 failures from 7472. features-service@3482b22b. Moving to Wave 75.
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 74 — FlashLoanCalculator + AaveLendingCalculator coverage. 28 new tests in
+test_flash_loan_and_aave_lending_calculators.py; both calculators 0%→~100%
+(source_name/feature_names/init/calculate_features/fetch_data all paths). Removed 2 stale run_batch/run_live tests from
+test_cli_and_tradfi.py (pre-existing failures — methods not in canonical ModeHandler since UTL lift 2026-05-08). QG ✅ 0
+failures from 7472. features-service@3482b22b. Moving to Wave 75.
 
-[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 75 — scanner_factories.py coverage. 18 new tests in test_scanner_factories.py; make_etherscan_scanner (chain routing + key venue + empty-key warning + timeout kwarg) + make_web3_scanner (alchemy key + empty-key/RPC warnings + bound factory delegation) + make_solana_scanner (Helius URL + custom venue + empty-key + max_signatures + rpc pass-through). All 18 passed. features-service@9661f8ab. Moving to Wave 76.
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 75 — scanner_factories.py coverage. 18 new tests in
+test_scanner_factories.py; make_etherscan_scanner (chain routing + key venue + empty-key warning + timeout kwarg) +
+make_web3_scanner (alchemy key + empty-key/RPC warnings + bound factory delegation) + make_solana_scanner (Helius URL +
+custom venue + empty-key + max_signatures + rpc pass-through). All 18 passed. features-service@9661f8ab. Moving to
+Wave 76.
 
-[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 76 — default_factories.py coverage. 25 new tests: _NullSolanaRpc + _to_signature_dict_list + _to_transaction_dict + _to_meta_dict + default_solana_rpc_factory (empty URL/construction failure/normal) + _resolve_block_for_timestamp+default_block_range_resolver (success/fallback/unknown-chain/api_key_supplier paths). All 25 passed. features-service@10251ea3. Moving to Wave 77.
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 76 — default_factories.py coverage. 25 new tests: \_NullSolanaRpc +
+\_to_signature_dict_list + \_to_transaction_dict + \_to_meta_dict + default_solana_rpc_factory (empty URL/construction
+failure/normal) + \_resolve_block_for_timestamp+default_block_range_resolver
+(success/fallback/unknown-chain/api_key_supplier paths). All 25 passed. features-service@10251ea3. Moving to Wave 77.
 
-[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 77 — parquet_dust_loader.py coverage. 25 new tests: lst_holding_wallet_from_params (identity/params/fallback) + lst_target_denom_from_params (native_asset/asset/ETH default) + _row_to_dust_token (normal/missing-amount/bad-amount/isoformat) + ParquetDustLoader.__call__ (no-wallet/exception/empty/filter-miss/match) + _safe_list_blobs (error+success) + _read_partition_frames (skip-non-parquet/read-failure/polars-append). All 25 passed. features-service@10467b52. Moving to Wave 78.
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 77 — parquet_dust_loader.py coverage. 25 new tests:
+lst_holding_wallet_from_params (identity/params/fallback) + lst_target_denom_from_params (native_asset/asset/ETH
+default) + \_row_to_dust_token (normal/missing-amount/bad-amount/isoformat) + ParquetDustLoader.**call**
+(no-wallet/exception/empty/filter-miss/match) + \_safe_list_blobs (error+success) + \_read_partition_frames
+(skip-non-parquet/read-failure/polars-append). All 25 passed. features-service@10467b52. Moving to Wave 78.
 
-[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 78 — lst_rewards_bootstrap.py coverage. 19 new tests: discover_chains_in_registry (5) + _build_required_venues (8) + bootstrap_seasonal_rewards_collector (6: BootstrapResult type, chains_wired, reloader.start(), no-chains warning, prefer_etherscan_for, solana→make_solana_scanner). All 19 passed. features-service@35fa1725. Moving to Wave 79.
+[2026-05-18 UTC] slot-4 — ✅ ITEM DONE: Wave 78 — lst_rewards_bootstrap.py coverage. 19 new tests:
+discover_chains_in_registry (5) + \_build_required_venues (8) + bootstrap_seasonal_rewards_collector (6: BootstrapResult
+type, chains_wired, reloader.start(), no-chains warning, prefer_etherscan_for, solana→make_solana_scanner). All 19
+passed. features-service@35fa1725. Moving to Wave 79.

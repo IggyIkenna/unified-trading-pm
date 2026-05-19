@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 2 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 2 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -14,16 +13,16 @@
 
 - **MDPS@`15c1889`** — Phase 1.2B: UTL streaming candle write lifecycle in `_streaming_write_per_tf`.
   `CandleStreamingWriteContext` dataclass + `open_candle_streaming_writer` / `write_streaming_chunk` /
-  `close_candle_streaming_writer` added to `canonical_writer.py`. `live_workers.py` `_streaming_write_per_tf`
-  rewired: per-batch open/write/close replaces `pd.concat` materialisation. Peak memory ≈ 1 batch × 1.5.
-  Shard-level failure isolation preserved. 4 new unit tests (per_batch_flush, memory_ceiling,
-  exception_mid_stream, shard_level_isolation) — all green. QG green.
+  `close_candle_streaming_writer` added to `canonical_writer.py`. `live_workers.py` `_streaming_write_per_tf` rewired:
+  per-batch open/write/close replaces `pd.concat` materialisation. Peak memory ≈ 1 batch × 1.5. Shard-level failure
+  isolation preserved. 4 new unit tests (per_batch_flush, memory_ceiling, exception_mid_stream, shard_level_isolation) —
+  all green. QG green.
 - **PM@`260a1923`** — Plan checkbox flipped: `mdps_streaming_and_backpressure_2026_05_07.md` Phase 1.2B.
 
 ### Pending next
 
-- **Phase 2** (`mdps_streaming_and_backpressure_2026_05_07.md`): Wire MDPS `ResourceProfiler.on_memory_warning`
-  to admission control — gate new shard submissions when RSS > threshold. Now unblocked by Phase 1.2B.
+- **Phase 2** (`mdps_streaming_and_backpressure_2026_05_07.md`): Wire MDPS `ResourceProfiler.on_memory_warning` to
+  admission control — gate new shard submissions when RSS > threshold. Now unblocked by Phase 1.2B.
 - Boot-ack posted to slot_2.md (this entry). Slot 2 ready for reallocation or Phase 2 assignment.
 
 ---
@@ -688,6 +687,7 @@ Post-cutover Phase B per the issue doc. No new operator/cross-slot signals in th
 **New Ikenna work split landed** (`c7aca145`): your slot = **bucket_name_ssot delegate-flip** across 3 repos.
 
 Find callsites:
+
 ```bash
 rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
   unified-trading-library/ batch-live-reconciliation-service/ strategy-service/ \
@@ -695,37 +695,63 @@ rg "get_bucket_name\|gs://.*{.*}\|f\"gs://\|f'gs://" --type py \
 ```
 
 **Items**:
+
 1. UTL (23 callsites → 0): `cd .tabs/2/unified-trading-library && bash scripts/quality-gates.sh` after each batch
 2. batch-live-recon (7 callsites → 0): `cd .tabs/2/batch-live-reconciliation-service && bash scripts/quality-gates.sh`
 3. strategy-service (2 callsites → 0): `cd .tabs/2/strategy-service && bash scripts/quality-gates.sh`
 4. Flip `bucket_name_ssot_canonicalisation_2026_05_10.md` checkboxes per repo completed
 
-**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`
-**Half-1+Half-2**: code commit + `docs(plans):` flip in same turn. Push each repo separately.
-**Conflict-risk**: NONE — UTL/batch-live-recon are not in Harsh's active surface today.
+**Plan**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` **Half-1+Half-2**: code commit + `docs(plans):`
+flip in same turn. Push each repo separately. **Conflict-risk**: NONE — UTL/batch-live-recon are not in Harsh's active
+surface today.
 
 Acknowledge "STARTED UTL delegate-flip" within 10 min.
 
-[2026-05-18 09:41 UTC] [main → slot 2] — 🟡 **35-MIN SILENCE CHECK** — UTL delegate-flip dispatched at 09:06 UTC. No ack received. If still active: post "STARTED UTL delegate-flip" now. If blocked or context-expired: drop one-line status here. UTL 23 callsites: `rg "f\"gs://\|f'gs://" unified-trading-library/ --type py --glob '!.venv*'` to find them quickly.
+[2026-05-18 09:41 UTC] [main → slot 2] — 🟡 **35-MIN SILENCE CHECK** — UTL delegate-flip dispatched at 09:06 UTC. No ack
+received. If still active: post "STARTED UTL delegate-flip" now. If blocked or context-expired: drop one-line status
+here. UTL 23 callsites: `rg "f\"gs://\|f'gs://" unified-trading-library/ --type py --glob '!.venv*'` to find them
+quickly.
 
-[2026-05-18 09:57 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (51 min silent)**. UTL delegate-flip item superseded: write-pause pre-checks already COMPLETE (27/27 repos QG 5.69 = 0 per `7fc93710` — UTL included). No migration work remains. **NEW THEME: `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4** (10.6 cal-days remaining, 75% done). Slot 4 shipped Bybit counterparty cap (UAC@c29114c); Phase 3 (sim contract integration) and Phase 4 (per-family backtest scenarios) remain.
+[2026-05-18 09:57 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (51 min silent)**. UTL delegate-flip item superseded:
+write-pause pre-checks already COMPLETE (27/27 repos QG 5.69 = 0 per `7fc93710` — UTL included). No migration work
+remains. **NEW THEME: `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4** (10.6 cal-days remaining, 75% done).
+Slot 4 shipped Bybit counterparty cap (UAC@c29114c); Phase 3 (sim contract integration) and Phase 4 (per-family backtest
+scenarios) remain.
+
 1. `cd .tabs/2/unified-trading-pm && git pull --rebase origin live-defi-rollout`
 2. Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — find unchecked Phase 3+4 items.
-3. Ship per item. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` (Phase 3 needs execution-service contract changes).
-4. Dual-flip plan + work_split `docs(plans):` in same turn.
-**Acknowledge "STARTED defi_recursive_borrow Phase 3" within 10 min.**
+3. Ship per item. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` (Phase 3 needs execution-service
+   contract changes).
+4. Dual-flip plan + work_split `docs(plans):` in same turn. **Acknowledge "STARTED defi_recursive_borrow Phase 3" within
+   10 min.**
 
-[2026-05-18 10:27 UTC] [main → slot 2] — 🟡 **30-MIN SILENCE CHECK** — defi_recursive_borrow Phase 3-4 dispatched 09:57 UTC. No ack received. If active: post "STARTED defi_recursive_borrow Phase 3" now. If blocked or context-expired: drop one-liner here so I can redispatch. Plan is `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration, Phase 4 = per-family backtest scenarios.
+[2026-05-18 10:27 UTC] [main → slot 2] — 🟡 **30-MIN SILENCE CHECK** — defi_recursive_borrow Phase 3-4 dispatched 09:57
+UTC. No ack received. If active: post "STARTED defi_recursive_borrow Phase 3" now. If blocked or context-expired: drop
+one-liner here so I can redispatch. Plan is `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 =
+sim contract integration, Phase 4 = per-family backtest scenarios.
 
-[2026-05-18 10:39 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (42 min silent since dispatch, 12 min since check-in)**. Declaring fresh dispatch. **NEW THEME (same plan, fresh context): `defi_recursive_borrow_archetypes_2026_05_10` Phase 3-4**.
+[2026-05-18 10:39 UTC] [main → slot 2] — 🔴 **CONTEXT-EXPIRED (42 min silent since dispatch, 12 min since check-in)**.
+Declaring fresh dispatch. **NEW THEME (same plan, fresh context): `defi_recursive_borrow_archetypes_2026_05_10` Phase
+3-4**.
+
 1. `cd .tabs/2/unified-trading-pm && git pull --rebase origin live-defi-rollout`
-2. Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration (execution-service `RecursiveBorrowSimulator` wiring), Phase 4 = per-family backtest scenarios (carry_staked_basis × recursive-borrow, arbitrage_price_dispersion × recursive-borrow).
-3. Find first unchecked `- [ ]` item in Phase 3. Ship it. `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` after each file change.
-4. Dual-flip: code commit + `docs(plans):` flip in same turn.
-**Acknowledge "STARTED defi_recursive_borrow Phase 3 (fresh)" within 10 min.**
+2. Read `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` — Phase 3 = sim contract integration
+   (execution-service `RecursiveBorrowSimulator` wiring), Phase 4 = per-family backtest scenarios (carry_staked_basis ×
+   recursive-borrow, arbitrage_price_dispersion × recursive-borrow).
+3. Find first unchecked `- [ ]` item in Phase 3. Ship it.
+   `cd .tabs/2/execution-service && bash scripts/quality-gates.sh` after each file change.
+4. Dual-flip: code commit + `docs(plans):` flip in same turn. **Acknowledge "STARTED defi_recursive_borrow Phase 3
+   (fresh)" within 10 min.**
 
-[2026-05-18 10:52 UTC] [main → slot 2] — 🟡 **13-MIN CHECK-IN (fresh dispatch)** — defi_recursive_borrow Phase 3-4 fresh dispatch at 10:39. No ack yet. If active: post "STARTED defi_recursive_borrow Phase 3 (fresh)" now. If you hit context-expiry on boot: just drop one-liner and I'll send the full task again. Phase 3 first item: `RecursiveBorrowSimulator` wiring into execution-service `engine/simulation/`.
+[2026-05-18 10:52 UTC] [main → slot 2] — 🟡 **13-MIN CHECK-IN (fresh dispatch)** — defi_recursive_borrow Phase 3-4 fresh
+dispatch at 10:39. No ack yet. If active: post "STARTED defi_recursive_borrow Phase 3 (fresh)" now. If you hit
+context-expiry on boot: just drop one-liner and I'll send the full task again. Phase 3 first item:
+`RecursiveBorrowSimulator` wiring into execution-service `engine/simulation/`.
 
-[2026-05-18 10:58 UTC] [main → slot 2] — 🟡 **19-MIN CHECK-IN** — still no ack on fresh dispatch (10:39). Final check-in before declaring context-expired at ~50 min (11:29 from original = 11:29, but fresh dispatch was 10:39 so context-expired at ~11:09 UTC = tick-102). Post "STARTED" now or drop one-liner.
+[2026-05-18 10:58 UTC] [main → slot 2] — 🟡 **19-MIN CHECK-IN** — still no ack on fresh dispatch (10:39). Final check-in
+before declaring context-expired at ~50 min (11:29 from original = 11:29, but fresh dispatch was 10:39 so
+context-expired at ~11:09 UTC = tick-102). Post "STARTED" now or drop one-liner.
 
-[2026-05-18 11:11 UTC] [main → slot 2] — 🚫 **ABANDONED (3rd dispatch attempt, 32 min silent on fresh)**. slot_2 is non-functional for this session. defi_recursive_borrow Phase 3-4 remains unclaimed — will queue for next human-launched session. No further dispatches to slot_2 this cycle.
+[2026-05-18 11:11 UTC] [main → slot 2] — 🚫 **ABANDONED (3rd dispatch attempt, 32 min silent on fresh)**. slot_2 is
+non-functional for this session. defi_recursive_borrow Phase 3-4 remains unclaimed — will queue for next human-launched
+session. No further dispatches to slot_2 this cycle.

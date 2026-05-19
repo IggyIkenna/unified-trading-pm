@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 5 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -1750,10 +1749,10 @@ Acknowledge "STARTED execution-service delegate-flip" within 10 min.
 
 # Slot 5 — 2026-05-19 boot ack
 
-**Boot at**: Tue May 19 09:01:26 UTC 2026
-**Theme**: writegate Phase 6.6/6.7 + live_pipeline Phase 3–5
-**Model**: Sonnet 4.6 (sonnet-doable)
+**Boot at**: Tue May 19 09:01:26 UTC 2026 **Theme**: writegate Phase 6.6/6.7 + live_pipeline Phase 3–5 **Model**: Sonnet
+4.6 (sonnet-doable)
 
 ## Status
+
 - STARTED: reading writegate + live_pipeline plan-of-record
 - Previous session: execution-service Phase B batch 31 (results/extractor.py) shipped + Half-2 flipped at PM@336569d4

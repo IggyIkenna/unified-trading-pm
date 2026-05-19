@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_harsh.md`
-> § Slot 8 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_harsh.md` § Slot 8 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -10,20 +9,29 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-18 UTC] slot-8 — 🟢 STARTED items 14-17 MEGA RESERVE. Beginning item 14: workspace-constraints.toml deep audit (per-repo dep version drift).
+[2026-05-18 UTC] slot-8 — 🟢 STARTED items 14-17 MEGA RESERVE. Beginning item 14: workspace-constraints.toml deep audit
+(per-repo dep version drift).
 
-[2026-05-18 UTC] slot-8 — ✅ DONE item 14 workspace-constraints deep audit. 8 errors fixed (8 repos), PM audit script PM@0274f170. 🔶 BIG: orchastrator repo not in slot-8 tab — has pydantic>=2.9.0 (canonical >=2.12.5) + google-cloud-storage>=2.18.0 (canonical >=3.8.0) + 6 missing ceilings. Human-owned repo. Main to assign.
+[2026-05-18 UTC] slot-8 — ✅ DONE item 14 workspace-constraints deep audit. 8 errors fixed (8 repos), PM audit script
+PM@0274f170. 🔶 BIG: orchastrator repo not in slot-8 tab — has pydantic>=2.9.0 (canonical >=2.12.5) +
+google-cloud-storage>=2.18.0 (canonical >=3.8.0) + 6 missing ceilings. Human-owned repo. Main to assign.
 
-[2026-05-18 UTC] slot-8 — ✅ DONE item 15 backfill: UTL event ratchet + cross-service idempotency tests already at UTL@7f8d174 (16 tests). Flipped.
+[2026-05-18 UTC] slot-8 — ✅ DONE item 15 backfill: UTL event ratchet + cross-service idempotency tests already at
+UTL@7f8d174 (16 tests). Flipped.
 
-[2026-05-18 UTC] slot-8 — ✅ DONE item 16: UAC cassette parity 316 passed, 0 failed, 49 skipped (stubs). No refreshes needed.
+[2026-05-18 UTC] slot-8 — ✅ DONE item 16: UAC cassette parity 316 passed, 0 failed, 49 skipped (stubs). No refreshes
+needed.
 
-[2026-05-18 UTC] slot-8 — ✅ DONE item 17: semver-agent audit — all 24 Python repos correct. BIG FIXED: unified-trading-system-ui@d7132de5 had __REPO_NAME__ placeholder leak. All MEGA RESERVE items 14-17 complete. QUEUE EXHAUSTED.
+[2026-05-18 UTC] slot-8 — ✅ DONE item 17: semver-agent audit — all 24 Python repos correct. BIG FIXED:
+unified-trading-system-ui@d7132de5 had **REPO_NAME** placeholder leak. All MEGA RESERVE items 14-17 complete. QUEUE
+EXHAUSTED.
 
 [2026-05-18 UTC] slot-8 — 🏁 **CYCLE-CLOSE (items 14-17 MEGA RESERVE complete)**
 
 Items shipped this session:
-- ✅ Item 14: workspace-constraints deep audit — 8 pyproject.toml fixes (anthropic/web3/requests/python-multipart) + PM audit script PM@0274f170
+
+- ✅ Item 14: workspace-constraints deep audit — 8 pyproject.toml fixes (anthropic/web3/requests/python-multipart) + PM
+  audit script PM@0274f170
 - ✅ Item 15: backfill flip — UTL@7f8d174 tests already shipped
 - ✅ Item 16: cassette parity run — 316 passed, 0 drift
 - ✅ Item 17: semver audit — 24 repos clean; unified-trading-system-ui@d7132de5 placeholder fix
@@ -372,10 +380,14 @@ committed — needs separate commit. Main to decide if warranted.
 CYCLE-CLOSE complete. No new dispatches taken.
 
 [2026-05-18 17:00 UTC] [main → slot 8] — 🏁 **END-OF-SHIFT AUDIT** (operator confirmed idle).
-- **Commits today**: 32+ items (pre-commit standardization 24/26 repos, issue-doc triage 68, workspace-constraints, codex/06 cross-link, UTL HMAC deferred, cassette parity, semver labels, manifest drift, pre-commit coverage, type-ignore ×17 removals). All scope respected.
+
+- **Commits today**: 32+ items (pre-commit standardization 24/26 repos, issue-doc triage 68, workspace-constraints,
+  codex/06 cross-link, UTL HMAC deferred, cassette parity, semver labels, manifest drift, pre-commit coverage,
+  type-ignore ×17 removals). All scope respected.
 - **Items flipped**: 13/17 (items 14-17 MEGA correctly deferred).
 - **Tab worktree state**:
   - `unified-trading-pm`: clean (81 behind LDR).
   - `unified-trading-library`: 1 commit behind LDR, minor.
-  - `unified-api-contracts`: pre-commit yaml change was ALREADY UPSTREAM (someone else pushed same patch) — local commit dropped on rebase. ✅ clean now.
+  - `unified-api-contracts`: pre-commit yaml change was ALREADY UPSTREAM (someone else pushed same patch) — local commit
+    dropped on rebase. ✅ clean now.
 - **Verdict**: ✅ HEALTHY.

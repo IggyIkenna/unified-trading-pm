@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_harsh.md`
-> § Slot 3 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_harsh.md` § Slot 3 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -542,11 +541,21 @@ authenticated session for each venue to call:
 - Item 21: post-cutover banner alignment sweep — 3 cross-plan banners updated to reference post-cutover successor plan.
   PM@aab95382.
 - Item 22: archetype doc broken-link sweep — 3 fixes: restaking-reward-economics ../../→../ in carry-recursive-staked +
-  yield-staking-simple; APD finalisation plan active→archive. PM@bd018a91.
-Continuing defi_archetypes/defi_master codex residuals.
+  yield-staking-simple; APD finalisation plan active→archive. PM@bd018a91. Continuing defi_archetypes/defi_master codex
+  residuals.
 
-[2026-05-18 22:00 UTC] slot-3 — ✅ DONE item 23: plan-ref corrections — 4 docs updated to reference post-cutover plan for Phase 10+ content. carry-recursive-borrow-lending-only Status note (Phase 12), carry-recursive-borrow-perp-hedged Status note + code-backport line 124 (Phases 6+7+8+12), cefi-perp-leg-bybit frontmatter Phase 10, recursive-borrow-backtest-scenarios Phase 12 see-also. PM@5404a41f.
+[2026-05-18 22:00 UTC] slot-3 — ✅ DONE item 23: plan-ref corrections — 4 docs updated to reference post-cutover plan
+for Phase 10+ content. carry-recursive-borrow-lending-only Status note (Phase 12), carry-recursive-borrow-perp-hedged
+Status note + code-backport line 124 (Phases 6+7+8+12), cefi-perp-leg-bybit frontmatter Phase 10,
+recursive-borrow-backtest-scenarios Phase 12 see-also. PM@5404a41f.
 
-[2026-05-18 22:30 UTC] slot-3 — ✅ DONE item 24: simulation_scenarios Phase 8 G+H+I — 3 codex sections added. live-pipeline-architecture.md § "Scenario tap points" (7-layer table + reuse-prod-codepath note); replay-subsystem.md § "Scenario overlay on replay" (composition contract + ordering invariant); honest-absence-downstream-handling.md § "Scenario-driven gap injection" (DropRows + ManifestPhantom; scenario_id provenance; alerting suppression). PM@ed0079f8. Flipped 8.G/8.H/8.I in simulation_scenarios plan.
+[2026-05-18 22:30 UTC] slot-3 — ✅ DONE item 24: simulation_scenarios Phase 8 G+H+I — 3 codex sections added.
+live-pipeline-architecture.md § "Scenario tap points" (7-layer table + reuse-prod-codepath note); replay-subsystem.md §
+"Scenario overlay on replay" (composition contract + ordering invariant); honest-absence-downstream-handling.md §
+"Scenario-driven gap injection" (DropRows + ManifestPhantom; scenario_id provenance; alerting suppression). PM@ed0079f8.
+Flipped 8.G/8.H/8.I in simulation_scenarios plan.
 
-[2026-05-18 23:00 UTC] slot-3 — ✅ DONE item 25: simulation_scenarios Phase 8 B+C — 2 NEW codex docs. scenario-outcome-assertions.md (9-category OutcomeCategory; 6-tuple assertion; PASS/FAIL/WARN; matrix-red cutover-block; alerting wire); scenario-overlay-semantics.md (parquet schema; provenance chain; available_at discipline; manifest scenario_id). PM@7a735152. Flipped 8.B/8.C in simulation_scenarios plan.
+[2026-05-18 23:00 UTC] slot-3 — ✅ DONE item 25: simulation_scenarios Phase 8 B+C — 2 NEW codex docs.
+scenario-outcome-assertions.md (9-category OutcomeCategory; 6-tuple assertion; PASS/FAIL/WARN; matrix-red cutover-block;
+alerting wire); scenario-overlay-semantics.md (parquet schema; provenance chain; available_at discipline; manifest
+scenario_id). PM@7a735152. Flipped 8.B/8.C in simulation_scenarios plan.

@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_harsh.md`
-> § Slot 9 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_harsh.md` § Slot 9 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -10,9 +9,17 @@
 > the slot's plan-of-record § "Open questions". Resolved entries removed by main. Format:
 > `[YYYY-MM-DD HH:MM UTC] <agent-tag> — <one-line>`
 
-[2026-05-18 22:30 UTC] harsh-slot-9 — ✅ DONE item 14 (MEGA RESERVE — live_pipeline_mtds_mdps_features). Dispatch note: mtds_databento_path_streaming fully done + item 15 already done; only item 14 open. Phase 15 of live_pipeline: 15.2/15.3/15.4 operator-required. Picked: 21-test test_websocket_streaming_handler.py (parse_shard_spec/validate_config/_resolve_connector/run async/standalone run). Resolved MTDS git debt (rebase+push ruff commit). 1720 passed, 15 pre-existing violations. mtds@8f78f24 + pm@5c241be6. 🏁 QUEUE EXHAUSTED — all items done. Awaiting fresh dispatch.
+[2026-05-18 22:30 UTC] harsh-slot-9 — ✅ DONE item 14 (MEGA RESERVE — live_pipeline_mtds_mdps_features). Dispatch note:
+mtds_databento_path_streaming fully done + item 15 already done; only item 14 open. Phase 15 of live_pipeline:
+15.2/15.3/15.4 operator-required. Picked: 21-test test_websocket_streaming_handler.py
+(parse_shard_spec/validate_config/\_resolve_connector/run async/standalone run). Resolved MTDS git debt (rebase+push
+ruff commit). 1720 passed, 15 pre-existing violations. mtds@8f78f24 + pm@5c241be6. 🏁 QUEUE EXHAUSTED — all items done.
+Awaiting fresh dispatch.
 
-[2026-05-17 20:22 UTC] ikenna-main — 🟢 B-015 UNBLOCKED: Smoke B DEPLOYMENT_COMPLETED at 20:21:48 UTC (VM features-onchain-defi-20260517-211522, exit_code=0, 11/11 groups). Launch paper backtest NOW: `cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI`. Note: 4 groups batch-skipped (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data; non-blocking for strategy).
+[2026-05-17 20:22 UTC] ikenna-main — 🟢 B-015 UNBLOCKED: Smoke B DEPLOYMENT_COMPLETED at 20:21:48 UTC (VM
+features-onchain-defi-20260517-211522, exit_code=0, 11/11 groups). Launch paper backtest NOW:
+`cd e2e-testing && bash scripts/defi/run-paper.sh --strategy carry_staked_basis --asset-group DEFI`. Note: 4 groups
+batch-skipped (macro_sentiment/onchain_perps/utilization/rate_impact — live-only data; non-blocking for strategy).
 
 [2026-05-15 21:55 UTC] harsh-slot-9 — ❓ BLOCKED-OPERATOR-DECISION: spotted B-015 greenlights from \_agent_pings.md
 (ikenna-slot-6@09:30 + ikenna-slot-8@11:25 UTC). Previous session (up to 21:05 UTC) missed them. Greenlights say
@@ -398,18 +405,27 @@ venue + sanctumSOL genesis + SANCTUM venue) + mtds@2497c81 (sanctumSOL Tier-1 SP
 skip, test fixes for 5 tests, QG bump 10→11). Queue exhausted — awaiting next dispatch.
 
 [2026-05-18 17:00 UTC] [main → slot 9] — 🏁 **END-OF-SHIFT AUDIT** (operator confirmed idle).
-- **Commits today**: 77+ items (MTDS handler coverage vault_share_price/native_staking/eigenlayer, MDPS canonical_writer, solana_lst/restaking, ezETH multi-call, databento+polymarket coverage, deribit/binance/bybit WSFeedConnectors ≥90%, reconnect-STALE tests ×16, PBM cross-archetype + manifest re-sync). Top-3 throughput.
+
+- **Commits today**: 77+ items (MTDS handler coverage vault_share_price/native_staking/eigenlayer, MDPS
+  canonical_writer, solana_lst/restaking, ezETH multi-call, databento+polymarket coverage, deribit/binance/bybit
+  WSFeedConnectors ≥90%, reconnect-STALE tests ×16, PBM cross-archetype + manifest re-sync). Top-3 throughput.
 - **Items flipped**: 16/17 (item 14 MEGA deferred).
 - **Tab worktree state**:
-  - `unified-trading-pm`: 🟡 DIRTY — `WORKSPACE_MANIFEST_DAG.svg` + `workspace-manifest.json` modified, 173 behind LDR. Could be slot 9 ran the dep-graph regenerator script intentionally — operator to confirm before commit.
-  - `market-tick-data-service`: 🔴 19 ruff format files uncommitted; rebase onto LDR (1 commit behind) hit conflicts — **NOT pushed**. Local commit `ee2b628` was aborted. Files remain uncommitted in worktree. On re-engage: `git status` to see, rebase, re-resolve.
+  - `unified-trading-pm`: 🟡 DIRTY — `WORKSPACE_MANIFEST_DAG.svg` + `workspace-manifest.json` modified, 173 behind LDR.
+    Could be slot 9 ran the dep-graph regenerator script intentionally — operator to confirm before commit.
+  - `market-tick-data-service`: 🔴 19 ruff format files uncommitted; rebase onto LDR (1 commit behind) hit conflicts —
+    **NOT pushed**. Local commit `ee2b628` was aborted. Files remain uncommitted in worktree. On re-engage: `git status`
+    to see, rebase, re-resolve.
   - `position-balance-monitor-service`: clean.
   - `market-data-processing-service`: clean.
 - **Verdict**: ✅ HEALTHY work, 2 cleanup items deferred (MTDS ruff + PM workspace-manifest review).
 
-[2026-05-18 21:00 UTC] [main → slot 9] — 🟢 **FRESH THEME — queue nearly empty (1 unchecked)**. Pick: **mtds_databento_path_streaming_2026_05_07.md** (93%, 1 item left — quick close-out, ~1 cal-day). Recipe:
-  1. `cd /home/hk/unified-trading-system-repos/market-tick-data-service && git pull --rebase origin live-defi-rollout`
-  2. Read `plans/active/mtds_databento_path_streaming_2026_05_07.md` — find the 1 unchecked `- [ ]` item.
-  3. Ship + commit + dual-flip + push.
-**After databento close-out**: continue MTDS adapter coverage continuation — mega-reserve item 15 (deribit/binance/bybit handler ≥90% coverage, ~3 cal-days). Or pick MDPS canonical_writer error classification audit (deep reserve item 12 territory).
-**Acknowledge "STARTED databento path streaming close-out" within 10 min.**
+[2026-05-18 21:00 UTC] [main → slot 9] — 🟢 **FRESH THEME — queue nearly empty (1 unchecked)**. Pick:
+**mtds_databento_path_streaming_2026_05_07.md** (93%, 1 item left — quick close-out, ~1 cal-day). Recipe:
+
+1. `cd /home/hk/unified-trading-system-repos/market-tick-data-service && git pull --rebase origin live-defi-rollout`
+2. Read `plans/active/mtds_databento_path_streaming_2026_05_07.md` — find the 1 unchecked `- [ ]` item.
+3. Ship + commit + dual-flip + push. **After databento close-out**: continue MTDS adapter coverage continuation —
+   mega-reserve item 15 (deribit/binance/bybit handler ≥90% coverage, ~3 cal-days). Or pick MDPS canonical_writer error
+   classification audit (deep reserve item 12 territory). **Acknowledge "STARTED databento path streaming close-out"
+   within 10 min.**

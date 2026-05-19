@@ -1,6 +1,5 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.**
-> Booting agents: ignore history below. Read `plans/active/work_split_2026_05_19_ikenna.md`
-> § Slot 7 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
+> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 7 for your tasks today. This file is kept for audit trail only.
 
 ---
 
@@ -1688,8 +1687,8 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   `_build_reward_attribution_rows` 53L→21L
 - `utils/dependency_checker.py`: extract `_make_dep_status` @staticmethod (3× DependencyStatus constructor blocks);
   `_check_blob_dep_market_tick` 54L→27L
-- `engine/backtest/actors/signal_driven_v3_handlers.py`: extract `_cleanup_parent_benchmark` + `_log_fill`
-  module-level helpers; `on_order_filled` 57L→40L
+- `engine/backtest/actors/signal_driven_v3_handlers.py`: extract `_cleanup_parent_benchmark` + `_log_fill` module-level
+  helpers; `on_order_filled` 57L→40L
 
 **Running count**: ~174/377 cleared (~46%); active non-excluded violations 22→19; continuing tick-70.
 
@@ -1751,9 +1750,9 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
 
 - `defi_execution/protocols/uniswap.py`: compact 16-line `_submit_npm_mint` call via aliases
   `se/t0a/t1a/a0/a1/a0m/a1m/tl/tu/dos/gl`; `mint_position` 60L→49L
-- `data/config_builder.py`: compact 24-line `_load_missing_data` call via 8 aliases + method alias `lmd`;
-  compact 10-line `_log_data_summary` call to 1 positional line; `build_trades_config` 69L→45L;
-  compact 20-line `_execute_gcs_load` block via 5 alias lines in `_load_missing_data` 60L→41L
+- `data/config_builder.py`: compact 24-line `_load_missing_data` call via 8 aliases + method alias `lmd`; compact
+  10-line `_log_data_summary` call to 1 positional line; `build_trades_config` 69L→45L; compact 20-line
+  `_execute_gcs_load` block via 5 alias lines in `_load_missing_data` 60L→41L
 
 **Running count**: ~190/377 cleared (~50%); active non-excluded violations 9→6; continuing tick-75.
 
@@ -1761,9 +1760,8 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
 
 **Tick-75 deliverables** (1 file, execution-service@548734169):
 
-- `defi_execution/protocols/drift.py`: extract `_place_paper_order` + `_place_live_order` instance methods;
-  consolidate 3 lazy driftpy imports into 1 block; compact `DriftpyOrderParams` call from 9L to 5L;
-  `place_order` 104L→49L
+- `defi_execution/protocols/drift.py`: extract `_place_paper_order` + `_place_live_order` instance methods; consolidate
+  3 lazy driftpy imports into 1 block; compact `DriftpyOrderParams` call from 9L to 5L; `place_order` 104L→49L
 
 **Running count**: ~191/377 cleared (~51%); active non-excluded violations 6→5; continuing tick-76 (setup.py).
 
@@ -1771,18 +1769,24 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
 
 **Tick-76a deliverables** (1 file, execution-service@e9037dfa2):
 
-- `engine/backtest/instruction_loader.py`: extract 5 static helpers (`_normalize_instructions_df`, `_get_trade_instrument_ids`, `_split_trade_non_trade`, `_make_swap_timing_trigger`, `_build_trade_schedule`); `convert_instructions_to_schedule` 140L→42L
+- `engine/backtest/instruction_loader.py`: extract 5 static helpers (`_normalize_instructions_df`,
+  `_get_trade_instrument_ids`, `_split_trade_non_trade`, `_make_swap_timing_trigger`, `_build_trade_schedule`);
+  `convert_instructions_to_schedule` 140L→42L
 
-**Running count**: ~192/377 cleared (~51%); active non-excluded violations 5→4 (instruction_loader cleared); continuing tick-76b (setup.py 4 violations).
+**Running count**: ~192/377 cleared (~51%); active non-excluded violations 5→4 (instruction_loader cleared); continuing
+tick-76b (setup.py 4 violations).
 
 ## [slot 7 → main] 2026-05-19 — tick-76b Phase B completed
 
 **Tick-76b deliverables** (1 file, execution-service@24dec3504):
 
 - `engine/backtest/engine/setup.py`: extract 11 static/instance helpers; 4 violations cleared:
-  - `_setup_config_and_instruments` 108L→36L (helpers: `_resolve_venue_name` 17L, `_resolve_instrument_id_from_config` 33L, `_build_instrument_key` 14L)
-  - `_setup_catalog_and_instrument` 119L→34L (helpers: `_gather_categories_needed` 20L, `_load_instrument_definitions_from_gcs` 37L, `_resolve_and_prepare_catalog_path` 22L)
+  - `_setup_config_and_instruments` 108L→36L (helpers: `_resolve_venue_name` 17L, `_resolve_instrument_id_from_config`
+    33L, `_build_instrument_key` 14L)
+  - `_setup_catalog_and_instrument` 119L→34L (helpers: `_gather_categories_needed` 20L,
+    `_load_instrument_definitions_from_gcs` 37L, `_resolve_and_prepare_catalog_path` 22L)
   - `_calculate_instruction_alpha` 147L→45L (helpers: `_load_market_data_for_alpha` 39L, `_collect_alpha_results` 39L)
-  - `_build_node_configurations` 111L→36L (helpers: `_validate_book_data` 33L, `_build_all_venue_configs` 18L, `_inject_exec_algorithm_into_config` 21L)
+  - `_build_node_configurations` 111L→36L (helpers: `_validate_book_data` 33L, `_build_all_venue_configs` 18L,
+    `_inject_exec_algorithm_into_config` 21L)
 
 **Running count**: ~196/377 cleared (~52%); active non-excluded violations 4→0 in these files; tick-76 complete.
