@@ -46,18 +46,19 @@ estimate_calibration_note: |
 
 ## Slot stack — ~116 cal AI-days across 8 implementer slots
 
-| Slot      | Theme                                                                                                                                                                                                                          | Cal AI-days | Plans owned                                                                                         |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
-| 1         | Main orchestrator + pvl-p18a oversight + cross-side sync                                                                                                                                                                       | —           | This LEDGER                                                                                         |
-| 2         | pvl-p18a monitor + alerting_live_rules close (2.8) + wave3x + manifest_schema_final_gate + sustain S3–S6                                                                                                                       | ~14         | alerting_live_rules, wave3x_residuals, manifest_schema_final_gate                                   |
-| 3         | aws_migration Phase 3–6 (27.6 cal remaining, 14% done)                                                                                                                                                                         | ~28         | aws_migration_defi_first                                                                            |
-| 4         | hard_schema_enforcement (4.8) + strategy_archetype_taxonomy (4.8) + cme_polymarket_arb Phase 3 (if unblocked by Ikenna slot 9)                                                                                                 | ~12         | hard_schema_enforcement, strategy_archetype_taxonomy                                                |
-| 5         | features_repo_consolidation Phase residuals (4.8) + gcs_migration_bundle close (4.8) + AUDIT_pre_may8 (1.5) + expected_unattempted_propagation close (1.3)                                                                     | ~12         | features_repo_consolidation, gcs_migration_bundle, AUDIT_pre_may8, expected_unattempted_propagation |
-| 6         | mdps_streaming Phase 2 (2.1) + mtds_databento close (1.2) + data_status_drilldown close (1.8) + defi_archetypes_canonicalisation close (1.8) + sustain S7–S10                                                                  | ~10         | mdps_streaming, mtds_databento, data_status_drilldown, defi_archetypes_canonicalisation             |
-| 7         | dex_perp_onboarding_handover (6.0) + gate_3_phantom_audit (0.8) + trigger_based_reference_data (1.9) + hedge_ratio_snapshot (0.5) + api_football_minimal (0.4) + tradfi_ohlcv close (0.4) + mock_data_benchmarking close (0.5) | ~11         | dex_perp_onboarding, gate_3_phantom, trigger_based_reference, hedge_ratio                           |
-| 8         | bucket_name_ssot residuals (2.7) + expected_universe_v2 close (1.6) + manifest_cross_asset_rescan (1.2) + available_at_lookahead (0.5) + deploy_missing_auto_launch final (0.5) + sustain S11–S15                              | ~10         | bucket_name_ssot, expected_universe_v2, manifest_cross_asset_rescan                                 |
-| 9         | compute_optimization close (1.9) + codex_vs_citadel close (1.4) + promote_workflow_may23 support + deployment_and_qg close (0.4) + missing_question_docs (0.9) + pm_coordination_ledger (0.3) + sustain S16–S20                | ~9          | compute_optimization, codex_vs_citadel, deployment_and_qg, missing_question_docs                    |
-| **Total** |                                                                                                                                                                                                                                | **~106**    |                                                                                                     |
+| Slot      | Theme                                                                                                                                                                                                                                | Cal AI-days | Plans owned                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
+| 1         | Main orchestrator + pvl-p18a oversight + cross-side sync                                                                                                                                                                             | —           | This LEDGER                                                                                         |
+| 2         | pvl-p18a monitor + alerting_live_rules close (2.8) + wave3x + manifest_schema_final_gate + sustain S3–S6                                                                                                                             | ~14         | alerting_live_rules, wave3x_residuals, manifest_schema_final_gate                                   |
+| 3         | aws_migration Phase 3–6 (27.6 cal remaining, 14% done)                                                                                                                                                                               | ~28         | aws_migration_defi_first                                                                            |
+| 4         | hard_schema_enforcement (4.8) + strategy_archetype_taxonomy (4.8) + cme_polymarket_arb Phase 3 (if unblocked by Ikenna slot 9)                                                                                                       | ~12         | hard_schema_enforcement, strategy_archetype_taxonomy                                                |
+| 5         | features_repo_consolidation Phase residuals (4.8) + gcs_migration_bundle close (4.8) + AUDIT_pre_may8 (1.5) + expected_unattempted_propagation close (1.3)                                                                           | ~12         | features_repo_consolidation, gcs_migration_bundle, AUDIT_pre_may8, expected_unattempted_propagation |
+| 6         | mdps_streaming Phase 2 (2.1) + mtds_databento close (1.2) + data_status_drilldown close (1.8) + defi_archetypes_canonicalisation close (1.8) + sustain S7–S10                                                                        | ~10         | mdps_streaming, mtds_databento, data_status_drilldown, defi_archetypes_canonicalisation             |
+| 7         | dex_perp_onboarding_handover (6.0) + gate_3_phantom_audit (0.8) + trigger_based_reference_data (1.9) + hedge_ratio_snapshot (0.5) + api_football_minimal (0.4) + tradfi_ohlcv close (0.4) + mock_data_benchmarking close (0.5)       | ~11         | dex_perp_onboarding, gate_3_phantom, trigger_based_reference, hedge_ratio                           |
+| 8         | bucket_name_ssot residuals (2.7) + expected_universe_v2 close (1.6) + manifest_cross_asset_rescan (1.2) + available_at_lookahead (0.5) + deploy_missing_auto_launch final (0.5) + sustain S11–S15                                    | ~10         | bucket_name_ssot, expected_universe_v2, manifest_cross_asset_rescan                                 |
+| 9         | compute_optimization close (1.9) + codex_vs_citadel close (1.4) + promote_workflow_may23 support + deployment_and_qg close (0.4) + missing_question_docs (0.9) + pm_coordination_ledger (0.3) + sustain S16–S20                      | ~9          | compute_optimization, codex_vs_citadel, deployment_and_qg, missing_question_docs                    |
+| 10        | agent_orchestrator_cloud_run_deployment: P0 (rename+scaffold) + P1 (Cloud Run staging) + P3 agent steps (auth flip) + P4 (CI/CD) + P6 (codex). **HUMAN gates at P2 (DNS/Squarespace) + P3 (user bootstrap) block P2→P5 progression** | ~5          | agent_orchestrator_cloud_run_deployment_2026_05_19                                                  |
+| **Total** |                                                                                                                                                                                                                                      | **~121**    |                                                                                                     |
 
 ---
 
@@ -246,6 +247,89 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ---
 
+### Slot 10 — agent-orchestrator Cloud Run deployment (P0–P4 + P6) — ~5 cal AI-days
+
+**Plan**: `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` **Repo**: `orchestrator-service/` (at
+workspace root — will be renamed to `agent-orchestrator/` in P0) **HUMAN gates** (do NOT proceed past these without
+Ikenna ack):
+
+- After P1: **Ikenna** does Firebase Console domain setup + Squarespace DNS paste → P2 complete
+- After P2: **Ikenna** bootstraps users via `manage_users.py` + smoke test → P3 auth verified
+- P5 (prod cutover + 7-day soak + laptop decommission) = Ikenna-only; skip for now
+
+**Cross-side notification required at P0 start**: post to `plans/active/_agent_pings.md` that GitHub repo rename is
+happening — Harsh needs to run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in his local
+clone.
+
+1. - [ ] **P0 — Compliance scaffold + rename** (~2.0 cal)
+   - Pre-audit: `rg "orchestrator-service" --type py --glob '!.venv*'` workspace-wide to confirm no Python import
+     collision
+   - GitHub rename: `gh repo rename agent-orchestrator --repo IggyIkenna/orchestrator-service --yes`
+   - Rename local dir (workspace root only — tab worktrees handled separately post-rename)
+   - Fix `orchastrator` typo across docs/server/scripts/dashboard (~40 refs)
+   - Add `server/api/main.py` with `ServiceBootstrap` (QG STEP 5.61)
+   - Add `make_health_router` from UTL with `data_freshness` callback (QG STEP 5.62)
+   - Add `server/config_reloaders.py` typed `AgentOrchestratorConfig` (QG STEP 5.34)
+   - Pyproject + Dockerfile: `ARG PROJECT_ID` +
+     `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
+   - Allocate port 8026 in `unified-trading-pm/scripts/dev/ui-api-mapping.json`
+   - Wire `quality-gates.sh` referencing PM `base-service.sh`
+   - Full-exec: `bash scripts/quality-gates.sh` passes; QG STEPs 5.61/5.62/5.34 green; `basedpyright server/` clean
+
+2. - [ ] **P1 — Cloud Run staging deploy** (~1.0 cal)
+   - `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` (mirrors `deploy-ui.sh`)
+   - `config/docker-build.env.{production,uat}` (ORCHASTRATOR_MODE + ORCHASTRATOR_PUBLIC_URL)
+   - `scripts/cloudbuild-agent-orchestrator.yaml` with cache-from prior tag
+   - Build + push image:
+     `europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat`
+   - `gcloud run deploy agent-orchestrator-staging --region europe-west4 --project central-element-323112`
+   - Full-exec: `curl https://agent-orchestrator-staging-<hash>-ew.a.run.app/healthz` → `{"status":"ok"}` 200
+
+   > **🛑 HUMAN GATE — P2**: Post ping to `_agent_pings.md`:
+   > `[DATE] harsh-slot-10 → ikenna-main — P1 done, Cloud Run staging live at <URL>. Need: Firebase Console domain setup + Squarespace DNS paste for agent-orchestrator.staging.odum-research.com. See plan P2 human steps.`
+   > **Do NOT proceed to P2 agent steps until Ikenna acks DNS propagated.**
+
+3. - [ ] **P2 agent steps — firebase.json + .firebaserc + vite.config** (~0.5 cal) _(can do while waiting for DNS)_
+   - `agent-orchestrator/firebase.json` with prod+uat hosting targets, `/api/*` + `/healthz` rewrites to Cloud Run
+   - `agent-orchestrator/.firebaserc` with targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site
+   - `dashboard/vite.config.ts`: confirm `dist/` output is Firebase-Hosting-compatible
+   - First `firebase deploy --only hosting:uat` from local
+
+4. - [ ] **P3 agent steps — strict auth flip** (~0.5 cal) _(after Ikenna acks P2 DNS propagated)_
+   - `gcloud secrets create ORCHASTRATOR_JWT_SECRET` (32-byte random); IAM bind to staging Cloud Run SA
+   - Wire the secret into Cloud Run staging via `gcloud run services update` with `--update-secrets` flag (see plan P3
+     for exact command shape)
+   - Replace `server/auth.py` permissive validate with argon2 hashed-user-list (matches `scripts/manage_users.py`
+     schema)
+   - Flip `ALLOW_ANONYMOUS=False` on Cloud Run
+
+   > **🛑 HUMAN GATE — P3 user bootstrap**: Ikenna runs `manage_users.py` to bootstrap ikenna+harsh on staging + runs
+   > 3-curl smoke test (valid → 200 + JWT; wrong password → 401; no bearer → 401). Post ack to `_agent_pings.md` when
+   > done.
+
+5. - [ ] **P4 — CI/CD wire-up** (~0.8 cal) _(after Ikenna acks P3 smoke test passed)_
+   - `.github/workflows/quality-gates.yml` referencing PM template
+   - `.github/workflows/deploy-staging.yml` (on push to main → Cloud Build → `gcloud run deploy --env=uat` →
+     `firebase deploy --only hosting:uat`)
+   - `.github/workflows/deploy-prod.yml` (`workflow_dispatch` only)
+   - GCP service account + Workload Identity Federation for GHA (copy from `client-reporting-api/.github/workflows/`)
+   - Trigger with trivial commit; verify both quality-gates + deploy-staging green within 10min
+
+6. - [ ] **P6 — Codex SSOT + CLAUDE.md updates** (~0.5 cal) _(can run concurrent with P4 or P5's soak)_
+   - NEW: `codex/04-architecture/agent-orchestrator-overview.md`
+   - UPDATE: `codex/08-workflows/local-dev.md` — port 8026 + local dev block
+   - UPDATE: `codex/05-infrastructure/launcher-script-ssot.md` — register `deploy-agent-orchestrator.sh`
+   - UPDATE: `agent-orchestrator/README.md` + `docs/OPERATIONS.md` — replace `orch.epiphanytechnologies.com` with
+     `agent-orchestrator.odum-research.com` (after P5; flag as pending if P5 not yet done)
+   - UPDATE: `cursor-configs/CLAUDE.md` key repo map — add `agent-orchestrator`
+   - Strike completed `TODO.md` items: "Off-laptop continuity" + "Strict auth"
+
+7. - [ ] **Plan flips** for each phase shipped. (0.3 cal)
+
+> **P5 (prod cutover + 7-day soak + laptop decommission)** = Ikenna-only after P4 verified. Not in this slot's scope.
+
+---
+
 ## Done-definition (2026-05-19 EOD)
 
 - Slot 2: alerting_live_rules 100% + wave3x closed + manifest_schema_final_gate closed + S3–S6 sweeps done.
@@ -258,6 +342,9 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 - Slot 8: bucket_name_ssot + expected_universe_v2 + manifest_cross_asset + available_at + deploy_missing closed +
   S11–S14.
 - Slot 9: compute_optimization + codex_vs_citadel + misc closes + S15–S20 done.
+- Slot 10: agent-orchestrator P0 (rename+scaffold+QG) + P1 (Cloud Run staging live) + P2 agent steps (firebase.json) +
+  P3 agent steps (auth flip) + P4 (CI/CD green) + P6 (codex). Human gates at P2 DNS + P3 user bootstrap require Ikenna
+  ack before progression.
 
 ---
 
