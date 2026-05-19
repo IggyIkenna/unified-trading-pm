@@ -454,7 +454,24 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 ### Slot 8 — defi_catalogue close + defi_simulation_realism + dex_perp — ~29 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** — codex
+> **🔴 THEME DISPLACED + REASSIGNED 2026-05-19 ~15:30 UTC** — Slot 8 NEW theme is now **ml_repo_consolidation FULL
+> PLAN** (~6 cal-AI-days, all 10 phases, single-slot ownership). Slot 8 already shipped Phase 0 + Phase 1 organically
+> (commits [`1113ffee9`](https://github.com/IggyIkenna/unified-trading-pm/commit/1113ffee9) Phase 1 schema-prep done,
+> [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80) BLOCKED-OPERATOR on Phase 2)
+> while my earlier dispatch had ML on slot 9. Phase 2 (`gh repo create IggyIkenna/ml-service`) UNBLOCKED 2026-05-19
+> ~15:09 UTC by slot 1 main + worktree provisioned at `.tabs/8/ml-service` on `tab/ikennaigboaka/8`. Slot 8
+> proceeds with Phase 2 (b-i) bootstrap next.
+>
+> **Plan**: [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md).
+> **Pre-audit**: [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
+> **Decisions already taken**: Phase 4 (h) = single flat-deps Docker (operator picked Option 2 2026-05-19);
+> Phase 0.5 (FeatureSubscriber → IoFeatureSubscriber rename) = DONE in `ml-inference-service@042c41d`.
+>
+> Slot 8's **previous** strategy-twin Phase 9+10 assignment (codex sweep) is REASSIGNED to whichever slot picks it up
+> after their strategy consolidation work clears (likely slot 3 once Phase 0.5+1+2 ships, or slot 6 after Phase 7
+> archive). Slot 1 main will dispatch in next reallocation pass.
+>
+> **PREVIOUS BANNER (deferred reassignment context — strategy Phase 9+10 codex sweep)** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** — codex
 > SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new `strategy-service-architecture.md` already
 > stub-created, register in `00-SSOT-INDEX.md`, update `promote-workflow-architecture.md`, `launcher-script-ssot.md`,
 > `vm-tarball-deployment.md`, `cli-convention.md`, `cli-promote-paths.md`, and bulk-rewrite ~150 incidental
@@ -500,17 +517,12 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 ### Slot 9 — batch_live_symmetry Tabs 4–7 + cme_polymarket_arb + promote_workflow_may23 — ~31 cal AI-days
 
-> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 9 NEW theme: **ml_repo_consolidation FULL PLAN** — all 10 phases,
-> single-slot ownership (smaller surface than strategy twin). Plan:
-> [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md). Pre-audit artifact:
-> [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
-> ~6 cal-AI-days. Independent of strategy-twin slots (3-8) — execute in parallel.
->
-> **Critical P0 sequencing**: rename `ml_inference_service/io/loader.py:FeatureSubscriber` → `IoFeatureSubscriber`
-> BEFORE Phase 3 subtree-merge (name-collision with `app/core/feature_subscriber.py:FeatureSubscriber` — pre-audit § (a)
-> inference table). Phase 2 = `gh repo create IggyIkenna/ml-service --private --add-readme` (operator-gated). Phase 4
-> (h) = single flat-deps Docker image (operator picked Option 2 2026-05-19; see
-> [`ikenna_orchestrator/pings/slot_1.md`](../../ikenna_orchestrator/pings/slot_1.md)).
+> **🟢 STANDING DOWN 2026-05-19 ~15:30 UTC** — Slot 9 not booted today (operator opened only 8 slots). ML
+> consolidation theme **REASSIGNED to slot 8** (organic pickup: slot 8 shipped Phase 0 + Phase 1 before reassignment
+> was formalised — see slot 8 commits [`1113ffee9`](https://github.com/IggyIkenna/unified-trading-pm/commit/1113ffee9)
+> + [`7663f6c80`](https://github.com/IggyIkenna/unified-trading-pm/commit/7663f6c80)). Slot 9 worktree provisioned
+> for ml-service + reset to LDR (`tab/ikennaigboaka/9`); ready for future boot if needed. Previous "🔴 THEME
+> DISPLACED" banner content (~6 cal-AI-days ML full-plan dispatch) moved to slot 8 — see Slot 8 section.
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 
