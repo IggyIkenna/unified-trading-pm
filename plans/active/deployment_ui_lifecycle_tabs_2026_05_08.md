@@ -381,7 +381,7 @@ todos:
 
   - id: bb1-experiment-registry-uac-ssot
     content: |
-      - [ ] [SCRIPT] P0. NEW UAC SSOT
+      - [x] ✅ [SCRIPT] P0. NEW UAC SSOT
         `unified_api_contracts/canonical/crosscutting/experiment_registry.py`. Declares the experiment kind
         taxonomy (closed set: `ML_TRAINING`, `STRATEGY_BACKTEST`, `EXECUTION_BACKTEST`) + the typed
         `ExperimentRunSpec(run_id, kind, owner, asset_group, started_at, hyperparams: dict, expected_steps,
@@ -389,6 +389,9 @@ todos:
         Persistence: per-run blob at `gs://<pid>-experiments/by_kind={kind}/run_id={run_id}/manifest.json` plus
         per-step append-only metric stream at the same prefix `metrics.jsonl`. NO new database — file-system / GCS
         only, mirroring the rest of the workspace.
+        — unified-api-contracts@09cb288 (2026-05-19 slot 6). ExperimentKind + ExperimentStatus StrEnums + frozen
+        ExperimentRunSpec + gcs_prefix/manifest_blob_path/metrics_blob_path properties. 15 unit tests. Exported
+        from UAC root facade.
 
   - id: bb2-experiment-emission-utl-helper
     content: |
