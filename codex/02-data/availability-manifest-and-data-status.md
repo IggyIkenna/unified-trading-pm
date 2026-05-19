@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-19
 ---
 
 # Availability Manifest & Data Status — SSOT
@@ -887,7 +887,9 @@ venues), the catalogue is **complete** for the asset_group. Cross-references:
 
 **Seven drift axes the audit handles** (each one historically caused a wave of false-positive phantoms):
 
-1. **Hive-vocab drift** — `category=` (legacy) vs `asset_group=` (post-2026-04 rename) coexist on disk; both probed.
+1. **Hive-vocab drift** — `category=` (legacy, pre-2026-05-19) vs `asset_group=` (canonical post-migration). Phase 3
+   GCS migration (2026-05-19) completed the `category=` → `asset_group=` rekey on disk. Reader fallback still probes
+   both during the 30-day window (until ~2026-06-15). After Phase 8 fallback removal, `category=` paths no longer exist.
 2. **`instrument_type` casing** — manifest holds `PERPETUAL` / `perpetual` interchangeably; disk only has lowercase.
    Membership check is case-insensitive.
 3. **Empty `instrument_type`** — schema-4 manifest rows omit the segment; audit accepts any disk `instrument_type`.
