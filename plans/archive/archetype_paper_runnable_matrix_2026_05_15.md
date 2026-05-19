@@ -1,3 +1,5 @@
+> **ARCHIVED 2026-05-19** — 100% complete (5/5 items); preserved for archaeology.
+
 ---
 title: "Archetype paper-runnable matrix (pvl-p18b snapshot)"
 slug: archetype_paper_runnable_matrix_2026_05_15
