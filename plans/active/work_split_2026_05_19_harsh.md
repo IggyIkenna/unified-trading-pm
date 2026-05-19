@@ -275,8 +275,8 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 6. - [ ] **features_service_qg_cleanup close** (0.8 cal left) — read plan for remaining items. (refactor 0.4×, ~2 = 0.8
          cal)
 7. - [ ] **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** (refactor 0.4×, ~2 = 0.8 cal)
-8. - [ ] **S16. SUSTAIN — workspace-wide hardcoded `"/tmp"` sweep** → `tempfile.gettempdir()`. Per CLAUDE.md. (refactor
-         0.4×, ~2 = 0.8 cal)
+8. - [x] ✅ **S16. SUSTAIN — workspace-wide hardcoded `"/tmp"` sweep** → `tempfile.gettempdir()`. Per CLAUDE.md. (refactor
+         0.4×, ~2 = 0.8 cal) — 8 files across 4 repos: e2e-testing@6426523, uac@5505c4c, pm@f41e8125, instruments-service@cca6cab. All remaining `/tmp` hits have `# nosec B108` exemptions (container detection / CLI dev defaults).
 9. - [ ] **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** (refactor 0.4×, ~2 = 0.8 cal)
 10. - [ ] **S18. SUSTAIN — cross-repo line-length 100→120 migration audit** (refactor 0.4×, ~2 = 0.8 cal)
 11. - [ ] **S19. SUSTAIN — cross-repo ruff `select` rule consistency** (refactor 0.4×, ~1 = 0.4 cal)
