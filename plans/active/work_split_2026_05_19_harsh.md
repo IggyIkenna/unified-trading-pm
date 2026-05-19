@@ -252,7 +252,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 4. - [ ] **available_at_lookahead_bias close** (plan at 66%, 0.5 cal left) — read plan for remaining items. (design
          0.6×, ~1 = 0.5 cal)
 5. - [x] ✅ **deploy_missing_auto_launch final item** — plan 100% complete + archived at PM@bda2306a (WORKSTEP-S7 closed item 14/14: Phase 4 closeout + 7-day soak ✅ 0 compromise events). `dm-` prefix registered in VM_PREFIX_TO_BUCKET (deployment-service@d3a96cf). Verified 2026-05-19.
-6. - [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** (refactor 0.4×, ~3 = 1.2 cal)
+6. - [x] ✅ **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** — UTL public API: 16 missing docstrings filled across 6 modules (api_key_reloader / service_cli / lifecycle_reloader / honest_coverage_ratchet / survivorship_guard / point_in_time); pre-existing test fix (naive→UTC). UTL@812acd1. Remaining 608 gap: next-cycle sweep.
 7. - [ ] **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** — any sync `requests` call in an async service
          context. (refactor 0.4×, ~2 = 0.8 cal)
 8. - [ ] **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** → use builtins `list[...]`/`dict[...]`.
