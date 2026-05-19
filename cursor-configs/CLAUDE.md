@@ -127,8 +127,14 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
 - Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
   SSOT: `codex/02-data/service-output-emission-semantics.md`.
+- **Single-walk discipline (HARD RULE — post Phase 2.2)**: The Phase 2.2 GCS bundled migration walks every parquet ONCE.
+  Any post-Phase-2 plan proposing another whole-corpus GCS walk is **review-blocking**. New schema columns,
+  partition-key changes, or filename renames MUST bundle into the Phase 2 walk or wait for a scheduled next-migration
+  window. SSOT: `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
 
-SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md` (§ "Reason taxonomy" — expanded taxonomy for `record_empty(reason=...)` callsites; § "Per-service consumer-class audit" — per-service skip/alert rules for `EXPECTED_*` + `attempted_failed` reasons).
+SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`
+(§ "Reason taxonomy" — expanded taxonomy for `record_empty(reason=...)` callsites; § "Per-service consumer-class audit"
+— per-service skip/alert rules for `EXPECTED_*` + `attempted_failed` reasons).
 
 ### Shard-granularity SSOT (CRITICAL)
 
@@ -162,7 +168,9 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
   `codex/05-infrastructure/vm-tarball-deployment.md`.
 - **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
   segment must be in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`.
-- **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
+- **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
+  at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
+  `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 

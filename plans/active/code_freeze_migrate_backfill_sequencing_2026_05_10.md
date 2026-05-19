@@ -432,8 +432,9 @@ The plan items here promote the existing pieces to execution shape:
       PM@`c72776e1` (gap-2.6.E operator runbook codex). **Backfilled 2026-05-15 by slot-1-main during code_freeze Half-2
       audit.** Original line continues: Cross-reference with `manifest_cross_asset_rescan_design`. Update
       `gcs_migration_bundle_pipeline_mode` Phase 2 body if any column missing.
-- [ ] [DOC] P1. **GAP-2.2.B** — Update CLAUDE.md "Honest absence vs fake placeholders" HARD RULE with reference to Phase
-      2.2 single-walk discipline. Reviewers should reject any post-Phase-2 plan that proposes another whole-corpus walk.
+- [x] ✅ [DOC] P1. **GAP-2.2.B** — Update CLAUDE.md "Honest absence vs fake placeholders" HARD RULE with reference to
+      Phase 2.2 single-walk discipline. Reviewers should reject any post-Phase-2 plan that proposes another whole-corpus
+      walk. **Shipped PM@`<sha>` 2026-05-19 slot-3.**
 
 ### Phase 2.3 — OHLCV legacy filename → per-instrument rename reconcile (GAP)
 
@@ -904,16 +905,15 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
       `codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
       rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
 - [x] ✅ [SCRIPT] P0. **Phase 2.6 Step 5 prep** — `deployment-service/scripts/archive-flat-buckets.sh` created —
-      deployment-service@9f158d5. Accepts `--env` / `--cloud` / `--retention-days` / `--dry-run`. Sets 30-day
-      Delete lifecycle policy on all flat (no-env-tier) GCP + AWS buckets from the Phase 2.6 migration inventory
-      (Tiers 1-7; 50 GCP + 50 AWS buckets). Dry-run by default (production guardrail). Syntax: `bash -n` passes.
-      Operator runs post-delegate-flip per Step 2.6.5: `bash deployment-service/scripts/archive-flat-buckets.sh
-      --env prod --cloud both --retention-days 30 [--no-dry-run]`.
-- [x] ✅ [DOC] P0. **Write-resume verification checklist** — documented in § "Write-resume verification checklist
-      (after delegate-flip deployed)" at end of this plan — PM@<see plan-flip commit>. 4-check procedure:
-      (1) manifest writes land in env-tiered paths, (2) QG STEP 5.69 baseline at 0, (3) deployment-api smoke
-      returns env-tiered names, (4) no flat-name reads in last 5 min. All 4 pass → Phase 2.6 write-resume
-      CONFIRMED.
+      deployment-service@9f158d5. Accepts `--env` / `--cloud` / `--retention-days` / `--dry-run`. Sets 30-day Delete
+      lifecycle policy on all flat (no-env-tier) GCP + AWS buckets from the Phase 2.6 migration inventory (Tiers 1-7; 50
+      GCP + 50 AWS buckets). Dry-run by default (production guardrail). Syntax: `bash -n` passes. Operator runs
+      post-delegate-flip per Step 2.6.5:
+      `bash deployment-service/scripts/archive-flat-buckets.sh     --env prod --cloud both --retention-days 30 [--no-dry-run]`.
+- [x] ✅ [DOC] P0. **Write-resume verification checklist** — documented in § "Write-resume verification checklist (after
+      delegate-flip deployed)" at end of this plan — PM@<see plan-flip commit>. 4-check procedure: (1) manifest writes
+      land in env-tiered paths, (2) QG STEP 5.69 baseline at 0, (3) deployment-api smoke returns env-tiered names, (4)
+      no flat-name reads in last 5 min. All 4 pass → Phase 2.6 write-resume CONFIRMED.
 
 ##### Carry-forward + dependencies
 
