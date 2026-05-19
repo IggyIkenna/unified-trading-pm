@@ -732,7 +732,7 @@ Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Code
   2026-05-11.)
 - Phase 3 boundary → CREATE `codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
   workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL →
-  `gs://{pid}-rescan-triage/`). **✅ SHIPPED 2026-05-19** — `unified-trading-pm@<sha>` (slot 7 WORKSTEP-S10;
+  `gs://{pid}-rescan-triage/`). **✅ SHIPPED 2026-05-19** — `unified-trading-pm@3e91c85e` (slot 7 WORKSTEP-S10;
   Post-Plan-Phase Codex Audit HARD RULE gap from Phase-3 ship 2026-05-11 retroactively closed).
 - Phase 4 boundary → UPDATE `codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
   step.
