@@ -8,10 +8,11 @@ scope: [engineer, admin]
 > types" sections in individual archetype docs. Those per-archetype docs link back here and keep only the archetype's
 > rows from the table below.
 >
-> **Scope:** For every one of the 53 v2 strategy archetypes (per UAC
-> `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` SSOT), every `(category, instrument_type)`
-> cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and
-> fully-spelled representative `slot_label` examples.
+> **Scope:** For every one of the 57 v2 strategy archetypes (per UAC
+> `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` SSOT; 57 as of 2026-05-18 V-1 — was 53 at doc
+> creation, 55 per 2026-05-12 audit, 57 per taxonomy V-1), every `(category, instrument_type)` cell is declared
+> SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal variant, gap reason, and fully-spelled
+> representative `slot_label` examples.
 >
 > **Matrix-completeness banner (2026-05-08).** This doc was authored at the 2026-04-19 18-archetype baseline. The tables
 > below currently cover the May-23 live + immediate-backtest archetype subset. The Phase 9 expansions (4 MEV + 1
