@@ -78,10 +78,10 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    when `VM_SHUTDOWN_ON_COMPLETION=true` (see § Observability & Lifecycle). **Do not** assume SSH or manual instance
    delete for routine runs.
 8. **Same region as GCS data**: `ZONE=asia-northeast1-c` (default) for all data-pipeline VMs. Cross-region transfer
-   cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in `asia-northeast1-b`
-   or `asia-northeast1-a` — same region, zero cross-region egress. NEVER fall back to a different region (e.g.
-   `us-central1`). Incident: 2026-05-19 defi-2022 was briefly created in `us-central1-a` before being caught and moved
-   back to `asia-northeast1-b`.
+   cost + latency makes this non-negotiable. **STOCKOUT fallback**: if `-c` reports STOCKOUT, retry in
+   `asia-northeast1-b` or `asia-northeast1-a` — same region, zero cross-region egress. NEVER fall back to a different
+   region (e.g. `us-central1`). Incident: 2026-05-19 defi-2022 was briefly created in `us-central1-a` before being
+   caught and moved back to `asia-northeast1-b`.
 9. **`cloud-platform` scope required**: for GCS + Secret Manager access. Every launcher sets this.
 
 Violating any of these means you're doing something off-pattern — document why in the launcher script header.
@@ -211,6 +211,65 @@ bash launch-ml-training-vm.sh \
   --start-date 2022-01-01 --end-date 2025-12-31 \
   --machine high
 ```
+
+---
+
+## GCS path scanning — `gsutil ls` vs `gcloud storage ls` (HARD RULE, 2026-05-19)
+
+**Rule**: when scanning for parquets under hive-partition prefixes (e.g. `day=2019-`, `asset_group=sports/`), use
+`gsutil ls -r` with a `**` glob wildcard — NOT `gcloud storage ls --recursive`.
+
+### The failure mode
+
+`gcloud storage ls --recursive gs://bucket/path/day=2019-06-` exits with rc=1 even when matching objects exist. The
+storage CLI treats a prefix that doesn't exactly match a GCS "directory" delimiter boundary as not-found. This is
+**silent data loss from the VM's perspective**: the ingestion handler receives an empty file list, skips all shards,
+emits `empty_confirmed` manifest rows, and self-deletes cleanly — zero error signal.
+
+**Production incident (2026-05-19 GCS migration run):** 31 VMs went idle. All emitted `DEPLOYMENT_COMPLETED`. Manifest
+showed 31 × N `empty_confirmed` rows. Root cause: `gcloud storage ls --recursive` was used against
+`gs://instruments-store-sports-prod/asset_group=sports/data_type=match/fixtures/day=2019-*` — the hive-partition prefix
+didn't anchor at a delimiter boundary so GCS returned 0 objects with rc=1. Bug fixes:
+
+- PM@`726a3bf` — switched all prefix scans to `gsutil ls -r gs://bucket/prefix**`
+- deployment-service@`5b917c1` — added `always-shutdown-on-failure` guard so VMs don't silently idle
+
+### Correct pattern
+
+```python
+import subprocess, shlex
+
+def gcs_ls_prefix(prefix: str) -> list[str]:
+    """Scan GCS under a hive-partition prefix. Returns list of gs:// paths."""
+    cmd = ["gsutil", "ls", "-r", f"{prefix}**"]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.returncode == 1 and not result.stdout.strip():
+        return []  # empty prefix — not an error
+    result.check_returncode()  # re-raise for any other non-zero exit
+    return [line.strip() for line in result.stdout.splitlines() if line.strip().endswith(".parquet")]
+```
+
+Key points:
+
+- `gsutil ls -r prefix**` — the `**` wildcard anchors glob matching at any depth after the literal prefix
+- `check=False` + treat rc=1 with empty stdout as empty list (GCS returns rc=1 for zero-match, not as an error)
+- Any other non-zero rc (auth failure, bucket not found) should re-raise
+
+### Wrong pattern
+
+```bash
+# WRONG — exits 1 on partial hive-partition prefix match; silent empty result
+gcloud storage ls --recursive gs://bucket/path/day=2019-06-
+
+# WRONG — subprocess(..., check=True) will raise on legitimate empty prefixes
+subprocess.run(["gsutil", "ls", "-r", prefix], check=True)
+```
+
+### Scope
+
+This applies to any code in instruments-service, MTDS, features-service, or deployment scripts that walks GCS to
+discover parquets by date-range prefix scan. It does NOT apply to listing a complete known path (no prefix matching
+needed) — those can use `gcloud storage ls` safely.
 
 ---
 
