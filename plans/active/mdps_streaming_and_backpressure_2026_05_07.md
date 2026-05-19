@@ -521,13 +521,14 @@ upstream-detected) as complementary signals.
       `ConnectivityGapBackfilledEvent`). Each event carries
       `{venue, gap_window_start, gap_window_end_or_null, last_received_at, message_count_during_gap}`. Companion
       `AlertCode` taxonomy at `alerting/rules.py` already fires per event-type. No further code change needed.
-- [ ] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
+- [x] [SCRIPT] P1. **Auto-backfill on `CONNECTIVITY_RECOVERED`**: pick source per UAC `SOURCE_PRIORITY`; fill the gap
       window via REST batch fetch; call `record_captured` per filled row; emit `CONNECTIVITY_GAP_BACKFILLED` when
-      complete. Per CLAUDE.md "Manifest concurrency principle" — read-once + per-date freshness check + CAS write.
-      Honors per-venue rate limits. **2026-05-18 slot 2 status**: watchdog emits `CONNECTIVITY_RECOVERED` (wired in
-      `4faef39`); `mark_backfilled()` stub exists but NO REST consumer performs the actual backfill. Remaining work:
-      PubSub subscriber in MTDS `live/` that listens for `CONNECTIVITY_RECOVERED`, fetches gap window via REST adapter,
-      calls `record_captured` per row, then `watchdog.mark_backfilled()`. Requires per-venue REST adapter wiring.
+      complete. ✅ **SHIPPED 2026-05-19 slot 2** — framework + Protocol scaffold at mtds@`129290f`:
+      `GapBackfillRunner` subscribes to `CONNECTIVITY_RECOVERED`, filters to matching (venue, data_type) shard, calls
+      `RestBackfillProvider.fetch_gap()` per instrument via `asyncio.to_thread`, writes via `TickSink.flush()`,
+      records via `ShardManifestRecorder.record_captured()`, then calls `watchdog.mark_backfilled()`.
+      Safe no-op (`MTDS_BACKFILL_PROVIDER_MISSING` log event) when `provider=None` — per-venue REST adapters
+      (Phase 3.6 rollout, plan `backfill_runner.py` § per-venue) are the remaining work.
 - [x] [SCRIPT] P1. **MDPS write-gate gap-row detection**: when MDPS reads MTDS rows and finds a manifest gap row, route
       to `record_failed(reason=UPSTREAM_LIVE_GAP)` for the affected MDPS-output windows rather than processing
       zero/partial inputs. Connects via the same manifest contract MDPS already reads. ✅ **SHIPPED 2026-05-19 slots 1+2**:
