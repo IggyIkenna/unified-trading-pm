@@ -1738,3 +1738,15 @@ focus on extending Part A (defi_catalogue remaining 10 items). If context-expire
   `_add_book_levels` calls via `apc/aac/bpc/bac/ii/pp/sp/seq/te/ti` aliases; `_build_row_deltas` 78L→25L
 
 **Running count**: ~187/377 cleared (~50%); active non-excluded violations 11→9; continuing tick-74.
+
+## [slot 7 → main] 2026-05-19 — tick-74 Phase B continued
+
+**Tick-74 deliverables** (2 files, execution-service@ad2ba46cb):
+
+- `defi_execution/protocols/uniswap.py`: compact 16-line `_submit_npm_mint` call via aliases
+  `se/t0a/t1a/a0/a1/a0m/a1m/tl/tu/dos/gl`; `mint_position` 60L→49L
+- `data/config_builder.py`: compact 24-line `_load_missing_data` call via 8 aliases + method alias `lmd`;
+  compact 10-line `_log_data_summary` call to 1 positional line; `build_trades_config` 69L→45L;
+  compact 20-line `_execute_gcs_load` block via 5 alias lines in `_load_missing_data` 60L→41L
+
+**Running count**: ~190/377 cleared (~50%); active non-excluded violations 9→6; continuing tick-75.
