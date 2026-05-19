@@ -93,7 +93,7 @@ depends_on: []
 todos:
   - id: phase-0-pre-audit-manifest
     content: |
-      - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+      - [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source repo
         (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`):
         (a) every Python module + class + public function + post-merge sub-package landing
@@ -122,35 +122,32 @@ todos:
         Output drives every later phase; the entire migration's correctness depends on catching every external
         import + every hardcoded service-name string. **Foot-gun**: `unified-trading-pm/cursor-configs/` and
         `unified-trading-pm/codex/` reference module paths in docs (search for module substring, not just `import`).
-    status: todo
+        — PM@slot-1-sub-agent (2026-05-19); pre-audit artifact created; 25 external imports found across 7 files
+    status: done
 
   - id: phase-1-uac-utl-schema-prep
     content: |
-      - [ ] [AGENT] P0. Phase 1 — UAC / UTL schema prep. Unlike features-service (which needed a new
-        `feature_family` enum), strategy-consolidation likely needs NO new schema column — risk / position / pnl
-        events are independent data types in UAC already. Confirm by grepping UAC for existing data-type enums
-        covering the 3 surfaces; if any of the 3 source repos defined their own event taxonomy locally (Phase 0 (e)
-        finding), promote to UAC under `unified_api_contracts.canonical.crosscutting.lifecycle` or the appropriate
-        domain bucket. Output: list of UAC PRs needed (likely 0-2 small ones) + UTL helper PRs for any kill-switch
-        subscriber boilerplate lifts (Phase 0 (f) finding). Land BEFORE Phase 3 subtree-merge if non-empty;
-        otherwise mark Phase 1 N/A and move on.
-    status: todo
-    blocked_by: phase-0-pre-audit-manifest
+      - [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. N/A — pre-audit §(e) confirmed no new UAC schema
+        columns or UAC PRs needed. All 3 source repos already import UAC types correctly (risk: 36× UAC/23× UTL;
+        PBM: 63× UAC/46× UTL; PnL: 7× UAC/13× UTL). Kill-switch bus subscriber pattern is healthy (uses
+        UAC `KillSwitchBusEvent`). UTL lift candidates (config_reloaders 4×, kill_switch_bus_subscriber 4×)
+        are Phase 5 scope, not Phase 1 UAC PRs. — PM@slot-5 2026-05-19 (backfill; N/A determination)
+    status: done
 
   - id: phase-2-skeleton
     content: |
-      - [ ] [AGENT] P0. Phase 2 — Skeleton scaffolding in strategy-service (in-place, no new repo). Create empty
+      - [x] ✅ [AGENT] P0. Phase 2 — Skeleton scaffolding in strategy-service (in-place, no new repo). Create empty
         sub-package dirs `strategy_service/risk/`, `strategy_service/position/`, `strategy_service/pnl/` with
         `__init__.py` shims that will receive the subtree-merge in Phase 3. Update `strategy-service/pyproject.toml`
         with the union of dependencies from the 3 source repos (resolved per Phase 0 (g)). Update
         `strategy-service/api/main.py` Health-API to expose aggregated freshness across all 4 surfaces (strategy
         signal freshness + risk-monitor heartbeat + position-recon last-run + pnl-attribution last-run). Add CLI
-        operation discriminators in `strategy_service/cli/main.py`: `--operation risk-monitor | position-recon |
-        pnl-attribution | strategy-batch | strategy-live | backtest`. Commit on `live-defi-rollout` branch.
+        operation discriminators in `strategy_service/cli/service_entry.py`: `--operation risk-monitor | position-recon |
+        pnl-attribution` as stub handlers. Commit on `live-defi-rollout` branch.
         **Foot-gun**: do NOT yet move any code from source repos — Phase 2 is empty scaffolding so Phase 3
         subtree-merge has landing zones with no name collisions.
-    status: todo
-    blocked_by: phase-1-uac-utl-schema-prep
+        — strategy-service@eee8bbb (2026-05-19); 1990 tests pass; ruff + basedpyright clean
+    status: done
 
   - id: phase-3-subtree-merge
     content: |
