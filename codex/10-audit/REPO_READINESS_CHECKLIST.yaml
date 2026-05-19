@@ -24,7 +24,7 @@
 #
 # repo_type values:
 #   library-t0   - Tier 0: zero-dep base libraries (UAC, UIC, UEI, UCI, EAL, MEL)
-#   library-t1   - Tier 1: single-dep libraries (UTL, URDI, USEI)
+#   library-t1   - Tier 1: single-dep libraries (UTL, USEI)  # URDI eliminated — merged into instruments-service
 #   library-t2   - Tier 2: multi-dep libraries (UMI, UTEI, UML, UFCL, UDEI, UPI)
 #   library-t3   - Tier 3: domain clients (UDC)
 #   service      - T4 production services
