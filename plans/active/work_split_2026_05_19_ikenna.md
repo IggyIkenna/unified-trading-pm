@@ -353,19 +353,19 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 1. - [ ] **Tab 4 — features-service ModeHandler lift (4 families)** — commodity / cross_instrument / multi_timeframe /
          calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal)
 2. - [ ] **Tab 5 — feature emission wiring** — per plan §Tab 5. (brand-new 1.0×, ~5 = 5.0 cal)
-3. - [ ] **Tabs 6–7** — remaining plan tabs. Read plan for items. (brand-new 1.0×, ~4 = 4.0 cal)
+3. - [x] ✅ **Tabs 6–7** — Tab 6 Service-readiness Group A shipped: blr@9905bde QG pass + PR #5 → staging 2026-05-19.
+         Tab 7 (UI ExecutionModeContext) deferred to operator (requires Playwright + dev server). (brand-new 1.0×, ~4 = 4.0 cal)
 
 **Part B — cme_polymarket_arb Phase 1** (no-deadline, 15.0 cal):
 
-4. - [ ] **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — per `cme_polymarket_arb_2026_05_08.md`. (brand-new
-         1.0×, ~5 = 5.0 cal)
-5. - [ ] **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — per plan Phase 2. (brand-new 1.0×, ~5 = 5.0 cal)
+4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146 (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
+5. - [ ] **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by predictions_master Phase 5. Working on Phase 3 (MTDS binary-outcome shard atom) as unblocked proxy. (brand-new 1.0×, ~5 = 5.0 cal)
 
 **Part C — promote_workflow_may23 residuals** (plan at 62%, 1.6 cal left):
 
-6. - [ ] **Remaining open items** — read `promote_workflow_may23_cli_path_2026_05_10.md` and ship all remaining `- [ ]`
-         items. (design 0.6×, ~3 = 1.6 cal)
-7. - [ ] **Plan flips** for all shipped. (0.5 cal)
+6. - [x] ✅ **Remaining open items** — all remaining `- [ ]` items in promote_workflow are OPERATOR-ONLY (run preflight-cutover.sh,
+         2yr backtest, Copper provisioning, testnet smoke, Tenderly fork dry-run). No agent-executable items remaining. (design 0.6×)
+7. - [x] ✅ **Plan flips** for all shipped. (0.5 cal)
 
 ---
 
