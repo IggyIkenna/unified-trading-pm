@@ -1136,3 +1136,47 @@ Plan update: `features_service_qg_cleanup_2026_05_11.md` Phase 1.3 annotated wit
 - writegate Phase 6.8: already ✅ (instruments-service@29d511d) — prior slot shipped it.
 
 **Slot 8 status**: all assigned items done or blocked. Available for reallocation. Awaiting next dispatch.
+
+---
+
+## [slot 8 → main] 2026-05-19 — ml_repo_consolidation Phase 0+1 COMPLETE; BLOCKED-OPERATOR on Phase 2
+
+**ACK + Status Update (2026-05-19)**:
+
+Phase 0 and Phase 1 of ml_repo_consolidation complete. Summary:
+
+**Shipped (ml_repo_consolidation)**:
+
+1. **Phase 0 SIDE EFFECT** — soft-freeze banner added to 20 active plans referencing ml-training-service or
+   ml-inference-service — PM@`a63e60e0b`
+
+2. **Phase 1 — UAC/UTL schema prep audit** — PM@`1113ffee9`
+   - 0 blocking UAC PRs needed before Phase 3
+   - PredictionEvent/PredictionEventDict/EnsembleConfig: all correctly marked CORRECT-LOCAL
+   - ModelTrainedEvent/ModelPromotedEvent: deferred to Phase 4(f) as TypedDicts — not blocking merge
+   - Kill-switch boilerplate: 0 grep hits in either repo — no UTL lift needed
+   - UAC internal.domain.ml already covers EnsembleConfig/ModelMetadata/InferenceResult
+   - UAC internal.domain.ml_inference_service already covers CascadeConfig/CascadePredictionEvent
+
+**BLOCKED-OPERATOR — Phase 2 (ml-service repo creation)**:
+
+```
+OPERATOR ACTION REQUIRED — ml_repo_consolidation Phase 2
+Plan: plans/active/ml_repo_consolidation_2026_05_19.md (todo id: phase-2-skeleton-new-repo)
+
+What I need:
+  gh repo create IggyIkenna/ml-service --private --add-readme
+
+Then: ping slot-8 or slot-9 with "[ack] ml-service repo created" so agent can:
+  (a) git clone into .tabs/<N>/ml-service/
+  (b) bootstrap skeleton (ml_service/{api,cli,training,inference,common}/, Dockerfile, etc.)
+  (c) seed pyproject.toml with the 35-dep union (resolved per Phase 0 (g) preaudit)
+
+Unblocks: entire ml_repo_consolidation Phase 3-10 chain
+Without it: Phase 3 subtree-merge cannot proceed
+```
+
+**Current Slot 8 state**:
+- strategy_repo_consolidation Phase 9+10: BLOCKED on slot 7 Phase 8A (which is BLOCKED on slots 3-6 upstream)
+- ml_repo_consolidation Phase 2+: BLOCKED-OPERATOR (repo creation)
+- Available for reallocation to any unblocked track
