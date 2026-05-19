@@ -276,7 +276,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          0.4×, ~2 = 0.8 cal) — 8 files across 4 repos: e2e-testing@6426523, uac@5505c4c, pm@f41e8125, instruments-service@cca6cab. All remaining `/tmp` hits have `# nosec B108` exemptions (container detection / CLI dev defaults).
 9. - [x] ✅ **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** (refactor 0.4×, ~2 = 0.8 cal) — workspace CLEAN. Audited 12 repos: all service repos have minimal __init__.py (no star imports, no private re-exports). UAC 6 `.internal.*` re-exports are intentional facade pattern (consumers use `from unified_api_contracts import X`). UTL side-effects are documented + opt-in. No violations found. PM@slot-4-2026-05-19.
 10. - [ ] **S18. SUSTAIN — cross-repo line-length 100→120 migration audit** (refactor 0.4×, ~2 = 0.8 cal)
-11. - [ ] **S19. SUSTAIN — cross-repo ruff `select` rule consistency** (refactor 0.4×, ~1 = 0.4 cal)
+11. - [x] ✅ **S19. SUSTAIN — cross-repo ruff `select` rule consistency** (refactor 0.4×, ~1 = 0.4 cal) — Audited 9 repos. Codex floor = ["E","F","W","I"]. One violation: deployment-service missing "W" → fixed (DS@3fa1731, W-clean). De-facto service-extended standard ["E","F","W","I","N","UP","B","C4","SIM","RUF","G"] documented in codex quality-gates.md (PM@f13a259f).
 12. - [x] ✅ **S20. SUSTAIN — cross-repo `setup.sh` consistency audit** (refactor 0.4×, ~1 = 0.4 cal) — PM@771f3d08; 25/25 repos identical to SSOT template; 0 drift
 13. - [ ] **Plan flips** for all shipped. (0.5 cal)
 
