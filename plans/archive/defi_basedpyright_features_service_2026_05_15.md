@@ -9,16 +9,19 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
 
+> **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
+
 **MIGRATED FROM:** `defi_master_2026_05_07.md` line 292 deferral **Status:** 84% CLEARED (slot-8 2026-05-17) — 136
 reportAny remain (was 825); foreign-active onchain/ + cross_instrument/ are the only remaining surfaces.
 
 ## Deferred work — migrated to:
 
 - features_service/onchain/ (96 errors): **DEFERRED-OTHER-SLOT** — slot-2 is in active flight on features-onchain
-  pipeline (LDR commits aaa6b319, cb787082, 50273e1f). Successor: same plan, deferred until slot-2 stabilizes onchain
-  pipeline.
+  pipeline (LDR commits aaa6b319, cb787082, 50273e1f). **Migrated to: `features_service_qg_cleanup_2026_05_11.md`** —
+  any remaining onchain/ basedpyright errors are a sub-item of the broader features-service QG cleanup.
 - features_service/cross_instrument/ (40 errors): **DEFERRED-OTHER-SLOT** — another slot has 5 cross_instrument
-  calculator files dirty (per slot-8 LDR fetch 2026-05-17). Successor: same plan, deferred until other slot pushes.
+  calculator files dirty (per slot-8 LDR fetch 2026-05-17). **Migrated to:
+  `features_service_qg_cleanup_2026_05_11.md`**.
 - features-service workspace foreign-dirty list cleanup → No successor needed (this plan handles).
 - Sibling repo drift (risk-and-exposure-service +17, strategy-service +53): ✅ cleaned slot-8 2026-05-17 — successor:
   not applicable.
@@ -122,10 +125,10 @@ Same patterns as execution-service fix:
       already cleaned as part of waves 4-5 sweeps. Plan-body assumption from the original scoping was incorrect — there
       is no adapters/ surface to fix.
 - [x] ✅ [DEFERRED-OTHER-SLOT] [AGENT] P0. Fix cast() wrappers in features_service/onchain/ (expected ~200 errors). —
-      **DONE slot-4 2026-05-18**: 96→0 errors across 20 files (wave A+B). Wave A: onchain_validity_engine.py (54 errors),
-      smoke.py (importlib casts), feature_builder_registry.py (_REGISTRY rename). Wave B: 17 remaining files (calculators,
-      collectors, engine, handlers). cast() for pd.Series.get(), polars group_by keys, rng.choice(), hex→Decimal,
-      pd.isna(float|str|None), method overrides. — features-service@f141061d
+      **DONE slot-4 2026-05-18**: 96→0 errors across 20 files (wave A+B). Wave A: onchain_validity_engine.py (54
+      errors), smoke.py (importlib casts), feature_builder_registry.py (\_REGISTRY rename). Wave B: 17 remaining files
+      (calculators, collectors, engine, handlers). cast() for pd.Series.get(), polars group_by keys, rng.choice(),
+      hex→Decimal, pd.isna(float|str|None), method overrides. — features-service@f141061d
 - [x] ✅ [AGENT] P0. Fix remaining errors in other modules. — features-service@dad0b74a (slot-8 wave 4 2026-05-17)
   - [x] ✅ calendar/ family (15 errors): yfinance_earnings_adapter, batch_handler, corporate_actions_handler,
         config_reloaders, economic_calendar_loader, calendar_orchestrator, mock_data_provider, feature_builder_registry
@@ -142,12 +145,12 @@ Same patterns as execution-service fix:
       .to_list() Any iterations, importlib module attribute accesses (smoke.py). Return type fix:
       \_sector_momentum_divergence NDArray[float64]→NDArray[np.int8]. CALCULATOR_REGISTRY cast for dict invariance.
       cross_instrument/ now at 0 reportAny; total features-service: 96 remaining (onchain/ only, DEFERRED-OTHER-SLOT).
-- [x] ✅ [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. —
-      **DONE slot-4 2026-05-18**: basedpyright 0 errors confirmed (`timeout 120 basedpyright features_service/onchain/`),
-      ruff ✅, coverage 78.76% > 70% floor. Pre-existing test failures (volatility/sports missing modules, Ikenna hard-coded
+- [x] ✅ [DEFERRED-OTHER-SLOT] [AGENT] P0. Verify basedpyright 0 errors, run quality-gates.sh, commit+push. — **DONE
+      slot-4 2026-05-18**: basedpyright 0 errors confirmed (`timeout 120 basedpyright features_service/onchain/`), ruff
+      ✅, coverage 78.76% > 70% floor. Pre-existing test failures (volatility/sports missing modules, Ikenna hard-coded
       path) confirmed unchanged by stash-test. Committed + pushed features-service@f141061d.
-- [x] ✅ [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain reaches 0
-      (cross-slot handshake required). — **DONE slot-4 2026-05-18**: see defi_master flip below.
+- [x] ✅ [DEFERRED-AFTER-FULL-CLEAN] [AGENT] P0. Flip checkbox in defi_master_2026_05_07.md. — flips when onchain
+      reaches 0 (cross-slot handshake required). — **DONE slot-4 2026-05-18**: see defi_master flip below.
 
 ## Temporary states + their canonical follow-up plans
 
