@@ -505,24 +505,23 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 
 ### Todos
 
-- [x] ✅ [AGENT] P0. **`batch-live-reconciliation-service/engine/orchestrator.py`** — greenfield ship per pre-audit § 1
-      Tab 6. 6-stage pipeline (config/data-pipeline/ML/strategy/execution/paper-live/batch-paper/agent/writer) fully
-      implemented. blr@579ba69 (initial) + blr@2c6f214 + blr@29b2e1c (threshold wiring). Backfilled 2026-05-19.
-- [x] ✅ [AGENT] P0. **`cli/handlers/reconcile_handler.py::ReconcileHandler.run()`** — wire orchestrator into CLI
-      (currently NotImplementedError stub). — blr@29b2e1c: fully implemented, calls run_reconciliation() from
-      orchestrator; verified 2026-05-19.
-- [x] ✅ [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content
-      unverified per pre-audit). — 12 stage files confirmed implemented (139-495 lines each, 0 stubs); verified
-      2026-05-19.
+- [ ] [AGENT] P0. **`batch-live-reconciliation-service/engine/orchestrator.py`** — greenfield ship per pre-audit § 1
+      Tab 6. Read manifest from MTDS + MDPS + features-service + strategy-service · compare batch vs live P&L per
+      archetype · compute deltas (bps, drawdown, fill-rate) · emit recon report.
+- [ ] [AGENT] P0. **`cli/handlers/reconcile_handler.py::ReconcileHandler.run()`** — wire orchestrator into CLI
+      (currently NotImplementedError stub).
+- [ ] [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content unverified
+      per pre-audit).
 - [ ] [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption.
 - [ ] [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison.
 - [x] ✅ [SCRIPT] P0. **Threshold decision wiring** — read `RECON_GREEN_THRESHOLDS` from UAC; emit
-      `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. — batch-live-recon@2c6f214 +
-      blr@29b2e1c (facade import): per-archetype alpha_pnl_gap_bps loop, carry_staked_basis: 50bps /
-      leveraged_funding_arb: 75bps. QG ✅ 2026-05-19
-- [x] ✅ [SCRIPT] P0. **Alerting hook** — `BATCH_VS_LIVE_RECON_DRIFTED` + `BATCH_LIVE_RECON_DRIFT` subscribed by
-      alerting-service typed handlers. `recon_drift_event_handler.py` routes both at CRITICAL (pagerduty+telegram).
-      `BatchEventReader` scans batch-live-recon GCS event logs. alerting@369f968 2026-05-19.
+      `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. — batch-live-recon@2c6f214:
+      import `RECON_GREEN_THRESHOLDS` from UAC thresholds.py; orchestrator emits `BATCH_VS_LIVE_RECON_DRIFTED`
+      per-archetype when `alpha_pnl_gap_bps > bps_delta_max` (carry_staked_basis: 50bps, leveraged_funding_arb: 75bps).
+      QG ✅ 2026-05-19
+- [x] ✅ [SCRIPT] P0. **Alerting hook** — `BATCH_VS_LIVE_RECON_DRIFTED` event subscribed by alerting-service rule. —
+      alerting-service@f5a35a4: evaluate_batch_vs_live_recon_drifted() added to reconciliation_rules.py + exported via
+      **init**.py; WARNING (1x-2x threshold) → telegram, CRITICAL (>2x) → pagerduty+telegram. QG ✅ 2026-05-19
 - [ ] [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
