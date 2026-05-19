@@ -521,9 +521,11 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       QG ✅ 2026-05-19
 - [x] ✅ [SCRIPT] P0. **Alerting hook** — `BATCH_VS_LIVE_RECON_DRIFTED` event subscribed by alerting-service rule. —
       alerting-service@f5a35a4: evaluate_batch_vs_live_recon_drifted() added to reconciliation_rules.py + exported via
-      **init**.py; WARNING (1x-2x threshold) → telegram, CRITICAL (>2x) → pagerduty+telegram. QG ✅ 2026-05-19
-- [ ] [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
-      semver-rollout to 0.1.0; A1-A3 RED → GREEN.
+      __init__.py; WARNING (1x-2x threshold) → telegram, CRITICAL (>2x) → pagerduty+telegram. UAC facade: uac@4f2dd19.
+      QG ✅ 2026-05-19
+- [x] ✅ [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
+      semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
+      import fixed in stage0_manifest_reason_check.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
       VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
       margin starting point).
