@@ -531,21 +531,22 @@ one-walk migration so manifest only rewrites once.
       (run the script against the provisioned env-tiered buckets to populate dev/staging) is part of THIS phase's window
       — Phase 3 / post-cutover, after Phase 2.6 provisioning + flat→env-tiered migration land (no urgency pre-2026-05-23
       since dev/staging not in active use yet). bucket_name_ssot plan Phase 0h.
-- [ ] [AGENT] P1. **GAP-2.4.F (NEW per operator extension (b+) 2026-05-11; OPERATOR RATIFIED ap-northeast-1
+- [x] ✅ [AGENT] P1. **GAP-2.4.F (NEW per operator extension (b+) 2026-05-11; OPERATOR RATIFIED ap-northeast-1
       2026-05-11)** — Region-pinning audit + enforcement. **Operator decision (a) ratified ap-northeast-1 (Tokyo) for
       AWS** — matched-region with GCP `asia-northeast1` (Tokyo). The 10 DeFi buckets shipped 2026-05-08 via
       `setup-defi-buckets.sh:28` (default `ap-northeast-1`) are already there; ratification is zero-cost. Yaml entries
       audited for region consistency: **GCP all `asia-northeast1` (Tokyo); AWS all `ap-northeast-1` (Tokyo)** —
       within-cloud syncing (Phase 0h) is
-      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md)
-      for full trade-off analysis.
-- [ ] [SCRIPT] P0. **GAP-2.4.G (NEW per operator extension (b+) 2026-05-11)** — Yaml extends env tier to ALL
+      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md)     for full trade-off analysis. — deployment-service/configs/bucket_config.yaml:14 `region:
+      ap-northeast-1`confirmed; bucket_name_ssot Phase 0i`[x]` (audit-backfilled 2026-05-19)
+- [x] ✅ [SCRIPT] P0. **GAP-2.4.G (NEW per operator extension (b+) 2026-05-11)** — Yaml extends env tier to ALL
       `${DEPLOYMENT_ENV}`-MISSING bucket kinds (`instruments-store-{ag}-{env}-{pid}`,
       `market-data-tick-{ag}-{env}-{pid}`, etc. — currently env-less). Confirm with operator which buckets stay env-less
       (`terraform-state` likely; `secrets` definitely). Composes with
       `pipeline_mode={batch_databento, live_websocket, live_rest}` hive partition INSIDE the bucket (env tier at BUCKET
       NAME level, pipeline_mode at PATH level — orthogonal). bucket_name_ssot plan Phase 0e. **Phase 1 code-complete
-      scope** (lands BEFORE Phase 0c provisioning).
+      scope** (lands BEFORE Phase 0c provisioning). — deployment-service@a5c2082 ("feat: bucket-name SSOT Phase 0e —
+      env-tier the Group-A bucket kinds per (b+)"); bucket_name_ssot Phase 0e `[x]` (audit-backfilled 2026-05-19)
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.H (NEW per operator extension (b+) 2026-05-11)** — VM launcher scripts (~30 under
       `deployment-service/scripts/vm/`) audit + `--env <prod|staging|dev>` flag. **Shipped 2026-05-11 across 7 commits**
       totalling ~72 env-aware launchers: `deployment-service@13ef741` (15 MTDS) + `@a2037d2` (19 sports) + `@68ad99f`
@@ -1699,10 +1700,10 @@ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
       `reason="SOURCE_RETURNED_ZERO"` to the empty path that would have crashed `LegacyBlankErrorReasonError`). PM
       baseline 6→0 at `<this-flip>`. STEP 5.70 `check_pipeline_mode_explicit_at_record_calls.py` workspace-wide: 0
       baselined, 0 new.
-- [ ] [AGENT] P0. **Phase 4.DEFAULT-REMOVAL** — Sequenced AFTER Phase 4.FEATURES + DefiManifestRecorder full df-flow
+- [x] ✅ [AGENT] P0. **Phase 4.DEFAULT-REMOVAL** — Sequenced AFTER Phase 4.FEATURES + DefiManifestRecorder full df-flow
       Q1=(α). Removes 4 transitional `None` defaults from 5 `record_*` methods + bumps `MANIFEST_SCHEMA_VERSION` 7→8 +
       reconciles codex prose at `availability-manifest-and-data-status.md:258-262+265`. **Owner**: TBD (no current slot
-      assignment).
+      assignment). — utl@547ff3c8 (audit-backfilled 2026-05-19)
 - [x] [AGENT] P1. **6 LookaheadBiasError strict-mode wire-ins** (freeze-gate item 5) for delta_one / volatility /
       calendar / commodity / cross_instrument / multi_timeframe feature families. **SHIPPED 2026-05-13 harsh slot 9** —
       `features-service@a0011d17` — `_enforce_as_of_boundary(strict=True)` at writer boundary for all 6 polars/pandas
