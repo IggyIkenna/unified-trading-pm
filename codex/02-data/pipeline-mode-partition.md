@@ -36,7 +36,7 @@ last_reviewed: 2026-05-19
 | ----------- | ---------------------------------- | ------------------------------ | -------------------- | ------------------------- |
 | sports      | 0 phantoms / 559,961 real          | 0 phantoms ✅                  | n/a — UAC dispatcher | 0 phantoms ✅ confirmed   |
 | prediction  | 0 phantoms / 14,403 real           | 14,403 phantoms 🔴 FALSE POS   | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
-| tradfi      | 0 phantoms / 245,907 real          | 245,907 phantoms 🔴 FALSE POS  | Axis-10 (reconciler) | ⏳ audit pending          |
+| tradfi      | 0 phantoms / 245,907 real          | 245,907 phantoms 🔴 FALSE POS  | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
 | cefi        | 0 phantoms / TBD real              | TBD                            | Axis-10 (reconciler) | ⏳ audit pending          |
 | defi        | 0 phantoms / TBD real              | TBD                            | Axis-10 (reconciler) | ⏳ audit pending          |
 

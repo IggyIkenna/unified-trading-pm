@@ -418,7 +418,7 @@ todos:
       Steps 1-6 COMPLETE (2026-05-19): 31 VMs TERMINATED, all exit status 0. No data loss confirmed.
       Step 6 (Phase 3.6 phantom gate): post-migration audit found false-positive phantoms (Axis-10 reconciler
       bug). Fix shipped at instruments-service@8accb30. Re-audit with fixed reconciler running (5 asset_groups).
-      prediction: 0 phantoms ✅ | sports: 0 phantoms ✅ | tradfi/cefi/defi: pending re-audit.
+      prediction: 0 phantoms ✅ | sports: 0 phantoms ✅ | tradfi: 0 phantoms ✅ | cefi/defi: pending re-audit.
       Step 7 (operator sign-off): HUMAN-ONLY, blocked on re-audit completing with 0 phantoms across all 5.
 
   - id: phase-4-consumer-sweep-explicit-pipeline-mode
@@ -797,7 +797,7 @@ Per phase — see each todo. Plan-level final gate:
 | Item                                    | Status           | Blocker / Note                                                                                                   | Successor                                                                    |
 | --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | Axis-10 reconciler fix                  | ✅ SHIPPED       | instruments-service@8accb30 — adds `pipeline_mode=batch_*/` prefix_tpls for cefi/defi/tradfi/prediction          | Unblocks Phase 3.6 re-audit                                                  |
-| Phase 3.6 re-audit — all 5 asset_groups | ⏳ PENDING       | Re-run `reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` with Axis-10 fix; expect 0 phantoms | All 5 must show 0 → operator sign-off step 7                                 |
+| Phase 3.6 re-audit — all 5 asset_groups | ⏳ PENDING       | prediction ✅ sports ✅ tradfi ✅ cefi/defi ⏳ (audits running)                                                    | All 5 must show 0 → operator sign-off step 7                                 |
 | Phase 3 operator sign-off step 7        | 🔴 BLOCKED-HUMAN | Phase 3.6 re-audits must return 0 phantoms; HUMAN-ONLY per plan                                                  | Operator marks each asset_group inline in Phase 3 item after re-audit passes |
 | Phase 6 residual phantom cleanup        | 🚫 NOT NEEDED    | Phantoms are Axis-10 false positives; DO NOT run `--apply` — parquets exist at new paths                         | N/A — fix is Axis-10 reconciler patch, not manifest mutation                 |
 | Plan banner removal                     | ⏳ PENDING       | All 5 operator sign-offs complete                                                                                | Remove banner after all asset_group sign-offs land                           |
