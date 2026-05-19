@@ -49,7 +49,7 @@ depends_on:
 todos:
   - id: phase-a-defi-decimals-validator
     content: |
-      - [ ] [CODE] P0. **Phase A — DeFi decimals model_validator rule.**
+      - [x] ✅ [CODE] P0. **Phase A — DeFi decimals model_validator rule.** — uac@956bec1. Rules 6+7 added to _enforce_per_asset_group_required_fields; 10 new tests; all QG green. (slot 4 2026-05-19)
         `InstrumentRecord._enforce_per_asset_group_required_fields` currently enforces:
           (1) CeFi SPOT_PAIR/PERPETUAL → base_asset + quote_asset non-empty
           (2) DeFi ONCHAIN → pool_address OR base_asset_contract_address non-empty
