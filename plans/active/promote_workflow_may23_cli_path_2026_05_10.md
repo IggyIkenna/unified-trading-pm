@@ -315,6 +315,15 @@ paper/live deployment exists.
       `trap "gcloud compute instances delete \$(hostname) ..." ERR EXIT` at script top for strategy-paper/live tasks.
       (deployment-service@ab6bfd2 — chained gcloud delete with ';' after VM_BACKFILL_CMD in strategy-paper/live block;
       resolves zone from metadata at launch so delete runs on any exit code)
+- [x] [AGENT] P1. **Operator-injected mid-run capital override for paper VMs**. Before this change paper VMs hardcoded
+      $500k starting capital with no way to simulate operator deposits/withdrawals without restart, blocking rebalance
+      testing on continuous paper runs (slot-1 audit 2026-05-19). Added `--initial-capital-usd` +
+      `--treasury-reserve-pct` CLI flags to `run-paper.sh`/`colocated_engine.py`; added `OperatorCapitalOverride`
+      GCS-polled JSON blob (`gs://deployment-scripts-<project>/operator_capital_overrides/<vm-hostname>.json`) that
+      mutates `state.{treasury,trading}_balance_usd` each tick — existing `TreasuryMonitor._detect_deposits` +
+      `TREASURY_LOW/HIGH` + `TREASURY_REBALANCE_NEEDED` + `TRANSFER_INITIATED` pipeline reacts automatically, emits
+      `OPERATOR_CAPITAL_OVERRIDE_APPLIED` event. DeFi + `--continuous` + non-mock cloud only. (e2e-testing@89ea188 —
+      colocated_engine.py + run-paper.sh)
 
 ## Phase 2 — Operator pre-flight checklist (P0, ~0.5d, SEQUENTIAL after Phase 1)
 
@@ -654,7 +663,8 @@ returns 200; event archive shows `STRATEGY_PROMOTED_TO_LIVE` within 1s.
 - [x] [AGENT] P0. **Replace mock fixtures** in 9 lifecycle sub-pages (`app/(platform)/services/promote/(lifecycle)/*`) —
       read from real backend (Phase U2 endpoint for runs + Phase U1 store for manifests). (ui@90896373 —
       paper-trading-tab + champion-challenger-tab wired to useStrategyRuns; 7 non-runs tabs unchanged)
-- [x] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend. (ui@6e705085 — wire demote + override promote actions to real backend)
+- [x] [AGENT] P0. **Promote, Demote, Override actions** all wire to backend. (ui@6e705085 — wire demote + override
+      promote actions to real backend)
 - [ ] [SCRIPT] P0. **Playwright e2e test** — operator clicks Promote button → backend receives → event fires → UI
       converges.
 
