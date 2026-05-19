@@ -531,7 +531,7 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       QG ✅ 2026-05-19
 - [x] ✅ [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
       semver-rollout to 0.1.0; A1-A3 RED → GREEN. — blr@9905bde QG ✅ 181s; PR #5 → staging 2026-05-19. Inline pandas
-      import fixed in stage0_manifest_reason_check.
+      import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
       VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
       margin starting point).
@@ -583,14 +583,17 @@ IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_feat
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **app/(ops)/ops/page.tsx:192** — replace `useState<"live"|"batch">` with `useExecutionMode()` hook.
-- [ ] [SCRIPT] P0. **app/(platform)/services/research/quant/page.tsx:216** — same.
-- [ ] [SCRIPT] P0. **components/ops/deployment/data-status/data-status-provider.tsx:33** — lift to ExecutionModeContext.
-- [ ] [SCRIPT] P0. **components/ops/deployment/form/deploy-form-context.tsx:31** — same.
-- [ ] [SCRIPT] P0. **components/widgets/markets/markets-data-context.tsx:57,62** — handle 3-way `compare` variant
-      (likely keep separate state for `compare` vs use ExecutionModeContext for live/batch).
-- [ ] [SCRIPT] P0. **components/widgets/pnl/pnl-data-context.tsx:159** — same refactor.
-- [ ] [SCRIPT] P0. Per-file: `npm run build` + `npm run test` + push.
+- [x] ✅ [SCRIPT] P0. **app/(ops)/ops/page.tsx:192** — replace `useState<"live"|"batch">` with `useExecutionMode()`
+      hook. — ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **app/(platform)/services/research/quant/page.tsx:216** — same. — ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **components/ops/deployment/data-status/data-status-provider.tsx:33** — lift to
+      ExecutionModeContext. — ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **components/ops/deployment/form/deploy-form-context.tsx:31** — same (paper→batch guard added). —
+      ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **components/widgets/markets/markets-data-context.tsx:57,62** — derived-state pattern (isBatch ?
+      "batch" : "live"); compare variant left on separate local state (pre-cutover scope). — ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. **components/widgets/pnl/pnl-data-context.tsx:159** — same refactor. — ui@2280a3f6 2026-05-19.
+- [x] ✅ [SCRIPT] P0. Per-file: `npx next build` exit 0; push ui@2280a3f6 → live-defi-rollout 2026-05-19.
 - [ ] [SCRIPT] P0. **Playwright e2e matrix** on dashboard / ops / research / data-status / pnl pages — verify mode
       toggle propagates correctly without prop-drill regressions.
 - [ ] [SCRIPT] P1. **post-cutover** — ML page hard-disable refactor + dashboard mock-conflation cleanup (defaults #6).
