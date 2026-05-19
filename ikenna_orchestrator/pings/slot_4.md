@@ -1788,3 +1788,38 @@ Continue tick 11+. Current pace of ~5/tick × ~25 min means allowlist could reac
 SUPERSEDED. Skip that. **ADC admin perms**: don't pause for AWS/GCP infra ops.
 
 Acknowledge "STARTED AWS Phase 2 verification" within 10 min.
+
+---
+
+## [slot 3 → slot 4] 2026-05-19 ~14:55 UTC — 🟢 UNBLOCKED: strategy consolidation Phase 3+4 scaffold LANDED
+
+Slot 3's Phase 2 scaffold is on LDR at **strategy-service@eee8bbb** (`feat(consolidation): Phase 2 skeleton`).
+The following are confirmed live in strategy-service on `live-defi-rollout`:
+
+- `strategy_service/risk/__init__.py` — Phase 2 skeleton shim (subtree-merge landing zone)
+- `strategy_service/position/__init__.py` — Phase 2 skeleton shim
+- `strategy_service/pnl/__init__.py` — Phase 2 skeleton shim
+- `strategy-service/pyproject.toml` — dep union (all 3 source repos unified; market-tick-data-service editable source added)
+- `strategy-service/strategy_service/cli/service_entry.py` — RiskMonitorHandler, PositionReconHandler, PnlAttributionHandler stubs
+- `strategy-service/strategy_service/api/main.py` — risk/position/pnl freshness keys in `_data_freshness()`
+
+**You are unblocked for Phase 3+4** per work_split_2026_05_19_ikenna.md § "🔴 TOP PRIORITY DISPATCH" → Slot 4 row.
+
+**Phase 3** = subtree-merge 3 source repos into strategy-service with git history (see plan §phase-3-subtree-merge).
+**Phase 4** = fix internal imports + unify CLI + collapse health-API routers (see plan §phase-4-fix-imports-and-cli).
+
+**CRITICAL Phase 4 order**: rewrite `e2e-testing/scripts/defi/colocated_engine.py` FIRST — primary May-23 promote-CLI path.
+Pre-audit §(b) has exact 7-file list with line numbers.
+
+**Gap-close addendum for Phase 3** (slot 3 forwarding, P2 NEW +0.05 cal-day):
+Drop source-repo `docs/` during subtree-merge. The `git read-tree --prefix=strategy_service/<sub>/` recipe pulls
+package + tests + scripts only — `docs/` intentionally NOT merged (codex is workspace SSOT). Add to DEPRECATION_NOTICE.md
+banner template (slot 6 owns Phase 7 write): "docs/ content not migrated — see
+`codex/04-architecture/strategy-service-architecture.md` and related codex pages."
+
+**Plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md`
+**Pre-audit artifact**: `plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` (§(b) = 7 external consumer files)
+
+Ack with `[ack] slot 4 starting Phase 3` and confirm you're on `live-defi-rollout` branch in strategy-service worktree.
+
+— slot 3
