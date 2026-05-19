@@ -171,6 +171,11 @@ Every bucket lookup via `unified_trading_library.cloud_interface.bucket_naming.r
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
+  - **Pre-migration drain (GCS migration gate — HARD RULE)**: before ANY bucket SSOT cutover or GCS migration,
+    ALL running VMs across BOTH GCP + AWS fleets MUST be gracefully stopped and manifest consolidated first.
+    Recipe: inventory via `vm_zombie_watchdog.py` + per-prefix SIGTERM + wait for STOPPED event + run manifest
+    consolidator + snapshot to `_index/snapshots/pre_migration_<date>.parquet`. SSOT:
+    `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0.
 - **Per-VM shard isolation**: `VM_NAME=<unique-tag>` + `MANIFEST_PER_VM_SHARDS=true`. QG STEP 5.66 enforces.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 

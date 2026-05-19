@@ -367,11 +367,15 @@ concurrent CAS write produces drift between writer-version-N and writer-version-
      recoverable in case Phase 2.1 atomic rename fails).
   7. Lock `live-defi-rollout` branch from launching new backfill VMs until Phase 2 completes (operator-enforced; no
      technical gate).
-- [ ] [AGENT] P0. **GAP-2.0.B** — Confirm Stage 0 covers BOTH GCP + AWS VM fleets (per
-      `aws_migration_defi_first_2026_05_07.md` 5 in-flight cross-cloud rsync jobs from 2026-05-08 Tab 4 close-out).
-      AWS-side VM drain has its own watchdog + event-stream surface; same recipe applies.
-- [ ] [DOC] P0. **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget VM launches" HARD RULE with "Pre-migration drain"
-      sub-section pointing at Stage 0.
+- [x] [AGENT] P0. **GAP-2.0.B** — Confirm Stage 0 covers BOTH GCP + AWS VM fleets. ✅ **CONFIRMED 2026-05-19 slot 2**:
+      AWS fleet = S3 storage-only; all compute VMs are GCP. The 5 in-flight cross-cloud rsync jobs from 2026-05-08
+      completed overnight (last log 01:04 May 9 — per `aws_migration_defi_first.md` § DONE-2026-05-08-tab4 table,
+      all 12 DeFi buckets ✅ COMPLETE). `vm_zombie_watchdog.py` (GCP-only) covers the entire compute fleet.
+      No AWS EC2 instances exist in this architecture — AWS = S3 only.
+- [x] [DOC] P0. **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget VM launches" HARD RULE with "Pre-migration drain"
+      sub-section pointing at Stage 0. ✅ **SHIPPED 2026-05-19 slot 2** — `cursor-configs/CLAUDE.md` updated with
+      "Pre-migration drain (GCS migration gate — HARD RULE)" sub-bullet covering GCP + AWS fleet drain, manifest
+      consolidator, snapshot, and SSOT pointer to `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0.
 
 ### Phase 2.1 — Manifest v5/v6/v7 → v8 atomic rename
 
