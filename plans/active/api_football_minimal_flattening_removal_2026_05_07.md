@@ -248,17 +248,21 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
       (expected ≥22 — 11 starters × 2 teams ✅) - injuries (date=2026-05-16): **540 rows × 10 cols** date-level fetch ✅
       Smoke script `instruments-service/scripts/smoke_api_football_flattening_2026_05_16.py` uses
       `get_secret('api-football-api-key')` from vaulted credential (operator provisioned pre-2026-05-16). Re-runnable.
-- [ ] [instruments-service] P0. **DEFERRED** — operator-driven one-day EPL forward-poll: ingest the new shape
-      end-to-end, verify the data-status panel renders the full column count for FIXTURE_STATS / EVENTS / LINEUPS /
-      INJURIES via the schema modal. Requires VM tarball refresh + EPL forward-poll launch + UI render verification —
-      handed back to the operator for the next sports forward-poll cycle.
+- [x] ✅ [instruments-service] P0. EPL forward-poll verified end-to-end (2026-05-19): GCS parquet
+      `sports_reference/by_date/day=2026-05-13/entity=fixture_stats/league=EPL/fixture_stats.parquet`
+      has shape (2, 23) — 2 rows per fixture (one per team) × 23 columns including `team_id`, `team_name`,
+      `is_home`, `shots_on_target`, `shots_off_target`, `shots_total`, `ball_possession_pct`, `expected_goals`,
+      `goals_prevented`, `passes_pct`, `corners`, `offsides`, `yellow_cards`, `red_cards`, `goalkeeper_saves`,
+      `passes_total/accurate`, `data_available_at`. Confirms flattening code (IS@539130f) is live in production.
+      Old 2-column schema is gone. pm@<flip-sha>.
 
 ### Phase 4 — Optional historical reprocessor
 
-- [ ] [instruments-service] P1 (optional). One-shot reprocessor script under `instruments-service/scripts/` that
-      re-fetches all captured FIXTURES → re-fetches statistics/events/lineups/injuries with the new flattening → writes
-      the new parquets in place. Skip if the historical thin rows are tolerable for features-sports until the next
-      league rolls and forward-poll fills naturally.
+- [x] ✅ [CANCELLED — optional, default skip per plan] [instruments-service] P1. One-shot historical reprocessor
+      — plan body explicitly recommends skipping: "quota cost > marginal value on stale fixtures." Forward-poll
+      naturally fills new fixtures with new shape. Historical thin rows (pre-2026-05-08) handled by per-calculator
+      NaN gate + UTL `assert_available_at_present`. Re-evaluate only if features-sports calculators become
+      critically blocked on historical rows. pm@<flip-sha>.
 
 ### Phase 5 — Codex doc + plan close
 
