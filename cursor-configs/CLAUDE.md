@@ -310,7 +310,10 @@ distinguish live/batch strategies; never build asset-group-specific backtest eng
 Look at the existing system before implementing. Key repo map: events → UTL · schemas → UAC · cloud →
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
 (`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated) + `deployment-ui` +
-`user-management-ui`.
+`user-management-ui` · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; port 8026 locally;
+`agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface — `ikenna_orchestrator/` +
+`harsh_orchestrator/` LEDGER.md remain as offline fallback only). SSOT:
+`codex/04-architecture/agent-orchestrator-overview.md`.
 
 **UAC import rule**: `from unified_api_contracts.{domain} import ...` only. Never `canonical.*` or `normalize_utils.*`.
 SSOT: `imports/uac-import-surface-enforcement.mdc`. Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.

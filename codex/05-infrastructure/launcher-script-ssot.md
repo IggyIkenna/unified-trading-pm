@@ -526,6 +526,28 @@ heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + tem
 
 ---
 
+## Cloud Run launchers
+
+Cloud Run deploy scripts are NOT VM launchers (they run `gcloud run deploy`, not
+`gcloud compute instances create`) and do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog
+registration. They live under `deployment-service/scripts/cloud-run/` and follow the shape of
+`deploy-ui.sh`:
+
+- `--env` flag required (rejects missing; supports `--env=prod|uat`)
+- Reads `config/docker-build.env.{production,uat}` for build-time env vars
+- Triggers Cloud Build + `gcloud run deploy` + optional `firebase deploy --only hosting`
+
+| Script                                        | Target service               | Status  |
+| --------------------------------------------- | ---------------------------- | ------- |
+| `deploy-ui.sh`                                | unified-trading-system-ui    | shipped |
+| `deploy-agent-orchestrator.sh`                | agent-orchestrator (P1+)     | P1 TODO |
+
+`deploy-agent-orchestrator.sh` is created at Phase 1 of
+`plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`. Architecture SSOT:
+`codex/04-architecture/agent-orchestrator-overview.md`.
+
+---
+
 ## References
 
 - CLAUDE.md "VM launcher script SSOT" rule (cursor-configs/CLAUDE.md, codified 2026-05-07).

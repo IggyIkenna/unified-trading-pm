@@ -139,12 +139,38 @@ bash unified-trading-pm/scripts/dev/dev-start.sh --list
 | 8013 | batch-audit-api       | batch-audit         |
 | 8014 | client-reporting-api  | client-reporting    |
 | 8015 | ml-inference-api      | ml-inference        |
+| 8026 | agent-orchestrator    | agent-orchestrator  |
 
 **Machine-readable SSOT:** `unified-trading-pm/scripts/dev/ui-api-mapping.json`
 
 **strictPort:** All UIs use `strictPort: true` in Vite config. If a port is already in use, the dev server fails
 immediately instead of silently picking the next port. This prevents accidental port drift that breaks API proxy
 configuration.
+
+### agent-orchestrator local dev (port 8026)
+
+The agent-orchestrator is **operator tooling** — not a trading service. It doesn't use `dev-start.sh` or the standard
+QG pipeline. Start it directly:
+
+```bash
+cd agent-orchestrator
+
+# One-time setup (per-repo .venv via uv)
+uv venv && uv sync
+.venv/bin/pre-commit install --install-hooks
+cd dashboard && npm install && cd ..
+
+# Boot: backend on :8026, Vite dashboard on :5173
+scripts/dev.sh            # live mode (real state.db)
+scripts/dev.sh --mock     # demo mode (state.mock.db + admin endpoints)
+```
+
+Quality gates: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). Cloud Run deploy uses
+`PORT=8080` internally (set in Dockerfile); local dev uses 8026 per workspace port registry.
+
+Dashboard public URLs: `https://agent-orchestrator.odum-research.com` (prod, pending P5 cutover) and
+`https://agent-orchestrator.staging.odum-research.com` (staging). Architecture SSOT:
+`codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
