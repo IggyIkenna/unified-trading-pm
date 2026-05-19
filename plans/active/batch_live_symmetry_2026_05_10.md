@@ -388,8 +388,9 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
       `features_service/calendar/cli/handlers/batch_handler.py`. — features-service (confirmed 2026-05-18 backfill)
 - [x] ✅ [SCRIPT] P0. Per family: `bash scripts/quality-gates.sh` + `git push origin live-defi-rollout`. —
       features-service@519625f7 — QG EXIT 0 / ALL QUALITY GATES PASSED (broad-except BE_EXCLUDE_GLOBS + noqa fixes)
-- [x] ✅ [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4 families
-      from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline). — PM@7b4f9869 — all 8 families on UTL ModeHandler; "Tab 4 pending" section replaced with "COMPLETE 2026-05-19"
+- [x] ✅ [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4
+      families from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline). —
+      PM@7b4f9869 — all 8 families on UTL ModeHandler; "Tab 4 pending" section replaced with "COMPLETE 2026-05-19"
 - [ ] [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
 
 ### Spawn prompt
@@ -507,16 +508,18 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 - [ ] [AGENT] P0. **`batch-live-reconciliation-service/engine/orchestrator.py`** — greenfield ship per pre-audit § 1
       Tab 6. Read manifest from MTDS + MDPS + features-service + strategy-service · compare batch vs live P&L per
       archetype · compute deltas (bps, drawdown, fill-rate) · emit recon report.
-- [ ] [AGENT] P0. **`cli/handlers/reconcile_handler.py::ReconcileHandler.run()`** — wire orchestrator into CLI
-      (currently NotImplementedError stub).
-- [ ] [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content unverified
-      per pre-audit).
+- [x] ✅ [AGENT] P0. **`cli/handlers/reconcile_handler.py::ReconcileHandler.run()`** — wire orchestrator into CLI
+      (currently NotImplementedError stub). — blr@29b2e1c: fully implemented, calls run_reconciliation() from
+      orchestrator; verified 2026-05-19.
+- [x] ✅ [AGENT] P0. **6 stage files `stages/stage{0-5}_*.py`** — audit + complete content (names exist, content
+      unverified per pre-audit). — 12 stage files confirmed implemented (139-495 lines each, 0 stubs); verified
+      2026-05-19.
 - [ ] [SCRIPT] P0. **Manifest reader integration** — UTL `record_captured` consumption.
 - [ ] [SCRIPT] P0. **P&L delta calculation pipeline** — per-archetype, per-trade, per-fill comparison.
 - [x] ✅ [SCRIPT] P0. **Threshold decision wiring** — read `RECON_GREEN_THRESHOLDS` from UAC; emit
-      `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. —
-      batch-live-recon@2c6f214 + blr@29b2e1c (facade import): per-archetype alpha_pnl_gap_bps loop,
-      carry_staked_basis: 50bps / leveraged_funding_arb: 75bps. QG ✅ 2026-05-19
+      `BATCH_VS_LIVE_RECON_DRIFTED` if `|batch_pnl - live_pnl| / live_pnl > threshold_bps`. — batch-live-recon@2c6f214 +
+      blr@29b2e1c (facade import): per-archetype alpha_pnl_gap_bps loop, carry_staked_basis: 50bps /
+      leveraged_funding_arb: 75bps. QG ✅ 2026-05-19
 - [x] ✅ [SCRIPT] P0. **Alerting hook** — `BATCH_VS_LIVE_RECON_DRIFTED` event subscribed by alerting-service rule.
       AlertCode + AlertRule (HIGH, PagerDuty+Telegram) seeded in UAC alerting facade. uac@4f2dd19 2026-05-19.
 - [ ] [SCRIPT] P0. **Service-readiness Group A** — `bash scripts/quality-gates.sh` Pass 1 + quickmerge to staging +
