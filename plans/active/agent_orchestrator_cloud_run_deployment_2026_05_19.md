@@ -292,4 +292,4 @@ verification command + actual output. Plan does NOT archive until all 7 phases h
 | P3    | _pending_                 | _pending_                            | —   |
 | P4    | _pending_                 | _pending_                            | —   |
 | P5    | _pending_                 | _pending_                            | —   |
-| P6    | _pending_                 | _pending_                            | —   |
+| P6    | codex overview + Slack section + README/OPERATIONS/TODO URL updates + launcher-ssot register | grep agent-orchestrator CLAUDE.md ✓; codex file reads cleanly; epiphanytechnologies in OPERATIONS.md/README.md replaced with odum-research.com (pending-P5 flagged); Off-laptop+Strict-auth+Slack items struck in TODO.md | orchastrator@ba9f785; unified-trading-pm@5daabedf |
