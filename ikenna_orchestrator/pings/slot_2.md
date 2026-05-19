@@ -29,13 +29,12 @@ pressure.
    locally; resolve any QG findings. Leave staged on a local branch (e.g. `slot2/l3-flip-staged`); **do not
    `quickmerge`**, **do not `git push`**.
 
-3. **L5 refactor on local branch — DO NOT PUSH** — same pattern for `_BUCKET_TEMPLATES` in
-   `deployment-api/`. Rewrite to call `resolve_bucket_name()`. QG green locally. Stage on local branch
-   (`slot2/l5-flip-staged`); do not push.
+3. **L5 refactor on local branch — DO NOT PUSH** — same pattern for `_BUCKET_TEMPLATES` in `deployment-api/`. Rewrite to
+   call `resolve_bucket_name()`. QG green locally. Stage on local branch (`slot2/l5-flip-staged`); do not push.
 
 4. **Archive-script dry-run** —
-   `bash deployment-service/scripts/archive-flat-buckets.sh --env prod --cloud both --dry-run`. Verify 30-day-hold
-   logic and confirm the bucket inventory it identifies matches the flat-bucket set expected to be retired.
+   `bash deployment-service/scripts/archive-flat-buckets.sh --env prod --cloud both --dry-run`. Verify 30-day-hold logic
+   and confirm the bucket inventory it identifies matches the flat-bucket set expected to be retired.
 
 5. **Pre-stage write-resume verification one-liners** — for each env-tiered bucket that L3/L5 will write to post-flip,
    write the exact `gcloud storage ls gs://{env-tiered-bucket}/` (or `aws s3 ls`) command into a local checklist file.
@@ -43,12 +42,12 @@ pressure.
 
 **HARD RULES**:
 
-- ❌ Do NOT push L3 or L5 flips until operator write-pause signal lands (operator will ping main → main relays to slot
-  2 here).
+- ❌ Do NOT push L3 or L5 flips until operator write-pause signal lands (operator will ping main → main relays to slot 2
+  here).
 - ❌ Do NOT touch work_split item 8 (Phase 2 freeze gate flip) — bookkeeping after items 1-4 complete.
 - ❌ Do NOT touch foreign files in `.tabs/2/`'s dep repos — any untracked file you didn't create is NOT YOURS.
-- ✅ DO commit + push any orchestration/audit notes that help (e.g. the L3 callsite manifest as a `docs(plans):` note
-  in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 if it adds operator value).
+- ✅ DO commit + push any orchestration/audit notes that help (e.g. the L3 callsite manifest as a `docs(plans):` note in
+  `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 if it adds operator value).
 
 **Self-check before reporting back**:
 
@@ -812,3 +811,10 @@ context-expired at ~11:09 UTC = tick-102). Post "STARTED" now or drop one-liner.
 [2026-05-18 11:11 UTC] [main → slot 2] — 🚫 **ABANDONED (3rd dispatch attempt, 32 min silent on fresh)**. slot_2 is
 non-functional for this session. defi_recursive_borrow Phase 3-4 remains unclaimed — will queue for next human-launched
 session. No further dispatches to slot_2 this cycle.
+
+[2026-05-19 UTC] [Slot 2 → main] — ✅ **L3 pre-staged ack** — local branch `slot2/l3-flip-staged` committed at
+`unified-trading-library@5418b1a7`. 5 wrappers migrated to `resolve_bucket_name`: instruments-store, market-data,
+features-calendar, ml-models-store, ml-predictions-store. QG: 3755 passed (2 pre-existing failures unchanged).
+execution/strategy/features_onchain wrappers deferred as BLOCKED-OPERATOR-DECISION (callers pass no asset_group). DO NOT
+PUSH until operator acks write-pause signal for L3 flip. Next: L5 refactor pre-stage on deployment-api local branch +
+archive dry-run.
