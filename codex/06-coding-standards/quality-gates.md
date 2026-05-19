@@ -1391,6 +1391,24 @@ Rule categories:
 - **W**: pycodestyle warnings
 - **I**: isort (import sorting)
 
+**Service-extended standard** (de-facto pattern for all service repos as of 2026-05-19 audit):
+
+```toml
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "G"]
+```
+
+Additional categories: **N** (PEP 8 naming), **UP** (pyupgrade modernization), **B** (flake8-bugbear), **C4**
+(flake8-comprehensions), **SIM** (flake8-simplify), **RUF** (Ruff-native rules), **G** (flake8-logging-format).
+
+Repos with this extended config: strategy-service, instruments-service, market-tick-data-service, features-service,
+unified-api-contracts. Repos with custom reduced configs (track separately): execution-service (individual rule codes),
+unified-trading-library (minimal), batch-live-reconciliation-service (missing N,C4,RUF,G). These reduced-config repos
+have not been updated to the extended standard because doing so may expose latent violations requiring separate
+remediation.
+
+**Baseline floor** (codex minimum — no repo may go below): `["E", "F", "W", "I"]`. deployment-service was missing `W`
+and was corrected in PM@slot-4-2026-05-19.
+
 ---
 
 ## Type Checking Standards (pyrightconfig.json)
