@@ -1,5 +1,20 @@
 # Slot 6 Ping Ledger
 
+## [slot 6 BOOT ACK] 2026-05-19 — deployment_ui_lifecycle_tabs theme; backfilling b1+b2 plan flips
+
+LDR sync complete. New theme: `deployment_ui_lifecycle_tabs_2026_05_08.md` (~30 cal AI-days).
+
+**Pre-audit findings (commit 567c8a1, May 13)**:
+- b1 (App.tsx 6-tab shell): DONE — deployment-ui@567c8a1 (History→Monitor rename, Status tab removed)
+- b2 (Monitor 4 sub-tabs): DONE — deployment-ui@567c8a1 (Backfill/Experiments/Live/Scheduled)
+- b6 (LiveFreshnessPanel): component shipped in same commit, gated on b5 (mode toggle) for wiring
+- b8 (StreamingLogsPanel): component shipped in same commit, gated on c5 (logs endpoint) for wiring
+- Plan checkboxes for b1/b2 were NEVER flipped — backfilling now in this commit.
+
+**Open work this session**: b5 (DataStatus mode toggle), c5 (SSE logs endpoint), d1-d3 (scheduler registry), e1-e2 (live-cluster registry), bb1-bb3 (experiment tracker).
+
+---
+
 ## [slot 6 → OPERATOR] 2026-05-15 — Phase 6.A Telegram per-env SHIPPED; operator provisioning required
 
 **What shipped**: `notify-telegram.yml` reusable workflow upgraded to per-environment token selection. 34 PM workflow

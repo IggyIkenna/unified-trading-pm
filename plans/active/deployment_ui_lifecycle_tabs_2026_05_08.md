@@ -148,17 +148,18 @@ todos:
 
   - id: b1-six-tab-shell-deploy-monitor-data-builds-readiness-config
     content: |
-      - [ ] [SCRIPT] P0. Re-shape `deployment-ui/src/App.tsx` tab bar from current 7 tabs (Deploy / Status /
+      - [x] ✅ [SCRIPT] P0. Re-shape `deployment-ui/src/App.tsx` tab bar from current 7 tabs (Deploy / Status /
         History / Builds / Data Status / Readiness / Config) to 6 tabs (Deploy / Monitor / Data Status / Builds /
         Readiness / Config). Renames: History → Monitor (semantic re-purposing — the tab is for runtime state,
         not just past deploys). Removed: standalone Status tab (Status content folds into Monitor sub-tabs per
         lifecycle class). Header carries: cloud-target toggle (GCP / AWS), env badge (read-only, derived from
         domain per Phase A.5). Service-axis sidebar persists unchanged — every tab still scopes to a selected
         service when relevant; service-axis is orthogonal to the lifecycle-class tab axis.
+        — deployment-ui@567c8a1 (2026-05-13, backfilled 2026-05-19 slot 6)
 
   - id: b2-monitor-tab-four-subtabs
     content: |
-      - [ ] [SCRIPT] P0. Monitor tab gets four sub-tabs, one per lifecycle class:
+      - [x] ✅ [SCRIPT] P0. Monitor tab gets four sub-tabs, one per lifecycle class:
         (a) **Backfill** — list of currently-running + recent ephemeral data-pipeline jobs (instruments / MTDS /
         MDPS / features-* backfills, smokes, migrations); per-job: progress %, dates-completed / total, shards
         captured/empty/failed counts (live event count from the events bucket), live event-tail, stop / restart /
@@ -175,6 +176,7 @@ todos:
         EVERY sub-tab uses the SAME row-component template (lifecycle-class-aware) so the operator sees one
         consistent layout across all four. The deploy-via-monitor pattern (re-deploy from Monitor's row context) is
         first-class; Deploy tab is exclusively for FRESH deployments.
+        — deployment-ui@567c8a1 (2026-05-13, shell; sub-tabs substantive via slot-7 c1-c4@f585227; backfilled 2026-05-19 slot 6)
 
   - id: b3-deploy-tab-fresh-deployments-only
     content: |
