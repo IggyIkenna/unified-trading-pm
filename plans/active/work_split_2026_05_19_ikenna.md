@@ -99,10 +99,8 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 4. - [ ] **Archive old flat buckets** — run
          `bash deployment-service/scripts/archive-flat-buckets.sh    --env prod --cloud both` (30-day hold, not delete).
          (infra 0.8×, ~2 = 1.6 cal)
-5. - [ ] **GAP-2.0.B** — Confirm Stage 0 drain covers BOTH GCP + AWS VM fleets. Doc update. (research 1.2×, ~1 = 1.2
-         cal)
-6. - [ ] **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget" HARD RULE with pre-migration drain addendum. (design
-         0.6×, ~1 = 0.6 cal)
+5. - [x] **GAP-2.0.B** — Confirm Stage 0 drain covers BOTH GCP + AWS VM fleets. Doc update. ✅ pm@`2af45259`
+6. - [x] **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget" HARD RULE with pre-migration drain addendum. ✅ pm@`2af45259`
 7. - [ ] **Reconcile phantoms** — run
          `python scripts/reconcile_phantom_manifest_rows_all.py    --asset-group cefi --dry-run` + repeat per
          asset_group. (infra 0.8×, ~2 = 1.6 cal)
