@@ -414,6 +414,8 @@ todos:
         `POST /api/monitor/experiments/{run_id}/{stop|restart}`.
         ExperimentsSubTab.tsx: full job table with loading/error/empty states; stop (running) + restart (failed/completed)
         VM action buttons via handleAction(); statusVariant() + kindLabel() helpers; 4 vitest tests.
+        — deployment-api@bfabb3e (2026-05-19 slot 6). Added stop/restart POST endpoints backed by
+        gcloud compute instances stop/reset; 10 unit tests; 422 guard for non-experiment VMs; dry_run preview mode.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase H — Environment-tiered hosting for deployment-UI/API itself
