@@ -151,7 +151,7 @@ todos:
 
   - id: phase-3-subtree-merge
     content: |
-      - [ ] [AGENT] P0. Phase 3 — Subtree-merge 3 source repos into strategy-service with full git history
+      - [x] ✅ [AGENT] P0. Phase 3 — Subtree-merge 3 source repos into strategy-service with full git history
         preserved. For each of {risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service}:
         ```bash
         cd strategy-service
@@ -167,7 +167,9 @@ todos:
         rewrite import statements inside the merged code — `strategy_service/risk/__init__.py` still imports
         `from risk_and_exposure_service.core import ...` until Phase 4. QG WILL fail between Phase 3 and Phase 4;
         this is expected. Keep Phase 4 in the same agent turn.
-    status: todo
+        — strategy-service@92515fde (risk) @cb200745 (position) @c67fb13d (pnl) @544edf80 (merge) 2026-05-19;
+          history reachable via 92515fde^2 (risk-remote tab/5 HEAD ba2eb788)
+    status: done
     blocked_by: phase-2-skeleton
 
   - id: phase-4-fix-imports-and-cli
