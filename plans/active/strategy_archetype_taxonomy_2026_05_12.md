@@ -494,6 +494,18 @@ V-1 additions (uac@0196842) the canonical count is 10. Slot-3 updated (PM@`a28a3
 - Archetype table: 6 rows → 10 rows with 4 new entries and their position structures / rates / when-to-use
 - Cross-references section: 4 new archetype doc links added
 
+### Item V-7 — arbitrage-structural family doc 2 → 7 archetypes ✅ SHIPPED 2026-05-19 slot-3
+
+`codex/09-strategy/architecture-v2/families/arbitrage-structural.md` showed count 2; UAC enum has 7 after MEV variants +
+ARBITRAGE_CROSS_DOMAIN_EVENT were added. Updated (PM@`4d0ffca5`):
+
+- Frontmatter archetype count: `2` → `7` with V-1 provenance note
+- Section heading: `## 2 Archetypes` → `## 7 Archetypes`
+- Table: 2 rows → 7 rows (added ARBITRAGE_MEV_BACKRUN, ARBITRAGE_MEV_SANDWICH (theoretical-only),
+  ARBITRAGE_MEV_JIT_LIQUIDITY, ARBITRAGE_MEV_LIQUIDATION_BUNDLE, ARBITRAGE_CROSS_DOMAIN_EVENT (doc pending Slot 8))
+- `Shared primitives (both archetypes)` → `(all archetypes)`
+- Cross-references: 4 MEV archetype doc links added
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)

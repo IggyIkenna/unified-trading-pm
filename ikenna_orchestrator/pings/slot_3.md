@@ -1192,3 +1192,38 @@ All `CARRY_RECURSIVE_BORROW_PERP_HEDGED` remaining in PM repo are now historical
 **Commit:** PM@`013d6d0f` **Plan flip (V-5 block):** PM@`<this commit>`
 
 Slot 3 AVAILABLE for next dispatch.
+
+---
+
+[2026-05-19 UTC] Slot 3 — **V-6 CARRY-AND-YIELD FAMILY DOC COMPLETE** (self-directed continuation).
+
+`codex/09-strategy/architecture-v2/families/carry-and-yield.md` was showing 6 archetypes; UAC enum has 10 after V-1
+additions. Updated:
+
+1. ✅ Frontmatter archetype count: 6 → 10 with V-1 provenance note
+2. ✅ Alpha thesis: 6 bullets → 10 bullets (all 4 new archetypes described)
+3. ✅ Section heading: `## 6 Archetypes` → `## 10 Archetypes`
+4. ✅ Archetype table: 6 rows → 10 rows (CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP_INV, CARRY_STAKED_BASIS_DATED,
+   CARRY_RECURSIVE_BORROW_LENDING_ONLY)
+5. ✅ Cross-references: 4 new archetype doc links added
+
+**Commit:** PM@`a28a315e` **Plan flip (V-6 block):** PM@`fd1fb631`
+
+Slot 3 AVAILABLE for next dispatch.
+
+---
+
+[2026-05-19 UTC] Slot 3 — **V-7 ARBITRAGE-STRUCTURAL FAMILY DOC COMPLETE** (self-directed continuation).
+
+`codex/09-strategy/architecture-v2/families/arbitrage-structural.md` was showing 2 archetypes; UAC enum has 7 after MEV
+variants + ARBITRAGE_CROSS_DOMAIN_EVENT were added in taxonomy V-1. Updated:
+
+1. ✅ Frontmatter archetype count: 2 → 7 with V-1 provenance note
+2. ✅ Section heading: `## 2 Archetypes` → `## 7 Archetypes`
+3. ✅ Table: 7 rows (ARBITRAGE_MEV_BACKRUN, ARBITRAGE_MEV_SANDWICH [theoretical], ARBITRAGE_MEV_JIT_LIQUIDITY,
+   ARBITRAGE_MEV_LIQUIDATION_BUNDLE, ARBITRAGE_CROSS_DOMAIN_EVENT [doc pending Slot 8])
+4. ✅ Cross-references: 4 MEV archetype doc links added
+
+**Commit:** PM@`4d0ffca5` **Plan flip (V-7 block):** PM@`<this commit>`
+
+Slot 3 AVAILABLE for next dispatch.
