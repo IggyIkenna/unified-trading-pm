@@ -1750,9 +1750,10 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       block. EXPECTED*\* vs attempted_failed distinction is presence/absence of blob (both absent → DependencyError → no
       trade). 4 audit tests added in TestWritegateConsumerClassAudit: missing-required→DependencyError; strategy-absent
       blocks CeFi; optional-absent does not block; all-required → executes. execution-service@1135de1d.
-- [ ] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
+- [x] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
-      discount.
+      discount. ✅ manifest_gap_handler.apply_manifest_quality_flags() + wired into _load_features_and_targets() +
+      8 unit tests. — ml-training-service@4e83099 (slot-5, 2026-05-19)
 - [ ] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
       `attempted_failed` (live model can't infer through gaps).
 - [ ] [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
