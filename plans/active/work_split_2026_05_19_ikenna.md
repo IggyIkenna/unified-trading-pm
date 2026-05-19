@@ -100,7 +100,8 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          `bash deployment-service/scripts/archive-flat-buckets.sh    --env prod --cloud both` (30-day hold, not delete).
          (infra 0.8×, ~2 = 1.6 cal)
 5. - [x] **GAP-2.0.B** — Confirm Stage 0 drain covers BOTH GCP + AWS VM fleets. Doc update. ✅ pm@`2af45259`
-6. - [x] **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget" HARD RULE with pre-migration drain addendum. ✅ pm@`2af45259`
+6. - [x] **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget" HARD RULE with pre-migration drain addendum. ✅
+         pm@`2af45259`
 7. - [ ] **Reconcile phantoms** — run
          `python scripts/reconcile_phantom_manifest_rows_all.py    --asset-group cefi --dry-run` + repeat per
          asset_group. (infra 0.8×, ~2 = 1.6 cal)
@@ -119,8 +120,11 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          ~2 = 1.2 cal) — PM@`1467b823`
 3. - [x] ✅ **GAP-2.3.B** — Audit features-service readers for `ticks.parquet` literal path references. (research 1.2×,
          ~2 = 2.4 cal) — PM@`1467b823` (no breaking changes; 3 bundled-type paths safe)
-4. - [ ] **Phase 2.5** — Run `manifest_cross_asset_rescan_design_2026_05_08.md` cross-asset `--apply-flips` sequence per
-         the plan. (infra 0.8×, ~3 = 2.4 cal)
+4. - [ ] [BLOCKED-OPERATOR-APPROVAL] **Phase 2.5** — Run `manifest_cross_asset_rescan_design_2026_05_08.md` cross-asset
+         `--apply-flips` sequence per the plan. (infra 0.8×, ~3 = 2.4 cal) cefi/defi/tradfi already done 2026-05-13.
+         Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher script
+         (`launch-cross-asset-rescan-vm.sh`) not yet shipped. Unblocks when: (a) operator approves sports apply-flips +
+         (b) launcher shipped. See plan at line 208-235 for details.
 5. - [ ] **gcs_migration_bundle Phase 3** — Complete remaining items in
          `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (plan at 2026-05-15 overdue, 4.8 cal left). Read plan for
          open `- [ ]` items. (infra 0.8×, ~6 = 4.8 cal)
@@ -130,10 +134,16 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 Read `batch_live_symmetry_2026_05_10.md` for open Tab 1/2/3 items. Tab 1 = codex SSOT batch, Tab 2 = UAC + UTL J1
 helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 
-6. - [ ] **Tab 1 — codex SSOT batch** (cefi-batch-live.md + mode-axis-discipline.md). ~200 lines each. (design 0.6×, ~5
-         = 3.0 cal)
-7. - [ ] **Tab 2 — UAC J1 helper + L7 sweep** per batch_live_symmetry plan §Tab 2. (brand-new 1.0×, ~5 = 5.0 cal)
-8. - [ ] **Tab 3 — QG STEPs L2/L3/L7 AST sweeps** per batch_live_symmetry plan §Tab 3. (refactor 0.4×, ~4 = 1.6 cal)
+6. - [x] ✅ **Tab 1 — codex SSOT batch** (cefi-batch-live.md + mode-axis-discipline.md). ~200 lines each. (design 0.6×,
+         ~5 = 3.0 cal) — batch_live_symmetry §Tab 1 all ✅; PM@`6153d9ea` (cefi-batch-live + mode-axis-discipline
+         shipped) + PM@`9df278ef` (batch-live-architecture updated); full-exec verified: both files present + STEP
+         5.75/5.76/5.77/5.78 in base-service.sh
+7. - [x] ✅ **Tab 2 — UAC J1 helper + L7 sweep** per batch_live_symmetry plan §Tab 2. (brand-new 1.0×, ~5 = 5.0 cal) —
+         batch_live_symmetry §Tab 2 all ✅; UAC@`01c1b59` (BatchExecutionMode + RECON_GREEN_THRESHOLDS + J1 stub) +
+         exec@`b30167e2` (node_builder migrated); L7 fix-list documented for Tab 5/MDPS owner
+8. - [x] ✅ **Tab 3 — QG STEPs L2/L3/L7 AST sweeps** per batch_live_symmetry plan §Tab 3. (refactor 0.4×, ~4 = 1.6 cal)
+         — batch_live_symmetry §Tab 3 all ✅; PM@`5772f57b` (STEP 5.75+5.76) + PM@`fac14af3` (STEP 5.77 L2) +
+         PM@`882faaa0` (STEP 5.78 L3); 0 workspace violations pre-flight; L7 sweep complete
 9. - [ ] **Plan checkboxes flip** for all items shipped. (0.5 cal)
 
 ---
