@@ -271,7 +271,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 5. - [ ] **scratch_codefreeze_phase4 residuals** (0.8 cal left) — read plan. (refactor 0.4×, ~2 = 0.8 cal)
 6. - [ ] **features_service_qg_cleanup close** (0.8 cal left) — read plan for remaining items. (refactor 0.4×, ~2 = 0.8
          cal)
-7. - [ ] **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** (refactor 0.4×, ~2 = 0.8 cal)
+7. - [x] ✅ **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** — 26 files across 25 repos; added missing build/dist/**/__pycache__/.venv*/node_modules entries; normalized bare __pycache__/.venv to glob patterns. See SHAs in PM commit.
 8. - [x] ✅ **S16. SUSTAIN — workspace-wide hardcoded `"/tmp"` sweep** → `tempfile.gettempdir()`. Per CLAUDE.md. (refactor
          0.4×, ~2 = 0.8 cal) — 8 files across 4 repos: e2e-testing@6426523, uac@5505c4c, pm@f41e8125, instruments-service@cca6cab. All remaining `/tmp` hits have `# nosec B108` exemptions (container detection / CLI dev defaults).
 9. - [x] ✅ **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** (refactor 0.4×, ~2 = 0.8 cal) — workspace CLEAN. Audited 12 repos: all service repos have minimal __init__.py (no star imports, no private re-exports). UAC 6 `.internal.*` re-exports are intentional facade pattern (consumers use `from unified_api_contracts import X`). UTL side-effects are documented + opt-in. No violations found. PM@slot-4-2026-05-19.

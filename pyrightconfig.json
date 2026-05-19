@@ -1,5 +1,7 @@
 {
-  "include": ["scripts"],
+  "include": [
+    "scripts"
+  ],
   "typeCheckingMode": "standard",
   "reportImplicitOverride": "none",
   "reportExplicitAny": "none",
@@ -10,7 +12,16 @@
   "reportUnknownParameterType": "none",
   "reportUnnecessaryComparison": "warning",
   "reportUnreachable": "warning",
-  "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py", "tests"],
+  "exclude": [
+    "scripts/migration",
+    "scripts/manifest/sbom-store.py",
+    "tests",
+    "node_modules",
+    "dist",
+    "build",
+    ".venv*",
+    "**/__pycache__"
+  ],
   "ignore": [
     "scripts/propagation/rollout-buildspec.py",
     "scripts/propagation/rollout-cloudbuild.py",
@@ -38,7 +49,10 @@
     "scripts/quality_gates/coverage_snapshot_to_parquet.py",
     "scripts/quality_gates/generate_coverage_targets_local.py"
   ],
-  "extraPaths": ["../unified-internal-contracts", "../unified-api-contracts"],
+  "extraPaths": [
+    "../unified-internal-contracts",
+    "../unified-api-contracts"
+  ],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.13"
