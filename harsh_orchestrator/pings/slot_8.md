@@ -379,6 +379,8 @@ committed — needs separate commit. Main to decide if warranted.
 
 CYCLE-CLOSE complete. No new dispatches taken.
 
+[2026-05-19 UTC] slot 8 — ✅ **DONE MECH87-UTL-TRYEXCEPT-IMPORTERROR** — utl@4dc3792: 0 `except ImportError` in UTL source (5 files: instruments_catalog_reader, manifest_writer, startup_validation, standardized_service, write_gate). 3774 passed, 2 pre-existing failures unchanged.
+
 [2026-05-18 17:00 UTC] [main → slot 8] — 🏁 **END-OF-SHIFT AUDIT** (operator confirmed idle).
 
 - **Commits today**: 32+ items (pre-commit standardization 24/26 repos, issue-doc triage 68, workspace-constraints,
