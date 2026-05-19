@@ -565,8 +565,19 @@ todos:
            2026-06-15".
 
         QG: PM quality-gates.sh clean. Plan-health agent picks up the SSOT additions on the next run.
-    status: todo
-    note: ""
+    status: done
+    note: |
+      PARTIAL SHIPPED 2026-05-08 (items 1-5 with pre-Phase-3 placeholders).
+      Post-Phase-3 data fills completed 2026-05-19:
+      - PM@2e35af600: pipeline-mode-partition.md — Shipped progress table updated; Phase 3 confirmed complete;
+        pre/post phantom count table added (sports/prediction confirmed 0; tradfi/cefi/defi re-audit pending);
+        Axis-10 row added; migration date 2026-05-XX→2026-05-19.
+      - PM@e828d542e: availability-manifest-and-data-status.md — drift-axis-1 updated to reflect
+        category=→asset_group= migration complete 2026-05-19; reader fallback window noted.
+      - CLAUDE.md item 6: N/A — no "category= legacy preserved" statement exists in CLAUDE.md;
+        vocabulary section already canonical.
+      - asset_group-vocabulary.md item 3: N/A — doc doesn't exist; vocabulary is in CLAUDE.md + availability-manifest (both updated).
+      Phase 7 is COMPLETE. Post-Phase-3 data fills all done.
 
   - id: phase-8-fallback-removal-followup
     content: |
