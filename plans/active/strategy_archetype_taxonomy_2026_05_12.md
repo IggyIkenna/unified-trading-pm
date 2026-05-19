@@ -529,6 +529,12 @@ the changelog (lines 1441-1443) but the scope header itself was missed. Fixed (P
 README table row for Arbitrage / Structural said "7 docs" but `arbitrage-cross-domain-event.md` doesn't exist — only 6
 docs present. Corrected to "6 docs (1 pending Slot 8)" (PM@`f7ded4ef`).
 
+### Item V-11 — architecture-v2/README.md MM + Vol doc counts corrected ✅ SHIPPED 2026-05-19 slot-3
+
+README Docs column said "10 docs" for Market Making (only 5 exist) and "19 docs" for Vol Trading (only 2 exist). The
+counts reflected archetype targets, not actual files. Corrected to "5 docs (5 pending Slot 8)" and "2 docs (17 pending
+Slot 6/8)" (PM@`f36f2cd4`).
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
