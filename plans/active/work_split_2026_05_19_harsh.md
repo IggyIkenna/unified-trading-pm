@@ -183,8 +183,12 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 6. - [x] ✅ **S7. SUSTAIN — cross-repo `# noqa` justification audit** — 0 bare `# noqa` found across
          all .tabs/6/ repos. All existing suppressions are already `# noqa: CODE` form. Newly written
          feature_observation_writer.py uses `# noqa: PLC0415` (correct). Sweep complete — no changes needed.
-7. - [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** — all repos have same quality-gates.yml structure.
-         (research 1.2×, ~1 = 1.2 cal)
+7. - [x] ✅ **S8. SUSTAIN — cross-repo CI workflow consistency audit** — ran `rollout-workflow-templates.sh --dry-run`:
+         2 repos missing `workspace-qg.yml` (`unified-trading-api`, `e2e-testing`), 5 repos with drifted
+         `major-bump-issue-handler.yml`/`semver-agent.yml`/`update-dependency-version.yml`. Full rollout run: 25 files
+         updated across 8 repos. Post-rollout dry-run: 0 drift remaining. SHAs: risk-and-exposure-service@ba2eb78,
+         strategy-service@47247c9, system-integration-tests@0e24b1c, trading-agent-service@afd76f0,
+         unified-api-contracts@3624173, unified-trading-api@6357612, e2e-testing@9a6cb2d, unified-trading-system-ui@8ff38717
 8. - [ ] **Plan flips** for all items. (0.5 cal)
 
 ---
