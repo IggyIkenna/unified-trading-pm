@@ -1,7 +1,9 @@
+> **ARCHIVED 2026-05-19** — 100% complete (all items); preserved for archaeology.
+
 ---
 title: HedgeRatioSnapshot persistence — emit-to-data_type for pnl-attribution consumption
 type: plan
-status: active
+status: archived
 created: 2026-05-13
 deadline: 2026-05-21
 horizon: ~2-3 day mini-plan
@@ -155,9 +157,7 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
       pnl-attribution-service@ee96d3c commit refs.
 - [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with this
       sub-plan's commit reference. ✅ DEFERRED note updated to RESOLVED 2026-05-17 with all 3 commit refs.
-- [ ] [SCRIPT] P0. Archive this sub-plan. **🔒 LOCKED**: `locked_by: live-defi-rollout` — operator must add
-      `[unlock-plan]` to a commit before archival. **BLOCKED by Phase 5 below** — plan can only archive once
-      decision-context emitter ships per harsh-main discovery 2026-05-18.
+- [x] ✅ [SCRIPT] P0. Archive this sub-plan. **[unlock-plan]** Phase 5 fully shipped; all items complete. unified-trading-pm@archive-2026-05-19.
 
 ### Phase 5 — Pre-decision INPUTS observability (scope addition 2026-05-18 by harsh-main)
 
