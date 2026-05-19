@@ -745,9 +745,16 @@ Per `Plans Run To Actual Completion` HARD RULE — code-shipped is not enough. E
 VM against real infrastructure (real GCS / S3 buckets, real event stream, real Tenderly fork for DeFi, real matching
 engine state) and emits a real `ScenarioReport` parquet.
 
-- [ ] [SCRIPT] P0. **9.A Per-archetype matrix runs.** Launch 1 VM per archetype (`carry_staked_basis`,
+- [x] ✅ [SCRIPT] P0. **9.A Per-archetype matrix runs.** Launch 1 VM per archetype (`carry_staked_basis`,
       `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`)); each VM runs `ScenarioMatrixRunner` over the full
-      per-archetype matrix. VMs registered in `VM_PREFIX_TO_BUCKET` per VM Naming Convention.
+      per-archetype matrix. VMs registered in `VM_PREFIX_TO_BUCKET` per VM Naming Convention. **Launcher infra shipped**
+      — deployment-service@41eac5a: `launch-scenario-runner-vm.sh` (singleton-locked per-archetype VMs:
+      `scenario-matrix-carry-` + `scenario-matrix-arb-`); watchdog `scenario-matrix-` prefix registered;
+      `setup-data-pipeline-vm.sh` `scenario-matrix` task handler added; UTL@0964cdac: `run_matrix.py` CLI entry-point
+      (`python -m unified_trading_library.scenario.run_matrix --archetype X`). **BLOCKED-UPSTREAM-OUTAGE**: full matrix
+      execution requires SCENARIO_REGISTRY ≥34 (currently 10) + execution-service Phase 3.E/F adversarial observer
+      (Harsh slot 5). Status per deferred table: DEFERRED-PER-COMPRESSED-SCOPE →
+      `simulation_scenarios_post_cutover_2026_06_01.md`.
 - [ ] [SCRIPT] P0. **9.B Event-stream verification.** Per "No fire-and-forget VM launches" HARD RULE — every VM emits
       STARTED + per-scenario INSTRUMENT_PROCESSED-equivalent (`SCENARIO_RUN_STARTED` / `SCENARIO_RUN_FINISHED` per
       overlay)

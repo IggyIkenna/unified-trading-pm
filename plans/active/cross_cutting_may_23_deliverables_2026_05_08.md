@@ -58,11 +58,13 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       sub-agent). See
       [`../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
       for full mapping table + Option A migration recipe.
-- [ ] [SCRIPT] **Catalogue rows populated** for every archetype family known to be in scope: carry (3 sub-types:
-      staked-basis / vanilla-basis / cross-venue), price-arb (3 sub-types: same-day-expiry / ETF↔future / cross-venue),
-      ML prediction (per-asset-group: CeFi-ML / S&P-prediction / sports-ML), prediction-markets (4 sub-types: Polymarket
-      / Kalshi / Opinion-Trade / CME-event-arb), and any others surfaced from
-      [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md). Owner: Harsh T6.
+- [x] ✅ [SCRIPT] **Catalogue rows populated — carry subtypes.** 4 missing carry-family archetypes added to
+      `archetype_capability_manifest.json`: `CARRY_STAKED_BASIS_DATED` (dated-contract staked-basis variant) +
+      `CARRY_BASIS_PERP_INV` (recursive-borrow + perp hedge, Family 2) + `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+      (pure-lending recursion, Family 1) + `CARRY_BASIS_DATED_INV` (inverse basis). STRATEGY_REGISTRY: 104→112.
+      Remaining: price-arb subtypes + ML prediction per-group + prediction-markets 4 sub-types (Polymarket/Kalshi/
+      Opinion-Trade/CME-event-arb) — prediction-market archetypes not yet in StrategyArchetype enum; Harsh T6 owns. —
+      uac@3b6d6ad
 - [ ] [SCRIPT] **Per-archetype venue matrix populated** — every (archetype, venue, instrument-type) combination known to
       be feasible is a row, even if not launching this cycle. Owner: Harsh T6.
 - [ ] [SCRIPT] **Per-archetype config parameters declared** (collateral, hedge ratios, position caps, kill-switch
@@ -318,7 +320,8 @@ pending operator triage of
 ## DONE-2026-05-08 (Tab 6 main) — cycle close
 
 Tab 6 main agent dispatched 3 parallel sub-agents per work-split plan
-[`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) § "TAB 6 — Cross-cutting design". Cycle outcome:
+[`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) § "TAB 6 — Cross-cutting design". Cycle
+outcome:
 
 | Sub-agent      | Scope                                                      | Status                                | Commits                                                                                                                                              |
 | -------------- | ---------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -646,7 +649,7 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 | #    | Status                                                                    | Item (line in this plan)                                 | Owner                                                                                                                                                                | Plan home                                                                                                                                                                                                                                  |
 | ---- | ------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1    | `[ ]` (un-flipped per A2 — parallel-SSOT reverted; canonical SSOT exists) | #3 Client model in UAC stable (line 86)                  | _Done by virtue of NOT shipping the parallel SSOT_ — existing `ClientDefinition` + `TradingAccount` carry the canonical model. Annotation explains. No further work. | This plan-of-record + issue doc Addendum                                                                                                                                                                                                   |
-| 2    | `[ ]`                                                                     | #1 Catalogue rows populated (line 55)                    | Harsh T6                                                                                                                                                             | This plan + [`work_split_2026_05_08_harsh.md`](../archive/work_split_2026_05_08_harsh.md) line 109                                                                                                                                                    |
+| 2    | `[ ]`                                                                     | #1 Catalogue rows populated (line 55)                    | Harsh T6                                                                                                                                                             | This plan + [`work_split_2026_05_08_harsh.md`](../archive/work_split_2026_05_08_harsh.md) line 109                                                                                                                                         |
 | 3    | `[ ]`                                                                     | #1 Per-archetype venue matrix populated (line 60)        | Harsh T6                                                                                                                                                             | Same as #2 — `ARCHETYPE_CAPABILITY_REGISTRY` row extension                                                                                                                                                                                 |
 | 4    | `[ ]`                                                                     | #1 Per-archetype config parameters declared (line 62)    | Harsh T6                                                                                                                                                             | Same — extends `ARCHETYPE_CONFIG_SEED` (A1's seed covers May-23 5 archetypes; Harsh extends per-archetype activation)                                                                                                                      |
 | 5    | `[ ]`                                                                     | #1 [BUILD] Strategy catalogue UI (line 64)               | Harsh T6                                                                                                                                                             | This plan § "Strategy catalogue UI route — scope assignment" + `work_split_2026_05_08_harsh.md` line 112                                                                                                                                   |
