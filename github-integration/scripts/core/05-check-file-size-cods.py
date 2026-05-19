@@ -31,6 +31,7 @@ Usage:
 import argparse
 import json
 import subprocess
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import cast
@@ -157,7 +158,7 @@ def scan_repo_for_large_files(repo_name: str, threshold: int, org: str = DEFAULT
         List of (relative_file_path, line_count) tuples
     """
     # Clone or use existing repo
-    repo_dir = Path(f"/tmp/cod-scan/{repo_name}")
+    repo_dir = Path(tempfile.gettempdir()) / "cod-scan" / repo_name
 
     if not repo_dir.exists():
         log_info(f"Cloning {org}/{repo_name}...")

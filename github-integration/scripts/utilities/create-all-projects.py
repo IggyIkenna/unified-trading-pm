@@ -23,7 +23,9 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
+from pathlib import Path
 from typing import cast
 
 import requests
@@ -701,7 +703,7 @@ def _create_projects_loop(
                 print(f"   Created {labels_created} labels")
 
         if not dry_run and project_number != "dry-run":
-            manual_file = f"/tmp/project-{project_number}-manual-setup.md"
+            manual_file = str(Path(tempfile.gettempdir()) / f"project-{project_number}-manual-setup.md")
             instructions = document_manual_steps(project_key, project_def, project_number)
             with open(manual_file, "w") as f:
                 f.write(instructions)
