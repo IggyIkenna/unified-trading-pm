@@ -1172,3 +1172,23 @@ plan have no count references (clean).
 **Commit:** PM@`f5107fe4` **Plan flip:** PM@`787ae2c7`
 
 Slot 3 AVAILABLE for next dispatch.
+
+---
+
+[2026-05-19 UTC] Slot 3 — **V-5 CODEX SWEEP COMPLETE** (self-directed, post-context-compaction continuation).
+
+Slot-3 swept all remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` non-historical references across the PM repo:
+
+1. ✅ `codex/04-architecture/flash-loan-receiver.md` — RecursiveLeverageReceiver users list
+2. ✅ `codex/04-architecture/cefi-perp-leg-bybit.md` — Family 2 context callout
+3. ✅ `codex/04-architecture/batch-live-architecture.md` — archetype × engine table row
+4. ✅ `codex/08-workflows/cutover-window-dependency-order.md` — backtest dependency diagram
+5. ✅ `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — Family 2 section header
+6. ✅ `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — currency note + 57-count annotation
+7. ✅ `plans/active/compute_optimization_mock_data_2026_05_13.md` — deferred item archetype list
+
+All `CARRY_RECURSIVE_BORROW_PERP_HEDGED` remaining in PM repo are now historical narratives only (correct context).
+
+**Commit:** PM@`013d6d0f` **Plan flip (V-5 block):** PM@`<this commit>`
+
+Slot 3 AVAILABLE for next dispatch.

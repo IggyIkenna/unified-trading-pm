@@ -461,6 +461,22 @@ clean).
 they describe the size of the manifest JSON before Phase 9 further expansion); not updated. Plans/epics with "18
 archetypes" or "53 archetypes" are all historical baseline markers (correct context; not updated).
 
+### Item V-5 — Remaining stale CARRY_RECURSIVE_BORROW_PERP_HEDGED refs in codex ✅ SHIPPED 2026-05-19 slot-3
+
+Slot-3 found and updated 6 codex docs + 1 active plan that still referenced the old archetype name as a live
+(non-historical) identifier (PM@`013d6d0f`):
+
+- `codex/04-architecture/flash-loan-receiver.md` ✅ — RecursiveLeverageReceiver users list
+- `codex/04-architecture/cefi-perp-leg-bybit.md` ✅ — Family 2 context callout
+- `codex/04-architecture/batch-live-architecture.md` ✅ — archetype × engine table row
+- `codex/08-workflows/cutover-window-dependency-order.md` ✅ — backtest dependency diagram
+- `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` ✅ — Family 2 section header
+- `codex/09-strategy/architecture-v2/category-instrument-coverage.md` ✅ — currency note + 57-count annotation added
+- `plans/active/compute_optimization_mock_data_2026_05_13.md` ✅ — deferred item archetype list
+
+All remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` references in the PM repo are now in historical change-log narratives
+(correct context; intentionally preserved).
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
