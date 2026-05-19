@@ -99,14 +99,18 @@ todos:
 
   - id: phase-3-mtds-binary-outcome-shard-atom
     content: |
-      - [ ] [SCRIPT] P1. **Phase 3 — MTDS binary-outcome shard atom** for EVENT_CONTRACT data_type. Per CLAUDE.md
+      - [x] ✅ [SCRIPT] P1. **Phase 3 — MTDS binary-outcome shard atom** for EVENT_CONTRACT data_type. Per CLAUDE.md
         "Shard-granularity SSOT" — for cefi options/futures the shard atom is `(asset_group, venue, data_type,
         chain=options_chain, root, day)`. For CME event-contracts the shard is bundled by `(asset_group=tradfi,
         venue=CME, data_type=EVENT_CONTRACT, root, resolution_date, day)` — `resolution_date` joins per-day
         snapshots that resolve at the same expiry; `strike_threshold` differs per cluster within the bundle.
         Cluster validation per Phase 1A of writegate: `expected_root_clusters = {(root, resolution_date,
         strike_threshold): expected_count}` per UAC SSOT.
-    status: todo
+        **SHIPPED 2026-05-19** mtds@b59b63e — PartitionedTickWriter event_contract_bundle_counts + envelope
+        properties; orchestrator finalize loop with record_captured_from_counts per (root, resolution_month) bundle;
+        UAC event_contract in BUNDLED_DATA_TYPES (uac@f70b975); extract_event_contract_shard_key exported (uac@f70b975).
+        TEMPORARY: expected == observed until Phase 4 instruments-service catalog.
+    status: done
 
   - id: phase-4-instruments-service-per-cluster-expiry
     content: |
