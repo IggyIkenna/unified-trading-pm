@@ -120,7 +120,7 @@ other features.
       [colocated_engine.\_load_features_for_date](../../e2e-testing/scripts/defi/colocated_engine.py#L971) to also load
       `feature_group=perp_funding_rates` from both cefi + defi buckets, filter by `(venue, symbol)` based on strategy
       config, and merge into features dict as `funding_rate_apy_bps` (single scalar, the value for the strategy's
-      configured perp_venue). — e2e-testing colocated_engine.py \_FEATURE_GROUPS wired with "perp_funding_rates" for
+      configured perp_venue). — e2e-testing@e47feb9; colocated_engine.py \_FEATURE_GROUPS wired with "perp_funding_rates" for
       both DEFI + CEFI; \_load_features_for_date generically flattens all parquet columns → funding_rate_apy_bps
       auto-appears.
 
