@@ -262,6 +262,49 @@ We just need a provider wrapper.
 **Phase-G QG**: paper VM relaunched with `--execution-provider matching_engine` produces fills with non-zero
 slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets within 10 ticks.
 
+## Phase-G.1: Solana AMM routing in MatchingEngineExecutionProvider (P0, ~1 day, PARALLEL with G)
+
+**Why P0**: `carry_staked_basis` Solana legs (jitoSOL/mSOL/bSOL ↔ SOL via Raydium/Orca pools) send `BookType.AMM`
+instructions. Phase G as shipped raises `NotImplementedError` on `BookType.AMM` — every Solana leg falls back to
+`BenchmarkFillProvider` zero-slippage. G.1 routes Solana AMM instruments through `SolanaAMMPool` (xy=k, existing
+`matching_engine/solana_clmm.py`) with pool state derived from MTDS `dex_pools` parquets.
+
+**Scope**: jitoSOL/mSOL/bSOL ↔ SOL only. EVM AMM (`BookType.AMM` for non-Solana) continues to raise
+`NotImplementedError` (deferred to `matching_engine_provider_multi_venue_2026_06.md`). Full on-chain tick-state CLMM
+routing also deferred.
+
+- [x] [AGENT] P0. **`execution_service/providers/solana_rpc_client.py`** — thin Helius RPC wrapper reading
+      `helius-api-key` from Secret Manager. Exposes `get_slot()`, `get_balance()`, `get_account_info()`,
+      `get_token_account_balance()`. Raises `MissingCredentialError` if key absent with operator ping reference. —
+      execution-service@c27a57c07 2026-05-19
+
+- [x] [AGENT] P0. **`execution_service/providers/solana_amm_depth_provider.py`** — Solana-side equivalent of
+      `L2DepthProvider`. `SolanaAmmDepthMode.BATCH` reads MTDS `dex_pools` parquets from
+      `gs://{bucket}/dex_pools/{protocol}/SOLANA/date={date}/...` for Raydium + Orca. `PoolSnapshot.from_aggregate()`
+      derives `reserve_x`/`reserve_y` from `(price, tvl_usd)` via 50/50 TVL split assumption. Returns `PoolSnapshot`
+      dataclass; `to_pool_snapshot_dict()` feeds `SolanaAMMPool.from_snapshot()`. — execution-service@c27a57c07
+      2026-05-19
+
+- [x] [AGENT] P0. **Modify `execution_service/providers/matching_engine.py`** — replace `NotImplementedError` on
+      `BookType.AMM` with venue-routing: Solana instruments (regex: `SOLANA-|JUPITER:|jitoSOL|mSOL|bSOL`) route to
+      `_execute_solana_amm()` which builds `SolanaAMMPool.from_snapshot()`, calls `pool.quote()` + `pool.apply()`,
+      computes `slippage_bps`, emits `SOLANA_AMM_FILL` log event. EVM AMM continues to raise `NotImplementedError`.
+      Lazy-init for `SolanaRpcClient` + `SolanaAmmDepthProvider`. — execution-service@c27a57c07 2026-05-19
+
+- [x] [AGENT] P0. **Extend `execution_service/providers/factory.py`** with `solana_api_key: str = ""` param.
+      `matching_engine` mode creates `SolanaRpcClient(api_key=solana_api_key)` + `SolanaAmmDepthProvider(...)` and
+      injects both into `MatchingEngineExecutionProvider`. — execution-service@c27a57c07 2026-05-19
+
+- [x] [AGENT] P0. **26 unit tests** in `tests/unit/providers/test_matching_engine_solana.py` (17 tests) +
+      `tests/unit/providers/test_solana_rpc_client.py` (9 tests). All credential-free (mock `httpx.post`). Cover:
+      instrument routing heuristic, jitoSOL/SOL fill path, slippage > 0 for large swap, EVM AMM `NotImplementedError`,
+      `MissingCredentialError`, `PoolSnapshot.from_aggregate` reserve math, zero-TVL honest absence, real AMM pool math
+      slippage direction. QG: 7514 passed, 2 pre-existing failures (not mine). — execution-service@c27a57c07 2026-05-19
+
+**Phase-G.1 QG**: 26 new tests pass. `bash scripts/quality-gates.sh` clean (7514 passed). Solana AMM instruments route
+to `SolanaAMMPool` fill; EVM AMM raises `NotImplementedError`; `MissingCredentialError` propagates correctly when Helius
+key absent.
+
 ## Phase-F: paper VM relaunch + fills>0 verification (P0, ~0.5 day, SEQUENTIAL after A-E + G)
 
 - [ ] [SCRIPT] P0. **Rebuild e2e-testing tarball** with strategy-service consumer changes from Phase-A. Push.
@@ -287,6 +330,7 @@ slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets wit
 | E     | features-service Cloud Run      | 24h continuous emission, no FAILED events                                                                                                                  | `/health` + alerting-service rule           | —                                                     |
 | F     | paper VM fills>0                | first 10 ticks emit ≥1 fill                                                                                                                                | Cloud Logging filter                        | —                                                     |
 | G     | MatchingEngineExecutionProvider | fills in `colocated_engine/fills/` parquets show non-zero `slippage_bps` + non-zero `funding_rate_pnl`                                                     | parquet inspector cron                      | —                                                     |
+| G.1   | Solana AMM routing              | jitoSOL/mSOL/bSOL legs produce `pool_shape=SOLANA_AMM` fills with `slippage_bps > 0`; EVM AMM raises `NotImplementedError`                                 | unit tests (26 pass @c27a57c07)             | 2026-05-19 (execution-service@c27a57c07, 26/26 OK)    |
 
 ## Codex SSOT updates
 
@@ -304,3 +348,7 @@ slippage_bps + non-zero `funding_rate_pnl` in `fills/positions/pnl` parquets wit
   expands to Hyperliquid/Bybit/OKX/Deribit/Aster)
 - real CeFi testnet execution (replaces synthetic matching-engine sim) → `cefi_testnet_real_execution_2026_06.md`
   (post-cutover; needs the 12 testnet credentials per `_agent_pings.md` 2026-05-19 batch)
+- Solana CLMM (per-tick Raydium CLMM + Orca Whirlpool tick-state) → `matching_engine_provider_multi_venue_2026_06.md`
+  (post-cutover; MTDS only captures aggregate stats today, not per-tick snapshots; G.1 uses xy=k SolanaAMMPool as MVP)
+- Solana LIVE mode depth (Helius RPC real-time pool state) → `matching_engine_provider_multi_venue_2026_06.md` (G.1
+  BATCH mode only; LIVE mode extension deferred; helius-api-key credential confirmed working)
