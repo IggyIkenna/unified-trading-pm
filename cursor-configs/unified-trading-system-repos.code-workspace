@@ -64,15 +64,6 @@
       "path": "../../ml-training-service"
     },
     {
-      "path": "../../pnl-attribution-service"
-    },
-    {
-      "path": "../../position-balance-monitor-service"
-    },
-    {
-      "path": "../../risk-and-exposure-service"
-    },
-    {
       "path": "../../strategy-service"
     },
     {
@@ -355,9 +346,6 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/market-tick-data-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/ml-inference-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/ml-training-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/pnl-attribution-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/position-balance-monitor-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/risk-and-exposure-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/strategy-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/system-integration-tests",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/trading-agent-service",

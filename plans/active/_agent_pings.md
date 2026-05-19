@@ -4016,3 +4016,39 @@ gh api repos/IggyIkenna/pnl-attribution-service --jq .archived
 **Waiting for**: operator [ack] + archive confirmation before proceeding to Phase 7 remaining steps and Phase 8A.
 
 — slot-5 / ikenna
+
+---
+
+## [slot-6 Phase 7 → OPERATOR] 2026-05-19 — strategy-repo consolidation archive ready
+
+**From**: slot-6 (tab/ikennaigboaka/6) **Plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md` Phase 7
+
+**Requires operator action**: `gh repo archive IggyIkenna/<repo> --confirm` × 3 repos
+
+All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN:
+
+1. `gh repo archive IggyIkenna/risk-and-exposure-service --confirm`
+2. `gh repo archive IggyIkenna/position-balance-monitor-service --confirm`
+3. `gh repo archive IggyIkenna/pnl-attribution-service --confirm`
+
+**Pre-requisites**:
+
+- DEPRECATION_NOTICE.md committed to each repo (Phase 7 canonical format with table + git-history note):
+  - risk-and-exposure-service@6e52257
+  - position-balance-monitor-service@f602e58
+  - pnl-attribution-service@c1ac3f0
+- CHANGELOG.md + QGBA merged into strategy-service@607a411b (158 total errors catalogued from 3 source repos)
+- workspace-manifest.json updated: `status=pending-archive-into-strategy-service`, `archived_into=strategy-service`, `archive_date=2026-05-19`
+- unified-trading-system-repos.code-workspace: 3 repos removed from `folders` list (29→26) and `git.scanRepositories` (27→24)
+- setup-tab-worktrees.sh: reads `archived_into` from workspace-manifest.json; auto-excludes repos with that field set — no manual edit required
+- Phase 6 parity gate: **[to be confirmed by Phase 6 agent — do NOT archive if RED]**
+
+**Post-archive actions** (agent-executable after operator confirms archived):
+
+- Flip Phase 7 checkbox in `strategy_repo_consolidation_2026_05_19.md`
+- Proceed to Phase 8A (launcher migration in deployment-service)
+- Verify: `gh api repos/IggyIkenna/risk-and-exposure-service --jq .archived` returns `true` for all 3
+
+**Gate**: Phase 6 agent must report GREEN before this ping is acted on. If Phase 6 is RED, plan flips to BLOCKED-CUTOVER — DO NOT archive.
+
+— slot-6 / ikenna
