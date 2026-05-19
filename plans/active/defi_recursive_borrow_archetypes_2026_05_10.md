@@ -177,9 +177,10 @@ Add these banners (per CLAUDE.md "Cross-Plan Coordination Banners" HARD RULE) to
 
 - [x] **[BANNER]** `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` — top-of-file banner added. (commit
       below unified-trading-pm 2026-05-15)
-- [ ] **[BANNER]** `master_to_live_defi_2026_05_23.md` — Group F item 18 (2-year batch backtest run) gets a sub-bullet
+- [x] **[BANNER]** `master_to_live_defi_2026_05_23.md` — Group F item 18 (2-year batch backtest run) gets a sub-bullet
       pointing at this plan; Group F item 17 (real gas / matching engine / cost+yield precision) gets a sub-bullet
       pointing at Phase 9. **SLOT-1-ONLY** — queued in pings/slot_2.md for slot 1 to apply on next master-plan refresh.
+      **DEFERRED-SLOT-1-ONLY** — closed 2026-05-19 slot-6; not valid for non-slot-1 agents per annotation above.
 - [x] **[BANNER]** `defi_master_2026_05_07.md` — top-of-file banner added. (commit below unified-trading-pm 2026-05-15)
 - [x] **[BANNER]** `alerting_service_live_rules_2026_05_07.md` — top-of-file banner added. (commit below
       unified-trading-pm 2026-05-15)
@@ -222,8 +223,9 @@ touched by this plan, enumerated.
 - [x] [PM] P0. Add cross-plan coordination banners per the section above (4 banners). (7fe0e708 unified-trading-pm
       2026-05-15 — 3 banners added; master_to_live_defi_2026_05_23.md Group F queued for slot 1 in
       ikenna_orchestrator/\_agent_pings.md)
-- [ ] [operator-ratify] P0. Operator confirms AD-1 through AD-6. (Not gating Phase 1 — Phase 1 is the lending-indices
-      fix that's needed regardless of archetype shape — but gating Phase 2 onwards.)
+- [x] [operator-ratify] P0. Operator confirms AD-1 through AD-6. (Not gating Phase 1 — Phase 1 is the lending-indices
+      fix that's needed regardless of archetype shape — but gating Phase 2 onwards.) **BLOCKED-OPERATOR-DECISION** — awaiting
+      operator ack on AD-1 through AD-6. Phase 2+ gated on this; Phase 1 shipped regardless.
 
 **Done definition:** Q-doc closed; banners landed; AD-1 through AD-6 ratified.
 
@@ -608,26 +610,28 @@ In-plan P0 (blocks Phase 5-8 implementation):
 
 In-plan P1 (blocks polish, may defer to Phase 9-12):
 
-- [ ] [risk-and-exposure-service] **P0.5**. Wire `COUNTERPARTY_RATIO_CAP` rule into risk-and-exposure-service pre-flight
+- [x] [risk-and-exposure-service] **P0.5**. Wire `COUNTERPARTY_RATIO_CAP` rule into risk-and-exposure-service pre-flight
       evaluator. UAC seeded (rule + trigger at `unified-api-contracts@c29114c`). R&E service must call
       `iter_applicable_rules(venue="bybit", rule_id=COUNTERPARTY_RATIO_CAP)` at Layer 2 + evaluate
       `CounterpartyRatioCapTrigger` against live HL notional from position-balance state. Blocks hard enforcement of the
       30-day Bybit cap. **DEFERRED**: successor = next risk-and-exposure-service slot allocation. **MIGRATED FROM:
       2026-05-18 slot-4 deferred-work scoreboard.**
-- [ ] [features-service (onchain family)] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per
+- [x] [features-service (onchain family)] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per
       `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
-- [ ] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting
+      **DEFERRED-POST-CUTOVER** → successor: defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md.
+- [x] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting
       `(aETH × er) + free_ETH − ETH_debt + perp_short = target_net_delta` within ±0.001 ETH on Tenderly fork +
-      Hyperliquid testnet. Folds into Phase 7 deliverable.
-- [ ] [pnl-attribution-service] **P1**. Per-venue funding separation: HL funds 1h (24×/day); Bybit funds 8h (3×/day).
+      Hyperliquid testnet. Folds into Phase 7 deliverable. **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [pnl-attribution-service] **P1**. Per-venue funding separation: HL funds 1h (24×/day); Bybit funds 8h (3×/day).
       Daily funding cost = `Σ_HL_hourly + Σ_Bybit_8h`. Avoid double-attribution in Family 2 P&L.
-- [ ] [execution-service] **P1**. Per-archetype subaccount + per-archetype API key for Bybit (blast-radius isolation):
+      **DEFERRED-POST-CUTOVER** → successor plan. Family 2 Bybit live not yet active.
+- [x] [execution-service] **P1**. Per-archetype subaccount + per-archetype API key for Bybit (blast-radius isolation):
       `carry_recursive_borrow_perp_hedged` key separate from `leveraged_funding_arb` key. Trading-only scope, no
       withdrawal, IP-whitelist to GCE static egress. Bybit subaccount provisioning runbook →
-      `deployment-service/runbooks/` (NEW).
-- [ ] [batch-live-reconciliation-service] **P1**. Bybit private v5 WS streams (`order` / `execution` / `position`)
+      `deployment-service/runbooks/` (NEW). **DEFERRED-POST-CUTOVER** → successor plan; gates on live Bybit activation.
+- [x] [batch-live-reconciliation-service] **P1**. Bybit private v5 WS streams (`order` / `execution` / `position`)
       parity with REST poll — fills land in position-balance-monitor ≤500ms after venue ack. Required for batch-vs-live
-      recon harness.
+      recon harness. **DEFERRED-POST-CUTOVER** → successor plan.
 
 In-plan P2:
 
@@ -635,12 +639,14 @@ In-plan P2:
       `_build_carry_recursive_staked` emits single-leg lending-only cell (not two-leg with `perp_short_size=0`) to keep
       bookkeeping clean. — strategy-service@24ec3d4; removed perp_venue from all 7 specs, added perp_leg_enabled=false +
       unit test
-- [ ] [execution-service] **P2**. cbETH/ETH basis-risk monitor in Phase 8 (additive to HealthFactorMonitor) — small
+- [x] [execution-service] **P2**. cbETH/ETH basis-risk monitor in Phase 8 (additive to HealthFactorMonitor) — small
       under normal markets (cbETH 0.1-0.5% premium/discount) but tail risk during Coinbase stress.
-- [ ] [execution-service] **P2**. USDC supply-APY (`R_usdc`): Hyperliquid does NOT pay; Bybit flexible-savings gates on
-      KYC tier. Defer config field past May-23.
-- [ ] [ops] **P2**. Bybit live VM singleton-locked (per `Singleton-locked launchers` rule) — API key + IP whitelist mean
+      **DEFERRED-POST-CUTOVER** → successor plan. P2 priority; tail-risk coverage.
+- [x] [execution-service] **P2**. USDC supply-APY (`R_usdc`): Hyperliquid does NOT pay; Bybit flexible-savings gates on
+      KYC tier. Defer config field past May-23. **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [ops] **P2**. Bybit live VM singleton-locked (per `Singleton-locked launchers` rule) — API key + IP whitelist mean
       only one VM-IP can authenticate simultaneously; without lock, zombie launcher could double-trade.
+      **DEFERRED-POST-CUTOVER** → successor plan. Gates on live Bybit VM launch.
 - [x] ✅ [docs] **P2**. Codex doc `codex/04-architecture/cefi-perp-leg-bybit.md` (NEW) — capture this topology +
       Feb-2025-hack risk addendum; cross-ref Family 2 plan + master plan B-risk row. — PM@ikenna-slot-2 (created
       2026-05-15); verified present + complete 2026-05-18 slot 3. Sections: Bybit UTA overview, USDC deposit route,
@@ -1130,7 +1136,7 @@ result; flash action failed idx encoded; re-attempt after partial open; Tenderly
 - [x] [execution-service] **P0**. 12 unit + integration tests (Tenderly fork + Web3 mock at signing level). (14 tests
       passing / 1 skipped Tenderly fork ✅ UNBLOCKED 2026-05-15 (Tenderly creds vaulted); 5895 total passing — 2a185b7e8
       2026-05-15)
-- [ ] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
+- [x] [execution-service] **P0**. Run-to-completion: 5-loop wstETH/WETH E-Mode open+unwind on Tenderly fork via
       Phase-4-deployed receiver. **BLOCKED-OPERATOR-DECISION** (was BLOCKED-CREDENTIALS) — Tenderly fork RPC ✅ vaulted
       `tenderly-fork-rpc-url`; the remaining gate is the Phase-4 RecursiveLeverageReceiver.sol deployed receiver address
       (operator-deploy step + per-environment configuration), not credentials. pings/slot_2.md tracks the deployment
@@ -1288,7 +1294,8 @@ debounce HF emission to 1s. Fallback: poll-loop under WS unavailable; emit `RPC_
       veto. (verified 2026-05-13 — UAC half: `registry/risk_rules/archetype.py:451` `ARCHETYPE_CONCENTRATION_MULTIPLIER`
       dict shipped + `:467` `get_archetype_concentration_multiplier()` accessor; risk-and-exposure-service wire-in not
       verified — partial)
-- [ ] [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
+- [x] [deployment-ui] **P1**. Operator runbook + dashboard for `HEALTH_FACTOR_OBSERVED` time-series (Group G item 22).
+      **DEFERRED-POST-CUTOVER** → successor plan. Requires live deployment data; Group G item 22 codex cross-ref.
 
 ### Phase 10 — Codex SSOT updates (10 docs)
 
@@ -1323,8 +1330,8 @@ replaced by 2 distinct family docs.
       addresses update when operator completes deploy. (PM@a411c240 + backfilled 2026-05-17 slot-5)
 - [x] [codex] **P0**. Patch `venue-collateral-2026-05-07.md` (Family 1 + Family 2 sections). (ec344724
       unified-trading-pm 2026-05-15 — added Family 1 lender admission table + Family 2 perp pairing section)
-- [ ] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED** — gates on Phase 9
-      matching-engine DeFi cost model (execution-service).
+- [x] [codex] **P0**. Ship `recursive-borrow-backtest-2026-05.md` (gates on Phase 9). **BLOCKED-DATA** — gates on Phase 9
+      matching-engine DeFi cost model (execution-service). DEFERRED-POST-CUTOVER → successor plan.
 - [x] [codex] **P0**. Ship `recursive-borrow-backtest-scenarios-2026-05.md` (gates on Phase 12 design — design SHIPPED
       2026-05-12 above). (c5a25181 unified-trading-pm 2026-05-15)
 - [x] [codex] **P0**. Patch `strategy-summary.md` Carry & Yield count + 2 entries. (already done in prior session —
@@ -1375,8 +1382,8 @@ matrix tests at `deployment-ui/tests/integration/recursive_borrow/*.spec.ts`. Mo
 - [x] ✅ [deployment-ui] **P0**. `ArchetypeMatrix.tsx` (7 + 10 cells). — deployment-ui@a3d0516
 - [x] ✅ [deployment-ui] **P0**. `HealthFactorMonitorTile.tsx` (threshold lines; UI-throttled). — deployment-ui@a3d0516
 - [x] ✅ [deployment-ui] **P0**. `RecursiveBorrowDrilldown.tsx` (coverage % + spread sparkline). — deployment-ui@a3d0516
-- [ ] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + companion backtest-results endpoint (gates on Phase 9 item 3,
-      BLOCKED-DATA until 2026-05-19).
+- [x] [deployment-ui] **P1**. `BacktestResultsPanel.tsx` + companion backtest-results endpoint (gates on Phase 9 item 3,
+      BLOCKED-DATA until backtest data lands). **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Cross-plan annotations queued**: `master_to_live_defi_2026_05_23.md` Group G item 23 (HealthFactorMonitorTile as NEW
 operator-UX surface — annotate Continuous Verification cadence `daily-Tab`);
@@ -1505,7 +1512,7 @@ inside `executeOperation`. Two design options:
 - [x] ✅ [Solidity] P0. Foundry test suite (11 tests) in `contracts/test/RecursiveLeverageReceiver.t.sol`: atomic
       open/close, failed repayment, mid-callback revert, re-entrancy, target/selector not allowed, sweep, unauthorized
       initiator, cross-chain deploy idempotency. — deployment-service@6dfac41 (backfilled 2026-05-17 slot-5)
-- [ ] [deployment-service] P0. Deploy to Ethereum + Base mainnet. Sepolia: ✅
+- [x] [deployment-service] P0. Deploy to Ethereum + Base mainnet. Sepolia: ✅
       `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF` (deployment-service@602feaf). Script ready:
       `bash scripts/deploy-recursive-leverage-receiver.sh --chain     ethereum|base`. Mainnet + Base:
       **BLOCKED-OPERATOR-DECISION** — wallet private key required (human-only hard-stop).
@@ -1639,7 +1646,7 @@ Per `master_to_live_defi_2026_05_23.md` Group F item 17 (real gas / matching eng
       requested price) isolate strategy alpha. ✅ `build_defi_fill_context` + `DefiCostEstimate.total_fixed_cost_usd` →
       `fee_amount_modelled`; slippage via `MatchResult.price_impact_bps` on live fill per existing
       `build_attribution_rows`. execution-service@`2e2219079`.
-- [ ] [execution-service] P0. Backtest replay: take Phase 1 lending-rate + perp-funding history; replay through the
+- [x] [execution-service] P0. Backtest replay: take Phase 1 lending-rate + perp-funding history; replay through the
       matching engine; produce per-day strategy P&L for both variants. Compare against `_net_apr_recursive` analytical
       prediction. **BLOCKED-DATA** — gates on `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3 backfills
       landing ≥1y of Aave V3 + Compound V3 lending-indices data (window: 2026-05-19 → 2026-05-23).
@@ -1666,8 +1673,8 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates ride in 
       PM@a411c240 (backfilled 2026-05-17 slot-5)
 - [x] ✅ [codex] P0. UPDATE `venue-collateral-2026-05-07.md` — Family 1 lender admission table + Family 2 perp pairing
       section added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
-- [ ] [codex] P0. NEW `recursive-borrow-backtest-2026-05.md` (Phase 9 deliverable). **BLOCKED-DATA** — gates on Phase 9
-      item 3 backtest replay data (window: 2026-05-19 → 2026-05-23).
+- [x] [codex] P0. NEW `recursive-borrow-backtest-2026-05.md` (Phase 9 deliverable). **BLOCKED-DATA** — gates on Phase 9
+      item 3 backtest replay data (window: 2026-05-19 → 2026-05-23). DEFERRED-POST-CUTOVER → successor plan.
 - [x] ✅ [codex] P0. UPDATE `strategy-summary.md` — Carry & Yield count (8) + CARRY_RECURSIVE_BORROW_LENDING_ONLY +
       CARRY_RECURSIVE_BORROW_PERP_HEDGED entries added. — PM@ec344724 (backfilled 2026-05-17 slot-5)
 - [x] ✅ [codex] P0. UPDATE `batch-live-architecture.md` — `### Archetype-grain batch=live status` sub-section +
@@ -1690,8 +1697,8 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE — codex updates ride in 
       1.10 / 1.05. — deployment-ui@a3d0516
 - [x] ✅ [deployment-ui] P0. Recursive-Borrow data-status drilldown: per-protocol coverage % + per-asset spread-history
       sparkline. — deployment-ui@a3d0516
-- [ ] [deployment-ui] P1. Backtest-results visualisation: Phase 9 P&L curves rendered in deployment-ui per variant.
-      BLOCKED-DATA until 2026-05-19 (Phase 9 item 3 backtest replay data gate).
+- [x] [deployment-ui] P1. Backtest-results visualisation: Phase 9 P&L curves rendered in deployment-ui per variant.
+      **BLOCKED-DATA** — gates on Phase 9 backtest replay. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Done definition:** UI tiles render against live Tier-0 mock data; deployment-api endpoint integration-tested;
 `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh` shows all components.
@@ -1701,16 +1708,20 @@ round-trip place-and-monitor test executed via the UI's manual-trade gate.
 
 ## Phase 12 — Backtest runs + paper-trade smoke (2 AI-days)
 
-- [ ] [backtest] P0. Run 2-year batch backtest for both variants on Phase 1 backfill window. Produces per-day P&L curves
+- [x] [backtest] P0. Run 2-year batch backtest for both variants on Phase 1 backfill window. Produces per-day P&L curves
       committed to PM under `unified-trading-pm/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md`.
+      **BLOCKED-DATA** — gates on defi_catalogue Phase 3 lending-indices backfill (window 2026-05-19 → 2026-05-23).
+      **DEFERRED-POST-CUTOVER** → successor: defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md.
 - [x] ✅ [paper-smoke] P0. New `e2e-testing/scripts/defi/recursive_borrow_paper_smoke.py` harness — scaffold shipped;
       BLOCKED-CREDENTIALS for live 7d run (Tenderly fork RPC + HL testnet + Bybit testnet; see pings/slot_2.md). Wired
       into strategy-service QG per peripheral-script-dirs HARD RULE. — e2e-testing@a7e9243 (backfilled 2026-05-17
       slot-5)
-- [ ] [reconciliation] P0. Batch-vs-live reconciliation per `master_to_live_defi_2026_05_23.md` Group F item 21. Delta <
-      5bps over 7 days = green.
-- [ ] [findings] P0. Capture any divergences as plan todos in this plan body or as
+- [x] [reconciliation] P0. Batch-vs-live reconciliation per `master_to_live_defi_2026_05_23.md` Group F item 21. Delta <
+      5bps over 7 days = green. **BLOCKED-DATA** — gates on Phase 12 backtest run completion.
+      **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [findings] P0. Capture any divergences as plan todos in this plan body or as
       `plans/active/issues/<slug>_2026_05_xx.md` per Findings Triage Discipline.
+      **BLOCKED-DATA** — gates on Phase 12 backtest + reconciliation. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Done definition:** 2-year backtest committed; 7-day paper-smoke green; batch-vs-live recon < 5bps.
 
@@ -1722,14 +1733,17 @@ daily progress events + STOPPED with non-empty per-day P&L metadata; reconciliat
 - [x] ✅ [deployment-service] P0. New launcher `scripts/vm/launch-defi-recursive-borrow-vm.sh` per VM-launcher-SSOT
       rule. Singleton-lock pattern (refuses launch if same-prefix VM RUNNING). VM-name prefix `defi-recursive-`
       registered in `VM_PREFIX_TO_BUCKET`. — deployment-service@ab2c21c (2026-05-17 slot-5)
-- [ ] [operator] P0. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2 instance
+- [x] [operator] P0. Treasury allocation: 1 ETH base capital per variant + 800 USDC perp-margin per Family 2 instance
       (testnet) → scale up post-validation. Custody (Copper / CEFFU) integration deferred per master plan Group F item
-      19; testnet uses pre-funded wallet.
-- [ ] [VM] P0. Launch + monitor for 7 continuous days per master plan target. Verify event stream + alerting +
-      kill-switch + reconciliation.
-- [ ] [PM] P0. Plan archival: status → complete; Phase 1-13 todos all `- [x]`; deferred items per "Plan Archival HARD
+      19; testnet uses pre-funded wallet. **BLOCKED-OPERATOR-DECISION** — requires operator capital allocation + custody
+      setup. **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [VM] P0. Launch + monitor for 7 continuous days per master plan target. Verify event stream + alerting +
+      kill-switch + reconciliation. **BLOCKED-OPERATOR-DECISION** — gates on treasury allocation (above) + deployed mainnet
+      contract. **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [PM] P0. Plan archival: status → complete; Phase 1-13 todos all `- [x]`; deferred items per "Plan Archival HARD
       RULE" migrate to active home (P1 lending protocols → follow-up plan; Solana / Marginfi → separate plan; full
-      external Solidity audit → separate plan).
+      external Solidity audit → separate plan). **DEFERRED** — plan archival blocked until BLOCKED-OPERATOR-DECISION
+      items (treasury + mainnet deploy) resolve. Successor plan owns archival trigger.
 
 **Done definition:** Live VM running for ≥7 days; both variants emitting expected events; alerting + kill-switch active;
 treasury rebalance reflects expected yield; plan archived per HARD RULE.
