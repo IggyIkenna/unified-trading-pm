@@ -148,8 +148,8 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       `ML_DIRECTIONAL_CONTINUOUS` + `ML_DIRECTIONAL_EVENT_SETTLED` from `StrategyArchetype` enum), arbitrage-sports-book
       (need sports vs Polymarket archetype), arbitrage-event-markets (need Polymarket vs CME from
       `cme_polymarket_arb_2026_05_08.md`), plus 6 more defi-carry-family members (`CARRY_BASIS_DATED`,
-      `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
-      `CARRY_RECURSIVE_BORROW_PERP_HEDGED`, and any other
+      `CARRY_BASIS_PERP`, `CARRY_RECURSIVE_STAKED`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `CARRY_BASIS_PERP_INV`, and
+      any other
       `CARRY*\*`archetypes in v2 enum). EXTEND scope = add     per-archetype`\_DIMENSIONS_BY_ARCHETYPE`grid dimensions +`\_dim_kwargs`+`\_build_config_grid`branches +    `specs_for_archetype`integration test. Estimated ~3-5 cal AI-days (design class 0.6× — 6 new archetype dimension     sets + verification pass). **OWNER FOLLOW-UP**: needs design call on per-archetype grid dimension choices (rate     window / threshold / slippage tier per archetype family). Spawn sub-plan or assign focused agent.     **DEFERRED**: EXTEND to cover 4 missing archetype families (ml-continuous, ml-settled, arbitrage-sports-book,     arbitrage-event-markets) requires design call on per-archetype grid dimensions. Needs dedicated slot with     per-archetype domain expertise. Verification-only half done (slot 7 2026-05-14 — confirmed gaps, script reads     UAC`StrategyArchetype`enum +`specs_for_archetype`
       from catalog correctly).
 - [x] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL

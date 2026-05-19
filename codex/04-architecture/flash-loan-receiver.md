@@ -131,8 +131,8 @@ the receiver must loop through an encoded action sequence (`bytes[]`) calling Aa
 inside the callback. The two contracts coexist:
 
 - `FlashLoanReceiver` — passthrough. Used by liquidation-capture archetypes that don't recurse.
-- `RecursiveLeverageReceiver` — action-encoder. Used by `CARRY_RECURSIVE_BORROW_LENDING_ONLY` +
-  `CARRY_RECURSIVE_BORROW_PERP_HEDGED` orchestrators.
+- `RecursiveLeverageReceiver` — action-encoder. Used by `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_BASIS_PERP_INV`
+  orchestrators.
 
 ### Source location
 

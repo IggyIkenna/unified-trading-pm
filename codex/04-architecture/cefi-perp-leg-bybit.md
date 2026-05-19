@@ -10,9 +10,9 @@ last_reviewed: 2026-05-17
 
 # CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)
 
-> **Context**: Family 2 (`CARRY_RECURSIVE_BORROW_PERP_HEDGED`) runs a USDC-margined ETH perp short as the delta-hedge
-> leg. Hyperliquid is PRIMARY; Bybit is SECONDARY (≤50% of HL notional for first 30 days post-cutover). This doc covers
-> Bybit-specific topology, the Feb-2025 hack risk addendum, and funding-cadence differences vs HL.
+> **Context**: Family 2 (`CARRY_BASIS_PERP_INV`) runs a USDC-margined ETH perp short as the delta-hedge leg. Hyperliquid
+> is PRIMARY; Bybit is SECONDARY (≤50% of HL notional for first 30 days post-cutover). This doc covers Bybit-specific
+> topology, the Feb-2025 hack risk addendum, and funding-cadence differences vs HL.
 
 ## Bybit UTA (Unified Trading Account) overview
 

@@ -7,9 +7,9 @@ last_reviewed: 2026-05-18
 
 This is the single SSOT for the batch / live architecture. It folds in the previous separate docs
 (`batch-live-pipeline.md` + `batch-live-symmetry.md`, both deleted 2026-05-08 per
-[`../../plans/archive/codex_refactor_2026_05_08.plan.md`](../../plans/archive/codex_refactor_2026_05_08.plan.md) Phase D.6) so the
-principle, the 4 seams, the anti-drift guards, the service audit matrix, the matching engine, alpha decomposition, the
-sports-specific notes, anti-patterns, and the instruments-live exception all live in one file.
+[`../../plans/archive/codex_refactor_2026_05_08.plan.md`](../../plans/archive/codex_refactor_2026_05_08.plan.md) Phase
+D.6) so the principle, the 4 seams, the anti-drift guards, the service audit matrix, the matching engine, alpha
+decomposition, the sports-specific notes, anti-patterns, and the instruments-live exception all live in one file.
 
 ---
 
@@ -271,7 +271,7 @@ variants, controlled entirely by config flags — no separate live/batch code pa
 | ------------------------------------------------ | ---------------------------- | ------------------ | --------------------------------- | ---------------------------------------- | --------------------------------- |
 | `CARRY_RECURSIVE_STAKED` (Family 0)              | `CarryRecursiveStakedEngine` | True               | True                              | Matching engine (AMMMatcher + L2Matcher) | Lido + Aave + HL perp             |
 | `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) | `CarryRecursiveStakedEngine` | False              | True (exchange-rate appreciation) | Matching engine (AMMMatcher)             | Aave + Uniswap V3                 |
-| `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2)  | `CarryRecursiveStakedEngine` | True               | False                             | Matching engine (AMMMatcher + L2Matcher) | Aave + Uniswap V3 + HL/Bybit perp |
+| `CARRY_BASIS_PERP_INV` (Family 2)                | `CarryRecursiveStakedEngine` | True               | False                             | Matching engine (AMMMatcher + L2Matcher) | Aave + Uniswap V3 + HL/Bybit perp |
 
 **Concentration-risk note**: `family=0+1+2` share the same E-Mode LST/WETH lending pool on Aave V3. A single risk-and-
 exposure-service `gross_notional` cap must bound the combined notional across all three family variants, not just

@@ -50,7 +50,7 @@ This doc identifies what's on which track + the checkpoint dates that bind cutov
   │  └─ TradFi ml-continuous (ES + commodity futures × 5-yr walk-forward)
   ├─ DeFi strategy backtests START (minimal ML needed — rule-based + paired_price_dispersion):
   │  ├─ CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_BASIS_PERP
-  │  ├─ CARRY_RECURSIVE_STAKED, CARRY_RECURSIVE_BORROW_LENDING_ONLY, CARRY_RECURSIVE_BORROW_PERP_HEDGED
+  │  ├─ CARRY_RECURSIVE_STAKED, CARRY_RECURSIVE_BORROW_LENDING_ONLY, CARRY_BASIS_PERP_INV
   │  └─ ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion + dated-cross-venue variants)
   │
 2026-05-19 → 2026-05-21 (Tue→Thu) — STRATEGY + EXECUTION BACKTESTS + PAPER TRADING

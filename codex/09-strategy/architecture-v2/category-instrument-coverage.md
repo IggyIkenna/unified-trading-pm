@@ -1438,6 +1438,9 @@ summary:
   `CARRY_RECURSIVE_STAKED` split (into `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_RECURSIVE_BORROW_PERP_HEDGED`) was
   the post-2026-05-08 delta. Matrix body remains the 18-archetype subset until the full 55-archetype materialisation
   ships under the codex_refactor plan above.
+- **2026-05-18** — UAC `StrategyArchetype` now **57** (not 55) per V-1 taxonomy additions (uac@0196842): renamed
+  `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV` (net 0) + added `CARRY_STAKED_BASIS_DATED` +
+  `CARRY_BASIS_DATED_INV` (+2). Matrix body still the 18-archetype subset until full materialisation.
 - **2026-04-19 (same day)** — Added dated-future rolls architecture: continuous-underlying concept,
   representative-future resolution via features, `REPRESENTATIVE_FUTURE_CHANGED` event contract, futures-roll as ATOMIC
   combo (listed or synthesized), circuit breakers. Slot-label convention now distinguishes rolling (`-dated-`) from

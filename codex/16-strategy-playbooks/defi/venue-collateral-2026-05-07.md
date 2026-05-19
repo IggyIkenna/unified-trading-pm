@@ -103,8 +103,8 @@ live-verified (planned in `defi_archetypes_canonicalisation_and_venue_matrix_202
 
 ## Family 2 — CeFi perp-venue pairing (delta-hedge leg)
 
-Family 2 (`CARRY_RECURSIVE_BORROW_PERP_HEDGED`) adds a USDC-margined ETH perp short on top of Family 1. The perp margin
-is **USDC only** — the LST collateral admitted above does NOT flow to the perp venue. The perp leg uses:
+Family 2 (`CARRY_BASIS_PERP_INV`) adds a USDC-margined ETH perp short on top of Family 1. The perp margin is **USDC
+only** — the LST collateral admitted above does NOT flow to the perp venue. The perp leg uses:
 
 - **Hyperliquid (PRIMARY)**: USDC-only margin (no LST admitted). Margin funded via Arbitrum USDC bridge (~10s finality).
   Funding accrues per-block (continuous). Withdrawal dispute window: 5 minutes.
