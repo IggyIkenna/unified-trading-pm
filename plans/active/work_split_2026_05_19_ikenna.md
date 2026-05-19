@@ -131,12 +131,13 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
      - instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
        sports/prediction apply-flips (operator [ack] required — use
        `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
-5. - [x] ✅ **gcs_migration_bundle Phase 2.5 + Phase 3 LAUNCHED** — Phase 2.5 (OHLCV ticks.parquet →
+5. - [x] ✅ **gcs_migration_bundle Phase 2.5 + Phase 3 RELAUNCHED (bug fix)** — Phase 2.5 (OHLCV ticks.parquet →
          {instrument_id}.parquet rename) implemented + 50 tests green + dry-run verified (ohlcv_legacy_filename=1
-         detected on real CeFi data). PM@`916742464`. Phase 3 fleet launched 2026-05-19 11:23 UTC: 30 VMs across
-         cefi/defi/tradfi/sports/prediction (1 VM/year). Manifest-consolidator + watchdog stopped for drain;
-         will restart post-migration. deployment-service@`a9f9c90` (launcher + watchdog prefix registration).
-         Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after Phase 3 phantom gate is green.
+         detected on real CeFi data). PM@`916742464`. Phase 3 fleet first launched 11:23 UTC, crashed on `gcloud
+         storage ls` (no prefix-match support for hive paths); relaunched 11:58 UTC with fix: `gsutil ls -r
+         **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.
+         31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`
+         (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.
 
 **RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per [`pings/slot_3.md`](../../ikenna_orchestrator/pings/slot_3.md))**:
 
