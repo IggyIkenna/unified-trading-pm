@@ -125,13 +125,14 @@ todos:
 
   - id: phase-4-manifest-row-key-shape-validation
     content: |
-      - [ ] [SCRIPT] P0. **Phase 4 — Manifest row_key shape validation.** UTL `ManifestWriter.record_captured`
+      - [x] ✅ [SCRIPT] P0. **Phase 4 — Manifest row_key shape validation.** UTL `ManifestWriter.record_captured`
         guard: for per-instrument shard atoms (per CLAUDE.md "shard-granularity SSOT"), row_key MUST contain
         non-empty `instrument_id`; for bundled shards, row_key MUST contain non-empty
         `chain` / `options_chain` / `canonical_question_group` per the shard-key matrix. Empty values → raise
         `MalformedRowKeyError` at write-time. Catches the 2026-05-07 CeFi Tardis bundle-shape regression
         proactively (covered separately by writegate Phase 2.A migration).
-    status: todo
+        — UTL@0caa08e3: MalformedRowKeyError class + _coerce_row_key guard for instrument_id/chain shard-atom keys
+    status: done
 
   - id: phase-5-qg-static-assertion
     content: |
