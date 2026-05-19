@@ -369,9 +369,9 @@ concurrent CAS write produces drift between writer-version-N and writer-version-
      technical gate).
 - [x] [AGENT] P0. **GAP-2.0.B** — Confirm Stage 0 covers BOTH GCP + AWS VM fleets. ✅ **CONFIRMED 2026-05-19 slot 2**:
       AWS fleet = S3 storage-only; all compute VMs are GCP. The 5 in-flight cross-cloud rsync jobs from 2026-05-08
-      completed overnight (last log 01:04 May 9 — per `aws_migration_defi_first.md` § DONE-2026-05-08-tab4 table,
-      all 12 DeFi buckets ✅ COMPLETE). `vm_zombie_watchdog.py` (GCP-only) covers the entire compute fleet.
-      No AWS EC2 instances exist in this architecture — AWS = S3 only.
+      completed overnight (last log 01:04 May 9 — per `aws_migration_defi_first.md` § DONE-2026-05-08-tab4 table, all 12
+      DeFi buckets ✅ COMPLETE). `vm_zombie_watchdog.py` (GCP-only) covers the entire compute fleet. No AWS EC2
+      instances exist in this architecture — AWS = S3 only.
 - [x] [DOC] P0. **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget VM launches" HARD RULE with "Pre-migration drain"
       sub-section pointing at Stage 0. ✅ **SHIPPED 2026-05-19 slot 2** — `cursor-configs/CLAUDE.md` updated with
       "Pre-migration drain (GCS migration gate — HARD RULE)" sub-bullet covering GCP + AWS fleet drain, manifest
@@ -455,7 +455,7 @@ one-walk migration so manifest only rewrites once.
       [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
       Phase 2. Added as Phase 2.5 todo (`phase-2-5-ohlcv-legacy-filename-rename`) with full spec: inventory logic,
       instrument_id extraction from parquet footer (NOT path heuristic), rename mechanics, manifest row_key update,
-      verification gates (ZERO `ticks.parquet` in MTDS buckets post-run), test additions. **Shipped PM@`<sha>`
+      verification gates (ZERO `ticks.parquet` in MTDS buckets post-run), test additions. **Shipped PM@`1467b823`
       2026-05-19 slot-3.**
 - [x] ✅ [SCRIPT] P1. **GAP-2.3.B** — Audit features-\* readers for `ticks.parquet` literal path references. **RESULT:
       No breaking changes.** 3 hardcoded `ticks.parquet` paths in features-service: (a) `sports/data/gcs_reader.py:283`
@@ -463,7 +463,8 @@ one-walk migration so manifest only rewrites once.
       `onchain/app/calculators/eigen_rewards_calculator.py:48` — eigenlayer rewards (intentionally bundled), (c)
       `delta_one/app/core/data_loader.py:495` — per-underlying options `underlying={u}/ticks.parquet` (intentionally
       bundled). All three are domain-specific bundled data types, NOT OHLCV per-instrument data. None will break from
-      the Phase 2.5 MTDS per-instrument rename. Documented in Phase 2.5 spec. **Shipped PM@`<sha>` 2026-05-19 slot-3.**
+      the Phase 2.5 MTDS per-instrument rename. Documented in Phase 2.5 spec. **Shipped PM@`1467b823` 2026-05-19
+      slot-3.**
 
 ### Phase 2.4 — AWS DeFi-first cloud-parity migration + env-tiered bucket provisioning + flat→tiered data migration (operator decision (b) 2026-05-11)
 
