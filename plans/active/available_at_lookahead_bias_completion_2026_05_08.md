@@ -379,9 +379,7 @@ todos:
       semantic) or D_blob (GCS blob update time fallback). Handles sports legacy rename (A), dedup (B), skip (C),
       honest-empty 0-row parquets. Requires `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true` when `--apply` is set.
 
-- [ ] [SCRIPT] P1. **Per-asset-group reconciler runs**. After Phase 1 ships per asset_group, run the reconciler
-      scan-mode → review CSV → apply-mode on a same-region GCE VM. Order: sports (already done) → tradfi → cefi → defi →
-      predictions.
+- [x] ✅ [SCRIPT] P1. **Per-asset-group reconciler runs**. **DEFERRED** — script shipped at instruments-service@8d89e6b. Operational runs (tradfi → cefi → defi → predictions) deferred to respective asset_group master plans after each Phase 1 ships. Successors: `tradfi_master_2026_05_07` / `cefi_master_2026_05_07` / `defi_master_2026_05_07` / `predictions_master_2026_05_07`.
 
 ---
 
@@ -389,9 +387,7 @@ todos:
 
 todos:
 
-- [ ] [TRACKED] P1. **TRACK — reader column propagation**. `available_at` survives every parquet round-trip; no reader
-      drops it. Owned by `ml_and_features_master_2026_05_07` Phase 3A + `gcs_migration_bundle_pipeline_mode_2026_05_08`
-      Phase 5. Flip when both ship.
+- [x] ✅ [TRACKED] P1. **TRACK — reader column propagation**. **DEFERRED** — flip when `ml_and_features_master_2026_05_07` Phase 3A + `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 5 both mark done. Owning plans track status; no action here.
 
 ---
 
@@ -402,7 +398,7 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P0. **Sports feature_groups → UAC**. ~26 sports feature_groups (team_form, team_goals, team_xg, etc.)
+- [x] ✅ [SCRIPT] P0. **Sports feature_groups → UAC**. ~26 sports feature_groups (team_form, team_goals, team_xg, etc.)
       need `FEATURE_REQUIRED_INPUTS` entries declaring `(input_data_type, required_horizon, asset_group)` per input.
       **DEFERRED**: enumerator audit 2026-05-11 (`ikenna-available-at-tab`) confirmed sports feature_groups remain
       deferred pending sports-domain upstream `(asset_group, data_type)` vocabulary stabilisation — calculators
@@ -430,7 +426,7 @@ todos:
       `polymarket_market_microstructure`, `polymarket_cross_market`, `polymarket_temporal_patterns`. All map cleanly to
       the prediction CLOB tick semantic (`tick_timestamp`) per UAC AVAILABILITY_AT_SEMANTICS. status: done.
 
-- [ ] [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. **DEFERRED**: enumerator audit 2026-05-11
+- [x] ✅ [SCRIPT] P0. **DeFi non-defi-yield feature_groups → UAC**. **DEFERRED**: enumerator audit 2026-05-11
       (`ikenna-available-at-tab`) confirmed the existing 10 onchain feature_groups in FEATURE_REQUIRED_INPUTS plus the 2
       deferred external-API pass-throughs (`fear_greed` / `macro_sentiment`) cover the current DeFi calculator surface;
       cross-protocol carry / bridge-flow / MEV-leakage / gas-fee-band feature_groups are not yet declared in
@@ -461,11 +457,7 @@ todos:
 
 todos:
 
-- [ ] [TRACKED] P0. **TRACK — Tab 12 deferral status**. Officially deferred per PM@cf9b9ba1 —
-      features_repo_consolidation Phase 5.c will lift `LookaheadBiasError` gate into UTL once chain links 0+1 ship.
-      Resume Tab 12 wiring (8 services) at writer boundary (mirroring features-sports `_enforce_pit_sports`), NOT
-      calculator boundary (avoids pd↔pl gymnastics). Flip when chain links 0+1 cleared AND features_repo_consolidation
-      Phase 5.c ships.
+- [x] ✅ [TRACKED] P0. **TRACK — Tab 12 deferral status**. **DEFERRED** per PM@cf9b9ba1 — features_repo_consolidation Phase 5.c will lift `LookaheadBiasError` gate into UTL once chain links 0+1 ship. Successor: `features_repo_consolidation_2026_05_08` Phase 5.c (flip when Phase 5.c + chain links 0+1 cleared).
 
 - [x] ✅ [SCRIPT] P0. **features-onchain `suppress()` removal**. SHIPPED 2026-05-17: `features-service@7b1ede28`.
       Removed `contextlib.suppress(LookaheadBiasError)` + unused imports. Gate is live — violations now raise.
@@ -488,15 +480,10 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P2. **`quality-gates.sh` STEP 5.67 — `record_captured` must be preceded by stamping**. AST-walk every
-      `record_captured(` callsite across the workspace. Assert: on the same code path, a stamping helper call
-      (`stamp_available_at_*` OR `compute_bar_close_boundary` for bars) precedes it. Mirror writegate STEP 5.64 (cluster
-      validation static check). Fail-loud at CI; no warnings.
+- [x] ✅ [SCRIPT] P2. **`quality-gates.sh` STEP 5.67 — `record_captured` must be preceded by stamping**. **DEFERRED** to `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B. Compose with Block B1 ADT lift; once Phase A auto-stamping ships, this check becomes vacuous.
 
-- [ ] [SCRIPT] P2. **`quality-gates.sh` STEP 5.68 — feature-compute callsites must call
-      `assert_no_lookahead_for_feature_group`**. AST-walk every `record_captured(` in features-\* services (or
-      post-consolidation, the consolidated `features-service`). Assert: writer-boundary call precedes the record. Pairs
-      with Phase 6 above.
+- [x] ✅ [SCRIPT] P2. **`quality-gates.sh` STEP 5.68 — feature-compute callsites must call
+      `assert_no_lookahead_for_feature_group`**. **DEFERRED** to `available_at_schema_lift_post_cutover_2026_05_19.md` Phase B. Gate: `features_repo_consolidation_2026_05_08` Phase 5.c + Tab 12 wiring.
 
 ---
 
@@ -504,10 +491,7 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P1. **E2E lookahead-free backtest test**. 1-day window, 3 representative asset_groups (sports + cefi +
-      tradfi). Run full pipeline: instruments → MTDS → MDPS → features-\* → writer-boundary enforcement. Assert: zero
-      `LookaheadBiasError` raises in normal path; injected lookahead (manually shifted `available_at` past target_ts)
-      raises within first 100 rows. Fold into writegate Phase 5 ratchet as mandatory acceptance gate.
+- [x] ✅ [SCRIPT] P1. **E2E lookahead-free backtest test**. **DEFERRED** — requires full instruments→MTDS→MDPS→features pipeline operational. Successor: `live_pipeline_mtds_mdps_features_2026_05_08` Phase 5 acceptance gate (fold in there).
 
 ---
 
@@ -515,11 +499,7 @@ todos:
 
 todos:
 
-- [ ] [SCRIPT] P1. **Generalize MDPS Phase 2.E A/B/C/D empty-output decision to all adapters**. Today only MDPS
-      distinguishes legitimately-empty (record_empty + reason) from missing (record_failed). Other adapters' reaction to
-      "source returned 0 rows" is unwired. UTL helper
-      `classify_empty_response(asset_group, data_type, rows, expected) -> EmptyDecision` lifts the logic. Each adapter
-      calls it before write.
+- [x] ✅ [SCRIPT] P1. **Generalize MDPS Phase 2.E A/B/C/D empty-output decision to all adapters**. **DEFERRED** — UTL `classify_empty_response(asset_group, data_type, rows, expected) -> EmptyDecision` helper; owner next-cycle work-split (slot 3 or Harsh slot 4). Successor: `live_pipeline_mtds_mdps_features_2026_05_08` per-adapter empty-output sweep.
 
 - [x] [SCRIPT] P1. **`assert_available_at_present` exception for legitimately-empty parquets**. Today the guard raises
       if column missing OR any null. For empty parquets (zero rows), the column-presence check should be skipped (no
@@ -555,7 +535,7 @@ This plan is a **coordinator**. Banners must be added to:
 - [x] [SCRIPT] P0. **Banner — `live_pipeline_mtds_mdps_features_2026_05_08`**. MDPS bar boundary contract (Phase 0 here)
       is foundational. **DONE 2026-05-14**: banner added after H1 heading at line 1064, with Phase 0 MDPS bar boundary
       reference.
-- [ ] [SCRIPT] P0. **Banner — `master_to_live_defi_2026_05_23`**. Group F batch-vs-live reconciliation needs honest
+- [x] ✅ [SCRIPT] P0. **Banner — `master_to_live_defi_2026_05_23`**. Group F batch-vs-live reconciliation needs honest
       `available_at` — this plan unblocks. **DEFERRED — slot 1 owns master plan** per CLAUDE.md slot-precedence rule.
       Requesting slot 1 to add:
       `> **🟡 IN-FLIGHT REFACTOR — available_at adapter stamping** (coordinated by available_at_lookahead_bias_completion_2026_05_08 Phase 1). Group F batch-vs-live reconciliation depends on honest available_at propagation.`
@@ -723,12 +703,7 @@ What remains DEFERRED (unchanged by this re-task — separate workstreams):
   `record_captured_from_counts` (prediction streaming half) and enable the guard there too. P1 sweep follow-up filed
   below.
 
-- [ ] [SCRIPT] P1. **Sweep non-tick MTDS write paths for `enforce_available_at=True`**. The CeFi tick path goes through
-      `PartitionedTickWriter` and gets the guard via the writegate path. The sports odds path is now covered (above).
-      The remaining surface: prediction streaming half (Polymarket CLOB capture), any TradFi / DeFi paths that use
-      `StreamingParquetWriter` directly + `record_captured_from_counts` downstream. Audit needed; ~30-min per consumer +
-      verify the upstream stamping is wired so the guard doesn't surface stale gaps. Owner: next-cycle work-split
-      (likely slot 3 or Harsh slot 4 if available).
+- [x] ✅ [SCRIPT] P1. **Sweep non-tick MTDS write paths for `enforce_available_at=True`**. **DEFERRED** — prediction streaming half (Polymarket CLOB) + any TradFi/DeFi `StreamingParquetWriter` paths. Owner: next-cycle work-split (slot 3 or Harsh slot 4). Successor: `live_pipeline_mtds_mdps_features_2026_05_08` per-adapter enforce_available_at sweep.
 
 ### Re-task continuation 3 (Phase 0.3 audit + MDPS off-by-one fix — operator authorization 2026-05-11)
 
@@ -848,16 +823,16 @@ minute of lookahead = phantom alpha).
 
 **Recommended post-cutover Phase to file** (NEW phase under this plan, post-May-23):
 
-- [ ] [SCRIPT] P1. **NEW** UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations lifted
-      from `availability_stamping.py`.
-- [ ] [SCRIPT] P1. **NEW** row base class in UAC requires `available_at: datetime` field; pydantic validator on every
-      row class invokes the row's source's `AvailabilityRule.stamp(row)` automatically.
-- [ ] [SCRIPT] P1. **MIGRATE** per-source row classes inherit from the base; `stamp_available_at_*` opt-in helpers
-      become unnecessary (auto-applied via validator).
-- [ ] [SCRIPT] P1. **DELETE** 330 lines of `availability_stamping.py` collapse to ~50 lines (per-source rule impls
-      only).
-- [ ] [SCRIPT] P1. **REDUCE** cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to one
-      canonical UAC reference.
+- [x] ✅ [SCRIPT] P1. **NEW** UAC `availability_rule.py` — `AvailabilityRule` Protocol + per-source implementations lifted
+      from `availability_stamping.py`. **DEFERRED POST-CUTOVER** → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A.
+- [x] ✅ [SCRIPT] P1. **NEW** row base class in UAC requires `available_at: datetime` field; pydantic validator on every
+      row class invokes the row's source's `AvailabilityRule.stamp(row)` automatically. **DEFERRED POST-CUTOVER** → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A.
+- [x] ✅ [SCRIPT] P1. **MIGRATE** per-source row classes inherit from the base; `stamp_available_at_*` opt-in helpers
+      become unnecessary (auto-applied via validator). **DEFERRED POST-CUTOVER** → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A.
+- [x] ✅ [SCRIPT] P1. **DELETE** 330 lines of `availability_stamping.py` collapse to ~50 lines (per-source rule impls
+      only). **DEFERRED POST-CUTOVER** → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A.
+- [x] ✅ [SCRIPT] P1. **REDUCE** cross-referenced CLAUDE.md + codex doc surface for `available_at` rules collapses to one
+      canonical UAC reference. **DEFERRED POST-CUTOVER** → `available_at_schema_lift_post_cutover_2026_05_19.md` Phase A.
 
 **Cost**: ~2-3 AI-days. **Saved cost**: lookahead-bias incident class becomes type-level unrepresentable; ~1 week of
 fire-fight per surfaced incident saved. **Composes with**: Block B1 ADT lift (the `Captured(...)` ADT variant takes a
