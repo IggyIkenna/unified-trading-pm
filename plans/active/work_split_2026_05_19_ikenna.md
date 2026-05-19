@@ -381,6 +381,14 @@ Status, Logs, Strategy, Kill-switch, Config.
 
 ### Slot 7 — cross_cutting_deliverables + simulation_scenarios_topology + defi_master — ~27 cal AI-days
 
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 7 NEW theme: **strategy_repo_consolidation Phase 8A** —
+> deployment-service sweep. **LARGEST single-repo edit in the plan**: ~90 hits across Terraform (6 per-service
+> dirs on GCP + AWS), cloud-build configs, cluster configs, bucket configs, launchers, bootstrap scripts. Plan
+> `terraform destroy` of the 3 retiring service modules in conjunction with `terraform apply` of the updated
+> strategy-service module — do NOT leave orphan Terraform-managed resources. Collapse 4 launchers to
+> `launch-strategy-vm.sh --operation {risk-monitor,position-recon,pnl-attribution,strategy-batch,strategy-live,backtest}`.
+> Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`. ~3 cal-AI-days. Blocked-on: slot 6 Phase 7 archive.
+
 **Part A — cross_cutting_may23_deliverables** (plan at 60%, 12.4 cal left):
 
 Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Focus on:
@@ -433,6 +441,15 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 ### Slot 8 — defi_catalogue close + defi_simulation_realism + dex_perp — ~29 cal AI-days
 
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 8 NEW theme: **strategy_repo_consolidation Phase 9 + 10** —
+> codex SSOT sweep (8 enumerated codex paths from plan Phase 9 a-h: new `strategy-service-architecture.md`
+> already stub-created, register in `00-SSOT-INDEX.md`, update `promote-workflow-architecture.md`,
+> `launcher-script-ssot.md`, `vm-tarball-deployment.md`, `cli-convention.md`,
+> `cli-promote-paths.md`, and bulk-rewrite ~150 incidental codex/cursor-configs refs to the 3 source repo
+> names). Phase 10 = workspace QG sweep + cross-plan banner cleanup + inventory regenerator + final commit
+> sweep. ~2 cal-AI-days. Blocked-on: slot 7 Phase 8A complete (Terraform must be applied before codex docs
+> reference new launcher topology).
+
 **Part A — defi_catalogue_chain_primitives** (plan at 87%, 27.2 cal left):
 
 Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 instrument wiring.
@@ -470,6 +487,18 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 ---
 
 ### Slot 9 — batch_live_symmetry Tabs 4–7 + cme_polymarket_arb + promote_workflow_may23 — ~31 cal AI-days
+
+> **🔴 THEME DISPLACED 2026-05-19 ~14:00 UTC** — Slot 9 NEW theme: **ml_repo_consolidation FULL PLAN** —
+> all 10 phases, single-slot ownership (smaller surface than strategy twin). Plan:
+> [`plans/active/ml_repo_consolidation_2026_05_19.md`](./ml_repo_consolidation_2026_05_19.md). Pre-audit
+> artifact: [`plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md`](./issues/ml_repo_consolidation_preaudit_2026_05_19.md).
+> ~6 cal-AI-days. Independent of strategy-twin slots (3-8) — execute in parallel.
+>
+> **Critical P0 sequencing**: rename `ml_inference_service/io/loader.py:FeatureSubscriber` →
+> `IoFeatureSubscriber` BEFORE Phase 3 subtree-merge (name-collision with
+> `app/core/feature_subscriber.py:FeatureSubscriber` — pre-audit § (a) inference table). Phase 2 = `gh repo create
+> IggyIkenna/ml-service --private --add-readme` (operator-gated). Phase 4 (h) = single flat-deps Docker image
+> (operator picked Option 2 2026-05-19; see [`ikenna_orchestrator/pings/slot_1.md`](../../ikenna_orchestrator/pings/slot_1.md)).
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 

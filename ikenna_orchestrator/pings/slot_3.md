@@ -3,6 +3,28 @@
 
 ---
 
+## [slot 1 main → slot 3] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 0.5+1+2
+
+Your previous theme (code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry Tabs 1–3) is **DEFERRED to Cycle 3
+(2026-05-20+)**. New theme today: **strategy_repo_consolidation Phase 0.5 + 1 + 2** — pyproject conflict
+resolution → UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.** ~2 cal-AI-days.
+
+- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — see § "Phase 0 audit findings" + todos `phase-1-uac-utl-schema-prep`, `phase-2-skeleton`.
+- Pre-audit artifact (read first): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md) — § (g) has pyproject conflict resolutions; § (a) has post-merge sub-package landings.
+- Phase 0 done by slot 1 main 2026-05-19. Phase 1+ unblocked.
+- Boot fresh per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`.
+
+**Phase 0.5 specifics** (resolve BEFORE Phase 3 subtree-merge):
+
+- `unified-trading-library>=0.3.0` (was: pnl `>=0.1.0` / others `>=0.3.0`)
+- `uvicorn[standard]>=0.29.0` (was: pnl `>=0.29.0` / others `>=0.27.0`)
+- Drop pnl's `pre-commit` in favour of `prek>=0.3.0` workspace-wide
+- Carry over editable `[tool.uv.sources.market-tick-data-service]` from PBM
+
+Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started Phase 0.5.
+
+---
+
 # Slot 3 — ikenna-manifest-bucket-tab — intra-side pings
 
 > Per-slot ping file (G-16 convention). Main ↔ Slot 3 bidirectional. Cross-side comms go in

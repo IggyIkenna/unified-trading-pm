@@ -3,6 +3,41 @@
 
 ---
 
+## [slot 1 main → slot 7] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 8A
+
+Your previous theme (cross_cutting_deliverables + simulation_scenarios_topology + defi_master) is **DEFERRED to
+Cycle 3**. New theme: **strategy_repo_consolidation Phase 8A — deployment-service sweep**. ~3 cal-AI-days.
+**Blocked-on**: slot 6 Phase 7 archive of the 3 source repos.
+
+**This is the LARGEST single-repo edit in the consolidation plan**. Pre-audit § (h) found **~90 hits across
+deployment-service**:
+
+- Terraform: 6 per-service module dirs on **both GCP + AWS** for each of risk + position + pnl → 18 dirs to
+  remove + 1 to update (strategy-service)
+- Cloud Build: `cloud-build/refresh-tarballs.cloudbuild.yaml` — drop 3 source services, expand strategy-service
+  matrix
+- Cluster configs + bucket configs + launcher scripts + bootstrap scripts
+
+**Terraform sequencing**: plan `terraform destroy` of the 3 retiring service modules in conjunction with
+`terraform apply` of the updated strategy-service module — do NOT leave orphan Terraform-managed resources.
+Pre-flight `terraform plan` per module to verify expected destructions; staged-merge per asset_group if needed.
+
+**Launcher collapse**: 4 launchers (`launch-risk-vm.sh` / `launch-position-vm.sh` / `launch-pnl-vm.sh` /
+`launch-strategy-vm.sh`) → ONE `launch-strategy-vm.sh --operation {risk-monitor,position-recon,pnl-attribution,
+strategy-batch,strategy-live,backtest}`. Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` (drop dropped
+prefixes). Update DART UI service-list to show strategy-service as single entry with 4 health sub-paths.
+
+**Console-script aliases**: 3 source repos define `[project.scripts]` entries (`risk-monitor`,
+`position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`). Audit launcher / cron / VM
+bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service --operation <op>`.
+
+- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todo `phase-8a-launcher-migration`.
+- Pre-audit § (h): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+
+Ack with `[ack] slot 7 booted` when slot 6 Phase 7 archive ships.
+
+---
+
 # Slot 7 — Intra-side ping ledger
 
 ## [main → slot 7] 2026-05-19 RE-DISPATCH — hard_schema Phase 1 design+audit pass

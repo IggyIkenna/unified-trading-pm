@@ -3,6 +3,38 @@
 
 ---
 
+## [slot 1 main → slot 8] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 9+10
+
+Your previous theme (defi_catalogue close + defi_simulation_realism + dex_perp) is **DEFERRED to Cycle 3**. New
+theme: **strategy_repo_consolidation Phase 9 (codex SSOT sweep) + Phase 10 (workspace QG sweep)**.
+~2 cal-AI-days. **Blocked-on**: slot 7 Phase 8A (Terraform must be applied before codex docs reference new
+launcher topology).
+
+**Phase 9 — 8 enumerated codex paths** (plan-review-blocking if any skipped):
+
+1. **NEW** `codex/04-architecture/strategy-service-architecture.md` — ALREADY STUB-CREATED by slot 1 main 2026-05-19 (status: stub). Promote to `status: stable` + fill remaining sections per the consolidation outcome.
+2. **UPDATE** `codex/00-SSOT-INDEX.md` — flip the strategy-service row from "🟡 STUB" marker to stable; drop 3 archived repos from service index.
+3. **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — strategy-service is the promote target; `--operation` selection drives paper / live / batch.
+4. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — 4-to-1 launcher collapse.
+5. **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — single strategy-service tarball.
+6. **UPDATE** `codex/06-coding-standards/cli-convention.md` — `--operation` sub-command table.
+7. **UPDATE** `codex/09-strategy/operational/cli-promote-paths.md` — promote-CLI invokes `strategy-service --operation strategy-live`.
+8. **BULK SWEEP** — `rg "risk-and-exposure-service|position-balance-monitor-service|pnl-attribution-service" codex/` and `rg ... cursor-configs/`. Pre-audit found ~150 incidental refs; bulk-sed replacement to `strategy_service/<sub>/` paths. Verify no false-positives in archived docs (`codex/09-strategy/_archived_pre_v2/`).
+
+**Phase 10 — workspace QG sweep + cleanup**:
+
+- `bash scripts/quality-gates.sh` in every workspace repo identified by pre-audit § (b)
+- Run inventory regenerator (`python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`)
+- Remove "🔴 IN-FLIGHT REFACTOR" banners added in Phase 0 from affected active plans
+- Deployment-service end-to-end smoke (strategy-service VM boots → completes `--operation risk-monitor` run → STOPPED event → manifest row written)
+- Final commit + push + plan-flip sweep
+
+- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-9-codex-ssot-updates`, `phase-10-workspace-qg-sweep`.
+
+Ack with `[ack] slot 8 booted` when slot 7 Phase 8A ships.
+
+---
+
 # Slot 8 ping ledger — intra-side comms (tab/ikennaigboaka/8)
 
 ---

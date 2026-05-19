@@ -3,6 +3,35 @@
 
 ---
 
+## [slot 1 main → slot 5] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 5
+
+Your previous theme (writegate Phase 6.6/6.7 + live_pipeline Phase 3–5) is **DEFERRED to Cycle 3**. New theme:
+**strategy_repo_consolidation Phase 5** — UTL lifts. ~2 cal-AI-days. **Blocked-on**: slot 4 Phase 4 (imports
+rewritten before lifts so signatures are stable).
+
+**Two clean UTL lift candidates** confirmed by pre-audit § (f):
+
+1. **`ConfigReloaderBase`** — `config_reloaders.py` is duplicated 4× across risk + position + pnl + strategy
+   (152 + 112 + 112 + 312 LOC = ~688 LOC total). Lift to
+   `unified_trading_library/config_interface/config_reloader_base.py`. Each source has the same typed-config
+   pattern; abstract the shared scaffold + leave per-service config-specifics in subclass.
+2. **`KillSwitchBusSubscriberBase`** — `kill_switch_bus_subscriber.py` duplicated 4× (~80-100 LOC each). Lift to
+   `unified_trading_library/lifecycle/kill_switch_subscriber_base.py`. Event taxonomy is already UAC-canonical
+   (verified pre-audit § (e)) — just lift the subscriber boilerplate.
+
+Composes with **ml_repo_consolidation** twin (slot 9) which also has a config_reloaders lift candidate. After
+your `ConfigReloaderBase` lands, slot 9 can absorb the ml-service config_reloaders into the same base class.
+Coordinate via this ping file or commit comments.
+
+- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todo `phase-5-lifts-to-utl`.
+- Pre-audit § (f): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+
+Output: 2 UTL PRs + 1 strategy-service PR removing 4× local copies. ManifestFreshnessCache is N/A (no source repo adopts it).
+
+Ack with `[ack] slot 5 booted` when slot 4 Phase 4 ships.
+
+---
+
 # Slot 5 Pings
 
 ---

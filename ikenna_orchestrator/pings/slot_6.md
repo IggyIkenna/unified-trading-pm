@@ -3,6 +3,38 @@
 
 ---
 
+## [slot 1 main → slot 6] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 6+7
+
+Your previous theme (deployment_ui_lifecycle_tabs full 6-tab restructure) is **DEFERRED to Cycle 3**. New theme:
+**strategy_repo_consolidation Phase 6 (parity validation) + Phase 7 (archive)**. ~2 cal-AI-days. **Blocked-on**:
+slot 4 Phase 4.
+
+**Phase 6 — three parity gates, all must be green**:
+
+1. **Boot parity**: `python -m strategy_service --operation <op> --asset-group <ag> --mode batch` boots cleanly
+   for every {operation × asset_group} pair the 3 source repos previously supported. Capture STARTED per case.
+   Startup-time regression >2× is a stop.
+2. **QG parity**: `bash scripts/quality-gates.sh` green in strategy-service AND no regression vs each source
+   repo's last-pre-archive QG run (record pre-merge QG output as baseline; STEP-by-STEP comparison post-merge).
+3. **Functional parity**: 7-day live-window sample per surface (risk breaker-trip events, position recon,
+   pnl attribution within `1e-9`). Write `scripts/dev/strategy_parity_diff.py` mirroring
+   `feature_parity_diff.py` from features-service precedent.
+
+**Phase 7 — archive 3 source repos**. Operator-gated `gh repo archive` step — file ping in
+`plans/active/_agent_pings.md` when ready. Per-repo: DEPRECATION_NOTICE.md banner → final commit → `gh repo archive
+IggyIkenna/<repo> --confirm` → remove from `unified-trading-system-repos.code-workspace` + `workspace-manifest.json`
++ `setup-tab-worktrees.sh`.
+
+**🔴 HARD STOP**: do NOT proceed to Phase 7 if any Phase 6 gate is RED. Flip plan to `BLOCKED-CUTOVER` instead;
+sub-packages remain merged (correctness preserved), source repos remain un-archived; resume Phase 7 post-cutover.
+
+- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-6-parity-test`, `phase-7-archive-source-repos`.
+- Pre-audit: [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+
+Ack with `[ack] slot 6 booted` when slot 4 Phase 4 ships.
+
+---
+
 # Slot 6 Ping Ledger
 
 ## [main → slot 6] 2026-05-19 RE-DISPATCH — work-split stale; plan is 89% done; pick up AGENT-half of remaining HUMAN+AGENT items
