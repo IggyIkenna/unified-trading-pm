@@ -479,6 +479,12 @@ reviews + tunes thresholds.
           is in PubSub topic `alerting-service-events`, not the GCS event path.
       Recheck log every 12h: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/alerting-quietness-20260519-110752/run.log`.
       Auto-shutdown at T+48h (~2026-05-21 11:07 UTC).
+      **⚠️ POST-LAUNCH FAILURE 2026-05-19 11:11 UTC**: VM `alerting-quietness-20260519-110752` KILLED after 1h —
+      exit_code=137 (SIGKILL from vm-exec stall watchdog). Root cause: `orchestrator.run_subscriber_loop()` produced
+      zero log output during quiet period (no alerts received) → vm-exec stall threshold=3600s hit → SIGKILL. VM
+      self-deleted. **FIX SHIPPED**: alerting-service@5717987 adds periodic heartbeat log every 30min to keep log
+      alive. **ACTION REQUIRED**: operator must restart Phase 7 VM using updated alerting-service tarball.
+      Re-launch: `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh`.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
