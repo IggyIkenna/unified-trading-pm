@@ -184,13 +184,13 @@ folded into the appropriate epic._
 | [`pm_coordination_ledger_2026_05_13`](./pm_coordination_ledger_2026_05_13.md)                                                       | master                               | design    | —          | —            | 0.3      | —                                        |
 | [`hedge_ratio_snapshot_persistence_2026_05_13`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | master                               | design    | 25/26      | 96%          | 0.1      | 2026-05-21                               |
 | [`ruff_workspace_cleanup_2026_05_12`](./ruff_workspace_cleanup_2026_05_12.md)                                                       | infrastructure_master_2026_05_07     | refactor  | 30/31      | 97%          | 0.0      | —                                        |
-| [`defi_basedpyright_features_service_2026_05_15`](./defi_basedpyright_features_service_2026_05_15.md)                               | master                               | refactor  | 54/54      | 100%         | 0.0      | —                                        |
-| [`defi_simulation_realism_2026_05_10`](./defi_simulation_realism_2026_05_10.md)                                                     | master                               | design    | 47/47      | 100%         | 0.0      | 2026-05-23                               |
-| [`deploy_missing_auto_launch_2026_05_07`](./deploy_missing_auto_launch_2026_05_07.md)                                               | cross_cutting_may_23_2026            | infra     | 14/14      | 100%         | 0.0      | —                                        |
-| [`solana_lst_native_staking_adapters_2026_05_14`](./solana_lst_native_staking_adapters_2026_05_14.md)                               | master                               | brand-new | 22/22      | 100%         | 0.0      | 2026-05-23                               |
-| [`solana_restaking_rewards_coverage_2026_05_13`](./solana_restaking_rewards_coverage_2026_05_13.md)                                 | master                               | brand-new | 18/18      | 100%         | 0.0      | 2026-05-23                               |
-| [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)           | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
-| [`wave2_polymarket_record_captured_from_counts_2026_05_09`](./wave2_polymarket_record_captured_from_counts_2026_05_09.md)           | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
+| [`defi_basedpyright_features_service_2026_05_15`](../archive/defi_basedpyright_features_service_2026_05_15.md)                               | master                               | refactor  | 54/54      | 100%         | 0.0      | —                                        |
+| [`defi_simulation_realism_2026_05_10`](../archive/defi_simulation_realism_2026_05_10.md)                                                     | master                               | design    | 47/47      | 100%         | 0.0      | 2026-05-23                               |
+| [`deploy_missing_auto_launch_2026_05_07`](../archive/deploy_missing_auto_launch_2026_05_07.md)                                               | cross_cutting_may_23_2026            | infra     | 14/14      | 100%         | 0.0      | —                                        |
+| [`solana_lst_native_staking_adapters_2026_05_14`](../archive/solana_lst_native_staking_adapters_2026_05_14.md)                               | master                               | brand-new | 22/22      | 100%         | 0.0      | 2026-05-23                               |
+| [`solana_restaking_rewards_coverage_2026_05_13`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                                 | master                               | brand-new | 18/18      | 100%         | 0.0      | 2026-05-23                               |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)           | master                               | infra     | 7/7        | 100%         | 0.0      | 2026-05-15 (Phase 1 + Phase 3 only)      |
+| [`wave2_polymarket_record_captured_from_counts_2026_05_09`](../archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md)           | master                               | design    | 8/8        | 100%         | 0.0      | 2026-05-23 (Polymarket subset) / 2026-06 |
 | **TOTAL** (63 plans)                                                                                                                | 0 orphans, 0 TBD                     | —         | —          | **55% done** | **450**  | —                                        |
 
 <!-- AUTO-INVENTORY-END -->
@@ -633,7 +633,7 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
 ### Group E — Operability (always-on)
 
 > **🟢 PER-TAB WORKTREES SHIPPED 2026-05-10** — 3-tier parallel-agent isolation (operator / slot / sub-agent) shipped
-> via [`plans/active/per_agent_worktrees_2026_05_10.md`](per_agent_worktrees_2026_05_10.md). Each operator runs N
+> via [`plans/active/per_agent_worktrees_2026_05_10.md`](../archive/per_agent_worktrees_2026_05_10.md). Each operator runs N
 > permanent slot worktrees at `.tabs/<N>/` on branch `tab/<operator>/<N>`; cross-slot foot-guns #1-#3 unrepresentable by
 > construction, #4 mitigated via per-slot `PREK_CACHE_DIR`. Bootstrap script + codex SSOTs + CLAUDE.md +
 > PLAN_FORMAT.md + both operator LEDGERs all updated in same plan execution. Operability win for the parallel-agent flow
@@ -736,13 +736,13 @@ Status legend: `✓` done · `◐` in flight · `✗` not started · `n/a` not a
     `04-architecture/autonomous-recovery-matrix.md`); alerting-service rules cover live data-freshness + P&L deviation +
     position breaches (codex `04-architecture/alerting-batch-live.md`); auto-recovery for known transient failure
     classes. **Risk plan Phase 0+1+2.G shipped 2026-05-11** —
-    [`risk_simulations_limits_alerting_2026_05_10`](risk_simulations_limits_alerting_2026_05_10.md) Phase 1 ships UAC
+    [`risk_simulations_limits_alerting_2026_05_10`](../archive/risk_simulations_limits_alerting_2026_05_10.md) Phase 1 ships UAC
     risk-rule taxonomy (UAC@`945ad5d`): `RiskRuleId` / `RiskRuleScope` / `RiskRuleConsequence` closed enums; `RiskRule`
     Pydantic with typed-trigger discriminated union; `kill_switch_scope()` orthogonality mapping per § 7 SSOT seam
     diagram; 6 new AlertCodes (closed-set 39 → 45); `StrategyFamilyId` risk-aggregation registry + cutover-archetype
     membership (LST_LEVERAGE_FAMILY ← CARRY_STAKED_BASIS; FUNDING_ARB_FAMILY ← ARBITRAGE_PRICE_DISPERSION). Group F item
     22 dependency cleared for risk Phases 2-9; sibling plan
-    [`disaster_recovery_circuit_breakers_2026_05_10`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1 owns
+    [`disaster_recovery_circuit_breakers_2026_05_10`](../archive/disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1 owns
     `BreakerRecoveryMode` + `BREAKER_RECOVERY_DEFAULTS` (composes with risk Phase 1.F via cross-reference, not
     duplication). **Tab 5 (Agent 5) cycle 2026-05-08 progress** (refresh from 2026-05-07 baseline): Phase 2 service
     migration SHIPPED (alerting-service@`b025e83` consumes UAC `LIVE_ALERT_RULES`); Phase 3 envelope `code: AlertCode`
@@ -881,7 +881,7 @@ per-target upgrade path.
 - **Item 18 (2-year batch backtest run)**:
   - [ ] [HUMAN+AGENT] P0. `pvl-p18a-paper-mode-evidence-run`: Run paper-mode end-to-end ≥3 continuous days for the
         May-23 lead pair (`carry_staked_basis` + `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion` variant per
-        [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md))
+        [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md))
         against real DeFi venues + Tenderly fork (EVM legs) + Solana devnet (Solana legs) + matching-engine simulation
         (perp hedge legs without testnet). Event-stream verified per "no fire-and-forget VM launches" rule. NOT an
         operator-actionable close-out — the run actually ships per "Plans Run To Actual Completion" HARD RULE. _(folded
@@ -1007,7 +1007,7 @@ item names what "done" looks like + the exact verification command/check):
 
 - [`defi_master_2026_05_07.md`](./defi_master_2026_05_07.md) — Tenderly fork + per-chain `paper_target_registry` compose
   with DeFi master.
-- [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](./arbitrage_price_dispersion_finalisation_2026_05_09.md) —
+- [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md) —
   funding-rate-dispersion variant is half of the May-23 paper-mode evidence run; banner mutual.
 - [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) — **NEW
   (2026-05-10), pivoted dual-track 2026-05-10 PM** — May-23 promote workflow shipped DUAL-TRACK per operator preference
@@ -1600,16 +1600,16 @@ findings across 12 areas. Outstanding work + answered-then-deferred follow-ups:
 
 **Post-cutover consolidated successor plans** (Phase 5 file-as-plan):
 
-- [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
+- [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
   — 12 codex-hygiene findings across multiple sweeps. POST_CUTOVER backlog.
-- [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+- [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
   — 11 QG-automation gaps (auto-fail vs warning enforcement; baseline-deletion ratchets). POST_CUTOVER backlog.
 - [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)
   — 7 operator-UX deliverables for alerting / on-call surface (post-cutover refinement of the May-23 minimum).
 
 **Pre-cutover consumer sweeps + operator gates** (live work in flight):
 
-- [`plans/active/issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md`](issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md)
+- [`plans/active/issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md`](../archive/issues/ml_artefact_path_resolver_consumer_sweep_2026_05_12.md)
   — ML-1 consumer sweep: **17 inline `gs://...models...` callsites in 6 repos** still bypass
   `resolve_bucket_name(kind="ml-models-store", ...)`. Routed to 3-slot coordinated retrofit per Findings Triage (NOT
   unilateral cross-repo edit). Composes with cluster-D readiness (live ML serving).
@@ -1661,7 +1661,7 @@ sign-off + Phase 7 cutover gate = next-cycle scope.
 - [`AUDIT_pre_may_8_cleanup_2026_05_13`](./AUDIT_pre_may_8_cleanup_2026_05_13.md) — P1 coordination doc (deadline
   2026-05-15) auditing all 26 pre-May-8 plans for blockers, deferrals, and ownership; per-plan triage feeds the daily
   work-split. Folded into master 2026-05-13 (was orphan; no domain epic fit because spans all 26 cross-epic plans).
-- [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](./wallet_treasury_post_cutover_custody_signing_2026_06_01.md)
+- [`wallet_treasury_post_cutover_custody_signing_2026_06_01`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)
   — P2 post-cutover (deadline 2026-06-15) covering Q3 + Q5 deferred work from
   `wallet_treasury_client_flow_2026_05_10.md`: real HMAC withdrawal approval chain (replaces May-23 button-click stub) +
   real Copper + CEFFU integrations + GCS audit log immutability + retention lock. Feeds Group G item 23 (operator UX for

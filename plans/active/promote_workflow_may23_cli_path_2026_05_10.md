@@ -63,7 +63,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > **Launcher-registry SSOT dependency** (per CLAUDE.md "VM launcher script SSOT" HARD RULE): the new
 > `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` scripts ship under `deployment-service/scripts/vm/` per
 > SSOT. The Deploy-Missing UI button surface for these launchers requires
-> [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+> [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../archive/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
 > Phase 2 (`_SERVICE_LAUNCHER_SCRIPTS` registry extension in `deployment-api/deployment_api/services/deploy_missing.py`)
 > — currently DEFERRED-PER-AUDIT 2026-05-10 in that plan. **Until Phase 2 lands, operators run the strategy launchers
 > manually** (acceptable for cutover; not a blocker). A `DEFERRED-AFTER-CONSOLIDATION-PHASE2` sub-todo lives in Phase 1
@@ -268,7 +268,7 @@ paper/live deployment exists.
 
 - [x] [AGENT] P1. **1.Y DEFERRED-AFTER-CONSOLIDATION-PHASE2 — register strategy launchers in
       `_SERVICE_LAUNCHER_SCRIPTS`** so the Deploy-Missing UI button surfaces them. Owner plan:
-      [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+      [`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../archive/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
       Phase 2 (currently DEFERRED-PER-AUDIT 2026-05-10). Add `launch-strategy-paper-vm.sh` +
       `launch-strategy-live-vm.sh` entries to `deployment-api/deployment_api/services/deploy_missing.py`
       `_SERVICE_LAUNCHER_SCRIPTS` dict so operators can deploy via Deploy-Missing UI button instead of running scripts

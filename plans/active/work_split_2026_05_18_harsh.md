@@ -795,11 +795,11 @@ smoke begins.
 #### Mechanical queue
 
 - [x] ✅ **1. deployment-ui + deployment-api Phase 2F final items (data_status_ui_phase_2f 80%, 4/5)** — 1 item left.
-      Plan path: [`data_status_ui_phase_2f.md`](data_status_ui_phase_2f.md). Close out. — INFRA cron VM verified
+      Plan path: [`data_status_ui_phase_2f.md`](../archive/data_status_ui_phase_2f.md). Close out. — INFRA cron VM verified
       complete (slot-2 2026-05-15): `launch-honest-coverage-vm.sh` + watchdog prefixes + DEPLOYMENT_ENV all in place.
       Cloud Scheduler activation = Ikenna/owner territory. Plan closed — DONE-2026-05-18 block added. PM@(flip commit).
 - [ ] **2. deploy_missing_auto_launch_2026_05_07 final item (93%, 13/14)** — 1 item left. Plan path:
-      [`deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md). Close out. ⏳ **SOAK
+      [`deploy_missing_auto_launch_2026_05_07.md`](../archive/deploy_missing_auto_launch_2026_05_07.md). Close out. ⏳ **SOAK
       GATE** — Phase 2 shipped deployment-api@950ffc9 2026-05-17. 7-day soak eligible flip 2026-05-24. 0 compromise
       events verified 2026-05-18. Annotated in plan. Cannot flip until 2026-05-24.
 - [x] ✅ **3. deployment-api / deployment-ui Phase 4 cron infra status check** — verify
@@ -1031,7 +1031,7 @@ smoke begins.
       (pass-through + fallback), \_infer_instrument_type UNKNOWN path, \_infer_chain (column + 4-part id),
       \_infer_league_id; QG green — mdps@cce0da5
 - [x] ✅ **3. solana_lst_native_staking_adapters_2026_05_14 final item (95%, 21/22)** — 1 checkbox left. Plan path:
-      [`solana_lst_native_staking_adapters_2026_05_14.md`](solana_lst_native_staking_adapters_2026_05_14.md). Close out.
+      [`solana_lst_native_staking_adapters_2026_05_14.md`](../archive/solana_lst_native_staking_adapters_2026_05_14.md). Close out.
       (deployment-service@ea1356b — launchers + watchdog prefixes; plan now 22/22 100%)
 
 #### Reserve queue

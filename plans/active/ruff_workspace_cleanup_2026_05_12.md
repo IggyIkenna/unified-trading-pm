@@ -210,7 +210,7 @@ residual count. Hand-fix is a separate follow-up plan, NOT this one's scope.
 
 - [`codex/06-coding-standards/ruff-discipline.md`](../../codex/06-coding-standards/ruff-discipline.md) — workspace SOP
   (foot-gun #2, rule zero + this plan's exception, RUF003 substitution table, `# noqa` guidance, real-alert taxonomy).
-- [`plans/active/issues/ci_lint_failures_ruff_fix_guidance_2026_05_12.md`](issues/ci_lint_failures_ruff_fix_guidance_2026_05_12.md)
+- [`plans/active/issues/ci_lint_failures_ruff_fix_guidance_2026_05_12.md`](../archive/issues/ci_lint_failures_ruff_fix_guidance_2026_05_12.md)
   — original issue doc (promoted to codex `f4cff324`).
 - `cursor-configs/CLAUDE.md` § "Two teammates × multiple parallel agents (CRITICAL)" — concurrency safety + foot-gun #2
   incident citation.

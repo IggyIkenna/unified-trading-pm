@@ -40,7 +40,7 @@ var.
 This blocks **all** TradFi Databento backfills end-to-end. The temp-file fix from earlier today let the actual API call
 succeed (`DatabentoBaseClient warmup successful: API key valid, 29 datasets available`) but the SDK's pandas-conversion
 path then chokes on every chunk. Symptom: every fetch returns 0 records; VM exits exit_code=0 with no captured data.
-Master plan [`tradfi_master_2026_05_07.md`](../../plans/epics/tradfi_master_2026_05_07.md) backfill items 1 + 6
+Master plan [`tradfi_master_2026_05_07.md`](../../epics/tradfi_master_2026_05_07.md) backfill items 1 + 6
 
 - 10 are now blocked on this, not on credentials.
 

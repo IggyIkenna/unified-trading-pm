@@ -41,7 +41,7 @@ staking_apy_bps = ((rate[t] / rate[t-7d]) ** (365/7) - 1) * 1e4
 ```
 
 This is already what
-[`carry-staked-basis.md` § "On-chain APY derivation"](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+[`carry-staked-basis.md` § "On-chain APY derivation"](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
 specifies and what the
 [features-onchain `staking_apy_total` aggregator](<../../../features-service%20(onchain%20family)/features_onchain_service/engine/staking_apy_total.py>)
 consumes.
@@ -128,12 +128,12 @@ Three crisp facts:
    [`unified-trading-library/.../external_urls.py`](../../../unified-trading-library/unified_trading_library/features_interface/external_urls.py)
    and the `defillama_tvl` feature in UAC `required_inputs.py` are TVL/protocol-scale features for Phase 2 risk context
    only — they do not feed LST APR. Add a non-goal callout in
-   [carry-staked-basis.md](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) (§ "On-chain APY
+   [carry-staked-basis.md](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) (§ "On-chain APY
    derivation"):
 
    > Non-goal: DefiLlama yields. DefiLlama is a TVL/risk-context source only; the staking APY is reconstructed from
    > on-chain rate growth and audited against Coinbase wrapped-assets API for cbETH. See
-   > [issues/lst_apr_sourcing_method_validated_2026_05_14.md](../../plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md).
+   > [issues/lst_apr_sourcing_method_validated_2026_05_14.md](lst_apr_sourcing_method_validated_2026_05_14.md).
 
 5. **Solana mSOL historical gap is a real coverage limitation** — not solvable by switching vendors. Path:
    - Tier 1 (Alchemy `getAccountInfo`): today only.
@@ -142,7 +142,7 @@ Three crisp facts:
    - Tier 3 (Marinade REST): 365d single aggregate, no per-day series.
    - **Action**: file Tier-2 subgraph registration as a separate `BLOCKED-OPERATOR-DECISION` (choose Marinade subgraph
      hosting tier) — not a DefiLlama substitution. Cross-link in
-     [solana_lst_native_staking_adapters_2026_05_14.md](../solana_lst_native_staking_adapters_2026_05_14.md).
+     [solana_lst_native_staking_adapters_2026_05_14.md](../../archive/solana_lst_native_staking_adapters_2026_05_14.md).
 
 ## Reproducing the smoke test
 
@@ -185,7 +185,7 @@ sub-agent picks up this thread).
       public-endpoint rationale.
 - [x] [DESIGN] P2. File a separate `BLOCKED-OPERATOR-DECISION` for Marinade Solana subgraph registration (Tier 2 mSOL
       historical coverage); cross-link from
-      [`solana_lst_native_staking_adapters_2026_05_14.md`](../solana_lst_native_staking_adapters_2026_05_14.md). ✅
+      [`solana_lst_native_staking_adapters_2026_05_14.md`](../../archive/solana_lst_native_staking_adapters_2026_05_14.md). ✅
       **DONE 2026-05-17 (slot-3)**: filed at `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md`
       with 3 paths (Path A — The Graph subgraph; Path B — Helius archive PDA queries; Path C — declare out-of-scope for
       May-23). Default if no operator response by 2026-05-19: Path C (JitoSOL covers Solana LST for May-23 cutover).

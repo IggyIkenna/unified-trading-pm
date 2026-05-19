@@ -43,7 +43,7 @@ estimate_calibration_note: |
 
 # Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)
 
-> Item 5 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md). Tab 3 (Ikenna) designs the
+> Item 5 of Tab 3 in [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md). Tab 3 (Ikenna) designs the
 > rescan flip schema; Harsh Tab 4 runs the rescan VM (mechanical execution). The actual rescan Python script
 > (`cross_asset_rescan.py`) is Harsh Tab 4's scope; this doc + the launcher are Tab 3's scope. Launcher script
 > (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) is queued as a follow-up; not shipped in this

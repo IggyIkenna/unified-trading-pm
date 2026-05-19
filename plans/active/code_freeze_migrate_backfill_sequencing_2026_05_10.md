@@ -304,7 +304,7 @@ technical enforcer; this section is the operator-readable checklist.
       sweep: `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh` ✅ **26 repos OK / 0 failed** +
       `bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup --skip-typecheck`
       ran across 26 repos. **2 workspace-wide QG-runner foot-guns surfaced + ✅ patched same-commit**
-      ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](issues/qg_runner_worktree_foot_guns_2026_05_12.md)): (1)
+      ([`issues/qg_runner_worktree_foot_guns_2026_05_12.md`](../archive/issues/qg_runner_worktree_foot_guns_2026_05_12.md)): (1)
       `.git`-as-DIR-only check in `run-all-quality-gates.sh:156` silently skipped every slot-worktree repo (first-run
       false-pass with `OK: 34 | Failed: 0`); fixed to also accept `.git` FILE shape (`git worktree` link). (2)
       `_PM_REPO=basename(REPO_ROOT)` / `_PM_WS=dirname(REPO_ROOT)` in `base-service.sh` STEPs 5.67 + 5.69 + 5.70
@@ -536,7 +536,7 @@ one-walk migration so manifest only rewrites once.
       `setup-defi-buckets.sh:28` (default `ap-northeast-1`) are already there; ratification is zero-cost. Yaml entries
       audited for region consistency: **GCP all `asia-northeast1` (Tokyo); AWS all `ap-northeast-1` (Tokyo)** —
       within-cloud syncing (Phase 0h) is
-      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md)     for full trade-off analysis. — deployment-service/configs/bucket_config.yaml:14 `region:
+      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](../archive/issues/aws_region_decision_brief_2026_05_11.md)     for full trade-off analysis. — deployment-service/configs/bucket_config.yaml:14 `region:
       ap-northeast-1`confirmed; bucket_name_ssot Phase 0i`[x]` (audit-backfilled 2026-05-19)
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.G (NEW per operator extension (b+) 2026-05-11)** — Yaml extends env tier to ALL
       `${DEPLOYMENT_ENV}`-MISSING bucket kinds (`instruments-store-{ag}-{env}-{pid}`,

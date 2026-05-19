@@ -529,7 +529,7 @@ todos:
 >
 > **Phase B.1 tab-count revision**: when A.2 ships, also revise Phase B.1's tab list from **6 tabs to 7 tabs** (add
 > Kill-switch tab per
-> [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 7.B — see
+> [`disaster_recovery_circuit_breakers_2026_05_10.md`](../archive/disaster_recovery_circuit_breakers_2026_05_10.md) Phase 7.B — see
 > banner already added there 2026-05-10 PM at lines 37-43 of that plan).
 
 ## Status — Phase progression (last update 2026-05-08, EOD — Phase A foundation 5/5 ✅ SHIPPED)

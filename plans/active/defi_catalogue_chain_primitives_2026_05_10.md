@@ -68,9 +68,9 @@ deferred.
 This plan owns the **catalogue + chain-primitives** half of that work. The simulation-realism half (per-pool AMM
 slippage models, lending rate-impact-from-own-trade, governance proposal sim, staking + restaking yield-stream sim,
 slashing tail-risk MC) lives in the sibling plan
-[`defi_simulation_realism_2026_05_10.md`](defi_simulation_realism_2026_05_10.md). The cross-asset-group SSOT cleanup +
+[`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md). The cross-asset-group SSOT cleanup +
 manifest-coverage-% UI surface lives in
-[`cross_asset_group_catalogue_audit_2026_05_10.md`](cross_asset_group_catalogue_audit_2026_05_10.md).
+[`cross_asset_group_catalogue_audit_2026_05_10.md`](../archive/cross_asset_group_catalogue_audit_2026_05_10.md).
 
 **Citadel-Grade discipline gates** (per CLAUDE.md § Citadel-Grade Planning Standards): pre-audit done in spawning
 question doc; phased DAG below; no tech-debt shims (clean breaks per protocol); maximal parallelization across protocols

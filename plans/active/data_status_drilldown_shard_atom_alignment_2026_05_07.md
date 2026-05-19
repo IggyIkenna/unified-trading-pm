@@ -599,7 +599,7 @@ documentation todo already shipped at PM@372e23aa. The remaining 4 are carried h
       the UI can render "showing N–M of T" + a load-more button. Bump cap from 30 → 200 (or remove with explicit
       pagination). Distinct from the hierarchical drilldown's `instrument_id` axis (Phase 6) — this is the venue-detail
       panel sample. Source:
-      [`../archive/issues/defi_launcher_audit_2026_05_07.md`](./issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
+      [`../archive/issues/defi_launcher_audit_2026_05_07.md`](../archive/issues/defi_launcher_audit_2026_05_07.md) § Q5 todo 1.
       (deployment-service@99acc13 + deployment-api@0b853ba — pagination params + total_instruments_unfiltered; also
       fixed field name mismatch: `top_instruments` → `instruments` in VenueDetailResult + VenueDetailPanel so the
       instruments list actually renders at runtime)

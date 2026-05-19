@@ -485,7 +485,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       Composes with client-reporting question doc. Per-archetype-per-chain wallet rollup ties into R7 multi-wallet.
       **Endpoint surface owned here**: `/api/treasury/rollup` (multi-source unified NAV) +
       `/treasury/nav?client_id=<id>`.
-      [`wallet_treasury_client_flow_2026_05_10.md`](wallet_treasury_client_flow_2026_05_10.md) Phase 5.B + 6.A
+      [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md) Phase 5.B + 6.A
       `/api/clients/{id}/treasury` becomes a CONSUMER (per-client attribution layer over this canonical multi-source
       rollup). The two endpoints differ by axis: this owns the source-axis (Copper / CEFFU / venue / on-chain); wallet
       plan owns the client-attribution axis on top.

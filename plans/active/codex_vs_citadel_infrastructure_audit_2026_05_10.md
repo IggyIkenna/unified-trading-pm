@@ -593,8 +593,8 @@ sub-agent):
 
 | Successor plan                                                                                                                       | Findings | Scope                                                                                               |
 | ------------------------------------------------------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------------- |
-| [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md) | 12       | AL-12, D-14, IN-19, IN-20, ML-12, ML-18, PB-16, O-12, O-19, ST-20, UI-17, UI-19 — codex-doc-hygiene |
-| [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](governance_qg_automation_gaps_post_cutover_2026_05_12.md)               | 11       | G-2, G-5, G-8, G-12, G-13, D-18, ST-19, UI-13, UI-18, PB-19, AL-21 QG-half — QG-automation gaps     |
+| [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md) | 12       | AL-12, D-14, IN-19, IN-20, ML-12, ML-18, PB-16, O-12, O-19, ST-20, UI-17, UI-19 — codex-doc-hygiene |
+| [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)               | 11       | G-2, G-5, G-8, G-12, G-13, D-18, ST-19, UI-13, UI-18, PB-19, AL-21 QG-half — QG-automation gaps     |
 | [`alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md`](alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md)         | 7        | AL-22, R-15, R-16, ST-11, TS-19, TS-20, AL-21 UX-half — operator-UX deliverables                    |
 
 Zero orphans.

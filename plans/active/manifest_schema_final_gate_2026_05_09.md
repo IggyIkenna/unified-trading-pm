@@ -278,7 +278,7 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
   next_state + 6 manifest_schema + 1 EXPECTED_KNOWN_SOURCE_GAP). **2026-05-11 RENAME** — third v8 column renamed from
   `expected_window_completeness_pct` → `expected_window_completeness_fraction` at UAC@`76f950a` per operator-approved
   option (a) from
-  [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](issues/expected_window_completeness_pct_range_drift_2026_05_11.md).
+  [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md).
   Three-way SSOT drift on range convention (UAC said 0-1; codex said "0-100 fraction" oxymoron; column name `_pct`
   implied percentage; UTL `completeness_fraction` arg canonical 0-1). Rename free because zero on-disk writes had
   shipped. `_pct` constant name banned post-`76f950a`.
@@ -432,7 +432,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       `economic_events`. Both tagged `BATCH_INSTRUMENTS_SERVICE` as a documented closed-set workaround pending UAC enum
       extension (`BATCH_FRED` for economic_events FRED-sourced + `BATCH_FEATURES_CALENDAR_SERVICE` for time_features
       pure-derived) — full finding + operator-decision menu at
-      [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
+      [`issues/features_calendar_pipeline_mode_gap_2026_05_12.md`](../archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md).
       Same logical-unit adjacent fix: `record_empty(...)` at line 264 now also passes `reason="SOURCE_RETURNED_ZERO"` —
       original code would have crashed `LegacyBlankErrorReasonError` at runtime (UTL Wave-2 writegate blank-reason
       guard, hardened 2026-05-07). - PM baseline `pipeline_mode_explicit_baseline.yaml` shrunk **6 → 0** at
@@ -1026,7 +1026,7 @@ Phase 5.A/B".
 
 | Finding doc                                                                                                                                    | Scope                                                                                                                                                                                                    | Severity |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                              | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
+| [`mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md`](../archive/issues/mtds_pipeline_mode_sweep_ambiguities_2026_05_12.md)                              | 102 MTDS callsites blocked on 5 design ambiguities (DefiManifestRecorder legacy `add()` path + 3 DeFi PipelineMode enum gaps + orchestrator dispatch strategy + reconciler preservation + test fixtures) | P0       |
 | [`mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md`](../archive/issues/mdps_vix_15m_yahoo_barchart_pipeline_mode_gap_2026_05_12.md) | VIX 15m route (Yahoo / Barchart) lacks `BATCH_YAHOO` / `BATCH_BARCHART` enum values; workaround `BATCH_DATABENTO` per SOURCE_PRIORITY top-entry                                                          | P1       |
 | [`footystats_pipeline_mode_gap_2026_05_12.md`](../archive/issues/footystats_pipeline_mode_gap_2026_05_12.md)                                   | footystats source lacks `BATCH_FOOTYSTATS` enum value; workaround `BATCH_API_FOOTBALL` stamped on instruments-service catalog rows                                                                       | P1       |
 

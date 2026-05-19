@@ -172,7 +172,7 @@ already supports LEADER_HEDGE mode.
 - [x] [codex] P0. Resolve circular cross-reference: in `arbitrage-price-dispersion.md` "Not in this archetype" section,
       remove the line pointing at `CARRY_BASIS_PERP` for funding arb. Leave the paired authoritative claim in
       `carry-basis-perp.md` only. **SHIPPED 2026-05-09** at PM@5fe5eabd (Phase E of
-      [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md)).
+      [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)).
       Verify gates:
       `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
       returns zero hits; `rg     'funding-rate-dispersion'` on the same file returns 1 hit. Same commit also added the
@@ -202,7 +202,7 @@ already supports LEADER_HEDGE mode.
       ARBITRAGE_PRICE_DISPERSION slots exist in `archetype_slot_resolver.py` (Aave / Aave-Compound × 3 chains /
       Polymarket-Binance / Unity-Betfair-Matchbook) but NO `funding-dispersion-leveraged` config variant. Tracked as
       Phase A in
-      [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md).
+      [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md).
       **SHIPPED 2026-05-09 (Tab 5 c2/c3/c6)**: Phase A complete end-to-end across 5 commits: A.1 dispatcher + slot stub
       at strategy-service@24f8494; A.2 helper module (3 modes + filters + 25 tests) at strategy-service@0b4ef0e; A.3
       engine 8-step loop wire-in (+ 13 engine tests) at strategy-service@04c0d52; A.6 multi-asset enumeration (probe
@@ -258,7 +258,7 @@ L205 P&L attribution ✅ Phase C at pnl-attribution-service@f5dcf63 + operationa
 `gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
 sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 + SOL `bybit→hyperliquid` $45.19 EMIT pairs).
 Successor finalisation plan
-[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](arbitrage_price_dispersion_finalisation_2026_05_09.md) shipped
+[`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md) shipped
 100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
 
 ---

@@ -75,7 +75,7 @@ targets + operator playbook + rehearsal procedure** required to enable live trad
   [`config.py:11-199`](alerting-service/alerting_service/config.py#L11-L199)
 - KillSwitchBus subscriber wired via UTL (Phase 3c, commit `7b74ed8`)
 - E2E test plan:
-  [`plans/active/end-to-end-testing/020_alerting_service.md`](unified-trading-pm/plans/active/end-to-end-testing/020_alerting_service.md)
+  [`plans/active/end-to-end-testing/020_alerting_service.md`](end-to-end-testing/020_alerting_service.md)
   — covers PubSub subscriptions, downstream commands, frontend API surface
 - UAC envelope:
   [`unified_api_contracts/internal/alerting/alerts.py`](unified-api-contracts/unified_api_contracts/internal/alerting/alerts.py)
@@ -650,7 +650,7 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
 
 ## Coordination notes
 
-- **alerting-service is Harsh's repo** per [`README.md`](alerting-service/README.md). All code edits to
+- **alerting-service is Harsh's repo** per [`README.md`](../epics/README.md). All code edits to
   alerting-service/ MUST be pair-coordinated, NOT pushed unilaterally. UAC additions (Phases 1) are owner-neutral and
   can ship without coordination. Producer-emitter migrations (Phase 3) touch services owned by both Ikenna + Harsh —
   coordinate per-service.

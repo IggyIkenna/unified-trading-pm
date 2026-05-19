@@ -347,7 +347,7 @@ this plan and **Q4** below (operator decision).
       ~$0.01-0.02/GB cross-cloud egress vs ~$0.09/GB trans-Pacific = ~5×
       cheaper). Within-cloud syncing (Phase 0h) is $0. Bucket provisioning (Phase 0c) creates buckets in canonical
       region; reject any `gcloud storage buckets create --location=<other-region>` / `aws s3 mb --region=<other>`.
-      **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}`.     Decision brief: [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](issues/aws_region_decision_brief_2026_05_11.md).
+      **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}`.     Decision brief: [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](../archive/issues/aws_region_decision_brief_2026_05_11.md).
       status: done — region pinning canonicalised; Phase 0c bucket provisioning targets ap-northeast-1 on AWS.
 
 **Net scope under (b+) — AI-day budget**: Phase 0a (done, decision recorded) + Phase 0b (~0.5 day) + Phase 0c (~2-3 days
@@ -1507,7 +1507,7 @@ Going quiet — Phase-1 scope DONE; the above carries to the Phase-2.6 cutover (
   yaml flip + UTL `resolve_bucket_name` extension queue as Phase 2.6 sub-step. Q7(c) flipped to ✅ RESOLVED in this plan
   body § Open questions.
 - ✅ **Watchdog architecture P1 follow-up filed** —
-  [`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](issues/watchdog_env_tiered_events_architecture_2026_05_11.md).
+  [`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](../archive/issues/watchdog_env_tiered_events_architecture_2026_05_11.md).
   Recommend option (i) single-watchdog-with-multi-bucket fan-in as default (lower-cost; smaller code change); instrument
   post-cutover; split to option (ii) per-env watchdogs only if throughput data shows it's needed. Picks up in next-cycle
   work-split after Phase 2.6 ships.

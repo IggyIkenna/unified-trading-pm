@@ -518,7 +518,7 @@ fan-out: launch-cross-asset-rescan-vm.sh (singleton-locked, WORKERS=64, HTTP_POO
 `instruments-service/scripts/cross_asset_rescan.py` reconciler (Class A auto-flips + Class C triage JSONL + lifecycle
 events). Rescan-design plan promoted DRAFT → active. **Q7(c) events env-tier RESOLVED** per operator 2026-05-11 PM
 (env-tiered, option c-i). Watchdog architecture follow-up filed at
-[`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](issues/watchdog_env_tiered_events_architecture_2026_05_11.md)
+[`plans/active/issues/watchdog_env_tiered_events_architecture_2026_05_11.md`](../archive/issues/watchdog_env_tiered_events_architecture_2026_05_11.md)
 — option (i) single-watchdog-with-multi-bucket fan-in recommended as default; instrument post-cutover. **Q7(b)**
 pnl/positions/risk shape-alignment still operator-pending.
 
@@ -1191,7 +1191,7 @@ clarifications 2026-05-13 post earlier ping).
    - **Funding-rate variant** (perp funding spread cross-venue) = same ARBITRAGE_PRICE_DISPERSION archetype,
      `funding-rate-dispersion` config variant, also in defi_master Fork 1, also Tier A.
 
-- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](../plans/active/defi_master_2026_05_07.md) **Fork 1** —
+- **Owner plan**: [`plans/active/defi_master_2026_05_07.md`](defi_master_2026_05_07.md) **Fork 1** —
   DeFi master owns the archetype family even though it spans cross-asset (single owner avoids cross-plan ambiguity).
   - **Shared infrastructure**: `paired_price_dispersion` calculator in features-cross-instrument-service powers BOTH.
     Catalog pair specs at UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.
@@ -2091,7 +2091,7 @@ state, escalate to opus-max tier for proper redesign. Operator unsure whether yo
 this template — please clarify or take ownership.
 
 **Full state captured at**:
-[`plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`](issues/workspace_qg_yml_redesign_2026_05_15.md)
+[`plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md`](../archive/issues/workspace_qg_yml_redesign_2026_05_15.md)
 
 Includes:
 
@@ -2129,7 +2129,7 @@ Two follow-ups landed in the last 30 min:
    wasted `git ls-remote` calls on every CI run.
 
 **Net state for you**: the 7 design questions in
-[`workspace_qg_yml_redesign_2026_05_15.md`](issues/workspace_qg_yml_redesign_2026_05_15.md) still apply. Today's
+[`workspace_qg_yml_redesign_2026_05_15.md`](../archive/issues/workspace_qg_yml_redesign_2026_05_15.md) still apply. Today's
 incremental cleanup only addressed Q3 (dep_repos source of truth — answer: `workspace-manifest.json`). The big design
 calls — trigger surface, migration sequencing, develop-vs-staging outlier, post-cutover canonical — are still pending
 your call.

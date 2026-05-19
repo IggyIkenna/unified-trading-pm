@@ -777,7 +777,7 @@ Per phase — see each todo. Plan-level final gate:
 
 ## DONE-2026-05-08 — Tab 3 (gcs-migration-manifest-tab) shipped
 
-Tab 3 of [`work_split_2026_05_08_ikenna.md`](work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this session.
+Tab 3 of [`work_split_2026_05_08_ikenna.md`](../archive/work_split_2026_05_08_ikenna.md) ran 5 sub-agents during this session.
 Phases shipped on `live-defi-rollout`:
 
 | Phase / Item                                                 | Commit(s)                                                                       | Notes                                                                                              |

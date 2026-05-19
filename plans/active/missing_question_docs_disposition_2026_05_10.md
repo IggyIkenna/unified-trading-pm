@@ -95,5 +95,5 @@ exists; its predecessor question doc is gone.
 - Archived issue:
   [`plans/archive/issues/missing_question_docs_orphan_references_2026_05_10.md`](../archive/issues/missing_question_docs_orphan_references_2026_05_10.md)
 - Existing active plans the references SHOULD point to:
-  - [`plans/active/risk_simulations_limits_alerting_2026_05_10.md`](risk_simulations_limits_alerting_2026_05_10.md)
-  - [`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`](client_reporting_pnl_attribution_mvp_2026_05_10.md)
+  - [`plans/active/risk_simulations_limits_alerting_2026_05_10.md`](../archive/risk_simulations_limits_alerting_2026_05_10.md)
+  - [`plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md`](../archive/client_reporting_pnl_attribution_mvp_2026_05_10.md)
