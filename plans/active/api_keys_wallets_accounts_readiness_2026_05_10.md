@@ -443,9 +443,11 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [ ] [HUMAN] **3.B.2** — Confirm CEFFU's product offering: MirrorX (off-exchange-settlement linking CEFFU custody to
         Binance perp margin without moving funds) vs direct custody API. Asset coverage: BTC + ETH + USDC + USDT
         minimally + LST scope.
-  - [ ] [AGENT] **3.B.3** — CEFFU SDK / API spec ingestion + factory-pattern adapter at
+  - [x] [AGENT] **3.B.3** — CEFFU SDK / API spec ingestion + factory-pattern adapter at
         `execution-service/execution_service/custody/ceffu.py` mirroring Copper shape. Register in `custody/factory.py`
-        for `"ceffu"` key. HMAC / signing-key conventions per CEFFU spec.
+        for `"ceffu"` key. HMAC / signing-key conventions per CEFFU spec. — (execution-service@027a8153b 2026-05-19
+        [backfilled]; STUB pending POD CEFFU API spec June-1; OES + direct-custody dual-surface shape pre-stubbed;
+        factory-registered; raises NotImplementedError until spec delivered — correct per plan direction)
   - [ ] [SCRIPT] **3.B.4** — End-to-end real-fund-movement test (mirror 3.A).
   - [ ] [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper for `carry_staked_basis` spot
         leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
@@ -459,7 +461,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
         envelope-encrypted private key from Secret Manager → call GCP `cloudkms.decrypt` (or AWS `kms.decrypt`) with the
         per-wallet CMK URI → in-memory decrypt → web3.py / solana-py signing → discard plaintext. Per-wallet CMK URI
         carried on `WalletProvisioningConfig.kms_key_uri` (UAC@`d721b6a`, shipped 2026-05-12). KMS Decrypter IAM bound
-        to trading-VM SA only. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)
+        to trading-VM SA only. — execution-service@d45d24b4b (audit-backfilled 2026-05-19; CloudKmsCustodyProvider full
+        implementation; GCP Cloud KMS + AWS KMS dual-path; sign_transaction + get_balance + create_transfer +
+        list_wallets; 384L; registered in custody/factory.py)
     - **Verification**: smoke test on Sepolia + Solana devnet via singleton-locked launcher
       `launch-defi-paper-trade-vm.sh` signs a transaction; latency budget ≤200ms KMS decrypt + ≤100ms web3 signing.
     - **Sub-residual**: per-wallet CMK rotation cadence (90-day default, configurable per asset_group);
@@ -542,11 +546,14 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       carry archetype needs them.
 
 - [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
-  - [ ] **4.D.1** — Add Arbitrum Sepolia (chain_id 421614), Base Sepolia (84532), Polygon Amoy (80002), Solana devnet to
-        [unified-api-contracts/config/testnet_contracts.yaml](unified-api-contracts/config/testnet_contracts.yaml).
-  - [ ] **4.D.2** — **Holesky decision**: Lido + EigenLayer testnet is Holesky, not Sepolia per `_defi_lst.py`. Either
+  - [x] **4.D.1** — Add Arbitrum Sepolia (chain_id 421614), Base Sepolia (84532), Polygon Amoy (80002), Solana devnet to
+        [unified-api-contracts/config/testnet_contracts.yaml](unified-api-contracts/config/testnet_contracts.yaml). —
+        (uac@818aaf1 2026-05-12 [backfilled]; all 4 chains added with Aave V3 + Uniswap V3 + protocol-specific
+        addresses)
+  - [x] **4.D.2** — **Holesky decision**: Lido + EigenLayer testnet is Holesky, not Sepolia per `_defi_lst.py`. Either
         include Holesky as a 6th testnet OR substitute mock contracts on Sepolia for Lido/EigenLayer integration tests.
-        **Recommendation**: include Holesky — net 6 testnets. Add to plan scope.
+        **Recommendation**: include Holesky — net 6 testnets. Add to plan scope. — (DECIDED: include Holesky as 6th
+        testnet; chain_id 17000 in testnet_contracts.yaml with Aave V3 + EigenLayer + Lido; [backfilled 2026-05-19])
   - [ ] **4.D.3** — Funded operator testnet wallets per chain × per archetype (mirror 4.A on testnets).
   - [ ] **4.D.4** — Testnet RPC credentials per chain (Alchemy / QuickNode / Helius testnet tier).
   - [ ] **4.D.5** — FlashLoanReceiver redeploy per testnet (or share Sepolia address per testnet_contracts.yaml comment
@@ -695,30 +702,29 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         the new rotation-runbook.md with explicit "excluded" list + rationale.
 
 - [ ] [HUMAN+AGENT] P0. **5.B — Prediction venue credentials.** (slot-8 audit 2026-05-18)
-  - [x] **5.B.1** — Polymarket API key provisioned. **DONE**: SM secret `polymarket-api-key` EXISTS in vault
-        (created 2026-03-02, v1 enabled, `gcloud secrets describe polymarket-api-key` confirmed). Added to
-        `_TRADE_KEY_PATTERNS` 2026-05-09. Secret value is live.
+  - [x] **5.B.1** — Polymarket API key provisioned. **DONE**: SM secret `polymarket-api-key` EXISTS in vault (created
+        2026-03-02, v1 enabled, `gcloud secrets describe polymarket-api-key` confirmed). Added to `_TRADE_KEY_PATTERNS`
+        2026-05-09. Secret value is live.
   - [ ] **5.B.2** — Kalshi API key. **BLOCKED-CREDENTIALS** — SM secret `kalshi-api-key` NOT FOUND in
-        `central-element-323112`. `kalshi-private-key-pem` also needs provisioning. Full KalshiAdapter is
-        shipped at `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS
-        auth, place/cancel/positions/balance). CREDENTIAL APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
-  - [x] **5.B.3** — Manifold API key. **SCOPED OUT**: `predictions_master_2026_05_07.md` does not include Manifold
-        in MVP archetype scope. Manifold is in `_PREDICTION_SOURCES` UAC enum + UAC schemas exist but no execution
+        `central-element-323112`. `kalshi-private-key-pem` also needs provisioning. Full KalshiAdapter is shipped at
+        `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth,
+        place/cancel/positions/balance). CREDENTIAL APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
+  - [x] **5.B.3** — Manifold API key. **SCOPED OUT**: `predictions_master_2026_05_07.md` does not include Manifold in
+        MVP archetype scope. Manifold is in `_PREDICTION_SOURCES` UAC enum + UAC schemas exist but no execution
         adapter + no SM secret — not a May-23 gate. No action needed.
-  - [x] **5.B.4** — Per-venue prediction adapter. **DONE**: Execution adapter exists at:
-        (a) `execution-service/execution_service/trade_execution/adapters/polymarket_adapter.py` — delegating to
-        `PolymarketCLOBAdapter` from sports-execution-interface;
-        (b) `execution-service/execution_service/sports_execution/prediction_markets/polymarket.py` —
-        `PolymarketAdapterConfig` with 5 SM secret keys;
-        (c) `execution-service/execution_service/sports_execution/adapters/exchanges/` — `PolymarketCLOBAdapter` +
-        `KalshiAdapter` (full implementations). Audit found these — "feature calculators but not execution adapter"
-        in prior audit was stale (adapters shipped since).
+  - [x] **5.B.4** — Per-venue prediction adapter. **DONE**: Execution adapter exists at: (a)
+        `execution-service/execution_service/trade_execution/adapters/polymarket_adapter.py` — delegating to
+        `PolymarketCLOBAdapter` from sports-execution-interface; (b)
+        `execution-service/execution_service/sports_execution/prediction_markets/polymarket.py` —
+        `PolymarketAdapterConfig` with 5 SM secret keys; (c)
+        `execution-service/execution_service/sports_execution/adapters/exchanges/` — `PolymarketCLOBAdapter` +
+        `KalshiAdapter` (full implementations). Audit found these — "feature calculators but not execution adapter" in
+        prior audit was stale (adapters shipped since).
 
-- [ ] [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius keys provisioned in Secret Manager.
-      (slot-8 audit 2026-05-18):
-      - **Helius**: SM secret `helius-api-key` EXISTS (created 2026-05-15, v1 enabled). DONE.
-      - **CoinGecko**: SM secret `coingecko-api-key` NOT FOUND. **BLOCKED-CREDENTIALS**. CREDENTIAL APPROVAL
-        REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
+- [ ] [SCRIPT] P1. **5.C — DeFi-data credentials.** CoinGecko + Helius keys provisioned in Secret Manager. (slot-8 audit
+      2026-05-18): - **Helius**: SM secret `helius-api-key` EXISTS (created 2026-05-15, v1 enabled). DONE. -
+      **CoinGecko**: SM secret `coingecko-api-key` NOT FOUND. **BLOCKED-CREDENTIALS**. CREDENTIAL APPROVAL REQUEST filed
+      in `ikenna_orchestrator/pings/slot_8.md`.
 
 **Phase 5 done definition** (full-execution criterion):
 

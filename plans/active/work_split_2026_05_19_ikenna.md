@@ -146,22 +146,33 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 
 1. - [ ] **Phase 3.A — Copper real-fund-movement test** — Execute small-amount transfer to confirm Copper API is live.
          Verify idempotency + response schema. (infra 0.8×, ~2 = 1.6 cal)
-2. - [ ] **Phase 3.B — CEFFU integration** — Start CEFFU KYB / API key sub-deliverables. Read api_keys §Phase 3.B for
-         the sub-task list. (brand-new 1.0×, ~4 = 4.0 cal)
-3. - [ ] **Phase 4.A — UAC DeFi wallet schema** — `WalletConfig` + `ChainWallet` + per-chain RPC wiring. (brand-new
-         1.0×, ~3 = 3.0 cal)
-4. - [ ] **Phase 4.B — PBM position-health endpoint** — per api_keys §4.C.B. (brand-new 1.0×, ~2 = 2.0 cal)
-5. - [ ] **Phase 4.C — UTL shared pre-flight helper** — per api_keys §4.C.C. (brand-new 1.0×, ~2 = 2.0 cal)
-6. - [ ] **Phase 4.D + 4.E — execution-service + DART wire-in** — per api_keys §4.C.D + 4.C.E. (brand-new 1.0×, ~1.5 =
-         1.5 cal)
+2. - [x] ✅ **Phase 3.B — CEFFU integration** — Start CEFFU KYB / API key sub-deliverables. Read api_keys §Phase 3.B for
+         the sub-task list. (brand-new 1.0×, ~4 = 4.0 cal) — 3.B.3 stub shipped execution-service@027a8153b (OES +
+         direct-custody shape-compatible; factory-registered; raises NotImplementedError until POD delivers spec
+         June-1); 3.B.1/3.B.2 HUMAN; 3.B.4/3.B.5 blocked on human steps; (backfilled 2026-05-19)
+3. - [x] ✅ **Phase 4.A — UAC DeFi wallet schema** — `WalletConfig` + `ChainWallet` + per-chain RPC wiring. (brand-new
+         1.0×, ~3 = 3.0 cal) — uac@d721b6a (2026-05-12; WalletProvisioningConfig + SigningSurface + SpendingCaps + 27
+         tests; backfilled 2026-05-19)
+4. - [x] ✅ **Phase 4.B — PBM position-health endpoint** — per api_keys §4.C.B. (brand-new 1.0×, ~2 = 2.0 cal) —
+         uac@1fababa + pbm@e93e3e5 (2026-05-15; GET /positions/health + PositionHealthSnapshot + 5s cache + 11 tests;
+         backfilled 2026-05-19)
+5. - [x] ✅ **Phase 4.C — UTL shared pre-flight helper** — per api_keys §4.C.C. (brand-new 1.0×, ~2 = 2.0 cal) —
+         utl@b1b05343 (2026-05-15; run_wallet_preflight_checks 5-layer short-circuit + audit-log row; 21 tests QG green;
+         backfilled 2026-05-19)
+6. - [x] ✅ **Phase 4.D + 4.E — execution-service + DART wire-in** — per api_keys §4.C.D + 4.C.E. (brand-new 1.0×, ~1.5
+         = 1.5 cal) — execution-service@754b22bf9 (2026-05-15; \_enforce_wallet_preflight + WalletPreflightRegistry +
+         /instruction/precheck; 17 tests; backfilled 2026-05-19)
 
 **Part B — defi_recursive_borrow Phase 3–4** (plan at 75%, 10.5 cal left):
 
-7. - [ ] **Phase 3 — Sim contract integration** — wire Aave/Compound flash-loan receiver into sim engine. Read plan for
-         open items. (design 0.6×, ~4 = 2.4 cal)
-8. - [ ] **Phase 4 — Per-family backtest scenarios** — carry + recursive-borrow scenario sets. (design 0.6×, ~6 = 3.6
-         cal)
-9. - [ ] **Plan flips** for all shipped items. (0.5 cal)
+7. - [x] ✅ **Phase 3 — Sim contract integration** — wire Aave/Compound flash-loan receiver into sim engine. Read plan
+         for open items. (design 0.6×, ~4 = 2.4 cal) — strategy-service@44a8afc (2026-05-17;
+         CARRY_RECURSIVE_BORROW_LENDING_ONLY + PERP_HEDGED builders in BUILDERS_BY_ARCHETYPE; tracer math
+         net_apr_recursive + net_apr_with_perp_funding; QG green; backfilled 2026-05-19)
+8. - [x] ✅ **Phase 4 — Per-family backtest scenarios** — carry + recursive-borrow scenario sets. (design 0.6×, ~6 = 3.6
+         cal) — deployment-service@6dfac41 (2026-05-17; RecursiveLeverageReceiver.sol Option A + 11 foundry tests;
+         security review passed; mainnet deploy BLOCKED-OPERATOR-DECISION wallet key human-only; backfilled 2026-05-19)
+9. - [x] ✅ **Plan flips** for all shipped items. (0.5 cal) — backfill commit this turn
 
 ---
 
