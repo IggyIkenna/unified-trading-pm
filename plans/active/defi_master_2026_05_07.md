@@ -29,13 +29,13 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` is the canonical implementation
-> track for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2) —
-> Phases 10+ (Solidity, execution-service, strategy-service, UI). Pre-cutover Phases 1-9 carried in
-> `defi_recursive_borrow_archetypes_2026_05_10.md`. Credentials: `tenderly-api-key`, `tenderly-fork-rpc-url`,
-> `hyperliquid-testnet-trade-key`, `bybit_api_key`, `bybit_api_secret` all vaulted (unblocked 2026-05-15). Check the
-> post-cutover plan for Phase 10+ status before modifying any recursive-borrow scope here. Banner updated 2026-05-18
-> slot 3 to reflect post-cutover successor plan.**
+> **🟡 IN-FLIGHT — `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` is the canonical implementation track
+> for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_BASIS_PERP_INV` (Family 2, formerly
+> `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — renamed 2026-05-18) — Phases 10+ (Solidity, execution-service,
+> strategy-service, UI). Pre-cutover Phases 1-9 carried in `defi_recursive_borrow_archetypes_2026_05_10.md`.
+> Credentials: `tenderly-api-key`, `tenderly-fork-rpc-url`, `hyperliquid-testnet-trade-key`, `bybit_api_key`,
+> `bybit_api_secret` all vaulted (unblocked 2026-05-15). Check the post-cutover plan for Phase 10+ status before
+> modifying any recursive-borrow scope here. Banner updated 2026-05-18 slot 3 to reflect post-cutover successor plan.**
 
 # DeFi Master — asset_group umbrella
 
@@ -206,10 +206,10 @@ Covers:
   7-day continuous run on real wallet.
 - **2 DeFi archetypes code+test+backtest READY-TO-GO-LIVE (toggle OFF at cutover)**:
   `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
-  - `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — per operator direction 2026-05-14 ("i want defi_recursive_borrow and
-    recursive staking in 23rd may though even if not essential for defi i want it backtested coded up and tested ready
-    to go live"). Phases 4-11 implementation in May-23 scope; Ikenna slots 2+3+6 own it. Live toggle ON post-cutover per
-    operator call. Plan:
+  - `CARRY_BASIS_PERP_INV` (formerly `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — renamed 2026-05-18) — per operator direction
+    2026-05-14 ("i want defi_recursive_borrow and recursive staking in 23rd may though even if not essential for defi i
+    want it backtested coded up and tested ready to go live"). Phases 4-11 implementation in May-23 scope; Ikenna slots
+    2+3+6 own it. Live toggle ON post-cutover per operator call. Plan:
     [`defi_recursive_borrow_archetypes_2026_05_10.md`](defi_recursive_borrow_archetypes_2026_05_10.md).
 - **2 DeFi perp DEXs live**: Hyperliquid + Aster. Plus historical-replay backfill for Lighter / Extended / Pacifica
   (originally scoped under CeFi venue expansion but they are DeFi by asset_group).
@@ -300,9 +300,10 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 - [x] [AGENT] P0. features-service (onchain family) `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable;
       multi-recent-commit pattern of fixes shows ongoing work (7f1b2a1, c90d01a, 955abb5, 266f512, f3db4ca, 82d94b6)]
       (2026-05-15 — QG passed 254s)
-- [x] ✅ [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable] (2026-05-15
-      — execution-service 0 reportAny errors 7966033ca; strategy-service 0 errors; risk-and-exposure-service 0 errors;
-      features-service 825→0 errors — features-service@f141061d slot-4 2026-05-18, per defi_basedpyright_features_service_2026_05_15.md)
+- [x] ✅ [AGENT] P0. basedpyright clean across all 4 DeFi service repos. [AUDIT 2026-05-07: FRESH — actionable]
+      (2026-05-15 — execution-service 0 reportAny errors 7966033ca; strategy-service 0 errors; risk-and-exposure-service
+      0 errors; features-service 825→0 errors — features-service@f141061d slot-4 2026-05-18, per
+      defi_basedpyright_features_service_2026_05_15.md)
 - [ ] [AGENT] P0. CARRY_RECURSIVE_STAKED batch e2e produces non-zero PnL row in
       `pnl-store-{pid}/by_strategy/.../day=2025-06-21`. [AUDIT 2026-05-07: FRESH — actionable; Phase 9 calculator
       catalog rerun launched 2026-05-07 (features-onchain-defi-backfill-20260507-013235 was launched per MEMORY but no
@@ -470,21 +471,21 @@ these venues.
       no LST cross-margin per 2026-05-15 live probe + docs review).
 - [ ] [AGENT] P2. **EXTENDED-STARKNET historical OHLCV path** — Item C. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (might be auth-gated); (2) failing that, build a
-      Starknet event subgraph against the Extended Settlement contract.
-      **NOTE 2026-05-18 slot-3**: `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) —
-      the "add Starknet RPC template" prerequisite is unblocked. Remaining: (1) historical endpoint research on
-      docs.extended.exchange + (2) Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C).
-      Falls back to forward-poll only if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
+      Starknet event subgraph against the Extended Settlement contract. **NOTE 2026-05-18 slot-3**:
+      `STARKNET_RPC_TEMPLATES` now available in UAC `_defi_chain_data.py` (uac@9aea2b7) — the "add Starknet RPC
+      template" prerequisite is unblocked. Remaining: (1) historical endpoint research on docs.extended.exchange + (2)
+      Settlement contract address/ABI research (BLOCKED-OPERATOR-DECISION per Item C). Falls back to forward-poll only
+      if both paths fail. [AUDIT 2026-05-07: FRESH — HANDOVER Item C; needed for
       `cefi-extended-starknet-history-backfill-{ts}` VM]
 - [ ] [AGENT] P2. **Lighter symbol-coverage scale-up** — currently
       `_LIGHTER_BACKFILL_TOP_SYMBOLS = (BTC, ETH, SOL,     HYPE, TON)`; expand to top-30 (Lighter has 170 perps
       including NVDA, USDCAD, BRENTOIL, XAU, XAG, SNDK exotics). Rate-limit budget already validated — 12 RPS handles
       top-30 comfortably. Unlocks cross-asset stat-arb / FX-perp arb against CeFi FX. [AUDIT 2026-05-07: FRESH —
       HANDOVER Item D; deferred pending strategy demand signal]
-- [x] ✅ [DOC] P3. **Per-trade gap documentation in coverage matrix** — codex `02-data/pipeline-coverage-matrix.md`: mark
-      `data_type=trades` as "live-only, no historical" for LIGHTER / PACIFICA / EXTENDED. Downstream strategies that
-      need per-trade should use OHLCV bars OR forward-poll-built history (~few months, growing from forward-poll launch
-      date). [AUDIT 2026-05-07: FRESH — HANDOVER Item E; honest-coverage transparency] PM@13ed5e33
+- [x] ✅ [DOC] P3. **Per-trade gap documentation in coverage matrix** — codex `02-data/pipeline-coverage-matrix.md`:
+      mark `data_type=trades` as "live-only, no historical" for LIGHTER / PACIFICA / EXTENDED. Downstream strategies
+      that need per-trade should use OHLCV bars OR forward-poll-built history (~few months, growing from forward-poll
+      launch date). [AUDIT 2026-05-07: FRESH — HANDOVER Item E; honest-coverage transparency] PM@13ed5e33
 - [ ] [VERIFY] P0. **Final state verification of Lighter + Pacifica historical backfill VMs** —
       `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. Manifest should show
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
@@ -1002,8 +1003,8 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
 
 - [x] ✅ [SCRIPT] P0. **Phase 1 — UAC ChainKind extension.** Add `HYPERLIQUID_L1` + `STARKNET` chain entries to UAC
       `unified_api_contracts.canonical.crosscutting.defi.ChainKind` enum + `CHAIN_BRIDGE_GRAPH` + genesis dates +
-      `HYPERLIQUID_RPC_TEMPLATES` / `STARKNET_RPC_TEMPLATES` (following SOLANA pattern). Exported from `__init__.py`.
-      — uac@9aea2b7 (2026-05-18 slot 3)
+      `HYPERLIQUID_RPC_TEMPLATES` / `STARKNET_RPC_TEMPLATES` (following SOLANA pattern). Exported from `__init__.py`. —
+      uac@9aea2b7 (2026-05-18 slot 3)
 - [ ] [SCRIPT] P0. **Phase 2 — instruments-service CLOB discovery adapters.** Lighter (zkSync) / Pacifica (Solana) /
       Extended (Starknet). Per-instrument catalog rows in instruments-store-defi:
       `(asset_group=defi, chain, venue,     instrument_type=PERP, instrument_id, contract_address, base_asset, quote_asset, decimals, listed_at)`.
@@ -1011,14 +1012,14 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
       emit record_captured per instrument.
 - [x] ✅ [SCRIPT] P0. **Phase 3 — `allowed_chains` codex docs shipped.** Per-archetype config gains
       `allowed_chains: list[ChainKind]`; docs ship now per operator precedent ("docs ship even if code deferred").
-      carry_staked_basis: [ethereum, solana, arbitrum]. APD: [ethereum, arbitrum, solana, base, optimism]
-      (DeFi-leg only; CeFi not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18 slot 3)
-      **NOTE**: strategy-service enforcement code is Phase 3 code impl — separate item, not yet shipped.
+      carry_staked_basis: [ethereum, solana, arbitrum]. APD: [ethereum, arbitrum, solana, base, optimism] (DeFi-leg
+      only; CeFi not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18 slot 3) **NOTE**: strategy-service
+      enforcement code is Phase 3 code impl — separate item, not yet shipped.
 - [x] ✅ [DOC] P1. **Phase 3 extension — `allowed_chains` to remaining DeFi recursive-borrow archetypes.** Same pattern
-      as Phase 3 above (doc-only; code enforcement separate). carry-recursive-staked: [ethereum]. carry-recursive-borrow-
-      lending-only: [ethereum, arbitrum, base] (per top-7 cell table). carry-recursive-borrow-perp-hedged: [ethereum,
-      arbitrum, base] (DeFi on-chain leg; CeFi perp leg not chain-gated). — PM@codex/09-strategy/archetypes/ (2026-05-18
-      slot 3)
+      as Phase 3 above (doc-only; code enforcement separate). carry-recursive-staked: [ethereum].
+      carry-recursive-borrow- lending-only: [ethereum, arbitrum, base] (per top-7 cell table).
+      carry-recursive-borrow-perp-hedged: [ethereum, arbitrum, base] (DeFi on-chain leg; CeFi perp leg not chain-gated).
+      — PM@codex/09-strategy/archetypes/ (2026-05-18 slot 3)
 - [ ] [HUMAN] P1. **Phase 4 — asset_group classification decision (operator).** CLOB-on-chain venues (Lighter / Pacifica
       / Extended) sit at the boundary between DeFi (on-chain settlement) and CeFi (centralised order book matching). Two
       options: (a) extend DeFi asset_group to include them (current default; minor mental tension); (b) new `clob_dex`
