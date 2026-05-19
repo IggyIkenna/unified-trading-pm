@@ -638,13 +638,15 @@ land.
 - [ ] [AGENT] P0. **Step 1 — Backtest VM launch** — operator-run paste-ready bash from pre-audit § 9 COMMAND #1.
       Backtest `carry_staked_basis` over 2026-04-01 to 2026-05-10 (or last 60d). Verify VM event stream STARTED + per-
       instrument INSTRUMENT_PROCESSED + STOPPED.
-- [ ] [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-backtest-vm.sh`** — greenfield ship per pre-audit § 1
-      Tab 8 step 1.
+- [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-backtest-vm.sh`** — greenfield ship per pre-audit § 1
+      Tab 8 step 1. — deployment@2b53165: wraps run-batch.sh, prefix defi-backtest-, singleton-locked per archetype,
+      100GB disk, self-deletes. watchdog registered. QG PASS 2026-05-19.
 - [ ] [SCRIPT] P0. **Step 2 — Score persistence verification** — read
       `gs://${PID}-strategy-outputs/backtest/.../*.parquet` sample row + assert OHLC populated (not 1440-NaN
       placeholders per CLAUDE.md "Honest absence" rule).
-- [ ] [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per pre-audit §
-      1 Tab 8 step 3.
+- [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per pre-audit §
+      1 Tab 8 step 3. — deployment@2b53165: wraps run-paper.sh, prefix defi-paper-, preflight check, singleton-locked,
+      LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
 - [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
       `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`.
 - [ ] [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
