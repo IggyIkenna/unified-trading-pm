@@ -231,7 +231,7 @@ todos:
 
   - id: b8-streaming-logs-component
     content: |
-      - [ ] [SCRIPT] P0. NEW `StreamingLogsPanel` component — single component powers logs across all four
+      - [x] ✅ [SCRIPT] P0. NEW `StreamingLogsPanel` component — single component powers logs across all four
         lifecycle classes. Inputs: `{lifecycle_class, target_ref, correlation_id|run_id|cluster_name}`. Streams
         from deployment-api `/api/logs/stream/{target_ref}` (NEW; thin wrapper over existing GCS event-stream + Cloud
         Logging tail). Server-side fans out to the right log source per lifecycle class (Cloud Run logs for
@@ -239,6 +239,7 @@ todos:
         Function logs for scheduler-as-cloud-function). Filter / search / pause / download. Operator hits the same
         component shape from Monitor → Backfill / Experiments / Live / Scheduled rows. Per CLAUDE.md UI testing
         rule must use `pool: forks`.
+        — deployment-ui@567c8a1 (component 2026-05-13) + @a0458e2 (SSE targetRef mode + c5 wiring 2026-05-19 slot 6)
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase C — deployment-api endpoints for Monitor sub-tabs + streaming
@@ -293,10 +294,12 @@ todos:
 
   - id: c5-streaming-logs-endpoint
     content: |
-      - [ ] [SCRIPT] P0. Add `GET /api/logs/stream/{target_ref}` route — SSE / WebSocket stream that fans out per
+      - [x] ✅ [SCRIPT] P0. Add `GET /api/logs/stream/{target_ref}` route — SSE / WebSocket stream that fans out per
         lifecycle class. Backfill + experiment + scheduled VM logs come from the events bucket + GCS Cloud Logging
         tail; long-lived live logs come from Cloud Run / GKE per-pod logs. Client filter / search / pause are
         client-side over the stream (server sends raw lines).
+        — deployment-api@6d5567b (2026-05-19 slot 6). VM path polls GCS events bucket; live-cluster 501 scaffold
+        (Cloud Run/GKE log tail is post-cutover scope, Phase E.2).
 
   - id: c6-aggregated-status-endpoints-removed-folded-into-monitor
     content: |
