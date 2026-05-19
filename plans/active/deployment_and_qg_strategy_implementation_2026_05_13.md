@@ -1,7 +1,7 @@
 ---
 title: Deployment + QG strategy implementation — env-locking, act pre-flight, retention, 99%-repo pipeline
 type: plan
-status: active
+status: done
 created: 2026-05-13
 deadline: 2026-05-23
 priority: P0
@@ -35,6 +35,17 @@ estimate_calibration_note: |
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
 annotations next to each `- [ ]` item in body for the specific successor / blocker per-item. No single migration target
 — this plan tracks multiple per-item dispositions.
+
+**2 items remain `- [ ]` (both BLOCKED-OPERATOR-DECISION — closed 2026-05-19 slot-4)**:
+
+- Phase 8.B Validation logic surface (UAC canonical/crosscutting coverage) — BLOCKED on UAC coverage.omit decision
+  (Option A: remove omit + write tests; Option B: declare not-measurable). Successor:
+  `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`. AWAITING operator pick A vs B.
+- Phase 8.C Error classification coverage to 95% — BLOCKED on same decision (same issue doc). Cannot enforce via ratchet
+  until `canonical/crosscutting/errors/*` is removed from `pyproject.toml` `[tool.coverage.run].omit`.
+
+Both items stay `- [ ]` (implementation not done). Plan status set to `done` because all non-operator-blocked
+implementation work is complete. Operator decision → implementer closes each item per issue doc instructions.
 
 # Deployment + QG strategy implementation
 
