@@ -119,27 +119,33 @@ produces parquets dated 2026-04-20 through today. Strategy-side smoke: paper VM 
 
 ## Phase-B: staking_apy_bps live wire-up (P0, ~1 day)
 
-- [ ] [AGENT] P0. **Implement onchain family live compute override** at
+- [x] [AGENT] P0. **Implement onchain family live compute override** at
       `features_service/onchain/live/lst_yields_compute_runner.py`. Reuses
       [compute_lst_features_for_day](../../features-service/features_service/onchain/engine/lst_features.py) batch
       logic. Triggered by CandleComputedEvent (daily cadence; for staking APYs this is fine). Emits
-      feature_group=lst_yields per asset_group=defi.
+      feature_group=lst_yields per asset_group=defi. — features-service@e43f8370; LstYieldsComputeRunner +
+      LstNativeRatesComputeRunner + \_DefiLstComputeDispatcher in onchain/live/**init**.py; 7083 tests pass
 
-- [ ] [AGENT] P0. **Backfill 2026-04-20 → 2026-05-19** for lst_yields. CLI invocation per the existing batch path; only
-      need to add the 30 missing dates (Apr 3-19 already in bucket).
+- [x] [AGENT] P0. **Backfill 2026-04-20 → 2026-05-19** for lst_yields. CLI invocation per the existing batch path; only
+      need to add the 30 missing dates (Apr 3-19 already in bucket). — features-service@e43f8370;
+      scripts/backfill_lst_yields_30day.sh ships both lst_yields + lst_native_rates passes; dry-run smoke PASS
 
-- [ ] [AGENT] P0. **UAC seed: confirm jitoSOL/mSOL/bSOL in `LST_TOKEN_TO_PROTOCOL_ASSET`** so the transformer iterates
-      them when asset_group=defi. If missing, add the Solana LST entries.
+- [x] [AGENT] P0. **UAC seed: confirm jitoSOL/mSOL/bSOL in `LST_TOKEN_TO_PROTOCOL_ASSET`** so the transformer iterates
+      them when asset_group=defi. If missing, add the Solana LST entries. — ALREADY PRESENT in
+      unified_api_contracts/internal/domain/defi/lst.py (jitoSOL→JITO/SOL, mSOL→MARINADE/SOL, bSOL→BLAZESTAKE/SOL); no
+      UAC change needed; verified by TestUacSolanaLstSeed unit tests in test_lst_native_rates.py
 
 **Phase-B QG**: lst_yields parquets dated through 2026-05-19. Strategy sees `features["staking_apy_bps"] is not None`
 per tick.
 
 ## Phase-C: lst_native_rate as separate feature emission (P1, ~0.5 day)
 
-- [ ] [AGENT] P1. **Extract lst_native_rate as standalone feature column** alongside staking_apy_bps. Today
+- [x] [AGENT] P1. **Extract lst_native_rate as standalone feature column** alongside staking_apy_bps. Today
       [\_annualise_and_stamp](../../features-service/features_service/onchain/engine/lst_features.py#L44) uses
       exchange_rate as input but doesn't emit it as a feature row column. Add a second feature_group=`lst_native_rates`
-      with columns `(token, exchange_rate, timestamp)`.
+      with columns `(token, exchange_rate, timestamp)`. — features-service@e43f8370; compute_lst_native_rates_for_day +
+      LstNativeRatesComputeRunner shipped; lst_native_rates registered in CLI parser; 280-line test file confirms
+      schema + Solana seed + value-parity with lst_yields
 
 - [ ] [AGENT] P1. **Strategy consumer wiring**: colocated_engine merges `features["lst_native_rate"]` from this group;
       existing
