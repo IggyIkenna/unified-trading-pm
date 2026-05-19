@@ -965,7 +965,7 @@ Items routed OUT of this plan (tracked in their own homes):
 
 ### Finding (harsh slot 3, 2026-05-12) — sports/smoke.py path-resolution post-consolidation regression
 
-- [ ] [features-sports] P1. `features_service/sports/smoke.py`
+- [x] ✅ [features-sports] P1. `features_service/sports/smoke.py`
       `_SMOKE_MATRIX_PATH = Path(__file__).resolve().parent.parent / "scripts" / "smoke_matrix.py"` resolves to
       `features_service/scripts/smoke_matrix.py` — a path that **does not exist** post-consolidation. The actual
       canonical location post-Phase-7 is `scripts/sports/smoke_matrix.py` (workspace-root scripts dir, per-family
@@ -981,6 +981,9 @@ Items routed OUT of this plan (tracked in their own homes):
       pre-existing (not introduced by Phase 4.FEATURES sweep at `features-service@842ff741`+`@229a0963`).
       Annotate-not-fix per CLAUDE.md Findings Triage Discipline — this is post-consolidation path-resolution residue
       owned by the features-consolidation tail / features-sports maintainer, not by writegate slice (c).
+      **✅ FIXED 2026-05-19 slot-5-harsh** — verified: all 8 `features_service/<family>/smoke.py` files already have
+      the corrected path (`parent.parent.parent / "scripts" / "<family>" / "smoke_matrix.py"`); 0 test failures
+      (features-service@`0e73bc90` per 2026-05-18 slot-8-ikenna update: 7266 passed, 22 skipped).
 
 ## DONE-2026-05-11 — Harsh slot 2 end-of-shift handover (sessions 2-4 + wrap-up)
 
