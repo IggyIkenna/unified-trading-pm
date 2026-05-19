@@ -49,6 +49,7 @@ from gcs_migration_bundle_2026_05_08 import (  # type: ignore[import-not-found]
     MigrationResult,
     MigrationStatus,
     MultiWorkerWithoutShardIsolationError,
+    _is_ohlcv_rename_candidate,
     _parse_rescan_output,
     assert_per_vm_shard_isolation,
     iter_parquet_uris_for_slice,
@@ -748,3 +749,208 @@ def test_assert_per_vm_shard_isolation_runs_before_v8_helper() -> None:
     # test_manifest_migrations_v7_to_v8.py); we only assert that the bundled
     # script's guard is the FIRST line of defence and uses the script's
     # error class (not UTL's).
+
+
+# ---------------------------------------------------------------------------
+# Phase 2.5 — OHLCV ticks.parquet → {instrument_id}.parquet rename
+# ---------------------------------------------------------------------------
+
+
+def test_is_ohlcv_rename_candidate_matches_ticks_parquet() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=cefi/venue=binance/data_type=ticks/ticks.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is True
+
+
+def test_is_ohlcv_rename_candidate_matches_candles() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=cefi/venue=binance/data_type=candles/ticks.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is True
+
+
+def test_is_ohlcv_rename_candidate_rejects_non_ticks_filename() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=cefi/venue=binance/data_type=ticks/BTC-USDT.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is False
+
+
+def test_is_ohlcv_rename_candidate_rejects_odds_api_path() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=sports/venue=ODDS_API/data_type=ticks/ticks.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is False
+
+
+def test_is_ohlcv_rename_candidate_rejects_eigenlayer_path() -> None:
+    obj = "raw_tick_data/by_date/day=2024-01-01/asset_group=defi/venue=EIGENLAYER/data_type=ticks/ticks.parquet"
+    assert _is_ohlcv_rename_candidate(obj) is False
+
+
+def test_is_ohlcv_rename_candidate_rejects_underlying_path() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/asset_group=defi/venue=aave/data_type=ticks/underlying=ETH/ticks.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is False
+
+
+def test_is_ohlcv_rename_candidate_rejects_non_ohlcv_data_type() -> None:
+    obj = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=cefi/venue=binance/data_type=order_book/ticks.parquet"
+    )
+    assert _is_ohlcv_rename_candidate(obj) is False
+
+
+def test_migrate_ohlcv_dry_run_marks_legacy_filename_drift() -> None:
+    """Dry-run: OHLCV_LEGACY_FILENAME drift class added; no parquet downloaded."""
+    src_uri = (
+        "gs://market-data-tick-cefi-test/raw_tick_data/by_date/day=2024-01-01/"
+        "pipeline_mode=batch_tardis/asset_group=cefi/venue=binance/data_type=ticks/ticks.parquet"
+    )
+    read_id_mock = MagicMock()
+    result = migrate_one_parquet(
+        src_uri,
+        apply=False,
+        cp_fn=MagicMock(),
+        rm_fn=MagicMock(),
+        describe_fn=MagicMock(),
+        read_instrument_id_fn=read_id_mock,
+    )
+    assert result.status is MigrationStatus.DRY_RUN
+    assert DriftClass.OHLCV_LEGACY_FILENAME in result.drift_classes
+    read_id_mock.assert_not_called()
+
+
+def test_migrate_ohlcv_apply_renames_to_instrument_id() -> None:
+    """Apply mode: reads instrument_id, renames ticks.parquet → BTC-USDT.parquet."""
+    parent = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=binance/data_type=ticks"
+    )
+    src_uri = f"gs://market-data-tick-cefi-test/{parent}/ticks.parquet"
+    cp_mock = MagicMock()
+    rm_mock = MagicMock()
+    describe_mock = MagicMock(return_value={"size": 512, "crc32c": "abc123"})
+    read_id_mock = MagicMock(return_value="BTC-USDT")
+
+    result = migrate_one_parquet(
+        src_uri,
+        apply=True,
+        cp_fn=cp_mock,
+        rm_fn=rm_mock,
+        describe_fn=describe_mock,
+        read_instrument_id_fn=read_id_mock,
+    )
+    assert result.status is MigrationStatus.MIGRATED
+    assert DriftClass.OHLCV_LEGACY_FILENAME in result.drift_classes
+    assert result.target_uri.endswith("/BTC-USDT.parquet")
+    assert "ticks.parquet" not in result.target_uri
+    read_id_mock.assert_called_once_with(src_uri)
+    cp_mock.assert_called_once()
+    rm_mock.assert_called_once_with(src_uri)
+
+
+def test_migrate_ohlcv_apply_no_instrument_id_skips_rename() -> None:
+    """Apply mode: instrument_id absent → OHLCV_NO_INSTRUMENT_ID, NOOP (no copy-to-self)."""
+    parent = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=binance/data_type=ticks"
+    )
+    src_uri = f"gs://market-data-tick-cefi-test/{parent}/ticks.parquet"
+    cp_mock = MagicMock()
+    rm_mock = MagicMock()
+    read_id_mock = MagicMock(return_value=None)
+
+    result = migrate_one_parquet(
+        src_uri,
+        apply=True,
+        cp_fn=cp_mock,
+        rm_fn=rm_mock,
+        describe_fn=MagicMock(),
+        read_instrument_id_fn=read_id_mock,
+    )
+    assert result.status is MigrationStatus.NOOP
+    assert DriftClass.OHLCV_NO_INSTRUMENT_ID in result.drift_classes
+    assert DriftClass.OHLCV_LEGACY_FILENAME not in result.drift_classes
+    # No GCS operations — copy-to-self avoided.
+    cp_mock.assert_not_called()
+    rm_mock.assert_not_called()
+
+
+def test_migrate_ohlcv_noop_when_already_renamed() -> None:
+    """Already-renamed instrument file is NOOP — no drift, no GCS calls."""
+    canonical = (
+        "raw_tick_data/by_date/day=2024-01-01/pipeline_mode=batch_tardis/"
+        "asset_group=cefi/venue=binance/data_type=ticks/BTC-USDT.parquet"
+    )
+    cp_mock = MagicMock()
+    rm_mock = MagicMock()
+    read_id_mock = MagicMock()
+    result = migrate_one_parquet(
+        f"gs://market-data-tick-cefi-test/{canonical}",
+        apply=True,
+        cp_fn=cp_mock,
+        rm_fn=rm_mock,
+        describe_fn=MagicMock(),
+        read_instrument_id_fn=read_id_mock,
+    )
+    assert result.status is MigrationStatus.NOOP
+    cp_mock.assert_not_called()
+    rm_mock.assert_not_called()
+    read_id_mock.assert_not_called()
+
+
+def test_migrate_ohlcv_combined_hive_drift_and_filename_rename() -> None:
+    """Legacy hive path + ticks.parquet → all drifts applied in one pass."""
+    src_uri = "gs://market-data-tick-cefi-test/day=2024-01-01/category=cefi/venue=binance/data_type=ticks/ticks.parquet"
+    read_id_mock = MagicMock(return_value="ETH-USDT")
+    describe_mock = MagicMock(return_value={"size": 256, "crc32c": "xyz789"})
+
+    result = migrate_one_parquet(
+        src_uri,
+        apply=True,
+        cp_fn=MagicMock(),
+        rm_fn=MagicMock(),
+        describe_fn=describe_mock,
+        read_instrument_id_fn=read_id_mock,
+    )
+    assert result.status is MigrationStatus.MIGRATED
+    assert DriftClass.LEGACY_PATH_PREFIX in result.drift_classes
+    assert DriftClass.LEGACY_CATEGORY_HIVE_KEY in result.drift_classes
+    assert DriftClass.PIPELINE_MODE_MISSING in result.drift_classes
+    assert DriftClass.OHLCV_LEGACY_FILENAME in result.drift_classes
+    assert result.target_uri.endswith("/ETH-USDT.parquet")
+    assert "ticks.parquet" not in result.target_uri
+
+
+def test_run_migration_threads_read_instrument_id_fn() -> None:
+    """run_migration passes read_instrument_id_fn through to migrate_one_parquet."""
+    bucket = "market-data-tick-cefi-test"
+    ohlcv_uri = (
+        f"gs://{bucket}/raw_tick_data/by_date/day=2024-01-01/"
+        "pipeline_mode=batch_tardis/asset_group=cefi/venue=binance/data_type=ticks/ticks.parquet"
+    )
+    read_id_mock = MagicMock(return_value="SOL-USDT")
+    describe_mock = MagicMock(return_value={"size": 128, "crc32c": "qqq"})
+
+    metrics, results = run_migration(
+        bucket=bucket,
+        prefix_slice="raw_tick_data/by_date/",
+        apply=True,
+        workers=1,
+        list_fn=lambda _b, _p: [ohlcv_uri],
+        cp_fn=MagicMock(),
+        rm_fn=MagicMock(),
+        describe_fn=describe_mock,
+        read_instrument_id_fn=read_id_mock,
+        skip_v8_backfill=True,
+        skip_rescan=True,
+    )
+    read_id_mock.assert_called_once_with(ohlcv_uri)
+    assert metrics.drift_histogram.get(str(DriftClass.OHLCV_LEGACY_FILENAME), 0) == 1
+    assert results[0].target_uri.endswith("/SOL-USDT.parquet")

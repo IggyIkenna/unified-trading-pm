@@ -113,6 +113,9 @@ class DriftClass(StrEnum):
     # ``MigrationMetrics`` axis-histogram + final JSON summary report.
     V8_NULL_COLUMNS_MISSING = "v8_null_columns_missing"
     CROSS_ASSET_RESCAN_CLASS_A = "cross_asset_rescan_class_a"
+    # Phase 2.5 — OHLCV ticks.parquet → {instrument_id}.parquet rename.
+    OHLCV_LEGACY_FILENAME = "ohlcv_legacy_filename"
+    OHLCV_NO_INSTRUMENT_ID = "ohlcv_no_instrument_id"
 
 
 class MigrationStatus(StrEnum):
@@ -163,6 +166,17 @@ _BUCKET_PREFIX_TO_DEFAULT_SOURCE: dict[str, str] = {
 _HIVE_SEGMENT_RE = re.compile(r"([a-zA-Z_]+)=([^/]+)")
 _LEGACY_DAY_PREFIX_RE = re.compile(r"^day=\d{4}-\d{2}-\d{2}/")
 _CANONICAL_PREFIX_RE = re.compile(r"^raw_tick_data/by_date/day=\d{4}-\d{2}-\d{2}/")
+
+# Phase 2.5 — OHLCV ticks.parquet → {instrument_id}.parquet rename.
+# Paths containing any of these fragments are excluded (non-MTDS OHLCV layouts).
+_OHLCV_RENAME_EXCLUDED_PATH_FRAGMENTS: frozenset[str] = frozenset(
+    {
+        "ODDS_API",
+        "EIGENLAYER",
+        "underlying=",
+    }
+)
+_OHLCV_LEGACY_DATA_TYPES: frozenset[str] = frozenset({"ticks", "candles", "trades"})
 
 
 # ---------------------------------------------------------------------------
@@ -439,6 +453,64 @@ def _gcloud_storage_rm(uri: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Phase 2.5 — OHLCV per-instrument filename helpers
+# ---------------------------------------------------------------------------
+
+
+def _is_ohlcv_rename_candidate(obj: str) -> bool:
+    """True if *obj* is a bundled OHLCV ticks.parquet needing per-instrument rename.
+
+    Applies only to MTDS-owned buckets (implied by data_type check); paths
+    containing any fragment in ``_OHLCV_RENAME_EXCLUDED_PATH_FRAGMENTS`` are skipped.
+    """
+    if not obj.endswith("/ticks.parquet"):
+        return False
+    if any(frag in obj for frag in _OHLCV_RENAME_EXCLUDED_PATH_FRAGMENTS):
+        return False
+    for part in obj.split("/"):
+        m = _HIVE_SEGMENT_RE.fullmatch(part)
+        if m and m.group(1) == "data_type":
+            return m.group(2) in _OHLCV_LEGACY_DATA_TYPES
+    return False
+
+
+def _read_instrument_id_from_parquet_footer(uri: str) -> str | None:
+    """Download *uri* and read instrument_id from the first row via pyarrow.
+
+    Returns None if the instrument_id column is absent, the first value is
+    null, or the parquet cannot be read. Downloads to a system temp file and
+    cleans up on exit.
+    """
+    import os
+    import tempfile
+
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".parquet")
+    os.close(tmp_fd)
+    try:
+        subprocess.run(  # noqa: S603 — gcloud is a trusted tool
+            ["gcloud", "storage", "cp", uri, tmp_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        import pyarrow.parquet as pq  # type: ignore[import-not-found]
+
+        pf = pq.ParquetFile(tmp_path)
+        for batch in pf.iter_batches(batch_size=1, columns=["instrument_id"]):
+            val = batch.column("instrument_id")[0].as_py()
+            return str(val) if val is not None else None
+        return None
+    except Exception:  # noqa: BLE001
+        return None
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+# ---------------------------------------------------------------------------
 # Per-parquet migration
 # ---------------------------------------------------------------------------
 
@@ -467,24 +539,49 @@ def migrate_one_parquet(
     cp_fn: Callable[[str, str], None] = _gcloud_storage_cp,
     rm_fn: Callable[[str], None] = _gcloud_storage_rm,
     describe_fn: Callable[[str], dict[str, object]] = _gcloud_storage_object_describe,
+    read_instrument_id_fn: Callable[[str], str | None] = _read_instrument_id_from_parquet_footer,
 ) -> MigrationResult:
     """Migrate a single parquet to canonical hive shape.
 
     1. Parse the path. 2. Determine target via :func:`plan_target_path`.
-    3. NOOP if already canonical. 4. DRY_RUN if ``apply=False``.
-    5. cp → verify → rm. 6. Rollback on crc32c mismatch.
+    3. Phase 2.5: OHLCV ticks.parquet → {instrument_id}.parquet rename (apply only).
+    4. NOOP if already canonical and no pending renames. 5. DRY_RUN if ``apply=False``.
+    6. cp → verify → rm. 7. Rollback on crc32c mismatch.
     """
     start = time.monotonic()
     bucket, obj = parse_gcs_uri(source_uri)
     target_obj, drifts = plan_target_path(obj, bucket=bucket)
+
+    # Phase 2.5 — OHLCV ticks.parquet → {instrument_id}.parquet per-instrument rename.
+    # In dry-run, mark the candidate without downloading; actual rename needs apply.
+    if _is_ohlcv_rename_candidate(target_obj):
+        if not apply:
+            drifts = (*drifts, DriftClass.OHLCV_LEGACY_FILENAME)
+        else:
+            instrument_id = read_instrument_id_fn(source_uri)
+            if instrument_id is None:
+                drifts = (*drifts, DriftClass.OHLCV_NO_INSTRUMENT_ID)
+                logger.warning(
+                    "ohlcv_rename: instrument_id absent from footer — skipping filename rename: %s",
+                    src_uri_str(source_uri),
+                )
+            else:
+                parent = target_obj.rsplit("/", 1)[0]
+                target_obj = f"{parent}/{instrument_id}.parquet"
+                drifts = (*drifts, DriftClass.OHLCV_LEGACY_FILENAME)
+
     target_uri = f"gs://{bucket}/{target_obj}"
 
-    if target_obj == obj:
+    # NOOP when no file move is needed: path unchanged AND no OHLCV rename pending.
+    # ``OHLCV_LEGACY_FILENAME`` in drifts means a rename is planned (dry-run) or
+    # will execute (apply). ``OHLCV_NO_INSTRUMENT_ID`` means rename was skipped —
+    # target_obj == obj is still true and a copy-to-self must be avoided.
+    if target_obj == obj and DriftClass.OHLCV_LEGACY_FILENAME not in drifts:
         return MigrationResult(
             source_uri=source_uri,
             target_uri=target_uri,
             status=MigrationStatus.NOOP,
-            drift_classes=(),
+            drift_classes=drifts,
             elapsed_ms=(time.monotonic() - start) * 1000.0,
         )
 
@@ -825,6 +922,7 @@ def run_migration(
     cp_fn: Callable[[str, str], None] = _gcloud_storage_cp,
     rm_fn: Callable[[str], None] = _gcloud_storage_rm,
     describe_fn: Callable[[str], dict[str, object]] = _gcloud_storage_object_describe,
+    read_instrument_id_fn: Callable[[str], str | None] = _read_instrument_id_from_parquet_footer,
     v8_backfill_fn: Callable[..., V7ToV8MigrationResult] | None = None,
     rescan_fn: Callable[..., CrossAssetRescanResult] | None = None,
     rescan_asset_group: str = "cross_asset_all",
@@ -903,6 +1001,7 @@ def run_migration(
                 cp_fn=cp_fn,
                 rm_fn=rm_fn,
                 describe_fn=describe_fn,
+                read_instrument_id_fn=read_instrument_id_fn,
             )
             metrics.record(result)
             results.append(result)
@@ -916,6 +1015,7 @@ def run_migration(
                     cp_fn=cp_fn,
                     rm_fn=rm_fn,
                     describe_fn=describe_fn,
+                    read_instrument_id_fn=read_instrument_id_fn,
                 ): uri
                 for uri in uris
             }
