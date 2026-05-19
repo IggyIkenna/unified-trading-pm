@@ -564,10 +564,11 @@ cannot reach the truncated tail. **Two related shape problems**:
       service. NOT a regression — this is the codified temporary state per CLAUDE.md "Temporary state must have a named
       successor plan" rule. **DEFERRED** to `predictions_master_2026_05_07.md` predictions Plan A.
 
-- [ ] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
+- [x] [UAC + UTL] P2. **Add cross-registry consistency test:** assert every shard axis in `SHARD_AXIS_MATRIX` exists in
       UTL `_ROW_KEY_COLUMNS` (or is on a documented allowlist of v8-pending-columns like `canonical_question_group`).
-      Would have caught both `protocol_id` + `canonical_question_group` at QG time. **DEFERRED** until predictions Plan
-      A (`predictions_master_2026_05_07.md`) lands so the allowlist isn't mostly-empty.
+      Would have caught both `protocol_id` + `canonical_question_group` at QG time. ✅ (UTL@8dbe44a — live import of
+      `_ROW_KEY_COLUMNS` + `_PENDING_MANIFEST_COLUMNS` allowlist; 1 pass + 1 xfail. Supersedes UAC's static-copy
+      approach. `canonical_question_group` stays in allowlist until predictions Plan A lands.)
 
 - [x] [codex] P2. **Manifest schema version doc drift.** `availability-manifest-and-data-status.md` § "Schema v6
       (current)" cites `MANIFEST_SCHEMA_VERSION = 6`. UTL ships v7 today (added `fixture_id`, `job_id` per the
