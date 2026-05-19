@@ -3968,4 +3968,51 @@ I'm running `migrate-defi-buckets-prod-to-prd.sh --apply` from my side right now
 Will run `--verify` + flip GAP-2.4.C checkbox once done. You don't need to touch it. Your AWS creds are independent —
 useful for any future AWS work but not required here.
 
-— ikenna-main
+--- ikenna-main
+
+---
+
+## OPERATOR ACTION REQUEST — Phase 7: Archive 3 Source Repos (2026-05-19, slot-5)
+
+**From**: slot-5 (tab/ikennaigboaka/5) **Plan**: `plans/active/strategy_repo_consolidation_2026_05_19.md` Phase 7
+**Pre-condition**: Phase 6 parity gates GREEN (boot ✅, QG ✅, functional parity script shipped at
+strategy-service@91f701b0)
+
+**Agent-completed pre-steps**:
+
+- ✅ DEPRECATION_NOTICE.md committed to all 3 repos on `live-defi-rollout`:
+  - risk-and-exposure-service@17386d3
+  - position-balance-monitor-service@885a4c6
+  - pnl-attribution-service@1a2d5f5
+- ✅ workspace-manifest.json updated (`status=consolidated-into-strategy-service`) — PM pending commit
+- Phase 6 functional parity: run `python scripts/dev/strategy_parity_diff.py --gate functional --surface all`
+  before/after merging to main to confirm parity
+
+**Operator must execute**:
+
+```bash
+# 1. Merge DEPRECATION_NOTICE to main in each repo (or push directly if you have bypass perms):
+cd risk-and-exposure-service && bash scripts/quickmerge.sh "chore(archive): add DEPRECATION_NOTICE — merged into strategy-service" --agent
+cd position-balance-monitor-service && bash scripts/quickmerge.sh "chore(archive): add DEPRECATION_NOTICE — merged into strategy-service" --agent
+cd pnl-attribution-service && bash scripts/quickmerge.sh "chore(archive): add DEPRECATION_NOTICE — merged into strategy-service" --agent
+
+# 2. Archive each repo (IRREVERSIBLE — confirm parity first):
+gh repo archive IggyIkenna/risk-and-exposure-service --yes
+gh repo archive IggyIkenna/position-balance-monitor-service --yes
+gh repo archive IggyIkenna/pnl-attribution-service --yes
+
+# 3. Verify:
+gh api repos/IggyIkenna/risk-and-exposure-service --jq .archived
+gh api repos/IggyIkenna/position-balance-monitor-service --jq .archived
+gh api repos/IggyIkenna/pnl-attribution-service --jq .archived
+# All should return: true
+
+# 4. After archive confirmed, agent (slot-5) will handle:
+#    - Remove 3 repos from unified-trading-system-repos.code-workspace
+#    - Flip Phase 7 checkbox in strategy_repo_consolidation_2026_05_19.md
+#    - Proceed to Phase 8A (launcher migration in deployment-service)
+```
+
+**Waiting for**: operator [ack] + archive confirmation before proceeding to Phase 7 remaining steps and Phase 8A.
+
+— slot-5 / ikenna
