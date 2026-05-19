@@ -316,7 +316,7 @@ todos:
 
   - id: d1-scheduler-registry-uac-ssot-env-scoped
     content: |
-      - [ ] [SCRIPT] P0. NEW UAC SSOT
+      - [x] ✅ [SCRIPT] P0. NEW UAC SSOT
         `unified_api_contracts/canonical/crosscutting/scheduler_registry.py`. Declares every scheduler that should
         exist per `(cloud_target, environment_tier)` cell as a typed list of `SchedulerSpec(name,
         lifecycle_class=SCHEDULED_RECURRING, schedule_cron, target_kind, target_ref, asset_group, owning_plan,
@@ -327,6 +327,7 @@ todos:
         manifest-consolidator-60s + data-status rollup + manifest-aggregation cron + T+1 audit. Adding a new
         scheduler in any plan = adding a row here; "deploy-missing schedulers" reads from this registry filtered
         by `(cloud_target, environment_tier)`. NO ad-hoc `gcloud scheduler jobs create` outside this registry.
+        — unified-api-contracts@e90b61c (2026-05-19 slot 6). 14 entries: 10 instruments-live + 4 infra. 15 unit tests. SchedulerTargetKind + get_schedulers_for_env exported from UAC root.
 
   - id: d2-scheduler-deploy-missing-implementation
     content: |
