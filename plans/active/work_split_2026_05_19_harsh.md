@@ -93,8 +93,8 @@ estimate_calibration_note: |
          enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal) — execution-service@8d60c4a1; 0 remaining violations across workspace
 6. - [x] ✅ **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** — every bare `# type: ignore` must have a
          comment explaining why. (refactor 0.4×, ~2 = 0.8 cal) — 137/137 already use specific error codes; 0 bare. Workspace clean. No changes needed.
-7. - [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
-         shared. (refactor 0.4×, ~2 = 0.8 cal)
+7. - [x] ✅ **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
+         shared. (refactor 0.4×, ~2 = 0.8 cal) — 29 candidates audited; all are autouse=True / fixture-chained / integration infrastructure. 0 truly orphaned. Workspace clean.
 8. - [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** —
          `cd unified-api-contracts &&    pytest tests/test_cassette_schema_parity.py`. Fix any mismatches. (research
          1.2×, ~2 = 2.4 cal)
