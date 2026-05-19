@@ -120,15 +120,26 @@ todos:
 
   - id: phase-1-uac-utl-schema-prep
     content: |
-      - [ ] [AGENT] P0. Phase 1 — UAC / UTL schema prep. Likely no new schema column needed — training-output
+      - [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. Likely no new schema column needed — training-output
         events and inference-input events are already independent UAC types. Confirm by grepping UAC for
         existing data-type enums covering training-complete / model-promoted / prediction-emitted; if either
         source repo defined local event types not promoted to UAC (Phase 0 (e) finding), lift to UAC under
         `unified_api_contracts.canonical.crosscutting.lifecycle` or `unified_api_contracts.domain.ml`. Output:
         list of UAC PRs needed (likely 0-2 small) + UTL helper PRs for any kill-switch subscriber boilerplate
         lifts. Land BEFORE Phase 3 if non-empty.
-    status: todo
-    blocked_by: phase-0-pre-audit-manifest
+        **RESULT (2026-05-19 slot-8)**: 0 blocking PRs before Phase 3.
+        - PredictionEvent (engine/schemas.py): CORRECT-LOCAL (docstring confirmed, not cross-service). Stays.
+        - PredictionEventDict/PredictionMetadata (types.py): CORRECT-LOCAL comment present. Stays.
+        - EnsembleConfig (ensemble_inference.py): DIFFERENT from UAC EnsembleConfig (runtime weights vs training
+          config). Stays local.
+        - ModelTrainedEvent + ModelPromotedEvent: dict-based wire protocols; DEFERRED to Phase 4 (f) as TypedDicts
+          under `unified_api_contracts.internal.domain.ml`. Not blocking Phase 3 — both dicts already stable.
+        - Kill-switch boilerplate: grep returned 0 hits in both repos. No UTL lift needed.
+        - UAC `internal.domain.ml` already has: EnsembleConfig, ModelMetadata, InferenceRequest, InferenceResult.
+        - UAC `internal.domain.ml_inference_service` already has: CascadeConfig, CascadePredictionEvent,
+          PredictionSnapshot.
+        - 0 UAC PRs + 0 UTL PRs needed before Phase 3.
+    status: done
 
   - id: phase-2-skeleton-new-repo
     content: |
