@@ -522,7 +522,7 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       (strategy_config_loader.py + gcs_feature_provider.py, @5d6c963) + UTL peripheral files (asset_group.py +
       options_cluster_lookup.py, @5b9e386c); batch-recon + strategy-service now at 0 remaining L3 consumers. Core L3
       wrapper (cloud_interface/constants.py + ~34 UTL consumers) still active by design — flips DURING Phase 2.6
-      write-pause (step 2.6.4). — PM@<sha>
+      write-pause (step 2.6.4). — PM@39c52db3
 - [x] **[SCRIPT] P1**. Add yaml-vs-resolver parity unit test (already shipped at UTL@`24f9b2cb` for 10 DeFi bucket
       entries; extend coverage to features-\* + sports + tradfi). **Shipped UTL@`e8dc6e3` (slot 4 2026-05-11)**:
       `_SNAPSHOT_YAML` extended with `features-volatility` / `features-onchain` (per-asset_group) + `features-sports` /
