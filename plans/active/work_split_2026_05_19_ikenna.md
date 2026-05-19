@@ -63,15 +63,20 @@ early.
 | 5    | strategy: UTL lifts — `ConfigReloaderBase` (4× ~688 LOC) + `KillSwitchBusSubscriberBase` (4× ~80 LOC)   | strategy_repo_consolidation | 5           | ~2          | slot 4 Phase 4  |
 | 6    | strategy: Phase 6 parity (boot + QG + functional) → Phase 7 archive 3 source repos                      | strategy_repo_consolidation | 6 / 7       | ~2          | slot 4 Phase 4  |
 | 7    | strategy: Phase 8A deployment-service sweep (~90 hits, Terraform destroy/apply sequencing)              | strategy_repo_consolidation | 8A          | ~3          | slot 6 Phase 7  |
-| 8    | strategy: Phase 9 codex sweep (8 enumerated paths + ~150 incidental refs) → Phase 10 workspace QG sweep | strategy_repo_consolidation | 9 / 10      | ~2          | slot 7 Phase 8A |
-| 9    | ML consolidation **full plan** (single-slot ownership, all 10 phases — smaller surface)                 | ml_repo_consolidation       | 0–10        | ~6          | —               |
+| 8    | **ML consolidation full plan** (single-slot ownership, all 10 phases — reassigned 2026-05-19 ~15:30 UTC from slot 9; slot 8 already shipped Phase 0+1 organically) | ml_repo_consolidation       | 0–10        | ~6          | —               |
+| 9    | 🟢 **STANDING DOWN** — slot not booted today (operator opened only 8 slots). Worktree reset to LDR + ml-service worktree provisioned (`tab/ikennaigboaka/9`). Available for future boot. | —                          | —           | —           | —               |
 
-**Dependency DAG**:
+**NOTE on strategy Phase 9 + 10** (codex sweep + workspace QG): previously assigned to slot 8 before ML reassignment.
+Now PENDING — slot 1 main will dispatch in next reallocation pass (likely slot 3 once Phase 0.5+1+2 ships, or slot 6
+after Phase 7 archive).
+
+**Dependency DAG** (revised 2026-05-19 ~15:30 UTC):
 
 ```
 Slot 3 (Phase 0.5+1+2)  →  Slot 4 (Phase 3+4)  →  Slot 5 (Phase 5)         ┐
-                                              →  Slot 6 (Phase 6+7)        ┤→  Slot 7 (Phase 8A)  →  Slot 8 (Phase 9+10)
-Slot 9 (ML full plan, independent)
+                                              →  Slot 6 (Phase 6+7)        ┤→  Slot 7 (Phase 8A)  →  PENDING (Phase 9+10 codex sweep)
+Slot 8 (ML full plan, independent — was slot 9)
+Slot 9 (standing down — not booted)
 ```
 
 **Critical-path callout**: Slot 4 must rewrite `e2e-testing/scripts/defi/colocated_engine.py` FIRST in Phase 4 (a)
