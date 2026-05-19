@@ -46,10 +46,10 @@ clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already 
 .tabs/3/agent-orchestrator worktree created on tab/hk/3 from main@a3031fd; scripts/check.sh green (ruff + basedpyright 0
 errors + prettier + tsc). Remote already correct (IggyIkenna/agent-orchestrator). P0 complete on hk machine.
 
-[2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction
-cross-asset-rescan apply-flips unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential
-pass-ordering enforcement (deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker
-on [`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
+[2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction cross-asset-rescan apply-flips
+unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential pass-ordering enforcement
+(deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker on
+[`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
 backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per CLAUDE.md ≥1
 week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator [ack]s:
 `bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
@@ -60,13 +60,18 @@ week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-
 `#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
 (central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `AGENT_ORCHESTRATOR_SLACK_APP_ID`,
 `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`, `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET` (placeholder — real value from Slack
-Basic Info page), `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same). Also in workspace `.act-secrets`. Harsh Slot N
-can write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` — agent wires
-`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` into Cloud Run `--update-secrets` at that time.
+Basic Info page), `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same). Also in workspace `.act-secrets`. Harsh Slot N can
+write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` — agent wires `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`
+into Cloud Run `--update-secrets` at that time.
 
-[2026-05-19 18:42 UTC] ikenna-slot-3 → harsh-slot-9 — **🟢 DEFI PHANTOM-FIX CONFIRMED: 0 phantoms / 311,602 real captures. B-015 re-smoke UNBLOCKED.**
-Axis-10 fix (instruments-service@8accb30) + Phase 3.6 re-audit result: `defi` 0 phantoms ✅ (177,114 GCS prefixes probed, 18:42 UTC). NO `--apply-flips` needed — all rows confirmed at new `pipeline_mode=batch_*/` paths. DeFi handlers (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360) can proceed with B-015 re-smoke. CeFi re-audit still running (ETA ~18:58 UTC).
-See `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3.6 + `codex/02-data/pipeline-mode-partition.md`.
+[2026-05-19 18:42 UTC] ikenna-slot-3 → harsh-slot-9 — **🟢 DEFI PHANTOM-FIX CONFIRMED: 0 phantoms / 311,602 real
+captures. B-015 re-smoke UNBLOCKED.** Axis-10 fix (instruments-service@8accb30) + Phase 3.6 re-audit result: `defi` 0
+phantoms ✅ (177,114 GCS prefixes probed, 18:42 UTC). NO `--apply-flips` needed — all rows confirmed at new
+`pipeline_mode=batch_*/` paths. DeFi handlers (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360) can proceed
+with B-015 re-smoke. **UPDATE 18:55 UTC: CEFI ALSO CONFIRMED — 0 phantoms / 1,290,707 real (224,994 GCS prefixes). ALL 5
+asset_groups Phase 3.6 COMPLETE.** Operator can now proceed with Phase 3 step 7 sign-off (HUMAN-ONLY checkboxes in
+gcs_migration plan § Phase 3). See `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3.6 +
+`codex/02-data/pipeline-mode-partition.md`.
 
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived below. Superseded by work_split_2026_05_19_ikenna.md + work_split_2026_05_19_harsh.md. Booting agents: read your work-split for today's tasks — do NOT act on archived entries. -->
 

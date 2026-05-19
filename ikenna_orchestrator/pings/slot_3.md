@@ -1401,10 +1401,11 @@ Slot 3 cannot touch master plan per slot-precedence rule.
 
 [2026-05-19 UTC ~17:30-18:30] Slot 3 — **CO-DUTY CLOSE + Axis-10 fix + Phase 7 codex complete**
 
-**CO-DUTY CLOSED**: All 31 Phase 3 migration VMs TERMINATED. Post-migration phantom audit found false positives
-(Axis-10 reconciler bug). Root cause confirmed + fix shipped. See corrected operator ping above (SUPERSEDES ~16:20 ping).
+**CO-DUTY CLOSED**: All 31 Phase 3 migration VMs TERMINATED. Post-migration phantom audit found false positives (Axis-10
+reconciler bug). Root cause confirmed + fix shipped. See corrected operator ping above (SUPERSEDES ~16:20 ping).
 
 **Shipped this session:**
+
 1. `instruments-service@8accb30` — Axis-10 reconciler fix: adds `pipeline_mode=batch_*/` prefix_tpls to
    `ASSET_GROUP_CONFIG` for cefi/defi/tradfi/prediction. QG passed. DO NOT run Phase 6 --apply.
 2. PM@`6af1ac872` — Half-2 flip: corrected operator ping + gcs_migration plan banner + deferred-work table.
@@ -1416,17 +1417,21 @@ Slot 3 cannot touch master plan per slot-precedence rule.
 8. PM@`b9f701a16` — Phase 3 execution note: steps 1-6 complete, step 7 pending re-audit.
 9. PM@`54ce00884` — Phase 0/1A/1B stale status=todo → done; Phase 6 NOT NEEDED note added.
 
-**Phase 3.6 re-audit with Axis-10 fix (UPDATED 18:42 UTC):**
+**Phase 3.6 re-audit with Axis-10 fix (FINAL — ALL 5 CONFIRMED 18:55 UTC):**
+
 - prediction: 14,403 → 0 phantoms ✅ CONFIRMED
 - sports: 559,961 → 0 phantoms ✅ CONFIRMED
 - tradfi: 245,907 → 0 phantoms ✅ CONFIRMED
 - defi: 311,602 → 0 phantoms ✅ CONFIRMED (18:42 UTC; 177,114 GCS prefixes probed)
-- cefi: ⏳ running (ETA ~18:58 UTC; 1.29M captured rows)
+- cefi: 1,290,707 → 0 phantoms ✅ CONFIRMED (18:55 UTC; 224,994 GCS prefixes probed)
 
-**Cross-side ping filed:** `_agent_pings.md` 18:42 UTC → harsh-slot-9: defi ✅, B-015 re-smoke unblocked.
-No `--apply-flips` needed for defi (all rows at new pipeline_mode= paths).
+**Cross-side ping filed:** `_agent_pings.md` 18:42 UTC → harsh-slot-9: defi ✅, B-015 re-smoke unblocked. No
+`--apply-flips` needed for any asset_group (all rows at new pipeline_mode= paths).
 
-**Pending operator action (4/5 confirmed):** Once cefi re-audit confirms 0 phantoms → Phase 3 step 7 per-asset-group
-sign-off (HUMAN-ONLY). Step 7 checkboxes in `gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3 content.
+**🟢 PHASE 3.6 COMPLETE — ALL 5 asset_groups 0 phantoms confirmed.**
 
-Slot 3 AVAILABLE for next dispatch (monitoring cefi audit).
+**Operator action required (HUMAN-ONLY):** Phase 3 step 7 per-asset-group sign-off — mark each checkbox in
+`gcs_migration_bundle_pipeline_mode_2026_05_08.md` § Phase 3 OPERATOR SIGN-OFF CHECKBOXES once services bounced. Then
+proceed with Phase 9 workspace-wide QG sweep.
+
+Slot 3 CO-DUTY CLOSED. Phase 3.6 monitoring complete.

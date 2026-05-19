@@ -12,38 +12,38 @@ last_reviewed: 2026-05-19
 
 ## Shipped progress (updated 2026-05-19 post-Phase-3 run)
 
-| Phase                                                        | Status        | Commit(s)                                                                       |
-| ------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------- |
-| 0 — pre-audit doc (operator-runnable on same-region VM)      | ✅ shipped    | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (plan flip)                   |
-| 1A — UAC `PipelineMode` SSOT + closed-set round-trip         | ✅ shipped    | `unified-api-contracts@8bc3f2a`                                                 |
-| 1B — UTL `ManifestWriter` `pipeline_mode` kwarg + tests      | ✅ shipped    | `unified-trading-library@87134364`                                              |
-| 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field             | ✅ shipped    | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5`                 |
-| 2 — Canonical migration script + 23 unit tests               | ✅ shipped    | `unified-trading-pm@5a3c360a` + `@cc6fe4ce` (plan flip)                         |
-| 3 — VM fleet execution (31 VMs, all 5 asset_groups)          | ✅ complete   | 2026-05-19 13:52→16:01 UTC; all 31 VMs TERMINATED exit 0. No data loss.         |
-| 4 — Workspace-wide consumer sweep                            | ✅ complete   | All production callsites pass explicit `pipeline_mode=`. No gaps found.          |
-| 5.1 — UTL `read_manifest_with_source_priority` reader        | ✅ shipped    | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) |
-| 5.2 — MTDS/MDPS path probers                                 | ✅ shipped    | `market-tick-data-service@33b2ae5` (2026-05-19)                                 |
-| 5.3 — Sports/DeFi `candidate_parquet_paths` extension        | ✅ shipped    | `unified-api-contracts@fefd720` (2026-05-19)                                    |
-| Axis-10 — Reconciler pipeline_mode= prefix fix               | ✅ shipped    | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
-| 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix)  | ⏳ pending    | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ⏳             |
-| 6 — Residual phantom cleanup                                 | 🚫 not needed | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
-| 8 — Reader fallback removal (T+30d, ~2026-06-15)             | ⏸ deferred   | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.   |
-| 9 — Final workspace-wide QG sweep                            | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
+| Phase                                                       | Status        | Commit(s)                                                                       |
+| ----------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
+| 0 — pre-audit doc (operator-runnable on same-region VM)     | ✅ shipped    | `unified-trading-pm@0cc633c8` (doc) + `@12483f5b` (plan flip)                   |
+| 1A — UAC `PipelineMode` SSOT + closed-set round-trip        | ✅ shipped    | `unified-api-contracts@8bc3f2a`                                                 |
+| 1B — UTL `ManifestWriter` `pipeline_mode` kwarg + tests     | ✅ shipped    | `unified-trading-library@87134364`                                              |
+| 1C — UAC `SOURCE_PRIORITY` `pipeline_mode` field            | ✅ shipped    | `unified-api-contracts@6a8529f` + `unified-trading-pm@53c498c5`                 |
+| 2 — Canonical migration script + 23 unit tests              | ✅ shipped    | `unified-trading-pm@5a3c360a` + `@cc6fe4ce` (plan flip)                         |
+| 3 — VM fleet execution (31 VMs, all 5 asset_groups)         | ✅ complete   | 2026-05-19 13:52→16:01 UTC; all 31 VMs TERMINATED exit 0. No data loss.         |
+| 4 — Workspace-wide consumer sweep                           | ✅ complete   | All production callsites pass explicit `pipeline_mode=`. No gaps found.         |
+| 5.1 — UTL `read_manifest_with_source_priority` reader       | ✅ shipped    | `unified-trading-library@52f123d6` + `unified-trading-pm@2a0d105d` (annotation) |
+| 5.2 — MTDS/MDPS path probers                                | ✅ shipped    | `market-tick-data-service@33b2ae5` (2026-05-19)                                 |
+| 5.3 — Sports/DeFi `candidate_parquet_paths` extension       | ✅ shipped    | `unified-api-contracts@fefd720` (2026-05-19)                                    |
+| Axis-10 — Reconciler pipeline_mode= prefix fix              | ✅ shipped    | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
+| 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix) | ✅ complete   | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ✅ 0             |
+| 6 — Residual phantom cleanup                                | 🚫 not needed | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
+| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred   | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
+| 9 — Final workspace-wide QG sweep                           | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
 
 ### Phase 3 migration: pre/post phantom counts (2026-05-19)
 
-| Asset group | Pre-migration (Gate 3, 2026-05-17) | Post-migration (initial audit) | Root cause           | Post-Axis-10-fix re-audit |
-| ----------- | ---------------------------------- | ------------------------------ | -------------------- | ------------------------- |
-| sports      | 0 phantoms / 559,961 real          | 0 phantoms ✅                  | n/a — UAC dispatcher | 0 phantoms ✅ confirmed   |
-| prediction  | 0 phantoms / 14,403 real           | 14,403 phantoms 🔴 FALSE POS   | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
-| tradfi      | 0 phantoms / 245,907 real          | 245,907 phantoms 🔴 FALSE POS  | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
-| cefi        | 0 phantoms / TBD real              | TBD                            | Axis-10 (reconciler) | ⏳ audit pending          |
-| defi        | 0 phantoms / 311,602 real          | 311,602 phantoms 🔴 FALSE POS  | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
+| Asset group | Pre-migration (Gate 3, 2026-05-17) | Post-migration (initial audit)  | Root cause           | Post-Axis-10-fix re-audit |
+| ----------- | ---------------------------------- | ------------------------------- | -------------------- | ------------------------- |
+| sports      | 0 phantoms / 559,961 real          | 0 phantoms ✅                   | n/a — UAC dispatcher | 0 phantoms ✅ confirmed   |
+| prediction  | 0 phantoms / 14,403 real           | 14,403 phantoms 🔴 FALSE POS    | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
+| tradfi      | 0 phantoms / 245,907 real          | 245,907 phantoms 🔴 FALSE POS   | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
+| cefi        | 0 phantoms / TBD real              | 1,290,707 phantoms 🔴 FALSE POS | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
+| defi        | 0 phantoms / 311,602 real          | 311,602 phantoms 🔴 FALSE POS   | Axis-10 (reconciler) | 0 phantoms ✅ confirmed   |
 
 **Axis-10**: `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` in `reconcile_phantom_manifest_rows_all.py` only probed
 pre-migration path shapes. Post-migration adds `pipeline_mode=batch_*/` before `asset_group=`. Fix adds
-`pipeline_mode=batch_*/` template variants for cefi/defi/tradfi/prediction.
-Fix: `instruments-service@8accb30` (2026-05-19).
+`pipeline_mode=batch_*/` template variants for cefi/defi/tradfi/prediction. Fix: `instruments-service@8accb30`
+(2026-05-19).
 
 ## TL;DR
 

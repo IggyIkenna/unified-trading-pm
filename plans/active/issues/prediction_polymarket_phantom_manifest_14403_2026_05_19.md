@@ -170,11 +170,16 @@ actual parquets exist at the new `pipeline_mode=batch_databento/` (tradfi) and `
 
 4. Once re-audit confirms 0 phantoms → operator can proceed with Phase 3 step 7 sign-off per asset_group.
 
-**Blocking gate status (post-fix):**
+**Blocking gate status (UPDATED 2026-05-19 18:55 UTC — ALL 5 CONFIRMED):**
 
-- Phase 3.6 all asset_groups: ⏳ PENDING re-audit with fixed reconciler
-- Phase 6 --apply: 🚫 NOT NEEDED (phantoms are false positives, not real missing files)
-- Operator sign-off: ⏳ PENDING re-audit green
+- Phase 3.6 all asset_groups: ✅ COMPLETE — 0 phantoms across all 5 asset_groups
+  - prediction: 0/14,403 real ✅ (re-audit 2026-05-19)
+  - sports: 0/559,961 real ✅ (re-audit 2026-05-19)
+  - tradfi: 0/245,907 real ✅ (re-audit 2026-05-19)
+  - defi: 0/311,602 real ✅ (re-audit 2026-05-19 18:42 UTC)
+  - cefi: 0/1,290,707 real ✅ (re-audit 2026-05-19 18:55 UTC; 224,994 GCS prefixes)
+- Phase 6 --apply: 🚫 NOT NEEDED (phantoms were false positives; all parquets confirmed at new paths)
+- Operator sign-off: ⏳ AWAITING HUMAN ACTION — step 7 per-asset-group checkboxes in gcs_migration plan § Phase 3
 
 **Code location**: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` § `ASSET_GROUP_CONFIG` —
 `prefix_tpls` for cefi/defi/tradfi/prediction.
