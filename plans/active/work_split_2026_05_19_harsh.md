@@ -217,6 +217,12 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          unified-api-contracts@3624173, unified-trading-api@6357612, e2e-testing@9a6cb2d, unified-trading-system-ui@8ff38717
 8. - [x] ✅ **Plan flips** for all items — all 7 items flipped: items 1/2 backfilled 2026-05-19 (PM@39fcc4f7),
          items 3/4 backfilled (PM@cd798869), item 5 PM@44f01d90, items 6/7 PM@fbfaacfa+ff2b04f5.
+9. - [x] ✅ **defi_master features-scope (orchestrator task R-S6-DEFI-MASTER-FEATURES-SCOPE)** — 6 items shipped:
+         (a) `create-code-tarballs.sh` stale features-* repo names fixed (all 6 category arrays + ALL_SERVICE_REPOS) — deployment-service@a2b3c92;
+         (b) EIGENLAYER `_EIGENLAYER_DATA_TYPE` shard-key drift fixed (`"rewards"` → `"eigenlayer_rewards"`) + docstring corrected — mtds@b3a15d8;
+         (c) Fireblocks DEFERRED-AFTER-CUTOVER checkbox flipped; (d) Consolidator poll-list gap deferred to code_freeze Phase 2.6;
+         (e) STARKNET historical OHLCV marked BLOCKED-OPERATOR-DECISION; (f) Lighter scale-up marked DEFERRED-POST-CUTOVER.
+         PM@67f8f1c2 (plan flips).
 
 ---
 
