@@ -202,6 +202,12 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 | `attempted_failed` | `MissingAvailableAt`                              | Parquet was written but lacks `available_at` column or has nulls — would corrupt LookaheadBiasError downstream gates                                                                                                                                                                                                                                                                           | (legacy parquet may exist; reconciler reflips manifest)        |
 | `attempted_failed` | `EmptyPlaceholderBugBackfill`                     | Reconciler-flipped historical row — pre-fix MDPS wrote 1440-NaN placeholder; reconciler caught it                                                                                                                                                                                                                                                                                              | (legacy parquet exists; reconciler doesn't delete it)          |
 | `attempted_failed` | `RAW_TICK_PARTITION_MISMATCH`                     | MTDS-side partition validator detected upstream-bug at write time                                                                                                                                                                                                                                                                                                                              | NO                                                             |
+| `attempted_failed` | `SCHEMA_VALIDATION_FAILED`                        | Pydantic / dataclass validation rejected the row — hard-required field missing or mistyped (e.g. `base_asset` null for SPOT_PAIR, `pool_address` null for DeFi on-chain instrument). Introduced by `hard_schema_enforcement_2026_05_08.md` Phase 2. `error_detail={field, expected_type, observed_value}` carried in the manifest row. — `uac@3157f45`                                         | NO                                                             |
+| `attempted_failed` | `UPSTREAM_SUBGRAPH_ZERO`                          | DeFi subgraph returned zero rows on a date the instruments-service catalog reports as alive. Must not be silently `empty_confirmed` — flip to `attempted_failed` so alerting fires. Matched to `UpstreamSubgraphZeroError`.                                                                                                                                                                    | NO                                                             |
+| `attempted_failed` | `MALFORMED_ROW_KEY`                               | `ManifestWriter.record_captured` rejected the `row_key` shape: per-instrument shard missing `instrument_id`; bundled shard missing `chain` / `options_chain` / `canonical_question_group`. Phase 4 of `hard_schema_enforcement_2026_05_08.md`.                                                                                                                                                 | NO                                                             |
+| `attempted_failed` | `CLASSIFIED_VENUE_ERROR`                          | Adapter error classified via UAC `classify_venue_error()` (rate-limit / 5xx / timeout / circuit-tripped). Venue-side transient / operational. Typically should retry. Existing `record_failed(error=classify_venue_error(exc))` callsites route here.                                                                                                                                          | NO                                                             |
+| `attempted_failed` | `UNCLASSIFIED_ADAPTER_ERROR`                      | Adapter exception that did NOT pass through `classify_venue_error()` before `record_failed`. Transition-period bucket; Phase 2 of `hard_schema_enforcement` forces every callsite to either use `classify_venue_error()` or a structured enum member. Any production occurrence is a bug in the calling adapter.                                                                               | NO                                                             |
+| `attempted_failed` | `UPSTREAM_LIVE_GAP`                               | MTDS emitted `CONNECTIVITY_GAP_DETECTED` for this (venue, data_type). MDPS detected the gap in MTDS availability manifest and propagates it. Downstream consumers SHOULD skip or alert; gap fills when MTDS auto-backfills on `CONNECTIVITY_RECOVERED`. — `uac@60c0ee9`                                                                                                                        | NO                                                             |
 
 ### Two principles this codifies
 
@@ -218,9 +224,17 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 ---
 
 **Cross-references for the reason taxonomy**:
-- § [Reader-side fallback for legacy rows](#reader-side-fallback-for-legacy-rows-codified-2026-05-07--operator-gap-finding) — how consumers handle `error_reason=None` in rows written before Phase 2.E.1
-- § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
-- Per-asset-group backfill runbook (shipped 2026-05-07): [`codex/02-data/expected-absence-backfill-runbook.md`](./expected-absence-backfill-runbook.md) — volumes per asset_group, invocation recipe, reconciler + enumerator scripts (`instruments-service/scripts/reconcile_expected_absence_reasons.py` + `enumerate_expected_universe.py`), UTL reader-side fallback `classify_legacy_empty_row()`
+
+- §
+  [Reader-side fallback for legacy rows](#reader-side-fallback-for-legacy-rows-codified-2026-05-07--operator-gap-finding)
+  — how consumers handle `error_reason=None` in rows written before Phase 2.E.1
+- § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three
+  `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
+- Per-asset-group backfill runbook (shipped 2026-05-07):
+  [`codex/02-data/expected-absence-backfill-runbook.md`](./expected-absence-backfill-runbook.md) — volumes per
+  asset_group, invocation recipe, reconciler + enumerator scripts
+  (`instruments-service/scripts/reconcile_expected_absence_reasons.py` + `enumerate_expected_universe.py`), UTL
+  reader-side fallback `classify_legacy_empty_row()`
 
 ---
 
@@ -248,23 +262,23 @@ this contract.
 The consumer-class rules above apply uniformly. The table below shows the most common reason codes per asset_group ×
 data_type combination — the patterns engineers hit most in practice:
 
-| asset_group  | data_type           | Most common `EXPECTED_*` reason(s)                                      | Consumer class (typical)                                   |
-| ------------ | ------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `cefi`       | `ohlcv_24h`         | `EXPECTED_INSTRUMENT_DELISTED`; `EXPECTED_INSTRUMENT_NOT_LISTED`        | Feature rolling-window (adjust denominator)                |
-| `cefi`       | `funding_rate`      | `EXPECTED_INSTRUMENT_DELISTED`; `SOURCE_RETURNED_ZERO` (no perp on day) | Strategy live — skip trade; ML — NaN-fill                  |
-| `defi`       | `lending_indices`   | `EXPECTED_PRE_GENESIS_CHAIN`; `EXPECTED_PRE_SOURCE_COVERAGE_START`      | Feature same-day single-sample — emit `record_empty`        |
-| `defi`       | `lst_rates`         | `EXPECTED_PRE_SOURCE_COVERAGE_START`; `EXPECTED_INSTRUMENT_NOT_LISTED`  | Feature rolling-window (adjust denominator)                |
-| `defi`       | `gas_fees`          | `EXPECTED_PRE_GENESIS_CHAIN`                                            | Feature same-day single-sample — emit `record_empty`        |
-| `tradfi`     | `ohlcv_1d`          | `EXPECTED_HOLIDAY`; `EXPECTED_WEEKEND`; `EXPECTED_PARTIAL_HALF_DAY`     | Feature rolling-window (adjust denominator)                |
-| `tradfi`     | `ohlcv_15m`         | `EXPECTED_OUTSIDE_TRADING_HOURS`; `EXPECTED_HOLIDAY`                   | Feature rolling-window (adjust denominator); intraday only |
-| `sports`     | `match_odds`        | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_PRE_SEASON`; `EXPECTED_POST_SEASON` | Feature rolling-window (adjust denominator)                |
-| `sports`     | `match_results`     | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`       | ML training — NaN-fill                                     |
-| `prediction` | `market_prices`     | `EXPECTED_INSTRUMENT_NOT_LISTED`; `EXPECTED_INSTRUMENT_DELISTED`        | ML training — NaN-fill; execution — skip                   |
+| asset_group  | data_type         | Most common `EXPECTED_*` reason(s)                                      | Consumer class (typical)                                   |
+| ------------ | ----------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `cefi`       | `ohlcv_24h`       | `EXPECTED_INSTRUMENT_DELISTED`; `EXPECTED_INSTRUMENT_NOT_LISTED`        | Feature rolling-window (adjust denominator)                |
+| `cefi`       | `funding_rate`    | `EXPECTED_INSTRUMENT_DELISTED`; `SOURCE_RETURNED_ZERO` (no perp on day) | Strategy live — skip trade; ML — NaN-fill                  |
+| `defi`       | `lending_indices` | `EXPECTED_PRE_GENESIS_CHAIN`; `EXPECTED_PRE_SOURCE_COVERAGE_START`      | Feature same-day single-sample — emit `record_empty`       |
+| `defi`       | `lst_rates`       | `EXPECTED_PRE_SOURCE_COVERAGE_START`; `EXPECTED_INSTRUMENT_NOT_LISTED`  | Feature rolling-window (adjust denominator)                |
+| `defi`       | `gas_fees`        | `EXPECTED_PRE_GENESIS_CHAIN`                                            | Feature same-day single-sample — emit `record_empty`       |
+| `tradfi`     | `ohlcv_1d`        | `EXPECTED_HOLIDAY`; `EXPECTED_WEEKEND`; `EXPECTED_PARTIAL_HALF_DAY`     | Feature rolling-window (adjust denominator)                |
+| `tradfi`     | `ohlcv_15m`       | `EXPECTED_OUTSIDE_TRADING_HOURS`; `EXPECTED_HOLIDAY`                    | Feature rolling-window (adjust denominator); intraday only |
+| `sports`     | `match_odds`      | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_PRE_SEASON`; `EXPECTED_POST_SEASON` | Feature rolling-window (adjust denominator)                |
+| `sports`     | `match_results`   | `EXPECTED_PAUSED_LEAGUE`; `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`       | ML training — NaN-fill                                     |
+| `prediction` | `market_prices`   | `EXPECTED_INSTRUMENT_NOT_LISTED`; `EXPECTED_INSTRUMENT_DELISTED`        | ML training — NaN-fill; execution — skip                   |
 
 Use the `n_valid` sibling column on all rolling-window calcs so downstream consumers can observe the effective
-denominator. For same-day single-sample calcs with `empty_confirmed`, emit `record_empty(reason=NO_INPUT_AVAILABLE)`
-for the calc's own output row rather than NaN-filling (the difference: NaN-fill is a value; `record_empty` is honest
-absence with a typed reason).
+denominator. For same-day single-sample calcs with `empty_confirmed`, emit `record_empty(reason=NO_INPUT_AVAILABLE)` for
+the calc's own output row rather than NaN-filling (the difference: NaN-fill is a value; `record_empty` is honest absence
+with a typed reason).
 
 ### Worked example — 20-day moving average with 2 expected-missing days
 
@@ -619,14 +633,14 @@ continuous-verification path for the manifest's `empty_confirmed` / `expected_un
 
 ### Components
 
-| Component          | Path                                                                       | Notes                                               |
-| ------------------ | -------------------------------------------------------------------------- | --------------------------------------------------- |
-| VM launcher        | `deployment-service/scripts/vm/launch-honest-coverage-vm.sh`               | Primary — all asset groups, Cloud Scheduler target  |
-| Ad-hoc launcher    | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`       | Per-asset-group filter via `--asset-group`          |
-| Scheduler setup    | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`         | Creates `honest-coverage-daily` Cloud Scheduler job |
-| Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all` | Runs inside VM, writes to GCS                       |
-| Output bucket      | resolved via `resolve_bucket_name("honest-coverage")/{date}/coverage.json` (actual bucket: `central-element-323112-honest-coverage`) | Consumed by deployment-api |
-| API consumer       | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C)           | UI-facing honest-coverage endpoint                  |
+| Component          | Path                                                                                                                                 | Notes                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| VM launcher        | `deployment-service/scripts/vm/launch-honest-coverage-vm.sh`                                                                         | Primary — all asset groups, Cloud Scheduler target  |
+| Ad-hoc launcher    | `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`                                                                 | Per-asset-group filter via `--asset-group`          |
+| Scheduler setup    | `deployment-service/scripts/vm/setup-honest-coverage-scheduler.sh`                                                                   | Creates `honest-coverage-daily` Cloud Scheduler job |
+| Measurement script | `instruments-service/scripts/measure_honest_coverage.py --asset-group all`                                                           | Runs inside VM, writes to GCS                       |
+| Output bucket      | resolved via `resolve_bucket_name("honest-coverage")/{date}/coverage.json` (actual bucket: `central-element-323112-honest-coverage`) | Consumed by deployment-api                          |
+| API consumer       | `deployment-api GET /api/data-status/honest-coverage` (Phase 2C)                                                                     | UI-facing honest-coverage endpoint                  |
 
 ### Cron schedule
 
@@ -674,7 +688,7 @@ The scenario harness can produce **synthetic gaps** via two `ScenarioMutationSpe
 Every manifest row produced by a scenario injection carries:
 
 - `synthetic=true` on the emitted event (alerting-service suppresses paging on `synthetic=true` rows)
-- `scenario_id: str` — the snake\_case scenario identifier from the UAC `SCENARIO_REGISTRY`
+- `scenario_id: str` — the snake_case scenario identifier from the UAC `SCENARIO_REGISTRY`
 
 Downstream consumers receiving a scenario-injected gap row MUST use the `scenario_id` column to distinguish
 scenario-fire from real-fire when computing quality metrics or firing alerts. The `ScenarioReport` parquet produced by
@@ -682,16 +696,17 @@ scenario-fire from real-fire when computing quality metrics or firing alerts. Th
 
 ### Consumer-class behavior under synthetic gaps
 
-The consumer-class rules from the [Per-service consumer-class audit](#per-service-consumer-class-audit-2026-05-07--operator-direction)
-table apply unchanged for synthetic gaps — the consumer does not need to know the gap is synthetic in order to apply the
-correct handling (skip / NaN-fill / alert). The two scenario-aware differences are:
+The consumer-class rules from the
+[Per-service consumer-class audit](#per-service-consumer-class-audit-2026-05-07--operator-direction) table apply
+unchanged for synthetic gaps — the consumer does not need to know the gap is synthetic in order to apply the correct
+handling (skip / NaN-fill / alert). The two scenario-aware differences are:
 
 1. **Alerting suppression**: alerting-service checks `synthetic=true` before firing a page. Human-facing alerts do NOT
-   fire for scenario rows. Internal `SCENARIO_OUTCOME_ASSERTION_FAILED` alerts still fire (they are test-harness signals,
-   not production pages).
+   fire for scenario rows. Internal `SCENARIO_OUTCOME_ASSERTION_FAILED` alerts still fire (they are test-harness
+   signals, not production pages).
 2. **Attribution audit**: downstream services that write secondary manifests (features-service, strategy-service) must
-   propagate `scenario_id` on their own output rows so the full scenario-fire provenance chain is traceable from
-   MTDS input → features output → strategy signal.
+   propagate `scenario_id` on their own output rows so the full scenario-fire provenance chain is traceable from MTDS
+   input → features output → strategy signal.
 
 ### Manifest-layer scope
 

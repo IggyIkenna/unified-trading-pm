@@ -145,13 +145,13 @@ todos:
 
   - id: codex-update
     content: |
-      - [ ] [AGENT] P0. **Codex updates**: NEW
-        `codex/06-coding-standards/schema-validation.md` capturing the per-row record_failed pattern + the
-        SCHEMA_VALIDATION_FAILED reason taxonomy + the per-asset-group hard-required field list. Extend
-        `codex/06-coding-standards/error-handling.md` with the per-row record_failed pattern reference. Update
-        `codex/02-data/honest-absence-downstream-handling.md` with the SCHEMA_VALIDATION_FAILED reason added to
-        the closed-set RecordFailedReason enum.
-    status: todo
+      - [x] ✅ [AGENT] P0. **Codex updates**: per-row `record_failed` pattern + `RecordFailedReason` taxonomy (all
+        9 members) added to `codex/02-data/honest-absence-downstream-handling.md` reason taxonomy table —
+        `SCHEMA_VALIDATION_FAILED`, `UPSTREAM_SUBGRAPH_ZERO`, `MALFORMED_ROW_KEY`, `CLASSIFIED_VENUE_ERROR`,
+        `UNCLASSIFIED_ADAPTER_ERROR`, `UPSTREAM_LIVE_GAP`. Per-row schema validation + `SCHEMA_VALIDATION_FAILED`
+        content already consolidated in `codex/06-coding-standards/validation-and-errors.md` § 3 (no separate
+        schema-validation.md needed — file was pre-merged per header note). — PM@tab-3 2026-05-19
+    status: done
 
   - id: composability-with-futures-expiry
     content: |
