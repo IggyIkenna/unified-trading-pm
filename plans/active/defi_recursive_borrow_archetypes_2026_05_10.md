@@ -141,7 +141,8 @@ window if Phase 1 starts immediately.
 > flip, perp-venue outage, cross-venue delta drift) that warrants explicit enum-level visibility (drawdown 0.05 / breach
 > 0.03 per
 > [`archetype_config.py:169-177`](../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py#L169-L177)).
-> Family 1 = `CARRY_RECURSIVE_BORROW_LENDING_ONLY`; Family 2 = `CARRY_RECURSIVE_BORROW_PERP_HEDGED`.
+> Family 1 = `CARRY_RECURSIVE_BORROW_LENDING_ONLY`; Family 2 = `CARRY_BASIS_PERP_INV` (formerly
+> `CARRY_RECURSIVE_BORROW_PERP_HEDGED` — renamed 2026-05-18 per taxonomy V-1, uac@0196842).
 
 > **AD-2**. The recursion is **purely lending-side**. Perp leg (Family 2) is a single matched short, separately
 > USDC-margined. Hyperliquid / Bybit / OKX are USDC-margin-only — borrowed ETH cannot be posted as perp margin without
@@ -241,7 +242,8 @@ operator ack visible in chat or commit co-authoring metadata.
 
 - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py:76-78` —
   `CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) + `CARRY_RECURSIVE_BORROW_PERP_HEDGED` (Family 2) enum members
-  ALREADY SHIPPED. AD-1 PR scope shrinks accordingly.
+  ALREADY SHIPPED. AD-1 PR scope shrinks accordingly. _(Family 2 later renamed to `CARRY_BASIS_PERP_INV` 2026-05-18 per
+  taxonomy V-1.)_
 - `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py:54-119` — `AAVE_V3_ETHEREUM_RESERVES`
   ships **10 reserves** (USDC, USDT, DAI, WETH, WBTC, WSTETH, WEETH, CBETH, LINK, AAVE) — NOT 8 as claimed in plan body
   intro; correct on next plan-body sweep.
@@ -595,22 +597,22 @@ In-plan P0 (blocks Phase 5-8 implementation):
       execution-service per System-First — venue-cap pre-trade gate is execution responsibility, not strategy-service.)
 - [x] [risk] **P0**. Bybit counterparty cap policy: **cap Bybit notional at ≤50% of Hyperliquid leg for first 30 days
       post-cutover** (Feb-2025-hack trust-premium discount). Codify in strategy-service archetype config +
-      risk-and-exposure-service venue-cap table.
-      **SHIPPED 2026-05-18** (slot 4): UAC-unified — new `RiskRuleId.COUNTERPARTY_RATIO_CAP` + `CounterpartyRatioCapTrigger`
-      (reference_venue / cap_ratio_of_reference / secondary_venue fields) in `canonical/crosscutting/risk_rule.py`;
-      4th rule added to `_BYBIT_RULES` in `registry/risk_rules/venue.py` (BLOCK, cap=0.50 of HL notional,
-      triggers_kill_switch=False); `bybit_notional_cap_pct_of_hl=0.50` seeded on `CARRY_RECURSIVE_BORROW_PERP_HEDGED`
-      in `ArchetypeConfig`. `CounterpartyRatioCapTrigger` re-exported at `risk.py` public facade.
-      QG: all 122s passing. unified-api-contracts@c29114c.
+      risk-and-exposure-service venue-cap table. **SHIPPED 2026-05-18** (slot 4): UAC-unified — new
+      `RiskRuleId.COUNTERPARTY_RATIO_CAP` + `CounterpartyRatioCapTrigger` (reference_venue / cap_ratio_of_reference /
+      secondary_venue fields) in `canonical/crosscutting/risk_rule.py`; 4th rule added to `_BYBIT_RULES` in
+      `registry/risk_rules/venue.py` (BLOCK, cap=0.50 of HL notional, triggers_kill_switch=False);
+      `bybit_notional_cap_pct_of_hl=0.50` seeded on `CARRY_RECURSIVE_BORROW_PERP_HEDGED` in `ArchetypeConfig`.
+      `CounterpartyRatioCapTrigger` re-exported at `risk.py` public facade. QG: all 122s passing.
+      unified-api-contracts@c29114c.
 
 In-plan P1 (blocks polish, may defer to Phase 9-12):
 
-- [ ] [risk-and-exposure-service] **P0.5**. Wire `COUNTERPARTY_RATIO_CAP` rule into risk-and-exposure-service
-      pre-flight evaluator. UAC seeded (rule + trigger at `unified-api-contracts@c29114c`). R&E service must call
+- [ ] [risk-and-exposure-service] **P0.5**. Wire `COUNTERPARTY_RATIO_CAP` rule into risk-and-exposure-service pre-flight
+      evaluator. UAC seeded (rule + trigger at `unified-api-contracts@c29114c`). R&E service must call
       `iter_applicable_rules(venue="bybit", rule_id=COUNTERPARTY_RATIO_CAP)` at Layer 2 + evaluate
-      `CounterpartyRatioCapTrigger` against live HL notional from position-balance state. Blocks hard enforcement
-      of the 30-day Bybit cap. **DEFERRED**: successor = next risk-and-exposure-service slot allocation.
-      **MIGRATED FROM: 2026-05-18 slot-4 deferred-work scoreboard.**
+      `CounterpartyRatioCapTrigger` against live HL notional from position-balance state. Blocks hard enforcement of the
+      30-day Bybit cap. **DEFERRED**: successor = next risk-and-exposure-service slot allocation. **MIGRATED FROM:
+      2026-05-18 slot-4 deferred-work scoreboard.**
 - [ ] [features-service (onchain family)] **P1**. New feature: `funding_rate_apr_rolling_30d_mean` per
       `(perp_venue, perp_pair)` — feeds Phase 7.5 adaptive sizing. Defer past May-23 if Phase 7 baseline ships green.
 - [ ] [risk-and-exposure-service] **P1**. Integration test: cross-venue netting
