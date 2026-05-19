@@ -318,6 +318,12 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 > `KillSwitchBusSubscriberBase` to absorb 4× duplicated kill-switch subscriber boilerplate (~80-100 LOC each). Two UTL
 > PRs + one strategy-service PR removing local copies. ~2 cal-AI-days. Blocked-on: slot 4 Phase 4 (imports rewritten
 > before lifts).
+>
+> **🟢 STATUS 2026-05-19 ~21:30 UTC** — Phase 4 QG gate DONE (strategy-service@7265289a). Phase 5 UTL lifts DEFERRED to
+> post-cutover (UTL changes too risky 4 days before May-23 live DeFi launch). Phase 6 boot+QG parity ✅ (12/12 pairs,
+> strategy-service@91f701b0). Phase 7 pre-steps done: DEPRECATION_NOTICE in 3 repos, workspace-manifest updated,
+> operator ping filed (PM@e88149a28). Awaiting operator `gh repo archive` for Phase 7 completion. Phases 8A/9/10 blocked
+> on Phase 7.
 
 **Part A — writegate Phase 6.6/6.7** (plan at 52%, 11.5 cal left):
 
@@ -341,8 +347,9 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
          Phase 3.5 COMPLETE. — MTDS@99fc7b3 (pre-shipped 2026-05-17)
 6. - [x] ✅ **Phase 4 MDPS live consumer** — LiveStreamAggregator + 7 Protocol adapters + consumer wiring shipped. —
          mdps@0068b2f (pre-shipped 2026-05-11)
-7. - [ ] **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference
-         gap-blocking). (0.5 cal)
+7. - [x] ✅ **Plan flips** for all shipped items + downstream AUDIT P0 items (ml-training NaN-fill + ml-inference
+         gap-blocking). (0.5 cal) — live_pipeline Phase 3+4 [x] confirmed; writegate audit items ml-training@1760 +
+         ml-inference@1764 already [x]; backfilled PM@f46c26a50 2026-05-19.
 
 ---
 
@@ -354,6 +361,10 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
 > `gh repo archive` of risk + position + pnl source repos once parity green. Operator-gated `gh archive` step — file
 > ping in `_agent_pings.md`. ~2 cal-AI-days. Blocked-on: slot 4 Phase 4. **Hard stop**: do NOT proceed to Phase 7
 > archive if Phase 6 RED — flip plan to `BLOCKED-CUTOVER` and notify operator.
+>
+> **🟢 STATUS 2026-05-19 ~21:30 UTC (completed by slot-5)** — Phase 6 ✅: boot 12/12 pairs EXIT=0, QG 4059 passed,
+> strategy_parity_diff.py shipped strategy-service@91f701b0. Phase 7: DEPRECATION_NOTICE committed to all 3 source
+> repos, operator archive ping filed PM@e88149a28. Awaiting operator `gh repo archive` for Phase 7 to complete.
 
 **Plan**: `deployment_ui_lifecycle_tabs_2026_05_08.md` (30.0 cal, no progress yet — TBD baseline).
 
