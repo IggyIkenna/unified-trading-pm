@@ -1,7 +1,7 @@
 # Ikenna's agent-orchestrator VM — onboarding
 
-> **Status**: provisioned 2026-05-19. VM is up, workspace cloned, 12 slots ready.
-> Backend service + DNS + TLS still need YOUR setup (steps below).
+> **Status**: provisioned 2026-05-19. VM is up, workspace cloned, 12 slots ready. Backend service + DNS + TLS still need
+> YOUR setup (steps below).
 >
 > **Authored**: Harsh + Claude, 2026-05-19. Workspace SSOT for ops procedures lives in `codex/05-infrastructure/`.
 
@@ -12,8 +12,8 @@
 You'll run **two Cursor windows side-by-side**:
 
 1. **Local Cursor (on your Mac)** — same as today. General dev, planning, lightweight edits, reading the PM repo.
-2. **Remote Cursor (SSH'd into the VM)** — for any session where you spawn the **Claude extension**. The Claude
-   agent running inside that Cursor process can:
+2. **Remote Cursor (SSH'd into the VM)** — for any session where you spawn the **Claude extension**. The Claude agent
+   running inside that Cursor process can:
    - read/write all 27 workspace repos at `/home/ubuntu/unified-trading-system-repos/`
    - spawn workers via tmux on the VM (16 vCPU / 64 GB headroom)
    - touch any of the 12 per-slot worktrees at `.tabs/1..12/<repo>/`
@@ -25,20 +25,20 @@ You'll run **two Cursor windows side-by-side**:
 
 ## What's already set up
 
-| Resource | Value |
-| --- | --- |
-| EC2 instance | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB / Intel Granite Rapids) |
-| Region / AZ | `ap-northeast-1` / `ap-northeast-1c` |
-| Public IP | `35.78.213.80` |
-| Boot disk | 300 GB gp3 (~4.8 GB used) |
-| OS | Ubuntu 24.04 LTS, kernel 6.17 |
-| Pre-installed | nginx, certbot, git, build tools, tmux, uv 0.11.15, Python 3.13.13 |
-| Workspace root | `/home/ubuntu/unified-trading-system-repos/` |
-| Repos cloned | 27 of 28 (skipped: `new-sports-batting-services` — your PAT lacks access to that CosmicTrader repo) |
-| Slot worktrees | 12 × 27 = 324 worktrees on branches `tab/ikennaigboaka/1..12` |
-| AWS IAM | account `427895769566`, `harsh-worker` creds in `~/.aws/credentials` (replace with your own — see below) |
-| SSH keypair | EC2 keypair `agent-orchestrator-key`; private key in AWS Secrets Manager at `arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:agent-orchestrator-vm-ssh-private` |
-| Security group | `sg-066c852065f8cdcac` (ports 22/80/443/8765 open from 0.0.0.0/0) |
+| Resource       | Value                                                                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EC2 instance   | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB / Intel Granite Rapids)                                                                                            |
+| Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                                                                      |
+| Public IP      | `35.78.213.80`                                                                                                                                                            |
+| Boot disk      | 300 GB gp3 (~4.8 GB used)                                                                                                                                                 |
+| OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                                                             |
+| Pre-installed  | nginx, certbot, git, build tools, tmux, uv 0.11.15, Python 3.13.13                                                                                                        |
+| Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                                                                                              |
+| Repos cloned   | 27 of 28 (skipped: `new-sports-batting-services` — your PAT lacks access to that CosmicTrader repo)                                                                       |
+| Slot worktrees | 12 × 27 = 324 worktrees on branches `tab/ikennaigboaka/1..12`                                                                                                             |
+| AWS IAM        | account `427895769566`, `harsh-worker` creds in `~/.aws/credentials` (replace with your own — see below)                                                                  |
+| SSH keypair    | EC2 keypair `agent-orchestrator-key`; private key in AWS Secrets Manager at `arn:aws:secretsmanager:ap-northeast-1:427895769566:secret:agent-orchestrator-vm-ssh-private` |
+| Security group | `sg-066c852065f8cdcac` (ports 22/80/443/8765 open from 0.0.0.0/0)                                                                                                         |
 
 **Cost**: ~$1.00/hr on-demand. With AWS credits, effectively free.
 
@@ -46,26 +46,28 @@ You'll run **two Cursor windows side-by-side**:
 
 ## 🔧 EOD 2026-05-19 pickup list — for your main agent to finish
 
-> **Update**: more was completed tonight than the per-step section below documents. Backend systemd, nginx HTTP, uv sync, JWT secret, and `backends.json` wire-up are all DONE. Below is the **minimum remaining work** to make `https://agent-orchestrator.odum-research.com` live for you. Hand this to your main agent.
+> **Update**: more was completed tonight than the per-step section below documents. Backend systemd, nginx HTTP, uv
+> sync, JWT secret, and `backends.json` wire-up are all DONE. Below is the **minimum remaining work** to make
+> `https://agent-orchestrator.odum-research.com` live for you. Hand this to your main agent.
 
 ### Status snapshot
 
-| Item | State |
-| --- | --- |
-| EC2 VM `m8i.4xlarge` running | ✅ done (Harsh) |
-| 27 workspace repos + 12 slot worktrees | ✅ done (Harsh) |
-| All sibling repos on `live-defi-rollout` (agent-orchestrator on `main`) | ✅ done (Harsh) |
-| `agent-orchestrator` `uv sync` (Python deps) | ✅ done (Harsh) |
-| JWT secret generated + in `.env.local` | ✅ done (Harsh) — value also backed up to AWS Secrets Manager as `agent-orchestrator-jwt-secret` |
-| `orchestrator.service` systemd unit installed + running | ✅ done (Harsh) — `sudo systemctl status orchestrator` confirms |
-| nginx :80 reverse proxy → 127.0.0.1:8765 | ✅ done (Harsh) — external smoke: `curl http://35.78.213.80/api/healthz` returns 200 |
-| `data/config/backends.json` updated with `ikenna-vm` as default | ✅ done (Harsh) — committed to `IggyIkenna/agent-orchestrator:main@66923e7` |
-| **DNS** `api.agent-orchestrator.odum-research.com` → `35.78.213.80` | 🔧 **Ikenna only** (Squarespace) |
-| **TLS** via certbot | 🔧 needs DNS first |
-| **GitHub auth** on VM (so agents can git push/pull) | 🔧 Ikenna identity required |
-| **Anthropic / Claude CLI** auth on VM | 🔧 Ikenna identity required |
-| **Bootstrap users** on backend | 🔧 Ikenna picks his password |
-| **Firebase Hosting deploy** of SPA (currently 404s — site exists, no bundle) | 🔧 Ikenna's Firebase project |
+| Item                                                                         | State                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EC2 VM `m8i.4xlarge` running                                                 | ✅ done (Harsh)                                                                                                                                                                               |
+| 27 workspace repos + 12 slot worktrees                                       | ✅ done (Harsh)                                                                                                                                                                               |
+| All sibling repos on `live-defi-rollout` (agent-orchestrator on `main`)      | ✅ done (Harsh)                                                                                                                                                                               |
+| `agent-orchestrator` `uv sync` (Python deps)                                 | ✅ done (Harsh)                                                                                                                                                                               |
+| JWT secret generated + in `.env.local`                                       | ✅ done (Harsh) — value also backed up to AWS Secrets Manager as `agent-orchestrator-jwt-secret`                                                                                              |
+| `orchestrator.service` systemd unit installed + running                      | ✅ done (Harsh) — `sudo systemctl status orchestrator` confirms                                                                                                                               |
+| nginx :80 reverse proxy → 127.0.0.1:8765                                     | ✅ done (Harsh) — external smoke: `curl http://35.78.213.80/api/healthz` returns 200                                                                                                          |
+| `data/config/backends.json` updated with `ikenna-vm` as default              | ✅ done (Harsh) — committed to `IggyIkenna/agent-orchestrator:main@66923e7`                                                                                                                   |
+| **DNS** `api.agent-orchestrator.odum-research.com` → `35.78.213.80`          | 🔧 **Ikenna only** (Squarespace)                                                                                                                                                              |
+| **TLS** via certbot                                                          | 🔧 needs DNS first                                                                                                                                                                            |
+| **GitHub auth** on VM (so agents can git push/pull)                          | 🔧 Ikenna identity required                                                                                                                                                                   |
+| **Anthropic / Claude CLI** auth on VM                                        | ✅ done (slot-1 2026-05-19) — Node 22 + `claude` 2.1.144 installed, OAuth via Max plan; `~/.claude/.credentials.json` confirms `subscriptionType=max`, `rateLimitTier=default_claude_max_20x` |
+| **Bootstrap users** on backend                                               | 🔧 Ikenna picks his password                                                                                                                                                                  |
+| **Firebase Hosting deploy** of SPA (currently 404s — site exists, no bundle) | 🔧 Ikenna's Firebase project                                                                                                                                                                  |
 
 ### Sequenced commands for your main agent
 
@@ -117,7 +119,7 @@ gcloud secrets versions access latest --secret=GH_PAT --project=central-element-
 # expect: first 10 chars of PAT (confirms read access)
 ```
 
-**4. (VM) Install Node + Claude CLI + auth**
+**4. (VM) Install Node + Claude CLI + auth — DONE 2026-05-19 (Max plan, NOT API key)**
 
 ```bash
 # Node from NodeSource (Ubuntu's apt has an older version)
@@ -125,9 +127,24 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 sudo npm install -g @anthropic-ai/claude-code
-claude login   # browser flow; use YOUR Anthropic account (per D15 — separate from Harsh's)
+
+# OAuth flow — uses your Claude Max subscription (NO ANTHROPIC_API_KEY env var must be set
+# in your interactive shell; if it is, Claude Code bills per-token via API instead of Max).
+# Just run `claude` for the first time — the first-run wizard walks through:
+#   1. theme (pick any)
+#   2. login method → select "Claude account with subscription · Pro, Max, Team, or Enterprise"
+#   3. it prints an OAuth URL — open on any browser, sign in with ikenna@odum-research.com,
+#      copy the verification code shown after approval, paste back into the terminal prompt
+#   4. confirm `/home/ubuntu` trust prompt → done
+claude        # NOT `claude login` — the first-run wizard handles auth automatically
 claude --version
+
+# Verify Max plan was used (not API):
+python3 -c "import json; d=json.load(open('$HOME/.claude/.credentials.json'))['claudeAiOauth']; print('subscriptionType:', d['subscriptionType'], '| tier:', d['rateLimitTier'])"
+# Expected: subscriptionType: max | tier: default_claude_max_20x
 ```
+
+If you need to re-auth (e.g. after token refresh failure), run `claude /logout` then `claude` again.
 
 **5. (VM) Bootstrap backend users**
 
@@ -155,7 +172,8 @@ Certbot auto-edits the nginx config and sets up auto-renew via systemd timer.
 
 **7. (Mac OR VM) First Firebase Hosting deploy of the SPA**
 
-This is the missing piece that's making `https://agent-orchestrator.odum-research.com` show the Firebase "Site Not Found" page. The Hosting site exists (Step P2 of your cutover plan) but no SPA bundle has been pushed yet.
+This is the missing piece that's making `https://agent-orchestrator.odum-research.com` show the Firebase "Site Not
+Found" page. The Hosting site exists (Step P2 of your cutover plan) but no SPA bundle has been pushed yet.
 
 ```bash
 # From your laptop OR VM — wherever you have firebase-tools auth
@@ -250,7 +268,8 @@ In Cursor:
 1. `Cmd+Shift+P` → **Remote-SSH: Connect to Host...** → pick `agent-orchestrator-vm`
 2. New window opens; bottom-left status shows `SSH: agent-orchestrator-vm`
 3. **File → Open Folder** → `/home/ubuntu/unified-trading-system-repos`
-4. (Optional) `cp .tabs/1/unified-trading-system-repos.code-workspace ~/agent-orch-slot1.code-workspace` and **File → Open Workspace from File** for the multi-root view scoped to slot 1
+4. (Optional) `cp .tabs/1/unified-trading-system-repos.code-workspace ~/agent-orch-slot1.code-workspace` and **File →
+   Open Workspace from File** for the multi-root view scoped to slot 1
 
 ---
 
@@ -329,25 +348,35 @@ aws sts get-caller-identity  # should print your IAM user, not harsh-worker
 
 ---
 
-## Step 6 — Install Claude CLI
+## Step 6 — Install Claude CLI + Max-plan OAuth
+
+> **Billing model**: this uses your Claude **Max subscription**, not the Anthropic API (pay-per-token). If
+> `ANTHROPIC_API_KEY` is set in your shell, Claude Code uses API billing and your Max plan is bypassed. Keep the env var
+> unset in your interactive shell. The orchestrator service may still set the API key in its systemd unit for
+> programmatic Claude calls — that's separate and intentional.
 
 ```bash
-# Install Node (needed for the npm-distributed CLI)
-sudo apt-get install -y nodejs npm
+# Node from NodeSource (Ubuntu's apt nodejs is too old for the CLI)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
 # Install Claude CLI globally
 sudo npm install -g @anthropic-ai/claude-code
 
-# Login (this opens a browser flow)
-claude login
-# Use your Anthropic account (separate from Harsh's — see D15 in the dual-deployment design doc)
+# First-run wizard handles auth — DO NOT run `claude login` (it's not a subcommand).
+claude
+# Walks you through:
+#   theme → "Claude account with subscription · Pro, Max, Team, or Enterprise" → OAuth URL
+# Open the URL in any browser, sign in with ikenna@odum-research.com (your Max account),
+# copy the verification code, paste into the terminal prompt → done.
 ```
 
-Verify:
+Verify Max plan (not API) is the auth path:
 
 ```bash
 claude --version
-which claude
+python3 -c "import json; d=json.load(open('$HOME/.claude/.credentials.json'))['claudeAiOauth']; print(d['subscriptionType'], d['rateLimitTier'])"
+# Expected: max default_claude_max_20x
 ```
 
 ---
@@ -398,8 +427,8 @@ curl -s http://127.0.0.1:8765/healthz
 # should print: {"status":"ok",...}
 ```
 
-Ctrl-C the foreground server when satisfied. Then wire it as a systemd service (`scripts/orchestrator.service`
-already in the repo — copy to `/etc/systemd/system/`, edit paths, `systemctl enable --now orchestrator`).
+Ctrl-C the foreground server when satisfied. Then wire it as a systemd service (`scripts/orchestrator.service` already
+in the repo — copy to `/etc/systemd/system/`, edit paths, `systemctl enable --now orchestrator`).
 
 ---
 
@@ -472,11 +501,13 @@ Then trigger a Firebase Hosting redeploy from the agent-orchestrator repo (your 
 ## How the two-Cursor workflow looks in practice
 
 **Local Cursor**:
+
 - Edit `unified-trading-pm/plans/...` for planning work
 - Browse architecture docs
 - Quick file edits where you don't need workspace-wide context
 
 **Remote Cursor (SSH → VM)**:
+
 - Open Cursor → Remote-SSH → `agent-orchestrator-vm`
 - Open `/home/ubuntu/unified-trading-system-repos/`
 - Open the Claude extension panel
@@ -488,6 +519,7 @@ Then trigger a Firebase Hosting redeploy from the agent-orchestrator repo (your 
   - Run `gcloud`, `aws`, `claude`, `git` — all your auth is here on the VM
 
 When you want to manage agents/slots via the dashboard:
+
 - Open `https://agent-orchestrator.odum-research.com` in your browser (Firebase-hosted SPA)
 - Dropdown is already pre-set to `Ikenna (VM)` (after Step 11)
 - Log in with the credentials from Step 8
@@ -497,20 +529,30 @@ When you want to manage agents/slots via the dashboard:
 
 ## Known gaps / things to come back to
 
-- **`new-sports-batting-services`** repo not cloned — your fine-grained PAT doesn't have access to this `CosmicTrader/*` repo. Grant access to your PAT (GitHub → Settings → PATs → edit → add repo access) then `cd /home/ubuntu/unified-trading-system-repos && git clone git@github.com:CosmicTrader/new-sports-batting-services.git` + re-run `setup-tab-worktrees.sh --add-slot 1..12`.
-- **Cloud Run staging in europe-west4** (your existing P1 deployment) is now redundant. Tear down when convenient: `gcloud run services delete agent-orchestrator-staging --region europe-west4 --project central-element-323112`.
-- **systemd unit + nginx config** above are the canonical pattern but I haven't run them — your call when to flip the backend from foreground-test to systemd-managed.
-- **Slack notifications** wiring (your P0 successor) — `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret will need to flow into the VM systemd env file.
+- **`new-sports-batting-services`** repo not cloned — your fine-grained PAT doesn't have access to this `CosmicTrader/*`
+  repo. Grant access to your PAT (GitHub → Settings → PATs → edit → add repo access) then
+  `cd /home/ubuntu/unified-trading-system-repos && git clone git@github.com:CosmicTrader/new-sports-batting-services.git` +
+  re-run `setup-tab-worktrees.sh --add-slot 1..12`.
+- **Cloud Run staging in europe-west4** (your existing P1 deployment) is now redundant. Tear down when convenient:
+  `gcloud run services delete agent-orchestrator-staging --region europe-west4 --project central-element-323112`.
+- **systemd unit + nginx config** above are the canonical pattern but I haven't run them — your call when to flip the
+  backend from foreground-test to systemd-managed.
+- **Slack notifications** wiring (your P0 successor) — `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret will need to flow into
+  the VM systemd env file.
 
 ---
 
 ## Troubleshooting
 
-- **SSH fails with "permission denied"**: `chmod 600 ~/.ssh/agent-orchestrator-key`, verify key matches what's in EC2 (fingerprint `7xWw4Rd4Z2YuSF3I9CMjg47IEZWbPJyBIGUhloQiKgc=`).
+- **SSH fails with "permission denied"**: `chmod 600 ~/.ssh/agent-orchestrator-key`, verify key matches what's in EC2
+  (fingerprint `7xWw4Rd4Z2YuSF3I9CMjg47IEZWbPJyBIGUhloQiKgc=`).
 - **Cursor Remote SSH hangs**: kill `~/.vscode-server/` on VM, reconnect.
 - **`uv sync` fails**: ensure `~/.local/bin` is on PATH (`export PATH="$HOME/.local/bin:$PATH"` in `~/.bashrc`).
-- **Backend 401 on login despite correct password**: check `ORCHESTRATOR_USERS_JSON` env var points at the file you bootstrapped users in.
-- **VM cost concerns**: `aws ec2 stop-instances --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1` halts billing for compute (EBS still ~$24/mo). `start-instances` to resume — the public IP changes, so you'd update DNS too. For continuous use, leave it running.
+- **Backend 401 on login despite correct password**: check `ORCHESTRATOR_USERS_JSON` env var points at the file you
+  bootstrapped users in.
+- **VM cost concerns**: `aws ec2 stop-instances --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1` halts
+  billing for compute (EBS still ~$24/mo). `start-instances` to resume — the public IP changes, so you'd update DNS too.
+  For continuous use, leave it running.
 
 ---
 
