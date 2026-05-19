@@ -131,8 +131,8 @@ todos:
 
         **Critical**: run from a same-region GCE VM per CLAUDE.md "phantom audit re-runnable recipe" rule —
         cross-region listing is 18× slower (~12 prefixes/sec from laptop vs 222/sec on `asia-northeast1-c`).
-    status: todo
-    note: ""
+    status: done
+    note: "Shipped unified-trading-pm@0cc633c8 (doc) + @12483f5b (plan flip). Pre-audit artifact at plans/archive/issues/gcs_migration_bundle_preaudit_2026_05_08.md."
 
   - id: phase-1a-uac-pipeline-mode-enum
     content: |
@@ -180,8 +180,8 @@ todos:
         (3) manifest row schema extension is back-compat with None default.
 
         QG: UAC quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "Shipped unified-api-contracts@8bc3f2a."
 
   - id: phase-1b-utl-manifestwriter-pipeline-mode-param
     content: |
@@ -210,8 +210,8 @@ todos:
         (4) post-Phase-5: removing the default raises if pipeline_mode is omitted (explicit-or-fail).
 
         QG: UTL quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: "Shipped unified-trading-library@87134364 — pipeline_mode kwarg on all 5 record_* methods + 11 unit tests."
 
   - id: phase-1c-uac-source-priority-pipeline-mode-mapping
     content: |
@@ -539,7 +539,11 @@ todos:
         count = 0 reported per asset_group + recorded inline in this plan's Phase 6 done-definition (NOT a separate
         issue doc). Composes with `manifest_schema_final_gate_2026_05_09` Phase 7.F phantom gate.
     status: todo
-    note: ""
+    note: |
+      NOT NEEDED (2026-05-19): post-Phase-3 phantoms are Axis-10 FALSE POSITIVES — parquets exist at new
+      pipeline_mode=batch_*/ paths. DO NOT run --apply; that would corrupt real captured rows to attempted_failed.
+      Correct remedy: Axis-10 reconciler fix (instruments-service@8accb30) + re-audit with fixed reconciler.
+      Pre-migration baseline of 354 residual phantoms was cleared by the migration drift-axis sweep.
 
   - id: phase-7-codex-ssot-updates
     content: |
