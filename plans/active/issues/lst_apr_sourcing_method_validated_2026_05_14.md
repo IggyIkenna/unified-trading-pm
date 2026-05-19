@@ -169,12 +169,13 @@ sub-agent picks up this thread).
       per-commit run since it requires Secret Manager + live network — operator runs via
       `python3 scripts/smoke_test_cbeth_history.py` from the workspace `.venv-workspace`. Follow-up: add a weekly /
       per-PR-touching-`lst_rates_handler` smoke trigger if cross-source drift becomes a recurring concern.
-- [ ] [SCRIPT] P2. Add `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no
+- [x] **FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE)** [SCRIPT] P2. Add `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no
       auth), emit `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER
       (NICE-TO-HAVE)**: requires new UTL `external_apis/` subpackage (architectural decision) + new event type
       `MANIFEST_CROSS_SOURCE_DRIFT`. On-chain canonical source already wired; this is a secondary smoke for drift
       detection only. Successor: file a separate plan once UTL `external_apis/` subpackage shape is decided (currently 1
-      candidate consumer; needs ≥2 to justify a new subpackage).
+      candidate consumer; needs ≥2 to justify a new subpackage). **FORMALLY CLOSED 2026-05-19 slot-5** — on-chain
+      canonical source already wired + validated; this cross-source drift check is post-cutover scope.
 - [x] [PLAN] P2. Cross-link this issue doc from `defi_master_2026_05_07.md` § "Real residual concerns" (after "Solana
       coverage genuinely thin" bullet). (shipped in this commit)
 - [x] [PLAN] P2. Slot 1 main: add a row to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator"
