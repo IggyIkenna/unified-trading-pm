@@ -196,6 +196,11 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 12. - [x] ✅ **Batch-32 method-size refactor — config/grid_v2_registry.py** — all 3 violations (130L, 163L, 205L)
           extracted to private helpers; all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
           allowlist. execution-service@911b4ffde (2026-05-19; allowlist 11→10, slot-4 cumulative 99 files cleared)
+13. - [x] ✅ **Batch-32 method-size refactor — config/grid_generator_v2.py** — all 3 violations (157L, 199L, 215L)
+          extracted to 7 additional private helpers (_build_venue_section, _build_grid_metadata,
+          _load_strategy_components, _update_stats, _accumulate_strategy_configs, _finalize_gen_output,
+          _setup_gen_context); all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
+          allowlist. execution-service@f27e5fc13 (2026-05-19; allowlist 10→9, slot-4 cumulative 100 files cleared)
 
 ---
 
