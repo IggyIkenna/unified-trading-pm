@@ -3,6 +3,63 @@
 
 ---
 
+## [main → slot 2] 2026-05-19 Write-pause prep dispatch — pre-stage L3/L5 flips while waiting on operator
+
+**Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
+
+**Context**: Slot 2's L3/L5 flips (work_split items 1+2) are gated on operator-triggered write-pause. Slot 2 should NOT
+sit idle — do the prep so the post-signal push is a 5-min mechanical step, not a 3-4 cal AI-day refactor under time
+pressure.
+
+**Tasks (do in order; all unblocked NOW; no operator signal required for any of these)**:
+
+1. **L3 consumer audit** — in `.tabs/2/unified-trading-library/`, run:
+
+   ```bash
+   rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests' -l
+   rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests' -c | sort -t: -k2 -rn
+   ```
+
+   Enumerate all callsites in `cloud_constants.py` + wrappers + downstream callers. Confirm the 36+ count from
+   work_split. Document the manifest in a temp note (not committed) for use in the refactor.
+
+2. **L3 refactor on local branch — DO NOT PUSH** — apply `get_bucket_name` → `resolve_bucket_name(...)` mechanical
+   rewrite across all enumerated callsites. Use SSOT signature from
+   `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name`. Run `bash scripts/quality-gates.sh`
+   locally; resolve any QG findings. Leave staged on a local branch (e.g. `slot2/l3-flip-staged`); **do not
+   `quickmerge`**, **do not `git push`**.
+
+3. **L5 refactor on local branch — DO NOT PUSH** — same pattern for `_BUCKET_TEMPLATES` in
+   `deployment-api/`. Rewrite to call `resolve_bucket_name()`. QG green locally. Stage on local branch
+   (`slot2/l5-flip-staged`); do not push.
+
+4. **Archive-script dry-run** —
+   `bash deployment-service/scripts/archive-flat-buckets.sh --env prod --cloud both --dry-run`. Verify 30-day-hold
+   logic and confirm the bucket inventory it identifies matches the flat-bucket set expected to be retired.
+
+5. **Pre-stage write-resume verification one-liners** — for each env-tiered bucket that L3/L5 will write to post-flip,
+   write the exact `gcloud storage ls gs://{env-tiered-bucket}/` (or `aws s3 ls`) command into a local checklist file.
+   Goal: write-resume verification becomes mechanical paste-and-check, not "now go figure out which buckets to check".
+
+**HARD RULES**:
+
+- ❌ Do NOT push L3 or L5 flips until operator write-pause signal lands (operator will ping main → main relays to slot
+  2 here).
+- ❌ Do NOT touch work_split item 8 (Phase 2 freeze gate flip) — bookkeeping after items 1-4 complete.
+- ❌ Do NOT touch foreign files in `.tabs/2/`'s dep repos — any untracked file you didn't create is NOT YOURS.
+- ✅ DO commit + push any orchestration/audit notes that help (e.g. the L3 callsite manifest as a `docs(plans):` note
+  in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.6 if it adds operator value).
+
+**Self-check before reporting back**:
+
+- Pre-staged commits are on local branches, NOT pushed.
+- QG green on both staged branches.
+- Slot 2 ack'd here when prep is complete (`[Slot 2 → main] 2026-05-19 L3/L5 pre-staged ✅`).
+
+**ETA**: ~6-8 cal AI-days (refactor 0.4× × ~15 baseline). Whole window fits inside the operator-write-pause wait.
+
+---
+
 # Slot 2 ping ledger — ikenna-defi-catalogue-tab
 
 ## [Slot 2 → Slot 1] 2026-05-18 Phase 1.2B SHIPPED ✅

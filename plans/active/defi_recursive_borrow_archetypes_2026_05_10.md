@@ -1411,67 +1411,24 @@ Ethereum + Compound V3 Ethereum/Arbitrum/Base SUPPLY_APY / BORROW_APY / UTILISAT
 day-grain; sample parquet probe confirms non-zero rates per day; instruments-service catalog reports the corresponding
 instrument-day rows as alive. **Then** this plan's Phase 2+ unblocks.
 
-(Original Phase 1 detail retained below as spec hint for catalogue plan; do NOT execute these here.)
+> **DE-DUPLICATED 2026-05-19** (operator-directed via audit pass): the 11 spec-hint todos previously retained here (UAC
+> `SUPPLY_APY`/`BORROW_APY`/`UTILISATION`/`LIQUIDATION_THRESHOLD`/`EMODE_PARAMS` enum addition, Bug 1 Aave V3 silent-zero
+> fix, Bug 2 Compound V3 multi-chain schema, Bug 3 `instruments-store-defi` 2022 metadata floor, 5 lending-rate adapters,
+> backfill VM launcher, run-to-completion verification) have been removed to eliminate structural-drift risk. They live
+> canonically in [`defi_catalogue_chain_primitives_2026_05_10.md`](defi_catalogue_chain_primitives_2026_05_10.md)
+> Phase 1 (UAC SSOT) + Phase 3 (MTDS adapters + bug fixes + production backfill VM). Catalogue plan owns ship + verify;
+> this plan consumes via Phase 9 backtest replay. Rationale: prior pattern of carrying duplicate trackers across plans
+> caused the Phase 6 Hyperliquid attribution miss surfaced in the 2026-05-19 audit (per-plan checkbox drift when canonical
+> owner ships). Done definition + Full-execution criterion paragraphs that described the deleted spec-hint scope have also
+> been removed; see catalogue plan Phase 3. This plan's Phase 1 done-def is the Reframed Phase 1 done definition stated
+> above (catalogue Phase 3 manifest reports `captured` for Aave V3 ETH + Compound V3 ETH/ARB/BASE across 2022-03-01 →
+> present).
 
-The `lending-indices DEFERRED` note in
-[`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
-blocks backtest. Three bugs + missing data_type enums + adapter rewrites + production backfill VM. Aave V3 Ethereum +
-Compound V3 Ethereum/Arbitrum/Base are P0 for May-23 (Family 1 wedges + Family 2 borrow leg); Spark + Morpho + Maker DSR
-are P1 (extends viable wedge set, not gating).
-
-- [ ] [UAC] P0. Add `SUPPLY_APY` / `BORROW_APY` / `UTILISATION` / `LIQUIDATION_THRESHOLD` / `EMODE_PARAMS` to
-      `data_type` enum in `canonical/domain/market_data/data_types.py`. Update `BUNDLED_DATA_TYPES` if any of these are
-      bundled per protocol (utilisation per pool may be). Wire into manifest schema column `data_type` validation.
-- [ ] [MTDS] P0. **Bug 1 fix** — Aave V3 Ethereum silent-zero. Audit the Aave adapter: when subgraph returns zero rows,
-      current behaviour writes `empty_confirmed`. Per CLAUDE.md "Honest absence vs fake placeholders" rule — should be
-      `attempted_failed` if catalog says alive. Add
-      `record_failed(UpstreamSubgraphZeroError(observed_dates, expected_day))` route + reason taxonomy entry.
-- [ ] [MTDS] P0. **Bug 2 fix** — Compound V3 multi-chain subgraph schema. Diff the schema across chains (Ethereum /
-      Arbitrum / Base / Polygon / Optimism); either normalise via per-chain query templates OR fail-fast with a typed
-      `CompoundSubgraphSchemaMismatchError` per chain.
-- [ ] [instruments-service] P0. **Bug 3 fix** — `instruments-store-defi` 2022 metadata floor. Backfill the missing
-      pre-2022 metadata for Aave V3 + Compound V3 pool instruments. Verify via `record_captured` rows present for
-      2020-01-01 onwards (Aave V3 launch ≈ 2022-03; pre-launch days
-      `record_expected_empty(reason=EXPECTED_PRE_VENUE_LAUNCH)`).
-- [ ] [MTDS] P0. New adapter: `aave_v3_lending_rates.py` — emits `SUPPLY_APY` + `BORROW_APY` + `UTILISATION` per (chain,
-      asset) at minute / hour cadence. Sources: Aave V3 subgraph (primary) + Aavescan API (cross-check). Cluster
-      validation per `(chain, day)` for bundled multi-asset reads.
-- [ ] [MTDS] P0. New adapter: `compound_v3_lending_rates.py` — same shape, Compound V3 subgraph per chain.
-- [ ] [MTDS] P1. New adapter: `morpho_blue_lending_rates.py` — per-market isolated rates. Morpho Blue is per-market, so
-      the row_key is `(chain, market_id)`.
-- [ ] [MTDS] P1. New adapter: `spark_lending_rates.py` — Spark is Aave fork; reuse Aave adapter shape with Spark
-      subgraph endpoint.
-- [ ] [MTDS] P2. New adapter: `maker_dsr_rate.py` — single rate stream from MakerDAO contract / subgraph. NICE-TO-HAVE;
-      not blocking May-23.
 - [x] ✅ [SCRIPT] P0. Manifest reconciler one-shot: `instruments-service/scripts/reconcile_lending_indices_phantom.py` —
       apply CLAUDE.md manifest-phantom-audit pattern, classify any pre-existing `empty_confirmed` rows that should be
       `attempted_failed` post-Bug-1-fix. — 403 SOURCE_RETURNED_ZERO phantoms flipped in GCS manifest (AAVEV3=248,
       COMPOUNDV3=124, SPARK=31; chains: ETH=93, ARB=62, OPT=62, BASE=62, BSC=31, AVAX=31, LINEA=31, POL=31);
       GCS-only, no local code changes; apply-flips exit 0 2026-05-19
-- [ ] [VM] P0. Backfill VM: `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (per
-      VM-launcher-SSOT rule). Per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true`). Window: 2022-03-01 → today, hourly
-      granularity, Aave V3 (Eth/Base/Arb) + Compound V3 (Eth/Base/Arb) primary; Spark + Morpho + Maker DSR as P1
-      follow-up VMs. Register VM-name prefix `defi-lending-` in `VM_PREFIX_TO_BUCKET` per zombie-watchdog rule.
-- [ ] [VM] P0. Run-to-completion: launch the VM, monitor STARTED → progress → STOPPED via event stream
-      (`gs://{pid}-events/events/mtds/...`), verify manifest `captured` rows for the full window via spot-check on a
-      sampled `(protocol, chain, asset, day)` parquet (assert non-NaN supply_apy + borrow_apy populated). Per CLAUDE.md
-      "Plans Run To Actual Completion" — not just launch + done; verify run-to-completion.
-
-**Done definition:** UAC has the 4 new data_type enums; 3 bugs fixed; 2 P0 adapters shipped (Aave V3 + Compound V3); P1
-adapters land in same phase or are explicitly deferred-to-named-successor-plan; reconciler runs and reports clean delta;
-backfill VM run-to-completion with verified parquets; manifest shows `captured` for ≥1y of (Aave V3 Eth / Aave V3 Base /
-Compound V3 Eth) × {USDC, USDT, ETH, wstETH, WBTC} hourly data.
-
-**Full-execution criterion:**
-
-- ✅ Backfill VM ran to STOPPED state with no `attempted_failed` rows beyond the Bug-1-fix-reclassified set.
-  - **What ran**:
-    `bash deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh --start 2022-03-01 --end 2026-05-09`
-    on a same-region GCE VM.
-  - **Verification**: `gcloud storage ls gs://${PID}-events/events/mtds/2026-05-1*/defi-lending-*/` shows STARTED +
-    STOPPED; manifest spot-check via
-    `python -c "from market_tick_data_service.manifest import read_canonical; m = read_canonical(asset_group='defi'); print(m.coverage_pct(data_type='SUPPLY_APY'))"`
-    returns ≥99% for the P0 protocol/chain/asset cube.
 
 ## Phase 2 — UAC config schema extension (1 AI-day)
 
