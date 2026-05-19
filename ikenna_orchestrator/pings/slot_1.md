@@ -5,7 +5,133 @@
 
 # Slot 1 — Main Orchestrator Intra-Side Ledger
 
-## [slot 1 main] 2026-05-19 ~13:30 UTC — OPERATOR DECISION REQUEST — ml-service flat-deps rule exception
+## [slot 1 main] 2026-05-19 ~19:40 UTC — INSTRUMENTS + MTDS BACKFILL FLEET LAUNCHED (smoke + full, all asset_groups)
+
+**Trigger**: operator question "why aren't we at 99% data status across all asset_groups yet" → audit identified
+infrastructure-ready but no unified per-asset-group orchestrator + several BLOCKED-CREDS adapters. Operator directive:
+"start backfilling vm smoke and then full runs for all the data without --force because manifest should be accurate
+now. dont chekc with me just doiti im leaving for 30 mins so dont await me."
+
+**Status**: ✅ FLEET DISPATCHED — **~80+ VMs RUNNING** in asia-northeast1-c as of 19:50 UTC.
+
+### Smoke runs (test buckets, IS_TEST_RUN=true)
+- ✅ `launch-instruments-smoke-vm.sh all 2026-05-18` — CeFi/TradFi/DeFi instruments-store-*-test-* writes
+- ✅ `launch-canonical-smoke-vm.sh all 2024-06-15` — MTDS canonical writes to market-data-tick-test-* (3 VMs RUNNING:
+  canonical-smoke-cefi/defi/tradfi-20260519-194143)
+
+### Full backfills (prod buckets, no --force per operator directive — manifest gets to decide what to re-fetch)
+
+**Instruments-service** (5-VM bundle):
+- ✅ `launch-instruments-backfill-vm.sh` — covered instr-backfill-cefi-{1,2,3} + defi + tradfi/sports. (First
+  attempt failed on macOS bash 3.2 `${ASSET_GROUP,,}` substitution; retried with `/opt/homebrew/bin/bash` and
+  succeeded. ROOT CAUSE: workspace Bash tool defaults to /bin/bash=3.2; bash 5.3 only at /opt/homebrew/bin/bash.
+  **Workspace finding logged below.**)
+
+**MTDS per-data-type backfills** (all dispatched, all RUNNING per `gcloud compute instances list`):
+- ✅ mtds-lending-indices (DeFi, 2022-01-01 → 2026-05-18 full window)
+- ✅ mtds-lst-rates (Lido/RocketPool/cbETH; Kamino skipped per BLOCKED-CREDS)
+- ✅ mtds-dex-pools, mtds-gas-fees, mtds-liquidations, mtds-eigenlayer-rewards (DeFi)
+- ✅ mtds-pyth-archive, mtds-pyth-lst, mtds-solana-drift, mtds-solana-gas (DeFi Solana)
+- ✅ mtds-vault-share-price, jito-solana, marinade-solana (DeFi LST)
+- ✅ mtds-prediction (Polymarket; Kalshi skipped per BLOCKED-CREDS — see api_keys_wallets_accounts_readiness_2026_05_10.md)
+- ✅ mtds-sports-odds, mdps-sharded, defi-generic, cefi-sharded (full Binance/Bybit/Deribit fleet — ~50 per-venue-per-year VMs)
+- ✅ tradfi-backfill-vm (ES quarterlies per year/tier — retried with bash 5.3 after first-attempt failure)
+- ⚠️ mtds-perp-funding — VM `mtds-perp-funding-backfill` ALREADY EXISTS (prior run still active); no relaunch needed
+
+**Sports feeds** (required positional date args; first batch printed usage, retried with full 2018-01-01 → 2026-05-19
+windows + bash 5.3):
+- ✅ api-football, footystats, understat, transfermarkt, openmeteo
+
+### KNOWN-BLOCKED (NOT relaunched — pre-existing tracked issues)
+- ❌ `launch-tier3-cefi-backfill.sh` — exit 1 with `BITFINEX: unbound variable` at line 84. Script bug, not
+  bash-version. Filed for slot-N follow-up: needs `set +u` guard or explicit init before `START_BY_VENUE` reference.
+  Per master plan, Tier-3 propagation Phase 3D.5 was already pending validation
+  (`expected_unattempted_validation_pending_phase3_2026_05_19.md`); this bug discovery composes with that.
+- ⏸ Kamino LST adapter (DeFi LST rates) — BLOCKED-CREDENTIALS per credential-readiness audit
+- ⏸ Kalshi prediction adapter — BLOCKED-CREDENTIALS (no SM secret); Polymarket runs alone for now
+
+### WORKSPACE FINDING — bash 3.2 vs 5.3 launcher portability (NEW — needs plan home)
+
+Multiple VM launchers in `deployment-service/scripts/vm/` use bash 4+ syntax (`${VAR,,}` lowercase, `declare -A`
+associative arrays) but are written with `#!/usr/bin/env bash` shebangs. On macOS dev machines where /bin/bash is 3.2,
+invoking via `bash <launcher>` (rather than direct exec) silently uses 3.2 and fails. Affected launchers seen tonight:
+- `launch-instruments-backfill-vm.sh` (line 238 `${ASSET_GROUP,,}`)
+- `launch-tradfi-backfill-vm.sh` → sources `cme-expiry-calendars.sh` (line 20 `declare -A`)
+- Likely others not yet exercised on this dev machine.
+
+**Recommended fix**: replace `${VAR,,}` with `$(echo "$VAR" | tr '[:upper:]' '[:lower:]')` + replace `declare -A`
+with explicit case statements OR add a top-of-script bash-version check
+(`(( BASH_VERSINFO[0] < 4 )) && { echo "Requires bash 4+; on macOS use /opt/homebrew/bin/bash" >&2; exit 2; }`).
+**To file**: `plans/active/issues/vm_launcher_bash_3_2_portability_2026_05_19.md`.
+
+### Post-launch verification — T+10min audit pending
+- Scheduled wakeup at +600s (per CLAUDE.md "No fire-and-forget VM launches"). Will check deployment-registry
+  heartbeats + STARTED events for the fleet. If any VM hasn't emitted progress/STARTED within 10min, will
+  investigate (likely image-pull or tarball-download bottleneck given ~80 simultaneous bringup).
+
+### Master plan implications (for next slot 1 turn — Half-3 deferred scoreboard)
+- Audit answered the operator question: NOT a "launch + done" gap. Real blockers:
+  1. No baseline measurement script (`measure-honest-coverage.py` TBD) → cannot declare ≥99% honestly even when
+     fleet completes
+  2. No per-asset-group unified orchestrator → tonight's launch was 25+ separate launcher invocations
+  3. Tier-3 enumerator propagation Phase 3D.5 pending → per-instrument expected-universe scan incomplete
+  4. CI honest-coverage ratchet not yet wired
+  5. Sports/TradFi phantom-row residuals need separate manifest-reconciler runs
+- These belong in `master_to_live_defi_2026_05_23.md` § "Path to 99% coverage" — operator should review.
+
+## [slot 1 main] 2026-05-19 ~20:10 UTC — HONEST-COVERAGE FORMULA CONSOLIDATION (Phase 0 shipped + plan)
+
+**Trigger**: 2026-05-19 backfill launch revealed (a) numerator/denominator drift across 3 in-flight plans
+producing inconsistent coverage % in API vs UI vs CLI vs CI, and (b) `launch-instruments-backfill-vm.sh` hardcoded
+`--force` so manifest-driven skip never fired in production. Operator directive: "fix the plan complete it for
+manifest and deployment api/ui and service data status so that no confusion again and ensure the production code
+for IS and MTDS looks at the right numerator and denominator when skipping and that running without --force works."
+
+### Phase 0 shipped this turn (all 3 commits pushed to live-defi-rollout)
+
+| # | Commit | What | Why |
+| - | - | - | - |
+| 1 | `unified-api-contracts@327fec6` | `compute_honest_coverage()` + `CaptureStatusCounts` NamedTuple as canonical SSOT in `canonical/crosscutting/honest_coverage.py` | Formula drift across 3 plans → one callable resolves it. Validates on sports manifest live: 100.00% on (157174 captured + 326 empty_confirmed) |
+| 2 | `deployment-service@d673323` | `launch-instruments-backfill-vm.sh` `--force` is now opt-in (was hardcoded) — prints `MODE: --force OFF (default) — manifest-driven skip ACTIVE` when omitted | Operator directive "no --force because manifest should be accurate" could not be honored until this fix landed |
+| 3 | `unified-trading-pm@a46b1f3f2` | NEW plan `plans/active/honest_coverage_formula_consolidation_2026_05_19.md` with Phase 0 pre-flipped + Phases 1-8 scoped | Plan-flip Half-2 for #1 + #2; Phase 1-8 scope captures the multi-repo migration to come |
+
+### Canonical formula (now in UAC — use this everywhere going forward)
+
+```python
+from unified_api_contracts.canonical.crosscutting.honest_coverage import (
+    CaptureStatusCounts, compute_honest_coverage, HONEST_COVERAGE_GAP_FIELDS,
+)
+# numerator   = captured + empty_confirmed + expected_unattempted_known_empty (EXPECTED_* reason)
+# denominator = numerator + attempted_failed + expected_unattempted_pending_fetch (non-EXPECTED_* reason)
+```
+
+### Operational sequence (resumed)
+
+1. ✅ Killed 7 instruments backfill VMs that were running under hardcoded `--force`
+2. ✅ Re-launched same 7 in no-force mode at 19:54 UTC (manifest filtering ACTIVE)
+3. ⏳ MTDS fleet continues running (no-force, was correct from initial dispatch — only IS had the bug)
+4. ⏳ T+10min audit wakeup scheduled at 19:57 UTC
+
+### Remaining Phase 1-8 scope (not shipped this turn — multi-repo, multi-day)
+
+Per `honest_coverage_formula_consolidation_2026_05_19.md`:
+- **Phase 1** — UTL `read_capture_status_counts()` helper (single read path)
+- **Phase 2/3** — instruments-service + MTDS migrations (replace bespoke counting)
+- **Phase 4** — deployment-api `data_status_service.py` consumers
+- **Phase 5** — deployment-ui panel uses API value directly (no client recomputation)
+- **Phase 6** — `honest-coverage-ratchet.sh` QG gate
+- **Phase 7** — codex docs (`availability-manifest-and-data-status.md` + SUPERSEDED banners on 3 in-flight plans)
+- **Phase 8** — real-fleet verification post-backfill (instruments ETA ~6-12h, MTDS already in-flight)
+
+### Operator-relevant follow-ups
+- Phase 1-8 implementation is the work-split addition for next cycle. Plan owns ~2.4 calibrated AI-days (refactor class).
+- The "MTDS uses instruments + fixtures as base universe" directive composes with Phase 8 verification: re-pull
+  every (asset_group, data_type) cell's `CaptureStatusCounts` after the IS fleet completes; cells that report 100%
+  with zero `expected_unattempted_pending_fetch` are SUSPICIOUS (denominator may be incomplete pending Tier-3
+  sentinel propagation Phase 3D.5).
+- Currently-running MTDS VMs are reading the EXISTING instruments catalogue. When IS fleet completes (catalogue
+  fills in), a fresh MTDS sweep will pick up newly-discovered instruments — and since MTDS handlers respect
+  `--force=false` (per audit, orchestrator.py:1985), that sweep is cheap (only the deltas get fetched).
 
 **Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
 
