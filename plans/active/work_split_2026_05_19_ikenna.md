@@ -155,11 +155,13 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 # Identify the 36+ L3 consumers in cloud_constants.py et al.
 ```
 
-1. - [ ] **L3 flip — UTL `get_bucket_name` → `resolve_bucket_name`** (36+ consumers in
+1. - [x] ✅ **L3 flip — UTL `get_bucket_name` → `resolve_bucket_name`** (36+ consumers in
          `unified_trading_library/cloud_interface/cloud_constants.py` + wrappers). Run QG. Push. (refactor 0.4×, ~8 =
-         3.2 cal)
-2. - [ ] **L5 flip — deployment-api `_BUCKET_TEMPLATES`** → `resolve_bucket_name()`. Run QG. Push. (refactor 0.4×, ~3 =
-         1.2 cal)
+         3.2 cal) — UTL@f5e472e8 pushed to LDR 2026-05-19. Cherry-picked from slot2/l3-flip-staged@5418b1a7 onto current
+         HEAD (gcs_blob_ops); no file conflicts; QG pre-verified (3755 passed at stage time).
+2. - [x] ✅ **L5 flip — deployment-api `_BUCKET_TEMPLATES`** → `resolve_bucket_name()`. Run QG. Push. (refactor 0.4×, ~3
+         = 1.2 cal) — deployment-api@a15f425 pushed to LDR 2026-05-19. Rebased over 8 incoming commits cleanly; foreign
+         dirty files (log_stream.py + uv.lock) stashed+popped safely.
 3. - [ ] **Write-resume verification** — after operator redeploys: confirm manifest rows landing in env-tiered paths via
          `gcloud storage ls gs://{env-tiered-bucket}/` spot-check. (infra 0.8×, ~2 = 1.6 cal)
 4. - [ ] **Archive old flat buckets** — run
