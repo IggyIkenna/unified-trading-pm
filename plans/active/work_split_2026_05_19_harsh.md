@@ -173,9 +173,10 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          (design 0.6×, ~3 = 1.8 cal)
 4. - [ ] **defi_archetypes_canonicalisation close** (plan at 85%, 1.8 cal left) — ship remaining items. (design 0.6×, ~3
          = 1.8 cal)
-5. - [ ] **features_tick_observation_audit scaffold** — create
-         `plans/active/    features_tick_observation_audit_2026_05_18.md`; scaffold `FeatureObservationRecord` UAC
-         type + `FeatureObservationWriter`; wire `correlation_id: str | None = None`. (brand-new 1.0×, ~2 = 2.0 cal)
+5. - [x] ✅ **features_tick_observation_audit scaffold** — plan created PM@a041770e; UAC
+         `FeatureObservation` + `FeatureObservationRecord` scaffolded UAC@6aa2c31; `FeatureObservationWriter`
+         Pattern A scaffolded features-service@4f29dbb4; `correlation_id: str | None = None` wired.
+         Phases 1+2 done; Phases 3 (correlation_id propagation) + 4 (pnl-attribution) remain open in plan.
 6. - [ ] **S7. SUSTAIN — cross-repo `# noqa` justification audit** — every bare `# noqa` must be `# noqa: CODE  reason`.
          (refactor 0.4×, ~2 = 0.8 cal)
 7. - [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** — all repos have same quality-gates.yml structure.
