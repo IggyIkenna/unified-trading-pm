@@ -534,15 +534,18 @@ registration. They live under `deployment-service/scripts/cloud-run/` and follow
 `deploy-ui.sh`:
 
 - `--env` flag required (rejects missing; supports `--env=prod|uat`)
-- Reads `config/docker-build.env.{production,uat}` for build-time env vars
-- Triggers Cloud Build + `gcloud run deploy` + optional `firebase deploy --only hosting`
+- Triggers `docker buildx build` (local) or `gcloud builds submit` (Cloud Build) + `gcloud run deploy`
+- Optional `firebase deploy --only hosting` at P2 (agent-orchestrator) or always (odum-portal)
+- Note: `agent-orchestrator` has NO frontend in its Docker image (Vite dashboard served by Firebase
+  Hosting at P2). `config/docker-build.env.{production,uat}` in the agent-orchestrator repo document
+  runtime env vars only; `--set-env-vars` is used directly at deploy time rather than a build-arg file.
 
-| Script                                        | Target service               | Status  |
-| --------------------------------------------- | ---------------------------- | ------- |
-| `deploy-ui.sh`                                | unified-trading-system-ui    | shipped |
-| `deploy-agent-orchestrator.sh`                | agent-orchestrator (P1+)     | P1 TODO |
+| Script                          | Target service             | Region       | Status  |
+| ------------------------------- | -------------------------- | ------------ | ------- |
+| `deploy-ui.sh`                  | unified-trading-system-ui  | europe-west4 | shipped |
+| `deploy-agent-orchestrator.sh`  | agent-orchestrator         | europe-west4 | shipped |
 
-`deploy-agent-orchestrator.sh` is created at Phase 1 of
+`deploy-agent-orchestrator.sh` shipped at Phase 1 of
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`. Architecture SSOT:
 `codex/04-architecture/agent-orchestrator-overview.md`.
 
