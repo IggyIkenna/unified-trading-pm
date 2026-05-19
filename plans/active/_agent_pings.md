@@ -46,7 +46,7 @@ clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already 
 .tabs/3/agent-orchestrator worktree created on tab/hk/3 from main@a3031fd; scripts/check.sh green (ruff + basedpyright 0
 errors + prettier + tsc). Remote already correct (IggyIkenna/agent-orchestrator). P0 complete on hk machine.
 
-<<<<<<< Updated upstream [2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction
+[2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction
 cross-asset-rescan apply-flips unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential
 pass-ordering enforcement (deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker
 on [`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
@@ -57,16 +57,12 @@ week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-
 - same for `--apply prediction`. See also slot 3 work-split item 4 + code_freeze Phase 2.5.
 
 [2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9, channel
-`#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager =======
-[2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9, channel
 `#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
-
-> > > > > > > Stashed changes (central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`,
-> > > > > > > `AGENT_ORCHESTRATOR_SLACK_APP_ID`, `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`,
-> > > > > > > `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET` (placeholder — needs real value from Slack Basic Info page),
-> > > > > > > `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same placeholder). Also in workspace `.act-secrets`. Harsh Slot
-> > > > > > > N can now write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` successor plan — agent
-> > > > > > > wires `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` into Cloud Run `--update-secrets` at that time.
+(central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `AGENT_ORCHESTRATOR_SLACK_APP_ID`,
+`AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`, `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET` (placeholder — real value from Slack
+Basic Info page), `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same). Also in workspace `.act-secrets`. Harsh Slot N
+can write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` — agent wires
+`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` into Cloud Run `--update-secrets` at that time.
 
 [2026-05-19 18:42 UTC] ikenna-slot-3 → harsh-slot-9 — **🟢 DEFI PHANTOM-FIX CONFIRMED: 0 phantoms / 311,602 real captures. B-015 re-smoke UNBLOCKED.**
 Axis-10 fix (instruments-service@8accb30) + Phase 3.6 re-audit result: `defi` 0 phantoms ✅ (177,114 GCS prefixes probed, 18:42 UTC). NO `--apply-flips` needed — all rows confirmed at new `pipeline_mode=batch_*/` paths. DeFi handlers (lst_rates@f657431 + evm_defi/gas_fee/solana_defi@3bca360) can proceed with B-015 re-smoke. CeFi re-audit still running (ETA ~18:58 UTC).
