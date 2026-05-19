@@ -1480,17 +1480,20 @@ grep.
       bundles need a `root_cluster` for weekly-series cluster extraction (E1A / EW1 / EOM / etc.). Currently
       `DatabentoClassification` exposes `underlying` only; weekly-series prefix from `raw_symbol` requires a new pattern
       match. Add the field + pattern parser in UAC; populate at MTDS write time. Without this, ES.OPT 11-cluster
-      taxonomy can't validate Databento-fed days against Tardis-fed days at the cluster level.
-      — market-tick-data-service@317e53c (field already in MTDS; imported extract_es_options_cluster from UAC registry; CME short-form option branch populates root_cluster; 8-cluster parametrize test green)
+      taxonomy can't validate Databento-fed days against Tardis-fed days at the cluster level. —
+      market-tick-data-service@317e53c (field already in MTDS; imported extract_es_options_cluster from UAC registry;
+      CME short-form option branch populates root_cluster; 8-cluster parametrize test green)
 - [x] ✅ [SCRIPT] P0. **Futures expiry_bucket helper for cluster validation** (Phase 0 audit gap finding — same lift
       pattern as `DatabentoClassification.root_cluster`). Tardis + Databento `futures_chain` bundles have `underlying`
       per row but expiry_bucket (front / back / spread / butterfly) is NOT a column — it must be derived from
       `raw_symbol` (e.g. `ESM6` → March 2026 → near-term front). New helper
       `unified_api_contracts.canonical.domain.futures.derive_expiry_bucket(symbol: str, today: date) -> str` OR a new
-      `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully.
-      — unified-api-contracts@60f4a87 (derive_expiry_bucket in registry/tradfi_symbology.py; sliding-window year expansion; spread/butterfly/front/back cases; 10 tests all green; exported from registry/__init__)
+      `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully. —
+      unified-api-contracts@60f4a87 (derive_expiry_bucket in registry/tradfi_symbology.py; sliding-window year
+      expansion; spread/butterfly/front/back cases; 10 tests all green; exported from registry/**init**)
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
-      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via VENUE_REGISTRY)
+      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via
+      VENUE_REGISTRY)
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
       `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
@@ -1761,14 +1764,17 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       `record_failed(reason=UPSTREAM_LEG_FAILED)`.
 - [ ] [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
       (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
-- [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
-      and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the other has
-      `attempted_failed`, flag.
-- [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` / `EXPECTED_HOLIDAY` /
-      `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain rolling APY → assert
-      `n_valid` per output row matches the expected (7 - n_excluded); run ml-training → assert NaN-fill +
-      `data_quality_flag` shape; run execution → assert correct skip/trade decisions; run reconciliation → assert
-      reason-agreement check.
+- [x] ✅ [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has
+      data and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the
+      other has `attempted_failed`, flag. — batch-live-reconciliation-service@69b784d (stage0_manifest_reason_check: 14
+      tests; slot-5 2026-05-19)
+- [x] ✅ [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` /
+      `EXPECTED_HOLIDAY` / `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain
+      rolling APY → assert `n_valid` per output row matches the expected (7 - n_excluded); run ml-training → assert
+      NaN-fill + `data_quality_flag` shape; run execution → assert correct skip/trade decisions; run reconciliation →
+      assert reason-agreement check. — features-service@81cdaf4f (8-test E2E smoke: window guard
+      n_valid/has_attempted_failed, realized_vol n_valid_5/n_valid_20, leg guard skip/propagate, 7-day decision flow;
+      slot-5 2026-05-19)
 
 #### Phase 2.E.4 — Update CLAUDE.md "Three-category empty-output decision" rule
 
