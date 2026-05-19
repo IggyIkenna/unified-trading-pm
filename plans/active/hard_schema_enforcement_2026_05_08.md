@@ -95,10 +95,15 @@ todos:
         Pydantic model_validator (decision sub-todo), (b) one-shot back-fill migration script per flip, (c)
         consumer-sweep across instruments-service + MTDS + downstream services. Roadmap added in the plan body
         below — actionable by the next agent.
+        **TRADFI FUTURE+OPTION model_validator rules SHIPPED 2026-05-19 by slot 8 (uac@80aef10)**: added FUTURE
+        (tradfi_master Q1 gate passed 2026-05-13) and OPTION (tradfi_master Q2 gate passed 2026-05-13) branches to
+        `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator. Both enforce `expiry` non-null
+        per workspace rule. 15 tests in `tests/internal/unit/test_instrument_record_hard_required_fields.py` cover
+        all 5 asset-group rules. QG ✅ ALL PASSED.
     status: helper-shipped
     note:
-      "uac@3157f45 RecordFailedReason taxonomy shipped 2026-05-11; Phase 2 record_failed signature refactor +
-      per-asset-group field flips still pending."
+      "uac@3157f45 RecordFailedReason taxonomy shipped 2026-05-11; uac@80aef10 FUTURE+OPTION model_validator rules
+      shipped 2026-05-19; Phase 2 record_failed signature refactor + Sports fixture_id field flip still pending."
 
   - id: phase-2-per-row-record-failed-orchestrator-refactor
     content: |
@@ -281,10 +286,12 @@ a refactor once the runtime checks have stabilised the data shape.
    `instrument_type in DEFI_INSTRUMENT_TYPES`. Back-fill from on-chain registry (Aave V3 / Compound V3 / etc.
    subgraphs) + per-protocol fallback ABI calls. **Composes with catalogue Phase 2-3** — those adapters write the
    per-protocol contract addresses + decimals at instruments-service write time.
-3. TradFi futures `expiry_date` + 4 sister dates — blocked on `tradfi_master_2026_05_07` Q1 (futures-expiry fields
-   shipping). Sequence: tradfi_master Q1 lands → this plan Phase 1.3 lands → existing futures rows already comply.
-4. TradFi options `expiration` — blocked on `tradfi_master_2026_05_07` Q2 (options-expiration flip). Same sequencing as
-   #3.
+3. ✅ TradFi futures `expiry` non-null model_validator rule — **SHIPPED uac@80aef10 2026-05-19** (tradfi_master Q1 gate
+   passed 2026-05-13). `InstrumentRecord` model_validator enforces `FUTURE → expiry non-null`. Full nullable→required
+   schema flip + back-fill migration still deferred (see Phase 5 dependency).
+4. ✅ TradFi options `expiry` non-null model_validator rule — **SHIPPED uac@80aef10 2026-05-19** (tradfi_master Q2 gate
+   passed 2026-05-13). `InstrumentRecord` model_validator enforces `OPTION → expiry non-null`. Full schema flip +
+   back-fill migration still deferred.
 5. Sports `fixture_id` — per-file audit in `canonical/domain/sports/`; flip nullable → required on every per-fixture
    entity schema. Already-captured sports parquets per the 2026-05-07 audit should comply (the adapter populates
    fixture_id from the api_football payload); validator simply codifies the requirement.

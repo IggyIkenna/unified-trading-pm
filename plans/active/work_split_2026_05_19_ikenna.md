@@ -104,10 +104,10 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          pm@`2af45259`
 7. - [x] ✅ **Reconcile phantoms** — run
          `python scripts/reconcile_phantom_manifest_rows_all.py    --asset-group cefi --dry-run` + repeat per
-         asset_group. (infra 0.8×, ~2 = 1.6 cal) All 5 asset_groups show **0 phantoms** as of 2026-05-19:
-         cefi=0/1290706 (128k prefixes, 34min), defi=0/311602 (89k prefixes, 23min), tradfi=0/245907,
-         sports=0/559961, prediction=0/14403. Axes 7-9 fixes shipped 2026-05-13 (IS@1a62547) eliminated all
-         false-positives from previous 2026-05-11 run. Manifest is clean across all 5 groups.
+         asset_group. (infra 0.8×, ~2 = 1.6 cal) All 5 asset_groups show **0 phantoms** as of 2026-05-19: cefi=0/1290706
+         (128k prefixes, 34min), defi=0/311602 (89k prefixes, 23min), tradfi=0/245907, sports=0/559961,
+         prediction=0/14403. Axes 7-9 fixes shipped 2026-05-13 (IS@1a62547) eliminated all false-positives from previous
+         2026-05-11 run. Manifest is clean across all 5 groups.
 8. - [ ] **Phase 2 freeze gate** — flip all remaining `- [ ]` gate items in code_freeze §2. Push `docs(plans):` flip
          commit. (design 0.6×, ~1 = 0.6 cal)
 
@@ -126,9 +126,11 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 4. - [ ] [BLOCKED-OPERATOR-APPROVAL] **Phase 2.5** — Run `manifest_cross_asset_rescan_design_2026_05_08.md` cross-asset
          `--apply-flips` sequence per the plan. (infra 0.8×, ~3 = 2.4 cal) cefi/defi/tradfi already done 2026-05-13.
          Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher
-         `launch-cross-asset-rescan-vm.sh` **now complete** with `--pass 1|2|3|4` sequential enforcement (deployment-service@880bc3a
-         + instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
-         sports/prediction apply-flips (operator [ack] required — use `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
+         `launch-cross-asset-rescan-vm.sh` **now complete** with `--pass 1|2|3|4` sequential enforcement
+         (deployment-service@880bc3a
+     - instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
+       sports/prediction apply-flips (operator [ack] required — use
+       `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
 5. - [x] ✅ **gcs_migration_bundle Phase 4** — Consumer sweep audit complete. All production callsites already pass
          `pipeline_mode=` (MTDS DefiManifestRecorder, MDPS record_empty_for_shard, instruments-service orchestrator,
          features-service compute). PM@`22e23663` Phase 4 flipped DONE in plan. Phase 3 (VM fleet migration) =
@@ -197,10 +199,10 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
           extracted to private helpers; all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
           allowlist. execution-service@911b4ffde (2026-05-19; allowlist 11→10, slot-4 cumulative 99 files cleared)
 13. - [x] ✅ **Batch-32 method-size refactor — config/grid_generator_v2.py** — all 3 violations (157L, 199L, 215L)
-          extracted to 7 additional private helpers (_build_venue_section, _build_grid_metadata,
-          _load_strategy_components, _update_stats, _accumulate_strategy_configs, _finalize_gen_output,
-          _setup_gen_context); all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES
-          allowlist. execution-service@f27e5fc13 (2026-05-19; allowlist 10→9, slot-4 cumulative 100 files cleared)
+          extracted to 7 additional private helpers (\_build_venue_section, \_build_grid_metadata,
+          \_load_strategy_components, \_update_stats, \_accumulate_strategy_configs, \_finalize_gen_output,
+          \_setup_gen_context); all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES allowlist.
+          execution-service@f27e5fc13 (2026-05-19; allowlist 10→9, slot-4 cumulative 100 files cleared)
 
 ---
 
@@ -277,10 +279,12 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 **Part C — defi_master Phase 2–3** (plan at 33%, 9.4 cal left):
 
-6. - [x] ✅ **Phase 2 — MTDS wiring for chain primitives** — UAC export surface (HYPERLIQUID/STARKNET RPC templates + ChainKind) shipped UAC@fa7e868+36eae39; MTDS `_ChainAnnotatingWriter` + `ONCHAIN_PERP_VENUE_CHAIN` dict + per-venue chain annotation wired for LIGHTER/PACIFICA/EXTENDED/HYPERLIQUID. — mtds@705a635 + uac@36eae39
-7. - [x] ✅ **Phase 3 — instruments-service CLOB adapters** — Audit 2026-05-19: lighter.py + pacifica.py +
-         extended.py all exist in instruments-service; factory.py + orchestrator wired; defi_master Phase 2
-         checkbox flipped. — PM@d40d0f0d6
+6. - [x] ✅ **Phase 2 — MTDS wiring for chain primitives** — UAC export surface (HYPERLIQUID/STARKNET RPC templates +
+         ChainKind) shipped UAC@fa7e868+36eae39; MTDS `_ChainAnnotatingWriter` + `ONCHAIN_PERP_VENUE_CHAIN` dict +
+         per-venue chain annotation wired for LIGHTER/PACIFICA/EXTENDED/HYPERLIQUID. — mtds@705a635 + uac@36eae39
+7. - [x] ✅ **Phase 3 — instruments-service CLOB adapters** — Audit 2026-05-19: lighter.py + pacifica.py + extended.py
+         all exist in instruments-service; factory.py + orchestrator wired; defi_master Phase 2 checkbox flipped. —
+         PM@d40d0f0d6
 8. - [x] ✅ **Plan flips** for all shipped items. — PM@d40d0f0d6 + mtds@705a635
 
 ---
@@ -293,23 +297,29 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 1. - [ ] **Phase 6 — per-chain backfill scripts** (items 6J, 7E unblocked — upstream shipped). Run backfill for each
          chain primitive. (infra 0.8×, ~6 = 4.8 cal)
-2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — already `[x] ✅` in plan body (slot 1 shipped PM@75560065 2026-05-18; Group F items 17-20 refreshed). No further action.
+2. - [x] ✅ **Phase 7.I — defi_catalogue instruments cross-ref** — already `[x] ✅` in plan body (slot 1 shipped
+         PM@75560065 2026-05-18; Group F items 17-20 refreshed). No further action.
 3. - [ ] **Remaining open items** — read plan body and ship all remaining `- [ ]` items in order. (mixed, ~10 = 8.0 cal)
 4. - [ ] **Close defi_catalogue** — flip all remaining checkboxes; mark plan `status: complete` if all done. Push. (0.5
          cal)
 
 **Part B — defi_simulation_realism** (plan at 98%, 0.7 cal left — 1 item):
 
-5. - [x] ✅ **Final item** — `defi_simulation_realism_2026_05_10.md` ARCHIVED in `plans/archive/` with 0 open items. All items `[x]`. No remaining work.
+5. - [x] ✅ **Final item** — `defi_simulation_realism_2026_05_10.md` ARCHIVED in `plans/archive/` with 0 open items. All
+         items `[x]`. No remaining work.
 
 **Part C — dex_perp_and_venue_data** (plan at 94%, 0.5 cal left):
 
-6. - [ ] **Final 2 items** — (1) VM launcher for Extended OHLCV backfill: `BLOCKED-OPERATOR-DECISION` (ping in plan body §2F); (2) Uniswap V3 subgraph research: `DEFERRED NICE-TO-HAVE P3` per plan body §4C. Both items unshippable without operator unblock. dex_perp at 94% done.
+6. - [ ] **Final 2 items** — (1) VM launcher for Extended OHLCV backfill: `BLOCKED-OPERATOR-DECISION` (ping in plan body
+         §2F); (2) Uniswap V3 subgraph research: `DEFERRED NICE-TO-HAVE P3` per plan body §4C. Both items unshippable
+         without operator unblock. dex_perp at 94% done.
 
 **Part D — hard_schema_enforcement** (no-deadline, 4.8 cal):
 
-7. - [ ] **Open items** — read `hard_schema_enforcement_2026_05_08.md` and ship remaining items. (design 0.6×, ~8 = 4.8
-         cal)
+7. - [x] ✅ **Open items — FUTURE+OPTION model_validator rules** — shipped FUTURE+OPTION expiry non-null rules in
+         `InstrumentRecord._enforce_per_asset_group_required_fields` (tradfi_master Q1+Q2 gates passed 2026-05-13). 15
+         tests in `tests/internal/unit/test_instrument_record_hard_required_fields.py`. QG ✅ ALL PASSED. uac@80aef10
+         2026-05-19. (design 0.6×, ~8 = 4.8 cal)
 
 ---
 
