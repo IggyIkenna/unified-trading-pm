@@ -281,12 +281,13 @@ findings total** across 48 tiers. Phase 1 → DONE; Phase 2 (disposition tagging
       Position-balance 6/11/3 · Instruments 2/17/3 · Alerting 6/12/3(+1) · Ops 6/11/2 · Governance 4/7/5 · UI 3/12/4 ·
       Testing 6/12/2 (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER (+KEEP)).
 
-- [ ] [AGENT] P0. **2.C Operator review.** **[PENDING-OPERATOR — cannot close without explicit operator ack]**
+- [ ] [AGENT] P0. **2.C Operator review.** **[PENDING-OPERATOR — cannot close without explicit operator ack]** **[DEFERRED-OPERATOR-DECISION]**
       Operator approves dispositions; disagreements surface as P0 ping. Dispositions aggregated above; the ~12 BIG
       findings (EX-1, EX-10, IN-1, PB-1/2/3, ML-1, ML-2, AL-1/AL-2, TS-5, + the catalogue P0 GMX/DRIFT) are escalated
       in `plans/active/_agent_pings.md` (see slot-8 ping 2026-05-12 line ~614). Pinged at 2026-05-12 — awaiting operator
       acknowledgement before this item can flip. Agent work (dispositions, issue docs, pings) 100% complete.
       2026-05-19 slot 9: confirmed still pending — no operator ack found in _agent_pings.md.
+      2026-05-19 slot 2 (R9-S2-CODEX-VS-CITADEL-CLOSE): all agent work complete; tagged DEFERRED-OPERATOR-DECISION. Awaiting R-10/R-11/AL-14 operator ack to close.
 
 **Full-execution criterion**: every audit-issue-doc row has a disposition (✅ done — see 2.B table); operator has signed
 off via Q&A or chat (🟡 pending).
@@ -441,19 +442,21 @@ DONE 2026-05-12.** 12 issue docs flipped per-row; 3 operator-gates + 4 P2 sub-ga
       (242 across 48 tiers / 12 areas), per-area summary table, disposition counts (63 IMMEDIATE / 137 PRE_CUTOVER / 36
       POST_CUTOVER / 6 KEEP), per-area issue-doc links, IMMEDIATE/PRE_CUTOVER batch commit shas, POST_CUTOVER plan
       filings, remaining operator gates.
-- [ ] [AGENT] P0. **6.B Operator sign-off.** **[PENDING-OPERATOR — cannot close without explicit operator ack]**
+- [ ] [AGENT] P0. **6.B Operator sign-off.** **[PENDING-OPERATOR — cannot close without explicit operator ack]** **[DEFERRED-OPERATOR-DECISION]**
       Operator reviews + approves; doc status flips to `signed-off`. Blocked by 2.C operator review ack.
       2026-05-19 slot 9: audit work complete; awaiting operator. Ping logged 2026-05-12.
+      2026-05-19 slot 2 (R9-S2-CODEX-VS-CITADEL-CLOSE): tagged DEFERRED-OPERATOR-DECISION. Blocked on 2.C ack.
 
 **Full-execution criterion**: sign-off doc exists; operator approved; counts add up (immediate + pre-cutover +
 post-cutover == total).
 
 ## Phase 7 — Cutover gate (Day 13, ~0.25 AI-day)
 
-- [ ] [AGENT] P0. **7.A Master plan row.** **[BLOCKED — depends on 6.B operator sign-off + slot-1-main owns master plan]**
+- [ ] [AGENT] P0. **7.A Master plan row.** **[BLOCKED — depends on 6.B operator sign-off + slot-1-main owns master plan]** **[DEFERRED-OPERATOR-DECISION]**
       Group A item: "Codex vs Citadel audit signed off; pre-cutover items shipped." Blocked by 6.B. Slot-1-main
       owns master_to_live_defi_2026_05_23.md edits (per CLAUDE.md "Slot precedence"). Note: plan is already tracked
       in active inventory table (line 164 master plan). 2026-05-19 slot 9.
+      2026-05-19 slot 2 (R9-S2-CODEX-VS-CITADEL-CLOSE): tagged DEFERRED-OPERATOR-DECISION. Blocked on 6.B + slot-1-main ownership.
 
 **Full-execution criterion**: master plan row green.
 
