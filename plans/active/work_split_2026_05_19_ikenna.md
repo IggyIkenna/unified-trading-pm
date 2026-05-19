@@ -239,16 +239,14 @@ Status, Logs, Strategy, Kill-switch, Config.
 
 Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Focus on:
 
-1. - [ ] **Strategy catalogue** — populate archetype × venue matrix in UAC. (design 0.6×, ~4 = 2.4 cal)
-2. - [ ] **Strategy IDs** — stable ID schema in UAC + registry for each catalogue row. (design 0.6×, ~4 = 2.4 cal)
-3. - [ ] **Client model + accounts** — wire capital allocation matrix per (client, archetype, venue). (brand-new 1.0×,
-         ~3 = 3.0 cal)
+1. - [x] ✅ **Strategy catalogue** — archetype × venue matrix in UAC; STRATEGY_REGISTRY + ArchetypeConfig SSOT. — uac@18bdc6e + uac@3cae1c2 (backfilled 2026-05-19)
+2. - [x] ✅ **Strategy IDs** — stable ID schema + `parse_strategy_id` / `format_strategy_id` canonical helpers. — uac@5083d65 (backfilled 2026-05-19)
+3. - [x] ✅ **Client model + accounts** — `CapitalAllocation` frozen dataclass + `CAPITAL_ALLOCATION_SEED` + `ClientDefinition` / `ClientRegistry` SSOT; 28 tests. — uac@3591037 + uac@3cae1c2 (backfilled 2026-05-19)
 
 **Part B — simulation_scenarios_topology** (plan at 62%, 7.6 cal left):
 
-4. - [ ] **Phase 3 — scenario-runner integration** — per the May-12 design-shipped spec. Wire scenario fan-out into
-         risk + alerting. (brand-new 1.0×, ~5 = 5.0 cal)
-5. - [ ] **Phase 4 — per-scenario fixture sets** — 10 scenarios × fixture each. (brand-new 1.0×, ~3 = 3.0 cal)
+4. - [x] ✅ **Phase 3 — scenario-runner integration** — 3.E `AdversarialMatchingEngine` (RejectFills/LatencyInject/BookSpoof at fill boundary) + 3.F alerting `synthetic=True` suppression + risk/alerting consumers. — execution-service@d0ec76f1 + alerting@3c0d675 (Harsh slot 5, 2026-05-12; backfilled 2026-05-19)
+5. - [x] ✅ **Phase 4 — per-scenario fixture sets** — 10 `ScenarioOverlay` registry instances (2 CeFi + 6 DeFi + 2 cross_asset); SCENARIO_REGISTRY populated. — uac@33630a6 (slot 7 Day-2 2026-05-12; backfilled 2026-05-19)
 
 **Part C — defi_master Phase 2–3** (plan at 33%, 9.4 cal left):
 
