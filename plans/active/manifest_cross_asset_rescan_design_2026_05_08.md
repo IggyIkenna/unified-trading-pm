@@ -226,17 +226,16 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       flips (trades+tbbo+ohlcv_1m) + 0 stamps ~08:27–08:34 UTC. Sports/prediction apply-flips deferred — needs separate
       authorized slot (99,620 sports phantoms). **DEFERRED**: Script 3 apply-flips for defi/sports/prediction blocked on
       classifier fix (P1 issue filed).
-- [ ] [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
+- [x] ✅ **DEFERRED** [SCRIPT] P1. **PRE_CUTOVER — switch all 3 reconciliation scripts to `resolve_bucket_name`** (blocked on physical
       bucket migration landing). Currently all 3 scripts hardcode legacy non-env-tiered bucket names (e.g.
       `market-data-tick-cefi-{PROJECT_ID}`) violating the bucket-name SSOT (b+) codified 2026-05-11.
       `cloud-providers.yaml` lines 124-132 already define the canonical env-tiered templates
       (`market-data-tick-cefi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`). Scripts must NOT adopt `resolve_bucket_name`
       until the physical GCS buckets are renamed/created — adopting early would point to non-existent buckets and fail
-      all manifest reads. **Blocker**: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (create env-tiered
-      buckets + copy data + cutover). After that plan's Phase 2.6 gate, update the 3 scripts: replace
-      `ASSET_GROUP_CONFIG` hardcoded bucket strings with
-      `resolve_bucket_name(cloud=Cloud.GCP, kind="market-data-tick", asset_group=ag)` (and `kind="instruments-store"`
-      for sports). Remove hardcoded `PROJECT_ID` constant.
+      all manifest reads. **MIGRATED TO**: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (create env-tiered
+      buckets + copy data + cutover). After Phase 2.6 gate, update the 3 scripts: replace `ASSET_GROUP_CONFIG` hardcoded
+      bucket strings with `resolve_bucket_name(cloud=Cloud.GCP, kind="market-data-tick", asset_group=ag)` (and
+      `kind="instruments-store"` for sports). Remove hardcoded `PROJECT_ID` constant. Deferred 2026-05-19 slot-8.
 
 ## Reconciliation execution order
 
