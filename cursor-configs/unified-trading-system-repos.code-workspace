@@ -2,7 +2,7 @@
   "folders": [
     {
       "path": "../../",
-      "name": "📁 Workspace Root"
+      "name": "\ud83d\udcc1 Workspace Root"
     },
     {
       "path": "../../unified-trading-api"
@@ -12,11 +12,11 @@
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "📋 Project Management"
+      "name": "\ud83d\udccb Project Management"
     },
     {
       "path": "../../unified-trading-system-ui",
-      "name": "🎨 UI"
+      "name": "\ud83c\udfa8 UI"
     },
     {
       "path": "../../batch-live-reconciliation-service"
@@ -83,7 +83,10 @@
     },
     {
       "path": "../../e2e-testing",
-      "name": "🧪 E2E Testing"
+      "name": "\ud83e\uddea E2E Testing"
+    },
+    {
+      "path": "../../orchestrator-service"
     }
   ],
   "settings": {
@@ -309,7 +312,18 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-api",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-library",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-pm",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-system-ui"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/unified-trading-system-ui",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/3/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/5/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/6/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/7/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/8/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/orchestrator-service",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/orchestrator-service"
     ],
     "git.scanRepositories": [
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-api",
@@ -337,7 +351,8 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/system-integration-tests",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/trading-agent-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-api-contracts",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/e2e-testing"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/e2e-testing",
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/orchestrator-service"
     ],
     "git.maxRepositoryCount": 30,
     "git.repositoryScanMaxDepth": 0,
@@ -349,7 +364,9 @@
     "git.showProgress": false,
     "python.defaultInterpreterPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos/.venv-workspace/bin/python",
     "python.venvPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos",
-    "python.venvFolders": [".venv-workspace"],
+    "python.venvFolders": [
+      ".venv-workspace"
+    ],
     "python.terminal.activateEnvironment": true,
     "python.languageServer": "None",
     "mypy-type-checker.enabled": false,

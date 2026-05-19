@@ -1,0 +1,300 @@
+---
+title: Harsh's daily work-split — 2026-05-19 (Cycle 2 Day-4; mechanical + infra sweep, ~116 cal AI-days)
+type: coordination-doc
+status: active
+created: 2026-05-19
+deadline: 2026-05-23
+horizon: 4 calendar days (19 May → 23 May); Cycle 2 close + Cycle 3 paper-smoke
+companion_to: plans/active/work_split_2026_05_19_ikenna.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-19
+estimate_class: infra
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 2.4
+effective_concurrent_slots: 8
+estimate_calibration_note: |
+  Harsh side owns ~116 cal AI-days today (1/2 of Ikenna's 231 = 2:1 ratio). Mix of
+  mechanical sweeps, infra runs, and plan close-outs. All heavy decision-bearing cutover
+  work is on Ikenna side. Harsh stays in implement-from-spec mode. Carries S3-S20 SUSTAIN
+  queue from May-18 split (all open). pvl-p18a (paper VM) still monitored by dedicated
+  Harsh slot — confirm still running before all else.
+---
+
+# Harsh's daily work-split — 2026-05-19 (mechanical + infra sweep)
+
+> **Scope discipline**: mechanical work + infra runs + close-outs + SUSTAIN sweeps. Heavy cutover decisions are on
+> Ikenna side today. Harsh side = high throughput, low collision risk. Do not touch Ikenna surfaces: UTL L3 flips,
+> writegate Phase 6.6/6.7, deployment_ui_lifecycle_tabs new tabs, api_keys Phase 3–4.
+>
+> **pvl-p18a**: paper VM `strategy-paper-carry-staked-basis-20260518-115404` must stay running until 2026-05-21 05:31
+> UTC. Dedicated Harsh slot monitors. If VM goes STOPPED → operator ping immediately.
+>
+> **Carries forward**: May-18 Harsh S3-S20 SUSTAIN items + open plan close-outs from May-16/17 session deferrals.
+
+---
+
+## Hard rules
+
+1. **Sustain sweeps are mechanical** — no architecture decisions. If a sweep surfaces a structural bug (not a lint/style
+   issue), file an issue doc and continue.
+2. **Half-1 + Half-2 discipline**: commit + push code THEN flip checkbox `docs(plans):` in SAME AGENT TURN.
+3. **No deployment-api new logic** — Ikenna slot 2 owns L5 flip. Harsh takes only test coverage work on deployment-api
+   (different files).
+4. **pvl-p18a monitor**: slot 2 pings main every 2h with VM health status.
+
+---
+
+## Slot stack — ~116 cal AI-days across 8 implementer slots
+
+| Slot      | Theme                                                                                                                                                                                                                          | Cal AI-days | Plans owned                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
+| 1         | Main orchestrator + pvl-p18a oversight + cross-side sync                                                                                                                                                                       | —           | This LEDGER                                                                                         |
+| 2         | pvl-p18a monitor + alerting_live_rules close (2.8) + wave3x + manifest_schema_final_gate + sustain S3–S6                                                                                                                       | ~14         | alerting_live_rules, wave3x_residuals, manifest_schema_final_gate                                   |
+| 3         | aws_migration Phase 3–6 (27.6 cal remaining, 14% done)                                                                                                                                                                         | ~28         | aws_migration_defi_first                                                                            |
+| 4         | hard_schema_enforcement (4.8) + strategy_archetype_taxonomy (4.8) + cme_polymarket_arb Phase 3 (if unblocked by Ikenna slot 9)                                                                                                 | ~12         | hard_schema_enforcement, strategy_archetype_taxonomy                                                |
+| 5         | features_repo_consolidation Phase residuals (4.8) + gcs_migration_bundle close (4.8) + AUDIT_pre_may8 (1.5) + expected_unattempted_propagation close (1.3)                                                                     | ~12         | features_repo_consolidation, gcs_migration_bundle, AUDIT_pre_may8, expected_unattempted_propagation |
+| 6         | mdps_streaming Phase 2 (2.1) + mtds_databento close (1.2) + data_status_drilldown close (1.8) + defi_archetypes_canonicalisation close (1.8) + sustain S7–S10                                                                  | ~10         | mdps_streaming, mtds_databento, data_status_drilldown, defi_archetypes_canonicalisation             |
+| 7         | dex_perp_onboarding_handover (6.0) + gate_3_phantom_audit (0.8) + trigger_based_reference_data (1.9) + hedge_ratio_snapshot (0.5) + api_football_minimal (0.4) + tradfi_ohlcv close (0.4) + mock_data_benchmarking close (0.5) | ~11         | dex_perp_onboarding, gate_3_phantom, trigger_based_reference, hedge_ratio                           |
+| 8         | bucket_name_ssot residuals (2.7) + expected_universe_v2 close (1.6) + manifest_cross_asset_rescan (1.2) + available_at_lookahead (0.5) + deploy_missing_auto_launch final (0.5) + sustain S11–S15                              | ~10         | bucket_name_ssot, expected_universe_v2, manifest_cross_asset_rescan                                 |
+| 9         | compute_optimization close (1.9) + codex_vs_citadel close (1.4) + promote_workflow_may23 support + deployment_and_qg close (0.4) + missing_question_docs (0.9) + pm_coordination_ledger (0.3) + sustain S16–S20                | ~9          | compute_optimization, codex_vs_citadel, deployment_and_qg, missing_question_docs                    |
+| **Total** |                                                                                                                                                                                                                                | **~106**    |                                                                                                     |
+
+---
+
+### Slot 1 — Main orchestrator (continuous)
+
+1. **pvl-p18a oversight** — confirm VM is still running every 2h. If stopped → operator ping.
+2. **Cross-side sync** — check `_agent_pings.md` + Harsh `_agent_pings.md` every ~30 min. ACK the pending Ikenna-main
+   ping from 2026-05-18 12:17 UTC (features_tick_observation_audit routing + StrategyDecisionContext correlation_id):
+   - Scaffold `features_tick_observation_audit_2026_05_18.md` sub-plan under Harsh ownership.
+   - Wire `FeatureObservationRecord.correlation_id: str | None = None` (field exists in UAC
+     `StrategyDecisionContextRecord` — don't block on Ikenna Phase 5 merge).
+   - Route implementation to Harsh slot 6 (features-onchain territory).
+3. **EOD inventory sweep** — run regenerator after all slots report DONE.
+4. **Conflict monitor** — watch for any Ikenna L3/L5 flip commits on UTL/deployment-api; pause any Harsh work touching
+   those files until write-pause window closes.
+
+---
+
+### Slot 2 — pvl-p18a monitor + alerting close + wave3x + manifest_schema + sustain S3–S6 — ~14 cal AI-days
+
+1. - [ ] **pvl-p18a health check** — run every 2h:
+         `gcloud compute instances describe strategy-paper-carry-staked-basis-20260518-115404    --zone asia-northeast1-a --format='get(status)'`.
+         Log to pings/slot_2.md. (infra 0.8×, ~0.5 per check)
+2. - [ ] **alerting_live_rules remaining 15 items** (plan at 79%, 2.8 cal left) — read plan for all remaining `- [ ]`
+         items and ship them. Target: 100% completion. (design 0.6×, ~5 = 2.8 cal)
+3. - [ ] **wave3x_residual_ssots close** (plan at 74%, 0.9 cal left) — read plan for remaining items. (design 0.6×, ~2 =
+         0.9 cal)
+4. - [ ] **manifest_schema_final_gate residuals** (plan at 52%, 1.0 cal left) — ship remaining `- [ ]` items. (design
+         0.6×, ~2 = 1.0 cal)
+5. - [ ] **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
+         enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal)
+6. - [ ] **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** — every bare `# type: ignore` must have a
+         comment explaining why. (refactor 0.4×, ~2 = 0.8 cal)
+7. - [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
+         shared. (refactor 0.4×, ~2 = 0.8 cal)
+8. - [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** —
+         `cd unified-api-contracts &&    pytest tests/test_cassette_schema_parity.py`. Fix any mismatches. (research
+         1.2×, ~2 = 2.4 cal)
+9. - [ ] **Plan flips** for all items shipped. (0.5 cal)
+
+---
+
+### Slot 3 — aws_migration Phase 3–6 — ~28 cal AI-days
+
+**Plan**: `aws_migration_defi_first_2026_05_07.md` (plan at 14%, 27.6 cal left).
+
+Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rsync + code path.
+
+1. - [ ] **Phase 1.B — AWS IAM matrix provisioning** — mirror GCP per-service SA matrix. Per plan §1.B script steps.
+         (infra 0.8×, ~6 = 4.8 cal)
+2. - [ ] **Phase 1.C — ECR setup + dual-cloud image push** — create ECR per service in ap-northeast-1. (infra 0.8×, ~3 =
+         2.4 cal)
+3. - [ ] **Phase 1.D — AWS S3 non-DeFi bucket parity** — extend bucket_config.yaml with AWS entries for sports +
+         prediction + tradfi buckets. (infra 0.8×, ~3 = 2.4 cal)
+4. - [ ] **Phase 2.A — Per-venue sub-key provisioning prep** — scaffold credential request list; file operator ping for
+         manual provisioning. (infra 0.8×, ~1 = 0.8 cal)
+5. - [ ] **Phase 4.A — DeFi mainnet wallet provisioning verify** — confirm CLOUD_KMS_ENCRYPTED wallet generation works
+         on AWS KMS as well as GCP KMS. (infra 0.8×, ~2 = 1.6 cal)
+6. - [ ] **GAP-2.4.A** — Verify aws_migration writes use same Phase 1.B bucket naming as GCP. (research 1.2×, ~1 = 1.2
+         cal)
+7. - [ ] **GAP-2.4.B** — Provision env-tiered AWS buckets to match GCP yaml schema. Run
+         `deployment-service/scripts/vm/provision-aws-buckets.sh`. (infra 0.8×, ~4 = 3.2 cal)
+8. - [ ] **GAP-2.4.C** — Migrate flat-bucket data into env-tiered AWS structure. (infra 0.8×, ~5 = 4.0 cal)
+9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
+
+---
+
+### Slot 4 — hard_schema_enforcement + strategy_archetype_taxonomy — ~12 cal AI-days
+
+> **Note**: if Ikenna slot 9 ships cme_polymarket_arb Phase 1 early, slot 4 can pick up Phase 2 as reserve.
+
+1. - [ ] **hard_schema_enforcement** (plan no-deadline, 4.8 cal left) — read `hard_schema_enforcement_2026_05_08.md` for
+         all open `- [ ]` items. Ship them. Covers workspace-wide hard schema enforcement at write boundaries. (design
+         0.6×, ~8 = 4.8 cal)
+2. - [ ] **strategy_archetype_taxonomy** (plan no-deadline, 4.8 cal left) — read
+         `strategy_archetype_taxonomy_2026_05_12.md` for open items. Ship them. (design 0.6×, ~8 = 4.8 cal)
+3. - [ ] **deployment_and_qg_strategy_implementation close** (plan at 98%, 0.4 cal left) — read plan for the 2 remaining
+         `- [ ]` items and ship. (infra 0.8×, ~1 = 0.4 cal)
+4. - [ ] **Plan flips** for all items. (0.5 cal)
+
+---
+
+### Slot 5 — features_repo_consolidation + gcs_migration_bundle + AUDIT + propagation — ~12 cal AI-days
+
+1. - [ ] **features_repo_consolidation Phase residuals** (overdue May-13, 4.8 cal left) — read plan for remaining
+         `- [ ]` items. Focus on any items not yet in QG pipeline. (refactor 0.4×, ~12 = 4.8 cal)
+2. - [ ] **gcs_migration_bundle_pipeline_mode close** (overdue May-15, 4.8 cal left) — read plan for remaining items.
+         (infra 0.8×, ~6 = 4.8 cal)
+3. - [ ] **AUDIT_pre_may_8_cleanup** (overdue May-15, 1.5 cal left) — read plan for open items. (design 0.6×, ~3 = 1.5
+         cal)
+4. - [ ] **expected_unattempted_propagation_chain close** (overdue May-15, plan at 80%, 1.3 cal left) — read plan for
+         remaining `- [ ]` items and ship. (brand-new 1.0×, ~1.3 = 1.3 cal)
+5. - [ ] **Plan flips** for all shipped items. (0.5 cal)
+
+---
+
+### Slot 6 — mdps_streaming + mtds_databento + data_status_drilldown + defi_archetypes + sustain — ~10 cal AI-days
+
+> Also owns: scaffold `features_tick_observation_audit_2026_05_18.md` (new sub-plan per Ikenna-main May-18 12:17
+> routing).
+
+1. - [ ] **mdps_streaming Phase 2** (2.1 cal left) — wire `ResourceProfiler.on_memory_warning` to admission control
+         (gate new shard submissions when RSS > threshold). Unblocked by Phase 1.2B (MDPS@15c1889 May-18). (brand-new
+         1.0×, ~2 = 2.1 cal)
+2. - [ ] **mtds_databento_path_streaming close** (1.2 cal left) — read plan for remaining items. (design 0.6×, ~2 = 1.2
+         cal)
+3. - [ ] **data_status_drilldown_shard_atom_alignment close** (plan at 83%, 1.8 cal left) — ship remaining items.
+         (design 0.6×, ~3 = 1.8 cal)
+4. - [ ] **defi_archetypes_canonicalisation close** (plan at 85%, 1.8 cal left) — ship remaining items. (design 0.6×, ~3
+         = 1.8 cal)
+5. - [ ] **features_tick_observation_audit scaffold** — create
+         `plans/active/    features_tick_observation_audit_2026_05_18.md`; scaffold `FeatureObservationRecord` UAC
+         type + `FeatureObservationWriter`; wire `correlation_id: str | None = None`. (brand-new 1.0×, ~2 = 2.0 cal)
+6. - [ ] **S7. SUSTAIN — cross-repo `# noqa` justification audit** — every bare `# noqa` must be `# noqa: CODE  reason`.
+         (refactor 0.4×, ~2 = 0.8 cal)
+7. - [ ] **S8. SUSTAIN — cross-repo CI workflow consistency audit** — all repos have same quality-gates.yml structure.
+         (research 1.2×, ~1 = 1.2 cal)
+8. - [ ] **Plan flips** for all items. (0.5 cal)
+
+---
+
+### Slot 7 — dex_perp_onboarding + gate_3_phantom + trigger_based + hedge_ratio + small closes — ~11 cal AI-days
+
+1. - [ ] **dex_perp_onboarding_handover** (no-deadline, 6.0 cal left) — read plan for all open items. This is a handover
+         doc + implementation. Ship remaining items. (design 0.6×, ~10 = 6.0 cal)
+2. - [ ] **gate_3_phantom_audit_runbook** (no-deadline, 0.8 cal left) — read plan for open items. Ensure runbook has
+         `owner` / `cadence` / `verifier` / `last_executed`. (infra 0.8×, ~1 = 0.8 cal)
+3. - [ ] **trigger_based_reference_data close** (no-deadline, 1.9 cal left) — read plan for remaining `- [ ]` items.
+         (design 0.6×, ~3 = 1.9 cal)
+4. - [ ] **hedge_ratio_snapshot_persistence close** (deadline 2026-05-21!, 0.5 cal left) — read plan and ship remaining
+         items. URGENT — 2 days to deadline. (design 0.6×, ~1 = 0.5 cal)
+5. - [ ] **api_football_minimal_flattening close** (0.4 cal left) — 2 items remaining. Ship. (refactor 0.4×, ~1 = 0.4
+         cal)
+6. - [ ] **tradfi_ohlcv_only_mvp_backfill close** (0.4 cal left) — final 2 items. Ship. (infra 0.8×, ~0.5 = 0.4 cal)
+7. - [ ] **mock_data_pipeline_benchmarking close** (0.5 cal left, 94% done) — final 2 items. (design 0.6×, ~1 = 0.5 cal)
+8. - [ ] **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** — any `datetime.now()` without `tz=UTC` is a bug.
+         Sweep + fix. (refactor 0.4×, ~2 = 0.8 cal)
+9. - [ ] **S10. SUSTAIN — cross-repo test data fixture utilization audit** — orphan fixtures. (refactor 0.4×, ~2 = 0.8
+         cal)
+10. - [ ] **Plan flips** for all shipped. (0.5 cal)
+
+---
+
+### Slot 8 — bucket_name_ssot + expected_universe_v2 + manifest_cross_asset + sustain — ~10 cal AI-days
+
+1. - [ ] **bucket_name_ssot_canonicalisation residuals** (plan at 73%, 2.7 cal left) — read plan for remaining `- [ ]`
+         items (plan flip items from May-18 + any code items not yet on LDR). (refactor 0.4×, ~7 = 2.7 cal)
+2. - [ ] **expected_universe_v2 close** (plan at 73%, 1.6 cal left) — read plan for remaining items. (design 0.6×, ~3 =
+         1.6 cal)
+3. - [ ] **manifest_cross_asset_rescan close** (plan at 50%, 1.2 cal left) — read plan. (infra 0.8×, ~2 = 1.2 cal)
+4. - [ ] **available_at_lookahead_bias close** (plan at 66%, 0.5 cal left) — read plan for remaining items. (design
+         0.6×, ~1 = 0.5 cal)
+5. - [ ] **deploy_missing_auto_launch final item** (plan at 93%, 0.5 cal left) — the 1 remaining `- [ ]` item. Ship it.
+         (infra 0.8×, ~0.6 = 0.5 cal)
+6. - [ ] **S11. SUSTAIN — cross-repo docstring coverage audit (Google-style)** (refactor 0.4×, ~3 = 1.2 cal)
+7. - [ ] **S12. SUSTAIN — workspace-wide `requests` → `aiohttp` audit** — any sync `requests` call in an async service
+         context. (refactor 0.4×, ~2 = 0.8 cal)
+8. - [ ] **S13. SUSTAIN — cross-repo `from typing import List/Dict` sweep** → use builtins `list[...]`/`dict[...]`.
+         (refactor 0.4×, ~2 = 0.8 cal)
+9. - [ ] **S14. SUSTAIN — workspace-wide bare `except:` sweep** → `except Exception:` minimum. (refactor 0.4×, ~2 = 0.8
+         cal)
+10. - [ ] **Plan flips** for all shipped. (0.5 cal)
+
+---
+
+### Slot 9 — compute_optimization + codex_vs_citadel + deployment_and_qg + misc closes + sustain — ~9 cal AI-days
+
+1. - [ ] **compute_optimization_mock_data close** (plan at 60%, 1.9 cal left) — read plan for remaining items. (design
+         0.6×, ~3 = 1.9 cal)
+2. - [ ] **codex_vs_citadel_infrastructure_audit close** (plan at 91%, 1.4 cal left) — final items. (research 1.2×, ~1 =
+         1.4 cal)
+3. - [ ] **missing_question_docs_disposition** (pre-cutover, 0.9 cal left) — read plan for 3 remaining items. File
+         dispositions. (design 0.6×, ~2 = 0.9 cal)
+4. - [ ] **pm_coordination_ledger close** (0.3 cal left) — read plan for open items. (design 0.6×, ~0.5 = 0.3 cal)
+5. - [ ] **scratch_codefreeze_phase4 residuals** (0.8 cal left) — read plan. (refactor 0.4×, ~2 = 0.8 cal)
+6. - [ ] **features_service_qg_cleanup close** (0.8 cal left) — read plan for remaining items. (refactor 0.4×, ~2 = 0.8
+         cal)
+7. - [ ] **S15. SUSTAIN — cross-repo `pyrightconfig.json` exclude-list audit** (refactor 0.4×, ~2 = 0.8 cal)
+8. - [ ] **S16. SUSTAIN — workspace-wide hardcoded `"/tmp"` sweep** → `tempfile.gettempdir()`. Per CLAUDE.md. (refactor
+         0.4×, ~2 = 0.8 cal)
+9. - [ ] **S17. SUSTAIN — cross-repo `__init__.py` public-API audit** (refactor 0.4×, ~2 = 0.8 cal)
+10. - [ ] **S18. SUSTAIN — cross-repo line-length 100→120 migration audit** (refactor 0.4×, ~2 = 0.8 cal)
+11. - [ ] **S19. SUSTAIN — cross-repo ruff `select` rule consistency** (refactor 0.4×, ~1 = 0.4 cal)
+12. - [ ] **S20. SUSTAIN — cross-repo `setup.sh` consistency audit** (refactor 0.4×, ~1 = 0.4 cal)
+13. - [ ] **Plan flips** for all shipped. (0.5 cal)
+
+---
+
+## Done-definition (2026-05-19 EOD)
+
+- Slot 2: alerting_live_rules 100% + wave3x closed + manifest_schema_final_gate closed + S3–S6 sweeps done.
+- Slot 3: aws_migration Phases 1.B–1.D + 2.A + 4.A + GAP-2.4.A/B/C on LDR.
+- Slot 4: hard_schema_enforcement 100% + strategy_archetype_taxonomy 100% + deployment_and_qg closed.
+- Slot 5: features_repo_consolidation + gcs_migration_bundle + AUDIT_pre_may8 + expected_unattempted all closed.
+- Slot 6: mdps_streaming Phase 2 + mtds_databento + data_status_drilldown + defi_archetypes closed +
+  features_tick_observation_audit scaffolded.
+- Slot 7: dex_perp_onboarding + gate_3_phantom + trigger_based_reference + hedge_ratio (URGENT) + all small closes done.
+- Slot 8: bucket_name_ssot + expected_universe_v2 + manifest_cross_asset + available_at + deploy_missing closed +
+  S11–S14.
+- Slot 9: compute_optimization + codex_vs_citadel + misc closes + S15–S20 done.
+
+---
+
+## Spawn prompt — paste into each tab (slot N)
+
+```text
+You are slot N (Harsh side). Today is 2026-05-19 (Cycle 2 Day-4 — mechanical + infra sweep).
+
+Boot:
+1. SYNC TO LDR — from .tabs/<N>/:
+     for d in */; do
+       (cd "$d" && [ -d .git -o -f .git ] && \
+        git fetch origin live-defi-rollout --quiet && \
+        git merge --ff-only origin/live-defi-rollout 2>/dev/null) ;
+     done
+
+2. Read unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
+
+3. Read unified-trading-pm/plans/active/work_split_2026_05_19_harsh.md § "Slot <N>"
+
+4. Read your top plan-of-record.
+
+5. Boot ack at unified-trading-pm/harsh_orchestrator/pings/slot_<N>.md using `date -u`.
+
+6. Slot 2 ONLY: immediately check pvl-p18a VM status:
+   gcloud compute instances describe strategy-paper-carry-staked-basis-20260518-115404 \
+     --zone asia-northeast1-a --format='get(status)'
+   Log result to pings/slot_2.md. If NOT RUNNING → ping main immediately.
+
+CRITICAL RULES:
+* Plan-flip discipline: (Half 1) commit + push code, then (Half 2) docs(plans): checkbox
+  flip IN SAME AGENT TURN.
+* Mechanical work only — if you hit an architectural decision, file a issue doc and skip.
+* No touches to: UTL L3 wrappers, deployment-api _BUCKET_TEMPLATES, writegate Phase 6.6/6.7,
+  deployment_ui new tabs, api_keys Phase 3–4 (all Ikenna territory today).
+* git fetch before any commit on shared repos.
+* QG before push: bash scripts/quality-gates.sh (Pass 1).
+
+Now begin.
+```
