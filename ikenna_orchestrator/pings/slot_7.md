@@ -1790,3 +1790,29 @@ tick-76b (setup.py 4 violations).
     `_inject_exec_algorithm_into_config` 21L)
 
 **Running count**: ~196/377 cleared (~52%); active non-excluded violations 4→0 in these files; tick-76 complete.
+
+## [slot 7 → main] 2026-05-19 — defi_master Phase 2 + forward-poll launcher
+
+**Session: continued from prior context compaction**
+
+**Deliverables**:
+
+1. **MTDS ChainKind wiring** — `market-tick-data-service@705a635`:
+   - `_ChainAnnotatingWriter` class wraps any `ChunkWriter` to stamp chunks with `chain` column
+   - `ONCHAIN_PERP_VENUE_CHAIN` dict exported for VM launchers / coverage matrix
+   - Chain constants: LIGHTER=ZKSYNC, PACIFICA=SOLANA, EXTENDED=STARKNET, HYPERLIQUID=HYPERLIQUID_L1
+   - Per-venue routing for LIGHTER-ZKSYNC (3 sub-paths), PACIFICA-SOLANA (2 sub-paths), EXTENDED-STARKNET wired
+
+2. **UAC surface fix** — `unified-api-contracts@36eae39`:
+   - `_defi.py` re-imports `HYPERLIQUID_RPC_TEMPLATES` + `STARKNET_RPC_TEMPLATES` from `_defi_chain_data`
+   - Completes the export chain started in `uac@fa7e868`
+
+3. **Forward-poll launcher** — `deployment-service@c5d2fa1`:
+   - `scripts/vm/launch-cefi-onchain-forward-poll.sh` — per-venue singleton-locked, covers LIGHTER + PACIFICA + EXTENDED + HYPERLIQUID + ASTER
+   - VM prefixes: cefi-lighter-/cefi-pacifica-/cefi-extended-/cefi-hyperliquid-/aster-fwd- (all in vm_zombie_watchdog)
+   - Unblocks CARRY_BASIS_PERP + ARBITRAGE_PRICE_DISPERSION signal generation
+
+4. **Plan flips** — `unified-trading-pm@131729a6a` (work_split items 6+7+8) + defi_master forward-poll launcher checkbox
+
+**defi_master items shipped**: forward-poll launcher P0 now `[x] ✅`
+**work_split items 6/7/8**: all flipped ✅

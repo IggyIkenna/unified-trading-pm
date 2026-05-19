@@ -451,11 +451,11 @@ delta-neutral carry edge if captured). DEX-DEX funding-rate dispersion is the hi
 table per HANDOVER. Forward-poll wiring unblocks `CARRY_BASIS_PERP` + `ARBITRAGE_PRICE_DISPERSION` signal generation for
 these venues.
 
-- [ ] [AGENT] P0. **Forward-poll launcher** `deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh` covering
+- [x] ✅ [AGENT] P0. **Forward-poll launcher** `deployment-service/scripts/vm/launch-cefi-onchain-forward-poll.sh` covering
       LIGHTER-ZKSYNC + PACIFICA-SOLANA + EXTENDED-STARKNET (+ HYPERLIQUID + ASTER for parity). Singleton-locked pattern
       (mirror `launch-sfi-forward-poll.sh`). Polls `/funding` every 1-5 min → MTDS `data_type=perp_funding`;
       `/recentTrades` every ~10s → live tape; `/orderBookOrders` / `/book` snapshots every ~30s → slippage-modeling
-      input. [AUDIT 2026-05-07: FRESH — required before live trading per HANDOVER Item A]
+      input. — deployment-service@c5d2fa1 (2026-05-19)
 - [x] [AGENT] P0. **MTDS perp_funding adapter** for LIGHTER + PACIFICA + EXTENDED — venue iteration in
       `mtds-perp-funding-` VM launcher; schema parity with existing Bybit / Binance / OKX / Deribit funding feed (per
       UAC `data_type=perp_funding` shape). [AUDIT 2026-05-07: FRESH — required before forward-poll launcher works]
