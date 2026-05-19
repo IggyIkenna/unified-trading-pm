@@ -1,7 +1,7 @@
 ---
 title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
 type: scratch
-status: prep — execution gated on Ikenna slot 3 UAC PipelineMode enum + MTDS sweep landing on live-defi-rollout
+status: CLOSED 2026-05-19 slot-5 — gating deps both landed; fan-out not needed; work done by Ikenna slot 3 directly
 created: 2026-05-12
 companion_to:
   plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (freeze-gate item 3, line ~153) +
@@ -9,7 +9,7 @@ companion_to:
   plans/active/manifest_schema_final_gate_2026_05_09.md (Phase 4)
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
-last_updated: 2026-05-15
+last_updated: 2026-05-19
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
@@ -18,6 +18,20 @@ estimate_calibration_note: |
   handlers — pipeline_mode= arg insertion at each handler call. refactor class multiplier 0.4x
   (mechanical sweep, well-defined target). Baseline 2 AI-days for the full sweep across MTDS;
   calibrated 0.8 AI-day.
+---
+
+## ✅ CLOSED 2026-05-19 slot-5
+
+Both gating deps landed before this fan-out was needed:
+1. UAC `PipelineMode` enum + 6 new `BATCH_*` values (BATCH_YAHOO/BARCHART/FOOTYSTATS/HYPERLIQUID_REST/PYTH_HERMES/CHAINLINK) — UAC@`52d289c`+`7d7ea4c`
+2. Ikenna slot 3 Phase 4.MTDS sweep — MTDS@`3da3f43` (97 callsites in 26 files, `pipeline_mode=` added to all handlers)
+
+PM baseline shrunk from 114 → 17 (FEATURES-only) → 6 remaining after UTL sweep. Fan-out sub-agents never spawned — single sweep was more efficient.
+
+**Remaining scope deferred**: `DefiManifestRecorder` `record_captured` full-v8 migration (df-flow propagation through every DeFi handler) → tracked at `manifest_schema_final_gate_2026_05_09.md` Phase 4.DEFAULT-REMOVAL.
+
+0 open `- [ ]` checkboxes in this scratch plan — done_definition satisfied.
+
 ---
 
 ## Deferred work — migrated to:
