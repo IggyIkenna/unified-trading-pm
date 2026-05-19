@@ -5,6 +5,79 @@
 
 # Slot 6 Ping Ledger
 
+## [main → slot 6] 2026-05-19 RE-DISPATCH — work-split stale; plan is 89% done; pick up AGENT-half of remaining HUMAN+AGENT items
+
+**Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
+
+**Context — IMPORTANT FINDING**: Slot 6's 2026-05-19 work-split lists items 1-7 as `[ ]` (30 cal AI-days
+"unstarted"). **This is wrong.** The actual plan
+[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md) is
+**89% done (33/37 items ✅)**. Slot 6 itself backfilled Phase B.1+B.2 + shipped F.1+F.2+G.1 today at
+deployment-ui@`ba009b2` + deployment-api@`ffd97c1` + utl@`424e03af`. The work-split was authored before today's plan
+body refresh and is stale.
+
+**Only 4 items genuinely open**, all `[HUMAN]` or `[HUMAN+AGENT]` tagged:
+
+- **F.3** `[HUMAN+AGENT]` — Update CLAUDE.md "VM Naming Convention" section with `lifecycle_class` requirement +
+  experiment-VM `run_id` suffix rule. AGENT can draft; operator commits.
+- **H.4** `[HUMAN+AGENT]` — Provision staging + prod Cloud Run instances of deployment-api + Firebase Hosting under
+  `staging.<research-domain>/deployment` + `<research-domain>/deployment`. DNS, TLS, IAM. AGENT can write the
+  provisioning checklist + IAM bindings spec; operator runs the actual provision.
+- **G.2** `[HUMAN+AGENT]` — Deploy 6-tab UI + Monitor sub-tabs + new deployment-api endpoints to staging GCP +
+  AWS-staging mirror. AGENT can write the deploy runbook (sequence + verification steps + smoke-cluster smoke-test
+  script); operator runs the deploy.
+- **G.3** `[HUMAN]` — Operator sign-off on 6-tab UX. Pure operator action.
+
+**Tasks for slot 6 this session**:
+
+1. **Work-split correction** — flip items 1-7 in
+   [`work_split_2026_05_19_ikenna.md`](../../plans/active/work_split_2026_05_19_ikenna.md) § Slot 6 from `[ ]` to
+   `[x] ✅` with evidence pointers to the plan body (Phase A.1-A.5 + B.1-B.4 + F.1-F.2 + G.1 SHAs). Cite the relevant
+   commits per plan body (UAC@`ba94d05` + deployment-service@`cc3f98a` + PM@`ebe5cc09`/`eb8a96ca` +
+   deployment-ui@`567c8a1`/`ba009b2` + deployment-api@`ffd97c1` + utl@`424e03af`). Ship as one
+   `docs(plans): flip slot-6 items 1-7 — deployment-ui plan 89% done, work-split was stale` commit.
+
+2. **F.3 AGENT-half — draft CLAUDE.md VM Naming Convention update** — write the new section text + propose where to
+   insert in existing CLAUDE.md. Save as a `.draft.md` next to CLAUDE.md (NOT a direct edit — operator decides where
+   it lands + when). Reference Phase A.2 SSOT (`VmPrefixSpec` + `lifecycle_class` field) +
+   experiment-VM `exp-<service>-<run_id>-<ts>` suffix rule. Include 2-3 example VM names per lifecycle class.
+
+3. **H.4 AGENT-half — staging+prod provisioning spec** — write
+   `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` (or similar) capturing:
+   - GCP Cloud Run service definitions for `deployment-api` (staging + prod tier)
+   - Firebase Hosting site configs for `deployment-ui` (staging + prod tier)
+   - DNS records (`staging.<research-domain>/deployment` + `<research-domain>/deployment`)
+   - TLS cert provisioning (Cloud Run managed certs)
+   - IAM bindings: deployment-api service account scoped to env tier (cross-env data leakage prevention per Phase
+     A.5)
+   - Reference existing trading-system-UI deployment pattern (look it up; cite paths)
+   Output is a runbook the operator can execute step-by-step. Do NOT actually provision.
+
+4. **G.2 AGENT-half — staging deploy runbook** — write
+   `deployment-service/runbooks/deployment-ui-staging-deploy.md` with: (a) the exact `gcloud run deploy` /
+   `firebase deploy` command sequence; (b) per-axis verification checklist (cloud-toggle latency, sub-tab
+   instant-feel, deploy-missing-schedulers idempotence, live-cluster lifecycle actions on smoke-cluster, experiment
+   tracker round-trip, streaming logs across all 4 lifecycle classes, env badge correctness). One-pager.
+
+5. **G.3 surface to operator-pending** — add entry to master plan operator-pending section flagging G.3 as the final
+   B6 gate after G.2 lands.
+
+**HARD RULES**:
+
+- ❌ Do NOT directly edit CLAUDE.md (F.3 — operator approves the change). Draft as `.draft.md`.
+- ❌ Do NOT provision Cloud Run / Firebase / DNS (H.4 — operator runs).
+- ❌ Do NOT trigger any staging deploy (G.2 — operator runs).
+- ❌ Do NOT add new scope items — the plan is 89% done; closing it out, not extending.
+- ✅ DO flip work-split items 1-7 in same agent turn as the cleanup commit (Half-1+2).
+- ✅ DO ship runbooks as PM commits (operator-runnable docs are PM-scope).
+
+**ETA**: design 0.6× × ~10 baseline = ~6 cal AI-days. Sized to fit comfortably.
+
+**Why slot 6**: peak context — just shipped F.1+F.2+G.1 hours ago + backfilled B.1+B.2. The 4 remaining items are
+all within their existing context graph.
+
+---
+
 ## [slot 6 BOOT ACK] 2026-05-19 — deployment_ui_lifecycle_tabs theme; backfilling b1+b2 plan flips
 
 LDR sync complete. New theme: `deployment_ui_lifecycle_tabs_2026_05_08.md` (~30 cal AI-days).

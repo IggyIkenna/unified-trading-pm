@@ -43,6 +43,15 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already uses correct repo name. See
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` P0 rename done @ unified-trading-pm@d78cb9342.
 
+[2026-05-19 11:50 UTC] ikenna-main — **OPERATOR ACTION REQUEST — sports + prediction cross-asset-rescan apply-flips
+unblocked at agent layer**. Today's Task B shipped `--pass 1|2|3|4|all` sequential pass-ordering enforcement
+(deployment-service@`880bc3a` + instruments-service@`5a0b115`) which was the secondary blocker on
+[`manifest_cross_asset_rescan_design_2026_05_08.md`](manifest_cross_asset_rescan_design_2026_05_08.md). Only operator
+backfill approval remains for: **sports (99,620 phantoms) + prediction (50 phantoms)** apply-flips. Per CLAUDE.md ≥1
+week backfill rule. Cefi/defi/tradfi apply-flips already done 2026-05-13. Ready-to-run when operator [ack]s:
+`bash deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh --apply sports`
++ same for `--apply prediction`. See also slot 3 work-split item 4 + code_freeze Phase 2.5.
+
 [2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9,
 channel `#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
 (central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `AGENT_ORCHESTRATOR_SLACK_APP_ID`,

@@ -138,6 +138,17 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          will restart post-migration. deployment-service@`a9f9c90` (launcher + watchdog prefix registration).
          Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after Phase 3 phantom gate is green.
 
+**RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per [`pings/slot_3.md`](../../ikenna_orchestrator/pings/slot_3.md))**:
+
+> ⚠️ **CO-DUTY ACTIVE**: Phase 3 VM fleet running (30 VMs from item 5). Slot 3 owns T+10min post-launch verification +
+> ≥1 progress/hour check-in + STOPPED/FAILED ack at exit (per CLAUDE.md "No fire-and-forget VM launches"). Audit work
+> below runs in parallel between check-ins.
+
+10. - [ ] **code_freeze GAP-2.4.A + Phase 2.4 cross-cloud parity audit** — verify aws_migration_defi_first writes use
+          UAC `resolve_bucket_name()` SSOT; build cross-cloud parity matrix per DeFi data_type (🟢/🟡/🔴); sweep
+          GAP-2.4.B/C/D pre-readiness checklist. Audit + write-only this session (do NOT run migrations). Runs in
+          parallel with Phase 3 VM monitoring. (research 1.2×, ~8 baseline = ~9.6 cal AI-days)
+
 **Part B — batch_live_symmetry Tabs 1–3** (plan at 34%, 19.7 cal left):
 
 Read `batch_live_symmetry_2026_05_10.md` for open Tab 1/2/3 items. Tab 1 = codex SSOT batch, Tab 2 = UAC + UTL J1
@@ -206,6 +217,16 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
           \_setup_gen_context); all public methods now ≤50L; removed from FUNCTION_SIZE_EXTRA_EXCLUDES allowlist.
           execution-service@f27e5fc13 (2026-05-19; allowlist 10→9, slot-4 cumulative 100 files cleared)
 
+**RE-DISPATCH 2026-05-19 (items 1-13 ✅; new pickup per [`pings/slot_4.md`](../../ikenna_orchestrator/pings/slot_4.md))**:
+
+14. - [ ] **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items
+          11-13. Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
+          `FUNCTION_SIZE_EXTRA_EXCLUDES`, run QG green, commit + flip checkbox in same agent turn. Once
+          execution-service allowlist is 0, scan unified-trading-api/ml-inference/ml-training/strategy-service
+          allowlists; pick smallest for next stream. Cumulative target 100 → 109+ by EOD. If recurring pattern across
+          services, add one-line codex note to `codex/06-coding-standards/method-size.md`. (refactor 0.4×, ~12 baseline
+          = ~5 cal AI-days)
+
 ---
 
 ### Slot 5 — writegate Phase 6.6/6.7 + live_pipeline Phase 3–5 — ~30 cal AI-days
@@ -254,6 +275,27 @@ Status, Logs, Strategy, Kill-switch, Config.
 5. - [ ] **Tab 4 — Strategy panel** — promote / demote / paper → live controls. (brand-new 1.0×, ~5 = 5.0 cal)
 6. - [ ] **Tab 5 — Kill-switch** — manual emergency halt per strategy / per service. (brand-new 1.0×, ~4 = 4.0 cal)
 7. - [ ] **Plan flips** for each tab shipped. (0.5 cal)
+
+> ⚠️ **WORK-SPLIT STALE WARNING**: Items 1-7 above were authored from a stale version of the plan. The actual
+> [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) is **89% done (33/37 ✅)**.
+> Plan body shows Phase A.1-A.5 + B.1-B.4 + F.1-F.2 + G.1 all ✅ (incl. 2026-05-19 backfills by slot 6 itself at
+> deployment-ui@`ba009b2` + deployment-api@`ffd97c1` + utl@`424e03af`). Only 4 items genuinely open, all
+> `[HUMAN]`/`[HUMAN+AGENT]`: F.3 (CLAUDE.md VM naming update), H.4 (Cloud Run provisioning), G.2 (staging deploy),
+> G.3 (operator sign-off). Re-dispatch per [`pings/slot_6.md`](../../ikenna_orchestrator/pings/slot_6.md):
+
+8. - [ ] **Work-split correction** — flip items 1-7 above to `[x] ✅` with evidence SHAs from plan body. One commit.
+          (0.5 cal)
+9. - [ ] **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
+          experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
+          cal)
+10. - [ ] **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with
+           Cloud Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI
+           pattern. Operator-runnable. (design 0.6×, ~3 = 1.8 cal)
+11. - [ ] **G.2 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-deploy.md` with exact
+           `gcloud run deploy` / `firebase deploy` sequence + per-axis verification checklist. (design 0.6×, ~2 = 1.2
+           cal)
+12. - [ ] **G.3 surface to operator-pending** — add to master plan operator-pending section flagging G.3 as final B6
+           gate after G.2 lands. (design 0.6×, ~0.5 = 0.3 cal)
 
 ---
 

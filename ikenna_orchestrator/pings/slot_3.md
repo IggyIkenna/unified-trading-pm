@@ -8,6 +8,62 @@
 > Per-slot ping file (G-16 convention). Main ↔ Slot 3 bidirectional. Cross-side comms go in
 > `plans/active/_agent_pings.md` (not here).
 
+## [main → slot 3] 2026-05-19 RE-DISPATCH — code_freeze GAP-2.4.A + Phase 2.4 cross-cloud parity audit
+
+**Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
+
+**Context**: Slot 3's 2026-05-19 work-split items 1-9 all ✅. Item 4 (Phase 2.5 cross-asset-rescan `--apply-flips`)
+hit `[BLOCKED-OPERATOR-APPROVAL]` for sports (99,620 phantoms) + prediction (50). Today's Task B unblock
+(deployment-service@`880bc3a` + instruments-service@`5a0b115` `--pass 1|2|3|4` sequential enforcement) resolved the
+secondary blocker — only operator credential approval remains. Slot 3 is now exhausted on assigned items.
+
+Re-dispatch to the next highest-context substantive item slot 3 has peak context for: **code_freeze GAP-2.4.A** + a
+broader Phase 2.4 cross-cloud parity audit pass. Slot 3 shipped GAP-2.2.B + GAP-2.3.A + GAP-2.3.B this cycle and
+gcs_migration_bundle Phase 4 (PM@`22e23663`) — they own the bucket-name SSOT + Phase 2 GAP audit context.
+
+**Plan**: [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+§ Phase 2.4.
+
+**Tasks (audit + write-only this session; no infra mutation)**:
+
+1. **GAP-2.4.A** — Verify `aws_migration_defi_first` migration writes use the same Phase 1.B
+   `resolve_bucket_name()` SSOT path (not inline `gs://` / `s3://` f-strings). Open `aws_migration_defi_first_2026_05_07.md`
+   + the migration script files; grep for `resolve_bucket_name` callsites vs raw bucket strings. Document findings as
+   a `- [x] ✅` flip in code_freeze plan §Phase 2.4 if SSOT-clean, or as a specific fix-list if drift found.
+
+2. **Cross-cloud parity matrix** — for every DeFi-relevant data_type that writes to BOTH GCP and AWS post-Phase-2.4,
+   confirm: (a) bucket name resolved via UAC SSOT on both sides; (b) yaml `cloud-providers.yaml` declares both
+   tiered buckets; (c) Glue catalog crawled equivalent path. Output: a 2-column table
+   `| data_type | parity_status |` (🟢 clean / 🟡 partial / 🔴 drift) embedded in code_freeze §2.4 GAP audit section.
+
+3. **GAP-2.4.B/C/D status sweep** — these are operator-gated infra ops (provision env-tiered buckets, migrate flat
+   data, doc deployment-api reader-repoint). For each: confirm pre-work (script existence, dry-run shape, yaml
+   readiness) is done so the operator action is single-button. Output: pre-readiness checklist per GAP. Do NOT run
+   the actual migration.
+
+4. **Plan flip + commit cadence** per CLAUDE.md Half-1+2: each GAP audit → code commit (if any) +
+   `docs(plans): flip GAP-2.4.X — <evidence>` flip commit in the same agent turn.
+
+5. **Cross-side check** — does Harsh side have an open AWS migration ping that depends on this audit landing first?
+   Check `plans/active/_agent_pings.md` for cross-side entries; relay any findings.
+
+**HARD RULES**:
+
+- ❌ Do NOT run actual migrations (GAP-2.4.B/C are operator-gated infra ops). Audit + readiness check only.
+- ❌ Do NOT touch sports/prediction apply-flips (Phase 2.5) — those are gated on operator credential approval per
+  cross-asset-rescan plan; main orchestrator is surfacing the ask separately.
+- ❌ Do NOT touch foreign files in dep repos beyond read-only grep.
+- ✅ DO commit + push per shippable unit; flip checkbox in same turn (per Half-1+2 rule).
+- ✅ DO add a `## Deferred work after 2026-05-19 slot 3 session` block at end if anything carries to tomorrow.
+
+**ETA**: research 1.2× × ~8 baseline = ~9.6 cal AI-days.
+
+**Why slot 3**: peak context on Phase 2 GAPs (3 shipped this cycle) + bucket_name_ssot consumer landscape + gcs_migration_bundle
+Phase 4 audit just done. Cross-cloud parity is the natural next layer in their context graph.
+
+---
+
+
 ---
 
 [2026-05-12 16:55 UTC] Slot 3 → Slot 1 — **PART A START** — manifest bucket provisioning + dry-run baseline. Context:

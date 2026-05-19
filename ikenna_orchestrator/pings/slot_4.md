@@ -5,6 +5,61 @@
 
 # Slot 4 — Ping Ledger
 
+## [main → slot 4] 2026-05-19 RE-DISPATCH — continue batch-32 method-size refactor stream
+
+**Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
+
+**Context**: Slot 4's 2026-05-19 work-split items 1-13 all ✅. Phase 3-4 api_keys_wallets + defi_recursive_borrow
+shipped (with CCTP bridge adapter as a discovered open item). 3 batch-32 method-size refactor files cleared today
+(execution-service@`ca97b10db` + `911b4ffde` + `f27e5fc13`) — `FUNCTION_SIZE_EXTRA_EXCLUDES` allowlist reduced 12 → 9.
+Slot-4 cumulative: 100 files cleared.
+
+Re-dispatch to **continue the same stream** — peak context, pure refactor, no operator dependencies, sized to single
+agent session. Remaining 9 files in the execution-service allowlist + any cross-service allowlists slot 4 hasn't
+touched yet.
+
+**Plan**: same pattern as items 11-13 — extract long methods to private helpers, all public methods ≤50L, remove from
+`FUNCTION_SIZE_EXTRA_EXCLUDES`.
+
+**Tasks**:
+
+1. **Inventory remaining 9 files** in execution-service `FUNCTION_SIZE_EXTRA_EXCLUDES`. Output the path list at start
+   of session for traceability.
+
+2. **Refactor in batches of 3** — per the established cadence from items 11-13. For each file:
+   - Read the file; identify all methods >50L
+   - Extract each violating method into private helpers (`_load_*`, `_build_*`, `_finalize_*` naming per items 11-13)
+   - All public methods ≤50L; remove from allowlist
+   - Run `bash scripts/quality-gates.sh` from execution-service repo — verify QG green
+   - Commit + push to `live-defi-rollout`
+   - Flip plan checkbox in work-split item 14/15/16 (append new items per file) in same agent turn
+
+3. **Cross-service allowlist scan** — once execution-service allowlist is 0 (all 9 cleared), check
+   `unified-trading-api`, `ml-inference-service`, `ml-training-service`, `strategy-service` for non-zero allowlists.
+   Pick the smallest one (lowest hanging fruit) and continue the refactor stream.
+
+4. **Codex SSOT pin** — if you find a recurring pattern across services (e.g. "config-builder methods consistently
+   blow the 50L limit"), add a one-line note to `codex/06-coding-standards/method-size.md` capturing the pattern + the
+   canonical extraction shape. Per CLAUDE.md "Post-Plan-Phase Codex Audit" — if you found a new pattern, codify it.
+
+**HARD RULES**:
+
+- ❌ Do NOT skip QG (`bash scripts/quality-gates.sh` must run green per file).
+- ❌ Do NOT batch >3 files into one commit (per item 11-13 cadence — one commit per file).
+- ❌ Do NOT use `--no-verify` on QG (only on git commit hooks if prek auto-restore symptom observed).
+- ✅ DO append new work-split items 14, 15, 16, ... per file cleared (or one rollup item "items 14-22: 9 files cleared
+   execution-service@...").
+- ✅ DO follow Half-1+2 cadence — code commit + plan flip in same agent turn.
+
+**ETA**: refactor 0.4× × ~12 baseline (9 files × ~1.3 cal each) = ~5 cal AI-days. Comfortably one session.
+
+**Cumulative target**: 100 → 109+ files cleared by EOD.
+
+**Why slot 4**: peak context — just shipped 3 in a row using the exact same extraction pattern. The 4th file is
+muscle memory at this point.
+
+---
+
 ## [slot 4 → main] 2026-05-19 (autonomous loop) — batch 31 complete; cumulative 97 files cleared
 
 **Status**: 🟢 ROUND COMPLETE
