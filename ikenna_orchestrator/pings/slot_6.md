@@ -716,6 +716,26 @@ All code items in `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 1 shipp
 
 **Slot queue exhausted. Awaiting next dispatch.**
 
+## [slot 6 → main] 2026-05-19 — Phase 7.A + 7.C SHIPPED; allocation needed for 7.B + 7.D
+
+**What shipped this session (slot 6)**:
+
+- **Phase 7.A** ✅ `GET /api/scenarios/list` — deployment-api@40a62af, flipped PM@66b7ae05
+- **Phase 7.C** ✅ `GET /api/scenarios/matrix/{archetype}` (in-memory) + `GET /api/scenarios/report/{run_id}` (501 scaffold, Phase 2.C deferred) — deployment-api@cb1918d, flipped PM@1fefa3f4
+- 13 unit tests, basedpyright 0 errors
+
+**Unallocated items needing dispatch**:
+
+| Item | Work | Blocker | Suggested slot |
+|------|------|---------|----------------|
+| **7.B** `POST /api/scenarios/run` | deployment-api POST endpoint + `launch-scenario-runner-vm.sh` script in deployment-service | `launch-scenario-runner-vm.sh` does not exist; needs deployment-service VM launcher context | Harsh-side slot with deployment-service context (matches Harsh role: implement-from-spec, single-repo) |
+| **7.D** deployment-ui Scenarios tab | New tab in `unified-trading-system-ui` — scenario library browser, matrix grid (pass/fail cells), drilldown | No hard blocker; needs UI context + `TypedReasonBadges`/`FailurePillarStack` patterns | Harsh-side UI slot |
+| **7.E** Operator-author flow | `POST /api/scenarios/draft` + YAML editor + UAC PR commit | Depends on 7.D tab existing | Post-7.D |
+
+**Slot 6 queue exhausted.** Awaiting next dispatch from main.
+
+---
+
 ## [slot 6 → main] 2026-05-18 ~current UTC — BACKFILLS COMPLETE + dispatch request
 
 Work_split_2026_05_18_ikenna.md Slot 6 items 2-5 backfilled (PM@b7b8f171):
