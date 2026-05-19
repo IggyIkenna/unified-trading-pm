@@ -122,9 +122,10 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          ~2 = 2.4 cal) — PM@`1467b823` (no breaking changes; 3 bundled-type paths safe)
 4. - [ ] [BLOCKED-OPERATOR-APPROVAL] **Phase 2.5** — Run `manifest_cross_asset_rescan_design_2026_05_08.md` cross-asset
          `--apply-flips` sequence per the plan. (infra 0.8×, ~3 = 2.4 cal) cefi/defi/tradfi already done 2026-05-13.
-         Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher script
-         (`launch-cross-asset-rescan-vm.sh`) not yet shipped. Unblocks when: (a) operator approves sports apply-flips +
-         (b) launcher shipped. See plan at line 208-235 for details.
+         Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher
+         `launch-cross-asset-rescan-vm.sh` **now complete** with `--pass 1|2|3|4` sequential enforcement (deployment-service@880bc3a
+         + instruments-service@5a0b115, 2026-05-19). Secondary blocker RESOLVED. Unblocks when operator approves
+         sports/prediction apply-flips (operator [ack] required — use `bash launch-cross-asset-rescan-vm.sh --apply cefi`).
 5. - [x] ✅ **gcs_migration_bundle Phase 4** — Consumer sweep audit complete. All production callsites already pass
          `pipeline_mode=` (MTDS DefiManifestRecorder, MDPS record_empty_for_shard, instruments-service orchestrator,
          features-service compute). PM@`22e23663` Phase 4 flipped DONE in plan. Phase 3 (VM fleet migration) =
