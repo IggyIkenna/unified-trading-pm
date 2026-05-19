@@ -432,10 +432,11 @@ Pre-audit artifact:
       `execution-service/execution_service/algo_library/leg_controller_runner.py`, (4-7) test files. Each rewrite is
       `from <old_pkg> X` → `from strategy_service.<sub> X`. Verify each consumer boots green BEFORE archiving source
       repos in Phase 7.
-- [ ] **P0** [AGENT] Phase 0.5 (NEW — sequencing fix) Resolve `pyproject.toml` conflicts (artifact § (g)) BEFORE Phase 3
-      subtree-merge: unify `unified-trading-library>=0.3.0`, `uvicorn[standard]>=0.29.0`, drop pnl's `pre-commit` in
-      favour of `prek>=0.3.0`. Carry over editable `[tool.uv.sources.market-tick-data-service]` from PBM. Land as a
-      single strategy-service `pyproject.toml` PR before Phase 3.
+- [x] ✅ **P0** [AGENT] Phase 0.5 (NEW — sequencing fix) Resolve `pyproject.toml` conflicts (artifact § (g)) BEFORE
+      Phase 3 subtree-merge: unify `unified-trading-library>=0.3.0`, `uvicorn[standard]>=0.29.0`, drop pnl's
+      `pre-commit` in favour of `prek>=0.3.0`. Carry over editable `[tool.uv.sources.market-tick-data-service]` from
+      PBM. Land as a single strategy-service `pyproject.toml` PR before Phase 3. — ✅ strategy-service@eee8bbb
+      (2026-05-19, another slot; dep union + editable source confirmed in pyproject.toml)
 - [ ] **P0** [DECISION] Topic-prefix compatibility decision — pre-audit (h) recommends **KEEP legacy topic prefixes**
       (`risk-monitor.*`, `position-monitor.*`, `pnl-attribution.*`) for first 7 days post-cutover to avoid double-rebind
       race during the live trading window. Rename via follow-up plan. Operator confirm — default YES unless
