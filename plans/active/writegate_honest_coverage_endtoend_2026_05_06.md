@@ -1769,8 +1769,9 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       `record_empty(reason=LEG_ABSENT_<which>)`; if EITHER leg `attempted_failed`, propagate
       `record_failed(reason=UPSTREAM_LEG_FAILED)`.
       — features-service@ea840d17 (manifest_leg_guard: LegManifestResult.should_skip_empty/should_propagate_failed, 9 tests; slot-5 2026-05-19)
-- [ ] [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
+- [x] ✅ [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
       (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
+      — strategy-service@2649a26 (manifest_allocation_guard: AllocationManifestResult, 11 tests; slot-5 2026-05-19)
 - [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
       and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the other has
       `attempted_failed`, flag.
