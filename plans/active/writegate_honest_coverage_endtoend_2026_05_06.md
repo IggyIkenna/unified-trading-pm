@@ -1772,9 +1772,10 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
 - [x] ✅ [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
       (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
       — strategy-service@2649a26 (manifest_allocation_guard: AllocationManifestResult, 11 tests; slot-5 2026-05-19)
-- [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
+- [x] ✅ [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
       and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the other has
       `attempted_failed`, flag.
+      — batch-live-reconciliation-service@69b784d (stage0_manifest_reason_check: 14 tests; slot-5 2026-05-19)
 - [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` / `EXPECTED_HOLIDAY` /
       `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain rolling APY → assert
       `n_valid` per output row matches the expected (7 - n_excluded); run ml-training → assert NaN-fill +
