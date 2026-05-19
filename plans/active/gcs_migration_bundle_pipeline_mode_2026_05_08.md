@@ -77,12 +77,11 @@ depends_on:
   - manifest-migration-master-2026-05-07
   - writegate-honest-coverage-endtoend-2026-05-06
 
-> **🟢 VM RUNNING — Phase 3 fleet RELAUNCHED 2026-05-19 11:58 UTC (2nd launch; 1st crashed 11:23 UTC —
-> `gcloud storage ls` no-prefix-match bug). 31 VMs across all 5 asset_groups, all asia-northeast1-c.
-> Bug fixes: PM@726a3bf (gsutil ls -r ** wildcard), deployment-service@5b917c1 (always-shutdown on failure).
-> Pre-migration drain: manifest-consolidator + watchdog stopped + restarted. Manifest snapshots taken.
-> Monitor: `gcloud compute instances list --project=central-element-323112 --filter="name~gcs-migration-bundle"`
-> Do NOT launch new market-data-tick-* VMs during migration window.**
+> **🟢 VM RUNNING — Phase 3 fleet IN-PROGRESS 2026-05-19 (slot 3 check-in ~14:45 UTC)**
+> 27/31 VMs TERMINATED (defi ✅, cefi ✅, sports ✅, tradfi-2020/2021/2022/2023/2026 ✅, prediction-2025 ✅).
+> 4 RUNNING: tradfi-2024 (456K URIs, ~25 min remaining), prediction-2026 (422K URIs, ~35 min remaining).
+> Note: tradfi-2023 completed 14:35 UTC (365K rows, 0 failed); tradfi-2025 completed 14:39 UTC (351K rows, 0 failed).
+> Do NOT launch new market-data-tick-* VMs during migration window.
 
 todos:
   - id: phase-0-pre-audit-gcs-state
