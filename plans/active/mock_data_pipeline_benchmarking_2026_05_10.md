@@ -203,12 +203,11 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...`samples; where it hasn't, keep the estimate + a`#
       ESTIMATE`    marker. The`defi_gas`non-uniform per-chain block-rate distribution (ETH 7.2k / ARB 350k / OP+BASE 43.2k / SOL     216k blocks per day) is in`PER_CHAIN_BLOCK_RATE_PER_DAY` (utl@`ca9c346`) — tune those numbers, do NOT switch to a     uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays     active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into     `live_pipeline_mtds_mdps_features_2026_05_08`.
-- [ ] [AGENT] P2. **3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** **DEFERRED** (slot 7,
-      2026-05-12). CeFi bucket has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/
-      instrument avg → ~11.2M total/day extrapolated for 21 instruments). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in
-      `registry/generators/cefi.py`. Since `book_snapshot_5` feeds the execution matching engine for slippage
-      estimation, a spec should be added post-calibration if the Phase 3.D subprocess run confirms MTDS reads it. **Do
-      NOT add until Phase 3.D confirms** (avoid premature spec proliferation).
+- [ ] [AGENT] P2. **[BLOCKED-OPERATOR-DECISION — blocked on 3.D] 3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.**
+      **DEFERRED** (slot 7, 2026-05-12). CeFi bucket has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21
+      instruments, ~535k rows/instrument avg → ~11.2M total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in
+      `registry/generators/cefi.py`. **Do NOT add until Phase 3.D confirms** MTDS reads it. Successor: fold into
+      `live_pipeline_mtds_mdps_features_2026_05_08` if backfill slips past 2026-05-23. Ping filed 2026-05-19.
 - [x] ✅ [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **RATIFIED 2026-05-17
       (slot-8)** per the B-015 Option A architectural finding shipped at `features-service@550cdaba` (slot-2):
       `vault_share_price` is consumed by features-onchain reading raw_tick_data DIRECTLY (NOT via MDPS-processed
@@ -217,7 +216,7 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       entry needed. The `# ESTIMATE` marker on the 5 DeFi specs is unrelated to this data_type (it's about per-chain
       block-rate calibration tracked separately). Closed-decision per slot-2's architectural ship + slot-8's diagnostic
       at `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`.
-- [ ] [AGENT] P1. **3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
+- [ ] [AGENT] P1. **[BLOCKED-OPERATOR-DECISION — subprocess VM run needs operator sign-off] 3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
       shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
       strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
       Harness `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`). **PARTIAL

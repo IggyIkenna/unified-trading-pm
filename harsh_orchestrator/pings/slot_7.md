@@ -691,6 +691,10 @@ S1-S15 items remain as previously flipped. Operator directed EOD stop.
 
 ---
 
+[2026-05-19 19:30 UTC] slot-7 → operator — OPERATOR APPROVAL REQUESTS for mock_data_pipeline_benchmarking_2026_05_10.md:
+
+3. **Phase 3.D subprocess harness run**: Reader wire-in shipped (MTDS@82639e0). Remaining: subprocess-mode run via `python -m unified_trading_library.synthetic --archetype carry_staked_basis --mode subprocess` + schema-drift assertion. Plan says "requires VM, needs operator sign-off." Options: (a) approve local subprocess run against real GCS (ADC creds available); (b) launch dedicated VM; (c) defer to `live_pipeline_mtds_mdps_features_2026_05_08` post-cutover. 3.C-followup (CEFI_BOOK_SNAPSHOT_5_SPEC) blocked on this.
+
 [2026-05-19 19:15 UTC] slot-7 → operator — OPERATOR APPROVAL REQUESTS for tradfi_ohlcv_only_mvp_backfill_2026_05_15.md:
 
 1. **Phase 8 cost sign-off**: Backfill completed 2026-05-17 ~14:00 UTC. 216,876 captured + 7,365 empty_confirmed + 0 attempted_failed across CME/NASDAQ/NYSE. Estimated ~$50-200 PAYG. DATABENTO_PAYG_SPEND events in GCS: early VMs (pre-10:05 UTC) pre-date emission code ship — actual figure needs Databento billing portal query (https://app.databento.com/billing). Please review and sign off on actual spend.
