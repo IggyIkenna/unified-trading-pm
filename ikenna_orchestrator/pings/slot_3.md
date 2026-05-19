@@ -1227,3 +1227,17 @@ variants + ARBITRAGE_CROSS_DOMAIN_EVENT were added in taxonomy V-1. Updated:
 **Commit:** PM@`4d0ffca5` **Plan flip (V-7 block):** PM@`<this commit>`
 
 Slot 3 AVAILABLE for next dispatch.
+
+---
+
+[2026-05-19 UTC] Slot 3 → Slot 1 MAIN — 📋 **FINDING: master plan line 264 stale carry count**
+
+During V-6/V-7 family doc sweep, found `plans/active/master_to_live_defi_2026_05_23.md` line 264 still says:
+
+- "Carry & Yield (6)" — should be 10 (V-1 added 4 archetypes per uac@0196842)
+- "9 families / 53 archetypes" — should be 57
+
+Slot-1 main owns this file. Suggest updating line 264's strategy archetypes cell from `Carry & Yield (6)` → `(10)` and
+the total from `53` → `57`.
+
+Slot 3 cannot touch master plan per slot-precedence rule.

@@ -10,9 +10,9 @@ scope: [engineer, admin]
 
 ## Where to go first
 
-- **Architecture v2 README**: [`architecture-v2/README.md`](architecture-v2/README.md) — full taxonomy (9 families × 55
+- **Architecture v2 README**: [`architecture-v2/README.md`](architecture-v2/README.md) — full taxonomy (9 families × 57
   archetypes × 7 axes × 10 cross-cutting concerns) + Capital Flow Lifecycle. SSOT for counts: UAC `StrategyFamily` (9) /
-  `StrategyArchetype` (55) / `InstructionActionV2` (14) enums.
+  `StrategyArchetype` (57) / `InstructionActionV2` (14) enums. _(57 as of 2026-05-18 taxonomy V-1; was 55 pre V-1.)_
 - **Migration audit**: [`architecture-v2/MIGRATION.md`](architecture-v2/MIGRATION.md) — every legacy doc / code module /
   config mapped to its v2 placement. Nothing is silently dropped.
 - **Archive index**: [`_archived_pre_v2/README.md`](_archived_pre_v2/README.md) — if you're looking for a legacy doc.

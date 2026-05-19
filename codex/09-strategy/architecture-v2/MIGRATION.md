@@ -11,12 +11,13 @@ scope: [engineer, admin]
 > **Rule:** If a legacy strategy isn't in this table, it's a bug. Flag it, don't silently drop it.
 
 > **Phase 9 update note (codex audit ST-3 2026-05-12)**: this migration audit describes the original v2 cutover
-> targeting **18 archetype engines**. Phase 9 (2026-04-25) expanded that to **55 archetypes** (current UAC enum count
-> per slot 8 audit ST-1). The 18-engine framing below + the "53 strategy classes → 18 archetype engines" / "18 archetype
-> engines need to clear their 14- or 28-day shadow" cells reflect the original migration plan, NOT the current archetype
-> population. For the canonical archetype count + family list, see UAC
-> `unified_api_contracts/internal/architecture_v2/enums.py:StrategyArchetype` (55 members) + [`README.md`](./README.md)
-> "the enum wins" note.
+> targeting **18 archetype engines**. Phase 9 (2026-04-25) expanded that to **55 archetypes** (UAC enum count per slot 8
+> audit ST-1); subsequently to **57** per taxonomy V-1 2026-05-18 (added `CARRY_STAKED_BASIS_DATED` +
+> `CARRY_BASIS_DATED_INV`; renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` → `CARRY_BASIS_PERP_INV`). The 18-engine framing
+> below + the "53 strategy classes → 18 archetype engines" / "18 archetype engines need to clear their 14- or 28-day
+> shadow" cells reflect the original migration plan, NOT the current archetype population. For the canonical archetype
+> count + family list, see UAC `unified_api_contracts/internal/architecture_v2/enums.py:StrategyArchetype` (57
+> members) + [`README.md`](./README.md) "the enum wins" note.
 
 ## Status Key
 
