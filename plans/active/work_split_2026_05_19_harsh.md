@@ -234,8 +234,7 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          cal)
 6. - [ ] **tradfi_ohlcv_only_mvp_backfill close** (0.4 cal left) — final 2 items. Ship. (infra 0.8×, ~0.5 = 0.4 cal)
 7. - [ ] **mock_data_pipeline_benchmarking close** (0.5 cal left, 94% done) — final 2 items. (design 0.6×, ~1 = 0.5 cal)
-8. - [ ] **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** — any `datetime.now()` without `tz=UTC` is a bug.
-         Sweep + fix. (refactor 0.4×, ~2 = 0.8 cal)
+8. - [x] ✅ **S9. SUSTAIN — workspace-wide naive datetime → UTC sweep** — 8 fixes across 6 test files in 5 repos; production source clean (0 naive calls). UTL@3b4507c DA@5eacec6 UAC@51b1d6a E2E@42a65c3 DS@42c6789
 9. - [ ] **S10. SUSTAIN — cross-repo test data fixture utilization audit** — orphan fixtures. (refactor 0.4×, ~2 = 0.8
          cal)
 10. - [ ] **Plan flips** for all shipped. (0.5 cal)
