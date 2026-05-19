@@ -452,7 +452,7 @@ todos:
 
   - id: h4-staging-and-prod-domain-deployment
     content: |
-      - [ ] [HUMAN+AGENT] P1. Provision staging + prod Cloud Run instances of deployment-api + Firebase Hosting (or
+      - [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P1. Provision staging + prod Cloud Run instances of deployment-api + Firebase Hosting (or
         equivalent) for deployment-UI under `staging.<research-domain>/deployment` and `<research-domain>/deployment`.
         DNS records, TLS certs, IAM bindings. CI builds promote `live-defi-rollout` → staging → prod via the
         existing semver-agent + workflow promotion machinery. Reference existing trading-system-UI deployment for
@@ -498,7 +498,7 @@ todos:
 
   - id: g2-staging-d3
     content: |
-      - [ ] [HUMAN+AGENT] P0. Deploy 6-tab UI + Monitor sub-tabs + new deployment-api endpoints to staging GCP
+      - [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P0. Deploy 6-tab UI + Monitor sub-tabs + new deployment-api endpoints to staging GCP
         project (and AWS staging mirror). Verify: cloud-toggle latency, sub-tab instant-feel,
         deploy-missing-schedulers idempotence, live-cluster lifecycle actions on smoke-cluster, experiment
         tracker round-trips a real ML training run, streaming logs render across all four lifecycle classes,
@@ -506,7 +506,7 @@ todos:
 
   - id: g3-operator-signoff
     content: |
-      - [ ] [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
+      - [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +
         env-tier hosting. B6 gate.
 ---
 
