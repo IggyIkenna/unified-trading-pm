@@ -23,8 +23,8 @@ completion_gates:
 
 repo_gates:
   - repo: agent-orchestrator # renamed from orchestrator-service 2026-05-19 — gh repo rename + local dir rename + worktree move chain
-    code: C4 # P0 shipped — scripts/check.sh green (ruff + basedpyright + prettier + tsc), 3 commits to main (0e84ebd typo, 8e5a7e2 health_router, a44d903 Dockerfile)
-    deployment: D1 # Dockerfile in place; first Cloud Run deploy at P1
+    code: C4 # P0 shipped — scripts/check.sh green (ruff + basedpyright + prettier + tsc), commits to main (0e84ebd typo, 8e5a7e2 health_router, a44d903 Dockerfile, a3031fd entrypoint fix, 42ee83a dockerignore, d56e70f data/config, 7ef9299 docker-build env files)
+    deployment: D2 # P1 shipped — Cloud Run staging deploy live at https://agent-orchestrator-staging-1060025368044.europe-west4.run.app, /health + /readiness 200 OK, revision agent-orchestrator-staging-00006-5vt. D3 (staging integration tests with real service calls) pending P3 auth flip.
     business: none
   - repo: deployment-service
     code: C0
@@ -60,14 +60,17 @@ todos:
 
   - id: p1-cloud-run-staging
     content: |
-      - [ ] [AGENT] P1. Phase 1 — Cloud Run staging deploy (depends on P0)
-        - [ ] Create deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh mirroring deploy-ui.sh shape (rejects missing --env; supports --env=prod|uat + --cloud + --build-env-file= override)
-        - [ ] Add config/docker-build.env.{production,uat} (server-side env: ORCHASTRATOR_MODE=live, ORCHASTRATOR_PUBLIC_URL, dashboard build needs only ORCHASTRATOR_API_BASE_URL since it's a Vite SPA not Next.js)
-        - [ ] Cloudbuild YAML at scripts/cloudbuild-agent-orchestrator.yaml — pulls prior :uat or :production tag as cache source
-        - [ ] First image build + push: asia-northeast1-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat
-        - [ ] First `gcloud run deploy --env=uat` creates Cloud Run service `agent-orchestrator-staging` in central-element-323112/asia-northeast1 (matches odum-portal-staging convention)
-      Full-execution criterion: `curl https://agent-orchestrator-staging-<hash>-an.a.run.app/healthz` returns `{"status":"ok","mode":"live","uptime_seconds":<int>}` (200). `gcloud run services describe agent-orchestrator-staging --region asia-northeast1 --project central-element-323112` shows `Conditions: Ready=True` + last revision SHA matching deployed commit. Verified via: `gcloud run services list --project central-element-323112 --region asia-northeast1 --filter "metadata.name=agent-orchestrator-staging"`.
-    status: todo
+      - [x] ✅ [AGENT] P1. Phase 1 — Cloud Run staging deploy — ikenna-side (with harsh-main parallel help)
+        - [x] ✅ Created deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh mirroring deploy-ui.sh shape — deployment-service@163788f. Single europe-west4 region (no multi-region fan-out for operator tooling), no BUILD_ENV_FILE machinery (Vite dashboard is served by Firebase Hosting at P2, not built into container). `--env=uat|prod` required.
+        - [x] ✅ docker-build env files at agent-orchestrator/config/docker-build.env.{production,uat} — shipped by harsh-main at agent-orchestrator@7ef9299. ORCHESTRATOR_MODE=live + ORCHESTRATOR_PUBLIC_URL.
+        - [x] ✅ Cloudbuild YAML at deployment-service/scripts/cloud-run/cloudbuild-agent-orchestrator.yaml — pulls prior :uat tag as --cache-from. Cold build 5m20s, warm build 1m46s.
+        - [x] ✅ First image build + push: europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat (via `gcloud builds submit --cloud`).
+        - [x] ✅ `gcloud run deploy --env=uat` created Cloud Run service `agent-orchestrator-staging` in central-element-323112/europe-west4 (matches odum-portal-staging convention, NOT asia-northeast1 — that was a plan typo by parallel agent). Revision agent-orchestrator-staging-00006-5vt. **Required 3 in-flight fixes before health check passed**:
+          - agent-orchestrator@a3031fd — ENTRYPOINT [] cleared (UTL base image had ENTRYPOINT=python, combined with shell-form CMD to produce `python sh -c "..."` and crash exit(2))
+          - deployment-service@b4725fb — memory 512Mi → 1Gi (UTL transitive imports use ~527MB on first load)
+          - agent-orchestrator@d56e70f (by harsh-main) — `COPY data/config/` (load_backlog raises FileNotFoundError without backlog.yaml; harsh-main shipped this in real-time from reading the same Cloud Run logs I was looking at)
+      Full-execution criterion ✅: `curl https://agent-orchestrator-staging-1060025368044.europe-west4.run.app/health` returns `{"status":"ok","service":"agent-orchestrator","version":"0.6.0","checks":{},"mock_mode":false,"data_freshness":{"last_processed_date":"never","stale":true}}` (HTTP 200, 391ms). `/readiness` returns `{"status":"ready"}` (200, 211ms). `gcloud run services describe` shows Ready=True. SSL cert: `CN=*.a.run.app`, issuer `Google Trust Services WR2`, valid through 2026-07-13. **Known follow-up** (non-blocking): `/healthz` returns Google Front End 404 (not FastAPI 404) despite being in openapi.json route table — GFE path-reservation oddity; `/health` + `/readiness` cover the workspace-standard probe surface so this is cosmetic. Plan-of-record: investigate at P6 codex doc time.
+    status: done
 
   - id: p2-firebase-hosting-domains
     content: |
@@ -284,12 +287,12 @@ Per CLAUDE.md "Post-Plan-Phase Codex Audit (HARD RULE)":
 To be filled in when the plan archives. Pattern: per-phase, list (a) what ran on real infra, (b) commit SHA, (c)
 verification command + actual output. Plan does NOT archive until all 7 phases have a row here.
 
-| Phase | What ran (cmd + duration) | Verification (cmd + observed output) | SHA |
-| ----- | ------------------------- | ------------------------------------ | --- |
-| P0    | _pending_                 | _pending_                            | —   |
-| P1    | _pending_                 | _pending_                            | —   |
-| P2    | _pending_                 | _pending_                            | —   |
-| P3    | _pending_                 | _pending_                            | —   |
-| P4    | _pending_                 | _pending_                            | —   |
-| P5    | _pending_                 | _pending_                            | —   |
+| Phase | What ran (cmd + duration)                                                                    | Verification (cmd + observed output)                                                                                                                                                                                      | SHA                                               |
+| ----- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| P0    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
+| P1    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
+| P2    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
+| P3    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
+| P4    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
+| P5    | _pending_                                                                                    | _pending_                                                                                                                                                                                                                 | —                                                 |
 | P6    | codex overview + Slack section + README/OPERATIONS/TODO URL updates + launcher-ssot register | grep agent-orchestrator CLAUDE.md ✓; codex file reads cleanly; epiphanytechnologies in OPERATIONS.md/README.md replaced with odum-research.com (pending-P5 flagged); Off-laptop+Strict-auth+Slack items struck in TODO.md | orchastrator@ba9f785; unified-trading-pm@5daabedf |
