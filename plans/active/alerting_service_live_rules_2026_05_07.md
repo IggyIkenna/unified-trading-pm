@@ -465,15 +465,20 @@ reviews + tunes thresholds.
       Staging Noise group). VM startup script handler + NEEDED_TARBALLS wiring — `deployment-service@ee01702` +
       `b08ed9b`. Launcher metadata corrected to use `VM_TASK=alerting-quietness-baseline` dispatch pattern —
       `deployment-service@ee01702`. **DONE 2026-05-19**: all Phase 7 prerequisites resolved; VM running.
-- [x] ✅ [HUMAN] P0. Operator-approved launch — VM `alerting-quietness-20260519-105730` RUNNING 2026-05-19
+- [x] ✅ [HUMAN] P0. Operator-approved launch — VM `alerting-quietness-20260519-110752` RUNNING 2026-05-19
       (asia-northeast1-c, staging, 48h duration, PD disabled, routing to UTS Staging Noise channel `-5209487754`).
-      Launch history: (1) `alerting-quietness-20260519-104344` failed rc=2 — CLI `--operation alerts` invalid, fixed
-      `deployment-service@bda7790`; (2) `alerting-quietness-20260519-105238` failed rc=1 — PubSub topic
-      `alerting-service-events` missing, created manually; (3) current launch using fixed tarball + topic.
+      Launch history (infra gaps fixed along the way):
+      (1) `alerting-quietness-20260519-104344` failed rc=2 — CLI `--operation alerts` not a valid arg, fixed `deployment-service@bda7790`;
+      (2) `alerting-quietness-20260519-105238` failed rc=1 — PubSub topic `alerting-service-events` missing, created manually
+          + publisher IAM grant to Compute SA;
+      (3) `alerting-quietness-20260519-105730` failed rc=1 — STARTED event published OK but 5 PubSub subscriptions missing
+          (`risk_alerts_circuit_breaker_triggers`, `balance_discrepancy_alerts`, `order_rejection_spikes`,
+          `service_error_events`, `margin-events`), all created + subscriber IAM granted;
+      (4) `alerting-quietness-20260519-110752` — awaiting STARTED event confirmation.
       Verify `STARTED` event in
-      `gs://central-element-323112-events/events/alerting-service/2026-05-19/alerting-quietness-20260519-105730/` within
+      `gs://central-element-323112-events/events/alerting-service/2026-05-19/alerting-quietness-20260519-110752/` within
       90s of VM boot; recheck every 12h for `QUIETNESS_BASELINE_CHECKPOINT` events. Auto-shutdown at T+48h (~2026-05-21
-      10:57 UTC).
+      11:07 UTC).
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
