@@ -865,3 +865,23 @@ strategy-service@1b18490 + market-tick-data-service: **all** = [] added. exec/fe
 [2026-05-18 UTC] slot-2 — 🏁 **SLOT 2 QUEUE EXHAUSTED** — All S-items done (S1-S20 complete). Entire slot-2 sustain
 queue cleared. Total shipped this session: S10, S11, S14, S15, S16, S17, S18, S19, S20 (+ S7/S8/S9/S12/S13 from prior
 session). No remaining items in slot-2 queue. Standing by for reallocation.
+
+---
+
+[2026-05-19 12:15 UTC] main → slot 2 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
+
+**Action required (in order)**:
+1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/2/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
+3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 2` — this is your slot's work for today
+
+**Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+- `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
+- Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
+- Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
+- If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
+
+**Today's assignment — Slot 2**:
+pvl-p18a monitor + alerting_live_rules close (2.8 cal) + wave3x_residuals + manifest_schema_final_gate + sustain S3-S6
+
+Ack this ping by appending `[2026-05-19 12:15 UTC] slot 2 — STARTED <first item>` below.

@@ -559,3 +559,23 @@ Flipped 8.G/8.H/8.I in simulation_scenarios plan.
 scenario-outcome-assertions.md (9-category OutcomeCategory; 6-tuple assertion; PASS/FAIL/WARN; matrix-red cutover-block;
 alerting wire); scenario-overlay-semantics.md (parquet schema; provenance chain; available_at discipline; manifest
 scenario_id). PM@7a735152. Flipped 8.B/8.C in simulation_scenarios plan.
+
+---
+
+[2026-05-19 12:15 UTC] main → slot 3 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
+
+**Action required (in order)**:
+1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/3/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
+3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 3` — this is your slot's work for today
+
+**Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+- `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
+- Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
+- Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
+- If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
+
+**Today's assignment — Slot 3**:
+aws_migration_defi_first Phases 1.B-1.D + 2.A + 4.A + GAP-2.4.A/B/C (~28 cal)
+
+Ack this ping by appending `[2026-05-19 12:15 UTC] slot 3 — STARTED <first item>` below.

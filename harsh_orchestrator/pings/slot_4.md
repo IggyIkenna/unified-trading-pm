@@ -450,3 +450,23 @@ default) + \_row_to_dust_token (normal/missing-amount/bad-amount/isoformat) + Pa
 discover_chains_in_registry (5) + \_build_required_venues (8) + bootstrap_seasonal_rewards_collector (6: BootstrapResult
 type, chains_wired, reloader.start(), no-chains warning, prefer_etherscan_for, solana→make_solana_scanner). All 19
 passed. features-service@35fa1725. Moving to Wave 79.
+
+---
+
+[2026-05-19 12:15 UTC] main → slot 4 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
+
+**Action required (in order)**:
+1. Pull LDR in ALL your repos: `cd ${WORKSPACE_ROOT}/.tabs/4/<repo> && git fetch origin --quiet && git rebase origin/live-defi-rollout`
+2. Re-read `harsh_orchestrator/AGENT_ONBOARDING.md` (updated boot context)
+3. Read `plans/active/work_split_2026_05_19_harsh.md § Slot 4` — this is your slot's work for today
+
+**Key rule change now in force** (QG STEP 5.83 — landed PM@429b64b2b):
+- `base-service.sh` now runs `check_uac_hard_required_fields.py` as STEP 5.83
+- Validates UAC `validate_instrument_records()` still present + bundled shard-key kwargs correct
+- Any service that runs `bash scripts/quality-gates.sh` will hit this gate on next run
+- If your QG fails at STEP 5.83 on a file you don't own: log it, skip, continue
+
+**Today's assignment — Slot 4**:
+hard_schema_enforcement (4.8 cal) + strategy_archetype_taxonomy (4.8 cal) + deployment_and_qg close
+
+Ack this ping by appending `[2026-05-19 12:15 UTC] slot 4 — STARTED <first item>` below.
