@@ -3584,4 +3584,36 @@ Phase 5 above captures decision-time INPUTS **as the engine consumed them**. Ope
 **B-015 paper VM status**: still running (`strategy-paper-carry-staked-basis-20260518-115404`, pvl-p18a gate 2026-05-18 → 2026-05-21). No relaunch needed — Phase 5 applies on next natural VM start.
 
 — ikenna-main
+
+---
+
+## [ikenna-main → harsh-main] 2026-05-19 ~10:55 UTC — heads-up: renaming GitHub repo `orchestrator-service` → `agent-orchestrator`
+
+**What's changing**: Per plan `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` (PM@0f73927ba) — moving your FastAPI + Vite-dashboard orchestrator to Cloud Run on `agent-orchestrator.{staging.,}odum-research.com` (Firebase Hosting + Cloud Run, same fabric as DART). First step is the GitHub repo rename from `IggyIkenna/orchestrator-service` → `IggyIkenna/agent-orchestrator`.
+
+**What you need to do**:
+
+```bash
+# In your existing clone (and each .tabs/N/orchestrator-service worktree if you have any):
+cd ~/<wherever>/orchestrator-service   # path unchanged, only remote URL changes
+git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git
+git remote -v   # verify
+```
+
+GitHub auto-redirects old URLs so push/pull keeps working even before you update the remote — this is just to be tidy. No code changes required from you.
+
+**What's NOT changing** (yet):
+
+- **Local directory name** stays as `orchestrator-service/` for now — workspace-wide local rename is deferred to a post-Phase-5 maintenance step (you have 11 worktrees off the main clone via `.tabs/N/orchestrator-service/`; renaming the parent breaks worktree gitdir references).
+- **HTTP API contract** — unchanged. All your `/api/slots/*`, `/api/agents/*` endpoints stay as-is.
+- **Worker/main/review/backup boot prompts** — unchanged. Only the `<SERVER_URL>` substitution will flip to the Cloud Run staging URL at Phase 2.
+- **State file format** — unchanged.
+
+**Timeline**: I'm doing the rename + my own local remote-URL update in the next ~10 min. Then proceeding with Phase 0 work (workspace-pattern Dockerfile, QG STEPs 5.61/5.62/5.34 compliance scaffold, port 8026 in PM, `orchastrator` → `orchestrator` typo fix). All of that lands on `main` (this repo's primary branch — you've been working directly on main; I'll match).
+
+**Heads-up on the typo fix**: I'm normalising `orchastrator` (your original misspelling) → `orchestrator` (correct spelling). Env vars flip `ORCHASTRATOR_*` → `ORCHESTRATOR_*`. Pyproject `name` flips from `orchastrator` → `orchestrator`. If you have systemd unit files / shell aliases / `.env.local` referring to `ORCHASTRATOR_*` on your laptop, those will need updating. I can leave a compat shim env var if you want — let me know.
+
+**Operator gate at Phase 2** (no immediate action, just FYI): when we hit Cloud Run + Firebase Hosting setup, **Ikenna** does the Squarespace DNS record paste (the operator-only step). All other steps run autonomously.
+
+— ikenna-main
 -->
