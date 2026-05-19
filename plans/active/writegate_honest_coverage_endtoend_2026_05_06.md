@@ -1474,13 +1474,14 @@ grep.
       **Option β**: refactor each bundle adapter to call `record_captured` directly instead of
       `writer.write_chunk(df) + writer_manifest.add()`. More callsites, more code review, but keeps adapter-level write
       atomicity. **Do NOT execute this Phase 2.B todo until amendment F is resolved by Ikenna.**
-- [ ] [SCRIPT] P0. **UAC enrichment: `DatabentoClassification.root_cluster: str` field** (Phase 0 audit gap finding —
+- [x] ✅ [SCRIPT] P0. **UAC enrichment: `DatabentoClassification.root_cluster: str` field** (Phase 0 audit gap finding —
       lifted from "deferred follow-up plan" to in-scope Phase 2.B todo per workspace rule that no temporary state ships
       without a named successor; rather than naming a successor we just do it here). Databento TradFi options_chain
       bundles need a `root_cluster` for weekly-series cluster extraction (E1A / EW1 / EOM / etc.). Currently
       `DatabentoClassification` exposes `underlying` only; weekly-series prefix from `raw_symbol` requires a new pattern
       match. Add the field + pattern parser in UAC; populate at MTDS write time. Without this, ES.OPT 11-cluster
       taxonomy can't validate Databento-fed days against Tardis-fed days at the cluster level.
+      — market-tick-data-service@317e53c (field already in MTDS; imported extract_es_options_cluster from UAC registry; CME short-form option branch populates root_cluster; 8-cluster parametrize test green)
 - [ ] [SCRIPT] P0. **Futures expiry_bucket helper for cluster validation** (Phase 0 audit gap finding — same lift
       pattern as `DatabentoClassification.root_cluster`). Tardis + Databento `futures_chain` bundles have `underlying`
       per row but expiry_bucket (front / back / spread / butterfly) is NOT a column — it must be derived from
