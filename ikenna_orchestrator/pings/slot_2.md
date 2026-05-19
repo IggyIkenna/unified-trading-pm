@@ -818,3 +818,11 @@ features-calendar, ml-models-store, ml-predictions-store. QG: 3755 passed (2 pre
 execution/strategy/features_onchain wrappers deferred as BLOCKED-OPERATOR-DECISION (callers pass no asset_group). DO NOT
 PUSH until operator acks write-pause signal for L3 flip. Next: L5 refactor pre-stage on deployment-api local branch +
 archive dry-run.
+
+[2026-05-19 UTC] [Slot 2 → main] — ✅ **L5 pre-staged ack** — local branch `slot2/l5-flip-staged` committed at
+`deployment-api@1c6e30f`. `_defi_tick_bucket()` migrated from hardcoded `f"market-data-tick-defi-{pid}"` to
+`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. `_COMMODITY_BUCKET_TEMPLATE` retained
+(no yaml kind exists for features-commodity yet — BLOCKED-OPERATOR-DECISION comment already in place). QG: 47/47
+drilldown+pool_breakdown tests passed (199 pre-existing failures unrelated to this change — same baseline). DO NOT PUSH
+until operator acks write-pause signal. All L3+L5 pre-stage tasks complete. Items 1–4 (dispatch tasks) fully prepped;
+awaiting operator write-pause signal to push.
