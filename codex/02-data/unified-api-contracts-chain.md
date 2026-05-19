@@ -12,8 +12,8 @@ last_reviewed: 2026-05-17
 - **unified-api-contracts version** = mappings + schemas + endpoints; bumping version versions the entire contract
   surface.
 - **SCHEMA_VERSIONS.md** tracks schema–version alignment, SDK pins, and endpoint→schema mappings.
-- **Interfaces** (UMI, UTEI, URDI) that depend on unified-api-contracts must run `check_sdk_version_alignment` in
-  quality gates.
+- **Interfaces** (UMI, UTEI, instruments-service) that depend on unified-api-contracts must run
+  `check_sdk_version_alignment` in quality gates.
 - **Chain:** config → SDK → raw schema validation → UAC normalizer → canonical schema → adapter returns canonical only.
 - **Normalization is mandatory** — adapters must not return raw venue responses to services.
 
@@ -43,7 +43,7 @@ Tracks:
   GCP/AWS)
 - Pinned [schema-validation] dependencies (databento, tardis-client, ccxt, ib_insync)
 - Endpoint → schema mapping tables
-- Version pins for consumer repos (UMI, market-tick-data-service, UTEI, URDI)
+- Version pins for consumer repos (UMI, market-tick-data-service, UTEI, instruments-service)
 - Schema gaps and recommended pins
 
 ---
@@ -58,7 +58,7 @@ misaligned.
 **Behavior:**
 
 1. Parses unified-api-contracts `pyproject.toml` [schema-validation] for pinned SDK versions.
-2. For each consumer (UMI, UTEI, URDI, market-tick-data-service, etc.), reads their pyproject.toml.
+2. For each consumer (UMI, UTEI, instruments-service, market-tick-data-service, etc.), reads their pyproject.toml.
 3. FAILs (exit 1) if:
    - Interface uses unified-api-contracts but version range does not include unified-api-contracts version
    - Interface uses SDK version X and unified-api-contracts has no schemas for that SDK
@@ -127,7 +127,7 @@ validates against unified-api-contracts schemas.
                                       │
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 5. Adapter (UMI / UTEI / URDI venue adapter)                                │
+│ 5. Adapter (UMI / UTEI / instruments-service venue adapter)                  │
 │    - Returns canonical schema only; never raw venue responses                 │
 │    - Output: canonical schema used by services                               │
 └─────────────────────────────────────────────────────────────────────────────┘

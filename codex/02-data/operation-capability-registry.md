@@ -159,14 +159,14 @@ Derived from `signing_scheme` + `sports_venue_type` + `venue_category`:
 
 ## Where Validation Is Wired
 
-| Repo     | Entry Point                              | Validation Type                      |
-| -------- | ---------------------------------------- | ------------------------------------ |
-| UTEI     | `factory.py:get_order_adapter()`         | `validate_operation("place_order")`  |
-| UDEI     | `protocols/*.py` (15 methods)            | `preflight_validate_operation()`     |
-| UMI      | `factory.py:_run_capability_preflight()` | Probes first market operation        |
-| URDI     | `factory.py` + `router.py`               | Graceful warning                     |
-| USEI     | 4 exchange adapters (13 methods)         | `validate_operation(venue, op, env)` |
-| exec-svc | `instruction_router.py`                  | `compose_validation()` — full chain  |
+| Repo                | Entry Point                              | Validation Type                      |
+| ------------------- | ---------------------------------------- | ------------------------------------ |
+| UTEI                | `factory.py:get_order_adapter()`         | `validate_operation("place_order")`  |
+| UDEI                | `protocols/*.py` (15 methods)            | `preflight_validate_operation()`     |
+| UMI                 | `factory.py:_run_capability_preflight()` | Probes first market operation        |
+| instruments-service | `factory.py` + `router.py`               | Graceful warning                     |
+| USEI                | 4 exchange adapters (13 methods)         | `validate_operation(venue, op, env)` |
+| exec-svc            | `instruction_router.py`                  | `compose_validation()` — full chain  |
 
 ## Population Status
 

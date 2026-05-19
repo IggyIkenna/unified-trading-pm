@@ -128,8 +128,8 @@ Rules:
 Interfaces that record VCR cassettes should **contribute them to unified-api-contracts** so one canonical location is
 used for replay (AC’s `tests/test_vcr_replay.py`) and by all consumers.
 
-1. **In the interface repo** (UMI, UTEI, USEI, URDI, UPI, UCI): run the interface’s recording script with live
-   credentials; filter secrets (authorization, x-api-key, etc.) in the cassette.
+1. **In the interface repo** (UMI, UTEI, USEI, instruments-service, UPI, UCI): run the interface’s recording script with
+   live credentials; filter secrets (authorization, x-api-key, etc.) in the cassette.
 2. **Open a PR against unified-api-contracts** adding or updating files under
    `unified_api_contracts/external/<venue>/mocks/<name>.yaml`. Create the venue `mocks/` directory if it doesn’t exist.
 3. **PR contents:** cassette YAML only (no code changes in AC unless you’re adding a new endpoint to `vcr_endpoints.py`
@@ -208,9 +208,9 @@ class IBKRMarketAdapter:
         self._ib = ib  # caller owns the lifecycle; no inline IB().connect() here
 ```
 
-This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, URDI). The full IBKR mock pattern
-lives inline above (this § "IBKR mock pattern" + the `MagicMock(spec=IB)` table below) — the dead cross-reference to a
-separate `ibkr-mock-pattern.md` was lifted 2026-05-12 per TS-6 audit (the file never existed).
+This fixture is registered in each interface repo's `conftest.py` (UMI, UTEI, UPI, instruments-service). The full IBKR
+mock pattern lives inline above (this § "IBKR mock pattern" + the `MagicMock(spec=IB)` table below) — the dead
+cross-reference to a separate `ibkr-mock-pattern.md` was lifted 2026-05-12 per TS-6 audit (the file never existed).
 
 ### Why not VCR
 
