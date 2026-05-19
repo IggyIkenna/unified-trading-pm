@@ -1441,9 +1441,11 @@ are P1 (extends viable wedge set, not gating).
       subgraph endpoint.
 - [ ] [MTDS] P2. New adapter: `maker_dsr_rate.py` — single rate stream from MakerDAO contract / subgraph. NICE-TO-HAVE;
       not blocking May-23.
-- [ ] [SCRIPT] P0. Manifest reconciler one-shot: `instruments-service/scripts/reconcile_lending_indices_phantom.py` —
+- [x] ✅ [SCRIPT] P0. Manifest reconciler one-shot: `instruments-service/scripts/reconcile_lending_indices_phantom.py` —
       apply CLAUDE.md manifest-phantom-audit pattern, classify any pre-existing `empty_confirmed` rows that should be
-      `attempted_failed` post-Bug-1-fix.
+      `attempted_failed` post-Bug-1-fix. — 403 SOURCE_RETURNED_ZERO phantoms flipped in GCS manifest (AAVEV3=248,
+      COMPOUNDV3=124, SPARK=31; chains: ETH=93, ARB=62, OPT=62, BASE=62, BSC=31, AVAX=31, LINEA=31, POL=31);
+      GCS-only, no local code changes; apply-flips exit 0 2026-05-19
 - [ ] [VM] P0. Backfill VM: `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (per
       VM-launcher-SSOT rule). Per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true`). Window: 2022-03-01 → today, hourly
       granularity, Aave V3 (Eth/Base/Arb) + Compound V3 (Eth/Base/Arb) primary; Spark + Morpho + Maker DSR as P1
