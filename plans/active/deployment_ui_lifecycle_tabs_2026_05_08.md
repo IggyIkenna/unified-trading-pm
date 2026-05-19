@@ -354,7 +354,7 @@ todos:
 
   - id: e1-live-cluster-registry-uac-ssot-env-scoped
     content: |
-      - [ ] [SCRIPT] P0. NEW UAC SSOT
+      - [x] ✅ [SCRIPT] P0. NEW UAC SSOT
         `unified_api_contracts/canonical/crosscutting/live_cluster_registry.py`. Declares every long-lived
         deployment per `(cloud_target, environment_tier)` cell: typed list of `LiveClusterSpec(name,
         lifecycle_class=LONG_LIVED_LIVE, cloud_target, environment_tier, deployment_kind:
@@ -363,6 +363,8 @@ todos:
         for May-23), 1 live-strategy per archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION
         (funding-rate-dispersion; renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07)),
         1 live-execution per cloud, 1 position-balance, 1 risk, 1 alerting. Same SSOT discipline as scheduler registry.
+        — unified-api-contracts@723f8fb (2026-05-19 slot 6). 26 entries: 12 MTDS + 4 strategy + 4 execution + 6 infra.
+        21 unit tests. LiveClusterDeploymentKind + get_clusters_for_env exported from UAC root.
 
   - id: e2-live-cluster-deploy-and-lifecycle-actions
     content: |
