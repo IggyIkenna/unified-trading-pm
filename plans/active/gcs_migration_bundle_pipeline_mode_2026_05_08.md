@@ -405,6 +405,13 @@ todos:
            Down-stream services bounced (MTDS/MDPS/features VMs) only after sign-off so they pick up the new
            manifest schema. Composes with `manifest_schema_final_gate_2026_05_09` Phase 7.G inline operator sign-off.
 
+           **OPERATOR SIGN-OFF CHECKBOXES (Step 7) — mark each after Phase 3.6 re-audit confirms 0:**
+           - [ ] [HUMAN] cefi — Phase 3.6 re-audit 0 phantoms ✅; downstream MTDS/MDPS/features VMs bounced
+           - [ ] [HUMAN] defi — Phase 3.6 re-audit 0 phantoms ✅; downstream VMs bounced
+           - [ ] [HUMAN] tradfi — Phase 3.6 re-audit 0 phantoms ✅ CONFIRMED 2026-05-19; downstream VMs bounced
+           - [ ] [HUMAN] sports — Phase 3.6 re-audit 0 phantoms ✅ CONFIRMED 2026-05-19; downstream VMs bounced
+           - [ ] [HUMAN] prediction — Phase 3.6 re-audit 0 phantoms ✅ CONFIRMED 2026-05-19; downstream VMs bounced
+
         Estimated wall-clock (back-of-envelope, refined by Phase 0 § (g)): cefi 8h, defi 4h, tradfi 6h,
         sports 12h (largest by file count), prediction 2h. Run sports overnight starting 2026-05-13 evening
         UTC; cefi+defi+tradfi+prediction in parallel one zone over starting same evening; full bundle done by
