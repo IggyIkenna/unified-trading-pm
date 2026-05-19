@@ -2088,6 +2088,58 @@ else
     log_success "STEP 5.82: image-build-on-staging-merge — skipped (no .github/workflows/)"
 fi
 
+# ── STEP 5.83: UAC hard-required field validation regression guard ─────────────
+#
+# Two-part check (hard_schema_enforcement_2026_05_08.md Phase 5):
+#
+# (a) UAC regression guard: asserts that validate_instrument_records() + the
+#     3 closed-set per-rule landmarks are still present in
+#     unified_api_contracts/internal/reference/instrument_validation.py.
+#     Guards against silent removal of the hard-required enforcement logic
+#     shipped in uac@37d1ddb.  Phase 1 nullable→required field flips are still
+#     pending; this check ensures the RUNTIME validator is not regressed before
+#     those static flips land.
+#
+# (b) Bundled-shard key kwargs: every literal
+#     record_captured(data_type="<bundled_type>", …) call in SOURCE_DIR MUST
+#     include the required shard-key kwarg:
+#       options_chain                       → options_chain=
+#       futures_chain                       → chain=
+#       prediction_canonical_question_group → canonical_question_group=
+#       sports_fixture_bundle               → fixture_id=
+#     Complements UTL MalformedRowKeyError (UTL@0caa08e3) with STATIC coverage.
+#     Inline opt-out: # QG-allow: shard-key-not-applicable
+#
+# Note: 5.66 is reserved (launcher-script multi-process-isolation), 5.68 is
+# reserved (available_at lookahead callsite check) — so this manifest-
+# correctness ratchet lands at 5.83 (after 5.82 image-build-on-staging-merge).
+# SSOT: plans/active/hard_schema_enforcement_2026_05_08.md Phase 5.
+_UAC_HARD_FIELD_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_uac_hard_required_fields.py"
+if [ -f "$_UAC_HARD_FIELD_CHECKER" ]; then
+    _UHF_REPO=$(basename "$PROJECT_ROOT")
+    _UHF_WS="$REPO_ROOT"
+    _UHF_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _UHF_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_UAC_HARD_FIELD_CHECKER" \
+            --workspace-root "$_UHF_WS" --scope "$_UHF_REPO" "${_UHF_SRC_ARG[@]}" >/tmp/uac_hard_required_fields_qg.log 2>&1; then
+        if grep -q '^\[FAIL\]' /tmp/uac_hard_required_fields_qg.log 2>/dev/null; then
+            log_fail "STEP 5.83: UAC hard-required field regression or bundled-shard key kwarg missing:"
+            cat /tmp/uac_hard_required_fields_qg.log
+            log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_uac_hard_required_fields.py --workspace-root $_UHF_WS --scope $_UHF_REPO"
+            V=$(( V + 1 ))
+        else
+            log_success "STEP 5.83: UAC hard-required field validation landmarks present + bundled-shard key kwargs OK"
+        fi
+    else
+        log_fail "STEP 5.83: UAC hard-required field check FAILED (validation regression or bundled-shard key kwarg missing):"
+        cat /tmp/uac_hard_required_fields_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_uac_hard_required_fields.py --workspace-root $_UHF_WS --scope $_UHF_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.83: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
