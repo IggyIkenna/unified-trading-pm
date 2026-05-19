@@ -31,6 +31,19 @@ resolution → UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.*
 
 Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started Phase 0.5.
 
+**[ack] slot 3 — 2026-05-19 ~14:50 UTC — Phases 0.5+1+2 ALL COMPLETE + GAP-2.4.A DONE**
+
+- Phase 0.5 (pyproject dep union): already shipped at strategy-service@eee8bbb by another slot; confirmed identical to spec
+- Phase 1 (UAC/UTL schema prep): N/A — 0 UAC PRs needed per pre-audit §(e)
+- Phase 2 (skeleton scaffolding): at strategy-service@eee8bbb (risk/position/pnl sub-packages + CLI stubs + dep union)
+- Plan flips: PM@08f46b40d (Phases 0/0.5/1/2 in strategy_repo_consolidation plan)
+- GAP-2.4.A: done PM@30b2ce193 (code_freeze plan flip), work_split item 10 backfilled PM@d640f776d
+- CO-DUTY ACTIVE: Phase 3 GCS migration fleet — 27/31 TERMINATED; 2 still running (tradfi-2024 ~456K URIs, prediction-2026 ~422K URIs)
+  - tradfi-2023: ✅ 14:35 UTC (365K rows, 0 failed)
+  - tradfi-2025: ✅ 14:39 UTC (351K rows, 0 failed)
+  - tradfi-2024 + prediction-2026: RUNNING — expect TERMINATED ~15:10-15:20 UTC
+- Slot 3 assigned items: ALL DONE. Awaiting VM completion for STOPPED ack + plan banner removal.
+
 ---
 
 # Slot 3 — ikenna-manifest-bucket-tab — intra-side pings
