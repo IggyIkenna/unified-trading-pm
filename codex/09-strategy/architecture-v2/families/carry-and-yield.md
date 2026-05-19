@@ -12,7 +12,9 @@ scope: [engineer, admin]
 >
 > **Typical hold policies:** CONTINUOUS (with periodic rebalance triggers) or HOLD_UNTIL_FLIP.
 >
-> **Archetype count:** 6 — distinguished by position structure and capital utilization pattern.
+> **Archetype count:** 10 — distinguished by position structure and capital utilization pattern. (6 original + 4 added
+> 2026-05-18: `CARRY_BASIS_DATED_INV`, `CARRY_BASIS_PERP_INV`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
+> `CARRY_STAKED_BASIS_DATED` per taxonomy V-1, uac@0196842.)
 
 ## Alpha thesis
 
@@ -21,10 +23,14 @@ between venues):
 
 - **Basis (dated)**: long spot + short dated future locks in the futures-spot premium/discount, captured at futures
   expiry
+- **Basis (dated, inverse)**: short spot + long dated future captures backwardation premium (negative funding regime)
 - **Basis (perp)**: long spot + short perp captures funding rate while staying delta-neutral
-- **Staked basis**: stake ETH → stETH → pledge on Aave → short perp; earn staking yield + funding + (optional) lending
-  yield
-- **Recursive staked basis**: leverage the staked basis via borrow-against-LST-restake loop
+- **Basis (perp, inverse)**: short spot + long perp captures negative funding rate (CeFi-margin-funded, USD\* only)
+- **Staked basis (perp)**: stake ETH → LST → pledge on perp venue → short perp; earn staking yield + funding
+- **Staked basis (dated)**: stake ETH → LST → pledge on dated-futures venue → short dated future; locks in basis at
+  entry, staking yield accrues during hold
+- **Recursive staked basis**: leverage the staked basis via borrow-against-LST-restake loop (ETH/SOL share class)
+- **Recursive borrow lending only**: pure cross-venue lending/borrow APY arb with no staking leg (USD\* or single-token)
 - **Yield rotation**: supply stable / BTC / ETH to the best-APY lending protocol per chain, rebalance as APYs shift
 - **Simple staking**: stake a PoS asset for validator yield, no basis/leverage
 
@@ -37,16 +43,20 @@ and rebalanced periodically** as rates shift.
 - Pure capital appreciation with incidental yield (directional families)
 - Yield farming with impermanent loss as primary risk (that's MARKET_MAKING — active LP)
 
-## 6 Archetypes
+## 10 Archetypes
 
-| Archetype                                                           | Position structure                                    | Primary rate captured                                           | When to use                                                              |
-| ------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [`CARRY_BASIS_DATED`](../archetypes/carry-basis-dated.md)           | Long spot + short dated future                        | Basis convergence (futures - spot at expiry)                    | TradFi commodities/equity index basis; Deribit dated futures             |
-| [`CARRY_BASIS_PERP`](../archetypes/carry-basis-perp.md)             | Long spot + short perp                                | Funding rate                                                    | Crypto basis: Uniswap/CEX spot + CEX/DEX perp                            |
-| [`CARRY_STAKED_BASIS`](../archetypes/carry-staked-basis.md)         | Stake → LST → pledge → short perp                     | Staking yield + funding (+ lending on collateral if applicable) | ETH on Lido + Aave + perp; SOL on Jito + Kamino + Drift                  |
-| [`CARRY_RECURSIVE_STAKED`](../archetypes/carry-recursive-staked.md) | Recursive loop: stake → borrow → stake → borrow → ... | Leveraged staking yield                                         | ETH/SOL leveraged staking; carries liquidation cascade risk              |
-| [`YIELD_ROTATION_LENDING`](../archetypes/yield-rotation-lending.md) | Supply asset to best-APY protocol/chain               | Lending APY differential                                        | USDC/USDT/wBTC/ETH lending rotation across Aave, Compound, Euler, Kamino |
-| [`YIELD_STAKING_SIMPLE`](../archetypes/yield-staking-simple.md)     | Stake asset, earn validator reward                    | Pure staking reward                                             | Standalone staking without basis leg; ETH on Lido, SOL on Jito/Marinade  |
+| Archetype                                                                                     | Position structure                                    | Primary rate captured                        | When to use                                                                  |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`CARRY_BASIS_DATED`](../archetypes/carry-basis-dated.md)                                     | Long spot + short dated future                        | Basis convergence (futures − spot at expiry) | TradFi commodities/equity index basis; Deribit dated futures                 |
+| [`CARRY_BASIS_DATED_INV`](../archetypes/carry-basis-dated-inv.md)                             | Short spot + long dated future                        | Backwardation premium (inverse basis)        | Backwardation regime; negative dated basis; added 2026-05-18                 |
+| [`CARRY_BASIS_PERP`](../archetypes/carry-basis-perp.md)                                       | Long spot + short perp                                | Funding rate (positive)                      | Crypto basis: Uniswap/CEX spot + CEX/DEX perp                                |
+| [`CARRY_BASIS_PERP_INV`](../archetypes/carry-basis-perp-inv.md)                               | CeFi margin → borrow + sell spot → long perp          | Negative funding rate (inverse carry)        | Negative funding regime; was `CARRY_RECURSIVE_BORROW_PERP_HEDGED`            |
+| [`CARRY_STAKED_BASIS`](../archetypes/carry-staked-basis.md)                                   | Stake → LST → perp venue collateral → short perp      | Staking yield + funding                      | ETH on Lido + perp; SOL on Jito + Drift                                      |
+| [`CARRY_STAKED_BASIS_DATED`](../archetypes/carry-staked-basis-dated.md)                       | Stake → LST → perp venue collateral → short dated fut | Staking yield + locked dated basis at entry  | Higher carry than perp when dated basis > expected funding; added 2026-05-18 |
+| [`CARRY_RECURSIVE_STAKED`](../archetypes/carry-recursive-staked.md)                           | Recursive loop: stake → borrow → stake → borrow → ... | Leveraged staking yield                      | ETH/SOL leveraged staking; carries liquidation cascade risk                  |
+| [`CARRY_RECURSIVE_BORROW_LENDING_ONLY`](../archetypes/carry-recursive-borrow-lending-only.md) | Lend + borrow same token cross-venue; no staking leg  | Cross-venue lending/borrow APY spread        | USDT/ETH cross-protocol rate spread; flash-loan or sequential unwind         |
+| [`YIELD_ROTATION_LENDING`](../archetypes/yield-rotation-lending.md)                           | Supply asset to best-APY protocol/chain               | Lending APY differential                     | USDC/USDT/wBTC/ETH lending rotation across Aave, Compound, Euler, Kamino     |
+| [`YIELD_STAKING_SIMPLE`](../archetypes/yield-staking-simple.md)                               | Stake asset, earn validator reward                    | Pure staking reward                          | Standalone staking without basis leg; ETH on Lido, SOL on Jito/Marinade      |
 
 ## Shared primitives (all archetypes)
 
@@ -222,8 +232,12 @@ Per-archetype reaction:
 ## Cross-references
 
 - Archetypes: [carry-basis-dated](../archetypes/carry-basis-dated.md),
-  [carry-basis-perp](../archetypes/carry-basis-perp.md), [carry-staked-basis](../archetypes/carry-staked-basis.md),
+  [carry-basis-dated-inv](../archetypes/carry-basis-dated-inv.md),
+  [carry-basis-perp](../archetypes/carry-basis-perp.md), [carry-basis-perp-inv](../archetypes/carry-basis-perp-inv.md),
+  [carry-staked-basis](../archetypes/carry-staked-basis.md),
+  [carry-staked-basis-dated](../archetypes/carry-staked-basis-dated.md),
   [carry-recursive-staked](../archetypes/carry-recursive-staked.md),
+  [carry-recursive-borrow-lending-only](../archetypes/carry-recursive-borrow-lending-only.md),
   [yield-rotation-lending](../archetypes/yield-rotation-lending.md),
   [yield-staking-simple](../archetypes/yield-staking-simple.md)
 - Venue collateral rules:
