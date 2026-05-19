@@ -22,7 +22,7 @@ completion_gates:
   business: none
 
 repo_gates:
-  - repo: orchestrator-service
+  - repo: agent-orchestrator
     code: C2
     deployment: D1
     business: none
