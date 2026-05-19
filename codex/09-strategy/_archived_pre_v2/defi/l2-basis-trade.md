@@ -249,7 +249,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -307,7 +307,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 Capital flow: Client deposit --> treasury --> BRIDGE to L2 --> hot wallet (L2) --> SWAP to ETH (spot leg) + TRANSFER
 USDC to Hyperliquid (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP ETH back -->
 BRIDGE to L1 --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -320,7 +320,7 @@ cost -- not estimated. L2 gas is the key differentiator vs mainnet basis: ~$0.05
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
 pools on L2 require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Perps use the CeFi base asset universe.
 
 ## Bridge Costs

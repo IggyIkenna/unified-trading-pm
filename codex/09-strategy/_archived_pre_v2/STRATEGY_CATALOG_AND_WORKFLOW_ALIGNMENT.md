@@ -238,8 +238,8 @@ Use this as a backlog bridge between documentation and engineering.
 - [Strategy README](README.md)
 - [Strategy description template](templates/strategy-description-template.md)
 - [Config architecture](cross-cutting/config-architecture.md)
-- [Operational modes matrix](cross-cutting/operational-modes-matrix.md)
-- [Tier 0 UI demo and parity](TIER_ZERO_UI_DEMO_AND_PARITY.md) — Codex ↔ UI mock ↔ future API tiers
+- [Operational modes matrix](../architecture-v2/cross-cutting/operational-modes-matrix.md)
+- [Tier 0 UI demo and parity](../TIER_ZERO_UI_DEMO_AND_PARITY.md) — Codex ↔ UI mock ↔ future API tiers
 - Strategy implementation directory: `strategy-service/strategy_service/engine/strategies/`
 - **UI alignment (generators vs hand docs):** `unified-trading-pm/docs/ui-alignment-ssot.md` — machine
   `ui-reference-data.json` vs narrative docs such as

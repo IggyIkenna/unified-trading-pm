@@ -262,7 +262,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -319,7 +319,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to WBTC (spot leg) + TRANSFER USDC to Hyperliquid
 (margin). Optional stacked variant adds SUPPLY WBTC to Aave V3 for additional yield. Rebalance: treasury < 10% -->
 strategy reduces position --> close perp + SWAP WBTC back --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -332,7 +332,7 @@ Hyperliquid perp leg has zero gas cost (off-chain CLOB).
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
 pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WBTC and CBBTC are in the BTC family
 within the whitelist. Perps use the CeFi base asset universe.
 

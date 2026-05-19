@@ -139,7 +139,7 @@ Every prediction market should be classified along three dimensions:
 | "Will it rain in NYC tomorrow?" (Kalshi) | No traditional equivalent                | NO — feature only           |
 
 Codification gap:
-[`prediction-markets-codification-gaps.md § G1 — Use-case classification`](prediction-markets-codification-gaps.md#g1--use-case-classification).
+[`prediction-markets-codification-gaps.md § G1 — Use-case classification`](../../operational/prediction-markets-codification-gaps.md#g1--use-case-classification).
 
 ## Instrument ID Convention
 
@@ -157,7 +157,7 @@ Examples:
 ```
 
 Codification gap:
-[`prediction-markets-codification-gaps.md § G2 — Instrument ID convention`](prediction-markets-codification-gaps.md#g2--instrument-id-convention).
+[`prediction-markets-codification-gaps.md § G2 — Instrument ID convention`](../../operational/prediction-markets-codification-gaps.md#g2--instrument-id-convention).
 
 ## Polymarket as a Feature Source
 
@@ -185,7 +185,7 @@ Codification gap:
 rule-based matching to group equivalent markets for stronger signals.
 
 Codification gap:
-[`prediction-markets-codification-gaps.md § G3 — Semantic market matching`](prediction-markets-codification-gaps.md#g3--semantic-market-matching).
+[`prediction-markets-codification-gaps.md § G3 — Semantic market matching`](../../operational/prediction-markets-codification-gaps.md#g3--semantic-market-matching).
 
 ## Polymarket/Kalshi as Execution Venues
 
@@ -307,7 +307,7 @@ For each market, determine:
 6. **Liquidity** (volume, open interest, bid-ask spread)
 
 Codification gap:
-[`prediction-markets-codification-gaps.md § G4 — Automated market classifier`](prediction-markets-codification-gaps.md#g4--automated-market-classifier).
+[`prediction-markets-codification-gaps.md § G4 — Automated market classifier`](../../operational/prediction-markets-codification-gaps.md#g4--automated-market-classifier).
 
 ## Key Academic Research
 
@@ -330,7 +330,7 @@ Codification gap:
 
 ## Integration gaps
 
-Full gap register: [`prediction-markets-codification-gaps.md`](prediction-markets-codification-gaps.md). G1–G7 cover
+Full gap register: [`prediction-markets-codification-gaps.md`](../../operational/prediction-markets-codification-gaps.md). G1–G7 cover
 use-case enum (G1), instrument ID convention (G2), semantic market matching (G3), automated classifier (G4), venue
 registry wiring (G5), Kalshi testnet (G6), and historical data pipeline (G7).
 

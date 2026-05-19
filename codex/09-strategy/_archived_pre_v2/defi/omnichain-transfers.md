@@ -84,7 +84,7 @@ Gas costs are L1-dominated for L1->L2 routes. L2->L2 routes are significantly ch
 Capital flow: treasury-ETH --> BRIDGE (Socket/LayerZero/Across) --> treasury-DEST --> hot-wallet-DEST. In-flight capital
 tracked as `PENDING_BRIDGE` position type with 30-minute timeout alert. Same EOA wallet address on all EVM chains
 (deterministic derivation). See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -111,7 +111,7 @@ mainnet/devnet + BTC). Gas token balances (ETH, MATIC, AVAX, BNB, SOL, etc.) are
 
 This is infrastructure, not a yield strategy -- instrument filtering is handled by the parent strategies (lending,
 basis, yield arb) that consume omnichain transfers. See
-[instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+[instrument-filtering.md](../../operational/instrument-filtering.md).
 
 ## Bridge Costs
 

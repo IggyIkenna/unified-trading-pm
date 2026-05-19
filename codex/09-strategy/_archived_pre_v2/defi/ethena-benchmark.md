@@ -246,7 +246,7 @@ strategy_alpha = strategy_expected_apy - ethena_benchmark_apy
 
 Capital flow: Client deposit --> treasury --> hot wallet --> TRANSFER to Ethena --> STAKE USDe to sUSDe. Hold forever.
 Simplest capital flow of all DeFi strategies -- deploy once, no rebalancing. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -259,7 +259,7 @@ one-time cost. Gas hits P&L immediately as a realized transaction cost.
 ## Instrument Filtering
 
 Ethena sUSDe is a yield-bearing token with a curated instrument set (1-3 instruments). Per
-[instrument-filtering.md](../cross-cutting/instrument-filtering.md), LST/yield protocols have **no filtering needed** --
+[instrument-filtering.md](../../operational/instrument-filtering.md), LST/yield protocols have **no filtering needed** --
 the adapter returns all instruments.
 
 ## E2E Manual Trading Workflow

@@ -226,7 +226,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -325,7 +325,7 @@ activity), the strategy routes accordingly.
 
 Capital flow: Client deposit --> treasury --> hot wallet --> TRANSFER + LEND to Aave V3. Rebalance: treasury < 10% -->
 strategy reduces position --> WITHDRAW + TRANSFER --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -338,7 +338,7 @@ primary cost drag (~$15-25 per supply/withdraw at 30 gwei).
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). For
 lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`** (~65 tokens). The lending basket tokens (USDC,
 USDT, DAI for stablecoin family; ETH, WETH for ETH family) are all in the whitelist. Validated at strategy init.
 

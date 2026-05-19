@@ -344,7 +344,7 @@ Links to SSOT -- do not duplicate:
 Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> ADD_LIQUIDITY to Raydium/Orca pool (SOL + USDC
 from wallet). Rebalance: REMOVE_LIQUIDITY + re-ADD_LIQUIDITY at new range (all on Solana, ~$0.60 total gas). Exit:
 REMOVE_LIQUIDITY + COLLECT_FEES --> TRANSFER --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -357,7 +357,7 @@ that would be uneconomical on Ethereum L1 (~$50-100 per rebalance).
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md).
 Solana DEX pools (Raydium, Orca) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS` with a **$10k TVL minimum**
 (client-side filter -- Solana DEXes return all pools via REST API). Solana tokens now include LSTs and ecosystem tokens
 (35+ in `SOLANA_TOKEN_ADDRESSES`), enabling LP on pairs like SOL/USDC, mSOL/SOL, jitoSOL/SOL.

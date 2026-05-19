@@ -241,7 +241,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -296,7 +296,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> SWAP to SOL --> STAKE to mSOL (spot LST leg) +
 DEPOSIT USDC to Drift (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + unstake mSOL +
 SWAP SOL back --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -309,7 +309,7 @@ relative to position size.
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md).
 Jupiter swap routing uses SOL and USDC which are both in `DEFI_MAJOR_ASSET_SYMBOLS`. mSOL is in the Solana LST category
 (WSOL, MSOL, STSOL, JITOSOL, BSOL, JSOL -- 35+ Solana tokens in `SOLANA_TOKEN_ADDRESSES`). LST/yield protocols have no
 additional filtering needed -- the adapter returns all instruments.

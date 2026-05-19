@@ -221,7 +221,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md).
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md).
 
 **Strategy-specific:**
 

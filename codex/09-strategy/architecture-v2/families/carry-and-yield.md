@@ -246,6 +246,6 @@ Per-archetype reaction:
 - Capital efficiency patterns (e.g., single-venue netted basis):
   [../../../04-architecture/capital-efficiency-patterns.md](../../../04-architecture/capital-efficiency-patterns.md)
 - Reward lifecycle (claim, compound, harvest):
-  [../../cross-cutting/reward-lifecycle.md](../../cross-cutting/reward-lifecycle.md) (legacy, preserved)
-- Rate impact modeling: [../../cross-cutting/rate-impact-model.md](../../cross-cutting/rate-impact-model.md) (legacy,
+  [../../cross-cutting/reward-lifecycle.md](../cross-cutting/reward-lifecycle.md) (legacy, preserved)
+- Rate impact modeling: [../../cross-cutting/rate-impact-model.md](../cross-cutting/rate-impact-model.md) (legacy,
   preserved)

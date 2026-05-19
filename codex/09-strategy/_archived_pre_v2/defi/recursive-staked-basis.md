@@ -441,7 +441,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -501,7 +501,7 @@ Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to WETH + FLAS
 swap to weETH, deposit to Aave, borrow WETH, repay flash) + TRANSFER USDC to Hyperliquid (margin). Flash loan amount is
 NOT from wallet -- protocol provides and repays within a single atomic transaction. Rebalance: treasury < 10% -->
 strategy reduces position --> atomic deleverage bundle + close perp --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -514,7 +514,7 @@ cost component that must be recovered by the leveraged yield within the first fe
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
 pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WETH and weETH are in the whitelist.
 Lending markets (Aave V3) require the base asset to be major. Perps use the CeFi base asset universe.
 

@@ -211,7 +211,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -264,7 +264,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 
 Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> SWAP to SOL (spot leg) + DEPOSIT USDC to Drift
 (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP SOL back --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -277,7 +277,7 @@ smaller position sizes than Ethereum equivalents.
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md).
 Jupiter swap routing uses SOL and USDC which are both in `DEFI_MAJOR_ASSET_SYMBOLS`. Solana tokens now include LSTs
 (WSOL, MSOL, STSOL, JITOSOL, BSOL, JSOL) and ecosystem tokens (JUP, RAY, ORCA, BONK, PYTH, JTO, WIF, HNT, MNDE -- 35+ in
 `SOLANA_TOKEN_ADDRESSES`).

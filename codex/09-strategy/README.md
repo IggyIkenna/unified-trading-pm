@@ -54,21 +54,21 @@ to, rather than absorbing:
 
 ### `cross-cutting/` — still authoritative
 
-- [`cross-cutting/client-onboarding.md`](cross-cutting/client-onboarding.md) — client-specific onboarding workflow.
+- [`cross-cutting/client-onboarding.md`](../08-workflows/client-onboarding.md) — client-specific onboarding workflow.
   Referenced from `architecture-v2/cross-cutting/capital-client-isolation.md`.
-- [`cross-cutting/client-strategy-config.md`](cross-cutting/client-strategy-config.md) — per-client strategy config
+- [`cross-cutting/client-strategy-config.md`](operational/client-strategy-config.md) — per-client strategy config
   surface. Extended by `architecture-v2/cross-cutting/portfolio-allocator.md`.
-- [`cross-cutting/instrument-filtering.md`](cross-cutting/instrument-filtering.md) — major-asset whitelist + pool TVL
+- [`cross-cutting/instrument-filtering.md`](operational/instrument-filtering.md) — major-asset whitelist + pool TVL
   rules. Referenced by every DeFi-touching archetype.
-- [`cross-cutting/onboarding-checklist.md`](cross-cutting/onboarding-checklist.md) — operational checklist.
-- [`cross-cutting/operational-modes-matrix.md`](cross-cutting/operational-modes-matrix.md) — batch/live mode matrix.
+- [`cross-cutting/onboarding-checklist.md`](operational/onboarding-checklist.md) — operational checklist.
+- [`cross-cutting/operational-modes-matrix.md`](architecture-v2/cross-cutting/operational-modes-matrix.md) — batch/live mode matrix.
   Referenced from `architecture-v2/cross-cutting/benchmark-fills.md`.
-- [`cross-cutting/pnl-attribution.md`](cross-cutting/pnl-attribution.md) — strategy-alpha vs execution-alpha split.
+- [`cross-cutting/pnl-attribution.md`](architecture-v2/cross-cutting/pnl-attribution.md) — strategy-alpha vs execution-alpha split.
   Enhanced with benchmark-fills contract.
-- [`cross-cutting/prediction-markets.md`](cross-cutting/prediction-markets.md) — prediction-market-specific details.
-- [`cross-cutting/rate-impact-model.md`](cross-cutting/rate-impact-model.md) — rate impact curves. Referenced by Carry &
+- [`cross-cutting/prediction-markets.md`](architecture-v2/cross-cutting/prediction-markets.md) — prediction-market-specific details.
+- [`cross-cutting/rate-impact-model.md`](architecture-v2/cross-cutting/rate-impact-model.md) — rate impact curves. Referenced by Carry &
   Yield archetypes.
-- [`cross-cutting/reward-lifecycle.md`](cross-cutting/reward-lifecycle.md) — DeFi reward lifecycle.
+- [`cross-cutting/reward-lifecycle.md`](architecture-v2/cross-cutting/reward-lifecycle.md) — DeFi reward lifecycle.
 
 ### Top-level
 

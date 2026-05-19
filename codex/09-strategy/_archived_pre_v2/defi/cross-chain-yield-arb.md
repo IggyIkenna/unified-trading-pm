@@ -256,7 +256,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -314,7 +314,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 
 Capital flow: treasury-ETH --> BRIDGE via Socket --> treasury-DEST --> hot-wallet-DEST --> LEND to highest-APY protocol.
 On rebalance: WITHDRAW --> BRIDGE to new best chain --> LEND. Gas token reserves maintained on each active chain. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -333,7 +333,7 @@ Morpho: 6 chains). All chains have Alchemy RPC endpoints configured via `CHAIN_R
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). For
 lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`**. The strategy only evaluates venues that pass
 the filtering pipeline -- no shitcoin pools or illiquid markets reach the spread matrix.
 

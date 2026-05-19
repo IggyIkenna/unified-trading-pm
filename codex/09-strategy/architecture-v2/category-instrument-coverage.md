@@ -1412,7 +1412,7 @@ summary:
 
 1. **Per-archetype docs** ([`architecture-v2/archetypes/*.md`](archetypes/)) include a short coverage section that is a
    pointer + slimmed table of just that archetype's rows, with a "Full coverage:
-   [here](../category-instrument-coverage.md#N-ARCHETYPE_ID)" back-link.
+   [here](category-instrument-coverage.md#N-ARCHETYPE_ID)" back-link.
 2. **Family docs** ([`architecture-v2/families/*.md`](families/)) include a family-level rollup — which categories the
    family covers at all, and which archetype implements which category.
 3. **UI** —

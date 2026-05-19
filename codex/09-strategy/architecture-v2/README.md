@@ -547,7 +547,7 @@ VOL_TRADING_OPTIONS@deribit-btc-vol-usdt-prod
 ```
 
 Full naming convention:
-[../../06-coding-standards/strategy-identity-versioning.md](../../../06-coding-standards/strategy-identity-versioning.md).
+[../../06-coding-standards/strategy-identity-versioning.md](../../06-coding-standards/strategy-identity-versioning.md).
 
 ## Polymorphic StrategyInstruction (14 action types)
 
@@ -575,7 +575,7 @@ Plus parallel **`AccountInstruction`** (operator-driven) for CLOSE_ALL, SET_MARG
 TRANSFER_SUBACCOUNT.
 
 Full spec:
-[../../04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md).
+[../../04-architecture/strategy-execution-protocol.md](../../04-architecture/strategy-execution-protocol.md).
 
 ## 5 Protocol Rules (strategy ↔ execution)
 
@@ -600,7 +600,7 @@ Artifacts in the system — all versioned, all consumer-opt-in:
 
 Rule: consumers reference artifacts by explicit version. No auto-upgrade. Version bumps are deliberate opt-in.
 
-Full model: [../../04-architecture/artifact-versioning.md](../../../04-architecture/artifact-versioning.md).
+Full model: [../../04-architecture/artifact-versioning.md](../../04-architecture/artifact-versioning.md).
 
 ## 3 Backtest Groups
 
@@ -612,7 +612,7 @@ Full model: [../../04-architecture/artifact-versioning.md](../../../04-architect
 
 Benchmark fills contract binds them: Group B uses benchmark fills (zero exec alpha) so strategy alpha is isolated.
 
-Full framework: [../../04-architecture/backtest-groups.md](../../../04-architecture/backtest-groups.md).
+Full framework: [../../04-architecture/backtest-groups.md](../../04-architecture/backtest-groups.md).
 
 ## Venue Architecture (summary)
 
@@ -625,9 +625,9 @@ Venues classified into:
 Every venue declares: supported operations, supported instruments, collateral rules (with haircuts), liquidation spec,
 margin netting rules, commission/fee structure.
 
-Full venue list: [../../02-venues/venue-registry-reference.md](../../../02-venues/venue-registry-reference.md). Prime
-brokers: [../../02-venues/prime-brokers.md](../../../02-venues/prime-brokers.md). Unity:
-[../../02-venues/unity-integration.md](../../../02-venues/unity-integration.md).
+Full venue list: [../../02-venues/venue-registry-reference.md](../../02-venues/venue-registry-reference.md). Prime
+brokers: [../../02-venues/prime-brokers.md](../../02-venues/prime-brokers.md). Unity:
+[../../02-venues/unity-integration.md](../../02-venues/unity-integration.md).
 
 ## Non-Negotiable Principles
 
@@ -741,8 +741,8 @@ Family docs follow a similar structure focused on shared primitives across their
 ## Next Steps for Readers
 
 - **Implementers** — read
-  [04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md) +
-  [06-coding-standards/strategy-identity-versioning.md](../../../06-coding-standards/strategy-identity-versioning.md)
+  [04-architecture/strategy-execution-protocol.md](../../04-architecture/strategy-execution-protocol.md) +
+  [06-coding-standards/strategy-identity-versioning.md](../../06-coding-standards/strategy-identity-versioning.md)
 - **Strategy designers** — read [families/\*.md](families/) for your family, then [archetypes/\*.md](archetypes/) for
   specific archetypes
 - **Operators** — read [cross-cutting/portfolio-allocator.md](cross-cutting/portfolio-allocator.md) +

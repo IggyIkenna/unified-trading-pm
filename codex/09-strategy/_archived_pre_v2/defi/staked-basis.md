@@ -246,7 +246,7 @@ See: [credentials-registry.yaml](../../../unified-trading-pm/credentials-registr
 
 ## Client Onboarding
 
-See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) for the standard flow.
+See [cross-cutting/client-onboarding.md](../../../08-workflows/client-onboarding.md) for the standard flow.
 
 **Strategy-specific:**
 
@@ -293,7 +293,7 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 
 Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to weETH (spot LST leg) + TRANSFER USDC to Hyperliquid
 (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP weETH back --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -306,7 +306,7 @@ has zero gas cost.
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
 pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. weETH is in the ETH LST category of the
 whitelist. Perps use the CeFi base asset universe.
 
@@ -452,7 +452,7 @@ For EtherFi staking, the strategy manages two reward token streams:
 For Lido (`staking_protocol="LIDO"`), there are no separate reward tokens -- yield accrues entirely through wstETH/ETH
 rate appreciation. The reward lifecycle is inactive.
 
-See [cross-cutting/reward-lifecycle.md](../cross-cutting/reward-lifecycle.md) for the full cross-strategy specification.
+See [cross-cutting/reward-lifecycle.md](../../architecture-v2/cross-cutting/reward-lifecycle.md) for the full cross-strategy specification.
 
 ## Token Wrapping
 

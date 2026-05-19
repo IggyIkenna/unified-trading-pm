@@ -264,11 +264,11 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 
 ## 8. Cross-references
 
-- [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
+- [`plans/active/cross_cutting_may_23_deliverables_2026_05_08.md`](../../../../plans/active/cross_cutting_may_23_deliverables_2026_05_08.md)
   — plan-of-record (this doc is its deliverable #4).
-- [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../plans/epics/cross_cutting_may_23_2026.epic.md) — parent
+- [`plans/epics/cross_cutting_may_23_2026.epic.md`](../../../../plans/epics/cross_cutting_may_23_2026.epic.md) — parent
   epic (5 non-negotiable deliverables for May-23).
-- [`plans/active/master_to_live_defi_2026_05_23.md`](../../../plans/active/master_to_live_defi_2026_05_23.md) Group G
+- [`plans/active/master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G
   item 23 — live-only success criterion (DART manual-trade gate).
 - [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
   — Tab 6.A finding that strategy_id grammar is already shipped (this spec consumes whichever grammar lands

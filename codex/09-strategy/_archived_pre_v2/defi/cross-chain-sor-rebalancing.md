@@ -374,7 +374,7 @@ Links to SSOT -- do not duplicate:
 Capital flow: treasury-ETH --> BRIDGE via Socket --> treasury-DEST --> hot-wallet-DEST --> DEPOSIT to protocol. Gas
 token reserves maintained on each active chain (2x expected gas cost in native token). Maximum 20% of portfolio in
 transit at any time. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -394,7 +394,7 @@ mainnet/devnet + BTC in the system). Gas token balances (ETH, MATIC, AVAX, BNB, 
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). The
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). The
 CrossChainSOR only evaluates instruments that pass the filtering pipeline. For lending markets, the base asset must be
 in `DEFI_MAJOR_ASSET_SYMBOLS`. For DEX pools, BOTH sides must be major assets with TVL minimums enforced.
 

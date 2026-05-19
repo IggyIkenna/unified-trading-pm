@@ -347,7 +347,7 @@ collection, access control, and auxiliary logic around swaps. The concentrated f
 Capital flow: Client deposit --> treasury --> hot wallet --> ADD_LIQUIDITY to AMM pool (token pair from wallet).
 Rebalance: REMOVE_LIQUIDITY + re-ADD_LIQUIDITY at new range (all on same chain). Exit: REMOVE_LIQUIDITY + COLLECT_FEES
 --> TRANSFER --> treasury. See
-[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+[wallet-hierarchy-and-capital-flow.md](../../../04-architecture/wallet-hierarchy-and-capital-flow.md).
 
 ## Gas Fee Tracking
 
@@ -362,7 +362,7 @@ reduce gas by ~100x.
 
 ## Instrument Filtering
 
-Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
 pools require **BOTH sides** to be in `DEFI_MAJOR_ASSET_SYMBOLS` (~65 tokens). TVL minimums: $100k for EVM (Uniswap V3
 subgraph `minTvl` param), $10k for Solana DEXes (client-side filter). Multi-token pools (Balancer) require **ALL**
 tokens to be major assets.
