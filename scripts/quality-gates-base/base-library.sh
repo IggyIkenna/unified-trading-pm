@@ -753,6 +753,25 @@ if [ -f "$_CHAIN_INCLUSION_CHECKER" ]; then
     fi
 fi
 
+# ── STEP 5.83: UAC InstrumentRecord hard-schema enforcement guard ─────────────
+# Verifies InstrumentRecord._enforce_per_asset_group_required_fields() model_validator
+# + CEFI_PAIR_INSTRUMENT_TYPES / DEFI_ONCHAIN_INSTRUMENT_TYPES frozensets exist in
+# unified_api_contracts/internal/reference/instrument.py.
+# Guards hard_schema_enforcement_2026_05_08 Phase 1 regression (model_validator
+# enforces non-empty required fields per asset_group: CeFi base/quote, DeFi pool
+# address, EVENT_CONTRACT expiry). Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
+_UAC_INSTRUMENT_VALIDATOR_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_uac_instrument_record_validator.py"
+if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_INSTRUMENT_VALIDATOR_CHECKER" ]; then
+    if $PYTHON_CMD "$_UAC_INSTRUMENT_VALIDATOR_CHECKER" >/tmp/uac_instrument_validator_qg.log 2>&1; then
+        log_ok "STEP 5.83: UAC InstrumentRecord hard-schema enforcement validator present (hard_schema Phase 1 guard)"
+    else
+        log_fail "STEP 5.83: UAC InstrumentRecord hard-schema enforcement MISSING or BROKEN:"
+        cat /tmp/uac_instrument_validator_qg.log
+        log_fail "         Fix: restore _enforce_per_asset_group_required_fields() in InstrumentRecord"
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
