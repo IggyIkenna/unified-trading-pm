@@ -148,10 +148,13 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          confirms full migration (256,015 objects total): dex-pools src=152161 = dst=152161 OK dex-swaps src=68703 =
          dst=68703 OK solana-defi src=5037 = dst=5037 OK evm-defi src=30114 = dst=30114 OK (5 empty source buckets
          skipped; no objects to copy.) Source `prod`-named buckets retained for the 30-day archival window per script
-         comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d. Discovery: `--verify` mode has two parser
-         bugs — (a) `wc -l` output formatting mis-parsed dex-swaps count, breaking the arithmetic compare; (b)
-         head-bucket existence check incorrectly flags 3 prod buckets as "does not exist" when `aws s3 ls` shows them
-         present. Migration result is correct; verify script needs fixing in a follow-up (filed as deferred work below).
+         comment + `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d. Discovery + fix (same turn): `--verify`
+         mode had two parser bugs — (a) `wc -l` + `set -o pipefail` interaction made transient S3 retries produce a
+         two-line "N\n0" count that broke arithmetic compare; (b) `aws s3api head-bucket` exits non-zero for both
+         NoSuchBucket and transient errors, mis-flagging real buckets as missing. Fixed in
+         `deployment-service@9cc26a3`: account-scoped `list-buckets` for existence,
+         `aws s3 ls --recursive --summarize` for counting. Re-ran `--verify` post-fix: all 10 buckets `[VERIFIED]`
+         (256,024 objects total — config-store had 9 objects we'd missed pre-fix).
          (infra 0.8×, ~5 = 4.0 cal)
 9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
 
