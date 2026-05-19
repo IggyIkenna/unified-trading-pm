@@ -1482,12 +1482,13 @@ grep.
       match. Add the field + pattern parser in UAC; populate at MTDS write time. Without this, ES.OPT 11-cluster
       taxonomy can't validate Databento-fed days against Tardis-fed days at the cluster level.
       — market-tick-data-service@317e53c (field already in MTDS; imported extract_es_options_cluster from UAC registry; CME short-form option branch populates root_cluster; 8-cluster parametrize test green)
-- [ ] [SCRIPT] P0. **Futures expiry_bucket helper for cluster validation** (Phase 0 audit gap finding — same lift
+- [x] ✅ [SCRIPT] P0. **Futures expiry_bucket helper for cluster validation** (Phase 0 audit gap finding — same lift
       pattern as `DatabentoClassification.root_cluster`). Tardis + Databento `futures_chain` bundles have `underlying`
       per row but expiry_bucket (front / back / spread / butterfly) is NOT a column — it must be derived from
       `raw_symbol` (e.g. `ESM6` → March 2026 → near-term front). New helper
       `unified_api_contracts.canonical.domain.futures.derive_expiry_bucket(symbol: str, today: date) -> str` OR a new
       `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully.
+      — unified-api-contracts@60f4a87 (registry/tradfi_symbology.py; sliding-window year expansion; spread/butterfly/front/back; 10 tests green)
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
       workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via VENUE_REGISTRY)
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
