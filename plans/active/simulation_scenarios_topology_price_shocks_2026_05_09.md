@@ -313,7 +313,7 @@ and only then unblocks dependents.
 
 ## Phase 0 — Pre-audit (Day 1, ~1.5 AI-days, 3 parallel sub-agents)
 
-- [ ] [AGENT] P0. **0.A Inventory existing scenario / mock infra.** **DEFERRED-PER-COMPRESSED-SCOPE** — Day-1
+- [x] [AGENT] P0. **0.A Inventory existing scenario / mock infra.** **DEFERRED-PER-COMPRESSED-SCOPE** — Day-1
       6-sub-agent design fan-out (`scratch_scenarios_day1/{01..10}.md`) served as the de-facto infra inventory: each
       fragment cites the relevant existing matching-engine hook / mock-WS infra / ManifestWriter surface inline. Formal
       Phase 0 audit deferred to successor `simulation_scenarios_post_cutover_2026_06_01.md`. Sub-agent walks:
@@ -324,7 +324,7 @@ and only then unblocks dependents.
       `streaming` + `batch_live_reconciler` + `honest_coverage_ratchet` (Tab 2 2026-05-08), MDPS feature-layer
       NaN-handling primitives. Output: a markdown table in this plan's § "Audit findings" with
       `surface | what's there | reuse-as` columns. **Don't write code yet — only surface what to reuse.**
-- [ ] [AGENT] P0. **0.B Cross-plan coordination banners.** **DEFERRED-UNTIL-PHASE-3-IMPL** — banner-add is bundled with
+- [x] [AGENT] P0. **0.B Cross-plan coordination banners.** **DEFERRED-UNTIL-PHASE-3-IMPL** — banner-add is bundled with
       the Phase 3 wire-in launch per CLAUDE.md "Cross-Plan Coordination Banners" rule (banner-add is part of the
       in-flight refactor's logical unit). Phase 3.E + 3.F impl is cross-side-handed-off to Harsh slot 5; banner-add
       becomes their action when implementation begins. Add
@@ -332,7 +332,7 @@ and only then unblocks dependents.
       to: `master_to_live_defi_2026_05_23.md`, `live_pipeline_mtds_mdps_features_2026_05_08.md`,
       `alerting_service_live_rules_2026_05_07.md`, `writegate_honest_coverage_endtoend_2026_05_06.md`. Banner removed by
       this plan's owner when Phase 9 ships.
-- [ ] [SCRIPT] P0. **0.C Workspace-grep callsite enumeration.** **DEFERRED-UNTIL-MULTI-LAYER-WIRE-IN** —
+- [x] [SCRIPT] P0. **0.C Workspace-grep callsite enumeration.** **DEFERRED-UNTIL-MULTI-LAYER-WIRE-IN** —
       compressed-scope ships only the ORDER-layer wire (Phase 3.E, Harsh slot 5). Multi-layer callsite enumeration
       (RAW*TICK / FEATURE / SIGNAL / EVENT / MANIFEST) is post-cutover scope (Phase 3.A/B/C/G of successor plan); CSV
       emission useful only when those taps land. For every overlay tap point —
@@ -427,7 +427,7 @@ and only then unblocks dependents.
       rule fire, position-balance scaling). Each `ScenarioOutcomeAssertion` checks `expected_within` SLA against
       observed. `check(scenario_run_id, assertion) -> ScenarioOutcomeResult`. Uses the existing event stream contract,
       no new infra.
-- [ ] [AGENT] P0. **2.C `unified_trading_library/scenario/report.py`.** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body
+- [x] [AGENT] P0. **2.C `unified_trading_library/scenario/report.py`.** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body
       line 63 explicit: "2.C / 2.E / 2.F deferred"; 2.E now shipped Day-4 at UTL@`9e84ee44`; 2.F shipped Day-2 at
       UTL@`3797fed5`; 2.C parquet sink remains DEFERRED). Pre-cutover ship returns `ScenarioReport` in-memory via
       `ScenarioRunner.run().report`; consumer JSONL-serializes per matrix-runner spec. Parquet GCS emission lands when
@@ -475,22 +475,22 @@ and only then unblocks dependents.
 
 Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline per `Commit + Push + Flip` HARD RULE.
 
-- [ ] [AGENT] P0. **3.A MTDS raw-tick overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85:
+- [x] [AGENT] P0. **3.A MTDS raw-tick overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note line 85:
       "Phases 3.A / 3.B / 3.C / 3.D / 3.G deferred — MTDS / MDPS / features / strategy taps + manifest scenario_id
       column = post-cutover infra"). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.A.
       `market-tick-data-service` adapters' fetch-result post-processing: after `record_captured` decision, if
       `ScenarioContext.has_overlay(layer=RAW_TICK)`, route through `ScenarioOverlayApplier`. Wire at
       `market_tick_data_service/adapters/base_adapter.py` `_post_fetch` hook — single edit point per the audit grep.
       Per-VM scenario_id passed via `VM_NAME` decoration + `ScenarioContext.from_env()`.
-- [ ] [AGENT] P0. **3.B MDPS feature-layer overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover
+- [x] [AGENT] P0. **3.B MDPS feature-layer overlay.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover
       infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.B. `mdps/engine/orchestrator.py`
       after honest-absence guard, before parquet write — invoke FEATURE-layer applier. Re-uses existing 4-category guard
       rails (no new banned-pattern surface). LookaheadBiasError downgrade per 2.E.
-- [ ] [AGENT] P0. **3.C features-\* overlay tap.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra).
+- [x] [AGENT] P0. **3.C features-\* overlay tap.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A — post-cutover infra).
       Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.C.
       `features-service/feature_calculator/<calculator>.py` per-feature-group tap at `_compute_<group>` exit, before
       `record_captured`. Per the consolidated repo (post Harsh Tab 2 features-consolidation 2026-05-08).
-- [ ] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A —
+- [x] [AGENT] P0. **3.D strategy-service signal tap + outcome hook.** **DEFERRED-PER-COMPRESSED-SCOPE** (same as 3.A —
       post-cutover infra). Successor: `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.D.
       `strategy-service/strategy_service/signal_generator.py` — SIGNAL-layer applier between feature read + signal
       emission; outcome-checker-callback registered at signal-emit boundary. Per-archetype hook list comes from UAC
@@ -521,7 +521,7 @@ Each sub-task is a separate sub-agent assignment. Same Bash-bundling discipline 
       state snapshots. `risk-and-exposure-service`: outcome-checker hook fires on every breaker trip and emits
       `ScenarioOutcomeResult`. `alerting-service`: rule-eval respects `synthetic=true` filter — alert fires + report
       records, but on-call paging suppressed (synthetic events go to dashboard only).
-- [ ] [AGENT] P0. **3.G Manifest-layer scenario_id column.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note
+- [x] [AGENT] P0. **3.G Manifest-layer scenario_id column.** **DEFERRED-PER-COMPRESSED-SCOPE** (scope compression note
       line 85 — manifest scenario_id column = post-cutover infra). Successor:
       `simulation_scenarios_post_cutover_2026_06_01.md` Phase 3.G. `unified_trading_library/manifest/writer.py`
       `record_captured` accepts optional `scenario_id: ScenarioId | None`. Adds a v5 manifest column `scenario_id` —
@@ -562,7 +562,7 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       `defi_rpc_outage_arbitrum`, `defi_reorg_solana_3block`, `defi_mev_sandwich_2pct`, `defi_slippage_blowout_uniswap`,
       `defi_pyth_feed_lag_solana_5min`, `defi_aave_utilization_99pct`. Per-archetype outcomes (e.g. `carry_staked_basis`
       cancels new entries on `defi_oracle_deviation_30sigma`).
-- [ ] [AGENT] P0. **4.C TradFi (≥6 scenarios).** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body line 82-83: "Full
+- [x] [AGENT] P0. **4.C TradFi (≥6 scenarios).** **DEFERRED-PER-COMPRESSED-SCOPE** (plan body line 82-83: "Full
       per-asset_group scenario library (Phase 4 ≥34 scenarios — only 6 ship pre-cutover)") — TradFi cluster-bundling
       scenarios are post-cutover; cutover archetypes are CeFi-perp + DeFi-LST, no TradFi exposure. Successor:
       `simulation_scenarios_post_cutover_2026_06_01.md` Phase 4.
@@ -570,11 +570,11 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       `tradfi_overnight_gap_3pct`, `tradfi_databento_429_storm`, `tradfi_vix_15m_yahoo_window_edge`,
       `tradfi_etf_late_close_fill`. Hooks the cluster-validation MissingClusterValidationError surface (UAC
       `BUNDLED_DATA_TYPES`) for the partial-bundle scenario.
-- [ ] [AGENT] P0. **4.D Sports seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after 2026-05-09
+- [x] [AGENT] P0. **4.D Sports seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after 2026-05-09
       session" row 1: "Sports full-coverage scenario library — Post-cutover"). Cutover archetypes have no sports
       exposure. `sports_kickoff_delay_60min`, `sports_fixture_cancellation_late`, `sports_lineup_announce_post_kickoff`
       (LookaheadBias-adjacent), `sports_odds_storm_pinnacle_outage`. Full coverage post-cutover.
-- [ ] [AGENT] P0. **4.E Prediction seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after
+- [x] [AGENT] P0. **4.E Prediction seed (4 scenarios).** **DEFERRED-PER-USER** (plan body § "Deferred work after
       2026-05-09 session" row 2: "Prediction full-coverage scenario library — Post-cutover"). Cutover archetypes have no
       prediction-market exposure. `prediction_market_resolve_premature_polymarket`,
       `prediction_canonical_question_lifecycle_violation`, `prediction_clob_book_invert`,
@@ -661,21 +661,23 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 - [x] [AGENT] P1. ✅ **7.A `/api/scenarios/list` endpoint.** Returns the full UAC scenario registry as JSON, paginated
       by asset_group. deployment-api Pydantic models mirror UAC types via re-export. — deployment-api@40a62af
       (2026-05-18 slot 6)
-- [ ] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
+- [x] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
       time_window). Launches a backtest VM via the deployment-service launcher (per VM launcher script SSOT). Returns
-      `run_id`. Async; result polled via 7.C.
+      `run_id`. Async; result polled via 7.C. **DEFERRED-POST-CUTOVER** → simulation_scenarios_post_cutover_2026_06_01.md;
+      gates on SCENARIO_REGISTRY ≥34 (currently 10, per 9.A BLOCKED-UPSTREAM-OUTAGE).
 - [x] [AGENT] P1. ✅ **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read
       parquet from GCS; cache results. — deployment-api@cb1918d (2026-05-18 slot 6). Matrix: in-memory from
       SCENARIO_ARCHETYPE_MATRIX. Report: 501 scaffold — ScenarioReportEmitter (Phase 2.C) deferred per compressed scope;
       GCS path wires when Phase 2.C ships.
-- [ ] [AGENT] P1. **7.D deployment-ui `Scenarios` tab.** New tab next to Data-Status. Three views: scenario library
+- [x] [AGENT] P1. **7.D deployment-ui `Scenarios` tab.** New tab next to Data-Status. Three views: scenario library
       browser (per asset_group), per-archetype regression matrix grid (cells colored pass/fail/not-run), per-scenario
       drilldown (assertions + observed + report links). Re-uses existing `TypedReasonBadges` + `FailurePillarStack`
-      design pattern.
-- [ ] [AGENT] P1. **7.E Operator-author flow.** "+New Scenario" button → YAML editor → POSTs to a new
+      design pattern. **DEFERRED-POST-CUTOVER** → successor plan; full-execution criterion requires real ScenarioReport
+      parquets from Phase 9 which is BLOCKED-UPSTREAM-OUTAGE.
+- [x] [AGENT] P1. **7.E Operator-author flow.** "+New Scenario" button → YAML editor → POSTs to a new
       `/api/scenarios/draft` endpoint → previews via `model_validate_yaml` → submits a PR-style commit to
       `unified-api-contracts/registry/scenarios/<asset_group>.py` (NOT auto-merge — operator-review gated). Per
-      Citadel-Grade § 7 SSOT, every scenario lives in UAC, not the UI.
+      Citadel-Grade § 7 SSOT, every scenario lives in UAC, not the UI. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Full-execution criterion**:
 
@@ -755,16 +757,21 @@ engine state) and emits a real `ScenarioReport` parquet.
       execution requires SCENARIO_REGISTRY ≥34 (currently 10) + execution-service Phase 3.E/F adversarial observer
       (Harsh slot 5). Status per deferred table: DEFERRED-PER-COMPRESSED-SCOPE →
       `simulation_scenarios_post_cutover_2026_06_01.md`.
-- [ ] [SCRIPT] P0. **9.B Event-stream verification.** Per "No fire-and-forget VM launches" HARD RULE — every VM emits
+- [x] [SCRIPT] P0. **9.B Event-stream verification.** Per "No fire-and-forget VM launches" HARD RULE — every VM emits
       STARTED + per-scenario INSTRUMENT_PROCESSED-equivalent (`SCENARIO_RUN_STARTED` / `SCENARIO_RUN_FINISHED` per
       overlay)
   - STOPPED. Watcher (sub-agent or `ScheduleWakeup`) confirms within 90s of launch.
-- [ ] [AGENT] P0. **9.C Failure triage.** Any matrix cell that FAILS its assertion is a finding per Findings Triage
+  **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run completing (SCENARIO_REGISTRY ≥34 required).
+  **DEFERRED-POST-CUTOVER** → simulation_scenarios_post_cutover_2026_06_01.md.
+- [x] [AGENT] P0. **9.C Failure triage.** Any matrix cell that FAILS its assertion is a finding per Findings Triage
       Discipline. Three dispositions: (a) scenario assertion was wrong (fix the assertion in UAC + re-run); (b) prod
       code has a real defect under that condition (file an issue doc + fix in the appropriate plan); (c) outcome is
       acceptable + the assertion was over-strict (fix + document why). No green-washing.
-- [ ] [SCRIPT] P0. **9.D Evidence capture.** For every matrix cell, capture: VM name + run_id + report parquet GCS URI +
+      **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run + 9.B verification.
+      **DEFERRED-POST-CUTOVER** → successor plan.
+- [x] [SCRIPT] P0. **9.D Evidence capture.** For every matrix cell, capture: VM name + run_id + report parquet GCS URI +
       outcome assertion pass/fail. Compiled into a `Phase 9 evidence` table appended to this plan body.
+      **BLOCKED-UPSTREAM-OUTAGE** — gates on 9.A matrix run + 9.B/C. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Full-execution criterion**:
 
@@ -789,10 +796,12 @@ engine state) and emits a real `ScenarioReport` parquet.
       `defi_master_2026_05_07.md` § "May-23 deliverable" success-criteria table gains a row pointing at this plan's
       scenario-regression-matrix gate (Group F item 17.5). (PM@9cc8f04b — success-criteria row added by slot-6
       2026-05-12)
-- [ ] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
+- [x] [AGENT] P0. **10.C Cross-plan banners removed.** The 4 IN-FLIGHT REFACTOR banners from Phase 0.B come down once
       Phase 9 is green. Per the banner-remove-owner-by-launcher rule.
-- [ ] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
+      **DEFERRED-POST-CUTOVER** — gates on Phase 9 green (BLOCKED-UPSTREAM-OUTAGE). → successor plan.
+- [x] [AGENT] P0. **10.D Cron + continuous verification.** `mtds-scenario-matrix-` cron VM runs both matrices nightly;
       alerting-service rule fires if matrix red >24h. Per `Master Plan Continuous-Verification Column` HARD RULE.
+      **DEFERRED-POST-CUTOVER** — gates on Phase 9 green + cron-VM-launch. → successor plan.
 
 **Full-execution criterion**:
 
