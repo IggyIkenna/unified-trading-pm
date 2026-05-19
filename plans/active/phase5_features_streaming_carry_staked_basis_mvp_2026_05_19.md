@@ -120,9 +120,9 @@ other features.
       [colocated_engine.\_load_features_for_date](../../e2e-testing/scripts/defi/colocated_engine.py#L971) to also load
       `feature_group=perp_funding_rates` from both cefi + defi buckets, filter by `(venue, symbol)` based on strategy
       config, and merge into features dict as `funding_rate_apy_bps` (single scalar, the value for the strategy's
-      configured perp_venue). — e2e-testing@e47feb9; colocated_engine.py \_FEATURE_GROUPS wired with "perp_funding_rates" for
-      both DEFI + CEFI; \_load_features_for_date generically flattens all parquet columns → funding_rate_apy_bps
-      auto-appears.
+      configured perp_venue). — e2e-testing@e47feb9; colocated_engine.py \_FEATURE_GROUPS wired with
+      "perp_funding_rates" for both DEFI + CEFI; \_load_features_for_date generically flattens all parquet columns →
+      funding_rate_apy_bps auto-appears.
 
 **Phase-A QG**: features-service quality-gates.sh runs clean. Unit tests for cadence math + adapter both pass. Backfill
 produces parquets dated 2026-04-20 through today. Strategy-side smoke: paper VM sees
@@ -134,17 +134,17 @@ produces parquets dated 2026-04-20 through today. Strategy-side smoke: paper VM 
       `features_service/onchain/live/lst_yields_compute_runner.py`. Reuses
       [compute_lst_features_for_day](../../features-service/features_service/onchain/engine/lst_features.py) batch
       logic. Triggered by CandleComputedEvent (daily cadence; for staking APYs this is fine). Emits
-      feature_group=lst_yields per asset_group=defi. — features-service@e43f8370; LstYieldsComputeRunner +
-      LstNativeRatesComputeRunner + \_DefiLstComputeDispatcher in onchain/live/**init**.py; 7083 tests pass
+      feature_group=lst_yields per asset_group=defi. — features-service@a4fadcf2; LstYieldsComputeRunner +
+      LstNativeRatesComputeRunner + \_DefiLstComputeDispatcher in onchain/live/**init**.py; 7085 tests pass
 
 - [x] [AGENT] P0. **Backfill 2026-04-20 → 2026-05-19** for lst_yields. CLI invocation per the existing batch path; only
-      need to add the 30 missing dates (Apr 3-19 already in bucket). — features-service@e43f8370;
+      need to add the 30 missing dates (Apr 3-19 already in bucket). — features-service@a4fadcf2;
       scripts/backfill_lst_yields_30day.sh ships both lst_yields + lst_native_rates passes; dry-run smoke PASS
 
 - [x] [AGENT] P0. **UAC seed: confirm jitoSOL/mSOL/bSOL in `LST_TOKEN_TO_PROTOCOL_ASSET`** so the transformer iterates
       them when asset_group=defi. If missing, add the Solana LST entries. — ALREADY PRESENT in
       unified_api_contracts/internal/domain/defi/lst.py (jitoSOL→JITO/SOL, mSOL→MARINADE/SOL, bSOL→BLAZESTAKE/SOL); no
-      UAC change needed; verified by TestUacSolanaLstSeed unit tests in test_lst_native_rates.py
+      UAC change needed; verified by TestUacSolanaLstSeed unit tests in test_lst_native_rates.py @a4fadcf2
 
 **Phase-B QG**: lst_yields parquets dated through 2026-05-19. Strategy sees `features["staking_apy_bps"] is not None`
 per tick.
@@ -154,9 +154,9 @@ per tick.
 - [x] [AGENT] P1. **Extract lst_native_rate as standalone feature column** alongside staking_apy_bps. Today
       [\_annualise_and_stamp](../../features-service/features_service/onchain/engine/lst_features.py#L44) uses
       exchange_rate as input but doesn't emit it as a feature row column. Add a second feature_group=`lst_native_rates`
-      with columns `(token, exchange_rate, timestamp)`. — features-service@e43f8370; compute_lst_native_rates_for_day +
-      LstNativeRatesComputeRunner shipped; lst_native_rates registered in CLI parser; 280-line test file confirms
-      schema + Solana seed + value-parity with lst_yields
+      with columns `(token, exchange_rate, timestamp)`. — features-service@a4fadcf2; compute_lst_native_rates_for_day +
+      LstNativeRatesComputeRunner shipped; lst_native_rates registered in CLI parser FEATURE_GROUPS; 280-line test file
+      confirms schema + Solana seed + value-parity with lst_yields
 
 - [ ] [AGENT] P1. **Strategy consumer wiring**: colocated_engine merges `features["lst_native_rate"]` from this group;
       existing
@@ -248,7 +248,8 @@ We just need a provider wrapper.
 - [x] [AGENT] P0. **Add to providers factory** at
       [providers/factory.py](../../execution-service/execution_service/providers/factory.py#L13): route
       `mode="matching_engine"` (or whatever the operator wants the flag to read as) to the new provider. Wire
-      `--execution-provider matching_engine` through run-paper.sh + colocated_engine.py routing block — execution-service@cce86de99 + e2e-testing@4ee08d2 2026-05-19
+      `--execution-provider matching_engine` through run-paper.sh + colocated_engine.py routing block —
+      execution-service@cce86de99 + e2e-testing@4ee08d2 2026-05-19
 
 - [x] [AGENT] P0. **MVP scope: ETH-PERP on Binance only** for the first ship. Hyperliquid + Bybit + OKX + Deribit +
       Aster expand post-May-23 in the named successor plan. — execution-service@cce86de99 2026-05-19
