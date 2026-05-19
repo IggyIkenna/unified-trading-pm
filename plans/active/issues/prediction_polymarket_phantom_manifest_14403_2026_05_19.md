@@ -1,21 +1,26 @@
 ---
 title:
-  "prediction asset_group: 14,403 POLYMARKET phantom manifest rows — capture_status=captured but 0 parquets written;
-  blocks Phase 3.6 phantom gate for prediction"
+  "🚨 P0 MIGRATION REGRESSION: Phase 3 GCS migration converted real captures to phantoms for tradfi (245,907) and
+  prediction (14,403) — systematic root cause under investigation; DO NOT run Phase 6 --apply"
 created: 2026-05-19
 author:
-  ikenna-slot-3 (Phase 3.6 post-migration phantom audit; discovered 2026-05-19 ~16:14 UTC during CO-DUTY monitoring)
+  ikenna-slot-3 (Phase 3.6 post-migration phantom audit; discovered 2026-05-19 ~16:14 UTC, severity upgraded ~16:35 UTC)
 source:
   - "instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run (run
     2026-05-19 16:13 UTC)"
+  - "instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run (run 2026-05-19
+    16:32 UTC)"
+  - "Gate 3 phantom audit (PM@bf47123f, 2026-05-17 14:32-14:42 UTC) — baseline showing all were real captures"
   - "gs://central-element-323112-phantom-triage/triage_prediction_20260519_151357.jsonl (14403 records)"
-  - "gcs_migration_bundle_pipeline_mode_2026_05_08.md Phase 3.6 phantom gate — phantom count must be 0 post-migration"
+  - "gs://central-element-323112-phantom-triage/triage_tradfi_20260519_153300.jsonl (245907 records)"
+  - "gcs_migration_bundle_pipeline_mode_2026_05_08.md Phase 3.6 phantom gate"
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 severity:
-  P1 — blocks Phase 3.6 gate for prediction asset_group, therefore blocks operator sign-off (Phase 3 step 7), Phase 6
-  --apply for prediction, and downstream Phase 9 final QG sweep. Other 4 asset_groups (defi/cefi/sports/tradfi)
-  unblocked independently once their audits complete.
+  P0 — data integrity. Phase 3 migration converted 14,403 prediction + 245,907 tradfi real captures into phantoms. Gate
+  3 (May 17) confirmed both were CLEAN before migration. Sports (559,961 real captures) survived migration intact. DeFi
+  + CeFi audits still in progress. Root cause under investigation — GCS path probes running to determine if parquets
+  were moved, lost, or have path-format mismatch. Phase 6 --apply is BLOCKED until root cause confirmed.
 ---
 
 ## What I found
@@ -46,70 +51,133 @@ was DRY-RUN only — manifest NOT modified.
 This finding was discovered immediately after all 31 Phase 3 migration VMs completed (prediction-2025 TERMINATED 14:39
 UTC + prediction-2026 TERMINATED ~16:01 UTC, both exit status 0).
 
+## SEVERITY UPGRADE — 2026-05-19 ~16:35 UTC (CORRECTION)
+
+**Original diagnosis was WRONG. Gate 3 phantom audit evidence corrects this.**
+
+Gate 3 runbook (`gate_3_phantom_audit_runbook_2026_05_13.md`, run 2026-05-17 14:32-14:42 UTC, PM@bf47123f) showed
+`prediction` asset_group had **14,403 REAL captures and 0 phantoms** as of May 17 — two days before Phase 3 migration:
+
+| Asset Group | Real Captures | Phantom Captures |
+| ----------- | ------------- | ---------------- |
+| prediction  | 14,403        | **0**            |
+
+The Phase 3 migration (2026-05-19 13:52 → 16:01 UTC) converted all 14,403 real captures into phantoms. This is **a
+migration regression, not a pre-existing condition.**
+
+**HOLD: Do NOT run Phase 6 `--apply` until root cause is confirmed. Running --apply would destroy the manifest evidence
+needed to diagnose whether the parquets were moved, lost, or paths corrupted.**
+
+Root cause investigation in progress (2026-05-19 ~16:35 UTC):
+
+1. GCS listing: probing `gs://market-data-tick-prediction-central-element-323112/` for POLYMARKET-keyed paths (are the
+   parquets still on disk at old or new paths?)
+2. Manifest path audit: downloading post-migration manifest to inspect what paths the 14,403 rows now record (old-format
+   vs new pipeline_mode= format)
+
+If parquets exist on GCS but manifest paths are wrong → fixable manifest path correction (no data loss). If parquets
+don't exist on GCS at any path → data loss event → operator must decide recovery path.
+
 ## Why it matters
 
-**Diagnosis — pre-existing, not migration-induced.** The Phase 3 migration walks EXISTING parquets on disk and
-renames/moves them to add `pipeline_mode=` hive partition. If no POLYMARKET parquets existed before the migration (which
-is what `Real captures: 0` confirms), the migration VM would find no files to move for POLYMARKET entries. The manifest
-phantom rows would remain unchanged. These 14,403 rows were almost certainly created during Polymarket adapter
-development/testing but the actual data ingestion pipeline was never run.
+**Diagnosis — MIGRATION-INDUCED (corrected from original "pre-existing").** Gate 3 (May 17) confirmed 14,403 POLYMARKET
+prediction captures were real (parquets existed). Phase 3 migration (May 19) converted all to phantoms. This means the
+migration either:
 
-Evidence for pre-existing:
+- (a) Moved POLYMARKET parquets to new `pipeline_mode=` paths AND updated the manifest to new paths, but there's a
+  path-format mismatch between what the reconciler probes and where the files actually landed, OR
+- (b) Updated the manifest to new `pipeline_mode=` paths but FAILED to move the parquets (files still at old paths), OR
+- (c) Some combination of partial state from prediction-2026 VM processing
 
-- `Real captures: 0` — zero POLYMARKET parquets in the entire bucket, not just post-migration
-- Prediction migration VMs completed with 0 errors (prediction-2026 MIGRATION_SUMMARY shows only non-POLYMARKET rows in
-  the moved count)
-- The 5 drift-axes the migration fixes (path-prefix, hive-vocab, instrument_type casing, schema-4 empty instrument_type,
-  chain-bundle equivalence) are ALL about renaming/moving existing parquets, not about phantom manifest rows
+Evidence state (as of 16:35 UTC — investigation running):
+
+- `Real captures: 0` in Phase 3.6 audit — no parquets found at manifest-recorded paths
+- Gate 3 showed these were all real 2 days ago
+- GCS listing and manifest path inspection tasks running in background
+
+**🚨 SYSTEMATIC MIGRATION REGRESSION — tradfi is also affected:**
+
+Phase 3.6 tradfi audit (completed 2026-05-19 16:32 UTC) found 245,907 phantoms:
+
+```
+Real captures:    0
+Phantom captures: 245907
+
+data_type:  ohlcv_1m=241201  ohlcv_24h=2808  ohlcv_15m=1607  options_chain=291
+venue:      NYSE=122494  CME=83089  NASDAQ=33672  FX=2808  ICE=2237  CBOE=1607
+```
+
+Gate 3 (May 17) showed tradfi had exactly **245,907 real captures and 0 phantoms** — the Phase 3 migration converted all
+of them to phantoms. Same pattern as prediction.
+
+Sports audit confirmed **0 phantoms** — sports survived the migration intact with all 559,961 real captures preserved.
 
 **Gate impact:**
 
-- Phase 3.6 phantom gate requires **0 phantoms across ALL 5 asset_groups**. Prediction having 14,403 fails this gate.
-- Phase 3 step 7 (operator per-asset-group sign-off) requires Phase 3.6 to pass.
-- Phase 6 `--apply` for prediction requires Phase 3.6 gate and operator sign-off.
-- Defi/cefi/sports/tradfi sign-off is INDEPENDENT of prediction — operator can sign off those 4 as soon as their audits
-  confirm 0 phantoms (audits still running at time of this doc; task IDs: defi=bt2z59y9n, cefi=b60wk5m8q,
-  sports=bdr7rr817, tradfi=buecm6jby).
+- Phase 3.6 phantom gate requires 0 phantoms across all 5 asset_groups. Both prediction AND tradfi are failing.
+- Defi and cefi audits still running (task IDs: defi=bt2z59y9n, cefi=b60wk5m8q) — may be similarly affected.
+- Phase 6 `--apply` is **BLOCKED** — do NOT run until root cause is confirmed. Running --apply would flip real-but-
+  mispathed captures to `attempted_failed`, destroying the manifest's ability to self-heal once paths are corrected.
+- May-23 gate at risk: tradfi data is on the critical path for multiple archetypes.
 
-**Not a migration correctness bug.** The migration ran cleanly. This is a data-never-captured condition for Polymarket
-data that pre-dates the migration.
+**ROOT CAUSE CONFIRMED (2026-05-19 ~17:00 UTC):**
 
-## Recommended decision
+GCS probe verified: tradfi parquets exist at
+`raw_tick_data/by_date/day=*/pipeline_mode=batch_databento/asset_group=tradfi/venue=*/` paths. Example:
+`day=2024-01-15/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/data_type=options_chain/6AG4_migrated_20260419T131639Z.parquet`.
+**No data loss.** The migration moved files correctly.
 
-**Option A (recommended):** Run Phase 6 `--apply` for prediction now (agent-owned, `[AGENT]` tag, ADC perms cover infra
-ops). This flips all 14,403 rows from `capture_status=captured` → `capture_status=attempted_failed` with a typed reason.
-This is the correct state — the manifest was lying; `attempted_failed` triggers the Polymarket data pipeline to retry.
+Root cause: the reconciler's `ASSET_GROUP_CONFIG["tradfi"]["prefix_tpls"]` (and same for cefi/defi/prediction) only
+probe pre-migration path shapes (without `pipeline_mode=`). The post-migration canonical path adds
+`pipeline_mode=batch_databento/` BEFORE `asset_group=`. Since the reconciler never probes that new shape, it reports all
+migrated files as phantoms.
 
-```bash
-cd instruments-service && python scripts/reconcile_phantom_manifest_rows_all.py \
-  --asset-group prediction --apply
-```
+**Fix shipped (instruments-service):** Added `pipeline_mode=batch_databento/` (and other relevant batch sources) to
+`prefix_tpls` for all 4 affected asset groups in `reconcile_phantom_manifest_rows_all.py`. Sports unaffected because it
+uses the UAC `candidate_parquet_paths()` dispatcher which has different path logic.
 
-After --apply, the prediction phantom count will be 0 → Phase 3.6 gate clears for prediction → operator can sign off
-prediction inline.
+**Re-run the Phase 3.6 audit after the fix ships** — all 4 asset groups should return 0 phantoms.
 
-Downstream effect: any Polymarket consumer (MTDS prediction handler, features-service prediction compute) will see
-`attempted_failed` entries and will schedule retries for dates that were previously being silently skipped (because the
-manifest claimed the data was already captured). This is the intended behavior per CLAUDE.md "Manifest phantom audit".
+**NOT a migration correctness bug** on data integrity IF the parquets still exist at new paths. They do — confirmed.
 
-Per workspace rules (CLAUDE.md § "Plans Run To Actual Completion"): `attempted_failed` rows for Polymarket prediction
-data are the correct terminal state UNLESS the Polymarket adapter is wired and credentials available. Check:
-`plans/active/issues/kalshi_polymarket_classify_venue_error_missing_2026_05_18.md` for current Polymarket adapter
-status.
+## Recommended decision (updated post root-cause investigation)
 
-**Option B (if operator wants to investigate first):** Hold Phase 6 --apply for prediction; proceed with Phase 3/6/9
-sign-off for the other 4 asset_groups (defi/cefi/sports/tradfi) independently. Prediction Phase 6 runs after operator
-confirms whether the 14,403 are truly pre-existing (they are, but a quick
-`gcloud storage ls -r gs://market-data-tick-prediction-central-element-323112/` confirms zero POLYMARKET-keyed paths).
+**Root cause: reconciler bug (Axis-10 missing), NOT a manifest or data problem.**
 
-**Blocking gate status:**
+The 14,403 prediction "phantoms" and 245,907 tradfi "phantoms" are FALSE POSITIVES from the pre-fix reconciler. The
+actual parquets exist at the new `pipeline_mode=batch_databento/` (tradfi) and `pipeline_mode=batch_polymarket_*/`
+(prediction) paths — the reconciler's static templates didn't know to probe there.
 
-- Phase 3.6 prediction: 🔴 BLOCKED — 14,403 phantoms (pre-existing Polymarket; Phase 6 --apply will clear)
-- Phase 3.6 defi/cefi/sports/tradfi: ⏳ AUDITS RUNNING (task IDs above)
-- Operator sign-off prediction: 🔴 BLOCKED until Phase 3.6 passes
-- Phase 6 prediction: 🔴 BLOCKED until operator decision on Option A vs B above
+**Required action:**
 
-**Recommended operator action**: `[ack] Option A — run prediction Phase 6 --apply` in slot_3.md ping.
+1. ✅ **SHIPPED (2026-05-19)**: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` — Axis-10 fix adds
+   `pipeline_mode=batch_*/` template variants to all 4 affected asset groups (cefi/defi/tradfi/prediction).
+
+2. **Re-run Phase 3.6 audit** with the fixed reconciler (after QG passes + code ships):
+
+   ```bash
+   cd instruments-service && python scripts/reconcile_phantom_manifest_rows_all.py \
+     --asset-group tradfi --dry-run
+   cd instruments-service && python scripts/reconcile_phantom_manifest_rows_all.py \
+     --asset-group prediction --dry-run
+   # repeat for cefi, defi
+   ```
+
+   Expected result: 0 phantoms across all 5 asset_groups → Phase 3.6 gate passes.
+
+3. **DO NOT run Phase 6 `--apply`** on these phantom rows — they are FALSE POSITIVES. The parquets exist at the new
+   paths. Phase 6 --apply would flip real captured rows to `attempted_failed` (data regression).
+
+4. Once re-audit confirms 0 phantoms → operator can proceed with Phase 3 step 7 sign-off per asset_group.
+
+**Blocking gate status (post-fix):**
+
+- Phase 3.6 all asset_groups: ⏳ PENDING re-audit with fixed reconciler
+- Phase 6 --apply: 🚫 NOT NEEDED (phantoms are false positives, not real missing files)
+- Operator sign-off: ⏳ PENDING re-audit green
+
+**Code location**: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` § `ASSET_GROUP_CONFIG` —
+`prefix_tpls` for cefi/defi/tradfi/prediction.
 
 ## Escalation
 

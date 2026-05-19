@@ -51,37 +51,49 @@ Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started
 
 ---
 
-## [slot 3 → OPERATOR] 2026-05-19 ~16:20 UTC — 🚨 Phase 3.6 OPERATOR ESCALATION — prediction Polymarket phantoms
+## [slot 3 → OPERATOR] 2026-05-19 ~17:30 UTC — ✅ CORRECTION + ROOT CAUSE CONFIRMED — prediction/tradfi phantoms are FALSE POSITIVES
+
+**SUPERSEDES** ping at ~16:20 UTC. Previous diagnosis ("pre-existing condition" / "run Phase 6 --apply") was WRONG.
 
 **All 31 Phase 3 migration VMs: ✅ TERMINATED** (prediction-2026 TERMINATED ~16:01 UTC, exit status 0).
 
-**Phase 3.6 post-migration phantom audit result — prediction asset_group:**
+**ROOT CAUSE CONFIRMED: Reconciler Axis-10 bug (NOT a data problem)**
 
-```
-Real captures:    0
-Phantom captures: 14,403  (POLYMARKET: 14,235; blank venue: 168)
+Gate 3 audit (PM@bf47123f, 2026-05-17) showed prediction had **14,403 REAL captures and 0 phantoms** before migration.
+Phase 3.6 audit returned 14,403 phantoms → migration-induced regression. GCS forensics confirmed: parquets exist at new
+`pipeline_mode=batch_databento/asset_group=tradfi/` paths. NO DATA LOSS.
 
-data_type:  trades=11,943  prediction_trades=2,460
-```
+**Root cause**: `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` in the reconciler only probed pre-migration path shapes (no
+`pipeline_mode=` segment). Post-migration paths added `pipeline_mode=batch_*/` before `asset_group=`. Reconciler never
+found the files at their new canonical paths → 14,403 prediction + 245,907 tradfi false-positive phantoms. Sports
+unaffected (uses UAC `candidate_parquet_paths()` dispatcher, different code path).
 
-**Diagnosis**: Pre-existing condition. All 14,403 rows have `capture_status=captured` in the prediction manifest but NO
-POLYMARKET parquets have EVER been written to `gs://market-data-tick-prediction-central-element-323112/`. The migration
-did not introduce these — the migration moves existing parquets; if no parquets exist for POLYMARKET, nothing moves.
-These manifest entries were created during Polymarket adapter development but real data ingestion never ran.
+**Fix SHIPPED: `instruments-service@8accb30`** (2026-05-19 ~17:30 UTC)
 
-**Gate impact**: Phase 3.6 requires 0 phantoms across all 5 asset_groups. Prediction is currently 14,403.
+- Adds `pipeline_mode=batch_*/` prefix template variants to `ASSET_GROUP_CONFIG` for cefi/defi/tradfi/prediction
+- QG passed (exit code 0) before commit
 
-**Issue doc**: `plans/active/issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`
+**DO NOT run Phase 6 `--apply`** — that would flip real captured rows to `attempted_failed` (data regression). The
+phantoms are false positives from the reconciler bug, not real missing files.
 
-**Operator decision required** (select one):
+**Required action (operator)**:
 
-- **[ack] Option A** — run Phase 6 `--apply` for prediction (flip 14,403 → `attempted_failed`; clears gate; unblocks
-  prediction data pipeline to retry). Agent runs immediately on your [ack].
-- **[ack] Option B** — hold prediction Phase 6; proceed with defi/cefi/sports/tradfi sign-off only now; investigate
-  prediction Polymarket status separately.
+1. No immediate operator action needed — fix is shipped
+2. When a slot picks up Phase 3.6 re-audit: run `reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run`
+   per asset_group with the fixed reconciler; all 5 should return 0 phantoms
+3. Once re-audit confirms 0 phantoms → proceed with Phase 3 step 7 per-asset-group sign-off (HUMAN-ONLY as before)
 
-**Other 4 asset_groups**: defi/cefi/sports/tradfi Phase 3.6 audits still running (background tasks). Will report results
-as soon as available. Those 4 are INDEPENDENT of the prediction blocker.
+**Full RCA**: `plans/active/issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`
+
+---
+
+## [slot 3 → OPERATOR] 2026-05-19 ~16:20 UTC — 🚨 Phase 3.6 OPERATOR ESCALATION — prediction Polymarket phantoms (SUPERSEDED — see correction above)
+
+~~**All 31 Phase 3 migration VMs: ✅ TERMINATED** (prediction-2026 TERMINATED ~16:01 UTC, exit status 0).~~
+
+~~**Diagnosis**: Pre-existing condition.~~ **INCORRECT — see correction above. Root cause is reconciler Axis-10 bug.**
+
+~~**Operator decision required**: Option A (--apply) or Option B (hold).~~ **DO NOT run --apply. See correction above.**
 
 ---
 

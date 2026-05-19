@@ -79,11 +79,13 @@ depends_on:
 
 > **✅ VM FLEET COMPLETE — Phase 3 migration finished 2026-05-19 ~16:01 UTC (slot 3 CO-DUTY close)**
 > All 31 VMs TERMINATED. defi ✅ cefi ✅ sports ✅ tradfi (2020–2026) ✅ prediction-2025 ✅ prediction-2026 ✅
-> Phase 3.6 phantom audit: prediction 🔴 BLOCKED — 14,403 POLYMARKET phantoms (pre-existing; see
-> `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`). defi/cefi/sports/tradfi audits in-progress.
-> Phase 3 operator sign-off BLOCKED until: (a) prediction operator [ack] for Phase 6 --apply;
-> (b) defi/cefi/sports/tradfi audits confirm 0 phantoms.
-> Do NOT launch market-data-tick-prediction VMs until prediction Phase 3.6 passes.
+> **ROOT CAUSE CONFIRMED (2026-05-19 ~17:00 UTC):** prediction 14,403 + tradfi 245,907 "phantoms" are FALSE POSITIVES —
+> reconciler Axis-10 bug: `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` lacked `pipeline_mode=batch_*/` variants.
+> Parquets confirmed on GCS at new paths (e.g. `day=*/pipeline_mode=batch_databento/asset_group=tradfi/`). NO DATA LOSS.
+> **Axis-10 fix SHIPPED: instruments-service@8accb30** — adds pipeline_mode= templates for cefi/defi/tradfi/prediction.
+> **DO NOT run Phase 6 --apply** — these are false positives; --apply would corrupt real captured rows.
+> Phase 3.6 phantom gate: ⏳ PENDING re-audit with fixed reconciler across all 5 asset_groups.
+> See `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md` for full RCA.
 
 todos:
   - id: phase-0-pre-audit-gcs-state
@@ -769,14 +771,13 @@ Per phase — see each todo. Plan-level final gate:
 
 ## Deferred work after 2026-05-19 slot-3 CO-DUTY session
 
-| Item                                                       | Status                       | Blocker                                                                                           | Successor                                                               |
-| ---------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Phase 3.6 phantom gate — prediction                        | 🔴 BLOCKED                   | 14,403 POLYMARKET phantoms; operator [ack] needed for Phase 6 `--apply`                           | Operator ack → Phase 6 `--apply` for prediction → 0 phantoms → sign-off |
-| Phase 3.6 phantom gate — defi/cefi/sports/tradfi           | ⏳ PENDING                   | Background audits still running (task IDs: `bt2z59y9n` / `b60wk5m8q` / `bdr7rr817` / `buecm6jby`) | Read audit outputs when complete; confirm 0 → report to operator        |
-| Phase 3 operator sign-off step 7                           | 🔴 BLOCKED                   | All 5 Phase 3.6 gates must pass                                                                   | Human-only: operator marks each asset_group inline in this plan         |
-| Phase 6 residual phantom cleanup — prediction              | 🔴 BLOCKED-OPERATOR-DECISION | Option A vs B per `issues/prediction_polymarket_phantom_manifest_14403_2026_05_19.md`             | Run `--asset-group prediction --apply` after operator [ack]             |
-| Phase 6 residual phantom cleanup — defi/cefi/sports/tradfi | ⏳ PENDING                   | Phase 3.6 audit results per asset_group                                                           | Run `--apply` per asset_group if audits show any residuals              |
-| Plan banner removal                                        | ⏳ PENDING                   | All 5 operator sign-offs complete                                                                 | Remove `✅ VM FLEET COMPLETE` banner after sign-off                     |
+| Item                                    | Status           | Blocker / Note                                                                                                   | Successor                                                                    |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Axis-10 reconciler fix                  | ✅ SHIPPED       | instruments-service@8accb30 — adds `pipeline_mode=batch_*/` prefix_tpls for cefi/defi/tradfi/prediction          | Unblocks Phase 3.6 re-audit                                                  |
+| Phase 3.6 re-audit — all 5 asset_groups | ⏳ PENDING       | Re-run `reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` with Axis-10 fix; expect 0 phantoms | All 5 must show 0 → operator sign-off step 7                                 |
+| Phase 3 operator sign-off step 7        | 🔴 BLOCKED-HUMAN | Phase 3.6 re-audits must return 0 phantoms; HUMAN-ONLY per plan                                                  | Operator marks each asset_group inline in Phase 3 item after re-audit passes |
+| Phase 6 residual phantom cleanup        | 🚫 NOT NEEDED    | Phantoms are Axis-10 false positives; DO NOT run `--apply` — parquets exist at new paths                         | N/A — fix is Axis-10 reconciler patch, not manifest mutation                 |
+| Plan banner removal                     | ⏳ PENDING       | All 5 operator sign-offs complete                                                                                | Remove banner after all asset_group sign-offs land                           |
 
 ## Temporary states + their canonical follow-up plans
 
