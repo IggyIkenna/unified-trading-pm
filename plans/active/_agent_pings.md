@@ -3811,3 +3811,156 @@ https://agent-orchestrator-uat-site.web.app proxies `/api/*` + `/health` to Clou
 PM@a6c4fe976, please re-slot to workers-on-VMs / multi-account-failover / Slack-notifications successor plans.
 
 — ikenna-main
+
+---
+
+## 2026-05-19 — Harsh: AWS access + agent-orchestrator-on-AWS migration plan
+
+**Cross-side to: harsh-main / slot 3** **From: ikenna-main**
+
+### Part A — AWS credentials (NOW AVAILABLE)
+
+You're unblocked on AWS. Created IAM user `harsh-worker` in account `427895769566` with functional parity to your GCP
+roles. Credentials are in GCP Secret Manager so you can fetch via your existing ADC.
+
+**Permissions attached** (10 managed + 1 inline):
+
+- `AmazonS3FullAccess`, `AmazonEC2FullAccess`, `AmazonECS_FullAccess`, `AmazonEC2ContainerRegistryFullAccess`
+- `AmazonAthenaFullAccess`, `AWSGlueConsoleFullAccess`, `AmazonSNSFullAccess`, `AmazonSQSFullAccess`
+- `SecretsManagerReadWrite`, `CloudWatchLogsFullAccess`
+- Inline `PassRoleForWorkloads` (`iam:PassRole` to ec2/ecs/lambda)
+- (Skipped `ReadOnlyAccess` — 10-policy AWS limit; not blocking)
+
+**Bootstrap (run once on your Linux worker)**:
+
+```bash
+# 1. Verify GCP identity
+gcloud auth list   # confirm harshkantariya@odum-research.com is active
+gcloud config set project central-element-323112
+
+# 2. Install AWS CLI if missing (Linux x86_64)
+which aws || (curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip \
+  && unzip -q /tmp/awscliv2.zip -d /tmp && sudo /tmp/aws/install)
+
+# 3. Pull AWS creds from Secret Manager → ~/.aws/credentials
+mkdir -p ~/.aws
+gcloud secrets versions access latest \
+  --secret=harsh-worker-aws-creds \
+  --project=central-element-323112 \
+| python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('[default]')
+print(f'aws_access_key_id={d[\"aws_access_key_id\"]}')
+print(f'aws_secret_access_key={d[\"aws_secret_access_key\"]}')
+" > ~/.aws/credentials
+
+cat > ~/.aws/config <<'EOF'
+[default]
+region = ap-northeast-1
+output = json
+EOF
+chmod 600 ~/.aws/credentials ~/.aws/config
+
+# 4. Verify
+aws sts get-caller-identity   # should print arn:aws:iam::427895769566:user/harsh-worker
+```
+
+### Part B — agent-orchestrator-on-AWS (you own this)
+
+Operator (Ikenna) ack: move agent-orchestrator off Cloud Run to AWS to cut cost. You scope the host option; operator
+handles DNS cutover. Cross-cloud auth deferred — skip wiring orchestrator → GCP resources for now; first goal is a
+running placeholder reachable on the public IP.
+
+**Current Cloud Run config** (for sizing reference):
+
+- 1 vCPU / 1 GB / min-instances=0 / max-instances=3
+- Image: `europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:production`
+- Deploy script: `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh`
+- Prod domain: `agent-orchestrator.odum-research.com`
+- UAT domain: `agent-orchestrator.staging.odum-research.com`
+
+**Cost note before you start**: Cloud Run with min-instances=0 idle compute is ~$0. If the bill is high, the cost is
+likely Artifact Registry storage + Cloud Build minutes + warm-request egress. Check `gcloud billing` per-service
+breakdown before deciding the move is warranted. If you proceed anyway, the plan below stands.
+
+**AWS host options (you pick)**: | Option | Tokyo (ap-northeast-1) cost | Notes | |---|---|---| | Lightsail $10/mo plan
+| $10/mo flat | Simplest; includes static IP + 2TB egress + 1 GB RAM. Recommended for first move | | EC2 t4g.small
+on-demand | ~$22-30/mo | Standard IAM/VPC; more moving parts | | EC2 t4g.small Spot | ~$8-12/mo | Cheap but reclaimable
+— bad for dashboard | | AWS App Runner | Similar to Cloud Run | Won't be cheaper |
+
+**Step-by-step (Lightsail path)**:
+
+```bash
+# Provision
+aws lightsail create-instances \
+  --instance-names agent-orchestrator-prod \
+  --availability-zone ap-northeast-1a \
+  --blueprint-id ubuntu_22_04 \
+  --bundle-id small_3_0 \
+  --tags key=service,value=agent-orchestrator key=env,value=prod key=owner,value=harshkantariya \
+  --region ap-northeast-1
+
+# Ports
+for PORT in 80 443; do
+  aws lightsail open-instance-public-ports \
+    --instance-name agent-orchestrator-prod \
+    --port-info fromPort=$PORT,toPort=$PORT,protocol=TCP \
+    --region ap-northeast-1
+done
+
+# Static IP
+aws lightsail allocate-static-ip --static-ip-name agent-orchestrator-prod-ip --region ap-northeast-1
+aws lightsail attach-static-ip \
+  --static-ip-name agent-orchestrator-prod-ip \
+  --instance-name agent-orchestrator-prod \
+  --region ap-northeast-1
+aws lightsail get-static-ip --static-ip-name agent-orchestrator-prod-ip --region ap-northeast-1 \
+  --query 'staticIp.ipAddress' --output text
+# → record this IP and ping back; operator needs it for DNS cutover
+```
+
+**On the VM (after `aws lightsail get-instance-access-details`)**:
+
+```bash
+sudo apt update && sudo apt install -y docker.io caddy git
+sudo usermod -aG docker ubuntu && newgrp docker
+
+# Configure docker to auth to europe-west4 AR (so you can pull the prod image)
+gcloud auth configure-docker europe-west4-docker.pkg.dev   # requires gcloud + a way to auth on the VM —
+# OR: download the image locally (your laptop), `docker save` → `scp` → `docker load` on the VM.
+# OR (simplest first deploy): build locally on the VM from the agent-orchestrator repo.
+
+docker pull europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:production
+docker run -d --restart=always --name orchestrator -p 8026:8026 \
+  europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:production
+
+# Caddy reverse proxy + auto-TLS
+sudo tee /etc/caddy/Caddyfile <<'EOF'
+agent-orchestrator.odum-research.com {
+    reverse_proxy localhost:8026
+}
+EOF
+sudo systemctl reload caddy
+```
+
+**Then ping back with**:
+
+1. Static IP address — operator does DNS cutover
+2. Confirmation that the placeholder serves on the IP (curl test fine; TLS will fail until DNS resolves)
+3. Whether you hit any GCP-creds blockers (the orchestrator probably needs GCS / Secret Manager access; we'll wire that
+   in the next step once VM is up)
+
+**Out of scope for this ping (next iteration)**:
+
+- Cross-cloud auth (orchestrator → GCP resources): operator + you will pick WIF vs SA-key after VM is up
+- Tearing down Cloud Run: keep deployed but de-mapped for 24h fallback after DNS cutover, then remove
+- systemd unit / monitoring / log shipping: do once auth is plumbed
+
+### Part C — re GAP-2.4.C status (informational)
+
+I'm running `migrate-defi-buckets-prod-to-prd.sh --apply` from my side right now (104k objects, ~5 buckets w/ data).
+Will run `--verify` + flip GAP-2.4.C checkbox once done. You don't need to touch it. Your AWS creds are independent —
+useful for any future AWS work but not required here.
+
+— ikenna-main
