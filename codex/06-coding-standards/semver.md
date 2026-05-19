@@ -84,7 +84,6 @@ This gate applies to ALL repos:
   - `major-bump-issue-handler.yml` — handles /approve and /reject comments
   - `semver-agent.yml` — automatic detection and issue creation
 - Admin script: `unified-trading-pm/scripts/approve-major-bump.sh`
-- Cursor rule: `unified-trading-pm/cursor-rules/core/major-bump-approval-required.mdc`
 - Plan #64: `unified-trading-pm/plans/archive/major_version_bump_approval_gate_2026_03_11.plan.md`
 
 ## v1.0.0 Stability Gate
@@ -106,4 +105,4 @@ No agent may declare BR8 or set v1.0.0 autonomously. Present the checklist summa
 Each repo has a `semver_rules_ref` in `unified-trading-pm/workspace-manifest.json` pointing to an entry in
 `unified-trading-pm/docs/per-repo-semver-rules.yaml`. Before proposing any bump, read the per-repo rules.
 
-SSOT: `unified-trading-pm/cursor-rules/core/per-repo-semver-rules.mdc`
+SSOT: `unified-trading-pm/docs/per-repo-semver-rules.yaml`

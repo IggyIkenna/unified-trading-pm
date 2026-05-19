@@ -9,7 +9,7 @@ created: 2026-05-15
 > human paths, and the dep-branch flow for cross-repo feature isolation.
 >
 > Cross-references: `CLAUDE.md` § "Git discipline"; `codex/08-workflows/dependency-cascade.md`;
-> `codex/08-workflows/version-graduation.md`; `cursor-rules/venv-usage-ssot.mdc`.
+> `codex/08-workflows/version-graduation.md`.
 
 ---
 
@@ -213,7 +213,7 @@ the same file — resolve with their changes in mind (likely their work should b
 
 | Topic                              | SSOT                                                                     |
 | ---------------------------------- | ------------------------------------------------------------------------ |
-| Quickmerge flags + mechanics       | `cursor-rules/workspace-workflow.md`                                     |
+| Quickmerge flags + mechanics       | `codex/08-workflows/deployment-flow.md`                                  |
 | Dep-branch full flow               | `codex/08-workflows/dependency-cascade.md`                               |
 | Version graduation                 | `codex/08-workflows/version-graduation.md`                               |
 | Per-tab worktrees (slot isolation) | `codex/05-infrastructure/per-tab-worktrees.md`                           |

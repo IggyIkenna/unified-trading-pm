@@ -940,8 +940,7 @@ other unstaged files, hooks modify the staged file, then prek tries to restore a
    ```
 
 **Prevention:** The QG template `quality-gates-service-template.sh` step [1] AUTO-FIX now runs prettier before ruff so
-local QG runs pre-format all file types before any commit. The canonical rule is in
-`unified-trading-pm/cursor-rules/documentation/prettier-docs-formatting.mdc`.
+local QG runs pre-format all file types before any commit.
 
 ---
 

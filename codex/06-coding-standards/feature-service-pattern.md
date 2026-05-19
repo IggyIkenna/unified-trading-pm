@@ -229,7 +229,6 @@ For the full dependency rule set, see `library-tier-architecture.mdc`.
 ## References
 
 - Library source: `unified-trading-library/src/unified_feature_calculator/service_base/`
-- Tier rules: `unified-trading-pm/cursor-rules/library-tier-architecture.mdc`
 - Prometheus metrics standard: `unified-trading-pm/codex/06-coding-standards/prometheus-metrics.md`
 - Correlation ID standard: `unified-trading-pm/codex/06-coding-standards/correlation-id.md`
 - No-os-getenv rule: `.cursor/rules/no-type-any-use-specific.mdc`

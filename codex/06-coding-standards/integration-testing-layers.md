@@ -10,7 +10,7 @@ testing strategy across all repos. **Cross-refs:**
 - Repo registry: `unified-trading-pm/workspace-manifest.json`
 - Plan: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (archived; folded forward into
   `06-coding-standards/README.md` § "Test Infrastructure" + `quality-gates.md` § GCP Emulator / Moto / Cassette parity)
-- Cursor rule: `cursor-rules/testing/integration-testing-layers.mdc` (verify path post `cursor-rules/` reorg)
+- Cursor rule: `cursor-rules/testing/testing-requirements-integration.mdc`
 - Tier architecture: `04-architecture/tier-and-import-architecture.md`
 - Topology DAG: `04-architecture/TOPOLOGY-DAG.md`
 

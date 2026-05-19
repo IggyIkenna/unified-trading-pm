@@ -42,7 +42,7 @@ unified_trading_library/kill_switch/bus.py:        # Bridge to legacy subscriber
 unified_trading_library/treasury/approval_bus.py:        idempotency_key: Redundant alias for request_id (backward compat).
 ```
 
-Violates `cursor-rules/core/no-backward-compat-shims.mdc`. All pre-existing.
+Violates no-backward-compat-shims rule. All pre-existing.
 
 ### 3. Function/class/method size exceeded (22 violations)
 

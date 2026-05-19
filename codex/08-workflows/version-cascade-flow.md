@@ -101,6 +101,4 @@ copies.
 
 - **Full doc:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`
 - **Local dev flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md`
-- **Breaking change commits:** `cursor-rules/dependencies/breaking-change-major-version-protocol.mdc`
-- **Quickmerge usage:** `cursor-rules/core/always-use-quickmerge.mdc`
 - **Version policy:** `workspace-manifest.json` → `versions_policy`
