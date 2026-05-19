@@ -885,3 +885,16 @@ session). No remaining items in slot-2 queue. Standing by for reallocation.
 pvl-p18a monitor + alerting_live_rules close (2.8 cal) + wave3x_residuals + manifest_schema_final_gate + sustain S3-S6
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 2 — STARTED <first item>` below.
+
+[2026-05-19 12:21 UTC] slot-2 — 🔴 **BLOCKED (BLK-b5dfcc6e): pvl-p18a paper VM health check**
+
+Task: check `strategy-paper-carry-staked-basis-20260518-115404` zone `asia-northeast1-a`.
+
+Findings:
+- VM `20260518-115404` NOT FOUND in `asia-northeast1-a` — actual zone is `asia-northeast1-c`, status = **TERMINATED**
+- VM `20260519-125252` in `asia-northeast1-c` = **TERMINATED** (launched today, short-lived)
+- VM `20260519-130923` in `asia-northeast1-c` = **RUNNING** (started 2026-05-19T05:09:37-07:00 = 12:09 UTC)
+
+Question sent to main: does the RUNNING new VM (20260519-130923) supersede the old one? Should health-check target be updated?
+Recommendation: A (new VM supersedes, update target, mark RUNNING).
+Awaiting operator direction.
