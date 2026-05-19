@@ -351,16 +351,22 @@ Read `live_pipeline_mtds_mdps_features_2026_05_08.md` for remaining open items. 
 This is the cross-cutting 6-tab restructure of the deployment UI. Read the full plan before starting. Key tabs: Deploy,
 Status, Logs, Strategy, Kill-switch, Config.
 
-1. - [ ] **Pre-audit** — read plan + identify current UI tab structure vs target. Grep for existing tab components in
-         `unified-trading-system-ui/`. (research 1.2×, ~1 = 1.2 cal)
-2. - [ ] **Tab 1 — Deploy lifecycle** — wiring VM launch events to UI deploy tab. (brand-new 1.0×, ~5 = 5.0 cal)
-3. - [ ] **Tab 2 — Status / data-freshness** — per-service health + manifest freshness feed. (brand-new 1.0×, ~5 = 5.0
-         cal)
-4. - [ ] **Tab 3 — Logs / event-stream** — WebSocket log tail per VM / service (Harsh slot-7 shipped WebSocket VM
-         streaming May-18; wire it into this tab). (brand-new 1.0×, ~5 = 5.0 cal)
-5. - [ ] **Tab 4 — Strategy panel** — promote / demote / paper → live controls. (brand-new 1.0×, ~5 = 5.0 cal)
-6. - [ ] **Tab 5 — Kill-switch** — manual emergency halt per strategy / per service. (brand-new 1.0×, ~4 = 4.0 cal)
-7. - [ ] **Plan flips** for each tab shipped. (0.5 cal)
+1. - [x] ✅ **Pre-audit** — read plan + identify current UI tab structure vs target. Grep for existing tab components in
+         `unified-trading-system-ui/`. (research 1.2×, ~1 = 1.2 cal) — deployment-ui@ba009b2 + deployment-api@ffd97c1 +
+         utl@424e03af (backfilled 2026-05-19)
+2. - [x] ✅ **Tab 1 — Deploy lifecycle** — wiring VM launch events to UI deploy tab. (brand-new 1.0×, ~5 = 5.0 cal) —
+         deployment-ui@ba009b2 Phase B.1+B.3 (backfilled 2026-05-19)
+3. - [x] ✅ **Tab 2 — Status / data-freshness** — per-service health + manifest freshness feed. (brand-new 1.0×, ~5 =
+         5.0 cal) — deployment-ui@ba009b2 Phase B.4+B.5+B.6 (backfilled 2026-05-19)
+4. - [x] ✅ **Tab 3 — Logs / event-stream** — WebSocket log tail per VM / service (Harsh slot-7 shipped WebSocket VM
+         streaming May-18; wire it into this tab). (brand-new 1.0×, ~5 = 5.0 cal) — deployment-ui@ba009b2 Phase B.8+C.5
+         (backfilled 2026-05-19)
+5. - [x] ✅ **Tab 4 — Strategy panel** — promote / demote / paper → live controls. (brand-new 1.0×, ~5 = 5.0 cal) —
+         deployment-api@ffd97c1 Phase E.1+E.2 (backfilled 2026-05-19)
+6. - [x] ✅ **Tab 5 — Kill-switch** — manual emergency halt per strategy / per service. (brand-new 1.0×, ~4 = 4.0 cal) —
+         utl@424e03af Phase BB.1+BB.2+BB.3 (backfilled 2026-05-19)
+7. - [x] ✅ **Plan flips** for each tab shipped. (0.5 cal) — deployment-ui@ba009b2 Phase G.1 workspace QG (backfilled
+         2026-05-19)
 
 > ⚠️ **WORK-SPLIT STALE WARNING**: Items 1-7 above were authored from a stale version of the plan. The actual
 > [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md) is **89% done (33/37 ✅)**.
@@ -369,11 +375,11 @@ Status, Logs, Strategy, Kill-switch, Config.
 > `[HUMAN]`/`[HUMAN+AGENT]`: F.3 (CLAUDE.md VM naming update), H.4 (Cloud Run provisioning), G.2 (staging deploy), G.3
 > (operator sign-off). Re-dispatch per [`pings/slot_6.md`](../../ikenna_orchestrator/pings/slot_6.md):
 
-8. - [ ] **Work-split correction** — flip items 1-7 above to `[x] ✅` with evidence SHAs from plan body. One commit.
-         (0.5 cal)
-9. - [ ] **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
+8. - [x] ✅ **Work-split correction** — flip items 1-7 above to `[x] ✅` with evidence SHAs from plan body. One commit.
+         (0.5 cal) — PM this commit
+9. - [x] ✅ **F.3 AGENT-half** — draft CLAUDE.md "VM Naming Convention" update text + `lifecycle_class` rule +
          experiment-VM `run_id` suffix rule. Save as `.draft.md` (operator approves landing). (design 0.6×, ~2 = 1.2
-         cal)
+         cal) — PM@2816975af (done by slot 6 itself, backfilled 2026-05-19)
 10. - [ ] **H.4 AGENT-half** — write `deployment-service/runbooks/deployment-ui-staging-prod-provisioning.md` with Cloud
           Run + Firebase Hosting + DNS + TLS + IAM specs per env tier. Reference existing trading-system-UI pattern.
           Operator-runnable. (design 0.6×, ~3 = 1.8 cal)
@@ -507,17 +513,24 @@ Read plan for the 9 remaining open items. Most are Phase 6 backfills + Phase 7 i
 
 **Part A — batch_live_symmetry Tabs 4–7** (continuation from slot 3's Tabs 1–3):
 
-1. - [x] ✅ **Tab 4 — features-service ModeHandler lift (4 families)** — commodity / cross_instrument / multi_timeframe /
-         calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal) — ALL 4 families DONE: features-service@519625f7 (confirmed 2026-05-18 backfill); plan checkboxes all ✅
-2. - [ ] [BLOCKED-OPERATOR] **Tab 5 — pipeline_mode VM fleet migration** — per plan §Tab 5 (Phases 3/4/9). Phase 4 consumer sweep already DONE (slot 3); Phase 3 VM migration requires operator cost-audit green-light. (brand-new 1.0×, ~5 = 5.0 cal)
+1. - [x] ✅ **Tab 4 — features-service ModeHandler lift (4 families)** — commodity / cross_instrument / multi_timeframe
+         / calendar. Per plan §Tab 4. (brand-new 1.0×, ~6 = 6.0 cal) — ALL 4 families DONE: features-service@519625f7
+         (confirmed 2026-05-18 backfill); plan checkboxes all ✅
+2. - [ ] [BLOCKED-OPERATOR] **Tab 5 — pipeline_mode VM fleet migration** — per plan §Tab 5 (Phases 3/4/9). Phase 4
+         consumer sweep already DONE (slot 3); Phase 3 VM migration requires operator cost-audit green-light. (brand-new
+         1.0×, ~5 = 5.0 cal)
 3. - [x] ✅ **Tabs 6–7** — Tab 6 Service-readiness Group A shipped: blr@9905bde QG pass + PR #5 → staging 2026-05-19.
          Tab 7 (UI ExecutionModeContext) deferred to operator (requires Playwright + dev server). (brand-new 1.0×, ~4 =
          4.0 cal)
 
 **Part B — cme_polymarket_arb Phase 1** (no-deadline, 15.0 cal):
 
-4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146 (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
-5. - [x] ✅ **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by predictions_master Phase 5. Phase 3 (MTDS binary-outcome shard atom) shipped as unblocked proxy. — uac@2751910: event_contract registered in BUNDLED_DATA_TYPES + EVENT_CONTRACT_ROOT_CLUSTERS (9 roots) + DATA_TYPE_TO_CLUSTER_REGISTRY; 3 tests green. (brand-new 1.0×, ~5 = 5.0 cal)
+4. - [x] ✅ **Phase 1 — InstrumentType.EVENT_CONTRACT + UAC schema** — confirmed shipped: uac@b95d146
+         (InstrumentType.EVENT_CONTRACT enum + Databento BAG classifier + 4 tests). (brand-new 1.0×, ~5 = 5.0 cal)
+5. - [x] ✅ **Phase 2 — MTDS Polymarket + CME adapter scaffolds** — Phase 2 (cross-link field) BLOCKED by
+         predictions_master Phase 5. Phase 3 (MTDS binary-outcome shard atom) shipped as unblocked proxy. — uac@2751910:
+         event_contract registered in BUNDLED_DATA_TYPES + EVENT_CONTRACT_ROOT_CLUSTERS (9 roots) +
+         DATA_TYPE_TO_CLUSTER_REGISTRY; 3 tests green. (brand-new 1.0×, ~5 = 5.0 cal)
 
 **Part C — promote_workflow_may23 residuals** (plan at 62%, 1.6 cal left):
 
