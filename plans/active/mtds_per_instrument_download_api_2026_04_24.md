@@ -229,9 +229,11 @@ class CanonicalParquetReader:
       2026-05-07: FRESH — actionable; verified `tests/integration/` has no `*canonical_parquet_reader*` file (only
       `test_library_contracts.py`); P1 deferral acceptable for May-23 deadline] ✅ **Done 2026-05-19 MTDS `12ab6f9`** —
       9 tests across 4 classes; real pyarrow on real in-memory parquets; stubbed GCS only; all 9 pass.
-- [x] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh` ✅ **Done 2026-05-19** — lint clean,
-      tests pass (9 new integration tests), pre-existing codex violations unchanged (15, max=13 pre-existing).
-- [ ] [SCRIPT] P1. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-3-integration-test]
+- [x] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh` ✅ **Done 2026-05-19** — lint clean, tests
+      pass (9 new integration tests), pre-existing codex violations unchanged (15, max=13 pre-existing).
+- [ ] [SCRIPT] P1. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-3-integration-test] [AUDIT 2026-05-19: BLOCKER
+      RESOLVED — Phase-3 integration test shipped at MTDS@12ab6f9 (2026-05-19); Quickmerge itself not yet run — 416
+      commits ahead of origin/main]
 
 ### Phase 4 — Codex doc
 
