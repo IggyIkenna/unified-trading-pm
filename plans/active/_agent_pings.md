@@ -43,6 +43,14 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already uses correct repo name. See
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` P0 rename done @ unified-trading-pm@d78cb9342.
 
+[2026-05-19 10:15 UTC] ikenna-main — Slack app `agent-orchestrator-alerts` provisioned (App ID: A0B4N3802N9,
+channel `#agent-orchestrator-alerts`, workspace T0252QF4M0B). Webhook + credentials stored in GCP Secret Manager
+(central-element-323112): `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `AGENT_ORCHESTRATOR_SLACK_APP_ID`,
+`AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`, `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET` (placeholder — needs real value from
+Slack Basic Info page), `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` (same placeholder). Also in workspace `.act-secrets`.
+Harsh Slot N can now write + dispatch `agent_orchestrator_slack_notifications_2026_05_XX.md` successor plan — agent
+wires `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` into Cloud Run `--update-secrets` at that time.
+
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived below. Superseded by work_split_2026_05_19_ikenna.md + work_split_2026_05_19_harsh.md. Booting agents: read your work-split for today's tasks — do NOT act on archived entries. -->
 
 <!-- ARCHIVED CYCLE 2 (2026-05-12 → 2026-05-18) — all resolved / superseded:
