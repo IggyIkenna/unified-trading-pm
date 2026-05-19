@@ -653,10 +653,14 @@ land.
       verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch. —
       e2e-testing@9063d14: preflight-cutover.sh Probe 8 added — alchemy-api-key Secret Manager + eth_getCode on Aave V3
       Pool (0x87870B...) + Uniswap SwapRouter02 (0x68b346...) via CHAIN_RPC_TEMPLATES[1] Alchemy ETH mainnet.
-- [ ] [SCRIPT] P0. **Tenderly fork pre-flight** — execution-service integration test pre-flight + pre-deploy fork-swap
-      smoke per pre-audit § 6 risk #5.
-- [ ] [SCRIPT] P0. **Pre-soak rate-limit audit** — confirm 6 perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid,
-      Aster) testnet rate limits per pre-audit § 6 risk #4.
+- [x] ✅ [SCRIPT] P0. **Tenderly fork pre-flight** — execution-service integration test pre-flight + pre-deploy
+      fork-swap smoke per pre-audit § 6 risk #5. e2e-testing@92f7503: preflight-cutover.sh Probe 9 — creates Tenderly
+      VNet (chain_id=1), verifies eth_chainId=1 on fork RPC, deletes VNet; paper mode only; --waive-tenderly-fork flag;
+      uses /vnets API (old /fork endpoint 410 Gone).
+- [x] ✅ [SCRIPT] P0. **Pre-soak rate-limit audit** — confirm 6 perp venues (Bybit, Deribit, Binance, OKX, Hyperliquid,
+      Aster) testnet rate limits per pre-audit § 6 risk #4. e2e-testing@92f7503: preflight-cutover.sh Probe 10 — hits
+      public time/health endpoint on all 6 perp venue testnets; 429=FAIL; logs rate-limit response headers
+      (X-RateLimit-\*, Retry-After); --waive-rate-limits flag.
 - [ ] [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9 COMMAND
       #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
 - [x] ✅ [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
