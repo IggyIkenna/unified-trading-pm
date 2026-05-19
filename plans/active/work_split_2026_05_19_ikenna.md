@@ -301,13 +301,13 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 **RE-DISPATCH 2026-05-19 (items 1-13 ✅; new pickup per
 [`pings/slot_4.md`](../../ikenna_orchestrator/pings/slot_4.md))**:
 
-14. - [ ] **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items 11-13.
+14. - [x] ✅ **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items 11-13.
           Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
           `FUNCTION_SIZE_EXTRA_EXCLUDES`, run QG green, commit + flip checkbox in same agent turn. Once
           execution-service allowlist is 0, scan unified-trading-api/ml-inference/ml-training/strategy-service
           allowlists; pick smallest for next stream. Cumulative target 100 → 109+ by EOD. If recurring pattern across
           services, add one-line codex note to `codex/06-coding-standards/method-size.md`. (refactor 0.4×, ~12 baseline
-          = ~5 cal AI-days)
+          = ~5 cal AI-days) — execution-service@23d8401c6 (8 commits; allowlist now empty `()`; codex stub created PM this commit; next stream: scan strategy-service allowlist)
 
 ---
 
