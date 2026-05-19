@@ -135,8 +135,12 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          10 bucket templates. (2) pnl/positions/risk-store-defi: script had unified-trading- prefix, yaml+GCP do not
          — fixed by removing prefix to match SSOT. Resolver reads yaml correctly; provisioning script was the source
          of drift. Buckets not yet created (GAP-2.4.B pending) — fix lands before --apply run. (research 1.2×, ~1 = 1.2 cal)
-7. - [ ] **GAP-2.4.B** — Provision env-tiered AWS buckets to match GCP yaml schema. Run
-         `deployment-service/scripts/vm/provision-aws-buckets.sh`. (infra 0.8×, ~4 = 3.2 cal)
+7. - [ ] [BLOCKED-CREDENTIALS] **GAP-2.4.B** — provision-aws-buckets.sh written (deployment-service@079903b): 3-env
+         wrapper (prd/stg/dev) around setup-defi-buckets.sh; idempotent. BLOCKED: aws CLI not installed in this
+         Linux worktree — operator must run from AWS-authenticated machine:
+         `PATH=/opt/homebrew/bin:$PATH bash scripts/aws/provision-aws-buckets.sh --apply`
+         (or `--apply --envs prd` for prod-only first). Note: existing prod-named buckets from 2026-05-08 are NOT
+         deleted; prd-named counterparts are created; data migration is GAP-2.4.C. (infra 0.8×, ~4 = 3.2 cal)
 8. - [ ] **GAP-2.4.C** — Migrate flat-bucket data into env-tiered AWS structure. (infra 0.8×, ~5 = 4.0 cal)
 9. - [ ] **Plan flips** for all shipped items. Push `docs(plans):` flips. (0.5 cal)
 
