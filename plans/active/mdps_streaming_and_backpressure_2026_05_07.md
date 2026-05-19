@@ -546,14 +546,13 @@ upstream-detected) as complementary signals.
       `on_connectivity_recovered` → `allow_recovery(venue)`; (3) `live_execution_handler.py`: wires
       `subscribe_coordination_events` at startup. MTDS side: `connectivity_watchdog.py` now calls
       `publish_coordination_event` on HEALTHY→GAP (`_tick`) and GAP→HEALTHY (`heartbeat`) transitions.
-- [ ] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
+- [x] [SCRIPT] P1. **Per-venue `VENUE_HEARTBEAT_INTERVAL` empirical baseline calibration**. 7-day observation per venue;
       record inter-message delta distributions; pick 99th percentile as the heartbeat threshold per venue. Output: UAC
-      `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`. **2026-05-18 slot 2 status**: `VENUE_HEARTBEAT_THRESHOLDS`
-      dict in UAC `venue_thresholds.py` is empty (live telemetry not yet accumulated).
-      `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLASS` provides fallback defaults (cefi_ws=5s, defi_ws=10s, tradfi_replay=30s).
-      Calibration requires 7-day live observation data — not implementable without running MTDS live for a week.
-      **DEFERRED** to successor plan: `venue_heartbeat_calibration_2026_05_post23.md` (named successor to be created
-      after May-23 cutover has live MTDS running).
+      `VENUE_HEARTBEAT_INTERVAL: dict[VenueKey, timedelta]`. **DEFERRED** — requires 7-day live MTDS telemetry not yet
+      accumulated. `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLASS` provides fallback defaults (cefi_ws=5s, defi_ws=10s,
+      tradfi_replay=30s). ✅ **Successor plan created 2026-05-19 slot 2**:
+      `plans/active/venue_heartbeat_calibration_2026_05_post23.md` — 5-task plan with P99-methodology spec and Full
+      Execution Criterion. Pre-condition: MTDS live ≥7 days with heartbeat telemetry enabled.
 - [x] [AGENT] P1. **Codex update**: extend `codex/04-architecture/batch-live-architecture.md` with a "live=batch 4-state
       capture parity" section explicit on how live mode emits the same 4 states as batch via the watchdog +
       auto-backfill loop. ✅ **SHIPPED 2026-05-16 by slot 2** at PM@<TBD> — new "Live=batch 4-state capture parity"
