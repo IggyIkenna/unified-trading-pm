@@ -44,12 +44,12 @@ Per CLAUDE.md "C6 — RPC provider redundancy" finding: every chain in scope has
 rpc_providers:
   ethereum:
     primary: alchemy
-    fallbacks: [infura, quicknode]
+    fallbacks: [quicknode, public]
     fallback_policy: auto-failover-on-5xx-or-429
     retry_budget: 3
   arbitrum:
     primary: alchemy
-    fallbacks: [infura, public]
+    fallbacks: [quicknode, public]
     fallback_policy: auto-failover-on-5xx-or-429
     retry_budget: 3
   solana:

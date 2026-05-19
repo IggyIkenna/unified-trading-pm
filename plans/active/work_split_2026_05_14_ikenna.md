@@ -155,7 +155,7 @@ Plan-of-record fan-out: `emerging_perp_venue_adapters_broken_2026_05_*` (P0) +
    Triage "fix in code if you have context". (research 1.2×, ~2 = 2.4 cal) **DONE** (2026-05-14):
    instruments-service@7c2fc5f — EXTENDED-STARKNET diagnosis comment with stale API endpoint note.
 3. ✅ **`helius_solana_rpc_for_validation` P1** — wire Helius into the Solana RPC validation path (replaces
-   Infura/Alchemy for Solana per UAC `CHAIN_RPC_TEMPLATES`). (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14):
+   Alchemy for Solana per UAC `CHAIN_RPC_TEMPLATES`). (infra 0.8×, ~3 = 2.4 cal) **DONE** (2026-05-14):
    execution-service@a300f7c — `capture_golden_swaps.py` Helius Solana RPC dispatch for SOLANA_CLMM/AMM shapes.
 4. ✅ **`solana_defi_coverage_gaps` successor plan A** — Pyth Hermes batch + PythNet live integration design +
    first-phase ship. (design 0.6×, ~4 = 2.4 cal) **DONE** (2026-05-14): PM@3fc9a790 —

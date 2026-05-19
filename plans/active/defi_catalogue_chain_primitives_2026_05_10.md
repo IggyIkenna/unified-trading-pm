@@ -914,7 +914,7 @@ Owner: ikenna for design + harsh for implementation.
       implementation closed the Harsh-handoff gap same-cycle.
 - [x] [AGENT] P0. **5B — Per-chain RPC redundancy**. Update
       `execution-service/execution_service/config/chain_config.yaml` (or equivalent) to declare ≥ 2 independent RPC
-      providers per chain in scope (Alchemy + Infura + QuickNode + Ankr + Helius for Solana + project-specific public
+      providers per chain in scope (Alchemy + QuickNode + Ankr + Helius for Solana + project-specific public
       RPC). Add `RpcProviderFallback` class that auto-fails-over on connection-drop / 429 / 5xx within configurable
       retry budget. **DESIGN-SHIPPED 2026-05-13 (Day 3) by slot 2 — IMPLEMENTATION HANDED TO HARSH SLOT 2.** Design SSOT
       lives in
