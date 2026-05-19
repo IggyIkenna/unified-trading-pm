@@ -205,10 +205,14 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       with inputs/outputs/failure-mode/recovery semantics per pass + shard-atom alignment cite. Cross-references
       `data_status_drilldown_shard_atom_alignment_2026_05_07.md` +
       `codex/02-data/availability-manifest-and-data-status.md`. Done-def cite: PM@<this commit>.
-- [ ] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
+- [x] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
-      **Blocker**: launcher not yet shipped (see "Launcher script" section above).
+      **DONE 2026-05-19 (slot 2)** — deployment-service@880bc3a + instruments-service@5a0b115. Added `--pass 1|2|3|4|all`
+      flag, `wait_for_vm_stopped()` helper (polls TERMINATED, max 8h), sequential 4-pass orchestration when `--apply`
+      used without `--pass` (dry-run single-VM unchanged). `RESCAN_PASS` env var propagated to VM metadata; Python side
+      reads it to pass `--data-types` to reconciler. Stale "Blocker: launcher not yet shipped" note was false —
+      launcher existed; only ordering was missing.
 - [x] [SCRIPT] P1. Dry-run all 5 asset_groups NOW (no ordering needed for audit pass) to get baseline phantom count
       before `--apply-flips`. (deployment-service@b5f25cc + @2ca80d5 2026-05-13): 5 VMs completed — Gate 3 results
       section populated. Run 1 failed silently (python path doubled by setup-script substitution); fixed in
