@@ -176,11 +176,13 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 > Also owns: scaffold `features_tick_observation_audit_2026_05_18.md` (new sub-plan per Ikenna-main May-18 12:17
 > routing).
 
-1. - [ ] **mdps_streaming Phase 2** (2.1 cal left) — wire `ResourceProfiler.on_memory_warning` to admission control
-         (gate new shard submissions when RSS > threshold). Unblocked by Phase 1.2B (MDPS@15c1889 May-18). (brand-new
-         1.0×, ~2 = 2.1 cal)
-2. - [ ] **mtds_databento_path_streaming close** (1.2 cal left) — read plan for remaining items. (design 0.6×, ~2 = 1.2
-         cal)
+1. - [x] ✅ **mdps_streaming Phase 2** — Phase 1.2B shipped MDPS@15c1889 (UTL streaming candle write lifecycle) +
+         Phase 2 shipped MDPS@6c560f4 (`BatchOrchestrationMixin._init_backpressure` + `_on_memory_warning` +
+         `_unpause_if_safe` + 4 unit tests in `test_memory_backpressure.py`). Plan todos both ✅. Remaining open:
+         Phase 3 (P2, row-group iterator, post-cutover) + Phase 4 (real-VM validation). (backfilled 2026-05-19)
+2. - [x] ✅ **mtds_databento_path_streaming close** — plan `status: done`. Phase 1 shipped MTDS@d8358f9 (path-streaming
+         + chunked to_df + 5 tests). Phase 2/3 DEFERRED-PER-PLAN (no second consumer, wall-clock acceptable). Phase 4
+         VALIDATED 2026-05-16 by slot-3 real-VM run (24,944 records, 96 min, 0 errors). (backfilled 2026-05-19)
 3. - [x] ✅ **data_status_drilldown_shard_atom_alignment close** — plan closed 100%: all 6 remaining items DEFERRED to
          named successors (download-csv → infrastructure_master, Playwright smoke → Phase 6, /coverage-summary →
          infrastructure_master, canonical_question_group → predictions_master, rollup inconsistency →
