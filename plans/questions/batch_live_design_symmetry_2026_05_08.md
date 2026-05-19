@@ -515,8 +515,9 @@ M3. **Risk + circuit-breakers** — mode-blind, verify. Per master plan Group F2
 how do we test the kill-switch in batch mode? Is there a `BatchExecutionMode=DRILL` for chaos testing?
 
 M4. **Reporting** — sibling
-[`client_reporting_pnl_attribution_2026_05_08.md`](client_reporting_pnl_attribution_2026_05_08.md). PnL reporting must
-show backtest PnL + paper PnL + live PnL with identical schema; mode is a filter, not a separate API endpoint.
+[`client_reporting_pnl_attribution_mvp_2026_05_10.md`](client_reporting_pnl_attribution_mvp_2026_05_10.md). PnL
+reporting must show backtest PnL + paper PnL + live PnL with identical schema; mode is a filter, not a separate API
+endpoint.
 
 M5. **PnL attribution** — strategy alpha vs execution alpha decomposition must be possible in BOTH modes. In batch: easy
 (always-fill = strategy alpha; matched = strategy + execution). In live: requires shadow-simulated fills. Per Block A3.

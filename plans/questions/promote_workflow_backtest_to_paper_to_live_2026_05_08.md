@@ -22,8 +22,8 @@ related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
-  - plans/questions/client_reporting_pnl_attribution_2026_05_08.md
-  - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
+  - plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
+  - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
   - plans/questions/defi_readiness_catalogue_2026_05_08.md
   - plans/epics/strategy_and_dart_master_2026_05_07.md
   - plans/epics/defi_master_2026_05_07.md
@@ -654,7 +654,7 @@ cutover-blocking subset.
 
 - NO `client_id` / `tenant_id` field on strategy lifecycle / deployment registration shape.
 - Client-attribution is END-stage (P&L parquets keyed by client).
-- Sibling doc `client_reporting_pnl_attribution_2026_05_08.md` confirms: client-reporting is Tier 3 post-launch; NOT
+- Sibling doc `client_reporting_pnl_attribution_mvp_2026_05_10.md` confirms: client-reporting is Tier 3 post-launch; NOT
   cutover scope.
 - **Gap**: P2 — multi-tenancy scope post-cutover.
 
@@ -814,8 +814,8 @@ gettig us to full completion befroe 23rd may no shortcuts" → **plan-extraction
   - `paper_vs_live_workflow_maturity_2026_05_08.md` — already folded
     `pvl-p17a..d / p18a..b / p20a..c / p21a / p22a / p23a..c`. May-23 plan extends with `pvl-p17e-launcher-scripts` +
     `pvl-p23d-promote-api-and-preflight` + `pvl-p23e-live-deployment-events`.
-  - `client_reporting_pnl_attribution_2026_05_08.md` — H4 + H5 deferred to Tier 3 post-launch.
-  - `risk_simulations_limits_alerting_2026_05_08.md` — H1 + H2 composition.
+  - `client_reporting_pnl_attribution_mvp_2026_05_10.md` — H4 + H5 deferred to Tier 3 post-launch.
+  - `risk_simulations_limits_alerting_2026_05_10.md` — H1 + H2 composition.
   - `api_keys_wallets_accounts_readiness_2026_05_08.md` — H6 composition.
   - `defi_readiness_catalogue_2026_05_08.md` — venue + chain coverage (jitoSOL/mSOL/bSOL Solana).
 - **Estimated scope**:

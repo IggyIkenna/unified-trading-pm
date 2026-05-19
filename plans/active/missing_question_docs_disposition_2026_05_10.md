@@ -63,20 +63,21 @@ exists; its predecessor question doc is gone.
 
 ## Done definition
 
-- [ ] **[AGENT] P0**. Operator triage on disposition (single decision, applies to all 8 references): Options: (a)
-      **Redirect to active plans**: rewrite all 8 references to point at the existing
-      `plans/active/risk_simulations_limits_alerting_2026_05_10.md` +
-      `plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md` (the question docs are dead; the active plans
-      already carry the SSOT scope). (b) **Re-spawn the question docs from active-plan content** (reverse-engineer);
-      useful only if operator wants a lower-velocity discussion surface separate from the live execution plan. (c)
-      **Accept-loss + remove refs**: treat the 8 references as orphan + delete the cite lines. Recommendation: (a) —
-      redirect to active plans. The active plans exist + carry the canonical scope.
-- [ ] **[SCRIPT] P0**. Once operator picks disposition, run mechanical sweep across the 8 cite sites + replace
-      `plans/questions/risk_simulations_limits_alerting_2026_05_08.md` →
-      `plans/active/risk_simulations_limits_alerting_2026_05_10.md` (and same for PnL).
-- [ ] **[SCRIPT] P0**. Workspace grep `risk_simulations_limits_alerting_2026_05_08` +
-      `client_reporting_pnl_attribution_2026_05_08` + `plans/questions/README.md` — assert 0 hits remain after the
-      sweep.
+- [x] ✅ **[AGENT] P0**. Operator triage on disposition: Options (a)/(b)/(c) — **OPERATOR PICKED (a) 2026-05-19 audit
+      pass**. Redirect all dead-doc cites to the active-plan successors `risk_simulations_limits_alerting_2026_05_10` +
+      `client_reporting_pnl_attribution_mvp_2026_05_10`. (audit-backfilled 2026-05-19)
+- [x] ✅ **[SCRIPT] P0**. Mechanical sweep ran 2026-05-19 across 7 active-area files
+      (`simulation_scenarios_topology_price_shocks`, `api_keys_wallets_accounts_readiness`,
+      `promote_workflow_post_cutover_ui_pipeline`, `paper-vs-live-execution-seam` codex,
+      `promote_workflow_backtest_to_paper_to_live`, `plans/questions/README.md`, `batch_live_design_symmetry`).
+      **NOTE**: by audit time the named active plans had themselves been archived; redirect now points at
+      `plans/archive/risk_simulations_limits_alerting_2026_05_10.md` +
+      `plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md` (preserves link validity). The 2 additional
+      files listed in cite-tracker table above (`paper_vs_live_workflow_maturity_2026_05_08.md`,
+      `defi_readiness_catalogue_2026_05_08.md`) do not exist on disk. (audit-backfilled 2026-05-19)
+- [x] ✅ **[SCRIPT] P0**. Workspace grep `risk_simulations_limits_alerting_2026_05_08` +
+      `client_reporting_pnl_attribution_2026_05_08` returns 0 hits in active+codex+questions (excluding the 2 dead docs
+      themselves + this disposition plan + archive) — verified 2026-05-19 (audit-backfilled).
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 

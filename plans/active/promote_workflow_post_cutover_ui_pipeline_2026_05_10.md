@@ -17,8 +17,8 @@ related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-  - plans/questions/client_reporting_pnl_attribution_2026_05_08.md
-  - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
+  - plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
+  - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
   - plans/epics/strategy_and_dart_master_2026_05_07.md
 related_codex:
   - codex/04-architecture/strategy-lifecycle-state-machine.md
@@ -46,9 +46,9 @@ estimate_calibration_note: |
 
 > **🔵 SLOT-7 AUDIT 2026-05-18**: All items in this plan require backend integration (Firestore
 > `MinimalCandidateManifest`, promote-api endpoint, DART `ManualTradeGateDialog` wiring) that is explicitly blocked
-> until after May-23 cutover per CLAUDE.md promote-workflow-architecture SSOT. Zero pre-stageable UI items exist
-> without the backend contract. Status = DEFERRED-POST-CUTOVER (named successor = this plan itself). No code changes
-> until May-23 cutover lands. — deployment-ui@e9e90d9 / PM@26336f55.
+> until after May-23 cutover per CLAUDE.md promote-workflow-architecture SSOT. Zero pre-stageable UI items exist without
+> the backend contract. Status = DEFERRED-POST-CUTOVER (named successor = this plan itself). No code changes until
+> May-23 cutover lands. — deployment-ui@e9e90d9 / PM@26336f55.
 
 > **🟢 OPERATOR-PICKS-TRACK AT CUTOVER — RATIFIED 2026-05-10 cross-plan audit Q12.** Both CLI track + UI track ship by
 > May-23 per [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md). At
@@ -554,7 +554,7 @@ WORKSPACE-WIDE codex audit catches any drift after the post-cutover plan complet
 ## Temporary states + canonical follow-up plans
 
 - **Multi-tenant client-id flow (H4)**: deferred to Tier 3 post-launch
-  (`plans/questions/client_reporting_pnl_attribution_2026_05_08.md` companion).
+  (`plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md` companion).
 - **CEFFU custody non-stub**: stays DEFERRED unless Binance institutional flow opens.
 - **A/B paper-trade governance rules**: deferred to a future plan if operator wants hard A/B enforcement.
 - **`strategy_family` taxonomy**: deferred to a future plan once cross-archetype rollups become an operational need.

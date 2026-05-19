@@ -51,7 +51,7 @@ Pub/Sub feed. Same upstream, same shape. **Don't introduce paper-specific data s
 `CLOUD_MOCK_MODE=true` / `VITE_MOCK_API=true` / `MOCK_STATE_MODE=interactive` are dev-mode flags. Risk simulations (drop
 the underlying 30%, spike funding to 100bps/8h, simulate a venue freeze, simulate a chain reorg) live in a separate
 surface owned by
-[`risk_simulations_limits_alerting_2026_05_08.md`](../../plans/questions/risk_simulations_limits_alerting_2026_05_08.md).
+[`risk_simulations_limits_alerting_2026_05_10.md`](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md).
 
 Mock-data ≠ paper-trading. Conflating them is an anti-pattern.
 

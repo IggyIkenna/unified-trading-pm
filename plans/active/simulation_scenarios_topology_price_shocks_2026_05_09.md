@@ -17,7 +17,7 @@ related_plans:
   - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
   - plans/active/alerting_service_live_rules_2026_05_07.md
   - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
+  - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
   - plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md
   - plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md
   - plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md
@@ -138,7 +138,7 @@ pre-cutover gate.
 This is **not**:
 
 - A throughput benchmark (that's `mock_data_pipeline_benchmarking_2026_05_08.md`).
-- A risk-limit / risk-simulation system (that's `risk_simulations_limits_alerting_2026_05_08.md`; this plan **consumes**
+- A risk-limit / risk-simulation system (that's `risk_simulations_limits_alerting_2026_05_10.md`; this plan **consumes**
   that system's circuit-breaker rules as expected-outcome assertions).
 - A DR / chaos drill harness (that's `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`; this plan
   **provides** the synthetic injection primitives that DR drills will reuse).
@@ -180,7 +180,7 @@ code path.
 
 ### Non-goals (out of scope; stay in their owner plans)
 
-- Real-state risk-limit + circuit-breaker rule definition — owned by `risk_simulations_limits_alerting_2026_05_08`. This
+- Real-state risk-limit + circuit-breaker rule definition — owned by `risk_simulations_limits_alerting_2026_05_10`. This
   plan **consumes** the rule taxonomy as expected outcomes; it doesn't define the rules themselves.
 - DR + reconciliation playbooks — owned by `disaster_recovery_reconciliation_circuit_breakers_2026_05_08`. Scenarios
   here may exercise DR primitives, but the playbook content lives there.
@@ -245,7 +245,7 @@ UPDATE:
   set, do not extend it.
 - **`master_to_live_defi_2026_05_23.md`** — adds new readiness item 17.5 (or extends item 20) "scenario regression
   matrix green per archetype." Update happens in Phase 10.
-- **`risk_simulations_limits_alerting_2026_05_08.md`** (question doc) — circuit-breaker rule taxonomy is the upstream
+- **`risk_simulations_limits_alerting_2026_05_10.md`** (question doc) — circuit-breaker rule taxonomy is the upstream
   vocabulary for outcome assertions. Scenarios consume that doc's rule names; if it spawns a plan first, this plan
   consumes the plan's UAC contracts.
 
@@ -637,9 +637,15 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 6 — Backtest harness wire-in (Days 10-11, ~1.5 AI-days, parallel with Phase 7)
 
-- [x] [AGENT] P0. **6.A Unified backtest CLI flags.** ✅ strategy-service@2c8e516 — mutually-exclusive argparse group `--scenario-id` / `--scenario-matrix` / `--scenario-overlay-yaml` added to `run_2yr_config_grid_backtest.py`; 4 new CLI tests pass.
-- [x] [AGENT] P0. **6.B Pipeline wiring.** ✅ strategy-service@2c8e516 — `ScenarioOverlay` resolved from CLI flag threaded through `_run_grid_for_archetype` → `_replay_slot_with_config`; `ScenarioOverlayApplier` applied per-day via UTL top-level import; 28 tests pass.
-- [x] [AGENT] P0. **6.C YAML overlay schema.** ✅ UAC@3677f54 — `model_validate_yaml` classmethod on `ScenarioOverlay`; `unified_api_contracts/scenario_overlay.py` facade; `schemas/scenario_overlay.schema.json` generated via Pydantic `model_json_schema()`.
+- [x] [AGENT] P0. **6.A Unified backtest CLI flags.** ✅ strategy-service@2c8e516 — mutually-exclusive argparse group
+      `--scenario-id` / `--scenario-matrix` / `--scenario-overlay-yaml` added to `run_2yr_config_grid_backtest.py`; 4
+      new CLI tests pass.
+- [x] [AGENT] P0. **6.B Pipeline wiring.** ✅ strategy-service@2c8e516 — `ScenarioOverlay` resolved from CLI flag
+      threaded through `_run_grid_for_archetype` → `_replay_slot_with_config`; `ScenarioOverlayApplier` applied per-day
+      via UTL top-level import; 28 tests pass.
+- [x] [AGENT] P0. **6.C YAML overlay schema.** ✅ UAC@3677f54 — `model_validate_yaml` classmethod on `ScenarioOverlay`;
+      `unified_api_contracts/scenario_overlay.py` facade; `schemas/scenario_overlay.schema.json` generated via Pydantic
+      `model_json_schema()`.
 
 **Full-execution criterion**:
 
@@ -652,14 +658,16 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 7 — deployment-api + ui surface (Days 10-12, ~1.5 AI-days, parallel with Phase 6)
 
-- [x] [AGENT] P1. ✅ **7.A `/api/scenarios/list` endpoint.** Returns the full UAC scenario registry as JSON, paginated by
-      asset_group. deployment-api Pydantic models mirror UAC types via re-export. — deployment-api@40a62af (2026-05-18 slot 6)
+- [x] [AGENT] P1. ✅ **7.A `/api/scenarios/list` endpoint.** Returns the full UAC scenario registry as JSON, paginated
+      by asset_group. deployment-api Pydantic models mirror UAC types via re-export. — deployment-api@40a62af
+      (2026-05-18 slot 6)
 - [ ] [AGENT] P1. **7.B `/api/scenarios/run` endpoint (POST).** Accepts `ScenarioRunRequest` (scenario_id, archetype,
       time_window). Launches a backtest VM via the deployment-service launcher (per VM launcher script SSOT). Returns
       `run_id`. Async; result polled via 7.C.
-- [x] [AGENT] P1. ✅ **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read parquet
-      from GCS; cache results. — deployment-api@cb1918d (2026-05-18 slot 6). Matrix: in-memory from SCENARIO_ARCHETYPE_MATRIX.
-      Report: 501 scaffold — ScenarioReportEmitter (Phase 2.C) deferred per compressed scope; GCS path wires when Phase 2.C ships.
+- [x] [AGENT] P1. ✅ **7.C `/api/scenarios/report/{run_id}` + `/api/scenarios/matrix/{archetype}` endpoints.** Read
+      parquet from GCS; cache results. — deployment-api@cb1918d (2026-05-18 slot 6). Matrix: in-memory from
+      SCENARIO_ARCHETYPE_MATRIX. Report: 501 scaffold — ScenarioReportEmitter (Phase 2.C) deferred per compressed scope;
+      GCS path wires when Phase 2.C ships.
 - [ ] [AGENT] P1. **7.D deployment-ui `Scenarios` tab.** New tab next to Data-Status. Three views: scenario library
       browser (per asset_group), per-archetype regression matrix grid (cells colored pass/fail/not-run), per-scenario
       drilldown (assertions + observed + report links). Re-uses existing `TypedReasonBadges` + `FailurePillarStack`
@@ -690,36 +698,37 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       values + reuse-prod-codepath principle + injection-point map + per-layer applier semantics + `synthetic=true`
       event-stream provenance + LookaheadBias compatibility note + cross-references to `live-pipeline-architecture.md` +
       `replay-subsystem.md`. Stub at Phase 1 commit; full content lands here.
-- [x] ✅ [AGENT] P0. **8.B NEW `codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy closed
-      enum + per-archetype matrix shape + fail semantics (matrix-red = cutover-block) + scenario-fail vs real-fire event
-      distinction (`synthetic=true`) + alerting wire pattern + cross-reference to `kill-switch-circuit-breaker.md` +
-      `autonomous-recovery-matrix.md`. — PM@7a735152 (2026-05-18 slot 3). Nine OutcomeCategory table; 6-tuple per-assertion
-      contract; PASS/FAIL/WARN semantics; synthetic=True safeguard; alerting wire (log-only path).
-- [x] ✅ [AGENT] P0. **8.C NEW `codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema + per-row
-      provenance column + `available_at` discipline under overlay (downgrade to warning, never silently shifted) +
-      manifest `scenario_id` column + cross-reference to `honest-absence-downstream-handling.md` +
-      `availability-manifest-and-data-status.md`. — PM@7a735152 (2026-05-18 slot 3). Schema (scenario_id/run_id/synthetic
-      columns); GCS path; provenance chain MTDS→features→signal→report; available_at downgrade rule;
-      MANIFEST tap layer scope (post-cutover Phase 3.G).
+- [x] ✅ [AGENT] P0. **8.B NEW `codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy
+      closed enum + per-archetype matrix shape + fail semantics (matrix-red = cutover-block) + scenario-fail vs
+      real-fire event distinction (`synthetic=true`) + alerting wire pattern + cross-reference to
+      `kill-switch-circuit-breaker.md` + `autonomous-recovery-matrix.md`. — PM@7a735152 (2026-05-18 slot 3). Nine
+      OutcomeCategory table; 6-tuple per-assertion contract; PASS/FAIL/WARN semantics; synthetic=True safeguard;
+      alerting wire (log-only path).
+- [x] ✅ [AGENT] P0. **8.C NEW `codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema +
+      per-row provenance column + `available_at` discipline under overlay (downgrade to warning, never silently
+      shifted) + manifest `scenario_id` column + cross-reference to `honest-absence-downstream-handling.md` +
+      `availability-manifest-and-data-status.md`. — PM@7a735152 (2026-05-18 slot 3). Schema
+      (scenario_id/run_id/synthetic columns); GCS path; provenance chain MTDS→features→signal→report; available_at
+      downgrade rule; MANIFEST tap layer scope (post-cutover Phase 3.G).
 - [x] [AGENT] P0. **8.D UPDATE `kill-switch-circuit-breaker.md`.** ✅ PM@3431713e. Added § "Scenario-driven trips" —
       ScenarioRunner trip mechanics + per-rule expected-trip table (6 rules × kill-switch scope).
 - [x] [AGENT] P0. **8.E UPDATE `autonomous-recovery-matrix.md`.** ✅ PM@3431713e. Added § "Scenario-driven recovery
       validation" — G1/G2/G3/G4 + HF1/HF2/CAS1 decision tree gates each paired with scenario_id + assertion checked;
       ScenarioMatrixRunner usage example.
-- [x] [AGENT] P0. **8.F UPDATE `backtest-groups.md`.** ✅ PM@3431713e. Added § "Scenario-overlay mode" — fourth axis
-      on Group B/C; axes summary table (A/B/C × archetype/config/exec-policy/scenario-id); CLI flag; cross-ref.
-- [x] ✅ [AGENT] P0. **8.G UPDATE `live-pipeline-architecture.md`.** Add § "Scenario tap points" — 7 layer tap point list +
-      reuse-prod-codepath note. — PM@ed0079f8 (2026-05-18 slot 3). 7-layer table (RAW_TICK/FEATURE-MDPS/FEATURE-features/
-      SIGNAL/ORDER/EVENT/MANIFEST) with pre-cutover wire status; reuse-prod-codepath note; cross-reference to
-      scenario-injection-architecture.md added.
+- [x] [AGENT] P0. **8.F UPDATE `backtest-groups.md`.** ✅ PM@3431713e. Added § "Scenario-overlay mode" — fourth axis on
+      Group B/C; axes summary table (A/B/C × archetype/config/exec-policy/scenario-id); CLI flag; cross-ref.
+- [x] ✅ [AGENT] P0. **8.G UPDATE `live-pipeline-architecture.md`.** Add § "Scenario tap points" — 7 layer tap point
+      list + reuse-prod-codepath note. — PM@ed0079f8 (2026-05-18 slot 3). 7-layer table
+      (RAW_TICK/FEATURE-MDPS/FEATURE-features/ SIGNAL/ORDER/EVENT/MANIFEST) with pre-cutover wire status;
+      reuse-prod-codepath note; cross-reference to scenario-injection-architecture.md added.
 - [x] ✅ [AGENT] P0. **8.H UPDATE `replay-subsystem.md`.** Add § "Scenario overlay on replay" — how the replay subsystem
-      composes with overlays for batch backtest. — PM@ed0079f8 (2026-05-18 slot 3). ReplayPublisher + ScenarioOverlayApplier
-      composition contract; ordering invariant (watermark KV before overlay); batch-backtest pseudocode;
-      post-cutover scope pointer.
+      composes with overlays for batch backtest. — PM@ed0079f8 (2026-05-18 slot 3). ReplayPublisher +
+      ScenarioOverlayApplier composition contract; ordering invariant (watermark KV before overlay); batch-backtest
+      pseudocode; post-cutover scope pointer.
 - [x] ✅ [AGENT] P0. **8.I UPDATE `honest-absence-downstream-handling.md`.** Add § "Scenario-driven gap injection" — how
       each consumer-class behaves under synthetic gaps; per-row `scenario_id` provenance respected. — PM@ed0079f8
-      (2026-05-18 slot 3). DropRows + ManifestPhantom mutation types; per-row scenario_id provenance; alerting suppression;
-      attribution audit; MANIFEST tap layer scope (post-cutover).
+      (2026-05-18 slot 3). DropRows + ManifestPhantom mutation types; per-row scenario_id provenance; alerting
+      suppression; attribution audit; MANIFEST tap layer scope (post-cutover).
 
 **Full-execution criterion**:
 
@@ -797,7 +806,7 @@ This plan composes with — read these before touching any of the surfaces:
 - **`writegate_honest_coverage_endtoend_2026_05_06.md`** — `EMPTY_CONFIRMED_REASONS` taxonomy is the upstream SSOT for
   topology-gap scenarios; this plan does NOT extend the taxonomy, only consumes it.
 - **`master_to_live_defi_2026_05_23.md`** — Phase 10 adds new readiness item; matrix gate joins Group F.
-- **`risk_simulations_limits_alerting_2026_05_08.md`** (question doc) — circuit-breaker rule taxonomy upstream
+- **`risk_simulations_limits_alerting_2026_05_10.md`** (question doc) — circuit-breaker rule taxonomy upstream
   vocabulary. If that question spawns a plan first, this plan's outcome-assertion enum consumes its rule names. If this
   plan ships first, the rule taxonomy seeds from this plan's working set + that plan extends.
 
@@ -965,7 +974,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 > **Cross-references used throughout this section** (do NOT redesign):
 >
 > - Risk-and-exposure-service thresholds: `codex/04-architecture/circuit-breaker-rule-taxonomy.md`
-> - Position-balance-monitor breach logic: `risk_simulations_limits_alerting_2026_05_08.md`
+> - Position-balance-monitor breach logic: `risk_simulations_limits_alerting_2026_05_10.md`
 > - Kill-switch ladder: `codex/04-architecture/kill-switch-circuit-breaker.md`
 > - Execution-service circuit breakers: `execution-service/execution_service/circuit_breakers/`
 
