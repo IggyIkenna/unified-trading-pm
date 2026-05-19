@@ -296,6 +296,16 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
          Smoke-tested: both [OK] against real UAC + empty source. Complements prior base-library.sh
          STEP 5.83 (PM@03a320846) which guards the Pydantic model_validator. — PM@429b64b2b + PM@8427ac070
 
+**Part E — hard_schema Phase 1 design+audit pass (RE-DISPATCH after item-9 close, 2026-05-19):**
+
+10. - [ ] **Phase 1 field-flip design+audit** — per [`ikenna_orchestrator/pings/slot_7.md`](../../ikenna_orchestrator/pings/slot_7.md)
+         dispatch 2026-05-19. Design+audit ONLY this session (no field flips). Output: (a) Optional→required field
+         inventory across 5 asset_groups; (b) consumer-sweep classification (🟢/🟡/🔴) for every field; (c) Sports
+         `fixture_id` phantom verification; (d) back-fill migration scope per field; (e) new plan file
+         `hard_schema_phase1_field_flip_migration_2026_05_19.md` with phased DAG. **Hard rules**: design only — no
+         flips; cross-link from `hard_schema_enforcement_2026_05_08.md` Phase 1 todo as named successor; read-only
+         grep on dep repos. (refactor 0.4×, ~30 baseline = ~12 cal AI-days)
+
 ---
 
 ### Slot 8 — defi_catalogue close + defi_simulation_realism + dex_perp — ~29 cal AI-days

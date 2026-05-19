@@ -5,6 +5,98 @@
 
 # Slot 7 — Intra-side ping ledger
 
+## [main → slot 7] 2026-05-19 RE-DISPATCH — hard_schema Phase 1 design+audit pass
+
+**Timestamp**: 2026-05-19 **Status**: 🟢 DISPATCH
+
+**Context**: Slot 7's 2026-05-19 work-split items (1-9, including the Phase 5 STEP 5.83 bonus pickup at PM@`429b64b2b`
++ `8427ac070`) are all ✅. You correctly identified Phase 1 nullable→required field flips as "the next substantive
+item but requires a migration plan + consumer sweep across 3+ repos — not a one-shot pick-up." That's right for the
+*flip itself*. But the **design+audit pass** that *unblocks* the multi-repo flip IS one-shot-sized and is exactly your
+highest-context next task — you just shipped Phase 5 of this plan.
+
+**Plan**: [`hard_schema_enforcement_2026_05_08.md`](../../plans/active/hard_schema_enforcement_2026_05_08.md) § Phase 1.
+
+**Current state** (per plan body lines 75-97):
+
+- ✅ Runtime model_validator rules shipped for all 5 asset-groups: CeFi (uac@`37d1ddb`), DeFi (uac@`37d1ddb`),
+  EVENT_CONTRACT (uac@`37d1ddb`), TradFi FUTURE+OPTION (uac@`80aef10`).
+- 🔴 **STILL OPEN**: field-level `Optional[X]` → `X` flips at the Pydantic schema layer. Today the model_validator
+  enforces non-null at runtime but the static type is still `Optional[X]`, so consumers downstream still must
+  `if x is None` defensively. Phase 1's full graduation requires the field-level flip + consumer-sweep + back-fill
+  migration.
+
+**Tasks (design+audit pass — NO field flips this session; design only)**:
+
+1. **Field inventory** — for each asset_group, enumerate the exact `Optional[X]` fields that the model_validator now
+   requires-but-still-nullable. Open `unified_api_contracts/canonical/domain/_*.py` for each asset_group + read the
+   `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator. Output: precise table
+
+   | asset_group | schema file path | field name | current type | target type | model_validator rule |
+
+   Cover at minimum: CeFi `base_asset` + `quote_asset`; DeFi `pool_address` OR `base_asset_contract_address` (note the
+   OR — slot 7 should propose how to handle disjunctive requirement at Pydantic-field level: union type, discriminator,
+   or keep as model_validator with `# type: ignore[optional-member-access]` at consumers); TradFi FUTURE+OPTION
+   `expiry`; EVENT_CONTRACT `expiry`; Sports `fixture_id` (PER PLAN BODY — Sports fixture_id flip is still pending).
+
+2. **Consumer-sweep** — for each field in the inventory, grep workspace for `.{field_name}` and `["{field_name}"]`
+   access patterns. Classify each callsite:
+   - 🟢 SAFE — already treats as non-null (no defensive `if x is None` guard)
+   - 🟡 DEFENSIVE — guards on None; after flip the guard becomes dead code (cleanup follow-up)
+   - 🔴 BREAKS — assigns `None` explicitly somewhere upstream; flip will fail at write-time
+   Output: per-field consumer table with file paths + line numbers + classification.
+
+3. **Sports fixture_id phantom verification** — re-run the phantom audit specifically for Sports rows lacking
+   `fixture_id`. (Today's broader phantom audit per work-split item 7 came back clean across all 5 asset_groups, so
+   this should be a quick re-confirmation against the Sports manifest.) Output: phantom count for `fixture_id IS NULL`
+   in Sports manifest.
+
+4. **Back-fill migration scope** — for each field where the consumer-sweep finds 🔴 BREAKS callsites OR where Sports
+   fixture_id phantom check finds >0 nulls, document the back-fill script shape: source-of-truth lookup, fallback
+   policy (back-fill from manifest row_key? from raw payload re-fetch? quarantine?), and which existing migration
+   tooling (manifest_cross_asset_rescan / gcs_migration_bundle_pipeline_mode) the back-fill should bundle into.
+
+5. **Phase 1 migration plan draft** — write a new plan file
+   `plans/active/hard_schema_phase1_field_flip_migration_2026_05_19.md` with:
+   - Frontmatter (status / locked_by / estimate_class=refactor / estimate_baseline_ai_days / estimate_calibrated_ai_days)
+   - Pre-audit manifest (the inventory + consumer-sweep tables from tasks 1+2)
+   - Phased Execution DAG: Phase A (DeFi disjunctive-field design decision) → Phase B (back-fill migrations, parallel
+     per asset_group) → Phase C (field-level flips at UAC, one PR per asset_group) → Phase D (consumer-sweep cleanup,
+     remove dead guards) → Phase E (codex SSOT updates).
+   - Per-phase QG gates + cross-repo PR sequencing.
+   - Continuous-verification path per master plan rule.
+
+**HARD RULES**:
+
+- ❌ Do NOT do field-level flips this session. **Design + audit ONLY.** The flips are blocked behind operator approval
+  of the migration plan (because they're cross-repo) and behind the Sports fixture_id phantom decision.
+- ❌ Do NOT touch the existing `hard_schema_enforcement_2026_05_08.md` plan body — write the Phase 1 detail-out as the
+  new dedicated plan file. Cross-link both directions.
+- ❌ Do NOT touch foreign-owned files in `.tabs/7/`'s dep repos during the consumer-sweep — read-only grep only.
+- ✅ DO ship as multiple commits per shippable unit (inventory → consumer-sweep → phantom verify → migration scope →
+  plan draft). Flip plan checkbox in same-turn after each push per CLAUDE.md Half-1+2 rule.
+- ✅ DO commit the new plan file under `plans/active/` with proper frontmatter; reference from
+  `hard_schema_enforcement_2026_05_08.md` Phase 1 todo as the named successor.
+
+**Self-check before declaring DONE**:
+
+- Inventory table covers all 5 asset_groups (CeFi + DeFi + TradFi + Sports + Predictions).
+- Consumer-sweep table has file:line refs for every callsite (no "checked, looks fine" — exhaustive grep output).
+- DeFi disjunctive-field decision proposed (3 options laid out with trade-offs).
+- Sports fixture_id phantom count confirmed against actual manifest run, not assumed.
+- New plan file frontmatter has `locked_by: live-defi-rollout` + `locked_since: 2026-05-19`.
+
+**ETA**: refactor 0.4× × ~30 baseline = ~12 cal AI-days. Sized to fit inside one Cycle 2 PREP day.
+
+**Why this is the right next task for slot 7**:
+
+- You shipped Phase 5 (STEP 5.83) hours ago — you have peak context on the validator landmarks, frozensets, and
+  bundled shard-key matrix.
+- The design+audit pass is single-repo READ + single-repo WRITE (PM only). Cross-repo flips are a downstream session.
+- Unblocks the entire post-cutover hard-typing graduation that's been deferred since 2026-05-08.
+
+---
+
 ## [slot 7 → main] CONTINUATION SESSION — 2026-05-14 (post-compaction)
 
 **Status**: ✅ DONE — continuation of prior slot-7 session after context compaction
