@@ -407,11 +407,13 @@ todos:
 
   - id: bb3-experiment-monitor-subtab-wiring
     content: |
-      - [ ] [SCRIPT] P0. Wire Monitor → Experiments sub-tab (Phase B.2) to `/api/monitor/experiments` endpoint
+      - [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P0. Wire Monitor → Experiments sub-tab (Phase B.2) to `/api/monitor/experiments` endpoint
         (Phase C.2) reading from the experiment registry + per-run blobs. Per-row: run_id, owner, kind, started_at,
         progress, current_step, key metrics tail (sparkline of last N), status. Click-through to per-run detail
         view with full hyperparams / metric chart / artifact download / log-stream. Stop / restart actions:
         `POST /api/monitor/experiments/{run_id}/{stop|restart}`.
+        ExperimentsSubTab.tsx: full job table with loading/error/empty states; stop (running) + restart (failed/completed)
+        VM action buttons via handleAction(); statusVariant() + kindLabel() helpers; 4 vitest tests.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase H — Environment-tiered hosting for deployment-UI/API itself
@@ -460,15 +462,18 @@ todos:
 
   - id: f1-cloud-toggle-loading-state
     content: |
-      - [ ] [SCRIPT] P1. Cloud-toggle (GCP / AWS) in Header MUST show explicit loading UX during the cache
+      - [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cloud-toggle (GCP / AWS) in Header MUST show explicit loading UX during the cache
         invalidate + parallel refetch (per Phase B.7). Skeleton-loaders or progress indicator on every tab during
         the load; tab-state preserved across the toggle. Per user direction 2026-05-08.
+        CloudSwitchingSkeleton component + skeleton.tsx; all 4 TabsContent gated on {switching ? <CloudSwitchingSkeleton /> : <SubTab />}.
 
   - id: f2-mode-toggle-instant-ux
     content: |
-      - [ ] [SCRIPT] P1. Cross-Monitor-sub-tab navigation (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel
+      - [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cross-Monitor-sub-tab navigation (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel
         instant — Phase B.7 prefetch keeps all four sub-tabs in cache. Add unit test that asserts no network call
         fires on tab switch when cache is warm. Performance budget: <50ms perceptible delay on sub-tab toggle.
+        LifecyclePrefetchContext.test — "F.2 — no re-fetch when all caches are warm" test: rerenders provider without
+        target change, waits 30ms, asserts globalFetch + fetchVmDeployments + getLiveStatus call counts unchanged.
 
   - id: f3-naming-convention-rule-into-claudemd
     content: |
