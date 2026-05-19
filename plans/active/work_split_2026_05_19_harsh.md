@@ -89,8 +89,8 @@ estimate_calibration_note: |
          0.9 cal)
 4. - [ ] **manifest_schema_final_gate residuals** (plan at 52%, 1.0 cal left) — ship remaining `- [ ]` items. (design
          0.6×, ~2 = 1.0 cal)
-5. - [ ] **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
-         enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal)
+5. - [x] ✅ **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
+         enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal) — execution-service@8d60c4a1; 0 remaining violations across workspace
 6. - [ ] **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** — every bare `# type: ignore` must have a
          comment explaining why. (refactor 0.4×, ~2 = 0.8 cal)
 7. - [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
