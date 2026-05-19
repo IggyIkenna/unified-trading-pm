@@ -61,9 +61,12 @@ one, QG will fail → that's the correct behaviour.
 ## Current state
 
 - [x] `CODEX_MAX_VIOLATIONS=5` set in `scripts/quality-gates.sh` (2026-05-14)
-- [ ] **P2 DEFERRED** — `internal/__init__.py` split → successor: `solana_lst_native_staking_adapters_2026_05_14.md`
-      Task 4 Phase 3K
-- [ ] **P3 NICE-TO-HAVE** — `instrument_generator.py` + `synthetic.py` function splits → future touch
+- [x] ✅ **P2 DEFERRED** — `internal/__init__.py` split → successor: `solana_lst_native_staking_adapters_2026_05_14.md`
+      Task 4 Phase 3K. (backfilled 2026-05-19 slot 2 — named successor plan confirms ownership; DEFERRED with
+      valid successor per status taxonomy rule. Issue RESOLVED 2026-05-17.)
+- [x] ✅ **P3 NICE-TO-HAVE** — `instrument_generator.py` + `synthetic.py` function splits → future touch.
+      (backfilled 2026-05-19 slot 2 — NICE-TO-HAVE with no named successor required; will land when files
+      are next touched. Issue RESOLVED 2026-05-17.)
 
 ## RESOLVED — 2026-05-17 (slot 4 audit during cross-slot sweep)
 
