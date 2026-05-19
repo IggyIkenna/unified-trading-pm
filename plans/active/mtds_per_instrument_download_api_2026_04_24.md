@@ -206,16 +206,19 @@ class CanonicalParquetReader:
       or `# legacy migration script — direct parquet read intentional`. 4 migrate scripts annotated as
       legacy-intentional. **DEFERRED**: full consumer migration (replacing instruments-service reads with a proper
       reader) requires a separate plan; added as P2 deferred item below.
-- [ ] [AGENT] P1. **DEFERRED — 2026-05-14 slot-7-G**: Full consumer migration — replace instruments-service bucket
+- [x] **FORMALLY DEFERRED** [AGENT] P1. **DEFERRED — 2026-05-14 slot-7-G**: Full consumer migration — replace instruments-service bucket
       `pd.read_parquet()` reads in `kalshi_adapter.py`, `polymarket_adapter.py`, `_instruments_metadata.py`,
       `_defi_instruments.py` with the appropriate instruments-service client or a dedicated `InstrumentsReader` class.
       These read `instrument_availability/by_date/.../instruments.parquet` (not MTDS tick shards) — they need a
       different reader pattern, not `CanonicalParquetReader`. Also: `tardis_adapter.py:2431` reads from a local temp
-      CSV-to-parquet converted file — needs a different migration pattern.
-- [ ] [AGENT] P1. If `CanonicalParquetReader` is generically useful (features-service, strategy-service), move to
+      CSV-to-parquet converted file — needs a different migration pattern. **FORMALLY CLOSED 2026-05-19 slot-5** —
+      original deferral from slot-7-G stands; confirmed in deferred-work table (line ~256); needs InstrumentsReader
+      pattern as separate plan scope.
+- [x] **FORMALLY DEFERRED** [AGENT] P1. If `CanonicalParquetReader` is generically useful (features-service, strategy-service), move to
       `unified_trading_library/readers.py` and re-export from MTDS for backwards compatibility. Decide after Phase 1 —
       if >1 non-MTDS repo would import it, move it; otherwise keep in MTDS. [AUDIT 2026-05-07: FRESH — actionable but P1
-      deferral acceptable]
+      deferral acceptable] **FORMALLY CLOSED 2026-05-19 slot-5** — only 1 consumer (MTDS itself); deferred-work table
+      (line ~257) confirms "Keep in MTDS for now; move to UTL only when 2nd non-MTDS repo adopts it."
 - [x] [QG] P1. QG on all affected repos. **Done 2026-05-14** — QG exit code 0 on MTDS; no new failures introduced.
 - [x] [SCRIPT] P1. Quickmerge. **Done 2026-05-14 MTDS `719e4aa`** — pushed to `tab/ikennaigboaka/7` +
       `live-defi-rollout`.
@@ -231,9 +234,12 @@ class CanonicalParquetReader:
       9 tests across 4 classes; real pyarrow on real in-memory parquets; stubbed GCS only; all 9 pass.
 - [x] [QG] P1. `cd market-tick-data-service && bash scripts/quality-gates.sh` ✅ **Done 2026-05-19** — lint clean, tests
       pass (9 new integration tests), pre-existing codex violations unchanged (15, max=13 pre-existing).
-- [ ] [SCRIPT] P1. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-3-integration-test] [AUDIT 2026-05-19: BLOCKER
-      RESOLVED — Phase-3 integration test shipped at MTDS@12ab6f9 (2026-05-19); Quickmerge itself not yet run — 416
-      commits ahead of origin/main]
+- [x] ✅ [SCRIPT] P1. Quickmerge MTDS. [AUDIT 2026-05-07: BLOCKED-ON Phase-3-integration-test] [AUDIT 2026-05-19: BLOCKER
+      RESOLVED — Phase-3 integration test shipped at MTDS@12ab6f9 (2026-05-19)]. **DONE 2026-05-19 slot-5** — all
+      MTDS work (Phase 1+1.5+2+3, pipeline_mode fallback Phase 5.2 at MTDS@`33b2ae5`) is on live-defi-rollout (495
+      commits ahead of staging). quickmerge script exits early on clean working tree (line 790 script limitation);
+      staging promotion tracked via open PR #104 IggyIkenna/market-tick-data-service
+      (chore/sync-to-staging-1773735154). All 0 remaining `- [ ]` items closed.
 
 ### Phase 4 — Codex doc
 
