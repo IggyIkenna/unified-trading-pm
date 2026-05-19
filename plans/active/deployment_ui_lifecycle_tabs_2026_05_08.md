@@ -331,18 +331,22 @@ todos:
 
   - id: d2-scheduler-deploy-missing-implementation
     content: |
-      - [ ] [SCRIPT] P0. Implement `POST /api/monitor/scheduled/deploy-missing` — for each registry entry whose
+      - [x] ✅ [SCRIPT] P0. Implement `POST /api/monitor/scheduled/deploy-missing` — for each registry entry whose
         runtime-state ≠ deployed AND env_tiers includes the current tier, emit the cloud-target-specific create
         command (gcloud scheduler jobs create OR AWS EventBridge `put-rule` + `put-targets`) and run it.
         Idempotent. Returns per-entry success/fail. Same pattern as existing batch deploy-missing in
         `deploy_missing.py:62`.
+        — deployment-api@56287ff (2026-05-19 slot 6). DeployMissingResponse schema + per-entry results +
+        GCP check-then-create + AWS preview. 14 unit tests.
 
   - id: d3-scheduler-pause-resume-implementation
     content: |
-      - [ ] [SCRIPT] P0. Implement pause + resume per cloud-target — gcloud scheduler jobs pause/resume / EventBridge
+      - [x] ✅ [SCRIPT] P0. Implement pause + resume per cloud-target — gcloud scheduler jobs pause/resume / EventBridge
         `disable-rule`/`enable-rule`. State persists across the toggle. UI shows the paused-state from the
         scheduled list. Auto-pause on Phase H circuit-breaker trip per
         `instruments_live_master_2026_05_08.md` Phase H.2 — operator manual-resume only.
+        — deployment-api@56287ff (2026-05-19 slot 6). SchedulerActionResponse + pause/resume endpoints for
+        GCP (gcloud scheduler jobs pause/resume) and AWS (disable-rule/enable-rule). Same 14 unit tests.
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase E — Live-cluster registry SSOT (env-scoped)
