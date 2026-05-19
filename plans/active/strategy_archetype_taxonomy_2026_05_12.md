@@ -506,6 +506,19 @@ ARBITRAGE_CROSS_DOMAIN_EVENT were added. Updated (PM@`4d0ffca5`):
 - `Shared primitives (both archetypes)` → `(all archetypes)`
 - Cross-references: 4 MEV archetype doc links added
 
+### Item V-8 — codex-wide 55/53 archetype count drift → 57 ✅ SHIPPED 2026-05-19 slot-3
+
+Found and fixed 3 additional codex docs still referencing stale 55/53 archetype counts (PM@`37b520ce`):
+
+- `codex/09-strategy/README.md` ✅ — "9 families × 55 archetypes" + "StrategyArchetype (55)" → 57
+- `codex/09-strategy/mvp-universe-per-asset-group.md` ✅ — "enum (53 archetypes)" → 57; "25 files" → 35
+- `codex/09-strategy/architecture-v2/MIGRATION.md` ✅ — Phase 9 note "55 archetypes" → 57 with V-1 provenance
+
+Also pinged Slot 1 main about `master_to_live_defi_2026_05_23.md:264` stale "Carry & Yield (6)" → (10) + "53 archetypes"
+→ 57 (Slot 1 owns that file per slot-precedence rule).
+
+`strategy-summary.md` stale "55 archetypes" references at lines 808/816 remain — Slot 8 scope per taxonomy plan routing.
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
