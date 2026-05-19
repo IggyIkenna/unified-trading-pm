@@ -37,6 +37,8 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 14 todos, 6 done; 8 remaining covering deployment-api→gcloud auto-launch endpoint + tarball-refresh wiring + IAM/audit + per-VM observability + idempotency guards. infra class (real auto-launch surface, security review). Baseline 9 (~1.1 AI-day per remaining infra todo); × 0.8 = 7.2.
 ---
 
+> **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
@@ -660,9 +662,9 @@ that already shipped.
       (30/op/hr, 200/op/day, 100/proj/hr, 1 active per shard_key for 6h), BigQuery + Cloud Logging audit-log shape per
       Decision 2, custom IAM role `roles/customDeployMissingLauncher` per Decision 1 Option B, and tarball-staleness
       paired refresh wiring.
-- [x] ✅ [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise events
-      fired). **SOAK STARTED 2026-05-17** (Phase 2 deployment-api@950ffc9 + Phase 3 deployment-ui@11f6b83). Slot 7
-      verified 0 compromise events via GCS events bucket spot-check 2026-05-18. Flipped per WORKSTEP-S7
+- [x] ✅ [unified-trading-pm] P2. Plan flips closeout once Phases 0-3 ship + a 7-day operational soak (no compromise
+      events fired). **SOAK STARTED 2026-05-17** (Phase 2 deployment-api@950ffc9 + Phase 3 deployment-ui@11f6b83). Slot
+      7 verified 0 compromise events via GCS events bucket spot-check 2026-05-18. Flipped per WORKSTEP-S7
       (orchestrator-dispatched closeout; 0 compromise events at T+2d soak).
 
 ## Success criteria
