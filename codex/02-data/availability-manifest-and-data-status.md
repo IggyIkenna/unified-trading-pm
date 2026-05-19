@@ -539,6 +539,34 @@ DEFI (see B-015 Option A: `features-service@550cdaba`,
 `market_state_adapter.py` / `liquidity_adapter.py`. Any other data_type request to MDPS DeFi returns `no files` exit
 cleanly — features-onchain must read raw_tick_data directly.
 
+#### Phase 6 DeFi backfill capture coverage (2026-05-19 — `defi_catalogue_chain_primitives_2026_05_10.md` Phase 6J)
+
+Per-protocol backfill status as of 2026-05-19. "Coverage start" = earliest captured row date in production manifest. For
+protocols still in `BLOCKED-*` state, features-onchain `DependencyChecker` gates on `captured` rows only — NaN fill
+applies until backfill lands per "honest absence" contract.
+
+| Protocol family               | Protocols                                                                             | Coverage start              | Row count (verified)                                                                          | Status              | Evidence                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| **Lending — Ethereum**        | AAVE_V3 / SPARK / COMPOUND_V3 / MORPHO / RADIANT / FLUID (ETH)                        | 2022-01-01                  | 65 rows (12 protocol-chain combos)                                                            | ✅ CAPTURED         | VM `mtds-lending-indices-20260511-204908`                                                  |
+| **Lending — Multi-chain**     | AAVE_V3 on ARBITRUM / OPTIMISM / POLYGON / AVALANCHE / BASE / LINEA / BSC             | 2022-01-01                  | 105,202 rows across 13 shards                                                                 | ✅ CAPTURED         | VM `mtds-lending-indices-20260517-160411`                                                  |
+| **Lending — SCROLL / ZKSYNC** | AAVE_V3 on SCROLL / ZKSYNC                                                            | —                           | 0                                                                                             | 🔴 BLOCKED-UPSTREAM | No UAC subgraph IDs (`get_subgraph_id('aave_v3', 'SCROLL')` returns None) — pending UAC PR |
+| **LST — Ethereum**            | LIDO / ETHERFI / ROCKETPOOL / ETHENA / FRAX / MAKER / RENZO / KELPDAO / PUFFER        | 2021-11-08 (Lido launch)    | ✅ via prior runs                                                                             | ✅ CAPTURED         | Pre-existing from Phase 1A adapters shipped 2026-05-13                                     |
+| **LST — Solana**              | JITO (jitoSOL) / MARINADE (mSOL) / SOLBLAZE (bSOL)                                    | —                           | 0                                                                                             | 🔴 BLOCKED-OPERATOR | Pyth Hermes backfill ≥1 year; ping filed 2026-05-14 in `pings/slot_2.md`                   |
+| **Restaking**                 | EIGENLAYER / SYMBIOTIC / KARAK / PUFFER / JITORESTAKING                               | 2023-06 (EigenLayer launch) | ✅ via prior runs                                                                             | ✅ CAPTURED         | `instruments-service@b563afb` + `execution-service@b9078ee9`                               |
+| **Vaults**                    | YEARN / CONVEX / BEEFY / PENDLE / IDLE                                                | —                           | 0                                                                                             | 🟡 OPEN             | Phase 6E per-protocol VM fan-out not yet launched                                          |
+| **DEX V3**                    | UNISWAP_V3 / SUSHI_V3 / PANCAKESWAP / CAMELOT / AERODROMEQ / VELODROME / TRADERJOE_V2 | —                           | 0                                                                                             | 🟡 OPEN             | Phase 6E per-protocol VM fan-out not yet launched                                          |
+| **DEX CLMM (Solana)**         | RAYDIUM / ORCA                                                                        | —                           | 0                                                                                             | 🟡 OPEN             | Phase 6E per-protocol VM fan-out not yet launched                                          |
+| **DEX — BALANCER / CURVE**    | BALANCER / CURVE                                                                      | —                           | 0                                                                                             | 🟡 OPEN             | Phase 6E per-protocol VM fan-out not yet launched                                          |
+| **Perp DEX (CeFi axis)**      | HYPERLIQUID / ASTER / GMX / DRIFT / PACIFICA / EXTENDED / LIGHTER                     | Varies by venue             | Partial (ASTER VM running per PM@`92a72779`; Pacifica/Lighter code shipped, backfill pending) | 🟡 PARTIAL          | Slot 3 owns 6D; `emerging_perp_venue_adapters_broken_2026_05_13.md` cross-link             |
+| **Manifest phantom audit**    | All DeFi buckets                                                                      | —                           | 1,606,190 manifest rows inspected; 0 phantoms                                                 | ✅ CLEAN            | Slot 2 audit 2026-05-16 (`/tmp/defi_phantom_audit_20260516.log`)                           |
+
+**Phase 6 full-execution criteria** (from plan):
+
+- ✅ Every Phase 1A protocol has ≥1 captured shard in production GCS per manifest.
+- ✅ Per-asset-group manifest coverage ≥99% for in-scope (asset_group, venue, data_type, day) cells.
+- ✅ Phantom audit shows zero drift.
+- 🟡 IN-FLIGHT: 6E vaults + DEX + SOLANA LST (6C) backfills not yet launched; coverage will update once VMs complete.
+
 ### Layer 3: Feature Services
 
 | Service                   | feature_group                                                                        | timeframe                           | chain                   | league_id |
