@@ -44,6 +44,175 @@ You'll run **two Cursor windows side-by-side**:
 
 ---
 
+## 🔧 EOD 2026-05-19 pickup list — for your main agent to finish
+
+> **Update**: more was completed tonight than the per-step section below documents. Backend systemd, nginx HTTP, uv sync, JWT secret, and `backends.json` wire-up are all DONE. Below is the **minimum remaining work** to make `https://agent-orchestrator.odum-research.com` live for you. Hand this to your main agent.
+
+### Status snapshot
+
+| Item | State |
+| --- | --- |
+| EC2 VM `m8i.4xlarge` running | ✅ done (Harsh) |
+| 27 workspace repos + 12 slot worktrees | ✅ done (Harsh) |
+| All sibling repos on `live-defi-rollout` (agent-orchestrator on `main`) | ✅ done (Harsh) |
+| `agent-orchestrator` `uv sync` (Python deps) | ✅ done (Harsh) |
+| JWT secret generated + in `.env.local` | ✅ done (Harsh) — value also backed up to AWS Secrets Manager as `agent-orchestrator-jwt-secret` |
+| `orchestrator.service` systemd unit installed + running | ✅ done (Harsh) — `sudo systemctl status orchestrator` confirms |
+| nginx :80 reverse proxy → 127.0.0.1:8765 | ✅ done (Harsh) — external smoke: `curl http://35.78.213.80/api/healthz` returns 200 |
+| `data/config/backends.json` updated with `ikenna-vm` as default | ✅ done (Harsh) — committed to `IggyIkenna/agent-orchestrator:main@66923e7` |
+| **DNS** `api.agent-orchestrator.odum-research.com` → `35.78.213.80` | 🔧 **Ikenna only** (Squarespace) |
+| **TLS** via certbot | 🔧 needs DNS first |
+| **GitHub auth** on VM (so agents can git push/pull) | 🔧 Ikenna identity required |
+| **Anthropic / Claude CLI** auth on VM | 🔧 Ikenna identity required |
+| **Bootstrap users** on backend | 🔧 Ikenna picks his password |
+| **Firebase Hosting deploy** of SPA (currently 404s — site exists, no bundle) | 🔧 Ikenna's Firebase project |
+
+### Sequenced commands for your main agent
+
+Run these in order from a Remote-SSH'd Cursor session on the VM (or your laptop where appropriate — annotated).
+
+**1. (Mac) Add DNS record in Squarespace**
+
+Operator-only UI action. Add A record:
+
+```
+Host:  api.agent-orchestrator
+Type:  A
+TTL:   3600
+Value: 35.78.213.80
+```
+
+Wait + verify propagation:
+
+```bash
+dig api.agent-orchestrator.odum-research.com +short
+# expect: 35.78.213.80
+```
+
+**2. (VM) GitHub SSH key**
+
+```bash
+ssh-keygen -t ed25519 -C "ikenna-agent-orchestrator-vm" -f ~/.ssh/github_ed25519 -N ""
+cat ~/.ssh/github_ed25519.pub
+# paste into github.com → Settings → SSH and GPG keys → New SSH key (title: "agent-orchestrator-vm")
+
+cat >> ~/.ssh/config <<EOF
+
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/github_ed25519
+  StrictHostKeyChecking no
+EOF
+
+ssh -T git@github.com  # expect: Hi IggyIkenna! ...
+```
+
+**3. (VM) GCP ADC**
+
+```bash
+gcloud auth application-default login   # browser flow via SSH port-forward
+gcloud config set project central-element-323112
+gcloud secrets versions access latest --secret=GH_PAT --project=central-element-323112 | head -c 10
+# expect: first 10 chars of PAT (confirms read access)
+```
+
+**4. (VM) Install Node + Claude CLI + auth**
+
+```bash
+# Node from NodeSource (Ubuntu's apt has an older version)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+sudo npm install -g @anthropic-ai/claude-code
+claude login   # browser flow; use YOUR Anthropic account (per D15 — separate from Harsh's)
+claude --version
+```
+
+**5. (VM) Bootstrap backend users**
+
+```bash
+cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+.venv/bin/python scripts/manage_users.py add ikenna   # prompts for password
+.venv/bin/python scripts/manage_users.py add harsh    # optional — if Harsh should access this backend too
+.venv/bin/python scripts/manage_users.py list         # verify both rows
+```
+
+No backend restart needed — `auth.py` reads `users.json` on every login attempt.
+
+**6. (VM) TLS via certbot** (after DNS propagates in step 1)
+
+```bash
+sudo certbot --nginx -d api.agent-orchestrator.odum-research.com \
+  --email ikenna@odum-research.com --agree-tos --non-interactive --redirect
+
+# Verify
+curl -s https://api.agent-orchestrator.odum-research.com/api/healthz
+# expect: {"status":"ok",...}
+```
+
+Certbot auto-edits the nginx config and sets up auto-renew via systemd timer.
+
+**7. (Mac OR VM) First Firebase Hosting deploy of the SPA**
+
+This is the missing piece that's making `https://agent-orchestrator.odum-research.com` show the Firebase "Site Not Found" page. The Hosting site exists (Step P2 of your cutover plan) but no SPA bundle has been pushed yet.
+
+```bash
+# From your laptop OR VM — wherever you have firebase-tools auth
+cd /path/to/agent-orchestrator   # the local clone
+
+# Make sure you're on main with the latest backends.json
+git pull origin main
+
+# Build the dashboard
+cd dashboard
+npm install
+npm run build     # outputs to dashboard/dist/
+cd ..
+
+# Firebase CLI
+npm install -g firebase-tools  # if not already
+firebase login                  # browser flow with your Google account
+firebase use --add              # pick the central-element-323112 project
+
+# Deploy to staging hosting target first (sanity check)
+firebase deploy --only hosting:uat
+
+# Verify
+curl -sI https://agent-orchestrator.staging.odum-research.com | head -1
+# expect: HTTP/2 200
+
+# Then prod
+firebase deploy --only hosting:prod
+
+curl -sI https://agent-orchestrator.odum-research.com | head -1
+# expect: HTTP/2 200
+```
+
+**8. (Mac, browser) End-to-end smoke**
+
+1. Open `https://agent-orchestrator.odum-research.com` in your browser
+2. The SPA loads (no more "Site Not Found")
+3. Dropdown defaults to `Ikenna VM (Tokyo)`
+4. Log in with the credentials you set in step 5
+5. Dashboard loads showing the 12 slot worktrees as available
+6. Spawn a test agent on slot 1 — should appear in `tmux ls` on the VM
+
+If anything 401s/CORS-errors, see Troubleshooting section below.
+
+### Optional cleanup (any time)
+
+- **Decommission the old Cloud Run staging in europe-west4** (now redundant per D0):
+  ```bash
+  gcloud run services delete agent-orchestrator-staging --region europe-west4 --project central-element-323112 --quiet
+  ```
+- **Tear down old europe-west4 image** in Artifact Registry (if you want):
+  ```bash
+  gcloud artifacts repositories delete cloud-run-source-deploy --location europe-west4 --project central-element-323112 --quiet
+  ```
+
+---
+
 ## Step 1 — Fetch the SSH key
 
 On your Mac:
