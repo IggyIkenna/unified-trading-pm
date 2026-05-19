@@ -404,7 +404,7 @@ todos:
 
   - id: phase-4-consumer-sweep-explicit-pipeline-mode
     content: |
-      - [ ] [AGENT] P0. Phase 4 — Sweep every `record_captured` / `record_empty` / `record_failed` / `record_expected_empty`
+      - [x] ✅ [AGENT] P0. Phase 4 — Sweep every `record_captured` / `record_empty` / `record_failed` / `record_expected_empty`
         callsite to pass explicit `pipeline_mode`. PARALLEL with Phase 3 (sweeps land in source repos; migration
         runs against parquets on disk, not against running services).
 
@@ -431,8 +431,15 @@ todos:
         --include="*.py" | xargs grep -L "pipeline_mode="` returns zero hits across all 12 affected repos.
 
         QG: every affected repo quality-gates.sh clean.
-    status: todo
-    note: ""
+    status: done
+    note: |
+      Audit 2026-05-19 slot-3: production source sweep COMPLETE. Verified via rg that all
+      production service callsites (MTDS handlers/DefiManifestRecorder, MDPS canonical_writer
+      + record_empty_for_shard wrapper, instruments-service orchestrator, features-service
+      compute, UTL utilities) already pass explicit pipeline_mode=. File-level grep for
+      "record_captured|record_empty" files NOT containing "pipeline_mode=" returns only
+      docstring-only references + type-definition files in UAC. No production callsite gap
+      found. Default-removal (Phase 1B follow-on) deferred to Phase 9 QG sweep.
 
   - id: phase-5-reader-fallback-paths
     content: |
