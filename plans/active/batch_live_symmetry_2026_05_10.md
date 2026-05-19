@@ -386,7 +386,8 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
       `features_service/multi_timeframe/cli/main.py`. — features-service (confirmed 2026-05-18 backfill)
 - [x] ✅ [SCRIPT] P0. **calendar family** — `CalendarBatchModeHandler(BaseModeHandler)` in
       `features_service/calendar/cli/handlers/batch_handler.py`. — features-service (confirmed 2026-05-18 backfill)
-- [ ] [SCRIPT] P0. Per family: `bash scripts/quality-gates.sh` + `git push origin live-defi-rollout`.
+- [x] ✅ [SCRIPT] P0. Per family: `bash scripts/quality-gates.sh` + `git push origin live-defi-rollout`. —
+      features-service@519625f7 — QG EXIT 0 / ALL QUALITY GATES PASSED (broad-except BE_EXCLUDE_GLOBS + noqa fixes)
 - [ ] [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4 families
       from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline).
 - [ ] [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
