@@ -143,12 +143,17 @@ todos:
 
   - id: phase-5-qg-static-assertion
     content: |
-      - [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.83 static assertion.** AST-walk checker
-        verifies InstrumentRecord `_enforce_per_asset_group_required_fields` model_validator + CEFI/DEFI
-        frozensets present in UAC `internal/reference/instrument.py`. Wired into `base-library.sh` STEP 5.83
-        under `UAC_CANONICAL_EXEMPT` guard — fires only in UAC QG, silently skips all other repos.
-        Guards Phase 1 regression: removes-validator → CI fails.
-        — PM@03a320846 (STEP 5.83 checker + base-library.sh wiring) 2026-05-19
+      - [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.83 static assertion.** Two-layer
+        coverage shipped:
+        (1) `check_uac_instrument_record_validator.py` wired in `base-library.sh` STEP 5.83 under
+        `UAC_CANONICAL_EXEMPT` guard — verifies InstrumentRecord model_validator + CEFI/DEFI frozensets
+        in UAC `internal/reference/instrument.py`. — PM@03a320846 2026-05-19
+        (2) `check_uac_hard_required_fields.py` wired in `base-service.sh` STEP 5.83 — verifies
+        `validate_instrument_records` + 3 closed-set rule landmarks in UAC `instrument_validation.py`
+        (runtime validator regression guard) + AST-walks service source for literal
+        `record_captured(data_type="<bundled_type>", …)` calls missing required shard-key kwarg.
+        Smoke-tested: both [OK] against real UAC + empty source.
+        — PM@429b64b2b (STEP 5.83 base-service.sh + check_uac_hard_required_fields.py) 2026-05-19
     status: done
 
   - id: codex-update
