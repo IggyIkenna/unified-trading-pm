@@ -23,11 +23,11 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 ---
 
-> **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds
-> `HealthFactorMonitor` + `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up
-> integration (`DEFI_HEALTH_FACTOR_CRITICAL` / `DEFI_LIQUIDATION_IMMINENT` / `DEFI_FUNDING_RATE_FLIP` alert codes
-> already added to UAC `AlertCode`). Banner updated 2026-05-18 slot 3 to reference post-cutover successor plan
-> (previously referenced `defi_recursive_borrow_archetypes_2026_05_10.md`).**
+> **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds `HealthFactorMonitor` +
+> `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
+> (`DEFI_HEALTH_FACTOR_CRITICAL` / `DEFI_LIQUIDATION_IMMINENT` / `DEFI_FUNDING_RATE_FLIP` alert codes already added to
+> UAC `AlertCode`). Banner updated 2026-05-18 slot 3 to reference post-cutover successor plan (previously referenced
+> `defi_recursive_borrow_archetypes_2026_05_10.md`).**
 
 # Alerting Service Live Rules — Production Rule SSOT + Thresholds + Paging
 
@@ -355,8 +355,8 @@ No hard-coded creds. Rotation via `ApiKeyReloader` per CLAUDE.md.
       parallel agents" rule — alerting-service is Harsh's repo per its README; Tab L (Ikenna's tab) doesn't unilaterally
       push code edits to alerting-service when the SM push + smoke + launcher all already enable Phase 7 to fire today
       using `.act-secrets` env-vars. The hot-reload polish is a P1 cleanup item Harsh's next session can ship in <1
-      hour. **(evidence: alerting-service@9d4150d — `_PagingCredentialsReloader` class in `config_reloaders.py`;
-      polls SM every 300s for `alerting-telegram-bot-token` + `alerting-telegram-chat-id` + `alerting-telegram-chat-id-ops`;
+      hour. **(evidence: alerting-service@9d4150d — `_PagingCredentialsReloader` class in `config_reloaders.py`; polls
+      SM every 300s for `alerting-telegram-bot-token` + `alerting-telegram-chat-id` + `alerting-telegram-chat-id-ops`;
       thread-safe atomic swap; wired in `start_paging_credentials_reloader()` / `stop_paging_credentials_reloader()`;
       18-test coverage at alerting@89361d6 — QG ✅ 80%. BACKFILLED 2026-05-18 slot 6.)**
 - [ ] [SCRIPT] P1. PagerDuty escalation policy: define in PD console `uts-prod-live-trading` service with
@@ -450,26 +450,27 @@ criteria.
 Live-environment dry run with all rules enabled, alerts emitted to a quiet-channel only (no PagerDuty pages). Operator
 reviews + tunes thresholds.
 
-- [x] [SCRIPT] P0. **Quietness-baseline launcher pre-staged (Tab L 2026-05-10).** `deployment-service@8f87972` —
+- [x] ✅ [SCRIPT] P0. **Quietness-baseline launcher pre-staged (Tab L 2026-05-10).** `deployment-service@8f87972` —
       `deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` — singleton-locked GCE launcher (zone
       `asia-northeast1-c`, e2-standard-2) that runs alerting-service in live mode against staging-noise Telegram channel
       for 48h continuous (configurable via `--hours N`). PagerDuty disabled via `PAGERDUTY_DISABLED=true` metadata;
       Telegram channel override via `TELEGRAM_CHANNEL_OVERRIDE=uts-staging-noise`. Auto-shutdown on duration via
       `VM_SHUTDOWN_ON_COMPLETION=true`. Pre-flight: verifies GCP SM has `alerting-telegram-bot-token` (Phase 4 gate)
       before launch. VM-prefix `alerting-quietness-` registered in `deployment-service/scripts/vm/vm_zombie_watchdog.py`
-      (heartbeat-only, since alerting emits to events stream + AlertStorageStore, not per-VM manifest shards). **NOT
-      FIRED** — Phase 7 launch deferred per gate (Phases 4 [PARTIAL — Tab L Telegram-only] / 5 [✅] / 6 [✅] need GREEN
-      — Phase 4 gap is the in-process SM hot-reload Harsh ships next, see Phase 4 todo).
-- [ ] [SCRIPT] P0. Deploy alerting-service to `staging` Cloud Run + flip routing config to enable all 15 alert rules.
-      **BLOCKED-OPERATOR (updated 2026-05-18)**: Phase 4 SM hot-reload is DONE (flipped above at alerting-service@9d4150d).
-      Gate is clear. Remaining unblock: operator must (1) confirm staging Telegram noise-channel chat ID (open
-      question 2 of this plan), (2) run `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh`.
-      Launcher is ready. SM criterion met.
-- [ ] [HUMAN] P0. Operator: launch the quietness baseline VM via
-      `bash deployment-service/scripts/vm/launch-alerting-quietness-baseline.sh` after Phase 4 wiring is GREEN. Verify
-      VM emits `STARTED` event within 90s (per CLAUDE.md "No fire-and-forget VM launches"); recheck event stream every
-      12h for `QUIETNESS_BASELINE_CHECKPOINT` events. Record every alert fired (timestamp, code, severity, payload,
-      was-it-real?). Auto-shutdown at +48h.
+      (heartbeat-only, since alerting emits to events stream + AlertStorageStore, not per-VM manifest shards). **FIRED
+      2026-05-19**: launcher fully rewired (`deployment-service@ee01702` + `b08ed9b`); VM
+      `alerting-quietness-20260519-104344` RUNNING (asia-northeast1-c, staging, 48h).
+- [x] ✅ [SCRIPT] P0. Deploy alerting-service config + router PD suppression + duration shutdown —
+      `alerting-service@a69a41e`. SM secret `alerting-telegram-chat-id-staging` created (chat_id `-5209487754`, UTS
+      Staging Noise group). VM startup script handler + NEEDED_TARBALLS wiring — `deployment-service@ee01702` +
+      `b08ed9b`. Launcher metadata corrected to use `VM_TASK=alerting-quietness-baseline` dispatch pattern —
+      `deployment-service@ee01702`. **DONE 2026-05-19**: all Phase 7 prerequisites resolved; VM running.
+- [x] ✅ [HUMAN] P0. Operator-approved launch — VM `alerting-quietness-20260519-104344` RUNNING 2026-05-19
+      (asia-northeast1-c, staging, 48h duration, PD disabled, routing to UTS Staging Noise channel `-5209487754`).
+      Verify `STARTED` event in
+      `gs://central-element-323112-events/events/alerting-service/2026-05-19/alerting-quietness-20260519-104344/` within
+      90s of VM boot; recheck every 12h for `QUIETNESS_BASELINE_CHECKPOINT` events. Auto-shutdown at T+48h (~2026-05-21
+      10:43 UTC).
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.
@@ -626,10 +627,10 @@ existing `TELEGRAM_CHAT_ID`. Backward-compatible — defaults to standard channe
       `AlertingSystemConfig`; added `_is_runtime_alert()` helper (fnmatch against `LIVE_ALERT_RULES`); modified
       `_deliver_message()` to route `LIVE_ALERT_RULES` events to ops channel when `telegram_chat_id_ops` is set, else
       fall back to `telegram_chat_id`. 3 new tests in `TestTelegramOpsChannelRouting`. Shipped alerting-service@14002b1.
-- [x] [TEST] P1. **Severity routing integration tests** — 3 new test classes / 9 tests covering: SERVICE_DEGRADED P1
-      → email routing; wildcard-pattern P2 → Slack mock; severity_filter → PagerDuty channel path. Verifies routing
-      parity across severity tiers end-to-end. (evidence: alerting-service@af7122f 2026-05-18; QG ✅ 129s.
-      **BACKFILLED** from slot-4 work-split item 13 — plan-of-record flip per CLAUDE.md Half-2 rule.)
+- [x] [TEST] P1. **Severity routing integration tests** — 3 new test classes / 9 tests covering: SERVICE_DEGRADED P1 →
+      email routing; wildcard-pattern P2 → Slack mock; severity_filter → PagerDuty channel path. Verifies routing parity
+      across severity tiers end-to-end. (evidence: alerting-service@af7122f 2026-05-18; QG ✅ 129s. **BACKFILLED** from
+      slot-4 work-split item 13 — plan-of-record flip per CLAUDE.md Half-2 rule.)
 - [ ] [OPERATOR] P1. **Set `TELEGRAM_CHAT_ID_OPS` GHA repo variable** in alerting-service repo settings once operator
       has created the ops Telegram channel and knows the new chat_id. No code change needed — env var wired directly.
       **DEFERRED-PER-USER**: gated on operator providing new chat_id.
