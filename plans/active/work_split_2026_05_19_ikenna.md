@@ -102,9 +102,12 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
 5. - [x] **GAP-2.0.B** — Confirm Stage 0 drain covers BOTH GCP + AWS VM fleets. Doc update. ✅ pm@`2af45259`
 6. - [x] **GAP-2.0.C** — Update CLAUDE.md "No fire-and-forget" HARD RULE with pre-migration drain addendum. ✅
          pm@`2af45259`
-7. - [ ] **Reconcile phantoms** — run
+7. - [x] ✅ **Reconcile phantoms** — run
          `python scripts/reconcile_phantom_manifest_rows_all.py    --asset-group cefi --dry-run` + repeat per
-         asset_group. (infra 0.8×, ~2 = 1.6 cal)
+         asset_group. (infra 0.8×, ~2 = 1.6 cal) All 5 asset_groups show **0 phantoms** as of 2026-05-19:
+         cefi=0/1290706 (128k prefixes, 34min), defi=0/311602 (89k prefixes, 23min), tradfi=0/245907,
+         sports=0/559961, prediction=0/14403. Axes 7-9 fixes shipped 2026-05-13 (IS@1a62547) eliminated all
+         false-positives from previous 2026-05-11 run. Manifest is clean across all 5 groups.
 8. - [ ] **Phase 2 freeze gate** — flip all remaining `- [ ]` gate items in code_freeze §2. Push `docs(plans):` flip
          commit. (design 0.6×, ~1 = 0.6 cal)
 
