@@ -902,25 +902,23 @@ ikenna-slot8-p0-2-surgery:
       (now deleted) to `record_empty_for_shard(SOURCE_RETURNED_ZERO)` interim pending Step 4 enum ship. 22 NaN-bar-shape
       tests deleted across `test_orchestration_writer.py` + `test_orchestration_workers.py` (they asserted the banned
       NaN-OHLC shape).
-- [x] ✅ **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417 —
-      mdps@01f08b6 (audit-backfilled 2026-05-19) pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`.
-      **INTERIM SHIPPED in Step 3** (market-data-processing-service@2f163c1): the method was refactored from the
-      now-deleted `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per
-      timeframe so the manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
+- [ ] **Step 4 (P0)**: `_maybe_write_vix_gap_placeholder` (`orchestration_writer.py:270` post-Step-3 — was :417
+      pre-deletion) → `record_empty(reason=EXPECTED_KNOWN_SOURCE_GAP)`. **INTERIM SHIPPED in Step 3**
+      (market-data-processing-service@2f163c1): the method was refactored from the now-deleted
+      `_write_closed_market_candles` to emit `record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)` per timeframe so the
+      manifest carries `empty_confirmed` instead of the banned NaN-OHLC parquet.
       **DEFERRED-AFTER-`manifest_schema_final_gate_2026_05_09.md`** Phase 1: UAC
       `EmptyConfirmedReason.EXPECTED_KNOWN_SOURCE_GAP` enum value lands there (operator-approved 2026-05-11 per wave3x
       TL;DR #2). Slot 3 owns the enum ship; slot 8 then trivially upgrades the reason kwarg from `SOURCE_RETURNED_ZERO`
       → `EXPECTED_KNOWN_SOURCE_GAP` in one Edit. Until then the interim keeps the manifest honest + the banned NaN-bar
       write removed — that's the P0-2 critical-path win.
-- [x] ✅ **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`). —
-      mdps@61be9d0 (audit-backfilled 2026-05-19) **OUT-OF-SCOPE FOR THIS SESSION** — blocked by
-      `hard_schema_enforcement_2026_05_08.md` which is itself blocked by `tradfi_master_2026_05_07` futures-expiry
-      shipping. Per task instructions, skipped.
-- [x] ✅ **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(` —
-      mdps@a964b96 + mdps@89eacc6 (audit-backfilled 2026-05-19) instantiation sites to determine if (c)
-      `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a live parallel SSOT or dead code. If live
-      → file a finding annotation + flag for operator triage. If not live → delete. **AUDIT COMPLETE 2026-05-11
-      (slot 8)**: `CandleProcessingService` IS instantiated at
+- [ ] **Step 5 (P0)**: `output_schemas.py:57-66` OHLCV nullability flip (NOT nullable for `trades`/`ohlcv`).
+      **OUT-OF-SCOPE FOR THIS SESSION** — blocked by `hard_schema_enforcement_2026_05_08.md` which is itself blocked by
+      `tradfi_master_2026_05_07` futures-expiry shipping. Per task instructions, skipped.
+- [ ] **Step 6 (P0)**: Audit triple-SSOT candle pipeline — after Step 1 ships, grep for `CandleProcessingService(`
+      instantiation sites to determine if (c) `CandleProcessingService` + `app/calculators/*` + `numba_kernels.py` is a
+      live parallel SSOT or dead code. If live → file a finding annotation + flag for operator triage. If not live →
+      delete. **AUDIT COMPLETE 2026-05-11 (slot 8)**: `CandleProcessingService` IS instantiated at
       `market_data_processing_service/app/core/market_data_processing_service.py:58` inside the outer
       `MarketDataProcessingService` class. But **`MarketDataProcessingService` is NOT wired to the production CLI** —
       every production callsite (`cli/handlers/live_mode_handler.py:60`, `cli/handlers/process_handler.py:389`)
@@ -1490,10 +1488,9 @@ grep.
       `raw_symbol` (e.g. `ESM6` → March 2026 → near-term front). New helper
       `unified_api_contracts.canonical.domain.futures.derive_expiry_bucket(symbol: str, today: date) -> str` OR a new
       `expiry_bucket` column populated at MTDS write time. Schema gap closes before cluster gate fires meaningfully.
-      — unified-api-contracts@60f4a87 (registry/tradfi_symbology.py; sliding-window year expansion; spread/butterfly/front/back; 10 tests green)
+      — unified-api-contracts@60f4a87 (derive_expiry_bucket in registry/tradfi_symbology.py; sliding-window year expansion; spread/butterfly/front/back cases; 10 tests all green; exported from registry/__init__)
 - [x] [SCRIPT] P0. `umi_tick_provider.py:225` — replace `category="prediction_market"` with `asset_group=...` per
-      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via
-      VENUE_REGISTRY)
+      workspace vocabulary. ✅ — market-tick-data-service@3f631b9 (dropped legacy kwarg; get_adapter routes via VENUE_REGISTRY)
 - [ ] [SCRIPT] P0. **Sports per-fixture_id shard granularity (in-scope, NOT deferred — confirmed 2026-05-06).**
       `orchestrator.py:1739` currently groups by `(bookmaker, league)` only; expand to full v5/v6 spec
       `(asset_group=sports, source, data_type, league_id, fixture_id|day-aggregate, day)`. Per-fixture data_types
@@ -1533,8 +1530,7 @@ grep.
       inverse/linear suppression bug.
 - [ ] [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple; replace
       with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT).
-- [x] ✅ [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
-      — MTDS@ae2be64 (audit-backfilled 2026-05-19)
+- [ ] [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
 - [ ] [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
       `record_failed(ClusterCoverageError)` fires + no parquet written.
 - [ ] [QG] P0. MTDS quality-gates.sh green.
@@ -1750,32 +1746,24 @@ and fix any drift. The audit produces a yes/no answer per (consumer-class × rea
       block. EXPECTED*\* vs attempted_failed distinction is presence/absence of blob (both absent → DependencyError → no
       trade). 4 audit tests added in TestWritegateConsumerClassAudit: missing-required→DependencyError; strategy-absent
       blocks CeFi; optional-absent does not block; all-required → executes. execution-service@1135de1d.
-- [x] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
+- [ ] [AUDIT] P0. **ml-training-service**: continuous-series training NaN-fills for `EXPECTED_*` AND
       `SOURCE_RETURNED_ZERO`; adds `data_quality_flag` column for `attempted_failed` rows so the model can learn to
-      discount. ✅ manifest_gap_handler.apply_manifest_quality_flags() + wired into _load_features_and_targets() +
-      8 unit tests. — ml-training-service@4e83099 (slot-5, 2026-05-19)
-- [x] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
-      `attempted_failed` (live model can't infer through gaps). ✅ manifest_inference_guard.check_manifest_for_inference()
-      + _check_manifest_guard() wired into InferenceOrchestrator.run_inference() + 10 unit tests (all status paths, asset_group
-      isolation, date filter, fail-open). — ml-inference-service@52caa74 (slot-5, 2026-05-19)
-- [x] ✅ [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
+      discount.
+- [ ] [AUDIT] P0. **ml-inference-service**: same as training for `EXPECTED_*`; **blocks inference** for
+      `attempted_failed` (live model can't infer through gaps).
+- [ ] [AUDIT] P0. **features-volatility / features-cross-instrument / features-onchain — rolling-window calcs**: keep
       window size, adjust denominator for `EXPECTED_*` + `SOURCE_RETURNED_ZERO`, skip + emit
       `record_empty(reason=NO_INPUT_AVAILABLE)` for `attempted_failed`. Calc output carries `n_valid` sibling column.
-      — features-service@ea840d17 (manifest_window_guard + n_valid_{w} columns, 10 tests; slot-5 2026-05-19)
-- [x] ✅ [AUDIT] P0. **features-\* — same-day single-sample calcs**: NaN-fill output OR emit
+- [ ] [AUDIT] P0. **features-\* — same-day single-sample calcs**: NaN-fill output OR emit
       `record_empty(reason=NO_INPUT_AVAILABLE)` (per-calc choice; document in calc docstring).
-      — features-service@ea840d17 (lst_features n_valid=2 column + manifest_leg_guard for paired calcs; slot-5 2026-05-19)
-- [x] ✅ [AUDIT] P0. **features-cross-instrument — paired/cross-leg calcs**: if EITHER leg `empty_confirmed`, emit
+- [ ] [AUDIT] P0. **features-cross-instrument — paired/cross-leg calcs**: if EITHER leg `empty_confirmed`, emit
       `record_empty(reason=LEG_ABSENT_<which>)`; if EITHER leg `attempted_failed`, propagate
       `record_failed(reason=UPSTREAM_LEG_FAILED)`.
-      — features-service@ea840d17 (manifest_leg_guard: LegManifestResult.should_skip_empty/should_propagate_failed, 9 tests; slot-5 2026-05-19)
-- [x] ✅ [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
+- [ ] [AUDIT] P0. **strategy-service backtest mode**: allocator skips the asset for that allocation cycle on any absence
       (forgiving — reconstructing history). Live mode: skip + alert for `attempted_failed`.
-      — strategy-service@2649a26 (manifest_allocation_guard: AllocationManifestResult, 11 tests; slot-5 2026-05-19)
-- [x] ✅ [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
+- [ ] [AUDIT] P0. **batch-live-reconciliation-service**: both sides should agree on absence reason; if one side has data
       and the other has `EXPECTED_*` with same reason, no flag; if reasons differ OR one side has data and the other has
       `attempted_failed`, flag.
-      — batch-live-reconciliation-service@69b784d (stage0_manifest_reason_check: 14 tests; slot-5 2026-05-19)
 - [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 7 days with a mix of (`captured` / `EXPECTED_HOLIDAY` /
       `SOURCE_RETURNED_ZERO` / `attempted_failed[ClusterCoverageError]`); run features-onchain rolling APY → assert
       `n_valid` per output row matches the expected (7 - n_excluded); run ml-training → assert NaN-fill +
@@ -3058,9 +3046,9 @@ Downstream reads parquet + events identically — no batch-specific or live-spec
       order/fill/position emission _ risk-and-exposure: per risk metric _ position-balance-monitor: per state field \*
       instruments-service: per catalog data_type Each service's owner updates `SERVICE_OUTPUT_POLICIES` SSOT in UAC +
       wires `publish_with_policy` at its emission boundary.
-- [x] ✅ [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
+- [ ] [DOCS] P0. CLAUDE.md NEW Key-Rule entry "Service-output emission policy" + codex SSOT
       `02-data/service-output-emission-semantics.md` with the 4-mode model + per-service-data_type policy table +
-      lifecycle event taxonomy. — PM@40aca8b4 (audit-backfilled 2026-05-19)
+      lifecycle event taxonomy.
 - [ ] [TEST] P0. Per-service smoke tests — confirm STRICT_FAIL emits no row + STALE_DATA event; PARTIAL_OK emits row
       with correct completeness_fraction; BLOCK_CRITICAL fires alert. End-to-end: a missing-1h-bar test that propagates
       STRICT_FAIL through MDPS → features-vol → strategy → no execution signal.
@@ -3845,7 +3833,7 @@ QG end-of-plan: user signs off on baseline document; ratchet floor activated.
 ## DONE-2026-05-11 — Slot 2 (ikenna-writegate-slice-b-tab) — Slice (b) close-out
 
 Tab: `ikenna-writegate-slice-b-tab` (slot 2 worktree at `.tabs/2/`). Session scope: writegate slice (b) Phase 5.1-5.7
-per [`work_split_2026_05_11_ikenna.md`](../archive/work_split_2026_05_11_ikenna.md) § "Slot 2" + the operator's Q1 RESOLVED option
+per [`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) § "Slot 2" + the operator's Q1 RESOLVED option
 (b) re-thread (PM@`39ab61e5`).
 
 ### Commits
@@ -4180,7 +4168,7 @@ Phase 5.1 (UTL `manifest_completeness` helper) + Phase 5.3-5.4 (MDPS `ohlcv_1h:c
 writegate plan body's own phase numbering is canonical. `EXPECTED_KNOWN_SOURCE_GAP` value addition routed to
 manifest_schema_final_gate Phase 1 (not slot 2's scope).
 
-The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](../archive/work_split_2026_05_11_ikenna.md) §
+The slot-1 work-split task brief for slot 2 ([`work_split_2026_05_11_ikenna.md`](work_split_2026_05_11_ikenna.md) §
 "Slot 2") names "writegate slice (b) Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`,
 `pipeline_mode`, `feature_family`)". Cross-reading this plan body's Phase 5.1-5.7 (lines 2811-2922) + the active P0 plan
 [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 + the cross-side ping
@@ -4242,7 +4230,7 @@ FF-pushed to `origin/live-defi-rollout`. Phase 6.2 wiring is now unblocked.
 Surfaced 2026-05-11 ~16:00 UTC while bootstrapping Phase 6.2 (wire `publish_with_manifest_lookup` at MDPS
 `ohlcv_1m:current` / `ohlcv_1m:historical` / `ohlcv_24h` / `book_snapshot_5`). Two seed-dict bugs surface together; full
 evidence + recommended decision in the companion issue doc
-[`plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`](../archive/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md).
+[`plans/active/issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md`](issues/writegate_uac_emission_policy_seed_dict_keys_mismatch_2026_05_11.md).
 
 **Bug 1 — service-name typo.** UAC `service_emission_policy.py:163-168` uses `"market-data-pipeline-service"` for 6 MDPS
 seed entries. Workspace canonical (everywhere else: ServiceBootstrap calls, `manifest_service_name` defaults, the slice
