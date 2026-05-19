@@ -108,7 +108,7 @@ todos:
 
   - id: p5-prod-cutover
     content: |
-      - [ ] [HUMAN+AGENT] P5. Phase 5 — Prod cutover + Harsh laptop decommission (depends on P4 + ≥1-week staging soak + **hard gate: workers-on-VMs successor plan reaches D3**)
+      - [ ] [HUMAN+AGENT] P5. Phase 5 — Prod cutover + Harsh laptop decommission (depends on P4 + ≥1-day staging soak + **hard gate: workers-on-VMs successor plan reaches D3**)
         - [ ] **HARD PREREQUISITE** for the "shut down laptop nginx" step below: `agent_orchestrator_workers_on_vms_2026_05_XX.md` (TBD slug) must reach D3 first. Reason: Cloud Run containers cannot tmux-spawn; killing Harsh's laptop with workers still tmux-spawning there kills the workers. Workers must move to VMs before laptop decommission.
         - [ ] Manual `gcloud run deploy --env=prod` (workflow_dispatch on deploy-prod.yml) — first prod deployment
         - [ ] Configure prod GCS state bucket: create gs://agent-orchestrator-state-prod/ (europe-west4, lifecycle: 30-day version retention); IAM bind to prod Cloud Run SA
@@ -116,9 +116,9 @@ todos:
         - [ ] One-shot state migration: gsutil cp Harsh's laptop data/state/state.json → gs://agent-orchestrator-state-prod/state.json (validated via diff after prod startup reads it back)
         - [ ] Bootstrap users on prod (ikenna + harsh, separate JWT secret from staging)
         - [ ] Both operators switch primary dashboard bookmark to https://agent-orchestrator.odum-research.com
-        - [ ] 7-day dual-run period: laptop `orch.epiphanytechnologies.com` remains live as fallback (no migration of laptop state — laptop is read-only after this point); explicitly mark via README on laptop "READ-ONLY FALLBACK 2026-MM-DD → 2026-MM-DD+7"
-        - [ ] After 7 consecutive days no fallback: shut down laptop nginx site (`sudo rm /etc/nginx/sites-enabled/orch.epiphanytechnologies.com && sudo systemctl reload nginx`) + remove orch.epiphanytechnologies.com DNS record
-      Full-execution criterion: Both operators using https://agent-orchestrator.odum-research.com daily for 7 consecutive business days with zero fallback to laptop URL (verified via Cloud Run access logs: 0 hits to laptop nginx during business hours over 7-day window). data/state/state.json mtime in gs://agent-orchestrator-state-prod/ updated within last 30min during business hours. Laptop nginx site file removed + DNS record gone. Verified via: `gcloud storage ls -L gs://agent-orchestrator-state-prod/state.json | grep "Update time"` + `dig orch.epiphanytechnologies.com +short` returns empty.
+        - [ ] 1-day dual-run period: laptop `orch.epiphanytechnologies.com` remains live as fallback for 24h (operator decision 2026-05-19 — shortened from 7 days; Cloud Run + GCS state mirror is sufficient confidence). Mark laptop README "READ-ONLY FALLBACK 2026-MM-DD → 2026-MM-DD+1"
+        - [ ] After 24h with no fallback needed: shut down laptop nginx site (`sudo rm /etc/nginx/sites-enabled/orch.epiphanytechnologies.com && sudo systemctl reload nginx`) + remove orch.epiphanytechnologies.com DNS record
+      Full-execution criterion: Both operators using https://agent-orchestrator.odum-research.com for 1 full business day with zero fallback to laptop URL (verified via Cloud Run access logs). data/state/state.json mtime in gs://agent-orchestrator-state-prod/ updated within last 30min during business hours. Laptop nginx site file removed + DNS record gone. Verified via: `gcloud storage ls -L gs://agent-orchestrator-state-prod/state.json | grep "Update time"` + `dig orch.epiphanytechnologies.com +short` returns empty.
     status: todo
 
   - id: p6-codex-claudemd-updates
@@ -195,7 +195,7 @@ P3 (strict-auth flip on staging)
 P4 (CI/CD wire-up)
    │
    ▼
-P5 (prod cutover + 7-day soak + laptop decommission)  ◄── HUMAN step: workflow_dispatch + DNS paste
+P5 (prod cutover + 1-day soak + laptop decommission)  ◄── HUMAN step: workflow_dispatch + DNS paste
    │
    └── P6 (codex + CLAUDE.md updates) — can run concurrent with P5's 7-day soak window
 ```
