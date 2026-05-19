@@ -287,6 +287,15 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
          PM@d40d0f0d6
 8. - [x] ✅ **Plan flips** for all shipped items. — PM@d40d0f0d6 + mtds@705a635
 
+**Part D — hard_schema Phase 5 (bonus — picked up after slot items exhausted):**
+
+9. - [x] ✅ **STEP 5.83 Layer-2 checker** — `check_uac_hard_required_fields.py` + base-service.sh STEP 5.83 wired:
+         (a) UAC regression guard: asserts `validate_instrument_records` + 3 closed-set rule landmarks in
+         `instrument_validation.py` still present; (b) bundled shard-key kwargs AST-walk: literal
+         `record_captured(data_type="<bundled>", …)` calls missing required shard-key kwarg → FAIL.
+         Smoke-tested: both [OK] against real UAC + empty source. Complements prior base-library.sh
+         STEP 5.83 (PM@03a320846) which guards the Pydantic model_validator. — PM@429b64b2b + PM@8427ac070
+
 ---
 
 ### Slot 8 — defi_catalogue close + defi_simulation_realism + dex_perp — ~29 cal AI-days
