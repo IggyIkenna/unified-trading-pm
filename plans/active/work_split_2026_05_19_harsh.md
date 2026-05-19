@@ -91,8 +91,8 @@ estimate_calibration_note: |
          0.6×, ~2 = 1.0 cal)
 5. - [x] ✅ **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
          enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal) — execution-service@8d60c4a1; 0 remaining violations across workspace
-6. - [ ] **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** — every bare `# type: ignore` must have a
-         comment explaining why. (refactor 0.4×, ~2 = 0.8 cal)
+6. - [x] ✅ **S4. SUSTAIN — cross-repo `# type: ignore` justification audit** — every bare `# type: ignore` must have a
+         comment explaining why. (refactor 0.4×, ~2 = 0.8 cal) — 137/137 already use specific error codes; 0 bare. Workspace clean. No changes needed.
 7. - [ ] **S5. SUSTAIN — cross-repo unused-fixture sweep** — pytest fixtures defined but never called. Remove or mark as
          shared. (refactor 0.4×, ~2 = 0.8 cal)
 8. - [ ] **S6. SUSTAIN — workspace-wide cassette parity deep refresh** —
