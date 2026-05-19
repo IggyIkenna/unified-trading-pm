@@ -17,6 +17,9 @@ parent_epic: master_to_live_defi_2026_05_23.md
 priority: P1 (Phase 1+3 pulled-forward)
 ---
 
+> **ARCHIVED 2026-05-19** — Phase 1 + Phase 3 100% complete (7 checkboxes checked). Phase 2 (Copper + CEFFU) is
+> client-side per operator decision 2026-05-13; no agent todos. Preserved for archaeology.
+
 ## 🟢 PULL-FORWARD UPDATE 2026-05-13 ~17:00 UTC (slot 1 main) — CORRECTED ~18:00 UTC
 
 Per density-push capacity assessment, **Phase 1 (Real HMAC withdrawal approval chain) and Phase 3 (Audit log
