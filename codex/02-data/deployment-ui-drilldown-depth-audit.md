@@ -52,7 +52,7 @@ exposes a per-asset-group set of columns that does not always reach those leaves
 ## Cross-references
 
 - **Plan(s) implementing this:** [`infrastructure_master`](../../plans/epics/infrastructure_master_2026_05_07.md),
-  [`data_status_drilldown_shard_atom_alignment`](../../plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
+  [`data_status_drilldown_shard_atom_alignment`](../../plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   `shard-granularity-ssot` (TBD lift from CLAUDE.md).
 - **Code:** `deployment-ui/src/pages/data-status/`, `deployment-api/deployment_api/services/data_status.py`.

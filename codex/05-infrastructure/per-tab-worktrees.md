@@ -463,7 +463,7 @@ flip as a false claim. The fix is Half 4 — make the work visible at the same m
 
 ## References
 
-- Plan: [`plans/active/per_agent_worktrees_2026_05_10.md`](../../plans/active/per_agent_worktrees_2026_05_10.md)
+- Plan: [`plans/active/per_agent_worktrees_2026_05_10.md`](../../plans/archive/per_agent_worktrees_2026_05_10.md)
 - Bootstrap script: [`scripts/dev/setup-tab-worktrees.sh`](../../scripts/dev/setup-tab-worktrees.sh)
 - Teardown script: [`scripts/dev/teardown-tab-worktrees.sh`](../../scripts/dev/teardown-tab-worktrees.sh)
 - Audit:

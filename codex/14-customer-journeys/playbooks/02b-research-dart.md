@@ -34,7 +34,7 @@ Deep-briefing content covering:
    strategies to your spec and run them for you).
 
 2. **The four catalogues** — the universe of what's available on the platform. See
-   [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md):
+   [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md):
    - **Data Catalogue** — 100+ venues, tick to daily, full market + sports + prediction markets
    - **Strategy Catalogue** — 18 archetypes × categories × instrument types
    - **ML Model Catalogue** — model families, training runs, registry
@@ -75,11 +75,11 @@ The DART briefing transcludes or references (never duplicates):
   — coverage matrix
 - [../../02-data/availability-manifest-and-data-status.md](../../02-data/availability-manifest-and-data-status.md) —
   data catalogue structure
-- [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md) — 4-catalogue pattern
-- [../cross-cutting/catalogue-strategy.md](../cross-cutting/catalogue-strategy.md)
-- [../cross-cutting/catalogue-data.md](../cross-cutting/catalogue-data.md)
-- [../cross-cutting/catalogue-ml-model.md](../cross-cutting/catalogue-ml-model.md)
-- [../cross-cutting/catalogue-execution-algo.md](../cross-cutting/catalogue-execution-algo.md)
+- [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md) — 4-catalogue pattern
+- [../cross-cutting/catalogue-strategy.md](../playbook-concepts/catalogue-strategy.md)
+- [../cross-cutting/catalogue-data.md](../playbook-concepts/catalogue-data.md)
+- [../cross-cutting/catalogue-ml-model.md](../playbook-concepts/catalogue-ml-model.md)
+- [../cross-cutting/catalogue-execution-algo.md](../playbook-concepts/catalogue-execution-algo.md)
 
 ## IR presentations surfaced here
 

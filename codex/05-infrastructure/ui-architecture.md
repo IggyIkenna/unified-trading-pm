@@ -13,7 +13,7 @@ repo registry) — both flagged 2026-03-24 with heavy overlap. This doc is the n
 remain for full detail until their content fully migrates here.
 
 **Status:** Consolidated 2026-05-13 by Slot 8 per
-[`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
+[`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
 Sweep 2 (UI-17 finding).
 
 ---

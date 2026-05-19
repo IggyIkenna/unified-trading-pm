@@ -53,7 +53,7 @@ for data — verify with `/api/v1/admin/stats`.
 6. Admin creates one or more clients under the fund.
 7. Admin creates a user under the org with the prospect's email via `/admin/onboard`.
 8. Admin assigns entitlements matching the demo flavour (see
-   [cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md) for the entitlement map). Stored as
+   [cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) for the entitlement map). Stored as
    `app_entitlements` Firestore docs + Firebase custom claims.
 9. Admin triggers a Firebase password-reset email to the prospect (POST `/api/v1/notifications/welcome` → Admin SDK
    `generatePasswordResetLink` + Resend); prospect sets their own password.
@@ -86,7 +86,7 @@ for data — verify with `/api/v1/admin/stats`.
 ## Related
 
 - [firebase-production.md](firebase-production.md) — the next tier
-- [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md) — what "create org / fund / client"
+- [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — what "create org / fund / client"
   means structurally
 - [../playbooks/03-warm-prospect-demo.md](../playbooks/03-warm-prospect-demo.md) — what the prospect experience looks
   like once provisioned

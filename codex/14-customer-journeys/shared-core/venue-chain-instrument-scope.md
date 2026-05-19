@@ -185,4 +185,4 @@ because no DeFi options protocol is integrated today; `Kalshi adapter` is BLOCKE
 - [strategy-origin-vs-stack-depth.md](strategy-origin-vs-stack-depth.md) — the commercial matrix that scope plugs into
 - [../demo-ops/demo-restriction-profiles.md](../demo-ops/demo-restriction-profiles.md) — profile encodes scope
 - [../commercial-model/pricing-building-blocks.md](../commercial-model/pricing-building-blocks.md) — pricing structure
-- [../infra-spec/stage-3b-uac-combo-rules.md](../infra-spec/stage-3b-uac-combo-rules.md) — Stage 3B registry
+- [../infra-spec/stage-3b-uac-combo-rules.md](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) — Stage 3B registry

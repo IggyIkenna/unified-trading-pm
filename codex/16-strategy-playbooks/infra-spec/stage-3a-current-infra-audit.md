@@ -9,14 +9,14 @@ scope: [engineer, admin]
 > **Scope:** Ship a single paste-able snapshot of what already exists in the workspace that the playbook SSOT can depend
 > on, and what needs to be built before the one-registry-four-derivations engine (Stage 3C) can land.
 >
-> Authoritative inputs: [`_ssot-rules/_source-v1-feedback.md`](../_ssot-rules/_source-v1-feedback.md) (rule 05
-> building-block list), [`page-triage/triage-matrix.md`](../page-triage/triage-matrix.md) (177-page classification),
-> [`page-triage/broken-links.md`](../page-triage/broken-links.md),
-> [`page-triage/duplicate-clusters.md`](../page-triage/duplicate-clusters.md),
+> Authoritative inputs: [`_ssot-rules/_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) (rule 05
+> building-block list), [`page-triage/triage-matrix.md`](../../14-customer-journeys/page-triage/triage-matrix.md) (177-page classification),
+> [`page-triage/broken-links.md`](../../14-customer-journeys/page-triage/broken-links.md),
+> [`page-triage/duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md),
 > [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md).
-> Cross-read against [`_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md),
-> [`04-dart-commercial-axes.md`](../_ssot-rules/04-dart-commercial-axes.md),
-> [`08-pricing-principles.md`](../_ssot-rules/08-pricing-principles.md).
+> Cross-read against [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md),
+> [`04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md),
+> [`08-pricing-principles.md`](../../14-customer-journeys/_ssot-rules/08-pricing-principles.md).
 >
 > **Peer stages:** Stage 3B catalogues the UAC combo rules; Stage 3C specs the derivation engine; Stage 3D builds the
 > target-experience deck; Stage 3E writes the refactor plan. This file is the shared "here's where we are today"
@@ -57,7 +57,7 @@ Stage 3B+3C+3E are the fix routes. This audit names the gaps; the downstream sta
 
 ## 1. Reuse of prior static audit
 
-[`page-triage/triage-matrix.md`](../page-triage/triage-matrix.md) classified all 177 routes across
+[`page-triage/triage-matrix.md`](../../14-customer-journeys/page-triage/triage-matrix.md) classified all 177 routes across
 unified-trading-system-ui (158) + user-management-ui (19). Headline distribution:
 
 | Action bucket     | Count | Notes                                                                                                |
@@ -67,7 +67,7 @@ unified-trading-system-ui (158) + user-management-ui (19). Headline distribution
 | `merge-into`      | ~25   | Concept-duplicates consolidated                                                                      |
 | `defer`           | ~14   | Intentionally deferred to follow-up plans (Phase 10.7 allocator split, pb3 signup, ...)              |
 | `deprecate`       | 0     | Explicit — all deprecation decisions pushed to follow-up plans per roadmap                           |
-| `partial-archive` | 5     | IR presentation slide archive — handled in [`partial-archive.md`](../page-triage/partial-archive.md) |
+| `partial-archive` | 5     | IR presentation slide archive — handled in [`partial-archive.md`](../../14-customer-journeys/page-triage/partial-archive.md) |
 
 Nav bottlenecks identified in the static audit:
 
@@ -80,7 +80,7 @@ Nav bottlenecks identified in the static audit:
 - `/services/strategy-catalogue/*` has self-contained sub-nav (Phase 10), but Data / ML / Execution Algo each have their
   own ad-hoc top nav with no consistent breadcrumb or admin entry-point.
 
-10 duplicate-cluster decisions already in [`duplicate-clusters.md`](../page-triage/duplicate-clusters.md). Summary for
+10 duplicate-cluster decisions already in [`duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md). Summary for
 Stage 3A's purposes:
 
 1. Strategy catalogue legacy (`/services/research/strategy/*`) → merged into `/services/strategy-catalogue/*` (Phase
@@ -102,7 +102,7 @@ Stage 3A's purposes:
 
 ## 2. Broken-href re-verification (re-ran grep against `app/**/page.tsx` 2026-04-20)
 
-### 2.1 Confirmed shipped fixes from [`broken-links.md`](../page-triage/broken-links.md)
+### 2.1 Confirmed shipped fixes from [`broken-links.md`](../../14-customer-journeys/page-triage/broken-links.md)
 
 | href                      | Fix applied                                                                                     | Status   |
 | ------------------------- | ----------------------------------------------------------------------------------------------- | -------- |
@@ -242,7 +242,7 @@ Pattern mismatch vs Strategy Catalogue:
 - No codex deep-link back to the SSOT (which would be
   [`codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md)).
 
-Data Catalogue refactor is tracked in [`roadmap/next-waves.md`](../roadmap/next-waves.md) Wave 5 per the Stage 3 plan
+Data Catalogue refactor is tracked in [`roadmap/next-waves.md`](../../14-customer-journeys/roadmap/next-waves.md) Wave 5 per the Stage 3 plan
 carry-over.
 
 ### 4.3 ML Model Catalogue — 🟠 **Fragmented + incomplete**
@@ -388,7 +388,7 @@ Not issued today. Summary:
 - No UAC registry of API-key scopes (rule 05 building-block 7 "execution layer" needs scoped keys for execution
   routing-policy clients vs read-only data clients).
 
-Roadmap wave: per-client API-key issuance is tracked in [`roadmap/next-waves.md`](../roadmap/next-waves.md) per memory
+Roadmap wave: per-client API-key issuance is tracked in [`roadmap/next-waves.md`](../../14-customer-journeys/roadmap/next-waves.md) per memory
 entry "Playbook SSOT shipped".
 
 ---
@@ -416,7 +416,7 @@ server-verified claim.
 
 ## 9. The 13-building-block Exists / Gap / Blocker table
 
-Source: [`_ssot-rules/_source-v1-feedback.md`](../_ssot-rules/_source-v1-feedback.md) "On building-block dimensions".
+Source: [`_ssot-rules/_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) "On building-block dimensions".
 Each row names the rule 05 block, where it exists today, what's missing, and what blocks the missing piece from landing.
 
 |   # | Building block                            | Exists in (repo / path)                                                                           | Gap                                                                                                          | Blocker                                                                                    |
@@ -459,12 +459,12 @@ Each row names the rule 05 block, where it exists today, what's missing, and wha
 
 ## 11. Cross-references
 
-- [`_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md) — research ≡ live rule
-- [`_ssot-rules/04-dart-commercial-axes.md`](../_ssot-rules/04-dart-commercial-axes.md) — commercial paths
-- [`_ssot-rules/08-pricing-principles.md`](../_ssot-rules/08-pricing-principles.md) — Tier A/B structure
-- [`page-triage/triage-matrix.md`](../page-triage/triage-matrix.md) — 177-route classification
-- [`page-triage/broken-links.md`](../page-triage/broken-links.md) — broken-href tracker
-- [`page-triage/duplicate-clusters.md`](../page-triage/duplicate-clusters.md) — 10 merge decisions
+- [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — research ≡ live rule
+- [`_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) — commercial paths
+- [`_ssot-rules/08-pricing-principles.md`](../../14-customer-journeys/_ssot-rules/08-pricing-principles.md) — Tier A/B structure
+- [`page-triage/triage-matrix.md`](../../14-customer-journeys/page-triage/triage-matrix.md) — 177-route classification
+- [`page-triage/broken-links.md`](../../14-customer-journeys/page-triage/broken-links.md) — broken-href tracker
+- [`page-triage/duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md) — 10 merge decisions
 - [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) —
   the 12 UAC gaps
 - [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)

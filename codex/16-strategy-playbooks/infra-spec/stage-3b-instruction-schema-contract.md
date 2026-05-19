@@ -10,7 +10,7 @@ scope: [engineer, admin]
 > by instructions-service + UAC at runtime for schema validation.
 >
 > **Authoritative source:**
-> [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md).
+> [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md).
 > This doc is the engineering projection of that rule — field names, types, validation surfaces, compat matrix. If the
 > rule text and this doc drift, the rule wins.
 >
@@ -22,8 +22,8 @@ scope: [engineer, admin]
 >   `schema_depth` sub-dimension.
 > - [`stage-3b-downstream-analytics-capability-matrix.md`](stage-3b-downstream-analytics-capability-matrix.md) — what
 >   downstream analytics each integration mode supports, keyed off the same boundary.
-> - [`../_ssot-rules/04-dart-commercial-axes.md`](../_ssot-rules/04-dart-commercial-axes.md) — the three DART paths.
-> - [`../_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md) — the "same-system
+> - [`../_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) — the three DART paths.
+> - [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — the "same-system
 >   partitioned view" framing underpinning rule 10.
 
 ---
@@ -477,7 +477,7 @@ Per rule 10 §"Pre-demo fit-check discipline", before a signals-only demo runs:
 - **[`stage-3b-downstream-analytics-capability-matrix.md`](stage-3b-downstream-analytics-capability-matrix.md)** —
   per-capability support per `instruction_schema_fit` value. Load-bearing: signals-only lacks upstream lineage, so
   certain analytics are `not_available`.
-- **[`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)**
+- **[`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)**
   — the canonical rule. This doc is the engineering projection; the rule wins on conflict.
 
 ---

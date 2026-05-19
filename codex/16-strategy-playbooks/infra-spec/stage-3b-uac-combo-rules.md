@@ -12,16 +12,16 @@ scope: [engineer, admin]
 >
 > **Sources (authoritative):**
 >
-> - [`_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md) — `lifecycle_phase` is a
+> - [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — `lifecycle_phase` is a
 >   named dimension orthogonal to `maturity`.
-> - [`_ssot-rules/04-dart-commercial-axes.md`](../_ssot-rules/04-dart-commercial-axes.md) — commercial-path axes.
-> - [`_ssot-rules/05-building-block-dimensions.md`](../_ssot-rules/05-building-block-dimensions.md) — 13 building blocks
+> - [`_ssot-rules/04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md) — commercial-path axes.
+> - [`_ssot-rules/05-building-block-dimensions.md`](../../14-customer-journeys/_ssot-rules/05-building-block-dimensions.md) — 13 building blocks
 >   are the entitlement dimension.
-> - [`_ssot-rules/07-data-licensing-boundaries.md`](../_ssot-rules/07-data-licensing-boundaries.md) — data-sensitive
+> - [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md) — data-sensitive
 >   blocks carry a licensing-constraint flag.
-> - [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+> - [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
 >   — `instruction_schema_fit` dimension (signals-only / client-strategy+downstream / full-pipeline).
-> - [`_ssot-rules/_source-v1-feedback.md`](../_ssot-rules/_source-v1-feedback.md) §"On building-block dimensions (rule
+> - [`_ssot-rules/_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) §"On building-block dimensions (rule
 >   05)" + §"On DART commercial model (rule 04)".
 > - [`../../09-strategy/architecture-v2/category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md)
 >   — 18 archetypes × 4 categories × 8 instrument types matrix with representative slot labels + 10 block-list groups
@@ -165,7 +165,7 @@ Opaque string; identifies the execution algorithm from execution-service `algo_l
 ### 1.9 `entitlement`
 
 The 13 building blocks from
-[`_ssot-rules/05-building-block-dimensions.md`](../_ssot-rules/05-building-block-dimensions.md):
+[`_ssot-rules/05-building-block-dimensions.md`](../../14-customer-journeys/_ssot-rules/05-building-block-dimensions.md):
 
 ```
 1.  reporting_core
@@ -413,7 +413,7 @@ conditions that the derivation engine enforces.
 - **Predicate:** `instruction_schema_fit == signals_only ∧ entitlement.includes(research_promote_pipeline)`
 - **Reason:** commercial (rule 10 enforcement: block 6 excluded by default from signals-only package)
 - **Evidence:**
-  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
   §"Package boundaries" — "Research / promote pipeline (block 6). Signals-only clients do not automatically get
   research, backtest, paper, or promotion capabilities." Derivation-engine rejection surfaces "upgrade to full-DART
   pricing" prompt per rule 10 §"Commercial quote enforcement".
@@ -422,7 +422,7 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `data_license_tier == institutional_only ∧ view_surface == public_marketing`
 - **Reason:** licensing (rule 07 boundary)
-- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../_ssot-rules/07-data-licensing-boundaries.md)
+- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
   §"Enforcement rules" #1–#5 — "Line items never reference raw data", "No 'Tier A raw data' combinations".
   Derivation-engine logs rule-07 breach to compliance per rule 07 §#6.
 
@@ -431,7 +431,7 @@ conditions that the derivation engine enforces.
 - **Predicate:** `demo_mode == true ∧ commercial_path == client_downstream ∧ block ∈ {research_promote_pipeline}`
 - **Reason:** visibility (demo-ops LOCKED-VISIBLE profile per rule 06 × rule 10)
 - **Evidence:**
-  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
   §"Interaction with the same-system principle" — "The client does **not** see the research / promote /
   strategy-authoring surfaces (rule 06 LOCKED-VISIBLE)". Enforced via demo-restriction-profile in Stage 2
   `demo-ops/demo-restriction-profiles.md`.
@@ -477,7 +477,7 @@ conditions that the derivation engine enforces.
 - **Predicate:** `instruction_schema_fit == signals_only ∧ ¬ all_required_fields_present(client.schema)`
 - **Reason:** technical (instruction schema contract — rule 10 §"What Odum execution needs")
 - **Evidence:**
-  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+  [`_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
   §"What Odum execution needs" — eight required fields (instrument+venue, action, size/exposure, timeframe/urgency,
   order constraints, strategy id, lifecycle behavior, essential risk+allocation constraints). Absence ⇒ engagement is
   either full-DART or bespoke, not signals-only.
@@ -486,7 +486,7 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `entitlement.tier == TIER_A ∧ framing == raw_data_feed`
 - **Reason:** licensing (rule 07 × rule 08 joint violation)
-- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../_ssot-rules/07-data-licensing-boundaries.md)
+- **Evidence:** [`_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md)
   §"Enforcement rules" #5 — "No 'Tier A raw data' combinations. If a Tier A quote line reads as a raw-data pass-through,
   it's a joint rule-07 and rule-08 violation. Rewrite." Note: rule 07 §#5 does NOT condition on the upstream
   `data_license_tier`; raw-data framing on a Tier A line is forbidden regardless of whether the underlying licence
@@ -507,7 +507,7 @@ conditions that the derivation engine enforces.
 
 - **Predicate:** `slot.fund_structure ≠ allocator.fund_structure ∧ allocator.fund_structure ∈ {POOLED, SMA}`
 - **Reason:** commercial / reporting (SMA vs Pooled share-class wiring differs; slots cannot be migrated mid-lifecycle)
-- **Evidence:** [`_source-v1-feedback.md`](../_ssot-rules/_source-v1-feedback.md) + memory note 2026-04-19 "Playbook
+- **Evidence:** [`_source-v1-feedback.md`](../../14-customer-journeys/_ssot-rules/_source-v1-feedback.md) + memory note 2026-04-19 "Playbook
   SSOT shipped" — "SMA vs Pooled structural decision applies to both IM + Reg Umbrella."
 
 ### BL-22: Org-scope mismatch on `CLIENT_EXCLUSIVE` allocation

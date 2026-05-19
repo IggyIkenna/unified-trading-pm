@@ -249,7 +249,7 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
   [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
   — full UI pipeline build
 - **Governance HARD RULE automation + QG ratchet** (pulled-forward to May-23):
-  [`plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+  [`plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
   — wires audit scripts (`dockerfile-base-pin.sh`, `artifact-registry-retention.sh`, `snapshot.sh`)
 - **MVP universe**:
   [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)

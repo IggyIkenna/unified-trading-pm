@@ -137,5 +137,5 @@ instrument (configurable per archetype).
 - Sibling: [`alert-code-taxonomy.md`](alert-code-taxonomy.md) (Tab 5 extends with the 4 ML codes above)
 - Foundation:
   [`../../05-infrastructure/live-pipeline-architecture.md`](../../05-infrastructure/live-pipeline-architecture.md)
-- Live serving: [`../ml/cefi-ml-live-serving.md`](../ml/cefi-ml-live-serving.md)
+- Live serving: [`../ml/cefi-ml-live-serving.md`](../../16-strategy-playbooks/ml/cefi-ml-live-serving.md)
 - UTL primitive: `unified_trading_library.batch_live_reconciler` (UTL@908b1647)

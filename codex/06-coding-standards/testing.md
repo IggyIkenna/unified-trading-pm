@@ -122,6 +122,6 @@ agents should not interpret a green Pass 2 as test coverage.
   credential-free gate.
 - [README.md](README.md) § "Test Infrastructure: Emulators & Mocks" — emulator hosts + moto + mock-WS + VCR pointers.
 - [quality-gates.md](quality-gates.md) — coverage formula + ratchet thresholds + QG step inventory.
-- [vcr-cassette-pattern.md](../02-data/vcr-cassette-pattern.md) → redirected to
+- [vcr-cassette-pattern.md](vcr-cassette-pattern.md) → redirected to
   [vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md) (canonical SSOT post-TS-3).
 - [test-templates/README.md](test-templates/README.md) — copy-paste boilerplate for events / pytest-asyncio fixtures.

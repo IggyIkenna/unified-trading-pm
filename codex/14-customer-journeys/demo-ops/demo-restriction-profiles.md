@@ -124,8 +124,8 @@ Stored in Stage 3B's UAC combo registry keyed by profile_id. Stage 3C's derivati
 `access_control(user, route, item, phase)` by looking up the profile, expanding to (blocks, scope, maturity_filter,
 locked_visible_set, hidden_entirely_set), and returning `visible | locked-visible | hidden`.
 
-See [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md) and
-[`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md).
+See [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md) and
+[`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md).
 
 ## What a profile does not do
 
@@ -145,5 +145,5 @@ See [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-com
 - [../commercial-model/building-block-packaging.md](../commercial-model/building-block-packaging.md)
 - [../shared-core/venue-chain-instrument-scope.md](../shared-core/venue-chain-instrument-scope.md)
 - [../shared-core/strategy-origin-vs-stack-depth.md](../shared-core/strategy-origin-vs-stack-depth.md)
-- [../infra-spec/stage-3b-uac-combo-rules.md](../infra-spec/stage-3b-uac-combo-rules.md)
-- [../infra-spec/stage-3c-derivation-engine.md](../infra-spec/stage-3c-derivation-engine.md)
+- [../infra-spec/stage-3b-uac-combo-rules.md](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md)
+- [../infra-spec/stage-3c-derivation-engine.md](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md)

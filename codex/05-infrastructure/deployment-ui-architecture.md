@@ -401,7 +401,7 @@ system (deployment-ui@e2b7a81).
   trading-system-UI. The deployment-UI follows the same pattern (Phase H of the activation plan).
 - [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md)
   — the active plan that owns the activation work this doc captures.
-- [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.md)
+- [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md)
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
 - [`plans/epics/instruments_live_master_2026_05_08.md`](../../plans/epics/instruments_live_master_2026_05_08.md) — Phase
   G of that plan delegates UI scope here.

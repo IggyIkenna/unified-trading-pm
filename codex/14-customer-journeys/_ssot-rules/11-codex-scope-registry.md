@@ -250,6 +250,6 @@ Data, Analytics, Research & Trading — Odum's DIY platform track ...
 - [Rule 07 (data licensing boundaries)](07-data-licensing-boundaries.md) — enriched services not raw resale; what leaks.
 - [Rule 09 (internal commercial one-liners)](09-internal-commercial-oneliners.md) — internal shorthand; external
   expansion.
-- [Stage 3E §1.9](../infra-spec/stage-3e-refactor-plan.md) — the infra spec entry this rule implements.
-- [visibility-slicing.md](../cross-cutting/visibility-slicing.md) — UI-level visibility rule for catalogue entries
+- [Stage 3E §1.9](../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md) — the infra spec entry this rule implements.
+- [visibility-slicing.md](../playbook-concepts/visibility-slicing.md) — UI-level visibility rule for catalogue entries
   (separate from codex scope but conceptually sibling).

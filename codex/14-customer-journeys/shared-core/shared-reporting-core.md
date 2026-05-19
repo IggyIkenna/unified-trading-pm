@@ -8,7 +8,7 @@ scope: [engineer, admin, sales]
 > filtered per audience; component tree is the same. Cites [rule 03](../_ssot-rules/03-same-system-principle.md) +
 > [rule 05](../_ssot-rules/05-building-block-dimensions.md) blocks 1-3.
 
-**Engineering source** (authoritative): [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md).
+**Engineering source** (authoritative): [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md).
 This doc re-frames the reporting surface for the experience layer and the commercial model; it does not duplicate the
 engineering content.
 
@@ -81,7 +81,7 @@ with admin entitlement.
 ## Relationship to investor relations
 
 The investor-relations views (board presentations, allocator pitch decks, platform-level summaries) exist at
-[../cross-cutting/investor-relations.md](../cross-cutting/investor-relations.md). They are distinct from client
+[../cross-cutting/investor-relations.md](../playbook-concepts/investor-relations.md). They are distinct from client
 reporting: IR renders aggregates and narrative; client reporting renders operational detail. The two are different
 surfaces but read from the same underlying reporting core for aggregates.
 
@@ -90,8 +90,8 @@ surfaces but read from the same underlying reporting core for aggregates.
 - [rule 03 — same-system principle](../_ssot-rules/03-same-system-principle.md)
 - [rule 05 — building-block dimensions](../_ssot-rules/05-building-block-dimensions.md) — blocks 1, 2, 3
 - [rule 06 — show / don't-show discipline](../_ssot-rules/06-show-dont-show-discipline.md) — entitlement slicing
-- [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md) — engineering treatment
-- [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md) — the filter mechanism
+- [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md) — engineering treatment
+- [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) — the filter mechanism
 - [org-fund-client-entity-model.md](org-fund-client-entity-model.md) — where entitlement attaches
 - [same-system-principle.md](same-system-principle.md) — the meta-claim
 - [client-reporting-demo-walkthrough.md](client-reporting-demo-walkthrough.md) — the shared demo path

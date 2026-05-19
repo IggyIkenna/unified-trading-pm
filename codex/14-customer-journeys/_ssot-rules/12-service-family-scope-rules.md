@@ -102,7 +102,7 @@ spec at `tests/e2e/playbooks/refactor/refactor-g1-11-service-family-scope.spec.t
   reporting surface between IM + DART_reporting_only + RegUmbrella.
 - [`../shared-core/org-fund-client-entity-model.md`](../shared-core/org-fund-client-entity-model.md) — org/fund/client
   entity shape underlying scope claims.
-- [`../cross-cutting/sma-vs-pooled.md`](../cross-cutting/sma-vs-pooled.md) — SMA vs Pooled axis (applies to IM +
+- [`../cross-cutting/sma-vs-pooled.md`](../playbook-concepts/sma-vs-pooled.md) — SMA vs Pooled axis (applies to IM +
   RegUmbrella, not DART).
 - [`../../09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`](../../09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md) — tier-zero
   UI demo parity story.

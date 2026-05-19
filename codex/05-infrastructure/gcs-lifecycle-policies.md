@@ -7,7 +7,7 @@ type: reference
 # GCS Lifecycle Policies — Cost + List-Latency Controls
 
 > SSOT for delete-after-N-days lifecycle rules across the workspace's GCS buckets. Applied 2026-05-16 by slot-8 per
-> [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md)
+> [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/archive/issues/deployment_events_lifecycle_audit_2026_05_15.md)
 > (operator-acked: ADC admin perms on `central-element-323112` cover GCS lifecycle ops per CLAUDE.md "Plans Run To
 > Actual Completion" HARD RULE).
 
@@ -97,7 +97,7 @@ Expected: each prints a single `{"rule":[...]}` line. Missing or empty → re-ap
 ## References
 
 - Issue doc:
-  [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md)
+  [`plans/active/issues/deployment_events_lifecycle_audit_2026_05_15.md`](../../plans/archive/issues/deployment_events_lifecycle_audit_2026_05_15.md)
 - VM watchdog: `deployment-service/scripts/vm/vm_zombie_watchdog.py` (consumer of `vm-logs/`)
 - QG snapshot cron: `deployment-service/scripts/vm/launch-qg-snapshot-vm.sh` (producer of `quality_gates_snapshot/`)
 - Event-stream HARD RULE: CLAUDE.md "No fire-and-forget VM launches (CRITICAL)" — STARTED + ≥1 progress/hr + STOPPED.

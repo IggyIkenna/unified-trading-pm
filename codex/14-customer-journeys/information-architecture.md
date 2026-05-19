@@ -11,7 +11,7 @@ Top-down canonical IA for the Odum platform. Every page in the UI must fit into 
 
 **Click-click-click to detail.** Initial state of every page assumes the user KNOWS what they want. Collapsing boxes
 default to collapsed only when 90%+ of users wouldn't care. The Bloomberg-terminal aesthetic applies throughout — see
-[cross-cutting/bloomberg-style-aesthetic.md](cross-cutting/bloomberg-style-aesthetic.md).
+[cross-cutting/bloomberg-style-aesthetic.md](playbook-concepts/bloomberg-style-aesthetic.md).
 
 ## Top-level tree
 
@@ -148,7 +148,7 @@ Service-local navigation (e.g., Data → Data Instruments → Data Coverage) liv
 ## Four catalogues — parallel surfaces
 
 Each catalogue is a fixed-universe SSOT surfaced under `/services/<catalogue-name>/`. All four follow the same pattern
-(see [cross-cutting/catalogues.md](cross-cutting/catalogues.md)):
+(see [cross-cutting/catalogues.md](playbook-concepts/catalogues.md)):
 
 - overview page (landing)
 - coverage matrix (all entries × classification dimensions)
@@ -168,16 +168,16 @@ Current state:
 
 The `/services/reports/*` tree is the ONE client-reporting surface. It's the primary walkthrough in BOTH pb3a (Reg
 Umbrella demo) and pb3b (IM demo) — same pages, same features, same data. Only the narrative framing differs. See
-[cross-cutting/client-reporting.md](cross-cutting/client-reporting.md).
+[cross-cutting/client-reporting.md](playbook-concepts/client-reporting.md).
 
 ## Investor Relations is NOT for prospects
 
 `/investor-relations/*` is for Odum investors and advisors — NOT for demo prospects. The presentations (board, plan, IM,
 platform, regulatory, disaster recovery) are sales/fundraising assets, not product walkthroughs. See
-[cross-cutting/investor-relations.md](cross-cutting/investor-relations.md).
+[cross-cutting/investor-relations.md](playbook-concepts/investor-relations.md).
 
 ## Related
 
 - Full page inventory: [page-triage/triage-matrix.md](page-triage/triage-matrix.md)
 - Playbook families: [audiences-and-journeys.md](audiences-and-journeys.md)
-- Visibility slicing: [cross-cutting/visibility-slicing.md](cross-cutting/visibility-slicing.md)
+- Visibility slicing: [cross-cutting/visibility-slicing.md](playbook-concepts/visibility-slicing.md)

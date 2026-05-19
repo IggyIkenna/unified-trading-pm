@@ -56,7 +56,7 @@ All five entries were classified **PRUNE** and removed from
 live routes) and [UI_STRUCTURE_MANIFEST.json](unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json).
 
 Per-href decision rationale (aligned with the forthcoming G2.4 ML Model Catalogue refactor — see
-[../cross-cutting/catalogue-ml-model.md](../cross-cutting/catalogue-ml-model.md)):
+[../cross-cutting/catalogue-ml-model.md](../playbook-concepts/catalogue-ml-model.md)):
 
 | Pruned href                         | Rationale                                                                                                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

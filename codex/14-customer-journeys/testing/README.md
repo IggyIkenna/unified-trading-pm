@@ -128,12 +128,12 @@ export async function expectClickPath(page, steps: Array<{ click: string; expect
 
 For each persona, navigating to `/dashboard` shows exactly the expected service tiles (unlocked vs padlocked vs hidden)
 per the entitlement × role × lock_state × maturity matrix in
-[../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md).
+[../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md).
 
 If a new persona or entitlement is added, this test must be updated.
 
 ## Related
 
 - Playbooks: [../playbooks/](../playbooks/)
-- Visibility slicing: [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md)
+- Visibility slicing: [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md)
 - Demo personas: [../authentication/README.md](../authentication/README.md)

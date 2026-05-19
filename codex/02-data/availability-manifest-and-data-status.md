@@ -195,7 +195,7 @@ caller code or assuming the legacy contract:
   in Plan B (UTL/UAC lift triple) which lifts `instruments-service _validate_predictions_null_rates` to a UTL helper.
 
 **Streaming-writer companion — `record_captured_from_counts` (shipped UTL@`ef47c81b` per
-[`wave2_polymarket_record_captured_from_counts_2026_05_09.md`](../../plans/active/wave2_polymarket_record_captured_from_counts_2026_05_09.md):49-60).**
+[`wave2_polymarket_record_captured_from_counts_2026_05_09.md`](../../plans/archive/wave2_polymarket_record_captured_from_counts_2026_05_09.md):49-60).**
 `ManifestWriter.record_captured_from_counts(row_key, total_rows, expected_root_clusters, cluster_extractor, observed_clusters, available_at_envelope, pipeline_mode)`
 is the streaming-writer-friendly variant of `record_captured`. Accepts `total_rows` (int) + `cluster_counts`
 (`observed_clusters` mapping) + `available_at_envelope` (UTC timestamp) + `pipeline_mode` (required) instead of a pandas
@@ -287,7 +287,7 @@ adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `Serv
 of the most recent `publish_with_policy()` decision for this row), and **`expected_window_completeness_fraction`**
 (0.0-1.0 fraction of the expected per-row window that was actually populated; denominator-aware coverage metric; renamed
 from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
-[`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
+[`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg convention).
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
 preserved in v8.
@@ -997,13 +997,13 @@ Without this, every per-(combined-venue) figure for a chain that has no manifest
 multi-axis stream.
 
 > **D-14 resolution status (2026-05-13)**: This finding is logged here AND in the codex doc audit findings issue
-> [`codex_audit_data_2026_05_12.md`](../../plans/active/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
+> [`codex_audit_data_2026_05_12.md`](../../plans/archive/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
 > been explicitly added as a new todo in `infrastructure_master_2026_05_07.md` (verified by grep 2026-05-13: the rollup
 > worker P5 task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔
 > `capture_status_counts`). The finding remains OPEN — the rollup worker still derives `dates_found` from a different
 > source than `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD
 > include this reconciliation. Tracked via Sweep 4 of
-> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
+> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md).
 
 When adding a new adapter, document any path duality here BEFORE merging the writer — silent dual-schemas are the
 canonical phantom-audit blast radius.

@@ -7,7 +7,7 @@ scope: [engineer, admin, sales]
 > What you leave off the page matters as much as what you put on it. Every experience playbook has an explicit
 > what-not-to-show list. An empty list is a drafting failure.
 
-**Mechanism SSOT:** [`../cross-cutting/visibility-slicing.md`](../cross-cutting/visibility-slicing.md) carries the
+**Mechanism SSOT:** [`../cross-cutting/visibility-slicing.md`](../playbook-concepts/visibility-slicing.md) carries the
 `visible(user, item)` filter function that enforces this rule at runtime.
 
 ## The show / don't-show contract

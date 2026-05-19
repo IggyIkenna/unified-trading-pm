@@ -28,7 +28,7 @@ last_reviewed: 2026-05-17
 > `service_emission_policy.next_state(*, policy, event)` resolves `(ServiceEmissionPolicy, EmissionLifecycleEvent)` →
 > `ServiceEmissionStateEnum` for the writer hot path). The third column was originally shipped as
 > `expected_window_completeness_pct` at UAC@`174f401`; renamed to `_fraction` at UAC@`76f950a` per
-> [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
+> [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 > option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg.
 
 ## TL;DR

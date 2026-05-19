@@ -100,7 +100,7 @@ The demo emphasises:
 
 1. "All four catalogues are SSOT — same data, same structure, different lenses."
 2. "Move strategies between catalogue states: PUBLIC → IM_RESERVED → CLIENT_EXCLUSIVE → RETIRED." (See
-   [../cross-cutting/catalogue-strategy.md](../cross-cutting/catalogue-strategy.md).)
+   [../cross-cutting/catalogue-strategy.md](../playbook-concepts/catalogue-strategy.md).)
 3. "Your IP stays yours — Odum IP stays ours — enforced via catalogue lock states."
 4. "Research → Promote → Trade is one pipeline, not separate tools."
 5. "Observation is real-time — anything you run goes to the same observability surface."
@@ -121,16 +121,16 @@ entitlements: [
 
 Within each catalogue, individual entries are further sliced by `lock_state` + `maturity` — the demo shows PUBLIC +
 CODE_AUDITED+ entries by default, with admin-only ability to reveal IM_RESERVED or CODE_NOT_WRITTEN placeholders. See
-[../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md).
+[../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md).
 
 ## Cross-cutting content
 
-- Four catalogues umbrella: [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md)
-- Per-catalogue docs: [../cross-cutting/catalogue-data.md](../cross-cutting/catalogue-data.md),
-  [catalogue-strategy.md](../cross-cutting/catalogue-strategy.md),
-  [catalogue-ml-model.md](../cross-cutting/catalogue-ml-model.md),
-  [catalogue-execution-algo.md](../cross-cutting/catalogue-execution-algo.md)
-- Visibility slicing: [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md)
+- Four catalogues umbrella: [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md)
+- Per-catalogue docs: [../cross-cutting/catalogue-data.md](../playbook-concepts/catalogue-data.md),
+  [catalogue-strategy.md](../playbook-concepts/catalogue-strategy.md),
+  [catalogue-ml-model.md](../playbook-concepts/catalogue-ml-model.md),
+  [catalogue-execution-algo.md](../playbook-concepts/catalogue-execution-algo.md)
+- Visibility slicing: [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md)
 
 ## Differences from pb3a/pb3b
 

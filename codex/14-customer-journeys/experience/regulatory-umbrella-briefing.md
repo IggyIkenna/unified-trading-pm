@@ -63,7 +63,7 @@ The fourth section is the operating model once live. The Umbrella firm operates 
 equivalent structure) under Odum's permissions. Odum runs compliance monitoring, supervisory checks, transaction
 reporting, and best-execution evidence on the firm's activity. The firm retains strategic and commercial control; the
 regulatory operations layer runs through Odum. Reg-specific view: Pooled vs SMA is an accounting/setup choice for the
-firm's structure — see [`../cross-cutting/sma-vs-pooled.md`](../cross-cutting/sma-vs-pooled.md). MIFID surfaces,
+firm's structure — see [`../cross-cutting/sma-vs-pooled.md`](../playbook-concepts/sma-vs-pooled.md). MIFID surfaces,
 transaction reporting, and supervisory artifacts render from the shared component tree.
 
 The fifth section is commitment. The engagement is twelve months minimum. The rationale is identical across services:

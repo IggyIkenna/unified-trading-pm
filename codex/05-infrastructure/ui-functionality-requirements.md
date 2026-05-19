@@ -9,7 +9,7 @@ last_reviewed: 2026-05-13
 >
 > This doc remains for screens / features / user roles / consolidation guidance detail. New readers should start at
 > `ui-architecture.md` for the navigation index. Full content merge into `ui-architecture.md` tracked in
-> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
+> [`codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md`](../../plans/archive/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md)
 > Sweep 2 (UI-17 finding).
 
 # UI Functionality Requirements — Unified Trading System

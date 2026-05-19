@@ -52,7 +52,7 @@ bash deployment-service/scripts/vm/create-code-tarballs.sh --all
 ```
 
 (or the per-asset_group variant). Stale tarball = stale code on the VM. Operators must remember to refresh when they
-push fixes; the [`deploy_missing_auto_launch_2026_05_07`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md)
+push fixes; the [`deploy_missing_auto_launch_2026_05_07`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md)
 successor plan adds an automatic refresh step.
 
 ### 2. Tarball-from-local (developer path; Deploy-Missing UI mode toggle)
@@ -82,7 +82,7 @@ the tarball.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
 per-shard launch container rather than `gcloud compute instances create`-ing a fresh VM each time. Tracked in
-[`deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md); out of scope
+[`deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md); out of scope
 today.
 
 ## Adding a new launcher
@@ -198,7 +198,7 @@ directory) and faster to refresh.
 
 The pre-2026-05-08 baseline of 29 ad-hoc VM launchers + 1 dashboard launcher outside `deployment-service/scripts/vm/`
 has been substantially migrated. Per
-[`plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
+[`plans/active/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/archive/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md)
 DONE-2026-05-08 block: **10 launchers shipped Tab 11** (with 17 new VM_PREFIX_TO_BUCKET entries + watchdog VM relaunch);
 the remaining **20 launchers are deferred** per documented per-launcher reasons (duplicates of canonical launchers,
 collision-risk with in-flight tabs, partial supersession by canonical equivalents).
@@ -312,7 +312,7 @@ deployment-cluster shape (asset-scoped vs cross-cutting).
   when concurrent VMs run.
 
 Plan:
-[`plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md).
+[`plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`](../../plans/archive/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md).
 
 Until the plan ships:
 
@@ -533,7 +533,7 @@ heredocs. **Shipped**: deployment-service@68a9943 (`lc_write_startup_file` + tem
 - CLAUDE.md "VM Naming Convention" — `VM_PREFIX_TO_BUCKET` registry.
 - [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
 - [`codex/05-infrastructure/strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md) — paper + live launcher SSOT.
-- [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/ai/deploy_missing_auto_launch_2026_05_07.md) —
+- [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md) —
   preview → auto-launch successor.
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) —
   bigger AWS S3 / ECR / EC2-launcher work.

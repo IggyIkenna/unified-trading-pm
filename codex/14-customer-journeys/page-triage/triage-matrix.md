@@ -210,7 +210,7 @@ via `PROMOTE_LIFECYCLE_NAV`.
 
 ## (platform)/services/reports — 12 routes → client-reporting (shared pb3a/pb3b)
 
-Per [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md), all 12 are the SHARED reporting
+Per [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md), all 12 are the SHARED reporting
 surface for IM + Reg Umbrella demos and real clients.
 
 | route                               | classification | reuse_hint             | action    | confidence | notes           |

@@ -172,4 +172,4 @@ referencing the old route is updated in the same PR.
 - [persona-and-user-prototype-mapping.md](persona-and-user-prototype-mapping.md) — who signs in for each route
 - [../shared-core/same-system-principle.md](../shared-core/same-system-principle.md) — rule 03 implementation
 - [../shared-core/shared-reporting-core.md](../shared-core/shared-reporting-core.md) — shared route per audience
-- [../infra-spec/stage-3c-derivation-engine.md](../infra-spec/stage-3c-derivation-engine.md) — derivation per route
+- [../infra-spec/stage-3c-derivation-engine.md](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md) — derivation per route

@@ -9,9 +9,9 @@ scope: [engineer, admin, sales]
 > [rule 03](../_ssot-rules/03-same-system-principle.md) + [rule 05](../_ssot-rules/05-building-block-dimensions.md).
 
 **Existing engineering sources** (authoritative):
-[../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md)
+[../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md)
 
-- [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md). This doc re-frames them for the experience
+- [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md). This doc re-frames them for the experience
   layer without duplicating their content.
 
 ## The hierarchy
@@ -39,7 +39,7 @@ organisation
 
 ## Why Pooled vs SMA matters
 
-See [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md) for the full engineering treatment. Short
+See [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md) for the full engineering treatment. Short
 version for experience-layer usage:
 
 - **Pooled fund.** One set of positions, one set of venue accounts, multiple share classes. NAV is struck at the fund
@@ -143,8 +143,8 @@ is the operating surface for this; the experience playbooks describe the shape, 
   underlying system
 - [rule 05 — building-block dimensions](../_ssot-rules/05-building-block-dimensions.md) — blocks attach at API-key-set
   level
-- [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md) — engineering treatment
-- [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md) — structural decision detail
+- [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — engineering treatment
+- [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md) — structural decision detail
 - [../experience/im-decision-journey.md](../experience/im-decision-journey.md) — pb2a uses this model
 - [../experience/investment-management-demo.md](../experience/investment-management-demo.md) — pb3b renders
   structure-specific views

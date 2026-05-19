@@ -30,15 +30,15 @@ Deep-briefing content covering:
 1. **What Odum IM is** — our own systematic strategies, run on our own platform, under our own FCA authorisation,
    offered to external allocators.
 2. **The four catalogues** — the universe of what Odum can trade, each an SSOT (see
-   [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md)):
+   [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md)):
    - Data Catalogue (what data we have)
    - Strategy Catalogue (what strategies we run)
    - ML Model Catalogue (what models power our strategies)
    - Execution Algo Catalogue (how we execute)
 3. **Fund structure options** — Pooled vs SMA (see
-   [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md))
+   [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md))
 4. **Client reporting** — what reporting you get as an allocator (same surface used in pb3 demo — see
-   [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md))
+   [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md))
 5. **Regulatory framework** — FCA 975797, MiFID II, how reporting + compliance flows
 6. **Track record** — real capital, real returns, link to investor-facing materials
 7. **Next steps** — link to booking a demo (promotes prospect to pb3)
@@ -70,8 +70,8 @@ The IM briefing transcludes or references (never duplicates):
 - [../../04-architecture/capital-structure-and-regulatory.md](../../04-architecture/capital-structure-and-regulatory.md)
   — regulatory framework
 - [../../07-security/compliance.md](../../07-security/compliance.md) — MiFID II / FCA events
-- [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md) — 4-catalogue pattern
-- [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md) — what the IM prospect will see in pb3b
+- [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md) — 4-catalogue pattern
+- [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md) — what the IM prospect will see in pb3b
 
 ## IR presentations surfaced here
 

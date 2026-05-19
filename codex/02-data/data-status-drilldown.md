@@ -331,7 +331,7 @@ Every leaf carries a `row_key` dict. Two operator actions consume it:
    [`market_tick_data_service/cli/shard_key.py`](../../../market-tick-data-service/market_tick_data_service/cli/shard_key.py).
 
    **Two launch modes** (operator-selectable per Phase 0 IAM/audit/rate-limit ratification 2026-05-08; tracked in
-   [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/active/deploy_missing_auto_launch_2026_05_07.md)):
+   [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md)):
    - **Preview mode (shipped)** — `POST /api/data-status/deploy-missing-preview` returns the bash invocation
      (`bash <launcher-script> --shard-key=<quoted>`) for the operator to copy + run from their authenticated terminal.
      No service-account IAM grant required on the deployment-api side; the operator's user creds are the auth boundary.

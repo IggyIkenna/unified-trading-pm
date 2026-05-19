@@ -474,7 +474,7 @@ tier is needed (e.g. `OBSERVE` between `WARN` and `INFO`), update both `AlertSev
 ## Alert lifecycle audit (`STALE_OPEN_ALERT` meta-alert) — Group F of governance_qg_automation_gaps
 
 > Added 2026-05-16 (slot-8) per
-> [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../../plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
+> [`governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
 > § Group F. Codifies the closed-loop check that alerting-service must surface `STALE_OPEN_ALERT` when a fire→clear
 > pair's clear is overdue. Implementation lives in alerting-service; this section is the contract.
 

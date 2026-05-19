@@ -13,7 +13,7 @@ scope: [engineer, admin]
 > [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
 > § Phase 3E.
 >
-> **Supersedes:** [`../roadmap/next-waves.md`](../roadmap/next-waves.md) (pointer-only; content preserved).
+> **Supersedes:** [`../roadmap/next-waves.md`](../../14-customer-journeys/roadmap/next-waves.md) (pointer-only; content preserved).
 >
 > **Reads:**
 >
@@ -712,7 +712,7 @@ follow-up plan" column) or are retired once their scope is absorbed.
 | [deployment_topology_and_client_isolation_2026_04_17.plan.md](../../../plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md) | Referenced by 2.6 (staging Firebase)                   |
 | [defi_demo_e2e_workflow_2026_03_30.plan.md](../../../plans/archive/defi_demo_e2e_workflow_2026_03_30.plan.md)                                     | Referenced by 1.4 + 2.7 (demo personas + provisioning) |
 | [platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md](../../../plans/ai/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md)  | Folded into 2.10 (Phase 10.7 allocator split)          |
-| [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md)                        | Referenced by 2.6 (ticket #12 is staging Firebase)     |
+| [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/ai/five_space_ia_execution_child_plan_2026_04_17.md)                        | Referenced by 2.6 (ticket #12 is staging Firebase)     |
 | [coverage_ratchet_policy_2026_04_19.plan.md](../../../plans/archive/coverage_ratchet_policy_2026_04_19.plan.md)                                   | Independent — runs in parallel                         |
 | [coverage_uplift_bottom5_2026_04_19.plan.md](../../../plans/ai/coverage_uplift_bottom5_2026_04_19.plan.md)                                        | Independent — runs in parallel                         |
 
@@ -720,10 +720,10 @@ follow-up plan" column) or are retired once their scope is absorbed.
 
 ## 7. What supersedes what
 
-- This document **supersedes** [`../roadmap/next-waves.md`](../roadmap/next-waves.md). Content preserved in that file
+- This document **supersedes** [`../roadmap/next-waves.md`](../../14-customer-journeys/roadmap/next-waves.md). Content preserved in that file
   with a top-line `> Superseded by ...` pointer.
 - This document **does NOT supersede** the 10 duplicate-cluster decisions in
-  [`../page-triage/duplicate-clusters.md`](../page-triage/duplicate-clusters.md) — those are tactical merge decisions
+  [`../page-triage/duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md) — those are tactical merge decisions
   already resolved within Phase 10.
 - This document **does NOT supersede**
   [`../../09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) —
@@ -751,11 +751,11 @@ complete when:
 - [`stage-3a-current-infra-audit.md`](stage-3a-current-infra-audit.md) — gap source for every G1/G2 item
 - [`stage-3b-uac-combo-rules.md`](stage-3b-uac-combo-rules.md) — 15 dimensions + 22 blockers the engine enforces
 - [`stage-3c-derivation-engine.md`](stage-3c-derivation-engine.md) — 4 formulas G1 ships
-- [`../_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md) — no-forked-UIs rule
+- [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — no-forked-UIs rule
   driving 1.1
-- [`../_ssot-rules/06-show-dont-show-discipline.md`](../_ssot-rules/06-show-dont-show-discipline.md) — LOCKED-VISIBLE
+- [`../_ssot-rules/06-show-dont-show-discipline.md`](../../14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md) — LOCKED-VISIBLE
   semantics for 1.3
-- [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+- [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
   — rule driving 1.2 + integration-depth pricing in 3.1
 - [`../../09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) —
   UAC gap tracker referenced by 1.8 + 2.9

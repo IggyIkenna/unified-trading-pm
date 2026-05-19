@@ -15,7 +15,7 @@ workspace; nothing on Ikenna's local machine is required.
 
 ## Read these in this order (≈45 min total)
 
-1. **[backfill-completion-playbook.md](../backfill-completion-playbook.md)** — operational SSOT. Cutoffs, MVP target,
+1. **[backfill-completion-playbook.md](../../15-runbooks/backfill-completion-playbook.md)** — operational SSOT. Cutoffs, MVP target,
    bundling/schema invariants, special cases (VIX, sports odds-API), credentials policy, known gotchas.
 2. **[active plan: instruments_and_market_tick_data_completion_2026_05_01.plan.md](../../../plans/archive/instruments_and_market_tick_data_completion_2026_05_01.plan.md)**
    — phased execution DAG. Phase 0 unblockers → Phase 1 sports → Phase 2 cefi → Phase 3 tradfi → Phase 4 prediction →

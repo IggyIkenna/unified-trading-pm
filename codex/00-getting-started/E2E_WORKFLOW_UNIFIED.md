@@ -10,7 +10,7 @@ scope: [engineer]
 
 - **5-step autonomous workflow:**
   [CLEAN_WORKFLOW_DIAGRAMS.md](../12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md#1-the-5-step-autonomous-workflow)
-- **9-stage maturity model:** [WORKFLOW_DIAGRAM.md](../11-project-management/github-integration/WORKFLOW_DIAGRAM.md)
+- **9-stage maturity model:** [WORKFLOW_DIAGRAM.md](../../plans/archive/WORKFLOW_DIAGRAM.md)
 - **Project structure (17 projects):**
   [PROJECT_STRUCTURE_REFERENCE.md](../12-presentations/PROJECT_STRUCTURE_REFERENCE.md)
 - **Complete vision (Google pitch):**
@@ -93,7 +93,7 @@ scope: [engineer]
 **What COD means:** Change of Direction - architectural pivots, design changes tracked separately
 
 **See detailed workflow:**
-[WORKFLOW_DIAGRAM.md - Stages 1-2](../11-project-management/github-integration/WORKFLOW_DIAGRAM.md#stage-1-cod-standards)
+[WORKFLOW_DIAGRAM.md - Stages 1-2](../../plans/archive/WORKFLOW_DIAGRAM.md#stage-1-cod-standards)
 
 **Stage 1 achievements:**
 
@@ -119,7 +119,7 @@ scope: [engineer]
 feature completeness
 
 **See detailed workflow:**
-[WORKFLOW_DIAGRAM.md - Stages 3-4](../11-project-management/github-integration/WORKFLOW_DIAGRAM.md#stage-3-event-logging)
+[WORKFLOW_DIAGRAM.md - Stages 3-4](../../plans/archive/WORKFLOW_DIAGRAM.md#stage-3-event-logging)
 
 ### Stages 5-9: New Services → Client Platform (FUTURE)
 
@@ -127,7 +127,7 @@ feature completeness
 
 **See complete vision:**
 
-- [WORKFLOW_DIAGRAM.md - Stages 5-9](../11-project-management/github-integration/WORKFLOW_DIAGRAM.md#stage-5-new-services)
+- [WORKFLOW_DIAGRAM.md - Stages 5-9](../../plans/archive/WORKFLOW_DIAGRAM.md#stage-5-new-services)
 - [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html)
 
 **Summary:**
@@ -319,7 +319,7 @@ python3 scripts/utilities/create-all-service-projects.py --service execution-ser
 
 - [LOCAL_VS_CLOUD_ORCHESTRATION.md](../12-agent-workflow/LOCAL_VS_CLOUD_ORCHESTRATION.md) - Local vs cloud comparison
 - [WORKER_AGENT_INSTRUCTIONS.md](../12-agent-workflow/WORKER_AGENT_INSTRUCTIONS.md) - Agent prompt templates
-- [QUICK_REFERENCE.md](../12-agent-workflow/QUICK_REFERENCE.md) - Command cheat sheet
+- [QUICK_REFERENCE.md](../validators/QUICK_REFERENCE.md) - Command cheat sheet
 
 **Complete Roadmap:**
 

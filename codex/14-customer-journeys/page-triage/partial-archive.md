@@ -95,5 +95,5 @@ Currently only IR presentations qualify. Other orphans either promote whole or d
 ## Related
 
 - Triage matrix: [triage-matrix.md](triage-matrix.md)
-- IR doc: [../cross-cutting/investor-relations.md](../cross-cutting/investor-relations.md)
+- IR doc: [../cross-cutting/investor-relations.md](../playbook-concepts/investor-relations.md)
 - pb2 briefings: [../playbooks/02-research-and-documentation.md](../playbooks/02-research-and-documentation.md)

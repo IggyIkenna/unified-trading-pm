@@ -85,5 +85,5 @@ Real client
 - Per-journey playbook docs: [playbooks/](playbooks/)
 - Auth-tier details: [authentication/](authentication/)
 - Environment-specific details: [environments/](environments/)
-- Visibility slicing mechanism: [cross-cutting/visibility-slicing.md](cross-cutting/visibility-slicing.md)
+- Visibility slicing mechanism: [cross-cutting/visibility-slicing.md](playbook-concepts/visibility-slicing.md)
 - Demo persona fixtures: [lib/auth/personas.ts](unified-trading-system-ui/lib/auth/personas.ts)

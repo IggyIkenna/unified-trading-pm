@@ -94,10 +94,10 @@ call. Screens, entitlements, and flow are identical. See [03b-demo-im.md](03b-de
 
 ## Cross-cutting content
 
-- Pooled vs SMA: [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md)
-- Client reporting (the core surface): [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md)
-- Fund/org/client hierarchy: [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md)
-- Visibility slicing: [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md)
+- Pooled vs SMA: [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md)
+- Client reporting (the core surface): [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)
+- Fund/org/client hierarchy: [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md)
+- Visibility slicing: [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md)
 
 ## Exit state
 

@@ -124,4 +124,4 @@ Per the audit, these `(public)/` routes are NOT linked from the homepage or the 
 - Next playbook: [02-research-and-documentation.md](02-research-and-documentation.md)
 - Marketing static content: `unified-trading-system-ui/public/*.html`
 - Bloomberg-style aesthetic:
-  [../cross-cutting/bloomberg-style-aesthetic.md](../cross-cutting/bloomberg-style-aesthetic.md)
+  [../cross-cutting/bloomberg-style-aesthetic.md](../playbook-concepts/bloomberg-style-aesthetic.md)

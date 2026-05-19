@@ -137,4 +137,4 @@ provisioned shape, (b) `BUCKET_PREFIXES` hardcode in `cloud_interface/constants.
 env-var defaults — none of the three agree on `(market_data, defi)` target bucket. Phase 1 smoke ships TODAY with
 band-aid (`MARKET_DATA_S3_BUCKET_DEFI` env explicit override), but Citadel-grade SSOT alignment requires the operator
 triage call captured in
-[`plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../../plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+[`plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../../plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).

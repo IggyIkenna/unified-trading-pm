@@ -37,10 +37,10 @@ reads_from: [_ssot-rules, experience, shared-core, commercial-model, demo-ops, i
 >
 > **Inputs:**
 >
-> - [`../infra-spec/stage-3a-current-infra-audit.md`](../infra-spec/stage-3a-current-infra-audit.md)
-> - [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md)
-> - [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md)
-> - [`../infra-spec/stage-3e-refactor-plan.md`](../infra-spec/stage-3e-refactor-plan.md)
+> - [`../infra-spec/stage-3a-current-infra-audit.md`](../../16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md)
+> - [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md)
+> - [`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md)
+> - [`../infra-spec/stage-3e-refactor-plan.md`](../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md)
 > - [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules + rule 11 (service-family scope, G1.11)
 > - [`../experience/`](../experience/) — 9 experience playbooks
 > - [`../page-triage/`](../page-triage/) — 177-route classification
@@ -1035,14 +1035,14 @@ uses real Firebase prod personas, and submits to production sinks. Dev ↔ stagi
 
 ### Infra spec + rules
 
-- [`../infra-spec/stage-3a-current-infra-audit.md`](../infra-spec/stage-3a-current-infra-audit.md)
-- [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md)
-- [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md)
-- [`../infra-spec/stage-3e-refactor-plan.md`](../infra-spec/stage-3e-refactor-plan.md)
+- [`../infra-spec/stage-3a-current-infra-audit.md`](../../16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md)
+- [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md)
+- [`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md)
+- [`../infra-spec/stage-3e-refactor-plan.md`](../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md)
 - [`../_ssot-rules/`](../_ssot-rules/) — 10 canonical rules + rule 11 (service-family scope, G1.11)
 - [`../experience/`](../experience/) — 9 experience playbooks
 - [`../demo-ops/upsell-overlays.md`](../demo-ops/upsell-overlays.md) — G1.13 tempt-logic spec
-- [`../cross-cutting/bloomberg-style-aesthetic.md`](../cross-cutting/bloomberg-style-aesthetic.md) — visual language
+- [`../cross-cutting/bloomberg-style-aesthetic.md`](../playbook-concepts/bloomberg-style-aesthetic.md) — visual language
 - [`../roadmap/next-waves.md`](../roadmap/next-waves.md) — superseded; content preserved
 
 ### G1 plan cross-references (per slide)

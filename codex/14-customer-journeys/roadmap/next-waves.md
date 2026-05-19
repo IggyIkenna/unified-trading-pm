@@ -4,7 +4,7 @@ scope: [engineer, admin, sales]
 
 # Next waves
 
-> **Superseded by [stage-3e-refactor-plan.md](../infra-spec/stage-3e-refactor-plan.md)** (2026-04-20).
+> **Superseded by [stage-3e-refactor-plan.md](../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md)** (2026-04-20).
 >
 > Stage 3E is the authoritative post-Stage-3 refactor backlog — 26 items grouped G1 / G2 / G3 with full context (current
 > state, target state, blast radius, blockers, owner, proposed follow-up plan, unlocked playbooks). Content below is
@@ -21,7 +21,7 @@ Highest priority. Without these, pb3 demos can't run on staging.
 
 - **Owner**: Odum ops
 - **Existing plan**:
-  [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md)
+  [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/ai/five_space_ia_execution_child_plan_2026_04_17.md)
   ticket #12
 - **Blocked by**: nothing
 - **Unblocks**: every pb3 test, demo-user lifecycle, prod/staging isolation
@@ -91,7 +91,7 @@ Unify the three fragmented catalogues (Data, ML Model, Execution Algo) to match 
 
 ## Wave 3 — Fund / org / client scaffolding
 
-The structural model from [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md) needs full
+The structural model from [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) needs full
 implementation before pb3a/pb3b demos are meaningful.
 
 ### 3a. Org-scoped JWT claims

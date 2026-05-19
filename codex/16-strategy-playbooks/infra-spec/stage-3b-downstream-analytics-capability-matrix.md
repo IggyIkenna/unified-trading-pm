@@ -21,13 +21,13 @@ scope: [engineer, admin]
 >
 > **Sources:**
 >
-> - [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../_ssot-rules/10-strategy-instruction-schema-principles.md)
+> - [`../_ssot-rules/10-strategy-instruction-schema-principles.md`](../../14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md)
 >   §"Package boundaries" — block 6 (research/promote) and certain block-11 analytics excluded from signals-only.
-> - [`../_ssot-rules/05-building-block-dimensions.md`](../_ssot-rules/05-building-block-dimensions.md) block 11
+> - [`../_ssot-rules/05-building-block-dimensions.md`](../../14-customer-journeys/_ssot-rules/05-building-block-dimensions.md) block 11
 >   (analytics packs) — sub-scoped per analytic family.
-> - [`../_ssot-rules/07-data-licensing-boundaries.md`](../_ssot-rules/07-data-licensing-boundaries.md) — enriched
+> - [`../_ssot-rules/07-data-licensing-boundaries.md`](../../14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md) — enriched
 >   analytics are always sellable; anything that exposes raw data is not.
-> - [`../_ssot-rules/03-same-system-principle.md`](../_ssot-rules/03-same-system-principle.md) — research ≡ live
+> - [`../_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md) — research ≡ live
 >   infrastructure; the same service produces the analytic in both contexts (when the lineage is available).
 > - [`stage-3b-instruction-schema-contract.md`](stage-3b-instruction-schema-contract.md) §1 "What Odum does NOT need" —
 >   the upstream IP that signals-only clients do NOT send is precisely the lineage certain analytics require.

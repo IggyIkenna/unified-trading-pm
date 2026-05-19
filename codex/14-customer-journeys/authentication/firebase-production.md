@@ -31,7 +31,7 @@ When a prospect commits:
 3. Ops creates the fund structure (Pooled or SMA) per signed mandate.
 4. Ops creates client record(s) under the fund.
 5. Ops generates fresh API keys per client (never shared across clients — see
-   [cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md)).
+   [cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md)).
 6. Ops creates the user(s) in production Firebase — one user per person who will sign in, not per client entity.
 7. Ops assigns entitlements matching the paid package.
 8. Ops triggers Firebase password reset → user sets own password.
@@ -92,9 +92,9 @@ trip. Tracked in [../roadmap/next-waves.md](../roadmap/next-waves.md).
 ## Related
 
 - [firebase-staging.md](firebase-staging.md) — always test there first
-- [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md) — what the provisioning structure
+- [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md) — what the provisioning structure
   means
-- [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md) — how entitlements slice the UI
+- [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md) — how entitlements slice the UI
 - Internal-auth (service-to-service, not user):
   [../../07-security/service-to-service-auth.md](../../07-security/service-to-service-auth.md)
 - Secrets management: [../../07-security/secrets-management.md](../../07-security/secrets-management.md)

@@ -309,7 +309,7 @@ controls + post-trade kill-switch triggers — wallet-tier is the FINEST-grain s
 
 - [ ] **E.2.1** Populate `SpendingCaps(per_tx_usd, per_hour_usd, per_day_usd, per_protocol_usd)` per wallet at
       provisioning time. Source: per-archetype risk budget per
-      [`risk_simulations_limits_alerting_2026_05_10.md`](../../plans/active/risk_simulations_limits_alerting_2026_05_10.md).
+      [`risk_simulations_limits_alerting_2026_05_10.md`](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md).
 - [ ] **E.2.2** Reconcile caps against per-venue / per-archetype caps. Per-wallet must be `≤` per-archetype cap;
       per-archetype must be `≤` per-asset_group cap (closed-set hierarchy).
 - [ ] **E.2.3** Verify position-balance-monitor rolling-window accumulators consume `SpendingCaps`. (Plan Phase 4.A

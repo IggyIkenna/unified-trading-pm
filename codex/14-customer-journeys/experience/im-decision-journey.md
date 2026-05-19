@@ -141,6 +141,6 @@ IM demo on staging Firebase, with a demo user provisioned to the IM flavour enti
   paragraph expands from the IM one-liner
 - Impl-layer briefing: [../playbooks/02a-research-im.md](../playbooks/02a-research-im.md)
 - Downstream demo: [../playbooks/03b-demo-im.md](../playbooks/03b-demo-im.md)
-- Client-reporting cross-cutting doc: [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md)
-- SMA vs Pooled: [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md)
+- Client-reporting cross-cutting doc: [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)
+- SMA vs Pooled: [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md)
 - Playwright spec: `unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts` (IM persona)

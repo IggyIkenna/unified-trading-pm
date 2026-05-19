@@ -11,7 +11,7 @@ re-discovering context that's already in an existing plan or memory entry.
 
 | Wave item                         | Reference                                                                                                                                  | Location                                |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| 1a. Staging Firebase              | [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/active/five_space_ia_execution_child_plan_2026_04_17.md) ticket #12      | Active plan                             |
+| 1a. Staging Firebase              | [five_space_ia_execution_child_plan_2026_04_17.md](../../../plans/ai/five_space_ia_execution_child_plan_2026_04_17.md) ticket #12      | Active plan                             |
 | 1a. Firebase staging details      | [docs/FIREBASE_ENVIRONMENTS.md](../../../../unified-trading-system-ui/docs/FIREBASE_ENVIRONMENTS.md)                                       | UI repo docs                            |
 | 1a. Staging build template        | [config/docker-build.env.staging.firebase.example](../../../../unified-trading-system-ui/config/docker-build.env.staging.firebase.example) | UI repo config                          |
 | 1b. Demo personas                 | [lib/auth/personas.ts](../../../../unified-trading-system-ui/lib/auth/personas.ts)                                                         | Current fixture (5 + 3 IR = 8 personas) |
@@ -27,11 +27,11 @@ re-discovering context that's already in an existing plan or memory entry.
 | 2a. Data capability declarations   | `unified-api-contracts/registry/capability_declarations/`                                                                            | UAC repo               |
 | 2a. Availability manifest v4       | MEMORY.md / CLAUDE.md                                                                                                                | Conversation           |
 | 2b. UTL ml/ sub-package            | [unified-trading-library ml/](https://)                                                                                              | UTL repo               |
-| 2b. ML Model Catalogue             | No dedicated doc yet; cross-linked from [catalogue-ml-model.md](../cross-cutting/catalogue-ml-model.md)                              | This SSOT              |
+| 2b. ML Model Catalogue             | No dedicated doc yet; cross-linked from [catalogue-ml-model.md](../playbook-concepts/catalogue-ml-model.md)                              | This SSOT              |
 | 2c. execution-service algo_library | [execution-service/algo_library/](https://)                                                                                          | Execution service repo |
-| 2c. Execution algos intro          | [catalogue-execution-algo.md](../cross-cutting/catalogue-execution-algo.md)                                                          | This SSOT              |
-| All catalogues pattern             | [catalogues.md](../cross-cutting/catalogues.md)                                                                                      | This SSOT              |
-| Strategy catalogue reference impl  | [catalogue-strategy.md](../cross-cutting/catalogue-strategy.md) + [09-strategy/architecture-v2/](../../09-strategy/architecture-v2/) | This SSOT + Codex      |
+| 2c. Execution algos intro          | [catalogue-execution-algo.md](../playbook-concepts/catalogue-execution-algo.md)                                                          | This SSOT              |
+| All catalogues pattern             | [catalogues.md](../playbook-concepts/catalogues.md)                                                                                      | This SSOT              |
+| Strategy catalogue reference impl  | [catalogue-strategy.md](../playbook-concepts/catalogue-strategy.md) + [09-strategy/architecture-v2/](../../09-strategy/architecture-v2/) | This SSOT + Codex      |
 
 ## Wave 3 — Fund / org / client
 
@@ -39,8 +39,8 @@ re-discovering context that's already in an existing plan or memory entry.
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | 3a. JWT claims                | [firebase-production.md](../authentication/firebase-production.md) gap section                                                                                                                                                                                               | This SSOT                       |
 | 3b. User-mgmt provisioning    | [user_management_merge_2026_03_23.plan.md](../../../plans/ai/user_management_merge_2026_03_23.plan.md)                                                                                                                                                                       | Active plan                     |
-| 3b. Fund / org / client model | [fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md)                                                                                                                                                                                                              | This SSOT                       |
-| 3b. SMA vs Pooled             | [sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md) + [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md) + [04-architecture/share-class-architecture.md](../../04-architecture/share-class-architecture.md) | This SSOT + active plan + codex |
+| 3b. Fund / org / client model | [fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md)                                                                                                                                                                                                              | This SSOT                       |
+| 3b. SMA vs Pooled             | [sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md) + [share_class_architecture_2026_04_01.plan.md](../../../plans/archive/share_class_architecture_2026_04_01.plan.md) + [04-architecture/share-class-architecture.md](../../04-architecture/share-class-architecture.md) | This SSOT + active plan + codex |
 | 3c. API key issuance          | [07-security/secrets-management.md](../../07-security/secrets-management.md), UTL ApiKeyReloader pattern                                                                                                                                                                     | Codex                           |
 
 ## Wave 4 — DART rebrand

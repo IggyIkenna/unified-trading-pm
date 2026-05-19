@@ -41,6 +41,6 @@ Stage 3B's registry reads restriction-profile identifiers defined here; Stage 3C
 
 - [`../_ssot-rules/`](../_ssot-rules/) — rules 02, 04, 05, 06, 07, 08, 09, 10
 - [`../experience/`](../experience/)
-- [`../infra-spec/stage-3b-uac-combo-rules.md`](../infra-spec/stage-3b-uac-combo-rules.md)
-- [`../infra-spec/stage-3c-derivation-engine.md`](../infra-spec/stage-3c-derivation-engine.md)
+- [`../infra-spec/stage-3b-uac-combo-rules.md`](../../16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md)
+- [`../infra-spec/stage-3c-derivation-engine.md`](../../16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md)
 - [`../../00-SSOT-INDEX.md`](../../00-SSOT-INDEX.md)

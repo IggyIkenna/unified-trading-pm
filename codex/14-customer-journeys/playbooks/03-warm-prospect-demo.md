@@ -62,7 +62,7 @@ Email link → odum-research.co.uk
 
 ## Visibility slicing
 
-THE core mechanism. See [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md).
+THE core mechanism. See [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md).
 
 | Role                 | What they see                                                                                                                            |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
@@ -85,7 +85,7 @@ Before a prospect can do pb3, an admin must:
 
 1. Sign in to user-management-ui on staging (admin persona)
 2. Create organisation for the demo — see
-   [../cross-cutting/fund-org-hierarchy.md](../cross-cutting/fund-org-hierarchy.md)
+   [../cross-cutting/fund-org-hierarchy.md](../playbook-concepts/fund-org-hierarchy.md)
 3. Decide pb3 flavour (IM / DART / Reg Umbrella / combo)
 4. Configure entitlements matching the flavour
 5. If IM or Reg Umbrella: pre-create the SMA/Pooled state so prospect can see the choice (or pre-lock one side to force
@@ -124,7 +124,7 @@ See [../authentication/firebase-staging.md](../authentication/firebase-staging.m
 - pb1: [01-marketing-pre-first-call.md](01-marketing-pre-first-call.md)
 - pb2: [02-research-and-documentation.md](02-research-and-documentation.md)
 - Auth: [../authentication/firebase-staging.md](../authentication/firebase-staging.md)
-- Slicing mechanism: [../cross-cutting/visibility-slicing.md](../cross-cutting/visibility-slicing.md)
-- Shared reporting (pb3a+pb3b): [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md)
-- SMA vs Pooled: [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md)
-- Four catalogues (pb3c): [../cross-cutting/catalogues.md](../cross-cutting/catalogues.md)
+- Slicing mechanism: [../cross-cutting/visibility-slicing.md](../playbook-concepts/visibility-slicing.md)
+- Shared reporting (pb3a+pb3b): [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)
+- SMA vs Pooled: [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md)
+- Four catalogues (pb3c): [../cross-cutting/catalogues.md](../playbook-concepts/catalogues.md)

@@ -123,6 +123,6 @@ Phase 0 is complete when ALL repos have:
 
 ## Related
 
-- [phase0_standards_enforcement.plan.md](../../unified-trading-pm/plans/archive/phase0_standards_enforcement.plan.md)
+- [phase0_standards_enforcement.plan.md](../../plans/archive/phase0_standards_enforcement.plan.md)
 - [quality-gates.md](quality-gates.md)
 - [integration-testing-layers.md](integration-testing-layers.md)

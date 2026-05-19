@@ -36,7 +36,7 @@ here rather than redefine. If a term is missing, add it.
 ## Catalogues
 
 The Odum platform has **four catalogues**, each an SSOT in service code, UAC, and UI. See
-[cross-cutting/catalogues.md](cross-cutting/catalogues.md) for the umbrella pattern.
+[cross-cutting/catalogues.md](playbook-concepts/catalogues.md) for the umbrella pattern.
 
 - **Data Catalogue** — Instruments × venues × data types × availability. SSOT in `instruments-service` +
   `market-tick-data-service` availability manifest + UAC capability declarations.
@@ -91,7 +91,7 @@ material.
 
 A separate section of the UI (`/investor-relations/*`) containing presentations (board / plan / IM / platform /
 regulatory / disaster recovery) intended for investors and advisors in Odum itself — NOT for prospects. See
-[cross-cutting/investor-relations.md](cross-cutting/investor-relations.md).
+[cross-cutting/investor-relations.md](playbook-concepts/investor-relations.md).
 
 ## Related codex
 

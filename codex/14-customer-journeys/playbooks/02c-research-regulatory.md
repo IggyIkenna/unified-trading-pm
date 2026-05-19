@@ -38,11 +38,11 @@ Deep-briefing content covering:
    officer, and supervision oversight. The client firm runs day-to-day operations.
 
 4. **Client reporting** — **same reporting surface** as the IM playbook (see
-   [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md)). Umbrella clients use Odum's reporting
+   [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md)). Umbrella clients use Odum's reporting
    infrastructure for regulatory filings, investor reporting, performance reporting — everything.
 
 5. **Fund structure options** — Pooled vs SMA (see
-   [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md)). Same structural decision as IM.
+   [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md)). Same structural decision as IM.
 
 6. **Regulatory events + audit trail** — MiFID II trade reporting, best-execution checking, event bus for audit.
 
@@ -69,8 +69,8 @@ The regulatory briefing transcludes or references (never duplicates):
 - [../../07-security/compliance.md](../../07-security/compliance.md) — MiFID II / FCA / MLRO / ARM
 - [../../04-architecture/capital-structure-and-regulatory.md](../../04-architecture/capital-structure-and-regulatory.md)
   — regulatory scope per activity
-- [../cross-cutting/client-reporting.md](../cross-cutting/client-reporting.md) — shared reporting surface
-- [../cross-cutting/sma-vs-pooled.md](../cross-cutting/sma-vs-pooled.md) — structural choice
+- [../cross-cutting/client-reporting.md](../playbook-concepts/client-reporting.md) — shared reporting surface
+- [../cross-cutting/sma-vs-pooled.md](../playbook-concepts/sma-vs-pooled.md) — structural choice
 
 ## IR presentations surfaced here
 

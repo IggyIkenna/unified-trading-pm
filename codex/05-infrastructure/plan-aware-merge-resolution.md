@@ -180,6 +180,6 @@ plan's stated direction. The operator confirms or redirects in one line.
 
 ## References
 
-- Plan: [`plans/active/per_agent_worktrees_2026_05_10.md`](../../plans/active/per_agent_worktrees_2026_05_10.md) Phase 3
+- Plan: [`plans/active/per_agent_worktrees_2026_05_10.md`](../../plans/archive/per_agent_worktrees_2026_05_10.md) Phase 3
 - Helper script: [`scripts/dev/slot-master-rebase.sh`](../../scripts/dev/slot-master-rebase.sh)
 - Sibling SSOT: [`per-tab-worktrees.md`](per-tab-worktrees.md)
