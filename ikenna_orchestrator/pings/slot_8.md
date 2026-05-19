@@ -1071,3 +1071,36 @@ Plan update: `features_service_qg_cleanup_2026_05_11.md` Phase 1.3 annotated wit
    ping in this file)
 
 **Work-split flip**: work_split_2026_05_18_ikenna.md slot-8 row updated.
+
+---
+
+## [slot 8 → main] 2026-05-19 — batch_live_symmetry overflow Probes 9+10 COMPLETE
+
+**ACK**: batch_live_symmetry Tab 8 overflow — all 3 SCRIPT P0 items done.
+
+**Shipped**:
+
+1. **Probe 9 (tenderly-fork)** — e2e-testing@`92f7503`
+   - Creates Tenderly VNet (chain_id=1 ETH mainnet) via `/vnets` API (old `/fork` endpoint 410 Gone)
+   - Verifies `eth_chainId=1` on fork RPC, then deletes VNet
+   - Paper mode only; `--waive-tenderly-fork` flag
+   - Matches pattern from `execution-service/tests/defi_execution/integration/conftest.py`
+
+2. **Probe 10 (rate-limits)** — e2e-testing@`92f7503`
+   - Hits public time/health endpoint on all 6 perp venue testnets (Bybit/Binance/OKX/Deribit/Hyperliquid/Aster)
+   - 429=FAIL; logs `X-RateLimit-*`/`Retry-After` headers; `--waive-rate-limits` flag
+   - Probe counters updated [X/7]→[X/10] across all existing probes
+
+3. **Plan flips** — PM@`dfa462779`
+   - Lines 656-659 in `batch_live_symmetry_2026_05_10.md` both ✅
+
+**Current Slot 8 state (2026-05-19 work split)**:
+
+- defi_catalogue: at 61/68 = 89.7%. All 7 remaining items BLOCKED (6C/6E=BLOCKED-OPERATOR, 6D=slot 3 owns,
+  8A/8B=BLOCKED-UPSTREAM, 8C=BLOCKED-OPERATOR/human-only). No actionable items.
+- defi_simulation_realism: ARCHIVED ✅
+- dex_perp: 2 items BLOCKED-OPERATOR-DECISION + DEFERRED. No actionable items.
+- hard_schema: DONE (uac@80aef10 2026-05-19) ✅
+- writegate Phase 6.8: already ✅ (instruments-service@29d511d) — prior slot shipped it.
+
+**Slot 8 status**: all assigned items done or blocked. Available for reallocation. Awaiting next dispatch.
