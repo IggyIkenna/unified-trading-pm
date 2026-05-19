@@ -125,9 +125,10 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          Sports (99,620 phantoms) + prediction (50) require operator approval per ≥1 week backfill rule. Launcher script
          (`launch-cross-asset-rescan-vm.sh`) not yet shipped. Unblocks when: (a) operator approves sports apply-flips +
          (b) launcher shipped. See plan at line 208-235 for details.
-5. - [ ] **gcs_migration_bundle Phase 3** — Complete remaining items in
-         `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (plan at 2026-05-15 overdue, 4.8 cal left). Read plan for
-         open `- [ ]` items. (infra 0.8×, ~6 = 4.8 cal)
+5. - [x] ✅ **gcs_migration_bundle Phase 4** — Consumer sweep audit complete. All production callsites already pass
+         `pipeline_mode=` (MTDS DefiManifestRecorder, MDPS record_empty_for_shard, instruments-service orchestrator,
+         features-service compute). PM@`22e23663` Phase 4 flipped DONE in plan. Phase 3 (VM fleet migration) =
+         [BLOCKED-OPERATOR] — requires operator to trigger + cost-audit first. Phases 6/9 unblock after Phase 3.
 
 **Part B — batch_live_symmetry Tabs 1–3** (plan at 34%, 19.7 cal left):
 
@@ -239,14 +240,21 @@ Status, Logs, Strategy, Kill-switch, Config.
 
 Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Focus on:
 
-1. - [x] ✅ **Strategy catalogue** — archetype × venue matrix in UAC; STRATEGY_REGISTRY + ArchetypeConfig SSOT. — uac@18bdc6e + uac@3cae1c2 (backfilled 2026-05-19)
-2. - [x] ✅ **Strategy IDs** — stable ID schema + `parse_strategy_id` / `format_strategy_id` canonical helpers. — uac@5083d65 (backfilled 2026-05-19)
-3. - [x] ✅ **Client model + accounts** — `CapitalAllocation` frozen dataclass + `CAPITAL_ALLOCATION_SEED` + `ClientDefinition` / `ClientRegistry` SSOT; 28 tests. — uac@3591037 + uac@3cae1c2 (backfilled 2026-05-19)
+1. - [x] ✅ **Strategy catalogue** — archetype × venue matrix in UAC; STRATEGY_REGISTRY + ArchetypeConfig SSOT. —
+         uac@18bdc6e + uac@3cae1c2 (backfilled 2026-05-19)
+2. - [x] ✅ **Strategy IDs** — stable ID schema + `parse_strategy_id` / `format_strategy_id` canonical helpers. —
+         uac@5083d65 (backfilled 2026-05-19)
+3. - [x] ✅ **Client model + accounts** — `CapitalAllocation` frozen dataclass + `CAPITAL_ALLOCATION_SEED` +
+         `ClientDefinition` / `ClientRegistry` SSOT; 28 tests. — uac@3591037 + uac@3cae1c2 (backfilled 2026-05-19)
 
 **Part B — simulation_scenarios_topology** (plan at 62%, 7.6 cal left):
 
-4. - [x] ✅ **Phase 3 — scenario-runner integration** — 3.E `AdversarialMatchingEngine` (RejectFills/LatencyInject/BookSpoof at fill boundary) + 3.F alerting `synthetic=True` suppression + risk/alerting consumers. — execution-service@d0ec76f1 + alerting@3c0d675 (Harsh slot 5, 2026-05-12; backfilled 2026-05-19)
-5. - [x] ✅ **Phase 4 — per-scenario fixture sets** — 10 `ScenarioOverlay` registry instances (2 CeFi + 6 DeFi + 2 cross_asset); SCENARIO_REGISTRY populated. — uac@33630a6 (slot 7 Day-2 2026-05-12; backfilled 2026-05-19)
+4. - [x] ✅ **Phase 3 — scenario-runner integration** — 3.E `AdversarialMatchingEngine`
+         (RejectFills/LatencyInject/BookSpoof at fill boundary) + 3.F alerting `synthetic=True` suppression +
+         risk/alerting consumers. — execution-service@d0ec76f1 + alerting@3c0d675 (Harsh slot 5, 2026-05-12; backfilled
+         2026-05-19)
+5. - [x] ✅ **Phase 4 — per-scenario fixture sets** — 10 `ScenarioOverlay` registry instances (2 CeFi + 6 DeFi + 2
+         cross_asset); SCENARIO_REGISTRY populated. — uac@33630a6 (slot 7 Day-2 2026-05-12; backfilled 2026-05-19)
 
 **Part C — defi_master Phase 2–3** (plan at 33%, 9.4 cal left):
 
