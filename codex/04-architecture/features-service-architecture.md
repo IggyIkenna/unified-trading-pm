@@ -153,22 +153,22 @@ hooks (`__init__`, `cleanup`, `_register_resource`, `_parse_date`) are the SSOT.
 cleanup errors route through UTL `classify_and_emit_error` with `_service_name` class var override (default
 `features-service`) so the EnhancedError envelope tags correctly per family.
 
-**Adoption status (2026-05-08):**
+**Adoption status (2026-05-19, all 8 families on UTL ModeHandler):**
 
-| Family             | Status                            | Pre-lift parent                                                               | Notes                                                                                                                                                                                                                                                                                                                                             |
-| ------------------ | --------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `volatility`       | UTL ModeHandler                   | local `features_service.volatility.cli.handlers.base_handler.ModeHandler`     | Migrated features-service@7335bbef; local copy deleted                                                                                                                                                                                                                                                                                            |
-| `delta_one`        | UTL ModeHandler                   | local `features_service.delta_one.cli.handlers.base_handler.ModeHandler`      | Migrated features-service@7335bbef; local copy deleted                                                                                                                                                                                                                                                                                            |
-| `onchain`          | UTL ModeHandler                   | local `features_service.onchain.cli.handlers.base_handler.ModeHandler`        | Migrated features-service@7335bbef; local copy deleted                                                                                                                                                                                                                                                                                            |
-| `sports`           | UTL ModeHandler                   | local `features_service.sports.cli.handlers.base_handler.ModeHandler`         | Migrated features-service@7335bbef; local copy deleted                                                                                                                                                                                                                                                                                            |
-| `commodity`        | bare `class BatchHandler:`        | none                                                                          | **Stays bare**: sync `run(start_date, end_date, commodity, dry_run)`; per-(commodity, day) shards; multi-factor compute with cross-factor coverage gating doesn't decompose to `enumerate_shards` + `compute_one_shard`. Adopting UTL ModeHandler would require either widening the ABC (distorting contract) or rewriting compute. Out of scope. |
-| `cross_instrument` | bare `class BatchHandler:`        | none                                                                          | **Stays bare**: async `run()` does `_ingest_data → _process_features → _gate_and_write` over feature_groups, NOT a per-shard fan-out. No natural shard_key axis. Force-fit would distort. Out of scope.                                                                                                                                           |
-| `multi_timeframe`  | bare `class BatchHandler:`        | none                                                                          | **Stays bare**: 109 LOC compact compute; doesn't share lifecycle with the 4 ModeHandler families. Adoption would add ceremony with no shared logic to lift. Out of scope.                                                                                                                                                                         |
-| `calendar`         | UTL `service_cli.BaseModeHandler` | UTL `unified_trading_library.service_cli.BaseModeHandler` (different lineage) | **Stays separate**: ServiceCLI-driven `args`+`runtime` injection lineage; not unified with `feature_service_base.ModeHandler` because the contract surfaces differ (config-driven vs CLI-args-driven). Out of scope.                                                                                                                              |
+| Family             | Status          | Pre-lift parent                                                               | Notes                                                                                                                                                       |
+| ------------------ | --------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `volatility`       | UTL ModeHandler | local `features_service.volatility.cli.handlers.base_handler.ModeHandler`     | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
+| `delta_one`        | UTL ModeHandler | local `features_service.delta_one.cli.handlers.base_handler.ModeHandler`      | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
+| `onchain`          | UTL ModeHandler | local `features_service.onchain.cli.handlers.base_handler.ModeHandler`        | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
+| `sports`           | UTL ModeHandler | local `features_service.sports.cli.handlers.base_handler.ModeHandler`         | Migrated features-service@7335bbef; local copy deleted                                                                                                      |
+| `commodity`        | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-commodity-service"`; QG green @519625f7                  |
+| `cross_instrument` | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` with `_service_name = "features-cross-instrument-service"`; QG green @519625f7           |
+| `multi_timeframe`  | UTL ModeHandler | bare `class BatchHandler:` (no parent)                                        | Tab 4 lift features-service@954fe85c — `BatchHandler(ModeHandler)` + `InfoHandler(ModeHandler)`; QG green @519625f7                                         |
+| `calendar`         | UTL ModeHandler | UTL `unified_trading_library.service_cli.BaseModeHandler` (pre-consolidation) | `CalendarBatchModeHandler(BaseModeHandler)` — already wired at consolidation (features-service@82abe801); Tab 4 confirmed alignment; QG green @519625f7     |
 
-The 3 bare-class families and `calendar` are documented design calls — the lift is **option α** for the 4 families with
-genuinely-overlapping local ABCs, NOT a force-fit across all 8. If a future bare-class family grows to need shared
-lifecycle, adoption is a small refactor (subclass + register resource + override `_service_name`); contract is open.
+All 8 families are now on UTL ModeHandler. The previous "bare class" and "stays separate" design notes are superseded by
+Tab 4 (batch_live_symmetry_2026_05_10.md). If a future bare-class family is added, adoption follows the same pattern:
+subclass `ModeHandler`, set `_service_name`, override `enumerate_shards` + `compute_one_shard`.
 
 **Cleanup-error envelope.** Subclasses MUST override `_service_name: str = "features-<family>-service"` so resource-
 cleanup failures surface in the right service tag in observability. Default falls back to `"features-service"` for
@@ -264,12 +264,11 @@ handler is not deployed. Sports features continue to run from batch GCS reads.
 **Calendar live-handler gating**: `features_service/calendar/cli/handlers/live_handler.py` is shipped but blocked on the
 economic-events PubSub feed going live (Phase 7 scope). Pre-cutover, calendar features run batch.
 
-### ModeHandler lift status — Tab 4 pending
+### ModeHandler lift status — Tab 4 COMPLETE (2026-05-19)
 
-The adoption table above (§ Canonical ModeHandler ABC) marks `commodity`, `cross_instrument`, `multi_timeframe`, and
-`calendar` as "bare class" or "separate lineage." These are being re-examined in `batch_live_symmetry_2026_05_10.md` Tab
-4 (features-service ModeHandler lift). If Tab 4 ships before cutover, the table above will flip those rows from
-`bare-class` to `UTL ModeHandler` — update this doc in the same logical unit as the Tab 4 commit.
+Tab 4 (`batch_live_symmetry_2026_05_10.md`) shipped at features-service@954fe85c (QG green @519625f7). All 8 families
+are now on UTL ModeHandler — the adoption table above (§ Canonical ModeHandler ABC) reflects the final state. No
+further bare-class families remain. Bare-class compat-path hard-delete scheduled post-prod-deploy (Tab 4 item 7).
 
 ## Migration history
 
