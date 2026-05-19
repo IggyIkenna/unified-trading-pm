@@ -34,6 +34,34 @@ running QG — PBM's per-family layout triggers the override rule.
 Architectural-collision P1 callout: existing `strategy_service/models/{position,pnl}.py` will coexist with new
 `strategy_service/{position,pnl}/` sub-packages. Layout-confusion only; defer absorption decision to follow-up.
 
+**Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 4 scope extension, +1 cal-day total):
+
+- **P0 Phase 4 (a-extension)** — e2e-testing scripts BEYOND Python imports (~0.5 cal-day). After you finish the
+  7-file Python `import` rewrite, grep these directories for shell + non-import invocations:
+
+  ```bash
+  rg -nF -e 'risk_and_exposure_service' -e 'position_balance_monitor_service' -e 'pnl_attribution_service' \
+        -e 'risk-monitor' -e 'position-monitor' -e 'position-monitor-std' -e 'pnl-attribution' -e 'pnl-attribution-std' \
+     e2e-testing/scripts/ system-integration-tests/scripts/ 2>/dev/null
+  rg -n 'python -m (risk_and_exposure|position_balance_monitor|pnl_attribution)_service' \
+     e2e-testing/ system-integration-tests/ 2>/dev/null
+  ```
+
+  Rewrite ALL hits to `python -m strategy_service --operation <op>`. **Do NOT preserve console-script aliases**
+  (operator decision 2026-05-19 — full cutover, no shims).
+
+- **P1 Phase 4 (i)** — Logging + observability config consolidation (~0.5 cal-day). After Phase 4 (b-h) ships:
+  - Per-sub-package logger naming: `strategy_service.risk`, `strategy_service.position`, `strategy_service.pnl`,
+    `strategy_service.engine` (use `logging.getLogger(__name__)` — gets the right namespace automatically; just
+    verify no source repo has `logging.getLogger("risk_and_exposure_service")` hardcoded).
+  - OpenTelemetry: `service.name=strategy-service` + `subsurface={risk,position,pnl,strategy}` label dimension
+    on emitted spans + metrics. Each source repo's `setup_telemetry()` callsite (or equivalent) gets the new
+    label.
+  - Prometheus / Cloud Trace exporters: confirm post-merge metrics emit with the consolidated `service.name`;
+    spot-check a kill-switch trip event flowing end-to-end to the observability backend.
+  - **Coordinate with slot 5** — if `ConfigReloaderBase` lift surfaces a shared logger-config pattern, lift that
+    too.
+
 Ack with `[ack] slot 4 booted` when you start Phase 3.
 
 ---

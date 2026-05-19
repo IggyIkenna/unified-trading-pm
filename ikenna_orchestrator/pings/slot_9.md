@@ -54,4 +54,51 @@ their UTL PR lands, your Phase 5 can absorb ml-service's config_reloaders into t
 - Codex stub already created: [`codex/04-architecture/ml-service-architecture.md`](../../codex/04-architecture/ml-service-architecture.md) — currently `status: stub`; promote to `stable` in Phase 9 after merge ships.
 - Boot fresh per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`.
 
+**Gap-close addendum 2026-05-19 ~14:45 UTC** (revised total: ~7.2 cal-AI-days; bundled into your existing scope):
+
+- **P0 Phase 4 (a-extension)** — e2e-testing shell scripts beyond Python imports (~0.25 cal-day). Pre-audit
+  § (b) found ~3-4 Python `import` updates; shell-script invocations not audited:
+
+  ```bash
+  rg -nF -e 'ml_training_service' -e 'ml_inference_service' -e 'ml-training-service' -e 'ml-inference-service' \
+     e2e-testing/scripts/ system-integration-tests/scripts/ 2>/dev/null
+  rg -n 'python -m ml_(training|inference)_service' e2e-testing/ system-integration-tests/ 2>/dev/null
+  ```
+
+  Rewrite to `python -m ml_service --operation <op>`.
+
+- **P1 Phase 4 (i)** — Logging + observability consolidation (~0.5 cal-day). Mirrors strategy-twin slot 4:
+  per-sub-package logger naming (`ml_service.training`, `ml_service.inference` via `logging.getLogger(__name__)`);
+  OpenTelemetry `service.name=ml-service` + `subsurface={training,inference}` labels; Prometheus + Cloud Trace
+  consolidation. **Coordinate with slot 4** if `ConfigReloaderBase` lift surfaces shared logger-config patterns.
+
+- **P2 Phase 3 addendum** — Drop source-repo `docs/` during subtree-merge (5-min addendum to recipe). Record
+  in DEPRECATION_NOTICE.md: "docs/ content not migrated — see `codex/04-architecture/ml-service-architecture.md`."
+
+- **P2 Phase 2 + 8A addendum** — GitHub Actions workflows (~0.25 cal-day). Phase 2 (g) seeds ml-service with
+  templated workflows. ADD: enumerate any per-source-repo CUSTOM workflows (cron-scheduled retraining,
+  scheduled model-bake jobs) NOT in the rollout template; migrate to ml-service or confirm obsolete.
+
+- **P3 Phase 7 addendum** — Per-repo markdown files (~0.1 cal-day). Each source repo carries `CHANGELOG.md`,
+  `QUALITY_GATE_BYPASS_AUDIT.md`, `CONTRIBUTING.md`. Decision: prepend each `CHANGELOG.md` to
+  `ml-service/CHANGELOG.md` under `## Consolidation 2026-05-19` heading; merge `QUALITY_GATE_BYPASS_AUDIT.md`
+  rows per sub-package; preserve only workspace-canonical `CONTRIBUTING.md`.
+
+- **P3 Phase 2 addendum — GitHub repo settings on NEW ml-service repo** (~0.1 cal-day). After Phase 2 (a)
+  `gh repo create`: configure branch protection on `main`:
+
+  ```bash
+  gh api repos/IggyIkenna/ml-service/branches/main/protection -X PUT \
+     -f required_status_checks[strict]=true \
+     -f required_status_checks[contexts][]='quality-gates' \
+     -f required_status_checks[contexts][]='workspace-qg' \
+     -f required_status_checks[contexts][]='staging-lock-check' \
+     -F enforce_admins=true \
+     -F required_pull_request_reviews[required_approving_review_count]=1 \
+     -F allow_force_pushes=false
+  ```
+
+  Also seed `.github/semver-agent.yml` per workspace template (copy from
+  `unified-trading-pm/scripts/workflow-templates/semver-agent.yml.tmpl`).
+
 Ack with `[ack] slot 9 booted` once you've read the plan + pre-audit and started Phase 0.5 (FeatureSubscriber rename).

@@ -21,6 +21,14 @@ resolution → UAC/UTL schema prep → in-place scaffold. **You unblock slot 4.*
 - Drop pnl's `pre-commit` in favour of `prek>=0.3.0` workspace-wide
 - Carry over editable `[tool.uv.sources.market-tick-data-service]` from PBM
 
+**Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 3 scope, +0.05 cal-day):
+
+- **Drop source-repo `docs/` during subtree-merge.** The Phase 3 `git read-tree --prefix=strategy_service/<sub>/`
+  recipe pulls package + tests + scripts only. `docs/` intentionally NOT merged — codex is workspace SSOT.
+  When you draft the DEPRECATION_NOTICE.md banner template (slot 6 owns the actual write in Phase 7), pass
+  forward this line: "docs/ content not migrated — see `codex/04-architecture/strategy-service-architecture.md`
+  and related codex pages."
+
 Ack with `[ack] slot 3 booted` once you've read the plan + pre-audit and started Phase 0.5.
 
 ---

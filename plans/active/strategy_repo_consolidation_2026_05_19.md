@@ -463,6 +463,63 @@ Pre-audit artifact:
   `pnl-attribution-std`). Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any
   launcher / cron / VM bootstrap script invoking the legacy command names; rewrite in Phase 8A.
 
+### Gap-close 2026-05-19 — coverage amendments (post-dispatch audit)
+
+Operator-validation question 2026-05-19 surfaced 4 gaps in the original 10-phase scope. Closing them now
+(before slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
+
+- [ ] **P0 NEW** [AGENT slot 4] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a)
+  currently covers the 7 `import`-consumer files from pre-audit § (b). Add: grep `e2e-testing/scripts/{defi,sports,prediction}/`
+  + `system-integration-tests/scripts/` + `e2e-testing/scripts/*.sh` for (i) shell invocations of
+  `python -m {risk_and_exposure,position_balance_monitor,pnl_attribution}_service`, (ii) console-script names
+  (`risk-monitor`, `position-monitor`, `pnl-attribution`, etc.), (iii) bare-Python entry-point invocations.
+  Rewrite to `python -m strategy_service --operation <op>`. Slot 4 extends Phase 4 (a) by ~0.5 cal-day.
+- [ ] **P0 NEW** [AGENT slot 7] Phase 8A — Console-script alias audit (PROMOTED from P2 to P0). Source repos
+  define `[project.scripts]`: `risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`,
+  `pnl-attribution-std`. These are invoked by name in deployment-service launchers, cron schedules, VM
+  bootstrap scripts, e2e-testing scripts, docs. **Decision: full cutover, no shim aliases in strategy-service
+  `[project.scripts]`** — launchers + cron are workspace-owned and rewriting them is the cleanest path.
+  Slot 7 bundles this into Phase 8A launcher migration; ~0.5 cal-day extension.
+- [ ] **P1 NEW** [AGENT slot 4] Phase 4 (i) — Logging + observability config consolidation. Per-service
+  `setup_events()` callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package
+  logger naming (`strategy_service.risk` / `strategy_service.position` / `strategy_service.pnl` /
+  `strategy_service.engine`) for filterability. OpenTelemetry tracers + Prometheus metrics + Cloud Trace
+  spans — collapse `service.name=<source-repo>` labels to `service.name=strategy-service` and add
+  `subsurface={risk,position,pnl,strategy}` label dimension. ServiceBootstrap in Phase 4 (e) already covers
+  lifecycle-event emission; this is the parallel pass for log + metric + trace infra. Slot 4 extends Phase 4
+  by ~0.5 cal-day.
+- [ ] **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
+  subtree-merge. `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/`
+  pulls package + tests + scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in
+  each archived source repo's `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
+  `codex/04-architecture/strategy-service-architecture.md` and related codex pages." 1-line addendum to
+  Phase 3 recipe; <5 min work.
+- [ ] **P2 NEW** [AGENT slot 7] Phase 8A addendum — GitHub Actions workflows in source repos going dark.
+  Each archived repo carries ~9 workflow files (~27 total across risk + position + pnl). Most are templated
+  copies (`workspace-qg.yml`, `semver-agent.yml`, `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) that
+  strategy-service already has via `rollout-workflow-templates.sh` — those just go dark with the repo, no
+  action needed. **Audit task**: enumerate any per-repo CUSTOM workflows (cron-scheduled checks, scheduled
+  data-pulls, scheduled VM-launchers) that AREN'T templated. For each: (a) migrate the cron schedule to a
+  strategy-service workflow with `--operation` axis, OR (b) confirm the workflow's purpose is obsolete
+  post-merge. Slot 7 ownership; ~0.5 cal-day. Workflow templates SSOT:
+  `unified-trading-pm/scripts/workflow-templates/`.
+- [ ] **P3 NEW** [AGENT slot 6] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
+  QUALITY_GATE_BYPASS_AUDIT.md / IMPLEMENTATION_VERIFICATION.md / UV_AND_DATABASE_UPDATES.md /
+  QUALITY_GATES_REPORT.md). Each source repo has these. Post-merge decision: (a) `CHANGELOG.md` content
+  prepended to `strategy-service/CHANGELOG.md` under "## Consolidation 2026-05-19" heading; (b)
+  `QUALITY_GATE_BYPASS_AUDIT.md` content merged into strategy-service's QGBA per service-sub-package row; (c)
+  `IMPLEMENTATION_VERIFICATION.md` + `QUALITY_GATES_REPORT.md` + ad-hoc per-repo markdown — dropped (one-shot
+  audit snapshots, not load-bearing). Slot 6 owns this as Phase 7 cleanup (~0.25 cal-day).
+- [ ] **P3 NEW** [AGENT slot 7] Phase 8A addendum — GitHub repo settings (branch protection rules + required
+  status checks + semver-agent config) on archived source repos do NOT auto-migrate. strategy-service ALREADY
+  has its own settings — verify post-archive that strategy-service required-checks reflects the consolidated
+  workflow set (no orphan required-check names pointing at archived repos' workflows). Slot 7 owns as Phase
+  8A finalisation (~0.1 cal-day; usually a 1-line `gh api repos/.../branches/main/protection -X PATCH` if any
+  drift found).
+
+**Total gap-close additions**: ~2.35 cal-AI-days bundled into existing slots (no new slot needed). Slot 3 +0.05,
+slot 4 +1, slot 6 +0.25, slot 7 +1.1.
+
 ### Risk register additions (post-audit)
 
 | Risk                                                                              | Severity   | Mitigation                                                                                                                       |

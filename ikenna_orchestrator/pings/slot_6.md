@@ -31,6 +31,21 @@ sub-packages remain merged (correctness preserved), source repos remain un-archi
 - Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-6-parity-test`, `phase-7-archive-source-repos`.
 - Pre-audit: [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 
+**Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 7 scope, +0.25 cal-day):
+
+- **P3 Per-repo markdown files** — each source repo carries `CHANGELOG.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
+  `IMPLEMENTATION_VERIFICATION.md`, `UV_AND_DATABASE_UPDATES.md`, `QUALITY_GATES_REPORT.md`. Pre-archive
+  decision:
+  - `CHANGELOG.md` from each source repo → PREPEND to `strategy-service/CHANGELOG.md` under a new heading
+    `## Consolidation 2026-05-19 — risk + position + pnl absorbed`. Preserve provenance.
+  - `QUALITY_GATE_BYPASS_AUDIT.md` from each source repo → MERGE per-bypass row into strategy-service's
+    consolidated QGBA. Tag each bypass with `[merged from risk-and-exposure-service]` etc. for audit trail.
+  - `IMPLEMENTATION_VERIFICATION.md` + `QUALITY_GATES_REPORT.md` + `UV_AND_DATABASE_UPDATES.md` — one-shot
+    audit snapshots, NOT load-bearing. DROP (they're preserved in the archived repo's git history if
+    needed).
+  - `DEPRECATION_NOTICE.md` in each archived repo references the codex SSOT
+    (`codex/04-architecture/strategy-service-architecture.md`) per slot 3's Phase 3 addendum.
+
 Ack with `[ack] slot 6 booted` when slot 4 Phase 4 ships.
 
 ---

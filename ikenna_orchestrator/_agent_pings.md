@@ -29,6 +29,9 @@ SECOND main agent in another tab; two main agents can divide the ledger using a
 Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Process" — Plan-of-record + Q&A bus / Ping ledger / Polling cadence subsections.
 -->
 
+[2026-05-19 15:00 UTC] slot-1-main → ALL Ikenna slots — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack in your slot_<N>.md ping file once your tab is clean.
+
+
 # Active pings
 
 <!-- 2026-05-19 cycle-close: all Cycle 2 entries (2026-05-12 → 2026-05-18) archived. Superseded by work_split_2026_05_19_ikenna.md. Booting agents: read your work-split — do NOT act on archived entries here. -->

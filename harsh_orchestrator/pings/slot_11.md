@@ -1,3 +1,7 @@
+[2026-05-19 15:00 UTC] slot-1-main → slot 11 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+
+---
+
 # Slot 11 ping log
 
 

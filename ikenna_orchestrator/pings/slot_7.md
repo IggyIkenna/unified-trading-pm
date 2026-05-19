@@ -31,6 +31,51 @@ prefixes). Update DART UI service-list to show strategy-service as single entry 
 `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`). Audit launcher / cron / VM
 bootstrap scripts invoking legacy names; rewrite to `python -m strategy_service --operation <op>`.
 
+**Gap-close addendum 2026-05-19 ~14:45 UTC** (Phase 8A scope extensions, +1.1 cal-day total):
+
+- **P0 PROMOTED Console-script alias audit** (was P2 #9 in plan, now P0 — bundled into your Phase 8A scope).
+  Full workspace grep for the 5 console-script names + their bare-Python equivalents:
+
+  ```bash
+  rg -nF -e 'risk-monitor' -e 'position-monitor' -e 'position-monitor-std' \
+        -e 'pnl-attribution' -e 'pnl-attribution-std' \
+     deployment-service/ unified-trading-pm/ codex/ 2>/dev/null
+  rg -n 'python -m (risk_and_exposure|position_balance_monitor|pnl_attribution)_service' \
+     deployment-service/ unified-trading-pm/scripts/ 2>/dev/null
+  ```
+
+  **Decision: full cutover — no shim aliases in strategy-service `[project.scripts]`** (operator alignment
+  2026-05-19). Rewrite every callsite to `python -m strategy_service --operation <op>`. Slot 4's
+  Phase 4 (a-extension) covers e2e-testing scripts; you cover deployment-service + workspace docs.
+
+- **P2 GitHub Actions workflows in source repos going dark** (~0.5 cal-day). Each archived repo carries ~9
+  workflow files (~27 total). Most are templated (`workspace-qg.yml`, `semver-agent.yml`,
+  `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) — strategy-service already has these via
+  `rollout-workflow-templates.sh`; they just go dark with the archived repo. **Audit task**:
+
+  ```bash
+  for repo in risk-and-exposure-service position-balance-monitor-service pnl-attribution-service; do
+    ls "${WORKSPACE_ROOT}/${repo}/.github/workflows/"
+    diff <(ls "${WORKSPACE_ROOT}/${repo}/.github/workflows/") \
+         <(ls "${WORKSPACE_ROOT}/unified-trading-pm/scripts/workflow-templates/")
+  done
+  ```
+
+  For any per-repo CUSTOM workflows (cron-scheduled checks, scheduled data-pulls, scheduled VM-launchers):
+  (a) migrate the cron schedule to a strategy-service workflow with `--operation` axis, OR (b) confirm the
+  workflow's purpose is obsolete post-merge. Workflow-template SSOT:
+  `unified-trading-pm/scripts/workflow-templates/`.
+
+- **P3 GitHub repo settings — strategy-service required-check audit** (~0.1 cal-day). strategy-service already
+  has its own branch protection. Verify post-archive that the required-check names on
+  `protection/required_status_checks/contexts` don't reference dead workflows from archived repos:
+
+  ```bash
+  gh api repos/IggyIkenna/strategy-service/branches/main/protection --jq '.required_status_checks.contexts'
+  ```
+
+  Patch via `gh api ... -X PATCH` if drift found.
+
 - Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todo `phase-8a-launcher-migration`.
 - Pre-audit § (h): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 

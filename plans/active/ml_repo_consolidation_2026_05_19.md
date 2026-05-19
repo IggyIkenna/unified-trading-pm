@@ -442,6 +442,48 @@ Pre-audit artifact:
       `create_s2s_auth_dependency("ml-service")` BUT downstream callers in deployment-api / strategy-service may pass
       the old service names in S2S tokens. Audit S2S token issuance + verification cutover.
 
+### Gap-close 2026-05-19 — coverage amendments (post-dispatch audit)
+
+Operator-validation question 2026-05-19 surfaced 4 gaps in the original 10-phase scope. Closing now before
+slot 9 boots. All amendments bundle into slot 9's existing scope (~1.5 cal-day extension total).
+
+- [ ] **P0 NEW** [AGENT slot 9] Phase 4 (a-extension) — e2e-testing scripts beyond Python imports. Phase 4 (a)
+  covers ~3-4 string-literal updates from pre-audit § (b). Add: grep `e2e-testing/scripts/` +
+  `system-integration-tests/scripts/` + `e2e-testing/scripts/*.sh` for (i) shell invocations of
+  `python -m ml_{training,inference}_service`, (ii) any console-script names, (iii) bare-Python entry-point
+  invocations. Rewrite to `python -m ml_service --operation <op>`. ~0.25 cal-day.
+- [ ] **P1 NEW** [AGENT slot 9] Phase 4 (i) — Logging + observability config consolidation. Per-service
+  `setup_events()` callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package
+  logger naming (`ml_service.training` / `ml_service.inference`) for filterability. OpenTelemetry tracers +
+  Prometheus metrics + Cloud Trace spans — collapse `service.name=ml-{training,inference}-service` to
+  `service.name=ml-service` and add `subsurface={training,inference}` label dimension. Mirrors strategy-twin
+  Phase 4 (i); coordinate label naming via slot 4 (ConfigReloaderBase + log-naming might share UTL surface).
+  ~0.5 cal-day.
+- [ ] **P2 NEW** [AGENT slot 9] Phase 3 addendum — Drop source-repo `docs/` subdirectories during
+  subtree-merge. `git read-tree --prefix=ml_service/<sub>/` pulls package + tests + scripts only; `docs/`
+  intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
+  `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
+  `codex/04-architecture/ml-service-architecture.md`."
+- [ ] **P2 NEW** [AGENT slot 9] Phase 2 addendum + Phase 8A addendum — GitHub Actions workflows. Phase 2 (g)
+  already runs `rollout-workflow-templates.sh` to seed ml-service with templated workflows. Add: enumerate any
+  per-source-repo CUSTOM workflows (cron-scheduled checks, scheduled retraining jobs, scheduled model-bake
+  workflows) in source repos that AREN'T in the rollout template. For each: (a) migrate to ml-service workflow
+  with `--operation` axis, OR (b) confirm purpose obsolete post-merge. ~0.25 cal-day.
+- [ ] **P3 NEW** [AGENT slot 9] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
+  QUALITY_GATE_BYPASS_AUDIT.md / CONTRIBUTING.md / per-source-repo notes). Decision: (a) `CHANGELOG.md`
+  content prepended to `ml-service/CHANGELOG.md` under "## Consolidation 2026-05-19" heading; (b)
+  `QUALITY_GATE_BYPASS_AUDIT.md` merged into ml-service's QGBA per sub-package row; (c) `CONTRIBUTING.md` +
+  ad-hoc per-repo markdown — preserve only the workspace-canonical version in ml-service root. ~0.1 cal-day.
+- [ ] **P3 NEW** [AGENT slot 9] Phase 2 addendum — GitHub repo settings on NEW ml-service repo. Phase 2 (a)
+  creates the repo via `gh repo create`. Add: configure branch protection on `main` (require `quality-gates`
+  + `workspace-qg` + `staging-lock-check` status checks); enable semver-agent (write
+  `.github/semver-agent.yml` per workspace template); enable required PR reviews; disable force-push on
+  protected branches. Cross-reference: `unified-trading-pm/scripts/workflow-templates/` for the canonical
+  template set. ~0.1 cal-day.
+
+**Total gap-close additions**: ~1.2 cal-AI-days bundled into slot 9's existing 6 cal-day budget → revised
+estimate ~7.2 cal-AI-days for ML consolidation. Still single-slot ownership; no new slot needed.
+
 ### Risk register additions (post-audit)
 
 | Risk                                                                         | Severity  | Mitigation                                                                                                                              |

@@ -1,3 +1,7 @@
+[2026-05-19 15:00 UTC] slot-1-main → slot 5 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
+
+---
+
 > **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
 > `plans/active/work_split_2026_05_19_harsh.md` § Slot 5 for your tasks today. This file is kept for audit trail only.
 
