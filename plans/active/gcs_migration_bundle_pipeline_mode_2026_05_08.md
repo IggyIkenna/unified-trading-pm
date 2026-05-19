@@ -454,9 +454,9 @@ todos:
 
   - id: phase-5-reader-fallback-paths
     content: |
-      - [ ] [AGENT] P0. Phase 5 — Reader fallback paths during the migration window. PARALLEL with Phase 3.
+      - [x] [AGENT] P0. Phase 5 — Reader fallback paths during the migration window. PARALLEL with Phase 3.
 
-        **5.1 SHIPPED 2026-05-08 (unified-trading-library@52f123d6); 5.2 + 5.3 deferred to follow-up sub-agents.**
+        **5.1 SHIPPED 2026-05-08 (unified-trading-library@52f123d6); 5.2 SHIPPED 2026-05-19 (market-tick-data-service@33b2ae5); 5.3 SHIPPED 2026-05-19 (unified-api-contracts@fefd720).**
         UTL `read_manifest_with_source_priority(...)` reader landed in
         `unified_trading_library/manifest_reader_fallback.py` (NEW module, 356 lines) + 11 unit tests in
         `tests/unit/test_reader_fallback_chain.py` (469 lines). Public API: `read_manifest_with_source_priority`,
@@ -810,8 +810,8 @@ session. Phases shipped on `live-defi-rollout`:
 
 - Phase 3 — Operator-gated VM execution (operator runs after Phase 0 audit results in §§(b)(c)(d)(e)(h)).
 - Phase 4 — Workspace-wide consumer sweep (parallel with Phase 3 per plan DAG).
-- Phase 5.2 — MTDS / MDPS path probers fallback (separate sub-agent).
-- Phase 5.3 — Sports + DeFi `candidate_parquet_paths` extension (separate sub-agent).
+- ✅ Phase 5.2 — MTDS path prober fallback — market-tick-data-service@33b2ae5 (2026-05-19).
+- ✅ Phase 5.3 — Sports + cross-asset `candidate_parquet_paths` extension — unified-api-contracts@fefd720 (2026-05-19).
 - Phase 6 — Residual phantom cleanup (sequential after Phase 3.6).
 - Phase 8 — Reader fallback removal (T+30d, ~2026-06-15).
 - Phase 9 — Final workspace-wide QG sweep (sequential after Phase 6).
