@@ -76,10 +76,9 @@ todos:
         - [ ] Add agent-orchestrator/.firebaserc with hosting targets prod=agent-orchestrator-prod-site, uat=agent-orchestrator-uat-site (both under central-element-323112 firebase project)
         - [ ] dashboard/vite.config.ts: confirm build output goes to a Firebase-Hosting-friendly path (dist/ → public/ relative to firebase.json)
         - [ ] First `firebase deploy --only hosting:uat` from local laptop
-        - [ ] [HUMAN] Operator (Ikenna): Firebase Console → Hosting → uat target → Add custom domain `agent-orchestrator.staging.odum-research.com` — Firebase returns 2 DNS records (A or CNAME)
-        - [ ] [HUMAN] Operator (Ikenna): paste those records into odum-research.com DNS provider (provider TBD — operator will identify at Phase 2 kickoff)
-        - [ ] [HUMAN] Wait ≤15min after DNS propagates for Firebase to auto-issue Let's Encrypt SSL
-        - [ ] Repeat for prod: agent-orchestrator.odum-research.com → prod target
+        - [x] ✅ [HUMAN] Operator (Ikenna): Firebase Console → Hosting → created sites `agent-orchestrator-uat-site` + `agent-orchestrator-prod-site` via CLI; added custom domains `agent-orchestrator.staging.odum-research.com` + `agent-orchestrator.odum-research.com` — Firebase returned CNAME records 2026-05-19
+        - [x] ✅ [HUMAN] Operator (Ikenna): pasted CNAME records into Squarespace DNS (odum-research.com) — `agent-orchestrator.staging` → `agent-orchestrator-uat-site.web.app`; `agent-orchestrator` → `agent-orchestrator-prod-site.web.app` — 2026-05-19
+        - [ ] [HUMAN] Wait for Firebase to verify DNS + auto-issue SSL (polling; check Firebase Console → Hosting for green Connected status on both domains)
       Full-execution criterion: browser loads https://agent-orchestrator.staging.odum-research.com → dashboard renders, /api/healthz returns 200 via SSL, sign-in page appears. SSL cert issued by Google (subject CN matches subdomain). Verified via: `openssl s_client -connect agent-orchestrator.staging.odum-research.com:443 -servername agent-orchestrator.staging.odum-research.com </dev/null 2>/dev/null | openssl x509 -noout -subject -issuer`.
     status: todo
 
