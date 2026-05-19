@@ -298,13 +298,12 @@ Read `cross_cutting_may23_deliverables_2026_05_08.md` for open `- [ ]` items. Fo
 
 **Part E — hard_schema Phase 1 design+audit pass (RE-DISPATCH after item-9 close, 2026-05-19):**
 
-10. - [ ] **Phase 1 field-flip design+audit** — per [`ikenna_orchestrator/pings/slot_7.md`](../../ikenna_orchestrator/pings/slot_7.md)
-         dispatch 2026-05-19. Design+audit ONLY this session (no field flips). Output: (a) Optional→required field
-         inventory across 5 asset_groups; (b) consumer-sweep classification (🟢/🟡/🔴) for every field; (c) Sports
-         `fixture_id` phantom verification; (d) back-fill migration scope per field; (e) new plan file
-         `hard_schema_phase1_field_flip_migration_2026_05_19.md` with phased DAG. **Hard rules**: design only — no
-         flips; cross-link from `hard_schema_enforcement_2026_05_08.md` Phase 1 todo as named successor; read-only
-         grep on dep repos. (refactor 0.4×, ~30 baseline = ~12 cal AI-days)
+10. - [x] ✅ **Phase 1 field-flip design+audit** — PM@16861e1ed. Field inventory (8 InstrumentRecord fields × 5
+         asset_groups), consumer-sweep (all 🟢 SAFE / 🟡 DEFENSIVE, zero 🔴 BREAKS), sports `fixture_id` phantom
+         verdict (non-optional on all per-fixture schemas; `CanonicalInjury` legitimately optional), back-fill
+         migration scope, phased DAG (A–F). Plan file: `hard_schema_phase1_field_flip_migration_2026_05_19.md`.
+         Real Phase A gap found: `base_asset_decimals` / `quote_asset_decimals` not yet validator-enforced.
+         (refactor 0.4×, ~30 baseline = ~12 cal AI-days)
 
 ---
 
