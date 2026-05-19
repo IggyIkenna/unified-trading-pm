@@ -1,3 +1,5 @@
+> **ARCHIVED 2026-05-19** — 100% complete (5/5 items); deferred follow-ups migrated to named issue docs; preserved for archaeology.
+
 ---
 title: Data Status UI Phase 2F — deployment-api/UI gap fixes (4 gaps from 6C smoke)
 created: 2026-05-14
