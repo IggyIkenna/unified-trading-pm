@@ -562,6 +562,37 @@ scenario_id). PM@7a735152. Flipped 8.B/8.C in simulation_scenarios plan.
 
 ---
 
+[2026-05-19 14:30 UTC] slot-3 → operator — CREDENTIAL APPROVAL REQUEST — aws-secrets-defi-subkeys (Phase 2.A)
+
+CREDENTIAL APPROVAL REQUEST — aws-secrets-defi-subkeys
+Vendor: AWS Secrets Manager (ap-northeast-1, account 427895769566)
+What I need: Manual provisioning of 6× perp-venue execution API sub-keys + on-chain RPC keys + alerting keys:
+
+  Group A — HUMAN-REQUIRED (per-venue sub-accounts, operator must generate):
+    - exec-odum-binance-cefi  → Binance API Management → dedicated sub-account → Spot+Futures trading permissions
+    - exec-odum-deribit-cefi  → Deribit Account → API Keys → trade+read (OAuth2 client_id + client_secret)
+    - exec-odum-okx-cefi      → OKX → API → Unified Account permissions (api_key + secret_key + passphrase)
+    - exec-odum-bybit-cefi    → Bybit → API → Unified Trading Account permissions (api_key + api_secret)
+    - exec-odum-hyperliquid-defi → Hyperliquid agent wallet (EIP-712; generate FRESH dedicated wallet, NOT primary)
+    - exec-odum-aster-cefi    → Aster perp venue API key (NOT in credentials-registry.yaml — confirm account exists)
+
+  Group B — SCRIPTABLE (can mirror from GCP → AWS with admin_od + ADC auth):
+    - alchemy-api-key         → EVM RPC for Arbitrum/Base/Polygon (Chainlink + Aave calls)
+    - thegraph-api-key        → DeFi subgraph queries
+
+  Group C — ALERTING (check existing GCP secrets or provision fresh):
+    - telegram-bot-token      → Telegram BotFather; see alerting_service_live_rules_2026_05_07 Phase 4
+    - pagerduty-api-key       → PagerDuty integration key
+
+  Group D — WALLET / CUSTODY (HUMAN-ONLY — NEVER script from GCP):
+    - AWS KMS trading wallet key in ap-northeast-1 (fresh generation, not copy from GCP). CLOUD_KMS_ENCRYPTED
+      ships May-23. Copper + CEFFU are June-1 scope.
+
+Account to use: AWS 427895769566 (admin_od); store via `aws secretsmanager create-secret --name <name> --secret-string '<json>' --region ap-northeast-1`
+Unblocks: aws_migration Phase 4 (AWS Secrets Manager parity) → Phase 6 ECS Fargate DeFi deployment (May-23 gate)
+Without it: CLOUD_PROVIDER=aws services can't read execution credentials → fail at startup
+Full scaffold: codex/11-project-management/secrets-migration-tracking.md § "DeFi-first credential request list"
+
 [2026-05-19 12:15 UTC] main → slot 3 — 🔄 RULES REFRESH + NEW WORK ASSIGNMENT (2026-05-19)
 
 **Action required (in order)**:
