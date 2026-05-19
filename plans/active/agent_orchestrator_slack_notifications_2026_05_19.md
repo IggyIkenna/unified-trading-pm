@@ -49,7 +49,7 @@ todos:
 
   - id: p1-notification-module
     content: |
-      - [ ] [AGENT] P1. Implement server/notifications/slack.py (depends on P0)
+      - [x] ✅ [AGENT] P1. Implement server/notifications/slack.py (depends on P0) — orchastrator@ceaaefe
         - [ ] Create `server/notifications/__init__.py` (empty)
         - [ ] Create `server/notifications/slack.py`:
             ```python
@@ -81,7 +81,7 @@ todos:
         - [ ] Add `httpx` to `pyproject.toml` `[project.dependencies]` (flat deps only)
         - [ ] Unit tests `tests/test_slack_notifications.py` — mock `httpx.AsyncClient.post`; assert correct payload shape for each of the 3 event types; assert no-op when `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is empty string
       Full-execution criterion: `bash scripts/check.sh` passes; unit tests green; basedpyright `server/notifications/` clean (timeout 120s); ruff clean.
-    status: todo
+    status: done
 
   - id: p2-event-hook-wiring
     content: |
@@ -202,7 +202,7 @@ Cloud Run service to exist (deployment plan P1).
 | Phase | What ran | Verification | SHA |
 | ----- | -------- | ------------ | --- |
 | P0    | _pending_ | _pending_   | —   |
-| P1    | _pending_ | _pending_   | —   |
+| P1    | slack.py + __init__.py + tests (4/4 pass) + httpx dep | check.sh py green; basedpyright 0 errors; 4 unit tests passed | ceaaefe |
 | P2    | _pending_ | _pending_   | —   |
 | P3    | _pending_ | _pending_   | —   |
 | P4    | _pending_ | _pending_   | —   |
