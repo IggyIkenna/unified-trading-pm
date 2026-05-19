@@ -414,7 +414,12 @@ todos:
         Coordination-Banners rule, banner ALL active plans with `🟡 IN-FLIGHT REFACTOR — gcs migration
         bundle 2026-05-13/14/15` so agents pause new VM launches.
     status: todo
-    note: ""
+    note: |
+      Steps 1-6 COMPLETE (2026-05-19): 31 VMs TERMINATED, all exit status 0. No data loss confirmed.
+      Step 6 (Phase 3.6 phantom gate): post-migration audit found false-positive phantoms (Axis-10 reconciler
+      bug). Fix shipped at instruments-service@8accb30. Re-audit with fixed reconciler running (5 asset_groups).
+      prediction: 0 phantoms ✅ | sports: 0 phantoms ✅ | tradfi/cefi/defi: pending re-audit.
+      Step 7 (operator sign-off): HUMAN-ONLY, blocked on re-audit completing with 0 phantoms across all 5.
 
   - id: phase-4-consumer-sweep-explicit-pipeline-mode
     content: |
