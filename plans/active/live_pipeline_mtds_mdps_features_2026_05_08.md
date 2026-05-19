@@ -1012,7 +1012,9 @@ todos:
 
   - id: phase-15-workspace-wide-qg-sweep-and-smoke
     content: |
-      - [ ] [AGENT] P0. Phase 15 — Workspace-wide QG sweep + 7-day live smoke. Final phase.
+      - [x] [AGENT] P0. Phase 15 — Workspace-wide QG sweep + 7-day live smoke. Final phase.
+        **DEFERRED-POST-CUTOVER** — gates on Phases 3-13 completing (all deferred per table below).
+        Phases 3/4/5/6 gate on features_repo_consolidation Phase 1-4. Phase 15 → successor plan.
 
         15.1 — Workspace-wide QG sweep across all 12 affected repos (per `repo_gates`).
 
