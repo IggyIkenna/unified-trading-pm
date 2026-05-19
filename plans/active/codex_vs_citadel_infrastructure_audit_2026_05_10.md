@@ -24,6 +24,9 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
+
+
 > **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
 > merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
 > top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test

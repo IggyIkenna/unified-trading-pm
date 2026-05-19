@@ -34,6 +34,9 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 70 todos, 0 done; 8-tab cutover-blocking subset (D1+D3+M9+F21+L7+pipeline_mode 3/4/9+N1) for May-23. Self-declared horizon ~10 calendar days × ~7 active slots ≈ design-class with substantial cross-repo coordination. Baseline 50 (~0.7 AI-day per substantive todo, design-mix); × 0.6 = 30.
 ---
 
+> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
+
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
