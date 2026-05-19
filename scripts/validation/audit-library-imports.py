@@ -25,7 +25,7 @@ import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List
+from __future__ import annotations
 
 
 @dataclass
@@ -33,7 +33,7 @@ class ImportInfo:
     """Information about an import statement."""
 
     module: str
-    names: List[str]
+    names: list[str]
     is_fallback: bool
     file_path: str
     line_number: int
@@ -44,10 +44,10 @@ class ServiceImportReport:
     """Import report for a single service."""
 
     service_name: str
-    direct_imports: Dict[str, List[str]]  # library → list of files
-    ucs_imports: Dict[str, List[str]]  # UCS import → list of files
-    fallback_patterns: List[Dict[str, str]]  # [{library, file, lines}]
-    storageclient_issues: List[Dict[str, str]]  # [{method, file, line}]
+    direct_imports: dict[str, list[str]]  # library → list of files
+    ucs_imports: dict[str, list[str]]  # UCS import → list of files
+    fallback_patterns: list[dict[str, str]]  # [{library, file, lines}]
+    storageclient_issues: list[dict[str, str]]  # [{method, file, line}]
     recommendation: str
     migration_tier: int
 
@@ -79,10 +79,10 @@ class ImportAuditor(ast.NodeVisitor):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.imports: List[ImportInfo] = []
+        self.imports: list[ImportInfo] = []
         self.in_try_block = False
         self.try_depth = 0
-        self.storageclient_issues: List[Dict[str, str]] = []
+        self.storageclient_issues: list[dict[str, str]] = []
 
     def visit_Try(self, node: ast.Try) -> None:
         """Track try blocks for fallback pattern detection."""
@@ -172,7 +172,7 @@ class ImportAuditor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def scan_file(file_path: Path) -> tuple[List[ImportInfo], List[Dict[str, str]]]:
+def scan_file(file_path: Path) -> tuple[list[ImportInfo], list[dict[str, str]]]:
     """Scan a single Python file for imports."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -188,7 +188,7 @@ def scan_file(file_path: Path) -> tuple[List[ImportInfo], List[Dict[str, str]]]:
         return [], []
 
 
-def scan_service_repo(service_path: Path) -> tuple[List[ImportInfo], List[Dict[str, str]]]:
+def scan_service_repo(service_path: Path) -> tuple[list[ImportInfo], list[dict[str, str]]]:
     """Scan all Python files in a service repo."""
     all_imports = []
     all_storageclient_issues = []
@@ -208,7 +208,7 @@ def scan_service_repo(service_path: Path) -> tuple[List[ImportInfo], List[Dict[s
     return all_imports, all_storageclient_issues
 
 
-def analyze_imports(imports: List[ImportInfo]) -> Dict:
+def analyze_imports(imports: list[ImportInfo]) -> dict[str, object]:
     """Analyze imports to generate report."""
     # Group direct imports by library
     direct_imports = defaultdict(set)
@@ -346,7 +346,7 @@ def audit_service(service_path: Path) -> ServiceImportReport:
     )
 
 
-def print_report(reports: List[ServiceImportReport]) -> None:
+def print_report(reports: list[ServiceImportReport]) -> None:
     """Print human-readable report to console."""
     print("\n" + "=" * 80)
     print("UNIFIED LIBRARIES IMPORT AUDIT REPORT")
