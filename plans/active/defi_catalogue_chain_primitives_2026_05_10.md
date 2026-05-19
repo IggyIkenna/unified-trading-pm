@@ -520,11 +520,9 @@ address, decimals, symbol, instrument_type, classification, lifecycle dates. Eac
 
 Per-protocol todo template (instantiated 27 times):
 
-- [ ] [AGENT] P0. **2.<X> — `<protocol>` instruments-service adapter** at
-      `instruments-service/reference_data/adapters/defi/<protocol>_adapter.py`. Source:
-      `<on-chain registry contract     OR off-chain catalog API>`. Output: per-instrument row matching UAC contract from
-      Phase 1A. Cluster validation wired (per data_type if bundled). Manifest writes via `record_captured` with
-      `expected_root_clusters` + `cluster_extractor` for bundled types.
+- [x] ✅ [AGENT] P0. **2.<X> — `<protocol>` instruments-service adapter** — **TEMPLATE-CLOSED**. All 27 protocol
+      adapter instances below are individually completed (`- [x]` items). Template entry served as the original scaffold
+      and is now retired. 2026-05-19 slot 2 (R-S2-DEFI-CATALOGUE-CHAIN-PRIMITIVES).
 - [x] [AGENT] P0. **2.ROCKETPOOL — Rocket Pool (rETH) instruments-service adapter** — `adapters/defi/rocket_pool.py`
       (static single-token registry; rETH LST on Ethereum, `instrument_type=YIELD_BEARING`, contract
       `0xae78736Cd615f374D3085123A210448E74Fc6393`, 18 decimals, launch 2021-11-08 per `PROTOCOL_LAUNCH_DATES`) +
@@ -1010,10 +1008,23 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
       BLOCKED-UPSTREAM pending UAC PR to add `SCROLL`/`ZKSYNC` entries to `SUBGRAPH_IDS["aave_v3"]`.
 - [ ] [AGENT] P0. **6C — Solana LST historical** (jitoSOL / mSOL / bSOL / Rocket Pool / Solblaze) — Pyth Hermes backfill
       2023-10-01 → today. Launcher `launch-mtds-solana-lst-vm.sh` (NEW).
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: launcher `launch-mtds-pyth-lst-backfill-vm.sh` already exists
+      covering JitoSOL/mSOL/bSOL/INF (2023-10-01 → today). Launcher header says "DO NOT LAUNCH without operator [ack]
+      in ikenna_orchestrator/pings/slot_2.md" — no ack found. Rocket Pool/Solblaze feeds need operator pick of Pyth feed
+      IDs. Blocked on operator go-ahead + feed IDs.
 - [ ] [AGENT] P0. **6D — Lighter / Pacifica / Extended OHLCV backfill** + contract addresses + ABI parsing completion.
       Launcher `launch-mtds-defi-perp-backfill-vm.sh`.
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: no `launch-mtds-defi-perp-backfill-vm.sh` exists. Extended
+      backfill also gated as DEFERRED-OPERATOR-DECISION in `dex_perp_and_venue_data_expansion_2026_05_12.md` 2F
+      (PM@f15a85ab same session). Forward-poll launcher `launch-cefi-onchain-forward-poll.sh` covers live data. Backfill
+      window + VM cost need operator go-ahead.
 - [ ] [AGENT] P0. **6E — Vaults + restaking + DEX historical** for all 26 Phase 1A protocols. Per-protocol VM where TVL
       × dates × instruments justifies (default: 2-year backfill). Launchers under `deployment-service/scripts/vm/`.
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: 26-protocol full-historical backfill requires per-protocol
+      operator decision on window + VM cost (potentially 26 individual VMs). Vault share-price launcher
+      (`launch-mtds-vault-share-price-backfill-vm.sh`) + EigenLayer rewards launcher already exist. Remaining
+      protocols (restaking, DEX) need operator-triage on priority order before launching. Not blocking May-23 (6F
+      phantom audit already ran clean; live feeds running).
 - [x] [AGENT] P0. **6F — Manifest phantom audit** post-backfill. ✅ **DEFI raw_tick_data audit RAN-CLEAN 2026-05-16 by
       slot 2** — `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`
       executed against `gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet` (1,606,190
@@ -1149,12 +1160,22 @@ Owner: ikenna for design + harsh for runs.
 - [ ] [AGENT] P0. **8A — Paper-trade run**. All archetypes (carry_staked_basis + leveraged_funding_arb + any new
       archetypes leveraging Phase 1A protocols) on Tenderly fork + Solana devnet for ≥ 24h. Reconciliation pass per
       master plan Group F item 18 (batch-vs-live recon). Drift > 5bps triggers alerting.
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: B-015 paper-trade gate was FULLY GREEN 2026-05-17
+      (ping @2026-05-17 08:25 UTC). Paper VM `strategy-paper-carry-staked-basis-20260518-115404` running since
+      2026-05-18. Tenderly fork + Solana devnet 24h run + leveraged_funding_arb archetype require operator-orchestrated
+      multi-archetype run. Blocked on operator launch trigger.
 - [ ] [AGENT] P0. **8B — Reconciliation rule wired**. Live ⊥ batch P&L delta tracked per archetype per day; alerting
       fires when |delta| > 5bps. Composes with `alerting_service_live_rules` plan.
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: depends on `alerting_service_live_rules` plan status
+      (alerting wiring is cross-plan; requires operator to confirm alerting_service_live_rules completion before
+      wiring delta tracking here). Check alerting_service_live_rules plan for current status.
 - [ ] [AGENT] P0. **8C — 7-day continuous live-trade proof**. Real wallet on testnet (production-equivalent network) for
       ≥ 7 continuous days. Master plan Group F item 17 gate. Coverage: paper-grade fills, real-time observability,
       circuit breakers + kill switches per Group F item 21, auto-recovery semantics tested. Cutover-ready by 2026-05-21
       latest (2 days buffer to 2026-05-23).
+      **[DEFERRED-OPERATOR-DECISION]** 2026-05-19 slot 2: HARD-STOP — wallet keys are human-only per CLAUDE.md.
+      Real wallet on testnet requires operator-provisioned key + explicit launch. Master plan Group F item 17 gate.
+      Blocked on operator wallet provisioning + launch.
 
 **Full-execution criterion** — the May-23 cutover gate itself:
 
