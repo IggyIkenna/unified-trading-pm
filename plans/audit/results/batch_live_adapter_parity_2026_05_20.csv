@@ -1,161 +1,108 @@
-asset_group,venue_token,data_type,batch_files,live_files,has_batch,has_live,parity_status,sample_batch_path,sample_live_path
-cefi,aster,liquidations,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py,
-cefi,aster,trades,2,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py,
-cefi,deribit,trades,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/deribit_ws_mixin.py,
-cefi,hyperliquid,book_snapshot_5,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
-cefi,hyperliquid,derivative_ticker,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py,
-cefi,hyperliquid,liquidations,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
-cefi,hyperliquid,trades,2,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py,
-defi,curve,dex_pools,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py,
-defi,curve,dex_swaps,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/cli/handlers/schema_validation.py,
-defi,jito,lst_rates,2,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py,
-defi,morpho,lending_indices,1,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_handler.py,
-prediction,kalshi,trades,2,0,True,False,BATCH_ONLY,market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py,
-prediction,polymarket,trades,2,0,True,False,BATCH_ONLY,market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/polymarket_adapter.py,
-cefi,binance,trades,1,1,True,True,GREEN,market-tick-data-service/market_tick_data_service/market_interface/websocket/handlers/binance.py,market-tick-data-service/market_tick_data_service/market_interface/websocket/handlers/binance.py
-cefi,aster,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,aster,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,binance,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,binance,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,binance,futures_chain,0,0,False,False,MISSING_BOTH,,
-cefi,binance,liquidations,0,0,False,False,MISSING_BOTH,,
-cefi,bybit,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,bybit,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,bybit,futures_chain,0,0,False,False,MISSING_BOTH,,
-cefi,bybit,liquidations,0,0,False,False,MISSING_BOTH,,
-cefi,bybit,trades,0,0,False,False,MISSING_BOTH,,
-cefi,coinbase,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,coinbase,trades,0,0,False,False,MISSING_BOTH,,
-cefi,deribit,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,deribit,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,deribit,futures_chain,0,0,False,False,MISSING_BOTH,,
-cefi,deribit,liquidations,0,0,False,False,MISSING_BOTH,,
-cefi,deribit,options_chain,0,0,False,False,MISSING_BOTH,,
-cefi,futures,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,futures,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,futures,futures_chain,0,0,False,False,MISSING_BOTH,,
-cefi,futures,liquidations,0,0,False,False,MISSING_BOTH,,
-cefi,futures,trades,0,0,False,False,MISSING_BOTH,,
-cefi,okx,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,okx,derivative_ticker,0,0,False,False,MISSING_BOTH,,
-cefi,okx,liquidations,0,0,False,False,MISSING_BOTH,,
-cefi,okx,trades,0,0,False,False,MISSING_BOTH,,
-cefi,spot,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,spot,trades,0,0,False,False,MISSING_BOTH,,
-cefi,upbit,book_snapshot_5,0,0,False,False,MISSING_BOTH,,
-cefi,upbit,trades,0,0,False,False,MISSING_BOTH,,
-defi,aavev3,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,aavev3,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,aavev3,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,aavev3,position_data,0,0,False,False,MISSING_BOTH,,
-defi,aavev3,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,position_data,0,0,False,False,MISSING_BOTH,,
-defi,arbitrum,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,position_data,0,0,False,False,MISSING_BOTH,,
-defi,avalanche,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,balancer,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,balancer,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,base,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,base,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,base,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,base,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,base,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,base,position_data,0,0,False,False,MISSING_BOTH,,
-defi,base,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,bsc,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,bsc,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,bsc,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,bsc,position_data,0,0,False,False,MISSING_BOTH,,
-defi,bsc,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,compoundv3,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,compoundv3,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,compoundv3,position_data,0,0,False,False,MISSING_BOTH,,
-defi,compoundv3,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,ethena,lst_rates,0,0,False,False,MISSING_BOTH,,
-defi,ethena,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,eigenlayer_rewards,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,lst_rates,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,position_data,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,ethereum,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,etherfi,eigenlayer_rewards,0,0,False,False,MISSING_BOTH,,
-defi,etherfi,lst_rates,0,0,False,False,MISSING_BOTH,,
-defi,etherfi,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,fluid,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,fluid,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,fluid,position_data,0,0,False,False,MISSING_BOTH,,
-defi,fluid,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,jito,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,lido,lst_rates,0,0,False,False,MISSING_BOTH,,
-defi,lido,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,linea,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,linea,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,linea,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,linea,position_data,0,0,False,False,MISSING_BOTH,,
-defi,linea,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,morpho,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,morpho,position_data,0,0,False,False,MISSING_BOTH,,
-defi,morpho,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,optimism,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,optimism,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,optimism,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,optimism,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,optimism,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,optimism,position_data,0,0,False,False,MISSING_BOTH,,
-defi,optimism,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,polygon,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,polygon,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,polygon,flash_loan_events,0,0,False,False,MISSING_BOTH,,
-defi,polygon,lending_indices,0,0,False,False,MISSING_BOTH,,
-defi,polygon,liquidation_events,0,0,False,False,MISSING_BOTH,,
-defi,polygon,position_data,0,0,False,False,MISSING_BOTH,,
-defi,polygon,risk_params,0,0,False,False,MISSING_BOTH,,
-defi,solana,lst_rates,0,0,False,False,MISSING_BOTH,,
-defi,solana,staking_yields,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv2,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv2,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv3,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv3,dex_swaps,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv4,dex_pools,0,0,False,False,MISSING_BOTH,,
-defi,uniswapv4,dex_swaps,0,0,False,False,MISSING_BOTH,,
-sports,api,odds,0,0,False,False,MISSING_BOTH,,
-sports,bet365,odds_movement,0,0,False,False,MISSING_BOTH,,
-sports,bet365,odds_snapshot,0,0,False,False,MISSING_BOTH,,
-sports,betfair,odds_movement,0,0,False,False,MISSING_BOTH,,
-sports,betfair,odds_snapshot,0,0,False,False,MISSING_BOTH,,
-sports,draftkings,odds_movement,0,0,False,False,MISSING_BOTH,,
-sports,draftkings,odds_snapshot,0,0,False,False,MISSING_BOTH,,
-sports,fanduel,odds_movement,0,0,False,False,MISSING_BOTH,,
-sports,fanduel,odds_snapshot,0,0,False,False,MISSING_BOTH,,
-sports,odds,odds,0,0,False,False,MISSING_BOTH,,
-sports,pinnacle,odds_movement,0,0,False,False,MISSING_BOTH,,
-sports,pinnacle,odds_snapshot,0,0,False,False,MISSING_BOTH,,
-tradfi,cboe,ohlcv_15m,0,0,False,False,MISSING_BOTH,,
-tradfi,cme,ohlcv_1m,0,0,False,False,MISSING_BOTH,,
-tradfi,cme,tbbo,0,0,False,False,MISSING_BOTH,,
-tradfi,cme,trades,0,0,False,False,MISSING_BOTH,,
-tradfi,finance,ohlcv_15m,0,0,False,False,MISSING_BOTH,,
-tradfi,finance,ohlcv_24h,0,0,False,False,MISSING_BOTH,,
-tradfi,fx,ohlcv_24h,0,0,False,False,MISSING_BOTH,,
-tradfi,ice,ohlcv_1m,0,0,False,False,MISSING_BOTH,,
-tradfi,ice,tbbo,0,0,False,False,MISSING_BOTH,,
-tradfi,ice,trades,0,0,False,False,MISSING_BOTH,,
-tradfi,nasdaq,ohlcv_1m,0,0,False,False,MISSING_BOTH,,
-tradfi,nyse,ohlcv_1m,0,0,False,False,MISSING_BOTH,,
-tradfi,yahoo,ohlcv_15m,0,0,False,False,MISSING_BOTH,,
-tradfi,yahoo,ohlcv_24h,0,0,False,False,MISSING_BOTH,,
+asset_group,venue,data_type,has_batch,has_live,parity_status,batch_source,live_source,notes
+cefi,BINANCE-FUTURES,trades,True,True,GREEN,tick_data_handler.py (Tardis),binance_futures_ws.py,WSFeedConnector registered
+cefi,BINANCE-FUTURES,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,BINANCE-FUTURES,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,BINANCE-FUTURES,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,BINANCE-FUTURES,futures_chain,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live futures_chain connector
+cefi,BINANCE-SPOT,trades,True,True,GREEN,tick_data_handler.py (Tardis),binance_spot_ws.py,WSFeedConnector registered
+cefi,BINANCE-SPOT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,BYBIT-FUTURES,trades,True,True,GREEN,tick_data_handler.py (Tardis),bybit_ws.py,WSFeedConnector registered
+cefi,BYBIT-FUTURES,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,BYBIT-FUTURES,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,BYBIT-FUTURES,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,BYBIT-FUTURES,futures_chain,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live futures_chain connector
+cefi,BYBIT-SPOT,trades,True,True,GREEN,tick_data_handler.py (Tardis),bybit_spot_ws.py,WSFeedConnector registered
+cefi,BYBIT-SPOT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,OKX-FUTURES,trades,True,True,GREEN,tick_data_handler.py (Tardis),okx_ws.py,WSFeedConnector registered
+cefi,OKX-FUTURES,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,OKX-FUTURES,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,OKX-FUTURES,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,OKX-SPOT,trades,True,True,GREEN,tick_data_handler.py (Tardis),okx_spot_ws.py,WSFeedConnector registered
+cefi,OKX-SPOT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,DERIBIT,trades,True,True,GREEN,tick_data_handler.py (Tardis),deribit_ws.py,WSFeedConnector registered
+cefi,DERIBIT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,DERIBIT,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,DERIBIT,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,DERIBIT,options_chain,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live options_chain connector
+cefi,DERIBIT,futures_chain,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live futures_chain connector
+cefi,HYPERLIQUID,trades,True,True,GREEN,tick_data_handler.py (Tardis),hyperliquid_ws.py (live/connectors),WSFeedConnector registered; separate internal hyperliquid_ws.py also exists
+cefi,HYPERLIQUID,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector via WSFeedConnector
+cefi,HYPERLIQUID,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,HYPERLIQUID,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,ASTER,trades,True,True,GREEN,tick_data_handler.py (Tardis),aster_ws.py,WSFeedConnector registered
+cefi,ASTER,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,ASTER,derivative_ticker,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live derivative_ticker connector
+cefi,ASTER,liquidations,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live liquidations connector
+cefi,COINBASE-SPOT,trades,True,True,GREEN,tick_data_handler.py (Tardis),coinbase_spot_ws.py,WSFeedConnector registered
+cefi,COINBASE-SPOT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,No live book_snapshot connector
+cefi,KRAKEN-FUTURES,trades,True,True,GREEN,tick_data_handler.py (Tardis),kraken_futures_ws.py,WSFeedConnector registered
+cefi,KRAKEN-SPOT,trades,True,True,GREEN,tick_data_handler.py (Tardis),kraken_spot_ws.py,WSFeedConnector registered
+cefi,UPBIT,trades,True,False,P0_GAP,tick_data_handler.py (Tardis),none,UPBIT in EXPECTED_COVERAGE but no live connector
+cefi,UPBIT,book_snapshot_5,True,False,P0_GAP,tick_data_handler.py (Tardis),none,UPBIT in EXPECTED_COVERAGE but no live connector
+defi,DRIFT-SOLANA,trades,True,True,GREEN,solana_defi_handler.py,drift_solana_ws.py,WSFeedConnector registered (perp trades)
+defi,PHOENIX-SOLANA,trades,True,True,GREEN,solana_defi_handler.py,phoenix_ws.py,WSFeedConnector registered (Solana DEX trades)
+defi,HYPERLIQUID-PERP,perp_funding,True,False,P0_GAP,perp_funding_handler.py,none,Batch: Tardis/S3 perp_funding; no live perp_funding WSFeedConnector
+defi,ASTER-PERP,perp_funding,True,False,P0_GAP,perp_funding_handler.py,none,Batch: perp_funding; no live connector
+defi,GMX,perp_funding,True,False,P0_GAP,perp_funding_handler.py,none,Batch: perp_funding; no live connector
+defi,PACIFICA,perp_funding,True,False,P0_GAP,perp_funding_handler.py,none,Batch: perp_funding; no live connector
+defi,LIGHTER,perp_funding,True,False,P0_GAP,perp_funding_handler.py,none,Batch: perp_funding; no live connector
+defi,LIDO,lst_rates,True,False,P0_GAP,lst_rates_handler.py,none,Batch: Lido APR; no live LST connector
+defi,ETHERFI,lst_rates,True,False,P0_GAP,lst_rates_handler.py,none,Batch: EtherFi APR; no live connector
+defi,COINBASE-LST,lst_rates,True,False,P0_GAP,lst_rates_handler.py,none,Batch: cbETH APR; no live connector
+defi,ROCKETPOOL,lst_rates,True,False,P0_GAP,lst_rates_handler.py,none,Batch: rETH APR; no live connector
+defi,JITO,lst_rates,True,False,P0_GAP,lst_rates_handler.py + solana_lst_archival.py,none,Batch: JitoSOL APR; no live connector
+defi,MARINADE,lst_rates,True,False,P0_GAP,lst_rates_handler.py,none,Batch: mSOL APR; no live connector
+defi,AAVE-V3,lending_indices,True,False,P0_GAP,evm_defi_handler.py + lending_indices_handler.py,none,Batch: Aave lending rates; no live lending_indices connector
+defi,COMPOUND-V3,lending_indices,True,False,P0_GAP,evm_defi_handler.py + lending_indices_handler.py,none,Batch: Compound rates; no live connector
+defi,MORPHO,lending_indices,True,False,P0_GAP,evm_defi_handler.py + lending_indices_handler.py,none,Batch: Morpho rates; no live connector
+defi,FLUID,lending_indices,True,False,P0_GAP,evm_defi_handler.py + lending_indices_handler.py,none,Batch: Fluid rates; no live connector
+defi,AAVE-V3,liquidation_events,True,False,P0_GAP,liquidations_handler.py,none,Batch: Aave liq events (TheGraph); no live manifest-wired connector; internal onchain_event_poller is PARTIAL
+defi,UNISWAP-V3,dex_pool_state,True,False,P0_GAP,dex_pools_handler.py,none,Batch: Uniswap V3 pool state; no live manifest-wired connector
+defi,UNISWAP-V3,dex_pool_swaps,True,False,P0_GAP,dex_swaps_handler.py,none,Batch: swap events; no live manifest-wired connector
+defi,BALANCER,dex_pool_state,True,False,P0_GAP,dex_pools_handler.py,none,Batch: Balancer pool state; no live connector
+defi,CURVE,dex_pool_state,True,False,P0_GAP,dex_pools_handler.py,none,Batch: Curve pool state; no live connector
+defi,CURVE,dex_pool_swaps,True,False,P0_GAP,dex_swaps_handler.py,none,Batch: Curve swaps; no live connector
+defi,EIGENLAYER,eigenlayer_rewards,True,False,P0_GAP,eigenlayer_rewards_handler.py,none,Batch: EigenLayer rewards; no live connector
+defi,MULTI-CHAIN,oracle_prices,True,False,P0_GAP,oracle_prices_handler.py,none,Batch: Chainlink/Pyth oracle prices; no live connector
+defi,MULTI-CHAIN,gas_fees,True,False,P0_GAP,gas_fee_handler.py,none,Batch: gas fee data; no live connector
+defi,AAVE-V3,flash_loan_events,True,False,P0_GAP,flash_loan_events_handler.py,none,Batch: Aave flash loan events; no live connector
+defi,MULTI-CHAIN,bridge_events,True,False,P0_GAP,bridge_events_handler.py,none,Batch: bridge events; no live connector
+defi,MULTI-CHAIN,token_transfers,True,False,P0_GAP,token_transfers_handler.py,none,Batch: token transfer events; no live connector
+defi,MULTI-CHAIN,vault_share_price,True,False,P0_GAP,vault_share_price_handler.py,none,Batch: vault share price; no live connector
+defi,MULTI-CHAIN,position_data,True,False,P0_GAP,position_data_handler.py,none,Batch: lending position data; no live connector
+defi,MULTI-CHAIN,mev_events,True,False,P0_GAP,mev_events_handler.py,none,Batch: MEV events; no live connector
+defi,MULTI-CHAIN,native_staking,True,False,P0_GAP,native_staking_handler.py,none,Batch: native staking; no live connector
+defi,MULTI-CHAIN,staking_yields,True,False,P0_GAP,staking_yields_handler.py,none,Batch: staking yields; no live connector
+defi,MULTI-CHAIN,governance_events,True,False,P0_GAP,governance_events_handler.py,none,Batch: governance events; no live connector
+defi,MULTI-CHAIN,governance_proposals,True,False,P0_GAP,governance_proposals_handler.py,none,Batch: governance proposals; no live connector
+defi,HYPERLIQUID-INTERNAL,perp_funding,True,True,PARTIAL,perp_funding_handler.py,market_interface/adapters/defi/live/hyperliquid_ws.py,Live adapter exists but NOT wired into WSFeedConnector registry; no manifest recording
+defi,AAVE-V3,liquidation_events,True,True,PARTIAL,liquidations_handler.py,market_interface/adapters/defi/live/onchain_event_poller.py,onchain_event_poller is not manifest-wired
+defi,UNISWAP-V3,dex_pool_swaps,True,True,PARTIAL,dex_swaps_handler.py,market_interface/adapters/defi/live/onchain_event_poller.py,onchain_event_poller is not manifest-wired
+defi,MULTI-CHAIN,defi_events,True,True,PARTIAL,multiple handlers,market_interface/adapters/defi_live/alchemy_adapter.py + thegraph_ws_adapter.py,Internal adapters not wired into manifest-recording registry
+tradfi,CME,trades,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,CME,ohlcv_1m,True,False,P0_GAP,tick_data_handler.py (Databento batch),none,Batch: CME ohlcv_1m; no live ohlcv connector
+tradfi,CME,tbbo,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,ICE,trades,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,ICE,ohlcv_1m,True,False,P0_GAP,tick_data_handler.py (Databento batch),none,Batch: ICE ohlcv_1m; no live ohlcv connector
+tradfi,ICE,tbbo,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,NYSE,ohlcv_1m,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,NASDAQ,ohlcv_1m,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,CBOE,ohlcv_15m,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,ARCA,trades,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,BATS,trades,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (Databento batch),databento_tradfi_ws.py,BLOCKED-CREDENTIALS: Databento WS subscription required
+tradfi,YAHOO-FINANCE,ohlcv_15m,True,False,P0_GAP,tick_data_handler.py (Yahoo batch),none,Batch: Yahoo ohlcv_15m; no live WS connector
+tradfi,YAHOO-FINANCE,ohlcv_24h,True,False,P0_GAP,tick_data_handler.py (Yahoo batch),none,Batch: Yahoo ohlcv_24h; no live connector
+tradfi,FX,ohlcv_24h,True,False,P0_GAP,tick_data_handler.py (FX batch),none,Batch: FX OHLCV; no live connector
+sports,ODDS-API,odds,True,True,BLOCKED_CREDENTIALS,tick_data_handler.py (ODDS-API batch),odds_api_ws.py,BLOCKED-CREDENTIALS: odds_api_ws registered but status BLOCKED-CREDENTIALS per __init__.py comment
+sports,PINNACLE,odds_snapshot,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has PINNACLE odds_snapshot; no live connector
+sports,PINNACLE,odds_movement,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has PINNACLE odds_movement; no live connector
+sports,BETFAIR,odds_snapshot,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has BETFAIR odds_snapshot; no live connector
+sports,BETFAIR,odds_movement,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has BETFAIR odds_movement; no live connector
+sports,DRAFTKINGS,odds_snapshot,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has DRAFTKINGS odds_snapshot; no live connector
+sports,DRAFTKINGS,odds_movement,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has DRAFTKINGS odds_movement; no live connector
+sports,FANDUEL,odds_snapshot,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has FANDUEL odds_snapshot; no live connector
+sports,FANDUEL,odds_movement,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has FANDUEL odds_movement; no live connector
+sports,BET365,odds_snapshot,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has BET365 odds_snapshot; no live connector
+sports,BET365,odds_movement,True,False,P0_GAP,tick_data_handler.py (batch),none,EXPECTED_COVERAGE has BET365 odds_movement; no live connector
+prediction,POLYMARKET,trades,True,True,GREEN,tick_data_handler.py (batch),polymarket_ws.py,WSFeedConnector registered
+prediction,KALSHI,trades,True,True,GREEN,tick_data_handler.py (batch),kalshi_ws.py,WSFeedConnector registered
