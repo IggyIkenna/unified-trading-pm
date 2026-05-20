@@ -142,18 +142,14 @@ Phase 0 (✅ DONE)
 
 ### Phase 2 — instruments-service migration
 
-- [ ] **P0. CLI `--operation=status`**: replace whatever bespoke counting it does with
-      `read_capture_status_counts()` → `compute_honest_coverage()` → JSON output. Output
-      shape: `{"asset_group": ..., "data_type": ..., "counts": {...all 5 fields...},
-      "coverage": <float>}`.
+- [x] **P0. ✅ CLI `--operation=status`**: `_run_coverage_status()` added to IS `cli/main.py` — bypasses ServiceBootstrap date-loop, reads IS bucket manifest, calls `compute_coverage_for_bucket()` per data_type, prints JSON `{bucket, rows:[{asset_group, data_type, counts (5 fields), coverage}]}`. IS@d79a5a3. (2026-05-20 slot-2)
 - [x] **P0. ✅ Skip path for `--force=false`**: `_should_skip_shard` + `_should_skip_date_for_per_league` + UTL `check_shard_freshness` all patched to honor EXPECTED_*/pending_fetch split. `expected_unattempted_known_empty` → skip; `expected_unattempted_pending_fetch` → stale/retry. 4 new UTL tests + 3 new IS tests pass. IS@ad18108 UTL@1ba2c57. (2026-05-20 slot-2)
 - [ ] **P1. /api/data-status endpoint**: same migration for the HTTP endpoint.
 
 ### Phase 3 — MTDS migration (parallel with Phase 2)
 
 - [x] **P0. ✅ Same migration as Phase 2** but for `market-tick-data-service`. Confirmed orchestrator.py:1985 skip logic; patched to include `expected_unattempted_known_empty` (EXPECTED_* reason) in skip-set. Non-EXPECTED_* `expected_unattempted` excluded from skip → retry. MTDS@77d9f31. (2026-05-20 slot-2)
-- [ ] **P0. Per-data-type CLIs**: lending-indices, lst-rates, dex-pools, perp-funding,
-      etc. — each must respect the no-force skip rule via the shared helper, not re-derive.
+- [x] **P0. ✅ Per-data-type CLIs**: all 9 MTDS handlers (dex_pools, dex_swaps, gas_fee, lending_indices, liquidation_events, liquidations, lst_rates, perp_funding, solana_lst_archival) updated to use `is_now_skip_worthy()` (new UTL method: captured | empty_confirmed | expected_unattempted_known_empty) instead of `is_now_captured()`. UTL@c33f3b6 MTDS@dfb518e. (2026-05-20 slot-2)
 
 ### Phase 4 — deployment-api consumers
 
