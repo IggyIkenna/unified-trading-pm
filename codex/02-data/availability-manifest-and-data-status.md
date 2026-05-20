@@ -1428,8 +1428,29 @@ manifest and computes coverage at three aggregation levels:
 - **Level 2 — per (asset_group, venue)**: same shape per venue
 - **Level 3 — per (asset_group, venue, data_type)**: same shape per data_type per venue
 
-**Coverage formula**:
-`coverage_pct = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted) × 100`
+**Coverage formula** — SSOT: `compute_honest_coverage()` in UAC
+(`unified_api_contracts.compute_honest_coverage`, `unified-api-contracts@a9891f9`).
+Do **NOT** recompute inline — import and call the canonical function.
+
+```python
+from unified_api_contracts import CaptureStatusCounts, compute_honest_coverage
+
+counts = CaptureStatusCounts(
+    captured=...,
+    empty_confirmed=...,
+    attempted_failed=...,
+    expected_unattempted_known_empty=...,   # error_reason startswith "EXPECTED_"
+    expected_unattempted_pending_fetch=..., # error_reason NOT startswith "EXPECTED_"
+)
+ratio = compute_honest_coverage(counts)
+# numerator   = captured + empty_confirmed + expected_unattempted_known_empty
+# denominator = numerator + attempted_failed + expected_unattempted_pending_fetch
+# returns 1.0 if denominator == 0 (empty manifest = fully covered)
+```
+
+For reading live manifest data use
+`unified_trading_library.manifest_writer.read_capture_status_counts(bucket, ...)` or
+`compute_coverage_for_bucket(bucket, ...)` — `unified-trading-library@8d66204`.
 
 **Output**: `gs://central-element-323112-honest-coverage/{YYYY-MM-DD}/coverage.json`
 

@@ -295,6 +295,11 @@ These bind every todo in this plan. Workspace CLAUDE.md additions in Phase 1C co
    `SOURCE_COVERAGE_START` / `KNOWN_COVERAGE_GAPS` / `venue_trading_calendar`); numerator counts only honest captures
    (real rows passing the 4-pillar write-gate). NaN placeholders + partial bundles + silent per-schema drops do not
    count.
+   > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: the numerator/denominator definition above is a prose description only.
+   > The **canonical implementation** is `compute_honest_coverage(CaptureStatusCounts(...))` from
+   > `unified_api_contracts` (`unified-api-contracts@a9891f9`). The five-field split adds the
+   > `expected_unattempted_known_empty` / `expected_unattempted_pending_fetch` distinction that this prose omits.
+   > SSOT: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
 2. **Single SSOT only — no double-SSOT in the data-saving methodology.** Where two paths exist for the same outcome, one
    is deleted. No `_create_empty_output()` AND `_handle_empty_tick_data()`; no `_ensure_timestamp` shim AND per-source
    `stamp_available_at_*` helpers; no parallel v3-shape `_write_manifest_records` AND v6 canonical writer; no inline

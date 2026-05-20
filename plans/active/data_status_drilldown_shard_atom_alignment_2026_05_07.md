@@ -170,6 +170,10 @@ The fix is two pieces:
 - **Replace the chain-row math** with `Σ leaf shards` (numerator = manifest rows with `capture_status=captured`;
   denominator = expected `(chain, venue, data_type, instrument_id_or_protocol_id, day)` tuples per the codex shard atom)
   so the chain row and the asset-group header use the same regime.
+  > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: `numerator = captured` above was correct at time of writing but is
+  > now incomplete — it excludes `empty_confirmed` and `expected_unattempted_known_empty` from numerator.
+  > Canonical formula: `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts`
+  > (`unified-api-contracts@a9891f9`). SSOT: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
 - **Land `PROTOCOL_LAUNCH_DATES` in UAC** so the leaf denominator clips pre-protocol-launch days the way
   `CHAIN_GENESIS_DATES` already clips pre-chain-genesis days.
 

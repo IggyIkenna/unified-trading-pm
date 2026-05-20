@@ -168,6 +168,15 @@ workspace-wide gate that "handles" missing data — by design.
 
 ## Reason taxonomy (codified 2026-05-07 — operator direction)
 
+> **Coverage formula SSOT (2026-05-19)**: consumers computing coverage MUST check the
+> `EXPECTED_*` vs non-`EXPECTED_*` split on `error_reason` — NOT just `capture_status` alone.
+> The canonical function is `compute_honest_coverage(CaptureStatusCounts(...))` from
+> `unified_api_contracts` (`unified-api-contracts@a9891f9`). Two `expected_unattempted`
+> sub-buckets: `expected_unattempted_known_empty` (reason startswith `"EXPECTED_"` — counts
+> toward numerator) and `expected_unattempted_pending_fetch` (non-`EXPECTED_` reason — counts
+> against coverage, will be retried on next backfill). Do **NOT** roll your own formula.
+> SSOT plan: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
+
 Earlier sections describe **3 causes** with binary `error_reason` (None vs typed-error string). Operator direction
 2026-05-07: the manifest IS the single source of truth for "what's there + why it's not." Downstream consumers should
 not have to consult `venue_trading_calendar` separately to interpret a missing row. Every `(shard_key, day)` tuple in

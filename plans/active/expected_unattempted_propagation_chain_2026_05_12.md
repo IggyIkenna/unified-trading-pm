@@ -330,6 +330,14 @@ Reconciler scripts should read instruments-service manifest once and pass into c
 
 ## Phase 2 — MDPS: record_expected_unattempted on skip + forward-fill semantics codification
 
+> **⚠️ COUNTING SEMANTICS SUPERSEDED (2026-05-19)**: this phase propagates `expected_unattempted` rows
+> correctly, but leaves the counting role of `expected_unattempted` unspecified. The **canonical split**
+> is: `expected_unattempted` with `error_reason` startswith `"EXPECTED_"` → counts toward numerator
+> (`expected_unattempted_known_empty`); non-`EXPECTED_*` reason → counts against coverage
+> (`expected_unattempted_pending_fetch`, retried on next backfill).
+> Formula SSOT: `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts`
+> (`unified-api-contracts@a9891f9`). Full plan: `honest_coverage_formula_consolidation_2026_05_19.md`.
+
 **model_tier**: sonnet-doable | **thinking**: medium | **Cal AI-days**: ~0.8 (was ~0.5; +0.3 for forward-fill semantics)
 
 **Goal**: When MDPS's `DependencyChecker` finds upstream MTDS shard absent or empty, write `expected_unattempted` in
