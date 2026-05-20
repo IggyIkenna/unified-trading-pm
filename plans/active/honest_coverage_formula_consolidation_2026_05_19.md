@@ -146,17 +146,12 @@ Phase 0 (✅ DONE)
       `read_capture_status_counts()` → `compute_honest_coverage()` → JSON output. Output
       shape: `{"asset_group": ..., "data_type": ..., "counts": {...all 5 fields...},
       "coverage": <float>}`.
-- [ ] **P0. Skip path for `--force=false`**: confirm `vm_instruments_backfill.sh`
-      orchestrator.py:1310 + 1465 skip logic skips `captured` + `empty_confirmed` +
-      `expected_unattempted_known_empty`, but DOES retry `attempted_failed` +
-      `expected_unattempted_pending_fetch`. Patch if it misses the split semantics.
+- [x] **P0. ✅ Skip path for `--force=false`**: `_should_skip_shard` + `_should_skip_date_for_per_league` + UTL `check_shard_freshness` all patched to honor EXPECTED_*/pending_fetch split. `expected_unattempted_known_empty` → skip; `expected_unattempted_pending_fetch` → stale/retry. 4 new UTL tests + 3 new IS tests pass. IS@ad18108 UTL@1ba2c57. (2026-05-20 slot-2)
 - [ ] **P1. /api/data-status endpoint**: same migration for the HTTP endpoint.
 
 ### Phase 3 — MTDS migration (parallel with Phase 2)
 
-- [ ] **P0. Same migration as Phase 2** but for `market-tick-data-service`. Audit found
-      orchestrator.py:1985 already skips when `force=False`; confirm it honors the
-      EXPECTED_*/non-EXPECTED_* split too.
+- [x] **P0. ✅ Same migration as Phase 2** but for `market-tick-data-service`. Confirmed orchestrator.py:1985 skip logic; patched to include `expected_unattempted_known_empty` (EXPECTED_* reason) in skip-set. Non-EXPECTED_* `expected_unattempted` excluded from skip → retry. MTDS@77d9f31. (2026-05-20 slot-2)
 - [ ] **P0. Per-data-type CLIs**: lending-indices, lst-rates, dex-pools, perp-funding,
       etc. — each must respect the no-force skip rule via the shared helper, not re-derive.
 
