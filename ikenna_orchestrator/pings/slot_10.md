@@ -150,3 +150,36 @@ features-service fixes applied:
 Plan flip: work_split_2026_05_20_ikenna.md @ 407992b7 — slot 10 🟢 DONE
 
 References: plans/active/work_split_2026_05_20_ikenna.md § Slot 10 + data_pipeline_master_coordination_2026_05_20.md Phase -1
+
+---
+
+## [slot-10 2026-05-20 overnight] Phase 1 audit + QG-CLUSTER-C rescue (slot-11 stale)
+
+**Status**: 🟢 ACTIVE — overnight autonomous operation
+
+### Phase 1 audit delivered (23:14 UTC)
+- `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` — 64 rows, 37 kinds
+- `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20_summary.md` — 24 prefix_drift, 10 infix_missing, 0 char-cap violations
+- Committed at unified-trading-pm@96af136e → pushed LDR
+- All 5 Phase 1 deliverables already checked in master coordinator (pre-existing from deployment-service@43fb886 + UTL@dc107d15)
+- Orchestrator: PHASE-1-BUCKET-SYMMETRY marked done
+
+### QG-CLUSTER-C rescue (slot-11 stale at 19:07 UTC, tmux alive, worker_alive=False)
+- Reassigned QG-CLUSTER-C from slot-11 back to queue; working in .tabs/10/ worktrees
+
+**execution-service**: ✅ QG GREEN — execution-service@92c4c9ed
+- Fixed: 4 multi-line string/f-string syntax errors (backtest_args.py, benchmark_compare.py, generate_three_domain_configs.py, query_instruments.py)
+- Fixed: 7 ruff I001/F541/UP017 auto-fixes (run_phase3c.py, scripts/)
+- Fixed: KrakenVenueError import drift → CanonicalError from unified_api_contracts
+- Fixed: test_mock_data_provider singleton config mock (env var patch doesn't reach cached singleton)
+
+**strategy-service**: 🔴 BLOCKED (freeze gate)
+- 5 failures in tests/unit/engine/strategies/v2/test_target_universe.py
+- Root cause: slot label `ML_DIRECTIONAL_CONTINUOUS@dydx-btc-1h-usdc-v2-prod` fails because venue_tokens grammar (UAC) doesn't recognize `dydx` as a valid venue token (uses `split_scope_tokens` from UAC architecture_v2/venue_tokens.py)
+- Fix requires: either add `dydx` to UAC venue token registry OR fix slot label format — both are in `engine/strategies/v2/` or UAC strategy-facing grammar → freeze gate blocks this
+- **Escalation required**: strategy_archetype_logic_audit_2026_05_20 (Opus-1M session) must address dydx venue token gap
+
+**ml-service**: N/A — no standalone ml-service repo. ml-training-service + ml-inference-service are both archived (Phase -2 Bucket 1). QG moot for archived repos.
+
+Plan flip: work_split_2026_05_20_ikenna.md slot-11 row updated — partial completion noted
+References: plans/active/work_split_2026_05_20_ikenna.md § Slot 11 + data_pipeline_master_coordination_2026_05_20.md Phase -1
