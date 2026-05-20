@@ -451,8 +451,7 @@ migration of ~10-50M parquets · consumer sweep · workspace QG sweep. **Estimat
       DefiManifestRecorder, MDPS canonical_writer, instruments-service, features-service, UTL) pass explicit
       `pipeline_mode=`. Per gcs_migration_bundle Phase 4 status:done. (backfilled 2026-05-20 slot-5)
 - [x] ✅ [SCRIPT] P0. **Phase 9 workspace-wide QG sweep** — per-repo `bash scripts/quality-gates.sh` post-migration. **DONE 2026-05-20 slot-5**: 5/9 migration-critical repos green (UAC/UTL/MTDS/MDPS/instruments-service); 4 non-migration repos have pre-existing/infra gaps. Evidence: UTL@d4e69b6 MTDS@b3a15d8 instruments@62dbfac. OPERATOR CONFIRM to close gate.
-- [ ] [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch (MDPS 3 violations:
-      `storage_dispatch_worker.py:49` · `output_writer_service.py:318` · `orchestration_writer.py:388`).
+- [x] ✅ [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch. **DONE 2026-05-20 slot-5**: 37 MTDS DeFi handlers stamped (market-tick-data-service@0d3a09a); MDPS StorageDispatchWorker.write() stamped (market-data-processing-service@18d3523). `output_writer_service.py`+`orchestration_writer.py` do not exist in LDR worktree — pre-audit was from main. 1733 MTDS tests pass.
 
 ### Spawn prompt
 
