@@ -163,16 +163,19 @@ Phase 8 — codex docs follows everything
 
 ### Phase 1 — UAC schema extension
 
-- [ ] **P0. Extend `InstrumentRecord`** in `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`
+- [x] ✅ **P0. Extend `InstrumentRecord`** in `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`
       with new optional fields:
       - `source_archive_url_template: str | None` (e.g. `"https://drift-historical-data-v2.s3.eu-west-1.amazonaws.com/program/{program_id}/market/{market}/{record_type}/{year}/{day}"`)
       - `source_record_types: dict[str, str] | None` (data_type → archive record-type name, e.g. `{"trades": "tradeRecords", "funding_rate": "fundingRateRecords"}`)
       - `source_coverage_start: dict[str, date] | None` (per data_type)
       - `source_coverage_end: dict[str, date] | None` (per data_type — the EXPECTED_PAST_SOURCE_COVERAGE_END trigger)
       - `listed_at: date | None`, `delisted_at: date | None` (some IS adapters already populate)
-- [ ] **P0. Add `EXPECTED_PAST_SOURCE_COVERAGE_END`** to `EmptyConfirmedReason` in `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py`.
+      — UAC@5a54bfd
+- [x] ✅ **P0. Add `EXPECTED_PAST_SOURCE_COVERAGE_END`** to `EmptyConfirmedReason` in `unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py`.
       Sister of `EXPECTED_PRE_SOURCE_COVERAGE_START` (already exists). Reason: archive stopped writing on a known date (e.g. Drift tradeRecords ended 2025-01-08).
-- [ ] **P0. Test**: roundtrip Pydantic write + read of `InstrumentRecord` with new optional fields.
+      — UAC@5a54bfd
+- [x] ✅ **P0. Test**: roundtrip Pydantic write + read of `InstrumentRecord` with new optional fields.
+      — `tests/unit/test_instrument_record_archive_metadata.py` UAC@5a54bfd — 5 tests pass
 
 ### Phase 2 — IS adapter migration (writes new fields)
 
