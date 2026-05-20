@@ -86,8 +86,6 @@ added 2026-04-25 in Phase 9 for cross-category sleeves; SSOT is UAC
 8. Is the alpha from **explicit if-else rules on features**? → **Rules Directional**
 9. Is the alpha from **cross-category sleeve allocation** (sub-strategies are themselves the underlyings)? →
    **Portfolio**
-10. Is the alpha from **cross-category sleeve allocation** (sub-strategies are themselves the underlyings)? →
-    **Portfolio**
 
 If it seems to straddle, identify the _primary_ alpha. "With vol overlay" where directional is primary is ML Directional
 with vol hedge as risk management, not a composite.

@@ -33,7 +33,7 @@ The **family** is never stored inside the slot label — it is always derivable 
 
 ---
 
-## 2. Family axis (8 values)
+## 2. Family axis (9 values)
 
 ```
 ML_DIRECTIONAL
@@ -44,37 +44,21 @@ MARKET_MAKING
 EVENT_DRIVEN
 VOL_TRADING
 STAT_ARB_PAIRS
+PORTFOLIO
 ```
 
-SSOT: `unified_api_contracts.internal.architecture_v2.enums.StrategyFamily`.
+SSOT: `unified_api_contracts.internal.architecture_v2.enums.StrategyFamily`. (`PORTFOLIO` added 2026-04-25 in Phase 9
+for cross-category sleeves.)
 
-## 3. Archetype axis (18 values)
+## 3. Archetype axis (57 values)
 
-```
-ML_DIRECTIONAL_CONTINUOUS
-ML_DIRECTIONAL_EVENT_SETTLED
-RULES_DIRECTIONAL_CONTINUOUS
-RULES_DIRECTIONAL_EVENT_SETTLED
-CARRY_BASIS_DATED
-CARRY_BASIS_PERP
-CARRY_STAKED_BASIS
-CARRY_RECURSIVE_STAKED
-YIELD_ROTATION_LENDING
-YIELD_STAKING_SIMPLE
-ARBITRAGE_PRICE_DISPERSION
-LIQUIDATION_CAPTURE
-MARKET_MAKING_CONTINUOUS
-MARKET_MAKING_EVENT_SETTLED
-EVENT_DRIVEN
-VOL_TRADING_OPTIONS
-STAT_ARB_PAIRS_FIXED
-STAT_ARB_CROSS_SECTIONAL
-```
-
-SSOT: `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype`.
+The slot-label grammar is identical for every archetype; this section is the naming contract, not the catalogue. The
+57-value enumeration grouped by family lives in [`README.md` § "57 Archetypes"](README.md) and the canonical SSOT is
+`unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype`. The original 2026-04-17 baseline had 18; the
+Phase 9 expansion (2026-04-25) and the 2026-05-18 taxonomy decision brought it to 57.
 
 The archetype → family relation is declared in `ARCHETYPE_TO_FAMILY` (same module) — **never** hardcode the family;
-always look it up.
+always look it up. Archetype IDs carry no category prefix (no `CEFI_` / `DEFI_` / `SPORTS_` / `TRADFI_`).
 
 ## 4. Slot-id grammar
 
