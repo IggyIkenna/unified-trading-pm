@@ -2,14 +2,13 @@
 title: UAC QG pre-existing size violations (5 total)
 created: 2026-05-14
 author: ikenna-slot-2
-resolved: 2026-05-14
-resolution:
-  SHIPPED — short-term fix landed (CODEX_MAX_VIOLATIONS=5 in scripts/quality-gates.sh). QG passes with pre-existing
-  budget. P2 + P3 follow-ups are nice-to-haves tracked via solana_lst_native_staking_adapters + future-touch.
+re_opened: 2026-05-20
 source:
   - unified-api-contracts QG run 2026-05-14 (Task 5 Phase 1 session)
 locked_by: live-defi-rollout
 ---
+
+> **🔴 RE-OPENED 2026-05-20** — original "resolution" was raising `CODEX_MAX_VIOLATIONS=5` in `scripts/quality-gates.sh`, which is debt deferral (masks 5 over-threshold files), not a code fix. Per operator directive 2026-05-20 ("don't defer"), the underlying file-size violations (`alerting/rules.py` 994L, `canonical/crosscutting/errors/defi.py` 1365L, `internal/events.py` 902L, `internal/__init__.py` 1688L, `internal/schemas/contracts.py` 1085L) still exist. Successor: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md` § Phase D cross-cutting QG ratchet plan — that phase explicitly absorbs the 7 patterns from B1 template and locks each repo against ratchet floor. UAC size-violation refactor lands as a D-phase deliverable.
 
 ## What I found
 

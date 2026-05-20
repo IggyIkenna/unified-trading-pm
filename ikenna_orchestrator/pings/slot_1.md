@@ -4861,3 +4861,35 @@ name and gracefully handle absence (logs warning + falls back to refusing Solana
 until the operator provisions.
 
 — ikenna-main slot 1
+
+---
+
+## [slot 1 main] 2026-05-20 ~07:55 UTC — DeFi 46-day backfill — PAUSED at preflight, operator decision required
+
+**Trigger**: operator dispatch 2026-05-20 "we should do this now, defi needs working" — task asked slot-1 to launch the
+46-day DeFi upstream backfill (`plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md`).
+
+**Status**: 🟡 PAUSED — no VMs launched. Status doc + decision options filed.
+
+**Blocker**: `deployment-service/scripts/vm/launch-instruments-backfill-vm.sh` and `launch-defi-backfill-vm.sh` both
+have hardcoded END dates (2026-02-28 and 2026-04-04 respectively) that fall BEFORE the 2026-04-01..2026-05-16 window.
+Neither launcher accepts `--start/--end` CLI overrides. Per CLAUDE.md "Blockers to flag (pause if hit) — Launcher
+script doesn't accept the date range cleanly" this is a hard pause condition. Yesterday's slot-1 dispatch
+(2026-05-19) ran the instruments-service VM at its hardcoded END=2026-02-28 — explaining why the 46-day window
+remains an upstream gap despite the fleet launch.
+
+**MTDS DeFi half is ready**: 11 launchers accept `--start/--end` (or positional dates). Launching MTDS-only without
+instruments-service first risks 100% `EXPECTED_DEPENDENCY_NOT_AVAILABLE` shards (writegate dep chain).
+
+**Operator decision options** (full detail in
+`plans/active/issues/defi_46day_backfill_launch_status_2026_05_20.md`):
+
+- **(A) RECOMMENDED** — edit both launchers to accept `--start/--end`, then launch instruments DeFi + 11 MTDS DeFi VMs
+  (~12 VMs total, ~$3 GCP cost, ~3-4h wallclock).
+- **(B)** — one-off copy of `launch-defi-backfill-vm.sh` hardcoded to the 46-day window (workspace launcher SSOT
+  drift risk).
+- **(C)** — MTDS-only (NOT RECOMMENDED — wasted compute likely).
+- **(D)** — different window (e.g. 14-day).
+
+**Action requested**: operator picks A/B/C/D. Slot 1 resumes within same dispatch on ack.
+

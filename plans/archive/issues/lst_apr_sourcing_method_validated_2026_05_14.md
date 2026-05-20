@@ -13,6 +13,8 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟢 RESOLUTION VERIFIED 2026-05-20** — all 5 plan-flip checkboxes are ✅. Validation work + master-plan row + Marinade BLOCKED-OPERATOR-DECISION all shipped. Marinade follow-up has named successor `plans/active/issues/marinade_solana_subgraph_registration_2026_05_17.md` (verified exists). P2 `coinbase_wrapped_assets.py` UTL client is FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE) — on-chain canonical source already wired; cross-source drift check is post-cutover scope. Archiving.
+
 ## What I found
 
 Sub-agents have on multiple occasions suggested using **DefiLlama** as the primary source for LST APRs (cbETH / stETH /

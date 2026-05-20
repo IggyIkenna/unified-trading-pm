@@ -11,7 +11,16 @@ locked_since: 2026-05-16
 severity:
   P1 — non-blocking for B-015 paper-trade (5-day window pre-authorized in parallel ping); blocking for live DeFi data
   correctness across full historical window
+launched_at: 2026-05-20
 ---
+
+> **🟡 LAUNCH PAUSED 2026-05-20** — operator authorized launch ("we should do this now, defi needs working"); slot-1
+> preflight found instruments-service launchers (`launch-instruments-backfill-vm.sh`, `launch-defi-backfill-vm.sh`)
+> have hardcoded END dates earlier than the 2026-04-01..2026-05-16 window and DO NOT accept `--start/--end` overrides.
+> No VMs launched. Operator decision required — see
+> `plans/active/issues/defi_46day_backfill_launch_status_2026_05_20.md` (options A/B/C/D). MTDS DeFi half is ready to
+> go once instruments-service path picked. Banner removed when manifest divergence A3 shows zero MISSING_EXPECTED for
+> the 46-day window.
 
 ## What I found
 
