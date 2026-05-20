@@ -805,16 +805,19 @@ unknown archetype/family.
 Documents the post-v1-delete shape of the strategy registry — the ONE place in Python that resolves
 `strategy_id → (name, family, category, archetype)`. v1 `StrategyFamily` (17 values), `StrategyArchetype` (13 values),
 and 55-entry `_DEFAULT_STRATEGIES` were deleted 2026-04-21. v2 registry is **derived, not hand-maintained** — generated
-from `archetype_capability_manifest.json`, flattening 55 archetypes × their cells' representative slot labels
-(originally sized for 18 archetypes / 96 entries on 2026-04-20; expanded by Phase 9 to 53, then to 55 by the
-`CARRY_RECURSIVE_STAKED` split — see UAC `StrategyArchetype` enum SSOT). Public API signatures preserved so consumers
+from `archetype_capability_manifest.json`, flattening the canonical archetype surface × their cells' representative slot
+labels (originally sized for 18 archetypes / 96 entries on 2026-04-20; expanded by Phase 9 to 53, then to 55 by the
+`CARRY_RECURSIVE_STAKED` split, then to **57** by the 2026-05-18 taxonomy decision — see UAC `StrategyArchetype` enum
+SSOT; the manifest declares cells for a 22-archetype live subset today, the remainder await their cell declarations).
+Public API signatures preserved so consumers
 need no call-site changes. Key v1→v2 field drift: `strategy_id` changed from flat ID (e.g. `DEFI_ETH_BASIS_HUF_1H`) to
 slot-label grammar; `execution_mode`, `strategy_type`, `default_timeframe` all removed (now archetype-derived).
 
 **4. category-instrument-coverage.md** —
 [category-instrument-coverage.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
-SSOT matrix: for every one of the 55 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55 by
-the `CARRY_RECURSIVE_STAKED` split — 35+ new archetypes await their cell declarations), every
+SSOT matrix: for every one of the 57 archetypes (originally 18 on 2026-04-20; expanded to 53 in Phase 9; then to 55 by
+the `CARRY_RECURSIVE_STAKED` split; then to 57 by the 2026-05-18 taxonomy decision — 35+ new archetypes await their cell
+declarations), every
 `(category, instrument_type)` cell is declared SUPPORTED / PARTIAL / BLOCKED / N/A with representative venues, signal
 variant, gap reason, and fully-spelled slot-label examples. Category is always derived from the execution venue — the
 same `ARBITRAGE_PRICE_DISPERSION` engine runs CeFi, DeFi, or Unity event-settled markets; only venue params differ. As
