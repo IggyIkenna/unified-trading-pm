@@ -401,8 +401,9 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 
 ### Codex SSOT updates
 
-- [ ] **[DOC] P1.** Update `codex/04-architecture/defi-execution-overview.md` § "Data pipeline" to note manifest handoff
-      contract at strategy→execution boundary
+- [x] ✅ **[DOC] P1.** Update `codex/04-architecture/defi-execution-overview.md` § "Data pipeline" to note manifest
+      handoff contract at strategy→execution boundary — PM@b1197eda1 (added Data Pipeline section:
+      StrategyManifestRecorder writer + ExecutionManifestRecorder reader, 3-state emission, QG enforcement pointer)
 
 ---
 
