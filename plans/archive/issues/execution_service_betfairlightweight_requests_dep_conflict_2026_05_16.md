@@ -2,6 +2,8 @@
 title: "execution-service pyproject — betfairlightweight + requests version conflict blocks SIT uv sync"
 created: 2026-05-16
 author: ikenna-main (workspace-qg Phase B failure-mode sweep)
+resolved: 2026-05-16
+resolution: SHIPPED — two-pronged: (validator side) slot-4 cross-slot pickup 2026-05-16; (features-backfill VM side) slot-1 main 2026-05-16 23:52 UTC. Both sides resolved per body.
 source:
   - system-integration-tests workspace-qg failure log 2026-05-16 18:58 UTC
   - github.com/IggyIkenna/system-integration-tests/actions/runs/25970164921
@@ -76,3 +78,27 @@ the SIT-side fix would be either (a) SIT-specific `[tool.uv] override-dependenci
 pattern, or (b) SIT QG drops execution-service from its install graph. Routed to SIT owner for the per-repo decision.
 
 Issue closeable at next archive sweep on the validator side; SIT half left open with the named follow-up above.
+
+## RESOLVED (features-backfill VM side) — 2026-05-16 23:52 UTC (slot 1 main)
+
+`features-onchain-defi-20260516-233044` (B-015 chain attempt 4) hit a 3rd flavour of this same conflict — the flat
+`uv pip install -e ... -e execution-service ...` resolve on the data-pipeline VM. Pre-existing NODEPS opt-out at
+`deployment-service/scripts/vm/setup-data-pipeline-vm.sh:403-408` only covered `synthetic-benchmark`, `strategy-paper`,
+`strategy-live` VM_TASKs.
+
+**Shipped at `deployment-service@9d37deb`**: extended the VM_TASK allowlist to include `features-backfill` so the
+features-onchain VM routes `execution-service` (and other service repos in `_SVC_BENCH_NODEPS`) through `--no-deps`,
+matching the strategy-paper/strategy-live pattern. Uploaded the updated setup script to
+`gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh` at 22:52:08 UTC. Attempt 5
+(`features-onchain-defi-20260516-235216`) re-launched 23:52 UTC.
+
+Both other VM_TASKs (`mtds-backfill`, `instruments-backfill`, etc.) that hit this same conflict in the future should add
+themselves to the same allowlist or accept the pyproject-level fix once the systemic SIT-side resolution lands.
+
+---
+
+## Triage — 2026-05-18
+
+**Status**: CLOSED — SHIPPED  
+**Triaged by**: slot-8 triage sweep  
+**Reason**: Resolved 2026-05-16; validator fix + VM setup script fix
