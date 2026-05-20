@@ -157,7 +157,7 @@ Phase 0 (pre-audit)  →  Phase 1 (UAC contracts)  →  Phase 2 (UTL bases)  →
 todos:
 
 - id: phase-0-pre-audit-manifest content: |
-  - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+  - [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/per_client_isolation_preaudit_2026_05_20.md` enumerating: (a) every callsite in
         strategy-service that currently assumes single-tenant process (env var reads, module-level globals holding
         client state, singleton patterns) — these need ClientContext refactor in Phase 4; (b) every UAC type that
@@ -168,10 +168,10 @@ todos:
         `assert_client_allowed` covers ALL event-bus subscribers in execution-service (grep + read every subscriber);
         (f) MTM compute paths re-verified per 2026-05-20 audit — 4 paths confirmed; capture any drift since audit; (g)
         per-venue credential refresh cadence per venue type (CEX vs DEX vs lending) — drives KMS poll interval defaults
-        in Phase 5. status: pending
+        in Phase 5. — pm@17b75c44 + pm@68a31e04 status: done
 
 - id: phase-1-uac-contracts content: |
-  - [ ] [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
+  - [x] ✅ [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
         `ClientLifecycleEvent` (StrEnum kind: REGISTER / DEREGISTER / QUARANTINE / UNQUARANTINE / CREDENTIAL_ROTATED;
         payload: client_id, archetype_id, shard_id, timestamp, reason); (2) `ClientReadyEvent` (emitted by ClientWorker
         after preflight green; client_id, archetype_id, shard_id, venue_auth_status: dict[venue, OK|FAILED|SKIPPED]);
@@ -184,7 +184,9 @@ todos:
         TransferIntent.idempotency_key; status: SUBMITTED | CONFIRMED | FAILED; on-chain tx_hash or CEX withdrawal_id;
         fee, gas_used). Tests: schema-parity cassettes per UAC discipline (every commit
         `pytest tests/test_cassette_schema_parity.py`). QG: STEP 5.69 bucket-name SSOT compliant (no inline bucket
-        strings in event payloads). status: pending blocked_by: phase-0-pre-audit-manifest
+        strings in event payloads). — uac@d0f72fd (7 files, 879 insertions: client_lifecycle_events.py +
+        transfer_events.py + 37 unit tests + __init__ exports + source_priority + availability_semantics fixes)
+        status: done
 
 - id: phase-2-utl-bases content: |
   - [ ] [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
