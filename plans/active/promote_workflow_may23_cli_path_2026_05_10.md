@@ -812,7 +812,7 @@ the UI path before any real-capital launch.
 
 ## Phase 9 — Master plan refresh (P0, ~0.5d, SEQUENTIAL after Phase 8)
 
-- [ ] [AGENT] P0. **Update `plans/active/master_to_live_defi_2026_05_23.md`**:
+- [x] ✅ [AGENT] P0. **Update `plans/active/master_to_live_defi_2026_05_23.md`**:
   - Refresh `Last verified` columns for F17/F18/F19/F20/F21/F22/G23 with actual completion dates.
   - Add new sub-todos under Group F:
     - `pvl-p17e-launcher-scripts` — DONE per Phase 1.
@@ -820,9 +820,13 @@ the UI path before any real-capital launch.
     - `pvl-p23e-live-deployment-events` — DEFERRED to post-cutover plan.
   - Add cross-reference to this plan + post-cutover plan in master plan body (Group F + G sections).
 
-- [ ] [AGENT] P0. **Update CLAUDE.md "Master Plan Continuous-Verification Column"** — verify the new
+- [x] ✅ [AGENT] P0. **Update CLAUDE.md "Master Plan Continuous-Verification Column"** — verify the new
       continuous-verification rows for F17/F18/F19/F20/F21/F22/G23 reference the actual cron / Tab / QG that runs
       between checkpoints (per Master Plan Continuous-Verification Column HARD RULE).
+      VERIFIED 2026-05-20: All 7 rows declare paths — F17 `cron:mtds-paper-smoke-` (not deployed yet / NEVER-list);
+      F18 `cron:strategy-backtest-grid-` (graduated 2026-05-18); F19 manual sign-off; F20 `cron:dex-perp-onboarding-`
+      + B-015 paper VM (running); F21 `cron:batch-vs-live-recon-` (cron-pending); F22 `cron:alerting-paging-targets-`
+      (scheduling-pending); G23 `manual`. CLAUDE.md rule text is accurate and does not require amendment.
 
 ## Phase 10 — Live cutover go (P0, operator-action, SEQUENTIAL after Phase 9)
 

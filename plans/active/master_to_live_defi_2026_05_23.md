@@ -1128,17 +1128,25 @@ item names what "done" looks like + the exact verification command/check):
   - `pvl-p17e-launcher-scripts` — write `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh` in
     `deployment-service/scripts/vm/` per CLAUDE.md _VM launcher script SSOT_ HARD RULE; register `strategy-paper-` +
     `strategy-live-` prefixes in `vm_zombie_watchdog.py:VM_PREFIX_TO_BUCKET`. **P0 cutover-blocker for both tracks.**
+    **✅ DONE** — deployment-service@87f12f1 (Phase 1 of `promote_workflow_may23_cli_path_2026_05_10.md`). Both
+    launchers shipped; prefixes registered in VM_PREFIX_TO_BUCKET; smoke VM ran end-to-end 2026-05-14.
   - `pvl-p17f-minimal-candidate-manifest` — `MinimalCandidateManifest` UAC type with placeholder Optional fields for
     pinned shas / model refs / features manifest version (full enrichment shipped post-cutover Phase 2). **P0 May-23
-    (Phase U1 of CLI plan).**
+    (Phase U1 of CLI plan).** **✅ DONE** — uac@2b48295 + utl@c7c8a730 (Phase U1); Firestore
+    `strategy_candidate_manifests` collection live; `CandidateManifestStore` helper + `STRATEGY_PROMOTED_TO_CANDIDATE`
+    event shipped.
   - `pvl-p23d-promote-api-MINIMAL` — backend `POST /promote/{strategy_id}/{manifest_id}` endpoint + minimal pre-flight
     pipeline (Copper sandbox / venue keys / alerting / kill-switch / recon — composes with existing services). **P0
-    May-23 (Phase U3 of CLI plan).** Full pre-flight + cross-service auto-registration in
+    May-23 (Phase U3 of CLI plan).** **✅ MINIMAL DONE** — deployment-api@fe2a9c5 (Phase U3); 5 pre-flight gates wired;
+    `STRATEGY_PROMOTED_TO_PAPER` / `STRATEGY_PROMOTED_TO_LIVE` events emitted. Full pre-flight + cross-service
+    auto-registration **DEFERRED** to
     [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
     Phase 9.
   - `pvl-p23e-live-deployment-events-MINIMAL` — May-23 uses UTL bare-string events (`STRATEGY_PROMOTED_TO_PAPER` /
     `STRATEGY_PROMOTED_TO_LIVE`); UAC `LifecycleEventType` enum membership + per-launch event-verification protocol
-    scoped to live trading deferred to post-cutover Phase 3. **P0 May-23 minimal subset.**
+    scoped to live trading deferred to post-cutover Phase 3. **P0 May-23 minimal subset.** **✅ MINIMAL DONE** —
+    utl@c7c8a730 (Phase U3); UTL bare-string events emitted on promote. UAC `LifecycleEventType` enum membership
+    **DEFERRED** to post-cutover Phase 3.
 - [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
   — **NEW (2026-05-10)** — EXTENDS May-23 dual-track minimal-UI shipments. Picks up everything DEFERRED from the May-23
   cutover plan: state-machine consolidation (4 UAC SSOTs → 1 canonical) + `CandidateManifest` enrichment (Phase 2
@@ -1194,6 +1202,13 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
       email-with-confirm-link, Slack) ship as a P1 follow-up. _(folded from paper_vs_live_workflow_maturity_2026_05_08)_
       — **shipped `deployment-api@9c608c9` + `ui@0c9fb81a` 2026-05-15** (pending-queue backend
       `routes/manual_pending.py` + `ManualTradeGateDialog` wired into DART terminal header)
+
+> **Cross-ref**: `pvl-p23a/b/c` (Group G item 23) execution is tracked in
+> [`promote_workflow_may23_cli_path_2026_05_10.md`](./promote_workflow_may23_cli_path_2026_05_10.md) Phases U4-U6.
+> Remaining open work: Playwright e2e tests for U4/U5/U6 + testnet operator-approve flow. Post-cutover DART enhancements
+> (all-archetype coverage + fallback approval channels) in
+> [`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](./promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+> Phase 10.
 
 > Per-service yamls in `codex/10-audit/repos/<service>.yaml` get extended to track items 4–23. Items 1–3 already in the
 > existing repo readiness yaml are inherited.
@@ -1365,17 +1380,21 @@ sign-off.
 
 ### Items with `Last verified: NEVER` (T-13 alerts)
 
-Per the HARD RULE: items where `Last verified` < cadence-implied-recency = P0 alert. Below 6 items have NEVER ran a
+Per the HARD RULE: items where `Last verified` < cadence-implied-recency = P0 alert. Below 5 items have NEVER ran a
 continuous verifier; **these are the May-23 critical-path execution risks**:
 
 - **C10** (Batch=live recon) — architecture invariant; cron lands with Wave-2 Phase 12 follow-up.
 - **F17** (Backtest fidelity) — depends on `simulation_scenarios_topology_price_shocks` Phase 9 — currently 0 of 56
-  todos done; operator decision pending on scope (per Audit C Finding C-5).
-- **F18** (2-yr config-grid backtest) — script SHIPPED (strategy-service@3dea3c7) but operator-scheduled run not yet
-  fired (~8-12h wall-clock).
-- **F19** (Copper / CEFFU treasury) — manual operator sign-off; no automation possible pre-cutover.
+  todos done; operator decision pending on scope (per Audit C Finding C-5). `cron:mtds-paper-smoke-` NOT YET DEPLOYED.
+- **F19** (Copper / CEFFU treasury) — manual operator sign-off; no automation possible pre-cutover. Operator VM run
+  required by 2026-05-22 pre-cutover gate.
 - **F21** (Reconciliation suite) — UTL `batch_live_reconciler` SHIPPED at @908b1647 but cron-pending.
-- **F22** (Trading guardrails) — alerting Phase 4-9 operator-driven; scheduling pending per Audit C Finding C-3.
+- **F22** (Trading guardrails) — alerting Phase 4-9 operator-driven; `cron:alerting-paging-targets-` scheduling pending
+  per Audit C Finding C-3.
+
+> **F18 GRADUATED 2026-05-18**: `cron:strategy-backtest-grid-` launcher shipped; 2 backtest VMs ran 2026-05-10;
+> defi_simulation_realism plan closes 47/47 (slot-1 Phase 9E master plan refresh 2026-05-18). Removed from NEVER list.
+> Last verified: 2026-05-18.
 
 > **F20 GRADUATED 2026-05-18**: B-015 paper VM (`strategy-paper-carry-staked-basis-20260518-115404`) exercised
 > paper-trade smoke runbook end-to-end. Removed from NEVER list. Last verified: 2026-05-18.
