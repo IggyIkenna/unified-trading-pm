@@ -474,3 +474,39 @@ passed. features-service@35fa1725. Moving to Wave 79.
 hard_schema_enforcement (4.8 cal) + strategy_archetype_taxonomy (4.8 cal) + deployment_and_qg close
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 4 — STARTED <first item>` below.
+
+---
+
+[2026-05-20 11:40 UTC] slot 4 — OPERATOR DEPLOY REQUEST (BLK-363c4fe1)
+
+**Task**: S4-PHASE5-CARRY-STAKED-BASIS — Phase-E Cloud Run deploy required
+
+Phase-C + tarball are shipped. The remaining gate is the Cloud Run deploy (OPERATOR-SIDE ONLY — needs production GCP creds + image build).
+
+**One-paste deploy command**:
+```bash
+# Prereq 1: build + push image
+gcloud builds submit /home/hk/unified-trading-system-repos/features-service \
+  --config=features-service/cloudbuild.yaml \
+  --substitutions=_PROJECT_ID=central-element-323112 \
+  --timeout=1800 \
+  --project=central-element-323112
+
+# Prereq 2: verify SA + secrets exist (see script header for create commands)
+
+# Deploy
+cd /home/hk/unified-trading-system-repos/deployment-service
+bash scripts/cloud-run/deploy_features_service_cloud_run.sh
+
+# Smoke test (after deploy)
+SERVICE_URL=$(gcloud run services describe features-service \
+  --region=asia-northeast1 --project=central-element-323112 \
+  --format="value(status.url)")
+curl -s "${SERVICE_URL}/health" | python3 -m json.tool
+```
+
+**24h soak criterion**: `/health → healthy:true` for 24 consecutive hours; feature parquets in bucket every tick; no FAILED events in alerting-service.
+
+**After soak**: relaunch paper VM `strategy-paper-carry-staked-basis-$(date +%Y%m%d)-$(date +%H%M%S)` — tarballs already in `gs://deployment-scripts-central-element-323112/code/` at features-service@c9729dce.
+
+Slot 4 moving to S4-DEFI-CATALOGUE-PRIMITIVES now.
