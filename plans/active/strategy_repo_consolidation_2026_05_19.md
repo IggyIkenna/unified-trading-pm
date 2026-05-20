@@ -274,28 +274,19 @@ todos:
 
   - id: phase-9-codex-ssot-updates
     content: |
-      - [ ] [AGENT] P0. Phase 9 — Codex SSOT updates. MANDATORY per HARD RULE "Post-Plan-Phase Codex Audit":
-        (a) **NEW** `codex/04-architecture/strategy-service-architecture.md` — full SSOT covering: 4 sub-packages
-            (strategy + risk + position + pnl), CLI dispatch keyed by `--operation`, Health-API aggregator,
-            kill-switch subscriber topology, ServiceBootstrap consolidation, V2 strategies + portfolio allocator +
-            signal broadcast surfaces, deployment topology (single VM per asset-group flavor), migration history
-            cross-link to this plan, anti-patterns (do NOT re-introduce per-surface repos).
-        (b) **UPDATE** `codex/00-SSOT-INDEX.md` — register new architecture page; drop 3 archived repos from
-            service index; mark `archived_into=strategy-service` per source.
-        (c) **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — strategy-service is the promote
-            target; clarify risk/position/pnl now invoked via `--operation` on the same image.
-        (d) **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — 4-to-1 launcher collapse (single
-            `launch-strategy-vm.sh` parameterised by `--operation` + `--asset-group`).
-        (e) **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — single strategy-service tarball
-            replaces 4-source-repo tarball matrix.
-        (f) **UPDATE** `codex/06-coding-standards/cli-convention.md` — add `--operation` sub-command table for
-            strategy-service's 6+ operations.
-        (g) **UPDATE** `codex/09-strategy/operational/cli-promote-paths.md` — promote-CLI now invokes
-            `strategy-service --operation strategy-live`; legacy `risk-and-exposure-service` reference removed.
-        (h) **UPDATE** any other codex page surfaced by `rg "risk-and-exposure-service|position-balance-monitor-service|pnl-attribution-service" codex/`
-            — replace with `strategy-service/<sub>/` or add SUPERSEDED banner. Enumerate exhaustively before
-            marking Phase 9 done.
-    status: todo
+      - [x] ✅ [AGENT] P0. Phase 9 — Codex SSOT updates. — PM@4d934d7ac (2026-05-20)
+        (a) `codex/04-architecture/strategy-service-architecture.md`: status stub→stable; caveat updated to
+            reflect consolidation complete (Phase 6 parity 4059 passed 0 errors).
+        (b) `codex/00-SSOT-INDEX.md`: strategy-service row STUB→STABLE with parity evidence + launcher sha.
+        (c) `promote-workflow-architecture.md`: no old-service references found — already clean.
+        (d) `launcher-script-ssot.md`: no old-service references found — already clean.
+        (e) `vm-tarball-deployment.md`: no old-service references found — already clean.
+        (f) `cli-convention.md`: no old-service references found — already clean.
+        (g) `cli-promote-paths.md`: no old-service references found — already clean.
+        (h) Migration banners added to 5 high-traffic architectural docs: runtime-deployment-topology.md,
+            data-flow-map.md, risk-preflight-flow.md, LIBRARY-DEPENDENCY-MATRIX.md, INTERNAL_DEPENDENCY_GRAPH.md.
+            10-audit/ + _archived_pre_v2/ historical docs intentionally left as-is (historical record).
+    status: done
     blocked_by: phase-8a-launcher-migration
 
   - id: phase-10-workspace-qg-sweep
