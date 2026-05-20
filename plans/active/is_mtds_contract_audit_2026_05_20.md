@@ -226,8 +226,12 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
       Operator: same decision as native_staking — UAC constants or IS?
 - [ ] **P0. `solana_lst_archival.py`** `**[BLOCKED-OPERATOR-DECISION]**`: Marinade/Jito archive endpoints —
       same decision chain as above.
-- [ ] **P1. `position_data_handler.py` + `tick_data_handler.py` + `websocket_streaming_handler.py`**:
-      remove partial fallback hardcodes.
+- [x] ✅ **P1. `position_data_handler.py` + `tick_data_handler.py` + `websocket_streaming_handler.py`**:
+      VERIFIED-CLEAN — both QG scripts (`no_hardcoded_venue_urls` + `no_hardcoded_venue_universe`)
+      pass clean. `tick_data_handler` + `websocket_streaming_handler` have no hardcodes;
+      plan line citations were stale. `position_data_handler` uses
+      `get_supported_chains_for_protocol("AAVEV3")` for Aave (IS-first); Uniswap V3 ETHEREUM
+      is a documented scope constraint comment, not a blocklisted universe pattern. (2026-05-20 slot-8)
 - [x] ✅ **P1. Legacy intent audit** for `data_manifest_handler.py` / `replay_handler.py`:
       both documented as exempt — `data_manifest_handler` is a read-only GCS scanner producing
       deployment-UI JSON (not a capture handler); `replay_handler` uses `ReplayPublisher`
@@ -290,9 +294,11 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - [x] ✅ **P0. Wire all three** into per-service `quality-gates.sh` (instruments-service + MTDS).
       Pre-existing handlers failing the check produce REVIEW-BLOCKING warnings at PR time.
       — IS@ceea3e5 (all 3 scripts wired — slot-5 completed partial IS@6ef6e96 slot-8 wiring); MTDS@8ca45ee (all 3 scripts wired)
-- [ ] **P1. Cross-link** with `honest_coverage_formula_consolidation_2026_05_19.md` Phase 6
-      (the "no inline coverage formula" linter). All three QG steps live in the same script
-      bundle.
+- [x] ✅ **P1. Cross-link** with `honest_coverage_formula_consolidation_2026_05_19.md` Phase 6:
+      that plan's Phase 6 (line 185) already carries `⚓ COMPOSES WITH is_mtds_contract_audit_2026_05_20.md Phase 7`.
+      The three structural guards (`no_silent_absence`, `no_hardcoded_venue_urls`, `no_hardcoded_venue_universe`)
+      live alongside the honest-coverage ratchet and the no-inline-formula linter in the same
+      `unified-trading-pm/scripts/qg/` bundle. Cross-link confirmed; no code change needed. (2026-05-20 slot-8)
 
 ### Phase 8 — Codex SSOT updates
 
