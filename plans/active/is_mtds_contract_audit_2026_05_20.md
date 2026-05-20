@@ -6,6 +6,10 @@ estimate_class: refactor
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 5.6
 status: in-flight
+deadline: 2026-05-23
+priority: P0
+parent_epic: manifest_evolution_master_2026_05_08
+epic_secondary: instruments_live_master_2026_05_08
 parent_plan: master_to_live_defi_2026_05_23.md
 related_plans:
   - honest_coverage_formula_consolidation_2026_05_19.md
@@ -276,10 +280,32 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - solana-defi bucket on v4 until Phase 4. Downstream consumers reading from this bucket
   should be aware (none currently — bucket is write-mostly).
 
-## Deferred work after 2026-05-20 audit session
+## Scope: all phases pre-May-23 (operator directive 2026-05-20)
 
-| Item | Why | Successor |
+All 8 phases are P0 pre-cutover. ~5.6 calibrated AI-days into a 3-day window (today 2026-05-20 → 2026-05-23)
+requires fan-out across slots. Parallelizable subdivisions:
+
+- **Phase 1 (UAC schema)** — single slot, ~0.5 day. Blocks everything else, ship first.
+- **Phase 2 (IS adapters)** — fan out per venue (Drift / Phoenix / Marinade / Jito / Orca / Raydium), one slot
+  per venue, in parallel. ~0.5 day each, can run concurrently with Phase 3.
+- **Phase 3 (MTDS handlers)** — fan out per handler. 6 ❌/⚠ handlers + 3 legacy handlers. ~0.4 day each,
+  parallel. The Drift handler is critical-path P0; others P0 (no P1 anymore).
+- **Phase 4 (solana-defi v4→v8 migration)** — single slot, ~0.5 day. Gated on Phase 2 (Drift adapter writes new
+  fields) before migration so v8 rows carry archive metadata.
+- **Phase 5 (re-backfill)** — fan out per venue. Bounded by Drift S3 coverage end + IS-bucket fresh write.
+  ~1 day total wall-clock (VMs run in parallel).
+- **Phase 6 (real-fleet verification)** — single slot, ~0.3 day, AFTER Phase 5.
+- **Phase 7 (QG enforcement)** — single slot, ~0.5 day. Can ship in parallel with Phases 2/3 — it gates
+  FUTURE merges, doesn't block current phases.
+- **Phase 8 (codex docs)** — single slot, ~0.3 day. Last phase.
+
+Critical path (sequential): Phase 1 → (Phase 2/3 in parallel) → Phase 4 → Phase 5 → Phase 6 → Phase 8.
+Phase 7 runs orthogonally.
+
+3-day wall-clock fit if 4+ slots run in parallel through Phases 2/3/5.
+
+## Cross-asset note (preserved)
+
+| Item | Status | Successor |
 |---|---|---|
-| Phase 1-8 implementation | Multi-repo cross-cutting refactor; ~5.6 calibrated AI-days | This plan |
-| Legacy 3-handler intent audit | Lower priority (not on May-23 path) | Phase 3 P1 sub-items |
-| Cross-asset instruments-service extension | Already BLOCKED-OPERATOR-DECISION | `cross_asset_instruments_service_scope_2026_05_14.md` |
+| Cross-asset instruments-service extension | BLOCKED-OPERATOR-DECISION (pre-existing) | `cross_asset_instruments_service_scope_2026_05_14.md` |

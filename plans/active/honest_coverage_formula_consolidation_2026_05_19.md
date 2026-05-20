@@ -6,6 +6,10 @@ estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
 status: in-flight
+deadline: 2026-05-23
+priority: P0
+parent_epic: manifest_evolution_master_2026_05_08
+epic_secondary: instruments_live_master_2026_05_08
 parent_plan: master_to_live_defi_2026_05_23.md
 ---
 

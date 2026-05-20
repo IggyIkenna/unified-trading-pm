@@ -221,20 +221,49 @@ and `EXPECTED_PAST_SOURCE_COVERAGE_END` enum member.
 
 These are scoped in the new plan with P0/P1 prioritization. Operator sign-off on the plan precedes implementation.
 
-### Open question for operator
+### Operator decision 2026-05-20 — ALL phases pre-May-23 + plan wired to parent epic
 
-Plan estimates 5.6 calibrated AI-days (refactor class × 0.4 = ~14 baseline). Roughly:
-- ~1 day: UAC schema + IS adapter migration (Drift first, others opportunistic)
-- ~2 days: MTDS handler refactors (6 ❌/⚠ handlers)
-- ~0.5 day: solana-defi v4→v8 migration
-- ~1 day: re-backfill (IS for Solana DeFi, then Drift S3 with correct shape)
-- ~0.5 day: 3 QG scripts + wire to quality-gates.sh
-- ~0.5 day: codex docs + SUPERSEDED banners + CLAUDE.md update + verification
+Both new plans were orphaned (had `parent_plan: master_to_live_defi_2026_05_23.md` but no epic link).
+Now wired to:
+- **Primary epic**: `manifest_evolution_master_2026_05_08` — explicitly the "schema + writer code + GCS data
+  layout co-evolve" umbrella. Both new plans add rows to its `folds_in:` list AND the body "Folded sub-plans"
+  table with gate mappings (G1 / G4 / G6 / G7).
+- **Secondary epic**: `instruments_live_master_2026_05_08` — referenced in plan frontmatter
+  `epic_secondary` for the IS-adapter completion side.
 
-This pushes past May-23 cutover for full completion. Suggestion: ship Phase 1 + Phase 7 (QG enforcement) +
-the Drift-specific Phase 3 sub-item pre-cutover. Other handler refactors are post-cutover work.
+The eleven-child count now: 9 pre-existing + honest_coverage + is_mtds_contract = 11. Epic body updated
+accordingly.
 
-Awaiting operator decision on scope.
+**All phases P0 pre-May-23.** Removed the previous pre-/post-cutover split. The 5.6 calibrated AI-days into a
+3-day window (today → May-23) requires fan-out across slots:
+
+- Phase 1 (UAC schema): 1 slot, ~0.5 day, BLOCKS everything
+- Phase 2 (6 IS adapters): fan out 1 slot/venue, parallel, ~0.5 day each
+- Phase 3 (6 MTDS handlers + 3 legacy intent audit): fan out 1 slot/handler, parallel, ~0.4 day each
+- Phase 4 (solana-defi v4→v8): 1 slot, ~0.5 day, gated on Phase 2 (Drift adapter writes new fields first)
+- Phase 5 (re-backfill): fan out 1 slot/venue, wall-clock ~1 day
+- Phase 6 (verification): 1 slot, ~0.3 day, AFTER Phase 5
+- Phase 7 (QG enforcement): 1 slot, ~0.5 day, runs orthogonally
+- Phase 8 (codex docs): 1 slot, ~0.3 day, LAST
+
+Critical path (sequential): Phase 1 → Phase 2/3 parallel → Phase 4 → Phase 5 → Phase 6 → Phase 8.
+Fits 3 days IF ≥4 slots run in parallel through Phases 2/3/5.
+
+### Operator-pending: work-split dispatch
+
+This needs to enter the daily work-split for slots beyond slot 1. Slot 1 owns Phase 1 + parts of Phase 7
+(QG enforcement). Other slots take Phase 2 (IS adapters) + Phase 3 (MTDS handlers) in parallel.
+
+Suggested cycle 2026-05-20 fan-out:
+- Slot 2: Drift IS adapter (Phase 2 P0)
+- Slot 3: Phoenix + Marinade + Jito IS adapters (Phase 2 P0)
+- Slot 4: solana_defi_handler refactor (Phase 3 critical-path P0)
+- Slot 5: perp_funding / lst_rates / native_staking handler refactors (Phase 3)
+- Slot 6: staking_yields / solana_lst_archival handler refactors (Phase 3)
+- Slot 7: solana-defi v4→v8 migration script (Phase 4)
+- Slot 8: 3 QG scripts (Phase 7) + codex docs (Phase 8)
+
+Slot 1 (me) orchestrates + Phase 1 (UAC) on a 0.5-day turn.
 
 **Status**: ✅ **RESOLVED 2026-05-19 ~14:00 UTC** — operator picked **Option 2 (Hold the line on flat-deps)**.
 
