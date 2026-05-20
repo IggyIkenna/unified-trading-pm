@@ -385,13 +385,17 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
     blocked on 1.B (IAM roles must exist first) and `aws sns:CreateTopic` permission TBD for harsh-worker. P1, not
     blocking May-23 critical path. Gated on 1.B resolution.
 
-- [ ] [AGENT] P1. **1.G — Per-VM-launcher AWS-EC2 equivalents.** Per VM-launcher-SSOT rule, every
+- [x] [AGENT] P1. **1.G — Per-VM-launcher AWS-EC2 equivalents.** Per VM-launcher-SSOT rule, every
       `gcloud compute instances create` script under `deployment-service/scripts/vm/launch-*-vm.sh` needs an AWS twin
       `launch-*-vm-aws.sh` using `aws ec2 run-instances`. Add AWS-side `VM_PREFIX_TO_BUCKET` registry equivalent in
       `deployment-service/scripts/vm/vm_zombie_watchdog_aws.py`.
-  - **[BLOCKED-OPERATOR-DECISION]** 2026-05-20 slot 7: aws CLI IS available. But ~40+ launch scripts to twin is large
-    scope. Awaiting operator ack on (a) defer post-cutover (significant scope, P1, not on May-23 critical path) vs.
-    (b) proceed now. Ping filed in `harsh_orchestrator/pings/slot_7.md`.
+  - **DONE** 2026-05-20 slot 7 (operator ack: "proceed now"). Design: single master launcher
+    `launch-ec2-vm.sh` (--task dispatch, 80 task entries) + shared library
+    `lib/aws_ec2_launch_lib.sh` (lc_aws_* functions mirroring launcher_common.sh) +
+    `vm_zombie_watchdog_aws.py` (boto3 twin of vm_zombie_watchdog.py, full VM_PREFIX_TO_BUCKET
+    registry). deployment-service@`5c4bed4`.
+  - **Remaining**: AWS_SECURITY_GROUP_IDS + AWS_SUBNET_ID must be set at runtime; IAM instance
+    profiles gated on 1.B resolution (scripts work today for code review/dry-run).
 
 - [ ] [AGENT] P1. **1.H — Cross-cloud Workload Identity Federation.** GCP SA assumes AWS IAM role for services spanning
       both clouds (per `aws-iam-matrix.md`). Configure trust policy on AWS roles + WIF pool on GCP project.
