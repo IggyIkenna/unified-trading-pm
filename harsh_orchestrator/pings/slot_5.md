@@ -447,3 +447,22 @@ Phase U2 smoke test + Phase U4/U5/U6 Playwright e2e — need running local dev s
 2. Start 2yr backtest (Phase 3): `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3` (background ~6h)
 3. Provision Copper testnet sub-account (Phase 4.A) — then Phase 4.A–4.C–5.C–5.D–6 unblock in sequence
 4. Set Telegram bot token in Secret Manager (Phase 5.B) — then Phase 5.C/5.D unblock
+
+---
+
+[2026-05-20 UTC] slot-5 → operator — **BLOCKED-OPERATOR: batch_live_symmetry Tab6 + Tab8 VMs** (plan: `batch_live_symmetry_2026_05_10.md`)
+
+Completed this session: backfilled Tab5 Phase3/4 checkboxes (gcs_migration_bundle 2026-05-19 evidence) + tagged all operator-blocked items. Agent-doable items remaining: Tab4 P1 (commodity bare-class deletion), Tab5 Phase9 QG sweep, Tab5 L7 MTDS defi handler fixes, Tab7 Playwright e2e matrix.
+
+**BLOCKED items needing operator VM launches (Tab8 first, then Tab6 unlocks):**
+
+| Plan item | Blocker | What operator must do |
+|-----------|---------|----------------------|
+| Tab8 Step 1 — 2yr backtest VM | Needs operator trigger | `bash deployment-service/scripts/vm/run-batch.sh --archetype carry_staked_basis --mode batch` (prefix `defi-backtest-`) |
+| Tab8 Step 2 — select top-3 candidates | Blocked on Step 1 output | Operator reviews backtest PnL/Sharpe; tags top-3 `STRATEGY_ID` in config |
+| Tab8 Step 4 — paper VM launch | Blocked on Step 1+2 | `bash deployment-service/scripts/vm/run-paper.sh --strategy-id <selected> --mode paper` (prefix `defi-paper-`) |
+| Tab8 Step 6 — 7-day soak readiness check | Blocked on Step 4 | After paper VM running ≥7d: confirm VM alive + events flowing + P&L accumulating |
+| Tab6 P0 — paper-mode smoke calibration | Blocked on Tab8 Step 4 paper VM | Run reconciler against shipped backtest + paper VM output; calibrate thresholds |
+| Tab6 P1 — 7-day soak calibration | Blocked on Tab8 paper VM running | Daily reconciler run during Tab8 soak; tighten thresholds |
+
+**No wallet keys / kill-switch operations involved — these are VM launch + paper-mode only.**
