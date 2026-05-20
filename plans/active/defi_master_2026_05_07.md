@@ -748,9 +748,12 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 > (UAC@`d721b6a`).
 
-- [ ] [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
+- [x] ✅ [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
       `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
-      P0-relevant for May 23 Group F]
+      P0-relevant for May 23 Group F] DONE 2026-05-20 slot 7: 25 unit tests (mock-based, all pass) +
+      integration scaffold in `tests/integration/test_copper_custody_provider.py` (BLOCKED-CREDENTIALS —
+      copper-sandbox-api-key/secret/org-id not in SM; skips gracefully). execution-service@0cc58c56.
+      Sandbox creds ping in `harsh_orchestrator/pings/slot_7.md`.
 - [x] ✅ [AGENT] P0. `CloudKmsCustodyProvider` implementation (NEW,
       `execution-service/execution_service/custody/cloud_kms.py`) per `api_keys_wallets` Plan Phase 3.C.1 — owner:
       Ikenna slot 4 successor + Harsh implementation. — execution-service@d45d24b4b (audit-backfilled 2026-05-19)

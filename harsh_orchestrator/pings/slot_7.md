@@ -747,3 +747,28 @@ Options:
 (b) **Proceed now** — ~40 scripts to write; agent can do it but 6+ hours; fits within this task's 6h estimate
 
 Note: 1.B (IAM roles) must be resolved first for any AWS EC2 launch to work (harsh-worker lacks iam:CreateRole).
+
+---
+
+## [2026-05-20] CREDENTIAL APPROVAL REQUEST — Copper sandbox (slot 7)
+
+**Context**: `defi_master_2026_05_07.md` line 738 Copper sandbox integration test.
+`CopperCustodyProvider` is fully implemented at `execution-service/execution_service/custody/copper.py`.
+25 unit tests pass. Integration test scaffold is in place and auto-skips when creds absent.
+
+**Vendor**: Copper.co sandbox — `https://api.sandbox.copper.co/platform`
+**What I need**: Three secrets in GCP Secret Manager (`central-element-323112`):
+  - `copper-sandbox-api-key`
+  - `copper-sandbox-api-secret`
+  - `copper-org-id` (or sandbox-specific `copper-sandbox-org-id`)
+
+**Account to use**: Existing operator Copper.co account; request sandbox access from Copper dashboard if not already active.
+
+**Unblocks**:
+  - `defi × COPPER_MPC` June-1 per-wallet signing-surface flip (custody-providers.md § 2.3)
+  - Master plan Group F Item 19: "Copper + CEFFU treasury wired"
+  - `tests/integration/test_copper_custody_provider.py` TestCopperSandboxIntegration (currently skips)
+
+**Without it**: Integration tests remain skipped; all 25 unit tests pass; adapter is production-ready.
+
+**Status**: BLOCKED-CREDENTIALS
