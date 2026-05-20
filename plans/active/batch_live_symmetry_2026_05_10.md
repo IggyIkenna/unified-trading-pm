@@ -815,6 +815,19 @@ owner must use the file list in Tab 2 L7 checkbox body above.
 | Tab 3 L2 STEP 5.77 enable                                          | ✅ DONE — PM@fac14af3; all 5 repos pre-flighted clean                                               | No successor                                           |
 | Tab 3 L7 verification sweep                                        | ✅ DONE — 0 assert_available_at_present=False; 0 ManifestWriter.add() calls                         | No successor                                           |
 
+## Deferred work after 2026-05-20 slot-5 session
+
+| Phase / item | Status as of 2026-05-20 | Successor / blocker |
+| --- | --- | --- |
+| Tab 5 L7 — 37 `available_at` stamps across 23 MTDS DeFi handlers | ✅ DONE — MTDS@0d3a09a | No successor |
+| Tab 5 L7 — MDPS `StorageDispatchWorker.write()` stamp | ✅ DONE — MDPS@18d3523 | No successor |
+| Phase 9 QG sweep (5 migration-critical repos) | ✅ GREEN — UAC, UTL, MTDS, MDPS, instruments-service all pass | No successor |
+| Phase 9 QG sweep (4 non-migration repos) | 🟡 OPERATOR CONFIRM — deployment-api (67 fails, foreign tab/hk/7 in-flight); deployment-ui (Node.js infra gap); unified-trading-pm (ruff not in PATH); deployment-service (pre-existing shellcheck 135 failures) | Operator to resolve infra gaps + tab/hk/7 merge |
+| Tab 7 P0 Playwright e2e matrix | 🟡 BLOCKED-INFRA — Node.js ≥20 not installed on machine | Operator to install Node.js ≥20; then re-assign to slot |
+| Tab 6 paper-mode smoke + 7-day soak calibration | 🟡 BLOCKED-OPERATOR — requires Tab6 reconciler VM launch first | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 6 |
+| Tab 8 backtest VM launch + paper-deploy + 7-day soak | 🟡 BLOCKED-OPERATOR — all VM operations are human-only | `plans/active/batch_live_symmetry_2026_05_10.md` Tab 8 |
+| Phase 4 `record_captured(df=...)` full migration (DEFAULT-REMOVAL) | 🔵 DEFERRED post-cutover | Named successor: `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4 |
+
 ## Temporary states + their canonical follow-up plans
 
 - **D4 Shadow-simulated fills in live**: deferred post-cutover — successor
