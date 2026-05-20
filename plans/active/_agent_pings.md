@@ -38,6 +38,13 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-20 11:30 UTC] ikenna-slot-8 — **OPERATOR ACTION REQUEST — archive ml-training-service + ml-inference-service**.
+Phase 6 all 3 parity gates GREEN (boot@5fce11a, QG@16865a3, functional@a6dd980). DEPRECATION_NOTICE.md committed to both
+repos. Steps 1/2/4/5/6 of Phase 7 done. Step 3 requires operator:
+`gh repo archive IggyIkenna/ml-training-service --yes && gh repo archive IggyIkenna/ml-inference-service --yes`. Then
+verify `gh api repos/IggyIkenna/ml-training-service --jq .archived` = true. See
+`plans/active/ml_repo_consolidation_2026_05_19.md` Phase 7.
+
 [2026-05-19 09:45 UTC] ikenna-main — ACTION REQUIRED FOR HARSH: GitHub repo `orchestrator-service` renamed to
 `agent-orchestrator`. Run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in your local
 clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already uses correct repo name. See
@@ -4038,9 +4045,12 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
   - position-balance-monitor-service@f602e58
   - pnl-attribution-service@c1ac3f0
 - CHANGELOG.md + QGBA merged into strategy-service@607a411b (158 total errors catalogued from 3 source repos)
-- workspace-manifest.json updated: `status=pending-archive-into-strategy-service`, `archived_into=strategy-service`, `archive_date=2026-05-19`
-- unified-trading-system-repos.code-workspace: 3 repos removed from `folders` list (29→26) and `git.scanRepositories` (27→24)
-- setup-tab-worktrees.sh: reads `archived_into` from workspace-manifest.json; auto-excludes repos with that field set — no manual edit required
+- workspace-manifest.json updated: `status=pending-archive-into-strategy-service`, `archived_into=strategy-service`,
+  `archive_date=2026-05-19`
+- unified-trading-system-repos.code-workspace: 3 repos removed from `folders` list (29→26) and `git.scanRepositories`
+  (27→24)
+- setup-tab-worktrees.sh: reads `archived_into` from workspace-manifest.json; auto-excludes repos with that field set —
+  no manual edit required
 - Phase 6 parity gate: **[to be confirmed by Phase 6 agent — do NOT archive if RED]**
 
 **Post-archive actions** (agent-executable after operator confirms archived):
@@ -4049,7 +4059,8 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 - Proceed to Phase 8A (launcher migration in deployment-service)
 - Verify: `gh api repos/IggyIkenna/risk-and-exposure-service --jq .archived` returns `true` for all 3
 
-**Gate**: Phase 6 agent must report GREEN before this ping is acted on. If Phase 6 is RED, plan flips to BLOCKED-CUTOVER — DO NOT archive.
+**Gate**: Phase 6 agent must report GREEN before this ping is acted on. If Phase 6 is RED, plan flips to BLOCKED-CUTOVER
+— DO NOT archive.
 
 — slot-6 / ikenna
 
@@ -4057,19 +4068,26 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 
 ## [slot-1 ikenna → harsh] 2026-05-20 — qg-snapshot cron VM stale ≥6 days; you now have IAM
 
-**From**: slot-1 main ikenna (tab/ikennaigboaka/1)
-**To**: harsh side (any slot)
-**Issue**: `plans/active/issues/qg_snapshot_cron_stale_2026_05_18.md`
+**From**: slot-1 main ikenna (tab/ikennaigboaka/1) **To**: harsh side (any slot) **Issue**:
+`plans/active/issues/qg_snapshot_cron_stale_2026_05_18.md`
 
-**Context**: QG snapshot cron VM hasn't fired since 2026-05-14 — 6+ days stale and growing. The QG dashboard + workspace-wide QG status snapshot pipeline depends on this cron. Issue body cites slot-7 (harsh) was blocked by missing `cloudscheduler.jobs.create/update` IAM on `central-element-323112`.
+**Context**: QG snapshot cron VM hasn't fired since 2026-05-14 — 6+ days stale and growing. The QG dashboard +
+workspace-wide QG status snapshot pipeline depends on this cron. Issue body cites slot-7 (harsh) was blocked by missing
+`cloudscheduler.jobs.create/update` IAM on `central-element-323112`.
 
-**Unblock landed 2026-05-20**: `harshkantariya@odum-research.com` now has `roles/cloudscheduler.admin` + `roles/run.admin` bound on project `central-element-323112` (granted by slot-1 main ikenna 2026-05-20). Verified via `gcloud projects get-iam-policy`.
+**Unblock landed 2026-05-20**: `harshkantariya@odum-research.com` now has `roles/cloudscheduler.admin` +
+`roles/run.admin` bound on project `central-element-323112` (granted by slot-1 main ikenna 2026-05-20). Verified via
+`gcloud projects get-iam-policy`.
 
 **Ask**: pick this up from harsh-side. Either:
+
 1. **Verify + re-enable** the scheduler job (status check + start), OR
 2. **Confirm intentionally paused** — if so, add `resolved:` block + archive the issue with the rationale.
 
-**Composes with**: also worth checking `tradfi-fwd-daily` and `cefi-fwd-daily` while you're in the Cloud Scheduler console — slot-1 main found those have been broken (HTTP 403 / zero executions for 4+ months). Separate work item: `tradfi_forward_poll_cron_missing_2026_05_17.md` (in-flight cron-VM agent will replace those with the cron-VM pattern, no further action needed there).
+**Composes with**: also worth checking `tradfi-fwd-daily` and `cefi-fwd-daily` while you're in the Cloud Scheduler
+console — slot-1 main found those have been broken (HTTP 403 / zero executions for 4+ months). Separate work item:
+`tradfi_forward_poll_cron_missing_2026_05_17.md` (in-flight cron-VM agent will replace those with the cron-VM pattern,
+no further action needed there).
 
 **No deadline**: P1 freshness gap, not May-23 critical-path.
 
@@ -4079,15 +4097,24 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 
 ## [slot-1 ikenna main → slot 5 harsh] 2026-05-20 — pause recommendation (HIGH PRIORITY)
 
-**Issue**: You are editing MTDS DeFi handlers (`perp_funding_handler.py`, `lst_rates_handler.py`, `native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`) as part of `is_mtds_contract_audit_2026_05_20.md` Phase 3+4. Three live blockers overlap this exact surface:
+**Issue**: You are editing MTDS DeFi handlers (`perp_funding_handler.py`, `lst_rates_handler.py`,
+`native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`) as part
+of `is_mtds_contract_audit_2026_05_20.md` Phase 3+4. Three live blockers overlap this exact surface:
 
-1. **46-day DeFi backfill in flight** (~12 VMs writing solana-defi v8 manifest right now; expected complete ~04-06 UTC 2026-05-20). Hardcode-removal commits mid-write risk pipeline restart while backfill still draining.
-2. **17 MTDS freshness-cache test failures pre-existing** in this EXACT handler family. Root cause unknown. Any handler edit may shift the test surface, making the existing failure-set non-comparable to baseline.
-3. **`data_manifest_handler.py:242` schema_version 4→8** flip is the same surface that produced the prediction (14,403) + tradfi (245,907) phantom regression from Phase 3 GCS migration. Migration phase 6 `--apply` is BLOCKED until that regression is understood.
+1. **46-day DeFi backfill in flight** (~12 VMs writing solana-defi v8 manifest right now; expected complete ~04-06 UTC
+   2026-05-20). Hardcode-removal commits mid-write risk pipeline restart while backfill still draining.
+2. **17 MTDS freshness-cache test failures pre-existing** in this EXACT handler family. Root cause unknown. Any handler
+   edit may shift the test surface, making the existing failure-set non-comparable to baseline.
+3. **`data_manifest_handler.py:242` schema_version 4→8** flip is the same surface that produced the prediction
+   (14,403) + tradfi (245,907) phantom regression from Phase 3 GCS migration. Migration phase 6 `--apply` is BLOCKED
+   until that regression is understood.
 
-**Recommended pause until**: (a) 46-day backfill confirmed STOPPED + manifest consolidated to snapshot, AND (b) freshness-cache test failures root-caused (mega-audit Phase A diagnostics), AND (c) phantom-manifest investigation lands or operator [ack] on schema_version flip approach.
+**Recommended pause until**: (a) 46-day backfill confirmed STOPPED + manifest consolidated to snapshot, AND (b)
+freshness-cache test failures root-caused (mega-audit Phase A diagnostics), AND (c) phantom-manifest investigation lands
+or operator [ack] on schema_version flip approach.
 
 **Alternative work picks** (orthogonal):
+
 1. `expected_unattempted_propagation_chain_2026_05_12.md` residuals (read-side, codex-side only)
 2. Mega-audit Phase A1 inventory script (no manifest writes)
 3. UTL `manifest_writer.py` unit-test hardening (read-only, no handler edits)
@@ -4099,11 +4126,18 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 
 ## [slot-1 ikenna main → slot 8 harsh] 2026-05-20 — pause recommendation
 
-**Issue**: Your `bucket_name_ssot residuals` work overlaps directly with **slot 2 ikenna** (which has `unified-trading-library/slot2/l3-flip-staged` + `deployment-api/slot2/l5-flip-staged` on LOCAL branches awaiting operator write-pause signal). Concurrent edits to UTL wrappers + `_defi_tick_bucket` will create stash conflicts on slot 2's push. Separately, `expected_universe_v2` + `manifest_cross_asset_rescan` both consume "expected coverage" which is mega-audit Phase A2 oracle — NOT YET BUILT.
+**Issue**: Your `bucket_name_ssot residuals` work overlaps directly with **slot 2 ikenna** (which has
+`unified-trading-library/slot2/l3-flip-staged` + `deployment-api/slot2/l5-flip-staged` on LOCAL branches awaiting
+operator write-pause signal). Concurrent edits to UTL wrappers + `_defi_tick_bucket` will create stash conflicts on slot
+2's push. Separately, `expected_universe_v2` + `manifest_cross_asset_rescan` both consume "expected coverage" which is
+mega-audit Phase A2 oracle — NOT YET BUILT.
 
-**Recommended pause until**: (a) slot 2 ikenna pushes L3+L5 flip branches (operator must signal write-pause first), AND (b) Phase A2 `expected_coverage()` lands as part of slot 3 ikenna's UAC SourceCapability metadata promotion plan (`uac_source_capability_metadata_promotion_2026_05_20.md`).
+**Recommended pause until**: (a) slot 2 ikenna pushes L3+L5 flip branches (operator must signal write-pause first), AND
+(b) Phase A2 `expected_coverage()` lands as part of slot 3 ikenna's UAC SourceCapability metadata promotion plan
+(`uac_source_capability_metadata_promotion_2026_05_20.md`).
 
 **Alternative work picks**:
+
 1. `available_at` propagation audit (read-side; orthogonal to bucket flips and Phase A2)
 2. Sustain S11-S14 sweep items if any remain mechanical (docs/config)
 3. `manifest_schema_final_gate` consumer-side audit — read-only
@@ -4115,14 +4149,17 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 ## [slot-1 ikenna main → slot 4 harsh] 2026-05-20 — pause confirmation
 
 **Issue**: You correctly filed two operator-blocks today:
+
 - `config_grid_archetype_extend_2026_05_20.md` engine-param mismatch (operator approach pick a vs b)
 - Slack webhook secret IAM bind (needs operator GCP admin)
 
 Without explicit STOPPED signal, the orchestrator may dispatch adjacent stale work.
 
-**Recommended pause until**: operator [ack] on either of the two filed pings. Do NOT grab adjacent hard_schema or strategy_archetype_taxonomy items autonomously — they may have their own dependencies on the engine-param decision.
+**Recommended pause until**: operator [ack] on either of the two filed pings. Do NOT grab adjacent hard_schema or
+strategy_archetype_taxonomy items autonomously — they may have their own dependencies on the engine-param decision.
 
 **Alternative work picks** (only if you must continue):
+
 1. `hard_schema_enforcement` codex SSOT updates (doc-only)
 2. Mega-audit Phase A inventory build-out — strategy-service consumer enumeration
 
@@ -4132,13 +4169,17 @@ Without explicit STOPPED signal, the orchestrator may dispatch adjacent stale wo
 
 ## [slot-1 ikenna main → slot 7 harsh] 2026-05-20 — coordinate-or-pause recommendation
 
-**Issue**: Your `dex_perp_onboarding` items overlap **slot 7 ikenna** which already shipped defi_master Phase 2 forward-poll launcher covering Lighter/Pacifica/Extended/Hyperliquid/Aster. Risk of duplicate adapter scaffolding.
+**Issue**: Your `dex_perp_onboarding` items overlap **slot 7 ikenna** which already shipped defi_master Phase 2
+forward-poll launcher covering Lighter/Pacifica/Extended/Hyperliquid/Aster. Risk of duplicate adapter scaffolding.
 
 Separately, AWS Phase 1.B + 1.G + Copper sandbox correctly filed BLOCKED-OPERATOR / BLOCKED-CREDENTIALS — keep parked.
 
-**Recommended action**: read slot 7 ikenna's recent pings (defi_master forward-poll) and `plans/archive/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`; coordinate adapter-scope explicitly before re-engaging dex_perp_onboarding. Otherwise: PAUSE that item.
+**Recommended action**: read slot 7 ikenna's recent pings (defi_master forward-poll) and
+`plans/archive/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`; coordinate adapter-scope explicitly before
+re-engaging dex_perp_onboarding. Otherwise: PAUSE that item.
 
 **Alternative work picks** (clear):
+
 1. `gate_3_phantom` — read-side audit of phantom regression on prediction/tradfi
 2. `trigger_based` + `hedge_ratio` small closes — orthogonal
 
@@ -4148,11 +4189,14 @@ Separately, AWS Phase 1.B + 1.G + Copper sandbox correctly filed BLOCKED-OPERATO
 
 ## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
 
-**Issue**: Your `aws_migration_defi_first` Group A (per-venue exchange sub-keys) + Group D (KMS wallet) items are correctly filed BLOCKED-CREDENTIALS. Continuing on those specifically risks half-implementing auth shape against guessed credential format.
+**Issue**: Your `aws_migration_defi_first` Group A (per-venue exchange sub-keys) + Group D (KMS wallet) items are
+correctly filed BLOCKED-CREDENTIALS. Continuing on those specifically risks half-implementing auth shape against guessed
+credential format.
 
 **Recommended pause until**: operator provisions Group A sub-keys (or [ack]s deferral list).
 
 **Continue on (clear)**:
+
 1. Group B — scriptable GCP→AWS secret mirror (alchemy, thegraph). Run NOW; operator has admin.
 2. Phase 4.A — `aws_iam_roles.yaml` SSOT consumer-side wiring.
 3. Group C — Telegram/PagerDuty alerting keys (check existing GCP secrets first).
@@ -4163,13 +4207,20 @@ Separately, AWS Phase 1.B + 1.G + Copper sandbox correctly filed BLOCKED-OPERATO
 
 ## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
 
-**Issue**: **3 slots** are currently editing overlapping MTDS DeFi handlers while the 46-day backfill writes through them (12 VMs in flight). High risk of write conflicts + non-comparable test-failure baseline.
+**Issue**: **3 slots** are currently editing overlapping MTDS DeFi handlers while the 46-day backfill writes through
+them (12 VMs in flight). High risk of write conflicts + non-comparable test-failure baseline.
 
-**Affected slots**: harsh-2 (manifest_schema_final_gate), harsh-5 (is_mtds_contract_audit Phase 3+4 — HIGHEST RISK, separate ping above), ikenna-5 (writegate Phase 6.6/6.7).
+**Affected slots**: harsh-2 (manifest_schema_final_gate), harsh-5 (is_mtds_contract_audit Phase 3+4 — HIGHEST RISK,
+separate ping above), ikenna-5 (writegate Phase 6.6/6.7).
 
-**Handlers under active edit + backfill write**: `perp_funding_handler.py`, `lst_rates_handler.py`, `native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`, `dex_pools_handler.py`, `dex_swaps_handler.py`, `lending_indices_handler.py`, `gas_fee_handler.py`, `liquidations_handler.py`, `eigenlayer_rewards_handler.py`, `vault_share_price_handler.py`.
+**Handlers under active edit + backfill write**: `perp_funding_handler.py`, `lst_rates_handler.py`,
+`native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`,
+`dex_pools_handler.py`, `dex_swaps_handler.py`, `lending_indices_handler.py`, `gas_fee_handler.py`,
+`liquidations_handler.py`, `eigenlayer_rewards_handler.py`, `vault_share_price_handler.py`.
 
-**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero MISSING_EXPECTED in A3 divergence dump.
+**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest
+consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero
+MISSING_EXPECTED in A3 divergence dump.
 
 — slot-1 main / ikenna
 
@@ -4177,16 +4228,17 @@ Separately, AWS Phase 1.B + 1.G + Copper sandbox correctly filed BLOCKED-OPERATO
 
 ## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
 
-**Issue**: BFG history scrub completed on 3 of 5 repos: **instruments-service**, **unified-trading-library**, **strategy-service**. Main branches force-pushed. Any slot holding worktree on these 3 repos:
+**Issue**: BFG history scrub completed on 3 of 5 repos: **instruments-service**, **unified-trading-library**,
+**strategy-service**. Main branches force-pushed. Any slot holding worktree on these 3 repos:
 
 ```bash
 git fetch && git reset --hard origin/main   # NOT git pull --rebase
 ```
 
-`pull --rebase` produces duplicate commits with mangled history; `reset --hard` is the recovery. Stash YOUR files first (by name, not `-u` to avoid foreign-dirty), reset, then pop.
+`pull --rebase` produces duplicate commits with mangled history; `reset --hard` is the recovery. Stash YOUR files first
+(by name, not `-u` to avoid foreign-dirty), reset, then pop.
 
 — slot-1 main / ikenna
-
 
 ## [slot-1 ikenna main → all PR authors on execution-service + MTDS] 2026-05-20 — BFG scrub Phase 2 complete; rebase needed
 
@@ -4197,42 +4249,59 @@ git fetch && git reset --hard origin/main   # NOT git pull --rebase
 - IggyIkenna/execution-service (20 feature branches rewritten)
 - IggyIkenna/market-tick-data-service (20 feature branches rewritten)
 
-History rewrote SA-key file `central-element-323112-e35fb0ddafe2.json` out of all reachable refs. Every open PR's branch tip has been rewritten — PRs continue to "exist" in the GitHub UI but their head ref no longer matches what the original author pushed.
+History rewrote SA-key file `central-element-323112-e35fb0ddafe2.json` out of all reachable refs. Every open PR's branch
+tip has been rewritten — PRs continue to "exist" in the GitHub UI but their head ref no longer matches what the original
+author pushed.
 
-**Key finding**: `main` HEAD SHA was UNCHANGED on both repos because the SA-key file only lived on feature/auto branches (it was never committed to `main` directly). The BFG scrub rewrote 20 + 20 feature branches per repo; `main`'s commit chain was already clean. So a fresh-clone advisory is only relevant for slots actively working on the rewritten feature branches — NOT for slots tracking `main` or `live-defi-rollout`.
+**Key finding**: `main` HEAD SHA was UNCHANGED on both repos because the SA-key file only lived on feature/auto branches
+(it was never committed to `main` directly). The BFG scrub rewrote 20 + 20 feature branches per repo; `main`'s commit
+chain was already clean. So a fresh-clone advisory is only relevant for slots actively working on the rewritten feature
+branches — NOT for slots tracking `main` or `live-defi-rollout`.
 
 **Pre-scrub main HEAD SHAs (recovery anchor)**:
+
 - execution-service: `807489468d6e77cd68724635937248cb3c1333f0` (unchanged post-scrub)
 - market-tick-data-service: `ae638b58e586f0fd17d013c4add39fa7f2f850e7` (unchanged post-scrub)
 
-**Open PRs requiring rebase if author wants to resurrect them** (snapshot at scrub time — 35 PRs in execution-service + 21 PRs in MTDS = 56 total; operator-acked orphan):
+**Open PRs requiring rebase if author wants to resurrect them** (snapshot at scrub time — 35 PRs in execution-service +
+21 PRs in MTDS = 56 total; operator-acked orphan):
 
 ### execution-service (35 PRs)
 
-- #177 [feat/ci-cd-foundation] — fix: P0 - except Exception pass, GOOGLE_CLOUD_PROJECT, ImportError fallbacks — @IggyIkenna
-- #176 [auto/20260220-154522-490985] — feat: Pass mode to get_order_adapter for sim/real routing (Task 350) — @CosmicTrader
-- #175 [auto/config-schema-unified-config] — Import config_schema from unified-config-interface (v1.7.0 corrected) — @IggyIkenna
-- #174 [auto/pattern-b-migration-execution] — feat: migrate to Pattern B (Artifact Registry with all 5 libs) — @IggyIkenna
+- #177 [feat/ci-cd-foundation] — fix: P0 - except Exception pass, GOOGLE_CLOUD_PROJECT, ImportError fallbacks —
+  @IggyIkenna
+- #176 [auto/20260220-154522-490985] — feat: Pass mode to get_order_adapter for sim/real routing (Task 350) —
+  @CosmicTrader
+- #175 [auto/config-schema-unified-config] — Import config_schema from unified-config-interface (v1.7.0 corrected) —
+  @IggyIkenna
+- #174 [auto/pattern-b-migration-execution] — feat: migrate to Pattern B (Artifact Registry with all 5 libs) —
+  @IggyIkenna
 - #172 [auto/20260219-114842-41277] — fix: add unified-config-interface for CI and local quality gates — @IggyIkenna
-- #171 [auto/20260219-094044-1941] — Split libraries: direct unified_events_interface imports, setup_events in benchmark_compare — @IggyIkenna
+- #171 [auto/20260219-094044-1941] — Split libraries: direct unified_events_interface imports, setup_events in
+  benchmark_compare — @IggyIkenna
 - #170 [auto/20260218-150553-35099] — Upgrade to Python 3.13 and migrate to split libraries (Tier 1) — @IggyIkenna
 - #164 [refactor/live-orchestration-layer] — Add live orchestration layer using split library structure — @IggyIkenna
 - #158 [auto/20260215-141643-nogates] — chore: add UNIFIED_CLOUD_SERVICES_GCS_BUCKET to cloudbuild — @IggyIkenna
 - #151 [auto/20260214-120514-26552] — Fixes #147: quality gates accept Python 3.13 and smoke test exit 5 — @IggyIkenna
 - #144 [auto/20260213-032738-77774] — replace print() with logger in test_predefined_orders.py — @IggyIkenna
 - #137 [fix/997-import-top] — move import to top in test_signal_trace_debug.py — @IggyIkenna
-- #126 [fix/976-print-to-logger-ucs-integration] — replace print() with logger.info() in test_ucs_integration.py — @IggyIkenna
+- #126 [fix/976-print-to-logger-ucs-integration] — replace print() with logger.info() in test_ucs_integration.py —
+  @IggyIkenna
 - #115 [auto/20260213-015638-50337] — move imports to top in test_instrument_resolver — @IggyIkenna
-- #110, #108 [auto/20260213-014550-78669, 20260213-014219-47183] — move imports to top in test_instruction_type_algorithm_selection — @IggyIkenna
-- #106, #104 [auto/20260213-013809-18040, 20260213-013447-7380] — move imports to top in test_cloud_agnostic_paths — @IggyIkenna
+- #110, #108 [auto/20260213-014550-78669, 20260213-014219-47183] — move imports to top in
+  test_instruction_type_algorithm_selection — @IggyIkenna
+- #106, #104 [auto/20260213-013809-18040, 20260213-013447-7380] — move imports to top in test_cloud_agnostic_paths —
+  @IggyIkenna
 - #105 [auto/20260213-013522-10395] — Replace print() with logger.info() in test_shard_combinatorics — @IggyIkenna
 - #94 [auto/20260213-010920-49741] — move rich imports to top in preflight.py — @IggyIkenna
 - #72 [fix/654-print-to-logger] — replace print() with logger in cleanup_gcs_bucket.py — @IggyIkenna
 - #67 [auto/20260213-000611-12639] — replace print() with logger.info() in run_phasee_fullpath_matrix.py — @IggyIkenna
-- #66 [fix/643-list-gcs-config] — replace os.getenv with ExecutionServicesConfig in list_gcs_dates_and_files.py — @IggyIkenna
+- #66 [fix/643-list-gcs-config] — replace os.getenv with ExecutionServicesConfig in list_gcs_dates_and_files.py —
+  @IggyIkenna
 - #65 [fix/codex-649-imports-at-top] — move imports to top in upload_backtest_results_to_gcs.py — @IggyIkenna
 - #64 [auto/20260212-235917-75403] — replace print() with logger in list_gcs_dates_and_files.py — @IggyIkenna
-- #63 [auto/20260212-235741-70337] — replace os.getenv with ExecutionServicesConfig in upload_backtest_results_to_gcs — @IggyIkenna
+- #63 [auto/20260212-235741-70337] — replace os.getenv with ExecutionServicesConfig in upload_backtest_results_to_gcs —
+  @IggyIkenna
 - #55 [auto/20260212-190248-49529] — add --entrypoint bash override for quality gates in Cloud Build — @IggyIkenna
 - #53 [auto/20260212-172430-91351] — feat: migrate to UCS base image, Python 3.12, uv; add .cursorrules — @IggyIkenna
 - #52 [auto/20260211-162930-15245] — add dependency install + git fetch/reset to quickmerge — @IggyIkenna
@@ -4244,29 +4313,35 @@ History rewrote SA-key file `central-element-323112-e35fb0ddafe2.json` out of al
 
 ### market-tick-data-service (21 PRs)
 
-- #95 [auto/20260227-211553-29705] — P0 - pip->uv, print->logger, GOOGLE_CLOUD_PROJECT, ImportError fallbacks — @IggyIkenna
-- #94 [data-io-production-readiness-project-9] — Data I/O Production Readiness: config, UEI migration, codex alignment — @CosmicTrader
+- #95 [auto/20260227-211553-29705] — P0 - pip->uv, print->logger, GOOGLE_CLOUD_PROJECT, ImportError fallbacks —
+  @IggyIkenna
+- #94 [data-io-production-readiness-project-9] — Data I/O Production Readiness: config, UEI migration, codex alignment —
+  @CosmicTrader
 - #93 [auto/20260220-092607-84647] — Move nautilus_schema (Phase 1 Step 1 of v1.7.0 domain extraction) — @IggyIkenna
 - #87 [refactor/import-from-market-interface] — import market feed clients from unified-market-interface — @IggyIkenna
 - #86 [auto/pattern-b-migration-market-tick] — migrate to Pattern B (Artifact Registry) — @IggyIkenna
-- #74 [auto/20260219-093103-80107] — log_event signature for unified_events_interface; fix E2E test imports — @IggyIkenna
+- #74 [auto/20260219-093103-80107] — log_event signature for unified_events_interface; fix E2E test imports —
+  @IggyIkenna
 - #70 [merge-auto-20260216-212353] — Merge: DataOrchestrationService, LiveModeHandler, split libraries — @IggyIkenna
 - #68 [auto/20260216-212353-56938] — Add split libraries, live mode, e2e tests for CEFI/TRADFI/DEFI — @IggyIkenna
 - #65 [auto/20260216-185111-354256] — feat(epic-2): complete market data infrastructure implementation — @CosmicTrader
 - #56 [auto/20260215-100052-16753] — quickmerge use uv for deps — @IggyIkenna
 - #55 [auto/20260214-123016-68236] — Rollout Check 5 (imports inside functions) to quality gates — @IggyIkenna
 - #44 [auto/20260211-125049-20793] — extract parallel_download_orchestrator, Phase 2 completion — @IggyIkenna
-- #43 [phase3-transforms-uploaders-python-20260211-115425] — Phase 3: Extract uploaders + Python 3.12+ consistency — @IggyIkenna
+- #43 [phase3-transforms-uploaders-python-20260211-115425] — Phase 3: Extract uploaders + Python 3.12+ consistency —
+  @IggyIkenna
 - #37 [auto/20260210-063242-52879] — sync latest changes — @IggyIkenna
 - #35 [auto/20260210-060458-12124] — quality gates and quickmerge updates — @IggyIkenna
 - #34 [auto/20260209-222339-62362] — add test_no_direct_gcs_client_imports (cloud-agnostic enforcement) — @IggyIkenna
 - #32 [auto/20260209-213239-19606] — market-tick audit fixes - P0/P1/P2 — @IggyIkenna
 - #31 [auto/20260209-210805-82937] — Align test execution: use python -m pytest — @IggyIkenna
-- #24 [auto/20260208-214251-19870] — normalize DEFI adapter schemas + historical validation (Curve, Euler, Fluid) — @IggyIkenna
+- #24 [auto/20260208-214251-19870] — normalize DEFI adapter schemas + historical validation (Curve, Euler, Fluid) —
+  @IggyIkenna
 - #21 [auto/20260208-200734-68714] — add DATABENTO_USE_ALTERNATE_KEYS + DATABENTO_BATCH_REGISTRY_BUCKET — @IggyIkenna
 - #16 [auto/20260208-115523-84079] — remove --no-verify from quickmerge.sh — @IggyIkenna
 
 **Per-PR recovery recipe** (if author wants to resurrect a specific PR):
+
 ```bash
 cd <repo>
 git fetch origin                       # pull the new rewritten branch tip
@@ -4277,12 +4352,18 @@ git reset --hard origin/<pr-branch>    # branch tip already rewritten — adopt 
 git push --force-with-lease origin <pr-branch>
 ```
 
-**Slot fresh-clone advisory** (applies only to slots actively working on the 40 rewritten feature branches across these 2 repos — slots on `main` / `live-defi-rollout` / `staging` are NOT affected):
+**Slot fresh-clone advisory** (applies only to slots actively working on the 40 rewritten feature branches across these
+2 repos — slots on `main` / `live-defi-rollout` / `staging` are NOT affected):
+
 ```bash
 cd <repo> && git fetch && git reset --hard origin/<your-branch>   # NOT git pull --rebase
 ```
-Stash YOUR named dirty files first (`git stash push -- path/to/your_file`), then reset, then `git stash pop`. NEVER `git stash -u` (autostashes foreign-dirty files belonging to other slots).
 
-**Residual `refs/pull/*` GitHub-managed refs**: still carry the SA-key blob (cannot be deleted via `git push`). GitHub will auto-GC these upon PR closure. Operator may optionally request GitHub support to force-purge if needed for compliance.
+Stash YOUR named dirty files first (`git stash push -- path/to/your_file`), then reset, then `git stash pop`. NEVER
+`git stash -u` (autostashes foreign-dirty files belonging to other slots).
+
+**Residual `refs/pull/*` GitHub-managed refs**: still carry the SA-key blob (cannot be deleted via `git push`). GitHub
+will auto-GC these upon PR closure. Operator may optionally request GitHub support to force-purge if needed for
+compliance.
 
 — slot-1 main / ikenna

@@ -234,19 +234,15 @@ todos:
   - id: phase-7-archive-source-repos
     content: |
       - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [HUMAN+AGENT] P0. Phase 7 — Archive both source repos. Per-repo sequence:
-        1. Add `DEPRECATION_NOTICE.md` banner: "**ARCHIVED 2026-05-XX** — code merged into ml-service via
-           ml_repo_consolidation_2026_05_19.md. New work + bug fixes go to ml-service/ml_service/<training|inference>/."
-        2. Final commit: `chore(archive): merged into ml-service per ml_repo_consolidation_2026_05_19`. Push to main.
-        3. `gh repo archive IggyIkenna/ml-<training|inference>-service --confirm` (operator action; shared-state
-           gate — agent files ping in `_agent_pings.md`).
-        4. Remove from `unified-trading-system-repos.code-workspace` folders list.
-        5. Remove from `workspace-manifest.json`; mark `status=consolidated-into-ml-service`,
-           `archived_into=ml-service`, `archive_date=<date>`.
-        6. Update `unified-trading-pm/scripts/dev/setup-tab-worktrees.sh` if 2 source repos enumerated explicitly.
-        7. Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` for both.
-        **Foot-gun**: do NOT archive before Phase 6 parity green.
-    status: formally-deferred
-    blocked_by: phase-6-parity-test
+        1. ✅ Add `DEPRECATION_NOTICE.md` banner: done — ml-training-service@d6f92f7, ml-inference-service@cb2307d.
+        2. ✅ Final commit pushed to live-defi-rollout for both repos.
+        3. **[OPERATOR REQUIRED]** `gh repo archive IggyIkenna/ml-training-service --yes` + `gh repo archive IggyIkenna/ml-inference-service --yes`. Operator ping filed in `_agent_pings.md`.
+        4. ✅ Removed both from `unified-trading-system-repos.code-workspace` folders list — PM@<pending>.
+        5. ✅ `workspace-manifest.json` updated: `status=consolidated-into-ml-service`, `archived_into=ml-service`, `archive_date=2026-05-20` — PM@<pending>.
+        6. ✅ `setup-tab-worktrees.sh` has no explicit enumeration of source repos — no change needed.
+        7. **[OPERATOR REQUIRED]** Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` after step 3.
+    status: blocked-operator
+    blocked_by: operator-archive-action
 
   - id: phase-8a-launcher-migration
     content: |
