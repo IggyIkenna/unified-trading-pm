@@ -15,9 +15,9 @@ status: in-progress
 
 # strategy→execution contract remediation — 2026-05-20
 
-> **Trigger**: Phase D6 of mega-audit-and-plan-beefup-progression-2026-05-20. C7 audit found P0 violations
-> in strategy-service write path + execution-service read path. Both sides have zero manifest emission,
-> creating a silent-empty gap when strategy-service fails to produce instructions for a day.
+> **Trigger**: Phase D6 of mega-audit-and-plan-beefup-progression-2026-05-20. C7 audit found P0 violations in
+> strategy-service write path + execution-service read path. Both sides have zero manifest emission, creating a
+> silent-empty gap when strategy-service fails to produce instructions for a day.
 
 ## Context
 
@@ -78,8 +78,8 @@ Phase Q — QG ratchet                                                 [AFTER Ph
    └── Qb. Extend no_silent_absence_handlers.sh to cover strategy_instructions/gcs.py
 ```
 
-**Foundation-completion-gate rule**: Phase 3 MUST NOT ship before Phase 2. Manifest-based preflight on empty manifest
-is useless.
+**Foundation-completion-gate rule**: Phase 3 MUST NOT ship before Phase 2. Manifest-based preflight on empty manifest is
+useless.
 
 ---
 
@@ -182,6 +182,7 @@ class StrategyManifestRecorder:
 **File**: `strategy-service/strategy_service/engine/core/gcs_storage_service.py:159-198`
 
 Before:
+
 ```python
 def write_instructions(self, strategy_id, date_str, instructions_df, client_id=""):
     blob_path = f"strategy_instructions/client_id={client_id}/strategy_id={strategy_id}/day={date_str}/instructions.parquet"
@@ -199,6 +200,7 @@ def write_instructions(self, strategy_id, date_str, instructions_df, client_id="
 ```
 
 After:
+
 ```python
 def write_instructions(self, strategy_id, date_str, instructions_df, client_id=""):
     from datetime import date as date_type
@@ -236,6 +238,7 @@ def write_instructions(self, strategy_id, date_str, instructions_df, client_id="
 **File**: `strategy-service/strategy_service/cli/handlers/batch_handler.py:501-508`
 
 Before:
+
 ```python
 if not is_complete:
     logger.warning(
@@ -245,6 +248,7 @@ if not is_complete:
 ```
 
 After (emit lifecycle event + DO NOT re-raise — shard isolation rule prevents raise inside loop):
+
 ```python
 if not is_complete:
     logger.warning(
@@ -259,10 +263,10 @@ if not is_complete:
     })
 ```
 
-Note: A `DependencyError` raise at this level would kill the entire batch handler instead of isolating per-shard.
-The correct fix is to emit `PROCESSING_INCOMPLETE` (a lifecycle event readable by the orchestrator) and let
-`record_failed` on individual `write_instructions` calls handle per-shard failure visibility. The warn-but-proceed
-is acceptable here AS LONG AS individual shard failures are recorded via `record_failed` in `write_instructions`.
+Note: A `DependencyError` raise at this level would kill the entire batch handler instead of isolating per-shard. The
+correct fix is to emit `PROCESSING_INCOMPLETE` (a lifecycle event readable by the orchestrator) and let `record_failed`
+on individual `write_instructions` calls handle per-shard failure visibility. The warn-but-proceed is acceptable here AS
+LONG AS individual shard failures are recorded via `record_failed` in `write_instructions`.
 
 ---
 
@@ -273,6 +277,7 @@ is acceptable here AS LONG AS individual shard failures are recorded via `record
 **File**: `execution-service/execution_service/strategy_instructions/gcs.py:127-165`
 
 The execution-service reads strategy instructions. It should record:
+
 - `record_captured` when it reads a non-empty DataFrame (confirmação de disponibilidade)
 - `record_empty(SOURCE_RETURNED_ZERO)` on 404 (hold day — strategy produced no instructions)
 - `record_failed` on any non-404 error
@@ -300,11 +305,14 @@ Required: route through `DependencyChecker.validate_config_can_run()` which call
 **File**: `strategy-service/strategy_service/engine/core/gcs_storage_service.py:58-65`
 
 Replace:
+
 ```python
 config = get_config()
 return config.get_output_bucket()
 ```
+
 With:
+
 ```python
 from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_name
 return resolve_bucket_name(cloud="gcp", kind="strategy-store")
@@ -314,8 +322,7 @@ return resolve_bucket_name(cloud="gcp", kind="strategy-store")
 
 **File**: `execution-service/execution_service/utils/dependency_checker.py:208-210`
 
-Replace hardcoded `"bucket_template": "strategy-store-{project_id}"` with call to `resolve_bucket_name()` at
-check time.
+Replace hardcoded `"bucket_template": "strategy-store-{project_id}"` with call to `resolve_bucket_name()` at check time.
 
 ---
 
@@ -323,9 +330,9 @@ check time.
 
 **File**: `execution-service/execution_service/strategy_instructions/gcs.py:24-34,145-165`
 
-Wrap `_raise_gcs_instructions_error()` to emit `ADAPTER_FETCH_FAILED` for non-404 errors. Note: this is a
-consumer error classification, not an adapter error, so the pattern is lighter — just log_event with the
-error code rather than full `classify_venue_error()`.
+Wrap `_raise_gcs_instructions_error()` to emit `ADAPTER_FETCH_FAILED` for non-404 errors. Note: this is a consumer error
+classification, not an adapter error, so the pattern is lighter — just log_event with the error code rather than full
+`classify_venue_error()`.
 
 ---
 
@@ -341,20 +348,28 @@ error code rather than full `classify_venue_error()`.
 
 ### Phase 1 — strategy-service (P0.1 + P0.4)
 
-- [x] ✅ **[CODE] P0.** 1a. Write `strategy_service/engine/core/strategy_manifest.py` — StrategyManifestRecorder shim — strategy-service@cd617891
-- [x] ✅ **[CODE] P0.** 1b. Wire manifest recorder in `gcs_storage_service.py::write_instructions()` — strategy-service@cd617891
-- [x] ✅ **[CODE] P0.** 1c. Fix `batch_handler.py:501-508` — emit PROCESSING_INCOMPLETE event on batch incompleteness — strategy-service@cd617891
-- [x] ✅ **[QG] P0.** Phase 1 QG: `cd strategy-service && bash scripts/quality-gates.sh` GREEN — 4118 passed, 5 pre-existing failures, basedpyright 0 errors
+- [x] ✅ **[CODE] P0.** 1a. Write `strategy_service/engine/core/strategy_manifest.py` — StrategyManifestRecorder shim —
+      strategy-service@cd617891
+- [x] ✅ **[CODE] P0.** 1b. Wire manifest recorder in `gcs_storage_service.py::write_instructions()` —
+      strategy-service@cd617891
+- [x] ✅ **[CODE] P0.** 1c. Fix `batch_handler.py:501-508` — emit PROCESSING_INCOMPLETE event on batch incompleteness —
+      strategy-service@cd617891
+- [x] ✅ **[QG] P0.** Phase 1 QG: `cd strategy-service && bash scripts/quality-gates.sh` GREEN — 4118 passed, 5
+      pre-existing failures, basedpyright 0 errors
 
 ### Phase 2 — execution-service (P0.2)
 
-- [ ] **[CODE] P0.** 2a. Write `execution_service/strategy_instructions/manifest.py` — ExecutionManifestRecorder
-- [ ] **[CODE] P0.** 2b-c. Wire record_captured/empty/failed in `download_instructions_df()`
-- [ ] **[QG] P0.** Phase 2 QG: `cd execution-service && bash scripts/quality-gates.sh` GREEN
+- [x] ✅ **[CODE] P0.** 2a. Write `execution_service/strategy_instructions/manifest.py` — ExecutionManifestRecorder —
+      execution-service@19dd21388
+- [x] ✅ **[CODE] P0.** 2b-c. Wire record_captured/empty/failed in `download_instructions_df()` —
+      execution-service@19dd21388
+- [x] ✅ **[QG] P0.** Phase 2 QG: ruff + basedpyright 0 errors on `strategy_instructions/` (full QG fails pre-existing
+      foreign lint errors in backtest_args.py/benchmark_compare.py) — execution-service@19dd21388
 
 ### Phase 3 — preflight gate (P0.3)
 
-- [ ] **[CODE] P0.** 3a. Route `backtest_checks.check_dependencies()` through `validate_config_can_run()` per strategy_id
+- [ ] **[CODE] P0.** 3a. Route `backtest_checks.check_dependencies()` through `validate_config_can_run()` per
+      strategy_id
 - [ ] **[QG] P0.** Phase 3 QG: `cd execution-service && bash scripts/quality-gates.sh` GREEN
 
 ### Phase 4 — bucket SSOT (P1.1 + P1.2)
@@ -374,28 +389,34 @@ error code rather than full `classify_venue_error()`.
 
 ### Codex SSOT updates
 
-- [ ] **[DOC] P1.** Update `codex/04-architecture/defi-execution-overview.md` § "Data pipeline" to note manifest handoff contract at strategy→execution boundary
+- [ ] **[DOC] P1.** Update `codex/04-architecture/defi-execution-overview.md` § "Data pipeline" to note manifest handoff
+      contract at strategy→execution boundary
 
 ---
 
 ## Full-execution criterion
 
-**Phase 1 done when**: strategy-service `quality-gates.sh` GREEN + `rg "record_captured\|record_empty\|record_failed" strategy_service/engine/core/gcs_storage_service.py` returns ≥3 hits
+**Phase 1 done when**: strategy-service `quality-gates.sh` GREEN +
+`rg "record_captured\|record_empty\|record_failed" strategy_service/engine/core/gcs_storage_service.py` returns ≥3 hits
 
-**Phase 2 done when**: execution-service `quality-gates.sh` GREEN + `rg "record_captured\|record_empty\|record_failed" execution_service/strategy_instructions/gcs.py` returns ≥3 hits
+**Phase 2 done when**: execution-service `quality-gates.sh` GREEN +
+`rg "record_captured\|record_empty\|record_failed" execution_service/strategy_instructions/gcs.py` returns ≥3 hits
 
-**Phase 3 done when**: `execution_service/cli/backtest_checks.py` no longer calls bare `check_dependencies()` for strategy — routes through `validate_config_can_run()`
+**Phase 3 done when**: `execution_service/cli/backtest_checks.py` no longer calls bare `check_dependencies()` for
+strategy — routes through `validate_config_can_run()`
 
-**Full plan done when**: paper-trade batch run for one day produces manifest rows in `strategy-store-{pid}/_index/availability_index.parquet` with `capture_status=captured` for each strategy that produced instructions
+**Full plan done when**: paper-trade batch run for one day produces manifest rows in
+`strategy-store-{pid}/_index/availability_index.parquet` with `capture_status=captured` for each strategy that produced
+instructions
 
 ---
 
 ## Temporary states + their canonical follow-up plans
 
-- **`validate_batch_completeness` warn path (A5)**: emitting `PROCESSING_INCOMPLETE` event is the canonical pattern
-  per `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § "Incomplete batch semantics". Per-shard
-  `record_failed` in `write_instructions()` provides the manifest visibility. No separate successor plan needed —
-  this plan closes it.
-- **P3 schema-version assessment**: blocked until Phase 1+2 manifest emission adds rows. Follow-up: once rows land,
-  run `SELECT DISTINCT schema_version FROM _index/availability_index.parquet` on `strategy-store` bucket to verify
+- **`validate_batch_completeness` warn path (A5)**: emitting `PROCESSING_INCOMPLETE` event is the canonical pattern per
+  `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` § "Incomplete batch semantics". Per-shard
+  `record_failed` in `write_instructions()` provides the manifest visibility. No separate successor plan needed — this
+  plan closes it.
+- **P3 schema-version assessment**: blocked until Phase 1+2 manifest emission adds rows. Follow-up: once rows land, run
+  `SELECT DISTINCT schema_version FROM _index/availability_index.parquet` on `strategy-store` bucket to verify
   schema_version=8. No separate plan — verify during paper-trade smoke (full-execution criterion).
