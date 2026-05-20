@@ -75,7 +75,7 @@ todos:
 
   - id: phase-b-null-decimals-gcs-audit-script
     content: |
-      - [ ] [SCRIPT] P0. **Phase B — Null-decimals GCS audit script.**
+      - [x] ✅ [SCRIPT] P0. **Phase B — Null-decimals GCS audit script.** — instruments-service@1f807c9. `scripts/audit_defi_null_decimals_2026_05_19.py` — scans DeFi parquets for null base/quote decimals; read-only; per-venue/per-type report; JSON output. (slot 4 2026-05-19)
         Write `instruments-service/scripts/audit_defi_null_decimals_2026_05_19.py`:
         ```python
         # Usage: python audit_defi_null_decimals_2026_05_19.py --asset-group defi --dry-run
@@ -96,7 +96,7 @@ todos:
 
   - id: phase-c-cefi-empty-string-audit
     content: |
-      - [ ] [SCRIPT] P1. **Phase C — CeFi empty-string base/quote audit (verification only).**
+      - [x] ✅ [SCRIPT] P1. **Phase C — CeFi empty-string base/quote audit (verification only).** — instruments-service@46bea40. `scripts/audit_cefi_empty_base_quote_2026_05_19.py` — scans CeFi parquets for empty base_asset/quote_asset in SPOT_PAIR/PERPETUAL rows; read-only; per-venue count table; JSON output. (slot 4 2026-05-19)
         `InstrumentRecord.base_asset` and `quote_asset` are already `str = ""` (non-nullable
         at declaration level). Model_validator Rule 1 enforces non-empty at write-time. This
         phase is a verification that the existing constraint is working:
@@ -111,7 +111,7 @@ todos:
 
   - id: phase-d-per-field-declaration-status-table
     content: |
-      - [ ] [DOCS] P1. **Phase D — Per-field declaration status table in plan body.**
+      - [x] ✅ [DOCS] P1. **Phase D — Per-field declaration status table in plan body.** — unified-trading-pm (this commit). `plans/active/hard_schema_enforcement_2026_05_08.md` "Per-asset-group schema-flip roadmap" section updated with corrected per-field status table showing Rules 6+7 shipped at uac@956bec1. (slot 4 2026-05-19)
         Update the "Per-asset-group schema-flip roadmap" section in
         `hard_schema_enforcement_2026_05_08.md` with the corrected per-field status:
         | Field | Current type | Model validator | Declaration flip needed? |
@@ -129,7 +129,7 @@ todos:
 
   - id: phase-e-subclass-design-deferred
     content: |
-      - [ ] [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
+      - [ ] **DEFERRED post-cutover** [DESIGN] P2. **Phase E — Subclass design for declaration-level enforcement (DEFERRED post-cutover).**
         For fields where the declaration flip would add real type-safety value but can't be
         expressed without subclasses (primarily `expiry` for FUTURE/OPTION):
         The subclass approach (e.g. `FuturesInstrumentRecord(InstrumentRecord)` with
@@ -144,7 +144,7 @@ todos:
 
   - id: phase-f-codex-update
     content: |
-      - [ ] [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.**
+      - [x] ✅ [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.** — unified-trading-pm (this commit). `codex/06-coding-standards/validation-and-errors.md` new §7 "InstrumentRecord hard-required field enforcement" with full 7-rule table, DEFI_ONCHAIN_INSTRUMENT_TYPES, audit script pointers, SSOT cross-ref. (slot 4 2026-05-19)
         Update `codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord
         hard-required field enforcement" with the corrected scope table (same as Phase D
         but in the codex SSOT). Cross-reference this plan + `hard_schema_enforcement_2026_05_08.md`.

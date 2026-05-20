@@ -265,22 +265,20 @@ Follows `unified-trading-pm/plans/PLAN_FORMAT.md`: 3-tier readiness (C5 / D3); p
 every todo; sibling-plan dependencies declared in `depends_on`; SSOT-first (codex docs in the codex-update todo own
 intent, plan owns activation); pre-audit complete via the source RFC archived to `plans/archive/issues/`.
 
-## Per-asset-group schema-flip roadmap (added 2026-05-11 slot 5, RE-TASK)
+## Per-asset-group schema-flip roadmap (updated 2026-05-20 slot 4 — hard_schema_phase1_field_flip_migration_2026_05_19)
 
-Phase 1's "nullable → required" flips require a workspace-wide audit of `InstrumentRecord`
-(`unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`) + per-domain schemas under
-`canonical/domain/`. Current state observation (slot 5 grep 2026-05-11):
+Per-field enforcement status as of 2026-05-20 (audit by slot 7 re-dispatch 2026-05-19; validator work slot 4):
 
-- `InstrumentRecord.base_asset` / `quote_asset` (line 84-85) — `str = ""` (defaults to empty; workspace rule says CeFi
-  spot/perp must have non-empty). **NOT nullable but unenforced** — empty-string sentinel passes the type check but
-  violates the workspace contract.
-- `InstrumentRecord.base_asset_contract_address` / `quote_asset_contract_address` / `base_asset_decimals` /
-  `quote_asset_decimals` (line 158-170) — `str | None = None` / `int | None = None`. DeFi rule says these must be
-  non-null for on-chain instruments. **NULLABLE; needs flip for DeFi.**
-- `InstrumentRecord.expiry` (line 108) — `datetime | None = None`. TradFi futures rule says must be non-null for
-  futures. **NULLABLE; needs flip for TradFi futures + options** (blocked on `tradfi_master` Q1+Q2).
-- Sports `fixture_id` — present on `canonical/domain/sports/{fixture_stats,player_stats,events,arbitrage}.py` per grep;
-  need per-file audit for nullability.
+| Field | Declaration | Model validator | Status |
+|---|---|---|---|
+| `base_asset` | `str = ""` | ✅ Rule 1: CeFi SPOT_PAIR/PERPETUAL → non-empty | **Already non-nullable.** Validator enforces at runtime. Phase C audit script verifies legacy rows. |
+| `quote_asset` | `str = ""` | ✅ Rule 1: same | **Already non-nullable.** Same as base_asset. |
+| `pool_address` | `str \| None` | ✅ Rule 2: DeFi ONCHAIN → pool_address OR contract_address (disjunctive) | **Disjunctive — cannot flip individually.** Validator is SSOT. |
+| `base_asset_contract_address` | `str \| None` | ✅ Rule 2: disjunctive | **Same as pool_address.** |
+| `base_asset_decimals` | `int \| None` | ✅ **Rule 6: SHIPPED uac@956bec1 2026-05-19** | Non-null enforced for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`. Phase B audit script verifies legacy rows. |
+| `quote_asset_decimals` | `int \| None` | ✅ **Rule 7: SHIPPED uac@956bec1 2026-05-19** | Non-null enforced for POOL type (two-asset). |
+| `expiry` | `datetime \| None` | ✅ Rules 3/4/5: FUTURE/OPTION/EVENT_CONTRACT → non-null (uac@80aef10) | **Legitimately None for non-futures.** Declaration stays Optional. Phase E (subclass) is post-cutover. |
+| Sports `fixture_id` | `str` (non-optional on all per-fixture entities) | N/A — already non-optional | **No flip needed.** `CanonicalInjury.fixture_id: str \| None` is legitimately nullable (pre-season injuries have no fixture). |
 
 **Three architectural choices for the actual flips** (next agent picks one):
 
