@@ -1180,10 +1180,13 @@ remains open. Folds into the existing "Lending-indices VM run-quality bugs" sect
       MTDS query depends on. Rewrite query, add per-row `record_failed(SCHEMA_DRIFT)` for any row where the response
       shape deviates from the canonical contract (so we never write garbage). Cassette parity test locks the new shape.
       Smoke 1 day per chain post-rewrite.
-- [ ] [AGENT] P1. **Verification recipe automation.** Post-VM-launch silent-zero detector — Cloud Scheduler job that
+- [x] ✅ [AGENT] P1. **Verification recipe automation.** Post-VM-launch silent-zero detector — Cloud Scheduler job that
       checks the last 24h of lending-indices manifest rows for unexpected zero-rows-per-instrument; alerts via Telegram
       if a venue × chain pair flatlines. Generalisable to other DeFi handlers; not just lending. Coordinate with
       `instruments_live_master_2026_05_08` Phase A.11 upstream-staleness monitor.
+      DONE 2026-05-20 slot 7: `scripts/detect_zero_row_defi_manifest.py` in MTDS — generalised via --data-type-filter;
+      runbook fields declared; last_executed=NEVER pending Cloud Scheduler wire-up (Phase A.11 upstream).
+      mtds@507774e.
 
 ### 2026-05-07 venue-matrix re-verification (Stream E update)
 
