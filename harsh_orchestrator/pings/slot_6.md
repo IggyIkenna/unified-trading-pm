@@ -527,3 +527,5 @@ next available item.
 mdps_streaming Phase 2 + mtds_databento + data_status_drilldown + defi_archetypes + features_tick_observation_audit scaffold + sustain S7-S8 (~10 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 6 — STARTED <first item>` below.
+
+[2026-05-20 UTC] slot-6 — CREDENTIAL/VM REQUEST: **TradFi 5,212 legacy-blank apply-flips run** — `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run 2026-05-17) confirmed: 5,099 rows `SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` + 113 rows `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Operator must schedule + approve VM launch (use `launch-manifest-recon-all-vm.sh` with `--apply-flips` variant). Item lives in `plans/epics/tradfi_master_2026_05_07.md` line 326. Tagged BLOCKED-OPERATOR in `gate_3_phantom_audit_runbook_2026_05_13.md` deferred table.
