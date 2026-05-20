@@ -3,6 +3,31 @@
 
 ---
 
+## [slot 3 → slot 1 main] 2026-05-20 — trading_agent Phase 1 SHIPPED + naming decision
+
+**Status**: ✅ Phase 1 UAC schemas shipped — `uac@82b7ad55`
+
+**Shipped**:
+- `unified_api_contracts/internal/strategy_pnl_stream.py` — `StrategyPnlStreamEvent`
+- `unified_api_contracts/internal/strategy_directives.py` — `ArchetypeAllocationDirective`
+- 12 unit tests in `tests/internal/unit/test_strategy_pnl_stream.py` + `test_strategy_directives.py`
+- Exports in `unified_api_contracts/internal/__init__.py`
+
+**Naming decision — OPERATOR ACK NEEDED**:
+The plan spec asks for `AllocationDirective` in `strategy_directives.py`, but `AllocationDirective` already exists
+in `internal/architecture_v2/schemas.py` (full multi-client post-cutover schema: `allocation_directive_id`,
+`client_id`, `allocator_id`, `directives: list[StrategyEquityDirective]`, etc.). Creating a second `AllocationDirective`
+in `strategy_directives.py` would shadow the existing export.
+
+**Decision taken**: named it `ArchetypeAllocationDirective` to avoid collision. All consumer plans
+(Phase 2/5/6 agent prompts) use `AllocationDirective` — those need updating to `ArchetypeAllocationDirective`.
+Operator should confirm this naming is correct, or redirect to a different resolution (e.g. use the existing
+`architecture_v2.AllocationDirective` and extend it, or rename the existing one).
+
+**Next**: Phases 2/3/4 are now unblocked (parallel). A4/A5/A6 background agents spawning.
+
+---
+
 ## [slot 1 main → slot 3] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 0.5+1+2
 
 Your previous theme (code_freeze Phase 2.0–2.5 gaps + batch_live_symmetry Tabs 1–3) is **DEFERRED to Cycle 3

@@ -8,7 +8,7 @@ overview:
   non-DeFi archetypes, and automatic re-weighting are all post-cutover. May-23 scope = data flow wired + no-op
   defaults + CI green.
 type: plan
-status: ready-for-pickup
+status: in-progress
 priority: P0
 created: 2026-05-20
 deadline: 2026-05-22
@@ -556,7 +556,7 @@ M1-M6/PW1-PW2/F1/Q1-Q2/E1-E2 — PM@<sha>`.
 
 | Phase | Cutover criterion                                                                                                  | Continuous verification                                                                       | Last verified |
 | ----- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------- |
-| 1     | UAC `StrategyPnlStreamEvent` + `AllocationDirective` ship + 12 unit tests pass                                     | UAC QG (per-commit) + grep `from unified_api_contracts.internal import StrategyPnlStreamEvent` | PENDING       |
+| 1     | ✅ UAC `StrategyPnlStreamEvent` + `ArchetypeAllocationDirective` ship + 12 unit tests pass — uac@82b7ad55. Note: named `ArchetypeAllocationDirective` (not `AllocationDirective`) to avoid collision with existing `architecture_v2.AllocationDirective` (full post-cutover multi-client schema). | UAC QG (per-commit) + grep `from unified_api_contracts.internal import StrategyPnlStreamEvent` | 2026-05-20 slot-3 |
 | 2     | strategy-service emits `StrategyPnlStreamEvent` for carry + APD; 4+ tests pass                                     | strategy-service QG + grep callsites in v2/ handlers (≥2)                                     | PENDING       |
 | 3     | features-service `performance_features/` subdomain ships passthrough subscriber; honest-absence path tested        | features-service QG + manifest row exists for lead-pair date range                            | PENDING       |
 | 4     | UAC facades export models; 2 integration tests pass                                                                | UAC QG                                                                                        | PENDING       |
