@@ -516,14 +516,18 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       remote. All repos clean. — strategy-service@d9a76e9a + system-integration-tests@fd45c5a (2026-05-20) Evidence:
       ruff → All checks passed; basedpyright → 0 errors; pytest tests/risk/unit/ tests/position/unit/ tests/pnl/unit/ →
       1456 passed, 2 skipped.
-- [ ] **P2 NEW** [AGENT slot 7] Phase 8A addendum — GitHub Actions workflows in source repos going dark. Each archived
-      repo carries ~9 workflow files (~27 total across risk + position + pnl). Most are templated copies
+- [x] ✅ **P2 NEW** [AGENT slot 7] Phase 8A addendum — GitHub Actions workflows in source repos going dark. Each
+      archived repo carries ~9 workflow files (~27 total across risk + position + pnl). Most are templated copies
       (`workspace-qg.yml`, `semver-agent.yml`, `staging-lock-check.yml`, `tab-mirror-to-ldr.yml`) that strategy-service
       already has via `rollout-workflow-templates.sh` — those just go dark with the repo, no action needed. **Audit
       task**: enumerate any per-repo CUSTOM workflows (cron-scheduled checks, scheduled data-pulls, scheduled
       VM-launchers) that AREN'T templated. For each: (a) migrate the cron schedule to a strategy-service workflow with
       `--operation` axis, OR (b) confirm the workflow's purpose is obsolete post-merge. Slot 7 ownership; ~0.5 cal-day.
-      Workflow templates SSOT: `unified-trading-pm/scripts/workflow-templates/`.
+      Workflow templates SSOT: `unified-trading-pm/scripts/workflow-templates/`. — ✅ VERIFIED 2026-05-20 slot 5: All 9
+      workflows in all 3 repos are standard workspace templates (agent-audit, major-bump-issue-handler,
+      plan-alignment-agent, request-major-bump, semver-agent, staging-lock-check, tab-mirror-to-ldr,
+      update-dependency-version, workspace-qg). ZERO custom cron/VM-launcher workflows found. All go dark with archive —
+      no migration needed.
 - [x] ✅ **P3 NEW** [AGENT slot 6] Phase 7 addendum — Per-repo markdown files (CHANGELOG.md /
       QUALITY_GATE_BYPASS_AUDIT.md / IMPLEMENTATION_VERIFICATION.md / UV_AND_DATABASE_UPDATES.md /
       QUALITY_GATES_REPORT.md). Each source repo has these. Post-merge decision: (a) `CHANGELOG.md` content prepended to
@@ -532,11 +536,13 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       `QUALITY_GATES_REPORT.md` + ad-hoc per-repo markdown — dropped (one-shot audit snapshots, not load-bearing). Slot
       6 owns this as Phase 7 cleanup (~0.25 cal-day). — strategy-service@607a411b (CHANGELOG created + 158 QGBA rows
       merged from all 3 source repos; 2026-05-19)
-- [ ] **P3 NEW** [AGENT slot 7] Phase 8A addendum — GitHub repo settings (branch protection rules + required status
+- [x] ✅ **P3 NEW** [AGENT slot 7] Phase 8A addendum — GitHub repo settings (branch protection rules + required status
       checks + semver-agent config) on archived source repos do NOT auto-migrate. strategy-service ALREADY has its own
       settings — verify post-archive that strategy-service required-checks reflects the consolidated workflow set (no
       orphan required-check names pointing at archived repos' workflows). Slot 7 owns as Phase 8A finalisation (~0.1
-      cal-day; usually a 1-line `gh api repos/.../branches/main/protection -X PATCH` if any drift found).
+      cal-day; usually a 1-line `gh api repos/.../branches/main/protection -X PATCH` if any drift found). — ✅ VERIFIED
+      2026-05-20 slot 5: strategy-service required-checks = `quality-gates` only (no orphan refs). Source repos each
+      have `quality-gates` only — go dark on archive with zero drift. No `gh api PATCH` needed.
 
 **Total gap-close additions**: ~2.35 cal-AI-days bundled into existing slots (no new slot needed). Slot 3 +0.05, slot 4
 +1, slot 6 +0.25, slot 7 +1.1.
