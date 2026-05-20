@@ -413,10 +413,9 @@ calculator, two consumers; the per-archetype filter logic is in the catalog spec
 - [ ] [AGENT] P0. Lighter subgraph availability check (thegraph.com/explorer); validate row schema match against
       `_fetch_lighter_rest`. [AUDIT 2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C — Extended
       on-chain replay sub-plan, pending operator]
-- [ ] [SCRIPT] P0. Launch `mtds-lighter-history-backfill-{ts}` singleton-locked VM; date range 2024-08-01 → today. Add
-      prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`. [AUDIT 2026-05-07: STALE — replaced by ohlcv_1m route via
-      /candles in MTDS@10aa715 (per MEMORY project_dex_perp_onboarding_2026_05_07); per-trade history NOT recoverable
-      per Lighter quirks finding]
+- [x] **[SUPERSEDED]** [SCRIPT] P0. ~~Launch `mtds-lighter-history-backfill-{ts}` singleton-locked VM~~ — approach
+      replaced by OHLCV via /candles endpoint (MTDS@10aa715). Per-trade history not recoverable (REST capped, no cursor;
+      `block_height` is sequencer-internal per Lighter quirks finding). Closed as SUPERSEDED per audit cleanup 2026-05-20.
 - [ ] [AGENT] P0. Extended Starknet mainnet `Settlement` contract address + event signature; add Starknet RPC template
       to UAC `CHAIN_RPC_TEMPLATES`. [AUDIT 2026-05-07: BLOCKED-ON dex_perp_onboarding_handover_2026_05_07:Item C Phase 0
       empirical research; Extended is the third venue, pending]
@@ -1199,6 +1198,11 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Config schema YAML example had comments like "JITO / MARINADE today; LIDO when an ETH-perp venue lands LST margin"
       — stale since DERIBIT/BYBIT slots landed in Stream A (2026-05-14). Updated to reflect live slot inventory:
       JITO/MARINADE/LIDO all live, SOL+ETH instruments both present. — PM@65c76031
+- [x] ✅ [DOC] P2. **APD archetype doc `allowed_chains` comment — fix stale claim that Hyperliquid is on-chain.**
+      Comment above `allowed_chains` said "FUNDING_DISPERSION variant: on-chain perp venues are Drift (solana) +
+      Hyperliquid (hyperliquid_l1)" — incorrect: Hyperliquid is CeFi; all 6 funding-rate-dispersion venues are CeFi
+      perps so `allowed_chains` is irrelevant for Variant B. Also removed stale guidance to set `allowed_chains` to
+      on-chain perp legs — no such config path exists. — PM@pending
 
 ## `available_at` adapter stamping (coordinated)
 

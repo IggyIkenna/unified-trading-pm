@@ -111,9 +111,10 @@ instrument_volatility_registry_lookup: true # use realized_vol_20 (1h candles) f
 
 # Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
 # Gates the DeFi on-chain leg only (CROSS_DEX_SPOT / CROSS_DEX_SPOT + flash-loan variants).
-# CeFi/sports/prediction legs have no ChainKind and are not gated by this field.
-# FUNDING_DISPERSION variant: on-chain perp venues are Drift (solana) + Hyperliquid (hyperliquid_l1);
-# set allowed_chains to those two when only using on-chain perp legs for dispersion.
+# CeFi perps, sports, and prediction legs have no ChainKind — not gated by this field.
+# FUNDING_DISPERSION variant (Variant B): uses 6 CeFi perp venues (bybit/deribit/binance/okx/
+# hyperliquid/aster) — no on-chain DeFi leg, so allowed_chains is irrelevant for that variant.
+# For DEX-perp dispersion (if added in future): Drift (solana) is on-chain — chain-gate applies.
 allowed_chains: [ethereum, arbitrum, solana, base, optimism]
 ```
 
