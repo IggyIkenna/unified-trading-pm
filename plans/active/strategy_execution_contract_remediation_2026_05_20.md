@@ -376,12 +376,21 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 ### Phase 4 — bucket SSOT (P1.1 + P1.2)
 
 - [ ] **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` → `resolve_bucket_name()`
-- [ ] **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template → `resolve_bucket_name()` at call time
-- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69)
+      **[BLOCKED-OPERATOR-DECISION]** — `strategy-store` kind in cloud-providers.yaml is per-asset_group
+      (CEFI/TRADFI/DEFI) but strategy-service uses unified `strategy-store-{project_id}`. Plan assumed flat kind but
+      yaml has split. Fix requires provisioning alignment + `_get_shared_bucket()` → `_get_strategy_bucket(category)`
+      refactor + all call sites update. Unblocks when: operator decides whether to (a) add flat `strategy-store` yaml
+      entry or (b) accept per-AG buckets and update write path.
+- [ ] **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template → `resolve_bucket_name()` at call time **[BLOCKED]**
+      — same blocker as 4a; `check_strategy_instructions()` uses unified `strategy-store-{project_id}` while
+      `build_instructions_location()` uses per-AG bucket. Bucket mismatch already pre-existing (write = unified, read =
+      per-AG). Captured here for operator awareness.
+- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) **[DEFERRED until 4a/4b unblocked]**
 
 ### Phase 5 — error classification (P1.3)
 
-- [ ] **[CODE] P1.** 5a. execution-service `_raise_gcs_instructions_error` → emit `ADAPTER_FETCH_FAILED` on non-404
+- [x] ✅ **[CODE] P1.** 5a. execution-service `_raise_gcs_instructions_error` → emit `ADAPTER_FETCH_FAILED` on non-404 —
+      execution-service@6e4dbe30b
 
 ### Phase Q — QG ratchet
 
