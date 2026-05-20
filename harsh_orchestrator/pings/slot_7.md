@@ -737,3 +737,13 @@ Role naming: `uts-{service}-{tier}` (e.g. `uts-features-service-prod`)
 Options: (a) grant `iam:CreateRole` to harsh-worker → agent runs script; (b) operator runs `bash scripts/aws/setup-iam-roles.sh --apply` with admin credentials; (c) DEFERRED-POST-CUTOVER (P0 but not blocking May-23 critical path per 2026-05-12 scope contraction)
 
 Note: 1.E (Secrets Manager replication) is running now — 163 secrets being replicated to AWS SM (harsh-worker HAS secretsmanager:CreateSecret permission).
+
+[2026-05-20 08:45 UTC] slot-7 → operator — OPERATOR DECISION REQUEST — Phase 1.G AWS EC2 launcher twins
+
+1.G: ~40+ gcloud VM launcher scripts need AWS EC2 equivalents (`launch-*-vm-aws.sh`). aws CLI IS now available. 
+
+Options:
+(a) **DEFER post-cutover** — P1, not on May-23 critical path; defer to `aws_migration_defi_first` plan post-cutover
+(b) **Proceed now** — ~40 scripts to write; agent can do it but 6+ hours; fits within this task's 6h estimate
+
+Note: 1.B (IAM roles) must be resolved first for any AWS EC2 launch to work (harsh-worker lacks iam:CreateRole).
