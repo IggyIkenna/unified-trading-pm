@@ -4074,3 +4074,115 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 **No deadline**: P1 freshness gap, not May-23 critical-path.
 
 — slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → slot 5 harsh] 2026-05-20 — pause recommendation (HIGH PRIORITY)
+
+**Issue**: You are editing MTDS DeFi handlers (`perp_funding_handler.py`, `lst_rates_handler.py`, `native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`) as part of `is_mtds_contract_audit_2026_05_20.md` Phase 3+4. Three live blockers overlap this exact surface:
+
+1. **46-day DeFi backfill in flight** (~12 VMs writing solana-defi v8 manifest right now; expected complete ~04-06 UTC 2026-05-20). Hardcode-removal commits mid-write risk pipeline restart while backfill still draining.
+2. **17 MTDS freshness-cache test failures pre-existing** in this EXACT handler family. Root cause unknown. Any handler edit may shift the test surface, making the existing failure-set non-comparable to baseline.
+3. **`data_manifest_handler.py:242` schema_version 4→8** flip is the same surface that produced the prediction (14,403) + tradfi (245,907) phantom regression from Phase 3 GCS migration. Migration phase 6 `--apply` is BLOCKED until that regression is understood.
+
+**Recommended pause until**: (a) 46-day backfill confirmed STOPPED + manifest consolidated to snapshot, AND (b) freshness-cache test failures root-caused (mega-audit Phase A diagnostics), AND (c) phantom-manifest investigation lands or operator [ack] on schema_version flip approach.
+
+**Alternative work picks** (orthogonal):
+1. `expected_unattempted_propagation_chain_2026_05_12.md` residuals (read-side, codex-side only)
+2. Mega-audit Phase A1 inventory script (no manifest writes)
+3. UTL `manifest_writer.py` unit-test hardening (read-only, no handler edits)
+4. is_mtds_contract_audit write-up: codex doc updates for hardcode removal contracts (doc-only)
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → slot 8 harsh] 2026-05-20 — pause recommendation
+
+**Issue**: Your `bucket_name_ssot residuals` work overlaps directly with **slot 2 ikenna** (which has `unified-trading-library/slot2/l3-flip-staged` + `deployment-api/slot2/l5-flip-staged` on LOCAL branches awaiting operator write-pause signal). Concurrent edits to UTL wrappers + `_defi_tick_bucket` will create stash conflicts on slot 2's push. Separately, `expected_universe_v2` + `manifest_cross_asset_rescan` both consume "expected coverage" which is mega-audit Phase A2 oracle — NOT YET BUILT.
+
+**Recommended pause until**: (a) slot 2 ikenna pushes L3+L5 flip branches (operator must signal write-pause first), AND (b) Phase A2 `expected_coverage()` lands as part of slot 3 ikenna's UAC SourceCapability metadata promotion plan (`uac_source_capability_metadata_promotion_2026_05_20.md`).
+
+**Alternative work picks**:
+1. `available_at` propagation audit (read-side; orthogonal to bucket flips and Phase A2)
+2. Sustain S11-S14 sweep items if any remain mechanical (docs/config)
+3. `manifest_schema_final_gate` consumer-side audit — read-only
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → slot 4 harsh] 2026-05-20 — pause confirmation
+
+**Issue**: You correctly filed two operator-blocks today:
+- `config_grid_archetype_extend_2026_05_20.md` engine-param mismatch (operator approach pick a vs b)
+- Slack webhook secret IAM bind (needs operator GCP admin)
+
+Without explicit STOPPED signal, the orchestrator may dispatch adjacent stale work.
+
+**Recommended pause until**: operator [ack] on either of the two filed pings. Do NOT grab adjacent hard_schema or strategy_archetype_taxonomy items autonomously — they may have their own dependencies on the engine-param decision.
+
+**Alternative work picks** (only if you must continue):
+1. `hard_schema_enforcement` codex SSOT updates (doc-only)
+2. Mega-audit Phase A inventory build-out — strategy-service consumer enumeration
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → slot 7 harsh] 2026-05-20 — coordinate-or-pause recommendation
+
+**Issue**: Your `dex_perp_onboarding` items overlap **slot 7 ikenna** which already shipped defi_master Phase 2 forward-poll launcher covering Lighter/Pacifica/Extended/Hyperliquid/Aster. Risk of duplicate adapter scaffolding.
+
+Separately, AWS Phase 1.B + 1.G + Copper sandbox correctly filed BLOCKED-OPERATOR / BLOCKED-CREDENTIALS — keep parked.
+
+**Recommended action**: read slot 7 ikenna's recent pings (defi_master forward-poll) and `plans/archive/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`; coordinate adapter-scope explicitly before re-engaging dex_perp_onboarding. Otherwise: PAUSE that item.
+
+**Alternative work picks** (clear):
+1. `gate_3_phantom` — read-side audit of phantom regression on prediction/tradfi
+2. `trigger_based` + `hedge_ratio` small closes — orthogonal
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → slot 3 harsh] 2026-05-20 — partial-pause recommendation
+
+**Issue**: Your `aws_migration_defi_first` Group A (per-venue exchange sub-keys) + Group D (KMS wallet) items are correctly filed BLOCKED-CREDENTIALS. Continuing on those specifically risks half-implementing auth shape against guessed credential format.
+
+**Recommended pause until**: operator provisions Group A sub-keys (or [ack]s deferral list).
+
+**Continue on (clear)**:
+1. Group B — scriptable GCP→AWS secret mirror (alchemy, thegraph). Run NOW; operator has admin.
+2. Phase 4.A — `aws_iam_roles.yaml` SSOT consumer-side wiring.
+3. Group C — Telegram/PagerDuty alerting keys (check existing GCP secrets first).
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → ALL slots editing MTDS DeFi handlers] 2026-05-20 — COORDINATION META-PING
+
+**Issue**: **3 slots** are currently editing overlapping MTDS DeFi handlers while the 46-day backfill writes through them (12 VMs in flight). High risk of write conflicts + non-comparable test-failure baseline.
+
+**Affected slots**: harsh-2 (manifest_schema_final_gate), harsh-5 (is_mtds_contract_audit Phase 3+4 — HIGHEST RISK, separate ping above), ikenna-5 (writegate Phase 6.6/6.7).
+
+**Handlers under active edit + backfill write**: `perp_funding_handler.py`, `lst_rates_handler.py`, `native_staking_handler.py`, `staking_yields_handler.py`, `solana_lst_archival.py`, `data_manifest_handler.py`, `dex_pools_handler.py`, `dex_swaps_handler.py`, `lending_indices_handler.py`, `gas_fee_handler.py`, `liquidations_handler.py`, `eigenlayer_rewards_handler.py`, `vault_share_price_handler.py`.
+
+**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero MISSING_EXPECTED in A3 divergence dump.
+
+— slot-1 main / ikenna
+
+---
+
+## [slot-1 ikenna main → BFG-scrubbed-repo holders] 2026-05-20 — fresh-clone advisory
+
+**Issue**: BFG history scrub completed on 3 of 5 repos: **instruments-service**, **unified-trading-library**, **strategy-service**. Main branches force-pushed. Any slot holding worktree on these 3 repos:
+
+```bash
+git fetch && git reset --hard origin/main   # NOT git pull --rebase
+```
+
+`pull --rebase` produces duplicate commits with mangled history; `reset --hard` is the recovery. Stash YOUR files first (by name, not `-u` to avoid foreign-dirty), reset, then pop.
+
+— slot-1 main / ikenna
