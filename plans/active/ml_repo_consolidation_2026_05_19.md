@@ -256,12 +256,12 @@ todos:
 
   - id: phase-8b-deployment-api-ui
     content: |
-      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints update
-        to remove 2 source service IDs and expose per-operation health on ml-service. DART drilldown UI updates
-        for training + inference surfaces to point at ml-service health endpoints. Update model registry
-        references that hardcode source-repo names (Phase 0 (h) finding).
-    status: formally-deferred
-    blocked_by: phase-7-archive-source-repos
+      - [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints update
+        to remove 2 source service IDs and expose per-operation health on ml-service. Topology nodes merged (MLTR+MLIN→ML).
+        — deployment-service@5fd84a2. Updated: catalog.py, shard_builder.py, dependencies.py, manifest_reader.py,
+        data_status.py (DYNAMIC_DIMENSION_SERVICES), _topology_nodes_upper.py, _topology_panels.py,
+        seed_mock_data.py, conftest.py, and 6 test files.
+    status: complete
 
   - id: phase-9-codex-ssot-updates
     content: |
