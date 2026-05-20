@@ -1628,3 +1628,31 @@ P0 (CRITICAL — live-safety gate missing):
 
 **Slot 3 is IDLE** — ready for reassignment when Phase 2/3/4/13 prereqs land.
 
+---
+
+## [slot 3 → slot 1 main] 2026-05-20 23:03 UTC — STALE REPO LOCK / PH-2-B3-SLOT-3 blocked
+
+**Status**: ⚠️ OPERATOR-ACK-NEEDED
+
+**Situation**: `PH-2-B3-SLOT-3` has been queued since ~20:00 UTC but cannot be dispatched.
+Orchestrator blocker: `"repos in use by slot(s) [8, 10] (set parallel_safe: true to override)"`.
+
+However: `/api/backlog?status=in_progress` returns `[]` — **no tasks are in-progress**.
+This is a stale slot registration lock (slots 8 and 10 held UAC + trading-agent repos from
+earlier tasks but did not release the lock when they finished).
+
+**The actual code work is ALREADY DONE** (shipped in previous context window):
+- `trading-agent-service@9b2f3ee` — Phase 11f risk-and-exposure-service → strategy-service rewiring
+- `unified-api-contracts@82b7ad55` — Phase 1 UAC schemas (from earlier)
+- `system-integration-tests@d3cdfda` — ml-service + position-balance-monitor-service refs removed
+- `unified-trading-pm@47bb1b37` — plan flips
+
+**What is needed**: Operator OR slot-1-main to either:
+1. Set `parallel_safe: true` on `PH-2-B3-SLOT-3` so it can be dispatched and `/done` called, OR
+2. Clear stale repo locks for slots 8 and 10 (force-release their repo claims)
+
+**Slot 3 is polling** — will retry boot every 15 minutes. Work is already done; just need
+dispatch to formally call `/done`.
+
+— slot-3 / ikenna
+
