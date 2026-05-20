@@ -1187,14 +1187,14 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Variant B section said "Funding-rate dispersion (not yet implemented; placeholder)" but the engine is fully
       implemented (`price_dispersion._on_tick_funding_rate_dispersion` + `funding_rate_dispersion.py`). Updated to
       accurate description with params, venue universe (bybit/deribit/binance/okx/hyperliquid/aster), and bridge slot
-      labels. — PM@PENDING
+      labels. — PM@02c5c4a9
 - [x] ✅ [DOC] P2. **APD archetype doc Example instances — replace stale slot labels with actual catalog/bridge labels.**
       Example instances section showed conceptual labels (e.g. `ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod`,
       `ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-ethereum-prod`) that didn't match the actual catalog. Replaced with
-      the 17 live catalog slots + bridge funding-rate-dispersion slots with source annotations. — PM@PENDING
+      the 17 live catalog slots + bridge funding-rate-dispersion slots with source annotations. — PM@02c5c4a9
 - [x] ✅ [DOC] P2. **CARRY_STAKED_BASIS archetype doc catalog axis — update examples from 2 pre-Stream-A to 4 current
       slots.** Examples section only showed 2 pre-2026-05-07 DRIFT slots. Updated to show all 4 live slots including
-      DERIBIT/stETH (USDC margin) and BYBIT/stETH (USDT margin), noting that stable token differs by venue. — PM@PENDING
+      DERIBIT/stETH (USDC margin) and BYBIT/stETH (USDT margin), noting that stable token differs by venue. — PM@02c5c4a9
 
 ## `available_at` adapter stamping (coordinated)
 
