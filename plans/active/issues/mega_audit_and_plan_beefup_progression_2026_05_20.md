@@ -190,7 +190,7 @@ beef-ups consume all of A1-A6.
 
 ### Phase B — Template extraction (small, unblocks all sibling audits)
 
-- [ ] **B1. Write `codex/04-architecture/service-contract-audit-template.md`**
+- [x] ✅ **B1. Write `codex/04-architecture/service-contract-audit-template.md`**
       Lift the 7 reusable patterns out of `is_mtds_contract_audit_2026_05_20.md`:
       (1) SSOT-owned reference flowing down, (2) manifest emission discipline,
       (3) schema-version compliance, (4) honest-absence reason taxonomy,
@@ -199,6 +199,9 @@ beef-ups consume all of A1-A6.
       Include: 4-dim audit matrix structure, pre-audit grep recipes, QG-ratchet
       phase shape, continuous-verification column. Owner: ikenna. Estimate:
       0.8 calibrated AI-days.
+      Evidence: PM@568f757fb — 467-line template with all 7 patterns + grep
+      recipes + QG-ratchet table + continuous-verification column. Unblocks
+      C1–C11 audits. Shipped 2026-05-20 slot-8.
 
 ### Phase C — Spawn sibling contract audits (post-B1, parallel)
 
