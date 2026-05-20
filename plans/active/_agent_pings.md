@@ -38,6 +38,19 @@ Full lifecycle + format spec: cursor-configs/CLAUDE.md § "Daily Work-Split Proc
 
 # Active pings
 
+[2026-05-20 (later) UTC] ikenna-main → both sides — **🔴 STRATEGY-CONSOLIDATION CLEANUP DISPATCHED — Phase 11
+appended to BOTH `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.** Operator
+directive: "finish all strategy consolidation related plans for your slots." Workspace audit found **~545 live-code
+refs** to the 5 archived services still in consumer repos. Scope: live code + DEPRECATION_NOTICE audit only (per
+operator answer 2026-05-20); skip docstrings/CHANGELOG/migration-history. Per-slot pings filed in
+`ikenna_orchestrator/pings/slot_{3,4,5,6,7,8}.md` (2026-05-20 latest entries). Per-slot fan-out: slot 3 = tail
+consumers (alerting/sys-int/e2e/trading-agent, ~0.5d); slot 4 = strategy-service own-repo logger strings (~0.25d);
+slot 5 = UAC + UTL (~1.0d, BOTH consolidations bundled); slot 6 = UI + DEPRECATION_NOTICE audit (~1.0d, BOTH);
+slot 7 = deployment-service incl. 10× terraform destroy (~1.25d, BOTH); slot 8 = execution-service + ml-service
+own-repo + ML-tail (~0.75d). **Total ~4.75 cal-AI-days fan-out.** Plan-flip discipline: BOTH plans' matching Phase
+11 checkboxes per single repo PR (`docs(plans): flip Phase 11x (strategy + ml) — <repo>@<sha>`).
+**This ping STILL OPEN until ALL 8 sub-phases (11a-11h) flip across both plans + per-repo QG green.**
+
 [2026-05-20 11:30 UTC] ikenna-slot-8 — **OPERATOR ACTION REQUEST — archive ml-training-service + ml-inference-service**.
 Phase 6 all 3 parity gates GREEN (boot@5fce11a, QG@16865a3, functional@a6dd980). DEPRECATION_NOTICE.md committed to both
 repos. Steps 1/2/4/5/6 of Phase 7 done. Step 3 requires operator:
@@ -4456,5 +4469,33 @@ operator fires the explicit Phase 2 freeze.
 ### Harsh-side responsibility clarified
 
 Per operator round 5: **Harsh agents focus on lint + QG**. Understand that to merge to remote they'll need to absorb improvements from remote as ikenna agents push migration work. The QG-green prerequisite IS the Harsh-side deliverable that unblocks every ikenna-side migration commit.
+
+— ikenna-main / slot-1
+
+---
+
+## [ikenna-main → ALL slots] 2026-05-20 UTC — ✅ Buckets 1 + 2 unblocked (ml-archive DONE; strategy-store unified)
+
+**Bucket 1 (ml repo archive — was operator-blocked)**: **DONE 2026-05-20**.
+`gh repo archive IggyIkenna/ml-training-service` + `gh repo archive
+IggyIkenna/ml-inference-service` both executed; `isArchived: true` confirmed.
+Operator directive 2026-05-20 round 5: "archiving a repo doesn't need to be
+operator blocked just do it." No further action needed on this bucket.
+
+**Bucket 2 (strategy-store bucket-strategy decision)**: **DONE 2026-05-20** —
+operator chose **unified bucket** for `strategy-store`. Plan
+[`strategy_execution_contract_remediation_2026_05_20.md`](strategy_execution_contract_remediation_2026_05_20.md)
+Phase 4a/4b unblocked + updated. Migration steps:
+
+1. Add flat `strategy-store: "strategy-store-${GCP_PROJECT_ID}"` to `cloud-providers.yaml`; remove per-AG dict entries.
+2. strategy-service `_get_shared_bucket()` → `resolve_bucket_name("strategy-store")` (no asset_group arg).
+3. execution-service `UPSTREAM_DEPS` template + `check_strategy_instructions()` + `build_instructions_location()` all use the unified bucket.
+4. `gsutil rsync` per-AG strategy data into the unified bucket; verify zero data loss; flip yaml atomically.
+5. Phase 4 QG (no `gs://` f-strings, STEP 5.69) un-deferred.
+
+**Bundled into**: master coordinator [`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) Phase 1 (bucket-name symmetry).
+
+**Bucket 4 (strategy_archetype_logic_audit)**: 🟢 **ACKED to run TONIGHT in parallel** with Phase 11 consolidation tail.
+Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orchestrated session per `codex/06-coding-standards/model-tier-selection.md`.
 
 — ikenna-main / slot-1

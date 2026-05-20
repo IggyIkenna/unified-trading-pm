@@ -375,17 +375,27 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 
 ### Phase 4 — bucket SSOT (P1.1 + P1.2)
 
-- [ ] **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` → `resolve_bucket_name()`
-      **[BLOCKED-OPERATOR-DECISION]** — `strategy-store` kind in cloud-providers.yaml is per-asset_group
-      (CEFI/TRADFI/DEFI) but strategy-service uses unified `strategy-store-{project_id}`. Plan assumed flat kind but
-      yaml has split. Fix requires provisioning alignment + `_get_shared_bucket()` → `_get_strategy_bucket(category)`
-      refactor + all call sites update. Unblocks when: operator decides whether to (a) add flat `strategy-store` yaml
-      entry or (b) accept per-AG buckets and update write path.
-- [ ] **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template → `resolve_bucket_name()` at call time **[BLOCKED]**
-      — same blocker as 4a; `check_strategy_instructions()` uses unified `strategy-store-{project_id}` while
-      `build_instructions_location()` uses per-AG bucket. Bucket mismatch already pre-existing (write = unified, read =
-      per-AG). Captured here for operator awareness.
-- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) **[DEFERRED until 4a/4b unblocked]**
+> **🟢 UNBLOCKED 2026-05-20 round 5 — operator decision**: **Unified bucket**.
+> Add flat `strategy-store` yaml entry; write + read paths both use
+> `strategy-store-${GCP_PROJECT_ID}`. Cross-asset strategies (portfolio
+> allocator spanning CEFI+DEFI+TRADFI) read/write the same bucket. Migration:
+> copy existing per-AG strategy data into the flat bucket, then delete per-AG
+> entries from `cloud-providers.yaml`. Sequenced under master coordinator
+> `data_pipeline_master_coordination_2026_05_20.md` Phase 1 (bucket-name
+> symmetry — extends to this strategy-store consolidation).
+
+- [ ] **[CODE] P1.** 4a. strategy-service `_get_shared_bucket()` →
+      `resolve_bucket_name("strategy-store")` (unified, no asset_group arg). Remove
+      per-AG dict from `cloud-providers.yaml`; add flat entry `strategy-store: "strategy-store-${GCP_PROJECT_ID}"`.
+      Update all call sites.
+- [ ] **[CODE] P1.** 4b. execution-service `UPSTREAM_DEPS` template +
+      `check_strategy_instructions()` + `build_instructions_location()` all use the unified bucket. Pre-existing
+      write=unified vs read=per-AG mismatch resolved at the yaml level.
+- [ ] **[MIGRATION] P0.** 4c. Migrate existing per-AG strategy parquets into the unified bucket via `gsutil rsync`;
+      verify zero data loss + flip `cloud-providers.yaml` atomically. Bundle into master coordinator Phase 1 bucket
+      symmetry window.
+- [ ] **[QG] P1.** Phase 4 QG: no `gs://` f-strings remaining (STEP 5.69) — un-deferred now that 4a/4b are
+      unblocked.
 
 ### Phase 5 — error classification (P1.3)
 

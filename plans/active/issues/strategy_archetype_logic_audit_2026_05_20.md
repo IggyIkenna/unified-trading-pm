@@ -4,8 +4,8 @@ created: 2026-05-20
 author: ikenna-slot-1 main
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-priority: P1
-status: UNACKED — pending sequencing after mega audit Phase A/C lands
+priority: P0
+status: ACKED — operator authorised 2026-05-20 round 5 to run TONIGHT in parallel with strategy/ml consolidation tail (Phase 11 cleanup, mostly done already). Requires **Opus 4.7 (1M context)** — cross-archetype + cross-codebase scope demands the full graph in one session per `codex/06-coding-standards/model-tier-selection.md` opus-required tier.
 parent_epic: strategy_and_dart_master_2026_05_07.md
 related_plans:
   - mega_audit_and_plan_beefup_progression_2026_05_20.md
