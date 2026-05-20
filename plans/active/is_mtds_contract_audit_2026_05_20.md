@@ -297,8 +297,9 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 - [x] ✅ **P1. Cross-link** with `honest_coverage_formula_consolidation_2026_05_19.md` Phase 6:
       that plan's Phase 6 (line 185) already carries `⚓ COMPOSES WITH is_mtds_contract_audit_2026_05_20.md Phase 7`.
       The three structural guards (`no_silent_absence`, `no_hardcoded_venue_urls`, `no_hardcoded_venue_universe`)
-      live alongside the honest-coverage ratchet and the no-inline-formula linter in the same
-      `unified-trading-pm/scripts/qg/` bundle. Cross-link confirmed; no code change needed. (2026-05-20 slot-8)
+      live alongside the honest-coverage ratchet and `no_inline_coverage_formula.sh` (PM@d68b92f7) in the same
+      `unified-trading-pm/scripts/qg/` bundle. `no_inline_coverage_formula.sh` wired as STEP 5.84 in base-service.sh.
+      (2026-05-20 slot-8 confirmed cross-link; slot-6 wired STEP 5.84)
 
 ### Phase 8 — Codex SSOT updates
 

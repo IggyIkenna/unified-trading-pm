@@ -2140,6 +2140,25 @@ else
     log_success "STEP 5.83: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.84: no-inline-coverage-formula — detect bespoke coverage ratio calcs ─
+#
+# Any re-implementation of compute_honest_coverage() numerator/denominator in
+# service source (not in honest_coverage.py itself) fails this gate.
+# SSOT: plans/active/honest_coverage_formula_consolidation_2026_05_19.md Phase 6.
+# Script: unified-trading-pm/scripts/qg/no_inline_coverage_formula.sh
+_INLINE_COVERAGE_LINTER="${REPO_ROOT}/unified-trading-pm/scripts/qg/no_inline_coverage_formula.sh"
+if [ -f "$_INLINE_COVERAGE_LINTER" ] && [ -n "${SOURCE_DIR:-}" ]; then
+    if bash "$_INLINE_COVERAGE_LINTER" "$REPO_ROOT" 2>/tmp/inline_coverage_qg.log; then
+        log_success "STEP 5.84: no-inline-coverage-formula — no bespoke coverage formula re-implementations"
+    else
+        log_fail "STEP 5.84: no-inline-coverage-formula — bespoke coverage formula detected (use compute_honest_coverage() from UAC):"
+        cat /tmp/inline_coverage_qg.log
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
