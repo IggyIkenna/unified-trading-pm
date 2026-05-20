@@ -330,22 +330,20 @@ todos:
         phase-7-e2e-and-unit-test-bundle
 
 - id: phase-9-codex-ssot content: |
-  - [ ] [AGENT] P1. Phase 9 — Codex SSOT updates. Add: (1) `codex/04-architecture/per-client-isolation-architecture.md`
-        — full architecture: supervisor + ClientWorker subprocess pattern, MarkPriceAggregator centralisation, hybrid
-        hot-reload, preflight sequence, crash isolation guarantees, GIL-and-subprocess rationale; (2)
-        `codex/04-architecture/execution-service-per-client-isolation.md` — confirm existing pattern;
-        assert_client_allowed surface; one-process-per-client deployment model; (3)
-        `codex/04-architecture/oms-protocol-and-state-machine.md` — PersistentOrderManager + state machine + idempotency
-        cache + child-order tracking; (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — asyncio.gather +
-        SmartOrderRouter + per-venue rate-limit / circuit-breaker pattern; (5)
-        `codex/04-architecture/transfer-coordinator.md` — TransferCoordinator facade, transfer-type routing table,
-        idempotency, persistence; (6) `codex/04-architecture/client-lifecycle-event-bus.md` —
-        REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED events, push-vs-pull contract for hot-reload, supervisor
-        subscription; (7) `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, shard auto-spawn,
-        capacity threshold defaults, vm_zombie_watchdog integration; (8) UPDATE existing
-        `codex/04-architecture/promote-workflow-architecture.md` — add per-client + per-shard semantics to promote
-        target taxonomy (currently `paper_1d` / `live_early`; clarify: shard is invisible to promote workflow, lives
-        entirely in strategy-service's runtime). status: pending blocked_by: phase-8-deployment-service-wiring
+  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (docs 1, 6, 7, 8 SHIPPED; docs 2-5 pending slot-7 Phase 6)** —
+        PM@32d1929db (slot 8 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
+        supervisor + ClientWorker subprocess, MarkPriceAggregator, hybrid hot-reload, preflight, crash isolation, GIL
+        rationale, clients.yaml - ⏳ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — PENDING
+        slot 7 Phase 6 write - ⏳ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` — PENDING slot 7 Phase
+        6 - ⏳ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — PENDING slot 7 Phase 6 - ⏳ (5)
+        `codex/04-architecture/transfer-coordinator.md` — PENDING slot 7 Phase 6 - ✅ (6)
+        `codex/04-architecture/client-lifecycle-event-bus.md` — REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED,
+        push-vs-pull, ShardCapacityEvent, supervisor subscription code snippet - ✅ (7)
+        `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, capacity thresholds, shard auto-spawn,
+        vm_zombie_watchdog prefix mapping, drain-before-migration rule - ✅ (8)
+        `codex/04-architecture/promote-workflow-architecture.md` UPDATED — per-client + per-shard taxonomy added,
+        shard-invisible-to-promote clarified, E.2 listed in deferred status: partial (docs 1/6/7/8 done; sanity-check of
+        2-5 pending slot-7 ship)
 
 - id: phase-e2-auto-shard-supervisor-signal content: |
   - [ ] **POST-MAY-23** [AGENT] P1. Phase E.2 — Auto-shard supervisor signal end-to-end: Wire deployment-service to
