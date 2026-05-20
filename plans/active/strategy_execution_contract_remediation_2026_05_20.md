@@ -394,8 +394,10 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 
 ### Phase Q — QG ratchet
 
-- [ ] **[SCRIPT] P1.** Qa. Extend `no_silent_absence_handlers.sh` to cover strategy-service `gcs_storage_service.py`
-- [ ] **[SCRIPT] P1.** Qb. Extend `no_silent_absence_handlers.sh` to cover execution `strategy_instructions/gcs.py`
+- [x] ✅ **[SCRIPT] P1.** Qa. Extend `no_silent_absence_handlers.sh` to cover strategy-service `gcs_storage_service.py`
+      — PM@dc849b256
+- [x] ✅ **[SCRIPT] P1.** Qb. Extend `no_silent_absence_handlers.sh` to cover execution `strategy_instructions/gcs.py` —
+      PM@dc849b256
 
 ### Codex SSOT updates
 
