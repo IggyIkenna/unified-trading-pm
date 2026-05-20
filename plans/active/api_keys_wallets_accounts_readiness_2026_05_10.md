@@ -760,9 +760,8 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
         `central-element-323112`. `kalshi-private-key-pem` also needs provisioning. Full KalshiAdapter is shipped at
         `execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py` (RSA-PSS auth,
         place/cancel/positions/balance). CREDENTIAL APPROVAL REQUEST filed in `ikenna_orchestrator/pings/slot_8.md`.
-  - [x] **5.B.3** — Manifold API key. **SCOPED OUT**: `predictions_master_2026_05_07.md` does not include Manifold in
-        MVP archetype scope. Manifold is in `_PREDICTION_SOURCES` UAC enum + UAC schemas exist but no execution
-        adapter + no SM secret — not a May-23 gate. No action needed.
+  - [x] **5.B.3** — Manifold API key. **KILLED 2026-05-20**: Manifold removed entirely from workspace per operator
+        directive (play-money — pointless). No credential needed. Adapter/schemas deleted from UAC + MTDS.
   - [x] **5.B.4** — Per-venue prediction adapter. **DONE**: Execution adapter exists at: (a)
         `execution-service/execution_service/trade_execution/adapters/polymarket_adapter.py` — delegating to
         `PolymarketCLOBAdapter` from sports-execution-interface; (b)

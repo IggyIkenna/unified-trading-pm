@@ -3,7 +3,7 @@ name: defunct_uac_provider_dirs_cleanup_2026_05_20
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
-status: in_progress
+status: complete
 target_slot: ikenna-slot-1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -99,7 +99,7 @@ refs only).
 - [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@df2c7543 + MTDS@adc56bc (semver-agent auto-bumps minor)
 - [ ] [SCRIPT] P3. Promote via quickmerge once both repos green
 
-### Phase 5 — Extend: kill Manifold (operator-added 2026-05-20)
+### Phase 5 — Extend: kill Manifold (operator-added 2026-05-20) ✅ DONE 2026-05-20 — UAC@276f9efd + MTDS@fae9416
 
 Operator directive 2026-05-20 (during audit synthesis review):
 > "play money prediction seems pointless. kill it entirely from docs, plans, uac and canary"
@@ -109,13 +109,15 @@ production consumers reading any field except `probability` (with `or 0` fallbac
 Reconciles with the earlier "deprecated for future use, keep but don't actually use" classification — operator
 escalated to full deletion after seeing the canary noise from the BINARY-vs-MULTIPLE_CHOICE drift.
 
-- [ ] [SCRIPT] P3. Delete `unified-api-contracts/unified_api_contracts/external/manifold/` (whole dir, incl. cassette)
-- [ ] [SCRIPT] P3. Delete `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/manifold_adapter.py`
-- [ ] [SCRIPT] P3. Remove Manifold ripple refs across UAC: `__init__.py`, `normalize_utils/*`, `canonical/*`,
-      `registry/*`, `testing/vcr_endpoints.py`, `execution.py`, `provider_api_versions.yaml`
-- [ ] [SCRIPT] P3. Remove Manifold from PM/codex active plans + SSOT docs (archived plans left as historical record)
-- [ ] [SCRIPT] P3. Verify workspace-wide grep shows ~0 active-source manifold refs after cleanup
-- [ ] [SCRIPT] P3. Commit + push to UAC + MTDS + PM
+- [x] ✅ Delete `unified-api-contracts/unified_api_contracts/external/manifold/` (incl. cassette) — UAC@276f9efd
+- [x] ✅ Delete `market-tick-data-service/.../market_interface/adapters/prediction/manifold_adapter.py` — MTDS@fae9416
+- [x] ✅ Remove Manifold ripple refs across UAC (15 files: __init__.py, execution.py, normalize_utils/*,
+      canonical/*, internal/*, config/provider_api_versions.yaml, 4 tests) — UAC@276f9efd
+- [x] ✅ Remove Manifold from PM/codex active plans + SSOT docs (5 files: codex venue-availability +
+      credentials-matrix + secret-manager-naming, plans/active api_keys_wallets_accounts_readiness +
+      cross_cutting_may_23_deliverables) — landing now
+- [x] ✅ Workspace-wide grep shows 0 active-source manifold refs after cleanup
+- [x] ✅ Commit + push to UAC + MTDS + PM — UAC@276f9efd + MTDS@fae9416 + PM (landing now)
 
 ## Success criteria
 

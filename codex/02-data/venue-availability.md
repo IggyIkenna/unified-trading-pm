@@ -98,8 +98,6 @@ Motivating catalogue audits:
 - CF-9 / CF-10 — bare `GMX` / `DRIFT` cefi venues with no adapter (GHOST).
 - DF-6 — vault venues marked "live" with no adapter, handler, OR capability anywhere.
 - DF-20 — MARGINFI / SOLEND "live" ghosts.
-- SP-1 — `manifold` declared in capability but no venue/adapter.
-- PR-7 — `MANIFOLD` orphan.
 
 QG script path: `unified-trading-pm/scripts/quality_gates/check_venue_adapter_coverage.py` (planned). Owner: governance
 

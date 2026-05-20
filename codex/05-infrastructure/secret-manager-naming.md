@@ -83,7 +83,6 @@ Total: 10 venues × 3 scopes × 2-3 fields per scope = ~60-90 secrets.
 ```
 polymarket-api-key
 kalshi-api-key
-manifold-api-key      # only if archetype scope adds Manifold
 ```
 
 ### 2.4 Cloud KMS CMKs
