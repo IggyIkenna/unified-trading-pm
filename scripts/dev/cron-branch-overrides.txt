@@ -1,0 +1,10 @@
+# Per-repo integration-branch overrides for slot-cron-ff-pull.sh.
+#
+# Default: the script's --branch arg (live-defi-rollout in cron).
+# This file: repo_name <whitespace> branch_name
+# Comments (#) and blank lines ignored.
+#
+# Add a row when a repo's canonical integration branch is NOT live-defi-rollout
+# (e.g., infra repos that ship via `main` directly).
+
+agent-orchestrator main

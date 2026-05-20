@@ -44,6 +44,38 @@ DRY_RUN=0
 PARALLEL_WORKERS="${SLOT_FF_PULL_WORKERS:-4}"
 DO_PREFETCH=1
 LOCK_FILE="/tmp/slot-cron-ff-pull.lock"
+OVERRIDES_FILE="$(dirname "${BASH_SOURCE[0]}")/cron-branch-overrides.txt"
+
+# Per-repo branch overrides, loaded from OVERRIDES_FILE if present.
+# Format: "repo_name branch_name" per line; # and blank lines ignored.
+# Parallel arrays (compatible with macOS bash 3.2; assoc arrays need bash 4+).
+OVERRIDE_REPOS=()
+OVERRIDE_BRANCHES=()
+if [[ -f "${OVERRIDES_FILE}" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        line="${line%%#*}"  # strip trailing comment
+        line="${line#"${line%%[![:space:]]*}"}"  # ltrim
+        [[ -z "${line// }" ]] && continue
+        repo=""; branch=""
+        read -r repo branch <<< "${line}"
+        if [[ -n "${repo}" && -n "${branch}" ]]; then
+            OVERRIDE_REPOS+=("${repo}")
+            OVERRIDE_BRANCHES+=("${branch}")
+        fi
+    done < "${OVERRIDES_FILE}"
+fi
+
+# Resolve the effective branch for a repo (override or default).
+branch_for_repo() {
+    local repo_name="$1" i
+    for i in "${!OVERRIDE_REPOS[@]}"; do
+        if [[ "${OVERRIDE_REPOS[$i]}" == "${repo_name}" ]]; then
+            echo "${OVERRIDE_BRANCHES[$i]}"
+            return 0
+        fi
+    done
+    echo "${INTEGRATION_BRANCH}"
+}
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -75,9 +107,10 @@ ff_one() {
     local do_fetch="${2:-1}"
     pushd "${repo_dir}" >/dev/null
 
-    local repo_name branch local_sha remote_sha merge_base ahead behind
+    local repo_name branch local_sha remote_sha merge_base ahead behind int_branch
     repo_name=$(basename "${repo_dir}")
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
+    int_branch="$(branch_for_repo "${repo_name}")"
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" ]]; then
         log "[skip:detached] ${repo_name} — not on a branch"
@@ -94,7 +127,7 @@ ff_one() {
 
     # Step 2: fetch only if not pre-fetched (silent; skip on offline / no-such-ref).
     if [[ "${do_fetch}" -eq 1 ]]; then
-        if ! git fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null; then
+        if ! git fetch --quiet origin "${int_branch}" 2>/dev/null; then
             log "[skip:fetch-fail] ${repo_name} (${branch}) — fetch failed (offline? missing branch?)"
             popd >/dev/null
             return 0
@@ -102,54 +135,54 @@ ff_one() {
     fi
 
     local_sha=$(git rev-parse HEAD)
-    remote_sha=$(git rev-parse "origin/${INTEGRATION_BRANCH}" 2>/dev/null || echo "")
+    remote_sha=$(git rev-parse "origin/${int_branch}" 2>/dev/null || echo "")
     if [[ -z "${remote_sha}" ]]; then
-        log "[skip:no-remote-ref] ${repo_name} (${branch}) — origin/${INTEGRATION_BRANCH} not in this worktree"
+        log "[skip:no-remote-ref] ${repo_name} (${branch}) — origin/${int_branch} not in this worktree"
         popd >/dev/null
         return 0
     fi
 
     # Step 3: already up-to-date?
     if [[ "${local_sha}" == "${remote_sha}" ]]; then
-        log_quiet "[ok:up-to-date] ${repo_name} (${branch})"
+        log_quiet "[ok:up-to-date] ${repo_name} (${branch} → ${int_branch})"
         popd >/dev/null
         return 0
     fi
 
-    merge_base=$(git merge-base HEAD "origin/${INTEGRATION_BRANCH}" 2>/dev/null || echo "")
+    merge_base=$(git merge-base HEAD "origin/${int_branch}" 2>/dev/null || echo "")
 
     if [[ -z "${merge_base}" ]]; then
-        log "[skip:no-merge-base] ${repo_name} (${branch}) — branches unrelated"
+        log "[skip:no-merge-base] ${repo_name} (${branch} → ${int_branch}) — branches unrelated"
         popd >/dev/null
         return 0
     fi
 
     # Step 4: ahead-only (local has unpushed commits, remote not advanced past us).
     if [[ "${merge_base}" == "${remote_sha}" && "${merge_base}" != "${local_sha}" ]]; then
-        ahead=$(git rev-list --count "origin/${INTEGRATION_BRANCH}..HEAD")
-        log "[skip:ahead] ${repo_name} (${branch}) — ${ahead} unpushed commit(s)"
+        ahead=$(git rev-list --count "origin/${int_branch}..HEAD")
+        log "[skip:ahead] ${repo_name} (${branch} → ${int_branch}) — ${ahead} unpushed commit(s)"
         popd >/dev/null
         return 0
     fi
 
     # Step 5: diverged (both sides have unique commits).
     if [[ "${merge_base}" != "${remote_sha}" && "${merge_base}" != "${local_sha}" ]]; then
-        ahead=$(git rev-list --count "origin/${INTEGRATION_BRANCH}..HEAD")
-        behind=$(git rev-list --count "HEAD..origin/${INTEGRATION_BRANCH}")
-        log "[skip:diverged] ${repo_name} (${branch}) — ahead ${ahead}, behind ${behind}; need manual rebase"
+        ahead=$(git rev-list --count "origin/${int_branch}..HEAD")
+        behind=$(git rev-list --count "HEAD..origin/${int_branch}")
+        log "[skip:diverged] ${repo_name} (${branch} → ${int_branch}) — ahead ${ahead}, behind ${behind}; need manual rebase"
         popd >/dev/null
         return 0
     fi
 
     # Step 6: clean fast-forward (merge_base == local_sha, remote ahead).
-    behind=$(git rev-list --count "HEAD..origin/${INTEGRATION_BRANCH}")
+    behind=$(git rev-list --count "HEAD..origin/${int_branch}")
     if [[ "${DRY_RUN}" -eq 1 ]]; then
-        log "[dry-run:ff] ${repo_name} (${branch}) — would FF by ${behind} commit(s) to ${remote_sha:0:8}"
+        log "[dry-run:ff] ${repo_name} (${branch} → ${int_branch}) — would FF by ${behind} commit(s) to ${remote_sha:0:8}"
     else
-        if git merge --ff-only --quiet "origin/${INTEGRATION_BRANCH}" 2>/dev/null; then
-            log "[ff] ${repo_name} (${branch}) — FF +${behind} → ${remote_sha:0:8}"
+        if git merge --ff-only --quiet "origin/${int_branch}" 2>/dev/null; then
+            log "[ff] ${repo_name} (${branch} → ${int_branch}) — FF +${behind} → ${remote_sha:0:8}"
         else
-            log "[skip:ff-failed] ${repo_name} (${branch}) — --ff-only refused; manual inspection needed"
+            log "[skip:ff-failed] ${repo_name} (${branch} → ${int_branch}) — --ff-only refused; manual inspection needed"
         fi
     fi
     popd >/dev/null
@@ -171,9 +204,8 @@ walk_slot() {
     log_quiet "slot $(basename "${slot_dir}"): walked ${count} repo(s)"
 }
 
-# Export functions + vars for parallel worker subshells (& inherits these).
-export -f ff_one walk_slot log log_quiet
-export INTEGRATION_BRANCH QUIET DRY_RUN
+# Workers are forked via `&`, so they inherit functions, variables, and the
+# BRANCH_OVERRIDES assoc array in-process without any export ceremony.
 
 prefetch_main_clones() {
     # Sequentially fetch origin/<branch> for every MAIN-workspace full clone.
@@ -184,12 +216,13 @@ prefetch_main_clones() {
     local failed=0
     for d in "${main_ws}"/*/; do
         [[ -d "${d}.git" ]] || continue  # only main clones (file-.git = linked worktree)
-        local repo_name
+        local repo_name int_branch
         repo_name=$(basename "${d}")
-        if git -C "${d}" fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null; then
+        int_branch="$(branch_for_repo "${repo_name}")"
+        if git -C "${d}" fetch --quiet origin "${int_branch}" 2>/dev/null; then
             fetched=$((fetched + 1))
         else
-            log "[prefetch-fail] ${repo_name} — fetch origin/${INTEGRATION_BRANCH} failed"
+            log "[prefetch-fail] ${repo_name} — fetch origin/${int_branch} failed"
             failed=$((failed + 1))
         fi
     done
