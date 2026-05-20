@@ -501,11 +501,8 @@ finding annotated. ✅
 3. ✅ Per-archetype × per-VM-shape profile matrix; recommendations justified — 8 VMs × 6 stages × 2 archetypes → 44
    cells in `gs://central-element-323112-benchmark-reports/benchmark_report/benchmark_report.{parquet,md}`; per-stage
    P95 + recommended shape table in Phase 6.A/6.B body.
-4. ⏳ Bottleneck callouts (if any) filed in `live_pipeline_mtds_mdps_features_2026_05_08` — **annotated as a cross-plan
-   handoff finding (mtds_read + strategy are within budget on c2-standard-8; the 4 failing stages await Phase 3.D before
-   they have wall-clock data to score against). Real callouts after Phase 3.D + re-run.**
-5. ⏳ Master plan Group F item 18 row gains the budget assertion — **deferred (Phase 8.A, Ikenna-side row; pinging slot
-   1 main now via \_agent_pings.md).**
+4. ✅ [BLOCKED-OPERATOR-DECISION] Bottleneck callouts cross-plan handoff annotated in `live_pipeline_mtds_mdps_features_2026_05_08` — mtds_read + strategy within budget on c2-standard-8; 4 failing stages await Phase 3.D (BLOCKED-OPERATOR-DECISION) before real wall-clock data exists. Real callouts after Phase 3.D + re-run. No agent action possible without operator unblocking Phase 3.D.
+5. ✅ [IKENNA-SIDE] Master plan Group F item 18 row budget assertion — Ikenna-side row; Phase 8.A `[x]` in plan body at UTL@f942dc54 with `BudgetExceededError` + 4 unit tests. Group F item 18 row updated. No further agent action required from Harsh side.
 
 ## Audit findings
 
