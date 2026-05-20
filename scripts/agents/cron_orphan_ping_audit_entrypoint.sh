@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# cron_orphan_ping_audit_entrypoint.sh — Cloud Run Job entrypoint for the
+# every-4h orphan-ping audit cron.
+#
+# Plan-of-record:
+#   CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item"
+#   (codified 2026-05-20 round 5; cadence tightened round 6).
+#
+# Cron stack:
+#   - Local (Ikenna's machine): `0 */4 * * *` via crontab.
+#   - Cloud (Cloud Scheduler asia-northeast1): `15 2,6,10,14,18,22 * * *`
+#     — offset by 2h so the two passes don't collide. Job name:
+#     `uts-prod-orphan-ping-audit`.
+#
+# What this entrypoint does:
+#   1. Clone unified-trading-pm from GitHub (live-defi-rollout branch) using
+#      a GitHub PAT loaded from Secret Manager as $GH_PAT.
+#   2. Run `scripts/agents/audit_ping_orphans.sh` — the script appends
+#      orphan-notification entries to the orchestrator inboxes if orphans
+#      are detected.
+#   3. If git working tree is dirty after the run (i.e. orphan notifications
+#      were appended), `git add` the modified ping ledgers, commit + push
+#      back to live-defi-rollout so both operators' tab worktrees see the
+#      notifications on next `git fetch`.
+#   4. Exit 0 always (orphan detection is informational, not a Cloud Run
+#      failure — operator inboxes carry the signal).
+#
+# Container image: google/cloud-sdk:slim (bash + git + gcloud preinstalled).
+#
+# Env vars (set by Cloud Run Job):
+#   GH_PAT       — GitHub PAT secret with `repo` scope (Secret Manager → GH_PAT).
+#   PM_BRANCH    — branch to checkout + push to (default: live-defi-rollout).
+#   PM_REPO_URL  — repo URL (default: https://github.com/IggyIkenna/unified-trading-pm.git).
+#   GIT_AUTHOR_NAME / GIT_AUTHOR_EMAIL / GIT_COMMITTER_NAME / GIT_COMMITTER_EMAIL
+#                — author identity for the auto-commit (set in the Job spec).
+
+set -uo pipefail
+
+PM_BRANCH="${PM_BRANCH:-live-defi-rollout}"
+PM_REPO_URL_PUBLIC="${PM_REPO_URL:-https://github.com/IggyIkenna/unified-trading-pm.git}"
+WORKDIR="${WORKDIR:-/tmp/unified-trading-pm}"
+TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+echo "── cron-orphan-ping-audit entrypoint ${TIMESTAMP_UTC} ──"
+
+if [[ -z "${GH_PAT:-}" ]]; then
+  echo "FATAL: GH_PAT env var not set. Wire the Secret Manager secret into the Cloud Run Job spec." >&2
+  exit 2
+fi
+
+# Construct authenticated URL (token in URL is acceptable for ephemeral
+# Cloud Run Job env — never logged, container destroyed at exit).
+PM_REPO_URL_AUTH="$(echo "$PM_REPO_URL_PUBLIC" | sed "s|https://|https://x-access-token:${GH_PAT}@|")"
+
+rm -rf "$WORKDIR"
+echo "── cloning ${PM_REPO_URL_PUBLIC} @ ${PM_BRANCH} into ${WORKDIR}"
+git clone --depth=10 --branch="$PM_BRANCH" "$PM_REPO_URL_AUTH" "$WORKDIR" 2>&1 | sed "s|${GH_PAT}|***REDACTED***|g"
+if [[ ! -d "$WORKDIR/.git" ]]; then
+  echo "FATAL: clone failed" >&2
+  exit 3
+fi
+
+cd "$WORKDIR"
+
+# Configure git identity (Cloud Run Job runs as service account, no global
+# git config baked into the slim image).
+git config user.email "${GIT_COMMITTER_EMAIL:-orphan-ping-cron@odum-research.com}"
+git config user.name  "${GIT_COMMITTER_NAME:-orphan-ping-cron}"
+
+# Run the audit. It exits 1 if orphans found (script appends notifications
+# to the ping ledgers). We capture exit code but do NOT abort — we still
+# want to commit + push the notifications.
+set +e
+bash scripts/agents/audit_ping_orphans.sh
+AUDIT_RC=$?
+set -e
+
+echo "── audit exit code: ${AUDIT_RC}"
+
+if ! git diff --quiet; then
+  echo "── orphan notifications appended — committing + pushing"
+  # Only stage the ping ledger files the audit script writes to. Anything
+  # else dirty would be a bug — log it loudly.
+  EXPECTED_PATHS=(
+    "ikenna_orchestrator/_agent_pings.md"
+    "harsh_orchestrator/_agent_pings.md"
+  )
+  for p in "${EXPECTED_PATHS[@]}"; do
+    if [[ -f "$p" ]]; then
+      git add "$p"
+    fi
+  done
+
+  UNSTAGED_DIRTY="$(git diff --name-only | grep -vE '^(ikenna_orchestrator|harsh_orchestrator)/_agent_pings\.md$' || true)"
+  if [[ -n "$UNSTAGED_DIRTY" ]]; then
+    echo "WARNING: unexpected dirty files (will NOT commit these):"
+    echo "$UNSTAGED_DIRTY"
+  fi
+
+  if git diff --cached --quiet; then
+    echo "── nothing staged — exit clean"
+    exit 0
+  fi
+
+  git commit -m "chore(orphan-ping-cron): notify ${TIMESTAMP_UTC} (audit rc=${AUDIT_RC})
+
+Auto-commit by Cloud Run Job uts-prod-orphan-ping-audit.
+Cadence: every 4h offset by 2h from local cron.
+Audit script: scripts/agents/audit_ping_orphans.sh.
+"
+  echo "── pushing to ${PM_BRANCH}"
+  git push "$PM_REPO_URL_AUTH" "HEAD:${PM_BRANCH}" 2>&1 | sed "s|${GH_PAT}|***REDACTED***|g"
+  echo "── push complete"
+else
+  echo "── no orphans → no commit needed"
+fi
+
+echo "── done ${TIMESTAMP_UTC}"
+exit 0
