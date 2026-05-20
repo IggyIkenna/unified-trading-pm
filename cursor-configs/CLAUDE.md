@@ -647,6 +647,11 @@ keep being sloppy and keep missing out stuff."
 
 **Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
+**Operator-handoff entry point for migration coordination**: `plans/active/data_pipeline_master_coordination_2026_05_20.md`
+— sequences AWS↔GCP bucket symmetry → code freeze → drain → GCS migration → AWS migration → Docker rebuild → manifest
+v8 backfill + label-flip → denominator/numerator UI fix → QG enforcement. References ALL existing related plans + audits
+without duplicating content. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do not reorder).
+
 ---
 
 ## Estimate Calibration (HARD RULE)

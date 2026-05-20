@@ -1,0 +1,476 @@
+---
+name: data-pipeline-master-coordination-2026-05-20
+title: Data pipeline master coordination — bucket symmetry → code freeze → GCS+AWS migration → manifest v8 → label-flip → denominator/numerator fix → QG enforcement
+created: 2026-05-20
+author: ikenna (slot-1 main, mega-audit round 5)
+status: active
+priority: P0
+locked_by: live-defi-rollout
+locked_since: 2026-05-20
+estimate_class: infra
+estimate_baseline_ai_days: 45
+estimate_calibrated_ai_days: 36
+parent_plan: master_to_live_defi_2026_05_23.md
+parent_epic: manifest_evolution_master_2026_05_08
+related_plans:
+  # Bucket naming + migration sequence
+  - bucket_name_ssot_canonicalisation_2026_05_10.md
+  - code_freeze_migrate_backfill_sequencing_2026_05_10.md
+  - aws_migration_defi_first_2026_05_07.md
+  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
+  # Manifest v8 + writegate
+  - writegate_honest_coverage_endtoend_2026_05_06.md
+  - d3_manifest_v8_finish_2026_05_20.md
+  - manifest_cross_asset_rescan_design_2026_05_08.md
+  - manifest_schema_final_gate_2026_05_09.md
+  - hard_schema_phase1_field_flip_migration_2026_05_19.md
+  # Denominator / honest coverage / UI
+  - honest_coverage_formula_consolidation_2026_05_19.md
+  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
+  - canary_coverage_qg_enforcement_2026_05_20.md
+  - deployment_ui_lifecycle_tabs_2026_05_08.md
+  - issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md
+  # Audits feeding this coordination
+  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
+  - audit/results/manifest_v8_compliance_2026_05_20_summary.md
+  - audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md
+  - audit/results/manifest_divergence_2026_05_20_summary.md
+  - audit/results/manifest_divergence_all_services_2026_05_20_summary.md
+  - audit/is_mtds_contract_audit_2026_05_20.md
+  - audit/mtds_features_contract_audit_2026_05_20.md
+  - audit/mtds_strategy_contract_audit_2026_05_20.md
+  - audit/strategy_execution_contract_audit_2026_05_20.md
+  - audit/utl_consumer_contract_audit_2026_05_20.md
+  - audit/uac_consumer_contract_audit_2026_05_20.md
+  # Codex SSOTs
+  - ../../codex/02-data/data-pipeline-correctness-hard-rule.md
+  - ../../codex/05-infrastructure/manifest-consolidator-ssot.md
+  - ../../codex/11-project-management/foundation-completion-gate-discipline.md
+---
+
+# Data pipeline master coordination — 2026-05-20
+
+> **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing
+> contained within PM active plans which can reference issues and audits, but
+> I should be able to go to an orchestrator with the problem and use ALL the
+> PM active plans and their references to solve."
+>
+> **This plan is the operator-handoff entry point.** It does NOT duplicate
+> content from referenced plans — it sequences them in the order they must
+> execute and surfaces the cross-cutting concerns that span multiple plans
+> (bucket asymmetry, code freeze, denominator fix, slot coordination).
+>
+> Linked from CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" +
+> from `mega_audit_phase_a_issues_human_readable_2026_05_20.md` § 6 as the
+> execution-ordering layer over the delegation SSOT.
+
+## Why this plan exists
+
+Mega-audit Phase A (rounds 1-4) surfaced multiple interlocking findings that
+share a single critical-path: **bucket naming asymmetry blocks clean manifest
+audit, which blocks v8 backfill, which blocks paper-trade promotion**. The
+existing plans each cover one slice cleanly; what was missing is the
+**execution ordering** + a **single document an orchestrator can read once**
+to know what runs in what order, in what slot, with what code-freeze gate.
+
+Symptoms the audit surfaced (linking to evidence):
+
+1. **0% of 7.4M manifest rows at v8** ([A4](../audit/results/manifest_v8_compliance_2026_05_20_summary.md)).
+   Confirmed writer-fleet-stale (residual analysis excludes 42 one-off shards;
+   residual 3,853 shards still 100% v<8) — Docker images deployed to VMs
+   built before the v8 constant bump.
+2. **236,892 `MISSING_EXPECTED` + 765 `DIVERGENT_EMPTY` cells** across MTDS
+   ([A3](../audit/results/manifest_divergence_2026_05_20_summary.md)).
+3. **AWS bucket naming asymmetric to GCP** — naming convention drift:
+   GCP `market-data-tick-defi-prd-central-element-323112` vs
+   AWS `unified-trading-market-data-defi-427895769566` (no env tier; extra
+   `unified-trading-` prefix). 62-char limit drove `prd` over `prod` on GCP
+   per [bucket_name_ssot_canonicalisation_2026_05_10.md](bucket_name_ssot_canonicalisation_2026_05_10.md);
+   AWS needs the same treatment for code-path identity.
+4. **16 service buckets without consolidated manifest** ([A3 v2](../audit/results/manifest_divergence_all_services_2026_05_20_summary.md))
+   — 14 empty (Group B env-split rollback) + 2 with non-manifest data
+   (execution-store-cefi, ml-training-artifacts).
+5. **Hybrid consolidator runtime** (legacy GCE VM + 10 Cloud Run jobs) —
+   resolved 2026-05-20: legacy VM deleted (deployment-service@73183b7),
+   Cloud Run is canonical per [codex/05-infrastructure/manifest-consolidator-ssot.md](../../codex/05-infrastructure/manifest-consolidator-ssot.md).
+6. **Denominator/numerator confusion in deployment-UI** — currently shows
+   captured/in_scope ratio, but in_scope underreports what we COULD capture.
+   See [honest_coverage_formula_consolidation_2026_05_19.md](honest_coverage_formula_consolidation_2026_05_19.md)
+   for the formula work.
+
+## Critical-path ordering (DO NOT REORDER)
+
+```
+                            ┌──────────────────────────────────────┐
+                            │  Phase 0: Pre-flight audits          │
+                            │  (mega-audit Phase A — DONE)         │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 1: AWS↔GCP bucket name        │
+                            │  symmetry audit + fix                │
+                            │  (drop unified-trading- prefix,      │
+                            │  add env-tier infix on AWS)          │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 2: CODE FREEZE WINDOW          │
+                            │  ALL slots paused; broadcast ping    │
+                            │  (operator-triggered start)          │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 3: Drain VM fleet              │
+                            │  (gracefully stop + consolidate     │
+                            │  per-VM shards to canonical)         │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 4: GCS bucket migration       │
+                            │  (single → split per env-tier;       │
+                            │  bucket-name SSOT cutover)           │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 5: AWS bucket migration       │
+                            │  (symmetric to GCP; same code path)  │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 6: Docker rebuild + redeploy  │
+                            │  (writer fleet → v8 binaries)        │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 7: Manifest v8 backfill +     │
+                            │  label-flip historical rows          │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 8: Code-freeze release         │
+                            │  Slots resume normal work            │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 9: Denominator/numerator fix  │
+                            │  in deployment-UI (parallel to      │
+                            │  Phase 10)                           │
+                            └──────────────┬───────────────────────┘
+                                           │
+                                           ▼
+                            ┌──────────────────────────────────────┐
+                            │  Phase 10: QG enforcement upgrade    │
+                            │  (manifest v8 + dependency-check)    │
+                            └──────────────────────────────────────┘
+```
+
+## Phase reference table (orchestrator entry point)
+
+Each phase points at the plan(s) that own the implementation detail. **The
+orchestrator's job is to read this table top-down + dispatch slots
+accordingly.** No phase content duplicated here.
+
+| Phase | Plan(s)-of-record | Owner slot | Pre-req | Verification (when done) |
+|---|---|---|---|---|
+| **0. Pre-flight audits** | `audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md` + the 6 contract audits in `audit/` | slot-1 main (mega-audit owner — already DONE round 4) | — | All R-items in mega-audit § 6 have named owner + plan; this file exists |
+| **1. AWS↔GCP bucket-name symmetry audit + fix** | `bucket_name_ssot_canonicalisation_2026_05_10.md` (extension) + see new § "Phase 1 — bucket symmetry" below | **Slot 2 + Slot 3** (code_freeze owners — closest to bucket plumbing) | Phase 0 GREEN | A3 v2 re-run: AWS bucket names match GCP template (env-tier present, no `unified-trading-` prefix), all ≤63 chars |
+| **2. CODE FREEZE WINDOW** | This plan § "Phase 2 — code freeze protocol" | **Slot 1 main** (operator triggers; main broadcasts) | Phase 1 GREEN | All non-freeze slots ACK'd in `_agent_pings.md`; zombie watchdog + Cloud Run consolidators still RUNNING |
+| **3. VM fleet drain** | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.0 Stage 0 (existing) | **Slot 2 + Slot 3** | Phase 2 active | All non-essential VMs STOPPED; per-VM shards consolidated; manifest snapshot under `_index/snapshots/pre_migration_2026_05_XX.parquet` |
+| **4. GCS bucket migration** | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Phase 2.2-2.6 + `gcs_migration_bundle_pipeline_mode_2026_05_08.md` (single-walk discipline) | **Slot 2 + Slot 3** | Phase 3 GREEN | Every GCS object lives under the new env-tiered bucket; `resolve_bucket_name()` returns the new bucket name for all kinds |
+| **5. AWS bucket migration** | `aws_migration_defi_first_2026_05_07.md` (extension) + see § "Phase 5 — AWS migration" below | **Slot 4** (api_keys owner — adjacent to AWS credentials work) | Phase 4 GREEN | AWS bucket names match GCP template (per Phase 1 audit); s3:// objects migrated to new bucket names |
+| **6. Docker rebuild + redeploy** | `writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 7.A (extended this session to diagnose Docker staleness FIRST) | **Slot 5** (writegate owner; R6 in mega-audit) | Phase 5 GREEN | Sample 100 newest manifest rows per bucket; ALL at `schema_version=8` (steady-state writers confirmed deployed) |
+| **7. Manifest v8 backfill + label-flip** | `writegate_honest_coverage_endtoend_2026_05_06.md` § Phase 7.B/7.C/7.D + `d3_manifest_v8_finish_2026_05_20.md` + `hard_schema_phase1_field_flip_migration_2026_05_19.md` (label-flip) | **Slot 5** | Phase 6 GREEN | A4 re-run: 100% v8 + 0 NULL across all 10 buckets; label-flip-bad-rows reconciler outputs 0 mismatches |
+| **8. Code-freeze release** | This plan § "Phase 8 — release protocol" | **Slot 1 main** | Phase 7 GREEN | Broadcast UNFREEZE ping; resume slot themes per `work_split_2026_05_19_ikenna.md` |
+| **9. Denominator/numerator fix in deployment-UI** | `honest_coverage_formula_consolidation_2026_05_19.md` + `data_status_drilldown_shard_atom_alignment_2026_05_07.md` + `deployment_ui_lifecycle_tabs_2026_05_08.md` (post-unfreeze) | **Slot 6** (deployment-UI owner — unfrozen after Phase 8) | Phase 8 GREEN | UI shows: numerator = `captured` cells; denominator = `captured + empty_confirmed + attempted_failed + expected_unattempted` (everything we tried OR could have tried). Out-of-scope cells NOT in denominator |
+| **10. QG enforcement upgrade** | `canary_coverage_qg_enforcement_2026_05_20.md` (existing) + extend with manifest-v8 QG step + upstream-dep-check QG step | **Slot 5** + **Slot 2/3** | Phase 8 GREEN (parallel with Phase 9) | New QG steps: (a) `check_manifest_v8_writer_runtime.py` (samples recent writes for v8); (b) `check_dependency_fail_propagation.py` (per A5 findings); both ratchet to 0 violations workspace-wide |
+
+## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
+
+**Current asymmetry** (illustrated for MTDS DeFi):
+
+| Cloud | Current name | Length |
+|---|---|---|
+| GCP | `market-data-tick-defi-prd-central-element-323112` | 48 chars |
+| AWS | `unified-trading-market-data-defi-427895769566` | 46 chars (NO env-tier infix) |
+
+**Target symmetric naming**:
+
+| Cloud | Target name | Length | Rationale |
+|---|---|---|---|
+| GCP | `market-data-tick-defi-prd-central-element-323112` | 48 chars | Already canonical |
+| AWS | `market-data-tick-defi-prd-427895769566` | 38 chars | Drop `unified-trading-` prefix; add env-tier infix `prd`; project-id naturally differs |
+
+**Code-path identity benefit**: every caller already does
+`resolve_bucket_name(kind, asset_group)` → the YAML template determines the
+name. With symmetric templates that differ ONLY by `${GCP_PROJECT_ID}` vs
+`${AWS_ACCOUNT_ID}`, the code paths are identical — readers + writers don't
+branch on cloud.
+
+**Phase 1 deliverables**:
+
+1. - [ ] **AWS bucket inventory audit** — every kind in
+       `deployment-service/configs/cloud-providers.yaml` `aws:` block: list
+       current bucket name + target symmetric name + 63-char-cap check. Output:
+       `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv`.
+2. - [ ] **Bucket-spawning script audit** — every script in
+       `deployment-service/scripts/` that provisions buckets on either cloud:
+       confirm it consults the YAML template + that the YAML is the SSOT.
+       Surface drift cases (hardcoded bucket names, alternate naming, missing
+       env-tier).
+3. - [ ] **YAML template alignment** — update `cloud-providers.yaml` `aws:`
+       block templates to mirror `gcp:` templates (one-line-per-kind diff).
+       Pre-existing GCP shape `{kind}-{ag}-${DEPLOYMENT_ENV_SHORT}-${PROJECT_ID}`
+       must apply with `${AWS_ACCOUNT_ID}` swap on AWS.
+4. - [ ] **63-char cap re-verification** — automated check that every
+       resolved bucket name on BOTH clouds is ≤63 chars across the full
+       (env × kind × asset_group) matrix.
+5. - [ ] **`prd`/`stg`/`dev` consistency** — confirm DEPLOYMENT_ENV_SHORT
+       3-char form used on BOTH clouds (currently GCP uses `prd`, AWS may use
+       a different form per its older templates).
+
+## Phase 2 — code freeze protocol
+
+**When**: triggered by operator after Phase 1 GREEN. Operator broadcasts in
+`plans/active/_agent_pings.md` cross-side + each side broadcasts in their
+own `_agent_pings.md`.
+
+**What freezes**:
+
+- ALL slot agents (ikenna 2-9 + harsh 2-N) — no new commits to live-defi-rollout
+  during the migration window.
+- ALL backfill / live writer VMs — drained gracefully per Phase 3.
+- Cron schedules → operator decides per-job whether to disable or let queue
+  (manifest consolidator should KEEP running to ingest the drain).
+- Cloud Run consolidator jobs (10 of them) — KEEP running so drain consolidation
+  works; once drain complete + migration starts, pause briefly.
+
+**What does NOT freeze**:
+
+- `vm_zombie_watchdog.py` — keeps running so abandoned VMs get cleaned up.
+- Manifest consolidator Cloud Run jobs (10) — keep running until Phase 4
+  starts; then pause + resume post-migration.
+- Operator + slot-1 main read-only work (status checks, audit re-runs).
+
+**Broadcast ping template** (operator + slot-1 main fire this):
+
+```
+🔴 CODE FREEZE 2026-05-XX — data-pipeline migration window
+
+Reason: bucket naming AWS↔GCP symmetry cutover + manifest v8 backfill.
+Per plan: plans/active/data_pipeline_master_coordination_2026_05_20.md.
+
+ALL SLOTS:
+- DO NOT push to live-defi-rollout during the freeze window.
+- DO NOT launch new backfill VMs.
+- Existing in-flight code on tab branches: hold; do not merge.
+- Read-only work allowed (status checks, audit re-runs, plan updates).
+
+EXPECTED DURATION: ~24-48h (operator-confirmed end via UNFREEZE ping).
+
+ACK CHECKLIST (slot-1 main tracks):
+- [ ] ikenna slot 2
+- [ ] ikenna slot 3
+- [ ] ikenna slot 4
+- [ ] ikenna slot 5
+- [ ] ikenna slot 6 (already frozen per mega-audit)
+- [ ] ikenna slot 7 (already frozen per mega-audit)
+- [ ] ikenna slot 8
+- [ ] ikenna slot 9 (already frozen per mega-audit)
+- [ ] harsh main + spawned slots
+```
+
+**During freeze**: slot-1 main monitors `_agent_pings.md` + runs `gcloud
+compute instances list` every 30 min to verify drain progress.
+
+## Phase 5 — AWS migration (symmetric to GCP)
+
+Reference: existing `aws_migration_defi_first_2026_05_07.md` plus the Phase 1
+symmetry work above.
+
+Per operator directive 2026-05-20 round 5: "AWS buckets name wise to look as
+identical as possible apart from project_id." Concrete shape:
+
+```yaml
+# cloud-providers.yaml (target — Phase 1 closes the diff)
+aws:
+  storage:
+    market-data:
+      CEFI: "market-data-tick-cefi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
+      DEFI: "market-data-tick-defi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
+      ...
+    instruments-store:
+      CEFI: "instruments-store-cefi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
+      ...
+```
+
+vs current AWS shape (which has `unified-trading-` prefix + no env tier).
+
+**Phase 5 specific deliverables**:
+
+1. - [ ] **AWS object migration** — `aws s3 sync` from current → target
+       bucket names per Phase 1 inventory. Per-asset-group, single-walk
+       discipline.
+2. - [ ] **AWS bucket creation scripts** — confirm every target bucket has
+       a Terraform / script provisioning step that creates it idempotently
+       (existing check from operator: "scripts spawning them and checking
+       if they exist already in deployment services for both clouds").
+3. - [ ] **AWS old-bucket deletion** — only after Phase 7 verification GREEN
+       + 30-day retention check.
+
+## Phase 9 — denominator/numerator fix in deployment-UI
+
+Per operator directive 2026-05-20 round 5: "we need the denominator is data
+status and numerator fixes so that we truly showing % of data we try to
+capture vs amount we theoretically COULD capture until proven otherwise."
+
+Current confusion (per `honest_coverage_formula_consolidation_2026_05_19.md`):
+- Multiple formulas exist for "coverage %" across deployment-api consumers.
+- Different denominators: sometimes `in_scope`, sometimes `captured + empty`,
+  sometimes the A2 oracle's `SHOULD_HAVE_DATA` count.
+
+**Target formula** (codified in this plan + the existing honest_coverage plan):
+
+- **Numerator**: `count(capture_status == "captured")` — cells we successfully
+  captured.
+- **Denominator**: `count(capture_status in {captured, empty_confirmed, attempted_failed, expected_unattempted})`
+  — every cell we tried OR could-have-tried, EXCLUDING `out_of_scope` /
+  `NOT_IN_SCOPE` per the A2 oracle.
+- **Display**: "% of in-scope cells captured" with breakdown panel showing
+  the 4-state distribution.
+- **Until proven otherwise**: any cell the A2 oracle says `SHOULD_HAVE_DATA`
+  but the manifest says `empty_confirmed` (a.k.a. `DIVERGENT_EMPTY`) goes
+  into the denominator AND triggers an investigation alert — these are
+  the "lost data" cells the UI must surface.
+
+## Slot dispatch table (cross-referencing mega-audit § 6)
+
+| Slot | Mega-audit R-items | Phase ownership in this plan |
+|---|---|---|
+| 1 | R10 (extend A3 to all services — DONE), R-NEW-1/2/3 coordination | Phase 0 + 2 + 8 (broadcast + drain monitor + unfreeze) |
+| 2 | R19 (UAC import-surface QG), code_freeze §2.6 | Phase 1 + 3 + 4 + 10 (bucket SSOT + drain + migration + QG) |
+| 3 | R19 alt, code_freeze §2.0-2.5 | Phase 1 + 3 + 4 (bucket symmetry + drain + migration) |
+| 4 | (api_keys + defi_recursive_borrow) — credentials unblock; **R-NEW-6 candidate** | Phase 5 (AWS migration) + R-NEW-6 detector if assigned |
+| 5 | R6, R9, R13, R14, R15, R16, R18, R22, R23 (writegate + v8 backfill + writer SSOT) | Phase 6 + 7 + 10 (Docker rebuild + v8 backfill + label flip + QG) |
+| 6 | R1, R8, R11, R20 (DeFi MISSING_EXPECTED + UI lifecycle + protocol pause venue-level + lifecycle_class QG) | Phase 9 (denominator/numerator UI) — unfrozen post Phase 8 |
+| 7 | R2, R7 (Sports MISSING_EXPECTED + sports off-season integration) | Resume own backlog post-unfreeze |
+| 8 | R-NEW-6 candidate (defi-catalogue context); IS-side audits | Phase 1 IS-bucket symmetry contribution + R-NEW-6 if assigned |
+| 9 | R3, R4, R5, R17 (Prediction/TradFi/CeFi A3 + A6) | Resume own backlog post-unfreeze |
+
+## Code-freeze + migration window estimate
+
+- Phase 1 (bucket symmetry audit + YAML diff): **~3 cal AI-days** (slot 2 + 3 in parallel).
+- Phase 2 broadcast: 0 cal (operator action).
+- Phase 3 drain: **~0.5 cal AI-days** (script-driven, slot 2 + 3 coordinate VMs).
+- Phase 4 GCS migration: **~8 cal AI-days** (single-walk; per `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.2-2.6).
+- Phase 5 AWS migration: **~5 cal AI-days** (slot 4; smaller corpus than GCP).
+- Phase 6 Docker rebuild: **~2 cal AI-days** (slot 5; image build + VM restart fleet).
+- Phase 7 v8 backfill + label-flip: **~8 cal AI-days** (slot 5; per writegate Phase 7 + d3_manifest_v8_finish + hard_schema_phase1_field_flip).
+- Phase 8 unfreeze: 0 cal (operator action).
+- Phase 9 denominator/numerator: **~4 cal AI-days** (slot 6; parallel with Phase 10).
+- Phase 10 QG enforcement: **~3 cal AI-days** (slot 5 + 2/3).
+
+**Total**: ~36 cal AI-days (matches frontmatter estimate). Wall-clock with
+parallelism: ~7-10 calendar days end-to-end (~24-48h hard freeze window for
+Phases 2-8; Phase 9-10 unfrozen).
+
+## Continuous-verification column (per CLAUDE.md HARD RULE)
+
+| Phase | Cutover criterion | Continuous verification |
+|---|---|---|
+| 1 | All AWS templates symmetric to GCP in YAML | Daily diff check via `scripts/bucket_naming/check_symmetry.sh` (to build) |
+| 2 | All slots ACK in ping ledger | Slot-1 main tally |
+| 3 | Zero non-essential VMs running | `gcloud compute instances list \| wc -l` < threshold |
+| 4 | 100% GCS objects under new bucket names | `gsutil ls` count match |
+| 5 | 100% S3 objects under new bucket names | `aws s3 ls` count match |
+| 6 | 100% new manifest writes at v8 | Sample 100 newest rows per bucket; A4 v2 residual re-run |
+| 7 | 100% existing manifest rows at v8 + 0 NULL | A4 v1 + A4 v2 both 100% v8 |
+| 8 | Broadcast UNFREEZE ack'd | `_agent_pings.md` UNFREEZE entry |
+| 9 | Deployment-UI shows correct formula | Spot-check a known bucket — math matches |
+| 10 | QG steps ratchet to 0 violations | `quality-gates.sh` exit 0 workspace-wide |
+
+## Zombie watchdog + Cloud Run consolidator continuity
+
+Per operator concern 2026-05-20 round 5: "still need zombie watchdogs and
+manifest aggregators to work" during the migration window.
+
+**Keep running during freeze**:
+
+- `vm_zombie_watchdog.py` — keeps cleaning abandoned VMs (essential during drain).
+- 10 Cloud Run consolidator jobs (`uts-prod-manifest-consolidator-*`) —
+  keep running through Phase 3 (so drain consolidation completes); pause briefly
+  during Phase 4 bucket cutover; resume after Phase 4 GREEN.
+- Cloud Scheduler crons `*/1 * * * *` — Cloud Run will queue if the bucket
+  name changes mid-poll; safe.
+
+**Pause briefly** (Phase 4-5 only):
+
+- Consolidator jobs pause for the actual `gsutil cp` cutover window (~few hours).
+- Resume immediately after the new bucket has the migrated objects.
+
+## Cross-side ping broadcast (slot-1 main fires this when freeze starts)
+
+Append to `plans/active/_agent_pings.md`:
+
+```markdown
+## 🔴 2026-05-XX CODE FREEZE — data-pipeline-master-coordination Phase 2 active
+
+**Owner**: ikenna slot-1 main (this side) ↔ harsh main (cross-side).
+**Plan**: `plans/active/data_pipeline_master_coordination_2026_05_20.md`.
+**Duration**: ~24-48h hard freeze (Phases 2-8); ~7-10 day full window incl. unfrozen Phases 9-10.
+
+**ACK checklist** (slots respond in their own ping file):
+- ikenna slot 2: [ ] / ikenna slot 3: [ ] / ikenna slot 4: [ ] / ikenna slot 5: [ ]
+- ikenna slot 6: [ ] / ikenna slot 7: [ ] / ikenna slot 8: [ ] / ikenna slot 9: [ ]
+- harsh main: [ ] / harsh spawned: [ ]
+
+**During freeze**: no commits to LDR; no new backfill VMs; read-only work allowed.
+**Watchdog + consolidator**: KEEP RUNNING (slot-1 monitors).
+**Resume signal**: 🟢 UNFREEZE ping in this same file when Phase 8 lands.
+```
+
+## Composes with
+
+- CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — this is the
+  operationalisation of that rule.
+- CLAUDE.md § "Pre-migration drain (GCS migration gate — HARD RULE)" — Phase 3
+  follows that recipe exactly.
+- CLAUDE.md § "Plans Run To Actual Completion" — Phase 7 v8 backfill must run
+  to 100%, not "most rows".
+- `codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze
+  protocol § Invariant 4.
+- `codex/11-project-management/foundation-completion-gate-discipline.md` —
+  Phase ordering follows layer-N+1 gate; data layer (3) gates everything above.
+
+## Why this is the operator-handoff entry point
+
+Operator can now hand this single file to an orchestrator agent + the
+orchestrator:
+
+1. Reads § "Phase reference table" top-down to know what runs first.
+2. Reads each cell's plan-of-record link for implementation detail.
+3. Reads § "Slot dispatch table" to know which slot owns which phase.
+4. Reads the mega-audit delegation SSOT for the underlying R-items.
+5. Fires the broadcast ping at Phase 2 boundary; tracks ACKs.
+6. Drives each phase to GREEN before unlocking the next.
+
+No content in referenced plans needs to be duplicated here; this plan is the
+**ordering + cross-cutting-concerns layer**, not a re-statement of the work.
+
+## Codex SSOT updates (per CLAUDE.md Post-Plan-Phase Audit)
+
+- [ ] `codex/02-data/data-pipeline-correctness-hard-rule.md` — add pointer
+      to this coordinator plan as the canonical execution-ordering reference.
+- [ ] `codex/11-project-management/foundation-completion-gate-discipline.md` —
+      cite this plan as the example of how layers 1-3 are sequenced
+      together for a major migration.
+- [ ] CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — add one-line
+      pointer to this plan as the operator-handoff entry point.

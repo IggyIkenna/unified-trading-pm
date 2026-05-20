@@ -18,6 +18,13 @@ End-to-end progression of the **mega audit + plan beef-up** effort kicked off 20
 true loose-ends count (not the plan-derived one) and turn it into a beefed-up actionable plan set that closes the gap
 between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 
+> **🚨 OPERATOR-HANDOFF ENTRY POINT (round 5 — 2026-05-20)**: hand
+> [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](../data_pipeline_master_coordination_2026_05_20.md)
+> to an orchestrator for the execution-ordering layer over this delegation SSOT. That plan sequences AWS↔GCP bucket
+> symmetry → code freeze → drain → GCS migration → AWS migration → Docker rebuild → manifest v8 backfill + label-flip →
+> denominator/numerator UI fix → QG enforcement, with named owner slot + plan-of-record + verification per phase. This
+> issue doc remains the per-finding delegation SSOT; the coordinator plan is the sequence-and-pacing layer above it.
+
 > **🚨 OPERATOR DIRECTIVE 2026-05-20 — supersedes any "deadline-driven cutbacks" in this tracker**: "The data pipeline
 > is critical to everything we do. I don't care about the 23rd deadline... I want every single issue that we found fully
 > fixed, bad manifest data migrated, without exception... I won't accept anything less than perfect on this."

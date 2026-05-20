@@ -4369,3 +4369,53 @@ will auto-GC these upon PR closure. Operator may optionally request GitHub suppo
 compliance.
 
 — slot-1 main / ikenna
+
+---
+
+## [ikenna-main → harsh-main + ALL slots both sides] 2026-05-20 UTC — 🚨 DATA-PIPELINE MASTER COORDINATION POSTED — awaiting operator code-freeze trigger
+
+**Plan**: [`plans/active/data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) — the single
+operator-handoff entry point sequencing all data-pipeline work under one
+critical path: AWS↔GCP bucket symmetry → code freeze → drain → GCS migration
+→ AWS migration → Docker rebuild → manifest v8 backfill + label-flip →
+denominator/numerator UI fix → QG enforcement.
+
+**Why now**: mega-audit Phase A (rounds 1-4) surfaced interlocking findings
+that share one critical-path. Existing plans cover individual slices but
+nothing sequences them. Operator directive 2026-05-20 round 5:
+- EVERYTHING in writing within PM active plans
+- Full proper migration of single→split bucket convention
+- Code freeze during the cutover (ALL slots both sides)
+- AWS bucket naming to match GCP (drop `unified-trading-` prefix, add env-tier infix)
+- All 3,853 steady-state per-VM shards confirmed at v<8 → Docker rebuild needed BEFORE backfill
+- Denominator/numerator math fix in deployment-UI for honest coverage %
+- Detector-derived PROTOCOL_PAUSE_WINDOWS (NOT operator-typed) — R-NEW-6 in mega-audit
+
+**ACK protocol** (each slot replies in their per-side ping file with a one-line ACK
+referencing this plan):
+
+- ikenna slot 2: [ ] — code_freeze §2.6 owner; will own Phase 1 + 3 + 4 + 10
+- ikenna slot 3: [ ] — code_freeze §2.0-2.5 owner; will own Phase 1 + 3 + 4
+- ikenna slot 4: [ ] — api_keys owner; will own Phase 5 (AWS) + candidate R-NEW-6 detector
+- ikenna slot 5: [ ] — writegate owner; will own Phase 6 + 7 + 10 (the v8 backfill + label-flip)
+- ikenna slot 6: [ ] — already 🔴 FROZEN; will own Phase 9 (denominator UI) post-unfreeze
+- ikenna slot 7: [ ] — already 🔴 FROZEN; resumes sports backlog post-unfreeze
+- ikenna slot 8: [ ] — defi_catalogue owner; candidate R-NEW-6 detector
+- ikenna slot 9: [ ] — already 🔴 FROZEN; resumes prediction/tradfi/cefi backlog post-unfreeze
+- harsh main + spawned: [ ] — Harsh-side slots should pause non-essential commits during the freeze window when operator triggers Phase 2
+
+**Operator triggers freeze**: when ready, append `🔴 CODE FREEZE` ping to this file
+referencing Phase 2 of the coordinator plan. Slot-1 main monitors ACKs + tracks
+drain progress + fires UNFREEZE ping when Phase 7 lands GREEN.
+
+**During freeze**: vm_zombie_watchdog + 10 Cloud Run consolidator jobs KEEP
+RUNNING (essential during drain). Brief pause only during Phase 4 GCS cutover.
+
+**Estimate**: ~36 cal AI-days total; ~24-48h hard freeze window (Phases 2-8);
+~7-10 calendar days end-to-end including unfrozen Phases 9-10.
+
+**Cross-side hard-gate**: this is a workspace-wide freeze. Harsh-side MUST
+participate; this is not an ikenna-only migration. Cross-ping persists until
+operator fires the explicit Phase 2 freeze.
+
+— ikenna-main / slot-1
