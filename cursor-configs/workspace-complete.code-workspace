@@ -2,15 +2,15 @@
   "folders": [
     {
       "path": ".",
-      "name": "📁 Workspace Root"
+      "name": "\ud83d\udcc1 Workspace Root"
     },
     {
       "path": ".cursor",
-      "name": "⚙️ Cursor Config"
+      "name": "\u2699\ufe0f Cursor Config"
     },
     {
       "path": ".venv-workspace",
-      "name": "🐍 Venv"
+      "name": "\ud83d\udc0d Venv"
     },
     {
       "path": "batch-live-reconciliation-service"
@@ -79,15 +79,6 @@
       "path": "ml-training-service"
     },
     {
-      "path": "pnl-attribution-service"
-    },
-    {
-      "path": "position-balance-monitor-service"
-    },
-    {
-      "path": "risk-and-exposure-service"
-    },
-    {
       "path": "strategy-service"
     },
     {
@@ -122,15 +113,15 @@
     },
     {
       "path": "unified-trading-pm",
-      "name": "📋 Project Management"
+      "name": "\ud83d\udccb Project Management"
     },
     {
       "path": "unified-trading-system-ui",
-      "name": "🎨 UI"
+      "name": "\ud83c\udfa8 UI"
     },
     {
       "path": "e2e-testing",
-      "name": "🧪 E2E Testing"
+      "name": "\ud83e\uddea E2E Testing"
     }
   ],
   "settings": {
