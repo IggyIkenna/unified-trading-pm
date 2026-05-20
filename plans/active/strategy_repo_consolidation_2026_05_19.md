@@ -203,13 +203,26 @@ todos:
 
   - id: phase-5-lifts-to-utl
     content: |
-      - [ ] **DEFERRED** [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL. Phase 0 (f) audit confirmed ≥2
-        candidates: `config_reloaders.py` 4× + `kill_switch_bus_subscriber.py` 4×. Deferred to post-cutover:
-        - UTL is a shared dep; changing it 4 days before May-23 live DeFi launch is unacceptable risk.
-        - Lifts are correctness-neutral (plan §) — deduplicated copies already within strategy-service sub-packages.
-        - Named successor: `plans/active/utl_lift_config_reloader_kill_switch_post_cutover.md` (to be created post May-23).
-        - Required lifts when successor plan runs: `make_config_reloader(config_cls)` + `make_kill_switch_subscriber(on_fire, on_clear)` into UTL; strategy-service 4× callsites each.
-    status: deferred
+      - [ ] [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL. **UN-DEFERRED 2026-05-20** per operator direction:
+        do it NOW rather than via post-cutover successor plan. Rationale for reversal: lifts are correctness-neutral
+        and well-scoped; carrying the duplication into cutover means 4× drift surface across risk/position/pnl/strategy
+        sub-packages exactly when single-source-of-truth matters most. UTL bump risk is bounded because the new
+        helpers are additive (no removals), callsites are confined to strategy-service after Phase 3 subtree-merge,
+        and no other repo consumes these helpers.
+        - Phase 0 (f) audit confirmed candidates: `config_reloaders.py` 4× (152/112/112/312 LOC, ~688 LOC total) +
+          `kill_switch_bus_subscriber.py` 4× (~80-100 LOC each).
+        - Required lifts: `make_config_reloader(config_cls)` / `ConfigReloaderBase[T]` +
+          `make_kill_switch_subscriber(on_fire, on_clear)` / `KillSwitchBusSubscriberBase` into UTL
+          (`unified_trading_library/services/` or appropriate sub-package); strategy-service 4× callsites each
+          rewritten to delegate.
+        - Sequencing: (1) UTL PR adding the two bases with unit tests against mock typed-config / mock bus event;
+          (2) UTL bump via semver-agent — patch bump only (additive); (3) strategy-service PR removing 4× local copies
+          of each, importing from UTL; (4) `bash scripts/quality-gates.sh` in strategy-service green;
+          (5) basedpyright clean per repo (UTL + strategy-service); (6) Half-1+2 push + plan-flip same agent turn.
+        - Cancels: `plans/active/utl_lift_config_reloader_kill_switch_post_cutover.md` (never created — un-defer
+          absorbs it).
+        - Reversal anchor: `_agent_pings.md` 2026-05-20 operator-direction entry.
+    status: active
     blocked_by: phase-4-fix-imports-and-cli
 
   - id: phase-6-parity-test
@@ -452,15 +465,16 @@ Pre-audit artifact:
       option (ii): added NOTE cross-link comments to models/pnl.py + models/position.py (UAC type aliases) pointing to
       strategy_service.pnl/position sub-packages (computation). Added reverse pointers in pnl/**init**.py +
       position/**init**.py. Option (i) deferred post-May-23 to avoid callsite-breakage risk at T-3 days.
-- [ ] **P1** [AGENT] Phase 8A sharpening — deployment-service blast radius is **~90 hits across Terraform (6 per-service
-      dirs on GCP + AWS), cloud-build, cluster configs, bucket configs, launchers, bootstrap scripts**. Phase 8A is the
-      LARGEST single-repo edit in this plan. Plan `terraform destroy` of the 3 retiring service modules in conjunction
-      with `terraform apply` of the updated strategy-service module — do NOT leave orphan Terraform-managed resources
-      after archive.
-- [ ] **P1** [AGENT] Phase 5 lifts sharpened — `config_reloaders.py` is duplicated 4× (152/112/112/312 LOC, total ~688
+- [x] ✅ **P1** [AGENT] Phase 8A sharpening — Terraform destroy audit. VERIFIED 2026-05-20 slot 5:
+      `terraform/services/{risk,position,pnl}/gcp/` have no `backend.tf` (no remote state). GCP confirmed:
+      `gcloud run jobs list` + `gcloud workflows list` → zero resources for all 3 services. AWS confirmed:
+      `aws ecs list-services` → no resources. No orphan Terraform-managed resources exist. Destroy is a no-op;
+      ARCHIVED.md runbooks remain as documentation but no `terraform destroy` execution needed.
+- [ ] **P1** [AGENT] Phase 5 lifts — `config_reloaders.py` is duplicated 4× (152/112/112/312 LOC, total ~688
       LOC) and is a clean UTL `ConfigReloaderBase` candidate. Kill-switch bus subscriber boilerplate is duplicated 4×
       (~80-100 LOC each) and is a clean UTL `KillSwitchBusSubscriberBase` candidate. Both confirmed by artifact § (f).
-      Ship as 2 UTL PRs in Phase 5.
+      **UN-DEFERRED 2026-05-20 per operator direction** (work_split_2026_05_19_ikenna.md): lifts are additive in
+      UTL (patch bump, no removals), blast radius bounded. Ship as 2 UTL PRs. Slot 5 picks up immediately.
 - [x] ✅ **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
       entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
       Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any launcher / cron / VM bootstrap
