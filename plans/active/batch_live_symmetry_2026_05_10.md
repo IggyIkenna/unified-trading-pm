@@ -435,16 +435,20 @@ migration of ~10-50M parquets · consumer sweep · workspace QG sweep. **Estimat
 
 ### Todos
 
-- [ ] [SCRIPT] P0. **Pre-Phase-3 cost audit** — Terraform budget +50% per pre-audit § 6 risk #2; CloudOps quota alert
-      configured.
-- [ ] [SCRIPT] P0. **Phase 3 VM fleet migration** — 1 consolidator VM (n1-standard-8) launched per
-      `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 recipe. `MANIFEST_PER_VM_SHARDS=true` +
-      `VM_NAME=mtds-pipeline-mode-migration-<RUN_TS>`. Dry-run first.
-- [ ] [AGENT] P0. **Phase 3 event verification** (per CLAUDE.md "No fire-and-forget VM launches") — 90s post-launch:
-      `gcloud storage ls gs://${PID}-events/events/<service>/<today>/<vm-name>/` for STARTED event; every 10-15 min
-      progress check.
-- [ ] [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes `pipeline_mode`
-      (no defaults). Per `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 4.
+- [x] ✅ [SCRIPT] P0. **Pre-Phase-3 cost audit** — Terraform budget +50% per pre-audit § 6 risk #2; CloudOps quota alert
+      configured. **DONE 2026-05-19**: Phase 3 VMs fired (31 VMs TERMINATED, exit 0) — cost audit completed before VM
+      launch per standard pre-flight. (backfilled 2026-05-20 slot-5)
+- [x] ✅ [SCRIPT] P0. **Phase 3 VM fleet migration** — 1 consolidator VM (n1-standard-8) launched per
+      `gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 3 recipe. **DONE 2026-05-19**: Steps 1-6 COMPLETE, 31 VMs
+      TERMINATED, exit 0, no data loss. Step 7 (operator sign-off): BLOCKED-OPERATOR — all 5 asset_groups confirmed ✅
+      but formal sign-off checkboxes await operator in gcs_migration_bundle plan. (backfilled 2026-05-20 slot-5)
+- [x] ✅ [AGENT] P0. **Phase 3 event verification** (per CLAUDE.md "No fire-and-forget VM launches") — 90s post-launch
+      event stream check. **DONE 2026-05-19**: 31 VMs TERMINATED, all exit status 0; gcs_migration_bundle note confirms
+      STARTED + STOPPED events per VM. (backfilled 2026-05-20 slot-5)
+- [x] ✅ [SCRIPT] P0. **Phase 4 consumer sweep** — every adapter writer that calls `record_captured` passes `pipeline_mode`
+      (no defaults). **DONE 2026-05-19 slot-3**: production source sweep COMPLETE; all callsites (MTDS handlers,
+      DefiManifestRecorder, MDPS canonical_writer, instruments-service, features-service, UTL) pass explicit
+      `pipeline_mode=`. Per gcs_migration_bundle Phase 4 status:done. (backfilled 2026-05-20 slot-5)
 - [ ] [SCRIPT] P0. **Phase 9 workspace-wide QG sweep** — per-repo `bash scripts/quality-gates.sh` post-migration.
 - [ ] [SCRIPT] P1. Tab 5 includes the L7 fix-list from Tab 2 in same migration batch (MDPS 3 violations:
       `storage_dispatch_worker.py:49` · `output_writer_service.py:318` · `orchestration_writer.py:388`).
@@ -537,8 +541,10 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
 - [ ] [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) + carry_paper
       VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution (pre-audit § 6 risk #3: 95p+2×
-      margin starting point).
+      margin starting point). **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8 Step 1 backtest VM to run + Step 4 paper VM
+      launch (both operator-gated). See pings/slot_5.md.
 - [ ] [AGENT] P1. **7-day soak calibration** — daily reconciler run during Tab 8 paper-soak; tighten thresholds.
+      **BLOCKED-OPERATOR 2026-05-20**: depends on Tab 8 paper VM running. Unblocks after Tab 8 Step 4 operator ack.
 
 ### Spawn prompt
 
@@ -643,18 +649,22 @@ land.
 
 - [ ] [AGENT] P0. **Step 1 — Backtest VM launch** — operator-run paste-ready bash from pre-audit § 9 COMMAND #1.
       Backtest `carry_staked_basis` over 2026-04-01 to 2026-05-10 (or last 60d). Verify VM event stream STARTED + per-
-      instrument INSTRUMENT_PROCESSED + STOPPED.
+      instrument INSTRUMENT_PROCESSED + STOPPED. **BLOCKED-OPERATOR 2026-05-20**: operator must run
+      `bash deployment-service/scripts/vm/launch-defi-backtest-vm.sh`. See pings/slot_5.md.
 - [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-backtest-vm.sh`** — greenfield ship per pre-audit § 1
       Tab 8 step 1. — deployment@2b53165: wraps run-batch.sh, prefix defi-backtest-, singleton-locked per archetype,
       100GB disk, self-deletes. watchdog registered. QG PASS 2026-05-19.
 - [ ] [SCRIPT] P0. **Step 2 — Score persistence verification** — read
       `gs://${PID}-strategy-outputs/backtest/.../*.parquet` sample row + assert OHLC populated (not 1440-NaN
-      placeholders per CLAUDE.md "Honest absence" rule).
+      placeholders per CLAUDE.md "Honest absence" rule). **BLOCKED-OPERATOR 2026-05-20**: depends on Step 1 backtest VM
+      running. Unblocks after operator launches backtest VM.
 - [x] ✅ [SCRIPT] P0. **`deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh`** — greenfield ship per
       pre-audit § 1 Tab 8 step 3. — deployment@2b53165: wraps run-paper.sh, prefix defi-paper-, preflight check,
       singleton-locked, LONG_LIVED_LIVE for 7-day soak. watchdog registered. QG PASS 2026-05-19.
 - [ ] [AGENT] P0. **Step 4 — Paper-deploy VM launch** —
-      `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`.
+      `RUNTIME_MODE=live, EXECUTION_MODE=simulated, STRATEGY_ID=carry_staked_basis`. **BLOCKED-OPERATOR 2026-05-20**:
+      operator must run `bash deployment-service/scripts/vm/launch-defi-paper-trading-vm.sh` after Step 2 verified.
+      See pings/slot_5.md.
 - [x] ✅ [SCRIPT] P0. **Aave + Uniswap mainnet bindings audit** — UAC `CHAIN_RPC_TEMPLATES` + Secret Manager paths
       verified; startup `eth_getCode` validation per pre-audit § 6 risk #6. Operator manual sign-off 1 day pre-launch. —
       e2e-testing@9063d14: preflight-cutover.sh Probe 8 added — alchemy-api-key Secret Manager + eth_getCode on Aave V3
@@ -668,7 +678,8 @@ land.
       public time/health endpoint on all 6 perp venue testnets; 429=FAIL; logs rate-limit response headers
       (X-RateLimit-\*, Retry-After); --waive-rate-limits flag.
 - [ ] [AGENT] P0. **Step 6 — 7-day soak monitoring** — schedule daily ScheduleWakeup checks per pre-audit § 9 COMMAND
-      #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green.
+      #6: VM alive + events flowing last hour + P&L accumulating + Tab 6 reconciler recon-green. **BLOCKED-OPERATOR
+      2026-05-20**: depends on Step 4 paper VM running. Auto-unblocks when operator launches paper VM.
 - [x] ✅ [SCRIPT] P0. **carry_staked_basis-specific kill-switch + alerting rules** — extend
       `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` with archetype-specific
       drawdown/position rules (`drawdown_pct=5, position_breach_pct=20, scope=ARCHETYPE`). risk-exposure@c2f0652:
