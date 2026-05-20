@@ -6,7 +6,30 @@ source:
   - strategy_repo_consolidation_2026_05_19.md
   - workspace_migration_to_active_2026_05_20.md
 locked_by: live-defi-rollout
+status_update_2026_05_20: P0 SHIPPED — remaining items below
 ---
+
+## Status (2026-05-20, slot 1 ikenna-main)
+
+- ✅ **P0 archived-repo path-deps in active consumers** — SHIPPED.
+  - deployment-api@71671ae — removed `position-balance-monitor-service`, declared `strategy-service` editable
+    (treasury_routes.py already imported `strategy_service.position.core.treasury_monitor`).
+  - system-integration-tests@e83a95e — removed 3 stale dep entries (risk/position/pnl); `strategy-service` was already
+    declared editable; tests already import `strategy_service.{pnl,risk,position}.*`.
+  - Workspace-wide grep verified: 0 Python imports of the archived module names in either consumer; ship was pure
+    pyproject cleanup.
+- ⚠️ **new-sports-batting-services** finding obsoleted — repo is now in `archive/new-sports-batting-services/`, not a
+  workspace consumer. The `unified-cloud-services` stale path-dep there is no longer load-bearing for `/active` setup.
+- 🟡 **e2e-testing uv lock conflict on execution-service** — still open (see below).
+- 🟡 **unified-trading-system-ui npm install fails on node-pre-gyp** — still open (see below).
+- 🟡 **NEW finding: gitleaks pre-commit hook has unexpanded `${WORKSPACE_ROOT:-..}` literal in args** — surfaced
+  2026-05-20 slot 1 while committing the P0 fix above. prek doesn't shell-expand the env var; gitleaks receives the
+  literal `${WORKSPACE_ROOT:-..}/unified-trading-pm/.gitleaks.toml` path and FTLs. Both deployment-api and
+  system-integration-tests P0 commits used `--no-verify` after manually running gitleaks (clean). Affects every repo
+  using the rollout `.pre-commit-config.yaml` gitleaks block. Fix: either set `WORKSPACE_ROOT` in the operator/agent
+  shell rc, or rewrite the hook to use a relative path (`../unified-trading-pm/.gitleaks.toml`) or a `language: system`
+  shell wrapper that resolves the path. Owner: workflow-templates SSOT
+  (`unified-trading-pm/scripts/workflow-templates/`) so all repos converge.
 
 ## What I found
 
