@@ -1,6 +1,6 @@
 # A3 — Manifest divergence summary
 
-_Generated: 2026-05-20T10:27:50.349615+00:00_
+_Generated: 2026-05-20T12:24:13.445289+00:00_
 
 Window: 2020-01-01 → 2026-05-20
 
@@ -13,11 +13,11 @@ Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` (0.
 | Classification | Cells | % | Status |
 |---|---:|---:|---|
 | `OK_OUT_OF_SCOPE` | 800,756 | 65.11% | ✅ honest |
-| `MISSING_EXPECTED` | 236,892 | 19.26% | ❌ review-blocking (silent gap) |
-| `OK_NOT_YET_LIVE` | 118,999 | 9.68% | ✅ honest |
+| `MISSING_EXPECTED` | 233,670 | 19.00% | ❌ review-blocking (silent gap) |
+| `OK_NOT_YET_LIVE` | 117,557 | 9.56% | ✅ honest |
 | `OK_CAPTURED` | 44,955 | 3.66% | ✅ honest |
 | `ATTEMPTED_FAILED` | 18,753 | 1.52% | ⚠️ review per-row |
-| `OK_HONEST_EMPTY` | 6,796 | 0.55% | ✅ honest |
+| `OK_HONEST_EMPTY` | 11,460 | 0.93% | ✅ honest |
 | `UNEXPECTED_CAPTURED` | 1,928 | 0.16% | ⚠️ data on a date the oracle said empty |
 | `DIVERGENT_EMPTY` | 765 | 0.06% | ❌ review-blocking (Drift-bug class) |
 
@@ -39,8 +39,9 @@ Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` (0.
 | Classification | Cells |
 |---|---:|
 | `OK_OUT_OF_SCOPE` | 651,944 |
-| `MISSING_EXPECTED` | 184,512 |
-| `OK_NOT_YET_LIVE` | 106,223 |
+| `MISSING_EXPECTED` | 181,290 |
+| `OK_NOT_YET_LIVE` | 104,781 |
+| `OK_HONEST_EMPTY` | 4,664 |
 | `DIVERGENT_EMPTY` | 765 |
 
 ### prediction
@@ -102,26 +103,26 @@ Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` (0.
 
 | Venue | Data type | Classification | Cells |
 |---|---|---|---:|
-| FLUID-ETHEREUM | position_data | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM | risk_params | `MISSING_EXPECTED` | 2,332 |
 | FLUID-ETHEREUM | liquidation_events | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM | lending_indices | `MISSING_EXPECTED` | 2,332 |
-| MORPHO-ETHEREUM | lending_indices | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM | risk_params | `MISSING_EXPECTED` | 2,332 |
 | MORPHO-ETHEREUM | liquidation_events | `MISSING_EXPECTED` | 2,332 |
-| MORPHO-ETHEREUM | position_data | `MISSING_EXPECTED` | 2,332 |
+| MORPHO-ETHEREUM | lending_indices | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM | lending_indices | `MISSING_EXPECTED` | 2,332 |
 | MORPHO-ETHEREUM | risk_params | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM | position_data | `MISSING_EXPECTED` | 2,332 |
+| MORPHO-ETHEREUM | position_data | `MISSING_EXPECTED` | 2,332 |
 | CURVE-ETHEREUM | dex_swaps | `MISSING_EXPECTED` | 2,314 |
 | CURVE-ETHEREUM | dex_pools | `MISSING_EXPECTED` | 2,314 |
-| BALANCER-ETHEREUM | dex_pools | `MISSING_EXPECTED` | 2,242 |
 | BALANCER-ETHEREUM | dex_swaps | `MISSING_EXPECTED` | 2,242 |
+| BALANCER-ETHEREUM | dex_pools | `MISSING_EXPECTED` | 2,242 |
 | UNISWAPV2-ETHEREUM | dex_pools | `MISSING_EXPECTED` | 2,207 |
 | UNISWAPV2-ETHEREUM | dex_swaps | `MISSING_EXPECTED` | 2,207 |
 | BALANCER-POLYGON | dex_pools | `MISSING_EXPECTED` | 2,182 |
+| BALANCER-POLYGON | dex_swaps | `MISSING_EXPECTED` | 2,182 |
 | MORPHO-POLYGON | lending_indices | `MISSING_EXPECTED` | 2,182 |
 | MORPHO-POLYGON | liquidation_events | `MISSING_EXPECTED` | 2,182 |
-| MORPHO-POLYGON | position_data | `MISSING_EXPECTED` | 2,182 |
 | MORPHO-POLYGON | risk_params | `MISSING_EXPECTED` | 2,182 |
-| BALANCER-POLYGON | dex_swaps | `MISSING_EXPECTED` | 2,182 |
+| MORPHO-POLYGON | position_data | `MISSING_EXPECTED` | 2,182 |
 
 ### prediction
 

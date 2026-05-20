@@ -1,6 +1,6 @@
 # A2 — expected_coverage() dump summary
 
-_Generated: 2026-05-20T10:25:42.470734+00:00_
+_Generated: 2026-05-20T12:22:37.866574+00:00_
 
 Window: 2020-01-01 → 2026-05-20
 
@@ -12,17 +12,18 @@ Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet` (0.56 Mi
 
 | State | Rows | % |
 |---|---:|---:|
-| `SHOULD_HAVE_DATA` | 301,365 | 70.23% |
-| `NOT_YET_LIVE` | 118,999 | 27.73% |
-| `EXPECTED_EMPTY` | 8,724 | 2.03% |
+| `SHOULD_HAVE_DATA` | 298,143 | 69.48% |
+| `NOT_YET_LIVE` | 117,557 | 27.40% |
+| `EXPECTED_EMPTY` | 13,388 | 3.12% |
 
 ## Reason breakdown (EXPECTED_EMPTY + NOT_YET_LIVE cells)
 
 | Reason | Rows |
 |---|---:|
-| `EXPECTED_PRE_VENUE_LAUNCH` | 87,917 |
+| `EXPECTED_PRE_VENUE_LAUNCH` | 86,475 |
 | `EXPECTED_PRE_GENESIS_CHAIN` | 31,082 |
 | `EXPECTED_WEEKEND` | 7,992 |
+| `EXPECTED_DEPRECATED_DATA_TYPE` | 4,664 |
 | `EXPECTED_HOLIDAY` | 732 |
 | `EXPECTED_PARTIAL_HALF_DAY` | 120 |
 
@@ -30,7 +31,7 @@ Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet` (0.56 Mi
 
 | asset_group | total cells | SHOULD_HAVE_DATA | EXPECTED_EMPTY |
 |---|---:|---:|---:|
-| defi | 291,500 | 185,277 | 0 |
+| defi | 291,500 | 182,055 | 4,664 |
 | cefi | 79,288 | 67,332 | 0 |
 | tradfi | 27,984 | 19,260 | 8,724 |
 | sports | 25,652 | 25,652 | 0 |
