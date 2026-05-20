@@ -88,10 +88,12 @@ PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (
 
 ### Phase 2 — cross_instrument handler honest absence
 
-- [ ] [AGENT] P0. Add `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` to
-      `features-service/cross_instrument/cli/handlers/batch_handler.py` for every skipped-group path
-  - Grep: `rg '_persist_results|skip' features_service/cross_instrument/ --type py` to find all skip paths
-  - Every group that is skipped (due to empty upstream, missing instruments, etc.) must emit `record_empty`
+- [x] ✅ [AGENT] P0. Add `record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO)` to
+      `features-service/cross_instrument/cli/handlers/batch_handler.py` for every skipped-group path —
+      features-service@bd5a1c0e + uac@39733749 (BATCH_CROSS_INSTRUMENT PipelineMode added)
+  - `_write_run_manifest()` now calls `record_empty()` for every group where
+    `not (result.success and result.features.height > 0)`
+  - UAC `PipelineMode.BATCH_CROSS_INSTRUMENT = "batch_cross_instrument"` added; cassette parity 298/298 passed
 
 ### Phase 3 — Strategy manifest emission
 
