@@ -212,12 +212,21 @@ digests them).
 For each of the 8 ordering steps, write/update the actionable plan in `plans/active/` to absorb the audit findings. Each
 plan cites the audits that feed it + lists the full remediation backlog drawn from those audits.
 
-- [ ] **D0. Orchestrator migration plan** — beef from C11
-- [ ] **D1. IS hardening plan** — beef from C0, C1, C2, C3
-- [ ] **D2. UAC continuity + known-gap calendars plan** — covered by A2 (built during diagnostics)
-- [ ] **D3. Manifest v8 finish + reason-enum wiring + divergence-detector plan** — beef from all C audits + A3
-- [ ] **D4. MTDS adapters preflight plan** — beef from C0, C4, C5
-- [ ] **D5. Features missing-data downgrade plan** — beef from C4, C6
+- [x] ✅ **D0. Orchestrator migration plan** — beef from C11: port/CORS fixes + LEDGER deprecation — PM@8dce0e075
+      (`d0_orchestrator_migration_2026_05_20.md`)
+- [x] ✅ **D1. IS hardening plan** — beef from C0, C1, C2, C3: IS catalogue wiring + error classification + execution
+      bucket-SSOT + Deribit tick_size from IS — PM@8dce0e075 (`d1_is_hardening_2026_05_20.md`)
+- [x] ✅ **D2. UAC continuity + known-gap calendars plan** — A2 built expected_coverage() function; this plan wires
+      runtime integration + UAC import surface compliance — PM@8dce0e075 (`d2_uac_continuity_2026_05_20.md`)
+- [x] ✅ **D3. Manifest v8 finish + reason-enum wiring + divergence-detector plan** — beef from all C audits + A3: data
+      migration (0% v8 REVIEW-BLOCKING) + reason-enum wiring + DIVERGENT_EMPTY detector — PM@8dce0e075
+      (`d3_manifest_v8_finish_2026_05_20.md`)
+- [x] ✅ **D4. MTDS adapters preflight plan** — beef from C0, C4, C5: zero manifest preflight in all 9 features
+      families + batch-live parity (13 BATCH_ONLY cells) + perp_funding schema drift — PM@8dce0e075
+      (`d4_mtds_adapters_preflight_2026_05_20.md`)
+- [x] ✅ **D5. Features missing-data downgrade plan** — beef from C4, C6: warn-but-proceed fixes + APD engine consume
+      paired_price_dispersion + strategy manifest emission + bucket-SSOT — PM@8dce0e075
+      (`d5_features_missing_data_downgrade_2026_05_20.md`)
 - [x] ✅ **D6. Strategy + execution plan** — beef from C5, C6, C7, C8 — COMPLETE (slot-8 2026-05-20) Phase 1:
       strategy-service@cd617891 (StrategyManifestRecorder + write_instructions + PROCESSING_INCOMPLETE) Phase 2:
       execution-service@19dd21388 (ExecutionManifestRecorder + download_instructions_df) Phase 3:
@@ -228,7 +237,8 @@ plan cites the audits that feed it + lists the full remediation backlog drawn fr
 - [x] ✅ **D7. Live adapters plan** — beef from C4, C8 (live mode rows): `emit_adapter_fetch_failed()` helper + 7 CCXT
       adapters wired (binance/hyperliquid/bybit/coinbase/deribit/okx/upbit) — execution-service@d7ac3ffc3; DeFi retry
       loop (C8-P0-2) classify + emit ADAPTER_FETCH_FAILED + FAIL-class short-circuit — execution-service@6085a9fb1
-- [ ] **D8. Perf upgrade plan** — beef from A1 (hot-path identification)
+- [x] ✅ **D8. Perf upgrade plan** — beef from A1: GCS REST API ops + resolve_bucket_name caching + retry overhead —
+      PM@8dce0e075 (`d8_perf_upgrade_2026_05_20.md`)
 - [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps). **Progress: 6/7 patterns
       SHIPPED as QG steps**: (a) `no_silent_absence_handlers.sh` STEP 5.70 (manifest emission), (b)
       `no_hardcoded_venue_urls.sh` STEP 5.70 (IS→MTDS URL ownership), (c) `no_hardcoded_venue_universe.sh` STEP 5.70
