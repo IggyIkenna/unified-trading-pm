@@ -1130,7 +1130,7 @@ workspace chose `empty_confirmed + error_reason=EXPECTED*\*` instead. Both are f
 denominator-divergence closure depends on the row EXISTING, not on the specific status value:
 
 - **Workspace approach (shipped)**: `capture_status=empty_confirmed`,
-  `error_reason=EXPECTED_PRE_GENESIS_CHAIN | EXPECTED_HOLIDAY | EXPECTED_PRE_SOURCE_COVERAGE_START | EXPECTED_PRE_VENUE_LAUNCH | EXPECTED_INSTRUMENT_NOT_LISTED | EXPECTED_WEEKEND | …`.
+  `error_reason=EXPECTED_PRE_GENESIS_CHAIN | EXPECTED_HOLIDAY | EXPECTED_PRE_SOURCE_COVERAGE_START | EXPECTED_PAST_SOURCE_COVERAGE_END | EXPECTED_PRE_VENUE_LAUNCH | EXPECTED_INSTRUMENT_NOT_LISTED | EXPECTED_WEEKEND | …`.
   Reuses the existing `empty_confirmed` plumbing (downstream services already branch on it for NaN-fills, denominator
   counting). Closed-set reason taxonomy in UAC `EMPTY_CONFIRMED_REASONS` (per CLAUDE.md "Reason taxonomy codified
   2026-05-07"); `EXPECTED_PRE_VENUE_LAUNCH` added 2026-05-07 at UAC@ac218dc with the new

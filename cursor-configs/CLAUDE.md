@@ -107,6 +107,10 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 ### Service architecture
 
 - **instruments-service** for reference data, not MTDS. MTDS is market data only.
+- **IS→MTDS contract**: instruments-service owns all venue URLs/universe via `InstrumentRecord`; MTDS handlers derive
+  URLs from IS, never hardcode. Three QG steps enforce (STEP 5.70): `no_silent_absence_handlers.sh`,
+  `no_hardcoded_venue_urls.sh`, `no_hardcoded_venue_universe.sh`. SSOT:
+  `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 - Shard-level failure isolation — no `raise` inside per-venue/per-shard loops. SSOT:
   `codex/04-architecture/shard-level-failure-isolation.md`.
 - Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
