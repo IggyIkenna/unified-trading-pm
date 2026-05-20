@@ -510,3 +510,27 @@ curl -s "${SERVICE_URL}/health" | python3 -m json.tool
 **After soak**: relaunch paper VM `strategy-paper-carry-staked-basis-$(date +%Y%m%d)-$(date +%H%M%S)` — tarballs already in `gs://deployment-scripts-central-element-323112/code/` at features-service@c9729dce.
 
 Slot 4 moving to S4-DEFI-CATALOGUE-PRIMITIVES now.
+
+---
+
+[2026-05-20 12:00 UTC] slot 4 — S4-DEFI-CATALOGUE-PRIMITIVES assessment
+
+**Finding**: All 6 remaining open items are BLOCKED-OPERATOR-DECISION or HARD-STOP. None are agent-doable.
+
+| Item | Status | Specific blocker |
+|------|--------|-----------------|
+| 6C Solana LST historical | `BLOCKED-OPERATOR-DECISION` | launcher `launch-mtds-pyth-lst-backfill-vm.sh` exists but header says "DO NOT LAUNCH without operator [ack]"; Pyth feed IDs for Rocket Pool/Solblaze need operator pick |
+| 6D Lighter/Pacifica/Extended OHLCV backfill | `BLOCKED-OPERATOR-DECISION` | No launcher script exists; backfill window + VM cost need operator go-ahead before creating + running |
+| 6E Vaults + restaking + DEX historical (26 protocols) | `BLOCKED-OPERATOR-DECISION` | 26-protocol priority triage needed before per-protocol VM launches ($$$); not blocking May-23 per 6F clean audit |
+| 8A Paper-trade run | `BLOCKED-OPERATOR-DECISION` | Multi-archetype run (carry_staked_basis + leveraged_funding_arb) needs operator launch trigger; single-archetype paper VM already running since 2026-05-18 |
+| 8B Reconciliation rule wired | `BLOCKED-CROSS-PLAN` | `BATCH_VS_LIVE_RECON_DRIFTED` AlertRule already in UAC. Blocked on `alerting_service_live_rules_2026_05_07.md` (11 open items, majority [HUMAN]) |
+| 8C 7-day continuous live-trade proof | `HARD-STOP` | Wallet keys — human-only per CLAUDE.md. Real wallet on testnet requires operator-provisioned key + explicit launch |
+
+**Operator action needed** (in priority order):
+1. **6C**: Ack in `ikenna_orchestrator/pings/slot_2.md` + provide Pyth feed IDs for rETH (Rocket Pool) and bSOL (Solblaze) → agent can then launch `launch-mtds-pyth-lst-backfill-vm.sh`
+2. **8A**: Decide if multi-archetype paper run (leveraged_funding_arb alongside carry_staked_basis) should start now or after May-23
+3. **8C**: Provision testnet wallet key + trigger live run when ready
+4. **6D + 6E**: Provide backfill priority order + cost approval (not May-23-blocking)
+5. **8B**: `alerting_service_live_rules` needs completion first (11 open items)
+
+This task cannot reach 100% without the above operator decisions. Raising /blocked on orchestrator.
