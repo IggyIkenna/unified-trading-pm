@@ -850,3 +850,24 @@ awaiting operator write-pause signal to push.
 **Next**: R19 UAC import surface enforcement (consumer repos deep `canonical.*` / `normalize_utils.*` imports → facade)
 
 **Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase 1
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MTDS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-tick-data-service**:
+- **UAC@e2f1380** — exported `VENUE_HEARTBEAT_THRESHOLDS` + `get_heartbeat_threshold` from facade (`__init__.py`); previously only accessible via deep `canonical.crosscutting.venue_thresholds`
+- **MTDS@bfc5105** — rewrote all 6 deep `canonical.*` imports to facade:
+  - `engine/orchestrator.py` (5 occurrences): `canonical.crosscutting.source_priority.{get_primary_source,has_source_priority,emission_latency_ms_for_source}` → `from unified_api_contracts import`
+  - `api/main.py` (1 occurrence): `canonical.crosscutting.venue_thresholds.VENUE_HEARTBEAT_THRESHOLDS` → `from unified_api_contracts import VENUE_HEARTBEAT_THRESHOLDS`
+
+**Verification**: `bash scripts/quality-gates.sh` in MTDS → `✅ STEP 5.23: UAC import surface clean`
+
+**R19 remaining** (other repos — not slot 2's current scope but documenting for handoff):
+- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason` added to UAC facade
+- `deployment-api` (3 files): `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` → check if already in facade
+- `unified-trading-system-ui` (10 files): facade re-exports in `context/api-contracts/` — likely exempt (UI layer)
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § slot dispatch table row 2 (R19)
