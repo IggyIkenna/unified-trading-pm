@@ -81,22 +81,22 @@ refs only).
       removed \_REGULATORY SourceCapability from `_tradfi.py` + normalize_regulatory_error +
       normalize_regulatory_trade_report)
 
-### Phase 3 — Cross-repo MTDS coordination (3 dirs)
+### Phase 3 — Cross-repo MTDS coordination (3 dirs) ✅ DONE 2026-05-20
 
-- [ ] [SCRIPT] P3. `sharpapi`: confirm no live MTDS handler wired (`rg sharpapi market-tick-data-service/`); delete
-      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sharpapi_adapter.py`; then
-      delete UAC `external/sharpapi/`
-- [ ] [SCRIPT] P3. `fear_greed`: delete UAC dir + delete fear_greed entry in MTDS
-      `tests/market_interface/integration/test_vcr_ac_schema_validation.py`
-- [ ] [SCRIPT] P3. `dydx`: delete UAC dir + delete UAC `tests/vcr/test_dydx_vcr.py` + delete dydx entry in MTDS
-      `test_vcr_ac_schema_validation.py`
+- [x] ✅ [SCRIPT] P3. `sharpapi`: confirm no live MTDS handler wired; deleted
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sharpapi_adapter.py` + UAC
+      `external/sharpapi/` — UAC@4aee80e1 + MTDS@adc56bc
+- [x] ✅ [SCRIPT] P3. `fear_greed`: deleted UAC dir + removed fear_greed entry in MTDS
+      `tests/market_interface/integration/test_vcr_ac_schema_validation.py` — UAC@4aee80e1 + MTDS@adc56bc
+- [x] ✅ [SCRIPT] P3. `dydx`: deleted UAC dir + UAC `tests/vcr/test_dydx_vcr.py` + dydx entry in MTDS
+      `test_vcr_ac_schema_validation.py` — UAC@4aee80e1 + MTDS@adc56bc
 
 ### Phase 4 — Validation + version bumps
 
 - [ ] [SCRIPT] P3. UAC `bash scripts/quality-gates.sh` — must pass green
 - [ ] [SCRIPT] P3. MTDS `bash scripts/quality-gates.sh` — must pass green
 - [ ] [SCRIPT] P3. Dispatch UAC `weekly-validation.yml` workflow + verify 12 venues are gone from output
-- [ ] [SCRIPT] P3. Commit UAC + MTDS as `feat!:` (minor bump on 0.x.x via semver-agent)
+- [x] ✅ [SCRIPT] P3. Commit UAC + MTDS as `feat!:` — UAC@4aee80e1 + MTDS@adc56bc (semver-agent auto-bumps minor)
 - [ ] [SCRIPT] P3. Promote via quickmerge once both repos green
 
 ## Success criteria
