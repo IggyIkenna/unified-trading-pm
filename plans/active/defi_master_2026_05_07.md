@@ -1212,6 +1212,13 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       Doc had `steth-deribit-q1-...-v2-prod` etc. (prototype labels); actual catalog generates
       `lido-deribit-eth-q1-usdc-v1-prod`, `lido-deribit-eth-q2-usdc-v1-prod`, `jito-drift-sol-q1-usdc-v1-prod`.
       Updated section heading from "Initial seed" to "Active catalog slots". — PM@bef3b7b6
+- [x] ✅ [DOC] P2. **Carry-and-yield family doc CSB slot examples — replace conceptual with actual catalog labels.**
+      Family doc "Typical instance examples" showed `lido-aave-hyperliquid-eth-prod` etc. (proto labels with aave as
+      a venue which is wrong for CSB). Updated to 4 actual catalog slots with comments. — PM@2f499ef7
+- [x] ✅ [DOC] P2. **Arbitrage-structural family doc APD examples — replace conceptual with actual catalog labels.**
+      "Typical instance examples" used `unity-epl-1x2-usd-prod`, `multi-dex-eth-usdc-ethereum-prod` etc. (prototype
+      labels). Updated to 17 catalog slots + 2 bridge funding-rate-dispersion slots. Renamed section to "Active
+      catalog slots (2026-05-20)". — PM@80e67a49
 
 ## `available_at` adapter stamping (coordinated)
 
