@@ -1200,7 +1200,10 @@ opaque):
 - [ ] [QG] P0. Add UTL `quality-gates.sh` step that fails if `_create_empty_output`-style placeholder return patterns
       are reintroduced (grep-based static check; can be fooled but catches the obvious). [AUDIT 2026-05-07: FRESH —
       actionable; no grep against `_create_empty_output|_handle_empty_tick_data` regression in
-      unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.]
+      unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.] **[BLOCKED-UTL-LIBRARY 2026-05-20 slot-6]:
+      STEP 5.67 lives in base-service.sh (service QG) only. UTL uses base-library.sh which does NOT include STEP 5.67.
+      Adding requires UTL repo + PM template edits — cross-repo scope outside this slot's assignment. Requires explicit
+      slot allocation targeting UTL + PM SSOT template propagation.]**
 - [x] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. (verified 2026-05-07:
       semver-agent auto-bumped on UTL@958634f9 + UTL@c5c2669e merges) [AUDIT 2026-05-07: STALE — semver-agent auto-fires
       on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped post-merge bumps. This
@@ -1448,17 +1451,22 @@ grep.
       item below.] — market-data-processing-service@5b95fb5 (_build_cluster_params: futures_chain →
       FUTURES_CHAIN_BUCKETS + futures_expiry_bucket; options_chain → get_active_es_options_clusters_for_date +
       extract_es_options_cluster; threaded into both write_candle_parquet + close_candle_streaming_writer)
-- [ ] [TEST] P0. Per-adapter integration test: simulate path A / path B / path C; assert correct manifest verb fires;
+- [x] ✅ [TEST] P0. Per-adapter integration test: simulate path A / path B / path C; assert correct manifest verb fires;
       assert NO 1440-row NaN parquet ever lands on disk. [AUDIT 2026-05-07: FRESH — actionable. Migration code shipped
       Tier 2A/C/D/E (MDPS@5b52d0b/b9f9328/80cf141/e9520a0); integration tests verifying the path-routing remain
-      unwritten.]
+      unwritten.] — MDPS@fefd65b: 7 tests (path A ×4 adapters, path B ×2, path C ×1); all pass; guards 0-row output
+      contract vs legacy 1440-NaN grid. 2026-05-20 slot-6.
 - [ ] [TEST] P0. End-to-end smoke: pick 1 venue × 1 instrument × 1 day across each asset_group; run MDPS; assert
       manifest reflects honest verb; spot-check 1 parquet per data_type; assert OHLC populated where claimed `captured`.
       [AUDIT 2026-05-07: IN-FLIGHT — VMs running 2026-05-07T03:30 UTC are end-to-end live tests (37 VMs
       CeFi/TradFi/Sports). Per the writegate contract they MUST emit honest record_empty/record_captured/record_failed.
       Validation is via deployment-ui post-completion review. Formal automated smoke harness not yet written.]
-- [ ] [QG] P0. MDPS quality-gates.sh green. [AUDIT 2026-05-07: FRESH — actionable; depends on resolution of items above.
-      Last MDPS QG run: c924410 (auto-pass on push). Workspace-wide QG sweep is Phase 5 item.]
+      **[BLOCKED-OPERATOR 2026-05-20 slot-6]: requires 37-VM production execution + deployment-ui post-run manifest
+      review. Not automatable by agent without production GCS + running VM fleet. Operator must schedule and execute
+      production backfill run; agent can verify manifest rows post-completion.]**
+- [x] ✅ [QG] P0. MDPS quality-gates.sh green. [AUDIT 2026-05-07: FRESH — actionable; depends on resolution of items above.
+      Last MDPS QG run: c924410 (auto-pass on push). Workspace-wide QG sweep is Phase 5 item.] — QG GREEN; STEP 5.67
+      passes (no banned placeholder methods); confirmed MDPS@18d3523 + MDPS@fefd65b. 2026-05-20 slot-6.
 
 ### Phase 2.B — MTDS partitioner validation + cluster wiring
 
