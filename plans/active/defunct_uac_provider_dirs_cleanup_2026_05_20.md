@@ -60,22 +60,26 @@ Delete cleanly, no shim.
 
 ## Phased execution
 
-### Phase 1 — UAC clean deletes (7 dirs)
+### Phase 1 — UAC clean deletes (7 dirs) ✅ DONE 2026-05-20 — UAC@a408925c
 
 `cryptoquant`, `cryptopanic`, `lunarcrush`, `prime_broker` (no refs) + `coinglass`, `hyblock`, `coingecko` (registry
 refs only).
 
-- [ ] [SCRIPT] P3. Delete `unified_api_contracts/external/{cryptoquant,cryptopanic,lunarcrush,prime_broker}/`
-- [ ] [SCRIPT] P3. Delete `unified_api_contracts/external/{coinglass,hyblock,coingecko}/` + remove SourceCapability
-      entries from `registry/capability_declarations/_altdata.py`
-- [ ] [SCRIPT] P3. Remove `coingecko` from `registry/_endpoint_registry_data.py`
-- [ ] [SCRIPT] P3. Remove `prime_broker` from `registry/venue_manifest/internal_services.py`
-- [ ] [SCRIPT] P3. Audit `unified_api_contracts/__init__.py` for re-exports of the 7 venues; remove
+- [x] ✅ Delete `unified_api_contracts/external/{cryptoquant,cryptopanic,lunarcrush,prime_broker}/` — UAC@a408925c
+- [x] ✅ Delete `unified_api_contracts/external/{coinglass,hyblock,coingecko}/` + remove SourceCapability entries from
+      `registry/capability_declarations/_altdata.py` — UAC@a408925c
+- [x] ✅ Remove `coingecko` from `registry/_endpoint_registry_data.py` — UAC@a408925c
+- [x] ✅ Remove `prime_broker` from `registry/venue_manifest/internal_services.py` — UAC@a408925c
+- [x] ✅ Audit `unified_api_contracts/__init__.py` for re-exports of the 7 venues; remove — UAC@a408925c
 
-### Phase 2 — UAC-internal touch (2 dirs)
+### Phase 2 — UAC-internal touch (2 dirs) ✅ DONE 2026-05-20 — UAC@a408925c
 
-- [ ] [SCRIPT] P3. `glassnode`: delete dir + remove from `tests/unit/test_phase5_phase6_normalizers.py`
-- [ ] [SCRIPT] P3. `regulatory`: delete dir + remove from `registry/venue_manifest/internal_services.py`
+- [x] ✅ `glassnode`: delete dir + remove from `tests/unit/test_phase5_phase6_normalizers.py` — UAC@a408925c (also
+      removed glassnode normalize fns + altdata error mapping + venue rate limits +
+      canonical/domain/execution/prime_broker.py file delete)
+- [x] ✅ `regulatory`: delete dir + remove from `registry/venue_manifest/internal_services.py` — UAC@a408925c (also
+      removed \_REGULATORY SourceCapability from `_tradfi.py` + normalize_regulatory_error +
+      normalize_regulatory_trade_report)
 
 ### Phase 3 — Cross-repo MTDS coordination (3 dirs)
 
