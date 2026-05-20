@@ -263,12 +263,11 @@ todos:
           their own `record_captured`.
 
       QG: `cd market-data-processing-service && bash scripts/quality-gates.sh` clean.
-    status: blocked
+    status: done
     note: |
-      "2026-05-10 PM chain-agent attempted; blocker = dual-SSOT lifecycle collision flagged in
-      ../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md (Case 5 BIG finding per Findings Triage).
-      Pre-requisite UTL@`6ce59900` shipped (streaming facade re-exports). Architectural decision (Options A/B/C in
-      issue doc) required before next attempt; resumes when operator picks resolution path."
+      "SHIPPED 2026-05-18 MDPS@15c1889 — CandleStreamingWriteContext + open_candle_streaming_writer +
+      write_streaming_chunk + close_candle_streaming_writer; _streaming_write_per_tf rewired to per-batch lifecycle;
+      4 unit tests passing. QG green. Dual-SSOT concern resolved via Option A (write_candle_parquet internal lifecycle)."
 
   - id: phase-2-resource-profiler-wiring
     content: |
@@ -315,15 +314,15 @@ todos:
       (4) in-flight shards complete cleanly after pause is engaged (no kill).
 
       QG: MDPS quality-gates.sh clean.
-    status: deferred-after-phase-1-2b
+    status: done
     note: |
-      "2026-05-10 PM chain-agent did not attempt; blocker = Phase 1.2B blocked on architectural decision per
-      ../archive/issues/mdps_phase_1_2b_dual_ssot_lifecycle_collision_2026_05_10.md; plan execution DAG gates Phase 2 on Phase 1.2B
-      callsite. Resumes when Phase 1.2B unblocks."
+      "SHIPPED 2026-05-18 MDPS@6c560f4 — BatchOrchestrationMixin._init_backpressure + _on_memory_warning +
+      _unpause_if_safe + submission gate loop; cli/main.py _start_resource_profiler() + emergency ManifestWriter flush;
+      4 unit tests in tests/unit/test_memory_backpressure.py passing. Unblocked after Phase 1.2B shipped."
 
   - id: phase-3-row-group-iterator-read
     content: |
-      - [ ] [AGENT] P2. Phase 3 (LOWER PRIORITY) — Convert eager `_read_tick_data` to row-group iterator.
+      - [x] [AGENT] [DEFERRED-POST-CUTOVER] P2. Phase 3 (LOWER PRIORITY) — Convert eager `_read_tick_data` to row-group iterator. Plan body explicitly states "Phase 3 lands post-cutover unless a specific shard hits OOM despite Phases 1+2 in place." Phases 1+2 shipped 2026-05-18; May-23 gate not blocked. — slot-2 2026-05-20.
 
       Audit finding from previous agent (the reason this was deferred):
       `_read_tick_data` is called from `_process_instrument_file` (live_workers.py:713) AND from batch_workers
@@ -366,12 +365,12 @@ todos:
       and is necessary for the truly large input files (CME GLBX trades > 5GB), but the band-aid VM-launcher
       memory bump (deployment-service@`02ee6d6`) plus Phases 1+2 should be sufficient for the May 23 cutover.
       Phase 3 lands post-cutover unless a specific shard hits OOM despite Phases 1+2 in place.
-    status: todo
-    note: ""
+    status: deferred-post-cutover
+    note: "DEFERRED-POST-CUTOVER 2026-05-20 slot-2: Phases 1+2 shipped 2026-05-18; band-aid bump covers May-23 gate."
 
   - id: phase-4-validation
     content: |
-      - [ ] [AGENT] P1. Phase 4 — End-to-end validation on a real backfill VM + retire the band-aid memory bump.
+      - [x] [AGENT] [BLOCKED-OPERATOR] P1. Phase 4 — End-to-end validation on a real backfill VM + retire the band-aid memory bump. Phases 1+2 shipped (unblocked); VM launch + verification required before band-aid revert (deployment-service@02ee6d6). Operator ping filed. — slot-2 2026-05-20.
 
       1. Launch a CeFi BTCUSDT 1m+5m+15m+1h ohlcv backfill VM for a 30-day window using the post-Phase-1+2 code.
          Verify via `gcloud compute instances describe` that the VM uses the standard memory tier (NOT the
@@ -392,8 +391,8 @@ todos:
 
       Success criteria: VM completes 30-day cefi backfill on standard memory tier, manifest is honest, output
       bytes match pre-migration reference.
-    status: todo
-    note: ""
+    status: blocked-operator
+    note: "BLOCKED-OPERATOR 2026-05-20 slot-2: VM launch + verification required; operator ping filed in slot_2.md."
 
 isProject: false
 estimate_class: design
