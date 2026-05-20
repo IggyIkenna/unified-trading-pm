@@ -1,3 +1,5 @@
+[2026-05-20 UTC] slot-2 health-check #2 — 📊 pvl-p18a: `strategy-paper-carry-staked-basis-20260519-183013` RUNNING (asia-northeast1-c). Original 20260518 VM TERMINATED (superseded). No action needed.
+
 [2026-05-20 UTC] slot-2 → operator — 📋 manifest_schema_final_gate Phase 7.C-7.G BACKFILLED:
 GCS migration Phase 3 completed 2026-05-19 per gcs_migration plan. Flipped Phase 7.C/7.D/7.E/7.F/7.G (+ 5 sub-checkboxes) in manifest_schema_final_gate_2026_05_09.md.
 **Phase 8.A/8.B still open [HUMAN]**: operator needs to review class-C triage rows at `gs://central-element-323112-rescan-triage/{run_id}/triage.jsonl` + sign off in `manifest_cross_asset_rescan_design_2026_05_08.md` § "Rescan triage decisions".

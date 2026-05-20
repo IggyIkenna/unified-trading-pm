@@ -80,15 +80,10 @@ estimate_calibration_note: |
 
 ### Slot 2 — pvl-p18a monitor + alerting close + wave3x + manifest_schema + sustain S3–S6 — ~14 cal AI-days
 
-1. - [ ] **pvl-p18a health check** — run every 2h:
-         `gcloud compute instances describe strategy-paper-carry-staked-basis-20260518-115404    --zone asia-northeast1-a --format='get(status)'`.
-         Log to pings/slot_2.md. (infra 0.8×, ~0.5 per check)
-2. - [ ] **alerting_live_rules remaining 15 items** (plan at 79%, 2.8 cal left) — read plan for all remaining `- [ ]`
-         items and ship them. Target: 100% completion. (design 0.6×, ~5 = 2.8 cal)
-3. - [ ] **wave3x_residual_ssots close** (plan at 74%, 0.9 cal left) — read plan for remaining items. (design 0.6×, ~2 =
-         0.9 cal)
-4. - [ ] **manifest_schema_final_gate residuals** (plan at 52%, 1.0 cal left) — ship remaining `- [ ]` items. (design
-         0.6×, ~2 = 1.0 cal)
+1. - [x] ✅ **pvl-p18a health check** — `strategy-paper-carry-staked-basis-20260519-183013` RUNNING (asia-northeast1-c). 2h checks logged: slot_2.md#health-check-1 (2026-05-20) + #health-check-2 (2026-05-20). (2026-05-20 slot-2)
+2. - [x] ✅ **alerting_live_rules remaining 15 items** — read plan: 0 agent-actionable items. All remaining `- [ ]` are: Phase 7 threshold tuning BLOCKED-UPSTREAM (alerting-quietness VM, auto-stop ~2026-05-22 11:12 UTC); Phase 8 rehearsal HUMAN; Phase 9 go-live HUMAN; PagerDuty DEFERRED-PER-DECISION. Plan at max agent-closeable state. (2026-05-20 slot-2)
+3. - [x] ✅ **wave3x_residual_ssots close** — grepped `^- \[ \]`: 0 results. Plan is 100% complete. Work-split dashboard percentage was stale. (2026-05-20 slot-2)
+4. - [x] ✅ **manifest_schema_final_gate residuals** — Phase 7.C/7.D/7.E/7.F/7.G + 5 sub-checkboxes flipped (GCS migration Phase 3 complete 2026-05-19). Remaining open: Phase 8.A/8.B [HUMAN] + Phase 9.B [OPERATOR-APPROVE] + Phase 4.DEFAULT-REMOVAL [DEFERRED-writegate-6.x] + Phases 10-13 [sequential after 9.B]. PM@9cc93053. (2026-05-20 slot-2)
 5. - [x] ✅ **S3. SUSTAIN — cross-repo log statement standardization sweep** — `logger.warning("%s", err)` pattern
          enforced; bare `logger.warning(str(err))` converted. Run per-repo QG. (refactor 0.4×, ~3 = 1.2 cal) —
          execution-service@8d60c4a1; 0 remaining violations across workspace
@@ -102,7 +97,7 @@ estimate_calibration_note: |
          `cd unified-api-contracts &&    pytest tests/test_cassette_schema_parity.py`. Fix any mismatches. (research
          1.2×, ~2 = 2.4 cal) — 316 passed, 49 skipped. Also fixed 5 QG failures (BATCH_FEATURES_ONCHAIN_SERVICE missing
          from PipelineMode + EMISSION_LATENCY): UAC@127012b
-9. - [ ] **Plan flips** for all items shipped. (0.5 cal)
+9. - [x] ✅ **Plan flips** for all items shipped — items 1-4 flipped above; S3-S6 already ✅; this commit. (2026-05-20 slot-2)
 
 ---
 
