@@ -34,7 +34,7 @@ related_plans:
 | **6** | Local | 🔴 FROZEN (was deployment_ui_lifecycle_tabs) — reassigned to A3 DeFi MISSING_EXPECTED remediation | Phase 9 (denominator UI post-unfreeze) | FROZEN |
 | **7** | Local | 🔴 FROZEN (was simulation_scenarios + defi_master P2-3) — reassigned to A3 Sports + A2 off-season gap | Resumes post-unfreeze | FROZEN |
 | 8 | Local | defi_catalogue close + R-NEW-6 detector candidate | Phase 14 | KEEP |
-| **9** | **🟡 PARALLEL** (LOCAL or VM operator choice) | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL** | Phase -1 (workspace QG prereq) | NEW theme tonight |
+| **9** | **✅ DONE** | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL** | Phase -1 (workspace QG prereq) | ✅ UAC (already green); ✅ UTL@f63eb8e2 (9 violations fixed + pm@424b4319 checker bug); ✅ IS (already green, no changes needed) |
 | **10** | **🟢 DONE** | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS** | Phase -1 | ✅ MTDS@5c1631d green (no fixes by slot-10); ✅ features-service@31c38543 green (codex+imports+upload-API fixes); ✅ MDPS@e3441a9 green (within-tolerance, no fixes needed) |
 | **11** | **🟡 PARALLEL** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service** | Phase -1 | NEW theme tonight |
 
