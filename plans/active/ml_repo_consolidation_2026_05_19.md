@@ -246,13 +246,13 @@ todos:
 
   - id: phase-8a-launcher-migration
     content: |
-      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`
+      - [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`
         + `launch-ml-inference-vm.sh` collapse into a single `launch-ml-vm.sh` parameterised by `--operation`.
         Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` to drop ml-training / ml-inference prefixes and
-        add ml-service prefix. Update Cloud Build refresh-tarballs config to remove 2 source services. Update
-        Terraform service map — drop 2 entries, add ml-service.
-    status: formally-deferred
-    blocked_by: phase-7-archive-source-repos
+        add ml-service prefix. Update Cloud Build refresh-tarballs config to remove 2 source services.
+        — deployment-service@cb018c0. launch-ml-vm.sh created (python -m ml_service, prefix ml-); vm_zombie_watchdog.py
+        updated ("ml-train-" → "ml-"); create-code-tarballs.sh all arrays updated (CEFI/SPORTS/ML_TRAINING/ALL_SERVICE_REPOS).
+    status: complete
 
   - id: phase-8b-deployment-api-ui
     content: |
