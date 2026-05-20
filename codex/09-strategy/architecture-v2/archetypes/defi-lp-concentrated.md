@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: DEFI_LP_CONCENTRATED
+family: MARKET_MAKING
+status: code-shipped
+venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3, TRADER_JOE_LB]
 topology_requirements:
   isolation:
     execution-service: shared
@@ -101,6 +105,21 @@ ship now per operator decision 2026-05-07.
   and `min_rebalance_interval_seconds` jointly.
 - **MEV on rebalance** — the burn + swap-the-imbalance + mint sequence is a sandwich target. Use a private-mempool /
   Flashbots Protect path to submit. (Tracked in the deferred mempool-feed plan.)
+
+## Example instances
+
+```
+DEFI_LP_CONCENTRATED@uniswap-v3-eth-usdc-ethereum-prod
+DEFI_LP_CONCENTRATED@uniswap-v3-wbtc-usdc-arbitrum-prod
+DEFI_LP_CONCENTRATED@pancakeswap-v3-bnb-usdt-bsc-prod
+```
+
+## Not in this archetype
+
+- Full-range / passive pool LP (Curve stableswap, Balancer weighted) → [`DEFI_LP_POOL`](defi-lp-pool.md)
+- ERC-4626 yield-vault deposit → [`DEFI_LP_VAULT`](defi-lp-vault.md)
+- Single-block JIT concentrated LP minted around a pending swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- CEX / CLOB order-book quoting → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md) + granular variants
 
 ## Plan
 

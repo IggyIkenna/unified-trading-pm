@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: DEFI_LP_POOL
+family: MARKET_MAKING
+status: code-shipped
+venue_universe: [CURVE, BALANCER_V2, BALANCER_V3]
 topology_requirements:
   isolation:
     execution-service: shared
@@ -72,6 +76,21 @@ Cross-pool rotation expands to 3 legs (WITHDRAW → BRIDGE → DEPOSIT) with LEA
   depegging, the exit itself prints worse than the on-paper invariant.
 - **Yield vs IL** — pools with high CRV / BAL incentives earn enough to tolerate small drift; high-volatility pools may
   have negative carry even at zero drift. The seed-the-strategy decision is operator-driven.
+
+## Example instances
+
+```
+DEFI_LP_POOL@curve-3pool-usdc-usdt-dai-ethereum-prod
+DEFI_LP_POOL@curve-steth-eth-ethereum-prod
+DEFI_LP_POOL@balancer-v2-wsteth-eth-arbitrum-prod
+```
+
+## Not in this archetype
+
+- Concentrated-range (Uniswap V3-style) LP → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
+- ERC-4626 yield-vault deposit → [`DEFI_LP_VAULT`](defi-lp-vault.md)
+- Lending-supply APY rotation (Aave/Compound supply side) → [`YIELD_ROTATION_LENDING`](yield-rotation-lending.md) (Carry & Yield)
+- Stablecoin price-dispersion arb across pools → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

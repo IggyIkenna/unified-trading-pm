@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: DEFI_LP_VAULT
+family: MARKET_MAKING
+status: code-shipped
+venue_universe: [YEARN_V3, MORPHO, AAVE_VAULT, SOMMELIER]
 topology_requirements:
   isolation:
     execution-service: shared
@@ -59,6 +63,20 @@ now per operator decision 2026-05-07.
   vault's `previewRedeem` ABI before deploying real capital.
 - **Perf fee step-changes** — operators of the underlying vault can raise the perf fee mid-deposit. APY drops without an
   underlying yield change; engine exits on the new realised APY.
+
+## Example instances
+
+```
+DEFI_LP_VAULT@yearn-v3-usdc-ethereum-prod
+DEFI_LP_VAULT@morpho-metamorpho-usdc-ethereum-prod
+DEFI_LP_VAULT@aave-vault-usdc-arbitrum-prod
+```
+
+## Not in this archetype
+
+- Direct concentrated / full-range pool LP (no ERC-4626 wrapper) → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md) / [`DEFI_LP_POOL`](defi-lp-pool.md)
+- Lending-supply APY rotation across protocols → [`YIELD_ROTATION_LENDING`](yield-rotation-lending.md) (Carry & Yield)
+- Staking-derivative (LST) yield without a vault wrapper → [`YIELD_STAKING_SIMPLE`](yield-staking-simple.md) (Carry & Yield)
 
 ## Plan
 
