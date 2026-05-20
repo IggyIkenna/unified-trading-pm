@@ -358,3 +358,13 @@ key absent.
   (post-cutover; MTDS only captures aggregate stats today, not per-tick snapshots; G.1 uses xy=k SolanaAMMPool as MVP)
 - Solana LIVE mode depth (Helius RPC real-time pool state) → `matching_engine_provider_multi_venue_2026_06.md` (G.1
   BATCH mode only; LIVE mode extension deferred; helius-api-key credential confirmed working)
+
+## Deferred work after 2026-05-20 slot-4
+
+| Item | Status | Blocker | Evidence |
+|---|---|---|---|
+| Phase-E: `gcloud run deploy features-service` | `BLOCKED-OPERATOR-DEPLOY` | deploy_features_service_cloud_run.sh line 4: operator-only; BLK-363c4fe1 filed | — |
+| Phase-E: 24h soak (features-service healthy:true, no FAILED events) | `BLOCKED-OPERATOR-DEPLOY` | needs deploy first | — |
+| Phase-F: Relaunch paper VM `strategy-paper-carry-staked-basis-{date}-{ts}` | `BLOCKED-OPERATOR-DEPLOY` | sequential after 24h soak | tarballs ready in GCS at c9729dce |
+| Phase-F: fills>0 in first 10 ticks | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch | — |
+| Phase-F: OPERATOR_CAPITAL_OVERRIDE_APPLIED → DEPOSIT_DETECTED → resize check | `BLOCKED-OPERATOR-DEPLOY` | sequential after VM relaunch | — |
