@@ -205,9 +205,12 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
       add manifest emission (`record_captured`/`record_empty`(EXPECTED_PAST_SOURCE_COVERAGE_END)/`record_failed`)
       to `_backfill_drift_s3_date`. All 3 QG scripts pass clean.
       — MTDS@3c8ce40 + MTDS@4bea31e + MTDS@3a43979 (slot-5 merge resolution)
-- [ ] **P0. `solana_defi_handler.py` (remaining)**: remove `_collect_drift` IS-bypass (line ~419 uses Drift
-      data API directly instead of IS catalogue); remove `_PHOENIX_PAIRS` hardcoded universe (load from IS).
-      Call IS DriftReferenceDataAdapter for full universe derivation.
+- [x] ✅ **P0. `solana_defi_handler.py` (remaining)**: removed `_PHOENIX_PAIRS` hardcoded universe from
+      handler; pair universe now loaded via `load_phoenix_clob_pairs_for_date()` (IS-first + static fallback
+      in `_instruments_metadata._PHOENIX_STATIC_CLOB_MARKETS`; Phoenix REST API dead 2026-05-15).
+      `_collect_drift` IS consultation added via `load_drift_market_symbols_for_date()` — soft cross-validation
+      (logs IS-catalogued markets missing from Drift API; proceeds with self-enumeration regardless).
+      All 3 QG scripts pass clean. — MTDS@e944eb7
 - [x] ✅ **P0. `perp_funding_handler.py`**: VERIFIED CLEAN — no Drift reference in current codebase;
       `DEFAULT_PROTOCOLS` = `["hyperliquid", "aster", "gmx", "pacifica", "lighter"]`. Plan line-145 citation stale. (2026-05-20 slot-5)
 - [ ] **P0. `lst_rates_handler.py`** `**[BLOCKED-OPERATOR-DECISION]**`: `_LST_TOKENS` dict is the hardcoded
