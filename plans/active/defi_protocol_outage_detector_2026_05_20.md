@@ -170,12 +170,14 @@ Phase 1 (adapter)  →  Phase 2 (handler)  →  Phase 3 (CLI registration)
 
 ### Phase 6 — Registry refresh script
 
-- [ ] **[AGENT] P1. 6.A — `refresh_protocol_pause_windows.py`** in
+- [x] ✅ **[AGENT] P1. 6.A — `refresh_protocol_pause_windows.py`** in
   `market-tick-data-service/market_tick_data_service/scripts/`:
   - Reads `protocol_outages` parquets from GCS for a date range
   - Aggregates `(protocol, chain) → list[(start_date, end_date)]`
-  - Writes to `unified-api-contracts/unified_api_contracts/registry/protocol_pause_windows_cache.json`
+  - Writes to `unified-api-contracts/unified_api_contracts/registry/data/protocol_pause_windows_cache.json`
   - `protocol_pause_windows.py` loads from the JSON cache at import time (falls back to empty)
+  - UAC type updated: `list[tuple[date, date | None]]`; ongoing windows handled in `is_protocol_paused`
+  — market-tick-data-service@c9ff1f7 + unified-api-contracts@cc6a629 2026-05-20
 
 ### Phase 7 — Curve pause detection (Phase 2 — requires direct RPC)
 
