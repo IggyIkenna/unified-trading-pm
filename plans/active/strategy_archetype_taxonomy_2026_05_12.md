@@ -552,6 +552,45 @@ All 23 pending archetype docs written and pushed. README table updated to reflec
 **README updated** (this commit): Arbitrage `7 docs`, Market Making `10 docs`, Vol Trading `19 docs`, Document Layout
 comment updated to `57 docs — all archetypes documented`. All 57 archetypes now have canonical docs.
 
+### Item V-13 — Full architecture-v2 doc audit + family-doc reconciliation ✅ SHIPPED 2026-05-20
+
+Operator-requested audit of every `codex/09-strategy/architecture-v2/` family + archetype doc against the UAC enum (57
+archetypes / 9 families), prompted by concern that the 2026-05-19 V-12 batch (23 docs) was written under thin guidance.
+
+**Key finding — the V-12 archetype docs are sound.** All 18 Vol, 5 granular MM, `ARBITRAGE_CROSS_DOMAIN_EVENT`, 4 MEV,
+and 3 DeFi-LP docs are accurate, internally consistent, and useful. They use a lighter 7-section taxonomy than the
+README's 11-section authoring convention, but they are complete and correct — **no rewrites needed.** The real drift was
+in the **family docs**, which were never updated after the Phase-9 expansion, plus scattered small defects.
+
+**Fixed (4 commits on `live-defi-rollout`):**
+
+- `families/vol-trading.md` ✅ — "1 Archetype" → enumerate all **19** (table + 19 cross-ref links) (PM@`f976d521`)
+- `families/market-making.md` ✅ — "2 Archetypes" → enumerate all **10** (5 granular CeFi + prediction + 3 DeFi LP);
+  corrected the stale "passive Uniswap-V2-style LP is not in this family" bullet (`DEFI_LP_POOL` _is_ full-range/passive
+  pool LP, in `MARKET_MAKING`) (PM@`f976d521`)
+- `families/arbitrage-structural.md` ✅ — un-staled `ARBITRAGE_CROSS_DOMAIN_EVENT` "doc pending" labels (PM@`f976d521`)
+- `architecture-v2/naming-convention.md` ✅ — "Family axis (8 values)" → 9 (add `PORTFOLIO`); "Archetype axis (18
+  values)" → 57 (replaced drift-prone inline 18-list with a pointer to README + enum SSOT) (PM@`8b6350dc`)
+- `architecture-v2/README.md` ✅ — removed duplicate decision-tree bullet (items 9 & 10 were identical) (PM@`8b6350dc`)
+- `archetypes/defi-lp-pool.md` ✅ — `LP_DEPOSIT`/`LP_WITHDRAW` are **not** enum values; aligned to the real engine wire
+  format (`SWAP` + `lp_operation="deposit"|"withdraw"`, verified against `defi_lp/pool.py`) (PM@`217660c1`)
+- `archetypes/defi-lp-concentrated.md` ✅ — clarified `LP_MINT`/`LP_BURN` now exist (actions 13/14) but engines still
+  route via `SWAP`+`lp_operation`; migration is a non-blocking follow-up (PM@`217660c1`)
+- `archetypes/vol-carry.md` ✅ — dropped stale "(doc pending)" labels (PM@`217660c1`)
+- `archetypes/vol-0dte-pin-risk.md` ✅ — "Gamma scalping archetype" link pointed at `vol-arb-rv-iv.md`; corrected to
+  `vol-0dte-gamma-scalping.md` (PM@`217660c1`)
+- `archetypes/carry-recursive-borrow-lending-only.md` ✅ — sibling link pointed at the renamed
+  `carry-recursive-borrow-perp-hedged` redirect; repointed to `carry-basis-perp-inv.md`; added `StrategyFamily` link +
+  disambiguated the plan's "Family 0/1/2" numbering from `StrategyFamily` (PM@`217660c1`)
+- 4 MEV + 3 DeFi-LP archetype docs ✅ — added markdown family-doc links (were plain-text family names) (PM@`217660c1`)
+- `strategy-summary.md` ✅ — registry/coverage narrative still cited "55 archetypes" at lines 808/816 (the V-8-deferred
+  leftovers); bumped to 57 and clarified the manifest declares cells for a 22-archetype live subset today (PM@`09f68f3a`)
+
+**Verified clean (no change needed):** all 18 Vol archetype docs, 5 granular MM docs, `arbitrage-cross-domain-event.md`,
+3 MEV docs (body), `category-instrument-coverage.md` (scope = 57), `archetype-paper-readiness.md` (= 57), README
+archetype doc-count table (2/2/10/7/10/1/19/2/4 = 57). `archetypes/` holds 58 files = 57 enum archetypes + 1 redirect
+stub (`carry-recursive-borrow-perp-hedged.md`).
+
 ## Composes with
 
 - `codex/09-strategy/strategy-summary.md` (canonical archetype list)
