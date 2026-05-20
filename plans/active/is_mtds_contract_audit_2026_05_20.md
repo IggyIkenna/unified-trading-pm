@@ -190,7 +190,10 @@ Each existing IS adapter must populate the new archive-metadata fields. Priority
       — IS@919c1e2 — both mSOL + native-stake records updated
 - [x] ✅ **P0. Jito** (`adapters/defi/jito.py`): same.
       — IS@919c1e2 — kobe stake_pool_stats URL template
-- [ ] **P1. Orca / Raydium / others**: populate template fields opportunistically.
+- [x] ✅ **P1. Orca / Raydium / others**: populate template fields opportunistically.
+      — IS@3a96c48 — Orca: source_archive_url_template=None (no known archive); Raydium: OHLCV endpoint
+      template (api-v3.raydium.io/pools/line/position?id={pool_id}&type=swap&timeType=day), record_types
+      {"ohlcv": "swap"}, coverage_start 2021-02-21. Both `_build_pool_record` + `_build_historical_pool_record`.
 
 ### Phase 3 — MTDS handler migration (consume IS, emit manifest)
 
