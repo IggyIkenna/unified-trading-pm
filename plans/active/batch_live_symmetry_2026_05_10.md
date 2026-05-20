@@ -394,7 +394,10 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
 - [x] ✅ [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4
       families from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline). —
       PM@7b4f9869 — all 8 families on UTL ModeHandler; "Tab 4 pending" section replaced with "COMPLETE 2026-05-19"
-- [ ] [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
+- [x] ✅ [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
+      features-service@3f64eada — Only commodity had remaining bare-class main(); deleted main()/_build_parser()/
+      _collect_factor_values()/_compute_signals_for_commodity() + stale imports. Shim now targets _service_main.
+      cross_instrument/multi_timeframe/calendar were already ServiceBootstrap-clean. QG: 74.09%, 7059 passed.
 
 ### Spawn prompt
 
