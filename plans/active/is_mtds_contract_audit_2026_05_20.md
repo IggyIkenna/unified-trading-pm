@@ -181,11 +181,15 @@ Phase 8 — codex docs follows everything
 
 Each existing IS adapter must populate the new archive-metadata fields. Priority order = audit Dim 1 violations:
 
-- [ ] **P0. Drift** (`instruments-service/instruments_service/reference_data/adapters/defi/drift.py`):
+- [x] ✅ **P0. Drift** (`instruments-service/instruments_service/reference_data/adapters/defi/drift.py`):
       Set `source_archive_url_template` + `source_record_types={"trades": "tradeRecords", "funding_rate": "fundingRateRecords", ...}` + `source_coverage_end={"trades": date(2025, 1, 8), ...}` (per direct S3 probe 2026-05-20).
-- [ ] **P0. Phoenix** (`adapters/defi/phoenix.py`): same shape, populate Jupiter quote-route metadata.
-- [ ] **P0. Marinade** (`adapters/defi/marinade.py`): API URL template + coverage windows.
-- [ ] **P0. Jito** (`adapters/defi/jito.py`): same.
+      — IS@919c1e2
+- [x] ✅ **P0. Phoenix** (`adapters/defi/phoenix.py`): same shape, populate Jupiter quote-route metadata.
+      — IS@919c1e2 — `source_archive_url_template` = Jupiter lite-api dexes=Phoenix template
+- [x] ✅ **P0. Marinade** (`adapters/defi/marinade.py`): API URL template + coverage windows.
+      — IS@919c1e2 — both mSOL + native-stake records updated
+- [x] ✅ **P0. Jito** (`adapters/defi/jito.py`): same.
+      — IS@919c1e2 — kobe stake_pool_stats URL template
 - [ ] **P1. Orca / Raydium / others**: populate template fields opportunistically.
 
 ### Phase 3 — MTDS handler migration (consume IS, emit manifest)
