@@ -50,7 +50,7 @@ you actually lock in the spread?), not directional risk.
 | [`ARBITRAGE_MEV_SANDWICH`](../archetypes/arbitrage-mev-sandwich.md)                     | Bracket a victim's large swap with front-run + back-run; capture adverse price movement                        | ATOMIC 3-tx bundle               | **Theoretical only — no live engine.** Regulatory risk; retained for completeness.                             |
 | [`ARBITRAGE_MEV_JIT_LIQUIDITY`](../archetypes/arbitrage-mev-jit-liquidity.md)           | Mint concentrated-LP position before imminent large swap; collect fees; burn next block                        | ATOMIC 2-block                   | Uniswap V3 / Algebra concentrated-liquidity pools; low-capital, near-zero inventory                            |
 | [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](../archetypes/arbitrage-mev-liquidation-bundle.md) | Flash-loan funded liquidation in a single atomic bundle; zero capital required                                 | ATOMIC single tx                 | Aave / Compound / Euler on 6 EVM chains + Kamino on Solana; extends LIQUIDATION_CAPTURE                        |
-| `ARBITRAGE_CROSS_DOMAIN_EVENT` _(per-archetype doc pending)_                            | Same real-world event priced in ≥2 venue domains (sports book / prediction CLOB / CME binary); arb across them | Leg-and-hedge                    | Sports book ↔ Polymarket ↔ Kalshi; CME binary options; added 2026-05-18 per taxonomy V-1                     |
+| [`ARBITRAGE_CROSS_DOMAIN_EVENT`](../archetypes/arbitrage-cross-domain-event.md)         | Same real-world event priced in ≥2 venue domains (sports book / prediction CLOB / CME binary); arb across them | Leg-and-hedge                    | Sports book ↔ Polymarket ↔ Kalshi; CME binary options; added 2026-05-18 per taxonomy V-1                     |
 
 ## Shared primitives (all archetypes)
 
@@ -285,8 +285,8 @@ def react_to_equity_change(self, new_equity_usd: Decimal) -> list[StrategyInstru
   [arbitrage-mev-backrun](../archetypes/arbitrage-mev-backrun.md),
   [arbitrage-mev-sandwich](../archetypes/arbitrage-mev-sandwich.md),
   [arbitrage-mev-jit-liquidity](../archetypes/arbitrage-mev-jit-liquidity.md),
-  [arbitrage-mev-liquidation-bundle](../archetypes/arbitrage-mev-liquidation-bundle.md), arbitrage-cross-domain-event
-  _(per-archetype doc pending — Slot 8)_
+  [arbitrage-mev-liquidation-bundle](../archetypes/arbitrage-mev-liquidation-bundle.md),
+  [arbitrage-cross-domain-event](../archetypes/arbitrage-cross-domain-event.md)
 - ATOMIC multi-leg:
   [../../../04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md)
 - MEV protection: [../cross-cutting/mev-protection.md](../cross-cutting/mev-protection.md)
