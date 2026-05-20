@@ -182,6 +182,110 @@ Items (initial): each = ~0.3-0.5 cal-AI-day.
 - `ADAPTER-POLYMARKET-FEED` (Prediction)
 - `ADAPTER-KALSHI-FEED` (Prediction)
 
+## Post-May-23 / parallel-prep tracks (concurrent with data-pipeline phases)
+
+> **Operator 2026-05-20 r2 follow-up**: "what about the rest of the epics / plans which aren't allocated yet to
+> `data_pipeline_master_coordination_2026_05_20.md` like paper trading defi and batch ml for cefi and tradfi and sports
+> and batch strategy and execution for those too and paper trading these are tasks that human probably needs to try and
+> audit once data is ready and backfilled? even if outside may 23 still worth having in harsh and ikenna as we can
+> concurrently prepare for them."
+>
+> These items don't block May-23 (the gate is the two DeFi archetypes only — `carry_staked_basis` +
+> `arbitrage_price_dispersion` per `master_to_live_defi_2026_05_23.md`). They run **concurrently** with the
+> data-pipeline coordinator on centralised VM slots, with the human-judgment supervision points landing on slot 1
+> (Ikenna) or slot 2 (Harsh) per the same split principle: archetype mechanics + paper-trade audit = Ikenna; batch
+> runs + wiring + sample-verify = Harsh.
+
+### Ikenna (slot 1) — archetype mechanics + paper-trade audit per asset_group
+
+18. **HUMAN-IKENNA-PAPER-TRADE-DEFI-AUDIT** — paper-trade audit for the two May-23 DeFi archetypes once paper_1d →
+    live_early flows ship. Read paper trades, validate logic matches archetype intent (collateral, liquidation,
+    cross-venue transfer, venue restriction, deployment topology dims 9-14 from archetype audit). 3-trading-day
+    operator-gate window per `promote_workflow_may23_cli_path_2026_05_10.md`. Composes with:
+    `defi_master_2026_05_07.md` + `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` +
+    `issues/strategy_archetype_logic_audit_2026_05_20.md`. Est: 3 cal-AI-days (3 trading-day audit window).
+
+19. **HUMAN-IKENNA-CEFI-ARCHETYPE-DESIGN** — archetype mechanics for CeFi tracks: perp-funding carry + spot-perp basis +
+    cross-CEX arbitrage. Allocator math, collateral semantics on perp venues (cross vs isolated margin), liquidation
+    safety bands, venue restriction matrix (which CEXes Cayman-only). Composes with: `epics/cefi_master_2026_05_07.md`
+    - `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md` (CeFi extension). Est: 2 cal-AI-days.
+
+20. **HUMAN-IKENNA-TRADFI-ARCHETYPE-DESIGN** — archetype mechanics for TradFi: ETF/futures basis, cash-and-carry on
+    treasuries, calendar spreads on commodity futures. Custody implications (TradFi prime broker), settlement
+    asymmetries (T+2 equities vs T+1 futures), Cayman vs UK regulatory split. Composes with:
+    `epics/tradfi_master_2026_05_07.md`. Est: 2 cal-AI-days.
+
+21. **HUMAN-IKENNA-SPORTS-ARCHETYPE-DESIGN** — Sports edge model design: odds dispersion across books, in-game line
+    movement signals, season-state gating (off-season → no edge, see `epics/sports_master_2026_05_07.md`). Capital
+    allocation: typically smaller stake per bet, higher number of concurrent positions. Custody implications (sportsbook
+    custody is intrinsic — funds sit at the book). Composes with: `epics/sports_master_2026_05_07.md` +
+    `cme_polymarket_arb_2026_05_08.md` (Polymarket overlap). Est: 2 cal-AI-days.
+
+22. **HUMAN-IKENNA-PREDICTION-ARCHETYPE-DESIGN** — Prediction archetype: Polymarket-vs-Kalshi spread design, contract
+    expiry mechanics, settlement-source disagreements (which Oracle / when), liquidity-weighted edge thresholds.
+    Composes with: `epics/predictions_master_2026_05_07.md`. Est: 2 cal-AI-days.
+
+23. **HUMAN-IKENNA-PAPER-TRADE-AUDIT-CROSS-ASSETGROUP** — once batch backfill for CeFi/TradFi/Sports/Prediction lands +
+    paper-trade harness runs (Harsh items 27-30 below), audit each archetype's paper-trade output. Same shape as item 18
+    but per asset_group. 1 cal-AI-day per asset_group × 4 = 4 cal-AI-days.
+
+### Harsh (slot 2) — batch ML / batch strategy / batch execution / paper-trade harness per asset_group
+
+24. **HUMAN-HARSH-BATCH-ML-CEFI** — batch ML training runs for CeFi archetypes (perp funding predictor, basis signal
+    model, cross-CEX arb stat-arb model). Run from spec once features are ready. Composes with:
+    `epics/ml_and_features_master_2026_05_07.md` + `epics/cefi_master_2026_05_07.md`. Est: 3 cal-AI-days.
+
+25. **HUMAN-HARSH-BATCH-ML-TRADFI** — batch ML for TradFi (basis predictor, calendar spread model). Composes with:
+    `epics/ml_and_features_master_2026_05_07.md` + `epics/tradfi_master_2026_05_07.md`. Est: 3 cal-AI-days.
+
+26. **HUMAN-HARSH-BATCH-ML-SPORTS** — batch ML for Sports (odds dispersion model, in-game movement model). Composes
+    with: `epics/ml_and_features_master_2026_05_07.md` + `epics/sports_master_2026_05_07.md`. Est: 3 cal-AI-days.
+
+27. **HUMAN-HARSH-BATCH-ML-PREDICTION** — batch ML for Prediction (Polymarket-Kalshi spread model, settlement-source
+    discrepancy detector). Composes with: `epics/ml_and_features_master_2026_05_07.md` +
+    `epics/predictions_master_2026_05_07.md`. Est: 3 cal-AI-days.
+
+28. **HUMAN-HARSH-BATCH-STRATEGY-EXEC-CEFI** — wire batch strategy + execution for CeFi archetypes against features + ML
+    outputs. Same shape as DeFi but on CeFi adapters. Composes with: `epics/strategy_and_dart_master_2026_05_07.md` +
+    `epics/cefi_master_2026_05_07.md`. Est: 4 cal-AI-days.
+
+29. **HUMAN-HARSH-BATCH-STRATEGY-EXEC-TRADFI** — wire batch strategy + execution for TradFi. Composes with:
+    `epics/strategy_and_dart_master_2026_05_07.md` + `epics/tradfi_master_2026_05_07.md`. Est: 4 cal-AI-days.
+
+30. **HUMAN-HARSH-BATCH-STRATEGY-EXEC-SPORTS-PREDICTION** — wire batch strategy + execution for Sports + Prediction
+    (bundled — overlap on book selection + settlement handling). Composes with:
+    `epics/strategy_and_dart_master_2026_05_07.md` + `epics/sports_master_2026_05_07.md` +
+    `epics/predictions_master_2026_05_07.md`. Est: 4 cal-AI-days.
+
+31. **HUMAN-HARSH-PAPER-TRADE-HARNESS-CROSS-ASSETGROUP** — paper-trade harness runs for CeFi/TradFi/Sports/Prediction
+    archetypes (same shape as DeFi paper_1d → live_early flow). Run end-to-end on mocked + real data once Harsh's items
+    28-30 land. Each archetype's harness output feeds Ikenna item 23 (paper-trade audit). Composes with:
+    `live_pipeline_mtds_mdps_features_2026_05_08.md` + `batch_live_symmetry_2026_05_10.md` (extension per asset_group).
+    Est: 2 cal-AI-days per asset_group × 4 = 8 cal-AI-days.
+
+### Parallel-prep sequencing principle
+
+These items DO NOT have a hard dependency on the data-pipeline coordinator finishing — they can run concurrently:
+
+- Items 19-22 (Ikenna archetype design) need: archetype-audit dimensions D1-D14 from
+  `strategy_archetype_logic_audit_2026_05_20.md` (running tonight). Soft dep — Ikenna can design CeFi/TradFi/Sports/
+  Prediction archetypes once DeFi dimensions are validated as the template.
+- Items 24-27 (Harsh batch ML) need: features ready per asset_group + ML training infra (mostly available, some
+  asset_groups have `BLOCKED-CREDENTIALS` on data sources — see adapter scaffolding track).
+- Items 28-30 (Harsh batch strategy+exec) need: items 19-22 design landed + items 24-27 ML outputs.
+- Item 31 (paper-trade harness) needs: items 28-30 wired.
+- Item 23 (Ikenna paper-trade audit) needs: item 31 output.
+
+**Cycle ordering per asset_group** (parallel across asset_groups):
+
+```
+Ikenna design (2 days) → Harsh ML (3 days) → Harsh strategy+exec (4 days) → Harsh paper-trade (2 days) → Ikenna audit (1 day)
+```
+
+Total per asset_group: ~12 cal-AI-days. Across 4 non-DeFi asset_groups in parallel: ~12 cal-AI-days wall-clock if all
+slots available, ~24 if serialised. Comfortably fits in the post-May-23 window (May-23 → June-1 Copper+CEFFU custody
+onboarding gives ~9 days).
+
 ## How these flow through the dashboard
 
 - Each item lands in `backlog.yaml` with `tier: human-task`, `target_slot: 1` or `2`, `affinity: high`
