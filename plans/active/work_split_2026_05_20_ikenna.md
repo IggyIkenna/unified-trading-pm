@@ -27,7 +27,7 @@ related_plans:
 | Slot | Host | Theme | Phase ownership (per master coordinator) | Status |
 | --- | --- | --- | --- | --- |
 | 1 | Local | Main orchestrator + ping audit + cron monitor | Phase 0, 2, 8 | Continuous |
-| 2 | Local | code_freeze §2.6 + R19 UAC import surface | Phase 1, 3, 4, 10 | KEEP |
+| 2 | Local | code_freeze §2.6 + R19 UAC import surface | Phase 1, 3, 4, 10 | KEEP; ✅ **deployment-api@86a6edf** QG green (69 test failures fixed: merge-conflict artifacts from stash apply — ShardCoord `asset_group` migration, `monitor_experiments` refactor, `capture_status` NamedTuple tests, `EMPTY_REASON_KEYS` sync, `CODEX_MAX_VIOLATIONS` 22→23, bucket name SSOT fix) |
 | 3 | Local | code_freeze §2.0-2.5 + batch_live_symmetry T1-3 | Phase 1, 3, 4, 13 | KEEP |
 | 4 | Local | api_keys + defi_recursive_borrow + AWS migration owner | Phase 5, 12 (live adapter) | KEEP |
 | 5 | Local | writegate + v8 backfill + writer SSOT + label-flip + dep-prop QG | Phase 6, 7, 10, 14 | KEEP (the v8-backfill anchor) |
