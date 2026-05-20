@@ -1,3 +1,5 @@
+[2026-05-20 UTC] slot-2 → operator — 📊 pvl-p18a health check: original VM `strategy-paper-carry-staked-basis-20260518-115404` is TERMINATED (zone=asia-northeast1-c). Most recent paper VM `strategy-paper-carry-staked-basis-20260519-183013` is RUNNING in asia-northeast1-c. No action needed.
+
 [2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR `defi_master` poolGetSnapshots (P1): Balancer V3 uses
 `poolGetSnapshots` (per-pool API) not `poolSnapshots` (per-day). Requires (a) Balancer V3 subgraph IDs for each chain
 added to UAC `registry/capability_declarations/_defi.py`, (b) new query loop pattern. Current Balancer subgraph IDs in
