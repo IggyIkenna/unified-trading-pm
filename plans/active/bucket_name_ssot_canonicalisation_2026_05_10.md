@@ -560,7 +560,10 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       (slot 8)**: Phase 0c-watchdog done — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET is now zero-drift (all 72
       f-strings → resolve_bucket_name() constants; deployment-service@d3a96cf). Remaining drift sites:
       dependency_checker.py (BLOCKED-operator), legacy get_bucket_name (off-limits this cycle), deployment-api templates
-      (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion.
+      (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion. **2026-05-20 slot-6 audit**: all 4
+      open items confirmed BLOCKED-* (Phase 0d → BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy
+      get_bucket_name → BLOCKED-PHASE-2.6; this audit table → BLOCKED-PHASE-2.6). Zero agent-doable items remain.
+      Agent items exhausted — calling /done.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 
