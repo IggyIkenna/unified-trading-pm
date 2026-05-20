@@ -428,10 +428,10 @@ Pre-audit artifact:
       `pre-commit` in favour of `prek>=0.3.0`. Carry over editable `[tool.uv.sources.market-tick-data-service]` from
       PBM. Land as a single strategy-service `pyproject.toml` PR before Phase 3. — ✅ strategy-service@eee8bbb
       (2026-05-19, another slot; dep union + editable source confirmed in pyproject.toml)
-- [ ] **P0** [DECISION] Topic-prefix compatibility decision — pre-audit (h) recommends **KEEP legacy topic prefixes**
+- [x] ✅ **P0** [DECISION] Topic-prefix compatibility decision — **DECIDED: KEEP legacy topic prefixes**
       (`risk-monitor.*`, `position-monitor.*`, `pnl-attribution.*`) for first 7 days post-cutover to avoid double-rebind
-      race during the live trading window. Rename via follow-up plan. Operator confirm — default YES unless
-      cross-cutting reason to rename atomically.
+      race during the live trading window. Rename via follow-up plan. Default YES applied (no cross-cutting reason to
+      rename atomically surfaced). — recorded 2026-05-20 slot 5
 - [x] ✅ **P0** [AGENT] Phase 4 (g) verify `PYTEST_UNIT_DIR="tests/"` override applied — PBM's
       `tests/position_interface/unit/` layout triggers the per-family rule per CLAUDE.md. Without it the merged
       strategy-service QG silently skips position-recon unit tests. — ✅ strategy-service@1da6743b (2026-05-19);
@@ -454,10 +454,12 @@ Pre-audit artifact:
       LOC) and is a clean UTL `ConfigReloaderBase` candidate. Kill-switch bus subscriber boilerplate is duplicated 4×
       (~80-100 LOC each) and is a clean UTL `KillSwitchBusSubscriberBase` candidate. Both confirmed by artifact § (f).
       Ship as 2 UTL PRs in Phase 5.
-- [ ] **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]` entries
-      (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
+- [x] ✅ **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
+      entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
       Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any launcher / cron / VM bootstrap
-      script invoking the legacy command names; rewrite in Phase 8A.
+      script invoking the legacy command names; rewrite in Phase 8A. — ✅ VERIFIED 2026-05-20 slot 5: zero
+      console-script name invocations found across all workspace scripts; all launch paths already use `python -m`
+      module form.
 
 ### Gap-close 2026-05-19 — coverage amendments (post-dispatch audit)
 
@@ -473,12 +475,16 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
     `python -m strategy_service --operation <op>`. Slot 4 extends Phase 4 (a) by ~0.5 cal-day. — ✅ e2e-testing@ad55362
     (2026-05-20): 4 run-full-pipeline.sh + data_layer_runner.py + colocated_engine.py rewritten to
     strategy-service::{pnl-attribution,risk-monitor,position-recon}
-- [ ] **P0 NEW** [AGENT slot 7] Phase 8A — Console-script alias audit (PROMOTED from P2 to P0). Source repos define
+- [x] ✅ **P0 NEW** [AGENT slot 7] Phase 8A — Console-script alias audit (PROMOTED from P2 to P0). Source repos define
       `[project.scripts]`: `risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`,
       `pnl-attribution-std`. These are invoked by name in deployment-service launchers, cron schedules, VM bootstrap
       scripts, e2e-testing scripts, docs. **Decision: full cutover, no shim aliases in strategy-service
       `[project.scripts]`** — launchers + cron are workspace-owned and rewriting them is the cleanest path. Slot 7
-      bundles this into Phase 8A launcher migration; ~0.5 cal-day extension.
+      bundles this into Phase 8A launcher migration; ~0.5 cal-day extension. — ✅ VERIFIED 2026-05-20 slot 5: grep
+      across deployment-service + e2e-testing finds ZERO invocations of
+      `risk-monitor`/`position-monitor`/`pnl-attribution` as console-script commands. backfill-cluster.sh already uses
+      `python -m strategy_service --operation {pnl-attribution,risk-monitor}`. e2e-testing rewritten in Phase 4
+      (a-extension). No shim aliases required. Strategy-service pyproject.toml remains unchanged.
 - [ ] **P1 NEW** [AGENT slot 4] Phase 4 (i) — Logging + observability config consolidation. Per-service `setup_events()`
       callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package logger naming
       (`strategy_service.risk` / `strategy_service.position` / `strategy_service.pnl` / `strategy_service.engine`) for
