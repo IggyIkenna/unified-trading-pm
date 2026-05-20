@@ -130,7 +130,14 @@ feed it + lists the full remediation backlog drawn from those audits.
 - [ ] **D6. Strategy + execution plan** — beef from C5, C6, C7, C8
 - [ ] **D7. Live adapters plan** — beef from C4, C8 (live mode rows)
 - [ ] **D8. Perf upgrade plan** — beef from A1 (hot-path identification)
-- [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps)
+- [ ] **Cross-cutting QG ratchet plan** — beef from A1 + B1 (the 7 patterns become 7 QG steps).
+      **Progress: 4/7 patterns SHIPPED as QG steps**: (a) `no_silent_absence_handlers.sh` STEP 5.70 (manifest emission),
+      (b) `no_hardcoded_venue_urls.sh` STEP 5.70 (IS→MTDS URL ownership), (c) `no_hardcoded_venue_universe.sh` STEP 5.70
+      (IS→MTDS universe ownership), (d) `no_adapter_contract_regression.sh` STEP 5.83 (per-file ratchet on
+      `classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed`; shipped 2026-05-20 per
+      `lint_sweep_774602ea8_regression_audit_2026_05_20.md`). **Remaining 3 patterns** awaiting codification: (e)
+      schema-version compliance, (f) honest-absence reason taxonomy enforcement, (g) expected_coverage preflight +
+      DIVERGENT_EMPTY post-hoc check.
 
 Estimate per plan-beef-up: ~1 calibrated AI-day (audit-driven fill-in). Total:
 ~10 calibrated AI-days, parallelisable.
