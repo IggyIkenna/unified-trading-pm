@@ -660,13 +660,32 @@ own the workspace-wide QG-green sweep as a prerequisite for any ikenna-side migr
 only via `BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
 `Data Pipeline Correctness Is The Heartbeat`.
 
-**Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5)**:
+**Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
 no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
-`harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record file path. Orphan pings (no plan ref)
-are review-blocking — author either (a) files a plan / extends an existing one, or (b) removes the ping. Slot-1 main +
-harsh main audit weekly. Audit recipe: `grep -L "plans/active\|plans/epics\|plans/audit\|plans/active/issues" <ping-file>`
-returns orphans. Composes with `Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo —
-pings just point at the todo).
+`harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record (`plans/active/<slug>.md`,
+`plans/epics/<slug>.md`, `plans/audit/<slug>.md`, or `plans/active/issues/<slug>.md`). Bare slug links to
+date-suffixed plan files (`<slug>_YYYY_MM_DD.md`) inside the same ping-ledger directory also count.
+
+**If an agent's ping references nothing**, the agent MUST EITHER (a) file a new plan / extend an existing one before
+posting (preferred), OR (b) remove the ping. **Forcing agents to make plans or issues around their pings is the point**
+— pings without plan-state get lost; plans persist + propagate via the inventory regenerator.
+
+**Cadence**: every 4 hours (6×/day), NOT weekly. Cron stack:
+
+- **Local** (Ikenna's machine, `crontab -e`):
+  ```
+  0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
+  ```
+- **AWS agent-orchestrator VM** (EventBridge cron offset by 2h so passes don't collide):
+  `15 2,6,10,14,18,22 * * *` → invokes script via the orchestrator's worker container. See
+  `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` for the deployment surface.
+
+When orphans are detected: the script appends a `## [orphan-ping-cron]` notification to BOTH orchestrator inboxes
+(`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`) listing every orphan + remediation
+steps. Slot-1 main + harsh main are responsible for clearing the notification within one cron cycle (4h).
+
+**Audit script SSOT**: `unified-trading-pm/scripts/agents/audit_ping_orphans.sh`. Composes with
+`Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo — pings just point at the todo).
 
 ---
 
