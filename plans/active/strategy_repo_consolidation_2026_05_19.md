@@ -498,7 +498,10 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       cal-day. — ✅ strategy-service@25638f4b (2026-05-20): 76 occurrences across 34 files; config.service_name + API
       titles + log messages → "strategy-service"; UAC seed keys (\_SERVICE_NAME in emission/isolation policy) +
       filesystem path keys (mock_data_provider) preserved at legacy values; test assertions updated to match. 0
-      failures.
+      failures. Slot 4 extension @29e4f149: _SERVICE_NAME renamed to "strategy-service" in all 3 sub-packages
+      (position/risk/pnl isolation_policy.py + core sinks + mock_data_provider + 51 test assertions across 24 files);
+      uac@b3bb291 adds BLOCK_CRITICAL for (strategy-service, portfolio_state) + (strategy-service, risk_state);
+      4118 passed 0 failed.
 - [x] ✅ **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during subtree-merge.
       `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/` pulls package + tests +
       scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
