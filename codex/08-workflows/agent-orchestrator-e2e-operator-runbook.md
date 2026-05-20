@@ -3,10 +3,11 @@ title: agent-orchestrator — e2e operator runbook
 created: 2026-05-19
 author: ikenna-claude-subagent
 status: active
-owner: ikenna
-cadence: continuous (always-on dashboard)
-verifier: ikenna + harsh (cross-operator)
-last_executed: P1 first-deploy 2026-05-19
+execution:
+  owner: ikenna
+  cadence: continuous (always-on dashboard)
+  verifier: ikenna + harsh (cross-operator)
+  last_executed: P1 first-deploy 2026-05-19
 ---
 
 # agent-orchestrator — E2E Operator Runbook
@@ -28,13 +29,13 @@ last_executed: P1 first-deploy 2026-05-19
 > model in effect: **Ikenna's backend is the EC2 VM**; **Harsh's backend is his laptop**. The Firebase-hosted dashboard
 > can switch between them via the backend dropdown — see § "Two-operator coordination" below.
 
-| Environment                            | URL (SPA dashboard / API)                                                                                      | Owner | Notes                                                                                                                                                                                                                                                            |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Production SPA (primary)**           | `https://agent-orchestrator.odum-research.com`                                                                 | both  | Firebase Hosting serves the SPA; the dashboard's backend dropdown picks which API to hit                                                                                                                                                                         |
-| **Ikenna VM (prod backend, default)**  | `https://api.agent-orchestrator.odum-research.com`                                                             | Ikenna | EC2 `i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`, `ap-northeast-1c`. systemd unit `orchestrator.service`. Let's Encrypt cert via certbot, auto-renew armed                                                                                                          |
-| **Harsh laptop (cross-side backend)**  | `https://orch.epiphanytechnologies.com`                                                                        | Harsh | Harsh's local fleet — always-on while his machine is up. Cross-side visibility requires Harsh adds an `ikenna` user to his `users.json` and the dashboard backend dropdown selects "Harsh (laptop)"                                                              |
-| **Staging SPA (UAT)**                  | `https://agent-orchestrator.staging.odum-research.com`                                                         | both  | Firebase Hosting `agent-orchestrator-uat-site` — same dashboard, points at staging backend if configured                                                                                                                                                         |
-| **Local dev**                          | `http://localhost:5173` (Vite) → `http://localhost:8765` (backend)                                             | self  | `cd agent-orchestrator && uvicorn server.server:app --port 8765` + `cd dashboard && npm run dev`                                                                                                                                                                 |
+| Environment                           | URL (SPA dashboard / API)                                          | Owner  | Notes                                                                                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Production SPA (primary)**          | `https://agent-orchestrator.odum-research.com`                     | both   | Firebase Hosting serves the SPA; the dashboard's backend dropdown picks which API to hit                                                                                                            |
+| **Ikenna VM (prod backend, default)** | `https://api.agent-orchestrator.odum-research.com`                 | Ikenna | EC2 `i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`, `ap-northeast-1c`. systemd unit `orchestrator.service`. Let's Encrypt cert via certbot, auto-renew armed                                            |
+| **Harsh laptop (cross-side backend)** | `https://orch.epiphanytechnologies.com`                            | Harsh  | Harsh's local fleet — always-on while his machine is up. Cross-side visibility requires Harsh adds an `ikenna` user to his `users.json` and the dashboard backend dropdown selects "Harsh (laptop)" |
+| **Staging SPA (UAT)**                 | `https://agent-orchestrator.staging.odum-research.com`             | both   | Firebase Hosting `agent-orchestrator-uat-site` — same dashboard, points at staging backend if configured                                                                                            |
+| **Local dev**                         | `http://localhost:5173` (Vite) → `http://localhost:8765` (backend) | self   | `cd agent-orchestrator && uvicorn server.server:app --port 8765` + `cd dashboard && npm run dev`                                                                                                    |
 
 VM SSH for ops:
 
@@ -62,8 +63,8 @@ Strict auth is in effect post-2026-05-19 cutover (`ALLOW_ANONYMOUS=False`).
 
 2. Open `https://agent-orchestrator.odum-research.com`, pick the right backend from the dropdown (Ikenna VM = default),
    sign in with the username + password from step 1.
-3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` from `~/.config/agent-orchestrator/jwt-secret` on the VM
-   or the equivalent path on the legacy host).
+3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` from `~/.config/agent-orchestrator/jwt-secret` on the VM or
+   the equivalent path on the legacy host).
 
 Per-backend bootstrap: each backend has its own `data/config/users.json` — you authenticate against whichever backend
 the dropdown selected. Adding Ikenna as a user on Harsh's backend (so Ikenna can see Harsh's slots) requires Harsh to
@@ -99,7 +100,8 @@ cd dashboard && npm run dev &  # opens http://localhost:5173
 2. Pick a slot ID (e.g. 5), role (`worker` / `main` / `monitor` / etc.), model (`sonnet` / `opus` / `haiku`).
 3. (Optional) preview the rendered boot prompt — dashboard fetches via `GET /api/spawn/preview?slot_id=<N>&...`.
 4. Click **Spawn**. Backend:
-   - Runs pre-spawn dirty-state gate; if dirty, returns 409 with per-repo manifest + offers `dirty_state_resolution=stash`
+   - Runs pre-spawn dirty-state gate; if dirty, returns 409 with per-repo manifest + offers
+     `dirty_state_resolution=stash`
    - `tmux new-session -d -s orch-slot-<N> -c .tabs/<N>/ claude --dangerously-skip-permissions --model <X>`
    - Auto-dismisses workspace-trust prompt (Enter) + bypass-permissions warning (`2`)
    - Pastes the boot prompt via `tmux load-buffer` + `tmux paste-buffer` + Enter
@@ -275,13 +277,13 @@ curl -sS -X POST http://localhost:8026/api/conditions/data-schema-shipped \
 All 5 are live on the Ikenna VM backend. The original plan + per-phase commit shas are in
 [`plans/active/agent_reliability_mitigations_2026_05_20.md`](../../plans/active/agent_reliability_mitigations_2026_05_20.md).
 
-| # | Mitigation | Surface | What it does |
-| --- | --- | --- | --- |
-| 1 | Mirror-failure → orchestrator alert | `POST /api/mirror-events` (public webhook) + `GET /api/mirror-events` + `POST /api/mirror-events/<id>/ack` | `.github/workflows/tab-mirror-to-ldr.yml` POSTs every outcome to the orchestrator. Skip/race-lost surface as alerted=true so the dashboard can show "LDR mirror blocked on `<repo>@<sha>`" instead of work sitting orphaned on a tab branch |
-| 2 | Pre-spawn dirty-state gate | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes |
-| 3 | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim` | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership |
-| 4 | Heartbeat in-flight files | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files` | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP |
-| 5 | On-demand artifact pattern | `.tabs/<N>/` code-only; venvs / node_modules built on first need | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern" |
+| #   | Mitigation                          | Surface                                                                                                    | What it does                                                                                                                                                                                                                                |
+| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Mirror-failure → orchestrator alert | `POST /api/mirror-events` (public webhook) + `GET /api/mirror-events` + `POST /api/mirror-events/<id>/ack` | `.github/workflows/tab-mirror-to-ldr.yml` POSTs every outcome to the orchestrator. Skip/race-lost surface as alerted=true so the dashboard can show "LDR mirror blocked on `<repo>@<sha>`" instead of work sitting orphaned on a tab branch |
+| 2   | Pre-spawn dirty-state gate          | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux                                           | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes                                                                  |
+| 3   | Per-agent `.agent-claim` file       | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim`                                                  | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership                                                                  |
+| 4   | Heartbeat in-flight files           | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files`                                   | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP                                                                 |
+| 5   | On-demand artifact pattern          | `.tabs/<N>/` code-only; venvs / node_modules built on first need                                           | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern"                                                      |
 
 ## Two-operator coordination — Ikenna VM ↔ Harsh laptop
 
@@ -290,14 +292,14 @@ SPA + the dashboard's backend dropdown let either operator switch perspective. T
 backends — each is authoritative for its own slot fleet. Cross-side coordination happens at the **plan layer**, not the
 runtime state layer.
 
-| Concern | Mechanism |
-| --- | --- |
-| Whose slot is whose? | Ikenna's slots live on the EC2 VM (`api.agent-orchestrator.odum-research.com`); Harsh's slots live on his laptop backend (`orch.epiphanytechnologies.com`). Slot IDs CAN collide between sides — there is no global slot ID space. Per Harsh's 2026-05-20 fleet topology: slots 1-20 = main agents (PM-only worktrees), slots 21-30 = workers (all 25 repos) — see `feat(worktrees): role-encode slot branches` in PM (200bbe774) |
-| Branch naming | Role-encoded prefix per `setup-tab-worktrees.sh` (200bbe774): `tab/${OPERATOR}m/<N>` for main (e.g. `tab/hkm/3`), `tab/${OPERATOR}/<N>` for worker (e.g. `tab/hk/21`). Ikenna picks his own prefixes — currently `tab/ikenna/<N>` legacy, migrating to role-encoded form |
-| Both backends visible from dashboard | `data/config/backends.json` in each backend's repo declares the cross-side URLs. Dashboard dropdown shows both; clicking switches the API the SPA talks to. Login is per-backend — see § "How to log in" |
-| Cross-side pings (work coordination) | Workspace-shared `plans/active/_agent_pings.md` (Ikenna ↔ Harsh, persistent until both ack). Per-slot pings stay intra-side under `<side>_orchestrator/pings/slot_<N>.md` |
-| Daily work-split | Each operator owns `plans/active/work_split_<YYYY_MM_DD>_<side>.md`. Slot 1 main on each side is authoritative for its own work-split; cross-side handoffs via pings |
-| Mirror events (cross-side via shared LDR) | `.github/workflows/tab-mirror-to-ldr.yml` runs in every repo; both operators' pushes to `tab/**` cascade through. Mirror events from either side land in **both** orchestrator backends if both are reachable (each repo POSTs to the SSOT webhook URL `https://api.agent-orchestrator.odum-research.com/api/mirror-events` — Harsh's backend currently doesn't accept; see Open Items) |
+| Concern                                   | Mechanism                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Whose slot is whose?                      | Ikenna's slots live on the EC2 VM (`api.agent-orchestrator.odum-research.com`); Harsh's slots live on his laptop backend (`orch.epiphanytechnologies.com`). Slot IDs CAN collide between sides — there is no global slot ID space. Per Harsh's 2026-05-20 fleet topology: slots 1-20 = main agents (PM-only worktrees), slots 21-30 = workers (all 25 repos) — see `feat(worktrees): role-encode slot branches` in PM (200bbe774) |
+| Branch naming                             | Role-encoded prefix per `setup-tab-worktrees.sh` (200bbe774): `tab/${OPERATOR}m/<N>` for main (e.g. `tab/hkm/3`), `tab/${OPERATOR}/<N>` for worker (e.g. `tab/hk/21`). Ikenna picks his own prefixes — currently `tab/ikenna/<N>` legacy, migrating to role-encoded form                                                                                                                                                          |
+| Both backends visible from dashboard      | `data/config/backends.json` in each backend's repo declares the cross-side URLs. Dashboard dropdown shows both; clicking switches the API the SPA talks to. Login is per-backend — see § "How to log in"                                                                                                                                                                                                                          |
+| Cross-side pings (work coordination)      | Workspace-shared `plans/active/_agent_pings.md` (Ikenna ↔ Harsh, persistent until both ack). Per-slot pings stay intra-side under `<side>_orchestrator/pings/slot_<N>.md`                                                                                                                                                                                                                                                        |
+| Daily work-split                          | Each operator owns `plans/active/work_split_<YYYY_MM_DD>_<side>.md`. Slot 1 main on each side is authoritative for its own work-split; cross-side handoffs via pings                                                                                                                                                                                                                                                              |
+| Mirror events (cross-side via shared LDR) | `.github/workflows/tab-mirror-to-ldr.yml` runs in every repo; both operators' pushes to `tab/**` cascade through. Mirror events from either side land in **both** orchestrator backends if both are reachable (each repo POSTs to the SSOT webhook URL `https://api.agent-orchestrator.odum-research.com/api/mirror-events` — Harsh's backend currently doesn't accept; see Open Items)                                           |
 
 ## Deploying SSOT systemd unit changes
 
@@ -312,13 +314,14 @@ bash scripts/install-orchestrator-service.sh --operator ubuntu --restart    # ap
 ```
 
 The install script:
+
 - Substitutes `User=hk` / `/home/hk/` for `--operator <name>` paths
 - Diffs against current installed unit at `/etc/systemd/system/orchestrator.service`
 - `sudo cp` + `daemon-reload`; `--restart` also bounces the service
 - **KillMode=process** in the SSOT means already-spawned workers SURVIVE the restart (tmux sessions persist)
 
-Closes the historical drift footgun: pre-2026-05-20 the VM's installed unit lacked `ReadWritePaths=/tmp`, causing
-every spawn to silently fail. Root-cause + fix tracked in
+Closes the historical drift footgun: pre-2026-05-20 the VM's installed unit lacked `ReadWritePaths=/tmp`, causing every
+spawn to silently fail. Root-cause + fix tracked in
 [`plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md`](../../plans/active/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md).
 
 ## When to escalate

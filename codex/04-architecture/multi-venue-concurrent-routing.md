@@ -31,6 +31,7 @@ asyncio.gather(
 ```
 
 **Imbalance detection**: if one leg succeeds and the other fails, the function:
+
 1. Emits `CONCURRENT_LEG_IMBALANCE` (WARNING) + `CONCURRENT_LEG_CANCEL_UNCONFIRMED` (CRITICAL) structured events.
 2. Marks `spread_id` as blocked in `BlockedSpreadsTracker`.
 3. Persists the blocked set to GCS (`execution_gcs_bucket/blocked_spreads/blocked_spreads.json`).
@@ -62,6 +63,7 @@ class ConcurrentExecutionResult:
 Routes SWAP (DEX) execution across Uniswap V3, Curve, and Balancer.
 
 **Routing algorithm**:
+
 1. Get quotes from all supported DEXs in parallel.
 2. If a single venue has the best effective price with acceptable price impact → single-venue.
 3. If order is large (price impact exceeds threshold) → split across venues to minimise slippage.
@@ -69,10 +71,10 @@ Routes SWAP (DEX) execution across Uniswap V3, Curve, and Balancer.
 
 **Key types**:
 
-| Type | Fields |
-|---|---|
-| `RouteQuote` | `venue, token_in, token_out, amount_in, amount_out, price_impact_bps, fee_rate, gas_estimate` |
-| `OptimizedRoute` | `routes: list[(venue, pct, quote)], total_amount_out, total_price_impact_bps, is_split` |
+| Type             | Fields                                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `RouteQuote`     | `venue, token_in, token_out, amount_in, amount_out, price_impact_bps, fee_rate, gas_estimate` |
+| `OptimizedRoute` | `routes: list[(venue, pct, quote)], total_amount_out, total_price_impact_bps, is_split`       |
 
 **Supported venues** (`SUPPORTED_VENUES`): `UNISWAP_V3` (fee tiers: 100/500/3000/10000 bps), `CURVE`, `BALANCER`.
 
@@ -106,10 +108,9 @@ first leg imbalance → BLOCKED (no further execution on that spread)
 operator clears → UNBLOCKED (execution resumes)
 ```
 
-For venue-level circuit breaking (temporary venue outage → stop routing to that venue), extend
-`BlockedSpreadsTracker` with a venue-keyed blocked set — the GCS persistence pattern composes directly. Per the
-2026-05-20 audit (Group H plan Phase 6), the current pattern is **sufficient for May-23**; venue-level circuit breaking
-is Phase E.1 (post-cutover).
+For venue-level circuit breaking (temporary venue outage → stop routing to that venue), extend `BlockedSpreadsTracker`
+with a venue-keyed blocked set — the GCS persistence pattern composes directly. Per the 2026-05-20 audit (Group H plan
+Phase 6), the current pattern is **sufficient for May-23**; venue-level circuit breaking is Phase E.1 (post-cutover).
 
 ---
 

@@ -35,15 +35,15 @@ PENDING
 
 States (`OrderStatus` StrEnum in `persistent_oms.py`):
 
-| State | Meaning |
-|---|---|
-| `PENDING` | Created in OMS; not yet validated |
-| `VALIDATED` | Passed pre-flight checks; ready to submit |
-| `SUBMITTED` | Sent to venue; awaiting acknowledgement |
+| State            | Meaning                                     |
+| ---------------- | ------------------------------------------- |
+| `PENDING`        | Created in OMS; not yet validated           |
+| `VALIDATED`      | Passed pre-flight checks; ready to submit   |
+| `SUBMITTED`      | Sent to venue; awaiting acknowledgement     |
 | `PARTIAL_FILLED` | Partially executed; outstanding qty remains |
-| `FILLED` | Fully executed |
-| `REJECTED` | Venue rejected the order |
-| `CANCELLED` | Cancelled by operator or algorithm |
+| `FILLED`         | Fully executed                              |
+| `REJECTED`       | Venue rejected the order                    |
+| `CANCELLED`      | Cancelled by operator or algorithm          |
 
 ---
 
@@ -85,12 +85,13 @@ Concrete adapters implement this protocol. Test suites substitute an in-memory a
 with `status=PENDING`. Returns order dict. Callers that provide a deterministic `operation_id` achieve idempotency at
 the persistence layer: a second create with the same `operation_id` will overwrite the first (last-write-wins).
 
-**Status updates** (`update_order_status()`): checks order exists before updating; returns `False` if not found
-(enables safe retry on at-most-once semantics). Carries optional `venue_order_id` and `fills` list.
+**Status updates** (`update_order_status()`): checks order exists before updating; returns `False` if not found (enables
+safe retry on at-most-once semantics). Carries optional `venue_order_id` and `fills` list.
 
 **NautilusTrader reconciliation** (`reconcile_with_nautilus(cache)`): walks `cache.orders_open()` and the OMS store,
-syncing statuses (ACCEPTED→SUBMITTED, FILLED→FILLED, CANCELED→CANCELLED). Returns `{orders_synced, orders_updated,
-orders_missing_in_cache, orders_missing_in_db}`. Called on restart to heal OMS state from NautilusTrader cache.
+syncing statuses (ACCEPTED→SUBMITTED, FILLED→FILLED, CANCELED→CANCELLED). Returns
+`{orders_synced, orders_updated, orders_missing_in_cache, orders_missing_in_db}`. Called on restart to heal OMS state
+from NautilusTrader cache.
 
 ---
 
@@ -98,12 +99,12 @@ orders_missing_in_cache, orders_missing_in_db}`. Called on restart to heal OMS s
 
 `instruction_tracker.py` — maps one instruction to N child orders (multi-leg algorithms).
 
-| Method | Behaviour |
-|---|---|
-| `track_order(instruction_id, order_id)` | Registers child order; sets status=SUBMITTED |
-| `update_fill(order_id, fill_data)` | Appends fill; sets status=FILLED |
-| `get_instruction_orders(instruction_id)` | Returns list of child order_ids (raises KeyError if unknown) |
-| `is_instruction_complete(instruction_id)` | True when ALL child orders are FILLED |
+| Method                                    | Behaviour                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| `track_order(instruction_id, order_id)`   | Registers child order; sets status=SUBMITTED                 |
+| `update_fill(order_id, fill_data)`        | Appends fill; sets status=FILLED                             |
+| `get_instruction_orders(instruction_id)`  | Returns list of child order_ids (raises KeyError if unknown) |
+| `is_instruction_complete(instruction_id)` | True when ALL child orders are FILLED                        |
 
 ---
 
@@ -121,5 +122,5 @@ Used by simpler adapters and test harnesses. Does not implement `OrderPersistenc
 
 The `TransferCoordinator` (Phase 6 new component) reuses the `operation_id`-based pattern from OMS:
 `TransferIntent.idempotency_key` maps 1:1 to `operation_id` in a `TransferPersistenceAdapter`. If the same
-idempotency_key is submitted twice, the second call returns the cached `TransferResult` without re-executing.
-See `codex/04-architecture/transfer-coordinator.md`.
+idempotency_key is submitted twice, the second call returns the cached `TransferResult` without re-executing. See
+`codex/04-architecture/transfer-coordinator.md`.

@@ -7,9 +7,8 @@ last_reviewed: 2026-05-20
 
 ## Overview
 
-`TransferCoordinator` is the **single entry point** for all fund-movement operations in execution-service. It is
-the Phase 6 new component of the Group H plan
-(`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`).
+`TransferCoordinator` is the **single entry point** for all fund-movement operations in execution-service. It is the
+Phase 6 new component of the Group H plan (`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`).
 
 Before this facade, fund movements were fragmented across `transfer_handler.py`, `defi_execution/protocols/*`,
 `defi_execution/hyperliquid_bridge.py`, `v2/handlers.py`, and `algo_library/intent_engine.py` — with no consistent
@@ -31,13 +30,13 @@ clients. `TransferCoordinator` is the final-gate consumer-side enforcement point
 
 ## Routing table
 
-| `TransferIntent.transfer_type` | Downstream handler |
-|---|---|
-| `CEX_WITHDRAW` | `adapters/order_adapter.py` venue withdraw |
-| `DEFI_DEPOSIT` | `defi_execution/protocols/<protocol>/deposit()` |
-| `DEFI_WITHDRAW` | `defi_execution/protocols/<protocol>/withdraw()` |
-| `BRIDGE` | `v2/handlers.py` `BridgeHandler` |
-| `SUBACCOUNT_MOVE` | NEW — Binance + OKX only; `NotSupportedError` for all others with named successor `subaccount_transfers_phase_2_2026_06_01.md` |
+| `TransferIntent.transfer_type` | Downstream handler                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `CEX_WITHDRAW`                 | `adapters/order_adapter.py` venue withdraw                                                                                     |
+| `DEFI_DEPOSIT`                 | `defi_execution/protocols/<protocol>/deposit()`                                                                                |
+| `DEFI_WITHDRAW`                | `defi_execution/protocols/<protocol>/withdraw()`                                                                               |
+| `BRIDGE`                       | `v2/handlers.py` `BridgeHandler`                                                                                               |
+| `SUBACCOUNT_MOVE`              | NEW — Binance + OKX only; `NotSupportedError` for all others with named successor `subaccount_transfers_phase_2_2026_06_01.md` |
 
 ---
 
@@ -86,14 +85,14 @@ UAC types (`TransferIntent` + `TransferResult`) defined in slot 5 Phase 1 — pr
 
 Phase 6 wraps the pre-existing execution-service surfaces to close each BLOCKING gap from the retroactive audit:
 
-| Gap | Pre-existing surface | TransferCoordinator fix |
-|---|---|---|
-| CEX withdrawal destination unvalidated | `transfer_handler.py:330` | Validates `to_address` against `client_id` wallet registry before delegating |
-| DeFi protocol methods lack `client_id` | `defi_execution/protocols/*.py` (aave, karak, yearn, idle, morpho, puffer) | Validates connector's wallet is in `client_id` wallet set before calling `deposit()`/`withdraw()` |
-| Bridge bare destination address | `defi_execution/hyperliquid_bridge.py:84,173` | Adds `client_id` validation before posting; raises `CrossClientTransferForbiddenError` on mismatch |
-| BridgeHandler no client enforcement | `v2/handlers.py:265` | Verifies BridgeInstructionV2's source/dest client match before returning `ActionHandlerResult` |
-| Intent engine `client_id` not in ExecutionSteps | `algo_library/intent_engine.py:495` | Propagates `client_id` through Intent dataclass + all `ExecutionStep` objects |
-| `assert_client_allowed` only at bus layer | `isolation_policy.py:80` | Called at TransferCoordinator entry (step 2 above) before any account data access |
+| Gap                                             | Pre-existing surface                                                       | TransferCoordinator fix                                                                            |
+| ----------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| CEX withdrawal destination unvalidated          | `transfer_handler.py:330`                                                  | Validates `to_address` against `client_id` wallet registry before delegating                       |
+| DeFi protocol methods lack `client_id`          | `defi_execution/protocols/*.py` (aave, karak, yearn, idle, morpho, puffer) | Validates connector's wallet is in `client_id` wallet set before calling `deposit()`/`withdraw()`  |
+| Bridge bare destination address                 | `defi_execution/hyperliquid_bridge.py:84,173`                              | Adds `client_id` validation before posting; raises `CrossClientTransferForbiddenError` on mismatch |
+| BridgeHandler no client enforcement             | `v2/handlers.py:265`                                                       | Verifies BridgeInstructionV2's source/dest client match before returning `ActionHandlerResult`     |
+| Intent engine `client_id` not in ExecutionSteps | `algo_library/intent_engine.py:495`                                        | Propagates `client_id` through Intent dataclass + all `ExecutionStep` objects                      |
+| `assert_client_allowed` only at bus layer       | `isolation_policy.py:80`                                                   | Called at TransferCoordinator entry (step 2 above) before any account data access                  |
 
 ---
 
@@ -101,16 +100,24 @@ Phase 6 wraps the pre-existing execution-service surfaces to close each BLOCKING
 
 Per `codex/04-architecture/client-funds-isolation.md` HARD RULE:
 
-1. **Intra-client happy path** — USDC → Aave deposit, same `client_id` on source + dest; verifies `TransferResult.status = CONFIRMED`.
-2. **UAC validator rejects cross-client at construction** — `TransferIntent` construction with mismatched `client_id` fails schema validation.
-3. **Defence-in-depth** — `TransferCoordinator` rejects cross-client intent at consume time even if UAC validator is bypassed (mock UAC validator to pass; confirm coordinator still raises).
+1. **Intra-client happy path** — USDC → Aave deposit, same `client_id` on source + dest; verifies
+   `TransferResult.status = CONFIRMED`.
+2. **UAC validator rejects cross-client at construction** — `TransferIntent` construction with mismatched `client_id`
+   fails schema validation.
+3. **Defence-in-depth** — `TransferCoordinator` rejects cross-client intent at consume time even if UAC validator is
+   bypassed (mock UAC validator to pass; confirm coordinator still raises).
 4. **Alert assertion** — `CrossClientTransferForbiddenError` raises AND structured alert event is emitted.
-5. **CEX withdrawal destination validation** — `to_address` not in `client_id` wallet registry → raises before any CEX RPC.
-6. **DeFi connector wallet validation** — connector's wallet not in `client_id` wallet set → raises before `deposit()`/`withdraw()`.
+5. **CEX withdrawal destination validation** — `to_address` not in `client_id` wallet registry → raises before any CEX
+   RPC.
+6. **DeFi connector wallet validation** — connector's wallet not in `client_id` wallet set → raises before
+   `deposit()`/`withdraw()`.
 7. **Bridge destination validation** — `destination_address` not in `client_id` wallet set → raises before bridge RPC.
-8. **Intent engine client_id propagation** — `_decompose_bridge()` produces `ExecutionStep` objects each carrying `client_id`.
-9. **assert_client_allowed at operation layer** — mock process-bound `client_id = A`; submit intent with `client_id = B` → `CrossClientEventError` raised.
-10. **Idempotency** — same `idempotency_key` submitted twice → second is no-op, returns cached `TransferResult`, no downstream RPC on second call.
+8. **Intent engine client_id propagation** — `_decompose_bridge()` produces `ExecutionStep` objects each carrying
+   `client_id`.
+9. **assert_client_allowed at operation layer** — mock process-bound `client_id = A`; submit intent with `client_id = B`
+   → `CrossClientEventError` raised.
+10. **Idempotency** — same `idempotency_key` submitted twice → second is no-op, returns cached `TransferResult`, no
+    downstream RPC on second call.
 
 ---
 

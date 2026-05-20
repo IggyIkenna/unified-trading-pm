@@ -10,8 +10,8 @@ last_reviewed: 2026-05-20
 Execution-service is **always isolated** — one process per client, enforced at the platform level. Per-client venue API
 keys, rate limits, entitlements, and order-flow confidentiality cannot be safely multiplexed in a single process.
 
-SSOT: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` § Phase 6.
-Cross-reference: `codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different clients.
+SSOT: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` § Phase 6. Cross-reference:
+`codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different clients.
 
 **For May-23 2-client launch**: existing pattern is correct. No code change required. Deployment-api fans out one
 execution-service process per client_id (Odum Research UK + defi-client-1).
@@ -34,17 +34,17 @@ deployment-api
 
 ### Layer 1 — topology (deployment-api)
 
-`runtime-topology.yaml` sets `isolation_policies.execution-service.default = isolated` and
-`allowed = [isolated]`. Deployment-api's runtime_profile fan-out creates one process per `client_id`, injecting
-`CLIENT_ID` as an env var. A shared execution-service process is topology-impossible.
+`runtime-topology.yaml` sets `isolation_policies.execution-service.default = isolated` and `allowed = [isolated]`.
+Deployment-api's runtime_profile fan-out creates one process per `client_id`, injecting `CLIENT_ID` as an env var. A
+shared execution-service process is topology-impossible.
 
 ### Layer 2 — process binding (`isolation_policy.py:1-80`)
 
-| Function | Behaviour |
-|---|---|
-| `get_my_isolation_policy()` | Reads `runtime-topology.yaml` via `get_isolation_policy("execution-service")`. Cached after first call. |
-| `get_bound_client_id()` | Returns `CLIENT_ID` env var. `None` when unset (test / non-isolated mode). |
-| `assert_client_allowed(client_id)` | In ISOLATED mode: raises `CrossClientEventError` if `client_id ≠ bound`. No-op in non-isolated mode. |
+| Function                               | Behaviour                                                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `get_my_isolation_policy()`            | Reads `runtime-topology.yaml` via `get_isolation_policy("execution-service")`. Cached after first call.                                    |
+| `get_bound_client_id()`                | Returns `CLIENT_ID` env var. `None` when unset (test / non-isolated mode).                                                                 |
+| `assert_client_allowed(client_id)`     | In ISOLATED mode: raises `CrossClientEventError` if `client_id ≠ bound`. No-op in non-isolated mode.                                       |
 | `load_client_venue_credentials(venue)` | Fetches `clients/<client_id>/<venue>/api_key` (+ `api_secret`) from Secret Manager. Raises `MissingClientBindingError` if CLIENT_ID unset. |
 
 ### Layer 3 — bus layer (`trigger.py:34`)
@@ -69,8 +69,8 @@ hardcoded path. Logs `CLIENT_VENUE_CREDENTIALS_LOADED client_id=... venue=... ha
 ## Cross-client transfer enforcement
 
 `assert_client_allowed()` covers incoming event-bus instructions but does NOT cover fund-movement operations that
-construct cross-client transfers via metadata (CEX withdrawal destination, DeFi protocol connector wallet,
-bridge destination address). These gaps are documented in
+construct cross-client transfers via metadata (CEX withdrawal destination, DeFi protocol connector wallet, bridge
+destination address). These gaps are documented in
 `plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md` and closed by the
 `TransferCoordinator` facade (Phase 6 new component — see `codex/04-architecture/transfer-coordinator.md`).
 

@@ -19,13 +19,14 @@ Output:
     - Recommendations for migration priority
 """
 
+from __future__ import annotations
+
 import ast
 import json
 import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from __future__ import annotations
 
 
 @dataclass
@@ -246,7 +247,7 @@ def analyze_imports(imports: list[ImportInfo]) -> dict[str, object]:
 
 
 def generate_recommendation(
-    service_name: str, direct_imports: Dict, ucs_imports: Dict, fallback_patterns: List, storageclient_issues: List
+    service_name: str, direct_imports: dict, ucs_imports: dict, fallback_patterns: list, storageclient_issues: list
 ) -> tuple[str, int]:
     """Generate migration recommendation and tier assignment."""
     # Count split library usage

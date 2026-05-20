@@ -99,7 +99,7 @@ def test_count_skips_plain_string_docstring_with_uri_example(tmp_path: Path) -> 
             Example call:
                 resolve_bucket_uri(cloud="gcp", kind="market-data", path="x")
             """
-            from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_uri
+            from unified_trading_library import resolve_bucket_uri
             return resolve_bucket_uri(cloud="gcp", kind="market-data", path=path, asset_group="cefi")
         ''',
     )
@@ -116,7 +116,7 @@ def test_count_skips_fstring_docstring_containing_uri(tmp_path: Path) -> None:
 
             Prefer resolve_bucket_uri() over building the URI directly.
             """
-            from unified_trading_library.cloud_interface.bucket_naming import resolve_bucket_uri
+            from unified_trading_library import resolve_bucket_uri
             return resolve_bucket_uri(cloud="gcp", kind="market-data", path=path, asset_group="cefi")
         ''',
     )

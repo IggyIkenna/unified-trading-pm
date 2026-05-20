@@ -1,4 +1,5 @@
-violation_count: 0
+violation_count: 1
 rule: runbook-execution-owner-ssot
 source: "CLAUDE.md \xA7 'Runbook Execution-Owner SSOT (HARD RULE)'"
-baseline_files: []
+baseline_files:
+  - unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md

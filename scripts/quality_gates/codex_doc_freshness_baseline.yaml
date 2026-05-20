@@ -1,6 +1,29 @@
-violation_count: 0
+violation_count: 12
 rule: codex-doc-freshness
-source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
-  governance_qg_automation_gaps_post_cutover_2026_05_12.md\
+source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' + governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
-baseline_files: []
+baseline_files:
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/02-data/data-pipeline-correctness-hard-rule.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/02-data/scenario-overlay-semantics.md
+  reason: no-last_reviewed-field
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/04-architecture/client-funds-isolation.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/04-architecture/instruments-service-as-ssot-for-mtds.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/04-architecture/scenario-outcome-assertions.md
+  reason: no-last_reviewed-field
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/04-architecture/trading-agent-service-directive-pipeline.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/05-infrastructure/agent-orchestrator-deploy.md
+  reason: no-last_reviewed-field
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/05-infrastructure/agent-orchestrator-slack-notifications.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/05-infrastructure/gcs-object-operations.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/05-infrastructure/manifest-consolidator-ssot.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/11-project-management/foundation-completion-gate-discipline.md
+  reason: no-frontmatter
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/7/unified-trading-pm/codex/11-project-management/issue-doc-lifecycle.md
+  reason: no-frontmatter

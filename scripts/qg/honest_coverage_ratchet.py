@@ -29,7 +29,7 @@ _REGRESSION_THRESHOLD = 0.005  # 0.5 percentage points
 def _load_snapshot(bucket: str, snapshot_date: str) -> dict[str, float] | None:
     """Load coverage snapshot from GCS. Returns None if not found."""
     try:
-        from unified_trading_library.cloud_interface import get_storage_client
+        from unified_trading_library import get_storage_client
 
         client = get_storage_client()
         path = f"_index/snapshots/honest_coverage/{snapshot_date}.json"
@@ -44,7 +44,7 @@ def _load_snapshot(bucket: str, snapshot_date: str) -> dict[str, float] | None:
 
 def _save_snapshot(bucket: str, snapshot_date: str, data: dict[str, float]) -> None:
     try:
-        from unified_trading_library.cloud_interface import get_storage_client
+        from unified_trading_library import get_storage_client
 
         client = get_storage_client()
         path = f"_index/snapshots/honest_coverage/{snapshot_date}.json"
@@ -81,8 +81,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--service", required=True)
     parser.add_argument("--asset-group", default=None)
     parser.add_argument("--threshold", type=float, default=_REGRESSION_THRESHOLD)
-    parser.add_argument("--skip-on-no-gcs", action="store_true",
-                        help="Exit 0 (skip) if GCS unavailable (local dev mode)")
+    parser.add_argument(
+        "--skip-on-no-gcs", action="store_true", help="Exit 0 (skip) if GCS unavailable (local dev mode)"
+    )
     args = parser.parse_args(argv)
 
     today = date.today().isoformat()
@@ -103,7 +104,9 @@ def main(argv: list[str] | None = None) -> int:
 
     prior = _load_snapshot(args.bucket, yesterday)
     if prior is None:
-        print(f"INFO: no prior snapshot for {yesterday} in {args.bucket}; saving baseline and skipping regression check.")
+        print(
+            f"INFO: no prior snapshot for {yesterday} in {args.bucket}; saving baseline and skipping regression check."
+        )
         _save_snapshot(args.bucket, today, current)
         return 2
 
