@@ -304,13 +304,21 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 | Drift coverage | Manifest shows captured (2020→2025-01-08) + empty_confirmed (2025-01-09→today, reason=EXPECTED_PAST_SOURCE_COVERAGE_END) | Sample query post-Phase-5 backfill | TBD |
 | solana-defi schema v8 | `schema_version` column = 8 in manifest | `gsutil cp ... + pandas check` | TBD |
 
+## Deferred work after 2026-05-20 slot-5 session
+
+| Item | Status | Blocking? | Next action |
+|---|---|---|---|
+| `solana_defi_handler.py` (remaining): `_collect_drift` IS-bypass (~line 419) + `_PHOENIX_PAIRS` | Open P0 | No (QG passes, contract enforced) | Next slot: replace `_collect_drift` with IS catalogue call; remove `_PHOENIX_PAIRS` |
+| Staking handlers (`lst_rates_handler`, `native_staking_handler`, `staking_yields_handler`, `solana_lst_archival`) | BLOCKED-OPERATOR-DECISION | Awaiting operator direction on live API URL architecture | Operator ack → next slot implements |
+| Phase 4: v4→v8 migration execution | BLOCKED-VM | Needs GCS `gs://solana-defi-*` write access + running VM | Operator runs: `python scripts/migrate_solana_defi_v4_to_v8.py --apply --confirm` |
+| Phase 5: Drift S3 + IS backfill re-run | BLOCKED-VM (gated on Phase 4) | Needs VM + GCS access | After Phase 4 |
+| Phase 6: coverage verification | BLOCKED (gated on Phase 5) | - | After Phase 5 |
+
 ## Temporary states + their canonical follow-up plans
 
-- Drift handler continues running silently (no manifest emission) until Phase 3 ships.
-  Mitigation: deleted the running Drift VM at 2026-05-19. New Drift VMs SHALL NOT launch
-  until Phase 3 ships.
-- solana-defi bucket on v4 until Phase 4. Downstream consumers reading from this bucket
-  should be aware (none currently — bucket is write-mostly).
+- Drift handler `_DRIFT_S3_BASE` constant removed (Phase 3 shipped MTDS@3a43979). Drift backfill
+  re-run (Phase 5) awaits Phase 4 migration first.
+- solana-defi bucket on v4 until Phase 4 executes. Downstream consumers: none currently (write-mostly).
 
 ## Scope: all phases pre-May-23 (operator directive 2026-05-20)
 
