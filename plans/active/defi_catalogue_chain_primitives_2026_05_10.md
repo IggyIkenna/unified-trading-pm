@@ -1528,6 +1528,10 @@ repos via 4 sub-agents (3 Phase-2 INSTR + 1 Phase-3 MTDS) + 4 main-thread shippa
 - ✅ All 4 Phase-2 deferred adapters: instruments-service unit tests 122/122 pass; end-to-end factory smoke 15/15
   chain-parse cases pass; basedpyright clean on new files.
 - ✅ Rocket Pool MTDS adapter: 16/16 unit tests pass (offline; no real Alchemy/AAVE calls).
+- ✅ Phase 7J test fix (2026-05-20, slot 8): 13 TestFreshnessSkip tests in 6 handler test files were using
+  `is_now_captured` mock (draft API) instead of `is_now_skip_worthy` (Phase 7J final API). Fixed across
+  test_dex_pools_handler / test_dex_swaps_handler / test_liquidations_handler / test_gas_fee_handler /
+  test_lending_indices_handler / test_perp_funding_handler → 22 tests now passing — MTDS@db85e77.
 - ✅ archetype-state yaml entry: factory smoke
   (`resolve_bucket_name(cloud="gcp", kind="archetype-state", asset_group="defi")`) returns the env-tiered template;
   pending operator bucket provisioning (deferred above).

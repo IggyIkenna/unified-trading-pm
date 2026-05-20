@@ -1340,3 +1340,25 @@ my worktree and Phase 3 is pulled).
 - Available for next dispatch
 
 — slot 8
+
+---
+
+## [slot 8] 2026-05-20 — Phase 7J TestFreshnessSkip test fix (13 → 0 failures)
+
+**Context**: QG on MTDS showed 13 FAILED tests in 6 TestFreshnessSkip classes. Root cause: Phase 7J handlers
+call `freshness_cache.is_now_skip_worthy()` but the tests were mocking `is_now_captured` (draft API name from
+before Phase 7J finalised the method name). MagicMock's `is_now_skip_worthy` attribute returns truthy MagicMock()
+by default, causing all handlers to skip every shard → call_count assertions fail.
+
+**Fix**: Replaced all `is_now_captured` with `is_now_skip_worthy` in 6 test files:
+- `test_dex_pools_handler.py`, `test_dex_swaps_handler.py`, `test_liquidations_handler.py`
+- `test_gas_fee_handler.py`, `test_lending_indices_handler.py`, `test_perp_funding_handler.py`
+
+**Result**: 22 tests pass (was 13 failed). MTDS@db85e77. Plan annotated: defi_catalogue_chain_primitives Phase 7J.
+
+**Current slot 8 state**:
+- Phase 7J test fix: ✅ DONE (MTDS@db85e77, 2026-05-20)
+- Phase 5+9+10 strategy codex: BLOCKED on slot 7 Phase 8A
+- Available for next dispatch — polling remote for new work
+
+— slot 8
