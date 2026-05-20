@@ -171,17 +171,22 @@ follow-throughs.
 ## Catalog axis (slot labels)
 
 ```
-CARRY_STAKED_BASIS@{staking_protocol}-{perp_venue}-f100-usdc-1h-usdc-v2-prod
+CARRY_STAKED_BASIS@{staking_protocol}-{perp_venue}-f{pct}-{stable}-1h-{stable}-v2-prod
 
-Examples (2026-05-05):
-  CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod
-  CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod
+Active slots (2026-05-20, post-Stream A):
+  CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod        # JitoSOL / DRIFT (Solana)
+  CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod    # mSOL / DRIFT (Solana)
+  CARRY_STAKED_BASIS@lido-deribit-f100-usdc-1h-usdc-v2-prod      # stETH / DERIBIT (ETH)
+  CARRY_STAKED_BASIS@lido-bybit-f100-usdt-1h-usdt-v2-prod        # stETH / BYBIT UTA (ETH, USDT margin)
 ```
 
-**Pre-2026-05-07:** 2 slots (DRIFT/JitoSOL + DRIFT/mSOL). **Post-Stream A flip:** ~7 slots once Deribit/stETH +
-Bybit/stETH + Bybit/METH + OKX/wstETH (haircut-verified per Stream A live probe) land. `f` is fixed at `100` (= 1.0)
-because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no spare USDC bucket. Built by
-`_build_carry_staked_basis` in
+Note: the stable token differs per venue — USDC for DRIFT/DERIBIT, USDT for BYBIT UTA. This is resolved via
+`_resolve_start_token(perp_venue, lst_asset)` in catalog.py.
+
+**Pre-2026-05-07:** 2 slots (DRIFT/JitoSOL + DRIFT/mSOL). **Post-Stream A (2026-05-20):** 4 slots live (+ Deribit/stETH
++ Bybit/stETH). Expected expansion to ~7 once OKX/wstETH + Bybit/METH haircut-verified per Stream A live probe. `f` is
+fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure: the LST IS the perp margin, no spare USDC
+bucket. Built by `_build_carry_staked_basis` in
 [`strategy-service/.../target_universe/catalog.py`](../../../../strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py)
 from the matrix at module import — slot expansion is automatic once the matrix entries flip to `accepted=True`.
 

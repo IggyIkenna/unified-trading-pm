@@ -140,10 +140,33 @@ allowed_chains: [ethereum, arbitrum, solana, base, optimism]
 share_class: USD
 ```
 
-### Variant B — Funding-rate dispersion (not yet implemented; placeholder)
+### Variant B — Funding-rate dispersion
 
-Uses paired positions on two perp venues to capture funding-rate spread. Config shape TBD when implemented.
-Relevant on-chain perp venues: Drift (solana) + Hyperliquid (hyperliquid_l1).
+Uses paired long/short positions across perp venues to capture funding-rate spread.
+Engine: `price_dispersion._on_tick_funding_rate_dispersion()` + `funding_rate_dispersion.py`
+(VenuePair, PairSelectionMode, VolCapClampConfig). Fully implemented as of 2026-05-20.
+
+Venue universe (May-23): bybit, deribit, binance, okx, hyperliquid, aster (6 CeFi perps).
+Pair selection: `dynamic-best-long-short` (PairSelectionMode) — ranks all venue pairs by
+funding spread net of cost, takes the best long venue vs best short venue each tick.
+
+Key params:
+```
+dispersion_type: "funding-rate-dispersion"
+venue_universe: "bybit,deribit,binance,okx,hyperliquid,aster"
+pair_selection_mode: "dynamic-best-long-short"
+target_leverage: "5.0"
+vol_cap_clamp_feature: "realized_vol_20"
+vol_cap_clamp_threshold_pct: "80.0"
+vol_cap_clamp_zscore_feature: "vol_regime_zscore_20"
+vol_cap_clamp_zscore_threshold: "2.0"
+vol_cap_clamp_combine: "any"
+cost_bps: "10"
+```
+
+Catalog slots (catalog.py `_build_arbitrage_price_dispersion`):
+- `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`
+- `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod`
 
 ## Execution semantics
 
@@ -188,46 +211,49 @@ def react_to_equity_change(new_equity):
 
 ## Example instances
 
+Active catalog slots (2026-05-20, from `catalog.py _build_arbitrage_price_dispersion`):
+
 ```
-Sports cross-book via Unity:
-  ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod
-  ARBITRAGE_PRICE_DISPERSION@unity-nba-moneyline-usd-prod
-  ARBITRAGE_PRICE_DISPERSION@unity-champions-league-1x2-usd-prod
+Lending protocol arb (same chain, different protocols):
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-ethereum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-ethereum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-optimism-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-optimism-usdc-1h-usdc-v2-prod
 
-DEX (single chain, flash-loan optional):
-  ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-ethereum-prod
-  ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-arbitrum-prod
+Cross-chain yield arb (same protocol, different chains):
+  ARBITRAGE_PRICE_DISPERSION@aave-ethereum-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-ethereum-optimism-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-arbitrum-base-usdc-1h-usdc-v2-prod
 
-Cross-CEX:
-  ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-usdt-prod
-  ARBITRAGE_PRICE_DISPERSION@cross-cex-eth-usdt-prod
+CEX-CEX spot/perp spread arb:
+  ARBITRAGE_PRICE_DISPERSION@binance-okx-btc-1m-usdt-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@binance-bybit-eth-1m-usdt-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@okx-hyperliquid-sol-1m-usdt-v2-prod
 
-Cross-venue vol:
-  ARBITRAGE_PRICE_DISPERSION@deribit-okx-btc-vol-usdt-prod
-  ARBITRAGE_PRICE_DISPERSION@deribit-okx-eth-vol-usdt-prod
+Sports cross-book arb:
+  ARBITRAGE_PRICE_DISPERSION@unity-betfair-matchbook-epl-gbp-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@unity-betfair-matchbook-nba-gbp-v2-prod
 
-Within-surface no-arb:
-  ARBITRAGE_PRICE_DISPERSION@deribit-btc-surface-noarb-usdt-prod
-  ARBITRAGE_PRICE_DISPERSION@deribit-eth-surface-noarb-usdt-prod
+Prediction market arb:
+  ARBITRAGE_PRICE_DISPERSION@polymarket-betfair-sports-gbp-v2-prod
 
-Cross-category:
-  ARBITRAGE_PRICE_DISPERSION@polymarket-unity-elections-usdc-prod
-  ARBITRAGE_PRICE_DISPERSION@polymarket-unity-sports-usdc-prod
+Cross-venue dated futures arb (CME micro vs Deribit, same expiry):
+  ARBITRAGE_PRICE_DISPERSION@cme-deribit-mbt-btc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@cme-deribit-met-eth-1h-usdc-v2-prod
+```
 
-Funding-rate dispersion:
-  ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
+Funding-rate dispersion slots live in the legacy-factory bridge (`archetype_slot_resolver.py`) not in the
+catalog — see Variant B above for labels and config.
 
-Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short — Stream B 2026-05-07):
+Bridge slots (2026-05-20, from `archetype_slot_resolver.py STRATEGY_TYPE_TO_SLOT`):
+```
   ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
   ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod
-  # config (operator-confirmed 2026-05-09; dispersion_type = "funding-rate-dispersion"):
-  #   venue_universe         = [bybit, deribit, binance, okx, hyperliquid, aster]
-  #   venue_selection_mode   = dynamic-best-long-short  (per funding cycle, ~8h)
-  #   target_leverage        = 5.0
-  #   vol_cap_clamp_feature  = realized_vol_20 (1h candles)
-  #   vol_cap_clamp_threshold_pct = 80.0  OR  vol_regime_zscore_20 > 2.0
-  #   bidirectional_funding  = true
-  #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
+  ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-sol-usdt-v5-prod
+  # + XRP, DOGE, BNB, ADA, AVAX (4-venue), TRX (3-venue)
+  # Reached via resolve_strategy_type("BTC_FUNDING_RATE_DISPERSION") etc.
 ```
 
 ## Migration from legacy
