@@ -190,13 +190,16 @@ Phase 0 (✅ DONE)
 
 ### Phase 7 — Codex docs
 
-- [ ] **P0. Update** `codex/02-data/availability-manifest-and-data-status.md` § "Coverage
-      formula" — point to `compute_honest_coverage()` as the SOLE SSOT.
-- [ ] **P0. Add SUPERSEDED banner** to the 3 in-flight plans' inline formula sections
-      pointing here.
-- [ ] **P1. Update** `codex/02-data/honest-absence-downstream-handling.md` § "Reason
-      taxonomy" — note that consumers MUST check the EXPECTED_*/non-EXPECTED_* split when
-      computing coverage, not just `capture_status` alone.
+- [x] **P0. ✅ Update** `codex/02-data/availability-manifest-and-data-status.md` § "Coverage
+      formula" — stale 4-field formula replaced with canonical 5-field `CaptureStatusCounts` +
+      `compute_honest_coverage()` reference + UTL helpers pointer. — `PM@d8cc6a4b`
+- [x] **P0. ✅ Add SUPERSEDED banner** to the 3 in-flight plans' inline formula sections:
+      `writegate_honest_coverage_endtoend_2026_05_06.md` (prose numerator omits empty_confirmed),
+      `data_status_drilldown_shard_atom_alignment_2026_05_07.md` (numerator=captured only),
+      `expected_unattempted_propagation_chain_2026_05_12.md` (counting role unspecified). — `PM@d8cc6a4b`
+- [x] **P1. ✅ Update** `codex/02-data/honest-absence-downstream-handling.md` § "Reason
+      taxonomy" — callout block added: EXPECTED_*/non-EXPECTED_* split required when computing
+      coverage; do NOT roll your own formula. — `PM@d8cc6a4b`
 
 ### Phase 8 — verify on real fleet
 
