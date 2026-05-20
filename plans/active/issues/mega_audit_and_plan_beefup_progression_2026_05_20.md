@@ -237,11 +237,19 @@ are diagnostic outputs, not actionable until phase D digests them).
       `plans/active/` to `plans/audit/`. Re-source remediation P0 todos into
       the beefed `mtds_adapters_preflight_*.md` actionable plan in Phase D.
       **DONE 2026-05-20 slot-2**: `git mv` to `plans/audit/` — PM@8e3755a9d.
-- [ ] **C1–C11.** Spawn one background agent per audit. Each agent reads B1
-      template + A1/A3 outputs for its rows, fills the 4-dim matrix, lands
-      audit doc in `plans/audit/`. Estimate per audit: ~2 calibrated AI-days
-      (template-driven, not from-scratch). Total: ~22 calibrated AI-days,
-      heavily parallelisable across slots.
+- [x] ✅ **C1–C11.** All 11 audits complete — 2026-05-20 slot-4 parallel fan-out.
+      Audit docs in `plans/audit/`:
+      C1 IS→features @badcdfbf9 (7 P0: volatility hardcodes ["BTC","ETH"]; 3 families zero manifest emission; QG 5.70 not wired)
+      C2 IS→strategy @66c8a2945 (4 P0: gcs_storage_service.py zero manifest emission; discover_instruments() swallows GCS exceptions)
+      C3 IS→execution @c10dc85ec (3 P0: 13 inline bucket f-strings; Deribit tick_size from live API)
+      C4 MTDS→features @e00b2393d (6 P0: zero MTDS manifest preflight in ALL 9 feature families; perp_funding schema drift root in MTDS)
+      C5 MTDS→strategy @a0ba688fe (3 P0: zero manifest emission on both batch+live write paths; no layering violation confirmed)
+      C6 features→strategy @e00b2393d (5 P0: APD engine re-derives spread from raw per-leg data — paired_price_dispersion produced but unconsumed)
+      C7 strategy→execution @8caad3987 (4 P0: silent cascade — strategy zero emission + execution zero emission = no trades, no alert)
+      C8 execution→venue @e93f740ee (2 P0: 7 CCXT adapters missing classify_venue_error — RETRY/SKIP routing broken for May-23 DeFi hedge leg)
+      C9 All→UAC @b556fc5cb (9 P0: execution-service+IS-service UAC_CANONICAL_EXEMPT=true QG bypass; 49 prod deep-import violations)
+      C10 All→UTL @ca33e1933 (4 P0: deployment-api zero ServiceBootstrap; execution live-path legacy ManifestWriter.add())
+      C11 orchestrator→all @ca33e1933 (0 P0: clean; port mismatch 8765 vs 8026; CORS missing prod domain)
 
 ### Phase D — Plan beef-up (post-C, the actionable output)
 
