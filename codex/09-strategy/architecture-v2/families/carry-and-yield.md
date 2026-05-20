@@ -169,10 +169,11 @@ Basis dated:
   CARRY_BASIS_DATED@cme-cl-front-curve-usd-prod      (oil front vs second month)
   CARRY_BASIS_DATED@deribit-btc-quarterly-usdt-prod
 
-Staked basis:
-  CARRY_STAKED_BASIS@lido-aave-hyperliquid-eth-prod
-  CARRY_STAKED_BASIS@rocketpool-aave-binance-eth-prod
-  CARRY_STAKED_BASIS@jito-kamino-drift-sol-prod
+Staked basis (active 2026-05-20, from catalog.py _build_carry_staked_basis):
+  CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod     # JitoSOL × DRIFT (Solana)
+  CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod # mSOL × DRIFT (Solana)
+  CARRY_STAKED_BASIS@lido-deribit-f100-usdc-1h-usdc-v2-prod   # stETH × DERIBIT (ETH, USDC)
+  CARRY_STAKED_BASIS@lido-bybit-f100-usdt-1h-usdt-v2-prod     # stETH × BYBIT UTA (ETH, USDT)
 
 Recursive staked:
   CARRY_RECURSIVE_STAKED@lido-aave-eth-prod          (ETH on Ethereum)
