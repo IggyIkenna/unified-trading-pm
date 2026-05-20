@@ -718,3 +718,5 @@ S1-S15 items remain as previously flipped. Operator directed EOD stop.
 dex_perp_onboarding_handover (6 cal) + gate_3_phantom + trigger_based_reference + hedge_ratio (URGENT deadline 2026-05-21) + small closes + sustain S9-S10 (~11 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 7 — STARTED <first item>` below.
+
+[2026-05-20 07:15 UTC] slot-7 — AUDIT: migrated items 3.C-followup + 3.D still awaiting operator [ack] from 2026-05-19 19:30 UTC ping above. Items tagged BLOCKED-OPERATOR-DECISION in live_pipeline_mtds_mdps_features_2026_05_08.md. Slot-7 session complete: Phase 14 item 2 (replay-subsystem.md codex) SHIPPED (PM@a22aee69). No further agent-doable items in scope — remaining open items are operational (Phase 15 cluster bootstrap) or out-of-scope repos (Phase 9 alerting, Phase 13 deployment-service).
