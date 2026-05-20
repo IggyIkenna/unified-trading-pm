@@ -451,11 +451,12 @@ Pre-audit artifact:
       `gcloud run jobs list` + `gcloud workflows list` → zero resources for all 3 services. AWS confirmed:
       `aws ecs list-services` → no resources. No orphan Terraform-managed resources exist. Destroy is a no-op;
       ARCHIVED.md runbooks remain as documentation but no `terraform destroy` execution needed.
-- [ ] **P1** [AGENT] Phase 5 lifts — `config_reloaders.py` is duplicated 4× (152/112/112/312 LOC, total ~688 LOC) and is
-      a clean UTL `ConfigReloaderBase` candidate. Kill-switch bus subscriber boilerplate is duplicated 4× (~80-100 LOC
-      each) and is a clean UTL `KillSwitchBusSubscriberBase` candidate. Both confirmed by artifact § (f). **UN-DEFERRED
-      2026-05-20 per operator direction** (work_split_2026_05_19_ikenna.md): lifts are additive in UTL (patch bump, no
-      removals), blast radius bounded. Ship as 2 UTL PRs. Slot 5 picks up immediately.
+- [x] ✅ **P1** [AGENT] Phase 5 lifts — `config_reloaders.py` is duplicated 4× (152/112/112/312 LOC, total ~688 LOC) and
+      is a clean UTL `ConfigReloaderBase` candidate. Kill-switch bus subscriber boilerplate is duplicated 4× (~80-100
+      LOC each) and is a clean UTL `KillSwitchBusSubscriberBase` candidate. Both confirmed by artifact § (f).
+      **UN-DEFERRED 2026-05-20 per operator direction** (work_split_2026_05_19_ikenna.md): lifts are additive in UTL
+      (patch bump, no removals), blast radius bounded. Ship as 2 UTL PRs. Slot 5 picks up immediately. — ✅
+      utl@e2445522 + strategy-service@054fae03 (backfilled 2026-05-20)
 - [x] ✅ **P2** [AGENT] Console-script command-name compatibility — the 3 source repos define `[project.scripts]`
       entries (`risk-monitor`, `position-monitor`, `position-monitor-std`, `pnl-attribution`, `pnl-attribution-std`).
       Post-merge: collapse to `python -m strategy_service --operation <op>`. Audit any launcher / cron / VM bootstrap
