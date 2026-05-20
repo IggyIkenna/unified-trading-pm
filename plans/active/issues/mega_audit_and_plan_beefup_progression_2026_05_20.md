@@ -19,6 +19,25 @@ End-to-end progression of the **mega audit + plan beef-up** effort kicked off
 plan-derived one) and turn it into a beefed-up actionable plan set that closes
 the gap between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 
+> **🚨 OPERATOR DIRECTIVE 2026-05-20 — supersedes any "deadline-driven cutbacks"
+> in this tracker**: "The data pipeline is critical to everything we do. I don't
+> care about the 23rd deadline... I want every single issue that we found fully
+> fixed, bad manifest data migrated, without exception... I won't accept
+> anything less than perfect on this."
+>
+> Codified as workspace HARD RULE in CLAUDE.md § "Data Pipeline Correctness Is
+> The Heartbeat" + SSOT `codex/02-data/data-pipeline-correctness-hard-rule.md`.
+>
+> **Operational consequence for THIS tracker**: all Phase A items (A1-A6) MUST
+> land GREEN before any layer-N+1 work proceeds for the affected asset_groups.
+> No `DEFERRED`. No "we'll do it after the 23rd". Closed-set deferral only via
+> `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE`
+> with operator ack. Sub-audits A5 + A6 are part of the same gate, not optional.
+>
+> **Audit transparency section is mandatory** for every Phase-A deliverable —
+> see [`plans/audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md`](../../audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md)
+> § "Coverage matrix" as the canonical template.
+
 ## Why this is an issue-doc not a plan
 
 This file is a **troubleshooting / coordination guide**. The actionable work

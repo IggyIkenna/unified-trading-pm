@@ -581,6 +581,57 @@ Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plan
 
 ---
 
+## Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE — codified 2026-05-20)
+
+> Operator directive 2026-05-20: the data pipeline is the heartbeat of everything (paper-trade, strategy, execution).
+> When a data audit surfaces issues, **every issue is fixed in full** — every missing venue × data_type × time range
+> backfilled, every silent empty diagnosed, every schema-version row migrated, every batch adapter paired with a live
+> equivalent. **No deferrals to hit a calendar deadline. No asset_group skipped.**
+
+**The only legitimate deferral path** (closed set, agent never decides autonomously — operator-only):
+
+- `BLOCKED-CREDENTIALS` — credential ask filed + operator-acked (per `External Data Is Always Available`).
+- `BLOCKED-OPERATOR-DECISION` — operator explicitly articulates why a specific (venue, data_type, time-range) is removed
+  from scope. Agent surfaces the gap + proposes options; operator decides scope.
+- `BLOCKED-UPSTREAM-OUTAGE` — third-party degraded; ping logged; auto-resumes on health check.
+
+**Banned reasoning patterns** (review-blocking):
+
+- "We'll skip this for the deadline" — deadline ≠ license to ship broken data.
+- "This asset_group is post-cutover" — every asset_group is in scope unless operator explicitly removes it.
+- "Most cells captured, backfill the rest later" — every cell is in scope unless operator explicitly removes it.
+- "The constant says v8, that's good enough" — code-constant ≠ data-state. Read the actual `schema_version` column
+  distribution per bucket (incident 2026-05-20: 0% of 7.4M prod rows at v8 despite constant bump).
+- "We'll do A5 / A6 later" — when a data audit names sub-audits (dependency-fail propagation, batch-live parity), those
+  are part of the same gate, not optional extensions.
+
+**Operational consequences**:
+
+1. **Layer-N+1 work freezes when a data audit is RED for affected asset_groups** (foundation-completion-gate expansion
+   — see `codex/11-project-management/foundation-completion-gate-discipline.md`).
+2. **Slot reassignment is mandatory**: slot 1 main reassigns slots from layer-N+1 to data-fix work until the audit is
+   GREEN. Slots that "double down on bad code" (build paper-trade / strategy / execution on top of unaudited data) are
+   blocked, not deprioritised.
+3. **Plan reviewer rejects** any plan proposing layer-N+1 changes while the relevant data audit has open P0 items
+   without an operator-acked `BLOCKED-*` status.
+4. **Every data audit MUST surface** (a) where it sampled vs walked exhaustively, (b) what coverage gaps remain. Audits
+   without this transparency section are review-blocked.
+
+**Composes with**: `Foundation-Completion-Gate Discipline` (data-correctness expansion of that gate);
+`External Data Is Always Available` (per-data-source case — credentials unblock, not scope removal);
+`Plans Run To Actual Completion` (operationally-shipped = every cell, not "most cells");
+`Manifest + Honest Absence` (per-cell expression — every cell either `captured` or `empty_confirmed[reason=<typed>]`
+with operator-acked reason).
+
+**Reference incident (2026-05-20)**: Mega-audit Phase A surfaced 765 `DIVERGENT_EMPTY` + 236,892 `MISSING_EXPECTED`
+cells across MTDS buckets + **0% of 7.4M prod manifest rows at v8** + 1.3M NULL-schema-version rows. Operator codifying
+this rule: "I'm tired of doing this same thing a million times. We're on version eight for a reason. It's because you
+keep being sloppy and keep missing out stuff."
+
+**Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
+
+---
+
 ## Estimate Calibration (HARD RULE)
 
 Apply class multipliers at plan-write time. Claude's estimates run 1.5-3× conservative for this workspace's fan-out
