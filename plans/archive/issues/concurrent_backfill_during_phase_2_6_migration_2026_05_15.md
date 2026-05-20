@@ -9,6 +9,7 @@ severity: LOW
 blocker: false
 status: LESSONS-LEARNED
 locked_by: live-defi-rollout
+resolved: 2026-05-15
 ---
 
 # Concurrent Backfill During Phase 2.6 Migration — Process Gap

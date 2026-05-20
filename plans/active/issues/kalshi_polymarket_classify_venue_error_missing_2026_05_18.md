@@ -42,7 +42,15 @@ Files to change:
 
 ## Resolution
 
-**RESOLVED 2026-05-18** — execution-service@a2b5eef46
+> **🔴 REGRESSION DETECTED 2026-05-20 (slot 1 verification sweep)** — `classify_venue_error` count in BOTH
+> `kalshi.py` and `polymarket_clob.py` is currently **0**, despite the 2026-05-18 fix at `execution-service@a2b5eef46`
+> adding 7 sites. Bisect shows commit `774602ea8` (chore(lint): add # noqa justification comments across execution-service)
+> wiped classify_venue_error from kalshi.py (and presumably polymarket_clob.py). At `a2b5eef46` count = 7; at
+> `5708cd6f5` count = 7; at `774602ea8` count = 0. **Issue REMAINS OPEN — does NOT archive.** Reassign to
+> execution-service slot owner to (a) restore classify_venue_error sites + (b) audit `774602ea8` for other adapter
+> regressions.
+
+**RESOLVED 2026-05-18** — execution-service@a2b5eef46 (REVERTED at `774602ea8` — see annotation above)
 
 - `kalshi.py`: added `classify_venue_error` + `ErrorAction` imports from UAC `canonical.crosscutting.errors`; added
   `ADAPTER_FETCH_FAILED` + `UNKNOWN_VENUE_ERROR_RECEIVED` imports from UTL events; all 5 `except aiohttp.ClientError`

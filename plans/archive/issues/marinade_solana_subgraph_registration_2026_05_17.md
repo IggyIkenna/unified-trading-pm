@@ -7,8 +7,11 @@ source:
   - "plans/active/solana_lst_native_staking_adapters_2026_05_14.md (companion)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
+resolved: 2026-05-20
 severity: P2 — Tier 2 mSOL historical coverage; not blocking carry_staked_basis paper trade gate
 ---
+
+> **🟢 RESOLVED 2026-05-20** — operator picked **Option (b) Helius archive paid tier**. Credentials are already in place per ikenna 2026-05-20. mSOL historical APR will source from Helius RPC archive endpoint. Successor implementation lands in MTDS solana defi handler (Phase D4 MTDS preflight beef-up of mega audit). Archiving.
 
 ## What I found
 

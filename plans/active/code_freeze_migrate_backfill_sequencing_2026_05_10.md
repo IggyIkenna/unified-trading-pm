@@ -342,6 +342,15 @@ CLAUDE.md _"Plans Run To Actual Completion"_ HARD RULE. The umbrella enforcer is
 a clean drain + state freeze before Phase 2.1 starts. If VMs are still writing during a manifest schema migration, every
 concurrent CAS write produces drift between writer-version-N and writer-version-N+1 rows — silent data corruption.
 
+> **WHY-SAFE annotation (2026-05-20, backfilled from `concurrent_backfill_during_phase_2_6_migration_2026_05_15.md`)**:
+> the drain gate is **vacuously satisfied** when the migration landed BEFORE any VMs launched in the current backfill
+> wave (`last_migration_date < first_vm_launch_date`). The 2026-05-15 TradFi OHLCV backfill window was empirically safe
+> because UAC@8867891 + UTL@958634f9 (Phase 2.6 writer migration) shipped 2026-05-07 — 8 days before the 63 OHLCV VMs
+> launched. 0 attempted_failed rows in 214k captured rows confirmed the migration landed days before backfill resumed,
+> so the drain gate was vacuously satisfied. **For future windows**: if `last_migration_date >= first_vm_launch_date`,
+> the drain is load-bearing and MUST run; otherwise the vacuous-safety condition applies. Encode the migration SHA+date
+> in the runbook ledger so future executors can confirm without re-deriving.
+
 **Disposition** (per AskUserQuestion answer 2026-05-10): add as a pre-phase to
 `plans/epics/manifest_migration_master_2026_05_07.md` Stage 1, NOT a standalone plan.
 
