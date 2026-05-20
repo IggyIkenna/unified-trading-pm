@@ -171,22 +171,22 @@ Phase 0 (✅ DONE)
 
 ### Phase 6 — CI ratchet
 
-- [x] ✅ **P0. `honest-coverage-ratchet.sh`** in `unified-trading-pm/scripts/qg/`: snapshot
+- [x] **P0. ✅ `honest-coverage-ratchet.sh`** in `unified-trading-pm/scripts/qg/`: snapshot
       yesterday's coverage per asset_group × data_type, compare to today, fail QG if any
       ratio regressed by >0.5pp. Stored snapshot: `_index/snapshots/honest_coverage/`.
-      — PM@d68b92f7 — `honest_coverage_ratchet.py` + `honest_coverage_ratchet.sh` created.
-- [ ] **P0. QG STEP wired**: per-service `quality-gates.sh` calls the ratchet for that
-      service's bucket scope. [BLOCKED-OPERATOR 2026-05-20 slot-6: ratchet needs per-service
-      bucket names as args — generic wiring in base-service.sh not possible without per-service
-      config. Wire in per-service QG as follow-up.]
-- [x] ✅ **P1. Inline-formula linter**: `grep` for re-implementations of the formula in any
-      file outside `honest_coverage.py` → QG FAIL.
-      — PM@d68b92f7 — `no_inline_coverage_formula.sh` created; wired as STEP 5.84 in base-service.sh.
-- [x] ✅ **P0. ⚓ COMPOSES WITH `is_mtds_contract_audit_2026_05_20.md` Phase 7** — the
+      Script + `honest_coverage_ratchet.py` created PM@d68b92f7; wired into MTDS@65f0e52 + IS@f534700.
+- [x] **P0. ✅ QG STEP wired**: per-service `quality-gates.sh` calls the ratchet for that
+      service's bucket scope. Base-service.sh generic wiring not possible (per-service bucket
+      names required); resolved by per-service wiring: MTDS `market-data-tick-defi-*` STEP 5.70
+      (MTDS@65f0e52) + IS `instruments-store-defi-*` STEP 5.70 (IS@f534700).
+- [x] **P1. ✅ Inline-formula linter**: `no_inline_coverage_formula.sh` created PM@d68b92f7;
+      wired as STEP 5.84 in base-service.sh (all services) + STEP 5.70 in MTDS@65f0e52 + IS@f534700.
+      Passes clean (0 violations in both repos).
+- [x] **P0. ✅ ⚓ COMPOSES WITH `is_mtds_contract_audit_2026_05_20.md` Phase 7** — the
       no-silent-absence + no-hardcoded-URL + no-hardcoded-universe QG steps live alongside
       the inline-formula linter in the same `unified-trading-pm/scripts/qg/` bundle. The
       ratchet is the "regression detector"; those three are the "structural guards".
-      — Cross-link added to is_mtds_contract_audit Phase 7 + base-service.sh STEP 5.84 wired.
+      Cross-link in is_mtds_contract_audit Phase 7 + base-service.sh STEP 5.84 wired.
 
 ### Phase 7 — Codex docs
 
