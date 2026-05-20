@@ -307,16 +307,21 @@ branch on cloud.
        confirm it consults the YAML template + that the YAML is the SSOT.
        Surface drift cases (hardcoded bucket names, alternate naming, missing
        env-tier).
-       — setup-defi-buckets.sh drift found + fixed: deployment-service@b9029ad
+       — setup-defi-buckets.sh drift found + fixed: deployment-service@b9029ad;
+         provision_manual_audit_buckets.sh + provision_audit_records_retention_lock.sh
+         drifts fixed: deployment-service@68e3558. Full table in
+         plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20_summary.md §
+         "Spawning Scripts Audit".
 3. - [x] ✅ **YAML template alignment** — update `cloud-providers.yaml` `aws:`
        block templates to mirror `gcp:` templates (one-line-per-kind diff).
        Pre-existing GCP shape `{kind}-{ag}-${DEPLOYMENT_ENV_SHORT}-${PROJECT_ID}`
        must apply with `${AWS_ACCOUNT_ID}` swap on AWS.
        — deployment-service@43fb886; UTL tests: unified-trading-library@dc107d15
-4. - [x] ✅ **63-char cap re-verification** — automated check that every
+4. - [x] ✅ **63-char cap re-verification + automated symmetry script** — automated check that every
        resolved bucket name on BOTH clouds is ≤63 chars across the full
-       (env × kind × asset_group) matrix.
-       — All 65 kinds × all env × all asset_group: 0 violations (python3 check)
+       (env × kind × asset_group) matrix. Persistent reusable script added.
+       — All 65 kinds × all env × all asset_group: 0 violations;
+         `scripts/bucket_naming/check_symmetry.sh` exits 0: deployment-service@68e3558
 5. - [x] ✅ **`prd`/`stg`/`dev` consistency** — confirm DEPLOYMENT_ENV_SHORT
        3-char form used on BOTH clouds (currently GCP uses `prd`, AWS may use
        a different form per its older templates).

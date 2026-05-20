@@ -172,6 +172,33 @@ For `audit-records`: change `unified-trading-audit-records-` to `trading-audit-r
 - `client-reports` / `client-statements`: GCP uses pid-prefix flat format (`${GCP_PROJECT_ID}-client-reports`);
   AWS would become `client-reports-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}` after fix — structurally different
   from GCP. Pre-existing structural divergence; env-tier on GCP is post-Phase-1.
-- `defi-validation`: GCP-only kind, no AWS counterpart. Not in scope.
+- `defi-validation`: Both GCP (`${pid}-defi-validation`) and AWS (`unified-trading-defi-validation-${account}`)
+  are intentionally env-less (validation runs target mainnet; environment-neutral). Structural divergence documented
+  in `check_symmetry.py` `_KNOWN_STRUCTURAL_DIVERGENCES`.
 - All changes are YAML-only (template string edits). On-disk bucket renaming / data migration follows
   code_freeze Phase 2.6 schedule.
+
+---
+
+## Spawning Scripts Audit
+
+**Date**: 2026-05-20 (slot 8 Phase 1B)
+**Scope**: every script in `deployment-service/scripts/` that provisions or references buckets on either cloud.
+
+| Script | Key line(s) | Status | Notes |
+|--------|-------------|--------|-------|
+| `scripts/aws/setup-defi-buckets.sh` | L8, L44–45, L71–86 | ✅ SSOT-consult | Reads cloud-providers.yaml templates; Phase 1 symmetry fix applied (deployment-service@b9029ad). One env-less `events` bucket hardcoded (intentional — matches YAML). |
+| `scripts/aws/provision-aws-buckets.sh` | L6–8 | ✅ SSOT-consult | Delegates entirely to setup-defi-buckets.sh; no direct bucket name construction. |
+| `scripts/aws/apply-bucket-policies.sh` | — | ✅ no provisioning | Applies IAM policies to existing buckets; reads bucket names via aws CLI, does not construct names. |
+| `scripts/aws/migrate-defi-buckets-prod-to-prd.sh` | — | ✅ migration only | Renames `prod`→`prd` on existing on-disk buckets; no SSOT drift (uses resolved names). |
+| `scripts/setup-buckets.py` | — | ✅ SSOT-consult | Reads cloud-providers.yaml + dependencies.yaml via `load_bucket_config()`; no hardcoded names. |
+| `scripts/provision-test-buckets.sh` | — | ✅ no drift | Test bucket names derived from kind names; no `unified-trading-` prefix. |
+| `scripts/provision_manual_audit_buckets.sh` | L28 | ⚠️ DRIFT FIXED | Was `unified-trading-manual-audit-${1}-${account}` → fixed to `manual-audit-${1}-${account}` (deployment-service@this-commit). Aligns to cloud-providers.yaml `aws.storage.manual-audit`. |
+| `scripts/provision_audit_records_retention_lock.sh` | L31 | ⚠️ DRIFT FIXED | Was `unified-trading-audit-records-${env}-${account}` → fixed to `trading-audit-records-${env}-${account}` (deployment-service@this-commit). Aligns to cloud-providers.yaml `aws.storage.audit-records`. |
+| `scripts/bootstrap/bootstrap_aws.sh` | L130–137 | 🔵 LEGACY | Hardcoded `unified-trading-instruments-*` + `unified-trading-market-data-*` names from pre-Phase-1. Bootstrap script only; not used in normal provisioning. On-disk buckets renamed in Phase 5. |
+| `scripts/setup-gcs-lifecycle-policies.sh` | — | ✅ GCP-only | GCS lifecycle rules only; no bucket name construction. |
+| `scripts/infra/configure_audit_bucket_versioning.sh` | — | ✅ SSOT-consult | Reads GCP_BUCKET from env + applies versioning; caller supplies name from resolver. |
+
+**Summary**: 2 drift fixes applied. 1 legacy script (bootstrap_aws.sh) uses old names — intentional, as it is not invoked in normal deployment flows (superseded by `setup-buckets.py`). Automated check: `bash scripts/bucket_naming/check_symmetry.sh` exits 0 (65 kind×ag pairs checked; 4 known structural divergences exempted with documentation).
+
+**Automated symmetry check**: `deployment-service/scripts/bucket_naming/check_symmetry.sh` — run after any future cloud-providers.yaml edit to detect regressions.
