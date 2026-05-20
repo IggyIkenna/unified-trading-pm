@@ -109,6 +109,38 @@ Symptoms the audit surfaced (linking to evidence):
 > BEFORE Phase 0 (strategy/ml/features consolidation + workspace-wide QG
 > green) and four post-data phases (11-14) for backfill-to-100% + live-data
 > + batch-live symmetry + strategy/execution topology cleanup.
+>
+> **2026-05-20 round 6 — strategy-service LOGIC freeze gate**:
+>
+> Operator directive: "strategy archetype refactor post consolidation is
+> baked in as an assumption to the master plan and agents will halt on those
+> repos until its complete which should be tonight." Plus operator note:
+> "they should do the consolidation part and quality gates in advance of me."
+>
+> **What proceeds (NO freeze on these)**:
+> - Phase -2 Bucket 3 stale-ref cleanup across slots 3-8 (logger strings,
+>   terraform destroy on archived dirs, deployment-ui registry, UAC slugs —
+>   SURFACE cleanup, NOT logic).
+> - Phase -2 consolidation Phase 11 sub-phases (11a-11h) in both
+>   `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`.
+> - Phase -1 workspace-wide QG green (Harsh-side).
+> - Phases 0-10 of data-pipeline migration once -2/-1 land GREEN.
+>
+> **What freezes until operator's Opus-1M `strategy_archetype_logic_audit_2026_05_20`
+> session lands GREEN tonight + R-items dispatched**:
+> - Strategy-service ARCHETYPE LOGIC changes (`strategy_service/strategy_service/engine/strategies/v2/`).
+> - Allocation / rebalancing logic (`strategy_service/strategy_service/engine/allocator/`).
+> - Collateral management code (per dimension 10 of the archetype audit).
+> - Liquidation management code (per dimension 11).
+> - Cross-venue transfer code (per dimension 12).
+> - Venue restriction enforcement (per dimension 9).
+> - Deployment topology dynamic-config + accounts/clients code (per dimension 14
+>   — overlaps execution-service `client_share_classes` consumers + agent-orchestrator
+>   account-management endpoints).
+>
+> Agents touching these surfaces during the freeze MUST stop + cite the gate.
+> Resume signal: operator appends `🟢 STRATEGY-LOGIC UNFREEZE` to
+> `plans/active/_agent_pings.md` referencing the audit's R-items.
 
 ```
                             ┌──────────────────────────────────────┐

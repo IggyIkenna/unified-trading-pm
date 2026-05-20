@@ -95,6 +95,74 @@ For EVERY archetype in `codex/09-strategy/architecture-v2/archetypes/` (and any 
 - Hedge leg specification: who chooses the hedge venue + hedge instrument?
 - Beta-to-market / beta-to-asset-class: what's the residual?
 
+### 9. VENUE RESTRICTIONS (operator focus 2026-05-20 round 6 — "the math is easy")
+- Per-venue allow-list / deny-list per client_id (UK clients can't access Extended Starknet; Cayman clients can; etc.)
+- Per-venue jurisdiction tags + auto-enforcement at order-construction time (UAC `client_funds_isolation` rule extends)
+- Per-venue MAX position limit + MAX gross exposure
+- Per-venue trading hours overlay (which archetypes can run during which venue's session?)
+- Per-venue credential health gate (if API key revoked or rate-limited mid-day, what happens?)
+- Per-(venue, instrument) blacklist (e.g. delisted, paused, low-liquidity)
+- **Test**: what does the archetype do when 2/3 venues for a multi-venue arb are restricted for the active client?
+
+### 10. COLLATERAL MANAGEMENT (operator focus)
+- Per-venue collateral type registry (stablecoin / native / LST-as-collateral)
+- Collateral haircut + LTV per venue (matches venue's actual risk params)
+- Cross-margin vs isolated-margin choice per archetype × venue
+- Collateral substitution (when can stETH replace ETH as collateral?)
+- Collateral rebalancing triggers (LTV drift > X% → top up / reduce)
+- DeFi-specific: liquidation health factor monitoring (Aave / Compound `getUserAccountData` reads)
+- CeFi-specific: maintenance margin proximity alerts
+- **Test**: at decision time, does the archetype know its current collateral position per venue + can it size correctly?
+
+### 11. LIQUIDATION MANAGEMENT (operator focus)
+- Per-archetype liquidation distance threshold (health factor ≤ X.X triggers action)
+- Pre-liquidation action: deleverage / top-up collateral / unwind position
+- Liquidation cascade detection: if one leg liquidates, what happens to the hedge leg?
+- Mark-price vs index-price awareness (perp venues liquidate on mark; on-chain liquidates on oracle)
+- Oracle freshness gate (Chainlink heartbeat < N min for the archetype's collateral assets)
+- Per-venue liquidation fee + skip risk
+- Recursive-loop archetypes: per-iteration liquidation health calc (e.g. Aave looping)
+- **Test**: under flash-crash scenario, what's the archetype's pre-liquidation playbook + does the directive bus get the right signals fast enough?
+
+### 12. CROSS-VENUE TRANSFERS (operator focus)
+- Permitted transfer pairs per client (intra-client only per CLAUDE.md `Client funds isolation` HARD RULE)
+- Transfer-window awareness (e.g. CEX withdrawal blackouts on Mondays UTC)
+- Bridge-time tolerance per chain (Ethereum withdraw 7d challenge period, Arbitrum 7d, Optimism 7d, etc.)
+- Stablecoin vs native asset transfer-cost calculus (USDC bridge vs ETH bridge)
+- Failed-transfer reconciler (transfer initiated but didn't arrive within window → alert + manual ack)
+- Sub-account move logic (CEFI internal: Binance spot → Binance futures sub-account)
+- Per-leg dependency: if archetype needs cross-venue transfer to size correctly, what's the fallback if transfer fails?
+- **Test**: a multi-venue staked-basis archetype needs to move stETH from Lido custody to a CEX as collateral — does the cross-venue transfer path exist + is it auditable?
+
+### 13. ALLOCATION-BASED REBALANCING (operator focus — "most of the focus")
+- Per-archetype target allocation % (of total client capital)
+- Cross-archetype rebalance trigger: drift % / time / regime
+- Allocation source-of-truth: `portfolio_allocator` (strategy-service)? `client_share_classes`? both?
+- Per-(client, archetype) override (a client opts out of `recursive_lending` but in for `staked_basis`)
+- Closed-loop feedback: realised PnL flows back to update allocations? Cadence?
+- Cross-asset-group allocation (cefi 50% / defi 30% / sports 20% per client) — how surfaced in deployment?
+- Forced-deallocation when an archetype is paused (capital returns to cash; what's the holding venue?)
+- **Test**: when operator adds a new client mid-day with target allocation (40% cefi, 60% defi), does the allocator detect + rebalance without manual intervention?
+
+### 14. DEPLOYMENT TOPOLOGY — DYNAMIC CONFIG + ACCOUNTS / CLIENTS (operator focus)
+- Adding a new client mid-day: which configs hot-reload? Which require VM restart?
+- Adding a new account (sub-account) to existing client: account discovery path + credential injection
+- Removing a client: graceful unwind (don't strand positions); position liquidation pathway
+- Removing an account: ditto
+- Adding a new venue: config hot-reload OR VM redeploy?
+- Per-archetype enable/disable from operator UI (directive bus): cadence to take effect
+- Per-(archetype, asset_group) enable/disable (e.g. pause arb_price_dispersion on DeFi but keep CeFi running)
+- Config drift detection: if `cloud-providers.yaml` or `client_share_classes.yaml` changes, do running VMs reload?
+- Health-API endpoint per service reflects current client/account count + per-archetype state
+- **Test**: with 3 archetypes running on 2 clients, operator adds a 3rd client + a new archetype simultaneously — does deployment topology absorb without restart?
+
+## Audit deliverables (per archetype + per cross-cutting dimension)
+
+1. **Design vs implementation gap table**: per dimension (1-14), what does the design SSOT say vs what does the code do? Surface every drift.
+2. **Per-dimension risk register**: list every "missing handler" / "wrong default" / "silent fallback" the archetype has that would surface as a P0 in live trading.
+3. **R-items for operator delegation**: each gap → a remediation item with target slot + estimated effort. Matches the mega-audit § 6 delegation SSOT format.
+4. **Pre-live trading gate**: any gap in dimensions 9-14 (venue restrictions / collateral / liquidation / cross-venue transfer / allocation rebalancing / deployment topology) is **P0 cutover-blocking** for the affected archetype.
+
 ## Archetype inventory (to be confirmed during audit Phase 0)
 
 Provisional list from codex + strategy-service:
