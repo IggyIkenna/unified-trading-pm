@@ -121,15 +121,18 @@ Phase 0 (✅ DONE)
 
 ### Phase 1 — UTL `ManifestWriter.read_capture_status_counts()` helper
 
-- [ ] **P0. UTL helper**: in `unified-trading-library/unified_trading_library/manifest_writer.py`
-      (or a sibling reader module — pick whichever the existing API uses for reads), add
-      `read_capture_status_counts(bucket: str, *, asset_group: str, data_type: str | None = None,
-      date_range: tuple[date, date] | None = None) -> CaptureStatusCounts`. Reads the manifest
-      parquet, groups rows by `(capture_status, error_reason)`, applies the
-      `EXPECTED_*` split rule, returns the typed counts. **Why UTL not UAC**: UAC is
-      schema-only; manifest READS are UTL's job.
-- [ ] **P0. Test**: roundtrip — write a synthetic manifest with all 4 statuses + a mix of
-      `EXPECTED_*` and non-`EXPECTED_*` reasons; assert counts split correctly.
+- [x] **P0. ✅ UAC facade exports**: `CaptureStatusCounts`, `compute_honest_coverage`,
+      `HONEST_COVERAGE_GAP_FIELDS` added to `unified_api_contracts/__init__.py` public
+      facade — consumers no longer need deep internal paths. — `unified-api-contracts@a9891f9`
+- [x] **P0. ✅ UTL helper**: `read_capture_status_counts()` + `compute_coverage_for_bucket()`
+      added to `unified-trading-library/unified_trading_library/manifest_writer.py`. Reads
+      manifest parquet, groups by `(capture_status, error_reason)`, applies `EXPECTED_*`
+      split, returns typed `CaptureStatusCounts`. `compute_coverage_for_bucket()` wraps
+      both and returns `(counts, ratio)`. — `unified-trading-library@8d66204`
+- [x] **P0. ✅ Test**: full roundtrip suite in `tests/unit/test_manifest_writer_coverage_counts.py`
+      — all 4 statuses split correctly, data_type + date_range filters, empty manifest → zero
+      counts, `compute_coverage_for_bucket` tuple output. 3792 passed, 2 pre-existing
+      unrelated failures. — `unified-trading-library@8d66204`
 - [ ] **P1. Per-service docstring rule**: every service's `/api/data-status` endpoint
       MUST call this helper, not re-implement the manifest read.
 
