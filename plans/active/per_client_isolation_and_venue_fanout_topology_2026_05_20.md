@@ -189,7 +189,7 @@ todos:
         status: done
 
 - id: phase-2-utl-bases content: |
-  - [ ] [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
+  - [x] ✅ [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
         `unified_trading_library/lifecycle/client_lifecycle_bus_subscriber_base.py` — `ClientLifecycleBusSubscriberBase`
         EXTENDS the `KillSwitchBusSubscriberBase` lifted in Phase 5 of strategy_repo_consolidation. Same scaffold,
         different event type. Sub-classes implement `on_register(event)` / `on_deregister(event)` /
@@ -206,8 +206,8 @@ todos:
         publishes TransferIntent / Order events. Sub-classes implement per-archetype trading logic. **Composes with
         Phase 5 strategy_repo_consolidation**: ConfigReloaderBase + KillSwitchBusSubscriberBase must land FIRST (slot 5
         is doing those NOW per un-defer 2026-05-20). This Phase 2 inherits from those bases. Tests: unit tests for each
-        base (mock subprocess + mock event bus + mock KMS); basedpyright clean. status: pending blocked_by:
-        phase-1-uac-contracts
+        base (mock subprocess + mock event bus + mock KMS); basedpyright clean.
+        — utl@cae77ad9 (58 unit tests, 4 bases, QG codex-compliant) status: done
 
 - id: phase-3-supervisor content: |
   - [x] ✅ [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
