@@ -157,7 +157,7 @@ Phase 0 (pre-audit)  →  Phase 1 (UAC contracts)  →  Phase 2 (UTL bases)  →
 todos:
 
 - id: phase-0-pre-audit-manifest content: |
-  - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+  - [x] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/per_client_isolation_preaudit_2026_05_20.md` enumerating: (a) every callsite in
         strategy-service that currently assumes single-tenant process (env var reads, module-level globals holding
         client state, singleton patterns) — these need ClientContext refactor in Phase 4; (b) every UAC type that
@@ -168,7 +168,8 @@ todos:
         `assert_client_allowed` covers ALL event-bus subscribers in execution-service (grep + read every subscriber);
         (f) MTM compute paths re-verified per 2026-05-20 audit — 4 paths confirmed; capture any drift since audit; (g)
         per-venue credential refresh cadence per venue type (CEX vs DEX vs lending) — drives KMS poll interval defaults
-        in Phase 5. status: pending
+        in Phase 5. status: done — slot-4@2026-05-20. Audit at
+        `plans/active/issues/per_client_isolation_preaudit_2026_05_20.md`.
 
 - id: phase-1-uac-contracts content: |
   - [ ] [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
