@@ -210,7 +210,7 @@ todos:
         phase-1-uac-contracts
 
 - id: phase-3-supervisor content: |
-  - [ ] [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
+  - [x] ✅ [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
         `StrategySupervisorBase`: (1) MarkPriceAggregator: subscribes to MTDS/MDPS mark price stream once per
         (archetype, shard); maintains shared-memory dict keyed by instrument_id, value =
         `MarkSnapshot(price, mtm_value_per_unit, timestamp,         stale_after_ms)`. ClientWorkers consume read-only
@@ -226,7 +226,7 @@ todos:
         `clients/<archetype>/<shard>/clients.yaml` (operator-managed; loaded at boot, hot-reloadable via
         ClientLifecycleEvent.REGISTER). Tests: unit tests with mocked subprocess + mocked shared_memory + mocked event
         bus (simulate REGISTER → spawn → READY → DEREGISTER → reap; simulate crash → restart → quarantine after 5
-        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). status: pending blocked_by: phase-2-utl-bases
+        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98% coverage, 24 tests pass
 
 - id: phase-4-client-worker-ipc content: |
   - [ ] [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
