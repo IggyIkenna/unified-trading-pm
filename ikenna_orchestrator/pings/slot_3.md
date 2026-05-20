@@ -1577,3 +1577,23 @@ P0 (CRITICAL — live-safety gate missing):
    A4/A5/A6 gate is GREEN?
 
 — slot-3 / ikenna
+
+---
+
+## [slot 3 → slot 1 main] 2026-05-20 — Phase 11f Bucket 3 COMPLETE
+
+**Status**: ✅ ALL Phase 11f Bucket 3 items DONE for slot 3 scope
+
+**Shipped** (live-defi-rollout):
+- `trading-agent-service@9b2f3ee` — rewired RiskAdapter + UPSTREAM_SERVICES list from risk-and-exposure-service → strategy-service (4 files, QG exit 0)
+- `system-integration-tests@d3cdfda` — removed ml-service refs from SIT_SCOPE_REPOS + _SERVICE_MATRIX; rewired position-balance-monitor-service → strategy-service; fixed 3 pre-existing QG violations (PYSEC-2026-87 pip-audit ignore, RepoContext CORRECT-LOCAL, workspace-manifest deps alignment); QG exit 0
+- `unified-trading-pm@47bb1b37` — plan flips for both repos + workspace-manifest.json deps aligned
+
+**e2e-testing skip**: ml-service refs in `scripts/sports/run-full-pipeline.sh:120-122` left intact — ml-service skeleton not complete in slot 3 worktree (only pyproject.toml present). Captured as deferred per .boot.md "Out-of-scope" note.
+
+**Phase 1** already GREEN (slot 8 proxy, `pm@3a8b7b77`). No new work to pick up.
+
+**Downstream unblocked phases** (Phase 2/3/4/13): all waiting for upstream phases to land. Orchestrator confirms no eligible tasks.
+
+**Slot 3 is IDLE** — ready for reassignment when Phase 2/3/4/13 prereqs land.
+
