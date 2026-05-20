@@ -206,37 +206,41 @@ Config references:
 - One **execution_policy_ref** (with MEV protection config for DeFi arb)
 - Optional **bridge_capability_refs** (for cross-chain variants)
 
-## Typical instance examples
+## Active catalog slots (2026-05-20, from `catalog.py _build_arbitrage_price_dispersion`)
 
 ```
-Price dispersion — sports:
-  ARBITRAGE_PRICE_DISPERSION@unity-epl-1x2-usd-prod              (cross-book via Unity)
-  ARBITRAGE_PRICE_DISPERSION@unity-nba-moneyline-usd-prod
-  ARBITRAGE_PRICE_DISPERSION@unity-la-liga-1x2-usd-prod
-  ARBITRAGE_PRICE_DISPERSION@unity-champions-league-1x2-usd-prod
+Lending protocol arb (same chain, different protocols):
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-ethereum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-ethereum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-compound-optimism-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-morpho-optimism-usdc-1h-usdc-v2-prod
 
-Price dispersion — DEX (on-chain atomic):
-  ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-ethereum-prod
-  ARBITRAGE_PRICE_DISPERSION@multi-dex-eth-usdc-arbitrum-prod
+Cross-chain yield arb (same protocol, different chains):
+  ARBITRAGE_PRICE_DISPERSION@aave-ethereum-arbitrum-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-ethereum-optimism-usdc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@aave-arbitrum-base-usdc-1h-usdc-v2-prod
 
-Price dispersion — CEX:
-  ARBITRAGE_PRICE_DISPERSION@binance-bybit-btc-usdt-prod
-  ARBITRAGE_PRICE_DISPERSION@cross-cex-eth-usdt-prod
+CEX-CEX spot/perp spread arb:
+  ARBITRAGE_PRICE_DISPERSION@binance-okx-btc-1m-usdt-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@binance-bybit-eth-1m-usdt-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@okx-hyperliquid-sol-1m-usdt-v2-prod
 
-Cross-category:
-  ARBITRAGE_PRICE_DISPERSION@polymarket-unity-elections-usdc-prod
-  ARBITRAGE_PRICE_DISPERSION@polymarket-unity-sports-usdc-prod
+Sports cross-book arb:
+  ARBITRAGE_PRICE_DISPERSION@unity-betfair-matchbook-epl-gbp-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@unity-betfair-matchbook-nba-gbp-v2-prod
 
-Vol arb (within-surface no-arb violations):
-  ARBITRAGE_PRICE_DISPERSION@deribit-btc-surface-noarb-usdt-prod    (butterfly / calendar / parity violations)
-  ARBITRAGE_PRICE_DISPERSION@deribit-eth-surface-noarb-usdt-prod
+Prediction market arb:
+  ARBITRAGE_PRICE_DISPERSION@polymarket-betfair-sports-gbp-v2-prod
 
-Cross-venue vol arb:
-  ARBITRAGE_PRICE_DISPERSION@deribit-okx-btc-vol-usdt-prod          (same option, different IVs across venues)
-  ARBITRAGE_PRICE_DISPERSION@deribit-okx-eth-vol-usdt-prod
+CME-Deribit dated futures arb:
+  ARBITRAGE_PRICE_DISPERSION@cme-deribit-mbt-btc-1h-usdc-v2-prod
+  ARBITRAGE_PRICE_DISPERSION@cme-deribit-met-eth-1h-usdc-v2-prod
 
-Funding-rate dispersion:
-  ARBITRAGE_PRICE_DISPERSION@multi-cex-btc-funding-usdt-prod
+Funding-rate dispersion (bridge slots, not in TARGET_UNIVERSE catalog):
+  ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod
+  ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-eth-usdt-v5-prod
 
 Liquidation capture:
   LIQUIDATION_CAPTURE@aave-ethereum-prod
