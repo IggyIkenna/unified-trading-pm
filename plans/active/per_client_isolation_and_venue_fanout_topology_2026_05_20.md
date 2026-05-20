@@ -229,7 +229,7 @@ todos:
         attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98% coverage, 24 tests pass
 
 - id: phase-4-client-worker-ipc content: |
-  - [ ] [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
+  - [x] ✅ [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
         strategy-service: (1) Subprocess entry point: spawned via `multiprocessing.get_context("spawn").Process` (spawn
         not fork — cleaner for venue-adapter HTTP clients which don't always survive fork). Receives at startup:
         client_id, archetype_id, shard_id, shared_memory_name, parent_event_pipe; (2) Per-client state owned:
@@ -248,7 +248,7 @@ todos:
         into ClientWorker.run(). Tests: unit tests for ClientWorker lifecycle (start → preflight → ready →
         process-event-loop → graceful-shutdown); crash test (raise unhandled exception in worker → supervisor detects
         via pipe close → restart logic); IPC test (parent emits credential-rotation → worker reloads CredentialStore
-        without restart). status: pending blocked_by: phase-3-supervisor
+        without restart). status: done — strategy-service@6506f868 + 36 tests green (59 passed); basedpyright 0 errors on 5 source files; blocked_by: phase-3-supervisor (resolved)
 
 - id: phase-5-preflight-and-hot-reload content: |
   - [ ] [AGENT] P0. Phase 5 — Preflight auth + balance check + hybrid hot-reload wiring. In ClientWorker: (1) Preflight
