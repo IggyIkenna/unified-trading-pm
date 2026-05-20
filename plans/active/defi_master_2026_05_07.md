@@ -1208,6 +1208,10 @@ venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue m
       2026-05-08 Stream A flip; catalog slot still absent (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`). BYBIT row
       said "stETH + METH + USDe up to 3 rows" but matrix has stETH + wstETH only; actual catalog output = 1 row
       (LIDO/stETH). Slot count corrected from "~7" to 4 (verified by running collateral helper). — PM@b7f84482
+- [x] ✅ [DOC] P2. **CSB-dated archetype doc catalog slots — fix stale slot labels from initial seed.**
+      Doc had `steth-deribit-q1-...-v2-prod` etc. (prototype labels); actual catalog generates
+      `lido-deribit-eth-q1-usdc-v1-prod`, `lido-deribit-eth-q2-usdc-v1-prod`, `jito-drift-sol-q1-usdc-v1-prod`.
+      Updated section heading from "Initial seed" to "Active catalog slots". — PM@bef3b7b6
 
 ## `available_at` adapter stamping (coordinated)
 
