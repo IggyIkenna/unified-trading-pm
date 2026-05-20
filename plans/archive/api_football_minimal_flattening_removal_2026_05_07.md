@@ -41,6 +41,8 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
 ---
 
+> **ARCHIVED 2026-05-20** — 100% complete (all 16 items shipped + DEFERRED resolved 2026-05-20 slot-8); preserved for archaeology. No deferred work outstanding.
+
 > **🟡 STAMPING SCOPE FOLDED INTO UMBRELLA — `available_at_lookahead_bias_completion_2026_05_08`** (codified 2026-05-08)
 >
 > Per operator direction this session — `available_at` stamping wiring (Phase 3 scope: fixture_stats → match_end_time /

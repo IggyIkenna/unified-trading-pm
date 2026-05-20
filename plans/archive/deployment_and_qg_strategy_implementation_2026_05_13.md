@@ -30,6 +30,8 @@ estimate_calibration_note: |
   Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
 ---
 
+> **ARCHIVED 2026-05-20** — 100% complete (all 90 items shipped); DEFERRED items tracked in successor plans listed below. Preserved for archaeology.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.

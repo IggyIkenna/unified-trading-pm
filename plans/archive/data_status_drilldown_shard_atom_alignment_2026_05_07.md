@@ -45,6 +45,8 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
 ---
 
+> **ARCHIVED 2026-05-20** — 100% complete (all 41 items shipped); DEFERRED items have named successor plans. Preserved for archaeology.
+
 # Data-status drill-down + MTDS CLI shard-atom alignment
 
 > **Cross-ref 2026-05-07: writegate Phase 3.D.4 expected-universe `--apply-write` COMPLETE on all 5 asset_groups +
