@@ -1,0 +1,394 @@
+---
+title: Harsh laptop migration — from epiphanytechnologies.com to shared agent-orchestrator
+created: 2026-05-20
+owner: ikenna
+audience: harsh
+status: active
+related:
+  - codex/04-architecture/agent-orchestrator-overview.md
+  - codex/05-infrastructure/per-tab-worktrees.md
+  - codex/12-agent-workflow/README.md
+  - agent-orchestrator/agents/main.md
+  - agent-orchestrator/agents/worker.md
+---
+
+# Harsh laptop migration — to shared agent-orchestrator
+
+> Goal: retire `orch.epiphanytechnologies.com` (Harsh's standalone orchestrator backend on his laptop) and consolidate
+> onto the shared agent-orchestrator backend running on the Ikenna AWS VM at
+> `https://api.agent-orchestrator.odum-research.com` (API) + `https://agent-orchestrator.odum-research.com/` (dashboard
+> SPA).
+>
+> Harsh's laptop becomes a **worker host** that runs slot worktrees + crons + Claude Code sessions, but does NOT run its
+> own FastAPI backend. All state lives centrally on the VM. One source of truth in the dashboard.
+
+This doc is the canonical migration checklist for Harsh. Ikenna keeps it current as the shared setup evolves (see
+"Change log" at the bottom).
+
+---
+
+## Target architecture (after migration)
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│   Shared backend (AWS VM, asia-northeast1-c equivalent on EC2)     │
+│   - uvicorn FastAPI                  → https://api.agent-orch...   │
+│   - SQLite state (orchestrator.db)                                 │
+│   - WorkerLivenessKicker (tmux-kick every 45s)                     │
+│   - TmuxPruner, ApiKeyReloader, …                                  │
+│   - Dashboard SPA served from same uvicorn (Vite-built dist/)      │
+│   - Cron: slot-cron-ff-pull (every 5 min)                          │
+│   - Cron: slot-git-status-report (every 5 min @ :2,7,12,…)         │
+│   - Slots running on VM:    9, 10, 11, 12  (Cluster A/B/C + spare) │
+└────────────────────────────────────────────────────────────────────┘
+                            ▲
+                            │ HTTPS + JWT
+                            │
+┌───────────────────────────┴────────────────────────────────────────┐
+│  Operator laptops (each is just a worker host, no backend)         │
+│                                                                    │
+│  Ikenna mac:                       Harsh laptop (Linux):           │
+│  - .tabs/1..8 worktrees            - .tabs/13..20 worktrees        │
+│  - Cron: slot-cron-ff-pull         - Cron: slot-cron-ff-pull       │
+│  - Cron: slot-git-status-report    - Cron: slot-git-status-report  │
+│    (slots 1-8)                       (slots 13-20)                 │
+│  - Cursor/Claude Code interactive  - Cursor/Claude Code interactive│
+│    sessions per slot                 sessions per slot             │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Slot range**: Harsh's slots are **13-20** by default (Ikenna owns 1-12 across local mac + AWS VM). This is
+operator-tunable — if you need a different range, ping `ikenna@odum-research.com` before bootstrapping so the auth +
+workspace assumptions match.
+
+**No `orch.epiphanytechnologies.com` anymore.** That backend is decommissioned once the migration is verified (see "Step
+8 — decommission").
+
+---
+
+## Pre-migration audit
+
+Before changing anything, snapshot what's on Harsh's laptop today:
+
+```bash
+# What backend is Harsh's existing orchestrator running?
+ssh harsh-laptop 'systemctl --user status orch* 2>&1 | head -10 || true; \
+                  ps -ef | grep -iE "uvicorn|orchestrator|epiphany" | grep -v grep'
+
+# What worktrees exist?
+ls -d ${WORKSPACE_PATH}/.tabs/*/  2>/dev/null
+
+# Active Claude sessions?
+tmux ls 2>&1 | grep -iE "orch|slot|harsh"
+
+# Pending work on Harsh's side (per the old file-based ledger format)?
+cat ${WORKSPACE_PATH}/unified-trading-pm/harsh_orchestrator/LEDGER.md \
+  | grep -E "🟢 IN FLIGHT|🟡 BLOCKED|🟡 IN-FLIGHT" || true
+```
+
+Save the output to a file (`/tmp/harsh-pre-migration-audit.txt`) — useful for verifying Step 7 below ("no work lost").
+
+---
+
+## Step 1 — read the canonical references
+
+Read these BEFORE any commands. They are the source of truth that the migration commands wrap:
+
+1. `unified-trading-pm/cursor-configs/CLAUDE.md` — workspace-wide HARD RULES (Quality Gates Are A Merge Prerequisite,
+   Data Pipeline Correctness Is The Heartbeat, Every Active Ping Must Reference A Plan Item, etc.)
+2. `unified-trading-pm/codex/04-architecture/agent-orchestrator-overview.md` — what the orchestrator is, its API
+   surface, model tiers.
+3. `unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md` — the 3-tier (operator → slot → sub-agent)
+   isolation model + the `setup-tab-worktrees.sh` bootstrap.
+4. `agent-orchestrator/agents/RULES.md` — slim shared rules for every agent (worker / main / review). Read first per its
+   STEP 0 directive.
+5. `agent-orchestrator/agents/worker.md` — what Harsh's per-slot Claude sessions should run as.
+6. `agent-orchestrator/agents/main.md` — if Harsh wants to also run a "main" agent (orchestration assistant chat), this
+   is the prompt.
+
+---
+
+## Step 2 — update workspace clones to current `main` / `live-defi-rollout`
+
+Harsh's laptop already has `${WORKSPACE_PATH}/unified-trading-system-repos/`. Bring every clone to current state:
+
+```bash
+WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
+cd "${WORKSPACE_PATH}"
+
+# Per-repo branch convention:
+#   - agent-orchestrator → branch `main` (no LDR for this repo per 2026-05-20 decision)
+#   - everything else    → branch `live-defi-rollout`
+
+# Update agent-orchestrator first (gets the dashboard SPA + reporter contract)
+cd "${WORKSPACE_PATH}/agent-orchestrator"
+git fetch origin main
+git checkout main
+git pull --ff-only origin main
+
+# Update unified-trading-pm next (workspace SSOT)
+cd "${WORKSPACE_PATH}/unified-trading-pm"
+git fetch origin live-defi-rollout
+git checkout live-defi-rollout
+git pull --ff-only origin live-defi-rollout
+
+# Verify the migration doc lives where this README says it does
+ls -la codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md
+```
+
+If any repo refuses to FF-pull (diverged because Harsh has uncommitted local edits): stash by file name (NOT
+`git stash -u` blindly), pull, pop. See `per-tab-worktrees.md § "Step 7 — troubleshooting"` for the autostash-conflict
+recovery recipe.
+
+---
+
+## Step 3 — bootstrap Harsh's slot range
+
+Provision slot worktrees `13` through `20` (8 slots default — same count as Ikenna's local). Each `.tabs/<N>/` will
+contain a per-repo worktree on branch `tab/harsh/<N>`.
+
+```bash
+cd "${WORKSPACE_PATH}"
+bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8 --start-slot 13 --operator harsh
+```
+
+Note: `--start-slot` may not yet exist; if not, run `--add-slot <N>` in a loop:
+
+```bash
+for N in 13 14 15 16 17 18 19 20; do
+    bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot $N --operator harsh
+done
+```
+
+After bootstrap, verify:
+
+```bash
+ls -d "${WORKSPACE_PATH}/.tabs/"*/  # should show 13/, 14/, ..., 20/
+ls -d "${WORKSPACE_PATH}/.tabs/13/"*/ | wc -l   # ~27 repos (each is a git worktree)
+```
+
+---
+
+## Step 4 — get a JWT for the shared backend
+
+Harsh logs in once to mint an auth token. The token persists at `${HOME}/.orch_token` (mode 600) and is used by the
+reporter cron + any direct API calls.
+
+```bash
+# Replace <password> with operator-shared password (ask Ikenna out-of-band)
+LOGIN_RESP=$(curl -sS -X POST https://api.agent-orchestrator.odum-research.com/api/auth/login \
+    -H 'Content-Type: application/json' \
+    -d '{"username":"harsh","password":"<password>"}')
+echo "$LOGIN_RESP" | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])" > "${HOME}/.orch_token"
+chmod 600 "${HOME}/.orch_token"
+
+# Sanity check — should print mode info, not 401
+TOKEN=$(cat "${HOME}/.orch_token")
+curl -sS https://api.agent-orchestrator.odum-research.com/api/mode \
+    -H "Authorization: Bearer $TOKEN"
+```
+
+For per-slot worker tokens (used by the worker's `/boot` + `/heartbeat`), Ikenna issues those server-side (using the
+orchestrator JWT secret) and drops them at `${WORKSPACE_PATH}/.tabs/<N>/.orch_token`. Ping Ikenna to issue tokens for
+slots 13-20 after Step 3 lands.
+
+---
+
+## Step 5 — install the two crons (every 5 min, offset by 2 min)
+
+```bash
+WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
+
+# Cron line 1 — fast-forward pull (origin/<branch> → local)
+( crontab -l 2>/dev/null | grep -v "slot-cron-ff-pull";
+  echo "*/5 * * * * cd ${WORKSPACE_PATH}/.tabs/13 && bash ${WORKSPACE_PATH}/unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh --all-slots --quiet --workers 4 >> /tmp/slot-cron-ff-pull.log 2>&1 # slot-cron-ff-pull"
+) | crontab -
+
+# Cron line 2 — git-status drift reporter (offset by 2 min to avoid collision)
+( crontab -l 2>/dev/null | grep -v "slot-git-status-report";
+  echo "2,7,12,17,22,27,32,37,42,47,52,57 * * * * cd ${WORKSPACE_PATH}/.tabs/13 && bash ${WORKSPACE_PATH}/unified-trading-pm/scripts/dev/slot-git-status-report.sh --quiet --slots 13,14,15,16,17,18,19,20 >> /tmp/slot-git-status-report.log 2>&1 # slot-git-status-report"
+) | crontab -
+
+# Verify
+crontab -l | grep -E "slot-cron-ff-pull|slot-git-status-report"
+```
+
+After the first 5-min boundary, check both logs:
+
+```bash
+tail -20 /tmp/slot-cron-ff-pull.log
+tail -20 /tmp/slot-git-status-report.log
+```
+
+Both should show per-slot per-repo activity. The dashboard's slot cards should now show GitStatusBadge for slots 13-20
+(green/yellow/red dots).
+
+---
+
+## Step 6 — spawn Claude Code sessions per slot
+
+Two patterns, pick by how Harsh prefers to work:
+
+### Pattern A — dashboard-driven spawn (operator clicks "+ Spawn worker")
+
+From the dashboard at `https://agent-orchestrator.odum-research.com/` go to **Fleet** → click "+ Spawn worker" on each
+slot tile. The orchestrator backend on the VM does NOT spawn workers on Harsh's laptop directly — this pattern only
+works when slots run ON the VM (slots 9-12). For Harsh's laptop slots (13-20), use Pattern B.
+
+### Pattern B — local tmux-spawn from Harsh's laptop
+
+Each slot gets its own tmux session running `claude --dangerously-skip-permissions`. Use
+`unified-trading-pm/scripts/dev/spawn-local-slot.sh` (or the equivalent manual recipe):
+
+```bash
+for N in 13 14 15 16 17 18 19 20; do
+    bash "${WORKSPACE_PATH}/unified-trading-pm/scripts/dev/spawn-local-slot.sh" \
+        --slot $N \
+        --operator harsh \
+        --model claude-sonnet-4-6 \
+        --effort high
+done
+```
+
+Once spawned, each session needs the worker boot prompt pasted in. The canonical template is
+`agent-orchestrator/agents/worker.md`. For Harsh, the per-slot prompt is:
+
+```
+You are slot <N> (find your slot number from PWD: .tabs/<N>/).
+Boot via your worktree's .boot.md + register via /api/slots/<N>/boot.
+Read agents/worker.md end-to-end before any work.
+Server: https://api.agent-orchestrator.odum-research.com
+Token: cat .orch_token  (per-slot JWT issued by Ikenna)
+Model: Sonnet 4.6 high
+```
+
+(Pattern C — Cursor IDE instances — also works for Harsh if he prefers IDE chat over headless tmux. The `.tabs/<N>/` is
+the workspace root; Cursor opens .tabs/13, then claude-code-chat boots the worker. The reporter cron does NOT depend on
+tmux either way.)
+
+---
+
+## Step 7 — verify "no work lost" from epiphany backend
+
+Cross-reference the pre-migration audit (Step 0):
+
+1. **In-flight tasks from Harsh's old LEDGER.md**:
+   - For each `🟢 IN FLIGHT` row in `unified-trading-pm/harsh_orchestrator/LEDGER.md` at audit time, check whether the
+     work shipped:
+     - YES (commit on `live-defi-rollout` for the repo named in the row) → mark row `✅ done` in the LEDGER with the
+       SHA.
+     - NO → add as a fresh backlog entry in the orchestrator backend (see `agents/main.md § Backlog YAML entry`).
+
+2. **Pending pings from `harsh_orchestrator/_agent_pings.md`**:
+   - Per the workspace `Every Active Ping Must Reference A Plan Item` HARD RULE, every active ping should already
+     reference a plan-of-record. The ones that don't will be flagged by the 4-hour orphan-ping cron (which runs on
+     Ikenna's local + the VM — Harsh doesn't need to install it).
+   - Confirm Harsh's recent pings are still in the file (i.e. nothing was lost during the laptop's epiphany backend
+     shutdown).
+
+3. **Slot rows in shared backend**:
+   ```bash
+   TOKEN=$(cat "${HOME}/.orch_token")
+   curl -sS "https://api.agent-orchestrator.odum-research.com/api/state" \
+       -H "Authorization: Bearer $TOKEN" \
+     | python3 -c "import json,sys; d=json.load(sys.stdin); [print(s['slot_id'],s['status'],s.get('current_task')) for s in d['slots'] if s['slot_id']>=13]"
+   ```
+   Expect 8 rows for slots 13-20, each either `idle` (no current task) or `working` (after Step 6 boot completes).
+
+---
+
+## Step 8 — decommission `orch.epiphanytechnologies.com`
+
+Only after Step 7 verifies no work lost:
+
+```bash
+# On Harsh's laptop — stop the old backend
+systemctl --user stop orch-epiphany 2>&1 || true
+systemctl --user disable orch-epiphany 2>&1 || true
+
+# Optional: archive the old config so future-Harsh can reference what was there
+mv ~/.config/orch-epiphany ~/.config/orch-epiphany.ARCHIVED-2026-05-20
+
+# DNS — remove the A/CNAME for orch.epiphanytechnologies.com (Ikenna will action
+# from Cloudflare side once Harsh confirms ready)
+```
+
+After DNS removal, ping Ikenna to verify no stale clients are still hitting the old URL (look at the VM's nginx access
+logs for traffic patterns).
+
+---
+
+## Operating norms (read once, then it's just work)
+
+- **Branch per repo**: `agent-orchestrator` is on `main`; all other repos use `live-defi-rollout`. See
+  `cron-branch-overrides.txt` for the runtime SSOT used by the FF-pull cron.
+- **Commit + push + flip plan checkbox in same agent turn**: the workspace has a HARD RULE on this (see CLAUDE.md §
+  "Commit + Push + Flip Plan Checkboxes As You Ship Each Item"). Backfill-flipping later is reviewer- rejected.
+- **Quality gates are a merge prerequisite**: `bash scripts/quality-gates.sh` exit 0 before any push. No exceptions
+  without `BLOCKED-OPERATOR-DECISION`.
+- **Foreign-files rule**: never `git checkout HEAD -- <conflicted_file>` on a file you don't own. Stash by name; if
+  rebase autostash conflicts, abort and recover via dangling-commit reflog. Full incident recipe in
+  per-tab-worktrees.md.
+- **Sub-agents start fresh**: paste `SUB_AGENT_MANDATORY_RULES.md` at the top of every Task spawn. The PM repo has an
+  inject helper.
+
+---
+
+## Sanity check (5-minute smoke after migration)
+
+```bash
+# 1. Token works
+TOKEN=$(cat "${HOME}/.orch_token")
+curl -sS https://api.agent-orchestrator.odum-research.com/api/mode -H "Authorization: Bearer $TOKEN"
+# Expect: {"mode":"live", ...}
+
+# 2. Crons installed
+crontab -l | grep -cE "slot-cron-ff-pull|slot-git-status-report"
+# Expect: 2
+
+# 3. Worktrees present
+ls -d "${WORKSPACE_PATH}/.tabs/"{13,14,15,16,17,18,19,20}/  2>&1
+# Expect: 8 directory paths
+
+# 4. Reporter has posted at least once
+ssh agent-orchestrator-vm "TOKEN=\$(cat /home/ubuntu/unified-trading-system-repos/.tabs/9/.orch_token); \
+    curl -sS http://127.0.0.1:8765/api/slots/13/git-status -H \"Authorization: Bearer \$TOKEN\" | head -c 300"
+# Expect: JSON with host=<harsh-laptop-hostname>, repos array
+
+# 5. Dashboard shows Harsh's slots
+# Open https://agent-orchestrator.odum-research.com/ → Fleet tab
+# Expect: slots 13-20 with GitStatusBadge (mostly green right after init)
+```
+
+---
+
+## When something goes wrong
+
+- **Reporter logs `[skip:no-token]` for every slot** — Ikenna hasn't issued per-slot tokens yet (Step 4 only mints the
+  operator-level token; per-slot tokens are server-side). Ping Ikenna.
+- **Reporter logs `HTTP 404 — slot N not found`** — backend doesn't have a row for slot N yet. Boot a worker into that
+  slot (Step 6) — the row appears on first `/boot` call.
+- **FF-pull cron logs `[skip:dirty]` for every repo** — that's normal during active work; the FF puller refuses to touch
+  dirty trees. Once Harsh commits + pushes, the next cron tick will FF cleanly.
+- **Dashboard shows red GitStatusBadge that won't go away** — either the reporter cron is broken (check
+  `/tmp/slot-git-status-report.log`), or the repo is genuinely stuck (dirty >60 min OR clean+behind >10 min — both
+  indicate operator should intervene).
+
+---
+
+## Change log
+
+| Date       | Change                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| 2026-05-20 | Initial doc — covers shared-backend migration, slot range 13-20, FF-pull + git-status-report crons |
+
+Future updates land here as the shared setup evolves (e.g. new cron, new agent.md spec, new dashboard panel that
+requires opt-in).
+
+---
+
+## Related plans
+
+- `plans/active/per_agent_worktrees_2026_05_10.md` — 3-tier worktree model
+- `plans/active/agent_reliability_mitigations_2026_05_20.md` — Phase 1-4 features that the shared backend now ships
+  (pre-spawn dirty gate, in_flight_files heartbeat, .agent-claim ownership, GHA webhook).
