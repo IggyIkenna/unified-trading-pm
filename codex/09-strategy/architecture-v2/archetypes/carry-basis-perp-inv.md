@@ -165,6 +165,14 @@ Phase 7.5 adaptive sizing (rolling 7d + 30d funding-APR mean):
 - **Smart contract**: Aave / Morpho exploit risk; mitigated by per-protocol position caps
 - **Typical Sharpe**: 1.5–3.5 in +funding regime; degrades to 0.8–1.2 in neutral-funding regime
 
+## Example instances
+
+```
+CARRY_BASIS_PERP_INV@aave-hyperliquid-eth-usdt-prod
+CARRY_BASIS_PERP_INV@morpho-bybit-eth-usdt-prod
+CARRY_BASIS_PERP_INV@aave-hyperliquid-btc-usdt-prod
+```
+
 ## See also
 
 - Historical doc (pre-rename): [carry-recursive-borrow-perp-hedged.md](carry-recursive-borrow-perp-hedged.md)
