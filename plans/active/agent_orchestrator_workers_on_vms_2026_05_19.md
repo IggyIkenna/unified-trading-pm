@@ -173,6 +173,7 @@ P1 (design confirm) ─┐
 - [x] [SCRIPT] P0. `scripts/worker-host-preflight.sh` — idempotent: claude theme/onboarding flags, per-worktree
       `hasTrustDialogAccepted`, credentials-present check, `/tmp` writability, + live self-test spawn. — agent-orchestrator
 - [x] [DOC] P0. `docs/WORKER_SPAWN_PREREQUISITES.md` — the four gates + the `nsenter` diagnostic + provisioning steps. — agent-orchestrator
+- [x] ✅ [AGENT] P0. `server/worker_liveness.py` — `WorkerLivenessKicker` daemon thread (mirrors `TmuxPruner`): classify pane (working/frozen/idle), kick frozen+idle via send-keys+sleep1+C-m, per-slot debounce (2×interval), `worker_kicked` activity event. Wired into `server.lifespan` next to `TmuxPruner`. Tests in `tests/test_worker_liveness.py` (21 tests, classifier fixtures, blocked-skip, debounce). ruff+basedpyright+pytest green; CI green. — agent-orchestrator@9e18f97
 - [ ] [SCRIPT] P1. Spawn endpoint auto-ensures folder-trust + onboarding flags in `~/.claude.json` for the target
       worktree before launching claude (reuse the `worktree_setup` bootstrap hook that already runs on spawn). — agent-orchestrator
 - [ ] [SCRIPT] P1. Spawn endpoint preflights `/tmp` writability **in its own namespace** and returns a specific 5xx
