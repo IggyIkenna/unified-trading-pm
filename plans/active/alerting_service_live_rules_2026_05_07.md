@@ -25,8 +25,6 @@ estimate_calibration_note: |
 
 > **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20 (asia-northeast1-c, staging, 48h). Tarball rebuilt at alerting-service@503ba57 (includes heartbeat fix @5717987). Auto-shutdown at T+48h (~2026-05-22 11:12 UTC). **Banner owner**: Slot 7 (launched 2026-05-20). Monitor: `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`
 
-> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
-
 
 > **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
 > merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new

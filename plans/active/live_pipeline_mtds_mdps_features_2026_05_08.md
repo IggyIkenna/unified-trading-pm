@@ -1050,8 +1050,6 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19** — strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive lands. Internal bugfixes + test work + plan-flip backfills continue.
-
 
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
