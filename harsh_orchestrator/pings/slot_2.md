@@ -1,3 +1,11 @@
+[2026-05-20 UTC] slot-2 → operator — 🟡 BLOCKED-OPERATOR × 6 items in `defi_catalogue_chain_primitives_2026_05_10.md` (all flipped [BLOCKED-OPERATOR] 2026-05-20):
+- **6C** Solana LST Pyth backfill: launcher `launch-mtds-pyth-lst-backfill-vm.sh` says "DO NOT LAUNCH without operator [ack]". Rocket Pool / Solblaze feed IDs still needed. → **Unblock**: ack in this file + provide rETH/bSOL Pyth feed IDs.
+- **6D** Lighter/Pacifica/Extended OHLCV backfill: no launcher script exists; backfill window + VM cost decision needed. → **Unblock**: specify date range + approve VM launch (estimate: 1-3 VMs, <$50/each).
+- **6E** Vaults/restaking/DEX historical (26 protocols): 26 per-protocol VMs need operator priority triage. Vault share-price launcher + EigenLayer launcher exist. → **Unblock**: confirm priority order (vault-share-price first? or operator-chosen list).
+- **8A** Paper-trade multi-archetype run: carry_staked_basis paper VM running since 2026-05-18. leveraged_funding_arb + Tenderly fork 24h run need operator-orchestrated launch. → **Unblock**: operator trigger `bash run-paper.sh --archetype leveraged_funding_arb`.
+- **8B** Reconciliation rule: depends on `alerting_service_live_rules` plan completion. → **Unblock**: confirm alerting_service_live_rules status.
+- **8C** 7-day live-trade proof: HARD-STOP — wallet keys human-only. → **Unblock**: operator wallet provisioning + explicit testnet launch (Group F item 17 gate; May-23 critical path).
+
 [2026-05-19 15:00 UTC] slot-1-main → slot 2 (Harsh side) — 🔴 OPERATOR BROADCAST: commit + push your dirty work to slot branch + FF to LDR. See [`plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md`](../../plans/active/_operator_broadcast_2026_05_19_commit_dirty_work.md). Ack here once your tab is clean.
 
 ---
