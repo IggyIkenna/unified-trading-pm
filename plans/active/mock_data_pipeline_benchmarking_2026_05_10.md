@@ -27,12 +27,6 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Mock-data pipeline benchmarking
 
 > **Status 2026-05-12 17:05 UTC (slot-7 Day-2 EOD)**: Phases 0-7 ✅ shipped + Phase 5.B/5.C/6.A-C ✅ ran end-to-end on
@@ -204,9 +198,9 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...`samples; where it hasn't, keep the estimate + a`#
       ESTIMATE`    marker. The`defi_gas`non-uniform per-chain block-rate distribution (ETH 7.2k / ARB 350k / OP+BASE 43.2k / SOL     216k blocks per day) is in`PER_CHAIN_BLOCK_RATE_PER_DAY` (utl@`ca9c346`) — tune those numbers, do NOT switch to a     uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays     active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into     `live_pipeline_mtds_mdps_features_2026_05_08`.
-- [x] ✅ [AGENT] P2. **[BLOCKED-OPERATOR-DECISION — blocked on 3.D] 3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.**
-      **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20). CeFi bucket has
-      `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
+- [x] ✅ [AGENT] P2. **[BLOCKED-OPERATOR-DECISION — blocked on 3.D] 3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing
+      from generators.** **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20). CeFi bucket
+      has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
       total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. Do NOT add until 3.D confirms MTDS
       reads it. Migrated to named successor plan; ping filed 2026-05-19.
 - [x] ✅ [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **RATIFIED 2026-05-17
@@ -217,10 +211,10 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       entry needed. The `# ESTIMATE` marker on the 5 DeFi specs is unrelated to this data_type (it's about per-chain
       block-rate calibration tracked separately). Closed-decision per slot-2's architectural ship + slot-8's diagnostic
       at `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`.
-- [x] ✅ [AGENT] P1. **[BLOCKED-OPERATOR-DECISION — subprocess VM run needs operator sign-off] 3.D Prod-reader schema-parity verification.**
-      **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20). Partial progress already
-      shipped: (1) ✅ MTDS reader wire-in (mtds@`82639e0`); (2) ✅ strategy-service reader wire-in
-      (strategy@`a03d12e`); (3) ✅ ml-inference-service wire-in (ml-inference@`0206358`); (4) ✅ harness
+- [x] ✅ [AGENT] P1. **[BLOCKED-OPERATOR-DECISION — subprocess VM run needs operator sign-off] 3.D Prod-reader
+      schema-parity verification.** **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20).
+      Partial progress already shipped: (1) ✅ MTDS reader wire-in (mtds@`82639e0`); (2) ✅ strategy-service reader
+      wire-in (strategy@`a03d12e`); (3) ✅ ml-inference-service wire-in (ml-inference@`0206358`); (4) ✅ harness
       `mtds_read` `--operation download` fix (utl@`7eceaba`). Remaining subprocess-mode harness run + schema-drift
       assertion + slot-8 handshake items migrated to named successor plan with full provenance.
 
@@ -499,8 +493,13 @@ finding annotated. ✅
 3. ✅ Per-archetype × per-VM-shape profile matrix; recommendations justified — 8 VMs × 6 stages × 2 archetypes → 44
    cells in `gs://central-element-323112-benchmark-reports/benchmark_report/benchmark_report.{parquet,md}`; per-stage
    P95 + recommended shape table in Phase 6.A/6.B body.
-4. ✅ [BLOCKED-OPERATOR-DECISION] Bottleneck callouts cross-plan handoff annotated in `live_pipeline_mtds_mdps_features_2026_05_08` — mtds_read + strategy within budget on c2-standard-8; 4 failing stages await Phase 3.D (BLOCKED-OPERATOR-DECISION) before real wall-clock data exists. Real callouts after Phase 3.D + re-run. No agent action possible without operator unblocking Phase 3.D.
-5. ✅ [IKENNA-SIDE] Master plan Group F item 18 row budget assertion — Ikenna-side row; Phase 8.A `[x]` in plan body at UTL@f942dc54 with `BudgetExceededError` + 4 unit tests. Group F item 18 row updated. No further agent action required from Harsh side.
+4. ✅ [BLOCKED-OPERATOR-DECISION] Bottleneck callouts cross-plan handoff annotated in
+   `live_pipeline_mtds_mdps_features_2026_05_08` — mtds_read + strategy within budget on c2-standard-8; 4 failing stages
+   await Phase 3.D (BLOCKED-OPERATOR-DECISION) before real wall-clock data exists. Real callouts after Phase 3.D +
+   re-run. No agent action possible without operator unblocking Phase 3.D.
+5. ✅ [IKENNA-SIDE] Master plan Group F item 18 row budget assertion — Ikenna-side row; Phase 8.A `[x]` in plan body at
+   UTL@f942dc54 with `BudgetExceededError` + 4 unit tests. Group F item 18 row updated. No further agent action required
+   from Harsh side.
 
 ## Audit findings
 

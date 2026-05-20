@@ -24,13 +24,10 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
-> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active workspace-wide. STEP 5.77 (L2) blocks mode-conditional branching outside seam in writegate consumer code. Verify `bash scripts/quality-gates.sh` before merging record_captured() wiring changes or mode-routing callsites in Phase 4+ writegate work.
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 (QG STEPs L1/L5/L2/L3/L7, 2026-05-20)**: Mode-axis QG enforcement active
+> workspace-wide. STEP 5.77 (L2) blocks mode-conditional branching outside seam in writegate consumer code. Verify
+> `bash scripts/quality-gates.sh` before merging record_captured() wiring changes or mode-routing callsites in Phase 4+
+> writegate work.
 
 ## Deferred work — migrated to:
 
@@ -51,41 +48,41 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 ### Phase/Wave status
 
-| Phase                                                                       | Status     | Key commits / blocker                                                                                                |
-| --------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- |
-| P0-2 Steps 1-4 + 6                                                          | ✅         | mdps@d717c59…a964b96 + mdps@89eacc6                                                                                  |
-| P0-2 Step 5 (OHLCV nullability)                                             | 🔒         | Blocked: `hard_schema_enforcement_2026_05_08` → tradfi futures-expiry                                                |
-| 1A — UTL contract (record_captured + stamping + 14 tests)                   | ✅         | UTL@958634f9; open: QG ratchet step                                                                                  |
-| 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)      |
-| 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                          |
-| 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                     |
+| Phase                                                                       | Status     | Key commits / blocker                                                                                                                                                                                       |
+| --------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0-2 Steps 1-4 + 6                                                          | ✅         | mdps@d717c59…a964b96 + mdps@89eacc6                                                                                                                                                                         |
+| P0-2 Step 5 (OHLCV nullability)                                             | 🔒         | Blocked: `hard_schema_enforcement_2026_05_08` → tradfi futures-expiry                                                                                                                                       |
+| 1A — UTL contract (record_captured + stamping + 14 tests)                   | ✅         | UTL@958634f9; open: QG ratchet step                                                                                                                                                                         |
+| 1B — UAC SSOTs (honest_coverage + source_priority + availability_semantics) | ✅ partial | Open: DATA_TYPE_TO_CLUSTER_REGISTRY + SPORTS_FIXTURE_CLUSTERS + PREDICTION_GROUPS (blocked on predictions plan)                                                                                             |
+| 1C — CLAUDE.md rules                                                        | ✅         | PM@989da6e0                                                                                                                                                                                                 |
+| 2.A — MDPS `_create_empty_output` (Tiers 2A/C/D/E)                          | ✅ partial | Open: v6 col wiring (quote_asset/margin_type), chain-bundle cluster_extractor, per-adapter tests                                                                                                            |
 | 2.B — MTDS cluster wiring                                                   | ✅ partial | GMX per-chain + skip-atom granularity + DeFi venue-split: market-tick-data-service@d5773c3; open: DatabentoClassification.root_cluster + futures_expiry_bucket + sports per-fixture sharding (Ikenna scope) |
-| 2.C — features-sports stamping                                              | ❌         | coaches/rounds ✅ (features-service@842ff741); open: fixture_lineups + fixture_player_stats + per-table available_at |
-| 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                |
-| 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                   |
-| 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                     |
-| 2.E.3 — downstream consumer audit (7 services)                              | ❌         | Ready; ~3-4 days                                                                                                     |
-| 3.A — reconciliation scripts (4 scripts)                                    | ✅ partial | Open: pre-v5 row purge, category=→asset_group= GCS migration runbook                                                 |
-| 3.B/3.C — GCS backfills + reconciler observability                          | ❌         | Ready; ~2-3 days                                                                                                     |
-| 3.D.1 — reconcile_expected_absence_reasons.py                               | ✅         | instruments-service@1f93745 + UTL@c5c2669e                                                                           |
-| 3.D.2 — reader-side classify_legacy_empty_row                               | ✅         | UTL@c5c2669e + deployment-api@176c599                                                                                |
-| 3.D.4 — v1 enumerator (1,455,901 rows / 5 asset_groups)                     | ✅         | All 5 VMs complete; deployment-ui spot-check pending                                                                 |
-| 3.D.5 — v2 catalog-driven enumeration                                       | ❌         | 0% started; ~8-12 days                                                                                               |
-| Wave 3 — cross-service cascade (expected_unattempted)                       | ❌         | Depends on 3.D.5; ~5-7 days                                                                                          |
-| Wave 3.S — sports/prediction per-source rules                               | ❌         | ~2-3 days                                                                                                            |
-| Wave 3.M — CeFi zero-activity bars                                          | ❌         | 0% started; UTL zero_activity_bars helper doesn't exist yet                                                          |
-| Wave 3.X — dimensions audit (11 SSOTs)                                      | ❌         | ~5-8 days                                                                                                            |
-| Wave 4 Slice (a) — ServiceEmissionPolicy enum + 48 tests                    | ✅         | UAC@58c3b61 + UTL@1a7e1d4b                                                                                           |
-| Wave 4 Slice (b) — Phase 5.1-5.7 MDPS POC + API + UI                        | ✅         | MDPS@9e1a93e + deployment-api@3a0948e + deployment-ui@00132db                                                        |
-| Wave 4 Slice (c) Phase 6.1 — MTDS audit (n/a)                               | ✅         | MTDS is originator, no wiring needed                                                                                 |
-| Wave 4 Slice (c) Phase 6.2 — MDPS remaining 3 data_types                    | ✅         | MDPS@d0df50c + @311614a; 1 follow-on: v8 col passthrough to record_captured                                          |
-| Wave 4 Slice (c) Phase 6.3-6.9 — per-service rollout                        | ❌         | ~15-20 days; Phase 6.3 features-vol = BUILD FROM SCRATCH                                                             |
-| 4.A — deployment-api typed-reason rendering                                 | ✅         | deployment-api@3b0477a                                                                                               |
-| 4.B — deployment-ui (badges + stacks + leaf modal)                          | ✅         | deployment-ui@a7384a0+621f0b3+8f630a6                                                                                |
-| 4.A/4.B residual — live-vs-historical alert + badge                         | ❌         | Multi-repo; ~2-3 days                                                                                                |
-| 5 — baseline + ratchet helper                                               | ✅ partial | UTL@59996210 + PM@5c876f9d; open: measure script (needs GCE VM), CI gate, write-gate quartet integration test        |
-| CeFi Tardis re-shape (migrated issue)                                       | ❌         | Decision → Option A; re-rescan 252 shards                                                                            |
-| MDPS liquidity baseline (migrated issue)                                    | ❌         | TickRateBaseline VM + DATA_QUALITY_SUSPECTED_GAP reason                                                              |
+| 2.C — features-sports stamping                                              | ❌         | coaches/rounds ✅ (features-service@842ff741); open: fixture_lineups + fixture_player_stats + per-table available_at                                                                                        |
+| 2.D — instruments-service schema bumps                                      | 🔒         | Scoped out; deferred to forward-poll-vs-backfill plan                                                                                                                                                       |
+| 2.E.1 — reason taxonomy (record_empty + 14 tests)                           | ✅         | UAC@8867891 + UTL@958634f9; open: QG AST-walk step                                                                                                                                                          |
+| 2.E.2 — per-service writer migration                                        | ✅ partial | instruments + features-sports + MDPS done; open: partial-bundle → EXPECTED_INSTRUMENT_NOT_LISTED                                                                                                            |
+| 2.E.3 — downstream consumer audit (7 services)                              | ❌         | Ready; ~3-4 days                                                                                                                                                                                            |
+| 3.A — reconciliation scripts (4 scripts)                                    | ✅ partial | Open: pre-v5 row purge, category=→asset_group= GCS migration runbook                                                                                                                                        |
+| 3.B/3.C — GCS backfills + reconciler observability                          | ❌         | Ready; ~2-3 days                                                                                                                                                                                            |
+| 3.D.1 — reconcile_expected_absence_reasons.py                               | ✅         | instruments-service@1f93745 + UTL@c5c2669e                                                                                                                                                                  |
+| 3.D.2 — reader-side classify_legacy_empty_row                               | ✅         | UTL@c5c2669e + deployment-api@176c599                                                                                                                                                                       |
+| 3.D.4 — v1 enumerator (1,455,901 rows / 5 asset_groups)                     | ✅         | All 5 VMs complete; deployment-ui spot-check pending                                                                                                                                                        |
+| 3.D.5 — v2 catalog-driven enumeration                                       | ❌         | 0% started; ~8-12 days                                                                                                                                                                                      |
+| Wave 3 — cross-service cascade (expected_unattempted)                       | ❌         | Depends on 3.D.5; ~5-7 days                                                                                                                                                                                 |
+| Wave 3.S — sports/prediction per-source rules                               | ❌         | ~2-3 days                                                                                                                                                                                                   |
+| Wave 3.M — CeFi zero-activity bars                                          | ❌         | 0% started; UTL zero_activity_bars helper doesn't exist yet                                                                                                                                                 |
+| Wave 3.X — dimensions audit (11 SSOTs)                                      | ❌         | ~5-8 days                                                                                                                                                                                                   |
+| Wave 4 Slice (a) — ServiceEmissionPolicy enum + 48 tests                    | ✅         | UAC@58c3b61 + UTL@1a7e1d4b                                                                                                                                                                                  |
+| Wave 4 Slice (b) — Phase 5.1-5.7 MDPS POC + API + UI                        | ✅         | MDPS@9e1a93e + deployment-api@3a0948e + deployment-ui@00132db                                                                                                                                               |
+| Wave 4 Slice (c) Phase 6.1 — MTDS audit (n/a)                               | ✅         | MTDS is originator, no wiring needed                                                                                                                                                                        |
+| Wave 4 Slice (c) Phase 6.2 — MDPS remaining 3 data_types                    | ✅         | MDPS@d0df50c + @311614a; 1 follow-on: v8 col passthrough to record_captured                                                                                                                                 |
+| Wave 4 Slice (c) Phase 6.3-6.9 — per-service rollout                        | ❌         | ~15-20 days; Phase 6.3 features-vol = BUILD FROM SCRATCH                                                                                                                                                    |
+| 4.A — deployment-api typed-reason rendering                                 | ✅         | deployment-api@3b0477a                                                                                                                                                                                      |
+| 4.B — deployment-ui (badges + stacks + leaf modal)                          | ✅         | deployment-ui@a7384a0+621f0b3+8f630a6                                                                                                                                                                       |
+| 4.A/4.B residual — live-vs-historical alert + badge                         | ❌         | Multi-repo; ~2-3 days                                                                                                                                                                                       |
+| 5 — baseline + ratchet helper                                               | ✅ partial | UTL@59996210 + PM@5c876f9d; open: measure script (needs GCE VM), CI gate, write-gate quartet integration test                                                                                               |
+| CeFi Tardis re-shape (migrated issue)                                       | ❌         | Decision → Option A; re-rescan 252 shards                                                                                                                                                                   |
+| MDPS liquidity baseline (migrated issue)                                    | ❌         | TickRateBaseline VM + DATA_QUALITY_SUSPECTED_GAP reason                                                                                                                                                     |
 
 ### Active blockers (external)
 
@@ -293,11 +290,11 @@ These bind every todo in this plan. Workspace CLAUDE.md additions in Phase 1C co
    `SOURCE_COVERAGE_START` / `KNOWN_COVERAGE_GAPS` / `venue_trading_calendar`); numerator counts only honest captures
    (real rows passing the 4-pillar write-gate). NaN placeholders + partial bundles + silent per-schema drops do not
    count.
-   > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: the numerator/denominator definition above is a prose description only.
-   > The **canonical implementation** is `compute_honest_coverage(CaptureStatusCounts(...))` from
-   > `unified_api_contracts` (`unified-api-contracts@a9891f9`). The five-field split adds the
-   > `expected_unattempted_known_empty` / `expected_unattempted_pending_fetch` distinction that this prose omits.
-   > SSOT: `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
+   > **⚠️ FORMULA SUPERSEDED (2026-05-19)**: the numerator/denominator definition above is a prose description only. The
+   > **canonical implementation** is `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts`
+   > (`unified-api-contracts@a9891f9`). The five-field split adds the `expected_unattempted_known_empty` /
+   > `expected_unattempted_pending_fetch` distinction that this prose omits. SSOT:
+   > `plans/active/honest_coverage_formula_consolidation_2026_05_19.md`.
 2. **Single SSOT only — no double-SSOT in the data-saving methodology.** Where two paths exist for the same outcome, one
    is deleted. No `_create_empty_output()` AND `_handle_empty_tick_data()`; no `_ensure_timestamp` shim AND per-source
    `stamp_available_at_*` helpers; no parallel v3-shape `_write_manifest_records` AND v6 canonical writer; no inline
@@ -1200,10 +1197,10 @@ opaque):
 - [ ] [QG] P0. Add UTL `quality-gates.sh` step that fails if `_create_empty_output`-style placeholder return patterns
       are reintroduced (grep-based static check; can be fooled but catches the obvious). [AUDIT 2026-05-07: FRESH —
       actionable; no grep against `_create_empty_output|_handle_empty_tick_data` regression in
-      unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.] **[BLOCKED-UTL-LIBRARY 2026-05-20 slot-6]:
-      STEP 5.67 lives in base-service.sh (service QG) only. UTL uses base-library.sh which does NOT include STEP 5.67.
-      Adding requires UTL repo + PM template edits — cross-repo scope outside this slot's assignment. Requires explicit
-      slot allocation targeting UTL + PM SSOT template propagation.]**
+      unified-trading-library/scripts/quality-gates.sh. ~1 hour to add.] **[BLOCKED-UTL-LIBRARY 2026-05-20 slot-6]: STEP
+      5.67 lives in base-service.sh (service QG) only. UTL uses base-library.sh which does NOT include STEP 5.67. Adding
+      requires UTL repo + PM template edits — cross-repo scope outside this slot's assignment. Requires explicit slot
+      allocation targeting UTL + PM SSOT template propagation.]**
 - [x] [DEP] P0. Bump UTL version (semver-agent handles; do NOT bump manually) on merge. (verified 2026-05-07:
       semver-agent auto-bumped on UTL@958634f9 + UTL@c5c2669e merges) [AUDIT 2026-05-07: STALE — semver-agent auto-fires
       on every merge with feat:/fix: prefix; UTL@958634f9 + UTL@c5c2669e have already shipped post-merge bumps. This
@@ -1432,7 +1429,7 @@ grep.
       verification todo: UAC owner confirms the wired set matches the v6 schema spec; flag any data_type whose row
       carries v6-relevant info we missed. [AUDIT 2026-05-07: FRESH — actionable; MDPS canonical_writer schema includes
       v6 columns but per-adapter population not yet audited. Tracked Open Question §3 also covers this. ~3-5 days work.]
-      — market-data-processing-service@5b95fb5 (_infer_v6_columns + _infer_cefi_quote_margin helpers wired into
+      — market-data-processing-service@5b95fb5 (\_infer_v6_columns + \_infer_cefi_quote_margin helpers wired into
       write_candle_parquet + close_candle_streaming_writer; CeFi: DERIBIT/USDT/USDC inference; TradFi: outright/single
       defaults; DeFi/sports/prediction: default "")
 - [x] [SCRIPT] P0. Add missing data_types to `_CEFI_TRADFI_DEFI_DATA_TYPES` in `orchestration_scanner.py:46–72`
@@ -1448,7 +1445,7 @@ grep.
       [AUDIT 2026-05-07: FRESH — actionable; zero `expected_root_clusters` callsites in MDPS (`grep -r
       "expected_root_clusters" market_data_processing_service/` returns empty). MTDS has the wiring at
       orchestrator.py:2155 for ES.OPT only; MDPS chain-bundle adapters need parallel wiring. Couples to MTDS Phase 2.B
-      item below.] — market-data-processing-service@5b95fb5 (_build_cluster_params: futures_chain →
+      item below.] — market-data-processing-service@5b95fb5 (\_build_cluster_params: futures_chain →
       FUTURES_CHAIN_BUCKETS + futures_expiry_bucket; options_chain → get_active_es_options_clusters_for_date +
       extract_es_options_cluster; threaded into both write_candle_parquet + close_candle_streaming_writer)
 - [x] ✅ [TEST] P0. Per-adapter integration test: simulate path A / path B / path C; assert correct manifest verb fires;
@@ -1464,9 +1461,9 @@ grep.
       **[BLOCKED-OPERATOR 2026-05-20 slot-6]: requires 37-VM production execution + deployment-ui post-run manifest
       review. Not automatable by agent without production GCS + running VM fleet. Operator must schedule and execute
       production backfill run; agent can verify manifest rows post-completion.]**
-- [x] ✅ [QG] P0. MDPS quality-gates.sh green. [AUDIT 2026-05-07: FRESH — actionable; depends on resolution of items above.
-      Last MDPS QG run: c924410 (auto-pass on push). Workspace-wide QG sweep is Phase 5 item.] — QG GREEN; STEP 5.67
-      passes (no banned placeholder methods); confirmed MDPS@18d3523 + MDPS@fefd65b. 2026-05-20 slot-6.
+- [x] ✅ [QG] P0. MDPS quality-gates.sh green. [AUDIT 2026-05-07: FRESH — actionable; depends on resolution of items
+      above. Last MDPS QG run: c924410 (auto-pass on push). Workspace-wide QG sweep is Phase 5 item.] — QG GREEN; STEP
+      5.67 passes (no banned placeholder methods); confirmed MDPS@18d3523 + MDPS@fefd65b. 2026-05-20 slot-6.
 
 ### Phase 2.B — MTDS partitioner validation + cluster wiring
 
@@ -1553,12 +1550,14 @@ grep.
       actual `data_type` strings registered are the per-data_type entries above (`ODDS_SNAPSHOT`, etc.). Update Phase 1B
       `BUNDLED_DATA_TYPES` seed to include those concrete data_type names.
 - [x] ✅ [SCRIPT] P0. GMX multi-chain — `perp_funding_handler.py:225` currently writes `chain=""`; emit per-chain Tier-2
-      fan-out per HANDOVER follow-up note. — market-tick-data-service@d5773c3 (_collect_gmx → dict[str, int], process() loops per chain)
+      fan-out per HANDOVER follow-up note. — market-tick-data-service@d5773c3 (\_collect_gmx → dict[str, int], process()
+      loops per chain)
 - [x] ✅ [SCRIPT] P0. Skip-if-exists granularity — `tick_data_handler.py:166` currently calls `check_shard_freshness` at
       `(venue, data_type, date)`; tighten to full v6 key including `quote_asset` + `margin_type` to avoid DERIBIT
-      inverse/linear suppression bug. — market-tick-data-service@d5773c3 (preflight_captured_atoms composite atom includes quote_asset+margin_type)
-- [x] ✅ [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple; replace
-      with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT). — market-tick-data-service@d5773c3
+      inverse/linear suppression bug. — market-tick-data-service@d5773c3 (preflight_captured_atoms composite atom
+      includes quote_asset+margin_type)
+- [x] ✅ [SCRIPT] P0. DeFi venue-split rationalisation — `orchestrator.py:1880–1908` hardcoded 27-protocol tuple;
+      replace with `_VENUE_MAPPING.all_defi_venues` lookup (single SSOT). — market-tick-data-service@d5773c3
 - [ ] [TEST] P0. MTDS unit test: feed a tick with `timestamp.date() != day_key` → assert rejection + event emission.
 - [ ] [TEST] P0. MTDS bundle adapter test: feed a partial bundle (8 of 11 ES.OPT clusters) → assert
       `record_failed(ClusterCoverageError)` fires + no parquet written.

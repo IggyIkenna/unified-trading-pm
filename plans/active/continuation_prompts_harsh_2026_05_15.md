@@ -8,11 +8,6 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Continuation Prompts — Harsh side, 2026-05-15 Day-1
 
 > **Status: ADOPTED 🟢** — operator authorized Lever 1+2 pattern @04:00 UTC. Slots execute their queue + self-pivot;
@@ -489,5 +484,5 @@ Today is Day-4 of the 4-day Harsh density-push cycle. EOD action:
 - [x] `bash scripts/agents/harsh_auto_poll.sh --watch` running in background (PID 80423, log: /tmp/harsh_auto_poll.log)
 - [x] All 8 slot worktrees `--reset-slot` clean to LDR; B-014 work preserved in 7 stashes (slot 8 recovers)
 - [x] Day-4 START pings dropped to all 8 slot ping files (this morning @04:18 UTC, then refreshed @04:26)
-- [x] ✅ Operator opens 8 Claude Code tabs in `.tabs/<N>/unified-trading-pm/` + pastes 1-line spawn prompt
-      (backfilled 2026-05-19 — workers are actively running as evidenced by slot-2 session executing plan closes)
+- [x] ✅ Operator opens 8 Claude Code tabs in `.tabs/<N>/unified-trading-pm/` + pastes 1-line spawn prompt (backfilled
+      2026-05-19 — workers are actively running as evidenced by slot-2 session executing plan closes)

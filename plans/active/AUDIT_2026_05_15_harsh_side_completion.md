@@ -14,12 +14,6 @@ sources:
   - origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Harsh-side Day-4 (2026-05-15) completion audit
 
 > **Purpose** — operator asked: of items closed today by parallel agents, which actually shipped (commit on

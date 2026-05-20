@@ -12,12 +12,6 @@ effective_concurrent_slots: 1
 companion_to: codex/06-coding-standards/ruff-discipline.md
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Workspace ruff auto-fix sweep
 
 > **Sonnet-suitable mechanical cleanup.** Per-repo cadence: rebase → `ruff format .` → `ruff check . --fix` →

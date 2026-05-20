@@ -29,11 +29,6 @@ model_tier: sonnet-doable
 thinking: high
 ---
 
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Expected-unattempted propagation chain — instruments → MTDS → MDPS → features → ML
 
 ## Why
@@ -330,11 +325,10 @@ Reconciler scripts should read instruments-service manifest once and pass into c
 
 ## Phase 2 — MDPS: record_expected_unattempted on skip + forward-fill semantics codification
 
-> **⚠️ COUNTING SEMANTICS SUPERSEDED (2026-05-19)**: this phase propagates `expected_unattempted` rows
-> correctly, but leaves the counting role of `expected_unattempted` unspecified. The **canonical split**
-> is: `expected_unattempted` with `error_reason` startswith `"EXPECTED_"` → counts toward numerator
-> (`expected_unattempted_known_empty`); non-`EXPECTED_*` reason → counts against coverage
-> (`expected_unattempted_pending_fetch`, retried on next backfill).
+> **⚠️ COUNTING SEMANTICS SUPERSEDED (2026-05-19)**: this phase propagates `expected_unattempted` rows correctly, but
+> leaves the counting role of `expected_unattempted` unspecified. The **canonical split** is: `expected_unattempted`
+> with `error_reason` startswith `"EXPECTED_"` → counts toward numerator (`expected_unattempted_known_empty`);
+> non-`EXPECTED_*` reason → counts against coverage (`expected_unattempted_pending_fetch`, retried on next backfill).
 > Formula SSOT: `compute_honest_coverage(CaptureStatusCounts(...))` from `unified_api_contracts`
 > (`unified-api-contracts@a9891f9`). Full plan: `honest_coverage_formula_consolidation_2026_05_19.md`.
 

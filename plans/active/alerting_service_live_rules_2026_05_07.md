@@ -23,13 +23,10 @@ estimate_calibration_note: |
   Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 ---
 
-> **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20 (asia-northeast1-c, staging, 48h). Tarball rebuilt at alerting-service@503ba57 (includes heartbeat fix @5717987). Auto-shutdown at T+48h (~2026-05-22 11:12 UTC). **Banner owner**: Slot 7 (launched 2026-05-20). Monitor: `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`
-
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
+> **🟢 VM RUNNING — alerting-quietness-20260520-111232** — Phase 7 quietness baseline VM RUNNING 2026-05-20
+> (asia-northeast1-c, staging, 48h). Tarball rebuilt at alerting-service@503ba57 (includes heartbeat fix @5717987).
+> Auto-shutdown at T+48h (~2026-05-22 11:12 UTC). **Banner owner**: Slot 7 (launched 2026-05-20). Monitor:
+> `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`
 
 > **🟡 IN-FLIGHT — Phase 8 of `defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` adds `HealthFactorMonitor` +
 > `LiquidationProximityCircuit` as new alerting consumers. These require kill-switch tier-up integration
@@ -488,7 +485,11 @@ reviews + tunes thresholds.
       `alerting-quietness-20260519-110752` KILLED after 1h — exit_code=137 (SIGKILL from vm-exec stall watchdog). Root
       cause: `orchestrator.run_subscriber_loop()` produced zero log output during quiet period (no alerts received) →
       vm-exec stall threshold=3600s hit → SIGKILL. VM self-deleted. **FIX SHIPPED**: alerting-service@5717987 adds
-      periodic heartbeat log every 30min to keep log alive. **ACTION REQUIRED resolved — RELAUNCHED 2026-05-20 Slot 7**: tarball rebuilt at alerting-service@503ba57 (includes @5717987 heartbeat fix). VM `alerting-quietness-20260520-111232` RUNNING (asia-northeast1-c, staging, 48h). Auto-shutdown ~2026-05-22 11:12 UTC. Monitor: `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`.
+      periodic heartbeat log every 30min to keep log alive. **ACTION REQUIRED resolved — RELAUNCHED 2026-05-20 Slot 7**:
+      tarball rebuilt at alerting-service@503ba57 (includes @5717987 heartbeat fix). VM
+      `alerting-quietness-20260520-111232` RUNNING (asia-northeast1-c, staging, 48h). Auto-shutdown ~2026-05-22 11:12
+      UTC. Monitor:
+      `gcloud storage ls gs://central-element-323112-events/events/alerting-service/2026-05-20/alerting-quietness-20260520-111232/`.
 - [ ] [HUMAN] P0. Per alert code, compute false-positive rate. Tune threshold: if FP > 10% per 24h, raise threshold by
       50% and re-run 24h. Iterate until FP < 5%/24h.
 - [ ] [SCRIPT] P0. Update `ALERT_THRESHOLDS` in UAC with tuned values. Annotate each entry with quietness-baseline-date.

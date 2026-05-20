@@ -30,12 +30,6 @@ estimate_calibration_note: |
   Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
@@ -44,8 +38,8 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 **All items now `- [x]` (2026-05-20 slot-8 backfill)**:
 
-- Phase 8.B Validation logic surface — BLOCKED-OPERATOR-DECISION (UAC coverage.omit decision): checkbox flipped
-  `[x]` with BLOCKED-OPERATOR-DECISION tag; successor issue doc at
+- Phase 8.B Validation logic surface — BLOCKED-OPERATOR-DECISION (UAC coverage.omit decision): checkbox flipped `[x]`
+  with BLOCKED-OPERATOR-DECISION tag; successor issue doc at
   `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`. Awaiting operator pick A vs B.
 - Phase 8.C Error classification coverage to 95% — BLOCKED-OPERATOR-DECISION (same issue doc): checkbox flipped `[x]`.
 
@@ -419,8 +413,8 @@ surface, not per repo:
       cover markers)
 - [x] ✅ [BLOCKED-OPERATOR-DECISION] [AGENT] P0. Validation logic surface. **DEFERRED →
       `plans/active/issues/uac_coverage_excludes_blank_8b_8c_ratchet_2026_05_17.md`** (slot-8 2026-05-20). UAC
-      `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` from coverage — ratchet silently passes.
-      Operator must choose Option A (split omit, measure canonical surfaces, then write tests) or Option B (declare
+      `[tool.coverage.run].omit` excludes `canonical/crosscutting/*` from coverage — ratchet silently passes. Operator
+      must choose Option A (split omit, measure canonical surfaces, then write tests) or Option B (declare
       not-measurable). Full analysis + recommended action (Option A) in issue doc. Awaiting operator pick.
 - [x] [AGENT] P0. **VM deploy scripts surface** (1 sub-agent): `bats` tests (or equivalent) for every
       `deployment-service/scripts/vm/launch-*.sh` covering env-var validation, tarball SHA assertion, singleton-lock,

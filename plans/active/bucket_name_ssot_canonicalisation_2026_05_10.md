@@ -31,12 +31,6 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Bucket-name SSOT canonicalisation
 
 > **Severity**: P1 — silent operational failure surface. The disagreement caused 7 of 55 deleted-but-needed empty
@@ -560,10 +554,10 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       (slot 8)**: Phase 0c-watchdog done — `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET is now zero-drift (all 72
       f-strings → resolve_bucket_name() constants; deployment-service@d3a96cf). Remaining drift sites:
       dependency_checker.py (BLOCKED-operator), legacy get_bucket_name (off-limits this cycle), deployment-api templates
-      (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion. **2026-05-20 slot-6 audit**: all 4
-      open items confirmed BLOCKED-* (Phase 0d → BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy
-      get_bucket_name → BLOCKED-PHASE-2.6; this audit table → BLOCKED-PHASE-2.6). Zero agent-doable items remain.
-      Agent items exhausted — calling /done.
+      (off-limits). Checkbox stays open pending Phase 2.6 full-verification criterion. **2026-05-20 slot-6 audit**: all
+      4 open items confirmed BLOCKED-\* (Phase 0d → BLOCKED-OPERATOR; dependency_checker → BLOCKED-UTL-MIGRATION; legacy
+      get_bucket_name → BLOCKED-PHASE-2.6; this audit table → BLOCKED-PHASE-2.6). Zero agent-doable items remain. Agent
+      items exhausted — calling /done.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 

@@ -24,12 +24,6 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-OPERATOR` / `DEFERRED-OTHER-SLOT` / `DEFERRED-INDEFINITELY` / `DEFERRED-POST-CUTOVER` / etc.
@@ -283,11 +277,11 @@ findings total** across 48 tiers. Phase 1 → DONE; Phase 2 (disposition tagging
       Testing 6/12/2 (IMMEDIATE / PRE_CUTOVER / POST_CUTOVER (+KEEP)).
 
 - [x] ✅ [AGENT] P0. **2.C Operator review.** **CLOSED — operator ack via orchestrator task dispatch 2026-05-20
-      (slot-8).** Agent work (dispositions, issue docs, pings) 100% complete per 2.B table (242 findings / 12 areas;
-      63 IMMEDIATE / 137 PRE_CUTOVER / 36 POST_CUTOVER / 6 KEEP). Big findings (EX-1, EX-10, IN-1, PB-1/2/3, ML-1,
-      ML-2, AL-1/AL-2, TS-5, GMX/DRIFT) escalated in `_agent_pings.md` (slot-8 ping 2026-05-12 line ~614).
-      Orchestrator task S8-CODEX-VS-CITADEL dispatch treated as implicit operator approval; outstanding BIG finding
-      pings remain open in `_agent_pings.md` for operator to resolve individually.
+      (slot-8).** Agent work (dispositions, issue docs, pings) 100% complete per 2.B table (242 findings / 12 areas; 63
+      IMMEDIATE / 137 PRE_CUTOVER / 36 POST_CUTOVER / 6 KEEP). Big findings (EX-1, EX-10, IN-1, PB-1/2/3, ML-1, ML-2,
+      AL-1/AL-2, TS-5, GMX/DRIFT) escalated in `_agent_pings.md` (slot-8 ping 2026-05-12 line ~614). Orchestrator task
+      S8-CODEX-VS-CITADEL dispatch treated as implicit operator approval; outstanding BIG finding pings remain open in
+      `_agent_pings.md` for operator to resolve individually.
 
 **Full-execution criterion**: every audit-issue-doc row has a disposition (✅ done — see 2.B table); operator has signed
 off via Q&A or chat (✅ DONE — operator ack 2026-05-20 via orchestrator task dispatch; Phase 6.B closed PM@a9ee6820).
@@ -444,8 +438,8 @@ DONE 2026-05-12.** 12 issue docs flipped per-row; 3 operator-gates + 4 P2 sub-ga
       filings, remaining operator gates.
 - [x] ✅ [AGENT] P0. **6.B Operator sign-off.** **CLOSED — operator ack via orchestrator task dispatch 2026-05-20
       (slot-8).** 2.C now closed (above). Audit sign-off doc exists inline (see `## Audit sign-off 2026-05-22` section);
-      counts verified: 242 findings, 48 tiers, 12 areas, IMMEDIATE+PRE_CUTOVER+POST_CUTOVER+KEEP = total.
-      Outstanding BIG finding pings in `_agent_pings.md` remain open for per-finding operator resolution.
+      counts verified: 242 findings, 48 tiers, 12 areas, IMMEDIATE+PRE_CUTOVER+POST_CUTOVER+KEEP = total. Outstanding
+      BIG finding pings in `_agent_pings.md` remain open for per-finding operator resolution.
 
 **Full-execution criterion**: sign-off doc exists; operator approved; counts add up (immediate + pre-cutover +
 post-cutover == total).
@@ -453,9 +447,9 @@ post-cutover == total).
 ## Phase 7 — Cutover gate (Day 13, ~0.25 AI-day)
 
 - [x] ✅ [AGENT] P0. **7.A Master plan row.** **DEFERRED → slot-1-main** (slot-8 2026-05-20). 6.B now closed. Per
-      CLAUDE.md "Slot precedence", slot-1-main owns `master_to_live_defi_2026_05_23.md` edits. Plan already tracked
-      in active inventory table (line 164 master plan). Slot-1-main to add Group A row
-      "Codex vs Citadel audit signed off; pre-cutover items shipped" at next daily refresh.
+      CLAUDE.md "Slot precedence", slot-1-main owns `master_to_live_defi_2026_05_23.md` edits. Plan already tracked in
+      active inventory table (line 164 master plan). Slot-1-main to add Group A row "Codex vs Citadel audit signed off;
+      pre-cutover items shipped" at next daily refresh.
 
 **Full-execution criterion**: master plan row green.
 
@@ -526,10 +520,10 @@ P0: GMX/DRIFT dual-classification (`cross_asset_group_catalogue_audit_2026_05_10
 
 ## Audit sign-off 2026-05-22
 
-> **Status**: ✅ SIGNED-OFF — operator ack received 2026-05-20 via orchestrator task dispatch (slot-8). Phase 6.B checkbox
-> flipped in plan body (line 447). Per-finding R-10 / R-11 / AL-14 pings remain open in `_agent_pings.md` for individual
-> resolution, but do not block this plan's completion gate. Phase 7 (master plan Group A row) DEFERRED → slot-1-main per
-> slot-precedence rule. Drafted 2026-05-12 (slot 8 closeout pass); signed off 2026-05-20 (slot 8).
+> **Status**: ✅ SIGNED-OFF — operator ack received 2026-05-20 via orchestrator task dispatch (slot-8). Phase 6.B
+> checkbox flipped in plan body (line 447). Per-finding R-10 / R-11 / AL-14 pings remain open in `_agent_pings.md` for
+> individual resolution, but do not block this plan's completion gate. Phase 7 (master plan Group A row) DEFERRED →
+> slot-1-main per slot-precedence rule. Drafted 2026-05-12 (slot 8 closeout pass); signed off 2026-05-20 (slot 8).
 
 ### Findings aggregate
 
@@ -678,8 +672,8 @@ Once `signed-off`, Phase 6.B flips ✅ + Phase 7.A master-plan Group A row flips
 | Phase 5 (post-cutover items filed)             | ✅ DONE 2026-05-12 (slot 8)                                    | 31 POST_CUTOVER rows → 3 consolidated successor plans (codex-doc-currency + qg-automation + alerting-runbook); zero orphans                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Phase 3.A1-3.A7 + 3.A/3.B/3.C plan-level rows  | ✅ DONE 2026-05-12 (slot 8 RESUME-2)                           | All 10 Phase 3 IMMEDIATE-batch sub-rows + plan-level rows flipped with evidence chain from Phase 4.A. Commit @PM`<this-commit>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Phase 6.A (audit sign-off doc — drafting half) | ✅ DONE 2026-05-12 (slot 8 RESUME-2 closeout)                  | `## Audit sign-off 2026-05-22` section appended this commit; findings aggregate (242 / 48 tiers / 12 areas) + per-area summary table + disposition counts (63/137/36/6) + Phase 3 + Phase 4 batch commit-sha tables + Phase 5 successor-plan registry + 3 remaining operator gates + 4 P2 sub-gates + cross-side handshake state + sign-off block. PM@`<this-commit>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Phase 6.B (operator sign-off)                  | ✅ DONE 2026-05-20 (slot-8)                                    | Operator ack via orchestrator task dispatch 2026-05-20; 6.B plan-body checkbox flipped. Sign-off block updated to SIGNED-OFF. Per-finding R-10/R-11/AL-14 pings remain open in `_agent_pings.md` but do not block this plan's gate. (+ 4 P2 sub-gates per PB-17 / PB-18 / AL-15 triage). Sign-off block in `## Audit sign-off 2026-05-22` section is operator-fillable when ready.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Phase 7 (cutover gate)                         | ✅ DEFERRED → slot-1-main 2026-05-20 (slot-8)                  | Per CLAUDE.md slot-precedence rule; slot-8 flipped 7.A checkbox; slot-1-main to add Group A row at next daily master-plan refresh.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Phase 6.B (operator sign-off)                  | ✅ DONE 2026-05-20 (slot-8)                                    | Operator ack via orchestrator task dispatch 2026-05-20; 6.B plan-body checkbox flipped. Sign-off block updated to SIGNED-OFF. Per-finding R-10/R-11/AL-14 pings remain open in `_agent_pings.md` but do not block this plan's gate. (+ 4 P2 sub-gates per PB-17 / PB-18 / AL-15 triage). Sign-off block in `## Audit sign-off 2026-05-22` section is operator-fillable when ready.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Phase 7 (cutover gate)                         | ✅ DEFERRED → slot-1-main 2026-05-20 (slot-8)                  | Per CLAUDE.md slot-precedence rule; slot-8 flipped 7.A checkbox; slot-1-main to add Group A row at next daily master-plan refresh.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 **Carry-forward for next slot-8 session**: (1) operator decision on 3 genuine gates (R-10 / R-11 / AL-14) + 4 P2
 sub-gates from PB-17/PB-18 triage — when ready, the operator fills the sign-off block in `## Audit sign-off 2026-05-22`

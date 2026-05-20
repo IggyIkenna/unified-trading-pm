@@ -37,12 +37,6 @@ estimate_calibration_note: |
   optimization is mostly upstream framework (lightgbm + torch dataloader) tuning.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Compute-bound stage optimization via mock data
 
 ## Why this plan exists
@@ -146,9 +140,9 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 > ml-settled, arbitrage-funding-rate, arbitrage-sports-book, arbitrage-event-markets, defi-carry-family).
 
 - [x] [SCRIPT] P0. ✅ **VERIFY done; EXTEND DEFERRED → `plans/active/config_grid_archetype_extend_2026_05_20.md`**
-      VERIFY (slot 6/7): `run_2yr_config_grid_backtest.py` covers `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION`
-      (2 of 6 Tier-A families); reads UAC `StrategyArchetype` enum + `specs_for_archetype` from catalog correctly.
-      EXTEND (4 missing families: ml-continuous, ml-settled, arbitrage-sportsbook, arbitrage-event-markets) requires
+      VERIFY (slot 6/7): `run_2yr_config_grid_backtest.py` covers `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (2
+      of 6 Tier-A families); reads UAC `StrategyArchetype` enum + `specs_for_archetype` from catalog correctly. EXTEND
+      (4 missing families: ml-continuous, ml-settled, arbitrage-sportsbook, arbitrage-event-markets) requires
       per-archetype grid dimension design call — migrated to named successor plan with BLOCKED-OPERATOR-DECISION gate.
       PM@slot8 2026-05-20.
 - [x] [SCRIPT] P0. Add `--max-parallel` CLI flag (default = SKU's CPU count); writer-side use UTL
@@ -218,15 +212,16 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 
 ### Phase 4 — ML training + retraining parallel config-grid (Days 6-8, ~1 cal-AI-day)
 
-- [x] [SCRIPT] P0. ✅ Confirm ml-training-service has a `--hyperparam-grid-file` CLI flag. If not, add it (per-archetype) —
-      accepts a JSON list of hyperparameter dicts, runs each in parallel. — ml-training-service@51cfc1a; added to
-      parser.py + main.py; accepts dict-of-lists or list-of-dicts formats; 7 unit tests pass. 2026-05-19 slot 9.
-- [x] [SCRIPT] P0. ✅ Mock training data harness: use synthetic features-output parquets from Phase 2 to drive ml-training
-      without real backfill. Verify training completes + writes `model.pkl` + `model_card.json` end-to-end. —
-      ml-training-service@51cfc1a; TestMockTrainingHarness 3 tests pass (mocked ModelTrainer + sports models to
-      avoid OOM under QG cgroup). 2026-05-19 slot 9.
-- [x] [SCRIPT] P1. ✅ Identify the per-stage time spent in (a) dataloader vs (b) GPU/CPU compute vs (c) checkpoint write.
-      If dataloader >40% → wire `num_workers` properly; if checkpoint >20% → defer to background thread. —
+- [x] [SCRIPT] P0. ✅ Confirm ml-training-service has a `--hyperparam-grid-file` CLI flag. If not, add it
+      (per-archetype) — accepts a JSON list of hyperparameter dicts, runs each in parallel. —
+      ml-training-service@51cfc1a; added to parser.py + main.py; accepts dict-of-lists or list-of-dicts formats; 7 unit
+      tests pass. 2026-05-19 slot 9.
+- [x] [SCRIPT] P0. ✅ Mock training data harness: use synthetic features-output parquets from Phase 2 to drive
+      ml-training without real backfill. Verify training completes + writes `model.pkl` + `model_card.json` end-to-end.
+      — ml-training-service@51cfc1a; TestMockTrainingHarness 3 tests pass (mocked ModelTrainer + sports models to avoid
+      OOM under QG cgroup). 2026-05-19 slot 9.
+- [x] [SCRIPT] P1. ✅ Identify the per-stage time spent in (a) dataloader vs (b) GPU/CPU compute vs (c) checkpoint
+      write. If dataloader >40% → wire `num_workers` properly; if checkpoint >20% → defer to background thread. —
       ml-training-service@51cfc1a; stage_timings_s dict written to .seed-complete marker: dataloader/feature_validation/
       data_prep/cpu_compute/checkpoint_write keys. 2026-05-19 slot 9.
 
@@ -235,8 +230,8 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 - [x] [SCRIPT] P0. ✅ Extend benchmark harness shape list from current
       `{c2-standard-8, c2-standard-16, c2-standard-30, c3-highcpu-44}` to add `c3-highcpu-88` / `c3-highcpu-176` /
       `m3-megamem-128` / `m3-ultramem-160`. Per-stage decision: which SKU gives best `cal-AI-day-per-$` for the
-      cutover-window run. — deployment-service@6a09fa1; launch-synthetic-benchmark-vm.sh SHAPES updated +
-      commented rationale (c3-highcpu for compute-bound, m3 for memory-heavy). 2026-05-19 slot 9.
+      cutover-window run. — deployment-service@6a09fa1; launch-synthetic-benchmark-vm.sh SHAPES updated + commented
+      rationale (c3-highcpu for compute-bound, m3 for memory-heavy). 2026-05-19 slot 9.
 - [x] [SCRIPT] P0. ✅ Run the extended matrix on the 3 slowest stages identified in Phase 0. Output:
       `codex/05-infrastructure/runtime-tiers-and-deployment.md` § "Per-stage SKU recommendation matrix" UPDATE with
       cutover-window-sized recommendations. — deployment-service@6a09fa1; launch-sku-matrix-v2-benchmark.sh fans out
@@ -245,9 +240,8 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
 - [x] [SCRIPT] P1. ✅ **DEFERRED → post-cutover** Spot-instance / preemptible-VM viability check: **YES — all Phase 5
       shapes save ~80% vs on-demand (well over ≥40% threshold)**. c3-highcpu-88/176 and m3-megamem-128/m3-ultramem-160
       are all ~80% cheaper on preemptible. Checkpoint-restart design is post-cutover (shard-skip pattern per writegate
-      discipline). Full analysis + checkpoint grain table added to
-      `codex/06-coding-standards/performance-targets.md` § "Preemptible / spot-instance viability". PM@slot8
-      2026-05-20.
+      discipline). Full analysis + checkpoint grain table added to `codex/06-coding-standards/performance-targets.md` §
+      "Preemptible / spot-instance viability". PM@slot8 2026-05-20.
 
 ### Phase 6 — Orchestrator dependency-ordering doc (PULLED FORWARD 2026-05-13, ~0.5 cal-AI-day)
 
@@ -368,16 +362,16 @@ slots + 1 PM slot, all distributable across existing density-push cycles.
 
 ## Deferred work after 2026-05-14 slot-7 session
 
-| Phase / item                                          | Status as of 2026-05-14                                                                                               | Successor / blocker                                                                               |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Phase 1: EXTEND to 4 missing archetype families       | **DEFERRED** — verification done (gaps confirmed), extension needs design call on dimension choices                   | Spawn sub-plan or assign features maintainer slot; needs `mvp-universe-per-asset-group.md` author |
-| Phase 1: wire results aggregation + 30-day smoke      | **DONE 2026-05-19** — strategy-service@8b20a32: `_write_csv()` + `main()` wired; 24 tests pass incl. 30d smoke      | —                                                                                                 |
-| Phase 2: `--worker-count` sports family               | **DONE** — features-service@722697d3                                                                                  | —                                                                                                 |
-| Phase 2: profiling other 7 families                   | **DONE 2026-05-19** — features-service@b93d3db1: `scripts/profile_compute_costs.py`; cme_gap 27ms/day, options_iv 18ms/day; slot 9 | —                                                                              |
-| Phase 3: execution alpha script                       | **DONE** — execution-service@fa18c3a1b                                                                                | —                                                                                                 |
-| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **DONE 2026-05-15** — `run_execution_alpha_parallel.py` + `launch-execution-alpha-vm.sh` + watchdog prefix registered | —                                                                                                 |
-| Phase 4 smoke tests                                   | **DONE** — strategy-service@fc634e3                                                                                   | —                                                                                                 |
-| Phase 4: ML training `--hyperparam-grid-file`         | **DONE 2026-05-19** — ml-training-service@51cfc1a: `--hyperparam-grid-file` flag + 7 tests + mock training harness; slot 9 | —                                                                              |
-| Phase 5: big-machine SKU matrix                       | **DONE 2026-05-19** — deployment-service@6a09fa1: launch-synthetic-benchmark-vm.sh SHAPES extended; launch-sku-matrix-v2 script; slot 9 | —                                                                   |
-| Phase 6: F17/18/20/21 + code_freeze cross-refs        | **DONE 2026-05-15** — dependency-order doc + code_freeze annotated; master plan forward-pointer pending slot 1 main   | —                                                                                                 |
-| Phase 7: performance-targets codex                    | **DONE PM@`db2de8ed`** — framework shipped; absolute targets STUB pending Phase 5                                     | —                                                                                                 |
+| Phase / item                                          | Status as of 2026-05-14                                                                                                                 | Successor / blocker                                                                               |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Phase 1: EXTEND to 4 missing archetype families       | **DEFERRED** — verification done (gaps confirmed), extension needs design call on dimension choices                                     | Spawn sub-plan or assign features maintainer slot; needs `mvp-universe-per-asset-group.md` author |
+| Phase 1: wire results aggregation + 30-day smoke      | **DONE 2026-05-19** — strategy-service@8b20a32: `_write_csv()` + `main()` wired; 24 tests pass incl. 30d smoke                          | —                                                                                                 |
+| Phase 2: `--worker-count` sports family               | **DONE** — features-service@722697d3                                                                                                    | —                                                                                                 |
+| Phase 2: profiling other 7 families                   | **DONE 2026-05-19** — features-service@b93d3db1: `scripts/profile_compute_costs.py`; cme_gap 27ms/day, options_iv 18ms/day; slot 9      | —                                                                                                 |
+| Phase 3: execution alpha script                       | **DONE** — execution-service@fa18c3a1b                                                                                                  | —                                                                                                 |
+| Phase 3: parallel-shard wrapper (730d × 2 archetypes) | **DONE 2026-05-15** — `run_execution_alpha_parallel.py` + `launch-execution-alpha-vm.sh` + watchdog prefix registered                   | —                                                                                                 |
+| Phase 4 smoke tests                                   | **DONE** — strategy-service@fc634e3                                                                                                     | —                                                                                                 |
+| Phase 4: ML training `--hyperparam-grid-file`         | **DONE 2026-05-19** — ml-training-service@51cfc1a: `--hyperparam-grid-file` flag + 7 tests + mock training harness; slot 9              | —                                                                                                 |
+| Phase 5: big-machine SKU matrix                       | **DONE 2026-05-19** — deployment-service@6a09fa1: launch-synthetic-benchmark-vm.sh SHAPES extended; launch-sku-matrix-v2 script; slot 9 | —                                                                                                 |
+| Phase 6: F17/18/20/21 + code_freeze cross-refs        | **DONE 2026-05-15** — dependency-order doc + code_freeze annotated; master plan forward-pointer pending slot 1 main                     | —                                                                                                 |
+| Phase 7: performance-targets codex                    | **DONE PM@`db2de8ed`** — framework shipped; absolute targets STUB pending Phase 5                                                       | —                                                                                                 |

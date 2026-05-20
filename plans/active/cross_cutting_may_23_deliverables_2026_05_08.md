@@ -25,12 +25,6 @@ estimate_calibration_note: |
   CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 # Cross-cutting May-23 deliverables — catalogue / IDs / clients / DART (2026-05-08)
 
 ## Why this plan exists
@@ -124,9 +118,9 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
       `StrategyArchetype` enum (the pre-revert single-edit migration); 28 unit tests in
       `tests/unit/test_capital_allocation.py`; re-exported through existing `strategy.py` facade alongside
       `ArchetypeConfig` (uac@18bdc6e — A1's parallel work) + `ClientDefinition` + `ClientRegistry`.)
-- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Client-account-strategy tagging propagated** through every
-      live trade + batch backtest result. Hooks into the strategy ID refactor sweep above. Owner: Harsh T6. Named
-      successor: this plan (gates on strategy ID refactor sweep landing; resume after sweep session).
+- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [SCRIPT] **Client-account-strategy tagging propagated** through every live
+      trade + batch backtest result. Hooks into the strategy ID refactor sweep above. Owner: Harsh T6. Named successor:
+      this plan (gates on strategy ID refactor sweep landing; resume after sweep session).
 
 ### #4 UI replication / DART manual-trade lane
 
@@ -1050,11 +1044,12 @@ stale. Remaining D2 work is UI-side (switch dropdowns from `constants.ts` to dyn
       spec.
 
 - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **D5 — P2 — `_SUPPORTED_ALGOS` hardcoded list** in
-      `manual_instruction_api.py:113` covers only CeFi exec algos. D1 resolved (uac@14a0292 2026-05-13 — `operation_type:
-      str = ""` added to `ManualInstruction`); D5 fix now technically unblocked but bundles into BUILD #1 backend wiring
-      (execution-service). Resolution design: `_SUPPORTED_ALGOS` stays CeFi-only; DeFi BUILD #1 uses `operation_type`
-      field instead of `algo`; sports/prediction BUILD #4/#5 use `MARKET` algo. Named successor: this plan (fix in BUILD
-      #1 execution-service session alongside operation_type wiring). Provenance: Harsh slot-6 Day-2 audit 2026-05-12.
+      `manual_instruction_api.py:113` covers only CeFi exec algos. D1 resolved (uac@14a0292 2026-05-13 —
+      `operation_type:     str = ""` added to `ManualInstruction`); D5 fix now technically unblocked but bundles into
+      BUILD #1 backend wiring (execution-service). Resolution design: `_SUPPORTED_ALGOS` stays CeFi-only; DeFi BUILD #1
+      uses `operation_type` field instead of `algo`; sports/prediction BUILD #4/#5 use `MARKET` algo. Named successor:
+      this plan (fix in BUILD #1 execution-service session alongside operation_type wiring). Provenance: Harsh slot-6
+      Day-2 audit 2026-05-12.
 
 #### Cross-side handshake status (Day-3, Ikenna slot 8, 2026-05-13)
 

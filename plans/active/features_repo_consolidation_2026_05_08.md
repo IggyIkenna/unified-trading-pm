@@ -944,12 +944,6 @@ estimate_calibration_note: |
   Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
-
-> **🟡 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** — ml-training-service + ml-inference-service are being
-> merged into new `ml-service` repo 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new
-> top-level packages, NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
-> work + plan-flip backfills continue.
-
 > **🟡 IN-FLIGHT REFACTOR — batch/live symmetry 2026-05-10** (BE-AWARE)
 >
 > [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) Tab 4 lifts `commodity` / `cross_instrument` /
@@ -958,7 +952,10 @@ estimate_calibration_note: |
 > status post-Tab-4". Tab 4 is in-flight on `batch_live_symmetry_2026_05_10`; changes to those families should be
 > coordinated with Tab 4 owner to avoid clobbering the lift.
 
-> **🟢 RESOLVED — batch_live_symmetry Tab 3 + Tab 4 (2026-05-20)**: Tab 4 ModeHandler lift COMPLETE at features-service@519625f7 (2026-05-19). 4 families (commodity / cross_instrument / multi_timeframe / calendar) on UTL ModeHandler ABC. Bare-class compat-paths scheduled for hard-delete post-prod. Tab 3 QG STEPs L1/L5/L2/L3/L7 enabled at PM@fac14af3 — verify `bash scripts/quality-gates.sh` passes before merging further consolidation work.
+> **🟢 RESOLVED — batch_live_symmetry Tab 3 + Tab 4 (2026-05-20)**: Tab 4 ModeHandler lift COMPLETE at
+> features-service@519625f7 (2026-05-19). 4 families (commodity / cross_instrument / multi_timeframe / calendar) on UTL
+> ModeHandler ABC. Bare-class compat-paths scheduled for hard-delete post-prod. Tab 3 QG STEPs L1/L5/L2/L3/L7 enabled at
+> PM@fac14af3 — verify `bash scripts/quality-gates.sh` passes before merging further consolidation work.
 
 > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BLOCK)
 >
