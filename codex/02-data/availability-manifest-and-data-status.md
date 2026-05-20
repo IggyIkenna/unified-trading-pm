@@ -1137,6 +1137,17 @@ denominator-divergence closure depends on the row EXISTING, not on the specific 
   `unified_api_contracts.registry.venue_launch_dates` SSOT (20 CeFi venues + 2 Prediction venues). Consumer-class
   behaviour documented in [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md).
 
+  **`EXPECTED_PRE_SOURCE_COVERAGE_START` — structured SSOT (2026-05-20)**: The per-data_type earliest available date
+  for a venue is now first-class on `SourceCapability.coverage_start: dict[str, date] | None` in
+  `unified_api_contracts/registry/capability.py`. Consumers call
+  `is_before_source_coverage_start(venue, data_type, check_date)` in `registry/expected_coverage.py` — returns `True`
+  if `check_date < capability.coverage_start[data_type]`, meaning callers should emit
+  `EmptyConfirmedReason.EXPECTED_PRE_SOURCE_COVERAGE_START` in `record_empty()`. Returns `False` when no coverage start
+  is known (no clip — the date is not excluded from the expected denominator). `venue_launch_dates.py` remains as a
+  secondary index for the single-date (not per-data_type) venue launch semantics; `coverage_start` field is SSOT for
+  per-data_type coverage start. QG STEP 5.85 enforces that every `SourceCapability(...)` has explicit `chain=` and
+  `kind=` kwargs (guards future venue additions from omitting the structured metadata).
+
 - **Hypothetical "not_attempted" approach**: separate status enum value. Identical effect (manifest carries the row,
   drilldown counts it, rollup denominator matches). Would have required updating every downstream consumer to branch on
   the new status. Net: more code change, same outcome.

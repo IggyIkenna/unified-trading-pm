@@ -204,12 +204,29 @@ this surface: Phase 6 of `cross_asset_group_catalogue_audit_2026_05_10.md`.
 
 ### Capability registry
 
-Each source declares its capabilities in `registry/capability/`:
+Each source declares its capabilities in `registry/capability/` via `SourceCapability` (Pydantic model in
+`registry/capability.py`):
 
 - Supported modes (batch, live, replay)
 - Supported environments (prod, sandbox, testnet)
 - Supported operations (trades, orderbook, ohlcv, etc.)
 - API key scope requirements (prod vs test keys)
+
+**Phase 1 metadata fields (2026-05-20)** — 4 structured fields added to `SourceCapability`:
+
+| Field | Type | Canonical values | Purpose |
+|---|---|---|---|
+| `chain` | `str \| None` | `"ethereum"`, `"starknet"`, `"solana"`, `"hyperevm"`, `"polygon"`, `"dydx-chain"`, `None` for pure CEX/data | Underlying settlement layer |
+| `kind` | `Literal[...] \| None` | `"perp_dex"`, `"spot_dex"`, `"perp_cex"`, `"spot_cex"`, `"options_cex"`, `"options_dex"`, `"prediction_dex"`, `"sports_book"`, `"lending_protocol"`, `"staking_protocol"`, `"amm_dex"`, `"vault_protocol"`, `None` for data providers | Venue class taxonomy |
+| `mandatory_user_agent` | `str \| None` | `"odum-group-unified-trading/extended-mtds"` for Extended Starknet; `None` otherwise | REST/WS clients MUST send this header if set |
+| `coverage_start` | `dict[str, date] \| None` | keys = workspace-canonical data_type names (e.g. `"candles"`, `"funding_rates"`, `"rates"`); values = ISO dates | Earliest available data per data_type |
+
+All 4 default to `None` (backwards-compatible). QG STEP 5.85 enforces explicit `chain=` and `kind=` kwargs on every
+`SourceCapability(...)` instantiation in `capability_declarations/_*.py` (even `None` is acceptable — the rule enforces
+explicit declaration, not non-null values).
+
+Consumers: `is_before_source_coverage_start(venue, data_type, check_date)` in `registry/expected_coverage.py` reads
+`coverage_start[data_type]` to emit `EXPECTED_PRE_SOURCE_COVERAGE_START` reason in `record_empty()` calls.
 
 Fail-fast error classes in UTL (`unified_trading_library.core.capability_errors`) are raised BEFORE any network call
 when an adapter is called with an unsupported mode, environment, or auth scope. Error classes: `UnsupportedModeError`,
