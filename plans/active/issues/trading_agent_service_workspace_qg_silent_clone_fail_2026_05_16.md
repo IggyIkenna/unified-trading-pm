@@ -121,14 +121,18 @@ credential issue is a routine operator-rotation task that doesn't block May-23 c
 
 ## Triage — 2026-05-18
 
-**Status**: OPEN **Triaged by**: slot-8 triage sweep **Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but
-credentials gap remains
+**Status**: OPEN
+**Triaged by**: slot-8 triage sweep
+**Reason**: BLOCKED-CREDENTIALS; visibility fix shipped but credentials gap remains
+
+---
 
 ## Triage update — 2026-05-20 (operator directive: architecture unlocked)
 
 **Status**: OPEN-P0 (was BLOCKED-CREDENTIALS-deferred-post-cutover) **Reason**: trading-agent-service now on May-23
 architecture-unlock path. CI hygiene fix needed for layer-7 continuous verification. **Slot owner**: assigned to
-architecture-unlock plan Phase 7 (CI hygiene). **Operator ask** (CREDENTIAL APPROVAL REQUEST):
+architecture-unlock plan Phase 7 (CI hygiene). **Operator ask** (CREDENTIAL APPROVAL REQUEST per CLAUDE.md "External
+Data Is Always Available" rule):
 
 - Rotate `GH_PAT` secret on `IggyIkenna/trading-agent-service` to match the working value on `IggyIkenna/mtds`
 - `gh secret set GH_PAT --repo IggyIkenna/trading-agent-service --body "$VALID_FINE_GRAINED_PAT"`

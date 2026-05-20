@@ -1857,6 +1857,18 @@ Both folded into Q1 recommendation (a)+(b) for a named successor plan.
 | README.md stub on 8 archived source repos                       | `done`-as-feasible (DEPRECATION_NOTICE.md present; README not stubbed)      | Non-fixable — archived repos read-only. Cosmetic. No successor needed.                                                                                                                                                                     |
 | Phase 4 deeper F6 `record_captured(df,...)` df-flow refactor    | `helper-shipped` (Option C: `writer.add(feature_family=...)` x18 callsites) | gated behind `features_available_at_stamping_*` per issue docs `f6_record_captured_requires_df_features_consolidation_2026_05_08.md` + `f6_df_flow_refactor_blocked_by_available_at_2026_05_08.md` (pre-existing; unchanged this session). |
 
+## New subdomain: performance_features (architecture-unlock 2026-05-20)
+
+Per operator directive 2026-05-20 and `trading_agent_service_architecture_unlock_2026_05_22.md` Phase-H:
+
+- [ ] [AGENT] P1. `features_service/performance_features/` subdomain — passthrough scaffold for trading-agent-service
+      performance-derived features. See phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md Phase-H.
+
+This subdomain is the consumer surface for the trading-agent-service's performance-derived feature reads. Ships as a
+passthrough stub (no derivation) for May-23; real derivations land post-cutover per epic §1.7 allocator split.
+
+---
+
 Cross-side: Phase 7 (features-service deployable + 8 child repos archived) was already announced cross-side on
 2026-05-10 (`plans/active/_agent_pings.md` 2026-05-10 19:10 UTC `features-service-consolidation-push-tab` ping:
 "Unblocks Phase 4-9... as needed"), and the DONE-2026-05-08 PM block already cleared the live-pipeline

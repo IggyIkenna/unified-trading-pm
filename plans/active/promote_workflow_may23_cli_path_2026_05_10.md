@@ -277,6 +277,11 @@ paper/live deployment exists.
       IN-FLIGHT REFACTOR banner). (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered;
       launcher_scripts_consolidation Phase 2 shipped 2026-05-13.)
 
+- [ ] [CODE] P1. `colocated_engine.py` instantiates `StrategyDirectiveReloader` at boot (no-op default if no directive
+      present); reloader reads from same config-hot-reload bus as existing `config_reloaders.py`. See
+      trading_agent_service_architecture_unlock plan Phase 5. Off-by-default for May-23: no upstream emitter wired
+      except no-op stub.
+
 **Phase 1 done definition** (per _"Plans Run To Actual Completion"_ HARD RULE):
 
 - ✅ Both launchers exist in `deployment-service/scripts/vm/` with the canonical shape.
@@ -556,6 +561,10 @@ can be operator-justified.
   full run; manifest has per-tick captured rows.
 
 ## UI Track — Phases U1-U6 (P0, ~6-8 AI-days combined, PARALLEL with Phases 4+5+6)
+
+> **Cross-link 2026-05-20**: directive emission path is wired by trading_agent_service_architecture_unlock plan Phase
+> 5+6. UI promote button MAY emit `AllocationDirective` post-cutover (see promote_workflow_post_cutover_ui_pipeline
+> plan). For May-23, UI promote → MinimalCandidateManifest (existing scope); directive emission stays no-op.
 
 **Why this track**: Operator preference (2026-05-10) is to ship a UI promote pipeline alongside the CLI path so the
 May-23 cutover can be driven from the Promote UI button + DART manual-trade gate, with CLI as belt-and-braces. Scope is

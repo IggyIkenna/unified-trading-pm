@@ -20,6 +20,7 @@ folds_in:
   - market_tick_data_to_100pct_2026_05_05 # TradFi slice
   - tradfi_ohlcv_only_mvp_backfill_2026_05_15 # OHLCV-only MVP scope narrow (drops L1-L3 to post-cutover)
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md

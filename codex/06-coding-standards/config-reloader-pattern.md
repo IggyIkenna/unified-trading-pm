@@ -133,13 +133,39 @@ class WalletCustodyReloader(ApiKeyReloader):
                           old_surface=old_surface, new_surface=row.signing_surface)
 ```
 
-### StrategyDirectiveReloader (directive-specific variant)
+## StrategyDirectiveReloader pattern — added 2026-05-20 (trading-agent-service architecture unlock)
 
-`strategy_service.config_reloaders.StrategyDirectiveReloader` extends the typed-reloader pattern with:
+`StrategyDirectiveReloader` (in `strategy_service/config_reloaders.py`) is a **push-based in-memory store** for
+`ArchetypeAllocationDirective` objects. It differs from `DomainConfigReloader` (poll-based GCS) in that directives are
+pushed via `inject_directive()` rather than polled from a store.
 
+Key properties:
 - In-memory `dict[archetype_id, ArchetypeAllocationDirective]` with `threading.Lock`
-- TTL eviction via `valid_until` field (directives auto-expire)
+- TTL eviction via `valid_until` field (directives auto-expire on `get_directive()` + each poll cycle)
 - `inject_directive(directive)` / `get_directive(archetype_id)` / `poll_once()` public API
 - Consumed by `AllocatorArchetypeEngine.weight_with_directive()` in `portfolio_allocator/archetypes.py`
 - No-op default: absent directive → `weight()` called unchanged (static config preserved)
-- See SSOT: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
+
+**Pattern**:
+
+```python
+from strategy_service.config_reloaders import StrategyDirectiveReloader
+
+reloader = StrategyDirectiveReloader(poll_interval_seconds=60)
+reloader.start()
+
+# Push-based: trading-agent-service calls inject_directive() when emitting
+reloader.inject_directive(ArchetypeAllocationDirective(archetype_id="carry_staked_basis", ...))
+
+# Pull-based: strategy engine calls get_directive() per tick
+directive = reloader.get_directive("carry_staked_basis")  # None if absent/expired
+weight = engine.weight_with_directive(directive)           # fallback to static if None
+```
+
+**Thread-safety**: `_lock` guards `_directives` dict. All reads/writes use `with self._lock`.
+`enabled=False` directives are stored and returned — callers must check `.enabled`.
+
+**Post-cutover**: lifted into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per
+`strategy_repo_consolidation_2026_05_19.md`.
+
+Full architecture: `codex/04-architecture/trading-agent-service-directive-pipeline.md`.

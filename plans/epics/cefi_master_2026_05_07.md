@@ -18,6 +18,7 @@ folds_in:
   - cefi_tradfi_tick_data_backfill_2026_04_10 # CeFi half (TradFi half goes to tradfi_master)
   - market_tick_data_to_100pct_2026_05_05 # CeFi slice (per asset_group split)
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - shard_granularity_ssot_propagation_2026_05_06

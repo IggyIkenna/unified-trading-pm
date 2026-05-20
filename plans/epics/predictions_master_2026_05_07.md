@@ -18,12 +18,18 @@ folds_in:
   - sports_predictions_e2e_2026_05_05 # predictions ML half (sports half goes to sports_master)
   - market_tick_data_to_100pct_2026_05_05 # predictions slice
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md
   - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
   - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
+
+> **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
+
 
 > **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for prediction asset_group**: 3,442 `MISSING_EXPECTED` cells.
 > KALSHI trades: 1,756 cells missing. POLYMARKET trades: 1,686 cells missing. Both are POST-launch cells (Polymarket

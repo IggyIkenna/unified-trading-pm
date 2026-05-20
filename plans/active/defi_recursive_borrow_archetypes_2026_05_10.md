@@ -27,6 +27,7 @@ priority: P0
 companion_to: plans/active/master_to_live_defi_2026_05_23.md
 spawned_from: plans/questions/defi_recursive_borrow_archetypes_2026_05_08.md
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
   - plans/active/defi_master_2026_05_07.md
   - plans/active/master_to_live_defi_2026_05_23.md

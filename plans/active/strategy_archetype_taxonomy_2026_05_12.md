@@ -267,6 +267,16 @@ All 4 Portfolio archetype docs created at PM@`747bd623`:
 - **Strategy registry update**: `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` +
   `ARCHETYPE_TO_FAMILY` dict + per-archetype `topology_requirements` + `share_class_compatibility` + `venue_universe`.
 
+## PnL Emission Readiness (StrategyPnlStreamEvent — per architecture-unlock plan)
+
+Per operator directive 2026-05-20 and `trading_agent_service_architecture_unlock_2026_05_22.md` Phase 1+2:
+
+| Archetype                    | Family                 | Emits StrategyPnlStreamEvent                                                 | Status                            |
+| ---------------------------- | ---------------------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| `carry_staked_basis`         | Carry & Yield          | ✅ May-23 (per architecture-unlock plan Phase 2)                             | SHIPPED strategy-service@a0f87c66 |
+| `arbitrage_price_dispersion` | Arbitrage / Structural | ✅ May-23 (per architecture-unlock plan Phase 2)                             | SHIPPED strategy-service@a0f87c66 |
+| All other archetypes (55)    | —                      | TODO post-cutover (when continuous-paper infrastructure lands per archetype) | —                                 |
+
 ## Counts after refinement
 
 Current section enumeration in strategy-summary.md = **55**. After refinement:

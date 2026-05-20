@@ -15,6 +15,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
   - tradfi_master_2026_05_07
   - cefi_tradfi_tick_data_backfill_2026_04_10
@@ -24,6 +25,10 @@ codex_ssots:
   - codex/02-data/mtds-data-source-coverage-matrix.md
   - codex/02-data/availability-manifest-and-data-status.md
 ---
+
+> **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
+> trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
+> plan's May-23 scope.
 
 # TradFi MVP — OHLCV-only Databento backfill
 

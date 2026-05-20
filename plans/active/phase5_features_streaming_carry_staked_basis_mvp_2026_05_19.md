@@ -329,6 +329,26 @@ key absent.
       strategy re-sizes positions** flow still works end-to-end (regression check on the rebalance pipeline shipped
       2026-05-19).
 
+## Phase-H: performance-features subdomain passthrough scaffold (P1, ~0.4 days, ARCHITECTURE-ONLY)
+
+Per operator directive 2026-05-20 "trading-agent-service architecture unlocked": features-service needs the consumer
+surface for performance-derived features to exist even if it only computes passthrough today. Adds the
+`features_service/performance_features/` package; trading-agent-service reads from this surface post-cutover.
+
+- [ ] [AGENT] P1. Create `features_service/performance_features/__init__.py` + `passthrough_compute.py` that subscribes
+      to `StrategyPnlStreamEvent` and emits FeaturesComputedEvent with feature_group=`performance_features` containing
+      the raw PnL fields (no derivation today). Output parquet at canonical manifest v5 path.
+- [ ] [AGENT] P1. Add `performance_features` to features-service CLI dispatcher:
+      `python -m features_service --operation compute --feature-group performance_features --asset-group <ag>` works
+      (no-op passthrough today).
+- [ ] [AGENT] P1. Manifest write: emit `record_empty(reason=EXPECTED_NO_PNL_STREAM)` when no upstream PnL events
+      received for the day (off-by-default state).
+- [ ] [TEST] P1. Unit test: subscribe-and-emit passthrough preserves all fields end-to-end; honest-absence path emits
+      expected reason.
+
+**Done gate**: features-service QG green; manifest shows `performance_features` row with `empty_confirmed` reason
+`EXPECTED_NO_PNL_STREAM` for May-23 lead pair; consumer surface exists, no derivation.
+
 ## Success criteria (Continuous Verification)
 
 | Group | Item                            | Cutover Criterion                                                                                                                                          | Continuous Verification                     | Last verified                                         |

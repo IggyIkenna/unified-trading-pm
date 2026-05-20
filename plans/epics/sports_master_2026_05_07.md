@@ -21,6 +21,7 @@ folds_in:
   - sports_predictions_e2e_2026_05_05 # sports half (predictions half goes to predictions_master)
   - market_tick_data_to_100pct_2026_05_05 # sports slice
 related_plans:
+  - plans/active/trading_agent_service_architecture_unlock_2026_05_22.md
   - master_to_live_defi_2026_05_23
   - writegate_honest_coverage_endtoend_2026_05_06
   - audit/results/manifest_divergence_2026_05_20_summary.md
