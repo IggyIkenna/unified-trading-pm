@@ -318,8 +318,10 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
     list-attached-role-policies --role-name <role>` matches the yaml.
   - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-iam-roles.sh` shipped upstream (deployment-service
     LDR ~2026-05-19). Script covers role creation but `aws_iam_roles.yaml` SSOT config file not yet created.
-    Remaining: (a) create `configs/aws_iam_roles.yaml` from script definitions; (b) run with `--apply` flag via
-    `aws` CLI. **[BLOCKED-AWS-CLI]** — `aws` CLI not installed in dev env; needs operator install + `aws sso login`.
+  - **[PARTIAL]** 2026-05-20 slot 7: `configs/aws_iam_roles.yaml` SSOT config created at deployment-service@`c6bd7c1`.
+    Covers all 19 services × prod-tier (staging/dev follow same shape). Per-service S3/SM/SNS/KMS/EC2/ECS shapes
+    derived from aws-iam-matrix.md §2 + setup-iam-roles.sh. Execution-service ONLY has kms:Decrypt on 5 trading CMKs.
+    Remaining: (b) run `setup-iam-roles.sh --apply` via `aws` CLI. **[BLOCKED-AWS-CLI]** — `aws` CLI not installed.
 
 - [ ] [SCRIPT] P0. **1.C — ECR setup + dual-cloud image push.** Create ECR repository per service in `ap-northeast-1`.
       Update `cloudbuild.yaml` + `buildspec.aws.yaml` to push the same image to both
@@ -328,8 +330,11 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
   - **Verification**: `aws ecr describe-repositories --region ap-northeast-1 | jq '.repositories | length'` matches GCP
     Artifact Registry repository count; `docker pull` succeeds from both endpoints with the same digest.
   - **[PARTIAL-UPSTREAM]** 2026-05-19 slot 2: `scripts/aws/setup-ecr-repos.sh` already existed. `buildspec.aws.yaml`
-    updated upstream. Remaining: run `setup-ecr-repos.sh --apply` + verify dual-push in cloudbuild.yaml.
-    **[BLOCKED-AWS-CLI]** — same blocker as 1.B.
+    updated upstream.
+  - **[VERIFIED]** 2026-05-20 slot 7: Dual-push architecture confirmed correct — `buildspec.aws.yaml` (AWS CodeBuild)
+    pushes to ECR; `cloudbuild.yaml` (GCP Cloud Build) pushes to GCP Artifact Registry. Two separate CI pipelines,
+    same image. No single-pipeline dual-push needed (correct split-cloud pattern). Remaining: run
+    `setup-ecr-repos.sh --apply` to create ECR repos. **[BLOCKED-AWS-CLI]** — same blocker as 1.B.
 
 - [x] [SCRIPT] P0. **1.D — AWS S3 non-DeFi bucket parity.** Extend `deployment-service/configs/bucket_config.yaml`
       `infrastructure_buckets.aws` (currently DeFi-only at line 232) with CeFi / TradFi / sports / prediction entries
@@ -350,8 +355,11 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
       round-trips through AWS Secrets Manager (Block H7 caveat: AWS half may be more stub than thought).
   - **Verification**: every credential listed in Phase 9.A `credentials-matrix.md` exists in BOTH GCP Secret Manager AND
     AWS Secrets Manager; `UnifiedCloudConfig(provider="aws").get_secret(<name>)` returns expected value.
-  - **[BLOCKED-AWS-CLI]** 2026-05-19 slot 2: no replication script exists yet; needs `aws secretsmanager` CLI.
-    Script scaffolding needed + `aws` CLI install + `aws sso login`. Operator: install `awscli` in dev env.
+  - **[PARTIAL]** 2026-05-20 slot 7: `scripts/aws/replicate-secrets-to-aws.sh` scaffold created at
+    deployment-service@`c6bd7c1`. Reads all enabled GCP SM secrets → creates AWS SM equivalents under
+    `unified-trading/<name>` hierarchy. Supports `--dry-run` / `--apply` / `--verify` / `--filter` flags.
+    Excludes firebase-sa-json / gcp-sa-key-* / github-pat (GCP-only secrets). Remaining: install `awscli` +
+    `aws sso login` → run `--apply`. **[BLOCKED-AWS-CLI]** — same blocker as 1.B.
 
 - [ ] [SCRIPT] P1. **1.F — AWS SNS/SQS + EventBridge mirroring.** Create AWS SNS topic + SQS subscription + DLQ per GCP
       Pub/Sub topic. Create AWS EventBridge rule per Cloud Scheduler job. Cross-cloud event routing not in scope for
