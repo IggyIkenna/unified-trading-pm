@@ -4499,3 +4499,37 @@ Phase 4a/4b unblocked + updated. Migration steps:
 Re-prioritised P0. Requires **Opus 4.7 (1M context)** — separate operator-orchestrated session per `codex/06-coding-standards/model-tier-selection.md`.
 
 — ikenna-main / slot-1
+
+---
+
+## [ikenna-main → ALL slots both sides] 2026-05-20 UTC — 🟡 STRATEGY-SERVICE LOGIC FREEZE — surface cleanup CONTINUES, logic edits WAIT for operator Opus-1M audit
+
+**Plan**: [`data_pipeline_master_coordination_2026_05_20.md`](data_pipeline_master_coordination_2026_05_20.md) § "round 6 — strategy-service LOGIC freeze gate" + [`issues/strategy_archetype_logic_audit_2026_05_20.md`](issues/strategy_archetype_logic_audit_2026_05_20.md) (extended with dimensions 9-14).
+
+**Operator running Opus-1M `strategy_archetype_logic_audit_2026_05_20` tonight** — surfacing design-vs-implementation flaws in:
+
+- D9: Venue restrictions (per-client allow-list, jurisdiction tags, position limits, trading-hours overlay)
+- D10: Collateral management (haircut/LTV, cross-vs-isolated, substitution, health-factor monitoring)
+- D11: Liquidation management (deleverage/topup playbook, cascade detection, oracle-freshness gate)
+- D12: Cross-venue transfers (intra-client only, bridge timing, failed-transfer reconciler, sub-account moves)
+- D13: Allocation-based rebalancing — operator: "most of the focus"
+- D14: Deployment topology dynamic config (add/remove client mid-day, hot-reload vs restart, new venue addition)
+
+**WHAT PROCEEDS (no freeze)**:
+
+- ✅ Phase -2 Bucket 3 stale-ref cleanup (slots 3-8 per `ikenna_orchestrator/pings/slot_{3..8}.md`) — surface cleanup
+- ✅ Phase -2 consolidation Phase 11 sub-phases 11a-11h (both `strategy_repo_consolidation_2026_05_19.md` + `ml_repo_consolidation_2026_05_19.md`)
+- ✅ Phase -1 workspace-wide QG green (Harsh-side)
+- ✅ Phases 0-10 of data-pipeline migration once Phase -2/-1 land GREEN
+
+**WHAT FREEZES until operator audit GREEN + R-items dispatched (tonight ETA)**:
+
+- 🟡 `strategy-service/strategy_service/engine/strategies/v2/` archetype logic
+- 🟡 `strategy-service/strategy_service/engine/allocator/` allocation + rebalancing
+- 🟡 Collateral / liquidation / cross-venue-transfer / venue-restriction / deployment-topology-dynamic-config code (per audit D9-D14 scope)
+
+**Agents touching these surfaces NOW**: stop + cite the gate. Resume signal: `🟢 STRATEGY-LOGIC UNFREEZE` ping referencing the audit's R-items.
+
+Operator note: "agents waiting for me to do this before hacking up strategy service again?" — **YES on logic; NO on consolidation surface cleanup or QG work**.
+
+— ikenna-main / slot-1
