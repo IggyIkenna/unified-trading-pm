@@ -25,9 +25,29 @@ from typing import cast
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
+WORKSPACE_ROOT = PM_ROOT.parent
 DERIVED_PATH = PM_ROOT / "derived-dependency-manifest.json"
 MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 CANONICAL_PATH = PM_ROOT / "canonical-dependency-manifest.json"
+
+# Status values that exempt a repository from the disk-presence check.
+# These statuses indicate the repo is intentionally not cloned under WORKSPACE_ROOT.
+# Any other status (incl. "active", "scaffolded", missing/empty) → repo MUST be on disk.
+DISK_ABSENT_OK_STATUSES: frozenset[str] = frozenset(
+    {
+        "archived",
+        "deprecated",
+        "deleted",
+        "future",
+    }
+)
+
+# Status prefixes that exempt a repo from disk-presence check (consolidations / merges).
+DISK_ABSENT_OK_PREFIXES: tuple[str, ...] = (
+    "consolidated-into-",
+    "merged-into-",
+    "pending-archive-into-",
+)
 
 JsonDict = dict[str, object]
 
@@ -92,7 +112,35 @@ def main() -> int:
             return 1
 
     issues: list[dict[str, object]] = []
+    disk_absent: list[dict[str, object]] = []
     manifest_repos_raw = _jdict(manifest.get("repositories")) or {}
+
+    # Disk-presence check: every manifest repo (status=active or unspecified) MUST
+    # have a directory under WORKSPACE_ROOT. Statuses in DISK_ABSENT_OK_STATUSES (or
+    # with DISK_ABSENT_OK_PREFIXES) are exempt. Entries with `archived: true` are
+    # exempt as well. Prevents stale manifest entries from being silently skipped by
+    # workspace iteration tooling (rollout-workflow-templates.sh, run-all-setup.sh).
+    # SSOT: plans/archive/issues/stale_manifest_entries_disk_absent_2026_05_18.md.
+    if not repo_filter:
+        for name, raw_entry in manifest_repos_raw.items():
+            entry = _jdict(raw_entry) or {}
+            if entry.get("archived") is True:
+                continue
+            status = _jstr(entry.get("status"), "active") or "active"
+            if status in DISK_ABSENT_OK_STATUSES:
+                continue
+            if any(status.startswith(prefix) for prefix in DISK_ABSENT_OK_PREFIXES):
+                continue
+            folder = _jstr(entry.get("folder_name")) or name
+            repo_path = WORKSPACE_ROOT / folder
+            if not repo_path.is_dir():
+                disk_absent.append(
+                    {
+                        "repo": name,
+                        "expected_path": str(repo_path),
+                        "status": status,
+                    }
+                )
 
     for repo_name, data in repos.items():
         data_d = _jdict(data) or {}
@@ -136,21 +184,39 @@ def main() -> int:
                             }
                         )
 
+    aligned = len(issues) == 0 and len(disk_absent) == 0
     if json_output:
-        out: dict[str, object] = {"aligned": len(issues) == 0, "issues": issues, "count": len(issues)}
+        out: dict[str, object] = {
+            "aligned": aligned,
+            "issues": issues,
+            "count": len(issues),
+            "disk_absent": disk_absent,
+            "disk_absent_count": len(disk_absent),
+        }
         print(json.dumps(out, indent=2))
     else:
-        if not issues:
+        if aligned:
             print("OK: All dependencies aligned with manifest and canonical constraints.")
+            print("OK: All non-archived manifest repos present on disk.")
             return 0
-        print(f"Found {len(issues)} misalignment(s):\n")
-        for i in issues:
-            print(f"  [{i['repo']}] {i['type']}: {i['dep']}")
-            if "pyproject_spec" in i:
-                print(f"    pyproject: {i['pyproject_spec']}")
-                print(f"    canonical: {i['canonical_spec']}")
+        if issues:
+            print(f"Found {len(issues)} misalignment(s):\n")
+            for i in issues:
+                print(f"  [{i['repo']}] {i['type']}: {i['dep']}")
+                if "pyproject_spec" in i:
+                    print(f"    pyproject: {i['pyproject_spec']}")
+                    print(f"    canonical: {i['canonical_spec']}")
+        if disk_absent:
+            print(f"\nFound {len(disk_absent)} manifest repo(s) absent from disk:\n")
+            for d in disk_absent:
+                print(f"  [{d['repo']}] status={d['status']!r} expected={d['expected_path']}")
+            print(
+                "\nFix: either re-clone the repo, set "
+                "'archived: true' / status in {archived,deprecated,deleted,future,consolidated-into-*,merged-into-*,pending-archive-into-*}, "
+                "or move the entry to removedEntries.",
+            )
         return 1
-    return 0
+    return 0 if aligned else 1
 
 
 if __name__ == "__main__":
