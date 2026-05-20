@@ -35,7 +35,7 @@ related_plans:
 | **7** | Local | 🔴 FROZEN (was simulation_scenarios + defi_master P2-3) — reassigned to A3 Sports + A2 off-season gap | Resumes post-unfreeze | FROZEN |
 | 8 | Local | defi_catalogue close + R-NEW-6 detector candidate | Phase 14 | KEEP |
 | **9** | **🟡 PARALLEL** (LOCAL or VM operator choice) | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL** | Phase -1 (workspace QG prereq) | NEW theme tonight |
-| **10** | **🟡 PARALLEL** | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS** | Phase -1 | NEW theme tonight |
+| **10** | **🟡 IN-PROGRESS** | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS** | Phase -1 | ✅ MTDS green (no fixes needed); ✅ features-service@31c38543 green; 🟡 MDPS in progress |
 | **11** | **🟡 PARALLEL** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service** | Phase -1 | NEW theme tonight |
 
 ## Slot 9-11 dispatch — QG green sweep (Phase -1 owner)
