@@ -54,6 +54,16 @@ Mostly documentation (existing patterns are correct) + ONE new component (Transf
 - UAC-validator rejects cross-client at construction;
 - defence-in-depth: TransferCoordinator rejects cross-client at consume time even if UAC validator bypassed;
 - alert assertion on rejection.
+- **PLUS one test per pre-existing BLOCKING gap** identified by retroactive audit
+  ([`plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md`](../../plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md)
+  — 5 additional gaps; covers CEX withdraw destination validation, DeFi protocol method extension, bridge function
+  extension, intent engine client_id plumbing, `assert_client_allowed` at operation layer).
+
+**Retroactive audit prerequisite**: READ
+[`plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md`](../../plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md)
+BEFORE starting Phase 6. The audit enumerates 6 BLOCKING gaps + 1 INSPECT + 1 OK in existing execution-service surfaces.
+Your TransferCoordinator facade must wrap each gap behind the enforcement layer. The audit's "Slot 7 Phase 6 — explicit
+action items" section is your work plan; the "Closure criterion" section is your DoD.
 
 Blocked-on (Phase 6 NEW component): slot 5 Phase 1 (UAC TransferIntent contract). Doc work has no blocker.
 
