@@ -204,7 +204,7 @@ Retained scaffolding (NOT removed, but inactive):
   `INSTRUMENT_TYPES_BY_VENUE` / `VENUE_FEE_MODEL_MAP` / `VENUE_ALPHA_PROFILE` rows (broader UAC venue-constants cleanup
   is owned by the cross-asset catalogue audit plan Phase 1D `to_canonical_venue()` work; mass-sweep would collide with
   that plan).
-- UAC `BETTING_SPORTS_VENUES` manifest entries for the 14 scrapers + `manifold` (manifold's a separate ghost — SP-1).
+- UAC `BETTING_SPORTS_VENUES` manifest entries for the 14 scrapers.
 - execution-service `adapters/scrapers/*.py` files (14 scrapers + `base_scraper.py` + `version_registry.py`) and
   `adapters/browser/us_books.py` `_make_us_book` factory.
 
