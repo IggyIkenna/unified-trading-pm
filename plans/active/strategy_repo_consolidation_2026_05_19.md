@@ -488,14 +488,17 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       `risk-monitor`/`position-monitor`/`pnl-attribution` as console-script commands. backfill-cluster.sh already uses
       `python -m strategy_service --operation {pnl-attribution,risk-monitor}`. e2e-testing rewritten in Phase 4
       (a-extension). No shim aliases required. Strategy-service pyproject.toml remains unchanged.
-- [ ] **P1 NEW** [AGENT slot 4] Phase 4 (i) — Logging + observability config consolidation. Per-service `setup_events()`
-      callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package logger naming
-      (`strategy_service.risk` / `strategy_service.position` / `strategy_service.pnl` / `strategy_service.engine`) for
-      filterability. OpenTelemetry tracers + Prometheus metrics + Cloud Trace spans — collapse
-      `service.name=<source-repo>` labels to `service.name=strategy-service` and add
+- [x] ✅ **P1 NEW** [AGENT slot 4] Phase 4 (i) — Logging + observability config consolidation. Per-service
+      `setup_events()` callsites + log levels + formatters + structured-log field naming. Decide: per-sub-package logger
+      naming (`strategy_service.risk` / `strategy_service.position` / `strategy_service.pnl` /
+      `strategy_service.engine`) for filterability. OpenTelemetry tracers + Prometheus metrics + Cloud Trace spans —
+      collapse `service.name=<source-repo>` labels to `service.name=strategy-service` and add
       `subsurface={risk,position,pnl,strategy}` label dimension. ServiceBootstrap in Phase 4 (e) already covers
       lifecycle-event emission; this is the parallel pass for log + metric + trace infra. Slot 4 extends Phase 4 by ~0.5
-      cal-day.
+      cal-day. — ✅ strategy-service@25638f4b (2026-05-20): 76 occurrences across 34 files; config.service_name + API
+      titles + log messages → "strategy-service"; UAC seed keys (\_SERVICE_NAME in emission/isolation policy) +
+      filesystem path keys (mock_data_provider) preserved at legacy values; test assertions updated to match. 0
+      failures.
 - [x] ✅ **P2 NEW** [AGENT slot 3] Phase 3 addendum — Drop source-repo `docs/` subdirectories during subtree-merge.
       `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/` pulls package + tests +
       scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
