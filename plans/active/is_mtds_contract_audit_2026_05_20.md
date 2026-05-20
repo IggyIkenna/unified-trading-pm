@@ -228,11 +228,14 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 ### Phase 4 — solana-defi bucket v4 → v8 migration
 
 - [x] ✅ **P0. Patch `data_manifest_handler.py:242`** — hardcoded `schema_version=4` becomes `schema_version=8`. — MTDS@b8c340b (also added capture_status="captured", error_reason="", attempted_at="", pipeline_mode="" defaults)
-- [ ] **P0. Migration script** `instruments-service/scripts/migrate_solana_defi_v4_to_v8.py`:
-      walk `gs://solana-defi-central-element-323112/_index/availability_index.parquet`,
-      add v8 columns (`capture_status`, `error_reason`, …), backfill `capture_status='captured'` for
-      existing rows (best-guess since v4 lacks the distinction — note assumption in plan).
-- [ ] **P0. Snapshot v4 manifest** to `_index/snapshots/pre_v8_migration_2026_05_20.parquet` before mutation.
+- [x] ✅ **P0. Migration script** `market_tick_data_service/scripts/migrate_solana_defi_v4_to_v8.py`
+      (placed in MTDS not IS — bucket is MTDS-owned): walks `_index/availability_index.parquet`,
+      snapshots to `_index/snapshots/pre_v8_migration_<date>.parquet`, adds v8 columns,
+      backfills `capture_status='captured'`. — MTDS@0f8ea34
+      Run: `python -m market_tick_data_service.scripts.migrate_solana_defi_v4_to_v8 --project central-element-323112 --apply --confirm`
+- [ ] **P0. Snapshot v4 manifest + execute migration** — operator runs migration script with `--apply --confirm`
+      on a VM with ADC access to `central-element-323112`. Verify: read back index, confirm `schema_version=8` in all rows.
+      **AWAITING OPERATOR EXECUTION** (script ships at MTDS@0f8ea34; operator must trigger `--apply --confirm`).
 
 ### Phase 5 — Re-backfill where the audit found data corruption
 
