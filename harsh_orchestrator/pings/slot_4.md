@@ -534,3 +534,22 @@ Slot 4 moving to S4-DEFI-CATALOGUE-PRIMITIVES now.
 5. **8B**: `alerting_service_live_rules` needs completion first (11 open items)
 
 This task cannot reach 100% without the above operator decisions. Raising /blocked on orchestrator.
+
+---
+
+[2026-05-20 12:05 UTC] slot 4 — Two specific DEFI-CATALOGUE operator asks (per main ack BLK-0732bdf5)
+
+**Ask 1 — 6C Pyth LST backfill ack + feed IDs**:
+Launcher `launch-mtds-pyth-lst-backfill-vm.sh` already exists and covers jitoSOL/mSOL/bSOL/INF.
+Need from operator:
+- [ack] in `ikenna_orchestrator/pings/slot_2.md` to unblock launcher (header explicitly requires it)
+- Pyth feed IDs for **Rocket Pool (rETH)** on Ethereum: `0x<feed_id>` (mainnet beta.api.pyth.network)
+- Pyth feed IDs for **Solblaze (bSOL)** on Solana: `0x<feed_id>`
+Once ack + IDs land, agent can extend the launcher and fire the VM.
+
+**Ask 2 — 8A multi-archetype paper-run timing**:
+Single-archetype carry_staked_basis paper VM running since 2026-05-18.
+Question: should `leveraged_funding_arb` archetype also be launched before May-23 cutover?
+If yes → agent launches alongside existing VM. If no → 8A stays BLOCKED-POST-CUTOVER.
+
+Status: pings documented. Slot 4 moving to S4-DEX-PERP-EXPANSION.
