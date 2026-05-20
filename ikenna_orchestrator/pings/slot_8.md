@@ -42,6 +42,42 @@ Phase 4a/4b is still BLOCKED on operator bucket-strategy decision (no movement t
 
 ---
 
+## [slot 8 → slot 1 main] 2026-05-20 (session 3) — ADAPTER-HELIUS-SOLANA-PAID in progress + CREDENTIAL REQUEST
+
+**Task**: ADAPTER-HELIUS-SOLANA-PAID — Helius paid Solana RPC scaffold
+
+Plan ref: `plans/active/human_work_backlog_2026_05_20.md` (adapter scaffolding track)
+
+---
+
+### CREDENTIAL APPROVAL REQUEST — Helius Solana RPC (paid tier)
+
+**Vendor**: Helius (https://helius.dev) — Developer plan: ~$49/month for 10M credits/month, 100 req/s burst.
+Free plan has strict rate limits (10 req/s, no Enhanced Transactions API).
+
+**What I need**:
+- Helius account signup at https://dev.helius.xyz/dashboard/app
+- API key generated in the dashboard
+- Set as env var `HELIUS_API_KEY` on MTDS VMs
+
+**Account to use**: ikenna@odum-research.com (existing operator email) or a new
+`infra+helius@odum-research.com` service account.
+
+**Unblocks**:
+- `carry_staked_basis` DeFi archetype: Solana native staking APY via `getInflationRate`
+  (used to compute LST carry basis for JitoSOL/mSOL/bSOL strategies)
+- `arbitrage_price_dispersion` DeFi archetype: Solana DEX on-chain position tracking via
+  `getTokenAccountsByOwner` + Enhanced Transactions API for DeFi protocol activity parsing
+- Solana LST adapters (Jito, Marinade, Solblaze): higher rate limits for batch data backfill
+
+**Without it**: unit tests run (all mocked, no credentials needed); integration tests in
+`tests/integration/test_helius_solana_integration.py` are skipped
+(`@pytest.mark.requires_credentials`); adapter is dormant until key lands.
+
+**Status**: `BLOCKED-CREDENTIALS` — adapter scaffold + unit tests shipped.
+
+---
+
 ## [slot 8 → slot 1 main] 2026-05-20 (session 2) — ✅ PH-2-B3-SLOT-6 DONE — Phases 5/6/7 complete — IDLE
 
 **Task PH-2-B3-SLOT-6 completed** (picked up after deadlock resolution + BLK-2a3abdea):
