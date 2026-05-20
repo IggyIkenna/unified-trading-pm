@@ -1547,21 +1547,33 @@ P0 (CRITICAL — live-safety gate missing):
 3. `StaleUpstreamError` does not exist in workspace — equivalent is `DataStalenessError` in UAC
    `internal/reference/data_freshness.py` but unwired in live paths.
 
-**A6** still running (batch-live adapter parity).
+**A6 COMPLETE** (batch-live adapter parity) — PM@6100162db.
 
 ### Phase 2 + 3 spawned (background agents, 2026-05-20)
 
-- Phase 2 (strategy-service PnL emission): background agent a07df2df86084d11d
-- Phase 3 (features performance_features + UAC EXPECTED_NO_PNL_STREAM): background agent abcd1c4a338f16c6a
+- Phase 2 (strategy-service PnL emission): background agent a07df2df86084d11d (running)
+- Phase 3 (features performance_features + UAC EXPECTED_NO_PNL_STREAM): background agent abcd1c4a338f16c6a (running)
+
+### A6 findings summary
+
+- ~66 P0 gap cells (batch adapters exist, no live WSFeedConnector wiring). DeFi most affected: `lending_indices`,
+  `lst_rates`, `dex_pools`, `perp_funding`.
+- 8 BLOCKED-CREDENTIALS: Databento TradFi WSFeed (7 venues) + ODDS-API live.
+- 4 PARTIAL: DeFi internal adapters not wired into manifest-recording WSFeedConnector registry.
+- Full CSV: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv`
+- C5 (MTDS→strategy) + C7 (strategy→execution) contract audits already landed by another tab.
 
 ### What operator needs to decide
 
 1. **[ACK NEEDED] ArchetypeAllocationDirective naming** — ack `Archetype` prefix so Phases 5/6 agent prompts can be
    updated
-2. **[ACK NEEDED] A4 v8 migration** — this requires a GCS walk. Must bundle into Phase 2 single-walk discipline (HARD
-   RULE: no new whole-corpus walk). Operator: is this bundled into an existing walk window, or does a new migration
-   window need scheduling?
-3. **[ACK NEEDED] A5 freshness gates** — two P0 live-safety gaps. Operator: should slot-3 wire these call sites in
-   strategy-service (Phase 2 is already touching that file) and flag execution-service for Harsh's slots?
+2. **[ACK NEEDED] A4 v8 migration** — must bundle into Phase 2 single-walk discipline (HARD RULE: no new whole-corpus
+   walk). Is this bundled into an existing walk window, or does a new migration window need scheduling?
+3. **[ACK NEEDED] A5 freshness gates** — two P0 live-safety gaps. Should slot-3 wire `assert_feature_fresh()` call sites
+   in strategy-service (Phase 2 already touching that file) and flag `assert_market_data_fresh()` for execution-service
+   to Harsh's slots?
+4. **[ACK NEEDED] A6 live adapter gaps** — ~66 batch-only cells. Should slot-3 spawn D7 (live adapters plan) once
+   remaining C-series audits complete? C1/C2/C3/C4/C6/C8/C9/C10/C11 still pending — should slot-3 spawn these now that
+   A4/A5/A6 gate is GREEN?
 
 — slot-3 / ikenna
