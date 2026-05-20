@@ -179,4 +179,13 @@ else
         log_quiet "=== slot $(basename "${slot}") ==="
         walk_slot "${slot}"
     done
+
+    # Also FF the main workspace (parent of .tabs/) — keeps the non-tab working
+    # tree in sync so VS Code SCM reflects actual LDR state. Uses the same
+    # dirty-check + FF-only logic as tab slots; skips on dirty/ahead/diverged.
+    main_workspace="$(dirname "${tabs_root}")"
+    if [[ -d "${main_workspace}" ]]; then
+        log_quiet "=== main-workspace ==="
+        walk_slot "${main_workspace}"
+    fi
 fi
