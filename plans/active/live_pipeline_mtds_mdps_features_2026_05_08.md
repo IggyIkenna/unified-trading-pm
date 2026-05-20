@@ -1681,3 +1681,31 @@ Harsh slot 5's shift ended 2026-05-11 ~14:45 UTC. This block is the clean pick-u
   live-runner wire-in failing `[3.5/6] IMPORT PATTERNS` — 11 deep
   `from unified_trading_library.feature_service_base.live_aggregator import ...`; mechanical
   `check-import-patterns.py --fix` or re-export at the UTL root — routed to that Phase 5/6 owner, not Harsh slot 5.)
+
+## Deferred work after 2026-05-20 slot-8 session (mock-data-benchmarking migration)
+
+**MIGRATED FROM**: `plans/active/mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3 items 3.C-followup + 3.D
+(slot-8 2026-05-20). Both items named this plan as their successor; benchmarking plan closed 100% after this migration.
+
+- [ ] [AGENT] P2. **3.C-followup (migrated): `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.** CeFi bucket has
+      `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
+      total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. **Do NOT add until 3.D below
+      confirms** MTDS reads it (to avoid spec drift from reality). Ping filed 2026-05-19 in
+      `harsh_orchestrator/pings/`. Provenance: `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.C-followup.
+
+- [ ] [AGENT] P1. **3.D (migrated): Prod-reader schema-parity verification.** PARTIAL progress already shipped:
+      (1) ✅ MTDS reader wire-in — `TickDataHandler.process()` early-return when `get_synthetic_input_override()` is set
+      (skips Tardis/Databento external-API calls; mtds@`82639e0`). (2) ✅ strategy-service reader wire-in —
+      `GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix (strategy@`a03d12e`). (3) ✅
+      ml-inference-service wire-in — `FeatureSubscriber.read()` override check (ml-inference@`0206358`). (4) ✅ Harness
+      `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`). **DEFERRED remains**:
+      subprocess-mode harness run + schema-drift assertion (requires VM, needs operator sign-off). Run each generator's
+      output through prod MTDS / MDPS / features-* reader via harness `subprocess` mode (once `--synthetic-input-uri`
+      flag is wired) and assert NO schema-drift error. Any column the prod reader expects that the Phase 2.A skeleton
+      omits → add to skeleton + `# SCHEMA-PARITY: <reader>` provenance line. **Also include slot-8 handshake items**:
+      (a) cefi fixtures cover 21-venue zero-activity-bar matrix incl. Cat-D shape (`catalogue_audit_cefi_2026_05_12.md`);
+      (b) tradfi re-point at new `tradfi_etfs.py`/`tradfi_roots.py` SSOT once Ikenna's catalogue Phase 5 lands — do not
+      bake fragmented 4-place ETF list into specs; (c) sports/prediction gaps (`EXPECTED_PAUSED_LEAGUE` +
+      `prediction_canonical_question_group` + `MARKET_LIFECYCLE`) already covered by DEFERRED-PER-USER post-cutover
+      sports/prediction sub-plan. Provenance: `mock_data_pipeline_benchmarking_2026_05_10.md` Phase 3.D + slot-8
+      handshake `harsh_orchestrator/pings/slot_8.md:15`.

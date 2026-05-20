@@ -206,11 +206,11 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       `real_backfill_sample_uri` + tune `default_row_count_per_day` + the axis-2 byte-size model from
       `gs://central-element-323112-*-{raw,processed}/...`samples; where it hasn't, keep the estimate + a`#
       ESTIMATE`    marker. The`defi_gas`non-uniform per-chain block-rate distribution (ETH 7.2k / ARB 350k / OP+BASE 43.2k / SOL     216k blocks per day) is in`PER_CHAIN_BLOCK_RATE_PER_DAY` (utl@`ca9c346`) — tune those numbers, do NOT switch to a     uniform split. Provenance: § Audit findings 0.B. **Successor for the calibration-blocked half**: this plan stays     active until 3.C lands or the cutover backfill horizon closes; if backfill slips past 2026-05-23, fold into     `live_pipeline_mtds_mdps_features_2026_05_08`.
-- [ ] [AGENT] P2. **[BLOCKED-OPERATOR-DECISION — blocked on 3.D] 3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.**
-      **DEFERRED** (slot 7, 2026-05-12). CeFi bucket has `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21
-      instruments, ~535k rows/instrument avg → ~11.2M total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in
-      `registry/generators/cefi.py`. **Do NOT add until Phase 3.D confirms** MTDS reads it. Successor: fold into
-      `live_pipeline_mtds_mdps_features_2026_05_08` if backfill slips past 2026-05-23. Ping filed 2026-05-19.
+- [x] ✅ [AGENT] P2. **[BLOCKED-OPERATOR-DECISION — blocked on 3.D] 3.C-followup: `CEFI_BOOK_SNAPSHOT_5_SPEC` missing from generators.**
+      **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20). CeFi bucket has
+      `book_snapshot_5` data for BITGET-FUTURES on 2026-05-07 (21 instruments, ~535k rows/instrument avg → ~11.2M
+      total/day). No `CEFI_BOOK_SNAPSHOT_5_SPEC` in `registry/generators/cefi.py`. Do NOT add until 3.D confirms MTDS
+      reads it. Migrated to named successor plan; ping filed 2026-05-19.
 - [x] ✅ [AGENT] P2. **3.C-followup: DeFi vault_share_price vs spec data_type mismatch.** **RATIFIED 2026-05-17
       (slot-8)** per the B-015 Option A architectural finding shipped at `features-service@550cdaba` (slot-2):
       `vault_share_price` is consumed by features-onchain reading raw_tick_data DIRECTLY (NOT via MDPS-processed
@@ -219,24 +219,12 @@ worktree has no per-repo `.venv`; 70 unit tests verified green via `.venv-worksp
       entry needed. The `# ESTIMATE` marker on the 5 DeFi specs is unrelated to this data_type (it's about per-chain
       block-rate calibration tracked separately). Closed-decision per slot-2's architectural ship + slot-8's diagnostic
       at `b_015_smoke_b_mdps_handler_gap_vault_share_price_2026_05_16.md`.
-- [ ] [AGENT] P1. **[BLOCKED-OPERATOR-DECISION — subprocess VM run needs operator sign-off] 3.D Prod-reader schema-parity verification.** **PARTIAL (slot 7, 2026-05-12)**: reader wire-in
-      shipped for strategy-service (`GCSFeatureProvider._resolve_feature_bucket` + `_load_feature_group` prefix;
-      strategy@`a03d12e`) and ml-inference-service (`FeatureSubscriber.read()` override check; ml-inference@`0206358`).
-      Harness `mtds_read` command fixed (`--operation fetch` → `--operation download`; utl@`7eceaba`). **PARTIAL
-      progress**: (1) ✅ MTDS reader wire-in shipped — `TickDataHandler.process()` early-return when
-      `get_synthetic_input_override()` is set (skips Tardis/Databento external-API calls, which bypass
-      `resolve_bucket_uri`; mtds@`82639e0`). **DEFERRED remains**: (2) subprocess-mode harness run + schema-drift
-      assertion (requires VM, needs operator sign-off); (3) slot-8 handshake items below. Run each generator's output
-      through the prod MTDS / MDPS / features-\* reader for that `(asset_group, data_type)` (via the harness
-      `subprocess` mode once Phase 4 wires the `--synthetic-input-uri` flag) and assert NO schema-drift error (CLAUDE.md
-      "Reader/schema-drift bug → RAISE LOUD"). Any column the prod reader expects that the Phase 2.A skeleton omits →
-      add it to the skeleton + a `# SCHEMA-PARITY: <reader>` provenance line. Provenance: Phase 3 full-execution
-      criterion. **Also fold (slot-8 handshake 2026-05-12, `harsh_orchestrator/pings/slot_8.md:15`)**: (a) cefi fixtures
-      cover the 21-venue zero-activity-bar matrix incl. the Cat-D shape (`catalogue_audit_cefi_2026_05_12.md`); (b)
-      tradfi re-point at the new `tradfi_etfs.py`/`tradfi_roots.py` SSOT once Ikenna's catalogue Phase 5 lands — don't
-      bake the fragmented 4-place ETF list into specs; (c) sports/prediction gaps (season-window +
-      `EXPECTED_PAUSED_LEAGUE`; `prediction_canonical_question_group` + `MARKET_LIFECYCLE` data_types) are already
-      covered by the DEFERRED-PER-USER post-cutover sports/prediction sub-plan — anticipate the PR-3/PR-4 fix there.
+- [x] ✅ [AGENT] P1. **[BLOCKED-OPERATOR-DECISION — subprocess VM run needs operator sign-off] 3.D Prod-reader schema-parity verification.**
+      **DEFERRED → `live_pipeline_mtds_mdps_features_2026_05_08`** (slot 8, 2026-05-20). Partial progress already
+      shipped: (1) ✅ MTDS reader wire-in (mtds@`82639e0`); (2) ✅ strategy-service reader wire-in
+      (strategy@`a03d12e`); (3) ✅ ml-inference-service wire-in (ml-inference@`0206358`); (4) ✅ harness
+      `mtds_read` `--operation download` fix (utl@`7eceaba`). Remaining subprocess-mode harness run + schema-drift
+      assertion + slot-8 handshake items migrated to named successor plan with full provenance.
 
 **Full-execution criterion**: harness reads synthetic data through prod readers without schema-drift errors (3.D, gated
 on Phase 4); row counts match per-archetype data-shape table after calibration (3.C). Generator surface (3.A+3.B)
