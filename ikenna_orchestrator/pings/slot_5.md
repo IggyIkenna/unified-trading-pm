@@ -1,32 +1,90 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-20 operator-direction reversal.** Booting agents: read the 2026-05-20 entry
+> at the top of this file FIRST, then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5 (status block 2026-05-20).
+> History below 2026-05-20 entry is audit-trail only.
 
 ---
 
-## [slot 1 main → slot 5] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 5
+## [slot 1 main → slot 5] 2026-05-20 — 🔴 OPERATOR-DIRECTION REVERSAL — Phase 5 UTL lifts UN-DEFERRED — PICK UP NOW
+
+**Reversal**: at the 21:30 UTC checkpoint 2026-05-19, slot 5 deferred Phase 5 UTL lifts to a post-cutover successor plan
+(`utl_lift_config_reloader_kill_switch_post_cutover.md`) on the theory that UTL changes 4 days before May-23 live DeFi
+launch were unacceptable risk. **Operator overruled 2026-05-20**: carrying 4× duplication of `config_reloaders.py` (~688
+LOC across risk/position/pnl/strategy sub-packages) + `kill_switch_bus_subscriber.py` (~80–100 LOC × 4) into cutover
+defeats the consolidation's SSOT premise. UTL bump is additive (patch, no removals), new helpers are consumed only by
+strategy-service after Phase 3 subtree-merge — blast radius is bounded. Successor plan is **CANCELLED** (never created —
+un-defer absorbs it).
+
+**Pick-up state**: Phase 3 subtree-merge + Phase 4 fix-imports + Phase 6 boot/QG parity all DONE
+(strategy-service@7265289a / @91f701b0). Sub-packages live + green. Phase 7 archive is operator-gated on
+`gh repo archive` (filed PM@e88149a28) and is NOT a blocker for Phase 5 — lifts can ship before or after the source-repo
+archive lands. **Source-repo worktrees REMOVED 2026-05-20** across all 11 tabs + main (risk + position + pnl
+`git worktree remove --force` + main repo `rm -rf`); operate exclusively on strategy-service sub-packages.
+
+**Sequencing** (mirrors `strategy_repo_consolidation_2026_05_19.md` § `phase-5-lifts-to-utl` un-defer body):
+
+1. **UTL PR** — add `ConfigReloaderBase[T]` (or `make_config_reloader(config_cls)` factory) to
+   `unified_trading_library/config_interface/config_reloader_base.py`, and `KillSwitchBusSubscriberBase` (or
+   `make_kill_switch_subscriber(on_fire, on_clear)` factory) to
+   `unified_trading_library/lifecycle/kill_switch_subscriber_base.py`. Unit tests against mock typed-config + mock UAC
+   `KillSwitchBusEvent`. Path-choice (base class vs factory) — pick whichever yields cleaner basedpyright with
+   strategy-service's 4 distinct typed-config classes; document choice in the PR body.
+2. **UTL bump via semver-agent** —
+   `gh workflow run request-major-bump.yml --repo IggyIkenna/unified-trading-library -f proposed_version="<next-patch>"`
+   → `/approve`. Patch bump only (additive).
+3. **strategy-service PR** — remove 4× local copies of each helper across
+   `strategy_service/{risk,position,pnl,signal_publishing_or_equivalent}/`; rewrite callsites to delegate to UTL.
+4. **QG green** — `bash scripts/quality-gates.sh` in strategy-service; STEP 5.34 (typed config_reloaders) must still
+   pass with the lift in place. `PYTEST_UNIT_DIR="tests/"` if the per-family test layout applies.
+5. **basedpyright clean** — both repos (`run_timeout 120 basedpyright <source_dir>/`).
+6. **Half-1 + Half-2 in same agent turn** — code commits + plan-flip of `phase-5-lifts-to-utl` checkbox with
+   `docs(plans):` prefix. Reference both repo SHAs in the flip evidence (e.g. `utl@<sha> + strategy-service@<sha>`).
+
+**Composes with**: ML repo consolidation (slot 8) which has a parallel `config_reloaders` lift candidate. If slot 8's
+ml-service callsite shape converges with strategy-service's, `ConfigReloaderBase` becomes a 5-way SSOT instead of 4-way
+(lift once, absorb twice). Coordinate via this ping file or commit comments.
+
+**Pre-audit § (f)** confirmed candidate inventory; nothing else in scope. ManifestFreshnessCache lift is N/A (no source
+repo adopted it).
+
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todo `phase-5-lifts-to-utl` (status: active).
+- Pre-audit § (f):
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+- Work-split status block: `plans/active/work_split_2026_05_19_ikenna.md` § Slot 5, 2026-05-20 status update.
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 5] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 5 (SUPERSEDED — see 2026-05-20 entry above for the un-defer)
 
 Your previous theme (writegate Phase 6.6/6.7 + live_pipeline Phase 3–5) is **DEFERRED to Cycle 3**. New theme:
-**strategy_repo_consolidation Phase 5** — UTL lifts. ~2 cal-AI-days. **Blocked-on**: slot 4 Phase 4 (imports
-rewritten before lifts so signatures are stable).
+**strategy_repo_consolidation Phase 5** — UTL lifts. ~2 cal-AI-days. **Blocked-on**: slot 4 Phase 4 (imports rewritten
+before lifts so signatures are stable).
 
 **Two clean UTL lift candidates** confirmed by pre-audit § (f):
 
-1. **`ConfigReloaderBase`** — `config_reloaders.py` is duplicated 4× across risk + position + pnl + strategy
-   (152 + 112 + 112 + 312 LOC = ~688 LOC total). Lift to
-   `unified_trading_library/config_interface/config_reloader_base.py`. Each source has the same typed-config
-   pattern; abstract the shared scaffold + leave per-service config-specifics in subclass.
+1. **`ConfigReloaderBase`** — `config_reloaders.py` is duplicated 4× across risk + position + pnl + strategy (152 +
+   112 + 112 + 312 LOC = ~688 LOC total). Lift to `unified_trading_library/config_interface/config_reloader_base.py`.
+   Each source has the same typed-config pattern; abstract the shared scaffold + leave per-service config-specifics in
+   subclass.
 2. **`KillSwitchBusSubscriberBase`** — `kill_switch_bus_subscriber.py` duplicated 4× (~80-100 LOC each). Lift to
-   `unified_trading_library/lifecycle/kill_switch_subscriber_base.py`. Event taxonomy is already UAC-canonical
-   (verified pre-audit § (e)) — just lift the subscriber boilerplate.
+   `unified_trading_library/lifecycle/kill_switch_subscriber_base.py`. Event taxonomy is already UAC-canonical (verified
+   pre-audit § (e)) — just lift the subscriber boilerplate.
 
-Composes with **ml_repo_consolidation** twin (slot 9) which also has a config_reloaders lift candidate. After
-your `ConfigReloaderBase` lands, slot 9 can absorb the ml-service config_reloaders into the same base class.
-Coordinate via this ping file or commit comments.
+Composes with **ml_repo_consolidation** twin (slot 9) which also has a config_reloaders lift candidate. After your
+`ConfigReloaderBase` lands, slot 9 can absorb the ml-service config_reloaders into the same base class. Coordinate via
+this ping file or commit comments.
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todo `phase-5-lifts-to-utl`.
-- Pre-audit § (f): [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todo `phase-5-lifts-to-utl`.
+- Pre-audit § (f):
+  [`plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md`](../../plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md).
 
-Output: 2 UTL PRs + 1 strategy-service PR removing 4× local copies. ManifestFreshnessCache is N/A (no source repo adopts it).
+Output: 2 UTL PRs + 1 strategy-service PR removing 4× local copies. ManifestFreshnessCache is N/A (no source repo adopts
+it).
 
 Ack with `[ack] slot 5 booted` when slot 4 Phase 4 ships.
 
@@ -1790,18 +1848,26 @@ Acknowledge "STARTED execution-service delegate-flip" within 10 min.
 
 ## 2026-05-20 — MTDS DeFi handler 3-slot coordination (intra-side mirror of cross-side meta-ping)
 
-**From**: slot-1 main ikenna
-**Cross-ref**: `plans/active/_agent_pings.md` § "ALL slots editing MTDS DeFi handlers" 2026-05-20
+**From**: slot-1 main ikenna **Cross-ref**: `plans/active/_agent_pings.md` § "ALL slots editing MTDS DeFi handlers"
+2026-05-20
 
-**Issue**: Your `writegate Phase 6.6/6.7` work touches MTDS DeFi handlers (perp_funding, lst_rates, native_staking, staking_yields, solana_lst_archival, data_manifest_handler, dex_pools, dex_swaps, lending_indices, gas_fee, liquidations, eigenlayer_rewards, vault_share_price). 2 other slots (harsh-2 + harsh-5) are also editing these handlers RIGHT NOW while the 46-day DeFi backfill writes through them (12 VMs in flight).
+**Issue**: Your `writegate Phase 6.6/6.7` work touches MTDS DeFi handlers (perp_funding, lst_rates, native_staking,
+staking_yields, solana_lst_archival, data_manifest_handler, dex_pools, dex_swaps, lending_indices, gas_fee,
+liquidations, eigenlayer_rewards, vault_share_price). 2 other slots (harsh-2 + harsh-5) are also editing these handlers
+RIGHT NOW while the 46-day DeFi backfill writes through them (12 VMs in flight).
 
-**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero MISSING_EXPECTED in A3 divergence dump (tracked in `plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md`).
+**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest
+consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero
+MISSING_EXPECTED in A3 divergence dump (tracked in
+`plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md`).
 
 **Continue-clear**:
+
 - writegate Phase 6.6/6.7 doc/codex/contract work (no handler .py edits)
 - live_pipeline Phase 3-5 — features-onchain consumer-side
 - Any non-MTDS surfaces
 
-Worth noting: the 17 pre-existing freshness-cache test failures live in this handler family. Root cause unknown. Editing handlers may shift the failure surface.
+Worth noting: the 17 pre-existing freshness-cache test failures live in this handler family. Root cause unknown. Editing
+handlers may shift the failure surface.
 
 — slot-1 main / ikenna

@@ -1,35 +1,64 @@
-> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split.** Booting agents: ignore history below. Read
-> `plans/active/work_split_2026_05_19_ikenna.md` § Slot 8 for your tasks today. This file is kept for audit trail only.
+> **⚠️ STALE LEDGER — superseded by 2026-05-19 work split + 2026-05-20 UTL-lift compose-with note.** Booting agents:
+> read 2026-05-20 entry first, then `plans/active/work_split_2026_05_19_ikenna.md` § Slot 8. History below is
+> audit-trail only.
 
 ---
 
-## [slot 1 main → slot 8] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 9+10
+## [slot 1 main → slot 8] 2026-05-20 — 📎 COMPOSES-WITH note — `ConfigReloaderBase` lift in strategy consolidation Phase 5
 
-Your previous theme (defi_catalogue close + defi_simulation_realism + dex_perp) is **DEFERRED to Cycle 3**. New
-theme: **strategy_repo_consolidation Phase 9 (codex SSOT sweep) + Phase 10 (workspace QG sweep)**.
-~2 cal-AI-days. **Blocked-on**: slot 7 Phase 8A (Terraform must be applied before codex docs reference new
-launcher topology).
+Slot 5 has been **un-deferred** for `strategy_repo_consolidation` Phase 5 — UTL lifts of `ConfigReloaderBase` (4×
+typed-config reloaders across risk/position/pnl/strategy) + `KillSwitchBusSubscriberBase` (4×). See
+`ikenna_orchestrator/pings/slot_5.md` 2026-05-20 entry for full sequencing.
+
+**Implication for ML consolidation**: ml-training-service + ml-inference-service both have `config_reloaders.py`
+callsites (per pre-audit § (f), parallel pattern). If your sub-package typed-config classes converge in shape with
+strategy-service's after Phase 6 in the ML plan, the lifted `ConfigReloaderBase` becomes a **5-way SSOT** instead of
+4-way — lift-once, absorb-twice. **Action**: when slot 5 lands the UTL PR (expect ~today/tomorrow), evaluate whether
+ml-service can drop its local `config_reloaders.py` and delegate to the new UTL base in the SAME ml-consolidation Phase
+6/7 window rather than carrying the duplication into post-cutover.
+
+Not a blocker — coordinate via this file or commit comments if you decide to absorb. If shapes don't converge cleanly,
+leave ml-service callsites alone and document as a known post-cutover lift in the ml-consolidation plan body.
+
+— slot 1 main / ikenna
+
+---
+
+## [slot 1 main → slot 8] 2026-05-19 ~14:30 UTC — 🔴 THEME REASSIGNMENT — strategy consolidation Phase 9+10 (SUPERSEDED on 2026-05-19 ~15:30 UTC — see work_split Slot 8 reassignment to ML full plan)
+
+Your previous theme (defi_catalogue close + defi_simulation_realism + dex_perp) is **DEFERRED to Cycle 3**. New theme:
+**strategy_repo_consolidation Phase 9 (codex SSOT sweep) + Phase 10 (workspace QG sweep)**. ~2 cal-AI-days.
+**Blocked-on**: slot 7 Phase 8A (Terraform must be applied before codex docs reference new launcher topology).
 
 **Phase 9 — 8 enumerated codex paths** (plan-review-blocking if any skipped):
 
-1. **NEW** `codex/04-architecture/strategy-service-architecture.md` — ALREADY STUB-CREATED by slot 1 main 2026-05-19 (status: stub). Promote to `status: stable` + fill remaining sections per the consolidation outcome.
-2. **UPDATE** `codex/00-SSOT-INDEX.md` — flip the strategy-service row from "🟡 STUB" marker to stable; drop 3 archived repos from service index.
-3. **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — strategy-service is the promote target; `--operation` selection drives paper / live / batch.
+1. **NEW** `codex/04-architecture/strategy-service-architecture.md` — ALREADY STUB-CREATED by slot 1 main 2026-05-19
+   (status: stub). Promote to `status: stable` + fill remaining sections per the consolidation outcome.
+2. **UPDATE** `codex/00-SSOT-INDEX.md` — flip the strategy-service row from "🟡 STUB" marker to stable; drop 3 archived
+   repos from service index.
+3. **UPDATE** `codex/04-architecture/promote-workflow-architecture.md` — strategy-service is the promote target;
+   `--operation` selection drives paper / live / batch.
 4. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — 4-to-1 launcher collapse.
 5. **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — single strategy-service tarball.
 6. **UPDATE** `codex/06-coding-standards/cli-convention.md` — `--operation` sub-command table.
-7. **UPDATE** `codex/09-strategy/operational/cli-promote-paths.md` — promote-CLI invokes `strategy-service --operation strategy-live`.
-8. **BULK SWEEP** — `rg "risk-and-exposure-service|position-balance-monitor-service|pnl-attribution-service" codex/` and `rg ... cursor-configs/`. Pre-audit found ~150 incidental refs; bulk-sed replacement to `strategy_service/<sub>/` paths. Verify no false-positives in archived docs (`codex/09-strategy/_archived_pre_v2/`).
+7. **UPDATE** `codex/09-strategy/operational/cli-promote-paths.md` — promote-CLI invokes
+   `strategy-service --operation strategy-live`.
+8. **BULK SWEEP** — `rg "risk-and-exposure-service|position-balance-monitor-service|pnl-attribution-service" codex/` and
+   `rg ... cursor-configs/`. Pre-audit found ~150 incidental refs; bulk-sed replacement to `strategy_service/<sub>/`
+   paths. Verify no false-positives in archived docs (`codex/09-strategy/_archived_pre_v2/`).
 
 **Phase 10 — workspace QG sweep + cleanup**:
 
 - `bash scripts/quality-gates.sh` in every workspace repo identified by pre-audit § (b)
 - Run inventory regenerator (`python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`)
 - Remove "🔴 IN-FLIGHT REFACTOR" banners added in Phase 0 from affected active plans
-- Deployment-service end-to-end smoke (strategy-service VM boots → completes `--operation risk-monitor` run → STOPPED event → manifest row written)
+- Deployment-service end-to-end smoke (strategy-service VM boots → completes `--operation risk-monitor` run → STOPPED
+  event → manifest row written)
 - Final commit + push + plan-flip sweep
 
-- Plan: [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md) — todos `phase-9-codex-ssot-updates`, `phase-10-workspace-qg-sweep`.
+- Plan:
+  [`plans/active/strategy_repo_consolidation_2026_05_19.md`](../../plans/active/strategy_repo_consolidation_2026_05_19.md)
+  — todos `phase-9-codex-ssot-updates`, `phase-10-workspace-qg-sweep`.
 
 Ack with `[ack] slot 8 booted` when slot 7 Phase 8A ships.
 
@@ -1177,6 +1206,7 @@ Without it: Phase 3 subtree-merge cannot proceed
 ```
 
 **Current Slot 8 state**:
+
 - strategy_repo_consolidation Phase 9+10: BLOCKED on slot 7 Phase 8A (which is BLOCKED on slots 3-6 upstream)
 - ml_repo_consolidation Phase 2+: BLOCKED-OPERATOR (repo creation)
 - Available for reallocation to any unblocked track
@@ -1188,18 +1218,26 @@ Without it: Phase 3 subtree-merge cannot proceed
 **Shipped while waiting for operator unblocks**:
 
 1. **Codex: gsutil vs gcloud-storage-ls HARD RULE** — PM@`02d7ab495`
-   - New section "GCS path scanning — gsutil ls vs gcloud storage ls" in `codex/05-infrastructure/vm-tarball-deployment.md`
-   - Documents production incident (2026-05-19, 31 VMs idle) caused by `gcloud storage ls --recursive` failing with rc=1 on partial hive-partition prefix match
+   - New section "GCS path scanning — gsutil ls vs gcloud storage ls" in
+     `codex/05-infrastructure/vm-tarball-deployment.md`
+   - Documents production incident (2026-05-19, 31 VMs idle) caused by `gcloud storage ls --recursive` failing with rc=1
+     on partial hive-partition prefix match
    - Correct pattern: `gsutil ls -r gs://bucket/prefix**` with `check=False` + treat rc=1/empty-stdout as empty list
-   - Refs PM@726a3bf + deployment-service@5b917c1 (slot 1 bug fixes). Filed Phase 7.5 evidence row in `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
+   - Refs PM@726a3bf + deployment-service@5b917c1 (slot 1 bug fixes). Filed Phase 7.5 evidence row in
+     `gcs_migration_bundle_pipeline_mode_2026_05_08.md`
 
 2. **strategy_repo_consolidation Phase 0 SIDE EFFECT** — PM@`ec98aef9c` (after rebase)
    - Soft-freeze banner added to 20 active plans with code-level scope over the 4 affected repos
    - Banner: "🟡 IN-FLIGHT REFACTOR — strategy-repo-consolidation-2026-05-19"
-   - Plans patched: AUDIT_2026_05_15, alerting_service, batch_live_symmetry, bucket_name_ssot, codex_vs_citadel, compute_optimization, cross_cutting_may_23, defi_archetypes, defi_master, defi_recursive_borrow, deployment_and_qg_strategy, features_repo_consolidation, features_service_qg_cleanup, live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation, mock_data_pipeline_benchmarking, promote_workflow_may23, ruff_workspace_cleanup, writegate_honest_coverage
+   - Plans patched: AUDIT_2026_05_15, alerting_service, batch_live_symmetry, bucket_name_ssot, codex_vs_citadel,
+     compute_optimization, cross_cutting_may_23, defi_archetypes, defi_master, defi_recursive_borrow,
+     deployment_and_qg_strategy, features_repo_consolidation, features_service_qg_cleanup,
+     live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation, mock_data_pipeline_benchmarking,
+     promote_workflow_may23, ruff_workspace_cleanup, writegate_honest_coverage
    - Phase 0 SIDE EFFECT checkbox flipped in strategy_repo_consolidation plan (status: done)
 
 **Current Slot 8 state**:
+
 - strategy_repo_consolidation Phase 9+10: BLOCKED on slot 7 Phase 8A
 - strategy_repo_consolidation Phase 0 SIDE EFFECT: ✅ DONE (PM@ec98aef9c)
 - ml_repo_consolidation Phase 2+: BLOCKED-OPERATOR (repo creation)
@@ -1212,20 +1250,21 @@ Without it: Phase 3 subtree-merge cannot proceed
 
 ## [slot 8 → main] 2026-05-19 — ALERT: strategy Phase 3 done, slot 4 not yet responded; Phase 4 idle
 
-**Observation**: strategy-service remote live-defi-rollout shows Phase 3 subtree-merge landed at 14:24 UTC
-(commits 92515fde/cb200745/c67fb13d/544edf80). Phase 4 (fix imports + CLI) is NOW unblocked.
+**Observation**: strategy-service remote live-defi-rollout shows Phase 3 subtree-merge landed at 14:24 UTC (commits
+92515fde/cb200745/c67fb13d/544edf80). Phase 4 (fix imports + CLI) is NOW unblocked.
 
-**Problem**: slot_4.md shows dispatch at top but no ack/STARTED response for strategy Phase 4 yet. Last slot 4
-activity was 2026-05-18 on execution-service method-size refactoring. If slot 4 is not running, Phase 4 is idle
-which blocks the entire Phase 4→5→6→7→8A→9→10 chain.
+**Problem**: slot_4.md shows dispatch at top but no ack/STARTED response for strategy Phase 4 yet. Last slot 4 activity
+was 2026-05-18 on execution-service method-size refactoring. If slot 4 is not running, Phase 4 is idle which blocks the
+entire Phase 4→5→6→7→8A→9→10 chain.
 
-**Action taken**: 
+**Action taken**:
+
 - Completed Phase 0 SIDE EFFECT for strategy_repo_consolidation (20 plans soft-frozen, PM@ec98aef9c)
 - Phase 4 not touched — it's slot 4's assignment
 - Doing Phase 9 pre-audit while waiting (enumerating codex docs with 3 source-repo names for Phase 9h)
 
-**Request**: if slot 4 is idle, please re-dispatch Phase 4 to another slot (or to slot 8 — I have
-`strategy-service` in my worktree and Phase 3 is pulled).
+**Request**: if slot 4 is idle, please re-dispatch Phase 4 to another slot (or to slot 8 — I have `strategy-service` in
+my worktree and Phase 3 is pulled).
 
 **UPDATE 2026-05-20**: Phase 4 self-dispatched and COMPLETED by slot 8. See ping below.
 
@@ -1236,6 +1275,7 @@ which blocks the entire Phase 4→5→6→7→8A→9→10 chain.
 ## [slot 8 → main] 2026-05-20 — Phase 4 COMPLETE + multi-repo dirty-tree cleanup done
 
 **Phase 4 completed (self-dispatched after observing slot 4 idle)**:
+
 - strategy-service: 71 basedpyright errors fixed (cast() patterns, public renames, log_event field names) → 0 errors
 - Tests: 1456 passed, 2 skipped (ruff clean, basedpyright 0 errors)
 - All Phase 4 import rewrites committed: strategy-service@d9a76e9a, system-integration-tests@fd45c5a
@@ -1244,6 +1284,7 @@ which blocks the entire Phase 4→5→6→7→8A→9→10 chain.
 - Plan flip: PM@4a0db8e94
 
 **Current slot 8 state**:
+
 - Phase 4: ✅ DONE (strategy-service@d9a76e9a, 2026-05-20)
 - Phase 5+/9+10: BLOCKED on slot 7 Phase 8A (deployment-service Terraform)
 - Available for next dispatch

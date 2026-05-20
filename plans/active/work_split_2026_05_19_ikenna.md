@@ -301,13 +301,14 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 **RE-DISPATCH 2026-05-19 (items 1-13 ✅; new pickup per
 [`pings/slot_4.md`](../../ikenna_orchestrator/pings/slot_4.md))**:
 
-14. - [x] ✅ **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items 11-13.
-          Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
+14. - [x] ✅ **Batch-32 continuation — execution-service allowlist 9→0** — continue same extraction pattern as items
+          11-13. Per file: identify >50L methods, extract to private helpers, public methods ≤50L, remove from
           `FUNCTION_SIZE_EXTRA_EXCLUDES`, run QG green, commit + flip checkbox in same agent turn. Once
           execution-service allowlist is 0, scan unified-trading-api/ml-inference/ml-training/strategy-service
           allowlists; pick smallest for next stream. Cumulative target 100 → 109+ by EOD. If recurring pattern across
           services, add one-line codex note to `codex/06-coding-standards/method-size.md`. (refactor 0.4×, ~12 baseline
-          = ~5 cal AI-days) — execution-service@23d8401c6 (8 commits; allowlist now empty `()`; codex stub created PM this commit; next stream: scan strategy-service allowlist)
+          = ~5 cal AI-days) — execution-service@23d8401c6 (8 commits; allowlist now empty `()`; codex stub created PM
+          this commit; next stream: scan strategy-service allowlist)
 
 ---
 
@@ -324,6 +325,16 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
 > strategy-service@91f701b0). Phase 7 pre-steps done: DEPRECATION_NOTICE in 3 repos, workspace-manifest updated,
 > operator ping filed (PM@e88149a28). Awaiting operator `gh repo archive` for Phase 7 completion. Phases 8A/9/10 blocked
 > on Phase 7.
+>
+> **🔴 STATUS 2026-05-20 — UN-DEFER per operator direction** — Phase 5 UTL lifts REVERSED back to ACTIVE-NOW (cancels
+> the never-created post-cutover successor plan). Operator rationale: carrying 4× `config_reloaders.py` + 4×
+> `kill_switch_bus_subscriber.py` duplication into cutover defeats the consolidation's SSOT premise; UTL bump is
+> additive (patch, no removals), callsites confined to strategy-service after Phase 3 subtree-merge, so blast radius
+> bounded. Plan body un-deferred in commit `94c709585`. **Slot 5 picks up immediately** per
+> `ikenna_orchestrator/pings/slot_5.md` 2026-05-20 dispatch. Source-repo worktrees (risk/position/pnl across all 11
+> tabs + main non-tab) removed 2026-05-20 per Phase 7 archive prep — slot 5 works on strategy-service sub-packages only.
+> Compose-with: ML consolidation slot 8 (if ml-service typed-config shapes converge, `ConfigReloaderBase` becomes 5-way
+> SSOT — see `pings/slot_8.md` 2026-05-20 note).
 
 **Part A — writegate Phase 6.6/6.7** (plan at 52%, 11.5 cal left):
 
