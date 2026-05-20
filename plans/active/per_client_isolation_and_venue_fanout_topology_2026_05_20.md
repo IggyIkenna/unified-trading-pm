@@ -157,7 +157,7 @@ Phase 0 (pre-audit)  →  Phase 1 (UAC contracts)  →  Phase 2 (UTL bases)  →
 todos:
 
 - id: phase-0-pre-audit-manifest content: |
-  - [ ] [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
+  - [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce
         `plans/active/issues/per_client_isolation_preaudit_2026_05_20.md` enumerating: (a) every callsite in
         strategy-service that currently assumes single-tenant process (env var reads, module-level globals holding
         client state, singleton patterns) — these need ClientContext refactor in Phase 4; (b) every UAC type that
@@ -168,10 +168,10 @@ todos:
         `assert_client_allowed` covers ALL event-bus subscribers in execution-service (grep + read every subscriber);
         (f) MTM compute paths re-verified per 2026-05-20 audit — 4 paths confirmed; capture any drift since audit; (g)
         per-venue credential refresh cadence per venue type (CEX vs DEX vs lending) — drives KMS poll interval defaults
-        in Phase 5. status: pending
+        in Phase 5. — pm@17b75c44 + pm@68a31e04 status: done
 
 - id: phase-1-uac-contracts content: |
-  - [ ] [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
+  - [x] ✅ [AGENT] P0. Phase 1 — UAC contracts. Add to `unified_api_contracts/canonical/crosscutting/`: (1)
         `ClientLifecycleEvent` (StrEnum kind: REGISTER / DEREGISTER / QUARANTINE / UNQUARANTINE / CREDENTIAL_ROTATED;
         payload: client_id, archetype_id, shard_id, timestamp, reason); (2) `ClientReadyEvent` (emitted by ClientWorker
         after preflight green; client_id, archetype_id, shard_id, venue_auth_status: dict[venue, OK|FAILED|SKIPPED]);
@@ -184,7 +184,9 @@ todos:
         TransferIntent.idempotency_key; status: SUBMITTED | CONFIRMED | FAILED; on-chain tx_hash or CEX withdrawal_id;
         fee, gas_used). Tests: schema-parity cassettes per UAC discipline (every commit
         `pytest tests/test_cassette_schema_parity.py`). QG: STEP 5.69 bucket-name SSOT compliant (no inline bucket
-        strings in event payloads). status: pending blocked_by: phase-0-pre-audit-manifest
+        strings in event payloads). — uac@d0f72fd (7 files, 879 insertions: client_lifecycle_events.py +
+        transfer_events.py + 37 unit tests + __init__ exports + source_priority + availability_semantics fixes)
+        status: done
 
 - id: phase-2-utl-bases content: |
   - [ ] [AGENT] P0. Phase 2 — UTL bases. Add to UTL: (1)
@@ -208,7 +210,7 @@ todos:
         phase-1-uac-contracts
 
 - id: phase-3-supervisor content: |
-  - [ ] [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
+  - [x] ✅ [AGENT] P0. Phase 3 — StrategySupervisor implementation in strategy-service. Concrete subclass of
         `StrategySupervisorBase`: (1) MarkPriceAggregator: subscribes to MTDS/MDPS mark price stream once per
         (archetype, shard); maintains shared-memory dict keyed by instrument_id, value =
         `MarkSnapshot(price, mtm_value_per_unit, timestamp,         stale_after_ms)`. ClientWorkers consume read-only
@@ -224,7 +226,7 @@ todos:
         `clients/<archetype>/<shard>/clients.yaml` (operator-managed; loaded at boot, hot-reloadable via
         ClientLifecycleEvent.REGISTER). Tests: unit tests with mocked subprocess + mocked shared_memory + mocked event
         bus (simulate REGISTER → spawn → READY → DEREGISTER → reap; simulate crash → restart → quarantine after 5
-        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). status: pending blocked_by: phase-2-utl-bases
+        attempts; simulate capacity threshold → SPAWN_NEW_SHARD emission). — strategy-service@4fb14035 + QG 82.98% coverage, 24 tests pass
 
 - id: phase-4-client-worker-ipc content: |
   - [ ] [AGENT] P0. Phase 4 — ClientWorker subprocess + IPC wiring. Concrete subclass of `ClientWorkerBase` in
@@ -330,20 +332,22 @@ todos:
         phase-7-e2e-and-unit-test-bundle
 
 - id: phase-9-codex-ssot content: |
-  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (docs 1, 6, 7, 8 SHIPPED; docs 2-5 pending slot-7 Phase 6)** —
-        PM@32d1929db (slot 8 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
+  - [x] ✅ **[AGENT] P1. Phase 9 — Codex SSOT updates (ALL 8 docs complete)** —
+        PM@32d1929db (slot 8, docs 1/6/7/8 2026-05-20) + slot 7@9db39606 (docs 2/3/4/5 2026-05-20, sanity-checked
+        by slot 8 2026-05-20) - ✅ (1) `codex/04-architecture/per-client-isolation-architecture.md` —
         supervisor + ClientWorker subprocess, MarkPriceAggregator, hybrid hot-reload, preflight, crash isolation, GIL
-        rationale, clients.yaml - ⏳ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — PENDING
-        slot 7 Phase 6 write - ⏳ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` — PENDING slot 7 Phase
-        6 - ⏳ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` — PENDING slot 7 Phase 6 - ⏳ (5)
-        `codex/04-architecture/transfer-coordinator.md` — PENDING slot 7 Phase 6 - ✅ (6)
+        rationale, clients.yaml - ✅ (2) `codex/04-architecture/execution-service-per-client-isolation.md` — isolation_policy.py:1-80
+        pattern confirmed, one-process-per-client, client-funds-isolation.md cross-ref present - ✅ (3) `codex/04-architecture/oms-protocol-and-state-machine.md` —
+        OMS state machine, UnifiedOrderManager/OrderPersistenceAdapter/PersistentOrderManager coverage confirmed - ✅ (4) `codex/04-architecture/multi-venue-concurrent-routing.md` —
+        concurrent.py two-leg asyncio.gather + SmartOrderRouter coverage confirmed - ✅ (5)
+        `codex/04-architecture/transfer-coordinator.md` — client-funds-isolation.md HARD RULE cross-ref present,
+        enforce sequence covers client_id check + isolation_policy.assert_client_allowed - ✅ (6)
         `codex/04-architecture/client-lifecycle-event-bus.md` — REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED,
         push-vs-pull, ShardCapacityEvent, supervisor subscription code snippet - ✅ (7)
         `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, capacity thresholds, shard auto-spawn,
         vm_zombie_watchdog prefix mapping, drain-before-migration rule - ✅ (8)
         `codex/04-architecture/promote-workflow-architecture.md` UPDATED — per-client + per-shard taxonomy added,
-        shard-invisible-to-promote clarified, E.2 listed in deferred status: partial (docs 1/6/7/8 done; sanity-check of
-        2-5 pending slot-7 ship)
+        shard-invisible-to-promote clarified, E.2 listed in deferred status
 
 - id: phase-e2-auto-shard-supervisor-signal content: |
   - [ ] **POST-MAY-23** [AGENT] P1. Phase E.2 — Auto-shard supervisor signal end-to-end: Wire deployment-service to

@@ -36,7 +36,7 @@ related_plans:
 | 8 | Local | defi_catalogue close + R-NEW-6 detector candidate | Phase 14 | KEEP |
 | **9** | **✅ DONE** | **QG GREEN SWEEP — Cluster A: instruments-service + UAC + UTL** | Phase -1 (workspace QG prereq) | ✅ UAC (already green); ✅ UTL@f63eb8e2 (9 violations fixed + pm@424b4319 checker bug); ✅ IS (already green, no changes needed) |
 | **10** | **🟢 DONE** | **QG GREEN SWEEP — Cluster B: MTDS + features-service + MDPS** | Phase -1 | ✅ MTDS@5c1631d green (no fixes by slot-10); ✅ features-service@31c38543 green (codex+imports+upload-API fixes); ✅ MDPS@e3441a9 green (within-tolerance, no fixes needed) |
-| **11** | **🟡 PARTIAL** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service** | Phase -1 | ✅ execution-service@2d330d5d green (codex 27→24, within CODEX_MAX_VIOLATIONS=24; slot-9 takeover — slot-11 worker died mid-task); strategy-service + ml-service: pending |
+| **11** | **🟡 IN PROGRESS** | **QG GREEN SWEEP — Cluster C: strategy-service + execution-service + ml-service** | Phase -1 | ✅ execution-service@2d330d5d (V=24/24, exit 0; slot-9 takeover — full noqa suppression + test fixes) built on @9f31b409+@92c4c9ed; ✅ strategy-service@d0bf1a7c (exit 0 at time of commit); 🔴 NEW REGRESSION: UAC@df2c754 removed `dydx` from venue_tokens → 5 tests in test_target_universe.py now fail (strategy catalog still references dydx). Freeze gate blocks catalog update; needs strategy_archetype_logic_audit; ✅ pm@64d175af; ml-service = ml-training + ml-inference (both archived Phase -2, QG moot) |
 
 ## Slot 9-11 dispatch — QG green sweep (Phase -1 owner)
 

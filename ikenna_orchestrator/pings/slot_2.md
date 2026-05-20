@@ -826,3 +826,90 @@ archive dry-run.
 drilldown+pool_breakdown tests passed (199 pre-existing failures unrelated to this change — same baseline). DO NOT PUSH
 until operator acks write-pause signal. All L3+L5 pre-stage tasks complete. Items 1–4 (dispatch tasks) fully prepped;
 awaiting operator write-pause signal to push.
+
+---
+
+## [slot 2 → main] 2026-05-20 Phase 1 bucket symmetry COMPLETE — starting R19
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**Phase 1 deliverables shipped (5/5)**:
+1. ✅ Audit CSV: `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` (65 rows, 62 asymmetries)
+2. ✅ Script audit: `setup-defi-buckets.sh` drift fixed (deployment-service@b9029ad)
+3. ✅ YAML alignment: `cloud-providers.yaml` AWS block rewritten 1:1 GCP (deployment-service@43fb886)
+4. ✅ 63-char cap: 0 violations across all clouds/envs/kinds
+5. ✅ DEPLOYMENT_ENV_SHORT consistency: both clouds identical 24-kind env-tiered set
+
+**UTL test updates**: unified-trading-library@dc107d15 (all test assertions updated for new templates)
+**Plan flips**: pm@b9700117 (Phase 1 deliverables 1-5 checked in data_pipeline_master_coordination_2026_05_20.md)
+
+**Pre-existing QG issue (NOT caused by my changes)**:
+- deployment-service step 6/6: `ml-inference-service` / `ml-training-service` missing workspace-manifest.json fields
+  — same failure on clean HEAD without my changes. Not in my scope.
+
+**Next**: R19 UAC import surface enforcement (consumer repos deep `canonical.*` / `normalize_utils.*` imports → facade)
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` Phase 1
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MTDS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-tick-data-service**:
+- **UAC@e2f1380** — exported `VENUE_HEARTBEAT_THRESHOLDS` + `get_heartbeat_threshold` from facade (`__init__.py`); previously only accessible via deep `canonical.crosscutting.venue_thresholds`
+- **MTDS@bfc5105** — rewrote all 6 deep `canonical.*` imports to facade:
+  - `engine/orchestrator.py` (5 occurrences): `canonical.crosscutting.source_priority.{get_primary_source,has_source_priority,emission_latency_ms_for_source}` → `from unified_api_contracts import`
+  - `api/main.py` (1 occurrence): `canonical.crosscutting.venue_thresholds.VENUE_HEARTBEAT_THRESHOLDS` → `from unified_api_contracts import VENUE_HEARTBEAT_THRESHOLDS`
+
+**Verification**: `bash scripts/quality-gates.sh` in MTDS → `✅ STEP 5.23: UAC import surface clean`
+
+**R19 remaining** (other repos — not slot 2's current scope but documenting for handoff):
+- `market-data-processing-service` (3 files): `canonical.crosscutting.honest_coverage` → needs `RecordFailedReason` added to UAC facade
+- `deployment-api` (3 files): `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry,scheduler_registry,circuit_breaker}` → check if already in facade
+- `unified-trading-system-ui` (10 files): facade re-exports in `context/api-contracts/` — likely exempt (UI layer)
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 deployment-api COMPLETE — source clean verified
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for deployment-api**:
+- **deployment-api@deb23fe** — rewrote all 7 deep `canonical.*` imports across 3 files to UAC facade:
+  - `routes/monitor_live.py`: `canonical.crosscutting.{cloud_target,environment_tier,live_cluster_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, LIVE_CLUSTER_REGISTRY, LiveClusterDeploymentKind, LiveClusterSpec)`)
+  - `routes/monitor_scheduled.py`: `canonical.crosscutting.{cloud_target,environment_tier,scheduler_registry}` (3 separate imports → single `from unified_api_contracts import (CloudTarget, EnvironmentTier, SchedulerSpec, SchedulerTargetKind, get_schedulers_for_env)`)
+  - `routes/kill_switch_routes.py`: `canonical.crosscutting.circuit_breaker.BreakerRecoveryMode` with `# noqa: qg-deep-import` → `from unified_api_contracts import BreakerRecoveryMode`
+
+**Verification**: `rg 'from unified_api_contracts\.canonical\.' deployment_api/ --glob '!test_*' --glob '!conftest*'` → CLEAN (0 hits). Note: deployment-api QG has pre-existing lint failures in `shard_detail.py` (foreign file) that prevent STEP 5.23 from running; source verified clean manually.
+
+**R19 remaining**: none — all slot-2 assigned repos complete.
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § slot dispatch table row 2 (R19)
+
+---
+
+## [slot 2 → main] 2026-05-20 R19 MDPS COMPLETE — QG STEP 5.23 GREEN
+
+**Timestamp**: 2026-05-20 **Status**: 🟢 SHIPPED
+
+**R19 fixes shipped for market-data-processing-service**:
+- **UAC@f3f5ee1** — exported 4 new symbols from facade `__init__.py`:
+  `FUTURES_CHAIN_BUCKETS`, `futures_expiry_bucket`, `get_active_es_options_clusters_for_date`, `RecordFailedReason`
+  (all from `canonical.crosscutting.honest_coverage`; previously required deep imports)
+- **MDPS@0b338d8 + a00ce6b** — rewrote all 4 deep `canonical.*` imports across 3 files:
+  - `app/core/canonical_writer.py`: merged `honest_coverage.{FUTURES_CHAIN_BUCKETS, futures_expiry_bucket, get_active_es_options_clusters_for_date}` + `source_priority.{emission_latency_ms_for_source, get_primary_source}` into existing facade block
+  - `app/core/dependency_checker.py`: `canonical.crosscutting.honest_coverage.RecordFailedReason` → `from unified_api_contracts import RecordFailedReason`
+  - `app/core/orchestration_service.py`: merged `RecordFailedReason` into existing facade import line
+
+**Verification**: `bash scripts/quality-gates.sh` → `✅ STEP 5.23: UAC import surface clean` (exit 0)
+
+**R19 slot-2 complete**: MTDS ✅ + deployment-api ✅ + MDPS ✅ (all 3 repos clean)
+
+**Remaining R19 workspace** (out of slot-2 scope — handled by other plans):
+- `instruments-service` + `execution-service`: covered by `d2_uac_continuity_2026_05_20.md` Phase 1 P0 (exempt-flag removal)
+- `unified-trading-system-ui`: UI facade layer, different team/plan
+- Scripts dirs (`deployment-service/scripts/`, `instruments-service/scripts/`): out of QG STEP 5.23 scope (SOURCE_DIR ≠ scripts/)
+
+**Plan reference**: `plans/active/data_pipeline_master_coordination_2026_05_20.md` § R19 + `d2_uac_continuity_2026_05_20.md` § Phase 1
