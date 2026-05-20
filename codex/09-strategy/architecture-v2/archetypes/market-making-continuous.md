@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_CONTINUOUS
+family: MARKET_MAKING
+status: live
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]
 topology_requirements:
   isolation:
     execution-service: isolated

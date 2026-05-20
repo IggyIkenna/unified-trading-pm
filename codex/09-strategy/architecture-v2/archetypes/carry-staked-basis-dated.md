@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_STAKED_BASIS_DATED
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [LIDO, ETHERFI, JITO, DERIBIT, DRIFT, BYBIT, UNISWAP_V3, JUPITER]
 topology_requirements:
   isolation:
     execution-service: isolated

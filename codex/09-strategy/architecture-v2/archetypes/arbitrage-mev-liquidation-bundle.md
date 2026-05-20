@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_MEV_LIQUIDATION_BUNDLE
+family: ARBITRAGE_STRUCTURAL
+status: code-shipped
+venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAPV3, BALANCER, CURVE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -85,6 +89,21 @@ execution-service `aave_flash_bundle.py` consumes the payload and packs it into 
   block; missed-block risk is gas-only.
 - **Flash-loan source pricing** — Aave V3 flash fee is 9 bps, Balancer is 0 bps (free), Maker DAI flash mint is 0 bps
   but DAI-denominated only. Wire each candidate's optimal source via param; `flash_loan_source` is operator-set.
+
+## Example instances
+
+```
+ARBITRAGE_MEV_LIQUIDATION_BUNDLE@aave-v3-multichain-prod
+ARBITRAGE_MEV_LIQUIDATION_BUNDLE@morpho-blue-ethereum-prod
+ARBITRAGE_MEV_LIQUIDATION_BUNDLE@euler-v2-ethereum-prod
+```
+
+## Not in this archetype
+
+- Capital-funded liquidation (no flash loan) → [`LIQUIDATION_CAPTURE`](liquidation-capture.md)
+- Backrunning a confirmed directional swap (not a liquidation event) → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
+- JIT LP positioned around an imminent swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- Cross-venue price arb without liquidation event → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

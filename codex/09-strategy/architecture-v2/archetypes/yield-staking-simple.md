@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: YIELD_STAKING_SIMPLE
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE]
 topology_requirements:
   isolation:
     execution-service: isolated

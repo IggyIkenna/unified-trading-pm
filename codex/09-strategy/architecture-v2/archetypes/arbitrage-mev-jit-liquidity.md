@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_MEV_JIT_LIQUIDITY
+family: ARBITRAGE_STRUCTURAL
+status: code-shipped
+venue_universe: [UNISWAPV3, PANCAKESWAP_V3, SUSHISWAP_V3]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -41,6 +45,21 @@ gas.
   can drop and capture rate goes up.
 - **MEV competition** — multiple JIT searchers compete for the same swap; the pool's fee tier must be high enough that
   the surplus split N-ways is still positive. Run only on 30/100 bps tiers; skip 1/5 bps pools.
+
+## Example instances
+
+```
+ARBITRAGE_MEV_JIT_LIQUIDITY@uniswapv3-eth-usdc-ethereum-prod
+ARBITRAGE_MEV_JIT_LIQUIDITY@uniswapv3-wbtc-usdt-arbitrum-prod
+ARBITRAGE_MEV_JIT_LIQUIDITY@pancakeswap-v3-bnb-usdt-bsc-prod
+```
+
+## Not in this archetype
+
+- Persistent concentrated LP earning fees over time → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
+- Backrunning a confirmed swap already on-chain → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
+- Front-running / sandwiching a pending victim tx → [`ARBITRAGE_MEV_SANDWICH`](arbitrage-mev-sandwich.md)
+- Flash-loan liquidation of under-collateralised positions → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
 
 ## Plan
 

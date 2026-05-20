@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ML_DIRECTIONAL_EVENT_SETTLED
+family: ML_DIRECTIONAL
+status: design
+venue_universe: [UNITY, BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
   isolation:
     execution-service: isolated

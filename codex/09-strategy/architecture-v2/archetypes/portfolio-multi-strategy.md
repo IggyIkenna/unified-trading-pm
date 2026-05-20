@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: PORTFOLIO_MULTI_STRATEGY
+family: PORTFOLIO
+status: design
+venue_universe: []
 topology_requirements:
   isolation: {}
   co_location: []
@@ -103,6 +107,14 @@ Portfolio Allocator (service)
 
 See [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md) for the service-level
 architecture.
+
+## Example instances
+
+```
+PORTFOLIO_MULTI_STRATEGY@multi-strategy-crypto-daily-usd-prod
+PORTFOLIO_MULTI_STRATEGY@multi-strategy-tradfi-weekly-usd-prod
+PORTFOLIO_MULTI_STRATEGY@multi-strategy-mixed-daily-usd-prod
+```
 
 ## Not in this archetype
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_0DTE_PIN_RISK
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -85,6 +89,21 @@ real-time delta breaches near expiry).
 - **Regime**: most relevant during quiet trending markets where spot slowly drifts into a strike zone; also triggered by
   sudden large moves that push spot through a previously-distant strike near expiry
 - **Best instruments**: BTC and ETH on Deribit (Friday expiries, weekly), SPX 0DTE (CBOE)
+
+## Example instances
+
+```
+VOL_0DTE_PIN_RISK@deribit-btc-friday-expiry-usdt-prod
+VOL_0DTE_PIN_RISK@deribit-eth-friday-expiry-usdt-prod
+VOL_0DTE_PIN_RISK@cboe-spx-0dte-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- Proactive intraday gamma scalping via bought straddle → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
+- Passive theta harvest (generates the short-gamma exposure managed here) → [`VOL_CARRY`](vol-carry.md)
+- Longer-tenor straddle positioning without pin-proximity logic → [`VOL_STRADDLE`](vol-straddle.md)
+- Calendar spread rolling to escape binary expiry risk → [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
 
 ## See also
 

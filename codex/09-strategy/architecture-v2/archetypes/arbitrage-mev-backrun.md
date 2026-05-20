@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_MEV_BACKRUN
+family: ARBITRAGE_STRUCTURAL
+status: code-shipped
+venue_universe: [UNISWAPV3, BALANCER, CURVE, SUSHISWAP, BINANCE, BYBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -46,6 +50,21 @@ without overpaying.
   realised spread is lower than the headline `arb_spread_bps`. Set `min_spread_bps` conservatively.
 - **CEX leg latency** — when the arb is DEX-vs-CEX, the CEX leg is not atomic with the DEX leg; treat it like a hedge
   with finite execution alpha and budget accordingly.
+
+## Example instances
+
+```
+ARBITRAGE_MEV_BACKRUN@uniswapv3-eth-usdc-ethereum-prod
+ARBITRAGE_MEV_BACKRUN@uniswapv3-balancer-wbtc-usdt-arbitrum-prod
+ARBITRAGE_MEV_BACKRUN@uniswapv3-binance-eth-usdt-ethereum-prod
+```
+
+## Not in this archetype
+
+- Front-running a pending victim tx (requires mempool feed) → [`ARBITRAGE_MEV_SANDWICH`](arbitrage-mev-sandwich.md)
+- JIT LP minted around an imminent swap → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- Flash-loan liquidation bundle (different profit mechanism) → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
+- Persistent cross-venue price arb (no per-block ordering dependency) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

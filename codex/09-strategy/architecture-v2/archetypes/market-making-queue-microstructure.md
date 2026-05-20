@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_QUEUE_MICROSTRUCTURE
+family: MARKET_MAKING
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -105,6 +109,22 @@ at each price level and reprices aggressively when queue position deteriorates.
   where L2 data quality is insufficient for queue estimation
 - **Upgrade path from**: MARKET_MAKING_INVENTORY_SKEW or MARKET_MAKING_ML_LEAN when adverse selection is the
   binding P&L constraint
+
+## Example instances
+
+```
+MARKET_MAKING_QUEUE_MICROSTRUCTURE@binance-btc-usdt-spot-mm-prod
+MARKET_MAKING_QUEUE_MICROSTRUCTURE@okx-eth-usdt-perp-mm-prod
+MARKET_MAKING_QUEUE_MICROSTRUCTURE@hyperliquid-sol-usdt-perp-mm-prod
+```
+
+## Not in this archetype
+
+- Symmetric spread without queue or VPIN modelling → [`MARKET_MAKING_PASSIVE_SPREAD`](market-making-passive-spread.md)
+- Inventory-skewed quotes without queue estimation → [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
+- ML-directed short-horizon lean without explicit queue model → [`MARKET_MAKING_ML_LEAN`](market-making-ml-lean.md)
+- Sports/prediction event-settled quoting → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
+- DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 
 ## See also
 

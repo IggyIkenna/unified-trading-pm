@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_SPREAD_STRUCTURES
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -99,6 +103,21 @@ level risk. Delta-hedge the aggregate book to remove directional exposure.
   over-priced skew structure without large directional or vol-level risk
 - **Avoid**: fast-trending markets or during liquidity crises where spreads widen materially per leg
 - **Asset fit**: BTC, ETH (Deribit has the deepest multi-expiry options book); SPX for TradFi calendars
+
+## Example instances
+
+```
+VOL_SPREAD_STRUCTURES@deribit-btc-calendar-7-30dte-usdt-prod
+VOL_SPREAD_STRUCTURES@deribit-eth-butterfly-30dte-usdt-prod
+VOL_SPREAD_STRUCTURES@cboe-spx-calendar-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- IV vs RV level divergence trade (not shape) — enter long or short vol on absolute spread threshold → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- Structural short-vol carry (sell straddle to harvest theta/carry premium) → [`VOL_CARRY`](vol-carry.md)
+- ATM straddle held for a binary event catalyst → [`VOL_STRADDLE`](vol-straddle.md)
+- Hard calendar no-arb violation (calendar spread below zero cost-of-carry) — mechanical arbitrage, not statistical → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

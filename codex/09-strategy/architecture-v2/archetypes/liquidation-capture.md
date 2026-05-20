@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: LIQUIDATION_CAPTURE
+family: ARBITRAGE_STRUCTURAL
+status: design
+venue_universe: [AAVE_V3, COMPOUND_V3, EULER, MORPHO, KAMINO]
 topology_requirements:
   isolation:
     execution-service: isolated

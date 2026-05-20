@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_STRADDLE
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -110,6 +114,22 @@ exceeds theta cost.
 - **Avoid (long)**: expensive IV environments with no specific catalyst — theta bleed will dominate
 - **Avoid (short)**: any period with known scheduled binary events within the tenor
 - **Asset fit**: BTC, ETH (Deribit 0DTE + weekly expirations); SPX/SPY weeklies for TradFi event plays
+
+## Example instances
+
+```
+VOL_STRADDLE@deribit-btc-straddle-7dte-usdt-prod
+VOL_STRADDLE@deribit-eth-straddle-14dte-usdt-prod
+VOL_STRADDLE@cboe-spx-straddle-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- Structural short-vol carry (systematically sell straddle every cycle to harvest theta, no event catalyst) → [`VOL_CARRY`](vol-carry.md)
+- IV vs RV divergence with mean-reversion timing signal (not event-driven) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- 0DTE intraday gamma scalping on expiry-day ATM options → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
+- Calendar or butterfly spread trading shape risk rather than vol level → [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
+- ML-model-directed straddle sizing where signal is a forecast, not an event calendar → [`VOL_ML_LEAN`](vol-ml-lean.md)
 
 ## See also
 

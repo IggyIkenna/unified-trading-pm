@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_BASIS_PERP
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, KRAKEN, UNISWAP_V3, JUPITER]
 topology_requirements:
   isolation:
     execution-service: isolated

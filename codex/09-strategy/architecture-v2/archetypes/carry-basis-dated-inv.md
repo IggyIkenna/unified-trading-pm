@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_BASIS_DATED_INV
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [CME, DERIBIT, OKX, BYBIT]
 topology_requirements:
   isolation:
     execution-service: isolated

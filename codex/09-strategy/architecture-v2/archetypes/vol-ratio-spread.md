@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_RATIO_SPREAD
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -103,6 +107,21 @@ vol will be insufficient to push the underlying through the short strike zone.
 - **Avoid**: high-vol regimes; when underlying is near the short strike at entry; when skew premium is justified by
   upcoming known event (earnings, FOMC, protocol upgrade)
 - **Best instruments**: BTC/ETH on Deribit; SPX weeklies on CBOE via IBKR (SPX has very rich put skew)
+
+## Example instances
+
+```
+VOL_RATIO_SPREAD@deribit-btc-call-1x2-14dte-usdt-prod
+VOL_RATIO_SPREAD@deribit-eth-put-1x2-21dte-usdt-prod
+VOL_RATIO_SPREAD@cboe-spx-put-1x2-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- Symmetric short straddle / strangle at a single strike pair (no naked short wing) → [`VOL_CARRY`](vol-carry.md)
+- Full 1/K² strike strip replicating variance swap payoff → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
+- Cross-asset vol spread (two correlated underlyings, same tenor) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- OTM skew richness exploited via hard mispricing arbitrage → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

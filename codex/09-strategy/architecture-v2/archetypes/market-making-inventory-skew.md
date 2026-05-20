@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_INVENTORY_SKEW
+family: MARKET_MAKING
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -97,6 +101,22 @@ that reduces inventory blowout risk without resorting to aggressive market-order
 - **Avoid**: very low-liquidity instruments where skewed quotes lead to zero fills on the skewed side; regime with
   highly persistent directional trends exceeding the inventory correction capacity
 - **Replaces**: pure passive spread when inventory blowout is the observed P&L driver
+
+## Example instances
+
+```
+MARKET_MAKING_INVENTORY_SKEW@binance-btc-usdt-spot-mm-prod
+MARKET_MAKING_INVENTORY_SKEW@okx-eth-usdt-perp-mm-prod
+MARKET_MAKING_INVENTORY_SKEW@hyperliquid-sol-usdt-perp-mm-prod
+```
+
+## Not in this archetype
+
+- Symmetric spread with no skew logic → [`MARKET_MAKING_PASSIVE_SPREAD`](market-making-passive-spread.md)
+- ML-directed short-horizon lean on top of inventory skew → [`MARKET_MAKING_ML_LEAN`](market-making-ml-lean.md)
+- Queue-position and VPIN-aware posting decision → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
+- Sports/event-settled back-lay quoting → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
+- DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 
 ## See also
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_MARKET_MAKING
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -107,6 +111,21 @@ active monitoring and selective quote withdrawal when inventory limits are breac
 - **Latency requirement**: premium SLA tier — quote refresh and delta hedge must execute within 50ms;
   deploy on co-located or low-latency cloud nodes near Deribit matching engine
 - **Asset fit**: BTC and ETH on Deribit (deepest crypto options book); OKX as secondary venue
+
+## Example instances
+
+```
+VOL_MARKET_MAKING@deribit-btc-options-7-30dte-usdt-prod
+VOL_MARKET_MAKING@deribit-eth-options-7-30dte-usdt-prod
+VOL_MARKET_MAKING@okx-options-btc-options-14dte-usdt-prod
+```
+
+## Not in this archetype
+
+- Passive short-vol carry (sell straddle/strangle and hold to expiry; no two-sided quoting) → [`VOL_CARRY`](vol-carry.md)
+- Spot or perp order-book quoting (no vol surface, no options Greeks management) → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md)
+- 0DTE intraday gamma scalping (directional delta rehedge on expiry day, not resting limit orders) → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
+- Vol view trade (directional position sized by IV/RV divergence, not inventory spread capture) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
 
 ## See also
 

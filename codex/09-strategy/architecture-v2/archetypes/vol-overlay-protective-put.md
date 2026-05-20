@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_OVERLAY_PROTECTIVE_PUT
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -103,6 +107,21 @@ cost paid against the protected underlying position's P&L.
 - **Avoid**: very high IV environments (put premium is prohibitively expensive); or when portfolio
   already has natural hedges (DeFi protocol shorts, basis trades on the other side)
 - **Asset fit**: BTC, ETH with large spot or perp longs; any position where drawdown management is critical
+
+## Example instances
+
+```
+VOL_OVERLAY_PROTECTIVE_PUT@deribit-btc-put-30dte-usdt-prod
+VOL_OVERLAY_PROTECTIVE_PUT@deribit-eth-put-30dte-usdt-prod
+VOL_OVERLAY_PROTECTIVE_PUT@deribit-btc-collar-30dte-usdt-prod
+```
+
+## Not in this archetype
+
+- Writing calls against the long to generate premium income (covered call overlay) → [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
+- Buying puts without an existing delta-1 long as a standalone vol view → [`VOL_STRADDLE`](vol-straddle.md) or [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- Structural short-vol carry — this archetype is a cost centre (long vol insurance), not a carry harvester → [`VOL_CARRY`](vol-carry.md)
+- Tail hedging via perp short rather than options (delta-1 hedge, no premium) → [`CARRY_BASIS_PERP`](carry-basis-perp.md)
 
 ## See also
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: PORTFOLIO_TACTICAL_OVERLAY
+family: PORTFOLIO
+status: design
+venue_universe: []
 topology_requirements:
   isolation: {}
   co_location: []
@@ -158,6 +162,14 @@ The Portfolio Allocator's `REGIME_AWARE` allocator also switches allocations by 
 equity level. `PORTFOLIO_TACTICAL_OVERLAY` applies regime logic WITHIN a strategy sleeve (across child strategies), one
 level deeper. They can be stacked without conflict. See
 [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md).
+
+## Example instances
+
+```
+PORTFOLIO_TACTICAL_OVERLAY@multi-strategy-crypto-regime-daily-usdt-prod
+PORTFOLIO_TACTICAL_OVERLAY@multi-strategy-tradfi-regime-daily-usd-prod
+PORTFOLIO_TACTICAL_OVERLAY@multi-strategy-mixed-regime-daily-usd-prod
+```
 
 ## Not in this archetype
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: STAT_ARB_PAIRS_FIXED
+family: STAT_ARB_PAIRS
+status: design
+venue_universe: [IBKR, CME, BINANCE, OKX, DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_PRICE_DISPERSION
+family: ARBITRAGE_STRUCTURAL
+status: code-shipped
+venue_universe: [BINANCE, BYBIT, OKX, DERIBIT, HYPERLIQUID, ASTER, KRAKEN, UNISWAPV3, BALANCER, CURVE, UNITY, BETFAIR_DIRECT, SMARKETS_DIRECT, POLYMARKET]
 topology_requirements:
   isolation:
     execution-service: isolated

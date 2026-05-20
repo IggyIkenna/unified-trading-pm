@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: RULES_DIRECTIONAL_CONTINUOUS
+family: RULES_DIRECTIONAL
+status: design
+venue_universe: [IBKR, CME, CBOE, BINANCE, OKX, BYBIT, HYPERLIQUID]
 topology_requirements:
   isolation:
     execution-service: isolated

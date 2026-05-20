@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_0DTE_GAMMA_SCALPING
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -117,6 +121,21 @@ offers daily option expirations with sufficient liquidity.
   deploy on low-latency infrastructure near Deribit matching engine
 - **Asset fit**: BTC and ETH exclusively (Deribit 0DTE daily expirations; ETH also has fine liquidity)
 - **Complements**: `VOL_CARRY` (0DTE scalping as active gamma collection; carry as passive theta harvest)
+
+## Example instances
+
+```
+VOL_0DTE_GAMMA_SCALPING@deribit-btc-atm-straddle-0dte-usdt-prod
+VOL_0DTE_GAMMA_SCALPING@deribit-eth-atm-straddle-0dte-usdt-prod
+VOL_0DTE_GAMMA_SCALPING@deribit-btc-atm-straddle-0dte-usdt-paper
+```
+
+## Not in this archetype
+
+- Pin risk management for short-gamma books near expiry strikes → [`VOL_0DTE_PIN_RISK`](vol-0dte-pin-risk.md)
+- Passive theta harvest via short straddle / strangle held for days → [`VOL_CARRY`](vol-carry.md)
+- Longer-tenor straddle positioning without intraday scalp loop → [`VOL_STRADDLE`](vol-straddle.md)
+- Continuous two-sided quoting on an option book → [`VOL_MARKET_MAKING`](vol-market-making.md)
 
 ## See also
 

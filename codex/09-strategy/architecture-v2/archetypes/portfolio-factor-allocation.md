@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: PORTFOLIO_FACTOR_ALLOCATION
+family: PORTFOLIO
+status: design
+venue_universe: []
 topology_requirements:
   isolation: {}
   co_location: []
@@ -110,6 +114,14 @@ Identical to `PORTFOLIO_MULTI_STRATEGY` — emits `AllocationDirective` only, no
 The Portfolio Allocator's `REGIME_AWARE` allocator switches allocations by regime. `PORTFOLIO_FACTOR_ALLOCATION`
 optimises for factor mandate rather than regime regime-switching — they compose for different objectives. See
 [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md).
+
+## Example instances
+
+```
+PORTFOLIO_FACTOR_ALLOCATION@multi-strategy-carry-momentum-weekly-usd-prod
+PORTFOLIO_FACTOR_ALLOCATION@multi-strategy-crypto-factor-weekly-usdt-prod
+PORTFOLIO_FACTOR_ALLOCATION@multi-strategy-tradfi-factor-weekly-usd-prod
+```
 
 ## Not in this archetype
 

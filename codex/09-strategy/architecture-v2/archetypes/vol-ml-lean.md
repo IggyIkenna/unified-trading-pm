@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_ML_LEAN
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -125,6 +129,21 @@ re-trains the model on a rolling basis to avoid regime staleness.
 - **Model maintenance**: requires regular monitoring — retrain validation, OOS accuracy tracking,
   and feature drift alerting are operational requirements, not optional
 - **Asset fit**: BTC, ETH (rich feature set); cross-asset features (VIX) require TradFi data pipeline
+
+## Example instances
+
+```
+VOL_ML_LEAN@deribit-btc-straddle-14dte-usdt-prod
+VOL_ML_LEAN@deribit-eth-straddle-14dte-usdt-prod
+VOL_ML_LEAN@cboe-spx-straddle-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- Rule-based IV-RV spread trade (threshold-entry, no ML model, no rolling retrain) → [`VOL_ARB_RV_IV`](vol-arb-rv-iv.md)
+- Structural short-vol carry (always short vol for theta, no model signal required) → [`VOL_CARRY`](vol-carry.md)
+- ML model predicting underlying direction (alpha is price, not realized vol) → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- ATM straddle sized for a specific binary event catalyst (event calendar, not model forecast) → [`VOL_STRADDLE`](vol-straddle.md)
 
 ## See also
 

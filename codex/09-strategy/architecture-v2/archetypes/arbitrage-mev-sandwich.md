@@ -1,6 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_MEV_SANDWICH
+family: ARBITRAGE_STRUCTURAL
 status: theoretical-only
+venue_universe: [UNISWAPV3, BALANCER, CURVE, SUSHISWAP]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -75,6 +78,21 @@ Test `test_sandwich_theoretical_is_not_factory_registered` in
 `strategy-service/tests/unit/engine/strategies/v2/test_sandwich_theoretical.py` is the **load-bearing assertion**: it
 pins the policy that the live engine MUST NOT exist. Removing the test or registering an engine for this archetype must
 be paired with the mempool-feed-integration plan shipping Phase 1.
+
+## Example instances
+
+```
+ARBITRAGE_MEV_SANDWICH@uniswapv3-eth-usdc-ethereum-theoretical
+ARBITRAGE_MEV_SANDWICH@uniswapv3-wbtc-usdt-arbitrum-theoretical
+ARBITRAGE_MEV_SANDWICH@balancer-curve-eth-usdt-ethereum-theoretical
+```
+
+## Not in this archetype
+
+- Post-confirmation backrun (no mempool required, live today) → [`ARBITRAGE_MEV_BACKRUN`](arbitrage-mev-backrun.md)
+- JIT LP around an imminent swap (fee capture, not sandwich) → [`ARBITRAGE_MEV_JIT_LIQUIDITY`](arbitrage-mev-jit-liquidity.md)
+- Flash-loan liquidation bundle → [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](arbitrage-mev-liquidation-bundle.md)
+- Persistent cross-venue price arb (no tx-ordering dependency) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## Plan
 

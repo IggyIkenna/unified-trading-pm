@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_ARB_RV_IV
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -97,6 +101,22 @@ continuously to isolate the vol view from directional noise.
 - **Avoid**: trending markets with fast-moving RV where spread oscillates without mean-reverting
 - **Asset fit**: BTC, ETH (deepest options liquidity on Deribit); SPX weeklies for TradFi expression
 - **Complements**: `VOL_CARRY` (carry harvests structural premium; this archetype times the breakdowns)
+
+## Example instances
+
+```
+VOL_ARB_RV_IV@deribit-btc-straddle-14dte-usdt-prod
+VOL_ARB_RV_IV@deribit-eth-straddle-14dte-usdt-prod
+VOL_ARB_RV_IV@cboe-spx-straddle-weekly-usd-prod
+```
+
+## Not in this archetype
+
+- Structural short-vol carry harvesting the steady IV-over-RV premium without timing entries → [`VOL_CARRY`](vol-carry.md)
+- Calendar or butterfly spread trading on term structure and smile shape rather than IV-RV level → [`VOL_SPREAD_STRUCTURES`](vol-spread-structures.md)
+- ATM straddle held for a specific binary catalyst (event-driven vol) → [`VOL_STRADDLE`](vol-straddle.md)
+- ML-forecast-driven vol sizing where the signal is a model prediction, not a rule-based spread threshold → [`VOL_ML_LEAN`](vol-ml-lean.md)
+- Hard no-arb violations (put-call parity, butterfly convexity) → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

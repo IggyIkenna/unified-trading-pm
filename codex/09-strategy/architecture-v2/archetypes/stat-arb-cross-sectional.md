@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: STAT_ARB_CROSS_SECTIONAL
+family: STAT_ARB_PAIRS
+status: design
+venue_universe: [IBKR, CME, BINANCE, OKX]
 topology_requirements:
   isolation:
     execution-service: isolated

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: EVENT_DRIVEN
+family: EVENT_DRIVEN
+status: design
+venue_universe: [BINANCE, OKX, HYPERLIQUID, IBKR, CME]
 topology_requirements:
   isolation:
     execution-service: isolated

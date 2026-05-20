@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: YIELD_ROTATION_LENDING
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [AAVE, COMPOUND, EULER, MORPHO, KAMINO]
 topology_requirements:
   isolation:
     execution-service: isolated

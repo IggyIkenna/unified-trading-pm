@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_CROSS_ASSET_SPREAD
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -101,6 +105,21 @@ historical norm.
   near an ETH hard fork or BTC halving where the fundamental vol dynamics shift; when matched expiry liquidity thin
   on one side
 - **Crypto pairs**: BTC/ETH (primary); BTC/SOL (secondary — lower correlation, wider expected spread); ETH/SOL
+
+## Example instances
+
+```
+VOL_CROSS_ASSET_SPREAD@deribit-btc-eth-spread-30dte-usdt-prod
+VOL_CROSS_ASSET_SPREAD@deribit-btc-sol-spread-30dte-usdt-prod
+VOL_CROSS_ASSET_SPREAD@okx-options-eth-sol-spread-30dte-usdt-prod
+```
+
+## Not in this archetype
+
+- Index vs basket of components (correlation premium harvest) → [`VOL_DISPERSION`](vol-dispersion.md)
+- Single-asset multi-strike skew harvest via ratio spread → [`VOL_RATIO_SPREAD`](vol-ratio-spread.md)
+- Cross-tenor calendar spread on the same single underlying → [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
+- Single-asset outright short-vol → [`VOL_CARRY`](vol-carry.md)
 
 ## See also
 

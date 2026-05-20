@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_TERM_STRUCTURE_ARB
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -96,6 +100,21 @@ historical average.
 - **Avoid**: low liquidity at far tenor; very steep carry costs make roll expensive; high-vol regime with persistent
   inverted structure (structure can stay inverted longer than position can stay solvent)
 - **Best instruments**: BTC/ETH on Deribit; SPX/SPY on CBOE
+
+## Example instances
+
+```
+VOL_TERM_STRUCTURE_ARB@deribit-btc-calendar-14v30dte-usdt-prod
+VOL_TERM_STRUCTURE_ARB@deribit-eth-calendar-14v30dte-usdt-prod
+VOL_TERM_STRUCTURE_ARB@cboe-spx-calendar-monthly-usd-prod
+```
+
+## Not in this archetype
+
+- Continuous parametric slope signal (Heston/SVI fit, daily refit) → [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
+- Outright single-tenor short-vol premium harvest → [`VOL_CARRY`](vol-carry.md)
+- Cross-asset vol spread (two correlated underlyings, same tenor) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- Long-dated convexity via LEAPS (single far tenor, no calendar spread) → [`VOL_LEAPS_CONVEXITY`](vol-leaps-convexity.md)
 
 ## See also
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_RECURSIVE_BORROW_LENDING_ONLY
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [AAVE, MORPHO, COMPOUND, EULER, UNISWAP_V3]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -145,6 +149,14 @@ differs (matching engine vs live venue), per workspace `Batch = Live` invariant.
   flash-loan-receiver pattern for `OpeningMode.FLASH` (depth >= 5 or size >= $50k on Ethereum)
 - [../../../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md](../../../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md)
   -- per-chain venue+collateral admission
+
+## Example instances
+
+```
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave-ethereum-wsteth-weth-emode-usdc-prod
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@morpho-ethereum-wsteth-weth-0945-usdc-prod
+CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave-arbitrum-wsteth-weth-emode-usdc-prod
+```
 
 ## Not in this archetype
 

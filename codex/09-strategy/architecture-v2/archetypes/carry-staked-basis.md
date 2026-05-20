@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_STAKED_BASIS
+family: CARRY_AND_YIELD
+status: code-shipped
+venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, HYPERLIQUID, UNISWAP_V3, JUPITER]
 topology_requirements:
   isolation:
     execution-service: isolated

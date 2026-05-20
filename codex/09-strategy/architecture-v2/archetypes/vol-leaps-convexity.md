@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_LEAPS_CONVEXITY
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -101,6 +105,21 @@ take profit) or when time-to-expiry falls below the short-tenor threshold.
 - **Avoid**: very expensive long-dated vol (above historical 80th percentile); illiquid far-expiry option chains;
   when near-term vol is already elevated (theta carry cost too high relative to expected payoff)
 - **Best instruments**: BTC/ETH quarterly expiries on Deribit; SPX LEAPS on CBOE via IBKR
+
+## Example instances
+
+```
+VOL_LEAPS_CONVEXITY@deribit-btc-quarterly-call-180dte-usdt-prod
+VOL_LEAPS_CONVEXITY@deribit-eth-quarterly-straddle-180dte-usdt-prod
+VOL_LEAPS_CONVEXITY@cboe-spx-leaps-call-365dte-usd-prod
+```
+
+## Not in this archetype
+
+- Short-vol premium harvest (opposite long-vol view) → [`VOL_CARRY`](vol-carry.md)
+- Calendar spread between near and far tenors with slope signal → [`VOL_TERM_STRUCTURE_SLOPE`](vol-term-structure-slope.md)
+- Variance swap replication via full strike strip → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
+- 0DTE intraday gamma scalping (same-day expiry) → [`VOL_0DTE_GAMMA_SCALPING`](vol-0dte-gamma-scalping.md)
 
 ## See also
 

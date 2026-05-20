@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_OVERLAY_COVERED_CALLS
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -102,6 +106,22 @@ delta-1 book — it does not initiate the underlying position itself.
 - **Asset fit**: BTC, ETH (liquid options chain on Deribit); any asset with a clean perp or spot long already
   running in the portfolio
 - **Complements**: `VOL_OVERLAY_PROTECTIVE_PUT` (add puts to form a collar with defined risk on both sides)
+
+## Example instances
+
+```
+VOL_OVERLAY_COVERED_CALLS@deribit-btc-call-7dte-usdt-prod
+VOL_OVERLAY_COVERED_CALLS@deribit-eth-call-14dte-usdt-prod
+VOL_OVERLAY_COVERED_CALLS@okx-options-btc-call-7dte-usdt-prod
+```
+
+## Not in this archetype
+
+- Writing calls without an existing underlying long (naked call writing) — not supported; this archetype is covered-only
+- Buying puts for tail protection on the same underlying long → [`VOL_OVERLAY_PROTECTIVE_PUT`](vol-overlay-protective-put.md)
+- Structural short-vol carry without an existing delta-1 book (standalone theta harvesting) → [`VOL_CARRY`](vol-carry.md)
+- ATM straddle expression (symmetric vol view, no underlying long required) → [`VOL_STRADDLE`](vol-straddle.md)
+- Directional options expression where alpha is the underlying move, not premium income → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
 
 ## See also
 

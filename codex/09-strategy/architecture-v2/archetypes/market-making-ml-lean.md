@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_ML_LEAN
+family: MARKET_MAKING
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -109,6 +113,22 @@ is combined with inventory skew so that both signal sources contribute to quote 
 - **Avoid**: very thin order books where features are noisy; new instruments with insufficient training data;
   high-volatility regime where 1-5 minute prediction is dominated by macro events
 - **Upgrade path from**: MARKET_MAKING_INVENTORY_SKEW — add ML layer when inventory-skew P&L plateaus
+
+## Example instances
+
+```
+MARKET_MAKING_ML_LEAN@binance-btc-usdt-spot-mm-prod
+MARKET_MAKING_ML_LEAN@okx-eth-usdt-perp-mm-prod
+MARKET_MAKING_ML_LEAN@hyperliquid-sol-usdt-perp-mm-prod
+```
+
+## Not in this archetype
+
+- Symmetric spread with no ML or skew → [`MARKET_MAKING_PASSIVE_SPREAD`](market-making-passive-spread.md)
+- Inventory-only skew without ML prediction layer → [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
+- Queue-position and VPIN-aware posting decision → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
+- Outright directional position from a strong ML signal → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 
 ## See also
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_DISPERSION
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -96,6 +100,21 @@ index vol vs a weighted basket of ETH, SOL, and BNB component vol.
   very short tenor where simultaneous fills across many legs become impractical
 - **Crypto note**: BTC serves as both index and dominant component — weight ETH/SOL/BNB carefully; BTC OI dominates
   Deribit; use OKX for ETH component; other components may have limited Deribit liquidity
+
+## Example instances
+
+```
+VOL_DISPERSION@deribit-btc-index-dispersion-14dte-usdt-prod
+VOL_DISPERSION@deribit-eth-components-dispersion-30dte-usdt-prod
+VOL_DISPERSION@cboe-spx-dispersion-monthly-usd-prod
+```
+
+## Not in this archetype
+
+- Single-underlying variance swap replication via 1/K² option strip → [`VOL_VARIANCE_SWAP`](vol-variance-swap.md)
+- Outright index short-vol without component legs → [`VOL_CARRY`](vol-carry.md)
+- Cross-asset vol spread between two correlated single underlyings → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
+- Hard cross-venue single-option mispricing vs theoretical model price → [`ARBITRAGE_PRICE_DISPERSION`](arbitrage-price-dispersion.md)
 
 ## See also
 

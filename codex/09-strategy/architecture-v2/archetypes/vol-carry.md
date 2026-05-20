@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_CARRY
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: CARRY_RECURSIVE_STAKED
+family: CARRY_AND_YIELD
+status: design
+venue_universe: [LIDO, AAVE, KAMINO, JITO, MARINADE]
 topology_requirements:
   isolation:
     execution-service: isolated

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_TERM_STRUCTURE_SLOPE
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -92,6 +96,21 @@ manages rolling expiries to maintain constant exposure to the target DTE spread.
 - **Avoid**: very shallow option chain at front tenor (low liquidity makes rolling expensive); rapidly evolving
   structural vol regime (slope can trend, not mean-revert, over weeks)
 - **Best instruments**: BTC/ETH on Deribit; SPX on CBOE
+
+## Example instances
+
+```
+VOL_TERM_STRUCTURE_SLOPE@deribit-btc-slope-7v30dte-usdt-prod
+VOL_TERM_STRUCTURE_SLOPE@deribit-eth-slope-7v30dte-usdt-prod
+VOL_TERM_STRUCTURE_SLOPE@cboe-spx-slope-weekly-v-monthly-usd-prod
+```
+
+## Not in this archetype
+
+- Discrete two-tenor calendar spread without daily parametric refit → [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
+- Outright single-tenor short-vol carry without slope signal → [`VOL_CARRY`](vol-carry.md)
+- Long-dated LEAPS convexity (single far tenor, no front leg) → [`VOL_LEAPS_CONVEXITY`](vol-leaps-convexity.md)
+- Cross-asset vol spread (two correlated underlyings) → [`VOL_CROSS_ASSET_SPREAD`](vol-cross-asset-spread.md)
 
 ## See also
 

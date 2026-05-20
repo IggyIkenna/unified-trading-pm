@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: PORTFOLIO_RISK_PARITY
+family: PORTFOLIO
+status: design
+venue_universe: []
 topology_requirements:
   isolation: {}
   co_location: []
@@ -101,6 +105,14 @@ Portfolio Allocator (RISK_PARITY archetype, client level)
 ```
 
 See [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md).
+
+## Example instances
+
+```
+PORTFOLIO_RISK_PARITY@multi-strategy-crypto-daily-usd-prod
+PORTFOLIO_RISK_PARITY@multi-strategy-tradfi-daily-usd-prod
+PORTFOLIO_RISK_PARITY@multi-strategy-mixed-daily-usd-prod
+```
 
 ## Not in this archetype
 

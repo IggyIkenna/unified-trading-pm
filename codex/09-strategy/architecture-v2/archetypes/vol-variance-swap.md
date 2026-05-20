@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_VARIANCE_SWAP
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -96,6 +100,21 @@ Deribit provides sufficient strike breadth for BTC and ETH to approximate the th
 - **Long variance**: anticipating a vol event; IV historically cheap vs future vol expectations; tail-risk hedge
 - **Avoid**: thin option chains with few strikes (replication breaks down); very near-term expiries where strip entry
   costs exceed variance premium; altcoins without sufficient OTM option liquidity
+
+## Example instances
+
+```
+VOL_VARIANCE_SWAP@deribit-btc-varswap-30dte-usdt-prod
+VOL_VARIANCE_SWAP@deribit-eth-varswap-30dte-usdt-prod
+VOL_VARIANCE_SWAP@deribit-btc-varswap-30dte-usdt-paper
+```
+
+## Not in this archetype
+
+- Dispersion trade (index vs basket of component vols) → [`VOL_DISPERSION`](vol-dispersion.md)
+- Outright short straddle / strangle (single-strike, no replication strip) → [`VOL_CARRY`](vol-carry.md)
+- OTM skew harvest via ratio spread (two strikes, single expiry) → [`VOL_RATIO_SPREAD`](vol-ratio-spread.md)
+- Calendar vol spread across two expiry tenors → [`VOL_TERM_STRUCTURE_ARB`](vol-term-structure-arb.md)
 
 ## See also
 

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_EVENT_SETTLED
+family: MARKET_MAKING
+status: design
+venue_universe: [BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
   isolation:
     execution-service: isolated

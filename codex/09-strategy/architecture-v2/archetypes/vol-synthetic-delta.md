@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: VOL_SYNTHETIC_DELTA
+family: VOL_TRADING
+status: design
+venue_universe: [DERIBIT, OKX_OPTIONS, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -112,6 +116,21 @@ rolling to maintain continuous exposure.
 - **Asset fit**: BTC, ETH (Deribit; deep ATM liquidity); SPX/SPY for TradFi directional with defined risk
 - **Complements**: `CARRY_BASIS_PERP` (use synthetic long instead of perp when funding is high);
   any strategy that would otherwise use a perp for delta-1 exposure
+
+## Example instances
+
+```
+VOL_SYNTHETIC_DELTA@deribit-btc-synthetic-long-14dte-usdt-prod
+VOL_SYNTHETIC_DELTA@deribit-eth-synthetic-long-30dte-usdt-prod
+VOL_SYNTHETIC_DELTA@deribit-btc-synthetic-short-14dte-usdt-prod
+```
+
+## Not in this archetype
+
+- Delta-1 long via spot or perp (no defined-risk structure, no expiry management) → [`CARRY_BASIS_PERP`](carry-basis-perp.md)
+- Long straddle (ATM call + put at same strike to express a vol view, not delta-1) → [`VOL_STRADDLE`](vol-straddle.md)
+- Directional options expression where the alpha is an ML or signal view on underlying price, not cost-of-carry vs perp → [`ML_DIRECTIONAL_CONTINUOUS`](ml-directional-continuous.md)
+- Covered call overlay against an existing long (income generation, not directional replication) → [`VOL_OVERLAY_COVERED_CALLS`](vol-overlay-covered-calls.md)
 
 ## See also
 

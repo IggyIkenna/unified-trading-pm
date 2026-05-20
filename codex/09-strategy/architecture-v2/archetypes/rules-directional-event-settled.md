@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: RULES_DIRECTIONAL_EVENT_SETTLED
+family: RULES_DIRECTIONAL
+status: design
+venue_universe: [UNITY, BETFAIR, SMARKETS, MATCHBOOK, POLYMARKET]
 topology_requirements:
   isolation:
     execution-service: isolated

@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ARBITRAGE_CROSS_DOMAIN_EVENT
+family: ARBITRAGE_STRUCTURAL
+status: design
+venue_universe: [PINNACLE, POLYMARKET, KALSHI, PREDICTIT, CME]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -108,6 +112,14 @@ prediction CLOB + CME binary).
   conditions differ from CLOB resolution); events too close to resolution (< 2h) where liquidity dries up
 - **Contrast with ARBITRAGE_PRICE_DISPERSION**: price dispersion = same domain, multiple venues (e.g. Polymarket vs
   Kalshi for same prediction); this archetype = different domain types for same event
+
+## Example instances
+
+```
+ARBITRAGE_CROSS_DOMAIN_EVENT@pinnacle-polymarket-elections-usd-prod
+ARBITRAGE_CROSS_DOMAIN_EVENT@kalshi-cme-fed-rate-usd-prod
+ARBITRAGE_CROSS_DOMAIN_EVENT@pinnacle-polymarket-sports-usd-prod
+```
 
 ## Not in this archetype
 

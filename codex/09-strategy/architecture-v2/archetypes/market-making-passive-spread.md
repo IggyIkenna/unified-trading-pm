@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_PASSIVE_SPREAD
+family: MARKET_MAKING
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -93,6 +97,22 @@ high enough to sustain a positive expected value per round trip.
 - **Avoid**: high-volatility regimes (adverse selection eats spread); very wide-spread instruments (large inventory risk
   per fill); venues with no maker rebate and high taker fees
 - **Best instruments**: major spot pairs (BTC/USDT, ETH/USDT) on Binance/OKX; high-liquidity perp funding markets
+
+## Example instances
+
+```
+MARKET_MAKING_PASSIVE_SPREAD@binance-btc-usdt-spot-mm-prod
+MARKET_MAKING_PASSIVE_SPREAD@okx-eth-usdt-spot-mm-prod
+MARKET_MAKING_PASSIVE_SPREAD@hyperliquid-sol-usdt-perp-mm-prod
+```
+
+## Not in this archetype
+
+- Inventory-skewed quoting with Avellaneda-Stoikov reservation price → [`MARKET_MAKING_INVENTORY_SKEW`](market-making-inventory-skew.md)
+- ML-guided directional lean on top of spread capture → [`MARKET_MAKING_ML_LEAN`](market-making-ml-lean.md)
+- Queue-position and VPIN-aware posting → [`MARKET_MAKING_QUEUE_MICROSTRUCTURE`](market-making-queue-microstructure.md)
+- Sports/event-settled back-lay quoting → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
+- DEX concentrated-liquidity LP fee capture → [`DEFI_LP_CONCENTRATED`](defi-lp-concentrated.md)
 
 ## See also
 

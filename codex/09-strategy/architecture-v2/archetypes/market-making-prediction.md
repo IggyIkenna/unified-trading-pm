@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: MARKET_MAKING_PREDICTION
+family: MARKET_MAKING
+status: design
+venue_universe: [POLYMARKET, KALSHI]
 topology_requirements:
   isolation:
     execution-service: isolated
@@ -103,6 +107,21 @@ MARKET_MAKING_EVENT_SETTLED for sports markets but applied to political, economi
 - **Avoid**: markets with no sharp-book reference and no model signal (pure noise quoting); markets resolving in < event_blackout_hours; binary outcomes with non-standard resolution criteria (ambiguity risk)
 - **Contrast with ARBITRAGE_CROSS_DOMAIN_EVENT**: this archetype earns spread on a single venue; cross-domain arb
   exploits pricing gaps across domains
+
+## Example instances
+
+```
+MARKET_MAKING_PREDICTION@polymarket-elections-yesno-mm-usdc-prod
+MARKET_MAKING_PREDICTION@kalshi-fed-rate-yesno-mm-usdc-prod
+MARKET_MAKING_PREDICTION@polymarket-sports-championship-yesno-mm-usdc-prod
+```
+
+## Not in this archetype
+
+- Sports exchange back-lay quoting (Betfair/Smarkets) → [`MARKET_MAKING_EVENT_SETTLED`](market-making-event-settled.md)
+- Crypto CLOB continuous quoting → [`MARKET_MAKING_CONTINUOUS`](market-making-continuous.md)
+- Cross-venue prediction market price dispersion arb → [`ARBITRAGE_CROSS_DOMAIN_EVENT`](arbitrage-cross-domain-event.md)
+- Directional one-sided position on a prediction contract → [`ML_DIRECTIONAL_EVENT_SETTLED`](ml-directional-event-settled.md)
 
 ## See also
 

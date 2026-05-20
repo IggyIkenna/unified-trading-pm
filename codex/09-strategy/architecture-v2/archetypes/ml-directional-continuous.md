@@ -1,5 +1,9 @@
 ---
 scope: [engineer, admin]
+archetype: ML_DIRECTIONAL_CONTINUOUS
+family: ML_DIRECTIONAL
+status: design
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, IBKR, CME, CBOE]
 topology_requirements:
   isolation:
     execution-service: isolated
