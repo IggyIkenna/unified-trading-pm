@@ -159,14 +159,14 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 > **Note**: if Ikenna slot 9 ships cme_polymarket_arb Phase 1 early, slot 4 can pick up Phase 2 as reserve.
 
-1. - [ ] **hard_schema_enforcement** (plan no-deadline, 4.8 cal left) — read `hard_schema_enforcement_2026_05_08.md` for
-         all open `- [ ]` items. Ship them. Covers workspace-wide hard schema enforcement at write boundaries. (design
-         0.6×, ~8 = 4.8 cal)
-2. - [ ] **strategy_archetype_taxonomy** (plan no-deadline, 4.8 cal left) — read
-         `strategy_archetype_taxonomy_2026_05_12.md` for open items. Ship them. (design 0.6×, ~8 = 4.8 cal)
-3. - [ ] **deployment_and_qg_strategy_implementation close** (plan at 98%, 0.4 cal left) — read plan for the 2 remaining
-         `- [ ]` items and ship. (infra 0.8×, ~1 = 0.4 cal)
-4. - [ ] **Plan flips** for all items. (0.5 cal)
+1. - [x] ✅ **hard_schema_enforcement** — plan `status: done`, 0 open items. Phase 1 (field-flip migration phases B/C/D/F)
+         shipped this cycle: instruments-service@1f807c9 + instruments-service@46bea40 + uac@956bec1 +
+         pm@65039c1e. Phase E DEFERRED post-cutover. (backfilled 2026-05-20 slot-4)
+2. - [x] ✅ **strategy_archetype_taxonomy** — plan `status: done`, 0 open items. All taxonomy items shipped prior
+         cycles. No new agent work needed. (backfilled 2026-05-20 slot-4)
+3. - [x] ✅ **deployment_and_qg_strategy_implementation close** — plan `status: done`, 0 real open checkboxes. All
+         remaining items are BLOCKED-OPERATOR-DECISION or DEFERRED with named successors. (backfilled 2026-05-20 slot-4)
+4. - [x] ✅ **Plan flips** — this commit. (2026-05-20 slot-4)
 
 ---
 
