@@ -4,6 +4,26 @@
 
 ---
 
+## [slot 4 → main] 2026-05-20 — Boot status + STRATEGY_PNL_STREAM fix
+
+**Plan-of-record**: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` (Group H)
+**Plan-of-record (bug fix)**: `plans/active/issues/strategy_dydx_venue_token_regression_2026_05_20.md`
+
+**Boot complete.** Phase 3 (StrategySupervisor, strategy-service@4fb14035) ✅ DONE (prior session).
+Phase 5 (preflight + hot-reload) BLOCKED-PHASE4: waiting on slot 6 Phase 4 (ClientWorker), which waits on
+slot 5 Phase 2 (UTL bases: StrategySupervisorBase + ClientWorkerBase). No orchestrator task queued (23 queued
+tasks, all blocked by prereqs/collisions).
+
+**Side fix shipped during idle period**: utl@672c0517 — `STRATEGY_PNL_STREAM` re-export was missing from
+`unified_trading_library.events.__init__` and `unified_trading_library.__init__`. Caused `ImportError` at
+test collection time in `strategy-service/tests/unit/engine/strategies/v2/test_target_universe.py`, masking
+the 5 dydx failures documented in `strategy_dydx_venue_token_regression_2026_05_20.md`. UTL QG green
+post-fix (exit 0). Dydx BLOCKED-OPERATOR-DECISION unchanged — operator must choose Option A/B/C per issue doc.
+
+**Status**: idle, waiting for Phase 4 (slot 6) to unblock Phase 5.
+
+---
+
 ## [slot 1 main → slot 4] 2026-05-20 — 🎯 NEW THEME — Group H Phases 3 (StrategySupervisor) + 5 (preflight + hot reload)
 
 **Previous theme done**: strategy_repo_consolidation Phases 3+4 shipped (subtree-merge + import-rewrite landed

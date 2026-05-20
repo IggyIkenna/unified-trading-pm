@@ -88,3 +88,15 @@ Add follow-up task to clean up once the audit decides on dydx retention.
 Escalation path: strategy_archetype_logic_audit_2026_05_20.md (Opus-1M session).
 
 Referenced from: plans/active/work_split_2026_05_20_ikenna.md § Slot 11 row.
+
+## Update 2026-05-20 — slot 4 boot investigation
+
+**Separate issue resolved**: A second root cause was masking the 5 dydx test failures:
+`STRATEGY_PNL_STREAM` was not re-exported from `unified_trading_library.__init__` (added to
+`events/event_types.py` in `de5ca0a0` but re-exports missed from `events/__init__.py` and
+`__init__.py`). This caused an `ImportError` at collection time, preventing the 5 dydx failures
+from appearing individually.
+
+Fixed in utl@672c0517 (`fix(exports): add STRATEGY_PNL_STREAM to UTL __init__ and events __init__
+re-exports`). After the fix, the 5 dydx failures now appear as individual `FAILED` lines rather
+than a single collection `ERROR`. The dydx BLOCKED-OPERATOR-DECISION status is unchanged.
