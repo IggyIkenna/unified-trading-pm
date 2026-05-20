@@ -391,9 +391,22 @@ Phase A is "operationally GREEN" when:
 6. ✅ Section 6 delegation SSOT complete (verification below in § 6.5)
 7. **Pending operator-fillable inputs**: `PROTOCOL_PAUSE_WINDOWS` seeds (Aave V2 deprecation, Compound V2 wind-down, etc.) + scope-removal acks for `BLOCKED-OPERATOR-DECISION` items
 
-### R-NEW-1 (2026-05-20 round 3): 16 services have NO consolidated manifest
+### R-NEW-1 (2026-05-20 round 3 — REFINED round 4 after probe): 16 services flagged "no consolidator" — REAL meaning is "no manifest data at all"
 
-Detected by A3 v2. Per-service breakdown:
+**Probe 2026-05-20 round 4** of all 16 buckets confirmed:
+
+- All 16 have **0 per_vm shards** (no manifest emission happening at all).
+- All 16 have **no `_index/` directory** (consolidator would have nothing to consolidate).
+- **14 of 16 are completely empty buckets** (likely from Group B env-split rollback — data moved or never landed here).
+- **2 of 16 have non-manifest data**: `execution-store-cefi-central-element-323112` (backfill_batches/blocked_spreads/config_tests dirs) + `ml-training-artifacts-central-element-323112` (experiments/) — these services write parquets directly without manifest emission.
+
+**Refined action**:
+
+- For the 14 empty buckets: NOT a consolidator gap — DEFER. Revisit when data actually lands. Adding Cloud Run jobs for empty buckets is wasted invocations.
+- For the 2 buckets with non-manifest data: wire `record_captured()` / `record_empty()` / `record_failed()` in the producer code (execution-service writers + ml-training-artifacts experiment loggers). Then per-VM shards land + a Cloud Run consolidator can be added.
+- **Per-asset-group consolidation (10 jobs → 5)** — operator decision. Recommendation: KEEP 10 split (per-bucket timeout + failure isolation; sports IS 900s vs prediction MTDS <10s timeouts can't be combined cleanly). See SSOT § "Cadence question" for full tradeoff analysis.
+
+**Owner**: slot 5 (paired with R6 — wire manifest emission into the 2 services with data + revisit empties as data lands).
 
 | Service kind | Buckets without `_index/availability_index.parquet` |
 |---|---|
