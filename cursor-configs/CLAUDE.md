@@ -290,6 +290,10 @@ Cayman vs others). Plan proposals framing "cross-client rebalancing" as in-scope
 `codex/04-architecture/client-funds-isolation.md`. Required tests in every transfer-related plan: happy intra-client
 path + UAC-validator-rejects-cross-client + defence-in-depth coordinator-rejects-cross-client + alert-on-attempt.
 
+### Per-client isolation architecture (strategy-service + execution-service)
+
+One subprocess per client (`multiprocessing.Process` under `StrategySupervisor`). Hard crash isolation (segfault/OOM/uncaught in one ClientWorker does not affect others). `MarkPriceAggregator` lives in supervisor (single MTM compute per tick, broadcast via shared memory). Hybrid hot-reload: push events for `REGISTER`/`DEREGISTER`/`CREDENTIAL_ROTATED` + pull KMS rotation. Per-client preflight: KMS → venue auth ping → balance fetch → `CLIENT_READY`; failure → `CLIENT_QUARANTINED`. GIL-free parallelism via subprocess boundary. SSOT: `codex/04-architecture/per-client-isolation-architecture.md`. Composes with: `codex/04-architecture/client-funds-isolation.md` (HARD RULE) + `codex/04-architecture/client-lifecycle-event-bus.md` + `codex/05-infrastructure/strategy-shard-vm-topology.md`.
+
 ---
 
 ## Version / Workflow / Plan Governance
