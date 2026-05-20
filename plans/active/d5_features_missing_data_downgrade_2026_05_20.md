@@ -67,11 +67,17 @@ prerequisite_plans:
 
 ### Phase 1 — EIA adapters + features warn-but-proceed (quick fixes)
 
-- [ ] [AGENT] P0. Fix `features_service/commodity/adapters/eia_ng.py:70`:
-  - Replace `self.logger.warning("EIA storage API returned no data rows"); return {}` with
-    `self.logger.warning("EIA storage API returned no data rows"); record_empty(reason=EmptyConfirmedReason.SOURCE_RETURNED_ZERO); raise DependencyError(fail_fast=False)`
-  - Note: fail_fast=False because EIA data is supplemental — downstream handler decides whether to abort
-- [ ] [AGENT] P0. Fix `features_service/commodity/adapters/eia_crude.py:61` — same pattern
+- [x] ✅ [AGENT] P0. Fix `features_service/commodity/adapters/eia_ng.py:70`: — features-service@906b902e
+  - Raises `ValueError("SOURCE_RETURNED_ZERO: ...")` instead of returning `{}`; caught by `_fetch_raw_for_factor`
+    OSError/ValueError handler which returns None, triggering `_has_full_factor_coverage` fail-loud path
+- [x] ✅ [AGENT] P0. Fix `features_service/commodity/adapters/eia_crude.py:61` — same pattern —
+      features-service@906b902e
+
+**Bonus (beyond Phase 1 scope, shipped same commit)**: commodity `batch_handler.py` — replaced one-shot
+`_write_manifest()` (hardcoded bucket, batch-at-end) with per-shard `ManifestWriter.record_empty()` +
+`manifest_writer.add()` calls; bucket via `resolve_bucket_name(cloud='gcp', kind='features-commodity')`; UAC `BATCH_EIA`
+PipelineMode added (uac@fb3751e8); `features-commodity` bucket kind registered (deployment-service@699efc2).
+
 - [ ] [AGENT] P0. Fix `strategy-service/...batch_handler.py:130,502` — replace warn-but-proceed with DependencyError
       raise
 - [ ] [AGENT] P1. Fix `ml-inference-service batch_handler.py:79,259` and `ml-service batch_handler.py:79,259` — same
