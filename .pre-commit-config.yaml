@@ -25,12 +25,12 @@ repos:
       - id: ruff-format
         name: Format with Ruff
 
-  # Prettier - auto-stage wrapper. Replaces upstream mirrors-prettier which aborts
-  # the commit when it reformats files (forced manual re-stage + re-commit). The
-  # wrapper runs prettier --write and re-stages the SUBSET of input files already
-  # in the index — never touches foreign-dirty files held by parallel slots per
-  # CLAUDE.md two-teammates rule. Template SSOT:
-  # scripts/pre-commit-templates/docs.pre-commit-config.yaml.
+  # Prettier - TypeScript/JSON/Markdown/YAML formatter (auto-stage wrapper).
+  # Wrapper replaces upstream mirrors-prettier because that hook aborts the commit
+  # when it reformats anything, forcing a manual re-stage + re-commit loop. The
+  # wrapper runs prettier --write then re-stages the SUBSET of input files that
+  # were already in the index (never touches foreign-dirty files held by other
+  # parallel slots). SSOT: scripts/hooks/prettier-autostage.sh.
   - repo: local
     hooks:
       - id: prettier-autostage
