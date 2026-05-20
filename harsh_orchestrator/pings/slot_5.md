@@ -406,3 +406,44 @@ changes). Operator left as-is to avoid edit-collision with your active shipping.
 features_repo_consolidation + gcs_migration_bundle + AUDIT_pre_may8 + expected_unattempted_propagation closes (~12 cal)
 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 5 — STARTED <first item>` below.
+
+---
+
+[2026-05-20] slot 5 → operator — promote_workflow BLOCKED items (S5-PROMOTE-MAY23-CLI, Phase 9 AGENT done at pm@9838d59a)
+
+26 SCRIPT items annotated with closed-set status tags in `plans/active/promote_workflow_may23_cli_path_2026_05_10.md`.
+
+**BLOCKED-CREDENTIALS** (8 items — Group 1, credentials/provisioning required):
+
+| Item | What's needed |
+|------|--------------|
+| Phase 2 preflight-cutover.sh operator run | All 8 probes green (Alchemy API key, Copper sandbox, perp testnet keys) |
+| Phase 4.A Copper sub-account provisioning | Copper sub-account creation + HMAC testnet credentials |
+| Phase 4.A First live-signing dry-run | Copper testnet HMAC sign working |
+| Phase 4.B Smoke-test 5 perp venue testnets | Read-only API calls to Bybit/Binance/OKX/Hyperliquid/Aster testnets |
+| Phase 4.C Smoke-test Solana paper | Solana devnet RPC + colocated_engine --execution-provider solana_devnet |
+| Phase 4.D Tenderly fork dry-run | TENDERLY_API_KEY in env (already in run-paper.sh --warn path) |
+| Phase 5.B Telegram bot token provision | Telegram bot + chat_id for alerting channel |
+| Phase 5.B PagerDuty key | PagerDuty integration key (or skip if Telegram-only) |
+
+**BLOCKED-OPERATOR-DECISION** (14 items — Groups 2+4, compute/long-running/sequentially blocked):
+
+| Item | Sequentially blocked on |
+|------|------------------------|
+| Phase 3: 2yr backtest (~6h per archetype) | Nothing — can start immediately (operator workstation or GCE VM) |
+| Phase 5.A: first recon dry-run | Phase 3 backtest output + paper run output |
+| Phase 5.C: 48h alerting staging dry-run | Phase 5.B Telegram/PagerDuty credentials |
+| Phase 5.D: live rehearsal 24h | Phase 5.A + Phase 5.C |
+| Phase 6: Launch paper VMs (×2 archetypes) | Phase 3 + Phase 4 + Phase 5 |
+| Phase 6: Monitor ≥3 days | Phase 6 paper VMs running |
+| Phase 8: CLI + UI dry-runs (×3 items) | Phase 6 ≥3d evidence + UI Track complete |
+| Phase 10: Live cutover (×4 items) | Phase 8 dry-run passed (human-only — wallet keys) |
+
+**SKIP** (4 items — Group 3, per main 2026-05-20):
+Phase U2 smoke test + Phase U4/U5/U6 Playwright e2e — need running local dev stack; belong to UI/e2e session.
+
+**Immediate operator actions to unblock**:
+1. `export TENDERLY_API_KEY=<key>` → Phase 4.D unblocks (run-paper.sh already handles missing key gracefully)
+2. Start 2yr backtest (Phase 3): `bash strategy-service/scripts/run_2yr_config_grid_backtest.py --archetype carry_staked_basis --candidate-emit --top-k 3` (background ~6h)
+3. Provision Copper testnet sub-account (Phase 4.A) — then Phase 4.A–4.C–5.C–5.D–6 unblock in sequence
+4. Set Telegram bot token in Secret Manager (Phase 5.B) — then Phase 5.C/5.D unblock
