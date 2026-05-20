@@ -107,24 +107,25 @@ should treat current numbers as a conservative floor.
 Adding a venue or LST to `VENUE_COLLATERAL_MATRIX` automatically expands the catalog's eligible slots on next
 regeneration. No engine code changes, no catalog code changes — just a new matrix row.
 
-Today's matrix (2026-05-07 — venue-matrix re-verification, see plan
+Today's matrix (2026-05-20 — re-verified against `accepted_perp_collateral()` in UAC `venue_collateral.py`; original
+2026-05-07 SSOT plan:
 [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)):
 
-| perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (post-Stream A flip) |
-| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| DRIFT                                                                                                            | JitoSOL (10% haircut), mSOL (10% haircut)                                                                  | 2 rows                                     |
-| DERIBIT                                                                                                          | stETH (7.5% haircut, X:PM/X:SM, offsets ETH-perp directly — effective 2026-01-13)                          | 1 row                                      |
-| BYBIT (UTA)                                                                                                      | stETH + METH + USDe (UTA cross-collateral; haircuts per Bybit margin-spec page)                            | up to 3 rows                               |
-| OKX (multi-currency / portfolio margin)                                                                          | wstETH — **pending live API verification, not yet confirmed** (haircut TBD per Stream A live probe)        | 1 row (pending confirmation)               |
-| HYPERLIQUID (L1)                                                                                                 | none (USDC-only) — explicit `accepted=False` rows                                                          | 0 rows                                     |
-| BINANCE (Multi-Assets Mode)                                                                                      | none — `BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT` only; cross-collateral feature retired                      | 0 rows                                     |
-| ASTER                                                                                                            | none — USDT/USDF/asBNB only                                                                                | 0 rows                                     |
-| GMX                                                                                                              | none — per-market collateral set excludes LSTs                                                             | 0 rows                                     |
-| BINANCE-FUTURES / BYBIT-FUTURES / OKX-FUTURES / KRAKEN-FUTURES / BITFINEX-FUTURES / BITGET-FUTURES (Tardis-CeFi) | none — linear-USDT or coin-margined only; LST acceptance lives at the spot-UTA layer not the futures layer | 0 rows                                     |
+| perp_venue                                                                                                       | LST acceptance                                                                                             | catalog rows produced (2026-05-20 actual) |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| DRIFT                                                                                                            | JitoSOL (10% haircut), mSOL (10% haircut)                                                                  | 2 rows                                    |
+| DERIBIT                                                                                                          | stETH (7.5% haircut, X:PM/X:SM, offsets ETH-perp directly — effective 2026-01-13)                          | 1 row                                     |
+| BYBIT (UTA)                                                                                                      | stETH + wstETH (UTA cross-collateral per venue_collateral.py; METH + USDe are UTA-eligible but not in LST matrix) | 1 row (LIDO/stETH only)             |
+| OKX (multi-currency / portfolio margin)                                                                          | wstETH — **confirmed in UAC venue_collateral.py since 2026-05-08 (Stream A flip)**; no catalog slot generated yet (OKX not in `_STAKED_BASIS_ETH_PERP_VENUES`) | 0 rows (slot pending)    |
+| HYPERLIQUID (L1)                                                                                                 | none (USDC-only) — explicit `accepted=False` rows                                                          | 0 rows                                    |
+| BINANCE (Multi-Assets Mode)                                                                                      | none — `BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT` only; cross-collateral feature retired                      | 0 rows                                    |
+| ASTER                                                                                                            | none — USDT/USDF/asBNB only                                                                                | 0 rows                                    |
+| GMX                                                                                                              | none — per-market collateral set excludes LSTs                                                             | 0 rows                                    |
+| BINANCE-FUTURES / BYBIT-FUTURES / OKX-FUTURES / KRAKEN-FUTURES / BITFINEX-FUTURES / BITGET-FUTURES (Tardis-CeFi) | none — linear-USDT or coin-margined only; LST acceptance lives at the spot-UTA layer not the futures layer | 0 rows                                    |
 
-**Effective slot count post-Stream A flip = ~7** (DRIFT/JitoSOL + DRIFT/mSOL + Deribit/stETH + Bybit/stETH +
-Bybit/METH + Bybit/USDe-as-stable-not-LST + OKX/wstETH; final count depends on Stream A live-probe haircut
-verifications). This **supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
+**Effective slot count (2026-05-20 verified) = 4**: DRIFT/JitoSOL + DRIFT/mSOL + Deribit/stETH + Bybit/stETH.
+(Prior "~7" estimate included Bybit/METH, Bybit/USDe, OKX/wstETH — those are not yet in the catalog.) This
+**supersedes the prior 2026-05-05 claim** that DRIFT was the only venue.
 
 **Per-venue wrap-step discipline (added 2026-05-12 per [`pnl-attribution.md`](../cross-cutting/pnl-attribution.md) HARD
 RULE #5 "Staking yield: wrapped (price-delta) vs rebasing (balance-delta)")**: the on-chain `STAKE` leg shape depends on
