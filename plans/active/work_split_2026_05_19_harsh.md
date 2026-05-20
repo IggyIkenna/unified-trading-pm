@@ -177,15 +177,11 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
 
 ### Slot 5 — features_repo_consolidation + gcs_migration_bundle + AUDIT + propagation — ~12 cal AI-days
 
-1. - [ ] **features_repo_consolidation Phase residuals** (overdue May-13, 4.8 cal left) — read plan for remaining
-         `- [ ]` items. Focus on any items not yet in QG pipeline. (refactor 0.4×, ~12 = 4.8 cal)
-2. - [ ] **gcs_migration_bundle_pipeline_mode close** (overdue May-15, 4.8 cal left) — read plan for remaining items.
-         (infra 0.8×, ~6 = 4.8 cal)
-3. - [ ] **AUDIT_pre_may_8_cleanup** (overdue May-15, 1.5 cal left) — read plan for open items. (design 0.6×, ~3 = 1.5
-         cal)
-4. - [ ] **expected_unattempted_propagation_chain close** (overdue May-15, plan at 80%, 1.3 cal left) — read plan for
-         remaining `- [ ]` items and ship. (brand-new 1.0×, ~1.3 = 1.3 cal)
-5. - [ ] **Plan flips** for all shipped items. (0.5 cal)
+1. - [x] ✅ **features_repo_consolidation Phase residuals** — Plan at max closeable state. Only open item (Phase 6 parity RUN) is explicitly DEFERRED to `features_service_qg_cleanup_2026_05_11.md` Phase 2 (blocked by 7-day live-data window). Code utility shipped at PM@44d23659. 0 agent-doable work remaining. (2026-05-20 slot-5)
+2. - [x] ✅ **gcs_migration_bundle_pipeline_mode close** — Phase 3 sign-off checkboxes flipped (all 5 asset_groups ✅ CONFIRMED inline) + Phase 6 SKIP (NOT NEEDED per Axis-10 fix) — PM@4042e905. Phase 8 P2 DEFERRED to 2026-06-15 by design. Plan at max closeable state. (2026-05-20 slot-5)
+3. - [x] ✅ **AUDIT_pre_may_8_cleanup** — Coordination doc, 0 open items. All tracked plans either closed, deferred with named successors, or assigned to active slots. Plan exhausted. (2026-05-20 slot-5)
+4. - [x] ✅ **expected_unattempted_propagation_chain close** — All items `[x]`. Phases 1-6 complete; Passes 3/4 formally deferred to writegate Phase 6.x (named successor). Validation items deferred to Phase 3 window (production run required). Plan at max closeable state. (2026-05-20 slot-5)
+5. - [x] ✅ **Plan flips** for all shipped items — PM@4042e905 + this work_split flip commit. (2026-05-20 slot-5)
 
 ---
 
