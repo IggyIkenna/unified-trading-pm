@@ -368,9 +368,10 @@ classification, not an adapter error, so the pattern is lighter — just log_eve
 
 ### Phase 3 — preflight gate (P0.3)
 
-- [ ] **[CODE] P0.** 3a. Route `backtest_checks.check_dependencies()` through `validate_config_can_run()` per
-      strategy_id
-- [ ] **[QG] P0.** Phase 3 QG: `cd execution-service && bash scripts/quality-gates.sh` GREEN
+- [x] ✅ **[CODE] P0.** 3a. Route `backtest_checks.check_dependencies()` through `check_config_specific_dependencies()`
+      per strategy_id when config present — execution-service@dbd9c4f35
+- [x] ✅ **[QG] P0.** Phase 3 QG: ruff + basedpyright 0 errors on backtest.py + backtest_checks.py —
+      execution-service@dbd9c4f35
 
 ### Phase 4 — bucket SSOT (P1.1 + P1.2)
 
