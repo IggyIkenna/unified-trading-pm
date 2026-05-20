@@ -106,9 +106,10 @@ are diagnostic outputs, not actionable until phase D digests them).
 | C10 | All → UTL (events, manifest, cloud) | `utl_consumer_contract_audit_2026_05_20.md` | cross-cutting |
 | C11 | agent-orchestrator → all | `orchestrator_service_contract_audit_2026_05_20.md` | 0 (orchestrator migration) |
 
-- [ ] **C0. Relocate** existing `is_mtds_contract_audit_2026_05_20.md` from
+- [x] ✅ **C0. Relocate** existing `is_mtds_contract_audit_2026_05_20.md` from
       `plans/active/` to `plans/audit/`. Re-source remediation P0 todos into
       the beefed `mtds_adapters_preflight_*.md` actionable plan in Phase D.
+      **DONE 2026-05-20 slot-2**: `git mv` to `plans/audit/` — PM@8e3755a9d.
 - [ ] **C1–C11.** Spawn one background agent per audit. Each agent reads B1
       template + A1/A3 outputs for its rows, fills the 4-dim matrix, lands
       audit doc in `plans/audit/`. Estimate per audit: ~2 calibrated AI-days
