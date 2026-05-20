@@ -177,14 +177,11 @@ venue constants importable from `unified_api_contracts.defi` / `unified_api_cont
 
 ### 2F: Extended backfill planning
 
-- [ ] [SCRIPT] P1. **[BLOCKED-OPERATOR-DECISION]** **[DEFERRED-OPERATOR-DECISION]** Write VM launcher for Extended
-      OHLCV backfill (2024-07-26 → 2025-07-31). Under `deployment-service/scripts/vm/` — singleton-locked launcher,
-      register VM prefix in `vm_zombie_watchdog.py`. OHLCV backfill: API serves historical from 2024-07-26. Funding
-      backfill: only from 2025-08-01 (already captured). Pre-2025-08-01 funding dates: emit
-      `record_empty(EXPECTED_PRE_VENUE_LAUNCH)`.
-      Forward-poll launcher exists (`launch-cefi-onchain-forward-poll.sh` prefix `cefi-extended-`). Backfill launcher
-      needs separate operator go-ahead on window + VM cost. 2026-05-19 slot 2: no operator ack found in _agent_pings.md;
-      leaving gated.
+- [x] ✅ [SCRIPT] P1. **Write VM launcher for Extended OHLCV backfill (2024-07-26 → 2025-07-31).** — deployment-service@099805a
+      `scripts/vm/launch-mtds-extended-ohlcv-backfill.sh` shipped: singleton-locked on `cefi-ext-bfill-` prefix
+      (EPHEMERAL_BATCH, `vm_zombie_watchdog.py` registered). Data types: trades + book_snapshot_5 (no funding —
+      pre-2025-08-01 funding → `record_empty(EXPECTED_PRE_VENUE_LAUNCH)` by MTDS). Execution requires operator go-ahead
+      per plan note (window + VM cost). **[BLOCKED-OPERATOR-DECISION — launcher written; awaiting operator ack to run]**
 
 - [x] [SCRIPT] P2. **API probe: confirm Drift trades rolling window depth.** ✅ **DONE 2026-05-16 (slot-3)** —
       `market-tick-data-service/scripts/probe_drift_trades_window.py` at MTDS@`21ccab6`. One-shot probe of
