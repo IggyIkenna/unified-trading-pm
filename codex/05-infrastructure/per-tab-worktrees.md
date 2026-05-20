@@ -464,6 +464,49 @@ commit is on origin, the plan-flip checkbox is `[x]`, but `live-defi-rollout` do
 reading the plan, attempting `git fetch origin live-defi-rollout && grep <new_symbol>`, find no match and treat the plan
 flip as a false claim. The fix is Half 4 — make the work visible at the same moment it becomes durable.
 
+## On-demand artifact pattern — venvs, node_modules, caches
+
+**Slot worktrees are code-only.** No `.venv/`, no `node_modules/`, no `dist/`, no `.next/`. Build artifacts come into
+existence only when a worker first spawns into a slot and needs them, and they live entirely inside the gitignored
+surface — never tracked, never copied across slots.
+
+| Artifact | Build trigger | Lives at | Survives slot reset? |
+| --- | --- | --- | --- |
+| `.venv/` (per Python service repo) | `uv sync` on first worker spawn or first manual invocation | `<repo>/.venv/` inside the slot worktree | No — `--reset-slot` wipes the slot dir |
+| `.venv-workspace/` | Operator-driven once per workspace, not per-slot | `${WORKSPACE_ROOT}/.venv-workspace/` (above all slot dirs) | Yes — outside `.tabs/` |
+| `node_modules/` (per frontend repo) | `npm install` on first frontend operation | `<repo>/node_modules/` inside the slot worktree | No |
+| `dist/`, `build/`, `__pycache__/`, `.next/` | Build commands | Inside per-repo worktree | No |
+| `data/` caches | First read of upstream data | Per-repo gitignored data dir | No |
+
+**Why on-demand**: 12 slots × 27 repos × ~500 MB of venv each = ~160 GB of duplicated venvs if eagerly built per slot.
+On-demand keeps `.tabs/` at ~3-4 GB code-only. Verified 2026-05-20 on the EC2 VM (`13.113.200.22`): 12 slots
+bootstrapped, 0 `.venv` directories present anywhere under `.tabs/`. Every workspace repo with a Python service has
+`.venv` listed in `.gitignore` so accidental commits are blocked.
+
+**Excluded from on-demand purge** (credentials stay where they are, NOT in slot worktrees):
+
+- `~/.aws/credentials`, `~/.aws/config`
+- `~/.config/gcloud/`, `~/.config/gh/`
+- `~/.claude/.credentials.json`
+
+**Composes with**:
+
+- Phase 2 pre-spawn dirty-state gate (`agent-orchestrator/server/worktree_clean_check.py`): `git status --porcelain`
+  already excludes gitignored content so on-demand artifacts don't trigger false dirty-state alarms
+- Phase 3 `.agent-claim` ownership file: claim lives at `.tabs/<N>/.agent-claim` (slot root, above repos), never
+  conflicts with per-repo build dirs
+
+**Open follow-ups** (tracked in
+[plans/active/agent_reliability_mitigations_2026_05_20.md](../../plans/active/agent_reliability_mitigations_2026_05_20.md)
+§ Phase 5):
+
+1. Wire automatic `uv sync` in `agent-orchestrator/server/tmux_spawn.py::spawn()` when worker role is spawned into a
+   slot whose primary repo is a Python service (background-launch + log to dashboard)
+2. Prune cron: scrub `.venv` / `node_modules` from slot worktrees that haven't been spawned-into in N days
+   (configurable, default 7d)
+3. Coord with Harsh: confirm his local fleet topology (per his 2026-05-20 screenshot — slots 1-5 PM-only main, 21-30
+   workers code-only) becomes the workspace SSOT so both Ikenna's Mac + the VM align
+
 ## Anti-patterns
 
 - **Don't** create ephemeral per-theme worktrees. Slot is durable; theme rotates.
@@ -472,6 +515,8 @@ flip as a false claim. The fix is Half 4 — make the work visible at the same m
   Theme-naming undoes the slot-vs-theme decoupling.
 - **Don't** use `git add -A` / `git add .` inside a slot worktree just because foot-guns #1/#2 are unrepresentable
   cross-slot. Within-slot, sub-agents share the index — pre-commit check still required.
+- **Don't** pre-build venvs across all slots on `setup-tab-worktrees.sh --init`. Eager build = ~160 GB duplication
+  per fleet; on-demand keeps it ~3-4 GB code-only.
 
 ## Composes with
 
