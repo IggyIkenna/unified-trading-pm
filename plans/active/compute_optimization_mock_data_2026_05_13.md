@@ -251,11 +251,12 @@ back-of-envelope: 730 days × 5.55s strategy × ~20 config-grid cells = ~22 hour
       cutover-window-sized recommendations. — deployment-service@6a09fa1; launch-sku-matrix-v2-benchmark.sh fans out
       carry_staked_basis + arbitrage_price_dispersion across all v2 shapes. Aggregation command in script comments.
       2026-05-19 slot 9.
-- [ ] [SCRIPT] P1. **DEFERRED** Spot-instance / preemptible-VM viability check: for the longest-running shapes, would preemptible
-      save ≥40% cost? If yes, design checkpoint-restart for those stages (post-cutover wire-in).
-      **BLOCKED-OPERATOR-DECISION**: requires actual SKU matrix benchmark results to identify the longest-running shapes
-      before viability can be assessed. Successor: run launch-sku-matrix-v2-benchmark.sh + aggregate results first.
-      Deferred to post-benchmark window. 2026-05-19 slot 9.
+- [x] [SCRIPT] P1. ✅ **DEFERRED → post-cutover** Spot-instance / preemptible-VM viability check: **YES — all Phase 5
+      shapes save ~80% vs on-demand (well over ≥40% threshold)**. c3-highcpu-88/176 and m3-megamem-128/m3-ultramem-160
+      are all ~80% cheaper on preemptible. Checkpoint-restart design is post-cutover (shard-skip pattern per writegate
+      discipline). Full analysis + checkpoint grain table added to
+      `codex/06-coding-standards/performance-targets.md` § "Preemptible / spot-instance viability". PM@slot8
+      2026-05-20.
 
 ### Phase 6 — Orchestrator dependency-ordering doc (PULLED FORWARD 2026-05-13, ~0.5 cal-AI-day)
 

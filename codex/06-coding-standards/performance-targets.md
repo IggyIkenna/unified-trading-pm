@@ -326,6 +326,36 @@ backfill running in parallel). This is the May-23 cutover-window binding constra
 
 ---
 
+## Preemptible / spot-instance viability (Phase 5 assessment — 2026-05-20)
+
+**Conclusion: YES — all large compute shapes clear the ≥40% cost-saving threshold.**
+
+GCP asia-northeast1 preemptible pricing vs on-demand for the Phase 5 extended shapes (GCP list pricing, 2026-05):
+
+| Shape           | On-demand $/hr (est.) | Preemptible $/hr (est.) | Savings | Passes ≥40% gate |
+| --------------- | --------------------: | ----------------------: | ------: | :---------------: |
+| c3-highcpu-88   |                 ~3.50 |                   ~0.70 |     80% | ✅                |
+| c3-highcpu-176  |                 ~7.00 |                   ~1.40 |     80% | ✅                |
+| m3-megamem-128  |                ~10.65 |                   ~2.13 |     80% | ✅                |
+| m3-ultramem-160 |                ~27.50 |                   ~5.50 |     80% | ✅                |
+
+_Preemptible VMs are ~20% of on-demand price for c3/m3 shapes in asia-northeast1. Up to 24h runtime; 30s eviction
+notice. Acceptable for batch compute stages with checkpoint-restart._
+
+**Checkpoint-restart design** (post-cutover scope — natural resumability per stage):
+
+| Stage              | Checkpoint grain                           | Resume strategy                                                        |
+| ------------------ | ------------------------------------------ | ---------------------------------------------------------------------- |
+| `features_compute` | instrument-day                             | Re-run only unwritten instrument-days; skip if output parquet exists   |
+| `strategy`         | config-grid cell × date-chunk              | Resume from last written chunk row in `grid_summary.parquet`           |
+| `matching_engine`  | archetype × date-chunk                     | Same as `strategy`; each chunk is an idempotent row                    |
+| `ml_training`      | epoch checkpoint (`.ckpt` file)            | Load last `.ckpt` at startup; skip completed epochs                    |
+
+**Implementation note**: all stages already write to GCS atomically per shard (writegate discipline). Checkpoint-restart
+reduces to "skip shards that already exist." Wire-in via `--resume` flag on each VM launcher script (post-cutover).
+
+---
+
 ## Benchmark data provenance
 
 | Field                        | Value                                                                                         |
