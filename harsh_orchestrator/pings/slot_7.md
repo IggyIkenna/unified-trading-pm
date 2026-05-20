@@ -720,3 +720,16 @@ dex_perp_onboarding_handover (6 cal) + gate_3_phantom + trigger_based_reference 
 Ack this ping by appending `[2026-05-19 12:15 UTC] slot 7 — STARTED <first item>` below.
 
 [2026-05-20 07:15 UTC] slot-7 — AUDIT: migrated items 3.C-followup + 3.D still awaiting operator [ack] from 2026-05-19 19:30 UTC ping above. Items tagged BLOCKED-OPERATOR-DECISION in live_pipeline_mtds_mdps_features_2026_05_08.md. Slot-7 session complete: Phase 14 item 2 (replay-subsystem.md codex) SHIPPED (PM@a22aee69). No further agent-doable items in scope — remaining open items are operational (Phase 15 cluster bootstrap) or out-of-scope repos (Phase 9 alerting, Phase 13 deployment-service).
+
+[2026-05-20 08:30 UTC] slot-7 → operator — OPERATOR APPROVAL REQUEST — Phase 1.B IAM roles
+
+BLOCKED-AWS-PERMISSIONS: `harsh-worker` (arn:aws:iam::427895769566:user/harsh-worker) does not have `iam:CreateRole` permission.
+
+Dry-run output: 30 roles would be created (10 services × 3 tiers: prod/staging/dev).
+Script: `deployment-service/scripts/aws/setup-iam-roles.sh --apply`
+Config SSOT: `deployment-service/configs/aws_iam_roles.yaml` (created at deployment-service@c6bd7c1)
+Role naming: `uts-{service}-{tier}` (e.g. `uts-features-service-prod`)
+
+Options: (a) grant `iam:CreateRole` to harsh-worker → agent runs script; (b) operator runs `bash scripts/aws/setup-iam-roles.sh --apply` with admin credentials; (c) DEFERRED-POST-CUTOVER (P0 but not blocking May-23 critical path per 2026-05-12 scope contraction)
+
+Note: 1.E (Secrets Manager replication) is running now — 163 secrets being replicated to AWS SM (harsh-worker HAS secretsmanager:CreateSecret permission).
