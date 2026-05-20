@@ -102,17 +102,18 @@ refs only).
 ### Phase 5 — Extend: kill Manifold (operator-added 2026-05-20) ✅ DONE 2026-05-20 — UAC@276f9efd + MTDS@fae9416
 
 Operator directive 2026-05-20 (during audit synthesis review):
+
 > "play money prediction seems pointless. kill it entirely from docs, plans, uac and canary"
 
-Manifold Markets is a play-money ("Mana") prediction-market platform. The 5-finding audit established: zero
-production consumers reading any field except `probability` (with `or 0` fallback in the dormant MTDS adapter).
-Reconciles with the earlier "deprecated for future use, keep but don't actually use" classification — operator
-escalated to full deletion after seeing the canary noise from the BINARY-vs-MULTIPLE_CHOICE drift.
+Manifold Markets is a play-money ("Mana") prediction-market platform. The 5-finding audit established: zero production
+consumers reading any field except `probability` (with `or 0` fallback in the dormant MTDS adapter). Reconciles with the
+earlier "deprecated for future use, keep but don't actually use" classification — operator escalated to full deletion
+after seeing the canary noise from the BINARY-vs-MULTIPLE_CHOICE drift.
 
 - [x] ✅ Delete `unified-api-contracts/unified_api_contracts/external/manifold/` (incl. cassette) — UAC@276f9efd
 - [x] ✅ Delete `market-tick-data-service/.../market_interface/adapters/prediction/manifold_adapter.py` — MTDS@fae9416
-- [x] ✅ Remove Manifold ripple refs across UAC (15 files: __init__.py, execution.py, normalize_utils/*,
-      canonical/*, internal/*, config/provider_api_versions.yaml, 4 tests) — UAC@276f9efd
+- [x] ✅ Remove Manifold ripple refs across UAC (15 files: **init**.py, execution.py, normalize_utils/_, canonical/_,
+      internal/\*, config/provider_api_versions.yaml, 4 tests) — UAC@276f9efd
 - [x] ✅ Remove Manifold from PM/codex active plans + SSOT docs (5 files: codex venue-availability +
       credentials-matrix + secret-manager-naming, plans/active api_keys_wallets_accounts_readiness +
       cross_cutting_may_23_deliverables) — landing now
