@@ -79,12 +79,12 @@ Net carry (USDC, annualised):
 | DRIFT      | JitoSOL (10% haircut; SOL-DATED program on Drift)              | JitoSOL × SOL quarterly = 1  |
 | BYBIT      | stETH (UTA cross-collateral, dated BTC/ETH futures)            | stETH × quarterly = 1 row    |
 
-**Initial seed catalog** (added 2026-05-18 per `strategy_archetype_taxonomy_2026_05_12.md` V-1):
+**Active catalog slots** (2026-05-20, from `catalog.py _build_carry_staked_basis_dated`):
 
 ```
-CARRY_STAKED_BASIS_DATED@steth-deribit-q1-usdc-1h-usdc-v2-prod
-CARRY_STAKED_BASIS_DATED@steth-deribit-q2-usdc-1h-usdc-v2-prod
-CARRY_STAKED_BASIS_DATED@jitosol-drift-q1-usdc-1h-usdc-v2-prod
+CARRY_STAKED_BASIS_DATED@lido-deribit-eth-q1-usdc-v1-prod   # stETH × Deribit ETH-Q1 quarterly
+CARRY_STAKED_BASIS_DATED@lido-deribit-eth-q2-usdc-v1-prod   # stETH × Deribit ETH-Q2 quarterly
+CARRY_STAKED_BASIS_DATED@jito-drift-sol-q1-usdc-v1-prod     # JitoSOL × Drift SOL-Q1 dated
 ```
 
 ## Config schema
