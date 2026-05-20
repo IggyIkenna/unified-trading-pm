@@ -16,9 +16,26 @@ related_codex:
 # Per-tab worktrees — 3-tier isolation for parallel-agent flow
 
 **TL;DR.** Each operator (Ikenna / Harsh) runs N parallel agent "tabs." Each tab gets its own permanent worktree at
-`.tabs/<N>/<repo>/` on a permanent branch `tab/<operator>/<N>`. Cross-tab races on `.git/index` + working tree become
+`.tabs/<N>/<repo>/` on a permanent **role-encoded** branch. Cross-tab races on `.git/index` + working tree become
 unrepresentable by construction. Slot is the durable identity; theme (writegate / cefi-master / defi / etc.) is the
 daily assignment via the operator's orchestrator LEDGER slot↔theme table.
+
+## Slot-number → role → branch-prefix scheme
+
+The slot number alone decides whether a tab is a **main** agent or a **worker**, and the branch prefix encodes **both
+operator and role** so a `git branch` listing is self-describing:
+
+| Slot range | Role | Branch | Harsh | Ikenna (his choice) |
+| --- | --- | --- | --- | --- |
+| `1..MAIN_SLOT_MAX` (default 20) | main agent | `tab/${MAIN_PREFIX}/<N>` | `tab/hkm/3` | `tab/iim/3` |
+| `> MAIN_SLOT_MAX` | worker | `tab/${WORKER_PREFIX}/<N>` | `tab/hk/21` | `tab/ii/21` *(or `iggy`/`ikenna`)* |
+
+- **Harsh (operator `hk`)**: `MAIN_PREFIX=hkm`, `WORKER_PREFIX=hk` — these are fixed on Harsh's side.
+- **Ikenna** owns his own prefixes: `--operator ii` gives the symmetric `tab/iim/<N>` / `tab/ii/<N>`, or he can
+  env-override `MAIN_PREFIX` / `WORKER_PREFIX` (e.g. `iggy`, `ikenna`) — his call.
+- No D/F ref collision: `hk` and `hkm` are distinct ref path components.
+- `setup-tab-worktrees.sh` derives both prefixes from `--operator` (`<op>` worker, `<op>m` main) unless overridden;
+  `MAIN_SLOT_MAX` (default 20) is the main/worker boundary.
 
 ## The 3-tier hierarchy
 
@@ -29,8 +46,10 @@ Tier 1 — Operator (Ikenna ⊥ Harsh)
     coordination via workspace-shared plans/active/_agent_pings.md.
 
 Tier 2 — Slot (within one operator)              ←── THIS DOC'S SCOPE
-    Per-slot worktree at .tabs/<N>/<repo>/ on permanent branch
-    tab/<operator>/<N>. Slot count is operator-declared at --init.
+    Per-slot worktree at .tabs/<N>/<repo>/ on a permanent role-encoded
+    branch: tab/<main-prefix>/<N> for slots 1..20 (main agents),
+    tab/<worker-prefix>/<N> for slots 21+ (workers). See the scheme
+    table above. Slot count is operator-declared at --init.
     Slot is durable identity; theme is daily assignment.
     Reconciliation: slot master rebases + pushes per shippable unit; plan-
     aware merge resolution for cross-slot conflicts. See

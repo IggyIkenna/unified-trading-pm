@@ -4,8 +4,17 @@
 # 3-tier isolation model (see codex/05-infrastructure/per-tab-worktrees.md):
 #   Tier 1 — Operator (Ikenna ⊥ Harsh):  separate machines.
 #   Tier 2 — Slot (this script's scope): per-slot worktree at .tabs/<N>/<repo>/ on
-#            permanent branch tab/<operator>/<N>.  Slot is durable identity;
+#            a permanent role-encoded branch.  Slot is durable identity;
 #            theme is daily work-split assignment.
+#
+# Slot-number → role → branch-prefix scheme (operator-configurable):
+#   Slots 1..MAIN_SLOT_MAX (default 20) = MAIN agents   → tab/${MAIN_PREFIX}/<N>
+#   Slots > MAIN_SLOT_MAX                = WORKER agents → tab/${WORKER_PREFIX}/<N>
+#   Harsh  (operator hk): MAIN_PREFIX=hkm  WORKER_PREFIX=hk   → tab/hkm/3 , tab/hk/21
+#   Ikenna picks his own (e.g. --operator ii → tab/iim/3 , tab/ii/21, or override
+#   WORKER_PREFIX/MAIN_PREFIX env for iggy/ikenna). The prefix alone tells you
+#   BOTH operator and role at a glance — no collision since hk ≠ hkm as ref path
+#   components.
 #   Tier 3 — Sub-agents within a slot:   share the slot's worktree; master agent
 #            partitions fan-out + reconciles.
 #
@@ -43,6 +52,11 @@ INTEGRATION_BRANCH="live-defi-rollout"
 
 # --- Arg parsing -----------------------------------------------------------
 OPERATOR="${USER:-unknown}"
+# Slots 1..MAIN_SLOT_MAX are main agents; the rest are workers. Branch prefix is
+# role-encoded: main → ${MAIN_PREFIX} (default ${OPERATOR}m), worker → ${WORKER_PREFIX}
+# (default ${OPERATOR}). Both default-derived from OPERATOR; either can be env-overridden
+# (e.g. Ikenna: WORKER_PREFIX=iggy MAIN_PREFIX=iim). Resolved AFTER arg parse (below).
+MAIN_SLOT_MAX="${MAIN_SLOT_MAX:-20}"
 MODE=""
 SLOT_COUNT=""
 SLOT_NUM=""
@@ -70,6 +84,10 @@ if [[ "${MODE}" == "init" && -z "${SLOT_COUNT}" ]]; then
     echo "ERROR: --init requires --slots <N>" >&2; exit 1
 fi
 
+# Resolve branch prefixes now that --operator is known (env override wins).
+WORKER_PREFIX="${WORKER_PREFIX:-${OPERATOR}}"
+MAIN_PREFIX="${MAIN_PREFIX:-${OPERATOR}m}"
+
 # --- Helpers ---------------------------------------------------------------
 log()  { printf '[setup-tab-worktrees] %s\n' "$*"; }
 err()  { printf '[setup-tab-worktrees] ERROR: %s\n' "$*" >&2; }
@@ -86,7 +104,16 @@ for k, v in d.get("repositories", {}).items():
 PY
 }
 
-slot_branch() { printf 'tab/%s/%s\n' "${OPERATOR}" "$1"; }
+# Branch name encodes operator + role. Slots 1..MAIN_SLOT_MAX are main agents
+# (tab/${MAIN_PREFIX}/<N>); higher slots are workers (tab/${WORKER_PREFIX}/<N>).
+slot_branch() {
+    local n="$1"
+    if (( n <= MAIN_SLOT_MAX )); then
+        printf 'tab/%s/%s\n' "${MAIN_PREFIX}" "$n"
+    else
+        printf 'tab/%s/%s\n' "${WORKER_PREFIX}" "$n"
+    fi
+}
 slot_dir()    { printf '%s/%s\n' "${TABS_DIR}" "$1"; }
 
 # Maps $USER/OPERATOR to the per-side orchestrator directory name.

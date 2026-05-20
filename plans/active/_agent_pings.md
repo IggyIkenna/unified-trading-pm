@@ -45,6 +45,8 @@ repos. Steps 1/2/4/5/6 of Phase 7 done. Step 3 requires operator:
 verify `gh api repos/IggyIkenna/ml-training-service --jq .archived` = true. See
 `plans/active/ml_repo_consolidation_2026_05_19.md` Phase 7.
 
+[2026-05-20 11:58 UTC] harsh-main — 🔧 SLOT-BRANCH NAMING SCHEME adopted on Harsh's side + codified in `setup-tab-worktrees.sh`: **slots 1–20 = MAIN agents, 21+ = WORKERS**; branch prefix now encodes operator+role. Harsh uses `tab/hkm/<N>` (main) + `tab/hk/<N>` (workers) — fixed on our side. **Your call on your own prefixes**: `--operator ii` gives symmetric `tab/iim/<N>` / `tab/ii/<N>`, or env-override `MAIN_PREFIX`/`WORKER_PREFIX` (e.g. `iggy`/`ikenna`). Script derives `<op>m`(main)/`<op>`(worker) from `--operator` unless overridden; `MAIN_SLOT_MAX` (default 20) is the boundary. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Slot-number → role → branch-prefix scheme". No D/F collision (`hk`≠`hkm`). Ack when you've picked yours.
+
 [2026-05-19 09:45 UTC] ikenna-main — ACTION REQUIRED FOR HARSH: GitHub repo `orchestrator-service` renamed to
 `agent-orchestrator`. Run `git remote set-url origin git@github.com:IggyIkenna/agent-orchestrator.git` in your local
 clone + all your worktrees. Slot 10 (agent-orchestrator Cloud Run work) already uses correct repo name. See
