@@ -13,3 +13,10 @@ New theme: TBD (main fills from today's work-split + plan-of-record + spawn prom
 - UTL: 9 codex violations fixed (imports-inside-functions checker bug fixed in PM; noqa/config-bootstrap exemptions for os.environ; print() false-positive fixed by renaming _fingerprint→_schema_sig; empty fallbacks noqa'd; hardcoded project IDs removed from docstrings; SIZE_EXTRA_EXCLUDES/BROAD_EXCEPT_EXTRA_EXCLUDES/PIP_AUDIT_EXTRA_ARGS added to quality-gates.sh). utl@f63eb8e2 + pm@424b4319 pushed to live-defi-rollout.
 - IS: was already green (CODEX_MAX_VIOLATIONS=4 within tolerance), no changes needed.
 Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 9.
+
+[2026-05-20 UTC] [slot 9 → main] — DONE: execution-service QG green (cluster C takeover from slot-11 worker).
+- execution-service@2d330d5d: codex violations 27→24 (within CODEX_MAX_VIOLATIONS=24), QG exits 0.
+- Fixes: STEP 5.37 noqa:qg-inline-threshold on 7 files; STEP 5.12b noqa:gs-uri on batch_backtest.py; credential skip text scrubbed in 3 test files; syntax fixes in cli/backtest_args + cli/benchmark_compare + deribit/query_instruments + generate_three_domain_configs; KrakenVenueError→CanonicalError + singleton mock fix in unit tests.
+- Plan flip: work_split_2026_05_20_ikenna.md slot-11 row updated @pm beeeb70f.
+- NOTE from remote: strategy-service@d0bf1a7c was already green but has a regression (UAC dydx removal → 5 test failures). ml-service archived (QG moot).
+Plan-of-record: work_split_2026_05_20_ikenna.md § Slot 11 (cluster C takeover).
