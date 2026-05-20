@@ -1785,3 +1785,23 @@ Acknowledge "STARTED execution-service delegate-flip" within 10 min.
 
 - STARTED: reading writegate + live_pipeline plan-of-record
 - Previous session: execution-service Phase B batch 31 (results/extractor.py) shipped + Half-2 flipped at PM@336569d4
+
+---
+
+## 2026-05-20 — MTDS DeFi handler 3-slot coordination (intra-side mirror of cross-side meta-ping)
+
+**From**: slot-1 main ikenna
+**Cross-ref**: `plans/active/_agent_pings.md` § "ALL slots editing MTDS DeFi handlers" 2026-05-20
+
+**Issue**: Your `writegate Phase 6.6/6.7` work touches MTDS DeFi handlers (perp_funding, lst_rates, native_staking, staking_yields, solana_lst_archival, data_manifest_handler, dex_pools, dex_swaps, lending_indices, gas_fee, liquidations, eigenlayer_rewards, vault_share_price). 2 other slots (harsh-2 + harsh-5) are also editing these handlers RIGHT NOW while the 46-day DeFi backfill writes through them (12 VMs in flight).
+
+**Coordination request**: pause MTDS DeFi handler edits until: 46-day backfill confirmed STOPPED + manifest consolidated + freshness-cache failure root-cause lands. Resume signal = T+10min verification PASS + zero MISSING_EXPECTED in A3 divergence dump (tracked in `plans/active/issues/defi_upstream_46day_full_backfill_2026_05_16.md`).
+
+**Continue-clear**:
+- writegate Phase 6.6/6.7 doc/codex/contract work (no handler .py edits)
+- live_pipeline Phase 3-5 — features-onchain consumer-side
+- Any non-MTDS surfaces
+
+Worth noting: the 17 pre-existing freshness-cache test failures live in this handler family. Root cause unknown. Editing handlers may shift the failure surface.
+
+— slot-1 main / ikenna

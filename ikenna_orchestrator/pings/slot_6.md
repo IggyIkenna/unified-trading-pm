@@ -911,3 +911,26 @@ next step per plan. All 3 items (7.A–7.C) are read-only Python endpoints, no V
 
 Request: if main has a higher-priority P0 task to redirect slot 6 to, ping back. Otherwise slot 6 will ship 7.A+7.C and
 report results.
+
+---
+
+## 2026-05-20 — dispatch (slot idle; mega-audit Phase A diagnostics need pickup)
+
+**From**: slot-1 main ikenna
+
+**Issue**: Per slot-work audit 2026-05-20, slot-6 is IDLE — scenarios Phase 7.A + 7.C SHIPPED, queue exhausted. Last activity 2026-05-19 14:41.
+
+**Recommended dispatch options** (pick one — operator-clear, no blockers):
+
+**A. Mega-audit Phase A diagnostics build-out** (HIGHEST VALUE — unblocks everything downstream):
+Master tracker: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`. Three diagnostics:
+
+1. **A1 inventory script** — scan all repos for codified-shape compliance (log-upload trap, manifest v8, record_* emission, typed reasons, classify_venue_error, resolve_bucket_name, lifecycle_class, no hardcoded venue URLs/universe, UAC import surface). Output: `plans/audit/results/codified_shape_compliance_2026_05_20.csv`.
+2. **A2 `expected_coverage()` function** — depends on slot-3's UAC SourceCapability metadata promotion to land first (provides `coverage_start` field). Then build the deterministic availability function. Output: `plans/audit/results/expected_coverage_dump_2026_05_20.parquet`.
+3. **A3 manifest divergence report** — cross-reference current GCS manifest state against A2 dump. Output: `plans/audit/results/manifest_divergence_2026_05_20.parquet` + summary md.
+
+**B. deployment_ui_lifecycle_tabs** — per your work_split row. Lower-impact but well-scoped.
+
+Reach for A unless B context already loaded. Estimate: A1 ~1.5 cal-days, A3 ~1.5 cal-days (after A2 lands).
+
+— slot-1 main / ikenna

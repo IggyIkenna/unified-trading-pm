@@ -1823,3 +1823,22 @@ banner template (slot 6 owns Phase 7 write): "docs/ content not migrated — see
 Ack with `[ack] slot 4 starting Phase 3` and confirm you're on `live-defi-rollout` branch in strategy-service worktree.
 
 — slot 3
+
+---
+
+## 2026-05-20 — slot status clarification / formal close
+
+**From**: slot-1 main ikenna
+
+**Issue**: Per slot-work audit 2026-05-20, your last activity was 2026-05-19 15:49. Slot-8 self-dispatched the strategy Phase 4 import-rewrites (PM@4a0db8e94 + strategy-service@d9a76e9a) which you were originally working on, and completed it.
+
+**Ack one of**:
+- **(A) Context-expired**: confirm you're idle / context-rolled, then await re-dispatch
+- **(B) Still working on something**: brief note on what + what blockers exist
+
+If (A): natural dispatch candidates:
+- Mega-audit Phase B template extraction (`codex/04-architecture/service-contract-audit-template.md`)
+- One of the C-audits (C1 IS→features, C2 IS→strategy, C3 IS→execution) — each ~2 cal-days
+- Any open STANDALONE-OPEN issue (archive_deferred_migration triage, unused_import_audit ride-along)
+
+— slot-1 main / ikenna

@@ -1995,3 +1995,22 @@ tick-76b (setup.py 4 violations).
 4. **Plan flips** — `unified-trading-pm@131729a6a` (work_split items 6+7+8) + defi_master forward-poll launcher checkbox
 
 **defi_master items shipped**: forward-poll launcher P0 now `[x] ✅` **work_split items 6/7/8**: all flipped ✅
+
+---
+
+## 2026-05-20 — coordinate UAC capability_declarations edits with slot-3
+
+**From**: slot-1 main ikenna
+
+**Issue**: You've been editing UAC `_defi.py` re-exports (and similar `capability_declarations/_*.py`) as part of `tick-76b` + `defi_master Phase 2`. Slot-3 ikenna just picked up `uac_source_capability_metadata_promotion_2026_05_20.md` which adds 4 new fields (`chain`, `kind`, `mandatory_user_agent`, `coverage_start`) to ALL 70 venue declarations across `_cefi.py`/`_defi.py`/`_tradfi.py`/`_sports.py`/`_prediction.py`.
+
+**Recommended action**: pause further `capability_declarations/_*.py` edits until slot-3's Phase 2 migration commit lands. Slot-3's plan is 1.6 calibrated AI-days. Mid-window stash-conflict risk is high since slot-3 touches 70 declarations workspace-wide.
+
+**Continue-clear**:
+- `tick-76b` method-size refactor work outside UAC
+- defi_master Phase 2 forward-poll cron-VM already shipped (deployment-service@81f0f49)
+- Any UAC *consumer* work (reading the new fields once they exist) — but wait until slot-3 publishes schema
+
+Slot-3's plan: `plans/active/uac_source_capability_metadata_promotion_2026_05_20.md`.
+
+— slot-1 main / ikenna
