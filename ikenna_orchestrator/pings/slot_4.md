@@ -1842,3 +1842,41 @@ If (A): natural dispatch candidates:
 - Any open STANDALONE-OPEN issue (archive_deferred_migration triage, unused_import_audit ride-along)
 
 — slot-1 main / ikenna
+
+---
+
+## 2026-05-20 — DISPATCH: trading-agent unlock Path B (features + agent service + backtest)
+
+**From**: slot-1 main ikenna
+**Plan**: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
+**Change manifest**: [plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
+
+**Prior ping** (2026-05-20 clarification) — confirmed re-dispatch path. This is your new chain.
+
+### Your chain — Path B (~4 cal-AI-days)
+
+Heavier path; ships the features-side scaffold + the trading-agent-service core + the backtest-replay infrastructure. Gates on slot-6 ikenna's Phase 1 commit before starting Phase 3.
+
+| Order | Phase | Estimate | Dep | Why |
+|---|---|---|---|---|
+| 1 | **Phase 3 — features-service `performance_features` scaffold** | 0.5 day | Phase 1 from slot-6 | New empty subdomain in features-service; producer surface for the agent service to consume. May-23 = scaffold only; real Sharpe/drawdown/regime-conditional features ship post-cutover. |
+| 2 | **Phase 7 — CI hygiene fix (trading-agent-service)** | 0.5 day | none — parallel-anytime | GH_PAT rotation per `trading_agent_service_workspace_qg_silent_clone_fail`. Operator may need to land a PAT secret — coordinate ping if needed. Run in parallel with Phase 3 if possible. |
+| 3 | **Phase 6 — trading-agent-service core scaffold** | 2 days | Phases 1+2+3 | Subscribes to features + ML + LLM + PnL streams (last 3 stubs for May-23; just-log subscribers). Emits no-op `AllocationDirective` that matches the existing static config — wires the path without changing behavior. |
+| 4 | **Phase 6.5 — Backtest-replay infrastructure** | 1 day | Phase 6 | NEW per operator directive 2026-05-20 (backtest-able + no forward-looking bias). Ships: `inference_cache.py` (LLM/ML output cache, write-through in live, read-only in backtest), `directive_log.py` (every directive logged with input snapshot), `--mode=backtest` CLI + `cutoff_clamp.py` decorator, the no-leak gate test. |
+
+### Coordination
+
+- **DO NOT start Phase 3** until slot-6 ikenna posts "Phase 1 landed @<sha>" to your ping file. Watch your ping queue.
+- **Phase 7 can run in parallel** — no dependency. Recommend starting it WHILE waiting for slot-6's Phase 1.
+- After your Phase 6.5 commit pushes, **post a ping to slot-6 ikenna** with "Path B complete @<sha> — Phase 8 unblocked" so slot-6 can write the master-plan flip.
+- Per memory `feedback_harvest_from_existing.md`: schemas + integration patterns are fully specified in the plan; harvest existing patterns (Hyperliquid adapter shape for Phase 6, `config_reloaders.py` for the StrategyDirectiveReloader pattern) — no operator iteration needed.
+
+### Self-execution prompt
+
+The plan's agent-execution prompts under each Phase 3/6/6.5/7 section are paste-able. The Phase 6.5 no-leak gate test is the most novel — see `plans/active/trading_agent_service_architecture_unlock_2026_05_22.md` § Phase 6.5 for the exact test shape (`tests/integration/test_no_leak_gate.py`).
+
+### Foundation-gate
+
+Your work is layer-5 (features-service) → layer-7 (trading-agent-service). Layer-5 is GREEN. Layer-7 is greenfield (new service). All clear.
+
+— slot-1 main / ikenna

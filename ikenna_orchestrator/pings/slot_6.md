@@ -934,3 +934,41 @@ Master tracker: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026
 Reach for A unless B context already loaded. Estimate: A1 ~1.5 cal-days, A3 ~1.5 cal-days (after A2 lands).
 
 — slot-1 main / ikenna
+
+---
+
+## 2026-05-20 — DISPATCH: trading-agent unlock Path A (UAC + strategy-service path)
+
+**From**: slot-1 main ikenna
+**Plan**: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md](../../plans/active/trading_agent_service_architecture_unlock_2026_05_22.md)
+**Change manifest**: [plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md](../../plans/active/issues/_trading_agent_unlock_plan_change_manifest_2026_05_20.md)
+
+**Note** — operator took mega-audit Phase A diagnostics to a separate Opus 1M tab, so the earlier dispatch ping for Phase A is RETIRED. Pick this up instead.
+
+### Your chain — Path A (~2.5 cal-AI-days)
+
+Critical path; ships the UAC schemas + strategy-service emission + the directive reloader. Slot-4 ikenna runs Path B (features + agent service + backtest replay) and gates on your Phase 1 landing.
+
+| Order | Phase | Estimate | Why |
+|---|---|---|---|
+| 1 | **Phase 1 — UAC schemas** (BLOCKING) | 0.5 day | Adds `strategy_pnl_stream`, `strategy_directives`, `agent_inference_cache` Pydantic to `unified_api_contracts/internal/`. Unblocks every downstream phase. Coordinate with slot-3 ikenna's `uac_source_capability_metadata_promotion` plan — different dirs (`internal/` vs `registry/`); no conflict. |
+| 2 | **Phase 4 — UAC __init__ exports + integration tests** | 0.2 day | Wires the new Pydantic models into `unified_api_contracts/__init__.py` per root-facade rule. Schema-level integration tests. Trivial after Phase 1. |
+| 3 | **Phase 2 — strategy-service emits PnL** | 1 day | Wires the emission path for May-23 archetypes (`carry_staked_basis`, `arbitrage_price_dispersion`). Other archetypes deferred to post-cutover per Phase 2 of the closed-loop allocator plan. |
+| 4 | **Phase 5 — strategy-service `StrategyDirectiveReloader`** | 0.5 day | Reads directives; defaults to no-override; existing capital/equity allocator reads from directive when present. `config_reloaders.py` pattern. |
+| 5 | **Phase 8 — Codex SSOT + master/epic/issue plan updates** | 0.5 day | After Path B finishes too. Updates master_to_live_defi_2026_05_23 to flip trading-agent-service to Phase-1-on-May-23 path + writes codex/04-architecture/trading-agent-service-directive-pipeline.md. |
+
+### Coordination
+
+- After your Phase 1 commit pushes, **post a ping to `ikenna_orchestrator/pings/slot_4.md`** with "Phase 1 landed @<sha> — Path B unblocked".
+- For Phase 8, coordinate with slot-4 to confirm all Phase 6/6.5/7 landed before you write the master-plan flip.
+- Per memory `feedback_harvest_from_existing.md`: harvest from existing UAC dirs (`registry/`, `internal/`) before any "iterate with operator" loop. No operator input expected for Phase 1-5 — schemas are fully specified in the plan.
+
+### Self-execution prompt
+
+The plan's agent-execution prompts under each Phase 1/2/4/5/8 section are paste-able. Run quality-gates per phase before moving to the next. Commit cadence per phase. Push to `live-defi-rollout`.
+
+### Foundation-gate
+
+Your work is layer-4 (UAC) → layer-6 (strategy-service). All layer-N prerequisites are GREEN (UAC + strategy-service are already foundation-stable). No blockers.
+
+— slot-1 main / ikenna
