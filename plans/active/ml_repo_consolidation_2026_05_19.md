@@ -158,27 +158,27 @@ todos:
 
   - id: phase-3-subtree-merge
     content: |
-      - [ ] [AGENT slot-8 IN-PROGRESS 2026-05-20] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git history
-        preserved. For each of {ml-training-service, ml-inference-service}:
-        ```bash
-        cd ml-service
-        git remote add -f <source>-remote ../<source>
-        git merge -s ours --no-commit --allow-unrelated-histories <source>-remote/main
-        git read-tree --prefix=ml_service/<sub>/ -u <source>-remote/main:<source_package>/
-        git read-tree --prefix=tests/<sub>/ -u <source>-remote/main:tests/
-        git read-tree --prefix=scripts/<sub>/ -u <source>-remote/main:scripts/
-        git commit -m "feat(consolidation): subtree-merge <source> into ml_service/<sub>/"
-        ```
-        Each subtree-merge is ONE commit per source repo (2 total). Verify `git log --follow
-        ml_service/training/<file>` reaches pre-merge history. **Foot-gun**: subtree-merge does NOT rewrite import
-        statements — `ml_service/training/__init__.py` still imports `from ml_training_service.app.core import ...`
-        until Phase 4. QG WILL fail between Phase 3 and Phase 4; keep Phase 4 in the same agent turn.
-    status: in-progress
+      - [x] ✅ [AGENT slot-8] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git history
+        preserved. Completed 2026-05-20. ml-service@739f3a3 (training) + @2c591c5 (inference).
+        ml-training-service/live-defi-rollout → ml_service/training/ + tests/training/ + scripts/training/ (739f3a3)
+        ml-inference-service/live-defi-rollout → ml_service/inference/ + tests/inference/ + scripts/inference/ (2c591c5)
+        Both merges used -s ours + read-tree with prefix. Skeleton __init__.py files replaced by source.
+    status: done
     blocked_by: phase-2-skeleton-new-repo
 
   - id: phase-4-fix-imports-and-cli
     content: |
-      - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package.
+      - [x] ✅ [AGENT slot-8] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package. Completed 2026-05-20. ml-service@9f82e14.
+        (a) 157 files: ml_training_service.* → ml_service.training.*, ml_inference_service.* → ml_service.inference.*
+        (b) Top-level ml_service/cli/main.py dispatcher with --operation {6 ops} + ServiceBootstrap (from Phase 2)
+        (c) ml_service/api/main.py: aggregated freshness (from Phase 2); sub-pkg api/main.py preserved
+        Remaining Phase 4 items (d-h) handled by Phase 4 sub-items below.
+        (d) MlServiceConfig merge: DEFERRED to Phase 5 (config_reloaders UTL lift covers this)
+        (e) ServiceBootstrap consolidated into cli/main.py (done Phase 2)
+        (f) test conftest merge: DEFERRED to Phase 6 QG sweep
+        (g) config_reloaders.py near-identical: DEFERRED to Phase 5 UTL lift
+        (h) optional-dep split: DEFERRED to Phase 5
+        Evidence: replaced Phase 4 (a)(b)(c)(e) core items; 235-file commit.
         (a) sed-rewrite every `from ml_training_service.*` → `from ml_service.training.*` and `from
             ml_inference_service.*` → `from ml_service.inference.*` inside the merged tree;
         (b) collapse 2 source `cli/main.py` entrypoints into `ml_service/cli/main.py` dispatcher keyed by
