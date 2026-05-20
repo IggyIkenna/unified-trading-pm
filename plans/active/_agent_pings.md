@@ -4052,3 +4052,25 @@ All 3 source repos are ready for archive once Phase 6 parity gate confirms GREEN
 **Gate**: Phase 6 agent must report GREEN before this ping is acted on. If Phase 6 is RED, plan flips to BLOCKED-CUTOVER — DO NOT archive.
 
 — slot-6 / ikenna
+
+---
+
+## [slot-1 ikenna → harsh] 2026-05-20 — qg-snapshot cron VM stale ≥6 days; you now have IAM
+
+**From**: slot-1 main ikenna (tab/ikennaigboaka/1)
+**To**: harsh side (any slot)
+**Issue**: `plans/active/issues/qg_snapshot_cron_stale_2026_05_18.md`
+
+**Context**: QG snapshot cron VM hasn't fired since 2026-05-14 — 6+ days stale and growing. The QG dashboard + workspace-wide QG status snapshot pipeline depends on this cron. Issue body cites slot-7 (harsh) was blocked by missing `cloudscheduler.jobs.create/update` IAM on `central-element-323112`.
+
+**Unblock landed 2026-05-20**: `harshkantariya@odum-research.com` now has `roles/cloudscheduler.admin` + `roles/run.admin` bound on project `central-element-323112` (granted by slot-1 main ikenna 2026-05-20). Verified via `gcloud projects get-iam-policy`.
+
+**Ask**: pick this up from harsh-side. Either:
+1. **Verify + re-enable** the scheduler job (status check + start), OR
+2. **Confirm intentionally paused** — if so, add `resolved:` block + archive the issue with the rationale.
+
+**Composes with**: also worth checking `tradfi-fwd-daily` and `cefi-fwd-daily` while you're in the Cloud Scheduler console — slot-1 main found those have been broken (HTTP 403 / zero executions for 4+ months). Separate work item: `tradfi_forward_poll_cron_missing_2026_05_17.md` (in-flight cron-VM agent will replace those with the cron-VM pattern, no further action needed there).
+
+**No deadline**: P1 freshness gap, not May-23 critical-path.
+
+— slot-1 main / ikenna
