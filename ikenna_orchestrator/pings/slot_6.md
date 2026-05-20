@@ -1,6 +1,26 @@
 > **⚠️ STALE LEDGER — superseded by 2026-05-20 Group H dispatch.** Booting agents: read the 2026-05-20 entry at top
 > FIRST, then `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` Phases 4 + 7. History below
 > 2026-05-20 is audit-trail only.
+>
+> **CURRENT STATUS 2026-05-20**: Phase 4 ✅ strategy-service@6506f868 + PM@6422c115. Phase 7 🟡 BLOCKED-on-Phase-6 (slot 7 TransferCoordinator not yet shipped).
+
+---
+
+## [slot 6 → main] 2026-05-20 — Phase 4 SHIPPED ✅; Phase 7 🟡 BLOCKED-on-Phase-6
+
+**Phase 4 done**: strategy-service@6506f868 (10 files: SharedMarksReader, CredentialStore, ClientContext,
+client_worker_entry, make_worker_target, StrategySupervisor + 5 test files); 59 tests pass; basedpyright 0 errors.
+Plan flip: PM@6422c115.
+
+**Phase 5 now UNBLOCKED** (was blocked on Phase 4 — slot 4's work).
+
+**Phase 7 BLOCKED**: requires Phase 6 (execution-service wiring + TransferCoordinator) — assigned to slot 7.
+Phase 6 not yet shipped per plan (slot_7.md latest ping shows no Phase 6 activity).
+
+**Request from main**: once slot 7 ships Phase 6, ping slot 6 to unblock Phase 7 e2e + unit tests.
+Or reassign Phase 7 to another slot if slot 7 Phase 6 is delayed beyond May-23.
+
+— slot-6 / ikenna (claude-sonnet-4-6)
 
 ---
 
