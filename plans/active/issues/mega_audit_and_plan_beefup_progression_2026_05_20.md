@@ -121,7 +121,15 @@ audit dimensions that must land for full data-pipeline coverage. These are A-pha
 (not B/C) because they're prerequisites for the Phase D plan beef-ups (the layer-N+1
 work shouldn't ship if these audits are RED).
 
-- [ ] **A4. Manifest v8 deep audit (data + code paths)**
+- [x] ✅ **A4. Manifest v8 deep audit (data + code paths)** — 2026-05-20.
+      Results: `plans/audit/results/manifest_v8_compliance_2026_05_20_{summary.md,data.csv,code.csv}`.
+      **DATA SIDE (REVIEW-BLOCKING): 0% v8 across ALL 5 asset_groups.** Every manifest row in
+      prod is at v<8: cefi 2.66M rows at v4-v7; defi 447k at v4-v7 + 1.29M NULL; sports 2.82M
+      at v2-v7 + 13k NULL; tradfi 127k at v4-v7 + 35k NULL; prediction 18k at v4-v7 + 2.3k NULL.
+      **CODE SIDE**: 3 files with hardcoded v<8 constants (review-blocking):
+      `deployment-service/scripts/rebuild_sports_manifest.py`,
+      `unified-api-contracts/canonical/crosscutting/manifest_schema.py`,
+      `unified-trading-library/manifest_writer.py`. 25 files with legacy-fallback patterns.
       Two dimensions, both per-asset-group:
       - **Data side**: read each MTDS + IS manifest's `_index/availability_index.parquet`,
         group by `schema_version` column → confirm 100% are v8. Any row at v<8 is
@@ -133,13 +141,19 @@ work shouldn't ship if these audits are RED).
         readers) for branches that handle pre-v8 rows or are missing v8 enhanced-field
         consumers. Output: per-file v8-readiness flag (consumes_v8_enhanced_fields,
         falls_back_to_v_lt_8). Surface mixed states as **review-blocking**.
-      Output: `plans/audit/results/manifest_v8_compliance_2026_05_20.csv` +
-      `..._summary.md`. Owner: background agent. Estimate: 1.0 calibrated AI-day.
       Composes with: A1 (file-level v8 constant scan) + existing QG STEP for manifest
       schema-version checks. SSOT: extend existing Cross-cutting QG ratchet plan
       with the data-side ratchet step (no new SSOT).
 
-- [ ] **A5. Dependency-data-checking + fail-propagation audit (per service × mode)**
+- [x] ✅ **A5. Dependency-data-checking + fail-propagation audit (per service × mode)** — 2026-05-20.
+      Results: `plans/audit/results/dependency_propagation_2026_05_20_{summary.md,csv}`.
+      **5 files with REVIEW-BLOCKING violations (warn-but-proceed instead of raise)**:
+      `ml-inference-service/…/batch_handler.py` (lines 79, 259),
+      `ml-service/…/batch_handler.py` (lines 79, 259),
+      `strategy-service/…/batch_handler.py` (lines 130, 502),
+      `features-service/…commodity/adapters/eia_ng.py` (line 70),
+      `features-service/…commodity/adapters/eia_crude.py` (line 61).
+      All other services (execution, IS, MDPS, MTDS, ML-training) are clean.
       Every service must declare what upstream data it depends on, AND fail loudly
       when that data is missing. Two sub-dimensions:
       - **Batch mode**: pre-flight gate before each shard write. If upstream
@@ -150,34 +164,29 @@ work shouldn't ship if these audits are RED).
       - **Live mode**: stream-time freshness gate. If upstream stream is stale
         (no new row in window-N), raise `StaleUpstreamError` — NOT fall through to
         zero. Audit every service's live handler.
-      Per service × mode = matrix of (upstream_checked, fail_propagates_loudly,
-      uses_typed_reason). Concentration on: features-service (consumes MTDS),
-      strategy-service (consumes features), execution-service (consumes strategy),
-      ML services (consume features). Output: `plans/audit/results/dependency_propagation_2026_05_20.csv`
-      + `..._summary.md`. **MUST surface every service × mode cell that swallows a
-      missing-upstream condition** (the silent-empty class on the consumer side, sister
-      to A3's DIVERGENT_EMPTY on the producer side).
-      Owner: background agent. Estimate: 1.5 calibrated AI-days.
-      Codify the patterns as QG steps: `check_dependency_fail_propagation.py` (per
-      service × mode) wired into each service's `quality-gates.sh` — operator directive
-      "any issues caught should be hardened in tests that quality gates uses".
+      **MUST surface every service × mode cell that swallows a missing-upstream condition.**
+      Codify as QG steps: `check_dependency_fail_propagation.py` wired into each service's
+      `quality-gates.sh` — operator directive "any issues caught should be hardened in tests".
 
-- [ ] **A6. Batch-live adapter parity audit (per venue × data_type)**
+- [x] ✅ **A6. Batch-live adapter parity audit (per venue × data_type)** — 2026-05-20.
+      Results: `plans/audit/results/batch_live_adapter_parity_2026_05_20_{summary.md,csv}`.
+      160 (asset_group, venue, data_type) tuples checked across 573 adapter files.
+      **cefi**: 1 GREEN / 7 BATCH_ONLY / 31 MISSING_BOTH. **defi**: 0/4/89.
+      **prediction**: 0/2/0. **sports**: 0/0/12. **tradfi**: 0/0/14.
+      **13 BATCH_ONLY cells (REVIEW-BLOCKING — live equivalent required)**:
+      aster(liquidations/trades), deribit(trades), hyperliquid(book_snapshot_5/derivative_ticker/liquidations/trades),
+      curve(dex_pools/dex_swaps), jito(lst_rates), morpho(lending_indices), kalshi(trades), polymarket(trades).
+      **146 MISSING_BOTH cells** (see CSV for full list). 0 LIVE_ONLY cells.
       Per CLAUDE.md "Batch = Live (CRITICAL)" — live + batch are operational modes of
       the same pipeline. For every venue × data_type with a batch adapter, there
       MUST be a live adapter (potentially from a different upstream source, but
-      same schema + same manifest emission contract). Audit:
-      - Enumerate batch adapters (MTDS handlers + IS handlers).
-      - Enumerate live adapters (MTDS live handlers + IS live handlers).
+      same schema + same manifest emission contract).
       - Diff: every batch-only cell is a P0 gap on the live track; every live-only
         cell may be intentional (live-only data_type) or a P1 gap on the batch track.
-      Output: `plans/audit/results/batch_live_adapter_parity_2026_05_20.csv` +
-      `..._summary.md` with the per-(venue, data_type) matrix. **MUST list every
-      batch-only adapter** so the live-rollout plan can size the gap explicitly.
-      Owner: background agent. Estimate: 1.5 calibrated AI-days.
       Note: different upstream sources between batch + live is fine (e.g. Tardis for
       batch CeFi vs venue WebSocket for live CeFi) — the audit checks contract parity,
-      not source identity.
+      not source identity. Caveats: regex-based path classification; adapter existence
+      ≠ orchestrator-wired (see CSV `venue_token` column for exact matches).
 
 **Why these aren't in the original A1/A2/A3**: A1 is *code-shape* compliance (regex
 scan of source); A2/A3 are *data-availability* expected vs actual. A4-A6 are *contract-
